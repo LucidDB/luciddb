@@ -168,7 +168,7 @@ void LcsClusterAppendExecStream::Init()
     // responsible for setting certain things, so we don't set them
     // in compressor
     m_bIsLong = false;
-    for (uint16_t idx = 0; idx < m_numColumns; idx++) {
+    for (uint idx = 0; idx < m_numColumns; idx++) {
         if (BBSqlTDef(m_baseTdefs[idx]).IsLong()) {
             m_bIsLong = true;
         }
@@ -178,7 +178,7 @@ void LcsClusterAppendExecStream::Init()
     AllocArrays();
     
     // get blocks from cache to use as temporary space and initialize arrays
-    for (uint16_t i = 0; i < m_numColumns; i++) {
+    for (uint i = 0; i < m_numColumns; i++) {
         
         bufferLock.allocatePage();
         m_rowBlock[i] = bufferLock.getPage().getWritableData();
@@ -196,14 +196,14 @@ void LcsClusterAppendExecStream::Init()
             colTupleDesc[i], i, m_blockSize);
     }
 
-    nRowsMax = (m_blockSize & 0xfffffff0) / sizeof(uint16_t);
+    nRowsMax = m_blockSize / sizeof(uint16_t);
 }
 
 
 ExecStreamResult LcsClusterAppendExecStream::Compress(
         ExecStreamQuantum const &quantum)
 {
-    uint16_t i, j, k;
+    uint i, j, k;
     bool canFit = false;
     bool undoInsert= false;
     
@@ -417,7 +417,7 @@ void LcsClusterAppendExecStream::StartNewBlock()
                           m_builderBlock.get(), m_blockSize);
     
     // reset Hashes
-    for (uint16_t i = 0; i < m_numColumns; i++) {
+    for (uint i = 0; i < m_numColumns; i++) {
         m_hash[i].init(m_hashBlock[i], 
             &m_riBlockBuilder, colTupleDesc[i], i, m_blockSize);
     }
@@ -455,11 +455,9 @@ void LcsClusterAppendExecStream::GetLastBlock(PLcsClusterNode &pBlock)
 
 void LcsClusterAppendExecStream::LoadExistingBlock() 
 {
-    boost::scoped_array<uint16_t> numVals;      // number of values in block
+    boost::scoped_array<uint> numVals;      // number of values in block
     boost::scoped_array<uint16_t> lastValOff;
-    // TODO jvs 28-Nov-2005:  use automatic mem mgmt for the buffers too
-    // to avoid leak in case of excn
-    boost::scoped_array<PBuffer> aLeftOverBufs;
+    boost::scoped_array<boost::scoped_array<FixedBuffer> > aLeftOverBufs;
                                             // array of buffers to hold
                                             // rolled back data for each
                                             // column
@@ -467,12 +465,12 @@ void LcsClusterAppendExecStream::LoadExistingBlock()
                                             // each col; since the value is
                                             // same for every column, no need
                                             // for this to be an array
-    boost::scoped_array<uint16_t> aiFixedSize;  // how much space was used for
+    boost::scoped_array<uint> aiFixedSize;  // how much space was used for
                                             // each column; should be
-                                            // equal for each column
+                                            // equal for each value in a column
     LcsHashValOrd vOrd;
 
-    uint16_t i, j;
+    uint i, j;
     RecordNum startRowCnt;
     RecordNum nrows;
     
@@ -481,7 +479,7 @@ void LcsClusterAppendExecStream::LoadExistingBlock()
                           m_builderBlock.get(), m_blockSize);
 
     lastValOff.reset(new uint16_t[m_numColumns]);
-    numVals.reset(new uint16_t[m_numColumns]);
+    numVals.reset(new uint[m_numColumns]);
     
     // REVIEW jvs 28-Nov-2005:  A simpler approach to this whole problem
     // might be to pretend we were starting an entirely new block,
@@ -505,8 +503,8 @@ void LcsClusterAppendExecStream::LoadExistingBlock()
     }
 
     // Setup structures to hold rolled back information
-    aiFixedSize.reset(new uint16_t[m_numColumns]);
-    aLeftOverBufs.reset(new PBuffer[m_numColumns]);
+    aiFixedSize.reset(new uint[m_numColumns]);
+    aLeftOverBufs.reset(new boost::scoped_array<FixedBuffer>[m_numColumns]);
 
     startRowCnt = m_rowCnt;
     
@@ -531,8 +529,9 @@ void LcsClusterAppendExecStream::LoadExistingBlock()
         // an 8 boundary), rollback and store in temporary mem
         // aLeftOverBufs[i]
         if (anLeftOvers > 0) {
-            aLeftOverBufs[i] = new FixedBuffer[anLeftOvers * aiFixedSize[i]];
-            m_riBlockBuilder.RollBackLastBatch(i, aLeftOverBufs[i]);
+            aLeftOverBufs[i].reset(
+                new FixedBuffer[anLeftOvers * aiFixedSize[i]]);
+            m_riBlockBuilder.RollBackLastBatch(i, aLeftOverBufs[i].get());
         }
     }
     
@@ -565,7 +564,7 @@ void LcsClusterAppendExecStream::LoadExistingBlock()
                 m_hash[i].startNewBatch(anLeftOvers);
             }
 
-            for (j = 0, val = aLeftOverBufs[i];
+            for (j = 0, val = aLeftOverBufs[i].get();
                  j < anLeftOvers;
                  j++, val += aiFixedSize[i])
             {
@@ -580,18 +579,11 @@ void LcsClusterAppendExecStream::LoadExistingBlock()
     }
     
     m_lastRow -= m_rowCnt;
-
-    // TODO jvs 28-Nov-2005:  see note above on scoped_array<FixedBuffer>
-    for (i = 0; i < m_numColumns; i++) {
-        if (anLeftOvers > 0) {
-            delete[] aLeftOverBufs[i];
-        }
-    }
 }
 
-void LcsClusterAppendExecStream::addValueOrdinal(uint16_t column, uint16_t vOrd) 
+void LcsClusterAppendExecStream::addValueOrdinal(uint column, uint16_t vOrd) 
 {
-    uint16_t * rowWordArray = (uint16_t *) m_rowBlock[column];
+    uint16_t *rowWordArray = (uint16_t *) m_rowBlock[column];
     rowWordArray[m_rowCnt] = vOrd;
     
     // since we added a row mark block as dirty
@@ -611,8 +603,8 @@ void LcsClusterAppendExecStream::WriteBatch(bool lastBatch)
     uint16_t *oVals;
     uint leftOvers;
     PBuffer val;
-    uint16_t mode;
-    uint16_t i, j;
+    LcsBatchMode mode;
+    uint i, j;
     uint origRowCnt, count = 0;
 
     m_lastRow += m_rowCnt;
@@ -625,7 +617,7 @@ void LcsClusterAppendExecStream::WriteBatch(bool lastBatch)
         
         // Pick which compression mode to use (fixed, variable, or compressed)
         m_riBlockBuilder.PickCompressionMode(i, m_maxValueSize[i],
-                                             (uint) m_rowCnt, &oVals, mode);
+                                             m_rowCnt, &oVals, mode);
         leftOvers = m_rowCnt > 8 ? m_rowCnt % 8 : 0;
         
         // all batches must end on an eight boundary so we move
@@ -634,15 +626,15 @@ void LcsClusterAppendExecStream::WriteBatch(bool lastBatch)
         // eight values in this batch allocate buffer to store
         // values to be written to next batch
         if (leftOvers) {
-            m_buf[i] = new uint8_t[leftOvers * m_maxValueSize[i]];
+            m_buf[i].reset(new FixedBuffer[leftOvers * m_maxValueSize[i]]);
             count = leftOvers;
 
         } else if (origRowCnt < 8) {
-            m_buf[i] = new uint8_t[origRowCnt * m_maxValueSize[i]];
+            m_buf[i].reset(new FixedBuffer[origRowCnt * m_maxValueSize[i]]);
             count = origRowCnt;
         } else {
             // no values to write to next batch (ie on boundary of 8)
-            m_buf[i] = 0;
+            m_buf[i].reset();
         }
     
         // Write out the batch and collect the leftover rows in m_buf
@@ -650,20 +642,21 @@ void LcsClusterAppendExecStream::WriteBatch(bool lastBatch)
             m_hash[i].prepareFixedOrVariableBatch((PBuffer) m_rowBlock[i],
                                                   m_rowCnt);
             m_riBlockBuilder.PutFixedVarBatch(i, (uint16_t *) m_rowBlock[i],
-                                              m_buf[i]);
+                                              m_buf[i].get());
             if (mode == LCS_FIXED) {
                 m_hash[i].clearFixedEntries();
             }
 
         } else {
 
-            uint16_t numVals;
+            uint numVals;
             
             // write orderVals to oVals and remap val ords in row array
             m_hash[i].prepareCompressedBatch((PBuffer) m_rowBlock[i],
-                                                 m_rowCnt, &numVals, oVals);
+                                             m_rowCnt, (uint16_t *) &numVals,
+                                             oVals);
             m_riBlockBuilder.PutCompressedBatch(i, (PBuffer) m_rowBlock[i],
-                                                m_buf[i]);
+                                                m_buf[i].get());
         }
         
         // setup next batch
@@ -687,7 +680,7 @@ void LcsClusterAppendExecStream::WriteBatch(bool lastBatch)
     
         // rollback each batch
         for (i = 0; i < m_numColumns; i++) {
-            m_riBlockBuilder.RollBackLastBatch(i, m_buf[i]);
+            m_riBlockBuilder.RollBackLastBatch(i, m_buf[i].get());
         }
         bStartNewBlock = true;
     }
@@ -705,7 +698,7 @@ void LcsClusterAppendExecStream::WriteBatch(bool lastBatch)
     if (!lastBatch) {
         for (i = 0; i < m_numColumns; i++) {
             m_rowCnt = 0;
-            for (j = 0, val = m_buf[i]; j < count; j++) {
+            for (j = 0, val = m_buf[i].get(); j < count; j++) {
                 LcsHashValOrd vOrd;
                 bool undoInsert = false;
                 
@@ -721,11 +714,9 @@ void LcsClusterAppendExecStream::WriteBatch(bool lastBatch)
         }
     }
 
-    // TODO jvs 28-Nov-2005:  use automatic mem mgmt for the entries in
-    // m_buf to avoid leak in case of excn
     for (i = 0; i < m_numColumns; i++) {
-        if (m_buf[i]) {
-            delete[] m_buf[i];
+        if (m_buf[i].get()) {
+            m_buf[i].reset();
         }
     }
 }
@@ -783,7 +774,7 @@ void LcsClusterAppendExecStream::AllocArrays()
     m_builderBlock.reset(new PBuffer[m_numColumns]);
     
     m_vOrd.reset(new LcsHashValOrd[m_numColumns]);
-    m_buf.reset(new PBuffer[m_numColumns]);
+    m_buf.reset(new boost::scoped_array<FixedBuffer>[m_numColumns]);
     m_maxValueSize.reset(new uint[m_numColumns]);
 }
 

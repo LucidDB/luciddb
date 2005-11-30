@@ -106,13 +106,10 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
      */
     boost::scoped_array<LcsHash> m_hash;
 
-    // REVIEW jvs 28-Nov-2005:  use uint instead of uint16_t here
-    // and other places where there's no good reason for a
-    // constraint on the number of objects
     /**
      * Number of columns in the cluster
      */
-    uint16_t m_numColumns;
+    uint m_numColumns;
 
     /**
      * Array of temporary blocks for row array
@@ -134,13 +131,10 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
      */
     boost::scoped_array<PBuffer> m_builderBlock;
 
-    // REVIEW jvs 28-Nov-2005:  this state variable is used in
-    // non-obvious ways having to do with the 8-row minimum per batch.
-    // Is there any way to consolidate that logic or make it less implicit?
     /**
      * Number of rows loaded into the current set of batches
      */
-    uint16_t m_rowCnt;
+    uint m_rowCnt;
 
     /**
      * True if index blocks need to be written to disk
@@ -174,7 +168,7 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
     /**
      * Temporary buffers used by WriteBatch
      */
-    boost::scoped_array<PBuffer> m_buf;
+    boost::scoped_array<boost::scoped_array<FixedBuffer> > m_buf;
 
     /**
      * Max size for each column cluster used by WriteBatch
@@ -235,7 +229,7 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
     /**
      * Adds value ordinal to row array for new row
      */
-    void addValueOrdinal(uint16_t column, uint16_t vOrd);
+    void addValueOrdinal(uint column, uint16_t vOrd);
 
     /**
      * True if row array is full
