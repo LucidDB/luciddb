@@ -90,6 +90,8 @@
 
     <pattern name="lu.farrago" class="com.lucidera.farrago.*"/>
     <pattern name="lu.fennel" class="com.lucidera.farrago.fennel.*" />
+    <pattern name="lu.namespace" class="com.lucidera.farrago.namespace.*" />
+    <pattern name="lu.namespace.flatfile" class="com.lucidera.farrago.namespace.flatfile.*" />
 
     <pattern name="defimpl" class="net.sf.farrago.defimpl.*" />
 
@@ -147,6 +149,8 @@
       <include pattern="lu.lurql.test"/>
       <include pattern="lu.farrago"/>
       <include pattern="lu.fennel"/>
+      <include pattern="lu.namespace"/>
+      <include pattern="lu.namespace.flatfile"/>
       <include pattern="defimpl"/>
       <include pattern="test"/>
       <include pattern="dt.test"/>

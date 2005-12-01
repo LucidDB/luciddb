@@ -84,9 +84,9 @@ class FlatFileExecStreamTest : public ExecStreamUnitTestBase
 public:
     explicit FlatFileExecStreamTest()
     {
-        //FENNEL_UNIT_TEST_CASE(FlatFileExecStreamTest, testBuffer);
+        FENNEL_UNIT_TEST_CASE(FlatFileExecStreamTest, testBuffer);
         FENNEL_UNIT_TEST_CASE(FlatFileExecStreamTest, testParser);
-        //FENNEL_UNIT_TEST_CASE(FlatFileExecStreamTest, testStream);
+        FENNEL_UNIT_TEST_CASE(FlatFileExecStreamTest, testStream);
     }
 
     void testBuffer();
@@ -213,13 +213,12 @@ void FlatFileExecStreamTest::testStream()
         pSegmentFactory->newScratchSegment(pCache,1);
      flatfileParams.outputTupleDesc.push_back(attrDesc);
     flatfileParams.outputTupleDesc.push_back(attrDesc);
-    flatfileParams.path = "flatfile/stream";
-    flatfileParams.fieldDelim = ",";
-    flatfileParams.rowDelim = "\n";
+    flatfileParams.dataFilePath = "flatfile/stream";
+    flatfileParams.fieldDelim = ',';
+    flatfileParams.rowDelim = '\n';
     flatfileParams.quoteChar = '"';
     flatfileParams.escapeChar = '\\';
     flatfileParams.header = false;
-    flatfileParams.logging = true;
     
     ExecStreamEmbryo flatfileStreamEmbryo;
     flatfileStreamEmbryo.init(
