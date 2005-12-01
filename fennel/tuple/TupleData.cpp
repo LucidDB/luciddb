@@ -27,32 +27,6 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-// TODO jvs 27-Nov-2005:  most of these methods are good candidates
-// for inlining
-
-TupleDatum::TupleDatum()
-{
-    cbData = 0;
-    pData = NULL;
-}
-
-TupleDatum::TupleDatum(TupleDatum const &other)
-{
-    copyFrom(other);
-}
-
-TupleDatum &TupleDatum::operator = (TupleDatum const &other)
-{
-    copyFrom(other);
-    return *this;
-}
-
-void TupleDatum::copyFrom(TupleDatum const &other)
-{
-    cbData = other.cbData;
-    pData = other.pData;
-}
-
 void TupleDatum::memCopyFrom(TupleDatum const &other)
 {
     cbData = other.cbData;
@@ -70,20 +44,17 @@ void TupleDatum::memCopyFrom(TupleDatum const &other)
     }
 }
 
-// TODO jvs 27-Nov-2005: We need a name for the storage format used by
-// storeDatum/loadDatum/etc below to distinguish it from the TupleAccessor
-// marshalling format.  Perhaps
-// storeCompressed/loadCompressed/getCompressedLength?  Also, we'll probably
-// need to implement leading/trailing zero compression for numerics to match
-// Broadbase.
+// TODO jvs 27-Nov-2005:
+// We'll probably need to implement leading/trailing zero compression for
+// numerics to match Broadbase.
 
-void TupleDatum::storeDatum(PBuffer pDataWithLen)
+void TupleDatum::storeLcsDatum(PBuffer pDataWithLen)
 {
     PBuffer tmpDataPtr = pDataWithLen;
       
     /*
      * Note:
-     * This storage format can only encode values shorter than 0x7f00 bytes.
+     * This storage format can only encode values shorter than 0x7fff bytes.
      */
     assert(cbData <= TWO_BYTE_MAX_LENGTH);
       
@@ -94,9 +65,9 @@ void TupleDatum::storeDatum(PBuffer pDataWithLen)
     if (!pData) {
         /*
          * Handle NULL.
-         * NULL is stored as a single byte encoding zero length.
+         * NULL is stored as a special two byte length.
          */
-        *tmpDataPtr = 0;
+        *tmpDataPtr = TWO_BYTE_MAX_LENGTH;
     } else {
         if (cbData <= ONE_BYTE_MAX_LENGTH) {
             *tmpDataPtr = static_cast<uint8_t>(cbData);
@@ -117,7 +88,7 @@ void TupleDatum::storeDatum(PBuffer pDataWithLen)
     }
 }
 
-void TupleDatum::loadDatumWithBuffer(PConstBuffer pDataWithLen)
+void TupleDatum::loadLcsDatum(PConstBuffer pDataWithLen)
 {
     assert (pData);
 
@@ -128,21 +99,21 @@ void TupleDatum::loadDatumWithBuffer(PConstBuffer pDataWithLen)
         cbData =
             ((*pDataWithLen & ONE_BYTE_LENGTH_MASK) << 8)
             | *(pDataWithLen + 1);
-        memcpy(const_cast<PBuffer>(pData), pDataWithLen + 2, cbData);
-    } else {
-        cbData = *pDataWithLen;
         if (cbData == 0) {
             /*
-             * Value is NULL.
+             * 0x8000 is used to indicate NULL value.
              */
             pData = NULL;
         } else {        
-            memcpy(const_cast<PBuffer>(pData), pDataWithLen + 1, cbData);
+            memcpy(const_cast<PBuffer>(pData), pDataWithLen + 2, cbData);
         }
+    } else {
+        cbData = *pDataWithLen;
+        memcpy(const_cast<PBuffer>(pData), pDataWithLen + 1, cbData);
     }
 }
 
-TupleStorageByteLength TupleDatum::getStorageLength(PConstBuffer pDataWithLen)
+TupleStorageByteLength TupleDatum::getLcsLength(PConstBuffer pDataWithLen)
 {
     if (pDataWithLen) {
         if (*pDataWithLen & TWO_BYTE_LENGTH_BIT) {
@@ -171,15 +142,6 @@ TupleStorageByteLength TupleDatum::getStorageLength(PConstBuffer pDataWithLen)
         }
     }
 }    
-
-TupleData::TupleData()
-{
-}
-
-TupleData::TupleData(TupleDescriptor const &tupleDesc)
-{
-    compute(tupleDesc);
-}
 
 void TupleData::compute(TupleDescriptor const &tupleDesc)
 {
