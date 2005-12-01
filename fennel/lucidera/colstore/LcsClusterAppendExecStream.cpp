@@ -66,6 +66,10 @@ void LcsClusterAppendExecStream::prepare(
     pOutAccessor->setTupleShape(outputTupleDesc);
     outputTuple.compute(outputTupleDesc);
     outputTuple[0].pData = (PConstBuffer) &numRowCompressed;
+
+    m_riBlockBuilder = SharedLcsClusterNodeWriter(
+        new LcsClusterNodeWriter(treeDescriptor, scratchAccessor,
+                                 getSharedTraceTarget(), getTraceSourceName()));
 }
     
 void LcsClusterAppendExecStream::getResourceRequirements(
@@ -114,9 +118,6 @@ LcsClusterAppendExecStream::LcsClusterAppendExecStream()
     m_firstRow = LcsRid(0);
     m_lastRow = LcsRid(0);
     m_startRow = LcsRid(0);
-    clusterDump = SharedLcsClusterDump(
-                    new LcsClusterDump(TRACE_FINE, getSharedTraceTarget(),
-                                       getTraceSourceName()));
 }
 
 void LcsClusterAppendExecStream::Init()
@@ -145,13 +146,6 @@ void LcsClusterAppendExecStream::Init()
     }
 #endif
 
-    // Initialize a btree writer as well as the lock for acquiring new
-    // cluster pages and the tuple data representing the btree records
-
-    m_btree = newWriter();
-    clusterLock.accessSegment(treeDescriptor.segmentAccessor);
-    btreeTupleData.compute(m_btree->getTupleDescriptor());
-
 #ifdef NOT_DONE_YET
     //intialize lastrow and starting row
     if (IsInOverwriteMode()) {
@@ -171,7 +165,7 @@ void LcsClusterAppendExecStream::Init()
 #endif
     
     AllocArrays();
-    
+
     // get blocks from cache to use as temporary space and initialize arrays
     for (uint i = 0; i < m_numColumns; i++) {
         
@@ -187,7 +181,7 @@ void LcsClusterAppendExecStream::Init()
         m_builderBlock[i] = bufferLock.getPage().getWritableData();
         bufferLock.unlock();
         
-        m_hash[i].init(m_hashBlock[i], &m_riBlockBuilder,
+        m_hash[i].init(m_hashBlock[i], m_riBlockBuilder,
             colTupleDesc[i], i, m_blockSize);
     }
 
@@ -223,8 +217,8 @@ ExecStreamResult LcsClusterAppendExecStream::Compress(
     
         PLcsClusterNode pExistingIndexBlock;
 
-        GetLastBlock(pExistingIndexBlock);
-        if (pExistingIndexBlock) { 
+        bool found = GetLastBlock(pExistingIndexBlock);
+        if (found) { 
             // indicate we are updating a leaf
             m_indexBlock = pExistingIndexBlock;
         
@@ -254,7 +248,7 @@ ExecStreamResult LcsClusterAppendExecStream::Compress(
         }
 
         WriteBlock();
-        clusterLock.unlock();
+        m_riBlockBuilder->unlockClusterPage();
         
         // outputTuple was already initialized to point to numRowCompressed
         // in prepare()
@@ -344,8 +338,6 @@ ExecStreamResult LcsClusterAppendExecStream::Compress(
 
 void LcsClusterAppendExecStream::Close() 
 {
-    m_btree.reset();
-
     // free cache blocks and the arrays pointing to them
     scratchAccessor.pSegment->deallocatePageRange(NULL_PAGE_ID, NULL_PAGE_ID);
     m_rowBlock.reset();
@@ -357,8 +349,10 @@ void LcsClusterAppendExecStream::Close()
     m_buf.reset();
     m_maxValueSize.reset();
 
-    // close block-builders
-    m_riBlockBuilder.Close();
+    // close block-builder
+
+    m_riBlockBuilder->Close();
+    m_riBlockBuilder.reset();
     
 #ifdef NOT_DONE_YET
     // we have to delete the old BTree if we were in overwrite mode
@@ -387,25 +381,17 @@ void LcsClusterAppendExecStream::StartNewBlock()
     m_firstRow = m_lastRow;
     
     // Get a new cluster page from the btree segment
-    clusterPageId = clusterLock.allocatePage();
-    m_indexBlock = &(clusterLock.getNodeForWrite());
-    
-    // Insert into the btree a tuple composed of the first rid on the
-    // page followed by the cluster pageid
-
-    btreeTupleData[0].pData = reinterpret_cast<uint8_t *> (&m_firstRow);
-    btreeTupleData[1].pData = reinterpret_cast<uint8_t *> (&clusterPageId);
-    m_btree->insertTupleData(btreeTupleData, DUP_FAIL);
+    m_indexBlock = m_riBlockBuilder->allocateClusterPage(m_firstRow);
     
     // Reset index block and block builder.
-    m_riBlockBuilder.Init(scratchAccessor, m_numColumns,
-                          reinterpret_cast<uint8_t *> (m_indexBlock),
-                          m_builderBlock.get(), m_blockSize);
+    m_riBlockBuilder->Init(m_numColumns,
+                           reinterpret_cast<uint8_t *> (m_indexBlock),
+                           m_builderBlock.get(), m_blockSize);
     
     // reset Hashes
     for (uint i = 0; i < m_numColumns; i++) {
         m_hash[i].init(m_hashBlock[i], 
-            &m_riBlockBuilder, colTupleDesc[i], i, m_blockSize);
+            m_riBlockBuilder, colTupleDesc[i], i, m_blockSize);
     }
     
     // reset row count
@@ -418,25 +404,16 @@ void LcsClusterAppendExecStream::StartNewBlock()
     m_indexBlockDirty = false;
     
     // Start writing a new block.
-    m_riBlockBuilder.OpenNew(m_firstRow);
+    m_riBlockBuilder->OpenNew(m_firstRow);
 }
 
-void LcsClusterAppendExecStream::GetLastBlock(PLcsClusterNode &pBlock) 
+bool LcsClusterAppendExecStream::GetLastBlock(PLcsClusterNode &pBlock) 
 {
-    pBlock = 0;
-    
-    if (!m_btree->searchLast()) {
-        // empty btree
-        return;
+    if (!m_riBlockBuilder->getLastClusterPageForWrite(pBlock, m_firstRow)) {
+        return false;
+    } else {
+        return true;
     }
-
-    // read the last cluster page using the last key in the btree
-
-    m_btree->getTupleAccessorForRead().unmarshal(btreeTupleData);
-    clusterPageId = readClusterPageId();
-    clusterLock.lockExclusive(clusterPageId);
-    pBlock = &(clusterLock.getNodeForWrite());
-    m_firstRow = readRid();
 }
 
 void LcsClusterAppendExecStream::LoadExistingBlock() 
@@ -460,9 +437,9 @@ void LcsClusterAppendExecStream::LoadExistingBlock()
     RecordNum startRowCnt;
     RecordNum nrows;
     
-    m_riBlockBuilder.Init(scratchAccessor, m_numColumns,
-                          reinterpret_cast<uint8_t *> (m_indexBlock),
-                          m_builderBlock.get(), m_blockSize);
+    m_riBlockBuilder->Init(m_numColumns,
+                           reinterpret_cast<uint8_t *> (m_indexBlock),
+                           m_builderBlock.get(), m_blockSize);
 
     lastValOff.reset(new uint16_t[m_numColumns]);
     numVals.reset(new uint[m_numColumns]);
@@ -477,17 +454,10 @@ void LcsClusterAppendExecStream::LoadExistingBlock()
     // the first rowid and the number of rows currently on the page.
     // As rows are "rolled back", m_lastRow is decremented accordingly
 
-    m_riBlockBuilder.OpenAppend(numVals.get(), lastValOff.get(), nrows);
+    m_riBlockBuilder->OpenAppend(numVals.get(), lastValOff.get(), nrows);
     m_lastRow = m_firstRow + nrows;
     m_startRow = m_lastRow;
     
-    if (isTracingLevel(TRACE_FINE)) {
-        FENNEL_TRACE(TRACE_FINE,
-                     "Calling ClusterDump from LoadExistingBlock");
-        clusterDump->dump(opaqueToInt(clusterPageId),
-                          (PBuffer) m_indexBlock, m_blockSize);
-    }
-
     // Setup structures to hold rolled back information
     aiFixedSize.reset(new uint[m_numColumns]);
     aLeftOverBufs.reset(new boost::scoped_array<FixedBuffer>[m_numColumns]);
@@ -509,7 +479,7 @@ void LcsClusterAppendExecStream::LoadExistingBlock()
         
         //reset everytime through loop
         m_rowCnt = startRowCnt;
-        m_riBlockBuilder.DescribeLastBatch(i, anLeftOvers, aiFixedSize[i]);
+        m_riBlockBuilder->DescribeLastBatch(i, anLeftOvers, aiFixedSize[i]);
         
         // if we have left overs from the last batch (ie. batch did not end on
         // an 8 boundary), rollback and store in temporary mem
@@ -517,7 +487,7 @@ void LcsClusterAppendExecStream::LoadExistingBlock()
         if (anLeftOvers > 0) {
             aLeftOverBufs[i].reset(
                 new FixedBuffer[anLeftOvers * aiFixedSize[i]]);
-            m_riBlockBuilder.RollBackLastBatch(i, aLeftOverBufs[i].get());
+            m_riBlockBuilder->RollBackLastBatch(i, aLeftOverBufs[i].get());
         }
     }
     
@@ -602,7 +572,7 @@ void LcsClusterAppendExecStream::WriteBatch(bool lastBatch)
         m_maxValueSize[i] = m_hash[i].getMaxValueSize();
         
         // Pick which compression mode to use (fixed, variable, or compressed)
-        m_riBlockBuilder.PickCompressionMode(i, m_maxValueSize[i],
+        m_riBlockBuilder->PickCompressionMode(i, m_maxValueSize[i],
                                              m_rowCnt, &oVals, mode);
         leftOvers = m_rowCnt > 8 ? m_rowCnt % 8 : 0;
         
@@ -627,7 +597,7 @@ void LcsClusterAppendExecStream::WriteBatch(bool lastBatch)
         if (LCS_FIXED == mode || LCS_VARIABLE == mode) {
             m_hash[i].prepareFixedOrVariableBatch((PBuffer) m_rowBlock[i],
                                                   m_rowCnt);
-            m_riBlockBuilder.PutFixedVarBatch(i, (uint16_t *) m_rowBlock[i],
+            m_riBlockBuilder->PutFixedVarBatch(i, (uint16_t *) m_rowBlock[i],
                                               m_buf[i].get());
             if (mode == LCS_FIXED) {
                 m_hash[i].clearFixedEntries();
@@ -641,7 +611,7 @@ void LcsClusterAppendExecStream::WriteBatch(bool lastBatch)
             m_hash[i].prepareCompressedBatch((PBuffer) m_rowBlock[i],
                                              m_rowCnt, (uint16_t *) &numVals,
                                              oVals);
-            m_riBlockBuilder.PutCompressedBatch(i, (PBuffer) m_rowBlock[i],
+            m_riBlockBuilder->PutCompressedBatch(i, (PBuffer) m_rowBlock[i],
                                                 m_buf[i].get());
         }
         
@@ -666,16 +636,16 @@ void LcsClusterAppendExecStream::WriteBatch(bool lastBatch)
     
         // rollback each batch
         for (i = 0; i < m_numColumns; i++) {
-            m_riBlockBuilder.RollBackLastBatch(i, m_buf[i].get());
+            m_riBlockBuilder->RollBackLastBatch(i, m_buf[i].get());
         }
         bStartNewBlock = true;
     }
     
     // Should we move to a new block?  Move if
     //    (a) bStartNewBlock (we need to move just to write the current batch)
-    // or (b) m_riBlockBuilder.IsEndOfBlock() (there isn't room to even start
+    // or (b) m_riBlockBuilder->IsEndOfBlock() (there isn't room to even start
     // the next batch)
-    if (bStartNewBlock || (!lastBatch && m_riBlockBuilder.IsEndOfBlock())) {
+    if (bStartNewBlock || (!lastBatch && m_riBlockBuilder->IsEndOfBlock())) {
         WriteBlock();
         StartNewBlock();
     }
@@ -728,15 +698,9 @@ void LcsClusterAppendExecStream::WriteBlock()
     
         // Tell block builder we are done so it can wrap up writing to the
         // index block
-        m_riBlockBuilder.EndBlock();
+        m_riBlockBuilder->EndBlock();
 
         // Dump out the page contents to trace if appropriate
-
-        if (isTracingLevel(TRACE_FINE)) {
-            FENNEL_TRACE(TRACE_FINE, "Calling ClusterDump from WriteBlock");
-            clusterDump->dump(opaqueToInt(clusterPageId),
-                              (PBuffer) m_indexBlock, m_blockSize);
-        }
 
         m_indexBlockDirty = false;
     }

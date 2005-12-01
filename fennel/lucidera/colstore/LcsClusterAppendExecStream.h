@@ -26,7 +26,6 @@
 #include "fennel/tuple/TupleData.h"
 #include "fennel/tuple/TupleDescriptor.h"
 #include "fennel/tuple/TupleAccessor.h"
-#include "fennel/btree/BTreeWriter.h"
 #include "fennel/ftrs/BTreeExecStream.h"
 #include "fennel/lucidera/colstore/LcsClusterNodeWriter.h"
 #include "fennel/lucidera/colstore/LcsHash.h"
@@ -35,7 +34,6 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-    
 struct LcsClusterAppendExecStreamParams : public BTreeExecStreamParams,
                                           public ConduitExecStreamParams
 {
@@ -56,6 +54,11 @@ struct LcsClusterAppendExecStreamParams : public BTreeExecStreamParams,
 class LcsClusterAppendExecStream : public BTreeExecStream,
                                    public ConduitExecStream
 {
+    /**
+     * Space available on page blocks for writing cluster data
+     */
+    uint m_blockSize;
+
     /**
      * Tuple descriptor for the tuple representing all cluster columns
      */
@@ -158,7 +161,7 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
     /**
      * Page builder object
      */
-    LcsClusterNodeWriter m_riBlockBuilder;
+    SharedLcsClusterNodeWriter m_riBlockBuilder;
 
     /**
      * Row value ordinal returned from hash, one per cluster column
@@ -189,21 +192,6 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
      * Total number of rows loaded by this object
      */
     RecordNum numRowCompressed;
-
-    /**
-     * Btree writer
-     */
-    SharedBTreeWriter m_btree;
-
-    /**
-     * Cluster pageid
-     */
-    PageId clusterPageId;
-
-    /**
-     * Cluster dump
-     */
-    SharedLcsClusterDump clusterDump;
 
     /**
      * Allocate memory for arrays
@@ -254,28 +242,13 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
      * Gets last block written to disk so we can append to it, reading in the
      * first rid value stored on the page
      *
-     * @param pBlock returns pointer to last cluster block, NULL if cluster
-     * is empty
+     * @param pBlock returns pointer to last cluster block
+     *
+     * @return true if cluster is non-empty
      */
-    void GetLastBlock(PLcsClusterNode &pBlock);
+    bool GetLastBlock(PLcsClusterNode &pBlock);
 
 public:
-    /**
-     * Tuple data representing the btree key
-     */
-    TupleData btreeTupleData;
-   
-    /**
-     * Buffer lock for the actual cluster node pages.  Shares the same 
-     * segment as the btree corresponding to the cluster.
-     */
-    ClusterPageLock clusterLock;
-
-    /**
-     * Space available on page blocks for writing cluster data
-     */
-    uint m_blockSize;
-
     /**
      * Performs minimal initialization of object
      */
@@ -341,24 +314,6 @@ public:
         ExecStreamResourceQuantity &minQuantity,
         ExecStreamResourceQuantity &optQuantity);
     virtual void closeImpl();
-
-    // REVIEW jvs 28-Nov-2005:  I don't think these should be either
-    // public or inline.
-    /**
-     * Returns RID from btree tuple
-     */
-    inline LcsRid readRid()
-    {
-        return *reinterpret_cast<LcsRid const *> (btreeTupleData[0].pData);
-    }
-    
-    /**
-     * Returns cluster pageid from btree tuple
-     */
-    inline PageId readClusterPageId()
-    {
-        return *reinterpret_cast<PageId const *> (btreeTupleData[1].pData);
-    }
 };
 
 

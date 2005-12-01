@@ -161,6 +161,7 @@ inline uint GetClusterSubHeaderSize(uint nColumns)
 }
 
 typedef LcsClusterNode *PLcsClusterNode;
+typedef const LcsClusterNode *PConstLcsClusterNode;
 typedef SegNodeLock<LcsClusterNode> ClusterPageLock;
 
 FENNEL_END_NAMESPACE

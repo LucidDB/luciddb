@@ -59,7 +59,6 @@ static uint8_t MagicTable[256] =
 
 LcsHash::LcsHash()
 {
-    clusterBlockWriter      = 0;
     columnId                = 0;
     valCnt                  = 0;
     maxValueSize            = 0;
@@ -70,7 +69,7 @@ LcsHash::LcsHash()
 
 void LcsHash::init(
     PBuffer hashBlockInit,
-    LcsClusterNodeWriter *clusterBlockWriterInit,
+    SharedLcsClusterNodeWriter clusterBlockWriterInit,
     TupleDescriptor const &colTupleDescInit,
     uint columnIdInit,
     uint blockSizeInit)
@@ -104,9 +103,9 @@ void LcsHash::init(
     colTupleBuffer.reset(
         new FixedBuffer[colTupleDesc[0].getMaxLcsLength()]);
     
-    compareInst =
+    compareInst = SharedLcsCompareColKeyUsingOffsetIndex(
         new LcsCompareColKeyUsingOffsetIndex(clusterBlockWriter, &hash,
-            colTupleDesc, columnId);
+                                             colTupleDesc, columnId));
     
 }
 
@@ -566,7 +565,7 @@ void LcsHashTable::init(PBuffer hashBlockInit, uint hashBlockSizeInit)
 
 
 LcsCompareColKeyUsingOffsetIndex::LcsCompareColKeyUsingOffsetIndex(
-    LcsClusterNodeWriter *clusterBlockWriterInit,
+    SharedLcsClusterNodeWriter clusterBlockWriterInit,
     LcsHashTable *hashTableInit,
     TupleDescriptor const &colTupleDescInit,
     uint columnIdInit)

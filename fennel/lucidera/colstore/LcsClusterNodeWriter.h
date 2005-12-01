@@ -22,8 +22,10 @@
 #ifndef Fennel_LcsClusterNodeWriter_Included
 #define Fennel_LcsClusterNodeWriter_Included
 
-#include "fennel/lucidera/colstore/LcsClusterNode.h"
+#include "fennel/lucidera/colstore/LcsClusterAccessBase.h"
 #include "fennel/lucidera/colstore/LcsBitOps.h"
+#include "fennel/lucidera/colstore/LcsClusterDump.h"
+#include "fennel/btree/BTreeWriter.h"
 #include "fennel/tuple/TupleData.h"
 #include <boost/scoped_array.hpp>
 
@@ -40,9 +42,14 @@ enum ForceMode { none = 0, fixed = 1, variable = 2 };
  * on the page and determining the offsets where different elements are to
  * be stored
  */
-class LcsClusterNodeWriter
+class LcsClusterNodeWriter : public LcsClusterAccessBase, public TraceSource
 {
 private:
+    /**
+     * Writes btree corresponding to cluster
+     */
+    SharedBTreeWriter bTreeWriter;
+
     /**
      * Accessor for scrath segments
      */
@@ -161,6 +168,11 @@ private:
     boost::scoped_array<uint> m_maxValueSize;
 
     /**
+     * Cluster dump
+     */
+    SharedLcsClusterDump clusterDump;
+
+    /**
      * Associates an offset with an address, determining whether a value is
      * stored in the temporary block or the temporary value bank
      *
@@ -228,10 +240,10 @@ private:
     }
 
 public:
-    /**
-     * Creates a new LcsClusterNodeWriter, zeroing out all member fields
-     */
-     explicit LcsClusterNodeWriter();
+     explicit LcsClusterNodeWriter(BTreeDescriptor &treeDescriptor,
+                                   SegmentAccessor &accessor,
+                                   SharedTraceTarget pTraceTargetInit,
+                                   std::string nameInit);
 
     /**
      * Destructor
@@ -239,11 +251,34 @@ public:
     ~LcsClusterNodeWriter();
 
     /**
+     * Gets the last cluster page
+     *
+     * @param pBlock output param returning the cluster page
+     *
+     * @param firstRid output param returning first rid stored on cluster page
+     *
+     * @return true if cluster is non-empty
+     */
+    bool getLastClusterPageForWrite(PLcsClusterNode &pBlock, LcsRid &firstRid);
+
+    /**
+     * Allocates a new cluster page
+     *
+     * @param firstRid first rid to be stored on cluster page
+     *
+     * @return page allocated
+     */
+    PLcsClusterNode allocateClusterPage(LcsRid firstRid);
+
+    /**
+     * Unlocks cluster page
+     */
+    void unlockClusterPage();
+
+    /**
      * Initializes object with parameters relevant to the cluster page that
      * will be written
      *
-     * @param accessor scratchAccessor for allocating temporary large buffer
-     * pages
      * @param nColumns number of columns in the cluster
      *
      * @param indexBlock pointer to the cluster page to be written
@@ -254,8 +289,7 @@ public:
      * @param szBlock size of cluster page, reflecting max amount of space
      * available to write cluster data
      */
-    void Init(SegmentAccessor const &accessor, uint nColumns,
-                PBuffer indexBlock, PBuffer *pBlock, uint szBlock);
+    void Init(uint nColumns, PBuffer indexBlock, PBuffer *pBlock, uint szBlock);
 
     void Close();
 

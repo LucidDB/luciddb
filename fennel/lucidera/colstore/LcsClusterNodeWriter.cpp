@@ -21,12 +21,24 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/lucidera/colstore/LcsClusterNodeWriter.h"
+#include "fennel/tuple/TupleAccessor.h"
 #include <boost/scoped_array.hpp>
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-LcsClusterNodeWriter::LcsClusterNodeWriter()
+LcsClusterNodeWriter::LcsClusterNodeWriter(BTreeDescriptor &treeDescriptor,
+                                           SegmentAccessor &accessor,
+                                           SharedTraceTarget pTraceTargetInit,
+                                           std::string nameInit) :
+    LcsClusterAccessBase(treeDescriptor)
 {
+    scratchAccessor = accessor;
+    bufferLock.accessSegment(scratchAccessor);
+    bTreeWriter = SharedBTreeWriter(new BTreeWriter(treeDescriptor,
+                                                    scratchAccessor));
+    clusterDump = SharedLcsClusterDump(
+                    new LcsClusterDump(TRACE_FINE, pTraceTargetInit,
+                                       nameInit));
     m_numColumns = 0;
     m_pHdr = 0;
     m_pHdrSize = 0;
@@ -69,13 +81,53 @@ void LcsClusterNodeWriter::Close()
     m_maxValueSize.reset();
 }
 
+bool LcsClusterNodeWriter::getLastClusterPageForWrite(PLcsClusterNode &pBlock,
+                                                      LcsRid &firstRid)
+{
+    // get the last key in the btree (if it exists) and read the cluster
+    // page based on the pageid stored in that btree record
 
-void LcsClusterNodeWriter::Init(SegmentAccessor const &accessor,
-                                uint nColumn, PBuffer iBlock, PBuffer *pB,
+    if (bTreeWriter->searchLast() == false) {
+        return false;
+    }
+
+    bTreeWriter->getTupleAccessorForRead().unmarshal(bTreeTupleData);
+    clusterPageId = readClusterPageId();
+    clusterLock.lockExclusive(clusterPageId);
+    pBlock = &(clusterLock.getNodeForWrite());
+    firstRid = pBlock->firstRID;
+
+    if (isTracingLevel(TRACE_FINE)) {
+        FENNEL_TRACE(TRACE_FINE,
+                     "Calling ClusterDump from getLastClusterPageForWrite");
+        clusterDump->dump(opaqueToInt(clusterPageId), (PBuffer) pBlock,
+                          m_szBlock);
+    }
+
+    return true;
+}
+
+PLcsClusterNode LcsClusterNodeWriter::allocateClusterPage(LcsRid firstRid)
+{
+    // allocate a new cluster page and insert the corresponding rid, pageid
+    // record into the btree
+
+    clusterPageId = clusterLock.allocatePage();
+    bTreeRid = firstRid;
+    bTreeTupleData[0].pData = reinterpret_cast<uint8_t *> (&firstRid);
+    bTreeTupleData[1].pData = reinterpret_cast<uint8_t *> (&clusterPageId);
+    bTreeWriter->insertTupleData(bTreeTupleData, DUP_FAIL);
+    return &(clusterLock.getNodeForWrite());
+}
+
+void LcsClusterNodeWriter::unlockClusterPage()
+{
+    clusterLock.unlock();
+}
+
+void LcsClusterNodeWriter::Init(uint nColumn, PBuffer iBlock, PBuffer *pB,
                                 uint szB)
 {
-    scratchAccessor = accessor;
-    bufferLock.accessSegment(scratchAccessor);
     m_numColumns = nColumn;
     m_indexBlock = iBlock;
     m_pBlock = pB;
@@ -1070,6 +1122,13 @@ void LcsClusterNodeWriter::MoveFromTempToIndex()
             myCopy(m_indexBlock + loc, &pBatch[b], sizeof(LcsBatchDir));
             loc += sizeof(LcsBatchDir);
         }
+    }
+
+    if (isTracingLevel(TRACE_FINE)) {
+        FENNEL_TRACE(TRACE_FINE,
+                     "Calling ClusterDump from MoveFromTempToIndex");
+        clusterDump->dump(opaqueToInt(clusterPageId),
+                          (PBuffer) m_indexBlock, m_szBlock);
     }
 }
 

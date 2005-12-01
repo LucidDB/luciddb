@@ -23,6 +23,7 @@
 #include "fennel/test/ExecStreamUnitTestBase.h"
 #include "fennel/lucidera/colstore/LcsClusterAppendExecStream.h"
 #include "fennel/lucidera/colstore/LcsClusterDump.h"
+#include "fennel/lucidera/colstore/LcsClusterVerifier.h"
 #include "fennel/btree/BTreeBuilder.h"
 #include "fennel/ftrs/BTreeInsertExecStream.h"
 #include "fennel/ftrs/BTreeSearchExecStream.h"
@@ -60,7 +61,6 @@ protected:
         std::string testName = "LcsClusterAppendExecStreamTest");
     
     void verifyClusterPages(
-        LcsClusterAppendExecStream *lcsStream,
         BTreeDescriptor &btreeDescriptor,
         std::string testName);
     
@@ -119,37 +119,33 @@ public:
 
 
 void LcsClusterAppendExecStreamTest::verifyClusterPages(
-        LcsClusterAppendExecStream *lcsStream,
         BTreeDescriptor &btreeDescriptor,
         std::string testName)
 {
-    BTreeReader reader(btreeDescriptor);
     bool found;
+    PConstLcsClusterNode pBlock;
+    PageId clusterPageId;
+    LcsRid rid;
+    ClusterPageData pageData;
+    uint blockSize =
+        btreeDescriptor.segmentAccessor.pSegment->getUsablePageSize();
+    LcsClusterVerifier clusterVerifier(btreeDescriptor);
     LcsClusterDump clusterDump(TRACE_INFO, shared_from_this(), testName);
 
-    // read every record on the btree
+    // read every cluster page
 
-    found = reader.searchFirst();
+    found = clusterVerifier.getFirstClusterPageForRead(pBlock);
     if (!found) {
-        BOOST_FAIL("searchFirst found nothing");
+        BOOST_FAIL("getFirstClusterPageForRead found nothing");
     }
     do {
-        LcsRid rid;
-        PageId clusterPageId;
-
-        reader.getTupleAccessorForRead().unmarshal(lcsStream->btreeTupleData);
-        rid = lcsStream->readRid();
-        clusterPageId = lcsStream->readClusterPageId();
-        lcsStream->clusterLock.lockShared(clusterPageId);
-        LcsClusterNode const &pBlock =
-            (lcsStream->clusterLock.getNodeForRead());
-
+        pageData = clusterVerifier.getPageData();
         // make sure the rid on the btree matches the rid on the cluster
         // page
-        BOOST_CHECK_EQUAL(rid, pBlock.firstRID);
-        clusterDump.dump(opaqueToInt(clusterPageId), (PBuffer) &pBlock,
-                         lcsStream->m_blockSize);
-    } while (reader.searchNext());
+        BOOST_CHECK_EQUAL(pageData.bTreeRid, pBlock->firstRID);
+        clusterDump.dump(opaqueToInt(pageData.clusterPageId), (PBuffer) pBlock,
+                         blockSize);
+    } while (found = clusterVerifier.getNextClusterPageForRead(pBlock));
 }
 
 /*
@@ -234,7 +230,7 @@ void LcsClusterAppendExecStreamTest::testImplSingleCol(
 
     // read records from btree to obtain cluster page ids
     // and dump out contents of cluster pages
-    verifyClusterPages(lcsStream, btreeDescriptor, testName);
+    verifyClusterPages(btreeDescriptor, testName);
 }
 
 
@@ -301,10 +297,9 @@ void LcsClusterAppendExecStreamTest::testImplMultiCol(
     /*
       Now use the above initialized parameter 
      */
-    LcsClusterAppendExecStream *lcsStream = new LcsClusterAppendExecStream();
-
     ExecStreamEmbryo lcsAppendStreamEmbryo;
-    lcsAppendStreamEmbryo.init(lcsStream, lcsAppendParams);
+    lcsAppendStreamEmbryo.init(new LcsClusterAppendExecStream(),
+                               lcsAppendParams);
     lcsAppendStreamEmbryo.getStream()->setName("LcsClusterAppendExecStream");
     
     SharedExecStream pOutputStream = prepareTransformGraph(
@@ -317,7 +312,7 @@ void LcsClusterAppendExecStreamTest::testImplMultiCol(
 
     // read records from btree to obtain cluster page ids
     // and dump out contents of cluster pages
-    verifyClusterPages(lcsStream, btreeDescriptor, testName);
+    verifyClusterPages(btreeDescriptor, testName);
 }
 
 

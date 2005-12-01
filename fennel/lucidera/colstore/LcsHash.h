@@ -330,7 +330,7 @@ private:
     /**
      * Reference to Node Writer to access the cluster column value.
      */
-    LcsClusterNodeWriter    *clusterBlockWriter;
+    SharedLcsClusterNodeWriter    clusterBlockWriter;
 
     /**
      * Column Id for this cluster column.
@@ -364,7 +364,7 @@ public:
      * @param[in] columnIdInit which column in the cluster is being compared
      */
     explicit LcsCompareColKeyUsingOffsetIndex(
-        LcsClusterNodeWriter *clusterBlockWriterInit,
+        SharedLcsClusterNodeWriter clusterBlockWriterInit,
         LcsHashTable *hashTableInit,
         TupleDescriptor const &colTupleDescInit,
         uint columnIdInit);
@@ -396,10 +396,10 @@ class LcsCompare
 private:
 
     /**
-     * Reference to the class that keeps the compare context and implements the
-     * comparison method.
+     * Reference to the class that keeps the compare context and
+     * implements the comparison method.
      */
-    LcsCompareColKeyUsingOffsetIndex *compareInstance;
+    SharedLcsCompareColKeyUsingOffsetIndex compareInstance;
 
 public:
 
@@ -410,7 +410,7 @@ public:
      * LcsCompareColKeyUsingOffsetIndex
      */
     inline explicit LcsCompare(
-        LcsCompareColKeyUsingOffsetIndex *compareInstanceInit);
+        SharedLcsCompareColKeyUsingOffsetIndex compareInstanceInit);
 
     /**
      * The less than operator.
@@ -454,7 +454,7 @@ private:
     /**
      * Block writer object used to add new value to a cluster block.
      */
-    LcsClusterNodeWriter *clusterBlockWriter;
+    SharedLcsClusterNodeWriter clusterBlockWriter;
 
     /**
      * The column tuple descriptor.
@@ -511,7 +511,7 @@ private:
     /**
      * Helper class to LcsCompare. It stores the comparison context.
      */
-    LcsCompareColKeyUsingOffsetIndex *compareInst;
+    SharedLcsCompareColKeyUsingOffsetIndex compareInst;
 
     /**
      * Compue hash key from value.
@@ -558,7 +558,7 @@ public:
      */
     void init(
         PBuffer hashBlockInit,
-        LcsClusterNodeWriter *clusterBlockWriterInit,
+        SharedLcsClusterNodeWriter clusterBlockWriterInit,
         TupleDescriptor const &colTupleDescInit,            
         uint columnIdInit,
         uint blockSizeInit);
@@ -850,7 +850,7 @@ inline bool LcsHashTable::isFull(uint leftOvers)
  ****************************************************/
 
 inline LcsCompare::LcsCompare(
-    LcsCompareColKeyUsingOffsetIndex *compareInstanceInit)
+    SharedLcsCompareColKeyUsingOffsetIndex compareInstanceInit)
 {
     compareInstance = compareInstanceInit;
 }

@@ -168,6 +168,13 @@ typedef boost::shared_ptr<SizeBuffer> SharedSizeBuffer;
 class LcsClusterDump;
 typedef boost::shared_ptr<LcsClusterDump> SharedLcsClusterDump;
 
+class LcsClusterNodeWriter;
+typedef boost::shared_ptr<LcsClusterNodeWriter> SharedLcsClusterNodeWriter;
+
+class LcsCompareColKeyUsingOffsetIndex;
+typedef boost::shared_ptr<LcsCompareColKeyUsingOffsetIndex>
+    SharedLcsCompareColKeyUsingOffsetIndex;
+
 FENNEL_END_NAMESPACE
 
 #endif
