@@ -23,6 +23,7 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/farrago/ExecStreamFactory.h"
 #include "fennel/lucidera/sorter/ExternalSortExecStream.h"
+#include "fennel/lucidera/flatfile/FlatFileExecStream.h"
 #include "fennel/db/Database.h"
 #include "fennel/segment/SegmentFactory.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
@@ -42,6 +43,12 @@ class ExecStreamSubFactory_lu
     
     bool created;
     
+    char readCharParam(const std::string &val)
+    {
+        assert(val.size() == 1);
+        return val.at(0);
+    }
+
     // implement FemVisitor
     virtual void visit(ProxySortingStreamDef &streamDef)
     {
@@ -51,29 +58,44 @@ class ExecStreamSubFactory_lu
             return;
         }
 
-        if (pExecStreamFactory) {
-            SharedDatabase pDatabase = pExecStreamFactory->getDatabase();
+        SharedDatabase pDatabase = pExecStreamFactory->getDatabase();
         
-            ExternalSortExecStreamParams params;
+        ExternalSortExecStreamParams params;
 
-            // REVIEW jvs 18-Nov-2004:  what about quota accessor?
+        // REVIEW jvs 18-Nov-2004:  what about quota accessor?
 
-            // ExternalSortStream requires a private ScratchSegment
-            params.scratchAccessor =
-                pDatabase->getSegmentFactory()->newScratchSegment(
-                    pDatabase->getCache());
+        // ExternalSortStream requires a private ScratchSegment
+        params.scratchAccessor =
+            pDatabase->getSegmentFactory()->newScratchSegment(
+                pDatabase->getCache());
         
-            pExecStreamFactory->readTupleStreamParams(params, streamDef);
-            params.distinctness = streamDef.getDistinctness();
-            params.pTempSegment = pDatabase->getTempSegment();
-            params.storeFinalRun = false;
-            CmdInterpreter::readTupleProjection(
-                params.keyProj,
-                streamDef.getKeyProj());
-            pEmbryo->init(
-                ExternalSortExecStream::newExternalSortExecStream(),
-                params);
-        }
+        pExecStreamFactory->readTupleStreamParams(params, streamDef);
+        params.distinctness = streamDef.getDistinctness();
+        params.pTempSegment = pDatabase->getTempSegment();
+        params.storeFinalRun = false;
+        CmdInterpreter::readTupleProjection(
+            params.keyProj,
+            streamDef.getKeyProj());
+        pEmbryo->init(
+            ExternalSortExecStream::newExternalSortExecStream(),
+            params);
+    }
+
+    // implement FemVisitor
+    virtual void visit(ProxyFlatFileTupleStreamDef &streamDef)
+    {
+        FlatFileExecStreamParams params;
+        pExecStreamFactory->readTupleStreamParams(params, streamDef);
+
+        assert(streamDef.getDataFilePath().size() > 0);
+        params.dataFilePath = streamDef.getDataFilePath();
+        params.errorFilePath = streamDef.getErrorFilePath();
+        params.fieldDelim = readCharParam(streamDef.getFieldDelimiter());
+        params.rowDelim = readCharParam(streamDef.getRowDelimiter());
+        params.quoteChar = readCharParam(streamDef.getQuoteCharacter());
+        params.escapeChar = readCharParam(streamDef.getEscapeCharacter());
+        params.header = streamDef.isHasHeader();
+        pEmbryo->init(FlatFileExecStream::newFlatFileExecStream(), params);
     }
 
     // implement JniProxyVisitor
