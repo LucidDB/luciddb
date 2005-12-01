@@ -46,7 +46,7 @@ order by LNAME, DNAME;
 select EL.CITY, DL.CITY
 from LOCATION EL, LOCATION DL, EMP, DEPT
 where EL.LOCID = EMP.LOCID and DL.LOCID=DEPT.LOCID
-order by CITY;
+order by CITY, CITY;
 
 -- many to many self join semi join variations
 select F.FNAME

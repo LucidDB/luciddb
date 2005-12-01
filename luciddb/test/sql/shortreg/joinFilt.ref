@@ -1,0 +1,162 @@
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- joinFilt.sql - join Filter tests
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Standard join filter case
+0: jdbc:luciddb:> select lname,dname from emp,dept
+. . . . . . . . > where emp.deptno=dept.deptno and dept.dname='Marketing';
++---------+------------+
+|  LNAME  |   DNAME    |
++---------+------------+
+| Webber  | Marketing  |
++---------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select lname,dname from emp,dept
+. . . . . . . . > where emp.deptno=dept.deptno and dept.dname<'Development'
+. . . . . . . . > order by 1;
++-----------+-------------+
+|   LNAME   |    DNAME    |
++-----------+-------------+
+| Brown     | Support     |
+| Fratz     | Accounting  |
+| Nife      | Sales       |
+| Reynolds  | Support     |
+| Roy       | Sales       |
+| Webber    | Marketing   |
+| Williams  | Sales       |
++-----------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- multiple dimension filter conditions
+0: jdbc:luciddb:> select emp.lname, emp.fname, dname from emp,dept
+. . . . . . . . > where emp.deptno=dept.deptno and dept.dname='Accounting' and dept.locid in ('HQ','SF')
+. . . . . . . . > order by 1,2;
+Error: java.lang.UnsupportedOperationException: class org.eigenbase.sql.SqlNodeList: 'HQ', 'SF' (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- don't reference dept in the select list, should drop out
+0: jdbc:luciddb:> -- of select list
+0: jdbc:luciddb:> select 1 from emp,dept
+. . . . . . . . > where emp.deptno=dept.deptno and dept.deptno=20
+. . . . . . . . > order by 1;
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select emp.fname from emp,dept
+. . . . . . . . > where emp.deptno=dept.deptno and dept.deptno<20
+. . . . . . . . > order by 1;
++--------+
+| FNAME  |
++--------+
+| Fritz  |
++--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- multiple dimension tables, filters on both
+0: jdbc:luciddb:> select customers.lname, products.name, sales.price
+. . . . . . . . > from sales, products, customers
+. . . . . . . . > where customers.custid=sales.custid
+. . . . . . . . > and sales.prodid = products.prodid
+. . . . . . . . > and customers.lname < 'C'
+. . . . . . . . > and products.name >= 'Soap'
+. . . . . . . . > order by 1,2,3;
++--------+-------+--------+
+| LNAME  | NAME  | PRICE  |
++--------+-------+--------+
++--------+-------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- multiple dimension tables but filter on only one
+0: jdbc:luciddb:> select customers.lname, products.name, sales.price
+. . . . . . . . > from sales, products, customers
+. . . . . . . . > where customers.custid=sales.custid
+. . . . . . . . > and sales.prodid = products.prodid
+. . . . . . . . > and customers.lname = 'Andrews'
+. . . . . . . . > order by 1,2,3;
++----------+------------+--------+
+|  LNAME   |    NAME    | PRICE  |
++----------+------------+--------+
+| Andrews  | Chicken    | 1.19   |
+| Andrews  | Chicken    | 7.08   |
+| Andrews  | Chicken    | 9.59   |
+| Andrews  | Eggs       | 8.67   |
+| Andrews  | Heater     | 3.68   |
+| Andrews  | Iron       | 1.26   |
+| Andrews  | Iron       | 5.13   |
+| Andrews  | Iron       | 5.9    |
+| Andrews  | Juice      | 0.75   |
+| Andrews  | Juice      | 1.79   |
+| Andrews  | Juice      | 3.67   |
+| Andrews  | Juice      | 9.49   |
+| Andrews  | Microwave  | 5.46   |
+| Andrews  | Microwave  | 6.98   |
+| Andrews  | Milk       | 1.86   |
+| Andrews  | Milk       | 8.24   |
+| Andrews  | Plunger    | 4.37   |
+| Andrews  | Plunger    | 4.47   |
+| Andrews  | Plunger    | 4.83   |
+| Andrews  | Plunger    | 5.92   |
+| Andrews  | Plunger    | 6.99   |
+| Andrews  | Shampoo    | 4.64   |
+| Andrews  | Soap       | 4.28   |
+| Andrews  | Soap       | 5.5    |
+| Andrews  | Soap       | 9.05   |
+| Andrews  | Soap       | 9.35   |
+| Andrews  | Soda       | 0.23   |
+| Andrews  | Soda       | 2.21   |
+| Andrews  | Soda       | 3.76   |
+| Andrews  | Soup       | 3.39   |
+| Andrews  | Soup       | 3.92   |
+| Andrews  | Telephone  | 7.83   |
+| Andrews  | Towel      | 2.9    |
+| Andrews  | Towel      | 9.03   |
++----------+------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- multiple dimension tables, multiple filters
+0: jdbc:luciddb:> select customers.lname, products.name, sales.price
+. . . . . . . . > from sales, products, customers
+. . . . . . . . > where customers.custid=sales.custid
+. . . . . . . . > and sales.prodid = products.prodid
+. . . . . . . . > and customers.lname < 'C'
+. . . . . . . . > and customers.fname > 'S'
+. . . . . . . . > order by 1,2,3;
++--------+-------+--------+
+| LNAME  | NAME  | PRICE  |
++--------+-------+--------+
++--------+-------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select customers.lname, products.name, sales.price
+. . . . . . . . > from sales, products, customers
+. . . . . . . . > where customers.custid=sales.custid
+. . . . . . . . > and sales.prodid = products.prodid
+. . . . . . . . > and customers.lname < 'C'
+. . . . . . . . > and customers.fname > 'S'
+. . . . . . . . > and sales.prodid < 10009
+. . . . . . . . > and products.name IN ('Soap', 'Juice', 'Soup', 'Microwave', 'Soda')
+. . . . . . . . > and products.price < 5.00
+. . . . . . . . > order by 1,2,3;
+Error: java.lang.UnsupportedOperationException: class org.eigenbase.sql.SqlNodeList: 'Soap', 'Juice', 'Soup', 'Microwave', 'Soda' (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- dimension tables not referenced in select list, should drop
+0: jdbc:luciddb:> -- out of join
+0: jdbc:luciddb:> select sum(sales.price)
+. . . . . . . . > from sales, products, customers
+. . . . . . . . > where customers.custid=sales.custid
+. . . . . . . . > and sales.prodid = products.prodid
+. . . . . . . . > and customers.lname < 'C'
+. . . . . . . . > and customers.fname > 'S'
+. . . . . . . . > and sales.prodid < 10009
+. . . . . . . . > and products.name IN ('Soap', 'Juice', 'Soup', 'Microwave', 'Soda')
+. . . . . . . . > and products.price < 5.00;
+Error: java.lang.UnsupportedOperationException: class org.eigenbase.sql.SqlNodeList: 'Soap', 'Juice', 'Soup', 'Microwave', 'Soda' (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select sum(sales.price)
+. . . . . . . . > from sales
+. . . . . . . . > where custid in (select custid from customers where lname<'F' and fname>'D')
+. . . . . . . . > and prodid in (select prodid from products where name
+. . . . . . . . > IN ('Soap', 'Juice', 'Soup', 'Microwave', 'Soda'));
+Error: java.lang.UnsupportedOperationException: class org.eigenbase.sql.SqlBinaryOperator: IN (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

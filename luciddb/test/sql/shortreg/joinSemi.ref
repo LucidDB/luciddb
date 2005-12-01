@@ -208,7 +208,7 @@
 0: jdbc:luciddb:> select EL.CITY, DL.CITY
 . . . . . . . . > from LOCATION EL, LOCATION DL, EMP, DEPT
 . . . . . . . . > where EL.LOCID = EMP.LOCID and DL.LOCID=DEPT.LOCID
-. . . . . . . . > order by CITY;
+. . . . . . . . > order by CITY, CITY;
 +----------------+----------------+
 |      CITY      |      CITY      |
 +----------------+----------------+
