@@ -345,11 +345,6 @@
   </path>
   <property name="bh.run.classpath" refid="bh.run.classpath"/>    
 
-  <taskdef 
-    name="tch" 
-    classname="org.apache.beehive.test.tools.tch.TchVMTask"
-    classpathref="bh.run.classpath"
-    onerror="fail"/>
   
   <macrodef name="blackhawk.fork">
     <attribute name="basedir" default="."/>
@@ -359,6 +354,11 @@
     <attribute name="verbose" default="true"/>
     <attribute name="classpathref" default="bh.run.classpath"/>
     <sequential>
+      <taskdef 
+        name="tch" 
+        classname="org.apache.beehive.test.tools.tch.TchVMTask"
+        classpathref="bh.run.classpath"
+        onerror="fail"/>
       <tch
         testfile="@{basedir}/@{testscript}"
         tchHome="@{tchhome}"
