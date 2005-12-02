@@ -46,16 +46,11 @@ FENNEL_BEGIN_NAMESPACE
  */
 class SegPageLock : public boost::noncopyable
 {
-    // NOTE: The reason this is not a shared pointer (or a non-pointer) is that
-    // SegPageLock instances may be instantiated very frequently when
-    // stack-allocated by an access method, and the shared pointer overhead
-    // would be unacceptable.  The tradeoff is lack of safety; it's
-    // up to the caller to ensure that the referenced SegmentAccessor
-    // outlives the referencing SegPageLock.  To assist with this,
-    // SegmentAccessor is usually passed as a const &, but to construct
-    // a SegPageLock, a non-const & is required.
+    // NOTE: the shared pointers in segmentAccessor imply some locking
+    // overhead during assignment.  If this is an issue, preallocate
+    // the necessary SegPageLocks rather than stack-allocating them.
     
-    SegmentAccessor *pSegmentAccessor;
+    SegmentAccessor segmentAccessor;
     CachePage *pPage;
     LockMode lockMode;
 
@@ -63,11 +58,10 @@ public:
     explicit SegPageLock()
     {
         pPage = NULL;
-        pSegmentAccessor = NULL;
     }
 
     explicit SegPageLock(
-        SegmentAccessor &segmentAccessor)
+        SegmentAccessor const &segmentAccessor)
     {
         pPage = NULL;
         accessSegment(segmentAccessor);
@@ -79,12 +73,12 @@ public:
     }
 
     void accessSegment(
-        SegmentAccessor &segmentAccessor)
+        SegmentAccessor const &segmentAccessorInit)
     {
         assert(!pPage);
-        assert(segmentAccessor.pSegment);
-        assert(segmentAccessor.pCacheAccessor);
-        pSegmentAccessor = &segmentAccessor;
+        assert(segmentAccessorInit.pSegment);
+        assert(segmentAccessorInit.pCacheAccessor);
+        segmentAccessor = segmentAccessorInit;
     }
 
     bool isLocked() const
@@ -108,7 +102,7 @@ public:
     PageId tryAllocatePage(PageOwnerId ownerId = ANON_PAGE_OWNER_ID)
     {
         unlock();
-        PageId pageId = pSegmentAccessor->pSegment->allocatePageId(ownerId);
+        PageId pageId = segmentAccessor.pSegment->allocatePageId(ownerId);
         if (pageId == NULL_PAGE_ID) {
             return pageId;
         }
@@ -121,23 +115,23 @@ public:
         assert(isLocked());
         BlockId blockId = pPage->getBlockId();
         unlock();
-        pSegmentAccessor->pCacheAccessor->discardPage(blockId);
-        PageId pageId = pSegmentAccessor->pSegment->translateBlockId(blockId);
-        pSegmentAccessor->pSegment->deallocatePageRange(pageId,pageId);
+        segmentAccessor.pCacheAccessor->discardPage(blockId);
+        PageId pageId = segmentAccessor.pSegment->translateBlockId(blockId);
+        segmentAccessor.pSegment->deallocatePageRange(pageId,pageId);
     }
 
     void deallocateUnlockedPage(PageId pageId)
     {
         assert(pageId != NULL_PAGE_ID);
-        BlockId blockId = pSegmentAccessor->pSegment->translatePageId(pageId);
-        pSegmentAccessor->pCacheAccessor->discardPage(blockId);
-        pSegmentAccessor->pSegment->deallocatePageRange(pageId,pageId);
+        BlockId blockId = segmentAccessor.pSegment->translatePageId(pageId);
+        segmentAccessor.pCacheAccessor->discardPage(blockId);
+        segmentAccessor.pSegment->deallocatePageRange(pageId,pageId);
     }
         
     void unlock()
     {
         if (pPage) {
-            pSegmentAccessor->pCacheAccessor->unlockPage(*pPage,lockMode);
+            segmentAccessor.pCacheAccessor->unlockPage(*pPage,lockMode);
             pPage = NULL;
         }
     }
@@ -153,24 +147,24 @@ public:
     {
         unlock();
         lockMode = lockModeInit;
-        BlockId blockId = pSegmentAccessor->pSegment->translatePageId(pageId);
-        pPage = pSegmentAccessor->pCacheAccessor->lockPage(
+        BlockId blockId = segmentAccessor.pSegment->translatePageId(pageId);
+        pPage = segmentAccessor.pCacheAccessor->lockPage(
             blockId,
             lockModeInit,
             readIfUnmapped,
-            pSegmentAccessor->pSegment.get());
+            segmentAccessor.pSegment.get());
     }
 
     void lockPageWithCoupling(
         PageId pageId,LockMode lockModeInit)
     {
         assert(lockModeInit < LOCKMODE_S_NOWAIT);
-        BlockId blockId = pSegmentAccessor->pSegment->translatePageId(pageId);
-        CachePage *pNewPage = pSegmentAccessor->pCacheAccessor->lockPage(
+        BlockId blockId = segmentAccessor.pSegment->translatePageId(pageId);
+        CachePage *pNewPage = segmentAccessor.pCacheAccessor->lockPage(
             blockId,
             lockModeInit,
             true,
-            pSegmentAccessor->pSegment.get());
+            segmentAccessor.pSegment.get());
         assert(pNewPage);
         unlock();
         lockMode = lockModeInit;
@@ -201,7 +195,7 @@ public:
 
     PageId getPageId()
     {
-        return pSegmentAccessor->pSegment->translateBlockId(
+        return segmentAccessor.pSegment->translateBlockId(
             getPage().getBlockId());
     }
 
@@ -217,7 +211,7 @@ public:
         // both pages will end up with this page's footer, on the assumption
         // that other was a scratch page
         // TODO:  correctly swap footers as well?
-        Segment &segment = *(pSegmentAccessor->pSegment);
+        Segment &segment = *(segmentAccessor.pSegment);
         memcpy(other.pPage->getWritableData() + segment.getUsablePageSize(),
                pPage->getReadableData() +  segment.getUsablePageSize(),
                segment.getFullPageSize() - segment.getUsablePageSize());
@@ -237,7 +231,7 @@ public:
 
     SharedCacheAccessor getCacheAccessor() const
     {
-        return pSegmentAccessor->pCacheAccessor;
+        return segmentAccessor.pCacheAccessor;
     }
 };
 
