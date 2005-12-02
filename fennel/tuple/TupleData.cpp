@@ -27,6 +27,37 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
+// TODO jvs 27-Nov-2005:  most of these methods are good candidates
+// for inlining
+
+TupleDatum::TupleDatum()
+{
+    cbData = 0;
+    pData = NULL;
+}
+
+TupleDatum::TupleDatum(TupleDatum const &other)
+{
+    copyFrom(other);
+}
+
+TupleDatum::TupleDatum(PConstBuffer pDataWithLen)
+{
+    loadDatum(pDataWithLen);
+}
+
+TupleDatum &TupleDatum::operator = (TupleDatum const &other)
+{
+    copyFrom(other);
+    return *this;
+}
+
+void TupleDatum::copyFrom(TupleDatum const &other)
+{
+    cbData = other.cbData;
+    pData = other.pData;
+}
+
 void TupleDatum::memCopyFrom(TupleDatum const &other)
 {
     cbData = other.cbData;
@@ -44,51 +75,73 @@ void TupleDatum::memCopyFrom(TupleDatum const &other)
     }
 }
 
-// TODO jvs 27-Nov-2005:
-// We'll probably need to implement leading/trailing zero compression for
-// numerics to match Broadbase.
+// TODO jvs 27-Nov-2005: We need a name for the storage format used by
+// storeDatum/loadDatum/etc below to distinguish it from the TupleAccessor
+// marshalling format.  Perhaps
+// storeCompressed/loadCompressed/getCompressedLength?  Also, we'll probably
+// need to implement leading/trailing zero compression for numerics to match
+// Broadbase.
 
-void TupleDatum::storeLcsDatum(PBuffer pDataWithLen)
+void TupleDatum::storeDatum(PBuffer pDataWithLen)
 {
+    // REVIEW jvs 27-Nov-2005: This method doesn't handle NULL values.
+    // Perhaps it should, but if it isn't supposed to, the method
+    // comments should specify that, and we should assert(pData) here.
+    
     PBuffer tmpDataPtr = pDataWithLen;
       
     /*
      * Note:
-     * This storage format can only encode values shorter than 0x7fff bytes.
+     * This storage format can only encode values shorter than 0x7f00 bytes.
      */
     assert(cbData <= TWO_BYTE_MAX_LENGTH);
       
     /*
      * Stores length.
      */
-    
-    if (!pData) {
-        /*
-         * Handle NULL.
-         * NULL is stored as a special two byte length.
-         */
-        *tmpDataPtr = TWO_BYTE_MAX_LENGTH;
+    if (cbData <= ONE_BYTE_MAX_LENGTH) {
+        *tmpDataPtr = static_cast<uint8_t>(cbData);
+        tmpDataPtr++;
     } else {
-        if (cbData <= ONE_BYTE_MAX_LENGTH) {
-            *tmpDataPtr = static_cast<uint8_t>(cbData);
-            tmpDataPtr++;
-        } else {
-            uint8_t higherByte = (cbData & 0x00007f00) >> 8 | TWO_BYTE_LENGTH_BIT;
-            uint8_t lowerByte  = cbData & 0x000000ff;
-            *tmpDataPtr = higherByte;
-            tmpDataPtr++;
-            *tmpDataPtr = lowerByte;
-            tmpDataPtr++;
-        }
+        // REVIEW jvs 27-Nov-2005:  Isn't this supposed to set
+        // the TWO_BYTE_LENGTH_BIT also?
+        uint8_t higherByte = (cbData & 0x00007f00) >> 8;
+        uint8_t lowerByte  = cbData & 0x000000ff;
+        *tmpDataPtr = higherByte;
+        tmpDataPtr++;
+        *tmpDataPtr = lowerByte;
+        tmpDataPtr++;
+    }
       
-        /*
-         * Stores value.
-         */
-        memcpy(tmpDataPtr, pData, cbData);
+    /*
+     * Stores value.
+     */
+    memcpy(tmpDataPtr, pData, cbData);
+}
+
+void TupleDatum::loadDatum(PConstBuffer pDataWithLen)
+{
+    // REVIEW jvs 27-Nov-2005: This method could cause alignment problems.
+    // storeDatum used memcpy, so it may have stored the datum at
+    // an unaligned address without problem; but here we will set pData
+    // to that unaligned address, in which case the caller will
+    // choke if it attempts to dereference it without a copy.
+    // Perhaps we should only have the loadDatumWithBuffer version?
+    
+    /*
+     * If length is longer than 127, use two bytes to store length.
+     */
+    if (*pDataWithLen & TWO_BYTE_LENGTH_BIT) {
+        cbData = ((*pDataWithLen & ONE_BYTE_LENGTH_MASK) << 8)
+            | *(pDataWithLen + 1);
+        pData = pDataWithLen + 2;
+    } else {
+        cbData = *pDataWithLen;
+        pData = pDataWithLen + 1;
     }
 }
 
-void TupleDatum::loadLcsDatum(PConstBuffer pDataWithLen)
+void TupleDatum::loadDatumWithBuffer(PConstBuffer pDataWithLen)
 {
     assert (pData);
 
@@ -99,22 +152,19 @@ void TupleDatum::loadLcsDatum(PConstBuffer pDataWithLen)
         cbData =
             ((*pDataWithLen & ONE_BYTE_LENGTH_MASK) << 8)
             | *(pDataWithLen + 1);
-        if (cbData == 0) {
-            /*
-             * 0x8000 is used to indicate NULL value.
-             */
-            pData = NULL;
-        } else {        
-            memcpy(const_cast<PBuffer>(pData), pDataWithLen + 2, cbData);
-        }
+        memcpy(const_cast<PBuffer>(pData), pDataWithLen + 2, cbData);
     } else {
         cbData = *pDataWithLen;
         memcpy(const_cast<PBuffer>(pData), pDataWithLen + 1, cbData);
     }
 }
 
-TupleStorageByteLength TupleDatum::getLcsLength(PConstBuffer pDataWithLen)
+TupleStorageByteLength TupleDatum::getStorageLength(PConstBuffer pDataWithLen)
 {
+    // REVIEW jvs 27-Nov-2005: the method comments say this returns
+    // the length of the data portion, but the sum below includes
+    // the length indicator itself, right?
+    
     if (pDataWithLen) {
         if (*pDataWithLen & TWO_BYTE_LENGTH_BIT) {
             return
@@ -131,10 +181,6 @@ TupleStorageByteLength TupleDatum::getLcsLength(PConstBuffer pDataWithLen)
         // documented.  But it relies on cbData, which won't work for
         // types like VARCHAR (only the TupleDescriptor is guaranteed to
         // have the required info).
-        //
-        // NOTE rchen 2005-11-29: This function returns the storage length
-        // required to store the value in pData, or the pointer passed in.
-        //
         if (cbData <= ONE_BYTE_MAX_LENGTH) {
             return cbData + 1;
         } else {
@@ -142,6 +188,15 @@ TupleStorageByteLength TupleDatum::getLcsLength(PConstBuffer pDataWithLen)
         }
     }
 }    
+
+TupleData::TupleData()
+{
+}
+
+TupleData::TupleData(TupleDescriptor const &tupleDesc)
+{
+    compute(tupleDesc);
+}
 
 void TupleData::compute(TupleDescriptor const &tupleDesc)
 {

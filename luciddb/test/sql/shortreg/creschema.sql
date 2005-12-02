@@ -3,9 +3,8 @@
 --
 
 create schema s;
-set schema 's';
 
-create table LOCATION(
+create table s.LOCATION(
 LOCID char(2) primary key,
 STREET varchar(50),
 CITY varchar(20),
@@ -14,14 +13,14 @@ ZIP integer)
 server sys_ftrs_data_server;
 
 -- DEPT: Departments in the company
-create table DEPT(
+create table s.DEPT(
 DEPTNO integer primary key,
 DNAME varchar(20) unique,
 LOCID CHAR(2))
 server sys_ftrs_data_server;
 
 -- EMP: employees in the company
-create table EMP(
+create table s.EMP(
 EMPNO integer primary key,
 FNAME varchar(20) not null,
 LNAME varchar(20) not null,
@@ -34,21 +33,21 @@ COMMISSION integer,
 HOBBY varchar(20))
 server sys_ftrs_data_server;
 
-create table CUSTOMERS(
+create table s.CUSTOMERS(
 CUSTID integer primary key,
 FNAME varchar(30),
 LNAME varchar(30) not null,
 SEX char(1))
 server sys_ftrs_data_server;
 
-create table PRODUCTS(
+create table s.PRODUCTS(
 PRODID integer primary key,
 NAME varchar(30) unique,
 PRICE float)
 server sys_ftrs_data_server;
 
 -- TS timestamp,
-create table SALES(
+create table s.SALES(
 CUSTID integer,
 EMPNO integer,
 PRODID integer,
@@ -59,20 +58,20 @@ server sys_ftrs_data_server;
 
 -- Additional indices not implicitly created by above constraints
 
-create index EMP_DEPTNO on EMP(DEPTNO);
-create index EMP_MANAGER on EMP(MANAGER);
-create index EMP_LOCID on EMP(LOCID);
-create index EMP_SEX on EMP(SEX);
-create index EMP_COMMISSION on EMP(COMMISSION);
+create index EMP_DEPTNO on s.EMP(DEPTNO);
+create index EMP_MANAGER on s.EMP(MANAGER);
+create index EMP_LOCID on s.EMP(LOCID);
+create index EMP_SEX on s.EMP(SEX);
+create index EMP_COMMISSION on s.EMP(COMMISSION);
 
-create index PRODUCTS_PRICE on PRODUCTS(PRICE);
+create index PRODUCTS_PRICE on s.PRODUCTS(PRICE);
 
-create index SALES_PRICE on SALES(PRICE);
-create index SALES_EMPNO on SALES(EMPNO);
-create index SALES_PRODID on SALES(PRODID);
-create index SALES_CUSTID on SALES(CUSTID);
+create index SALES_PRICE on s.SALES(PRICE);
+create index SALES_EMPNO on s.SALES(EMPNO);
+create index SALES_PRODID on s.SALES(PRODID);
+create index SALES_CUSTID on s.SALES(CUSTID);
 
-create index CUSTOMERS_NAME on CUSTOMERS(LNAME, FNAME);
+create index CUSTOMERS_NAME on s.CUSTOMERS(LNAME, FNAME);
 
 
 -- /creschema.sql

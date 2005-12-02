@@ -3,50 +3,48 @@
 -- semi joins
 --
 
-set schema 's';
-
 -- a bunch of equi-joins
 
 -- two way
-select EMP.EMPNO, EMP.LNAME from EMP, DEPT
-where EMP.DEPTNO = DEPT.DEPTNO order by EMPNO;
+select EMP.LNAME from EMP, DEPT
+where EMP.DEPTNO = DEPT.DEPTNO order by EMP.EMPNO;
 
 select DEPT.DNAME from EMP, DEPT
-where EMP.DEPTNO = DEPT.DEPTNO order by DNAME;
+where EMP.DEPTNO = DEPT.DEPTNO order by DEPT.DNAME;
 
 -- three way
 SELECT EMP.LNAME
 from EMP, DEPT, LOCATION
 where EMP.DEPTNO=DEPT.DEPTNO and DEPT.LOCID=LOCATION.LOCID
-order by LNAME;
+order by EMP.LNAME;
 
 SELECT DEPT.DNAME
 from EMP, DEPT, LOCATION
 where EMP.DEPTNO=DEPT.DEPTNO and DEPT.LOCID=LOCATION.LOCID
-order by DNAME;
+order by DEPT.DNAME;
 
-SELECT LOCATION.STREET, LOCATION.CITY
+SELECT LOCATION.CITY
 from EMP, DEPT, LOCATION
 where EMP.DEPTNO=DEPT.DEPTNO and DEPT.LOCID=LOCATION.LOCID
-order by STREET;
+order by LOCATION.STREET;
 
 -- semi joins of a self join
-select M.EMPNO, M.LNAME from EMP M, EMP R
-where M.EMPNO = R.MANAGER order by EMPNO;
+select M.LNAME from EMP M, EMP R
+where M.EMPNO = R.MANAGER order by M.EMPNO;
 
-select R.EMPNO, R.LNAME from EMP M, EMP R
-where M.EMPNO = R.MANAGER order by EMPNO;
+select R.LNAME from EMP M, EMP R
+where M.EMPNO = R.MANAGER order by R.EMPNO;
 
 -- double reference of a table
 select EMP.LNAME, DEPT.DNAME
 from LOCATION EL, LOCATION DL, EMP, DEPT
 where EL.LOCID = EMP.LOCID and DL.LOCID=DEPT.LOCID
-order by LNAME, DNAME;
+order by EMP.LNAME, DEPT.DNAME;
 
 select EL.CITY, DL.CITY
 from LOCATION EL, LOCATION DL, EMP, DEPT
 where EL.LOCID = EMP.LOCID and DL.LOCID=DEPT.LOCID
-order by CITY, CITY;
+order by EL.CITY, DL.CITY;
 
 -- many to many self join semi join variations
 select F.FNAME
@@ -54,14 +52,14 @@ FROM CUSTOMERS M, CUSTOMERS F
 WHERE M.LNAME = F.LNAME
 AND M.SEX = 'M'
 AND F.SEX = 'F'
-order by FNAME;
+order by F.FNAME;
 
 select M.FNAME, M.LNAME
 FROM CUSTOMERS M, CUSTOMERS F
 WHERE M.LNAME = F.LNAME
 AND M.SEX = 'M'
 AND F.SEX = 'F'
-order by FNAME, LNAME;
+order by M.FNAME, M.LNAME;
 
 -- a few ranges
 -- a big ol' join
@@ -69,14 +67,14 @@ select PRODUCTS.PRICE
 from SALES, PRODUCTS
 where SALES.PRICE between PRODUCTS.PRICE - 1 and PRODUCTS.PRICE + 1
 and SALES.PRODID = PRODUCTS.PRODID
-order by  PRICE;
+order by  PRODUCTS.PRICE;
 
 -- non join conditions
 select SALES.CUSTID
 from SALES, PRODUCTS
 where SALES.PRICE between PRODUCTS.PRICE - 1 and PRODUCTS.PRICE + 1
 and ( PRODUCTS.NAME LIKE 'C%' OR PRODUCTS.NAME LIKE 'P%')
-order by CUSTID;
+order by SALES.CUSTID;
 
 -- equality and non equality in one
 select SALES.PRICE
@@ -84,12 +82,12 @@ from SALES, PRODUCTS, CUSTOMERS
 where SALES.PRICE - PRODUCTS.PRICE < 0.5
 and PRODUCTS.PRICE - SALES.PRICE < 0.25
 and SALES.CUSTID = CUSTOMERS.CUSTID
-order by PRICE;
+order by SALES.PRICE;
 
-select PRODUCTS.NAME, CUSTOMERS.CUSTID, CUSTOMERS.FNAME, 
-CUSTOMERS.LNAME, PRODUCTS.PRICE
+select PRODUCTS.NAME, CUSTOMERS.FNAME, CUSTOMERS.LNAME,
+	PRODUCTS.PRICE
 from SALES, PRODUCTS, CUSTOMERS
 where SALES.PRICE - PRODUCTS.PRICE < 0.5
 and PRODUCTS.PRICE - SALES.PRICE < 0.25
 and SALES.CUSTID = CUSTOMERS.CUSTID
-order by NAME, CUSTID;
+order by PRODUCTS.NAME, CUSTOMERS.CUSTID;

@@ -2,7 +2,6 @@
 -- composite index tests
 --
 
-set schema 's';
 
 -- leading edge searches
 
@@ -22,3 +21,5 @@ select LNAME,CUSTID from customers where LNAME<'Andrews' order by 1,2;
 
 select * from customers where LNAME='Bush' and FNAME='Gerry' order by 1;
 select LNAME from customers where LNAME='Frank' and FNAME='Victor' order by 1;
+
+

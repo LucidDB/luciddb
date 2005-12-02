@@ -81,9 +81,6 @@ public abstract class FarragoReposImpl extends FarragoMetadataFactoryImpl
         owner.addAllocation(this);
     }
 
-    // TODO jvs 30-Nov-2005:  rename these methods; initGraph initializes
-    // other stuff besides the model graph
-
     /**
      * Initializes the model graph. The constructor of a concrete subclass must
      * call this after the repository has been initialized, and
@@ -92,11 +89,6 @@ public abstract class FarragoReposImpl extends FarragoMetadataFactoryImpl
     protected void initGraph()
     {
         isFennelEnabled = !getDefaultConfig().isFennelDisabled();
-        initGraphOnly();
-    }
-
-    protected void initGraphOnly()
-    {
         modelGraph = new JmiModelGraph(getRootPackage());
         modelView = new JmiModelView(modelGraph);
     }

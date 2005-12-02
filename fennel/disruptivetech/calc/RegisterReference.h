@@ -447,11 +447,11 @@ public:
                 mCachePtrModified = true;
                 mResetP->push_back(this);
             }
-            reinterpret_cast<TMPLT>(mPData) = newP;
+            mPData = reinterpret_cast<PBuffer>(newP);
             mCbData = len;
         } else {
             TupleDatum *bind = getBinding();
-            reinterpret_cast<TMPLT>(const_cast<PBuffer>(bind->pData)) = newP;
+            bind->pData = reinterpret_cast<PConstBuffer>(newP);
             bind->cbData = len; 
         }
     }
@@ -476,7 +476,7 @@ public:
     {
         assert(!(mProp & (EPropCachePointer | EPropPtrReset)));
         TupleDatum *bind = getBinding();
-        reinterpret_cast<TMPLT*>(const_cast<PBuffer>(bind->pData)) = from->refer();
+        bind->pData = reinterpret_cast<PConstBuffer>(const_cast<TMPLT*>(from->refer()));
         bind->cbData = from->length();
     }
 

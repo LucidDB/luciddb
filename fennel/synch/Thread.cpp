@@ -56,7 +56,8 @@ void Thread::start()
 void Thread::join()
 {
     assert(pBoostThread);
-    assert(*pBoostThread != boost::thread());
+    boost::thread t;
+    assert(*pBoostThread != t);
     pBoostThread->join();
     delete pBoostThread;
     pBoostThread = NULL;

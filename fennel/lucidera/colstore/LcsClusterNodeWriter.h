@@ -22,10 +22,8 @@
 #ifndef Fennel_LcsClusterNodeWriter_Included
 #define Fennel_LcsClusterNodeWriter_Included
 
-#include "fennel/lucidera/colstore/LcsClusterAccessBase.h"
+#include "fennel/lucidera/colstore/LcsClusterNode.h"
 #include "fennel/lucidera/colstore/LcsBitOps.h"
-#include "fennel/lucidera/colstore/LcsClusterDump.h"
-#include "fennel/btree/BTreeWriter.h"
 #include "fennel/tuple/TupleData.h"
 #include <boost/scoped_array.hpp>
 
@@ -42,14 +40,9 @@ enum ForceMode { none = 0, fixed = 1, variable = 2 };
  * on the page and determining the offsets where different elements are to
  * be stored
  */
-class LcsClusterNodeWriter : public LcsClusterAccessBase, public TraceSource
+class LcsClusterNodeWriter
 {
 private:
-    /**
-     * Writes btree corresponding to cluster
-     */
-    SharedBTreeWriter bTreeWriter;
-
     /**
      * Accessor for scrath segments
      */
@@ -63,7 +56,7 @@ private:
     /**
      * Number of columns in cluster
      */
-    uint m_numColumns;
+    uint16_t m_numColumns;
 
     /**
      * Cluster page header
@@ -73,7 +66,7 @@ private:
     /**
      * Size of the cluster page header
      */
-    uint m_pHdrSize;
+    uint16_t m_pHdrSize;
     
     /**
      * Cluster page to be written
@@ -88,7 +81,7 @@ private:
     /**
      * Size of the cluster page
      */
-    uint m_szBlock;
+    uint16_t m_szBlock;
 
     /**
      * Minimum size left on the page
@@ -128,7 +121,7 @@ private:
      * Count of the number of batches in the temporary pages, one per
      * cluster column
      */
-    boost::scoped_array<uint> m_batchCount;
+    boost::scoped_array<int16_t> m_batchCount;
 
     /**
      * Number of bytes left on the page
@@ -166,11 +159,6 @@ private:
      * Max value size encountered thus far for each cluster column
      */
     boost::scoped_array<uint> m_maxValueSize;
-
-    /**
-     * Cluster dump
-     */
-    SharedLcsClusterDump clusterDump;
 
     /**
      * Associates an offset with an address, determining whether a value is
@@ -217,33 +205,11 @@ private:
      */
     void AllocArrays();
 
-    /**
-     * Rounds a 32-bit value to a boundary of 8
-     *
-     * @param val value to be rounded
-     */
-    inline uint32_t round8Boundary(uint32_t val)
-    {
-        return val & 0xfffffff8;
-    }
-
-    /**
-     * Rounds a 32-bit value to a boundary of 8 if it is > 8
-     *
-     * @param val value to be rounded
-     */
-    inline uint32_t roundIf8Boundary(uint32_t val)
-    {
-        if (val > 8) {
-            return round8Boundary(val);
-        }
-    }
-
 public:
-     explicit LcsClusterNodeWriter(BTreeDescriptor &treeDescriptor,
-                                   SegmentAccessor &accessor,
-                                   SharedTraceTarget pTraceTargetInit,
-                                   std::string nameInit);
+    /**
+     * Creates a new LcsClusterNodeWriter, zeroing out all member fields
+     */
+     explicit LcsClusterNodeWriter();
 
     /**
      * Destructor
@@ -251,34 +217,11 @@ public:
     ~LcsClusterNodeWriter();
 
     /**
-     * Gets the last cluster page
-     *
-     * @param pBlock output param returning the cluster page
-     *
-     * @param firstRid output param returning first rid stored on cluster page
-     *
-     * @return true if cluster is non-empty
-     */
-    bool getLastClusterPageForWrite(PLcsClusterNode &pBlock, LcsRid &firstRid);
-
-    /**
-     * Allocates a new cluster page
-     *
-     * @param firstRid first rid to be stored on cluster page
-     *
-     * @return page allocated
-     */
-    PLcsClusterNode allocateClusterPage(LcsRid firstRid);
-
-    /**
-     * Unlocks cluster page
-     */
-    void unlockClusterPage();
-
-    /**
      * Initializes object with parameters relevant to the cluster page that
      * will be written
      *
+     * @param accessor scratchAccessor for allocating temporary large buffer
+     * pages
      * @param nColumns number of columns in the cluster
      *
      * @param indexBlock pointer to the cluster page to be written
@@ -289,7 +232,8 @@ public:
      * @param szBlock size of cluster page, reflecting max amount of space
      * available to write cluster data
      */
-    void Init(uint nColumns, PBuffer indexBlock, PBuffer *pBlock, uint szBlock);
+    void Init(SegmentAccessor const &accessor, uint16_t nColumns,
+                PBuffer indexBlock, PBuffer *pBlock, uint16_t szBlock);
 
     void Close();
 
@@ -298,7 +242,7 @@ public:
      *
      * @param startRID first RID on the page
      */
-    void OpenNew(LcsRid startRID);
+    void OpenNew(Rid startRID);
 
     /**
      * Prepares an existing cluster page for appending new data
@@ -311,7 +255,7 @@ public:
      *
      * @param nrows returns number of rows currently on page
      */
-    void OpenAppend(uint *nVal, uint16_t *lastVal, RecordNum &nrows);
+    void OpenAppend(uint16_t *nVal, uint16_t *lastVal, RecordNum &nrows);
     
     /**
      * Returns parameters describing the last batch for a given column
@@ -324,7 +268,7 @@ public:
      * @param recSize output parameter returning the record size for the
      * batch
      */
-    void DescribeLastBatch(uint column, uint &dRow, uint &recSize);
+    void DescribeLastBatch(uint16_t column, uint &dRow, uint16_t &recSize);
     
     /**
      * Returns the offset of the next value in a batch
@@ -337,7 +281,7 @@ public:
      *
      * @return offset of the value after "thisVal"
      */
-    uint16_t GetNextVal(uint column, uint16_t thisVal);
+    uint16_t GetNextVal(uint16_t column, uint16_t thisVal);
 
     /**
      * Rolls back the last 8 value (or less) from a batch
@@ -348,14 +292,14 @@ public:
      * the buffer is assumed to be fixedRec * (nRows % 8) in size, as
      * determined by the last call to describeLastBatch
      */
-    void RollBackLastBatch(uint column, PBuffer pVal);
+    void RollBackLastBatch(uint16_t column, PBuffer pVal);
 
     /**
      * Returns true if the batch is not being forced to compress mode
      *
      * @param column column being described
      */
-    inline bool NoCompressMode(uint column) const { 
+    inline bool NoCompressMode(uint16_t column) const { 
         return m_bForceMode[column] == fixed ||
                 m_bForceMode[column] == variable;
     };
@@ -369,7 +313,7 @@ public:
      *
      * @return pointer to value
      */
-    inline PBuffer GetOffsetPtr(uint column, uint16_t offset)
+    inline PBuffer GetOffsetPtr(uint16_t column, uint16_t offset)
         { return m_pBlock[column] + offset; };
 
     /**
@@ -383,7 +327,7 @@ public:
      *
      * @return true if there is enough room in the page for the value
      */
-    bool AddValue(uint column, bool bFirstTimeInBatch);
+    bool AddValue(uint16_t column, bool bFirstTimeInBatch);
 
     /**
      * Adds a new value to the page.  In the case of compressed or variable
@@ -398,7 +342,7 @@ public:
      *
      * @return true if there is enough room in the page for the value
      */
-    bool AddValue(uint column, PBuffer pVal, uint16_t *oVal);
+    bool AddValue(uint16_t column, PBuffer pVal, uint16_t *oVal);
 
     /**
      * Undoes the last value added to the current batch for a column
@@ -410,7 +354,7 @@ public:
      * @param bFirstTimeInBatch true if the value being undone is the first
      * such value for the batch
      */
-    void UndoValue(uint column, PBuffer pVal, bool bFirstInBatch);
+    void UndoValue(uint16_t column, PBuffer pVal, bool bFirstInBatch);
 
     /**
      * Writes a compressed mode batch into the temporary cluster page for
@@ -433,7 +377,7 @@ public:
      * @param pBuf temporary buffer where excess row values will be copied;
      * assumed to be (nRow % 8)*fixedRec big
      */
-    void PutCompressedBatch(uint column, PBuffer pRows, PBuffer pBuf);
+    void PutCompressedBatch(uint16_t column, PBuffer pRows, PBuffer pBuf);
 
     /**
      * Writes a fixed or variable mode batch into a temporary cluster page for
@@ -456,7 +400,7 @@ public:
      * @param pBuf temporary buffer where excess row values will be copied;
      * assumed to be (nRow % 8)*fixedRec big
      */
-    void PutFixedVarBatch(uint column, uint16_t *pRows, PBuffer pBuf);
+    void PutFixedVarBatch(uint16_t column, uint16_t *pRows, PBuffer pBuf);
 
     /**
      * Determines which compression mode to use for a batch
@@ -472,9 +416,9 @@ public:
      *
      * @param compressionMode returns the chosen compression mode
      */
-    void PickCompressionMode(uint column, uint fixedSize, uint nRows,
+    void PickCompressionMode(uint16_t column, uint fixedSize, uint nRows,
                                 uint16_t **pValOffset,
-                                LcsBatchMode &compressionMode);
+                                uint16_t &compressionMode);
 
     /**
      * Returns true if there is no space left in the cluster page

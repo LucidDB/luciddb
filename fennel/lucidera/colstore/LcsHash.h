@@ -139,30 +139,23 @@ private:
     /**
      * Size of the buffer.
      */
-    uint              hashBlockSize;
+    uint16_t          hashBlockSize;
 
     /**
      * Size of the hash table, i.e. size of the hash entry array.
      */
-    uint              hashTableSize;
+    uint16_t          hashTableSize;
 
     /**
      * Index of next hash value node to allocate.
      */
-    uint              nextValueNode;
+    uint16_t          nextValueNode;
 
 public:
 
     /**
-     * Array indexed by the hash key value. Each entry points(using offset) to
-     * a list of hash value nodes which have the same hash key.
-     *
-     * Entry array is indexed by the hash kay and stores the first offsets of
-     * value nodes with the hash key. Though the offset value does not need to
-     * be uint16_t, it saves memory to use uint16_t than uint(32 or 64 bit)
-     * since the number of entries(i.e. hash table size) is limited to the
-     * numbers that can fit into a block. This also implied that the next field
-     * in LcsHashValueNode needs to be uint16_t.
+     * Array indexed by the hash key value. Each entry points to a list of hash
+     * value nodes which have the same hash key.
      */
     uint16_t          *entry;
 
@@ -197,7 +190,7 @@ public:
     /**
      * Returns the hash table size.
      */
-    inline uint numHashEntries();
+    inline uint16_t numHashEntries();
 
     /**
      * Gives out the next hash value node for the caller to fill in interesting
@@ -330,14 +323,14 @@ private:
     /**
      * Reference to Node Writer to access the cluster column value.
      */
-    SharedLcsClusterNodeWriter    clusterBlockWriter;
+    LcsClusterNodeWriter    *clusterBlockWriter;
 
     /**
      * Column Id for this cluster column.
      * Node Writer is for the whole cluster. It needs the column ID to get
      * the value for a column.
      */
-    uint                     columnId;
+    uint16_t                 columnId;
 
     /**
      * Two tuple instances to store the values being compared
@@ -364,10 +357,10 @@ public:
      * @param[in] columnIdInit which column in the cluster is being compared
      */
     explicit LcsCompareColKeyUsingOffsetIndex(
-        SharedLcsClusterNodeWriter clusterBlockWriterInit,
+        LcsClusterNodeWriter *clusterBlockWriterInit,
         LcsHashTable *hashTableInit,
         TupleDescriptor const &colTupleDescInit,
-        uint columnIdInit);
+        uint16_t columnIdInit);
 
     ~LcsCompareColKeyUsingOffsetIndex() {}
 
@@ -382,7 +375,6 @@ public:
      *
      * @return true if value at offset located at colKeyOffsetIndex1 is
      * less than value at offset loocated at colKeyOffsetIndex2
-     *
      */
     bool lessThan(const uint16_t colKeyOffsetIndex1,
         const uint16_t colKeyOffsetIndex2);
@@ -396,10 +388,10 @@ class LcsCompare
 private:
 
     /**
-     * Reference to the class that keeps the compare context and
-     * implements the comparison method.
+     * Reference to the class that keeps the compare context and implements the
+     * comparison method.
      */
-    SharedLcsCompareColKeyUsingOffsetIndex compareInstance;
+    LcsCompareColKeyUsingOffsetIndex *compareInstance;
 
 public:
 
@@ -410,7 +402,7 @@ public:
      * LcsCompareColKeyUsingOffsetIndex
      */
     inline explicit LcsCompare(
-        SharedLcsCompareColKeyUsingOffsetIndex compareInstanceInit);
+        LcsCompareColKeyUsingOffsetIndex *compareInstanceInit);
 
     /**
      * The less than operator.
@@ -421,7 +413,6 @@ public:
      *
      * @return true if value at offset located at colKeyOffsetIndex1 is
      * less than value at offset loocated at colKeyOffsetIndex2
-     *
      */
     inline bool operator()(const uint16_t colKeyOffsetIndex1,
         const uint16_t colKeyOffsetIndex2);
@@ -442,7 +433,7 @@ private:
     /**
      * column for which this LcsHash structure is built.
      */
-    uint                  columnId;
+    uint16_t              columnId;
 
     /**
      * LcsHashTable object contains logic to fit the data strcture into one
@@ -454,7 +445,7 @@ private:
     /**
      * Block writer object used to add new value to a cluster block.
      */
-    SharedLcsClusterNodeWriter clusterBlockWriter;
+    LcsClusterNodeWriter *clusterBlockWriter;
 
     /**
      * The column tuple descriptor.
@@ -464,12 +455,7 @@ private:
     /**
      * The column currently begin compressed.
      */
-    TupleDataWithBuffer   colTuple;
-
-    /**
-     * The column being compared against.
-     */
-    TupleDataWithBuffer   searchTuple;
+    TupleData             colTuple;
     
     /**
      * Scratch memory to store the current column value being compressed.
@@ -478,7 +464,6 @@ private:
     
     /**
      * Number of unique values in the current batch.
-     * The type of this field should be the same as that of LcsHashValOrd.
      */
     uint16_t              valCnt;
 
@@ -511,7 +496,7 @@ private:
     /**
      * Helper class to LcsCompare. It stores the comparison context.
      */
-    SharedLcsCompareColKeyUsingOffsetIndex compareInst;
+    LcsCompareColKeyUsingOffsetIndex *compareInst;
 
     /**
      * Compue hash key from value.
@@ -558,10 +543,10 @@ public:
      */
     void init(
         PBuffer hashBlockInit,
-        SharedLcsClusterNodeWriter clusterBlockWriterInit,
+        LcsClusterNodeWriter *clusterBlockWriterInit,
         TupleDescriptor const &colTupleDescInit,            
-        uint columnIdInit,
-        uint blockSizeInit);
+        uint16_t columnIdInit,
+        uint16_t blockSizeInit);
   
     /**
      * Inserts a single column tuple into the hash table. It also causes the
@@ -574,7 +559,7 @@ public:
      * @param[out] undoInsert true if this insert should be undone
      */
     void insert(
-        TupleDatum &colTupleDatum,
+        TupleData &colTupleData,
         LcsHashValOrd *valOrd,
         bool *undoInsert);
     
@@ -600,7 +585,7 @@ public:
      *
      * @param[in] colTupleData column tuple just inserted
      */
-    void undoInsert(TupleDatum &colTupleDatum);
+    void undoInsert(TupleData &colTupleData);
     
     /**
      * Undoes the previous insert of a column data buffer.
@@ -781,7 +766,7 @@ inline void LcsHashTable::resetBatch()
     }
 }
 
-inline uint LcsHashTable::numHashEntries()
+inline uint16_t LcsHashTable::numHashEntries()
 {
     return hashTableSize;
 }
@@ -850,7 +835,7 @@ inline bool LcsHashTable::isFull(uint leftOvers)
  ****************************************************/
 
 inline LcsCompare::LcsCompare(
-    SharedLcsCompareColKeyUsingOffsetIndex compareInstanceInit)
+    LcsCompareColKeyUsingOffsetIndex *compareInstanceInit)
 {
     compareInstance = compareInstanceInit;
 }

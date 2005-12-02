@@ -3,8 +3,6 @@
 -- sub query test for ANY, ALL
 --
 
-set schema 's';
-
 -- basics
 
 select LNAME from emp where DEPTNO > ANY (select DEPTNO from dept) order by 1;

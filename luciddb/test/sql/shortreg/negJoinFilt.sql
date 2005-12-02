@@ -1,9 +1,7 @@
 --
 -- negJoinFilt.sql - join filter tests for queries where join Filter should
--- NOT be used
+--					 NOT be used
 --
-
-set schema 's';
 
 -- a case where it's not worth it to join filter
 explain plan for select * from emp,dept

@@ -1,13 +1,23 @@
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Equi-joins
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> set schema 's';
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- standard emp/dept
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select EMP.EMPNO, EMP.LNAME, EMP.DEPTNO, DEPT.DEPTNO, DEPT.DNAME
+. . . . . . . . > 
 . . . . . . . . > from EMP, DEPT
+. . . . . . . . > 
 . . . . . . . . > where EMP.DEPTNO = DEPT.DEPTNO order by EMPNO;
 +--------+-----------+---------+---------+--------------+
 | EMPNO  |   LNAME   | DEPTNO  | DEPTNO  |    DNAME     |
@@ -25,8 +35,12 @@
 | 110    | Jones     | 30      | 30      | Development  |
 +--------+-----------+---------+---------+--------------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- this one used to fail in calculator due to column mapping stuff
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select EMP.EMPNO, EMP.DEPTNO, DEPT.DNAME from EMP, DEPT
+. . . . . . . . > 
 . . . . . . . . > where EMP.DEPTNO = DEPT.DEPTNO order by EMPNO;
 +--------+---------+--------------+
 | EMPNO  | DEPTNO  |    DNAME     |
@@ -44,9 +58,14 @@
 | 110    | 30      | Development  |
 +--------+---------+--------------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- dept, loc
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select DEPTNO, DNAME, CITY, LOCATION.LOCID from DEPT, LOCATION
+. . . . . . . . > 
 . . . . . . . . > where DEPT.LOCID=LOCATION.LOCID
+. . . . . . . . > 
 . . . . . . . . > order by DEPTNO, LOCID;
 +---------+--------------+----------------+--------+
 | DEPTNO  |    DNAME     |      CITY      | LOCID  |
@@ -57,5 +76,6 @@
 | 40      | Sales        | San Mateo      | HQ     |
 | 50      | Support      | Menlo Park     | MP     |
 +---------+--------------+----------------+--------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

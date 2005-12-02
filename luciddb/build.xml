@@ -93,7 +93,6 @@
     <pathelement path="${classes.dir}"/>
     <pathelement path="${farrago.sqlline.classpath}"/>
     <pathelement path="${ant.classpath}"/>
-    <pathelement path="${bh.run.classpath}"/>
   </path>
   <property name="test.classpath" refid="test.classpath"/>
 
@@ -107,16 +106,7 @@
     <antcall target="createCatalog"/>
     <antcall target="shortreg"/>
     <antcall target="txn"/>
-    <antcall target="bh" />
   </target>
-
-  <target name="bh">
-    <echo> hi </echo>
-    <blackhawk.fork basedir="test/src/com/lucidera/luciddb/test/bh" 
-      testscript="test.xml"
-      classpathref="test.classpath" />
-  </target>
-    
 
   <target name="compile" depends="clean">
     <!-- compile farrago first -->    
@@ -289,8 +279,8 @@
       <fileset dir="${testlog.dir}" includes="*.txt"/>
       <fileset dir="${testlog.dir}/shortreg"/><!-- delete eventually-->
       <fileset dir="${testlog.dir}/txn"/><!-- delete eventually-->
-      <fileset dir="${testsrc.dir}" includes="**/*.log"/>
-      <fileset dir="${testsrc.dir}" includes="**/*.dif"/>
+      <fileset dir="${testsrc.dir}" includes="*.log"/>
+      <fileset dir="${testsrc.dir}" includes="*.dif"/>
     </delete>
     <delete quiet="true" file="${LucidDbTrace.log}"/>
   </target>

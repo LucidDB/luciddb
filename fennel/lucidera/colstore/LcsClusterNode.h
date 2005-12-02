@@ -27,14 +27,10 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-/**
- * Column store rid type
- */
-DEFINE_OPAQUE_INTEGER(LcsRid, uint64_t);
-
 // batch compression mode values
-
-enum LcsBatchMode { LCS_COMPRESSED, LCS_FIXED, LCS_VARIABLE };
+const uint LCS_COMPRESSED   = 0;
+const uint LCS_FIXED        = 1;
+const uint LCS_VARIABLE     = 2;
 
 /**
  * Batch directory representing each batch within a cluster
@@ -44,30 +40,30 @@ struct LcsBatchDir
 public:
     /**
      * Type of batch:
-     *  compressed - only distinct values are stored for the column
-     *  fixed - values are stored as fixed size records
-     *  variable - records are stored as variable sizes but duplicates are
+     *  0 = compressed; only distinct values are stored for the column
+     *  1 = fixed; values are stored as fixed size records
+     *  2 = variable; records are stored as variable sizes but duplicates are
      *      not removed
      */
-    LcsBatchMode mode;
+    uint16_t mode;  // 0 compressed, 1 fixed size record
 
     /**
      * Number of rows in the batch
      */
-    uint nRow;
+    uint32_t nRow;
 
     /**
      * Number of values in the batch.  In the case of compressed mode, this
      * is the number of distinct values.  In the other cases, it equals
      * nRows.
      */
-    uint nVal;
+    uint16_t nVal;
 
     /**
      * Number of values in the column corresponding to the batch that have
      * already been written into the cluster page
      */
-    uint nValHighMark;
+    uint16_t nValHighMark;
 
     /**
      * Offset in the cluster page where the batch starts.
@@ -76,27 +72,24 @@ public:
      *  variable - offsets to the values at the bottom of the page
      *  fixed - records themselves
      */
-    uint oVal;
+    uint16_t oVal;
 
     /**
      * Offset in the cluster page corresponding to the last value for this
      * batch that has already been written into the cluster page
      */
-    uint oLastValHighMark;  // value high mark before the batch
+    uint16_t oLastValHighMark;  // value high mark before the batch
     
     /**
      * Size of batch records in fixed mode case
      */
-    uint recSize;
+    uint16_t recSize;
 };
 
 typedef LcsBatchDir *PLcsBatchDir;
 
 /**
  * Header stored on each page of a cluster
- *
- * Note that all fields related to offsets that are stored in arrays
- * are stored as 16-bit values to minimize space usage on the cluster page
  */
 struct LcsClusterNode : public StoredNode
 {
@@ -106,22 +99,22 @@ public:
     /**
      * First RID stored on cluster page
      */
-    LcsRid firstRID;
+    Rid firstRID;
 
     /**
      * Number of columns in the cluster
      */
-    uint nColumn;
+    uint16_t nColumn;
 
     /**
      * Offset to batch directory
      */
-    uint oBatch;
+    uint16_t oBatch;
 
     /**
      * Number of batches on cluster page
      */
-    uint nBatch;
+    uint16_t nBatch;
 
     /**
      * Offsets to the last value stored on the page for each column in
@@ -140,7 +133,7 @@ public:
     /**
      * Number of distinct values in the page for each column in cluster
      */
-    uint *nVal;
+    uint16_t *nVal;
 
     /**
      * For each column in the cluster, offset used to get the real offset
@@ -156,12 +149,10 @@ public:
  */
 inline uint GetClusterSubHeaderSize(uint nColumns)
 {
-    return sizeof(LcsClusterNode) + (3 * sizeof(uint16_t *) * nColumns) +
-            sizeof(uint) * nColumns;
+    return sizeof(LcsClusterNode) + (4 * sizeof(uint16_t *) * nColumns);
 }
 
 typedef LcsClusterNode *PLcsClusterNode;
-typedef const LcsClusterNode *PConstLcsClusterNode;
 typedef SegNodeLock<LcsClusterNode> ClusterPageLock;
 
 FENNEL_END_NAMESPACE

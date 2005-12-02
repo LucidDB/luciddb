@@ -2,8 +2,6 @@
 -- Sub query tests: IN
 --
 
-set schema 's';
-
 -- Uncorrelated
 
 select LNAME from emp
@@ -34,7 +32,7 @@ order by 1;
 
 select LNAME from emp
 where deptno IN (select deptno from dept where dname='Marketing'
-and dept.deptno=emp.deptno)
+			  and dept.deptno=emp.deptno)
 order by 1;
 
 select LNAME from emp
