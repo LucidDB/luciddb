@@ -534,7 +534,7 @@ public class FarragoDatabase extends FarragoCompoundAllocation
             return;
         }
         int n = FennelStorage.getHandleCount();
-        assert (n == 0);
+        assert (n == 0): "FennelStorage.getHandleCount() == " + n;
     }
 
     private void loadFennel(

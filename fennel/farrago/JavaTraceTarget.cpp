@@ -26,6 +26,8 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
+#define JAVATRACETARGET_TYPE_STR ("JavaTraceTarget")
+
 JavaTraceTarget::JavaTraceTarget()
 {
     JniEnvAutoRef pEnv;
@@ -40,7 +42,7 @@ JavaTraceTarget::JavaTraceTarget()
     jobject javaTraceInit = 
         pEnv->CallStaticObjectMethod(classNativeTrace, methInstance);
 
-    ++JniUtil::handleCount;
+    JniUtil::incrementHandleCount(JAVATRACETARGET_TYPE_STR, this);
     javaTrace = pEnv->NewGlobalRef(javaTraceInit);
 
     // TODO:  convert to Java excn instead
@@ -59,7 +61,7 @@ JavaTraceTarget::~JavaTraceTarget()
     JniEnvAutoRef pEnv;
 
     pEnv->DeleteGlobalRef(javaTrace);
-    --JniUtil::handleCount;
+    JniUtil::decrementHandleCount(JAVATRACETARGET_TYPE_STR, this);
 
     javaTrace = NULL;
 }
