@@ -78,6 +78,8 @@ public class LucidDbSqlTest extends FarragoTestCase
     protected void runTest()
         throws Exception
     {
+        // mask out source control Id
+        addDiffMask("\\$Id.*\\$");
         runSqlLineTest(getName());
     }
 
