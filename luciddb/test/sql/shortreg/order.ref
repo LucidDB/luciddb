@@ -131,6 +131,7 @@ Error: java.lang.UnsupportedOperationException: class org.eigenbase.sql.SqlCall:
 +----------+------+-----------+
 | MANAGER  | SEX  |   LNAME   |
 +----------+------+-----------+
+|          | M    | Bush      |
 | 100      | M    | Brown     |
 | 100      | M    | Fratz     |
 | 100      | M    | Nife      |
@@ -141,7 +142,6 @@ Error: java.lang.UnsupportedOperationException: class org.eigenbase.sql.SqlCall:
 | 103      | M    | Williams  |
 | 104      | F    | Andrews   |
 | 104      | F    | Reynolds  |
-| 123      | M    | Bush      |
 +----------+------+-----------+
 0: jdbc:luciddb:> select MANAGER, SEX,LNAME from EMP order by 2,1,3;
 +----------+------+-----------+
@@ -150,6 +150,7 @@ Error: java.lang.UnsupportedOperationException: class org.eigenbase.sql.SqlCall:
 | 101      | F    | Jones     |
 | 104      | F    | Andrews   |
 | 104      | F    | Reynolds  |
+|          | M    | Bush      |
 | 100      | M    | Brown     |
 | 100      | M    | Fratz     |
 | 100      | M    | Nife      |
@@ -157,7 +158,6 @@ Error: java.lang.UnsupportedOperationException: class org.eigenbase.sql.SqlCall:
 | 102      | M    | Roy       |
 | 102      | M    | Webber    |
 | 103      | M    | Williams  |
-| 123      | M    | Bush      |
 +----------+------+-----------+
 0: jdbc:luciddb:> select MANAGER, SEX,LNAME from EMP order by 2,1,3;
 +----------+------+-----------+
@@ -166,6 +166,7 @@ Error: java.lang.UnsupportedOperationException: class org.eigenbase.sql.SqlCall:
 | 101      | F    | Jones     |
 | 104      | F    | Andrews   |
 | 104      | F    | Reynolds  |
+|          | M    | Bush      |
 | 100      | M    | Brown     |
 | 100      | M    | Fratz     |
 | 100      | M    | Nife      |
@@ -173,7 +174,6 @@ Error: java.lang.UnsupportedOperationException: class org.eigenbase.sql.SqlCall:
 | 102      | M    | Roy       |
 | 102      | M    | Webber    |
 | 103      | M    | Williams  |
-| 123      | M    | Bush      |
 +----------+------+-----------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- nulls
@@ -181,33 +181,33 @@ Error: java.lang.UnsupportedOperationException: class org.eigenbase.sql.SqlCall:
 +-----------+-------------+
 |   LNAME   | COMMISSION  |
 +-----------+-------------+
-| Andrews   | 123         |
-| Brown     | 123         |
-| Bush      | 123         |
-| Fratz     | 123         |
-| Guy       | 123         |
-| Jones     | 123         |
+| Andrews   |             |
+| Brown     |             |
+| Bush      |             |
+| Fratz     |             |
+| Guy       |             |
+| Jones     |             |
 | Nife      | 5           |
-| Reynolds  | 123         |
+| Reynolds  |             |
 | Roy       | 7           |
-| Webber    | 123         |
+| Webber    |             |
 | Williams  | 10          |
 +-----------+-------------+
 0: jdbc:luciddb:> select lname, commission from EMP order by 2,1;
 +-----------+-------------+
 |   LNAME   | COMMISSION  |
 +-----------+-------------+
+| Andrews   |             |
+| Brown     |             |
+| Bush      |             |
+| Fratz     |             |
+| Guy       |             |
+| Jones     |             |
+| Reynolds  |             |
+| Webber    |             |
 | Nife      | 5           |
 | Roy       | 7           |
 | Williams  | 10          |
-| Andrews   | 123         |
-| Brown     | 123         |
-| Bush      | 123         |
-| Fratz     | 123         |
-| Guy       | 123         |
-| Jones     | 123         |
-| Reynolds  | 123         |
-| Webber    | 123         |
 +-----------+-------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- constants and expressions in order by
@@ -215,80 +215,80 @@ Error: java.lang.UnsupportedOperationException: class org.eigenbase.sql.SqlCall:
 +---------+-----------+-------------+
 | EXPR$0  |   LNAME   | COMMISSION  |
 +---------+-----------+-------------+
-| 103     | Bush      | 123         |
-| 104     | Brown     | 123         |
-| 105     | Andrews   | 123         |
-| 106     | Webber    | 123         |
-| 107     | Fratz     | 123         |
-| 108     | Guy       | 123         |
+| 103     | Bush      |             |
+| 104     | Brown     |             |
+| 105     | Andrews   |             |
+| 106     | Webber    |             |
+| 107     | Fratz     |             |
+| 108     | Guy       |             |
 | 109     | Roy       | 7           |
 | 110     | Williams  | 10          |
-| 111     | Reynolds  | 123         |
+| 111     | Reynolds  |             |
 | 112     | Nife      | 5           |
-| 113     | Jones     | 123         |
+| 113     | Jones     |             |
 +---------+-----------+-------------+
 0: jdbc:luciddb:> select 'hello', lname, commission from EMP order by 1,2;
 +---------+-----------+-------------+
 | EXPR$0  |   LNAME   | COMMISSION  |
 +---------+-----------+-------------+
-| hello   | Andrews   | 123         |
-| hello   | Brown     | 123         |
-| hello   | Bush      | 123         |
-| hello   | Fratz     | 123         |
-| hello   | Guy       | 123         |
-| hello   | Jones     | 123         |
+| hello   | Andrews   |             |
+| hello   | Brown     |             |
+| hello   | Bush      |             |
+| hello   | Fratz     |             |
+| hello   | Guy       |             |
+| hello   | Jones     |             |
 | hello   | Nife      | 5           |
-| hello   | Reynolds  | 123         |
+| hello   | Reynolds  |             |
 | hello   | Roy       | 7           |
-| hello   | Webber    | 123         |
+| hello   | Webber    |             |
 | hello   | Williams  | 10          |
 +---------+-----------+-------------+
 0: jdbc:luciddb:> select 'hello', lname, commission from EMP order by 2,1;
 +---------+-----------+-------------+
 | EXPR$0  |   LNAME   | COMMISSION  |
 +---------+-----------+-------------+
-| hello   | Andrews   | 123         |
-| hello   | Brown     | 123         |
-| hello   | Bush      | 123         |
-| hello   | Fratz     | 123         |
-| hello   | Guy       | 123         |
-| hello   | Jones     | 123         |
+| hello   | Andrews   |             |
+| hello   | Brown     |             |
+| hello   | Bush      |             |
+| hello   | Fratz     |             |
+| hello   | Guy       |             |
+| hello   | Jones     |             |
 | hello   | Nife      | 5           |
-| hello   | Reynolds  | 123         |
+| hello   | Reynolds  |             |
 | hello   | Roy       | 7           |
-| hello   | Webber    | 123         |
+| hello   | Webber    |             |
 | hello   | Williams  | 10          |
 +---------+-----------+-------------+
 0: jdbc:luciddb:> select 'hello', lname, commission from EMP order by 1,lname;
 +---------+-----------+-------------+
 | EXPR$0  |   LNAME   | COMMISSION  |
 +---------+-----------+-------------+
-| hello   | Andrews   | 123         |
-| hello   | Brown     | 123         |
-| hello   | Bush      | 123         |
-| hello   | Fratz     | 123         |
-| hello   | Guy       | 123         |
-| hello   | Jones     | 123         |
+| hello   | Andrews   |             |
+| hello   | Brown     |             |
+| hello   | Bush      |             |
+| hello   | Fratz     |             |
+| hello   | Guy       |             |
+| hello   | Jones     |             |
 | hello   | Nife      | 5           |
-| hello   | Reynolds  | 123         |
+| hello   | Reynolds  |             |
 | hello   | Roy       | 7           |
-| hello   | Webber    | 123         |
+| hello   | Webber    |             |
 | hello   | Williams  | 10          |
 +---------+-----------+-------------+
 0: jdbc:luciddb:> select 'hello', lname, commission from EMP order by lname,1;
 +---------+-----------+-------------+
 | EXPR$0  |   LNAME   | COMMISSION  |
 +---------+-----------+-------------+
-| hello   | Andrews   | 123         |
-| hello   | Brown     | 123         |
-| hello   | Bush      | 123         |
-| hello   | Fratz     | 123         |
-| hello   | Guy       | 123         |
-| hello   | Jones     | 123         |
+| hello   | Andrews   |             |
+| hello   | Brown     |             |
+| hello   | Bush      |             |
+| hello   | Fratz     |             |
+| hello   | Guy       |             |
+| hello   | Jones     |             |
 | hello   | Nife      | 5           |
-| hello   | Reynolds  | 123         |
+| hello   | Reynolds  |             |
 | hello   | Roy       | 7           |
-| hello   | Webber    | 123         |
+| hello   | Webber    |             |
 | hello   | Williams  | 10          |
 +---------+-----------+-------------+
 0: jdbc:luciddb:> 
