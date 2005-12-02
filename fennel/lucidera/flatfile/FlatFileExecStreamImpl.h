@@ -62,12 +62,18 @@ class FlatFileExecStreamImpl : public FlatFileExecStream
     char *next;
     SharedFlatFileParser pParser;
     FlatFileRowParseResult lastResult;
-    TupleData lastTuple;
+    TupleDescriptor textDesc;
+    TupleData textTuple, dataTuple;
     bool isRowPending;
 
     SegPageLock bufferLock;
     SegmentAccessor scratchAccessor;
     
+    /**
+     * The Calculator object which does the real work.
+     */
+    SharedCalculator pCalc;
+
     // implement ExecStream
     virtual void closeImpl();
     

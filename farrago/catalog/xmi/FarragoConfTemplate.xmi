@@ -31,6 +31,7 @@
           cachePagesInit='@cachePagesInit@'
           cachePageSize='@cachePageSize@'
           resourceDir='@resourceDir@'
+          jniHandleTraceFile='@jniHandleTraceFile@'
           />
       </FEMConfig:FarragoConfig.FennelConfig>
     </FEMConfig:FarragoConfig>

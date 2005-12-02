@@ -62,6 +62,60 @@ SIGHUP</code> or <code>signal 1</code> to end the call to
 
 <hr>
 
+<h2>How do debug Fennel JNI Handles?</h2>
+
+Farrago maintains handles to Fennel C++ objects of various types,
+including the Fennel Database class, transactions, and stream graphs.
+Handles are effectively C++ pointers converted to long integers.
+Fennel maintains a count of currently allocated handles and Farrago
+tests that this count is zero when it shuts down (see
+<code>net.sf.farrago.db.FarragoDatabase.assertNoFennelHandles()</code>).
+
+<p>When the Fennel handle count assertion fails, it indicates a resource
+leak of some kind.  Determining which resource can be difficult.
+Fennel can be configured to log the allocation and deallocation of JNI
+handles to a file.  To enable this, start Farrago and execute:
+
+<pre><code>alter system set "jniHandleTraceFile" = '/tmp/some/path'</code></pre>
+
+<p><b>After restarting Farrago</b>, all JNI handle information will be
+logged to <code>/tmp/some/path</code>.  Setting the path to
+<code>''</code> disables the tracing (after restarting Farrago).
+
+<p>The <code>checkJniHandleTrace</code> script (found in the Eigenbase
+Perforce server under <code>//open/util/bin</code>) will analyze the
+trace file and generate a list of missing deallocations including the
+object's type and memory location.  This is often enough to determine
+the cause of the problem.
+
+<p>It may be necessary to configure Fennel tracing to output pointer
+information to correlate the JNI handle trace data with specific
+actions taken by the user.
+
+<p>The script also detects other conditions, such as the same handle
+being counted twice or handles being flagged as deallocated despite
+never having been flagged as allocated.
+
+<p>Because Farrago's <code>ant test</code> completely rebuilds the
+Farrago catalog and because Farrago unit tests restore startup
+parameters after each test, you can define a special property to cause
+the necessary database startup parameter to be configured during
+catalog creation:
+
+<pre><code>ant test -Dtrace.fennel.handles=/some/path/fennel.handles</code></pre>
+
+A file named <code>/some/path/fennel.handles</code> will be generated
+with traces across all Farrago invocations that occur during <code>ant
+test</code>.  Setting this property also works when executing just
+<code>ant createCatalog</code>.  Instead of using the command line
+the property may also be set in the <code>customBuild.properties</code>
+file.  In any event, remember to rebuild the catalog <i>without</i>
+the <code>fennel.trace.handles</code> property to disable handle tracing
+in your backed up Farrago catalog.  Otherwise, <code>ant restoreCatalog</code>
+will re-enable tracing.
+
+<hr>
+
 <h2>How do I trace the Fennel C++ unit tests?</h2> 
 
 In directory <code>fennel/test</code>, create a file named

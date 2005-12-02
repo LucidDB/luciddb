@@ -95,6 +95,7 @@ class ExecStreamSubFactory_lu
         params.quoteChar = readCharParam(streamDef.getQuoteCharacter());
         params.escapeChar = readCharParam(streamDef.getEscapeCharacter());
         params.header = streamDef.isHasHeader();
+        params.calcProgram = streamDef.getCalcProgram();
         pEmbryo->init(FlatFileExecStream::newFlatFileExecStream(), params);
     }
 

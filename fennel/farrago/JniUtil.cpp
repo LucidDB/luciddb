@@ -25,6 +25,7 @@
 #include "fennel/farrago/JniUtil.h"
 #include "fennel/farrago/JavaExcn.h"
 #include "fennel/common/FennelResource.h"
+#include "fennel/common/ConfigMap.h"
 
 #ifdef __MINGW32__
 #include <process.h>
@@ -35,6 +36,8 @@
 #endif
 
 FENNEL_BEGIN_CPPFILE("$Id$");
+
+ParamName JniUtilParams::paramJniHandleTraceFile = "jniHandleTraceFile";
 
 JavaVM *JniUtil::pVm = NULL;
 jmethodID JniUtil::methGetClassName = 0;
@@ -49,12 +52,26 @@ jmethodID JniUtil::methToString = 0;
 
 AtomicCounter JniUtil::handleCount;
 
+bool JniUtil::traceHandleCountEnabled = false;
+bool JniUtil::closeHandleCountTraceOnZero = false;
+std::ofstream JniUtil::handleCountTraceStream;
+
 #ifndef __MINGW32__
 static void debugger_signalHandler(int signum)
 {
     // do nothing
 }
 #endif
+
+JniUtilParams::JniUtilParams()
+{
+    jniHandleTraceFile = "";
+}
+
+void JniUtilParams::readConfig(ConfigMap const &configMap)
+{
+    jniHandleTraceFile = configMap.getStringParam(paramJniHandleTraceFile);
+}
 
 void JniUtil::initDebug(char const *envVarName)
 {
@@ -99,6 +116,48 @@ void JniUtil::initDebug(char const *envVarName)
 #endif
     }
 }
+
+void JniUtil::configure(const JniUtilParams &params)
+{
+    // Check if the stream is already open.  During unit tests Fennel is
+    // sometimes stopped and restarted in a single process.  Flag an error
+    // if this happens, it means the previous shutdown failed.
+    if (handleCountTraceStream.is_open()) {
+        assert(false);
+
+        // Non-debug builds: clean up
+        handleCountTraceStream
+            << "ERROR: trace stream already open" << std::endl;
+        handleCountTraceStream.flush();
+        handleCountTraceStream.close();
+        traceHandleCountEnabled = false;
+        closeHandleCountTraceOnZero = false;
+    }
+
+    if (params.jniHandleTraceFile.length() > 0) {
+        handleCountTraceStream.open(
+            params.jniHandleTraceFile.c_str(), std::ios::app);
+
+        handleCountTraceStream
+            << "# Fennel JNI Handle Trace (see //open/util/bin/checkJniHandleTrace.pl)"
+            << std::endl;
+
+        assert(handleCountTraceStream.good());
+
+        traceHandleCountEnabled = true;
+        closeHandleCountTraceOnZero = false;
+    }
+}
+
+void JniUtil::shutdown()
+{
+    // JavaTraceTarget decrements after DbHandle.  Set a flag to close the
+    // trace stream when the counter hits zero.
+    if (traceHandleCountEnabled) {
+        closeHandleCountTraceOnZero = true;
+    }
+}
+
 
 jint JniUtil::init(JavaVM *pVmInit)
 {
@@ -193,6 +252,41 @@ jobject JniUtil::getNextFromIter(JniEnvRef pEnv,jobject jIter)
     }
     return pEnv->CallObjectMethod(jIter,methNext);
 }
+
+void JniUtil::incrementHandleCount(const char *pType, const void *pHandle)
+{
+    ++handleCount;
+    
+    traceHandleCount("INC", pType, pHandle);
+}
+
+void JniUtil::decrementHandleCount(const char *pType, const void *pHandle)
+{
+    --handleCount;
+    
+    assert(handleCount >= 0);
+
+    traceHandleCount("DEC", pType, pHandle);
+}
+
+void JniUtil::traceHandleCount(
+    const char *pAction, const char *pType, const void *pHandle)
+{
+    if (traceHandleCountEnabled) {
+        handleCountTraceStream
+            << pAction << " " << pType << ": " << pHandle << std::endl;
+
+        if (handleCount == 0 && closeHandleCountTraceOnZero && 
+            strcmp(pAction, "DEC") == 0) {
+            traceHandleCountEnabled = false;
+            closeHandleCountTraceOnZero = false;
+            
+            handleCountTraceStream.flush();
+            handleCountTraceStream.close();   
+        }
+    }
+}
+
 
 JniExceptionChecker::~JniExceptionChecker()
 {
