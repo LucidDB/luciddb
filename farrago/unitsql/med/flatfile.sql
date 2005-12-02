@@ -14,7 +14,7 @@ create schema flatfile_schema;
 set schema 'flatfile_schema';
 
 create foreign table flatfile_explicit_table(
-    id varchar(10),
+    id int not null,
     name varchar(50) not null,
     extra_field char(1) not null)
 server flatfile_server

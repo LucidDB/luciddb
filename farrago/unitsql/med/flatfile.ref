@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/med/flatfile.sql#4 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/med/flatfile.sql#1 $
 0: jdbc:farrago:> -- Test flatfile namespace plugin
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create foreign data wrapper flatfile_foreign_wrapper
@@ -14,7 +14,7 @@
 0: jdbc:farrago:> set schema 'flatfile_schema';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create foreign table flatfile_explicit_table(
-. . . . . . . . >     id varchar(10),
+. . . . . . . . >     id int not null,
 . . . . . . . . >     name varchar(50) not null,
 . . . . . . . . >     extra_field char(1) not null)
 . . . . . . . . > server flatfile_server
