@@ -47,6 +47,8 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
+#define JAVAOBJECTHANDLE_TYPE_STR ("JavaObjectHandle")
+
 #ifdef __MINGW32__
 extern "C" JNIEXPORT BOOL APIENTRY DllMain(
     HANDLE hModule, 
@@ -298,7 +300,7 @@ Java_net_sf_farrago_fennel_FennelStorage_newObjectHandle(
         jGlobalRef = NULL;
     }
     jobject *pGlobalRef = new jobject;
-    ++JniUtil::handleCount;
+    JniUtil::incrementHandleCount(JAVAOBJECTHANDLE_TYPE_STR, pGlobalRef);
     *pGlobalRef = jGlobalRef;
     return reinterpret_cast<jlong>(pGlobalRef);
 }
@@ -316,7 +318,7 @@ Java_net_sf_farrago_fennel_FennelStorage_deleteObjectHandle(
         pEnv->DeleteGlobalRef(jGlobalRef);
     }
     delete pGlobalRef;
-    --JniUtil::handleCount;
+    JniUtil::decrementHandleCount(JAVAOBJECTHANDLE_TYPE_STR, pGlobalRef);
 }
 
 // TODO:  share code with new/delete
@@ -347,7 +349,7 @@ extern "C" JNIEXPORT jint JNICALL
 Java_net_sf_farrago_fennel_FennelStorage_getHandleCount(
     JNIEnv *pEnvInit, jclass)
 {
-    return JniUtil::handleCount;
+    return JniUtil::getHandleCount();
 }
 
 FENNEL_END_CPPFILE("$Id$");

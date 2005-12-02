@@ -28,6 +28,7 @@
 
 #include <jni.h>
 #include <locale>
+#include <fstream>
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -105,6 +106,33 @@ public:
 
 };
 
+class ConfigMap;
+
+/**
+ * JniUtilParams defines parameters used to configure JniUtil.
+ */
+class JniUtilParams
+{
+public:
+    static ParamName paramJniHandleTraceFile;
+
+    /**
+     * The JNI handle trace file.
+     */
+    std::string jniHandleTraceFile;
+
+    /**
+     * Define a default set of JniUtil parameters.
+     */
+    explicit JniUtilParams();
+
+    /**
+     * Read parameter settings from a ConfigMap.
+     */
+    void readConfig(ConfigMap const &configMap);
+};
+
+
 /**
  * Static utility methods for dealing with JNI.
  */
@@ -150,6 +178,35 @@ class JniUtil
      */
     static JNIEnv *getJavaEnv();
 
+    /**
+     * Counter for all handles opened by Farrago.
+     */
+    static AtomicCounter handleCount;
+
+
+    /**
+     * Flag indicating whether tracing of handles is enabled.  Should only
+     * be set as JniUtil is being initialized.
+     */
+    static bool traceHandleCountEnabled;
+
+    /**
+     * Flag indicating that the JNI handle trace stream should be closed 
+     * when the handle count reaches 0.
+     */
+    static bool closeHandleCountTraceOnZero;
+
+    /**
+     * Stream for tracing handles opened by Farrago.
+     */
+    static std::ofstream handleCountTraceStream;
+
+    /**
+     * JNI handle tracing method.
+     */
+    static void traceHandleCount(
+        const char *pAction, const char *pType, const void *pHandle);
+
 public:
     /**
      * Required JNI version.
@@ -190,6 +247,19 @@ public:
      * @param pVm the VM in which we're loaded
      */
     static jint init(JavaVM *pVm);
+
+    /**
+     * Configure run-time JNI features, such as whether or not JNI handles
+     * are traced.
+     *
+     * @param JniUtil configuration parameters
+     */
+    static void configure(const JniUtilParams &params);
+
+    /**
+     * Shutdown run-time JNI features, such as JNI handle tracking.
+     */
+    static void shutdown();
 
     /**
      * Calls java.lang.Class.getName().
@@ -255,10 +325,40 @@ public:
      */
     static uint lookUpEnum(std::string *pSymbols,std::string const &symbol);
 
+    
     /**
-     * Counter for all handles opened by Farrago.
+     * Increment the handle count.  The handle type is used for JNI
+     * handle tracing.  It indicates the type of handle that was
+     * created and must match the corresponding call to
+     * decrementHandleCount.  Use a string constant whenever possible
+     * to avoid degrading performance.
+     *
+     * @param pType handle type description
+     * @param pHandle handle's memory location
      */
-    static AtomicCounter handleCount;
+    static void incrementHandleCount(const char *pType, const void *pHandle);
+
+    /**
+     * Decrement the handle count.  The handle type is used for JNI
+     * handle tracing.  It indicates the type of handle that was
+     * destroyed and must match the value used in the corresponding
+     * call to incrementHandleCount.  Use a string constant for the
+     * type whenever possible to avoid degrading performance.
+     *
+     * @param pType handle type description
+     * @param pHandle handle's memory location
+     */
+    static void decrementHandleCount(const char *pType, const void *pHandle);
+
+    /**
+     * Retrieve the current handle count.
+     *
+     * @return current handle count
+     */
+    static inline int getHandleCount()
+    {
+        return handleCount;
+    }
 };
 
 // NOTE jvs 16-Oct-2004:  This crazy kludge is for problems arising on Linux

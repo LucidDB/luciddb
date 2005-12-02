@@ -121,12 +121,14 @@ CmdInterpreter::DbHandle::~DbHandle()
     
     // close database before trace
     pDb->close();
-    --JniUtil::handleCount;
+    JniUtil::decrementHandleCount(DBHANDLE_TRACE_TYPE_STR, this);
+
+    JniUtil::shutdown();
 }
     
 CmdInterpreter::TxnHandle::~TxnHandle()
 {
-    --JniUtil::handleCount;
+    JniUtil::decrementHandleCount(TXNHANDLE_TRACE_TYPE_STR, this);
 }
     
 CmdInterpreter::StreamGraphHandle::~StreamGraphHandle()
@@ -135,7 +137,7 @@ CmdInterpreter::StreamGraphHandle::~StreamGraphHandle()
         JniEnvAutoRef pEnv;
         pEnv->DeleteGlobalRef(javaRuntimeContext);
     }
-    --JniUtil::handleCount;
+    JniUtil::decrementHandleCount(STREAMGRAPHHANDLE_TRACE_TYPE_STR, this);
 }
     
 void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
@@ -151,12 +153,17 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
     cacheParams.readConfig(configMap);
     SharedCache pCache = Cache::newCache(cacheParams);
 
+    JniUtilParams jniUtilParams;
+    jniUtilParams.readConfig(configMap);
+    JniUtil::configure(jniUtilParams);
+
     DeviceMode openMode = cmd.isCreateDatabase()
         ? DeviceMode::createNew
         : DeviceMode::load;
     
     std::auto_ptr<DbHandle> pDbHandle(newDbHandle());
-    ++JniUtil::handleCount;
+    JniUtil::incrementHandleCount(DBHANDLE_TRACE_TYPE_STR, pDbHandle.get());
+
     pDbHandle->pTraceTarget.reset(new JavaTraceTarget());
 
     SharedDatabase pDb = Database::newDatabase(
@@ -266,7 +273,7 @@ void CmdInterpreter::visit(ProxyCmdBeginTxn &cmd)
         pDb->getCheckpointThread()->getActionMutex());
 
     std::auto_ptr<TxnHandle> pTxnHandle(newTxnHandle());
-    ++JniUtil::handleCount;
+    JniUtil::incrementHandleCount(TXNHANDLE_TRACE_TYPE_STR, pTxnHandle.get());
     pTxnHandle->pDb = pDb;
     // TODO:  CacheAccessor factory
     pTxnHandle->pTxn = pDb->getTxnLog()->newLogicalTxn(pDb->getCache());
@@ -339,7 +346,8 @@ void CmdInterpreter::visit(ProxyCmdCreateExecutionStreamGraph &cmd)
     pGraph->setTxn(pTxnHandle->pTxn);
     std::auto_ptr<StreamGraphHandle> pStreamGraphHandle(
         new StreamGraphHandle());
-    ++JniUtil::handleCount;
+    JniUtil::incrementHandleCount(
+        STREAMGRAPHHANDLE_TRACE_TYPE_STR, pStreamGraphHandle.get());
     pStreamGraphHandle->javaRuntimeContext = NULL;
     pStreamGraphHandle->pTxnHandle = pTxnHandle;
     pStreamGraphHandle->pExecStreamGraph = pGraph;

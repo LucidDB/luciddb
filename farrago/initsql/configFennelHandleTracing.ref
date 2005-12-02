@@ -1,0 +1,8 @@
+0: jdbc:farrago:> -- $Id$
+0: jdbc:farrago:> -- This configures Farrago to write a Fennel JNI handle trace to a file
+0: jdbc:farrago:> -- fennel.handles in the working directory in which Farrago is started.
+0: jdbc:farrago:> 
+0: jdbc:farrago:> alter system set "jniHandleTraceFile" = 'fennel.handles';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

@@ -198,6 +198,16 @@ inline CmdInterpreter::TxnHandle &CmdInterpreter::getTxnHandleFromLong(
     return *reinterpret_cast<TxnHandle *>(jHandle);
 }
 
+// The following macros are used for tracing the JniUtil handle count.
+// They are defined here to allow for the allocation of these handle 
+// types from other locations while still deallocating them in the 
+// handle class destructors (handle count tracing depends on the handle
+// type string being the same at allocation and deallocation time).
+#define DBHANDLE_TRACE_TYPE_STR ("DbHandle")
+#define TXNHANDLE_TRACE_TYPE_STR ("TxnHandle")
+#define STREAMGRAPHHANDLE_TRACE_TYPE_STR ("StreamGraphHandle")
+
+
 FENNEL_END_NAMESPACE
 
 #endif
