@@ -111,10 +111,12 @@
   </target>
 
   <target name="bh">
-    <echo> hi </echo>
-    <blackhawk.fork basedir="test/src/com/lucidera/luciddb/test/bh" 
+    <blackhawk.fork basedir="test/sql/shortreg" 
       testscript="test.xml"
-      classpathref="test.classpath" />
+      classpathref="test.classpath"/>
+    <blackhawk.fork basedir="test/src/com/lucidera/luciddb/test/bh"
+      testscript="test.xml"
+      classpathref="test.classpath"/>
   </target>
     
 
