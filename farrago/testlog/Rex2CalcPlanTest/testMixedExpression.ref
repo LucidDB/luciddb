@@ -1,12 +1,12 @@
 O vc,128, s4;
 I vc,128, s4;
-L c,128, bo, s4, bo, bo, s4, bo;
+L vc,4, bo, s4, bo, bo, s4, bo;
 S bo;
 C bo, bo, c,4, vc,48, s4, s4, s4, vc,5;
 V 1, 0, 0x46726564 /* Fred */, 0x49534F2D383835392D3124656E5F5553247072696D617279 /* ISO-8859-1$en_US$primary */, 0, 10, 2, 0x3232303034 /* 22004 */;
 T;
-CALL 'castA(L0, I0) /* 0: */;
-CALL 'strCmpA(L2, L0, C2) /* 1: */;
+CALL 'castA(L0, C2) /* 0: */;
+CALL 'strCmpA(L2, I0, L0) /* 1: */;
 EQ L1, L2, C4 /* 2: =($1, _ISO-8859-1'Fred') */;
 GT L3, I1, C5 /* 3: >($0, 10) */;
 AND L4, L1, L3 /* 4: AND(=($1, _ISO-8859-1'Fred'), >($0, 10)) */;
