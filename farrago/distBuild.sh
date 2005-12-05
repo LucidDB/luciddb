@@ -68,9 +68,9 @@ else
 
     # if fennel was not build, don't include it.
     if ( grep -q -i '^fennel.disabled=true' initBuild.properties ) ; then
-        dist_fennel=true;
-    else 
         dist_fennel=false;
+    else 
+        dist_fennel=true;
     fi
 fi
 
