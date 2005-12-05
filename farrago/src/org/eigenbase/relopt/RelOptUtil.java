@@ -135,23 +135,22 @@ public abstract class RelOptUtil
     public static Set getVariablesUsed(RelNode rel)
     {
         final VariableUsedVisitor vuv = new VariableUsedVisitor();
-        go(
-            new VisitorRelVisitor(vuv) {
-                // implement RelVisitor
-                public void visit(
-                    RelNode p,
-                    int ordinal,
-                    RelNode parent)
-                {
-                    p.collectVariablesUsed(vuv.variables);
-                    super.visit(p, ordinal, parent);
+        final VisitorRelVisitor visitor = new VisitorRelVisitor(vuv) {
+            // implement RelVisitor
+            public void visit(
+                RelNode p,
+                int ordinal,
+                RelNode parent)
+            {
+                p.collectVariablesUsed(vuv.variables);
+                super.visit(p, ordinal, parent);
 
-                    // Important! Remove stopped variables AFTER we visit children.
-                    // (which what super.visit() does)
-                    vuv.variables.removeAll(p.getVariablesStopped());
-                }
-            },
-            rel);
+                // Important! Remove stopped variables AFTER we visit children.
+                // (which what super.visit() does)
+                vuv.variables.removeAll(p.getVariablesStopped());
+            }
+        };
+        visitor.go(rel);
         return vuv.variables;
     }
 
@@ -195,17 +194,15 @@ public abstract class RelOptUtil
      * Sets a {@link RelVisitor} going on a given relational expression, and
      * returns the result.
      */
-    public static RelNode go(
+    public static void go(
         RelVisitor visitor,
         RelNode p)
     {
-        RelHolder root = new RelHolder(p);
         try {
-            visitor.visit(root, -1, null);
+            visitor.go(p);
         } catch (Throwable e) {
             throw Util.newInternal(e, "while visiting tree");
         }
-        return root.get();
     }
 
     /**
@@ -648,45 +645,6 @@ public abstract class RelOptUtil
 
     //~ Inner Classes ---------------------------------------------------------
 
-    private static class RelHolder extends AbstractRelNode
-    {
-        RelNode p;
-
-        RelHolder(RelNode p)
-        {
-            super(p.getCluster(), p.getTraits());
-            this.p = p;
-        }
-
-        public RelNode [] getInputs()
-        {
-            return new RelNode [] { p };
-        }
-
-        public void childrenAccept(RelVisitor visitor)
-        {
-            visitor.visit(p, 0, this);
-        }
-
-        public Object clone()
-        {
-            throw new UnsupportedOperationException();
-        }
-
-        public void replaceInput(
-            int ordinalInParent,
-            RelNode p)
-        {
-            assert (ordinalInParent == 0);
-            this.p = p;
-        }
-
-        RelNode get()
-        {
-            return p;
-        }
-    }
-
     private static class VariableSetVisitor extends RelVisitor
     {
         HashSet variables = new HashSet();
@@ -721,7 +679,7 @@ public abstract class RelOptUtil
      * Returns a translation of the IS [NOT] DISTINCT FROM sql opertor
      * @param neg if false then a translation of IS NOT DISTINCT FROM is returned
      */
-    public static RexNode isDistinctFrom (
+    public static RexNode isDistinctFrom(
         RexBuilder rexBuilder,
         RexNode x,
         RexNode y,
@@ -757,7 +715,7 @@ public abstract class RelOptUtil
         return ret;
     }
 
-    private static RexNode isDistinctFromInternal (
+    private static RexNode isDistinctFromInternal(
         RexBuilder rexBuilder,
         RexNode x,
         RexNode y,

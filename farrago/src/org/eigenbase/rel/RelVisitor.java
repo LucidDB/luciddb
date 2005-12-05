@@ -37,16 +37,44 @@ package org.eigenbase.rel;
  */
 public abstract class RelVisitor
 {
+    private RelNode root;
     //~ Methods ---------------------------------------------------------------
 
+    /**
+     * Visits a node during a traversal.
+     *
+     * @param node Node to visit
+     * @param ordinal Ordinal of node within its parent
+     * @param parent Parent of the node, or null if it is the root of the
+     *               traversal
+     */
     public void visit(
-        RelNode p,
+        RelNode node,
         int ordinal,
         RelNode parent)
     {
-        p.childrenAccept(this);
+        node.childrenAccept(this);
+    }
+
+    /**
+     * Replaces the root node of this traversal.
+     *
+     * @param node The new root node
+      */
+    public void replaceRoot(RelNode node)
+    {
+        this.root = node;
+    }
+
+    /**
+     * Starts an iteration.
+     */
+    public RelNode go(RelNode p)
+    {
+        this.root = p;
+        visit(p, 0, null);
+        return root;
     }
 }
-
 
 // End RelVisitor.java

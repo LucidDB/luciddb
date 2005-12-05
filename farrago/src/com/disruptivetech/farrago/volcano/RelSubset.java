@@ -226,7 +226,7 @@ public class RelSubset extends AbstractRelNode
     RelNode buildCheapestPlan(VolcanoPlanner planner)
     {
         CheapestPlanReplacer replacer = new CheapestPlanReplacer(planner);
-        RelNode cheapest = RelOptUtil.go(replacer, this);
+        final RelNode cheapest = replacer.go(this);
 
         if (planner.listener != null) {
             RelOptListener.RelChosenEvent event =
@@ -322,7 +322,11 @@ public class RelSubset extends AbstractRelNode
                         e);
                     throw e;
                 }
-                parent.replaceInput(ordinal, cheapest);
+                if (parent == null) {
+                    replaceRoot(cheapest);
+                } else {
+                    parent.replaceInput(ordinal, cheapest);
+                }
                 p = cheapest;
             }
 
