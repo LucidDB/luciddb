@@ -521,7 +521,6 @@ public class SqlValidatorTestCase extends TestCase
             checkEx(thrown, expectedMsgPattern, sap);
         }
 
-
         public RelDataType getResultType(String sql)
         {
             SqlValidator validator = getValidator();
@@ -744,7 +743,7 @@ public class SqlValidatorTestCase extends TestCase
             typeChecker.checkType(actualType);
         }
 
-        public void checkFails(String expression, String expectedError)
+        public void checkInvalid(String expression, String expectedError)
         {
             // After bug 315 is fixed, take this assert out: the other assert
             // will be sufficient.
@@ -756,6 +755,16 @@ public class SqlValidatorTestCase extends TestCase
             SqlValidatorTestCase.this.checkFails(
                 buildQuery(expression),
                 expectedError);
+        }
+
+        public void checkFails(String expression, String expectedError)
+        {
+            // We need to test that the expression fails at runtime.
+            // Ironically, that means that is must succeed at prepare time.
+            SqlValidator validator = getValidator();
+            final String sql = buildQuery(expression);
+            SqlNode n = parseAndValidate(validator, sql);
+            assertNotNull(n);
         }
     }
 

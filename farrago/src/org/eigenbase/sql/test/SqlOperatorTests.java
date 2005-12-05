@@ -23,12 +23,13 @@
 package org.eigenbase.sql.test;
 
 import junit.framework.TestCase;
+import org.eigenbase.sql.SqlJdbcFunctionCall;
+import org.eigenbase.sql.SqlOperator;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
 
 import java.util.regex.Pattern;
 
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.SqlJdbcFunctionCall;
-import org.eigenbase.sql.SqlOperator;
+import static org.eigenbase.util.TestUtil.NL;
 
 /**
  * Contains unit tests for all operators. Each of the methods is named after an
@@ -90,6 +91,12 @@ public abstract class SqlOperatorTests extends TestCase
      * Remove this constant when dtbug 315 has been fixed.
      */
     public static final boolean bug315Fixed = false;
+
+    /**
+     * Whether <a href="http://jirahost.eigenbase.org:8080/browse/FNL-3">issue
+     * Fnl-3</a> is fixed.
+     */
+    public static final boolean issueFnl3Fixed = false;
 
     /**
      * Regular expression for a SQL TIME(0) value.
@@ -424,7 +431,7 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkBoolean("false is not true", Boolean.TRUE);
         getTester().checkBoolean("cast(null as boolean) is not true",
             Boolean.TRUE);
-        getTester().checkFails(
+        getTester().checkInvalid(
             "select ^'a string' is not true^ from (values (1))",
             "(?s)Cannot apply 'IS NOT TRUE' to arguments of type '<CHAR\\(8\\)> IS NOT TRUE'. Supported form\\(s\\): '<BOOLEAN> IS NOT TRUE'.*");
     }
@@ -464,7 +471,7 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkBoolean("cast(null as boolean) is not unknown",
             Boolean.FALSE);
         getTester().checkBoolean("unknown is not unknown", Boolean.FALSE);
-        getTester().checkFails("^'abc' IS NOT UNKNOWN^", "(?s).*Cannot apply 'IS NOT UNKNOWN'.*");
+        getTester().checkInvalid("^'abc' IS NOT UNKNOWN^", "(?s).*Cannot apply 'IS NOT UNKNOWN'.*");
     }
 
     public void testIsUnknownOperator()
@@ -475,7 +482,7 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkBoolean("cast(null as boolean) is unknown",
             Boolean.TRUE);
         getTester().checkBoolean("unknown is unknown", Boolean.TRUE);
-        getTester().checkFails("0 = 1 AND ^2 IS UNKNOWN^ AND 3 > 4", "(?s).*Cannot apply 'IS UNKNOWN'.*");
+        getTester().checkInvalid("0 = 1 AND ^2 IS UNKNOWN^ AND 3 > 4", "(?s).*Cannot apply 'IS UNKNOWN'.*");
     }
 
     public void testIsASetOperator()
@@ -500,7 +507,7 @@ public abstract class SqlOperatorTests extends TestCase
     public void testPrefixMinusOperator()
     {
         getTester().setFor(SqlStdOperatorTable.prefixMinusOperator);
-        getTester().checkFails(
+        getTester().checkInvalid(
             "'a' + ^- 'b'^ + 'c'",
             "(?s)Cannot apply '-' to arguments of type '-<CHAR\\(1\\)>'.*");
         getTester().checkScalarExact("-1", "-1");
@@ -750,11 +757,11 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkNull("nullif(cast(null as varchar(1)),'a')");
         // Error message reflects the fact that Nullif is expanded before it is
         // validated (like a C macro). Not perfect, but good enough.
-        getTester().checkFails("1 + ^nullif(1, date '2005-8-4')^ + 2",
+        getTester().checkInvalid("1 + ^nullif(1, date '2005-8-4')^ + 2",
             "(?s)Cannot apply '=' to arguments of type '<INTEGER> = <DATE>'\\..*");
         // TODO: fix bug 324.
         if (todo) {
-        getTester().checkFails("1 + ^nullif(1, 2, 3)^ + 2",
+        getTester().checkInvalid("1 + ^nullif(1, 2, 3)^ + 2",
             "invalid number of arguments to NULLIF");
         }
     }
@@ -764,7 +771,7 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().setFor(SqlStdOperatorTable.coalesceFunc);
         getTester().checkString("coalesce('a','b')", "a", "CHAR(1) NOT NULL");
         getTester().checkScalarExact("coalesce(null,null,3)", "3");
-        getTester().checkFails("1 + ^coalesce('a', 'b', 1, null)^ + 2",
+        getTester().checkInvalid("1 + ^coalesce('a', 'b', 1, null)^ + 2",
             "Illegal mixing of types in CASE or COALESCE statement");
     }
 
@@ -821,7 +828,7 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().setFor(SqlStdOperatorTable.localTimestampFunc);
         getTester().checkScalar("LOCALTIMESTAMP", timestampPattern,
             "TIMESTAMP(0) NOT NULL");
-        getTester().checkFails(
+        getTester().checkInvalid(
             "^LOCALTIMESTAMP()^",
             "No match found for function signature LOCALTIMESTAMP\\(\\)");
         getTester().checkScalar(
@@ -835,7 +842,7 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().setFor(SqlStdOperatorTable.currentTimeFunc);
         getTester().checkScalar("CURRENT_TIME", timePattern,
             "TIME(0) NOT NULL");
-        getTester().checkFails(
+        getTester().checkInvalid(
             "^CURRENT_TIME()^",
             "No match found for function signature CURRENT_TIME\\(\\)");
         getTester().checkScalar("CURRENT_TIME(1)", timePattern,
@@ -847,7 +854,7 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().setFor(SqlStdOperatorTable.currentTimestampFunc);
         getTester().checkScalar("CURRENT_TIMESTAMP", timestampPattern,
             "TIMESTAMP(0) NOT NULL");
-        getTester().checkFails(
+        getTester().checkInvalid(
             "^CURRENT_TIMESTAMP()^",
             "No match found for function signature CURRENT_TIMESTAMP\\(\\)");
         getTester().checkScalar("CURRENT_TIMESTAMP(1)", timestampPattern,
@@ -881,6 +888,25 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkString("trim(trailing 'a' from 'aAa')", "aA", "todo: VARCHAR(3) NOT NULL");
         getTester().checkNull("trim(cast(null as varchar(1)) from 'a')");
         getTester().checkNull("trim('a' from cast(null as varchar(1)))");
+
+        if (issueFnl3Fixed) {
+            // SQL:2003 6.29.9: trim string must have length=1.
+            // Failure occurs at runtime.
+            //
+            // TODO: Change message to "Invalid argument\(s\) for 'TRIM' function",
+            // The message should come from a resource file, and should still
+            // have the SQL error code 22027.
+            getTester().checkFails("trim('xy' from 'abcde')",
+                "could not calculate results for the following row:" + NL +
+                "\\[ 0 \\]" + NL +
+                "Messages:" + NL +
+                "\\[0\\]:PC=0 Code=22027 ");
+            getTester().checkFails("trim('' from 'abcde')",
+                "could not calculate results for the following row:" + NL +
+                "\\[ 0 \\]" + NL +
+                "Messages:" + NL +
+                "\\[0\\]:PC=0 Code=22027 ");
+        }
     }
 
     public void testWindow() {
@@ -977,9 +1003,9 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkType("count(1)","BIGINT NOT NULL");
         getTester().checkType("count(1.2)","BIGINT NOT NULL");
         getTester().checkType("COUNT(DISTINCT 'x')","BIGINT NOT NULL");
-        getTester().checkFails("^COUNT()^",
+        getTester().checkInvalid("^COUNT()^",
             "Invalid number of arguments to function 'COUNT'. Was expecting 1 arguments");
-        getTester().checkFails("^COUNT(1, 2)^",
+        getTester().checkInvalid("^COUNT(1, 2)^",
             "Invalid number of arguments to function 'COUNT'. Was expecting 1 arguments");
         final String[] values = {"0", "CAST(null AS INTEGER)", "1", "0"};
         getTester().checkAgg("COUNT(x)", values, new Integer(3), 0);
@@ -997,18 +1023,18 @@ public abstract class SqlOperatorTests extends TestCase
     public void testSumFunc()
     {
         getTester().setFor(SqlStdOperatorTable.sumOperator);
-        getTester().checkFails("sum(^*^)",
+        getTester().checkInvalid("sum(^*^)",
             "Unknown identifier '\\*'");
-        getTester().checkFails("^sum('name')^",
+        getTester().checkInvalid("^sum('name')^",
             "(?s)Cannot apply 'SUM' to arguments of type 'SUM\\(<CHAR\\(4\\)>\\)'\\. Supported form\\(s\\): 'SUM\\(<NUMERIC>\\)'.*");
         getTester().checkType("sum(1)","INTEGER");
         getTester().checkType("sum(1.2)","DECIMAL(2, 1)");
         getTester().checkType("sum(DISTINCT 1.5)","DECIMAL(2, 1)");
-        getTester().checkFails("^sum()^",
+        getTester().checkInvalid("^sum()^",
             "Invalid number of arguments to function 'SUM'. Was expecting 1 arguments");
-        getTester().checkFails("^sum(1, 2)^",
+        getTester().checkInvalid("^sum(1, 2)^",
             "Invalid number of arguments to function 'SUM'. Was expecting 1 arguments");
-        getTester().checkFails("^sum(cast(null as varchar(2)))^",
+        getTester().checkInvalid("^sum(cast(null as varchar(2)))^",
             "(?s)Cannot apply 'SUM' to arguments of type 'SUM\\(<VARCHAR\\(2\\)>\\)'\\. Supported form\\(s\\): 'SUM\\(<NUMERIC>\\)'.*");
         final String[] values = {"0", "CAST(null AS INTEGER)", "2", "2"};
         getTester().checkAgg("sum(x)", values, new Integer(4), 0);
@@ -1023,9 +1049,9 @@ public abstract class SqlOperatorTests extends TestCase
     public void testAvgFunc()
     {
         getTester().setFor(SqlStdOperatorTable.avgOperator);
-        getTester().checkFails("avg(^*^)",
+        getTester().checkInvalid("avg(^*^)",
             "Unknown identifier '\\*'");
-        getTester().checkFails("^avg(cast(null as varchar(2)))^",
+        getTester().checkInvalid("^avg(cast(null as varchar(2)))^",
             "(?s)Cannot apply 'AVG' to arguments of type 'AVG\\(<VARCHAR\\(2\\)>\\)'\\. Supported form\\(s\\): 'AVG\\(<NUMERIC>\\)'.*");
         getTester().checkType("AVG(CAST(NULL AS INTEGER))", "INTEGER");
         getTester().checkType("AVG(DISTINCT 1.5)", "DECIMAL(2, 1) NOT NULL");
