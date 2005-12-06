@@ -21,6 +21,7 @@
 	<!-- perforce synchronization target -->
 	<target name="sync" description="Synchronize the Fennel project" unless="no-sync">
 		<p4sync view="${open_root}/fennel/..." failonerror="true"/>
+		<p4sync view="${open_root}/util/..." failonerror="true"/>
 	</target>
 
 	<!-- basic build targets -->
@@ -74,6 +75,13 @@
 		<exec dir="${default.build.home}" executable="cp" failonerror="true">
 			<arg value="-pr"/>
 			<arg value="./fennel/"/>
+			<arg value="${integration.build.home}/"/>
+		</exec>
+
+		<echo message="Copying ./util to ${integration.build.home}/"/>
+		<exec dir="${default.build.home}" executable="cp" failonerror="true">
+			<arg value="-pr"/>
+			<arg value="./util/"/>
 			<arg value="${integration.build.home}/"/>
 		</exec>
 	</target>
