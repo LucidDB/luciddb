@@ -125,6 +125,8 @@ cp OpenJava/COPYRIGHT $LIB_DIR/openjava.license.txt
 cp RmiJdbc/dist/lib/*.jar $LIB_DIR
 cp csvjdbc/csvjdbc.jar $LIB_DIR
 cp csvjdbc/license.txt $LIB_DIR/csvjdbc.license.txt
+cp jtds/jtds-1.2.jar $LIB_DIR
+cp jtds/LICENSE $LIB_DIR/jtds.license
 cp sqlline.jar $LIB_DIR
 cp sqlline/LICENSE $LIB_DIR/sqlline.license
 cp jline.jar $LIB_DIR
