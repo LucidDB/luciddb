@@ -367,6 +367,7 @@
         verbose="@{verbose}"
         fork="true"
         classpathref="@{classpathref}">
+        <jvmarg line="&FarragoProps;"/>
       </tch>
     </sequential>
   </macrodef>
