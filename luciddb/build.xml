@@ -111,10 +111,8 @@
   </target>
 
   <target name="bh">
+    <antcall target="createCatalog"/>
     <blackhawk.fork basedir="test/sql/shortreg" 
-      testscript="test.xml"
-      classpathref="test.classpath"/>
-    <blackhawk.fork basedir="test/src/com/lucidera/luciddb/test/bh"
       testscript="test.xml"
       classpathref="test.classpath"/>
   </target>

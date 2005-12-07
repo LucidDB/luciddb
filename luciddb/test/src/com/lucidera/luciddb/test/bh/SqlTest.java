@@ -21,6 +21,7 @@
 package com.lucidera.luciddb.test.bh;
 
 import java.io.*;
+import java.util.regex.*;
 import org.apache.beehive.test.tools.tch.compose.AutoTest;
 import org.apache.beehive.test.tools.tch.compose.TestContext;
 import org.apache.beehive.test.tools.tch.compose.Parameters;
@@ -47,20 +48,19 @@ public class SqlTest extends AutoTest {
     File sqlFileSansExt;
     File logFile;    
     File refFile;
+    /** Diff masks defined so far */
+    // private List diffMasks;
+    private String diffMasks;
+    Matcher compiledDiffMatcher;
+    private String ignorePatterns;
+    Matcher compiledIgnoreMatcher;
 
     public SqlTest(TestContext tc) throws Exception {
         super(tc);
         Parameters param = tc.getParameters();
+        // obtain parameters, these are both required
         jdbcDriverClassName = param.getString("jdbc-driver");
         sqlFile = param.getString("sql-file");
-/** not necessary, since blackhawk will require the param and fail if not set
-        if (jdbcDriverClassName == null) {
-            throw new Exception("jdbc-driver is null");
-        }
-        if (sqlFile == null) {
-            throw new Exception("sql-file is null");
-        }
-**/
         Class clazz = Class.forName(jdbcDriverClassName);
         driver = (FarragoJdbcEngineDriver) clazz.newInstance();
         driverName = driver.getClass().getName();
@@ -104,7 +104,7 @@ public class SqlTest extends AutoTest {
             System.setProperty("sqlline.system.exit", "true");
             SqlLine.mainWithInputRedirection(args, sequenceStream);
             printStream.flush();
-// FIXME: next job is to make this work            diffTestLog();
+            diffTestLog();
         } catch (Exception e) {
             return failure("Failed with Unexpected Exception: " + 
                 e.toString(),e);
@@ -118,7 +118,6 @@ public class SqlTest extends AutoTest {
             }
         }
 
-        inform("First method");
         return success("No problem");
     }
 
@@ -154,9 +153,11 @@ public class SqlTest extends AutoTest {
      * PrintWriter), be sure to flush the wrapping Writer before calling this
      * method.
      * </p>
+     */
+
 
     protected void diffTestLog()
-        throws IOException
+        throws IOException, Exception
     {
         int n = 0;
         assert (logOutputStream != null);
@@ -171,6 +172,7 @@ public class SqlTest extends AutoTest {
         FileReader logReader = null;
         FileReader refReader = null;
         try {
+/** don't do the gc trick for now
             if (compiledIgnoreMatcher != null) {
                 if (gcInterval != 0) {
                     n++;
@@ -180,6 +182,7 @@ public class SqlTest extends AutoTest {
                     }
                 }
             }
+**/
             logReader = new FileReader(logFile);
             refReader = new FileReader(refFile);
             LineNumberReader logLineReader = new LineNumberReader(logReader);
@@ -222,9 +225,91 @@ public class SqlTest extends AutoTest {
         // no diffs detected, so delete redundant .log file
         logFile.delete();
     }
+
+    /**
+     * Adds a diff mask.  Strings matching the given regular expression
+     * will be masked before diffing.  This can be used to suppress
+     * spurious diffs on a case-by-case basis.
+     *
+     * @param mask a regular expression, as per String.replaceAll
      */
-  
+    protected void addDiffMask(String mask)
+    {
+        // diffMasks.add(mask);
+        if (diffMasks.length() == 0) {
+            diffMasks = mask;
+        } else {
+            diffMasks = diffMasks + "|" + mask;
+        }
+        Pattern compiledDiffPattern = Pattern.compile(diffMasks);
+        compiledDiffMatcher = compiledDiffPattern.matcher("");
+    }
+
+    protected void addIgnorePattern(String javaPattern)
+    {
+        if (ignorePatterns.length() == 0) {
+            ignorePatterns = javaPattern;
+        } else {
+            ignorePatterns = ignorePatterns + "|" + javaPattern;
+        }
+        Pattern compiledIgnorePattern = Pattern.compile(ignorePatterns);
+        compiledIgnoreMatcher = compiledIgnorePattern.matcher("");
+    }
+
+    private String applyDiffMask(String s)
+    {
+        if (compiledDiffMatcher != null) {
+            compiledDiffMatcher.reset(s);
+            // we assume most of lines do not match
+            // so compiled matches will be faster than replaceAll.
+            if (compiledDiffMatcher.find()) {
+                return s.replaceAll(diffMasks, "XYZZY");
+            }
+        }
+        return s;
+    }
+    private boolean matchIgnorePatterns(String s)
+    {
+        if (compiledIgnoreMatcher != null) {
+            compiledIgnoreMatcher.reset(s);
+            return compiledIgnoreMatcher.matches();
+        }
+        return false;
+    }
+
+    private void diffFail (
+        File logFile,
+        int lineNumber) throws Exception
+    {
+        tc.inform("DIFF FAILED!");
+        final String message =
+            "diff detected at line " + lineNumber + " in " + logFile;
+        throw new Exception(message + 
+            fileContents(refFile) + 
+            fileContents(logFile));
+    }
+
+    /**
+     * Returns the contents of a file as a string.
+     */ 
+    private static String fileContents(File file)
+    {
+        try {
+            char[] buf = new char[2048];
+            final FileReader reader = new FileReader(file);
+            int readCount;
+            final StringWriter writer = new StringWriter();
+            while ((readCount = reader.read(buf)) >= 0) {
+                writer.write(buf, 0, readCount);
+            }
+            return writer.toString();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }
+
 
 
 // End SimpleTest.java
