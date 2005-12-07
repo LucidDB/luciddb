@@ -21,7 +21,6 @@
 	<!-- perforce synchronization target -->
 	<target name="sync" description="Synchronize the Fennel project" unless="no-sync">
 		<p4sync view="${open_root}/fennel/..." failonerror="true"/>
-		<p4sync view="//open/util/..." failonerror="true"/>
 	</target>
 
 	<!-- basic build targets -->
@@ -67,23 +66,14 @@
 	</target>
 
 	<target name="integration-copy" depends="sync">
-		<delete dir="${integration.build.home}/fennel" quiet="true"/>
+		<delete dir="${integration.build.home}/fennel"/>
 		<mkdir dir="${integration.build.home}/fennel"/>
-		<delete dir="${integration.build.home}/util" quiet="true"/>
-		<mkdir dir="${integration.build.home}/util"/>
 
 		<!-- ant's copy task doesn't preserve permissions -->
 		<echo message="Copying ./fennel to ${integration.build.home}/"/>
 		<exec dir="${default.build.home}" executable="cp" failonerror="true">
 			<arg value="-pr"/>
 			<arg value="./fennel/"/>
-			<arg value="${integration.build.home}/"/>
-		</exec>
-
-		<echo message="Copying ./util to ${integration.build.home}/"/>
-		<exec dir="${default.build.home}" executable="cp" failonerror="true">
-			<arg value="-pr"/>
-			<arg value="./util/"/>
 			<arg value="${integration.build.home}/"/>
 		</exec>
 	</target>

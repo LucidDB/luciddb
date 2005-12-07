@@ -21,7 +21,6 @@
 	<!-- perforce synchronization target -->
 	<target name="sync" description="Synchronize the Farrago project" unless="no-sync">
 		<p4sync view="${open_root}/farrago/..." failonerror="true"/>
-		<p4sync view="//open/util/..." failonerror="true"/>
 	</target>
 
 	<!-- basic build targets -->
@@ -65,23 +64,14 @@
 	</target>
 
 	<target name="integration-copy" depends="sync">
-		<delete dir="${integration.build.home}/farrago" quiet="true"/>
+		<delete dir="${integration.build.home}/farrago"/>
 		<mkdir dir="${integration.build.home}/farrago"/>
-		<delete dir="${integration.build.home}/util" quiet="true"/>
-		<mkdir dir="${integration.build.home}/util"/>
 
 		<!-- ant's copy task doesn't preserve permissions -->
 		<echo message="Copying ./farrago to ${integration.build.home}/"/>
 		<exec dir="${default.build.home}" executable="cp" failonerror="true">
 			<arg value="-pr"/>
 			<arg value="./farrago/"/>
-			<arg value="${integration.build.home}/"/>
-		</exec>
-
-		<echo message="Copying ./util to ${integration.build.home}/"/>
-		<exec dir="${default.build.home}" executable="cp" failonerror="true">
-			<arg value="-pr"/>
-			<arg value="./util/"/>
 			<arg value="${integration.build.home}/"/>
 		</exec>
 	</target>
