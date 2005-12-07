@@ -120,7 +120,7 @@ void FlatFileExecStreamTest::testBuffer()
     fileBuffer.fill(fileBuffer.buf()+6);
     BOOST_REQUIRE(fileBuffer.size()==5);
     BOOST_REQUIRE(strncmp(fileBuffer.buf(), "7654\n", 5)==0);
-    BOOST_REQUIRE(fileBuffer.end());
+    BOOST_REQUIRE(fileBuffer.readCompleted());
     fileBuffer.close();
 
     // TODO: test missing file, empty file

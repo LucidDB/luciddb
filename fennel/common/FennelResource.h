@@ -3,12 +3,12 @@
 
 /**
  * This class was generated
- * by class mondrian.resource.ResourceGen
- * from /home/jvs/open/dev/fennel/common/FennelResource.xml
- * on Sat Nov 27 23:31:08 PST 2004.
+ * by class org.eigenbase.resgen.ResourceGen
+ * from /home/jpham/open/fennel/common/FennelResource.xml
+ * on Wed Dec 07 11:54:38 PST 2005.
  * It contains a list of messages, and methods to
  * retrieve and format those messages.
- **/
+ */
 
 #ifndef Fennel_FennelResource_Included
 #define Fennel_FennelResource_Included
@@ -20,8 +20,8 @@
 #include "ResourceDefinition.h"
 #include "ResourceBundle.h"
 
-// begin includes specified by /home/jvs/open/dev/fennel/common/FennelResource.xml
-// end includes specified by /home/jvs/open/dev/fennel/common/FennelResource.xml
+// begin includes specified by /home/jpham/open/fennel/common/FennelResource.h
+// end includes specified by /home/jpham/open/fennel/common/FennelResource.h
 
 namespace fennel {
 
@@ -42,20 +42,90 @@ class FennelResource : ResourceBundle
 
     static void setResourceFileLocation(const std::string &location);
 
-	/** <code>sysCallFailed</code> is 'System call failed:  {0}'	 */
+    /**
+     * <code>sysCallFailed</code> is 'System call failed:  {0}'
+     */
     std::string sysCallFailed(const std::string &p0) const;
 
-	/** <code>duplicateKeyDetected</code> is 'Duplicate key detected:  {0}'	 */
+    /**
+     * <code>duplicateKeyDetected</code> is 'Duplicate key detected:  {0}'
+     */
     std::string duplicateKeyDetected(const std::string &p0) const;
 
-	/** <code>internalError</code> is 'Internal error:  {0}'	 */
+    /**
+     * <code>internalError</code> is 'Internal error:  {0}'
+     */
     std::string internalError(const std::string &p0) const;
 
-	/** <code>executionAborted</code> is 'Execution aborted'	 */
+    /**
+     * <code>executionAborted</code> is 'Execution aborted'
+     */
     std::string executionAborted() const;
 
-	/** <code>rowTooLong</code> is 'Row size ({0,number,#} bytes) exceeds maximum ({1,number,#} bytes); row data:  {2}'	 */
+    /**
+     * <code>rowTooLong</code> is 'Row size ({0,number,#} bytes) exceeds maximum ({1,number,#} bytes); row data:  {2}'
+     */
     std::string rowTooLong(int p0, int p1, const std::string &p2) const;
+
+    /**
+     * <code>rowTypeTooLong</code> is 'Maximum row size ({0,number,#} bytes) exceeds limit ({1,number,#} bytes)'
+     */
+    std::string rowTypeTooLong(int p0, int p1) const;
+
+    /**
+     * <code>readDataFailed</code> is 'Could not access data file {0}: {1}'
+     */
+    std::string readDataFailed(const std::string &p0, const std::string &p1) const;
+
+    /**
+     * <code>dataTransferFailed</code> is 'Failed to access file {0} (size {1,number,#} bytes)'
+     */
+    std::string dataTransferFailed(const std::string &p0, int p1) const;
+
+    /**
+     * <code>writeLogFailed</code> is 'Could not write to log file {0}: {1}'
+     */
+    std::string writeLogFailed(const std::string &p0, const std::string &p1) const;
+
+    /**
+     * <code>noRowsReturned</code> is 'No rows were read from file {0}; last error was: {1}'
+     */
+    std::string noRowsReturned(const std::string &p0, const std::string &p1) const;
+
+    /**
+     * <code>errorsEncountered</code> is 'Errors were encountered while processing file {0}; please see log file {1} for more information'
+     */
+    std::string errorsEncountered(const std::string &p0, const std::string &p1) const;
+
+    /**
+     * <code>noRowDelimiter</code> is 'Data file {0} has no row delimiter'
+     */
+    std::string noRowDelimiter(const std::string &p0) const;
+
+    /**
+     * <code>incompleteColumn</code> is 'column has no delimiter'
+     */
+    std::string incompleteColumn() const;
+
+    /**
+     * <code>noColumnDelimiter</code> is 'row has no column delimiter'
+     */
+    std::string noColumnDelimiter() const;
+
+    /**
+     * <code>tooFewColumns</code> is 'row has too few columns'
+     */
+    std::string tooFewColumns() const;
+
+    /**
+     * <code>tooManyColumns</code> is 'row has too many columns'
+     */
+    std::string tooManyColumns() const;
+
+    /**
+     * <code>rowTextTooLong</code> is 'row text was too large'
+     */
+    std::string rowTextTooLong() const;
 
     private:
     ResourceDefinition _sysCallFailed;
@@ -63,6 +133,18 @@ class FennelResource : ResourceBundle
     ResourceDefinition _internalError;
     ResourceDefinition _executionAborted;
     ResourceDefinition _rowTooLong;
+    ResourceDefinition _rowTypeTooLong;
+    ResourceDefinition _readDataFailed;
+    ResourceDefinition _dataTransferFailed;
+    ResourceDefinition _writeLogFailed;
+    ResourceDefinition _noRowsReturned;
+    ResourceDefinition _errorsEncountered;
+    ResourceDefinition _noRowDelimiter;
+    ResourceDefinition _incompleteColumn;
+    ResourceDefinition _noColumnDelimiter;
+    ResourceDefinition _tooFewColumns;
+    ResourceDefinition _tooManyColumns;
+    ResourceDefinition _rowTextTooLong;
 
     template<class _GRB, class _BC, class _BC_ITER>
         friend _GRB *makeInstance(_BC &bundleCache, const Locale &locale);

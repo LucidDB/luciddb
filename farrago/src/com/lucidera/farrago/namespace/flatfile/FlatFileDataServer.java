@@ -21,25 +21,15 @@
 */
 package com.lucidera.farrago.namespace.flatfile;
 
-import java.lang.reflect.*;
 import java.sql.*;
 import java.util.*;
 
-import net.sf.farrago.catalog.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
-import net.sf.farrago.resource.*;
 import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
 
-import org.eigenbase.rel.*;
-import org.eigenbase.rel.convert.*;
-import org.eigenbase.rel.jdbc.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -52,8 +42,6 @@ import org.eigenbase.util.*;
 class FlatFileDataServer extends MedAbstractDataServer
 {
     //~ Static fields/initializers --------------------------------------------
-
-    public static final String PROP_FILENAME = "FILENAME";
 
     private MedAbstractDataWrapper wrapper;
     private FlatFileParams params;
@@ -102,9 +90,7 @@ class FlatFileDataServer extends MedAbstractDataServer
             return null;
         }
 
-        String fileName =
-            tableProps.getProperty(PROP_FILENAME, null);
-        return new FlatFileColumnSet(localName, rowType, params, fileName);
+        return new FlatFileColumnSet(localName, rowType, params, tableProps);
     }
 
     // implement FarragoMedDataServer

@@ -44,8 +44,9 @@ class FlatFileParams extends MedAbstractBase
     public static final String PROP_QUOTE_CHAR = "QUOTE_CHAR";
     public static final String PROP_ESCAPE_CHAR = "ESCAPE_CHAR";
     public static final String PROP_WITH_HEADER = "WITH_HEADER";
-    public static final String PROP_WITH_ERROR_LOGGING = "WITH_ERROR_LOGGING";
     public static final String PROP_NUM_ROWS_SCAN = "NUM_ROWS_SCAN";
+    public static final String PROP_WITH_ERROR_LOGGING = "WITH_ERROR_LOGGING";
+    public static final String PROP_LOG_DIRECTORY = "LOG_DIRECTORY";
     public static final String PROPVAL_DAT = "DAT";
     public static final String PROPVAL_BCP = "BCP";
     public static final String PROPVAL_ERR = "ERR";
@@ -162,14 +163,19 @@ class FlatFileParams extends MedAbstractBase
         return withHeader;
     }
 
+    public int getNumRowsScan()
+    {
+        return numRowsScan;
+    }
+
     public boolean getWithErrorLogging()
     {
         return withErrorLogging;
     }
 
-    public int getNumRowsScan()
+    public String getLogDirectory() 
     {
-        return numRowsScan;
+        return getProperties().getProperty(PROP_LOG_DIRECTORY, null);
     }
 }
 

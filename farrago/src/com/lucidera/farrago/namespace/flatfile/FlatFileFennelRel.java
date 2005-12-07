@@ -21,30 +21,22 @@
 */
 package com.lucidera.farrago.namespace.flatfile;
 
-import java.sql.*;
-import java.util.*;
+import java.io.*;
+import java.text.*;
 
 import junit.framework.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.query.*;
-import net.sf.farrago.util.*;
 
-import openjava.mop.*;
 import openjava.ptree.*;
 
-import org.eigenbase.oj.rel.*;
-import org.eigenbase.oj.stmt.*;
-import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.jdbc.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.util.*;
 
 import com.disruptivetech.farrago.calc.*;
 
@@ -52,11 +44,13 @@ import com.disruptivetech.farrago.calc.*;
  * FlatFileFennelRel provides a flatfile implementation for
  * {@link TableAccessRel} with {@link FennelRel#FENNEL_EXEC_CONVENTION}.
  *
- * @author John V. Pham
+ * @author John Pham
  * @version $Id$
  */
 class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
 {
+    public static final int FLAT_FILE_MAX_NON_CHAR_VALUE_LEN = 255;
+    
     //~ Instance fields -------------------------------------------------------
 
     private FlatFileColumnSet columnSet;
@@ -73,9 +67,38 @@ class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
             connection);
         this.columnSet = columnSet;
     }
-
+    
     //~ Methods ---------------------------------------------------------------
 
+    /**
+     * Constructs a file path which may be used to track errors encountered
+     * during the scan of a flat file. The file name returned is similar to
+     * the data file path, but includes a timestamp and uses a different file
+     * extension. The path returned only contains the file name.
+     */
+    private String constructErrorFilePath() 
+    {
+        String logDir = columnSet.getParams().getLogDirectory();
+        if (logDir == null) {
+            logDir = "";
+        } else if (logDir.indexOf(File.separator, logDir.length()-1) < 0) {
+            logDir += File.separator;
+        }
+        File dataFile = new File(columnSet.getFilename()); // DIR/FILE.EXT
+        assert(dataFile != null);
+        String dataFileName = dataFile.getName();          // FILE.EXT
+        int dot = dataFileName.indexOf('.');
+        if (dot == -1) {
+            dot = dataFileName.length();
+        }
+        String rootName = dataFileName.substring(0, dot);  // FILE
+        assert(rootName != null);
+
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+        String timeStamp = formatter.format(new java.util.Date());
+        return logDir + rootName + "_" + timeStamp + ".err";
+    }
+    
     // implement FennelRel
     public Object implementFennelChild(FennelRelImplementor implementor)
     {
@@ -92,8 +115,11 @@ class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
             repos.newFemFlatFileTupleStreamDef();
         streamDef.setDataFilePath(columnSet.getFilename());
         if (params.getWithErrorLogging()) {
-            // TODO: log errors to file
-            //streamDef.setErrorFilePath();
+            String path = columnSet.getErrorFilename();
+            if (path == null) {
+                path = constructErrorFilePath();
+            }
+            streamDef.setErrorFilePath(path);
         }
         streamDef.setHasHeader(params.getWithHeader());
         streamDef.setNumRowsScan(params.getNumRowsScan());
@@ -169,7 +195,7 @@ class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
                 sourceNames[i] = "col" + i;
                 RexNode sourceNode =
                     rexBuilder.makeInputRef(sourceTypes[i], i);
-                // TODO: call a dedicated function for conversion
+                // TODO: call dedicated functions for conversion of dates
                 castExps[i] = rexBuilder.makeCast(targetType, sourceNode);
             }
             RelDataType inputRowType =
@@ -188,7 +214,7 @@ class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
             RelDataTypeFactory factory,
             RelDataType sqlType) 
         {
-            int length = 255;
+            int length = FLAT_FILE_MAX_NON_CHAR_VALUE_LEN;
             switch (sqlType.getSqlTypeName().getOrdinal()) {
             case SqlTypeName.Char_ordinal:
             case SqlTypeName.Varchar_ordinal:

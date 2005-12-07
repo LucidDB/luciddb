@@ -21,21 +21,14 @@
 */
 package com.lucidera.farrago.namespace.flatfile;
 
-import java.sql.*;
 import java.util.*;
 
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
-import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
 
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.convert.*;
-import org.eigenbase.rel.jdbc.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.sql.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -47,10 +40,14 @@ import org.eigenbase.util.*;
  */
 class FlatFileColumnSet extends MedAbstractColumnSet
 {
+    public static final String PROP_FILENAME = "FILENAME";
+    public static final String PROP_ERROR_FILENAME = "ERROR_FILENAME";
+    
     //~ Instance fields -------------------------------------------------------
 
     FlatFileParams params;
     String filename;
+    String errorFilename;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -58,11 +55,12 @@ class FlatFileColumnSet extends MedAbstractColumnSet
         String [] localName,
         RelDataType rowType,
         FlatFileParams params,
-        String filename)
+        Properties tableProps)
     {
         super(localName, null, rowType, null, null);
         this.params = params;
-        this.filename = filename;
+        filename = tableProps.getProperty(PROP_FILENAME, null);
+        errorFilename = tableProps.getProperty(PROP_ERROR_FILENAME, null);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -75,6 +73,11 @@ class FlatFileColumnSet extends MedAbstractColumnSet
     public String getFilename()
     {
         return filename;
+    }
+        
+    public String getErrorFilename()
+    {
+        return errorFilename;
     }
         
     // implement RelOptTable

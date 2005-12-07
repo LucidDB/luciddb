@@ -101,9 +101,14 @@ public:
     inline uint size() { return contentSize; }
 
     /**
+     * returns a pointer to the end of buffer contents
+     */
+    inline char *contentEnd() { return buffer + contentSize; }
+    
+    /**
      * whether entire file has been read
      */
-    bool end();
+    bool readCompleted();
     
     /**
      * reads more data into buffer, preserving unread portion of the buffer;
