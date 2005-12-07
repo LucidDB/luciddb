@@ -103,15 +103,13 @@
   </path>
   <property name="luciddb.build.classpath" refid="luciddb.build.classpath"/>
 
-  <target name="test" depends="compile">
-    <antcall target="createCatalog"/>
+  <target name="test" depends="compile,createCatalog">
     <antcall target="shortreg"/>
     <antcall target="txn"/>
     <antcall target="bh" />
   </target>
 
   <target name="bh">
-    <antcall target="createCatalog"/>
     <blackhawk.fork basedir="test/sql/shortreg" 
       testscript="test.xml"
       classpathref="test.classpath"/>
