@@ -26,7 +26,6 @@
 #include "fennel/lucidera/flatfile/FlatFileBuffer.h"
 #include "fennel/lucidera/flatfile/FlatFileExecStream.h"
 #include "fennel/lucidera/flatfile/FlatFileParser.h"
-#include "fennel/lucidera/flatfile/FlatFileRowExcn.h"
 #include "fennel/segment/SegmentAccessor.h"
 #include "fennel/segment/SegPageLock.h"
 #include "fennel/tuple/TupleData.h"
