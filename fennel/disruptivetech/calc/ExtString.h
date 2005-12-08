@@ -60,12 +60,18 @@ strCatAF3(RegisterRef<char*>* result,
           RegisterRef<char*>* str2);
 
 //! StrCmp. Ascii.
+//! Str1 and str2 may be any combination of VARCHAR and/or CHAR.
+//! Returns -1, 0, 1.
 void
 strCmpA(RegisterRef<int32_t>* result,   
         RegisterRef<char*>* str1,
         RegisterRef<char*>* str2);
 
-//! StrCmp. Binary
+//! StrCmp. Binary (Octal-- comparison is byte-wise)
+//! See SQL2003 Part 2 Section 4.3.2. All binary strings can be compared.
+//! As an extension to SQL2003, allow inequalities (>,>=, etc.)
+//! Follows byte-wise comparison semantics of memcmp().
+//! Returns -1, 0, 1.
 void
 strCmpOct(RegisterRef<int32_t>* result,
           RegisterRef<char*>* str1,

@@ -138,7 +138,28 @@ SqlStrCat(char* dest,
           char const * const str2,
           int str2LenBytes);
 
-//! StrCmp. Fixed Width / SQL CHAR. Ascii, no UCS2 yet.
+//! StrCmp. SQL VARCHAR & CHAR. Ascii, no UCS2 yet.
+//!
+//! str1 and str2 can be any combination of VARCHAR and/or CHAR.
+//! Supports only PAD SPACE mode. TODO: Support NO PAD mode.
+//!
+//! References: 
+//! SQL2003 Part 2 Section 4.2.2.
+//! SQL99 Part 2 Section 4.2.1.
+//! SQL2003 Part 2 Section 8.2 General Rule 3.
+//! SQL99 Part 2 Section 8.2, General Rule 3.
+//! SQL2003 Part 2 Section 10.5 General Rule 2 (default to PAD SPACE).
+//! SQL99 Part 2 Section 10.6 General Rule 2: (default to PAD SPACE).
+//!
+//! Note: Extending a shorter string with spaces is equivalent to 
+//! ignoring trailing spaces on both strings, and performing a more
+//! conventional strcmp-type operation. For example 'A ' == 'A'
+//! becomes 'A ' == 'A ' or equivalently, 'A', 'A'. 'AB ' == 'A'
+//! becomes 'AB ' == 'A  ' or equivalently, 'AB', 'A'. Extending with
+//! spaces is the same as comparison of the longer string with nothing
+//! as any non-space character is assumed to be greater than space.
+//! Note that this means that passing strings with values less than
+//! space will result in some confusion.
 //!
 //! Returns -1, 0, 1.
 //!
@@ -146,20 +167,19 @@ SqlStrCat(char* dest,
 //! currently unsupported.
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 int
-SqlStrCmp_Fix(char const * const str1,
+SqlStrCmp(char const * const str1,
               int str1LenBytes,
               char const * const str2,
               int str2LenBytes,
               int trimchar = ' ')
 {
-
-    char const * start = str1;
-    char const * end = str1 + str1LenBytes;
-    int str1TrimLenBytes;
-    int str2TrimLenBytes;
-    
     if (CodeUnitBytes == MaxCodeUnitsPerCodePoint) {
         if (CodeUnitBytes == 1) {
+            char const * start = str1;
+            char const * end = str1 + str1LenBytes;
+            int str1TrimLenBytes;
+            int str2TrimLenBytes;
+    
             if (end != start) {
                 end--;
                 while (end != start && *end == trimchar) end--;
@@ -176,40 +196,34 @@ SqlStrCmp_Fix(char const * const str1,
                 if (end != start || *end != trimchar) end++;
             }
             str2TrimLenBytes = end - start;
+            return SqlStrCmp_Bin(str1, str1TrimLenBytes, 
+                                 str2, str2TrimLenBytes);
+#if 0
+            int minLenBytes = str1TrimLenBytes > str2TrimLenBytes ?
+                str2TrimLenBytes : str1TrimLenBytes;
 
-        } else if (CodeUnitBytes == 2) {
-            // TODO: Add UCS2 here
-            throw std::logic_error("no UCS2");
-        } else {
-            throw std::logic_error("no such encoding");
-        }
-    } else {
-        throw std::logic_error("no UTF8/16/32");
-    }
 
-    
-    if (str1TrimLenBytes > str2TrimLenBytes) {
-        return 1;
-    } else if (str1TrimLenBytes < str2TrimLenBytes) {
-        return -1;
-    }
-
-    assert(str1TrimLenBytes == str2TrimLenBytes);
-
-    if (CodeUnitBytes == MaxCodeUnitsPerCodePoint) {
-        if (CodeUnitBytes == 1) {
-            // comparison must be unsigned to work for > 128
-            unsigned char const *s1 = reinterpret_cast<unsigned char const *>(str1);
-            unsigned char const *s2 = reinterpret_cast<unsigned char const *>(str2);
-            int len = str1TrimLenBytes;
-            
-            while (len-- > 0) {
-                if (*s1 != *s2) {
-                    return ( (*s1 > *s2) ? 1 : -1 );
-                }
-                s1++;
-                s2++;
+            // To allow 0, "Null", values in string, uses memcmp over
+            // strcmp. Not strictly needed, may have some future value.
+            // First, check for differences in "common" length. If same
+            // values, declare the longer string be declared "larger".
+            int memc = memcmp(str1, str2, minLenBytes);
+            if (memc > 0) {
+                // Normalize to -1, 0, 1
+                return 1;
+            } else if (memc < 0) {
+                // Normalize to -1, 0, 1
+                return -1;
+            } else if (str1TrimLenBytes == str2TrimLenBytes) {
+                // memc == 0
+                // Equal length & contain same data -> equal
+                return 0;
+            } else if (str1TrimLenBytes > str2TrimLenBytes) {
+                return 1;
+            } else {
+                return -1;
             }
+#endif
         } else if (CodeUnitBytes == 2) {
             // TODO: Add UCS2 here
             throw std::logic_error("no UCS2");
@@ -222,53 +236,17 @@ SqlStrCmp_Fix(char const * const str1,
     return 0;
 }
 
-
-//! StrCmp. Variable Width / VARCHAR. Ascii only. No UCS2 yet.
+//! StrCmp. Binary.
+//! See SQL2003 Part 2 Section 4.3.2.
+//! As an extension to SQL2003, allow inequalities (>,>=, etc.)
+//! Follows byte-wise comparison semantics of memcmp().
 //!
-//! Returns -1, 0, 1
-template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
+//! Returns -1, 0, 1.
 int
-SqlStrCmp_Var(char const * const str1,
+SqlStrCmp_Bin(char const * const str1,
               int str1LenBytes,
               char const * const str2,
-              int str2LenBytes)
-{
-    // consider strcoll for I18N
-    if (str1LenBytes > str2LenBytes) {
-        return 1;
-    } else if (str1LenBytes < str2LenBytes) {
-        return -1;
-    }
-
-    assert(str1LenBytes == str2LenBytes);
-
-    if (CodeUnitBytes == MaxCodeUnitsPerCodePoint) {
-        if (CodeUnitBytes == 1) {
-            // comparison must be unsigned to work for > 128
-            unsigned char const *s1 = reinterpret_cast<unsigned char const *>(str1);
-            unsigned char const *s2 = reinterpret_cast<unsigned char const *>(str2);
-            int len = str1LenBytes;
-
-            while (len-- > 0) {
-                if (*s1 != *s2) {
-                    return ( (*s1 > *s2) ? 1 : -1 );
-                }
-                s1++;
-                s2++;
-            }
-        } else if (CodeUnitBytes == 2) {
-            // TODO: Add UCS2 here
-            throw std::logic_error("no UCS2");
-        } else {
-            throw std::logic_error("no such encoding");
-        }
-    } else {
-        throw std::logic_error("no UTF8/16/32");
-    }
-    
-    return 0;
-}
-
+              int str2LenBytes);
 
 //! StrCpy. String Copy. Fixed Width / SQL CHAR. Ascii and UCS2.
 //!

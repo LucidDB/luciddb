@@ -67,14 +67,57 @@ values unknown<=true;
 values unknown<=false;
 values unknown<=unknown;
 
-values x'ff'=x'ff';
-values X'f2'<>x'ff';
-values x'11'>x'01';
-values x'11'<x'aa';
-values x'0a'<=x'0a';
-values x'0a'<=x'10';
-values x'20'<=x'10';
-values x'0001'>=x'100000';
+-- SQL2003 Part 2 Section 4.3.2 and
+-- SQL2003 Part 2 Section 8.2 General Rule 4 state
+-- that CLOBS (ex. BINARY/VARBINARY) may only be compared for
+-- equality. Currently allow the other (>,>=, etc.) comparisons
+-- as an extension.
+-- tests that return true:
+values   x'ff' =  x'ff';
+values   x'ff' <= x'ff';
+values   x'ff' >= x'ff';
+values   x'00' =  x'00';
+values x'00ff' =  x'00ff';
+values   x'ff' >  x'00';
+values x'00ff' >  x'0000';
+values x'0000' >  x'00';
+values   x'ff' >= x'00';
+values x'00ff' >= x'0000';
+values x'0000' >= x'00';
+values   x'00' <  x'ff';
+values   x'00' <  x'0000';
+values x'0000' <  x'00ff';
+values   x'00' <= x'ff';
+values   x'00' <= x'0000';
+values x'0000' <= x'00ff';
+values   x'00' <> x'ff';
+values   x'ff' <> x'00';
+values x'0000' <> x'0001';
+values x'0000' <> x'00';
+values   x'00' <> x'0000';
+
+-- symmetric (inverted) tests return false:
+values   x'ff' <>  x'ff';
+values   x'00' <>  x'00';
+values x'00ff' <>  x'00ff';
+values   x'ff' <  x'00';
+values x'00ff' <  x'0000';
+values x'0000' <  x'00';
+values   x'ff' <= x'00';
+values x'00ff' <= x'0000';
+values x'0000' <= x'00';
+values   x'00' >  x'ff';
+values   x'00' >  x'0000';
+values x'0000' >  x'00ff';
+values   x'00' >= x'ff';
+values   x'00' >= x'0000';
+values x'0000' >= x'00ff';
+values   x'00' =  x'ff';
+values   x'ff' =  x'00';
+values x'0000' =  x'0001';
+values x'0000' =  x'00';
+values   x'00' =  x'0000';
+
 
 values 'a' is distinct from 'a';
 values 'a' is distinct from 'aa';

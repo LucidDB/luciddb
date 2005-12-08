@@ -64,10 +64,8 @@ class SqlStringTest : virtual public TestBase, public TraceSource
     void testSqlStringCat_Var2();
     void testSqlStringCpy_Fix();
     void testSqlStringCpy_Var();
-    void testSqlStringCmp_Fix_DiffLen();
-    void testSqlStringCmp_Fix_EqLen();
-    void testSqlStringCmp_Var_DiffLen();
-    void testSqlStringCmp_Var_EqLen();
+    void testSqlStringCmp();
+    void testSqlStringCmp_Bin();
     void testSqlStringLenBit();
     void testSqlStringLenChar();
     void testSqlStringLenOct();
@@ -87,16 +85,19 @@ class SqlStringTest : virtual public TestBase, public TraceSource
                                      int number,
                                      char character);
     
-    void testSqlStringCmp_Var_Helper(SqlStringBuffer &src1,
-                                     int src1_len,
-                                     SqlStringBuffer &src2,
-                                     int src2_len);
-    void testSqlStringCmp_Fix_Helper(SqlStringBuffer &src1,
+    void testSqlStringCmp_Helper(SqlStringBuffer &src1,
+                                 int src1_storage,
+                                 int src1_len,
+                                 SqlStringBuffer &src2,
+                                 int src2_storage,
+                                 int src2_len);
+    void testSqlStringCmp_Bin_Helper(SqlStringBuffer &src1,
                                      int src1_storage,
                                      int src1_len,
                                      SqlStringBuffer &src2,
                                      int src2_storage,
                                      int src2_len);
+    void testSqlStringCmp_Bin_Helper2(int &lower, int &upper);
     int testSqlStringNormalizeLexicalCmp(int v);
 
     void testSqlStringAlterCase_Ascii(int dst_storage,
@@ -154,10 +155,8 @@ public:
         FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringCat_Var);
         FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringCpy_Fix);
         FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringCpy_Var);
-        FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringCmp_Fix_DiffLen);
-        FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringCmp_Fix_EqLen);
-        FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringCmp_Var_DiffLen);
-        FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringCmp_Var_EqLen);
+        FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringCmp);
+        FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringCmp_Bin);
         FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringLenBit);
         FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringLenChar);
         FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringLenOct);
@@ -799,6 +798,7 @@ SqlStringTest::testSqlStringCpy_Var()
     }
 }
 
+
 int
 SqlStringTest::testSqlStringNormalizeLexicalCmp(int v)
 {
@@ -807,20 +807,20 @@ SqlStringTest::testSqlStringNormalizeLexicalCmp(int v)
     return 0;
 }
 
-
-
 void
-SqlStringTest::testSqlStringCmp_Fix_Helper(SqlStringBuffer &src1,
+SqlStringTest::testSqlStringCmp_Helper(SqlStringBuffer &src1,
                                            int src1_storage,
                                            int src1_len,
                                            SqlStringBuffer &src2,
                                            int src2_storage,
                                            int src2_len)
 {
-    int result;
+    int result, resultflip;
     
     string s1(src1.mStr, src1_len);
     string s2(src2.mStr, src2_len);
+    string s1F(src1.mStr, src1_storage);
+    string s2F(src2.mStr, src2_storage);
 
     // It is possible that test string ends with a space. Remove it.
     s1.erase (s1.find_last_not_of ( " " ) + 1);
@@ -832,204 +832,277 @@ SqlStringTest::testSqlStringCmp_Fix_Helper(SqlStringBuffer &src1,
     int expected2 = testSqlStringNormalizeLexicalCmp(strcmp(s1p, s2p));
     BOOST_CHECK_EQUAL(expected, expected2);
 
-    result = SqlStrCmp_Fix<1,1>(src1.mStr, src1_storage,
-                                src2.mStr, src2_storage);
+#if 0
+    BOOST_MESSAGE("src1=|" << s1 << "|" << 
+                  " src2=|" << s2 << "|" <<
+                  " src1F=|" << s1F << "|" <<
+                  " src2F=|" << s2F << "|" <<
+                  " expect=" << expected <<
+                  " expect2=" << expected2);
+#endif     
+
+    // Test in a more CHAR / padded way
+    result = SqlStrCmp<1,1>(src1.mStr, src1_storage,
+                            src2.mStr, src2_storage);
     BOOST_CHECK(src1.verify());
     BOOST_CHECK(src2.verify());
-
-#if 0
-    BOOST_MESSAGE(" src1=|" << s1 << "|" << 
-                  " src2=|" << s2 << "|" <<
-                  " expect=" << expected <<
-                  " expect2=" << expected2 <<
-                  " result=" << result);
-#endif     
     BOOST_CHECK_EQUAL(result, expected);
 
-    // check the exact opposite, even if equal
-    int result2 = SqlStrCmp_Fix<1,1>(src2.mStr, src2_storage,
-                                     src1.mStr, src1_storage);
-    BOOST_CHECK(src1.verify());
-    BOOST_CHECK(src2.verify());
-    BOOST_CHECK_EQUAL(result2 * -1, result);
-    
-    // force check of equal strings
-    result = SqlStrCmp_Fix<1,1>(src1.mStr, src1_storage,
+    // Test in a more CHAR / padded way, flip arguments
+    resultflip = SqlStrCmp<1,1>(src2.mStr, src2_storage,
                                 src1.mStr, src1_storage);
     BOOST_CHECK(src1.verify());
+    BOOST_CHECK(src2.verify());
+    BOOST_CHECK_EQUAL(resultflip * -1, result);
+
+    // Test in a more VARCHAR / non-padded way
+    result = SqlStrCmp<1,1>(src1.mStr, src1_len,
+                            src2.mStr, src2_len);
+    BOOST_CHECK(src1.verify());
+    BOOST_CHECK(src2.verify());
+    BOOST_CHECK_EQUAL(result, expected);
+
+    // Test in a more VARCHAR / non-padded way, flip arguments
+    resultflip = SqlStrCmp<1,1>(src2.mStr, src2_len,
+                                src1.mStr, src1_len);
+    BOOST_CHECK(src1.verify());
+    BOOST_CHECK(src2.verify());
+    BOOST_CHECK_EQUAL(resultflip * -1, result);
+
+    // Test in a mixed CHAR/VARCHAR mode
+    result = SqlStrCmp<1,1>(src1.mStr, src1_len,
+                            src2.mStr, src2_storage);
+    BOOST_CHECK(src1.verify());
+    BOOST_CHECK(src2.verify());
+    BOOST_CHECK_EQUAL(result, expected);
+
+    // Test in a mixed CHAR/VARCHAR mode, flip
+    resultflip = SqlStrCmp<1,1>(src2.mStr, src2_storage,
+                                src1.mStr, src1_len);
+    BOOST_CHECK(src1.verify());
+    BOOST_CHECK(src2.verify());
+    BOOST_CHECK_EQUAL(resultflip * -1, result);
+
+    // Test in a mixed CHAR/VARCHAR mode, flip types
+    result = SqlStrCmp<1,1>(src1.mStr, src1_storage,
+                            src2.mStr, src2_len);
+    BOOST_CHECK(src1.verify());
+    BOOST_CHECK(src2.verify());
+    BOOST_CHECK_EQUAL(result, expected);
+
+    // Test in a mixed CHAR/VARCHAR mode, flip types and flip args
+    resultflip = SqlStrCmp<1,1>(src2.mStr, src2_len,
+                                src1.mStr, src1_storage);
+    BOOST_CHECK(src1.verify());
+    BOOST_CHECK(src2.verify());
+    BOOST_CHECK_EQUAL(resultflip * -1, result);
+
+
+    // force check of equal strings
+    result = SqlStrCmp<1,1>(src1.mStr, src1_storage,
+                            src1.mStr, src1_storage);
+    BOOST_CHECK(src1.verify());
     BOOST_CHECK_EQUAL(result, 0);
-    
+
+    result = SqlStrCmp<1,1>(src1.mStr, src1_len,
+                            src1.mStr, src1_len);
+    BOOST_CHECK(src1.verify());
+    BOOST_CHECK_EQUAL(result, 0);
+
+    result = SqlStrCmp<1,1>(src1.mStr, src1_storage,
+                            src1.mStr, src1_len);
+    BOOST_CHECK(src1.verify());
+    BOOST_CHECK_EQUAL(result, 0);
+
+    result = SqlStrCmp<1,1>(src1.mStr, src1_len,
+                            src1.mStr, src1_storage);
+    BOOST_CHECK(src1.verify());
+    BOOST_CHECK_EQUAL(result, 0);
+
+    result = SqlStrCmp<1,1>(src2.mStr, src2_storage,
+                            src2.mStr, src2_storage);
+    BOOST_CHECK(src2.verify());
+    BOOST_CHECK_EQUAL(result, 0);
+
+    result = SqlStrCmp<1,1>(src2.mStr, src2_len,
+                            src2.mStr, src2_len);
+    BOOST_CHECK(src2.verify());
+    BOOST_CHECK_EQUAL(result, 0);
 }
 
 
 void
-SqlStringTest::testSqlStringCmp_Fix_DiffLen()
+SqlStringTest::testSqlStringCmp()
 {
     int src1_storage, src2_storage, src1_len, src2_len;
-    unsigned char startchar;
+    
+    // can't test w/ 0, confuses strcmp and/or std:string
+    // want to test test some values less than 'space', some 
+    // values between 'space' and 127, some values around 127,
+    // and some values above 127. Thus test every 30
+    // characters (space is 32) in the full 8-bit range to
+    // hit all combinations these areas to insure that there
+    // are no unsigned/signed issues, less than space
+    // issues, etc. given that PAD SPACE is the default and
+    // only supported mode, testing characters less than
+    // space doesn't make sense until NO PAD is supported.
+    // therefore startchar, for now starts one greater than
+    // space
+    int startc = ' ' + 1;  // should be 1 to test NO PAD
+    int range = 255 - startc;
 
     for (src1_storage = 0; src1_storage <= MAXLEN; src1_storage++) {
         for (src1_len = 0; src1_len < src1_storage; src1_len++) {
             for (src2_storage = 0; src2_storage <= MAXLEN; src2_storage++) {
                 for (src2_len = 0; src2_len < src2_storage; src2_len++) {
-                    // can't test w/ 0, confuses strcmp and/or std:string
-                    for (startchar = 1; startchar < 255; startchar++) {
-                        SqlStringBuffer src1(src1_storage, src1_len,
-                                             0, src1_storage - src1_len, 
-                                             'd', ' ');
-                        SqlStringBuffer src2(src2_storage, src2_len,
-                                             0, src2_storage-src2_len,
-                                             's', ' ');
-                        
-                        src1.patternfill(startchar, 1, 255);
-                        src2.patternfill(startchar, 1, 255);
-                        
-                        testSqlStringCmp_Fix_Helper(src1, src1_storage, src1_len,
-                                                    src2, src2_storage, src2_len);
+                    for (int startchar1 = startc; startchar1 < 255;
+                         startchar1+=30) {
+                        for (int startchar2 = startc; startchar2 < 255;
+                             startchar2+=30) {
+                            SqlStringBuffer src1(src1_storage, src1_len,
+                                                 0, src1_storage - src1_len, 
+                                                 'd', ' ');
+                            SqlStringBuffer src2(src2_storage, src2_len,
+                                                 0, src2_storage-src2_len,
+                                                 's', ' ');
+                            
+                            src1.patternfill(startchar1, startc, 255);
+                            src2.patternfill(startchar2, startc, 255);
+                            
+                            testSqlStringCmp_Helper(src1, src1_storage,
+                                                    src1_len,
+                                                    src2, src2_storage,
+                                                    src2_len);
+                        }
                     }
+                }
+                // try some fully random character groupings as a test
+                // to the more controlled test above
+                for (int randX = 0; randX < 5; randX++) {
+                    SqlStringBuffer src1(src1_storage, src1_len,
+                                         0, src1_storage - src1_len, 
+                                         'd', ' ');
+                    SqlStringBuffer src2(src2_storage, src2_len,
+                                         0, src2_storage-src2_len,
+                                         's', ' ');
+                    
+                    src1.randomize(startc + (rand() % range), startc, 255);
+                    src2.randomize(startc + (rand() % range), startc, 255);
+                    
+                    testSqlStringCmp_Helper(src1, src1_storage, src1_len,
+                                            src2, src2_storage, src2_len);
                 }
             }
         }
     }
 }
 
+// src1 and src2 are always not equal, except when both 0 length
+void
+SqlStringTest::testSqlStringCmp_Bin_Helper(
+    SqlStringBuffer &src1,
+    int src1_storage,
+    int src1_len,
+    SqlStringBuffer &src2,
+    int src2_storage,
+    int src2_len)
+{
+    int result;
+    string s1(src1.mStr, src1_len);
+    string s2(src2.mStr, src2_len);
+#if 0
+    BOOST_MESSAGE("src1=|" << s1 << "| " << src1_len << " " << src1_storage <<
+                  " src2=|" << s2 << "| " << src2_len << " " << src2_storage);
+#endif     
+ 
+    int expected = testSqlStringNormalizeLexicalCmp(s1.compare(s2));
+    
+    // (generally) different values
+    result = SqlStrCmp_Bin(src1.mStr, src1_len,
+                           src2.mStr, src2_len);
+    BOOST_CHECK(src1.verify());
+    BOOST_CHECK(src2.verify());
+    BOOST_CHECK_EQUAL(expected, result);
+
+    // swap different values
+    result = SqlStrCmp_Bin(src2.mStr, src2_len,
+                           src1.mStr, src1_len);
+    BOOST_CHECK(src1.verify());
+    BOOST_CHECK(src2.verify());
+    BOOST_CHECK_EQUAL(expected * -1, result);
+        
+    // same string
+    result = SqlStrCmp_Bin(src1.mStr, src1_len,
+                           src1.mStr, src1_len);
+    BOOST_CHECK(src1.verify());
+    BOOST_CHECK_EQUAL(0, result);
+
+    // same string
+    result = SqlStrCmp_Bin(src2.mStr, src2_len,
+                           src2.mStr, src2_len);
+    BOOST_CHECK(src2.verify());
+    BOOST_CHECK_EQUAL(0, result);
+}
+
+// Lower must be > 0 to allow the use of strncmp() in testing
+void
+SqlStringTest::testSqlStringCmp_Bin_Helper2(int &lower, int &upper)
+{
+    lower = (rand() % 254) + 1;
+    upper = lower + (rand() % (255-lower));
+    assert(lower > 0 && lower < 256);
+    assert(upper > 0 && upper < 256);
+    assert(lower <= upper);
+}
 
 void
-SqlStringTest::testSqlStringCmp_Fix_EqLen()
+SqlStringTest::testSqlStringCmp_Bin()
 {
-    int src1_storage, src2_storage, src1_len, src2_len, randX;
-    
-    // not much point large length, chances of 2 random strings being equal
-    // are very low. test forces an equality check anyway.
-    src1_storage = MAXCMPLEN;
-    src2_storage = MAXCMPLEN;
-    for (src1_len = 0; src1_len < src1_storage; src1_len++) {
-        src2_len = src1_len;
-        for (randX = 0; randX <= MAXCMPRANDOM; randX++) {
+    // See SQL2003 Part 2 Section 4.3.2. Binary strings are equal only if
+    // they are same length if following SQL2003 strictly. Allow an
+    // extension to test for inequalities, therefore test for -1, 0, 1
+    // memcmp() semantics.
+    int src1_storage, src2_storage, src1_len, src2_len;
+
+    for (src1_storage = 0; src1_storage <= MAXCMPLEN; src1_storage++) {
+        src1_len = src1_storage;
+        for (src2_storage = 0; src2_storage <= MAXCMPLEN; src2_storage++) {
+            src2_len = src2_storage;
             SqlStringBuffer src1(src1_storage, src1_len,
                                  0, src1_storage - src1_len, 
                                  'd', ' ');
             SqlStringBuffer src2(src2_storage, src2_len,
                                  0, src2_storage-src2_len,
                                  's', ' ');
-            
-            // can't test w/ 0, confuses strcmp and/or std:string
-            src1.randomize(1, 1, 255);
-            src2.randomize(1, 1, 255);
-            
-            testSqlStringCmp_Fix_Helper(src1, src1_storage, src1_len,
-                                        src2, src2_storage, src2_len);
-        }
-    }
-}
+            testSqlStringCmp_Bin_Helper(
+                src1, src1_storage, src1_len,
+                src2, src2_storage, src2_len);
 
-
-void
-SqlStringTest::testSqlStringCmp_Var_Helper(SqlStringBuffer &src1,
-                                           int src1_len,
-                                           SqlStringBuffer &src2,
-                                           int src2_len)
-{
-    int result;
-    
-    string s1(src1.mStr, src1_len);
-    string s2(src2.mStr, src2_len);
-        
-    int expected = testSqlStringNormalizeLexicalCmp(s1.compare(s2));
-    char const * const s1p = s1.c_str();
-    char const * const s2p = s2.c_str();
-    int expected2 = testSqlStringNormalizeLexicalCmp(strcmp(s1p, s2p));
-    BOOST_CHECK_EQUAL(expected, expected2);
-    
-
-    result = SqlStrCmp_Var<1,1>(src1.mStr, src1_len,
-                                src2.mStr, src2_len);
-    BOOST_CHECK(src1.verify());
-    BOOST_CHECK(src2.verify());
-
-#if 0    
-    BOOST_MESSAGE(" src1=|" << s1 << "|" << 
-                  " src2=|" << s2 << "|" <<
-                  " expect=" << expected <<
-                  " expect2=" << expected2 <<
-                  " result=" << result);
-#endif     
-    BOOST_CHECK_EQUAL(result, expected);
-
-    // check the exact opposite, even if equal
-    int result2 = SqlStrCmp_Var<1,1>(src2.mStr, src2_len,
-                                     src1.mStr, src1_len);
-    BOOST_CHECK(src1.verify());
-    BOOST_CHECK(src2.verify());
-    BOOST_CHECK_EQUAL(result2 * -1, result);
-    
-    // force check of equal strings
-    result = SqlStrCmp_Var<1,1>(src1.mStr, src1_len,
-                                src1.mStr, src1_len);
-    BOOST_CHECK(src1.verify());
-    BOOST_CHECK_EQUAL(result, 0);
-    
-}
-
-    
-void
-SqlStringTest::testSqlStringCmp_Var_DiffLen()
-{
-    int src1_storage, src2_storage, src1_len, src2_len;
-    unsigned char startchar;
-
-    for (src1_storage = 0; src1_storage <= MAXLEN; src1_storage++) {
-        src1_len = src1_storage;
-        for (src2_storage = 0; src2_storage <= MAXLEN; src2_storage++) {
-            src2_len = src2_storage;
-            // can't test w/ 0, confuses strcmp and/or std:string
-            for (startchar = 1; startchar < 255; startchar++) {
-                SqlStringBuffer src1(src1_storage, src1_len,
-                                     0, src1_storage - src1_len, 
-                                     'd', ' ');
-                SqlStringBuffer src2(src2_storage, src2_len,
-                                     0, src2_storage-src2_len,
-                                     's', ' ');
-                
-                src1.patternfill(startchar, 1, 255);
-                src2.patternfill(startchar, 1, 255);
-                
-                testSqlStringCmp_Var_Helper(src1, src1_len,
-                                            src2, src2_len);
+            int lower, upper;
+            int maxcmp = MAXCMPRANDOM >> 2; // no need for high iteration count
+            if (maxcmp < 16) maxcmp = 16;
+            for (int randX = 0; randX < maxcmp; randX++) {
+                testSqlStringCmp_Bin_Helper2(lower, upper);
+                src1.randomize(lower, lower, upper);
+                // src2 must not == src1, except when 0 length
+                int count = 100;
+                do {
+                    testSqlStringCmp_Bin_Helper2(lower, upper);
+                    src2.randomize(lower, lower, upper);
+                } while (src1_len > 0 && count > 0 &&
+                         !memcmp(src1.mStr, src2.mStr, src1_len));
+                if (count < 1) {
+                    // bad luck, just give up on this iteration
+                    BOOST_MESSAGE("giving up on impossible random string gen");
+                    break;
+                }
+                testSqlStringCmp_Bin_Helper(
+                    src1, src1_storage, src1_len,
+                    src2, src2_storage, src2_len);
             }
         }
     }
 }
-
-
-void
-SqlStringTest::testSqlStringCmp_Var_EqLen()
-{
-    int src1_storage, src2_storage, src1_len, src2_len, randX;
-    
-    // not much point large length, chances of 2 random strings being equal
-    // are very low. test forces an equality check anyway.
-    src1_storage = MAXCMPLEN;
-    src1_len = src1_storage;
-    src2_storage = src1_storage;
-    src2_len = src1_storage;
-    for (randX = 0; randX <= MAXCMPRANDOM; randX++) {
-        SqlStringBuffer src1(src1_storage, src1_len,
-                             0, src1_storage - src1_len, 
-                             'd', ' ');
-        SqlStringBuffer src2(src2_storage, src2_len,
-                             0, src2_storage-src2_len,
-                             's', ' ');
-        
-        // can't test w/ 0, confuses strcmp and/or std:string
-        src1.randomize(1, 1, 255);
-        src2.randomize(1, 1, 255);
-
-        testSqlStringCmp_Var_Helper(src1, src1_len,
-                                    src2, src2_len);
-    }
-}
-
 
 void
 SqlStringTest::testSqlStringLenBit()
@@ -1069,7 +1142,6 @@ SqlStringTest::testSqlStringLenBit()
         }
     }
 }
-
 
 void
 SqlStringTest::testSqlStringLenChar()

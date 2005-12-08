@@ -362,54 +362,267 @@ Was expecting one of:
 |         |
 +---------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> values x'ff'=x'ff';
+0: jdbc:farrago:> -- SQL2003 Part 2 Section 4.3.2 and
+0: jdbc:farrago:> -- SQL2003 Part 2 Section 8.2 General Rule 4 state
+0: jdbc:farrago:> -- that CLOBS (ex. BINARY/VARBINARY) may only be compared for
+0: jdbc:farrago:> -- equality. Currently allow the other (>,>=, etc.) comparisons
+0: jdbc:farrago:> -- as an extension.
+0: jdbc:farrago:> -- tests that return true:
+0: jdbc:farrago:> values   x'ff' =  x'ff';
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> values X'f2'<>x'ff';
+0: jdbc:farrago:> values   x'ff' <= x'ff';
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> values x'11'>x'01';
+0: jdbc:farrago:> values   x'ff' >= x'ff';
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> values x'11'<x'aa';
+0: jdbc:farrago:> values   x'00' =  x'00';
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> values x'0a'<=x'0a';
+0: jdbc:farrago:> values x'00ff' =  x'00ff';
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> values x'0a'<=x'10';
+0: jdbc:farrago:> values   x'ff' >  x'00';
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> values x'20'<=x'10';
+0: jdbc:farrago:> values x'00ff' >  x'0000';
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> values x'0000' >  x'00';
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> values   x'ff' >= x'00';
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> values x'00ff' >= x'0000';
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> values x'0000' >= x'00';
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> values   x'00' <  x'ff';
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> values   x'00' <  x'0000';
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> values x'0000' <  x'00ff';
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> values   x'00' <= x'ff';
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> values   x'00' <= x'0000';
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> values x'0000' <= x'00ff';
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> values   x'00' <> x'ff';
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> values   x'ff' <> x'00';
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> values x'0000' <> x'0001';
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> values x'0000' <> x'00';
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> values   x'00' <> x'0000';
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- symmetric (inverted) tests return false:
+0: jdbc:farrago:> values   x'ff' <>  x'ff';
 +---------+
 | EXPR$0  |
 +---------+
 | false   |
 +---------+
-0: jdbc:farrago:> values x'0001'>=x'100000';
+0: jdbc:farrago:> values   x'00' <>  x'00';
 +---------+
 | EXPR$0  |
 +---------+
 | false   |
 +---------+
+0: jdbc:farrago:> values x'00ff' <>  x'00ff';
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> values   x'ff' <  x'00';
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> values x'00ff' <  x'0000';
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> values x'0000' <  x'00';
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> values   x'ff' <= x'00';
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> values x'00ff' <= x'0000';
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> values x'0000' <= x'00';
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> values   x'00' >  x'ff';
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> values   x'00' >  x'0000';
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> values x'0000' >  x'00ff';
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> values   x'00' >= x'ff';
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> values   x'00' >= x'0000';
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> values x'0000' >= x'00ff';
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> values   x'00' =  x'ff';
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> values   x'ff' =  x'00';
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> values x'0000' =  x'0001';
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> values x'0000' =  x'00';
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> values   x'00' =  x'0000';
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values 'a' is distinct from 'a';
 +---------+

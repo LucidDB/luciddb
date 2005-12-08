@@ -71,26 +71,14 @@ strCmpA(RegisterRef<int32_t>* result,
         RegisterRef<char*>* str1,
         RegisterRef<char*>* str2)
 {
-    assert(str1->type() == str2->type());
     assert(StandardTypeDescriptor::isTextArray(str1->type()));
 
     if (str1->isNull() || str2->isNull()) {
         result->toNull();
     } else {
-        if (str1->type() == STANDARD_TYPE_CHAR) {
-            result->value(SqlStrCmp_Fix<1,1>
-                          (str1->pointer(),
-                           str1->storage(),
-                           str2->pointer(),
-                           str2->storage()));
-        } else {
-            assert(str1->type()== STANDARD_TYPE_VARCHAR);
-            result->value(SqlStrCmp_Var<1,1>
-                          (str1->pointer(),
-                           str1->length(),
-                           str2->pointer(),
-                           str2->length()));
-        }
+        result->value(SqlStrCmp<1,1>(
+                          str1->pointer(), str1->storage(),
+                          str2->pointer(), str2->storage()));
     }
 }
 
@@ -99,26 +87,14 @@ strCmpOct(RegisterRef<int32_t>* result,
           RegisterRef<char*>* str1,
           RegisterRef<char*>* str2)
 {
-    assert(str1->type() == str2->type());
     assert(StandardTypeDescriptor::isBinaryArray(str1->type()));
 
     if (str1->isNull() || str2->isNull()) {
         result->toNull();
     } else {
-        if (str1->type() == STANDARD_TYPE_BINARY) {
-            result->value(SqlStrCmp_Fix<1,1>
-                          (str1->pointer(),
-                           str1->storage(),
-                           str2->pointer(),
-                           str2->storage()));
-        } else {
-            assert(str1->type()== STANDARD_TYPE_VARBINARY);
-            result->value(SqlStrCmp_Var<1,1>
-                          (str1->pointer(),
-                           str1->length(),
-                           str2->pointer(),
-                           str2->length()));
-        }
+        result->value(SqlStrCmp_Bin(
+                          str1->pointer(), str1->storage(),
+                          str2->pointer(), str2->storage()));
     }
 }
 
@@ -459,11 +435,29 @@ ExtStringRegister(ExtendedInstructionTable* eit)
     params_1N_2V.push_back(STANDARD_TYPE_VARCHAR);
     params_1N_2V.push_back(STANDARD_TYPE_VARCHAR);
 
+    vector<StandardTypeDescriptorOrdinal> params_1N_1F_1V;
+    params_1N_1F_1V.push_back(STANDARD_TYPE_INT_32);
+    params_1N_1F_1V.push_back(STANDARD_TYPE_CHAR);
+    params_1N_1F_1V.push_back(STANDARD_TYPE_VARCHAR);
+
+    vector<StandardTypeDescriptorOrdinal> params_1N_1V_1F;
+    params_1N_1V_1F.push_back(STANDARD_TYPE_INT_32);
+    params_1N_1V_1F.push_back(STANDARD_TYPE_VARCHAR);
+    params_1N_1V_1F.push_back(STANDARD_TYPE_CHAR);
+
     eit->add("strCmpA", params_1N_2F,
              (ExtendedInstruction3<int32_t, char*, char*>*) NULL,
              &strCmpA);
 
     eit->add("strCmpA", params_1N_2V,
+             (ExtendedInstruction3<int32_t, char*, char*>*) NULL,
+             &strCmpA);
+
+    eit->add("strCmpA", params_1N_1F_1V,
+             (ExtendedInstruction3<int32_t, char*, char*>*) NULL,
+             &strCmpA);
+
+    eit->add("strCmpA", params_1N_1V_1F,
              (ExtendedInstruction3<int32_t, char*, char*>*) NULL,
              &strCmpA);
 
@@ -485,11 +479,29 @@ ExtStringRegister(ExtendedInstructionTable* eit)
     params_1N_2VB.push_back(STANDARD_TYPE_VARBINARY);
     params_1N_2VB.push_back(STANDARD_TYPE_VARBINARY);
 
+    vector<StandardTypeDescriptorOrdinal> params_1N_1B_1VB;
+    params_1N_1B_1VB.push_back(STANDARD_TYPE_INT_32);
+    params_1N_1B_1VB.push_back(STANDARD_TYPE_BINARY);
+    params_1N_1B_1VB.push_back(STANDARD_TYPE_VARBINARY);
+
+    vector<StandardTypeDescriptorOrdinal> params_1N_1VB_1B;
+    params_1N_1VB_1B.push_back(STANDARD_TYPE_INT_32);
+    params_1N_1VB_1B.push_back(STANDARD_TYPE_VARBINARY);
+    params_1N_1VB_1B.push_back(STANDARD_TYPE_BINARY);
+
     eit->add("strCmpOct", params_1N_2B,
              (ExtendedInstruction3<int32_t, char*, char*>*) NULL,
              &strCmpOct);
 
     eit->add("strCmpOct", params_1N_2VB,
+             (ExtendedInstruction3<int32_t, char*, char*>*) NULL,
+             &strCmpOct);
+
+    eit->add("strCmpOct", params_1N_1B_1VB,
+             (ExtendedInstruction3<int32_t, char*, char*>*) NULL,
+             &strCmpOct);
+
+    eit->add("strCmpOct", params_1N_1VB_1B,
              (ExtendedInstruction3<int32_t, char*, char*>*) NULL,
              &strCmpOct);
 
