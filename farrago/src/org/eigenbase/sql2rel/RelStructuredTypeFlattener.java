@@ -413,7 +413,12 @@ public class RelStructuredTypeFlattener
         setNewForOldRel(rel, newRel);
     }
 
-    private void rewriteGeneric(RelNode rel)
+    public void rewriteRel(SelfFlatteningRel rel)
+    {
+        rel.flattenRel(this);
+    }
+    
+    public void rewriteGeneric(RelNode rel)
     {
         RelNode newRel = RelOptUtil.clone(rel);
         RelNode [] oldInputs = rel.getInputs();
@@ -705,6 +710,11 @@ public class RelStructuredTypeFlattener
                 return conjunction;
             }
         }
+    }
+    
+    public interface SelfFlatteningRel extends RelNode
+    {
+        void flattenRel(RelStructuredTypeFlattener flattener);
     }
 }
 
