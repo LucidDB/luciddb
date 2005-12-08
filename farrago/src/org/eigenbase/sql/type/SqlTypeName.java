@@ -239,6 +239,7 @@ public class SqlTypeName extends EnumeratedValues.SerializableValue
         setNameForJdbcType(Types.DATE, Date);
         setNameForJdbcType(Types.TIME, Time);
         setNameForJdbcType(Types.TIMESTAMP, Timestamp);
+        setNameForJdbcType(Types.BIT, Boolean);
         setNameForJdbcType(Types.BOOLEAN, Boolean);
         setNameForJdbcType(Types.DISTINCT, Distinct);
         setNameForJdbcType(Types.STRUCT, Structured);

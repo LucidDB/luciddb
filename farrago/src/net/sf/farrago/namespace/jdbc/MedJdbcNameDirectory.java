@@ -33,6 +33,7 @@ import net.sf.farrago.util.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.util.*;
@@ -209,14 +210,19 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
                 FarragoMedMetadataQuery.OTN_TABLE);
             boolean wantColumns = query.getResultObjectTypes().contains(
                 FarragoMedMetadataQuery.OTN_COLUMN);
-            List tableList = new ArrayList();
+            List tableListActual = new ArrayList();
+            List tableListOptimized = new ArrayList();
             if (wantTables) {
-                if (!queryTables(query, sink, tableList)) {
+                if (!queryTables(
+                        query, sink, tableListActual, tableListOptimized))
+                {
                     return false;
                 }
             }
             if (wantColumns) {
-                if (!queryColumns(query, sink, tableList)) {
+                if (!queryColumns(
+                        query, sink, tableListActual, tableListOptimized))
+                {
                     return false;
                 }
             }
@@ -267,7 +273,8 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
     private boolean queryTables(
         FarragoMedMetadataQuery query,
         FarragoMedMetadataSink sink,
-        List tableList)
+        List tableListActual,
+        List tableListOptimized)
         throws SQLException
     {
         assert(schemaName != null);
@@ -317,7 +324,7 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
                     remarks,
                     props);
                 if (include) {
-                    tableList.add(tableName);
+                    tableListActual.add(tableName);
                 }
             }
         } finally {
@@ -325,15 +332,16 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
         }
 
         // decide on column retrieval plan
-        double dMatching = (double) tableList.size();
+        double dMatching = (double) tableListActual.size();
         // +1:  avoid divided by zero
         double dReturned = (double) nTablesReturned + 1;
         if (dMatching / dReturned > 0.3) {
             // a significant portion of the tables returned are matches,
             // so just scan all columns at once and post-filter them,
             // rather than making repeated single-table metadata calls
-            tableList.clear();
-            tableList.add("*");
+            tableListOptimized.add("*");
+        } else {
+            tableListOptimized.addAll(tableListActual);
         }
         
         return true;
@@ -342,16 +350,18 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
     private boolean queryColumns(
         FarragoMedMetadataQuery query,
         FarragoMedMetadataSink sink,
-        List tableList)
+        List tableListActual,
+        List tableListOptimized)
         throws SQLException
     {
-        if (tableList.equals(Collections.singletonList("*"))) {
-            return queryColumnsImpl(query, sink, null);
+        if (tableListOptimized.equals(Collections.singletonList("*"))) {
+            return queryColumnsImpl(
+                query, sink, null, new HashSet(tableListActual));
         } else {
-            Iterator iter = tableList.iterator();
+            Iterator iter = tableListOptimized.iterator();
             while (iter.hasNext()) {
                 String tableName = (String) iter.next();
-                if (!queryColumnsImpl(query, sink, tableName)) {
+                if (!queryColumnsImpl(query, sink, tableName, null)) {
                     return false;
                 }
             }
@@ -362,7 +372,8 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
     private boolean queryColumnsImpl(
         FarragoMedMetadataQuery query,
         FarragoMedMetadataSink sink,
-        String tableName)
+        String tableName,
+        Set tableSet)
         throws SQLException
     {
         String schemaPattern = getSchemaPattern();
@@ -400,9 +411,44 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
                     continue;
                 }
                 String returnedTableName = resultSet.getString(3);
+                if (tableSet != null) {
+                    if (!tableSet.contains(returnedTableName)) {
+                        continue;
+                    }
+                }
                 String columnName = resultSet.getString(4);
-                RelDataType type = sink.getTypeFactory().createJdbcColumnType(
-                    resultSet);
+                RelDataType type;
+                try {
+                    type =
+                        sink.getTypeFactory().createJdbcColumnType(resultSet);
+                    // TODO jvs 7-Dec-2005: get rid of this once
+                    // we support DECIMAL type; for now fake it as VARCHAR
+                    if (type.getSqlTypeName() == SqlTypeName.Decimal) {
+                        type = sink.getTypeFactory().createSqlType(
+                            SqlTypeName.Double);
+                    }
+                    if (SqlTypeFamily.Datetime.getTypeNames().contains(
+                            type.getSqlTypeName()))
+                    {
+                        // TODO jvs 7-Dec-2005: proper precision lowering
+                        // once we support anything greater than 0
+                        // for datetime precision; for now we just
+                        // toss the precision.
+                        type = sink.getTypeFactory().createSqlType(
+                            type.getSqlTypeName());
+                    }
+                } catch (Throwable ex) {
+                    // TODO jvs 7-Dec-2005: post this as a warning once we have
+                    // warning support set up.  For now the only way to see it
+                    // is to look at the trace log.  The reason we carry on
+                    // here is that a lot of tables may contain types we don't
+                    // support, and it's a pain for the user to have to exclude
+                    // them one by one via trial and error.
+                    type =
+                        sink.getTypeFactory().createSqlType(
+                            SqlTypeName.Varchar,
+                            1024);
+                }
                 String remarks = resultSet.getString(12);
                 String defaultValue = resultSet.getString(13);
                 int ordinalZeroBased = resultSet.getInt(17) - 1;
