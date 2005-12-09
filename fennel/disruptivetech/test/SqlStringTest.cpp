@@ -1078,6 +1078,9 @@ SqlStringTest::testSqlStringCmp_Bin()
                 src1, src1_storage, src1_len,
                 src2, src2_storage, src2_len);
 
+            if (src1_len == 0 || src2_len == 0) {
+                continue;
+            }
             int lower, upper;
             int maxcmp = MAXCMPRANDOM >> 2; // no need for high iteration count
             if (maxcmp < 16) maxcmp = 16;
@@ -1089,7 +1092,7 @@ SqlStringTest::testSqlStringCmp_Bin()
                 do {
                     testSqlStringCmp_Bin_Helper2(lower, upper);
                     src2.randomize(lower, lower, upper);
-                } while (src1_len > 0 && count > 0 &&
+                } while (src1_len > 0 && count-- > 0 &&
                          !memcmp(src1.mStr, src2.mStr, src1_len));
                 if (count < 1) {
                     // bad luck, just give up on this iteration
