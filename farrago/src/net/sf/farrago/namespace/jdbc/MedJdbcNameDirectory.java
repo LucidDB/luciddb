@@ -417,10 +417,13 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
                     }
                 }
                 String columnName = resultSet.getString(4);
+                boolean isNullable =
+                    resultSet.getInt(11) != DatabaseMetaData.columnNoNulls;
                 RelDataType type;
                 try {
                     type =
                         sink.getTypeFactory().createJdbcColumnType(resultSet);
+
                     // TODO jvs 7-Dec-2005: get rid of this once
                     // we support DECIMAL type; for now fake it as VARCHAR
                     if (type.getSqlTypeName() == SqlTypeName.Decimal) {
@@ -449,6 +452,12 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
                             SqlTypeName.Varchar,
                             1024);
                 }
+
+                // In case we tailored the type, preserve
+                // its original nullability.
+                type = sink.getTypeFactory().createTypeWithNullability(
+                    type, isNullable);
+                    
                 String remarks = resultSet.getString(12);
                 String defaultValue = resultSet.getString(13);
                 int ordinalZeroBased = resultSet.getInt(17) - 1;
