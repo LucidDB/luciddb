@@ -43,6 +43,8 @@ struct TupleDatum
     static const TupleStorageByteLength ONE_BYTE_MAX_LENGTH = 127;
     static const TupleStorageByteLength TWO_BYTE_MAX_LENGTH = 32767;
     static const uint8_t ONE_BYTE_LENGTH_MASK = 0x7f;
+    static const uint16_t TWO_BYTE_LENGTH_MASK1 = 0x7f00;
+    static const uint16_t TWO_BYTE_LENGTH_MASK2 = 0x00ff;
     static const uint8_t TWO_BYTE_LENGTH_BIT = 0x80;
 
     TupleStorageByteLength cbData;

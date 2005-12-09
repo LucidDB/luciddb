@@ -25,7 +25,7 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-LcsClusterVerifier::LcsClusterVerifier(BTreeDescriptor &treeDescriptor) :
+LcsClusterVerifier::LcsClusterVerifier(BTreeDescriptor const &treeDescriptor) :
     LcsClusterReader(treeDescriptor)
 {
 }

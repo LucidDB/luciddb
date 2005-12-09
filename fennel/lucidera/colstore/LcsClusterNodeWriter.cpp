@@ -26,16 +26,16 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-LcsClusterNodeWriter::LcsClusterNodeWriter(BTreeDescriptor &treeDescriptor,
-                                           SegmentAccessor &accessor,
+LcsClusterNodeWriter::LcsClusterNodeWriter(BTreeDescriptor &treeDescriptorInit,
+                                           SegmentAccessor &accessorInit,
                                            SharedTraceTarget pTraceTargetInit,
                                            std::string nameInit) :
-    LcsClusterAccessBase(treeDescriptor)
+    LcsClusterAccessBase(treeDescriptorInit)
 {
-    scratchAccessor = accessor;
+    scratchAccessor = accessorInit;
     bufferLock.accessSegment(scratchAccessor);
-    bTreeWriter = SharedBTreeWriter(new BTreeWriter(treeDescriptor,
-                                                    scratchAccessor));
+    bTreeWriter = SharedBTreeWriter(new BTreeWriter(treeDescriptorInit,
+            scratchAccessor));
     clusterDump = SharedLcsClusterDump(
                     new LcsClusterDump(TRACE_FINE, pTraceTargetInit,
                                        nameInit));
@@ -68,6 +68,7 @@ LcsClusterNodeWriter::~LcsClusterNodeWriter()
 
 void LcsClusterNodeWriter::Close()
 {
+    bTreeWriter.reset();
     m_batch.reset();
     m_pValBank.reset();
     m_pValBankStart.reset();
@@ -1135,51 +1136,52 @@ void LcsClusterNodeWriter::MoveFromTempToIndex()
 void LcsClusterNodeWriter::AllocArrays()
 {
     // allocate arrays only if they have not been allocated already
-    if (m_allocArrays)
-        return;
-    m_allocArrays = true;
+    if (!m_allocArrays) {        
+        m_allocArrays = true;
 
-    m_batch.reset(new LcsBatchDir[m_numColumns]);
+        m_batch.reset(new LcsBatchDir[m_numColumns]);
+        
+        m_pValBank.reset(new PBuffer[m_numColumns]);
 
-    m_pValBank.reset(new PBuffer[m_numColumns]);
+        // allocate larger buffers for the individual pages in the value bank
 
-    // allocate larger buffers for the individual pages in the value bank
+        for (uint col = 0; col < m_numColumns; col++) {
+            bufferLock.allocatePage();
+            m_pValBank[col] = bufferLock.getPage().getWritableData();
+            // Similar to what's done in external sorter, we rely on the fact
+            // that the underlying ScratchSegment keeps the page pinned for us.
+            // The pages will be released when all other pages associated with
+            // the ScratchSegment are released.
+            bufferLock.unlock();
+        }
 
-    for (uint col = 0; col < m_numColumns; col++) {
-        bufferLock.allocatePage();
-        m_pValBank[col] = bufferLock.getPage().getWritableData();
-        // Similar to what's done in external sorter, we rely on the fact
-        // that the underlying ScratchSegment keeps the page pinned for us.
-        // The pages will be released when all other pages associated with
-        // the ScratchSegment are released.
-        bufferLock.unlock();
+        m_pValBankStart.reset(new uint16_t[m_numColumns]);
+
+        m_forceModeCount.reset(new uint[m_numColumns]);
+        
+        m_bForceMode.reset(new ForceMode[m_numColumns]);
+
+        m_oValBank.reset(new uint16_t[m_numColumns]);
+    
+        m_batchOffset.reset(new uint16_t[m_numColumns]);
+
+        m_batchCount.reset(new uint[m_numColumns]);
+
+        m_nBits.reset(new uint[m_numColumns]);
+
+        m_nextWidthChange.reset(new uint[m_numColumns]);
+
+        m_maxValueSize.reset(new uint[m_numColumns]);
     }
 
-    m_pValBankStart.reset(new uint16_t[m_numColumns]);
     memset(m_pValBankStart.get(), 0, m_numColumns * sizeof(uint16_t));
-
-    m_forceModeCount.reset(new uint[m_numColumns]);
     memset(m_forceModeCount.get(), 0, m_numColumns * sizeof(uint));
-
-    m_bForceMode.reset(new ForceMode[m_numColumns]);
     memset(m_bForceMode.get(), 0, m_numColumns * sizeof(ForceMode));
-
-    m_oValBank.reset(new uint16_t[m_numColumns]);
     memset(m_oValBank.get(), 0, m_numColumns * sizeof(uint16_t));
-    
-    m_batchOffset.reset(new uint16_t[m_numColumns]);
     memset(m_batchOffset.get(), 0, m_numColumns * sizeof(uint16_t));
-
-    m_batchCount.reset(new uint[m_numColumns]);
     memset(m_batchCount.get(), 0, m_numColumns * sizeof(uint));
-
-    m_nBits.reset(new uint[m_numColumns]);
     memset(m_nBits.get(), 0, m_numColumns * sizeof(uint));
-
-    m_nextWidthChange.reset(new uint[m_numColumns]);
     memset(m_nextWidthChange.get(), 0, m_numColumns * sizeof(uint));
-
-    m_maxValueSize.reset(new uint[m_numColumns]);
     memset(m_maxValueSize.get(), 0, m_numColumns * sizeof(uint));
 }
 

@@ -27,9 +27,10 @@
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 LcsClusterAccessBase::LcsClusterAccessBase(
-    BTreeDescriptor &treeDescriptor)
+    BTreeDescriptor const &treeDescriptor)
 {
-    clusterLock.accessSegment(treeDescriptor.segmentAccessor);
+    segmentAccessor = treeDescriptor.segmentAccessor;
+    clusterLock.accessSegment(segmentAccessor);
     bTreeTupleData.compute(treeDescriptor.tupleDescriptor);
 }
 

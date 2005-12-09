@@ -94,7 +94,7 @@ class BTreeTest : virtual public SegStorageTestBase
         uint nRecords,
         bool alternating,
         bool deletion);
-    void testSearch(SharedByteInputStream,uint nRecords);
+    void testSearch(SharedByteInputStream,uint nRecords,bool leastUpper);
     void testSearchLast();
     
 public:
@@ -200,7 +200,12 @@ void BTreeTest::testBulkLoad(uint nRecords,uint nLevelsExpected,bool newRoot)
 
     // Make sure we can search for each key individually
     pInputStream->seekSegPos(startPos);
-    testSearch(pInputStream,nRecords);
+    testSearch(pInputStream,nRecords,true);
+
+    // Do same search, but searching for greatest lower bound during
+    // intermediate searches
+    pInputStream->seekSegPos(startPos);
+    testSearch(pInputStream,nRecords,false);
     
     // Make sure we can scan all tuples
     pInputStream->seekSegPos(startPos);
@@ -242,13 +247,14 @@ void BTreeTest::verifyTree(uint nRecordsExpected,uint nLevelsExpected)
 }
 
 void BTreeTest::testSearch(
-    SharedByteInputStream pInputStream,uint nRecords)
+    SharedByteInputStream pInputStream,uint nRecords,bool leastUpper)
 {
     BTreeReader reader(descriptor);
     for (uint i = 0; i < nRecords; ++i) {
         pInputStream->readValue(record);
-        if (!reader.searchForKey(keyData,DUP_SEEK_ANY)) {
-            BOOST_FAIL("Could not find key #" << i << ":  " << record.key);
+        if (!reader.searchForKey(keyData,DUP_SEEK_ANY,leastUpper)) {
+            BOOST_FAIL("LeastUpper:" << leastUpper <<
+                       ". Could not find key #" << i << ":  " << record.key);
         }
         reader.getTupleAccessorForRead().unmarshal(tupleData);
         BOOST_CHECK_EQUAL(record.key,readKey());

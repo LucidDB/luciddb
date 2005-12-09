@@ -116,10 +116,6 @@ protected:
 
     // helpers for above visitors
 
-    void readBTreeStreamParams(
-        BTreeExecStreamParams &,
-        ProxyIndexAccessorDef &);
-    
     void readBTreeReadStreamParams(
         BTreeReadExecStreamParams &,
         ProxyIndexScanDef &);
@@ -174,6 +170,10 @@ public:
     void readTupleStreamParams(
         SingleOutputExecStreamParams &,
         ProxyTupleStreamDef &);
+
+    void readBTreeStreamParams(
+        BTreeExecStreamParams &,
+        ProxyIndexAccessorDef &);    
 };
 
 class ExecStreamSubFactory : public boost::noncopyable

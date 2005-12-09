@@ -240,8 +240,8 @@ private:
     }
 
 public:
-     explicit LcsClusterNodeWriter(BTreeDescriptor &treeDescriptor,
-                                   SegmentAccessor &accessor,
+     explicit LcsClusterNodeWriter(BTreeDescriptor &treeDescriptorInit,
+                                   SegmentAccessor &accessorInit,
                                    SharedTraceTarget pTraceTargetInit,
                                    std::string nameInit);
 

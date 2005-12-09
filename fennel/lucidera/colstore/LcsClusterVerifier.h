@@ -54,7 +54,7 @@ class LcsClusterVerifier : public LcsClusterReader
     ClusterPageData pageData;
 
 public:
-    explicit LcsClusterVerifier(BTreeDescriptor &treeDescriptor);
+    explicit LcsClusterVerifier(BTreeDescriptor const &treeDescriptor);
  
     /**
      * Retrieves cluster page data for the current cluster page

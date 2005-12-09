@@ -99,6 +99,16 @@ public abstract class TableModificationRelBase extends SingleRel
         return operation;
     }
 
+    public boolean isInsert()
+    {
+        return operation.equals(Operation.INSERT);
+    }
+    
+    public boolean isUpdate()
+    {
+        return operation.equals(Operation.UPDATE);
+    }    
+
     // implement RelNode
     public RelDataType deriveRowType()
     {
@@ -120,7 +130,7 @@ public abstract class TableModificationRelBase extends SingleRel
             return inputRowType;
         }
 
-        if (operation.equals(Operation.UPDATE)) {
+        if (isUpdate()) {
             inputRowType =
                 getCluster().getTypeFactory().createJoinType(
                     new RelDataType [] {

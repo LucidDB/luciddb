@@ -24,6 +24,7 @@
 #include "fennel/lucidera/colstore/LcsClusterAppendExecStream.h"
 #include "fennel/lucidera/colstore/LcsClusterDump.h"
 #include "fennel/lucidera/colstore/LcsClusterVerifier.h"
+#include "fennel/lucidera/colstore/LcsRowScanExecStream.h"
 #include "fennel/btree/BTreeBuilder.h"
 #include "fennel/ftrs/BTreeInsertExecStream.h"
 #include "fennel/ftrs/BTreeSearchExecStream.h"
@@ -46,24 +47,34 @@ protected:
     TupleAttributeDescriptor attrDesc_int64;
 
     PageId  savedRootPageId;
+    BTreeDescriptor btreeDescriptor;
     
-    void testImplSingleCol(
+    void testLoadSingleCol(
         uint nRows,
         bool newRoot,
         SharedMockProducerExecStreamGenerator pGeneratorInit, 
         std::string testName = "LcsClusterAppendExecStreamTest");
     
-    void testImplMultiCol(
+    void testLoadMultiCol(
         uint nRows,
         uint nCols,
         bool newRoot,
         SharedMockProducerExecStreamGenerator pGeneratorInit,
         std::string testName = "LcsClusterAppendExecStreamTest");
     
-    void verifyClusterPages(
-        BTreeDescriptor &btreeDescriptor,
-        std::string testName);
+    void verifyClusterPages(std::string testName);
     
+    void testScanSingleCol(
+        uint nrows,
+        SharedMockProducerExecStreamGenerator pGeneratorInit,
+        SharedMockProducerExecStreamGenerator pResultGenerator);
+
+    void testScanMultiCol(
+        uint nrows,
+        uint nCols,
+        SharedMockProducerExecStreamGenerator pGeneratorInit,
+        SharedMockProducerExecStreamGenerator pResultGenerator);
+
 public:
     explicit LcsClusterAppendExecStreamTest()
     {
@@ -92,10 +103,9 @@ public:
             testMultiColStairNewRoot);
         FENNEL_UNIT_TEST_CASE(LcsClusterAppendExecStreamTest,
             testMultiColStairOldRoot);
-        
     }
     void testCaseSetUp();
-
+    void testCaseTearDown();
     
     void testSingleColNoDupNewRoot();
     void testSingleColNoDupOldRoot();
@@ -105,7 +115,6 @@ public:
 
     void testSingleColStairNewRoot();
     void testSingleColStairOldRoot();
-
     
     void testMultiColNoDupNewRoot();
     void testMultiColNoDupOldRoot();
@@ -117,10 +126,7 @@ public:
     void testMultiColStairOldRoot();
 };
 
-
-void LcsClusterAppendExecStreamTest::verifyClusterPages(
-        BTreeDescriptor &btreeDescriptor,
-        std::string testName)
+void LcsClusterAppendExecStreamTest::verifyClusterPages(std::string testName)
 {
     bool found;
     PConstLcsClusterNode pBlock;
@@ -154,7 +160,7 @@ void LcsClusterAppendExecStreamTest::verifyClusterPages(
    in order for it to be preserved, the subsequent call with newRoot=false must
    be done within the same testcase call.
  */
-void LcsClusterAppendExecStreamTest::testImplSingleCol(
+void LcsClusterAppendExecStreamTest::testLoadSingleCol(
     uint nRows,
     bool newRoot,
     SharedMockProducerExecStreamGenerator pGeneratorInit,
@@ -191,7 +197,6 @@ void LcsClusterAppendExecStreamTest::testImplSingleCol(
     lcsAppendParams.pRootMap = 0;
     
     // setup temporary btree descriptor to get an empty page to start the btree
-    BTreeDescriptor btreeDescriptor;
 
     btreeDescriptor.segmentAccessor.pSegment = lcsAppendParams.pSegment;
     btreeDescriptor.segmentAccessor.pCacheAccessor = pCache;
@@ -230,11 +235,10 @@ void LcsClusterAppendExecStreamTest::testImplSingleCol(
 
     // read records from btree to obtain cluster page ids
     // and dump out contents of cluster pages
-    verifyClusterPages(btreeDescriptor, testName);
+    verifyClusterPages(testName);
 }
 
-
-void LcsClusterAppendExecStreamTest::testImplMultiCol(
+void LcsClusterAppendExecStreamTest::testLoadMultiCol(
     uint nRows,
     uint nCols,
     bool newRoot,
@@ -274,7 +278,6 @@ void LcsClusterAppendExecStreamTest::testImplMultiCol(
     lcsAppendParams.pRootMap = 0;
     
     // setup temporary btree descriptor to get an empty page to start the btree
-    BTreeDescriptor btreeDescriptor;
 
     btreeDescriptor.segmentAccessor.pSegment = lcsAppendParams.pSegment;
     btreeDescriptor.segmentAccessor.pCacheAccessor = pCache;
@@ -312,9 +315,115 @@ void LcsClusterAppendExecStreamTest::testImplMultiCol(
 
     // read records from btree to obtain cluster page ids
     // and dump out contents of cluster pages
-    verifyClusterPages(btreeDescriptor, testName);
+    verifyClusterPages(testName);
 }
 
+void LcsClusterAppendExecStreamTest::testScanSingleCol(
+    uint nrows,
+    SharedMockProducerExecStreamGenerator pGeneratorInit,
+    SharedMockProducerExecStreamGenerator pResultGenerator)
+{
+    SharedMockProducerExecStreamGenerator pGenerator = pGeneratorInit;
+
+    // setup input stream
+
+    MockProducerExecStreamParams mockParams;
+    mockParams.outputTupleDesc.push_back(attrDesc_int64);
+    mockParams.nRows = nrows;
+    mockParams.pGenerator = pGenerator;
+
+    ExecStreamEmbryo mockStreamEmbryo;
+    mockStreamEmbryo.init(new MockProducerExecStream(), mockParams);
+    mockStreamEmbryo.getStream()->setName("MockProducerScanExecStream");
+
+    // setup parameters into scan
+    //  single cluster with only one column, project that single column
+    
+    LcsRowScanExecStreamParams scanParams;
+    struct LcsClusterScanDef clusterScanDef;
+
+    clusterScanDef.clusterTupleDesc.push_back(attrDesc_int64);
+    clusterScanDef.pSegment = btreeDescriptor.segmentAccessor.pSegment;
+    clusterScanDef.pCacheAccessor =
+        btreeDescriptor.segmentAccessor.pCacheAccessor;
+    clusterScanDef.tupleDesc = btreeDescriptor.tupleDescriptor;
+    clusterScanDef.keyProj = btreeDescriptor.keyProjection;
+    clusterScanDef.rootPageId = btreeDescriptor.rootPageId;
+    clusterScanDef.segmentId = btreeDescriptor.segmentId;
+    clusterScanDef.pageOwnerId = btreeDescriptor.pageOwnerId;
+
+    scanParams.lcsClusterScanDefs.push_back(clusterScanDef);
+    scanParams.outputTupleDesc.push_back(attrDesc_int64);
+    scanParams.outputProj.push_back(0);
+
+    ExecStreamEmbryo scanStreamEmbryo;
+
+    scanStreamEmbryo.init(new LcsRowScanExecStream(), scanParams);
+    scanStreamEmbryo.getStream()->setName("RowScanExecStream");
+
+    SharedExecStream pOutputStream = prepareTransformGraph(
+        mockStreamEmbryo, scanStreamEmbryo);
+    
+    // result should be sequence of rows
+    verifyOutput(*pOutputStream, nrows, *pResultGenerator);
+}
+
+void LcsClusterAppendExecStreamTest::testScanMultiCol(
+    uint nrows,
+    uint nCols,
+    SharedMockProducerExecStreamGenerator pGeneratorInit,
+    SharedMockProducerExecStreamGenerator pResultGenerator)
+{
+    uint i;
+    SharedMockProducerExecStreamGenerator pGenerator = pGeneratorInit;
+
+    // setup input stream
+
+    MockProducerExecStreamParams mockParams;
+    for (i = 0; i < nCols; i++)
+        mockParams.outputTupleDesc.push_back(attrDesc_int64);
+    mockParams.nRows = nrows;
+    mockParams.pGenerator = pGenerator;
+
+    ExecStreamEmbryo mockStreamEmbryo;
+    mockStreamEmbryo.init(new MockProducerExecStream(), mockParams);
+    mockStreamEmbryo.getStream()->setName("MockProducerScanExecStream");
+
+    // setup parameters into scan
+    //  single cluster with only n columns, project all columns
+    
+    LcsRowScanExecStreamParams scanParams;
+    struct LcsClusterScanDef clusterScanDef;
+
+    for (i = 0; i < nCols; i++)
+        clusterScanDef.clusterTupleDesc.push_back(attrDesc_int64);
+
+    clusterScanDef.pSegment = btreeDescriptor.segmentAccessor.pSegment;
+    clusterScanDef.pCacheAccessor =
+        btreeDescriptor.segmentAccessor.pCacheAccessor;
+    clusterScanDef.tupleDesc = btreeDescriptor.tupleDescriptor;
+    clusterScanDef.keyProj = btreeDescriptor.keyProjection;
+    clusterScanDef.rootPageId = btreeDescriptor.rootPageId;
+    clusterScanDef.segmentId = btreeDescriptor.segmentId;
+    clusterScanDef.pageOwnerId = btreeDescriptor.pageOwnerId;
+
+    scanParams.lcsClusterScanDefs.push_back(clusterScanDef);
+    for (i = 0; i < nCols; i++) {
+        scanParams.outputTupleDesc.push_back(attrDesc_int64);
+        scanParams.outputProj.push_back(i);
+    }
+
+    ExecStreamEmbryo scanStreamEmbryo;
+
+    scanStreamEmbryo.init(new LcsRowScanExecStream(), scanParams);
+    scanStreamEmbryo.getStream()->setName("RowScanExecStream");
+
+    SharedExecStream pOutputStream = prepareTransformGraph(
+        mockStreamEmbryo, scanStreamEmbryo);
+    
+    // result should be sequence of rows
+    verifyOutput(*pOutputStream, nrows, *pResultGenerator);
+}
 
 void LcsClusterAppendExecStreamTest::testCaseSetUp()
 {    
@@ -326,12 +435,25 @@ void LcsClusterAppendExecStreamTest::testCaseSetUp()
     savedRootPageId = NULL_PAGE_ID;
 }
 
+void LcsClusterAppendExecStreamTest::testCaseTearDown()
+{
+    btreeDescriptor.segmentAccessor.reset();
+    ExecStreamUnitTestBase::testCaseTearDown();
+}
+
 void LcsClusterAppendExecStreamTest::testSingleColNoDupNewRoot()
 {
+    // 1. load 848 rows
+    // 2. scan 848 rows
+
     SharedMockProducerExecStreamGenerator pGenerator =
         SharedMockProducerExecStreamGenerator(new RampExecStreamGenerator());
+    SharedMockProducerExecStreamGenerator pResultGenerator =
+        SharedMockProducerExecStreamGenerator(new RampExecStreamGenerator());
     
-    testImplSingleCol(848, true,  pGenerator, "testSingleColNoDupNewRoot");
+    testLoadSingleCol(848, true,  pGenerator, "testSingleColNoDupNewRoot");
+    testReset();
+    testScanSingleCol(848, pGenerator, pResultGenerator);
 }
 
 /*
@@ -342,24 +464,45 @@ void LcsClusterAppendExecStreamTest::testSingleColNoDupNewRoot()
 */
 void LcsClusterAppendExecStreamTest::testSingleColNoDupOldRoot()
 {
-    
+    // 1. load 10 rows
+    // 2. scan first 10 rows
+    // 3. load 10 more rows
+    // 4. scan second 10 rows
+
     SharedMockProducerExecStreamGenerator pGenerator =
         SharedMockProducerExecStreamGenerator(new RampExecStreamGenerator());
+    SharedMockProducerExecStreamGenerator pResultGenerator =
+        SharedMockProducerExecStreamGenerator(new RampExecStreamGenerator());
 
-    testImplSingleCol(10, true,  pGenerator,  "testSingleColNoDupOldRoot");
+    testLoadSingleCol(10, true,  pGenerator,  "testSingleColNoDupOldRoot");
+    testReset();
+    // this will test scans of variable mode batches
+    testScanSingleCol(10, pGenerator, pResultGenerator);
 
     testReset();
+    testLoadSingleCol(10, false,  pGenerator,  "testSingleColNoDupOldRoot");
 
-    testImplSingleCol(10, false,  pGenerator,  "testSingleColNoDupOldRoot");
+    testReset();
+    pGenerator.reset(new RampExecStreamGenerator(10));
+    testScanSingleCol(10, pGenerator, pResultGenerator);
 }
 
 
 void LcsClusterAppendExecStreamTest::testSingleColConstNewRoot()
 {
+    // 1. load 848 rows
+    // 2. scan 848 rows
+
     SharedMockProducerExecStreamGenerator pGenerator =
         SharedMockProducerExecStreamGenerator(new ConstExecStreamGenerator(72));
+    SharedMockProducerExecStreamGenerator pResultGenerator =
+        SharedMockProducerExecStreamGenerator(new ConstExecStreamGenerator(72));
     
-    testImplSingleCol(848, true,  pGenerator,  "testSingleColConstNewRoot");
+    testLoadSingleCol(848, true, pGenerator, "testSingleColConstNewRoot");
+    testReset();
+
+    pGenerator.reset(new RampExecStreamGenerator());
+    testScanSingleCol(848, pGenerator, pResultGenerator);
 }
 
 /*
@@ -370,23 +513,39 @@ void LcsClusterAppendExecStreamTest::testSingleColConstNewRoot()
 */
 void LcsClusterAppendExecStreamTest::testSingleColConstOldRoot()
 {
-    
+    // 1. load 10 rows
+    // 2. load 10 more rows
+    // 3. scan 20 rows
+
     SharedMockProducerExecStreamGenerator pGenerator =
         SharedMockProducerExecStreamGenerator(new ConstExecStreamGenerator(72));
+    SharedMockProducerExecStreamGenerator pResultGenerator =
+        SharedMockProducerExecStreamGenerator(new ConstExecStreamGenerator(72));
 
-    testImplSingleCol(10, true,  pGenerator,  "testSingleColConstOldRoot");
+    testLoadSingleCol(10, true,  pGenerator,  "testSingleColConstOldRoot");
+    testReset();
+    testLoadSingleCol(10, false,  pGenerator,  "testSingleColConstOldRoot");
 
     testReset();
-
-    testImplSingleCol(10, false,  pGenerator,  "testSingleColConstOldRoot");
+    pGenerator.reset(new RampExecStreamGenerator());
+    testScanSingleCol(20, pGenerator, pResultGenerator);
 }
 
 void LcsClusterAppendExecStreamTest::testSingleColStairNewRoot()
 {
+    // 1. load 848 rows
+    // 2. scan 848 rows
+
     SharedMockProducerExecStreamGenerator pGenerator =
         SharedMockProducerExecStreamGenerator(new StairCaseExecStreamGenerator(1,  7));
-    
-    testImplSingleCol(848, true,  pGenerator,  "testSingleColStairNewRoot");
+    SharedMockProducerExecStreamGenerator pResultGenerator =
+        SharedMockProducerExecStreamGenerator(new StairCaseExecStreamGenerator(1,  7));
+
+    testLoadSingleCol(848, true, pGenerator, "testSingleColStairNewRoot");
+    testReset();
+
+    pGenerator.reset(new RampExecStreamGenerator());
+    testScanSingleCol(848, pGenerator, pResultGenerator);
 }
 
 /*
@@ -397,25 +556,43 @@ void LcsClusterAppendExecStreamTest::testSingleColStairNewRoot()
 */
 void LcsClusterAppendExecStreamTest::testSingleColStairOldRoot()
 {
-    
+    // 1. load 10 rows
+    // 2. scan first 10 rows
+    // 3. load 10 more rows
+    // 4. scan 2nd 10 rows
+
     SharedMockProducerExecStreamGenerator pGenerator =
         SharedMockProducerExecStreamGenerator(new StairCaseExecStreamGenerator(1, 7));
+    SharedMockProducerExecStreamGenerator pRidGenerator =
+        SharedMockProducerExecStreamGenerator(new RampExecStreamGenerator());
+    SharedMockProducerExecStreamGenerator pResultGenerator =
+        SharedMockProducerExecStreamGenerator(new StairCaseExecStreamGenerator(1,  7));
 
-    testImplSingleCol(10, true,  pGenerator,  "testSingleColStairOldRoot");
+    testLoadSingleCol(10, true,  pGenerator,  "testSingleColStairOldRoot");
+    testReset();
+    testScanSingleCol(10, pRidGenerator, pResultGenerator);
 
     testReset();
+    testLoadSingleCol(10, false,  pGenerator, "testSingleColStairOldRoot");
 
-    testImplSingleCol(10, false,  pGenerator, "testSingleColStairOldRoot");
+    testReset();
+    pRidGenerator.reset(new RampExecStreamGenerator(10));
+    testScanSingleCol(10, pRidGenerator, pResultGenerator);
 }
-
-
 
 void LcsClusterAppendExecStreamTest::testMultiColNoDupNewRoot()
 {
+    // 1. load 848 rows
+    // 2. scan 848 rows
+
     SharedMockProducerExecStreamGenerator pGenerator =
         SharedMockProducerExecStreamGenerator(new RampExecStreamGenerator());
+    SharedMockProducerExecStreamGenerator pResultGenerator =
+        SharedMockProducerExecStreamGenerator(new RampExecStreamGenerator());
     
-    testImplMultiCol(848, 3, true,  pGenerator,  "testMultiColNoDupNewRoot");
+    testLoadMultiCol(848, 3, true,  pGenerator,  "testMultiColNoDupNewRoot");
+    testReset();
+    testScanMultiCol(848, 3, pGenerator, pResultGenerator);
 }
 
 /*
@@ -426,24 +603,46 @@ void LcsClusterAppendExecStreamTest::testMultiColNoDupNewRoot()
 */
 void LcsClusterAppendExecStreamTest::testMultiColNoDupOldRoot()
 {
-    
+    // 1. load 10 rows
+    // 2. scan first 10 rows
+    // 3. load 10 more rows
+    // 4. scan 2nd 10 rows
+
     SharedMockProducerExecStreamGenerator pGenerator =
         SharedMockProducerExecStreamGenerator(new RampExecStreamGenerator());
+    SharedMockProducerExecStreamGenerator pRidGenerator =
+        SharedMockProducerExecStreamGenerator(new RampExecStreamGenerator());
+    SharedMockProducerExecStreamGenerator pResultGenerator =
+        SharedMockProducerExecStreamGenerator(new RampExecStreamGenerator());
 
-    testImplMultiCol(10, 3, true,  pGenerator,"testMultiColNoDupOldRoot");
+    testLoadMultiCol(10, 3, true,  pGenerator,"testMultiColNoDupOldRoot");
+    testReset();
+    testScanMultiCol(10, 3, pRidGenerator, pResultGenerator);
 
     testReset();
+    testLoadMultiCol(10, 3, false,  pGenerator, "testMultiColNoDupOldRoot");
 
-    testImplMultiCol(10, 3, false,  pGenerator, "testMultiColNoDupOldRoot");
+    testReset();
+    pRidGenerator.reset(new RampExecStreamGenerator(10));
+    testScanMultiCol(10, 3, pRidGenerator, pResultGenerator);
 }
 
 
 void LcsClusterAppendExecStreamTest::testMultiColConstNewRoot()
 {
+    // 1. load 848 rows
+    // 2. scan 848 rows
+
     SharedMockProducerExecStreamGenerator pGenerator =
         SharedMockProducerExecStreamGenerator(new ConstExecStreamGenerator(72));
+    SharedMockProducerExecStreamGenerator pResultGenerator =
+        SharedMockProducerExecStreamGenerator(new ConstExecStreamGenerator(72));
     
-    testImplMultiCol(848, 3, true,  pGenerator,  "testMultiColConstNewRoot");
+    testLoadMultiCol(848, 3, true,  pGenerator,  "testMultiColConstNewRoot");
+    testReset();
+
+    pGenerator.reset(new RampExecStreamGenerator());
+    testScanMultiCol(848, 3, pGenerator, pResultGenerator);
 }
 
 /*
@@ -454,23 +653,39 @@ void LcsClusterAppendExecStreamTest::testMultiColConstNewRoot()
 */
 void LcsClusterAppendExecStreamTest::testMultiColConstOldRoot()
 {
+    // 1. load 10 rows
+    // 2. load 10 more rows
+    // 3. scan 20 rows
     
     SharedMockProducerExecStreamGenerator pGenerator =
         SharedMockProducerExecStreamGenerator(new ConstExecStreamGenerator(72));
+    SharedMockProducerExecStreamGenerator pResultGenerator =
+        SharedMockProducerExecStreamGenerator(new ConstExecStreamGenerator(72));
 
-    testImplMultiCol(10, 3, true,  pGenerator,  "testMultiColConstOldRoot");
+    testLoadMultiCol(10, 3, true,  pGenerator,  "testMultiColConstOldRoot");
+    testReset();
+    testLoadMultiCol(10, 3, false,  pGenerator, "testMultiColConstOldRoot");
 
     testReset();
-
-    testImplMultiCol(10, 3, false,  pGenerator, "testMultiColConstOldRoot");
+    pGenerator.reset(new RampExecStreamGenerator());
+    testScanMultiCol(20, 3, pGenerator, pResultGenerator);
 }
 
 void LcsClusterAppendExecStreamTest::testMultiColStairNewRoot()
 {
+    // 1. load 848 rows
+    // 2. scan 848 rows
+
     SharedMockProducerExecStreamGenerator pGenerator =
         SharedMockProducerExecStreamGenerator(new StairCaseExecStreamGenerator(1,  7));
+    SharedMockProducerExecStreamGenerator pResultGenerator =
+        SharedMockProducerExecStreamGenerator(new StairCaseExecStreamGenerator(1,  7));
     
-    testImplMultiCol(848, 3, true,  pGenerator,  "testMultiColStairNewRoot");
+    testLoadMultiCol(848, 3, true,  pGenerator,  "testMultiColStairNewRoot");
+    testReset();
+
+    pGenerator.reset(new RampExecStreamGenerator());
+    testScanMultiCol(848, 3, pGenerator, pResultGenerator);
 }
 
 /*
@@ -481,19 +696,30 @@ void LcsClusterAppendExecStreamTest::testMultiColStairNewRoot()
 */
 void LcsClusterAppendExecStreamTest::testMultiColStairOldRoot()
 {
-    
+    // 1. load 10 rows
+    // 2. scan first 10 rows
+    // 3. load more 10 rows
+    // 4. scan 2nd 10 rows
+
     SharedMockProducerExecStreamGenerator pGenerator =
         SharedMockProducerExecStreamGenerator(new StairCaseExecStreamGenerator(1, 7));
+    SharedMockProducerExecStreamGenerator pRidGenerator =
+        SharedMockProducerExecStreamGenerator(new RampExecStreamGenerator());
+    SharedMockProducerExecStreamGenerator pResultGenerator =
+        SharedMockProducerExecStreamGenerator(new StairCaseExecStreamGenerator(1,  7));
 
-    testImplMultiCol(10, 3, true,  pGenerator,  "testMultiColStairOldRoot");
+    testLoadMultiCol(10, 3, true, pGenerator, "testMultiColStairOldRoot");
+    testReset();
+    testScanMultiCol(10, 3, pRidGenerator, pResultGenerator);
 
     testReset();
+    testLoadMultiCol(10, 3, false, pGenerator, "testMultiColStairOldRoot");
 
-    testImplMultiCol(10, 3, false,  pGenerator,  "testMultiColStairOldRoot");
+    testReset();
+    pRidGenerator.reset(new RampExecStreamGenerator(10));
+    testScanMultiCol(10, 3, pRidGenerator, pResultGenerator);
 }
 
-
 FENNEL_UNIT_TEST_SUITE(LcsClusterAppendExecStreamTest);
-
 
 // End LcsClusterAppendExecStreamTest.cpp

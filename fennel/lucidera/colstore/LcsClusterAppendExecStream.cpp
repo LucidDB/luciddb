@@ -67,9 +67,8 @@ void LcsClusterAppendExecStream::prepare(
     outputTuple.compute(outputTupleDesc);
     outputTuple[0].pData = (PConstBuffer) &numRowCompressed;
 
-    m_riBlockBuilder = SharedLcsClusterNodeWriter(
-        new LcsClusterNodeWriter(treeDescriptor, scratchAccessor,
-                                 getSharedTraceTarget(), getTraceSourceName()));
+    m_blockSize = treeDescriptor.segmentAccessor.pSegment->getUsablePageSize();
+    
 }
     
 void LcsClusterAppendExecStream::getResourceRequirements(
@@ -128,8 +127,15 @@ void LcsClusterAppendExecStream::Init()
     m_bCompressCalled = false;
     numRowCompressed = 0;
 
-    m_blockSize = scratchAccessor.pSegment->getUsablePageSize();
-   
+    // The dynamic allocated memory in m_riBlockBuilder is allocated for every
+    // LcsClusterAppendExecStream.open() and deallocated for every
+    // LcsClusterAppendExecStream.closeImpl(). The dynamic memory is not reused
+    // across calls(e.g. when issueing the same statement twice).
+    m_riBlockBuilder = SharedLcsClusterNodeWriter(
+        new LcsClusterNodeWriter(treeDescriptor, scratchAccessor,
+                                 getSharedTraceTarget(),
+                                 getTraceSourceName()));
+    
 #ifdef NOT_DONE_YET
     if (IsInOverwriteMode()) {
         
@@ -351,7 +357,8 @@ void LcsClusterAppendExecStream::Close()
 
     // close block-builder
 
-    m_riBlockBuilder->Close();
+    //m_riBlockBuilder->Close();
+    
     m_riBlockBuilder.reset();
     
 #ifdef NOT_DONE_YET

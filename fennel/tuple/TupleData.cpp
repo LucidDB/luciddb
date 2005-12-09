@@ -65,16 +65,19 @@ void TupleDatum::storeLcsDatum(PBuffer pDataWithLen)
     if (!pData) {
         /*
          * Handle NULL.
-         * NULL is stored as a special two byte length.
+         * NULL is stored as a special two byte length: 0x8000
          */
-        *tmpDataPtr = TWO_BYTE_MAX_LENGTH;
+        *tmpDataPtr = TWO_BYTE_LENGTH_BIT;
+        tmpDataPtr ++;
+        *tmpDataPtr = 0x00;
+        tmpDataPtr ++;
     } else {
         if (cbData <= ONE_BYTE_MAX_LENGTH) {
             *tmpDataPtr = static_cast<uint8_t>(cbData);
             tmpDataPtr++;
         } else {
-            uint8_t higherByte = (cbData & 0x00007f00) >> 8 | TWO_BYTE_LENGTH_BIT;
-            uint8_t lowerByte  = cbData & 0x000000ff;
+            uint8_t higherByte = (cbData & TWO_BYTE_LENGTH_MASK1) >> 8 | TWO_BYTE_LENGTH_BIT;
+            uint8_t lowerByte  = cbData & TWO_BYTE_LENGTH_MASK2;
             *tmpDataPtr = higherByte;
             tmpDataPtr++;
             *tmpDataPtr = lowerByte;

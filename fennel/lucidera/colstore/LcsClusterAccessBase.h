@@ -39,6 +39,11 @@ protected:
      * page
      */
     TupleData bTreeTupleData;
+
+    /**
+     * Accessor for segment storing both btree and cluster pages.
+     */
+    SegmentAccessor segmentAccessor;
    
     /**
      * Buffer lock for the actual cluster node pages.  Shares the same 
@@ -67,7 +72,7 @@ protected:
     PageId readClusterPageId();
 
 public:
-    explicit LcsClusterAccessBase(BTreeDescriptor &treeDescriptor);
+    explicit LcsClusterAccessBase(BTreeDescriptor const &treeDescriptor);
 };
 
 FENNEL_END_NAMESPACE

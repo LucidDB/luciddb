@@ -8,5 +8,6 @@ LcsClusterDump.cpp \
 LcsClusterNodeWriter.cpp \
 LcsClusterReader.cpp \
 LcsClusterVerifier.cpp \
+LcsColumnReader.cpp \
 LcsHash.cpp \
 LcsRowScanExecStream.cpp

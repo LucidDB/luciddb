@@ -103,13 +103,17 @@ protected:
      *
      * @param dupSeek what to do if duplicates are found
      *
+     * @param leastUpper whether to position on least upper bound or greatest
+     * lower bound
+     *
      * @param found receives whether the search key was found; if false,
      * the position of the least upper bound is returned instead
      *
      * @return 0-based position of found key on node
      */
     inline uint binarySearch(
-        BTreeNode const &node,DuplicateSeek dupSeek,bool &found);
+        BTreeNode const &node, DuplicateSeek dupSeek, bool leastUpper,
+        bool &found);
 
     /**
      * @return the key being sought
@@ -130,6 +134,15 @@ protected:
     inline bool adjustRootLockMode(LockMode &lockMode);
 
     /**
+     * Compares the first key on a node to the current search key.
+     *
+     * @param node the node to search
+     *
+     * @return result of comparing searchKey with the first key (0, -1, or 1)
+     */
+    inline int compareFirstKey(BTreeNode const &node);
+
+    /**
      * Implements the workhorse algorithm for performing the actual search
      * through the tree; templated to efficiently allow for certain
      * variations needed when the search is used in preparation for an
@@ -140,13 +153,17 @@ protected:
      *
      * @param dupSeek how to handle duplicates
      *
+     * @param leastUpper whether to position on least upper bound or greatest
+     * lower bound
+     *
      * @param pageStack receives a path of rightmost PageId's encountered
      * from root to the level above the leaf (PageStack must support
      * the push_back method)
      */
     template <bool leafLockCoupling,class PageStack>
     inline bool BTreeReader::searchForKeyTemplate(
-        TupleData const &key,DuplicateSeek dupSeek,PageStack &pageStack);
+        TupleData const &key, DuplicateSeek dupSeek, bool leastUpper,
+        PageStack &pageStack);
     
     /**
      * Searches for the first or last tuple in the tree.
@@ -210,10 +227,15 @@ public:
      *
      * @param dupSeek what to do if duplicates are found
      *
+     * @param leastUpper (default true) - if true, reader will position on the
+     * least upper bound of key; otherwise, it will position on tuple with
+     * greatest lower bound
+     *
      * @return true if tuple found; false if not found, in which case
-     * reader is positioned on tuple with least upper bound of key
+     * reader is positioned on tuple depending on leastUpper parameter
      */
-    bool searchForKey(TupleData const &key,DuplicateSeek dupSeek);
+    bool searchForKey(TupleData const &key,DuplicateSeek dupSeek,
+                      bool leastUpper = true);
     
     /**
      * Searches for the next tuple.  Can be used after either searchFirst

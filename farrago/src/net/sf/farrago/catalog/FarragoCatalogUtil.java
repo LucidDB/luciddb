@@ -475,7 +475,13 @@ public abstract class FarragoCatalogUtil
         }
         FemLocalIndex clusteredIndex = FarragoCatalogUtil.getClusteredIndex(
             repos, (CwmTable) owner);
+                
         if (clusteredIndex != null) {
+            // TODO rchen 2005-12-05: set column info in the catalog correctly so
+            // that we don't have to look up the clustered indices.
+        	if (!clusteredIndex.isSorted()) {
+            	return true;
+            }
             Iterator iter = clusteredIndex.getIndexedFeature().iterator();
             while (iter.hasNext()) {
                 CwmIndexedFeature indexedFeature =
