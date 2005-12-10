@@ -16,17 +16,11 @@
 0: jdbc:luciddb:> select lname,dname from emp,dept
 . . . . . . . . > where emp.deptno=dept.deptno and dept.dname<'Development'
 . . . . . . . . > order by 1;
-+-----------+-------------+
-|   LNAME   |    DNAME    |
-+-----------+-------------+
-| Brown     | Support     |
-| Fratz     | Accounting  |
-| Nife      | Sales       |
-| Reynolds  | Support     |
-| Roy       | Sales       |
-| Webber    | Marketing   |
-| Williams  | Sales       |
-+-----------+-------------+
++--------+-------------+
+| LNAME  |    DNAME    |
++--------+-------------+
+| Fratz  | Accounting  |
++--------+-------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- multiple dimension filter conditions
 0: jdbc:luciddb:> select emp.lname, emp.fname, dname from emp,dept
@@ -62,10 +56,59 @@ Error: java.lang.UnsupportedOperationException: class org.eigenbase.sql.SqlNodeL
 . . . . . . . . > and customers.lname < 'C'
 . . . . . . . . > and products.name >= 'Soap'
 . . . . . . . . > order by 1,2,3;
-+--------+-------+--------+
-| LNAME  | NAME  | PRICE  |
-+--------+-------+--------+
-+--------+-------+--------+
++----------+------------+--------+
+|  LNAME   |    NAME    | PRICE  |
++----------+------------+--------+
+| Andrews  | Soap       | 4.28   |
+| Andrews  | Soap       | 5.5    |
+| Andrews  | Soap       | 9.05   |
+| Andrews  | Soap       | 9.35   |
+| Andrews  | Soda       | 0.23   |
+| Andrews  | Soda       | 2.21   |
+| Andrews  | Soda       | 3.76   |
+| Andrews  | Soup       | 3.39   |
+| Andrews  | Soup       | 3.92   |
+| Andrews  | Telephone  | 7.83   |
+| Andrews  | Towel      | 2.9    |
+| Andrews  | Towel      | 9.03   |
+| Bush     | Soap       | 3.43   |
+| Bush     | Soap       | 4.07   |
+| Bush     | Soap       | 4.38   |
+| Bush     | Soap       | 4.92   |
+| Bush     | Soap       | 8.6    |
+| Bush     | Soda       | 0.0    |
+| Bush     | Soda       | 1.47   |
+| Bush     | Soda       | 3.06   |
+| Bush     | Soda       | 3.38   |
+| Bush     | Soda       | 3.4    |
+| Bush     | Soda       | 4.71   |
+| Bush     | Soda       | 6.5    |
+| Bush     | Soda       | 7.23   |
+| Bush     | Soup       | 1.54   |
+| Bush     | Soup       | 1.55   |
+| Bush     | Soup       | 1.65   |
+| Bush     | Soup       | 2.75   |
+| Bush     | Soup       | 2.84   |
+| Bush     | Soup       | 4.46   |
+| Bush     | Soup       | 4.61   |
+| Bush     | Soup       | 4.93   |
+| Bush     | Soup       | 5.13   |
+| Bush     | Soup       | 5.57   |
+| Bush     | Soup       | 9.88   |
+| Bush     | Telephone  | 2.35   |
+| Bush     | Telephone  | 3.28   |
+| Bush     | Telephone  | 3.37   |
+| Bush     | Telephone  | 5.16   |
+| Bush     | Telephone  | 9.1    |
+| Bush     | Telephone  | 9.99   |
+| Bush     | Towel      | 0.63   |
+| Bush     | Towel      | 1.29   |
+| Bush     | Towel      | 2.83   |
+| Bush     | Towel      | 7.4    |
+| Bush     | Towel      | 8.04   |
+| Bush     | Towel      | 8.72   |
+| Bush     | Towel      | 9.28   |
++----------+------------+--------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- multiple dimension tables but filter on only one
 0: jdbc:luciddb:> select customers.lname, products.name, sales.price
@@ -122,10 +165,32 @@ Error: java.lang.UnsupportedOperationException: class org.eigenbase.sql.SqlNodeL
 . . . . . . . . > and customers.lname < 'C'
 . . . . . . . . > and customers.fname > 'S'
 . . . . . . . . > order by 1,2,3;
-+--------+-------+--------+
-| LNAME  | NAME  | PRICE  |
-+--------+-------+--------+
-+--------+-------+--------+
++----------+----------+--------+
+|  LNAME   |   NAME   | PRICE  |
++----------+----------+--------+
+| Andrews  | Chicken  | 9.59   |
+| Andrews  | Eggs     | 8.67   |
+| Andrews  | Heater   | 3.68   |
+| Andrews  | Iron     | 1.26   |
+| Andrews  | Juice    | 9.49   |
+| Andrews  | Plunger  | 5.92   |
+| Andrews  | Soap     | 4.28   |
+| Andrews  | Soap     | 5.5    |
+| Andrews  | Soap     | 9.35   |
+| Andrews  | Soda     | 0.23   |
+| Andrews  | Soup     | 3.92   |
+| Bush     | Heater   | 6.3    |
+| Bush     | Iron     | 7.22   |
+| Bush     | Juice    | 6.34   |
+| Bush     | Plunger  | 3.22   |
+| Bush     | Plunger  | 7.95   |
+| Bush     | Plunger  | 8.04   |
+| Bush     | Shampoo  | 5.41   |
+| Bush     | Soap     | 8.6    |
+| Bush     | Soda     | 0.0    |
+| Bush     | Soda     | 3.06   |
+| Bush     | Towel    | 8.04   |
++----------+----------+--------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select customers.lname, products.name, sales.price
 . . . . . . . . > from sales, products, customers
