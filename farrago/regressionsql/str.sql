@@ -14,6 +14,9 @@ values 'a'<'b';
 values 'a'<>'b';
 values 'a'<='b';
 
+values 'A' < 'AAA';
+values 'BB' < 'AAA';
+
 select substring(name from 1 for 2) from sales.emps order by 1;
 select substring(name from 2) from sales.emps order by 1;
 select substring(name from 1) from sales.emps order by 1;
