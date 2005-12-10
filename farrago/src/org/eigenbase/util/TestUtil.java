@@ -38,6 +38,15 @@ public abstract class TestUtil
         Pattern.compile("\r\n|\r|\n");
     private static final Pattern TabPattern = Pattern.compile("\t");
 
+    /**
+     * System-dependent newline character. <p/>
+     *
+     * Do not use '\n' in strings which are samples for test results.
+     * {@link java.io.PrintWriter#println()}  produces '\n' on Unix and '\r\n'
+     * on Windows, but '\n' is always '\n', so your tests will fail on Windows. 
+     */
+    public static final String NL = Util.lineSeparator;
+
     public static void assertEqualsVerbose(
         String expected,
         String actual)
@@ -47,8 +56,8 @@ public abstract class TestUtil
                 return;
             } else {
                 String message =
-                    "Expected:" + Util.lineSeparator +
-                    expected + Util.lineSeparator +
+                    "Expected:" + NL +
+                    expected + NL +
                     "Actual: null";
                 throw new ComparisonFailure(message, expected, actual);
             }
@@ -59,9 +68,9 @@ public abstract class TestUtil
         String s = quoteForJavaUsingFold(actual);
 
         String message =
-            "Expected:" + Util.lineSeparator + expected + Util.lineSeparator
-            + "Actual: " + Util.lineSeparator + actual + Util.lineSeparator
-            + "Actual java: " + Util.lineSeparator + s + Util.lineSeparator;
+            "Expected:" + NL + expected + NL
+            + "Actual: " + NL + actual + NL
+            + "Actual java: " + NL + s + NL;
         throw new ComparisonFailure(message, expected, actual);
     }
 
@@ -87,7 +96,7 @@ public abstract class TestUtil
         s = LineBreakPattern.matcher(s).replaceAll(lineBreak);
         s = TabPattern.matcher(s).replaceAll("\\\\t");
         s = "\"" + s + "\"";
-        final String spurious = " + " + Util.lineSeparator + "\"\"";
+        final String spurious = " + " + NL + "\"\"";
         if (s.endsWith(spurious)) {
             s = s.substring(0, s.length() - spurious.length());
         }
@@ -95,7 +104,7 @@ public abstract class TestUtil
     }
 
     private static final String lineBreak =
-        "\" + NL +" + Util.lineSeparator + "\"";
+        "\" + NL +" + NL + "\"";
 
 
     /**
@@ -124,14 +133,14 @@ public abstract class TestUtil
         s = TabPattern.matcher(s).replaceAll("\\\\t");
         s = "\"" + s + "\"";
         if (lineBreaks) {
-            return "fold(new String[] {" + Util.lineSeparator + s + "})";
+            return "fold(new String[] {" + NL + s + "})";
         } else {
             return s;
         }
     }
 
     private static final String commaLineBreak =
-        "\"," + Util.lineSeparator + "\"";
+        "\"," + NL + "\"";
 
 
     /**
@@ -143,7 +152,7 @@ public abstract class TestUtil
         StringBuffer buf = new StringBuffer();
         for (int i = 0; i < strings.length; i++) {
             if (i > 0) {
-                buf.append(Util.lineSeparator);
+                buf.append(NL);
             }
             String string = strings[i];
             buf.append(string);

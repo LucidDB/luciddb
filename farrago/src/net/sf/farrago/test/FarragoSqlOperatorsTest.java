@@ -33,6 +33,7 @@ import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.BasicSqlType;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.test.SqlValidatorTestCase;
+import org.eigenbase.util.Util;
 
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -99,13 +100,29 @@ public class FarragoSqlOperatorsTest
             this.farragoTest = new MyFarragoTestCase();
         }
 
-        public void checkFails(
+        public void checkInvalid(
             String expression,
             String expectedError)
         {
             try {
                 farragoTest.setUp();
-                farragoTest.checkFails(vm, expression, expectedError);
+                farragoTest.checkFails(vm, expression, expectedError, false);
+            } catch (Exception e) {
+                throw wrap(e);
+            } finally {
+                try {
+                    farragoTest.tearDown();
+                } catch (Exception e) {
+                    throw wrap(e);
+                }
+            }
+        }
+
+        public void checkFails(String expression, String expectedError)
+        {
+            try {
+                farragoTest.setUp();
+                farragoTest.checkFails(vm, expression, expectedError, true);
             } catch (Exception e) {
                 throw wrap(e);
             } finally {
@@ -263,20 +280,34 @@ public class FarragoSqlOperatorsTest
             super("dummy");
         }
 
+        /**
+         * Checks that a scalar expression fails at validate time or runtime
+         * on a given virtual machine.
+         */
         void checkFails(
             FarragoCalcSystemTest.VirtualMachine vm,
             String expression,
-            String expectedError) throws SQLException
+            String expectedError,
+            boolean runtime) throws SQLException
         {
             stmt.execute(vm.getAlterSystemCommand());
             String query = buildQuery(expression);
             SqlParserUtil.StringAndPos sap = SqlParserUtil.findPos(query);
-            Assert.assertNotNull(
-                "Negative tests must contain an error location", sap.pos);
+            if (!runtime) {
+                Assert.assertNotNull(
+                    "negative validation tests must contain an error location",
+                    sap.pos);
+            }
 
             Throwable thrown = null;
             try {
                 resultSet = stmt.executeQuery(sap.sql);
+                if (runtime) {
+                    // If we're expecting a runtime error, we may need to ask
+                    // for the row before the error occurs.
+                    boolean hasNext = resultSet.next();
+                    Util.discard(hasNext);
+                }
             } catch (FarragoUtil.FarragoSqlException ex) {
                 // The exception returned by the JDBC driver is dumbed down,
                 // and doesn't contain the full position information.

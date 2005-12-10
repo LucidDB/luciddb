@@ -65,6 +65,36 @@ SqlStrCat(char* dest,
 }
 
 int
+SqlStrCmp_Bin(char const * const str1,
+              int str1LenBytes,
+              char const * const str2,
+              int str2LenBytes)
+{
+    // First, check for differences in "common" length. If common length
+    // are contains same values, declare the longer string "larger".
+    int minLenBytes =
+        str1LenBytes > str2LenBytes ? str2LenBytes : str1LenBytes;
+    int memc = memcmp(str1, str2, minLenBytes);
+    if (memc > 0) {
+        // Normalize to -1, 0, 1
+        return 1;
+    } else if (memc < 0) {
+        // Normalize to -1, 0, 1
+        return -1;
+    } else if (str1LenBytes == str2LenBytes) {
+        // memc == 0
+        // Equal length & contain same data -> equal
+        return 0;
+    } else if (str1LenBytes > str2LenBytes) {
+        // Common contains same data, str1 is longer -> str1 > str2
+        return 1;
+    } else {
+        // Common contains same data, str2 is longer -> str2 > str1
+        return -1;
+    }
+}
+
+int
 SqlStrCpy_Var(char* dest,
               int destStorageBytes,
               char const * const str,
@@ -78,8 +108,6 @@ SqlStrCpy_Var(char* dest,
     memcpy(dest, str, strLenBytes);
     return strLenBytes;
 }
-
-
 
 int
 SqlStrLenBit(int strLenBytes)

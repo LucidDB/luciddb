@@ -337,20 +337,22 @@ CalcExtStringTest::testCalcExtStringCmpA()
     ostringstream pg(""), outloc("");
     int i;
 
-    for (i = 0; i <= 8; i++) {
+    for (i = 0; i <= 11; i++) {
         outloc << "s4, ";
     }
     outloc << "s4;" << endl;
 
     pg << "O " << outloc.str();
     pg << "L " << outloc.str();
-    pg << "C vc,2, vc,2, ";      // varchar data[0-1]
-    pg << "c,2, c,2, ";          // char data[2-3]
-    pg << "vc,5, c,5;" << endl;  // nulls[4-5]
+    pg << "C vc,2, vc,2, vc,2, "; // varchar data[0-2]
+    pg << "c,2, c,2, c,2, ";      // char data[3-5]
+    pg << "vc,5, c,5;" << endl;  // nulls[6-7]
     pg << "V 0x" << stringToHex("AB");
     pg << ", 0x" << stringToHex("CD");
+    pg << ", 0x" << stringToHex("EF");
     pg << ", 0x" << stringToHex("GH");
     pg << ", 0x" << stringToHex("IJ");
+    pg << ", 0x" << stringToHex("EF");
     pg << ",,;" << endl;
     pg << "T;" << endl;
     // varchar common cases
@@ -358,17 +360,22 @@ CalcExtStringTest::testCalcExtStringCmpA()
     pg << "CALL 'strCmpA(L1, C1, C0);" << endl;
     pg << "CALL 'strCmpA(L2, C0, C1);" << endl;
     // varchar null cases
-    pg << "CALL 'strCmpA(L3, C4, C0);" << endl;
-    pg << "CALL 'strCmpA(L4, C0, C4);" << endl;
+    pg << "CALL 'strCmpA(L3, C6, C0);" << endl;
+    pg << "CALL 'strCmpA(L4, C0, C6);" << endl;
     // char common cases
-    pg << "CALL 'strCmpA(L5, C2, C2);" << endl;
-    pg << "CALL 'strCmpA(L6, C3, C2);" << endl;
-    pg << "CALL 'strCmpA(L7, C2, C3);" << endl;
+    pg << "CALL 'strCmpA(L5, C3, C3);" << endl;
+    pg << "CALL 'strCmpA(L6, C4, C3);" << endl;
+    pg << "CALL 'strCmpA(L7, C3, C4);" << endl;
     // char null cases
-    pg << "CALL 'strCmpA(L8, C5, C2);" << endl;
-    pg << "CALL 'strCmpA(L9, C2, C5);" << endl;
+    pg << "CALL 'strCmpA(L8, C7, C2);" << endl;
+    pg << "CALL 'strCmpA(L9, C2, C7);" << endl;
+    // mixed common cases
+    pg << "CALL 'strCmpA(L10, C2, C5);" << endl;
+    pg << "CALL 'strCmpA(L11, C0, C3);" << endl;
+    pg << "CALL 'strCmpA(L12, C3, C0);" << endl;
+
     // make output available
-    refLocalOutput(pg, 10);
+    refLocalOutput(pg, 13);
 
     Calculator calc(0);
     
@@ -402,6 +409,10 @@ CalcExtStringTest::testCalcExtStringCmpA()
     // char null cases
     BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[8]));
     BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[9]));
+    // mixed cases
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[10], 0));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[11], -1));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[12], 1));
 }
 
 void
@@ -410,21 +421,23 @@ CalcExtStringTest::testCalcExtStringCmpOct()
     ostringstream pg(""), outloc("");
     int i;
 
-    for (i = 0; i <= 8; i++) {
+    for (i = 0; i <= 11; i++) {
         outloc << "s4, ";
     }
     outloc << "s4;" << endl;
 
     pg << "O " << outloc.str();
     pg << "L " << outloc.str();
-    pg << "C vb,1, vb,1, ";      // varbinary data[0-1]
+    pg << "C vb,1, vb,1, vb,1, "; // varbinary data[0-2]
     //disabling binaries for now since they seem to be failing in the assembler
-    pg << "b,1, b,1, ";          // binary data[2-3]
-    pg << "vb,0, b,0;" << endl;  // nulls[4-5]
+    pg << "b,1, b,1, b,1, ";      // binary data[3-5]
+    pg << "vb,0, b,0; " << endl;  // nulls[6-7]
     pg << "V 0xAA";
     pg << ", 0xBB";
     pg << ", 0xCC";
     pg << ", 0xDD";
+    pg << ", 0xEE";
+    pg << ", 0xCC";
     pg << ",,;" << endl;
 
     pg << "T;" << endl;
@@ -433,17 +446,21 @@ CalcExtStringTest::testCalcExtStringCmpOct()
     pg << "CALL 'strCmpOct(L1, C1, C0);" << endl;
     pg << "CALL 'strCmpOct(L2, C0, C1);" << endl;
     // varchar null cases
-    pg << "CALL 'strCmpOct(L3, C4, C0);" << endl;
-    pg << "CALL 'strCmpOct(L4, C0, C4);" << endl;
+    pg << "CALL 'strCmpOct(L3, C6, C0);" << endl;
+    pg << "CALL 'strCmpOct(L4, C0, C6);" << endl;
     // char common cases
-    pg << "CALL 'strCmpOct(L5, C2, C2);" << endl;
-    pg << "CALL 'strCmpOct(L6, C3, C2);" << endl;
-    pg << "CALL 'strCmpOct(L7, C2, C3);" << endl;
+    pg << "CALL 'strCmpOct(L5, C3, C3);" << endl;
+    pg << "CALL 'strCmpOct(L6, C4, C3);" << endl;
+    pg << "CALL 'strCmpOct(L7, C3, C4);" << endl;
     // char null cases
-    pg << "CALL 'strCmpOct(L8, C5, C2);" << endl;
-    pg << "CALL 'strCmpOct(L9, C2, C5);" << endl;
+    pg << "CALL 'strCmpOct(L8, C7, C3);" << endl;
+    pg << "CALL 'strCmpOct(L9, C3, C7);" << endl;
+    // mixed common cases
+    pg << "CALL 'strCmpOct(L10, C2, C2);" << endl;
+    pg << "CALL 'strCmpOct(L11, C0, C3);" << endl;
+    pg << "CALL 'strCmpOct(L12, C3, C0);" << endl;
     // make output available
-    refLocalOutput(pg, 10);
+    refLocalOutput(pg, 13);
 
     Calculator calc(0);
     
@@ -477,6 +494,10 @@ CalcExtStringTest::testCalcExtStringCmpOct()
     // char null cases
     BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[8]));
     BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[9]));
+    // check mixed cases
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[10], 0));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[11], -1));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[12], 1));
 }
 
 void

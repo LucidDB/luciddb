@@ -1033,7 +1033,7 @@ public class SqlToRelConverter
         }
     }
 
-    private RelNode convertInsert(SqlInsert call)
+    protected RelNode convertInsert(SqlInsert call)
     {
         SqlValidatorNamespace targetScope =
             validator.getNamespace(call.getTargetTable());

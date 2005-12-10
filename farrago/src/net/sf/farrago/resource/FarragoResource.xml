@@ -592,7 +592,7 @@ column type family is {1} but default value type family is {2}</text>
 </exception>
 
 <exception id="450060" name="InvalidFunctionArgument">
-<text>Invalid argument(s) for {0} function</text>
+<text>Invalid argument(s) for ''{0}'' function</text>
 </exception>
 
 <exception id="450070" name="InvalidEscapeCharacter">

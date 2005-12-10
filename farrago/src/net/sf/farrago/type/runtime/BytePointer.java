@@ -26,6 +26,7 @@ import net.sf.farrago.resource.*;
 
 import org.eigenbase.util.*;
 import org.eigenbase.sql.fun.SqlTrimFunction;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
 
 import java.io.*;
 import java.nio.*;
@@ -401,7 +402,8 @@ public class BytePointer extends ByteArrayInputStream
         byte trimChar;
 
         if (bp1.getByteCount() != 1) {
-            throw FarragoResource.instance().InvalidFunctionArgument.ex("trim");
+            throw FarragoResource.instance().InvalidFunctionArgument.ex(
+                SqlStdOperatorTable.trimFunc.getName());
         }
         copyFrom(bp2);
         trimChar = bp1.buf[bp1.pos];

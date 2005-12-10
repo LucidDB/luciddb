@@ -20,16 +20,13 @@
 */
 package com.disruptivetech.farrago.volcano;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.RelVisitor;
 import org.eigenbase.relopt.*;
-import org.eigenbase.trace.EigenbaseTrace;
 import org.eigenbase.util.Util;
 
 
@@ -79,9 +76,7 @@ public class VolcanoRuleCall extends RelOptRuleCall
             // Make sure traits that the new rel doesn't know about are
             // propagated.
             RelTraitSet rels0Traits = rels[0].getTraits();
-
-            RelOptUtil.go(
-                new TraitPropagationVisitor(getPlanner(), rels0Traits), rel);
+            new TraitPropagationVisitor(getPlanner(), rels0Traits).go(rel);
 
             if (tracer.isLoggable(Level.FINEST)) {
                 tracer.finest("Rule " + getRule() + " arguments "
@@ -241,29 +236,24 @@ public class VolcanoRuleCall extends RelOptRuleCall
 
         public void visit(RelNode rel, int ordinal, RelNode parent)
         {
-            if (parent != null) {
-                if (rel instanceof RelSubset) {
-                    return;
+            if (rel instanceof RelSubset) {
+                return;
+            }
+
+            if (planner.isRegistered(rel)) {
+                return;
+            }
+
+            RelTraitSet relTraits = rel.getTraits();
+            for (int i = 0; i < baseTraits.size(); i++) {
+                if (i >= relTraits.size()) {
+                    // Copy traits that the new rel doesn't know about.
+                    relTraits.addTrait(baseTraits.getTrait(i));
+                } else {
+                    // Verify that the traits are from the same RelTraitDef
+                    assert relTraits.getTrait(i).getTraitDef() ==
+                        baseTraits.getTrait(i).getTraitDef();
                 }
-
-                if (planner.isRegistered(rel)) {
-                    return;
-                }
-
-                RelTraitSet relTraits = rel.getTraits();
-                for(int i = 0; i < baseTraits.size(); i++) {
-                    if (i >= relTraits.size()) {
-                        // Copy traits that the new rel doesn't know about.
-                        relTraits.addTrait(baseTraits.getTrait(i));
-                    } else {
-                        // Verify that the traits are from the same RelTraitDef
-                        assert(
-                            relTraits.getTrait(i).getTraitDef() ==
-                            baseTraits.getTrait(i).getTraitDef());
-                    }
-                }
-
-
             }
 
             rel.childrenAccept(this);
