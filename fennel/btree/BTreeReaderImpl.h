@@ -37,6 +37,7 @@ inline TupleData const &BTreeReader::getSearchKey()
 inline uint BTreeReader::binarySearch(
     BTreeNode const &node,
     DuplicateSeek dupSeek,
+    bool leastUpper,
     bool &found)
 {
     return getNodeAccessor(node).binarySearch(
@@ -44,6 +45,7 @@ inline uint BTreeReader::binarySearch(
         keyDescriptor,
         getSearchKey(),
         dupSeek,
+        leastUpper,
         comparisonKeyData,
         found);
 }
@@ -70,9 +72,19 @@ inline bool BTreeReader::adjustRootLockMode(LockMode &lockMode)
     return false;
 }
 
+inline int BTreeReader::compareFirstKey(BTreeNode const &node)
+{
+    return getNodeAccessor(node).compareFirstKey(
+        node,
+        keyDescriptor,
+        getSearchKey(),
+        comparisonKeyData);
+}
+
 template <bool leafLockCoupling,class PageStack>
 inline bool BTreeReader::searchForKeyTemplate(
-    TupleData const &key,DuplicateSeek dupSeek,PageStack &pageStack)
+    TupleData const &key, DuplicateSeek dupSeek, bool leastUpper,
+    PageStack &pageStack)
 {
     pSearchKey = &key;
     
@@ -100,9 +112,44 @@ inline bool BTreeReader::searchForKeyTemplate(
         }
         
         bool found;
-        uint iUpperBound = binarySearch(node,dupSeek,found);
+        uint iKeyBound = binarySearch(node,dupSeek,leastUpper,found);
 
-        if (iUpperBound == node.nEntries) {
+        // if we're searching for the greatest lower bound, we didn't
+        // find an exact match, and we're positioned at the rightmost
+        // key entry, need to search the first key in the right sibling
+        // to be sure we have the correct glb
+        if (!leastUpper && !found && iKeyBound == node.nEntries - 1 &&
+                node.rightSibling != NULL_PAGE_ID) {
+
+            // not currently handling leaf lock coupling for reads,
+            // which is the only time we're searching for glb
+            assert(leafLockCoupling == false);
+
+            pageLock.unlock();
+            pageLock.lockPage(node.rightSibling, lockMode);
+            BTreeNode const &rightNode = pageLock.getNodeForRead();
+            int res = compareFirstKey(rightNode);
+
+            pageLock.unlock();
+            if (res < 0) {
+                // stick with the current node, so go back and relock it
+                //
+                // FIXME zfong 7-Dec-2005: Need to handle case where a
+                // node split has occurred since the current node was
+                // unlocked.  To do so, need to search starting at the
+                // current node and continue searching right until you
+                // find a node whose right sibling is equal to the
+                // original right sibling.  The key we want should then
+                // be the last entry on that node.
+                pageLock.lockPage(pageId, lockMode);
+            } else {
+                // switch over to the right sibling
+                pageId = node.rightSibling;
+                continue;
+            }
+        }
+                
+        if (iKeyBound == node.nEntries) {
             assert(!found);
             // What we're searching for is bigger than everything on
             // this node.
@@ -125,7 +172,7 @@ inline bool BTreeReader::searchForKeyTemplate(
         switch(node.height) {
         case 0:
             // at leaf level
-            iTupleOnLeaf = iUpperBound;
+            iTupleOnLeaf = iKeyBound;
             return found;
             
         case 1:
@@ -142,8 +189,8 @@ inline bool BTreeReader::searchForKeyTemplate(
 
         // record the successor child as a terminator for rightward
         // searches once we descend to the child level
-        if (iUpperBound < (node.nEntries - 1)) {
-            rightSearchTerminator = getChild(node,iUpperBound + 1);
+        if (iKeyBound < (node.nEntries - 1)) {
+            rightSearchTerminator = getChild(node,iKeyBound + 1);
         } else {
             // have to consult our own sibling to find the successor
             // child

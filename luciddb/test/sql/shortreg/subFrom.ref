@@ -1,0 +1,138 @@
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- Sub query in from list tests
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME, FNAME, DEPTNO from (select * from emp) bob order by 1,2;
++-----------+--------+---------+
+|   LNAME   | FNAME  | DEPTNO  |
++-----------+--------+---------+
+| Andrews   | Julie  | 30      |
+| Brown     | Bob    | 50      |
+| Bush      | Bill   | 30      |
+| Fratz     | Fritz  | 10      |
+| Guy       | Rich   | 30      |
+| Jones     | Jill   | 30      |
+| Nife      | Jack   | 40      |
+| Reynolds  | Mary   | 50      |
+| Roy       | Rob    | 40      |
+| Webber    | Frank  | 20      |
+| Williams  | Robin  | 40      |
++-----------+--------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME, FNAME, DEPTNO from (select DEPTNO,LNAME,FNAME from emp) bert order by 1,2;
++-----------+--------+---------+
+|   LNAME   | FNAME  | DEPTNO  |
++-----------+--------+---------+
+| Andrews   | Julie  | 30      |
+| Brown     | Bob    | 50      |
+| Bush      | Bill   | 30      |
+| Fratz     | Fritz  | 10      |
+| Guy       | Rich   | 30      |
+| Jones     | Jill   | 30      |
+| Nife      | Jack   | 40      |
+| Reynolds  | Mary   | 50      |
+| Roy       | Rob    | 40      |
+| Webber    | Frank  | 20      |
+| Williams  | Robin  | 40      |
++-----------+--------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select EEE, DDD from (select DEPTNO DDD, LNAME, FNAME EEE from emp) ernie order by 1,2;
++--------+------+
+|  EEE   | DDD  |
++--------+------+
+| Bill   | 30   |
+| Bob    | 50   |
+| Frank  | 20   |
+| Fritz  | 10   |
+| Jack   | 40   |
+| Jill   | 30   |
+| Julie  | 30   |
+| Mary   | 50   |
+| Rich   | 30   |
+| Rob    | 40   |
+| Robin  | 40   |
++--------+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME,FNAME, dname
+. . . . . . . . > from (select LNAME,FNAME, DEPTNO from emp) EMP,
+. . . . . . . . > (select dname,deptno from dept) DEPT
+. . . . . . . . > where EMP.DEPTNO = DEPT.DEPTNO
+. . . . . . . . > order by 1,3,2;
++-----------+--------+--------------+
+|   LNAME   | FNAME  |    DNAME     |
++-----------+--------+--------------+
+| Andrews   | Julie  | Development  |
+| Brown     | Bob    | Support      |
+| Bush      | Bill   | Development  |
+| Fratz     | Fritz  | Accounting   |
+| Guy       | Rich   | Development  |
+| Jones     | Jill   | Development  |
+| Nife      | Jack   | Sales        |
+| Reynolds  | Mary   | Support      |
+| Roy       | Rob    | Sales        |
+| Webber    | Frank  | Marketing    |
+| Williams  | Robin  | Sales        |
++-----------+--------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME,FNAME, dname
+. . . . . . . . > from (select LNAME,FNAME, DEPTNO DDD from emp) E,
+. . . . . . . . > (select dname,deptno from dept) D
+. . . . . . . . > where E.DDD = D.DEPTNO
+. . . . . . . . > order by 3,2,1;
++-----------+--------+--------------+
+|   LNAME   | FNAME  |    DNAME     |
++-----------+--------+--------------+
+| Fratz     | Fritz  | Accounting   |
+| Bush      | Bill   | Development  |
+| Jones     | Jill   | Development  |
+| Andrews   | Julie  | Development  |
+| Guy       | Rich   | Development  |
+| Webber    | Frank  | Marketing    |
+| Nife      | Jack   | Sales        |
+| Roy       | Rob    | Sales        |
+| Williams  | Robin  | Sales        |
+| Brown     | Bob    | Support      |
+| Reynolds  | Mary   | Support      |
++-----------+--------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- sub query in from list, with aggregation
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select C,D from (select count(*) C, DEPTNO D from emp group by DEPTNO) bart order by 1,2;
++----+-----+
+| C  |  D  |
++----+-----+
+| 1  | 10  |
+| 1  | 20  |
+| 2  | 50  |
+| 3  | 40  |
+| 4  | 30  |
++----+-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from (select * from emp) frank;
++---------+
+| EXPR$0  |
++---------+
+| 11      |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select DEPTNO, count(*) from (select * from emp) john group by DEPTNO order by 1;
++---------+---------+
+| DEPTNO  | EXPR$1  |
++---------+---------+
+| 10      | 1       |
+| 20      | 1       |
+| 30      | 4       |
+| 40      | 3       |
+| 50      | 2       |
++---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from (select count(*) C, DEPTNO D from emp group by DEPTNO) fred;
++---------+
+| EXPR$0  |
++---------+
+| 5       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

@@ -39,6 +39,7 @@ public class ResultSetIterator implements RestartableIterator
 
     protected ResultSet resultSet;
     private Object row;
+    private boolean endOfStream;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -48,6 +49,7 @@ public class ResultSetIterator implements RestartableIterator
         // this constructor, since subclasses aren't initialized yet.  Now
         // it follows the same pattern as CalcIterator.
         this.resultSet = resultSet;
+        endOfStream = false;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -82,6 +84,7 @@ public class ResultSetIterator implements RestartableIterator
     {
         try {
             if (resultSet.first()) {
+                endOfStream = false;
                 row = makeRow();
             } else {
                 row = null;
@@ -105,15 +108,15 @@ public class ResultSetIterator implements RestartableIterator
     private void moveToNext()
     {
         try {
-            if (resultSet == null) {
+            if (endOfStream) {
                 return;
             }
             if (resultSet.next()) {
                 row = makeRow();
             } else {
-                // nullify resultSet since some ResultSet implementations don't
+                // record endOfStream since some ResultSet implementations don't
                 // like extra calls to next() after it returns false
-                resultSet = null;
+                endOfStream = true;
                 row = null;
             }
         } catch (SQLException e) {

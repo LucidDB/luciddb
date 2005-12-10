@@ -8,15 +8,17 @@ endif
 
 # NOTE:  tests are ordered roughly from fastest to slowest
 noinst_PROGRAMS= \
-LcsClusterAppendExecStreamTest \
 ExternalSortExecStreamTest \
-FlatFileExecStreamTest
+FlatFileExecStreamTest \
+LcsClusterAppendExecStreamTest \
+LcsRowScanExecStreamTest
 
 TESTS = $(noinst_PROGRAMS)
 
 ExternalSortExecStreamTest_SOURCES=ExternalSortExecStreamTest.cpp
-LcsClusterAppendExecStreamTest_SOURCES=LcsClusterAppendExecStreamTest.cpp
 FlatFileExecStreamTest_SOURCES=FlatFileExecStreamTest.cpp
+LcsClusterAppendExecStreamTest_SOURCES=LcsClusterAppendExecStreamTest.cpp
+LcsRowScanExecStreamTest_SOURCES=LcsRowScanExecStreamTest.cpp
 
 # NOTE:  have to repeat $(EXTRA_LDFLAGS) on mingw due to stupid linker.
 

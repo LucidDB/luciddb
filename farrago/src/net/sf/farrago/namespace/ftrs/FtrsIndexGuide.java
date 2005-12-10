@@ -424,7 +424,7 @@ class FtrsIndexGuide
      *
      * create table pencil_case(
      *     id int not null primary key,
-     *     p pencil int not null,
+     *     p pencil not null,
      *     crayon_count int);
      *
      *</code></pre>

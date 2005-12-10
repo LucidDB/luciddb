@@ -43,6 +43,8 @@ struct TupleDatum
     static const TupleStorageByteLength ONE_BYTE_MAX_LENGTH = 127;
     static const TupleStorageByteLength TWO_BYTE_MAX_LENGTH = 32767;
     static const uint8_t ONE_BYTE_LENGTH_MASK = 0x7f;
+    static const uint16_t TWO_BYTE_LENGTH_MASK1 = 0x7f00;
+    static const uint16_t TWO_BYTE_LENGTH_MASK2 = 0x00ff;
     static const uint8_t TWO_BYTE_LENGTH_BIT = 0x80;
 
     TupleStorageByteLength cbData;
@@ -55,18 +57,9 @@ struct TupleDatum
         uint64_t data64;
     };
     
-    explicit TupleDatum();
-    TupleDatum(TupleDatum const &other);
+    inline explicit TupleDatum();
+    inline TupleDatum(TupleDatum const &other);
 
-
-    /*
-      REVIEW jvs 27-Nov-2005:  instead of providing this constructor,
-      requiring a call to the default constructor followed by
-      loadDatum would make calling code more self-explanatory.
-    */
-    
-    explicit TupleDatum(PConstBuffer pDataWithLen);
-      
     /**
      * Copy assignment(shallow copy).
      *
@@ -75,8 +68,8 @@ struct TupleDatum
      * 
      * @param[in] other the source TupleDatum
      */
-    TupleDatum &operator = (TupleDatum const &other);
-    
+    inline TupleDatum &operator = (TupleDatum const &other);
+
     /**
      * Copies data from source(shallow copy).
      * 
@@ -87,7 +80,7 @@ struct TupleDatum
      * 
      * @param[in] other the source TupleDatum 
      */
-    void copyFrom(TupleDatum const &other);
+    inline void copyFrom(TupleDatum const &other);
 
     /**
      * Copies data into TupleDatum's private buffer(deep copy).
@@ -112,50 +105,48 @@ struct TupleDatum
     /**
      * Stores data with length information encoded into the buffer passed in.
      * 
-     * @note Several methods - storeDatum, loadDatum and loadDatumWithBuffer -
-     * store and load TupleDatum to and from a preallocated buffer. The length
-     * required for this buffer is determined by the number of bytes needed to
-     * store the length indicator plus the maximum length of the data field
-     * (from the associated TupleDescriptor cbStorage value). The storage format
-     * is different from the marshalled format for a tuple (see TupleAccessor):
-     * since there's only one TupleDatum involved, there is no need to store the
-     * offset needed for "constant seek time". The byte format of the buffer
-     * after storeDatum is:
+     * @note
+     * Two methods, storeLcsDatum and loadLcsDatum, store and load TupleDatum
+     * to and from a preallocated buffer. The length required for this buffer
+     * is determined by the number of bytes needed to store the length
+     * indicator plus the maximum length of the data field (from the associated
+     * TupleDescriptor cbStorage value). The storage format is different from
+     * the marshalled format for a tuple (see TupleAccessor), since there's
+     * only one TupleDatum involved and there is no need to store the offset
+     * needed for "constant seek time". The byte format of the buffer after
+     * storeDatum is:
      *
      * @par
+     * One length byte encodes value length from 0(0x0000) to 127(0x007f)\n
      * 0xxxxxxx\n
      * -------- -------- -------- -------- -------- ...\n
      * |length  |     data value bytes\n
      *
      * @par
-     * 1xxxxxxx xxxxxxxx   \n
+     * Two length bytes encode value length from 128(0x0100) to 32767(0x7fff)\n
+     * 1xxxxxxx xxxxxxxx\n
      * -------- -------- -------- -------- -------- ...\n
      * |      length     |     data value bytes\n
      *
      * @par
      * where length(1 or 2 bytes) comes from TupleDatum.cbData(a 4 byte type)
-     * and data value bytes are copied from TupleDatum.pData. The buffer to
-     * allocate should be at least (cbStorage + 2) bytes long.
+     * and data value bytes are copied from TupleDatum.pData. When storing NULL
+     * values, the two-byte length value of 0x8000 is used but the length
+     * value(0x0000) is not valid in the two byte length range. Empty string is
+     * represented by a single length byte encoding the length value 0.
      *
-     * REVIEW jvs 27-Nov-2005:  probably worth providing a method for
-     * computing the required buffer length instead of relying on
-     * a comment spec here
-     *  
+     * @par
+     * The caller needs to allocate a buffer of sufficient size. To do this,
+     * the caller must use the getMaxLcsLength() method from the associated
+     * TupleAttributeDescriptor(or the TupleDescriptor for the tuple, then
+     * indexing into the corresponding TupleDatum location). That method
+     * returns the value of TupleAttributeDescriptor.cbStorage + 2.
+     *
+     *
      * @param[in, out] pDataWithLen data buffer to store to
      */
-    void storeDatum(PBuffer pDataWithLen);
-
-    /**
-     * Loads TupleDatum from a buffer with length information encoded. This
-     * function perform shallow copy.
-     *
-     * @note
-     * See note on copyFrom method.
-     *
-     * @param[in] pDataWithLen data buffer to load from
-     */
-    void loadDatum(PConstBuffer pDataWithLen);
-
+    void storeLcsDatum(PBuffer pDataWithLen);
+    
     /**
      * Loads TupleDatum from a buffer with length information encoded.
      *
@@ -164,16 +155,16 @@ struct TupleDatum
      *
      * @param[in] pDataWithLen data buffer to load from
      */
-    void loadDatumWithBuffer(PConstBuffer pDataWithLen);
+    void loadLcsDatum(PConstBuffer pDataWithLen);
 
     /**
      * Gets the length information from a stored data buffer.
      *
-     * @param[in] pDataWithLen the data buffer to get the length from
+     * @param[in] pDataWithLen the optional data buffer to get the length from
      *
-     * @return length of the data portion in the buffer
+     * @return length of the value in storage format including the length bytes
      */
-    TupleStorageByteLength getStorageLength(PConstBuffer pDataWithLen = NULL);
+    TupleStorageByteLength getLcsLength(PConstBuffer pDataWithLen = NULL);
 };
 
 /**
@@ -183,8 +174,8 @@ struct TupleDatum
 class TupleData : public std::vector<TupleDatum>
 {
 public:
-    explicit TupleData();
-    explicit TupleData(TupleDescriptor const &tupleDesc);
+    inline explicit TupleData();
+    inline explicit TupleData(TupleDescriptor const &tupleDesc);
 
     void compute(TupleDescriptor const &);
 
@@ -193,6 +184,46 @@ public:
     /** project unmarshalled data; like TupleDescriptor::projectFrom */
     void projectFrom(TupleData const& src, TupleProjection const&);
 };
+
+/****************************************************
+  Definitions of inline methods for class TupleDatum
+ ****************************************************/
+
+inline TupleDatum::TupleDatum()
+{
+    cbData = 0;
+    pData = NULL;
+}
+
+inline TupleDatum::TupleDatum(TupleDatum const &other)
+{
+    copyFrom(other);
+}
+
+inline TupleDatum &TupleDatum::operator = (TupleDatum const &other)
+{
+    copyFrom(other);
+    return *this;
+}
+
+inline void TupleDatum::copyFrom(TupleDatum const &other)
+{
+    cbData = other.cbData;
+    pData = other.pData;
+}
+
+/***************************************************
+  Definitions of inline methods for class TupleData
+ ***************************************************/
+
+inline TupleData::TupleData()
+{
+}
+
+inline TupleData::TupleData(TupleDescriptor const &tupleDesc)
+{
+    compute(tupleDesc);
+}
 
 FENNEL_END_NAMESPACE
 

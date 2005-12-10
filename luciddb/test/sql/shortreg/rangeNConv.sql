@@ -2,6 +2,8 @@
 -- BBRange datatype conversion tests
 --
 
+set schema 's';
+
 -- list all values
 select price from products order by price;
 

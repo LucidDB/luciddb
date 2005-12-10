@@ -179,6 +179,9 @@ public:
      *
      * @param dupSeek what to do if duplicates are found
      *
+     * @param leastUpper whether to position on least upper bound or
+     * greatest lower bound
+     *
      * @param scratchKey key to be used as a temp variable in comparisons
      *
      * @param found same semantics as BTreeReader::binarySearch
@@ -188,8 +191,28 @@ public:
         TupleDescriptor const &keyDescriptor,
         TupleData const &searchKey,
         DuplicateSeek dupSeek,
+        bool leastUpper,
         TupleData &scratchKey,
         bool &found) = 0;
+
+    /**
+     * Compare first key on a node to provided search key.
+     *
+     * @param node the node to search
+     *
+     * @param keyDescriptor key descriptor to be used for comparisons
+     *
+     * @param searchKey key to search for
+     *
+     * @param scratchKey key to be used as a temp variable in comparison
+     *
+     * @return result of comparing searchKey with the first key (0, -1, or 1)
+     */
+    virtual int compareFirstKey(
+        BTreeNode const &node,
+        TupleDescriptor const &keyDescriptor,
+        TupleData const &searchKey,
+        TupleData &scratchKey) = 0;
 
     /**
      * Enumeration used to classify the storage state of a node which

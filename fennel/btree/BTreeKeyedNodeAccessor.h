@@ -63,6 +63,7 @@ public:
         TupleDescriptor const &keyDescriptor,
         TupleData const &searchKey,
         DuplicateSeek dupSeek,
+        bool leastUpper,
         TupleData &scratchKey,
         bool &found)
     {
@@ -99,10 +100,27 @@ public:
                 nKeys -= (split + 1);
             }
         }
+        if (!found && !leastUpper && base > 0)
+            base--;
         if ((base != probe) && (base < node.nEntries)) {
             accessTupleInline(node,base);
         }
         return base;
+    }
+
+    virtual int compareFirstKey(
+        BTreeNode const &node,
+        TupleDescriptor const &keyDescriptor,
+        TupleData const &searchKey,
+        TupleData &scratchKey)
+    {
+        int nKeys = NodeAccessor::getKeyCount(node);
+        if (nKeys == 0)
+            return -1;
+        accessTupleInline(node, 0);
+        pKeyAccessor->unmarshal(scratchKey);
+        int compareResult = keyDescriptor.compareTuples(searchKey, scratchKey);
+        return compareResult;
     }
 
     virtual PConstBuffer getEntryForRead(BTreeNode const &node,uint iEntry)

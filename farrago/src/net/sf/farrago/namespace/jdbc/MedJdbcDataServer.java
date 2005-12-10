@@ -30,6 +30,7 @@ import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
@@ -224,6 +225,23 @@ class MedJdbcDataServer extends MedAbstractDataServer
                     return new ResultSetToFarragoIteratorConverter(
                         rel.getCluster(),
                         rel);
+                }
+            });
+
+        // optimizer sometimes can't figure out how to convert data
+        // from JDBC directly into Fennel, so help it out
+        planner.addRule(
+            new ConverterRule(RelNode.class, CallingConvention.RESULT_SET,
+                FennelRel.FENNEL_EXEC_CONVENTION,
+                "ResultSetToFennelRule")
+            {
+                public RelNode convert(RelNode rel)
+                {
+                    return new IteratorToFennelConverter(
+                        rel.getCluster(),
+                        new ResultSetToFarragoIteratorConverter(
+                            rel.getCluster(),
+                            rel));
                 }
             });
     }

@@ -46,18 +46,26 @@ class RampExecStreamGenerator : public MockProducerExecStreamGenerator
 {
 protected:
     int offset;
+    int factor;
 public:
-    RampExecStreamGenerator(int offset_) {
-        offset = offset_;
+    RampExecStreamGenerator(int offsetInit, int factorInit) {
+        offset = offsetInit;
+        factor = factorInit;
+    }
+
+    RampExecStreamGenerator(int offsetInit) {
+        offset = offsetInit;
+        factor = 1;
     }
 
     RampExecStreamGenerator() {
         offset = 0;
+        factor = 1;
     }
 
     virtual int64_t generateValue(uint iRow, uint iCol)
     {
-        return iRow + offset;
+        return iRow * factor + offset;
     }
 };
 
@@ -272,13 +280,12 @@ public:
         return generators[iCol]->next();
     }
 
- private:
+private:
     uint columnCount()
     {
         return generators.size();
     }
 };
-
 
 /**
  * Duplicate stream generator
@@ -316,28 +323,36 @@ public:
 };
 
 /**
- * Column generator which produces values in sequence, starting at start.
+ * Column generator which produces values in sequence, starting at start,
+ * optionally with a fixed offset between each value.
  */
 class SeqColumnGenerator : public ColumnGenerator<int64_t>
 {
-    int start;
+    int offset;
     int curr;
 
 public:
     explicit SeqColumnGenerator()
     {
-        start = 0;
-        curr = 0;
+        offset = 1;
+        curr = -1;
     }
     explicit SeqColumnGenerator(int startInit)
     {
-        start = startInit;
-        curr = start;
+        offset = 1;
+        curr = startInit - 1;
+    }
+
+    explicit SeqColumnGenerator(int startInit, int offsetInit)
+    {
+        offset = offsetInit;
+        curr = startInit - offset;
     }
 
     int64_t next() 
     {
-        return curr++;
+        curr += offset;
+        return curr;
     }
 };
 

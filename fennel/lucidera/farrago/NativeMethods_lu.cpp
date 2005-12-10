@@ -24,6 +24,7 @@
 #include "fennel/farrago/ExecStreamFactory.h"
 #include "fennel/lucidera/sorter/ExternalSortExecStream.h"
 #include "fennel/lucidera/flatfile/FlatFileExecStream.h"
+#include "fennel/lucidera/colstore/LcsClusterAppendExecStream.h"
 #include "fennel/db/Database.h"
 #include "fennel/segment/SegmentFactory.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
@@ -99,6 +100,19 @@ class ExecStreamSubFactory_lu
         pEmbryo->init(FlatFileExecStream::newFlatFileExecStream(), params);
     }
 
+    // implement FemVisitor
+    virtual void visit(ProxyLcsClusterAppendStreamDef &streamDef)
+    {
+        LcsClusterAppendExecStreamParams params;
+        pExecStreamFactory->readTupleStreamParams(params, streamDef);
+        pExecStreamFactory->readBTreeStreamParams(params, streamDef);
+        
+        params.overwrite = false;
+        pEmbryo->init(
+            new LcsClusterAppendExecStream(),
+            params);
+    }
+    
     // implement JniProxyVisitor
     virtual void unhandledVisit()
     {

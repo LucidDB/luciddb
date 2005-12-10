@@ -26,7 +26,6 @@
 #include "fennel/tuple/TupleData.h"
 #include "fennel/tuple/TupleDescriptor.h"
 #include "fennel/tuple/TupleAccessor.h"
-#include "fennel/btree/BTreeWriter.h"
 #include "fennel/ftrs/BTreeExecStream.h"
 #include "fennel/lucidera/colstore/LcsClusterNodeWriter.h"
 #include "fennel/lucidera/colstore/LcsHash.h"
@@ -35,7 +34,6 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-    
 struct LcsClusterAppendExecStreamParams : public BTreeExecStreamParams,
                                           public ConduitExecStreamParams
 {
@@ -56,6 +54,11 @@ struct LcsClusterAppendExecStreamParams : public BTreeExecStreamParams,
 class LcsClusterAppendExecStream : public BTreeExecStream,
                                    public ConduitExecStream
 {
+    /**
+     * Space available on page blocks for writing cluster data
+     */
+    uint m_blockSize;
+
     /**
      * Tuple descriptor for the tuple representing all cluster columns
      */
@@ -106,19 +109,21 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
      */
     boost::scoped_array<LcsHash> m_hash;
 
-    // REVIEW jvs 28-Nov-2005:  use uint instead of uint16_t here
-    // and other places where there's no good reason for a
-    // constraint on the number of objects
     /**
      * Number of columns in the cluster
      */
-    uint16_t m_numColumns;
+    uint m_numColumns;
 
     /**
      * Array of temporary blocks for row array
      */
     boost::scoped_array<PBuffer> m_rowBlock;
     
+    /**
+     * Maximum number of values that can be stored in m_rowBlock
+     */
+    uint nRowsMax;
+
     /**
      * Array of temporary blocks for hash table
      */
@@ -129,20 +134,10 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
      */
     boost::scoped_array<PBuffer> m_builderBlock;
 
-    // REVIEW jvs 28-Nov-2005:  this state variable is used in
-    // non-obvious ways having to do with the 8-row minimum per batch.
-    // Is there any way to consolidate that logic or make it less implicit?
     /**
      * Number of rows loaded into the current set of batches
      */
-    uint16_t m_rowCnt;
-
-    // REVIEW jvs 28-Nov-2005:  I think it should be safe to get rid of
-    // this (closeImpl will only be called if it's really needed).
-    /**
-     * True if close already done
-     */
-    bool m_bClosed;
+    uint m_rowCnt;
 
     /**
      * True if index blocks need to be written to disk
@@ -152,21 +147,21 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
     /**
      * Starting rowid in a cluster page
      */
-    Rid m_firstRow;
+    LcsRid m_firstRow;
 
     /**
      * Last rowid in the last batch
      */
-    Rid m_lastRow;
+    LcsRid m_lastRow;
 
     /* First rowid in current load
      */
-    Rid m_startRow;
+    LcsRid m_startRow;
 
     /**
      * Page builder object
      */
-    LcsClusterNodeWriter m_riBlockBuilder;
+    SharedLcsClusterNodeWriter m_riBlockBuilder;
 
     /**
      * Row value ordinal returned from hash, one per cluster column
@@ -176,7 +171,7 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
     /**
      * Temporary buffers used by WriteBatch
      */
-    boost::scoped_array<PBuffer> m_buf;
+    boost::scoped_array<boost::scoped_array<FixedBuffer> > m_buf;
 
     /**
      * Max size for each column cluster used by WriteBatch
@@ -199,21 +194,6 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
     RecordNum numRowCompressed;
 
     /**
-     * Btree writer
-     */
-    SharedBTreeWriter m_btree;
-
-    /**
-     * Cluster pageid
-     */
-    PageId clusterPageId;
-
-    /**
-     * Cluster dump
-     */
-    LcsClusterDump *clusterDump;
-
-    /**
      * Allocate memory for arrays
      */
     void AllocArrays();
@@ -234,12 +214,10 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
      */
     void convertTuplesToCols();
 
-    // REVIEW jvs 28-Nov-2005:  This method is somewhat misnamed, since it
-    // just sets one value in a cluster row.
     /**
      * Adds value ordinal to row array for new row
      */
-    void AddRow(uint16_t column, uint16_t vOrd);
+    void addValueOrdinal(uint column, uint16_t vOrd);
 
     /**
      * True if row array is full
@@ -264,37 +242,17 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
      * Gets last block written to disk so we can append to it, reading in the
      * first rid value stored on the page
      *
-     * @param pBlock returns pointer to last cluster block, NULL if cluster
-     * is empty
+     * @param pBlock returns pointer to last cluster block
+     *
+     * @return true if cluster is non-empty
      */
-    void GetLastBlock(PLcsClusterNode &pBlock);
+    bool GetLastBlock(PLcsClusterNode &pBlock);
 
 public:
-    /**
-     * Tuple data representing the btree key
-     */
-    TupleData btreeTupleData;
-   
-    /**
-     * Buffer lock for the actual cluster node pages.  Shares the same 
-     * segment as the btree corresponding to the cluster.
-     */
-    ClusterPageLock clusterLock;
-
-    /**
-     * Space available on page blocks for writing cluster data
-     */
-    uint m_blockSize;
-
     /**
      * Performs minimal initialization of object
      */
     explicit LcsClusterAppendExecStream();
-
-    /**
-     * Deallocates remaining temporary memory allocated during prepare()
-     */
-    ~LcsClusterAppendExecStream();
 
     /**
      * Initializes and sets up object with content specific to the load that
@@ -335,7 +293,7 @@ public:
         return m_lastRow;
     }
 
-    void SetLastRow(Rid row) {
+    void SetLastRow(LcsRid row) {
         m_lastRow = row;
     } 
 
@@ -356,24 +314,6 @@ public:
         ExecStreamResourceQuantity &minQuantity,
         ExecStreamResourceQuantity &optQuantity);
     virtual void closeImpl();
-
-    // REVIEW jvs 28-Nov-2005:  I don't think these should be either
-    // public or inline.
-    /**
-     * Returns RID from btree tuple
-     */
-    inline Rid readRid()
-    {
-        return *reinterpret_cast<Rid const *> (btreeTupleData[0].pData);
-    }
-    
-    /**
-     * Returns cluster pageid from btree tuple
-     */
-    inline PageId readClusterPageId()
-    {
-        return *reinterpret_cast<PageId const *> (btreeTupleData[1].pData);
-    }
 };
 
 

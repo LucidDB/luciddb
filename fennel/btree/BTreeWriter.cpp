@@ -85,7 +85,7 @@ uint BTreeWriter::insertTupleFromBuffer(
     pageStack.clear();
 
     bool duplicate = searchForKeyTemplate< true, std::vector<PageId> >(
-        searchKeyData,DUP_SEEK_ANY,pageStack);
+        searchKeyData,DUP_SEEK_ANY,true,pageStack);
 
     // REVIEW:  This implements the SQL semantics whereby keys with null values
     // are considered duplicates for DISTINCT but not for UNIQUE.  Should
@@ -356,6 +356,7 @@ uint BTreeWriter::lockParentPage(int height)
                     keyDescriptor, // nodeAccessor.tupleDescriptor,
                     searchKeyData, 
                     DUP_SEEK_ANY,
+                    true,
                     nodeAccessor.tupleData,
                     found);
                 nodeAccessor.accessTuple(node, iPosition);
@@ -391,6 +392,7 @@ uint BTreeWriter::lockParentPage(int height)
             keyDescriptor, // nodeAccessor.tupleDescriptor,
             searchKeyData,
             DUP_SEEK_ANY,
+            true,
             nodeAccessor.tupleData,
             found);
 
