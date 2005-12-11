@@ -78,7 +78,7 @@ Database::Database(
     ConfigMap const &configMapInit,
     DeviceMode openModeInit,
     SharedTraceTarget pTraceTarget)
-    : TraceSource(pTraceTarget,"Database"),
+    : TraceSource(pTraceTarget,"database"),
       pCache(pCacheInit),
       configMap(configMapInit)
 {
