@@ -245,7 +245,7 @@ below shows a simple query stream graph with associated scheduler and buffers:
 This graph corresponds to a simple query like 
 <code>SELECT name FROM emps WHERE age > 30</code>.  Note that although 
 four buffer instances are created, the two instances of 
-ConsumerToProducerProvisionAdapter are the only streams that actually
+ScratchBufferExecStream are the only streams that actually
 allocate any memory.  The BTreeScan writes into the memory allocated by
 adapter1 above it, which is also read by the calculator; the calculator
 writes into the memory allocated by adapter2 above it, which is also read by
