@@ -58,9 +58,7 @@ public abstract class SqlNode implements Cloneable
      */
     SqlNode(SqlParserPos pos)
     {
-        // TODO jvs 4-June-2005:  not all code complies with this.
-        // Julian.  Please.  Run.  ALL.  Tests.  Next.  Time.
-        // Util.pre(pos != null, "pos != null");
+        Util.pre(pos != null, "pos != null");
         this.pos = pos;
     }
 
