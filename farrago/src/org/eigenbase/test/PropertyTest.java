@@ -25,6 +25,7 @@ package org.eigenbase.test;
 
 import junit.framework.TestCase;
 import junit.framework.Assert;
+import junit.framework.TestSuite;
 import org.eigenbase.util.property.*;
 
 
@@ -37,6 +38,15 @@ import org.eigenbase.util.property.*;
  */
 public class PropertyTest extends TestCase
 {
+    public static TestSuite _suite()
+    {
+        final TestSuite suite = new TestSuite();
+        for (int i = 0; i < 1000; i++) {
+              suite.addTestSuite(PropertyTest.class);
+        }
+        return suite;
+    }
+
     public void testInt()
     {
         final MyProperties props = new MyProperties();
@@ -390,43 +400,44 @@ public class PropertyTest extends TestCase
         final State3 state = new State3();
         state.callCounter = 0;
 
-        intProp.addTrigger(
-                new Trigger() {
-                    public boolean isPersistent() {
-                        return false;
-                    }
-                    public int phase() {
-                        return Trigger.PRIMARY_PHASE;
-                    }
-                    public void execute(Property property, String value) {
-                        state.triggerCalled = true;
-                        state.triggerValue = value;
-                    }
-                }
-        );
-        intProp.addTrigger(
-                new Trigger() {
-                    public boolean isPersistent() {
-                        return false;
-                    }
-                    public int phase() {
-                        return Trigger.SECONDARY_PHASE;
-                    }
-                    public void execute(Property property, String value)
-                            throws Trigger.VetoRT {
+        // Add a trigger. Keep it on the stack to prevent it from being
+        // garbage-collected.
+        final Trigger trigger1 = new Trigger() {
+            public boolean isPersistent() {
+                return false;
+            }
+            public int phase() {
+                return Trigger.PRIMARY_PHASE;
+            }
+            public void execute(Property property, String value) {
+                state.triggerCalled = true;
+                state.triggerValue = value;
+            }
+        };
+        intProp.addTrigger(trigger1);
 
-                        // even numbers are rejected
-                        state.callCounter++;
-                        int ival = Integer.decode(value).intValue();
-                        if ((ival % 2) == 0) {
-                            // throw on even
-                            throw new Trigger.VetoRT("have a nice day");
-                        } else {
-                            // ok
-                        }
-                    }
+        final Trigger trigger2 = new Trigger() {
+            public boolean isPersistent() {
+                return false;
+            }
+            public int phase() {
+                return Trigger.SECONDARY_PHASE;
+            }
+            public void execute(Property property, String value)
+                throws VetoRT {
+
+                // even numbers are rejected
+                state.callCounter++;
+                int ival = Integer.decode(value).intValue();
+                if ((ival % 2) == 0) {
+                    // throw on even
+                    throw new VetoRT("have a nice day");
+                } else {
+                    // ok
                 }
-        );
+            }
+        };
+        intProp.addTrigger(trigger2);
 
         for (int i = 0; i < 10; i++) {
             // reset values
@@ -457,9 +468,18 @@ public class PropertyTest extends TestCase
             int val = Integer.decode(state.triggerValue).intValue();
 
             assertTrue("Odd counter not value", (i == val));
-
         }
 
+    }
+
+    /**
+     * Runs {@link #testVetoChangeValue} many times, to test concurrency.
+     */
+    public void testVetoChangeValueManyTimes() throws Exception
+    {
+        for (int i = 0; i < 1000; ++i) {
+            testVetoChangeValue();
+        }
     }
 
     private static class MyProperties extends TriggerableProperties
