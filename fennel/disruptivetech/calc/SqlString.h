@@ -138,6 +138,18 @@ SqlStrCat(char* dest,
           char const * const str2,
           int str2LenBytes);
 
+//! StrCmp. Binary.
+//! See SQL2003 Part 2 Section 4.3.2.
+//! As an extension to SQL2003, allow inequalities (>,>=, etc.)
+//! Follows byte-wise comparison semantics of memcmp().
+//!
+//! Returns -1, 0, 1.
+int
+SqlStrCmp_Bin(char const * const str1,
+              int str1LenBytes,
+              char const * const str2,
+              int str2LenBytes);
+
 //! StrCmp. SQL VARCHAR & CHAR. Ascii, no UCS2 yet.
 //!
 //! str1 and str2 can be any combination of VARCHAR and/or CHAR.
@@ -235,18 +247,6 @@ SqlStrCmp(char const * const str1,
     }
     return 0;
 }
-
-//! StrCmp. Binary.
-//! See SQL2003 Part 2 Section 4.3.2.
-//! As an extension to SQL2003, allow inequalities (>,>=, etc.)
-//! Follows byte-wise comparison semantics of memcmp().
-//!
-//! Returns -1, 0, 1.
-int
-SqlStrCmp_Bin(char const * const str1,
-              int str1LenBytes,
-              char const * const str2,
-              int str2LenBytes);
 
 //! StrCpy. String Copy. Fixed Width / SQL CHAR. Ascii and UCS2.
 //!
