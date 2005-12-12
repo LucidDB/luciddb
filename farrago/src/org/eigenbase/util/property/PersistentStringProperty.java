@@ -83,13 +83,17 @@ public class PersistentStringProperty extends StringProperty
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Sets the value of this property.  This method is synchronized to
+     * Sets the value of this property.<p/>
+     *
+     * This method is synchronized to
      * prevent multiple threads from attempting to initialize the property
      * storage ({@link #storage}) simultaneously.
+     *
+     * @return The previous value, or the default value if not set.
      */
-    public synchronized void set(String value)
+    public synchronized String set(String value)
     {
-        super.set(value);
+        final String prevValue = super.set(value);
 
         if (!storageInitialized) {
             storageInitialized = true;
@@ -97,30 +101,31 @@ public class PersistentStringProperty extends StringProperty
             if (propertyFileLocation.get() == null) {
                 tracer.warning("Cannot store property '" + getPath()
                     + "' because storage location is not set");
-                return;
+                return prevValue;
             }
             try {
                 storage =
                     PersistentPropertyStorage.newPersistentPropertyStorage(
                         propertyFileLocation.get());
-            } catch(IOException e) {
+            } catch (IOException e) {
                 tracer.warning(
                     "Unable to initialize persistent property storage for '"
                     + getPath() + "'");
                 tracer.throwing("PersistentPropertyStorage", "<init>", e);
-                return;
+                return prevValue;
             }
         }
 
         if (storage != null) {
             try {
                 storage.storeProperty(this);
-            } catch(IOException e) {
+            } catch (IOException e) {
                 tracer.warning(
                     "Unable to persist property '" + getPath() + "'");
                 tracer.throwing("PersistentPropertyStorage", "set(String)", e);
             }
         }
+        return prevValue;
     }
 }
 

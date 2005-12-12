@@ -90,13 +90,30 @@ public class DoubleProperty extends Property
      * If the property has no value, returns the default value.
      * If there is no default value, returns the given default value.
      */
-    public double get(int defaultValue)
+    public double get(double defaultValue)
     {
-        final String value = getInternal(null, false);
+        final String value = getInternal(Double.toString(defaultValue), false);
         if (value == null) {
             return defaultValue;
         }
         return Double.parseDouble(value);
+    }
+
+    /**
+     * Sets the value of this double property.
+     *
+     * @return The previous value, or the default value if not set.
+     */
+    public double set(double value)
+    {
+        String prevValue = setString(Double.toString(value));
+        if (prevValue == null) {
+            prevValue = getDefaultValue();
+            if (prevValue == null) {
+                return 0;
+            }
+        }
+        return Double.parseDouble(prevValue);
     }
 }
 

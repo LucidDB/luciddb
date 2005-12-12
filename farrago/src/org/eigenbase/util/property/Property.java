@@ -162,10 +162,12 @@ public abstract class Property
 
     /**
      * Sets a property directly as a string.
+     *
+     * @return the previous value
      */
-    public Object setString(String value)
+    public String setString(String value)
     {
-        return properties.setProperty(path, value);
+        return (String) properties.setProperty(path, value);
     }
 
     /**
@@ -195,6 +197,15 @@ public abstract class Property
         return toBoolean(value);
     }
 
+    /**
+     * Converts a string to a boolean.<p/>
+     *
+     * Note that {@link Boolean#parseBoolean(String)} is similar,
+     * but only exists from JDK 1.5 onwards,
+     * and only accepts 'true'.
+     *
+     * @return true if the string is "1" or "true" or "yes", ignoring case
+     */
     protected static boolean toBoolean(final String value)
     {
         return value.equalsIgnoreCase("1") ||
@@ -203,7 +214,8 @@ public abstract class Property
     }
 
     /**
-     * Returns the value of the property as a string.
+     * Returns the value of the property as a string,
+     * or null if the property is not set.
      */
     public String stringValue()
     {
@@ -211,21 +223,25 @@ public abstract class Property
     }
 
     /**
-     * A trigger list is associated with a property key.
-     * Each contains zero or more Triggers.
-     * Each Trigger is stored in a WeakReference so that
-     * when the the Trigger is only reachable via weak referencs the Trigger
+     * A trigger list a list of triggers associated with a given property.<p/>
+     *
+     * A trigger list is associated with a property key, and
+     * contains zero or more {@link Trigger} objects.<p/>
+     *
+     * Each {@link Trigger} is stored in a {@link WeakReference} so that when
+     * the Trigger is only reachable via weak references the Trigger
      * will be be collected and the contents of the WeakReference
      * will be set to null.
      */
     private static class TriggerList extends ArrayList
     {
         /**
-         * Add a Trigger wrapping it in a WeakReference.
+         * Adds a Trigger, wrapping it in a WeakReference.
          *
          * @param trigger
          */
-        void add(final Trigger trigger) {
+        void add(final Trigger trigger)
+        {
             // this is the object to add to list
             Object o = (trigger.isPersistent())
                         ? trigger : (Object) new WeakReference(trigger);
@@ -251,12 +267,14 @@ public abstract class Property
         }
 
         /**
-         * Remove the given Trigger.
-         * In addition, any WeakReference that is empty are removed.
+         * Removes the given Trigger.<p/>
+         *
+         * In addition, removes any {@link WeakReference} that is empty.
          *
          * @param trigger
          */
-        void remove(final Trigger trigger) {
+        void remove(final Trigger trigger)
+        {
             for (Iterator it = iterator(); it.hasNext(); ) {
                 Trigger t = convert(it.next());
 
@@ -269,9 +287,10 @@ public abstract class Property
         }
 
         /**
-         * Execute all Triggers in this Entry passing in the property
-         * key whose change was the casue.
-         * In addition, any WeakReference that is empty are removed.
+         * Executes every {@link Trigger} in this {@link TriggerList}, passing
+         * in the property key whose change was the casue.<p/>
+         *
+         * In addition, removes any {@link WeakReference} that is empty.
          *
          * @param property The property whose change caused this property to
          *   fire
@@ -300,7 +319,12 @@ public abstract class Property
             }
         }
 
-        private Trigger convert(Object o) {
+        /**
+         * Converts a trigger or a weak reference to a trigger into a trigger.
+         * The result may be null.
+         */ 
+        private Trigger convert(Object o)
+        {
             if (o instanceof WeakReference) {
                 o = ((WeakReference) o).get();
             }
