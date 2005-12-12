@@ -436,10 +436,21 @@ public abstract class JmiObjUtil
         while (featureIter.hasNext()) {
             StructuralFeature feature = (StructuralFeature) featureIter.next();
             if (feature.getMultiplicity().getLower() != 0) {
-                assert (obj.refGetValue(feature) != null)
-                    : "Missing value for mandatory feature "
-                    + ((ModelElement) refClass.refMetaObject()).getName() + "."
-                    + feature.getName();
+                if (obj.refGetValue(feature) == null) {
+                    String featureClassName = getMetaObjectName(refClass);
+                    String objectName = null;
+                    try {
+                        // If it has a name attribute, use that
+                        objectName = (String) obj.refGetValue("name");
+                    } catch (Throwable ex) {
+                        // Otherwise, just dump it
+                        objectName = obj.toString();
+                    }
+                    assert (false)
+                        : "Missing value for mandatory feature "
+                        + featureClassName + "." + feature.getName()
+                        + " in object " + objectName;
+                }
             }
         }
     }
