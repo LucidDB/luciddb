@@ -651,6 +651,10 @@ column type family is {1} but default value type family is {2}</text>
 <text>Mock foreign object {0} not found</text>
 </exception>
 
+<exception id="460110" name="JdbcDriverTypeUnsupported">
+<text>Cannot support JDBC type {2} (ordinal {3,number,#}) found in column {1} of table {0}</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Database/Session resources 470,000 - 480,000 -->
 <!-- ====================================================================== -->

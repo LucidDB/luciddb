@@ -71,10 +71,14 @@ public:
         NO_STATUS = 0,
         INCOMPLETE_COLUMN,
         COLUMN_TOO_LARGE,
+        NO_COLUMN_DELIM,
         TOO_FEW_COLUMNS,
         TOO_MANY_COLUMNS
     };
 
+    explicit FlatFileRowParseResult();
+    void reset();
+    
     /**
      * Reports errors encountered during row parsing
      */
@@ -84,6 +88,10 @@ public:
      * Offsets to column values within the buffer
      */
     std::vector<uint> offsets;
+
+    /**
+     * Sizes of column values
+     */
     std::vector<uint> sizes;
     
     /**
@@ -96,6 +104,11 @@ public:
      * set to the first unread character, regardless of errors.
      */
     char *next;
+
+    /**
+     * Ongoing count of row delimiters read
+     */
+    uint nRowDelimsRead;
 };
 
 /**

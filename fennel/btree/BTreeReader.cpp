@@ -125,11 +125,12 @@ bool BTreeReader::searchNext()
     return true;
 }
 
-bool BTreeReader::searchForKey(TupleData const &key,DuplicateSeek dupSeek)
+bool BTreeReader::searchForKey(TupleData const &key,DuplicateSeek dupSeek,
+                               bool leastUpper)
 {
     NullPageStack nullPageStack;
     bool found = searchForKeyTemplate<false,NullPageStack>(
-        key,dupSeek,nullPageStack);
+        key,dupSeek,leastUpper,nullPageStack);
     pSearchKey = NULL;
     return found;
 }

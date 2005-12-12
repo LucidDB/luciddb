@@ -283,77 +283,31 @@ If you prefer using a GUI, try the <code>dbmanEngine</code> script instead.
 
 <h2>Tracing</h2>
 
-Tracing based on the standard <a
-href="http://java.sun.com/j2se/1.4.1/docs/api/java/util/logging/package-summary.html#package_description">java.util.logging
-facility</a> is controlled by the file
-<code>dev/farrago/trace/FarragoTrace.properties</code>, which is
-generated when the catalog is created.  You can make modifications to
-this file; they won't be overwritten during regeneration.  However,
-comments cannot be preserved during regeneration, so don't bother.
-Normally, trace output is written to
-<code>dev/farrago/trace/FarragoTrace.log</code>.
-
-<p>
-
-The timestamp of the trace configuration file is checked once per
-second; whenever it changes, the new configuration is applied
-automatically, so there's no need to restart the database.  (TODO:
-make this configurable, since that's not always desirable.)
-
-<p>
-
-Farrago classes use the standard logger naming scheme (logger name
-matches fully-qualified class name, so for detailed catalog tracing of
-the JDBC driver, add <code>net.sf.farrago.jdbc.level=FINE</code>).  However,
-Fennel doesn't use the java.util.logging API directly, so it
-has a custom logger naming scheme.  Below are some useful trace definitions:
-
-<ul>
-
-<li>add <code>net.sf.farrago.jdbc.level=FINER</code> to trace exceptions which
-are returned via the JDBC driver (this is very useful
-since it traces underlying exceptions as well; these may
-not be visible in a front end such as sqlline);
-this is added automatically for developer builds</li>
-
-<li>add <code>net.sf.farrago.db.level=FINE</code> to see all SQL statements
-executed (use FINER to see dynamic parameter values as well)</li>
-
-<li>add <code>net.sf.farrago.query.streamgraph.level=FINE</code> to trace
-Fennel execution stream graphs
-
-<li>add <code>net.sf.fennel.level=FINE</code>. to turn on all
-low-level Fennel tracing (probably more than you want!)
-
-<li>add <code>net.sf.farrago.fennel.level=FINE</code>
-to trace just the commands sent to the Fennel API (not their
-implementation)
-
-<li>add <code>net.sf.fennel.xo.level=FINE</code> to trace
-tuples processed by execution streams
-
-<li>add <code>org.eigenbase.relopt.RelOptPlanner.level=FINE</code> to trace
-query optimization
-
-<li>some Fennel classes provide further tracing discrimination (TBD)
-
-</ul>
+See <a href="http://wiki.eigenbase.org/FarragoTracing">the wiki docs</a>
+for instructions on tracing Farrago.
 
 <h2>Unit Testing</h2>
 
-Please read the <a
-href="api/net/sf/farrago/test/package-summary.html#package_description">
-test package overview</a> for details.
+See <a href="http://wiki.eigenbase.org/FarragoTests">the wiki docs</a>
+for information on Farrago unit tests.
 
 <h2>Debugging</h2>
 
-Run <code>ant jswat.sqlline</code> or <code>ant jswat.isql</code> to
-use the <a href="http://www.bluemarsh.com/java/jswat">JSwat</a>
-debugger for execution of interactive SQL commands.  For sqlline,
-input/output is performed through the JSwat Output pane at the bottom
-left of the screen.  The <code>junitDebug</code> script can also be
-used to debug one unit test at a time.  If you want to use another
-debugger, the <code>jswatDebug</code> ant macro definition in
+The <a href="http://wiki.eigenbase.org/FarragoDevFAQ">developer
+FAQ</a> contains some useful information on debugging, including
+how to set up Eclipse.
+
+<p>
+
+A standalone debugger (<a
+href="http://www.bluemarsh.com/java/jswat">JSwat</a>) is also provided
+in the thirdparty distribution.  Run <code>ant jswat.sqlline</code> or
+<code>ant jswat.isql</code> to use this debugger for execution of
+interactive SQL commands.  For sqlline, input/output is performed
+through the JSwat Output pane at the bottom left of the screen.  The
+<code>junitDebug</code> script can also be used to debug one unit test
+at a time.  If you want to use another debugger, the
+<code>jswatDebug</code> ant macro definition in
 <code>dev/farrago/buildMacros.xml</code> might be helpful as a
 template for passing the right startup information.  Also, as part of
 a successful build, the full classpath is always dumped to the file
@@ -361,14 +315,11 @@ a successful build, the full classpath is always dumped to the file
 
 <p>
 
-The <a href="faqTech.html">developer FAQ</a> contains some
-useful information on debugging.
-
 <h2>Client/Server Operation</h2>
 
 So far, all of the execution modes discussed have been <em>embedded
 engine mode</em>, where the Farrago engine is loaded directly into a
-single process such as iSQL-Viewer or sqlline.  This is the most
+single process such as sqlline.  This is the most
 useful for debugging, but scripts are also available to test
 client/server mode.  Run the <code>farragoServer</code> script to
 start the server in a shell (after startup, it waits listening for

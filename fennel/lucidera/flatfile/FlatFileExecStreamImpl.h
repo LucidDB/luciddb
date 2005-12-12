@@ -47,7 +47,7 @@ const int FLAT_FILE_MAX_NON_CHAR_VALUE_LEN = 255;
 /**
  * FlatFileExecStreamImpl implements the FlatFileExecStream interface.
  *
- * @author John V. Sichi
+ * @author John Pham
  * @version $Id$
  */
 class FlatFileExecStreamImpl : public FlatFileExecStream
@@ -62,12 +62,25 @@ class FlatFileExecStreamImpl : public FlatFileExecStream
     char *next;
     SharedFlatFileParser pParser;
     FlatFileRowParseResult lastResult;
-    TupleData lastTuple;
+    TupleDescriptor textDesc;
+    TupleData textTuple, dataTuple;
     bool isRowPending;
 
     SegPageLock bufferLock;
     SegmentAccessor scratchAccessor;
-    
+
+    // error logging
+    std::string dataFilePath, errorFilePath;
+    SharedRandomAccessDevice pErrorFile;
+    FileSize filePosition;
+    uint nRowsOutput, nRowErrors;
+    std::string reason;
+
+    /**
+     * The Calculator object which does the real work.
+     */
+    SharedCalculator pCalc;
+
     // implement ExecStream
     virtual void closeImpl();
     
@@ -103,6 +116,31 @@ class FlatFileExecStreamImpl : public FlatFileExecStream
     void convert(
         const FlatFileRowParseResult &result,
         TupleData &tuple);
+
+    /**
+     * Logs a single error to file. The reason for the error is read
+     * from the row parse result.
+     */
+    void logError(const FlatFileRowParseResult &result);
+
+    /**
+     * Logs a single error to file
+     */
+    void FlatFileExecStreamImpl::logError(
+        const std::string reason,
+        const FlatFileRowParseResult &result);
+
+    /**
+     * Attempt to detect and report major errors encountered while parsing
+     * file. Throws an exception if no rows were returned, but errors were
+     * found.
+     */
+    void detectMajorErrors();
+
+    /**
+     * Throws an error if a row delimiter was not found.
+     */
+    void checkRowDelimiter();
     
 public:
     // implement ExecStream

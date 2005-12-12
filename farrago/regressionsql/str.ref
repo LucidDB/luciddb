@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/regressionsql/str.sql#2 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/regressionsql/str.sql#3 $
 0: jdbc:farrago:> -- Full vertical system testing of non function statements
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
@@ -52,6 +52,19 @@
 | EXPR$0  |
 +---------+
 | true    |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values 'A' < 'AAA';
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> values 'BB' < 'AAA';
++---------+
+| EXPR$0  |
++---------+
+| false   |
 +---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select substring(name from 1 for 2) from sales.emps order by 1;

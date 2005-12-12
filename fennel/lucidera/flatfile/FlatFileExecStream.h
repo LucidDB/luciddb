@@ -91,6 +91,11 @@ struct FlatFileExecStreamParams : public SingleOutputExecStreamParams
      */
     bool header;
 
+    /**
+     * Converts flat file text into typed data
+     */
+    std::string calcProgram;
+    
     explicit FlatFileExecStreamParams()
     {
         errorFilePath = "";

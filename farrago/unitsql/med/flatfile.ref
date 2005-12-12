@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/med/flatfile.sql#4 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/med/flatfile.sql#2 $
 0: jdbc:farrago:> -- Test flatfile namespace plugin
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create foreign data wrapper flatfile_foreign_wrapper
@@ -7,30 +7,139 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create server flatfile_server
 . . . . . . . . > foreign data wrapper flatfile_foreign_wrapper
-. . . . . . . . > options (with_header 'no');
+. . . . . . . . > options (with_header 'yes', log_directory 'testlog');
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema flatfile_schema;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'flatfile_schema';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create foreign table flatfile_explicit_table(
-. . . . . . . . >     id varchar(10),
+. . . . . . . . >     id int not null,
 . . . . . . . . >     name varchar(50) not null,
 . . . . . . . . >     extra_field char(1) not null)
 . . . . . . . . > server flatfile_server
 . . . . . . . . > options (filename 'unitsql/med/example.csv');
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from flatfile_explicit_table;
+0: jdbc:farrago:> select * from flatfile_explicit_table order by 3;
 +------+------------------------------------------+--------------+
 |  ID  |                   NAME                   | EXTRA_FIELD  |
 +------+------------------------------------------+--------------+
-| 123  | "S,"                                     | F            |
 | 123  | Jonathan Ackerman                        | A            |
 | 234  | Grady O'Neil                             | B            |
 | 456  | Susan, Peter and Dave                    | C            |
 | 789  | Amelia "meals" Maurice                   | E            |
+| 123  | "S,"                                     | F            |
 | 234  | Peter "peg leg", Jimmy & Samantha "Sam"  | G            |
 +------+------------------------------------------+--------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create foreign table flatfile_rowTypeTooBig(
+. . . . . . . . >     a varchar(2000),
+. . . . . . . . >     b varchar(2000),
+. . . . . . . . >     c varchar(2000))
+. . . . . . . . > server flatfile_server
+. . . . . . . . > options (filename 'unitsql/med/example.csv');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from flatfile_rowTypeTooBig;
+Error: Maximum row size (6008 bytes) exceeds limit (4096 bytes) (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create foreign table flatfile_missing(
+. . . . . . . . >     id int not null,
+. . . . . . . . >     name varchar(50) not null,
+. . . . . . . . >     extra_field char(1) not null)
+. . . . . . . . > server flatfile_server
+. . . . . . . . > options (filename 'unitsql/med/missing.csv');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from flatfile_missing;
+Error: Could not access data file unitsql/med/missing.csv: System call failed:  Failed to open file unitsql/med/missing.csv: No such file or directory (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- note: this column description is invalid, and should cause errors
+0: jdbc:farrago:> create foreign table flatfile_locked(
+. . . . . . . . >     id int not null,
+. . . . . . . . >     name varchar(50) not null)
+. . . . . . . . > server flatfile_server
+. . . . . . . . > options (
+. . . . . . . . >     filename 'unitsql/med/example.csv',
+. . . . . . . . >     error_filename 'unitsql/med/locked');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from flatfile_locked;
+Error: Could not write to log file unitsql/med/locked: System call failed:  Failed to open file unitsql/med/locked: Permission denied (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create server flatfile_server_badLineDelim
+. . . . . . . . > foreign data wrapper flatfile_foreign_wrapper
+. . . . . . . . > options (
+. . . . . . . . >     with_header 'yes',
+. . . . . . . . >     line_delimiter '\t', 
+. . . . . . . . >     log_directory 'testlog/');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create foreign table flatfile_badLineDelim(
+. . . . . . . . >     id int not null,
+. . . . . . . . >     name varchar(50) not null,
+. . . . . . . . >     extra_field char(1) not null)
+. . . . . . . . > server flatfile_server_badLineDelim
+. . . . . . . . > options (filename 'unitsql/med/example.csv');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from flatfile_schema.flatfile_badLineDelim;
+Error: Data file unitsql/med/example.csv has no row delimiter (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create server flatfile_server_badFieldDelim
+. . . . . . . . > foreign data wrapper flatfile_foreign_wrapper
+. . . . . . . . > options (
+. . . . . . . . >     with_header 'yes',
+. . . . . . . . >     field_delimiter '\t', 
+. . . . . . . . >     log_directory 'testlog');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create foreign table flatfile_badFieldDelim(
+. . . . . . . . >     id int not null,
+. . . . . . . . >     name varchar(50) not null,
+. . . . . . . . >     extra_field char(1) not null)
+. . . . . . . . > server flatfile_server_badFieldDelim
+. . . . . . . . > options (filename 'unitsql/med/example.csv');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from flatfile_schema.flatfile_badFieldDelim;
+Error: No rows were read from file unitsql/med/example.csv; last error was: row has no column delimiter (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- data file is assumed to have at least one 'G'
+0: jdbc:farrago:> create server flatfile_server_incompleteColumn
+. . . . . . . . > foreign data wrapper flatfile_foreign_wrapper
+. . . . . . . . > options (
+. . . . . . . . >     with_header 'yes',
+. . . . . . . . >     line_delimiter 'G', 
+. . . . . . . . >     log_directory 'testlog');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create foreign table flatfile_incompleteColumn(
+. . . . . . . . >     id int not null,
+. . . . . . . . >     name varchar(50) not null,
+. . . . . . . . >     extra_field char(1) not null)
+. . . . . . . . > server flatfile_server_incompleteColumn
+. . . . . . . . > options (filename 'unitsql/med/example.csv');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from flatfile_schema.flatfile_incompleteColumn;
+Error: No rows were read from file unitsql/med/example.csv; last error was: column has no delimiter (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create foreign table flatfile_tooManyColumns(
+. . . . . . . . >     id int not null,
+. . . . . . . . >     name varchar(50) not null)
+. . . . . . . . > server flatfile_server
+. . . . . . . . > options (filename 'unitsql/med/example.csv');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from flatfile_schema.flatfile_tooManyColumns;
+Error: No rows were read from file unitsql/med/example.csv; last error was: row has too many columns (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create foreign table flatfile_tooFewColumns(
+. . . . . . . . >     id int not null,
+. . . . . . . . >     name varchar(50) not null,
+. . . . . . . . >     extra_field char(1) not null,
+. . . . . . . . >     extra_field2 char(1) not null)
+. . . . . . . . > server flatfile_server
+. . . . . . . . > options (filename 'unitsql/med/example.csv');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from flatfile_schema.flatfile_tooFewColumns;
+Error: No rows were read from file unitsql/med/example.csv; last error was: row has too few columns (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- we cannot cause the rowTextTooLong error because a row is 
+0: jdbc:farrago:> -- guaranteed to fit within the buffers used for flat files.
+0: jdbc:farrago:> -- however, if we decide to relax this restriction, throw in 
+0: jdbc:farrago:> -- a test case.
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  required metadata support not available
 0: jdbc:farrago:> import foreign schema testdata

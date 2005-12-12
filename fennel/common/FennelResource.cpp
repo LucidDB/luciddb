@@ -3,16 +3,16 @@
 
 /**
  * This class was generated
- * by class mondrian.resource.ResourceGen
- * from /home/jvs/open/fennel/common/FennelResource.xml
- * on Thu Nov 04 19:35:39 PST 2004.
+ * by class org.eigenbase.resgen.ResourceGen
+ * from /home/jpham/open/fennel/common/FennelResource.xml
+ * on Wed Dec 07 11:54:38 PST 2005.
  * It contains a list of messages, and methods to
  * retrieve and format those messages.
- **/
+ */
 
-// begin common include specified by /home/jvs/open/fennel/common/FennelResource.xml
+// begin common include specified by /home/jpham/open/fennel/common/FennelResource.cpp
 #include "CommonPreamble.h"
-// end common include specified by /home/jvs/open/fennel/common/FennelResource.xml
+// end common include specified by /home/jpham/open/fennel/common/FennelResource.cpp
 #include "FennelResource.h"
 #include "ResourceBundle.h"
 #include "Locale.h"
@@ -50,7 +50,19 @@ FennelResource::FennelResource(Locale locale)
       _duplicateKeyDetected(this, "duplicateKeyDetected"),
       _internalError(this, "internalError"),
       _executionAborted(this, "executionAborted"),
-      _rowTooLong(this, "rowTooLong")
+      _rowTooLong(this, "rowTooLong"),
+      _rowTypeTooLong(this, "rowTypeTooLong"),
+      _readDataFailed(this, "readDataFailed"),
+      _dataTransferFailed(this, "dataTransferFailed"),
+      _writeLogFailed(this, "writeLogFailed"),
+      _noRowsReturned(this, "noRowsReturned"),
+      _errorsEncountered(this, "errorsEncountered"),
+      _noRowDelimiter(this, "noRowDelimiter"),
+      _incompleteColumn(this, "incompleteColumn"),
+      _noColumnDelimiter(this, "noColumnDelimiter"),
+      _tooFewColumns(this, "tooFewColumns"),
+      _tooManyColumns(this, "tooManyColumns"),
+      _rowTextTooLong(this, "rowTextTooLong")
 { }
 
 string FennelResource::sysCallFailed(const std::string &p0) const
@@ -72,6 +84,54 @@ string FennelResource::executionAborted() const
 string FennelResource::rowTooLong(int p0, int p1, const std::string &p2) const
 {
     return _rowTooLong.format(p0, p1, p2);
+}
+string FennelResource::rowTypeTooLong(int p0, int p1) const
+{
+    return _rowTypeTooLong.format(p0, p1);
+}
+string FennelResource::readDataFailed(const std::string &p0, const std::string &p1) const
+{
+    return _readDataFailed.format(p0, p1);
+}
+string FennelResource::dataTransferFailed(const std::string &p0, int p1) const
+{
+    return _dataTransferFailed.format(p0, p1);
+}
+string FennelResource::writeLogFailed(const std::string &p0, const std::string &p1) const
+{
+    return _writeLogFailed.format(p0, p1);
+}
+string FennelResource::noRowsReturned(const std::string &p0, const std::string &p1) const
+{
+    return _noRowsReturned.format(p0, p1);
+}
+string FennelResource::errorsEncountered(const std::string &p0, const std::string &p1) const
+{
+    return _errorsEncountered.format(p0, p1);
+}
+string FennelResource::noRowDelimiter(const std::string &p0) const
+{
+    return _noRowDelimiter.format(p0);
+}
+string FennelResource::incompleteColumn() const
+{
+    return _incompleteColumn.format();
+}
+string FennelResource::noColumnDelimiter() const
+{
+    return _noColumnDelimiter.format();
+}
+string FennelResource::tooFewColumns() const
+{
+    return _tooFewColumns.format();
+}
+string FennelResource::tooManyColumns() const
+{
+    return _tooManyColumns.format();
+}
+string FennelResource::rowTextTooLong() const
+{
+    return _rowTextTooLong.format();
 }
 
 } // end namespace fennel

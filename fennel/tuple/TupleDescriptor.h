@@ -53,6 +53,16 @@ struct TupleAttributeDescriptor
         TupleStorageByteLength cbStorage = 0);
 
     bool operator == (TupleAttributeDescriptor const &other) const;
+
+    /**
+     * Get the storage required to store any value of this attribute in the Lcs
+     * column storage format. See TupleData.h for a description of this format.
+     *
+     * @return maximum storage length required for this attribute
+     */
+    inline TupleStorageByteLength getMaxLcsLength() {
+        return cbStorage + 2;
+    }
 };
 
 /**

@@ -23,6 +23,20 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
+FlatFileRowParseResult::FlatFileRowParseResult()
+{
+    reset();
+}
+
+void FlatFileRowParseResult::reset()
+{
+    status = NO_STATUS;
+    current = next = NULL;
+    //offsets.clear();
+    //sizes.;
+    nRowDelimsRead = 0;
+}
+
 FlatFileParser::FlatFileParser(
     char fieldDelim, char rowDelim, char quote, char escape)
 {
@@ -38,7 +52,7 @@ char *FlatFileParser::scanRow(
     FlatFileRowDescriptor columns,
     FlatFileRowParseResult &result)
 {
-    assert(!(buffer.end() && rowIn > buffer.buf()+buffer.size()));
+    assert(!(buffer.readCompleted() && rowIn > buffer.contentEnd()));
     char *row = rowIn;
     uint size = buffer.buf() + buffer.size() - row;
     uint offset = 0;
@@ -57,7 +71,7 @@ char *FlatFileParser::scanRow(
             columnResult);
         switch (columnResult.type) {
         case FlatFileColumnParseResult::NO_DELIM:
-            if (buffer.end()) {
+            if (buffer.readCompleted()) {
                 result.status = FlatFileRowParseResult::INCOMPLETE_COLUMN;
                 done = true;
                 break;
@@ -73,7 +87,11 @@ char *FlatFileParser::scanRow(
             }
         case FlatFileColumnParseResult::ROW_DELIM:
             if (i+1 != columns.size()) {
-                result.status = FlatFileRowParseResult::TOO_FEW_COLUMNS;
+                if (i == 0) {
+                    result.status = FlatFileRowParseResult::NO_COLUMN_DELIM;
+                } else {
+                    result.status = FlatFileRowParseResult::TOO_FEW_COLUMNS;
+                }
             }
             done = true;
             break;
@@ -103,17 +121,24 @@ char *FlatFileParser::scanRowEnd(
 {
     char *read = result.next;
     switch (result.status) {
+    case FlatFileRowParseResult::INCOMPLETE_COLUMN:
+        return read;
     case FlatFileRowParseResult::COLUMN_TOO_LARGE:
     case FlatFileRowParseResult::TOO_MANY_COLUMNS:
         read = scanRowDelim(buffer, read, true);
+        if (read == buffer.contentEnd()) {
+            assert(buffer.readCompleted());
+            return read;
+        }
     case FlatFileRowParseResult::NO_STATUS:
+    case FlatFileRowParseResult::NO_COLUMN_DELIM:
     case FlatFileRowParseResult::TOO_FEW_COLUMNS:
         read = scanRowDelim(buffer, read, false);
-    case FlatFileRowParseResult::INCOMPLETE_COLUMN:
         break;
     default:
         permAssert(false);
     }
+    result.nRowDelimsRead++;
     return read;
 }
 
@@ -129,7 +154,7 @@ char *FlatFileParser::scanRowDelim(
             break;
         } else if (read < end) {
             read++;
-        } else if (read == end && buffer.end()) {
+        } else if (read == end && buffer.readCompleted()) {
             break;
         } else {
             permAssert(read == end);

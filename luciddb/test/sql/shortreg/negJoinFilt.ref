@@ -1,0 +1,128 @@
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- negJoinFilt.sql - join filter tests for queries where join Filter should
+0: jdbc:luciddb:> -- NOT be used
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- a case where it's not worth it to join filter
+0: jdbc:luciddb:> explain plan for select * from emp,dept
+. . . . . . . . > where emp.deptno=dept.deptno and dept.dname<'Marketing';
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                     column0                                                                                                                     |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(EMPNO=[$0], FNAME=[$1], LNAME=[$2], SEX=[$3], DEPTNO=[$4], MANAGER=[$5], LOCID=[$6], SAL=[$7], COMMISSION=[$8], HOBBY=[$9], DEPTNO0=[$10], DNAME=[$11], LOCID0=[$12], condition=[AND(=($4, $10), <($11, _ISO-8859-1'Marketing'))])  |
+|   FennelToIteratorConverter                                                                                                                                                                                                                     |
+|     FennelCartesianProductRel(leftouterjoin=[false])                                                                                                                                                                                            |
+|       FtrsIndexScanRel(table=[[LOCALDB, S, EMP]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMP$SYS$PRIMARY_KEY], preserveOrder=[false])                                                                                                      |
+|       FtrsIndexScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPT$SYS$PRIMARY_KEY], preserveOrder=[false])                                                                                                    |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- this isn't worth it since the rows from emp are limited
+0: jdbc:luciddb:> explain plan for select * from emp,dept
+. . . . . . . . > where emp.deptno=dept.deptno
+. . . . . . . . > and dept.dname='Marketing'
+. . . . . . . . > and emp.empno=100;
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                             column0                                                                                                                              |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(EMPNO=[$0], FNAME=[$1], LNAME=[$2], SEX=[$3], DEPTNO=[$4], MANAGER=[$5], LOCID=[$6], SAL=[$7], COMMISSION=[$8], HOBBY=[$9], DEPTNO0=[$10], DNAME=[$11], LOCID0=[$12], condition=[AND(AND(=($4, $10), =($11, _ISO-8859-1'Marketing')), =($0, 100))])  |
+|   FennelToIteratorConverter                                                                                                                                                                                                                                      |
+|     FennelCartesianProductRel(leftouterjoin=[false])                                                                                                                                                                                                             |
+|       FtrsIndexScanRel(table=[[LOCALDB, S, EMP]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMP$SYS$PRIMARY_KEY], preserveOrder=[false])                                                                                                                       |
+|       FtrsIndexScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPT$SYS$PRIMARY_KEY], preserveOrder=[false])                                                                                                                     |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- this shouldn't do it because the filter condition's on the big table
+0: jdbc:luciddb:> explain plan for select * from emp,dept
+. . . . . . . . > where emp.deptno=dept.deptno and emp.fname='Bill';
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                  column0                                                                                                                  |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(EMPNO=[$0], FNAME=[$1], LNAME=[$2], SEX=[$3], DEPTNO=[$4], MANAGER=[$5], LOCID=[$6], SAL=[$7], COMMISSION=[$8], HOBBY=[$9], DEPTNO0=[$10], DNAME=[$11], LOCID0=[$12], condition=[AND(=($4, $10), =($1, _ISO-8859-1'Bill'))])  |
+|   FennelToIteratorConverter                                                                                                                                                                                                               |
+|     FennelCartesianProductRel(leftouterjoin=[false])                                                                                                                                                                                      |
+|       FtrsIndexScanRel(table=[[LOCALDB, S, EMP]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMP$SYS$PRIMARY_KEY], preserveOrder=[false])                                                                                                |
+|       FtrsIndexScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPT$SYS$PRIMARY_KEY], preserveOrder=[false])                                                                                              |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- this shouldn't do it because it's not an equi-join
+0: jdbc:luciddb:> explain plan for select * from emp,dept
+. . . . . . . . > where emp.deptno>dept.deptno and dept.dname='Marketing';
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                     column0                                                                                                                     |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(EMPNO=[$0], FNAME=[$1], LNAME=[$2], SEX=[$3], DEPTNO=[$4], MANAGER=[$5], LOCID=[$6], SAL=[$7], COMMISSION=[$8], HOBBY=[$9], DEPTNO0=[$10], DNAME=[$11], LOCID0=[$12], condition=[AND(>($4, $10), =($11, _ISO-8859-1'Marketing'))])  |
+|   FennelToIteratorConverter                                                                                                                                                                                                                     |
+|     FennelCartesianProductRel(leftouterjoin=[false])                                                                                                                                                                                            |
+|       FtrsIndexScanRel(table=[[LOCALDB, S, EMP]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMP$SYS$PRIMARY_KEY], preserveOrder=[false])                                                                                                      |
+|       FtrsIndexScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPT$SYS$PRIMARY_KEY], preserveOrder=[false])                                                                                                    |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- this shouldn't do it because the equi join is not accessible top level
+0: jdbc:luciddb:> explain plan for select * from emp,dept
+. . . . . . . . > where (emp.deptno=dept.deptno or dept.deptno > 5) and dept.dname='Marketing';
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                            column0                                                                                                                             |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(EMPNO=[$0], FNAME=[$1], LNAME=[$2], SEX=[$3], DEPTNO=[$4], MANAGER=[$5], LOCID=[$6], SAL=[$7], COMMISSION=[$8], HOBBY=[$9], DEPTNO0=[$10], DNAME=[$11], LOCID0=[$12], condition=[AND(OR(=($4, $10), >($10, 5)), =($11, _ISO-8859-1'Marketing'))])  |
+|   FennelToIteratorConverter                                                                                                                                                                                                                                    |
+|     FennelCartesianProductRel(leftouterjoin=[false])                                                                                                                                                                                                           |
+|       FtrsIndexScanRel(table=[[LOCALDB, S, EMP]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMP$SYS$PRIMARY_KEY], preserveOrder=[false])                                                                                                                     |
+|       FtrsIndexScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPT$SYS$PRIMARY_KEY], preserveOrder=[false])                                                                                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- this shouldn't do it because the filter condition is not accessible top level
+0: jdbc:luciddb:> explain plan for select * from emp,dept
+. . . . . . . . > where emp.deptno=dept.deptno and (emp.fname='Bill' or dept.dname='Marketing');
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                    column0                                                                                                                                    |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(EMPNO=[$0], FNAME=[$1], LNAME=[$2], SEX=[$3], DEPTNO=[$4], MANAGER=[$5], LOCID=[$6], SAL=[$7], COMMISSION=[$8], HOBBY=[$9], DEPTNO0=[$10], DNAME=[$11], LOCID0=[$12], condition=[AND(=($4, $10), OR(=($1, _ISO-8859-1'Bill'), =($11, _ISO-8859-1'Marketing')))])  |
+|   FennelToIteratorConverter                                                                                                                                                                                                                                                   |
+|     FennelCartesianProductRel(leftouterjoin=[false])                                                                                                                                                                                                                          |
+|       FtrsIndexScanRel(table=[[LOCALDB, S, EMP]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMP$SYS$PRIMARY_KEY], preserveOrder=[false])                                                                                                                                    |
+|       FtrsIndexScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPT$SYS$PRIMARY_KEY], preserveOrder=[false])                                                                                                                                  |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- this shouldn't do it since emp does not have an index on column hobby
+0: jdbc:luciddb:> explain plan for select * from emp,dept
+. . . . . . . . > where emp.hobby=dept.dname and dept.dname='Marketing';
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                     column0                                                                                                                     |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(EMPNO=[$0], FNAME=[$1], LNAME=[$2], SEX=[$3], DEPTNO=[$4], MANAGER=[$5], LOCID=[$6], SAL=[$7], COMMISSION=[$8], HOBBY=[$9], DEPTNO0=[$10], DNAME=[$11], LOCID0=[$12], condition=[AND(=($9, $11), =($11, _ISO-8859-1'Marketing'))])  |
+|   FennelToIteratorConverter                                                                                                                                                                                                                     |
+|     FennelCartesianProductRel(leftouterjoin=[false])                                                                                                                                                                                            |
+|       FtrsIndexScanRel(table=[[LOCALDB, S, EMP]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMP$SYS$PRIMARY_KEY], preserveOrder=[false])                                                                                                      |
+|       FtrsIndexScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPT$SYS$PRIMARY_KEY], preserveOrder=[false])                                                                                                    |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- pre filter should happen here, but we still need to join to location since
+0: jdbc:luciddb:> -- location.state is not unique
+0: jdbc:luciddb:> explain plan for select emp.* from emp,location
+. . . . . . . . > where emp.fname=location.state and location.locid='00';
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                            column0                                                                                             |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(EMPNO=[$0], FNAME=[$1], LNAME=[$2], SEX=[$3], DEPTNO=[$4], MANAGER=[$5], LOCID=[$6], SAL=[$7], COMMISSION=[$8], HOBBY=[$9], condition=[AND(=($1, $13), =($10, _ISO-8859-1'00'))])  |
+|   FennelToIteratorConverter                                                                                                                                                                    |
+|     FennelCartesianProductRel(leftouterjoin=[false])                                                                                                                                           |
+|       FtrsIndexScanRel(table=[[LOCALDB, S, EMP]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMP$SYS$PRIMARY_KEY], preserveOrder=[false])                                                     |
+|       FtrsIndexScanRel(table=[[LOCALDB, S, LOCATION]], projection=[*], index=[SYS$CONSTRAINT_INDEX$LOCATION$SYS$PRIMARY_KEY], preserveOrder=[false])                                           |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- can't handle non-simple equi join case
+0: jdbc:luciddb:> explain plan for select * from emp,dept
+. . . . . . . . > where emp.deptno+1=dept.deptno+1 and dept.dname='Marketing';
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                           column0                                                                                                                           |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(EMPNO=[$0], FNAME=[$1], LNAME=[$2], SEX=[$3], DEPTNO=[$4], MANAGER=[$5], LOCID=[$6], SAL=[$7], COMMISSION=[$8], HOBBY=[$9], DEPTNO0=[$10], DNAME=[$11], LOCID0=[$12], condition=[AND(=(+($4, 1), +($10, 1)), =($11, _ISO-8859-1'Marketing'))])  |
+|   FennelToIteratorConverter                                                                                                                                                                                                                                 |
+|     FennelCartesianProductRel(leftouterjoin=[false])                                                                                                                                                                                                        |
+|       FtrsIndexScanRel(table=[[LOCALDB, S, EMP]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMP$SYS$PRIMARY_KEY], preserveOrder=[false])                                                                                                                  |
+|       FtrsIndexScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPT$SYS$PRIMARY_KEY], preserveOrder=[false])                                                                                                                |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

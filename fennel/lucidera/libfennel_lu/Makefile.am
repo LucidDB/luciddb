@@ -9,6 +9,7 @@ libfennel_lu_flatfile_la_SOURCES=
 libfennel_lu_flatfile_la_LIBADD=\
 	$(top_builddir)/lucidera/flatfile/libflatfile.la \
 	-L$(top_builddir)/libfennel \
+	-lfennel_device \
 	-lfennel_exec \
 	-lfennel_segment \
 	-lfennel_tuple \
@@ -29,6 +30,7 @@ libfennel_lu_colstore_la_LIBADD=\
 	-L$(top_builddir)/libfennel \
 	-lfennel_exec \
 	-lfennel_btree \
+	-lfennel_ftrs \
 	-lfennel_segment \
 	-lfennel_tuple \
 	-lfennel_common

@@ -86,7 +86,7 @@ void LcsClusterDump::dump(uint64_t pageId, PBuffer pBlock, uint szBlock)
     callTrace("Header");
     callTrace("------");
     callTrace("nColumn:          %5u", pHdr->nColumn);
-    callTrace("firstRid:         %5u", pHdr->firstRID);
+    callTrace("firstRid:         %5u", opaqueToInt(pHdr->firstRID));
     callTrace("oBatch:           %5u", pHdr->oBatch);
     callTrace("nBatch:           %5u", pHdr->nBatch);
     for (i = 0; i < pHdr->nColumn; i++) {
@@ -102,6 +102,12 @@ void LcsClusterDump::dump(uint64_t pageId, PBuffer pBlock, uint szBlock)
 
     pBatch = (PLcsBatchDir) (pBlock + pHdr->oBatch);
     for (i = 0; i < pHdr->nBatch; i++) {
+
+        // columns are stored in alternating batches.
+        // Need to find out the offset to apply to column offsets.
+        int col = i % pHdr->nColumn;
+        uint16_t delta = pHdr->delta[col];
+        
         switch (pBatch[i].mode) {
         case LCS_COMPRESSED:
             mode = "Compressed";
@@ -169,7 +175,7 @@ void LcsClusterDump::dump(uint64_t pageId, PBuffer pBlock, uint szBlock)
             callTrace("------------");
             pO = (uint16_t *) (pBlock + pBatch[i].oVal);
             for (j = 0; j < pBatch[i].nVal; j++)
-                fprintVal(j, pBlock + pO[j]);
+                fprintVal(j, pBlock + pO[j] - delta);
 
         } else if (pBatch[i].mode == LCS_FIXED) {
             // fixed size rows
@@ -186,7 +192,7 @@ void LcsClusterDump::dump(uint64_t pageId, PBuffer pBlock, uint szBlock)
             callTrace("------------------");
             pO = (uint16_t *) (pBlock + pBatch[i].oVal);
             for (j = 0; j < pBatch[i].nRow; j++)
-                fprintVal(j, pBlock + pO[j]);
+                fprintVal(j, pBlock + pO[j] - delta);
         }
         callTrace("#############################################################");
     }
@@ -233,7 +239,7 @@ PBuffer LcsClusterDump::fprintVal(uint idx, PBuffer pV)
     memset(st, ' ', lnLen);
     callTrace("%05u:", idx);
     
-    sz = TupleDatum(p).getStorageLength();
+    sz = TupleDatum().getLcsLength(p);
     l = sprintf(st + lnValIdx, "%4u: ", sz);
     st[lnValIdx + l] = 0;
 

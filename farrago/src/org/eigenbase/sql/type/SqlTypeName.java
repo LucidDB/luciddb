@@ -82,7 +82,7 @@ public class SqlTypeName extends EnumeratedValues.SerializableValue
     public static final int Decimal_ordinal = 5;
     public static final SqlTypeName Decimal =
         new SqlTypeName("DECIMAL", Decimal_ordinal,
-            PrecNoScaleNo | PrecYesScaleYes);
+            PrecNoScaleNo | PrecYesScaleNo | PrecYesScaleYes);
     public static final int Float_ordinal = 6;
     public static final SqlTypeName Float =
         new SqlTypeName("FLOAT", Float_ordinal, PrecNoScaleNo);
@@ -239,6 +239,7 @@ public class SqlTypeName extends EnumeratedValues.SerializableValue
         setNameForJdbcType(Types.DATE, Date);
         setNameForJdbcType(Types.TIME, Time);
         setNameForJdbcType(Types.TIMESTAMP, Timestamp);
+        setNameForJdbcType(Types.BIT, Boolean);
         setNameForJdbcType(Types.BOOLEAN, Boolean);
         setNameForJdbcType(Types.DISTINCT, Distinct);
         setNameForJdbcType(Types.STRUCT, Structured);

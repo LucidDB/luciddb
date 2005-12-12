@@ -2,6 +2,8 @@
 -- joinFilt.sql - join Filter tests
 --
 
+set schema 's';
+
 -- Standard join filter case
 select lname,dname from emp,dept
 where emp.deptno=dept.deptno and dept.dname='Marketing';
@@ -79,4 +81,4 @@ select sum(sales.price)
 from sales
 where custid in (select custid from customers where lname<'F' and fname>'D')
 and prodid in (select prodid from products where name
-	IN ('Soap', 'Juice', 'Soup', 'Microwave', 'Soda'));
+IN ('Soap', 'Juice', 'Soup', 'Microwave', 'Soda'));

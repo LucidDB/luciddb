@@ -310,8 +310,16 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                         boolean isNullable =
                             (metaData.isNullable(iOneBased)
                                 != ResultSetMetaData.columnNoNulls);
-                        return createJdbcType(
+                        RelDataType type = createJdbcType(
                             typeOrdinal, precision, scale, isNullable);
+                        if (type == null) {
+                            throw newUnsupportedJdbcType(
+                                metaData.getTableName(iOneBased),
+                                metaData.getColumnName(iOneBased),
+                                metaData.getColumnTypeName(iOneBased),
+                                typeOrdinal);
+                        }
+                        return type;
                     } catch (SQLException ex) {
                         throw newSqlTypeException(ex);
                     }
@@ -329,7 +337,16 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             boolean isNullable =
                 getColumnsResultSet.getInt(11)
                 != DatabaseMetaData.columnNoNulls;
-            return createJdbcType(typeOrdinal, precision, scale, isNullable);
+            RelDataType type =
+                createJdbcType(typeOrdinal, precision, scale, isNullable);
+            if (type == null) {
+                throw newUnsupportedJdbcType(
+                    getColumnsResultSet.getString(3),
+                    getColumnsResultSet.getString(4),
+                    getColumnsResultSet.getString(6),
+                    typeOrdinal);
+            }
+            return type;
         } catch (SQLException ex) {
             throw newSqlTypeException(ex);
         }
@@ -342,7 +359,9 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         boolean isNullable)
     {
         SqlTypeName typeName = SqlTypeName.getNameForJdbcType(typeOrdinal);
-        assert(typeName != null);
+        if (typeName == null) {
+            return null;
+        }
 
         if (SqlTypeFamily.getFamilyForSqlType(typeName)
             == SqlTypeFamily.Character)
@@ -383,6 +402,19 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     private EigenbaseException newSqlTypeException(SQLException ex)
     {
         return FarragoResource.instance().JdbcDriverTypeInfoFailed.ex(ex);
+    }
+
+    private EigenbaseException newUnsupportedJdbcType(
+        String tableName,
+        String columnName,
+        String typeName,
+        int typeOrdinal)
+    {
+        return FarragoResource.instance().JdbcDriverTypeUnsupported.ex(
+            repos.getLocalizedObjectName(tableName),
+            repos.getLocalizedObjectName(columnName),
+            repos.getLocalizedObjectName(typeName),
+            typeOrdinal);
     }
 
     int generateClassId()

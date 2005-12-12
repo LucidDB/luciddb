@@ -8,15 +8,17 @@ endif
 
 # NOTE:  tests are ordered roughly from fastest to slowest
 noinst_PROGRAMS= \
-LcsClusterAppendExecStreamTest \
 ExternalSortExecStreamTest \
-FlatFileExecStreamTest
+FlatFileExecStreamTest \
+LcsClusterAppendExecStreamTest \
+LcsRowScanExecStreamTest
 
 TESTS = $(noinst_PROGRAMS)
 
 ExternalSortExecStreamTest_SOURCES=ExternalSortExecStreamTest.cpp
-LcsClusterAppendExecStreamTest_SOURCES=LcsClusterAppendExecStreamTest.cpp
 FlatFileExecStreamTest_SOURCES=FlatFileExecStreamTest.cpp
+LcsClusterAppendExecStreamTest_SOURCES=LcsClusterAppendExecStreamTest.cpp
+LcsRowScanExecStreamTest_SOURCES=LcsRowScanExecStreamTest.cpp
 
 # NOTE:  have to repeat $(EXTRA_LDFLAGS) on mingw due to stupid linker.
 
@@ -24,6 +26,7 @@ LDADD = \
 	-L$(top_builddir)/test \
 	-L$(top_builddir)/libfennel \
 	-L$(top_builddir)/lucidera/libfennel_lu \
+	-L$(top_builddir)/disruptivetech/libfennel_dt \
 	-l$(TEST_LIB) \
 	-lfennel_lu_colstore \
 	-lfennel_lu_flatfile \
@@ -38,6 +41,8 @@ LDADD = \
 	-lfennel_cache \
 	-lfennel_device \
 	-lfennel_common \
+	-lfennel_dt_calc \
+	-lfennel_dt_xo \
 	-l$(STLPORT_LIB) \
 	$(EXTRA_LDFLAGS)
 

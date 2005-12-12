@@ -21,7 +21,7 @@
 */
 
 #ifndef Fennel_TupleDataWithBuffer_Included
-#define Fennel_tupleDataWithBuffer_Included
+#define Fennel_TupleDataWithBuffer_Included
 
 #include "fennel/tuple/TupleData.h"
 #include "fennel/tuple/TupleAccessor.h"

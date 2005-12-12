@@ -21,6 +21,7 @@
 
 #include "fennel/lucidera/flatfile/FlatFileBuffer.h"
 
+#include "fennel/common/FennelResource.h"
 #include "fennel/common/SysCallExcn.h"
 #include "fennel/device/RandomAccessFileDevice.h"
 #include "fennel/device/RandomAccessRequest.h"
@@ -55,15 +56,13 @@ void FlatFileBuffer::open()
     try {
         pRandomAccessDevice.reset(
             new RandomAccessFileDevice(path,openMode));
-    } catch (...) {
-        throw FennelExcn("could not read file " + path);
+    } catch (SysCallExcn e) {
+        throw FennelExcn(
+            FennelResource::instance().readDataFailed(path, e.getMessage()));
     }
     filePosition = 0;
     fileEnd = pRandomAccessDevice->getSizeInBytes();
     contentSize = 0;
-    if (end()) {
-        throw FennelExcn("file " + path + " is empty");
-    }
 }
 
 void FlatFileBuffer::closeImpl()
@@ -72,7 +71,7 @@ void FlatFileBuffer::closeImpl()
     contentSize = 0;
 }
 
-bool FlatFileBuffer::end()
+bool FlatFileBuffer::readCompleted()
 {
     assert(filePosition <= fileEnd);
     return filePosition == fileEnd;
@@ -99,7 +98,8 @@ public:
     uint getBufferSize() const { return bufferSize; }
     void notifyTransferCompletion(bool bSuccess) {
         if (!bSuccess) {
-            throw FennelExcn("failed to read from file " + path);
+            throw FennelExcn(FennelResource::instance().dataTransferFailed(
+                                 path, bufferSize));
         }
     }
 };
@@ -143,6 +143,6 @@ bool FlatFileBuffer::full()
     return (contentSize == bufferSize);
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/lucidera/flatfile/FlatFileBuffer.cpp#1 $");
+FENNEL_END_CPPFILE("$Id$");
 
 // End FlatFileBuffer.cpp
