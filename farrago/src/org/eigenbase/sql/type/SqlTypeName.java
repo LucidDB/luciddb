@@ -82,7 +82,7 @@ public class SqlTypeName extends EnumeratedValues.SerializableValue
     public static final int Decimal_ordinal = 5;
     public static final SqlTypeName Decimal =
         new SqlTypeName("DECIMAL", Decimal_ordinal,
-            PrecNoScaleNo | PrecYesScaleYes);
+            PrecNoScaleNo | PrecYesScaleNo | PrecYesScaleYes);
     public static final int Float_ordinal = 6;
     public static final SqlTypeName Float =
         new SqlTypeName("FLOAT", Float_ordinal, PrecNoScaleNo);
