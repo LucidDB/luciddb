@@ -74,8 +74,7 @@
 			       skipusers="&skipusers;"
 			       spamwhilebroken="&spamwhilebroken;"
 			       subjectprefix="&subjectprefix;">
-				<failure address="&failureaddress;"
-				         reportWhenFixed="&reportwhenfixed;"/>
+				<always address="&failureaddress;"/>
 			</email>
 		</publishers>
 	</project>
