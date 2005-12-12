@@ -23,14 +23,14 @@
 
 package org.eigenbase.test;
 
-import junit.framework.TestCase;
-import junit.framework.Assert;
-import junit.framework.TestSuite;
 import org.eigenbase.util.property.*;
 
+import junit.framework.Assert;
+import junit.framework.TestCase;
 
 /**
- * Unit test for properties system.
+ * Unit test for properties system ({@link TriggerableProperties},
+ * {@link IntegerProperty} and the like).
  *
  * @author jhyde
  * @since July 6, 2005
@@ -38,15 +38,6 @@ import org.eigenbase.util.property.*;
  */
 public class PropertyTest extends TestCase
 {
-    public static TestSuite _suite()
-    {
-        final TestSuite suite = new TestSuite();
-        for (int i = 0; i < 1000; i++) {
-              suite.addTestSuite(PropertyTest.class);
-        }
-        return suite;
-    }
-
     public void testInt()
     {
         final MyProperties props = new MyProperties();
@@ -62,28 +53,27 @@ public class PropertyTest extends TestCase
     {
         final MyProperties props = new MyProperties();
         final int[] ints = {0};
-        props.intProp.addTrigger(
-                new Trigger() {
-                    public boolean isPersistent() {
-                        return false;
-                    }
+        final Trigger trigger = new Trigger() {
+            public boolean isPersistent() {
+                return false;
+            }
 
-                    public int phase() {
-                        return 0;
-                    }
+            public int phase() {
+                return 0;
+            }
 
-                    public void execute(Property property, String value)
-                            throws VetoRT {
-                        int intValue = Integer.parseInt(value);
-                        if (intValue > 10) {
-                            ints[0] = intValue;
-                        }
-                        if (intValue > 100) {
-                            throw new VetoRT("too big");
-                        }
-                    }
+            public void execute(Property property, String value)
+                throws VetoRT {
+                int intValue = Integer.parseInt(value);
+                if (intValue > 10) {
+                    ints[0] = intValue;
                 }
-        );
+                if (intValue > 100) {
+                    throw new VetoRT("too big");
+                }
+            }
+        };
+        props.intProp.addTrigger(trigger);
         props.intProp.set(5);
         assertEquals(0, ints[0]); // unchanged
         props.intProp.set(15);
@@ -112,9 +102,9 @@ public class PropertyTest extends TestCase
 
         String path= "test.mondrian.properties.change.value";
         BooleanProperty boolProp = new BooleanProperty(
-                props,
-                path,
-                false);
+            props,
+            path,
+            false);
 
         assertTrue("Check property value NOT false",
             (! boolProp.get()));
@@ -132,20 +122,19 @@ public class PropertyTest extends TestCase
         state.triggerCalled = false;
         state.triggerValue = null;
 
-        boolProp.addTrigger(
-                new Trigger() {
-                    public boolean isPersistent() {
-                        return false;
-                    }
-                    public int phase() {
-                        return Trigger.PRIMARY_PHASE;
-                    }
-                    public void execute(Property property, String value) {
-                        state.triggerCalled = true;
-                        state.triggerValue = value;
-                    }
-                }
-        );
+        final Trigger trigger = new Trigger() {
+            public boolean isPersistent() {
+                return false;
+            }
+            public int phase() {
+                return Trigger.PRIMARY_PHASE;
+            }
+            public void execute(Property property, String value) {
+                state.triggerCalled = true;
+                state.triggerValue = value;
+            }
+        };
+        boolProp.addTrigger(trigger);
 
         String falseStr = "false";
         props.setProperty(path, falseStr);
@@ -182,9 +171,9 @@ public class PropertyTest extends TestCase
         final MyProperties props = new MyProperties();
         String path= "test.mondrian.properties.call.order";
         BooleanProperty boolProp = new BooleanProperty(
-                props,
-                path,
-                false);
+            props,
+            path,
+            false);
 
         final State2 state = new State2();
         state.callCounter = 0;
@@ -200,99 +189,98 @@ public class PropertyTest extends TestCase
 
         // primaryOne
         Trigger primaryOneTrigger =
-                new Trigger() {
-                    public boolean isPersistent() {
-                        return false;
-                    }
-                    public int phase() {
-                        return Trigger.PRIMARY_PHASE;
-                    }
-                    public void execute(Property property, String value) {
-                        state.primaryOne = state.callCounter++;
-                    }
-                };
+            new Trigger() {
+                public boolean isPersistent() {
+                    return false;
+                }
+                public int phase() {
+                    return Trigger.PRIMARY_PHASE;
+                }
+                public void execute(Property property, String value) {
+                    state.primaryOne = state.callCounter++;
+                }
+            };
         boolProp.addTrigger(primaryOneTrigger);
 
         // secondaryOne
         Trigger secondaryOneTrigger =
-                new Trigger() {
-                    public boolean isPersistent() {
-                        return false;
-                    }
-                    public int phase() {
-                        return Trigger.SECONDARY_PHASE;
-                    }
-                    public void execute(Property property, String value) {
-                        state.secondaryOne = state.callCounter++;
-                    }
-                };
+            new Trigger() {
+                public boolean isPersistent() {
+                    return false;
+                }
+                public int phase() {
+                    return Trigger.SECONDARY_PHASE;
+                }
+                public void execute(Property property, String value) {
+                    state.secondaryOne = state.callCounter++;
+                }
+            };
         boolProp.addTrigger(secondaryOneTrigger);
 
         // tertiaryOne
         Trigger tertiaryOneTrigger =
-                new Trigger() {
-                    public boolean isPersistent() {
-                        return false;
-                    }
-                    public int phase() {
-                        return Trigger.TERTIARY_PHASE;
-                    }
-                    public void execute(Property property, String value) {
-                        state.tertiaryOne = state.callCounter++;
-                    }
-                };
+            new Trigger() {
+                public boolean isPersistent() {
+                    return false;
+                }
+                public int phase() {
+                    return Trigger.TERTIARY_PHASE;
+                }
+                public void execute(Property property, String value) {
+                    state.tertiaryOne = state.callCounter++;
+                }
+            };
         boolProp.addTrigger(tertiaryOneTrigger);
 
         // tertiaryTwo
         Trigger tertiaryTwoTrigger =
-                new Trigger() {
-                    public boolean isPersistent() {
-                        return false;
-                    }
-                    public int phase() {
-                        return Trigger.TERTIARY_PHASE;
-                    }
-                    public void execute(Property property, String value) {
-                        state.tertiaryTwo = state.callCounter++;
-                    }
-                };
+            new Trigger() {
+                public boolean isPersistent() {
+                    return false;
+                }
+                public int phase() {
+                    return Trigger.TERTIARY_PHASE;
+                }
+                public void execute(Property property, String value) {
+                    state.tertiaryTwo = state.callCounter++;
+                }
+            };
         boolProp.addTrigger(tertiaryTwoTrigger);
 
         // secondaryTwo
         Trigger secondaryTwoTrigger =
-                new Trigger() {
-                    public boolean isPersistent() {
-                        return false;
-                    }
-                    public int phase() {
-                        return Trigger.SECONDARY_PHASE;
-                    }
-                    public void execute(Property property, String value) {
-                        state.secondaryTwo = state.callCounter++;
-                    }
-                };
+            new Trigger() {
+                public boolean isPersistent() {
+                    return false;
+                }
+                public int phase() {
+                    return Trigger.SECONDARY_PHASE;
+                }
+                public void execute(Property property, String value) {
+                    state.secondaryTwo = state.callCounter++;
+                }
+            };
         boolProp.addTrigger(secondaryTwoTrigger);
 
         // primaryTwo
         Trigger primaryTwoTrigger =
-                new Trigger() {
-                    public boolean isPersistent() {
-                        return false;
-                    }
-                    public int phase() {
-                        return Trigger.PRIMARY_PHASE;
-                    }
-                    public void execute(Property property, String value) {
-                        state.primaryTwo = state.callCounter++;
-                    }
-                };
+            new Trigger() {
+                public boolean isPersistent() {
+                    return false;
+                }
+                public int phase() {
+                    return Trigger.PRIMARY_PHASE;
+                }
+                public void execute(Property property, String value) {
+                    state.primaryTwo = state.callCounter++;
+                }
+            };
         boolProp.addTrigger(primaryTwoTrigger);
 
         String falseStr = "false";
         props.setProperty(path, falseStr);
         assertTrue("Check trigger was called",
             (state.callCounter == 0));
-
 
         String trueStr = "true";
         props.setProperty(path, trueStr);
@@ -372,17 +360,18 @@ public class PropertyTest extends TestCase
         boolean triggerCalled;
         String triggerValue;
     }
+
     /**
-     * Check that one can veto a property change
+     * Checks that one can veto a property change.
      */
     public void testVetoChangeValue() throws Exception
     {
         final MyProperties props = new MyProperties();
         String path= "test.mondrian.properties.veto.change.value";
         IntegerProperty intProp = new IntegerProperty(
-                props,
-                path,
-                -1);
+            props,
+            path,
+            -1);
 
         assertTrue("Check property value NOT false",
             (intProp.get() == -1));
@@ -448,7 +437,7 @@ public class PropertyTest extends TestCase
 
             try {
                 props.setProperty(path,
-                        Integer.toString(i));
+                    Integer.toString(i));
             } catch (Trigger.VetoRT ex) {
                 // Trigger rejects even numbers so if even its ok
                 if (! isEven) {
@@ -485,7 +474,7 @@ public class PropertyTest extends TestCase
     private static class MyProperties extends TriggerableProperties
     {
         public final IntegerProperty intProp = new IntegerProperty(
-                this, "props.int", 5);
+            this, "props.int", 5);
     }
 }
 
