@@ -316,8 +316,8 @@ public class FarragoDefaultSessionPersonality
         case SqlTypeName.Float_ordinal:
         case SqlTypeName.Double_ordinal:
         case SqlTypeName.Row_ordinal:
-            return true;
         case SqlTypeName.Decimal_ordinal:
+            return true;
         case SqlTypeName.Distinct_ordinal:
         default:
             return false;
