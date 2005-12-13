@@ -116,6 +116,11 @@ abstract class AbstractNamespace implements SqlValidatorNamespace
         return rowType;
     }
 
+    public void setRowType(RelDataType rowType)
+    {
+        this.rowType = rowType;
+    }
+
     public SqlValidatorTable getTable() {
         return null;
     }

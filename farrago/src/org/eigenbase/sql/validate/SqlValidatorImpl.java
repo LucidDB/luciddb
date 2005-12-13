@@ -96,7 +96,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
     protected final HashMap namespaces = new HashMap();
     private SqlNode outermostNode;
     private int nextGeneratedId;
-    private final RelDataTypeFactory typeFactory;
+    protected final RelDataTypeFactory typeFactory;
     protected final RelDataType unknownType;
     private final RelDataType booleanType;
 
@@ -161,14 +161,16 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
 
     public SqlNodeList expandStar(
         SqlNodeList selectList,
-        SqlSelect query)
+        SqlSelect query,
+        boolean includeSystemVars)
     {
         ArrayList list = new ArrayList();
         ArrayList aliases = new ArrayList();
         ArrayList types = new ArrayList();
         for (int i = 0; i < selectList.size(); i++) {
             final SqlNode selectItem = selectList.get(i);
-            expandSelectItem(selectItem, query, list, aliases, types);
+            expandSelectItem(selectItem, query, list, aliases, types,
+                includeSystemVars);
         }
         return new SqlNodeList(list, SqlParserPos.ZERO);
     }
@@ -181,6 +183,8 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
      * @param select       Containing select clause
      * @param selectItems  List that expanded items are written to
      * @param aliases      List of aliases
+     * @param types        List of data types in alias order
+     * @param includeSystemVars If true include system vars in lists
      * @return Whether the node was expanded
      */
     private boolean expandSelectItem(
@@ -188,7 +192,8 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         SqlSelect select,
         ArrayList selectItems,
         List aliases,
-        List types)
+        List types,
+        final boolean includeSystemVars)
     {
         final SelectScope scope = (SelectScope) getWhereScope(select);
         if (selectItem instanceof SqlIdentifier) {
@@ -216,7 +221,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                                 new String [] {tableName, columnName},
                                 starPosition);
                         addToSelectList(selectItems, aliases, types, exp,
-                            scope);
+                            scope, includeSystemVars);
                     }
                 }
                 return true;
@@ -244,7 +249,8 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                         new SqlIdentifier(
                             new String [] { tableName, columnName },
                             SqlParserPos.ZERO);
-                    addToSelectList(selectItems, aliases, types, exp, scope);
+                    addToSelectList(selectItems, aliases, types, exp, scope,
+                        includeSystemVars);
                 }
                 return true;
             }
@@ -1312,12 +1318,13 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
      * Adds an expression to a select list, ensuring that its alias does not
      * clash with any existing expressions on the list.
      */
-    private void addToSelectList(
+    protected void addToSelectList(
         ArrayList list,
         List aliases,
         List types,
         SqlNode exp,
-        SqlValidatorScope scope)
+        SqlValidatorScope scope,
+        final boolean includeSystemVars)
     {
         String alias = deriveAlias(exp, -1);
         if (alias == null) {
@@ -1535,6 +1542,11 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         return false;
     }
 
+    protected SelectNamespace allocSelectNamespace(SqlSelect select)
+    {
+        return new SelectNamespace( this, select);
+    }
+
     /**
      * Registers a query in a parent scope.
      *
@@ -1561,8 +1573,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         switch (node.getKind().getOrdinal()) {
         case SqlKind.SelectORDINAL:
             final SqlSelect select = (SqlSelect) node;
-            final SelectNamespace selectNs = new SelectNamespace(
-                this, select);
+            final SelectNamespace selectNs = allocSelectNamespace(select);
             registerNamespace(usingScope, alias, selectNs, forceNullable);
             SelectScope selectScope = new SelectScope(parentScope, select);
             scopes.put(select, selectScope);
@@ -2138,7 +2149,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                 Util.discard(matches);
             }
             expandSelectItem(selectItem, select, expandedSelectItems,
-                aliasList, typeList);
+                aliasList, typeList, false);
         }
 
         // Create the new select list with expanded items.  Pass through
@@ -2227,9 +2238,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         validateSelect(sqlSelect, targetRowType);
         RelDataType sourceRowType = getNamespace(sqlSelect).getRowType();
 
-        if (targetRowType.getFieldList().size()
-            != sourceRowType.getFieldList().size())
-        {
+        if (!isRowTypeSizeEqual( targetRowType, sourceRowType)) {
             throw EigenbaseResource.instance().UnmatchInsertColumn.ex(
                 new Integer(targetRowType.getFieldList().size()),
                 new Integer(sourceRowType.getFieldList().size()));
@@ -2237,6 +2246,11 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
 
         // TODO:  validate type compatibility, etc.
         validateAccess(table, SqlAccessEnum.INSERT);
+    }
+
+    protected boolean isRowTypeSizeEqual(RelDataType rt1, RelDataType rt2)
+    {
+        return rt1.getFieldList().size() == rt2.getFieldList().size();
     }
 
     /**
@@ -2304,7 +2318,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
     /**
      * Validates a VALUES clause
      */
-    private void validateValues(
+    protected void validateValues(
         SqlCall node,
         RelDataType targetRowType,
         SqlValidatorScope scope)
@@ -2329,6 +2343,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                 scope,
                 rowConstructor);
         }
+
         for (int i = 0; i < operands.length; i++) {
             SqlNode operand = operands[i];
             operand.validate(this, scope);

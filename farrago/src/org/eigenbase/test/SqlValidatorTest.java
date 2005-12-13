@@ -2110,6 +2110,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         // (To debug invidual statements, paste them into this method.)
         //            1         2         3         4         5         6
         //   12345678901234567890123456789012345678901234567890123456789012345
+        checkExpType("cast(multiset[1] as double multiset)", "DOUBLE NOT NULL MULTISET NOT NULL");
     }
 }
 

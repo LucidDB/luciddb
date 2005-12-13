@@ -1320,7 +1320,7 @@ public class SqlToRelConverter
         Blackboard bb,
         SqlNodeList selectList, SqlSelect select)
     {
-        selectList = validator.expandStar(selectList, select);
+        selectList = validator.expandStar(selectList, select, true);
         replaceSubqueries(bb, selectList);
         String [] fieldNames = new String[selectList.size()];
         RexNode [] exps = new RexNode[selectList.size()];

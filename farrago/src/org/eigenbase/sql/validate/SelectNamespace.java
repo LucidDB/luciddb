@@ -39,7 +39,7 @@ public class SelectNamespace extends AbstractNamespace
 {
     private final SqlSelect select;
 
-    SelectNamespace(SqlValidatorImpl validator, SqlSelect select)
+    public SelectNamespace(SqlValidatorImpl validator, SqlSelect select)
     {
         super(validator);
         this.select = select;
