@@ -1,0 +1,18 @@
+0: jdbc:luciddb:> create foreign data wrapper default_jdbc
+. . . . . . . . > library '/home/schoi/open/farrago/plugin/FarragoMedJdbc.jar'
+. . . . . . . . > language java;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server sql_server
+. . . . . . . . > foreign data wrapper default_jdbc
+. . . . . . . . > options(
+. . . . . . . . >     driver_class 'net.sourceforge.jtds.jdbc.Driver',
+. . . . . . . . >     url 'jdbc:jtds:sqlserver://akela.lucidera.com:1433',
+. . . . . . . . >     user_name 'sa',
+. . . . . . . . >     password 'ketajo',
+. . . . . . . . >     qualifying_catalog_name 'BENCHMARK',
+. . . . . . . . >     table_types 'TABLE'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema mssql_schema;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

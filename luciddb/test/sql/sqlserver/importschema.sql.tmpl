@@ -1,0 +1,5 @@
+import foreign schema "@SCHEMA_NAME@" from server @SERVER_NAME@ into mssql_schema;
+
+select count(*) from mssql_schema."bench100K";
+select count(*) from mssql_schema."bench1M";
+
