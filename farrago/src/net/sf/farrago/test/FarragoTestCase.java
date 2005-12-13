@@ -730,7 +730,8 @@ public abstract class FarragoTestCase extends DiffTestCase
             String name = schema.getName();
             return name.equals("SALES")
                 || name.equals("SQLJ")
-                || name.equals("INFORMATION_SCHEMA");
+                || name.equals("INFORMATION_SCHEMA")
+                || name.startsWith("SYS_");
         }
 
         private void dropSchemas()
@@ -751,9 +752,6 @@ public abstract class FarragoTestCase extends DiffTestCase
                 String schemaName = schema.getName();
                 if (!isBlessedSchema(schema)) {
                     list.add(schemaName);
-//                    tracer.warning("dropping schema=" +schemaName);
-//                } else {
-//                    tracer.warning("keeping schema=" +schemaName);
                 }
             }
             Iterator iter = list.iterator();
