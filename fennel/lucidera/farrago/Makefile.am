@@ -20,6 +20,7 @@ libfarrago_lu_la_LIBADD = \
 	-lfarrago \
 	-lfennel_db \
 	-lfennel_btree \
+	-lfennel_ftrs \
 	-lfennel_exec \
 	-lfennel_tuple \
 	-lfennel_txn \
