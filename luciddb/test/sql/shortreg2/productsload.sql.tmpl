@@ -1,0 +1,11 @@
+CREATE foreign table csv_schema.SHORTREG_PRODUCTS_SRC (
+PRODID INTEGER,
+NAME VARCHAR(30),
+PRICE DOUBLE
+)
+server @SERVER_NAME@
+options (@TABLE_OPTIONS@ '@shortreg.dir@/products@file_ext@');
+
+INSERT INTO s.PRODUCTS
+SELECT PRODID,NAME,PRICE
+FROM csv_schema.SHORTREG_PRODUCTS_SRC;
