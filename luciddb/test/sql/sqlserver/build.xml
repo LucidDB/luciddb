@@ -51,7 +51,7 @@
     <copy file="config.prop" tofile="config.properties" 
       overwrite="true" filtering="true">
       <filterset>
-        <filtersfile file="config.properties"/>
+        <filtersfile file="config.prop"/>
       </filterset>
     </copy>
     <!-- generate all sql files -->
