@@ -770,18 +770,22 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             }
             return stmt;
         }
+
+        FarragoSessionDdlStmt ddlStmt = (FarragoSessionDdlStmt) parsedObj;
+
+        validateDdl(ddlValidator, reposTxnContext, ddlStmt);
+        
         if (!isExecDirect) {
             return null;
         }
 
-        executeDdl(ddlValidator, reposTxnContext,
-            (FarragoSessionDdlStmt) parsedObj);
+        executeDdl(ddlValidator, reposTxnContext, ddlStmt);
 
         pRollback[0] = false;
         return null;
     }
 
-    private void executeDdl(
+    private void validateDdl(
         FarragoSessionDdlValidator ddlValidator,
         FarragoReposTxnContext reposTxnContext,
         FarragoSessionDdlStmt ddlStmt)
@@ -791,9 +795,15 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             // TODO:  commit at end of DDL too in case it updated something?
             commitImpl();
         }
-
         tracer.fine("validating DDL");
         ddlValidator.validate(ddlStmt);
+    }
+    
+    private void executeDdl(
+        FarragoSessionDdlValidator ddlValidator,
+        FarragoReposTxnContext reposTxnContext,
+        FarragoSessionDdlStmt ddlStmt)
+    {
         tracer.fine("updating storage");
         ddlValidator.executeStorage();
 
