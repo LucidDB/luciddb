@@ -112,6 +112,11 @@ public class FarragoDbSessionFactory implements FarragoSessionFactory
     }
 
     // implement FarragoSessionFactory
+    public void applyFennelExtensionParameters(Map map)
+    {
+    }
+    
+    // implement FarragoSessionFactory
     public void specializedInitialization(FarragoAllocationOwner owner)
     {
     }
