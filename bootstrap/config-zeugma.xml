@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE cruisecontrol [
+
+<!ENTITY open_p4port     "zeugma.lucidera.com:1666">
+<!ENTITY open_p4client   "cruise.zeugma.eigenbase">
+<!ENTITY open_p4user     "guest">
+<!ENTITY open_root       "//open/dev">
+<!ENTITY open_propfile   "zeugma.perforce.properties">
+<!ENTITY open_default.build.home     "/home/cruise/open">
+<!ENTITY open_integration.build.home "/home/cruise/open/bootstrap/build">
+
+<!ENTITY buildresultsbase "http://cruisehost.eigenbase.org:8081/cruisecontrol/buildresults">
+<!ENTITY mailhost         "zeugma.lucidera.com">
+<!ENTITY reportsuccess    "always">
+<!ENTITY returnname       "Eigenbase Build Monkey">
+<!ENTITY returnaddress    "cruise@eigenbase.org">
+<!ENTITY skipusers        "true">
+<!ENTITY spamwhilebroken  "true">
+<!ENTITY subjectprefix    "Eigenbase Continuous Integration: ">
+<!ENTITY failureaddress   "jsichi@gmail.com">
+<!ENTITY reportwhenfixed  "true">
+<!ENTITY emailmapper      "/home/cruise/open/bootstrap/p4email.txt">
+
+<!ENTITY scp_user         "cruise">
+<!ENTITY scp_host         "apoptosis.lucidera.com">
+<!ENTITY scp_options      "">
+<!ENTITY scp_filesep      "/">
+<!ENTITY rsync_cmd        "rsync -az -e ssh --delete-after">
+<!ENTITY rsync_dest       "cruise@apoptosis.lucidera.com:web/artifacts">
+
+<!ENTITY build_interval   "3600">
+
+<!ENTITY ant              "./doant.sh">
+
+<!ENTITY configSuffix     "">
+
+<!ENTITY saffronProject SYSTEM "config-saffron.xml">
+<!ENTITY fennelProject SYSTEM "config-fennel.xml">
+<!ENTITY farragoProject SYSTEM "config-farrago.xml">
+
+]>
+
+
+<cruisecontrol>
+	&saffronProject;
+	&fennelProject;
+	&farragoProject;
+</cruisecontrol>
