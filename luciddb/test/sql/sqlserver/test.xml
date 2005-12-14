@@ -23,7 +23,6 @@
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
-
     </test-suite>
   </target>
 </project>

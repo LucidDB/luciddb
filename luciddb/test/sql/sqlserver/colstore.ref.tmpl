@@ -1,11 +1,11 @@
-0: jdbc:luciddb:> create schema m_sch;
-0: jdbc:luciddb:> set schema 'm_sch';
+0: jdbc:luciddb:> create schema @name_prefix@_sch;
+0: jdbc:luciddb:> set schema '@name_prefix@_sch';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create table YYY(
 . . . . . . . . > i integer primary key)
-. . . . . . . . > server sys_column_store_data_server;
+. . . . . . . . > server @DATA_STORE@;
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> insert into m_sch.YYY
-. . . . . . . . > select * from mssql_schema."yyy";
+0: jdbc:luciddb:> insert into @name_prefix@_sch.YYY
+. . . . . . . . > select * from @name_prefix@_schema."yyy";
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

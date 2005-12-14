@@ -47,6 +47,7 @@
     <delete dir="${gensql.dir}" quiet="true"/>
     <mkdir dir="${gensql.dir}"/>
     <filter token="open.dir" value="${open.dir}"/>
+
     <!-- generate config.properties file -->
     <copy file="config.prop" tofile="config.properties" 
       overwrite="true" filtering="true">
@@ -54,8 +55,9 @@
         <filtersfile file="config.prop"/>
       </filterset>
     </copy>
+
     <!-- generate all sql files -->
-    <copy todir="${gensql.dir}" overwrite="true"
+    <copy todir="${gensql.dir}tmp" overwrite="true"
       filtering="true">
       <fileset dir="${sqlserver.dir}">
         <include name="**/*.tmpl"/>
@@ -65,6 +67,17 @@
         <filtersfile file="config.properties"/>
       </filterset>
     </copy>
+    <copy todir="${gensql.dir}" overwrite="true"
+      filtering="true">
+      <fileset dir="${gensql.dir}tmp"/>
+      <filterchain>
+        <tokenfilter>
+          <replaceregex pattern="^.*. . . >.*@.*@.*" replace=". . . . . . . . > " flags="s"/>
+          <replaceregex pattern="^.*@.*@.*" replace="" flags="s"/>
+        </tokenfilter>
+      </filterchain>
+    </copy>
+    <delete dir="${gensql.dir}tmp" quiet="true"/>
   </target>
 
   <target name="test">

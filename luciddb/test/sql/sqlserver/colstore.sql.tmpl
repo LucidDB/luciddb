@@ -1,9 +1,9 @@
-create schema m_sch;
-set schema 'm_sch';
+create schema @name_prefix@_sch;
+set schema '@name_prefix@_sch';
 
 create table YYY(
 i integer primary key)
 server @DATA_STORE@;
 
-insert into m_sch.YYY
-select * from mssql_schema."yyy";
+insert into @name_prefix@_sch.YYY
+select * from @name_prefix@_schema."yyy";

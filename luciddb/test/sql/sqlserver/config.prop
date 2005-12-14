@@ -1,18 +1,49 @@
-############################
-# Properties for SQLSERVER #
-############################
+##############
+# Properties #
+##############
 
 
 ######################
 ## SQL SERVER PROPS ##
 ######################
 
+name_prefix=mssql
 SERVER=akela.lucidera.com
 PORT=1433
 USERNAME=sa
 PASSWORD=ketajo
 CATALOG_NAME=BENCHMARK
-SCHEMA_NAME=dbo
+SCHEMA=dbo
+## Comma-separated list of table types wanted, without spaces
+TABLE_TYPES=TABLE
+
+SERVER_NAME=@name_prefix@_server
+DRIVER_CLASS=net.sourceforge.jtds.jdbc.Driver
+URL=jdbc:jtds:sqlserver://@SERVER@:@PORT@
+
+DATA_WRAPPER_NAME=@name_prefix@_jdbc
+DATA_LIBRARY=@open.dir@/farrago/plugin/FarragoMedJdbc.jar
+
+
+##################
+## ORACLE PROPS ##
+##################
+
+#name_prefix=orcl
+#SERVER=akela.lucidera.com
+#PORT=1521
+#USERNAME=schoi
+#PASSWORD=schoi
+#SID=XE
+#SCHEMA=SCHOI
+
+#SERVER_NAME=@name_prefix@_server
+#DRIVER_CLASS=oracle.jdbc.driver.OracleDriver
+#URL=jdbc:oracle:thin:@@SERVER@:@PORT@:@SID@
+
+#DATA_WRAPPER_NAME=@name_prefix@_jdbc
+#DATA_LIBRARY=@open.dir@/farrago/plugin/FarragoMedJdbc.jar
+
 
 ###############################
 ## row store or column store ##
@@ -20,22 +51,3 @@ SCHEMA_NAME=dbo
 
 #DATA_STORE=sys_ftrs_data_server
 DATA_STORE=sys_column_store_data_server
-
-
-##########################
-## foreign data wrapper ##
-##########################
-
-DATA_WRAPPER_NAME=default_jdbc
-DATA_LIBRARY=@open.dir@/farrago/plugin/FarragoMedJdbc.jar
-
-
-####################
-## foreign server ##
-####################
-
-SERVER_NAME=sql_server
-DRIVER_CLASS=net.sourceforge.jtds.jdbc.Driver
-URL=jdbc:jtds:sqlserver://@SERVER@:@PORT@
-# Comma-separated list of table types wanted, without spaces
-TABLE_TYPES=TABLE

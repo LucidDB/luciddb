@@ -1,12 +1,12 @@
-0: jdbc:luciddb:> import foreign schema "dbo" from server sql_server into mssql_schema;
+0: jdbc:luciddb:> import foreign schema "@SCHEMA@" from server @name_prefix@_server into @name_prefix@_schema;
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> select count(*) from mssql_schema."bench100K";
+0: jdbc:luciddb:> select count(*) from @name_prefix@_schema."bench100K";
 +---------+
 | EXPR$0  |
 +---------+
 | 100000  |
 +---------+
-0: jdbc:luciddb:> select count(*) from mssql_schema."bench1M";
+0: jdbc:luciddb:> select count(*) from @name_prefix@_schema."bench1M";
 +----------+
 |  EXPR$0  |
 +----------+
