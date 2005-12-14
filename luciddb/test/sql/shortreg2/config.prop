@@ -14,7 +14,7 @@ DATA_STORE=sys_ftrs_data_server
 
 DATA_WRAPPER_NAME=temp_jdbc
 
-#DATA_LIBRARY=@open.dir@/farrago/plugin/FarragoMedJdbc.jar
+#DATA_LIBRARY=@open.dir@/luciddb/plugin/FarragoMedJdbc3p.jar
 DATA_LIBRARY=class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper
 
 

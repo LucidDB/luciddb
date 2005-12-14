@@ -284,8 +284,6 @@
     <pathelement location="${janino.dir}/lib/janino.jar"/>
     <pathelement location="${openjava.dir}/openjava.jar"/>
     <pathelement location="${hsqldb.dir}/lib/hsqldb.jar"/>
-    <pathelement location="${jtds.dir}/jtds-1.2.jar"/>
-    <pathelement location="${env.LUCIDERA_PLATFORM_HOME}/thirdparty/ojdbc14_g.jar"/>
     <pathelement path="${farrago.custom.classpath}"/>
   </path>
   <property name="farrago.3p.classpath" refid="farrago.3p.classpath"/>

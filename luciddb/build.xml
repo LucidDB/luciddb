@@ -50,6 +50,7 @@
   <property name="classes.dir" location="${luciddb.dir}/classes" />
 
   <property name="luciddb.test.dir" location="${luciddb.dir}/test" />
+  <property name="luciddb.plugin.dir" location="${luciddb.dir}/plugin" />
 
   <!-- directory in which catalog data is stored -->
   <property name="catalog.dir" location="${luciddb.dir}/catalog" />
@@ -103,7 +104,7 @@
   </path>
   <property name="luciddb.build.classpath" refid="luciddb.build.classpath"/>
 
-  <target name="test" depends="compile,createCatalog">
+  <target name="test" depends="compile,createCatalog,buildJdbcPlugin">
     <antcall target="shortreg"/>
     <antcall target="txn"/>
     <antcall target="bh" />
@@ -253,6 +254,25 @@
       </junit>
     </sequential>
   </macrodef>
+
+  <!-- create FarragoMedJdbc3p plugin jar -->
+  <!-- FarragoMedJdbc.jar + jtds and oracle jdbc drivers -->
+  <target name="buildJdbcPlugin">
+    <!-- assume farrago jdbc plugin has already been created -->
+    <mkdir dir="${luciddb.plugin.dir}"/>
+    <jar jarfile="${luciddb.plugin.dir}/FarragoMedJdbc3p.jar"
+      filesetmanifest="merge">
+      <zipgroupfileset dir="${farrago.plugin.dir}">
+        <include name="FarragoMedJdbc.jar"/>
+      </zipgroupfileset>
+      <zipgroupfileset dir="${open.dir}/thirdparty/jtds">
+        <include name="jtds-1.2.jar"/>
+      </zipgroupfileset>
+      <zipgroupfileset dir="${env.LUCIDERA_PLATFORM_HOME}/thirdparty">
+        <include name="ojdbc14_g.jar"/>
+      </zipgroupfileset>
+    </jar>
+  </target>
 
   <target name="shortreg" depends="compile" >
     <filelist dir="${testsrc.dir}/shortreg" id="filelist.shortregsql"
