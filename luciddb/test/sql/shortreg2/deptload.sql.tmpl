@@ -1,11 +1,14 @@
-CREATE foreign table csv_schema.SHORTREG_DEPT_SRC (
+CREATE foreign table @name_prefix@_schema.SHORTREG_DEPT_SRC (
 DEPTNO INTEGER,
 DNAME VARCHAR(20),
 LOCID VARCHAR(2)
 )
 server @SERVER_NAME@
-options (@TABLE_OPTIONS@ '@shortreg.dir@/dept@file_ext@');
+options (
+SCHEMA_NAME '@SCHEMA@',
+@TABLE_NAME@ '@ff_dir@DEPT@file_ext@'
+);
 
 INSERT INTO s.DEPT
 SELECT DEPTNO,DNAME,LOCID
-FROM csv_schema.SHORTREG_DEPT_SRC;
+FROM @name_prefix@_schema.SHORTREG_DEPT_SRC;

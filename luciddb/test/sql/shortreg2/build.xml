@@ -48,11 +48,18 @@
     <mkdir dir="${gensql.dir}"/>
     <filter token="open.dir" value="${open.dir}"/>
     <filter token="shortreg.dir" value="${shortreg.dir}"/>
+
     <!-- generate config.properties file -->
-    <copy file="config.prop" tofile="config.properties" 
-      overwrite="true" filtering="true"/>
+    <property name="config.prop" value="prop.oracle"/>
+    <copy file="${config.prop}" tofile="config.properties" 
+      overwrite="true" filtering="true">
+      <filterset>
+        <filtersfile file="${config.prop}"/>
+      </filterset>
+    </copy>
+
     <!-- generate all sql files -->
-    <copy todir="${gensql.dir}" overwrite="true"
+    <copy todir="${gensql.dir}tmp" overwrite="true"
       filtering="true">
       <fileset dir="${shortreg.dir}">
         <include name="**/*.tmpl"/>
@@ -62,13 +69,34 @@
         <filtersfile file="config.properties"/>
       </filterset>
     </copy>
+    <copy todir="${gensql.dir}" overwrite="true"
+      filtering="true">
+      <fileset dir="${gensql.dir}tmp"/>
+      <filterchain>
+        <tokenfilter>
+          <replaceregex pattern="^.*. . >.*@.*@.*" replace=". . . . . . . . > " flags="s"/>
+          <replaceregex pattern="^.*@.*@.*" replace="" flags="s"/>
+        </tokenfilter>
+      </filterchain>
+    </copy>
+    <delete dir="${gensql.dir}tmp" quiet="true"/>
   </target>
 
   <target name="test">
+    <antcall target="restoreCatalog"/>
     <antcall target="gen-sql"/>
     <blackhawk.fork basedir="${shortreg.dir}" 
       testscript="test.xml"
       classpathref="test.classpath"/>
+  </target>  
+
+  <target name="clean">
+    <delete dir="${gensql.dir}"/>
+  </target>  
+
+  <target name="restoreCatalog">
+    <ant dir="${open.dir}/farrago" target="restoreCatalog"/>
+    <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>
   </target>  
 
 </project>

@@ -1,4 +1,4 @@
-0: jdbc:luciddb:> CREATE foreign table csv_schema.SHORTREG_EMP_SRC (
+0: jdbc:luciddb:> CREATE foreign table @name_prefix@_schema.SHORTREG_EMP_SRC (
 . . . . . . . . > EMPNO INTEGER,
 . . . . . . . . > FNAME VARCHAR(20),
 . . . . . . . . > LNAME VARCHAR(20),
@@ -11,10 +11,13 @@
 . . . . . . . . > HOBBY VARCHAR(20)
 . . . . . . . . > )
 . . . . . . . . > server @SERVER_NAME@
-. . . . . . . . > options (@TABLE_OPTIONS@ '@shortreg.dir@/emp@file_ext@');
+. . . . . . . . > options (
+. . . . . . . . > SCHEMA_NAME '@SCHEMA@',
+. . . . . . . . > @TABLE_NAME@ '@ff_dir@EMP@file_ext@'
+. . . . . . . . > );
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> INSERT INTO s.EMP
 . . . . . . . . > SELECT EMPNO,FNAME,LNAME,SEX,DEPTNO,MANAGER,LOCID,SAL,COMMISSION,HOBBY
-. . . . . . . . > FROM csv_schema.SHORTREG_EMP_SRC;
+. . . . . . . . > FROM @name_prefix@_schema.SHORTREG_EMP_SRC;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

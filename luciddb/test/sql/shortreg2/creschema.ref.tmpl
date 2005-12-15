@@ -84,9 +84,15 @@
 0: jdbc:luciddb:> create server @SERVER_NAME@
 . . . . . . . . > foreign data wrapper @DATA_WRAPPER_NAME@
 . . . . . . . . > options(
-. . . . . . . . >     driver_class '@DRIVER_CLASS@',
+. . . . . . . . > 
 . . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
 . . . . . . . . >     schema_name '@SCHEMA_NAME@',
+. . . . . . . . >     qualifying_catalog_name '@CATALOG_NAME@',
+. . . . . . . . >     table_types '@TABLE_TYPES@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@'
+. . . . . . . . > 
 . . . . . . . . >     directory '@DIRECTORY@',
 . . . . . . . . >     file_extension '@FILE_EXTENSION@',
 . . . . . . . . >     ctrl_file_extension '@CTRL_FILE_EXT@',
@@ -99,6 +105,6 @@
 . . . . . . . . > 
 . . . . . . . . > );
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create schema csv_schema;
+0: jdbc:luciddb:> create schema @name_prefix@_schema;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

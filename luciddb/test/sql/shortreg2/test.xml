@@ -78,14 +78,14 @@
         <test-parameter name="sql-file" value="subFrom.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
-
+<!-- 
       <test name="aggJoinEq" requiresRun="empload,deptload,locationload,productsload,customersload,salesload">
         <test-parameter name="jdbc-driver" 
           value="com.lucidera.jdbc.LucidDbLocalDriver"/>
         <test-parameter name="sql-file" value="aggJoinEq.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
-
+-->
     </test-suite>
   </target>
 </project>

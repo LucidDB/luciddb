@@ -1,5 +1,7 @@
 # properties
 
+name_prefix=ff
+
 #############################
 # row store or column store #
 #############################
@@ -12,24 +14,14 @@ DATA_STORE=sys_ftrs_data_server
 # foreign data wrapper #
 ########################
 
-DATA_WRAPPER_NAME=temp_jdbc
-
-#DATA_LIBRARY=@open.dir@/luciddb/plugin/FarragoMedJdbc3p.jar
+DATA_WRAPPER_NAME=@name_prefix@_jdbc
 DATA_LIBRARY=class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper
-
 
 ##################
 # foreign server #
 ##################
 
-#SERVER_NAME=csv_server
-SERVER_NAME=file_server
-
-# csvjdbc options
-DRIVER_CLASS=org.relique.jdbc.csv.CsvDriver
-# URL=jdbc:relique:csv:@shortreg.dir@
-URL=jdbc:relique:csv:
-SCHEMA_NAME=TESTDATA
+SERVER_NAME=@name_prefix@_server
 
 # flatfile options
 DIRECTORY=@shortreg.dir@
@@ -42,15 +34,12 @@ ESCAPE_CHAR=
 WITH_HEADER=yes
 NUM_ROWS_SCAN=1
 
-
 #########################
 # foreign table options #
 #########################
 
-# depending on csvjdbc/flatfile, respectively
-#TABLE_OPTIONS=table_name
-TABLE_OPTIONS=filename
+TABLE_NAME=filename
 
 # tmp workaround while flatfile does not read file_extension
 file_ext=.csv
-#file_ext=
+ff_dir=@shortreg.dir@/

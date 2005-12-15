@@ -1,11 +1,14 @@
-create foreign table csv_schema.SHORTREG_CUSTOMERS_SRC (
+create foreign table @name_prefix@_schema.SHORTREG_CUSTOMERS_SRC (
 CUSTID INTEGER,
 FNAME VARCHAR(30),
 LNAME VARCHAR(30),
 SEX VARCHAR(1)
 )
 server @SERVER_NAME@
-options (@TABLE_OPTIONS@ '@shortreg.dir@/customers@file_ext@');
+options (
+SCHEMA_NAME '@SCHEMA@',
+@TABLE_NAME@ '@ff_dir@CUSTOMERS@file_ext@'
+);
 
 INSERT INTO s.CUSTOMERS
-SELECT CUSTID,FNAME,LNAME,SEX FROM csv_schema.SHORTREG_CUSTOMERS_SRC;
+SELECT CUSTID,FNAME,LNAME,SEX FROM @name_prefix@_schema.SHORTREG_CUSTOMERS_SRC;
