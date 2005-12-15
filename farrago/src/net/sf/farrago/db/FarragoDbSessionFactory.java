@@ -124,7 +124,7 @@ public class FarragoDbSessionFactory implements FarragoSessionFactory
     // implement FarragoSessionFactory
     public void cleanupSessions()
     {
-        FarragoDatabase.shutdownConditional(0);
+        FarragoDbSingleton.shutdownConditional(0);
     }
     
     // implement FarragoSessionFactory

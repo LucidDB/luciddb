@@ -59,38 +59,25 @@ import org.netbeans.mdr.handlers.*;
 
 /**
  * FarragoDatabase is a top-level singleton representing an instance of a
- * Farrago database engine.  It is reference-counted to allow it to be shared
- * in a library environment such as the directly embedded JDBC driver.
- * Note that all synchronization is done at the class level, not the
- * object level.
+ * Farrago database engine.
+ *
+ *<p>
+ *
+ * NOTE jvs 14-Dec-2005:  FarragoDatabase inherits from FarragoDbSingleton
+ * for backwards compatibility.  This tie may eventually be severed
+ * so that multiple instances of FarragoDatabase can be created in the
+ * same JVM.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoDatabase extends FarragoCompoundAllocation
+public class FarragoDatabase extends FarragoDbSingleton
 {
     //~ Static fields/initializers --------------------------------------------
 
     // TODO jvs 11-Aug-2004:  Get rid of this once corresponding TODO in
     // FarragoDbSession.prepare is resolved.
     public static final Object DDL_LOCK = new Integer(1994);
-    private static final Logger tracer = FarragoTrace.getDatabaseTracer();
-
-    /**
-     * Reference count.
-     */
-    private static int nReferences;
-
-    /**
-     * Singleton instance, or null when nReferences == 0.
-     */
-    private static FarragoDatabase instance;
-
-    /**
-     * Flag indicating whether FarragoDatabase is already in
-     * {@link #shutdown()}, to help prevent recursive shutdown.
-     */
-    private static boolean inShutdown;
 
     //~ Instance fields -------------------------------------------------------
 
@@ -126,11 +113,13 @@ public class FarragoDatabase extends FarragoCompoundAllocation
      * @param init whether to initialize the system catalog (the first time
      *     the database is started)
      */
-    private FarragoDatabase(
+    public FarragoDatabase(
         FarragoSessionFactory sessionFactory,
         boolean init)
     {
-        instance = this;
+        if (instance == null) {
+            instance = this;
+        }
         try {
             FarragoCompoundAllocation startOfWorldAllocation = 
                 new FarragoCompoundAllocation();
@@ -257,127 +246,6 @@ public class FarragoDatabase extends FarragoCompoundAllocation
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Establishes a database reference.  If this is the first reference, the
-     * database will be loaded first; otherwise, the existing database is
-     * reused with an increased reference count.
-     *
-     * @param sessionFactory factory for various database-level objects
-     *
-     * @return loaded database
-     */
-    public static synchronized FarragoDatabase pinReference(
-        FarragoSessionFactory sessionFactory)
-    {
-        tracer.info("connect");
-
-        ++nReferences;
-        if (nReferences == 1) {
-            assert (instance == null);
-            boolean success = false;
-            try {
-                FarragoDatabase newDb =
-                    new FarragoDatabase(sessionFactory, false);
-                assert (newDb == instance);
-                success = true;
-            } finally {
-                if (!success) {
-                    nReferences = 0;
-                    instance = null;
-                }
-            }
-        }
-        return instance;
-    }
-
-    static synchronized void addSession(
-        FarragoDatabase db,
-        FarragoDbSession session)
-    {
-        assert (db == instance);
-        db.addAllocation(session);
-    }
-
-    static synchronized void disconnectSession(FarragoDbSession session)
-    {
-        tracer.info("disconnect");
-
-        FarragoDatabase db = session.getDatabase();
-
-        assert (nReferences > 0);
-        assert (db == instance);
-
-        db.forgetAllocation(session);
-
-        nReferences--;
-    }
-
-    /**
-     * Conditionally shuts down the database depending on the number
-     * of references.
-     *
-     * @param groundReferences threshold for shutdown; if actual number
-     * of sessions is greater than this, no shutdown takes place
-     *
-     * @return whether shutdown took place
-     */
-    public static synchronized boolean shutdownConditional(
-        int groundReferences)
-    {
-        assert (instance != null);
-        tracer.fine("ground reference count = " + groundReferences);
-        tracer.fine("actual reference count = " + nReferences);
-        if (nReferences <= groundReferences) {
-            shutdown();
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * Shuts down the database, killing any running sessions.
-     */
-    public static synchronized void shutdown()
-    {
-        // REVIEW: SWZ 12/31/2004: If an extension project adds "specialized
-        // initialization" that ends up pinning a reference to FarragoDatabase
-        // (e.g. it opens a Connection so that it can execute SQL statements),
-        // then the extension's specialized shutdown should close the
-        // connection. When it does, FarragoSessionFactory.cleanupSessions()
-        // will be invoked and calls shutdownConditional() -- resulting in a
-        // recursive call to shutdown. The inShutdown field blocks this, but
-        // there's probably a better way -- maybe a new implementation of
-        // Connection that represents an internal connection and avoids the
-        // extra reference count and cleanupSessions() call.
-        if (inShutdown) {
-            return;
-        }
-        inShutdown = true;
-
-        tracer.info("shutdown");
-        assert (instance != null);
-        try {
-            instance.sessionFactory.specializedShutdown();
-            instance.close(false);
-        } finally {
-            instance = null;
-            nReferences = 0;
-            inShutdown = false;
-        }
-    }
-
-    public static boolean isReferenced()
-    {
-        if (nReferences > 0) {
-            assert (instance != null);
-            return true;
-        } else {
-            assert (instance == null);
-            return false;
-        }
-    }
-
-    /**
      * @return the shared code cache for this database
      */
     public FarragoObjectCache getCodeCache()
@@ -483,7 +351,7 @@ public class FarragoDatabase extends FarragoCompoundAllocation
         systemRepos.addResourceBundles(resourceBundles);
     }
 
-    private void close(boolean suppressExcns)
+    public void close(boolean suppressExcns)
     {
         try {
             // This will close (in reverse order) all the FarragoAllocations

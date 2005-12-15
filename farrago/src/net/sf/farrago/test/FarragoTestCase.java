@@ -213,7 +213,7 @@ public abstract class FarragoTestCase extends DiffTestCase
     public static void staticTearDown()
         throws Exception
     {
-        if (!FarragoDatabase.isReferenced()) {
+        if (!FarragoDbSingleton.isReferenced()) {
             // some kind of forced shutdown already happened; pop out
             return;
         }
@@ -266,7 +266,7 @@ public abstract class FarragoTestCase extends DiffTestCase
         grep -n -F "`echo pinReference && echo disconnectSession`" \
         FarragoTrace.log | more
         */
-        if (FarragoDatabase.isReferenced()) {
+        if (FarragoDbSingleton.isReferenced()) {
             String msg = "Leaked test sessions detected, aborting!";
             System.err.println(msg);
             tracer.severe(msg);

@@ -148,8 +148,8 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         this.sessionFactory = sessionFactory;
         this.url = url;
 
-        database = FarragoDatabase.pinReference(sessionFactory);
-        FarragoDatabase.addSession(database, this);
+        database = FarragoDbSingleton.pinReference(sessionFactory);
+        FarragoDbSingleton.addSession(database, this);
         boolean success = false;
         try {
             init(info);
@@ -432,7 +432,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             }
         }
         try {
-            FarragoDatabase.disconnectSession(this);
+            FarragoDbSingleton.disconnectSession(this);
         } finally {
             database = null;
             repos = null;

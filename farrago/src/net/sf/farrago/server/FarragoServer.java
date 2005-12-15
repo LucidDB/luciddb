@@ -83,7 +83,7 @@ public class FarragoServer
         FarragoSessionFactory sessionFactory = jdbcDriver.newSessionFactory();
 
         // Load the database instance
-        FarragoDatabase db = FarragoDatabase.pinReference(sessionFactory);
+        FarragoDatabase db = FarragoDbSingleton.pinReference(sessionFactory);
 
         FemFarragoConfig config = db.getSystemRepos().getCurrentConfig();
 
@@ -142,7 +142,7 @@ public class FarragoServer
 
         // NOTE:  use groundReferences=1 in shutdownConditional
         // to account for our baseline reference
-        if (FarragoDatabase.shutdownConditional(getGroundReferences())) {
+        if (FarragoDbSingleton.shutdownConditional(getGroundReferences())) {
             System.out.println(res.ServerShutdownComplete.str());
 
             // TODO: should find a way to prevent new messages BEFORE shutdown
@@ -177,7 +177,7 @@ public class FarragoServer
         unbindRegistry();
         FarragoResource res = FarragoResource.instance();
         System.out.println(res.ServerShuttingDown.str());
-        FarragoDatabase.shutdown();
+        FarragoDbSingleton.shutdown();
         System.out.println(res.ServerShutdownComplete.str());
     }
 
