@@ -603,6 +603,7 @@ require version '${required.ant.version}'."/>
       file="${farrago.src.dir}/net/sf/farrago/FarragoMetadataFactoryImpl.java"/>
     <delete dir="${farrago.catalog.src.dir}"/>
     <delete file="${FarragoSqlTestWrapper.java}"/>
+    <delete dir="${farrago.catalog.dir}/fennel"/>
   </target>
 
   <!-- delete catalog data only -->
@@ -755,7 +756,7 @@ require version '${required.ant.version}'."/>
     unless="resource.fennel.uptodate">
 
     <mkdir dir="${farrago.catalog.dir}/fennel"/>
-    <copy todir="${farrago.catalog.dir}/fennel">
+    <copy todir="${farrago.catalog.dir}/fennel" preservelastmodified="true">
       <fileset dir="${fennel.dir}/common" includes="*.properties"/>
     </copy>
   </target>
