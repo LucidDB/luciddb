@@ -41,6 +41,7 @@
 			<!-- currentbuildstatuspublisher file="logs/farrago/currentbuildstatus.txt"/ -->
 
 			<artifactspublisher dir="&open_integration.build.home;/farrago/trace" dest="artifacts/farrago&configSuffix;" subdirectory="trace"/>
+			<artifactspublisher dir="&open_integration.build.home;/farrago/testlog" dest="artifacts/farrago&configSuffix;" subdirectory="testlog"/>
 			<artifactspublisher dir="&open_integration.build.home;/farrago/unitsql" dest="artifacts/farrago&configSuffix;" subdirectory="unitsql"/>
 			<artifactspublisher dir="&open_integration.build.home;/farrago/initsql" dest="artifacts/farrago&configSuffix;" subdirectory="initsql"/>
 			<artifactspublisher dir="&open_integration.build.home;/farrago/regressionsql" dest="artifacts/farrago&configSuffix;" subdirectory="regressionsql"/>
