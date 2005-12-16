@@ -6,6 +6,9 @@ typedef JniProxyIter<ProxyAggInvocation> SharedProxyAggInvocation;
 class ProxyAggStreamDef;
 typedef JniProxyIter<ProxyAggStreamDef> SharedProxyAggStreamDef;
 
+class ProxyBarrierStreamDef;
+typedef JniProxyIter<ProxyBarrierStreamDef> SharedProxyBarrierStreamDef;
+
 class ProxyBufferingTupleStreamDef;
 typedef JniProxyIter<ProxyBufferingTupleStreamDef> SharedProxyBufferingTupleStreamDef;
 
@@ -144,6 +147,9 @@ typedef JniProxyIter<ProxyMockTupleStreamDef> SharedProxyMockTupleStreamDef;
 class ProxySortingStreamDef;
 typedef JniProxyIter<ProxySortingStreamDef> SharedProxySortingStreamDef;
 
+class ProxySplitterStreamDef;
+typedef JniProxyIter<ProxySplitterStreamDef> SharedProxySplitterStreamDef;
+
 class ProxyStreamGraphHandle;
 typedef JniProxyIter<ProxyStreamGraphHandle> SharedProxyStreamGraphHandle;
 
@@ -247,6 +253,12 @@ int32_t getGroupingPrefixSize();
 static jmethodID meth_getGroupingPrefixSize;
 SharedProxyAggInvocation getAggInvocation();
 static jmethodID meth_getAggInvocation;
+};
+
+class ProxyBarrierStreamDef
+: virtual public JniProxy, virtual public ProxyTupleStreamDef
+{
+public:
 };
 
 class ProxyBufferingTupleStreamDef
@@ -637,6 +649,8 @@ class ProxyLcsClusterAppendStreamDef
 public:
 bool isOverwrite();
 static jmethodID meth_isOverwrite;
+SharedProxyTupleProjection getClusterColProj();
+static jmethodID meth_getClusterColProj;
 };
 
 class ProxyLcsClusterScanDef
@@ -681,6 +695,12 @@ class ProxySortingStreamDef
 public:
 Distinctness getDistinctness();
 static jmethodID meth_getDistinctness;
+};
+
+class ProxySplitterStreamDef
+: virtual public JniProxy, virtual public ProxyTupleStreamDef
+{
+public:
 };
 
 class ProxyStreamGraphHandle
@@ -813,10 +833,10 @@ bool isPhysical();
 static jmethodID meth_isPhysical;
 std::string getRange();
 static jmethodID meth_getRange;
-SharedProxyWindowStreamDef getWindowStream();
-static jmethodID meth_getWindowStream;
 SharedProxyWindowPartitionDef getPartition();
 static jmethodID meth_getPartition;
+SharedProxyWindowStreamDef getWindowStream();
+static jmethodID meth_getWindowStream;
 int32_t getOffset();
 static jmethodID meth_getOffset;
 };
@@ -860,6 +880,8 @@ static JniProxyVisitTable<FemVisitor> visitTbl;
 virtual void visit(ProxyAggInvocation &)
 { unhandledVisit(); }
 virtual void visit(ProxyAggStreamDef &)
+{ unhandledVisit(); }
+virtual void visit(ProxyBarrierStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyBufferingTupleStreamDef &)
 { unhandledVisit(); }
@@ -952,6 +974,8 @@ virtual void visit(ProxyMergeStreamDef &)
 virtual void visit(ProxyMockTupleStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxySortingStreamDef &)
+{ unhandledVisit(); }
+virtual void visit(ProxySplitterStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyStreamGraphHandle &)
 { unhandledVisit(); }

@@ -1,0 +1,9 @@
+create schema @name_prefix@_sch;
+set schema '@name_prefix@_sch';
+
+create table YYY(
+i integer primary key)
+server @DATA_STORE@;
+
+insert into @name_prefix@_sch.YYY
+select * from @name_prefix@_schema."yyy";

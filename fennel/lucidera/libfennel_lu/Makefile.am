@@ -8,7 +8,10 @@ libfennel_lu_colstore.la
 libfennel_lu_flatfile_la_SOURCES=
 libfennel_lu_flatfile_la_LIBADD=\
 	$(top_builddir)/lucidera/flatfile/libflatfile.la \
+	-L$(top_builddir)/disruptivetech/libfennel_dt \
 	-L$(top_builddir)/libfennel \
+	-lfennel_dt_calc \
+	-lfennel_dt_xo \
 	-lfennel_device \
 	-lfennel_exec \
 	-lfennel_segment \

@@ -1,0 +1,5 @@
+import foreign schema "@SCHEMA@" from server @SERVER_NAME@ into @name_prefix@_schema;
+
+select count(*) from @name_prefix@_schema."bench100K";
+select count(*) from @name_prefix@_schema."bench1M";
+

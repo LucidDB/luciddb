@@ -1,0 +1,17 @@
+create foreign data wrapper @DATA_WRAPPER_NAME@
+library '@DATA_LIBRARY@'
+language java;
+
+create server @SERVER_NAME@
+foreign data wrapper @DATA_WRAPPER_NAME@
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    schema_name '@SCHEMA_NAME@',
+    qualifying_catalog_name '@CATALOG_NAME@',
+    table_types '@TABLE_TYPES@',
+    driver_class '@DRIVER_CLASS@'
+);
+
+create schema @name_prefix@_schema;

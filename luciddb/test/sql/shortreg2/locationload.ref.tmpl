@@ -1,0 +1,18 @@
+0: jdbc:luciddb:> CREATE foreign table @name_prefix@_schema.SHORTREG_LOCATION_SRC (
+. . . . . . . . > LOCID VARCHAR(2),
+. . . . . . . . > STREET VARCHAR(50),
+. . . . . . . . > CITY VARCHAR(20),
+. . . . . . . . > STATE VARCHAR(2),
+. . . . . . . . > ZIP INTEGER
+. . . . . . . . > )
+. . . . . . . . > server @SERVER_NAME@
+. . . . . . . . > options (
+. . . . . . . . > SCHEMA_NAME '@SCHEMA@',
+. . . . . . . . > @TABLE_NAME@ '@ff_dir@LOCATION@file_ext@'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> INSERT INTO s.LOCATION
+. . . . . . . . > SELECT LOCID,STREET,CITY,STATE,ZIP
+. . . . . . . . > FROM @name_prefix@_schema.SHORTREG_LOCATION_SRC;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

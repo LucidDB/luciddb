@@ -213,7 +213,7 @@ public abstract class FarragoTestCase extends DiffTestCase
     public static void staticTearDown()
         throws Exception
     {
-        if (!FarragoDatabase.isReferenced()) {
+        if (!FarragoDbSingleton.isReferenced()) {
             // some kind of forced shutdown already happened; pop out
             return;
         }
@@ -266,7 +266,7 @@ public abstract class FarragoTestCase extends DiffTestCase
         grep -n -F "`echo pinReference && echo disconnectSession`" \
         FarragoTrace.log | more
         */
-        if (FarragoDatabase.isReferenced()) {
+        if (FarragoDbSingleton.isReferenced()) {
             String msg = "Leaked test sessions detected, aborting!";
             System.err.println(msg);
             tracer.severe(msg);
@@ -730,7 +730,8 @@ public abstract class FarragoTestCase extends DiffTestCase
             String name = schema.getName();
             return name.equals("SALES")
                 || name.equals("SQLJ")
-                || name.equals("INFORMATION_SCHEMA");
+                || name.equals("INFORMATION_SCHEMA")
+                || name.startsWith("SYS_");
         }
 
         private void dropSchemas()
@@ -751,9 +752,6 @@ public abstract class FarragoTestCase extends DiffTestCase
                 String schemaName = schema.getName();
                 if (!isBlessedSchema(schema)) {
                     list.add(schemaName);
-//                    tracer.warning("dropping schema=" +schemaName);
-//                } else {
-//                    tracer.warning("keeping schema=" +schemaName);
                 }
             }
             Iterator iter = list.iterator();

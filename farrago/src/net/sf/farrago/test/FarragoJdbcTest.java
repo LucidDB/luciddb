@@ -220,7 +220,7 @@ public class FarragoJdbcTest extends FarragoTestCase
     {
         testCancel(false);
     }
-    
+
     private void testCancel(boolean synchronous)
         throws Exception
     {
@@ -1902,6 +1902,28 @@ public class FarragoJdbcTest extends FarragoTestCase
             metaData.getColumnTypeName(1));
     }
 
+    /**
+     * Verifies that DDL statements are validated at prepare time,
+     * not just execution time.
+     */
+    public void testDdlPreparation()
+    {
+        // test error:  exceed timestamp precision
+        String ddl = "create table sales.bad_tbl("
+            + "ts timestamp(100) not null primary key)";
+        try {
+            preparedStmt = connection.prepareStatement(ddl);
+        } catch (SQLException ex) {
+            // expected; verify that the message refers to precision
+            Assert.assertTrue(
+                "Expected message about precision but got '"
+                + ex.getMessage() + "'", 
+                ex.getMessage().indexOf("Precision") > -1);
+            return;
+        }
+        fail("Expected failure due to invalid DDL");
+    }
+    
     // TODO:  re-execute DDL, DML
 
     /**

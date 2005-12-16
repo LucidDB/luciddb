@@ -1,0 +1,182 @@
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- composite index tests
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- leading edge searches
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME from customers where LNAME='Dole' order by 1;
++--------+
+| LNAME  |
++--------+
+| Dole   |
+| Dole   |
+| Dole   |
++--------+
+0: jdbc:luciddb:> select LNAME from customers where LNAME='Peterson' order by 1;
++-----------+
+|   LNAME   |
++-----------+
+| Peterson  |
+| Peterson  |
+| Peterson  |
+| Peterson  |
+| Peterson  |
+| Peterson  |
+| Peterson  |
++-----------+
+0: jdbc:luciddb:> select LNAME from customers where LNAME='Andrews' order by 1;
++----------+
+|  LNAME   |
++----------+
+| Andrews  |
+| Andrews  |
+| Andrews  |
+| Andrews  |
++----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME from customers where LNAME<='Dole' order by 1;
++------------+
+|   LNAME    |
++------------+
+| Andrews    |
+| Andrews    |
+| Andrews    |
+| Andrews    |
+| Bush       |
+| Bush       |
+| Bush       |
+| Bush       |
+| Bush       |
+| Bush       |
+| Bush       |
+| Bush       |
+| Bush       |
+| Bush       |
+| Carlucchi  |
+| Carlucchi  |
+| Carlucchi  |
+| Carlucchi  |
+| Carlucchi  |
+| Dole       |
+| Dole       |
+| Dole       |
++------------+
+0: jdbc:luciddb:> select LNAME,FNAME from customers where LNAME>='Peterson' order by 1,2;
++---------------+-----------+
+|     LNAME     |   FNAME   |
++---------------+-----------+
+| Peterson      | Andy      |
+| Peterson      | David     |
+| Peterson      | Denise    |
+| Peterson      | Max       |
+| Peterson      | Ulysses   |
+| Peterson      | Victor    |
+| Peterson      | Victor    |
+| Randolph      | Anita     |
+| Randolph      | Eric      |
+| Randolph      | Larry     |
+| Randolph      | Patty     |
+| Randolph      | Terri     |
+| Smith         | Anthony   |
+| Smith         | Hope      |
+| Smith         | Pauline   |
+| Smith         | Randy     |
+| Smith         | Veronica  |
+| Stevens       | Anthony   |
+| Stevens       | Barry     |
+| Stevens       | Carla     |
+| Stevens       | Dave      |
+| Stevens       | Hope      |
+| Stevens       | Kathy     |
+| Van Morrison  | Batilda   |
+| Van Morrison  | Lisa      |
+| Van Morrison  | Margaret  |
+| Van Morrison  | Mary      |
+| Van Morrison  | Patty     |
+| Van Morrison  | Paul      |
++---------------+-----------+
+0: jdbc:luciddb:> select LNAME,CUSTID from customers where LNAME<='Andrews' order by 1,2;
++----------+---------+
+|  LNAME   | CUSTID  |
++----------+---------+
+| Andrews  | 3       |
+| Andrews  | 46      |
+| Andrews  | 51      |
+| Andrews  | 64      |
++----------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME from customers where LNAME<'Dole' order by 1;
++------------+
+|   LNAME    |
++------------+
+| Andrews    |
+| Andrews    |
+| Andrews    |
+| Andrews    |
+| Bush       |
+| Bush       |
+| Bush       |
+| Bush       |
+| Bush       |
+| Bush       |
+| Bush       |
+| Bush       |
+| Bush       |
+| Bush       |
+| Carlucchi  |
+| Carlucchi  |
+| Carlucchi  |
+| Carlucchi  |
+| Carlucchi  |
++------------+
+0: jdbc:luciddb:> select LNAME,FNAME from customers where LNAME>'Peterson' order by 1,2;
++---------------+-----------+
+|     LNAME     |   FNAME   |
++---------------+-----------+
+| Randolph      | Anita     |
+| Randolph      | Eric      |
+| Randolph      | Larry     |
+| Randolph      | Patty     |
+| Randolph      | Terri     |
+| Smith         | Anthony   |
+| Smith         | Hope      |
+| Smith         | Pauline   |
+| Smith         | Randy     |
+| Smith         | Veronica  |
+| Stevens       | Anthony   |
+| Stevens       | Barry     |
+| Stevens       | Carla     |
+| Stevens       | Dave      |
+| Stevens       | Hope      |
+| Stevens       | Kathy     |
+| Van Morrison  | Batilda   |
+| Van Morrison  | Lisa      |
+| Van Morrison  | Margaret  |
+| Van Morrison  | Mary      |
+| Van Morrison  | Patty     |
+| Van Morrison  | Paul      |
++---------------+-----------+
+0: jdbc:luciddb:> select LNAME,CUSTID from customers where LNAME<'Andrews' order by 1,2;
++--------+---------+
+| LNAME  | CUSTID  |
++--------+---------+
++--------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- full searches
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from customers where LNAME='Bush' and FNAME='Gerry' order by 1;
++---------+--------+--------+------+
+| CUSTID  | FNAME  | LNAME  | SEX  |
++---------+--------+--------+------+
+| 30      | Gerry  | Bush   | M    |
++---------+--------+--------+------+
+0: jdbc:luciddb:> select LNAME from customers where LNAME='Frank' and FNAME='Victor' order by 1;
++--------+
+| LNAME  |
++--------+
+| Frank  |
++--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

@@ -1,0 +1,28 @@
+<project name="tch" default="simple-test">
+  <target name="simple-test">
+    <test-suite testunit="simple-test">
+
+      <test name="creschema">
+        <test-parameter name="jdbc-driver" 
+          value="com.lucidera.jdbc.LucidDbLocalDriver"/>
+        <test-parameter name="sql-file" value="gen/creschema.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="importschema" requiresRun="creschema">
+        <test-parameter name="jdbc-driver" 
+          value="com.lucidera.jdbc.LucidDbLocalDriver"/>
+        <test-parameter name="sql-file" value="gen/importschema.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="colstore" requiresRun="creschema">
+        <test-parameter name="jdbc-driver" 
+          value="com.lucidera.jdbc.LucidDbLocalDriver"/>
+        <test-parameter name="sql-file" value="gen/colstore.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+    </test-suite>
+  </target>
+</project>
