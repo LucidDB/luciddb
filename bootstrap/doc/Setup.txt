@@ -88,6 +88,14 @@ To eliminate some errors from Tomcat while trying to view the build
 result pages, I had to copy xalan.jar from $CC_HOME/reporting/jsp/lib
 to $TOMCAT_HOME/common/endorsed.  I figured this out by reading
 http://wiki.apache.org/cocoon/EndorsedLibsProblem.
+-------------------------
+
+
+14-Dec-2005:
+-------------------------
+To fix problems viewing the XML log file with the latest cc,
+apply this patch:
+http://tinyurl.com/7v7ck 
 
 -------------------------
 

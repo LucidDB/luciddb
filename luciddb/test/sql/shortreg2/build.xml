@@ -25,12 +25,7 @@
   
   <property name="open.dir" location="../../../.."/>
   <fail unless="open.dir" />
-
   <property environment="env" />
-
-  <!-- override Farrago -->
-  <property name="project.catalog.dir" location="${open.dir}/luciddb/catalog" />
-  <property name="project.trace.propfile" location="${open.dir}/luciddb/trace/LucidDbTrace.properties" />
 
   <import file="${open.dir}/farrago/buildMacros.xml" />
   
@@ -100,6 +95,7 @@
   </target>  
 
   <target name="restoreCatalog">
+    <ant dir="${open.dir}/farrago" target="restoreCatalog"/>
     <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>
   </target>  
 
