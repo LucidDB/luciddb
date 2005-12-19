@@ -20,12 +20,16 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 -->
 
-<project name="sqlserver" basedir="." default="createServerDef">
+<project name="benchmark" basedir="." default="test">
   <dirname property="sqlserver.dir" file="${ant.file.sqlserver}" />
 
   <property name="open.dir" location="../../../.."/>
   <fail unless="open.dir" />
   <property environment="env" />
+
+  <!-- override Farrago -->
+  <property name="project.catalog.dir" location="${open.dir}/luciddb/catalog" />
+  <property name="project.trace.propfile" location="${open.dir}/luciddb/trace/LucidDbTrace.properties" />
 
   <import file="${open.dir}/farrago/buildMacros.xml" />
   
@@ -49,10 +53,11 @@
     <filter token="open.dir" value="${open.dir}"/>
 
     <!-- generate config.properties file -->
-    <copy file="config.prop" tofile="config.properties" 
+    <property name="config.prop" value="prop.oracle"/>
+    <copy file="${config.prop}" tofile="config.properties" 
       overwrite="true" filtering="true">
       <filterset>
-        <filtersfile file="config.prop"/>
+        <filtersfile file="${config.prop}"/>
       </filterset>
     </copy>
 
@@ -81,11 +86,15 @@
   </target>
 
   <target name="test">
+    <antcall target="restoreCatalog"/>
     <antcall target="gen-sql"/>
     <blackhawk.fork basedir="${sqlserver.dir}" 
       testscript="test.xml"
       classpathref="test.classpath"/>
   </target>  
 
+  <target name="restoreCatalog">
+    <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>
+  </target>  
 
 </project>

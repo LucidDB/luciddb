@@ -16,10 +16,17 @@
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
-      <test name="colstore" requiresRun="creschema">
+      <test name="benchload" requiresRun="importschema">
         <test-parameter name="jdbc-driver" 
           value="com.lucidera.jdbc.LucidDbLocalDriver"/>
-        <test-parameter name="sql-file" value="gen/colstore.sql"/>
+        <test-parameter name="sql-file" value="gen/benchload.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="benchqueries" requiresRun="benchload">
+        <test-parameter name="jdbc-driver" 
+          value="com.lucidera.jdbc.LucidDbLocalDriver"/>
+        <test-parameter name="sql-file" value="benchqueries.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
