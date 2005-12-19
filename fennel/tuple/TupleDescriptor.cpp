@@ -85,7 +85,7 @@ int TupleDescriptor::compareTuples(
 {
     int keyComp;    
     // REVIEW:  should pass n as a param instead of recalculating it each time
-    uint keyCount = std::min(tuple1.size(),tuple2.size());
+    size_t keyCount = std::min(tuple1.size(),tuple2.size());
     keyCount = std::min(keyCount,size());
     keyComp = compareTuplesKey(tuple1, tuple2, keyCount);
     return keyComp;
