@@ -87,6 +87,9 @@
   <property name="LucidDbConf.xmi"
     location="${xmi.dir}/LucidDbConf.xmi"/>
 
+  <!-- Set to a path to enable Fennel JNI handle tracing during tests. -->
+  <property name="trace.fennel.handles" value=""/>
+
   <!-- Classpaths -->
 
   <!-- classpath for running tests via ant -->
@@ -180,6 +183,7 @@
       <replacefilter token="@cachePagesInit@" value="5000"/>
       <replacefilter token="@fennel.disabled@" value="${fennel.disabled}"/>
       <replacefilter token="@resourceDir@" value="$${FARRAGO_HOME}/catalog/fennel"/>
+      <replacefilter token="@jniHandleTraceFile@" value="${trace.fennel.handles}"/>
     </replace>
     <farrago.mdrFork target="forked_importConfig"/>
   </target>
