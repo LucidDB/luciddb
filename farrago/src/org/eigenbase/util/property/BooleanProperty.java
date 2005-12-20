@@ -94,13 +94,29 @@ public class BooleanProperty extends Property
      */
     public boolean get(boolean defaultValue)
     {
-        final String value = getInternal(null, false);
+        final String value = getInternal(Boolean.toString(defaultValue), false);
         if (value == null) {
             return defaultValue;
         }
         return toBoolean(value);
     }
 
+    /**
+     * Sets the value of this boolean property.
+     *
+     * @return The previous value, or the default value if not set.
+     */
+    public boolean set(boolean value)
+    {
+        String prevValue = setString(Boolean.toString(value));
+        if (prevValue == null) {
+            prevValue = getDefaultValue();
+            if (prevValue == null) {
+                return false;
+            }
+        }
+        return toBoolean(prevValue);
+    }
 }
 
 

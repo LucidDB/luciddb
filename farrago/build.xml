@@ -505,10 +505,7 @@ require version '${required.ant.version}'."/>
     <copy file="${FarragoConfTemplate.xmi}"
       tofile="${FarragoConf.xmi}" overwrite="true"/>
 
-    <mkdir dir="${farrago.catalog.dir}/fennel"/>
-    <copy todir="${farrago.catalog.dir}/fennel">
-      <fileset dir="${fennel.dir}/common" includes="*.properties"/>
-    </copy>
+    <antcall target="copyFennelResources"/>
 
     <replace file="${FarragoConf.xmi}">
       <replacefilter token="@checkpointInterval@" value="300"/>
@@ -606,6 +603,7 @@ require version '${required.ant.version}'."/>
       file="${farrago.src.dir}/net/sf/farrago/FarragoMetadataFactoryImpl.java"/>
     <delete dir="${farrago.catalog.src.dir}"/>
     <delete file="${FarragoSqlTestWrapper.java}"/>
+    <delete dir="${farrago.catalog.dir}/fennel"/>
   </target>
 
   <!-- delete catalog data only -->
@@ -698,7 +696,7 @@ require version '${required.ant.version}'."/>
   </target>
 
   <target name="generateResources" 
-    depends="makeClassesDir,checkResourceUptodate"
+    depends="makeClassesDir,checkResourceUptodate,copyFennelResources"
     unless="resource.uptodate">
     <!-- Exception classes need to exist for reflection -->
     <farrago.javaCompile
@@ -737,6 +735,30 @@ require version '${required.ant.version}'."/>
       locales="en_US">
       <include name="org/eigenbase/resource/EigenbaseResource.xml"/>
     </resgen>
+  </target>
+
+  <target name="checkFennelResourceUptodate">
+    <condition property="resource.fennel.uptodate">
+      <uptodate>
+        <srcfiles
+          dir="${fennel.dir}/common"
+          includes="*.properties"/>
+        <regexpmapper
+          from="(.*)\.properties"
+          to="${farrago.catalog.dir}/fennel/\1.properties"/>
+      </uptodate>
+    </condition>
+  </target>
+
+  <target 
+    name="copyFennelResources" 
+    depends="checkFennelResourceUptodate"
+    unless="resource.fennel.uptodate">
+
+    <mkdir dir="${farrago.catalog.dir}/fennel"/>
+    <copy todir="${farrago.catalog.dir}/fennel" preservelastmodified="true">
+      <fileset dir="${fennel.dir}/common" includes="*.properties"/>
+    </copy>
   </target>
 
   <target name="checkParserUptodate">

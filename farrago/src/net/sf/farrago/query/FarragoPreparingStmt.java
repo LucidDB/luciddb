@@ -497,7 +497,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         if (analyzedSql.paramRowType == null) {
             // query expression
             RelNode rootRel = sqlToRelConverter.convertValidatedQuery(sqlNode);
-            analyzedSql.resultType = rootRel.getRowType();
+            analyzedSql.setResultType(rootRel.getRowType());
             analyzedSql.paramRowType = getParamRowType();
         } else {
             // parameterized row expression
@@ -952,8 +952,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
 
         CwmNamedColumnSet table = (CwmNamedColumnSet) resolved.object;
         ModalityType modality = ModalityTypeEnum.MODALITYTYPE_RELATIONAL;
-        if (table instanceof FemBaseColumnSet) {
-            modality = ((FemBaseColumnSet) table).getModality();
+        if (table instanceof FemAbstractColumnSet) {
+            modality = ((FemAbstractColumnSet) table).getModality();
         }
 
         PrivilegedAction action = PrivilegedActionEnum.SELECT;

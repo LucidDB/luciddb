@@ -318,6 +318,11 @@ public class SqlIdentifier extends SqlNode
         }
         return ns.isMonotonic(fqId.names[fqId.names.length - 1]);
     }
+
+    public boolean equalsBaseName(String name) {
+        return names[names.length - 1].equals(name);
+    }
+
 }
 
 

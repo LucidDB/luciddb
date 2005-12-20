@@ -21,6 +21,7 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/lucidera/colstore/LcsColumnReader.h"
+#include "fennel/lucidera/colstore/LcsClusterReader.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 

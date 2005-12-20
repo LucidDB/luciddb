@@ -92,7 +92,7 @@ public class IntegerProperty extends Property
      */
     public int get(int defaultValue)
     {
-        final String value = getInternal(null, false);
+        final String value = getInternal(Integer.toString(defaultValue), false);
         if (value == null) {
             return defaultValue;
         }
@@ -101,12 +101,20 @@ public class IntegerProperty extends Property
 
     /**
      * Sets the value of this integer property.
+     *
+     * @return The previous value, or -1 if not set.
      */
-    public void set(int value)
+    public int set(int value)
     {
-        setString(Integer.toString(value));
+        String prevValue = setString(Integer.toString(value));
+        if (prevValue == null) {
+            prevValue = getDefaultValue();
+            if (prevValue == null) {
+                return 0;
+            }
+        }
+        return Integer.parseInt(prevValue);
     }
 }
-
 
 // End IntegerProperty.java

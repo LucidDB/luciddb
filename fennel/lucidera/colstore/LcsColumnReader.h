@@ -22,12 +22,10 @@
 #ifndef Fennel_LcsColumnReader_Included
 #define Fennel_LcsColumnReader_Included
 
-#include "fennel/lucidera/colstore/LcsClusterReader.h"
+#include "fennel/lucidera/colstore/LcsClusterNode.h"
 #include "fennel/lucidera/colstore/LcsBitOps.h"
 
 FENNEL_BEGIN_NAMESPACE
-
-class LcsClusterReader;
 
 /**
  * Reads RIDs from a single cluster
