@@ -86,12 +86,17 @@ public class StringProperty extends Property
 
     /**
      * Sets the value of this property.
+     *
+     * @return The previous value, or the default value if not set.
      */
-    public void set(String value)
+    public String set(String value)
     {
-        properties.setProperty(getPath(), value);
+        String prevValue = setString(value);
+        if (prevValue == null) {
+            prevValue = getDefaultValue();
+        }
+        return prevValue;
     }
 }
-
 
 // End StringProperty.java

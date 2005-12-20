@@ -470,11 +470,11 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     // implement FarragoSession
     public FarragoSessionAnalyzedSql analyzeSql(
         String sql,
-        RelDataTypeFactory typeFactory, 
+        RelDataTypeFactory typeFactory,
         RelDataType paramRowType)
     {
         FarragoSessionAnalyzedSql analyzedSql =
-            new FarragoSessionAnalyzedSql();
+            getAnalysisBlock(typeFactory);
         analyzedSql.paramRowType = paramRowType;
         FarragoSessionExecutableStmt stmt = prepare(
             sql, null, false, analyzedSql);
@@ -492,6 +492,11 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             }
         }
         return analyzedSql;
+    }
+
+    public FarragoSessionAnalyzedSql getAnalysisBlock(RelDataTypeFactory typeFactory)
+    {
+        return new FarragoSessionAnalyzedSql();
     }
 
     public FarragoDatabase getDatabase()
@@ -749,6 +754,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         if ((analyzedSql != null) && (analyzedSql.paramRowType != null)) {
             expectStatement = false;
         }
+
         Object parsedObj = parser.parseSqlText(
             stmtValidator, ddlValidator, sql, expectStatement);
 

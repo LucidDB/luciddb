@@ -73,6 +73,11 @@ public class FarragoSessionAnalyzedSql
      * True if the expression contains dynamic parameter markers.
      */
     public boolean hasDynamicParams;
+
+    public void setResultType(RelDataType resultType)
+    {
+        this.resultType = resultType;
+    }
 }
 
 

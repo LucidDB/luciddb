@@ -103,6 +103,16 @@ public interface FarragoSessionFactory extends FarragoSessionPersonalityFactory
         FemJar femJar);
 
     /**
+     * Allows extensions of Farrago to add their own parameters to the
+     * Fennel configuration parameters.
+     * 
+     * @param map a non-null, modifiable Map where configuration
+     *            parameters can be added.  All map keys and values are
+     *            Strings.
+     */
+    public void applyFennelExtensionParameters(Map map);
+    
+    /**
      * Allows extensions of Farrago to perform their own
      * initialization tasks.
      *

@@ -44,9 +44,215 @@ public class PropertyTest extends TestCase
 
         // Default value.
         Assert.assertEquals(5, props.intProp.get());
+        Assert.assertEquals(789, props.intProp.get(789));
 
-        props.intProp.set(8);
+        int prev = props.intProp.set(8);
         Assert.assertEquals(8, props.intProp.get());
+        Assert.assertEquals(5, prev);
+
+        prev = props.intProp.set(0);
+        Assert.assertEquals(8, prev);
+    }
+
+    public void testIntNoDefault()
+    {
+        final MyProperties props = new MyProperties();
+
+        // As above, on property with no default value.
+        Assert.assertEquals(0, props.intPropNoDefault.get());
+        Assert.assertEquals(17, props.intPropNoDefault.get(17));
+
+        int prev = props.intPropNoDefault.set(-56);
+        Assert.assertEquals(0, prev);
+        Assert.assertEquals(-56, props.intPropNoDefault.get());
+        Assert.assertEquals(-56, props.intPropNoDefault.get(17));
+
+        // Second time set returns the previous value.
+        prev = props.intPropNoDefault.set(12345);
+        Assert.assertEquals(-56, prev);
+
+        // Setting null is not OK.
+        try {
+            props.intPropNoDefault.setString(null);
+            fail("expected NPE");
+        } catch (NullPointerException e) {
+            // ok
+        }
+    }
+
+    public void testDouble()
+    {
+        final MyProperties props = new MyProperties();
+
+        // Default value.
+        Assert.assertEquals(-3.14, props.doubleProp.get());
+        Assert.assertEquals(.789, props.doubleProp.get(.789));
+
+        double prev = props.doubleProp.set(.8);
+        Assert.assertEquals(.8, props.doubleProp.get());
+        Assert.assertEquals(-3.14, prev);
+
+        prev = props.doubleProp.set(.0);
+        Assert.assertEquals(.8, prev);
+    }
+
+    public void testDoubleNoDefault()
+    {
+        final MyProperties props = new MyProperties();
+
+        // As above, on property with no default value.
+        Assert.assertEquals(.0, props.doublePropNoDefault.get());
+        Assert.assertEquals(.17, props.doublePropNoDefault.get(.17));
+
+        double prev = props.doublePropNoDefault.set(-.56);
+        Assert.assertEquals(.0, prev);
+        Assert.assertEquals(-.56, props.doublePropNoDefault.get());
+        Assert.assertEquals(-.56, props.doublePropNoDefault.get(.17));
+
+        // Second time set returns the previous value.
+        prev = props.doublePropNoDefault.set(.12345);
+        Assert.assertEquals(-.56, prev);
+
+        // Setting null is not OK.
+        try {
+            props.doublePropNoDefault.setString(null);
+            fail("expected NPE");
+        } catch (NullPointerException e) {
+            // ok
+        }
+    }
+
+    public void testString()
+    {
+        final MyProperties props = new MyProperties();
+
+        // Default value.
+        Assert.assertEquals("foo", props.stringProp.get());
+        Assert.assertEquals("xxxxx", props.stringProp.get("xxxxx"));
+
+        // First time set returns the default value.
+        String prev = props.stringProp.set("bar");
+        Assert.assertEquals("bar", props.stringProp.get());
+        Assert.assertEquals("foo", prev);
+
+        // Second time set returns the previous value.
+        prev = props.stringProp.set("baz");
+        Assert.assertEquals("bar", prev);
+
+        // Setting null is not OK.
+        try {
+            prev = props.stringProp.set(null);
+            fail("expected NPE");
+        } catch (NullPointerException e) {
+            // ok
+        }
+    }
+
+    public void testStringNoDefault()
+    {
+        final MyProperties props = new MyProperties();
+
+        // As above, on property with no default value.
+        Assert.assertEquals(null, props.stringPropNoDefault.get());
+        Assert.assertEquals("xx", props.stringPropNoDefault.get("xx"));
+
+        String prev = props.stringPropNoDefault.set("paul");
+        Assert.assertEquals(null, prev);
+        Assert.assertEquals("paul", props.stringPropNoDefault.get());
+        Assert.assertEquals("paul", props.stringPropNoDefault.get("xx"));
+
+        // Second time set returns the previous value.
+        prev = props.stringPropNoDefault.set("ringo");
+        Assert.assertEquals("paul", prev);
+
+        // Setting null is not OK.
+        try {
+            prev = props.stringPropNoDefault.set(null);
+            fail("expected NPE");
+        } catch (NullPointerException e) {
+            // ok
+        }
+
+    }
+
+    public void testBoolean()
+    {
+        final MyProperties props = new MyProperties();
+
+        // Default value.
+        Assert.assertEquals(true, props.booleanProp.get());
+        Assert.assertEquals(false, props.booleanProp.get(false));
+
+        // First time set returns the default value.
+        boolean prev = props.booleanProp.set(false);
+        Assert.assertEquals(false, props.booleanProp.get());
+        Assert.assertEquals(true, prev);
+
+        // Second time set returns the previous value.
+        prev = props.booleanProp.set(true);
+        Assert.assertEquals(false, prev);
+
+        // Various values all mean true.
+        String prevString = props.booleanProp.setString("1");
+        Assert.assertEquals(true, props.booleanProp.get());
+        prevString = props.booleanProp.setString("true");
+        Assert.assertEquals(true, props.booleanProp.get());
+        prevString = props.booleanProp.setString("TRUE");
+        Assert.assertEquals(true, props.booleanProp.get());
+        prevString = props.booleanProp.setString("yes");
+        Assert.assertEquals(true, props.booleanProp.get());
+        prevString = props.booleanProp.setString("Yes");
+        Assert.assertEquals(true, props.booleanProp.get());
+
+        // All other values mean false.
+        prevString = props.booleanProp.setString("");
+        Assert.assertEquals(false, props.booleanProp.get());
+        prevString = props.booleanProp.setString("true ");
+        Assert.assertEquals(false, props.booleanProp.get());
+        prevString = props.booleanProp.setString("no");
+        Assert.assertEquals(false, props.booleanProp.get());
+        prevString = props.booleanProp.setString("wombat");
+        Assert.assertEquals(false, props.booleanProp.get());
+        prevString = props.booleanProp.setString("0");
+        Assert.assertEquals(false, props.booleanProp.get());
+        prevString = props.booleanProp.setString("false");
+        Assert.assertEquals(false, props.booleanProp.get());
+
+        // Setting null is not OK.
+        try {
+            props.booleanProp.setString(null);
+            fail("expected NPE");
+        } catch (NullPointerException e) {
+            // ok
+        }
+    }
+
+    public void testBooleanNoDefault()
+    {
+        final MyProperties props = new MyProperties();
+
+        // As above, on property with no default value.
+        Assert.assertEquals(false, props.booleanPropNoDefault.get());
+        Assert.assertEquals(true, props.booleanPropNoDefault.get(true));
+        Assert.assertEquals(false, props.booleanPropNoDefault.get(false));
+
+        boolean prev = props.booleanPropNoDefault.set(true);
+        Assert.assertEquals(false, prev);
+        Assert.assertEquals(true, props.booleanPropNoDefault.get());
+        Assert.assertEquals(true, props.booleanPropNoDefault.get(false));
+
+        // Second time set returns the previous value.
+        prev = props.booleanPropNoDefault.set(false);
+        Assert.assertEquals(true, prev);
+
+        // Setting null is not OK.
+        try {
+            props.booleanPropNoDefault.setString(null);
+            fail("expected NPE");
+        } catch (NullPointerException e) {
+            // ok
+        }
+
     }
 
     public void testTrigger()
@@ -109,8 +315,13 @@ public class PropertyTest extends TestCase
         assertTrue("Check property value NOT false",
             (! boolProp.get()));
 
+        // set via the 'set' method
+        final boolean prevBoolean = boolProp.set(true);
+        assertEquals(false, prevBoolean);
+
         // now explicitly set the property
-        props.setProperty(path, "false");
+        final Object prevObject = props.setProperty(path, "false");
+        assertEquals("true", prevObject);
 
         String v = props.getProperty(path);
         assertTrue("Check property value is null",
@@ -475,6 +686,27 @@ public class PropertyTest extends TestCase
     {
         public final IntegerProperty intProp = new IntegerProperty(
             this, "props.int", 5);
+
+        public final IntegerProperty intPropNoDefault =
+            new IntegerProperty(this, "props.int.nodefault");
+
+        public final StringProperty stringProp =
+            new StringProperty(this, "props.string", "foo");
+
+        public final StringProperty stringPropNoDefault =
+            new StringProperty(this, "props.string.nodefault", null);
+
+        public final DoubleProperty doubleProp =
+            new DoubleProperty(this, "props.double", -3.14);
+
+        public final DoubleProperty doublePropNoDefault =
+            new DoubleProperty(this, "props.double.nodefault");
+
+        public final BooleanProperty booleanProp =
+            new BooleanProperty(this, "props.boolean", true);
+
+        public final BooleanProperty booleanPropNoDefault =
+            new BooleanProperty(this, "props.boolean.nodefault");
     }
 }
 

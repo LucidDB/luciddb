@@ -456,7 +456,7 @@ public class SqlToOpenjavaConverter
         SqlNodeList selectList, SqlSelect select)
     {
         ExpressionList list = new ExpressionList();
-        selectList = validator.expandStar(selectList, select);
+        selectList = validator.expandStar(selectList, select, false);
         for (int i = 0; i < selectList.size(); i++) {
             final SqlNode node = selectList.get(i);
             Expression expression = convertExpression(scope, node);

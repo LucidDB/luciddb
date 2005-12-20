@@ -20,6 +20,7 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
+#include "fennel/lucidera/colstore/LcsColumnReader.h"
 #include "fennel/lucidera/colstore/LcsClusterReader.h"
 #include "fennel/btree/BTreeWriter.h"
 #include "fennel/tuple/TupleAccessor.h"

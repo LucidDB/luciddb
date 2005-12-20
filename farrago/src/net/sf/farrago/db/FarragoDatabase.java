@@ -416,6 +416,9 @@ public class FarragoDatabase extends FarragoDbSingleton
         FemFennelConfig fennelConfig =
             systemRepos.getCurrentConfig().getFennelConfig();
         Map attributeMap = JmiUtil.getAttributeValues(fennelConfig);
+        
+        sessionFactory.applyFennelExtensionParameters(attributeMap);
+        
         FemDatabaseParam param;
         Iterator iter = attributeMap.entrySet().iterator();
         while (iter.hasNext()) {

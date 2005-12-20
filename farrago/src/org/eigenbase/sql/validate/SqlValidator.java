@@ -255,7 +255,8 @@ public interface SqlValidator
      */
     SqlNodeList expandStar(
         SqlNodeList selectList,
-        SqlSelect query);
+        SqlSelect query,
+        boolean includeSystemVars);
 
     /**
      * Returns the scope that expressions in the WHERE and GROUP BY clause of
