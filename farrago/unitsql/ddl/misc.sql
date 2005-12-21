@@ -58,7 +58,8 @@ create clustered index explicit_jk2 on lcs_table_overlap(j,k)
 
 -- test some features which aren't yet implemented for LCS
 
--- should fail:  can't handle unclustered indexes yet
+-- doesn't fail, but has no effect,
+-- because for now unclustered indexes are stubbed out
 create table lcs_table_unclustered(i int not null)
 server sys_column_store_data_server
 create index unclustered_i on lcs_table_unclustered(i)
