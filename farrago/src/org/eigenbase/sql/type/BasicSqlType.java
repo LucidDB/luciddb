@@ -151,7 +151,9 @@ public class BasicSqlType extends AbstractSqlType
             case SqlTypeName.Integer_ordinal:
                 return 10;
             case SqlTypeName.Bigint_ordinal:
-                return 20;
+                return 19;
+            case SqlTypeName.Decimal_ordinal:
+                return SqlTypeName.MAX_NUMERIC_PRECISION;
             case SqlTypeName.Real_ordinal:
                 return 7;
             case SqlTypeName.Float_ordinal:
@@ -173,7 +175,18 @@ public class BasicSqlType extends AbstractSqlType
     // implement RelDataType
     public int getScale()
     {
-        assert(scale != SCALE_NOT_SPECIFIED);
+        if (scale == SCALE_NOT_SPECIFIED) {
+            switch (typeName.getOrdinal()) {
+            case SqlTypeName.Tinyint_ordinal:
+            case SqlTypeName.Smallint_ordinal:
+            case SqlTypeName.Integer_ordinal:
+            case SqlTypeName.Bigint_ordinal:
+            case SqlTypeName.Decimal_ordinal:
+                return 0;
+            default:
+                throw Util.newInternal("type "+typeName+" does not have a scale");
+            }
+        }
         return scale;
     }
 

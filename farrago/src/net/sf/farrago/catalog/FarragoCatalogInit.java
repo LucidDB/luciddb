@@ -36,6 +36,7 @@ import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
 import org.netbeans.api.mdr.events.*;
+import org.eigenbase.sql.type.SqlTypeName;
 
 /**
  * FarragoCatalogInit contains one-time persistent initialization procedures
@@ -315,13 +316,12 @@ public class FarragoCatalogInit implements MDRPreChangeListener
         simpleType.setTypeNumber(new Integer(Types.TIMESTAMP));
         simpleType.setDateTimePrecision(new Integer(0));
 
-        // TODO: Set max precision and scale correctly
         simpleType = repos.newCwmSqlsimpleType();
         simpleType.setName("DECIMAL");
         simpleType.setTypeNumber(new Integer(Types.DECIMAL));
-        simpleType.setNumericPrecision(new Integer(39));
+        simpleType.setNumericPrecision(new Integer(SqlTypeName.MAX_NUMERIC_PRECISION));
         simpleType.setNumericPrecisionRadix(new Integer(10));
-        simpleType.setNumericScale(new Integer(127));
+        simpleType.setNumericScale(new Integer(SqlTypeName.MAX_NUMERIC_SCALE));
         defineTypeAlias("DEC", simpleType);
 
         // REVIEW jvs 11-Aug-2005:  This isn't a real type descriptor, since

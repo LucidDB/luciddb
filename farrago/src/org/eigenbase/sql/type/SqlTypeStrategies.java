@@ -677,12 +677,242 @@ public abstract class SqlTypeStrategies
             }
         };
 
-    // FIXME jvs 4-June-2005:  this is incorrect; multiply/divide
-    // have to take precision and scale into account
+    /**
+     * Type-inference strategy whereby the result type of a call is
+     * the decimal product of two exact numeric operands where at
+     * least one of the operands is a decimal.
+     *
+     * Let p1, s1 be the precision and scale of the first operand
+     * Let p2, s2 be the precision and scale of the second operand
+     * Let p, s be the precision and scale of the result,
+     *
+     * Then the result type is a decimal with:
+     * <ul>
+     * <li>p = p1 + p2</li>
+     * <li>s = s1 + s2</li>
+     * </ul>
+     * p and s are capped at their maximum values
+     *
+     * @sql.2003 Part 2 Section 6.26
+     */
+    public static final SqlReturnTypeInference
+        rtiDecimalProduct =
+            new SqlReturnTypeInference()
+            {
+                public RelDataType inferReturnType(
+                    SqlOperatorBinding opBinding)
+                {
+                    RelDataType type1 = opBinding.getOperandType(0);
+                    RelDataType type2 = opBinding.getOperandType(1);
+                    if (SqlTypeUtil.isExactNumeric(type1)
+                            && SqlTypeUtil.isExactNumeric(type2))
+                    {
+                        if (SqlTypeUtil.isDecimal(type1) || SqlTypeUtil.isDecimal(type2))
+                        {
+                            int p1 = type1.getPrecision();
+                            int p2 = type2.getPrecision();
+                            int s1 = type1.getScale();
+                            int s2 = type2.getScale();
+
+                            int scale = s1 + s2;
+                            scale = Math.min(scale, SqlTypeName.MAX_NUMERIC_SCALE);
+                            int precision = p1 + p2;
+                            precision = Math.min(precision, SqlTypeName.MAX_NUMERIC_PRECISION);
+
+                            RelDataType ret;
+                            ret = opBinding.getTypeFactory().createSqlType(
+                                    SqlTypeName.Decimal, precision, scale);
+
+                            return ret;
+                        }
+                    }
+
+                    return null;
+                }
+            };
+
+    /**
+     * Same as {@link #rtiNullableDecimalProduct} but returns with nullablity
+     * if any of the operands is nullable by using
+     * {@link SqlTypeTransforms#toNullable}
+     */
+    public static final SqlReturnTypeInference
+        rtiNullableDecimalProduct =
+            new SqlTypeTransformCascade(
+                rtiDecimalProduct, SqlTypeTransforms.toNullable);
+
+    /**
+     * Type-inference strategy whereby the result type of a call is
+     * {@link #rtiNullableDecimalProduct} with a fallback to
+     * {@link #rtiNullableFirstInterval}  and {@link #rtiLeastRestrictive}
+     *
+     * These rules are used for multiplication.
+     */
     public static final SqlReturnTypeInference
         rtiNullableProduct =
         new SqlReturnTypeInferenceChain(
-            rtiNullableFirstInterval, rtiLeastRestrictive);
+            new SqlReturnTypeInference[] {
+                rtiNullableDecimalProduct,
+                rtiNullableFirstInterval,
+                rtiLeastRestrictive} );
+
+    /**
+     * Type-inference strategy whereby the result type of a call is
+     * the decimal product of two exact numeric operands where at
+     * least one of the operands is a decimal.
+     *
+     * Let p1, s1 be the precision and scale of the first operand
+     * Let p2, s2 be the precision and scale of the second operand
+     * Let p, s be the precision and scale of the result,
+     *
+     * Then the result type is a decimal with:
+     * <ul>
+     * <li>s = 19 - p1 + s1 - s2</li>
+     * <li>p = 19</li>
+     * </ul>
+     * p and s are capped at their maximum values
+     *
+     * @sql.2003 Part 2 Section 6.26
+     */
+    public static final SqlReturnTypeInference
+        rtiDecimalQuotient =
+            new SqlReturnTypeInference()
+            {
+                public RelDataType inferReturnType(
+                    SqlOperatorBinding opBinding)
+                {
+                    RelDataType type1 = opBinding.getOperandType(0);
+                    RelDataType type2 = opBinding.getOperandType(1);
+                    if (SqlTypeUtil.isExactNumeric(type1)
+                            && SqlTypeUtil.isExactNumeric(type2))
+                    {
+                        if (SqlTypeUtil.isDecimal(type1) || SqlTypeUtil.isDecimal(type2))
+                        {
+                            int p1 = type1.getPrecision();
+                            int p2 = type2.getPrecision();
+                            int s1 = type1.getScale();
+                            int s2 = type2.getScale();
+
+                            int scale = SqlTypeName.MAX_NUMERIC_PRECISION - p1 + s1 - s2;
+                            scale = Math.min(scale, SqlTypeName.MAX_NUMERIC_SCALE);
+                            // TODO: Allow negative scale?
+                            scale = Math.max(scale, 0);
+
+                            int precision = SqlTypeName.MAX_NUMERIC_PRECISION;
+
+                            RelDataType ret;
+                            ret = opBinding.getTypeFactory().createSqlType(
+                                    SqlTypeName.Decimal, precision, scale);
+
+                            return ret;
+                        }
+                    }
+
+                    return null;
+                }
+            };
+
+    /**
+     * Same as {@link #rtiNullableDecimalQuotient} but returns with nullablity
+     * if any of the operands is nullable by using
+     * {@link SqlTypeTransforms#toNullable}
+     */
+    public static final SqlReturnTypeInference
+        rtiNullableDecimalQuotient =
+            new SqlTypeTransformCascade(
+                rtiDecimalQuotient, SqlTypeTransforms.toNullable);
+
+    /**
+     * Type-inference strategy whereby the result type of a call is
+     * {@link #rtiNullableDecimalQuotient} with a fallback to
+     * {@link #rtiNullableFirstInterval}  and {@link #rtiLeastRestrictive}
+     *
+     * These rules are used for division.
+     */
+    public static final SqlReturnTypeInference
+        rtiNullableQuotient =
+        new SqlReturnTypeInferenceChain(
+            new SqlReturnTypeInference[] {
+                rtiNullableDecimalQuotient,
+                rtiNullableFirstInterval,
+                rtiLeastRestrictive} );
+
+    /**
+     * Type-inference strategy whereby the result type of a call is
+     * the decimal sum of two exact numeric operands where at
+     * least one of the operands is a decimal.
+     *
+     * Let p1, s1 be the precision and scale of the first operand
+     * Let p2, s2 be the precision and scale of the second operand
+     * Let p, s be the precision and scale of the result,
+     *
+     * Then the result type is a decimal with:
+     * <ul>
+     * <li>s = max(s1, s2)</li>
+     * <li>p = max(p1 - s1, p2 - s2) + s + 1</li>
+     * </ul>
+     * p and s are capped at their maximum values
+     *
+     * @sql.2003 Part 2 Section 6.26
+     */
+    public static final SqlReturnTypeInference
+        rtiDecimalSum =
+            new SqlReturnTypeInference()
+            {
+                public RelDataType inferReturnType(
+                    SqlOperatorBinding opBinding)
+                {
+                    RelDataType type1 = opBinding.getOperandType(0);
+                    RelDataType type2 = opBinding.getOperandType(1);
+                    if (SqlTypeUtil.isExactNumeric(type1)
+                            && SqlTypeUtil.isExactNumeric(type2))
+                    {
+                        if (SqlTypeUtil.isDecimal(type1) || SqlTypeUtil.isDecimal(type2))
+                        {
+                            int p1 = type1.getPrecision();
+                            int p2 = type2.getPrecision();
+                            int s1 = type1.getScale();
+                            int s2 = type2.getScale();
+
+                            int scale = Math.max(s1, s2);
+                            assert(scale <= SqlTypeName.MAX_NUMERIC_SCALE);
+                            int precision = Math.max(p1-s1, p2-s2) + scale + 1;
+                            precision = Math.min(precision, SqlTypeName.MAX_NUMERIC_PRECISION);
+
+                            RelDataType ret;
+                            ret = opBinding.getTypeFactory().createSqlType(
+                                    SqlTypeName.Decimal, precision, scale);
+
+                            return ret;
+                        }
+                    }
+
+                    return null;
+                }
+            };
+
+    /**
+     * Same as {@link #rtiNullableDecimalSum} but returns with nullablity
+     * if any of the operands is nullable by using
+     * {@link SqlTypeTransforms#toNullable}
+     */
+    public static final SqlReturnTypeInference
+        rtiNullableDecimalSum =
+            new SqlTypeTransformCascade(
+                rtiDecimalSum, SqlTypeTransforms.toNullable);
+
+    /**
+     * Type-inference strategy whereby the result type of a call is
+     * {@link #rtiNullableDecimalSum} with a fallback to
+     * {@link #rtiLeastRestrictive}
+     *
+     * These rules are used for addition and subtraction.
+     */
+    public static final SqlReturnTypeInference
+        rtiNullableSum =
+            new SqlReturnTypeInferenceChain(
+                    rtiNullableDecimalSum,
+                    rtiLeastRestrictive);
 
     /**
      * Type-inference strategy whereby the

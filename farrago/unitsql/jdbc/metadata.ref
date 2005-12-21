@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/jdbc/metadata.sql#2 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/jdbc/metadata.sql#10 $
 0: jdbc:farrago:> -- Test JDBC metadata calls
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test getCatalogs
@@ -389,7 +389,7 @@ usesLocalFiles                                    false
 | VARBINARY  | -3         | 65535      | X'              | '               |                | 1         | true            | true        | false               | false             | false           |                  |                |                |                |                   |                 |
 | BINARY     | -2         | 65535      | X'              | '               |                | 1         | true            | true        | false               | false             | false           |                  |                |                |                |                   |                 |
 | CHAR       | 1          | 65535      | '               | '               |                | 1         | true            | true        | false               | false             | false           |                  |                |                |                |                   |                 |
-| DECIMAL    | 3          | 39         |                 |                 |                | 1         | true            | true        | false               | false             | false           |                  |                |                |                |                   | 10              |
+| DECIMAL    | 3          | 19         |                 |                 |                | 1         | true            | true        | false               | false             | false           |                  |                |                |                |                   | 10              |
 | INTEGER    | 4          | 32         |                 |                 |                | 1         | true            | true        | false               | false             | false           |                  |                |                |                |                   | 2               |
 | SMALLINT   | 5          | 16         |                 |                 |                | 1         | true            | true        | false               | false             | false           |                  |                |                |                |                   | 2               |
 | REAL       | 7          | 23         |                 |                 |                | 1         | true            | true        | false               | false             | false           |                  |                |                |                |                   | 2               |
