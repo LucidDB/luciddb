@@ -61,11 +61,6 @@ private:
     ClusterPageLock bufferLock;
 
     /**
-     * Number of columns in cluster
-     */
-    uint m_numColumns;
-
-    /**
      * Cluster page header
      */
     PLcsClusterNode m_pHdr;
@@ -176,7 +171,7 @@ private:
      * Associates an offset with an address, determining whether a value is
      * stored in the temporary block or the temporary value bank
      *
-     * @param lastVal offset of the last value for this particular column
+     * @param lastValOffset offset of the last value for this particular column
      *
      * @param pValBank buffer storing values in the value bank
      *
@@ -188,12 +183,12 @@ private:
      *
      * @return address corresponding to offset
      */
-    PBuffer ValueSource(uint16_t lastVal, PBuffer pValBank,
+    PBuffer ValueSource(uint16_t lastValOffset, PBuffer pValBank,
                             uint16_t oValBank, PBuffer pBlock,
                             uint16_t f)
     {
         // if value not in back use 
-        if (f < lastVal)
+        if (f < lastValOffset)
             return pValBank + f - oValBank;
         else 
             return pBlock + f;
@@ -271,11 +266,6 @@ public:
     PLcsClusterNode allocateClusterPage(LcsRid firstRid);
 
     /**
-     * Unlocks cluster page
-     */
-    void unlockClusterPage();
-
-    /**
      * Initializes object with parameters relevant to the cluster page that
      * will be written
      *
@@ -303,15 +293,16 @@ public:
     /**
      * Prepares an existing cluster page for appending new data
      *
-     * @param nVal pointer to output array reflecting the number of values
-     * currently in each column on this page
+     * @param nValOffsets pointer to output array reflecting the number of
+     * values currently in each column on this page
      *
-     * @param lastVal pointer to output array reflecting the offset of the last
-     * value currently on the page for each cluster column
+     * @param lastValOffsets pointer to output array reflecting the offset of
+     * the last value currently on the page for each cluster column
      *
      * @param nrows returns number of rows currently on page
      */
-    void OpenAppend(uint *nVal, uint16_t *lastVal, RecordNum &nrows);
+    void OpenAppend(uint *nValOffsets, uint16_t *lastValOffsets,
+                    RecordNum &nrows);
     
     /**
      * Returns parameters describing the last batch for a given column
@@ -483,7 +474,7 @@ public:
         uint col;
         int valueSizeNeeded;
         
-        for (valueSizeNeeded = 0, col = 0; col < m_numColumns; col++)
+        for (valueSizeNeeded = 0, col = 0; col < nClusterCols; col++)
             valueSizeNeeded += m_batch[col].recSize * LcsMaxLeftOver;
 
         return m_szLeft <= (m_rIMinSzLeft + valueSizeNeeded); 

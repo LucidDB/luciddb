@@ -1,0 +1,115 @@
+/*
+// $Id$
+// Fennel is a library of data storage and processing components.
+// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2005-2005 Disruptive Tech
+// Copyright (C) 2005-2005 LucidEra, Inc.
+// Portions Copyright (C) 2004-2005 John V. Sichi
+//
+// This program is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation; either version 2 of the License, or (at your option)
+// any later version approved by The Eigenbase Project.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+#include "fennel/common/CommonPreamble.h"
+#include "fennel/exec/SplitterExecStream.h"
+#include "fennel/exec/ExecStreamBufAccessor.h"
+
+FENNEL_BEGIN_CPPFILE("$Id$");
+
+void SplitterExecStream::open(bool restart)
+{
+    DiffluenceExecStream::open(restart);
+    iOutput = 0;
+    pLastConsumptionEnd = NULL;
+}
+
+ExecStreamResult SplitterExecStream::execute(ExecStreamQuantum const &)
+{
+    if (pLastConsumptionEnd) {
+        while (iOutput < outAccessorList.size()) {
+            switch(outAccessorList[iOutput]->getState()) {
+            case EXECBUF_NONEMPTY:
+            case EXECBUF_OVERFLOW:
+                return EXECRC_BUF_OVERFLOW;
+            case EXECBUF_UNDERFLOW:
+            case EXECBUF_EMPTY:
+                ++iOutput;
+                break;
+            case EXECBUF_EOS:
+                assert(pInAccessor->getState() == EXECBUF_EOS);
+                return EXECRC_EOS;
+            }
+        }
+
+        /*
+         * All the output buf accesors have reached EXECBUF_EMPTY. It
+         * means the downstream consumer must have consumed everything
+         * up to the last byte we told it was available; pass that
+         * information on to our upstream producer.
+         * Also reset the pLastConsumptionEnd pointer and the EOBCount.
+         */
+        pInAccessor->consumeData(pLastConsumptionEnd);
+        pLastConsumptionEnd = NULL;
+        iOutput = 0;
+
+        /*
+         * Now that all the consumers are done with this output buffer,
+         * should transition to the scheduler so that producer exec
+         * stream could be scheduled to provide new input buffer.
+         */
+        return EXECRC_BUF_UNDERFLOW;
+    }
+    
+    switch(pInAccessor->getState()) {
+    case EXECBUF_OVERFLOW:
+    case EXECBUF_NONEMPTY:
+        pLastConsumptionEnd = pInAccessor->getConsumptionEnd();
+        
+        /*
+         * The same buffer is provided for consumption to all the output buffer
+         * accessors.
+         */
+        for (int i = 0; i < outAccessorList.size(); i ++) {
+            outAccessorList[i]->provideBufferForConsumption(
+                pInAccessor->getConsumptionStart(),
+                pLastConsumptionEnd);
+        }
+        return EXECRC_BUF_OVERFLOW;
+    case EXECBUF_UNDERFLOW:
+        return EXECRC_BUF_UNDERFLOW;
+    case EXECBUF_EMPTY:
+        pInAccessor->requestProduction();
+        return EXECRC_BUF_UNDERFLOW;
+    case EXECBUF_EOS:
+        for (int i = 0; i < outAccessorList.size(); i ++) {
+            outAccessorList[i]->markEOS();
+        }
+        return EXECRC_EOS;
+    default:
+        permAssert(false);
+    }
+}
+
+ExecStreamBufProvision SplitterExecStream::getOutputBufProvision() const
+{
+    /*
+     * Splitter does not own any buffer; however, it provides its producer's
+     * buffer directly to its consumer(s).
+     */
+    return BUFPROV_PRODUCER;
+}
+
+FENNEL_END_CPPFILE("$Id$");
+
+// End SplitterExecStream.cpp

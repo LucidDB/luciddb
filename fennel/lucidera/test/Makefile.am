@@ -11,6 +11,7 @@ noinst_PROGRAMS= \
 ExternalSortExecStreamTest \
 FlatFileExecStreamTest \
 LcsClusterAppendExecStreamTest \
+LcsMultiClusterAppendTest \
 LcsRowScanExecStreamTest
 
 TESTS = $(noinst_PROGRAMS)
@@ -18,6 +19,7 @@ TESTS = $(noinst_PROGRAMS)
 ExternalSortExecStreamTest_SOURCES=ExternalSortExecStreamTest.cpp
 FlatFileExecStreamTest_SOURCES=FlatFileExecStreamTest.cpp
 LcsClusterAppendExecStreamTest_SOURCES=LcsClusterAppendExecStreamTest.cpp
+LcsMultiClusterAppendTest_SOURCES=LcsMultiClusterAppendTest.cpp
 LcsRowScanExecStreamTest_SOURCES=LcsRowScanExecStreamTest.cpp
 
 # NOTE:  have to repeat $(EXTRA_LDFLAGS) on mingw due to stupid linker.

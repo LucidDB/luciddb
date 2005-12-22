@@ -30,19 +30,19 @@ import org.eigenbase.relopt.RelOptRuleOperand;
 import org.eigenbase.relopt.RelOptUtil;
 
 /**
- * LcsClusterAppendRule is a rule for converting an abstract {@link
- * TableModificationRel} into a corresponding {@link LcsClusterAppendRel}.
+ * LcsTableAppendRule is a rule for converting an abstract {@link
+ * TableModificationRel} into a corresponding {@link LcsTableAppendRel}.
  * 
  * @author Rushan Chen
  * @version $Id$
  */
-public class LcsClusterAppendRule extends RelOptRule
+public class LcsTableAppendRule extends RelOptRule
 {
 
     /**
-     * Creates a new LcsClusterAppendRule object.
+     * Creates a new LcsTableAppendRule object.
      */
-    public LcsClusterAppendRule()
+    public LcsTableAppendRule()
     {
         super(new RelOptRuleOperand(
                 TableModificationRel.class,
@@ -100,8 +100,8 @@ public class LcsClusterAppendRule extends RelOptRule
             return;
         }
 
-        LcsClusterAppendRel clusterAppendRel =
-            new LcsClusterAppendRel(
+        LcsTableAppendRel clusterAppendRel =
+            new LcsTableAppendRel(
                 tableModification.getCluster(),
                 (LcsTable) tableModification.getTable(),
                 tableModification.getConnection(),
@@ -116,4 +116,4 @@ public class LcsClusterAppendRule extends RelOptRule
 }
 
 
-//End LcsClusterAppendRule
+//End LcsTableAppendRule

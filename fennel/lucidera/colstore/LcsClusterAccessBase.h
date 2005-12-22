@@ -62,6 +62,36 @@ protected:
     LcsRid bTreeRid;
 
     /**
+     * Number of columns in cluster
+     */
+    uint nClusterCols;
+
+    /**
+     * Offsets to the last value stored on the page for each column in
+     * cluster
+     */
+    uint16_t *lastVal;
+
+    /**
+     * Offsets to the first value stored on the page for each column in
+     * cluster.  Points to the end of the firstVal, so subtracting lastVal
+     * from firstVal will tell you the number of bytes taken up by values for
+     * a column, since lastVals are appended in front of firstVal
+     */
+    uint16_t *firstVal;
+
+    /**
+     * Number of distinct values in the page for each column in cluster
+     */
+    uint *nVal;
+
+    /**
+     * For each column in the cluster, offset used to get the real offset
+     * within the page
+     */
+    uint16_t *delta;
+
+    /**
      * Returns RID from btree tuple
      */
     LcsRid readRid();
@@ -71,8 +101,36 @@ protected:
      */
     PageId readClusterPageId();
 
+    /**
+     * Sets pointers to offset arrays in cluster page header
+     *
+     * @param pHdr pointer to cluster node header
+     */
+    void setHdrOffsets(PConstLcsClusterNode pHdr);
+
 public:
     explicit LcsClusterAccessBase(BTreeDescriptor const &treeDescriptor);
+
+    /**
+     * Returns number of columns in cluster
+     */
+    uint getNumClusterCols()
+    {
+        return nClusterCols;
+    }
+
+    /**
+     * Sets number of columns in cluster
+     */
+    void setNumClusterCols(uint nCols)
+    {
+        nClusterCols = nCols;
+    }
+
+    /**
+     * Unlocks cluster page
+     */
+    void unlockClusterPage();
 };
 
 FENNEL_END_NAMESPACE

@@ -4,15 +4,19 @@
 /**
  * This class was generated
  * by class org.eigenbase.resgen.ResourceGen
+ * from /home/jvs/open/dev/fennel/common/FennelResource.xml
+ * on Sat Nov 27 23:31:08 PST 2004.
+ * from /home/rchen/open_lcs/fennel/common/FennelResource.xml
+ * on Tue Dec 13 18:09:18 PST 2005.
  * from /home/jpham/open/fennel/common/FennelResource.xml
  * on Wed Dec 07 11:54:38 PST 2005.
  * It contains a list of messages, and methods to
  * retrieve and format those messages.
  */
 
-// begin common include specified by /home/jpham/open/fennel/common/FennelResource.cpp
+// begin common include specified by /home/rchen/open_lcs/fennel/common/FennelResource.cpp
 #include "CommonPreamble.h"
-// end common include specified by /home/jpham/open/fennel/common/FennelResource.cpp
+// end common include specified by /home/rchen/open_lcs/fennel/common/FennelResource.cpp
 #include "FennelResource.h"
 #include "ResourceBundle.h"
 #include "Locale.h"

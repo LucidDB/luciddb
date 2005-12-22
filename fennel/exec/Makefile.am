@@ -20,7 +20,10 @@ ScratchBufferExecStream.cpp \
 SegBufferExecStream.cpp \
 SingleInputExecStream.cpp \
 SingleOutputExecStream.cpp \
-SortedAggExecStream.cpp
+SortedAggExecStream.cpp \
+DiffluenceExecStream.cpp \
+SplitterExecStream.cpp \
+BarrierExecStream.cpp
 
 DESIGN_DOCS=\
 ExecStreamDesign.cpp \

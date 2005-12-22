@@ -6,9 +6,9 @@
 0: jdbc:farrago:> set schema 'lcs';
 0: jdbc:farrago:> set path 'lcs';
 0: jdbc:farrago:> 
-0: jdbc:farrago:> ----------------------------------------
-0: jdbc:farrago:> -- Part 1. Single Cluster Loader test --
-0: jdbc:farrago:> ----------------------------------------
+0: jdbc:farrago:> ---------------------------------
+0: jdbc:farrago:> -- Part 1. Single Cluster test --
+0: jdbc:farrago:> ---------------------------------
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- 1.1 One cluster of a single column.
 0: jdbc:farrago:> --
@@ -25,27 +25,23 @@
 | LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | SYS$CLUSTERED_INDEX$LCS$LCSEMPS$EMPNO  | 1     | 1                 | EMPNO        | A             | 0            | 0      |                   |
 +------------+--------------+-------------+-------------+------------------+----------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> !set outputformat csv
 0: jdbc:farrago:> -- verify that explain plan works
-0: jdbc:farrago:> explain plan with implementation for insert into lcsemps values(10);
-+----------------------------------------------------------------------------------------------------------------------+
-|                                                       column0                                                        |
-+----------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                            |
-|   LcsClusterAppendRel(table=[[LOCALDB, LCS, LCSEMPS]], operation=[INSERT], updateColumnList=[[]], flattened=[true])  |
-|     FennelCalcRel(EXPR$0=[CAST(10):INTEGER])                                                                         |
-|       FennelOneRowRel                                                                                                |
-+----------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> explain plan for insert into lcsemps values(10);
+'column0'
+'FennelToIteratorConverter'
+'  LcsTableAppendRel(table=[[LOCALDB, LCS, LCSEMPS]], operation=[INSERT], flattened=[true])'
+'    FennelCalcRel(EXPR$0=[CAST(10):INTEGER])'
+'      FennelOneRowRel'
 0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan with implementation for 
+0: jdbc:farrago:> explain plan for 
 . . . . . . . . > insert into lcsemps select empno from sales.emps;
-+---------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                      column0                                                                      |
-+---------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                         |
-|   LcsClusterAppendRel(table=[[LOCALDB, LCS, LCSEMPS]], operation=[INSERT], updateColumnList=[[]], flattened=[true])                               |
-|     FennelCalcRel(EMPNO=[CAST($0):INTEGER])                                                                                                       |
-|       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])  |
-+---------------------------------------------------------------------------------------------------------------------------------------------------+
+'column0'
+'FennelToIteratorConverter'
+'  LcsTableAppendRel(table=[[LOCALDB, LCS, LCSEMPS]], operation=[INSERT], flattened=[true])'
+'    FennelCalcRel(EMPNO=[CAST($0):INTEGER])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> !set outputformat table
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify that insert values works
 0: jdbc:farrago:> insert into lcsemps values(10);
@@ -53,75 +49,32 @@
 0: jdbc:farrago:> -- verify that insert select works
 0: jdbc:farrago:> insert into lcsemps select empno from sales.emps;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- TODO: 2005-12-06(rchen) this would fail since query is not supported yet
-0: jdbc:farrago:> -- select * from lcsemps;
+0: jdbc:farrago:> select * from lcsemps order by empno;
++--------+
+| EMPNO  |
++--------+
+| 10     |
+| 100    |
+| 110    |
+| 110    |
+| 120    |
++--------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify truncate works
 0: jdbc:farrago:> truncate table lcsemps;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from lcsemps;
++--------+
+| EMPNO  |
++--------+
++--------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- drop lcsemps
 0: jdbc:farrago:> drop table lcsemps;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
-0: jdbc:farrago:> -- 1.2 Two clusters of a single column each.
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- Without specifying the clustered index clause in create table, a default 
-0: jdbc:farrago:> -- index will be created for each column.
-0: jdbc:farrago:> -- Also, LCS tables do not require primary keys.
-0: jdbc:farrago:> create table lcsemps(empno int, name varchar(128)) server sys_column_store_data_server;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify creation of system-defined clustered indices
-0: jdbc:farrago:> !indexes LCSEMPS
-+------------+--------------+-------------+-------------+------------------+----------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |               INDEX_NAME               | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
-+------------+--------------+-------------+-------------+------------------+----------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | SYS$CLUSTERED_INDEX$LCS$LCSEMPS$EMPNO  | 1     | 1                 | EMPNO        | A             | 0            | 0      |                   |
-| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | SYS$CLUSTERED_INDEX$LCS$LCSEMPS$NAME   | 1     | 1                 | NAME         | A             | 0            | 0      |                   |
-+------------+--------------+-------------+-------------+------------------+----------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify that explain plan works
-0: jdbc:farrago:> explain plan with implementation for insert into lcsemps values(10, 'Selma');
-+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                           column0                                                                           |
-+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                                   |
-|   LcsClusterAppendRel(table=[[LOCALDB, LCS, LCSEMPS]], operation=[INSERT], updateColumnList=[[]], flattened=[true])                                         |
-|     FennelCalcRel(EXPR$0=[CAST(10):INTEGER], EXPR$1=[CAST(_ISO-8859-1'Selma'):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"])  |
-|       FennelOneRowRel                                                                                                                                       |
-+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan with implementation for 
-. . . . . . . . > insert into lcsemps select empno, name from sales.emps;
-+---------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                      column0                                                                      |
-+---------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                         |
-|   LcsClusterAppendRel(table=[[LOCALDB, LCS, LCSEMPS]], operation=[INSERT], updateColumnList=[[]], flattened=[true])                               |
-|     FennelCalcRel(EMPNO=[CAST($0):INTEGER], NAME=[CAST($1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"])           |
-|       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])  |
-+---------------------------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify that insert values works
-0: jdbc:farrago:> -- TODO: 2005-12-06(rchen) This does not work yet.
-0: jdbc:farrago:> -- insert into lcsemps values(10, 'Selma');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify that insert select works
-0: jdbc:farrago:> -- TODO: 2005-12-06(rchen) This does not work yet.
-0: jdbc:farrago:> -- insert into lcsemps select empno, name from sales.emps;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- TODO: 2005-12-06(rchen) this would fail since query is not supported yet
-0: jdbc:farrago:> -- select * from lcsemps;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify truncate works
-0: jdbc:farrago:> truncate table lcsemps;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- drop lcsemps
-0: jdbc:farrago:> drop table lcsemps;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- 1.3 One cluster of three columns.
+0: jdbc:farrago:> -- 1.2 One cluster of three columns.
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- Without specifying the clustered index clause in create table, a default 
 0: jdbc:farrago:> -- index will be created for each column.
@@ -141,26 +94,22 @@
 +------------+--------------+-------------+-------------+------------------+-----------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify that explain plan works
-0: jdbc:farrago:> explain plan with implementation for insert into lcsemps values(10, 'Selma', 10000);
-+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                                          column0                                                                                          |
-+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                                                                 |
-|   LcsClusterAppendRel(table=[[LOCALDB, LCS, LCSEMPS]], operation=[INSERT], updateColumnList=[[]], flattened=[true])                                                                       |
-|     FennelCalcRel(EXPR$0=[CAST(10):INTEGER], EXPR$1=[CAST(_ISO-8859-1'Selma'):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], EXPR$2=[CAST(10000):INTEGER])  |
-|       FennelOneRowRel                                                                                                                                                                     |
-+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> !set outputformat csv
+0: jdbc:farrago:> explain plan for insert into lcsemps values(10, 'Selma', 10000);
+'column0'
+'FennelToIteratorConverter'
+'  LcsTableAppendRel(table=[[LOCALDB, LCS, LCSEMPS]], operation=[INSERT], flattened=[true])'
+'    FennelCalcRel(EXPR$0=[CAST(10):INTEGER], EXPR$1=[CAST(_ISO-8859-1'Selma'):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], EXPR$2=[CAST(10000):INTEGER])'
+'      FennelOneRowRel'
 0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan with implementation for 
+0: jdbc:farrago:> explain plan for 
 . . . . . . . . > insert into lcsemps select empno, name, empid from sales.emps;
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                              column0                                                                               |
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                                          |
-|   LcsClusterAppendRel(table=[[LOCALDB, LCS, LCSEMPS]], operation=[INSERT], updateColumnList=[[]], flattened=[true])                                                |
-|     FennelCalcRel(EMPNO=[CAST($0):INTEGER], NAME=[CAST($1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], EMPID=[CAST($5):INTEGER])  |
-|       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])                   |
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+'column0'
+'FennelToIteratorConverter'
+'  LcsTableAppendRel(table=[[LOCALDB, LCS, LCSEMPS]], operation=[INSERT], flattened=[true])'
+'    FennelCalcRel(EMPNO=[CAST($0):INTEGER], NAME=[CAST($1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], EMPID=[CAST($5):INTEGER])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> !set outputformat table
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify that insert values works
 0: jdbc:farrago:> insert into lcsemps values(10, 'Selma', 10000);
@@ -168,18 +117,94 @@
 0: jdbc:farrago:> -- verify that insert select works
 0: jdbc:farrago:> insert into lcsemps select empno, name, empid from sales.emps;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- TODO: 2005-12-06(rchen) this would fail since query is not supported yet
-0: jdbc:farrago:> -- select * from lcsemps;
+0: jdbc:farrago:> select * from lcsemps order by empno;
++--------+--------+--------+
+| EMPNO  |  NAME  | EMPID  |
++--------+--------+--------+
+| 10     | Selma  | 10000  |
+| 100    | Fred   | 30     |
+| 110    | Eric   | 3      |
+| 110    | John   | 2      |
+| 120    | Wilma  | 1      |
++--------+--------+--------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test some projections
+0: jdbc:farrago:> select empno, name, empid from lcsemps order by empno;
++--------+--------+--------+
+| EMPNO  |  NAME  | EMPID  |
++--------+--------+--------+
+| 10     | Selma  | 10000  |
+| 100    | Fred   | 30     |
+| 110    | Eric   | 3      |
+| 110    | John   | 2      |
+| 120    | Wilma  | 1      |
++--------+--------+--------+
+0: jdbc:farrago:> select name from lcsemps order by name;
++--------+
+|  NAME  |
++--------+
+| Eric   |
+| Fred   |
+| John   |
+| Selma  |
+| Wilma  |
++--------+
+0: jdbc:farrago:> select name, name from lcsemps order by name;
++--------+--------+
+|  NAME  |  NAME  |
++--------+--------+
+| Eric   | Eric   |
+| Fred   | Fred   |
+| John   | John   |
+| Selma  | Selma  |
+| Wilma  | Wilma  |
++--------+--------+
+0: jdbc:farrago:> select empid, empno from lcsemps empno;
++--------+--------+
+| EMPID  | EMPNO  |
++--------+--------+
+| 10000  | 10     |
+| 30     | 100    |
+| 3      | 110    |
+| 1      | 120    |
+| 2      | 110    |
++--------+--------+
+0: jdbc:farrago:> select name, empno, empid from lcsemps order by empno;
++--------+--------+--------+
+|  NAME  | EMPNO  | EMPID  |
++--------+--------+--------+
+| Selma  | 10     | 10000  |
+| Fred   | 100    | 30     |
+| Eric   | 110    | 3      |
+| John   | 110    | 2      |
+| Wilma  | 120    | 1      |
++--------+--------+--------+
+0: jdbc:farrago:> select empno + empid as empno_plus_empid from lcsemps order by empno_plus_empid;
++-------------------+
+| EMPNO_PLUS_EMPID  |
++-------------------+
+| 112               |
+| 113               |
+| 121               |
+| 130               |
+| 10010             |
++-------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify truncate works
 0: jdbc:farrago:> truncate table lcsemps;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from lcsemps;
++--------+-------+--------+
+| EMPNO  | NAME  | EMPID  |
++--------+-------+--------+
++--------+-------+--------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- drop lcsemps
 0: jdbc:farrago:> drop table lcsemps;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
-0: jdbc:farrago:> -- 1.4 One cluster of a single column.
+0: jdbc:farrago:> -- 1.3 One cluster of a single column.
 0: jdbc:farrago:> --     Testing inserting NULLs and empty strings.
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- Without specifying the clustered index clause in create table, a default 
@@ -199,64 +224,52 @@
 0: jdbc:farrago:> -- alter system set "calcVirtualMachine" = 'CALCVM_AUTO';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify that explain plan works
-0: jdbc:farrago:> explain plan with implementation for insert into lcsemps values(NULL);
-+----------------------------------------------------------------------------------------------------------------------+
-|                                                       column0                                                        |
-+----------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                            |
-|   LcsClusterAppendRel(table=[[LOCALDB, LCS, LCSEMPS]], operation=[INSERT], updateColumnList=[[]], flattened=[true])  |
-|     FennelCalcRel(EXPR$0=[CAST(null):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"])     |
-|       FennelOneRowRel                                                                                                |
-+----------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> explain plan with implementation for insert into lcsemps values('');
-+----------------------------------------------------------------------------------------------------------------------------+
-|                                                          column0                                                           |
-+----------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                  |
-|   LcsClusterAppendRel(table=[[LOCALDB, LCS, LCSEMPS]], operation=[INSERT], updateColumnList=[[]], flattened=[true])        |
-|     FennelCalcRel(EXPR$0=[CAST(_ISO-8859-1''):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"])  |
-|       FennelOneRowRel                                                                                                      |
-+----------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> explain plan with implementation for insert into lcsemps values('Pescadero');
-+-------------------------------------------------------------------------------------------------------------------------------------+
-|                                                               column0                                                               |
-+-------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                           |
-|   LcsClusterAppendRel(table=[[LOCALDB, LCS, LCSEMPS]], operation=[INSERT], updateColumnList=[[]], flattened=[true])                 |
-|     FennelCalcRel(EXPR$0=[CAST(_ISO-8859-1'Pescadero'):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"])  |
-|       FennelOneRowRel                                                                                                               |
-+-------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> !set outputformat csv
+0: jdbc:farrago:> explain plan for insert into lcsemps values(NULL);
+'column0'
+'FennelToIteratorConverter'
+'  LcsTableAppendRel(table=[[LOCALDB, LCS, LCSEMPS]], operation=[INSERT], flattened=[true])'
+'    FennelCalcRel(EXPR$0=[CAST(null):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"])'
+'      FennelOneRowRel'
+0: jdbc:farrago:> explain plan for insert into lcsemps values('');
+'column0'
+'FennelToIteratorConverter'
+'  LcsTableAppendRel(table=[[LOCALDB, LCS, LCSEMPS]], operation=[INSERT], flattened=[true])'
+'    FennelCalcRel(EXPR$0=[CAST(_ISO-8859-1''):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"])'
+'      FennelOneRowRel'
+0: jdbc:farrago:> explain plan for insert into lcsemps values('Pescadero');
+'column0'
+'FennelToIteratorConverter'
+'  LcsTableAppendRel(table=[[LOCALDB, LCS, LCSEMPS]], operation=[INSERT], flattened=[true])'
+'    FennelCalcRel(EXPR$0=[CAST(_ISO-8859-1'Pescadero'):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"])'
+'      FennelOneRowRel'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- Plans with NULL in the populating stream
+0: jdbc:farrago:> explain plan for 
+. . . . . . . . > insert into lcsemps select city from sales.emps;
+'column0'
+'FennelToIteratorConverter'
+'  LcsTableAppendRel(table=[[LOCALDB, LCS, LCSEMPS]], operation=[INSERT], flattened=[true])'
+'    FennelCalcRel(CITY=[CAST($4):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for 
+. . . . . . . . > insert into lcsemps select city from sales.emps where empno = 100;
+'column0'
+'FennelToIteratorConverter'
+'  LcsTableAppendRel(table=[[LOCALDB, LCS, LCSEMPS]], operation=[INSERT], flattened=[true])'
+'    FennelCalcRel(CITY=[CAST($4):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], condition=[=($0, 100)])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> !set outputformat table
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Locate a NULL value from the source table.
+0: jdbc:farrago:> !set outputformat table
 0: jdbc:farrago:> select city from sales.emps where empno = 100;
 +-------+
 | CITY  |
 +-------+
 |       |
 +-------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Plans with NULL in the populating stream
-0: jdbc:farrago:> explain plan with implementation for 
-. . . . . . . . > insert into lcsemps select city from sales.emps;
-+---------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                      column0                                                                      |
-+---------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                         |
-|   LcsClusterAppendRel(table=[[LOCALDB, LCS, LCSEMPS]], operation=[INSERT], updateColumnList=[[]], flattened=[true])                               |
-|     FennelCalcRel(CITY=[CAST($4):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"])                                      |
-|       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])  |
-+---------------------------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan with implementation for 
-. . . . . . . . > insert into lcsemps select city from sales.emps where empno = 100;
-+---------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                      column0                                                                      |
-+---------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                         |
-|   LcsClusterAppendRel(table=[[LOCALDB, LCS, LCSEMPS]], operation=[INSERT], updateColumnList=[[]], flattened=[true])                               |
-|     FennelCalcRel(CITY=[CAST($4):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], condition=[=($0, 100)])              |
-|       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])  |
-+---------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify that insert values works
 0: jdbc:farrago:> insert into lcsemps values(NULL);
@@ -279,18 +292,40 @@
 0: jdbc:farrago:> -- verify that executing the same exec stream also works
 0: jdbc:farrago:> insert into lcsemps select city from sales.emps;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- TODO: 2005-12-06(rchen) this would fail since query is not supported yet
-0: jdbc:farrago:> -- select * from lcsemps;
+0: jdbc:farrago:> select * from lcsemps order by city;
++----------------+
+|      CITY      |
++----------------+
+|                |
+|                |
+|                |
+|                |
+|                |
+|                |
+|                |
+|                |
+| Pescadero      |
+| San Francisco  |
+| San Francisco  |
+| Vancouver      |
+| Vancouver      |
++----------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify truncate works
 0: jdbc:farrago:> truncate table lcsemps;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from lcsemps;
++-------+
+| CITY  |
++-------+
++-------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- drop lcsemps
 0: jdbc:farrago:> drop table lcsemps;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
-0: jdbc:farrago:> -- 1.5 Bug case
+0: jdbc:farrago:> -- 1.4 Bug case
 0: jdbc:farrago:> --
 0: jdbc:farrago:> create table lcsemps(city varchar(20)) server sys_column_store_data_server;
 0: jdbc:farrago:> 
@@ -303,17 +338,52 @@
 0: jdbc:farrago:> -- It's now fixed by allocating a brand new LcsClusterNodeWriter for every LcsClusterAppendExecStream::open()
 0: jdbc:farrago:> insert into lcsemps values(NULL);
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- TODO: 2005-12-06(rchen) this would fail since query is not supported yet
-0: jdbc:farrago:> -- select * from lcsemps;
+0: jdbc:farrago:> select * from lcsemps order by city;
++----------------+
+|      CITY      |
++----------------+
+|                |
+|                |
+|                |
+|                |
+|                |
+| San Francisco  |
+| San Francisco  |
+| Vancouver      |
+| Vancouver      |
++----------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- issue the select again to make sure state is correctly reset when the
+0: jdbc:farrago:> -- stream is re-executed
+0: jdbc:farrago:> select * from lcsemps order by city;
++----------------+
+|      CITY      |
++----------------+
+|                |
+|                |
+|                |
+|                |
+|                |
+| San Francisco  |
+| San Francisco  |
+| Vancouver      |
+| Vancouver      |
++----------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify truncate works
 0: jdbc:farrago:> truncate table lcsemps;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from lcsemps;
++-------+
+| CITY  |
++-------+
++-------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop table lcsemps;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
-0: jdbc:farrago:> -- 1.6 Bugcase
+0: jdbc:farrago:> -- 1.5 Bugcase
 0: jdbc:farrago:> --
 0: jdbc:farrago:> create table lcsemps(city varchar(20)) server sys_column_store_data_server;
 0: jdbc:farrago:> 
@@ -321,11 +391,28 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> insert into lcsemps select city from sales.emps;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- TODO: 2005-12-06(rchen) this would fail since query is not supported yet
-0: jdbc:farrago:> -- select * from lcsemps;
+0: jdbc:farrago:> select * from lcsemps order by city;
++----------------+
+|      CITY      |
++----------------+
+|                |
+|                |
+|                |
+|                |
+| San Francisco  |
+| San Francisco  |
+| Vancouver      |
+| Vancouver      |
++----------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify truncate works
 0: jdbc:farrago:> truncate table lcsemps;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from lcsemps;
++-------+
+| CITY  |
++-------+
++-------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: 2005-12-06(rchen) this used to fail with:
 0: jdbc:farrago:> -- java: ../../fennel/cache/CacheMethodsImpl.h:299: void fennel::CacheImpl<PageT, VictimPolicyT>::discardPage:Assertion `page->nReferences == 1' failed.
@@ -333,14 +420,361 @@
 0: jdbc:farrago:> drop table lcsemps;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
-0: jdbc:farrago:> ---------------------------------------
-0: jdbc:farrago:> -- Part 2. Multi-cluster Loader test --
-0: jdbc:farrago:> ---------------------------------------
+0: jdbc:farrago:> --------------------------------
+0: jdbc:farrago:> -- Part 2. Multi-cluster test --
+0: jdbc:farrago:> --------------------------------
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- 2.1 Two clusters of a single column each.
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- Without specifying the clustered index clause in create table, a default 
+0: jdbc:farrago:> -- index will be created for each column.
+0: jdbc:farrago:> -- Also, LCS tables do not require primary keys.
+0: jdbc:farrago:> create table lcsemps(empno int, name varchar(128)) server sys_column_store_data_server;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- verify creation of system-defined clustered indices
+0: jdbc:farrago:> !indexes LCSEMPS
++------------+--------------+-------------+-------------+------------------+----------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |               INDEX_NAME               | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
++------------+--------------+-------------+-------------+------------------+----------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
+| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | SYS$CLUSTERED_INDEX$LCS$LCSEMPS$EMPNO  | 1     | 1                 | EMPNO        | A             | 0            | 0      |                   |
+| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | SYS$CLUSTERED_INDEX$LCS$LCSEMPS$NAME   | 1     | 1                 | NAME         | A             | 0            | 0      |                   |
++------------+--------------+-------------+-------------+------------------+----------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- verify that explain plan works
+0: jdbc:farrago:> !set outputformat csv
+0: jdbc:farrago:> explain plan for insert into lcsemps values(10, 'Selma');
+'column0'
+'FennelToIteratorConverter'
+'  LcsTableAppendRel(table=[[LOCALDB, LCS, LCSEMPS]], operation=[INSERT], flattened=[true])'
+'    FennelCalcRel(EXPR$0=[CAST(10):INTEGER], EXPR$1=[CAST(_ISO-8859-1'Selma'):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"])'
+'      FennelOneRowRel'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for 
+. . . . . . . . > insert into lcsemps select empno, name from sales.emps;
+'column0'
+'FennelToIteratorConverter'
+'  LcsTableAppendRel(table=[[LOCALDB, LCS, LCSEMPS]], operation=[INSERT], flattened=[true])'
+'    FennelCalcRel(EMPNO=[CAST($0):INTEGER], NAME=[CAST($1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> !set outputformat table
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- verify that insert values works
+0: jdbc:farrago:> insert into lcsemps values(10, 'Selma');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- verify that insert select works
+0: jdbc:farrago:> insert into lcsemps select empno, name from sales.emps;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from lcsemps order by empno;
++--------+--------+
+| EMPNO  |  NAME  |
++--------+--------+
+| 10     | Selma  |
+| 100    | Fred   |
+| 110    | Eric   |
+| 110    | John   |
+| 120    | Wilma  |
++--------+--------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- verify truncate works
+0: jdbc:farrago:> truncate table lcsemps;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from lcsemps;
++--------+-------+
+| EMPNO  | NAME  |
++--------+-------+
++--------+-------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- drop lcsemps
+0: jdbc:farrago:> drop table lcsemps;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
-0: jdbc:farrago:> ---------------------------------
-0: jdbc:farrago:> -- Part 3. Cluster Reader test --
-0: jdbc:farrago:> ---------------------------------
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- 2.2 Four clusters.
+0: jdbc:farrago:> --
+0: jdbc:farrago:> create table multicluster(c0 int, c1 varchar(128), c2 int, c3 int, c4 int, c5 int, c6 varchar(128),
+. . . . . . . . >                      c7 int)
+. . . . . . . . >     server sys_column_store_data_server
+. . . . . . . . > create clustered index i_c0 on multicluster(c0)
+. . . . . . . . > create clustered index i_c1_c2 on multicluster(c1, c2)
+. . . . . . . . > create clustered index i_c3_c4_c5 on multicluster(c3, c4)
+. . . . . . . . > create clustered index i_c6_c7_c8_c9 on multicluster(c5, c6, c7);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !set outputformat csv
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > insert into multicluster values(1, 'am', 100, 50, -10, 1000, NULL, 0);
+'column0'
+'FennelToIteratorConverter'
+'  LcsTableAppendRel(table=[[LOCALDB, LCS, MULTICLUSTER]], operation=[INSERT], flattened=[true])'
+'    FennelCalcRel(EXPR$0=[CAST(1):INTEGER], EXPR$1=[CAST(_ISO-8859-1'am'):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], EXPR$2=[CAST(100):INTEGER], EXPR$3=[CAST(50):INTEGER], EXPR$4=[CAST(-(10)):INTEGER], EXPR$5=[CAST(1000):INTEGER], EXPR$6=[CAST(null):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], EXPR$7=[CAST(0):INTEGER])'
+'      FennelOneRowRel'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select * from multicluster order by c0, c1;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
+'    LcsRowScanRel(table=[[LOCALDB, LCS, MULTICLUSTER]], projection=[*], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]])'
+0: jdbc:farrago:> !set outputformat table
+0: jdbc:farrago:> 
+0: jdbc:farrago:> insert into multicluster values(1, 'am', 100, 50, -10, 1000, NULL, 0);
+0: jdbc:farrago:> insert into multicluster values(1, 'am', 100, 50, -10, 1000, NULL, 0);
+0: jdbc:farrago:> insert into multicluster values(1, NULL, 101, 51, -11, 1001, NULL, 1);
+0: jdbc:farrago:> insert into multicluster values(2, '',   102, 52, -12, 1002, NULL, 2);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select c7, c1, c4, c0 from multicluster order by c0;
++-----+-----+------+-----+
+| C7  | C1  |  C4  | C0  |
++-----+-----+------+-----+
+| 0   | am  | -10  | 1   |
+| 0   | am  | -10  | 1   |
+| 1   |     | -11  | 1   |
+| 2   |     | -12  | 2   |
++-----+-----+------+-----+
+0: jdbc:farrago:> select c7, c1, c4, c0 from multicluster order by c0;
++-----+-----+------+-----+
+| C7  | C1  |  C4  | C0  |
++-----+-----+------+-----+
+| 0   | am  | -10  | 1   |
+| 0   | am  | -10  | 1   |
+| 1   |     | -11  | 1   |
+| 2   |     | -12  | 2   |
++-----+-----+------+-----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select c3, c1, c1, c4, c7 from multicluster order by c1;
++-----+-----+-----+------+-----+
+| C3  | C1  | C1  |  C4  | C7  |
++-----+-----+-----+------+-----+
+| 51  |     |     | -11  | 1   |
+| 52  |     |     | -12  | 2   |
+| 50  | am  | am  | -10  | 0   |
+| 50  | am  | am  | -10  | 0   |
++-----+-----+-----+------+-----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from multicluster order by c0, c1;
++-----+-----+------+-----+------+-------+-----+-----+
+| C0  | C1  |  C2  | C3  |  C4  |  C5   | C6  | C7  |
++-----+-----+------+-----+------+-------+-----+-----+
+| 1   |     | 101  | 51  | -11  | 1001  |     | 1   |
+| 1   | am  | 100  | 50  | -10  | 1000  |     | 0   |
+| 1   | am  | 100  | 50  | -10  | 1000  |     | 0   |
+| 2   |     | 102  | 52  | -12  | 1002  |     | 2   |
++-----+-----+------+-----+------+-------+-----+-----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- A parser bug
+0: jdbc:farrago:> -- This sometimes does not work:
+0: jdbc:farrago:> -- !set outputformat csv
+0: jdbc:farrago:> -- explain plan with implementation for
+0: jdbc:farrago:> -- insert into multicluster select empno, name, 0, 10, 100, 1000, city, deptno from sales.emps;
+0: jdbc:farrago:> !set outputformat csv
+0: jdbc:farrago:> explain plan for insert into multicluster select empno, name, 0, 10, 100, 1000, city, deptno from sales.emps; 
+'column0'
+'FennelToIteratorConverter'
+'  LcsTableAppendRel(table=[[LOCALDB, LCS, MULTICLUSTER]], operation=[INSERT], flattened=[true])'
+'    FennelCalcRel(EMPNO=[CAST($0):INTEGER], NAME=[CAST($1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], EXPR$2=[CAST(0):INTEGER], EXPR$3=[CAST(10):INTEGER], EXPR$4=[CAST(100):INTEGER], EXPR$5=[CAST(1000):INTEGER], CITY=[$4], DEPTNO=[CAST($2):INTEGER])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select * from multicluster order by c0, c1;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
+'    LcsRowScanRel(table=[[LOCALDB, LCS, MULTICLUSTER]], projection=[*], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]])'
+0: jdbc:farrago:> !set outputformat table
+0: jdbc:farrago:> 
+0: jdbc:farrago:> insert into multicluster select empno, name, 0, 10, 100, 1000, city, deptno from sales.emps; 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select c7, c1, c4, c0 from multicluster order by c0;
++-----+--------+------+------+
+| C7  |   C1   |  C4  |  C0  |
++-----+--------+------+------+
+| 0   | am     | -10  | 1    |
+| 0   | am     | -10  | 1    |
+| 1   |        | -11  | 1    |
+| 2   |        | -12  | 2    |
+| 10  | Fred   | 100  | 100  |
+| 20  | Eric   | 100  | 110  |
+| 40  | John   | 100  | 110  |
+| 20  | Wilma  | 100  | 120  |
++-----+--------+------+------+
+0: jdbc:farrago:> select c7, c1, c4, c0 from multicluster order by c0;
++-----+--------+------+------+
+| C7  |   C1   |  C4  |  C0  |
++-----+--------+------+------+
+| 0   | am     | -10  | 1    |
+| 0   | am     | -10  | 1    |
+| 1   |        | -11  | 1    |
+| 2   |        | -12  | 2    |
+| 10  | Fred   | 100  | 100  |
+| 20  | Eric   | 100  | 110  |
+| 40  | John   | 100  | 110  |
+| 20  | Wilma  | 100  | 120  |
++-----+--------+------+------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select c3, c1, c1, c4, c7 from multicluster order by c1;
++-----+--------+--------+------+-----+
+| C3  |   C1   |   C1   |  C4  | C7  |
++-----+--------+--------+------+-----+
+| 51  |        |        | -11  | 1   |
+| 52  |        |        | -12  | 2   |
+| 10  | Eric   | Eric   | 100  | 20  |
+| 10  | Fred   | Fred   | 100  | 10  |
+| 10  | John   | John   | 100  | 40  |
+| 10  | Wilma  | Wilma  | 100  | 20  |
+| 50  | am     | am     | -10  | 0   |
+| 50  | am     | am     | -10  | 0   |
++-----+--------+--------+------+-----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from multicluster order by c0, c1;
++------+--------+------+-----+------+-------+----------------+-----+
+|  C0  |   C1   |  C2  | C3  |  C4  |  C5   |       C6       | C7  |
++------+--------+------+-----+------+-------+----------------+-----+
+| 1    |        | 101  | 51  | -11  | 1001  |                | 1   |
+| 1    | am     | 100  | 50  | -10  | 1000  |                | 0   |
+| 1    | am     | 100  | 50  | -10  | 1000  |                | 0   |
+| 2    |        | 102  | 52  | -12  | 1002  |                | 2   |
+| 100  | Fred   | 0    | 10  | 100  | 1000  |                | 10  |
+| 110  | Eric   | 0    | 10  | 100  | 1000  | San Francisco  | 20  |
+| 110  | John   | 0    | 10  | 100  | 1000  | Vancouver      | 40  |
+| 120  | Wilma  | 0    | 10  | 100  | 1000  |                | 20  |
++------+--------+------+-----+------+-------+----------------+-----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> truncate table multicluster;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from multicluster;
++-----+-----+-----+-----+-----+-----+-----+-----+
+| C0  | C1  | C2  | C3  | C4  | C5  | C6  | C7  |
++-----+-----+-----+-----+-----+-----+-----+-----+
++-----+-----+-----+-----+-----+-----+-----+-----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop table multicluster;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- 2.3 Try a different source
+0: jdbc:farrago:> --
+0: jdbc:farrago:> create table threeclusters(c0 int, c1 varchar(128), c2 char(2))
+. . . . . . . . > server sys_column_store_data_server;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create foreign data wrapper flatfile_foreign_wrapper
+. . . . . . . . > library 'class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper'
+. . . . . . . . > language java;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create server flatfile_server
+. . . . . . . . > foreign data wrapper flatfile_foreign_wrapper
+. . . . . . . . > options (with_header 'yes', log_directory 'testlog');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create foreign table flatfile_table(
+. . . . . . . . >     id int not null,
+. . . . . . . . >     name varchar(50) not null,
+. . . . . . . . >     extra_field char(1) not null)
+. . . . . . . . > server flatfile_server
+. . . . . . . . > options (filename 'unitsql/med/example.csv');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !set outputformat csv
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > insert into threeclusters select * from flatfile_table;
+'column0'
+'FennelToIteratorConverter'
+'  LcsTableAppendRel(table=[[LOCALDB, LCS, THREECLUSTERS]], operation=[INSERT], flattened=[true])'
+'    FennelCalcRel(ID=[CAST($0):INTEGER], NAME=[CAST($1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], EXTRA_FIELD=[CAST($2):CHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"])'
+'      FlatFileFennelRel(table=[[LOCALDB, LCS, FLATFILE_TABLE]])'
+0: jdbc:farrago:> !set outputformat table
+0: jdbc:farrago:> 
+0: jdbc:farrago:> insert into threeclusters select * from flatfile_table;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> insert into threeclusters select * from flatfile_table;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from threeclusters order by c0;
++------+------------------------------------------+-----+
+|  C0  |                    C1                    | C2  |
++------+------------------------------------------+-----+
+| 123  | "S,"                                     | F   |
+| 123  | Jonathan Ackerman                        | A   |
+| 123  | Jonathan Ackerman                        | A   |
+| 123  | "S,"                                     | F   |
+| 234  | Peter "peg leg", Jimmy & Samantha "Sam"  | G   |
+| 234  | Grady O'Neil                             | B   |
+| 234  | Peter "peg leg", Jimmy & Samantha "Sam"  | G   |
+| 234  | Grady O'Neil                             | B   |
+| 456  | Susan, Peter and Dave                    | C   |
+| 456  | Susan, Peter and Dave                    | C   |
+| 789  | Amelia "meals" Maurice                   | E   |
+| 789  | Amelia "meals" Maurice                   | E   |
++------+------------------------------------------+-----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> truncate table threeclusters;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from threeclusters;
++-----+-----+-----+
+| C0  | C1  | C2  |
++-----+-----+-----+
++-----+-----+-----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop table threeclusters;
+0: jdbc:farrago:> drop table flatfile_table;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -------------------------------------
+0: jdbc:farrago:> -- Part 3. Cluster Projection test --
+0: jdbc:farrago:> -------------------------------------
+0: jdbc:farrago:> create table tencols(c0 int, c1 int, c2 int, c3 int, c4 int, c5 int, c6 int,
+. . . . . . . . >                      c7 int, c8 int, c9 int)
+. . . . . . . . >     server sys_column_store_data_server
+. . . . . . . . > create clustered index i_c0 on tencols(c0)
+. . . . . . . . > create clustered index i_c1_c2 on tencols(c1, c2)
+. . . . . . . . > create clustered index i_c3_c4_c5 on tencols(c3, c4, c5)
+. . . . . . . . > create clustered index i_c6_c7_c8_c9 on tencols(c6, c7, c8, c9);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !set outputformat csv
+0: jdbc:farrago:> -- should select all clusters
+0: jdbc:farrago:> explain plan for select * from tencols;
+'column0'
+'FennelToIteratorConverter'
+'  LcsRowScanRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[*], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]])'
+0: jdbc:farrago:> explain plan for select c4, c1, c8, c0 from tencols;
+'column0'
+'FennelToIteratorConverter'
+'  LcsRowScanRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[[4, 1, 8, 0]], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should select only one cluster
+0: jdbc:farrago:> explain plan for select c7, c9 from tencols;
+'column0'
+'FennelToIteratorConverter'
+'  LcsRowScanRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[[7, 9]], clustered indexes=[[I_C6_C7_C8_C9]])'
+0: jdbc:farrago:> explain plan for select c5, c4, c3 from tencols;
+'column0'
+'FennelToIteratorConverter'
+'  LcsRowScanRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[[5, 4, 3]], clustered indexes=[[I_C3_C4_C5]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should select two clusters
+0: jdbc:farrago:> explain plan for select c0, c4, c5 from tencols;
+'column0'
+'FennelToIteratorConverter'
+'  LcsRowScanRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[[0, 4, 5]], clustered indexes=[[I_C0, I_C3_C4_C5]])'
+0: jdbc:farrago:> explain plan for select c2, c6, c1, c9 from tencols;
+'column0'
+'FennelToIteratorConverter'
+'  LcsRowScanRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[[2, 6, 1, 9]], clustered indexes=[[I_C1_C2, I_C6_C7_C8_C9]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should select three clusters
+0: jdbc:farrago:> explain plan for select c8, c7, c3, c6, c2 from tencols;
+'column0'
+'FennelToIteratorConverter'
+'  LcsRowScanRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[[8, 7, 3, 6, 2]], clustered indexes=[[I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]])'
+0: jdbc:farrago:> explain plan for select c0, c1, c4, c5, c9 from tencols;
+'column0'
+'FennelToIteratorConverter'
+'  LcsRowScanRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[[0, 1, 4, 5, 9]], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]])'
+0: jdbc:farrago:> !set outputformat table
+0: jdbc:farrago:> 
+0: jdbc:farrago:> truncate table tencols;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from tencols;
++-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+| C0  | C1  | C2  | C3  | C4  | C5  | C6  | C7  | C8  | C9  |
++-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
++-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop table tencols;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --

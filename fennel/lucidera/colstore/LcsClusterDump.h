@@ -22,7 +22,9 @@
 #ifndef Fennel_LcsClusterDump_Included
 #define Fennel_LcsClusterDump_Included
 
+#include "fennel/btree/BTreeDescriptor.h"
 #include "fennel/common/TraceSource.h"
+#include "fennel/lucidera/colstore/LcsClusterAccessBase.h"
 #include <boost/enable_shared_from_this.hpp>
 
 FENNEL_BEGIN_NAMESPACE
@@ -30,7 +32,7 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * Class used to dump the contents of a cluster page using fennel trace
  */
-class LcsClusterDump : public TraceSource
+class LcsClusterDump : public LcsClusterAccessBase, public TraceSource
 {
     /**
      * The level at which tracing of cluster dump will be done.
@@ -44,7 +46,8 @@ class LcsClusterDump : public TraceSource
     PBuffer fprintVal(uint idx, PBuffer pV);
 
 public:
-    explicit LcsClusterDump(TraceLevel traceLevelInit,
+    explicit LcsClusterDump(const BTreeDescriptor &bTreeDescriptor,
+                            TraceLevel traceLevelInit,
                             SharedTraceTarget pTraceTarget, std::string name);
 
     /**
@@ -52,11 +55,11 @@ public:
      *
      * @param pageId pageid of the cluster page
      *
-     * @param pBlock pointer to the cluster page
+     * @param pHdr pointer to the cluster page
      *
      * @param szBlock number of bytes in the page
      */
-    void dump(uint64_t pageId, PBuffer pBlock, uint szBlock);
+    void dump(uint64_t pageId, PConstLcsClusterNode pHdr, uint szBlock);
 };
 
 

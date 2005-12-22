@@ -84,7 +84,8 @@ class LcsDataServer extends MedAbstractFennelDataServer
 
         // TODO jvs 26-Oct-2005:  planner rules specific to
         // column-store go here, e.g.
-        planner.addRule(new LcsClusterAppendRule());
+        planner.addRule(new LcsTableAppendRule());
+        planner.addRule(new LcsTableProjectionRule());
     }
 
     // implement FarragoMedLocalDataServer

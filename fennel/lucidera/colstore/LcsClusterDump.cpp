@@ -21,7 +21,6 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/lucidera/colstore/LcsClusterDump.h"
-#include "fennel/lucidera/colstore/LcsClusterNode.h"
 #include "fennel/lucidera/colstore/LcsBitOps.h"
 #include "fennel/tuple/TupleData.h"
 #include "fennel/common/TraceSource.h"
@@ -51,18 +50,21 @@ const uint oStr = oByte + nByte * lnByte + lnSep;
 // maximum read at one time
 const uint MaxReadBatch = 64;
 
-LcsClusterDump::LcsClusterDump(TraceLevel traceLevelInit,
+LcsClusterDump::LcsClusterDump(const BTreeDescriptor &bTreeDescriptor,
+                               TraceLevel traceLevelInit,
                                SharedTraceTarget pTraceTargetInit,
-                               string nameInit)
-                               : TraceSource(pTraceTargetInit, nameInit)
+                               string nameInit) :
+    LcsClusterAccessBase(bTreeDescriptor),
+    TraceSource(pTraceTargetInit, nameInit)
 {
     traceLevel = traceLevelInit;
 }
 
 // Dump page contents
-void LcsClusterDump::dump(uint64_t pageId, PBuffer pBlock, uint szBlock)
+void LcsClusterDump::dump(uint64_t pageId, PConstLcsClusterNode pHdr,
+                          uint szBlock)
 {
-    PLcsClusterNode pHdr;
+    PBuffer pBlock = (PBuffer) pHdr;
     uint i, j, k;
     uint16_t *pO;
     PBuffer pR;
@@ -78,22 +80,26 @@ void LcsClusterDump::dump(uint64_t pageId, PBuffer pBlock, uint szBlock)
     uint16_t v[MaxReadBatch];       // temporary space to store row indexes
     char *mode;
 
+    // set pointers for various offset arrays
+
+    nClusterCols = pHdr->nColumn;
+    setHdrOffsets(pHdr);
+
     // print header
     
-    pHdr = (PLcsClusterNode) pBlock;
     callTrace("Cluster Page Dump - PageId %ld", pageId);
     callTrace("-----------------------------");
     callTrace("Header");
     callTrace("------");
-    callTrace("nColumn:          %5u", pHdr->nColumn);
+    callTrace("nColumn:          %5u", nClusterCols);
     callTrace("firstRid:         %5u", opaqueToInt(pHdr->firstRID));
     callTrace("oBatch:           %5u", pHdr->oBatch);
     callTrace("nBatch:           %5u", pHdr->nBatch);
-    for (i = 0; i < pHdr->nColumn; i++) {
-        callTrace("lastVal[%d]:       %5u", i, pHdr->lastVal[i]);
-        callTrace("firstVal[%d]:      %5u", i, pHdr->firstVal[i]);
-        callTrace("nVal[%d]:          %5u", i, pHdr->nVal[i]);
-        callTrace("delta[%d]:         %5u", i, pHdr->delta[i]);
+    for (i = 0; i < nClusterCols; i++) {
+        callTrace("lastVal[%d]:       %5u", i, lastVal[i]);
+        callTrace("firstVal[%d]:      %5u", i, firstVal[i]);
+        callTrace("nVal[%d]:          %5u", i, nVal[i]);
+        callTrace("delta[%d]:         %5u", i, delta[i]);
     }
 
     callTrace("#############################################################");
@@ -105,8 +111,8 @@ void LcsClusterDump::dump(uint64_t pageId, PBuffer pBlock, uint szBlock)
 
         // columns are stored in alternating batches.
         // Need to find out the offset to apply to column offsets.
-        int col = i % pHdr->nColumn;
-        uint16_t delta = pHdr->delta[col];
+        int col = i % nClusterCols;
+        uint16_t deltaVal = delta[col];
         
         switch (pBatch[i].mode) {
         case LCS_COMPRESSED:
@@ -175,7 +181,7 @@ void LcsClusterDump::dump(uint64_t pageId, PBuffer pBlock, uint szBlock)
             callTrace("------------");
             pO = (uint16_t *) (pBlock + pBatch[i].oVal);
             for (j = 0; j < pBatch[i].nVal; j++)
-                fprintVal(j, pBlock + pO[j] - delta);
+                fprintVal(j, pBlock + pO[j] - deltaVal);
 
         } else if (pBatch[i].mode == LCS_FIXED) {
             // fixed size rows
@@ -192,7 +198,7 @@ void LcsClusterDump::dump(uint64_t pageId, PBuffer pBlock, uint szBlock)
             callTrace("------------------");
             pO = (uint16_t *) (pBlock + pBatch[i].oVal);
             for (j = 0; j < pBatch[i].nRow; j++)
-                fprintVal(j, pBlock + pO[j] - delta);
+                fprintVal(j, pBlock + pO[j] - deltaVal);
         }
         callTrace("#############################################################");
     }
@@ -201,12 +207,12 @@ void LcsClusterDump::dump(uint64_t pageId, PBuffer pBlock, uint szBlock)
 
     callTrace("Value List at the Bottom of the Page");
     callTrace("------------------------------------");
-    for (i = 0; i < pHdr->nColumn; i++) {
+    for (i = 0; i < nClusterCols; i++) {
         callTrace("Column #%2u", i);
         callTrace("------------");
-        if (pHdr->lastVal[i] < szBlock) {
-            pR = pBlock + pHdr->lastVal[i];
-            for (j = pHdr->nVal[i]; j > 0; j--)
+        if (lastVal[i] < szBlock) {
+            pR = pBlock + lastVal[i];
+            for (j = nVal[i]; j > 0; j--)
                 pR = fprintVal(j, pR);
         } else
             callTrace("NONE.");

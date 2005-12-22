@@ -72,8 +72,8 @@ bool LcsClusterReader::getNextClusterPageForRead(PConstLcsClusterNode &pBlock)
 
 void LcsClusterReader::init()
 {
-    clusterCols.reset(new LcsColumnReader[nCols]);
-    for (uint i = 0; i < nCols; i++)
+    clusterCols.reset(new LcsColumnReader[nClusterCols]);
+    for (uint i = 0; i < nClusterCols; i++)
         clusterCols[i].init(this, i);
 }
 
@@ -81,6 +81,12 @@ void LcsClusterReader::open()
 {
     pLeaf = NULL;
     pRangeBatches = NULL;
+}
+
+void LcsClusterReader::close()
+{
+    bTreeReader->endSearch();
+    unlockClusterPage();
 }
 
 bool LcsClusterReader::position(LcsRid rid)
@@ -149,10 +155,10 @@ bool LcsClusterReader::positionInBlock(LcsRid rid)
     // Go forward through the ranges in the current block until we find the
     // right one, or until we hit the end of the block
     while (rid >= getRangeEndRid()
-           && pRangeBatches + nCols < pBatches + pLHdr->nBatch) {
+           && pRangeBatches + nClusterCols < pBatches + pLHdr->nBatch) {
         rangeStartRid += pRangeBatches->nRow;
 
-        pRangeBatches += nCols;            // go to start of next range
+        pRangeBatches += nClusterCols;            // go to start of next range
 
         // set end rowid based on already available info (for performance
         // reasons)
@@ -171,7 +177,11 @@ bool LcsClusterReader::positionInBlock(LcsRid rid)
 
 void LcsClusterReader::setUpBlock()
 {
+    // setup pointers to lastVal, firstVal arrays
     pLeaf = (PBuffer) pLHdr;
+    setHdrOffsets(pLHdr);
+
+    assert(pLHdr->nBatch > 0);
 
     pBatches = (PLcsBatchDir) (pLeaf + pLHdr->oBatch);
     rangeStartRid = pLHdr->firstRID;

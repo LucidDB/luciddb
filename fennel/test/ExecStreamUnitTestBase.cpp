@@ -111,6 +111,50 @@ SharedExecStream ExecStreamUnitTestBase::prepareConfluenceGraph(
     return pAdaptedStream;
 }
 
+SharedExecStream ExecStreamUnitTestBase::prepareDAG(
+    ExecStreamEmbryo &srcStreamEmbryo,
+    ExecStreamEmbryo &srcBufStreamEmbryo,
+    std::vector<ExecStreamEmbryo> &interStreamEmbryos,
+    ExecStreamEmbryo &destStreamEmbryo)
+{
+    std::vector<ExecStreamEmbryo>::iterator it;
+    
+    pGraphEmbryo->saveStreamEmbryo(srcStreamEmbryo);
+    pGraphEmbryo->saveStreamEmbryo(srcBufStreamEmbryo);
+
+    // save all intermediate stream embryos
+    for (it = interStreamEmbryos.begin(); it != interStreamEmbryos.end();
+            ++it) {
+        pGraphEmbryo->saveStreamEmbryo(*it);
+    }
+
+    pGraphEmbryo->saveStreamEmbryo(destStreamEmbryo);
+    
+    pGraphEmbryo->addDataflow(
+        srcStreamEmbryo.getStream()->getName(),
+        srcBufStreamEmbryo.getStream()->getName());
+
+    // connect all inter streams to src and dest
+    for (it = interStreamEmbryos.begin(); it != interStreamEmbryos.end();
+            ++it) {
+        pGraphEmbryo->addDataflow(srcBufStreamEmbryo.getStream()->getName(),
+                                  (*it).getStream()->getName());
+        pGraphEmbryo->addDataflow((*it).getStream()->getName(),
+                                  destStreamEmbryo.getStream()->getName());
+    }
+
+    SharedExecStream pAdaptedStream =
+        pGraphEmbryo->addAdapterFor(
+            destStreamEmbryo.getStream()->getName(), 0, 
+            BUFPROV_PRODUCER);
+    pGraph->addOutputDataflow(
+        pAdaptedStream->getStreamId());
+
+    pGraphEmbryo->prepareGraph(shared_from_this(), "");
+
+    return pAdaptedStream;
+}
+
 void ExecStreamUnitTestBase::testCaseSetUp()
 {
     ExecStreamTestBase::testCaseSetUp();

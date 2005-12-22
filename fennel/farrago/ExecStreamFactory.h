@@ -113,6 +113,8 @@ protected:
     virtual void visit(ProxyMergeStreamDef &);
     virtual void visit(ProxyMockTupleStreamDef &);
     virtual void visit(ProxyAggStreamDef &);
+    virtual void visit(ProxySplitterStreamDef &);
+    virtual void visit(ProxyBarrierStreamDef &);
 
     // helpers for above visitors
 

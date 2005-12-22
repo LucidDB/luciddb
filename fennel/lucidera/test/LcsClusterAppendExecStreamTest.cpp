@@ -136,7 +136,8 @@ void LcsClusterAppendExecStreamTest::verifyClusterPages(std::string testName)
     uint blockSize =
         btreeDescriptor.segmentAccessor.pSegment->getUsablePageSize();
     LcsClusterVerifier clusterVerifier(btreeDescriptor);
-    LcsClusterDump clusterDump(TRACE_INFO, shared_from_this(), testName);
+    LcsClusterDump clusterDump(btreeDescriptor, TRACE_INFO, shared_from_this(),
+                               testName);
 
     // read every cluster page
 
@@ -149,7 +150,7 @@ void LcsClusterAppendExecStreamTest::verifyClusterPages(std::string testName)
         // make sure the rid on the btree matches the rid on the cluster
         // page
         BOOST_CHECK_EQUAL(pageData.bTreeRid, pBlock->firstRID);
-        clusterDump.dump(opaqueToInt(pageData.clusterPageId), (PBuffer) pBlock,
+        clusterDump.dump(opaqueToInt(pageData.clusterPageId), pBlock,
                          blockSize);
     } while (found = clusterVerifier.getNextClusterPageForRead(pBlock));
 }
@@ -183,6 +184,9 @@ void LcsClusterAppendExecStreamTest::testLoadSingleCol(
     lcsAppendParams.pCacheAccessor = pCache;
     lcsAppendParams.pSegment = pLinearSegment;
     
+    lcsAppendParams.overwrite = false;
+    lcsAppendParams.inputProj.push_back(0);
+
     // initialize the btree parameter portion of lcsAppendParams
     // BTree tuple desc only has one column
     (lcsAppendParams.tupleDesc).push_back(attrDesc_int64);
@@ -193,19 +197,20 @@ void LcsClusterAppendExecStreamTest::testLoadSingleCol(
 
     // output only one value(rows inserted)
     lcsAppendParams.outputTupleDesc.push_back(attrDesc_int64);
-    lcsAppendParams.overwrite = false;
+
     lcsAppendParams.pRootMap = 0;
+
+    // Set up BTreeExecStreamParams using default values from BTreeDescriptor.
+    lcsAppendParams.segmentId = btreeDescriptor.segmentId;
+    lcsAppendParams.pageOwnerId = btreeDescriptor.pageOwnerId;
     
     // setup temporary btree descriptor to get an empty page to start the btree
-
     btreeDescriptor.segmentAccessor.pSegment = lcsAppendParams.pSegment;
     btreeDescriptor.segmentAccessor.pCacheAccessor = pCache;
     btreeDescriptor.tupleDescriptor = lcsAppendParams.tupleDesc;
     btreeDescriptor.keyProjection = lcsAppendParams.keyProj;
     btreeDescriptor.rootPageId = newRoot ? NULL_PAGE_ID : savedRootPageId;
-    btreeDescriptor.segmentId = lcsAppendParams.segmentId;
-    btreeDescriptor.pageOwnerId = lcsAppendParams.pageOwnerId;
-    
+
     BTreeBuilder builder(btreeDescriptor, pLinearSegment);
 
     // if BTree root not yet setup
@@ -274,7 +279,11 @@ void LcsClusterAppendExecStreamTest::testLoadMultiCol(
 
     // output only one value(rows inserted)
     lcsAppendParams.outputTupleDesc.push_back(attrDesc_int64);
+
     lcsAppendParams.overwrite = false;
+    for (uint i = 0; i < nCols; i++) {
+        lcsAppendParams.inputProj.push_back(i);
+    }
     lcsAppendParams.pRootMap = 0;
     
     // setup temporary btree descriptor to get an empty page to start the btree

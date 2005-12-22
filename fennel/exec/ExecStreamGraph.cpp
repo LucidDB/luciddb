@@ -30,8 +30,8 @@
 #include "fennel/segment/Segment.h"
 #include "fennel/exec/DynamicParam.h"
 
-
 #include <boost/bind.hpp>
+#include <boost/graph/strong_components.hpp>
 #include <boost/graph/topological_sort.hpp>
 
 FENNEL_BEGIN_CPPFILE("$Id$");
@@ -555,6 +555,17 @@ std::vector<SharedExecStream> ExecStreamGraphImpl::getSortedStreams()
         sortStreams();
     }
     return sortedStreams;
+}
+
+bool ExecStreamGraphImpl::checkForNoCycles()
+{
+    int numVertices = boost::num_vertices(graphRep);
+
+    // if # strong components is < # vertices, then there must be at least
+    // one cycle
+    std::vector<int> component(numVertices);
+    int nStrongComps = boost::strong_components(graphRep, &component[0]);
+    return (nStrongComps >= numVertices);
 }
 
 FENNEL_END_CPPFILE("$Id$");
