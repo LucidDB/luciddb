@@ -21,7 +21,7 @@
 -->
 
 <project name="benchmark" basedir="." default="test">
-  <dirname property="sqlserver.dir" file="${ant.file.sqlserver}" />
+  <dirname property="bench.dir" file="${ant.file.bench}" />
 
   <property name="open.dir" location="../../../.."/>
   <fail unless="open.dir" />
@@ -36,7 +36,7 @@
   <property name="classes.dir" location="${open.dir}/luciddb/classes" />
 
   <!-- directory in which sql tests are generated -->
-  <property name="gensql.dir" value="${sqlserver.dir}/gen" />
+  <property name="gensql.dir" value="${bench.dir}/gen" />
 
   <!-- classpath for running tests via ant -->
   <path id="test.classpath">
@@ -53,6 +53,7 @@
     <filter token="open.dir" value="${open.dir}"/>
 
     <!-- generate config.properties file -->
+    <!-- use prop.oracle as default; should set through cmdline -->
     <property name="config.prop" value="prop.oracle"/>
     <copy file="${config.prop}" tofile="config.properties" 
       overwrite="true" filtering="true">
@@ -64,7 +65,7 @@
     <!-- generate all sql files -->
     <copy todir="${gensql.dir}tmp" overwrite="true"
       filtering="true">
-      <fileset dir="${sqlserver.dir}">
+      <fileset dir="${bench.dir}">
         <include name="**/*.tmpl"/>
       </fileset>
       <mapper type="glob" from="*.tmpl" to="*"/>
@@ -77,7 +78,7 @@
       <fileset dir="${gensql.dir}tmp"/>
       <filterchain>
         <tokenfilter>
-          <replaceregex pattern="^.*. . . >.*@.*@.*" replace=". . . . . . . . > " flags="s"/>
+          <replaceregex pattern="^.*. . >.*@.*@.*" replace=". . . . . . . . > " flags="s"/>
           <replaceregex pattern="^.*@.*@.*" replace="" flags="s"/>
         </tokenfilter>
       </filterchain>
@@ -86,12 +87,17 @@
   </target>
 
   <target name="test">
+    <property name="test-suite" value="test.xml"/>
     <antcall target="restoreCatalog"/>
     <antcall target="gen-sql"/>
-    <blackhawk.fork basedir="${sqlserver.dir}" 
-      testscript="test.xml"
+    <blackhawk.fork basedir="${bench.dir}" 
+      testscript="${test-suite}"
       classpathref="test.classpath"/>
   </target>  
+
+  <target name="clean">
+    <delete dir="${gensql.dir}"/>
+  </target>
 
   <target name="restoreCatalog">
     <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>

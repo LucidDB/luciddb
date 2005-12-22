@@ -1,0 +1,86 @@
+create foreign table @name_prefix@_schema."bench100" (
+"kseq" integer,
+"k2" integer,
+"k4" integer,
+"k5" integer,
+"k10" integer,
+"k25" integer,
+"k100" integer,
+"k1k" integer,
+"k10k" integer,
+"k40k" integer,
+"k100k" integer,
+"k250k" integer,
+"k500k" integer
+)
+server @SERVER_NAME@
+options (
+SCHEMA_NAME '@SCHEMA@',
+@TABLE_NAME@ '@ff_dir@bench100@file_ext@'
+);
+
+
+create foreign table @name_prefix@_schema."bench10K" (
+"kseq" integer,
+"k2" integer,
+"k4" integer,
+"k5" integer,
+"k10" integer,
+"k25" integer,
+"k100" integer,
+"k1k" integer,
+"k10k" integer,
+"k40k" integer,
+"k100k" integer,
+"k250k" integer,
+"k500k" integer
+)
+server @SERVER_NAME@
+options (
+SCHEMA_NAME '@SCHEMA@',
+@TABLE_NAME@ '@ff_dir@bench10K@file_ext@'
+);
+
+
+create foreign table @name_prefix@_schema."bench100K" (
+"kseq" integer,
+"k2" integer,
+"k4" integer,
+"k5" integer,
+"k10" integer,
+"k25" integer,
+"k100" integer,
+"k1k" integer,
+"k10k" integer,
+"k40k" integer,
+"k100k" integer,
+"k250k" integer,
+"k500k" integer
+)
+server @SERVER_NAME@
+options (
+SCHEMA_NAME '@SCHEMA@',
+@TABLE_NAME@ '@ff_dir@bench100K@file_ext@'
+);
+
+
+create foreign table @name_prefix@_schema."bench1M" (
+"kseq" integer,
+"k2" integer,
+"k4" integer,
+"k5" integer,
+"k10" integer,
+"k25" integer,
+"k100" integer,
+"k1k" integer,
+"k10k" integer,
+"k40k" integer,
+"k100k" integer,
+"k250k" integer,
+"k500k" integer
+)
+server @SERVER_NAME@
+options (
+SCHEMA_NAME '@SCHEMA@',
+@TABLE_NAME@ '@ff_dir@bench1M@file_ext@'
+);
