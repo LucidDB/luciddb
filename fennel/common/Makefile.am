@@ -1,26 +1,21 @@
 include $(top_srcdir)/am_include.mk
 
+# NOTE jvs 22-Dec-2005:  we used to try to use timestamps to
+# regenerate resources automatically, but it caused too many problems
+# with branch/merge.
 
-# Only generate these files if they are out-of-dat w.r.t. the resource XML
-# document.
-FFennelResource.h FennelResource.cpp: FennelResource.xml
+# Regenerate resources only when explicitly requested
+generateResources:
 	@if [ "!" -z "$(ANT_HOME)" ]; then \
-		ant -f buildResources.xml generate.resources; \
+		ant -f buildResources.xml execute.resgen; \
 	else \
-		if [ -z "$(SKIP_RESOURCE_GEN)" ]; then \
 echo; \
-echo "FennelResource.h or FennelResource.cpp is out of date with respect to"; \
-echo "FennelResource.xml. In order to regenerate them, Apache Ant must be"; \
+echo "In order to regenerate FennelResource code, Apache Ant must be"; \
 echo "installed, the ANT_HOME environment variable set, and the Eigenbase"; \
 echo "Resource Generator (ResGen) JAR files (eigenbase-resgen.jar and"; \
-echo "eigenbase-xom.jar) must be in your CLASSPATH environment variable. If"; \
-echo "you wish to build Fennel without updating these files set"; \
-echo "SKIP_RESOURCE_GEN=1 and re-run make (note: your build may still fail"; \
-echo "if checked-in code uses resources that don't exist in your build due"; \
-echo "to this error)."; \
+echo "eigenbase-xom.jar) must be in your CLASSPATH environment variable."; \
 echo; \
-			exit 1; \
-		fi \
+exit 1; \
 	fi
 
 noinst_LTLIBRARIES=libcommon.la
