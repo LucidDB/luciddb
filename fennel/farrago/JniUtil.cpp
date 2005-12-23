@@ -26,6 +26,7 @@
 #include "fennel/farrago/JavaExcn.h"
 #include "fennel/common/FennelResource.h"
 #include "fennel/common/ConfigMap.h"
+#include "fennel/common/Backtrace.h"
 
 #ifdef __MINGW32__
 #include <process.h>
@@ -161,6 +162,7 @@ void JniUtil::shutdown()
 
 jint JniUtil::init(JavaVM *pVmInit)
 {
+    AutoBacktrace::install();           // print backtrace on fatal error
     pVm = pVmInit;
     JniEnvAutoRef pEnv;
     jclass classClass = pEnv->FindClass("java/lang/Class");
