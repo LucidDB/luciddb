@@ -576,7 +576,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                 RelOptUtil.dumpPlan(
                     "Plan before flattening",
                     rootRel,
-                    false));
+                    false,
+                    SqlExplainLevel.ALL_ATTRIBUTES));
         }
         originalRowType = rootRel.getRowType();
         rootRel = flattenTypes(rootRel, true);
@@ -585,7 +586,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                 RelOptUtil.dumpPlan(
                     "Plan after flattening",
                     rootRel,
-                    false));
+                    false,
+                    SqlExplainLevel.ALL_ATTRIBUTES));
         }
         rootRel = super.optimize(rootRel);
         if (dumpPlan) {
@@ -593,7 +595,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                 RelOptUtil.dumpPlan(
                     "Plan after optimization",
                     rootRel,
-                    false));
+                    false,
+                    SqlExplainLevel.ALL_ATTRIBUTES));
         }
         return rootRel;
     }

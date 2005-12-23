@@ -182,11 +182,15 @@ Farrago-specific mechanisms for system extensibility
 LEFT/RIGHT/INNER/CROSS JOIN, old-style comma list, nested queries,
 and explicit TABLE references.
 
-<li>EXPLAIN PLAN [{WITH|WITHOUT} IMPLEMENTATION] [AS XML] FOR
+<li>EXPLAIN PLAN [ { EXCLUDING | INCLUDING [ ALL ] } ATTRIBUTES ]
+[{WITH|WITHOUT} IMPLEMENTATION] [AS XML] FOR
 <em>query-or-DML-statement</em>; shows optimizer plan.  WITHOUT
 IMPLEMENTATION yields unoptimized abstract relational plan.  Default
 is WITH IMPLEMENTATION, which yields optimized plan with all physical
 operators.  AS XML yields detailed output in element-oriented XML.
+EXCLUDING ATTRIBUTES shows relational operator names only.  
+INCLUDING ATTRIBUTES is the default.  INCLUDING ALL ATTRIBUTES provides
+additional attributes such as cost.
 
 <li>row expressions:  (TODO:  list)
 

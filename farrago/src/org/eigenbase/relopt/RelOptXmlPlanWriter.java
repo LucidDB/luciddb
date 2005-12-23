@@ -26,6 +26,7 @@ import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.AbstractRelNode;
 import org.eigenbase.xom.XMLOutput;
 import org.eigenbase.rex.RexNode;
+import org.eigenbase.sql.*;
 
 import java.io.PrintWriter;
 
@@ -39,9 +40,13 @@ public class RelOptXmlPlanWriter extends RelOptPlanWriter
     private final XMLOutput xmlOutput;
     boolean generic = true;
 
-    public RelOptXmlPlanWriter(PrintWriter pw)
+    // TODO jvs 23-Dec-2005:  honor detail level.  The current inheritance
+    // structure makes this difficult without duplication; need to factor
+    // out the filtering of attributes before rendering.
+
+    public RelOptXmlPlanWriter(PrintWriter pw, SqlExplainLevel detailLevel)
     {
-        super(pw);
+        super(pw, detailLevel);
         xmlOutput = new XMLOutput(this);
         xmlOutput.setGlob(true);
         xmlOutput.setCompact(false);

@@ -36,21 +36,24 @@ public class SqlExplain extends SqlCall
 
     // constants representing operand positions
     public static final int EXPLICANDUM_OPERAND = 0;
-    public static final int WITH_IMPLEMENTATION_OPERAND = 1;
-    private static final int AS_XML_OPERAND = 2;
-    public static final int OPERAND_COUNT = 3;
+    public static final int DETAIL_LEVEL_OPERAND = 1;
+    public static final int WITH_IMPLEMENTATION_OPERAND = 2;
+    public static final int AS_XML_OPERAND = 3;
+    public static final int OPERAND_COUNT = 4;
 
     //~ Constructors ----------------------------------------------------------
 
     public SqlExplain(
         SqlSpecialOperator operator,
         SqlNode explicandum,
+        SqlLiteral detailLevel,
         SqlLiteral withImplementation,
         SqlLiteral asXml,
         SqlParserPos pos)
     {
         super(operator, new SqlNode[OPERAND_COUNT], pos);
         operands[EXPLICANDUM_OPERAND] = explicandum;
+        operands[DETAIL_LEVEL_OPERAND] = detailLevel;
         operands[WITH_IMPLEMENTATION_OPERAND] = withImplementation;
         operands[AS_XML_OPERAND] = asXml;
     }
@@ -66,11 +69,16 @@ public class SqlExplain extends SqlCall
     }
 
     /**
-     * Gets the source SELECT expression for the data to be inserted.  It is
-     * only safe to call this after non-SELECT source expressions (e.g. VALUES)
-     * have been expanded by SqlValidator.performUnconditionalRewrites.
-     *
-     * @return the source SELECT for the data to be inserted
+     * @return detail level to be generated
+     */
+    public SqlExplainLevel getDetailLevel()
+    {
+        return (SqlExplainLevel)
+            SqlLiteral.enumValue(operands[DETAIL_LEVEL_OPERAND]);
+    }
+
+    /**
+     * @return whether physical plan implementation should be returned
      */
     public boolean withImplementation()
     {
@@ -92,6 +100,17 @@ public class SqlExplain extends SqlCall
         int rightPrec)
     {
         writer.keyword("EXPLAIN PLAN");
+        switch(getDetailLevel()) {
+        case NO_ATTRIBUTES:
+            writer.keyword("EXCLUDING ATTRIBUTES");
+            break;
+        case DIGEST_ATTRIBUTES:
+            writer.keyword("INCLUDING ATTRIBUTES");
+            break;
+        case ALL_ATTRIBUTES:
+            writer.keyword("INCLUDING ALL ATTRIBUTES");
+            break;
+        }
         if (!withImplementation()) {
             writer.keyword("WITHOUT IMPLEMENTATION");
         }
