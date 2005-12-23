@@ -1,5 +1,6 @@
 0: jdbc:luciddb:> set schema 's';
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- overflows. change from INTEGER to NUMERIC later.
 0: jdbc:luciddb:> select sum("k500k") from bench100K group by "k2" order by 1;
 +-------------+
 |   EXPR$0    |
@@ -126,5 +127,193 @@
 | 23298916  |
 +-----------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select max("k10k") from bench100K group by "k2" order by 1;
++---------+
+| EXPR$0  |
++---------+
+| 9995    |
+| 9999    |
++---------+
+0: jdbc:luciddb:> select max("k10k") from bench100K group by "k5" order by 1;
++---------+
+| EXPR$0  |
++---------+
+| 9975    |
+| 9994    |
+| 9995    |
+| 9999    |
+| 9999    |
++---------+
+0: jdbc:luciddb:> select max("k10k") from bench100K group by "k10" order by 1;
++---------+
+| EXPR$0  |
++---------+
+| 9962    |
+| 9967    |
+| 9975    |
+| 9989    |
+| 9990    |
+| 9994    |
+| 9995    |
+| 9997    |
+| 9999    |
+| 9999    |
++---------+
+0: jdbc:luciddb:> select max("k10k") from bench100K group by "k25" order by 1;
++---------+
+| EXPR$0  |
++---------+
+| 9934    |
+| 9948    |
+| 9952    |
+| 9960    |
+| 9961    |
+| 9961    |
+| 9967    |
+| 9967    |
+| 9967    |
+| 9967    |
+| 9971    |
+| 9973    |
+| 9979    |
+| 9986    |
+| 9989    |
+| 9990    |
+| 9990    |
+| 9992    |
+| 9994    |
+| 9994    |
+| 9995    |
+| 9995    |
+| 9997    |
+| 9999    |
+| 9999    |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select min("k10k") from bench100K group by "k2" order by 1;
++---------+
+| EXPR$0  |
++---------+
+| 3       |
+| 4       |
++---------+
+0: jdbc:luciddb:> select min("k10k") from bench100K group by "k5" order by 1;
++---------+
+| EXPR$0  |
++---------+
+| 3       |
+| 3       |
+| 4       |
+| 4       |
+| 23      |
++---------+
+0: jdbc:luciddb:> select min("k10k") from bench100K group by "k10" order by 1;
++---------+
+| EXPR$0  |
++---------+
+| 3       |
+| 3       |
+| 4       |
+| 5       |
+| 9       |
+| 21      |
+| 22      |
+| 27      |
+| 29      |
+| 31      |
++---------+
+0: jdbc:luciddb:> select min("k10k") from bench100K group by "k25" order by 1;
++---------+
+| EXPR$0  |
++---------+
+| 3       |
+| 3       |
+| 4       |
+| 4       |
+| 4       |
+| 5       |
+| 5       |
+| 5       |
+| 9       |
+| 10      |
+| 19      |
+| 28      |
+| 29      |
+| 31      |
+| 35      |
+| 38      |
+| 40      |
+| 41      |
+| 48      |
+| 49      |
+| 49      |
+| 52      |
+| 60      |
+| 62      |
+| 97      |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count("k10k") from bench100K group by "k2" order by 1;
++---------+
+| EXPR$0  |
++---------+
+| 49684   |
+| 50316   |
++---------+
+0: jdbc:luciddb:> select count("k10k") from bench100K group by "k5" order by 1;
++---------+
+| EXPR$0  |
++---------+
+| 19638   |
+| 19838   |
+| 19965   |
+| 20153   |
+| 20406   |
++---------+
+0: jdbc:luciddb:> select count("k10k") from bench100K group by "k10" order by 1;
++---------+
+| EXPR$0  |
++---------+
+| 9234    |
+| 9553    |
+| 9688    |
+| 9770    |
+| 9837    |
+| 9986    |
+| 10319   |
+| 10328   |
+| 10544   |
+| 10741   |
++---------+
+0: jdbc:luciddb:> select count("k10k") from bench100K group by "k25" order by 1;
++---------+
+| EXPR$0  |
++---------+
+| 3516    |
+| 3596    |
+| 3689    |
+| 3700    |
+| 3734    |
+| 3811    |
+| 3828    |
+| 3838    |
+| 3863    |
+| 3895    |
+| 3918    |
+| 3988    |
+| 3998    |
+| 4023    |
+| 4061    |
+| 4073    |
+| 4086    |
+| 4181    |
+| 4209    |
+| 4227    |
+| 4240    |
+| 4251    |
+| 4307    |
+| 4437    |
+| 4531    |
++---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit
