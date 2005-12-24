@@ -201,6 +201,14 @@ class LcsDataServer extends MedAbstractFennelDataServer
             FennelRelUtil.createTupleProjection(
                 repos,
                 FennelRelUtil.newIotaProjection(1)));
+
+        // Tell Fennel how to drop the cluster pages together with
+        // the BTree.  The constant 1 below projects the PageId pointer
+        // in leaf tuples.
+        cmd.setLeafPageIdProj(
+            FennelRelUtil.createTupleProjection(
+                repos,
+                new Integer [] { 1 }));
     }
 }
 

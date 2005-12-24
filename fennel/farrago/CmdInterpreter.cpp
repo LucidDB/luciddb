@@ -241,18 +241,16 @@ void CmdInterpreter::visit(ProxyCmdCreateIndex &cmd)
 
 void CmdInterpreter::visit(ProxyCmdTruncateIndex &cmd)
 {
-    // block checkpoints
-    SharedDatabase pDb = getDbHandle(cmd.getDbHandle())->pDb;
-    SXMutexSharedGuard actionMutexGuard(
-        pDb->getCheckpointThread()->getActionMutex());
-    
-    BTreeDescriptor treeDescriptor;
-    getBTreeForIndexCmd(cmd,PageId(cmd.getRootPageId()),treeDescriptor);
-    BTreeBuilder builder(treeDescriptor);
-    builder.truncate(false);
+    dropOrTruncateIndex(cmd, false);
 }
 
 void CmdInterpreter::visit(ProxyCmdDropIndex &cmd)
+{
+    dropOrTruncateIndex(cmd, true);
+}
+
+void CmdInterpreter::dropOrTruncateIndex(
+    ProxyCmdDropIndex &cmd, bool drop)
 {
     // block checkpoints
     SharedDatabase pDb = getDbHandle(cmd.getDbHandle())->pDb;
@@ -261,8 +259,13 @@ void CmdInterpreter::visit(ProxyCmdDropIndex &cmd)
     
     BTreeDescriptor treeDescriptor;
     getBTreeForIndexCmd(cmd,PageId(cmd.getRootPageId()),treeDescriptor);
+    TupleProjection leafPageIdProj;
+    if (cmd.getLeafPageIdProj()) {
+        CmdInterpreter::readTupleProjection(
+            leafPageIdProj, cmd.getLeafPageIdProj());
+    }
     BTreeBuilder builder(treeDescriptor);
-    builder.truncate(true);
+    builder.truncate(drop, leafPageIdProj.size() ? &leafPageIdProj : NULL);
 }
 
 void CmdInterpreter::visit(ProxyCmdBeginTxn &cmd)
