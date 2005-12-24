@@ -74,8 +74,8 @@ public class FarragoServerTest extends TestCase
         FarragoJdbcEngineDriver serverDriver = new FarragoJdbcEngineDriver();
         server.start(serverDriver);
 
-        // NOTE:  can't call DriverManager.connect here, because that would
-        // deadlock
+        // NOTE: can't call DriverManager.getConnection here, because that
+        // would deadlock
         FarragoJdbcClientDriver clientDriver = new FarragoJdbcClientDriver();
         Connection connection =
             clientDriver.connect(
