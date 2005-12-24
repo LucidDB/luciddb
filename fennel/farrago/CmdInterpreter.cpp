@@ -29,6 +29,7 @@
 #include "fennel/cache/CacheParams.h"
 #include "fennel/common/ConfigMap.h"
 #include "fennel/common/FennelExcn.h"
+#include "fennel/common/Backtrace.h"
 #include "fennel/btree/BTreeBuilder.h"
 #include "fennel/db/Database.h"
 #include "fennel/db/CheckpointThread.h"
@@ -165,6 +166,8 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
     JniUtil::incrementHandleCount(DBHANDLE_TRACE_TYPE_STR, pDbHandle.get());
 
     pDbHandle->pTraceTarget.reset(new JavaTraceTarget());
+    // on a fatal error, echo the backtrace to the log file:
+    AutoBacktrace::setTraceTarget(pDbHandle->pTraceTarget);
 
     SharedDatabase pDb = Database::newDatabase(
         pCache,
@@ -193,6 +196,7 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
 void CmdInterpreter::visit(ProxyCmdCloseDatabase &cmd)
 {
     DbHandle *pDbHandle = getDbHandle(cmd.getDbHandle());
+    AutoBacktrace::setTraceTarget();
     deleteAndNullify(pDbHandle);
 }
 
