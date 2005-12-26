@@ -20,6 +20,7 @@ exit 1; \
 
 noinst_LTLIBRARIES=libcommon.la
 libcommon_la_SOURCES=\
+Backtrace.cpp \
 ByteArrayInputStream.cpp \
 ByteArrayOutputStream.cpp \
 ByteInputStream.cpp \
@@ -47,3 +48,10 @@ DESIGN_DOCS=CommonTerms.cpp
 EXTRA_DIST=$(DESIGN_DOCS)
 TAGS_DEPENDENCIES=$(DESIGN_DOCS)
 ETAGS_ARGS=$(DESIGN_DOCS)
+
+# a trivial standalone test of Backtrace
+noinst_PROGRAMS = testBacktrace
+testBacktrace_SOURCES=testBacktrace.cpp
+testBacktrace_DEPENDENCIES=Backtrace.cpp Backtrace.h
+testBacktrace_LDADD=-lcommon
+

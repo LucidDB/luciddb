@@ -104,9 +104,16 @@ ExecStreamGraphImpl::addVertex(SharedExecStream pStream)
     Vertex v = newVertex();
     boost::put(boost::vertex_data, graphRep, v, pStream);
     if (pStream) {
+        // Note that pStream can be null for an exterior node in a farrago graph.
+        // Guard against duplicating a stream name.
+        const std::string& name = pStream->getName();
+        if (name.length() == 0)
+            permFail("cannot add nameless stream to graph " << this);
+        if (findStream(name))
+            permFail("cannot add stream " << name << " to graph " << this);
         pStream->id = v;
         pStream->pGraph = this;
-        streamMap[pStream->getName()] = pStream->getStreamId();
+        streamMap[name] = pStream->getStreamId();
     }
     return v;
 }
@@ -114,8 +121,6 @@ ExecStreamGraphImpl::addVertex(SharedExecStream pStream)
 void ExecStreamGraphImpl::addStream(
     SharedExecStream pStream)
 {
-    assert(pStream->getName().length());
-    assert(findStream(pStream->getName()).get()==NULL);
     (void) addVertex(pStream);
 }
 
@@ -123,8 +128,8 @@ void ExecStreamGraphImpl::removeStream(ExecStreamId id)
 {
     Vertex v = boost::vertices(graphRep).first[id];
     SharedExecStream pStream = getStreamFromVertex(v);
-    assert(pStream->pGraph == this);
-    assert(pStream->id == id);
+    permAssert(pStream->pGraph == this);
+    permAssert(pStream->id == id);
 
     streamMap.erase(pStream->getName());
     removeFromStreamOutMap(pStream);
@@ -202,7 +207,7 @@ void ExecStreamGraphImpl::mergeFrom(ExecStreamGraph& src)
         mergeFrom(*p);
         return;
     }
-    assert(false);
+    permFail("unknown subtype of ExecStreamGraph");
 }
 
 void ExecStreamGraphImpl::mergeFrom(
@@ -212,15 +217,15 @@ void ExecStreamGraphImpl::mergeFrom(
         mergeFrom(*p, nodes);
         return;
     }
-    assert(false);
+    permFail("unknown subtype of ExecStreamGraph");
 }
 
 void ExecStreamGraphImpl::mergeFrom(ExecStreamGraphImpl& src)
 {
     // Since the identity of the added graph SRC will be lost, at this time both
     // graphs must be prepared, and must both be open or both be closed.
-    assert(isPrepared && src.isPrepared);
-    assert(isOpen == src.isOpen);
+    permAssert(isPrepared && src.isPrepared);
+    permAssert(isOpen == src.isOpen);
 
     // map a source vertex ID to the ID of the copied target vertex 
     std::map<Vertex, Vertex> vmap;
@@ -255,8 +260,8 @@ void ExecStreamGraphImpl::mergeFrom(
     ExecStreamGraphImpl& src, std::vector<ExecStreamId>const& nodes)
 {
     // both graphs must be prepared, and must both be open or both be closed.
-    assert(isPrepared && src.isPrepared);
-    assert(isOpen == src.isOpen);
+    permAssert(isPrepared && src.isPrepared);
+    permAssert(isOpen == src.isOpen);
 
     // map a source vertex ID to the ID of the copied target vertex 
     std::map<Vertex, Vertex> vmap;
@@ -338,7 +343,7 @@ void ExecStreamGraphImpl::interposeStream(
     ExecStreamId interposedId)
 {
     SharedExecStream pLastStream = findLastStream(name, iOutput);
-    assert(pLastStream.get());
+    permAssert(pLastStream.get());
     streamOutMap[std::make_pair(name, iOutput)] = interposedId;
     addDataflow(
         pLastStream->getStreamId(),
@@ -417,7 +422,7 @@ void ExecStreamGraphImpl::bindStreamBufAccessors(SharedExecStream pStream)
 
 void ExecStreamGraphImpl::open()
 {
-    assert(!isOpen);
+    permAssert(!isOpen);
     isOpen = true;
     needsClose = true;
 
@@ -550,7 +555,7 @@ SharedExecStreamBufAccessor ExecStreamGraphImpl::getStreamOutputAccessor(
 
 std::vector<SharedExecStream> ExecStreamGraphImpl::getSortedStreams()
 {
-    assert(isPrepared);
+    permAssert(isPrepared);
     if (sortedStreams.empty()) {
         sortStreams();
     }

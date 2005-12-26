@@ -24,6 +24,7 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/test/TestBase.h"
 #include "fennel/common/FileSystem.h"
+#include "fennel/common/Backtrace.h"
 
 #ifdef __CYGWIN__
 #include <locale>
@@ -119,6 +120,14 @@ TestSuite *TestBase::releaseTestSuite()
 void TestBase::beforeTestCase(std::string testCaseName)
 {
     notifyTrace(testName,TRACE_INFO,"ENTER:  " + testCaseName);
+
+    // Install the AutoBacktrace signal handler now, after
+    // boost::execution_monitor::catch_signals() has installed its own, so that on
+    // SIGABRT AutoBacktrace goes first, prints the backtrace, then chains to boost,
+    // which handles the error.
+    AutoBacktrace::setOutputStream();
+    AutoBacktrace::setTraceTarget(shared_from_this());
+    AutoBacktrace::install();
 }
 
 void TestBase::afterTestCase(std::string testCaseName)
