@@ -27,6 +27,10 @@
 
 #include <sstream>
 
+#ifndef __MINGW32__
+#include <cxxabi.h>
+#endif
+
 using std::endl;
 using std::ostream;
 
@@ -34,8 +38,9 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 
 Backtrace::~Backtrace()
 {
-    if (ownbuf)
+    if (ownbuf) {
         delete[] addrbuf;
+    }
 }
 
 Backtrace::Backtrace(size_t maxdepth) 
@@ -60,21 +65,112 @@ void Backtrace::print(int fd) const
 {
 #ifndef __MINGW32__
     // skip 1st stack frame (the Backtrace constructor)
-    if (depth > 1)
+    if (depth > 1) {
         backtrace_symbols_fd(addrbuf+1, depth-1, fd);
+    }
 #endif
 }
 
-// TODO: be more readable. Imitate gdb backtrace: demangle, include source code line
-// numbers; omit hex addresses.
+#ifndef __MINGW32__
+int Backtrace::lookupLibraryBase(
+    struct dl_phdr_info *pInfo, size_t size, void *pData)
+{
+    LibraryInfo *pLibInfo = reinterpret_cast<LibraryInfo *>(pData);
+    if (strcmp(pLibInfo->pImageName, pInfo->dlpi_name) == 0) {
+        pLibInfo->baseAddress = pInfo->dlpi_addr;
+        return 1;
+    }
+    return 0;
+}
+#endif
+
+// NOTE jvs 25-Dec-2005:  we could theoretically call the addr2line utility
+// from this method to produce source file/line numbers directly, but
+// that seems like tempting fate given the handler context in which this
+// method may be called.  Instead, we defer that to the
+// open/util/bin/analyzeBacktrace utility.
 ostream& Backtrace::print(ostream& os) const
 {
 #ifndef __MINGW32__
     char **syms = backtrace_symbols(addrbuf, depth);
     if (syms) {
         // skip 1st stack frame (the Backtrace constructor)
-        for (int i = 1; i < depth; i++)
-            os << syms[i] << endl;
+        for (int i = 1; i < depth; i++) {
+            // Attempt to demangle C++ function names.
+            // Input is of the form "imagename(mangledname+offset) [0xaddr]"
+            
+            char *pSymbol = syms[i];
+            char *pLeftParen = strchr(pSymbol, '(');
+            char *pPlus = strchr(pSymbol, '+');
+            char *pLeftBracket = strchr(pSymbol, '[');
+            char *pRightBracket = strchr(pSymbol, ']');
+
+            // Special case:  unmangled C names like 'main' can't
+            // go through the demangler, so skip anything that
+            // doesn't start with an underscore
+            if (pLeftParen && (pLeftParen[1] != '_')) {
+                pLeftParen = NULL;
+            }
+            
+            if (!pLeftParen || !pPlus || (pLeftParen > pPlus)
+                || !pLeftBracket || !pRightBracket
+                || (pLeftBracket > pRightBracket)
+                || (pPlus > pLeftBracket))
+            {
+                // Unrecognized format; dump as is.
+                os << pSymbol << endl;
+                continue;
+            }
+
+            // attempt to determine the library base address if the
+            // absolute address is in a region of memory mapped to a .so;
+            // lookup "imagename" in list of loaded libraries
+            *pLeftParen = 0;
+            LibraryInfo libInfo;
+            libInfo.baseAddress = 0;
+            libInfo.pImageName = pSymbol;
+            dl_iterate_phdr(lookupLibraryBase, &libInfo);
+            
+            // dump everything up to lparen
+            os << pSymbol << '(';
+
+            // restore lparen we zeroed out earlier
+            *pLeftParen = '(';
+
+            *pPlus = 0;
+            int status = -3;
+            char *pDemangled =
+                abi::__cxa_demangle(pLeftParen + 1, NULL, NULL, &status);
+            if (status || !pDemangled) {
+                // non-zero status means demangling failed;
+                // use mangled name instead
+                os << pLeftParen + 1;
+            } else {
+                os << pDemangled;
+                free(pDemangled);
+            }
+            // dump plus and everything up to lbracket
+            *pPlus = '+';
+            *pLeftBracket = 0;
+            os << pPlus;
+            *pLeftBracket = '[';
+            os << '[';
+
+            // apply .so base address bias if relevant and available
+            *pRightBracket = 0;
+            unsigned long addr = strtoul(
+                pLeftBracket + 1, NULL, 16);
+            *pRightBracket = ']';
+            if (libInfo.baseAddress) {
+                addr -= libInfo.baseAddress;
+            }
+            os << "0x";
+            os << std::hex;
+            os << addr;
+            os << std::dec;
+            os << ']';
+            os << endl;
+        }
         free(syms);
     }
 #endif
@@ -83,8 +179,9 @@ ostream& Backtrace::print(ostream& os) const
 
 std::ostream* AutoBacktrace::pstream = &std::cerr;
 SharedTraceTarget AutoBacktrace::ptrace;
+
 #ifndef __MINGW32__
-struct sigaction AutoBacktrace::nextAction;
+struct sigaction AutoBacktrace::nextAction[BACKTRACE_SIG_MAX];
 #endif
 
 void AutoBacktrace::signal_handler(int signum)
@@ -93,17 +190,22 @@ void AutoBacktrace::signal_handler(int signum)
     Backtrace bt;
     if (ptrace) {
         std::ostringstream oss;
+        oss <<
+            "*** CAUGHT SIGNAL " << signum << "; BACKTRACE:" << std::endl;
         oss << bt;
         std::string msg = oss.str();
-        if (pstream)
+        if (pstream) {
             *pstream << msg;
+        }
         ptrace->notifyTrace("backtrace", TRACE_SEVERE, msg);
     } else if (pstream) {
+        *pstream <<
+            "*** CAUGHT SIGNAL " << signum << "; BACKTRACE:" << std::endl;
         *pstream << bt;
     }
 
     // invoke next handler: never coming back, so reset the signal handler
-    sigaction(signum, &nextAction, NULL);
+    sigaction(signum, &(nextAction[signum]), NULL);
     raise(signum);
 #endif
 }
@@ -118,34 +220,44 @@ void AutoBacktrace::setOutputStream(ostream& os)
     pstream = &os;
 }
 
-void AutoBacktrace::setTraceTarget()
-{
-    ptrace.reset();
-}
-
 void AutoBacktrace::setTraceTarget(SharedTraceTarget p)
 {
     ptrace = p;
 }
 
-void AutoBacktrace::install()
+void AutoBacktrace::install(bool includeSegFault)
 {
-    // Traps SIGABRT: this handles assert(); unless NDEBUG, permAssert() => assert(),
-    // so that's covered. std::terminate() also => abort().
-    // TODO: trap permAssert() directly.
+    // Traps SIGABRT: this handles assert(); unless NDEBUG, permAssert() =>
+    // assert(), so that's covered. std::terminate() also => abort().  TODO:
+    // trap permAssert() directly.
+#ifndef __MINGW32__
+    installSignal(SIGILL);
+    installSignal(SIGABRT);
+
+    if (includeSegFault) {
+        installSignal(SIGSEGV);
+    }
+    
+    installSignal(SIGBUS);
+#endif
+}
+
+void AutoBacktrace::installSignal(int signum)
+{
+    permAssert(signum < BACKTRACE_SIG_MAX);
 #ifndef __MINGW32__
     struct sigaction act;
     struct sigaction old_act;
     act.sa_handler = signal_handler;
     sigemptyset (&act.sa_mask);
     act.sa_flags = 0;
-    int rc = sigaction(SIGABRT, &act, &old_act);
+    int rc = sigaction(signum, &act, &old_act);
     if (rc) {
         return;                         // failed
     }
     if (old_act.sa_handler != signal_handler) {
         // installed for the first time
-        nextAction = old_act;
+        nextAction[signum] = old_act;
     }
 #endif
 }

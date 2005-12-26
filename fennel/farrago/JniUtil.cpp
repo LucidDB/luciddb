@@ -162,7 +162,12 @@ void JniUtil::shutdown()
 
 jint JniUtil::init(JavaVM *pVmInit)
 {
-    AutoBacktrace::install();           // print backtrace on fatal error
+    // Install handler to print backtrace on fatal error.  Note that
+    // we pass false to suppress handling of SIGSEGV, because Java
+    // raises this spuriously.  Instead, if a real SIGSEGV occurs
+    // in native code, Java will abort, raising SIGABRT from the same
+    // stack frame, so we'll catch that and backtrace it instead.
+    AutoBacktrace::install(false);
     pVm = pVmInit;
     JniEnvAutoRef pEnv;
     jclass classClass = pEnv->FindClass("java/lang/Class");

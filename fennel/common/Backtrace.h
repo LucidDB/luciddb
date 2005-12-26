@@ -30,6 +30,7 @@
 #ifndef __MINGW32__
 #include <signal.h>
 #include <execinfo.h>
+#include <link.h>
 #endif
 
 
@@ -46,6 +47,16 @@ class Backtrace
     const bool ownbuf;                  // the object allocated the addrbuf
     const size_t bufsize;
     void** addrbuf;                     // [bufsize]
+
+    struct LibraryInfo 
+    {
+        ElfW(Addr) baseAddress;
+        char const *pImageName;
+    };
+
+#ifndef __MINGW32__
+    static int lookupLibraryBase(struct dl_phdr_info *, size_t, void *);
+#endif
 
 public:
     /**
@@ -90,27 +101,55 @@ class AutoBacktrace {
     static SharedTraceTarget ptrace;
     static void signal_handler(int signum);
 #ifndef __MINGW32__
-    static struct sigaction nextAction;
+#define BACKTRACE_SIG_MAX 32
+    static struct sigaction nextAction[BACKTRACE_SIG_MAX];
 #endif
 
     AutoBacktrace() {}                  // hide constructor
     
+    static void installSignal(int signum);
 public:
-    /// installs backtrace on error; default output is to stderr.
-    static void install();
+    /**
+     * Installs backtrace on error; default output is to stderr.
+     *
+     *<p>
+     *
+     * NOTE jvs 25-Dec-2005:  for more flexibility, we could
+     * allow the caller to specify a sigset_t.
+     *
+     * @param includeSegFault if true, SIGSEGV is included in the
+     * set of signals causing a backtrace; if false, it is omitted
+     * (required in environments such as a Java VM where spurious
+     * segfaults may be signalled but handled as part of normal
+     * operation)
+     */
+    static void install(bool includeSegFault = true);
 
-    /// sets an ostream to which the backtrace is written 
-    static void setOutputStream(std::ostream&);
-    /// unsets a target stream for backtrace.
+    /**
+     * Sets an ostream to which the backtrace is written.
+     *
+     * @param outStream receives backtrace if signal is handled
+     */
+    static void setOutputStream(std::ostream &outStream);
+    
+    /**
+     * Unsets a target stream for backtrace.
+     */
     static void setOutputStream();
 
-    /// sets a TraceTarget to which the backtrace is written,
-    /// independent of setOutputStream.
-    static void setTraceTarget(SharedTraceTarget);
-    /// unsets a TraceTarget for backtrace.
-    static void setTraceTarget();
+    /**
+     * Sets a TraceTarget to which the backtrace is written,
+     * independent of setOutputStream.
+     *
+     * @param pTraceTarget receives backtrace if signal is handled;
+     * if singular (the default), resets target to nothing
+     */
+    static void setTraceTarget(
+        SharedTraceTarget pTraceTarget = SharedTraceTarget());
 };
 
 FENNEL_END_NAMESPACE
+    
 #endif
+    
 // End Backtrace.h
