@@ -64,8 +64,8 @@ public interface SqlTester
         String resultType);
 
     /**
-     * Tests that a scalar SQL expression returns the expected integer result.
-     * For example,
+     * Tests that a scalar SQL expression returns the expected exact numeric
+     * result as an integer. For example,
      *
      * <blockquote><pre>checkScalarExact("1 + 2", "3");</pre></blockquote>
      *
@@ -77,8 +77,25 @@ public interface SqlTester
         String result);
 
     /**
-     * Tests that a scalar SQL expression returns expected double result. For
-     * example,
+     * Tests that a scalar SQL expression returns the expected exact numeric
+     * result. For example,
+     *
+     * <blockquote><pre>checkScalarExact("1 + 2", "3");</pre></blockquote>
+     *
+     * @param expression Scalar expression
+     * @param expectedType Type we expect the result to have, including
+     *   nullability, precision and scale, for example
+     *   <code>DECIMAL(2, 1) NOT NULL</code>.  
+     * @param result Expected result
+     */
+    void checkScalarExact(
+        String expression,
+        String expectedType,
+        String result);
+
+    /**
+     * Tests that a scalar SQL expression returns expected appoximate numeric
+     * result. For example,
      *
      * <blockquote><pre>checkScalarApprox("1.0 + 2.1", "3.1");</pre></blockquote>
      *
