@@ -41,7 +41,7 @@ Backtrace::~Backtrace()
 Backtrace::Backtrace(size_t maxdepth) 
     :ownbuf(true), bufsize(maxdepth + 1)
 {
-    addrbuf = new (void *)[bufsize];
+    addrbuf = new void * [bufsize];
     depth = backtrace(addrbuf, bufsize);
 }
 
