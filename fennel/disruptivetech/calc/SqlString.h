@@ -29,6 +29,8 @@
 #include <unicode/ustring.h>
 #endif
 
+#include <limits>
+
 FENNEL_BEGIN_NAMESPACE
 
 #if !(defined LITTLEENDIAN || defined BIGENDIAN)
@@ -804,7 +806,6 @@ SqlStrTrim(char const ** result,
     return end - start;
 }
 
-
 //! SqlStrCastToExact. Char & VarChar. Ascii only.
 //!
 //! Cast a string to an exact numeric.
@@ -891,6 +892,269 @@ SqlStrCastToExact(char const * const str,
                 // exception -- invalid character value for cast
                 throw "22018";
             }
+
+        } else if (CodeUnitBytes == 2) {
+            // TODO: Add UCS2 here
+            throw std::logic_error("no UCS2");
+        } else {
+            throw std::logic_error("no such encoding");
+        }
+    } else {
+        throw std::logic_error("no UTF8/16/32");
+    }
+
+    if (negative) {
+        return rv * -1;
+    } else {
+        return rv;
+    }
+}
+
+//! SqlExactMax
+//!
+//! Returns the maximum integer with the given precision
+inline int64_t SqlExactMax(int precision, bool negative)
+{
+    int64_t rv;
+    if (precision < 19) {
+        rv = 1;
+        for (int i = 0; i < precision; i++) {
+            rv *= 10;
+        }
+        rv--;
+    } else {
+        if (negative) {
+            rv = -std::numeric_limits<int64_t>::min();
+        } else {
+            rv = std::numeric_limits<int64_t>::max();
+        }
+    }
+    return rv;
+}
+
+//! SqlStrCastToExact. Char & VarChar. Ascii only.
+//!
+//! Cast a string to an exact numeric with precision and scale.
+template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
+int64_t
+SqlStrCastToExact(char const * const str,
+                  int strLenBytes,
+                  int precision,
+                  int scale,
+                  int padChar = ' ')
+{
+    int64_t rv = 0;
+    bool negative = false;
+
+    assert(precision > 0);
+    if (MaxCodeUnitsPerCodePoint == 1) {
+        if (CodeUnitBytes == 1) {
+            // ASCII
+            // comparison must be unsigned to work for > 128
+            unsigned char const *ptr =
+                reinterpret_cast<unsigned char const *>(str);
+            unsigned char const *end =
+                reinterpret_cast<unsigned char const *>(str + strLenBytes);
+
+            // STATE: parse optional sign, consume leading white space
+            while (ptr < end) {
+                if (*ptr == '-') {
+                    // move onto next state, do not allow whitespace
+                    // after -, for example '- 4' is not allowed
+                    negative = true;
+                    ptr++;
+                    break;
+                } else if (*ptr == '+') {
+                    // move onto next state, do not allow whitespace
+                    // after +, for example '+ 4' is not allowed
+                    ptr++;
+                    break;
+                } else if (*ptr == padChar) {
+                    // consume leading whitespace
+                    ptr++;
+                } else if (*ptr >= '0' &&  *ptr <= '9') {
+                    // found a number. don't advance, move onto next state
+                    break;
+                } else if (*ptr == '.') {
+                    // found decimal point. don't advance, move onto next state
+                    break;
+                } else {
+                    // unexpected character found
+                    // SQL99 Part 2 Section 6.22 General Rule 6.b.i data
+                    // exception -- invalid character value for cast
+                    throw "22018";
+                }
+            }
+
+            if (ptr >= end) {
+                // no number found
+                // SQL99 Part 2 Section 6.22 General Rule 6.b.i data
+                // exception -- invalid character value for cast
+                throw "22018";
+            }
+
+            // STATE: Parse numbers until padChar, end, or illegal char
+            bool parsed = false;
+            bool decimal_parsed = false;
+            bool roundup = false;
+            int ignored = 0; 
+            int decimal_position = 0;
+            int mantissa_digits = 0, parsed_digits = 0;
+            int digit;         
+            int64_t mantissa = 0;
+            int64_t exponent = 0;
+            while (ptr < end) {
+                if (*ptr >= '0' && *ptr <= '9') {
+                    // number
+                    digit = (*(ptr++) - '0');
+
+                    // Only add to mantissa if precision not reached
+                    if (mantissa_digits < precision) {
+                        if (mantissa_digits < 18) {
+                            mantissa = mantissa * 10 + digit;
+                        } else {
+                            // Handle 19th digit overflow
+                            int64_t tmp;
+                            tmp = mantissa * 10 + digit;
+                            if (tmp < mantissa) {
+                                if (negative) { 
+                                    if (-tmp == std::numeric_limits<int64_t>::min()) {
+                                        // okay
+                                    } else {
+                                        // data exception -- numeric value out of range
+                                        throw "22003";
+                                    }
+                                } else {
+                                    // data exception -- numeric value out of range
+                                    throw "22003";
+                                }                                
+                            }
+                            mantissa = tmp;
+                        }
+
+                        if (mantissa != 0) {
+                            mantissa_digits++;
+                        }
+                    } else {
+                        // Decide if ignored digits (after precision is lost)
+                        // causes the final result to be rounded up or not
+                        ignored++;
+                        if (ignored == 1) {
+                            roundup = (digit >= 5);
+                        }
+                    }
+                    parsed = true;
+                    if (decimal_parsed || mantissa != 0) {
+                        parsed_digits++;
+                    }
+                } else if (!decimal_parsed && (*ptr == '.')) {
+                    // decimal point
+                    ptr++;
+                    decimal_parsed = true;
+                    decimal_position = parsed_digits;
+                } else if ((*ptr == 'E') || (*ptr == 'e')) {
+                    // parse exponent, move into next state
+                    ptr++;
+                    if (ptr < end) {
+                        if (*ptr == '+' || *ptr == '-' || 
+                            (*ptr >= '0' && *ptr <= '9')) {
+                            exponent = SqlStrCastToExact
+                                <CodeUnitBytes, MaxCodeUnitsPerCodePoint>
+                                ((char const * const) ptr, end - ptr, padChar);
+                        } else {
+                            parsed = false;
+                        }
+                    } else {
+                        parsed = false;
+                    } 
+                    ptr = end;
+                    break;
+                } else if (*ptr == padChar) {
+                    // move onto next state, end of number
+                    ptr++;
+                    break;
+                } else {
+                    // illegal character
+                    parsed = false;
+                    break;
+                }
+            }
+
+            // STATE: Parse padChar until end or illegal char
+            while (ptr < end) {
+                if (*(ptr++) != padChar) {
+                    // unexpected character after end of number
+                    parsed = false;
+                    break;
+                }
+            }
+            if (!parsed) {
+                // SQL99 Part 2 Section 6.22 General Rule 6.b.i data
+                // exception -- invalid character value for cast
+                throw "22018";
+            }
+
+            if (!decimal_parsed) {
+                decimal_position = parsed_digits;
+            }
+
+            if (roundup) {
+                // Check if digits will increase/overflow
+                if (mantissa == SqlExactMax(mantissa_digits, negative)) {
+                    mantissa_digits++;
+                }
+                mantissa++;
+            }
+
+            int parsed_scale = 
+                parsed_digits - ignored - decimal_position - exponent;
+
+            if (mantissa_digits - parsed_scale > precision - scale) {
+                // SQL2003 Part 2 Section 6.12 General Rule 8.a.ii
+                // data exception -- numeric value out of range
+                // (if leading significant digits are lost)
+                throw "22003";
+            }                          
+
+            rv = mantissa;           
+
+            if (scale > parsed_scale) {
+                int64_t tmp;
+                for (int i = 0; i < scale - parsed_scale; i++) {
+                    tmp = rv*10;
+                    // Check for overflow
+                    if (tmp < rv) {
+                        // data exception -- numeric value out of range
+                        throw "22003";
+                    }
+                    rv = tmp;
+                }
+            } else if (scale < parsed_scale) {
+                int adjust_scale = parsed_scale - scale;
+                for (int i = 0; i < adjust_scale; i++) {
+                    rv = rv/10;
+                }
+
+                // Do Rounding
+                int64_t factor = 1;
+                for (int i = 0; i < adjust_scale; i++) {
+                    factor *= 10;
+                }
+                if (mantissa % factor >= factor/2) {
+                    // Check if digit will increase/overflow
+                    if (rv == SqlExactMax(mantissa_digits - adjust_scale, negative)) {
+                        mantissa_digits++;
+                        if (mantissa_digits - parsed_scale 
+                            > precision - scale) {
+                            // SQL2003 Part 2 Section 6.12 General Rule 8.a.ii
+                            // data exception -- numeric value out of range
+                            // (if leading significant digits are lost)
+                            throw "22003";
+                        }
+                    }
+                    rv++;
+                }
+            } 
 
         } else if (CodeUnitBytes == 2) {
             // TODO: Add UCS2 here
@@ -1121,9 +1385,143 @@ SqlStrCastFromExact(char* dest,
     return rv;
 }
 
+//! SqlStrCastFromExact. Char & VarChar. Ascii only.
+//!
+//! Cast an exact numeric with precision and scale to a string.
+//!
+//! This routine may not be compliant with the SQL99 standard.
+//!
+//! Pad character code points that require more than one code unit are
+//! currently unsupported.
+template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
+int
+SqlStrCastFromExact(char* dest,
+                    int destStorageBytes,
+                    int64_t src,
+                    int precision,
+                    int scale,
+                    bool fixed,  // e.g. char, else variable (varchar)
+                    int padchar = ' ')
+{
+    int rv;
+
+    if (MaxCodeUnitsPerCodePoint == 1) {
+        if (CodeUnitBytes == 1) {
+            // ASCII
+
+            // TODO: Check performance of current implementation against 
+            // TODO: a version with % and /10, etc.
+
+            if (scale == 0) {
+                // Scale is 0, same as normal cast
+                rv = SqlStrCastFromExact
+                    <CodeUnitBytes, MaxCodeUnitsPerCodePoint>
+                    (dest, destStorageBytes, src, fixed, padchar);        
+            } else if (scale > 0) {
+                // Positive Scale
+                int ndigits, decimal, sign = 0;
+                char buf[36];      // #%lld should always fit in 21 bytes.
+                rv = snprintf(buf, 35, "%lld", abs(src));
+                // snprintf does not return null termination in length
+                assert(rv >= 0 && rv <= 35);
+                
+                ndigits = rv;
+                if (src < 0) {
+                    sign = 1;
+                    rv++;
+                }
+                
+                // Figure out where to add decimal point
+                decimal = ndigits - scale;
+                if (decimal < 0) {
+                    // Need to pad with 0s
+                    rv += (-decimal) + 1;
+                } else {
+                    rv += 1;
+                }
+                
+                // Check if there is enough space
+                if (rv > destStorageBytes) {
+                    // SQL99 Part 2 Section 6.22 General Rule 8.a.iv (fixed
+                    // length) "22001" data exception -- string data, right
+                    // truncation
+                    
+                    // SQL99 Part 2 Section 6.22 General Rule 9.a.iii (variable
+                    // length) "22001" data exception -- string data, right
+                    // truncation
+                    throw "22001";
+                }
+                
+                // Copy into destination buffer, placing the '.' appropriately
+                if (sign) {
+                    dest[0] = '-';
+                }
+                
+                if (decimal < 0) {
+                    int pad = -decimal;
+                    dest[sign] = '.';
+                    memset(dest + sign + 1, '0', pad);
+                    memcpy(dest + sign + 1 + pad, buf, ndigits);
+                } else {
+                    memcpy(dest + sign, buf, decimal);
+                    dest[decimal + sign] = '.';
+                    memcpy(dest + sign + 1 + decimal, buf + decimal, scale);
+                }
+                
+                if (fixed) {
+                    memset(dest + rv, padchar, destStorageBytes - rv);
+                    rv = destStorageBytes;
+                }        
+                
+            } else {
+                // Negative Scale
+                int nzeros = (src != 0)? -scale: 0;
+                int len;
+                char buf[36];      // #%lld should always fit in 21 bytes.
+                rv = snprintf(buf, 35, "%lld", src);
+                // snprintf does not return null termination in length
+                assert(rv >= 0 && rv <= 35);
+
+                len = rv;
+
+                // Check if there is enough space
+                rv += nzeros;
+                if (rv > destStorageBytes) {
+                    // SQL99 Part 2 Section 6.22 General Rule 8.a.iv (fixed
+                    // length) "22001" data exception -- string data, right
+                    // truncation
+            
+                    // SQL99 Part 2 Section 6.22 General Rule 9.a.iii (variable
+                    // length) "22001" data exception -- string data, right
+                    // truncation
+                    throw "22001";
+                }
+
+                // Add zeros
+                memcpy(dest, buf, len);
+                memset(dest + len, '0', nzeros);
+                
+                if (fixed) {
+                    memset(dest + rv, padchar, destStorageBytes - rv);
+                    rv = destStorageBytes;
+                }        
+            }            
+        } else if (CodeUnitBytes == 2) {
+            // TODO: Add UCS2 here
+            throw std::logic_error("no UCS2");
+        } else {
+            throw std::logic_error("no such encoding");
+        }
+    } else {
+        throw std::logic_error("no UTF8/16/32");
+    }
+
+    return rv;
+}
+
 //! SqlStrCastFromApprox. Char & VarChar. Ascii only.
 //!
-//! Cast an exact numeric to a string.
+//! Cast an approximate (e.g. floating point) numeric to a string.
 //!
 //! This routine is not fully SQL99 compliant. Deltas are
 //! in 6.22 General Rule 8 b i 2 and 9 b i 2. Currently the
