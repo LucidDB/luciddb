@@ -76,11 +76,14 @@ public:
     virtual ~VersionedSegment();
 
     /**
-     * Recovers to the current version from the log.
+     * Recovers to a specific version from the log.
      *
      * @param firstLogPageId starting PageId in log segment
+     *
+     * @param versionNumber version number to recover to, or MAXU
+     * to use current version number
      */
-    void recover(PageId firstLogPageId);
+    void recover(PageId firstLogPageId, SegVersionNum versionNumber = MAXU);
 
     /**
      * @return the PageId of the oldest log page still needed for recovery
@@ -100,7 +103,7 @@ public:
      * @return the current version number for this segment
      */
     SegVersionNum getVersionNumber() const;
-
+    
     /**
      * @return the WAL segment
      */

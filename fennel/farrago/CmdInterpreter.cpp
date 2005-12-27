@@ -231,7 +231,7 @@ void CmdInterpreter::getBTreeForIndexCmd(
 
 void CmdInterpreter::visit(ProxyCmdCreateIndex &cmd)
 {
-    // block checkpoints
+    // block checkpoints during this method
     SharedDatabase pDb = getDbHandle(cmd.getDbHandle())->pDb;
     SXMutexSharedGuard actionMutexGuard(
         pDb->getCheckpointThread()->getActionMutex());
@@ -256,7 +256,7 @@ void CmdInterpreter::visit(ProxyCmdDropIndex &cmd)
 void CmdInterpreter::dropOrTruncateIndex(
     ProxyCmdDropIndex &cmd, bool drop)
 {
-    // block checkpoints
+    // block checkpoints during this method
     SharedDatabase pDb = getDbHandle(cmd.getDbHandle())->pDb;
     SXMutexSharedGuard actionMutexGuard(
         pDb->getCheckpointThread()->getActionMutex());
@@ -274,10 +274,17 @@ void CmdInterpreter::dropOrTruncateIndex(
 
 void CmdInterpreter::visit(ProxyCmdBeginTxn &cmd)
 {
-    // block checkpoints
+    // block checkpoints during this method
     SharedDatabase pDb = getDbHandle(cmd.getDbHandle())->pDb;
     SXMutexSharedGuard actionMutexGuard(
         pDb->getCheckpointThread()->getActionMutex());
+
+    if (pDb->shouldForceTxns()) {
+        // We're equating transactions with checkpoints, so take
+        // out an extra lock to block checkpoints for the duration
+        // of the transaction.
+        pDb->getCheckpointThread()->getActionMutex().waitFor(LOCKMODE_S);
+    }
 
     std::auto_ptr<TxnHandle> pTxnHandle(newTxnHandle());
     JniUtil::incrementHandleCount(TXNHANDLE_TRACE_TYPE_STR, pTxnHandle.get());
@@ -302,7 +309,7 @@ void CmdInterpreter::visit(ProxyCmdSavepoint &cmd)
 {
     TxnHandle *pTxnHandle = getTxnHandle(cmd.getTxnHandle());
     
-    // block checkpoints
+    // block checkpoints during this method
     SXMutexSharedGuard actionMutexGuard(
         pTxnHandle->pDb->getCheckpointThread()->getActionMutex());
     
@@ -314,10 +321,11 @@ void CmdInterpreter::visit(ProxyCmdSavepoint &cmd)
 void CmdInterpreter::visit(ProxyCmdCommit &cmd)
 {
     TxnHandle *pTxnHandle = getTxnHandle(cmd.getTxnHandle());
+    SharedDatabase pDb = pTxnHandle->pDb;
 
-    // block checkpoints
+    // block checkpoints during this method
     SXMutexSharedGuard actionMutexGuard(
-        pTxnHandle->pDb->getCheckpointThread()->getActionMutex());
+        pDb->getCheckpointThread()->getActionMutex());
     
     if (cmd.getSvptHandle()) {
         SavepointId svptId = getSavepointId(cmd.getSvptHandle());
@@ -325,16 +333,27 @@ void CmdInterpreter::visit(ProxyCmdCommit &cmd)
     } else {
         pTxnHandle->pTxn->commit();
         deleteAndNullify(pTxnHandle);
+        if (pDb->shouldForceTxns()) {
+            // release the checkpoint lock acquired at BeginTxn
+            pDb->getCheckpointThread()->getActionMutex().release(
+                LOCKMODE_S);
+            actionMutexGuard.unlock();
+            // force a checkpoint now to flush all data modified by transaction
+            // to disk; wait for it to complete before reporting the
+            // transaction as committed
+            pDb->requestCheckpoint(CHECKPOINT_FLUSH_ALL, false);
+        }
     }
 }
 
 void CmdInterpreter::visit(ProxyCmdRollback &cmd)
 {
     TxnHandle *pTxnHandle = getTxnHandle(cmd.getTxnHandle());
+    SharedDatabase pDb = pTxnHandle->pDb;
 
-    // block checkpoints
+    // block checkpoints during this method
     SXMutexSharedGuard actionMutexGuard(
-        pTxnHandle->pDb->getCheckpointThread()->getActionMutex());
+        pDb->getCheckpointThread()->getActionMutex());
     
     if (cmd.getSvptHandle()) {
         SavepointId svptId = getSavepointId(cmd.getSvptHandle());
@@ -342,6 +361,15 @@ void CmdInterpreter::visit(ProxyCmdRollback &cmd)
     } else {
         pTxnHandle->pTxn->rollback();
         deleteAndNullify(pTxnHandle);
+        if (pDb->shouldForceTxns()) {
+            // implement rollback by simulating crash recovery,
+            // reverting all pages modified by transaction
+            pDb->checkpointImpl(CHECKPOINT_DISCARD);
+            pDb->recoverPhysical();
+            // release the checkpoint lock acquired at BeginTxn
+            pDb->getCheckpointThread()->getActionMutex().release(
+                LOCKMODE_S);
+        }
     }
 }
 

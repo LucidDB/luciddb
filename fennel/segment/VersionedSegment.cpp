@@ -250,10 +250,15 @@ bool VersionedSegment::canFlushPage(CachePage &page)
     return DelegatingSegment::canFlushPage(page);
 }
 
-void VersionedSegment::recover(PageId firstLogPageId)
+void VersionedSegment::recover(
+    PageId firstLogPageId,SegVersionNum versionNumberInit)
 {
     assert(dataToLogMap.empty());
     assert(pWALSegment->getMinDirtyPageId() == NULL_PAGE_ID);
+
+    if (!isMAXU(versionNumberInit)) {
+        versionNumber = versionNumberInit;
+    }
 
     // The conventional thing to do is to scan forward to find the log end, and
     // then recover backwards, guaranteeing that earlier shadows replace later

@@ -289,7 +289,7 @@
 
   <target name="txn" depends="compile">
     <filelist dir="${testsrc.dir}/txn" id="filelist.txnsql"
-      files="negative.sql"/>
+      files="negative.sql,rollback.sql"/>
     <pathconvert property="filelist.txnsql" refid="filelist.txnsql"
       pathsep="${line.separator}" dirsep="${file.separator}" />
     <runSqlTests filelist="${filelist.txnsql}"/>

@@ -1,0 +1,62 @@
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/txn/negative.sql#1 $
+0: jdbc:luciddb:> -- Tests LucidDB support for implicit rollback on error
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema s;
+0: jdbc:luciddb:> create table s.t(i int not null);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table s.mock_fennel_table(
+. . . . . . . . >     id int not null)
+. . . . . . . . > server sys_mock_foreign_data_server
+. . . . . . . . > options (executor_impl 'FENNEL', row_count '3000');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- run a load which will fail on the last row
+0: jdbc:luciddb:> -- due to division by zero
+0: jdbc:luciddb:> insert into s.t
+. . . . . . . . > select * from s.mock_fennel_table
+. . . . . . . . > union all
+. . . . . . . . > values (1/0);
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=0 Code=22012 (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- verify that table contents were rolled back
+0: jdbc:luciddb:> select count(*) from s.t;
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- run a load which should succeed
+0: jdbc:luciddb:> insert into s.t
+. . . . . . . . > select * from s.mock_fennel_table;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- verify that table contents were updated
+0: jdbc:luciddb:> select count(*) from s.t;
++---------+
+| EXPR$0  |
++---------+
+| 3000    |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- run an incremental load which will fail on the last row
+0: jdbc:luciddb:> -- due to division by zero
+0: jdbc:luciddb:> insert into s.t
+. . . . . . . . > select * from s.mock_fennel_table
+. . . . . . . . > union all
+. . . . . . . . > values (1/0);
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=0 Code=22012 (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- verify that table contents were rolled back
+0: jdbc:luciddb:> select count(*) from s.t;
++---------+
+| EXPR$0  |
++---------+
+| 3000    |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

@@ -253,6 +253,7 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
             if (!isDml) {
                 params.txnCodeCache = null;
             }
+            params.isDml = isDml;
             params.dynamicParamValues = dynamicParamValues;
             FarragoSessionRuntimeContext context =
                 session.getPersonality().newRuntimeContext(params);
@@ -294,9 +295,6 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
             } catch (SQLException ex) {
                 throw FarragoResource.instance().DmlFailure.ex(ex);
             } finally {
-                if (!success) {
-                    session.endTransactionIfAuto(false);
-                }
                 try {
                     resultSet.close();
                 } catch (SQLException ex) {
@@ -306,12 +304,15 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
                     synchronized(streamGraphMutex) {
                         streamGraph = null;
                     }
+                    if (!success) {
+                        session.endTransactionIfAuto(false);
+                    }
                 }
             }
         }
 
-        // NOTE:  for now, we only auto-commit after DML.  Queries aren't an
-        // issue until locking gets implemented.
+        // NOTE:  for result sets, autocommit is taken care of by
+        // FarragoIteratorResultSet and FennelTxnContext
         if (resultSet == null) {
             session.endTransactionIfAuto(true);
         }
