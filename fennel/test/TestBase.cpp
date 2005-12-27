@@ -132,6 +132,7 @@ void TestBase::beforeTestCase(std::string testCaseName)
 
 void TestBase::afterTestCase(std::string testCaseName)
 {
+    AutoBacktrace::setTraceTarget();
     notifyTrace(testName,TRACE_INFO,"LEAVE:  " + testCaseName);
 }
 
