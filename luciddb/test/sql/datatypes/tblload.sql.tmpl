@@ -1,0 +1,37 @@
+-- local tables
+
+create schema s;
+set schema 's';
+
+create table types (
+c_char char(10),
+c_varchar varchar(10),
+c_decimal decimal(10,3),
+c_tinyint tinyint,
+c_smallint smallint,
+c_integer integer,
+c_bigint bigint,
+c_real real,
+c_double double,
+c_boolean boolean,
+c_date date,
+c_time time,
+c_timestamp timestamp
+)
+server @DATA_STORE@;
+
+create table blobtypes(
+c_binary binary(10),
+c_varbinary varbinary(10)
+)
+server @DATA_STORE@;
+
+INSERT INTO types
+SELECT c_char,c_varchar,c_decimal,c_tinyint,c_smallint,c_integer,c_bigint,c_real,c_double,c_boolean,c_date,c_time,c_timestamp
+FROM @name_prefix@_schema.types;
+
+
+INSERT INTO blobtypes
+SELECT c_binary,c_varbinary
+FROM @name_prefix@_schema.blobtypes;
+

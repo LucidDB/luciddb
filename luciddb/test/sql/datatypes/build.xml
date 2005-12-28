@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+// $Id$
+// LucidDB is a DBMS optimized for business intelligence.
+// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005-2005 The Eigenbase Project
+//
+// This program is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation; either version 2 of the License, or (at your option)
+// any later version approved by The Eigenbase Project.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//  
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+-->
+
+<project name="benchmark" basedir="." default="test">
+  <dirname property="datatypes.dir" file="${ant.file.datatypes}" />
+
+  <property name="open.dir" location="../../../.."/>
+  <fail unless="open.dir" />
+  <property environment="env" />
+
+  <!-- override Farrago -->
+  <property name="project.catalog.dir" location="${open.dir}/luciddb/catalog" />
+  <property name="project.trace.propfile" location="${open.dir}/luciddb/trace/LucidDbTrace.properties" />
+
+  <import file="${open.dir}/farrago/buildMacros.xml" />
+  
+  <property name="classes.dir" location="${open.dir}/luciddb/classes" />
+
+  <!-- directory in which sql tests are generated -->
+  <property name="gensql.dir" value="${datatypes.dir}/gen" />
+
+  <!-- classpath for running tests via ant -->
+  <path id="test.classpath">
+    <pathelement path="${classes.dir}"/>
+    <pathelement path="${farrago.sqlline.classpath}"/>
+    <pathelement path="${ant.classpath}"/>
+    <pathelement path="${bh.run.classpath}"/>
+  </path>
+  <property name="test.classpath" refid="test.classpath"/>
+
+  <target name="gen-sql">
+    <delete dir="${gensql.dir}" quiet="true"/>
+    <mkdir dir="${gensql.dir}"/>
+    <filter token="open.dir" value="${open.dir}"/>
+    <filter token="datatypes.dir" value="${datatypes.dir}"/>
+
+    <!-- generate config.properties file -->
+    <!-- use prop.oracle as default; should set through cmdline -->
+    <property name="config.prop" value="prop.csvjdbc"/>
+    <copy file="${config.prop}" tofile="config.properties" 
+      overwrite="true" filtering="true">
+      <filterset>
+        <filtersfile file="${config.prop}"/>
+      </filterset>
+    </copy>
+
+    <!-- generate all sql files -->
+    <copy todir="${gensql.dir}tmp" overwrite="true"
+      filtering="true">
+      <fileset dir="${datatypes.dir}">
+        <include name="**/*.tmpl"/>
+      </fileset>
+      <mapper type="glob" from="*.tmpl" to="*"/>
+      <filterset>
+        <filtersfile file="config.properties"/>
+      </filterset>
+    </copy>
+    <copy todir="${gensql.dir}" overwrite="true"
+      filtering="true">
+      <fileset dir="${gensql.dir}tmp"/>
+      <filterchain>
+        <tokenfilter>
+          <replaceregex pattern="^.*. . >.*@.*@.*" replace=". . . . . . . . > " flags="s"/>
+          <replaceregex pattern="^.*@.*@.*" replace="" flags="s"/>
+        </tokenfilter>
+      </filterchain>
+    </copy>
+    <delete dir="${gensql.dir}tmp" quiet="true"/>
+  </target>
+
+  <target name="test">
+    <property name="test-suite" value="test.xml"/>
+    <antcall target="restoreCatalog"/>
+    <antcall target="gen-sql"/>
+    <blackhawk.fork basedir="${datatypes.dir}" 
+      testscript="${test-suite}"
+      classpathref="test.classpath"/>
+  </target>  
+
+  <target name="clean">
+    <delete dir="${gensql.dir}"/>
+  </target>
+
+  <target name="restoreCatalog">
+    <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>
+  </target>  
+
+</project>
