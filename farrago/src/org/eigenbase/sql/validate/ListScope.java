@@ -37,7 +37,7 @@ import java.util.List;
  * @version $Id$
  * @since Mar 25, 2003
  */
-abstract class ListScope extends DelegatingScope
+public abstract class ListScope extends DelegatingScope
 {
     /**
      * List of child {@link SqlValidatorNamespace} objects.
@@ -59,6 +59,15 @@ abstract class ListScope extends DelegatingScope
         Util.pre(alias != null, "alias != null");
         children.add(ns);
         childrenNames.add(alias);
+    }
+
+    public SqlValidatorNamespace getChild(int index)
+    {
+        SqlValidatorNamespace rtSpace = null;
+        if (index >= 0 && index < children.size()) {
+            rtSpace = (SqlValidatorNamespace)children.get(index);
+        }
+        return rtSpace;
     }
 
     protected SqlValidatorNamespace getChild(String alias)
