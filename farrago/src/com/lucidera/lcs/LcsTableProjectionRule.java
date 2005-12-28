@@ -66,6 +66,11 @@ public class LcsTableProjectionRule extends RelOptRule
     // implement RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
+        // REVIEW jvs 27-Dec-2005: Most of this code is copied
+        // from FtrsTableProjectionRule.  Factor it out instead into
+        // a new class
+        // net.sf.farrago.namespace.impl.MedAbstractFennelProjectionRule.
+        
         ProjectRel origProject = (ProjectRel) call.rels[0];
         if (!origProject.isBoxed()) {
             return;

@@ -156,7 +156,7 @@ public class TableAccessMap
                 return;
             }
             String newAccess;
-            if (p instanceof TableModificationRel) {
+            if (p instanceof TableModificationRelBase) {
                 newAccess = WRITE_ACCESS;
             } else {
                 newAccess = READ_ACCESS;

@@ -37,7 +37,7 @@ import org.eigenbase.sql.type.*;
 
 /**
  * LcsIndexGuide provides information about the mapping from catalog
- * definitions for lcs tables and their clusters to their Fennel representation.
+ * definitions for LCS tables and their clusters to their Fennel representation.
  *
  * @author Zelaine Fong
  * @version $Id$
@@ -61,6 +61,9 @@ class LcsIndexGuide
     private int numFlattenedCols;
     
     private int numUnFlattenedCols;
+
+    // REVIEW jvs 27-Dec-2005: To eliminate code duplication, the second
+    // constructor should call the first one with this(x, y, z) syntax.
 
     /**
      * Construct an IndexGuide using a specific list of indexes
@@ -131,6 +134,22 @@ class LcsIndexGuide
         return flattenedRowType;
     }
     
+    // REVIEW jvs 27-Dec-2005: Javadoc below has @return tag,
+    // but method returns void.  Also, use HTML pre and code tags around
+    // preformatted code, otherwise in the Javadoc output it will
+    // all run together.  Example:
+    //
+    // <pre><code>
+    // 
+    // create table t(a int, b int, c int, d int)
+    // create clustered index it on t(c, a, b, d);
+    // 
+    // clusterMap[] = { 2, 0, 1, 3 }
+    // 
+    // </code></pre>
+    //
+    // The example would be more useful if it had multiple indexes.
+    
     /**
      * Creates an array mapping cluster columns to table columns, the order of
      * the array matching the order of the cluster columns in an ordered list
@@ -149,8 +168,6 @@ class LcsIndexGuide
     {
         clusterMap = new ArrayList();
         
-        int nUnFlattenedCols = flatteningMap.length;
-        int nFlattenedCols = flattenedRowType.getFieldList().size();
         for (FemLocalIndex index : clusteredIndexes) {
             for (Object f : index.getIndexedFeature()) {
                 CwmIndexedFeature indexedFeature = (CwmIndexedFeature) f;
@@ -170,6 +187,8 @@ class LcsIndexGuide
     private void addClusterCols(int colOrdinal)
     {
         int nColsToAdd = getNumFlattenedSubCols(colOrdinal);
+
+        colOrdinal = flattenOrdinal(colOrdinal);
         
         for (int i = colOrdinal; i < colOrdinal + nColsToAdd; i++) {
             clusterMap.add(i);
@@ -184,7 +203,7 @@ class LcsIndexGuide
      * 
      * @return number of subcolumns in flattened column
      */
-    private int getNumFlattenedSubCols(int colOrdinal)
+    public int getNumFlattenedSubCols(int colOrdinal)
     {
         int nCols;
         
@@ -195,6 +214,13 @@ class LcsIndexGuide
         }
         return nCols;
     }
+
+    // REVIEW jvs 27-Dec-2005: without qualifiers, terms like "size" are
+    // ambiguous in the context of an index, where it could mean number of
+    // columns, total storage size, key size, etc.  In this case what's meant
+    // is "the number of physically stored fields in the clustered index tuple
+    // after flattening", right?  So maybe getNumFlattenedClusterCols?  Also,
+    // should assert that the index is actually clustered.
     
     /**
      * Retrieves number of columns in a clustered index
@@ -212,10 +238,11 @@ class LcsIndexGuide
             FemAbstractColumn column = 
                 (FemAbstractColumn) indexedFeature.getFeature();
             nCols += getNumFlattenedSubCols(column.getOrdinal());
-            }
+        }
         return nCols;
     }
-    
+
+    // REVIEW jvs 27-Dec-2005: see above on "size"
     
     /**
      * Retrieves number of columns in all the clustered indexes accessed
@@ -255,7 +282,7 @@ class LcsIndexGuide
             FemAbstractColumn column = 
                 (FemAbstractColumn) indexedFeature.getFeature();
             int numSubCols = getNumFlattenedSubCols(column.getOrdinal());
-            int colOrd = column.getOrdinal();
+            int colOrd = flattenOrdinal(column.getOrdinal());
 
             // add an entry for each subcolumn within a complex type
             for (int i = colOrd; i < colOrd + numSubCols; i++) {
@@ -269,7 +296,7 @@ class LcsIndexGuide
         }
         return tupleDesc;
     }
-    
+
     /**
      * Creates a projection list relative to the cluster columns
      * 
@@ -288,24 +315,29 @@ class LcsIndexGuide
         if (origProj != null) {
             proj = new Integer[origProj.length];
             for (i = 0; i < origProj.length; i++) {
-                proj[i] = 
-                    new Integer(
-                        clusterMap.indexOf(Integer.valueOf(origProj[i])));
+                proj[i] = computeProjectedColumn(origProj[i].intValue());
             }
         } else {
             proj = new Integer[numFlattenedCols];
             for (i = 0; i < proj.length; i++) {
-                proj[i] = new Integer(clusterMap.indexOf(i));
+                proj[i] = computeProjectedColumn(i);
             }
         }
         return proj;
+    }
+
+    private Integer computeProjectedColumn(int i)
+    {
+        int j = clusterMap.indexOf(i);
+        assert(j != -1);
+        return new Integer(j);
     }
     
     /**
      * Determines if an index is referenced by projection list
      * 
      * @param index clustered index being checked
-     * @param projection projected column list
+     * @param projection array of flattened ordinals of projected columns
      * 
      * @return true if at least one column in the clustered index is
      * referenced in the projection list
@@ -318,17 +350,37 @@ class LcsIndexGuide
             CwmIndexedFeature indexedFeature = (CwmIndexedFeature) f;
             FemAbstractColumn column = 
                 (FemAbstractColumn) indexedFeature.getFeature();
-            int n = new Integer(flattenOrdinal(column.getOrdinal()));
-            for (int i = 0; i < projection.length; i++) {
-                if (n == projection[i]) {
-                    return true;
-                }
+            if (testColumnCoverage(column, projection)) {
+                return true;
             }
         }
         return false;
     }
     
-    private int flattenOrdinal(int columnOrdinal)
+    /**
+     * Determines if a column is referenced by projection list.
+     * 
+     * @param column column being checked
+     * @param projection array of flattened ordinals of projected columns
+     * 
+     * @return true if the column (or one of its sub-fields for a column with
+     * structured type) is referenced in the projection list
+     */
+    public boolean testColumnCoverage(
+        FemAbstractColumn column,
+        Integer [] projection)
+    {
+        int n = flattenOrdinal(column.getOrdinal());
+        int nEnd = n + getNumFlattenedSubCols(column.getOrdinal());
+        for (int i = 0; i < projection.length; i++) {
+            if ((projection[i] >= n) && (projection[i] < nEnd)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    int flattenOrdinal(int columnOrdinal)
     {
         int i = flatteningMap[columnOrdinal];
         assert(i != -1);

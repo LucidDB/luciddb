@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/ddl/misc.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/ddl/misc.sql#4 $
 0: jdbc:farrago:> -- Miscellaneous DDL
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema misc;
@@ -73,6 +73,19 @@ Error: PRIMARY KEY constraint required for table "MISC"."MISSING_PK" (state=,cod
 . . . . . . . . > ;
 Error: Multiple clustered indexes contain column "J" (state=,code=0)
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test usage of UDT's for column type
+0: jdbc:farrago:> create type square as (
+. . . . . . . . >     side_length double
+. . . . . . . . > ) final;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table lcs_table_udt(i int not null,s square)
+. . . . . . . . > server sys_column_store_data_server
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test LCS drop/truncate
+0: jdbc:farrago:> truncate table lcs_table;
+0: jdbc:farrago:> drop table lcs_table_explicit;
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test some features which aren't yet implemented for LCS
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- doesn't fail, but has no effect,
@@ -82,25 +95,11 @@ Error: Multiple clustered indexes contain column "J" (state=,code=0)
 . . . . . . . . > create index unclustered_i on lcs_table_unclustered(i)
 . . . . . . . . > ;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create type square as (
-. . . . . . . . >     side_length double
-. . . . . . . . > ) final;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail:  can't handle UDT yet
-0: jdbc:farrago:> create table lcs_table_udt(i int not null,s square)
-. . . . . . . . > server sys_column_store_data_server
-. . . . . . . . > ;
-Error: java.lang.UnsupportedOperationException: class java.lang.String: column-store for UDT (state=,code=0)
-0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  can't handle collections yet
 0: jdbc:farrago:> create table lcs_table_multiset(i int not null,im integer multiset)
 . . . . . . . . > server sys_column_store_data_server
 . . . . . . . . > ;
 Error: java.lang.UnsupportedOperationException: class java.lang.String: column-store for collection type (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test LCS drop/truncate; TODO: with data
-0: jdbc:farrago:> truncate table lcs_table;
-0: jdbc:farrago:> drop table lcs_table_explicit;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- End misc.sql
 0: jdbc:farrago:> 

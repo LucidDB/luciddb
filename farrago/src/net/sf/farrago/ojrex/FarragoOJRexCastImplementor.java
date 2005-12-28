@@ -78,6 +78,9 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
                 rhsType.getSqlTypeName() != null) 
             {
                 if (!SqlTypeUtil.canCastFrom(lhsType, rhsType, true)) {
+                    // REVIEW jvs 27-Dec-2005:  Need a better error
+                    // message here:  this is during code generation, but
+                    // the message is intended for execution.
                     throw FarragoResource.instance().Overflow.ex();
                 }
             }

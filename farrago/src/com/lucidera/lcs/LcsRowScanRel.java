@@ -61,7 +61,9 @@ public class LcsRowScanRel extends TableAccessRelBase implements FennelRel
      * all columns.  Note that these ordinals are relative to the table.
      */
     final Integer [] projectedColumns;
-    
+
+    // REVIEW jvs 27-Dec-2005:  Why is this declared as a member
+    // variable?  It's only used in one method.
     /**
      * Array of 0-based columns representing the projection list relative
      * to the clusters that will be scanned
@@ -159,10 +161,25 @@ public class LcsRowScanRel extends TableAccessRelBase implements FennelRel
         } else {
             projection = Arrays.asList(projectedColumns);
         }
+        
+        // REVIEW jvs 27-Dec-2005:  Since LcsRowScanRel is given
+        // a list (implying ordering) as input, it seems to me that
+        // the caller should be responsible for putting the
+        // list into a deterministic order rather than doing
+        // it here.
+        
         TreeSet indexNames = new TreeSet();
         for (FemLocalIndex index : clusteredIndexes) {
             indexNames.add(index.getName());
         }
+
+        // REVIEW jvs 27-Dec-2005: See
+        // http://issues.eigenbase.org/browse/FRG-8; the "clustered indexes"
+        // attribute is an example of a derived attribute which doesn't need to
+        // be part of the digest (it's implied by the column projection since
+        // we don't allow clusters to overlap), but is useful in verbose mode.
+        // Can't resolve this comment until FRG-8 is completed.
+        
         pw.explain(
             this,
             new String [] { "table", "projection", "clustered indexes"},
@@ -197,8 +214,6 @@ public class LcsRowScanRel extends TableAccessRelBase implements FennelRel
         FemTupleAttrDescriptor attrDesc = repos.newFemTupleAttrDescriptor();
         tupleDesc.getAttrDescriptor().add(attrDesc);
         attrDesc.setTypeOrdinal(typeDesc.getOrdinal());
-        attrDesc.setByteLength(typeDesc.getFixedByteCount());
-        attrDesc.setNullable(false);
         input.setOutputDesc(tupleDesc);
             
         implementor.addDataFlowFromProducerToConsumer(input, scanStream);
@@ -286,8 +301,13 @@ public class LcsRowScanRel extends TableAccessRelBase implements FennelRel
             // the plan.
             clusterScan.setRootPageId(-1);
         }
+
         clusterScan.setSegmentId(LcsDataServer.getIndexSegmentId(index));
         clusterScan.setIndexId(JmiUtil.getObjectId(index));
+
+        // REVIEW jvs 27-Dec-2005:  this code is duplicated here,
+        // in LcsDataServer, and in LcsTableAppendRel.  It should be
+        // factored out as a static utility method on LcsIndexGuide.
 
         // tupledesc is the descriptor of the btree index corresponding to
         // the cluster.  For LCS clustered indexes, the stored tuple is always
@@ -300,8 +320,6 @@ public class LcsRowScanRel extends TableAccessRelBase implements FennelRel
             FemTupleAttrDescriptor attrDesc = repos.newFemTupleAttrDescriptor();
             tupleDesc.getAttrDescriptor().add(attrDesc);
             attrDesc.setTypeOrdinal(typeDesc.getOrdinal());
-            attrDesc.setByteLength(typeDesc.getFixedByteCount());
-            attrDesc.setNullable(false);
         }
         clusterScan.setTupleDesc(tupleDesc);
         

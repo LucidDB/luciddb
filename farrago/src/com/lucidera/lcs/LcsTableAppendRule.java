@@ -71,7 +71,6 @@ public class LcsTableAppendRule extends RelOptRule
             return;
         }
 
-        // Note: we do not support structured column in the column store yet.
         if (!tableModification.isFlattened()) {
             return;
         }

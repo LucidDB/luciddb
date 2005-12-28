@@ -1,5 +1,5 @@
 -----------------------------------
--- LucidDB COlumn Store SQL test --
+-- LucidDB Column Store SQL test --
 -----------------------------------
 
 create schema lcs;
@@ -103,9 +103,6 @@ create table lcsemps(city varchar(20)) server sys_column_store_data_server;
 -- verify creation of system-defined clustered index
 !indexes LCSEMPS
 
--- alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
--- alter system set "calcVirtualMachine" = 'CALCVM_AUTO';
-
 -- verify that explain plan works
 !set outputformat csv
 explain plan for insert into lcsemps values(NULL);
@@ -167,7 +164,8 @@ insert into lcsemps select city from sales.emps;
 
 -- NOTE: 2005-12-06(rchen) this used to fail with:
 -- java: SXMutex.cpp:144: bool fennel::SXMutex::tryUpgrade(): Assertion `!nExclusive' failed.
--- It's now fixed by allocating a brand new LcsClusterNodeWriter for every LcsClusterAppendExecStream::open()
+-- It's now fixed by allocating a brand new LcsClusterNodeWriter for every 
+-- LcsClusterAppendExecStream::open()
 insert into lcsemps values(NULL);
 
 select * from lcsemps order by city;
@@ -215,7 +213,8 @@ drop table lcsemps;
 -- Without specifying the clustered index clause in create table, a default 
 -- index will be created for each column.
 -- Also, LCS tables do not require primary keys.
-create table lcsemps(empno int, name varchar(128)) server sys_column_store_data_server;
+create table lcsemps(empno int, name varchar(128)) 
+server sys_column_store_data_server;
 
 -- verify creation of system-defined clustered indices
 !indexes LCSEMPS
@@ -248,9 +247,10 @@ drop table lcsemps;
 --
 -- 2.2 Four clusters.
 --
-create table multicluster(c0 int, c1 varchar(128), c2 int, c3 int, c4 int, c5 int, c6 varchar(128),
-                     c7 int)
-    server sys_column_store_data_server
+create table multicluster(
+    c0 int, c1 varchar(128), c2 int, c3 int, c4 int, c5 int, c6 varchar(128),
+    c7 int)
+server sys_column_store_data_server
 create clustered index i_c0 on multicluster(c0)
 create clustered index i_c1_c2 on multicluster(c1, c2)
 create clustered index i_c3_c4_c5 on multicluster(c3, c4)
@@ -377,6 +377,61 @@ truncate table tencols;
 select * from tencols;
 
 drop table tencols;
+
+
+-------------------------------------
+-- Part 4. UDT test --
+-------------------------------------
+
+create type rectangle as (
+    width double default 2.0,
+    height double default 4.0
+) final;
+
+create table rectangles(name varchar(128), r rectangle, id int not null)
+server sys_column_store_data_server
+;
+
+-- verify that three indexes are created (not four)
+!indexes RECTANGLES
+
+insert into rectangles values('Default', new rectangle(), 1);
+
+-- can't execute this because we don't support returning UDT instances
+-- via JDBC yet; but at least explain plan below should work
+-- select * from rectangles t;
+
+select id from rectangles t;
+
+select t.r.width from rectangles t;
+
+select t.r.height, name from rectangles t;
+
+!set outputformat csv
+
+explain plan for
+insert into rectangles values('Default', new rectangle(), 1);
+
+explain plan for
+select * from rectangles t;
+
+explain plan for
+select id from rectangles t;
+
+explain plan for
+select t.r.width from rectangles t;
+
+explain plan for
+select t.r.height, name from rectangles t;
+
+!set outputformat table
+
+truncate table rectangles;
+
+select count(*) from rectangles;
+
+drop table rectangles;
+drop type rectangle;
 
 
 --

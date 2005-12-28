@@ -82,8 +82,8 @@ class LcsDataServer extends MedAbstractFennelDataServer
     {
         super.registerRules(planner);
 
-        // TODO jvs 26-Oct-2005:  planner rules specific to
-        // column-store go here, e.g.
+        // NOTE jvs 26-Oct-2005:  planner rules specific to
+        // column-store go here
         planner.addRule(new LcsTableAppendRule());
         planner.addRule(new LcsTableProjectionRule());
     }
@@ -94,20 +94,17 @@ class LcsDataServer extends MedAbstractFennelDataServer
         FemLocalIndex generatedPrimaryKeyIndex)
         throws SQLException
     {
-        // Verify that no column has a UDT or collection for its type, because
+        // Verify that no column has a collection for its type, because
         // we don't support those...yet.
         Set<CwmColumn> uncoveredColumns = new HashSet<CwmColumn>(
             table.getFeature());
         for (CwmColumn col : uncoveredColumns) {
-            if (col.getType() instanceof FemUserDefinedType) {
-                throw Util.needToImplement(
-                    "column-store for UDT");
-            }
             if (col.getType() instanceof FemSqlcollectionType) {
                 throw Util.needToImplement(
                     "column-store for collection type");
             }
         }
+        
         // Verify that clustered indexes do not overlap
         for (Object i : FarragoCatalogUtil.getTableIndexes(repos, table)) {
             FemLocalIndex index = (FemLocalIndex) i;
@@ -192,8 +189,6 @@ class LcsDataServer extends MedAbstractFennelDataServer
             tupleDesc.getAttrDescriptor().add(attrDesc);
             attrDesc.setTypeOrdinal(
                 typeDesc.getOrdinal());
-            attrDesc.setByteLength(typeDesc.getFixedByteCount());
-            attrDesc.setNullable(false);
         }
 
         cmd.setTupleDesc(tupleDesc);

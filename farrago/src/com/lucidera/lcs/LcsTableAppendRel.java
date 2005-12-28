@@ -40,20 +40,26 @@ import org.eigenbase.relopt.*;
 
 /**
  * LcsTableAppendRel is the relational expression corresponding to
- * appending to a single cluster of a column storage table.
+ * appending rows to all of the clusters of a column-store table.
  * 
  * @author Rushan Chen
  * @version $Id$
  */
-public class LcsTableAppendRel extends TableModificationRelBase implements FennelRel    
+public class LcsTableAppendRel
+    extends TableModificationRelBase
+    implements FennelRel    
 {
     //~ Instance fields -------------------------------------------------------
 
-	/** Helper class to manipulate the cluster indexes. */
+    /** Helper class to manipulate the cluster indexes. */
     private LcsIndexGuide indexGuide;
     
     /** Refinement for TableModificationRelBase.table. */
     final LcsTable lcsTable;
+    
+    // REVIEW jvs 27-Dec-2005: Unfortunately, Javadoc doesn't support
+    // the in/out parameter modes available in doxygen; the param
+    // tags below will get chewed up.
     
     /**
      * Constructor. Currectly only insert is supported.
@@ -62,7 +68,7 @@ public class LcsTableAppendRel extends TableModificationRelBase implements Fenne
      * @param[in] lcsTable target table of insert
      * @param[in] connection connection
      * @param[in] child input to the load
-     * @param[in] DML operation type. 
+     * @param[in] operation DML operation type
      * @param[in] updateColumnList
      */
     public LcsTableAppendRel(RelOptCluster cluster, LcsTable lcsTable, 
@@ -81,6 +87,11 @@ public class LcsTableAppendRel extends TableModificationRelBase implements Fenne
     // implement RelNode
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
+        // REVIEW jvs 27-Dec-2005: I know costing is mostly bogus right now,
+        // but copying the formulas from scan here is extra bogus;
+        // should be using child rows and child row type, since
+        // the load itself only produces the rowcount (one row/col).
+        
         double dRows = getRows();
         // TODO:  compute page-based I/O cost
         // CPU cost is proportional to number of columns projected
@@ -148,10 +159,12 @@ public class LcsTableAppendRel extends TableModificationRelBase implements Fenne
     // Override TableModificationRelBase
     public void explain(RelOptPlanWriter pw)
     {        
+        // REVIEW jvs 27-Dec-2005: We can just leave off operation
+        // and flattened since their value is constant.
+        
         // TODO: 
-        // 1. display cost information via a generic method
-        // See issue from http://jirahost.eigenbase.org:8080/browse/FRG-8
-        // 2. make list of index names available in the verbose mode of explain plan.
+        // make list of index names available in the verbose mode of
+        // explain plan.
         pw.explain(
             this,
             new String [] {"child", "table", "operation", "flattened"},
@@ -163,7 +176,7 @@ public class LcsTableAppendRel extends TableModificationRelBase implements Fenne
 
     private FemSplitterStreamDef newSplitter(FarragoRepos repos)
     {
-        FemSplitterStreamDef splitter =repos.newFemSplitterStreamDef();
+        FemSplitterStreamDef splitter = repos.newFemSplitterStreamDef();
         
         splitter.setOutputDesc(
             FennelRelUtil.createTupleDescriptorFromRowType(
@@ -178,15 +191,19 @@ public class LcsTableAppendRel extends TableModificationRelBase implements Fenne
         FemBarrierStreamDef barrier = repos.newFemBarrierStreamDef();
 
         FemTupleDescriptor rowCountTupleDesc = repos.newFemTupleDescriptor();
+
+        // REVIEW jvs 27-Dec-2005: it's better to use
+        // FennelRelUtil.createTupleDescriptorFromRowType(
+        //     repos, getFarragoTypeFactory(), getRowType())
+        // instead of hard-coding here.
         
-        FemTupleAttrDescriptor rowCountAttrDesc = repos.newFemTupleAttrDescriptor();
+        FemTupleAttrDescriptor rowCountAttrDesc =
+            repos.newFemTupleAttrDescriptor();
         FennelStoredTypeDescriptor rowCountTypeDesc =
             FennelStandardTypeDescriptor.INT_64;
                 
         rowCountAttrDesc.setTypeOrdinal(
             rowCountTypeDesc.getOrdinal());
-        rowCountAttrDesc.setByteLength(rowCountTypeDesc.getFixedByteCount());
-        rowCountAttrDesc.setNullable(false);
     
         rowCountTupleDesc.getAttrDescriptor().add(rowCountAttrDesc);
     
@@ -197,7 +214,8 @@ public class LcsTableAppendRel extends TableModificationRelBase implements Fenne
 
     private FemBufferingTupleStreamDef newBuffer(FarragoRepos repos)    
     {
-        FemBufferingTupleStreamDef buffer = repos.newFemBufferingTupleStreamDef();
+        FemBufferingTupleStreamDef buffer =
+            repos.newFemBufferingTupleStreamDef();
     
         buffer.setInMemory(false);
         buffer.setMultipass(false);
@@ -218,6 +236,11 @@ public class LcsTableAppendRel extends TableModificationRelBase implements Fenne
         FemLcsClusterAppendStreamDef clusterAppend = 
             repos.newFemLcsClusterAppendStreamDef();
         
+        // REVIEW jvs 27-Dec-2005: it's better to use
+        // FennelRelUtil.createTupleDescriptorFromRowType(
+        //     repos, getFarragoTypeFactory(), getRowType())
+        // instead of hard-coding here.
+        
         //
         // Set up FemExecutionStreamDef
         //        - setOutputDesc
@@ -227,11 +250,10 @@ public class LcsTableAppendRel extends TableModificationRelBase implements Fenne
         FennelStoredTypeDescriptor rowCountTypeDesc =
             FennelStandardTypeDescriptor.INT_64;
         
-        FemTupleAttrDescriptor rowCountAttrDesc = repos.newFemTupleAttrDescriptor();
+        FemTupleAttrDescriptor rowCountAttrDesc =
+            repos.newFemTupleAttrDescriptor();
         rowCountAttrDesc.setTypeOrdinal(
                 rowCountTypeDesc.getOrdinal());
-        rowCountAttrDesc.setByteLength(rowCountTypeDesc.getFixedByteCount());
-        rowCountAttrDesc.setNullable(false);
         
         rowCountTupleDesc.getAttrDescriptor().add(rowCountAttrDesc);
         clusterAppend.setOutputDesc(rowCountTupleDesc);
@@ -246,7 +268,8 @@ public class LcsTableAppendRel extends TableModificationRelBase implements Fenne
         clusterAppend.setRootPageId(
             stmt.getIndexMap().getIndexRoot(clusterIndex));
         
-        clusterAppend.setSegmentId(LcsDataServer.getIndexSegmentId(clusterIndex));
+        clusterAppend.setSegmentId(
+            LcsDataServer.getIndexSegmentId(clusterIndex));
         
         long indexId = JmiUtil.getObjectId(clusterIndex);
         
@@ -263,11 +286,10 @@ public class LcsTableAppendRel extends TableModificationRelBase implements Fenne
             FennelStandardTypeDescriptor.INT_64;
         
         for (int i = 0; i < 2; ++i) {
-            FemTupleAttrDescriptor indexAttrDesc = repos.newFemTupleAttrDescriptor();
+            FemTupleAttrDescriptor indexAttrDesc =
+                repos.newFemTupleAttrDescriptor();
             indexAttrDesc.setTypeOrdinal(
                 indexTypeDesc.getOrdinal());
-            indexAttrDesc.setByteLength(indexTypeDesc.getFixedByteCount());
-            indexAttrDesc.setNullable(false);
             indexTupleDesc.getAttrDescriptor().add(indexAttrDesc);
         }
 
@@ -279,7 +301,8 @@ public class LcsTableAppendRel extends TableModificationRelBase implements Fenne
         //
         Integer[] keyProj ={0};
         
-        clusterAppend.setKeyProj(FennelRelUtil.createTupleProjection(repos, keyProj));
+        clusterAppend.setKeyProj(
+            FennelRelUtil.createTupleProjection(repos, keyProj));
         
         //
         // Set up FemLcsClusterAppendStreamDef
@@ -289,7 +312,8 @@ public class LcsTableAppendRel extends TableModificationRelBase implements Fenne
         clusterAppend.setOverwrite(false);
         
         Integer[] clusterColProj;
-        clusterColProj = new Integer[clusterIndex.getIndexedFeature().size()];
+        clusterColProj =
+            new Integer[indexGuide.getSizeOfClusteredIndex(clusterIndex)];
         
         //
         // Figure out the projection covering columns contained in each index.
@@ -298,12 +322,17 @@ public class LcsTableAppendRel extends TableModificationRelBase implements Fenne
         for (Object f : clusterIndex.getIndexedFeature()) {
             CwmIndexedFeature indexedFeature = (CwmIndexedFeature) f;
             FemAbstractColumn column = 
-                (FemAbstractColumn) indexedFeature.getFeature();    
-            clusterColProj[i] = column.getOrdinal();
-            i++;
+                (FemAbstractColumn) indexedFeature.getFeature();
+            int n = indexGuide.getNumFlattenedSubCols(column.getOrdinal());
+            for (int j = 0; j < n; ++j) {
+                clusterColProj[i] =
+                    indexGuide.flattenOrdinal(column.getOrdinal()) + j;
+                i++;
+            }
         }
         
-        clusterAppend.setClusterColProj(FennelRelUtil.createTupleProjection(repos, clusterColProj));
+        clusterAppend.setClusterColProj(
+            FennelRelUtil.createTupleProjection(repos, clusterColProj));
         
         return clusterAppend;
         
@@ -312,7 +341,10 @@ public class LcsTableAppendRel extends TableModificationRelBase implements Fenne
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
-        assert (getOperation().getOrdinal() == TableModificationRel.Operation.INSERT_ORDINAL);
+        // REVIEW jvs 27-Dec-2005: Should do this in constructor
+        // rather than waiting until here.
+        assert (getOperation().getOrdinal()
+            == TableModificationRel.Operation.INSERT_ORDINAL);
         
         FemExecutionStreamDef input =
             implementor.visitFennelChild((FennelRel) getChild());
@@ -331,24 +363,29 @@ public class LcsTableAppendRel extends TableModificationRelBase implements Fenne
         //
         // 2. Setup all the LcsClusterAppendStreamDef's
         //    - Get all the clustered indices.
-        //    - For each index, set up the corresponding clusterAppend stream def.
+        //    - For each index, set up the corresponding clusterAppend stream
+        //      def.
         //
             
         ArrayList clusterAppendDefs = new ArrayList();
         
-        // Get the clustered index associated with this table. Currently we only allow 
-        // loading into a Lcs table with only one clustered index defined.
+        // Get the clustered indexes associated with this table.
         List<FemLocalIndex> clusteredIndexes =
             FarragoCatalogUtil.getClusteredIndexes(repos, table);
         
         for (FemLocalIndex clusteredIndex : clusteredIndexes) {            
-            clusterAppendDefs.add(newClusterAppend(repos, stmt, clusteredIndex));
+            clusterAppendDefs.add(
+                newClusterAppend(repos, stmt, clusteredIndex));
         }
          
         //
         // 3. Setup the BarrierStreamDef.
         //
         FemBarrierStreamDef barrier = newBarrier(repos);
+        
+        // REVIEW jvs 27-Dec-2005: this conditional buffering logic was
+        // duplicated from FtrsTableModificationRel; should be factored out
+        // instead, maybe to MedAbstractFennelDataServer
         
         //
         // 4. Set up buffering if required.
@@ -376,7 +413,8 @@ public class LcsTableAppendRel extends TableModificationRelBase implements Fenne
             splitter);
             
         for (Object streamDef : clusterAppendDefs) {
-            FemLcsClusterAppendStreamDef clusterAppend = (FemLcsClusterAppendStreamDef) streamDef;
+            FemLcsClusterAppendStreamDef clusterAppend =
+                (FemLcsClusterAppendStreamDef) streamDef;
             implementor.addDataFlowFromProducerToConsumer(
                 splitter,
                 clusterAppend);
