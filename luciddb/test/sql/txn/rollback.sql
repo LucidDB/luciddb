@@ -35,3 +35,5 @@ values (1/0);
 
 -- verify that table contents were rolled back
 select count(*) from s.t;
+
+drop schema s cascade;

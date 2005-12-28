@@ -1,4 +1,4 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/txn/negative.sql#1 $
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/txn/rollback.sql#1 $
 0: jdbc:luciddb:> -- Tests LucidDB support for implicit rollback on error
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create schema s;
@@ -58,5 +58,7 @@ Messages:
 +---------+
 | 3000    |
 +---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop schema s cascade;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit
