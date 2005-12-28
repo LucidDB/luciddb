@@ -630,7 +630,8 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         }
 
         // now transform node itself
-        if (node.isA(SqlKind.SetQuery) || node.isA(SqlKind.Values)) {
+        //if (node.isA(SqlKind.SetQuery) || node.isA(SqlKind.Values)) {
+        if (node.isA(SqlKind.Values)) {
             final SqlNodeList selectList =
                 new SqlNodeList(SqlParserPos.ZERO);
             selectList.add(new SqlIdentifier("*", SqlParserPos.ZERO));
