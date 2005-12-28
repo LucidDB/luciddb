@@ -75,8 +75,10 @@ class SqlStringTest : virtual public TestBase, public TraceSource
     void testSqlStringAlterCase();
     void testSqlStringTrim();
     void testSqlStringCastToExact();
+    void testSqlStringCastToDecimal();
     void testSqlStringCastToApprox();
     void testSqlStringCastFromExact();
+    void testSqlStringCastFromDecimal();
     void testSqlStringCastFromApprox();
     void testSqlStringCastToVarChar();
     void testSqlStringCastToChar();
@@ -133,6 +135,15 @@ class SqlStringTest : virtual public TestBase, public TraceSource
                                          int src_len,
                                          bool exceptionExpected);
 
+    void testSqlStringCastToDecimal_Helper(uint64_t value,
+                                           int precision,
+                                           int scale,
+                                           char const * const buf,
+                                           int src_storage,
+                                           int src_len,
+                                           bool outOfRangeExpected,
+                                           bool invalidCharExpected);
+
     void testSqlStringCastToApprox_Helper(double value,
                                           char const * const buf,
                                           int src_storage,
@@ -166,8 +177,10 @@ public:
         FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringAlterCase);
         FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringTrim);
         FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringCastToExact);
+        FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringCastToDecimal);
         FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringCastToApprox);
         FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringCastFromExact);
+        FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringCastFromDecimal);
         FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringCastFromApprox);
         FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringCastToVarChar);
         FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringCastToChar);
@@ -2201,6 +2214,403 @@ SqlStringTest::testSqlStringCastToExact()
     }
 }
 
+void
+SqlStringTest::testSqlStringCastToDecimal_Helper(uint64_t value,
+                                                 int precision,
+                                                 int scale,
+                                                 char const * const buf,
+                                                 int src_storage,
+                                                 int src_len,
+                                                 bool outOfRangeExpected,
+                                                 bool invalidCharExpected)
+{
+    bool caught = false;
+    int64_t newvalue;
+    SqlStringBuffer src(src_storage, src_len,
+                        0, src_storage-src_len,
+                        's', ' ');
+
+#if 0
+    BOOST_MESSAGE("buf = |" << buf << "|");
+#endif
+    if (strlen(buf) > src_len) {
+        // not all test cases will fit, just silently ignore them
+        return;
+    }
+
+    // copy string, minus null
+    memcpy(src.mStr, buf, strlen(buf));
+    // pad out any leftovers with spaces (say, if value is very small for 
+    // string length)
+    memset(src.mStr + strlen(buf), ' ', src_len - strlen(buf));
+#if 0
+    BOOST_MESSAGE("str = |" << src.mLeftP << "|");
+#endif
+    
+    try {
+        newvalue = SqlStrCastToExact<1,1>(src.mStr,
+                                          src_len,
+                                          precision,
+                                          scale);
+    } catch (const char *str) {
+        caught = true;
+        if (outOfRangeExpected) {
+            BOOST_CHECK_EQUAL(strcmp(str, "22003"), 0);
+        } else if (invalidCharExpected) {
+            BOOST_CHECK_EQUAL(strcmp(str, "22018"), 0);
+        } else {
+            // Unexpected exception
+            BOOST_CHECK(false);
+        }
+    }
+    BOOST_CHECK_EQUAL(caught, (invalidCharExpected || outOfRangeExpected));
+    if (!caught) {
+        BOOST_CHECK_EQUAL(value, newvalue);
+        BOOST_CHECK(src.verify());
+    }
+}
+
+
+// tests varchar case, at least partially, when src_len == src_storage
+void
+SqlStringTest::testSqlStringCastToDecimal()
+{
+    int src_storage, src_len;
+    int rand_idx;
+    int precision, scale;
+    int64_t power, poweridx;
+    int64_t value, valuer1, valuer2, valuer3;
+    char buf[256];
+    
+    src_storage = MAXLEN;
+    //    strlen(2^64) = 20;
+    for (src_storage = 1; src_storage <= 20; src_storage++) {
+        for (src_len = 1; src_len <= src_storage; src_len++) {
+            power = 1;
+            for (poweridx = 0; poweridx < src_len; poweridx++) {
+                power *= 10;
+            }
+            // do a bit more than typical random to get decent coverage
+            // on positives, negatives, and various length numbers.
+            // besides, test runs very quickly anyway.
+            for (rand_idx = 0; rand_idx < 5 * MAXRANDOM; rand_idx++) {
+
+                // rand only produces a long, not a long long, so get jiggy.
+                valuer1 = rand();
+                valuer2 = rand();
+                valuer3 = rand();
+                value = (valuer1 * valuer2 * valuer3) % power;
+                // overflow will cause some negative values
+                if (value < 0) value *= -1;
+                if (src_len > 1 && rand() % 2) {
+                    // cause ~half of values to be negative, but
+                    // reduce length by one to prevent overflow of
+                    // src.
+                    value /= -10;
+                }
+
+#if 0
+                BOOST_MESSAGE("src_storage = " << src_storage);
+                BOOST_MESSAGE("src_len = " << src_len);
+                BOOST_MESSAGE("power = " << power);
+                BOOST_MESSAGE("value = " << value);
+#endif
+
+                scale = 0;
+
+                // positive test, "1234   "
+                sprintf(buf, "%lld", value);
+                precision = (value < 0)? strlen(buf)-1: strlen(buf);
+                BOOST_REQUIRE(strlen(buf) <= src_len);
+                testSqlStringCastToDecimal_Helper(value,
+                                                  precision,
+                                                  scale,
+                                                  buf,
+                                                  src_storage,
+                                                  src_len,
+                                                  false,
+                                                  false);
+
+                // positive test, "+123   "
+                if (src_len >= 2 && value >= 0) {
+                    sprintf(buf, "+%lld", value / 10);
+                    BOOST_REQUIRE(strlen(buf) <= src_len);
+                    testSqlStringCastToDecimal_Helper(value / 10,
+                                                      precision,
+                                                      scale,
+                                                      buf,
+                                                      src_storage,
+                                                      src_len,
+                                                      false,
+                                                      false);
+                }
+
+
+                // positive test, "  123", " 1234", "12345", "123456"
+                sprintf(buf, "%5lld", value);
+                testSqlStringCastToDecimal_Helper(value,
+                                                  precision,
+                                                  scale,
+                                                  buf,
+                                                  src_storage,
+                                                  src_len,
+                                                  false,
+                                                  false);
+
+                // positive test, "            1234"
+                sprintf(buf, "%20lld", value);
+                testSqlStringCastToDecimal_Helper(value,
+                                                  precision,
+                                                  scale,
+                                                  buf,
+                                                  src_storage,
+                                                  src_len,
+                                                  false,
+                                                  false);
+
+                // positive test, "000000000000001234"
+                sprintf(buf, "%020lld", value);
+                testSqlStringCastToDecimal_Helper(value,
+                                                  precision,
+                                                  scale,
+                                                  buf,
+                                                  src_storage,
+                                                  src_len,
+                                                  false,
+                                                  false);
+
+
+                // positive test, "0001234  "
+                sprintf(buf, "%07lld", value);
+                testSqlStringCastToDecimal_Helper(value,
+                                                  precision,
+                                                  scale,
+                                                  buf,
+                                                  src_storage,
+                                                  src_len,
+                                                  false,
+                                                  false);
+
+                // positive test, ".1234"
+                if (src_len >= 3) {
+                    sprintf(buf, ".%lld", value);
+                    if (value < 0) {
+                        buf[0] = '-';
+                        buf[1] = '.';
+                    }
+                    testSqlStringCastToDecimal_Helper(value,
+                                                      precision,
+                                                      precision,
+                                                      buf,
+                                                      src_storage,
+                                                      src_len,
+                                                      false,
+                                                      false);
+                }
+
+
+                // positive test, ".1234e3" = "123.4"
+                if (src_len >= 5) {
+                    sprintf(buf, ".%llde3", value);
+                    if (value < 0) {
+                        buf[0] = '-';
+                        buf[1] = '.';
+                    }
+                    testSqlStringCastToDecimal_Helper(value,
+                                                      precision,
+                                                      precision-3,
+                                                      buf,
+                                                      src_storage,
+                                                      src_len,
+                                                      false,
+                                                      false);
+
+                    // negative test, out of range
+                    testSqlStringCastToDecimal_Helper(value,
+                                                      precision,
+                                                      precision,
+                                                      buf,
+                                                      src_storage,
+                                                      src_len,
+                                                      true,
+                                                      false);
+                }
+
+                // positive test, "1234e-3"
+                if (src_len >= 5) {
+                    uint64_t tmp;
+                    sprintf(buf, "%llde-3", value);
+
+                    testSqlStringCastToDecimal_Helper(value,
+                                                      precision,
+                                                      3,
+                                                      buf,
+                                                      src_storage,
+                                                      src_len,
+                                                      false,
+                                                      false);
+
+                    // positive test, rounding
+                    if (value < 0) {
+                        tmp = -((-value + 5)/10);
+                    } else {
+                        tmp = (value + 5)/10;
+                    }
+                    testSqlStringCastToDecimal_Helper(tmp,
+                                                      precision,
+                                                      2,
+                                                      buf,
+                                                      src_storage,
+                                                      src_len,
+                                                      false,
+                                                      false);
+
+                    // negative test, out of range
+                    testSqlStringCastToDecimal_Helper(value,
+                                                      precision,
+                                                      4,
+                                                      buf,
+                                                      src_storage,
+                                                      src_len,
+                                                      true,
+                                                      false);
+                }
+
+                // negative test, out of range
+                if (abs(value) >= 10) {
+                    sprintf(buf, "%lld", value);                    
+                    testSqlStringCastToDecimal_Helper(value,
+                                                      precision-1,
+                                                      scale,
+                                                      buf,
+                                                      src_storage,
+                                                      src_len,
+                                                      true,
+                                                      false);
+                }                
+
+                // negative test, "123e"
+                if (src_len >= 3) {
+                    sprintf(buf, "%llde", value);
+                    testSqlStringCastToDecimal_Helper(value,
+                                                      precision,
+                                                      scale,
+                                                      buf,
+                                                      src_storage,
+                                                      src_len,
+                                                      false,
+                                                      true);
+                }
+
+                // negative test, "a234   "
+                sprintf(buf, "%lld", value);
+                buf[0] = 'a';
+                testSqlStringCastToDecimal_Helper(value,
+                                                  precision,
+                                                  scale,
+                                                  buf,
+                                                  src_storage,
+                                                  src_len,
+                                                  false,
+                                                  true);
+
+                // negative test, "1a34   "
+                if (src_len > 2) {
+                    sprintf(buf, "%lld", value);
+                    buf[1] = 'a';
+                    testSqlStringCastToDecimal_Helper(value,
+                                                      precision,
+                                                      scale,
+                                                      buf,
+                                                      src_storage,
+                                                      src_len,
+                                                      false,
+                                                      true);
+                }
+
+                // negative test, "1 23 "
+                if (src_len > 3 && value >= 100) {
+                    sprintf(buf, "%lld", value);
+                    buf[1] = ' ';
+                    testSqlStringCastToDecimal_Helper(value,
+                                                      precision,
+                                                      scale,
+                                                      buf,
+                                                      src_storage,
+                                                      src_len,
+                                                      false,
+                                                      true);
+                }
+
+                // negative test, "    "
+                memset(buf, ' ', src_len);
+                testSqlStringCastToDecimal_Helper(value,
+                                                  precision,
+                                                  scale,
+                                                  buf,
+                                                  src_storage,
+                                                  src_len,
+                                                  false,
+                                                  true);
+
+                // negative test, "- 3"
+                if (src_len > 3) {
+                    sprintf(buf, "%lld", value);
+                    buf[0] = '-';
+                    buf[1] = ' ';
+                    testSqlStringCastToDecimal_Helper(value,
+                                                      precision,
+                                                      scale,
+                                                      buf,
+                                                      src_storage,
+                                                      src_len,
+                                                      false,
+                                                      true);
+                }
+
+                // negative test, "+ 3"
+                if (src_len > 3) {
+                    sprintf(buf, "%lld", value);
+                    buf[0] = '-';
+                    buf[1] = ' ';
+                    testSqlStringCastToDecimal_Helper(value,
+                                                      precision,
+                                                      scale,
+                                                      buf,
+                                                      src_storage,
+                                                      src_len,
+                                                      false,
+                                                      true);
+                }
+
+                // negative test, "- "
+                memset(buf, ' ', src_len);
+                buf[0] = '-';
+                testSqlStringCastToDecimal_Helper(value,
+                                                  precision,
+                                                  scale,
+                                                  buf,
+                                                  src_storage,
+                                                  src_len,
+                                                  false,
+                                                  true);
+                // negative test, "+ "
+                memset(buf, ' ', src_len);
+                buf[0] = '+';
+                testSqlStringCastToDecimal_Helper(value,
+                                                  precision,
+                                                  scale,
+                                                  buf,
+                                                  src_storage,
+                                                  src_len,
+                                                  false,
+                                                  true);
+
+
+            }
+        }
+    }
+}
 
 void
 SqlStringTest::testSqlStringCastToApprox_Helper(double value,
@@ -2552,6 +2962,148 @@ SqlStringTest::testSqlStringCastFromExact()
                             newlen = SqlStrCastFromExact<1,1>(dst_fix.mStr,
                                                               dst_storage,
                                                               value,
+                                                              true);
+                        } catch (const char *str) {
+                            caught = true;
+                            BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
+                            BOOST_CHECK(expect_fix.length() > dst_storage);
+                            BOOST_CHECK(dst_fix.verify());
+                        }
+                        if (!caught) {
+                            string result_fix(dst_fix.mStr, newlen);
+                            BOOST_CHECK(dst_fix.verify());
+                            BOOST_CHECK(expect_fix.length() <= dst_storage);
+                            BOOST_CHECK(!expect_fix.compare(result_fix));
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void
+SqlStringTest::testSqlStringCastFromDecimal()
+{
+    int precision, scale;
+    int src_len;
+    int dst_storage, dst_len, newlen = 0;
+    int rand_idx, power_idx;
+    int negative;
+    int64_t value, newones, whole, decimal;
+    char expected_buf[256];
+    char digits[] = "0123456789";
+    bool caught;
+    
+    // strlen(MAX_VAL(int64_t))=19, strlen(MIN_VAL(int64_t))=20
+    for (dst_storage = 0; dst_storage <= 22; dst_storage++) {
+        for (dst_len = 0; dst_len <= dst_storage; dst_len++) {
+            for (src_len = 0; src_len < 19; src_len++) {
+                for (rand_idx = 0; rand_idx < 1; rand_idx++) {
+                    for (negative = 0; negative <= 1; negative++) {
+                        precision = src_len;
+                        value = 0;
+                        for (power_idx = 0; 
+                             power_idx < src_len - negative; // space for '-'
+                             power_idx++) {
+                            if (!value) {
+                                // no leading zeros
+                                newones = rand() % 9 + 1;
+                            } else {
+                                newones = rand() % 10;
+                            }
+                            value = value*10 + newones;
+                        }
+                        if (!(rand() % 10)) value = 0; // goose odds of 0
+                        if (negative) { 
+                            value *= -1;
+                        }
+                        scale = rand() % 25 - 5;
+
+                        if (scale == 0) {
+                            sprintf(expected_buf, "%lld", value);
+                        } else if (scale > 0) {
+                            whole = value;
+                            for (int i = 0; i < scale; i++) {
+                                whole /= 10;
+                            }
+
+                            if (whole != 0) {
+                                sprintf(expected_buf, "%lld", whole);
+                            } else {
+                                if (value < 0) {
+                                    expected_buf[0] = '-';
+                                    expected_buf[1] = '\0';
+                                } else {
+                                    expected_buf[0] = '\0';
+                                }
+                            }
+
+                            for (int i = 0; i < scale; i++) {
+                                whole *= 10;
+                            }
+                            decimal = abs(value - whole);
+
+                            int len = strlen(expected_buf);
+                            expected_buf[len] = '.';
+                            for (int i = scale-1; i >= 0; i--) {
+                                expected_buf[len+i+1] = digits[decimal % 10];
+                                decimal /= 10;
+                            }
+                            expected_buf[len+scale+1] = '\0';
+                        } else if (scale < 0) {
+                            sprintf(expected_buf, "%lld", value);
+                            if (value != 0) {
+                                int len = strlen(expected_buf);
+                                memset(expected_buf + len, '0', -scale);
+                                expected_buf[len - scale] = '\0';
+                            }
+                        }
+
+                        string expect(expected_buf);
+                        string expect_fix(expect); // right padded (CHAR)
+                        if (expect_fix.length() < dst_storage) {
+                            expect_fix.append(dst_storage -
+                                              expect_fix.length(),
+                                              ' ');
+                        }
+
+                        SqlStringBuffer dst(dst_storage, dst_len,
+                                            0, dst_storage - dst_len,
+                                            's', ' ');
+
+                        caught = false;
+                        try {
+                            newlen = SqlStrCastFromExact<1,1>(dst.mStr,
+                                                              dst_storage,
+                                                              value,
+                                                              precision,
+                                                              scale,
+                                                              false);
+                        } catch (const char *str) {
+                            caught = true;
+                            BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
+                            BOOST_CHECK(expect.length() > dst_storage);
+                            BOOST_CHECK(dst.verify());
+                        }
+                        if (!caught) {
+                            string result(dst.mStr, newlen);
+                            BOOST_CHECK(dst.verify());
+                            BOOST_CHECK(expect.length() <= dst_storage);
+                            BOOST_CHECK(!expect.compare(result));
+                        }
+
+                        SqlStringBuffer dst_fix(dst_storage, dst_len,
+                                                0, dst_storage - dst_len,
+                                                's', ' ');
+
+                        caught = false;
+                        try {
+                            newlen = SqlStrCastFromExact<1,1>(dst_fix.mStr,
+                                                              dst_storage,
+                                                              value,
+                                                              precision,
+                                                              scale,
                                                               true);
                         } catch (const char *str) {
                             caught = true;

@@ -47,7 +47,7 @@ Backtrace::Backtrace(size_t maxdepth)
     :ownbuf(true), bufsize(maxdepth + 1)
 {
 #ifndef __MINGW32__
-    addrbuf = new (void *)[bufsize];
+    addrbuf = new void * [bufsize];
     depth = backtrace(addrbuf, bufsize);
 #endif
 }

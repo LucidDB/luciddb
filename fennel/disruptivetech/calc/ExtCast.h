@@ -38,6 +38,17 @@ castExactToStrA(RegisterRef<char*>* result,
 
 //! castA. Ascii. Char & Varchar
 //! 
+//! Casts an exact numeric with precision and scale to an Ascii string.
+//!
+//! May throw "22001" data exception - string data, right truncation
+void
+castExactToStrA(RegisterRef<char*>* result,
+                RegisterRef<int64_t>* src,
+                RegisterRef<int32_t>* precision,
+                RegisterRef<int32_t>* scale);
+
+//! castA. Ascii. Char & Varchar
+//! 
 //! Casts an approximate numeric to an Ascii string.
 //!
 //! May throw "22001" data exception - string data, right truncation
@@ -53,6 +64,18 @@ castApproxToStrA(RegisterRef<char*>* result,
 void
 castStrtoExactA(RegisterRef<int64_t>* result,
                 RegisterRef<char*>* src);
+
+//! castA. Ascii. Char & Varchar
+//! 
+//! Casts a string to an exact numeric with precision and scale.
+//!
+//! May throw "22018" data exception - invalid character value for cast
+//! May throw "22003" data exception - numeric value out of range
+void
+castStrToExactA(RegisterRef<int64_t>* result,
+                RegisterRef<char*>* src,
+                RegisterRef<int32_t>* precision,
+                RegisterRef<int32_t>* scale);
 
 //! castA. Ascii. Char & Varchar
 //! 
