@@ -50,8 +50,12 @@ TAGS_DEPENDENCIES=$(DESIGN_DOCS)
 ETAGS_ARGS=$(DESIGN_DOCS)
 
 # a trivial standalone test of Backtrace
+# TODO jvs 26-June-2005:  This is a hack to suppress build on Windows;
+# if we ever get backtrace working on Windows, need to come up
+# with the proper link line.
+if !STATIC_TEST_LIBRARY
 noinst_PROGRAMS = testBacktrace
 testBacktrace_SOURCES=testBacktrace.cpp
 testBacktrace_DEPENDENCIES=Backtrace.cpp Backtrace.h
 testBacktrace_LDADD=-lcommon
-
+endif
