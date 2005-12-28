@@ -29,24 +29,19 @@
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 void DiffluenceExecStream::setOutputBufAccessors(
-    std::vector<SharedExecStreamBufAccessor> const &outAccessorListInit)
+    std::vector<SharedExecStreamBufAccessor> const &outAccessorsInit)
 {
-    outAccessorList = outAccessorListInit;
+    outAccessors = outAccessorsInit;
 }
 
 void DiffluenceExecStream::prepare(DiffluenceExecStreamParams const &params)
 {
     SingleInputExecStream::prepare(params);
     
-    /*
-     * This is how Conduit and Scratch ExecStream set up the outputBufAccessor.
-     * The output shape is the same as the input, since the consumers will
-     * share the same input buffer(which is the output buffer of
-     * Diffluence). Projection will be done by the consumer.
-     */
-    for (uint i = 0; i < outAccessorList.size(); ++i) {
-        assert(outAccessorList[i]->getProvision() == getOutputBufProvision());
-        outAccessorList[i]->setTupleShape(
+    // By default, shape for all outputs is the same as the input.
+    for (uint i = 0; i < outAccessors.size(); ++i) {
+        assert(outAccessors[i]->getProvision() == getOutputBufProvision());
+        outAccessors[i]->setTupleShape(
             pInAccessor->getTupleDesc(),
             pInAccessor->getTupleFormat());
     }
@@ -58,8 +53,8 @@ void DiffluenceExecStream::open(bool restart)
     
     if (restart) {
         // restart outputs
-        for (uint i = 0; i < outAccessorList.size(); ++i) {
-            outAccessorList[i]->clear();
+        for (uint i = 0; i < outAccessors.size(); ++i) {
+            outAccessors[i]->clear();
         }
     }
 }
@@ -68,7 +63,7 @@ ExecStreamBufProvision DiffluenceExecStream::getOutputBufProvision() const
 {
     /*
      * Indicate to the consumer that buffer should be provided by the consumer.
-     * DiffluenceExecStream does not have any associated buffers.
+     * By default, DiffluenceExecStream does not have any associated buffers.
      */
     return BUFPROV_CONSUMER;
 }

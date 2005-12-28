@@ -358,6 +358,9 @@ void LcsRowScanExecStreamTest::testScanPastEndOfCluster()
     testScanCols(2, 1, 1, proj, 1, 1);
 }
 
+// TODO jvs 27-Dec-2005:  Need to clean up test framework so that
+// some base class can be told to do this dance instead of repeating
+// it in every test case.
 void LcsRowScanExecStreamTest::testCaseSetUp()
 {    
     ExecStreamTestBase::testCaseSetUp();

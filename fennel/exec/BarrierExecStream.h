@@ -41,12 +41,12 @@ struct BarrierExecStreamParams : public ConfluenceExecStreamParams
  * BarrierExecStream is a synchronizing barrier to wait for the completion of
  * several upstream producers and generate a status output for the downstream
  * consumer.
- * Note 2005-12-14:
+ * TODO 2005-12-14:
  * BarrierExecStream can provide a buffer for its producers to write into.
  * Currently a ScratchBuffer will be added between its producers and
  * BarrierExecStream.
  *
- * @author John V. Sichi
+ * @author Rushan Chen
  * @version $Id$
  */
 class BarrierExecStream : public ConfluenceExecStream

@@ -46,16 +46,18 @@ class DiffluenceExecStream : virtual public SingleInputExecStream
 {
 protected:
 
+    // NOTE jvs 27-Dec-2005:  I renamed this from outAccessorList to
+    // outAccessors for consistency with ConfluenceExecStream.
     /**
      * List of output buffer accessors.
      */
-    std::vector<SharedExecStreamBufAccessor> outAccessorList;
+    std::vector<SharedExecStreamBufAccessor> outAccessors;
 
 public:
     // implement ExecStream
     virtual void prepare(DiffluenceExecStreamParams const &params);
     virtual void setOutputBufAccessors(
-        std::vector<SharedExecStreamBufAccessor> const &outAccessorListInit);
+        std::vector<SharedExecStreamBufAccessor> const &outAccessorsInit);
     virtual void open(bool restart);
     /**
      * Indicate to the consumer if the buffer is provided by this exec stream

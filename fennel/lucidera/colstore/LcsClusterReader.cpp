@@ -37,6 +37,8 @@ LcsClusterNode const &LcsClusterReader::readClusterPage()
 {
     bTreeReader->getTupleAccessorForRead().unmarshal(bTreeTupleData);
     clusterPageId = readClusterPageId();
+    // REVIEW jvs 27-Dec-2005:  What is bTreeRid used for?  Should probably
+    // assert that it matches node.firstRID
     bTreeRid = readRid();
     clusterLock.lockShared(clusterPageId);
     LcsClusterNode const &node = clusterLock.getNodeForRead();

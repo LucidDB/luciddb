@@ -41,13 +41,22 @@ void LcsClusterAppendExecStream::prepare(
     clusterColsTupleDesc = pInAccessor->getTupleDesc();
 
     clusterColsTupleData.compute(clusterColsTupleDesc);
+
     inputProj = params.inputProj;
     m_numColumns = inputProj.size();
+
+    // REVIEW jvs 27-Dec-2005:  instead of this for loop, you can use
+    // colTupleDesc.projectFrom(clusterColsTupleDesc, inputProj);
+    
     colTupleDesc.reset(new TupleDescriptor[m_numColumns]);
     for (int i = 0; i < m_numColumns; i++) {
         colTupleDesc[i].push_back(clusterColsTupleDesc[inputProj[i]]);
     }
 
+    // REVIEW jvs 27-Dec-2005:  should assert that colTupleDesc
+    // matches pInAccessor; I ran into violations of this a few times
+    // on the way to getting UDT's working.
+    
     m_bOverwrite = params.overwrite;
 
     // setup bufferLock to access temporary large page blocks
@@ -272,6 +281,11 @@ ExecStreamResult LcsClusterAppendExecStream::Compress(
         if (!pInAccessor->demandData()) {
             return EXECRC_BUF_UNDERFLOW;
         }
+
+        // REVIEW jvs 27-Dec-2005: as an optimization, instead of every
+        // appender unmarshalling the full tuple and then projecting out what
+        // it wants, use TupleProjectionAccessor to unmarshal only the relevant
+        // attributes; that's what it's designed to do efficiently
    
         // if we have finished processing the previous row, unmarshal
         // the next cluster tuple and convert them into individual

@@ -36,14 +36,13 @@ struct SplitterExecStreamParams : public DiffluenceExecStreamParams
 };
     
 /**
- * SplitterExecStream is an adapter for converting the output of an
- * upstream producer for use by several downstream consumers.
- * SplitterExecStream itself does not provide any buffer to either
- * the producer or the consumer. The upstream producer writes its results into
- * its output buffer, and the downstream consumers read input from the same
+ * SplitterExecStream is an adapter for aliasing the output of an upstream
+ * producer for use by several downstream consumers.  SplitterExecStream itself
+ * does not allocate any buffers.  Instead, it requires the upstream producer
+ * to supply a buffer, and the downstream consumers all read from that same
  * buffer.
  *
- * @author John V. Sichi
+ * @author Rushan Chen
  * @version $Id$
  */
 class SplitterExecStream : public DiffluenceExecStream
@@ -62,10 +61,8 @@ public:
     // implement ExecStream
     virtual void open(bool restart);
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
-    /**
-     * Indicate to the consumer if the buffer is provided by this exec stream
-     * which is the producer.
-     */
+    
+    // override DiffluenceExecStream
     virtual ExecStreamBufProvision getOutputBufProvision() const;
 };
 

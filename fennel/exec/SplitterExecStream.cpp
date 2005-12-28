@@ -37,8 +37,8 @@ void SplitterExecStream::open(bool restart)
 ExecStreamResult SplitterExecStream::execute(ExecStreamQuantum const &)
 {
     if (pLastConsumptionEnd) {
-        while (iOutput < outAccessorList.size()) {
-            switch(outAccessorList[iOutput]->getState()) {
+        while (iOutput < outAccessors.size()) {
+            switch(outAccessors[iOutput]->getState()) {
             case EXECBUF_NONEMPTY:
             case EXECBUF_OVERFLOW:
                 return EXECRC_BUF_OVERFLOW;
@@ -53,9 +53,9 @@ ExecStreamResult SplitterExecStream::execute(ExecStreamQuantum const &)
         }
 
         /*
-         * All the output buf accesors have reached EXECBUF_EMPTY. It
-         * means the downstream consumer must have consumed everything
-         * up to the last byte we told it was available; pass that
+         * All the output buf accessors have reached EXECBUF_EMPTY. This
+         * means the downstream consumers must have consumed everything
+         * up to the last byte we told them was available; pass that
          * information on to our upstream producer.
          * Also reset the pLastConsumptionEnd pointer and the EOBCount.
          */
@@ -80,8 +80,8 @@ ExecStreamResult SplitterExecStream::execute(ExecStreamQuantum const &)
          * The same buffer is provided for consumption to all the output buffer
          * accessors.
          */
-        for (int i = 0; i < outAccessorList.size(); i ++) {
-            outAccessorList[i]->provideBufferForConsumption(
+        for (int i = 0; i < outAccessors.size(); i ++) {
+            outAccessors[i]->provideBufferForConsumption(
                 pInAccessor->getConsumptionStart(),
                 pLastConsumptionEnd);
         }
@@ -92,8 +92,8 @@ ExecStreamResult SplitterExecStream::execute(ExecStreamQuantum const &)
         pInAccessor->requestProduction();
         return EXECRC_BUF_UNDERFLOW;
     case EXECBUF_EOS:
-        for (int i = 0; i < outAccessorList.size(); i ++) {
-            outAccessorList[i]->markEOS();
+        for (int i = 0; i < outAccessors.size(); i ++) {
+            outAccessors[i]->markEOS();
         }
         return EXECRC_EOS;
     default:

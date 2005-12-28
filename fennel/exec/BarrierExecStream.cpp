@@ -26,7 +26,6 @@
 #include "fennel/exec/ExecStreamBufAccessor.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
-
 void BarrierExecStream:: prepare(BarrierExecStreamParams const &params)
 {
     TupleDescriptor outputTupleDesc;
@@ -34,10 +33,14 @@ void BarrierExecStream:: prepare(BarrierExecStreamParams const &params)
     ConfluenceExecStream::prepare(params);
 
     /*
-     * The output tuple form the producers should be the same: they all have
+     * The output tuple from the producers should be the same: they all have
      * just one column recording number of rows processed by the producers.
      */
     outputTupleDesc = inAccessors[0]->getTupleDesc();
+
+    // REVIEW jvs 27-Dec-2005:  more asserts needed according to above comment:
+    // all inputs must match rowCount, and there must be at least one
+    // input otherwise we'll produce garbage
     
     assert (outputTupleDesc.size() == 1);
     
@@ -80,7 +83,7 @@ ExecStreamResult BarrierExecStream::execute(ExecStreamQuantum const &)
                 rowCount = *reinterpret_cast<RecordNum const *>
                     (inputTuple[0].pData);
             } else {
-                assert((inAccessors[iInput]->getTupleDesc()).
+                permAssert((inAccessors[iInput]->getTupleDesc()).
                             compareTuples(inputTuple, outputTuple) == 0);
             }
             inAccessors[iInput]->consumeTuple();
