@@ -27,6 +27,7 @@
 #include "fennel/txn/LogicalTxnStoredStructs.h"
 #include "fennel/segment/CrcSegOutputStream.h"
 #include "fennel/segment/SpillOutputStream.h"
+#include "fennel/segment/SegmentFactory.h"
 #include "fennel/common/ByteInputStream.h"
 
 #include <boost/bind.hpp>
@@ -57,6 +58,9 @@ LogicalTxnLog::LogicalTxnLog(
     pOutputStream->getSegPos(lastCheckpointMemento.logPosition);
     lastCheckpointMemento.nUncommittedTxns = 0;
     nCommittedBeforeLastCheckpoint = 0;
+
+    groupCommitInterval = pSegmentFactory->getConfigMap().getIntParam(
+        "groupCommitInterval");
 }
 
 SharedLogicalTxnLog LogicalTxnLog::newLogicalTxnLog(
@@ -128,9 +132,12 @@ void LogicalTxnLog::commitTxn(SharedLogicalTxn pTxn)
         PConstBuffer pBuffer = pInputStream->getReadPointer(1,&cbActual);
         pOutputStream->writeBytes(pBuffer,cbActual);
     }
-    // TODO:  parameterize
+
+    // REVIEW jvs 27-Dec-2005:  when groupCommitInterval is 0, maybe
+    // we should bypass some of the overhead here?
+    
     boost::xtime groupCommitExpiration;
-    convertTimeout(30,groupCommitExpiration);
+    convertTimeout(groupCommitInterval,groupCommitExpiration);
     SegStreamPosition logPos;
     pOutputStream->getSegPos(logPos);
     PageId startPageId = CompoundId::getPageId(logPos.segByteId);

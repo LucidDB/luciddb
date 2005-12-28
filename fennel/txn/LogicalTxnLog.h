@@ -92,6 +92,11 @@ class LogicalTxnLog
      */
     uint nCommittedBeforeLastCheckpoint;
 
+    /**
+     * Group commit interval in milliseconds, or 0 for immediate commit.
+     */
+    uint groupCommitInterval;
+
     explicit LogicalTxnLog(
         SegmentAccessor const &logSegmentAccessor,
         PseudoUuid const &onlineUuid,
