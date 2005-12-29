@@ -60,7 +60,7 @@ LogicalTxnLog::LogicalTxnLog(
     nCommittedBeforeLastCheckpoint = 0;
 
     groupCommitInterval = pSegmentFactory->getConfigMap().getIntParam(
-        "groupCommitInterval");
+        "groupCommitInterval", 30);
 }
 
 SharedLogicalTxnLog LogicalTxnLog::newLogicalTxnLog(
@@ -133,22 +133,24 @@ void LogicalTxnLog::commitTxn(SharedLogicalTxn pTxn)
         pOutputStream->writeBytes(pBuffer,cbActual);
     }
 
-    // REVIEW jvs 27-Dec-2005:  when groupCommitInterval is 0, maybe
-    // we should bypass some of the overhead here?
-    
     boost::xtime groupCommitExpiration;
-    convertTimeout(groupCommitInterval,groupCommitExpiration);
+    if (groupCommitInterval) {
+        convertTimeout(groupCommitInterval,groupCommitExpiration);
+    }
     SegStreamPosition logPos;
     pOutputStream->getSegPos(logPos);
     PageId startPageId = CompoundId::getPageId(logPos.segByteId);
     for (;;) {
-        bool timeout = !condition.timed_wait(mutexGuard,groupCommitExpiration);
+        bool timeout = true;
+        if (groupCommitInterval) {
+            timeout = !condition.timed_wait(mutexGuard,groupCommitExpiration);
 
-        pOutputStream->getSegPos(logPos);
-        PageId lastPageId = CompoundId::getPageId(logPos.segByteId);
-        if (lastPageId != startPageId) {
-            // someone else has flushed for us
-            break;
+            pOutputStream->getSegPos(logPos);
+            PageId lastPageId = CompoundId::getPageId(logPos.segByteId);
+            if (lastPageId != startPageId) {
+                // someone else has flushed for us
+                break;
+            }
         }
 
         if (timeout) {
