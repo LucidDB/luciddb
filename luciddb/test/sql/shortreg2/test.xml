@@ -1,6 +1,14 @@
 <project name="tch" default="simple-test">
   <target name="simple-test">
     <test-suite testunit="simple-test">
+      
+      <init-hook>
+        <test name="restoreCatalog" testunit="init-test">
+          <ant-task>
+            <ant target="restoreCatalog"/>
+          </ant-task>
+        </test>
+      </init-hook>
 
       <test name="creschema">
         <test-parameter name="jdbc-driver" 
@@ -51,41 +59,8 @@
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
-      <test name="joinEqSanity" requiresRun="salesload">
-        <test-parameter name="jdbc-driver" 
-          value="com.lucidera.jdbc.LucidDbLocalDriver"/>
-        <test-parameter name="sql-file" value="joinEqSanity.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
-      </test>
+      <test-suite-call testfile="test-queries.xml"/>
 
-      <test name="compIdx" requiresRun="customersload">
-        <test-parameter name="jdbc-driver" 
-          value="com.lucidera.jdbc.LucidDbLocalDriver"/>
-        <test-parameter name="sql-file" value="compIdx.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
-      </test>
-
-      <test name="rangeNConv" requiresRun="productsload">
-        <test-parameter name="jdbc-driver" 
-          value="com.lucidera.jdbc.LucidDbLocalDriver"/>
-        <test-parameter name="sql-file" value="rangeNConv.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
-      </test>
-
-      <test name="subFrom" requiresRun="empload">
-        <test-parameter name="jdbc-driver" 
-          value="com.lucidera.jdbc.LucidDbLocalDriver"/>
-        <test-parameter name="sql-file" value="subFrom.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
-      </test>
-<!-- 
-      <test name="aggJoinEq" requiresRun="empload,deptload,locationload,productsload,customersload,salesload">
-        <test-parameter name="jdbc-driver" 
-          value="com.lucidera.jdbc.LucidDbLocalDriver"/>
-        <test-parameter name="sql-file" value="aggJoinEq.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
-      </test>
--->
     </test-suite>
   </target>
 </project>
