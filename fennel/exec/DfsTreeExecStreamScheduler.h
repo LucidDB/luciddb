@@ -25,6 +25,7 @@
 #define Fennel_DfsTreeExecStreamScheduler_Included
 
 #include "fennel/exec/ExecStreamScheduler.h"
+#include "fennel/exec/ExecStreamGraphImpl.h"
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -43,6 +44,25 @@ class DfsTreeExecStreamScheduler : public ExecStreamScheduler
     volatile bool aborted;
     
     SharedExecStreamGraph pGraph;
+
+    /**
+     * Finds the next consumer to execute for a given producer.
+     *
+     * @param graphImpl current stream graph
+     * @param graphRep graph representation of current stream graph
+     * @param stream currrent execution stream
+     * @param edge returns edge to consumer to execute next
+     * @param current returns id of consumer to execute next
+     * @param nonState state to skip when looking for next consumer
+     *
+     * @return false if reached sink vertex, else true
+     */
+    bool findNextConsumer(ExecStreamGraphImpl &graphImpl,
+                          const ExecStreamGraphImpl::GraphRep &graphRep,
+                          const ExecStream &stream,
+                          ExecStreamGraphImpl::Edge &edge,
+                          ExecStreamId &current,
+                          ExecStreamBufState skipState);
 
 public:
     /**

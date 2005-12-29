@@ -118,6 +118,8 @@ protected:
         SharedProxySvptHandle,SavepointId);
 
     void getBTreeForIndexCmd(ProxyIndexCmd &,PageId,BTreeDescriptor &);
+    void dropOrTruncateIndex(
+        ProxyCmdDropIndex &cmd, bool drop);
 
     // Per-command overrides for FemVisitor; add new commands here
     virtual void visit(ProxyCmdCreateExecutionStreamGraph &);

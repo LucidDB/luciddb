@@ -25,6 +25,7 @@
 #include "fennel/lucidera/sorter/ExternalSortExecStream.h"
 #include "fennel/lucidera/flatfile/FlatFileExecStream.h"
 #include "fennel/lucidera/colstore/LcsClusterAppendExecStream.h"
+#include "fennel/lucidera/colstore/LcsRowScanExecStream.h"
 #include "fennel/db/Database.h"
 #include "fennel/segment/SegmentFactory.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
@@ -107,12 +108,39 @@ class ExecStreamSubFactory_lu
         pExecStreamFactory->readTupleStreamParams(params, streamDef);
         pExecStreamFactory->readBTreeStreamParams(params, streamDef);
         
-        params.overwrite = false;
+        params.overwrite = streamDef.isOverwrite();
+        
+        CmdInterpreter::readTupleProjection(
+            params.inputProj,
+            streamDef.getClusterColProj());
+
         pEmbryo->init(
             new LcsClusterAppendExecStream(),
             params);
     }
     
+    //implement FemVisitor
+    virtual void visit(ProxyLcsRowScanStreamDef &streamDef)
+    {
+        LcsRowScanExecStreamParams params;
+        pExecStreamFactory->readTupleStreamParams(params, streamDef);
+
+        SharedProxyLcsClusterScanDef pClusterScan = streamDef.getClusterScan();
+        for ( ; pClusterScan; ++pClusterScan) {
+            LcsClusterScanDef clusterScanParam;
+            clusterScanParam.pCacheAccessor = params.pCacheAccessor;
+            pExecStreamFactory->readBTreeStreamParams(clusterScanParam,
+                                                      *pClusterScan);
+            pExecStreamFactory->readTupleDescriptor(
+                clusterScanParam.clusterTupleDesc,
+                pClusterScan->getClusterTupleDesc());
+            params.lcsClusterScanDefs.push_back(clusterScanParam);
+        }
+        CmdInterpreter::readTupleProjection(params.outputProj,
+                                            streamDef.getOutputProj());
+        pEmbryo->init(new LcsRowScanExecStream(), params);
+    }
+
     // implement JniProxyVisitor
     virtual void unhandledVisit()
     {

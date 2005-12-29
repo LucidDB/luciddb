@@ -616,12 +616,15 @@ SqlSelect SqlSelect() :
 SqlNode SqlExplain() :
 {
     SqlNode stmt;
+    SqlExplainLevel detailLevel = SqlExplainLevel.DIGEST_ATTRIBUTES;
     boolean withImplementation = true;
     SqlParserPos pos;
     boolean asXml;
 }
 {
-    <EXPLAIN> <PLAN> [ withImplementation = WithImplementation() ]
+    <EXPLAIN> <PLAN>
+    [ detailLevel = ExplainDetailLevel() ]
+    [ withImplementation = WithImplementation() ]
     (
         <AS> <XML> { asXml = true; }
         |
@@ -640,6 +643,7 @@ SqlNode SqlExplain() :
         return new SqlExplain(
             SqlStdOperatorTable.explainOperator,
             stmt,
+            SqlLiteral.createEnum(detailLevel, SqlParserPos.ZERO),
             SqlLiteral.createBoolean(withImplementation, SqlParserPos.ZERO),
             SqlLiteral.createBoolean(asXml, SqlParserPos.ZERO),
             pos);
@@ -647,7 +651,7 @@ SqlNode SqlExplain() :
 }
 
 /**
- * Parses modifier for EXPLAIN PLAN.
+ * Parses WITH | WITHOUT IMPLEMENTATION modifier for EXPLAIN PLAN.
  */
 boolean WithImplementation() :
 {
@@ -664,6 +668,31 @@ boolean WithImplementation() :
             return false;
         }
     )
+}
+
+/**
+ * Parses INCLUDING ALL ATTRIBUTES modifier for EXPLAIN PLAN.
+ */
+SqlExplainLevel ExplainDetailLevel() :
+{
+    SqlExplainLevel level = SqlExplainLevel.DIGEST_ATTRIBUTES;
+}
+{
+    (
+        <EXCLUDING> <ATTRIBUTES>
+        {
+            level = SqlExplainLevel.NO_ATTRIBUTES;
+        }
+        |
+        <INCLUDING>
+        [ <ALL> { level = SqlExplainLevel.ALL_ATTRIBUTES; } ]
+        <ATTRIBUTES>
+        {
+        }
+    )
+    {
+        return level;
+    }
 }
 
 /**

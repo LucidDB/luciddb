@@ -27,6 +27,7 @@ import java.io.*;
 import java.sql.*;
 import java.util.*;
 
+import org.eigenbase.sql.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.runtime.*;
@@ -46,20 +47,23 @@ public class PreparedExplanation implements PreparedResult
 
     private final RelNode rel;
     private final boolean asXml;
+    private final SqlExplainLevel detailLevel;
 
     //~ Constructors ----------------------------------------------------------
 
-    PreparedExplanation(RelNode rel, boolean asXml)
+    PreparedExplanation(
+        RelNode rel, boolean asXml, SqlExplainLevel detailLevel)
     {
         this.rel = rel;
         this.asXml = asXml;
+        this.detailLevel = detailLevel;
     }
 
     //~ Methods ---------------------------------------------------------------
 
     public String getCode()
     {
-        return RelOptUtil.dumpPlan("", rel, asXml);
+        return RelOptUtil.dumpPlan("", rel, asXml, detailLevel);
     }
 
     public boolean isDml()

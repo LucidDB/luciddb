@@ -212,6 +212,10 @@ public:
     virtual std::vector<SharedExecStream> getSortedStreams();
     virtual int getStreamCount();
     virtual int getDataflowCount();
+    /**
+     * @return true if graph has no cycles
+     */
+    virtual bool checkForNoCycles();
 };
 
 inline ExecStreamGraphImpl::GraphRep const &ExecStreamGraphImpl::getGraphRep()

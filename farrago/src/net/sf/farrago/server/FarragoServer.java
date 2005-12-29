@@ -47,11 +47,13 @@ public class FarragoServer
 
     protected static Registry rmiRegistry;
 
+    private final PrintWriter pw;
+
     //~ Methods ---------------------------------------------------------------
 
     /**
      * Defines the main entry point for the Farrago server.  Customized servers
-     * can provide their own which call run() with an extended implementation
+     * can provide their own which call start() with an extended implementation
      * of {@link net.sf.farrago.jdbc.engine.FarragoJdbcServerDriver}.
      *
      * @param args ignored
@@ -61,6 +63,28 @@ public class FarragoServer
         FarragoServer server = new FarragoServer();
         server.start(new FarragoJdbcEngineDriver());
         server.runConsole();
+    }
+
+    /**
+     * Creates a new FarragoServer instance, with console output to System.out.
+     * This constructor can be used to embed a FarragoServer inside
+     * of another container such as a J2EE app server.
+     */
+    public FarragoServer()
+    {
+        this(new PrintWriter(System.out, true));
+    }
+
+    /**
+     * Creates a new FarragoServer instance, with redirected console output.
+     * This constructor can be used to embed a FarragoServer inside
+     * of another container such as a J2EE app server.
+     *
+     * @param pw receives console output
+     */
+    public FarragoServer(PrintWriter pw)
+    {
+        this.pw = pw;
     }
 
     /**
@@ -74,10 +98,10 @@ public class FarragoServer
         FarragoResource res = FarragoResource.instance();
         FarragoReleaseProperties releaseProps =
             FarragoReleaseProperties.instance();
-        System.out.println(
+        pw.println(
             res.ServerProductName.str(
                 releaseProps.productName.get()));
-        System.out.println(res.ServerLoadingDatabase.str());
+        pw.println(res.ServerLoadingDatabase.str());
 
         // Load the session factory
         FarragoSessionFactory sessionFactory = jdbcDriver.newSessionFactory();
@@ -95,7 +119,7 @@ public class FarragoServer
             rmiRegistryPort = releaseProps.jdbcUrlPortDefault.get();
         }
 
-        System.out.println(res.ServerStartingNetwork.str());
+        pw.println(res.ServerStartingNetwork.str());
 
         List argList = new ArrayList();
 
@@ -126,7 +150,7 @@ public class FarragoServer
             }
         }
 
-        System.out.println(
+        pw.println(
             res.ServerListening.str(new Integer(rmiRegistryPort)));
     }
 
@@ -138,18 +162,18 @@ public class FarragoServer
     public boolean stopSoft()
     {
         FarragoResource res = FarragoResource.instance();
-        System.out.println(res.ServerShuttingDown.str());
+        pw.println(res.ServerShuttingDown.str());
 
         // NOTE:  use groundReferences=1 in shutdownConditional
         // to account for our baseline reference
         if (FarragoDbSingleton.shutdownConditional(getGroundReferences())) {
-            System.out.println(res.ServerShutdownComplete.str());
+            pw.println(res.ServerShutdownComplete.str());
 
             // TODO: should find a way to prevent new messages BEFORE shutdown
             unbindRegistry();
             return true;
         } else {
-            System.out.println(res.ServerSessionsExist.str());
+            pw.println(res.ServerSessionsExist.str());
             return false;
         }
     }
@@ -176,9 +200,9 @@ public class FarragoServer
     {
         unbindRegistry();
         FarragoResource res = FarragoResource.instance();
-        System.out.println(res.ServerShuttingDown.str());
+        pw.println(res.ServerShuttingDown.str());
         FarragoDbSingleton.shutdown();
-        System.out.println(res.ServerShutdownComplete.str());
+        pw.println(res.ServerShutdownComplete.str());
     }
 
     /** Unbinds all items remaining in RMI registry. */
@@ -197,6 +221,14 @@ public class FarragoServer
             // TODO:  handle this better
             ex.printStackTrace();
         }
+    }
+
+    /**
+     * @return redirected console output
+     */
+    public PrintWriter getPrintWriter()
+    {
+        return pw;
     }
 
     /**
@@ -230,7 +262,7 @@ public class FarragoServer
                 stopHard();
                 break;
             } else {
-                System.out.println(res.ServerBadCommand.str(cmd));
+                pw.println(res.ServerBadCommand.str(cmd));
             }
         }
         System.exit(0);

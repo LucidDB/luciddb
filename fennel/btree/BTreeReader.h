@@ -143,6 +143,15 @@ protected:
     inline int compareFirstKey(BTreeNode const &node);
 
     /**
+     * Sets tuple accessor to provided node entry
+     *
+     * @param node the current node positioned on
+     *
+     * @param iEntry the entry within the node to set the tuple accessor to
+     */
+    inline void accessTupleInline(BTreeNode const &node, uint iEntry);
+
+    /**
      * Implements the workhorse algorithm for performing the actual search
      * through the tree; templated to efficiently allow for certain
      * variations needed when the search is used in preparation for an

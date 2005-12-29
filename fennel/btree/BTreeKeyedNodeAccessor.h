@@ -41,7 +41,7 @@ class BTreeKeyedNodeAccessor : public NodeAccessor
 public:
     KeyAccessor *pKeyAccessor;
 
-    void accessTupleInline(BTreeNode const &node,uint iEntry)
+    virtual void accessTupleInline(BTreeNode const &node,uint iEntry)
     {
         assert(iEntry < node.nEntries);
         NodeAccessor::tupleAccessor.setCurrentTupleBuf(

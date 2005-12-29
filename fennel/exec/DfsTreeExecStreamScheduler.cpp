@@ -65,13 +65,10 @@ void DfsTreeExecStreamScheduler::start()
         dynamic_cast<ExecStreamGraphImpl&>(*pGraph);
     ExecStreamGraphImpl::GraphRep graphRep = graphImpl.getGraphRep();
 
-    // assert that graph is a tree (or forest of trees)
-    ExecStreamGraphImpl::VertexIterPair p = boost::vertices(graphRep);
-    for (; p.first != p.second; ++(p.first)) {
-        assert(boost::out_degree(*(p.first),graphRep) < 2);
-    }
-
-    // TODO:  assert no cycles
+    // note: we no longer check that graph is a tree (or forest of trees)
+    // since it is now possible to have multiple consumers from a single
+    // producer
+    assert(graphImpl.checkForNoCycles());
     aborted = false;
 }
 
@@ -144,23 +141,23 @@ ExecStreamBufAccessor &DfsTreeExecStreamScheduler::readStream(
             throw AbortExcn();
         }
 
+        ExecStreamGraphImpl::Edge edge;
+
         switch(rc) {
         case EXECRC_EOS:
+            // find a consumer that is not in EOS state
+            if (!findNextConsumer(graphImpl, graphRep, stream, edge, current,
+                                  EXECBUF_EOS)) {
+                return graphImpl.getBufAccessorFromEdge(edge);
+            } 
+            // if all were in eos, just use the last consumer
+            break;
         case EXECRC_BUF_OVERFLOW:
-            {
-                // move current downstream
-                assert(boost::out_degree(current,graphRep) == 1);
-                ExecStreamGraphImpl::Edge edge =
-                    *(boost::out_edges(current,graphRep).first);
-                current = boost::target(edge,graphRep);
-                if (boost::out_degree(current,graphRep) == 0) {
-                    // we've hit the output sentinel
-                    assert(!graphImpl.getStreamFromVertex(current));
-                    FENNEL_TRACE(
-                        TRACE_FINE,
-                        "leaving readStream " << stream.getName());
-                    return graphImpl.getBufAccessorFromEdge(edge);
-                }
+            // find a consumer that is not in underflow state; i.e., not
+            // waiting on this producer to continue execution
+            if (!findNextConsumer(graphImpl, graphRep, stream, edge, current,
+                                  EXECBUF_UNDERFLOW)) {
+                return graphImpl.getBufAccessorFromEdge(edge);
             }
             break;
         case EXECRC_BUF_UNDERFLOW:
@@ -173,6 +170,45 @@ ExecStreamBufAccessor &DfsTreeExecStreamScheduler::readStream(
             permAssert(false);
         }
     }
+}
+
+bool DfsTreeExecStreamScheduler::findNextConsumer(
+    ExecStreamGraphImpl &graphImpl,
+    const ExecStreamGraphImpl::GraphRep &graphRep,
+    const ExecStream &stream,
+    ExecStreamGraphImpl::Edge &edge,
+    ExecStreamId &current,
+    ExecStreamBufState skipState)
+{
+    ExecStreamGraphImpl::OutEdgeIterPair outEdges =
+        boost::out_edges(current,graphRep);
+    for (; outEdges.first != outEdges.second; ++(outEdges.first)) {
+
+        edge = *(outEdges.first);
+        current = boost::target(edge,graphRep);
+        if (boost::out_degree(current,graphRep) == 0) {
+            // we've hit the output sentinel
+            assert(!graphImpl.getStreamFromVertex(current));
+            FENNEL_TRACE(
+                TRACE_FINE,
+                "leaving readStream " << stream.getName());
+            return false;
+        }
+
+        ExecStreamBufAccessor &bufAccessor =
+            graphImpl.getBufAccessorFromEdge(edge);
+        if (bufAccessor.getState() != skipState) {
+            break;
+        }
+        assert(!(skipState == EXECBUF_UNDERFLOW &&
+                    bufAccessor.getState() == EXECBUF_EOS));
+    }
+    // should be at least one consumer in non-underflow state if looking
+    // for a non-underflow consumer
+    assert(!(skipState == EXECBUF_UNDERFLOW &&
+                outEdges.first == outEdges.second));
+
+    return true;
 }
 
 FENNEL_END_CPPFILE("$Id$");

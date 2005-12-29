@@ -20,6 +20,7 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
+#include "fennel/lucidera/colstore/LcsClusterReader.h"
 #include "fennel/lucidera/colstore/LcsColumnReader.h"
 #include "fennel/lucidera/colstore/LcsClusterReader.h"
 
@@ -30,7 +31,7 @@ void LcsColumnReader::sync()
     // Get batch using column's offset within cluster
     pBatch = &pScan->pRangeBatches[colOrd];
     pValues = pScan->pLeaf + pBatch->oVal;
-    pBase = pScan->pLeaf - pScan->pLHdr->delta[colOrd];
+    pBase = pScan->pLeaf - pScan->delta[colOrd];
     
     if (batchIsCompressed()) {
         // where the bit vectors start

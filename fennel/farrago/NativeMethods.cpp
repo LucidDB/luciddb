@@ -66,7 +66,11 @@ JNI_OnLoad(JavaVM *vm,void *reserved)
     FENNEL_JNI_ONLOAD_COMMON();
     jint version = JniUtil::init(vm);
     JniEnvAutoRef pEnv;
-    staticInitFem(pEnv,FemVisitor::visitTbl);
+    try {
+        staticInitFem(pEnv,FemVisitor::visitTbl);
+    } catch (std::exception &ex) {
+        pEnv.handleExcn(ex);
+    }
 
     // REVIEW jvs 26-Nov-2004:  I had to put this in to squelch strange
     // shutdown problems when extension JNI libraries (such as

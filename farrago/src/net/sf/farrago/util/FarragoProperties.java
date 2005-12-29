@@ -131,6 +131,7 @@ public class FarragoProperties extends Properties
         super(System.getProperties());
     }
 
+
     //~ Methods ---------------------------------------------------------------
 
     /**
@@ -147,18 +148,29 @@ public class FarragoProperties extends Properties
     }
 
     /**
+     * WARNING: in most cases you should be using the singleton {@link
+     * #instance} instead.
+     *
+     * @return a new instance of FarragoProperties
+     */
+    public static FarragoProperties newInstance()
+    {
+        return new FarragoProperties();
+    }
+
+    /**
      * @return the directory containing the Farrago repos files; equivalent
      * to {@link #catalogDir} if set, otherwise the "catalog" subdirectory of
      * {@link #homeDir}
      */
     public File getCatalogDir()
     {
-        String catalogDirOpt = instance().catalogDir.get();
+        String catalogDirOpt = catalogDir.get();
         if (catalogDirOpt != null) {
             return new File(catalogDirOpt);
         } else {
-            String homeDir = instance().homeDir.get(true);
-            return new File(homeDir, "catalog");
+            String homeDirString = homeDir.get(true);
+            return new File(homeDirString, "catalog");
         }
     }
 

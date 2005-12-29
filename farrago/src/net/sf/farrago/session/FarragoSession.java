@@ -186,6 +186,17 @@ public interface FarragoSession extends FarragoAllocation
     public void commit();
 
     /**
+     * Ends the current transaction if session is in autocommit mode.
+     * Normally, an attempt to commit or rollback in autocommit mode
+     * will cause an exception; this method is for use by other components
+     * which need to notify the session that some event (e.g.
+     * cursor close) is triggering an autocommit boundary.
+     *
+     * @param commit true to commit; false to rollback
+     */
+    public void endTransactionIfAuto(boolean commit);
+
+    /**
      * Rolls back current transaction if any.
      *
      * @param savepoint savepoint to roll back to, or null to rollback

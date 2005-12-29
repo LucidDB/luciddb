@@ -48,13 +48,13 @@ class Backtrace
     const size_t bufsize;
     void** addrbuf;                     // [bufsize]
 
+#ifndef __MINGW32__
     struct LibraryInfo 
     {
         ElfW(Addr) baseAddress;
         char const *pImageName;
     };
 
-#ifndef __MINGW32__
     static int lookupLibraryBase(struct dl_phdr_info *, size_t, void *);
 #endif
 

@@ -1,0 +1,31 @@
+create foreign table @name_prefix@_schema.types(
+c_char char(10),
+c_varchar varchar(10),
+c_decimal decimal(10,3),
+c_tinyint tinyint,
+c_smallint smallint,
+c_integer integer,
+c_bigint bigint,
+c_real real,
+c_double double,
+c_boolean boolean,
+c_date date,
+c_time time,
+c_timestamp timestamp
+)
+server @SERVER_NAME@
+options (
+SCHEMA_NAME '@SCHEMA@',
+@TABLE_NAME@ '@ff_dir@types@file_ext@'
+);
+
+
+create foreign table @name_prefix@_schema.blobtypes(
+c_binary binary(10),
+c_varbinary varbinary(10)
+)
+server @SERVER_NAME@
+options (
+SCHEMA_NAME '@SCHEMA@',
+@TABLE_NAME@ '@ff_dir@blob@file_ext@'
+);

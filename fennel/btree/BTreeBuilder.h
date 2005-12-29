@@ -101,6 +101,7 @@ class BTreeBuilder : public BTreeAccessBase
     void swapRoot();
 
     void truncateChildren(BTreeNode const &node);
+    void truncateExternal(TupleProjection const &leafPageIdProj);
 
 public:
     /**
@@ -149,8 +150,14 @@ public:
      * @param rootless if true, all nodes of the existing tree are deallocated;
      * if false, the root is cleared but remains allocated while all
      * other nodes are deallocated
+     *
+     * @param pLeafPageIdProj if non-NULL, leaf tuples will be read
+     * and non-null projected attributes will be interpreted as additional
+     * PageId's to be dropped
      */
-    void truncate(bool rootless);
+    void truncate(
+        bool rootless,
+        TupleProjection const *pLeafPageIdProj = NULL);
 };
 
 inline BTreeBuildLevel &BTreeBuilder::getLevel(uint i)

@@ -41,6 +41,12 @@ struct LcsClusterAppendExecStreamParams : public BTreeExecStreamParams,
      * True if cluster append is in overwrite mode
      */
     bool overwrite;
+
+    /**
+     * Projection list projecting out columns for this cluster
+     */
+    TupleProjection inputProj;
+
     explicit LcsClusterAppendExecStreamParams()
     {
         overwrite = false;
@@ -60,12 +66,14 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
     uint m_blockSize;
 
     /**
-     * Tuple descriptor for the tuple representing all cluster columns
+     * Tuple descriptor for the tuple representing all cluster columns across
+     * the table that this cluster is a part of
      */
     TupleDescriptor clusterColsTupleDesc;
 
     /**
      * Tuple data for the tuple datums representing all cluster columns
+     * across the table that this cluster is a part of
      */
     TupleData clusterColsTupleData;
 
@@ -73,11 +81,6 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
      * Individual tuple descriptors for each column in the cluster
      */
     boost::scoped_array<TupleDescriptor> colTupleDesc;
-
-    /**
-     * Individual tuple data for each column in the cluster
-     */
-    boost::scoped_array<TupleData> colTupleData;
 
     /**
      * Scratch accessor for allocating large buffer pages
@@ -93,6 +96,11 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
      * True if overwriting all existing data
      */
     bool m_bOverwrite;
+
+    /**
+     * Projection list projecting out columns for this cluster
+     */
+    TupleProjection inputProj;
 
     /**
      * Output tuple containing count of number of rows loaded

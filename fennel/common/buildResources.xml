@@ -1,4 +1,4 @@
-<project name="fennel_common_resources" default="warning">
+<project name="fennel_common_resources" default="generate.resources">
 
   <!--
 // $Id$
@@ -35,12 +35,6 @@ ${perforce.view}/${resource.name}.h
 ${perforce.view}/${resource.name}.cpp
 ${perforce.view}/${resource.name}*.properties
 "/>
-
-  <target name="warning">
-    <echo>This build script is executed automatically by the fennel/common
-Makefile.  Normally, it is not executed by hand, although you may
-do so by calling out the generated.resources target excplicitly.</echo>
-  </target>
 
   <target
     name="generate.resources"

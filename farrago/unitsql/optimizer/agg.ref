@@ -1,11 +1,10 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/agg.sql#4 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/agg.sql#5 $
 0: jdbc:farrago:> -- Test aggregate queries
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'sales';
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- force usage of Java calculator
-0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_FENNEl';
-Error: Type mismatch in value ''CALCVM_FENNEl'' for system parameter "calcVirtualMachine" (state=,code=0)
+0: jdbc:farrago:> -- force usage of Fennel calculator
+0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select count(*) from depts;
 +---------+
@@ -215,8 +214,8 @@ Error: Type mismatch in value ''CALCVM_FENNEl'' for system parameter "calcVirtua
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select sum(age) from emps group by deptno;
 'column0'
-'IterCalcRel(EXPR$0=[$1])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelCalcRel(EXPR$0=[$1])'
 '    FennelAggRel(groupCount=[1], agg#0=[SUM(1)])'
 '      FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '        FennelRenameRel(fieldNames=[[$f0, $f1]])'

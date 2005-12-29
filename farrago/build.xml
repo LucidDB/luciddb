@@ -512,6 +512,7 @@ require version '${required.ant.version}'."/>
       <replacefilter token="@cachePageSize@" value="4096"/>
       <replacefilter token="@cachePagesMax@" value="1000"/>
       <replacefilter token="@cachePagesInit@" value="1000"/>
+      <replacefilter token="@groupCommitInterval@" value="30"/>
       <replacefilter token="@fennel.disabled@" value="${fennel.disabled}"/>
       <replacefilter token="@resourceDir@" value="$${FARRAGO_HOME}/catalog/fennel"/>
       <replacefilter token="@jniHandleTraceFile@" value="${trace.fennel.handles}"/>

@@ -46,17 +46,20 @@ Backtrace::~Backtrace()
 Backtrace::Backtrace(size_t maxdepth) 
     :ownbuf(true), bufsize(maxdepth + 1)
 {
+#ifndef __MINGW32__
     addrbuf = new void * [bufsize];
     depth = backtrace(addrbuf, bufsize);
+#endif
 }
 
 Backtrace::Backtrace(size_t bufsize, void** buffer)
     :ownbuf(false), bufsize(bufsize)
 {
+#ifndef __MINGW32__
     addrbuf = buffer;
     depth = backtrace(addrbuf, bufsize);
+#endif
 }
-
 
 // NOTE: mberkowitz 22-Dec-2005 Not implemented on mingw:
 //  could use signal() in lieu of sigaction(), but is there backtrace()?
@@ -244,8 +247,8 @@ void AutoBacktrace::install(bool includeSegFault)
 
 void AutoBacktrace::installSignal(int signum)
 {
-    permAssert(signum < BACKTRACE_SIG_MAX);
 #ifndef __MINGW32__
+    permAssert(signum < BACKTRACE_SIG_MAX);
     struct sigaction act;
     struct sigaction old_act;
     act.sa_handler = signal_handler;

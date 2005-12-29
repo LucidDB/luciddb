@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/jdbc/metadata.sql#10 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/jdbc/metadata.sql#2 $
 0: jdbc:farrago:> -- Test JDBC metadata calls
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test getCatalogs
@@ -429,7 +429,7 @@ usesLocalFiles                                    false
 +-------------------+------------------------+------------------+---------------+--------------------+--------------+----------------------------+-------------------------+----------------+-----------------+----------------+
 | databaseInitSize  | databaseIncrementSize  | databaseMaxSize  | tempInitSize  | tempIncrementSize  | tempMaxSize  | databaseShadowLogInitSize  | databaseTxnLogInitSize  | cachePagesMax  | cachePagesInit  | cachePageSize  |
 +-------------------+------------------------+------------------+---------------+--------------------+--------------+----------------------------+-------------------------+----------------+-----------------+----------------+
-| 1000              | 1                      | 0                | 1000          | 1                  | 0            | 2000                       | 2000                    | 1000           | 1000            | 4096           |
+| 1000              | 1000                   | 0                | 1000          | 1000               | 0            | 2000                       | 2000                    | 1000           | 1000            | 4096           |
 +-------------------+------------------------+------------------+---------------+--------------------+--------------+----------------------------+-------------------------+----------------+-----------------+----------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 

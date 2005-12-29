@@ -102,6 +102,34 @@ protected:
         ExecStreamEmbryo &confluenceStreamEmbryo);
 
     /**
+     * Defines and prepares a graph consisting of a source, a transform and two
+     * intermediate transform streams followed by one confluence stream.
+     *
+     * @param srcStreamEmbryo1 embryonic source stream which produces tuples
+     *
+     * @param srcBufStreamEmbryo embryonic ScratchBufferExecStream which
+     * produces tuples for multiple consumers
+     *
+     * @param interStreamEmbryos embryonic intermediate streams which
+     * produces tuples
+     *
+     * @param destStreamEmbryo embryonic confluence stream which processes
+     * tuples produced by the sourceStreamEmbryos
+     *
+     * @return output buffer stream
+     *
+     * TODO: 2005-12-12 This is currently not used by any test since the graph
+     * can not be scheduled currently. Once the scheduler is enhanced to
+     * support DAG scheduling, tests need to be added to test out the
+     * ScratchBuffer or Diffluence exec stream.
+     */
+    SharedExecStream prepareDAG(
+        ExecStreamEmbryo &srcStreamEmbryo,
+        ExecStreamEmbryo &srcBufStreamEmbryo,
+        std::vector<ExecStreamEmbryo> &interStreamEmbryos,
+        ExecStreamEmbryo &destStreamEmbryo);
+
+    /**
      * Executes the prepared stream graph and verifies that its output
      * is an expected-size run of constant bytes.
      *

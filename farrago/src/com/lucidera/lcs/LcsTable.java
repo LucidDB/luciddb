@@ -22,16 +22,13 @@ package com.lucidera.lcs;
 
 import java.util.*;
 
-import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.namespace.impl.*;
-import net.sf.farrago.query.*;
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.fem.med.*;
+import net.sf.farrago.namespace.impl.*;
 
-import org.eigenbase.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-
 
 /**
  * An implementation of RelOptTable for accessing data in a LucidDB
@@ -42,6 +39,8 @@ import org.eigenbase.reltype.*;
  */
 class LcsTable extends MedAbstractColumnSet
 {
+    private List<FemLocalIndex> clusteredIndexes;
+    
     //~ Constructors ----------------------------------------------------------
 
     LcsTable(
@@ -60,10 +59,17 @@ class LcsTable extends MedAbstractColumnSet
         RelOptCluster cluster,
         RelOptConnection connection)
     {
-        // TODO jvs 26-Oct-2005
-        throw Util.needToImplement(this);
+        clusteredIndexes = FarragoCatalogUtil.getClusteredIndexes(
+            getPreparingStmt().getRepos(),
+            getCwmColumnSet());
+        return new LcsRowScanRel(
+            cluster, 
+            this, 
+            clusteredIndexes,
+            connection,
+            null);
     }
+    
 }
-
 
 // End LcsTable.java

@@ -30,8 +30,7 @@ import org.eigenbase.rel.TableAccessRel;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.SqlOperatorTable;
+import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.fun.SqlCaseOperator;
 import org.eigenbase.sql.parser.SqlParser;
@@ -684,7 +683,8 @@ public class SqlToRelConverterTest extends TestCase
         final RelNode rel = tester.convertSqlToRel(sql);
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
-        RelOptXmlPlanWriter planWriter = new RelOptXmlPlanWriter(pw);
+        RelOptXmlPlanWriter planWriter =
+            new RelOptXmlPlanWriter(pw, SqlExplainLevel.DIGEST_ATTRIBUTES);
         rel.explain(planWriter);
         pw.flush();
         TestUtil.assertEqualsVerbose(

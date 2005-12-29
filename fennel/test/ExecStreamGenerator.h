@@ -380,6 +380,44 @@ public:
     }
 };
 
+/**
+ * Duplicate column generator
+ *
+ * Generates numDups duplicate rows per value for a column, in sequence,
+ * starting at initValue
+ */
+class DupColumnGenerator : public ColumnGenerator<int64_t>
+{
+    int numDups;
+    int64_t curValue;
+    int dupCount;
+
+public:
+    explicit DupColumnGenerator(int numDupsInit) {
+        assert(numDupsInit > 0);
+        numDups = numDupsInit;
+        curValue = 0;
+        dupCount = 0;
+    }
+    
+    explicit DupColumnGenerator(int numDupsInit, int initValue) {
+        assert(numDupsInit > 0);
+        numDups = numDupsInit;
+        curValue = initValue;
+        dupCount = 0;
+    }
+
+    int64_t next() 
+    {
+        int64_t retVal = curValue;
+
+        if (++dupCount == numDups) {
+            ++curValue;
+            dupCount = 0;
+        }
+        return retVal;
+    }
+};
 
 FENNEL_END_NAMESPACE
 

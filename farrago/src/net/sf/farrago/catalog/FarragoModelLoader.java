@@ -24,6 +24,7 @@ package net.sf.farrago.catalog;
 
 import java.io.*;
 import java.util.*;
+import java.util.logging.*;
 
 import net.sf.farrago.FarragoPackage;
 import net.sf.farrago.util.FarragoProperties;
@@ -53,7 +54,13 @@ public class FarragoModelLoader
 
     protected MDRepository mdrRepos;
     private String storageFactoryClassName;
-    private Properties storageProps = new Properties();
+    private final Properties storageProps;
+    private final FarragoProperties farragoProperties;
+
+    // NOTE jvs 15-Dec-2005:  Do it this way to avoid dependency on
+    // FarragoTrace.
+    private static final Logger tracer = Logger.getLogger(
+        "net.sf.farrago.catalog.FarragoRepos");
 
     //~ Methods ---------------------------------------------------------------
 
@@ -64,6 +71,17 @@ public class FarragoModelLoader
             mdrRepos.shutdown();
             mdrRepos = null;
         }
+    }
+
+    public FarragoModelLoader()
+    {
+        this(FarragoProperties.instance());
+    }
+
+    public FarragoModelLoader(FarragoProperties farragoProperties)
+    {
+        this.farragoProperties = farragoProperties;
+        storageProps = new Properties();
     }
 
     public MDRepository getMdrRepos()
@@ -97,7 +115,7 @@ public class FarragoModelLoader
 
     public File getSystemReposFile()
     {
-        File catalogDir = FarragoProperties.instance().getCatalogDir();
+        File catalogDir = farragoProperties.getCatalogDir();
         return new File(catalogDir, "ReposStorage.properties");
     }
 
@@ -112,14 +130,12 @@ public class FarragoModelLoader
             propsStream.close();
         }
 
-        FarragoProperties farragoProps = FarragoProperties.instance();
-        
         Iterator iter = props.entrySet().iterator();
         while (iter.hasNext()) {
             Map.Entry entry = (Map.Entry) iter.next();
             setStorageProperty(
                 entry.getKey().toString(),
-                farragoProps.expandProperties(
+                farragoProperties.expandProperties(
                     entry.getValue().toString()));
         }
     }
@@ -140,6 +156,9 @@ public class FarragoModelLoader
         String name,
         String value)
     {
+        tracer.fine(
+            "Setting repository storage property '" + name
+            + "' = [ " + value + " ]");
         storageProps.put(name, value);
     }
 }
