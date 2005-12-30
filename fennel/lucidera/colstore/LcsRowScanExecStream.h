@@ -28,6 +28,7 @@
 #include "fennel/tuple/TupleDescriptor.h"
 #include "fennel/tuple/TupleAccessor.h"
 #include "fennel/tuple/TupleProjectionAccessor.h"
+#include "fennel/tuple/TupleDataWithBuffer.h"
 #include <boost/scoped_array.hpp>
 
 FENNEL_BEGIN_NAMESPACE
@@ -80,11 +81,6 @@ class LcsRowScanExecStream : public ConduitExecStream
     TupleDescriptor rowTupleDesc;
 
     /**
-     * Tuple data representing the full table row
-     */
-    TupleData rowTupleData;
-
-    /**
      * Tuple accessor for full table row
      */
     TupleAccessor rowTupleAccessor;
@@ -93,6 +89,11 @@ class LcsRowScanExecStream : public ConduitExecStream
      * Buffer for full table row
      */
     boost::scoped_array<FixedBuffer> rowTupleBuffer;
+
+    /**
+     * Tuple data for data read directly from cluster pages
+     */
+    TupleDataWithBuffer clusterTupleData;
 
     /**
      * Number of clusters to be scanned

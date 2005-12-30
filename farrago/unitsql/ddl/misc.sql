@@ -56,30 +56,31 @@ create clustered index explicit_ij on lcs_table_overlap(i,j)
 create clustered index explicit_jk2 on lcs_table_overlap(j,k)
 ;
 
--- test some features which aren't yet implemented for LCS
-
--- should fail:  can't handle unclustered indexes yet
-create table lcs_table_unclustered(i int not null)
-server sys_column_store_data_server
-create index unclustered_i on lcs_table_unclustered(i)
-;
-
+-- test usage of UDT's for column type
 create type square as (
     side_length double
 ) final;
 
--- should fail:  can't handle UDT yet
 create table lcs_table_udt(i int not null,s square)
 server sys_column_store_data_server
+;
+
+-- test LCS drop/truncate
+truncate table lcs_table;
+drop table lcs_table_explicit;
+
+-- test some features which aren't yet implemented for LCS
+
+-- doesn't fail, but has no effect,
+-- because for now unclustered indexes are stubbed out
+create table lcs_table_unclustered(i int not null)
+server sys_column_store_data_server
+create index unclustered_i on lcs_table_unclustered(i)
 ;
 
 -- should fail:  can't handle collections yet
 create table lcs_table_multiset(i int not null,im integer multiset)
 server sys_column_store_data_server
 ;
-
--- test LCS drop/truncate; TODO: with data
-truncate table lcs_table;
-drop table lcs_table_explicit;
 
 -- End misc.sql

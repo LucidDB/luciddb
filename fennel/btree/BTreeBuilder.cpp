@@ -25,6 +25,7 @@
 #include "fennel/btree/BTreeBuilder.h"
 #include "fennel/btree/BTreeBuildLevel.h"
 #include "fennel/btree/BTreeAccessBaseImpl.h"
+#include "fennel/btree/BTreeReader.h"
 #include "fennel/segment/SegInputStream.h"
 #include "fennel/segment/SegOutputStream.h"
 
@@ -346,8 +347,13 @@ void BTreeBuilder::growTree()
     level.allocatePage();
 }
 
-void BTreeBuilder::truncate(bool rootless)
+
+void BTreeBuilder::truncate(
+    bool rootless, TupleProjection const *pLeafPageIdProj)
 {
+    if (pLeafPageIdProj) {
+        truncateExternal(*pLeafPageIdProj);
+    }
     BTreePageLock pageLock;
     pageLock.accessSegment(treeDescriptor.segmentAccessor);
     pageLock.lockExclusive(getRootPageId());
@@ -381,6 +387,34 @@ void BTreeBuilder::truncateChildren(BTreeNode const &node)
         pageLock.deallocateUnlockedPage(pageId);
         pageId = nextPageId;
     }
+}
+
+void BTreeBuilder::truncateExternal(TupleProjection const &leafPageIdProj)
+{
+    // REVIEW jvs 24-Dec-2005:  Here we pre-scan the tree, dropping
+    // the external pages.  This scan could be combined with
+    // the main truncate traversal for better efficiency.
+    BTreeReader reader(treeDescriptor);
+    TupleProjectionAccessor projAccessor;
+    projAccessor.bind(
+        reader.getTupleAccessorForRead(),
+        leafPageIdProj);
+    TupleDescriptor projDesc;
+    projDesc.projectFrom(treeDescriptor.tupleDescriptor, leafPageIdProj);
+    TupleData projData(projDesc);
+    BTreePageLock pageLock;
+    pageLock.accessSegment(treeDescriptor.segmentAccessor);
+    if (reader.searchFirst()) do {
+        projAccessor.unmarshal(projData);
+        for (uint i = 0; i < projData.size(); ++i) {
+            if (!projData[i].pData) {
+                continue;
+            }
+            PageId pageId = *reinterpret_cast<PageId const *>(
+                projData[i].pData);
+            pageLock.deallocateUnlockedPage(pageId);
+        }
+    } while (reader.searchNext());
 }
 
 FENNEL_END_CPPFILE("$Id$");

@@ -1,4 +1,4 @@
-<project name="fennel_common_resources" default="warning">
+<project name="fennel_common_resources" default="generate.resources">
 
   <!--
 // $Id$
@@ -36,12 +36,6 @@ ${perforce.view}/${resource.name}.cpp
 ${perforce.view}/${resource.name}*.properties
 "/>
 
-  <target name="warning">
-    <echo>This build script is executed automatically by the fennel/common
-Makefile.  Normally, it is not executed by hand, although you may
-do so by calling out the generated.resources target excplicitly.</echo>
-  </target>
-
   <target
     name="generate.resources"
     description="Regenerate, if necessary, the Fennel Resource header and implementation and the associated properties files.">
@@ -49,7 +43,7 @@ do so by calling out the generated.resources target excplicitly.</echo>
     <!-- We attempt to avoid re-generating files when they don't need it.
          The rationale is to avoid no-op perforce changelist creation and
          submission. (Normally testing is handled by make, but someone might
-         run this script directly). This condition is entirely correct: it
+         run this script directly). This condition isn't entirely correct: it
          should check all ${resource.name}*.properties files, but the 
          uptodate task doesn't provide a means to do that. -->
     <condition property="subroutine" value="execute.resgen">
@@ -83,7 +77,7 @@ do so by calling out the generated.resources target excplicitly.</echo>
 
     <antcall target="checkout.files"/>
 
-    <resgen mode="c++" srcdir="./" locales="${resource.locales}">
+    <resgen mode="c++" srcdir="./" locales="${resource.locales}" commentstyle="scm-safe">
       <include name="${resource.name}.xml"/>
     </resgen>
   </target>

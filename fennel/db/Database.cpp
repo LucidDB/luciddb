@@ -46,6 +46,7 @@ using namespace boost::filesystem;
 
 ParamName Database::paramDatabaseDir = "databaseDir";
 ParamName Database::paramResourceDir = "resourceDir";
+ParamName Database::paramForceTxns = "forceTxns";
 ParamName Database::paramDatabasePrefix = "database";
 ParamName Database::paramTempPrefix = "temp";
 ParamName Database::paramShadowLogPrefix = "databaseShadowLog";
@@ -83,6 +84,8 @@ Database::Database(
       configMap(configMapInit)
 {
     openMode = openModeInit;
+
+    forceTxns = configMap.getBoolParam(paramForceTxns);
 
     // NOTE:  do this early in case other initialization throws exceptions
     // (and to prevent thread-safety issues later on)
@@ -291,17 +294,26 @@ SharedSegment Database::createTxnLogSegment(
     readDeviceParams(paramTxnLogPrefix,txnLogMode,deviceParams);
     CompoundId::setDeviceId(deviceParams.firstBlockId,txnLogDeviceId);
     CompoundId::setBlockNum(deviceParams.firstBlockId,0);
-    deviceParams.nPagesAllocated = MAXU;
-    deviceParams.nPagesIncrement = 0;
-    deviceParams.nPagesMax = deviceParams.nPagesMin;
+    if (forceTxns) {
+        deviceParams.nPagesAllocated = 0;
+    } else {
+        deviceParams.nPagesAllocated = MAXU;
+        deviceParams.nPagesIncrement = 0;
+        deviceParams.nPagesMax = deviceParams.nPagesMin;
+    }
     
     SharedSegment pLinearSegment =
         pSegmentFactory->newLinearDeviceSegment(
             pCache,
             deviceParams);
-    
-    SharedSegment pTxnLogSegment = pSegmentFactory->newCircularSegment(
-        pLinearSegment,pCheckpointThread,oldestPageId);
+
+    SharedSegment pTxnLogSegment;
+    if (forceTxns) {
+        pTxnLogSegment = pLinearSegment;
+    } else {
+        pTxnLogSegment = pSegmentFactory->newCircularSegment(
+            pLinearSegment,pCheckpointThread,oldestPageId);
+    }
         
     return pTxnLogSegment;
 }
@@ -328,9 +340,14 @@ SharedSegment Database::createShadowLog(DeviceMode shadowLogMode)
     readDeviceParams(paramShadowLogPrefix,shadowLogMode,deviceParams);
     CompoundId::setDeviceId(deviceParams.firstBlockId,shadowDeviceId);
     CompoundId::setBlockNum(deviceParams.firstBlockId,0);
-    deviceParams.nPagesAllocated = MAXU;
-    deviceParams.nPagesIncrement = 0;
-    deviceParams.nPagesMax = deviceParams.nPagesMin;
+
+    if (forceTxns) {
+        deviceParams.nPagesAllocated = 0;
+    } else {
+        deviceParams.nPagesAllocated = MAXU;
+        deviceParams.nPagesIncrement = 0;
+        deviceParams.nPagesMax = deviceParams.nPagesMin;
+    }
     
     SharedSegment pShadowSegment =
         pSegmentFactory->newLinearDeviceSegment(
@@ -341,10 +358,13 @@ SharedSegment Database::createShadowLog(DeviceMode shadowLogMode)
     if (!shadowLogMode.create) {
         oldestPageId = header.shadowRecoveryPageId;
     }
-    pShadowSegment = pSegmentFactory->newCircularSegment(
-        pShadowSegment,
-        pCheckpointThread,
-        oldestPageId);
+
+    if (!forceTxns) {
+        pShadowSegment = pSegmentFactory->newCircularSegment(
+            pShadowSegment,
+            pCheckpointThread,
+            oldestPageId);
+    }
     
     return pSegmentFactory->newWALSegment(pShadowSegment);
 }
@@ -567,6 +587,12 @@ void Database::requestCheckpoint(CheckpointType checkpointType,bool async)
     uint nCheckpointsBefore = nCheckpoints;
     mutexGuard.unlock();
 
+    if (forceTxns && (checkpointType == CHECKPOINT_FLUSH_FUZZY)) {
+        // fuzzy checkpoints aren't meaningful in forceTxns mode,
+        // so treat them as sharp
+        checkpointType = CHECKPOINT_FLUSH_ALL;
+    }
+
     pCheckpointThread->requestCheckpoint(checkpointType);
 
     if (async) {
@@ -602,23 +628,7 @@ void Database::writeHeader()
 void Database::recover(
     LogicalTxnParticipantFactory &txnParticipantFactory)
 {
-    assert(!openMode.create);
-    assert(isRecoveryRequired());
-
-    FENNEL_TRACE(
-        TRACE_INFO,
-        "recovery beginning; page version = "
-        << header.versionNumber);
-
-    if (header.shadowRecoveryPageId != NULL_PAGE_ID) {
-        pVersionedSegment->recover(header.shadowRecoveryPageId);
-        pVersionedSegment->checkpoint(CHECKPOINT_FLUSH_AND_UNMAP);
-        header.versionNumber = pVersionedSegment->getVersionNumber();
-        header.shadowRecoveryPageId = NULL_PAGE_ID;
-        writeHeader();
-        pVersionedSegment->deallocateCheckpointedLog(
-            CHECKPOINT_FLUSH_AND_UNMAP);
-    }
+    recoverPhysical();
 
     // REVIEW:  are shadows being correctly logged during recovery?  They have
     // to be, otherwise we can't re-recover after a failed recovery.
@@ -639,7 +649,6 @@ void Database::recover(
             pSegmentFactory);
     logSegmentAccessor.reset();
 
-
     pRecoveryLog->recover(header.txnLogCheckpointMemento);
     assert(pRecoveryLog.unique());
     pRecoveryLog.reset();
@@ -648,10 +657,32 @@ void Database::recover(
     
     closeDevices();
     deleteLogs();
-    recoveryRequired = false;
     FENNEL_TRACE(TRACE_INFO, "recovery completed");
 
     openSegments();
+}
+
+void Database::recoverPhysical()
+{
+    assert(!openMode.create);
+    assert(isRecoveryRequired());
+    recoveryRequired = false;
+    
+    FENNEL_TRACE(
+        TRACE_INFO,
+        "recovery beginning; page version = "
+        << header.versionNumber);
+
+    if (header.shadowRecoveryPageId != NULL_PAGE_ID) {
+        pVersionedSegment->recover(
+            header.shadowRecoveryPageId, header.versionNumber);
+        pVersionedSegment->checkpoint(CHECKPOINT_FLUSH_AND_UNMAP);
+        header.versionNumber = pVersionedSegment->getVersionNumber();
+        header.shadowRecoveryPageId = NULL_PAGE_ID;
+        writeHeader();
+        pVersionedSegment->deallocateCheckpointedLog(
+            CHECKPOINT_FLUSH_AND_UNMAP);
+    }
 }
 
 bool Database::isRecoveryRequired() const
@@ -694,6 +725,11 @@ void Database::writeStats(StatsTarget &target)
     StrictMutexGuard mutexGuard(mutex);
     target.writeCounter("DatabaseCheckpoints",nCheckpointsStat);
     nCheckpointsStat = 0;
+}
+
+bool Database::shouldForceTxns() const
+{
+    return forceTxns;
 }
 
 FENNEL_END_CPPFILE("$Id$");

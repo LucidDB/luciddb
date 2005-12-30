@@ -22,14 +22,17 @@
       <FEMConfig:FarragoConfig.FennelConfig>
         <FEMConfig:FennelConfig
           databaseInitSize='1000'
-          databaseIncrementSize='1'
+          databaseIncrementSize='1000'
           tempInitSize='1000'
-          tempIncrementSize='1'
+          tempIncrementSize='1000'
           databaseShadowLogInitSize='2000'
+          databaseShadowLogIncrementSize='1000'
           databaseTxnLogInitSize='2000'
+          databaseTxnLogIncrementSize='1000'
           cachePagesMax='@cachePagesMax@'
           cachePagesInit='@cachePagesInit@'
           cachePageSize='@cachePageSize@'
+          groupCommitInterval='@groupCommitInterval@'
           resourceDir='@resourceDir@'
           jniHandleTraceFile='@jniHandleTraceFile@'
           />

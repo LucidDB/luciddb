@@ -395,7 +395,8 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         return sessionVariables;
     }
 
-    protected void endTransactionIfAuto(boolean commit)
+    // implement FarragoSession
+    public void endTransactionIfAuto(boolean commit)
     {
         if (isAutoCommit) {
             if (commit) {
@@ -797,8 +798,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         FarragoSessionDdlStmt ddlStmt)
     {
         if (ddlStmt.requiresCommit()) {
-            // For now, DDL causes implicit commit of any pending txn.
-            // TODO:  commit at end of DDL too in case it updated something?
+            // most DDL causes implicit commit of any pending txn
             commitImpl();
         }
         tracer.fine("validating DDL");
@@ -811,9 +811,14 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         FarragoSessionDdlStmt ddlStmt)
     {
         tracer.fine("updating storage");
-        ddlValidator.executeStorage();
+        if (ddlStmt.requiresCommit()) {
+            // start a Fennel txn to cover any effects on storage
+            fennelTxnContext.initiateTxn();
+        }
 
+        boolean rollbackFennel = true;
         try {
+            ddlValidator.executeStorage();
             ddlStmt.preExecute();
             if (ddlStmt instanceof DdlStmt) {
                 ((DdlStmt) ddlStmt).visit(new DdlExecutionVisitor());
@@ -822,6 +827,8 @@ public class FarragoDbSession extends FarragoCompoundAllocation
 
             tracer.fine("committing DDL");
             reposTxnContext.commit();
+            commitImpl();
+            rollbackFennel = false;
 
             if (shutDownRequested) {
                 closeAllocation();
@@ -839,6 +846,9 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         } finally {
             shutDownRequested = false;
             catalogDumpRequested = false;
+            if (rollbackFennel) {
+                rollbackImpl();
+            }
         }
     }
 

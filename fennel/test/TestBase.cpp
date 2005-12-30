@@ -56,8 +56,17 @@ TestBase::TestBase()
         configMap.getStringParam(paramTraceStdout,"");
     traceStdout = ((traceStdoutParam.length() == 0) ? false : true);
 
+    std::string defaultTraceFileName;
+    const char *fennelHome = getenv("FENNEL_HOME");
+    if (fennelHome) {
+        defaultTraceFileName += fennelHome;
+        defaultTraceFileName += "/trace/";
+    }
+    defaultTraceFileName += testName+"_trace.log";
     std::string traceFileName =
-        configMap.getStringParam(paramTraceFileName,testName+"_trace.log");
+        configMap.getStringParam(
+            paramTraceFileName,
+            defaultTraceFileName);
 
     traceFile = false;
     if (traceFileName == "-") {

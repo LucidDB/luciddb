@@ -13,9 +13,6 @@ alter system set "calcVirtualMachine" = 'turing';
 -- should work
 alter system set "calcVirtualMachine" = 'CALCVM_AUTO';
 
--- should fail:  immutable
-alter system set "fennelDisabled" = true;
-
 -- should work
 alter system set "cachePagesMax" = 1001;
 

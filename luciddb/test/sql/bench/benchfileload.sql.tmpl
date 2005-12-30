@@ -1,0 +1,86 @@
+create foreign table @name_prefix@_schema."bench100" (
+"kseq" double,
+"k2" double,
+"k4" double,
+"k5" double,
+"k10" double,
+"k25" double,
+"k100" double,
+"k1k" double,
+"k10k" double,
+"k40k" double,
+"k100k" double,
+"k250k" double,
+"k500k" double
+)
+server @SERVER_NAME@
+options (
+SCHEMA_NAME '@SCHEMA@',
+@TABLE_NAME@ '@ff_dir@bench100@file_ext@'
+);
+
+
+create foreign table @name_prefix@_schema."bench10K" (
+"kseq" double,
+"k2" double,
+"k4" double,
+"k5" double,
+"k10" double,
+"k25" double,
+"k100" double,
+"k1k" double,
+"k10k" double,
+"k40k" double,
+"k100k" double,
+"k250k" double,
+"k500k" double
+)
+server @SERVER_NAME@
+options (
+SCHEMA_NAME '@SCHEMA@',
+@TABLE_NAME@ '@ff_dir@bench10K@file_ext@'
+);
+
+
+create foreign table @name_prefix@_schema."bench100K" (
+"kseq" double,
+"k2" double,
+"k4" double,
+"k5" double,
+"k10" double,
+"k25" double,
+"k100" double,
+"k1k" double,
+"k10k" double,
+"k40k" double,
+"k100k" double,
+"k250k" double,
+"k500k" double
+)
+server @SERVER_NAME@
+options (
+SCHEMA_NAME '@SCHEMA@',
+@TABLE_NAME@ '@ff_dir@bench100K@file_ext@'
+);
+
+
+create foreign table @name_prefix@_schema."bench1M" (
+"kseq" double,
+"k2" double,
+"k4" double,
+"k5" double,
+"k10" double,
+"k25" double,
+"k100" double,
+"k1k" double,
+"k10k" double,
+"k40k" double,
+"k100k" double,
+"k250k" double,
+"k500k" double
+)
+server @SERVER_NAME@
+options (
+SCHEMA_NAME '@SCHEMA@',
+@TABLE_NAME@ '@ff_dir@bench1M@file_ext@'
+);

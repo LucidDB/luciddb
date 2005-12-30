@@ -1,11 +1,9 @@
-// This class is generated. Do NOT modify it, or
-// add it to source control.
+// This class is generated. Do NOT modify it manually.
 
 /**
  * This class was generated
  * by class org.eigenbase.resgen.ResourceGen
- * from /home/jpham/open/fennel/common/FennelResource.xml
- * on Wed Dec 07 11:54:38 PST 2005.
+ * from .../FennelResource.xml
  * It contains a list of messages, and methods to
  * retrieve and format those messages.
  */
@@ -20,8 +18,8 @@
 #include "ResourceDefinition.h"
 #include "ResourceBundle.h"
 
-// begin includes specified by /home/jpham/open/fennel/common/FennelResource.h
-// end includes specified by /home/jpham/open/fennel/common/FennelResource.h
+// begin includes specified by .../FennelResource.xml
+// end includes specified by .../FennelResource.xml
 
 namespace fennel {
 

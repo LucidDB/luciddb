@@ -25,6 +25,7 @@ package org.eigenbase.relopt;
 
 import java.util.HashSet;
 
+import org.eigenbase.sql.*;
 import org.eigenbase.rel.AbstractRelNode;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rex.RexNode;
@@ -42,23 +43,23 @@ public class RelOptPlanWriter extends java.io.PrintWriter
 
     /** Recursion detection. */
     HashSet active = new HashSet();
-    boolean brief;
+    private final SqlExplainLevel detailLevel;
     int level;
 
     //~ Constructors ----------------------------------------------------------
 
     public RelOptPlanWriter(java.io.PrintWriter pw)
     {
-        this(pw, false);
+        this(pw, SqlExplainLevel.DIGEST_ATTRIBUTES);
     }
 
     public RelOptPlanWriter(
         java.io.PrintWriter pw,
-        boolean brief)
+        SqlExplainLevel detailLevel)
     {
         super(pw);
         this.level = 0;
-        this.brief = brief;
+        this.detailLevel = detailLevel;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -91,27 +92,34 @@ public class RelOptPlanWriter extends java.io.PrintWriter
             s = "";
         }
         s = s + rel.getRelTypeName() + ((AbstractRelNode) rel).getQualifier();
-        if (brief) {
-            explainBrief(s, rel, terms);
-            return;
-        }
 
         for (int i = 0; i < level; i++) {
             print("  ");
         }
         print(s);
-        int j = 0;
-        for (int i = 0; i < children.length; i++) {
-            RexNode child = children[i];
-            print(((j == 0) ? "(" : ", ") + terms[inputs.length + j++] + "=["
-                + child.toString() + "]");
+        if (detailLevel != SqlExplainLevel.NO_ATTRIBUTES) {
+            int j = 0;
+            for (int i = 0; i < children.length; i++) {
+                RexNode child = children[i];
+                print(((j == 0) ? "(" : ", ")
+                    + terms[inputs.length + j++] + "=["
+                    + child.toString() + "]");
+            }
+            for (int i = 0; i < values.length; i++) {
+                Object value = values[i];
+                print(((j == 0) ? "(" : ", ")
+                    + terms[inputs.length + j++] + "=["
+                    + value.toString() + "]");
+            }
+            if (j > 0) {
+                print(")");
+            }
         }
-        for (int i = 0; i < values.length; i++) {
-            Object value = values[i];
-            print(((j == 0) ? "(" : ", ") + terms[inputs.length + j++] + "=["
-                + value.toString() + "]");
+        if (detailLevel == SqlExplainLevel.ALL_ATTRIBUTES) {
+            print(": cost = ");
+            print(rel.computeSelfCost(rel.getCluster().getPlanner()));
         }
-        println((j > 0) ? ")" : "");
+        println("");
         level++;
         for (int i = 0; i < inputs.length; i++) {
             RelNode child = inputs[i];
@@ -146,6 +154,17 @@ public class RelOptPlanWriter extends java.io.PrintWriter
         exp.explain(this);
     }
 
+    /**
+     * @return detail level at which plan should be generated
+     */
+    public SqlExplainLevel getDetailLevel()
+    {
+        return detailLevel;
+    }
+
+    // REVIEW jvs 23-Dec-2005:  I'm not sure what the original purpose
+    // of this code was, but the output is hard to understand, and
+    // no one was using it, so I made it inaccessible.
     private void explainBrief(
         String s,
         RelNode rel,

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/params.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/ddl/params.sql#1 $
 0: jdbc:farrago:> -- Test system parameters
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should work
@@ -13,10 +13,6 @@ Error: Type mismatch in value ''turing'' for system parameter "calcVirtualMachin
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should work
 0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_AUTO';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail:  immutable
-0: jdbc:farrago:> alter system set "fennelDisabled" = true;
-Error: Cannot change immutable system parameter "fennelDisabled" (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should work
 0: jdbc:farrago:> alter system set "cachePagesMax" = 1001;

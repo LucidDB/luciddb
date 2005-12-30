@@ -3,8 +3,8 @@
 
 set schema 'sales';
 
--- force usage of Java calculator
-alter system set "calcVirtualMachine" = 'CALCVM_FENNEl';
+-- force usage of Fennel calculator
+alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
 
 select count(*) from depts;
 

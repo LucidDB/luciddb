@@ -224,7 +224,8 @@ public class SqlLiteral extends SqlNode
             // EnumeratedValues.Value, and it would be silly if it were its
             // own value!
             return value instanceof EnumeratedValues.Value
-                || value instanceof String;
+                || value instanceof String
+                || value instanceof Enum;
         case SqlTypeName.Multiset_ordinal:
             return true;
         case SqlTypeName.Integer_ordinal: // not allowed -- use Decimal
@@ -274,6 +275,17 @@ public class SqlLiteral extends SqlNode
     public static EnumeratedValues.Value symbolValue(SqlNode node)
     {
         return (EnumeratedValues.Value) ((SqlLiteral) node).value;
+    }
+
+    /**
+     * Extracts the Enum from a symbol literal.
+     *
+     * @throws ClassCastException if the value is not a symbol literal
+     * @see #createEnum(Enum, SqlParserPos)
+     */
+    public static Enum enumValue(SqlNode node)
+    {
+        return (Enum) ((SqlLiteral) node).value;
     }
 
     /**
@@ -382,6 +394,18 @@ public class SqlLiteral extends SqlNode
         return new SqlLiteral(o, SqlTypeName.Symbol, pos);
     }
 
+    /**
+     * Creates a literal which represents an Enum represented as a symbol.
+     *
+     * @see #enumValue(SqlNode)
+     */
+    public static SqlLiteral createEnum(
+        Enum o,
+        SqlParserPos pos)
+    {
+        return new SqlLiteral(o, SqlTypeName.Symbol, pos);
+    }
+
     public boolean equals(Object obj)
     {
         if (!(obj instanceof SqlLiteral)) {
@@ -437,8 +461,13 @@ public class SqlLiteral extends SqlNode
             throw typeName.unexpected();
 
         case SqlTypeName.Symbol_ordinal:
-            EnumeratedValues.Value enumVal = (EnumeratedValues.Value) value;
-            writer.keyword(enumVal.getName().toUpperCase());
+            if (value instanceof EnumeratedValues.Value) {
+                EnumeratedValues.Value enumVal = (EnumeratedValues.Value) value;
+                writer.keyword(enumVal.getName().toUpperCase());
+            } else {
+                Enum enumVal = (Enum) value;
+                writer.keyword(enumVal.name());
+            }
             break;
         default:
             writer.literal(value.toString());

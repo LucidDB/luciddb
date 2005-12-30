@@ -5,7 +5,7 @@
 [testSingleColNoDupNewRoot] ------
 [testSingleColNoDupNewRoot] nColumn:              1
 [testSingleColNoDupNewRoot] firstRid:             0
-[testSingleColNoDupNewRoot] oBatch:            3876
+[testSingleColNoDupNewRoot] oBatch:            3860
 [testSingleColNoDupNewRoot] nBatch:               2
 [testSingleColNoDupNewRoot] lastVal[0]:        4096
 [testSingleColNoDupNewRoot] firstVal[0]:       4096
@@ -18,7 +18,7 @@
 [testSingleColNoDupNewRoot] nRow:               360
 [testSingleColNoDupNewRoot] nVal:                 0
 [testSingleColNoDupNewRoot] nValHighMark:         0
-[testSingleColNoDupNewRoot] oVal:                60
+[testSingleColNoDupNewRoot] oVal:                44
 [testSingleColNoDupNewRoot] oLastValHighMark:  4096
 [testSingleColNoDupNewRoot] recSize:              9
 [testSingleColNoDupNewRoot] Fixed Size Rows
@@ -750,7 +750,7 @@
 [testSingleColNoDupNewRoot] nRow:                64
 [testSingleColNoDupNewRoot] nVal:                 0
 [testSingleColNoDupNewRoot] nValHighMark:         0
-[testSingleColNoDupNewRoot] oVal:              3300
+[testSingleColNoDupNewRoot] oVal:              3284
 [testSingleColNoDupNewRoot] oLastValHighMark:  4096
 [testSingleColNoDupNewRoot] recSize:              9
 [testSingleColNoDupNewRoot] Fixed Size Rows
@@ -895,7 +895,7 @@
 [testSingleColNoDupNewRoot] ------
 [testSingleColNoDupNewRoot] nColumn:              1
 [testSingleColNoDupNewRoot] firstRid:           424
-[testSingleColNoDupNewRoot] oBatch:            3876
+[testSingleColNoDupNewRoot] oBatch:            3860
 [testSingleColNoDupNewRoot] nBatch:               2
 [testSingleColNoDupNewRoot] lastVal[0]:        4096
 [testSingleColNoDupNewRoot] firstVal[0]:       4096
@@ -908,7 +908,7 @@
 [testSingleColNoDupNewRoot] nRow:               360
 [testSingleColNoDupNewRoot] nVal:                 0
 [testSingleColNoDupNewRoot] nValHighMark:         0
-[testSingleColNoDupNewRoot] oVal:                60
+[testSingleColNoDupNewRoot] oVal:                44
 [testSingleColNoDupNewRoot] oLastValHighMark:  4096
 [testSingleColNoDupNewRoot] recSize:              9
 [testSingleColNoDupNewRoot] Fixed Size Rows
@@ -1640,7 +1640,7 @@
 [testSingleColNoDupNewRoot] nRow:                64
 [testSingleColNoDupNewRoot] nVal:                 0
 [testSingleColNoDupNewRoot] nValHighMark:         0
-[testSingleColNoDupNewRoot] oVal:              3300
+[testSingleColNoDupNewRoot] oVal:              3284
 [testSingleColNoDupNewRoot] oLastValHighMark:  4096
 [testSingleColNoDupNewRoot] recSize:              9
 [testSingleColNoDupNewRoot] Fixed Size Rows
@@ -1779,24 +1779,6 @@
 [testSingleColNoDupNewRoot] Column # 0
 [testSingleColNoDupNewRoot] ------------
 [testSingleColNoDupNewRoot] NONE.
-[testSingleColNoDupNewRoot] Cluster Page Dump - PageId 3
-[testSingleColNoDupNewRoot] -----------------------------
-[testSingleColNoDupNewRoot] Header
-[testSingleColNoDupNewRoot] ------
-[testSingleColNoDupNewRoot] nColumn:              1
-[testSingleColNoDupNewRoot] firstRid:           848
-[testSingleColNoDupNewRoot] oBatch:              60
-[testSingleColNoDupNewRoot] nBatch:               0
-[testSingleColNoDupNewRoot] lastVal[0]:        4096
-[testSingleColNoDupNewRoot] firstVal[0]:       4096
-[testSingleColNoDupNewRoot] nVal[0]:              0
-[testSingleColNoDupNewRoot] delta[0]:             0
-[testSingleColNoDupNewRoot] #############################################################
-[testSingleColNoDupNewRoot] Value List at the Bottom of the Page
-[testSingleColNoDupNewRoot] ------------------------------------
-[testSingleColNoDupNewRoot] Column # 0
-[testSingleColNoDupNewRoot] ------------
-[testSingleColNoDupNewRoot] NONE.
 [LcsClusterAppendExecStreamTest] LEAVE:  testSingleColNoDupNewRoot
 [LcsClusterAppendExecStreamTest] ENTER:  testSingleColNoDupOldRoot
 [testSingleColNoDupOldRoot] Cluster Page Dump - PageId 1
@@ -1805,7 +1787,7 @@
 [testSingleColNoDupOldRoot] ------
 [testSingleColNoDupOldRoot] nColumn:              1
 [testSingleColNoDupOldRoot] firstRid:             0
-[testSingleColNoDupOldRoot] oBatch:              80
+[testSingleColNoDupOldRoot] oBatch:              64
 [testSingleColNoDupOldRoot] nBatch:               2
 [testSingleColNoDupOldRoot] lastVal[0]:        3988
 [testSingleColNoDupOldRoot] firstVal[0]:       4096
@@ -1818,7 +1800,7 @@
 [testSingleColNoDupOldRoot] nRow:                 8
 [testSingleColNoDupOldRoot] nVal:                 0
 [testSingleColNoDupOldRoot] nValHighMark:         0
-[testSingleColNoDupOldRoot] oVal:                60
+[testSingleColNoDupOldRoot] oVal:                44
 [testSingleColNoDupOldRoot] oLastValHighMark:  4096
 [testSingleColNoDupOldRoot] recSize:              9
 [testSingleColNoDupOldRoot] Variable Size Rows
@@ -1846,7 +1828,7 @@
 [testSingleColNoDupOldRoot] nRow:                 2
 [testSingleColNoDupOldRoot] nVal:                 0
 [testSingleColNoDupOldRoot] nValHighMark:        10
-[testSingleColNoDupOldRoot] oVal:                76
+[testSingleColNoDupOldRoot] oVal:                60
 [testSingleColNoDupOldRoot] oLastValHighMark:  4006
 [testSingleColNoDupOldRoot] recSize:              9
 [testSingleColNoDupOldRoot] Variable Size Rows
@@ -1890,7 +1872,7 @@
 [testSingleColNoDupOldRoot] ------
 [testSingleColNoDupOldRoot] nColumn:              1
 [testSingleColNoDupOldRoot] firstRid:             0
-[testSingleColNoDupOldRoot] oBatch:             100
+[testSingleColNoDupOldRoot] oBatch:              84
 [testSingleColNoDupOldRoot] nBatch:               3
 [testSingleColNoDupOldRoot] lastVal[0]:        3952
 [testSingleColNoDupOldRoot] firstVal[0]:       4096
@@ -1903,7 +1885,7 @@
 [testSingleColNoDupOldRoot] nRow:                 8
 [testSingleColNoDupOldRoot] nVal:                 0
 [testSingleColNoDupOldRoot] nValHighMark:         0
-[testSingleColNoDupOldRoot] oVal:                60
+[testSingleColNoDupOldRoot] oVal:                44
 [testSingleColNoDupOldRoot] oLastValHighMark:  4096
 [testSingleColNoDupOldRoot] recSize:              9
 [testSingleColNoDupOldRoot] Variable Size Rows
@@ -1931,7 +1913,7 @@
 [testSingleColNoDupOldRoot] nRow:                 8
 [testSingleColNoDupOldRoot] nVal:                 0
 [testSingleColNoDupOldRoot] nValHighMark:        10
-[testSingleColNoDupOldRoot] oVal:                76
+[testSingleColNoDupOldRoot] oVal:                60
 [testSingleColNoDupOldRoot] oLastValHighMark:  4006
 [testSingleColNoDupOldRoot] recSize:              9
 [testSingleColNoDupOldRoot] Variable Size Rows
@@ -1959,7 +1941,7 @@
 [testSingleColNoDupOldRoot] nRow:                 4
 [testSingleColNoDupOldRoot] nVal:                 0
 [testSingleColNoDupOldRoot] nValHighMark:        12
-[testSingleColNoDupOldRoot] oVal:                92
+[testSingleColNoDupOldRoot] oVal:                76
 [testSingleColNoDupOldRoot] oLastValHighMark:  3988
 [testSingleColNoDupOldRoot] recSize:              9
 [testSingleColNoDupOldRoot] Variable Size Rows
@@ -2017,7 +1999,7 @@
 [testSingleColConstNewRoot] ------
 [testSingleColConstNewRoot] nColumn:              1
 [testSingleColConstNewRoot] firstRid:             0
-[testSingleColConstNewRoot] oBatch:              62
+[testSingleColConstNewRoot] oBatch:              46
 [testSingleColConstNewRoot] nBatch:               1
 [testSingleColConstNewRoot] lastVal[0]:        4087
 [testSingleColConstNewRoot] firstVal[0]:       4096
@@ -2030,7 +2012,7 @@
 [testSingleColConstNewRoot] nRow:               848
 [testSingleColConstNewRoot] nVal:                 1
 [testSingleColConstNewRoot] nValHighMark:         0
-[testSingleColConstNewRoot] oVal:                60
+[testSingleColConstNewRoot] oVal:                44
 [testSingleColConstNewRoot] oLastValHighMark:  4096
 [testSingleColConstNewRoot] recSize:              9
 [testSingleColConstNewRoot] Rows
@@ -2173,7 +2155,7 @@
 [testSingleColConstOldRoot] ------
 [testSingleColConstOldRoot] nColumn:              1
 [testSingleColConstOldRoot] firstRid:             0
-[testSingleColConstOldRoot] oBatch:              66
+[testSingleColConstOldRoot] oBatch:              50
 [testSingleColConstOldRoot] nBatch:               2
 [testSingleColConstOldRoot] lastVal[0]:        4087
 [testSingleColConstOldRoot] firstVal[0]:       4096
@@ -2186,7 +2168,7 @@
 [testSingleColConstOldRoot] nRow:                 8
 [testSingleColConstOldRoot] nVal:                 1
 [testSingleColConstOldRoot] nValHighMark:         0
-[testSingleColConstOldRoot] oVal:                60
+[testSingleColConstOldRoot] oVal:                44
 [testSingleColConstOldRoot] oLastValHighMark:  4096
 [testSingleColConstOldRoot] recSize:              9
 [testSingleColConstOldRoot] Rows
@@ -2203,7 +2185,7 @@
 [testSingleColConstOldRoot] nRow:                 2
 [testSingleColConstOldRoot] nVal:                 0
 [testSingleColConstOldRoot] nValHighMark:         1
-[testSingleColConstOldRoot] oVal:                62
+[testSingleColConstOldRoot] oVal:                46
 [testSingleColConstOldRoot] oLastValHighMark:  4087
 [testSingleColConstOldRoot] recSize:              9
 [testSingleColConstOldRoot] Variable Size Rows
@@ -2225,7 +2207,7 @@
 [testSingleColConstOldRoot] ------
 [testSingleColConstOldRoot] nColumn:              1
 [testSingleColConstOldRoot] firstRid:             0
-[testSingleColConstOldRoot] oBatch:              66
+[testSingleColConstOldRoot] oBatch:              50
 [testSingleColConstOldRoot] nBatch:               3
 [testSingleColConstOldRoot] lastVal[0]:        4087
 [testSingleColConstOldRoot] firstVal[0]:       4096
@@ -2238,7 +2220,7 @@
 [testSingleColConstOldRoot] nRow:                 8
 [testSingleColConstOldRoot] nVal:                 1
 [testSingleColConstOldRoot] nValHighMark:         0
-[testSingleColConstOldRoot] oVal:                60
+[testSingleColConstOldRoot] oVal:                44
 [testSingleColConstOldRoot] oLastValHighMark:  4096
 [testSingleColConstOldRoot] recSize:              9
 [testSingleColConstOldRoot] Rows
@@ -2255,7 +2237,7 @@
 [testSingleColConstOldRoot] nRow:                 8
 [testSingleColConstOldRoot] nVal:                 1
 [testSingleColConstOldRoot] nValHighMark:         1
-[testSingleColConstOldRoot] oVal:                62
+[testSingleColConstOldRoot] oVal:                46
 [testSingleColConstOldRoot] oLastValHighMark:  4087
 [testSingleColConstOldRoot] recSize:              9
 [testSingleColConstOldRoot] Rows
@@ -2272,7 +2254,7 @@
 [testSingleColConstOldRoot] nRow:                 4
 [testSingleColConstOldRoot] nVal:                 1
 [testSingleColConstOldRoot] nValHighMark:         1
-[testSingleColConstOldRoot] oVal:                64
+[testSingleColConstOldRoot] oVal:                48
 [testSingleColConstOldRoot] oLastValHighMark:  4087
 [testSingleColConstOldRoot] recSize:              9
 [testSingleColConstOldRoot] Rows
@@ -2297,7 +2279,7 @@
 [testSingleColStairNewRoot] ------
 [testSingleColStairNewRoot] nColumn:              1
 [testSingleColStairNewRoot] firstRid:             0
-[testSingleColStairNewRoot] oBatch:            1152
+[testSingleColStairNewRoot] oBatch:            1136
 [testSingleColStairNewRoot] nBatch:               1
 [testSingleColStairNewRoot] lastVal[0]:        2998
 [testSingleColStairNewRoot] firstVal[0]:       4096
@@ -2310,7 +2292,7 @@
 [testSingleColStairNewRoot] nRow:               848
 [testSingleColStairNewRoot] nVal:               122
 [testSingleColStairNewRoot] nValHighMark:         0
-[testSingleColStairNewRoot] oVal:                60
+[testSingleColStairNewRoot] oVal:                44
 [testSingleColStairNewRoot] oLastValHighMark:  4096
 [testSingleColStairNewRoot] recSize:              9
 [testSingleColStairNewRoot] Rows
@@ -2937,7 +2919,7 @@
 [testSingleColStairOldRoot] ------
 [testSingleColStairOldRoot] nColumn:              1
 [testSingleColStairOldRoot] firstRid:             0
-[testSingleColStairOldRoot] oBatch:              69
+[testSingleColStairOldRoot] oBatch:              53
 [testSingleColStairOldRoot] nBatch:               2
 [testSingleColStairOldRoot] lastVal[0]:        4078
 [testSingleColStairOldRoot] firstVal[0]:       4096
@@ -2950,7 +2932,7 @@
 [testSingleColStairOldRoot] nRow:                 8
 [testSingleColStairOldRoot] nVal:                 2
 [testSingleColStairOldRoot] nValHighMark:         0
-[testSingleColStairOldRoot] oVal:                60
+[testSingleColStairOldRoot] oVal:                44
 [testSingleColStairOldRoot] oLastValHighMark:  4096
 [testSingleColStairOldRoot] recSize:              9
 [testSingleColStairOldRoot] Rows
@@ -2969,7 +2951,7 @@
 [testSingleColStairOldRoot] nRow:                 2
 [testSingleColStairOldRoot] nVal:                 0
 [testSingleColStairOldRoot] nValHighMark:         2
-[testSingleColStairOldRoot] oVal:                65
+[testSingleColStairOldRoot] oVal:                49
 [testSingleColStairOldRoot] oLastValHighMark:  4078
 [testSingleColStairOldRoot] recSize:              9
 [testSingleColStairOldRoot] Variable Size Rows
@@ -2993,7 +2975,7 @@
 [testSingleColStairOldRoot] ------
 [testSingleColStairOldRoot] nColumn:              1
 [testSingleColStairOldRoot] firstRid:             0
-[testSingleColStairOldRoot] oBatch:              75
+[testSingleColStairOldRoot] oBatch:              59
 [testSingleColStairOldRoot] nBatch:               3
 [testSingleColStairOldRoot] lastVal[0]:        4078
 [testSingleColStairOldRoot] firstVal[0]:       4096
@@ -3006,7 +2988,7 @@
 [testSingleColStairOldRoot] nRow:                 8
 [testSingleColStairOldRoot] nVal:                 2
 [testSingleColStairOldRoot] nValHighMark:         0
-[testSingleColStairOldRoot] oVal:                60
+[testSingleColStairOldRoot] oVal:                44
 [testSingleColStairOldRoot] oLastValHighMark:  4096
 [testSingleColStairOldRoot] recSize:              9
 [testSingleColStairOldRoot] Rows
@@ -3025,7 +3007,7 @@
 [testSingleColStairOldRoot] nRow:                 8
 [testSingleColStairOldRoot] nVal:                 2
 [testSingleColStairOldRoot] nValHighMark:         2
-[testSingleColStairOldRoot] oVal:                65
+[testSingleColStairOldRoot] oVal:                49
 [testSingleColStairOldRoot] oLastValHighMark:  4078
 [testSingleColStairOldRoot] recSize:              9
 [testSingleColStairOldRoot] Rows
@@ -3044,7 +3026,7 @@
 [testSingleColStairOldRoot] nRow:                 4
 [testSingleColStairOldRoot] nVal:                 2
 [testSingleColStairOldRoot] nValHighMark:         2
-[testSingleColStairOldRoot] oVal:                70
+[testSingleColStairOldRoot] oVal:                54
 [testSingleColStairOldRoot] oLastValHighMark:  4078
 [testSingleColStairOldRoot] recSize:              9
 [testSingleColStairOldRoot] Rows
@@ -3073,7 +3055,7 @@
 [testMultiColNoDupNewRoot] ------
 [testMultiColNoDupNewRoot] nColumn:              3
 [testMultiColNoDupNewRoot] firstRid:             0
-[testMultiColNoDupNewRoot] oBatch:            3332
+[testMultiColNoDupNewRoot] oBatch:            3316
 [testMultiColNoDupNewRoot] nBatch:               6
 [testMultiColNoDupNewRoot] lastVal[0]:        4096
 [testMultiColNoDupNewRoot] firstVal[0]:       4096
@@ -3094,7 +3076,7 @@
 [testMultiColNoDupNewRoot] nRow:               112
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:                92
+[testMultiColNoDupNewRoot] oVal:                76
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -3330,7 +3312,7 @@
 [testMultiColNoDupNewRoot] nRow:               112
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              1100
+[testMultiColNoDupNewRoot] oVal:              1084
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -3566,7 +3548,7 @@
 [testMultiColNoDupNewRoot] nRow:               112
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              2108
+[testMultiColNoDupNewRoot] oVal:              2092
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -3802,7 +3784,7 @@
 [testMultiColNoDupNewRoot] nRow:                 8
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              3116
+[testMultiColNoDupNewRoot] oVal:              3100
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -3830,7 +3812,7 @@
 [testMultiColNoDupNewRoot] nRow:                 8
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              3188
+[testMultiColNoDupNewRoot] oVal:              3172
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -3858,7 +3840,7 @@
 [testMultiColNoDupNewRoot] nRow:                 8
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              3260
+[testMultiColNoDupNewRoot] oVal:              3244
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -3897,7 +3879,7 @@
 [testMultiColNoDupNewRoot] ------
 [testMultiColNoDupNewRoot] nColumn:              3
 [testMultiColNoDupNewRoot] firstRid:           120
-[testMultiColNoDupNewRoot] oBatch:            3332
+[testMultiColNoDupNewRoot] oBatch:            3316
 [testMultiColNoDupNewRoot] nBatch:               6
 [testMultiColNoDupNewRoot] lastVal[0]:        4096
 [testMultiColNoDupNewRoot] firstVal[0]:       4096
@@ -3918,7 +3900,7 @@
 [testMultiColNoDupNewRoot] nRow:               112
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:                92
+[testMultiColNoDupNewRoot] oVal:                76
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -4154,7 +4136,7 @@
 [testMultiColNoDupNewRoot] nRow:               112
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              1100
+[testMultiColNoDupNewRoot] oVal:              1084
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -4390,7 +4372,7 @@
 [testMultiColNoDupNewRoot] nRow:               112
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              2108
+[testMultiColNoDupNewRoot] oVal:              2092
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -4626,7 +4608,7 @@
 [testMultiColNoDupNewRoot] nRow:                 8
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              3116
+[testMultiColNoDupNewRoot] oVal:              3100
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -4654,7 +4636,7 @@
 [testMultiColNoDupNewRoot] nRow:                 8
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              3188
+[testMultiColNoDupNewRoot] oVal:              3172
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -4682,7 +4664,7 @@
 [testMultiColNoDupNewRoot] nRow:                 8
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              3260
+[testMultiColNoDupNewRoot] oVal:              3244
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -4721,7 +4703,7 @@
 [testMultiColNoDupNewRoot] ------
 [testMultiColNoDupNewRoot] nColumn:              3
 [testMultiColNoDupNewRoot] firstRid:           240
-[testMultiColNoDupNewRoot] oBatch:            3332
+[testMultiColNoDupNewRoot] oBatch:            3316
 [testMultiColNoDupNewRoot] nBatch:               6
 [testMultiColNoDupNewRoot] lastVal[0]:        4096
 [testMultiColNoDupNewRoot] firstVal[0]:       4096
@@ -4742,7 +4724,7 @@
 [testMultiColNoDupNewRoot] nRow:               112
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:                92
+[testMultiColNoDupNewRoot] oVal:                76
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -4978,7 +4960,7 @@
 [testMultiColNoDupNewRoot] nRow:               112
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              1100
+[testMultiColNoDupNewRoot] oVal:              1084
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -5214,7 +5196,7 @@
 [testMultiColNoDupNewRoot] nRow:               112
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              2108
+[testMultiColNoDupNewRoot] oVal:              2092
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -5450,7 +5432,7 @@
 [testMultiColNoDupNewRoot] nRow:                 8
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              3116
+[testMultiColNoDupNewRoot] oVal:              3100
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -5478,7 +5460,7 @@
 [testMultiColNoDupNewRoot] nRow:                 8
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              3188
+[testMultiColNoDupNewRoot] oVal:              3172
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -5506,7 +5488,7 @@
 [testMultiColNoDupNewRoot] nRow:                 8
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              3260
+[testMultiColNoDupNewRoot] oVal:              3244
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -5545,7 +5527,7 @@
 [testMultiColNoDupNewRoot] ------
 [testMultiColNoDupNewRoot] nColumn:              3
 [testMultiColNoDupNewRoot] firstRid:           360
-[testMultiColNoDupNewRoot] oBatch:            3332
+[testMultiColNoDupNewRoot] oBatch:            3316
 [testMultiColNoDupNewRoot] nBatch:               6
 [testMultiColNoDupNewRoot] lastVal[0]:        4096
 [testMultiColNoDupNewRoot] firstVal[0]:       4096
@@ -5566,7 +5548,7 @@
 [testMultiColNoDupNewRoot] nRow:               112
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:                92
+[testMultiColNoDupNewRoot] oVal:                76
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -5802,7 +5784,7 @@
 [testMultiColNoDupNewRoot] nRow:               112
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              1100
+[testMultiColNoDupNewRoot] oVal:              1084
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -6038,7 +6020,7 @@
 [testMultiColNoDupNewRoot] nRow:               112
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              2108
+[testMultiColNoDupNewRoot] oVal:              2092
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -6274,7 +6256,7 @@
 [testMultiColNoDupNewRoot] nRow:                 8
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              3116
+[testMultiColNoDupNewRoot] oVal:              3100
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -6302,7 +6284,7 @@
 [testMultiColNoDupNewRoot] nRow:                 8
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              3188
+[testMultiColNoDupNewRoot] oVal:              3172
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -6330,7 +6312,7 @@
 [testMultiColNoDupNewRoot] nRow:                 8
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              3260
+[testMultiColNoDupNewRoot] oVal:              3244
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -6369,7 +6351,7 @@
 [testMultiColNoDupNewRoot] ------
 [testMultiColNoDupNewRoot] nColumn:              3
 [testMultiColNoDupNewRoot] firstRid:           480
-[testMultiColNoDupNewRoot] oBatch:            3332
+[testMultiColNoDupNewRoot] oBatch:            3316
 [testMultiColNoDupNewRoot] nBatch:               6
 [testMultiColNoDupNewRoot] lastVal[0]:        4096
 [testMultiColNoDupNewRoot] firstVal[0]:       4096
@@ -6390,7 +6372,7 @@
 [testMultiColNoDupNewRoot] nRow:               112
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:                92
+[testMultiColNoDupNewRoot] oVal:                76
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -6626,7 +6608,7 @@
 [testMultiColNoDupNewRoot] nRow:               112
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              1100
+[testMultiColNoDupNewRoot] oVal:              1084
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -6862,7 +6844,7 @@
 [testMultiColNoDupNewRoot] nRow:               112
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              2108
+[testMultiColNoDupNewRoot] oVal:              2092
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -7098,7 +7080,7 @@
 [testMultiColNoDupNewRoot] nRow:                 8
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              3116
+[testMultiColNoDupNewRoot] oVal:              3100
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -7126,7 +7108,7 @@
 [testMultiColNoDupNewRoot] nRow:                 8
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              3188
+[testMultiColNoDupNewRoot] oVal:              3172
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -7154,7 +7136,7 @@
 [testMultiColNoDupNewRoot] nRow:                 8
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              3260
+[testMultiColNoDupNewRoot] oVal:              3244
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -7193,7 +7175,7 @@
 [testMultiColNoDupNewRoot] ------
 [testMultiColNoDupNewRoot] nColumn:              3
 [testMultiColNoDupNewRoot] firstRid:           600
-[testMultiColNoDupNewRoot] oBatch:            3332
+[testMultiColNoDupNewRoot] oBatch:            3316
 [testMultiColNoDupNewRoot] nBatch:               6
 [testMultiColNoDupNewRoot] lastVal[0]:        4096
 [testMultiColNoDupNewRoot] firstVal[0]:       4096
@@ -7214,7 +7196,7 @@
 [testMultiColNoDupNewRoot] nRow:               112
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:                92
+[testMultiColNoDupNewRoot] oVal:                76
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -7450,7 +7432,7 @@
 [testMultiColNoDupNewRoot] nRow:               112
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              1100
+[testMultiColNoDupNewRoot] oVal:              1084
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -7686,7 +7668,7 @@
 [testMultiColNoDupNewRoot] nRow:               112
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              2108
+[testMultiColNoDupNewRoot] oVal:              2092
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -7922,7 +7904,7 @@
 [testMultiColNoDupNewRoot] nRow:                 8
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              3116
+[testMultiColNoDupNewRoot] oVal:              3100
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -7950,7 +7932,7 @@
 [testMultiColNoDupNewRoot] nRow:                 8
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              3188
+[testMultiColNoDupNewRoot] oVal:              3172
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -7978,7 +7960,7 @@
 [testMultiColNoDupNewRoot] nRow:                 8
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              3260
+[testMultiColNoDupNewRoot] oVal:              3244
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -8017,7 +7999,7 @@
 [testMultiColNoDupNewRoot] ------
 [testMultiColNoDupNewRoot] nColumn:              3
 [testMultiColNoDupNewRoot] firstRid:           720
-[testMultiColNoDupNewRoot] oBatch:            3332
+[testMultiColNoDupNewRoot] oBatch:            3316
 [testMultiColNoDupNewRoot] nBatch:               6
 [testMultiColNoDupNewRoot] lastVal[0]:        4096
 [testMultiColNoDupNewRoot] firstVal[0]:       4096
@@ -8038,7 +8020,7 @@
 [testMultiColNoDupNewRoot] nRow:               112
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:                92
+[testMultiColNoDupNewRoot] oVal:                76
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -8274,7 +8256,7 @@
 [testMultiColNoDupNewRoot] nRow:               112
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              1100
+[testMultiColNoDupNewRoot] oVal:              1084
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -8510,7 +8492,7 @@
 [testMultiColNoDupNewRoot] nRow:               112
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              2108
+[testMultiColNoDupNewRoot] oVal:              2092
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -8746,7 +8728,7 @@
 [testMultiColNoDupNewRoot] nRow:                 8
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              3116
+[testMultiColNoDupNewRoot] oVal:              3100
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -8774,7 +8756,7 @@
 [testMultiColNoDupNewRoot] nRow:                 8
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              3188
+[testMultiColNoDupNewRoot] oVal:              3172
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -8802,7 +8784,7 @@
 [testMultiColNoDupNewRoot] nRow:                 8
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:              3260
+[testMultiColNoDupNewRoot] oVal:              3244
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Fixed Size Rows
@@ -8841,7 +8823,7 @@
 [testMultiColNoDupNewRoot] ------
 [testMultiColNoDupNewRoot] nColumn:              3
 [testMultiColNoDupNewRoot] firstRid:           840
-[testMultiColNoDupNewRoot] oBatch:             140
+[testMultiColNoDupNewRoot] oBatch:             124
 [testMultiColNoDupNewRoot] nBatch:               3
 [testMultiColNoDupNewRoot] lastVal[0]:        4024
 [testMultiColNoDupNewRoot] firstVal[0]:       4096
@@ -8862,7 +8844,7 @@
 [testMultiColNoDupNewRoot] nRow:                 8
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:                92
+[testMultiColNoDupNewRoot] oVal:                76
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Variable Size Rows
@@ -8890,7 +8872,7 @@
 [testMultiColNoDupNewRoot] nRow:                 8
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:               108
+[testMultiColNoDupNewRoot] oVal:                92
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Variable Size Rows
@@ -8918,7 +8900,7 @@
 [testMultiColNoDupNewRoot] nRow:                 8
 [testMultiColNoDupNewRoot] nVal:                 0
 [testMultiColNoDupNewRoot] nValHighMark:         0
-[testMultiColNoDupNewRoot] oVal:               124
+[testMultiColNoDupNewRoot] oVal:               108
 [testMultiColNoDupNewRoot] oLastValHighMark:  4096
 [testMultiColNoDupNewRoot] recSize:              9
 [testMultiColNoDupNewRoot] Variable Size Rows
@@ -9004,7 +8986,7 @@
 [testMultiColNoDupOldRoot] ------
 [testMultiColNoDupOldRoot] nColumn:              3
 [testMultiColNoDupOldRoot] firstRid:             0
-[testMultiColNoDupOldRoot] oBatch:             152
+[testMultiColNoDupOldRoot] oBatch:             136
 [testMultiColNoDupOldRoot] nBatch:               6
 [testMultiColNoDupOldRoot] lastVal[0]:        3988
 [testMultiColNoDupOldRoot] firstVal[0]:       4096
@@ -9025,7 +9007,7 @@
 [testMultiColNoDupOldRoot] nRow:                 8
 [testMultiColNoDupOldRoot] nVal:                 0
 [testMultiColNoDupOldRoot] nValHighMark:         0
-[testMultiColNoDupOldRoot] oVal:                92
+[testMultiColNoDupOldRoot] oVal:                76
 [testMultiColNoDupOldRoot] oLastValHighMark:  4096
 [testMultiColNoDupOldRoot] recSize:              9
 [testMultiColNoDupOldRoot] Variable Size Rows
@@ -9053,7 +9035,7 @@
 [testMultiColNoDupOldRoot] nRow:                 8
 [testMultiColNoDupOldRoot] nVal:                 0
 [testMultiColNoDupOldRoot] nValHighMark:         0
-[testMultiColNoDupOldRoot] oVal:               108
+[testMultiColNoDupOldRoot] oVal:                92
 [testMultiColNoDupOldRoot] oLastValHighMark:  4096
 [testMultiColNoDupOldRoot] recSize:              9
 [testMultiColNoDupOldRoot] Variable Size Rows
@@ -9081,7 +9063,7 @@
 [testMultiColNoDupOldRoot] nRow:                 8
 [testMultiColNoDupOldRoot] nVal:                 0
 [testMultiColNoDupOldRoot] nValHighMark:         0
-[testMultiColNoDupOldRoot] oVal:               124
+[testMultiColNoDupOldRoot] oVal:               108
 [testMultiColNoDupOldRoot] oLastValHighMark:  4096
 [testMultiColNoDupOldRoot] recSize:              9
 [testMultiColNoDupOldRoot] Variable Size Rows
@@ -9109,7 +9091,7 @@
 [testMultiColNoDupOldRoot] nRow:                 2
 [testMultiColNoDupOldRoot] nVal:                 0
 [testMultiColNoDupOldRoot] nValHighMark:        10
-[testMultiColNoDupOldRoot] oVal:               140
+[testMultiColNoDupOldRoot] oVal:               124
 [testMultiColNoDupOldRoot] oLastValHighMark:  4006
 [testMultiColNoDupOldRoot] recSize:              9
 [testMultiColNoDupOldRoot] Variable Size Rows
@@ -9125,7 +9107,7 @@
 [testMultiColNoDupOldRoot] nRow:                 2
 [testMultiColNoDupOldRoot] nVal:                 0
 [testMultiColNoDupOldRoot] nValHighMark:        10
-[testMultiColNoDupOldRoot] oVal:               144
+[testMultiColNoDupOldRoot] oVal:               128
 [testMultiColNoDupOldRoot] oLastValHighMark:  4006
 [testMultiColNoDupOldRoot] recSize:              9
 [testMultiColNoDupOldRoot] Variable Size Rows
@@ -9141,7 +9123,7 @@
 [testMultiColNoDupOldRoot] nRow:                 2
 [testMultiColNoDupOldRoot] nVal:                 0
 [testMultiColNoDupOldRoot] nValHighMark:        10
-[testMultiColNoDupOldRoot] oVal:               148
+[testMultiColNoDupOldRoot] oVal:               132
 [testMultiColNoDupOldRoot] oLastValHighMark:  4006
 [testMultiColNoDupOldRoot] recSize:              9
 [testMultiColNoDupOldRoot] Variable Size Rows
@@ -9237,7 +9219,7 @@
 [testMultiColNoDupOldRoot] ------
 [testMultiColNoDupOldRoot] nColumn:              3
 [testMultiColNoDupOldRoot] firstRid:             0
-[testMultiColNoDupOldRoot] oBatch:             212
+[testMultiColNoDupOldRoot] oBatch:             196
 [testMultiColNoDupOldRoot] nBatch:               9
 [testMultiColNoDupOldRoot] lastVal[0]:        3952
 [testMultiColNoDupOldRoot] firstVal[0]:       4096
@@ -9258,7 +9240,7 @@
 [testMultiColNoDupOldRoot] nRow:                 8
 [testMultiColNoDupOldRoot] nVal:                 0
 [testMultiColNoDupOldRoot] nValHighMark:         0
-[testMultiColNoDupOldRoot] oVal:                92
+[testMultiColNoDupOldRoot] oVal:                76
 [testMultiColNoDupOldRoot] oLastValHighMark:  4096
 [testMultiColNoDupOldRoot] recSize:              9
 [testMultiColNoDupOldRoot] Variable Size Rows
@@ -9286,7 +9268,7 @@
 [testMultiColNoDupOldRoot] nRow:                 8
 [testMultiColNoDupOldRoot] nVal:                 0
 [testMultiColNoDupOldRoot] nValHighMark:         0
-[testMultiColNoDupOldRoot] oVal:               108
+[testMultiColNoDupOldRoot] oVal:                92
 [testMultiColNoDupOldRoot] oLastValHighMark:  4096
 [testMultiColNoDupOldRoot] recSize:              9
 [testMultiColNoDupOldRoot] Variable Size Rows
@@ -9314,7 +9296,7 @@
 [testMultiColNoDupOldRoot] nRow:                 8
 [testMultiColNoDupOldRoot] nVal:                 0
 [testMultiColNoDupOldRoot] nValHighMark:         0
-[testMultiColNoDupOldRoot] oVal:               124
+[testMultiColNoDupOldRoot] oVal:               108
 [testMultiColNoDupOldRoot] oLastValHighMark:  4096
 [testMultiColNoDupOldRoot] recSize:              9
 [testMultiColNoDupOldRoot] Variable Size Rows
@@ -9342,7 +9324,7 @@
 [testMultiColNoDupOldRoot] nRow:                 8
 [testMultiColNoDupOldRoot] nVal:                 0
 [testMultiColNoDupOldRoot] nValHighMark:        10
-[testMultiColNoDupOldRoot] oVal:               140
+[testMultiColNoDupOldRoot] oVal:               124
 [testMultiColNoDupOldRoot] oLastValHighMark:  4006
 [testMultiColNoDupOldRoot] recSize:              9
 [testMultiColNoDupOldRoot] Variable Size Rows
@@ -9370,7 +9352,7 @@
 [testMultiColNoDupOldRoot] nRow:                 8
 [testMultiColNoDupOldRoot] nVal:                 0
 [testMultiColNoDupOldRoot] nValHighMark:        10
-[testMultiColNoDupOldRoot] oVal:               156
+[testMultiColNoDupOldRoot] oVal:               140
 [testMultiColNoDupOldRoot] oLastValHighMark:  4006
 [testMultiColNoDupOldRoot] recSize:              9
 [testMultiColNoDupOldRoot] Variable Size Rows
@@ -9398,7 +9380,7 @@
 [testMultiColNoDupOldRoot] nRow:                 8
 [testMultiColNoDupOldRoot] nVal:                 0
 [testMultiColNoDupOldRoot] nValHighMark:        10
-[testMultiColNoDupOldRoot] oVal:               172
+[testMultiColNoDupOldRoot] oVal:               156
 [testMultiColNoDupOldRoot] oLastValHighMark:  4006
 [testMultiColNoDupOldRoot] recSize:              9
 [testMultiColNoDupOldRoot] Variable Size Rows
@@ -9426,7 +9408,7 @@
 [testMultiColNoDupOldRoot] nRow:                 4
 [testMultiColNoDupOldRoot] nVal:                 0
 [testMultiColNoDupOldRoot] nValHighMark:        12
-[testMultiColNoDupOldRoot] oVal:               188
+[testMultiColNoDupOldRoot] oVal:               172
 [testMultiColNoDupOldRoot] oLastValHighMark:  3988
 [testMultiColNoDupOldRoot] recSize:              9
 [testMultiColNoDupOldRoot] Variable Size Rows
@@ -9446,7 +9428,7 @@
 [testMultiColNoDupOldRoot] nRow:                 4
 [testMultiColNoDupOldRoot] nVal:                 0
 [testMultiColNoDupOldRoot] nValHighMark:        12
-[testMultiColNoDupOldRoot] oVal:               196
+[testMultiColNoDupOldRoot] oVal:               180
 [testMultiColNoDupOldRoot] oLastValHighMark:  3988
 [testMultiColNoDupOldRoot] recSize:              9
 [testMultiColNoDupOldRoot] Variable Size Rows
@@ -9466,7 +9448,7 @@
 [testMultiColNoDupOldRoot] nRow:                 4
 [testMultiColNoDupOldRoot] nVal:                 0
 [testMultiColNoDupOldRoot] nValHighMark:        12
-[testMultiColNoDupOldRoot] oVal:               204
+[testMultiColNoDupOldRoot] oVal:               188
 [testMultiColNoDupOldRoot] oLastValHighMark:  3988
 [testMultiColNoDupOldRoot] recSize:              9
 [testMultiColNoDupOldRoot] Variable Size Rows
@@ -9592,7 +9574,7 @@
 [testMultiColConstNewRoot] ------
 [testMultiColConstNewRoot] nColumn:              3
 [testMultiColConstNewRoot] firstRid:             0
-[testMultiColConstNewRoot] oBatch:             104
+[testMultiColConstNewRoot] oBatch:              88
 [testMultiColConstNewRoot] nBatch:               6
 [testMultiColConstNewRoot] lastVal[0]:        4087
 [testMultiColConstNewRoot] firstVal[0]:       4096
@@ -9613,7 +9595,7 @@
 [testMultiColConstNewRoot] nRow:               632
 [testMultiColConstNewRoot] nVal:                 1
 [testMultiColConstNewRoot] nValHighMark:         0
-[testMultiColConstNewRoot] oVal:                92
+[testMultiColConstNewRoot] oVal:                76
 [testMultiColConstNewRoot] oLastValHighMark:  4096
 [testMultiColConstNewRoot] recSize:              9
 [testMultiColConstNewRoot] Rows
@@ -9717,7 +9699,7 @@
 [testMultiColConstNewRoot] nRow:               632
 [testMultiColConstNewRoot] nVal:                 1
 [testMultiColConstNewRoot] nValHighMark:         0
-[testMultiColConstNewRoot] oVal:                94
+[testMultiColConstNewRoot] oVal:                78
 [testMultiColConstNewRoot] oLastValHighMark:  4096
 [testMultiColConstNewRoot] recSize:              9
 [testMultiColConstNewRoot] Rows
@@ -9821,7 +9803,7 @@
 [testMultiColConstNewRoot] nRow:               632
 [testMultiColConstNewRoot] nVal:                 1
 [testMultiColConstNewRoot] nValHighMark:         0
-[testMultiColConstNewRoot] oVal:                96
+[testMultiColConstNewRoot] oVal:                80
 [testMultiColConstNewRoot] oLastValHighMark:  4096
 [testMultiColConstNewRoot] recSize:              9
 [testMultiColConstNewRoot] Rows
@@ -9925,7 +9907,7 @@
 [testMultiColConstNewRoot] nRow:               216
 [testMultiColConstNewRoot] nVal:                 1
 [testMultiColConstNewRoot] nValHighMark:         1
-[testMultiColConstNewRoot] oVal:                98
+[testMultiColConstNewRoot] oVal:                82
 [testMultiColConstNewRoot] oLastValHighMark:  4087
 [testMultiColConstNewRoot] recSize:              9
 [testMultiColConstNewRoot] Rows
@@ -9971,7 +9953,7 @@
 [testMultiColConstNewRoot] nRow:               216
 [testMultiColConstNewRoot] nVal:                 1
 [testMultiColConstNewRoot] nValHighMark:         1
-[testMultiColConstNewRoot] oVal:               100
+[testMultiColConstNewRoot] oVal:                84
 [testMultiColConstNewRoot] oLastValHighMark:  4087
 [testMultiColConstNewRoot] recSize:              9
 [testMultiColConstNewRoot] Rows
@@ -10017,7 +9999,7 @@
 [testMultiColConstNewRoot] nRow:               216
 [testMultiColConstNewRoot] nVal:                 1
 [testMultiColConstNewRoot] nValHighMark:         1
-[testMultiColConstNewRoot] oVal:               102
+[testMultiColConstNewRoot] oVal:                86
 [testMultiColConstNewRoot] oLastValHighMark:  4087
 [testMultiColConstNewRoot] recSize:              9
 [testMultiColConstNewRoot] Rows
@@ -10079,7 +10061,7 @@
 [testMultiColConstOldRoot] ------
 [testMultiColConstOldRoot] nColumn:              3
 [testMultiColConstOldRoot] firstRid:             0
-[testMultiColConstOldRoot] oBatch:             110
+[testMultiColConstOldRoot] oBatch:              94
 [testMultiColConstOldRoot] nBatch:               6
 [testMultiColConstOldRoot] lastVal[0]:        4087
 [testMultiColConstOldRoot] firstVal[0]:       4096
@@ -10100,7 +10082,7 @@
 [testMultiColConstOldRoot] nRow:                 8
 [testMultiColConstOldRoot] nVal:                 1
 [testMultiColConstOldRoot] nValHighMark:         0
-[testMultiColConstOldRoot] oVal:                92
+[testMultiColConstOldRoot] oVal:                76
 [testMultiColConstOldRoot] oLastValHighMark:  4096
 [testMultiColConstOldRoot] recSize:              9
 [testMultiColConstOldRoot] Rows
@@ -10117,7 +10099,7 @@
 [testMultiColConstOldRoot] nRow:                 8
 [testMultiColConstOldRoot] nVal:                 1
 [testMultiColConstOldRoot] nValHighMark:         0
-[testMultiColConstOldRoot] oVal:                94
+[testMultiColConstOldRoot] oVal:                78
 [testMultiColConstOldRoot] oLastValHighMark:  4096
 [testMultiColConstOldRoot] recSize:              9
 [testMultiColConstOldRoot] Rows
@@ -10134,7 +10116,7 @@
 [testMultiColConstOldRoot] nRow:                 8
 [testMultiColConstOldRoot] nVal:                 1
 [testMultiColConstOldRoot] nValHighMark:         0
-[testMultiColConstOldRoot] oVal:                96
+[testMultiColConstOldRoot] oVal:                80
 [testMultiColConstOldRoot] oLastValHighMark:  4096
 [testMultiColConstOldRoot] recSize:              9
 [testMultiColConstOldRoot] Rows
@@ -10151,7 +10133,7 @@
 [testMultiColConstOldRoot] nRow:                 2
 [testMultiColConstOldRoot] nVal:                 0
 [testMultiColConstOldRoot] nValHighMark:         1
-[testMultiColConstOldRoot] oVal:                98
+[testMultiColConstOldRoot] oVal:                82
 [testMultiColConstOldRoot] oLastValHighMark:  4087
 [testMultiColConstOldRoot] recSize:              9
 [testMultiColConstOldRoot] Variable Size Rows
@@ -10167,7 +10149,7 @@
 [testMultiColConstOldRoot] nRow:                 2
 [testMultiColConstOldRoot] nVal:                 0
 [testMultiColConstOldRoot] nValHighMark:         1
-[testMultiColConstOldRoot] oVal:               102
+[testMultiColConstOldRoot] oVal:                86
 [testMultiColConstOldRoot] oLastValHighMark:  4087
 [testMultiColConstOldRoot] recSize:              9
 [testMultiColConstOldRoot] Variable Size Rows
@@ -10183,7 +10165,7 @@
 [testMultiColConstOldRoot] nRow:                 2
 [testMultiColConstOldRoot] nVal:                 0
 [testMultiColConstOldRoot] nValHighMark:         1
-[testMultiColConstOldRoot] oVal:               106
+[testMultiColConstOldRoot] oVal:                90
 [testMultiColConstOldRoot] oLastValHighMark:  4087
 [testMultiColConstOldRoot] recSize:              9
 [testMultiColConstOldRoot] Variable Size Rows
@@ -10213,7 +10195,7 @@
 [testMultiColConstOldRoot] ------
 [testMultiColConstOldRoot] nColumn:              3
 [testMultiColConstOldRoot] firstRid:             0
-[testMultiColConstOldRoot] oBatch:             110
+[testMultiColConstOldRoot] oBatch:              94
 [testMultiColConstOldRoot] nBatch:               9
 [testMultiColConstOldRoot] lastVal[0]:        4087
 [testMultiColConstOldRoot] firstVal[0]:       4096
@@ -10234,7 +10216,7 @@
 [testMultiColConstOldRoot] nRow:                 8
 [testMultiColConstOldRoot] nVal:                 1
 [testMultiColConstOldRoot] nValHighMark:         0
-[testMultiColConstOldRoot] oVal:                92
+[testMultiColConstOldRoot] oVal:                76
 [testMultiColConstOldRoot] oLastValHighMark:  4096
 [testMultiColConstOldRoot] recSize:              9
 [testMultiColConstOldRoot] Rows
@@ -10251,7 +10233,7 @@
 [testMultiColConstOldRoot] nRow:                 8
 [testMultiColConstOldRoot] nVal:                 1
 [testMultiColConstOldRoot] nValHighMark:         0
-[testMultiColConstOldRoot] oVal:                94
+[testMultiColConstOldRoot] oVal:                78
 [testMultiColConstOldRoot] oLastValHighMark:  4096
 [testMultiColConstOldRoot] recSize:              9
 [testMultiColConstOldRoot] Rows
@@ -10268,7 +10250,7 @@
 [testMultiColConstOldRoot] nRow:                 8
 [testMultiColConstOldRoot] nVal:                 1
 [testMultiColConstOldRoot] nValHighMark:         0
-[testMultiColConstOldRoot] oVal:                96
+[testMultiColConstOldRoot] oVal:                80
 [testMultiColConstOldRoot] oLastValHighMark:  4096
 [testMultiColConstOldRoot] recSize:              9
 [testMultiColConstOldRoot] Rows
@@ -10285,7 +10267,7 @@
 [testMultiColConstOldRoot] nRow:                 8
 [testMultiColConstOldRoot] nVal:                 1
 [testMultiColConstOldRoot] nValHighMark:         1
-[testMultiColConstOldRoot] oVal:                98
+[testMultiColConstOldRoot] oVal:                82
 [testMultiColConstOldRoot] oLastValHighMark:  4087
 [testMultiColConstOldRoot] recSize:              9
 [testMultiColConstOldRoot] Rows
@@ -10302,7 +10284,7 @@
 [testMultiColConstOldRoot] nRow:                 8
 [testMultiColConstOldRoot] nVal:                 1
 [testMultiColConstOldRoot] nValHighMark:         1
-[testMultiColConstOldRoot] oVal:               100
+[testMultiColConstOldRoot] oVal:                84
 [testMultiColConstOldRoot] oLastValHighMark:  4087
 [testMultiColConstOldRoot] recSize:              9
 [testMultiColConstOldRoot] Rows
@@ -10319,7 +10301,7 @@
 [testMultiColConstOldRoot] nRow:                 8
 [testMultiColConstOldRoot] nVal:                 1
 [testMultiColConstOldRoot] nValHighMark:         1
-[testMultiColConstOldRoot] oVal:               102
+[testMultiColConstOldRoot] oVal:                86
 [testMultiColConstOldRoot] oLastValHighMark:  4087
 [testMultiColConstOldRoot] recSize:              9
 [testMultiColConstOldRoot] Rows
@@ -10336,7 +10318,7 @@
 [testMultiColConstOldRoot] nRow:                 4
 [testMultiColConstOldRoot] nVal:                 1
 [testMultiColConstOldRoot] nValHighMark:         1
-[testMultiColConstOldRoot] oVal:               104
+[testMultiColConstOldRoot] oVal:                88
 [testMultiColConstOldRoot] oLastValHighMark:  4087
 [testMultiColConstOldRoot] recSize:              9
 [testMultiColConstOldRoot] Rows
@@ -10353,7 +10335,7 @@
 [testMultiColConstOldRoot] nRow:                 4
 [testMultiColConstOldRoot] nVal:                 1
 [testMultiColConstOldRoot] nValHighMark:         1
-[testMultiColConstOldRoot] oVal:               106
+[testMultiColConstOldRoot] oVal:                90
 [testMultiColConstOldRoot] oLastValHighMark:  4087
 [testMultiColConstOldRoot] recSize:              9
 [testMultiColConstOldRoot] Rows
@@ -10370,7 +10352,7 @@
 [testMultiColConstOldRoot] nRow:                 4
 [testMultiColConstOldRoot] nVal:                 1
 [testMultiColConstOldRoot] nValHighMark:         1
-[testMultiColConstOldRoot] oVal:               108
+[testMultiColConstOldRoot] oVal:                92
 [testMultiColConstOldRoot] oLastValHighMark:  4087
 [testMultiColConstOldRoot] recSize:              9
 [testMultiColConstOldRoot] Rows
@@ -10403,7 +10385,7 @@
 [testMultiColStairNewRoot] ------
 [testMultiColStairNewRoot] nColumn:              3
 [testMultiColStairNewRoot] firstRid:             0
-[testMultiColStairNewRoot] oBatch:            1538
+[testMultiColStairNewRoot] oBatch:            1528
 [testMultiColStairNewRoot] nBatch:               6
 [testMultiColStairNewRoot] lastVal[0]:        3466
 [testMultiColStairNewRoot] firstVal[0]:       4096
@@ -10422,9 +10404,9 @@
 [testMultiColStairNewRoot] --------------------
 [testMultiColStairNewRoot] mode:                 0
 [testMultiColStairNewRoot] nRow:               384
-[testMultiColStairNewRoot] nVal:                55
+[testMultiColStairNewRoot] nVal:                56
 [testMultiColStairNewRoot] nValHighMark:         0
-[testMultiColStairNewRoot] oVal:                92
+[testMultiColStairNewRoot] oVal:                76
 [testMultiColStairNewRoot] oLastValHighMark:  4096
 [testMultiColStairNewRoot] recSize:              9
 [testMultiColStairNewRoot] Rows
@@ -10594,14 +10576,16 @@
 [testMultiColStairNewRoot]          9:  8 35  0  0  0  0  0  0  0                       .5.......          
 [testMultiColStairNewRoot] 00054:
 [testMultiColStairNewRoot]          9:  8 36  0  0  0  0  0  0  0                       .6.......          
+[testMultiColStairNewRoot] 00055:
+[testMultiColStairNewRoot]          9:  8 37  0  0  0  0  0  0  0                       .7.......          
 [testMultiColStairNewRoot] #############################################################
 [testMultiColStairNewRoot] Batch # 2 (Compressed)
 [testMultiColStairNewRoot] --------------------
 [testMultiColStairNewRoot] mode:                 0
 [testMultiColStairNewRoot] nRow:               384
-[testMultiColStairNewRoot] nVal:                55
+[testMultiColStairNewRoot] nVal:                56
 [testMultiColStairNewRoot] nValHighMark:         0
-[testMultiColStairNewRoot] oVal:               490
+[testMultiColStairNewRoot] oVal:               476
 [testMultiColStairNewRoot] oLastValHighMark:  4096
 [testMultiColStairNewRoot] recSize:              9
 [testMultiColStairNewRoot] Rows
@@ -10771,14 +10755,16 @@
 [testMultiColStairNewRoot]          9:  8 35  0  0  0  0  0  0  0                       .5.......          
 [testMultiColStairNewRoot] 00054:
 [testMultiColStairNewRoot]          9:  8 36  0  0  0  0  0  0  0                       .6.......          
+[testMultiColStairNewRoot] 00055:
+[testMultiColStairNewRoot]          9:  8 37  0  0  0  0  0  0  0                       .7.......          
 [testMultiColStairNewRoot] #############################################################
 [testMultiColStairNewRoot] Batch # 3 (Compressed)
 [testMultiColStairNewRoot] --------------------
 [testMultiColStairNewRoot] mode:                 0
 [testMultiColStairNewRoot] nRow:               384
-[testMultiColStairNewRoot] nVal:                55
+[testMultiColStairNewRoot] nVal:                56
 [testMultiColStairNewRoot] nValHighMark:         0
-[testMultiColStairNewRoot] oVal:               888
+[testMultiColStairNewRoot] oVal:               876
 [testMultiColStairNewRoot] oLastValHighMark:  4096
 [testMultiColStairNewRoot] recSize:              9
 [testMultiColStairNewRoot] Rows
@@ -10948,15 +10934,17 @@
 [testMultiColStairNewRoot]          9:  8 35  0  0  0  0  0  0  0                       .5.......          
 [testMultiColStairNewRoot] 00054:
 [testMultiColStairNewRoot]          9:  8 36  0  0  0  0  0  0  0                       .6.......          
+[testMultiColStairNewRoot] 00055:
+[testMultiColStairNewRoot]          9:  8 37  0  0  0  0  0  0  0                       .7.......          
 [testMultiColStairNewRoot] #############################################################
 [testMultiColStairNewRoot] Batch # 4 (Compressed)
 [testMultiColStairNewRoot] --------------------
 [testMultiColStairNewRoot] mode:                 0
 [testMultiColStairNewRoot] nRow:               104
 [testMultiColStairNewRoot] nVal:                16
-[testMultiColStairNewRoot] nValHighMark:        55
-[testMultiColStairNewRoot] oVal:              1286
-[testMultiColStairNewRoot] oLastValHighMark:  3601
+[testMultiColStairNewRoot] nValHighMark:        56
+[testMultiColStairNewRoot] oVal:              1276
+[testMultiColStairNewRoot] oLastValHighMark:  3592
 [testMultiColStairNewRoot] recSize:              9
 [testMultiColStairNewRoot] Rows
 [testMultiColStairNewRoot] ----
@@ -11014,9 +11002,9 @@
 [testMultiColStairNewRoot] mode:                 0
 [testMultiColStairNewRoot] nRow:               104
 [testMultiColStairNewRoot] nVal:                16
-[testMultiColStairNewRoot] nValHighMark:        55
-[testMultiColStairNewRoot] oVal:              1370
-[testMultiColStairNewRoot] oLastValHighMark:  3601
+[testMultiColStairNewRoot] nValHighMark:        56
+[testMultiColStairNewRoot] oVal:              1360
+[testMultiColStairNewRoot] oLastValHighMark:  3592
 [testMultiColStairNewRoot] recSize:              9
 [testMultiColStairNewRoot] Rows
 [testMultiColStairNewRoot] ----
@@ -11074,9 +11062,9 @@
 [testMultiColStairNewRoot] mode:                 0
 [testMultiColStairNewRoot] nRow:               104
 [testMultiColStairNewRoot] nVal:                16
-[testMultiColStairNewRoot] nValHighMark:        55
-[testMultiColStairNewRoot] oVal:              1454
-[testMultiColStairNewRoot] oLastValHighMark:  3601
+[testMultiColStairNewRoot] nValHighMark:        56
+[testMultiColStairNewRoot] oVal:              1444
+[testMultiColStairNewRoot] oLastValHighMark:  3592
 [testMultiColStairNewRoot] recSize:              9
 [testMultiColStairNewRoot] Rows
 [testMultiColStairNewRoot] ----
@@ -11563,7 +11551,7 @@
 [testMultiColStairNewRoot] ------
 [testMultiColStairNewRoot] nColumn:              3
 [testMultiColStairNewRoot] firstRid:           488
-[testMultiColStairNewRoot] oBatch:            1220
+[testMultiColStairNewRoot] oBatch:            1204
 [testMultiColStairNewRoot] nBatch:               3
 [testMultiColStairNewRoot] lastVal[0]:        3619
 [testMultiColStairNewRoot] firstVal[0]:       4096
@@ -11584,7 +11572,7 @@
 [testMultiColStairNewRoot] nRow:               360
 [testMultiColStairNewRoot] nVal:                53
 [testMultiColStairNewRoot] nValHighMark:         0
-[testMultiColStairNewRoot] oVal:                92
+[testMultiColStairNewRoot] oVal:                76
 [testMultiColStairNewRoot] oLastValHighMark:  4096
 [testMultiColStairNewRoot] recSize:              9
 [testMultiColStairNewRoot] Rows
@@ -11754,7 +11742,7 @@
 [testMultiColStairNewRoot] nRow:               360
 [testMultiColStairNewRoot] nVal:                53
 [testMultiColStairNewRoot] nValHighMark:         0
-[testMultiColStairNewRoot] oVal:               468
+[testMultiColStairNewRoot] oVal:               452
 [testMultiColStairNewRoot] oLastValHighMark:  4096
 [testMultiColStairNewRoot] recSize:              9
 [testMultiColStairNewRoot] Rows
@@ -11924,7 +11912,7 @@
 [testMultiColStairNewRoot] nRow:               360
 [testMultiColStairNewRoot] nVal:                53
 [testMultiColStairNewRoot] nValHighMark:         0
-[testMultiColStairNewRoot] oVal:               844
+[testMultiColStairNewRoot] oVal:               828
 [testMultiColStairNewRoot] oLastValHighMark:  4096
 [testMultiColStairNewRoot] recSize:              9
 [testMultiColStairNewRoot] Rows
@@ -12422,7 +12410,7 @@
 [testMultiColStairOldRoot] ------
 [testMultiColStairOldRoot] nColumn:              3
 [testMultiColStairOldRoot] firstRid:             0
-[testMultiColStairOldRoot] oBatch:             119
+[testMultiColStairOldRoot] oBatch:             103
 [testMultiColStairOldRoot] nBatch:               6
 [testMultiColStairOldRoot] lastVal[0]:        4078
 [testMultiColStairOldRoot] firstVal[0]:       4096
@@ -12443,7 +12431,7 @@
 [testMultiColStairOldRoot] nRow:                 8
 [testMultiColStairOldRoot] nVal:                 2
 [testMultiColStairOldRoot] nValHighMark:         0
-[testMultiColStairOldRoot] oVal:                92
+[testMultiColStairOldRoot] oVal:                76
 [testMultiColStairOldRoot] oLastValHighMark:  4096
 [testMultiColStairOldRoot] recSize:              9
 [testMultiColStairOldRoot] Rows
@@ -12462,7 +12450,7 @@
 [testMultiColStairOldRoot] nRow:                 8
 [testMultiColStairOldRoot] nVal:                 2
 [testMultiColStairOldRoot] nValHighMark:         0
-[testMultiColStairOldRoot] oVal:                97
+[testMultiColStairOldRoot] oVal:                81
 [testMultiColStairOldRoot] oLastValHighMark:  4096
 [testMultiColStairOldRoot] recSize:              9
 [testMultiColStairOldRoot] Rows
@@ -12481,7 +12469,7 @@
 [testMultiColStairOldRoot] nRow:                 8
 [testMultiColStairOldRoot] nVal:                 2
 [testMultiColStairOldRoot] nValHighMark:         0
-[testMultiColStairOldRoot] oVal:               102
+[testMultiColStairOldRoot] oVal:                86
 [testMultiColStairOldRoot] oLastValHighMark:  4096
 [testMultiColStairOldRoot] recSize:              9
 [testMultiColStairOldRoot] Rows
@@ -12500,7 +12488,7 @@
 [testMultiColStairOldRoot] nRow:                 2
 [testMultiColStairOldRoot] nVal:                 0
 [testMultiColStairOldRoot] nValHighMark:         2
-[testMultiColStairOldRoot] oVal:               107
+[testMultiColStairOldRoot] oVal:                91
 [testMultiColStairOldRoot] oLastValHighMark:  4078
 [testMultiColStairOldRoot] recSize:              9
 [testMultiColStairOldRoot] Variable Size Rows
@@ -12516,7 +12504,7 @@
 [testMultiColStairOldRoot] nRow:                 2
 [testMultiColStairOldRoot] nVal:                 0
 [testMultiColStairOldRoot] nValHighMark:         2
-[testMultiColStairOldRoot] oVal:               111
+[testMultiColStairOldRoot] oVal:                95
 [testMultiColStairOldRoot] oLastValHighMark:  4078
 [testMultiColStairOldRoot] recSize:              9
 [testMultiColStairOldRoot] Variable Size Rows
@@ -12532,7 +12520,7 @@
 [testMultiColStairOldRoot] nRow:                 2
 [testMultiColStairOldRoot] nVal:                 0
 [testMultiColStairOldRoot] nValHighMark:         2
-[testMultiColStairOldRoot] oVal:               115
+[testMultiColStairOldRoot] oVal:                99
 [testMultiColStairOldRoot] oLastValHighMark:  4078
 [testMultiColStairOldRoot] recSize:              9
 [testMultiColStairOldRoot] Variable Size Rows
@@ -12568,7 +12556,7 @@
 [testMultiColStairOldRoot] ------
 [testMultiColStairOldRoot] nColumn:              3
 [testMultiColStairOldRoot] firstRid:             0
-[testMultiColStairOldRoot] oBatch:             137
+[testMultiColStairOldRoot] oBatch:             121
 [testMultiColStairOldRoot] nBatch:               9
 [testMultiColStairOldRoot] lastVal[0]:        4078
 [testMultiColStairOldRoot] firstVal[0]:       4096
@@ -12589,7 +12577,7 @@
 [testMultiColStairOldRoot] nRow:                 8
 [testMultiColStairOldRoot] nVal:                 2
 [testMultiColStairOldRoot] nValHighMark:         0
-[testMultiColStairOldRoot] oVal:                92
+[testMultiColStairOldRoot] oVal:                76
 [testMultiColStairOldRoot] oLastValHighMark:  4096
 [testMultiColStairOldRoot] recSize:              9
 [testMultiColStairOldRoot] Rows
@@ -12608,7 +12596,7 @@
 [testMultiColStairOldRoot] nRow:                 8
 [testMultiColStairOldRoot] nVal:                 2
 [testMultiColStairOldRoot] nValHighMark:         0
-[testMultiColStairOldRoot] oVal:                97
+[testMultiColStairOldRoot] oVal:                81
 [testMultiColStairOldRoot] oLastValHighMark:  4096
 [testMultiColStairOldRoot] recSize:              9
 [testMultiColStairOldRoot] Rows
@@ -12627,7 +12615,7 @@
 [testMultiColStairOldRoot] nRow:                 8
 [testMultiColStairOldRoot] nVal:                 2
 [testMultiColStairOldRoot] nValHighMark:         0
-[testMultiColStairOldRoot] oVal:               102
+[testMultiColStairOldRoot] oVal:                86
 [testMultiColStairOldRoot] oLastValHighMark:  4096
 [testMultiColStairOldRoot] recSize:              9
 [testMultiColStairOldRoot] Rows
@@ -12646,7 +12634,7 @@
 [testMultiColStairOldRoot] nRow:                 8
 [testMultiColStairOldRoot] nVal:                 2
 [testMultiColStairOldRoot] nValHighMark:         2
-[testMultiColStairOldRoot] oVal:               107
+[testMultiColStairOldRoot] oVal:                91
 [testMultiColStairOldRoot] oLastValHighMark:  4078
 [testMultiColStairOldRoot] recSize:              9
 [testMultiColStairOldRoot] Rows
@@ -12665,7 +12653,7 @@
 [testMultiColStairOldRoot] nRow:                 8
 [testMultiColStairOldRoot] nVal:                 2
 [testMultiColStairOldRoot] nValHighMark:         2
-[testMultiColStairOldRoot] oVal:               112
+[testMultiColStairOldRoot] oVal:                96
 [testMultiColStairOldRoot] oLastValHighMark:  4078
 [testMultiColStairOldRoot] recSize:              9
 [testMultiColStairOldRoot] Rows
@@ -12684,7 +12672,7 @@
 [testMultiColStairOldRoot] nRow:                 8
 [testMultiColStairOldRoot] nVal:                 2
 [testMultiColStairOldRoot] nValHighMark:         2
-[testMultiColStairOldRoot] oVal:               117
+[testMultiColStairOldRoot] oVal:               101
 [testMultiColStairOldRoot] oLastValHighMark:  4078
 [testMultiColStairOldRoot] recSize:              9
 [testMultiColStairOldRoot] Rows
@@ -12703,7 +12691,7 @@
 [testMultiColStairOldRoot] nRow:                 4
 [testMultiColStairOldRoot] nVal:                 2
 [testMultiColStairOldRoot] nValHighMark:         2
-[testMultiColStairOldRoot] oVal:               122
+[testMultiColStairOldRoot] oVal:               106
 [testMultiColStairOldRoot] oLastValHighMark:  4078
 [testMultiColStairOldRoot] recSize:              9
 [testMultiColStairOldRoot] Rows
@@ -12722,7 +12710,7 @@
 [testMultiColStairOldRoot] nRow:                 4
 [testMultiColStairOldRoot] nVal:                 2
 [testMultiColStairOldRoot] nValHighMark:         2
-[testMultiColStairOldRoot] oVal:               127
+[testMultiColStairOldRoot] oVal:               111
 [testMultiColStairOldRoot] oLastValHighMark:  4078
 [testMultiColStairOldRoot] recSize:              9
 [testMultiColStairOldRoot] Rows
@@ -12741,7 +12729,7 @@
 [testMultiColStairOldRoot] nRow:                 4
 [testMultiColStairOldRoot] nVal:                 2
 [testMultiColStairOldRoot] nValHighMark:         2
-[testMultiColStairOldRoot] oVal:               132
+[testMultiColStairOldRoot] oVal:               116
 [testMultiColStairOldRoot] oLastValHighMark:  4078
 [testMultiColStairOldRoot] recSize:              9
 [testMultiColStairOldRoot] Rows

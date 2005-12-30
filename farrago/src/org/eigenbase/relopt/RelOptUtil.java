@@ -42,9 +42,7 @@ import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.*;
 import org.eigenbase.util.Util;
 import org.eigenbase.oj.util.*;
-import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.SqlOperator;
-import org.eigenbase.sql.SqlOperatorTable;
+import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 
 /**
@@ -622,9 +620,12 @@ public abstract class RelOptUtil
      *               is XML.
      * @param rel    Relational expression to explain.
      * @param asXml Whether to format as XML.
+     * @param detailLevel Detail level.
      * @return Plan
      */
-    public static String dumpPlan(String header, RelNode rel, boolean asXml)
+    public static String dumpPlan(
+        String header, RelNode rel, boolean asXml,
+        SqlExplainLevel detailLevel)
     {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
@@ -633,9 +634,9 @@ public abstract class RelOptUtil
         }
         RelOptPlanWriter planWriter;
         if (asXml) {
-            planWriter = new RelOptXmlPlanWriter(pw);
+            planWriter = new RelOptXmlPlanWriter(pw, detailLevel);
         } else {
-            planWriter = new RelOptPlanWriter(pw);
+            planWriter = new RelOptPlanWriter(pw, detailLevel);
         }
         planWriter.setIdPrefix(false);
         rel.explain(planWriter);

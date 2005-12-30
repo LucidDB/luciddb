@@ -24,6 +24,8 @@ import net.sf.farrago.session.*;
 import net.sf.farrago.db.*;
 import net.sf.farrago.defimpl.*;
 
+import java.util.*;
+
 /**
  * LucidDbSessionFactory extends {@link FarragoDbSessionFactory}
  * with LucidDB-specific behavior.
@@ -39,6 +41,15 @@ public class LucidDbSessionFactory extends FarragoDefaultSessionFactory
         FarragoSessionPersonality defaultPersonality)
     {
         return new LucidDbSessionPersonality((FarragoDbSession) session);
+    }
+    
+    // implement FarragoSessionFactory
+    public void applyFennelExtensionParameters(Map map)
+    {
+        super.applyFennelExtensionParameters(map);
+
+        // Tell Fennel to checkpoint after each transaction.
+        map.put("forceTxns", "true");
     }
 }
 

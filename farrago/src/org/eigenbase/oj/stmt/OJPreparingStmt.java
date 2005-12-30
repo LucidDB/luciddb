@@ -222,6 +222,7 @@ public abstract class OJPreparingStmt
         boolean explain = false;
         boolean explainAsXml = false;
         boolean explainWithImplementation = false;
+        SqlExplainLevel detailLevel = SqlExplainLevel.DIGEST_ATTRIBUTES;
         if (sqlQuery.isA(SqlKind.Explain)) {
             explain = true;
 
@@ -230,6 +231,7 @@ public abstract class OJPreparingStmt
             sqlQuery = sqlExplain.getExplicandum();
             explainWithImplementation = sqlExplain.withImplementation();
             explainAsXml = sqlExplain.isXml();
+            detailLevel = sqlExplain.getDetailLevel();
         }
 
         SqlToRelConverter sqlToRelConverter =
@@ -242,12 +244,14 @@ public abstract class OJPreparingStmt
         }
 
         if (explain && !explainWithImplementation) {
-            return new PreparedExplanation(rootRel, explainAsXml);
+            return new PreparedExplanation(
+                rootRel, explainAsXml, detailLevel);
         }
 
         rootRel = optimize(rootRel);
         if (explain) {
-            return new PreparedExplanation(rootRel, explainAsXml);
+            return new PreparedExplanation(
+                rootRel, explainAsXml, detailLevel);
         }
         return implement(
             rootRel,

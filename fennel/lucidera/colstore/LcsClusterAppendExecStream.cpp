@@ -41,15 +41,26 @@ void LcsClusterAppendExecStream::prepare(
     clusterColsTupleDesc = pInAccessor->getTupleDesc();
 
     clusterColsTupleData.compute(clusterColsTupleDesc);
-    m_numColumns = clusterColsTupleData.size();
+
+    inputProj = params.inputProj;
+    m_numColumns = inputProj.size();
+
+    // REVIEW jvs 27-Dec-2005:  instead of this for loop, you can use
+    // colTupleDesc.projectFrom(clusterColsTupleDesc, inputProj);
+    
     colTupleDesc.reset(new TupleDescriptor[m_numColumns]);
     for (int i = 0; i < m_numColumns; i++) {
-        colTupleDesc[i].push_back(clusterColsTupleDesc[i]);
+        colTupleDesc[i].push_back(clusterColsTupleDesc[inputProj[i]]);
     }
+
+    // REVIEW jvs 27-Dec-2005:  should assert that colTupleDesc
+    // matches pInAccessor; I ran into violations of this a few times
+    // on the way to getting UDT's working.
+    
+    m_bOverwrite = params.overwrite;
 
     // setup bufferLock to access temporary large page blocks
 
-    m_bOverwrite = params.overwrite;
     scratchAccessor = params.scratchAccessor;
     bufferLock.accessSegment(scratchAccessor);
 
@@ -245,8 +256,9 @@ ExecStreamResult LcsClusterAppendExecStream::Compress(
         // since we done adding rows to index write last batch
         // and block
         if (m_rowCnt) {
-            // if rowCnt < 8 force writeBatch to write a batch
-            if (m_rowCnt < 8) {
+            // if rowCnt < 8 or a multiple of 8, force writeBatch to
+            // treat this as the last batch
+            if (m_rowCnt < 8 || (m_rowCnt % 8) == 0) {
                 WriteBatch(true);
             } else {
                 WriteBatch(false);
@@ -269,6 +281,11 @@ ExecStreamResult LcsClusterAppendExecStream::Compress(
         if (!pInAccessor->demandData()) {
             return EXECRC_BUF_UNDERFLOW;
         }
+
+        // REVIEW jvs 27-Dec-2005: as an optimization, instead of every
+        // appender unmarshalling the full tuple and then projecting out what
+        // it wants, use TupleProjectionAccessor to unmarshal only the relevant
+        // attributes; that's what it's designed to do efficiently
    
         // if we have finished processing the previous row, unmarshal
         // the next cluster tuple and convert them into individual
@@ -283,7 +300,8 @@ ExecStreamResult LcsClusterAppendExecStream::Compress(
 
         for (j = 0; j < m_numColumns; j++) {
 
-            m_hash[j].insert(clusterColsTupleData[j], &m_vOrd[j], &undoInsert);
+            m_hash[j].insert(clusterColsTupleData[inputProj[j]], &m_vOrd[j],
+                             &undoInsert);
             
             if (undoInsert) {
                 
@@ -292,7 +310,7 @@ ExecStreamResult LcsClusterAppendExecStream::Compress(
                 //     k <= j
                 for (k = 0; k <= j; k++) {
                     
-                    m_hash[k].undoInsert(clusterColsTupleData[k]);
+                    m_hash[k].undoInsert(clusterColsTupleData[inputProj[k]]);
                 }
                 break;
             }

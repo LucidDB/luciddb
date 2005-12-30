@@ -1,0 +1,2061 @@
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- range joins
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- a big ol' join
+0: jdbc:luciddb:> select SALES.CUSTID, SALES.PRODID, SALES.PRICE, PRODUCTS.PRICE
+. . . . . . . . > from SALES, PRODUCTS
+. . . . . . . . > where SALES.PRICE between PRODUCTS.PRICE - 1 and PRODUCTS.PRICE + 1
+. . . . . . . . > and SALES.PRODID = PRODUCTS.PRODID
+. . . . . . . . > order by  CUSTID, PRODID, PRICE;
++---------+---------+--------+--------+
+| CUSTID  | PRODID  | PRICE  | PRICE  |
++---------+---------+--------+--------+
+| 0       | 10001   | 0.66   | 0.34   |
+| 1       | 10009   | 5.33   | 6.27   |
+| 2       | 10010   | 4.95   | 4.91   |
+| 3       | 10011   | 3.68   | 3.02   |
+| 4       | 10003   | 8.68   | 8.78   |
+| 5       | 10000   | 7.95   | 7.41   |
+| 5       | 10000   | 8.04   | 7.41   |
+| 5       | 10002   | 5.41   | 4.69   |
+| 5       | 10003   | 8.04   | 8.78   |
+| 5       | 10009   | 7.22   | 6.27   |
+| 6       | 10002   | 4.29   | 4.69   |
+| 6       | 10006   | 8.6    | 7.81   |
+| 7       | 10006   | 8.06   | 7.81   |
+| 7       | 10008   | 3.28   | 2.95   |
+| 8       | 10005   | 5.74   | 5.05   |
+| 9       | 10002   | 4.06   | 4.69   |
+| 9       | 10010   | 4.21   | 4.91   |
+| 9       | 10015   | 5.54   | 6.47   |
+| 10      | 10013   | 5.93   | 6.21   |
+| 10      | 10015   | 6.97   | 6.47   |
+| 11      | 10008   | 2.06   | 2.95   |
+| 12      | 10005   | 4.55   | 5.05   |
+| 12      | 10007   | 1.42   | 1.61   |
+| 13      | 10001   | 0.7    | 0.34   |
+| 15      | 10007   | 1.08   | 1.61   |
+| 15      | 10008   | 2.65   | 2.95   |
+| 15      | 10012   | 2.13   | 2.92   |
+| 16      | 10010   | 5.2    | 4.91   |
+| 16      | 10012   | 2.54   | 2.92   |
+| 17      | 10007   | 2.4    | 1.61   |
+| 18      | 10004   | 4.31   | 4.62   |
+| 18      | 10005   | 4.81   | 5.05   |
+| 18      | 10013   | 6.74   | 6.21   |
+| 18      | 10014   | 5.08   | 5.18   |
+| 19      | 10010   | 4.51   | 4.91   |
+| 19      | 10010   | 4.96   | 4.91   |
+| 19      | 10012   | 2.6    | 2.92   |
+| 20      | 10005   | 5.69   | 5.05   |
+| 21      | 10007   | 0.88   | 1.61   |
+| 22      | 10006   | 7.57   | 7.81   |
+| 22      | 10012   | 2.02   | 2.92   |
+| 22      | 10015   | 6.5    | 6.47   |
+| 23      | 10007   | 2.11   | 1.61   |
+| 23      | 10009   | 6.28   | 6.27   |
+| 23      | 10011   | 2.37   | 3.02   |
+| 24      | 10002   | 4.17   | 4.69   |
+| 24      | 10007   | 2.59   | 1.61   |
+| 24      | 10014   | 5.09   | 5.18   |
+| 25      | 10000   | 7.66   | 7.41   |
+| 25      | 10006   | 8.55   | 7.81   |
+| 26      | 10005   | 5.39   | 5.05   |
+| 26      | 10009   | 6.59   | 6.27   |
+| 28      | 10008   | 2.81   | 2.95   |
+| 28      | 10012   | 2.93   | 2.92   |
+| 29      | 10007   | 1.85   | 1.61   |
+| 29      | 10007   | 2.12   | 1.61   |
+| 30      | 10005   | 4.61   | 5.05   |
+| 31      | 10002   | 5.41   | 4.69   |
+| 31      | 10003   | 8.08   | 8.78   |
+| 31      | 10010   | 5.58   | 4.91   |
+| 32      | 10008   | 3.35   | 2.95   |
+| 32      | 10009   | 6.88   | 6.27   |
+| 33      | 10004   | 4.34   | 4.62   |
+| 33      | 10008   | 2.16   | 2.95   |
+| 33      | 10011   | 3.48   | 3.02   |
+| 35      | 10006   | 8.02   | 7.81   |
+| 36      | 10005   | 4.93   | 5.05   |
+| 37      | 10009   | 5.35   | 6.27   |
+| 37      | 10015   | 7.3    | 6.47   |
+| 38      | 10005   | 4.24   | 5.05   |
+| 39      | 10000   | 7.07   | 7.41   |
+| 39      | 10014   | 5.11   | 5.18   |
+| 40      | 10002   | 3.89   | 4.69   |
+| 40      | 10008   | 2.56   | 2.95   |
+| 40      | 10012   | 3.0    | 2.92   |
+| 40      | 10013   | 6.24   | 6.21   |
+| 41      | 10000   | 7.67   | 7.41   |
+| 41      | 10007   | 0.74   | 1.61   |
+| 41      | 10007   | 1.38   | 1.61   |
+| 41      | 10009   | 7.05   | 6.27   |
+| 42      | 10010   | 5.36   | 4.91   |
+| 42      | 10010   | 5.48   | 4.91   |
+| 43      | 10002   | 5.53   | 4.69   |
+| 43      | 10005   | 5.02   | 5.05   |
+| 43      | 10007   | 1.6    | 1.61   |
+| 45      | 10000   | 6.93   | 7.41   |
+| 46      | 10004   | 3.67   | 4.62   |
+| 48      | 10000   | 7.31   | 7.41   |
+| 48      | 10003   | 8.72   | 8.78   |
+| 48      | 10013   | 6.5    | 6.21   |
+| 49      | 10000   | 6.93   | 7.41   |
+| 49      | 10001   | 0.06   | 0.34   |
+| 49      | 10001   | 0.58   | 0.34   |
+| 49      | 10004   | 4.36   | 4.62   |
+| 49      | 10012   | 2.16   | 2.92   |
+| 49      | 10013   | 6.38   | 6.21   |
+| 49      | 10014   | 4.86   | 5.18   |
+| 50      | 10009   | 5.83   | 6.27   |
+| 51      | 10000   | 6.99   | 7.41   |
++---------+---------+--------+--------+
+| CUSTID  | PRODID  | PRICE  | PRICE  |
++---------+---------+--------+--------+
+| 51      | 10003   | 9.03   | 8.78   |
+| 51      | 10009   | 5.9    | 6.27   |
+| 52      | 10000   | 7.25   | 7.41   |
+| 52      | 10002   | 4.6    | 4.69   |
+| 52      | 10012   | 2.53   | 2.92   |
+| 53      | 10014   | 4.92   | 5.18   |
+| 54      | 10002   | 4.38   | 4.69   |
+| 54      | 10005   | 4.21   | 5.05   |
+| 54      | 10005   | 5.67   | 5.05   |
+| 54      | 10012   | 2.16   | 2.92   |
+| 54      | 10014   | 4.95   | 5.18   |
+| 55      | 10008   | 2.35   | 2.95   |
+| 56      | 10004   | 4.15   | 4.62   |
+| 56      | 10007   | 0.72   | 1.61   |
+| 56      | 10010   | 5.7    | 4.91   |
+| 56      | 10014   | 5.93   | 5.18   |
+| 57      | 10002   | 5.67   | 4.69   |
+| 57      | 10006   | 7.53   | 7.81   |
+| 57      | 10010   | 5.67   | 4.91   |
+| 57      | 10013   | 6.16   | 6.21   |
+| 58      | 10001   | 0.93   | 0.34   |
+| 58      | 10006   | 6.86   | 7.81   |
+| 58      | 10012   | 2.4    | 2.92   |
+| 59      | 10010   | 4.4    | 4.91   |
+| 60      | 10002   | 4.52   | 4.69   |
+| 60      | 10014   | 5.04   | 5.18   |
+| 61      | 10014   | 5.33   | 5.18   |
+| 62      | 10009   | 5.79   | 6.27   |
+| 63      | 10001   | 1.32   | 0.34   |
+| 63      | 10007   | 1.01   | 1.61   |
+| 63      | 10007   | 1.45   | 1.61   |
+| 63      | 10014   | 4.2    | 5.18   |
+| 63      | 10014   | 5.8    | 5.18   |
+| 63      | 10015   | 6.01   | 6.47   |
+| 64      | 10002   | 4.64   | 4.69   |
+| 64      | 10006   | 7.08   | 7.81   |
+| 65      | 10001   | 0.29   | 0.34   |
+| 65      | 10001   | 1.11   | 0.34   |
+| 66      | 10004   | 3.69   | 4.62   |
+| 66      | 10010   | 4.75   | 4.91   |
+| 66      | 10014   | 5.34   | 5.18   |
+| 67      | 10009   | 6.49   | 6.27   |
+| 67      | 10012   | 2.24   | 2.92   |
+| 67      | 10014   | 4.35   | 5.18   |
+| 67      | 10015   | 5.9    | 6.47   |
+| 68      | 10002   | 4.23   | 4.69   |
+| 69      | 10004   | 4.18   | 4.62   |
+| 69      | 10011   | 2.2    | 3.02   |
+| 70      | 10002   | 5.46   | 4.69   |
+| 70      | 10010   | 5.5    | 4.91   |
+| 71      | 10005   | 5.21   | 5.05   |
+| 72      | 10006   | 6.83   | 7.81   |
+| 72      | 10015   | 6.74   | 6.47   |
+| 73      | 10007   | 2.3    | 1.61   |
+| 75      | 10006   | 6.96   | 7.81   |
+| 75      | 10008   | 2.93   | 2.95   |
+| 75      | 10014   | 5.49   | 5.18   |
+| 76      | 10012   | 2.41   | 2.92   |
+| 77      | 10000   | 6.51   | 7.41   |
+| 77      | 10008   | 2.97   | 2.95   |
+| 77      | 10013   | 6.82   | 6.21   |
+| 79      | 10012   | 2.41   | 2.92   |
+| 80      | 10003   | 9.28   | 8.78   |
+| 80      | 10005   | 4.46   | 5.05   |
+| 80      | 10005   | 5.13   | 5.05   |
+| 80      | 10005   | 5.57   | 5.05   |
+| 80      | 10012   | 2.03   | 2.92   |
+| 81      | 10002   | 5.08   | 4.69   |
+| 81      | 10013   | 5.95   | 6.21   |
+| 82      | 10007   | 0.71   | 1.61   |
+| 82      | 10007   | 2.26   | 1.61   |
+| 83      | 10008   | 3.37   | 2.95   |
+| 83      | 10014   | 5.57   | 5.18   |
+| 84      | 10005   | 4.82   | 5.05   |
+| 84      | 10013   | 5.69   | 6.21   |
+| 85      | 10011   | 2.84   | 3.02   |
+| 86      | 10000   | 6.76   | 7.41   |
+| 86      | 10013   | 6.72   | 6.21   |
+| 87      | 10001   | 0.74   | 0.34   |
+| 87      | 10005   | 6.05   | 5.05   |
+| 87      | 10006   | 7.81   | 7.81   |
+| 87      | 10007   | 0.66   | 1.61   |
+| 88      | 10000   | 6.95   | 7.41   |
+| 88      | 10008   | 3.61   | 2.95   |
+| 88      | 10014   | 5.16   | 5.18   |
+| 89      | 10006   | 8.51   | 7.81   |
+| 89      | 10008   | 3.82   | 2.95   |
+| 89      | 10010   | 5.27   | 4.91   |
+| 90      | 10007   | 1.76   | 1.61   |
+| 90      | 10007   | 1.99   | 1.61   |
+| 90      | 10010   | 4.07   | 4.91   |
+| 90      | 10012   | 3.76   | 2.92   |
+| 91      | 10000   | 8.28   | 7.41   |
+| 91      | 10001   | 0.77   | 0.34   |
+| 92      | 10005   | 5.03   | 5.05   |
+| 92      | 10008   | 2.5    | 2.95   |
+| 92      | 10014   | 4.91   | 5.18   |
+| 96      | 10000   | 7.22   | 7.41   |
+| 97      | 10006   | 7.71   | 7.81   |
+| 98      | 10007   | 0.78   | 1.61   |
++---------+---------+--------+--------+
+| CUSTID  | PRODID  | PRICE  | PRICE  |
++---------+---------+--------+--------+
+| 99      | 10002   | 4.68   | 4.69   |
+| 99      | 10008   | 2.3    | 2.95   |
+| 99      | 10011   | 2.98   | 3.02   |
++---------+---------+--------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- non join conditions
+0: jdbc:luciddb:> select PRODUCTS.NAME, SALES.CUSTID
+. . . . . . . . > from SALES, PRODUCTS
+. . . . . . . . > where SALES.PRICE between PRODUCTS.PRICE - 1 and PRODUCTS.PRICE + 1
+. . . . . . . . > and ( PRODUCTS.NAME LIKE 'C%' OR PRODUCTS.NAME LIKE 'P%')
+. . . . . . . . > order by NAME, CUSTID;
++----------+---------+
+|   NAME   | CUSTID  |
++----------+---------+
+| Chicken  | 0       |
+| Chicken  | 0       |
+| Chicken  | 0       |
+| Chicken  | 1       |
+| Chicken  | 1       |
+| Chicken  | 2       |
+| Chicken  | 3       |
+| Chicken  | 4       |
+| Chicken  | 4       |
+| Chicken  | 4       |
+| Chicken  | 4       |
+| Chicken  | 5       |
+| Chicken  | 5       |
+| Chicken  | 5       |
+| Chicken  | 5       |
+| Chicken  | 5       |
+| Chicken  | 6       |
+| Chicken  | 6       |
+| Chicken  | 7       |
+| Chicken  | 7       |
+| Chicken  | 7       |
+| Chicken  | 8       |
+| Chicken  | 8       |
+| Chicken  | 10      |
+| Chicken  | 10      |
+| Chicken  | 11      |
+| Chicken  | 11      |
+| Chicken  | 11      |
+| Chicken  | 12      |
+| Chicken  | 12      |
+| Chicken  | 13      |
+| Chicken  | 13      |
+| Chicken  | 14      |
+| Chicken  | 14      |
+| Chicken  | 15      |
+| Chicken  | 15      |
+| Chicken  | 16      |
+| Chicken  | 16      |
+| Chicken  | 16      |
+| Chicken  | 17      |
+| Chicken  | 17      |
+| Chicken  | 17      |
+| Chicken  | 17      |
+| Chicken  | 18      |
+| Chicken  | 18      |
+| Chicken  | 18      |
+| Chicken  | 19      |
+| Chicken  | 20      |
+| Chicken  | 20      |
+| Chicken  | 21      |
+| Chicken  | 21      |
+| Chicken  | 22      |
+| Chicken  | 22      |
+| Chicken  | 23      |
+| Chicken  | 23      |
+| Chicken  | 23      |
+| Chicken  | 23      |
+| Chicken  | 24      |
+| Chicken  | 24      |
+| Chicken  | 24      |
+| Chicken  | 25      |
+| Chicken  | 25      |
+| Chicken  | 25      |
+| Chicken  | 26      |
+| Chicken  | 26      |
+| Chicken  | 26      |
+| Chicken  | 27      |
+| Chicken  | 27      |
+| Chicken  | 28      |
+| Chicken  | 29      |
+| Chicken  | 30      |
+| Chicken  | 31      |
+| Chicken  | 31      |
+| Chicken  | 31      |
+| Chicken  | 32      |
+| Chicken  | 32      |
+| Chicken  | 34      |
+| Chicken  | 34      |
+| Chicken  | 35      |
+| Chicken  | 35      |
+| Chicken  | 36      |
+| Chicken  | 37      |
+| Chicken  | 37      |
+| Chicken  | 37      |
+| Chicken  | 37      |
+| Chicken  | 37      |
+| Chicken  | 37      |
+| Chicken  | 38      |
+| Chicken  | 39      |
+| Chicken  | 39      |
+| Chicken  | 39      |
+| Chicken  | 40      |
+| Chicken  | 41      |
+| Chicken  | 41      |
+| Chicken  | 41      |
+| Chicken  | 44      |
+| Chicken  | 45      |
+| Chicken  | 45      |
+| Chicken  | 47      |
++----------+---------+
+|   NAME   | CUSTID  |
++----------+---------+
+| Chicken  | 47      |
+| Chicken  | 48      |
+| Chicken  | 48      |
+| Chicken  | 48      |
+| Chicken  | 49      |
+| Chicken  | 49      |
+| Chicken  | 49      |
+| Chicken  | 49      |
+| Chicken  | 50      |
+| Chicken  | 51      |
+| Chicken  | 52      |
+| Chicken  | 52      |
+| Chicken  | 52      |
+| Chicken  | 52      |
+| Chicken  | 53      |
+| Chicken  | 54      |
+| Chicken  | 55      |
+| Chicken  | 55      |
+| Chicken  | 57      |
+| Chicken  | 57      |
+| Chicken  | 58      |
+| Chicken  | 58      |
+| Chicken  | 58      |
+| Chicken  | 59      |
+| Chicken  | 60      |
+| Chicken  | 61      |
+| Chicken  | 61      |
+| Chicken  | 63      |
+| Chicken  | 63      |
+| Chicken  | 64      |
+| Chicken  | 64      |
+| Chicken  | 64      |
+| Chicken  | 64      |
+| Chicken  | 67      |
+| Chicken  | 68      |
+| Chicken  | 68      |
+| Chicken  | 68      |
+| Chicken  | 69      |
+| Chicken  | 69      |
+| Chicken  | 69      |
+| Chicken  | 71      |
+| Chicken  | 72      |
+| Chicken  | 72      |
+| Chicken  | 72      |
+| Chicken  | 73      |
+| Chicken  | 73      |
+| Chicken  | 74      |
+| Chicken  | 75      |
+| Chicken  | 75      |
+| Chicken  | 76      |
+| Chicken  | 77      |
+| Chicken  | 77      |
+| Chicken  | 77      |
+| Chicken  | 78      |
+| Chicken  | 79      |
+| Chicken  | 80      |
+| Chicken  | 81      |
+| Chicken  | 81      |
+| Chicken  | 83      |
+| Chicken  | 83      |
+| Chicken  | 83      |
+| Chicken  | 84      |
+| Chicken  | 85      |
+| Chicken  | 85      |
+| Chicken  | 86      |
+| Chicken  | 86      |
+| Chicken  | 86      |
+| Chicken  | 86      |
+| Chicken  | 87      |
+| Chicken  | 87      |
+| Chicken  | 88      |
+| Chicken  | 88      |
+| Chicken  | 88      |
+| Chicken  | 89      |
+| Chicken  | 89      |
+| Chicken  | 89      |
+| Chicken  | 89      |
+| Chicken  | 89      |
+| Chicken  | 90      |
+| Chicken  | 90      |
+| Chicken  | 90      |
+| Chicken  | 91      |
+| Chicken  | 92      |
+| Chicken  | 93      |
+| Chicken  | 93      |
+| Chicken  | 94      |
+| Chicken  | 94      |
+| Chicken  | 94      |
+| Chicken  | 94      |
+| Chicken  | 95      |
+| Chicken  | 95      |
+| Chicken  | 96      |
+| Chicken  | 96      |
+| Chicken  | 96      |
+| Chicken  | 96      |
+| Chicken  | 97      |
+| Chicken  | 97      |
+| Chicken  | 98      |
+| Chicken  | 98      |
+| Chicken  | 98      |
++----------+---------+
+|   NAME   | CUSTID  |
++----------+---------+
+| Chicken  | 98      |
+| Chicken  | 99      |
+| Chicken  | 99      |
+| Cookies  | 0       |
+| Cookies  | 1       |
+| Cookies  | 2       |
+| Cookies  | 3       |
+| Cookies  | 6       |
+| Cookies  | 6       |
+| Cookies  | 6       |
+| Cookies  | 7       |
+| Cookies  | 8       |
+| Cookies  | 8       |
+| Cookies  | 9       |
+| Cookies  | 10      |
+| Cookies  | 11      |
+| Cookies  | 11      |
+| Cookies  | 12      |
+| Cookies  | 12      |
+| Cookies  | 12      |
+| Cookies  | 13      |
+| Cookies  | 13      |
+| Cookies  | 13      |
+| Cookies  | 14      |
+| Cookies  | 15      |
+| Cookies  | 15      |
+| Cookies  | 15      |
+| Cookies  | 15      |
+| Cookies  | 16      |
+| Cookies  | 16      |
+| Cookies  | 17      |
+| Cookies  | 17      |
+| Cookies  | 17      |
+| Cookies  | 17      |
+| Cookies  | 18      |
+| Cookies  | 18      |
+| Cookies  | 18      |
+| Cookies  | 19      |
+| Cookies  | 20      |
+| Cookies  | 21      |
+| Cookies  | 21      |
+| Cookies  | 22      |
+| Cookies  | 22      |
+| Cookies  | 23      |
+| Cookies  | 23      |
+| Cookies  | 24      |
+| Cookies  | 24      |
+| Cookies  | 25      |
+| Cookies  | 25      |
+| Cookies  | 27      |
+| Cookies  | 27      |
+| Cookies  | 27      |
+| Cookies  | 29      |
+| Cookies  | 29      |
+| Cookies  | 29      |
+| Cookies  | 29      |
+| Cookies  | 30      |
+| Cookies  | 30      |
+| Cookies  | 30      |
+| Cookies  | 31      |
+| Cookies  | 31      |
+| Cookies  | 31      |
+| Cookies  | 33      |
+| Cookies  | 33      |
+| Cookies  | 33      |
+| Cookies  | 33      |
+| Cookies  | 34      |
+| Cookies  | 34      |
+| Cookies  | 34      |
+| Cookies  | 34      |
+| Cookies  | 35      |
+| Cookies  | 36      |
+| Cookies  | 38      |
+| Cookies  | 38      |
+| Cookies  | 40      |
+| Cookies  | 40      |
+| Cookies  | 40      |
+| Cookies  | 41      |
+| Cookies  | 41      |
+| Cookies  | 41      |
+| Cookies  | 43      |
+| Cookies  | 43      |
+| Cookies  | 43      |
+| Cookies  | 46      |
+| Cookies  | 47      |
+| Cookies  | 47      |
+| Cookies  | 47      |
+| Cookies  | 48      |
+| Cookies  | 49      |
+| Cookies  | 49      |
+| Cookies  | 49      |
+| Cookies  | 49      |
+| Cookies  | 50      |
+| Cookies  | 51      |
+| Cookies  | 52      |
+| Cookies  | 52      |
+| Cookies  | 52      |
+| Cookies  | 53      |
+| Cookies  | 54      |
+| Cookies  | 54      |
++----------+---------+
+|   NAME   | CUSTID  |
++----------+---------+
+| Cookies  | 54      |
+| Cookies  | 55      |
+| Cookies  | 55      |
+| Cookies  | 55      |
+| Cookies  | 56      |
+| Cookies  | 56      |
+| Cookies  | 56      |
+| Cookies  | 56      |
+| Cookies  | 56      |
+| Cookies  | 58      |
+| Cookies  | 58      |
+| Cookies  | 58      |
+| Cookies  | 58      |
+| Cookies  | 58      |
+| Cookies  | 59      |
+| Cookies  | 59      |
+| Cookies  | 59      |
+| Cookies  | 60      |
+| Cookies  | 60      |
+| Cookies  | 62      |
+| Cookies  | 62      |
+| Cookies  | 63      |
+| Cookies  | 63      |
+| Cookies  | 63      |
+| Cookies  | 63      |
+| Cookies  | 63      |
+| Cookies  | 64      |
+| Cookies  | 64      |
+| Cookies  | 64      |
+| Cookies  | 65      |
+| Cookies  | 65      |
+| Cookies  | 66      |
+| Cookies  | 66      |
+| Cookies  | 67      |
+| Cookies  | 67      |
+| Cookies  | 67      |
+| Cookies  | 68      |
+| Cookies  | 68      |
+| Cookies  | 68      |
+| Cookies  | 68      |
+| Cookies  | 69      |
+| Cookies  | 69      |
+| Cookies  | 70      |
+| Cookies  | 70      |
+| Cookies  | 71      |
+| Cookies  | 72      |
+| Cookies  | 72      |
+| Cookies  | 72      |
+| Cookies  | 73      |
+| Cookies  | 73      |
+| Cookies  | 73      |
+| Cookies  | 76      |
+| Cookies  | 76      |
+| Cookies  | 76      |
+| Cookies  | 77      |
+| Cookies  | 77      |
+| Cookies  | 79      |
+| Cookies  | 79      |
+| Cookies  | 80      |
+| Cookies  | 80      |
+| Cookies  | 81      |
+| Cookies  | 81      |
+| Cookies  | 81      |
+| Cookies  | 82      |
+| Cookies  | 82      |
+| Cookies  | 82      |
+| Cookies  | 83      |
+| Cookies  | 84      |
+| Cookies  | 85      |
+| Cookies  | 85      |
+| Cookies  | 85      |
+| Cookies  | 85      |
+| Cookies  | 86      |
+| Cookies  | 87      |
+| Cookies  | 87      |
+| Cookies  | 87      |
+| Cookies  | 87      |
+| Cookies  | 87      |
+| Cookies  | 87      |
+| Cookies  | 90      |
+| Cookies  | 90      |
+| Cookies  | 90      |
+| Cookies  | 90      |
+| Cookies  | 90      |
+| Cookies  | 91      |
+| Cookies  | 91      |
+| Cookies  | 91      |
+| Cookies  | 92      |
+| Cookies  | 92      |
+| Cookies  | 92      |
+| Cookies  | 92      |
+| Cookies  | 93      |
+| Cookies  | 94      |
+| Cookies  | 94      |
+| Cookies  | 95      |
+| Cookies  | 95      |
+| Cookies  | 96      |
+| Cookies  | 97      |
+| Cookies  | 97      |
+| Cookies  | 97      |
++----------+---------+
+|   NAME   | CUSTID  |
++----------+---------+
+| Cookies  | 98      |
+| Cookies  | 98      |
+| Cookies  | 98      |
+| Cookies  | 98      |
+| Cookies  | 98      |
+| Cookies  | 99      |
+| Cookies  | 99      |
+| Cookies  | 99      |
+| Plunger  | 0       |
+| Plunger  | 0       |
+| Plunger  | 1       |
+| Plunger  | 1       |
+| Plunger  | 1       |
+| Plunger  | 2       |
+| Plunger  | 4       |
+| Plunger  | 4       |
+| Plunger  | 4       |
+| Plunger  | 5       |
+| Plunger  | 5       |
+| Plunger  | 5       |
+| Plunger  | 5       |
+| Plunger  | 6       |
+| Plunger  | 7       |
+| Plunger  | 7       |
+| Plunger  | 7       |
+| Plunger  | 8       |
+| Plunger  | 10      |
+| Plunger  | 11      |
+| Plunger  | 11      |
+| Plunger  | 12      |
+| Plunger  | 13      |
+| Plunger  | 13      |
+| Plunger  | 13      |
+| Plunger  | 16      |
+| Plunger  | 16      |
+| Plunger  | 16      |
+| Plunger  | 17      |
+| Plunger  | 17      |
+| Plunger  | 17      |
+| Plunger  | 17      |
+| Plunger  | 18      |
+| Plunger  | 18      |
+| Plunger  | 18      |
+| Plunger  | 18      |
+| Plunger  | 19      |
+| Plunger  | 20      |
+| Plunger  | 21      |
+| Plunger  | 22      |
+| Plunger  | 22      |
+| Plunger  | 23      |
+| Plunger  | 23      |
+| Plunger  | 23      |
+| Plunger  | 23      |
+| Plunger  | 23      |
+| Plunger  | 24      |
+| Plunger  | 24      |
+| Plunger  | 24      |
+| Plunger  | 24      |
+| Plunger  | 24      |
+| Plunger  | 25      |
+| Plunger  | 25      |
+| Plunger  | 26      |
+| Plunger  | 26      |
+| Plunger  | 26      |
+| Plunger  | 26      |
+| Plunger  | 26      |
+| Plunger  | 26      |
+| Plunger  | 27      |
+| Plunger  | 27      |
+| Plunger  | 28      |
+| Plunger  | 29      |
+| Plunger  | 30      |
+| Plunger  | 31      |
+| Plunger  | 31      |
+| Plunger  | 31      |
+| Plunger  | 32      |
+| Plunger  | 32      |
+| Plunger  | 34      |
+| Plunger  | 34      |
+| Plunger  | 34      |
+| Plunger  | 35      |
+| Plunger  | 35      |
+| Plunger  | 36      |
+| Plunger  | 37      |
+| Plunger  | 37      |
+| Plunger  | 37      |
+| Plunger  | 37      |
+| Plunger  | 37      |
+| Plunger  | 37      |
+| Plunger  | 38      |
+| Plunger  | 38      |
+| Plunger  | 39      |
+| Plunger  | 39      |
+| Plunger  | 39      |
+| Plunger  | 40      |
+| Plunger  | 41      |
+| Plunger  | 41      |
+| Plunger  | 41      |
+| Plunger  | 41      |
+| Plunger  | 41      |
++----------+---------+
+|   NAME   | CUSTID  |
++----------+---------+
+| Plunger  | 43      |
+| Plunger  | 44      |
+| Plunger  | 45      |
+| Plunger  | 45      |
+| Plunger  | 47      |
+| Plunger  | 48      |
+| Plunger  | 48      |
+| Plunger  | 48      |
+| Plunger  | 49      |
+| Plunger  | 50      |
+| Plunger  | 51      |
+| Plunger  | 52      |
+| Plunger  | 52      |
+| Plunger  | 52      |
+| Plunger  | 52      |
+| Plunger  | 52      |
+| Plunger  | 53      |
+| Plunger  | 53      |
+| Plunger  | 54      |
+| Plunger  | 55      |
+| Plunger  | 56      |
+| Plunger  | 57      |
+| Plunger  | 57      |
+| Plunger  | 58      |
+| Plunger  | 58      |
+| Plunger  | 58      |
+| Plunger  | 60      |
+| Plunger  | 61      |
+| Plunger  | 61      |
+| Plunger  | 61      |
+| Plunger  | 63      |
+| Plunger  | 63      |
+| Plunger  | 64      |
+| Plunger  | 64      |
+| Plunger  | 64      |
+| Plunger  | 64      |
+| Plunger  | 66      |
+| Plunger  | 67      |
+| Plunger  | 67      |
+| Plunger  | 67      |
+| Plunger  | 68      |
+| Plunger  | 68      |
+| Plunger  | 69      |
+| Plunger  | 69      |
+| Plunger  | 71      |
+| Plunger  | 72      |
+| Plunger  | 72      |
+| Plunger  | 72      |
+| Plunger  | 72      |
+| Plunger  | 73      |
+| Plunger  | 74      |
+| Plunger  | 74      |
+| Plunger  | 75      |
+| Plunger  | 75      |
+| Plunger  | 76      |
+| Plunger  | 77      |
+| Plunger  | 77      |
+| Plunger  | 77      |
+| Plunger  | 77      |
+| Plunger  | 78      |
+| Plunger  | 79      |
+| Plunger  | 80      |
+| Plunger  | 81      |
+| Plunger  | 81      |
+| Plunger  | 83      |
+| Plunger  | 83      |
+| Plunger  | 83      |
+| Plunger  | 83      |
+| Plunger  | 84      |
+| Plunger  | 85      |
+| Plunger  | 85      |
+| Plunger  | 86      |
+| Plunger  | 86      |
+| Plunger  | 86      |
+| Plunger  | 86      |
+| Plunger  | 86      |
+| Plunger  | 86      |
+| Plunger  | 86      |
+| Plunger  | 87      |
+| Plunger  | 87      |
+| Plunger  | 88      |
+| Plunger  | 88      |
+| Plunger  | 88      |
+| Plunger  | 89      |
+| Plunger  | 89      |
+| Plunger  | 89      |
+| Plunger  | 89      |
+| Plunger  | 90      |
+| Plunger  | 90      |
+| Plunger  | 90      |
+| Plunger  | 90      |
+| Plunger  | 91      |
+| Plunger  | 92      |
+| Plunger  | 93      |
+| Plunger  | 93      |
+| Plunger  | 93      |
+| Plunger  | 93      |
+| Plunger  | 94      |
+| Plunger  | 94      |
+| Plunger  | 94      |
++----------+---------+
+|   NAME   | CUSTID  |
++----------+---------+
+| Plunger  | 94      |
+| Plunger  | 95      |
+| Plunger  | 95      |
+| Plunger  | 96      |
+| Plunger  | 96      |
+| Plunger  | 96      |
+| Plunger  | 96      |
+| Plunger  | 97      |
+| Plunger  | 98      |
+| Plunger  | 98      |
+| Plunger  | 98      |
+| Plunger  | 99      |
+| Plunger  | 99      |
++----------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- equality and non equality in one
+0: jdbc:luciddb:> select SALES.CUSTID, PRODUCTS.NAME, CUSTOMERS.FNAME, CUSTOMERS.LNAME,
+. . . . . . . . > PRODUCTS.PRICE, SALES.PRICE, PRODUCTS.PRICE-SALES.PRICE
+. . . . . . . . > from SALES, PRODUCTS, CUSTOMERS
+. . . . . . . . > where SALES.PRICE - PRODUCTS.PRICE < 0.5
+. . . . . . . . > and PRODUCTS.PRICE - SALES.PRICE < 0.25
+. . . . . . . . > and SALES.CUSTID = CUSTOMERS.CUSTID
+. . . . . . . . > order by NAME, CUSTID, PRICE, PRICE;
++---------+---------------+-----------+---------------+--------+--------+------------------------+
+| CUSTID  |     NAME      |   FNAME   |     LNAME     | PRICE  | PRICE  |         EXPR$6         |
++---------+---------------+-----------+---------------+--------+--------+------------------------+
+| 0       | Chicken       | Eric      | Locicero      | 7.81   | 7.69   | 0.11999999999999922    |
+| 4       | Chicken       | Victor    | Peterson      | 7.81   | 7.84   | -0.03000000000000025   |
+| 4       | Chicken       | Victor    | Peterson      | 7.81   | 7.99   | -0.1800000000000006    |
+| 5       | Chicken       | Veronica  | Bush          | 7.81   | 7.95   | -0.14000000000000057   |
+| 5       | Chicken       | Veronica  | Bush          | 7.81   | 8.04   | -0.22999999999999954   |
+| 5       | Chicken       | Veronica  | Bush          | 7.81   | 8.04   | -0.22999999999999954   |
+| 6       | Chicken       | Fritz     | Grant         | 7.81   | 8.21   | -0.40000000000000124   |
+| 7       | Chicken       | Missy     | Bush          | 7.81   | 8.06   | -0.2500000000000009    |
+| 8       | Chicken       | Ted       | Howard        | 7.81   | 7.7    | 0.10999999999999943    |
+| 11      | Chicken       | Bianca    | Grant         | 7.81   | 7.95   | -0.14000000000000057   |
+| 11      | Chicken       | Bianca    | Grant         | 7.81   | 7.71   | 0.09999999999999964    |
+| 13      | Chicken       | Maggie    | Everett       | 7.81   | 7.84   | -0.03000000000000025   |
+| 16      | Chicken       | Oliver    | Grant         | 7.81   | 8.02   | -0.20999999999999996   |
+| 18      | Chicken       | Theodore  | OLeary        | 7.81   | 7.83   | -0.020000000000000462  |
+| 22      | Chicken       | Eric      | Locicero      | 7.81   | 7.57   | 0.23999999999999932    |
+| 23      | Chicken       | Ophelia   | Everett       | 7.81   | 8.13   | -0.3200000000000012    |
+| 23      | Chicken       | Ophelia   | Everett       | 7.81   | 8.08   | -0.27000000000000046   |
+| 24      | Chicken       | David     | Peterson      | 7.81   | 8.29   | -0.47999999999999954   |
+| 25      | Chicken       | Florence  | Carlucchi     | 7.81   | 7.96   | -0.15000000000000036   |
+| 25      | Chicken       | Florence  | Carlucchi     | 7.81   | 7.66   | 0.14999999999999947    |
+| 27      | Chicken       | Mary      | Noose         | 7.81   | 7.95   | -0.14000000000000057   |
+| 29      | Chicken       | Pauline   | Everett       | 7.81   | 7.58   | 0.22999999999999954    |
+| 31      | Chicken       | Mary      | Van Morrison  | 7.81   | 7.58   | 0.22999999999999954    |
+| 31      | Chicken       | Mary      | Van Morrison  | 7.81   | 8.08   | -0.27000000000000046   |
+| 35      | Chicken       | Anita     | Carlucchi     | 7.81   | 8.02   | -0.20999999999999996   |
+| 36      | Chicken       | Jake      | Bush          | 7.81   | 8.03   | -0.21999999999999975   |
+| 37      | Chicken       | Terri     | Noose         | 7.81   | 7.95   | -0.14000000000000057   |
+| 37      | Chicken       | Terri     | Noose         | 7.81   | 8.25   | -0.4400000000000004    |
+| 38      | Chicken       | Andy      | Jones         | 7.81   | 7.71   | 0.09999999999999964    |
+| 39      | Chicken       | Batilda   | Van Morrison  | 7.81   | 8.12   | -0.3099999999999996    |
+| 40      | Chicken       | Kevin     | Frank         | 7.81   | 7.66   | 0.14999999999999947    |
+| 41      | Chicken       | Pauline   | Smith         | 7.81   | 7.67   | 0.13999999999999968    |
+| 45      | Chicken       | Margaret  | Van Morrison  | 7.81   | 7.57   | 0.23999999999999932    |
+| 50      | Chicken       | Bill      | Mantela       | 7.81   | 8.25   | -0.4400000000000004    |
+| 52      | Chicken       | Victor    | Peterson      | 7.81   | 7.92   | -0.11000000000000032   |
+| 63      | Chicken       | Margaret  | Everett       | 7.81   | 7.72   | 0.08999999999999986    |
+| 63      | Chicken       | Margaret  | Everett       | 7.81   | 8.18   | -0.3700000000000001    |
+| 64      | Chicken       | Harry     | Andrews       | 7.81   | 7.83   | -0.020000000000000462  |
+| 64      | Chicken       | Harry     | Andrews       | 7.81   | 8.24   | -0.4300000000000006    |
+| 67      | Chicken       | Denise    | Peterson      | 7.81   | 7.93   | -0.1200000000000001    |
+| 71      | Chicken       | Holly     | Dole          | 7.81   | 8.27   | -0.45999999999999996   |
+| 73      | Chicken       | Patty     | Randolph      | 7.81   | 7.71   | 0.09999999999999964    |
+| 74      | Chicken       | Andy      | OLeary        | 7.81   | 8.24   | -0.4300000000000006    |
+| 77      | Chicken       | Lisa      | Van Morrison  | 7.81   | 7.6    | 0.20999999999999996    |
+| 77      | Chicken       | Lisa      | Van Morrison  | 7.81   | 7.7    | 0.10999999999999943    |
+| 81      | Chicken       | Alice     | Kemp          | 7.81   | 8.21   | -0.40000000000000124   |
+| 84      | Chicken       | David     | Howard        | 7.81   | 8.21   | -0.40000000000000124   |
+| 85      | Chicken       | Patty     | Howard        | 7.81   | 8.0    | -0.1900000000000004    |
+| 85      | Chicken       | Patty     | Howard        | 7.81   | 8.27   | -0.45999999999999996   |
+| 86      | Chicken       | Ted       | Grant         | 7.81   | 7.79   | 0.019999999999999574   |
+| 87      | Chicken       | Maggie    | Kemp          | 7.81   | 7.81   | 0.0                    |
+| 89      | Chicken       | Anita     | Randolph      | 7.81   | 7.88   | -0.07000000000000028   |
+| 89      | Chicken       | Anita     | Randolph      | 7.81   | 8.24   | -0.4300000000000006    |
+| 90      | Chicken       | Paul      | Van Morrison  | 7.81   | 7.61   | 0.1999999999999993     |
+| 90      | Chicken       | Paul      | Van Morrison  | 7.81   | 7.68   | 0.1299999999999999     |
+| 91      | Chicken       | Ophelia   | OLeary        | 7.81   | 8.28   | -0.46999999999999975   |
+| 93      | Chicken       | Terri     | Randolph      | 7.81   | 7.57   | 0.23999999999999932    |
+| 94      | Chicken       | Hugh      | Kemp          | 7.81   | 8.2    | -0.3899999999999997    |
+| 95      | Chicken       | Margaret  | Bush          | 7.81   | 8.23   | -0.4200000000000008    |
+| 95      | Chicken       | Margaret  | Bush          | 7.81   | 8.28   | -0.46999999999999975   |
+| 96      | Chicken       | Bruce     | Grant         | 7.81   | 8.0    | -0.1900000000000004    |
+| 96      | Chicken       | Bruce     | Grant         | 7.81   | 8.0    | -0.1900000000000004    |
+| 97      | Chicken       | Samantha  | Frank         | 7.81   | 7.71   | 0.09999999999999964    |
+| 98      | Chicken       | Victor    | Frank         | 7.81   | 8.23   | -0.4200000000000008    |
+| 99      | Chicken       | Veronica  | Dole          | 7.81   | 8.22   | -0.41000000000000103   |
+| 2       | Cookies       | Gary      | Everett       | 1.61   | 1.88   | -0.2699999999999998    |
+| 6       | Cookies       | Fritz     | Grant         | 1.61   | 1.37   | 0.24                   |
+| 7       | Cookies       | Missy     | Bush          | 1.61   | 1.69   | -0.07999999999999985   |
+| 8       | Cookies       | Ted       | Howard        | 1.61   | 1.38   | 0.2300000000000002     |
+| 9       | Cookies       | Wendy     | Kemp          | 1.61   | 1.98   | -0.3699999999999999    |
+| 10      | Cookies       | Earl      | Dole          | 1.61   | 1.48   | 0.13000000000000012    |
+| 11      | Cookies       | Bianca    | Grant         | 1.61   | 2.06   | -0.44999999999999996   |
+| 12      | Cookies       | Dave      | Stevens       | 1.61   | 1.58   | 0.030000000000000027   |
+| 12      | Cookies       | Dave      | Stevens       | 1.61   | 1.42   | 0.19000000000000017    |
+| 14      | Cookies       | Barry     | Jones         | 1.61   | 1.71   | -0.09999999999999987   |
+| 16      | Cookies       | Oliver    | Grant         | 1.61   | 1.56   | 0.050000000000000044   |
+| 17      | Cookies       | Jeniffer  | Mantela       | 1.61   | 1.69   | -0.07999999999999985   |
+| 17      | Cookies       | Jeniffer  | Mantela       | 1.61   | 1.73   | -0.11999999999999988   |
+| 18      | Cookies       | Theodore  | OLeary        | 1.61   | 1.92   | -0.30999999999999983   |
+| 22      | Cookies       | Eric      | Locicero      | 1.61   | 2.02   | -0.4099999999999999    |
+| 22      | Cookies       | Eric      | Locicero      | 1.61   | 2.07   | -0.45999999999999974   |
+| 23      | Cookies       | Ophelia   | Everett       | 1.61   | 2.11   | -0.4999999999999998    |
+| 25      | Cookies       | Florence  | Carlucchi     | 1.61   | 1.88   | -0.2699999999999998    |
+| 25      | Cookies       | Florence  | Carlucchi     | 1.61   | 2.03   | -0.4199999999999997    |
+| 27      | Cookies       | Mary      | Noose         | 1.61   | 1.9    | -0.2899999999999998    |
+| 27      | Cookies       | Mary      | Noose         | 1.61   | 1.63   | -0.019999999999999796  |
+| 29      | Cookies       | Pauline   | Everett       | 1.61   | 1.85   | -0.24                  |
+| 29      | Cookies       | Pauline   | Everett       | 1.61   | 1.96   | -0.34999999999999987   |
+| 31      | Cookies       | Mary      | Van Morrison  | 1.61   | 1.77   | -0.15999999999999992   |
+| 33      | Cookies       | Patty     | Van Morrison  | 1.61   | 1.61   | 0.0                    |
+| 34      | Cookies       | Bill      | Kemp          | 1.61   | 1.78   | -0.16999999999999993   |
+| 35      | Cookies       | Anita     | Carlucchi     | 1.61   | 2.08   | -0.47                  |
+| 38      | Cookies       | Andy      | Jones         | 1.61   | 1.51   | 0.10000000000000009    |
+| 40      | Cookies       | Kevin     | Frank         | 1.61   | 1.86   | -0.25                  |
+| 41      | Cookies       | Pauline   | Smith         | 1.61   | 1.38   | 0.2300000000000002     |
+| 41      | Cookies       | Pauline   | Smith         | 1.61   | 1.48   | 0.13000000000000012    |
+| 43      | Cookies       | Erica     | Grant         | 1.61   | 1.6    | 0.010000000000000009   |
+| 43      | Cookies       | Erica     | Grant         | 1.61   | 1.77   | -0.15999999999999992   |
+| 47      | Cookies       | Hope      | Stevens       | 1.61   | 1.96   | -0.34999999999999987   |
++---------+---------------+-----------+---------------+--------+--------+------------------------+
+| CUSTID  |     NAME      |   FNAME   |     LNAME     | PRICE  | PRICE  |         EXPR$6         |
++---------+---------------+-----------+---------------+--------+--------+------------------------+
+| 48      | Cookies       | Daniel    | Bush          | 1.61   | 1.55   | 0.06000000000000005    |
+| 50      | Cookies       | Bill      | Mantela       | 1.61   | 1.45   | 0.16000000000000014    |
+| 52      | Cookies       | Victor    | Peterson      | 1.61   | 1.38   | 0.2300000000000002     |
+| 56      | Cookies       | Max       | Frank         | 1.61   | 1.4    | 0.2100000000000002     |
+| 56      | Cookies       | Max       | Frank         | 1.61   | 2.08   | -0.47                  |
+| 56      | Cookies       | Max       | Frank         | 1.61   | 1.57   | 0.040000000000000036   |
+| 56      | Cookies       | Max       | Frank         | 1.61   | 1.8    | -0.18999999999999995   |
+| 59      | Cookies       | Jeniffer  | Bush          | 1.61   | 1.47   | 0.14000000000000012    |
+| 59      | Cookies       | Jeniffer  | Bush          | 1.61   | 1.56   | 0.050000000000000044   |
+| 59      | Cookies       | Jeniffer  | Bush          | 1.61   | 1.54   | 0.07000000000000006    |
+| 60      | Cookies       | Ceasar    | Mantela       | 1.61   | 1.9    | -0.2899999999999998    |
+| 63      | Cookies       | Margaret  | Everett       | 1.61   | 1.4    | 0.2100000000000002     |
+| 63      | Cookies       | Margaret  | Everett       | 1.61   | 1.45   | 0.16000000000000014    |
+| 64      | Cookies       | Harry     | Andrews       | 1.61   | 1.86   | -0.25                  |
+| 64      | Cookies       | Harry     | Andrews       | 1.61   | 1.79   | -0.17999999999999994   |
+| 66      | Cookies       | Anthony   | Smith         | 1.61   | 1.59   | 0.020000000000000018   |
+| 67      | Cookies       | Denise    | Peterson      | 1.61   | 1.65   | -0.039999999999999813  |
+| 68      | Cookies       | Anthony   | Frank         | 1.61   | 1.68   | -0.06999999999999984   |
+| 68      | Cookies       | Anthony   | Frank         | 1.61   | 1.66   | -0.04999999999999982   |
+| 68      | Cookies       | Anthony   | Frank         | 1.61   | 1.64   | -0.029999999999999805  |
+| 68      | Cookies       | Anthony   | Frank         | 1.61   | 1.59   | 0.020000000000000018   |
+| 69      | Cookies       | Hope      | Smith         | 1.61   | 2.04   | -0.42999999999999994   |
+| 72      | Cookies       | Fred      | Noose         | 1.61   | 1.71   | -0.09999999999999987   |
+| 77      | Cookies       | Lisa      | Van Morrison  | 1.61   | 1.88   | -0.2699999999999998    |
+| 80      | Cookies       | Ian       | Bush          | 1.61   | 2.03   | -0.4199999999999997    |
+| 84      | Cookies       | David     | Howard        | 1.61   | 1.55   | 0.06000000000000005    |
+| 85      | Cookies       | Patty     | Howard        | 1.61   | 1.52   | 0.09000000000000008    |
+| 85      | Cookies       | Patty     | Howard        | 1.61   | 1.49   | 0.1200000000000001     |
+| 87      | Cookies       | Maggie    | Kemp          | 1.61   | 1.47   | 0.14000000000000012    |
+| 87      | Cookies       | Maggie    | Kemp          | 1.61   | 2.08   | -0.47                  |
+| 90      | Cookies       | Paul      | Van Morrison  | 1.61   | 1.99   | -0.3799999999999999    |
+| 90      | Cookies       | Paul      | Van Morrison  | 1.61   | 1.76   | -0.1499999999999999    |
+| 95      | Cookies       | Margaret  | Bush          | 1.61   | 1.65   | -0.039999999999999813  |
+| 95      | Cookies       | Margaret  | Bush          | 1.61   | 1.82   | -0.20999999999999996   |
+| 96      | Cookies       | Bruce     | Grant         | 1.61   | 1.37   | 0.24                   |
+| 98      | Cookies       | Victor    | Frank         | 1.61   | 1.61   | 0.0                    |
+| 98      | Cookies       | Victor    | Frank         | 1.61   | 1.49   | 0.1200000000000001     |
+| 1       | Eggs          | Terri     | Grant         | 6.47   | 6.66   | -0.1900000000000004    |
+| 1       | Eggs          | Terri     | Grant         | 6.47   | 6.91   | -0.4400000000000004    |
+| 4       | Eggs          | Victor    | Peterson      | 6.47   | 6.9    | -0.4300000000000006    |
+| 5       | Eggs          | Veronica  | Bush          | 6.47   | 6.34   | 0.1299999999999999     |
+| 5       | Eggs          | Veronica  | Bush          | 6.47   | 6.3    | 0.16999999999999993    |
+| 7       | Eggs          | Missy     | Bush          | 6.47   | 6.69   | -0.22000000000000064   |
+| 8       | Eggs          | Ted       | Howard        | 6.47   | 6.4    | 0.0699999999999994     |
+| 13      | Eggs          | Maggie    | Everett       | 6.47   | 6.53   | -0.0600000000000005    |
+| 14      | Eggs          | Barry     | Jones         | 6.47   | 6.39   | 0.08000000000000007    |
+| 18      | Eggs          | Theodore  | OLeary        | 6.47   | 6.74   | -0.27000000000000046   |
+| 18      | Eggs          | Theodore  | OLeary        | 6.47   | 6.95   | -0.4800000000000004    |
+| 19      | Eggs          | Patty     | Carlucchi     | 6.47   | 6.75   | -0.28000000000000025   |
+| 21      | Eggs          | Anita     | Carlucchi     | 6.47   | 6.32   | 0.14999999999999947    |
+| 22      | Eggs          | Eric      | Locicero      | 6.47   | 6.5    | -0.03000000000000025   |
+| 23      | Eggs          | Ophelia   | Everett       | 6.47   | 6.78   | -0.3100000000000005    |
+| 23      | Eggs          | Ophelia   | Everett       | 6.47   | 6.28   | 0.1899999999999995     |
+| 23      | Eggs          | Ophelia   | Everett       | 6.47   | 6.86   | -0.39000000000000057   |
+| 24      | Eggs          | David     | Peterson      | 6.47   | 6.56   | -0.08999999999999986   |
+| 24      | Eggs          | David     | Peterson      | 6.47   | 6.41   | 0.05999999999999961    |
+| 26      | Eggs          | Andy      | Peterson      | 6.47   | 6.59   | -0.1200000000000001    |
+| 26      | Eggs          | Andy      | Peterson      | 6.47   | 6.56   | -0.08999999999999986   |
+| 26      | Eggs          | Andy      | Peterson      | 6.47   | 6.42   | 0.04999999999999982    |
+| 27      | Eggs          | Mary      | Noose         | 6.47   | 6.91   | -0.4400000000000004    |
+| 28      | Eggs          | Ulysses   | Peterson      | 6.47   | 6.33   | 0.13999999999999968    |
+| 32      | Eggs          | Larry     | Randolph      | 6.47   | 6.88   | -0.41000000000000014   |
+| 32      | Eggs          | Larry     | Randolph      | 6.47   | 6.65   | -0.1800000000000006    |
+| 34      | Eggs          | Bill      | Kemp          | 6.47   | 6.62   | -0.15000000000000036   |
+| 38      | Eggs          | Andy      | Jones         | 6.47   | 6.69   | -0.22000000000000064   |
+| 39      | Eggs          | Batilda   | Van Morrison  | 6.47   | 6.4    | 0.0699999999999994     |
+| 40      | Eggs          | Kevin     | Frank         | 6.47   | 6.4    | 0.0699999999999994     |
+| 40      | Eggs          | Kevin     | Frank         | 6.47   | 6.24   | 0.22999999999999954    |
+| 41      | Eggs          | Pauline   | Smith         | 6.47   | 6.68   | -0.20999999999999996   |
+| 41      | Eggs          | Pauline   | Smith         | 6.47   | 6.54   | -0.07000000000000028   |
+| 43      | Eggs          | Erica     | Grant         | 6.47   | 6.49   | -0.020000000000000462  |
+| 45      | Eggs          | Margaret  | Van Morrison  | 6.47   | 6.93   | -0.45999999999999996   |
+| 47      | Eggs          | Hope      | Stevens       | 6.47   | 6.96   | -0.4900000000000002    |
+| 48      | Eggs          | Daniel    | Bush          | 6.47   | 6.5    | -0.03000000000000025   |
+| 49      | Eggs          | Maggie    | OLeary        | 6.47   | 6.93   | -0.45999999999999996   |
+| 49      | Eggs          | Maggie    | OLeary        | 6.47   | 6.38   | 0.08999999999999986    |
+| 52      | Eggs          | Victor    | Peterson      | 6.47   | 6.53   | -0.0600000000000005    |
+| 52      | Eggs          | Victor    | Peterson      | 6.47   | 6.89   | -0.41999999999999993   |
+| 52      | Eggs          | Victor    | Peterson      | 6.47   | 6.65   | -0.1800000000000006    |
+| 53      | Eggs          | Veronica  | Smith         | 6.47   | 6.79   | -0.3200000000000003    |
+| 54      | Eggs          | Max       | Peterson      | 6.47   | 6.81   | -0.33999999999999986   |
+| 56      | Eggs          | Max       | Frank         | 6.47   | 6.55   | -0.08000000000000007   |
+| 56      | Eggs          | Max       | Frank         | 6.47   | 6.23   | 0.23999999999999932    |
+| 58      | Eggs          | Monty     | Grant         | 6.47   | 6.44   | 0.02999999999999936    |
+| 58      | Eggs          | Monty     | Grant         | 6.47   | 6.86   | -0.39000000000000057   |
+| 61      | Eggs          | Anita     | Locicero      | 6.47   | 6.44   | 0.02999999999999936    |
+| 66      | Eggs          | Anthony   | Smith         | 6.47   | 6.67   | -0.20000000000000018   |
+| 67      | Eggs          | Denise    | Peterson      | 6.47   | 6.49   | -0.020000000000000462  |
+| 67      | Eggs          | Denise    | Peterson      | 6.47   | 6.58   | -0.11000000000000032   |
+| 69      | Eggs          | Hope      | Smith         | 6.47   | 6.47   | 0.0                    |
+| 70      | Eggs          | Peter     | Howard        | 6.47   | 6.25   | 0.21999999999999975    |
+| 72      | Eggs          | Fred      | Noose         | 6.47   | 6.74   | -0.27000000000000046   |
+| 72      | Eggs          | Fred      | Noose         | 6.47   | 6.94   | -0.47000000000000064   |
+| 72      | Eggs          | Fred      | Noose         | 6.47   | 6.83   | -0.3600000000000003    |
+| 74      | Eggs          | Andy      | OLeary        | 6.47   | 6.68   | -0.20999999999999996   |
+| 75      | Eggs          | Jeniffer  | Kemp          | 6.47   | 6.96   | -0.4900000000000002    |
+| 75      | Eggs          | Jeniffer  | Kemp          | 6.47   | 6.57   | -0.10000000000000053   |
+| 77      | Eggs          | Lisa      | Van Morrison  | 6.47   | 6.51   | -0.040000000000000036  |
+| 77      | Eggs          | Lisa      | Van Morrison  | 6.47   | 6.82   | -0.35000000000000053   |
+| 78      | Eggs          | Barry     | Stevens       | 6.47   | 6.26   | 0.20999999999999996    |
++---------+---------------+-----------+---------------+--------+--------+------------------------+
+| CUSTID  |     NAME      |   FNAME   |     LNAME     | PRICE  | PRICE  |         EXPR$6         |
++---------+---------------+-----------+---------------+--------+--------+------------------------+
+| 79      | Eggs          | Carla     | Stevens       | 6.47   | 6.96   | -0.4900000000000002    |
+| 82      | Eggs          | Ceasar    | Locicero      | 6.47   | 6.35   | 0.1200000000000001     |
+| 83      | Eggs          | Pauline   | Bush          | 6.47   | 6.61   | -0.14000000000000057   |
+| 86      | Eggs          | Ted       | Grant         | 6.47   | 6.76   | -0.29000000000000004   |
+| 86      | Eggs          | Ted       | Grant         | 6.47   | 6.72   | -0.25                  |
+| 86      | Eggs          | Ted       | Grant         | 6.47   | 6.7    | -0.23000000000000043   |
+| 87      | Eggs          | Maggie    | Kemp          | 6.47   | 6.79   | -0.3200000000000003    |
+| 88      | Eggs          | Anthony   | Stevens       | 6.47   | 6.95   | -0.4800000000000004    |
+| 88      | Eggs          | Anthony   | Stevens       | 6.47   | 6.26   | 0.20999999999999996    |
+| 89      | Eggs          | Anita     | Randolph      | 6.47   | 6.24   | 0.22999999999999954    |
+| 89      | Eggs          | Anita     | Randolph      | 6.47   | 6.63   | -0.16000000000000014   |
+| 90      | Eggs          | Paul      | Van Morrison  | 6.47   | 6.75   | -0.28000000000000025   |
+| 92      | Eggs          | Rex       | Mantela       | 6.47   | 6.56   | -0.08999999999999986   |
+| 93      | Eggs          | Terri     | Randolph      | 6.47   | 6.37   | 0.09999999999999964    |
+| 93      | Eggs          | Terri     | Randolph      | 6.47   | 6.72   | -0.25                  |
+| 93      | Eggs          | Terri     | Randolph      | 6.47   | 6.44   | 0.02999999999999936    |
+| 94      | Eggs          | Hugh      | Kemp          | 6.47   | 6.36   | 0.10999999999999943    |
+| 94      | Eggs          | Hugh      | Kemp          | 6.47   | 6.93   | -0.45999999999999996   |
+| 96      | Eggs          | Bruce     | Grant         | 6.47   | 6.91   | -0.4400000000000004    |
+| 4       | Heater        | Victor    | Peterson      | 3.02   | 3.08   | -0.06000000000000005   |
+| 5       | Heater        | Veronica  | Bush          | 3.02   | 3.22   | -0.20000000000000018   |
+| 5       | Heater        | Veronica  | Bush          | 3.02   | 3.06   | -0.040000000000000036  |
+| 6       | Heater        | Fritz     | Grant         | 3.02   | 3.04   | -0.020000000000000018  |
+| 7       | Heater        | Missy     | Bush          | 3.02   | 3.28   | -0.2599999999999998    |
+| 9       | Heater        | Wendy     | Kemp          | 3.02   | 3.27   | -0.25                  |
+| 11      | Heater        | Bianca    | Grant         | 3.02   | 3.03   | -0.009999999999999787  |
+| 12      | Heater        | Dave      | Stevens       | 3.02   | 3.02   | 0.0                    |
+| 13      | Heater        | Maggie    | Everett       | 3.02   | 2.99   | 0.029999999999999805   |
+| 14      | Heater        | Barry     | Jones         | 3.02   | 2.88   | 0.14000000000000012    |
+| 15      | Heater        | Patty     | Noose         | 3.02   | 3.13   | -0.10999999999999988   |
+| 15      | Heater        | Patty     | Noose         | 3.02   | 2.88   | 0.14000000000000012    |
+| 18      | Heater        | Theodore  | OLeary        | 3.02   | 2.9    | 0.1200000000000001     |
+| 18      | Heater        | Theodore  | OLeary        | 3.02   | 3.48   | -0.45999999999999996   |
+| 18      | Heater        | Theodore  | OLeary        | 3.02   | 2.96   | 0.06000000000000005    |
+| 18      | Heater        | Theodore  | OLeary        | 3.02   | 3.37   | -0.3500000000000001    |
+| 19      | Heater        | Patty     | Carlucchi     | 3.02   | 3.33   | -0.31000000000000005   |
+| 24      | Heater        | David     | Peterson      | 3.02   | 3.04   | -0.020000000000000018  |
+| 26      | Heater        | Andy      | Peterson      | 3.02   | 3.17   | -0.1499999999999999    |
+| 27      | Heater        | Mary      | Noose         | 3.02   | 2.85   | 0.16999999999999993    |
+| 28      | Heater        | Ulysses   | Peterson      | 3.02   | 2.81   | 0.20999999999999996    |
+| 28      | Heater        | Ulysses   | Peterson      | 3.02   | 2.93   | 0.08999999999999986    |
+| 30      | Heater        | Gerry     | Bush          | 3.02   | 3.4    | -0.3799999999999999    |
+| 32      | Heater        | Larry     | Randolph      | 3.02   | 3.35   | -0.33000000000000007   |
+| 33      | Heater        | Patty     | Van Morrison  | 3.02   | 3.48   | -0.45999999999999996   |
+| 34      | Heater        | Bill      | Kemp          | 3.02   | 3.01   | 0.010000000000000231   |
+| 36      | Heater        | Jake      | Bush          | 3.02   | 3.43   | -0.41000000000000014   |
+| 38      | Heater        | Andy      | Jones         | 3.02   | 2.95   | 0.06999999999999984    |
+| 38      | Heater        | Andy      | Jones         | 3.02   | 2.99   | 0.029999999999999805   |
+| 40      | Heater        | Kevin     | Frank         | 3.02   | 3.0    | 0.020000000000000018   |
+| 46      | Heater        | Hugh      | Andrews       | 3.02   | 3.39   | -0.3700000000000001    |
+| 48      | Heater        | Daniel    | Bush          | 3.02   | 3.38   | -0.3599999999999999    |
+| 50      | Heater        | Bill      | Mantela       | 3.02   | 3.08   | -0.06000000000000005   |
+| 50      | Heater        | Bill      | Mantela       | 3.02   | 3.33   | -0.31000000000000005   |
+| 51      | Heater        | Betty     | Andrews       | 3.02   | 2.9    | 0.1200000000000001     |
+| 55      | Heater        | Hope      | Bush          | 3.02   | 2.89   | 0.1299999999999999     |
+| 55      | Heater        | Hope      | Bush          | 3.02   | 2.84   | 0.18000000000000016    |
+| 56      | Heater        | Max       | Frank         | 3.02   | 3.29   | -0.27                  |
+| 65      | Heater        | Kathy     | Stevens       | 3.02   | 3.0    | 0.020000000000000018   |
+| 67      | Heater        | Denise    | Peterson      | 3.02   | 3.07   | -0.04999999999999982   |
+| 71      | Heater        | Holly     | Dole          | 3.02   | 3.26   | -0.23999999999999977   |
+| 73      | Heater        | Patty     | Randolph      | 3.02   | 3.16   | -0.14000000000000012   |
+| 75      | Heater        | Jeniffer  | Kemp          | 3.02   | 3.17   | -0.1499999999999999    |
+| 75      | Heater        | Jeniffer  | Kemp          | 3.02   | 2.93   | 0.08999999999999986    |
+| 76      | Heater        | Randy     | Smith         | 3.02   | 3.48   | -0.45999999999999996   |
+| 77      | Heater        | Lisa      | Van Morrison  | 3.02   | 2.97   | 0.04999999999999982    |
+| 77      | Heater        | Lisa      | Van Morrison  | 3.02   | 3.35   | -0.33000000000000007   |
+| 79      | Heater        | Carla     | Stevens       | 3.02   | 3.05   | -0.029999999999999805  |
+| 81      | Heater        | Alice     | Kemp          | 3.02   | 3.24   | -0.2200000000000002    |
+| 82      | Heater        | Ceasar    | Locicero      | 3.02   | 3.49   | -0.4700000000000002    |
+| 82      | Heater        | Ceasar    | Locicero      | 3.02   | 3.48   | -0.45999999999999996   |
+| 83      | Heater        | Pauline   | Bush          | 3.02   | 3.37   | -0.3500000000000001    |
+| 83      | Heater        | Pauline   | Bush          | 3.02   | 2.83   | 0.18999999999999995    |
+| 85      | Heater        | Patty     | Howard        | 3.02   | 2.84   | 0.18000000000000016    |
+| 85      | Heater        | Patty     | Howard        | 3.02   | 3.36   | -0.33999999999999986   |
+| 85      | Heater        | Patty     | Howard        | 3.02   | 2.85   | 0.16999999999999993    |
+| 88      | Heater        | Anthony   | Stevens       | 3.02   | 3.09   | -0.06999999999999984   |
+| 89      | Heater        | Anita     | Randolph      | 3.02   | 3.3    | -0.2799999999999998    |
+| 91      | Heater        | Ophelia   | OLeary        | 3.02   | 3.06   | -0.040000000000000036  |
+| 93      | Heater        | Terri     | Randolph      | 3.02   | 3.05   | -0.029999999999999805  |
+| 97      | Heater        | Samantha  | Frank         | 3.02   | 3.17   | -0.1499999999999999    |
+| 99      | Heater        | Veronica  | Dole          | 3.02   | 2.98   | 0.040000000000000036   |
+| 0       | Iron          | Eric      | Locicero      | 6.27   | 6.09   | 0.17999999999999972    |
+| 1       | Iron          | Terri     | Grant         | 6.27   | 6.66   | -0.39000000000000057   |
+| 5       | Iron          | Veronica  | Bush          | 6.27   | 6.3    | -0.03000000000000025   |
+| 5       | Iron          | Veronica  | Bush          | 6.27   | 6.34   | -0.07000000000000028   |
+| 7       | Iron          | Missy     | Bush          | 6.27   | 6.69   | -0.4200000000000008    |
+| 8       | Iron          | Ted       | Howard        | 6.27   | 6.4    | -0.13000000000000078   |
+| 12      | Iron          | Dave      | Stevens       | 6.27   | 6.15   | 0.11999999999999922    |
+| 13      | Iron          | Maggie    | Everett       | 6.27   | 6.53   | -0.2600000000000007    |
+| 13      | Iron          | Maggie    | Everett       | 6.27   | 6.22   | 0.04999999999999982    |
+| 14      | Iron          | Barry     | Jones         | 6.27   | 6.39   | -0.1200000000000001    |
+| 18      | Iron          | Theodore  | OLeary        | 6.27   | 6.74   | -0.47000000000000064   |
+| 19      | Iron          | Patty     | Carlucchi     | 6.27   | 6.75   | -0.4800000000000004    |
+| 21      | Iron          | Anita     | Carlucchi     | 6.27   | 6.32   | -0.05000000000000071   |
+| 22      | Iron          | Eric      | Locicero      | 6.27   | 6.5    | -0.23000000000000043   |
+| 23      | Iron          | Ophelia   | Everett       | 6.27   | 6.28   | -0.010000000000000675  |
+| 24      | Iron          | David     | Peterson      | 6.27   | 6.41   | -0.14000000000000057   |
+| 24      | Iron          | David     | Peterson      | 6.27   | 6.56   | -0.29000000000000004   |
+| 25      | Iron          | Florence  | Carlucchi     | 6.27   | 6.22   | 0.04999999999999982    |
+| 26      | Iron          | Andy      | Peterson      | 6.27   | 6.05   | 0.21999999999999975    |
++---------+---------------+-----------+---------------+--------+--------+------------------------+
+| CUSTID  |     NAME      |   FNAME   |     LNAME     | PRICE  | PRICE  |         EXPR$6         |
++---------+---------------+-----------+---------------+--------+--------+------------------------+
+| 26      | Iron          | Andy      | Peterson      | 6.27   | 6.56   | -0.29000000000000004   |
+| 26      | Iron          | Andy      | Peterson      | 6.27   | 6.42   | -0.15000000000000036   |
+| 26      | Iron          | Andy      | Peterson      | 6.27   | 6.2    | 0.0699999999999994     |
+| 26      | Iron          | Andy      | Peterson      | 6.27   | 6.59   | -0.3200000000000003    |
+| 28      | Iron          | Ulysses   | Peterson      | 6.27   | 6.33   | -0.0600000000000005    |
+| 32      | Iron          | Larry     | Randolph      | 6.27   | 6.65   | -0.3800000000000008    |
+| 34      | Iron          | Bill      | Kemp          | 6.27   | 6.62   | -0.35000000000000053   |
+| 38      | Iron          | Andy      | Jones         | 6.27   | 6.69   | -0.4200000000000008    |
+| 39      | Iron          | Batilda   | Van Morrison  | 6.27   | 6.4    | -0.13000000000000078   |
+| 40      | Iron          | Kevin     | Frank         | 6.27   | 6.4    | -0.13000000000000078   |
+| 40      | Iron          | Kevin     | Frank         | 6.27   | 6.24   | 0.02999999999999936    |
+| 41      | Iron          | Pauline   | Smith         | 6.27   | 6.68   | -0.41000000000000014   |
+| 41      | Iron          | Pauline   | Smith         | 6.27   | 6.54   | -0.27000000000000046   |
+| 43      | Iron          | Erica     | Grant         | 6.27   | 6.49   | -0.22000000000000064   |
+| 44      | Iron          | Walter    | Frank         | 6.27   | 6.22   | 0.04999999999999982    |
+| 48      | Iron          | Daniel    | Bush          | 6.27   | 6.5    | -0.23000000000000043   |
+| 49      | Iron          | Maggie    | OLeary        | 6.27   | 6.38   | -0.11000000000000032   |
+| 52      | Iron          | Victor    | Peterson      | 6.27   | 6.65   | -0.3800000000000008    |
+| 52      | Iron          | Victor    | Peterson      | 6.27   | 6.53   | -0.2600000000000007    |
+| 56      | Iron          | Max       | Frank         | 6.27   | 6.23   | 0.03999999999999915    |
+| 56      | Iron          | Max       | Frank         | 6.27   | 6.55   | -0.28000000000000025   |
+| 57      | Iron          | Terri     | Kemp          | 6.27   | 6.16   | 0.10999999999999943    |
+| 58      | Iron          | Monty     | Grant         | 6.27   | 6.44   | -0.17000000000000082   |
+| 61      | Iron          | Anita     | Locicero      | 6.27   | 6.44   | -0.17000000000000082   |
+| 66      | Iron          | Anthony   | Smith         | 6.27   | 6.67   | -0.40000000000000036   |
+| 67      | Iron          | Denise    | Peterson      | 6.27   | 6.58   | -0.3100000000000005    |
+| 67      | Iron          | Denise    | Peterson      | 6.27   | 6.49   | -0.22000000000000064   |
+| 68      | Iron          | Anthony   | Frank         | 6.27   | 6.14   | 0.1299999999999999     |
+| 69      | Iron          | Hope      | Smith         | 6.27   | 6.47   | -0.20000000000000018   |
+| 70      | Iron          | Peter     | Howard        | 6.27   | 6.25   | 0.019999999999999574   |
+| 72      | Iron          | Fred      | Noose         | 6.27   | 6.74   | -0.47000000000000064   |
+| 74      | Iron          | Andy      | OLeary        | 6.27   | 6.68   | -0.41000000000000014   |
+| 75      | Iron          | Jeniffer  | Kemp          | 6.27   | 6.21   | 0.05999999999999961    |
+| 75      | Iron          | Jeniffer  | Kemp          | 6.27   | 6.57   | -0.3000000000000007    |
+| 77      | Iron          | Lisa      | Van Morrison  | 6.27   | 6.51   | -0.2400000000000002    |
+| 78      | Iron          | Barry     | Stevens       | 6.27   | 6.26   | 0.009999999999999787   |
+| 82      | Iron          | Ceasar    | Locicero      | 6.27   | 6.35   | -0.08000000000000007   |
+| 83      | Iron          | Pauline   | Bush          | 6.27   | 6.61   | -0.34000000000000075   |
+| 84      | Iron          | David     | Howard        | 6.27   | 6.15   | 0.11999999999999922    |
+| 86      | Iron          | Ted       | Grant         | 6.27   | 6.72   | -0.4500000000000002    |
+| 86      | Iron          | Ted       | Grant         | 6.27   | 6.76   | -0.4900000000000002    |
+| 86      | Iron          | Ted       | Grant         | 6.27   | 6.7    | -0.4300000000000006    |
+| 87      | Iron          | Maggie    | Kemp          | 6.27   | 6.05   | 0.21999999999999975    |
+| 88      | Iron          | Anthony   | Stevens       | 6.27   | 6.26   | 0.009999999999999787   |
+| 89      | Iron          | Anita     | Randolph      | 6.27   | 6.63   | -0.3600000000000003    |
+| 89      | Iron          | Anita     | Randolph      | 6.27   | 6.24   | 0.02999999999999936    |
+| 90      | Iron          | Paul      | Van Morrison  | 6.27   | 6.75   | -0.4800000000000004    |
+| 92      | Iron          | Rex       | Mantela       | 6.27   | 6.19   | 0.07999999999999918    |
+| 92      | Iron          | Rex       | Mantela       | 6.27   | 6.56   | -0.29000000000000004   |
+| 93      | Iron          | Terri     | Randolph      | 6.27   | 6.44   | -0.17000000000000082   |
+| 93      | Iron          | Terri     | Randolph      | 6.27   | 6.37   | -0.10000000000000053   |
+| 93      | Iron          | Terri     | Randolph      | 6.27   | 6.72   | -0.4500000000000002    |
+| 94      | Iron          | Hugh      | Kemp          | 6.27   | 6.36   | -0.09000000000000075   |
+| 99      | Iron          | Veronica  | Dole          | 6.27   | 6.07   | 0.1999999999999993     |
+| 2       | Juice         | Gary      | Everett       | 4.62   | 4.95   | -0.33000000000000007   |
+| 7       | Juice         | Missy     | Bush          | 4.62   | 4.98   | -0.3600000000000003    |
+| 8       | Juice         | Ted       | Howard        | 4.62   | 4.99   | -0.3700000000000001    |
+| 9       | Juice         | Wendy     | Kemp          | 4.62   | 4.48   | 0.13999999999999968    |
+| 10      | Juice         | Earl      | Dole          | 4.62   | 4.48   | 0.13999999999999968    |
+| 12      | Juice         | Dave      | Stevens       | 4.62   | 4.55   | 0.07000000000000028    |
+| 14      | Juice         | Barry     | Jones         | 4.62   | 4.93   | -0.3099999999999996    |
+| 15      | Juice         | Patty     | Noose         | 4.62   | 5.05   | -0.4299999999999997    |
+| 16      | Juice         | Oliver    | Grant         | 4.62   | 5.11   | -0.4900000000000002    |
+| 18      | Juice         | Theodore  | OLeary        | 4.62   | 5.08   | -0.45999999999999996   |
+| 18      | Juice         | Theodore  | OLeary        | 4.62   | 4.81   | -0.1899999999999995    |
+| 19      | Juice         | Patty     | Carlucchi     | 4.62   | 4.96   | -0.33999999999999986   |
+| 19      | Juice         | Patty     | Carlucchi     | 4.62   | 4.51   | 0.11000000000000032    |
+| 22      | Juice         | Eric      | Locicero      | 4.62   | 4.86   | -0.2400000000000002    |
+| 24      | Juice         | David     | Peterson      | 4.62   | 5.09   | -0.46999999999999975   |
+| 28      | Juice         | Ulysses   | Peterson      | 4.62   | 4.99   | -0.3700000000000001    |
+| 30      | Juice         | Gerry     | Bush          | 4.62   | 4.61   | 0.009999999999999787   |
+| 31      | Juice         | Mary      | Van Morrison  | 4.62   | 4.39   | 0.23000000000000043    |
+| 31      | Juice         | Mary      | Van Morrison  | 4.62   | 4.76   | -0.13999999999999968   |
+| 36      | Juice         | Jake      | Bush          | 4.62   | 4.93   | -0.3099999999999996    |
+| 36      | Juice         | Jake      | Bush          | 4.62   | 4.99   | -0.3700000000000001    |
+| 37      | Juice         | Terri     | Noose         | 4.62   | 4.47   | 0.15000000000000036    |
+| 38      | Juice         | Andy      | Jones         | 4.62   | 4.69   | -0.07000000000000028   |
+| 39      | Juice         | Batilda   | Van Morrison  | 4.62   | 5.11   | -0.4900000000000002    |
+| 41      | Juice         | Pauline   | Smith         | 4.62   | 4.5    | 0.1200000000000001     |
+| 41      | Juice         | Pauline   | Smith         | 4.62   | 4.42   | 0.20000000000000018    |
+| 43      | Juice         | Erica     | Grant         | 4.62   | 4.77   | -0.14999999999999947   |
+| 43      | Juice         | Erica     | Grant         | 4.62   | 5.02   | -0.39999999999999947   |
+| 45      | Juice         | Margaret  | Van Morrison  | 4.62   | 4.89   | -0.2699999999999996    |
+| 46      | Juice         | Hugh      | Andrews       | 4.62   | 4.83   | -0.20999999999999996   |
+| 49      | Juice         | Maggie    | OLeary        | 4.62   | 4.86   | -0.2400000000000002    |
+| 52      | Juice         | Victor    | Peterson      | 4.62   | 4.6    | 0.020000000000000462   |
+| 53      | Juice         | Veronica  | Smith         | 4.62   | 4.92   | -0.2999999999999998    |
+| 54      | Juice         | Max       | Peterson      | 4.62   | 4.38   | 0.2400000000000002     |
+| 54      | Juice         | Max       | Peterson      | 4.62   | 4.95   | -0.33000000000000007   |
+| 54      | Juice         | Max       | Peterson      | 4.62   | 4.39   | 0.23000000000000043    |
+| 55      | Juice         | Hope      | Bush          | 4.62   | 4.71   | -0.08999999999999986   |
+| 57      | Juice         | Terri     | Kemp          | 4.62   | 4.43   | 0.1900000000000004     |
+| 58      | Juice         | Monty     | Grant         | 4.62   | 4.99   | -0.3700000000000001    |
+| 58      | Juice         | Monty     | Grant         | 4.62   | 4.79   | -0.16999999999999993   |
+| 59      | Juice         | Jeniffer  | Bush          | 4.62   | 4.92   | -0.2999999999999998    |
+| 59      | Juice         | Jeniffer  | Bush          | 4.62   | 4.4    | 0.21999999999999975    |
+| 60      | Juice         | Ceasar    | Mantela       | 4.62   | 5.04   | -0.41999999999999993   |
+| 60      | Juice         | Ceasar    | Mantela       | 4.62   | 4.52   | 0.10000000000000053    |
+| 61      | Juice         | Anita     | Locicero      | 4.62   | 5.05   | -0.4299999999999997    |
+| 61      | Juice         | Anita     | Locicero      | 4.62   | 4.5    | 0.1200000000000001     |
++---------+---------------+-----------+---------------+--------+--------+------------------------+
+| CUSTID  |     NAME      |   FNAME   |     LNAME     | PRICE  | PRICE  |         EXPR$6         |
++---------+---------------+-----------+---------------+--------+--------+------------------------+
+| 64      | Juice         | Harry     | Andrews       | 4.62   | 4.47   | 0.15000000000000036    |
+| 64      | Juice         | Harry     | Andrews       | 4.62   | 4.64   | -0.019999999999999574  |
+| 65      | Juice         | Kathy     | Stevens       | 4.62   | 5.02   | -0.39999999999999947   |
+| 65      | Juice         | Kathy     | Stevens       | 4.62   | 4.92   | -0.2999999999999998    |
+| 66      | Juice         | Anthony   | Smith         | 4.62   | 4.75   | -0.1299999999999999    |
+| 68      | Juice         | Anthony   | Frank         | 4.62   | 4.43   | 0.1900000000000004     |
+| 78      | Juice         | Barry     | Stevens       | 4.62   | 4.74   | -0.1200000000000001    |
+| 80      | Juice         | Ian       | Bush          | 4.62   | 4.46   | 0.16000000000000014    |
+| 80      | Juice         | Ian       | Bush          | 4.62   | 4.38   | 0.2400000000000002     |
+| 81      | Juice         | Alice     | Kemp          | 4.62   | 5.08   | -0.45999999999999996   |
+| 84      | Juice         | David     | Howard        | 4.62   | 4.82   | -0.20000000000000018   |
+| 85      | Juice         | Patty     | Howard        | 4.62   | 4.6    | 0.020000000000000462   |
+| 88      | Juice         | Anthony   | Stevens       | 4.62   | 4.95   | -0.33000000000000007   |
+| 92      | Juice         | Rex       | Mantela       | 4.62   | 5.03   | -0.41000000000000014   |
+| 92      | Juice         | Rex       | Mantela       | 4.62   | 4.91   | -0.29000000000000004   |
+| 94      | Juice         | Hugh      | Kemp          | 4.62   | 4.62   | 0.0                    |
+| 99      | Juice         | Veronica  | Dole          | 4.62   | 4.68   | -0.05999999999999961   |
+| 4       | Microwave     | Victor    | Peterson      | 2.92   | 3.08   | -0.16000000000000014   |
+| 5       | Microwave     | Veronica  | Bush          | 2.92   | 3.06   | -0.14000000000000012   |
+| 5       | Microwave     | Veronica  | Bush          | 2.92   | 3.22   | -0.30000000000000027   |
+| 6       | Microwave     | Fritz     | Grant         | 2.92   | 3.04   | -0.1200000000000001    |
+| 6       | Microwave     | Fritz     | Grant         | 2.92   | 2.71   | 0.20999999999999996    |
+| 7       | Microwave     | Missy     | Bush          | 2.92   | 3.28   | -0.3599999999999999    |
+| 9       | Microwave     | Wendy     | Kemp          | 2.92   | 2.7    | 0.21999999999999975    |
+| 9       | Microwave     | Wendy     | Kemp          | 2.92   | 3.27   | -0.3500000000000001    |
+| 11      | Microwave     | Bianca    | Grant         | 2.92   | 3.03   | -0.10999999999999988   |
+| 12      | Microwave     | Dave      | Stevens       | 2.92   | 3.02   | -0.10000000000000009   |
+| 13      | Microwave     | Maggie    | Everett       | 2.92   | 2.99   | -0.07000000000000028   |
+| 14      | Microwave     | Barry     | Jones         | 2.92   | 2.88   | 0.040000000000000036   |
+| 15      | Microwave     | Patty     | Noose         | 2.92   | 3.13   | -0.20999999999999996   |
+| 15      | Microwave     | Patty     | Noose         | 2.92   | 2.88   | 0.040000000000000036   |
+| 18      | Microwave     | Theodore  | OLeary        | 2.92   | 3.37   | -0.4500000000000002    |
+| 18      | Microwave     | Theodore  | OLeary        | 2.92   | 2.96   | -0.040000000000000036  |
+| 18      | Microwave     | Theodore  | OLeary        | 2.92   | 2.9    | 0.020000000000000018   |
+| 19      | Microwave     | Patty     | Carlucchi     | 2.92   | 3.33   | -0.41000000000000014   |
+| 24      | Microwave     | David     | Peterson      | 2.92   | 3.04   | -0.1200000000000001    |
+| 26      | Microwave     | Andy      | Peterson      | 2.92   | 3.17   | -0.25                  |
+| 27      | Microwave     | Mary      | Noose         | 2.92   | 2.85   | 0.06999999999999984    |
+| 28      | Microwave     | Ulysses   | Peterson      | 2.92   | 2.81   | 0.10999999999999988    |
+| 28      | Microwave     | Ulysses   | Peterson      | 2.92   | 2.93   | -0.010000000000000231  |
+| 30      | Microwave     | Gerry     | Bush          | 2.92   | 3.4    | -0.48                  |
+| 32      | Microwave     | Larry     | Randolph      | 2.92   | 3.35   | -0.43000000000000016   |
+| 34      | Microwave     | Bill      | Kemp          | 2.92   | 3.01   | -0.08999999999999986   |
+| 35      | Microwave     | Anita     | Carlucchi     | 2.92   | 2.72   | 0.19999999999999973    |
+| 35      | Microwave     | Anita     | Carlucchi     | 2.92   | 2.69   | 0.22999999999999998    |
+| 38      | Microwave     | Andy      | Jones         | 2.92   | 2.99   | -0.07000000000000028   |
+| 38      | Microwave     | Andy      | Jones         | 2.92   | 2.95   | -0.03000000000000025   |
+| 40      | Microwave     | Kevin     | Frank         | 2.92   | 3.0    | -0.08000000000000007   |
+| 42      | Microwave     | Eric      | Randolph      | 2.92   | 2.68   | 0.23999999999999977    |
+| 46      | Microwave     | Hugh      | Andrews       | 2.92   | 3.39   | -0.4700000000000002    |
+| 48      | Microwave     | Daniel    | Bush          | 2.92   | 3.38   | -0.45999999999999996   |
+| 50      | Microwave     | Bill      | Mantela       | 2.92   | 3.33   | -0.41000000000000014   |
+| 50      | Microwave     | Bill      | Mantela       | 2.92   | 3.08   | -0.16000000000000014   |
+| 51      | Microwave     | Betty     | Andrews       | 2.92   | 2.9    | 0.020000000000000018   |
+| 55      | Microwave     | Hope      | Bush          | 2.92   | 2.89   | 0.029999999999999805   |
+| 55      | Microwave     | Hope      | Bush          | 2.92   | 2.84   | 0.08000000000000007    |
+| 56      | Microwave     | Max       | Frank         | 2.92   | 3.29   | -0.3700000000000001    |
+| 65      | Microwave     | Kathy     | Stevens       | 2.92   | 3.0    | -0.08000000000000007   |
+| 67      | Microwave     | Denise    | Peterson      | 2.92   | 3.07   | -0.1499999999999999    |
+| 71      | Microwave     | Holly     | Dole          | 2.92   | 3.26   | -0.33999999999999986   |
+| 73      | Microwave     | Patty     | Randolph      | 2.92   | 3.16   | -0.2400000000000002    |
+| 75      | Microwave     | Jeniffer  | Kemp          | 2.92   | 2.93   | -0.010000000000000231  |
+| 75      | Microwave     | Jeniffer  | Kemp          | 2.92   | 3.17   | -0.25                  |
+| 77      | Microwave     | Lisa      | Van Morrison  | 2.92   | 2.97   | -0.050000000000000266  |
+| 77      | Microwave     | Lisa      | Van Morrison  | 2.92   | 3.35   | -0.43000000000000016   |
+| 79      | Microwave     | Carla     | Stevens       | 2.92   | 3.05   | -0.1299999999999999    |
+| 80      | Microwave     | Ian       | Bush          | 2.92   | 2.75   | 0.16999999999999993    |
+| 81      | Microwave     | Alice     | Kemp          | 2.92   | 2.69   | 0.22999999999999998    |
+| 81      | Microwave     | Alice     | Kemp          | 2.92   | 3.24   | -0.3200000000000003    |
+| 83      | Microwave     | Pauline   | Bush          | 2.92   | 3.37   | -0.4500000000000002    |
+| 83      | Microwave     | Pauline   | Bush          | 2.92   | 2.83   | 0.08999999999999986    |
+| 85      | Microwave     | Patty     | Howard        | 2.92   | 2.84   | 0.08000000000000007    |
+| 85      | Microwave     | Patty     | Howard        | 2.92   | 3.36   | -0.43999999999999995   |
+| 85      | Microwave     | Patty     | Howard        | 2.92   | 2.85   | 0.06999999999999984    |
+| 87      | Microwave     | Maggie    | Kemp          | 2.92   | 2.74   | 0.17999999999999972    |
+| 88      | Microwave     | Anthony   | Stevens       | 2.92   | 3.09   | -0.16999999999999993   |
+| 89      | Microwave     | Anita     | Randolph      | 2.92   | 3.3    | -0.3799999999999999    |
+| 91      | Microwave     | Ophelia   | OLeary        | 2.92   | 2.69   | 0.22999999999999998    |
+| 91      | Microwave     | Ophelia   | OLeary        | 2.92   | 3.06   | -0.14000000000000012   |
+| 93      | Microwave     | Terri     | Randolph      | 2.92   | 3.05   | -0.1299999999999999    |
+| 97      | Microwave     | Samantha  | Frank         | 2.92   | 2.75   | 0.16999999999999993    |
+| 97      | Microwave     | Samantha  | Frank         | 2.92   | 3.17   | -0.25                  |
+| 99      | Microwave     | Veronica  | Dole          | 2.92   | 2.98   | -0.06000000000000005   |
+| 1       | Milk          | Terri     | Grant         | 5.18   | 5.51   | -0.33000000000000007   |
+| 1       | Milk          | Terri     | Grant         | 5.18   | 5.33   | -0.15000000000000036   |
+| 2       | Milk          | Gary      | Everett       | 5.18   | 4.95   | 0.22999999999999954    |
+| 3       | Milk          | Terri     | Andrews       | 5.18   | 5.5    | -0.3200000000000003    |
+| 4       | Milk          | Victor    | Peterson      | 5.18   | 5.14   | 0.040000000000000036   |
+| 4       | Milk          | Victor    | Peterson      | 5.18   | 5.33   | -0.15000000000000036   |
+| 5       | Milk          | Veronica  | Bush          | 5.18   | 5.41   | -0.23000000000000043   |
+| 7       | Milk          | Missy     | Bush          | 5.18   | 5.66   | -0.4800000000000004    |
+| 7       | Milk          | Missy     | Bush          | 5.18   | 4.98   | 0.1999999999999993     |
+| 8       | Milk          | Ted       | Howard        | 5.18   | 4.99   | 0.1899999999999995     |
+| 9       | Milk          | Wendy     | Kemp          | 5.18   | 5.54   | -0.3600000000000003    |
+| 11      | Milk          | Bianca    | Grant         | 5.18   | 5.55   | -0.3700000000000001    |
+| 12      | Milk          | Dave      | Stevens       | 5.18   | 5.13   | 0.04999999999999982    |
+| 13      | Milk          | Maggie    | Everett       | 5.18   | 5.37   | -0.1900000000000004    |
+| 15      | Milk          | Patty     | Noose         | 5.18   | 5.05   | 0.1299999999999999     |
+| 16      | Milk          | Oliver    | Grant         | 5.18   | 5.2    | -0.020000000000000462  |
+| 16      | Milk          | Oliver    | Grant         | 5.18   | 5.11   | 0.0699999999999994     |
++---------+---------------+-----------+---------------+--------+--------+------------------------+
+| CUSTID  |     NAME      |   FNAME   |     LNAME     | PRICE  | PRICE  |         EXPR$6         |
++---------+---------------+-----------+---------------+--------+--------+------------------------+
+| 18      | Milk          | Theodore  | OLeary        | 5.18   | 5.08   | 0.09999999999999964    |
+| 19      | Milk          | Patty     | Carlucchi     | 5.18   | 4.96   | 0.21999999999999975    |
+| 24      | Milk          | David     | Peterson      | 5.18   | 5.09   | 0.08999999999999986    |
+| 26      | Milk          | Andy      | Peterson      | 5.18   | 5.39   | -0.20999999999999996   |
+| 28      | Milk          | Ulysses   | Peterson      | 5.18   | 4.99   | 0.1899999999999995     |
+| 31      | Milk          | Mary      | Van Morrison  | 5.18   | 5.58   | -0.40000000000000036   |
+| 31      | Milk          | Mary      | Van Morrison  | 5.18   | 5.41   | -0.23000000000000043   |
+| 32      | Milk          | Larry     | Randolph      | 5.18   | 5.36   | -0.1800000000000006    |
+| 34      | Milk          | Bill      | Kemp          | 5.18   | 5.52   | -0.33999999999999986   |
+| 34      | Milk          | Bill      | Kemp          | 5.18   | 5.21   | -0.03000000000000025   |
+| 36      | Milk          | Jake      | Bush          | 5.18   | 4.99   | 0.1899999999999995     |
+| 37      | Milk          | Terri     | Noose         | 5.18   | 5.35   | -0.16999999999999993   |
+| 38      | Milk          | Andy      | Jones         | 5.18   | 5.22   | -0.040000000000000036  |
+| 39      | Milk          | Batilda   | Van Morrison  | 5.18   | 5.21   | -0.03000000000000025   |
+| 39      | Milk          | Batilda   | Van Morrison  | 5.18   | 5.11   | 0.0699999999999994     |
+| 40      | Milk          | Kevin     | Frank         | 5.18   | 5.12   | 0.05999999999999961    |
+| 40      | Milk          | Kevin     | Frank         | 5.18   | 5.64   | -0.45999999999999996   |
+| 41      | Milk          | Pauline   | Smith         | 5.18   | 5.55   | -0.3700000000000001    |
+| 42      | Milk          | Eric      | Randolph      | 5.18   | 5.48   | -0.3000000000000007    |
+| 42      | Milk          | Eric      | Randolph      | 5.18   | 5.36   | -0.1800000000000006    |
+| 43      | Milk          | Erica     | Grant         | 5.18   | 5.02   | 0.16000000000000014    |
+| 43      | Milk          | Erica     | Grant         | 5.18   | 5.53   | -0.35000000000000053   |
+| 44      | Milk          | Walter    | Frank         | 5.18   | 5.61   | -0.4300000000000006    |
+| 46      | Milk          | Hugh      | Andrews       | 5.18   | 5.13   | 0.04999999999999982    |
+| 46      | Milk          | Hugh      | Andrews       | 5.18   | 5.46   | -0.28000000000000025   |
+| 49      | Milk          | Maggie    | OLeary        | 5.18   | 5.46   | -0.28000000000000025   |
+| 52      | Milk          | Victor    | Peterson      | 5.18   | 5.67   | -0.4900000000000002    |
+| 54      | Milk          | Max       | Peterson      | 5.18   | 5.67   | -0.4900000000000002    |
+| 54      | Milk          | Max       | Peterson      | 5.18   | 4.95   | 0.22999999999999954    |
+| 54      | Milk          | Max       | Peterson      | 5.18   | 5.55   | -0.3700000000000001    |
+| 55      | Milk          | Hope      | Bush          | 5.18   | 5.16   | 0.019999999999999574   |
+| 57      | Milk          | Terri     | Kemp          | 5.18   | 5.67   | -0.4900000000000002    |
+| 57      | Milk          | Terri     | Kemp          | 5.18   | 5.41   | -0.23000000000000043   |
+| 57      | Milk          | Terri     | Kemp          | 5.18   | 5.67   | -0.4900000000000002    |
+| 58      | Milk          | Monty     | Grant         | 5.18   | 5.19   | -0.010000000000000675  |
+| 58      | Milk          | Monty     | Grant         | 5.18   | 4.99   | 0.1899999999999995     |
+| 59      | Milk          | Jeniffer  | Bush          | 5.18   | 5.55   | -0.3700000000000001    |
+| 60      | Milk          | Ceasar    | Mantela       | 5.18   | 5.04   | 0.13999999999999968    |
+| 60      | Milk          | Ceasar    | Mantela       | 5.18   | 5.35   | -0.16999999999999993   |
+| 61      | Milk          | Anita     | Locicero      | 5.18   | 5.05   | 0.1299999999999999     |
+| 61      | Milk          | Anita     | Locicero      | 5.18   | 5.33   | -0.15000000000000036   |
+| 65      | Milk          | Kathy     | Stevens       | 5.18   | 5.02   | 0.16000000000000014    |
+| 66      | Milk          | Anthony   | Smith         | 5.18   | 5.34   | -0.16000000000000014   |
+| 66      | Milk          | Anthony   | Smith         | 5.18   | 5.67   | -0.4900000000000002    |
+| 70      | Milk          | Peter     | Howard        | 5.18   | 5.21   | -0.03000000000000025   |
+| 70      | Milk          | Peter     | Howard        | 5.18   | 5.46   | -0.28000000000000025   |
+| 70      | Milk          | Peter     | Howard        | 5.18   | 5.5    | -0.3200000000000003    |
+| 71      | Milk          | Holly     | Dole          | 5.18   | 5.21   | -0.03000000000000025   |
+| 73      | Milk          | Patty     | Randolph      | 5.18   | 5.22   | -0.040000000000000036  |
+| 75      | Milk          | Jeniffer  | Kemp          | 5.18   | 5.49   | -0.3100000000000005    |
+| 78      | Milk          | Barry     | Stevens       | 5.18   | 5.65   | -0.47000000000000064   |
+| 80      | Milk          | Ian       | Bush          | 5.18   | 5.13   | 0.04999999999999982    |
+| 80      | Milk          | Ian       | Bush          | 5.18   | 5.57   | -0.39000000000000057   |
+| 81      | Milk          | Alice     | Kemp          | 5.18   | 5.08   | 0.09999999999999964    |
+| 83      | Milk          | Pauline   | Bush          | 5.18   | 5.57   | -0.39000000000000057   |
+| 84      | Milk          | David     | Howard        | 5.18   | 5.47   | -0.29000000000000004   |
+| 86      | Milk          | Ted       | Grant         | 5.18   | 5.13   | 0.04999999999999982    |
+| 86      | Milk          | Ted       | Grant         | 5.18   | 5.35   | -0.16999999999999993   |
+| 88      | Milk          | Anthony   | Stevens       | 5.18   | 4.95   | 0.22999999999999954    |
+| 88      | Milk          | Anthony   | Stevens       | 5.18   | 5.16   | 0.019999999999999574   |
+| 89      | Milk          | Anita     | Randolph      | 5.18   | 5.27   | -0.08999999999999986   |
+| 92      | Milk          | Rex       | Mantela       | 5.18   | 5.03   | 0.14999999999999947    |
+| 93      | Milk          | Terri     | Randolph      | 5.18   | 5.29   | -0.11000000000000032   |
+| 95      | Milk          | Margaret  | Bush          | 5.18   | 5.5    | -0.3200000000000003    |
+| 97      | Milk          | Samantha  | Frank         | 5.18   | 5.29   | -0.11000000000000032   |
+| 0       | Plunger       | Eric      | Locicero      | 7.41   | 7.69   | -0.28000000000000025   |
+| 0       | Plunger       | Eric      | Locicero      | 7.41   | 7.56   | -0.14999999999999947   |
+| 1       | Plunger       | Terri     | Grant         | 7.41   | 7.38   | 0.03000000000000025    |
+| 2       | Plunger       | Gary      | Everett       | 7.41   | 7.56   | -0.14999999999999947   |
+| 4       | Plunger       | Victor    | Peterson      | 7.41   | 7.84   | -0.4299999999999997    |
+| 5       | Plunger       | Veronica  | Bush          | 7.41   | 7.22   | 0.1900000000000004     |
+| 8       | Plunger       | Ted       | Howard        | 7.41   | 7.7    | -0.29000000000000004   |
+| 11      | Plunger       | Bianca    | Grant         | 7.41   | 7.71   | -0.2999999999999998    |
+| 12      | Plunger       | Dave      | Stevens       | 7.41   | 7.29   | 0.1200000000000001     |
+| 13      | Plunger       | Maggie    | Everett       | 7.41   | 7.84   | -0.4299999999999997    |
+| 16      | Plunger       | Oliver    | Grant         | 7.41   | 7.18   | 0.23000000000000043    |
+| 16      | Plunger       | Oliver    | Grant         | 7.41   | 7.46   | -0.04999999999999982   |
+| 17      | Plunger       | Jeniffer  | Mantela       | 7.41   | 7.19   | 0.21999999999999975    |
+| 17      | Plunger       | Jeniffer  | Mantela       | 7.41   | 7.45   | -0.040000000000000036  |
+| 17      | Plunger       | Jeniffer  | Mantela       | 7.41   | 7.32   | 0.08999999999999986    |
+| 18      | Plunger       | Theodore  | OLeary        | 7.41   | 7.83   | -0.41999999999999993   |
+| 20      | Plunger       | Frank     | Noose         | 7.41   | 7.4    | 0.009999999999999787   |
+| 21      | Plunger       | Anita     | Carlucchi     | 7.41   | 7.55   | -0.13999999999999968   |
+| 22      | Plunger       | Eric      | Locicero      | 7.41   | 7.57   | -0.16000000000000014   |
+| 24      | Plunger       | David     | Peterson      | 7.41   | 7.25   | 0.16000000000000014    |
+| 24      | Plunger       | David     | Peterson      | 7.41   | 7.35   | 0.0600000000000005     |
+| 25      | Plunger       | Florence  | Carlucchi     | 7.41   | 7.66   | -0.25                  |
+| 28      | Plunger       | Ulysses   | Peterson      | 7.41   | 7.24   | 0.16999999999999993    |
+| 29      | Plunger       | Pauline   | Everett       | 7.41   | 7.58   | -0.16999999999999993   |
+| 30      | Plunger       | Gerry     | Bush          | 7.41   | 7.23   | 0.17999999999999972    |
+| 31      | Plunger       | Mary      | Van Morrison  | 7.41   | 7.39   | 0.020000000000000462   |
+| 31      | Plunger       | Mary      | Van Morrison  | 7.41   | 7.58   | -0.16999999999999993   |
+| 34      | Plunger       | Bill      | Kemp          | 7.41   | 7.38   | 0.03000000000000025    |
+| 35      | Plunger       | Anita     | Carlucchi     | 7.41   | 7.51   | -0.09999999999999964   |
+| 37      | Plunger       | Terri     | Noose         | 7.41   | 7.3    | 0.11000000000000032    |
+| 37      | Plunger       | Terri     | Noose         | 7.41   | 7.41   | 0.0                    |
+| 37      | Plunger       | Terri     | Noose         | 7.41   | 7.43   | -0.019999999999999574  |
+| 38      | Plunger       | Andy      | Jones         | 7.41   | 7.71   | -0.2999999999999998    |
+| 39      | Plunger       | Batilda   | Van Morrison  | 7.41   | 7.55   | -0.13999999999999968   |
+| 40      | Plunger       | Kevin     | Frank         | 7.41   | 7.66   | -0.25                  |
++---------+---------------+-----------+---------------+--------+--------+------------------------+
+| CUSTID  |     NAME      |   FNAME   |     LNAME     | PRICE  | PRICE  |         EXPR$6         |
++---------+---------------+-----------+---------------+--------+--------+------------------------+
+| 41      | Plunger       | Pauline   | Smith         | 7.41   | 7.67   | -0.2599999999999998    |
+| 44      | Plunger       | Walter    | Frank         | 7.41   | 7.37   | 0.040000000000000036   |
+| 45      | Plunger       | Margaret  | Van Morrison  | 7.41   | 7.57   | -0.16000000000000014   |
+| 48      | Plunger       | Daniel    | Bush          | 7.41   | 7.31   | 0.10000000000000053    |
+| 48      | Plunger       | Daniel    | Bush          | 7.41   | 7.23   | 0.17999999999999972    |
+| 52      | Plunger       | Victor    | Peterson      | 7.41   | 7.25   | 0.16000000000000014    |
+| 53      | Plunger       | Veronica  | Smith         | 7.41   | 7.42   | -0.009999999999999787  |
+| 55      | Plunger       | Hope      | Bush          | 7.41   | 7.43   | -0.019999999999999574  |
+| 57      | Plunger       | Terri     | Kemp          | 7.41   | 7.53   | -0.1200000000000001    |
+| 57      | Plunger       | Terri     | Kemp          | 7.41   | 7.31   | 0.10000000000000053    |
+| 60      | Plunger       | Ceasar    | Mantela       | 7.41   | 7.56   | -0.14999999999999947   |
+| 61      | Plunger       | Anita     | Locicero      | 7.41   | 7.36   | 0.04999999999999982    |
+| 61      | Plunger       | Anita     | Locicero      | 7.41   | 7.33   | 0.08000000000000007    |
+| 63      | Plunger       | Margaret  | Everett       | 7.41   | 7.72   | -0.3099999999999996    |
+| 64      | Plunger       | Harry     | Andrews       | 7.41   | 7.83   | -0.41999999999999993   |
+| 68      | Plunger       | Anthony   | Frank         | 7.41   | 7.48   | -0.07000000000000028   |
+| 69      | Plunger       | Hope      | Smith         | 7.41   | 7.41   | 0.0                    |
+| 73      | Plunger       | Patty     | Randolph      | 7.41   | 7.71   | -0.2999999999999998    |
+| 77      | Plunger       | Lisa      | Van Morrison  | 7.41   | 7.7    | -0.29000000000000004   |
+| 77      | Plunger       | Lisa      | Van Morrison  | 7.41   | 7.6    | -0.1899999999999995    |
+| 78      | Plunger       | Barry     | Stevens       | 7.41   | 7.4    | 0.009999999999999787   |
+| 80      | Plunger       | Ian       | Bush          | 7.41   | 7.36   | 0.04999999999999982    |
+| 81      | Plunger       | Alice     | Kemp          | 7.41   | 7.38   | 0.03000000000000025    |
+| 83      | Plunger       | Pauline   | Bush          | 7.41   | 7.38   | 0.03000000000000025    |
+| 83      | Plunger       | Pauline   | Bush          | 7.41   | 7.29   | 0.1200000000000001     |
+| 83      | Plunger       | Pauline   | Bush          | 7.41   | 7.4    | 0.009999999999999787   |
+| 86      | Plunger       | Ted       | Grant         | 7.41   | 7.3    | 0.11000000000000032    |
+| 86      | Plunger       | Ted       | Grant         | 7.41   | 7.31   | 0.10000000000000053    |
+| 86      | Plunger       | Ted       | Grant         | 7.41   | 7.79   | -0.3799999999999999    |
+| 87      | Plunger       | Maggie    | Kemp          | 7.41   | 7.81   | -0.39999999999999947   |
+| 88      | Plunger       | Anthony   | Stevens       | 7.41   | 7.42   | -0.009999999999999787  |
+| 89      | Plunger       | Anita     | Randolph      | 7.41   | 7.88   | -0.46999999999999975   |
+| 90      | Plunger       | Paul      | Van Morrison  | 7.41   | 7.68   | -0.2699999999999996    |
+| 90      | Plunger       | Paul      | Van Morrison  | 7.41   | 7.61   | -0.20000000000000018   |
+| 93      | Plunger       | Terri     | Randolph      | 7.41   | 7.49   | -0.08000000000000007   |
+| 93      | Plunger       | Terri     | Randolph      | 7.41   | 7.57   | -0.16000000000000014   |
+| 94      | Plunger       | Hugh      | Kemp          | 7.41   | 7.4    | 0.009999999999999787   |
+| 96      | Plunger       | Bruce     | Grant         | 7.41   | 7.22   | 0.1900000000000004     |
+| 97      | Plunger       | Samantha  | Frank         | 7.41   | 7.71   | -0.2999999999999998    |
+| 98      | Plunger       | Victor    | Frank         | 7.41   | 7.31   | 0.10000000000000053    |
+| 99      | Plunger       | Veronica  | Dole          | 7.41   | 7.44   | -0.03000000000000025   |
+| 1       | Refrigerator  | Terri     | Grant         | 4.91   | 5.33   | -0.41999999999999993   |
+| 2       | Refrigerator  | Gary      | Everett       | 4.91   | 4.95   | -0.040000000000000036  |
+| 4       | Refrigerator  | Victor    | Peterson      | 4.91   | 5.33   | -0.41999999999999993   |
+| 4       | Refrigerator  | Victor    | Peterson      | 4.91   | 5.14   | -0.22999999999999954   |
+| 7       | Refrigerator  | Missy     | Bush          | 4.91   | 4.98   | -0.07000000000000028   |
+| 8       | Refrigerator  | Ted       | Howard        | 4.91   | 4.99   | -0.08000000000000007   |
+| 12      | Refrigerator  | Dave      | Stevens       | 4.91   | 5.13   | -0.21999999999999975   |
+| 13      | Refrigerator  | Maggie    | Everett       | 4.91   | 5.37   | -0.45999999999999996   |
+| 14      | Refrigerator  | Barry     | Jones         | 4.91   | 4.93   | -0.019999999999999574  |
+| 15      | Refrigerator  | Patty     | Noose         | 4.91   | 5.05   | -0.13999999999999968   |
+| 16      | Refrigerator  | Oliver    | Grant         | 4.91   | 5.2    | -0.29000000000000004   |
+| 16      | Refrigerator  | Oliver    | Grant         | 4.91   | 5.11   | -0.20000000000000018   |
+| 18      | Refrigerator  | Theodore  | OLeary        | 4.91   | 5.08   | -0.16999999999999993   |
+| 18      | Refrigerator  | Theodore  | OLeary        | 4.91   | 4.81   | 0.10000000000000053    |
+| 19      | Refrigerator  | Patty     | Carlucchi     | 4.91   | 4.96   | -0.04999999999999982   |
+| 22      | Refrigerator  | Eric      | Locicero      | 4.91   | 4.86   | 0.04999999999999982    |
+| 24      | Refrigerator  | David     | Peterson      | 4.91   | 5.09   | -0.17999999999999972   |
+| 26      | Refrigerator  | Andy      | Peterson      | 4.91   | 5.39   | -0.47999999999999954   |
+| 28      | Refrigerator  | Ulysses   | Peterson      | 4.91   | 4.99   | -0.08000000000000007   |
+| 31      | Refrigerator  | Mary      | Van Morrison  | 4.91   | 4.76   | 0.15000000000000036    |
+| 32      | Refrigerator  | Larry     | Randolph      | 4.91   | 5.36   | -0.4500000000000002    |
+| 34      | Refrigerator  | Bill      | Kemp          | 4.91   | 5.21   | -0.2999999999999998    |
+| 36      | Refrigerator  | Jake      | Bush          | 4.91   | 4.99   | -0.08000000000000007   |
+| 36      | Refrigerator  | Jake      | Bush          | 4.91   | 4.93   | -0.019999999999999574  |
+| 37      | Refrigerator  | Terri     | Noose         | 4.91   | 5.35   | -0.4399999999999995    |
+| 38      | Refrigerator  | Andy      | Jones         | 4.91   | 5.22   | -0.3099999999999996    |
+| 38      | Refrigerator  | Andy      | Jones         | 4.91   | 4.69   | 0.21999999999999975    |
+| 39      | Refrigerator  | Batilda   | Van Morrison  | 4.91   | 5.11   | -0.20000000000000018   |
+| 39      | Refrigerator  | Batilda   | Van Morrison  | 4.91   | 5.21   | -0.2999999999999998    |
+| 40      | Refrigerator  | Kevin     | Frank         | 4.91   | 5.12   | -0.20999999999999996   |
+| 42      | Refrigerator  | Eric      | Randolph      | 4.91   | 5.36   | -0.4500000000000002    |
+| 43      | Refrigerator  | Erica     | Grant         | 4.91   | 4.77   | 0.14000000000000057    |
+| 43      | Refrigerator  | Erica     | Grant         | 4.91   | 5.02   | -0.10999999999999943   |
+| 45      | Refrigerator  | Margaret  | Van Morrison  | 4.91   | 4.89   | 0.020000000000000462   |
+| 46      | Refrigerator  | Hugh      | Andrews       | 4.91   | 5.13   | -0.21999999999999975   |
+| 46      | Refrigerator  | Hugh      | Andrews       | 4.91   | 4.83   | 0.08000000000000007    |
+| 49      | Refrigerator  | Maggie    | OLeary        | 4.91   | 4.86   | 0.04999999999999982    |
+| 53      | Refrigerator  | Veronica  | Smith         | 4.91   | 4.92   | -0.009999999999999787  |
+| 54      | Refrigerator  | Max       | Peterson      | 4.91   | 4.95   | -0.040000000000000036  |
+| 55      | Refrigerator  | Hope      | Bush          | 4.91   | 4.71   | 0.20000000000000018    |
+| 55      | Refrigerator  | Hope      | Bush          | 4.91   | 5.16   | -0.25                  |
+| 58      | Refrigerator  | Monty     | Grant         | 4.91   | 5.19   | -0.28000000000000025   |
+| 58      | Refrigerator  | Monty     | Grant         | 4.91   | 4.99   | -0.08000000000000007   |
+| 58      | Refrigerator  | Monty     | Grant         | 4.91   | 4.79   | 0.1200000000000001     |
+| 59      | Refrigerator  | Jeniffer  | Bush          | 4.91   | 4.92   | -0.009999999999999787  |
+| 60      | Refrigerator  | Ceasar    | Mantela       | 4.91   | 5.35   | -0.4399999999999995    |
+| 60      | Refrigerator  | Ceasar    | Mantela       | 4.91   | 5.04   | -0.1299999999999999    |
+| 61      | Refrigerator  | Anita     | Locicero      | 4.91   | 5.33   | -0.41999999999999993   |
+| 61      | Refrigerator  | Anita     | Locicero      | 4.91   | 5.05   | -0.13999999999999968   |
+| 65      | Refrigerator  | Kathy     | Stevens       | 4.91   | 5.02   | -0.10999999999999943   |
+| 65      | Refrigerator  | Kathy     | Stevens       | 4.91   | 4.92   | -0.009999999999999787  |
+| 66      | Refrigerator  | Anthony   | Smith         | 4.91   | 4.75   | 0.16000000000000014    |
+| 66      | Refrigerator  | Anthony   | Smith         | 4.91   | 5.34   | -0.4299999999999997    |
+| 70      | Refrigerator  | Peter     | Howard        | 4.91   | 5.21   | -0.2999999999999998    |
+| 71      | Refrigerator  | Holly     | Dole          | 4.91   | 5.21   | -0.2999999999999998    |
+| 73      | Refrigerator  | Patty     | Randolph      | 4.91   | 5.22   | -0.3099999999999996    |
+| 78      | Refrigerator  | Barry     | Stevens       | 4.91   | 4.74   | 0.16999999999999993    |
+| 80      | Refrigerator  | Ian       | Bush          | 4.91   | 5.13   | -0.21999999999999975   |
+| 81      | Refrigerator  | Alice     | Kemp          | 4.91   | 5.08   | -0.16999999999999993   |
++---------+---------------+-----------+---------------+--------+--------+------------------------+
+| CUSTID  |     NAME      |   FNAME   |     LNAME     | PRICE  | PRICE  |         EXPR$6         |
++---------+---------------+-----------+---------------+--------+--------+------------------------+
+| 84      | Refrigerator  | David     | Howard        | 4.91   | 4.82   | 0.08999999999999986    |
+| 86      | Refrigerator  | Ted       | Grant         | 4.91   | 5.35   | -0.4399999999999995    |
+| 86      | Refrigerator  | Ted       | Grant         | 4.91   | 5.13   | -0.21999999999999975   |
+| 88      | Refrigerator  | Anthony   | Stevens       | 4.91   | 5.16   | -0.25                  |
+| 88      | Refrigerator  | Anthony   | Stevens       | 4.91   | 4.95   | -0.040000000000000036  |
+| 89      | Refrigerator  | Anita     | Randolph      | 4.91   | 5.27   | -0.35999999999999943   |
+| 92      | Refrigerator  | Rex       | Mantela       | 4.91   | 4.91   | 0.0                    |
+| 92      | Refrigerator  | Rex       | Mantela       | 4.91   | 5.03   | -0.1200000000000001    |
+| 93      | Refrigerator  | Terri     | Randolph      | 4.91   | 5.29   | -0.3799999999999999    |
+| 97      | Refrigerator  | Samantha  | Frank         | 4.91   | 5.29   | -0.3799999999999999    |
+| 99      | Refrigerator  | Veronica  | Dole          | 4.91   | 4.68   | 0.23000000000000043    |
+| 2       | Shampoo       | Gary      | Everett       | 4.69   | 4.95   | -0.2599999999999998    |
+| 4       | Shampoo       | Victor    | Peterson      | 4.69   | 5.14   | -0.4499999999999993    |
+| 7       | Shampoo       | Missy     | Bush          | 4.69   | 4.98   | -0.29000000000000004   |
+| 8       | Shampoo       | Ted       | Howard        | 4.69   | 4.99   | -0.2999999999999998    |
+| 9       | Shampoo       | Wendy     | Kemp          | 4.69   | 4.48   | 0.20999999999999996    |
+| 10      | Shampoo       | Earl      | Dole          | 4.69   | 4.48   | 0.20999999999999996    |
+| 12      | Shampoo       | Dave      | Stevens       | 4.69   | 5.13   | -0.4399999999999995    |
+| 12      | Shampoo       | Dave      | Stevens       | 4.69   | 4.55   | 0.14000000000000057    |
+| 14      | Shampoo       | Barry     | Jones         | 4.69   | 4.93   | -0.23999999999999932   |
+| 15      | Shampoo       | Patty     | Noose         | 4.69   | 5.05   | -0.35999999999999943   |
+| 16      | Shampoo       | Oliver    | Grant         | 4.69   | 5.11   | -0.41999999999999993   |
+| 18      | Shampoo       | Theodore  | OLeary        | 4.69   | 4.81   | -0.11999999999999922   |
+| 18      | Shampoo       | Theodore  | OLeary        | 4.69   | 5.08   | -0.3899999999999997    |
+| 19      | Shampoo       | Patty     | Carlucchi     | 4.69   | 4.96   | -0.2699999999999996    |
+| 19      | Shampoo       | Patty     | Carlucchi     | 4.69   | 4.51   | 0.1800000000000006     |
+| 22      | Shampoo       | Eric      | Locicero      | 4.69   | 4.86   | -0.16999999999999993   |
+| 24      | Shampoo       | David     | Peterson      | 4.69   | 5.09   | -0.39999999999999947   |
+| 28      | Shampoo       | Ulysses   | Peterson      | 4.69   | 4.99   | -0.2999999999999998    |
+| 30      | Shampoo       | Gerry     | Bush          | 4.69   | 4.61   | 0.08000000000000007    |
+| 31      | Shampoo       | Mary      | Van Morrison  | 4.69   | 4.76   | -0.0699999999999994    |
+| 36      | Shampoo       | Jake      | Bush          | 4.69   | 4.99   | -0.2999999999999998    |
+| 36      | Shampoo       | Jake      | Bush          | 4.69   | 4.93   | -0.23999999999999932   |
+| 37      | Shampoo       | Terri     | Noose         | 4.69   | 4.47   | 0.22000000000000064    |
+| 38      | Shampoo       | Andy      | Jones         | 4.69   | 4.69   | 0.0                    |
+| 39      | Shampoo       | Batilda   | Van Morrison  | 4.69   | 5.11   | -0.41999999999999993   |
+| 40      | Shampoo       | Kevin     | Frank         | 4.69   | 5.12   | -0.4299999999999997    |
+| 41      | Shampoo       | Pauline   | Smith         | 4.69   | 4.5    | 0.1900000000000004     |
+| 43      | Shampoo       | Erica     | Grant         | 4.69   | 4.77   | -0.07999999999999918   |
+| 43      | Shampoo       | Erica     | Grant         | 4.69   | 5.02   | -0.3299999999999992    |
+| 45      | Shampoo       | Margaret  | Van Morrison  | 4.69   | 4.89   | -0.1999999999999993    |
+| 46      | Shampoo       | Hugh      | Andrews       | 4.69   | 5.13   | -0.4399999999999995    |
+| 46      | Shampoo       | Hugh      | Andrews       | 4.69   | 4.83   | -0.13999999999999968   |
+| 49      | Shampoo       | Maggie    | OLeary        | 4.69   | 4.86   | -0.16999999999999993   |
+| 52      | Shampoo       | Victor    | Peterson      | 4.69   | 4.6    | 0.09000000000000075    |
+| 53      | Shampoo       | Veronica  | Smith         | 4.69   | 4.92   | -0.22999999999999954   |
+| 54      | Shampoo       | Max       | Peterson      | 4.69   | 4.95   | -0.2599999999999998    |
+| 55      | Shampoo       | Hope      | Bush          | 4.69   | 4.71   | -0.019999999999999574  |
+| 55      | Shampoo       | Hope      | Bush          | 4.69   | 5.16   | -0.46999999999999975   |
+| 58      | Shampoo       | Monty     | Grant         | 4.69   | 4.79   | -0.09999999999999964   |
+| 58      | Shampoo       | Monty     | Grant         | 4.69   | 4.99   | -0.2999999999999998    |
+| 59      | Shampoo       | Jeniffer  | Bush          | 4.69   | 4.92   | -0.22999999999999954   |
+| 60      | Shampoo       | Ceasar    | Mantela       | 4.69   | 4.52   | 0.17000000000000082    |
+| 60      | Shampoo       | Ceasar    | Mantela       | 4.69   | 5.04   | -0.34999999999999964   |
+| 61      | Shampoo       | Anita     | Locicero      | 4.69   | 5.05   | -0.35999999999999943   |
+| 61      | Shampoo       | Anita     | Locicero      | 4.69   | 4.5    | 0.1900000000000004     |
+| 64      | Shampoo       | Harry     | Andrews       | 4.69   | 4.47   | 0.22000000000000064    |
+| 64      | Shampoo       | Harry     | Andrews       | 4.69   | 4.64   | 0.05000000000000071    |
+| 65      | Shampoo       | Kathy     | Stevens       | 4.69   | 4.92   | -0.22999999999999954   |
+| 65      | Shampoo       | Kathy     | Stevens       | 4.69   | 5.02   | -0.3299999999999992    |
+| 66      | Shampoo       | Anthony   | Smith         | 4.69   | 4.75   | -0.05999999999999961   |
+| 78      | Shampoo       | Barry     | Stevens       | 4.69   | 4.74   | -0.04999999999999982   |
+| 80      | Shampoo       | Ian       | Bush          | 4.69   | 4.46   | 0.23000000000000043    |
+| 80      | Shampoo       | Ian       | Bush          | 4.69   | 5.13   | -0.4399999999999995    |
+| 81      | Shampoo       | Alice     | Kemp          | 4.69   | 5.08   | -0.3899999999999997    |
+| 84      | Shampoo       | David     | Howard        | 4.69   | 4.82   | -0.1299999999999999    |
+| 85      | Shampoo       | Patty     | Howard        | 4.69   | 4.6    | 0.09000000000000075    |
+| 86      | Shampoo       | Ted       | Grant         | 4.69   | 5.13   | -0.4399999999999995    |
+| 88      | Shampoo       | Anthony   | Stevens       | 4.69   | 5.16   | -0.46999999999999975   |
+| 88      | Shampoo       | Anthony   | Stevens       | 4.69   | 4.95   | -0.2599999999999998    |
+| 92      | Shampoo       | Rex       | Mantela       | 4.69   | 4.91   | -0.21999999999999975   |
+| 92      | Shampoo       | Rex       | Mantela       | 4.69   | 5.03   | -0.33999999999999986   |
+| 94      | Shampoo       | Hugh      | Kemp          | 4.69   | 4.62   | 0.07000000000000028    |
+| 99      | Shampoo       | Veronica  | Dole          | 4.69   | 4.68   | 0.010000000000000675   |
+| 0       | Soap          | Eric      | Locicero      | 0.34   | 0.66   | -0.32                  |
+| 1       | Soap          | Terri     | Grant         | 0.34   | 0.56   | -0.22000000000000003   |
+| 2       | Soap          | Gary      | Everett       | 0.34   | 0.55   | -0.21000000000000002   |
+| 3       | Soap          | Terri     | Andrews       | 0.34   | 0.23   | 0.11000000000000001    |
+| 4       | Soap          | Victor    | Peterson      | 0.34   | 0.14   | 0.2                    |
+| 6       | Soap          | Fritz     | Grant         | 0.34   | 0.22   | 0.12000000000000002    |
+| 6       | Soap          | Fritz     | Grant         | 0.34   | 0.84   | -0.49999999999999994   |
+| 7       | Soap          | Missy     | Bush          | 0.34   | 0.52   | -0.18                  |
+| 10      | Soap          | Earl      | Dole          | 0.34   | 0.23   | 0.11000000000000001    |
+| 13      | Soap          | Maggie    | Everett       | 0.34   | 0.64   | -0.3                   |
+| 13      | Soap          | Maggie    | Everett       | 0.34   | 0.8    | -0.46                  |
+| 13      | Soap          | Maggie    | Everett       | 0.34   | 0.7    | -0.35999999999999993   |
+| 14      | Soap          | Barry     | Jones         | 0.34   | 0.31   | 0.030000000000000027   |
+| 14      | Soap          | Barry     | Jones         | 0.34   | 0.21   | 0.13000000000000003    |
+| 19      | Soap          | Patty     | Carlucchi     | 0.34   | 0.46   | -0.12                  |
+| 21      | Soap          | Anita     | Carlucchi     | 0.34   | 0.65   | -0.31                  |
+| 21      | Soap          | Anita     | Carlucchi     | 0.34   | 0.55   | -0.21000000000000002   |
+| 23      | Soap          | Ophelia   | Everett       | 0.34   | 0.23   | 0.11000000000000001    |
+| 24      | Soap          | David     | Peterson      | 0.34   | 0.5    | -0.15999999999999998   |
+| 26      | Soap          | Andy      | Peterson      | 0.34   | 0.52   | -0.18                  |
+| 28      | Soap          | Ulysses   | Peterson      | 0.34   | 0.33   | 0.010000000000000009   |
+| 29      | Soap          | Pauline   | Everett       | 0.34   | 0.63   | -0.29                  |
+| 30      | Soap          | Gerry     | Bush          | 0.34   | 0.63   | -0.29                  |
+| 30      | Soap          | Gerry     | Bush          | 0.34   | 0.64   | -0.3                   |
+| 33      | Soap          | Patty     | Van Morrison  | 0.34   | 0.6    | -0.25999999999999995   |
+| 33      | Soap          | Patty     | Van Morrison  | 0.34   | 0.74   | -0.39999999999999997   |
++---------+---------------+-----------+---------------+--------+--------+------------------------+
+| CUSTID  |     NAME      |   FNAME   |     LNAME     | PRICE  | PRICE  |         EXPR$6         |
++---------+---------------+-----------+---------------+--------+--------+------------------------+
+| 34      | Soap          | Bill      | Kemp          | 0.34   | 0.55   | -0.21000000000000002   |
+| 38      | Soap          | Andy      | Jones         | 0.34   | 0.83   | -0.48999999999999994   |
+| 39      | Soap          | Batilda   | Van Morrison  | 0.34   | 0.45   | -0.10999999999999999   |
+| 40      | Soap          | Kevin     | Frank         | 0.34   | 0.63   | -0.29                  |
+| 41      | Soap          | Pauline   | Smith         | 0.34   | 0.74   | -0.39999999999999997   |
+| 41      | Soap          | Pauline   | Smith         | 0.34   | 0.59   | -0.24999999999999994   |
+| 43      | Soap          | Erica     | Grant         | 0.34   | 0.49   | -0.14999999999999997   |
+| 44      | Soap          | Walter    | Frank         | 0.34   | 0.57   | -0.22999999999999993   |
+| 44      | Soap          | Walter    | Frank         | 0.34   | 0.19   | 0.15000000000000002    |
+| 44      | Soap          | Walter    | Frank         | 0.34   | 0.35   | -0.009999999999999953  |
+| 47      | Soap          | Hope      | Stevens       | 0.34   | 0.11   | 0.23000000000000004    |
+| 49      | Soap          | Maggie    | OLeary        | 0.34   | 0.58   | -0.23999999999999994   |
+| 50      | Soap          | Bill      | Mantela       | 0.34   | 0.47   | -0.12999999999999995   |
+| 50      | Soap          | Bill      | Mantela       | 0.34   | 0.5    | -0.15999999999999998   |
+| 50      | Soap          | Bill      | Mantela       | 0.34   | 0.45   | -0.10999999999999999   |
+| 51      | Soap          | Betty     | Andrews       | 0.34   | 0.75   | -0.41                  |
+| 52      | Soap          | Victor    | Peterson      | 0.34   | 0.16   | 0.18000000000000002    |
+| 55      | Soap          | Hope      | Bush          | 0.34   | 0.68   | -0.34                  |
+| 55      | Soap          | Hope      | Bush          | 0.34   | 0.38   | -0.03999999999999998   |
+| 55      | Soap          | Hope      | Bush          | 0.34   | 0.35   | -0.009999999999999953  |
+| 56      | Soap          | Max       | Frank         | 0.34   | 0.37   | -0.02999999999999997   |
+| 56      | Soap          | Max       | Frank         | 0.34   | 0.18   | 0.16000000000000003    |
+| 56      | Soap          | Max       | Frank         | 0.34   | 0.61   | -0.26999999999999996   |
+| 56      | Soap          | Max       | Frank         | 0.34   | 0.72   | -0.37999999999999995   |
+| 58      | Soap          | Monty     | Grant         | 0.34   | 0.28   | 0.06                   |
+| 62      | Soap          | Kevin     | Carlucchi     | 0.34   | 0.2    | 0.14                   |
+| 62      | Soap          | Kevin     | Carlucchi     | 0.34   | 0.13   | 0.21000000000000002    |
+| 63      | Soap          | Margaret  | Everett       | 0.34   | 0.16   | 0.18000000000000002    |
+| 65      | Soap          | Kathy     | Stevens       | 0.34   | 0.29   | 0.050000000000000044   |
+| 66      | Soap          | Anthony   | Smith         | 0.34   | 0.5    | -0.15999999999999998   |
+| 67      | Soap          | Denise    | Peterson      | 0.34   | 0.43   | -0.08999999999999997   |
+| 67      | Soap          | Denise    | Peterson      | 0.34   | 0.38   | -0.03999999999999998   |
+| 69      | Soap          | Hope      | Smith         | 0.34   | 0.12   | 0.22000000000000003    |
+| 70      | Soap          | Peter     | Howard        | 0.34   | 0.43   | -0.08999999999999997   |
+| 72      | Soap          | Fred      | Noose         | 0.34   | 0.47   | -0.12999999999999995   |
+| 73      | Soap          | Patty     | Randolph      | 0.34   | 0.64   | -0.3                   |
+| 76      | Soap          | Randy     | Smith         | 0.34   | 0.51   | -0.16999999999999998   |
+| 76      | Soap          | Randy     | Smith         | 0.34   | 0.74   | -0.39999999999999997   |
+| 77      | Soap          | Lisa      | Van Morrison  | 0.34   | 0.72   | -0.37999999999999995   |
+| 81      | Soap          | Alice     | Kemp          | 0.34   | 0.77   | -0.43                  |
+| 82      | Soap          | Ceasar    | Locicero      | 0.34   | 0.71   | -0.36999999999999994   |
+| 85      | Soap          | Patty     | Howard        | 0.34   | 0.63   | -0.29                  |
+| 85      | Soap          | Patty     | Howard        | 0.34   | 0.11   | 0.23000000000000004    |
+| 86      | Soap          | Ted       | Grant         | 0.34   | 0.54   | -0.2                   |
+| 87      | Soap          | Maggie    | Kemp          | 0.34   | 0.74   | -0.39999999999999997   |
+| 87      | Soap          | Maggie    | Kemp          | 0.34   | 0.82   | -0.4799999999999999    |
+| 87      | Soap          | Maggie    | Kemp          | 0.34   | 0.61   | -0.26999999999999996   |
+| 87      | Soap          | Maggie    | Kemp          | 0.34   | 0.66   | -0.32                  |
+| 88      | Soap          | Anthony   | Stevens       | 0.34   | 0.53   | -0.19                  |
+| 88      | Soap          | Anthony   | Stevens       | 0.34   | 0.15   | 0.19000000000000003    |
+| 90      | Soap          | Paul      | Van Morrison  | 0.34   | 0.4    | -0.06                  |
+| 91      | Soap          | Ophelia   | OLeary        | 0.34   | 0.79   | -0.45                  |
+| 91      | Soap          | Ophelia   | OLeary        | 0.34   | 0.15   | 0.19000000000000003    |
+| 91      | Soap          | Ophelia   | OLeary        | 0.34   | 0.77   | -0.43                  |
+| 92      | Soap          | Rex       | Mantela       | 0.34   | 0.29   | 0.050000000000000044   |
+| 92      | Soap          | Rex       | Mantela       | 0.34   | 0.73   | -0.38999999999999996   |
+| 93      | Soap          | Terri     | Randolph      | 0.34   | 0.1    | 0.24000000000000002    |
+| 94      | Soap          | Hugh      | Kemp          | 0.34   | 0.81   | -0.47000000000000003   |
+| 97      | Soap          | Samantha  | Frank         | 0.34   | 0.84   | -0.49999999999999994   |
+| 98      | Soap          | Victor    | Frank         | 0.34   | 0.78   | -0.44                  |
+| 0       | Soda          | Eric      | Locicero      | 6.21   | 6.09   | 0.1200000000000001     |
+| 1       | Soda          | Terri     | Grant         | 6.21   | 6.66   | -0.4500000000000002    |
+| 5       | Soda          | Veronica  | Bush          | 6.21   | 6.34   | -0.1299999999999999    |
+| 5       | Soda          | Veronica  | Bush          | 6.21   | 6.3    | -0.08999999999999986   |
+| 7       | Soda          | Missy     | Bush          | 6.21   | 6.69   | -0.4800000000000004    |
+| 8       | Soda          | Ted       | Howard        | 6.21   | 6.4    | -0.1900000000000004    |
+| 12      | Soda          | Dave      | Stevens       | 6.21   | 6.15   | 0.05999999999999961    |
+| 13      | Soda          | Maggie    | Everett       | 6.21   | 6.22   | -0.009999999999999787  |
+| 13      | Soda          | Maggie    | Everett       | 6.21   | 6.53   | -0.3200000000000003    |
+| 14      | Soda          | Barry     | Jones         | 6.21   | 6.39   | -0.17999999999999972   |
+| 21      | Soda          | Anita     | Carlucchi     | 6.21   | 6.32   | -0.11000000000000032   |
+| 22      | Soda          | Eric      | Locicero      | 6.21   | 6.5    | -0.29000000000000004   |
+| 23      | Soda          | Ophelia   | Everett       | 6.21   | 6.28   | -0.07000000000000028   |
+| 24      | Soda          | David     | Peterson      | 6.21   | 6.56   | -0.34999999999999964   |
+| 24      | Soda          | David     | Peterson      | 6.21   | 6.41   | -0.20000000000000018   |
+| 25      | Soda          | Florence  | Carlucchi     | 6.21   | 6.22   | -0.009999999999999787  |
+| 26      | Soda          | Andy      | Peterson      | 6.21   | 6.05   | 0.16000000000000014    |
+| 26      | Soda          | Andy      | Peterson      | 6.21   | 6.56   | -0.34999999999999964   |
+| 26      | Soda          | Andy      | Peterson      | 6.21   | 6.42   | -0.20999999999999996   |
+| 26      | Soda          | Andy      | Peterson      | 6.21   | 6.2    | 0.009999999999999787   |
+| 26      | Soda          | Andy      | Peterson      | 6.21   | 6.59   | -0.3799999999999999    |
+| 28      | Soda          | Ulysses   | Peterson      | 6.21   | 6.33   | -0.1200000000000001    |
+| 32      | Soda          | Larry     | Randolph      | 6.21   | 6.02   | 0.1900000000000004     |
+| 32      | Soda          | Larry     | Randolph      | 6.21   | 6.65   | -0.4400000000000004    |
+| 34      | Soda          | Bill      | Kemp          | 6.21   | 6.62   | -0.41000000000000014   |
+| 36      | Soda          | Jake      | Bush          | 6.21   | 5.99   | 0.21999999999999975    |
+| 38      | Soda          | Andy      | Jones         | 6.21   | 6.69   | -0.4800000000000004    |
+| 39      | Soda          | Batilda   | Van Morrison  | 6.21   | 6.4    | -0.1900000000000004    |
+| 40      | Soda          | Kevin     | Frank         | 6.21   | 6.24   | -0.03000000000000025   |
+| 40      | Soda          | Kevin     | Frank         | 6.21   | 6.4    | -0.1900000000000004    |
+| 41      | Soda          | Pauline   | Smith         | 6.21   | 6.68   | -0.46999999999999975   |
+| 41      | Soda          | Pauline   | Smith         | 6.21   | 6.54   | -0.33000000000000007   |
+| 43      | Soda          | Erica     | Grant         | 6.21   | 6.49   | -0.28000000000000025   |
+| 44      | Soda          | Walter    | Frank         | 6.21   | 6.22   | -0.009999999999999787  |
+| 48      | Soda          | Daniel    | Bush          | 6.21   | 6.5    | -0.29000000000000004   |
+| 49      | Soda          | Maggie    | OLeary        | 6.21   | 6.38   | -0.16999999999999993   |
+| 49      | Soda          | Maggie    | OLeary        | 6.21   | 6.01   | 0.20000000000000018    |
+| 52      | Soda          | Victor    | Peterson      | 6.21   | 6.65   | -0.4400000000000004    |
+| 52      | Soda          | Victor    | Peterson      | 6.21   | 6.53   | -0.3200000000000003    |
+| 56      | Soda          | Max       | Frank         | 6.21   | 6.23   | -0.020000000000000462  |
++---------+---------------+-----------+---------------+--------+--------+------------------------+
+| CUSTID  |     NAME      |   FNAME   |     LNAME     | PRICE  | PRICE  |         EXPR$6         |
++---------+---------------+-----------+---------------+--------+--------+------------------------+
+| 56      | Soda          | Max       | Frank         | 6.21   | 6.55   | -0.33999999999999986   |
+| 57      | Soda          | Terri     | Kemp          | 6.21   | 6.16   | 0.04999999999999982    |
+| 58      | Soda          | Monty     | Grant         | 6.21   | 6.44   | -0.23000000000000043   |
+| 61      | Soda          | Anita     | Locicero      | 6.21   | 6.44   | -0.23000000000000043   |
+| 63      | Soda          | Margaret  | Everett       | 6.21   | 6.01   | 0.20000000000000018    |
+| 66      | Soda          | Anthony   | Smith         | 6.21   | 6.67   | -0.45999999999999996   |
+| 67      | Soda          | Denise    | Peterson      | 6.21   | 6.58   | -0.3700000000000001    |
+| 67      | Soda          | Denise    | Peterson      | 6.21   | 6.49   | -0.28000000000000025   |
+| 68      | Soda          | Anthony   | Frank         | 6.21   | 6.14   | 0.07000000000000028    |
+| 69      | Soda          | Hope      | Smith         | 6.21   | 6.47   | -0.2599999999999998    |
+| 70      | Soda          | Peter     | Howard        | 6.21   | 6.25   | -0.040000000000000036  |
+| 74      | Soda          | Andy      | OLeary        | 6.21   | 6.68   | -0.46999999999999975   |
+| 75      | Soda          | Jeniffer  | Kemp          | 6.21   | 6.21   | 0.0                    |
+| 75      | Soda          | Jeniffer  | Kemp          | 6.21   | 6.57   | -0.3600000000000003    |
+| 77      | Soda          | Lisa      | Van Morrison  | 6.21   | 6.51   | -0.2999999999999998    |
+| 78      | Soda          | Barry     | Stevens       | 6.21   | 6.26   | -0.04999999999999982   |
+| 82      | Soda          | Ceasar    | Locicero      | 6.21   | 6.35   | -0.13999999999999968   |
+| 83      | Soda          | Pauline   | Bush          | 6.21   | 6.61   | -0.40000000000000036   |
+| 84      | Soda          | David     | Howard        | 6.21   | 6.15   | 0.05999999999999961    |
+| 86      | Soda          | Ted       | Grant         | 6.21   | 6.7    | -0.4900000000000002    |
+| 87      | Soda          | Maggie    | Kemp          | 6.21   | 6.05   | 0.16000000000000014    |
+| 88      | Soda          | Anthony   | Stevens       | 6.21   | 6.26   | -0.04999999999999982   |
+| 89      | Soda          | Anita     | Randolph      | 6.21   | 6.24   | -0.03000000000000025   |
+| 89      | Soda          | Anita     | Randolph      | 6.21   | 6.63   | -0.41999999999999993   |
+| 92      | Soda          | Rex       | Mantela       | 6.21   | 6.56   | -0.34999999999999964   |
+| 92      | Soda          | Rex       | Mantela       | 6.21   | 5.98   | 0.22999999999999954    |
+| 92      | Soda          | Rex       | Mantela       | 6.21   | 6.19   | 0.019999999999999574   |
+| 93      | Soda          | Terri     | Randolph      | 6.21   | 6.37   | -0.16000000000000014   |
+| 93      | Soda          | Terri     | Randolph      | 6.21   | 6.44   | -0.23000000000000043   |
+| 94      | Soda          | Hugh      | Kemp          | 6.21   | 6.36   | -0.15000000000000036   |
+| 99      | Soda          | Veronica  | Dole          | 6.21   | 6.07   | 0.13999999999999968    |
+| 1       | Soup          | Terri     | Grant         | 5.05   | 5.33   | -0.28000000000000025   |
+| 1       | Soup          | Terri     | Grant         | 5.05   | 5.51   | -0.45999999999999996   |
+| 2       | Soup          | Gary      | Everett       | 5.05   | 4.95   | 0.09999999999999964    |
+| 3       | Soup          | Terri     | Andrews       | 5.05   | 5.5    | -0.4500000000000002    |
+| 4       | Soup          | Victor    | Peterson      | 5.05   | 5.14   | -0.08999999999999986   |
+| 4       | Soup          | Victor    | Peterson      | 5.05   | 5.33   | -0.28000000000000025   |
+| 5       | Soup          | Veronica  | Bush          | 5.05   | 5.41   | -0.3600000000000003    |
+| 7       | Soup          | Missy     | Bush          | 5.05   | 4.98   | 0.0699999999999994     |
+| 8       | Soup          | Ted       | Howard        | 5.05   | 4.99   | 0.05999999999999961    |
+| 9       | Soup          | Wendy     | Kemp          | 5.05   | 5.54   | -0.4900000000000002    |
+| 12      | Soup          | Dave      | Stevens       | 5.05   | 5.13   | -0.08000000000000007   |
+| 13      | Soup          | Maggie    | Everett       | 5.05   | 5.37   | -0.3200000000000003    |
+| 14      | Soup          | Barry     | Jones         | 5.05   | 4.93   | 0.1200000000000001     |
+| 15      | Soup          | Patty     | Noose         | 5.05   | 5.05   | 0.0                    |
+| 16      | Soup          | Oliver    | Grant         | 5.05   | 5.11   | -0.0600000000000005    |
+| 16      | Soup          | Oliver    | Grant         | 5.05   | 5.2    | -0.15000000000000036   |
+| 18      | Soup          | Theodore  | OLeary        | 5.05   | 4.81   | 0.2400000000000002     |
+| 18      | Soup          | Theodore  | OLeary        | 5.05   | 5.08   | -0.03000000000000025   |
+| 19      | Soup          | Patty     | Carlucchi     | 5.05   | 4.96   | 0.08999999999999986    |
+| 22      | Soup          | Eric      | Locicero      | 5.05   | 4.86   | 0.1899999999999995     |
+| 24      | Soup          | David     | Peterson      | 5.05   | 5.09   | -0.040000000000000036  |
+| 26      | Soup          | Andy      | Peterson      | 5.05   | 5.39   | -0.33999999999999986   |
+| 28      | Soup          | Ulysses   | Peterson      | 5.05   | 4.99   | 0.05999999999999961    |
+| 31      | Soup          | Mary      | Van Morrison  | 5.05   | 5.41   | -0.3600000000000003    |
+| 32      | Soup          | Larry     | Randolph      | 5.05   | 5.36   | -0.3100000000000005    |
+| 34      | Soup          | Bill      | Kemp          | 5.05   | 5.52   | -0.46999999999999975   |
+| 34      | Soup          | Bill      | Kemp          | 5.05   | 5.21   | -0.16000000000000014   |
+| 36      | Soup          | Jake      | Bush          | 5.05   | 4.99   | 0.05999999999999961    |
+| 36      | Soup          | Jake      | Bush          | 5.05   | 4.93   | 0.1200000000000001     |
+| 37      | Soup          | Terri     | Noose         | 5.05   | 5.35   | -0.2999999999999998    |
+| 38      | Soup          | Andy      | Jones         | 5.05   | 5.22   | -0.16999999999999993   |
+| 39      | Soup          | Batilda   | Van Morrison  | 5.05   | 5.11   | -0.0600000000000005    |
+| 39      | Soup          | Batilda   | Van Morrison  | 5.05   | 5.21   | -0.16000000000000014   |
+| 40      | Soup          | Kevin     | Frank         | 5.05   | 5.12   | -0.07000000000000028   |
+| 42      | Soup          | Eric      | Randolph      | 5.05   | 5.36   | -0.3100000000000005    |
+| 42      | Soup          | Eric      | Randolph      | 5.05   | 5.48   | -0.4300000000000006    |
+| 43      | Soup          | Erica     | Grant         | 5.05   | 5.02   | 0.03000000000000025    |
+| 43      | Soup          | Erica     | Grant         | 5.05   | 5.53   | -0.4800000000000004    |
+| 45      | Soup          | Margaret  | Van Morrison  | 5.05   | 4.89   | 0.16000000000000014    |
+| 46      | Soup          | Hugh      | Andrews       | 5.05   | 5.13   | -0.08000000000000007   |
+| 46      | Soup          | Hugh      | Andrews       | 5.05   | 5.46   | -0.41000000000000014   |
+| 46      | Soup          | Hugh      | Andrews       | 5.05   | 4.83   | 0.21999999999999975    |
+| 49      | Soup          | Maggie    | OLeary        | 5.05   | 4.86   | 0.1899999999999995     |
+| 49      | Soup          | Maggie    | OLeary        | 5.05   | 5.46   | -0.41000000000000014   |
+| 53      | Soup          | Veronica  | Smith         | 5.05   | 4.92   | 0.1299999999999999     |
+| 54      | Soup          | Max       | Peterson      | 5.05   | 4.95   | 0.09999999999999964    |
+| 55      | Soup          | Hope      | Bush          | 5.05   | 5.16   | -0.11000000000000032   |
+| 57      | Soup          | Terri     | Kemp          | 5.05   | 5.41   | -0.3600000000000003    |
+| 58      | Soup          | Monty     | Grant         | 5.05   | 4.99   | 0.05999999999999961    |
+| 58      | Soup          | Monty     | Grant         | 5.05   | 5.19   | -0.14000000000000057   |
+| 59      | Soup          | Jeniffer  | Bush          | 5.05   | 4.92   | 0.1299999999999999     |
+| 60      | Soup          | Ceasar    | Mantela       | 5.05   | 5.04   | 0.009999999999999787   |
+| 60      | Soup          | Ceasar    | Mantela       | 5.05   | 5.35   | -0.2999999999999998    |
+| 61      | Soup          | Anita     | Locicero      | 5.05   | 5.05   | 0.0                    |
+| 61      | Soup          | Anita     | Locicero      | 5.05   | 5.33   | -0.28000000000000025   |
+| 65      | Soup          | Kathy     | Stevens       | 5.05   | 5.02   | 0.03000000000000025    |
+| 65      | Soup          | Kathy     | Stevens       | 5.05   | 4.92   | 0.1299999999999999     |
+| 66      | Soup          | Anthony   | Smith         | 5.05   | 5.34   | -0.29000000000000004   |
+| 70      | Soup          | Peter     | Howard        | 5.05   | 5.5    | -0.4500000000000002    |
+| 70      | Soup          | Peter     | Howard        | 5.05   | 5.21   | -0.16000000000000014   |
+| 70      | Soup          | Peter     | Howard        | 5.05   | 5.46   | -0.41000000000000014   |
+| 71      | Soup          | Holly     | Dole          | 5.05   | 5.21   | -0.16000000000000014   |
+| 73      | Soup          | Patty     | Randolph      | 5.05   | 5.22   | -0.16999999999999993   |
+| 75      | Soup          | Jeniffer  | Kemp          | 5.05   | 5.49   | -0.4400000000000004    |
+| 80      | Soup          | Ian       | Bush          | 5.05   | 5.13   | -0.08000000000000007   |
+| 81      | Soup          | Alice     | Kemp          | 5.05   | 5.08   | -0.03000000000000025   |
+| 84      | Soup          | David     | Howard        | 5.05   | 4.82   | 0.22999999999999954    |
+| 84      | Soup          | David     | Howard        | 5.05   | 5.47   | -0.41999999999999993   |
+| 86      | Soup          | Ted       | Grant         | 5.05   | 5.13   | -0.08000000000000007   |
++---------+---------------+-----------+---------------+--------+--------+------------------------+
+| CUSTID  |     NAME      |   FNAME   |     LNAME     | PRICE  | PRICE  |         EXPR$6         |
++---------+---------------+-----------+---------------+--------+--------+------------------------+
+| 86      | Soup          | Ted       | Grant         | 5.05   | 5.35   | -0.2999999999999998    |
+| 88      | Soup          | Anthony   | Stevens       | 5.05   | 5.16   | -0.11000000000000032   |
+| 88      | Soup          | Anthony   | Stevens       | 5.05   | 4.95   | 0.09999999999999964    |
+| 89      | Soup          | Anita     | Randolph      | 5.05   | 5.27   | -0.21999999999999975   |
+| 92      | Soup          | Rex       | Mantela       | 5.05   | 5.03   | 0.019999999999999574   |
+| 92      | Soup          | Rex       | Mantela       | 5.05   | 4.91   | 0.13999999999999968    |
+| 93      | Soup          | Terri     | Randolph      | 5.05   | 5.29   | -0.2400000000000002    |
+| 95      | Soup          | Margaret  | Bush          | 5.05   | 5.5    | -0.4500000000000002    |
+| 97      | Soup          | Samantha  | Frank         | 5.05   | 5.29   | -0.2400000000000002    |
+| 4       | Telephone     | Victor    | Peterson      | 2.95   | 3.08   | -0.1299999999999999    |
+| 5       | Telephone     | Veronica  | Bush          | 2.95   | 3.06   | -0.10999999999999988   |
+| 5       | Telephone     | Veronica  | Bush          | 2.95   | 3.22   | -0.27                  |
+| 6       | Telephone     | Fritz     | Grant         | 2.95   | 3.04   | -0.08999999999999986   |
+| 6       | Telephone     | Fritz     | Grant         | 2.95   | 2.71   | 0.2400000000000002     |
+| 7       | Telephone     | Missy     | Bush          | 2.95   | 3.28   | -0.3299999999999996    |
+| 9       | Telephone     | Wendy     | Kemp          | 2.95   | 3.27   | -0.31999999999999984   |
+| 11      | Telephone     | Bianca    | Grant         | 2.95   | 3.03   | -0.07999999999999963   |
+| 12      | Telephone     | Dave      | Stevens       | 2.95   | 3.02   | -0.06999999999999984   |
+| 13      | Telephone     | Maggie    | Everett       | 2.95   | 2.99   | -0.040000000000000036  |
+| 14      | Telephone     | Barry     | Jones         | 2.95   | 2.88   | 0.07000000000000028    |
+| 15      | Telephone     | Patty     | Noose         | 2.95   | 3.13   | -0.17999999999999972   |
+| 15      | Telephone     | Patty     | Noose         | 2.95   | 2.88   | 0.07000000000000028    |
+| 18      | Telephone     | Theodore  | OLeary        | 2.95   | 2.96   | -0.009999999999999787  |
+| 18      | Telephone     | Theodore  | OLeary        | 2.95   | 3.37   | -0.41999999999999993   |
+| 18      | Telephone     | Theodore  | OLeary        | 2.95   | 2.9    | 0.050000000000000266   |
+| 19      | Telephone     | Patty     | Carlucchi     | 2.95   | 3.33   | -0.3799999999999999    |
+| 24      | Telephone     | David     | Peterson      | 2.95   | 3.04   | -0.08999999999999986   |
+| 26      | Telephone     | Andy      | Peterson      | 2.95   | 3.17   | -0.21999999999999975   |
+| 27      | Telephone     | Mary      | Noose         | 2.95   | 2.85   | 0.10000000000000009    |
+| 28      | Telephone     | Ulysses   | Peterson      | 2.95   | 2.93   | 0.020000000000000018   |
+| 28      | Telephone     | Ulysses   | Peterson      | 2.95   | 2.81   | 0.14000000000000012    |
+| 30      | Telephone     | Gerry     | Bush          | 2.95   | 3.4    | -0.44999999999999973   |
+| 32      | Telephone     | Larry     | Randolph      | 2.95   | 3.35   | -0.3999999999999999    |
+| 34      | Telephone     | Bill      | Kemp          | 2.95   | 3.01   | -0.05999999999999961   |
+| 35      | Telephone     | Anita     | Carlucchi     | 2.95   | 2.72   | 0.22999999999999998    |
+| 36      | Telephone     | Jake      | Bush          | 2.95   | 3.43   | -0.48                  |
+| 38      | Telephone     | Andy      | Jones         | 2.95   | 2.95   | 0.0                    |
+| 38      | Telephone     | Andy      | Jones         | 2.95   | 2.99   | -0.040000000000000036  |
+| 40      | Telephone     | Kevin     | Frank         | 2.95   | 3.0    | -0.04999999999999982   |
+| 46      | Telephone     | Hugh      | Andrews       | 2.95   | 3.39   | -0.43999999999999995   |
+| 48      | Telephone     | Daniel    | Bush          | 2.95   | 3.38   | -0.4299999999999997    |
+| 50      | Telephone     | Bill      | Mantela       | 2.95   | 3.08   | -0.1299999999999999    |
+| 50      | Telephone     | Bill      | Mantela       | 2.95   | 3.33   | -0.3799999999999999    |
+| 51      | Telephone     | Betty     | Andrews       | 2.95   | 2.9    | 0.050000000000000266   |
+| 55      | Telephone     | Hope      | Bush          | 2.95   | 2.84   | 0.11000000000000032    |
+| 55      | Telephone     | Hope      | Bush          | 2.95   | 2.89   | 0.06000000000000005    |
+| 56      | Telephone     | Max       | Frank         | 2.95   | 3.29   | -0.33999999999999986   |
+| 65      | Telephone     | Kathy     | Stevens       | 2.95   | 3.0    | -0.04999999999999982   |
+| 67      | Telephone     | Denise    | Peterson      | 2.95   | 3.07   | -0.11999999999999966   |
+| 71      | Telephone     | Holly     | Dole          | 2.95   | 3.26   | -0.3099999999999996    |
+| 73      | Telephone     | Patty     | Randolph      | 2.95   | 3.16   | -0.20999999999999996   |
+| 75      | Telephone     | Jeniffer  | Kemp          | 2.95   | 3.17   | -0.21999999999999975   |
+| 75      | Telephone     | Jeniffer  | Kemp          | 2.95   | 2.93   | 0.020000000000000018   |
+| 77      | Telephone     | Lisa      | Van Morrison  | 2.95   | 3.35   | -0.3999999999999999    |
+| 77      | Telephone     | Lisa      | Van Morrison  | 2.95   | 2.97   | -0.020000000000000018  |
+| 79      | Telephone     | Carla     | Stevens       | 2.95   | 3.05   | -0.09999999999999964   |
+| 80      | Telephone     | Ian       | Bush          | 2.95   | 2.75   | 0.20000000000000018    |
+| 81      | Telephone     | Alice     | Kemp          | 2.95   | 3.24   | -0.29000000000000004   |
+| 83      | Telephone     | Pauline   | Bush          | 2.95   | 3.37   | -0.41999999999999993   |
+| 83      | Telephone     | Pauline   | Bush          | 2.95   | 2.83   | 0.1200000000000001     |
+| 85      | Telephone     | Patty     | Howard        | 2.95   | 2.85   | 0.10000000000000009    |
+| 85      | Telephone     | Patty     | Howard        | 2.95   | 2.84   | 0.11000000000000032    |
+| 85      | Telephone     | Patty     | Howard        | 2.95   | 3.36   | -0.4099999999999997    |
+| 87      | Telephone     | Maggie    | Kemp          | 2.95   | 2.74   | 0.20999999999999996    |
+| 88      | Telephone     | Anthony   | Stevens       | 2.95   | 3.09   | -0.13999999999999968   |
+| 89      | Telephone     | Anita     | Randolph      | 2.95   | 3.3    | -0.34999999999999964   |
+| 91      | Telephone     | Ophelia   | OLeary        | 2.95   | 3.06   | -0.10999999999999988   |
+| 93      | Telephone     | Terri     | Randolph      | 2.95   | 3.05   | -0.09999999999999964   |
+| 97      | Telephone     | Samantha  | Frank         | 2.95   | 3.17   | -0.21999999999999975   |
+| 97      | Telephone     | Samantha  | Frank         | 2.95   | 2.75   | 0.20000000000000018    |
+| 99      | Telephone     | Veronica  | Dole          | 2.95   | 2.98   | -0.029999999999999805  |
+| 0       | Towel         | Eric      | Locicero      | 8.78   | 8.63   | 0.14999999999999858    |
+| 3       | Towel         | Terri     | Andrews       | 8.78   | 8.67   | 0.10999999999999943    |
+| 4       | Towel         | Victor    | Peterson      | 8.78   | 8.68   | 0.09999999999999964    |
+| 4       | Towel         | Victor    | Peterson      | 8.78   | 9.14   | -0.3600000000000012    |
+| 5       | Towel         | Veronica  | Bush          | 8.78   | 8.6    | 0.17999999999999972    |
+| 6       | Towel         | Fritz     | Grant         | 8.78   | 8.6    | 0.17999999999999972    |
+| 8       | Towel         | Ted       | Howard        | 8.78   | 8.57   | 0.20999999999999908    |
+| 10      | Towel         | Earl      | Dole          | 8.78   | 8.95   | -0.16999999999999993   |
+| 10      | Towel         | Earl      | Dole          | 8.78   | 8.57   | 0.20999999999999908    |
+| 10      | Towel         | Earl      | Dole          | 8.78   | 8.89   | -0.11000000000000121   |
+| 11      | Towel         | Bianca    | Grant         | 8.78   | 8.86   | -0.08000000000000007   |
+| 11      | Towel         | Bianca    | Grant         | 8.78   | 8.67   | 0.10999999999999943    |
+| 14      | Towel         | Barry     | Jones         | 8.78   | 8.6    | 0.17999999999999972    |
+| 14      | Towel         | Barry     | Jones         | 8.78   | 8.59   | 0.1899999999999995     |
+| 15      | Towel         | Patty     | Noose         | 8.78   | 8.69   | 0.08999999999999986    |
+| 19      | Towel         | Patty     | Carlucchi     | 8.78   | 9.19   | -0.41000000000000014   |
+| 21      | Towel         | Anita     | Carlucchi     | 8.78   | 8.67   | 0.10999999999999943    |
+| 21      | Towel         | Anita     | Carlucchi     | 8.78   | 8.96   | -0.1800000000000015    |
+| 22      | Towel         | Eric      | Locicero      | 8.78   | 8.59   | 0.1899999999999995     |
+| 25      | Towel         | Florence  | Carlucchi     | 8.78   | 8.55   | 0.22999999999999865    |
+| 26      | Towel         | Andy      | Peterson      | 8.78   | 9.01   | -0.23000000000000043   |
+| 28      | Towel         | Ulysses   | Peterson      | 8.78   | 9.0    | -0.22000000000000064   |
+| 29      | Towel         | Pauline   | Everett       | 8.78   | 9.23   | -0.45000000000000107   |
+| 31      | Towel         | Mary      | Van Morrison  | 8.78   | 9.11   | -0.33000000000000007   |
+| 32      | Towel         | Larry     | Randolph      | 8.78   | 8.72   | 0.05999999999999872    |
+| 37      | Towel         | Terri     | Noose         | 8.78   | 9.23   | -0.45000000000000107   |
+| 41      | Towel         | Pauline   | Smith         | 8.78   | 8.88   | -0.10000000000000142   |
+| 43      | Towel         | Erica     | Grant         | 8.78   | 9.02   | -0.2400000000000002    |
+| 44      | Towel         | Walter    | Frank         | 8.78   | 9.23   | -0.45000000000000107   |
++---------+---------------+-----------+---------------+--------+--------+------------------------+
+| CUSTID  |     NAME      |   FNAME   |     LNAME     | PRICE  | PRICE  |         EXPR$6         |
++---------+---------------+-----------+---------------+--------+--------+------------------------+
+| 45      | Towel         | Margaret  | Van Morrison  | 8.78   | 9.15   | -0.370000000000001     |
+| 47      | Towel         | Hope      | Stevens       | 8.78   | 8.86   | -0.08000000000000007   |
+| 47      | Towel         | Hope      | Stevens       | 8.78   | 8.89   | -0.11000000000000121   |
+| 47      | Towel         | Hope      | Stevens       | 8.78   | 8.78   | 0.0                    |
+| 48      | Towel         | Daniel    | Bush          | 8.78   | 9.1    | -0.3200000000000003    |
+| 48      | Towel         | Daniel    | Bush          | 8.78   | 8.72   | 0.05999999999999872    |
+| 49      | Towel         | Maggie    | OLeary        | 8.78   | 8.59   | 0.1899999999999995     |
+| 49      | Towel         | Maggie    | OLeary        | 8.78   | 8.54   | 0.2400000000000002     |
+| 51      | Towel         | Betty     | Andrews       | 8.78   | 9.03   | -0.25                  |
+| 51      | Towel         | Betty     | Andrews       | 8.78   | 9.05   | -0.27000000000000135   |
+| 52      | Towel         | Victor    | Peterson      | 8.78   | 8.69   | 0.08999999999999986    |
+| 52      | Towel         | Victor    | Peterson      | 8.78   | 9.15   | -0.370000000000001     |
+| 54      | Towel         | Max       | Peterson      | 8.78   | 9.04   | -0.2599999999999998    |
+| 55      | Towel         | Hope      | Bush          | 8.78   | 8.61   | 0.16999999999999993    |
+| 63      | Towel         | Margaret  | Everett       | 8.78   | 9.15   | -0.370000000000001     |
+| 68      | Towel         | Anthony   | Frank         | 8.78   | 8.69   | 0.08999999999999986    |
+| 69      | Towel         | Hope      | Smith         | 8.78   | 8.75   | 0.02999999999999936    |
+| 69      | Towel         | Hope      | Smith         | 8.78   | 8.78   | 0.0                    |
+| 70      | Towel         | Peter     | Howard        | 8.78   | 8.82   | -0.040000000000000924  |
+| 70      | Towel         | Peter     | Howard        | 8.78   | 9.23   | -0.45000000000000107   |
+| 71      | Towel         | Holly     | Dole          | 8.78   | 9.1    | -0.3200000000000003    |
+| 73      | Towel         | Patty     | Randolph      | 8.78   | 8.67   | 0.10999999999999943    |
+| 73      | Towel         | Patty     | Randolph      | 8.78   | 9.15   | -0.370000000000001     |
+| 74      | Towel         | Andy      | OLeary        | 8.78   | 8.89   | -0.11000000000000121   |
+| 75      | Towel         | Jeniffer  | Kemp          | 8.78   | 8.7    | 0.08000000000000007    |
+| 77      | Towel         | Lisa      | Van Morrison  | 8.78   | 8.88   | -0.10000000000000142   |
+| 77      | Towel         | Lisa      | Van Morrison  | 8.78   | 9.22   | -0.4400000000000013    |
+| 82      | Towel         | Ceasar    | Locicero      | 8.78   | 9.1    | -0.3200000000000003    |
+| 84      | Towel         | David     | Howard        | 8.78   | 9.25   | -0.47000000000000064   |
+| 85      | Towel         | Patty     | Howard        | 8.78   | 8.97   | -0.19000000000000128   |
+| 87      | Towel         | Maggie    | Kemp          | 8.78   | 9.23   | -0.45000000000000107   |
+| 87      | Towel         | Maggie    | Kemp          | 8.78   | 8.92   | -0.14000000000000057   |
+| 88      | Towel         | Anthony   | Stevens       | 8.78   | 9.09   | -0.3100000000000005    |
+| 89      | Towel         | Anita     | Randolph      | 8.78   | 8.77   | 0.009999999999999787   |
+| 90      | Towel         | Paul      | Van Morrison  | 8.78   | 9.14   | -0.3600000000000012    |
+| 90      | Towel         | Paul      | Van Morrison  | 8.78   | 8.92   | -0.14000000000000057   |
+| 91      | Towel         | Ophelia   | OLeary        | 8.78   | 9.17   | -0.39000000000000057   |
+| 92      | Towel         | Rex       | Mantela       | 8.78   | 9.01   | -0.23000000000000043   |
+| 93      | Towel         | Terri     | Randolph      | 8.78   | 9.27   | -0.4900000000000002    |
+| 97      | Towel         | Samantha  | Frank         | 8.78   | 8.71   | 0.06999999999999851    |
+| 98      | Towel         | Victor    | Frank         | 8.78   | 9.04   | -0.2599999999999998    |
++---------+---------------+-----------+---------------+--------+--------+------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- TODO: date ranges
+0: jdbc:luciddb:> -- select S1.CUSTID, S1.EMPNO, S1.TS, S2.CUSTID, S2.EMPNO, S2.TS,
+0: jdbc:luciddb:> -- from SALES S1, SALES S2
+0: jdbc:luciddb:> -- where S1.TS between S2.TS -1 and S2.TS +1
+0: jdbc:luciddb:> -- order by S1.CUSTID, S1.EMPNO, S1.TS, S2.CUSTID, S2.EMPNO, S2.TS;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

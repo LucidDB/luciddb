@@ -80,6 +80,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
     private final FarragoSessionVariables sessionVariables;
     private final FarragoDataWrapperCache dataWrapperCache;
     private final FarragoStreamFactoryProvider streamFactoryProvider;
+    private final boolean isDml;
     private FennelStreamGraph streamGraph;
     private long currentTime;
 
@@ -101,6 +102,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
         this.dynamicParamValues = params.dynamicParamValues;
         this.sessionVariables = params.sessionVariables;
         this.streamFactoryProvider = params.streamFactoryProvider;
+        this.isDml = params.isDml;
 
         dataWrapperCache =
             new FarragoDataWrapperCache(
@@ -134,6 +136,10 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
     {
         // make sure all streams get closed BEFORE they are deallocated
         streamOwner.closeAllocation();
+        if (!isDml) {
+            // For queries, this is called when the cursor is closed. 
+            session.endTransactionIfAuto(true);
+        }
         super.closeAllocation();
     }
 

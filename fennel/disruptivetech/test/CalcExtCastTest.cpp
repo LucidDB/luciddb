@@ -45,11 +45,19 @@ class CalcExtCastTest : virtual public TestBase, public TraceSource
     void testCalcExtCastStringToVarChar();
     void testCalcExtCastExactToChar();
     void testCalcExtCastExactToVarChar();
+    void testCalcExtCastDecimalToChar();
+    void testCalcExtCastDecimalToVarChar();
     void testCalcExtCastBigExactToString();
     void testCalcExtCastExactToStringTruncates();
+    void testCalcExtCastDecimalToStringTruncates();
     void testCalcExtCastCharToExact();
     void testCalcExtCastVarCharToExact();
+    void testCalcExtCastCharToDecimal();
+    void testCalcExtCastVarCharToDecimal();
     void testCalcExtCastStringToExactFails();
+    void testCalcExtCastStringToDecimalFails();
+    void testCalcExtCastStringToDecimalMinMax();
+    void testCalcExtCastStringToDecimalRange();
     void testCalcExtCastStringToApprox();
     void testCalcExtCastApproxToString();
 
@@ -72,6 +80,7 @@ class CalcExtCastTest : virtual public TestBase, public TraceSource
 
     static const char* truncErr;
     static const char* invalidCharErr;
+    static const char* outOfRangeErr;
 
 public:
     explicit CalcExtCastTest()
@@ -83,11 +92,19 @@ public:
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastStringToVarChar);
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastExactToVarChar);
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastExactToChar);
+        FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastDecimalToChar);
+        FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastDecimalToVarChar);
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastBigExactToString);
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastExactToStringTruncates); // errors
+        FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastDecimalToStringTruncates); // errors
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastCharToExact);
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastVarCharToExact);
+        FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastCharToDecimal);
+        FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastVarCharToDecimal);
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastStringToExactFails);
+        FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastStringToDecimalFails);
+        FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastStringToDecimalMinMax);
+        FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastStringToDecimalRange);
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastStringToApprox);
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastApproxToString);
     }
@@ -99,6 +116,7 @@ public:
 
 const char * CalcExtCastTest::truncErr = "22001";
 const char * CalcExtCastTest::invalidCharErr = "22018";
+const char * CalcExtCastTest::outOfRangeErr = "22003";
 
 // returns the minimum int64_t value, as a string.
 string CalcExtCastTest::minInt64String()
@@ -505,6 +523,236 @@ CalcExtCastTest::testCalcExtCastExactToVarChar()
     BOOST_CHECK(iter == calc.mWarnings.end());
 }
 
+// cast decimal numbers (with precision/scale) to char strings
+void
+CalcExtCastTest::testCalcExtCastDecimalToChar()
+{
+    // decimal(5,2) test values: (null, 0, 10, -10.90, 4.30, -.09, .30),
+    // cast to CHAR(6) and CHAR(16)
+
+    // decimal(5,0) test values: (null, 0, 1000, -1090, 430, -9, 30),
+    // cast to CHAR(5) and CHAR(16)
+
+    // decimal(5,-2) test values: (null, 0, 100000, -109000, 43000, -900, 3000),
+    // cast to CHAR(7) and CHAR(16)
+
+    ostringstream pg(""), outloc("");
+    outloc <<  "c,6, c,6, c,6, c,6, c,6, c,6, c,6, "
+           <<  "c,16, c,16, c,16, c,16, c,16, c,16, c,16, "
+           <<  "c,5, c,5, c,5, c,5, c,5, c,5, c,5, "
+           <<  "c,16, c,16, c,16, c,16, c,16, c,16, c,16, "
+           <<  "c,7, c,7, c,7, c,7, c,7, c,7, c,7, "
+           <<  "c,16, c,16, c,16, c,16, c,16, c,16, c,16;" << endl;
+    pg << "O " << outloc.str();
+    pg << "L " << outloc.str();
+    pg << "C s8, s8, s8, s8, s8, s8, s8, s4, s4, s4, s4;" << endl;
+    pg << "V , 0, 1000, -1090, 430, -9, 30, 5, 2, 0, -2;" << endl;
+    pg << "T;" << endl;
+    // cast decimal(5,2) to CHAR(6)
+    for (int i=0; i < 7; i++)
+        pg << "CALL 'castA(L" << i << ", C" << i << ", C7, C8 );" << endl;
+    // cast decimal(5,2) to CHAR(16)
+    for (int i=0; i < 7; i++)
+        pg << "CALL 'castA(L" << (i+7) << ", C" << i << ", C7, C8 );" << endl;
+
+    // cast decimal(5,0) to CHAR(5)
+    for (int i=0; i < 7; i++)
+        pg << "CALL 'castA(L" << (i+14) << ", C" << i << ", C7, C9 );" << endl;
+    // cast decimal(5,0) to CHAR(16)
+    for (int i=0; i < 7; i++)
+        pg << "CALL 'castA(L" << (i+21) << ", C" << i << ", C7, C9 );" << endl;
+
+    // cast decimal(5,-2) to CHAR(7)
+    for (int i=0; i < 7; i++)
+        pg << "CALL 'castA(L" << (i+28) << ", C" << i << ", C7, C10 );" << endl;
+    // cast decimal(5,-2) to CHAR(16)
+    for (int i=0; i < 7; i++)
+        pg << "CALL 'castA(L" << (i+35) << ", C" << i << ", C7, C10 );" << endl;
+
+    refLocalOutput(pg, 7*6);      // make output available
+
+    Calculator calc(0);
+    try {
+        calc.assemble(pg.str().c_str());
+    }
+    catch (FennelExcn& ex) {
+        BOOST_MESSAGE("Assemble exception " << ex.getMessage());
+        BOOST_MESSAGE(pg.str());
+        BOOST_REQUIRE(0);
+    }
+
+    TupleDataWithBuffer outTuple(calc.getOutputRegisterDescriptor());
+    TupleDataWithBuffer inTuple(calc.getInputRegisterDescriptor());
+    calc.bind(&inTuple, &outTuple);
+    calc.exec();
+    printOutput(outTuple, calc);
+    deque<CalcMessage>::iterator iter = calc.mWarnings.begin();
+
+    // check results:
+    // decimal(5,2)
+    BOOST_CHECK(cmpTupNull(outTuple[0]));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[1], ".00   "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[2], "10.00 "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[3], "-10.90"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[4], "4.30  "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[5], "-.09  "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[6], ".30   "));
+    BOOST_CHECK(cmpTupNull(outTuple[7]));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[8],  ".00             "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[9],  "10.00           "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[10], "-10.90          "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[11], "4.30            "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[12], "-.09            "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[13], ".30             "));
+
+    // decimal(5,0)
+    BOOST_CHECK(cmpTupNull(outTuple[14]));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[15], "0    "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[16], "1000 "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[17], "-1090"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[18], "430  "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[19], "-9   "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[20], "30   "));
+    BOOST_CHECK(cmpTupNull(outTuple[21]));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[22], "0               "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[23], "1000            "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[24], "-1090           "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[25], "430             "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[26], "-9              "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[27], "30              "));
+
+    // decimal(5,-2)
+    BOOST_CHECK(cmpTupNull(outTuple[28]));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[29], "0      "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[30], "100000 "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[31], "-109000"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[32], "43000  "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[33], "-900   "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[34], "3000   "));
+    BOOST_CHECK(cmpTupNull(outTuple[35]));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[36], "0               "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[37], "100000          "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[38], "-109000         "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[39], "43000           "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[40], "-900            "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[41], "3000            "));
+}
+
+// cast decimal numbers (with precision/scale) to varchar strings
+void
+CalcExtCastTest::testCalcExtCastDecimalToVarChar()
+{
+    // decimal(5,2) test values: (null, 0, 10, -10.90, 4.30, -.09, .30),
+    // cast to VARCHAR(6) and VARCHAR(16)
+
+    // decimal(5,0) test values: (null, 0, 1000, -1090, 430, -9, 30),
+    // cast to VARCHAR(5) and VARCHAR(16)
+
+    // decimal(5,-2) test values: (null, 0, 100000, -109000, 43000, -900, 3000),
+    // cast to VARCHAR(7) and VARCHAR(16)
+
+    ostringstream pg(""), outloc("");
+    outloc <<  "vc,6, vc,6, vc,6, vc,6, vc,6, vc,6, vc,6, "
+           <<  "vc,16, vc,16, vc,16, vc,16, vc,16, vc,16, vc,16, "
+           <<  "vc,5, vc,5, vc,5, vc,5, vc,5, vc,5, vc,5, "
+           <<  "vc,16, vc,16, vc,16, vc,16, vc,16, vc,16, vc,16, "
+           <<  "vc,7, vc,7, vc,7, vc,7, vc,7, vc,7, vc,7, "
+           <<  "vc,16, vc,16, vc,16, vc,16, vc,16, vc,16, vc,16;" << endl;
+    pg << "O " << outloc.str();
+    pg << "L " << outloc.str();
+    pg << "C s8, s8, s8, s8, s8, s8, s8, s4, s4, s4, s4;" << endl;
+    pg << "V , 0, 1000, -1090, 430, -9, 30, 5, 2, 0, -2;" << endl;
+    pg << "T;" << endl;
+    // cast decimal(5,2) to VARCHAR(6)
+    for (int i=0; i < 7; i++)
+        pg << "CALL 'castA(L" << i << ", C" << i << ", C7, C8 );" << endl;
+    // cast decimal(5,2) to VARCHAR(16)
+    for (int i=0; i < 7; i++)
+        pg << "CALL 'castA(L" << (i+7) << ", C" << i << ", C7, C8 );" << endl;
+
+    // cast decimal(5,0) to VARCHAR(5)
+    for (int i=0; i < 7; i++)
+        pg << "CALL 'castA(L" << (i+14) << ", C" << i << ", C7, C9 );" << endl;
+    // cast decimal(5,0) to VARCHAR(16)
+    for (int i=0; i < 7; i++)
+        pg << "CALL 'castA(L" << (i+21) << ", C" << i << ", C7, C9 );" << endl;
+
+    // cast decimal(5,-2) to VARCHAR(7)
+    for (int i=0; i < 7; i++)
+        pg << "CALL 'castA(L" << (i+28) << ", C" << i << ", C7, C10 );" << endl;
+    // cast decimal(5,-2) to VARCHAR(16)
+    for (int i=0; i < 7; i++)
+        pg << "CALL 'castA(L" << (i+35) << ", C" << i << ", C7, C10 );" << endl;
+
+    refLocalOutput(pg, 7*6);      // make output available
+
+    Calculator calc(0);
+    try {
+        calc.assemble(pg.str().c_str());
+    }
+    catch (FennelExcn& ex) {
+        BOOST_MESSAGE("Assemble exception " << ex.getMessage());
+        BOOST_MESSAGE(pg.str());
+        BOOST_REQUIRE(0);
+    }
+
+    TupleDataWithBuffer outTuple(calc.getOutputRegisterDescriptor());
+    TupleDataWithBuffer inTuple(calc.getInputRegisterDescriptor());
+    calc.bind(&inTuple, &outTuple);
+    calc.exec();
+    printOutput(outTuple, calc);
+    deque<CalcMessage>::iterator iter = calc.mWarnings.begin();
+
+    // check results:
+    // decimal(5,2)
+    BOOST_CHECK(cmpTupNull(outTuple[0]));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[1], ".00"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[2], "10.00"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[3], "-10.90"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[4], "4.30"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[5], "-.09"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[6], ".30"));
+    BOOST_CHECK(cmpTupNull(outTuple[7]));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[8],  ".00"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[9],  "10.00"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[10], "-10.90"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[11], "4.30"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[12], "-.09"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[13], ".30"));
+
+    // decimal(5,0)
+    BOOST_CHECK(cmpTupNull(outTuple[14]));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[15], "0"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[16], "1000"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[17], "-1090"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[18], "430"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[19], "-9"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[20], "30"));
+    BOOST_CHECK(cmpTupNull(outTuple[21]));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[22], "0"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[23], "1000"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[24], "-1090"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[25], "430"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[26], "-9"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[27], "30"));
+
+    // decimal(5,-2)
+    BOOST_CHECK(cmpTupNull(outTuple[28]));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[29], "0"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[30], "100000"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[31], "-109000"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[32], "43000"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[33], "-900"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[34], "3000"));
+    BOOST_CHECK(cmpTupNull(outTuple[35]));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[36], "0"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[37], "100000"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[38], "-109000"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[39], "43000"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[40], "-900"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[41], "3000"));
+}
+
 // cast large exact numbers to strings
 void
 CalcExtCastTest::testCalcExtCastBigExactToString()
@@ -611,6 +859,151 @@ CalcExtCastTest::testCalcExtCastExactToStringTruncates()
     BOOST_CHECK(iter == calc.mWarnings.end());
 }
 
+
+// cast decimal numbers to strings; truncates
+void
+CalcExtCastTest::testCalcExtCastDecimalToStringTruncates()
+{
+    // decimal(5,2) test values: (-10.9, -.09, .30),
+    // decimal(5,0) test values: (-1090, -9, 30),
+    // decimal(5,-2) test values: (-109000, -900, 3000),
+
+    // cast to VARCHAR(3) and CHAR(3)
+    ostringstream pg(""), outloc("");
+    outloc <<  "vc,3, vc,3, vc,3, c,3, c,3, c,3, " 
+           <<  "vc,3, vc,3, vc,3, c,3, c,3, c,3, " 
+           <<  "vc,3, vc,3, vc,3, c,3, c,3, c,3;" << endl;
+    pg << "O " << outloc.str();
+    pg << "L " << outloc.str();
+    pg << "C s8, s8, s8, s4, s4, s4, s4;" << endl;
+    pg << "V -1090, -9, 30, 5, 2, 0, -2;" << endl;
+    pg << "T;" << endl;
+
+    pg << "CALL 'castA(L0, C0, C3, C4);" << endl;
+    pg << "CALL 'castA(L1, C1, C3, C4);" << endl;
+    pg << "CALL 'castA(L2, C2, C3, C4);" << endl;
+    pg << "CALL 'castA(L3, C0, C3, C4);" << endl;
+    pg << "CALL 'castA(L4, C1, C3, C4);" << endl;
+    pg << "CALL 'castA(L5, C2, C3, C4);" << endl;
+
+    pg << "CALL 'castA(L6, C0, C3, C5);" << endl;
+    pg << "CALL 'castA(L7, C1, C3, C5);" << endl;
+    pg << "CALL 'castA(L8, C2, C3, C5);" << endl;
+    pg << "CALL 'castA(L9, C0, C3, C5);" << endl;
+    pg << "CALL 'castA(L10, C1, C3, C5);" << endl;
+    pg << "CALL 'castA(L11, C2, C3, C5);" << endl;
+
+    pg << "CALL 'castA(L12, C0, C3, C6);" << endl;
+    pg << "CALL 'castA(L13, C1, C3, C6);" << endl;
+    pg << "CALL 'castA(L14, C2, C3, C6);" << endl;
+    pg << "CALL 'castA(L15, C0, C3, C6);" << endl;
+    pg << "CALL 'castA(L16, C1, C3, C6);" << endl;
+    pg << "CALL 'castA(L17, C2, C3, C6);" << endl;
+
+    refLocalOutput(pg, 18);      // make output available
+
+    Calculator calc(0);
+    try {
+        calc.assemble(pg.str().c_str());
+    }
+    catch (FennelExcn& ex) {
+        BOOST_MESSAGE("Assemble exception " << ex.getMessage());
+        BOOST_MESSAGE(pg.str());
+        BOOST_REQUIRE(0);
+    }
+
+    TupleDataWithBuffer outTuple(calc.getOutputRegisterDescriptor());
+    TupleDataWithBuffer inTuple(calc.getInputRegisterDescriptor());
+    calc.bind(&inTuple, &outTuple);
+    calc.exec();
+    printOutput(outTuple, calc);
+    deque<CalcMessage>::iterator iter = calc.mWarnings.begin();
+
+    // check results:
+    // decimal(5,2)
+    // -10.9 -> vc(3) = truncates
+    BOOST_CHECK_EQUAL(iter->pc, 0);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, truncErr));
+    iter++;
+
+    // -.09 -> vc(3) = truncates
+    BOOST_CHECK_EQUAL(iter->pc, 1);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, truncErr));
+    iter++;
+
+    // .30 - > vc(3) = ok
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[2], ".30"));
+
+    // -10.9 -> c(3) = truncates
+    BOOST_CHECK_EQUAL(iter->pc, 3);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, truncErr));
+    iter++;
+
+    // -.09 -> c(3) = truncates
+    BOOST_CHECK_EQUAL(iter->pc, 4);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, truncErr));
+    iter++;
+
+    // .30 - > c(3) = ok
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[5], ".30"));
+
+    // decimal(5,0)
+    // -1090 -> vc(3) = truncates
+    BOOST_CHECK_EQUAL(iter->pc, 6);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, truncErr));
+    iter++;
+
+    // -9 -> vc(3) = ok
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[7], "-9"));
+
+    // 30 - > vc(3) = ok
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[8], "30"));
+
+    // -1090 -> c(3) = truncates
+    BOOST_CHECK_EQUAL(iter->pc, 9);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, truncErr));
+    iter++;
+
+    // -9 -> c(3) = ok
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[10], "-9 "));
+
+    // 30 - > c(3) = ok
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[11], "30 "));
+
+    // decimal(5,-2)
+    // -109000 -> vc(3) = truncates
+    BOOST_CHECK_EQUAL(iter->pc, 12);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, truncErr));
+    iter++;
+
+    // -900 -> vc(3) = truncates
+    BOOST_CHECK_EQUAL(iter->pc, 13);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, truncErr));
+    iter++;
+
+    // 3000 -> vc(3) = truncates
+    BOOST_CHECK_EQUAL(iter->pc, 14);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, truncErr));
+    iter++;
+
+    // -109000 -> c(3) = truncates
+    BOOST_CHECK_EQUAL(iter->pc, 15);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, truncErr));
+    iter++;
+
+    // -900 -> c(3) = truncates
+    BOOST_CHECK_EQUAL(iter->pc, 16);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, truncErr));
+    iter++;
+
+    // 3000 -> c(3) = truncates
+    BOOST_CHECK_EQUAL(iter->pc, 17);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, truncErr));
+    iter++;
+
+    BOOST_CHECK(iter == calc.mWarnings.end());
+}
+
 void CalcExtCastTest::testCalcExtCastVarCharToExact()
 {
     // test values: null; 123, -123, MAX and MIN; same with trailing spaces.
@@ -711,6 +1104,186 @@ void CalcExtCastTest::testCalcExtCastCharToExact()
     BOOST_CHECK(iter == calc.mWarnings.end());
 }
 
+void CalcExtCastTest::testCalcExtCastVarCharToDecimal()
+{
+    // test values: null, 99.99, -105.0e-3, 950.00, 234.446
+    // same with trailing spaces.to
+    // decimal(5, 2)
+    // decimal(5, 0)
+    // decimal(5, -2)
+    ostringstream pg(""), outloc("");
+    outloc << "s8, s8, s8, s8, s8, s8, s8, s8, s8, " 
+           << "s8, s8, s8, s8, s8, s8, s8, s8, s8, " 
+           << "s8, s8, s8, s8, s8, s8, s8, s8, s8;" 
+           << endl;
+    pg << "O " << outloc.str();
+    pg << "L " << outloc.str();
+    pg << "C vc,1, vc,5, vc,9, vc,6, vc,7, vc,10, vc,10, vc,10, vc,10, " 
+       << "  s4, s4, s4, s4;" << endl;
+    pg << "V "                  // a null
+       << ", 0x" << stringToHex("99.99") 
+       << ", 0x" << stringToHex("-105.0e-3")
+       << ", 0x" << stringToHex("950.00")
+       << ", 0x" << stringToHex("234.446")
+       << ", 0x" << stringToHex("99.99     ") 
+       << ", 0x" << stringToHex("-105.0e-3 ")
+       << ", 0x" << stringToHex("950.00    ")
+       << ", 0x" << stringToHex("234.446   ")
+       << ", 5, 2, 0, -2;" << endl;
+    pg << "T;" << endl;
+
+    for (int i = 0; i < 9; i++)
+        pg << "CALL 'castA(L"<<i<<",C"<<i<<",C9, C10);"<< endl;
+    for (int i = 0; i < 9; i++)
+        pg << "CALL 'castA(L"<<(i+9)<<",C"<<i<<",C9, C11);"<< endl;
+    for (int i = 0; i < 9; i++)
+        pg << "CALL 'castA(L"<<(i+18)<<",C"<<i<<",C9, C12);"<< endl;
+
+    refLocalOutput(pg, 9*3);      // make output available
+
+    Calculator calc(0);
+    try {
+        calc.assemble(pg.str().c_str());
+    }
+    catch (FennelExcn& ex) {
+        BOOST_MESSAGE("Assemble exception " << ex.getMessage());
+        BOOST_MESSAGE(pg.str());
+        BOOST_REQUIRE(0);
+    }
+
+    TupleDataWithBuffer outTuple(calc.getOutputRegisterDescriptor());
+    TupleDataWithBuffer inTuple(calc.getInputRegisterDescriptor());
+    calc.bind(&inTuple, &outTuple);
+    calc.exec();
+    printOutput(outTuple, calc);
+    deque<CalcMessage>::iterator iter = calc.mWarnings.begin();
+
+    // decimal(5,2)
+    BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[0]));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[1],  9999));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[2],  -11));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[3],  95000));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[4],  23445));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[5],  9999));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[6],  -11));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[7],  95000));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[8],  23445));
+
+    // decimal(5,0)
+    BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[9]));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[10],  100));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[11],  0));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[12],  950));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[13],  234));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[14],  100));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[15],  0));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[16],  950));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[17],  234));
+
+    // decimal(5,-2)
+    BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[18]));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[19],  1));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[20],  0));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[21],  10));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[22],  2));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[23],  1));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[24],  0));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[25],  10));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[26],  2));
+
+    BOOST_CHECK(iter == calc.mWarnings.end());
+}
+
+void CalcExtCastTest::testCalcExtCastCharToDecimal()
+{
+    // test values: null, .8987, -0005.2, +980, 0.000000000000355e14
+    // same with trailing spaces.to
+    // decimal(5, 2)
+    // decimal(5, 0)
+    // decimal(5, -2)
+    ostringstream pg(""), outloc("");
+    outloc << "s8, s8, s8, s8, s8, s8, s8, s8, s8, " 
+           << "s8, s8, s8, s8, s8, s8, s8, s8, s8, " 
+           << "s8, s8, s8, s8, s8, s8, s8, s8, s8;" 
+           << endl;
+    pg << "O " << outloc.str();
+    pg << "L " << outloc.str();
+    pg << "C c,1, c,5, c,7, c,4, c,20, c,10, c,10, c,10, c,32, " 
+       << "  s4, s4, s4, s4;" << endl;
+    pg << "V "                  // a null
+       << ", 0x" << stringToHex(".8987") 
+       << ", 0x" << stringToHex("-0005.2")
+       << ", 0x" << stringToHex("+980")
+       << ", 0x" << stringToHex("0.000000000000355e14")
+       << ", 0x" << stringToHex(".8987     ")
+       << ", 0x" << stringToHex("-0005.2   ")
+       << ", 0x" << stringToHex("+980      ")
+       << ", 0x" << stringToHex("0.000000000000355e14            ")
+       << ", 5, 2, 0, -2;" << endl;
+    pg << "T;" << endl;
+
+    for (int i = 0; i < 9; i++)
+        pg << "CALL 'castA(L"<<i<<",C"<<i<<",C9, C10);"<< endl;
+    for (int i = 0; i < 9; i++)
+        pg << "CALL 'castA(L"<<(i+9)<<",C"<<i<<",C9, C11);"<< endl;
+    for (int i = 0; i < 9; i++)
+        pg << "CALL 'castA(L"<<(i+18)<<",C"<<i<<",C9, C12);"<< endl;
+
+    refLocalOutput(pg, 9*3);      // make output available
+
+    Calculator calc(0);
+    try {
+        calc.assemble(pg.str().c_str());
+    }
+    catch (FennelExcn& ex) {
+        BOOST_MESSAGE("Assemble exception " << ex.getMessage());
+        BOOST_MESSAGE(pg.str());
+        BOOST_REQUIRE(0);
+    }
+
+    TupleDataWithBuffer outTuple(calc.getOutputRegisterDescriptor());
+    TupleDataWithBuffer inTuple(calc.getInputRegisterDescriptor());
+    calc.bind(&inTuple, &outTuple);
+    calc.exec();
+    printOutput(outTuple, calc);
+    deque<CalcMessage>::iterator iter = calc.mWarnings.begin();
+
+    // decimal(5,2)
+    BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[0]));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[1],  90));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[2],  -520));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[3],  98000));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[4],  3550));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[5],  90));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[6],  -520));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[7],  98000));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[8],  3550));
+
+    // decimal(5,0)
+    BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[9]));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[10],  1));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[11],  -5));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[12],  980));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[13],  36));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[14],  1));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[15],  -5));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[16],  980));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[17],  36));
+
+    // decimal(5,-2)
+    BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[18]));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[19],  0));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[20],  0));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[21],  10));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[22],  0));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[23],  0));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[24],  0));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[25],  10));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[26],  0));
+
+    BOOST_CHECK(iter == calc.mWarnings.end());
+}
+
 void CalcExtCastTest::testCalcExtCastStringToExactFails()
 {
     // test invalid values abc, 12z
@@ -752,6 +1325,288 @@ void CalcExtCastTest::testCalcExtCastStringToExactFails()
     }
     BOOST_CHECK(iter == calc.mWarnings.end());
 }
+
+void CalcExtCastTest::testCalcExtCastStringToDecimalFails()
+{
+    // test invalid values: 12c, 34.54.243, 342.342e453.23, 234e 23
+    // cast to decimal(5,2)
+    ostringstream pg(""), outloc("");
+    outloc << "s8, s8, s8, s8, s8, s8, s8, s8;" << endl;
+    pg << "O " << outloc.str();
+    pg << "L " << outloc.str();
+    pg << "C vc,3, vc,9, vc,14, vc,7, c,3, c,9, c,14, c,7, "
+       << "  s4, s4;" << endl;
+    pg << "V 0x" << stringToHex("12c") 
+       << ", 0x" << stringToHex("34.54.243")
+       << ", 0x" << stringToHex("342.342e453.23")
+       << ", 0x" << stringToHex("234e 23")
+       << ", 0x" << stringToHex("12c") 
+       << ", 0x" << stringToHex("34.54.243")
+       << ", 0x" << stringToHex("342.342e453.23")
+       << ", 0x" << stringToHex("234e 23")
+       << ", 5, 2;" << endl;
+    pg << "T;" << endl;
+
+    for (int i = 0; i < 8; i++)
+        pg << "CALL 'castA(L"<<i<<",C"<<i<<",C8, C9);"<< endl;
+
+    refLocalOutput(pg, 8);      // make output available
+    
+    Calculator calc(0);
+    try {
+        calc.assemble(pg.str().c_str());
+    }
+    catch (FennelExcn& ex) {
+        BOOST_MESSAGE("Assemble exception " << ex.getMessage());
+        BOOST_MESSAGE(pg.str());
+        BOOST_REQUIRE(0);
+    }
+
+    TupleDataWithBuffer outTuple(calc.getOutputRegisterDescriptor());
+    TupleDataWithBuffer inTuple(calc.getInputRegisterDescriptor());
+    calc.bind(&inTuple, &outTuple);
+    calc.exec();
+    printOutput(outTuple, calc);
+
+    // all the casts should have failed
+    deque<CalcMessage>::iterator iter = calc.mWarnings.begin();
+    for (int pc = 0; pc < 8; pc++, iter++) {
+        BOOST_CHECK_EQUAL(iter->pc, pc);
+        BOOST_CHECK_EQUAL(0, strcmp(iter->str, invalidCharErr));
+    }
+    BOOST_CHECK(iter == calc.mWarnings.end());
+}
+
+void CalcExtCastTest::testCalcExtCastStringToDecimalMinMax()
+{
+    // test values: MIN, MAX,
+    //              9223372036854775808 (MAX+1),
+    //              9223372036854775807.12345
+    //              9223372036854775807.9
+    //              -9223372036854775809
+    //              -9223372036854775807.9
+    //              -9223372036854775808.9
+    //              9323415432153452535
+    //              9.78E+18
+    //              9.78E+20
+    // cast to decimal(19, 0)
+    // cast to decimal(9, -10)
+    ostringstream pg(""), outloc("");
+    outloc << "s8, s8, s8, s8, s8, s8, s8, s8, s8, s8, s8, "
+           << "s8, s8, s8, s8, s8, s8, s8, s8, s8, s8, s8;" << endl;
+    pg << "O " << outloc.str();
+    pg << "L " << outloc.str();
+    pg << "C vc,30, vc,30, vc,30, vc,30, vc,30, "
+       << "  vc,30, vc,30, vc,30, vc,30, vc,30, vc,30, "
+       << "  s4, s4, s4, s4;" << endl;
+    pg << "V 0x" << stringToHex(minInt64String())
+       << ", 0x" << stringToHex(maxInt64String())
+       << ", 0x" << stringToHex("9223372036854775808")
+       << ", 0x" << stringToHex("9223372036854775807.12345")
+       << ", 0x" << stringToHex("9223372036854775807.9") 
+       << ", 0x" << stringToHex("-9223372036854775809") 
+       << ", 0x" << stringToHex("-9223372036854775807.9")
+       << ", 0x" << stringToHex("-9223372036854775808.9")
+       << ", 0x" << stringToHex("9323415432153452535")
+       << ", 0x" << stringToHex("9.78E+18")
+       << ", 0x" << stringToHex("9.78E+20")
+       << ", 19, 0, 9, -10;" << endl;
+    pg << "T;" << endl;
+
+    for (int i = 0; i < 11; i++)
+        pg << "CALL 'castA(L"<<i<<",C"<<i<<",C11, C12);"<< endl;
+
+    for (int i = 0; i < 11; i++)
+        pg << "CALL 'castA(L"<<(i+11)<<",C"<<i<<",C13, C14);"<< endl;
+
+    refLocalOutput(pg, 22);      // make output available
+    
+    Calculator calc(0);
+    try {
+        calc.assemble(pg.str().c_str());
+    }
+    catch (FennelExcn& ex) {
+        cout << ex.getMessage();
+        BOOST_MESSAGE("Assemble exception " << ex.getMessage());
+        BOOST_MESSAGE(pg.str());
+        BOOST_REQUIRE(0);
+    }
+
+    TupleDataWithBuffer outTuple(calc.getOutputRegisterDescriptor());
+    TupleDataWithBuffer inTuple(calc.getInputRegisterDescriptor());
+    calc.bind(&inTuple, &outTuple);
+    calc.exec();
+    printOutput(outTuple, calc);
+
+    // check results:
+    deque<CalcMessage>::iterator iter = calc.mWarnings.begin();
+
+    // decimal(19,0)
+    // MIN -> decimal(19,0) = ok
+    BOOST_CHECK_EQUAL(0, cmpTupInt64(outTuple[0], std::numeric_limits<int64_t>::min()));
+
+    // MAX -> decimal(19,0) = ok
+    BOOST_CHECK_EQUAL(0, cmpTupInt64(outTuple[1], std::numeric_limits<int64_t>::max()));
+
+    // MAX + 1 -> decimal(19,0) = out of range
+    BOOST_CHECK_EQUAL(iter->pc, 2);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, outOfRangeErr));
+    iter++;
+
+    // MAX.12345 -> decimal(19, 0) = ok
+    BOOST_CHECK_EQUAL(0, cmpTupInt64(outTuple[3], std::numeric_limits<int64_t>::max()));
+
+    // MAX.9 -> decimal(19, 0) = out of range
+    BOOST_CHECK_EQUAL(iter->pc, 4);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, outOfRangeErr));
+    iter++;
+
+    // MIN - 1 -> decimal(19,0) = out of range
+    BOOST_CHECK_EQUAL(iter->pc, 5);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, outOfRangeErr));
+    iter++;
+
+    // (MIN+1).9 -> decimal(19,0) = ok
+    BOOST_CHECK_EQUAL(0, cmpTupInt64(outTuple[6], std::numeric_limits<int64_t>::min()));
+
+    // MIN.9 -> decimal(19,0) = out of range
+    BOOST_CHECK_EQUAL(iter->pc, 7);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, outOfRangeErr));
+    iter++;
+
+    // 9323415432153452535 -> decimal(19,0) = out of range
+    BOOST_CHECK_EQUAL(iter->pc, 8);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, outOfRangeErr));
+    iter++;
+
+    // 9.78E+18 -> decimal(19,0) = out of range
+    BOOST_CHECK_EQUAL(iter->pc, 9);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, outOfRangeErr));
+    iter++;
+
+    // 9.78E+20 -> decimal(19,0) = out of range
+    BOOST_CHECK_EQUAL(iter->pc, 10);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, outOfRangeErr));
+    iter++;
+
+    // decimal(9,-10)
+    int64_t factor = 1;
+    for (int i = 0; i < 10; i++) {
+        factor *= 10;
+    }
+    int64_t smax = std::numeric_limits<int64_t>::max()/factor + 1;
+    int64_t smin = std::numeric_limits<int64_t>::min()/factor - 1;
+
+    // MIN -> decimal(9,-10) = ok
+    BOOST_CHECK_EQUAL(0, cmpTupInt64(outTuple[11], smin));
+
+    // MAX -> decimal(9,-10) = ok
+    BOOST_CHECK_EQUAL(0, cmpTupInt64(outTuple[12], smax));
+
+    // MAX + 1 -> decimal(9,-10) = ok
+    BOOST_CHECK_EQUAL(0, cmpTupInt64(outTuple[13], smax));
+
+    // MAX.12345 -> decimal(19,-10) = ok
+    BOOST_CHECK_EQUAL(0, cmpTupInt64(outTuple[14], smax));
+
+    // MAX.9 -> decimal(19,-10) = ok
+    BOOST_CHECK_EQUAL(0, cmpTupInt64(outTuple[15], smax));
+
+    // MIN - 1 -> decimal(9,-10) = ok
+    BOOST_CHECK_EQUAL(0, cmpTupInt64(outTuple[16], smin));
+
+    // (MIN+1).9 -> decimal(9,-10) = ok
+    BOOST_CHECK_EQUAL(0, cmpTupInt64(outTuple[17], smin));
+
+    // MIN.9 -> decimal(9,-10) = ok
+    BOOST_CHECK_EQUAL(0, cmpTupInt64(outTuple[18], smin));
+
+    // 9323415432153452535 -> decimal(9,-10) = ok
+    BOOST_CHECK_EQUAL(0, cmpTupInt64(outTuple[19], 932341543ll));
+
+    // 9.78E+18 -> decimal(9,-10) = ok
+    BOOST_CHECK_EQUAL(0, cmpTupInt64(outTuple[20], 978000000ll));
+
+    // 9.78E+20 -> decimal(9,-10) = out of range
+    BOOST_CHECK_EQUAL(iter->pc, 21);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, outOfRangeErr));
+    iter++;
+
+    BOOST_CHECK(iter == calc.mWarnings.end());
+}
+
+
+void CalcExtCastTest::testCalcExtCastStringToDecimalRange()
+{
+    // test values: 1000 999.999, 999.991 9.99999e2 9.9999e2, 99999999990000000000e-20
+    // cast to decimal(5, 2)
+    ostringstream pg(""), outloc("");
+    outloc << "s8, s8, s8, s8, s8, s8;" << endl;
+    pg << "O " << outloc.str();
+    pg << "L " << outloc.str();
+    pg << "C vc,30, vc,30, vc,30, vc,30, vc,30, vc,30, "
+       << "  s4, s4;" << endl;
+    pg << "V 0x" << stringToHex("1000")
+       << ", 0x" << stringToHex("999.999")
+       << ", 0x" << stringToHex("999.991")
+       << ", 0x" << stringToHex("9.99999e2")
+       << ", 0x" << stringToHex("9.9999e2")
+       << ", 0x" << stringToHex("99999999990000000000e-20") 
+       << ", 5, 2;" << endl;
+    pg << "T;" << endl;
+
+    for (int i = 0; i < 6; i++)
+        pg << "CALL 'castA(L"<<i<<",C"<<i<<",C6, C7);"<< endl;
+
+    refLocalOutput(pg, 6);      // make output available
+    
+    Calculator calc(0);
+    try {
+        calc.assemble(pg.str().c_str());
+    }
+    catch (FennelExcn& ex) {
+        cout << ex.getMessage();
+        BOOST_MESSAGE("Assemble exception " << ex.getMessage());
+        BOOST_MESSAGE(pg.str());
+        BOOST_REQUIRE(0);
+    }
+
+    TupleDataWithBuffer outTuple(calc.getOutputRegisterDescriptor());
+    TupleDataWithBuffer inTuple(calc.getInputRegisterDescriptor());
+    calc.bind(&inTuple, &outTuple);
+    calc.exec();
+    printOutput(outTuple, calc);
+
+    // check results:
+    deque<CalcMessage>::iterator iter = calc.mWarnings.begin();
+
+    // decimal(5,2)
+    // 1000 -> decimal(5,2) = out of range
+    BOOST_CHECK_EQUAL(iter->pc, 0);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, outOfRangeErr));
+    iter++;
+
+    // 999.999 -> decimal(5,2) = out of range
+    BOOST_CHECK_EQUAL(iter->pc, 1);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, outOfRangeErr));
+    iter++;
+
+    // 999.991 -> decimal(5,2) = ok
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[2], 99999));
+
+    // 9.99999e2 -> decimal(5,2) = out of range
+    BOOST_CHECK_EQUAL(iter->pc, 3);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, outOfRangeErr));
+    iter++;
+
+    // 9.9999e2 -> decimal(5,2) = ok
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[4], 99999));
+
+    // 99999999990000000000e-20 -> decimal(5,2) = ok
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[5], 100));
+    BOOST_CHECK(iter == calc.mWarnings.end());
+}
+
 
 void CalcExtCastTest::testCalcExtCastStringToApprox()
 {

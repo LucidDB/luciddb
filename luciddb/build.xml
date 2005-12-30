@@ -87,6 +87,9 @@
   <property name="LucidDbConf.xmi"
     location="${xmi.dir}/LucidDbConf.xmi"/>
 
+  <!-- Set to a path to enable Fennel JNI handle tracing during tests. -->
+  <property name="trace.fennel.handles" value=""/>
+
   <!-- Classpaths -->
 
   <!-- classpath for running tests via ant -->
@@ -178,8 +181,10 @@
       <replacefilter token="@cachePageSize@" value="32768"/>
       <replacefilter token="@cachePagesMax@" value="5000"/>
       <replacefilter token="@cachePagesInit@" value="5000"/>
+      <replacefilter token="@groupCommitInterval@" value="0"/>
       <replacefilter token="@fennel.disabled@" value="${fennel.disabled}"/>
       <replacefilter token="@resourceDir@" value="$${FARRAGO_HOME}/catalog/fennel"/>
+      <replacefilter token="@jniHandleTraceFile@" value="${trace.fennel.handles}"/>
     </replace>
     <farrago.mdrFork target="forked_importConfig"/>
   </target>
@@ -285,7 +290,7 @@
 
   <target name="txn" depends="compile">
     <filelist dir="${testsrc.dir}/txn" id="filelist.txnsql"
-      files="negative.sql"/>
+      files="negative.sql,rollback.sql"/>
     <pathconvert property="filelist.txnsql" refid="filelist.txnsql"
       pathsep="${line.separator}" dirsep="${file.separator}" />
     <runSqlTests filelist="${filelist.txnsql}"/>

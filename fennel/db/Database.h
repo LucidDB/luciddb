@@ -92,6 +92,8 @@ class Database
 
     LogicalTxnParticipantFactory *pTxnParticipantFactory;
 
+    bool forceTxns;
+
     bool recoveryRequired;
 
     DeviceMode openMode;
@@ -159,6 +161,7 @@ class Database
 public:
     static ParamName paramDatabaseDir;
     static ParamName paramResourceDir;
+    static ParamName paramForceTxns;
     static ParamName paramDatabasePrefix;
     static ParamName paramTempPrefix;
     static ParamName paramShadowLogPrefix;
@@ -204,6 +207,10 @@ public:
     StoredTypeDescriptorFactory const &getTypeFactory() const;
 
     bool isRecoveryRequired() const;
+
+    bool shouldForceTxns() const;
+
+    void recoverPhysical();
 
     void recover(
         LogicalTxnParticipantFactory &txnParticipantFactory);

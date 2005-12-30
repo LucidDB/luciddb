@@ -149,7 +149,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      */
     public static final SqlBinaryOperator divideOperator =
         new SqlBinaryOperator("/", SqlKind.Divide, 30, true,
-            SqlTypeStrategies.rtiNullableProduct,
+            SqlTypeStrategies.rtiNullableQuotient,
             SqlTypeStrategies.otiFirstKnown,
             SqlTypeStrategies.otcDivisionOperator);
 
@@ -241,9 +241,8 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      */
     public static final SqlBinaryOperator minusOperator =
         new SqlMonotonicBinaryOperator("-", SqlKind.Minus, 20, true,
-            // FIXME jvs 4-June-2005:  this is incorrect; minus
-            // has to take precision into account
-            SqlTypeStrategies.rtiLeastRestrictive,
+            // Same type inference strategy as sum
+            SqlTypeStrategies.rtiNullableSum,
             SqlTypeStrategies.otiFirstKnown,
             SqlTypeStrategies.otcMinusOperator);
 
@@ -279,9 +278,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      */
     public static final SqlBinaryOperator plusOperator =
         new SqlMonotonicBinaryOperator("+", SqlKind.Plus, 20, true,
-            // FIXME jvs 4-June-2005:  this is incorrect; plus
-            // has to take precision into account
-            SqlTypeStrategies.rtiLeastRestrictive,
+            SqlTypeStrategies.rtiNullableSum,
             SqlTypeStrategies.otiFirstKnown,
             SqlTypeStrategies.otcPlusOperator);
 

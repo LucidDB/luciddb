@@ -1,0 +1,42 @@
+<project name="tch" default="simple-test">
+  <target name="simple-test">
+    <test-suite testunit="simple-test">
+
+      <test name="joinEqSanity">
+        <test-parameter name="jdbc-driver" 
+          value="com.lucidera.jdbc.LucidDbLocalDriver"/>
+        <test-parameter name="sql-file" value="joinEqSanity.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="compIdx">
+        <test-parameter name="jdbc-driver" 
+          value="com.lucidera.jdbc.LucidDbLocalDriver"/>
+        <test-parameter name="sql-file" value="compIdx.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="rangeNConv">
+        <test-parameter name="jdbc-driver" 
+          value="com.lucidera.jdbc.LucidDbLocalDriver"/>
+        <test-parameter name="sql-file" value="rangeNConv.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="subFrom">
+        <test-parameter name="jdbc-driver" 
+          value="com.lucidera.jdbc.LucidDbLocalDriver"/>
+        <test-parameter name="sql-file" value="subFrom.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+<!-- 
+      <test name="aggJoinEq">
+        <test-parameter name="jdbc-driver" 
+          value="com.lucidera.jdbc.LucidDbLocalDriver"/>
+        <test-parameter name="sql-file" value="aggJoinEq.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+-->
+    </test-suite>
+  </target>
+</project>

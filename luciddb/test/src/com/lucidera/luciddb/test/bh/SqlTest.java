@@ -61,18 +61,29 @@ public class SqlTest extends AutoTest {
         // obtain parameters, these are both required
         jdbcDriverClassName = param.getString("jdbc-driver");
         sqlFile = param.getString("sql-file");
-        Class clazz = Class.forName(jdbcDriverClassName);
-        driver = (FarragoJdbcEngineDriver) clazz.newInstance();
-        driverName = driver.getClass().getName();
-        urlPrefix = driver.getUrlPrefix();
+        // following parameters are not required
+        String username = param.getString("username", "");
+        if (username.equals("")) {
+            username = FarragoCatalogInit.SA_USER_NAME;
+        }
+        String passwd = param.getString("passwd", "");
+        urlPrefix = param.getString("url", "");
+        driverName = jdbcDriverClassName;
+        if (urlPrefix.equals("")) {
+            Class clazz = Class.forName(jdbcDriverClassName);
+            driver = (FarragoJdbcEngineDriver) clazz.newInstance();
+            driverName = driver.getClass().getName();
+            urlPrefix = driver.getUrlPrefix();
+        }
         assert (sqlFile.endsWith(".sql"));
         sqlFileSansExt =
             new File(sqlFile.substring(0, sqlFile.length() - 4));
         args =
             new String [] {
-                "-u", driver.getUrlPrefix(), "-d",
+                "-u", urlPrefix, "-d",
                 driverName, "-n",
-                FarragoCatalogInit.SA_USER_NAME,
+                username, "-p",
+                passwd,
                 "--force=true", "--silent=true",
                 "--showWarnings=false", "--maxWidth=1024"
             };

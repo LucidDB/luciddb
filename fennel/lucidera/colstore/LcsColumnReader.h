@@ -76,6 +76,10 @@ class LcsColumnReader
      */
     PBitVecFuncPtr pFuncReadBitVec;
 
+    // REVIEW jvs 27-Dec-2005:  Either someone at Broadbase didn't
+    // know how to use pointer-to-member-functions, or Visual C++ had
+    // a bug.  Anyway, should be able to use them instead of statics.
+
     /**
      * Retrieves the current value of the column from a fixed mode batch
      */

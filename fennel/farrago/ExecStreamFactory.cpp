@@ -33,6 +33,8 @@
 #include "fennel/ftrs/BTreeSortExecStream.h"
 #include "fennel/exec/MergeExecStream.h"
 #include "fennel/exec/SegBufferExecStream.h"
+#include "fennel/exec/SplitterExecStream.h"
+#include "fennel/exec/BarrierExecStream.h"
 #include "fennel/exec/ExecStreamGraphEmbryo.h"
 #include "fennel/ftrs/FtrsTableWriterFactory.h"
 #include "fennel/exec/CartesianJoinExecStream.h"
@@ -282,6 +284,20 @@ void ExecStreamFactory::visit(ProxyBufferingTupleStreamDef &streamDef)
         params.scratchAccessor.pCacheAccessor = params.pCacheAccessor;
     }
     embryo.init(new SegBufferExecStream(), params);
+}
+
+void ExecStreamFactory::visit(ProxySplitterStreamDef &streamDef)
+{
+    SplitterExecStreamParams params;
+    readExecStreamParams(params, streamDef);
+    embryo.init(new SplitterExecStream(), params);
+}
+
+void ExecStreamFactory::visit(ProxyBarrierStreamDef &streamDef)
+{
+    BarrierExecStreamParams params;
+    readTupleStreamParams(params, streamDef);
+    embryo.init(new BarrierExecStream(), params);
 }
 
 void ExecStreamFactory::readExecStreamParams(

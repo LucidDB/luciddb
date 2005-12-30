@@ -27,6 +27,7 @@
 #include "fennel/txn/LogicalTxnStoredStructs.h"
 #include "fennel/segment/CrcSegOutputStream.h"
 #include "fennel/segment/SpillOutputStream.h"
+#include "fennel/segment/SegmentFactory.h"
 #include "fennel/common/ByteInputStream.h"
 
 #include <boost/bind.hpp>
@@ -57,6 +58,9 @@ LogicalTxnLog::LogicalTxnLog(
     pOutputStream->getSegPos(lastCheckpointMemento.logPosition);
     lastCheckpointMemento.nUncommittedTxns = 0;
     nCommittedBeforeLastCheckpoint = 0;
+
+    groupCommitInterval = pSegmentFactory->getConfigMap().getIntParam(
+        "groupCommitInterval", 30);
 }
 
 SharedLogicalTxnLog LogicalTxnLog::newLogicalTxnLog(
@@ -128,20 +132,25 @@ void LogicalTxnLog::commitTxn(SharedLogicalTxn pTxn)
         PConstBuffer pBuffer = pInputStream->getReadPointer(1,&cbActual);
         pOutputStream->writeBytes(pBuffer,cbActual);
     }
-    // TODO:  parameterize
+
     boost::xtime groupCommitExpiration;
-    convertTimeout(30,groupCommitExpiration);
+    if (groupCommitInterval) {
+        convertTimeout(groupCommitInterval,groupCommitExpiration);
+    }
     SegStreamPosition logPos;
     pOutputStream->getSegPos(logPos);
     PageId startPageId = CompoundId::getPageId(logPos.segByteId);
     for (;;) {
-        bool timeout = !condition.timed_wait(mutexGuard,groupCommitExpiration);
+        bool timeout = true;
+        if (groupCommitInterval) {
+            timeout = !condition.timed_wait(mutexGuard,groupCommitExpiration);
 
-        pOutputStream->getSegPos(logPos);
-        PageId lastPageId = CompoundId::getPageId(logPos.segByteId);
-        if (lastPageId != startPageId) {
-            // someone else has flushed for us
-            break;
+            pOutputStream->getSegPos(logPos);
+            PageId lastPageId = CompoundId::getPageId(logPos.segByteId);
+            if (lastPageId != startPageId) {
+                // someone else has flushed for us
+                break;
+            }
         }
 
         if (timeout) {

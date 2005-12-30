@@ -704,6 +704,11 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("cast(1 as real)", "REAL NOT NULL");
         checkExpType("cast(1.0 as double)", "DOUBLE NOT NULL");
         checkExpType("cast(1 as double)", "DOUBLE NOT NULL");
+        checkExpType("cast(123 as decimal(6,4))", "DECIMAL(6, 4) NOT NULL");
+        checkExpType("cast(123 as decimal(6))", "DECIMAL(6) NOT NULL");
+        checkExpType("cast(123 as decimal)", "DECIMAL NOT NULL");
+        checkExpType("cast(1.234 as decimal(2,5))", "DECIMAL(2, 5) NOT NULL");
+        checkExpType("cast('4.5' as decimal(3,1))", "DECIMAL(3, 1) NOT NULL");
         checkExpType("cast(null as boolean)", "BOOLEAN");
         checkExpType("cast('abc' as varchar(1))", "VARCHAR(1) NOT NULL");
         checkExpType("cast('abc' as char(1))", "CHAR(1) NOT NULL");
@@ -717,6 +722,8 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "(?s).*Unknown datatype name 'BAR'");
         checkExpFails("cast(multiset[1] as integer)",
             "(?s).*Cast function cannot convert value of type INTEGER MULTISET to type INTEGER");
+        checkExpFails("cast(x'ff' as decimal(5,2))",
+            "(?s).*Cast function cannot convert value of type BINARY\\(1\\) to type DECIMAL\\(5, 2\\)");
     }
 
     public void testDateTime() {
@@ -920,7 +927,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
     public void testElement() {
         checkExpType("element(multiset[1])", "INTEGER NOT NULL");
-        checkExpType("1.0+element(multiset[1])", "DECIMAL(2, 1) NOT NULL");
+        checkExpType("1.0+element(multiset[1])", "DECIMAL(12, 1) NOT NULL");
         checkExpType("element(multiset['1'])", "CHAR(1) NOT NULL");
         checkExpType("element(multiset[1e-2])", "DOUBLE NOT NULL");
         checkExpType("element(multiset[multiset[cast(null as tinyint)]])", "TINYINT MULTISET NOT NULL");
@@ -1063,6 +1070,93 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("interval '1' month / 0.1", "INTERVAL MONTH NOT NULL");
         checkExpType("interval '1-2' year TO month / 0.1e-9", "INTERVAL YEAR TO MONTH NOT NULL");
         checkExpFails("1.234/interval '1 1:2:3' day to second ", "(?s).*Cannot apply '/' to arguments of type '<DECIMAL.4, 3.> / <INTERVAL DAY TO SECOND>'.*");
+    }
+
+    public void testNumericOperators()
+    {
+        // addition operator
+        checkExpType("cast(1 as TINYINT) + cast(5 as INTEGER)", "INTEGER NOT NULL");
+        checkExpType("cast(null as SMALLINT) + cast(5 as BIGINT)", "BIGINT");
+        checkExpType("cast(1 as REAL) + cast(5 as INTEGER)", "DOUBLE NOT NULL");
+        checkExpType("cast(null as REAL) + cast(5 as DOUBLE)", "DOUBLE");
+
+        checkExpType("cast(1 as DECIMAL(5, 2)) + cast(1 as DOUBLE)", "DOUBLE NOT NULL");
+        checkExpType("cast(null as DECIMAL(5, 2)) + cast(1 as DOUBLE)", "DOUBLE");
+
+        checkExpType("1.543 + 2.34", "DECIMAL(5, 3) NOT NULL");
+        checkExpType("cast(1 as DECIMAL(5, 2)) + cast(1 as BIGINT)", "DECIMAL(19, 2) NOT NULL");
+        checkExpType("cast(1 as DECIMAL(5, 2)) + cast(1 as INTEGER)", "DECIMAL(13, 2) NOT NULL");
+        checkExpType("cast(1 as DECIMAL(5, 2)) + cast(null as SMALLINT)", "DECIMAL(8, 2)");
+        checkExpType("cast(1 as DECIMAL(5, 2)) + cast(1 as TINYINT)", "DECIMAL(6, 2) NOT NULL");
+
+        checkExpType("cast(1 as DECIMAL(5, 2)) + cast(1 as DECIMAL(5, 2))", "DECIMAL(6, 2) NOT NULL");
+        checkExpType("cast(1 as DECIMAL(5, 2)) + cast(1 as DECIMAL(6, 2))", "DECIMAL(7, 2) NOT NULL");
+        checkExpType("cast(1 as DECIMAL(4, 2)) + cast(1 as DECIMAL(6, 4))", "DECIMAL(7, 4) NOT NULL");
+        checkExpType("cast(null as DECIMAL(4, 2)) + cast(1 as DECIMAL(6, 4))", "DECIMAL(7, 4)");
+        checkExpType("cast(1 as DECIMAL(19, 2)) + cast(1 as DECIMAL(19, 2))", "DECIMAL(19, 2) NOT NULL");
+
+        // substraction operator
+        checkExpType("cast(1 as TINYINT) - cast(5 as BIGINT)", "BIGINT NOT NULL");
+        checkExpType("cast(null as INTEGER) - cast(5 as SMALLINT)", "INTEGER");
+        checkExpType("cast(1 as INTEGER) - cast(5 as REAL)", "DOUBLE NOT NULL");
+        checkExpType("cast(null as REAL) - cast(5 as DOUBLE)", "DOUBLE");
+
+        checkExpType("cast(1 as DECIMAL(5, 2)) - cast(1 as DOUBLE)", "DOUBLE NOT NULL");
+        checkExpType("cast(null as DOUBLE) - cast(1 as DECIMAL)", "DOUBLE");
+
+        checkExpType("1.543 - 24", "DECIMAL(14, 3) NOT NULL");
+        checkExpType("cast(1 as DECIMAL(5)) - cast(1 as BIGINT)", "DECIMAL(19, 0) NOT NULL");
+        checkExpType("cast(1 as DECIMAL(5, 2)) - cast(1 as INTEGER)", "DECIMAL(13, 2) NOT NULL");
+        checkExpType("cast(1 as DECIMAL(5, 2)) - cast(null as SMALLINT)", "DECIMAL(8, 2)");
+        checkExpType("cast(1 as DECIMAL(5, 2)) - cast(1 as TINYINT)", "DECIMAL(6, 2) NOT NULL");
+
+        checkExpType("cast(1 as DECIMAL(5, 2)) - cast(1 as DECIMAL(7))", "DECIMAL(10, 2) NOT NULL");
+        checkExpType("cast(1 as DECIMAL(5, 2)) - cast(1 as DECIMAL(6, 2))", "DECIMAL(7, 2) NOT NULL");
+        checkExpType("cast(1 as DECIMAL(4, 2)) - cast(1 as DECIMAL(6, 4))", "DECIMAL(7, 4) NOT NULL");
+        checkExpType("cast(null as DECIMAL) - cast(1 as DECIMAL(6, 4))", "DECIMAL(19, 4)");
+        checkExpType("cast(1 as DECIMAL(19, 2)) - cast(1 as DECIMAL(19, 2))", "DECIMAL(19, 2) NOT NULL");
+
+        // multiply operator
+        checkExpType("cast(1 as TINYINT) * cast(5 as INTEGER)", "INTEGER NOT NULL");
+        checkExpType("cast(null as SMALLINT) * cast(5 as BIGINT)", "BIGINT");
+        checkExpType("cast(1 as REAL) * cast(5 as INTEGER)", "DOUBLE NOT NULL");
+        checkExpType("cast(null as REAL) * cast(5 as DOUBLE)", "DOUBLE");
+
+        checkExpType("cast(1 as DECIMAL(7, 3)) * 1.654", "DECIMAL(11, 6) NOT NULL");
+        checkExpType("cast(null as DECIMAL(7, 3)) * cast (1.654 as DOUBLE)", "DOUBLE");
+
+        checkExpType("cast(null as DECIMAL(5, 2)) * cast(1 as BIGINT)", "DECIMAL(19, 2)");
+        checkExpType("cast(1 as DECIMAL(5, 2)) * cast(1 as INTEGER)", "DECIMAL(15, 2) NOT NULL");
+        checkExpType("cast(1 as DECIMAL(5, 2)) * cast(1 as SMALLINT)", "DECIMAL(10, 2) NOT NULL");
+        checkExpType("cast(1 as DECIMAL(5, 2)) * cast(1 as TINYINT)", "DECIMAL(8, 2) NOT NULL");
+
+        checkExpType("cast(1 as DECIMAL(5, 2)) * cast(1 as DECIMAL(5, 2))", "DECIMAL(10, 4) NOT NULL");
+        checkExpType("cast(1 as DECIMAL(5, 2)) * cast(1 as DECIMAL(6, 2))", "DECIMAL(11, 4) NOT NULL");
+        checkExpType("cast(1 as DECIMAL(4, 2)) * cast(1 as DECIMAL(6, 4))", "DECIMAL(10, 6) NOT NULL");
+        checkExpType("cast(null as DECIMAL(4, 2)) * cast(1 as DECIMAL(6, 4))", "DECIMAL(10, 6)");
+        checkExpType("cast(1 as DECIMAL(4, 10)) * cast(null as DECIMAL(6, 10))", "DECIMAL(10, 19)");
+        checkExpType("cast(1 as DECIMAL(19, 2)) * cast(1 as DECIMAL(19, 2))", "DECIMAL(19, 4) NOT NULL");
+
+        // divide operator
+        checkExpType("cast(1 as TINYINT) / cast(5 as INTEGER)", "INTEGER NOT NULL");
+        checkExpType("cast(null as SMALLINT) / cast(5 as BIGINT)", "BIGINT");
+        checkExpType("cast(1 as REAL) / cast(5 as INTEGER)", "DOUBLE NOT NULL");
+        checkExpType("cast(null as REAL) / cast(5 as DOUBLE)", "DOUBLE");
+
+        checkExpType("cast(1 as DECIMAL(7, 3)) / 1.654", "DECIMAL(19, 12) NOT NULL");
+        checkExpType("cast(null as DECIMAL(7, 3)) / cast (1.654 as DOUBLE)", "DOUBLE");
+
+        checkExpType("cast(null as DECIMAL(5, 2)) / cast(1 as BIGINT)", "DECIMAL(19, 16)");
+        checkExpType("cast(1 as DECIMAL(5, 2)) / cast(1 as INTEGER)", "DECIMAL(19, 16) NOT NULL");
+        checkExpType("cast(1 as DECIMAL(5, 2)) / cast(1 as SMALLINT)", "DECIMAL(19, 16) NOT NULL");
+        checkExpType("cast(1 as DECIMAL(5, 2)) / cast(1 as TINYINT)", "DECIMAL(19, 16) NOT NULL");
+
+        checkExpType("cast(1 as DECIMAL(5, 2)) / cast(1 as DECIMAL(5, 2))", "DECIMAL(19, 14) NOT NULL");
+        checkExpType("cast(1 as DECIMAL(5, 2)) / cast(1 as DECIMAL(6, 2))", "DECIMAL(19, 14) NOT NULL");
+        checkExpType("cast(1 as DECIMAL(4, 2)) / cast(1 as DECIMAL(6, 4))", "DECIMAL(19, 13) NOT NULL");
+        checkExpType("cast(null as DECIMAL(4, 2)) / cast(1 as DECIMAL(6, 4))", "DECIMAL(19, 13)");
+        checkExpType("cast(1 as DECIMAL(4, 10)) / cast(null as DECIMAL(6, 120))", "DECIMAL(19, 0)");
+        checkExpType("cast(1 as DECIMAL(19, 2)) / cast(1 as DECIMAL(19, 2))", "DECIMAL(19, 0) NOT NULL");
     }
 
     private void checkWin(String sql, String expectedMsgPattern) {

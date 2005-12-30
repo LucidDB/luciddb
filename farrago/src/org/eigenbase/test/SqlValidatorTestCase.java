@@ -676,6 +676,16 @@ public class SqlValidatorTestCase extends TestCase
             check(sql, AbstractSqlTester.IntegerTypeChecker, result, 0);
         }
 
+        public void checkScalarExact(
+            String expression,
+            String expectedType,
+            String result)
+        {
+            String sql = buildQuery(expression);
+            TypeChecker typeChecker = new AbstractSqlTester.StringTypeChecker(expectedType);
+            check(sql, typeChecker, result, 0);
+        }
+
         public void checkScalarApprox(
             String expression,
             String expectedType,

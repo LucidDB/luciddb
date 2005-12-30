@@ -82,9 +82,10 @@ class LcsDataServer extends MedAbstractFennelDataServer
     {
         super.registerRules(planner);
 
-        // TODO jvs 26-Oct-2005:  planner rules specific to
-        // column-store go here, e.g.
-        planner.addRule(new LcsClusterAppendRule());
+        // NOTE jvs 26-Oct-2005:  planner rules specific to
+        // column-store go here
+        planner.addRule(new LcsTableAppendRule());
+        planner.addRule(new LcsTableProjectionRule());
     }
 
     // implement FarragoMedLocalDataServer
@@ -93,32 +94,22 @@ class LcsDataServer extends MedAbstractFennelDataServer
         FemLocalIndex generatedPrimaryKeyIndex)
         throws SQLException
     {
-        // TODO jvs 5-Nov-2005:  get rid of this once we support unclustered
-        // indexes on LCS tables
-        if (generatedPrimaryKeyIndex != null) {
-            generatedPrimaryKeyIndex.refDelete();
-        }
-
-        // Verify that no column has a UDT or collection for its type, because
+        // Verify that no column has a collection for its type, because
         // we don't support those...yet.
         Set<CwmColumn> uncoveredColumns = new HashSet<CwmColumn>(
             table.getFeature());
         for (CwmColumn col : uncoveredColumns) {
-            if (col.getType() instanceof FemUserDefinedType) {
-                throw Util.needToImplement(
-                    "column-store for UDT");
-            }
             if (col.getType() instanceof FemSqlcollectionType) {
                 throw Util.needToImplement(
                     "column-store for collection type");
             }
         }
+        
         // Verify that clustered indexes do not overlap
         for (Object i : FarragoCatalogUtil.getTableIndexes(repos, table)) {
             FemLocalIndex index = (FemLocalIndex) i;
             if (!index.isClustered()) {
-                throw Util.needToImplement(
-                    "column-store unclustered index");
+                continue;
             }
             // LCS clustered indexes are sorted on RID, not value
             index.setSorted(false);
@@ -154,6 +145,30 @@ class LcsDataServer extends MedAbstractFennelDataServer
         }
     }
 
+    // NOTE jvs 20-Dec-2005:  For now we just stub out unclustered indexes
+    // until they're working in LCS.
+
+    // implement FarragoMedLocalDataServer
+    public long createIndex(FemLocalIndex index)
+    {
+        if (index.isClustered()) {
+            return super.createIndex(index);
+        } else {
+            return -1;
+        }
+    }
+    
+    // implement FarragoMedLocalDataServer
+    public void dropIndex(
+        FemLocalIndex index,
+        long rootPageId,
+        boolean truncate)
+    {
+        if (index.isClustered()) {
+            super.dropIndex(index, rootPageId, truncate);
+        }
+    }
+    
     protected void prepareIndexCmd(
         FemIndexCmd cmd,
         FemLocalIndex index)
@@ -174,8 +189,6 @@ class LcsDataServer extends MedAbstractFennelDataServer
             tupleDesc.getAttrDescriptor().add(attrDesc);
             attrDesc.setTypeOrdinal(
                 typeDesc.getOrdinal());
-            attrDesc.setByteLength(typeDesc.getFixedByteCount());
-            attrDesc.setNullable(false);
         }
 
         cmd.setTupleDesc(tupleDesc);
@@ -183,6 +196,14 @@ class LcsDataServer extends MedAbstractFennelDataServer
             FennelRelUtil.createTupleProjection(
                 repos,
                 FennelRelUtil.newIotaProjection(1)));
+
+        // Tell Fennel how to drop the cluster pages together with
+        // the BTree.  The constant 1 below projects the PageId pointer
+        // in leaf tuples.
+        cmd.setLeafPageIdProj(
+            FennelRelUtil.createTupleProjection(
+                repos,
+                new Integer [] { 1 }));
     }
 }
 

@@ -12,14 +12,21 @@
       <test name="importschema" requiresRun="creschema">
         <test-parameter name="jdbc-driver" 
           value="com.lucidera.jdbc.LucidDbLocalDriver"/>
-        <test-parameter name="sql-file" value="gen/importschema.sql"/>
+        <test-parameter name="sql-file" value="gen/foreigntabl.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
-      <test name="colstore" requiresRun="creschema">
+      <test name="tableload" requiresRun="importschema">
         <test-parameter name="jdbc-driver" 
           value="com.lucidera.jdbc.LucidDbLocalDriver"/>
-        <test-parameter name="sql-file" value="gen/colstore.sql"/>
+        <test-parameter name="sql-file" value="gen/tblload.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="types">
+        <test-parameter name="jdbc-driver" 
+          value="com.lucidera.jdbc.LucidDbLocalDriver"/>
+        <test-parameter name="sql-file" value="metadatatypes.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 

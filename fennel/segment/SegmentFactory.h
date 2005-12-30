@@ -26,6 +26,7 @@
 
 #include "fennel/common/CompoundId.h"
 #include "fennel/common/ClosableObject.h"
+#include "fennel/common/ConfigMap.h"
 #include "fennel/synch/SynchObj.h"
 #include "fennel/segment/TracingSegment.h"
 #include "fennel/device/DeviceMode.h"
@@ -36,7 +37,6 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-class ConfigMap;
 class LinearDeviceSegmentParams;
 class PseudoUuid;
 
@@ -64,6 +64,8 @@ class SegmentFactory
 
     StrictMutex mutex;
 
+    ConfigMap configMap;
+
     DeviceId allocateTempDeviceId();
 
     void deallocateTempDeviceId(DeviceId);
@@ -88,6 +90,11 @@ public:
         SharedTraceTarget pTraceTarget);
     
     virtual ~SegmentFactory();
+
+    /**
+     * @return ConfigMap parameterizing this factory
+     */
+    ConfigMap const &getConfigMap() const;
 
     /**
      * Opens a LinearDeviceSegment.

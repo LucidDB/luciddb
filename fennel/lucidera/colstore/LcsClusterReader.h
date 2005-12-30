@@ -49,12 +49,12 @@ FENNEL_BEGIN_NAMESPACE
  * Here's how to use a LcsClusterReader (Scan) and LcsColumnReader (ColScan):
  *
  * Scan.Init
- * for i in 0..nCols ColScan[i].Init
+ * for i in 0..nClusterCols ColScan[i].Init
  * Scan.Position(first rid)
  * do
- *   for i in 0..nCols ColScan[i].Sync
+ *   for i in 0..nClusterCols ColScan[i].Sync
  *   do
- *     for i in 0..nCols print ColScan[i].GetCurrentValue
+ *     for i in 0..nClusterCols print ColScan[i].GetCurrentValue
  *   while Scan.AdvanceWithinBatch(1)
  * while Scan.NextRange != EOF
  * Scan.Close()
@@ -132,7 +132,8 @@ class LcsClusterReader : public LcsClusterAccessBase
     }
 
     /**
-     * Updates class status to reflect page just read
+     * Updates class status to reflect page just read and sets header
+     * values to point within the current page
      */
     void setUpBlock();
 
@@ -153,11 +154,6 @@ class LcsClusterReader : public LcsClusterAccessBase
 
 public:
     /**
-     * Number of columns in the cluster
-     */
-    uint nCols;
-
-    /**
      * Column readers for each cluster column
      */
     boost::scoped_array<LcsColumnReader> clusterCols;
@@ -177,6 +173,11 @@ public:
      * Initializes state variables used by cluster reader.
      */
     void open();
+
+    /**
+     * Performs shutdown on cluster reader
+     */
+    void close();
 
     /**
      * Gets first page in a cluster

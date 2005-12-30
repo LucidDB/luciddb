@@ -25,6 +25,7 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/common/Backtrace.h"
+#include "fennel/common/ConfigMap.h"
 #include <ostream>
 #include <cassert>
 #include <stdexcept>
@@ -73,6 +74,7 @@ FENNEL_END_CPPFILE("$Id");
 // testBacktrace tests Backtrace()
 // testBacktrace a tests AutoBacktrace of assert()
 // testBacktrace e tests AutoBacktrace of an uncaught exception
+// testBacktrace s tests AutoBacktrace of a SIGSEGV
 int main(int argc, char **argv)
 {
     if (argc == 1) {
@@ -86,10 +88,20 @@ int main(int argc, char **argv)
             assert(false);
             std::cerr << "not reached\n";
             break;
+        case 'p':
+            permAssert(false);
+            std::cerr << "not reached\n";
+            break;
         case 'e':
             std::cerr << "throw new std::runtime_error(\"testing AutoBacktrace\")\n";
             throw new std::runtime_error("testing AutoBacktrace");
             std::cerr << "not reached\n";
+            break;
+        case 's':
+            {
+                fennel::ConfigMap configMap;
+                configMap.readParams(*(std::istream *) NULL);
+            }
             break;
         default:
             ;

@@ -122,31 +122,6 @@ public:
      * Number of batches on cluster page
      */
     uint nBatch;
-
-    /**
-     * Offsets to the last value stored on the page for each column in
-     * cluster
-     */
-    uint16_t *lastVal;
-
-    /**
-     * Offsets to the first value stored on the page for each column in
-     * cluster.  Points to the end of the firstVal, so subtracting lastVal
-     * from firstVal will tell you the number of bytes taken up by values for
-     * a column, since lastVals are appended in front of firstVal
-     */
-    uint16_t *firstVal;
-
-    /**
-     * Number of distinct values in the page for each column in cluster
-     */
-    uint *nVal;
-
-    /**
-     * For each column in the cluster, offset used to get the real offset
-     * within the page
-     */
-    uint16_t *delta;
 };
 
 /**

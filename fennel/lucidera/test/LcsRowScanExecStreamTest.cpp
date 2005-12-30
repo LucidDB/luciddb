@@ -148,7 +148,7 @@ void LcsRowScanExecStreamTest::loadOneCluster(
     lcsAppendParams.scratchAccessor =
         pSegmentFactory->newScratchSegment(pCache, 10);
     lcsAppendParams.pCacheAccessor = pCache;
-    lcsAppendParams.pSegment = pLinearSegment;
+    lcsAppendParams.pSegment = pRandomSegment;
     
     // initialize the btree parameter portion of lcsAppendParams
     // BTree tuple desc only has one column
@@ -160,7 +160,11 @@ void LcsRowScanExecStreamTest::loadOneCluster(
 
     // output only one value(rows inserted)
     lcsAppendParams.outputTupleDesc.push_back(attrDesc_int64);
+
     lcsAppendParams.overwrite = false;
+    for (uint i = 0; i < nCols; i++) {
+        lcsAppendParams.inputProj.push_back(i);
+    }
     lcsAppendParams.pRootMap = 0;
     
     // setup temporary btree descriptor to get an empty page to start the btree
@@ -170,10 +174,10 @@ void LcsRowScanExecStreamTest::loadOneCluster(
     bTreeDescriptor.tupleDescriptor = lcsAppendParams.tupleDesc;
     bTreeDescriptor.keyProjection = lcsAppendParams.keyProj;
     bTreeDescriptor.rootPageId = NULL_PAGE_ID; 
-    bTreeDescriptor.segmentId = lcsAppendParams.segmentId;
-    bTreeDescriptor.pageOwnerId = lcsAppendParams.pageOwnerId;
+    lcsAppendParams.segmentId = bTreeDescriptor.segmentId;
+    lcsAppendParams.pageOwnerId = bTreeDescriptor.pageOwnerId;
     
-    BTreeBuilder builder(bTreeDescriptor, pLinearSegment);
+    BTreeBuilder builder(bTreeDescriptor, pRandomSegment);
     builder.createEmptyRoot();
     lcsAppendParams.rootPageId = bTreeDescriptor.rootPageId =
         builder.getRootPageId();
@@ -272,8 +276,8 @@ void LcsRowScanExecStreamTest::testScans()
     // 4. test skipping of rows
     // 5. test full table scan
     
-    uint nRows = 1000;
-    uint nCols = 5;
+    uint nRows = 50000;
+    uint nCols = 12;
     uint nClusters = 3;
     TupleProjection proj;
 
@@ -316,14 +320,14 @@ void LcsRowScanExecStreamTest::testScanOnEmptyCluster()
 
     BTreeDescriptor &bTreeDescriptor = *(bTreeClusters[0]);
 
-    bTreeDescriptor.segmentAccessor.pSegment = pLinearSegment;
+    bTreeDescriptor.segmentAccessor.pSegment = pRandomSegment;
     bTreeDescriptor.segmentAccessor.pCacheAccessor = pCache;
     bTreeDescriptor.tupleDescriptor.push_back(attrDesc_int64);
     bTreeDescriptor.tupleDescriptor.push_back(attrDesc_int64);
     bTreeDescriptor.keyProjection.push_back(0);
     bTreeDescriptor.rootPageId = NULL_PAGE_ID; 
     
-    BTreeBuilder builder(bTreeDescriptor, pLinearSegment);
+    BTreeBuilder builder(bTreeDescriptor, pRandomSegment);
     builder.createEmptyRoot();
     bTreeDescriptor.rootPageId = builder.getRootPageId();
 
@@ -354,9 +358,21 @@ void LcsRowScanExecStreamTest::testScanPastEndOfCluster()
     testScanCols(2, 1, 1, proj, 1, 1);
 }
 
+// TODO jvs 27-Dec-2005:  Need to clean up test framework so that
+// some base class can be told to do this dance instead of repeating
+// it in every test case.
 void LcsRowScanExecStreamTest::testCaseSetUp()
 {    
-    ExecStreamUnitTestBase::testCaseSetUp();
+    ExecStreamTestBase::testCaseSetUp();
+    closeStorage();
+    openStorage(DeviceMode::load);
+    
+    pRandomSegment = pSegmentFactory->newRandomAllocationSegment(
+        pLinearSegment,true);
+    pLinearSegment.reset();
+
+    pGraph = newStreamGraph();
+    pGraphEmbryo = newStreamGraphEmbryo(pGraph);
     
     attrDesc_int64 = TupleAttributeDescriptor(
         stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));

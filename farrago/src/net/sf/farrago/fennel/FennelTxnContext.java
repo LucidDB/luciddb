@@ -70,6 +70,14 @@ public class FennelTxnContext
     }
 
     /**
+     * Forces a transaction to begin unless one is already in progress.
+     */
+    public void initiateTxn()
+    {
+        getTxnHandleLong();
+    }
+
+    /**
      * Gets the handle to the current txn.  If no txn is in progress, starts one
      * and returns the new handle.
      *

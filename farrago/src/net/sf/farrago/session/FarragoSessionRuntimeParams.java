@@ -91,6 +91,11 @@ public class FarragoSessionRuntimeParams
      * FarragoStreamFactoryProvider to use for registering stream factories.
      */
     public FarragoStreamFactoryProvider streamFactoryProvider;
+
+    /**
+     * Whether the context is for a DML statement.
+     */
+    public boolean isDml;
 }
 
 

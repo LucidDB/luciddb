@@ -1,0 +1,95 @@
+
+--
+-- semi joins
+--
+
+set schema 's';
+
+-- a bunch of equi-joins
+
+-- two way
+select EMP.EMPNO, EMP.LNAME from EMP, DEPT
+where EMP.DEPTNO = DEPT.DEPTNO order by EMPNO;
+
+select DEPT.DNAME from EMP, DEPT
+where EMP.DEPTNO = DEPT.DEPTNO order by DNAME;
+
+-- three way
+SELECT EMP.LNAME
+from EMP, DEPT, LOCATION
+where EMP.DEPTNO=DEPT.DEPTNO and DEPT.LOCID=LOCATION.LOCID
+order by LNAME;
+
+SELECT DEPT.DNAME
+from EMP, DEPT, LOCATION
+where EMP.DEPTNO=DEPT.DEPTNO and DEPT.LOCID=LOCATION.LOCID
+order by DNAME;
+
+SELECT LOCATION.STREET, LOCATION.CITY
+from EMP, DEPT, LOCATION
+where EMP.DEPTNO=DEPT.DEPTNO and DEPT.LOCID=LOCATION.LOCID
+order by STREET;
+
+-- semi joins of a self join
+select M.EMPNO, M.LNAME from EMP M, EMP R
+where M.EMPNO = R.MANAGER order by EMPNO;
+
+select R.EMPNO, R.LNAME from EMP M, EMP R
+where M.EMPNO = R.MANAGER order by EMPNO;
+
+-- double reference of a table
+select EMP.LNAME, DEPT.DNAME
+from LOCATION EL, LOCATION DL, EMP, DEPT
+where EL.LOCID = EMP.LOCID and DL.LOCID=DEPT.LOCID
+order by LNAME, DNAME;
+
+select EL.CITY, DL.CITY
+from LOCATION EL, LOCATION DL, EMP, DEPT
+where EL.LOCID = EMP.LOCID and DL.LOCID=DEPT.LOCID
+order by CITY, CITY;
+
+-- many to many self join semi join variations
+select F.FNAME
+FROM CUSTOMERS M, CUSTOMERS F
+WHERE M.LNAME = F.LNAME
+AND M.SEX = 'M'
+AND F.SEX = 'F'
+order by FNAME;
+
+select M.FNAME, M.LNAME
+FROM CUSTOMERS M, CUSTOMERS F
+WHERE M.LNAME = F.LNAME
+AND M.SEX = 'M'
+AND F.SEX = 'F'
+order by FNAME, LNAME;
+
+-- a few ranges
+-- a big ol' join
+select PRODUCTS.PRICE
+from SALES, PRODUCTS
+where SALES.PRICE between PRODUCTS.PRICE - 1 and PRODUCTS.PRICE + 1
+and SALES.PRODID = PRODUCTS.PRODID
+order by  PRICE;
+
+-- non join conditions
+select SALES.CUSTID
+from SALES, PRODUCTS
+where SALES.PRICE between PRODUCTS.PRICE - 1 and PRODUCTS.PRICE + 1
+and ( PRODUCTS.NAME LIKE 'C%' OR PRODUCTS.NAME LIKE 'P%')
+order by CUSTID;
+
+-- equality and non equality in one
+select SALES.PRICE
+from SALES, PRODUCTS, CUSTOMERS
+where SALES.PRICE - PRODUCTS.PRICE < 0.5
+and PRODUCTS.PRICE - SALES.PRICE < 0.25
+and SALES.CUSTID = CUSTOMERS.CUSTID
+order by PRICE;
+
+select PRODUCTS.NAME, CUSTOMERS.CUSTID, CUSTOMERS.FNAME, 
+CUSTOMERS.LNAME, PRODUCTS.PRICE
+from SALES, PRODUCTS, CUSTOMERS
+where SALES.PRICE - PRODUCTS.PRICE < 0.5
+and PRODUCTS.PRICE - SALES.PRICE < 0.25
+and SALES.CUSTID = CUSTOMERS.CUSTID
+order by NAME, CUSTID;

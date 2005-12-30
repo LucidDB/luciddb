@@ -44,6 +44,21 @@ PageId LcsClusterAccessBase::readClusterPageId()
     return *reinterpret_cast<PageId const *> (bTreeTupleData[1].pData);
 }
 
+void LcsClusterAccessBase::setHdrOffsets(PConstLcsClusterNode pHdr)
+{
+    PBuffer p = (PBuffer) pHdr;
+
+    lastVal = (uint16_t *) (p += sizeof(LcsClusterNode));
+    firstVal = (uint16_t *) (p += sizeof(uint16_t) * nClusterCols);
+    nVal = (uint *) (p += sizeof(uint16_t) * nClusterCols);
+    delta = (uint16_t *) (p += sizeof(uint) * nClusterCols);
+}
+
+void LcsClusterAccessBase::unlockClusterPage()
+{
+    clusterLock.unlock();
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End LcsClusterAccessBase.cpp

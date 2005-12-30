@@ -48,8 +48,9 @@ SharedSegmentFactory SegmentFactory::newSegmentFactory(
 }
 
 SegmentFactory::SegmentFactory(
-    ConfigMap const &configMap,
+    ConfigMap const &configMapInit,
     SharedTraceTarget pTraceTargetInit)
+    : configMap(configMapInit)
 {
     pTraceTarget = pTraceTargetInit;
 
@@ -60,6 +61,11 @@ SegmentFactory::SegmentFactory(
     
 SegmentFactory::~SegmentFactory()
 {
+}
+
+ConfigMap const &SegmentFactory::getConfigMap() const
+{
+    return configMap;
 }
 
 SharedSegment SegmentFactory::newLinearDeviceSegment(

@@ -118,6 +118,16 @@ public abstract class AbstractSqlTester implements SqlTester
         check(sql, IntegerTypeChecker, result, 0);
     }
 
+    public void checkScalarExact(
+        String expression,
+        String expectedType,
+        String result)
+    {
+        String sql = buildQuery(expression);
+        TypeChecker typeChecker = new StringTypeChecker(expectedType);
+        check(sql, typeChecker, result, 0);
+    }
+
     public void checkScalarApprox(
         String expression,
         String expectedType,

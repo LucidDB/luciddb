@@ -372,6 +372,19 @@ public abstract class SqlTypeUtil
     }
 
     /**
+     * @return true if type is decimal
+     */
+    public static boolean isDecimal(RelDataType type)
+    {
+        SqlTypeName typeName = type.getSqlTypeName();
+        if (typeName == null) {
+            return false;
+        }
+        return (typeName.getOrdinal() == SqlTypeName.Decimal_ordinal);
+        
+    }
+
+    /**
      * @return true if type is numeric with exact precision
      */
     public static boolean isExactNumeric(RelDataType type)

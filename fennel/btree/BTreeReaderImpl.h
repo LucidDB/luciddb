@@ -81,6 +81,11 @@ inline int BTreeReader::compareFirstKey(BTreeNode const &node)
         comparisonKeyData);
 }
 
+inline void BTreeReader::accessTupleInline(BTreeNode const &node, uint iEntry)
+{
+    getNodeAccessor(node).accessTupleInline(node, iEntry);
+}
+
 template <bool leafLockCoupling,class PageStack>
 inline bool BTreeReader::searchForKeyTemplate(
     TupleData const &key, DuplicateSeek dupSeek, bool leastUpper,
@@ -133,6 +138,7 @@ inline bool BTreeReader::searchForKeyTemplate(
             pageLock.unlock();
             if (res < 0) {
                 // stick with the current node, so go back and relock it
+                // and reset the tuple accessor back to the prior key
                 //
                 // FIXME zfong 7-Dec-2005: Need to handle case where a
                 // node split has occurred since the current node was
@@ -142,6 +148,7 @@ inline bool BTreeReader::searchForKeyTemplate(
                 // original right sibling.  The key we want should then
                 // be the last entry on that node.
                 pageLock.lockPage(pageId, lockMode);
+                accessTupleInline(node, iKeyBound);
             } else {
                 // switch over to the right sibling
                 pageId = node.rightSibling;

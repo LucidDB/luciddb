@@ -57,9 +57,10 @@ void LcsRowScanExecStream::prepare(LcsRowScanExecStreamParams const &params)
 
         pClu = SharedLcsClusterReader(new LcsClusterReader(treeDescriptor));
 
-        pClu->nCols = params.lcsClusterScanDefs[i].clusterTupleDesc.size();
+        pClu->setNumClusterCols(
+            params.lcsClusterScanDefs[i].clusterTupleDesc.size());
         pClu->init();
-        for (uint j = 0; j < pClu->nCols; j++) {
+        for (uint j = 0; j < pClu->getNumClusterCols(); j++) {
             rowTupleDesc.push_back(
                 params.lcsClusterScanDefs[i].clusterTupleDesc[j]);
         }
@@ -77,6 +78,11 @@ void LcsRowScanExecStream::prepare(LcsRowScanExecStreamParams const &params)
     projDescriptor.projectFrom(rowTupleDesc, params.outputProj);
     projData.compute(projDescriptor);
     pOutAccessor->setTupleShape(projDescriptor);
+
+    // need to allocate a separate buffer for tuple data read from 
+    // cluster pages, since they require the tuple data in fixed width
+    // format
+    clusterTupleData.computeAndAllocate(rowTupleDesc);
 }
 
 void LcsRowScanExecStream::open(bool restart)
@@ -93,8 +99,6 @@ void LcsRowScanExecStream::open(bool restart)
         rowTupleBuffer.reset(
             new FixedBuffer[rowTupleAccessor.getMaxByteCount()]);
         rowTupleAccessor.setCurrentTupleBuf(rowTupleBuffer.get(), false);
-        rowTupleData.compute(rowTupleDesc);
-        rowTupleAccessor.unmarshal(rowTupleData);
     }
 }
 
@@ -142,6 +146,7 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
 
             // Go through each cluster, forming rows and checking ranges
 
+            uint prevClusterEnd = 0;
             for (iClu = 0; iClu <  nClusters; iClu++) {
 
                 SharedLcsClusterReader &pScan = pClusters[iClu];
@@ -161,7 +166,8 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
                            && rid < pScan->getRangeEndRid());
 
                     // Tell all column scans that the batch has changed.
-                    for (iCluCol = 0; iCluCol < pScan->nCols; iCluCol++) {
+                    for (iCluCol = 0; iCluCol < pScan->getNumClusterCols();
+                            iCluCol++) {
                         LcsColumnReader *pColScan = &pScan->clusterCols[iCluCol];
 
                         // synchronize column scan
@@ -178,7 +184,8 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
                         opaqueToInt(pScan->getCurrentRid()));
                 }
 
-                for (iCluCol = 0; iCluCol < pScan->nCols; iCluCol++) {
+                for (iCluCol = 0; iCluCol < pScan->getNumClusterCols();
+                        iCluCol++) {
 
                     LcsColumnReader *pColScan = &pScan->clusterCols[iCluCol];
                     PBuffer curValue;
@@ -187,14 +194,20 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
                     // tuple datum entry 
 
                     curValue = pColScan->getCurrentValue();
-                    rowTupleData[iClu * pScan->nCols + iCluCol].loadLcsDatum(
-                        curValue);
+                    clusterTupleData[prevClusterEnd+iCluCol].
+                        loadLcsDatum(curValue);
                 }
+
+                prevClusterEnd += pScan->getNumClusterCols();
             }
 
             // project row, if rid was found
             if (iClu == nClusters) {
                 tupleFound = true;
+                rowTupleAccessor.marshal(clusterTupleData,
+                        rowTupleBuffer.get());
+                // reset datum pointers, in case of nulls
+                clusterTupleData.resetBuffer();
                 projAccessor.unmarshal(projData);
             }
             producePending = true;
@@ -229,6 +242,9 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
 void LcsRowScanExecStream::closeImpl()
 {
     ConduitExecStream::closeImpl();
+    for (uint i = 0; i < nClusters; i++) {
+        pClusters[i]->close();
+    }
     rowTupleBuffer.reset();
 }
 

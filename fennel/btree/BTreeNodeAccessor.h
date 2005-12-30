@@ -215,6 +215,15 @@ public:
         TupleData &scratchKey) = 0;
 
     /**
+     * Sets tuple accessor to provided node entry
+     *
+     * @param node the current node positioned on
+     *
+     * @param iEntry the entry within the node to set the tuple accessor to
+     */
+    virtual void accessTupleInline(BTreeNode const &node, uint iEntry) = 0;
+
+    /**
      * Enumeration used to classify the storage state of a node which
      * is targeted for insertion.
      */
