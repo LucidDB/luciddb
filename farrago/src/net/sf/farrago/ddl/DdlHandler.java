@@ -68,7 +68,7 @@ public abstract class DdlHandler
     protected final FarragoRepos repos;
 
     /**
-     * An instance of FarragoResource for use in throwing vallidation
+     * An instance of FarragoResource for use in throwing validation
      * errors.  The name is intentionally short to keep line length under
      * control.
      */

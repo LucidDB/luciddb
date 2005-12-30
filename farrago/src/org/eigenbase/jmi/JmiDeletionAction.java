@@ -36,6 +36,12 @@ public enum JmiDeletionAction
     RESTRICT,
 
     /**
+     * Break the association, possibly leaving the object on the other side
+     * dangling.
+     */
+    INVALIDATE,
+
+    /**
      * Cascade the modification recursively to the object on the
      * other side of the association.
      */
