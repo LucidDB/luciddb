@@ -59,6 +59,10 @@ create foreign table bad_table_name
 server mock_foreign_metadata_server
 options (foreign_table_name 'BACH_TABLE');
 
+-- test create index on mock table
+
+create index mock_index on mock_empty_table(id);
+
 insert into mock_empty_table values (5);
 
 select * from mock_fennel_table;

@@ -121,13 +121,19 @@ class MedMockLocalDataServer
     {
         // Fake out the build plan with a dummy iterator which returns a
         // rowcount of 0.
-        return new MedMockIterRel(
+        MedMockIterRel rel = new MedMockIterRel(
             new MedMockColumnSet(
-                new String [0],
-                cluster.getTypeFactory().createSqlType(SqlTypeName.Bigint),
+                table.getQualifiedName(),
+                RelOptUtil.createDmlRowType(
+                    cluster.getTypeFactory()),
                 1,
                 "JAVA"),
             cluster, null);
+
+        // Add a dummy project on top to keep the optimizer happy.
+        return RelOptUtil.createRenameRel(
+            rel.getRowType(),
+            rel);
     }
 }
 
