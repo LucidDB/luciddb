@@ -35,11 +35,11 @@ LcsClusterNodeWriter::LcsClusterNodeWriter(BTreeDescriptor &treeDescriptorInit,
 {
     scratchAccessor = accessorInit;
     bufferLock.accessSegment(scratchAccessor);
-    bTreeWriter = SharedBTreeWriter(new BTreeWriter(treeDescriptorInit,
-            scratchAccessor));
+    bTreeWriter = SharedBTreeWriter(
+        new BTreeWriter(treeDescriptorInit, scratchAccessor, true));
     clusterDump = SharedLcsClusterDump(
-                    new LcsClusterDump(treeDescriptorInit,
-                                       TRACE_FINE, pTraceTargetInit, nameInit));
+        new LcsClusterDump(
+            treeDescriptorInit, TRACE_FINE, pTraceTargetInit, nameInit));
     nClusterCols = 0;
     m_pHdr = 0;
     m_pHdrSize = 0;
@@ -90,6 +90,7 @@ bool LcsClusterNodeWriter::getLastClusterPageForWrite(PLcsClusterNode &pBlock,
     // page based on the pageid stored in that btree record
 
     if (bTreeWriter->searchLast() == false) {
+        bTreeWriter->endSearch();
         return false;
     }
 
@@ -117,7 +118,7 @@ PLcsClusterNode LcsClusterNodeWriter::allocateClusterPage(LcsRid firstRid)
     bTreeRid = firstRid;
     bTreeTupleData[0].pData = reinterpret_cast<uint8_t *> (&firstRid);
     bTreeTupleData[1].pData = reinterpret_cast<uint8_t *> (&clusterPageId);
-    bTreeWriter->insertTupleData(bTreeTupleData, DUP_FAIL);
+    bTreeWriter->insertTupleData(bTreeTupleData, DUP_ALLOW);
     return &(clusterLock.getNodeForWrite());
 }
 

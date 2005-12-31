@@ -473,27 +473,27 @@ void LcsClusterAppendExecStreamTest::testSingleColNoDupNewRoot()
 */
 void LcsClusterAppendExecStreamTest::testSingleColNoDupOldRoot()
 {
-    // 1. load 10 rows
-    // 2. scan first 10 rows
-    // 3. load 10 more rows
-    // 4. scan second 10 rows
+    // 1. load 848 rows
+    // 2. scan first 848 rows
+    // 3. load 848 more rows
+    // 4. scan second 848 rows
 
     SharedMockProducerExecStreamGenerator pGenerator =
         SharedMockProducerExecStreamGenerator(new RampExecStreamGenerator());
     SharedMockProducerExecStreamGenerator pResultGenerator =
         SharedMockProducerExecStreamGenerator(new RampExecStreamGenerator());
 
-    testLoadSingleCol(10, true,  pGenerator,  "testSingleColNoDupOldRoot");
+    testLoadSingleCol(848, true,  pGenerator,  "testSingleColNoDupOldRoot");
     testReset();
     // this will test scans of variable mode batches
-    testScanSingleCol(10, pGenerator, pResultGenerator);
+    testScanSingleCol(848, pGenerator, pResultGenerator);
 
     testReset();
-    testLoadSingleCol(10, false,  pGenerator,  "testSingleColNoDupOldRoot");
+    testLoadSingleCol(848, false,  pGenerator,  "testSingleColNoDupOldRoot");
 
     testReset();
-    pGenerator.reset(new RampExecStreamGenerator(10));
-    testScanSingleCol(10, pGenerator, pResultGenerator);
+    pGenerator.reset(new RampExecStreamGenerator(848));
+    testScanSingleCol(848, pGenerator, pResultGenerator);
 }
 
 

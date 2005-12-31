@@ -292,14 +292,23 @@ void LcsRowScanExecStreamTest::testScans()
     testScanCols(nRows, nCols, nClusters, proj, 1, nRows);
     testReset();
 
-    // project columns 10, 1, 5, 4, 7, and 13
+    // project columns 22, 10, 12, 26, 1, 35, 15, 5, 17, 30, 4, 20, 7, and 13
     proj.clear();
+    proj.push_back(22);
     proj.push_back(10);
+    proj.push_back(12);
+    proj.push_back(26);
     proj.push_back(1);
+    proj.push_back(35);
+    proj.push_back(15);
     proj.push_back(5);
+    proj.push_back(17);
+    proj.push_back(30);
     proj.push_back(4);
+    proj.push_back(20);
     proj.push_back(7);
     proj.push_back(13);
+
     testScanCols(nRows, nCols, nClusters, proj, 1, nRows);
     testReset();
 

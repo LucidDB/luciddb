@@ -39,6 +39,13 @@ void LcsRowScanExecStream::prepare(LcsRowScanExecStreamParams const &params)
 
     nClusters = params.lcsClusterScanDefs.size();
     pClusters.reset(new SharedLcsClusterReader[nClusters]);
+
+    uint clusterStart = 0;
+    uint projCount = 0;
+    TupleDescriptor allClusterTupleDesc;
+    TupleProjection newProj;
+
+    newProj.resize(params.outputProj.size());
     for (uint i = 0; i < nClusters; i++) {
 
         SharedLcsClusterReader &pClu = pClusters[i];
@@ -57,12 +64,33 @@ void LcsRowScanExecStream::prepare(LcsRowScanExecStreamParams const &params)
 
         pClu = SharedLcsClusterReader(new LcsClusterReader(treeDescriptor));
 
-        pClu->setNumClusterCols(
-            params.lcsClusterScanDefs[i].clusterTupleDesc.size());
-        pClu->init();
-        for (uint j = 0; j < pClu->getNumClusterCols(); j++) {
-            rowTupleDesc.push_back(
-                params.lcsClusterScanDefs[i].clusterTupleDesc[j]);
+        // setup the cluster and column readers to only read the columns
+        // that are going to be projected
+        uint clusterEnd = clusterStart +
+            params.lcsClusterScanDefs[i].clusterTupleDesc.size() - 1;
+
+        // create a vector of the columns that are projected from
+        // this cluster and recompute the projection list
+        // based on the individual cluster projections
+        TupleProjection clusterProj;
+        for (uint j = 0; j < newProj.size(); j++) {
+            if (params.outputProj[j] >= clusterStart &&
+                params.outputProj[j] <= clusterEnd)
+            {
+                clusterProj.push_back(params.outputProj[j] - clusterStart);
+                newProj[j] = projCount++;
+            }
+        }
+        clusterStart = clusterEnd + 1;
+
+        // need to select at least one column from cluster;
+        // otherwise, there's a bug in the optimizer
+        assert(clusterProj.size() > 0);
+        pClu->initColumnReaders(
+            params.lcsClusterScanDefs[i].clusterTupleDesc.size(), clusterProj);
+        for (uint j = 0; j < pClu->nColsToRead; j++) {
+            allClusterTupleDesc.push_back(
+                params.lcsClusterScanDefs[i].clusterTupleDesc[clusterProj[j]]);
         }
     }
 
@@ -71,18 +99,27 @@ void LcsRowScanExecStream::prepare(LcsRowScanExecStreamParams const &params)
     // this will be changed to a bitmap later
     ridTupleData.compute(pInAccessor->getTupleDesc());
 
-    // setup projected output tuple
+    // setup projected output tuple, by reshuffling allClusterTupleDesc
+    // built above, into the correct projection order
 
-    rowTupleAccessor.compute(rowTupleDesc);
-    projAccessor.bind(rowTupleAccessor, params.outputProj);
-    projDescriptor.projectFrom(rowTupleDesc, params.outputProj);
-    projData.compute(projDescriptor);
+    TupleDescriptor projDescriptor;
+    for (uint i = 0; i < newProj.size(); i++) {
+        projDescriptor.push_back(allClusterTupleDesc[newProj[i]]);
+    }
     pOutAccessor->setTupleShape(projDescriptor);
 
-    // need to allocate a separate buffer for tuple data read from 
-    // cluster pages, since they require the tuple data in fixed width
-    // format
-    clusterTupleData.computeAndAllocate(rowTupleDesc);
+    // create a projection map to map cluster data read to the output
+    // projection
+    projMap.resize(newProj.size());
+    for (uint i = 0; i < projMap.size(); i++) {
+        for (uint j = 0; j < newProj.size(); j++) {
+            if (newProj[j] == i) {
+                projMap[i] = j;
+            }
+        }
+    }
+
+    outputTupleData.computeAndAllocate(projDescriptor);
 }
 
 void LcsRowScanExecStream::open(bool restart)
@@ -94,11 +131,6 @@ void LcsRowScanExecStream::open(bool restart)
     fullTableScan = false;
     for (uint i = 0; i < nClusters; i++) {
         pClusters[i]->open();
-    }
-    if (!restart) {
-        rowTupleBuffer.reset(
-            new FixedBuffer[rowTupleAccessor.getMaxByteCount()]);
-        rowTupleAccessor.setCurrentTupleBuf(rowTupleBuffer.get(), false);
     }
 }
 
@@ -166,8 +198,7 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
                            && rid < pScan->getRangeEndRid());
 
                     // Tell all column scans that the batch has changed.
-                    for (iCluCol = 0; iCluCol < pScan->getNumClusterCols();
-                            iCluCol++) {
+                    for (iCluCol = 0; iCluCol < pScan->nColsToRead; iCluCol++) {
                         LcsColumnReader *pColScan = &pScan->clusterCols[iCluCol];
 
                         // synchronize column scan
@@ -184,8 +215,7 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
                         opaqueToInt(pScan->getCurrentRid()));
                 }
 
-                for (iCluCol = 0; iCluCol < pScan->getNumClusterCols();
-                        iCluCol++) {
+                for (iCluCol = 0; iCluCol < pScan->nColsToRead; iCluCol++) {
 
                     LcsColumnReader *pColScan = &pScan->clusterCols[iCluCol];
                     PBuffer curValue;
@@ -194,27 +224,23 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
                     // tuple datum entry 
 
                     curValue = pColScan->getCurrentValue();
-                    clusterTupleData[prevClusterEnd+iCluCol].
+                    outputTupleData[projMap[prevClusterEnd + iCluCol]].
                         loadLcsDatum(curValue);
                 }
 
-                prevClusterEnd += pScan->getNumClusterCols();
+                prevClusterEnd += pScan->nColsToRead;
             }
 
-            // project row, if rid was found
             if (iClu == nClusters) {
                 tupleFound = true;
-                rowTupleAccessor.marshal(clusterTupleData,
-                        rowTupleBuffer.get());
                 // reset datum pointers, in case of nulls
-                clusterTupleData.resetBuffer();
-                projAccessor.unmarshal(projData);
+                outputTupleData.resetBuffer();
             }
             producePending = true;
         }
             
         // produce tuple
-        if (tupleFound && !pOutAccessor->produceTuple(projData)) {
+        if (tupleFound && !pOutAccessor->produceTuple(outputTupleData)) {
             return EXECRC_BUF_OVERFLOW;
         }
         producePending = false;
@@ -245,7 +271,6 @@ void LcsRowScanExecStream::closeImpl()
     for (uint i = 0; i < nClusters; i++) {
         pClusters[i]->close();
     }
-    rowTupleBuffer.reset();
 }
 
 FENNEL_END_CPPFILE("$Id$");

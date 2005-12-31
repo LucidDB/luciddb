@@ -69,13 +69,17 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
      * Tuple descriptor for the tuple representing all cluster columns across
      * the table that this cluster is a part of
      */
-    TupleDescriptor clusterColsTupleDesc;
+    TupleDescriptor tableColsTupleDesc;
 
     /**
-     * Tuple data for the tuple datums representing all cluster columns
-     * across the table that this cluster is a part of
+     * Tuple data for the tuple datums representing only this cluster
      */
     TupleData clusterColsTupleData;
+
+    /**
+     * Tuple descriptors for the columns that are part of this cluster 
+     */
+    TupleDescriptor clusterColsTupleDesc;
 
     /**
      * Individual tuple descriptors for each column in the cluster
@@ -98,14 +102,25 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
     bool m_bOverwrite;
 
     /**
-     * Projection list projecting out columns for this cluster
+     * Whether row count has been produced.
      */
-    TupleProjection inputProj;
+    bool isDone;
 
     /**
      * Output tuple containing count of number of rows loaded
      */
     TupleData outputTuple;
+
+    /**
+     * A reference to the output accessor 
+     * contained in SingleOutputExecStream::pOutAccessor
+     */
+    TupleAccessor* outputTupleAccessor;
+
+    /**
+     * buffer holding the outputTuple to provide to the consumers
+     */
+    boost::scoped_array<FixedBuffer> outputTupleBuffer;
 
     /**
      * True if execute has been called at least once
@@ -258,11 +273,6 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
 
 public:
     /**
-     * Performs minimal initialization of object
-     */
-    explicit LcsClusterAppendExecStream();
-
-    /**
      * Initializes and sets up object with content specific to the load that
      * will be carried out
      */
@@ -322,6 +332,7 @@ public:
         ExecStreamResourceQuantity &minQuantity,
         ExecStreamResourceQuantity &optQuantity);
     virtual void closeImpl();
+    virtual ExecStreamBufProvision getOutputBufProvision() const;
 };
 
 

@@ -98,7 +98,7 @@ public class LcsTableAppendRel
         // I/O cost is proportional to pages of clustered index to write
         double dCpu = dRows * getRowType().getFieldList().size();
 
-        int nIndexCols = getIndexGuide().getSizeOfClusteredIndexes();
+        int nIndexCols = getIndexGuide().getNumFlattenedClusterCols();
         
         double dIo = dRows * nIndexCols;
         
@@ -275,24 +275,7 @@ public class LcsTableAppendRel
         
         clusterAppend.setIndexId(indexId);
         
-        //
-        // For LCS clustered indexes, the stored tuple is always the same:
-        // [RID, PageId]; and the key is just the RID.  In Fennel,
-        // both attributes are represented as 64-bit int.
-        //
-        FemTupleDescriptor indexTupleDesc = repos.newFemTupleDescriptor();
-        
-        FennelStoredTypeDescriptor indexTypeDesc =
-            FennelStandardTypeDescriptor.INT_64;
-        
-        for (int i = 0; i < 2; ++i) {
-            FemTupleAttrDescriptor indexAttrDesc =
-                repos.newFemTupleAttrDescriptor();
-            indexAttrDesc.setTypeOrdinal(
-                indexTypeDesc.getOrdinal());
-            indexTupleDesc.getAttrDescriptor().add(indexAttrDesc);
-        }
-
+        FemTupleDescriptor indexTupleDesc = indexGuide.createBtreeTupleDesc();
         clusterAppend.setTupleDesc(indexTupleDesc);
         
         //
@@ -313,7 +296,7 @@ public class LcsTableAppendRel
         
         Integer[] clusterColProj;
         clusterColProj =
-            new Integer[indexGuide.getSizeOfClusteredIndex(clusterIndex)];
+            new Integer[indexGuide.getNumFlattenedClusterCols(clusterIndex)];
         
         //
         // Figure out the projection covering columns contained in each index.

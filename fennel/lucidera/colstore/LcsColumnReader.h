@@ -76,29 +76,26 @@ class LcsColumnReader
      */
     PBitVecFuncPtr pFuncReadBitVec;
 
-    // REVIEW jvs 27-Dec-2005:  Either someone at Broadbase didn't
-    // know how to use pointer-to-member-functions, or Visual C++ had
-    // a bug.  Anyway, should be able to use them instead of statics.
-
     /**
-     * Retrieves the current value of the column from a fixed mode batch
+     * Pointer to function that retrieves the current value of the column
+     * from a fixed mode batch
      */
-    const PBuffer (*pGetCurrentValueFunc)(const LcsColumnReader* me);
+    const PBuffer (LcsColumnReader:: *pGetCurrentValueFunc) ();
 
     /**
      * Returns value from compressed batch
      */
-    static const PBuffer getCompressedValue(const LcsColumnReader* me);
+    const PBuffer getCompressedValue();
 
     /**
      * Returns  value from fixed batch
      */
-    static const PBuffer getFixedValue(const LcsColumnReader* me);
+    const PBuffer getFixedValue();
 
     /**
      * Returns value from variable batch
      */
-    static const PBuffer getVariableValue(const LcsColumnReader* me);
+    const PBuffer getVariableValue();
 
 public:
     /**
@@ -137,9 +134,9 @@ public:
     /**
      * Returns current value code for a compressed batch entry
      */
-    const PBuffer getCurrentValue() const
+    const PBuffer getCurrentValue()
     {
-        return pGetCurrentValueFunc(this);
+        return (this->*pGetCurrentValueFunc)();
     }
 
     /**

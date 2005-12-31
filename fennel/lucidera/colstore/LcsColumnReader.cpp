@@ -122,32 +122,31 @@ void LcsColumnReader::sync()
         }
 
         // Set function pointer to get data
-        pGetCurrentValueFunc = getCompressedValue;
+        pGetCurrentValueFunc = &LcsColumnReader::getCompressedValue;
 
     } else if (batchIsFixed()) {
         // Set function pointer to get data in fixed case
-        pGetCurrentValueFunc = getFixedValue;
+        pGetCurrentValueFunc = &LcsColumnReader::getFixedValue;
     } else {
         // Set function pointer to get data in variable case
-        pGetCurrentValueFunc = getVariableValue;
+        pGetCurrentValueFunc = &LcsColumnReader::getVariableValue;
     }
 }
 
-const PBuffer LcsColumnReader::getCompressedValue(const LcsColumnReader *me)
+const PBuffer LcsColumnReader::getCompressedValue()
 {
-    return me->getBatchValue(me->getCurrentValueCode());
+    return getBatchValue(getCurrentValueCode());
 }
 
-const PBuffer LcsColumnReader::getFixedValue(const LcsColumnReader *me)
+const PBuffer LcsColumnReader::getFixedValue()
 {
-    return (const PBuffer)(me->pValues + (me->pScan->getRangePos()
-                                            * me->pBatch->recSize));
+    return (const PBuffer)(pValues + (pScan->getRangePos() * pBatch->recSize));
 }
 
-const PBuffer LcsColumnReader::getVariableValue(const LcsColumnReader *me)
+const PBuffer LcsColumnReader::getVariableValue()
 {
-    return (const PBuffer) (me->getBatchBase()
-        + me->getBatchOffsets()[me->pScan->getRangePos()]);
+    return (const PBuffer) (getBatchBase() +
+        getBatchOffsets()[pScan->getRangePos()]);
 }
 
 void LcsColumnReader::readCompressedBatch(uint count, uint16_t *pValCodes,

@@ -26,6 +26,7 @@
 #include "fennel/lucidera/colstore/LcsClusterNode.h"
 #include "fennel/lucidera/colstore/LcsColumnReader.h"
 #include "fennel/btree/BTreeReader.h"
+#include "fennel/tuple/TupleDescriptor.h"
 #include <boost/scoped_array.hpp>
 
 FENNEL_BEGIN_NAMESPACE
@@ -154,7 +155,12 @@ class LcsClusterReader : public LcsClusterAccessBase
 
 public:
     /**
-     * Column readers for each cluster column
+     * Number of cluster columns that will be read
+     */
+    uint nColsToRead;
+
+    /**
+     * Column readers for each cluster column that will be read
      */
     boost::scoped_array<LcsColumnReader> clusterCols;
 
@@ -166,8 +172,14 @@ public:
 
     /**
      * Initializes cluster reader with column readers
+     *
+     * @param total number of columns in the cluster
+     *
+     * @param clusterProj list of columns to be read from cluster; column
+     * numbers are 0-based relative to the cluster
      */
-    void init();
+    void initColumnReaders(
+        uint nClusterColsInit, TupleProjection const &clusterProj);
 
     /**
      * Initializes state variables used by cluster reader.

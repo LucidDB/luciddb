@@ -103,13 +103,19 @@ void BTreeNodeAccessor::compactNode(BTreeNode &node,BTreeNode &scratchNode)
 // virtual calls and reduce pointer arithmetic)
 void BTreeNodeAccessor::splitNode(
     BTreeNode &node,BTreeNode &newNode,
-    uint cbNewTuple)
+    uint cbNewTuple,
+    bool monotonic)
 {
-    // TODO:  special case for monotonic insertion
-    
     assert(!newNode.nEntries);
     assert(node.nEntries > 1);
     newNode.height = node.height; // split should be of the same height
+
+    // if monotonic, don't actually split the page; leave the left
+    // page as is and force all inserts to go into the new page
+    // on the right
+    if (monotonic) {
+        return;
+    }
 
     // Calculate the balance point in bytes
     uint cbNeeded = getEntryByteCount(cbNewTuple);

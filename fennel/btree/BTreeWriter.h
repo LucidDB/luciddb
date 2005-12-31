@@ -73,6 +73,11 @@ class BTreeWriter : public BTreeReader, public LogicalTxnParticipant
      */
     boost::scoped_array<FixedBuffer> leafTupleBuffer;
 
+    /**
+     * If true, inserts are always increasing
+     */
+    bool monotonic;
+
     inline void optimizeRootLockMode();
     
     /**
@@ -168,10 +173,13 @@ public:
      * @param descriptor descriptor for tree to be accessed
      *
      * @param scratchAccessor accessor for scratch segment used in splits
+     *
+     * @param monotonic if true, inserts are always increasing
      */
     explicit BTreeWriter(
         BTreeDescriptor const &descriptor,
-        SegmentAccessor const &scratchAccessor);
+        SegmentAccessor const &scratchAccessor,
+        bool monotonic = false);
     
     virtual ~BTreeWriter();
 

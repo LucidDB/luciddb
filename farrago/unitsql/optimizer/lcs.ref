@@ -69,6 +69,19 @@
 +--------+
 +--------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- verify that cached insert plans work (Jira Issue LDB-4)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> insert into lcsemps values(20);
+0: jdbc:farrago:> truncate table lcsemps;
+0: jdbc:farrago:> insert into lcsemps values(20);
+0: jdbc:farrago:> select * from lcsemps order by empno;
++--------+
+| EMPNO  |
++--------+
+| 20     |
++--------+
+0: jdbc:farrago:> truncate table lcsemps;
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- drop lcsemps
 0: jdbc:farrago:> drop table lcsemps;
 0: jdbc:farrago:> 
@@ -117,7 +130,7 @@
 0: jdbc:farrago:> -- verify that insert select works
 0: jdbc:farrago:> insert into lcsemps select empno, name, empid from sales.emps;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from lcsemps order by empno;
+0: jdbc:farrago:> select * from lcsemps order by empno, name;
 +--------+--------+--------+
 | EMPNO  |  NAME  | EMPID  |
 +--------+--------+--------+
@@ -159,15 +172,15 @@
 | Selma  | Selma  |
 | Wilma  | Wilma  |
 +--------+--------+
-0: jdbc:farrago:> select empid, empno from lcsemps empno;
+0: jdbc:farrago:> select empid, empno from lcsemps order by empno;
 +--------+--------+
 | EMPID  | EMPNO  |
 +--------+--------+
 | 10000  | 10     |
 | 30     | 100    |
 | 3      | 110    |
-| 1      | 120    |
 | 2      | 110    |
+| 1      | 120    |
 +--------+--------+
 0: jdbc:farrago:> select name, empno, empid from lcsemps order by empno;
 +--------+--------+--------+
@@ -463,7 +476,7 @@
 0: jdbc:farrago:> -- verify that insert select works
 0: jdbc:farrago:> insert into lcsemps select empno, name from sales.emps;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from lcsemps order by empno;
+0: jdbc:farrago:> select * from lcsemps order by empno, name;
 +--------+--------+
 | EMPNO  |  NAME  |
 +--------+--------+
@@ -521,26 +534,26 @@
 0: jdbc:farrago:> insert into multicluster values(1, NULL, 101, 51, -11, 1001, NULL, 1);
 0: jdbc:farrago:> insert into multicluster values(2, '',   102, 52, -12, 1002, NULL, 2);
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select c7, c1, c4, c0 from multicluster order by c0;
+0: jdbc:farrago:> select c7, c1, c4, c0 from multicluster order by c0, c1;
 +-----+-----+------+-----+
 | C7  | C1  |  C4  | C0  |
 +-----+-----+------+-----+
-| 0   | am  | -10  | 1   |
-| 0   | am  | -10  | 1   |
 | 1   |     | -11  | 1   |
+| 0   | am  | -10  | 1   |
+| 0   | am  | -10  | 1   |
 | 2   |     | -12  | 2   |
 +-----+-----+------+-----+
-0: jdbc:farrago:> select c7, c1, c4, c0 from multicluster order by c0;
+0: jdbc:farrago:> select c7, c1, c4, c0 from multicluster order by c0, c1;
 +-----+-----+------+-----+
 | C7  | C1  |  C4  | C0  |
 +-----+-----+------+-----+
-| 0   | am  | -10  | 1   |
-| 0   | am  | -10  | 1   |
 | 1   |     | -11  | 1   |
+| 0   | am  | -10  | 1   |
+| 0   | am  | -10  | 1   |
 | 2   |     | -12  | 2   |
 +-----+-----+------+-----+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select c3, c1, c1, c4, c7 from multicluster order by c1;
+0: jdbc:farrago:> select c3, c1, c1, c4, c7 from multicluster order by c1, c3;
 +-----+-----+-----+------+-----+
 | C3  | C1  | C1  |  C4  | C7  |
 +-----+-----+-----+------+-----+
@@ -583,26 +596,26 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> insert into multicluster select empno, name, 0, 10, 100, 1000, city, deptno from sales.emps; 
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select c7, c1, c4, c0 from multicluster order by c0;
+0: jdbc:farrago:> select c7, c1, c4, c0 from multicluster order by c0, c1;
 +-----+--------+------+------+
 | C7  |   C1   |  C4  |  C0  |
 +-----+--------+------+------+
-| 0   | am     | -10  | 1    |
-| 0   | am     | -10  | 1    |
 | 1   |        | -11  | 1    |
+| 0   | am     | -10  | 1    |
+| 0   | am     | -10  | 1    |
 | 2   |        | -12  | 2    |
 | 10  | Fred   | 100  | 100  |
 | 20  | Eric   | 100  | 110  |
 | 40  | John   | 100  | 110  |
 | 20  | Wilma  | 100  | 120  |
 +-----+--------+------+------+
-0: jdbc:farrago:> select c7, c1, c4, c0 from multicluster order by c0;
+0: jdbc:farrago:> select c7, c1, c4, c0 from multicluster order by c0, c1;
 +-----+--------+------+------+
 | C7  |   C1   |  C4  |  C0  |
 +-----+--------+------+------+
-| 0   | am     | -10  | 1    |
-| 0   | am     | -10  | 1    |
 | 1   |        | -11  | 1    |
+| 0   | am     | -10  | 1    |
+| 0   | am     | -10  | 1    |
 | 2   |        | -12  | 2    |
 | 10  | Fred   | 100  | 100  |
 | 20  | Eric   | 100  | 110  |
@@ -610,7 +623,7 @@
 | 20  | Wilma  | 100  | 120  |
 +-----+--------+------+------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select c3, c1, c1, c4, c7 from multicluster order by c1;
+0: jdbc:farrago:> select c3, c1, c1, c4, c7 from multicluster order by c1, c3;
 +-----+--------+--------+------+-----+
 | C3  |   C1   |   C1   |  C4  | C7  |
 +-----+--------+--------+------+-----+
@@ -683,18 +696,18 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> insert into threeclusters select * from flatfile_table;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from threeclusters order by c0;
+0: jdbc:farrago:> select * from threeclusters order by c0, c1;
 +------+------------------------------------------+-----+
 |  C0  |                    C1                    | C2  |
 +------+------------------------------------------+-----+
 | 123  | "S,"                                     | F   |
-| 123  | Jonathan Ackerman                        | A   |
-| 123  | Jonathan Ackerman                        | A   |
 | 123  | "S,"                                     | F   |
-| 234  | Peter "peg leg", Jimmy & Samantha "Sam"  | G   |
+| 123  | Jonathan Ackerman                        | A   |
+| 123  | Jonathan Ackerman                        | A   |
+| 234  | Grady O'Neil                             | B   |
 | 234  | Grady O'Neil                             | B   |
 | 234  | Peter "peg leg", Jimmy & Samantha "Sam"  | G   |
-| 234  | Grady O'Neil                             | B   |
+| 234  | Peter "peg leg", Jimmy & Samantha "Sam"  | G   |
 | 456  | Susan, Peter and Dave                    | C   |
 | 456  | Susan, Peter and Dave                    | C   |
 | 789  | Amelia "meals" Maurice                   | E   |

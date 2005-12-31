@@ -289,9 +289,12 @@ public:
      *
      * @param cbNewTuple number of bytes which will be required to store the
      * tuple which caused this split
+     *
+     * @param monotonic if true, inserts are always increasing so optimize
+     * the split accordingly
      */
     virtual void splitNode(
-        BTreeNode &node,BTreeNode &newNode,uint cbNewTuple);
+        BTreeNode &node,BTreeNode &newNode,uint cbNewTuple,bool monotonic);
 };
 
 inline uint BTreeNodeAccessor::getKeyCount(BTreeNode const &node) const

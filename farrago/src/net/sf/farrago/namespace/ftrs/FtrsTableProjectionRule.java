@@ -27,6 +27,7 @@ import java.util.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.util.*;
 
@@ -45,7 +46,7 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class FtrsTableProjectionRule extends RelOptRule
+class FtrsTableProjectionRule extends MedAbstractFennelProjectionRule
 {
     //~ Constructors ----------------------------------------------------------
 
@@ -72,7 +73,7 @@ class FtrsTableProjectionRule extends RelOptRule
     // implement RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
-        ProjectRel origProject = (ProjectRel) call.rels[0];
+        origProject = (ProjectRel) call.rels[0];
         if (!origProject.isBoxed()) {
             return;
         }
@@ -83,30 +84,10 @@ class FtrsTableProjectionRule extends RelOptRule
             return;
         }
 
-        // REVIEW:  what about AnonFields?
-        // TODO:  rather than failing, split into parts that can be
-        // pushed down and parts that can't
-        int n = origProject.getChildExps().length;
-        Integer [] projectedColumns = new Integer[n];
-        RelDataType rowType = origScan.getRowType();
-        RelDataType projType = origProject.getRowType();
-        RelDataTypeField [] projFields = projType.getFields();
-        String [] fieldNames = new String[n];
-        boolean needRename = false;
-        for (int i = 0; i < n; ++i) {
-            RexNode exp = origProject.getChildExps()[i];
-            if (!(exp instanceof RexInputRef)) {
-                return;
-            }
-            RexInputRef fieldAccess = (RexInputRef) exp;
-            String projFieldName = projFields[i].getName();
-            fieldNames[i] = projFieldName;
-            String origFieldName =
-                rowType.getFields()[fieldAccess.getIndex()].getName();
-            if (!projFieldName.equals(origFieldName)) {
-                needRename = true;
-            }
-            projectedColumns[i] = new Integer(fieldAccess.getIndex());
+        boolean needRename = createProjectionList(origScan);
+        if (numProjectedCols == 0) {
+            // projection rule cannot be applied
+            return;
         }
 
         // Generate a potential scan for each available index covering the
@@ -142,19 +123,7 @@ class FtrsTableProjectionRule extends RelOptRule
                     origScan.isOrderPreserving);
 
             if (needRename) {
-                // Replace calling convention with FENNEL_EXEC_CONVENTION
-                RelTraitSet traits =
-                    RelOptUtil.clone(origProject.getTraits());
-                traits.setTrait(
-                    CallingConventionTraitDef.instance,
-                    FennelRel.FENNEL_EXEC_CONVENTION);
-
-                projectedScan =
-                    new FennelRenameRel(
-                        origProject.getCluster(),
-                        projectedScan,
-                        fieldNames,
-                        traits);
+                projectedScan = renameProjectedScan(projectedScan);
             }
 
             call.transformTo(projectedScan);

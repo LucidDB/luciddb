@@ -26,6 +26,8 @@
 
 #include "fennel/exec/ConfluenceExecStream.h"
 #include "fennel/tuple/TupleData.h"
+#include "fennel/tuple/TupleAccessor.h"
+#include <boost/scoped_array.hpp>
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -41,10 +43,7 @@ struct BarrierExecStreamParams : public ConfluenceExecStreamParams
  * BarrierExecStream is a synchronizing barrier to wait for the completion of
  * several upstream producers and generate a status output for the downstream
  * consumer.
- * TODO 2005-12-14:
- * BarrierExecStream can provide a buffer for its producers to write into.
- * Currently a ScratchBuffer will be added between its producers and
- * BarrierExecStream.
+ * BarrierExecStream provides output buffer for its consumers.
  *
  * @author Rushan Chen
  * @version $Id$
@@ -52,7 +51,28 @@ struct BarrierExecStreamParams : public ConfluenceExecStreamParams
 class BarrierExecStream : public ConfluenceExecStream
 {
     TupleData inputTuple;
+
+    /**
+     * Whether row count has been produced.
+     */
+    bool isDone;    
+
+    /**
+     * Output tuple which holds the row count.
+     */
     TupleData outputTuple;
+
+    /**
+     * A reference to the output accessor 
+     * contained in SingleOutputExecStream::pOutAccessor
+     */
+    TupleAccessor* outputTupleAccessor;
+
+    /**
+     * buffer holding the outputTuple to provide to the consumers
+     */
+    boost::scoped_array<FixedBuffer> outputTupleBuffer;
+
     /**
      * 0-based ordinal of next input from which to read
      */
@@ -69,6 +89,11 @@ public:
     virtual void prepare(BarrierExecStreamParams const &params);    
     virtual void open(bool restart);
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
+    virtual ExecStreamBufProvision getOutputBufProvision() const;
+    /**
+     * Implements ExecStream.
+     */
+    virtual void closeImpl();
 };
 
 FENNEL_END_NAMESPACE
