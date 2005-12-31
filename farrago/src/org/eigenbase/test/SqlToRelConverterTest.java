@@ -514,45 +514,41 @@ public class SqlToRelConverterTest extends TestCase
     public void testUnion() {
         // union all
         check( "select empno from emp union all select deptno from dept",
-            "ProjectRel(EMPNO=[$0])" + NL +
-            "  UnionRel(all=[true])" + NL +
-            "    ProjectRel(EMPNO=[$0])" + NL +
-            "      TableAccessRel(table=[[SALES, EMP]])" + NL +
-            "    ProjectRel(DEPTNO=[$0])" + NL +
-            "      TableAccessRel(table=[[SALES, DEPT]])" + NL);
+            "UnionRel(all=[true])"+ NL +
+            "  ProjectRel(EMPNO=[$0])"+ NL +
+            "    TableAccessRel(table=[[SALES, EMP]])"+ NL +
+            "  ProjectRel(DEPTNO=[$0])"+ NL +
+            "    TableAccessRel(table=[[SALES, DEPT]])" + NL);
 
         // union without all
         check("select empno from emp union select deptno from dept",
-            "ProjectRel(EMPNO=[$0])" + NL +
-            "  UnionRel(all=[false])" + NL +
-            "    ProjectRel(EMPNO=[$0])" + NL +
-            "      TableAccessRel(table=[[SALES, EMP]])" + NL +
-            "    ProjectRel(DEPTNO=[$0])" + NL +
-            "      TableAccessRel(table=[[SALES, DEPT]])" + NL);
+            "UnionRel(all=[false])" + NL +
+            "  ProjectRel(EMPNO=[$0])" + NL +
+            "    TableAccessRel(table=[[SALES, EMP]])" + NL +
+            "  ProjectRel(DEPTNO=[$0])" + NL +
+            "    TableAccessRel(table=[[SALES, DEPT]])" + NL);
 
         // union with values
         check("values (10), (20)" + NL +
             "union all" + NL +
             "select 34 from emp" + NL +
             "union all values (30), (45 + 10)",
-            "ProjectRel(EXPR$0=[$0])" + NL +
+            "UnionRel(all=[true])" + NL +
             "  UnionRel(all=[true])" + NL +
             "    ProjectRel(EXPR$0=[$0])" + NL +
             "      UnionRel(all=[true])" + NL +
-            "        ProjectRel(EXPR$0=[$0])" + NL +
-            "          UnionRel(all=[true])" + NL +
-            "            ProjectRel(EXPR$0=[10])" + NL +
-            "              OneRowRel" + NL +
-            "            ProjectRel(EXPR$0=[20])" + NL +
-            "              OneRowRel" + NL +
-            "        ProjectRel(EXPR$0=[34])" + NL +
-            "          TableAccessRel(table=[[SALES, EMP]])" + NL +
-            "    ProjectRel(EXPR$0=[$0])" + NL +
-            "      UnionRel(all=[true])" + NL +
-            "        ProjectRel(EXPR$0=[30])" + NL +
+            "        ProjectRel(EXPR$0=[10])" + NL +
             "          OneRowRel" + NL +
-            "        ProjectRel(EXPR$0=[+(45, 10)])" + NL +
-            "          OneRowRel" + NL);
+            "        ProjectRel(EXPR$0=[20])" + NL +
+            "          OneRowRel" + NL +
+            "    ProjectRel(EXPR$0=[34])" + NL +
+            "      TableAccessRel(table=[[SALES, EMP]])" + NL +
+            "  ProjectRel(EXPR$0=[$0])" + NL +
+            "    UnionRel(all=[true])" + NL +
+            "      ProjectRel(EXPR$0=[30])" + NL +
+            "        OneRowRel" + NL +
+            "      ProjectRel(EXPR$0=[+(45, 10)])" + NL +
+            "        OneRowRel" + NL);
 
         // union of subquery, inside from list, also values
         check("select deptno from emp as emp0 cross join" + NL +
@@ -562,21 +558,19 @@ public class SqlToRelConverterTest extends TestCase
             "ProjectRel(DEPTNO=[$7])" + NL +
             "  JoinRel(condition=[true], joinType=[inner])" + NL +
             "    TableAccessRel(table=[[SALES, EMP]])" + NL +
-            "    ProjectRel(EMPNO=[$0])" + NL +
+            "    UnionRel(all=[true])" + NL +
             "      UnionRel(all=[true])" + NL +
             "        ProjectRel(EMPNO=[$0])" + NL +
-            "          UnionRel(all=[true])" + NL +
-            "            ProjectRel(EMPNO=[$0])" + NL +
-            "              TableAccessRel(table=[[SALES, EMP]])" + NL +
-            "            ProjectRel(DEPTNO=[$0])" + NL +
-            "              FilterRel(condition=[>($0, 20)])" + NL +
-            "                TableAccessRel(table=[[SALES, DEPT]])" + NL +
-            "        ProjectRel(EXPR$0=[$0])" + NL +
-            "          UnionRel(all=[true])" + NL +
-            "            ProjectRel(EXPR$0=[45])" + NL +
-            "              OneRowRel" + NL +
-            "            ProjectRel(EXPR$0=[67])" + NL +
-            "              OneRowRel" + NL);
+            "          TableAccessRel(table=[[SALES, EMP]])" + NL +
+            "        ProjectRel(DEPTNO=[$0])" + NL +
+            "          FilterRel(condition=[>($0, 20)])" + NL +
+            "            TableAccessRel(table=[[SALES, DEPT]])" + NL +
+            "      ProjectRel(EXPR$0=[$0])" + NL +
+            "        UnionRel(all=[true])" + NL +
+            "          ProjectRel(EXPR$0=[45])" + NL +
+            "            OneRowRel" + NL +
+            "          ProjectRel(EXPR$0=[67])" + NL +
+            "            OneRowRel" + NL);
 
     }
 
