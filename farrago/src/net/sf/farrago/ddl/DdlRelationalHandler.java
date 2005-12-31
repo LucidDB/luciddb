@@ -40,6 +40,7 @@ import net.sf.farrago.session.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
@@ -432,8 +433,48 @@ public class DdlRelationalHandler extends DdlHandler
             validator.getDataWrapperCache(),
             index);
 
-        // TODO:  index existing rows; for now, creating an index on a
-        // non-empty table will leave the index (incorrectly) empty
+        FemLocalTable table = (FemLocalTable) 
+            FarragoCatalogUtil.getIndexTable(index);
+
+        if (!validator.isCreatedObject(table)) {
+            indexExistingRows(table, index);
+        }
+    }
+
+    private void indexExistingRows(
+        FemLocalTable table,
+        FemLocalIndex index)
+    {
+        FemDataServer dataServer = table.getServer();
+        FarragoMedLocalDataServer medDataServer = (FarragoMedLocalDataServer)
+            validator.getDataWrapperCache().loadServerFromCatalog(dataServer);
+
+        // NOTE jvs 30-Dec-2005:  We rely on the visibility of the
+        // new object still being VK_PRIVATE so that the optimizer won't
+        // see it and try to use it to satisfy source table scans!
+        
+        FarragoSession session = validator.newReentrantSession();
+        FarragoSessionStmtContext stmtContext = session.newStmtContext(null);
+        FarragoSessionStmtValidator stmtValidator =
+            session.newStmtValidator();
+        try {
+            FarragoSessionPreparingStmt stmt = 
+                session.getPersonality().newPreparingStmt(stmtValidator);
+            stmt.preImplement();
+            RelOptTable relOptTable = stmt.loadColumnSet(
+                FarragoCatalogUtil.getQualifiedName(table));
+            assert(relOptTable != null);
+            RelNode indexBuildPlan = medDataServer.constructIndexBuildPlan(
+                relOptTable,
+                index,
+                stmt.getRelOptCluster());
+            stmtContext.prepare(indexBuildPlan, SqlKind.Insert, true, stmt);
+            stmtContext.execute();
+        } finally {
+            stmtContext.closeAllocation();
+            stmtValidator.closeAllocation();
+            validator.releaseReentrantSession(session);
+        }
     }
 
     // implement FarragoSessionDdlHandler

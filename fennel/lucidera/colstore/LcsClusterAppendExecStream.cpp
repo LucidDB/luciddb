@@ -35,28 +35,22 @@ void LcsClusterAppendExecStream::prepare(
     BTreeExecStream::prepare(params);
     ConduitExecStream::prepare(params);
 
-    // construct individual tuple descriptors, accessors, and data for
-    // each column in the cluster
+    tableColsTupleDesc = pInAccessor->getTupleDesc();
+    m_numColumns = params.inputProj.size();
 
-    clusterColsTupleDesc = pInAccessor->getTupleDesc();
-
-    clusterColsTupleData.compute(clusterColsTupleDesc);
-
-    inputProj = params.inputProj;
-    m_numColumns = inputProj.size();
-
-    // REVIEW jvs 27-Dec-2005:  instead of this for loop, you can use
-    // colTupleDesc.projectFrom(clusterColsTupleDesc, inputProj);
-    
+    // setup one tuple descriptor per cluster column
     colTupleDesc.reset(new TupleDescriptor[m_numColumns]);
     for (int i = 0; i < m_numColumns; i++) {
-        colTupleDesc[i].push_back(clusterColsTupleDesc[inputProj[i]]);
+        colTupleDesc[i].push_back(tableColsTupleDesc[params.inputProj[i]]);
     }
 
-    // REVIEW jvs 27-Dec-2005:  should assert that colTupleDesc
-    // matches pInAccessor; I ran into violations of this a few times
-    // on the way to getting UDT's working.
-    
+    // setup descriptors, accessors and data to access only the columns
+    // for this cluster, based on the input projection
+
+    pInAccessor->bindProjection(params.inputProj);
+    clusterColsTupleDesc.projectFrom(tableColsTupleDesc, params.inputProj);
+    clusterColsTupleData.compute(clusterColsTupleDesc);
+
     m_bOverwrite = params.overwrite;
 
     // setup bufferLock to access temporary large page blocks
@@ -77,6 +71,8 @@ void LcsClusterAppendExecStream::prepare(
     pOutAccessor->setTupleShape(outputTupleDesc);
     outputTuple.compute(outputTupleDesc);
     outputTuple[0].pData = (PConstBuffer) &numRowCompressed;
+
+    outputTupleAccessor = & pOutAccessor->getScratchTupleAccessor();
 
     m_blockSize = treeDescriptor.segmentAccessor.pSegment->getUsablePageSize();
     
@@ -106,7 +102,12 @@ void LcsClusterAppendExecStream::open(bool restart)
     BTreeExecStream::open(restart);
     ConduitExecStream::open(restart);
 
+    if (!restart) {
+        outputTupleBuffer.reset(new FixedBuffer[outputTupleAccessor->getMaxByteCount()]);        
+    }
+
     Init();
+    isDone = false;
 }
 
 ExecStreamResult LcsClusterAppendExecStream::execute(
@@ -119,19 +120,16 @@ void LcsClusterAppendExecStream::closeImpl()
 {
     BTreeExecStream::closeImpl();
     ConduitExecStream::closeImpl();
+    outputTupleBuffer.reset();
     Close();
 }
 
-LcsClusterAppendExecStream::LcsClusterAppendExecStream() 
+void LcsClusterAppendExecStream::Init()
 {
     m_indexBlock = 0;
     m_firstRow = LcsRid(0);
     m_lastRow = LcsRid(0);
     m_startRow = LcsRid(0);
-}
-
-void LcsClusterAppendExecStream::Init()
-{
     m_rowCnt = 0;
     m_indexBlockDirty = false;
     m_arraysAlloced = false;
@@ -213,6 +211,12 @@ ExecStreamResult LcsClusterAppendExecStream::Compress(
     bool canFit = false;
     bool undoInsert= false;
     
+    if (isDone) {
+        // already returned final result
+        pOutAccessor->markEOS();
+        return EXECRC_EOS;
+    }
+
     // If this is the first time compress is called, then
     // start new block (for new table), or load last block
     // (of existing table).  We do this here rather than in
@@ -270,11 +274,14 @@ ExecStreamResult LcsClusterAppendExecStream::Compress(
         
         // outputTuple was already initialized to point to numRowCompressed
         // in prepare()
-        if (!pOutAccessor->produceTuple(outputTuple)) {
-            return EXECRC_BUF_OVERFLOW;
-        }
-        pOutAccessor->markEOS();
-        return EXECRC_EOS;
+        // Write a single outputTuple(numRowCompressed) and indicate OVERFLOW.
+
+        outputTupleAccessor->marshal(outputTuple, outputTupleBuffer.get());
+        pOutAccessor->provideBufferForConsumption(outputTupleBuffer.get(), 
+            outputTupleBuffer.get() + outputTupleAccessor->getCurrentByteCount());
+
+        isDone = true;
+        return EXECRC_BUF_OVERFLOW;
     }
 
     for (i = 0; i < quantum.nTuplesMax; i++) {
@@ -282,16 +289,11 @@ ExecStreamResult LcsClusterAppendExecStream::Compress(
             return EXECRC_BUF_UNDERFLOW;
         }
 
-        // REVIEW jvs 27-Dec-2005: as an optimization, instead of every
-        // appender unmarshalling the full tuple and then projecting out what
-        // it wants, use TupleProjectionAccessor to unmarshal only the relevant
-        // attributes; that's what it's designed to do efficiently
-   
         // if we have finished processing the previous row, unmarshal
         // the next cluster tuple and convert them into individual
         // tuples, one per cluster column
         if (!pInAccessor->isTupleConsumptionPending())
-            pInAccessor->unmarshalTuple(clusterColsTupleData);
+            pInAccessor->unmarshalProjectedTuple(clusterColsTupleData);
 
         // Go through each column value for current row and insert it.
         // If we run out of space then rollback all the columns that
@@ -300,7 +302,7 @@ ExecStreamResult LcsClusterAppendExecStream::Compress(
 
         for (j = 0; j < m_numColumns; j++) {
 
-            m_hash[j].insert(clusterColsTupleData[inputProj[j]], &m_vOrd[j],
+            m_hash[j].insert(clusterColsTupleData[j], &m_vOrd[j],
                              &undoInsert);
             
             if (undoInsert) {
@@ -310,7 +312,7 @@ ExecStreamResult LcsClusterAppendExecStream::Compress(
                 //     k <= j
                 for (k = 0; k <= j; k++) {
                     
-                    m_hash[k].undoInsert(clusterColsTupleData[inputProj[k]]);
+                    m_hash[k].undoInsert(clusterColsTupleData[k]);
                 }
                 break;
             }
@@ -751,6 +753,12 @@ void LcsClusterAppendExecStream::AllocArrays()
     m_vOrd.reset(new LcsHashValOrd[m_numColumns]);
     m_buf.reset(new boost::scoped_array<FixedBuffer>[m_numColumns]);
     m_maxValueSize.reset(new uint[m_numColumns]);
+}
+
+ExecStreamBufProvision
+    LcsClusterAppendExecStream::getOutputBufProvision() const
+{
+    return BUFPROV_PRODUCER;
 }
 
 FENNEL_END_CPPFILE("$Id$");

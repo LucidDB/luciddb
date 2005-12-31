@@ -43,6 +43,7 @@ import org.eigenbase.rex.*;
 import org.eigenbase.util.Util;
 import org.eigenbase.oj.util.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 
 /**
@@ -644,41 +645,27 @@ public abstract class RelOptUtil
         return sw.toString();
     }
 
-    //~ Inner Classes ---------------------------------------------------------
-
-    private static class VariableSetVisitor extends RelVisitor
+    /**
+     * Creates the row type descriptor for the result of a DML operation, which
+     * is a single column named ROWCOUNT of type BIGINT.
+     *
+     * @param typeFactory factory to use for creating type descriptor
+     *
+     * @return created type
+     */
+    public static RelDataType createDmlRowType(RelDataTypeFactory typeFactory)
     {
-        HashSet variables = new HashSet();
-
-        // implement RelVisitor
-        public void visit(
-            RelNode p,
-            int ordinal,
-            RelNode parent)
-        {
-            super.visit(p, ordinal, parent);
-            p.collectVariablesUsed(variables);
-
-            // Important! Remove stopped variables AFTER we visit children
-            // (which what super.visit() does)
-            variables.removeAll(p.getVariablesStopped());
-        }
-    }
-
-    private static class VariableUsedVisitor extends RexShuttle
-    {
-        HashSet variables = new HashSet();
-
-        public RexNode visitCorrelVariable(RexCorrelVariable p)
-        {
-            variables.add(p.getName());
-            return p;
-        }
+        RelDataType [] types = new RelDataType[1];
+        String [] fieldNames = new String[1];
+        types[0] = typeFactory.createSqlType(SqlTypeName.Bigint);
+        fieldNames[0] = "ROWCOUNT";
+        return typeFactory.createStructType(types, fieldNames);
     }
 
     /**
      * Returns a translation of the IS [NOT] DISTINCT FROM sql opertor
-     * @param neg if false then a translation of IS NOT DISTINCT FROM is returned
+     * @param neg if false then a translation of IS NOT DISTINCT FROM is
+     * returned
      */
     public static RexNode isDistinctFrom(
         RexBuilder rexBuilder,
@@ -733,17 +720,49 @@ public abstract class RelOptUtil
             eqOp   = opTab.notEqualsOperator;
         }
         RexNode[] whenThenElse = new RexNode[] {
-                // when x is null
-                rexBuilder.makeCall(opTab.isNullOperator, x)
-                // then return y is [not] null
-                ,rexBuilder.makeCall(nullOp, y)
-                // when y is null
-                ,rexBuilder.makeCall(opTab.isNullOperator, y)
-                // then return x is [not] null
-                ,rexBuilder.makeCall(nullOp, x)
-                // else return x compared to y
-                ,rexBuilder.makeCall(eqOp, x, y)};
+            // when x is null
+            rexBuilder.makeCall(opTab.isNullOperator, x),
+            // then return y is [not] null
+            rexBuilder.makeCall(nullOp, y),
+            // when y is null
+            rexBuilder.makeCall(opTab.isNullOperator, y),
+            // then return x is [not] null
+            rexBuilder.makeCall(nullOp, x),
+            // else return x compared to y
+            rexBuilder.makeCall(eqOp, x, y)};
         return rexBuilder.makeCall(opTab.caseOperator, whenThenElse);
+    }
+    
+    //~ Inner Classes ---------------------------------------------------------
+
+    private static class VariableSetVisitor extends RelVisitor
+    {
+        HashSet variables = new HashSet();
+
+        // implement RelVisitor
+        public void visit(
+            RelNode p,
+            int ordinal,
+            RelNode parent)
+        {
+            super.visit(p, ordinal, parent);
+            p.collectVariablesUsed(variables);
+
+            // Important! Remove stopped variables AFTER we visit children
+            // (which what super.visit() does)
+            variables.removeAll(p.getVariablesStopped());
+        }
+    }
+
+    private static class VariableUsedVisitor extends RexShuttle
+    {
+        HashSet variables = new HashSet();
+
+        public RexNode visitCorrelVariable(RexCorrelVariable p)
+        {
+            variables.add(p.getName());
+            return p;
+        }
     }
 }
 

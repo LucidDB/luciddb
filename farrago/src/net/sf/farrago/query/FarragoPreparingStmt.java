@@ -577,7 +577,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                     "Plan before flattening",
                     rootRel,
                     false,
-                    SqlExplainLevel.ALL_ATTRIBUTES));
+                    SqlExplainLevel.DIGEST_ATTRIBUTES));
         }
         originalRowType = rootRel.getRowType();
         rootRel = flattenTypes(rootRel, true);
@@ -587,7 +587,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                     "Plan after flattening",
                     rootRel,
                     false,
-                    SqlExplainLevel.ALL_ATTRIBUTES));
+                    SqlExplainLevel.DIGEST_ATTRIBUTES));
         }
         rootRel = super.optimize(rootRel);
         if (dumpPlan) {
@@ -794,6 +794,12 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             "FarragoPreparingStmt.contentsAsArray() should have been replaced");
     }
 
+    // implement FarragoSessionPreparingStmt
+    public RelOptTable loadColumnSet(SqlIdentifier name)
+    {
+        return getTableForMember(name.names);
+    }
+    
     // implement RelOptSchema
     public RelOptTable getTableForMember(String [] names)
     {

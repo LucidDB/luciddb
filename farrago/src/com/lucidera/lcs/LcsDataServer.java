@@ -168,6 +168,16 @@ class LcsDataServer extends MedAbstractFennelDataServer
             super.dropIndex(index, rootPageId, truncate);
         }
     }
+
+    // implement FarragoMedLocalDataServer
+    public RelNode constructIndexBuildPlan(
+        RelOptTable table,
+        FemLocalIndex index,
+        RelOptCluster cluster)
+    {
+        // TODO jvs 29-Dec-2005
+        throw Util.needToImplement("index existing LCS rows");
+    }
     
     protected void prepareIndexCmd(
         FemIndexCmd cmd,

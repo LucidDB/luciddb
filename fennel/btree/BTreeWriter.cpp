@@ -37,7 +37,8 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 
 BTreeWriter::BTreeWriter(
     BTreeDescriptor const &descriptor,
-    SegmentAccessor const &scratchAccessorInit)
+    SegmentAccessor const &scratchAccessorInit,
+    bool monotonicInit)
     : BTreeReader(descriptor),
       scratchAccessor(scratchAccessorInit)
 {
@@ -50,6 +51,7 @@ BTreeWriter::BTreeWriter(
         new FixedBuffer[pNonLeafNodeAccessor->tupleAccessor.getMaxByteCount()]);
     leafTupleBuffer.reset(
         new FixedBuffer[pLeafNodeAccessor->tupleAccessor.getMaxByteCount()]);
+    monotonic = monotonicInit;
 }
 
 BTreeWriter::~BTreeWriter()
@@ -82,25 +84,39 @@ uint BTreeWriter::insertTupleFromBuffer(
     std::cout << std::endl;
 #endif
     
-    pageStack.clear();
+    // monotonic inserts do not need to search for key; we will always
+    // be inserting after where we are positioned except the first time
+    // through or after a split, where we will need to do an initial search
+    // to setup the appropriate position
+    assert(!(monotonic && distinctness == DUP_FAIL));
+    if (monotonic) {
+        if (isPositioned()) {
+            ++iTupleOnLeaf;
+        } else {
+            pageStack.clear();
+            searchForKeyTemplate< true, std::vector<PageId> >(
+                searchKeyData,DUP_SEEK_ANY,true,pageStack);
+        }
+    } else {
+        pageStack.clear();
+        bool duplicate = searchForKeyTemplate< true, std::vector<PageId> >(
+            searchKeyData,DUP_SEEK_ANY,true,pageStack);
 
-    bool duplicate = searchForKeyTemplate< true, std::vector<PageId> >(
-        searchKeyData,DUP_SEEK_ANY,true,pageStack);
-
-    // REVIEW:  This implements the SQL semantics whereby keys with null values
-    // are considered duplicates for DISTINCT but not for UNIQUE.  Should
-    // probably introduce new DUP_ options to make it explicit.
-    if (duplicate) {
-        switch(distinctness) {
-        case DUP_ALLOW:
-            break;
-        case DUP_DISCARD:
-            endSearch();
-            return cbTuple;
-        default:
-            if (!searchKeyData.containsNull()) {
+        // REVIEW:  This implements the SQL semantics whereby keys with null
+        // values are considered duplicates for DISTINCT but not for UNIQUE.
+        // Should probably introduce new DUP_ options to make it explicit.
+        if (duplicate) {
+            switch(distinctness) {
+            case DUP_ALLOW:
+                break;
+            case DUP_DISCARD:
                 endSearch();
-                throw BTreeDuplicateKeyExcn(keyDescriptor,searchKeyData);
+                return cbTuple;
+            default:
+                if (!searchKeyData.containsNull()) {
+                    endSearch();
+                    throw BTreeDuplicateKeyExcn(keyDescriptor,searchKeyData);
+                }
             }
         }
     }
@@ -117,12 +133,18 @@ uint BTreeWriter::insertTupleFromBuffer(
         getLogicalTxn()->endLogicalAction();
     }
     
+    bool split = false;
     if (!attemptInsertWithoutSplit(
             pageLock,pTupleBuffer,cbTuple,iTupleOnLeaf))
     {
         splitNode(pageLock,pTupleBuffer,cbTuple,iTupleOnLeaf);
+        split = true;
     }
-    endSearch();
+    // restart the search after a split even if monotonic insert to
+    // ensure correct path to newnode
+    if (!monotonic || split) {
+        endSearch();
+    }
 
     return cbTuple;
 }
@@ -190,7 +212,7 @@ void BTreeWriter::splitNode(
     setRightSibling(newNode,newPageId,node.rightSibling);
     setRightSibling(node,pageId,newPageId);
     
-    nodeAccessor.splitNode(node,newNode,cbTuple);
+    nodeAccessor.splitNode(node,newNode,cbTuple,monotonic);
     
 #if 0
     std::cerr << "LEFT AFTER SPLIT:" << std::endl;

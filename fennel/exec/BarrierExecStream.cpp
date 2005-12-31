@@ -37,29 +37,40 @@ void BarrierExecStream:: prepare(BarrierExecStreamParams const &params)
      * just one column recording number of rows processed by the producers.
      */
     outputTupleDesc = inAccessors[0]->getTupleDesc();
-
-    // REVIEW jvs 27-Dec-2005:  more asserts needed according to above comment:
-    // all inputs must match rowCount, and there must be at least one
-    // input otherwise we'll produce garbage
-    
     assert (outputTupleDesc.size() == 1);
+
+    for (int i = 1; i < inAccessors.size(); i ++) {
+        assert(inAccessors[0]->getTupleDesc() == inAccessors[i]->getTupleDesc());
+    }
     
     pOutAccessor->setTupleShape(outputTupleDesc);
     
     inputTuple.compute(outputTupleDesc);
     outputTuple.compute(outputTupleDesc);
     outputTuple[0].pData = (PConstBuffer) &rowCount;
-    
+
+    outputTupleAccessor = & pOutAccessor->getScratchTupleAccessor();
 }
 
 void BarrierExecStream::open(bool restart)
 {
     ConfluenceExecStream::open(restart);
     iInput = 0;
+
+    if (!restart) {
+        outputTupleBuffer.reset(new FixedBuffer[outputTupleAccessor->getMaxByteCount()]);
+    }
+    isDone = false;
 }
 
-ExecStreamResult BarrierExecStream::execute(ExecStreamQuantum const &)
+ExecStreamResult BarrierExecStream::execute(ExecStreamQuantum const &quantum)
 {
+    if (isDone) {
+        // already returned final result
+        pOutAccessor->markEOS();
+        return EXECRC_EOS;
+    }
+
     switch (pOutAccessor->getState()) {
     case EXECBUF_NONEMPTY:
     case EXECBUF_OVERFLOW:
@@ -101,14 +112,26 @@ ExecStreamResult BarrierExecStream::execute(ExecStreamQuantum const &)
         }
     }
 
-    // attempt to write output
-    bool success = pOutAccessor->produceTuple(outputTuple);
-    if (success) {
-        pOutAccessor->markEOS();
-        return EXECRC_EOS;
-    } else {
-        return EXECRC_BUF_OVERFLOW;
-    }
+    // Write a single outputTuple(rowCount) and indicate OVERFLOW.
+    outputTupleAccessor->marshal(outputTuple, outputTupleBuffer.get());
+
+    pOutAccessor->provideBufferForConsumption(outputTupleBuffer.get(), 
+        outputTupleBuffer.get() + outputTupleAccessor->getCurrentByteCount());
+
+    isDone = true;
+    return EXECRC_BUF_OVERFLOW;
+}
+
+ExecStreamBufProvision
+    BarrierExecStream::getOutputBufProvision() const
+{
+    return BUFPROV_PRODUCER;
+}
+
+void BarrierExecStream::closeImpl()
+{
+    ConfluenceExecStream::closeImpl();
+    outputTupleBuffer.reset();
 }
 
 FENNEL_END_CPPFILE("$Id$");

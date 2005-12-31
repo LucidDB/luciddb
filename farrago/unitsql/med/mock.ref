@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/med/mock.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/med/mock.sql#2 $
 0: jdbc:farrago:> -- Test mock namespace plugin
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create foreign data wrapper mock_foreign_wrapper
@@ -60,6 +60,10 @@ Error: Mock foreign object "BACH_SCHEMA" not found (state=,code=0)
 . . . . . . . . > server mock_foreign_metadata_server
 . . . . . . . . > options (foreign_table_name 'BACH_TABLE');
 Error: Mock foreign object "BACH_TABLE" not found (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test create index on mock table
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create index mock_index on mock_empty_table(id);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> insert into mock_empty_table values (5);
 0: jdbc:farrago:> 

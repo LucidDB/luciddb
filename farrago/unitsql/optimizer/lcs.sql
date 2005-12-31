@@ -41,6 +41,14 @@ truncate table lcsemps;
 
 select * from lcsemps;
 
+-- verify that cached insert plans work (Jira Issue LDB-4)
+
+insert into lcsemps values(20);
+truncate table lcsemps;
+insert into lcsemps values(20);
+select * from lcsemps order by empno;
+truncate table lcsemps;
+
 -- drop lcsemps
 drop table lcsemps;
 
@@ -72,13 +80,13 @@ insert into lcsemps values(10, 'Selma', 10000);
 -- verify that insert select works
 insert into lcsemps select empno, name, empid from sales.emps;
 
-select * from lcsemps order by empno;
+select * from lcsemps order by empno, name;
 
 -- test some projections
 select empno, name, empid from lcsemps order by empno;
 select name from lcsemps order by name;
 select name, name from lcsemps order by name;
-select empid, empno from lcsemps empno;
+select empid, empno from lcsemps order by empno;
 select name, empno, empid from lcsemps order by empno;
 select empno + empid as empno_plus_empid from lcsemps order by empno_plus_empid;
 
@@ -233,7 +241,7 @@ insert into lcsemps values(10, 'Selma');
 -- verify that insert select works
 insert into lcsemps select empno, name from sales.emps;
 
-select * from lcsemps order by empno;
+select * from lcsemps order by empno, name;
 
 -- verify truncate works
 truncate table lcsemps;
@@ -269,10 +277,10 @@ insert into multicluster values(1, 'am', 100, 50, -10, 1000, NULL, 0);
 insert into multicluster values(1, NULL, 101, 51, -11, 1001, NULL, 1);
 insert into multicluster values(2, '',   102, 52, -12, 1002, NULL, 2);
 
-select c7, c1, c4, c0 from multicluster order by c0;
-select c7, c1, c4, c0 from multicluster order by c0;
+select c7, c1, c4, c0 from multicluster order by c0, c1;
+select c7, c1, c4, c0 from multicluster order by c0, c1;
 
-select c3, c1, c1, c4, c7 from multicluster order by c1;
+select c3, c1, c1, c4, c7 from multicluster order by c1, c3;
 
 select * from multicluster order by c0, c1;
 
@@ -290,10 +298,10 @@ select * from multicluster order by c0, c1;
 
 insert into multicluster select empno, name, 0, 10, 100, 1000, city, deptno from sales.emps; 
 
-select c7, c1, c4, c0 from multicluster order by c0;
-select c7, c1, c4, c0 from multicluster order by c0;
+select c7, c1, c4, c0 from multicluster order by c0, c1;
+select c7, c1, c4, c0 from multicluster order by c0, c1;
 
-select c3, c1, c1, c4, c7 from multicluster order by c1;
+select c3, c1, c1, c4, c7 from multicluster order by c1, c3;
 
 select * from multicluster order by c0, c1;
 
@@ -333,7 +341,7 @@ insert into threeclusters select * from flatfile_table;
 
 insert into threeclusters select * from flatfile_table;
 
-select * from threeclusters order by c0;
+select * from threeclusters order by c0, c1;
 
 truncate table threeclusters;
 

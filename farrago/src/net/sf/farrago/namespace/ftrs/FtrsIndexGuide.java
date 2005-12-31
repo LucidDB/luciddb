@@ -96,6 +96,22 @@ class FtrsIndexGuide
     }
 
     /**
+     * Determines whether an index is in a valid state for satisfying queries.
+     * This returns false for a new index under construction.  Optimization
+     * rules which consider unclustered indexes must test this state.
+     * For FTRS, clustered indexes are always valid since they can
+     * only be created together with the table.
+     *
+     * @param index index to test
+     *
+     * @return true if usable
+     */
+    public boolean isValid(FemLocalIndex index)
+    {
+        return index.getVisibility() == VisibilityKindEnum.VK_PUBLIC;
+    }
+
+    /**
      * Gets a list of columns covered by an unclustered index.
      *
      *<p>
@@ -332,6 +348,42 @@ class FtrsIndexGuide
                     column.getOrdinal()));
         }
         return tupleProj;
+    }
+
+    /**
+     * Creates a new physical writer definition for a particular index,
+     * initializing any invariant information.
+     *
+     * @param rel relational expression modifying the index
+     *
+     * @param index the index of interest
+     *
+     * @return new writer
+     */
+    public FemIndexWriterDef newIndexWriter(
+        FennelRel rel,
+        FemLocalIndex index)
+    {
+        FemIndexWriterDef indexWriter =
+            repos.getFennelPackage().getFemIndexWriterDef()
+            .createFemIndexWriterDef();
+        if (!FarragoCatalogUtil.isIndexTemporary(index)) {
+            final FarragoPreparingStmt stmt =
+                FennelRelUtil.getPreparingStmt(rel);
+            indexWriter.setRootPageId(
+                stmt.getIndexMap().getIndexRoot(index));
+        } else {
+            indexWriter.setRootPageId(-1);
+        }
+        indexWriter.setSegmentId(FtrsDataServer.getIndexSegmentId(index));
+        indexWriter.setIndexId(JmiUtil.getObjectId(index));
+        indexWriter.setTupleDesc(
+            getCoverageTupleDescriptor(index));
+        indexWriter.setKeyProj(
+            getDistinctKeyProjection(index));
+        indexWriter.setDistinctness(index.isUnique()
+            ? DistinctnessEnum.DUP_FAIL : DistinctnessEnum.DUP_ALLOW);
+        return indexWriter;
     }
 
     private void appendConstraintColumns(

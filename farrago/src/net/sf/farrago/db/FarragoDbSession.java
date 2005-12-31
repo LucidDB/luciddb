@@ -338,6 +338,11 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             clone.isClone = true;
             clone.allocations = new LinkedList();
             clone.savepointList = new ArrayList();
+            // NOTE jvs 30-Dec-2005:  Autocommit on an internal
+            // session is usually unwanted because it would
+            // interfere with the transaction of the top-level
+            // statement.
+            clone.isAutoCommit = false;
             if (inheritedVariables == null) {
                 inheritedVariables = sessionVariables;
             }

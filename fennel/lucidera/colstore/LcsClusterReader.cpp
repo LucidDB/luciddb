@@ -42,6 +42,7 @@ LcsClusterNode const &LcsClusterReader::readClusterPage()
     bTreeRid = readRid();
     clusterLock.lockShared(clusterPageId);
     LcsClusterNode const &node = clusterLock.getNodeForRead();
+    assert(bTreeRid == node.firstRID);
     return node;
 }
 
@@ -72,11 +73,14 @@ bool LcsClusterReader::getNextClusterPageForRead(PConstLcsClusterNode &pBlock)
     return true;
 }
 
-void LcsClusterReader::init()
+void LcsClusterReader::initColumnReaders(
+    uint nClusterColsInit, TupleProjection const &clusterProj)
 {
-    clusterCols.reset(new LcsColumnReader[nClusterCols]);
-    for (uint i = 0; i < nClusterCols; i++)
-        clusterCols[i].init(this, i);
+    nClusterCols = nClusterColsInit;
+    nColsToRead = clusterProj.size();
+    clusterCols.reset(new LcsColumnReader[nColsToRead]);
+    for (uint i = 0; i < nColsToRead; i++)
+        clusterCols[i].init(this, clusterProj[i]);
 }
 
 void LcsClusterReader::open()

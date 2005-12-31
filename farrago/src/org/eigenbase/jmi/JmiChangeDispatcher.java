@@ -70,6 +70,17 @@ public interface JmiChangeDispatcher
      * TODO jvs 18-Nov-2005:  explain the purpose of this or get rid of it.
      */
     public void clearDependencySuppliers(RefObject refObj);
+
+    /**
+     * Notifies this dispatcher of the effect of a deletion on
+     * a dependent object.
+     *
+     * @param refObj dependent object
+     *
+     * @param deletionAction effect
+     */
+    public void notifyDeleteEffect(
+        RefObject refObj, JmiDeletionAction deletionAction);
 }
 
 // End JmiChangeDispatcher.java

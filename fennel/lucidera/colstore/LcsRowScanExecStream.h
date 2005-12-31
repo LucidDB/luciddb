@@ -76,24 +76,16 @@ class LcsRowScanExecStream : public ConduitExecStream
     TupleData inputTuple;
 
     /**
-     * Tuple descriptor representing the full table row
+     * Projection map that maps columns read from cluster to their position
+     * in the output projection
      */
-    TupleDescriptor rowTupleDesc;
+    std::vector<uint> projMap;
 
     /**
-     * Tuple accessor for full table row
+     * Tuple data for projected columns read from all clusters, in projection
+     * order
      */
-    TupleAccessor rowTupleAccessor;
-
-    /**
-     * Buffer for full table row
-     */
-    boost::scoped_array<FixedBuffer> rowTupleBuffer;
-
-    /**
-     * Tuple data for data read directly from cluster pages
-     */
-    TupleDataWithBuffer clusterTupleData;
+    TupleDataWithBuffer outputTupleData;
 
     /**
      * Number of clusters to be scanned
@@ -101,7 +93,7 @@ class LcsRowScanExecStream : public ConduitExecStream
     uint nClusters;
 
     /**
-     * Array containing info about clusters
+     * Array containing cluster readers
      */
     boost::scoped_array<SharedLcsClusterReader> pClusters;
 
@@ -110,21 +102,6 @@ class LcsRowScanExecStream : public ConduitExecStream
      */
     TupleData ridTupleData;
     
-    /**
-     * Tuple accessor for projected row
-     */
-    TupleProjectionAccessor projAccessor;
-
-    /**
-     * Descriptor for projected tuple
-     */
-    TupleDescriptor projDescriptor;
-
-    /**
-     * Tuple data for projected output tuple
-     */
-    TupleData projData;
-
     /**
      * Number of rids read
      */

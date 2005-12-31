@@ -219,26 +219,8 @@ class FtrsTableModificationRel extends TableModificationRelBase
             }
 
             FemIndexWriterDef indexWriter =
-                repos.getFennelPackage().getFemIndexWriterDef()
-                    .createFemIndexWriterDef();
-            if (!FarragoCatalogUtil.isIndexTemporary(index)) {
-                final FarragoPreparingStmt stmt =
-                    FennelRelUtil.getPreparingStmt(this);
-                indexWriter.setRootPageId(
-                    stmt.getIndexMap().getIndexRoot(index));
-            } else {
-                indexWriter.setRootPageId(-1);
-            }
-            indexWriter.setSegmentId(FtrsDataServer.getIndexSegmentId(index));
-            indexWriter.setIndexId(JmiUtil.getObjectId(index));
-            indexWriter.setTupleDesc(
-                indexGuide.getCoverageTupleDescriptor(index));
-            indexWriter.setKeyProj(
-                indexGuide.getDistinctKeyProjection(index));
+                indexGuide.newIndexWriter(this, index);
             indexWriter.setUpdateInPlace(updateInPlace);
-
-            indexWriter.setDistinctness(index.isUnique()
-                ? DistinctnessEnum.DUP_FAIL : DistinctnessEnum.DUP_ALLOW);
             if (index != clusteredIndex) {
                 indexWriter.setInputProj(
                     indexGuide.getCoverageProjection(index));

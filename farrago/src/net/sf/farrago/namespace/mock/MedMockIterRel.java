@@ -37,8 +37,8 @@ import org.eigenbase.rel.jdbc.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql2rel.*;
 import org.eigenbase.util.*;
-
 
 /**
  * MedMockIterRel provides a mock implementation for
@@ -47,7 +47,10 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class MedMockIterRel extends TableAccessRelBase implements JavaRel
+class MedMockIterRel
+    extends TableAccessRelBase
+    implements JavaRel, RelStructuredTypeFlattener.SelfFlatteningRel
+
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -97,6 +100,12 @@ class MedMockIterRel extends TableAccessRelBase implements JavaRel
             new MedMockIterRel(columnSet, getCluster(), connection);
         clone.inheritTraitsFrom(this);
         return clone;
+    }
+    
+    // implement RelStructuredTypeFlattener.SelfFlatteningRel
+    public void flattenRel(RelStructuredTypeFlattener flattener)
+    {
+        flattener.rewriteGeneric(this);
     }
 }
 

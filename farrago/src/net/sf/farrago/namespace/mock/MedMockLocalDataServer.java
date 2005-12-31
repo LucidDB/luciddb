@@ -34,6 +34,8 @@ import net.sf.farrago.type.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.relopt.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.sql.type.*;
 
 /**
  * MedMockLocalDataServer provides a mock implementation of the
@@ -109,6 +111,29 @@ class MedMockLocalDataServer
         assert (executorImpl.equals(PROPVAL_JAVA)
             || executorImpl.equals(PROPVAL_FENNEL));
         return new MedMockColumnSet(localName, rowType, nRows, executorImpl);
+    }
+
+    // implement FarragoMedLocalDataServer
+    public RelNode constructIndexBuildPlan(
+        RelOptTable table,
+        FemLocalIndex index,
+        RelOptCluster cluster)
+    {
+        // Fake out the build plan with a dummy iterator which returns a
+        // rowcount of 0.
+        MedMockIterRel rel = new MedMockIterRel(
+            new MedMockColumnSet(
+                table.getQualifiedName(),
+                RelOptUtil.createDmlRowType(
+                    cluster.getTypeFactory()),
+                1,
+                "JAVA"),
+            cluster, null);
+
+        // Add a dummy project on top to keep the optimizer happy.
+        return RelOptUtil.createRenameRel(
+            rel.getRowType(),
+            rel);
     }
 }
 

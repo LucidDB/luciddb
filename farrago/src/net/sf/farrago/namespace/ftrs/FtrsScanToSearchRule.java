@@ -164,6 +164,12 @@ class FtrsScanToSearchRule extends RelOptRule
             return;
         }
 
+        FtrsIndexGuide indexGuide = origScan.ftrsTable.getIndexGuide();
+
+        if (!indexGuide.isValid(index)) {
+            return;
+        }
+
         boolean isUnique =
             index.isUnique() && (index.getIndexedFeature().size() == 1);
 
@@ -213,7 +219,7 @@ class FtrsScanToSearchRule extends RelOptRule
             }
 
             Integer [] clusteredKeyColumns =
-                origScan.ftrsTable.getIndexGuide().getClusteredDistinctKeyArray(
+                indexGuide.getClusteredDistinctKeyArray(
                     origScan.index);
             FtrsIndexScanRel unclusteredScan =
                 new FtrsIndexScanRel(

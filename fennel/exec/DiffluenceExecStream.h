@@ -46,8 +46,6 @@ class DiffluenceExecStream : virtual public SingleInputExecStream
 {
 protected:
 
-    // NOTE jvs 27-Dec-2005:  I renamed this from outAccessorList to
-    // outAccessors for consistency with ConfluenceExecStream.
     /**
      * List of output buffer accessors.
      */

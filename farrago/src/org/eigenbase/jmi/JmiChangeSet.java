@@ -289,6 +289,7 @@ public class JmiChangeSet implements MDRPreChangeListener
                             && rule.getEndName().equals(
                                 associationEvent.getEndName())) {
                         fireDeletionRule(
+                            refAssoc,
                             rule,
                             associationEvent.getFixedElement(),
                             associationEvent.getOldElement());
@@ -428,6 +429,7 @@ public class JmiChangeSet implements MDRPreChangeListener
     }
 
     private void fireDeletionRule(
+        RefAssociation refAssoc,
         JmiDeletionRule rule,
         RefObject droppedEnd,
         RefObject otherEnd)
@@ -438,12 +440,25 @@ public class JmiChangeSet implements MDRPreChangeListener
             return;
         }
         JmiDeletionAction action = rule.getAction();
-        if (action == JmiDeletionAction.CASCADE) {
+        
+        if ((action == JmiDeletionAction.CASCADE)
+            || (dispatcher.getDeletionAction() == JmiDeletionAction.CASCADE))
+        {
             deleteQueue.add(otherEnd);
+            dispatcher.notifyDeleteEffect(
+                otherEnd, JmiDeletionAction.CASCADE);
             return;
         }
-        if (dispatcher.getDeletionAction() == JmiDeletionAction.CASCADE) {
-            deleteQueue.add(otherEnd);
+
+        if (dispatcher.getDeletionAction() == JmiDeletionAction.INVALIDATE) {
+            // Don't actually delete anything; instead just
+            // break the link and leave a dangling reference.
+            // NOTE jvs 29-Dec-2005:  This won't work if we ever need to
+            // INVALIDATE a composite association; in that case
+            // we would need to explicitly queue an action to
+            // break the link.
+            dispatcher.notifyDeleteEffect(
+                otherEnd, JmiDeletionAction.INVALIDATE);
             return;
         }
 

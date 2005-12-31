@@ -29,12 +29,15 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.session.*;
+import net.sf.farrago.query.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.rex.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
 import org.eigenbase.relopt.*;
@@ -89,6 +92,7 @@ class FtrsDataServer extends MedAbstractFennelDataServer
         planner.addRule(new FtrsScanToSearchRule());
         planner.addRule(new FtrsIndexJoinRule());
         planner.addRule(new FtrsRemoveRedundantSortRule());
+        planner.addRule(new FtrsIndexBuilderRule());
     }
 
     // implement FarragoMedLocalDataServer
@@ -129,6 +133,52 @@ class FtrsDataServer extends MedAbstractFennelDataServer
         }
     }
 
+    // implement FarragoMedLocalDataServer
+    public RelNode constructIndexBuildPlan(
+        RelOptTable table,
+        FemLocalIndex index,
+        RelOptCluster cluster)
+    {
+        // Construct the equivalent of
+        //     SELECT index-coverage-tuple
+        //     FROM table
+        //     ORDER BY index-coverage-tuple
+        
+        FtrsTable ftrsTable = (FtrsTable) table;
+        FtrsIndexGuide indexGuide = ftrsTable.getIndexGuide();
+
+        RelNode tableScan = new TableAccessRel(cluster, ftrsTable, null);
+
+        Integer [] projOrdinals = indexGuide.getUnclusteredCoverageArray(index);
+        RexNode [] projExps = new RexNode[projOrdinals.length];
+        RelDataTypeField [] fields =
+            indexGuide.getFlattenedRowType().getFields();
+        RelFieldCollation [] collations =
+            new RelFieldCollation[projOrdinals.length];
+        for (int i = 0; i < projOrdinals.length; ++i) {
+            projExps[i] = new RexInputRef(
+                projOrdinals[i],
+                fields[projOrdinals[i]].getType());
+            collations[i] = new RelFieldCollation(i);
+        }
+        
+        ProjectRel project =
+            new ProjectRel(
+                cluster,
+                tableScan,
+                projExps,
+                null,
+                ProjectRel.Flags.Boxed);
+
+        SortRel sort =
+            new SortRel(
+                cluster,
+                project,
+                collations);
+        
+        return new FarragoIndexBuilderRel(cluster, sort, index);
+    }
+    
     // implement MedAbstractFennelDataServer
     protected void prepareIndexCmd(
         FemIndexCmd cmd,

@@ -28,6 +28,7 @@
 #include "fennel/tuple/TupleDescriptor.h"
 #include "fennel/tuple/TupleFormat.h"
 #include "fennel/tuple/TupleAccessor.h"
+#include "fennel/tuple/TupleProjectionAccessor.h"
 #include "fennel/tuple/TupleOverflowExcn.h"
 
 #include <boost/utility.hpp>
@@ -64,6 +65,8 @@ class ExecStreamBufAccessor : public boost::noncopyable
     TupleAccessor tupleProductionAccessor;
 
     TupleAccessor tupleConsumptionAccessor;
+
+    TupleProjectionAccessor tupleProjectionAccessor;
 
     uint cbBuffer;
     
@@ -360,6 +363,20 @@ public:
      * tracing (note that this is clobbered by produceTuple)
      */
     inline TupleAccessor &getScratchTupleAccessor();
+
+    /**
+     * Binds projection accessor to the input tuple accessor
+     *
+     * @param inputProj 0-based vector of projected columns
+     */
+    inline void bindProjection(TupleProjection const &inputProj);
+
+    /**
+     * Unmarshals projected tuple from input stream
+     *
+     * @param projTupleData projected tuple
+     */
+    inline void unmarshalProjectedTuple(TupleData &projTupleData);
 };
 
 inline ExecStreamBufAccessor::ExecStreamBufAccessor()
@@ -689,6 +706,19 @@ inline bool ExecStreamBufAccessor::demandData()
         requestProduction();
         return false;
     }
+}
+
+inline void ExecStreamBufAccessor::bindProjection(
+    TupleProjection const &inputProj)
+{
+    tupleProjectionAccessor.bind(tupleConsumptionAccessor, inputProj);
+}
+
+inline void ExecStreamBufAccessor::unmarshalProjectedTuple(
+    TupleData &projTupleData)
+{
+    accessConsumptionTuple();
+    tupleProjectionAccessor.unmarshal(projTupleData);
 }
 
 FENNEL_END_NAMESPACE

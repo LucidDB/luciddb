@@ -154,8 +154,8 @@ public class FarragoDefaultSessionPersonality
             new DdlSecurityHandler(ddlValidator);
         handlerList.add(medHandler);
         handlerList.add(new DdlRoutineHandler(ddlValidator));
-        handlerList.add(new DdlRelationalHandler(medHandler));
         handlerList.add(securityHandler);
+        handlerList.add(new DdlRelationalHandler(medHandler));
 
         // Define drop rules
         FarragoRepos repos =

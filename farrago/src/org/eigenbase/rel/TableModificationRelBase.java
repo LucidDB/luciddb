@@ -112,15 +112,9 @@ public abstract class TableModificationRelBase extends SingleRel
     // implement RelNode
     public RelDataType deriveRowType()
     {
-        RelDataType [] types = new RelDataType[1];
-        String [] fieldNames = new String[1];
-        types[0] =
-            getCluster().getTypeFactory().createSqlType(SqlTypeName.Bigint);
-        fieldNames[0] = "ROWCOUNT";
-        return getCluster().getTypeFactory().createStructType(
-            types, fieldNames);
+        return RelOptUtil.createDmlRowType(getCluster().getTypeFactory());
     }
-
+    
     // override RelNode
     public RelDataType getExpectedInputRowType(int ordinalInParent)
     {
