@@ -166,6 +166,9 @@ class FtrsTableProjectionRule extends RelOptRule
         FemLocalIndex index,
         Integer [] projection)
     {
+        if (!indexGuide.isValid(index)) {
+            return false;
+        }
         if (index.isClustered()) {
             // clustered index guarantees coverage
             return true;

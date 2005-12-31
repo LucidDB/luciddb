@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/ddl/misc.sql#4 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/ddl/misc.sql#5 $
 0: jdbc:farrago:> -- Miscellaneous DDL
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema misc;
@@ -31,6 +31,110 @@ Error: Clustered index already defined on table "MISC"."DUP_CLUSTERED" (state=,c
 0: jdbc:farrago:> -- should fail:  FTRS tables must have a primary key
 0: jdbc:farrago:> create table missing_pk(i int not null,j int not null);
 Error: PRIMARY KEY constraint required for table "MISC"."MISSING_PK" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- FTRS support for create index on existing rows
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table t(
+. . . . . . . . > h int,
+. . . . . . . . > i int not null primary key,
+. . . . . . . . > j int, 
+. . . . . . . . > k int not null unique);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select k from t order by 1;
++----+
+| K  |
++----+
++----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create index t_h on t(h);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select h from t order by 1;
++----+
+| H  |
++----+
++----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> insert into t values(1,1,1,1);
+0: jdbc:farrago:> insert into t values(2,2,2,2);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select k from t order by 1;
++----+
+| K  |
++----+
+| 1  |
+| 2  |
++----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select h from t order by 1;
++----+
+| H  |
++----+
+| 1  |
+| 2  |
++----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create index t_j on t(j);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select j from t order by 1;
++----+
+| J  |
++----+
+| 1  |
+| 2  |
++----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> insert into t values(3,3,3,3);
+0: jdbc:farrago:> insert into t values(4,4,4,4);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select h from t order by 1;
++----+
+| H  |
++----+
+| 1  |
+| 2  |
+| 3  |
+| 4  |
++----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select k from t order by 1;
++----+
+| K  |
++----+
+| 1  |
+| 2  |
+| 3  |
+| 4  |
++----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select j from t order by 1;
++----+
+| J  |
++----+
+| 1  |
+| 2  |
+| 3  |
+| 4  |
++----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !set outputformat csv
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for select k from t order by 1;
+'column0'
+'FennelToIteratorConverter'
+'  FtrsIndexScanRel(table=[[LOCALDB, MISC, T]], projection=[[3]], index=[SYS$CONSTRAINT_INDEX$T$SYS$UNIQUE_KEY$K], preserveOrder=[true])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for select h from t order by 1;
+'column0'
+'FennelToIteratorConverter'
+'  FtrsIndexScanRel(table=[[LOCALDB, MISC, T]], projection=[[0]], index=[T_H], preserveOrder=[true])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for select j from t order by 1;
+'column0'
+'FennelToIteratorConverter'
+'  FtrsIndexScanRel(table=[[LOCALDB, MISC, T]], projection=[[2]], index=[T_J], preserveOrder=[true])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !set outputformat table
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- LCS-specific table validation rules

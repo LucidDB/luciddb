@@ -299,9 +299,9 @@ mentioning some serious limitations in the features listed above:
 
 <ul>
 
-<li>The validator is still under development, so when you make an invalid
-request, you may get ugly internal errors, data corruption,
-printer spontaneous combustion, etc.
+<li>The validator still has a few rough edges, so in certain cases, an
+invalid request will result in ugly internal errors, printer
+spontaneous combustion, etc.
 
 <li>ORDER BY descending is not supported (nor is the non-standard
 ORDER BY a+b).
@@ -311,18 +311,14 @@ don't actually work yet.  Same for INTERSECT and EXCEPT.
 
 <li>Type inference is missing for some dynamic parameter contexts.
 
-<li>Creating a new index on a table with existing rows will not
-actually index those rows.
-
 <li>You can specify a CHARACTER SET name on CHAR/VARCHAR columns from
 only the single-byte character sets known to Java.
 
-<li>BTree height increase is not yet implemented, so inserting lots of
-data will lead to a long linear chain of pages.  Bulk load for
-multi-level trees is implemented internally, but not yet exposed via SQL.
+<li>Bulk load for multi-level trees is implemented internally, but not
+yet hooked into CREATE INDEX.
 
-<li>There's no concurrency control at all, and a few known FIXME's for
-threading problems.  So don't try more than a single session yet.
+<li>There's no concurrency control at all, so don't try more than a
+single session yet.
 
 <li>Updates to unique keys are not ordered correctly, so spurious
 uniqueness violations result for a statement like update t set pk=pk+1

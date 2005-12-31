@@ -494,19 +494,10 @@ public class DdlValidator extends FarragoCompoundAllocation
         stopListening();
 
         List deletionList = new ArrayList();
-        Iterator mapIter = validatedMap.entrySet().iterator();
-        while (mapIter.hasNext()) {
-            Map.Entry mapEntry = (Map.Entry) mapIter.next();
+        for (Object entry : validatedMap.entrySet()) {
+            Map.Entry mapEntry = (Map.Entry) entry;
             RefObject obj = (RefObject) mapEntry.getKey();
             Object action = mapEntry.getValue();
-
-            if (obj instanceof CwmModelElement) {
-                CwmModelElement modelElement = (CwmModelElement) obj;
-
-                if (action != VALIDATE_DELETION) {
-                    updateObjectTimestamp(modelElement);
-                }
-            }
 
             if (obj instanceof CwmStructuralFeature) {
                 // Set some mandatory but irrelevant attributes.
@@ -549,6 +540,24 @@ public class DdlValidator extends FarragoCompoundAllocation
                 invokeHandler(element, "executeModification");
             } else {
                 assert (false);
+            }
+        }
+
+        // Now mark objects as visible and update their timestamps; we defer
+        // this until here so that storage handlers above can use object
+        // visibility attribute to distinguish new objects.
+        for (Object entry : validatedMap.entrySet()) {
+            Map.Entry mapEntry = (Map.Entry) entry;
+            RefObject obj = (RefObject) mapEntry.getKey();
+            Object action = mapEntry.getValue();
+
+            if (!(obj instanceof CwmModelElement)) {
+                continue;
+            }
+            CwmModelElement element = (CwmModelElement) obj;
+            
+            if (action != VALIDATE_DELETION) {
+                updateObjectTimestamp(element);
             }
         }
 

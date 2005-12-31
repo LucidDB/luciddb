@@ -27,6 +27,8 @@ import java.sql.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fennel.*;
 
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
 
 /**
  * FarragoMedLocalDataServer represents a {@link FarragoMedDataServer}
@@ -87,6 +89,27 @@ public interface FarragoMedLocalDataServer extends FarragoMedDataServer
         long rootPageId,
         boolean truncate)
         throws SQLException;
+
+    /**
+     * Creates a plan for loading existing rows of a table into an index.
+     * Typically, the topmost node of this plan will be a {@link
+     * net.sf.farrago.query.FarragoIndexBuilderRel}, and this plugin will
+     * supply a rule which transforms that into a corresponding physical rel
+     * for writing to the index.  Where possible, the returned plan should
+     * consist of logical rels, increasing optimization potential.
+     *
+     * @param table the optimizer representation for the indexed table
+     *
+     * @param index the index to be loaded
+     *
+     * @param cluster container for newly created relational expressions
+     *
+     * @return plan which will be used as input to optimization
+     */
+    public RelNode constructIndexBuildPlan(
+        RelOptTable table,
+        FemLocalIndex index,
+        RelOptCluster cluster);
 }
 
 

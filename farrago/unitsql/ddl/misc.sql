@@ -29,6 +29,51 @@ create clustered index ix2 on dup_clustered(j)
 create table missing_pk(i int not null,j int not null);
 
 
+-- FTRS support for create index on existing rows
+
+create table t(
+h int,
+i int not null primary key,
+j int, 
+k int not null unique);
+
+select k from t order by 1;
+
+create index t_h on t(h);
+
+select h from t order by 1;
+
+insert into t values(1,1,1,1);
+insert into t values(2,2,2,2);
+
+select k from t order by 1;
+
+select h from t order by 1;
+
+create index t_j on t(j);
+
+select j from t order by 1;
+
+insert into t values(3,3,3,3);
+insert into t values(4,4,4,4);
+
+select h from t order by 1;
+
+select k from t order by 1;
+
+select j from t order by 1;
+
+!set outputformat csv
+
+explain plan for select k from t order by 1;
+
+explain plan for select h from t order by 1;
+
+explain plan for select j from t order by 1;
+
+!set outputformat table
+
+
 -- LCS-specific table validation rules
 
 -- LCS tables don't require primary keys

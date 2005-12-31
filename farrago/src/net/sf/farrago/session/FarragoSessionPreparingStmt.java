@@ -112,10 +112,9 @@ public interface FarragoSessionPreparingStmt extends FarragoAllocation
         boolean logical);
 
     /**
-     * @return true if the implementation may be saved for resuse
+     * @return true if the implementation may be saved for reuse
      */
     public boolean mayCacheImplementation();
-
 
     /**
      * @return generic stmt validator
@@ -180,6 +179,15 @@ public interface FarragoSessionPreparingStmt extends FarragoAllocation
      * @return new expression implementor
      */
     public JavaRelImplementor getRelImplementor(RexBuilder rexBuilder);
+
+    /**
+     * Looks up a named ColumnSet and loads its optimizer representation.
+     *
+     * @param name name of ColumnSet
+     *
+     * @return optimizer representation, or null if not found
+     */
+    public RelOptTable loadColumnSet(SqlIdentifier name);
 }
 
 
