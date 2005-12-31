@@ -43,7 +43,7 @@ ${perforce.view}/${resource.name}*.properties
     <!-- We attempt to avoid re-generating files when they don't need it.
          The rationale is to avoid no-op perforce changelist creation and
          submission. (Normally testing is handled by make, but someone might
-         run this script directly). This condition is entirely correct: it
+         run this script directly). This condition isn't entirely correct: it
          should check all ${resource.name}*.properties files, but the 
          uptodate task doesn't provide a means to do that. -->
     <condition property="subroutine" value="execute.resgen">
@@ -77,7 +77,7 @@ ${perforce.view}/${resource.name}*.properties
 
     <antcall target="checkout.files"/>
 
-    <resgen mode="c++" srcdir="./" locales="${resource.locales}">
+    <resgen mode="c++" srcdir="./" locales="${resource.locales}" commentstyle="scm-safe">
       <include name="${resource.name}.xml"/>
     </resgen>
   </target>
