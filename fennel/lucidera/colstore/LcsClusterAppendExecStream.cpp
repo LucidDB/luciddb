@@ -53,10 +53,6 @@ void LcsClusterAppendExecStream::prepare(
         colTupleDesc[i].push_back(clusterColsTupleDesc[inputProj[i]]);
     }
 
-    // REVIEW jvs 27-Dec-2005:  should assert that colTupleDesc
-    // matches pInAccessor; I ran into violations of this a few times
-    // on the way to getting UDT's working.
-    
     m_bOverwrite = params.overwrite;
 
     // setup bufferLock to access temporary large page blocks
