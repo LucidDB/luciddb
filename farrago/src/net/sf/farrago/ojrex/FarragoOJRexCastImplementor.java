@@ -203,12 +203,71 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
                 lhsType, translator.getFarragoTypeFactory());
             if (SqlTypeUtil.isExactNumeric(lhsType) 
                 && SqlTypeUtil.isApproximateNumeric(rhsType)) {
-                rhsExp = new MethodCall(
-                            new Literal(
-                                Literal.STRING,
-                                "java.lang.Math"),
-                            "round",
-                            new ExpressionList(rhsExp));
+                OJClass inClass = OJUtil.typeToOJClass(
+                     rhsType, translator.getFarragoTypeFactory());
+
+                Variable inTemp = translator.getRelImplementor().newVariable();
+                translator.addStatement(
+                         new VariableDeclaration(TypeName.forOJClass(inClass),
+                         new VariableDeclarator( inTemp.toString(), null)));
+
+                OJClass outClass = OJUtil.typeToOJClass(
+                     lhsType, translator.getFarragoTypeFactory());
+                Variable outTemp = translator.getRelImplementor().newVariable();
+                translator.addStatement(
+                         new VariableDeclaration(TypeName.forOJClass(outClass),
+                         new VariableDeclarator(outTemp.toString(), null)));
+
+                addStatement(translator, stmtList,
+                    new ExpressionStatement(
+                        new AssignmentExpression(
+                            inTemp,
+                            AssignmentExpression.EQUALS,
+                            rhsExp)));
+
+                addStatement(translator, stmtList,
+                    new IfStatement(
+                        new BinaryExpression(
+                            inTemp,
+                            BinaryExpression.LESS, 
+                            Literal.constantZero()),
+                        new StatementList(
+                            new ExpressionStatement(
+                                new AssignmentExpression(inTemp,
+                                    AssignmentExpression.EQUALS,
+                                    new UnaryExpression(
+                                        inTemp,
+                                        UnaryExpression.MINUS))),
+                            new ExpressionStatement(
+                                new AssignmentExpression(
+                                    outTemp,
+                                    AssignmentExpression.EQUALS,
+                                    new CastExpression(lhsClass, 
+                                        new MethodCall(
+                                            new Literal(
+                                                Literal.STRING,
+                                                "java.lang.Math"),
+                                            "round",
+                                            new ExpressionList(inTemp))))),
+                            new ExpressionStatement(
+                                new AssignmentExpression(outTemp,
+                                    AssignmentExpression.EQUALS,
+                                    new UnaryExpression(
+                                        outTemp,
+                                        UnaryExpression.MINUS)))),
+                        new StatementList(
+                            new ExpressionStatement(
+                                new AssignmentExpression(
+                                    outTemp,
+                                    AssignmentExpression.EQUALS,
+                                    new CastExpression(lhsClass, 
+                                        new MethodCall(
+                                            new Literal(
+                                                Literal.STRING,
+                                                "java.lang.Math"),
+                                            "round",
+                                            new ExpressionList(inTemp))))))));
+                rhsExp = outTemp;
             }
             rhsExp = new CastExpression(lhsClass, rhsExp);
         }
