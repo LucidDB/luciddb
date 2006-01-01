@@ -242,6 +242,11 @@ SharedLogicalTxnLog LogicalTxn::getLog()
     return pLog;
 }
 
+TxnId LogicalTxn::getTxnId() const
+{
+    return txnId;
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End LogicalTxn.cpp

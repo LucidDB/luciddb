@@ -29,6 +29,7 @@
 #include "fennel/segment/SpillOutputStream.h"
 #include "fennel/segment/SegmentFactory.h"
 #include "fennel/common/ByteInputStream.h"
+#include "fennel/cache/QuotaCacheAccessor.h"
 
 #include <boost/bind.hpp>
 #include <sstream>
@@ -45,6 +46,18 @@ LogicalTxnLog::LogicalTxnLog(
     : pSegmentFactory(pSegmentFactoryInit),
       logSegmentAccessor(logSegmentAccessorInit)
 {
+    // Set up cache accessor so that all page locks will be taken out
+    // with a reserved TxnId.  Just for sanity-checking, set up a quota to make
+    // sure logging never locks more than two pages at a time.
+    nextTxnId = FIRST_TXN_ID;
+    logSegmentAccessor.pCacheAccessor = SharedCacheAccessor(
+        new QuotaCacheAccessor(
+            SharedQuotaCacheAccessor(),
+            logSegmentAccessor.pCacheAccessor,
+            2));
+    logSegmentAccessor.pCacheAccessor->setTxnId(nextTxnId);
+    ++nextTxnId;
+    
     // TODO: Support an option to skip CRC's for optimized non-durable logging.
     // Also support a paranoid option for recording CRC's for long logs.
     pOutputStream = CrcSegOutputStream::newCrcSegOutputStream(
@@ -54,7 +67,6 @@ LogicalTxnLog::LogicalTxnLog(
     // need to wait after each page.  So request synchronous writes.
     pOutputStream->setWriteLatency(WRITE_EAGER_SYNC);
     
-    nextTxnId = TxnId(1);
     pOutputStream->getSegPos(lastCheckpointMemento.logPosition);
     lastCheckpointMemento.nUncommittedTxns = 0;
     nCommittedBeforeLastCheckpoint = 0;
@@ -82,6 +94,16 @@ SharedLogicalTxn LogicalTxnLog::newLogicalTxn(
     SharedCacheAccessor pCacheAccessor)
 {
     StrictMutexGuard mutexGuard(mutex);
+    // Set up cache accessor so that all page locks will be taken out
+    // with the new TxnId.  Just for sanity-checking, set up a quota to make
+    // sure logging never locks more than two pages at a time.
+    nextTxnId = FIRST_TXN_ID;
+    pCacheAccessor = SharedCacheAccessor(
+        new QuotaCacheAccessor(
+            SharedQuotaCacheAccessor(),
+            pCacheAccessor,
+            2));
+    pCacheAccessor->setTxnId(nextTxnId);
     SharedLogicalTxn pTxn(
         new LogicalTxn(nextTxnId,shared_from_this(),pCacheAccessor));
     uncommittedTxns.push_back(pTxn);

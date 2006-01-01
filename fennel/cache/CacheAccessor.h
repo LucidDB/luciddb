@@ -97,13 +97,18 @@ public:
      * when this page is written; if specified, it must match all prior and
      * subsequent lock requests for the same page mapping
      *
+     * @param txnId optional TxnId to associate with lock;
+     * default is IMPLICIT_TXN_ID, which uses current thread ID
+     * as an implicit TxnId
+     *
      * @return the locked CachePage, or NULL if a NoWait attempt failed
      */
     virtual CachePage *lockPage(
         BlockId blockId,
         LockMode lockMode,
         bool readIfUnmapped = true,
-        MappedPageListener *pMappedPageListener = NULL) = 0;
+        MappedPageListener *pMappedPageListener = NULL,
+        TxnId txnId = IMPLICIT_TXN_ID) = 0;
     
     /**
      * Releases lock held on page.
@@ -113,8 +118,13 @@ public:
      * @param lockMode must correspond to value passed to Cache::lockPage;
      * however, for pages locked with NOWAIT, the equivalent unlock type
      * should be normal (e.g. LOCKMODE_S instead of LOCKMODE_S_NOWAIT)
+     *
+     * @param txnId must correspond to value passed to Cache::lockPage
      */
-    virtual void unlockPage(CachePage &page,LockMode lockMode) = 0;
+    virtual void unlockPage(
+        CachePage &page,
+        LockMode lockMode,
+        TxnId txnId = IMPLICIT_TXN_ID) = 0;
 
     /**
      * Unmaps a page from the cache if already mapped, discarding its contents
@@ -194,6 +204,20 @@ public:
      * @return the underlying Cache accessed by this CacheAccessor
      */
     virtual SharedCache getCache() = 0;
+
+    /**
+     * Sets a default TxnId to use for locking pages (to be used when
+     * IMPLICIT_TXN_ID is specified).  Not all CacheAccessor implementations
+     * support this behavior.
+     *
+     * @param txnId new default txn ID
+     */
+    virtual void setTxnId(TxnId txnId) = 0;
+
+    /**
+     * @return default TxnId associated with this accessor
+     */
+    virtual TxnId getTxnId() const = 0;
 };
 
 FENNEL_END_NAMESPACE

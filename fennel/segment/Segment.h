@@ -247,13 +247,6 @@ public:
      * @return true iff the PageId is currently allocated in this segment
      */
     virtual bool isPageIdAllocated(PageId pageId) = 0;
-
-    /**
-     * Stupid hack because JNI+Linux+dynamic_cast=SIGSEGV.
-     *
-     * @return is this a TracingSegment?
-     */
-    virtual bool isTracingSegment() const;
     
     /**
      * Constructs a linear PageId based on a linear page number.

@@ -188,6 +188,11 @@ public:
      * @return the log for this txn
      */
     SharedLogicalTxnLog getLog();
+
+    /**
+     * @return ID of this txn
+     */
+    TxnId getTxnId() const;
 };
 
 FENNEL_END_NAMESPACE

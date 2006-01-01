@@ -36,17 +36,19 @@ CachePage *DelegatingCacheAccessor::lockPage(
     BlockId blockId,
     LockMode lockMode,
     bool readIfUnmapped,
-    MappedPageListener *pMappedPageListener)
+    MappedPageListener *pMappedPageListener,
+    TxnId txnId)
 {
     return pDelegate->lockPage(
-        blockId,lockMode,readIfUnmapped,pMappedPageListener);
+        blockId,lockMode,readIfUnmapped,pMappedPageListener,txnId);
 }
 
 void DelegatingCacheAccessor::unlockPage(
     CachePage &page,
-    LockMode lockMode)
+    LockMode lockMode,
+    TxnId txnId)
 {
-    pDelegate->unlockPage(page,lockMode);
+    pDelegate->unlockPage(page,lockMode,txnId);
 }
 
 void DelegatingCacheAccessor::discardPage(
@@ -92,6 +94,16 @@ uint DelegatingCacheAccessor::getMaxLockedPages()
 void DelegatingCacheAccessor::setMaxLockedPages(uint nPages)
 {
     pDelegate->setMaxLockedPages(nPages);
+}
+
+TxnId DelegatingCacheAccessor::getTxnId() const
+{
+    return pDelegate->getTxnId();
+}
+
+void DelegatingCacheAccessor::setTxnId(TxnId txnId)
+{
+    pDelegate->setTxnId(txnId);
 }
 
 FENNEL_END_CPPFILE("$Id$");

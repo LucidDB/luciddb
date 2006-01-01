@@ -36,6 +36,9 @@ FENNEL_BEGIN_NAMESPACE
 // TODO:  provide debug-build support for verifying that the page owner is
 // correct for each page access
 
+// TODO jvs 31-Dec-2005:  Doxygen for all methods, and move inline
+// bodies to end of file.
+    
 /**
  * A SegPageLock is associated with a single segment, and starts out in the
  * unlocked state.  It serves a function similar to a boost::scoped_lock, but
@@ -72,7 +75,7 @@ public:
         unlock();
     }
 
-    void accessSegment(
+    inline void accessSegment(
         SegmentAccessor const &segmentAccessorInit)
     {
         assert(!pPage);
@@ -81,25 +84,25 @@ public:
         segmentAccessor = segmentAccessorInit;
     }
 
-    bool isLocked() const
+    inline bool isLocked() const
     {
         return pPage ? true : false;
     }
 
-    CachePage &getPage() const
+    inline CachePage &getPage() const
     {
         assert(isLocked());
         return *pPage;
     }
     
-    PageId allocatePage(PageOwnerId ownerId = ANON_PAGE_OWNER_ID)
+    inline PageId allocatePage(PageOwnerId ownerId = ANON_PAGE_OWNER_ID)
     {
         PageId pageId = tryAllocatePage(ownerId);
         assert(pageId != NULL_PAGE_ID);
         return pageId;
     }
     
-    PageId tryAllocatePage(PageOwnerId ownerId = ANON_PAGE_OWNER_ID)
+    inline PageId tryAllocatePage(PageOwnerId ownerId = ANON_PAGE_OWNER_ID)
     {
         unlock();
         PageId pageId = segmentAccessor.pSegment->allocatePageId(ownerId);
@@ -110,7 +113,7 @@ public:
         return pageId;
     }
     
-    void deallocateLockedPage()
+    inline void deallocateLockedPage()
     {
         assert(isLocked());
         BlockId blockId = pPage->getBlockId();
@@ -120,7 +123,7 @@ public:
         segmentAccessor.pSegment->deallocatePageRange(pageId,pageId);
     }
 
-    void deallocateUnlockedPage(PageId pageId)
+    inline void deallocateUnlockedPage(PageId pageId)
     {
         assert(pageId != NULL_PAGE_ID);
         BlockId blockId = segmentAccessor.pSegment->translatePageId(pageId);
@@ -128,20 +131,22 @@ public:
         segmentAccessor.pSegment->deallocatePageRange(pageId,pageId);
     }
         
-    void unlock()
+    inline void unlock()
     {
         if (pPage) {
-            segmentAccessor.pCacheAccessor->unlockPage(*pPage,lockMode);
+            segmentAccessor.pCacheAccessor->unlockPage(
+                *pPage,
+                lockMode);
             pPage = NULL;
         }
     }
 
-    void dontUnlock()
+    inline void dontUnlock()
     {
         pPage = NULL;
     }
     
-    void lockPage(
+    inline void lockPage(
         PageId pageId,LockMode lockModeInit,
         bool readIfUnmapped = true)
     {
@@ -155,7 +160,7 @@ public:
             segmentAccessor.pSegment.get());
     }
 
-    void lockPageWithCoupling(
+    inline void lockPageWithCoupling(
         PageId pageId,LockMode lockModeInit)
     {
         assert(lockModeInit < LOCKMODE_S_NOWAIT);
@@ -171,36 +176,42 @@ public:
         pPage = pNewPage;
     }
     
-    void lockShared(PageId pageId)
+    inline void lockShared(PageId pageId)
     {
         lockPage(pageId,LOCKMODE_S);
     }
     
-    void lockExclusive(PageId pageId)
+    inline void lockExclusive(PageId pageId)
     {
         lockPage(pageId,LOCKMODE_X);
     }
     
-    void lockSharedNoWait(PageId pageId)
+    inline void lockSharedNoWait(PageId pageId)
     {
         lockPage(pageId,LOCKMODE_S_NOWAIT);
         lockMode = LOCKMODE_S;
     }
     
-    void lockExclusiveNoWait(PageId pageId)
+    inline void lockExclusiveNoWait(PageId pageId)
     {
         lockPage(pageId,LOCKMODE_X_NOWAIT);
         lockMode = LOCKMODE_X;
     }
 
-    PageId getPageId()
+    inline PageId getPageId()
     {
         return segmentAccessor.pSegment->translateBlockId(
             getPage().getBlockId());
     }
 
+    inline void flushPage(bool async)
+    {
+        assert(isLocked());
+        segmentAccessor.pCacheAccessor->flushPage(getPage(), true);
+    }
+
     // TODO:  big warning
-    void swapBuffers(SegPageLock &other)
+    inline void swapBuffers(SegPageLock &other)
     {
         // TODO:  assert magic numbers the same?
         assert(isLocked());
@@ -218,18 +229,21 @@ public:
         pPage->swapBuffers(*other.pPage);
     }
 
-    bool tryUpgrade()
+    inline bool tryUpgrade()
     {
         assert(isLocked());
         assert(lockMode == LOCKMODE_S);
-        if (pPage->tryUpgrade()) {
+        // REVIEW jvs 31-Dec-2005:  This should really go through
+        // the CacheAccessor interface.
+        TxnId txnId = segmentAccessor.pCacheAccessor->getTxnId();
+        if (pPage->tryUpgrade(txnId)) {
             lockMode = LOCKMODE_X;
             return true;
         }
         return false;
     }
 
-    SharedCacheAccessor getCacheAccessor() const
+    inline SharedCacheAccessor getCacheAccessor() const
     {
         return segmentAccessor.pCacheAccessor;
     }
@@ -269,7 +283,7 @@ struct StoredNode
 template <class Node>
 class SegNodeLock : public SegPageLock
 {
-    void verifyMagicNumber(Node const &node) const
+    inline void verifyMagicNumber(Node const &node) const
     {
         assert(node.magicNumber == Node::MAGIC_NUMBER);
     }
@@ -285,7 +299,7 @@ public:
     {
     }
     
-    Node const &getNodeForRead() const
+    inline Node const &getNodeForRead() const
     {
         Node const &node =
             *reinterpret_cast<Node const *>(getPage().getReadableData());
@@ -293,19 +307,19 @@ public:
         return node;
     }
     
-    Node &getNodeForWrite()
+    inline Node &getNodeForWrite()
     { 
         return *reinterpret_cast<Node *>(getPage().getWritableData());
     }
 
-    PageId allocatePage(PageOwnerId ownerId = ANON_PAGE_OWNER_ID)
+    inline PageId allocatePage(PageOwnerId ownerId = ANON_PAGE_OWNER_ID)
     {
         PageId pageId = SegPageLock::allocatePage(ownerId);
         setMagicNumber();
         return pageId;
     }
     
-    PageId tryAllocatePage(PageOwnerId ownerId = ANON_PAGE_OWNER_ID)
+    inline PageId tryAllocatePage(PageOwnerId ownerId = ANON_PAGE_OWNER_ID)
     {
         PageId pageId = SegPageLock::tryAllocatePage(ownerId);
         if (pageId != NULL_PAGE_ID) {
@@ -314,12 +328,12 @@ public:
         return pageId;
     }
     
-    void setMagicNumber()
+    inline void setMagicNumber()
     {
         getNodeForWrite().magicNumber = Node::MAGIC_NUMBER;
     }
 
-    bool isMagicNumberValid()
+    inline bool isMagicNumberValid()
     {
         Node const &node =
             *reinterpret_cast<Node const *>(getPage().getReadableData());

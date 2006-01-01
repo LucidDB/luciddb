@@ -157,10 +157,10 @@ template <class PageT,class VictimPolicyT>
 PageT *CacheImpl<PageT,VictimPolicyT>
 ::lockPage(
     BlockId blockId,LockMode lockMode,bool readIfUnmapped,
-    MappedPageListener *pMappedPageListener)
+    MappedPageListener *pMappedPageListener,TxnId txnId)
 {
     // first find the page and increment its reference count
-    
+
     assert(blockId != NULL_BLOCK_ID);
     assert(CompoundId::getDeviceId(blockId) != NULL_DEVICE_ID);
     PageBucketT &bucket = getHashBucket(blockId);
@@ -206,7 +206,7 @@ PageT *CacheImpl<PageT,VictimPolicyT>
 
     // now acquire the requested lock
     
-    if (!page->lock.waitFor(lockMode)) {
+    if (!page->lock.waitFor(lockMode,ETERNITY,txnId)) {
         // NoWait failed; release reference
         assert((lockMode == LOCKMODE_S_NOWAIT) ||
                (lockMode == LOCKMODE_X_NOWAIT));
@@ -231,7 +231,7 @@ PageT *CacheImpl<PageT,VictimPolicyT>
 template <class PageT,class VictimPolicyT>
 void CacheImpl<PageT,VictimPolicyT>
 ::unlockPage(
-    CachePage &vPage,LockMode lockMode)
+    CachePage &vPage,LockMode lockMode,TxnId txnId)
 {
     assert(lockMode < LOCKMODE_S_NOWAIT);
     PageT &page = static_cast<PageT &>(vPage);
@@ -242,8 +242,9 @@ void CacheImpl<PageT,VictimPolicyT>
     if (CompoundId::getDeviceId(page.getBlockId()) == NULL_DEVICE_ID) {
         // originated from lockScratchPage()
         bFree = true;
+    } else {
+        page.lock.release(lockMode,txnId);
     }
-    page.lock.release(lockMode);
     page.nReferences--;
     if (!page.nReferences) {
         if (bFree) {
@@ -318,12 +319,6 @@ PageT *CacheImpl<PageT,VictimPolicyT>
     page->dataStatus = CachePage::DATA_DIRTY;
     CompoundId::setDeviceId(page->blockId,NULL_DEVICE_ID);
     CompoundId::setBlockNum(page->blockId,blockNum);
-    
-    // Establish a real lock, even though it's not really needed.  This is just
-    // to keep the assert in CachePage::getWritableData() happy; maybe only do
-    // this for a DEBUG build?
-    bool rc = page->lock.waitFor(LOCKMODE_X);
-    assert(rc);
     
     return page;
 }
@@ -803,6 +798,10 @@ void CacheImpl<PageT,VictimPolicyT>
             continue;
         }
         if (!page.isDirty()) {
+            continue;
+        }
+        if (page.isScratchLocked()) {
+            // someone has the page scratch-locked
             continue;
         }
         if (!page.lock.waitFor(LOCKMODE_S_NOWAIT)) {

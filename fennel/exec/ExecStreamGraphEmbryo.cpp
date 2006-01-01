@@ -45,15 +45,13 @@ ExecStreamGraphEmbryo::ExecStreamGraphEmbryo(
     SharedExecStreamGraph pGraphInit, 
     SharedExecStreamScheduler pSchedulerInit, 
     SharedCache pCacheInit,
-    SharedSegmentFactory pSegmentFactoryInit, 
-    bool enforceCacheQuotasInit)
+    SharedSegmentFactory pSegmentFactoryInit)
 {
     pGraph = pGraphInit;
     pScheduler = pSchedulerInit;
     pCacheAccessor = pCacheInit;
     scratchAccessor =
         pSegmentFactoryInit->newScratchSegment(pCacheInit);
-    enforceCacheQuotas = enforceCacheQuotasInit;
     
     pGraph->setScratchSegment(scratchAccessor.pSegment);
 }
@@ -160,14 +158,9 @@ void ExecStreamGraphEmbryo::initStreamParams(ExecStreamParams &params)
 {
     params.pCacheAccessor = pCacheAccessor;
     params.scratchAccessor = scratchAccessor;
-    if (!enforceCacheQuotas) {
-        params.enforceQuotas = false;
-        return;
-    }
     
-    params.enforceQuotas = true;
     // All cache access should be wrapped by quota checks.  Actual
-    // quotas will be set per-execution.
+    // quotas and TxnIds will be set per-execution.
     uint quota = 0;
     SharedQuotaCacheAccessor pQuotaAccessor(
         new QuotaCacheAccessor(

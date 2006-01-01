@@ -255,6 +255,26 @@ static const PageOwnerId ANON_PAGE_OWNER_ID = PageOwnerId(0xFFFFFFFFFFFFFFFFLL);
  */
 static const SavepointId NULL_SVPT_ID = SavepointId(MAXU);
 
+/**
+ * Symbolic value indicating that some implicit value (typically the current
+ * thread ID) should be used as a transaction ID.
+ */
+static const TxnId IMPLICIT_TXN_ID = TxnId(0);
+
+/**
+ * Symbolic value for first valid TxnId.  Note that we use a number above the
+ * 32-bit ID range because some locks uses real TxnId's and others use thread
+ * ID's, and we'd like to be able to tell them apart.  This won't work on a
+ * platform which actually generated 64-bit thread ID's, which is conceivable
+ * (like if they use a pointer to a thread descriptor as an ID).
+ */
+static const TxnId FIRST_TXN_ID = TxnId(0x0000000100000000LL);
+
+/**
+ * Sentinel value for an invalid TxnId.
+ */
+static const TxnId NULL_TXN_ID = TxnId(0xFFFFFFFFFFFFFFFFLL);
+
 // The types below are called "Num" rather than "Id" because they are
 // used to represent either a count or an offset.  We use plain
 // typedef rather than DEFINE_OPAQUE_INTEGER because a lot of arithmetic

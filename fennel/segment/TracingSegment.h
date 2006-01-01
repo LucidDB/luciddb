@@ -60,7 +60,6 @@ public:
     virtual void deallocatePageRange(PageId startPageId,PageId endPageId);
     virtual void delegatedCheckpoint(
         Segment &delegatingSegment,CheckpointType checkpointType);
-    virtual bool isTracingSegment() const;
 
     // delegate the MappedPageListener interface
     virtual void notifyPageMap(CachePage &page);

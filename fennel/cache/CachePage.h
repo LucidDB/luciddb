@@ -191,7 +191,7 @@ private:
     bool isExclusiveLockHeld() const
     {
         // REVIEW:  should make sure lock is held by this thread?
-        return lock.isLocked(LOCKMODE_X);
+        return isScratchLocked() || lock.isLocked(LOCKMODE_X);
     }
 
 // ----------------------------------------------------------------------
@@ -290,6 +290,11 @@ public:
     }
 
     /**
+     * @return true if page is currently locked as scratch memory
+     */
+    bool isScratchLocked() const;
+
+    /**
      * @return the MappedPageListener associated with this page
      */
     MappedPageListener *getMappedPageListener() const
@@ -306,13 +311,13 @@ public:
      *
      * @return true if upgrade succeeded
      */
-    bool tryUpgrade()
+    bool tryUpgrade(TxnId txnId)
     {
         StrictMutexGuard pageGuard(mutex);
         if (isTransferInProgress()) {
             return false;
         }
-        return lock.tryUpgrade();
+        return lock.tryUpgrade(txnId);
     }
 
     /**

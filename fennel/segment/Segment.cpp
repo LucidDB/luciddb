@@ -103,11 +103,6 @@ uint Segment::getFullPageSize() const
     return pCache->getPageSize();
 }
 
-bool Segment::isTracingSegment() const
-{
-    return false;
-}
-
 bool Segment::ensureAllocatedSize(BlockNum nPages)
 {
     while (getAllocatedSizeInPages() < nPages) {

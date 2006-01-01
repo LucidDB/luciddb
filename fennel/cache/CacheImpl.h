@@ -467,7 +467,7 @@ public:
     virtual uint getAllocatedPageCount();
     virtual PageT *lockPage(
         BlockId blockId,LockMode lockMode,bool readIfUnmapped,
-        MappedPageListener *pMappedPageListener);
+        MappedPageListener *pMappedPageListener,TxnId txnId);
     virtual PageT *lockScratchPage(BlockNum blockNum);
     virtual void discardPage(BlockId blockId);
     virtual uint checkpointPages(
@@ -482,7 +482,7 @@ public:
     virtual void prefetchBatch(
         BlockId blockId,uint nPages,MappedPageListener *pMappedPageListener);
     virtual void flushPage(CachePage &page,bool async);
-    virtual void unlockPage(CachePage &page,LockMode lockMode);
+    virtual void unlockPage(CachePage &page,LockMode lockMode,TxnId txnId);
     virtual void nicePage(CachePage &page);
     virtual bool isPageMapped(BlockId blockId);
 };

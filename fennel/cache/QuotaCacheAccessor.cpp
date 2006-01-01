@@ -32,9 +32,9 @@ QuotaCacheAccessor::QuotaCacheAccessor(
     uint maxLockedPagesInit)
     : DelegatingCacheAccessor(pDelegateInit),
       pSuperQuotaAccessor(pSuperQuotaAccessorInit),
-      maxLockedPages(maxLockedPagesInit),
-      nPagesLocked(0)
+      maxLockedPages(maxLockedPagesInit)
 {
+    implicitTxnId = IMPLICIT_TXN_ID;
 }
     
 QuotaCacheAccessor::~QuotaCacheAccessor()
@@ -46,10 +46,14 @@ CachePage *QuotaCacheAccessor::lockPage(
     BlockId blockId,
     LockMode lockMode,
     bool readIfUnmapped,
-    MappedPageListener *pMappedPageListener)
+    MappedPageListener *pMappedPageListener,
+    TxnId txnId)
 {
+    if (txnId == IMPLICIT_TXN_ID) {
+        txnId = implicitTxnId;
+    }
     CachePage *pPage = DelegatingCacheAccessor::lockPage(
-        blockId,lockMode,readIfUnmapped,pMappedPageListener);
+        blockId,lockMode,readIfUnmapped,pMappedPageListener,txnId);
     if (pPage) {
         incrementUsage();
     }
@@ -58,16 +62,20 @@ CachePage *QuotaCacheAccessor::lockPage(
 
 void QuotaCacheAccessor::unlockPage(
     CachePage &page,
-    LockMode lockMode)
+    LockMode lockMode,
+    TxnId txnId)
 {
+    if (txnId == IMPLICIT_TXN_ID) {
+        txnId = implicitTxnId;
+    }
     decrementUsage();
-    DelegatingCacheAccessor::unlockPage(page,lockMode);
+    DelegatingCacheAccessor::unlockPage(page,lockMode,txnId);
 }
 
 void QuotaCacheAccessor::incrementUsage()
 {
     assert(nPagesLocked < maxLockedPages);
-    nPagesLocked++;
+    ++nPagesLocked;
     if (pSuperQuotaAccessor) {
         pSuperQuotaAccessor->incrementUsage();
     }
@@ -76,7 +84,7 @@ void QuotaCacheAccessor::incrementUsage()
 void QuotaCacheAccessor::decrementUsage()
 {
     assert(nPagesLocked);
-    nPagesLocked--;
+    --nPagesLocked;
     if (pSuperQuotaAccessor) {
         pSuperQuotaAccessor->decrementUsage();
     }
@@ -91,6 +99,16 @@ void QuotaCacheAccessor::setMaxLockedPages(uint nPages)
 {
     assert(nPages >= nPagesLocked);
     maxLockedPages = nPages;
+}
+
+void QuotaCacheAccessor::setTxnId(TxnId txnId)
+{
+    implicitTxnId = txnId;
+}
+
+TxnId QuotaCacheAccessor::getTxnId() const
+{
+    return implicitTxnId;
 }
 
 FENNEL_END_CPPFILE("$Id$");
