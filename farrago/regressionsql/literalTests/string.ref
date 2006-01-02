@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/regressionsql/literalTests/string.sql#7 $ 
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/regressionsql/literalTests/string.sql#8 $ 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values 'unknown';
 +----------+
@@ -31,7 +31,7 @@ Messages:
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
-[0]:PC=1 Code=22001 (state=,code=0)
+[0]:PC=4 Code=22001 (state=,code=0)
 0: jdbc:farrago:> insert into t_char values(x'ff',null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY(1)' to 'CHAR(1)' (state=,code=0)
 0: jdbc:farrago:> -- char(1) too short to hold these - will give error

@@ -90,24 +90,17 @@ public class FarragoSqlValidator extends SqlValidatorImpl
         // now use ESP instead.
         switch (literal.getTypeName().getOrdinal()) {
         case SqlTypeName.Decimal_ordinal:
+            // decimal and long have the same precision (as 64-bit integers),
+            // so the unscaled value of a decimal must fit into a long.
             BigDecimal bd = (BigDecimal) literal.getValue();
-            if (bd.scale() == 0) {
-                // Value must fit into a long.
-                long longValue = bd.longValue();
-                if (!BigDecimal.valueOf(longValue).equals(bd)) {
-                    // overflow
-                    throw newValidationError(
-                        literal, EigenbaseResource.instance()
-                        .NumberLiteralOutOfRange.ex(bd.toString()));
-                }
-            } else {
-                // fall through for scaled case
+            bd = new BigDecimal(bd.unscaledValue());
+            long longValue = bd.longValue();
+            if (!BigDecimal.valueOf(longValue).equals(bd)) {
+                // overflow
+                throw newValidationError(
+                    literal, EigenbaseResource.instance()
+                    .NumberLiteralOutOfRange.ex(bd.toString()));
             }
-
-            // TODO jvs 4-Aug-2004:  support exact numerics,
-            // which may also be able to handle overflow case above
-            // if our maximum precision is bigger than that of a long
-            validateLiteralAsDouble(literal);
             break;
         case SqlTypeName.Double_ordinal:
             validateLiteralAsDouble(literal);

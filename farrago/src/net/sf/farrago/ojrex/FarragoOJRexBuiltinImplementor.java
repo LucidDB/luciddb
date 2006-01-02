@@ -539,12 +539,6 @@ public class FarragoOJRexBuiltinImplementor extends FarragoOJRexImplementor
                     new ExpressionList(
                         Literal.makeLiteral(funcName)))));
     }
-
-    // implement OJRexImplementor
-    public boolean canImplement(RexCall call)
-    {
-        return true;
-    }
 }
 
 // End FarragoOJRexBuiltinImplementor.java

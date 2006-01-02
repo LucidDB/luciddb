@@ -235,7 +235,11 @@ public class RexKind extends EnumeratedValues.BasicValue
     public static final int NewSpecificationOrdinal = 46;
     public static final RexKind NewSpecification =
         new RexKind("NewSpecification", NewSpecificationOrdinal);
-
+    /** The internal REINTERPRET operator */
+    public static final int ReinterpretOrdinal = 47;
+    public static final RexKind Reinterpret =
+        new RexKind("Reinterpret", ReinterpretOrdinal);
+    
     /**
      * Set of all {@link RexKind} instances.
      */
@@ -247,7 +251,7 @@ public class RexKind extends EnumeratedValues.BasicValue
             Divide, Minus, Plus, MinusPrefix, Times, Arithmetic, // arithmetic
             FieldAccess, Concat, Substr, Row, Identifier, Literal,
                 Values, DynamicParam, Cast, Trim, MultisetQueryConstructor,
-                NewSpecification
+                NewSpecification, Reinterpret
             });
 
     //~ Instance fields -------------------------------------------------------

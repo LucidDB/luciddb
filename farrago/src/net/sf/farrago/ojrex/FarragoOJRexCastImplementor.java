@@ -556,12 +556,6 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
                     stmtList, lhsType, rhsType, lhsExp, rhsExp);
         }
     }
-
-    // implement OJRexImplementor
-    public boolean canImplement(RexCall call)
-    {
-        return true;
-    }
 }
 
 

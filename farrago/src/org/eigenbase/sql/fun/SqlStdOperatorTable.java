@@ -641,6 +641,25 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      */
     public static final SqlBinaryOperator overOperator =
         new SqlOverOperator();
+    
+    /**
+     * An <code>REINTERPRET<code> operator is internal to the planner.
+     * 
+     * When the physical storage of two types is the same, this operator 
+     * may be used to reinterpret values of one type as the other. This 
+     * operator is similar to a cast, except that it does not alter the 
+     * data value. Like a regular cast it accepts one operand and stores 
+     * the target type as the return type.
+     */
+    public static final SqlSpecialOperator reinterpretOperator =
+        new SqlSpecialOperator("Reinterpret", SqlKind.Reinterpret) {
+        public SqlOperandCountRange getOperandCountRange()
+        {
+            return SqlOperandCountRange.Two;
+        }
+
+        
+    };
 
 
     //-------------------------------------------------------------

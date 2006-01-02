@@ -343,6 +343,11 @@ public class SqlKind extends EnumeratedValues.BasicValue
     public static final SqlKind Escape =
         new SqlKind("EscapeChain", EscapeORDINAL);
 
+    /** Reinterpret operator (a reinterpret cast) */
+    public static final int ReinterpretORDINAL = 202;
+    public static final SqlKind Reinterpret = 
+        new SqlKind("Reinterpret", ReinterpretORDINAL);
+    
     // aggregates of other kinds, 300-399
 
     /**

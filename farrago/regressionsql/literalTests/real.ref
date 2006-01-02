@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/regressionsql/literalTests/real.sql#6 $ 
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/regressionsql/literalTests/real.sql#7 $ 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test real literal
 0: jdbc:farrago:> values 0.0;
@@ -20,11 +20,11 @@
 | 0.1     |
 +---------+
 0: jdbc:farrago:> values 1004.30;
-+---------+
-| EXPR$0  |
-+---------+
-| 1004.3  |
-+---------+
++----------+
+|  EXPR$0  |
++----------+
+| 1004.30  |
++----------+
 0: jdbc:farrago:> values -34.84;
 +---------+
 | EXPR$0  |
@@ -74,11 +74,11 @@
 | 0.0     |
 +---------+
 0: jdbc:farrago:> values 1004.30;
-+---------+
-| EXPR$0  |
-+---------+
-| 1004.3  |
-+---------+
++----------+
+|  EXPR$0  |
++----------+
+| 1004.30  |
++----------+
 0: jdbc:farrago:> values -34.84;
 +---------+
 | EXPR$0  |
@@ -108,11 +108,11 @@ Error: From line 1, column 9 to line 1, column 13: Numeric literal '1E400' out o
 | -34.84  |
 +---------+
 0: jdbc:farrago:> values -1004.30;
-+----------+
-|  EXPR$0  |
-+----------+
-| -1004.3  |
-+----------+
++-----------+
+|  EXPR$0   |
++-----------+
+| -1004.30  |
++-----------+
 0: jdbc:farrago:> values -1.2345678901234e+200;
 +-----------------------+
 |        EXPR$0         |

@@ -220,7 +220,9 @@ public abstract class SqlOperatorTests extends TestCase
 
         // null
         getTester().checkNull("cast(null as double)");
-        getTester().checkNull("cast(null as decimal(4,3))");
+        if (decimalSupported) {
+            getTester().checkNull("cast(null as decimal(4,3))");
+        }
         getTester().checkNull("cast(null as date)");
     }
 
@@ -329,6 +331,7 @@ public abstract class SqlOperatorTests extends TestCase
         }
     }
 
+    // TODO: reenable test once we have decided the decimal output type 
     public void testDivideOperator()
     {
         getTester().setFor(SqlStdOperatorTable.divideOperator);
