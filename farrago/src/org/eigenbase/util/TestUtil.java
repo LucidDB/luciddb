@@ -133,7 +133,7 @@ public abstract class TestUtil
         s = TabPattern.matcher(s).replaceAll("\\\\t");
         s = "\"" + s + "\"";
         if (lineBreaks) {
-            return "fold(new String[] {" + NL + s + "})";
+            return "TestUtil.fold(new String[] {" + NL + s + "})";
         } else {
             return s;
         }

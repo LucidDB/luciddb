@@ -12,9 +12,9 @@
 <!ENTITY aspen_p4client  "cruise.smedley">
 <!ENTITY aspen_p4user    "guest">
 
-<!ENTITY buildresultsbase "http://jhyde.dyndns.org:8888/aspen/buildresults">
+<!ENTITY buildresultsbase "http://jhyde.dyndns.org:8008/aspen/buildresults">
 <!ENTITY mailhost         "smtp.rcn.com">
-<!ENTITY reportsuccess    "fixes">
+<!ENTITY reportsuccess    "always">
 <!ENTITY returnname       "Build Monkey">
 <!ENTITY returnaddress    "buildmonkey@fishtaco.org">
 <!ENTITY skipusers        "true">
@@ -45,7 +45,7 @@
 
 <cruisecontrol>
 	&saffronProject;
-	&fennelProject;
-	&farragoProject;
+	<!-- &fennelProject; -->
+	<!-- &farragoProject; -->
 	&aspenProject;
 </cruisecontrol>
