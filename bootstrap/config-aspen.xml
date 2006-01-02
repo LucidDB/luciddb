@@ -47,6 +47,7 @@
 			<artifactspublisher dir="build/aspen/unitsql" dest="artifacts/aspen&configSuffix;" subdirectory="unitsql"/>
 			<artifactspublisher dir="build/aspen/trace" dest="artifacts/aspen&configSuffix;" subdirectory="trace"/>
 			<artifactspublisher dir="build/aspen/testcases" dest="artifacts/aspen&configSuffix;" subdirectory="testcases"/>
+			<artifactspublisher dir="build/fennel/trace" dest="artifacts/aspen&configSuffix;" subdirectory="fennel_trace"/>
 
 			<!-- sync up artifacts on jsp machine: CC's scp would copy everything -->
 			<execute command="&rsync_cmd; artifacts/aspen&configSuffix; &rsync_dest;"/>

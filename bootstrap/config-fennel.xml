@@ -33,7 +33,7 @@
 		<publishers>
 			<currentbuildstatuspublisher file="logs/fennel/currentbuildstatus.txt"/>
 
-			<artifactspublisher dir="build/fennel/test/.testlog" dest="artifacts/fennel&configSuffix;"/>
+			<artifactspublisher dir="build/fennel/trace" dest="artifacts/fennel&configSuffix;"/>
 
 			<!-- sync up artifacts on jsp machine: CC's scp would copy everything -->
 			<execute command="&rsync_cmd; artifacts/fennel&configSuffix; &rsync_dest;"/>
