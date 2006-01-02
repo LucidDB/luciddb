@@ -23,6 +23,8 @@ package net.sf.farrago.type.runtime;
 
 import java.math.BigDecimal;
 
+import org.eigenbase.util.*;
+
 import net.sf.farrago.resource.FarragoResource;
 
 /**
@@ -89,20 +91,12 @@ public abstract class EncodedSqlDecimal
     {
         if (obj == null) {
             setNull(true);
-        } else if (obj instanceof Number) {
-            setNull(false);
-            setNumber((Number) obj);
-        } else if (obj instanceof NullablePrimitive) {
-            NullablePrimitive nullable = (NullablePrimitive) obj;
-            assignFrom(nullable.getNullableData());
         } else if (obj instanceof EncodedSqlDecimal) {
+            setNull(false);
             EncodedSqlDecimal decimal = (EncodedSqlDecimal) obj;
             value = decimal.value;
-        } else if (obj instanceof Boolean) {
-            setNull(false);
-            Boolean b = (Boolean) obj;
-            setNumber(b.booleanValue() ? INT_ONE : INT_ZERO);
         } else {
+            // TODO: are we allowed to allocate here?
             setNull(false);
             String s = obj.toString();
             BigDecimal n;
@@ -117,16 +111,11 @@ public abstract class EncodedSqlDecimal
                     "NUMERIC",
                     "NumberFormatException");
             }
-            setNumber(n);
+            n = n.setScale(getScale(), BigDecimal.ROUND_HALF_UP);
+            value = n.unscaledValue().longValue();
         }
     }
     
-    private void setNumber(Number n)
-    {
-        long l = n.longValue();
-        assignFrom(l);
-    }
-
     // implement AssignableValue
     public void assignFrom(long l)
     {

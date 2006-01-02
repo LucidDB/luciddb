@@ -36,6 +36,8 @@ public class ExtInstructionDefTable
         new CalcProgramBuilder.ExtInstrDef("ABS", 2);
     public static final CalcProgramBuilder.ExtInstrDef castA =
         new CalcProgramBuilder.ExtInstrDef("castA", 2);
+    public static final CalcProgramBuilder.ExtInstrDef castADecimal =
+        new CalcProgramBuilder.ExtInstrDef("castA", 4);
     public static final CalcProgramBuilder.ExtInstrDef castDateToMillis =
         new CalcProgramBuilder.ExtInstrDef("CastDateTimeToInt64", 2);
     public static final CalcProgramBuilder.ExtInstrDef castDateToStr =

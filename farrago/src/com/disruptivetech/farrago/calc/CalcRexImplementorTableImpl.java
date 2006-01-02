@@ -32,6 +32,7 @@ import org.eigenbase.sql.type.SqlTypeUtil;
 import org.eigenbase.util.DoubleKeyMap;
 import org.eigenbase.util.Util;
 
+import java.math.*;
 import java.util.*;
 
 
@@ -1029,30 +1030,16 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 SqlTypeName.charTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castA));
             
-            /*
             doubleKeyMap.put(
                 SqlTypeName.Decimal,
                 SqlTypeName.charTypes,
-                new UsingInstrImplementor(ExtInstructionDefTable.castA) {
-                    public CalcProgramBuilder.Register implement(
-                        RexCall call,
-                        RexToCalcTranslator translator)
-                    {
-                        return super.implement(call, translator);
-                    }
-                });
+                new CastDecimalImplementor(
+                    ExtInstructionDefTable.castADecimal));
             doubleKeyMap.put(
                 SqlTypeName.charTypes,
                 SqlTypeName.Decimal,
-                new UsingInstrImplementor(ExtInstructionDefTable.castA) {
-                    public CalcProgramBuilder.Register implement(
-                        RexCall call,
-                        RexToCalcTranslator translator)
-                    {
-                        return super.implement(call, translator);
-                    }
-                });
-                */
+                new CastDecimalImplementor(
+                    ExtInstructionDefTable.castADecimal));
         }
 
         public CalcProgramBuilder.Register implement(
@@ -1097,6 +1084,49 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
 
             throw Util.needToImplement("Cast from '" + fromType.toString()
                 + "' to '" + toType.toString() + "'");
+        }
+        
+        /** Implementor for casting between char and decimal types */
+        private static class CastDecimalImplementor extends InstrDefImplementor
+        {
+            CastDecimalImplementor(CalcProgramBuilder.InstructionDef instr) 
+            {
+                super(instr);
+            }
+            
+            // refine InstrDefImplementor
+            protected ArrayList makeRegList(
+                RexToCalcTranslator translator,
+                RexCall call)
+            {
+                RelDataType decimalType;
+                Util.pre(SqlTypeUtil.isDecimal(call.getType())
+                    || SqlTypeUtil.isDecimal(call.operands[0].getType()),
+                    "CastDecimalImplementor can only cast decimal types");
+                if (SqlTypeUtil.isDecimal(call.getType())) {
+                    Util.pre(
+                        SqlTypeUtil.inCharFamily(call.operands[0].getType()),
+                        "CalRex cannot cast non char type to decimal");
+                    decimalType = call.getType();
+                } else {
+                    Util.pre(
+                        SqlTypeUtil.inCharFamily(call.getType()),
+                        "CalRex cannot cast from decimal to non char type");
+                    decimalType = call.operands[0].getType();
+                }
+                RexLiteral precision = translator.rexBuilder
+                    .makeExactLiteral(
+                        BigDecimal.valueOf(decimalType.getPrecision()));
+                RexLiteral scale = translator.rexBuilder
+                    .makeExactLiteral(
+                        BigDecimal.valueOf(decimalType.getScale()));
+                
+                ArrayList regList = implementOperands(call, translator);
+                regList.add(translator.implementNode(precision));
+                regList.add(translator.implementNode(scale));
+                regList.add(0, createResultRegister(translator, call));
+                return regList;
+            }
         }
     }
 

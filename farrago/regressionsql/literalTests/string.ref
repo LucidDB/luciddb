@@ -31,7 +31,7 @@ Messages:
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
-[0]:PC=4 Code=22001 (state=,code=0)
+[0]:PC=1 Code=22001 (state=,code=0)
 0: jdbc:farrago:> insert into t_char values(x'ff',null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY(1)' to 'CHAR(1)' (state=,code=0)
 0: jdbc:farrago:> -- char(1) too short to hold these - will give error
@@ -146,12 +146,12 @@ Messages:
 +---------------------------------+---------------+
 |           VARCHAR_COL           | VARCHAR_COL2  |
 +---------------------------------+---------------+
-| -1.1000000000000001E+00         |               |
+| -1.1                            |               |
 | -1.2345678901234000E-200        |               |
 | -1.23E-50                       |               |
 | -1.23E50                        |               |
-| -4.4442200000000003E+03         |               |
-| 0E0                             |               |
+| -4444.22                        |               |
+| .0                              |               |
 | 1.23E-50                        |               |
 | 1.23E50                         |               |
 | 123456789012345678901234567890  |               |

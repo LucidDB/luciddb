@@ -85,12 +85,15 @@ public class ReduceDecimalsRule extends RelOptRule
             return;
         }
 
-        boolean reduced = false;
-        RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
         if (rel instanceof CalcRel) {
             CalcRel calcRel = (CalcRel) rel;
             RexNode[] exprs = calcRel.getChildExps();
+            if (!RexUtil.requiresDecimalExpansion(exprs, true)) {
+                return;
+            }
+            RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
             RexNode[] newExprs = new RexNode[exprs.length];
+            boolean reduced = false;
             for (int i=0; i < exprs.length; i++) {
                 RexNode expr = exprs[i];
                 newExprs[i] = reduceDecimals(expr, rexBuilder);
@@ -231,7 +234,7 @@ public class ReduceDecimalsRule extends RelOptRule
         } else if (call.isA(RexKind.Other)
             && (call.getOperator() == SqlStdOperatorTable.absFunc))
         {
-            return new PassThroughExpander(rexBuilder);//FunctionExpander(rexBuilder);
+            return new PassThroughExpander(rexBuilder);
         } else {
             return new CastAsDoubleExpander(rexBuilder);
         }
@@ -492,10 +495,9 @@ public class ReduceDecimalsRule extends RelOptRule
         public boolean canExpand(RexCall call)
         {
             return call.isA(RexKind.Cast)
-                && RexUtil.requiresDecimalExpansion(call, false);
-            // FIXME: I shouldn't handle char, other types
-            //    && SqlTypeUtil.isNumeric(call.getType())
-            //    && SqlTypeUtil.isNumeric(call.operands[0].getType());
+                && RexUtil.requiresDecimalExpansion(call, false)
+                && SqlTypeUtil.isNumeric(call.getType())
+                && SqlTypeUtil.isNumeric(call.operands[0].getType());
         }
         
         // implement RexExpander
@@ -530,12 +532,6 @@ public class ReduceDecimalsRule extends RelOptRule
                     toType,
                     scaleDownDouble(
                         decodeValue(operand), fromType.getScale()));
-            } else if (SqlTypeUtil.inCharFamily(fromType)) {
-                // FIXME: I shouldn't handle this
-                return encodeValue(ensureType(real8, operand), toType);
-            } else if (SqlTypeUtil.inCharFamily(toType)) {
-                // FIXME: I shouldn't handle this
-                return ensureType(toType, ensureType(real8, operand));
             } else {
                 // Both decimals
                 Util.pre(SqlTypeUtil.isDecimal(fromType) 
@@ -605,8 +601,6 @@ public class ReduceDecimalsRule extends RelOptRule
                     SqlTypeUtil.isApproximateNumeric(typeA) ? 1 : 0;
                 int otherIndex = (castIndex==0) ? 1 : 0;
                 RexNode[] newOperands = new RexNode[2];
-                // NOTE: this will be expanded in another pass. It might 
-                // be more kind to do it all in one pass.
                 newOperands[castIndex] = 
                     ensureType(real8, operands[castIndex]);
                 newOperands[otherIndex] = operands[otherIndex];
