@@ -36,11 +36,6 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-inline std::string toStr(std::ostream const &ostr) 
-{
-    return static_cast<std::ostringstream const &>(ostr).str();
-}
-
 ExecStreamGraphEmbryo::ExecStreamGraphEmbryo(
     SharedExecStreamGraph pGraphInit, 
     SharedExecStreamScheduler pSchedulerInit, 
