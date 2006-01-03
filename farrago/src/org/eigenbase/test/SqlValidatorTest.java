@@ -1074,6 +1074,14 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
     public void testNumericOperators()
     {
+        // unary operator
+        checkExpType("- cast(1 as TINYINT)", "TINYINT NOT NULL");
+        checkExpType("+ cast(1 as INT)", "INTEGER NOT NULL");
+        checkExpType("- cast(1 as FLOAT)", "FLOAT NOT NULL");
+        checkExpType("+ cast(1 as DOUBLE)", "DOUBLE NOT NULL");
+        checkExpType("-1.643", "DECIMAL(4, 3) NOT NULL");
+        checkExpType("+1.643", "DECIMAL(4, 3) NOT NULL");
+
         // addition operator
         checkExpType("cast(1 as TINYINT) + cast(5 as INTEGER)", "INTEGER NOT NULL");
         checkExpType("cast(null as SMALLINT) + cast(5 as BIGINT)", "BIGINT");
@@ -1085,7 +1093,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
         checkExpType("1.543 + 2.34", "DECIMAL(5, 3) NOT NULL");
         checkExpType("cast(1 as DECIMAL(5, 2)) + cast(1 as BIGINT)", "DECIMAL(19, 2) NOT NULL");
-        checkExpType("cast(1 as DECIMAL(5, 2)) + cast(1 as INTEGER)", "DECIMAL(13, 2) NOT NULL");
+        checkExpType("cast(1 as NUMERIC(5, 2)) + cast(1 as INTEGER)", "DECIMAL(13, 2) NOT NULL");
         checkExpType("cast(1 as DECIMAL(5, 2)) + cast(null as SMALLINT)", "DECIMAL(8, 2)");
         checkExpType("cast(1 as DECIMAL(5, 2)) + cast(1 as TINYINT)", "DECIMAL(6, 2) NOT NULL");
 
