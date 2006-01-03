@@ -168,6 +168,11 @@ public class StackWriter extends FilterWriter
             out.write(c);
             needIndent = true;
             break;
+        case '\r':
+            // NOTE jvs 3-Jan-2006:  suppress indentIfNeeded() in this case
+            // so that we don't get spurious diffs on Windows vs. Linux
+            out.write(c);
+            break;
         case '\'':
             writeQuote(singleQuote);
             break;
