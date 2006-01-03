@@ -83,6 +83,15 @@ public:
     /** prints the backtrace to a unix file descriptor: for use when out of memory */
     void print(int fd) const;
 
+    /**
+     * Attempts to demangle a C++ name and write it to an ostream.
+     *
+     * @param out receives demangled name
+     *
+     * @param pMangled name to be demangled
+     */
+    static void writeDemangled(
+        std::ostream &out, char const *pMangled);
 };
 
 inline std::ostream& operator << (std::ostream& os, const Backtrace& bt)

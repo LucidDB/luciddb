@@ -31,7 +31,7 @@ SXMutex::SXMutex()
     nShared = 0;
     nExclusive = 0;
     nExclusivePending = 0;
-    exclusiveHolderId = -1;
+    exclusiveHolderId = NULL_TXN_ID;
     schedulingPolicy = SCHEDULE_DEFAULT;
 }
 
@@ -40,7 +40,14 @@ SXMutex::~SXMutex()
     assert(!nShared);
     assert(!nExclusive);
     assert(!nExclusivePending);
-    assert(exclusiveHolderId == -1);
+    assert(exclusiveHolderId == NULL_TXN_ID);
+}
+
+inline void SXMutex::normalizeTxnId(TxnId &txnId)
+{
+    if (txnId == IMPLICIT_TXN_ID) {
+        txnId = TxnId(uint(getCurrentThreadId()));
+    }
 }
 
 void SXMutex::setSchedulingPolicy(SchedulingPolicy schedulingPolicyInit)
@@ -50,14 +57,14 @@ void SXMutex::setSchedulingPolicy(SchedulingPolicy schedulingPolicyInit)
     schedulingPolicy = schedulingPolicyInit;
 }
 
-bool SXMutex::waitFor(LockMode lockMode,uint iTimeout)
+bool SXMutex::waitFor(LockMode lockMode,uint iTimeout,TxnId txnId)
 {
     boost::xtime atv;
     if (iTimeout != ETERNITY) {
         convertTimeout(iTimeout,atv);
     }
     StrictMutexGuard mutexGuard(mutex);
-    int currentThreadId = getCurrentThreadId();
+    normalizeTxnId(txnId);
     bool bExclusive = (lockMode == LOCKMODE_X || lockMode == LOCKMODE_X_NOWAIT);
     bool bExclusivePending = (lockMode == LOCKMODE_X)
         && (schedulingPolicy == SCHEDULE_FAVOR_EXCLUSIVE);
@@ -65,7 +72,7 @@ bool SXMutex::waitFor(LockMode lockMode,uint iTimeout)
         ++nExclusivePending;
     }
     for (;;) {
-        if (exclusiveHolderId == currentThreadId) {
+        if (exclusiveHolderId == txnId) {
             break;
         }
         if (bExclusive) {
@@ -96,7 +103,7 @@ bool SXMutex::waitFor(LockMode lockMode,uint iTimeout)
     }
     if (bExclusive) {
         ++nExclusive;
-        exclusiveHolderId = currentThreadId;
+        exclusiveHolderId = txnId;
         if (bExclusivePending) {
             assert(nExclusivePending > 0);
             --nExclusivePending;
@@ -107,19 +114,24 @@ bool SXMutex::waitFor(LockMode lockMode,uint iTimeout)
     return true;
 }
 
-void SXMutex::release(LockMode lockMode)
+void SXMutex::release(LockMode lockMode,TxnId txnId)
 {
     StrictMutexGuard mutexGuard(mutex);
     if (lockMode == LOCKMODE_X) {
         assert(nExclusive);
+        normalizeTxnId(txnId);
+        assert(exclusiveHolderId == txnId);
         --nExclusive;
         if (!nExclusive) {
-            exclusiveHolderId = -1;
+            exclusiveHolderId = NULL_TXN_ID;
             condition.notify_all();
         }
     } else {
         assert(lockMode == LOCKMODE_S);
         assert(nShared);
+        // NOTE:  we can't assert(exclusiveHolderId == NULL_TXN_ID) here,
+        // because a txn may take both a shared lock and an exclusive
+        // lock simultaneously.
         --nShared;
         if (!nShared) {
             condition.notify_all();
@@ -137,11 +149,12 @@ bool SXMutex::isLocked(LockMode lockMode) const
     }
 }
 
-bool SXMutex::tryUpgrade()
+bool SXMutex::tryUpgrade(TxnId txnId)
 {
     StrictMutexGuard mutexGuard(mutex);
     assert(nShared);
     assert(!nExclusive);
+    assert(exclusiveHolderId == NULL_TXN_ID);
     if (nShared > 1) {
         return false;
     }
@@ -149,7 +162,8 @@ bool SXMutex::tryUpgrade()
     // nExclusivePending
     nShared = 0;
     nExclusive = 1;
-    exclusiveHolderId = getCurrentThreadId();
+    normalizeTxnId(txnId);
+    exclusiveHolderId = txnId;
     return true;
 }
 

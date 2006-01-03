@@ -42,7 +42,7 @@ ExecStreamTestBase::newStreamGraphEmbryo(SharedExecStreamGraph g)
 {
     return SharedExecStreamGraphEmbryo(
         new ExecStreamGraphEmbryo(
-            g, pScheduler, pCache, pSegmentFactory, true));
+            g, pScheduler, pCache, pSegmentFactory));
 }
 
 ExecStreamScheduler *ExecStreamTestBase::newScheduler()

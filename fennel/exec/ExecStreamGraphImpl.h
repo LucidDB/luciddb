@@ -85,6 +85,11 @@ protected:
     typedef StreamMap::const_iterator StreamMapConstIter;
     typedef std::map<std::pair<std::string, uint>,ExecStreamId> EdgeMap;
 
+    // nested classes for implementing renderGraphviz
+    class DotGraphRenderer;
+    class DotVertexRenderer;
+    class DotEdgeRenderer;
+
     /**
      * List of freed vertices
      */
@@ -138,9 +143,11 @@ protected:
     virtual void openStream(SharedExecStream pStream);
     virtual void bindStreamBufAccessors(SharedExecStream pStream);
     virtual void mergeFrom(ExecStreamGraphImpl& src);
-    virtual void mergeFrom(ExecStreamGraphImpl& src, std::vector<ExecStreamId>const& nodes);
+    virtual void mergeFrom(
+        ExecStreamGraphImpl& src, std::vector<ExecStreamId>const& nodes);
 
-    /** frees all nodes and edges: like removeStream() on all streams, but faster */
+    /** frees all nodes and edges: like removeStream() on all streams, but
+     * faster */
     virtual void clear();
     /** adds a node */
     virtual Vertex addVertex(SharedExecStream pStream);
@@ -165,7 +172,8 @@ public:
     inline SharedExecStream getStreamFromVertex(Vertex);
     inline SharedExecStreamBufAccessor &getSharedBufAccessorFromEdge(Edge);
     inline ExecStreamBufAccessor &getBufAccessorFromEdge(Edge);
-    
+
+    // implement ExecStreamGraph
     virtual void setTxn(SharedLogicalTxn pTxn);
     virtual void setScratchSegment(
         SharedSegment pScratchSegment);
@@ -182,7 +190,8 @@ public:
     virtual void addInputDataflow(
         ExecStreamId consumerId);
     virtual void mergeFrom(ExecStreamGraph& src);
-    virtual void mergeFrom(ExecStreamGraph& src, std::vector<ExecStreamId>const& nodes);
+    virtual void mergeFrom(
+        ExecStreamGraph& src, std::vector<ExecStreamId>const& nodes);
     virtual SharedExecStream findStream(
         std::string name);
     virtual SharedExecStream findLastStream(
@@ -212,10 +221,8 @@ public:
     virtual std::vector<SharedExecStream> getSortedStreams();
     virtual int getStreamCount();
     virtual int getDataflowCount();
-    /**
-     * @return true if graph has no cycles
-     */
-    virtual bool checkForNoCycles();
+    virtual void renderGraphviz(std::ostream &);
+    virtual bool isAcyclic();
 };
 
 inline ExecStreamGraphImpl::GraphRep const &ExecStreamGraphImpl::getGraphRep()

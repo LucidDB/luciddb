@@ -141,11 +141,6 @@ struct ExecStreamParams
      */
     SegmentAccessor scratchAccessor;
 
-    /**
-     * Whether ExecStream should enforce resource quotas.
-     */
-    bool enforceQuotas;
-
     explicit ExecStreamParams();
 
     virtual ~ExecStreamParams();

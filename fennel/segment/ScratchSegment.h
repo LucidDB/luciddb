@@ -86,8 +86,10 @@ public:
         BlockId blockId,
         LockMode lockMode,
         bool readIfUnmapped = true,
-        MappedPageListener *pMappedPageListener = NULL);
-    virtual void unlockPage(CachePage &page,LockMode lockMode);
+        MappedPageListener *pMappedPageListener = NULL,
+        TxnId txnId = IMPLICIT_TXN_ID);
+    virtual void unlockPage(
+        CachePage &page,LockMode lockMode,TxnId txnId = IMPLICIT_TXN_ID);
     virtual void discardPage(BlockId blockId);
     virtual void prefetchPage(
         BlockId blockId,
@@ -100,6 +102,8 @@ public:
     virtual SharedCache getCache();
     virtual uint getMaxLockedPages();
     virtual void setMaxLockedPages(uint nPages);
+    virtual void setTxnId(TxnId txnId);
+    virtual TxnId getTxnId() const;
 };
 
 FENNEL_END_NAMESPACE

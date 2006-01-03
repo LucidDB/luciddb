@@ -141,17 +141,7 @@ ostream& Backtrace::print(ostream& os) const
             *pLeftParen = '(';
 
             *pPlus = 0;
-            int status = -3;
-            char *pDemangled =
-                abi::__cxa_demangle(pLeftParen + 1, NULL, NULL, &status);
-            if (status || !pDemangled) {
-                // non-zero status means demangling failed;
-                // use mangled name instead
-                os << pLeftParen + 1;
-            } else {
-                os << pDemangled;
-                free(pDemangled);
-            }
+            writeDemangled(os, pLeftParen + 1);
             // dump plus and everything up to lbracket
             *pPlus = '+';
             *pLeftBracket = 0;
@@ -178,6 +168,21 @@ ostream& Backtrace::print(ostream& os) const
     }
 #endif
     return os;
+}
+
+void Backtrace::writeDemangled(std::ostream &out, char const *pMangled)
+{
+    int status = -3;
+    char *pDemangled =
+        abi::__cxa_demangle(pMangled, NULL, NULL, &status);
+    if (status || !pDemangled) {
+        // non-zero status means demangling failed;
+        // use mangled name instead
+        out << pMangled;
+    } else {
+        out << pDemangled;
+        free(pDemangled);
+    }
 }
 
 std::ostream* AutoBacktrace::pstream = &std::cerr;

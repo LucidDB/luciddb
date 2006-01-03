@@ -36,7 +36,7 @@ public:
     {
     }
 
-    operator uint()
+    operator uint() const
     {
         return _M_ref_count;
     }

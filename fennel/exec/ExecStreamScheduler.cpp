@@ -31,6 +31,8 @@
 #include "fennel/tuple/TupleData.h"
 #include "fennel/tuple/TuplePrinter.h"
 
+#include <fstream>
+
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 ExecStreamScheduler::ExecStreamScheduler(
@@ -49,6 +51,18 @@ void ExecStreamScheduler::addGraph(SharedExecStreamGraph pGraph)
 {
     assert(!pGraph->pScheduler);
     pGraph->pScheduler = this;
+
+    if (tracingFine) {
+        std::string dotFileName;
+        const char *fennelHome = getenv("FENNEL_HOME");
+        if (fennelHome) {
+            dotFileName += fennelHome;
+            dotFileName += "/trace/";
+        }
+        dotFileName += "ExecStreamGraph.dot";
+        std::ofstream dotStream(dotFileName.c_str());
+        pGraph->renderGraphviz(dotStream);
+    }
     
     // if any of the streams in the new graph require tracing, then
     // disable our tracing short-circuit

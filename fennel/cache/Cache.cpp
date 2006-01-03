@@ -75,6 +75,15 @@ void Cache::setMaxLockedPages(uint)
 {
 }
 
+void Cache::setTxnId(TxnId)
+{
+}
+
+TxnId Cache::getTxnId() const
+{
+    return IMPLICIT_TXN_ID;
+}
+
 void Cache::writeStats(StatsTarget &target)
 {
     CacheStats stats;

@@ -60,15 +60,15 @@ void DfsTreeExecStreamScheduler::removeGraph(SharedExecStreamGraph pGraphInit)
 void DfsTreeExecStreamScheduler::start()
 {
     FENNEL_TRACE(TRACE_FINE,"start");
-    
-    ExecStreamGraphImpl &graphImpl =
-        dynamic_cast<ExecStreamGraphImpl&>(*pGraph);
-    ExecStreamGraphImpl::GraphRep graphRep = graphImpl.getGraphRep();
 
+    // TODO jvs 2-Jan-2006:  rename this class now that it's no longer
+    // restricted to trees; come up with something more generic in case
+    // DFS becomes irrelevant also.
+    
     // note: we no longer check that graph is a tree (or forest of trees)
     // since it is now possible to have multiple consumers from a single
     // producer
-    assert(graphImpl.checkForNoCycles());
+    assert(pGraph->isAcyclic());
     aborted = false;
 }
 

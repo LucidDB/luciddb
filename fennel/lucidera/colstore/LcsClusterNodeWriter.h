@@ -51,7 +51,7 @@ private:
     SharedBTreeWriter bTreeWriter;
 
     /**
-     * Accessor for scrath segments
+     * Accessor for scratch segments
      */
     SegmentAccessor scratchAccessor;
 

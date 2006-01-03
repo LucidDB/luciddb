@@ -405,17 +405,6 @@ void ExecStreamFactory::readIndexWriterParams(
     params.updateInPlace = indexWriterDef.isUpdateInPlace();
 }
 
-bool ExecStreamFactory::shouldEnforceCacheQuotas()
-{
-    TraceLevel traceLevel =
-        pDatabase->getTraceTarget().getSourceTraceLevel("xo.quota");
-#ifdef DEBUG
-    return traceLevel <= TRACE_OFF;
-#else
-    return traceLevel <= TRACE_FINE;
-#endif
-}
-
 ExecStreamSubFactory::~ExecStreamSubFactory()
 {
 }
