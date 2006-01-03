@@ -64,23 +64,23 @@
   <!-- message id range 441000-441999 reserved for external data wrapper -->
 
   <message id="441000" name="readDataFailed">
-    <text>Could not access data file {0}: {1}</text>
+    <text>Could not read data file {0}</text>
   </message>
 
   <message id="441000" name="dataTransferFailed">
-    <text>Failed to access file {0} (size {1,number,#} bytes)</text>
+    <text>Could not access file {0} (size {1,number,#} bytes)</text>
   </message>
 
   <message id="441010" name="writeLogFailed">
-    <text>Could not write to log file {0}: {1}</text>
+    <text>Could not write log file {0}</text>
   </message>
 
   <message id="441020" name="noRowsReturned">
-    <text>No rows were read from file {0}; last error was: {1}</text>
+    <text>Read no rows from file {0}; last error was: {1}</text>
   </message>
 
   <message id="441030" name="errorsEncountered">
-    <text>Errors were encountered while processing file {0}; please see log file {1} for more information</text>
+    <text>Encountered errors while processing file {0}; please see log file {1} for more information</text>
   </message>
 
   <message id="441040" name="noRowDelimiter">
@@ -88,23 +88,23 @@
   </message>
 
   <message id="441050" name="incompleteColumn">
-    <text>column has no delimiter</text>
+    <text>Column has no delimiter</text>
   </message>
 
   <message id="441060" name="noColumnDelimiter">
-    <text>row has no column delimiter</text>
+    <text>Row has no column delimiter</text>
   </message>
 
   <message id="441070" name="tooFewColumns">
-    <text>row has too few columns</text>
+    <text>Row has too few columns</text>
   </message>
 
   <message id="441080" name="tooManyColumns">
-    <text>row has too many columns</text>
+    <text>Row has too many columns</text>
   </message>
 
   <message id="441090" name="rowTextTooLong">
-    <text>row text was too large</text>
+    <text>Row text was too large</text>
   </message>
 
 </resourceBundle>

@@ -140,8 +140,9 @@ void FlatFileExecStreamImpl::logError(
                 pErrorFile.reset(
                     new RandomAccessFileDevice(errorFilePath, openMode));
             } catch (SysCallExcn e) {
-                throw FennelExcn(FennelResource::instance().writeLogFailed(
-                                     errorFilePath, e.getMessage()));
+                FENNEL_TRACE(TRACE_FINE, e.getMessage());
+                throw FennelExcn(
+                    FennelResource::instance().writeLogFailed(errorFilePath));
             }
             filePosition = pErrorFile->getSizeInBytes();
         }

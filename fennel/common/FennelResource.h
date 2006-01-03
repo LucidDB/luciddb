@@ -71,27 +71,27 @@ class FennelResource : ResourceBundle
     std::string rowTypeTooLong(int p0, int p1) const;
 
     /**
-     * <code>readDataFailed</code> is 'Could not access data file {0}: {1}'
+     * <code>readDataFailed</code> is 'Could not read data file {0}'
      */
-    std::string readDataFailed(const std::string &p0, const std::string &p1) const;
+    std::string readDataFailed(const std::string &p0) const;
 
     /**
-     * <code>dataTransferFailed</code> is 'Failed to access file {0} (size {1,number,#} bytes)'
+     * <code>dataTransferFailed</code> is 'Could not access file {0} (size {1,number,#} bytes)'
      */
     std::string dataTransferFailed(const std::string &p0, int p1) const;
 
     /**
-     * <code>writeLogFailed</code> is 'Could not write to log file {0}: {1}'
+     * <code>writeLogFailed</code> is 'Could not write log file {0}'
      */
-    std::string writeLogFailed(const std::string &p0, const std::string &p1) const;
+    std::string writeLogFailed(const std::string &p0) const;
 
     /**
-     * <code>noRowsReturned</code> is 'No rows were read from file {0}; last error was: {1}'
+     * <code>noRowsReturned</code> is 'Read no rows from file {0}; last error was: {1}'
      */
     std::string noRowsReturned(const std::string &p0, const std::string &p1) const;
 
     /**
-     * <code>errorsEncountered</code> is 'Errors were encountered while processing file {0}; please see log file {1} for more information'
+     * <code>errorsEncountered</code> is 'Encountered errors while processing file {0}; please see log file {1} for more information'
      */
     std::string errorsEncountered(const std::string &p0, const std::string &p1) const;
 
@@ -101,27 +101,27 @@ class FennelResource : ResourceBundle
     std::string noRowDelimiter(const std::string &p0) const;
 
     /**
-     * <code>incompleteColumn</code> is 'column has no delimiter'
+     * <code>incompleteColumn</code> is 'Column has no delimiter'
      */
     std::string incompleteColumn() const;
 
     /**
-     * <code>noColumnDelimiter</code> is 'row has no column delimiter'
+     * <code>noColumnDelimiter</code> is 'Row has no column delimiter'
      */
     std::string noColumnDelimiter() const;
 
     /**
-     * <code>tooFewColumns</code> is 'row has too few columns'
+     * <code>tooFewColumns</code> is 'Row has too few columns'
      */
     std::string tooFewColumns() const;
 
     /**
-     * <code>tooManyColumns</code> is 'row has too many columns'
+     * <code>tooManyColumns</code> is 'Row has too many columns'
      */
     std::string tooManyColumns() const;
 
     /**
-     * <code>rowTextTooLong</code> is 'row text was too large'
+     * <code>rowTextTooLong</code> is 'Row text was too large'
      */
     std::string rowTextTooLong() const;
 

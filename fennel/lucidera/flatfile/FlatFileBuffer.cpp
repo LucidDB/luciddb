@@ -57,8 +57,9 @@ void FlatFileBuffer::open()
         pRandomAccessDevice.reset(
             new RandomAccessFileDevice(path,openMode));
     } catch (SysCallExcn e) {
+        FENNEL_TRACE(TRACE_FINE, e.getMessage());
         throw FennelExcn(
-            FennelResource::instance().readDataFailed(path, e.getMessage()));
+            FennelResource::instance().readDataFailed(path));
     }
     filePosition = 0;
     fileEnd = pRandomAccessDevice->getSizeInBytes();

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/med/flatfile.sql#2 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/med/flatfile.sql#3 $
 0: jdbc:farrago:> -- Test flatfile namespace plugin
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create foreign data wrapper flatfile_foreign_wrapper
@@ -50,7 +50,7 @@ Error: Maximum row size (6008 bytes) exceeds limit (4096 bytes) (state=,code=0)
 . . . . . . . . > options (filename 'unitsql/med/missing.csv');
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from flatfile_missing;
-Error: Could not access data file unitsql/med/missing.csv: System call failed:  Failed to open file unitsql/med/missing.csv: No such file or directory (state=,code=0)
+Error: Could not read data file unitsql/med/missing.csv (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- note: this column description is invalid, and should cause errors
 0: jdbc:farrago:> create foreign table flatfile_locked(
@@ -62,7 +62,7 @@ Error: Could not access data file unitsql/med/missing.csv: System call failed:  
 . . . . . . . . >     error_filename 'unitsql/med/locked');
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from flatfile_locked;
-Error: Could not write to log file unitsql/med/locked: System call failed:  Failed to open file unitsql/med/locked: Permission denied (state=,code=0)
+Error: Could not write log file unitsql/med/locked (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create server flatfile_server_badLineDelim
 . . . . . . . . > foreign data wrapper flatfile_foreign_wrapper
@@ -96,7 +96,7 @@ Error: Data file unitsql/med/example.csv has no row delimiter (state=,code=0)
 . . . . . . . . > options (filename 'unitsql/med/example.csv');
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from flatfile_schema.flatfile_badFieldDelim;
-Error: No rows were read from file unitsql/med/example.csv; last error was: row has no column delimiter (state=,code=0)
+Error: Read no rows from file unitsql/med/example.csv; last error was: Row has no column delimiter (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- data file is assumed to have at least one 'G'
 0: jdbc:farrago:> create server flatfile_server_incompleteColumn
@@ -114,7 +114,7 @@ Error: No rows were read from file unitsql/med/example.csv; last error was: row 
 . . . . . . . . > options (filename 'unitsql/med/example.csv');
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from flatfile_schema.flatfile_incompleteColumn;
-Error: No rows were read from file unitsql/med/example.csv; last error was: column has no delimiter (state=,code=0)
+Error: Read no rows from file unitsql/med/example.csv; last error was: Column has no delimiter (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create foreign table flatfile_tooManyColumns(
 . . . . . . . . >     id int not null,
@@ -123,7 +123,7 @@ Error: No rows were read from file unitsql/med/example.csv; last error was: colu
 . . . . . . . . > options (filename 'unitsql/med/example.csv');
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from flatfile_schema.flatfile_tooManyColumns;
-Error: No rows were read from file unitsql/med/example.csv; last error was: row has too many columns (state=,code=0)
+Error: Read no rows from file unitsql/med/example.csv; last error was: Row has too many columns (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create foreign table flatfile_tooFewColumns(
 . . . . . . . . >     id int not null,
@@ -134,7 +134,7 @@ Error: No rows were read from file unitsql/med/example.csv; last error was: row 
 . . . . . . . . > options (filename 'unitsql/med/example.csv');
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from flatfile_schema.flatfile_tooFewColumns;
-Error: No rows were read from file unitsql/med/example.csv; last error was: row has too few columns (state=,code=0)
+Error: Read no rows from file unitsql/med/example.csv; last error was: Row has too few columns (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- we cannot cause the rowTextTooLong error because a row is 
 0: jdbc:farrago:> -- guaranteed to fit within the buffers used for flat files.
