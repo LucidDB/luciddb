@@ -67,6 +67,10 @@ public abstract class FarragoOJRexImplementor implements OJRexImplementor
     // implement OJRexImplementor
     public boolean canImplement(RexCall call)
     {
+        if (RexUtil.requiresDecimalExpansion(call, true)) {
+            return false;
+        }
+        
         // NOTE jvs 17-June-2004:  In general, we assume that if
         // an implementor is registered, it is capable of the
         // requested implementation independent of operands.

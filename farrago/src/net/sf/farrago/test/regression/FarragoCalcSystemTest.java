@@ -58,6 +58,8 @@ public class FarragoCalcSystemTest extends FarragoTestCase
     private static CalcRexImplementorTable fennelTab =
         CalcRexImplementorTableImpl.std();
 
+    // This constant should be removed when decimals are supported
+    private static boolean decimalSupported = false;
 
     //~ Instance fields -------------------------------------------------------
 
@@ -143,7 +145,11 @@ public class FarragoCalcSystemTest extends FarragoTestCase
         exclude.add(opTab.currentTimeFunc);
         exclude.add(opTab.minusDateOperator);
         exclude.add(opTab.throwOperator);
+        if (!decimalSupported) {
+            exclude.add(opTab.reinterpretOperator);
+        }
 
+        
         // Eventually need to include these when cast is working
         exclude.add(opTab.overlapsOperator);
         exclude.add(opTab.initcapFunc);

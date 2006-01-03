@@ -358,6 +358,8 @@ public class RexLiteral extends RexNode
         switch (typeName.getOrdinal()) {
         case SqlTypeName.Char_ordinal:
             return ((NlsString) value).getValue();
+        case SqlTypeName.Decimal_ordinal:
+            return new Long(((BigDecimal)value).unscaledValue().longValue());
         case SqlTypeName.Date_ordinal:
         case SqlTypeName.Time_ordinal:
         case SqlTypeName.Timestamp_ordinal:

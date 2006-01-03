@@ -274,9 +274,8 @@ public abstract class FennelRelUtil
      *
      * <tr>
      * <td>{@link SqlTypeName#Decimal}(precision, scale)</td>
-     * <td>{@link FennelStandardTypeDescriptor#INT_32 INT_32}</td>
-     * <td>Not yet implemented.
-     *
+     * <td>{@link FennelStandardTypeDescriptor#INT_64 INT_64}</td>
+     * <td>
      *     <p>We plan to use a shifted representation. For example, the
      *     <code>DECIMAL(6, 2)</code> value 1234.5 would be represented as
      *     an {@link FennelStandardTypeDescriptor#INT_32 INT_32} value 123450
@@ -441,6 +440,7 @@ public abstract class FennelRelUtil
         case SqlTypeName.Real_ordinal:
             return FennelStandardTypeDescriptor.REAL;
         case SqlTypeName.Decimal_ordinal:
+            return FennelStandardTypeDescriptor.INT_64;
         case SqlTypeName.Float_ordinal:
         case SqlTypeName.Double_ordinal:
             return FennelStandardTypeDescriptor.DOUBLE;

@@ -32,6 +32,7 @@ import org.eigenbase.sql.type.SqlTypeUtil;
 import org.eigenbase.util.DoubleKeyMap;
 import org.eigenbase.util.Util;
 
+import java.math.*;
 import java.util.*;
 
 
@@ -578,6 +579,10 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             opTab.prefixPlusOperator,
             new IdentityImplementor());
 
+        register(
+            opTab.reinterpretOperator,
+            new ReinterpretCastImplementor());
+
         registerInstr(opTab.similarOperator, ExtInstructionDefTable.similar);
 
         registerInstr(opTab.substringFunc, ExtInstructionDefTable.substring);
@@ -621,6 +626,9 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
     {
         public boolean canImplement(RexCall call)
         {
+            if (RexUtil.requiresDecimalExpansion(call, true)) {
+                return false;
+            }
             return true;
         }
     }
@@ -876,7 +884,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 new UsingInstrImplementor(CalcProgramBuilder.Cast));
             doubleKeyMap.put(
                 SqlTypeName.intTypes,
-                SqlTypeName.fractionalTypes,
+                SqlTypeName.approxTypes,
                 new UsingInstrImplementor(CalcProgramBuilder.Cast));
             doubleKeyMap.put(
                 SqlTypeName.datetimeTypes,
@@ -902,11 +910,11 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 });
 
             doubleKeyMap.put(
-                SqlTypeName.fractionalTypes,
-                SqlTypeName.fractionalTypes,
+                SqlTypeName.approxTypes,
+                SqlTypeName.approxTypes,
                 new UsingInstrImplementor(CalcProgramBuilder.Cast));
             doubleKeyMap.put(
-                SqlTypeName.fractionalTypes,
+                SqlTypeName.approxTypes,
                 SqlTypeName.charTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castA) {
                     public CalcProgramBuilder.Register implement(
@@ -923,7 +931,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                     }
                 });
             doubleKeyMap.put(
-                SqlTypeName.fractionalTypes,
+                SqlTypeName.approxTypes,
                 SqlTypeName.intTypes,
                 new AbstractCalcRexImplementor() {
                     public CalcProgramBuilder.Register implement(
@@ -1001,7 +1009,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 });
             doubleKeyMap.put(
                 SqlTypeName.charTypes,
-                SqlTypeName.fractionalTypes,
+                SqlTypeName.approxTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castA) {
                     public CalcProgramBuilder.Register implement(
                         RexCall call,
@@ -1021,6 +1029,17 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 SqlTypeName.charTypes,
                 SqlTypeName.charTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castA));
+            
+            doubleKeyMap.put(
+                SqlTypeName.Decimal,
+                SqlTypeName.charTypes,
+                new CastDecimalImplementor(
+                    ExtInstructionDefTable.castADecimal));
+            doubleKeyMap.put(
+                SqlTypeName.charTypes,
+                SqlTypeName.Decimal,
+                new CastDecimalImplementor(
+                    ExtInstructionDefTable.castADecimal));
         }
 
         public CalcProgramBuilder.Register implement(
@@ -1065,6 +1084,70 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
 
             throw Util.needToImplement("Cast from '" + fromType.toString()
                 + "' to '" + toType.toString() + "'");
+        }
+        
+        /** Implementor for casting between char and decimal types */
+        private static class CastDecimalImplementor extends InstrDefImplementor
+        {
+            CastDecimalImplementor(CalcProgramBuilder.InstructionDef instr) 
+            {
+                super(instr);
+            }
+            
+            // refine InstrDefImplementor
+            protected ArrayList makeRegList(
+                RexToCalcTranslator translator,
+                RexCall call)
+            {
+                RelDataType decimalType;
+                Util.pre(SqlTypeUtil.isDecimal(call.getType())
+                    || SqlTypeUtil.isDecimal(call.operands[0].getType()),
+                    "CastDecimalImplementor can only cast decimal types");
+                if (SqlTypeUtil.isDecimal(call.getType())) {
+                    Util.pre(
+                        SqlTypeUtil.inCharFamily(call.operands[0].getType()),
+                        "CalRex cannot cast non char type to decimal");
+                    decimalType = call.getType();
+                } else {
+                    Util.pre(
+                        SqlTypeUtil.inCharFamily(call.getType()),
+                        "CalRex cannot cast from decimal to non char type");
+                    decimalType = call.operands[0].getType();
+                }
+                RexLiteral precision = translator.rexBuilder
+                    .makeExactLiteral(
+                        BigDecimal.valueOf(decimalType.getPrecision()));
+                RexLiteral scale = translator.rexBuilder
+                    .makeExactLiteral(
+                        BigDecimal.valueOf(decimalType.getScale()));
+                
+                ArrayList regList = implementOperands(call, translator);
+                regList.add(translator.implementNode(precision));
+                regList.add(translator.implementNode(scale));
+                regList.add(0, createResultRegister(translator, call));
+                return regList;
+            }
+        }
+    }
+
+    /**
+     * Implementor for REINTERPRET operator.
+     */
+    private static class ReinterpretCastImplementor extends AbstractCalcRexImplementor
+    {
+        public boolean canImplement(RexCall call)
+        {
+            return (call.isA(RexKind.Reinterpret)
+                && !call.operands[0].isA(RexKind.Reinterpret));
+        }
+        
+        public CalcProgramBuilder.Register implement(
+            RexCall call,
+            RexToCalcTranslator translator)
+        {
+            Util.pre(call.operands.length == 1, "call.operands.length == 1");
+            RexNode op = call.operands[0];
+            return translator.implementNode(op);
         }
     }
 

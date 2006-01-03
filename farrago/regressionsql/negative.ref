@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/regressionsql/negative.sql#2 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/regressionsql/negative.sql#6 $
 0: jdbc:farrago:> -- Full vertical negative system testing
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
@@ -63,7 +63,7 @@ Messages:
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
-[0]:PC=0 Code=22012 (state=,code=0)
+[0]:PC=2 Code=22012 (state=,code=0)
 0: jdbc:farrago:> values MOD(1, 0);
 Error: could not calculate results for the following row:
 [ 0 ]
@@ -73,17 +73,17 @@ Messages:
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
-[0]:PC=3 Code=22023 (state=,code=0)
+[0]:PC=6 Code=22023 (state=,code=0)
 0: jdbc:farrago:> values ln(0.0);
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
-[0]:PC=1 Code=22023 (state=,code=0)
+[0]:PC=3 Code=22023 (state=,code=0)
 0: jdbc:farrago:> values log10(0.0);
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
-[0]:PC=1 Code=22023 (state=,code=0)
+[0]:PC=3 Code=22023 (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values 1='';
 Error: From line 1, column 8 to line 1, column 11: Cannot apply '=' to arguments of type '<INTEGER> = <CHAR(0)>'. Supported form(s): '<COMPARABLE_TYPE> = <COMPARABLE_TYPE>' (state=,code=0)

@@ -161,7 +161,6 @@ public class FarragoJdbcTest extends FarragoTestCase
     // Flags indicating whether bugs have been fixed. (It's better to 'if'
     // out than to comment out code, because commented out code doesn't get
     // refactored.)
-    private static final boolean dtbug119_fixed = false;
     private static final boolean todo = false;
 
     //~ Instance fields -------------------------------------------------------
@@ -546,10 +545,10 @@ public class FarragoJdbcTest extends FarragoTestCase
     private void checkSetString()
         throws Exception
     {
-        // Skipped: dtbug220
-        // for (int j=2; j<=TestSqlType.length; j++)
-        checkSet(TestJavaType.String, TestSqlType.Char, stringValue);
-        checkSet(TestJavaType.String, TestSqlType.Varchar, stringValue);
+        for (int j=0; j<=TestSqlType.all.length; j++) {
+            checkSet(TestJavaType.String, TestSqlType.Char, stringValue);
+            checkSet(TestJavaType.String, TestSqlType.Varchar, stringValue);
+        }
         if (true) {
             //todo: setString on VARBINARY column should fail
             checkSet(TestJavaType.String, TestSqlType.Binary, stringValue);
@@ -722,7 +721,6 @@ public class FarragoJdbcTest extends FarragoTestCase
             id = resultSet.getInt(1);
             switch (id) {
             case 100:
-                /* Numerics and timestamps skipped due to dtbug220 */
                 assertEquals(
                     stringValue,
                     resultSet.getString(TINYINT));
@@ -760,9 +758,9 @@ public class FarragoJdbcTest extends FarragoTestCase
                     resultSet.getString(VARCHAR));
 
                 // What should BINARY/VARBINARY be?
-                //assertEquals(stringValue, resultSet.getString(BINARY));
-                //assertEquals(stringValue, resultSet.getString(VARBINARY));
-                // dtbug110, 199
+                assertEquals(stringValue, resultSet.getString(BINARY));
+                assertEquals(stringValue, resultSet.getString(VARBINARY));
+
                 assertEquals(
                     stringValue,
                     resultSet.getString(DATE));
@@ -1223,45 +1221,44 @@ public class FarragoJdbcTest extends FarragoTestCase
                     boolValue,
                     resultSet.getBoolean(BOOLEAN));
 
-                //assertEquals(boolValue, resultSet.getBoolean(CHAR));
-                //can not convert String (true) to long exception
-                //assertEquals(boolValue, resultSet.getBoolean(VARCHAR));
+                assertEquals(boolValue, resultSet.getBoolean(CHAR));
+                assertEquals(boolValue, resultSet.getBoolean(VARCHAR));
                 break;
             case 114:
+                assertEquals(
+                    bigDecimalValue,
+                    resultSet.getBigDecimal(TINYINT));
+                assertEquals(
+                    bigDecimalValue,
+                    resultSet.getBigDecimal(SMALLINT));
+                assertEquals(
+                    bigDecimalValue,
+                    resultSet.getBigDecimal(INTEGER));
+                assertEquals(
+                    bigDecimalValue,
+                    resultSet.getBigDecimal(BIGINT));
+                assertEquals(
+                    bigDecimalValue,
+                    resultSet.getBigDecimal(REAL));
+                assertEquals(
+                    bigDecimalValue,
+                    resultSet.getBigDecimal(FLOAT));
+                assertEquals(
+                    bigDecimalValue,
+                    resultSet.getBigDecimal(DOUBLE));
 
-                // dtbug119
-                if (dtbug119_fixed) {
-                    assertEquals(
-                        bigDecimalValue,
-                        resultSet.getBigDecimal(TINYINT));
-                    assertEquals(
-                        bigDecimalValue,
-                        resultSet.getBigDecimal(SMALLINT));
-                    assertEquals(
-                        bigDecimalValue,
-                        resultSet.getBigDecimal(INTEGER));
-                    assertEquals(
-                        bigDecimalValue,
-                        resultSet.getBigDecimal(BIGINT));
-                    assertEquals(
-                        bigDecimalValue,
-                        resultSet.getBigDecimal(REAL));
-                    assertEquals(
-                        bigDecimalValue,
-                        resultSet.getBigDecimal(FLOAT));
-                    assertEquals(
-                        bigDecimalValue,
-                        resultSet.getBigDecimal(DOUBLE));
-
-                    //todo:
-                    //assertEquals(bigDecimalValue, resultSet.getBigDecimal(BigDecimal));
-                    assertEquals(
-                        bigDecimalValue,
-                        resultSet.getBigDecimal(CHAR));
-                    assertEquals(
-                        bigDecimalValue,
-                        resultSet.getBigDecimal(VARCHAR));
+                //todo:
+                if (todo) {
+                    //assertEquals(
+                    //    bigDecimalValue,
+                    //    resultSet.getBigDecimal(BigDecimal));
                 }
+                assertEquals(
+                    bigDecimalValue,
+                    resultSet.getBigDecimal(CHAR));
+                assertEquals(
+                    bigDecimalValue,
+                    resultSet.getBigDecimal(VARCHAR));
                 break;
             case 115:
 
@@ -1379,10 +1376,9 @@ public class FarragoJdbcTest extends FarragoTestCase
                     assertEquals(bytes[i], resBytes[i]);
                 }
 
-                // dtbug199
-                //assertEquals(date, resultSet.getObject(DATE));
-                //assertEquals(time, resultSet.getObject(TIME));
-                //assertEquals(timestamp, resultSet.getObject(TIMESTAMP));
+                assertEquals(date, resultSet.getObject(DATE));
+                assertEquals(time, resultSet.getObject(TIME));
+                assertEquals(timestamp, resultSet.getObject(TIMESTAMP));
                 break;
             default:
 
@@ -1503,6 +1499,8 @@ public class FarragoJdbcTest extends FarragoTestCase
     public void testChar()
         throws Exception
     {
+        String name = "JDBC Test Char";
+
         preparedStmt =
             connection.prepareStatement(
                 "insert into \"SALES\".\"EMPS\" values "
@@ -1510,25 +1508,25 @@ public class FarragoJdbcTest extends FarragoTestCase
 
         preparedStmt.setByte(3, (byte) 1);
         preparedStmt.setByte(4, (byte) -128);
-        doEmpInsert(1);
+        doEmpInsert(name, 1);
 
         preparedStmt.setShort(3, (short) 2);
         preparedStmt.setShort(4, (short) 32767);
-        doEmpInsert(2);
+        doEmpInsert(name, 2);
 
         preparedStmt.setInt(3, 3);
         preparedStmt.setInt(4, -234234);
-        doEmpInsert(3);
+        doEmpInsert(name, 3);
 
         preparedStmt.setLong(3, 4L);
         preparedStmt.setLong(4, 123432432432545455L);
-        doEmpInsert(4);
+        doEmpInsert(name, 4);
 
         Throwable throwable;
         try {
             preparedStmt.setFloat(3, 5.0F);
             preparedStmt.setFloat(4, 6.02e+23F);
-            doEmpInsert(5);
+            doEmpInsert(name, 5);
             throwable = null;
             fail("Expected an error");
         } catch (SQLException e) {
@@ -1540,7 +1538,7 @@ public class FarragoJdbcTest extends FarragoTestCase
         try {
             preparedStmt.setDouble(3, 6.2);
             preparedStmt.setDouble(4, 3.14);
-            doEmpInsert(6);
+            doEmpInsert(name, 6);
         } catch (SQLException e) {
             throwable = e;
         }
@@ -1553,12 +1551,12 @@ public class FarragoJdbcTest extends FarragoTestCase
         preparedStmt.setBigDecimal(
             4,
             new BigDecimal(88.23432432));
-        doEmpInsert(7);
+        doEmpInsert(name, 7);
 
         try {
             preparedStmt.setBoolean(3, false);
             preparedStmt.setBoolean(4, true);
-            doEmpInsert(8);
+            doEmpInsert(name, 8);
         } catch (SQLException e) {
             throwable = e;
         }
@@ -1567,11 +1565,11 @@ public class FarragoJdbcTest extends FarragoTestCase
 
         preparedStmt.setString(3, "x");
         preparedStmt.setBoolean(4, true);
-        doEmpInsert(8);
+        doEmpInsert(name, 8);
 
         preparedStmt.setString(3, "F");
         preparedStmt.setString(4, "San Jose");
-        doEmpInsert(9);
+        doEmpInsert(name, 9);
 
         preparedStmt.setObject(
             3,
@@ -1579,16 +1577,12 @@ public class FarragoJdbcTest extends FarragoTestCase
         preparedStmt.setObject(
             4,
             new StringBuffer("New York"));
-        doEmpInsert(10);
+        doEmpInsert(name, 10);
 
-        // this query won't find everything we insert above because of bugs in
-        // executeUpdate when there's a setFloat/setDouble called on a varchar
-        // column.  See comments in bug#117
-        //query = "select gender, city, empid from sales.emps where name like '";
-        //query += name + "%'";
-        // for now, use this query instead
-        String query =
-            "select gender, city, empid from sales.emps where empno>1000";
+        // only query what we insert above
+        String query;
+        query = "select gender, city, empid from sales.emps where name like '";
+        query += name + "%'";
 
         preparedStmt = connection.prepareStatement(query);
 
@@ -1598,49 +1592,38 @@ public class FarragoJdbcTest extends FarragoTestCase
             empid = resultSet.getInt(3);
             switch (empid) {
             case 101:
-
-                // ERROR  - bug #117 logged for errors given in the following commented lines
-                // assertEquals(gender, resultSet.getByte(1));
-                // assertEquals(city, resultSet.getByte(2));
+                assertEquals(1, resultSet.getByte(1));
+                assertEquals(-128, resultSet.getByte(2));
                 break;
             case 102:
-
-                // assertEquals(gender2, resultSet.getShort(1));
-                // assertEquals(city2, resultSet.getShort(2));
+                assertEquals(2, resultSet.getShort(1));
+                assertEquals(32767, resultSet.getShort(2));
                 break;
             case 103:
-
-                // assertEquals(gender3, resultSet.getInt(1));
-                // assertEquals(city3, resultSet.getInt(2));
+                assertEquals(3, resultSet.getInt(1));
+                assertEquals(-234234, resultSet.getInt(2));
                 break;
             case 104:
-
-                // assertEquals(gender4, resultSet.getLong(1));
-                // assertEquals(city4, resultSet.getLong(2));
+                assertEquals(4L, resultSet.getLong(1));
+                assertEquals(123432432432545455L, resultSet.getLong(2));
                 break;
             case 105:
-
-                // assertEquals(gender5, resultSet.getFloat(1), 0.0001);
-                // assertEquals(city5, resultSet.getFloat(2), 0.0001);
+                assertEquals(5.0F, resultSet.getFloat(1), 0.0001);
+                assertEquals(6.02e+23F, resultSet.getFloat(2), 0.0001);
                 break;
             case 106:
-
-                // assertEquals(gender6, resultSet.getDouble(1), 0.0001);
-                // assertEquals(city6, resultSet.getDouble(2), 0.0001);
+                assertEquals(6.2, resultSet.getDouble(1), 0.0001);
+                assertEquals(3.14, resultSet.getDouble(2), 0.0001);
                 break;
             case 107:
-
-                // ERROR
-                // assertEquals(gender7, resultSet.getBigDecimal(1));
-                // assertEquals(city7, resultSet.getBigDecimal(2));
+                assertEquals(new BigDecimal(2.0), resultSet.getBigDecimal(1));
+                assertEquals(new BigDecimal(88.23432432), resultSet.getBigDecimal(2));
                 break;
             case 108:
                 assertEquals(
                     "x",
                     resultSet.getString(1));
-
-                // ERROR:  same as bug #117
-                // assertEquals(city8, resultSet.getBoolean(2));
+                assertEquals(true, resultSet.getBoolean(2));
                 break;
             case 109:
                 assertEquals(
@@ -1651,14 +1634,12 @@ public class FarragoJdbcTest extends FarragoTestCase
                     resultSet.getString(2));
                 break;
             case 110:
-
-                // ERROR - the actual result looks correct, probably merely object type not matching
-                // assertEquals(genderx, resultSet.getObject(1));
-                // assertEquals(cityx, resultSet.getObject(2));
+                // Okay, since the underlying types are VARCHAR and CHAR,
+                // getObject should return Strings
+                assertEquals("M", resultSet.getObject(1));
+                assertEquals("New York", resultSet.getObject(2));
                 break;
             default:
-
-                // uncomment this when I can do a like sql query
                 assertEquals(1, 2);
                 break;
             }
@@ -1683,10 +1664,9 @@ public class FarragoJdbcTest extends FarragoTestCase
         }
     }
 
-    private void doEmpInsert(int i)
+    private void doEmpInsert(String name, int i)
         throws SQLException
     {
-        String name = "JDBC Test Char";
         preparedStmt.setInt(1, i + 1000);
         preparedStmt.setString(2, name + i);
         preparedStmt.setInt(5, i + 100);
@@ -1777,6 +1757,9 @@ public class FarragoJdbcTest extends FarragoTestCase
         while (resultSet.next()) {
             assertEquals(
                 666,
+                resultSet.getInt(1));
+            assertEquals(
+                666,
                 resultSet.getFloat(1),
                 0.0001);
             assertEquals(
@@ -1784,10 +1767,10 @@ public class FarragoJdbcTest extends FarragoTestCase
                 resultSet.getDouble(2),
                 0.0001);
 
-            // ERROR: Bug#119: getBigDecimal not supported
-            // assertEquals(empid2, resultSet.getBigDecimal(3));
-            // ERROR: Bug#117: getBoolean returns SQLException like getXXX on char data types (where XXX is numeric type)
-            // assertEquals(age2, resultSet.getBoolean(4));
+            assertEquals(
+                 BigDecimal.valueOf(empid2.longValue()),
+                 resultSet.getBigDecimal(3));
+            assertEquals(age2, resultSet.getBoolean(4));
         }
 
         resultSet.close();
@@ -2411,7 +2394,7 @@ public class FarragoJdbcTest extends FarragoTestCase
             new TestJavaType("Object", Object.class, true);
 
         // next 4 are not regular, because their 'set' method has an extra
-        // parmaeter, e.g. setAsciiStream(int,InputStream,int length)
+        // parameter, e.g. setAsciiStream(int,InputStream,int length)
         private static final TestJavaType AsciiStream =
             new TestJavaType("AsciiStream", InputStream.class, false);
         private static final TestJavaType UnicodeStream =

@@ -150,13 +150,9 @@ public class RexToOJTranslator implements RexVisitor
             break;
         case SqlTypeName.Decimal_ordinal:
             BigDecimal bd = (BigDecimal) value;
-            if (bd.scale() > 0) {
-                // If the value is a fraction, translate to a double.
-                setTranslation(Literal.makeLiteral(bd.doubleValue()));
-                break;
-            } else {
+            if (bd.scale() == 0) {
                 // Fit the value into an int if possible, otherwise long.
-                long longValue = ((BigDecimal) value).longValue();
+                long longValue = bd.longValue();
                 int intValue = (int) longValue;
                 if (longValue == intValue) {
                     setTranslation(Literal.makeLiteral(intValue));
@@ -165,6 +161,10 @@ public class RexToOJTranslator implements RexVisitor
                 }
                 break;
             }
+            // represent decimals with unscaled value
+            long unscaled = bd.unscaledValue().longValue();
+            setTranslation(Literal.makeLiteral(unscaled));
+            break;
         case SqlTypeName.Double_ordinal:
             setTranslation(
                 Literal.makeLiteral(((BigDecimal) value).doubleValue()));
