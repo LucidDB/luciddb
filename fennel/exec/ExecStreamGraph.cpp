@@ -583,8 +583,9 @@ public:
     void operator()(std::ostream &out) const
     {
         out << "graph [bgcolor=gray, rankdir=BT]" << std::endl;
-        out << "node [shape=record, style=filled, fillcolor=white]"
-            << std::endl;
+        out << "node [shape=record, style=filled, "
+            << "fillcolor=white, fontsize=10.0]" << std::endl;
+        out << "edge [fontsize=10.0]" << std::endl;
     }
 };
 
