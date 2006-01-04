@@ -222,6 +222,10 @@ DEFINE_OPAQUE_INTEGER(SavepointId,uint);
 // a logged LogicalTxnParticipant.
 DEFINE_OPAQUE_INTEGER(LogicalTxnClassId,uint64_t);
 
+// DynamicParamId is an identifier for a dynamic parameter within the
+// scope of an ExecStreamGraph.
+DEFINE_OPAQUE_INTEGER(DynamicParamId,uint);
+
 // LogicalActionType enumerates the possible actions in a LogicalTxn in a
 // participant-defined manner.  Each participant class defines its own
 // enumeration of positive integers, but the same integer may be used by
@@ -265,8 +269,8 @@ static const TxnId IMPLICIT_TXN_ID = TxnId(0);
  * Symbolic value for first valid TxnId.  Note that we use a number above the
  * 32-bit ID range because some locks uses real TxnId's and others use thread
  * ID's, and we'd like to be able to tell them apart.  This won't work on a
- * platform which actually generated 64-bit thread ID's, which is conceivable
- * (like if they use a pointer to a thread descriptor as an ID).
+ * platform which actually generates 64-bit thread ID's, which is conceivable
+ * (like if the OS uses a pointer to a thread descriptor as an ID).
  */
 static const TxnId FIRST_TXN_ID = TxnId(0x0000000100000000LL);
 

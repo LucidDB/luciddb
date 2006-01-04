@@ -26,48 +26,68 @@
 #include "fennel/tuple/TupleAccessor.h"
 #include "fennel/tuple/TupleData.h"
 
-FENNEL_BEGIN_NAMESPACE
+FENNEL_BEGIN_CPPFILE("$Id$");
 
-
-
-DynamicParam::DynamicParam(uint bufferSize)
+DynamicParam::DynamicParam(TupleAttributeDescriptor const &descInit)
+    : desc(descInit)
 {
-    pBuffer.reset(new FixedBuffer[bufferSize]);
-    datum.cbData = bufferSize;
-    datum.pData = pBuffer.get();
+    pBuffer.reset(new FixedBuffer[desc.cbStorage]);
 }
 
 void DynamicParamManager::createParam(
-      const uint dynamicParamId, 
-      const TupleAttributeDescriptor &attrDesc)
+    DynamicParamId dynamicParamId, 
+    const TupleAttributeDescriptor &attrDesc,
+    bool failIfExists)
 {
-    assert(paramMap.find(dynamicParamId) == paramMap.end());
-    SharedDynamicParam param(new DynamicParam(attrDesc.cbStorage));
+    StrictMutexGuard mutexGuard(mutex);
+
+    ParamMapConstIter pExisting = paramMap.find(dynamicParamId);
+    if (pExisting != paramMap.end()) {
+        permAssert(!failIfExists);
+        assert(attrDesc == pExisting->second->getDesc());
+        return;
+    }
+    SharedDynamicParam param(new DynamicParam(attrDesc));
     paramMap.insert(ParamMap::value_type(dynamicParamId, param));
 }
 
-void DynamicParamManager::removeParam(const uint dynamicParamId)
+void DynamicParamManager::deleteParam(DynamicParamId dynamicParamId)
 {
+    StrictMutexGuard mutexGuard(mutex);
+    
     assert(paramMap.find(dynamicParamId) != paramMap.end());
     paramMap.erase(dynamicParamId);
     assert(paramMap.find(dynamicParamId) == paramMap.end());
 }
 
-void DynamicParamManager::setParam(const uint dynamicParamId, const TupleDatum &src)
+void DynamicParamManager::writeParam(
+    DynamicParamId dynamicParamId, const TupleDatum &src)
 {
-    DynamicParam &param = getParam(dynamicParamId);
-    assert(param.getDatum().cbData = src.cbData);
-    assert(param.getDatum().pData == param.pBuffer.get());
-
-    memcpy(param.pBuffer.get(), src.pData, src.cbData);
+    StrictMutexGuard mutexGuard(mutex);
+    
+    DynamicParam &param = getParamInternal(dynamicParamId);
+    if (src.pData) {
+        assert(src.cbData <= param.getDesc().cbStorage);
+    }
+    param.datum.pData = param.pBuffer.get();
+    param.datum.memCopyFrom(src);
 }
 
-DynamicParam &DynamicParamManager::getParam(const uint dynamicParamId)
+DynamicParam const &DynamicParamManager::getParam(
+    DynamicParamId dynamicParamId)
 {
-    assert(paramMap.find(dynamicParamId) != paramMap.end());
-    return *paramMap.find(dynamicParamId)->second.get();
+    StrictMutexGuard mutexGuard(mutex);
+    return getParamInternal(dynamicParamId);
 }
 
-FENNEL_END_NAMESPACE
+DynamicParam &DynamicParamManager::getParamInternal(
+    DynamicParamId dynamicParamId)
+{
+    ParamMapConstIter pExisting = paramMap.find(dynamicParamId);
+    assert(pExisting != paramMap.end());
+    return *(pExisting->second.get());
+}
+
+FENNEL_END_CPPFILE("$Id$");
 
 // End DynamicParam.cpp
