@@ -173,8 +173,11 @@ ostream& Backtrace::print(ostream& os) const
 void Backtrace::writeDemangled(std::ostream &out, char const *pMangled)
 {
     int status = -3;
-    char *pDemangled =
+    char *pDemangled = NULL;
+#ifndef __MINGW32__
+    pDemangled =
         abi::__cxa_demangle(pMangled, NULL, NULL, &status);
+#endif
     if (status || !pDemangled) {
         // non-zero status means demangling failed;
         // use mangled name instead
