@@ -25,6 +25,7 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/common/ClosableObject.h"
+#include "fennel/common/TraceSource.h"
 #include "fennel/device/RandomAccessDevice.h"
 
 FENNEL_BEGIN_NAMESPACE
@@ -53,7 +54,7 @@ typedef boost::shared_ptr<FlatFileBuffer> SharedFlatFileBuffer;
  * @version $Id$
  */
 
-class FlatFileBuffer : public ClosableObject
+class FlatFileBuffer : public ClosableObject, public TraceSource
 {
     std::string path;
     SharedRandomAccessDevice pRandomAccessDevice;

@@ -87,17 +87,17 @@ string FennelResource::rowTypeTooLong(int p0, int p1) const
 {
     return _rowTypeTooLong.format(p0, p1);
 }
-string FennelResource::readDataFailed(const std::string &p0, const std::string &p1) const
+string FennelResource::readDataFailed(const std::string &p0) const
 {
-    return _readDataFailed.format(p0, p1);
+    return _readDataFailed.format(p0);
 }
 string FennelResource::dataTransferFailed(const std::string &p0, int p1) const
 {
     return _dataTransferFailed.format(p0, p1);
 }
-string FennelResource::writeLogFailed(const std::string &p0, const std::string &p1) const
+string FennelResource::writeLogFailed(const std::string &p0) const
 {
-    return _writeLogFailed.format(p0, p1);
+    return _writeLogFailed.format(p0);
 }
 string FennelResource::noRowsReturned(const std::string &p0, const std::string &p1) const
 {

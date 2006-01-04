@@ -301,11 +301,42 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
 
     /**
      * Converts a binary call (two regs as operands) by converting the first
+     * operand to type {@link CalcProgramBuilder.OpType#Int8} for exact types
+     * and {@link CalcProgramBuilder.OpType#Double} for approximate types and
+     * then back again. Logically it will do something like<br>
+     * t0 = type of first operand<br>
+     * CAST(CALL(CAST(op0 as INT8), op1) as t0)<br>
+     * If t0 is not a numeric or is
+     * already is INT8 or DOUBLE, the CALL is simply returned as is.
+     */
+    private static RexCall implementFirstOperandWithDoubleOrInt8(
+        RexCall call,
+        RexToCalcTranslator translator,
+        RexNode typeNode,
+        int i,
+        boolean castBack)
+    {
+        CalcProgramBuilder.RegisterDescriptor rd =
+            translator.getCalcRegisterDescriptor(typeNode);
+        if (rd.getType().isExact()) {
+            return implementFirstOperandWithInt8(
+                    call, translator, typeNode, i, castBack);
+        } else if (rd.getType().isApprox()) {
+            return implementFirstOperandWithDouble(
+                    call, translator, typeNode, i, castBack);
+
+        }
+        return call;
+    }
+
+    /**
+     * Converts a binary call (two regs as operands) by converting the first
      * operand to type {@link CalcProgramBuilder.OpType#Int8} if needed and
      * then back again. Logically it will do something like<br>
      * t0 = type of first operand<br>
      * CAST(CALL(CAST(op0 as INT8), op1) as t0)<br>
-     * If t0 already is INT8, the CALL is simply returned as is.
+     * If t0 is not an exact type or is already is INT8,
+     *  the CALL is simply returned as is.
      */
     private static RexCall implementFirstOperandWithInt8(
         RexCall call,
@@ -422,7 +453,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                     RexToCalcTranslator translator)
                 {
                     RexCall newCall =
-                        implementFirstOperandWithInt8(call, translator,
+                        implementFirstOperandWithDoubleOrInt8(call, translator,
                             call.operands[0], 0, true);
                     if (newCall.equals(call)) {
                         return super.implement(call, translator);
