@@ -679,7 +679,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("cast(null as date)", "DATE");
         checkExpType("cast(null as time)", "TIME(0)");
         checkExpType("cast(null as timestamp)", "TIMESTAMP(0)");
-        checkExpType("cast(null as decimal)", "DECIMAL");
+        checkExpType("cast(null as decimal)", "DECIMAL(19, 0)");
         checkExpType("cast(null as varbinary(1))", "VARBINARY(1)");
 
         checkExp("cast(null as integer), cast(null as char(1))");
@@ -705,8 +705,8 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("cast(1.0 as double)", "DOUBLE NOT NULL");
         checkExpType("cast(1 as double)", "DOUBLE NOT NULL");
         checkExpType("cast(123 as decimal(6,4))", "DECIMAL(6, 4) NOT NULL");
-        checkExpType("cast(123 as decimal(6))", "DECIMAL(6) NOT NULL");
-        checkExpType("cast(123 as decimal)", "DECIMAL NOT NULL");
+        checkExpType("cast(123 as decimal(6))", "DECIMAL(6, 0) NOT NULL");
+        checkExpType("cast(123 as decimal)", "DECIMAL(19, 0) NOT NULL");
         checkExpType("cast(1.234 as decimal(2,5))", "DECIMAL(2, 5) NOT NULL");
         checkExpType("cast('4.5' as decimal(3,1))", "DECIMAL(3, 1) NOT NULL");
         checkExpType("cast(null as boolean)", "BOOLEAN");
