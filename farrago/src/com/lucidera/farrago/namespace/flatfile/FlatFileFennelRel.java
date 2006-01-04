@@ -223,6 +223,7 @@ class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
             case SqlTypeName.Bigint_ordinal:
             case SqlTypeName.Boolean_ordinal:
             case SqlTypeName.Date_ordinal:
+            case SqlTypeName.Decimal_ordinal:
             case SqlTypeName.Double_ordinal:
             case SqlTypeName.Float_ordinal:
             case SqlTypeName.Integer_ordinal:
@@ -233,7 +234,6 @@ class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
             case SqlTypeName.Tinyint_ordinal:
                 break;
             case SqlTypeName.Binary_ordinal:
-            case SqlTypeName.Decimal_ordinal:
             case SqlTypeName.IntervalDayTime_ordinal:
             case SqlTypeName.IntervalYearMonth_ordinal:
             case SqlTypeName.Multiset_ordinal:
