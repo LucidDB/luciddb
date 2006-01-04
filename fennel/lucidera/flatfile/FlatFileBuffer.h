@@ -39,16 +39,33 @@ typedef boost::shared_ptr<FlatFileBuffer> SharedFlatFileBuffer;
  *
  * <p>
  *
- * This implementation sequentially reads an ascii file page by page. It may
- * be updated to handle unicode. In addition, other implementations may choose
- * to prefetch pages for better performance.
+ * This implementation sequentially reads an ascii file page by page. It
+ * handles the details of file access, and manages a pointer to unread data.
+ * The file is opened during a call to <code>open()</code> and is closed
+ * either by an explicit call to <code>close()</code> or on deallocation.
  *
  * <p>
  *
- * FIXME: this class should manage the "current row" pointer. May want
- * multiple pages to implement read ahead. end() is ambiguous, may want to
- * change it to readCompleted(), then have end() return pointer to end of
- * contents.
+ * Storage must be provided with a call to <code>setStorage()</code> before
+ * calling <code>read()</code>. Once <code>read()</code> has been called,
+ * <code>getReadPtr()</code> will return a pointer to the current data
+ * pointer. A call to <code>getEnd()</code> will return a pointer to the
+ * end of data. A call to <code>isFull()</code> describes whether more data
+ * can be read without consuming some. A call to <code>isComplete()</code>
+ * describes whether or not the file has been completely read.
+ *
+ * <p>
+ *
+ * The method <code>setReadPtr()</code> may be used to consume input data.
+ * Upon reaching the end of the buffer, subsequent calls to
+ * <code>read()</code> are used to fetch more data. Unread data is
+ * preserved, but the current read pointer may be updated.
+ *
+ * <p>
+ *
+ * FIXME: This class should use a special character pointer. It may be
+ * updated to handle unicode. It may be refined to prefetch pages for
+ * better performance.
  *
  * @author John Pham
  * @version $Id$
@@ -60,71 +77,73 @@ class FlatFileBuffer : public ClosableObject, public TraceSource
     SharedRandomAccessDevice pRandomAccessDevice;
     FileSize filePosition, fileEnd;
     
-protected:
-	char *buffer;
+	char *pBuffer;
 	uint bufferSize, contentSize;
+    char *pCurrent;
 
     // implement ClosableObject
     void closeImpl();
     
 public:
-    virtual ~FlatFileBuffer();
-
     /**
-     * construct a buffer
+     * Constructs a buffer
      *
      * @param path location of flat file to be opened
      */
     FlatFileBuffer(const std::string &path);
+    virtual ~FlatFileBuffer();
 
     /**
-     * sets internal buffers
+     * Opens a file and obtains resources needed for reading the file
+     */
+	void open();
+
+    /**
+     * Sets internal buffers
      *
      * @param buffer storage for characters read
      *
      * @param size size of buffer, in characters
      */
-    void setStorage(char *buffer, uint size);
+    void setStorage(char *pBuffer, uint size);
     
     /**
-     * open file and allocates resources needed for reading the file
-     */
-	void open();
-
-    /**
-     * returns a pointer to the beginning of the buffer
-     */
-    inline char *buf() { return buffer; }
-    
-    /**
-     * returns the size of the buffer contents, in characters
-     */
-    inline uint size() { return contentSize; }
-
-    /**
-     * returns a pointer to the end of buffer contents
-     */
-    inline char *contentEnd() { return buffer + contentSize; }
-    
-    /**
-     * whether entire file has been read
-     */
-    bool readCompleted();
-    
-    /**
-     * reads more data into buffer, preserving unread portion of the buffer;
-     * the unread portion is moved to the beginning of the buffer
-     *
-     * @param unread pointer to unread portion of the buffer
+     * Reads more data into buffer, preserving unread data.
+     * Invalidates previous read pointers.
      *
      * @return number of characters read
      */
-	uint fill(char *unread = NULL);
+	uint read();
 
     /**
-     * whether buffer has been filled to maximum capacity
+     * Returns a pointer to the current row
      */
-    bool full();
+    char *getReadPtr();
+
+    /**
+     * Returns a pointer to the end of buffer contents
+     */
+    char *getEndPtr();
+
+    /**
+     * Returns the difference between getEndPtr() and getReadPtr()
+     */
+    int getSize();
+
+    /**
+     * Returns whether buffer has been filled to maximum capacity
+     */
+    bool isFull();
+
+    /**
+     * Returns whether entire file has been read
+     */
+    bool isComplete();
+    
+    /**
+     * Consumes buffer contents up to pointer
+     */
+    void setReadPtr(char *ptr);
 };
 
 FENNEL_END_NAMESPACE

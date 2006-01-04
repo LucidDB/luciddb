@@ -23,7 +23,7 @@
 #define Fennel_FlatFileParser_Included
 
 #include "fennel/common/CommonPreamble.h"
-#include "fennel/lucidera/flatfile/FlatFileBuffer.h"
+//#include "fennel/lucidera/flatfile/FlatFileBuffer.h"
 
 #include <vector>
 
@@ -38,10 +38,15 @@ typedef boost::shared_ptr<FlatFileParser> SharedFlatFileParser;
 class FlatFileColumnParseResult
 {
 public:
+    /** Delimiter type encountered during column parse */
     enum DelimiterType {
+        /** No delimiter was found */
         NO_DELIM = 0,
+        /** Field delimiter was found */
         FIELD_DELIM,
+        /** Row delimiter was found */
         ROW_DELIM,
+        /** Parser read up to maximum length of field */
         MAX_LENGTH
     };
     
@@ -67,12 +72,33 @@ public:
 class FlatFileRowParseResult
 {
 public:
+    /** Status of row parsing */
     enum RowStatus {
+        /**
+         * Row was parsed successfully
+         */
         NO_STATUS = 0,
+        /**
+         * A column in the row was not delimited by either a column or
+         * row delimiter
+         */
         INCOMPLETE_COLUMN,
-        COLUMN_TOO_LARGE,
+        /**
+         * Row did not fit into buffer
+         */
+        ROW_TOO_LARGE,
+        /**
+         * Row delimiter was hit, before any column delimiters, when
+         * multiple columns were expected
+         */
         NO_COLUMN_DELIM,
+        /**
+         * Column delimiters were encountered, but row had too few columns
+         */
         TOO_FEW_COLUMNS,
+        /**
+         * Row had too many columns, or column values were too long,  
+         */
         TOO_MANY_COLUMNS
     };
 
@@ -117,12 +143,10 @@ public:
 class FlatFileColumnDescriptor
 {
 public:
-    bool isChar;
     uint maxLength;
 
-    FlatFileColumnDescriptor(bool isChar, uint maxLength)
+    FlatFileColumnDescriptor(uint maxLength)
     {
-        this->isChar = isChar;
         this->maxLength = maxLength;
     }
 };
@@ -133,7 +157,11 @@ public:
 typedef std::vector<FlatFileColumnDescriptor> FlatFileRowDescriptor;
 
 /**
- * This class parses tuples
+ * This class parses fields and rows from a field delimited text buffer.
+ * The main entry point is <code>scanRow()</code> which returns pointers
+ * into a text buffer, representing columns. The method
+ * <code>stripQuoting()</code> may be useful for decoding a quoted value.
+ * Other methods are primarily made public for testing purposes.
  *
  * @author John Pham
  * @version $Id$
@@ -145,82 +173,39 @@ class FlatFileParser
     char quote;
     char escape;
 
-public:
-    /**
-     * Constructs a FlatFileParser. See FlatFileExecStreamParams for more
-     * detail on the parameters.
-     *
-     * FIXME: We can assume that the textual representation of a row can fit
-     * within a single page, so we don't need to scanRow and scanRowEnd
-     * separately.
-     *
-     * @param fieldDelim character delimiter
-     *
-     * @param rowDelim row delimiter
-     *
-     * @param quote quote character
-     *
-     * @param escape escape character
-     */
-    FlatFileParser(
-        const char fieldDelim,
-        const char rowDelim,
-        const char quote,
-        const char escape);
-    
-    /**
-     * Scans through buffer until the end of a row is reached, and locates
-     * columns within the row. May refill buffer, while preserving the row.
-     *
-     * @param buffer flat file buffer to be parsed
-     *
-     * @param current location of row inside buffer
-     *
-     * @param columns description of columns to be parsed
-     *
-     * @param result result of parsing row
-     *
-     * @return pointer to row
-     */
-    char *scanRow(
-        FlatFileBuffer &buffer,
-        char *current,
-        FlatFileRowDescriptor columns,
-        FlatFileRowParseResult &result);
-
     /**
      * Scans through buffer to recover from any row errors. Scans to row
      * delimiter if one was not found. Then scans past spurious row
-     * delimiters. This function may refill the buffer, without preserving
-     * the row, so the row should be processed before calling this function.
+     * delimiters. On success, increments row delimiter count.
      *
-     * @param buffer flat file buffer to be parsed
+     * @param[in] buffer flat file buffer to be parsed
      *
-     * @param current end of row scanned
+     * @param[in] size size of buffer
      *
-     * @param result result from scanning for row
+     * @param[in, out] result result from scanning for row
      *
-     * @return pointer to the next row
+     * @return pointer to the next row, or end of buffer
      */
-    char *scanRowEnd(
-        FlatFileBuffer &buffer,
+    const char *scanRowEnd(
+        const char *buffer,
+        int size,
         FlatFileRowParseResult &result);
     
     /**
      * Scan through buffer to find a row delimiter, or non row delimiter
-     * character. May fill buffer without conserving the row.
+     * character.
      *
-     * @param buffer flat file buffer to be parsed
+     * @param[in] buffer flat file buffer to be parsed
      *
-     * @param current current position in buffer
+     * @param[in] size size of buffer
      *
-     * @param search if true, look for row delimiter, else a non row delimiter
+     * @param[in] search if true, look for row delimiter, else a non row delim
      *
-     * @return pointer to character found
+     * @return pointer to character found, or end of buffer
      */
-    char *scanRowDelim(
-        FlatFileBuffer &buffer,
-        char *current,
+    const char *scanRowDelim(
+        const char *buffer,
+        int size,
         bool search);
 
     /**
@@ -230,27 +215,61 @@ public:
      */
     bool isRowDelim(char c);
     
+public:
+    /**
+     * Constructs a FlatFileParser. See FlatFileExecStreamParams for more
+     * detail on the parameters.
+     *
+     * @param[in] fieldDelim character delimiter
+     *
+     * @param[in] rowDelim row delimiter
+     *
+     * @param[in] quote quote character
+     *
+     * @param[in] escape escape character
+     */
+    FlatFileParser(
+        const char fieldDelim,
+        const char rowDelim,
+        const char quote,
+        const char escape);
+    
+    /**
+     * Scans through buffer until the end of a row is reached, and locates
+     * columns within the row.
+     *
+     * @param[in] buffer buffer with text to be parsed
+     *
+     * @param[in] size size of buffer, in characters
+     *
+     * @param[in] columns description of columns to be parsed
+     *
+     * @param[out] result result of parsing row
+     */
+    void scanRow(
+        const char *buffer, 
+        int size,
+        const FlatFileRowDescriptor &columns,
+        FlatFileRowParseResult &result);
+
     /**
      * Scans through buffer to find the length of a column value. Stops
      * scanning the buffer if maxLength characters have been read. 
-     * Only character columns can be quoted. The column is considered to be
-     * quoted if and only if the first character is a quote character.
+     * A column is considered to be quoted if and only if the first
+     * character is a quote character.
      *
-     * @param buffer buffer containing text to scan
+     * @param[in] buffer buffer containing text to scan
      *
-     * @param size size of buffer contents, in characters
+     * @param[in] size size of buffer contents, in characters
      *
-     * @param maxLength maximum length of column, excluding escapes and quotes
+     * @param[in] maxLength max length of column, excluding escapes and quotes
      *
-     * @param isChar whether the column is a character column and can be quoted
-     *
-     * @param result result of scanning buffer
+     * @param[out] result result of scanning buffer
      */
     void scanColumn(
-        char *buffer,
+        const char *buffer,
         uint size,
         uint maxLength, 
-        bool isChar,
         FlatFileColumnParseResult &result);
 
     /**
@@ -267,11 +286,11 @@ public:
      * <code>a quote"</code> becomes <code>a quote"</code> <br>
      * <code>""aquote"</code> becomes <code>(empty string)</code>
      *
-     * @param buffer buffer containing column value text
+     * @param[in, out] buffer buffer containing column value text
      *
-     * @param size size of column value text, in characters
+     * @param[in] size size of column value text, in characters
      *
-     * @param untrimmed if value is untrimmed, it will be trimmed first
+     * @param[in] untrimmed if value is untrimmed, it will be trimmed first
      *
      * @return size of resulting column text
      */
@@ -280,9 +299,9 @@ public:
     /**
      * Trim spaces from beginning and end of text
      *
-     * @param buffer buffer containing text
+     * @param[in, out] buffer buffer containing text
      *
-     * @param size size of text, in characters
+     * @param[in] size size of text, in characters
      *
      * @return size of resulting column text
      */

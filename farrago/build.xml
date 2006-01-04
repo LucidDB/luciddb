@@ -410,6 +410,7 @@ require version '${required.ant.version}'."/>
       <fileset dir="${testlog.dir}" includes="*.txt"/>
       <fileset dir="${testlog.dir}" includes="*.log"/>
       <fileset dir="${testlog.dir}" includes="*.dif"/>
+      <fileset dir="${testlog.dir}" includes="*.err"/>
       <fileset dir="${unitsql.dir}" includes="**/*.log"/>
       <fileset dir="${unitlurql.dir}" includes="**/*.log"/>
       <fileset dir="${regressionsql.dir}" includes="**/*.log"/>

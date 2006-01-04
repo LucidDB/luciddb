@@ -28,24 +28,33 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
+FlatFileBuffer::FlatFileBuffer(const std::string &path)
+{
+    this->path = path;
+    pBuffer = NULL;
+    bufferSize = 0;
+    contentSize = 0;
+    pCurrent = NULL;
+}
+
 FlatFileBuffer::~FlatFileBuffer()
 {
     close();
 }
 
-FlatFileBuffer::FlatFileBuffer(const std::string &path)
+void FlatFileBuffer::closeImpl()
 {
-    this->path = path;
-    this->buffer = NULL;
-    this->bufferSize = 0;
-    this->contentSize = 0;
+    pRandomAccessDevice.reset();
+    contentSize = 0;
+    pCurrent = NULL;
 }
 
-void FlatFileBuffer::setStorage(char *buffer, uint size)
+void FlatFileBuffer::setStorage(char *pBuffer, uint size)
 {
-    this->buffer = buffer;
-    this->bufferSize = size;
-    this->contentSize = 0;
+    this->pBuffer = pBuffer;
+    bufferSize = size;
+    contentSize = 0;
+    pCurrent = NULL;
 }
 
 // TODO: review exception mechanism
@@ -57,25 +66,14 @@ void FlatFileBuffer::open()
         pRandomAccessDevice.reset(
             new RandomAccessFileDevice(path,openMode));
     } catch (SysCallExcn e) {
-        FENNEL_TRACE(TRACE_FINE, e.getMessage());
+        FENNEL_TRACE(TRACE_SEVERE, e.getMessage());
         throw FennelExcn(
             FennelResource::instance().readDataFailed(path));
     }
     filePosition = 0;
     fileEnd = pRandomAccessDevice->getSizeInBytes();
     contentSize = 0;
-}
-
-void FlatFileBuffer::closeImpl()
-{
-    pRandomAccessDevice.reset();
-    contentSize = 0;
-}
-
-bool FlatFileBuffer::readCompleted()
-{
-    assert(filePosition <= fileEnd);
-    return filePosition == fileEnd;
+    pCurrent = NULL;
 }
 
 /**
@@ -84,23 +82,24 @@ bool FlatFileBuffer::readCompleted()
 class FlatFileBinding : public RandomAccessRequestBinding
 {
     std::string path;
-    char *buffer;
+    char *pBuffer;
     uint bufferSize;
     
 public:
     FlatFileBinding(std::string &path, char *buf, uint size) 
     {
         this->path = path;
-        buffer = buf;
+        pBuffer = buf;
         bufferSize = size;
     }
         
-    PBuffer getBuffer() const { return (PBuffer) buffer; }
+    PBuffer getBuffer() const { return (PBuffer) pBuffer; }
     uint getBufferSize() const { return bufferSize; }
     void notifyTransferCompletion(bool bSuccess) {
         if (!bSuccess) {
-            throw FennelExcn(FennelResource::instance().dataTransferFailed(
-                                 path, bufferSize));
+            throw FennelExcn(
+                FennelResource::instance().dataTransferFailed(
+                    path, bufferSize));
         }
     }
 };
@@ -110,19 +109,19 @@ inline uint min(uint a, uint b)
     return (a < b) ? a : b;
 }
 
-uint FlatFileBuffer::fill(char *unread)
+uint FlatFileBuffer::read()
 {
     int residual = 0;
-    if (unread) {
-        char *contentEnd = buffer + contentSize;
-        assert(buffer <= unread && unread <= contentEnd);
-        residual = contentEnd - unread;
-        memmove(buffer, unread, residual * sizeof(char));
+    if (pCurrent != NULL) {
+        assert(pBuffer <= pCurrent && pCurrent <= getEndPtr());
+        residual = getEndPtr() - pCurrent;
+        memmove(pBuffer, pCurrent, residual * sizeof(char));
         contentSize = residual;
     }
+    pCurrent = pBuffer;
 
     int free = bufferSize - residual;
-    char *target = buffer + residual;
+    char *target = pBuffer + residual;
     uint targetSize = min(free*sizeof(char), fileEnd-filePosition);
     
     RandomAccessRequest readRequest;
@@ -139,9 +138,39 @@ uint FlatFileBuffer::fill(char *unread)
     return targetSize/sizeof(char);
 }
 
-bool FlatFileBuffer::full() 
+char *FlatFileBuffer::getReadPtr()
 {
-    return (contentSize == bufferSize);
+    assert(pCurrent != NULL && pBuffer <= pCurrent);
+    return pCurrent;
+}
+
+char *FlatFileBuffer::getEndPtr()
+{
+    assert(pBuffer != NULL);
+    return pBuffer + contentSize;
+}
+
+int FlatFileBuffer::getSize()
+{
+    return getEndPtr() - getReadPtr();
+}
+
+bool FlatFileBuffer::isFull()
+{
+    assert(pBuffer != NULL);
+    return (pCurrent == pBuffer && contentSize == bufferSize);
+}
+
+bool FlatFileBuffer::isComplete()
+{
+    assert(filePosition <= fileEnd);
+    return filePosition == fileEnd;
+}
+
+void FlatFileBuffer::setReadPtr(char *ptr) 
+{
+    assert(pBuffer <= pCurrent && pCurrent <= ptr && ptr <= getEndPtr());
+    pCurrent = ptr;
 }
 
 FENNEL_END_CPPFILE("$Id$");
