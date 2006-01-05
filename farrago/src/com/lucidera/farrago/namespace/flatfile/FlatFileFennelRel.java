@@ -70,35 +70,6 @@ class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
     
     //~ Methods ---------------------------------------------------------------
 
-    /**
-     * Constructs a file path which may be used to track errors encountered
-     * during the scan of a flat file. The file name returned is similar to
-     * the data file path, but includes a timestamp and uses a different file
-     * extension. The path returned only contains the file name.
-     */
-    private String constructErrorFilePath() 
-    {
-        String logDir = columnSet.getParams().getLogDirectory();
-        if (logDir == null) {
-            logDir = "";
-        } else if (logDir.indexOf(File.separator, logDir.length()-1) < 0) {
-            logDir += File.separator;
-        }
-        File dataFile = new File(columnSet.getFilename()); // DIR/FILE.EXT
-        assert(dataFile != null);
-        String dataFileName = dataFile.getName();          // FILE.EXT
-        int dot = dataFileName.indexOf('.');
-        if (dot == -1) {
-            dot = dataFileName.length();
-        }
-        String rootName = dataFileName.substring(0, dot);  // FILE
-        assert(rootName != null);
-
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
-        String timeStamp = formatter.format(new java.util.Date());
-        return logDir + rootName + "_" + timeStamp + ".err";
-    }
-    
     // implement FennelRel
     public Object implementFennelChild(FennelRelImplementor implementor)
     {
@@ -113,13 +84,9 @@ class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
         
         FemFlatFileTupleStreamDef streamDef =
             repos.newFemFlatFileTupleStreamDef();
-        streamDef.setDataFilePath(columnSet.getFilename());
-        if (params.getWithErrorLogging()) {
-            String path = columnSet.getErrorFilename();
-            if (path == null) {
-                path = constructErrorFilePath();
-            }
-            streamDef.setErrorFilePath(path);
+        streamDef.setDataFilePath(columnSet.getFilePath());
+        if (params.getWithLogging()) {
+            streamDef.setErrorFilePath(columnSet.getLogFilePath());
         }
         streamDef.setHasHeader(params.getWithHeader());
         streamDef.setNumRowsScan(params.getNumRowsScan());

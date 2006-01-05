@@ -68,3 +68,8 @@ foreign data wrapper sys_mock_foreign;
 create foreign data wrapper sys_jdbc
 library '${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'
 language java;
+
+-- create wrapper for access to flatfile data
+create foreign data wrapper sys_file_wrapper
+library 'class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper'
+language java;

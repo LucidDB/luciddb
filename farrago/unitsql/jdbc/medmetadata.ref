@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/jdbc/medmetadata.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/jdbc/medmetadata.sql#3 $
 0: jdbc:farrago:> -- Test JDBC metadata calls for foreign data wrappers
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- !set verbose true
@@ -21,6 +21,7 @@
 |       name        |
 +-------------------+
 | SYS_COLUMN_STORE  |
+| SYS_FILE_WRAPPER  |
 | SYS_FTRS          |
 | SYS_JDBC          |
 | SYS_MDR           |
@@ -174,6 +175,7 @@ Error: DDL validation error near line 1, column 31: Reference to unknown foreign
 |       name        |
 +-------------------+
 | SYS_COLUMN_STORE  |
+| SYS_FILE_WRAPPER  |
 | SYS_FTRS          |
 | SYS_JDBC          |
 | SYS_MDR           |

@@ -62,8 +62,8 @@ class FlatFileDataServer extends MedAbstractDataServer
     void initialize()
         throws SQLException
     {
-        params = new FlatFileParams();
-        params.decode(getProperties());
+        params = new FlatFileParams(getProperties());
+        params.decode();
         
         // TODO: validate, e.g. throw an error if directory doesn't exist
     }
