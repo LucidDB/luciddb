@@ -409,6 +409,58 @@ public class JmiChangeSet implements MDRPreChangeListener
             dropRule);
     }
 
+    public void validateUniqueNames(
+        RefObject container,
+        Collection<RefObject> collection,
+        boolean includeType)
+    {
+        Map<String, RefObject> nameMap =
+            new LinkedHashMap<String, RefObject>();
+        for (RefObject element : collection) {
+            String nameKey = dispatcher.getNameKey(element, includeType);
+            if (nameKey == null) {
+                continue;
+            }
+
+            RefObject other = nameMap.get(nameKey);
+            if (other != null) {
+                if (dispatcher.isNewObject(other)
+                    && dispatcher.isNewObject(element))
+                {
+                    // clash between two new objects being defined
+                    // simultaneously
+                    dispatcher.notifyNameCollision(
+                        container,
+                        element,
+                        other,
+                        true);
+                    continue;
+                } else {
+                    RefObject newElement;
+                    RefObject oldElement;
+                    if (dispatcher.isNewObject(other)) {
+                        newElement = other;
+                        oldElement = element;
+                    } else {
+                        // TODO:  remove this later when RENAME is supported
+                        assert (dispatcher.isNewObject(element));
+                        newElement = element;
+                        oldElement = other;
+                    }
+
+                    // new object clashes with existing object
+                    dispatcher.notifyNameCollision(
+                        container,
+                        newElement,
+                        oldElement,
+                        false);
+                    continue;
+                }
+            }
+            nameMap.put(nameKey, element);
+        }
+    }
+
     private void enqueueValidationExcn(DeferredException excn)
     {
         if (enqueuedValidationExcn != null) {
