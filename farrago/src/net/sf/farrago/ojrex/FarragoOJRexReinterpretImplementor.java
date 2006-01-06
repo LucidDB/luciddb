@@ -22,11 +22,8 @@
 package net.sf.farrago.ojrex;
 
 import net.sf.farrago.type.runtime.*;
-import openjava.ptree.Expression;
-import openjava.ptree.ExpressionList;
-import openjava.ptree.FieldAccess;
-import openjava.ptree.MethodCall;
-import openjava.ptree.Variable;
+
+import openjava.ptree.*;
 
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.reltype.RelDataType;
@@ -45,7 +42,7 @@ import org.eigenbase.util.*;
  * @version $Id$
  */
 public class FarragoOJRexReinterpretImplementor
-	extends FarragoOJRexImplementor
+	extends FarragoOJRexCastImplementor
 {
     /** Constructs an OJRexReinterpretCastImplementor */
     public FarragoOJRexReinterpretImplementor()
@@ -81,22 +78,24 @@ public class FarragoOJRexReinterpretImplementor
             "call.isA(RexKind.Reinterpret)");
         Util.pre(operands.length == 1, "operands.length == 1");
         Util.pre(call.operands.length == 1, "call.operands.length == 1");
+
         RelDataType retType = call.getType();
         if (SqlTypeUtil.isDecimal(retType)) {
             Variable varResult = translator.createScratchVariable(retType);
-            return 
-                new MethodCall(
-                    varResult,
-                    EncodedSqlDecimal.REINTERPRET_METHOD_NAME, 
-                    new ExpressionList(operands[0]));
+            translator.addStatement(
+                new ExpressionStatement(
+                    new MethodCall(
+                        varResult,
+                        EncodedSqlDecimal.REINTERPRET_METHOD_NAME, 
+                        new ExpressionList(operands[0]))));
+            return varResult;
         }
-        assert(SqlTypeUtil.isIntType(retType)) :
-            "SqlTypeUtil.isIntType(retType)";
-        assert(SqlTypeUtil.isDecimal(call.operands[0].getType())) :
-            "SqlTypeUtil.isDecimal(call.operands[0].getType())";
-        return new FieldAccess(
-            operands[0], 
-            NullablePrimitive.VALUE_FIELD_NAME);
+        
+        Util.pre(SqlTypeUtil.isIntType(retType),
+            "SqlTypeUtil.isIntType(retType)");
+        Util.pre(SqlTypeUtil.isDecimal(call.operands[0].getType()),
+            "SqlTypeUtil.isDecimal(call.operands[0].getType())");
+        return super.implementFarrago(translator, call, operands);
     }
 }
 

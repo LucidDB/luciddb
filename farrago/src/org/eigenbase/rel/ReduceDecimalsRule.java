@@ -249,9 +249,15 @@ public class ReduceDecimalsRule extends RelOptRule
 
         /** Factory for constructing RexNode */
         RexBuilder builder;
-        /** Type for internal representation of decimals */
+        /** 
+         * Type for the internal representation of decimals. When using 
+         * this type, be careful to set its nullability.
+         */
         RelDataType int8;
-        /** Type for doubles */
+        /** 
+         * Type for doubles. When using this type, be careful to set 
+         * its nullability 
+         */
         RelDataType real8;
 
         //~ Public methods --------------------------------------------------
@@ -432,7 +438,9 @@ public class ReduceDecimalsRule extends RelOptRule
         protected RexNode decodeValue(RexNode decimalNode) 
         {
             assert(SqlTypeUtil.isDecimal(decimalNode.getType()));
-            return builder.makeReinterpretCast(int8, decimalNode);
+            return builder.makeReinterpretCast(
+                matchNullability(int8, decimalNode),
+                decimalNode);
         }
         
         /** 
@@ -440,13 +448,42 @@ public class ReduceDecimalsRule extends RelOptRule
          * If the expression is not the expected integer type, then 
          * it is casted first.
          * 
+         * <p>By default, this method corrects the nullability of the 
+         * specified type to match the nullability of the expression.
+         * 
          * @param value integer representation of decimal
          * @param decimalType type integer will be reinterpreted as
+         * 
+         * @return the integer representation reinterpreted as a decimal type
          */
         protected RexNode encodeValue(RexNode value, RelDataType decimalType)
         {
+            return encodeValue(value, decimalType, true);
+        }
+
+        /** 
+         * Casts a decimal's integer representation to a decimal node. 
+         * If the expression is not the expected integer type, then 
+         * it is casted first.
+         * 
+         * @param value integer representation of decimal
+         * @param decimalType type integer will be reinterpreted as
+         * @param matchNullability whether to correct nullability of 
+         *            decimalType to match value's nullability
+         * 
+         * @return the integer representation reinterpreted as a decimal type
+         */
+        protected RexNode encodeValue(
+            RexNode value, 
+            RelDataType decimalType, 
+            boolean matchNullability)
+        {
             RexNode cast = ensureType(int8, value);
-            return builder.makeReinterpretCast(decimalType, cast);
+            RelDataType targetType = decimalType;
+            if (matchNullability) {
+                targetType = matchNullability(decimalType, cast);
+            }
+            return builder.makeReinterpretCast(targetType, cast);
         }
         
         /**
@@ -469,12 +506,60 @@ public class ReduceDecimalsRule extends RelOptRule
             }
         }
         
+        /**
+         * Ensures expression is interpreted as a specified type. 
+         * The returned expression may be wrapped with a cast. 
+         * 
+         * <p>By default, this method corrects the nullability of the 
+         * specified type to match the nullability of the expression.
+         * 
+         * @param type desired type
+         * @param node expression
+         * 
+         * @return a casted expression or the original expression
+         */
         protected RexNode ensureType(RelDataType type, RexNode node)
         {
-            if (node.getType() != type) {
-                return builder.makeCast(type, node);
+            return ensureType(type, node, true);
+        }
+
+        /**
+         * Ensures expression is interpreted as a specified type. 
+         * The returned expression may be wrapped with a cast. 
+         * 
+         * @param type desired type
+         * @param node expression
+         * @param matchNullability whether to correct nullability of 
+         *            specified type to match the expression
+         * 
+         * @return a casted expression or the original expression
+         */
+        protected RexNode ensureType(
+            RelDataType type, 
+            RexNode node, 
+            boolean matchNullability)
+        {
+            RelDataType targetType = type;
+            if (matchNullability) {
+                targetType = matchNullability(type, node);
+            }
+            if (node.getType() != targetType) {
+                return builder.makeCast(targetType, node);
             }
             return node;
+        }
+
+        /** Ensure's type's nullability matches value's nullability */
+        protected RelDataType matchNullability(
+            RelDataType type, RexNode value)
+        {
+            boolean typeNullability = type.isNullable();
+            boolean valueNullability = value.getType().isNullable();
+            if (typeNullability != valueNullability) {
+                return builder.getTypeFactory().createTypeWithNullability(
+                    type, valueNullability);
+            }
+            return type;
         }
     }
     
@@ -495,9 +580,7 @@ public class ReduceDecimalsRule extends RelOptRule
         public boolean canExpand(RexCall call)
         {
             return call.isA(RexKind.Cast)
-                && RexUtil.requiresDecimalExpansion(call, false)
-                && SqlTypeUtil.isNumeric(call.getType())
-                && SqlTypeUtil.isNumeric(call.operands[0].getType());
+                && RexUtil.requiresDecimalExpansion(call, false);
         }
         
         // implement RexExpander
@@ -522,21 +605,22 @@ public class ReduceDecimalsRule extends RelOptRule
             {
                 return encodeValue(
                     scaleUp(operand, toType.getScale()),
-                    toType);
+                    toType,
+                    false);
             } else if (SqlTypeUtil.isIntType(toType)) {
                 return ensureType(
                     toType,
-                    scaleDown(decodeValue(operand), fromType.getScale()));
+                    scaleDown(decodeValue(operand), fromType.getScale()),
+                    false);
             } else if (SqlTypeUtil.isApproximateNumeric(toType)) {
                 return ensureType(
                     toType,
                     scaleDownDouble(
-                        decodeValue(operand), fromType.getScale()));
-            } else {
-                // Both decimals
-                Util.pre(SqlTypeUtil.isDecimal(fromType) 
-                            && SqlTypeUtil.isDecimal(toType),
-                            "ReduceDecimalsRule: unsupported cast");
+                        decodeValue(operand), fromType.getScale()),
+                    false);
+            } else if (SqlTypeUtil.isDecimal(fromType) 
+                && SqlTypeUtil.isDecimal(toType))
+            {
                 RexNode value = decodeValue(operand);
                 int fromScale = fromType.getScale();
                 int toScale = toType.getScale();
@@ -548,7 +632,10 @@ public class ReduceDecimalsRule extends RelOptRule
                 } else {
                     scaled = scaleDown(value, fromScale-toScale);
                 }
-                return encodeValue(scaled, toType);
+                return encodeValue(scaled, toType, false);
+            } else {
+                throw Util.needToImplement(
+                    "Reduce decimal cast from "+fromType + " to "+toType);
             }
         }
     }
@@ -738,8 +825,10 @@ public class ReduceDecimalsRule extends RelOptRule
     
     /** 
      * Expands miscellaneous functions which are not handled by other 
-     * expanders yet require special handling (i.e. casting as a double 
-     * doesn't work).
+     * expanders yet require special handling (i.e. pass through and 
+     * casting as a double don't work).
+     * 
+     * <p>NOTE: currently not used (hasn't been needed yet)
      */
     class FunctionExpander extends RexExpander
     {
