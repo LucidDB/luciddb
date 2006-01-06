@@ -168,6 +168,17 @@ public class SqlSelect extends SqlCall
             getOperator().unparse(writer, operands, leftPrec, rightPrec);
         }
     }
+
+    public boolean hasOrderBy()
+    {
+        SqlNodeList orderList = getOrderList();
+        return ((null != orderList) && (0 != orderList.size()));
+    }
+
+    public boolean hasWhere()
+    {
+        return null != getWhere();
+    }
 }
 
 // End SqlSelect.java

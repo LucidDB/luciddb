@@ -1994,7 +1994,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
     private void validateWindowClause(SqlSelect select)
     {
         final SqlNodeList windowList = select.getWindowList();
-        if (windowList == null) {
+        if (windowList == null || windowList.size() == 0) {
             return;
         }
 
@@ -2436,7 +2436,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         return SqlUtil.newContextException(pos, e);
     }
 
-    private SqlWindow getWindowByName(
+    protected SqlWindow getWindowByName(
         SqlIdentifier id,
         SqlValidatorScope scope)
     {
