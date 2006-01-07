@@ -1167,7 +1167,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("cast(1 as DECIMAL(19, 2)) / cast(1 as DECIMAL(19, 2))", "DECIMAL(19, 0) NOT NULL");
     }
 
-    private void checkWin(String sql, String expectedMsgPattern) {
+    protected void checkWin(String sql, String expectedMsgPattern) {
         logger.info(sql);
         checkFails(sql, expectedMsgPattern);
     }
@@ -2212,7 +2212,6 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         // (To debug invidual statements, paste them into this method.)
         //            1         2         3         4         5         6
         //   12345678901234567890123456789012345678901234567890123456789012345
-        checkExpType("cast(multiset[1] as double multiset)", "DOUBLE NOT NULL MULTISET NOT NULL");
     }
 }
 

@@ -29,7 +29,7 @@
 #  or ${EIGEN_TEST_DEFAULT_PACKAGE} if it is set.
 
 once=true
-if [ "$1" == "-repeat" ]; then
+if [ "$1" == "-repeat" -o "$1" == "--repeat" ]; then
     once=false;
     shift;
 fi
