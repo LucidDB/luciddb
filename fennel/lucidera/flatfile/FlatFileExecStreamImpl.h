@@ -106,14 +106,13 @@ class FlatFileExecStreamImpl : public FlatFileExecStream
         const TupleDescriptor &tupleDesc);
     
     /**
-     * Converts a text row into a tuple. The current implementation simply sets
-     * up pointers but does not do any real conversion.
+     * Converts a text row into a data tuple.
      *
      * @param result result of parsing text row
      *
-     * @param tuple tuple data, currently without storage
+     * @param tuple tuple data
      */
-    void convert(
+    void convertTuple(
         const FlatFileRowParseResult &result,
         TupleData &tuple);
 

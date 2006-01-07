@@ -42,24 +42,34 @@ FlatFileExecStream *FlatFileExecStream::newFlatFileExecStream()
     return new FlatFileExecStreamImpl();
 }
 
-void FlatFileExecStreamImpl::convert(
+void FlatFileExecStreamImpl::convertTuple(
     const FlatFileRowParseResult &result,
     TupleData &tuple)
 {
+    TupleData *pTupleData = NULL;
+    if (pCalc) {
+        // NOTE: bind calc inputs for real implementation
+        // (output tuple is already bound)
+        pTupleData = &textTuple;
+    } else {
+        // NOTE: just return text tuple for fake implementation
+        pTupleData = &tuple;
+    }
+
     for (uint i=0; i<tuple.size(); i++) {
         char *value = result.current + result.offsets[i];
         uint size = result.sizes[i];
         uint strippedSize = pParser->stripQuoting(value, size, false);
-
-        if (pCalc) {
-            textTuple[i].pData = (PConstBuffer) value;
-            textTuple[i].cbData = strippedSize;
-            // output tuple is already bound
+        if (size == 0) {
+            // a value which is empty, (not quoted empty), is null
+            (*pTupleData)[i].pData = NULL;
+            (*pTupleData)[i].cbData = 0;
         } else {
-            tuple[i].pData = (PConstBuffer) value;
-            tuple[i].cbData = strippedSize;
+            (*pTupleData)[i].pData = (PConstBuffer) value;
+            (*pTupleData)[i].cbData = strippedSize;
         }
     }
+            
     if (pCalc) {
         try {
             pCalc->exec();
@@ -80,7 +90,7 @@ void FlatFileExecStreamImpl::logError(const FlatFileRowParseResult &result)
     case FlatFileRowParseResult::INCOMPLETE_COLUMN:
         reason = FennelResource::instance().incompleteColumn();
         break;
-    case FlatFileRowParseResult::COLUMN_TOO_LARGE:
+    case FlatFileRowParseResult::ROW_TOO_LARGE:
         reason = FennelResource::instance().rowTextTooLong();
         break;
     case FlatFileRowParseResult::NO_COLUMN_DELIM:
@@ -129,41 +139,44 @@ void FlatFileExecStreamImpl::logError(
     const std::string reason,
     const FlatFileRowParseResult &result)
 {
+    
     this->reason = reason;
     std::string rowText =
         std::string(result.current, result.next-result.current);
-    if (logging) {
-        if (! pErrorFile) {
-            DeviceMode openMode;
-            openMode.create = 1;
-            try {
-                pErrorFile.reset(
-                    new RandomAccessFileDevice(errorFilePath, openMode));
-            } catch (SysCallExcn e) {
-                FENNEL_TRACE(TRACE_FINE, e.getMessage());
-                throw FennelExcn(
-                    FennelResource::instance().writeLogFailed(errorFilePath));
-            }
-            filePosition = pErrorFile->getSizeInBytes();
-        }
 
-        std::ostringstream oss;
-        oss << reason << ", " << rowText << endl;
-        std::string record = oss.str();
-        uint targetSize = record.size()*sizeof(char);
-            
-        pErrorFile->setSizeInBytes(filePosition + targetSize);
-        RandomAccessRequest writeRequest;
-        writeRequest.pDevice = pErrorFile.get();
-        writeRequest.cbOffset = filePosition;
-        writeRequest.cbTransfer = targetSize;
-        writeRequest.type = RandomAccessRequest::WRITE;
-        FlatFileBinding binding(errorFilePath, record.c_str(), targetSize);
-        writeRequest.bindingList.push_back(binding);
-        pErrorFile->transfer(writeRequest);
-        pErrorFile->flush();
-        filePosition += targetSize;
+    if (! logging) {
+        return;
     }
+    if (! pErrorFile) {
+        DeviceMode openMode;
+        openMode.create = 1;
+        try {
+            pErrorFile.reset(
+                new RandomAccessFileDevice(errorFilePath, openMode));
+        } catch (SysCallExcn e) {
+            FENNEL_TRACE(TRACE_SEVERE, e.getMessage());
+            throw FennelExcn(
+                FennelResource::instance().writeLogFailed(errorFilePath));
+        }
+        filePosition = pErrorFile->getSizeInBytes();
+    }
+
+    std::ostringstream oss;
+    oss << reason << ", " << rowText << endl;
+    std::string record = oss.str();
+    uint targetSize = record.size()*sizeof(char);
+            
+    pErrorFile->setSizeInBytes(filePosition + targetSize);
+    RandomAccessRequest writeRequest;
+    writeRequest.pDevice = pErrorFile.get();
+    writeRequest.cbOffset = filePosition;
+    writeRequest.cbTransfer = targetSize;
+    writeRequest.type = RandomAccessRequest::WRITE;
+    FlatFileBinding binding(errorFilePath, record.c_str(), targetSize);
+    writeRequest.bindingList.push_back(binding);
+    pErrorFile->transfer(writeRequest);
+    pErrorFile->flush();
+    filePosition += targetSize;
 }
 
 void FlatFileExecStreamImpl::detectMajorErrors()
@@ -190,6 +203,7 @@ void FlatFileExecStreamImpl::checkRowDelimiter()
     }
 }
 
+// FIXME: this method should leverage existing CalcStream code
 void FlatFileExecStreamImpl::prepare(
     FlatFileExecStreamParams const &params)
 {
@@ -210,6 +224,7 @@ void FlatFileExecStreamImpl::prepare(
     pParser.reset(new FlatFileParser(
                       params.fieldDelim, params.rowDelim,
                       params.quoteChar, params.escapeChar));
+    // NOTE: this is a hack used for unit testing without the calculator
     if (params.calcProgram.size() == 0) return;
     
     try {
@@ -295,10 +310,10 @@ FlatFileRowDescriptor FlatFileExecStreamImpl::readTupleDescriptor(
             StandardTypeDescriptorOrdinal(
                 attr.pTypeDescriptor->getOrdinal());
         if (StandardTypeDescriptor::isTextArray(ordinal)) {
-            rowDesc.push_back(FlatFileColumnDescriptor(true, attr.cbStorage));
+            rowDesc.push_back(FlatFileColumnDescriptor(attr.cbStorage));
         } else {
-            rowDesc.push_back(FlatFileColumnDescriptor(false,
-                                  FLAT_FILE_MAX_NON_CHAR_VALUE_LEN));
+            rowDesc.push_back(
+                FlatFileColumnDescriptor(FLAT_FILE_MAX_NON_CHAR_VALUE_LEN));
         }
     }
     return rowDesc;
@@ -334,8 +349,8 @@ void FlatFileExecStreamImpl::open(bool restart)
         pBuffer->setStorage((char*)pBufferStorage, cbPageSize);
     }
     pBuffer->open();
-    pBuffer->fill();
-    next = pBuffer->buf();
+    pBuffer->read();
+    next = pBuffer->getReadPtr();
     isRowPending = false;
     nRowsOutput = nRowErrors = 0;
     lastResult.reset();
@@ -345,11 +360,11 @@ void FlatFileExecStreamImpl::open(bool restart)
         for (uint i=0; i < rowDesc.size(); i++) {
             headerDesc.push_back(
                 FlatFileColumnDescriptor(
-                    true,
                     FLAT_FILE_MAX_COLUMN_NAME_LEN));
         }
-        next = pParser->scanRow(*pBuffer, next, headerDesc, lastResult);
-        next = pParser->scanRowEnd(*pBuffer, lastResult);
+        pParser->scanRow(
+            pBuffer->getReadPtr(), pBuffer->getSize(), headerDesc, lastResult);
+        pBuffer->setReadPtr(lastResult.next);
         checkRowDelimiter();
     }
 }
@@ -364,30 +379,39 @@ ExecStreamResult FlatFileExecStreamImpl::execute(
 
     for (uint nTuples=0; nTuples < quantum.nTuplesMax; nTuples++) {
         while (!isRowPending) {
-            if (pBuffer->readCompleted() && (next >= pBuffer->contentEnd())) {
+            if (pBuffer->isComplete()
+                && (pBuffer->getReadPtr() >= pBuffer->getEndPtr()))
+            {
                 detectMajorErrors();
                 pOutAccessor->markEOS();
                 return EXECRC_EOS;
             }
-            next = pParser->scanRow(*pBuffer, next, rowDesc, lastResult);
+            pParser->scanRow(
+                pBuffer->getReadPtr(),pBuffer->getSize(),rowDesc,lastResult);
+
             switch (lastResult.status) {
             case FlatFileRowParseResult::INCOMPLETE_COLUMN:
-            case FlatFileRowParseResult::COLUMN_TOO_LARGE:
+            case FlatFileRowParseResult::ROW_TOO_LARGE:
+                if (!pBuffer->isFull() && !pBuffer->isComplete()) {
+                    pBuffer->read();
+                    continue;
+                }
             case FlatFileRowParseResult::NO_COLUMN_DELIM:
             case FlatFileRowParseResult::TOO_FEW_COLUMNS:
             case FlatFileRowParseResult::TOO_MANY_COLUMNS:
                 logError(lastResult);
-                next = pParser->scanRowEnd(*pBuffer, lastResult);
                 nRowErrors++;
+                pBuffer->setReadPtr(lastResult.next);
                 continue;
             case FlatFileRowParseResult::NO_STATUS:
                 try {
-                    convert(lastResult, dataTuple);
+                    convertTuple(lastResult, dataTuple);
                     isRowPending = true;
+                    pBuffer->setReadPtr(lastResult.next);
                 } catch (CalcExcn e) {
                     logError(e.getMessage(), lastResult);
-                    next = pParser->scanRowEnd(*pBuffer, lastResult);
                     nRowErrors++;
+                    pBuffer->setReadPtr(lastResult.next);
                     continue;
                 }
                 break;
@@ -399,7 +423,6 @@ ExecStreamResult FlatFileExecStreamImpl::execute(
         if (!pOutAccessor->produceTuple(dataTuple)) {
             return EXECRC_BUF_OVERFLOW;
         }
-        next = pParser->scanRowEnd(*pBuffer, lastResult);
         isRowPending = false;
         nRowsOutput++;
     }

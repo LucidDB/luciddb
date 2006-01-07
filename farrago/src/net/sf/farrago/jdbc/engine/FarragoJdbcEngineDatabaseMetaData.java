@@ -51,7 +51,8 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
 
     //~ Constructors ----------------------------------------------------------
 
-    FarragoJdbcEngineDatabaseMetaData(FarragoJdbcEngineConnection connection)
+    protected FarragoJdbcEngineDatabaseMetaData(
+        FarragoJdbcEngineConnection connection)
     {
         this.connection = connection;
         repos = connection.getSession().getRepos();

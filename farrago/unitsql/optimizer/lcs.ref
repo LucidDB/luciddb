@@ -673,7 +673,10 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create server flatfile_server
 . . . . . . . . > foreign data wrapper flatfile_foreign_wrapper
-. . . . . . . . > options (with_header 'yes', log_directory 'testlog');
+. . . . . . . . > options (
+. . . . . . . . >     with_header 'yes', 
+. . . . . . . . >     file_extension '',
+. . . . . . . . >     log_directory 'testlog');
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create foreign table flatfile_table(
 . . . . . . . . >     id int not null,

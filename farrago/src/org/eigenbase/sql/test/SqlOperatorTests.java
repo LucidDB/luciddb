@@ -99,12 +99,6 @@ public abstract class SqlOperatorTests extends TestCase
     public static final boolean dtbug242Fixed = false;
 
     /**
-     * Remove this constant when decimal type is supported
-     */
-    public static final boolean decimalSupported = true;
-    public static final boolean decimalNullSupported = false;
-
-    /**
      * Whether <a href="http://jirahost.eigenbase.org:8080/browse/FNL-3">issue
      * Fnl-3</a> is fixed.
      */
@@ -280,29 +274,27 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkScalarExact("cast(1.0 as bigint)", "BIGINT NOT NULL", "1");
         getTester().checkScalarExact("cast(1.0 as int)", "1");
 
-        if (decimalSupported) {
-            // decimal to integer
-            getTester().checkScalarExact("cast(1.25 as integer)", "1");
-            getTester().checkScalarExact("cast(-1.25 as integer)", "-1");
-            getTester().checkScalarExact("cast(1.75 as integer)", "2");
-            getTester().checkScalarExact("cast(-1.75 as integer)", "-2");
-            getTester().checkScalarExact("cast(1.5 as integer)", "2");
-            getTester().checkScalarExact("cast(-1.5 as integer)", "-2");
+        // decimal to integer
+        getTester().checkScalarExact("cast(1.25 as integer)", "1");
+        getTester().checkScalarExact("cast(-1.25 as integer)", "-1");
+        getTester().checkScalarExact("cast(1.75 as integer)", "2");
+        getTester().checkScalarExact("cast(-1.75 as integer)", "-2");
+        getTester().checkScalarExact("cast(1.5 as integer)", "2");
+        getTester().checkScalarExact("cast(-1.5 as integer)", "-2");
 
-            // decimal to decimal
-            getTester().checkScalarExact(
-                "cast(1.29 as decimal(2,1))", "DECIMAL(2, 1) NOT NULL", "1.3");
-            getTester().checkScalarExact(
-                "cast(1.25 as decimal(2,1))", "DECIMAL(2, 1) NOT NULL", "1.3");
-            getTester().checkScalarExact(
-                "cast(1.21 as decimal(2,1))", "DECIMAL(2, 1) NOT NULL", "1.2");
-            getTester().checkScalarExact(
-                "cast(-1.29 as decimal(2,1))", "DECIMAL(2, 1) NOT NULL", "-1.3");
-            getTester().checkScalarExact(
-                "cast(-1.25 as decimal(2,1))", "DECIMAL(2, 1) NOT NULL", "-1.3");
-            getTester().checkScalarExact(
-                "cast(-1.21 as decimal(2,1))", "DECIMAL(2, 1) NOT NULL", "-1.2");
-        }
+        // decimal to decimal
+        getTester().checkScalarExact(
+            "cast(1.29 as decimal(2,1))", "DECIMAL(2, 1) NOT NULL", "1.3");
+        getTester().checkScalarExact(
+            "cast(1.25 as decimal(2,1))", "DECIMAL(2, 1) NOT NULL", "1.3");
+        getTester().checkScalarExact(
+            "cast(1.21 as decimal(2,1))", "DECIMAL(2, 1) NOT NULL", "1.2");
+        getTester().checkScalarExact(
+            "cast(-1.29 as decimal(2,1))", "DECIMAL(2, 1) NOT NULL", "-1.3");
+        getTester().checkScalarExact(
+            "cast(-1.25 as decimal(2,1))", "DECIMAL(2, 1) NOT NULL", "-1.3");
+        getTester().checkScalarExact(
+            "cast(-1.21 as decimal(2,1))", "DECIMAL(2, 1) NOT NULL", "-1.2");
 
         // decimal to double to integer
         getTester().checkScalarExact("cast( cast(1.25 as double) as integer)", "1");
@@ -320,9 +312,7 @@ public abstract class SqlOperatorTests extends TestCase
 
         // null
         getTester().checkNull("cast(null as double)");
-        if (decimalNullSupported) {
-            getTester().checkNull("cast(null as decimal(4,3))");
-        }
+        getTester().checkNull("cast(null as decimal(4,3))");
         getTester().checkNull("cast(null as date)");
     }
 
@@ -330,29 +320,27 @@ public abstract class SqlOperatorTests extends TestCase
     {
         getTester().setFor(SqlStdOperatorTable.castFunc);
 
-        if (decimalSupported) {
-            // string to decimal
-            getTester().checkScalarExact(
-                    "cast('1.29' as decimal(2,1))", "DECIMAL(2, 1) NOT NULL", "1.3");
-            getTester().checkScalarExact(
-                    "cast('1.25' as decimal(2,1))", "DECIMAL(2, 1) NOT NULL", "1.3");
-            getTester().checkScalarExact(
-                    "cast('1.21' as decimal(2,1))", "DECIMAL(2, 1) NOT NULL", "1.2");
-            getTester().checkScalarExact(
-                    "cast('-1.29' as decimal(2,1))", "DECIMAL(2, 1) NOT NULL", "-1.3");
-            getTester().checkScalarExact(
-                    "cast('-1.25' as decimal(2,1))", "DECIMAL(2, 1) NOT NULL", "-1.3");
-            getTester().checkScalarExact(
-                    "cast('-1.21' as decimal(2,1))", "DECIMAL(2, 1) NOT NULL", "-1.2");
+        // string to decimal
+        getTester().checkScalarExact(
+                "cast('1.29' as decimal(2,1))", "DECIMAL(2, 1) NOT NULL", "1.3");
+        getTester().checkScalarExact(
+                "cast('1.25' as decimal(2,1))", "DECIMAL(2, 1) NOT NULL", "1.3");
+        getTester().checkScalarExact(
+                "cast('1.21' as decimal(2,1))", "DECIMAL(2, 1) NOT NULL", "1.2");
+        getTester().checkScalarExact(
+                "cast('-1.29' as decimal(2,1))", "DECIMAL(2, 1) NOT NULL", "-1.3");
+        getTester().checkScalarExact(
+                "cast('-1.25' as decimal(2,1))", "DECIMAL(2, 1) NOT NULL", "-1.3");
+        getTester().checkScalarExact(
+                "cast('-1.21' as decimal(2,1))", "DECIMAL(2, 1) NOT NULL", "-1.2");
 
-            // decimal to string
-            getTester().checkString(
-                    "cast(1.29 as varchar(10))", "1.29", "VARCHAR(10) NOT NULL");
-            getTester().checkString(
-                    "cast(.48 as varchar(10))", ".48", "VARCHAR(10) NOT NULL");
-            getTester().checkString(
-                    "cast(-0.29 as varchar(10))", "-.29", "VARCHAR(10) NOT NULL");
-        }
+        // decimal to string
+        getTester().checkString(
+                "cast(1.29 as varchar(10))", "1.29", "VARCHAR(10) NOT NULL");
+        getTester().checkString(
+                "cast(.48 as varchar(10))", ".48", "VARCHAR(10) NOT NULL");
+        getTester().checkString(
+                "cast(-0.29 as varchar(10))", "-.29", "VARCHAR(10) NOT NULL");
 
         // string to integer
         getTester().checkScalarExact("cast('6543' as integer)", "6543");
@@ -485,10 +473,8 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkScalarExact("-10 / 5", "-2");
         getTester().checkScalarApprox(
                 " cast(10.0 as double) / 5", "DOUBLE NOT NULL", 2.0, 0);
-        if (decimalSupported) {
-            getTester().checkScalarExact(
-                    "10.0 / 5.0", "DECIMAL(19, 16) NOT NULL", "2.0000000000000000");
-        }
+        getTester().checkScalarExact(
+            "10.0 / 5.0", "DECIMAL(19, 16) NOT NULL", "2.0000000000000000");
         getTester().checkNull("1e1 / cast(null as float)");
     }
 
@@ -626,12 +612,10 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkScalarApprox(
                 "cast(2.0 as double) -1", "DOUBLE NOT NULL", 1, 0);
         getTester().checkScalarExact("1-2", "-1");
-        if (decimalSupported) {
-            getTester().checkScalarExact(
-                    "10.0 - 5.0", "DECIMAL(4, 1) NOT NULL", "5.0");
-            getTester().checkScalarExact(
-                    "19.68 - 4.2", "DECIMAL(5, 2) NOT NULL", "15.48");
-        }
+        getTester().checkScalarExact(
+            "10.0 - 5.0", "DECIMAL(4, 1) NOT NULL", "5.0");
+        getTester().checkScalarExact(
+            "19.68 - 4.2", "DECIMAL(5, 2) NOT NULL", "15.48");
         getTester().checkNull("1e1-cast(null as double)");
         getTester().checkNull("cast(null as tinyint) - cast(null as smallint)");
     }
@@ -650,13 +634,11 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkScalarExact("+2*3", "6");
         getTester().checkScalarExact("2*0", "0");
         getTester().checkScalarApprox(
-                "cast(2.0 as double)*3", "DOUBLE NOT NULL", 6, 0);
-        if (decimalSupported) {
-            getTester().checkScalarExact(
-                    "10.0 * 5.0", "DECIMAL(5, 2) NOT NULL", "50.00");
-            getTester().checkScalarExact(
-                    "19.68 * 4.2", "DECIMAL(6, 3) NOT NULL", "82.656");
-        }
+            "cast(2.0 as double)*3", "DOUBLE NOT NULL", 6, 0);
+        getTester().checkScalarExact(
+                "10.0 * 5.0", "DECIMAL(5, 2) NOT NULL", "50.00");
+        getTester().checkScalarExact(
+                "19.68 * 4.2", "DECIMAL(6, 3) NOT NULL", "82.656");
         getTester().checkNull("2e-3*cast(null as integer)");
         getTester().checkNull("cast(null as tinyint) * cast(4 as smallint)");
     }
@@ -685,14 +667,12 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkScalarExact("-1+2", "1");
         getTester().checkScalarApprox(
                 "1+cast(2.0 as double)", "DOUBLE NOT NULL", 3, 0);
-        if (decimalSupported) {
-            getTester().checkScalarExact(
-                    "10.0 + 5.0", "DECIMAL(4, 1) NOT NULL", "15.0");
-            getTester().checkScalarExact(
-                    "19.68 + 4.2", "DECIMAL(5, 2) NOT NULL", "23.88");
-            getTester().checkScalarApprox(
-                    "19.68 + cast(4.2 as float)", "DOUBLE NOT NULL", 23.88, 0);
-        }
+        getTester().checkScalarExact(
+            "10.0 + 5.0", "DECIMAL(4, 1) NOT NULL", "15.0");
+        getTester().checkScalarExact(
+            "19.68 + 4.2", "DECIMAL(5, 2) NOT NULL", "23.88");
+        getTester().checkScalarApprox(
+            "19.68 + cast(4.2 as float)", "DOUBLE NOT NULL", 23.88, 0);
         getTester().checkNull("cast(null as tinyint)+1");
         getTester().checkNull("1e-2+cast(null as double)");
     }
@@ -805,9 +785,7 @@ public abstract class SqlOperatorTests extends TestCase
             "'a' + ^- 'b'^ + 'c'",
             "(?s)Cannot apply '-' to arguments of type '-<CHAR\\(1\\)>'.*");
         getTester().checkScalarExact("-1", "-1");
-        if (decimalSupported) {
-            getTester().checkScalarExact("-1.23", "DECIMAL(3, 2) NOT NULL", "-1.23");
-        }
+        getTester().checkScalarExact("-1.23", "DECIMAL(3, 2) NOT NULL", "-1.23");
         getTester().checkScalarApprox("-1.0e0", "DOUBLE NOT NULL", -1, 0);
         getTester().checkNull("-cast(null as integer)");
         getTester().checkNull("-cast(null as tinyint)");
@@ -817,9 +795,7 @@ public abstract class SqlOperatorTests extends TestCase
     {
         getTester().setFor(SqlStdOperatorTable.prefixPlusOperator);
         getTester().checkScalarExact("+1", "1");
-        if (decimalSupported) {
-            getTester().checkScalarExact("+1.23", "DECIMAL(3, 2) NOT NULL", "1.23");
-        }
+        getTester().checkScalarExact("+1.23", "DECIMAL(3, 2) NOT NULL", "1.23");
         getTester().checkScalarApprox("+1.0e0", "DOUBLE NOT NULL", 1, 0);
         getTester().checkNull("+cast(null as integer)");
         getTester().checkNull("+cast(null as tinyint)");
@@ -1054,12 +1030,8 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkScalarExact("abs(cast(-20 as SMALLINT))", "SMALLINT NOT NULL", "20");
         getTester().checkScalarExact("abs(cast(-100 as INT))", "INTEGER NOT NULL", "100");
         getTester().checkScalarExact("abs(cast(1000 as BIGINT))", "BIGINT NOT NULL", "1000");
-
-        if (decimalSupported) {
-            getTester().checkScalarExact("abs(54.4)", "DECIMAL(3, 1) NOT NULL", "54.4");
-            getTester().checkScalarExact("abs(-54.4)", "DECIMAL(3, 1) NOT NULL", "54.4");
-        }
-
+        getTester().checkScalarExact("abs(54.4)", "DECIMAL(3, 1) NOT NULL", "54.4");
+        getTester().checkScalarExact("abs(-54.4)", "DECIMAL(3, 1) NOT NULL", "54.4");
         getTester().checkScalarApprox("abs(-9.32E-2)", "DOUBLE NOT NULL", 0.0932, 0);
         getTester().checkScalarApprox("abs(cast(-3.5 as double))", "DOUBLE NOT NULL", 3.5, 0);
         getTester().checkScalarApprox("abs(cast(-3.5 as float))", "FLOAT NOT NULL", 3.5, 0);

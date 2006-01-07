@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/cast.sql#2 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/regressionsql/cast.sql#4 $
 0: jdbc:farrago:> -- Full vertical system testing of the cast function
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
@@ -95,7 +95,12 @@
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> --values cast(null as decimal);
+0: jdbc:farrago:> values cast(null as decimal);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values cast(1.8 as integer);

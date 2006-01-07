@@ -20,7 +20,7 @@ values cast(null as time);
 values cast(null as timestamp);
 values cast(null as varbinary(1));
 values cast(null as float);
---values cast(null as decimal);
+values cast(null as decimal);
 
 
 values cast(1.8 as integer);

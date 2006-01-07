@@ -265,9 +265,10 @@ public class RexUtil
      * 
      * <p>Exceptions to this rule are:
      * <ul>
+     *   <li>It's okay to cast decimals to and from char types
+     *   <li>It's okay to cast null literals as decimals
+     *   <li>Casts require expansion if their return type is decimal
      *   <li>Reinterpret casts can handle a decimal operand
-     *   <li>Regular cast do not require expansion to/from char types
-     *   <li>Regular casts require expansion if their return type is decimal
      * </ul>
      * 
      * @param call expression possibly in need of expansion
@@ -283,6 +284,10 @@ public class RexUtil
                 && requiresDecimalExpansion(call.operands, recurse));
         }
         if (call.isA(RexKind.Cast)) {
+            if (isNullLiteral(call.operands[0], false)) {
+                return false;
+            }
+            
             RelDataType lhsType = call.getType();
             RelDataType rhsType = call.operands[0].getType();
             if (SqlTypeUtil.inCharFamily(lhsType)

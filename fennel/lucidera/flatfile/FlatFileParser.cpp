@@ -32,8 +32,6 @@ void FlatFileRowParseResult::reset()
 {
     status = NO_STATUS;
     current = next = NULL;
-    //offsets.clear();
-    //sizes.;
     nRowDelimsRead = 0;
 }
 
@@ -46,15 +44,14 @@ FlatFileParser::FlatFileParser(
     this->escape = escape;
 }
 
-char *FlatFileParser::scanRow(
-    FlatFileBuffer &buffer,
-    char *rowIn, 
-    FlatFileRowDescriptor columns,
+void FlatFileParser::scanRow(
+    const char *buffer, 
+    int size, 
+    const FlatFileRowDescriptor &columns,
     FlatFileRowParseResult &result)
 {
-    assert(!(buffer.readCompleted() && rowIn > buffer.contentEnd()));
-    char *row = rowIn;
-    uint size = buffer.buf() + buffer.size() - row;
+    assert(size >= 0);
+    const char *row = buffer;
     uint offset = 0;
     FlatFileColumnParseResult columnResult;
 
@@ -67,24 +64,14 @@ char *FlatFileParser::scanRow(
             row + offset,
             size - offset,
             columns[i].maxLength,
-            columns[i].isChar,
             columnResult);
         switch (columnResult.type) {
         case FlatFileColumnParseResult::NO_DELIM:
-            if (buffer.readCompleted()) {
-                result.status = FlatFileRowParseResult::INCOMPLETE_COLUMN;
-                done = true;
-                break;
-            } else if (row==buffer.buf() && buffer.full()) {
-                result.status = FlatFileRowParseResult::COLUMN_TOO_LARGE;
-                done = true;
-                break;
-            } else {
-                buffer.fill(row);
-                row = buffer.buf();
-                size = buffer.size();
-                continue;
-            }
+            // NOTE: we stop scanning at maximum column length, which is
+            // smaller than a page, so we never hit the "large row" error
+            result.status = FlatFileRowParseResult::INCOMPLETE_COLUMN;
+            done = true;
+            break;
         case FlatFileColumnParseResult::ROW_DELIM:
             if (i+1 != columns.size()) {
                 if (i == 0) {
@@ -110,30 +97,32 @@ char *FlatFileParser::scanRow(
         offset = columnResult.next - row;
         if (done) break;
     }
-    result.current = row;
-    result.next = columnResult.next;
-    return row;
+    result.current = const_cast<char *>(row);
+    result.next = const_cast<char *>(
+        scanRowEnd(columnResult.next, buffer+size-columnResult.next, result));
 }
 
-char *FlatFileParser::scanRowEnd(
-    FlatFileBuffer &buffer,
+const char *FlatFileParser::scanRowEnd(
+    const char *buffer,
+    int size,
     FlatFileRowParseResult &result)
 {
-    char *read = result.next;
+    const char *read = buffer;
+    const char *end = buffer + size;
     switch (result.status) {
     case FlatFileRowParseResult::INCOMPLETE_COLUMN:
+    case FlatFileRowParseResult::ROW_TOO_LARGE:
+        assert(read == end);
         return read;
-    case FlatFileRowParseResult::COLUMN_TOO_LARGE:
     case FlatFileRowParseResult::TOO_MANY_COLUMNS:
-        read = scanRowDelim(buffer, read, true);
-        if (read == buffer.contentEnd()) {
-            assert(buffer.readCompleted());
+        read = scanRowDelim(read, end-read, true);
+        if (read == end) {
             return read;
         }
     case FlatFileRowParseResult::NO_STATUS:
     case FlatFileRowParseResult::NO_COLUMN_DELIM:
     case FlatFileRowParseResult::TOO_FEW_COLUMNS:
-        read = scanRowDelim(buffer, read, false);
+        read = scanRowDelim(read, end-read, false);
         break;
     default:
         permAssert(false);
@@ -142,26 +131,18 @@ char *FlatFileParser::scanRowEnd(
     return read;
 }
 
-char *FlatFileParser::scanRowDelim(
-    FlatFileBuffer &buffer,
-    char *current,
+const char *FlatFileParser::scanRowDelim(
+    const char *buffer, 
+    int size, 
     bool search) 
 {
-    char *read = current;
-    char *end = buffer.buf() + buffer.size();
-    while (true) {
-        if (read < end && (isRowDelim(*read) == search)) {
-            break;
-        } else if (read < end) {
-            read++;
-        } else if (read == end && buffer.readCompleted()) {
+    const char *read = buffer;
+    const char *end = buffer + size;
+    while (read < end) {
+        if (isRowDelim(*read) == search) {
             break;
         } else {
-            permAssert(read == end);
-            buffer.fill(read);
-            read = buffer.buf();
-            end = buffer.buf() + buffer.size();
-            continue;
+            read++;
         }
     }
     return read;
@@ -174,17 +155,16 @@ bool FlatFileParser::isRowDelim(char c)
 }
 
 void FlatFileParser::scanColumn(
-    char *buffer,
+    const char *buffer,
     uint size,
     uint maxLength, 
-    bool isChar,
     FlatFileColumnParseResult &result)
 {
-    assert (size > 0);
+    assert (size >= 0);
     assert (maxLength > 0);
-    char *read = buffer;
-    char *end = buffer + size;
-    bool quoted = (isChar && *buffer == quote);
+    const char *read = buffer;
+    const char *end = buffer + size;
+    bool quoted = (size > 0 && *buffer == quote);
     bool quoteEscape = (quoted && quote == escape);
     uint remaining = maxLength;
 
@@ -250,14 +230,14 @@ void FlatFileParser::scanColumn(
     switch (result.type) {
     case FlatFileColumnParseResult::NO_DELIM:
     case FlatFileColumnParseResult::MAX_LENGTH:
-        assert(read > buffer);
+        assert(read >= buffer);
         result.size = read - buffer;
-        result.next = read;
+        result.next = const_cast<char *>(read);
         break;
     case FlatFileColumnParseResult::FIELD_DELIM:
     case FlatFileColumnParseResult::ROW_DELIM:
         result.size = read - buffer;
-        result.next = read + 1;
+        result.next = const_cast<char *>(read + 1);
         break;
     default:
         permAssert(false);

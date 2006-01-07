@@ -323,7 +323,10 @@ language java;
 
 create server flatfile_server
 foreign data wrapper flatfile_foreign_wrapper
-options (with_header 'yes', log_directory 'testlog');
+options (
+    with_header 'yes', 
+    file_extension '',
+    log_directory 'testlog');
 
 create foreign table flatfile_table(
     id int not null,

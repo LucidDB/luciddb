@@ -222,6 +222,9 @@ public class BasicSqlType extends AbstractSqlType
             if (typeName.getDefaultPrecision() > -1) {
                 printPrecision = true;
             }
+            if (typeName.getDefaultScale() > -1) {
+                printScale = true;
+            }
         }
 
         if (printPrecision) {

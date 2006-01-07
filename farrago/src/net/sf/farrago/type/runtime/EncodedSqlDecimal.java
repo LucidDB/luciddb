@@ -28,33 +28,35 @@ import org.eigenbase.util.*;
 import net.sf.farrago.resource.FarragoResource;
 
 /**
- * Runtime type for decimal values.
- *
+ * Runtime type for decimal values. The usage of decimal values 
+ * is highly restricted within the Farrago runtime. The operations 
+ * allowed for decimals are:
+ * 
+ * <ul>
+ *   <li>A decimal may be casted to or from strings. 
+ *   <li>A decimal may be reinterpreted to or from its
+ *       internal representation, a long value.
+ * </ul> 
+ * 
+ * The optimizer does not allow other operations to reach to the 
+ * Farrago runtime. This class extends a primitive type so that it 
+ * is easily assigned to and from its internal representation. As 
+ * usual, the <code>getNullableData</code> method returns an 
+ * external data type, conforming to SQL standards.
  *
  * @author jpham
  * @since Dec 21, 2005
  * @version $Id$
  **/
 public abstract class EncodedSqlDecimal 
-    implements AssignableValue, NullableValue
+    extends NullablePrimitive.NullableLong
 {
     //~ Static fields -------------------------------------------------------
 
     public static final String GET_PRECISION_METHOD_NAME = "getPrecision";
     public static final String GET_SCALE_METHOD_NAME = "getScale";
     public static final String REINTERPRET_METHOD_NAME = "reinterpret";
-    private static final Integer INT_ONE = new Integer(1);
-    private static final Integer INT_ZERO = new Integer(0);
     
-    //~ Instance fields -------------------------------------------------------
-
-    private boolean isNull;
-    
-    /**
-     * Scaled integer representation of the decimal
-     */
-    public long value;
-
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -62,6 +64,7 @@ public abstract class EncodedSqlDecimal
      */
     public EncodedSqlDecimal()
     {
+        super();
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -76,49 +79,56 @@ public abstract class EncodedSqlDecimal
      */
     protected abstract int getScale();
     
-    public void setNull(boolean isNull)
-    {
-        this.isNull = isNull;
-    }
-    
-    public boolean isNull()
-    {
-        return isNull;
-    }
-    
     // implement AssignableValue
     public void assignFrom(Object obj) 
     {
         if (obj == null) {
             setNull(true);
         } else if (obj instanceof EncodedSqlDecimal) {
-            setNull(false);
             EncodedSqlDecimal decimal = (EncodedSqlDecimal) obj;
+            setNull(decimal.isNull());
             value = decimal.value;
-        } else {
-            // TODO: are we allowed to allocate here?
-            setNull(false);
-            String s = obj.toString();
-            BigDecimal n;
-            try {
-                n = new BigDecimal(s.trim());
-            } catch (NumberFormatException ex) {
-                // NOTE jvs 11-Oct-2005:  leave ex out entirely, because
-                // it doesn't contain useful information and causes
-                // test diffs due to JVM variance
-                throw FarragoResource.instance().AssignFromFailed.ex(
-                    s,
-                    "NUMERIC",
-                    "NumberFormatException");
+        } else if (obj instanceof NullablePrimitive) {
+            Util.pre(obj instanceof NullablePrimitive.NullableLong, 
+                "obj instanceof NullablePrimitive.NullableLong");
+            NullablePrimitive.NullableLong primitive = 
+                (NullablePrimitive.NullableLong) obj;
+            setNull(primitive.isNull());
+            value = primitive.value;
+        } else if (obj instanceof EncodedCharPointer) {
+            // REVIEW jpham 6-Jan-2006: we try not to allocate objects 
+            // on a per row basis, but here we do so on a per column basis
+            EncodedCharPointer str = (EncodedCharPointer) obj;
+            setNull(str.isNull());
+            if (! str.isNull()) {
+                String s = obj.toString();
+                BigDecimal n;
+                try {
+                    n = new BigDecimal(s.trim());
+                } catch (NumberFormatException ex) {
+                    // NOTE jvs 11-Oct-2005:  leave ex out entirely, because
+                    // it doesn't contain useful information and causes
+                    // test diffs due to JVM variance
+                    throw FarragoResource.instance().AssignFromFailed.ex(
+                        s,
+                        "NUMERIC",
+                        "NumberFormatException");
+                }
+                n = n.setScale(getScale(), BigDecimal.ROUND_HALF_UP);
+                value = n.unscaledValue().longValue();
             }
-            n = n.setScale(getScale(), BigDecimal.ROUND_HALF_UP);
-            value = n.unscaledValue().longValue();
+        } else {
+            throw Util.needToImplement(
+                "Assign EncodedSqlDecimal from " + obj.getClass());
         }
     }
     
     // implement AssignableValue
     public void assignFrom(long l)
     {
+        // NOTE: this is a quicker, cheaper version of assignment 
+        // for the common case
+        setNull(false);
         value = l;
     }
     
@@ -132,17 +142,23 @@ public abstract class EncodedSqlDecimal
     }
     
     /**
-     * Encodes a long value as an EncodedSqlDecimal. Implemented by 
-     * setting the value of the current object and returning the 
-     * current object. This scheme avoids allocations.
+     * Encodes a long value as an EncodedSqlDecimal.
      * 
      * @param value value to be encoded as an EncodedSqlDecimal
      * @return this, an EncodedSqlDecimal whose value has been set
      */
-    public EncodedSqlDecimal reinterpret(long value) 
+    public void reinterpret(long value) 
     {
-        this.value = value;
-        return this;
+        assignFrom(value);
+    }
+
+    public void reinterpret(NullablePrimitive.NullableLong primitive) 
+    {
+        if (primitive.isNull()) {
+            setNull(true);
+            return;
+        }
+        assignFrom(primitive.value);
     }
 }
 
