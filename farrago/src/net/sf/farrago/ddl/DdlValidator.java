@@ -467,9 +467,31 @@ public class DdlValidator extends FarragoCompoundAllocation
         if (replacementTarget != null) {
             Set deps = getDependencies(replacementTarget);
             scheduleRevalidation(deps);
-
-            stopListening();
+            
+            stopListening();            
+            // special cases - FemBaseColumnSet, FemDataServer
+            Iterator i = deps.iterator();
+            while (i.hasNext()) {
+                CwmModelElement e = (CwmModelElement)i.next();
+                if (e instanceof FemBaseColumnSet) {
+                    // must reset server to newElement
+                    ((FemBaseColumnSet)e).setServer((FemDataServer)newElement);
+                } else if (e instanceof FemDataServer) {
+                    ((FemDataServer)e).setWrapper((FemDataWrapper)newElement);
+                }
+            }
+            
+            // preserve owned elements
+            ArrayList ownedElements = null;
+            if (replacementTarget instanceof CwmNamespace) {
+                ownedElements = new ArrayList();
+                Collection c = ((CwmNamespace)replacementTarget).getOwnedElement();
+                ownedElements.addAll(c);
+                // remove ownership to avoid cascade delete
+                c.clear();
+            }
             replaceDependencies(replacementTarget, newElement);
+            
             startListening();
 
             replacementTarget.refDelete();
@@ -482,6 +504,12 @@ public class DdlValidator extends FarragoCompoundAllocation
                     }
                     refObj.refDelete();
                 }
+            }
+            
+            // restore owned elements
+            if (ownedElements != null) {
+                Collection c = ((CwmNamespace)newElement).getOwnedElement();
+                c.addAll(ownedElements);
             }
         }
     }

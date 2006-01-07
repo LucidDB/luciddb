@@ -90,14 +90,6 @@ public class DdlRelationalHandler extends DdlHandler
     // implement FarragoSessionDdlHandler
     public void validateDefinition(FemLocalSchema schema)
     {
-        if (isReplacingType(schema)) {
-            throw res.ValidatorNotReplaceable.ex(
-                repos.getLocalizedObjectName(
-                    null,
-                    schema.getName(),
-                    schema.refClass()));
-        }
-
         validator.validateUniqueNames(
             schema,
             schema.getOwnedElement(),
