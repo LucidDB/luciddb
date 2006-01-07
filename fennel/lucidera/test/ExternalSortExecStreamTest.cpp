@@ -105,9 +105,6 @@ void ExternalSortExecStreamTest::testImpl(
     ExternalSortExecStreamParams sortParams;
     sortParams.outputTupleDesc.push_back(attrDesc);
     sortParams.distinctness = DUP_ALLOW;
-    pRandomSegment = pSegmentFactory->newRandomAllocationSegment(
-        pLinearSegment, true);
-    pLinearSegment.reset();
     sortParams.pTempSegment = pRandomSegment;
     sortParams.pCacheAccessor = pCache;
     sortParams.scratchAccessor =

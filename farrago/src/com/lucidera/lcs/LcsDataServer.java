@@ -145,30 +145,6 @@ class LcsDataServer extends MedAbstractFennelDataServer
         }
     }
 
-    // NOTE jvs 20-Dec-2005:  For now we just stub out unclustered indexes
-    // until they're working in LCS.
-
-    // implement FarragoMedLocalDataServer
-    public long createIndex(FemLocalIndex index)
-    {
-        if (index.isClustered()) {
-            return super.createIndex(index);
-        } else {
-            return -1;
-        }
-    }
-    
-    // implement FarragoMedLocalDataServer
-    public void dropIndex(
-        FemLocalIndex index,
-        long rootPageId,
-        boolean truncate)
-    {
-        if (index.isClustered()) {
-            super.dropIndex(index, rootPageId, truncate);
-        }
-    }
-
     // implement FarragoMedLocalDataServer
     public RelNode constructIndexBuildPlan(
         RelOptTable table,
@@ -183,37 +159,48 @@ class LcsDataServer extends MedAbstractFennelDataServer
         FemIndexCmd cmd,
         FemLocalIndex index)
     {
-        // TODO jvs 5-Nov-2005:  get rid of this once we support unclustered
-        // indexes on LCS tables
-        assert(index.isClustered());
-
-        // For LCS clustered indexes, the stored tuple is always the same:
-        // [RID, PageId]; and the key is just the RID.  In Fennel,
-        // both attributes are represented as 64-bit ints.
-
-        FemTupleDescriptor tupleDesc = repos.newFemTupleDescriptor();
-        FennelStoredTypeDescriptor typeDesc =
-            FennelStandardTypeDescriptor.INT_64;
-        for (int i = 0; i < 2; ++i) {
-            FemTupleAttrDescriptor attrDesc = repos.newFemTupleAttrDescriptor();
-            tupleDesc.getAttrDescriptor().add(attrDesc);
-            attrDesc.setTypeOrdinal(
-                typeDesc.getOrdinal());
+        LcsIndexGuide indexGuide = new LcsIndexGuide(
+            new FarragoTypeFactoryImpl(repos),
+            FarragoCatalogUtil.getIndexTable(index));
+        if (index.isClustered()) {
+            prepareClusteredIndexCmd(
+                indexGuide,
+                cmd,
+                index);
+        } else {
+            prepareClusteredIndexCmd(
+                indexGuide,
+                cmd,
+                index);
         }
+    }
 
-        cmd.setTupleDesc(tupleDesc);
+    private void prepareClusteredIndexCmd(
+        LcsIndexGuide indexGuide,
+        FemIndexCmd cmd,
+        FemLocalIndex index)
+    {
+        cmd.setTupleDesc(
+            indexGuide.createClusteredBTreeTupleDesc());
+        
         cmd.setKeyProj(
-            FennelRelUtil.createTupleProjection(
-                repos,
-                FennelRelUtil.newIotaProjection(1)));
+            indexGuide.createClusteredBTreeRidDesc());
 
         // Tell Fennel how to drop the cluster pages together with
-        // the BTree.  The constant 1 below projects the PageId pointer
-        // in leaf tuples.
+        // the BTree.
         cmd.setLeafPageIdProj(
-            FennelRelUtil.createTupleProjection(
-                repos,
-                new Integer [] { 1 }));
+            indexGuide.createClusteredBTreePageIdDesc());
+    }
+    
+    private void prepareUnclusteredIndexCmd(
+        LcsIndexGuide indexGuide,
+        FemIndexCmd cmd,
+        FemLocalIndex index)
+    {
+        cmd.setTupleDesc(
+            indexGuide.createUnclusteredBTreeTupleDesc(index));
+        cmd.setKeyProj(
+            indexGuide.createUnclusteredBTreeKeyDesc(index));
     }
 }
 

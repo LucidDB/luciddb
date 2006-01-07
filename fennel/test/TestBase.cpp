@@ -131,9 +131,9 @@ void TestBase::beforeTestCase(std::string testCaseName)
     notifyTrace(testName,TRACE_INFO,"ENTER:  " + testCaseName);
 
     // Install the AutoBacktrace signal handler now, after
-    // boost::execution_monitor::catch_signals() has installed its own, so that on
-    // SIGABRT AutoBacktrace goes first, prints the backtrace, then chains to boost,
-    // which handles the error.
+    // boost::execution_monitor::catch_signals() has installed its own, so that
+    // on SIGABRT AutoBacktrace goes first, prints the backtrace, then chains
+    // to boost, which handles the error.
     AutoBacktrace::setOutputStream();
     AutoBacktrace::setTraceTarget(shared_from_this());
     AutoBacktrace::install();

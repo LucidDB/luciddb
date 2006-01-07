@@ -35,10 +35,10 @@ FENNEL_BEGIN_NAMESPACE
  */
 struct Correlation 
 {
-    uint dynamicParamId;
+    DynamicParamId dynamicParamId;
     uint leftAttributeOrdinal;
 
-    Correlation(uint id, uint offset) : 
+    Correlation(DynamicParamId id, uint offset) : 
         dynamicParamId(id), 
         leftAttributeOrdinal(offset)
     { 

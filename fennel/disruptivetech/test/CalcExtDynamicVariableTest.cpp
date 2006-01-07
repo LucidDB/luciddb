@@ -126,76 +126,76 @@ CalcExtDynamicVariableTest::testCalcExtDynamicVariable()
 
     int32_t data0 = -321;
     dynamicData[0].pData = (PConstBuffer) &data0;
-    dpm.createParam(0, outTupleDesc[0]);
-    dpm.setParam(0, dynamicData[0]);
+    dpm.createParam(DynamicParamId(0), outTupleDesc[0]);
+    dpm.writeParam(DynamicParamId(0), dynamicData[0]);
 
     uint32_t data1 = 622;
     dynamicData[1].pData = (PConstBuffer) &data1;
-    dpm.createParam(1, outTupleDesc[1]);
-    dpm.setParam(1, dynamicData[1]);
+    dpm.createParam(DynamicParamId(1), outTupleDesc[1]);
+    dpm.writeParam(DynamicParamId(1), dynamicData[1]);
 
     int64_t data2 = 0xFFFFFFFFffffffffLL;
     dynamicData[2].pData = (PConstBuffer) &data2;
-    dpm.createParam(2, outTupleDesc[2]);
-    dpm.setParam(2, dynamicData[2]);
+    dpm.createParam(DynamicParamId(2), outTupleDesc[2]);
+    dpm.writeParam(DynamicParamId(2), dynamicData[2]);
 
     uint64_t data3 = 0x8000000000000000ULL;
     dynamicData[3].pData = (PConstBuffer) &data3;
-    dpm.createParam(3, outTupleDesc[3]);
-    dpm.setParam(3, dynamicData[3]);
+    dpm.createParam(DynamicParamId(3), outTupleDesc[3]);
+    dpm.writeParam(DynamicParamId(3), dynamicData[3]);
 
     int8_t data4 = 0xFF;
     dynamicData[4].pData = (PConstBuffer) &data4;
-    dpm.createParam(4, outTupleDesc[4]);
-    dpm.setParam(4, dynamicData[4]);
+    dpm.createParam(DynamicParamId(4), outTupleDesc[4]);
+    dpm.writeParam(DynamicParamId(4), dynamicData[4]);
 
     uint8_t data5 = 128;
     dynamicData[5].pData = (PConstBuffer) &data5;
-    dpm.createParam(5, outTupleDesc[5]);
-    dpm.setParam(5, dynamicData[5]);
+    dpm.createParam(DynamicParamId(5), outTupleDesc[5]);
+    dpm.writeParam(DynamicParamId(5), dynamicData[5]);
     
     int16_t data6 = 0xFFFF;
     dynamicData[6].pData = (PConstBuffer) &data6;
-    dpm.createParam(6, outTupleDesc[6]);
-    dpm.setParam(6, dynamicData[6]);
+    dpm.createParam(DynamicParamId(6), outTupleDesc[6]);
+    dpm.writeParam(DynamicParamId(6), dynamicData[6]);
 
     uint16_t data7 = 0x8000;
     dynamicData[7].pData = (PConstBuffer) &data7;
-    dpm.createParam(7, outTupleDesc[7]);
-    dpm.setParam(7, dynamicData[7]);
+    dpm.createParam(DynamicParamId(7), outTupleDesc[7]);
+    dpm.writeParam(DynamicParamId(7), dynamicData[7]);
 
     bool data8 = true;
     dynamicData[8].pData = (PConstBuffer) &data8;
-    dpm.createParam(8, outTupleDesc[8]);
-    dpm.setParam(8, dynamicData[8]);
+    dpm.createParam(DynamicParamId(8), outTupleDesc[8]);
+    dpm.writeParam(DynamicParamId(8), dynamicData[8]);
 
     float data9 = 3.14f;
     dynamicData[9].pData = (PConstBuffer) &data9;
-    dpm.createParam(9, outTupleDesc[9]);
-    dpm.setParam(9, dynamicData[9]);
+    dpm.createParam(DynamicParamId(9), outTupleDesc[9]);
+    dpm.writeParam(DynamicParamId(9), dynamicData[9]);
 
     float data10 = 3.14e300;
     dynamicData[10].pData = (PConstBuffer) &data10;
-    dpm.createParam(10, outTupleDesc[10]);
-    dpm.setParam(10, dynamicData[10]);
+    dpm.createParam(DynamicParamId(10), outTupleDesc[10]);
+    dpm.writeParam(DynamicParamId(10), dynamicData[10]);
 
     char* data11 = "abc";
     dynamicData[11].pData = (PConstBuffer) data11;
     dynamicData[11].cbData = strlen(data11);
-    dpm.createParam(11, outTupleDesc[11]);
-    dpm.setParam(11, dynamicData[11]);
+    dpm.createParam(DynamicParamId(11), outTupleDesc[11]);
+    dpm.writeParam(DynamicParamId(11), dynamicData[11]);
 
     char* data12 = "def";
     dynamicData[12].pData = (PConstBuffer) data12;
     dynamicData[12].cbData = strlen(data12);
-    dpm.createParam(12, outTupleDesc[12]);
-    dpm.setParam(12, dynamicData[12]);
+    dpm.createParam(DynamicParamId(12), outTupleDesc[12]);
+    dpm.writeParam(DynamicParamId(12), dynamicData[12]);
 
     char* data13 = "ghi";
     dynamicData[13].pData = (PConstBuffer) data13;
     dynamicData[13].cbData = strlen(data13);
-    dpm.createParam(13, outTupleDesc[13]);
-    dpm.setParam(13, dynamicData[13]);
+    dpm.createParam(DynamicParamId(13), outTupleDesc[13]);
+    dpm.writeParam(DynamicParamId(13), dynamicData[13]);
 
     TupleDataWithBuffer outTuple(calc.getOutputRegisterDescriptor());
     TupleDataWithBuffer inTuple(calc.getInputRegisterDescriptor());

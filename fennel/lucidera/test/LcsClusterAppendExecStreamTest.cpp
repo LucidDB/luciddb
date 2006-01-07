@@ -182,7 +182,7 @@ void LcsClusterAppendExecStreamTest::testLoadSingleCol(
     lcsAppendParams.scratchAccessor =
         pSegmentFactory->newScratchSegment(pCache, 10);
     lcsAppendParams.pCacheAccessor = pCache;
-    lcsAppendParams.pSegment = pLinearSegment;
+    lcsAppendParams.pSegment = pRandomSegment;
     
     lcsAppendParams.overwrite = false;
     lcsAppendParams.inputProj.push_back(0);
@@ -211,7 +211,7 @@ void LcsClusterAppendExecStreamTest::testLoadSingleCol(
     btreeDescriptor.keyProjection = lcsAppendParams.keyProj;
     btreeDescriptor.rootPageId = newRoot ? NULL_PAGE_ID : savedRootPageId;
 
-    BTreeBuilder builder(btreeDescriptor, pLinearSegment);
+    BTreeBuilder builder(btreeDescriptor, pRandomSegment);
 
     // if BTree root not yet setup
     if (newRoot) {
@@ -267,7 +267,7 @@ void LcsClusterAppendExecStreamTest::testLoadMultiCol(
     lcsAppendParams.scratchAccessor =
         pSegmentFactory->newScratchSegment(pCache, 10);
     lcsAppendParams.pCacheAccessor = pCache;
-    lcsAppendParams.pSegment = pLinearSegment;
+    lcsAppendParams.pSegment = pRandomSegment;
     
     // initialize the btree parameter portion of lcsAppendParams
     // BTree tuple desc only has one column
@@ -296,7 +296,7 @@ void LcsClusterAppendExecStreamTest::testLoadMultiCol(
     btreeDescriptor.segmentId = lcsAppendParams.segmentId;
     btreeDescriptor.pageOwnerId = lcsAppendParams.pageOwnerId;
     
-    BTreeBuilder builder(btreeDescriptor, pLinearSegment);
+    BTreeBuilder builder(btreeDescriptor, pRandomSegment);
 
     // if BTree root not yet setup
     if (newRoot) {
@@ -461,15 +461,15 @@ void LcsClusterAppendExecStreamTest::testSingleColNoDupNewRoot()
         SharedMockProducerExecStreamGenerator(new RampExecStreamGenerator());
     
     testLoadSingleCol(848, true,  pGenerator, "testSingleColNoDupNewRoot");
-    testReset();
+    resetExecStreamTest();
     testScanSingleCol(848, pGenerator, pResultGenerator);
 }
 
 /*
-  Tests appending to an existing tree by first inserting into a new btree
-  and then reusing the btree.  Note that all of this needs to be done within
-  a single testcase with an intervening testReset().  Otherwise, the btree
-  state from the first set of inserts is not preserved.
+  Tests appending to an existing tree by first inserting into a new btree and
+  then reusing the btree.  Note that all of this needs to be done within a
+  single testcase with an intervening resetExecStreamTest().  Otherwise, the
+  btree state from the first set of inserts is not preserved.
 */
 void LcsClusterAppendExecStreamTest::testSingleColNoDupOldRoot()
 {
@@ -484,14 +484,14 @@ void LcsClusterAppendExecStreamTest::testSingleColNoDupOldRoot()
         SharedMockProducerExecStreamGenerator(new RampExecStreamGenerator());
 
     testLoadSingleCol(848, true,  pGenerator,  "testSingleColNoDupOldRoot");
-    testReset();
+    resetExecStreamTest();
     // this will test scans of variable mode batches
     testScanSingleCol(848, pGenerator, pResultGenerator);
 
-    testReset();
+    resetExecStreamTest();
     testLoadSingleCol(848, false,  pGenerator,  "testSingleColNoDupOldRoot");
 
-    testReset();
+    resetExecStreamTest();
     pGenerator.reset(new RampExecStreamGenerator(848));
     testScanSingleCol(848, pGenerator, pResultGenerator);
 }
@@ -508,17 +508,17 @@ void LcsClusterAppendExecStreamTest::testSingleColConstNewRoot()
         SharedMockProducerExecStreamGenerator(new ConstExecStreamGenerator(72));
     
     testLoadSingleCol(848, true, pGenerator, "testSingleColConstNewRoot");
-    testReset();
+    resetExecStreamTest();
 
     pGenerator.reset(new RampExecStreamGenerator());
     testScanSingleCol(848, pGenerator, pResultGenerator);
 }
 
 /*
-  Tests appending to an existing tree by first inserting into a new btree
-  and then reusing the btree.  Note that all of this needs to be done within
-  a single testcase with an intervening testReset().  Otherwise, the btree
-  state from the first set of inserts is not preserved.
+  Tests appending to an existing tree by first inserting into a new btree and
+  then reusing the btree.  Note that all of this needs to be done within a
+  single testcase with an intervening resetExecStreamTest().  Otherwise, the
+  btree state from the first set of inserts is not preserved.
 */
 void LcsClusterAppendExecStreamTest::testSingleColConstOldRoot()
 {
@@ -532,10 +532,10 @@ void LcsClusterAppendExecStreamTest::testSingleColConstOldRoot()
         SharedMockProducerExecStreamGenerator(new ConstExecStreamGenerator(72));
 
     testLoadSingleCol(10, true,  pGenerator,  "testSingleColConstOldRoot");
-    testReset();
+    resetExecStreamTest();
     testLoadSingleCol(10, false,  pGenerator,  "testSingleColConstOldRoot");
 
-    testReset();
+    resetExecStreamTest();
     pGenerator.reset(new RampExecStreamGenerator());
     testScanSingleCol(20, pGenerator, pResultGenerator);
 }
@@ -551,17 +551,17 @@ void LcsClusterAppendExecStreamTest::testSingleColStairNewRoot()
         SharedMockProducerExecStreamGenerator(new StairCaseExecStreamGenerator(1,  7));
 
     testLoadSingleCol(848, true, pGenerator, "testSingleColStairNewRoot");
-    testReset();
+    resetExecStreamTest();
 
     pGenerator.reset(new RampExecStreamGenerator());
     testScanSingleCol(848, pGenerator, pResultGenerator);
 }
 
 /*
-  Tests appending to an existing tree by first inserting into a new btree
-  and then reusing the btree.  Note that all of this needs to be done within
-  a single testcase with an intervening testReset().  Otherwise, the btree
-  state from the first set of inserts is not preserved.
+  Tests appending to an existing tree by first inserting into a new btree and
+  then reusing the btree.  Note that all of this needs to be done within a
+  single testcase with an intervening resetExecStreamTest().  Otherwise, the
+  btree state from the first set of inserts is not preserved.
 */
 void LcsClusterAppendExecStreamTest::testSingleColStairOldRoot()
 {
@@ -578,13 +578,13 @@ void LcsClusterAppendExecStreamTest::testSingleColStairOldRoot()
         SharedMockProducerExecStreamGenerator(new StairCaseExecStreamGenerator(1,  7));
 
     testLoadSingleCol(10, true,  pGenerator,  "testSingleColStairOldRoot");
-    testReset();
+    resetExecStreamTest();
     testScanSingleCol(10, pRidGenerator, pResultGenerator);
 
-    testReset();
+    resetExecStreamTest();
     testLoadSingleCol(10, false,  pGenerator, "testSingleColStairOldRoot");
 
-    testReset();
+    resetExecStreamTest();
     pRidGenerator.reset(new RampExecStreamGenerator(10));
     testScanSingleCol(10, pRidGenerator, pResultGenerator);
 }
@@ -600,15 +600,15 @@ void LcsClusterAppendExecStreamTest::testMultiColNoDupNewRoot()
         SharedMockProducerExecStreamGenerator(new RampExecStreamGenerator());
     
     testLoadMultiCol(848, 3, true,  pGenerator,  "testMultiColNoDupNewRoot");
-    testReset();
+    resetExecStreamTest();
     testScanMultiCol(848, 3, pGenerator, pResultGenerator);
 }
 
 /*
-  Tests appending to an existing tree by first inserting into a new btree
-  and then reusing the btree.  Note that all of this needs to be done within
-  a single testcase with an intervening testReset().  Otherwise, the btree
-  state from the first set of inserts is not preserved.
+  Tests appending to an existing tree by first inserting into a new btree and
+  then reusing the btree.  Note that all of this needs to be done within a
+  single testcase with an intervening resetExecStreamTest().  Otherwise, the
+  btree state from the first set of inserts is not preserved.
 */
 void LcsClusterAppendExecStreamTest::testMultiColNoDupOldRoot()
 {
@@ -625,13 +625,13 @@ void LcsClusterAppendExecStreamTest::testMultiColNoDupOldRoot()
         SharedMockProducerExecStreamGenerator(new RampExecStreamGenerator());
 
     testLoadMultiCol(10, 3, true,  pGenerator,"testMultiColNoDupOldRoot");
-    testReset();
+    resetExecStreamTest();
     testScanMultiCol(10, 3, pRidGenerator, pResultGenerator);
 
-    testReset();
+    resetExecStreamTest();
     testLoadMultiCol(10, 3, false,  pGenerator, "testMultiColNoDupOldRoot");
 
-    testReset();
+    resetExecStreamTest();
     pRidGenerator.reset(new RampExecStreamGenerator(10));
     testScanMultiCol(10, 3, pRidGenerator, pResultGenerator);
 }
@@ -648,17 +648,17 @@ void LcsClusterAppendExecStreamTest::testMultiColConstNewRoot()
         SharedMockProducerExecStreamGenerator(new ConstExecStreamGenerator(72));
     
     testLoadMultiCol(848, 3, true,  pGenerator,  "testMultiColConstNewRoot");
-    testReset();
+    resetExecStreamTest();
 
     pGenerator.reset(new RampExecStreamGenerator());
     testScanMultiCol(848, 3, pGenerator, pResultGenerator);
 }
 
 /*
-  Tests appending to an existing tree by first inserting into a new btree
-  and then reusing the btree.  Note that all of this needs to be done within
-  a single testcase with an intervening testReset().  Otherwise, the btree
-  state from the first set of inserts is not preserved.
+  Tests appending to an existing tree by first inserting into a new btree and
+  then reusing the btree.  Note that all of this needs to be done within a
+  single testcase with an intervening resetExecStreamTest().  Otherwise, the
+  btree state from the first set of inserts is not preserved.
 */
 void LcsClusterAppendExecStreamTest::testMultiColConstOldRoot()
 {
@@ -672,10 +672,10 @@ void LcsClusterAppendExecStreamTest::testMultiColConstOldRoot()
         SharedMockProducerExecStreamGenerator(new ConstExecStreamGenerator(72));
 
     testLoadMultiCol(10, 3, true,  pGenerator,  "testMultiColConstOldRoot");
-    testReset();
+    resetExecStreamTest();
     testLoadMultiCol(10, 3, false,  pGenerator, "testMultiColConstOldRoot");
 
-    testReset();
+    resetExecStreamTest();
     pGenerator.reset(new RampExecStreamGenerator());
     testScanMultiCol(20, 3, pGenerator, pResultGenerator);
 }
@@ -691,17 +691,17 @@ void LcsClusterAppendExecStreamTest::testMultiColStairNewRoot()
         SharedMockProducerExecStreamGenerator(new StairCaseExecStreamGenerator(1,  7));
     
     testLoadMultiCol(848, 3, true,  pGenerator,  "testMultiColStairNewRoot");
-    testReset();
+    resetExecStreamTest();
 
     pGenerator.reset(new RampExecStreamGenerator());
     testScanMultiCol(848, 3, pGenerator, pResultGenerator);
 }
 
 /*
-  Tests appending to an existing tree by first inserting into a new btree
-  and then reusing the btree.  Note that all of this needs to be done within
-  a single testcase with an intervening testReset().  Otherwise, the btree
-  state from the first set of inserts is not preserved.
+  Tests appending to an existing tree by first inserting into a new btree and
+  then reusing the btree.  Note that all of this needs to be done within a
+  single testcase with an intervening resetExecStreamTest().  Otherwise, the
+  btree state from the first set of inserts is not preserved.
 */
 void LcsClusterAppendExecStreamTest::testMultiColStairOldRoot()
 {
@@ -718,13 +718,13 @@ void LcsClusterAppendExecStreamTest::testMultiColStairOldRoot()
         SharedMockProducerExecStreamGenerator(new StairCaseExecStreamGenerator(1,  7));
 
     testLoadMultiCol(10, 3, true, pGenerator, "testMultiColStairOldRoot");
-    testReset();
+    resetExecStreamTest();
     testScanMultiCol(10, 3, pRidGenerator, pResultGenerator);
 
-    testReset();
+    resetExecStreamTest();
     testLoadMultiCol(10, 3, false, pGenerator, "testMultiColStairOldRoot");
 
-    testReset();
+    resetExecStreamTest();
     pRidGenerator.reset(new RampExecStreamGenerator(10));
     testScanMultiCol(10, 3, pRidGenerator, pResultGenerator);
 }

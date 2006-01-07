@@ -49,7 +49,8 @@ protected:
     /**
      * Creates an embryo for a stream graph.
      */
-    virtual SharedExecStreamGraphEmbryo newStreamGraphEmbryo(SharedExecStreamGraph);
+    virtual SharedExecStreamGraphEmbryo newStreamGraphEmbryo(
+        SharedExecStreamGraph);
 
     /**
      * Creates a scheduler.
@@ -57,9 +58,9 @@ protected:
     virtual ExecStreamScheduler *newScheduler();
 
     /**
-     * refines testCaseTearDown
+     * ExecStream-specific handler called from testCaseTearDown.
      */
-    virtual void tearDown();
+    virtual void tearDownExecStreamTest();
 
 public:
     virtual ~ExecStreamTestBase() {}

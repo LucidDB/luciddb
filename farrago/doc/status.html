@@ -78,7 +78,7 @@ datatype (not arbitrary expressions).
 column level or the table level.  Constraints can be named, and are
 enforced via implicitly created indexes.
 
-<li>CREATE [UNIQUE] CLUSTERED INDEX: if specified, this must be at the
+<li>CREATE CLUSTERED INDEX: if specified, this must be at the
 end of the CREATE TABLE statement, not in a separate statement.  Example:  
 <pre><code>
 create table t(i int not null primary key,j int not null,k int)
@@ -87,9 +87,9 @@ create index t_y on t(k);
 <code></pre>
 If not specified, the primary key is used implicitly for clustering.
 <a href="design/TableIndexing.html">
-Every table has exactly one clustered index</a>.
+For the default row-store, every table has exactly one clustered index</a>.
 
-<li>CREATE [UNIQUE] INDEX: unclustered indexes can be created either
+<li>CREATE INDEX: unclustered indexes can be created either
 at the end of the table definition or in separate statements.  Indexes
 are considered to be schema elements but are always created in the same
 schema as their containing table.

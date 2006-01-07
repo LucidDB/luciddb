@@ -60,7 +60,8 @@ class ExecStreamSubFactory_dt
         SharedProxyCorrelation pCorrelation = streamDef.getCorrelations();
         for ( /* empty */; pCorrelation; ++pCorrelation) {
             Correlation correlation(
-                            pCorrelation->getId(), pCorrelation->getOffset());
+                DynamicParamId(pCorrelation->getId()),
+                pCorrelation->getOffset());
             params.correlations.push_back(correlation);
         }
         pEmbryo->init(new CorrelationJoinExecStream(), params);

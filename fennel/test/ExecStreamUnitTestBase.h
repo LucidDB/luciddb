@@ -32,7 +32,10 @@ FENNEL_BEGIN_NAMESPACE
 
 /**
  * ExecStreamUnitTestBase extends ExecStreamTestBase to be the common base of
- * the unit tests of fennel ExecStreams. It assumes a single stream graph.
+ * the unit tests of ExecStreams which assume a single stream graph.  (Other
+ * subclasses of ExecStreamTestBase may not rely on this assumption; this is
+ * the reason why this class exists separately from ExecStreamTestBase.)
+ *
  * @author John V. Sichi, Marc Berkowitz
  * @version $Id$
  */
@@ -102,30 +105,25 @@ protected:
         ExecStreamEmbryo &confluenceStreamEmbryo);
 
     /**
-     * Defines and prepares a graph consisting of a source, a transform and two
-     * intermediate transform streams followed by one confluence stream.
+     * Defines and prepares a graph consisting of a source, a splitter, and two
+     * parallel transform streams which flow together into a confluence stream.
      *
-     * @param srcStreamEmbryo1 embryonic source stream which produces tuples
+     * @param srcStreamEmbryo embryonic source stream which produces tuples
      *
-     * @param srcBufStreamEmbryo embryonic ScratchBufferExecStream which
+     * @param splitterStreamEmbryo embryonic SplitterExecStream which
      * produces tuples for multiple consumers
      *
      * @param interStreamEmbryos embryonic intermediate streams which
-     * produces tuples
+     * transform tuples
      *
      * @param destStreamEmbryo embryonic confluence stream which processes
-     * tuples produced by the sourceStreamEmbryos
+     * tuples produced by the interStreamEmbryos
      *
      * @return output buffer stream
-     *
-     * TODO: 2005-12-12 This is currently not used by any test since the graph
-     * can not be scheduled currently. Once the scheduler is enhanced to
-     * support DAG scheduling, tests need to be added to test out the
-     * ScratchBuffer or Diffluence exec stream.
      */
     SharedExecStream prepareDAG(
         ExecStreamEmbryo &srcStreamEmbryo,
-        ExecStreamEmbryo &srcBufStreamEmbryo,
+        ExecStreamEmbryo &splitterStreamEmbryo,
         std::vector<ExecStreamEmbryo> &interStreamEmbryos,
         ExecStreamEmbryo &destStreamEmbryo);
 
@@ -176,13 +174,12 @@ protected:
 
     /**
      * Reset stream graph so multiple iterations of a method can be called
-     * within a single testcase
+     * within a single testcase.
      */
-    void testReset();
+    void resetExecStreamTest();
 
     // refine ExecStreamTestBase
-    virtual void tearDown();
-
+    virtual void tearDownExecStreamTest();
 
 public:
     // refine ExecStreamTestBase

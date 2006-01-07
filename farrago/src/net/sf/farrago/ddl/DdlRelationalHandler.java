@@ -146,8 +146,7 @@ public class DdlRelationalHandler extends DdlHandler
     // implement FarragoSessionDdlHandler
     public void validateModification(FemLocalIndex index)
     {
-        // indexes are never modified after creation
-        throw new AssertionError();
+        // nothing to do here
     }
 
     // implement FarragoSessionDdlHandler

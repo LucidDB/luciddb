@@ -106,7 +106,19 @@ public abstract class FarragoAbstractJdbcDriver implements Driver
         if (url == null) {
             return false;
         }
-        return url.startsWith(getUrlPrefix());
+        
+        if (!url.startsWith(getUrlPrefix())) {
+            return false;
+        }
+
+        // Make sure we don't accidentally steal a URL intended for
+        // an RMI driver which accepts a longer prefix.
+        String suffix = url.substring(getUrlPrefix().length());
+        if (suffix.startsWith("rmi:")) {
+            return false;
+        }
+        
+        return true;
     }
 
     public void register()
