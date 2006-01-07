@@ -22,17 +22,15 @@
 0: jdbc:farrago:> -- arbitrary precision numerics, this limitation will likely go away.
 0: jdbc:farrago:> insert into ints values (5, -32768, -2147483648, -9223372036854775807);
 0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- REVIEW: SZ: 8/5/2004: these aren't support yet
-0: jdbc:farrago:> --create table exacts (
-0: jdbc:farrago:> --    x integer not null primary key,
-0: jdbc:farrago:> --    i decimal(5,0) not null,
-0: jdbc:farrago:> --    r decimal(4,2) not null);
-0: jdbc:farrago:> --insert into exacts values (1, 1, 1.00);
-0: jdbc:farrago:> --insert into exacts values (2, -1, -1.00);
-0: jdbc:farrago:> --insert into exacts values (3, 0, 0.00);
-0: jdbc:farrago:> --insert into exacts values (4, 99999, 99.99);
-0: jdbc:farrago:> --insert into exacts values (5, -99999, -99.99);
+0: jdbc:farrago:> create table exacts (
+. . . . . . . . >     x integer not null primary key,
+. . . . . . . . >     i decimal(5,0) not null,
+. . . . . . . . >     r decimal(4,2) not null);
+0: jdbc:farrago:> insert into exacts values (1, 1, 1.00);
+0: jdbc:farrago:> insert into exacts values (2, -1, -1.00);
+0: jdbc:farrago:> insert into exacts values (3, 0, 0.00);
+0: jdbc:farrago:> insert into exacts values (4, 99999, 99.99);
+0: jdbc:farrago:> insert into exacts values (5, -99999, -99.99);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create table approx (
 . . . . . . . . >     x integer not null primary key,
@@ -54,7 +52,16 @@
 | 4  | 32767   | 2147483647   | 9223372036854775807   |
 | 5  | -32768  | -2147483648  | -9223372036854775807  |
 +----+---------+--------------+-----------------------+
-0: jdbc:farrago:> --select * from exacts;
+0: jdbc:farrago:> select * from exacts;
++----+---------+---------+
+| X  |    I    |    R    |
++----+---------+---------+
+| 1  | 1       | 1.00    |
+| 2  | -1      | -1.00   |
+| 3  | 0       | 0.00    |
+| 4  | 99999   | 99.99   |
+| 5  | -99999  | -99.99  |
++----+---------+---------+
 0: jdbc:farrago:> select * from approx;
 +----+------------+--------------------+
 | X  |     R      |         D          |
@@ -99,8 +106,26 @@
 | 9223372036854775807   |
 | -9223372036854775807  |
 +-----------------------+
-0: jdbc:farrago:> --select cast(i as char(6)) from exacts;
-0: jdbc:farrago:> --select cast(r as char(6)) from exacts;
+0: jdbc:farrago:> select cast(i as char(6)) from exacts;
++---------+
+| EXPR$0  |
++---------+
+| 1       |
+| -1      |
+| 0       |
+| 99999   |
+| -99999  |
++---------+
+0: jdbc:farrago:> select cast(r as char(6)) from exacts;
++---------+
+| EXPR$0  |
++---------+
+| 1.00    |
+| -1.00   |
+| .00     |
+| 99.99   |
+| -99.99  |
++---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Note: Currently need >= 23 characters to display a double JK 2004/08/11
 0: jdbc:farrago:> -- REVIEW: Results are likely to be non-portable, as float representations
@@ -155,8 +180,26 @@ Messages:
 | 9223372036854775807   |
 | -9223372036854775807  |
 +-----------------------+
-0: jdbc:farrago:> --select cast(i as varchar(6)) from exacts;
-0: jdbc:farrago:> --select cast(r as varchar(6)) from exacts;
+0: jdbc:farrago:> select cast(i as varchar(6)) from exacts;
++---------+
+| EXPR$0  |
++---------+
+| 1       |
+| -1      |
+| 0       |
+| 99999   |
+| -99999  |
++---------+
+0: jdbc:farrago:> select cast(r as varchar(6)) from exacts;
++---------+
+| EXPR$0  |
++---------+
+| 1.00    |
+| -1.00   |
+| .00     |
+| 99.99   |
+| -99.99  |
++---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
@@ -177,8 +220,16 @@ Error: could not calculate results for the following row:
 [ 4, 32767, 2147483647, 9223372036854775807 ]
 Messages:
 [0]:PC=0 Code=22001 (state=,code=0)
-0: jdbc:farrago:> --select cast(i as char(3)) from exacts;
-0: jdbc:farrago:> --select cast(r as char(3)) from exacts;
+0: jdbc:farrago:> select cast(i as char(3)) from exacts;
+Error: could not calculate results for the following row:
+[ 4, 99999, 9999 ]
+Messages:
+[0]:PC=0 Code=22001 (state=,code=0)
+0: jdbc:farrago:> select cast(r as char(3)) from exacts;
+Error: could not calculate results for the following row:
+[ 1, 1, 100 ]
+Messages:
+[0]:PC=0 Code=22001 (state=,code=0)
 0: jdbc:farrago:> select cast(r as char(3)) from approx;
 Error: could not calculate results for the following row:
 [ 1, 1, 1 ]
@@ -209,8 +260,16 @@ Error: could not calculate results for the following row:
 [ 4, 32767, 2147483647, 9223372036854775807 ]
 Messages:
 [0]:PC=0 Code=22001 (state=,code=0)
-0: jdbc:farrago:> --select cast(i as varchar(3)) from exacts;
-0: jdbc:farrago:> --select cast(r as varchar(3)) from exacts;
+0: jdbc:farrago:> select cast(i as varchar(3)) from exacts;
+Error: could not calculate results for the following row:
+[ 4, 99999, 9999 ]
+Messages:
+[0]:PC=0 Code=22001 (state=,code=0)
+0: jdbc:farrago:> select cast(r as varchar(3)) from exacts;
+Error: could not calculate results for the following row:
+[ 1, 1, 100 ]
+Messages:
+[0]:PC=0 Code=22001 (state=,code=0)
 0: jdbc:farrago:> select cast(r as varchar(3)) from approx;
 Error: could not calculate results for the following row:
 [ 1, 1, 1 ]
@@ -251,6 +310,7 @@ Messages:
 +-----------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop table ints;
+0: jdbc:farrago:> drop table exacts;
 0: jdbc:farrago:> drop table approx;
 0: jdbc:farrago:> drop schema s;
 0: jdbc:farrago:> 

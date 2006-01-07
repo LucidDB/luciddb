@@ -1168,8 +1168,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
     {
         public boolean canImplement(RexCall call)
         {
-            return (call.isA(RexKind.Reinterpret)
-                && !call.operands[0].isA(RexKind.Reinterpret));
+            return (call.isA(RexKind.Reinterpret));
         }
         
         public CalcProgramBuilder.Register implement(

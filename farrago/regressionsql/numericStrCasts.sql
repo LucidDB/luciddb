@@ -22,17 +22,15 @@ insert into ints values (4, 32767, 2147483647, 9223372036854775807);
 -- arbitrary precision numerics, this limitation will likely go away.
 insert into ints values (5, -32768, -2147483648, -9223372036854775807);
 
-
--- REVIEW: SZ: 8/5/2004: these aren't support yet
---create table exacts (
---    x integer not null primary key,
---    i decimal(5,0) not null,
---    r decimal(4,2) not null);
---insert into exacts values (1, 1, 1.00);
---insert into exacts values (2, -1, -1.00);
---insert into exacts values (3, 0, 0.00);
---insert into exacts values (4, 99999, 99.99);
---insert into exacts values (5, -99999, -99.99);
+create table exacts (
+    x integer not null primary key,
+    i decimal(5,0) not null,
+    r decimal(4,2) not null);
+insert into exacts values (1, 1, 1.00);
+insert into exacts values (2, -1, -1.00);
+insert into exacts values (3, 0, 0.00);
+insert into exacts values (4, 99999, 99.99);
+insert into exacts values (5, -99999, -99.99);
 
 create table approx (
     x integer not null primary key,
@@ -45,7 +43,7 @@ insert into approx values (4, 3.1415927, 3.141592653589793);
 insert into approx values (5, 31.415927, 31.41592653589793);
 
 select * from ints;
---select * from exacts;
+select * from exacts;
 select * from approx;
 
 --
@@ -54,8 +52,8 @@ select * from approx;
 select cast(si as char(6))  from ints;
 select cast(i as char(11)) from ints;
 select cast(bi as char(20)) from ints;
---select cast(i as char(6)) from exacts;
---select cast(r as char(6)) from exacts;
+select cast(i as char(6)) from exacts;
+select cast(r as char(6)) from exacts;
 
 -- Note: Currently need >= 23 characters to display a double JK 2004/08/11
 -- REVIEW: Results are likely to be non-portable, as float representations
@@ -70,8 +68,8 @@ select cast(d as char(23)) from approx;
 select cast(si as varchar(6)) from ints;
 select cast(i as varchar(11)) from ints;
 select cast(bi as varchar(20)) from ints;
---select cast(i as varchar(6)) from exacts;
---select cast(r as varchar(6)) from exacts;
+select cast(i as varchar(6)) from exacts;
+select cast(r as varchar(6)) from exacts;
 
 
 --
@@ -80,8 +78,8 @@ select cast(bi as varchar(20)) from ints;
 select cast(si as char(3)) from ints;
 select cast(i as char(5)) from ints;
 select cast(bi as char(10)) from ints;
---select cast(i as char(3)) from exacts;
---select cast(r as char(3)) from exacts;
+select cast(i as char(3)) from exacts;
+select cast(r as char(3)) from exacts;
 select cast(r as char(3)) from approx;
 select cast(d as char(3)) from approx;
 
@@ -92,8 +90,8 @@ select cast(d as char(3)) from approx;
 select cast(si as varchar(3)) from ints;
 select cast(i as varchar(5)) from ints;
 select cast(bi as varchar(10)) from ints;
---select cast(i as varchar(3)) from exacts;
---select cast(r as varchar(3)) from exacts;
+select cast(i as varchar(3)) from exacts;
+select cast(r as varchar(3)) from exacts;
 select cast(r as varchar(3)) from approx;
 select cast(d as varchar(3)) from approx;
 
@@ -108,5 +106,6 @@ alter system set "calcVirtualMachine"='CALCVM_JAVA';
 select cast(r as varchar(23)) from approx;
 
 drop table ints;
+drop table exacts;
 drop table approx;
 drop schema s;

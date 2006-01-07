@@ -52,8 +52,7 @@ public class FarragoOJRexReinterpretImplementor
     // implement OJRexImplementor
     public boolean canImplement(RexCall call)
     {
-        if (call.isA(RexKind.Reinterpret)
-            && !call.operands[0].isA(RexKind.Reinterpret))
+        if (call.isA(RexKind.Reinterpret))
         {
             RelDataType fromType = call.getType();
             RelDataType toType = call.operands[0].getType();

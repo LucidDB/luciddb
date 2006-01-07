@@ -916,7 +916,24 @@ public class ReduceDecimalsRule extends RelOptRule
     }
     
     /**
-     * An expander that simplifies multiple reinterpret calls.
+     * An expander that simplifies multiple reinterpret calls. There are 
+     * two cases of simplification we would like to consider.
+     * 
+     * <p>In the first case, say (1.0+1)*1, we are doing nested arithmetic.
+     * The inner operation returns a decimal (Reinterpret(...)) which the 
+     * outer operation immediately reuses: (Reinterpret(Reinterpret(...))).
+     * Arithmetic overflow is handled by underlying integer operations, so 
+     * we don't have to consider it. Simply remove the nested Reinterpret.
+     * Note that nullability propagates too.
+     * 
+     * <p>In the second case, say cast (1.4 as decimal(3,1)), we are 
+     * casting decimals of the same scale. If the outer precision is 
+     * greater, we are allowed to remove the Reinterpret cast, provided 
+     * we can change the type of the inner expression. If the outer 
+     * precision is lesser, we would at least want to do an overflow 
+     * check before changing the type. In either case, we don't really 
+     * have a good way to change the output type so there is little we 
+     * can do.
      */
     class ReinterpretExpander extends RexExpander
     {
@@ -939,8 +956,19 @@ public class ReduceDecimalsRule extends RelOptRule
                     if (subCall.isA(RexKind.Reinterpret)) {
                         assert(subCall.operands.length == 1);
                         RexNode innerValue = subCall.operands[0];
-                        if (call.getType() == innerValue.getType()) {
+                        // NOTE: first case, pass through decimal type
+                        if (SqlTypeUtil.isBigint(call.getType())
+                            && SqlTypeUtil.isBigint(innerValue.getType()))
+                        {
                             return RexUtil.clone(innerValue);
+                        }
+                        // NOTE: second case, decimal casting
+                        if (SqlTypeUtil.isDecimal(call.getType())
+                            && SqlTypeUtil.isDecimal(innerValue.getType())
+                            && call.getType().getScale() 
+                                > innerValue.getType().getScale()) 
+                        {
+                            // NOTE: can't do much
                         }
                     }
                 }
