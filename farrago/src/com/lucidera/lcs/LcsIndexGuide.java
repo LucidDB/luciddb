@@ -356,24 +356,143 @@ class LcsIndexGuide
     }
 
     /**
-     * Creates a tuple descriptor for the btree index corresponding to
-     * the cluster.  For LCS clustered indexes, the stored tuple is always
-     * the same: [RID, PageId]; and the key is just the RID.  In Fennel,
-     * both attributes are represented as 64-bit ints.
+     * Creates a tuple descriptor for the BTree index corresponding to a
+     * clustered index.  For LCS clustered indexes, the stored tuple is always
+     * the same: [RID, PageId]; and the key is just the RID.  In Fennel, both
+     * attributes are represented as 64-bit ints.
      *
      * @return btree tuple descriptor
      */
-    public FemTupleDescriptor createBtreeTupleDesc()
+    public FemTupleDescriptor createClusteredBTreeTupleDesc()
     {
         FemTupleDescriptor tupleDesc = repos.newFemTupleDescriptor();
+
+        // add RID
+        appendInt64Attr(tupleDesc);
+        
+        // add PageId
+        appendInt64Attr(tupleDesc);
+        
+        return tupleDesc;
+    }
+
+    private void appendInt64Attr(FemTupleDescriptor tupleDesc)
+    {
         FennelStoredTypeDescriptor typeDesc =
             FennelStandardTypeDescriptor.INT_64;
-        for (int i = 0; i < 2; ++i) {
-            FemTupleAttrDescriptor attrDesc = repos.newFemTupleAttrDescriptor();
-            tupleDesc.getAttrDescriptor().add(attrDesc);
-            attrDesc.setTypeOrdinal(typeDesc.getOrdinal());
+        FemTupleAttrDescriptor attrDesc = repos.newFemTupleAttrDescriptor();
+        tupleDesc.getAttrDescriptor().add(attrDesc);
+        attrDesc.setTypeOrdinal(typeDesc.getOrdinal());
+    }
+
+    private void appendBitmapAttr(FemTupleDescriptor tupleDesc)
+    {
+        FennelStoredTypeDescriptor typeDesc =
+            FennelStandardTypeDescriptor.VARBINARY;
+        FemTupleAttrDescriptor attrDesc = repos.newFemTupleAttrDescriptor();
+        tupleDesc.getAttrDescriptor().add(attrDesc);
+        attrDesc.setTypeOrdinal(typeDesc.getOrdinal());
+        attrDesc.setNullable(true);
+
+        // REVIEW jvs 6-Jan-2006: this is based on a 32K page size with a
+        // maximum entry size of 1/8 of a page.  Should probably make it
+        // communicate with native code about this to get the right number
+        // automatically.
+        attrDesc.setByteLength(4096);
+    }
+
+    // TODO jvs 6-Jan-2005:  use this in LcsTableAppendRel.
+
+    /**
+     * Creates a tuple projection for the RID attribute of the BTree index
+     * corresponding to a clustered index.
+     *
+     * @see createClusteredBTreeTupleDesc
+     *
+     * @return RID attribute projection
+     */
+    public FemTupleProjection createClusteredBTreeRidDesc()
+    {
+        return FennelRelUtil.createTupleProjection(
+            repos,
+            new Integer [] { 0 });
+    }
+    
+    /**
+     * Creates a tuple projection for the PageId attribute of the BTree index
+     * tuple corresponding to a clustered index.
+     *
+     * @see createClusteredBTreeTupleDesc
+     *
+     * @return PageId attribute projection
+     */
+    public FemTupleProjection createClusteredBTreePageIdDesc()
+    {
+        return FennelRelUtil.createTupleProjection(
+            repos,
+            new Integer [] { 1 });
+    }
+
+    /**
+     * Creates a tuple descriptor for the BTree index corresponding to an
+     * unclustered index.
+     *
+     * <p>
+     *
+     * For LCS unclustered indexes, the stored tuple is
+     * [K1, K2, ..., RID, BITMAP], and the key is [K1, K2, ..., RID]
+     *
+     * @param index unclustered index 
+     *
+     * @return btree tuple descriptor
+     */
+    public FemTupleDescriptor createUnclusteredBTreeTupleDesc(
+        FemLocalIndex index)
+    {
+        assert(!index.isClustered());
+        
+        FemTupleDescriptor tupleDesc = repos.newFemTupleDescriptor();
+
+        // add K1, K2, ...
+        Iterator iter = index.getIndexedFeature().iterator();
+        while (iter.hasNext()) {
+            CwmIndexedFeature indexedFeature = (CwmIndexedFeature) iter.next();
+            FemAbstractColumn column =
+                (FemAbstractColumn) indexedFeature.getFeature();
+            FennelRelUtil.addTupleAttrDescriptor(
+                repos,
+                tupleDesc,
+                typeFactory.createCwmElementType(column));
         }
+
+        // add RID
+        appendInt64Attr(tupleDesc);
+
+        // add BITMAP
+        appendBitmapAttr(tupleDesc);
+        
         return tupleDesc;
+    }
+    
+    /**
+     * Creates a tuple projection for the key attributes of the BTree index
+     * corresponding to an unclustered index.
+     *
+     * @param index unclustered index 
+     *
+     * @see createUnclusteredBTreeTupleDesc
+     *
+     * @return key attribute projection
+     */
+    public FemTupleProjection createUnclusteredBTreeKeyDesc(
+        FemLocalIndex index)
+    {
+        // number of key fields = number of columns plus RID
+        int n = index.getIndexedFeature().size() + 1;
+        
+        return FennelRelUtil.createTupleProjection(
+            repos,
+            FennelRelUtil.newIotaProjection(n));
     }
 }
 

@@ -297,12 +297,11 @@ public class LcsRowScanRel extends TableAccessRelBase implements FennelRel
         clusterScan.setSegmentId(LcsDataServer.getIndexSegmentId(index));
         clusterScan.setIndexId(JmiUtil.getObjectId(index));
 
-        FemTupleDescriptor tupleDesc = indexGuide.createBtreeTupleDesc();
-        clusterScan.setTupleDesc(tupleDesc);
+        clusterScan.setTupleDesc(
+            indexGuide.createClusteredBTreeTupleDesc());
         
-        Integer[] keyProj = {0};
         clusterScan.setKeyProj(
-            FennelRelUtil.createTupleProjection(repos, keyProj));
+            indexGuide.createClusteredBTreeRidDesc());
     }
 
     // implement FennelRel

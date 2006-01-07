@@ -591,11 +591,9 @@ FemLocalIndex IndexDefinition(CwmTable table) :
     SqlIdentifier indexName;
     CwmTable specifiedTable;
     List columnNameList;
-    boolean unique = false;
     boolean clustered = false;
 }
 {
-    [ <UNIQUE> { unique = true; } ]
     [ <CLUSTERED> { clustered = true; } ]
     <INDEX>
     {
@@ -622,7 +620,7 @@ FemLocalIndex IndexDefinition(CwmTable table) :
             index.setClustered(true);
         }
         index.setSorted(true);
-        index.setUnique(unique);
+        index.setUnique(false);
     }
     <LPAREN> columnNameList = SimpleIdentifierCommaList() <RPAREN>
     {
