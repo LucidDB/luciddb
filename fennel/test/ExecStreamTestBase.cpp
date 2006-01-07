@@ -65,13 +65,15 @@ void ExecStreamTestBase::testCaseTearDown()
     if (pScheduler) {
         pScheduler->stop();
     }
-    tearDown();
-    // free the scheduler last, since an ExecStreamGraph hold a raw Scheduler ptr
+    // destroy the graph
+    tearDownExecStreamTest();
+    // free the scheduler last, since an ExecStreamGraph hold a raw Scheduler
+    // ptr
     pScheduler.reset(); 
     SegStorageTestBase::testCaseTearDown();
 }
 
-void ExecStreamTestBase::tearDown()
+void ExecStreamTestBase::tearDownExecStreamTest()
 {
 }
 
