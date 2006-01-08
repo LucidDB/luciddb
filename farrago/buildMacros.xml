@@ -356,7 +356,7 @@
     <sequential>
       <taskdef 
         name="tch" 
-        classname="org.apache.beehive.test.tools.tch.TchVMTask"
+        classname="org.eigenbase.blackhawk.TchVMTask"
         classpathref="bh.run.classpath"
         onerror="fail"/>
       <tch

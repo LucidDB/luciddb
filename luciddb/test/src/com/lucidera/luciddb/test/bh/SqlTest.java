@@ -22,9 +22,9 @@ package com.lucidera.luciddb.test.bh;
 
 import java.io.*;
 import java.util.regex.*;
-import org.apache.beehive.test.tools.tch.compose.AutoTest;
-import org.apache.beehive.test.tools.tch.compose.TestContext;
-import org.apache.beehive.test.tools.tch.compose.Parameters;
+import org.eigenbase.blackhawk.compose.AutoTest;
+import org.eigenbase.blackhawk.compose.TestContext;
+import org.eigenbase.blackhawk.compose.Parameters;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.catalog.*;
 import sqlline.SqlLine;

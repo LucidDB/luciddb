@@ -20,8 +20,8 @@
 */
 package com.lucidera.luciddb.test.bh;
 
-import org.apache.beehive.test.tools.tch.compose.AutoTest;
-import org.apache.beehive.test.tools.tch.compose.TestContext;
+import org.eigenbase.blackhawk.compose.AutoTest;
+import org.eigenbase.blackhawk.compose.TestContext;
 
 /**
  * Simple "hello world" test for bh-base test in the luciddb area
