@@ -295,14 +295,28 @@ public class RexBuilder
             new RexNode [] { exp });
     }
 
+    /**
+     * Makes a reinterpret cast
+     * 
+     * @param type type returned by the cast
+     * @param exp expression to be casted
+     * @param checkOverflow whether an overflow check is required
+     *
+     * @return a RexCall with two operands and a special return type
+     */
     public RexNode makeReinterpretCast(
         RelDataType type,
-        RexNode exp)
+        RexNode exp,
+        RexNode checkOverflow)
     {
+        Util.pre(checkOverflow instanceof RexLiteral, 
+            "checkOverflow instanceof RexLiteral");
+        Util.pre(checkOverflow.getType() == booleanTrue.getType(),
+            "checkOverflow.getType() == booleanTrue.getType()");
         return new RexCall(
             type,
             opTab.reinterpretOperator,
-            new RexNode [] { exp });      
+            new RexNode [] { exp, checkOverflow });      
     }
     
     /**
@@ -388,11 +402,12 @@ public class RexBuilder
                 relType = typeFactory.createSqlType(SqlTypeName.Bigint);
             }
         } else {
+            int precision = bd.unscaledValue().toString().length();
             relType =
                 typeFactory.createSqlType(
                     SqlTypeName.Decimal,
                     scale,
-                    SqlTypeName.MAX_NUMERIC_PRECISION);
+                    precision);
         }
         return makeExactLiteral(bd, relType);
     }

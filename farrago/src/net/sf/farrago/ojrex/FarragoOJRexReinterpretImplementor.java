@@ -75,8 +75,8 @@ public class FarragoOJRexReinterpretImplementor
     {
         Util.pre(call.isA(RexKind.Reinterpret),
             "call.isA(RexKind.Reinterpret)");
-        Util.pre(operands.length == 1, "operands.length == 1");
-        Util.pre(call.operands.length == 1, "call.operands.length == 1");
+        Util.pre(operands.length == 2, "operands.length == 2");
+        Util.pre(call.operands.length == 2, "call.operands.length == 2");
 
         RelDataType retType = call.getType();
         if (SqlTypeUtil.isDecimal(retType)) {
@@ -86,7 +86,7 @@ public class FarragoOJRexReinterpretImplementor
                     new MethodCall(
                         varResult,
                         EncodedSqlDecimal.REINTERPRET_METHOD_NAME, 
-                        new ExpressionList(operands[0]))));
+                        new ExpressionList(operands[0], operands[1]))));
             return varResult;
         }
         

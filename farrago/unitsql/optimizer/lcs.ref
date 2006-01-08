@@ -850,7 +850,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, RECTANGLES]], operation=[INSERT], flattened=[true])'
-'    FennelCalcRel(EXPR$0=[CAST(_ISO-8859-1'Default'):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], $f1=[CAST(false):BOOLEAN], $f2=[CAST(/(CAST(Reinterpret(2.0)):DOUBLE NOT NULL, 10)):DOUBLE], $f3=[CAST(/(CAST(Reinterpret(4.0)):DOUBLE NOT NULL, 10)):DOUBLE], EXPR$2=[1])'
+'    FennelCalcRel(EXPR$0=[CAST(_ISO-8859-1'Default'):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], $f1=[CAST(false):BOOLEAN], $f2=[CAST(/(CAST(Reinterpret(2.0, false)):DOUBLE NOT NULL, 10)):DOUBLE], $f3=[CAST(/(CAST(Reinterpret(4.0, false)):DOUBLE NOT NULL, 10)):DOUBLE], EXPR$2=[1])'
 '      FennelOneRowRel'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for

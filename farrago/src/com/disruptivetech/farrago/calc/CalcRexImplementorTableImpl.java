@@ -25,6 +25,7 @@ import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.SqlAggFunction;
 import org.eigenbase.sql.SqlOperator;
+import org.eigenbase.sql.SqlStateCodes;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.fun.SqlTrimFunction;
 import org.eigenbase.sql.type.SqlTypeName;
@@ -1175,9 +1176,41 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             RexCall call,
             RexToCalcTranslator translator)
         {
-            Util.pre(call.operands.length == 1, "call.operands.length == 1");
-            RexNode op = call.operands[0];
-            return translator.implementNode(op);
+            Util.pre(call.operands.length == 2, "call.operands.length == 2");
+            Util.pre(call.operands[1] instanceof RexLiteral,
+                "call.operands[1] instanceof RexLiteral");
+            CalcProgramBuilder.Register value = 
+                translator.implementNode(call.operands[0]);
+            if (call.operands[1].isAlwaysTrue()) {
+                // NOTE: perform overflow check
+                // boolean overflowed = ( abs(value) >= overflowValue )
+                // jumpFalse overflowed endCheck
+                // throw overflow exception
+                // endCheck
+                // NOTE: translator does not reimplement the same rex node
+                RexNode overflowValue = 
+                    translator.rexBuilder.makeExactLiteral(
+                        BigDecimal.valueOf(
+                            Util.powerOfTen(
+                                call.getType().getPrecision())));
+                RexNode comparison = translator.rexBuilder.makeCall(
+                    opTab.greaterThanOrEqualOperator,
+                    translator.rexBuilder.makeCall(
+                        opTab.absFunc,
+                        call.operands[0]),
+                    overflowValue);
+                CalcProgramBuilder.Register overflowed = 
+                    translator.implementNode(comparison);
+                String endCheck = translator.newLabel();
+                translator.builder.addLabelJumpFalse(endCheck, overflowed);
+                CalcProgramBuilder.Register errorMsg =
+                    translator.builder.newVarcharLiteral(
+                        SqlStateCodes.NumericValueOutOfRange.getState());
+                CalcProgramBuilder.raise.add(
+                    translator.builder, errorMsg);
+                translator.builder.addLabel(endCheck);
+            }
+            return value;
         }
     }
 
