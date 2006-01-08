@@ -103,6 +103,13 @@ public abstract class NullablePrimitive implements NullableValue,
             Boolean b = (Boolean) obj;
             setNumber(b.booleanValue() ? INT_ONE : INT_ZERO);
         } else {
+            if (obj instanceof NullableValue) {
+                NullableValue nullable = (NullableValue) obj;
+                if (nullable.isNull()) {
+                    setNull(true);
+                    return;
+                }
+            }
             setNull(false);
             String s = obj.toString();
             Number n;
