@@ -108,7 +108,7 @@
   <property name="luciddb.build.classpath" refid="luciddb.build.classpath"/>
 
   <target name="test" depends="compile,createCatalog,buildJdbcPlugin">
-    <antcall target="shortreg"/>
+    <antcall target="xreg"/>
     <antcall target="txn"/>
     <antcall target="bh" />
   </target>
