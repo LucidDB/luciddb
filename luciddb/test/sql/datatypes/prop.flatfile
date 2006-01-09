@@ -38,7 +38,3 @@ NUM_ROWS_SCAN=1
 #########################
 
 TABLE_NAME=filename
-
-# tmp workaround while flatfile does not read file_extension
-file_ext=.csv
-ff_dir=@datatypes.dir@/

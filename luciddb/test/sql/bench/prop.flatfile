@@ -30,7 +30,7 @@ FIELD_DELIM=,
 LINE_DELIM=\\n
 QUOTE_CHAR="
 ESCAPE_CHAR=
-WITH_HEADER=no
+WITH_HEADER=yes
 NUM_ROWS_SCAN=1
 
 #########################
@@ -38,7 +38,3 @@ NUM_ROWS_SCAN=1
 #########################
 
 TABLE_NAME=filename
-
-# tmp workaround while flatfile does not read file_extension
-file_ext=.csv
-ff_dir=/mnt/raksha/engineering/testdata/csv_BENCHMARK/
