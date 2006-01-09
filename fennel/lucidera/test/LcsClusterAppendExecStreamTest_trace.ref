@@ -1,5 +1,5 @@
 [LcsClusterAppendExecStreamTest] ENTER:  testSingleColNoDupNewRoot
-[testSingleColNoDupNewRoot] Cluster Page Dump - PageId 1
+[testSingleColNoDupNewRoot] Cluster Page Dump - PageId 3
 [testSingleColNoDupNewRoot] -----------------------------
 [testSingleColNoDupNewRoot] Header
 [testSingleColNoDupNewRoot] ------
@@ -889,7 +889,7 @@
 [testSingleColNoDupNewRoot] Column # 0
 [testSingleColNoDupNewRoot] ------------
 [testSingleColNoDupNewRoot] NONE.
-[testSingleColNoDupNewRoot] Cluster Page Dump - PageId 2
+[testSingleColNoDupNewRoot] Cluster Page Dump - PageId 4
 [testSingleColNoDupNewRoot] -----------------------------
 [testSingleColNoDupNewRoot] Header
 [testSingleColNoDupNewRoot] ------
@@ -1781,7 +1781,7 @@
 [testSingleColNoDupNewRoot] NONE.
 [LcsClusterAppendExecStreamTest] LEAVE:  testSingleColNoDupNewRoot
 [LcsClusterAppendExecStreamTest] ENTER:  testSingleColNoDupOldRoot
-[testSingleColNoDupOldRoot] Cluster Page Dump - PageId 1
+[testSingleColNoDupOldRoot] Cluster Page Dump - PageId 3
 [testSingleColNoDupOldRoot] -----------------------------
 [testSingleColNoDupOldRoot] Header
 [testSingleColNoDupOldRoot] ------
@@ -2671,7 +2671,7 @@
 [testSingleColNoDupOldRoot] Column # 0
 [testSingleColNoDupOldRoot] ------------
 [testSingleColNoDupOldRoot] NONE.
-[testSingleColNoDupOldRoot] Cluster Page Dump - PageId 2
+[testSingleColNoDupOldRoot] Cluster Page Dump - PageId 4
 [testSingleColNoDupOldRoot] -----------------------------
 [testSingleColNoDupOldRoot] Header
 [testSingleColNoDupOldRoot] ------
@@ -3561,7 +3561,7 @@
 [testSingleColNoDupOldRoot] Column # 0
 [testSingleColNoDupOldRoot] ------------
 [testSingleColNoDupOldRoot] NONE.
-[testSingleColNoDupOldRoot] Cluster Page Dump - PageId 1
+[testSingleColNoDupOldRoot] Cluster Page Dump - PageId 3
 [testSingleColNoDupOldRoot] -----------------------------
 [testSingleColNoDupOldRoot] Header
 [testSingleColNoDupOldRoot] ------
@@ -4451,7 +4451,7 @@
 [testSingleColNoDupOldRoot] Column # 0
 [testSingleColNoDupOldRoot] ------------
 [testSingleColNoDupOldRoot] NONE.
-[testSingleColNoDupOldRoot] Cluster Page Dump - PageId 2
+[testSingleColNoDupOldRoot] Cluster Page Dump - PageId 4
 [testSingleColNoDupOldRoot] -----------------------------
 [testSingleColNoDupOldRoot] Header
 [testSingleColNoDupOldRoot] ------
@@ -5388,7 +5388,7 @@
 [testSingleColNoDupOldRoot]          9:  8  1  0  0  0  0  0  0  0                       .........          
 [testSingleColNoDupOldRoot] 00001:
 [testSingleColNoDupOldRoot]          9:  8  0  0  0  0  0  0  0  0                       .........          
-[testSingleColNoDupOldRoot] Cluster Page Dump - PageId 3
+[testSingleColNoDupOldRoot] Cluster Page Dump - PageId 5
 [testSingleColNoDupOldRoot] -----------------------------
 [testSingleColNoDupOldRoot] Header
 [testSingleColNoDupOldRoot] ------
@@ -6278,7 +6278,7 @@
 [testSingleColNoDupOldRoot] Column # 0
 [testSingleColNoDupOldRoot] ------------
 [testSingleColNoDupOldRoot] NONE.
-[testSingleColNoDupOldRoot] Cluster Page Dump - PageId 4
+[testSingleColNoDupOldRoot] Cluster Page Dump - PageId 6
 [testSingleColNoDupOldRoot] -----------------------------
 [testSingleColNoDupOldRoot] Header
 [testSingleColNoDupOldRoot] ------
@@ -7154,7 +7154,7 @@
 [testSingleColNoDupOldRoot] NONE.
 [LcsClusterAppendExecStreamTest] LEAVE:  testSingleColNoDupOldRoot
 [LcsClusterAppendExecStreamTest] ENTER:  testSingleColConstNewRoot
-[testSingleColConstNewRoot] Cluster Page Dump - PageId 1
+[testSingleColConstNewRoot] Cluster Page Dump - PageId 3
 [testSingleColConstNewRoot] -----------------------------
 [testSingleColConstNewRoot] Header
 [testSingleColConstNewRoot] ------
@@ -7310,7 +7310,7 @@
 [testSingleColConstNewRoot]          9:  8 48  0  0  0  0  0  0  0                       .H.......          
 [LcsClusterAppendExecStreamTest] LEAVE:  testSingleColConstNewRoot
 [LcsClusterAppendExecStreamTest] ENTER:  testSingleColConstOldRoot
-[testSingleColConstOldRoot] Cluster Page Dump - PageId 1
+[testSingleColConstOldRoot] Cluster Page Dump - PageId 3
 [testSingleColConstOldRoot] -----------------------------
 [testSingleColConstOldRoot] Header
 [testSingleColConstOldRoot] ------
@@ -7362,7 +7362,7 @@
 [testSingleColConstOldRoot] ------------
 [testSingleColConstOldRoot] 00001:
 [testSingleColConstOldRoot]          9:  8 48  0  0  0  0  0  0  0                       .H.......          
-[testSingleColConstOldRoot] Cluster Page Dump - PageId 1
+[testSingleColConstOldRoot] Cluster Page Dump - PageId 3
 [testSingleColConstOldRoot] -----------------------------
 [testSingleColConstOldRoot] Header
 [testSingleColConstOldRoot] ------
@@ -7434,7 +7434,7 @@
 [testSingleColConstOldRoot]          9:  8 48  0  0  0  0  0  0  0                       .H.......          
 [LcsClusterAppendExecStreamTest] LEAVE:  testSingleColConstOldRoot
 [LcsClusterAppendExecStreamTest] ENTER:  testSingleColStairNewRoot
-[testSingleColStairNewRoot] Cluster Page Dump - PageId 1
+[testSingleColStairNewRoot] Cluster Page Dump - PageId 3
 [testSingleColStairNewRoot] -----------------------------
 [testSingleColStairNewRoot] Header
 [testSingleColStairNewRoot] ------
@@ -8074,7 +8074,7 @@
 [testSingleColStairNewRoot]          9:  8  0  0  0  0  0  0  0  0                       .........          
 [LcsClusterAppendExecStreamTest] LEAVE:  testSingleColStairNewRoot
 [LcsClusterAppendExecStreamTest] ENTER:  testSingleColStairOldRoot
-[testSingleColStairOldRoot] Cluster Page Dump - PageId 1
+[testSingleColStairOldRoot] Cluster Page Dump - PageId 3
 [testSingleColStairOldRoot] -----------------------------
 [testSingleColStairOldRoot] Header
 [testSingleColStairOldRoot] ------
@@ -8130,7 +8130,7 @@
 [testSingleColStairOldRoot]          9:  8  1  0  0  0  0  0  0  0                       .........          
 [testSingleColStairOldRoot] 00001:
 [testSingleColStairOldRoot]          9:  8  0  0  0  0  0  0  0  0                       .........          
-[testSingleColStairOldRoot] Cluster Page Dump - PageId 1
+[testSingleColStairOldRoot] Cluster Page Dump - PageId 3
 [testSingleColStairOldRoot] -----------------------------
 [testSingleColStairOldRoot] Header
 [testSingleColStairOldRoot] ------
@@ -8210,7 +8210,7 @@
 [testSingleColStairOldRoot]          9:  8  0  0  0  0  0  0  0  0                       .........          
 [LcsClusterAppendExecStreamTest] LEAVE:  testSingleColStairOldRoot
 [LcsClusterAppendExecStreamTest] ENTER:  testMultiColNoDupNewRoot
-[testMultiColNoDupNewRoot] Cluster Page Dump - PageId 1
+[testMultiColNoDupNewRoot] Cluster Page Dump - PageId 3
 [testMultiColNoDupNewRoot] -----------------------------
 [testMultiColNoDupNewRoot] Header
 [testMultiColNoDupNewRoot] ------
@@ -9034,7 +9034,7 @@
 [testMultiColNoDupNewRoot] Column # 2
 [testMultiColNoDupNewRoot] ------------
 [testMultiColNoDupNewRoot] NONE.
-[testMultiColNoDupNewRoot] Cluster Page Dump - PageId 2
+[testMultiColNoDupNewRoot] Cluster Page Dump - PageId 4
 [testMultiColNoDupNewRoot] -----------------------------
 [testMultiColNoDupNewRoot] Header
 [testMultiColNoDupNewRoot] ------
@@ -9858,7 +9858,7 @@
 [testMultiColNoDupNewRoot] Column # 2
 [testMultiColNoDupNewRoot] ------------
 [testMultiColNoDupNewRoot] NONE.
-[testMultiColNoDupNewRoot] Cluster Page Dump - PageId 3
+[testMultiColNoDupNewRoot] Cluster Page Dump - PageId 5
 [testMultiColNoDupNewRoot] -----------------------------
 [testMultiColNoDupNewRoot] Header
 [testMultiColNoDupNewRoot] ------
@@ -10682,7 +10682,7 @@
 [testMultiColNoDupNewRoot] Column # 2
 [testMultiColNoDupNewRoot] ------------
 [testMultiColNoDupNewRoot] NONE.
-[testMultiColNoDupNewRoot] Cluster Page Dump - PageId 4
+[testMultiColNoDupNewRoot] Cluster Page Dump - PageId 6
 [testMultiColNoDupNewRoot] -----------------------------
 [testMultiColNoDupNewRoot] Header
 [testMultiColNoDupNewRoot] ------
@@ -11506,7 +11506,7 @@
 [testMultiColNoDupNewRoot] Column # 2
 [testMultiColNoDupNewRoot] ------------
 [testMultiColNoDupNewRoot] NONE.
-[testMultiColNoDupNewRoot] Cluster Page Dump - PageId 5
+[testMultiColNoDupNewRoot] Cluster Page Dump - PageId 7
 [testMultiColNoDupNewRoot] -----------------------------
 [testMultiColNoDupNewRoot] Header
 [testMultiColNoDupNewRoot] ------
@@ -12330,7 +12330,7 @@
 [testMultiColNoDupNewRoot] Column # 2
 [testMultiColNoDupNewRoot] ------------
 [testMultiColNoDupNewRoot] NONE.
-[testMultiColNoDupNewRoot] Cluster Page Dump - PageId 6
+[testMultiColNoDupNewRoot] Cluster Page Dump - PageId 8
 [testMultiColNoDupNewRoot] -----------------------------
 [testMultiColNoDupNewRoot] Header
 [testMultiColNoDupNewRoot] ------
@@ -13154,7 +13154,7 @@
 [testMultiColNoDupNewRoot] Column # 2
 [testMultiColNoDupNewRoot] ------------
 [testMultiColNoDupNewRoot] NONE.
-[testMultiColNoDupNewRoot] Cluster Page Dump - PageId 7
+[testMultiColNoDupNewRoot] Cluster Page Dump - PageId 9
 [testMultiColNoDupNewRoot] -----------------------------
 [testMultiColNoDupNewRoot] Header
 [testMultiColNoDupNewRoot] ------
@@ -13978,7 +13978,7 @@
 [testMultiColNoDupNewRoot] Column # 2
 [testMultiColNoDupNewRoot] ------------
 [testMultiColNoDupNewRoot] NONE.
-[testMultiColNoDupNewRoot] Cluster Page Dump - PageId 8
+[testMultiColNoDupNewRoot] Cluster Page Dump - PageId 10
 [testMultiColNoDupNewRoot] -----------------------------
 [testMultiColNoDupNewRoot] Header
 [testMultiColNoDupNewRoot] ------
@@ -14141,7 +14141,7 @@
 [testMultiColNoDupNewRoot]          9:  8 48  3  0  0  0  0  0  0                       .H.......          
 [LcsClusterAppendExecStreamTest] LEAVE:  testMultiColNoDupNewRoot
 [LcsClusterAppendExecStreamTest] ENTER:  testMultiColNoDupOldRoot
-[testMultiColNoDupOldRoot] Cluster Page Dump - PageId 1
+[testMultiColNoDupOldRoot] Cluster Page Dump - PageId 3
 [testMultiColNoDupOldRoot] -----------------------------
 [testMultiColNoDupOldRoot] Header
 [testMultiColNoDupOldRoot] ------
@@ -14374,7 +14374,7 @@
 [testMultiColNoDupOldRoot]          9:  8  1  0  0  0  0  0  0  0                       .........          
 [testMultiColNoDupOldRoot] 00001:
 [testMultiColNoDupOldRoot]          9:  8  0  0  0  0  0  0  0  0                       .........          
-[testMultiColNoDupOldRoot] Cluster Page Dump - PageId 1
+[testMultiColNoDupOldRoot] Cluster Page Dump - PageId 3
 [testMultiColNoDupOldRoot] -----------------------------
 [testMultiColNoDupOldRoot] Header
 [testMultiColNoDupOldRoot] ------
@@ -14729,7 +14729,7 @@
 [testMultiColNoDupOldRoot]          9:  8  0  0  0  0  0  0  0  0                       .........          
 [LcsClusterAppendExecStreamTest] LEAVE:  testMultiColNoDupOldRoot
 [LcsClusterAppendExecStreamTest] ENTER:  testMultiColConstNewRoot
-[testMultiColConstNewRoot] Cluster Page Dump - PageId 1
+[testMultiColConstNewRoot] Cluster Page Dump - PageId 3
 [testMultiColConstNewRoot] -----------------------------
 [testMultiColConstNewRoot] Header
 [testMultiColConstNewRoot] ------
@@ -15216,7 +15216,7 @@
 [testMultiColConstNewRoot]          9:  8 48  0  0  0  0  0  0  0                       .H.......          
 [LcsClusterAppendExecStreamTest] LEAVE:  testMultiColConstNewRoot
 [LcsClusterAppendExecStreamTest] ENTER:  testMultiColConstOldRoot
-[testMultiColConstOldRoot] Cluster Page Dump - PageId 1
+[testMultiColConstOldRoot] Cluster Page Dump - PageId 3
 [testMultiColConstOldRoot] -----------------------------
 [testMultiColConstOldRoot] Header
 [testMultiColConstOldRoot] ------
@@ -15350,7 +15350,7 @@
 [testMultiColConstOldRoot] ------------
 [testMultiColConstOldRoot] 00001:
 [testMultiColConstOldRoot]          9:  8 48  0  0  0  0  0  0  0                       .H.......          
-[testMultiColConstOldRoot] Cluster Page Dump - PageId 1
+[testMultiColConstOldRoot] Cluster Page Dump - PageId 3
 [testMultiColConstOldRoot] -----------------------------
 [testMultiColConstOldRoot] Header
 [testMultiColConstOldRoot] ------
@@ -15540,7 +15540,7 @@
 [testMultiColConstOldRoot]          9:  8 48  0  0  0  0  0  0  0                       .H.......          
 [LcsClusterAppendExecStreamTest] LEAVE:  testMultiColConstOldRoot
 [LcsClusterAppendExecStreamTest] ENTER:  testMultiColStairNewRoot
-[testMultiColStairNewRoot] Cluster Page Dump - PageId 1
+[testMultiColStairNewRoot] Cluster Page Dump - PageId 3
 [testMultiColStairNewRoot] -----------------------------
 [testMultiColStairNewRoot] Header
 [testMultiColStairNewRoot] ------
@@ -16706,7 +16706,7 @@
 [testMultiColStairNewRoot]          9:  8  1  0  0  0  0  0  0  0                       .........          
 [testMultiColStairNewRoot] 00001:
 [testMultiColStairNewRoot]          9:  8  0  0  0  0  0  0  0  0                       .........          
-[testMultiColStairNewRoot] Cluster Page Dump - PageId 2
+[testMultiColStairNewRoot] Cluster Page Dump - PageId 4
 [testMultiColStairNewRoot] -----------------------------
 [testMultiColStairNewRoot] Header
 [testMultiColStairNewRoot] ------
@@ -17565,7 +17565,7 @@
 [testMultiColStairNewRoot]          9:  8 45  0  0  0  0  0  0  0                       .E.......          
 [LcsClusterAppendExecStreamTest] LEAVE:  testMultiColStairNewRoot
 [LcsClusterAppendExecStreamTest] ENTER:  testMultiColStairOldRoot
-[testMultiColStairOldRoot] Cluster Page Dump - PageId 1
+[testMultiColStairOldRoot] Cluster Page Dump - PageId 3
 [testMultiColStairOldRoot] -----------------------------
 [testMultiColStairOldRoot] Header
 [testMultiColStairOldRoot] ------
@@ -17711,7 +17711,7 @@
 [testMultiColStairOldRoot]          9:  8  1  0  0  0  0  0  0  0                       .........          
 [testMultiColStairOldRoot] 00001:
 [testMultiColStairOldRoot]          9:  8  0  0  0  0  0  0  0  0                       .........          
-[testMultiColStairOldRoot] Cluster Page Dump - PageId 1
+[testMultiColStairOldRoot] Cluster Page Dump - PageId 3
 [testMultiColStairOldRoot] -----------------------------
 [testMultiColStairOldRoot] Header
 [testMultiColStairOldRoot] ------
