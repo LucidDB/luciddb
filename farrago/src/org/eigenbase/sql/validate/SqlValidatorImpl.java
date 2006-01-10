@@ -675,11 +675,6 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                     selectList, call.getOperands()[0], null, null, null, null,
                     null, SqlParserPos.ZERO);
             return wrapperNode;
-        } else if (node.isA(SqlKind.Insert)) {
-            SqlInsert call = (SqlInsert) node;
-            call.setOperand(
-                SqlInsert.SOURCE_SELECT_OPERAND,
-                call.getSource());
         } else if (node.isA(SqlKind.Delete)) {
             SqlDelete call = (SqlDelete) node;
             final SqlNodeList selectList =
@@ -1663,7 +1658,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             registerQuery(
                 parentScope,
                 usingScope,
-                insertCall.getSourceSelect(),
+                insertCall.getSource(),
                 null,
                 false);
             break;
@@ -2244,9 +2239,14 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                     false);
         }
 
-        SqlSelect sqlSelect = call.getSourceSelect();
-        validateSelect(sqlSelect, targetRowType);
-        RelDataType sourceRowType = getNamespace(sqlSelect).getRowType();
+        SqlNode source = call.getSource();
+        if (source instanceof SqlSelect) {
+            SqlSelect sqlSelect = (SqlSelect) source;
+            validateSelect(sqlSelect, targetRowType);
+        } else {
+            validateQuery(source);
+        }
+        RelDataType sourceRowType = getNamespace(source).getRowType();
 
         if (!isRowTypeSizeEqual( targetRowType, sourceRowType)) {
             throw EigenbaseResource.instance().UnmatchInsertColumn.ex(

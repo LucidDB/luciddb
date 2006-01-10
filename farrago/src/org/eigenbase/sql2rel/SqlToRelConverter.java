@@ -1053,7 +1053,7 @@ public class SqlToRelConverter
         RelDataType lhsRowType = targetTable.getRowType();
         SqlNodeList targetColumnList = call.getTargetColumnList();
 
-        RelNode sourceRel = convertQueryRecursive(call.getSourceSelect());
+        RelNode sourceRel = convertQueryRecursive(call.getSource());
         RelDataType sourceRowType = sourceRel.getRowType();
         final RexNode sourceRef =
             rexBuilder.makeRangeReference(sourceRowType, 0);
