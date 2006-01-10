@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 1999-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,6 +35,7 @@
 #include <boost/test/parameterized_test.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <fstream>
+#include <vector>
 
 typedef boost::unit_test_framework::test_suite TestSuite;
 
@@ -98,6 +99,42 @@ protected:
      * Copy trace output to file
      */
     bool traceFile;
+
+    /**
+     * Run all test cases, including the extra tests.
+     * (static, since set by readParams())
+     */
+    static bool runAll;
+
+    /**
+     * Run only the test case of this name.
+     * (static, since set by readParams())
+     */
+    static std::string runSingle;
+
+    /**
+     * Collects a group of named test-case definitions.
+     * Preserves the order; allows lookup by name.
+     */
+    class TestCaseGroup 
+    {
+        struct Item 
+        {
+            std::string name;
+            boost::unit_test::test_unit * tu;
+            Item(std::string name, boost::unit_test::test_unit* tu)
+                :name(name), tu(tu) {}
+        };
+        /** the test cases, in order of definition */
+        std::vector<Item> items;
+    public:
+        void addTest(std::string name, boost::unit_test::test_unit *tu);
+        boost::unit_test::test_unit* findTest(std::string name) const;
+        void addAllToTestSuite(TestSuite *) const;
+    };
+
+    TestCaseGroup defaultTests;
+    TestCaseGroup extraTests;
 
 public:
     static ParamName paramTestSuiteName;
@@ -208,17 +245,30 @@ TestSuite* init_unit_test_suite(int argc,char **argv) \
     return pTestObj->releaseTestSuite(); \
 }
 
-// FENNEL_UNIT_TEST_CASE should be invoked within the test
-// class constructor, once for each test case method
+
+// In the test class constructor, invoke either FENNEL_UNIT_TEST_CASE or
+// FENNEL_EXTRA_UNIT_TEST_CASE for each test case method. Call FENNEL_UNIT_TEST_CASE
+// to define a test case that is run by default. Call FENNEL_EXTRA_UNIT_TEST_CASE to
+// define an extra test case that is run only when selected from the command line,
+// either by "-t TESTNAME" or by "-all".
 
 #define FENNEL_UNIT_TEST_CASE(UserTestClass,testMethodName) \
+  FENNEL_DEFINE_UNIT_TEST_CASE(defaultTests,UserTestClass,testMethodName)
+
+#define FENNEL_EXTRA_UNIT_TEST_CASE(UserTestClass,testMethodName) \
+  FENNEL_DEFINE_UNIT_TEST_CASE(extraTests,UserTestClass,testMethodName)
+
+// This macro is based on BOOST_PARAM_CLASS_TEST_CASE():
+// make_test_case() below actually returns a test_unit_generator, not a test_case.
+// The generator emits one test.
+#define FENNEL_DEFINE_UNIT_TEST_CASE(group,UserTestClass,testMethodName) \
 do { \
     typedef TestWrapperTemplate<UserTestClass> TestWrapper; \
     boost::shared_ptr<UserTestClass> pDerivedTestObj = \
         boost::dynamic_pointer_cast<UserTestClass>(pTestObj); \
     TestWrapper::FunctionType params [] = \
         { &UserTestClass::testMethodName }; \
-    pTestSuite->add( \
+    boost::unit_test::test_unit *tu = \
         boost::unit_test::make_test_case<TestWrapper>( \
             &TestWrapper::runTest, \
             #testMethodName, \
@@ -226,7 +276,8 @@ do { \
                 #testMethodName, \
                 pDerivedTestObj)), \
             params, \
-            params + 1)); \
+            params + 1).next(); \
+    group.addTest(#testMethodName, tu); \
 } while (0)
 
 FENNEL_END_NAMESPACE

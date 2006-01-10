@@ -75,4 +75,11 @@ public class SqlStateCodes  extends EnumeratedValues.BasicValue
             "22",
             "004");
 
+    public static final int NumericValueOutOfRange_ORDINAL = 2;
+    public static final SqlStateCodes NumericValueOutOfRange = 
+        new SqlStateCodes(
+            "numeric value out of range",
+            NumericValueOutOfRange_ORDINAL,
+            "22",
+            "003");
 }

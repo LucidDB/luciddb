@@ -287,7 +287,7 @@ public class ReduceDecimalsRule extends RelOptRule
         protected RexNode makeScaleFactor(int scale)
         {
             if (scale >= 0) {
-                BigDecimal bd = new BigDecimal(powerOfTen(scale));
+                BigDecimal bd = new BigDecimal(Util.powerOfTen(scale));
                 return builder.makeExactLiteral(bd, int8);
             } else {
                 BigDecimal bd = new BigDecimal(BigInteger.valueOf(1), scale);
@@ -303,35 +303,8 @@ public class ReduceDecimalsRule extends RelOptRule
         protected RexNode makeRoundFactor(int scale)
         {
             Util.pre(scale > 0, "scale > 0");
-            BigDecimal bd = new BigDecimal(powerOfTen(scale)/2);
+            BigDecimal bd = new BigDecimal(Util.powerOfTen(scale)/2);
             return builder.makeExactLiteral(bd, int8);
-        }
-        
-        /**
-         * Calculates a power of ten as a long value.
-         * 
-         * @param exponent exponent, must be greater than zero
-         * @return 10^exponent
-         */
-        protected long powerOfTen(int exponent)
-        {
-            Util.pre(exponent > 0, "exponent > 0");
-            // NOTE: java.lang.Math.pow returns double and could cause 
-            // rounding problems
-            if (exponent == 1) {
-                return 10; 
-            }
-            else {
-                // TODO: make iterative rather than recursive
-                int half = exponent/2;
-                int remainder = exponent%2;
-                long halfPower = powerOfTen(half);
-                if (remainder > 0) {
-                    return halfPower*halfPower*10;
-                } else {
-                    return halfPower*halfPower;
-                }
-            }
         }
         
         /** 
@@ -440,7 +413,8 @@ public class ReduceDecimalsRule extends RelOptRule
             assert(SqlTypeUtil.isDecimal(decimalNode.getType()));
             return builder.makeReinterpretCast(
                 matchNullability(int8, decimalNode),
-                decimalNode);
+                decimalNode,
+                builder.makeLiteral(false));
         }
         
         /** 
@@ -450,6 +424,7 @@ public class ReduceDecimalsRule extends RelOptRule
          * 
          * <p>By default, this method corrects the nullability of the 
          * specified type to match the nullability of the expression.
+         * It does not perform an overflow check.
          * 
          * @param value integer representation of decimal
          * @param decimalType type integer will be reinterpreted as
@@ -458,7 +433,7 @@ public class ReduceDecimalsRule extends RelOptRule
          */
         protected RexNode encodeValue(RexNode value, RelDataType decimalType)
         {
-            return encodeValue(value, decimalType, true);
+            return encodeValue(value, decimalType, true, false);
         }
 
         /** 
@@ -466,24 +441,39 @@ public class ReduceDecimalsRule extends RelOptRule
          * If the expression is not the expected integer type, then 
          * it is casted first.
          * 
+         * <p>The more versatile version of <code>encodeValue</code>
+         * is useful for explicit casts which need strict handling 
+         * of cast types and overflow checks.
+         * 
+         * The <code>checkOverflow</code> flag 
+         * 
          * @param value integer representation of decimal
          * @param decimalType type integer will be reinterpreted as
-         * @param matchNullability whether to correct nullability of 
-         *            decimalType to match value's nullability
+         * @param matchNullability indicates whether the decimal type's 
+         *            nullability should be corrected to match the 
+         *            expression's nullability. Usually true, except for 
+         *            explicit casts.
+         * @param checkOverflow indicates whether an overflow check is 
+         *            required when reinterpreting this particular value  
+         *            as the decimal type. This is usually not required 
+         *            for arithmetic, but often required for explicit 
+         *            casts.
          * 
          * @return the integer representation reinterpreted as a decimal type
          */
         protected RexNode encodeValue(
             RexNode value, 
             RelDataType decimalType, 
-            boolean matchNullability)
+            boolean matchNullability,
+            boolean checkOverflow)
         {
             RexNode cast = ensureType(int8, value);
             RelDataType targetType = decimalType;
             if (matchNullability) {
                 targetType = matchNullability(decimalType, cast);
             }
-            return builder.makeReinterpretCast(targetType, cast);
+            return builder.makeReinterpretCast(
+                targetType, cast, builder.makeLiteral(checkOverflow));
         }
         
         /**
@@ -530,7 +520,9 @@ public class ReduceDecimalsRule extends RelOptRule
          * @param type desired type
          * @param node expression
          * @param matchNullability whether to correct nullability of 
-         *            specified type to match the expression
+         *            specified type to match the expression; this 
+         *            usually should be true, except for explicit  
+         *            casts which may override default nullability
          * 
          * @return a casted expression or the original expression
          */
@@ -599,15 +591,8 @@ public class ReduceDecimalsRule extends RelOptRule
             {
                 return RexRebuilder.rebuildCall(call, operands, builder);
             }
-            
-            if (SqlTypeUtil.isIntType(fromType)
-                || SqlTypeUtil.isApproximateNumeric(fromType))
-            {
-                return encodeValue(
-                    scaleUp(operand, toType.getScale()),
-                    toType,
-                    false);
-            } else if (SqlTypeUtil.isIntType(toType)) {
+
+            if (SqlTypeUtil.isIntType(toType)) {
                 return ensureType(
                     toType,
                     scaleDown(decodeValue(operand), fromType.getScale()),
@@ -618,12 +603,33 @@ public class ReduceDecimalsRule extends RelOptRule
                     scaleDownDouble(
                         decodeValue(operand), fromType.getScale()),
                     false);
+            } else if (SqlTypeUtil.isApproximateNumeric(fromType)) {
+                return encodeValue(
+                    scaleUp(operand, toType.getScale()),
+                    toType,
+                    false, 
+                    true);
+            }
+            
+            int fromScale = fromType.getScale();
+            int toScale = toType.getScale();
+            int fromDigits = fromType.getPrecision() - fromScale;
+            int toDigits = toType.getPrecision() - toScale;
+            // NOTE: precision 19 overflows when its underlying 
+            // bigint representation overflows
+            boolean checkOverflow =
+                toType.getPrecision() < 19 && toDigits < fromDigits;
+            
+            if (SqlTypeUtil.isIntType(fromType)) {
+                return encodeValue(
+                    scaleUp(operand, toType.getScale()),
+                    toType,
+                    false, 
+                    checkOverflow);
             } else if (SqlTypeUtil.isDecimal(fromType) 
                 && SqlTypeUtil.isDecimal(toType))
             {
                 RexNode value = decodeValue(operand);
-                int fromScale = fromType.getScale();
-                int toScale = toType.getScale();
                 RexNode scaled = null;
                 if (fromScale == toScale) {
                     scaled = value;
@@ -632,7 +638,7 @@ public class ReduceDecimalsRule extends RelOptRule
                 } else {
                     scaled = scaleDown(value, fromScale-toScale);
                 }
-                return encodeValue(scaled, toType, false);
+                return encodeValue(scaled, toType, false, checkOverflow);
             } else {
                 throw Util.needToImplement(
                     "Reduce decimal cast from "+fromType + " to "+toType);
@@ -950,11 +956,11 @@ public class ReduceDecimalsRule extends RelOptRule
         public RexNode expand(RexCall call, RexNode[] operands)
         {
             if (call.isA(RexKind.Reinterpret)) {
-                assert(operands.length == 1);
+                assert(operands.length == 2);
                 if (operands[0] instanceof RexCall) {
                     RexCall subCall = (RexCall) operands[0];
                     if (subCall.isA(RexKind.Reinterpret)) {
-                        assert(subCall.operands.length == 1);
+                        assert(subCall.operands.length == 2);
                         RexNode innerValue = subCall.operands[0];
                         // NOTE: first case, pass through decimal type
                         if (SqlTypeUtil.isBigint(call.getType())
@@ -1004,9 +1010,9 @@ public class ReduceDecimalsRule extends RelOptRule
                 Util.pre(newOperands.length==1,"newOperands.length==1");
                 return builder.makeCast(call.getType(), newOperands[0]);
             } else if (call.isA(RexKind.Reinterpret)) {
-                Util.pre(newOperands.length==1,"newOperands.length==1");
+                Util.pre(newOperands.length==2,"newOperands.length==2");
                 return builder.makeReinterpretCast(
-                    call.getType(), newOperands[0]);
+                    call.getType(), newOperands[0], newOperands[1]);
             }
             return builder.makeCall(call.getOperator(), newOperands);
         }

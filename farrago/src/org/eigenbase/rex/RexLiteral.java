@@ -374,6 +374,13 @@ public class RexLiteral extends RexNode
         return ((Boolean) ((RexLiteral) node).value).booleanValue();
     }
 
+    public boolean isAlwaysTrue() 
+    {
+        Util.pre(typeName.getOrdinal() == SqlTypeName.Boolean_ordinal,
+            "typeName.getOrdinal() == SqlTypeName.Boolean_ordinal");
+        return booleanValue(this);
+    }
+
     public boolean equals(Object obj)
     {
         return (obj instanceof RexLiteral)

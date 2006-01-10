@@ -59,11 +59,17 @@ public abstract class EncodedSqlDecimal
     
     //~ Constructors ----------------------------------------------------------
 
+    private long overflowValue = 0;
+    
     /**
      * Creates a runtime object
      */
     public EncodedSqlDecimal()
     {
+        // NOTE: overflowValue depends on an abstract method. The use of 
+        // an abstract method inside a constructor may cause problems for 
+        // Java interpreters, so save initialization of overflowValue 
+        // for later.
         super();
     }
 
@@ -145,20 +151,32 @@ public abstract class EncodedSqlDecimal
      * Encodes a long value as an EncodedSqlDecimal.
      * 
      * @param value value to be encoded as an EncodedSqlDecimal
+     * @param overflowCheck whether to check for overflow
+     * 
      * @return this, an EncodedSqlDecimal whose value has been set
      */
-    public void reinterpret(long value) 
+    public void reinterpret(long value, boolean overflowCheck) 
     {
+        if (overflowCheck && getPrecision() < 19) {
+            if (overflowValue == 0) {
+                overflowValue = Util.powerOfTen(getPrecision());
+            }
+            if (Math.abs(value) >= overflowValue) {
+                throw FarragoResource.instance().Overflow.ex();
+            }
+        }
         assignFrom(value);
     }
 
-    public void reinterpret(NullablePrimitive.NullableLong primitive) 
+    public void reinterpret(
+        NullablePrimitive.NullableLong primitive,
+        boolean overflowCheck) 
     {
         if (primitive.isNull()) {
             setNull(true);
             return;
         }
-        assignFrom(primitive.value);
+        reinterpret(primitive.value, overflowCheck);
     }
 }
 

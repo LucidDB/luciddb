@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/replace.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/replace.sql#2 $
 0: jdbc:farrago:> -- Test create or replace DDL 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema createorreplace;
@@ -9,10 +9,15 @@
 0: jdbc:farrago:> create table foo2 (bar2 integer primary key);
 0: jdbc:farrago:> insert into foo2 (bar2) values (256);
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail:  replace not allowed on TABLE
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- Table (disallowed)
+0: jdbc:farrago:> --
 0: jdbc:farrago:> create or replace table foo (bar2 integer primary key);
 Error: Cannot replace table "FOO" because it does not support replacement (state=,code=0)
 0: jdbc:farrago:> 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- View
+0: jdbc:farrago:> --
 0: jdbc:farrago:> create view fooview as select * from foo;
 0: jdbc:farrago:> select * from fooview;
 +------+
@@ -79,18 +84,142 @@ Error: From line 1, column 7 to line 1, column 15: Unknown field 'BAR2' (state=,
 0: jdbc:farrago:> create or replace view loop1 as select * from loop2;
 Error: Object definition contains recursive cycle (state=,code=0)
 0: jdbc:farrago:> 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- Index (disallowed)
+0: jdbc:farrago:> --
 0: jdbc:farrago:> create index idx on foo(bar);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  duplicate index
 0: jdbc:farrago:> create index idx on foo(bar);
 Error: DDL validation error near line 1, column 14: Target schema "LOCALDB"."CREATEORREPLACE" already contains index "IDX" with same name (state=,code=0)
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail:  replace not allowed on INDEX
 0: jdbc:farrago:> create or replace index idx on foo(bar);
 Error: Cannot replace index "IDX" because it does not support replacement (state=,code=0)
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- disallow replace on schema
-0: jdbc:farrago:> create or replace schema createorreplace description 'blah';
-Error: Cannot replace schema "CREATEORREPLACE" because it does not support replacement (state=,code=0)
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- Schema
+0: jdbc:farrago:> --
+0: jdbc:farrago:> create schema foo;
+0: jdbc:farrago:> set schema 'foo';
+0: jdbc:farrago:> create view v1 as select * from sales.depts;
+0: jdbc:farrago:> select * from v1;
++---------+------------+
+| DEPTNO  |    NAME    |
++---------+------------+
+| 10      | Sales      |
+| 20      | Marketing  |
+| 30      | Accounts   |
++---------+------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create or replace schema foo description 'blah';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select "description" from sys_fem."SQL2003"."LocalSchema"
+. . . . . . . . >  where "name" = 'FOO';
++--------------+
+| description  |
++--------------+
+| blah         |
++--------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from foo.v1;
++---------+------------+
+| DEPTNO  |    NAME    |
++---------+------------+
+| 10      | Sales      |
+| 20      | Marketing  |
+| 30      | Accounts   |
++---------+------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> set schema 'foo';
+0: jdbc:farrago:> create view v2 as select * from sales.depts;
+0: jdbc:farrago:> select * from v2;
++---------+------------+
+| DEPTNO  |    NAME    |
++---------+------------+
+| 10      | Sales      |
+| 20      | Marketing  |
+| 30      | Accounts   |
++---------+------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create or replace view v2 as select * from sales.emps;
+0: jdbc:farrago:> select * from v2;
++--------+--------+---------+---------+----------------+--------+------+-------------+----------+----------+
+| EMPNO  |  NAME  | DEPTNO  | GENDER  |      CITY      | EMPID  | AGE  | PUBLIC_KEY  | SLACKER  | MANAGER  |
++--------+--------+---------+---------+----------------+--------+------+-------------+----------+----------+
+| 100    | Fred   | 10      |         |                | 30     | 25   | 41626320    | true     | false    |
+| 110    | Eric   | 20      | M       | San Francisco  | 3      | 80   | 416263      |          | false    |
+| 120    | Wilma  | 20      | F       |                | 1      | 50   |             |          | true     |
+| 110    | John   | 40      | M       | Vancouver      | 2      |      | 58797A      | false    | true     |
++--------+--------+---------+---------+----------------+--------+------+-------------+----------+----------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- Server
+0: jdbc:farrago:> --
+0: jdbc:farrago:> create foreign data wrapper foo_wrapper
+. . . . . . . . >  library 'class net.sf.farrago.namespace.mock.MedMockForeignDataWrapper'
+. . . . . . . . >  language java;
+0: jdbc:farrago:>                                                                                 
+0: jdbc:farrago:> create server foo_server
+. . . . . . . . >  foreign data wrapper foo_wrapper;
+0: jdbc:farrago:>                                                                                 
+0: jdbc:farrago:> create foreign table foo_table(
+. . . . . . . . >     id int not null)
+. . . . . . . . > server foo_server
+. . . . . . . . > options (executor_impl 'JAVA', row_count '3');
+0: jdbc:farrago:>                                                                                 
+0: jdbc:farrago:> select * from foo_table;
++-----+
+| ID  |
++-----+
+| 0   |
+| 0   |
+| 0   |
++-----+
+0: jdbc:farrago:>                                                                                 
+0: jdbc:farrago:> create or replace server foo_server
+. . . . . . . . >  foreign data wrapper foo_wrapper
+. . . . . . . . >  description 'blah';
+0: jdbc:farrago:>                                                                                 
+0: jdbc:farrago:> select "description" from sys_fem.med."DataServer" where "name" = 'FOO_SERVER';
++--------------+
+| description  |
++--------------+
+| blah         |
++--------------+
+0: jdbc:farrago:>                                                                                 
+0: jdbc:farrago:> select * from foo_table;
++-----+
+| ID  |
++-----+
+| 0   |
+| 0   |
+| 0   |
++-----+
+0: jdbc:farrago:>                                                                                 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- Wrapper
+0: jdbc:farrago:> --
+0: jdbc:farrago:> create or replace foreign data wrapper foo_wrapper
+. . . . . . . . >   library 'class net.sf.farrago.namespace.mock.MedMockForeignDataWrapper'
+. . . . . . . . >   language java
+. . . . . . . . >   description 'blah';
+0: jdbc:farrago:>                                                                                 
+0: jdbc:farrago:> select "description" from sys_fem.med."DataWrapper" where "name" = 'FOO_WRAPPER';
++--------------+
+| description  |
++--------------+
+| blah         |
++--------------+
+0: jdbc:farrago:>                                                                                 
+0: jdbc:farrago:> select * from foo_table;
++-----+
+| ID  |
++-----+
+| 0   |
+| 0   |
+| 0   |
++-----+
+0: jdbc:farrago:>                                                                                 
+0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit
