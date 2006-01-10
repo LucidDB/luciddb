@@ -1114,6 +1114,12 @@ SqlNode TableRef() :
                 SqlParserUtil.toNodeArray(args),
                 pos);
         }
+        |
+        <TABLE> <LPAREN>
+        tableRef = NamedRoutineCall(SqlFunctionCategory.UserDefinedFunction)
+        <RPAREN>
+        {
+        }
     )
     [
         [ <AS> ] alias = Identifier()

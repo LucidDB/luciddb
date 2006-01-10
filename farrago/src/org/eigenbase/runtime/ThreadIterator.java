@@ -71,6 +71,8 @@ public abstract class ThreadIterator extends QueueIterator implements Iterator,
     Runnable,
     Iterable
 {
+    private Thread thread;
+    
     //~ Constructors ----------------------------------------------------------
 
     public ThreadIterator()
@@ -108,8 +110,23 @@ public abstract class ThreadIterator extends QueueIterator implements Iterator,
 
     protected ThreadIterator start()
     {
-        new Thread(this).start();
+        assert(thread == null);
+        thread = new Thread(this);
+        thread.start();
         return this;
+    }
+
+    // implement QueueIterator
+    protected void onClose()
+    {
+        if (thread != null) {
+            try {
+                thread.join();
+            } catch (InterruptedException ex) {
+                throw Util.newInternal(ex);
+            }
+            thread = null;
+        }
     }
 
     //~ Inner Classes ---------------------------------------------------------

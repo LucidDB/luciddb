@@ -22,6 +22,8 @@
 package net.sf.farrago.ojrex;
 
 import java.lang.reflect.*;
+import java.sql.*;
+
 import openjava.ptree.*;
 import openjava.mop.*;
 import org.eigenbase.rex.*;
@@ -63,7 +65,9 @@ public class FarragoOJRexStaticMethodImplementor
         Class [] javaParams = method.getParameterTypes();
         for (int i = 0; i < operands.length; ++i) {
             Expression expr;
-            if (javaParams[i].isPrimitive()) {
+            if (javaParams[i].isPrimitive()
+                || javaParams[i] == PreparedStatement.class)
+            {
                 expr = operands[i];
             } else {
                 expr = new CastExpression(
@@ -127,6 +131,12 @@ public class FarragoOJRexStaticMethodImplementor
                 new StatementList(
                     new ExpressionStatement(callExpr)));
             translator.addStatement(tryStmt);
+            if (returnType.isStruct()) {
+                // For UDX invocation, we don't want to return
+                // anything at all, because it's called from
+                // a dead-end thread.
+                return null;
+            }
             Expression nullVar = translator.createScratchVariable(
                 returnType);
             translator.addStatement(

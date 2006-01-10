@@ -144,6 +144,7 @@ public class QueueIterator implements Iterator
         }
         if (!hasNext) {
             checkError();
+            onClose();
         }
         return hasNext;
     }
@@ -284,6 +285,15 @@ public class QueueIterator implements Iterator
         } else {
             throw new Error("error: " + throwable);
         }
+    }
+
+    /**
+     * Called once the iterator returns false for hasNext().  Default
+     * implementation does nothing, but subclasses can use this
+     * for cleanup actions.
+     */
+    protected void onClose()
+    {
     }
 
     //~ Inner Classes ---------------------------------------------------------

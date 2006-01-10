@@ -44,6 +44,7 @@ import openjava.ptree.*;
 
 import java.lang.reflect.*;
 import java.util.*;
+import java.sql.*;
 
 import java.util.List;
 
@@ -120,6 +121,15 @@ public class FarragoUserDefinedRoutine
         return returnType;
     }
 
+    public boolean isTableFunction()
+    {
+        // TODO jvs 9-Jan-2006:  somewhere or other we need to validate
+        // that a table function can't be invoked from anywhere other
+        // than as a table reference; or rather, if invoked elsewhere, 
+        // it should return a MULTISET value per the standard.
+        return FarragoCatalogUtil.isTableFunction(routine);
+    }
+
     public FemJar getJar()
     {
         return femJar;
@@ -177,7 +187,14 @@ public class FarragoUserDefinedRoutine
         String javaClassName = classPlusMethodName.substring(0, iLastDot);
         String javaMethodName = classPlusMethodName.substring(iLastDot + 1);
         int nParams = FarragoCatalogUtil.getRoutineParamCount(routine);
-        Class [] javaParamClasses = new Class[nParams];
+        int nJavaParams = nParams;
+
+        if (isTableFunction()) {
+            // one extra for PreparedStatement
+            ++nJavaParams;
+        }
+        
+        Class [] javaParamClasses = new Class[nJavaParams];
         if (iLeftParen == -1) {
             List params = routine.getParameter();
             for (int i = 0; i < nParams; ++i) {
@@ -189,11 +206,14 @@ public class FarragoUserDefinedRoutine
                     throw Util.needToImplement(type);
                 }
             }
+            if (isTableFunction()) {
+                javaParamClasses[nParams] = PreparedStatement.class;
+            }
         } else {
             int iNameStart = iLeftParen + 1;
             boolean last = false;
             int i = 0;
-            for (; (i < nParams) && !last; ++i) {
+            for (; (i < nJavaParams) && !last; ++i) {
                 int iComma = fullMethodName.indexOf(',', iNameStart);
                 if (iComma == -1) {
                     iComma = fullMethodName.indexOf(')', iNameStart);
@@ -219,7 +239,7 @@ public class FarragoUserDefinedRoutine
                 javaParamClasses[i] = paramClass;
                 iNameStart = iComma + 1;
             }
-            if (!last || (i != nParams)) {
+            if (!last || (i != nJavaParams)) {
                 // TODO jvs 16-Jan-2005:  specific err msg for mismatch
                 // between number of SQL routine parameters and number of
                 // Java method parameters
@@ -280,7 +300,9 @@ public class FarragoUserDefinedRoutine
             JavaToSqlTypeConversionRules.instance();
 
         Class javaReturnClass = javaMethod.getReturnType();
-        if (routine.getType() == ProcedureTypeEnum.FUNCTION) {
+        if ((routine.getType() == ProcedureTypeEnum.FUNCTION)
+            && (!isTableFunction()))
+        {
             SqlTypeName actualReturnSqlType = rules.lookup(javaReturnClass);
             SqlTypeName declReturnSqlType = returnType.getSqlTypeName();
             if (!checkCompatibility(actualReturnSqlType, declReturnSqlType)) {
@@ -315,6 +337,18 @@ public class FarragoUserDefinedRoutine
                         repos.getLocalizedObjectName(javaUnmangledMethodName),
                         javaParamClass.toString());
             }
+            if (isTableFunction()) {
+                if (javaParamClasses[nParams] != PreparedStatement.class) {
+                    throw FarragoResource.instance().
+                        ValidatorRoutineJavaParamMismatch.ex(
+                            "RETURNS TABLE",
+                            repos.getLocalizedObjectName(routine),
+                            "java.sql.PreparedStatement",
+                            repos.getLocalizedObjectName(
+                                javaUnmangledMethodName),
+                            javaParamClass.toString());
+                }
+            }
         }
 
         return javaMethod;
@@ -345,7 +379,12 @@ public class FarragoUserDefinedRoutine
             throw FarragoResource.instance().PluginMethodMismatch.ex(ex);
         }
 
-        Expression [] args = new Expression[operands.length];
+        int nJavaArgs = operands.length;
+        if (isTableFunction()) {
+            ++nJavaArgs;
+        }
+
+        Expression [] args = new Expression[nJavaArgs];
         Class [] javaParams = method.getParameterTypes();
         for (int i = 0; i < operands.length; ++i) {
             args[i] = translateOperand(
@@ -354,6 +393,14 @@ public class FarragoUserDefinedRoutine
                 operands[i],
                 javaParams[i],
                 getParamTypes()[i]);
+        }
+
+        if (isTableFunction()) {
+            // NOTE jvs 8-Jan-2006:  "this" here refers to the
+            // calling instance of FarragoJavaUdxIterator
+            args[operands.length] = new MethodCall(
+                "getResultInserter",
+                new ExpressionList());
         }
         
         FarragoOJRexStaticMethodImplementor implementor =

@@ -147,6 +147,14 @@ Error: Result expression type VARCHAR(128) from routine "UDFTEST"."BAD_ATOI" doe
 . . . . . . . . > return case when x = 1 then x else x*factorial(x-1) end;
 Error: Object definition contains recursive cycle (state=,code=0)
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- UDX
+0: jdbc:farrago:> create function ramp(n int)
+. . . . . . . . > returns table(i int)
+. . . . . . . . > language java
+. . . . . . . . > parameter style system defined java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.ramp';
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  we don't allow mutual recursion either
 0: jdbc:farrago:> create schema crypto
 . . . . . . . . > create function alice(x double)
@@ -408,6 +416,17 @@ Error: nothing but a failure (state=,code=0)
 0: jdbc:farrago:> -- should fail
 0: jdbc:farrago:> values throw_npe();
 Error: java.lang.NullPointerException: null (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from table(ramp(5));
++----+
+| I  |
++----+
+| 0  |
+| 1  |
+| 2  |
+| 3  |
+| 4  |
++----+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set path 'crypto2';
 0: jdbc:farrago:> 

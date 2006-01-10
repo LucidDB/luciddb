@@ -122,6 +122,7 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
         planner.addRule(new SwapJoinRule());
         planner.addRule(new RemoveTrivialProjectRule());
         planner.addRule(new FarragoMultisetSplitterRule());
+        planner.addRule(FarragoJavaUdxRule.instance);
 
         planner.addRule(new IterRules.HomogeneousUnionToIteratorRule());
         planner.addRule(new IterRules.OneRowToIteratorRule());

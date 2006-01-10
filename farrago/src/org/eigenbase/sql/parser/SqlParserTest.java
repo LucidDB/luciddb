@@ -1436,7 +1436,7 @@ public class SqlParserTest extends TestCase
     public void testSelectFromBareExplicitTableFails()
     {
         checkFails("select * from table emp",
-            "(?s).*Encountered \"table\" at line 1, column 15.*");
+            "(?s).*Encountered \"emp\" at line 1, column 21.*");
     }
 
     public void testExplain()
