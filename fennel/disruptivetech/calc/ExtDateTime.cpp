@@ -97,7 +97,7 @@ CastStrAToDate(
     if (dateStr->isNull()) {
         result->toNull();
     } else {
-        result->value(SqlStrToDate<1,1,SQLDATE>(dateStr->pointer(), dateStr->storage()));
+        result->value(SqlStrToDate<1,1,SQLDATE>(dateStr->pointer(), dateStr->stringLength()));
     }
 }
 
@@ -112,7 +112,7 @@ CastStrAToTime(
     if (timeStr->isNull()) {
         result->toNull();
     } else {
-        result->value(SqlStrToDate<1,1,SQLTIME>(timeStr->pointer(), timeStr->storage()));
+        result->value(SqlStrToDate<1,1,SQLTIME>(timeStr->pointer(), timeStr->stringLength()));
     }
 }
 
@@ -127,7 +127,7 @@ CastStrAToTimestamp(
     if (timestampStr->isNull()) {
         result->toNull();
     } else {
-        result->value(SqlStrToDate<1,1,SQLTIMESTAMP>(timestampStr->pointer(), timestampStr->storage()));
+        result->value(SqlStrToDate<1,1,SQLTIMESTAMP>(timestampStr->pointer(), timestampStr->stringLength()));
     }
 }
 
