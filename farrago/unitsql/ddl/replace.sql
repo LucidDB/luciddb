@@ -9,9 +9,14 @@ insert into foo (bar) values (128);
 create table foo2 (bar2 integer primary key);
 insert into foo2 (bar2) values (256);
 
--- should fail:  replace not allowed on TABLE
+--
+-- Table (disallowed)
+--
 create or replace table foo (bar2 integer primary key);
 
+--
+-- View
+--
 create view fooview as select * from foo;
 select * from fooview;
 
@@ -46,13 +51,73 @@ create view loop2 as select * from loop1;
 -- this should fail
 create or replace view loop1 as select * from loop2;
 
+--
+-- Index (disallowed)
+--
 create index idx on foo(bar);
 
 -- should fail:  duplicate index
 create index idx on foo(bar);
 
--- should fail:  replace not allowed on INDEX
 create or replace index idx on foo(bar);
 
--- disallow replace on schema
-create or replace schema createorreplace description 'blah';
+--
+-- Schema
+--
+create schema foo;
+set schema 'foo';
+create view v1 as select * from sales.depts;
+select * from v1;
+
+create or replace schema foo description 'blah';
+
+select "description" from sys_fem."SQL2003"."LocalSchema"
+ where "name" = 'FOO';
+
+select * from foo.v1;
+
+set schema 'foo';
+create view v2 as select * from sales.depts;
+select * from v2;
+
+create or replace view v2 as select * from sales.emps;
+select * from v2;
+
+--
+-- Server
+--
+create foreign data wrapper foo_wrapper
+ library 'class net.sf.farrago.namespace.mock.MedMockForeignDataWrapper'
+ language java;
+                                                                                
+create server foo_server
+ foreign data wrapper foo_wrapper;
+                                                                                
+create foreign table foo_table(
+    id int not null)
+server foo_server
+options (executor_impl 'JAVA', row_count '3');
+                                                                                
+select * from foo_table;
+                                                                                
+create or replace server foo_server
+ foreign data wrapper foo_wrapper
+ description 'blah';
+                                                                                
+select "description" from sys_fem.med."DataServer" where "name" = 'FOO_SERVER';
+                                                                                
+select * from foo_table;
+                                                                                
+--
+-- Wrapper
+--
+create or replace foreign data wrapper foo_wrapper
+  library 'class net.sf.farrago.namespace.mock.MedMockForeignDataWrapper'
+  language java
+  description 'blah';
+                                                                                
+select "description" from sys_fem.med."DataWrapper" where "name" = 'FOO_WRAPPER';
+                                                                                
+select * from foo_table;
+                                                                                
+

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 1999-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,14 +25,18 @@
 #include "fennel/test/TestBase.h"
 #include "fennel/common/FileSystem.h"
 #include "fennel/common/Backtrace.h"
+#include "boost/test/test_tools.hpp"
 
 #ifdef __CYGWIN__
 #include <locale>
 #endif
 
 using namespace fennel;
+using boost::unit_test::test_unit;
 
 ConfigMap TestBase::configMap;
+bool TestBase::runAll = false;
+std::string TestBase::runSingle;
 
 ParamName TestBase::paramTestSuiteName = "testSuiteNameBoost";
 ParamName TestBase::paramTraceFileName = "testTraceFileName";
@@ -50,8 +54,6 @@ TestBase::TestBase()
     testName = configMap.getStringParam(paramTestSuiteName);
     traceLevel = static_cast<TraceLevel>(
         configMap.getIntParam(paramTraceLevel,TRACE_INFO));
-    pTestSuite = BOOST_TEST_SUITE(testName.c_str());
-
     std::string traceStdoutParam = 
         configMap.getStringParam(paramTraceStdout,"");
     traceStdout = ((traceStdoutParam.length() == 0) ? false : true);
@@ -87,21 +89,52 @@ TestBase::~TestBase()
     configMap.clear();
 }
 
+
+/// Parses the command line.
+/// format: [-v] [-t TEST | -all] {param=val}* [CONFIGFILE | -]
+/// Normally, the test program runs the default test cases.
+/// With the option "-all", runs the extra test cases as well.
+/// With the option "-t TEST", runs only the single test case named TEST.
+/// CONFIGFILE is read to load configuration parameters.
+/// Configuration parameters can also be set ad hoc, from the command line,
+/// as pairs name=val. These take precedence.
+
 void TestBase::readParams(int argc,char **argv)
 {
     bool verbose = false;
+    ConfigMap adhocMap;
+
     for (int i = 1; i < argc; ++i) {
-        std::string configFileName = argv[i];
-        if (configFileName == "-v") {
-            verbose = true;
-        } else if (configFileName == "-") {
-            configMap.readParams(std::cin);
+        std::string arg = argv[i];
+        if (argv[i][0] == '-') {
+            if (arg == "-v") {
+                verbose = true;
+            } else if (arg == "-") {
+                configMap.readParams(std::cin);
+            } else if (arg == "-all") {
+                runAll = true;
+            } else if (arg == "-t") {   // -t TEST
+                permAssert(i+1 < argc);
+                runSingle = argv[++i];
+            } else if (arg[1] == 't') { // allow -tTEST
+                runSingle = arg.substr(2);
+            }
         } else {
-            std::ifstream configFile(configFileName.c_str());
-            assert(configFile.good());
-            configMap.readParams(configFile);
+            int i = arg.find("=");
+            if ((0 < i) && (i < arg.size())) {
+                // an ad hoc parameter
+                std::string key = arg.substr(0,i);
+                std::string val = arg.substr(i+1);
+                adhocMap.setStringParam(key,val);
+            } else {
+                // a config file name
+                std::ifstream configFile(arg.c_str());
+                assert(configFile.good());
+                configMap.readParams(configFile);
+            }
         }
     }
+    configMap.mergeFrom(adhocMap);
 
     // set a default dictionary file location for use by tests that need a
     // small non-random sorted data set
@@ -121,10 +154,52 @@ TestSuite *TestBase::releaseTestSuite()
     assert(pTestObj.use_count() > 1);
     // release self-reference now that all test cases have been registered
     pTestObj.reset();
-    TestSuite *pRetTestSuite = pTestSuite;
-    pTestSuite = NULL;
-    return pRetTestSuite;
+
+    TestSuite* pTestSuite = BOOST_TEST_SUITE(testName.c_str());
+
+    if (runSingle.size()) {
+        test_unit *p =  defaultTests.findTest(runSingle);
+        if (!p)
+            p = extraTests.findTest(runSingle);
+        if (!p) {
+            std::cerr << "test " << runSingle << " not found\n";
+            exit(2);
+        }
+        pTestSuite->add(p);
+    } else {
+        defaultTests.addAllToTestSuite(pTestSuite);
+        if (runAll)
+            extraTests.addAllToTestSuite(pTestSuite);
+    }
+    return pTestSuite;
 }
+
+void TestBase::TestCaseGroup::addTest(std::string name, test_unit *tu)
+{
+    items.push_back(Item(name, tu));
+}
+
+test_unit* 
+TestBase::TestCaseGroup::findTest(std::string name) const
+{
+    for (std::vector<Item>::const_iterator p = items.begin();
+         p != items.end(); ++p)
+    {
+        if (name == p->name)
+            return p->tu;
+    }
+    return 0;
+}
+
+void TestBase::TestCaseGroup::addAllToTestSuite(TestSuite *suite) const
+{
+    for (std::vector<Item>::const_iterator p = items.begin();
+         p != items.end(); ++p)
+    {
+        suite->add(p->tu);
+    }
+}
+
 
 void TestBase::beforeTestCase(std::string testCaseName)
 {
