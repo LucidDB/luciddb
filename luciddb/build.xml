@@ -109,7 +109,7 @@
 
   <target name="test" depends="compile,createCatalog,buildJdbcPlugin">
     <antcall target="xreg"/>
-    <!-- antcall target="txn"/ -->
+    <antcall target="txn"/>
     <antcall target="bh" />
   </target>
 
