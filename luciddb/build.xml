@@ -120,7 +120,7 @@
   </target>
     
 
-  <target name="compile" depends="clean">
+  <target name="compile" depends="clean,makeOutputDirs">
     <!-- compile farrago first -->    
     <ant dir="${farrago.dir}" target="compile"/>
 
