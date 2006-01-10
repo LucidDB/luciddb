@@ -23,6 +23,7 @@ ThreadedTestBase.cpp
 
 # NOTE:  tests are ordered roughly from fastest to slowest
 noinst_PROGRAMS= \
+TestOptionsTest \
 ResourceTest \
 LocalConditionTest \
 TupleTest \
@@ -42,6 +43,8 @@ BTreeTest \
 BacktraceTest
 
 TESTS = $(noinst_PROGRAMS)
+
+TestOptionsTest_SOURCES=TestOptionsTest.cpp
 
 ResourceTest_SOURCES=ResourceTest.cpp
 
