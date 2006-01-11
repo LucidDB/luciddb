@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+set -e
+set -v
 
 usage() {
     echo "Usage:  initBuild.sh --with[out]-farrago [--with[out]-fennel] [--with[out]-optimization] [--with[out]-debug] [--skip-fennel[-thirdparty]-build] [--with[out]-tests]"
@@ -25,7 +27,8 @@ usage() {
 
 farrago_disabled=missing
 skip_tests=true
-FENNEL_FLAG=--with-fennel
+FARRAGO_FLAGS=""
+luciddb_dir=$(cd $(dirname $0); pwd)
 
 # extended globbing for case statement
 shopt -sq extglob
@@ -34,19 +37,19 @@ while [ -n "$1" ]; do
     case $1 in
         --with-farrago) farrago_disabled=false;;
         --without-farrago) farrago_disabled=true;;
-        --with?(out)-fennel) FENNEL_FLAG="$1";;
-        --with?(out)-optimization) OPT_FLAG="$1";;
-        --with?(out)-debug) DEBUG_FLAG="$1";;
-        --skip-fennel?(-thirdparty)-build) FENNEL_BUILD_FLAG="$1";;
+
         --with-tests)
             skip_tests=false;
-            TEST_FLAG="$1";;
+            FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
         --without-tests)
             skip_tests=true;
-            TEST_FLAG="$1";;
+            FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
+
+        --*) FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
 
         *) usage; exit -1;;
     esac
+
     shift
 done
 
@@ -61,13 +64,15 @@ fi
 if $farrago_disabled ; then
     echo Farrago disabled.
 else
-    cd ../farrago
-    ./initBuild.sh $FENNEL_FLAG $OPT_FLAG $DEBUG_FLAG \
-        $FENNEL_BUILD_FLAG $TEST_FLAG
+    cd ${luciddb_dir}/../farrago
+    ./initBuild.sh ${FARRAGO_FLAGS}
 fi
 
 # Build catalog then run tests
-cd ../luciddb
+cd ${luciddb_dir}/../farrago
+. farragoenv.sh `pwd`/../thirdparty
+
+cd ${luciddb_dir}
 ant clean
 
 if $skip_tests ; then
