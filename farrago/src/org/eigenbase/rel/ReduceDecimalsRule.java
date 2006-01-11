@@ -652,9 +652,7 @@ public class ReduceDecimalsRule extends RelOptRule
     class BinaryArithmeticExpander extends RexExpander
     {
         RelDataType typeA, typeB;
-        int precisionA, precisionB;
         int scaleA, scaleB;
-        int digitsA, digitsB;
         
         /** Constructs an ArithmeticExpander */
         public BinaryArithmeticExpander(RexBuilder builder)
@@ -741,24 +739,12 @@ public class ReduceDecimalsRule extends RelOptRule
 
             scaleA = typeA.getScale();
             scaleB = typeB.getScale();
-            precisionA = typeA.getPrecision();
-            precisionB = typeB.getPrecision();
-            digitsA = precisionA - scaleA;
-            digitsB = precisionB - scaleB;
         }
         
         private RexNode expandPlusMinus(RexCall call, RexNode[] operands)
         {
-            int outDigits = Math.max(digitsA, digitsB)+1;
-            int outScale = Math.max(scaleA, scaleB);
-            if (outDigits + outScale > SqlTypeName.MAX_NUMERIC_PRECISION) {
-                outDigits = SqlTypeName.MAX_NUMERIC_PRECISION - outScale;
-            }
-            int outPrecision = outDigits + outScale;
-            RelDataType outType = 
-                builder.getTypeFactory().createSqlType(
-                    SqlTypeName.Decimal, outPrecision, outScale);
-            
+            RelDataType outType = call.getType();
+            int outScale = outType.getScale();
             return encodeValue(
                 builder.makeCall(
                     call.getOperator(), 
@@ -769,20 +755,7 @@ public class ReduceDecimalsRule extends RelOptRule
 
         private RexNode expandDivide(RexCall call, RexNode[] operands)
         {
-            int outDigits = digitsA+scaleB;
-            if (outDigits > SqlTypeName.MAX_NUMERIC_PRECISION) {
-                outDigits = SqlTypeName.MAX_NUMERIC_PRECISION;
-            }
-            int outScale = SqlTypeName.MAX_NUMERIC_PRECISION - outDigits;
-            outScale = Math.max(outScale, Math.max(scaleA, scaleB));
-            if (outDigits + outScale > SqlTypeName.MAX_NUMERIC_PRECISION) {
-                outDigits = SqlTypeName.MAX_NUMERIC_PRECISION - outScale;
-            }
-            int outPrecision = outDigits + outScale;
-            RelDataType outType = 
-                builder.getTypeFactory().createSqlType(
-                    SqlTypeName.Decimal, outPrecision, outScale);
-            
+            RelDataType outType = call.getType();
             RexNode dividend = 
                 builder.makeCall(call.getOperator(),
                     ensureType(real8, accessValue(operands[0])),
@@ -791,32 +764,18 @@ public class ReduceDecimalsRule extends RelOptRule
                 builder.makeCall(
                     SqlStdOperatorTable.multiplyOperator,
                     dividend, 
-                    makeScaleFactor(outScale - scaleA + scaleB));
+                    makeScaleFactor(outType.getScale() - scaleA + scaleB));
             return encodeValue(rescale, outType);
         }
 
         private RexNode expandTimes(RexCall call, RexNode[] operands)
         {
-            int outDigits = digitsA+digitsB;
-            int outScale = scaleA+scaleB;
-            if (outScale > SqlTypeName.MAX_NUMERIC_SCALE) {
-                // TODO: replace this with a better, localizable message
-                throw Util.newInternal("Could not Multiply: scale too large");
-            }
-            if (outDigits + outScale > SqlTypeName.MAX_NUMERIC_PRECISION) {
-                outDigits = SqlTypeName.MAX_NUMERIC_PRECISION - outScale;
-            }
-            int outPrecision = outDigits + outScale;
-            RelDataType outType = 
-                builder.getTypeFactory().createSqlType(
-                    SqlTypeName.Decimal, outPrecision, outScale);
-            
             return encodeValue(
                 builder.makeCall(
                     call.getOperator(),
                     accessValue(operands[0]),
                     accessValue(operands[1])),
-                outType);
+                call.getType());
         }
         
         private RexNode expandComparison(RexCall call, RexNode[] operands)
@@ -962,24 +921,63 @@ public class ReduceDecimalsRule extends RelOptRule
                     if (subCall.isA(RexKind.Reinterpret)) {
                         assert(subCall.operands.length == 2);
                         RexNode innerValue = subCall.operands[0];
-                        // NOTE: first case, pass through decimal type
-                        if (SqlTypeUtil.isBigint(call.getType())
-                            && SqlTypeUtil.isBigint(innerValue.getType()))
-                        {
+                        if (canSimplify(call, subCall, innerValue)) {
                             return RexUtil.clone(innerValue);
-                        }
-                        // NOTE: second case, decimal casting
-                        if (SqlTypeUtil.isDecimal(call.getType())
-                            && SqlTypeUtil.isDecimal(innerValue.getType())
-                            && call.getType().getScale() 
-                                > innerValue.getType().getScale()) 
-                        {
-                            // NOTE: can't do much
                         }
                     }
                 }
             }
             return RexRebuilder.rebuildCall(call, operands, builder);
+        }
+        
+        /**
+         * Detect, in a generic, but strict way, whether it is possible to 
+         * simplify a reinterpret cast. The rules are as follows:
+         * 
+         * <ol>
+         *   <li>If value is not the same basic type as outer, then we 
+         *     cannot simplify
+         *   <li>If the value is nullable but the inner or outer are not, then 
+         *     we cannot simplify.
+         *   <li>If inner is nullable but outer is not, we cannot simplify.
+         *   <li>If an overflow check is required from either inner or 
+         *     outer, we cannot simplify.
+         *   <li>Otherwise, given the same type, and sufficient nullability 
+         *     constraints, we can simplify.
+         * </ol>
+         * 
+         * @param outer outer call to reinterpret
+         * @param inner inner call to reinterpret
+         * @param value inner value
+         * @return whether the two reinterpret casts can be removed
+         */
+        private boolean canSimplify(
+            RexCall outer, RexCall inner, RexNode value) 
+        {
+            RelDataType outerType = outer.getType();
+            RelDataType innerType = inner.getType();
+            RelDataType valueType = value.getType();
+            boolean outerCheck = outer.operands[1].isAlwaysTrue();
+            boolean innerCheck = inner.operands[1].isAlwaysTrue();
+            
+            if (outerType.getSqlTypeName() != valueType.getSqlTypeName()
+                || outerType.getPrecision() != valueType.getPrecision()
+                || outerType.getScale() != valueType.getScale()) 
+            {
+                return false;
+            }
+            if (valueType.isNullable() && 
+                (!innerType.isNullable() || !outerType.isNullable())) 
+            {
+                return false;
+            }
+            if (innerType.isNullable() && !outerType.isNullable()) {
+                return false;
+            }
+            if (innerCheck || outerCheck) {
+                return false;
+            }
+            return true;
         }
     }
     
