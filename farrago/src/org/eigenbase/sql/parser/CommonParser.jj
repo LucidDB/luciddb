@@ -947,7 +947,10 @@ SqlNode SelectExpression() :
 // building up non-linear join trees (e.g. OUTER JOIN two tables, and then INNER
 // JOIN the result).  Also note that aliases on parenthesized FROM expressions
 // "hide" all table names inside the parentheses (without aliases, they're
-// visible).  Also, CROSS JOIN shouldn't permit a join condition.
+// visible).
+//
+// We allow CROSS JOIN to have a join condition, even though that is not valid
+// SQL; the validator will catch it.
 /**
  * Parses the FROM clause a SELECT.
  */
@@ -964,6 +967,10 @@ SqlNode FromClause() :
 {
     e = TableRef()
     (
+        // Decide whether to read a JOIN clause or a comma, or to quit having
+        // seen a single entry FROM clause like 'FROM emps'. See comments
+        // elsewhere regarding <COMMA> lookahead.
+        LOOKAHEAD(2)
         (
             <NATURAL> {isNatural = true;}
             |
@@ -1838,13 +1845,12 @@ SqlNode Expression3(ExprContext exprContext) :
                     throw new ParseException(
                         EigenbaseResource.instance().IllegalMinusDate.str(
                             getPos().toString()));
-                } else {
-                    list2 = startList(((SqlCall) list.get(0)).operands[0]);
-                    list2.add(((SqlCall) list.get(0)).operands[1]);
-                    list2.add(e);
                 }
+                List list3 = startList(((SqlCall) list.get(0)).operands[0]);
+                list3.add(((SqlCall) list.get(0)).operands[1]);
+                list3.add(e);
                 return SqlStdOperatorTable.minusDateOperator.createCall(
-                    SqlParserUtil.toNodeArray(list2), getPos());
+                    SqlParserUtil.toNodeArray(list3), getPos());
             }
         )
     ]
