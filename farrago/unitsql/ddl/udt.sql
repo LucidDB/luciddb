@@ -13,6 +13,12 @@ create type rectilinear_coord as (
     y double
 ) final;
 
+-- decimal type
+create type rectilinear_coord_dec as (
+    x decimal(10,4),
+    y decimal(9,3)
+) final;
+
 -- structured type with default values
 create type rectilinear_coord0 as (
     x double default 0,
@@ -67,6 +73,25 @@ for rectilinear_coord_non0
 begin
     set self.x = x_init; set self.y = y_init; return self
 ; end;
+
+
+-- decimal type with constructor
+create type rectilinear_coord_non0_dec as (
+    x decimal(10,4) default 100.12345,
+    y decimal(9, 3) default 100.1234
+) final
+constructor method rectilinear_coord_non0_dec
+    (x_init decimal(10,4),y_init double) 
+returns rectilinear_coord_non0_dec 
+self as result
+contains sql
+;
+
+create specific method rectilinear_coord_non0_dec
+for rectilinear_coord_non0_dec
+begin
+    set self.x = x_init; set self.y = cast(y_init as decimal(9, 3))
+; return self; end;
 
 -- structured type with overloaded constructors
 create type rectilinear_coord_overloaded as (
@@ -282,6 +307,12 @@ contains sql
 deterministic
 return c.y/c.x;
 
+create function slope_dec(c rectilinear_coord_non0_dec)
+returns decimal(10, 4)
+contains sql
+deterministic
+return c.y/c.x;
+
 create function make_coord(x double,y double)
 returns rectilinear_coord_non0
 contains sql
@@ -295,6 +326,8 @@ deterministic
 return new rectilinear_coord_non0(c.y,c.x);
 
 values slope(new rectilinear_coord_non0(5,20));
+-- FIXME: should be 4.0000
+-- values slope_dec(new rectilinear_coord_non0_dec(5.0,20.0));
 
 select t.c.x, t.c.y from (select make_coord(7,9) as c from (values(0))) t;
 

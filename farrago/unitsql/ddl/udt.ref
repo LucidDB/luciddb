@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udt.sql#12 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/ddl/udt.sql#3 $
 0: jdbc:farrago:> -- Test DDL for user-defined types
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema udttest;
@@ -11,6 +11,12 @@
 0: jdbc:farrago:> create type rectilinear_coord as (
 . . . . . . . . >     x double,
 . . . . . . . . >     y double
+. . . . . . . . > ) final;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- decimal type
+0: jdbc:farrago:> create type rectilinear_coord_dec as (
+. . . . . . . . >     x decimal(10,4),
+. . . . . . . . >     y decimal(9,3)
 . . . . . . . . > ) final;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- structured type with default values
@@ -72,6 +78,25 @@ Error: Result expression type VARCHAR(20) cannot be assigned to declared type DO
 . . . . . . . . > begin
 . . . . . . . . >     set self.x = x_init; set self.y = y_init; return self
 . . . . . . . . > ; end;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- decimal type with constructor
+0: jdbc:farrago:> create type rectilinear_coord_non0_dec as (
+. . . . . . . . >     x decimal(10,4) default 100.12345,
+. . . . . . . . >     y decimal(9, 3) default 100.1234
+. . . . . . . . > ) final
+. . . . . . . . > constructor method rectilinear_coord_non0_dec
+. . . . . . . . >     (x_init decimal(10,4),y_init double) 
+. . . . . . . . > returns rectilinear_coord_non0_dec 
+. . . . . . . . > self as result
+. . . . . . . . > contains sql
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create specific method rectilinear_coord_non0_dec
+. . . . . . . . > for rectilinear_coord_non0_dec
+. . . . . . . . > begin
+. . . . . . . . >     set self.x = x_init; set self.y = cast(y_init as decimal(9, 3))
+. . . . . . . . > ; return self; end;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- structured type with overloaded constructors
 0: jdbc:farrago:> create type rectilinear_coord_overloaded as (
@@ -316,6 +341,12 @@ Error: DDL validation error near line 1, column 33: Reference to unknown user-de
 . . . . . . . . > deterministic
 . . . . . . . . > return c.y/c.x;
 0: jdbc:farrago:> 
+0: jdbc:farrago:> create function slope_dec(c rectilinear_coord_non0_dec)
+. . . . . . . . > returns decimal(10, 4)
+. . . . . . . . > contains sql
+. . . . . . . . > deterministic
+. . . . . . . . > return c.y/c.x;
+0: jdbc:farrago:> 
 0: jdbc:farrago:> create function make_coord(x double,y double)
 . . . . . . . . > returns rectilinear_coord_non0
 . . . . . . . . > contains sql
@@ -334,6 +365,8 @@ Error: DDL validation error near line 1, column 33: Reference to unknown user-de
 +---------+
 | 4.0     |
 +---------+
+0: jdbc:farrago:> -- FIXME: should be 4.0000
+0: jdbc:farrago:> -- values slope_dec(new rectilinear_coord_non0_dec(5.0,20.0));
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select t.c.x, t.c.y from (select make_coord(7,9) as c from (values(0))) t;
 +------+------+
