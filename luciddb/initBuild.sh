@@ -72,6 +72,10 @@ fi
 cd ${luciddb_dir}/../farrago
 . farragoenv.sh `pwd`/../thirdparty
 
+# set up Fennel's LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=
+. ${luciddb_dir}/../fennel/fennelenv.sh ${luciddb_dir}/../fennel
+
 cd ${luciddb_dir}
 ant clean
 
