@@ -31,6 +31,11 @@ create table multisetTable_ic(i integer primary key, ii integer multiset, c char
 --insert into multisetTable_ic values(1,multiset(select deptno from sales.depts), multiset(select name from sales.depts));
 -- insert into multisetTable_ic values(2, multiset[2],null);
 
+-- insert with decimals
+create table multisetTable_d(i integer primary key, c decimal(4,1) multiset);
+-- insert into multisetTable_d values(0, multiset['1.4', '4.2', '5.2']);
+-- insert into multisetTable_d values(1, null);
+
 
 -- insert wrong types, must fail
 -- insert into multisetTable_c values(2, 'a');

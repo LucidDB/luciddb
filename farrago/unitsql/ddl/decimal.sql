@@ -31,8 +31,7 @@ create table tde4(n integer not null primary key, d decimal(5, -2));
 -- Test insert into table (decimal)
 insert into td values(1, 2);
 insert into td5 values(1, 3);
--- TODO: Fix error: Implementation of Reinterpret(Reinterpret(2.69)) not found 
--- insert into td52 values(1, 2.69);
+insert into td52 values(1, 2.69);
 
 -- rounding
 insert into td values(2, 2.7);
@@ -74,10 +73,9 @@ insert into td values(23, -9223372036854775808.5);
 -- insert into td52 values(23, -999.995); 
 
 -- null
--- TODO: Fix null
--- insert into td values(30, null);
--- insert into td5 values(30, null);
--- insert into td52 values(30, null);
+insert into td values(30, null);
+insert into td5 values(30, null);
+insert into td52 values(30, null);
 
 select * from td;
 select * from td5;
@@ -89,10 +87,9 @@ insert into tn values(1, 2.5);
 insert into tn9 values(1, 1234.456);
 insert into tn95 values(1, 9999.99999123);
 
--- TODO: Fix null
--- insert into tn values(2, null);
--- insert into tn9 values(2, null);
--- insert into tn95 values(2, null);
+insert into tn values(2, null);
+insert into tn9 values(2, null);
+insert into tn95 values(2, null);
 
 select * from tn;
 select * from tn9;

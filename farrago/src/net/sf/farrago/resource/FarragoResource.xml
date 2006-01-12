@@ -575,8 +575,12 @@ column type family is {1} but default value type family is {2}</text>
 <text>Value ''{0}'' is too long for parameter of type {1}</text>
 </exception>
 
-<exception id="450020" name="ParameterValueIncompatible">
+<exception id="450021" name="ParameterValueIncompatible">
 <text>Cannot assign a value of Java class {0} to parameter of type {1}</text>
+</exception>
+
+<exception id="450022" name="ParameterValueOutOfRange">
+<text>Value ''{0}'' is out of range for parameter of type {1}</text>
 </exception>
 
 <exception id="450030" name="NoDefaultConnection">

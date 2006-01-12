@@ -22,8 +22,10 @@
 package net.sf.farrago.type.runtime;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 
 import org.eigenbase.util.*;
+import org.eigenbase.util14.NumberUtil;
 
 import net.sf.farrago.resource.FarragoResource;
 
@@ -84,7 +86,21 @@ public abstract class EncodedSqlDecimal
      * @return the decimal scale of this number
      */
     protected abstract int getScale();
-    
+
+    protected void setNumber(Number number)
+    {
+        BigDecimal bd = NumberUtil.toBigDecimal(number, getScale());
+
+        // Check Overflow
+        BigInteger usv = bd.unscaledValue();
+        long usvl = usv.longValue();
+        if (usv.equals(BigInteger.valueOf(usvl))) {
+            reinterpret(usvl, true);
+        } else {
+            throw FarragoResource.instance().Overflow.ex();
+        }
+    }
+
     // implement AssignableValue
     public void assignFrom(Object obj) 
     {
@@ -94,38 +110,8 @@ public abstract class EncodedSqlDecimal
             EncodedSqlDecimal decimal = (EncodedSqlDecimal) obj;
             setNull(decimal.isNull());
             value = decimal.value;
-        } else if (obj instanceof NullablePrimitive) {
-            Util.pre(obj instanceof NullablePrimitive.NullableLong, 
-                "obj instanceof NullablePrimitive.NullableLong");
-            NullablePrimitive.NullableLong primitive = 
-                (NullablePrimitive.NullableLong) obj;
-            setNull(primitive.isNull());
-            value = primitive.value;
-        } else if (obj instanceof EncodedCharPointer) {
-            // REVIEW jpham 6-Jan-2006: we try not to allocate objects 
-            // on a per row basis, but here we do so on a per column basis
-            EncodedCharPointer str = (EncodedCharPointer) obj;
-            setNull(str.isNull());
-            if (! str.isNull()) {
-                String s = obj.toString();
-                BigDecimal n;
-                try {
-                    n = new BigDecimal(s.trim());
-                } catch (NumberFormatException ex) {
-                    // NOTE jvs 11-Oct-2005:  leave ex out entirely, because
-                    // it doesn't contain useful information and causes
-                    // test diffs due to JVM variance
-                    throw FarragoResource.instance().AssignFromFailed.ex(
-                        s,
-                        "NUMERIC",
-                        "NumberFormatException");
-                }
-                n = n.setScale(getScale(), BigDecimal.ROUND_HALF_UP);
-                value = n.unscaledValue().longValue();
-            }
         } else {
-            throw Util.needToImplement(
-                "Assign EncodedSqlDecimal from " + obj.getClass());
+            super.assignFrom(obj);
         }
     }
     
