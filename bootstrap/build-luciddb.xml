@@ -15,7 +15,7 @@
 
 
 	<!-- by default we build "with farrago" and "with tests" -->
-	<property name="luciddb.init.arg" value="--with-farrago"/>
+	<property name="luciddb.init.arg" value="--with-farrago --with-fennel"/>
         <property name="luciddb.init.tests.arg" value="--with-tests"/>
 
 	<!-- perforce synchronization target -->
