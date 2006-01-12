@@ -78,5 +78,9 @@ ant clean
 if $skip_tests ; then
     ant createCatalog
 else
+    cd ${luciddb_dir}/../blackhawk
+    ant
+
+    cd ${luciddb_dir}
     ant test
 fi
