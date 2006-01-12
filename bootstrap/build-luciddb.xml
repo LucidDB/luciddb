@@ -133,9 +133,6 @@
 	<target name="do-cleanbuild">
 		<property name="build.home" location="${default.build.home}"/>
     
-                <!-- build blackhawk first -->
-		<ant dir="${build.home}/blackhawk" inheritAll="false"/>
-              
 		<exec dir="${build.home}/luciddb" executable="bash" failonerror="true">
 			<arg value="${build.home}/luciddb/initBuild.sh"/>
 			<arg value="${luciddb.init.arg}"/>

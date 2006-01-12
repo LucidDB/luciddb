@@ -43,6 +43,7 @@
 		<!-- directory to write build logs to -->
 		<log dir="logs/luciddb">
 			<merge dir="&open_integration.build.home;/luciddb/testlog"/>
+			<merge dir="&open_integration.build.home;/farrago/testlog"/>
 		</log>
 
 		<!-- Publishers are run *after* a build completes -->
