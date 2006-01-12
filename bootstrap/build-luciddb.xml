@@ -14,8 +14,9 @@
 	<property name="integration.build.home" location="./build"/>
 
 
-	<!-- by default we build "with farrago" and "with tests" -->
-	<property name="luciddb.init.arg" value="--with-farrago --with-fennel"/>
+	<!-- by default we build "with farrago", "with fennel" and "with tests" -->
+	<property name="luciddb.init.arg" value="--with-farrago"/>
+	<property name="luciddb.init.arg.2" value="--with-fennel"/>
         <property name="luciddb.init.tests.arg" value="--with-tests"/>
 
 	<!-- perforce synchronization target -->
@@ -138,6 +139,7 @@
 		<exec dir="${build.home}/luciddb" executable="bash" failonerror="true">
 			<arg value="${build.home}/luciddb/initBuild.sh"/>
 			<arg value="${luciddb.init.arg}"/>
+			<arg value="${luciddb.init.arg.2}"/>
 			<arg value="${luciddb.init.tests.arg}"/>
 			<env key="ANT_HOME" file="${build.home}/thirdparty/ant"/>
 			<env key="PATH" path="${env.PATH}:${build.home}/thirdparty/ant/bin/ant"/>
