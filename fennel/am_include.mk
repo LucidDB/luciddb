@@ -26,3 +26,6 @@ $(EXTRA_LDFLAGS)
 AM_ETAGSFLAGS = --c++ --declarations --members
 
 noinst_HEADERS=$(wildcard *.h)
+
+AUTOMAKE_OPTIONS=foreign
+
