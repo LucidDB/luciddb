@@ -608,12 +608,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         if (isAutoCommit) {
             throw FarragoResource.instance().SessionNoSavepointInAutocommit.ex();
         }
-        FennelSvptHandle fennelSvptHandle;
-        if (repos.isFennelEnabled()) {
-            fennelSvptHandle = fennelTxnContext.newSavepoint();
-        } else {
-            fennelSvptHandle = null;
-        }
+        FennelSvptHandle fennelSvptHandle = fennelTxnContext.newSavepoint();
         FarragoDbSavepoint newSavepoint =
             new FarragoDbSavepoint(nextSavepointId++, name, fennelSvptHandle,
                 this);
