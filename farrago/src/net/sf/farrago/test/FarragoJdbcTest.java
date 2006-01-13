@@ -27,6 +27,7 @@ import java.io.Reader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.*;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -35,6 +36,8 @@ import junit.framework.Assert;
 import junit.framework.Test;
 
 import java.sql.Date;
+
+import org.eigenbase.util14.NumberUtil;
 
 /**
  * FarragoJdbcTest tests specifics of the Farrago implementation of the JDBC
@@ -114,6 +117,8 @@ public class FarragoJdbcTest extends FarragoTestCase
     private static final Boolean boolObj = Boolean.FALSE;
     private static final BigDecimal decimalObj =
         new BigDecimal(13412342124143241D);
+    private static final BigDecimal decimal73Obj =
+        new BigDecimal(64.2341);
     private static final String charObj = "CHAR test string";
     private static final String varcharObj = "VARCHAR test string";
     private static final int TINYINT = 2;
@@ -131,6 +136,8 @@ public class FarragoJdbcTest extends FarragoTestCase
     private static final int TIME = 14;
     private static final int DATE = 15;
     private static final int TIMESTAMP = 16;
+    private static final int DECIMAL = 17;
+    private static final int DECIMAL73 = 18;
     private static boolean schemaExists = false;
     private static final String [] columnNames =
         new String[TestSqlType.all.length];
@@ -363,10 +370,7 @@ public class FarragoJdbcTest extends FarragoTestCase
         checkSetDoubleMin();
         checkSetDoubleMax();
         checkSetBooleanFalse();
-        if (todo) {
-            // BigDecimal values seem to go in but don't come out!
-            checkSetBigDecimal();
-        }
+        checkSetBigDecimal();
         checkSetBytes();
         checkSetDate();
         checkSetTime();
@@ -425,6 +429,10 @@ public class FarragoJdbcTest extends FarragoTestCase
         values[TIME] = time;
         preparedStmt.setObject(TIMESTAMP, timestamp);
         values[TIMESTAMP] = timestamp;
+        preparedStmt.setObject(DECIMAL, decimalObj);
+        values[DECIMAL] = decimalObj;
+        preparedStmt.setObject(DECIMAL73, decimal73Obj);
+        values[DECIMAL73] = decimal73Obj;
         checkResults(TestJavaType.Object);
     }
 
@@ -609,7 +617,7 @@ public class FarragoJdbcTest extends FarragoTestCase
             checkSet(TestJavaType.String, TestSqlType.Char, stringValue);
             checkSet(TestJavaType.String, TestSqlType.Varchar, stringValue);
         }
-        if (true) {
+        if (todo) {
             //todo: setString on VARBINARY column should fail
             checkSet(TestJavaType.String, TestSqlType.Binary, stringValue);
             checkSet(TestJavaType.String, TestSqlType.Varbinary, stringValue);
@@ -729,37 +737,30 @@ public class FarragoJdbcTest extends FarragoTestCase
         } catch (InvocationTargetException e) {
             throwable = e.getCause();
         }
-        switch (validity) {
-        case TestSqlType.VALID:
+
+        Pattern expectedException = TestSqlType.exceptionPatterns[validity];
+        if (expectedException == null) {
+            assert(validity == TestSqlType.VALID);
             if (throwable != null) {
                 fail("Error received when none expected, javaType="
                     + javaType.name + ", sqlType=" + sqlType.string
                     + ", value=" + value + ", throwable=" + throwable);
             }
             this.values[column] = value;
-            break;
-        case TestSqlType.INVALID:
+        } else {
+            boolean okay = false;
             if (throwable instanceof SQLException) {
                 String errorString = throwable.toString();
-                if (errorString.matches(
-                            ".*Cannot assign a value of Java class .* to .*")) {
-                    break;
+                if (expectedException.matcher(errorString).matches()) {
+                    okay = true;
                 }
             }
-            fail("Was expecting error, javaType=" + javaType.name
-                + ", sqlType=" + sqlType.string + ", value=" + value);
-            break;
-        case TestSqlType.OUTOFRANGE:
-            Pattern outOfRangePattern = Pattern.compile("out of range");
-            if (throwable instanceof SQLException) {
-                String errorString = throwable.toString();
-                if (outOfRangePattern.matcher(errorString).matches()) {
-                    break;
-                }
+            if (!okay) {
+                fail("Was expecting " + TestSqlType.validityName[validity]
+                    +" error, javaType=" + javaType.name
+                    + ", sqlType=" + sqlType.string + ", value=" + value
+                    + ", throwable=" + throwable);
             }
-            fail("Was expecting out-of-range error, javaType=" + javaType.name
-                + ", sqlType=" + sqlType.string + ", value=" + value);
-            break;
         }
     }
 
@@ -1307,12 +1308,10 @@ public class FarragoJdbcTest extends FarragoTestCase
                     bigDecimalValue,
                     resultSet.getBigDecimal(DOUBLE));
 
-                //todo:
-                if (todo) {
-                    //assertEquals(
-                    //    bigDecimalValue,
-                    //    resultSet.getBigDecimal(BigDecimal));
-                }
+                assertEquals(
+                    bigDecimalValue,
+                    resultSet.getBigDecimal(DECIMAL));
+
                 assertEquals(
                     bigDecimalValue,
                     resultSet.getBigDecimal(CHAR));
@@ -2220,6 +2219,20 @@ public class FarragoJdbcTest extends FarragoTestCase
         /** Definition of the <code>CHAR(100)</code> SQL type. */
         private static final TestSqlType Char =
             new TestSqlType(CHAR, "char(100)") {
+                public int checkIsValid(Object value)
+                {
+                    if (value == null) {
+                        return VALID;
+                    } else {
+                        String str = String.valueOf(value);
+                        if (str.length() <= 100) {
+                            return VALID;
+                        } else {
+                            return TOOLONG;
+                        }
+                    }
+                }
+
                 public Object getExpected(Object value)
                 {
                     String s = String.valueOf(value);
@@ -2238,6 +2251,20 @@ public class FarragoJdbcTest extends FarragoTestCase
         /** Definition of the <code>VARCHAR(200)</code> SQL type. */
         private static final TestSqlType Varchar =
             new TestSqlType(VARCHAR, "varchar(200)") {
+                public int checkIsValid(Object value)
+                {
+                    if (value == null) {
+                        return VALID;
+                    } else {
+                        String str = String.valueOf(value);
+                        if (str.length() <= 200) {
+                            return VALID;
+                        } else {
+                            return TOOLONG;
+                        }
+                    }
+                }
+
                 public Object getExpected(Object value)
                 {
                     return String.valueOf(value);
@@ -2253,10 +2280,10 @@ public class FarragoJdbcTest extends FarragoTestCase
                         return VALID;
                     } else if (value instanceof byte []) {
                         byte [] bytes = (byte []) value;
-                        if (bytes.length < 10) {
+                        if (bytes.length <= 10) {
                             return VALID;
                         } else {
-                            return OUTOFRANGE;
+                            return TOOLONG;
                         }
                     } else {
                         return INVALID;
@@ -2295,10 +2322,10 @@ public class FarragoJdbcTest extends FarragoTestCase
                         return VALID;
                     } else if (value instanceof byte []) {
                         byte [] bytes = (byte []) value;
-                        if (bytes.length < 20) {
+                        if (bytes.length <= 20) {
                             return VALID;
                         } else {
-                            return OUTOFRANGE;
+                            return TOOLONG;
                         }
                     } else {
                         return INVALID;
@@ -2359,22 +2386,40 @@ public class FarragoJdbcTest extends FarragoTestCase
                     return super.getExpected(value);
                 }
             };
+
+        /** Definition of the <code>DECIMAL</code> SQL type. */
+        private static final TestSqlType Decimal =
+            new TestSqlDecimalType(DECIMAL);
+
+        private static final TestSqlType Decimal73 =
+            new TestSqlDecimalType(DECIMAL73, 7, 3);
+
         private static final TestSqlType [] all =
         {
             Tinyint, Smallint, Integer, Bigint, Real, Float, Double, Boolean,
             Char, Varchar, Binary, Varbinary, Time, Date, Timestamp,
+            Decimal, Decimal73
         };
         private static final TestSqlType [] typesNumericAndChars =
         {
             Tinyint, Smallint, Integer, Bigint, Real, Float, Double, Char,
-            Varchar,
+            Varchar, Decimal, Decimal73
         };
         private static final TestSqlType [] typesBinary = { Binary, Varbinary, };
         public static final int VALID = 0;
         public static final int INVALID = 1;
         public static final int OUTOFRANGE = 2;
+        public static final int TOOLONG = 3;
         public static final String [] validityName =
-        { "valid", "invalid", "outofrange" };
+        { "valid", "invalid", "out of range", "too long" };
+        public static final Pattern exceptionPatterns[] =
+            new Pattern[]
+            {
+                null,
+                Pattern.compile(".*Cannot assign a value of Java class .* to .*"),
+                Pattern.compile(".*out of range.*"),
+                Pattern.compile(".*too long.*")
+            };
         private final int ordinal;
         private final String string;
 
@@ -2406,6 +2451,94 @@ public class FarragoJdbcTest extends FarragoTestCase
         }
     }
 
+    /**
+     * Defines class for testing decimal sql type
+     */
+    private static class TestSqlDecimalType extends TestSqlType
+    {
+        final static int MAX_PRECISION = 19;
+        int precision;
+        int scale;
+        BigInteger maxUnscaled;
+        BigInteger minUnscaled;
+
+        TestSqlDecimalType(int ordinal) {
+            super(ordinal, "DECIMAL");
+            this.precision = MAX_PRECISION;
+            this.scale = 0;
+        }
+
+        TestSqlDecimalType(
+            int ordinal, int precision)
+        {
+            super(ordinal, "DECIMAL(" + precision + ")");
+            this.precision = precision;
+            this.scale = 0;
+        }
+
+        TestSqlDecimalType(
+            int ordinal, int precision, int scale)
+        {
+            super(ordinal, "DECIMAL(" + precision + "," + scale + ")");
+            this.precision = precision;
+            this.scale = scale;
+        }
+
+        private BigInteger getMaxUnscaled()
+        {
+            if (maxUnscaled == null) {
+                maxUnscaled = NumberUtil.getMaxUnscaled(precision);
+            }
+            return maxUnscaled;
+        }
+
+        private BigInteger getMinUnscaled()
+        {
+            if (minUnscaled == null) {
+                minUnscaled = NumberUtil.getMinUnscaled(precision);
+            }
+            return minUnscaled;
+
+        }
+
+        public int checkIsValid(Object value)
+        {
+            if ((value == null) || value instanceof Boolean) {
+                return VALID;
+            }
+            try {
+                BigDecimal expected = (BigDecimal) getExpected(value);
+                if (expected != null) {
+                    BigInteger usv = expected.unscaledValue();
+                    if (usv.compareTo(getMaxUnscaled()) > 0) {
+                        return OUTOFRANGE;
+                    } else if (usv.compareTo(getMinUnscaled()) < 0) {
+                        return OUTOFRANGE;
+                    }
+                }
+
+            } catch (Exception ex) {
+                return INVALID;
+            }
+            return VALID;
+        }
+
+        public Object getExpected(Object value)
+        {
+            BigDecimal n;
+            if (value instanceof Number) {
+                n = NumberUtil.toBigDecimal((Number) value);
+            } else if (value instanceof String) {
+                n = new BigDecimal((String) value);
+            } else if (value instanceof Boolean) {
+                n = new BigDecimal(((Boolean) value).booleanValue() ? 1 : 0);
+            } else {
+                return super.getExpected(value);
+            }
+            n = NumberUtil.rescaleBigDecimal(n, scale);
+            return n;
+        }
+    }
     /**
      * Defines a Java type.
      *

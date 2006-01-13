@@ -3,15 +3,27 @@
 
 select*from unnest(multiset[1,2,3]);
 
+select*from unnest(multiset[1.34,1.563,2.0]);
+
+select*from unnest(multiset[1.23e1, -23.e0]);
+
 select*from unnest(multiset[1+2,3-4,5*6,7/8,9+10*11*log10(13)]);
 
 select*from unnest(multiset['a','b'||'c']);
 
 select*from unnest(multiset[row(1,2,3,4), row(11,22,33,44)]);
 
+select*from unnest(multiset[row(43.2, 421e-2), row(32.22, 43e-1)]);
+
 select*from unnest(multiset(select*from sales.depts));
 
 select*from unnest(values(multiset[1]));
+
+select*from unnest(values(multiset[43e-1]));
+
+select*from unnest(values(multiset[32.342]));
+
+select*from unnest(values(multiset[43, 32.2, 34e-2]));
 
 select*from unnest(values(multiset(select*from sales.emps)));
 

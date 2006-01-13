@@ -32,7 +32,7 @@ create schema metadata_test_schema;
 create table metadata_test_schema.new_table (
     tid integer primary key,
     address varchar(256),
-    amount integer );
+    amount decimal(5,2) );
 
 !tables
 !columns NEW_TABLE

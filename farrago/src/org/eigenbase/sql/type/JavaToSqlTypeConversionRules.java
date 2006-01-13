@@ -25,6 +25,7 @@ package org.eigenbase.sql.type;
 import java.util.*;
 import java.sql.*;
 import java.sql.Date;
+import java.math.BigDecimal;
 
 /**
  * JavaToSqlTypeConversionRules defines mappings from common Java types
@@ -66,6 +67,7 @@ public class JavaToSqlTypeConversionRules
         rules.put(Date.class, SqlTypeName.Date);
         rules.put(Timestamp.class, SqlTypeName.Timestamp);
         rules.put(Time.class, SqlTypeName.Time);
+        rules.put(BigDecimal.class, SqlTypeName.Decimal);
     }
 
     /**

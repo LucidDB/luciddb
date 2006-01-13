@@ -793,12 +793,12 @@ public abstract class SqlTypeStrategies
                             int s1 = type1.getScale();
                             int s2 = type2.getScale();
 
-                            int scale = SqlTypeName.MAX_NUMERIC_PRECISION - p1 + s1 - s2;
+                            int scale = Math.max(6, s1 + p2 + 1);
                             scale = Math.min(scale, SqlTypeName.MAX_NUMERIC_SCALE);
-                            // TODO: Allow negative scale?
-                            scale = Math.max(scale, 0);
 
-                            int precision = SqlTypeName.MAX_NUMERIC_PRECISION;
+                            int precision = (p1 - s1 + s2) + scale;
+                            precision = Math.min(precision, SqlTypeName.MAX_NUMERIC_PRECISION);
+                            assert(precision > 0);
 
                             RelDataType ret;
                             ret = opBinding.getTypeFactory().createSqlType(
@@ -878,6 +878,7 @@ public abstract class SqlTypeStrategies
                             assert(scale <= SqlTypeName.MAX_NUMERIC_SCALE);
                             int precision = Math.max(p1-s1, p2-s2) + scale + 1;
                             precision = Math.min(precision, SqlTypeName.MAX_NUMERIC_PRECISION);
+                            assert(precision > 0);
 
                             RelDataType ret;
                             ret = opBinding.getTypeFactory().createSqlType(

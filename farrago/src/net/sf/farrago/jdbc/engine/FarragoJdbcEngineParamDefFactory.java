@@ -56,6 +56,8 @@ public class FarragoJdbcEngineParamDefFactory
             return new FarragoJdbcEngineTimestampParamDef(paramName, type);
         case SqlTypeName.Time_ordinal:
             return new FarragoJdbcEngineTimeParamDef(paramName, type);
+        case SqlTypeName.Decimal_ordinal:
+            return new FarragoJdbcEngineDecimalParamDef(paramName, type);
         default:
             return new FarragoJdbcEngineParamDef(paramName, type);
         }

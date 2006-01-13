@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/jdbc/metadata.sql#2 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/jdbc/metadata.sql#10 $
 0: jdbc:farrago:> -- Test JDBC metadata calls
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test getCatalogs
@@ -142,7 +142,7 @@
 0: jdbc:farrago:> create table metadata_test_schema.new_table (
 . . . . . . . . >     tid integer primary key,
 . . . . . . . . >     address varchar(256),
-. . . . . . . . >     amount integer );
+. . . . . . . . >     amount decimal(5,2) );
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !tables
 +------------+-----------------------+-------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
@@ -162,7 +162,7 @@
 +------------+-----------------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
 | LOCALDB    | METADATA_TEST_SCHEMA  | NEW_TABLE   | TID          | 4          | INTEGER    |              | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 1                 | YES          |                |               |              |                   |
 | LOCALDB    | METADATA_TEST_SCHEMA  | NEW_TABLE   | ADDRESS      | 12         | VARCHAR    | 256          | 0           |             |                 | 1         |          |             | 0              | 0                 | 256                | 2                 | YES          |                |               |              |                   |
-| LOCALDB    | METADATA_TEST_SCHEMA  | NEW_TABLE   | AMOUNT       | 4          | INTEGER    |              | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 3                 | YES          |                |               |              |                   |
+| LOCALDB    | METADATA_TEST_SCHEMA  | NEW_TABLE   | AMOUNT       | 3          | DECIMAL    | 5            | 0           | 2           |                 | 1         |          |             | 0              | 0                 |                    | 3                 | YES          |                |               |              |                   |
 +------------+-----------------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- TODO: Try adding and dropping columns from the table and check metadata
