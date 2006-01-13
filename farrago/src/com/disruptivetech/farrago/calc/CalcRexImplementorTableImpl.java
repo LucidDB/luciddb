@@ -25,6 +25,7 @@ import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.SqlAggFunction;
 import org.eigenbase.sql.SqlOperator;
+import org.eigenbase.sql.SqlStateCodes;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.fun.SqlTrimFunction;
 import org.eigenbase.sql.type.SqlTypeName;
@@ -32,6 +33,7 @@ import org.eigenbase.sql.type.SqlTypeUtil;
 import org.eigenbase.util.DoubleKeyMap;
 import org.eigenbase.util.Util;
 
+import java.math.*;
 import java.util.*;
 
 
@@ -300,11 +302,42 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
 
     /**
      * Converts a binary call (two regs as operands) by converting the first
+     * operand to type {@link CalcProgramBuilder.OpType#Int8} for exact types
+     * and {@link CalcProgramBuilder.OpType#Double} for approximate types and
+     * then back again. Logically it will do something like<br>
+     * t0 = type of first operand<br>
+     * CAST(CALL(CAST(op0 as INT8), op1) as t0)<br>
+     * If t0 is not a numeric or is
+     * already is INT8 or DOUBLE, the CALL is simply returned as is.
+     */
+    private static RexCall implementFirstOperandWithDoubleOrInt8(
+        RexCall call,
+        RexToCalcTranslator translator,
+        RexNode typeNode,
+        int i,
+        boolean castBack)
+    {
+        CalcProgramBuilder.RegisterDescriptor rd =
+            translator.getCalcRegisterDescriptor(typeNode);
+        if (rd.getType().isExact()) {
+            return implementFirstOperandWithInt8(
+                    call, translator, typeNode, i, castBack);
+        } else if (rd.getType().isApprox()) {
+            return implementFirstOperandWithDouble(
+                    call, translator, typeNode, i, castBack);
+
+        }
+        return call;
+    }
+
+    /**
+     * Converts a binary call (two regs as operands) by converting the first
      * operand to type {@link CalcProgramBuilder.OpType#Int8} if needed and
      * then back again. Logically it will do something like<br>
      * t0 = type of first operand<br>
      * CAST(CALL(CAST(op0 as INT8), op1) as t0)<br>
-     * If t0 already is INT8, the CALL is simply returned as is.
+     * If t0 is not an exact type or is already is INT8,
+     *  the CALL is simply returned as is.
      */
     private static RexCall implementFirstOperandWithInt8(
         RexCall call,
@@ -421,7 +454,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                     RexToCalcTranslator translator)
                 {
                     RexCall newCall =
-                        implementFirstOperandWithInt8(call, translator,
+                        implementFirstOperandWithDoubleOrInt8(call, translator,
                             call.operands[0], 0, true);
                     if (newCall.equals(call)) {
                         return super.implement(call, translator);
@@ -578,6 +611,10 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             opTab.prefixPlusOperator,
             new IdentityImplementor());
 
+        register(
+            opTab.reinterpretOperator,
+            new ReinterpretCastImplementor());
+
         registerInstr(opTab.similarOperator, ExtInstructionDefTable.similar);
 
         registerInstr(opTab.substringFunc, ExtInstructionDefTable.substring);
@@ -621,6 +658,9 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
     {
         public boolean canImplement(RexCall call)
         {
+            if (RexUtil.requiresDecimalExpansion(call, true)) {
+                return false;
+            }
             return true;
         }
     }
@@ -876,7 +916,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 new UsingInstrImplementor(CalcProgramBuilder.Cast));
             doubleKeyMap.put(
                 SqlTypeName.intTypes,
-                SqlTypeName.fractionalTypes,
+                SqlTypeName.approxTypes,
                 new UsingInstrImplementor(CalcProgramBuilder.Cast));
             doubleKeyMap.put(
                 SqlTypeName.datetimeTypes,
@@ -902,11 +942,11 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 });
 
             doubleKeyMap.put(
-                SqlTypeName.fractionalTypes,
-                SqlTypeName.fractionalTypes,
+                SqlTypeName.approxTypes,
+                SqlTypeName.approxTypes,
                 new UsingInstrImplementor(CalcProgramBuilder.Cast));
             doubleKeyMap.put(
-                SqlTypeName.fractionalTypes,
+                SqlTypeName.approxTypes,
                 SqlTypeName.charTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castA) {
                     public CalcProgramBuilder.Register implement(
@@ -923,7 +963,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                     }
                 });
             doubleKeyMap.put(
-                SqlTypeName.fractionalTypes,
+                SqlTypeName.approxTypes,
                 SqlTypeName.intTypes,
                 new AbstractCalcRexImplementor() {
                     public CalcProgramBuilder.Register implement(
@@ -1001,7 +1041,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 });
             doubleKeyMap.put(
                 SqlTypeName.charTypes,
-                SqlTypeName.fractionalTypes,
+                SqlTypeName.approxTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castA) {
                     public CalcProgramBuilder.Register implement(
                         RexCall call,
@@ -1021,6 +1061,17 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 SqlTypeName.charTypes,
                 SqlTypeName.charTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castA));
+            
+            doubleKeyMap.put(
+                SqlTypeName.Decimal,
+                SqlTypeName.charTypes,
+                new CastDecimalImplementor(
+                    ExtInstructionDefTable.castADecimal));
+            doubleKeyMap.put(
+                SqlTypeName.charTypes,
+                SqlTypeName.Decimal,
+                new CastDecimalImplementor(
+                    ExtInstructionDefTable.castADecimal));
         }
 
         public CalcProgramBuilder.Register implement(
@@ -1065,6 +1116,101 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
 
             throw Util.needToImplement("Cast from '" + fromType.toString()
                 + "' to '" + toType.toString() + "'");
+        }
+        
+        /** Implementor for casting between char and decimal types */
+        private static class CastDecimalImplementor extends InstrDefImplementor
+        {
+            CastDecimalImplementor(CalcProgramBuilder.InstructionDef instr) 
+            {
+                super(instr);
+            }
+            
+            // refine InstrDefImplementor
+            protected ArrayList makeRegList(
+                RexToCalcTranslator translator,
+                RexCall call)
+            {
+                RelDataType decimalType;
+                Util.pre(SqlTypeUtil.isDecimal(call.getType())
+                    || SqlTypeUtil.isDecimal(call.operands[0].getType()),
+                    "CastDecimalImplementor can only cast decimal types");
+                if (SqlTypeUtil.isDecimal(call.getType())) {
+                    Util.pre(
+                        SqlTypeUtil.inCharFamily(call.operands[0].getType()),
+                        "CalRex cannot cast non char type to decimal");
+                    decimalType = call.getType();
+                } else {
+                    Util.pre(
+                        SqlTypeUtil.inCharFamily(call.getType()),
+                        "CalRex cannot cast from decimal to non char type");
+                    decimalType = call.operands[0].getType();
+                }
+                RexLiteral precision = translator.rexBuilder
+                    .makeExactLiteral(
+                        BigDecimal.valueOf(decimalType.getPrecision()));
+                RexLiteral scale = translator.rexBuilder
+                    .makeExactLiteral(
+                        BigDecimal.valueOf(decimalType.getScale()));
+                
+                ArrayList regList = implementOperands(call, translator);
+                regList.add(translator.implementNode(precision));
+                regList.add(translator.implementNode(scale));
+                regList.add(0, createResultRegister(translator, call));
+                return regList;
+            }
+        }
+    }
+
+    /**
+     * Implementor for REINTERPRET operator.
+     */
+    private static class ReinterpretCastImplementor extends AbstractCalcRexImplementor
+    {
+        public boolean canImplement(RexCall call)
+        {
+            return (call.isA(RexKind.Reinterpret));
+        }
+        
+        public CalcProgramBuilder.Register implement(
+            RexCall call,
+            RexToCalcTranslator translator)
+        {
+            Util.pre(call.operands.length == 2, "call.operands.length == 2");
+            Util.pre(call.operands[1] instanceof RexLiteral,
+                "call.operands[1] instanceof RexLiteral");
+            CalcProgramBuilder.Register value = 
+                translator.implementNode(call.operands[0]);
+            if (call.operands[1].isAlwaysTrue()) {
+                // NOTE: perform overflow check
+                // boolean overflowed = ( abs(value) >= overflowValue )
+                // jumpFalse overflowed endCheck
+                // throw overflow exception
+                // endCheck
+                // NOTE: translator does not reimplement the same rex node
+                RexNode overflowValue = 
+                    translator.rexBuilder.makeExactLiteral(
+                        BigDecimal.valueOf(
+                            Util.powerOfTen(
+                                call.getType().getPrecision())));
+                RexNode comparison = translator.rexBuilder.makeCall(
+                    opTab.greaterThanOrEqualOperator,
+                    translator.rexBuilder.makeCall(
+                        opTab.absFunc,
+                        call.operands[0]),
+                    overflowValue);
+                CalcProgramBuilder.Register overflowed = 
+                    translator.implementNode(comparison);
+                String endCheck = translator.newLabel();
+                translator.builder.addLabelJumpFalse(endCheck, overflowed);
+                CalcProgramBuilder.Register errorMsg =
+                    translator.builder.newVarcharLiteral(
+                        SqlStateCodes.NumericValueOutOfRange.getState());
+                CalcProgramBuilder.raise.add(
+                    translator.builder, errorMsg);
+                translator.builder.addLabel(endCheck);
+            }
+            return value;
         }
     }
 

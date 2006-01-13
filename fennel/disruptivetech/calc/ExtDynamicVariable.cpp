@@ -30,7 +30,8 @@ FENNEL_BEGIN_NAMESPACE
 
 PConstBuffer getData(RegisterRef<int>* id) {
     assert(!id->isNull());
-    return id->getDynamicParamManager()->getParam(id->value()).getDatum().pData;
+    return id->getDynamicParamManager()->getParam(
+        DynamicParamId(id->value())).getDatum().pData;
 }
 
 void

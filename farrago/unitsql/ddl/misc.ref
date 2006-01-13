@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/ddl/misc.sql#5 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/ddl/misc.sql#6 $
 0: jdbc:farrago:> -- Miscellaneous DDL
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema misc;
@@ -169,6 +169,10 @@ Error: PRIMARY KEY constraint required for table "MISC"."MISSING_PK" (state=,cod
 | LOCALDB    | MISC         | LCS_TABLE_EXPLICIT  | true        | LOCALDB          | EXPLICIT_JK1  | 1     | 2                 | K            | A             | 0            | 0      |                   |
 +------------+--------------+---------------------+-------------+------------------+---------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  can't drop a clustered index
+0: jdbc:farrago:> drop index explicit_jk1;
+Error: Clustered index "MISC"."EXPLICIT_JK1" cannot be dropped (state=,code=0)
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail: LCS clustered indexes may not overlap
 0: jdbc:farrago:> create table lcs_table_overlap(i int not null,j int not null,k int not null)
 . . . . . . . . > server sys_column_store_data_server
@@ -190,14 +194,19 @@ Error: Multiple clustered indexes contain column "J" (state=,code=0)
 0: jdbc:farrago:> truncate table lcs_table;
 0: jdbc:farrago:> drop table lcs_table_explicit;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test some features which aren't yet implemented for LCS
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- doesn't fail, but has no effect,
-0: jdbc:farrago:> -- because for now unclustered indexes are stubbed out
+0: jdbc:farrago:> -- test creation of unclustered index
 0: jdbc:farrago:> create table lcs_table_unclustered(i int not null)
 . . . . . . . . > server sys_column_store_data_server
 . . . . . . . . > create index unclustered_i on lcs_table_unclustered(i)
 . . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test truncate of table with unclustered index
+0: jdbc:farrago:> truncate table lcs_table_unclustered;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test drop of unclustered index
+0: jdbc:farrago:> drop index unclustered_i;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test some features which aren't yet implemented for LCS
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  can't handle collections yet
 0: jdbc:farrago:> create table lcs_table_multiset(i int not null,im integer multiset)

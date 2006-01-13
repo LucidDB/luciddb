@@ -42,6 +42,17 @@ void SegStorageTestBase::openSegmentStorage(DeviceMode openMode)
         : pRandomAccessDevice->getSizeInBytes()/cbPageFull);
 }
 
+void SegStorageTestBase::openRandomSegment()
+{
+    // reopen will interpret pages as already allocated, which
+    // is what RandomAllocationSegment expects
+    closeStorage();
+    openStorage(DeviceMode::load);
+    pRandomSegment = pSegmentFactory->newRandomAllocationSegment(
+        pLinearSegment, true);
+    pLinearSegment.reset();
+}
+
 SharedSegment SegStorageTestBase::createLinearDeviceSegment(
     DeviceId deviceId,uint nPages)
 {

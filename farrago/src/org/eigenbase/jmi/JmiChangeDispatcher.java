@@ -81,6 +81,39 @@ public interface JmiChangeDispatcher
      */
     public void notifyDeleteEffect(
         RefObject refObj, JmiDeletionAction deletionAction);
+
+    /**
+     * Constructs a key suitable for name uniqueness testing.
+     *
+     * @param obj object for which to construct a key
+     *
+     * @param includeType if true, object type is included in key; if false,
+     * type is omitted
+     *
+     * @return key represented as a string, or null if object
+     * is anonymous
+     */
+    public String getNameKey(RefObject obj, boolean includeType);
+
+    /**
+     * Notifies this dispatcher of the detection of a collision in names
+     * triggered by a call to {@link JmiChangeSet#validateUniqueNames}.
+     *
+     * @param container namespace in which collision occurred
+     *
+     * @param newElement new element being defined with duplicate name
+     *
+     * @param oldElement existing element with same name
+     *
+     * @param bothNew true if both newElement and oldElement are
+     * being created simultaneously; false if oldElement is an existing
+     * persistent object
+     */
+    public void notifyNameCollision(
+        RefObject container,
+        RefObject newElement,
+        RefObject oldElement,
+        boolean bothNew);
 }
 
 // End JmiChangeDispatcher.java

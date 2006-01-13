@@ -27,56 +27,113 @@
 #include "fennel/common/SharedTypes.h"
 #include "fennel/tuple/TupleData.h"
 #include "fennel/tuple/TupleDescriptor.h"
+#include "fennel/synch/SynchObj.h"
+
 #include <map>
 #include <boost/scoped_array.hpp>
 
 
+FENNEL_BEGIN_NAMESPACE
+
 /**
- * DynamicParam defines parameters and methods to create and manage dynamic 
- * parameters.
  * Dynamic parameters are parameters (physically tuples) shared amongst streams.
  *
  * @author Wael Chatila
  * @version $Id$
  */
 
-FENNEL_BEGIN_NAMESPACE
-
 class DynamicParam
 {
-public:
+    friend class DynamicParamManager;
+    
     boost::scoped_array<FixedBuffer> pBuffer;
+    TupleAttributeDescriptor desc;
     TupleDatum datum;
 
-    explicit DynamicParam(uint bufferSize);
-    inline TupleDatum &getDatum();
+public:
+    explicit DynamicParam(TupleAttributeDescriptor const &desc);
+    inline TupleDatum const &getDatum() const;
+    inline TupleAttributeDescriptor const &getDesc() const;
 };
 
-typedef boost::shared_ptr<DynamicParam> SharedDynamicParam;
-
+/**
+ * DynamicParamManager defines methods to allocate, access, and deallocate
+ * dynamic parameters.  It is multi-thread safe (but see warning
+ * on getParam).
+ */
 class DynamicParamManager
 {
-private:
-    typedef std::map<uint, SharedDynamicParam> ParamMap;
+    typedef std::map<DynamicParamId, SharedDynamicParam> ParamMap;
     typedef ParamMap::const_iterator ParamMapConstIter;
 
+    StrictMutex mutex;
+
     ParamMap paramMap;
+
+    DynamicParam &getParamInternal(DynamicParamId dynamicParamId);
     
 public:
-    void createParam(const uint dynamicParamId, 
-                     const TupleAttributeDescriptor &attrDesc);
+    /**
+     * Creates a new dynamic parameter.  Initially, a dynamic parameter
+     * has value NULL.
+     *
+     * @param dynamicParamId unique ID of parameter within this manager; ID's
+     * need not be contiguous, and must be assigned by some other authority
+     *
+     * @param attrDesc descriptor for data values to be stored
+     *
+     * @param failIfExists if true (the default) an assertion failure
+     * will occur if dynamicParamId is already in use
+     */
+    void createParam(
+        DynamicParamId dynamicParamId, 
+        const TupleAttributeDescriptor &attrDesc,
+        bool failIfExists = true);
 
-    void removeParam(const uint dynamicParamId);
+    /**
+     * Deletes an existing dynamic parameter.
+     *
+     * @param dynamicParamId ID with which parameter was created
+     */
+    void deleteParam(DynamicParamId dynamicParamId);
 
-    void setParam(const uint dynamicParamId, const TupleDatum &src);
+    /**
+     * Writes a value to a dynamic parameter, overwriting
+     * any previous value.
+     *
+     * @param dynamicParamId ID with which parameter was created
+     *
+     * @param src source data from which to copy
+     */
+    void writeParam(DynamicParamId dynamicParamId, const TupleDatum &src);
 
-    DynamicParam &getParam(const uint dynamicParamId);
-
+    /**
+     * Accesses a dynamic parameter by reference.
+     *
+     *<p>
+     *
+     * NOTE jvs 4-Jan-2006:  This interface is dangerous if there
+     * is a possibility that writeParam may be used from another thread
+     * simultaneously.  If we ever need that, we should add a new
+     * method readParam which would marshal out the current value
+     * while holding onto the manager's mutex.
+     * 
+     *
+     * @param dynamicParamId ID with which parameter was created
+     *
+     * @return read-only reference to dynamic parameter
+     */
+    DynamicParam const &getParam(DynamicParamId dynamicParamId);
 };
 
-inline TupleDatum &DynamicParam::getDatum() 
+inline TupleDatum const &DynamicParam::getDatum() const
 {
     return datum;
+}
+
+inline TupleAttributeDescriptor const &DynamicParam::getDesc() const
+{
+    return desc;
 }
 
 FENNEL_END_NAMESPACE

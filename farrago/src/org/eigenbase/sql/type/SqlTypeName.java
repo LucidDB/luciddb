@@ -449,6 +449,22 @@ public class SqlTypeName extends EnumeratedValues.SerializableValue
             // TODO jvs 26-July-2004:  should be 6 for microseconds,
             // but we can't support that yet
             return 0;
+        case Decimal_ordinal:
+            return MAX_NUMERIC_PRECISION;
+        default:
+            return -1;
+        }
+    }
+
+    /**
+     * @return default scale for this type if supported, otherwise
+     * -1 if scale is either unsupported or must be specified explicitly
+     */
+    public int getDefaultScale()
+    {
+        switch (getOrdinal()) {
+        case Decimal_ordinal:
+            return 0;
         default:
             return -1;
         }

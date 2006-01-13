@@ -146,13 +146,6 @@ public:
     SharedDatabase getDatabase();
 
     /**
-     * Decides whether cache quotas should actually be enforced.  By default
-     * they are only for a DEBUG build, but this can be overridden by setting
-     * trace level net.sf.fennel.xo.quota to FINE.
-     */
-    bool shouldEnforceCacheQuotas();
-    
-    /**
      * Reads the Java representation of an ExecStream.
      */
     virtual ExecStreamEmbryo const &visitStream(

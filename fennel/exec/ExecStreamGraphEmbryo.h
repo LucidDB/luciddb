@@ -65,11 +65,6 @@ class ExecStreamGraphEmbryo : public boost::noncopyable
     SegmentAccessor scratchAccessor;
 
     /**
-     * Whether cache quotas should be enforced during execution.
-     */
-    bool enforceCacheQuotas;
-
-    /**
      * Streams to be linked and prepared, mapped by name
      */
     StreamMap allStreamEmbryos;
@@ -96,8 +91,7 @@ public:
         SharedExecStreamGraph pGraph, 
         SharedExecStreamScheduler pScheduler,
         SharedCache pCache,
-        SharedSegmentFactory pSegmentFactory,
-        bool enforceCacheQuotas);
+        SharedSegmentFactory pSegmentFactory);
 
     virtual ~ExecStreamGraphEmbryo();
 

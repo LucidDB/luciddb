@@ -410,8 +410,7 @@ void CmdInterpreter::visit(ProxyCmdPrepareExecutionStreamGraph &cmd)
         pStreamGraphHandle->pExecStreamGraph,
         pScheduler,
         pTxnHandle->pDb->getCache(),
-        pTxnHandle->pDb->getSegmentFactory(), 
-        pStreamGraphHandle->pExecStreamFactory->shouldEnforceCacheQuotas());
+        pTxnHandle->pDb->getSegmentFactory());
     pStreamGraphHandle->pExecStreamFactory->setGraphEmbryo(graphEmbryo);
     ExecStreamBuilder streamBuilder(
         graphEmbryo, 

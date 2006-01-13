@@ -113,7 +113,7 @@ void LcsRowScanExecStreamTest::loadClusters(uint nRows, uint nCols,
             boost::shared_ptr<BTreeDescriptor> (new BTreeDescriptor());
         bTreeClusters.push_back(pBTreeDesc);
         loadOneCluster(nRows, nCols, i * nCols, *(bTreeClusters[i]));
-        testReset();
+        resetExecStreamTest();
     }
 }
 
@@ -290,7 +290,7 @@ void LcsRowScanExecStreamTest::testScans()
         for (uint j = 0; j < nCols; j++)
             proj.push_back(i * nCols + j);
     testScanCols(nRows, nCols, nClusters, proj, 1, nRows);
-    testReset();
+    resetExecStreamTest();
 
     // project columns 22, 10, 12, 26, 1, 35, 15, 5, 17, 30, 4, 20, 7, and 13
     proj.clear();
@@ -310,11 +310,11 @@ void LcsRowScanExecStreamTest::testScans()
     proj.push_back(13);
 
     testScanCols(nRows, nCols, nClusters, proj, 1, nRows);
-    testReset();
+    resetExecStreamTest();
 
     // read every 7 rows, same projection as above
     testScanCols(nRows, nCols, nClusters, proj, 7, nRows/7);
-    testReset();
+    resetExecStreamTest();
 
     // full table scan -- input stream is empty
     testScanCols(0, nCols, nClusters, proj, 1, nRows);
@@ -356,7 +356,7 @@ void LcsRowScanExecStreamTest::testScanOnEmptyCluster()
 void LcsRowScanExecStreamTest::testScanPastEndOfCluster()
 {
     loadOneCluster(1, 1, 0, *(bTreeClusters[0]));
-    testReset();
+    resetExecStreamTest();
 
     // have testScanCols attempt to read 2 rows, although it should only
     // be able to read 1
@@ -367,21 +367,9 @@ void LcsRowScanExecStreamTest::testScanPastEndOfCluster()
     testScanCols(2, 1, 1, proj, 1, 1);
 }
 
-// TODO jvs 27-Dec-2005:  Need to clean up test framework so that
-// some base class can be told to do this dance instead of repeating
-// it in every test case.
 void LcsRowScanExecStreamTest::testCaseSetUp()
 {    
-    ExecStreamTestBase::testCaseSetUp();
-    closeStorage();
-    openStorage(DeviceMode::load);
-    
-    pRandomSegment = pSegmentFactory->newRandomAllocationSegment(
-        pLinearSegment,true);
-    pLinearSegment.reset();
-
-    pGraph = newStreamGraph();
-    pGraphEmbryo = newStreamGraphEmbryo(pGraph);
+    ExecStreamUnitTestBase::testCaseSetUp();
     
     attrDesc_int64 = TupleAttributeDescriptor(
         stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));

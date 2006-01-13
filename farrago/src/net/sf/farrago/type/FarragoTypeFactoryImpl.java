@@ -375,12 +375,6 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             }
         }
 
-        // TODO jvs 6-Aug-2005:  get rid of this once we support fixed-point
-        // numerics
-        if (typeName == SqlTypeName.Decimal) {
-            typeName = SqlTypeName.Double;
-        }
-
         RelDataType type;
         if (typeName.allowsScale()) {
             type = createSqlType(
@@ -524,6 +518,9 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             } else {
                 return OJSystem.LONG;
             }
+        case SqlTypeName.Decimal_ordinal:
+            return newDecimalOJClass(
+                declarer, type);
         case SqlTypeName.Real_ordinal:
             if (type.isNullable()) {
                 return OJClass.forClass(
@@ -531,7 +528,6 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             } else {
                 return OJSystem.FLOAT;
             }
-        case SqlTypeName.Decimal_ordinal:
         case SqlTypeName.Float_ordinal:
         case SqlTypeName.Double_ordinal:
             if (type.isNullable()) {
@@ -561,6 +557,35 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         default:
             throw new AssertionError();
         }
+    }
+
+    private OJClass newDecimalOJClass(
+        OJClass declarer, RelDataType type)
+    {
+        Class superclass = EncodedSqlDecimal.class;
+        MemberDeclarationList memberDecls = new MemberDeclarationList();
+        memberDecls.add(
+            new MethodDeclaration(
+                new ModifierList(ModifierList.PROTECTED),
+                OJUtil.typeNameForClass(int.class),
+                EncodedSqlDecimal.GET_PRECISION_METHOD_NAME,
+                new ParameterList(),
+                new TypeName[0],
+                new StatementList(
+                    new ReturnStatement(
+                        Literal.makeLiteral(type.getPrecision())))));
+        memberDecls.add(
+            new MethodDeclaration(
+                new ModifierList(ModifierList.PROTECTED),
+                OJUtil.typeNameForClass(int.class),
+                EncodedSqlDecimal.GET_SCALE_METHOD_NAME,
+                new ParameterList(),
+                new TypeName[0],
+                new StatementList(
+                    new ReturnStatement(
+                        Literal.makeLiteral(type.getScale())))));
+        return newHolderOJClass(
+            superclass, memberDecls, declarer, type);
     }
 
     private OJClass newDatetimeOJClass(
@@ -642,6 +667,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         Expression expr)
     {
         if (SqlTypeUtil.isDatetime(type) ||
+            SqlTypeUtil.isDecimal(type) ||
             ((getClassForPrimitive(type) != null) && type.isNullable()))
         {
             return new FieldAccess(expr, NullablePrimitive.VALUE_FIELD_NAME);
@@ -668,10 +694,10 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         case SqlTypeName.Integer_ordinal:
             return int.class;
         case SqlTypeName.Bigint_ordinal:
+        case SqlTypeName.Decimal_ordinal:
             return long.class;
         case SqlTypeName.Real_ordinal:
             return float.class;
-        case SqlTypeName.Decimal_ordinal:
         case SqlTypeName.Float_ordinal:
         case SqlTypeName.Double_ordinal:
             return double.class;

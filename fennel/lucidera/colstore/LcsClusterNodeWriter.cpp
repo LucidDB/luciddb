@@ -114,7 +114,30 @@ PLcsClusterNode LcsClusterNodeWriter::allocateClusterPage(LcsRid firstRid)
     // allocate a new cluster page and insert the corresponding rid, pageid
     // record into the btree
 
+    PageId prevPageId = NULL_PAGE_ID;
+
+    // REVIEW jvs 31-Dec-2005:  When we finish the last page in the load,
+    // we should do the flush below, and also unlock the page immediately
+    // (rather than waiting for ExecStream::close).  Various other
+    // resources such as the BTreeWriter should be released at that
+    // time also, (a) to keep the resource usage window smaller and
+    // (b) to avoid interference with downstream processing such
+    // as writing to unclustered indexes.
+
+    if (clusterLock.isLocked()) {
+        // Remember the predecessor so that we can chain it below.
+        prevPageId = clusterLock.getPageId();
+        
+        // Kick off an asynchronous write on the page we've just finished
+        // so that when it comes time to checkpoint or victimize,
+        // maybe it will be on disk already.
+        clusterLock.flushPage(true);
+    }
+
     clusterPageId = clusterLock.allocatePage();
+    if (prevPageId != NULL_PAGE_ID) {
+        segmentAccessor.pSegment->setPageSuccessor(prevPageId, clusterPageId);
+    }
     bTreeRid = firstRid;
     bTreeTupleData[0].pData = reinterpret_cast<uint8_t *> (&firstRid);
     bTreeTupleData[1].pData = reinterpret_cast<uint8_t *> (&clusterPageId);

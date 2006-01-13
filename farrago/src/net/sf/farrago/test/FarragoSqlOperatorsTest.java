@@ -370,17 +370,17 @@ public class FarragoSqlOperatorsTest
             assertNotNull(actualSqlTypeName);
             assertEquals(actualSqlTypeName.getName(), actualTypeName);
             final int actualNullable = md.isNullable(column);
-            if (actualSqlTypeName.allowsNoPrecNoScale()) {
-                return new BasicSqlType(actualSqlTypeName);
+            if (actualSqlTypeName.allowsScale()) {
+                return new BasicSqlType(
+                    actualSqlTypeName,
+                    md.getPrecision(column),
+                    md.getScale(column));
             } else if (actualSqlTypeName.allowsPrecNoScale()) {
                 return new BasicSqlType(
                     actualSqlTypeName,
                     md.getPrecision(column));
             } else {
-                return new BasicSqlType(
-                    actualSqlTypeName,
-                    md.getPrecision(column),
-                    md.getScale(column));
+                return new BasicSqlType(actualSqlTypeName);
             }
         }
 

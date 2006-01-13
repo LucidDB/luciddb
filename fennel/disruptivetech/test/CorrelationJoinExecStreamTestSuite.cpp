@@ -53,7 +53,7 @@ void CorrelationJoinExecStreamTestSuite::testCorrelationJoin()
     leftStreamEmbryo.init(new MockProducerExecStream(),paramsMockLeft);
     leftStreamEmbryo.getStream()->setName("LeftProducerExecStream");
 
-    uint dynamicParamId(1);
+    DynamicParamId dynamicParamId(1);
     MockProducerExecStreamParams paramsMockRight(paramsMockLeft);
     paramsMockRight.pGenerator.reset(new DynamicParamExecStreamGenerator(
                                             dynamicParamId, 

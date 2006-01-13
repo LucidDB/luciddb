@@ -137,16 +137,6 @@ PageId LinearDeviceSegment::getPageSuccessor(PageId pageId)
 void LinearDeviceSegment::setPageSuccessor(PageId pageId,PageId successorId)
 {
     setLinearPageSuccessor(pageId,successorId);
-#if 0
-    if (successorId == NULL_PAGE_ID) {
-        // REVIEW:  Is this even a good idea?  Maybe just assert instead; but
-        // some tests currently rely on the truncation behavior.
-        
-        // truncate the device to match
-        pDevice->setSizeInBytes(
-            (getLinearBlockNum(pageId)+1)*getFullPageSize());
-    }
-#endif
 }
 
 Segment::AllocationOrder LinearDeviceSegment::getAllocationOrder() const

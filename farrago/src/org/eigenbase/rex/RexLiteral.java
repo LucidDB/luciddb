@@ -358,6 +358,8 @@ public class RexLiteral extends RexNode
         switch (typeName.getOrdinal()) {
         case SqlTypeName.Char_ordinal:
             return ((NlsString) value).getValue();
+        case SqlTypeName.Decimal_ordinal:
+            return new Long(((BigDecimal)value).unscaledValue().longValue());
         case SqlTypeName.Date_ordinal:
         case SqlTypeName.Time_ordinal:
         case SqlTypeName.Timestamp_ordinal:
@@ -370,6 +372,13 @@ public class RexLiteral extends RexNode
     public static boolean booleanValue(RexNode node)
     {
         return ((Boolean) ((RexLiteral) node).value).booleanValue();
+    }
+
+    public boolean isAlwaysTrue() 
+    {
+        Util.pre(typeName.getOrdinal() == SqlTypeName.Boolean_ordinal,
+            "typeName.getOrdinal() == SqlTypeName.Boolean_ordinal");
+        return booleanValue(this);
     }
 
     public boolean equals(Object obj)

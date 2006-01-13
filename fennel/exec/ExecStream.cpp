@@ -25,12 +25,12 @@
 #include "fennel/exec/ExecStream.h"
 #include "fennel/exec/ExecStreamGraph.h"
 #include "fennel/cache/CacheAccessor.h"
+#include "fennel/txn/LogicalTxn.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 ExecStreamParams::ExecStreamParams()
 {
-    enforceQuotas = true;
 }
 
 ExecStreamParams::~ExecStreamParams()
@@ -68,10 +68,8 @@ void ExecStream::prepare(ExecStreamParams const &params)
     if (pGraph) {
         pDynamicParamManager = pGraph->getDynamicParamManager();
     }
-    if (params.enforceQuotas) {
-        pQuotaAccessor = params.pCacheAccessor;
-        pScratchQuotaAccessor = params.scratchAccessor.pCacheAccessor;
-    }
+    pQuotaAccessor = params.pCacheAccessor;
+    pScratchQuotaAccessor = params.scratchAccessor.pCacheAccessor;
 }
     
 void ExecStream::getResourceRequirements(
@@ -112,6 +110,14 @@ void ExecStream::open(bool restart)
     }
     if (pGraph) {
         pTxn = pGraph->getTxn();
+        if (pTxn) {
+            if (pQuotaAccessor) {
+                pQuotaAccessor->setTxnId(pTxn->getTxnId());
+            }
+            if (pScratchQuotaAccessor) {
+                pScratchQuotaAccessor->setTxnId(pTxn->getTxnId());
+            }
+        }
     }
 }
 

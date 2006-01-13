@@ -126,6 +126,9 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
         planner.addRule(new IterRules.HomogeneousUnionToIteratorRule());
         planner.addRule(new IterRules.OneRowToIteratorRule());
 
+        planner.addRule(
+            new ReduceDecimalsRule(CalcRel.class));
+        
         if (fennelEnabled) {
             planner.addRule(new FennelSortRule());
             planner.addRule(new FennelCollectRule());

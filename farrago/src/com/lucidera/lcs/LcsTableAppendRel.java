@@ -275,7 +275,8 @@ public class LcsTableAppendRel
         
         clusterAppend.setIndexId(indexId);
         
-        FemTupleDescriptor indexTupleDesc = indexGuide.createBtreeTupleDesc();
+        FemTupleDescriptor indexTupleDesc =
+            indexGuide.createClusteredBTreeTupleDesc();
         clusterAppend.setTupleDesc(indexTupleDesc);
         
         //

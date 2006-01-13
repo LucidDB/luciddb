@@ -121,14 +121,7 @@ public:
 void BTreeTest::testCaseSetUp()
 {
     openStorage(DeviceMode::createNew);
-    
-    // reopen will interpret pages as already allocated
-    closeStorage();
-    openStorage(DeviceMode::load);
-
-    pRandomSegment = pSegmentFactory->newRandomAllocationSegment(
-        pLinearSegment,true);
-    pLinearSegment.reset();
+    openRandomSegment();
 
     descriptor.segmentAccessor.pSegment = pRandomSegment;
     descriptor.segmentAccessor.pCacheAccessor = pCache;

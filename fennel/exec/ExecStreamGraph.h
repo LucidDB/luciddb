@@ -51,10 +51,10 @@ class ExecStreamScheduler;
  *
  * <p>
  *
- * A stream has a permanent, unique name. These names are used later to find the streams.
- * When a stream is added to a graph it is assigned an ExecStreamId. This
- * identifier is later used to work with the stream. If the stream is moved to another
- * graph, it obtains a new ExecStreamId.
+ * A stream has a permanent, unique name. These names are used later to find
+ * the streams.  When a stream is added to a graph it is assigned an
+ * ExecStreamId. This identifier is later used to work with the stream. If the
+ * stream is moved to another graph, it obtains a new ExecStreamId.
  */
 class ExecStreamGraph
     : public boost::noncopyable,
@@ -173,14 +173,14 @@ public:
     virtual void mergeFrom(ExecStreamGraph& src) = 0;
 
     /**
-     * Adds a subgraph, taken (removed) from another graph.
-     * (Slower than mergeFrom(ExecStreamGraph&), which merges its entire source).
-     * Assumes the graphs are disjoint, and that both have been prepared.
-     * The two graphs are both open, or else both closed.
-     * @param src the source graph
+     * Adds a subgraph, taken (removed) from another graph.  (Slower than
+     * mergeFrom(ExecStreamGraph&), which merges its entire source).  Assumes
+     * the graphs are disjoint, and that both have been prepared.  The two
+     * graphs are both open, or else both closed.  @param src the source graph
      * @param nodes identifies source nodes.
      */
-    virtual void mergeFrom(ExecStreamGraph& src, std::vector<ExecStreamId>const& nodes) = 0;
+    virtual void mergeFrom(
+        ExecStreamGraph& src, std::vector<ExecStreamId>const& nodes) = 0;
 
     /**
      * Finds a stream by name.
@@ -325,14 +325,29 @@ public:
     virtual std::vector<SharedExecStream> getSortedStreams() = 0;
 
     /**
-     * the number of streams in the graph. Can only be called after prepare.
+     * @return the number of streams in the graph; can only be called after
+     * prepare.
      */
     virtual int getStreamCount() = 0;
 
     /**
-     * the number of dataflows (edges) in the graph. Can only be called after prepare.
+     * @return the number of dataflows (edges) in the graph; can only be called
+     * after prepare.
      */
     virtual int getDataflowCount() = 0;
+
+    /**
+     * Renders the graph in the .dot format defined by
+     * <a href="http://www.graphviz.org">Graphviz</a>.
+     *
+     * @param dotStream ostream on which to write .dot representation
+     */
+    virtual void renderGraphviz(std::ostream &dotStream) = 0;
+    
+    /**
+     * @return true if graph has no cycles
+     */
+    virtual bool isAcyclic() = 0;
 };
 
 inline ExecStreamScheduler *ExecStreamGraph::getScheduler() const

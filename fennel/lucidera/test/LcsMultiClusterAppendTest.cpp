@@ -95,7 +95,7 @@ void LcsMultiClusterAppendTest::testLoad()
     TupleProjection proj;
 
     loadClusters(nRows, nCols, nClusters);
-    testReset();
+    resetExecStreamTest();
 
     // project all columns
     for (uint i = 0; i < nClusters * nCols; i++)
@@ -284,16 +284,7 @@ void LcsMultiClusterAppendTest::scanCols(uint nRows, uint nCols,
 
 void LcsMultiClusterAppendTest::testCaseSetUp()
 {    
-    ExecStreamTestBase::testCaseSetUp();
-    closeStorage();
-    openStorage(DeviceMode::load);
-
-    pRandomSegment = pSegmentFactory->newRandomAllocationSegment(
-        pLinearSegment, true);
-    pLinearSegment.reset();
-
-    pGraph = newStreamGraph();
-    pGraphEmbryo = newStreamGraphEmbryo(pGraph);
+    ExecStreamUnitTestBase::testCaseSetUp();
 
     attrDesc_int64 = TupleAttributeDescriptor(
         stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));

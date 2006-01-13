@@ -94,6 +94,9 @@ create clustered index explicit_jk1 on lcs_table_explicit(j,k)
 -- verify creation of user-defined clustered indexes
 !indexes LCS_TABLE_EXPLICIT
 
+-- should fail:  can't drop a clustered index
+drop index explicit_jk1;
+
 -- should fail: LCS clustered indexes may not overlap
 create table lcs_table_overlap(i int not null,j int not null,k int not null)
 server sys_column_store_data_server
@@ -114,14 +117,19 @@ server sys_column_store_data_server
 truncate table lcs_table;
 drop table lcs_table_explicit;
 
--- test some features which aren't yet implemented for LCS
-
--- doesn't fail, but has no effect,
--- because for now unclustered indexes are stubbed out
+-- test creation of unclustered index
 create table lcs_table_unclustered(i int not null)
 server sys_column_store_data_server
 create index unclustered_i on lcs_table_unclustered(i)
 ;
+
+-- test truncate of table with unclustered index
+truncate table lcs_table_unclustered;
+
+-- test drop of unclustered index
+drop index unclustered_i;
+
+-- test some features which aren't yet implemented for LCS
 
 -- should fail:  can't handle collections yet
 create table lcs_table_multiset(i int not null,im integer multiset)

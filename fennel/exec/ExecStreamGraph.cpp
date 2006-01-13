@@ -28,11 +28,13 @@
 #include "fennel/exec/ExecStreamScheduler.h"
 #include "fennel/exec/DynamicParam.h"
 #include "fennel/segment/Segment.h"
-#include "fennel/exec/DynamicParam.h"
+#include "fennel/exec/ScratchBufferExecStream.h"
+#include "fennel/common/Backtrace.h"
 
 #include <boost/bind.hpp>
 #include <boost/graph/strong_components.hpp>
 #include <boost/graph/topological_sort.hpp>
+#include <boost/graph/graphviz.hpp>
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -104,8 +106,8 @@ ExecStreamGraphImpl::addVertex(SharedExecStream pStream)
     Vertex v = newVertex();
     boost::put(boost::vertex_data, graphRep, v, pStream);
     if (pStream) {
-        // Note that pStream can be null for an exterior node in a farrago graph.
-        // Guard against duplicating a stream name.
+        // Note that pStream can be null for an exterior node in a farrago
+        // graph.  Guard against duplicating a stream name.
         const std::string& name = pStream->getName();
         if (name.length() == 0)
             permFail("cannot add nameless stream to graph " << this);
@@ -140,13 +142,13 @@ void ExecStreamGraphImpl::removeStream(ExecStreamId id)
     pStream->id = 0;
 }
 
-
 void ExecStreamGraphImpl::removeFromStreamOutMap(SharedExecStream p)
 {
     int outCt = getOutputCount(p->getStreamId());
     if (outCt > 0) {
         std::string name = p->getName();
-        // assumes map key pairs <name, index> sort lexicographically, so <name, *> is contiguous.
+        // assumes map key pairs <name, index> sort lexicographically, so
+        // <name, *> is contiguous.
         EdgeMap::iterator startNameRange =
             streamOutMap.find(std::make_pair(name, 0));
         EdgeMap::iterator endNameRange =
@@ -200,7 +202,6 @@ int ExecStreamGraphImpl::getDataflowCount()
     return boost::num_edges(graphRep);
 }
 
-
 void ExecStreamGraphImpl::mergeFrom(ExecStreamGraph& src)
 {
     if (ExecStreamGraphImpl *p = dynamic_cast<ExecStreamGraphImpl*>(&src)) {
@@ -239,11 +240,13 @@ void ExecStreamGraphImpl::mergeFrom(ExecStreamGraphImpl& src)
         vmap[vsrc] = vnew;
     }
 
-    // copy the edges (with attached buffers, which stay bound to the adjacent streams)
+    // copy the edges (with attached buffers, which stay bound to the adjacent
+    // streams)
     EdgeIterPair edges = boost::edges(src.graphRep);
     for (; edges.first != edges.second; ++edges.first) {
         Edge esrc = *edges.first;
-        SharedExecStreamBufAccessor pBuf = src.getSharedBufAccessorFromEdge(esrc);
+        SharedExecStreamBufAccessor pBuf =
+            src.getSharedBufAccessorFromEdge(esrc);
         std::pair<Edge, bool> x = boost::add_edge(
             vmap[boost::source(esrc, src.graphRep)], // image of source node
             vmap[boost::target(esrc, src.graphRep)], // image of target node
@@ -253,7 +256,6 @@ void ExecStreamGraphImpl::mergeFrom(ExecStreamGraphImpl& src)
     src.clear();                        // source is empty
     sortedStreams.clear();              // invalid now
 }
-
 
 // merges a subgraph, viz the induced subgraph of a set of NODES of SRC
 void ExecStreamGraphImpl::mergeFrom(
@@ -275,8 +277,9 @@ void ExecStreamGraphImpl::mergeFrom(
         vmap[vsrc] = vnew;
     }
 
-    // Copy the internal edges (with attached buffers, which stay bound to the adjacent streams).
-    // It suffices to scan the outbound edges. The external edges are abandoned.
+    // Copy the internal edges (with attached buffers, which stay bound to the
+    // adjacent streams).  It suffices to scan the outbound edges. The external
+    // edges are abandoned.
     if (nnodes > 1) {                   // (when only 1 node, no internal edges)
         for (int i = 0; i < nnodes; i++) {
             // Find all outbound edges E (U,V) in the source subgraph
@@ -291,8 +294,10 @@ void ExecStreamGraphImpl::mergeFrom(
                 Vertex v = boost::target(e, src.graphRep);
                 // V is in the subgraph iff v is a key in the map vmap[]
                 if (vmap.find(v) != vmap.end()) {
-                    SharedExecStreamBufAccessor pBuf = src.getSharedBufAccessorFromEdge(e);
-                    std::pair<Edge, bool> x = boost::add_edge(vmap[u], vmap[v], pBuf, graphRep);
+                    SharedExecStreamBufAccessor pBuf =
+                        src.getSharedBufAccessorFromEdge(e);
+                    std::pair<Edge, bool> x =
+                        boost::add_edge(vmap[u], vmap[v], pBuf, graphRep);
                     assert(x.second);
                 }
             }
@@ -310,7 +315,6 @@ void ExecStreamGraphImpl::mergeFrom(
     src.sortedStreams.clear();          // invalidate
     sortedStreams.clear();              // invalidate
 }
-
 
 SharedExecStream ExecStreamGraphImpl::findStream(
     std::string name)
@@ -562,7 +566,7 @@ std::vector<SharedExecStream> ExecStreamGraphImpl::getSortedStreams()
     return sortedStreams;
 }
 
-bool ExecStreamGraphImpl::checkForNoCycles()
+bool ExecStreamGraphImpl::isAcyclic()
 {
     int numVertices = boost::num_vertices(graphRep);
 
@@ -571,6 +575,80 @@ bool ExecStreamGraphImpl::checkForNoCycles()
     std::vector<int> component(numVertices);
     int nStrongComps = boost::strong_components(graphRep, &component[0]);
     return (nStrongComps >= numVertices);
+}
+
+class ExecStreamGraphImpl::DotGraphRenderer
+{
+public:
+    void operator()(std::ostream &out) const
+    {
+        out << "graph [bgcolor=gray, rankdir=BT]" << std::endl;
+        out << "node [shape=record, style=filled, "
+            << "fillcolor=white, fontsize=10.0]" << std::endl;
+        out << "edge [fontsize=10.0]" << std::endl;
+    }
+};
+
+class ExecStreamGraphImpl::DotEdgeRenderer
+{
+    ExecStreamGraphImpl &graph;
+public:
+    DotEdgeRenderer(ExecStreamGraphImpl &graphInit)
+        : graph(graphInit)
+    {
+    }
+
+    void operator()(
+        std::ostream &out, ExecStreamGraphImpl::Edge const &edge) const
+    {
+        SharedExecStreamBufAccessor pAccessor =
+            graph.getSharedBufAccessorFromEdge(edge);
+        out << "[label=\"";
+        if (pAccessor) {
+            out << ExecStreamBufState_names[pAccessor->getState()];
+        }
+        out << "\"]";
+    }
+};
+
+class ExecStreamGraphImpl::DotVertexRenderer
+{
+    ExecStreamGraphImpl &graph;
+public:
+    DotVertexRenderer(ExecStreamGraphImpl &graphInit)
+        : graph(graphInit)
+    {
+    }
+
+    void operator()(std::ostream &out, ExecStreamId const &streamId) const
+    {
+        SharedExecStream pStream = graph.getStream(streamId);
+        out << "[label=\"{";
+        if (pStream) {
+            out << streamId;
+            out << "|";
+            if (dynamic_cast<ScratchBufferExecStream *>(pStream.get())) {
+                out << "MEMBUF";
+            } else {
+                Backtrace::writeDemangled(out, typeid(*pStream).name());
+                out << "|";
+                out << pStream->getName();
+            }
+        } else {
+            out << "SINK";
+        }
+        out << "}\"]";
+    }
+};
+
+void ExecStreamGraphImpl::renderGraphviz(std::ostream &dotStream)
+{
+    boost::write_graphviz(
+        dotStream,
+        graphRep,
+        DotVertexRenderer(*this),
+        DotEdgeRenderer(*this),
+        DotGraphRenderer());
 }
 
 FENNEL_END_CPPFILE("$Id$");

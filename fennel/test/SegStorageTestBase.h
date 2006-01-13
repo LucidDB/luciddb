@@ -39,14 +39,12 @@ protected:
     SharedSegmentFactory pSegmentFactory;
     
     /**
-     * Segment supporting linear page allocation.  This is used for testing
-     * the non-allocation portion of the Segment interface.
+     * Segment supporting linear page allocation.
      */
     SharedSegment pLinearSegment;
 
     /**
-     * (Optional) segment supporting random page allocation.  If present, this
-     * is used for testing the allocation portion of the Segment interface.
+     * (Optional) segment supporting random page allocation.
      */
     SharedSegment pRandomSegment;
 
@@ -54,6 +52,8 @@ public:
     virtual void openStorage(DeviceMode openMode);
 
     virtual void openSegmentStorage(DeviceMode openMode);
+
+    virtual void openRandomSegment();
 
     SharedSegment createLinearDeviceSegment(DeviceId deviceId,uint nPages);
     

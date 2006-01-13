@@ -58,7 +58,6 @@ public class FarragoCalcSystemTest extends FarragoTestCase
     private static CalcRexImplementorTable fennelTab =
         CalcRexImplementorTableImpl.std();
 
-
     //~ Instance fields -------------------------------------------------------
 
     String sqlToExecute;
@@ -143,7 +142,9 @@ public class FarragoCalcSystemTest extends FarragoTestCase
         exclude.add(opTab.currentTimeFunc);
         exclude.add(opTab.minusDateOperator);
         exclude.add(opTab.throwOperator);
+        exclude.add(opTab.reinterpretOperator);
 
+        
         // Eventually need to include these when cast is working
         exclude.add(opTab.overlapsOperator);
         exclude.add(opTab.initcapFunc);

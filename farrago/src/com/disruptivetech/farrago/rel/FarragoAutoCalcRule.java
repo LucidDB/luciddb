@@ -195,12 +195,13 @@ public class FarragoAutoCalcRule extends RelOptRule
             }
         }
 
-        CalcRelSplitter transform =
+        AutoCalcRelSplitter transform =
             new AutoCalcRelSplitter(calc, relImplementor, translator);
 
-        RelNode resultCalcRelTree = transform.execute();
-
-        call.transformTo(resultCalcRelTree);
+        if (transform.canImplement(calc)) {
+            RelNode resultCalcRelTree = transform.execute();
+            call.transformTo(resultCalcRelTree);
+        }
     }
 
     //~ Inner Classes ---------------------------------------------------------
@@ -220,6 +221,14 @@ public class FarragoAutoCalcRule extends RelOptRule
             this.translator = translator;
         }
 
+        protected boolean canImplement(CalcRel rel)
+        {
+            if (RexUtil.requiresDecimalExpansion(rel.getChildExps(), true)) {
+                return false;
+            }
+            return true;
+        }
+        
         protected boolean canImplementAs(
             RexCall call, CalcRelSplitter.RelType relType)
         {

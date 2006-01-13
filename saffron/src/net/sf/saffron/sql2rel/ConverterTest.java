@@ -420,10 +420,7 @@ public class ConverterTest extends TestCase
             + NL);
     }
 
-    // FIXME jvs 31-Dec-2005:  disabled these tests broken by Jack's
-    // UNION rewrite change
-
-    public void _testUnion()
+    public void testUnion()
     {
         check("select 1 from \"emps\" union select 2 from \"depts\"",
             TestUtil.fold(new String[] {
@@ -435,7 +432,7 @@ public class ConverterTest extends TestCase
                 ""}));
     }
 
-    public void _testUnionAll()
+    public void testUnionAll()
     {
         check("select 1 from \"emps\" union all select 2 from \"depts\"",
             TestUtil.fold(new String[] {
@@ -447,7 +444,7 @@ public class ConverterTest extends TestCase
                 ""}));
     }
 
-    public void _testUnionInFrom()
+    public void testUnionInFrom()
     {
         check("select * from (select 1 as \"i\", 3 as \"j\" from \"emps\" union select 2, 5 from \"depts\") where \"j\" > 4",
             TestUtil.fold(new String[] {

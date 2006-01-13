@@ -24,6 +24,7 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/cache/Cache.h"
 #include "fennel/cache/CachePage.h"
+#include "fennel/common/CompoundId.h"
 
 #include <algorithm>
 
@@ -66,6 +67,11 @@ void CachePage::swapBuffers(CachePage &other)
     assert(isExclusiveLockHeld());
     assert(other.isExclusiveLockHeld());
     std::swap(pBuffer,other.pBuffer);
+}
+
+bool CachePage::isScratchLocked() const
+{
+    return CompoundId::getDeviceId(getBlockId()) == Cache::NULL_DEVICE_ID;
 }
 
 FENNEL_END_CPPFILE("$Id$");

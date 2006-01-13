@@ -220,6 +220,8 @@ public:
     virtual SharedCache getCache();
     virtual uint getMaxLockedPages();
     virtual void setMaxLockedPages(uint nPages);
+    virtual void setTxnId(TxnId); // ignored
+    virtual TxnId getTxnId() const;
 
     // implementation of StatsSource
     virtual void writeStats(StatsTarget &target);

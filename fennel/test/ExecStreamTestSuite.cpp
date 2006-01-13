@@ -158,7 +158,7 @@ void ExecStreamTestSuite::testSegBufferExecStream()
     mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
     
     SegBufferExecStreamParams bufParams;
-    bufParams.scratchAccessor.pSegment = pLinearSegment;
+    bufParams.scratchAccessor.pSegment = pRandomSegment;
     bufParams.scratchAccessor.pCacheAccessor = pCache;
     bufParams.multipass = false;
 

@@ -47,40 +47,38 @@ values cast('-9223372036854775808' as bigint);
 --
 -- test decimal(N, 0) limits (signed N-digit integers)
 --
---values cast('99999' as decimal(5, 0));
---values cast('-99999' as decimal(5, 0));
+values cast('99999' as decimal(5, 0));
+values cast('-99999' as decimal(5, 0));
 
 -- these should fail (numeric out of range)
---values cast('100000' as decimal(5, 0));
---values cast('-100000' as decimal(5, 0));
+values cast('100000' as decimal(5, 0));
+values cast('-100000' as decimal(5, 0));
 
 
 --
 -- test decimal(N, M) (exact numeric) conversions
 --
---values cast('1.0' as decimal(2,1));
---values cast('-1.0' as decimal(2,1));
---values cast('0.0' as decimal(2,1));
---values cast('12.34' as decimal(4, 2));
---values cast('-43.21' as decimal(4, 2));
---values cast('5.67' as decimal(4, 2));
+values cast('1.0' as decimal(2,1));
+values cast('-1.0' as decimal(2,1));
+values cast('0.0' as decimal(2,1));
+values cast('12.34' as decimal(4, 2));
+values cast('-43.21' as decimal(4, 2));
+values cast('5.67' as decimal(4, 2));
 
---values cast('1' as decimal(2,1));
---values cast('-1' as decimal(2,1));
---values cast('0' as decimal(2,1));
---values cast('12' as decimal(4, 2));
---values cast('-43' as decimal(4, 2));
+values cast('1' as decimal(2,1));
+values cast('-1' as decimal(2,1));
+values cast('0' as decimal(2,1));
+values cast('12' as decimal(4, 2));
+values cast('-43' as decimal(4, 2));
 
 -- REVIEW: spec says that numeric out of range error only occurs when
 -- the most significant digits are lost: these are okay
---values cast('12.345' as decimal(4, 2));
---values cast('-12.345' as decimal(4, 2));
+values cast('12.345' as decimal(4, 2));
+values cast('-12.345' as decimal(4, 2));
 
 -- these should fail (numeric out of range)
---values cast('123.45' as decimal(4, 2));
---values cast('-123.45' as decimal(4, 2));
-
-
+values cast('123.45' as decimal(4, 2));
+values cast('-123.45' as decimal(4, 2));
 
 --
 -- test double (approximate numeric) conversions

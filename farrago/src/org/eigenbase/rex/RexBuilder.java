@@ -296,6 +296,30 @@ public class RexBuilder
     }
 
     /**
+     * Makes a reinterpret cast
+     * 
+     * @param type type returned by the cast
+     * @param exp expression to be casted
+     * @param checkOverflow whether an overflow check is required
+     *
+     * @return a RexCall with two operands and a special return type
+     */
+    public RexNode makeReinterpretCast(
+        RelDataType type,
+        RexNode exp,
+        RexNode checkOverflow)
+    {
+        Util.pre(checkOverflow instanceof RexLiteral, 
+            "checkOverflow instanceof RexLiteral");
+        Util.pre(checkOverflow.getType() == booleanTrue.getType(),
+            "checkOverflow.getType() == booleanTrue.getType()");
+        return new RexCall(
+            type,
+            opTab.reinterpretOperator,
+            new RexNode [] { exp, checkOverflow });      
+    }
+    
+    /**
      * Creates a reference to all the fields in the row. That is, the whole
      * row as a single record object.
      * @param rowType Type of the input row
@@ -366,19 +390,26 @@ public class RexBuilder
      */
     public RexLiteral makeExactLiteral(BigDecimal bd)
     {
-        SqlTypeName result;
-        if (bd.scale() > 0) {
-            result = SqlTypeName.Double;
-        } else {
-            long l = bd.longValue();
+        RelDataType relType;
+        int scale = bd.scale();
+        long l = bd.unscaledValue().longValue();
+        assert(scale >= 0 && scale <= SqlTypeName.MAX_NUMERIC_SCALE);
+        assert(BigDecimal.valueOf(l).equals(bd));
+        if (scale == 0) {
             if ((l >= Integer.MIN_VALUE) && (l <= Integer.MAX_VALUE)) {
-                result = SqlTypeName.Integer;
+                relType = typeFactory.createSqlType(SqlTypeName.Integer);
             } else {
-                result = SqlTypeName.Bigint;
+                relType = typeFactory.createSqlType(SqlTypeName.Bigint);
             }
+        } else {
+            int precision = bd.unscaledValue().toString().length();
+            relType =
+                typeFactory.createSqlType(
+                    SqlTypeName.Decimal,
+                    scale,
+                    precision);
         }
-
-        return makeExactLiteral(bd, typeFactory.createSqlType(result));
+        return makeExactLiteral(bd, relType);
     }
 
     /**

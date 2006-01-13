@@ -146,40 +146,129 @@ Messages:
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- test decimal(N, 0) limits (signed N-digit integers)
 0: jdbc:farrago:> --
-0: jdbc:farrago:> --values cast('99999' as decimal(5, 0));
-0: jdbc:farrago:> --values cast('-99999' as decimal(5, 0));
+0: jdbc:farrago:> values cast('99999' as decimal(5, 0));
++---------+
+| EXPR$0  |
++---------+
+| 99999   |
++---------+
+0: jdbc:farrago:> values cast('-99999' as decimal(5, 0));
++---------+
+| EXPR$0  |
++---------+
+| -99999  |
++---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- these should fail (numeric out of range)
-0: jdbc:farrago:> --values cast('100000' as decimal(5, 0));
-0: jdbc:farrago:> --values cast('-100000' as decimal(5, 0));
+0: jdbc:farrago:> values cast('100000' as decimal(5, 0));
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=0 Code=22003 (state=,code=0)
+0: jdbc:farrago:> values cast('-100000' as decimal(5, 0));
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=0 Code=22003 (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- test decimal(N, M) (exact numeric) conversions
 0: jdbc:farrago:> --
-0: jdbc:farrago:> --values cast('1.0' as decimal(2,1));
-0: jdbc:farrago:> --values cast('-1.0' as decimal(2,1));
-0: jdbc:farrago:> --values cast('0.0' as decimal(2,1));
-0: jdbc:farrago:> --values cast('12.34' as decimal(4, 2));
-0: jdbc:farrago:> --values cast('-43.21' as decimal(4, 2));
-0: jdbc:farrago:> --values cast('5.67' as decimal(4, 2));
+0: jdbc:farrago:> values cast('1.0' as decimal(2,1));
++---------+
+| EXPR$0  |
++---------+
+| 1.0     |
++---------+
+0: jdbc:farrago:> values cast('-1.0' as decimal(2,1));
++---------+
+| EXPR$0  |
++---------+
+| -1.0    |
++---------+
+0: jdbc:farrago:> values cast('0.0' as decimal(2,1));
++---------+
+| EXPR$0  |
++---------+
+| 0.0     |
++---------+
+0: jdbc:farrago:> values cast('12.34' as decimal(4, 2));
++---------+
+| EXPR$0  |
++---------+
+| 12.34   |
++---------+
+0: jdbc:farrago:> values cast('-43.21' as decimal(4, 2));
++---------+
+| EXPR$0  |
++---------+
+| -43.21  |
++---------+
+0: jdbc:farrago:> values cast('5.67' as decimal(4, 2));
++---------+
+| EXPR$0  |
++---------+
+| 5.67    |
++---------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> --values cast('1' as decimal(2,1));
-0: jdbc:farrago:> --values cast('-1' as decimal(2,1));
-0: jdbc:farrago:> --values cast('0' as decimal(2,1));
-0: jdbc:farrago:> --values cast('12' as decimal(4, 2));
-0: jdbc:farrago:> --values cast('-43' as decimal(4, 2));
+0: jdbc:farrago:> values cast('1' as decimal(2,1));
++---------+
+| EXPR$0  |
++---------+
+| 1.0     |
++---------+
+0: jdbc:farrago:> values cast('-1' as decimal(2,1));
++---------+
+| EXPR$0  |
++---------+
+| -1.0    |
++---------+
+0: jdbc:farrago:> values cast('0' as decimal(2,1));
++---------+
+| EXPR$0  |
++---------+
+| 0.0     |
++---------+
+0: jdbc:farrago:> values cast('12' as decimal(4, 2));
++---------+
+| EXPR$0  |
++---------+
+| 12.00   |
++---------+
+0: jdbc:farrago:> values cast('-43' as decimal(4, 2));
++---------+
+| EXPR$0  |
++---------+
+| -43.00  |
++---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- REVIEW: spec says that numeric out of range error only occurs when
 0: jdbc:farrago:> -- the most significant digits are lost: these are okay
-0: jdbc:farrago:> --values cast('12.345' as decimal(4, 2));
-0: jdbc:farrago:> --values cast('-12.345' as decimal(4, 2));
+0: jdbc:farrago:> values cast('12.345' as decimal(4, 2));
++---------+
+| EXPR$0  |
++---------+
+| 12.35   |
++---------+
+0: jdbc:farrago:> values cast('-12.345' as decimal(4, 2));
++---------+
+| EXPR$0  |
++---------+
+| -12.35  |
++---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- these should fail (numeric out of range)
-0: jdbc:farrago:> --values cast('123.45' as decimal(4, 2));
-0: jdbc:farrago:> --values cast('-123.45' as decimal(4, 2));
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
+0: jdbc:farrago:> values cast('123.45' as decimal(4, 2));
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=0 Code=22003 (state=,code=0)
+0: jdbc:farrago:> values cast('-123.45' as decimal(4, 2));
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=0 Code=22003 (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- test double (approximate numeric) conversions

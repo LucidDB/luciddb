@@ -113,14 +113,14 @@ SharedExecStream ExecStreamUnitTestBase::prepareConfluenceGraph(
 
 SharedExecStream ExecStreamUnitTestBase::prepareDAG(
     ExecStreamEmbryo &srcStreamEmbryo,
-    ExecStreamEmbryo &srcBufStreamEmbryo,
+    ExecStreamEmbryo &splitterStreamEmbryo,
     std::vector<ExecStreamEmbryo> &interStreamEmbryos,
     ExecStreamEmbryo &destStreamEmbryo)
 {
     std::vector<ExecStreamEmbryo>::iterator it;
     
     pGraphEmbryo->saveStreamEmbryo(srcStreamEmbryo);
-    pGraphEmbryo->saveStreamEmbryo(srcBufStreamEmbryo);
+    pGraphEmbryo->saveStreamEmbryo(splitterStreamEmbryo);
 
     // save all intermediate stream embryos
     for (it = interStreamEmbryos.begin(); it != interStreamEmbryos.end();
@@ -132,12 +132,12 @@ SharedExecStream ExecStreamUnitTestBase::prepareDAG(
     
     pGraphEmbryo->addDataflow(
         srcStreamEmbryo.getStream()->getName(),
-        srcBufStreamEmbryo.getStream()->getName());
+        splitterStreamEmbryo.getStream()->getName());
 
     // connect all inter streams to src and dest
     for (it = interStreamEmbryos.begin(); it != interStreamEmbryos.end();
             ++it) {
-        pGraphEmbryo->addDataflow(srcBufStreamEmbryo.getStream()->getName(),
+        pGraphEmbryo->addDataflow(splitterStreamEmbryo.getStream()->getName(),
                                   (*it).getStream()->getName());
         pGraphEmbryo->addDataflow((*it).getStream()->getName(),
                                   destStreamEmbryo.getStream()->getName());
@@ -158,17 +158,17 @@ SharedExecStream ExecStreamUnitTestBase::prepareDAG(
 void ExecStreamUnitTestBase::testCaseSetUp()
 {
     ExecStreamTestBase::testCaseSetUp();
+    openRandomSegment();
     pGraph = newStreamGraph();
     pGraphEmbryo = newStreamGraphEmbryo(pGraph);
 }
 
-void ExecStreamUnitTestBase::testReset()
+void ExecStreamUnitTestBase::resetExecStreamTest()
 {
     if (pScheduler) {
         pScheduler->stop();
     }
-    tearDown();
-    pScheduler.reset();
+    tearDownExecStreamTest();
                 
     pScheduler.reset(newScheduler());
     pGraph = newStreamGraph();
@@ -176,7 +176,7 @@ void ExecStreamUnitTestBase::testReset()
 }
 
 // refines ExecStreamTestBase::testCaseTearDown()
-void ExecStreamUnitTestBase::tearDown()
+void ExecStreamUnitTestBase::tearDownExecStreamTest()
 {
     pGraph.reset();
     pGraphEmbryo.reset();

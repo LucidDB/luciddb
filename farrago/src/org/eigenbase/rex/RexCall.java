@@ -153,6 +153,8 @@ public class RexCall extends RexNode
             return RexKind.MultisetQueryConstructor;
         case SqlKind.NewSpecificationORDINAL:
             return RexKind.NewSpecification;
+        case SqlKind.ReinterpretORDINAL:
+            return RexKind.Reinterpret;
         default:
             throw kind.unexpected();
         }

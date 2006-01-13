@@ -74,7 +74,7 @@ void CorrelationJoinExecStream::close()
 {
     std::vector<Correlation>::iterator it = correlations.begin();
     for (/* empty */ ; it != correlations.end(); ++it) {
-        pDynamicParamManager->removeParam(it->dynamicParamId);
+        pDynamicParamManager->deleteParam(it->dynamicParamId);
     }
     ConfluenceExecStream::closeImpl();
 }
@@ -98,7 +98,7 @@ ExecStreamResult CorrelationJoinExecStream::execute(
             // updating the dynamic param(s) with the new left value(s)
             std::vector<Correlation>::iterator it = correlations.begin();
             for (/* empty */ ; it != correlations.end(); ++it) {
-                pDynamicParamManager->setParam(
+                pDynamicParamManager->writeParam(
                     it->dynamicParamId, outputData[it->leftAttributeOrdinal]);
             }
 

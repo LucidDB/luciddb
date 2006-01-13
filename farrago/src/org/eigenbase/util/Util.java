@@ -328,6 +328,33 @@ public class Util extends Toolbox
     }
 
     /**
+     * Calculates a power of ten as a long value.
+     * 
+     * @param exponent exponent, must be greater than zero
+     * @return 10^exponent
+     */
+    public static long powerOfTen(int exponent)
+    {
+        Util.pre(exponent > 0, "exponent > 0");
+        // NOTE: java.lang.Math.pow returns double and could cause 
+        // rounding problems
+        if (exponent == 1) {
+            return 10; 
+        }
+        else {
+            // TODO: make iterative rather than recursive
+            int half = exponent/2;
+            int remainder = exponent%2;
+            long halfPower = powerOfTen(half);
+            if (remainder > 0) {
+                return halfPower*halfPower*10;
+            } else {
+                return halfPower*halfPower;
+            }
+        }
+    }
+    
+    /**
      * Prints an object using reflection. We can handle <code>null</code>;
      * arrays of objects and primitive values; for regular objects, we print
      * all public fields.

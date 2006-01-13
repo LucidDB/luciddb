@@ -107,20 +107,21 @@ void FlatFileExecStreamTest::testBuffer()
     std::string path = "flatfile/buffer";
     
     FlatFileBuffer fileBuffer(path);
-    fileBuffer.setStorage((char *) fixedBuffer, (uint)8);
     fileBuffer.open();
-    BOOST_REQUIRE(fileBuffer.buf()==(char *)fixedBuffer);
-    BOOST_REQUIRE(fileBuffer.size()==0);
-    fileBuffer.fill();
-    BOOST_REQUIRE(fileBuffer.size() == 8);
-    BOOST_REQUIRE(strncmp(fileBuffer.buf(), "12345671", 8)==0);
-    fileBuffer.fill(fileBuffer.buf()+7);
-    BOOST_REQUIRE(fileBuffer.size() == 8);
-    BOOST_REQUIRE(strncmp(fileBuffer.buf(), "12345676", 8)==0);
-    fileBuffer.fill(fileBuffer.buf()+6);
-    BOOST_REQUIRE(fileBuffer.size()==5);
-    BOOST_REQUIRE(strncmp(fileBuffer.buf(), "7654\n", 5)==0);
-    BOOST_REQUIRE(fileBuffer.readCompleted());
+    fileBuffer.setStorage((char *) fixedBuffer, (uint)8);
+    fileBuffer.read();
+    BOOST_REQUIRE(fileBuffer.getReadPtr()==(char *)fixedBuffer);
+    BOOST_REQUIRE(fileBuffer.getEndPtr() == fileBuffer.getReadPtr()+8);
+    BOOST_REQUIRE(strncmp(fileBuffer.getReadPtr(), "12345671", 8) == 0);
+    fileBuffer.setReadPtr(fileBuffer.getReadPtr()+7);
+    fileBuffer.read();
+    BOOST_REQUIRE(fileBuffer.getEndPtr()-fileBuffer.getReadPtr() == 8);
+    BOOST_REQUIRE(strncmp(fileBuffer.getReadPtr(), "12345676", 8) == 0);
+    fileBuffer.setReadPtr(fileBuffer.getReadPtr()+6);
+    fileBuffer.read();
+    BOOST_REQUIRE(fileBuffer.getEndPtr()-fileBuffer.getReadPtr() == 5);
+    BOOST_REQUIRE(strncmp(fileBuffer.getReadPtr(), "7654\n", 5) == 0);
+    BOOST_REQUIRE(fileBuffer.isComplete());
     fileBuffer.close();
 
     // TODO: test missing file, empty file
@@ -158,45 +159,47 @@ void FlatFileExecStreamTest::testParser()
     BOOST_CHECK_EQUAL(strncmp(buffer, "\"rage\"", 6), 0);
 
     FlatFileColumnParseResult result;
+    /* All columns can be quoted now
     // quote/escapes are plain escapes if not column is not char type
     strcpy(buffer, "\"all that\"\n is gold, ");
     parser.scanColumn(buffer, 21, 128, false, result);
     BOOST_CHECK_EQUAL(result.type, FlatFileColumnParseResult::FIELD_DELIM);
     BOOST_CHECK_EQUAL(result.size, 19);
     BOOST_CHECK(result.next == buffer + 20);
+    */
     // quotes are valid for char columns
     strcpy(buffer, "\"does not glitter\"\n ");
-    parser.scanColumn(buffer, 20, 128, true, result);
+    parser.scanColumn(buffer, 20, 128, result);
     BOOST_CHECK_EQUAL(result.type, FlatFileColumnParseResult::ROW_DELIM);
     BOOST_CHECK_EQUAL(result.size, 18);
     BOOST_CHECK(result.next == buffer + 19);
     // embedded quotes
     strcpy(buffer, "\"not all those who \"\"wander\"\"\", ");
-    parser.scanColumn(buffer, 32, 128, true, result);
+    parser.scanColumn(buffer, 32, 128, result);
     BOOST_CHECK_EQUAL(result.type, FlatFileColumnParseResult::FIELD_DELIM);
     BOOST_CHECK_EQUAL(result.size, 30);
     BOOST_CHECK(result.next == buffer + 31);
     // fixed column type
     strcpy(buffer, " are lost  ");
-    parser.scanColumn(buffer, 11, 9, true, result);
+    parser.scanColumn(buffer, 11, 9, result);
     BOOST_CHECK_EQUAL(result.type, FlatFileColumnParseResult::MAX_LENGTH);
     BOOST_CHECK_EQUAL(result.size, 9);
     BOOST_CHECK(result.next == buffer + 9);
     // imbalanced quote
     strcpy(buffer, "\"JRR, ");
-    parser.scanColumn(buffer, 6, 128, true, result);
+    parser.scanColumn(buffer, 6, 128, result);
     BOOST_CHECK_EQUAL(result.type, FlatFileColumnParseResult::NO_DELIM);
     BOOST_CHECK_EQUAL(result.size, 6);
     BOOST_CHECK(result.next == buffer + 6);
     // data after quote
     strcpy(buffer, "\"Tolkien\"  , ");
-    parser.scanColumn(buffer, 13, 128, true, result);
+    parser.scanColumn(buffer, 13, 128, result);
     BOOST_CHECK_EQUAL(result.type, FlatFileColumnParseResult::FIELD_DELIM);
     BOOST_CHECK_EQUAL(result.size, 11);
     BOOST_CHECK(result.next == buffer + 12);
     // fixed length exactly equal to buffer size
     strcpy(buffer, "some poems");
-    parser.scanColumn(buffer, 10, 10, true, result);
+    parser.scanColumn(buffer, 10, 10, result);
     BOOST_CHECK_EQUAL(result.type, FlatFileColumnParseResult::NO_DELIM);
     BOOST_CHECK_EQUAL(result.size, 10);
     BOOST_CHECK(result.next == buffer + 10);

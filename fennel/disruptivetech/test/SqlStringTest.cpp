@@ -2233,6 +2233,7 @@ SqlStringTest::testSqlStringCastToDecimal_Helper(uint64_t value,
 #if 0
     BOOST_MESSAGE("buf = |" << buf << "|");
 #endif
+
     if (strlen(buf) > src_len) {
         // not all test cases will fit, just silently ignore them
         return;
@@ -2392,89 +2393,89 @@ SqlStringTest::testSqlStringCastToDecimal()
                                                   false);
 
                 // positive test, ".1234"
-                if (src_len >= 3) {
-                    sprintf(buf, ".%lld", value);
-                    if (value < 0) {
-                        buf[0] = '-';
-                        buf[1] = '.';
-                    }
-                    testSqlStringCastToDecimal_Helper(value,
-                                                      precision,
-                                                      precision,
-                                                      buf,
-                                                      src_storage,
-                                                      src_len,
-                                                      false,
-                                                      false);
+                sprintf(buf, ".%lld", value);
+                if (value < 0) {
+                    buf[0] = '-';
+                    buf[1] = '.';
                 }
+                testSqlStringCastToDecimal_Helper(value,
+                                                  precision,
+                                                  precision,
+                                                  buf,
+                                                  src_storage+1,
+                                                  src_len+1,
+                                                  false,
+                                                  false);
+            
 
 
                 // positive test, ".1234e3" = "123.4"
-                if (src_len >= 5) {
-                    sprintf(buf, ".%llde3", value);
-                    if (value < 0) {
-                        buf[0] = '-';
-                        buf[1] = '.';
-                    }
-                    testSqlStringCastToDecimal_Helper(value,
-                                                      precision,
-                                                      precision-3,
-                                                      buf,
-                                                      src_storage,
-                                                      src_len,
-                                                      false,
-                                                      false);
+                sprintf(buf, ".%llde3", value);
+                if (value < 0) {
+                    buf[0] = '-';
+                    buf[1] = '.';
+                }
+                testSqlStringCastToDecimal_Helper(value,
+                                                  precision,
+                                                  precision-3,
+                                                  buf,
+                                                  src_storage+3,
+                                                  src_len+3,
+                                                  false,
+                                                  false);
 
+                if (value != 0) {
                     // negative test, out of range
                     testSqlStringCastToDecimal_Helper(value,
                                                       precision,
                                                       precision,
                                                       buf,
-                                                      src_storage,
-                                                      src_len,
+                                                      src_storage+3,
+                                                      src_len+3,
                                                       true,
                                                       false);
                 }
 
                 // positive test, "1234e-3"
-                if (src_len >= 5) {
-                    uint64_t tmp;
-                    sprintf(buf, "%llde-3", value);
-
-                    testSqlStringCastToDecimal_Helper(value,
-                                                      precision,
-                                                      3,
-                                                      buf,
-                                                      src_storage,
-                                                      src_len,
-                                                      false,
-                                                      false);
-
-                    // positive test, rounding
-                    if (value < 0) {
-                        tmp = -((-value + 5)/10);
-                    } else {
-                        tmp = (value + 5)/10;
-                    }
-                    testSqlStringCastToDecimal_Helper(tmp,
-                                                      precision,
-                                                      2,
-                                                      buf,
-                                                      src_storage,
-                                                      src_len,
-                                                      false,
-                                                      false);
-
+                uint64_t tmp;
+                sprintf(buf, "%llde-3", value);
+                
+                testSqlStringCastToDecimal_Helper(value,
+                                                  precision,
+                                                  3,
+                                                  buf,
+                                                  src_storage,
+                                                  src_len,
+                                                  false,
+                                                  false);
+                
+                // positive test, rounding
+                if (value < 0) {
+                    tmp = -((-value + 5)/10);
+                } else {
+                    tmp = (value + 5)/10;
+                }
+                testSqlStringCastToDecimal_Helper(tmp,
+                                                  precision,
+                                                  2,
+                                                  buf,
+                                                  src_storage+3,
+                                                  src_len+3,
+                                                  false,
+                                                  false);
+                
+                if (value != 0) {
                     // negative test, out of range
                     testSqlStringCastToDecimal_Helper(value,
                                                       precision,
                                                       4,
                                                       buf,
-                                                      src_storage,
-                                                      src_len,
+                                                      src_storage+3,
+                                                      src_len+3,
                                                       true,
                                                       false);
                 }
+            
 
                 // negative test, out of range
                 if (abs(value) >= 10) {
@@ -2490,18 +2491,16 @@ SqlStringTest::testSqlStringCastToDecimal()
                 }                
 
                 // negative test, "123e"
-                if (src_len >= 3) {
-                    sprintf(buf, "%llde", value);
-                    testSqlStringCastToDecimal_Helper(value,
-                                                      precision,
-                                                      scale,
-                                                      buf,
-                                                      src_storage,
-                                                      src_len,
-                                                      false,
-                                                      true);
-                }
-
+                sprintf(buf, "%llde", value);
+                testSqlStringCastToDecimal_Helper(value,
+                                                  precision,
+                                                  scale,
+                                                  buf,
+                                                  src_storage+1,
+                                                  src_len+1,
+                                                  false,
+                                                  true);
+            
                 // negative test, "a234   "
                 sprintf(buf, "%lld", value);
                 buf[0] = 'a';

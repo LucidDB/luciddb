@@ -27,6 +27,7 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.SqlTypeUtil;
 import org.eigenbase.util.Util;
 
 
@@ -256,6 +257,74 @@ public class RexUtil
             types[i] = exprs[i].getType();
         }
         return types;
+    }
+    
+    /**
+     * Determines whether a {@link RexCall} requires decimal expansion. 
+     * It usually requires expansion if it has decimal operands. 
+     * 
+     * <p>Exceptions to this rule are:
+     * <ul>
+     *   <li>It's okay to cast decimals to and from char types
+     *   <li>It's okay to cast null literals as decimals
+     *   <li>Casts require expansion if their return type is decimal
+     *   <li>Reinterpret casts can handle a decimal operand
+     * </ul>
+     * 
+     * @param call expression possibly in need of expansion
+     * @param recurse whether to check nested calls
+     * @return whether the expression requires expansion
+     */
+    public static boolean requiresDecimalExpansion(
+        RexCall call, 
+        boolean recurse)
+    {
+        if (call.isA(RexKind.Reinterpret)) {
+            return (recurse 
+                && requiresDecimalExpansion(call.operands, recurse));
+        }
+        if (call.isA(RexKind.Cast)) {
+            if (isNullLiteral(call.operands[0], false)) {
+                return false;
+            }
+            
+            RelDataType lhsType = call.getType();
+            RelDataType rhsType = call.operands[0].getType();
+            if (SqlTypeUtil.inCharFamily(lhsType)
+                || SqlTypeUtil.inCharFamily(rhsType)) 
+            {
+                return (recurse 
+                    && requiresDecimalExpansion(call.operands, recurse));
+            }
+            if (SqlTypeUtil.isDecimal(lhsType)) {
+                return true;
+            }
+        }
+        for (int i=0; i < call.operands.length; i++) {
+            if (SqlTypeUtil.isDecimal(call.operands[i].getType())) {
+                return true;
+            }
+        }
+        if (recurse) {
+            return requiresDecimalExpansion(call.operands, recurse);
+        }
+        return false;
+    }
+    
+    /** Determines whether any operand of a set requires decimal expansion */
+    public static boolean requiresDecimalExpansion(
+        RexNode[] operands,
+        boolean recurse)
+    {
+        for (int i=0; i < operands.length; i++) {
+            if (operands[i] instanceof RexCall) {
+                RexCall call = (RexCall) operands[i];
+                if (requiresDecimalExpansion(call, recurse)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
 

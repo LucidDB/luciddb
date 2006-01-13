@@ -168,11 +168,6 @@ void TracingSegment::delegatedCheckpoint(
     DelegatingSegment::delegatedCheckpoint(delegatingSegment,checkpointType);
 }
 
-bool TracingSegment::isTracingSegment() const
-{
-    return true;
-}
-
 FENNEL_END_CPPFILE("$Id$");
 
 // End TracingSegment.cpp

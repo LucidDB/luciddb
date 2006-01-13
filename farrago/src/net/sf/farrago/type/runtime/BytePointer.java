@@ -786,6 +786,23 @@ public class BytePointer extends ByteArrayInputStream
 
     public void cast(long l, int precision)
     {
+        castDecimal(l, precision, 0);
+    }
+    
+    public void cast(EncodedSqlDecimal d, int precision)
+    {
+        castDecimal(d.value, precision, d.getScale());
+    }
+    
+    /**
+     * Casts a decimal into a string.
+     * 
+     * @param l long value of decimal
+     * @param precision maximum length of string
+     * @param scale scale of decimal
+     */
+    private void castDecimal(long l, int precision, int scale)
+    {
         boolean negative = false;
         if (l < 0) {
             l = -l;
@@ -798,6 +815,15 @@ public class BytePointer extends ByteArrayInputStream
         {
             len++;
         }
+        if (scale > 0) {
+            if (len > scale) {
+                len++;
+            } else {
+                // NOTE: for 0.0 instead of .0 make this a +2
+                len = scale + 1;
+            }
+        }
+        int digits = len;
 
         if (negative) {
             len++;
@@ -806,20 +832,24 @@ public class BytePointer extends ByteArrayInputStream
             throw FarragoResource.instance().Overflow.ex();
         }
 
-        if (l == 0) {
+        if (scale == 0 && l == 0) {
             len = 1;
         }
         allocateOwnBytes(len);
-        if (l == 0) {
+        if (scale == 0 && l == 0) {
             ownBytes[0] = (byte) '0';
         } else {
             if (negative) {
                 ownBytes[0] = (byte) '-';
             }
             int i = 0;
-            for (templ=l; templ != 0; i++, templ = templ/10) {
+            for (templ=l; i < digits; i++, templ = templ/10) {
                 int currentDigit = (int) (templ % 10);
                 ownBytes[len - 1 - i] = (byte) ('0' + (char) currentDigit);
+                if (scale > 0 && i == scale - 1) {
+                    i++;
+                    ownBytes[len - 1 - i] = (byte) '.';
+                }
             }
         }
 

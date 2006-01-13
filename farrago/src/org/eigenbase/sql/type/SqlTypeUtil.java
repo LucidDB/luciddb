@@ -372,6 +372,26 @@ public abstract class SqlTypeUtil
     }
 
     /**
+     * @return true if type is one of the integer types
+     */
+    public static boolean isIntType(RelDataType type)
+    {
+        SqlTypeName typeName = type.getSqlTypeName();
+        if (typeName == null) {
+            return false;
+        }
+        switch (typeName.getOrdinal()) {
+        case SqlTypeName.Tinyint_ordinal:
+        case SqlTypeName.Smallint_ordinal:
+        case SqlTypeName.Integer_ordinal:
+        case SqlTypeName.Bigint_ordinal:
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    /**
      * @return true if type is decimal
      */
     public static boolean isDecimal(RelDataType type)
@@ -380,8 +400,19 @@ public abstract class SqlTypeUtil
         if (typeName == null) {
             return false;
         }
-        return (typeName.getOrdinal() == SqlTypeName.Decimal_ordinal);
-        
+        return (typeName.getOrdinal() == SqlTypeName.Decimal_ordinal);   
+    }
+
+    /**
+     * @return true if type is bigint
+     */
+    public static boolean isBigint(RelDataType type)
+    {
+        SqlTypeName typeName = type.getSqlTypeName();
+        if (typeName == null) {
+            return false;
+        }
+        return (typeName.getOrdinal() == SqlTypeName.Bigint_ordinal);   
     }
 
     /**
@@ -535,9 +566,6 @@ public abstract class SqlTypeUtil
         case SqlTypeName.Bigint_ordinal:
         case SqlTypeName.Float_ordinal:
         case SqlTypeName.Real_ordinal:
-            // TODO jvs 10-Oct-2005:  get rid of this once Java
-            // calc supports fixed-point numerics
-        case SqlTypeName.Decimal_ordinal:
         case SqlTypeName.Double_ordinal:
         case SqlTypeName.Symbol_ordinal:
             return true;

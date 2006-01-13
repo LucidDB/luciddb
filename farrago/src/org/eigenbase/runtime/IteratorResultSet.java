@@ -153,7 +153,12 @@ public class IteratorResultSet implements ResultSet
         int scale)
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+        BigDecimal bd = getBigDecimal(columnIndex);
+        if (bd != null) {
+            return bd.setScale(scale, BigDecimal.ROUND_HALF_UP);
+        } else {
+            return null;
+        }
     }
 
     public BigDecimal getBigDecimal(
@@ -161,19 +166,24 @@ public class IteratorResultSet implements ResultSet
         int scale)
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+        BigDecimal bd = getBigDecimal(columnName);
+        if (bd != null) {
+            return bd.setScale(scale, BigDecimal.ROUND_HALF_UP);
+        } else {
+            return null;
+        }
     }
 
     public BigDecimal getBigDecimal(int columnIndex)
         throws SQLException
     {
-        return BigDecimal.valueOf(toLong(getRaw(columnIndex)));
+        return toBigDecimal(getRaw(columnIndex));
     }
 
     public BigDecimal getBigDecimal(String columnName)
         throws SQLException
     {
-        return BigDecimal.valueOf(toLong(getRaw(columnName)));
+        return toBigDecimal(getRaw(columnName));
     }
 
     public InputStream getBinaryStream(int columnIndex)
@@ -1178,15 +1188,36 @@ public class IteratorResultSet implements ResultSet
         } else {
             wasNull = false;
         }
+        // REVIEW: JDBC spec maps the boolean type into the BOOLEAN or BIT type
+        // so it allows conversions from/to numeric types. We treat any non-zero
+        // numeric as true, 0 as false.  Strings are converted based on the
+        // SQL.2003 standard or to a numeric value, and then to a boolean.
         if (o instanceof Boolean) {
             return ((Boolean) o).booleanValue();
-        } else {
-            long value = toLong(o);
-            if (value > 0) {
+        } else if (o instanceof String) {
+            String s = (String) o;
+            s = s.trim();
+            // Allow SQL.2003 boolean literal strings to be converted into
+            // boolean values
+            if (s.equalsIgnoreCase("true")) {
                 return true;
             }
-            return false;
-
+            else if (s.equalsIgnoreCase("false")) {
+                return false;
+            }
+            else if (s.equalsIgnoreCase("unknown")) {
+                // SQL.2003 Part 2, Section 5.13, General Rules 10 specifies
+                // that the literal unknown indicates that boolean truth value
+                // is unknown, represented by null
+                wasNull = true;
+                return false;
+            } else {
+                // Try numeric
+                return (toDouble(o) != 0);
+                //throw newConversionError(o,boolean.class);
+            }
+        } else {
+            return (toDouble(o) != 0);
             //throw newConversionError(o,boolean.class);
         }
     }
@@ -1238,6 +1269,8 @@ public class IteratorResultSet implements ResultSet
             return ((Double) o).doubleValue();
         } else if (o instanceof Float) {
             return ((Float) o).doubleValue();
+        } else if (o instanceof BigDecimal) {
+            return ((BigDecimal) o).doubleValue();
         } else if (o instanceof String) {
             try {
                 return Double.parseDouble(((String) o).trim());
@@ -1263,6 +1296,8 @@ public class IteratorResultSet implements ResultSet
             return ((Float) o).floatValue();
         } else if (o instanceof Double) {
             return ((Double) o).floatValue();
+        } else if (o instanceof BigDecimal) {
+            return ((BigDecimal) o).floatValue();
         } else if (o instanceof String) {
             try {
                 return Float.parseFloat(((String) o).trim());
@@ -1272,6 +1307,28 @@ public class IteratorResultSet implements ResultSet
             }
         } else {
             return (float) toLong_(o);
+        }
+    }
+
+    private BigDecimal toBigDecimal(Object o)
+        throws SQLException
+    {
+        if (o == null) {
+            wasNull = true;
+            return null;
+        } else {
+            wasNull = false;
+        }
+        if (o instanceof BigDecimal) {
+            return (BigDecimal) o;
+        } else if (o instanceof Double) {
+            return BigDecimal.valueOf(((Double) o).doubleValue());
+        } else if (o instanceof Float) {
+            return BigDecimal.valueOf(((Float) o).doubleValue());
+        } else if (o instanceof String) {
+            return new BigDecimal((String) o);
+        } else {
+            return BigDecimal.valueOf(toLong_(o));
         }
     }
 
@@ -1320,6 +1377,8 @@ public class IteratorResultSet implements ResultSet
             return ((Double) o).longValue();
         } else if (o instanceof Float) {
             return ((Float) o).longValue();
+        } else if (o instanceof BigDecimal) {
+            return ((BigDecimal) o).longValue();
         } else if (o instanceof Boolean) {
             if (((Boolean) o).booleanValue()) {
                 return 1;

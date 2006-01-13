@@ -125,12 +125,12 @@ public:
  */
 class DynamicParamExecStreamGenerator : public MockProducerExecStreamGenerator
 {
-    uint dynamicParamId;
+    DynamicParamId dynamicParamId;
     SharedDynamicParamManager paramManager;
 
 public:
     DynamicParamExecStreamGenerator(
-        uint dynamicParamId_,
+        DynamicParamId dynamicParamId_,
         SharedDynamicParamManager paramManager_)
         : dynamicParamId(dynamicParamId_),
           paramManager(paramManager_)

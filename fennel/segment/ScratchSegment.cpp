@@ -123,7 +123,8 @@ CachePage *ScratchSegment::lockPage(
     BlockId blockId,
     LockMode lockMode,
     bool readIfUnmapped,
-    MappedPageListener *pMappedPageListener)
+    MappedPageListener *pMappedPageListener,
+    TxnId txnId)
 {
     StrictMutexGuard mutexGuard(mutex);
     
@@ -137,7 +138,8 @@ CachePage *ScratchSegment::lockPage(
 
 void ScratchSegment::unlockPage(
     CachePage &,
-    LockMode)
+    LockMode,
+    TxnId)
 {
     // ignore; pages remain locked until segment is closed
 }
@@ -189,6 +191,15 @@ void ScratchSegment::setMaxLockedPages(uint nPages)
     StrictMutexGuard mutexGuard(mutex);
     assert(nPages >= pages.size());
     nPagesMax = nPages;
+}
+
+void ScratchSegment::setTxnId(TxnId)
+{
+}
+
+TxnId ScratchSegment::getTxnId() const
+{
+    return IMPLICIT_TXN_ID;
 }
 
 FENNEL_END_CPPFILE("$Id$");

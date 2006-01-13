@@ -23,6 +23,7 @@
 package net.sf.farrago.test;
 
 import java.sql.*;
+import java.math.BigDecimal;
 
 /**
  * FarragoTestUDR contains definitions for user-defined routines used
@@ -54,6 +55,15 @@ public abstract class FarragoTestUDR
             return "nada";
         } else {
             return Integer.toHexString(i.intValue());
+        }
+    }
+
+    public static BigDecimal decimalAbs(BigDecimal dec)
+    {
+        if (dec == null) {
+            return null;
+        } else {
+            return dec.abs();
         }
     }
 

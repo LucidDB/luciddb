@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/collectionTypes.sql#7 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/ddl/collectionTypes.sql#6 $
 0: jdbc:farrago:> -- Test DDL for collection types
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema collectionsTest;
@@ -31,6 +31,11 @@ Error: DDL validation error near line 1, column 14: Target schema "LOCALDB"."COL
 0: jdbc:farrago:> --insert into multisetTable_ic values(0, multiset(select deptno from sales.depts),  multiset['a']);
 0: jdbc:farrago:> --insert into multisetTable_ic values(1,multiset(select deptno from sales.depts), multiset(select name from sales.depts));
 0: jdbc:farrago:> -- insert into multisetTable_ic values(2, multiset[2],null);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- insert with decimals
+0: jdbc:farrago:> create table multisetTable_d(i integer primary key, c decimal(4,1) multiset);
+0: jdbc:farrago:> -- insert into multisetTable_d values(0, multiset['1.4', '4.2', '5.2']);
+0: jdbc:farrago:> -- insert into multisetTable_d values(1, null);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- insert wrong types, must fail
