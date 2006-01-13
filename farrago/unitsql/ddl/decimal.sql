@@ -28,6 +28,9 @@ create table tde3(n integer not null primary key, d decimal(-1));
 -- should give error, negative scale not allowed
 create table tde4(n integer not null primary key, d decimal(5, -2));
 
+-- should give error, precision cannot be 0
+create table tde5(n integer not null primary key, d decimal(0));
+
 -- Test insert into table (decimal)
 insert into td values(1, 2);
 insert into td5 values(1, 3);

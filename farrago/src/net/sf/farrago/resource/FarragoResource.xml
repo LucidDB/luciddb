@@ -165,6 +165,11 @@
 <text>Precision {0,number,#} exceeds maximum of {1,number,#} in definition of {2}</text>
 </exception>
 
+<exception id="420101" name="ValidatorPrecisionMustBePositive"
+    className="org.eigenbase.sql.validate.SqlValidatorException">
+<text>Precision must be positive in definition of {0}</text>
+</exception>
+
 <exception id="420110" name="ValidatorScaleExceeded"
     className="org.eigenbase.sql.validate.SqlValidatorException">
 <text>Scale {0,number,#} exceeds maximum of {1,number,#} in definition of {2}</text>

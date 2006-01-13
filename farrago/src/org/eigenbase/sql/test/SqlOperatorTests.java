@@ -465,7 +465,6 @@ public abstract class SqlOperatorTests extends TestCase
         }
     }
 
-    // TODO: reenable test once we have decided the decimal output type 
     public void testDivideOperator()
     {
         getTester().setFor(SqlStdOperatorTable.divideOperator);
@@ -474,7 +473,7 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkScalarApprox(
                 " cast(10.0 as double) / 5", "DOUBLE NOT NULL", 2.0, 0);
         getTester().checkScalarExact(
-            "10.0 / 5.0", "DECIMAL(19, 16) NOT NULL", "2.0000000000000000");
+            "10.0 / 5.0", "DECIMAL(9, 6) NOT NULL", "2.000000");
         getTester().checkNull("1e1 / cast(null as float)");
     }
 
@@ -1110,7 +1109,9 @@ public abstract class SqlOperatorTests extends TestCase
     {
         getTester().setFor(SqlStdOperatorTable.localTimeFunc);
         getTester().checkScalar("LOCALTIME", timePattern, "TIME(0) NOT NULL");
-        //TODO: getTester().checkFails("LOCALTIME()", "?", SqlTypeName.Time);
+        getTester().checkInvalid(
+            "^LOCALTIME()^",
+            "No match found for function signature LOCALTIME\\(\\)");
         getTester().checkScalar("LOCALTIME(1)", timePattern,
             "TIME(1) NOT NULL");
     }
@@ -1157,6 +1158,9 @@ public abstract class SqlOperatorTests extends TestCase
     {
         getTester().setFor(SqlStdOperatorTable.currentDateFunc);
         getTester().checkScalar("CURRENT_DATE", datePattern, "DATE NOT NULL");
+        getTester().checkInvalid(
+            "^CURRENT_DATE()^",
+            "No match found for function signature CURRENT_DATE\\(\\)");
     }
 
     public void testSubstringFunction()

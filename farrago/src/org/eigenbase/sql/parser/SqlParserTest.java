@@ -538,8 +538,10 @@ public class SqlParserTest extends TestCase
         checkExp("cast(x as integer)", "CAST(`X` AS INTEGER)");
         checkExp("cast(x as varchar(1))", "CAST(`X` AS VARCHAR(1))");
         checkExp("cast(x as date)", "CAST(`X` AS DATE)");
-        checkExp("cast(x as time)", "CAST(`X` AS TIME(0))");
-        checkExp("cast(x as timestamp)", "CAST(`X` AS TIMESTAMP(0))");
+        checkExp("cast(x as time)", "CAST(`X` AS TIME)");
+        checkExp("cast(x as timestamp)", "CAST(`X` AS TIMESTAMP)");
+        checkExp("cast(x as time(0))", "CAST(`X` AS TIME(0))");
+        checkExp("cast(x as timestamp(0))", "CAST(`X` AS TIMESTAMP(0))");
         checkExp("cast(x as decimal(1,1))", "CAST(`X` AS DECIMAL(1, 1))");
         checkExp("cast(x as char(1))", "CAST(`X` AS CHAR(1))");
         checkExp("cast(x as binary(1))", "CAST(`X` AS BINARY(1))");
@@ -549,6 +551,8 @@ public class SqlParserTest extends TestCase
         checkExp("cast(x as bigint)", "CAST(`X` AS BIGINT)");
         checkExp("cast(x as real)", "CAST(`X` AS REAL)");
         checkExp("cast(x as double)", "CAST(`X` AS DOUBLE)");
+        checkExp("cast(x as decimal)", "CAST(`X` AS DECIMAL)");
+        checkExp("cast(x as decimal(0))", "CAST(`X` AS DECIMAL(0))");
         checkExp("cast(x as decimal(1,2))", "CAST(`X` AS DECIMAL(1, 2))");
 
         checkExp("cast('foo' as bar)", "CAST('foo' AS `BAR`)");

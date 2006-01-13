@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/ddl/decimal.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/ddl/decimal.sql#2 $
 0: jdbc:farrago:> -- Throws unsupported types at the system, to make sure the errors are
 0: jdbc:farrago:> -- civilized.
 0: jdbc:farrago:> 
@@ -35,6 +35,10 @@ Was expecting:
 Error: org.eigenbase.sql.parser.SqlParseException: Encountered "-" at line 1, column 64.
 Was expecting:
     <UNSIGNED_INTEGER_LITERAL> ... (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should give error, precision cannot be 0
+0: jdbc:farrago:> create table tde5(n integer not null primary key, d decimal(0));
+Error: DDL validation error near line 1, column 51: Precision must be positive in definition of column "D" (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Test insert into table (decimal)
 0: jdbc:farrago:> insert into td values(1, 2);

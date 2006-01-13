@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/datetime.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/ddl/datetime.sql#3 $
 0: jdbc:farrago:> -- test datetime ddl.
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema tempo;
@@ -9,6 +9,12 @@
 . . . . . . . . >     datecol date default date '2002-05-23',
 . . . . . . . . >     timecol time default time '12:09:22',
 . . . . . . . . >     timestampcol timestamp default timestamp '2002-05-23 12:09:22');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table datetime2(
+. . . . . . . . >     col1 int not null primary key,
+. . . . . . . . >     datecol date default date '2002-05-23',
+. . . . . . . . >     timecol time(0) default time '12:09:22',
+. . . . . . . . >     timestampcol timestamp(0) default timestamp '2002-05-23 12:09:22');
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- real values
 0: jdbc:farrago:> insert into datetime1(col1,datecol,timecol,timestampcol) 

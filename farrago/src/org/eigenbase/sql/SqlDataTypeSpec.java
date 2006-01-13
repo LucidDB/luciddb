@@ -197,11 +197,11 @@ public class SqlDataTypeSpec extends SqlNode
             // we have a built-in data type
             writer.keyword(name);
 
-            if (sqlTypeName.allowsPrec()) {
+            if (sqlTypeName.allowsPrec() && precision >= 0) {
                 final SqlWriter.Frame frame =
                     writer.startList(SqlWriter.FrameType.FunCall, "(", ")");
                 writer.print(precision);
-                if (sqlTypeName.allowsScale()) {
+                if (sqlTypeName.allowsScale() && scale >= 0) {
                     writer.sep(",", true);
                     writer.print(scale);
                 }
@@ -286,10 +286,10 @@ public class SqlDataTypeSpec extends SqlNode
 
         // TODO jvs 13-Dec-2004:  these assertions should be real
         // validation errors instead; need to share code with DDL
-        if ((precision > 0) && (scale > 0)) {
+        if ((precision >= 0) && (scale >= 0)) {
             assert(sqlTypeName.allowsPrecScale(true, true));
             type = typeFactory.createSqlType(sqlTypeName, precision, scale);
-        } else if (precision > 0) {
+        } else if (precision >= 0) {
             assert(sqlTypeName.allowsPrecNoScale());
             type = typeFactory.createSqlType(sqlTypeName, precision);
         } else {
