@@ -97,6 +97,7 @@ public class FarragoJavaUdxRel extends TableFunctionRelBase
             new AllocationExpression(
                 OJUtil.typeNameForClass(FarragoJavaUdxIterator.class),
                 new ExpressionList(
+                    implementor.getConnectionVariable(),
                     new ClassLiteral(TypeName.forOJClass(outputRowClass))),
                 memberList);
 

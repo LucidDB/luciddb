@@ -30,6 +30,7 @@ import net.sf.farrago.trace.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.session.*;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
@@ -54,7 +55,7 @@ public class FarragoIteratorResultSet extends IteratorResultSet
 
     //~ Instance fields -------------------------------------------------------
 
-    private FarragoAllocation allocation;
+    private FarragoSessionRuntimeContext runtimeContext;
     private RelDataType rowType;
 
     //~ Constructors ----------------------------------------------------------
@@ -65,17 +66,17 @@ public class FarragoIteratorResultSet extends IteratorResultSet
      * @param iterator underlying iterator
      * @param clazz Class for objects which iterator will produce
      * @param rowType type info for rows produced
-     * @param allocation object to close when this ResultSet is closed
+     * @param runtimeContext runtime context for this execution
      */
     public FarragoIteratorResultSet(
         Iterator iterator,
         Class clazz,
         RelDataType rowType,
-        FarragoAllocation allocation)
+        FarragoSessionRuntimeContext runtimeContext)
     {
         super(iterator, new SyntheticColumnGetter(clazz));
         this.rowType = rowType;
-        this.allocation = allocation;
+        this.runtimeContext = runtimeContext;
         if (tracer.isLoggable(Level.FINE)) {
             tracer.fine(toString());
         }
@@ -90,6 +91,9 @@ public class FarragoIteratorResultSet extends IteratorResultSet
         try {
             if (tracer.isLoggable(Level.FINE)) {
                 tracer.fine(toString());
+            }
+            if (runtimeContext != null) {
+                runtimeContext.checkCancel();
             }
             return super.next();
         } catch (Throwable ex) {
@@ -112,11 +116,11 @@ public class FarragoIteratorResultSet extends IteratorResultSet
         if (tracer.isLoggable(Level.FINE)) {
             tracer.fine(toString());
         }
-        if (allocation != null) {
+        if (runtimeContext != null) {
             // NOTE:  this may be called reentrantly for daemon stmts,
             // so need special handling
-            FarragoAllocation allocationToClose = allocation;
-            allocation = null;
+            FarragoAllocation allocationToClose = runtimeContext;
+            runtimeContext = null;
             allocationToClose.closeAllocation();
         }
         super.close();

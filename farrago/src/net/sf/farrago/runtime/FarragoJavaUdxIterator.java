@@ -22,6 +22,7 @@
 package net.sf.farrago.runtime;
 
 import net.sf.farrago.type.runtime.*;
+import net.sf.farrago.session.*;
 
 import org.eigenbase.util.*;
 import org.eigenbase.runtime.*;
@@ -46,10 +47,16 @@ public abstract class FarragoJavaUdxIterator
 
     private final PreparedStatement resultInserter;
 
+    private final FarragoSessionRuntimeContext runtimeContext;
+
     private int iRow;
 
-    protected FarragoJavaUdxIterator(Class rowClass)
+    protected FarragoJavaUdxIterator(
+        FarragoSessionRuntimeContext runtimeContext,
+        Class rowClass)
     {
+        this.runtimeContext = runtimeContext;
+        
         // TODO jvs 8-Jan-2006: enhance QueueIterator to support queue sizes
         // greater than 1.  For now, since the the queue size is 1, we
         // construct a circular array of 2 here: one for the producer thread to
@@ -108,6 +115,7 @@ public abstract class FarragoJavaUdxIterator
         public int executeUpdate()
             throws SQLException
         {
+            runtimeContext.checkCancel();
             put(getCurrentRow());
             ++iRow;
             if (iRow >= rowObjs.length) {
