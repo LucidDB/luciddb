@@ -436,6 +436,18 @@ public class DdlValidator extends FarragoCompoundAllocation
     }
 
     /**
+     * Returns RENAME TO argument of CREATE OR REPLACE.
+     * @return new name of object, or null if this is not a CREATE OR REPLACE or RENAME TO.
+     */
+    private SqlIdentifier getNewName()
+    {
+        if (ddlStmt instanceof DdlCreateStmt) {
+            return (((DdlCreateStmt) ddlStmt).getReplaceOptions().getNewName());
+        }
+        return null;        
+    }
+    
+    /**
      * Tests if DDL statement is CREATE OR REPLACE and the target object
      * (to be replaced) is of the specified type.
      * @param object Object type to test for
@@ -466,9 +478,27 @@ public class DdlValidator extends FarragoCompoundAllocation
     {
         if (replacementTarget != null) {
             Set deps = getDependencies(replacementTarget);
-            scheduleRevalidation(deps);
+
+            // also revalidate dependencies of children (owned by rootElement)
+            if (replacementTarget instanceof CwmNamespace) {
+                Collection children = ((CwmNamespace)replacementTarget).getOwnedElement();
+                if (children != null) {
+                    Iterator j = children.iterator();
+                    while (j.hasNext()) {
+                        CwmModelElement e = (CwmModelElement)j.next();
+                        deps.addAll(getDependencies(e));
+                    }
+                }
+            }
             
-            stopListening();            
+            scheduleRevalidation(deps);
+
+            SqlIdentifier newName = getNewName();
+            if (newName != null) {
+                newElement.setName(newName.getSimple());
+            }
+            
+            stopListening(); 
             // special cases - FemBaseColumnSet, FemDataServer
             Iterator i = deps.iterator();
             while (i.hasNext()) {
@@ -1297,26 +1327,23 @@ public class DdlValidator extends FarragoCompoundAllocation
     public Set getDependencies(CwmModelElement rootElement)
     {
         HashSet result = new HashSet();
+
         DependencySupplier s =
             getRepos().getCorePackage().getDependencySupplier();
         Collection deps = s.getSupplierDependency(rootElement);
-
-        if (deps != null) {
-            Iterator i = deps.iterator();
-            while (i.hasNext()) {
-                Object o = i.next();
-                if (o instanceof CwmDependency) {
-                    CwmDependency dep = (CwmDependency) o;
-                    Collection c = dep.getClient();
-                    Iterator i2 = c.iterator();
-                    while (i2.hasNext()) {
-                        CwmModelElement e = (CwmModelElement)i2.next();
-                        result.add(e);
-                    }
+        Iterator i = deps.iterator();
+        while (i.hasNext()) {
+            Object o = i.next();
+            if (o instanceof CwmDependency) {
+                CwmDependency dep = (CwmDependency) o;
+                Collection c = dep.getClient();
+                Iterator i2 = c.iterator();
+                while (i2.hasNext()) {
+                    CwmModelElement e = (CwmModelElement)i2.next();
+                    result.add(e);
                 }
             }
-        }
-
+        }        
         return result;
     }
 
