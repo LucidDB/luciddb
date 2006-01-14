@@ -52,19 +52,7 @@ public class FarragoOJRexReinterpretImplementor
     // implement OJRexImplementor
     public boolean canImplement(RexCall call)
     {
-        if (call.isA(RexKind.Reinterpret))
-        {
-            RelDataType fromType = call.getType();
-            RelDataType toType = call.operands[0].getType();
-            if ((SqlTypeUtil.isDecimal(fromType) 
-                    && SqlTypeUtil.isBigint(toType))
-                || (SqlTypeUtil.isBigint(fromType)
-                    && SqlTypeUtil.isDecimal(toType))) 
-            {
-                return true;
-            }
-        }
-        return false;
+        return call.isA(RexKind.Reinterpret);
     }
     
     // implement FarragoOJRexImplementor
@@ -75,11 +63,10 @@ public class FarragoOJRexReinterpretImplementor
     {
         Util.pre(call.isA(RexKind.Reinterpret),
             "call.isA(RexKind.Reinterpret)");
-        Util.pre(operands.length == 2, "operands.length == 2");
-        Util.pre(call.operands.length == 2, "call.operands.length == 2");
 
         RelDataType retType = call.getType();
         if (SqlTypeUtil.isDecimal(retType)) {
+            // assignment from long to decimal
             Variable varResult = translator.createScratchVariable(retType);
             translator.addStatement(
                 new ExpressionStatement(
@@ -87,6 +74,8 @@ public class FarragoOJRexReinterpretImplementor
                         varResult,
                         EncodedSqlDecimal.REINTERPRET_METHOD_NAME, 
                         new ExpressionList(operands[0], operands[1]))));
+            checkNullability(
+                translator, retType, call.operands[0], operands[0]);
             return varResult;
         }
         
@@ -94,7 +83,43 @@ public class FarragoOJRexReinterpretImplementor
             "SqlTypeUtil.isIntType(retType)");
         Util.pre(SqlTypeUtil.isDecimal(call.operands[0].getType()),
             "SqlTypeUtil.isDecimal(call.operands[0].getType())");
+        if (retType.isNullable()) {
+            // assignment from decimal to nullable long
+            Variable varResult = translator.createScratchVariable(retType);
+            translator.addStatement(
+                new ExpressionStatement(
+                    new MethodCall(
+                        operands[0],
+                        EncodedSqlDecimal.ASSIGN_TO_METHOD_NAME, 
+                        new ExpressionList(varResult))));
+            return varResult;
+        }
         return super.implementFarrago(translator, call, operands);
+    }
+
+    /**
+     * Inserts a null test if a value is nullable, but a target type 
+     * is not.
+     */
+    private void checkNullability(
+        FarragoRexToOJTranslator translator,
+        RelDataType targetType,
+        RexNode rexValue,
+        Expression javaValue)
+    {
+        ExpressionStatement nullTest = null;
+        if (!targetType.isNullable() && rexValue.getType().isNullable()) {
+            nullTest = 
+                new ExpressionStatement(
+                    new MethodCall(
+                        translator.getRelImplementor()
+                        .getConnectionVariable(),
+                        "checkNotNull",
+                        new ExpressionList(
+                            Literal.makeLiteral(rexValue.toString()),
+                            javaValue)));
+            translator.addStatement(nullTest);
+        }
     }
 }
 

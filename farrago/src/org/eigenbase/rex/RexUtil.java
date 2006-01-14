@@ -279,36 +279,35 @@ public class RexUtil
         RexCall call, 
         boolean recurse)
     {
+        boolean required = call.getOperator().requiresDecimalExpansion();
         if (call.isA(RexKind.Reinterpret)) {
-            return (recurse 
-                && requiresDecimalExpansion(call.operands, recurse));
-        }
-        if (call.isA(RexKind.Cast)) {
+            required = false;
+        } else if (call.isA(RexKind.Cast)) {
             if (isNullLiteral(call.operands[0], false)) {
                 return false;
             }
-            
             RelDataType lhsType = call.getType();
             RelDataType rhsType = call.operands[0].getType();
             if (SqlTypeUtil.inCharFamily(lhsType)
                 || SqlTypeUtil.inCharFamily(rhsType)) 
             {
-                return (recurse 
-                    && requiresDecimalExpansion(call.operands, recurse));
-            }
-            if (SqlTypeUtil.isDecimal(lhsType)) {
+                required = false;
+            } else if (SqlTypeUtil.isDecimal(lhsType)
+                && lhsType != rhsType) 
+            {
                 return true;
             }
         }
-        for (int i=0; i < call.operands.length; i++) {
-            if (SqlTypeUtil.isDecimal(call.operands[i].getType())) {
-                return true;
+        
+        if (required) {
+            for (int i=0; i < call.operands.length; i++) {
+                if (SqlTypeUtil.isDecimal(call.operands[i].getType())) {
+                    return true;
+                }
             }
         }
-        if (recurse) {
-            return requiresDecimalExpansion(call.operands, recurse);
-        }
-        return false;
+        return (
+            recurse && requiresDecimalExpansion(call.operands, recurse));
     }
     
     /** Determines whether any operand of a set requires decimal expansion */
@@ -325,6 +324,26 @@ public class RexUtil
             }
         }
         return false;
+    }
+    
+    /**
+     * Replaces the operands of a call. The new operands' types must match 
+     * the old operands' types.
+     */
+    public static RexCall replaceOperands(RexCall call, RexNode[] operands)
+    {
+        if (call.operands == operands) {
+            return call;
+        }
+        for (int i = 0; i < operands.length; i++) {
+            RelDataType oldType = call.operands[i].getType();
+            RelDataType newType = operands[i].getType();
+            if (!oldType.isNullable() && newType.isNullable()) {
+                throw Util.newInternal("invalid nullability"); 
+            }
+            assert(oldType.toString().equals(newType.toString()));
+        }
+        return new RexCall(call.getType(), call.getOperator(), operands);
     }
 }
 

@@ -230,8 +230,7 @@ values null_preserving_int_to_hex_string(255);
 -- this should return null
 values null_preserving_int_to_hex_string(cast(null as integer));
 
--- FIXME: Hangs
--- values decimal_abs(-54.1234);
+    values decimal_abs(-54.1234);
 
 values atoi('451');
 

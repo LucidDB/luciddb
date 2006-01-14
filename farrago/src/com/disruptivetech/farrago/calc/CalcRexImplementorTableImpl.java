@@ -32,6 +32,7 @@ import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.type.SqlTypeUtil;
 import org.eigenbase.util.DoubleKeyMap;
 import org.eigenbase.util.Util;
+import org.eigenbase.util14.*;
 
 import java.math.*;
 import java.util.*;
@@ -1183,6 +1184,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 translator.implementNode(call.operands[0]);
             if (call.operands[1].isAlwaysTrue()) {
                 // NOTE: perform overflow check
+                // if value is null goto endCheck
                 // boolean overflowed = ( abs(value) >= overflowValue )
                 // jumpFalse overflowed endCheck
                 // throw overflow exception
@@ -1190,11 +1192,11 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 // NOTE: translator does not reimplement the same rex node
                 RexNode overflowValue = 
                     translator.rexBuilder.makeExactLiteral(
-                        BigDecimal.valueOf(
-                            Util.powerOfTen(
+                        new BigDecimal(
+                            NumberUtil.getMaxUnscaled(
                                 call.getType().getPrecision())));
                 RexNode comparison = translator.rexBuilder.makeCall(
-                    opTab.greaterThanOrEqualOperator,
+                    opTab.greaterThanOperator,
                     translator.rexBuilder.makeCall(
                         opTab.absFunc,
                         call.operands[0]),
