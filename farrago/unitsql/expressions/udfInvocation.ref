@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/expressions/udfInvocation.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/expressions/udfInvocation.sql#4 $
 0: jdbc:farrago:> -- Test queries with UDF invocations
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema udftest;
@@ -350,8 +350,12 @@ Error: Target "I" cannot be assigned null value (state=,code=0)
 |         |
 +---------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- FIXME: Hangs
-0: jdbc:farrago:> -- values decimal_abs(-54.1234);
+0: jdbc:farrago:>     values decimal_abs(-54.1234);
++----------+
+|  EXPR$0  |
++----------+
+| 54.1234  |
++----------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values atoi('451');
 +---------+

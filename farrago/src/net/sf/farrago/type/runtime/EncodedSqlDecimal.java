@@ -36,31 +36,34 @@ import net.sf.farrago.resource.FarragoResource;
  * 
  * <ul>
  *   <li>A decimal may be casted to or from strings. 
+ *   <li>A decimal may be assigned from another decimal
  *   <li>A decimal may be reinterpreted to or from its
  *       internal representation, a long value.
  * </ul> 
  * 
  * The optimizer does not allow other operations to reach to the 
- * Farrago runtime. This class extends a primitive type so that it 
- * is easily assigned to and from its internal representation. As 
- * usual, the <code>getNullableData</code> method returns an 
- * external data type, conforming to SQL standards.
+ * Farrago runtime. As usual, the method <code>getNullableData</code> 
+ * returns an external data type, conforming to SQL standards.
  *
  * @author jpham
  * @since Dec 21, 2005
  * @version $Id$
  **/
-public abstract class EncodedSqlDecimal 
-    extends NullablePrimitive.NullableLong
+public abstract class EncodedSqlDecimal implements AssignableValue
 {
     //~ Static fields -------------------------------------------------------
 
     public static final String GET_PRECISION_METHOD_NAME = "getPrecision";
     public static final String GET_SCALE_METHOD_NAME = "getScale";
     public static final String REINTERPRET_METHOD_NAME = "reinterpret";
+    public static final String ASSIGN_TO_METHOD_NAME = "assignTo";
+    public static final String VALUE_FIELD_NAME = "value";
     
     //~ Constructors ----------------------------------------------------------
 
+    private boolean isNull;
+    public long value;
+    private AssignableDecimal helper;
     private long overflowValue = 0;
     
     /**
@@ -68,11 +71,12 @@ public abstract class EncodedSqlDecimal
      */
     public EncodedSqlDecimal()
     {
+        helper = new AssignableDecimal(this);
+
         // NOTE: overflowValue depends on an abstract method. The use of 
         // an abstract method inside a constructor may cause problems for 
         // Java interpreters, so save initialization of overflowValue 
         // for later.
-        super();
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -87,39 +91,26 @@ public abstract class EncodedSqlDecimal
      */
     protected abstract int getScale();
 
-    protected void setNumber(Number number)
-    {
-        BigDecimal bd = NumberUtil.toBigDecimal(number, getScale());
-
-        // Check Overflow
-        BigInteger usv = bd.unscaledValue();
-        long usvl = usv.longValue();
-        if (usv.equals(BigInteger.valueOf(usvl))) {
-            reinterpret(usvl, true);
-        } else {
-            throw FarragoResource.instance().Overflow.ex();
-        }
+    // implement NullableValue
+    public boolean isNull() {
+        return isNull;
     }
-
+    
+    // implement NullableValue
+    public void setNull(boolean b) {
+        isNull = b;
+    }
+    
     // implement AssignableValue
     public void assignFrom(Object obj) 
     {
-        if (obj == null) {
-            setNull(true);
-        } else if (obj instanceof EncodedSqlDecimal) {
-            EncodedSqlDecimal decimal = (EncodedSqlDecimal) obj;
-            setNull(decimal.isNull());
-            value = decimal.value;
-        } else {
-            super.assignFrom(obj);
-        }
-    }
+        helper.assignFrom(obj);
+   }
     
     // implement AssignableValue
     public void assignFrom(long l)
     {
-        // NOTE: this is a quicker, cheaper version of assignment 
-        // for the common case
+        // NOTE: this is used internally and for decimal literals
         setNull(false);
         value = l;
     }
@@ -138,14 +129,13 @@ public abstract class EncodedSqlDecimal
      * 
      * @param value value to be encoded as an EncodedSqlDecimal
      * @param overflowCheck whether to check for overflow
-     * 
-     * @return this, an EncodedSqlDecimal whose value has been set
      */
     public void reinterpret(long value, boolean overflowCheck) 
     {
         if (overflowCheck && getPrecision() < 19) {
             if (overflowValue == 0) {
-                overflowValue = Util.powerOfTen(getPrecision());
+                overflowValue = BigInteger.TEN.pow(
+                    getPrecision()).longValue();
             }
             if (Math.abs(value) >= overflowValue) {
                 throw FarragoResource.instance().Overflow.ex();
@@ -163,6 +153,58 @@ public abstract class EncodedSqlDecimal
             return;
         }
         reinterpret(primitive.value, overflowCheck);
+    }
+    
+    public void assignTo(NullablePrimitive.NullableLong target)
+    {
+        target.setNull(isNull());
+        target.value = this.value;
+    }
+    
+    /**
+     * Class which assigns a value to an {@link EncodedSqlDecimal}.
+     */
+    public class AssignableDecimal extends NullablePrimitive.NullableLong
+    {
+        EncodedSqlDecimal parent;
+        
+        public AssignableDecimal(EncodedSqlDecimal parent)
+        {
+            this.parent = parent;
+        }
+        
+        public void setNull(boolean b)
+        {
+            parent.setNull(b);
+        }
+        
+        protected void setNumber(Number number)
+        {
+            BigDecimal bd = NumberUtil.toBigDecimal(number, getScale());
+
+            // Check Overflow
+            BigInteger usv = bd.unscaledValue();
+            long usvl = usv.longValue();
+            if (usv.equals(BigInteger.valueOf(usvl))) {
+                parent.reinterpret(usvl, true);
+            } else {
+                throw FarragoResource.instance().Overflow.ex();
+            }
+        }
+
+        // implement AssignableValue
+        public void assignFrom(Object obj) 
+        {
+            if (obj == null) {
+                parent.setNull(true);
+            } else if (obj instanceof EncodedSqlDecimal) {
+                EncodedSqlDecimal decimal = (EncodedSqlDecimal) obj;
+                parent.setNull(decimal.isNull());
+                parent.value = decimal.value;
+            } else {
+                super.assignFrom(obj);
+            }
+        }
     }
 }
 

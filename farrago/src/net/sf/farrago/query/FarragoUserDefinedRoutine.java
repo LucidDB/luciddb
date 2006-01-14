@@ -477,6 +477,11 @@ public class FarragoUserDefinedRoutine
         }
     }
     
+    public boolean requiresDecimalExpansion() 
+    {
+        return false;
+    }
+    
     private static final String RETURN_PREFIX = "RETURN ";
 
     public static String removeReturnPrefix(String body)

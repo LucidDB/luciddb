@@ -141,6 +141,18 @@ class ExecStreamSubFactory_lu
         pEmbryo->init(new LcsRowScanExecStream(), params);
     }
 
+    // implement FemVisitor
+    virtual void visit(ProxyLbmGeneratorStreamDef &streamDef)
+    {
+
+    }
+
+    // implement FemVisitor
+    virtual void visit(ProxyLbmSplicerStreamDef &streamDef)
+    {
+
+    }
+
     // implement JniProxyVisitor
     virtual void unhandledVisit()
     {

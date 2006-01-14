@@ -585,6 +585,15 @@ public abstract class SqlOperator
     {
         return false;
     }
+    
+    /**
+     * Method to check if call requires expansion when it has decimal 
+     * operands. The default implementation is to return true.
+     */
+    public boolean requiresDecimalExpansion()
+    {
+        return true;
+    }
 }
 
 
