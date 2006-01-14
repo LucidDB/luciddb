@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/regressionsql/selectAdvanced.sql#5 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/regressionsql/selectAdvanced.sql#6 $
 0: jdbc:farrago:> -- Full vertical system testing of advanced select statements
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
@@ -284,7 +284,43 @@ Error: Cast function cannot convert value of type INTEGER to type VARBINARY(1) (
 +---------+
 | true    |
 +---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- a few decimal tests
+0: jdbc:farrago:> create table s.nulldecimal(c decimal(4,2) primary key, d decimal(6,0));
+0: jdbc:farrago:> insert into s.nulldecimal values (19, null);
+0: jdbc:farrago:> insert into s.nulldecimal values (20, 20);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail
+0: jdbc:farrago:> insert into s.nulldecimal values (null, 20);
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=8 Code=22004 (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test whether nullability flags are read correctly
+0: jdbc:farrago:> -- the first column should be detected as not nullable
+0: jdbc:farrago:> -- while the second column should be detected as nullable
+0: jdbc:farrago:> select d from s.nulldecimal;
++-----+
+|  D  |
++-----+
+|     |
+| 20  |
++-----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- the type of (d*1.0) is decimal(7,1)
+0: jdbc:farrago:> -- casting to decimal(6,1) requires an overflow check
+0: jdbc:farrago:> -- this tests whether the overflow check works with null values
+0: jdbc:farrago:> select cast((d * 1.0) as decimal(6,1)) from s.nulldecimal;
++---------+
+| EXPR$0  |
++---------+
+|         |
+| 20.0    |
++---------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> drop table s.b;
+0: jdbc:farrago:> drop table s.nulldecimal;
 0: jdbc:farrago:> drop schema s;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

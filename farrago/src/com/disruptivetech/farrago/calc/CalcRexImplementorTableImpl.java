@@ -1183,13 +1183,22 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             CalcProgramBuilder.Register value = 
                 translator.implementNode(call.operands[0]);
             if (call.operands[1].isAlwaysTrue()) {
-                // NOTE: perform overflow check
-                // if value is null goto endCheck
-                // boolean overflowed = ( abs(value) >= overflowValue )
-                // jumpFalse overflowed endCheck
-                // throw overflow exception
-                // endCheck
-                // NOTE: translator does not reimplement the same rex node
+                // perform overflow check:
+                //     if (value is null) goto [endCheck]
+                //     bool overflowed = ( abs(value) >= overflowValue )
+                //     if (!overflowed) goto [endCheck]
+                //     throw overflow exception
+                // [endCheck]
+                String endCheck = translator.newLabel();
+                if (call.operands[0].getType().isNullable()) {
+                    RexNode nullCheck = 
+                        translator.rexBuilder.makeCall(
+                            opTab.isNullOperator,
+                            call.operands[0]);
+                    CalcProgramBuilder.Register isNull = 
+                        translator.implementNode(nullCheck);
+                    translator.builder.addLabelJumpTrue(endCheck, isNull);
+                }
                 RexNode overflowValue = 
                     translator.rexBuilder.makeExactLiteral(
                         new BigDecimal(
@@ -1203,7 +1212,6 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                     overflowValue);
                 CalcProgramBuilder.Register overflowed = 
                     translator.implementNode(comparison);
-                String endCheck = translator.newLabel();
                 translator.builder.addLabelJumpFalse(endCheck, overflowed);
                 CalcProgramBuilder.Register errorMsg =
                     translator.builder.newVarcharLiteral(
