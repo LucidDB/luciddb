@@ -114,8 +114,6 @@ public abstract class SqlOperatorTests extends TestCase
 
     public static final String literalOutOfRangeMessage =
             "(?s).*Numeric literal.*out of range.*";
-    public static final String castNotSupportedMessage =
-            "(?s).*Cast function cannot convert value of type .* to type .*";
 
     /**
      * Regular expression for a SQL TIME(0) value.
@@ -276,10 +274,6 @@ public abstract class SqlOperatorTests extends TestCase
                 checkCastFails(maxOverflowNumericStrings[i], type, outOfRangeMessage);
                 checkCastFails(minOverflowNumericStrings[i], type, outOfRangeMessage);
             }
-
-            // invalid casts
-            checkCastFails(maxNumericStrings[i], "boolean", castNotSupportedMessage);
-            checkCastFails("true",type, castNotSupportedMessage);
         }
 
         getTester().checkScalarExact("cast(1.0 as bigint)", "BIGINT NOT NULL", "1");

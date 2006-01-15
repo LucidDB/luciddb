@@ -733,6 +733,13 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpFails("cast(43 as decimal(0,2))",
             "(?s).*Precision must be positive.*");
         }
+
+        checkExpFails("cast(1 as boolean)",
+            "(?s).*Cast function cannot convert value of type INTEGER to type BOOLEAN.*");
+        checkExpFails("cast(1.0e1 as boolean)",
+            "(?s).*Cast function cannot convert value of type DOUBLE to type BOOLEAN.*");
+        checkExpFails("cast(true as numeric)",
+            "(?s).*Cast function cannot convert value of type BOOLEAN to type DECIMAL.*");
     }
 
     public void testDateTime() {
