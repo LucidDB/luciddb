@@ -96,7 +96,7 @@ public abstract class SqlOperatorTests extends TestCase
     /**
      * Remove this constant when dtbug 242 has been fixed.
      */
-    public static final boolean dtbug242Fixed = false;
+    public static final boolean dtbug242Fixed = true;
 
     /**
      * Whether <a href="http://jirahost.eigenbase.org:8080/browse/FNL-3">issue
@@ -105,10 +105,17 @@ public abstract class SqlOperatorTests extends TestCase
     public static final boolean issueFnl3Fixed = false;
 
     // TODO: Change message when issueFnl3Fixed to something like
+    // "Invalid character for cast: PC=0 Code=22018"
+    public static final String invalidCharMessage = "(?s).*";
+
+    // TODO: Change message when issueFnl3Fixed to something like
     // "Overflow during calculation or cast: PC=0 Code=22003"
     public static final String outOfRangeMessage = "(?s).*";
 
-    public static final String literalOutOfRangeMessage = "(?s).*Numeric literal.*out of range.*";
+    public static final String literalOutOfRangeMessage =
+            "(?s).*Numeric literal.*out of range.*";
+    public static final String castNotSupportedMessage =
+            "(?s).*Cast function cannot convert value of type .* to type .*";
 
     /**
      * Regular expression for a SQL TIME(0) value.
@@ -250,7 +257,7 @@ public abstract class SqlOperatorTests extends TestCase
 
         // Test casting for min,max, out of range for numeric types
         // TODO: Fix test for decimal and approx types
-        for (int i = 0; i < 4/*numericTypeNames.length*/; i++) {
+        for (int i = 0; i < 5/*numericTypeNames.length*/; i++) {
             String type = numericTypeNames[i];
             if (type.equalsIgnoreCase("BIGINT")) {
                 checkCastToScalarOkay(maxNumericStrings[i], type);
@@ -269,6 +276,10 @@ public abstract class SqlOperatorTests extends TestCase
                 checkCastFails(maxOverflowNumericStrings[i], type, outOfRangeMessage);
                 checkCastFails(minOverflowNumericStrings[i], type, outOfRangeMessage);
             }
+
+            // invalid casts
+            checkCastFails(maxNumericStrings[i], "boolean", castNotSupportedMessage);
+            checkCastFails("true",type, castNotSupportedMessage);
         }
 
         getTester().checkScalarExact("cast(1.0 as bigint)", "BIGINT NOT NULL", "1");
@@ -380,18 +391,44 @@ public abstract class SqlOperatorTests extends TestCase
                     "3.23000000E+00", "VARCHAR(20) NOT NULL");
         }
 
-        if (dtbug242Fixed) {
-            // boolean to string
-            getTester().checkString(
-                "cast(true as char(8))", "true    ", "CHAR(8) NOT NULL");
-            getTester().checkString(
-                "cast(false as char(8))", "false   ", "CHAR(8) NOT NULL");
+        // boolean to string (char)
+        getTester().checkString(
+            "cast(true as char(4))", "TRUE", "CHAR(4) NOT NULL");
+        getTester().checkString(
+            "cast(false as char(5))", "FALSE", "CHAR(5) NOT NULL");
+        getTester().checkString(
+            "cast(true as char(8))", "TRUE    ", "CHAR(8) NOT NULL");
+        getTester().checkString(
+            "cast(false as char(8))", "FALSE   ", "CHAR(8) NOT NULL");
+        getTester().checkFails("cast(true as char(3))", invalidCharMessage);
+        getTester().checkFails("cast(false as char(4))", invalidCharMessage);
 
-            // string to boolean
-            getTester().checkBoolean("cast('true' as boolean)", Boolean.TRUE);
-            getTester().checkBoolean("cast('false' as boolean)", Boolean.FALSE);
-            getTester().checkFails("cast('blah' as boolean", "message");
-        }
+        // boolean to string (varchar)
+        getTester().checkString(
+            "cast(true as varchar(4))", "TRUE", "VARCHAR(4) NOT NULL");
+        getTester().checkString(
+            "cast(false as varchar(5))", "FALSE", "VARCHAR(5) NOT NULL");
+        getTester().checkString(
+            "cast(true as varchar(8))", "TRUE", "VARCHAR(8) NOT NULL");
+        getTester().checkString(
+            "cast(false as varchar(8))", "FALSE", "VARCHAR(8) NOT NULL");
+        getTester().checkFails("cast(true as varchar(3))", invalidCharMessage);
+        getTester().checkFails("cast(false as varchar(4))", invalidCharMessage);
+
+        // string to boolean
+        getTester().checkBoolean("cast('true' as boolean)", Boolean.TRUE);
+        getTester().checkBoolean("cast('false' as boolean)", Boolean.FALSE);
+        getTester().checkBoolean("cast('  trUe' as boolean)", Boolean.TRUE);
+        getTester().checkBoolean("cast('  fALse' as boolean)", Boolean.FALSE);
+        getTester().checkFails("cast('unknown' as boolean)", invalidCharMessage);
+        getTester().checkFails("cast('blah' as boolean)", invalidCharMessage);
+
+        getTester().checkBoolean(
+                "cast(cast('true' as varchar(10))  as boolean)", Boolean.TRUE);
+        getTester().checkBoolean(
+                "cast(cast('false' as varchar(10)) as boolean)", Boolean.FALSE);
+        getTester().checkFails(
+                "cast(cast('blah' as varchar(10)) as boolean)", invalidCharMessage);
 
         // null
         getTester().checkNull("cast(null as varchar(10))");

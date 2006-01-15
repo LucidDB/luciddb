@@ -1159,7 +1159,6 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("cast(null as SMALLINT) / cast(5 as BIGINT)", "BIGINT");
         checkExpType("cast(1 as REAL) / cast(5 as INTEGER)", "DOUBLE NOT NULL");
         checkExpType("cast(null as REAL) / cast(5 as DOUBLE)", "DOUBLE");
-
         checkExpType("cast(1 as DECIMAL(7, 3)) / 1.654", "DECIMAL(15, 8) NOT NULL");
         checkExpType("cast(null as DECIMAL(7, 3)) / cast (1.654 as DOUBLE)", "DOUBLE");
 
@@ -1172,7 +1171,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("cast(1 as DECIMAL(5, 2)) / cast(1 as DECIMAL(6, 2))", "DECIMAL(14, 9) NOT NULL");
         checkExpType("cast(1 as DECIMAL(4, 2)) / cast(1 as DECIMAL(6, 4))", "DECIMAL(15, 9) NOT NULL");
         checkExpType("cast(null as DECIMAL(4, 2)) / cast(1 as DECIMAL(6, 4))", "DECIMAL(15, 9)");
-        checkExpType("cast(1 as DECIMAL(4, 10)) / cast(null as DECIMAL(6, 120))", "DECIMAL(19, 17)");
+        checkExpType("cast(1 as DECIMAL(4, 10)) / cast(null as DECIMAL(6, 19))", "DECIMAL(19, 17)");
         checkExpType("cast(1 as DECIMAL(19, 2)) / cast(1 as DECIMAL(19, 2))", "DECIMAL(19, 19) NOT NULL");
     }
 

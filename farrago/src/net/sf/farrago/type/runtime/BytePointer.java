@@ -784,6 +784,18 @@ public class BytePointer extends ByteArrayInputStream
         return currentLength;
     }
 
+    public void cast(boolean b, int precision)
+    {
+        String str = b? NullablePrimitive.TRUE_LITERAL: NullablePrimitive.FALSE_LITERAL;
+        if (precision < str.length()) {
+            throw FarragoResource.instance().Overflow.ex();
+        }
+
+        buf = str.getBytes();
+        pos = 0;
+        count = buf.length;
+    }
+
     public void cast(long l, int precision)
     {
         castDecimal(l, precision, 0);

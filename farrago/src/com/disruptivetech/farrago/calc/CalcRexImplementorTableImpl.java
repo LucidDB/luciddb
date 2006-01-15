@@ -925,6 +925,11 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castDateToMillis));
             doubleKeyMap.put(
+                SqlTypeName.booleanTypes,
+                SqlTypeName.charTypes,
+                new UsingInstrImplementor(
+                    ExtInstructionDefTable.castA));
+            doubleKeyMap.put(
                 SqlTypeName.intTypes,
                 SqlTypeName.charTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castA) {
@@ -1022,6 +1027,12 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 SqlTypeName.charTypes,
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castTimestampToStr));
+
+            doubleKeyMap.put(
+                SqlTypeName.charTypes,
+                SqlTypeName.booleanTypes,
+                new UsingInstrImplementor(
+                    ExtInstructionDefTable.castA));
 
             doubleKeyMap.put(
                 SqlTypeName.charTypes,

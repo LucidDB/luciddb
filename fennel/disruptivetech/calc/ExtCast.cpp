@@ -137,6 +137,40 @@ castStrToApproxA(RegisterRef<double>* result,
     }
 }
 
+void
+castBooleanToStrA(RegisterRef<char*>* result,
+                  RegisterRef<bool>* src)
+{
+    assert(StandardTypeDescriptor::isTextArray(result->type()));
+
+    if (src->isNull()) {
+        result->toNull();
+        result->length(0);
+    } else {
+        result->length(SqlStrCastFromBoolean<1,1>
+                       (result->pointer(),
+                        result->storage(),
+                        src->value(),
+                        (result->type() == STANDARD_TYPE_CHAR ?
+                         true : false)));
+    }
+}
+
+void
+castStrToBooleanA(RegisterRef<bool>* result,
+                  RegisterRef<char*>* src)
+{
+    assert(StandardTypeDescriptor::isTextArray(src->type()));
+
+    if (src->isNull()) {
+        result->toNull();
+    } else {
+        result->value(SqlStrCastToBoolean<1,1>
+                      (src->pointer(),
+                       src->stringLength()));
+    }
+}
+
 
 // TODO: cases where the result is smaller than the input could
 // probably benefit from operating by reference instead of by value
@@ -197,6 +231,14 @@ ExtCastRegister(ExtendedInstructionTable* eit)
 {
     assert(eit != NULL);
     
+    vector<StandardTypeDescriptorOrdinal> params_1B_1C;
+    params_1B_1C.push_back(STANDARD_TYPE_BOOL);
+    params_1B_1C.push_back(STANDARD_TYPE_CHAR);
+
+    vector<StandardTypeDescriptorOrdinal> params_1B_1V;
+    params_1B_1V.push_back(STANDARD_TYPE_BOOL);
+    params_1B_1V.push_back(STANDARD_TYPE_VARCHAR);
+
     vector<StandardTypeDescriptorOrdinal> params_1I_1C;
     params_1I_1C.push_back(STANDARD_TYPE_INT_64);
     params_1I_1C.push_back(STANDARD_TYPE_CHAR);
@@ -205,17 +247,17 @@ ExtCastRegister(ExtendedInstructionTable* eit)
     params_1I_1V.push_back(STANDARD_TYPE_INT_64);
     params_1I_1V.push_back(STANDARD_TYPE_VARCHAR);
 
-    vector<StandardTypeDescriptorOrdinal> params_1I_1C_SP;
-    params_1I_1C_SP.push_back(STANDARD_TYPE_INT_64);
-    params_1I_1C_SP.push_back(STANDARD_TYPE_CHAR);
-    params_1I_1C_SP.push_back(STANDARD_TYPE_INT_32);
-    params_1I_1C_SP.push_back(STANDARD_TYPE_INT_32);
+    vector<StandardTypeDescriptorOrdinal> params_1I_1C_PS;
+    params_1I_1C_PS.push_back(STANDARD_TYPE_INT_64);
+    params_1I_1C_PS.push_back(STANDARD_TYPE_CHAR);
+    params_1I_1C_PS.push_back(STANDARD_TYPE_INT_32);
+    params_1I_1C_PS.push_back(STANDARD_TYPE_INT_32);
 
-    vector<StandardTypeDescriptorOrdinal> params_1I_1V_SP;
-    params_1I_1V_SP.push_back(STANDARD_TYPE_INT_64);
-    params_1I_1V_SP.push_back(STANDARD_TYPE_VARCHAR);
-    params_1I_1V_SP.push_back(STANDARD_TYPE_INT_32);
-    params_1I_1V_SP.push_back(STANDARD_TYPE_INT_32);
+    vector<StandardTypeDescriptorOrdinal> params_1I_1V_PS;
+    params_1I_1V_PS.push_back(STANDARD_TYPE_INT_64);
+    params_1I_1V_PS.push_back(STANDARD_TYPE_VARCHAR);
+    params_1I_1V_PS.push_back(STANDARD_TYPE_INT_32);
+    params_1I_1V_PS.push_back(STANDARD_TYPE_INT_32);
 
     vector<StandardTypeDescriptorOrdinal> params_1D_1C;
     params_1D_1C.push_back(STANDARD_TYPE_DOUBLE);
@@ -225,6 +267,14 @@ ExtCastRegister(ExtendedInstructionTable* eit)
     params_1D_1V.push_back(STANDARD_TYPE_DOUBLE);
     params_1D_1V.push_back(STANDARD_TYPE_VARCHAR);
 
+    vector<StandardTypeDescriptorOrdinal> params_1C_1B;
+    params_1C_1B.push_back(STANDARD_TYPE_CHAR);
+    params_1C_1B.push_back(STANDARD_TYPE_BOOL);
+
+    vector<StandardTypeDescriptorOrdinal> params_1V_1B;
+    params_1V_1B.push_back(STANDARD_TYPE_VARCHAR);
+    params_1V_1B.push_back(STANDARD_TYPE_BOOL);
+
     vector<StandardTypeDescriptorOrdinal> params_1C_1I;
     params_1C_1I.push_back(STANDARD_TYPE_CHAR);
     params_1C_1I.push_back(STANDARD_TYPE_INT_64);
@@ -233,17 +283,17 @@ ExtCastRegister(ExtendedInstructionTable* eit)
     params_1V_1I.push_back(STANDARD_TYPE_VARCHAR);
     params_1V_1I.push_back(STANDARD_TYPE_INT_64);
 
-    vector<StandardTypeDescriptorOrdinal> params_1C_1I_SP;
-    params_1C_1I_SP.push_back(STANDARD_TYPE_CHAR);
-    params_1C_1I_SP.push_back(STANDARD_TYPE_INT_64);
-    params_1C_1I_SP.push_back(STANDARD_TYPE_INT_32);
-    params_1C_1I_SP.push_back(STANDARD_TYPE_INT_32);
+    vector<StandardTypeDescriptorOrdinal> params_1C_1I_PS;
+    params_1C_1I_PS.push_back(STANDARD_TYPE_CHAR);
+    params_1C_1I_PS.push_back(STANDARD_TYPE_INT_64);
+    params_1C_1I_PS.push_back(STANDARD_TYPE_INT_32);
+    params_1C_1I_PS.push_back(STANDARD_TYPE_INT_32);
 
-    vector<StandardTypeDescriptorOrdinal> params_1V_1I_SP;
-    params_1V_1I_SP.push_back(STANDARD_TYPE_VARCHAR);
-    params_1V_1I_SP.push_back(STANDARD_TYPE_INT_64);
-    params_1V_1I_SP.push_back(STANDARD_TYPE_INT_32);
-    params_1V_1I_SP.push_back(STANDARD_TYPE_INT_32);
+    vector<StandardTypeDescriptorOrdinal> params_1V_1I_PS;
+    params_1V_1I_PS.push_back(STANDARD_TYPE_VARCHAR);
+    params_1V_1I_PS.push_back(STANDARD_TYPE_INT_64);
+    params_1V_1I_PS.push_back(STANDARD_TYPE_INT_32);
+    params_1V_1I_PS.push_back(STANDARD_TYPE_INT_32);
 
     vector<StandardTypeDescriptorOrdinal> params_1C_1D;
     params_1C_1D.push_back(STANDARD_TYPE_CHAR);
@@ -269,6 +319,13 @@ ExtCastRegister(ExtendedInstructionTable* eit)
     params_1C_1C.push_back(STANDARD_TYPE_CHAR);
     params_1C_1C.push_back(STANDARD_TYPE_CHAR);
 
+    eit->add("castA", params_1B_1C,
+             (ExtendedInstruction2<bool, char*>*) NULL,
+             &castStrToBooleanA);
+    eit->add("castA", params_1B_1V,
+             (ExtendedInstruction2<bool, char*>*) NULL,
+             &castStrToBooleanA);
+
     eit->add("castA", params_1I_1C,
              (ExtendedInstruction2<int64_t, char*>*) NULL,
              &castStrToExactA);
@@ -276,10 +333,10 @@ ExtCastRegister(ExtendedInstructionTable* eit)
              (ExtendedInstruction2<int64_t, char*>*) NULL,
              &castStrToExactA);
 
-    eit->add("castA", params_1I_1C_SP,
+    eit->add("castA", params_1I_1C_PS,
              (ExtendedInstruction4<int64_t, char*, int32_t, int32_t>*) NULL,
              &castStrToExactA);
-    eit->add("castA", params_1I_1V_SP,
+    eit->add("castA", params_1I_1V_PS,
              (ExtendedInstruction4<int64_t, char*, int32_t, int32_t>*) NULL,
              &castStrToExactA);
 
@@ -290,6 +347,13 @@ ExtCastRegister(ExtendedInstructionTable* eit)
              (ExtendedInstruction2<double, char*>*) NULL,
              &castStrToApproxA);
 
+    eit->add("castA", params_1C_1B,
+             (ExtendedInstruction2<char*, bool>*) NULL,
+             &castBooleanToStrA);
+    eit->add("castA", params_1V_1B,
+             (ExtendedInstruction2<char*, bool>*) NULL,
+             &castBooleanToStrA);
+
     eit->add("castA", params_1C_1I,
              (ExtendedInstruction2<char*, int64_t>*) NULL,
              &castExactToStrA);
@@ -297,10 +361,10 @@ ExtCastRegister(ExtendedInstructionTable* eit)
              (ExtendedInstruction2<char*, int64_t>*) NULL,
              &castExactToStrA);
 
-    eit->add("castA", params_1C_1I_SP,
+    eit->add("castA", params_1C_1I_PS,
              (ExtendedInstruction4<char*, int64_t, int32_t, int32_t>*) NULL,
              &castExactToStrA);
-    eit->add("castA", params_1V_1I_SP,
+    eit->add("castA", params_1V_1I_PS,
              (ExtendedInstruction4<char*, int64_t, int32_t, int32_t>*) NULL,
              &castExactToStrA);
 
