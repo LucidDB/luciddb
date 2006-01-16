@@ -64,7 +64,7 @@ Error: java.lang.IllegalArgumentException: replacement string should be a char (
 . . . . . . . . > no sql
 . . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.FYMonth.FunctionExecute';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- fails: cannot override function using same # of params
+0: jdbc:luciddb:> -- fails: cannot override function
 0: jdbc:luciddb:> create function calcFiscalMonth(t Timestamp, firstMo integer) 
 . . . . . . . . > returns integer
 . . . . . . . . > language java
@@ -109,5 +109,90 @@ Error: DDL validation error near line 1, column 8: Target schema "LOCALDB"."UDFT
 +---------+
 | 2       |
 +---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test CleanPhone
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function cleanPhone(num varchar(128))
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.CleanPhone.FunctionExecute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values cleanPhone('1 2 3 4 5 6 7 8 9  0');
++-----------------+
+|     EXPR$0      |
++-----------------+
+| (123) 456-7890  |
++-----------------+
+0: jdbc:luciddb:> values cleanPhone('123456789012');
++---------------+
+|    EXPR$0     |
++---------------+
+| 123456789012  |
++---------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function cleanPhoneFormat(num varchar(128), format integer)
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.CleanPhone.FunctionExecute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values cleanPhoneFormat('123 456 789 012', 1);
++------------------+
+|      EXPR$0      |
++------------------+
+| 123 456 789 012  |
++------------------+
+0: jdbc:luciddb:> values cleanPhoneFormat('123.456.7890', 0);
++---------------+
+|    EXPR$0     |
++---------------+
+| 123-456-7890  |
++---------------+
+0: jdbc:luciddb:> values cleanPhoneFormat('1234567890', -1);
+Error: java.lang.IllegalArgumentException: invalid phone output format (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function cleanPhoneFormRjct(num varchar(128), format integer, reject boolean)
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.CleanPhone.FunctionExecute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values cleanPhoneFormRjct('1234567890', 1, true);
++-----------------+
+|     EXPR$0      |
++-----------------+
+| (123) 456-7890  |
++-----------------+
+0: jdbc:luciddb:> values cleanPhoneFormRjct('123456789012', 1, false);
++---------------+
+|    EXPR$0     |
++---------------+
+| 123456789012  |
++---------------+
+0: jdbc:luciddb:> values cleanPhoneFormRjct('123456789012', 1, true);
+Error: java.lang.IllegalArgumentException: null (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function cleanPhoneFormRjct2(num varchar(128), format varchar(128), reject boolean)
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.CleanPhone.FunctionExecute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values cleanPhoneFormRjct2('aBcDeFgHiJkLm', '(999) 999 999 999 9', true);
++----------------------+
+|        EXPR$0        |
++----------------------+
+| (222) 333 444 555 6  |
++----------------------+
+0: jdbc:luciddb:> values cleanPhoneFormRjct2('1800TESTING', '9-999-999-9999', true);
++-----------------+
+|     EXPR$0      |
++-----------------+
+| 1-800-837-8464  |
++-----------------+
+0: jdbc:luciddb:> values cleanPhoneFormRjct2('123-4567-890123', '(999)9999999', true);
+Error: java.lang.IllegalArgumentException: null (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

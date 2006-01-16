@@ -35,13 +35,16 @@ public class CharReplace
         return in.replace((char)oldChar, (char)newChar);
     }
     
-    public static String FunctionExecute(String in, String oldChar, String newChar)
+    public static String FunctionExecute(
+        String in, String oldChar, String newChar)
     {
         if(oldChar.length() != 1) {
-            throw new IllegalArgumentException("replacing string should be a char");
+            throw new IllegalArgumentException(
+                "replacing string should be a char");
         }
         if(newChar.length() != 1) {
-            throw new IllegalArgumentException("replacement string should be a char");
+            throw new IllegalArgumentException(
+                "replacement string should be a char");
         }
 
         return in.replace(oldChar.charAt(0), newChar.charAt(0));
