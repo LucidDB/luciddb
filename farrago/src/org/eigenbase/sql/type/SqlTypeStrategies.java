@@ -793,11 +793,14 @@ public abstract class SqlTypeStrategies
                             int s1 = type1.getScale();
                             int s2 = type2.getScale();
 
+                            int dout = Math.min(p1 - s1 + s2, SqlTypeName.MAX_NUMERIC_PRECISION);
+
                             int scale = Math.max(6, s1 + p2 + 1);
+                            scale = Math.min(scale, SqlTypeName.MAX_NUMERIC_PRECISION - dout);
                             scale = Math.min(scale, SqlTypeName.MAX_NUMERIC_SCALE);
 
-                            int precision = (p1 - s1 + s2) + scale;
-                            precision = Math.min(precision, SqlTypeName.MAX_NUMERIC_PRECISION);
+                            int precision = dout + scale;
+                            assert(precision <= SqlTypeName.MAX_NUMERIC_PRECISION);
                             assert(precision > 0);
 
                             RelDataType ret;

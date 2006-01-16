@@ -1169,7 +1169,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("cast(1 as DECIMAL(7, 3)) / 1.654", "DECIMAL(15, 8) NOT NULL");
         checkExpType("cast(null as DECIMAL(7, 3)) / cast (1.654 as DOUBLE)", "DOUBLE");
 
-        checkExpType("cast(null as DECIMAL(5, 2)) / cast(1 as BIGINT)", "DECIMAL(19, 19)");
+        checkExpType("cast(null as DECIMAL(5, 2)) / cast(1 as BIGINT)", "DECIMAL(19, 16)");
         checkExpType("cast(1 as DECIMAL(5, 2)) / cast(1 as INTEGER)", "DECIMAL(16, 13) NOT NULL");
         checkExpType("cast(1 as DECIMAL(5, 2)) / cast(1 as SMALLINT)", "DECIMAL(11, 8) NOT NULL");
         checkExpType("cast(1 as DECIMAL(5, 2)) / cast(1 as TINYINT)", "DECIMAL(9, 6) NOT NULL");
@@ -1178,8 +1178,8 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("cast(1 as DECIMAL(5, 2)) / cast(1 as DECIMAL(6, 2))", "DECIMAL(14, 9) NOT NULL");
         checkExpType("cast(1 as DECIMAL(4, 2)) / cast(1 as DECIMAL(6, 4))", "DECIMAL(15, 9) NOT NULL");
         checkExpType("cast(null as DECIMAL(4, 2)) / cast(1 as DECIMAL(6, 4))", "DECIMAL(15, 9)");
-        checkExpType("cast(1 as DECIMAL(4, 10)) / cast(null as DECIMAL(6, 19))", "DECIMAL(19, 17)");
-        checkExpType("cast(1 as DECIMAL(19, 2)) / cast(1 as DECIMAL(19, 2))", "DECIMAL(19, 19) NOT NULL");
+        checkExpType("cast(1 as DECIMAL(4, 10)) / cast(null as DECIMAL(6, 19))", "DECIMAL(19, 6)");
+        checkExpType("cast(1 as DECIMAL(19, 2)) / cast(1 as DECIMAL(19, 2))", "DECIMAL(19, 0) NOT NULL");
     }
 
     protected void checkWin(String sql, String expectedMsgPattern) {

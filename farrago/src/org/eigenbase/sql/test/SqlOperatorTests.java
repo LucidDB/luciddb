@@ -510,10 +510,12 @@ public abstract class SqlOperatorTests extends TestCase
             "1.0 / 3.0", "DECIMAL(8, 6) NOT NULL", "0.333333");
         getTester().checkScalarExact(
             "100.1 / 0.0001", "DECIMAL(14, 7) NOT NULL", "1001000.0000000");
+        getTester().checkScalarExact(
+            "100.1 / 0.00000001", "DECIMAL(19, 8) NOT NULL", "10010000000.00000000");
         getTester().checkNull("1e1 / cast(null as float)");
 
         getTester().checkFails(
-            "100.1 / 0.00000001", outOfRangeMessage);
+            "100.1 / 0.00000000000000001", outOfRangeMessage);
     }
 
     public void testEqualsOperator()
