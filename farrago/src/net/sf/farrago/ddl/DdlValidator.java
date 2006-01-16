@@ -1261,7 +1261,7 @@ public class DdlValidator extends FarragoCompoundAllocation
     /**
      * Check transitive closure of dependencies of an element for cycles.
      *
-     * @param element Starting element for dependency search
+     * @param rootElement Starting element for dependency search
      * @return true if cycle is found
      */
     private boolean containsCycle(
