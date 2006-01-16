@@ -72,6 +72,9 @@ public class CompoundParallelIterator implements Iterator
         this.in = iterators;
         this.out = new QueueIterator(in.length, tracer);
         for (int i = 0; i < in.length; i++) {
+            // FIXME jvs 16-Jan-2006:  These threads are started
+            // but never joined.  This is a resource leak.  Either
+            // join them or daemonize them (as in ThreadIterator).
             Thread th = new InputIteratorThread(out, in[i]);
             th.start();
         }

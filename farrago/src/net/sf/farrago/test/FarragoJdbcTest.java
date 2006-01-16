@@ -245,11 +245,7 @@ public class FarragoJdbcTest extends FarragoTestCase
         testUdxCancel(true);
     }
     
-    // TODO jvs 12-Jan-2006: re-enable this once I've figured out how
-    // to make sure that the UDX doesn't get stuck on a full queue,
-    // preventing it from calling checkCancel (thus deadlocking
-    // cursor close)
-    public void _testUdxAsynchronousCancel()
+    public void testUdxAsynchronousCancel()
         throws Exception
     {
         testUdxCancel(false);

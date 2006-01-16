@@ -23,23 +23,27 @@
 
 package org.eigenbase.runtime;
 
+import org.eigenbase.util.*;
 import org.eigenbase.trace.EigenbaseLogger;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.logging.Logger;
 import java.util.logging.Level;
+import java.util.concurrent.*;
 
 
 /**
- * Adapter that exposes a 'push' producer as an {@link Iterator}.
- * Supports one or more producers feeding into a single consumer. The consumer and
- * the producers must each run in its own thread. When there are several producers
+ * Adapter that exposes a 'push' producer as an {@link Iterator}.  Supports one
+ * or more producers feeding into a single consumer. The consumer and the
+ * producers must each run in its own thread. When there are several producers
  * the data is merged as it arrives: no sorting.
  *
- * <p>The queue contains at most one object. If you call {@link
- * #next}, your thread will wait until a producer thread calls {@link #put} or
- * {@link #done}. Nulls are allowed. If a producer has an error, it can
- * pass it to the consumer via {@link #done}.</p>
+ * <p>By default, the queue contains at most one object (implemented via {@link
+ * SynchronousQueue}), but this can be customized by supplying an alternate
+ * implementation (e.g. {@link ArrayBlockingQueue}) to the constructor. If you
+ * call {@link #next}, your thread will wait until a producer thread calls
+ * {@link #put} or {@link #done}. Nulls are allowed. If a producer has an
+ * error, it can pass it to the consumer via {@link #done}.</p>
  *
  * @author jhyde
  * @since Oct 20, 2003
@@ -48,40 +52,33 @@ import java.util.logging.Level;
 public class QueueIterator implements Iterator
 {
     //~ Instance fields -------------------------------------------------------
+
+    // NOTE: numProducers is the only state variable requiring synchronization.
+    // All others are accessed only from the consumer end, which does not
+    // support consumption from multiple threads.  (The queue itself
+    // provides its own synchronization.)
+    
     private int numProducers;
-    // a wrapping class can provide its tracer, which is used here to trace synchronization events
+    // a wrapping class can provide its tracer, which is used here to trace
+    // synchronization events
     private final EigenbaseLogger tracer; 
 
-    /** next Iterator value (can be null) */
+    /** next Iterator value (nulls are represented via #WRAPPED_NULL) */
     protected Object next;
+    
     /** false when Iterator is finished */
     protected boolean hasNext;
-    /** true when Iterator is waiting for next value from producer.
-     * Protects the {@link #full} semaphore. */
-    protected boolean waitingForProducer;
     protected Throwable throwable;
 
-    /**
-     * A  producer notifies <code>empty</code> every time it produces an
-     * object (or finishes). The consumer waits for it.
-     */
-    protected Semaphore empty;
-
-    /**
-     * Conversely, the consumer notifies <code>full</code> every time it reads
-     * the next object. The producers wait for it, then one starts work.
-     */
-    protected Semaphore full;
-
+    private BlockingQueue queue;
 
     //~ Constructors ----------------------------------------------------------
 
-    /** default constructor (one producer, no tracer) */
+    /** default constructor (one producer, no tracer, SynchronousQueue) */
     public QueueIterator()
     {
         this(1, null);
     }
-
 
     /**
      * @param n number of producers
@@ -89,17 +86,30 @@ public class QueueIterator implements Iterator
      */
     public QueueIterator(int n, Logger tracer)
     {
+        this(n, tracer, null);
+    }
+
+    /**
+     * @param n number of producers
+     * @param tracer trace to this Logger, or null.
+     * @param queue {@link BlockingQueue} implementation, or null
+     * for default
+     */
+    public QueueIterator(int n, Logger tracer, BlockingQueue queue)
+    {
         numProducers = n;
         this.tracer = (tracer == null)? null : new EigenbaseLogger(tracer);
 
+        if (queue == null) {
+            this.queue = new SynchronousQueue();
+        } else {
+            this.queue = queue;
+        }
+        
         if (n == 0) {
             hasNext = false;            // done now
-            waitingForProducer = false; // aren't any
             return;
         }
-        empty = new Semaphore(0);       // no data yet
-        full = new Semaphore(1);        // one empty data slot
-        waitingForProducer = true;
         hasNext = true;
     }
 
@@ -111,41 +121,42 @@ public class QueueIterator implements Iterator
      */
     public void done(Throwable throwable)
     {
-        // This method is NOT synchronized. If it were, it would deadlock with
-        // the waiting consumer thread. The consumer thread has called
-        // full.release(), and that is sufficient.
-        if (tracer != null) tracer.log(Level.FINE, "{0} producer waits", this);
-        full.acquire(); // wait for consumer thread to use previous
-        if (tracer != null) tracer.log(Level.FINE, "{0} producer proceeds", this);
-        numProducers--;
-        if (numProducers == 0 || throwable != null) {
-            // shut down the iterator
-            hasNext = false;
-            next = null;
-            this.throwable = throwable;
-            if (tracer != null) tracer.log(Level.FINE, "{0} done; producer yields to consumer", this);
-            empty.release(); // wake up consumer thread
+        EndOfQueue eoq = null;
 
-        } else {
-            // yield to other producers, let consumer sleep
-            if (tracer != null) tracer.log(Level.FINE, "{0} producer yields to other producers", this);
-            full.release();
-        } 
+        // NOTE:  synchronized can't be around queue.put or we'll deadlock
+        synchronized(this) {
+            numProducers--;
+            if (numProducers == 0 || throwable != null) {
+                // shut down the iterator
+                eoq = new EndOfQueue(throwable);
+            }
+        }
+        
+        if (eoq != null) {
+            // put a dummy null to wake up the consumer, who will check
+            // for
+            try {
+                queue.put(eoq);
+            } catch (InterruptedException ex) {
+                throw Util.newInternal(ex);
+            }
+        }
     }
 
     // implement Iterator
-    public synchronized boolean hasNext()
+    public boolean hasNext()
     {
-        if (waitingForProducer) {
-            if (tracer != null) tracer.log(Level.FINE, "{0} consumer waits", this);
-            empty.acquire(); // wait for producer to produce one
-            if (tracer != null) tracer.log(Level.FINE, "{0} consumer proceeds", this);
-            waitingForProducer = false;
-        }
         if (!hasNext) {
-            checkError();
-            onClose();
+            return false;
         }
+        if (next == null) {
+            try {
+                next = queue.take();
+            } catch (InterruptedException ex) {
+                throw Util.newInternal(ex);
+            }
+        }
+        checkTermination();
         return hasNext;
     }
 
@@ -156,50 +167,44 @@ public class QueueIterator implements Iterator
      * @param timeoutMillis Milliseconds to wait; less than or equal to zero
      *   means don't wait
      */
-    public synchronized boolean hasNext(long timeoutMillis)
+    public boolean hasNext(long timeoutMillis)
         throws TimeoutException
     {
-        if (waitingForProducer) {
-            // wait for producer to produce one
-            if (tracer != null) tracer.log(Level.FINE, "{0} consumer waits", this);
-            boolean isLocked = empty.tryAcquire(timeoutMillis);
-            if (!isLocked) {
-                // Throw an exception indicating timeout. It's not a 'real'
-                // error, so we don't set the '_throwable' field. It's OK
-                // to call this method again.
-                if (tracer != null) tracer.log(Level.FINE, "{0} consumer timed out", this);
+        if (!hasNext) {
+            return false;
+        }
+        if (next == null) {
+            try {
+                if (timeoutMillis <= 0) {
+                    next = queue.peek();
+                } else {
+                    next = queue.poll(timeoutMillis, TimeUnit.MILLISECONDS);
+                }
+            } catch (InterruptedException ex) {
+                throw Util.newInternal(ex);
+            }
+            if (next == null) {
                 throw new TimeoutException();
             }
-            if (tracer != null) tracer.log(Level.FINE, "{0} consumer proceeds", this);
-            waitingForProducer = false;
         }
-        if (!hasNext) {
-            checkError();
-        }
+        checkTermination();
         return hasNext;
     }
 
     // implement Iterator
-    public synchronized Object next()
+    public Object next()
     {
-        if (waitingForProducer) {
-            if (tracer != null) tracer.log(Level.FINE, "{0} consumer waits", this);
-            empty.acquire(); // wait for producer to produce one
-            if (tracer != null) tracer.log(Level.FINE, "{0} consumer proceeds", this);
-            waitingForProducer = false;
-        }
-        if (!hasNext) {
-            checkError();
-
+        if (!hasNext()) {
             // It is illegal to call next when there are no more objects.
             throw new NoSuchElementException();
         }
         Object o = next;
-        waitingForProducer = true;
-        if (tracer != null) tracer.log(Level.FINE, "{0} consumer wakes producer", this);
-        full.release();
-        if (tracer != null) tracer.log(Level.FINER, "{0} => {1}", this, o);
-        return o;
+        next = null;
+        if (o == WRAPPED_NULL) {
+            return null;
+        } else {
+            return o;
+        }
     }
 
     /**
@@ -209,60 +214,73 @@ public class QueueIterator implements Iterator
      * @param timeoutMillis Milliseconds to wait; less than or equal to zero
      *   means don't wait
      */
-    public synchronized Object next(long timeoutMillis)
+    public Object next(long timeoutMillis)
         throws TimeoutException
     {
-        if (waitingForProducer) {
-            // wait for producer to produce one
-        if (tracer != null) tracer.log(Level.FINE, "{0} consumer waits", this);
-            boolean isLocked = empty.tryAcquire(timeoutMillis);
-            if (!isLocked) {
-                // Throw an exception indicating timeout. It's not a 'real'
-                // error, so we don't set the '_throwable' field. It's OK
-                // to call this method again.
-                if (tracer != null) tracer.log(Level.FINE, "{0} consumer times out", this);
-                throw new TimeoutException();
-            }
-            if (tracer != null) tracer.log(Level.FINE, "{0} consumer proceeds", this);
-            waitingForProducer = false;
-        }
-        if (!hasNext) {
-            checkError();
-
+        if (!hasNext(timeoutMillis)) {
             // It is illegal to call next when there are no more objects.
             throw new NoSuchElementException();
         }
-        Object o = next;
-        waitingForProducer = true;
-        if (tracer != null) tracer.log(Level.FINE, "{0} consumer wakes producer", this);
-        full.release();
-        if (tracer != null) tracer.log(Level.FINER, "{0} => {1}", this, o);
-        return o;
+        return next();
     }
 
     /**
      * Producer calls <code>put</code> to add another object (which may be
      * null).
      *
+     * @param o object to put
+     *
      * @throws IllegalStateException if this method is called after
      *   {@link #done}
      */
     public void put(Object o)
     {
-        // This method is NOT synchronized. If it were, it would deadlock with
-        // the waiting consumer thread. The consumer thread has called
-        // full.release(), and that is sufficient.
-        if (tracer != null) tracer.log(Level.FINER, "{0} put {1}", this, o);
-        if (tracer != null) tracer.log(Level.FINE, "{0} producer waits", this);
-        full.acquire(); // wait for consumer thread to use previous
-        if (tracer != null) tracer.log(Level.FINE, "{0} producer proceeds", this);
         if (!hasNext) {
             // It is illegal to add a new object after done() has been called.
             throw new IllegalStateException();
         }
-        next = o;
-        if (tracer != null) tracer.log(Level.FINE, "{0} producer wakes consumer", this);
-        empty.release(); // wake up consumer thread
+        if (o == null) {
+            o = WRAPPED_NULL;
+        }
+        try {
+            queue.put(o);
+        } catch (InterruptedException ex) {
+            throw Util.newInternal(ex);
+        }
+    }
+
+    /**
+     * Producer calls <code>offer</code> to attempt to add another object
+     * (which may be null) with a timeout.
+     *
+     * @param o object to offer
+     *
+     * @param timeoutMillis Milliseconds to wait; less than or equal to zero
+     *   means don't wait
+     *
+     * @return true if offer accepted
+     *
+     * @throws IllegalStateException if this method is called after
+     *   {@link #done}
+     */
+    public boolean offer(Object o, long timeoutMillis)
+    {
+        if (!hasNext) {
+            // It is illegal to add a new object after done() has been called.
+            throw new IllegalStateException();
+        }
+        if (o == null) {
+            o = WRAPPED_NULL;
+        }
+        try {
+            if (timeoutMillis <= 0) {
+                return queue.offer(o);
+            } else {
+                return queue.offer(o, timeoutMillis, TimeUnit.MILLISECONDS);
+            }
+        } catch (InterruptedException ex) {
+            throw Util.newInternal(ex);
+        }
     }
 
     // implement Iterator
@@ -272,10 +290,19 @@ public class QueueIterator implements Iterator
     }
 
     /**
-     * Throws an error if one has been set via {@link #done(Throwable)}.
+     * Checks for end-of-queue, and throws an error if one has been set via
+     * {@link #done(Throwable)}.
      */
-    protected void checkError()
+    protected void checkTermination()
     {
+        if (!(next instanceof EndOfQueue)) {
+            return;
+        }
+        EndOfQueue eoq = (EndOfQueue) next;
+        next = null;
+        hasNext = false;
+        throwable = eoq.throwable;
+        onEndOfQueue();
         if (throwable == null) {
             ;
         } else if (throwable instanceof RuntimeException) {
@@ -288,23 +315,46 @@ public class QueueIterator implements Iterator
     }
 
     /**
-     * Called once the iterator returns false for hasNext().  Default
-     * implementation does nothing, but subclasses can use this
-     * for cleanup actions.
+     * Called (from the consumer thread context) just before the iterator
+     * returns false for hasNext().  Default implementation does nothing, but
+     * subclasses can use this for cleanup actions.
      */
-    protected void onClose()
+    protected void onEndOfQueue()
     {
     }
 
     //~ Inner Classes ---------------------------------------------------------
 
     /**
-     * Thrown by {@link QueueIterator#hasNext(long)} and {@link QueueIterator#next(long)} to indicate that
-     * operation timed out before rows were available.
+     * Thrown by {@link QueueIterator#hasNext(long)} and {@link
+     * QueueIterator#next(long)} to indicate that operation timed out before
+     * rows were available.
      */
     public static class TimeoutException extends Exception
     {
     }
+
+    /**
+     * Sentinel object.
+     */
+    private static class EndOfQueue
+    {
+        Throwable throwable;
+        
+        EndOfQueue(Throwable throwable)
+        {
+            this.throwable = throwable;
+        }
+    }
+
+    /**
+     * A null masquerading as a real object.
+     */
+    private static class WrappedNull
+    {
+    }
+
+    private static final WrappedNull WRAPPED_NULL = new WrappedNull();
 }
 
 

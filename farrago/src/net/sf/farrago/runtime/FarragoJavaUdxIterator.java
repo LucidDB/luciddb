@@ -29,6 +29,7 @@ import org.eigenbase.runtime.*;
 
 import java.math.*;
 import java.util.*;
+import java.util.concurrent.*;
 import java.sql.*;
 import java.lang.reflect.*;
 
@@ -41,8 +42,9 @@ import java.lang.reflect.*;
  */
 public abstract class FarragoJavaUdxIterator
     extends ThreadIterator
-    implements PreparedStatement
 {
+    private static final int QUEUE_ARRAY_SIZE = 10000;
+    
     private final FarragoSyntheticObject [] rowObjs;
 
     private final PreparedStatement resultInserter;
@@ -55,16 +57,14 @@ public abstract class FarragoJavaUdxIterator
         FarragoSessionRuntimeContext runtimeContext,
         Class rowClass)
     {
+        super(new ArrayBlockingQueue(QUEUE_ARRAY_SIZE));
         this.runtimeContext = runtimeContext;
         
-        // TODO jvs 8-Jan-2006: enhance QueueIterator to support queue sizes
-        // greater than 1.  For now, since the the queue size is 1, we
-        // construct a circular array of 2 here: one for the producer thread to
-        // write to and one for the consumer thread to read from.  In general,
-        // if QueueIterator's "full" semaphore starts with a count of n,
-        // then our circular array needs to be of size n+1 so that we
+        // NOTE jvs 16-Jan-2006: We construct a circular array with two extra
+        // slots:  one for the producer thread to write into, and one for the
+        // consumer thread to read from; this guarantees that we
         // never recycle a row still accessible by the consumer.
-        rowObjs = new FarragoSyntheticObject[2];
+        rowObjs = new FarragoSyntheticObject[QUEUE_ARRAY_SIZE + 2];
         try {
             for (int i = 0; i < rowObjs.length; ++i) {
                 rowObjs[i] = (FarragoSyntheticObject) rowClass.newInstance();
@@ -79,9 +79,7 @@ public abstract class FarragoJavaUdxIterator
             new PreparedStatementInvocationHandler());
 
         // TODO jvs 9-Jan-2006:  shouldn't start until plan is
-        // fully loaded; and need to make sure thread is cleaned up
-        // in all cases when cursor is closed; also need to support
-        // query abort
+        // fully loaded
         start();
     }
 
@@ -116,7 +114,14 @@ public abstract class FarragoJavaUdxIterator
             throws SQLException
         {
             runtimeContext.checkCancel();
-            put(getCurrentRow());
+            // on a full pipe, timeout every second to check cancellation; we
+            // have to do it this way because the iterator above us
+            // may not get sucked dry when the cursor is closed, in which
+            // case we'll be stuck on the full pipe unless we can check
+            // for cancellation
+            while (!offer(getCurrentRow(), 1000)) {
+                runtimeContext.checkCancel();
+            }
             ++iRow;
             if (iRow >= rowObjs.length) {
                 iRow = 0;
