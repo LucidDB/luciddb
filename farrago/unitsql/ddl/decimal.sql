@@ -1,6 +1,4 @@
 -- $Id$
--- Throws unsupported types at the system, to make sure the errors are
--- civilized.
 
 create schema decimal_ddl_test;
 set schema 'decimal_ddl_test';
@@ -10,6 +8,8 @@ set schema 'decimal_ddl_test';
 create table td(n integer not null primary key, d decimal);
 create table td5(n integer not null primary key, d decimal(5));
 create table td52(n integer not null primary key, d decimal(5, 2));
+create table td52notnull(n integer not null primary key, 
+    d decimal(5, 2) not null);
 
 -- Test table creation with numeric type (should be same as decimal)
 create table tn(n integer not null primary key, d numeric);
@@ -66,19 +66,22 @@ insert into td values(22, -9223372036854775809);
 insert into td values(23, -9223372036854775808.5);
 
 -- TODO: Should give error
--- insert into td5 values(20, 100000);
+insert into td5 values(20, 100000);
 -- insert into td5 values(21, 99999.5); 
--- insert into td5 values(22, -100000);
+insert into td5 values(22, -100000);
 -- insert into td5 values(23, -99999.5); 
--- insert into td52 values(20, 1000.00);
+insert into td52 values(20, 1000.00);
 -- insert into td52 values(21, 999.995);
--- insert into td52 values(22, -1000.00);
+insert into td52 values(22, -1000.00);
 -- insert into td52 values(23, -999.995); 
 
 -- null
 insert into td values(30, null);
 insert into td5 values(30, null);
 insert into td52 values(30, null);
+
+-- should give error
+insert into td52notnull values(30, null);
 
 select * from td;
 select * from td5;
