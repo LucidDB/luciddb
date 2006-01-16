@@ -1,0 +1,113 @@
+0: jdbc:luciddb:> -- Test queries with UDF invocations
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema udftest;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 'udftest';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set path 'udftest';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test CharReplace
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function replaceChar(str varchar(128), oldC varchar(128), newC varchar(128)) 
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.CharReplace.FunctionExecute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function replaceCharInt(str varchar(128), oldC integer, newC integer) 
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.CharReplace.FunctionExecute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values replaceChar('AA AA AA AA', 'A', 'B');
++--------------+
+|    EXPR$0    |
++--------------+
+| BB BB BB BB  |
++--------------+
+0: jdbc:luciddb:> values replaceChar('bb bb bb bb', 'b', 'A');
++--------------+
+|    EXPR$0    |
++--------------+
+| AA AA AA AA  |
++--------------+
+0: jdbc:luciddb:> values replaceChar('bbbbbbbb', 'b', 'AA');
+Error: java.lang.IllegalArgumentException: replacement string should be a char (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values replaceCharInt('111111', 49, 51);
++---------+
+| EXPR$0  |
++---------+
+| 333333  |
++---------+
+0: jdbc:luciddb:> values replaceCharInt('//////', 47, 42);
++---------+
+| EXPR$0  |
++---------+
+| ******  |
++---------+
+0: jdbc:luciddb:> values replaceCharInt('******', 42, 49);
++---------+
+| EXPR$0  |
++---------+
+| 111111  |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test FYMonth
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function calcFiscalMonth(d Date, firstMo integer) 
+. . . . . . . . > returns integer
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.FYMonth.FunctionExecute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- fails: cannot override function using same # of params
+0: jdbc:luciddb:> create function calcFiscalMonth(t Timestamp, firstMo integer) 
+. . . . . . . . > returns integer
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.FYMonth.FunctionExecute';
+Error: DDL validation error near line 1, column 8: Target schema "LOCALDB"."UDFTEST" already contains routine "CALCFISCALMONTH" with same name (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function calcFiscalMonthT(t Timestamp, firstMo integer) 
+. . . . . . . . > returns integer
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.FYMonth.FunctionExecute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values calcFiscalMonth(DATE '2005-10-12', 3);
++---------+
+| EXPR$0  |
++---------+
+| 8       |
++---------+
+0: jdbc:luciddb:> values calcFiscalMonth(DATE '2006-1-12', 1);
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values calcFiscalMonthT(TIMESTAMP '2006-2-12 13:00:00', 3);
++---------+
+| EXPR$0  |
++---------+
+| 12      |
++---------+
+0: jdbc:luciddb:> values calcFiscalMonthT(TIMESTAMP '1999-3-3 00:00:00', 3);
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:luciddb:> values calcFiscalMonthT(TIMESTAMP '2006-4-12 13:00:00', 3);
++---------+
+| EXPR$0  |
++---------+
+| 2       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit
