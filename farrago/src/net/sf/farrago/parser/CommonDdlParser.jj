@@ -580,6 +580,7 @@ FemLocalView ViewDefinition() :
         queryExpr.setLanguage("SQL");
         queryExpr.setBody(bodyText);
         view.setQueryExpression(queryExpr);
+        ExtendedViewDefinition( view, query);
         return view;
     }
 }

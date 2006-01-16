@@ -179,6 +179,20 @@ public class SqlSelect extends SqlCall
     {
         return null != getWhere();
     }
+
+    public boolean isKeywordPresent(SqlSelectKeyword targetKeyWord)
+    {
+        final SqlNodeList keywordList = (SqlNodeList)
+            operands[SqlSelect.KEYWORDS_OPERAND];
+        for (int i = 0; i < keywordList.size(); i++) {
+            final SqlSelectKeyword keyWord = (SqlSelectKeyword)
+                SqlLiteral.symbolValue(keywordList.get(i));
+            if (keyWord == targetKeyWord) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
 
 // End SqlSelect.java
