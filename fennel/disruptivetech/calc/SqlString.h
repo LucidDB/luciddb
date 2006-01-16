@@ -1614,6 +1614,7 @@ SqlStrCastFromApprox(char* dest,
     return rv;
 }
 
+
 //! SqlStrCastToVarChar.  Ascii only.
 //!
 //! Pad character code points that require more than one code unit are
@@ -1727,6 +1728,119 @@ SqlStrCastToChar(char *dest,
                     }
                 }
             }
+        } else if (CodeUnitBytes == 2) {
+            // TODO: Add UCS2 here
+            throw std::logic_error("no UCS2");
+        } else {
+            throw std::logic_error("no such encoding");
+        }
+    } else {
+        throw std::logic_error("no UTF8/16/32");
+    }
+
+    return rv;
+}
+
+
+//! SqlStrCastToBoolean. Char & VarChar. Ascii only.
+//!
+//! Cast a string to an boolean
+//!
+//! See SQL2003 Part 2 Section 5.3 Format &lt;boolean literal&gt; and
+//! General Rules 10 for details on the format of a boolean.
+//! Boolean can be true, false, or unknown (null). 
+//! This method only casts from 'true' and 'false'.
+template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
+bool
+SqlStrCastToBoolean(char const * const str,
+                    int strLenBytes,
+                    int padChar = ' ')
+{
+    bool rv;
+    if (MaxCodeUnitsPerCodePoint == 1) {
+        if (CodeUnitBytes == 1) {
+            // ASCII
+            char const *ptr = str;
+            char const *end = str + strLenBytes;
+
+            // Skip past any leading whitespace.
+            while (ptr < end && *ptr == padChar) ptr++;
+
+            // Check if true, false, or unknown
+            if ((end - ptr) >= 4 && strncasecmp(ptr, "TRUE", 4) == 0) {
+                rv = true;
+                ptr += 4; // advance past true
+            } else if ((end - ptr) >= 5 && strncasecmp(ptr, "FALSE", 5) == 0) {
+                rv = false;
+                ptr += 5; // advance past false;
+            } else {
+                // SQL2003 Part 2 Section 6.12 General Rule 20.a.ii "22018"
+                // data exception -- invalid character value for cast
+                throw "22018";
+            }
+
+            // verify that trailing characters are all padChar
+            while (ptr < end) {
+                if (*ptr != padChar) {
+                    // SQL2003 Part 2 Section 6.12 General Rule 20.a.ii "22018"
+                    // data exception -- invalid character value for cast
+                    throw "22018";
+                }
+                ptr++;
+            }
+        } else if (CodeUnitBytes == 2) {
+            // TODO: Add UCS2 here
+            throw std::logic_error("no UCS2");
+        } else {
+            throw std::logic_error("no such encoding");
+        }
+    } else {
+        throw std::logic_error("no UTF8/16/32");
+    }
+
+    return rv;
+}
+
+//! SqlStrCastFromBoolean Char & VarChar. Ascii only.
+//!
+//! Cast a boolea to a string.
+//!
+//! SQL2003 Part 2 Section 6.12 General Rules 10.e and 11.e specifies
+//! that false should be cast to 'false' and true to 'true'.
+template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
+int
+SqlStrCastFromBoolean(char* dest,
+                      int destStorageBytes,
+                      bool src,
+                      bool fixed,  // e.g. char, else variable (varchar)
+                      int padchar = ' ')
+{
+    int rv;
+
+    if (MaxCodeUnitsPerCodePoint == 1) {
+        if (CodeUnitBytes == 1) {
+            // ASCII
+
+            // SQL2003 6.12 General Rule 10, case e i,ii  and
+            // SQL2003 6.12 General Rule 11, case e i,ii
+            if (src && destStorageBytes >= 4) {
+                memcpy(dest, "TRUE", 4);
+                rv = 4;
+            } else if (!src && destStorageBytes >= 5) {
+                memcpy(dest, "FALSE", 5);
+                rv = 5;
+            } else {
+                // SQL2003 Part 2 Section 6.12 General Rule 
+                // 10.e.iii (fixed length) and 11.e.iii (variable length)
+                // "22018" data exception -- invalid character value for cast
+                throw "22018";
+            }
+
+            if (fixed) {
+                memset(dest + rv, padchar, destStorageBytes - rv);
+                rv = destStorageBytes;
+            }
+
         } else if (CodeUnitBytes == 2) {
             // TODO: Add UCS2 here
             throw std::logic_error("no UCS2");

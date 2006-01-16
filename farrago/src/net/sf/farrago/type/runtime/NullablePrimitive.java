@@ -48,6 +48,10 @@ public abstract class NullablePrimitive implements NullableValue,
      */
     public static final String VALUE_FIELD_NAME = "value";
 
+    public static final String TRUE_LITERAL = "TRUE";
+    public static final String FALSE_LITERAL = "FALSE";
+    public static final String UNKNOWN_LITERAL = "UNKNOWN";
+
     /**
      * Name of field storing null indicator.
      */
@@ -154,13 +158,13 @@ public abstract class NullablePrimitive implements NullableValue,
             } else if (obj instanceof String) {
                 String s = (String) obj;
                 s = s.trim();
-                if (s.equalsIgnoreCase("true")) {
+                if (s.equalsIgnoreCase(TRUE_LITERAL)) {
                     value = true;
                 }
-                else if (s.equalsIgnoreCase("false")) {
+                else if (s.equalsIgnoreCase(FALSE_LITERAL)) {
                     value = false;
                 }
-                else if (s.equalsIgnoreCase("unknown")) {
+                else if (s.equalsIgnoreCase(UNKNOWN_LITERAL)) {
                     setNull(true);
                 }
                 else {
@@ -188,6 +192,26 @@ public abstract class NullablePrimitive implements NullableValue,
         public boolean getBit()
         {
             return value;
+        }
+
+        /**
+         * Implements cast from string to non-nullable boolean
+         * Invoked by generated code
+         */
+        public static final boolean convertString(String s)
+        {
+            s = s.trim();
+            if (s.equalsIgnoreCase(TRUE_LITERAL)) {
+                return true;
+            }
+            else if (s.equalsIgnoreCase(FALSE_LITERAL)) {
+                return false;
+            } else {
+                throw FarragoResource.instance().AssignFromFailed.ex(
+                    s,
+                    "BOOLEAN",
+                    "Invalid boolean value");
+            }
         }
 
         /**

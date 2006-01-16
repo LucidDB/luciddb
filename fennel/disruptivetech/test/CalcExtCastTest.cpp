@@ -43,6 +43,8 @@ class CalcExtCastTest : virtual public TestBase, public TraceSource
 {
     void testCalcExtCastStringToChar();
     void testCalcExtCastStringToVarChar();
+    void testCalcExtCastBooleanToChar();
+    void testCalcExtCastBooleanToVarChar();
     void testCalcExtCastExactToChar();
     void testCalcExtCastExactToVarChar();
     void testCalcExtCastDecimalToChar();
@@ -50,6 +52,8 @@ class CalcExtCastTest : virtual public TestBase, public TraceSource
     void testCalcExtCastBigExactToString();
     void testCalcExtCastExactToStringTruncates();
     void testCalcExtCastDecimalToStringTruncates();
+    void testCalcExtCastCharToBoolean();
+    void testCalcExtCastVarCharToBoolean();
     void testCalcExtCastCharToExact();
     void testCalcExtCastVarCharToExact();
     void testCalcExtCastCharToDecimal();
@@ -66,6 +70,7 @@ class CalcExtCastTest : virtual public TestBase, public TraceSource
     // REVIEW mb: Might be clearer if tests always printed calc outputs.
     int cmpTupStr(TupleDatum const & tup, char const * const str);
     int cmpTupStr(TupleDatum const & tup, const string& str);
+    int cmpTupBool(TupleDatum const & tup, bool val);
     int cmpTupInt(TupleDatum const & tup, int val);
     int cmpTupInt64(TupleDatum const & tup, int64_t val);
     int cmpTupNull(TupleDatum const & tup);
@@ -90,6 +95,8 @@ public:
         CalcInit::instance();
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastStringToChar);
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastStringToVarChar);
+        FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastBooleanToVarChar);
+        FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastBooleanToChar);
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastExactToVarChar);
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastExactToChar);
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastDecimalToChar);
@@ -97,6 +104,8 @@ public:
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastBigExactToString);
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastExactToStringTruncates); // errors
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastDecimalToStringTruncates); // errors
+        FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastCharToBoolean);
+        FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastVarCharToBoolean);
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastCharToExact);
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastVarCharToExact);
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastCharToDecimal);
@@ -189,6 +198,14 @@ CalcExtCastTest::cmpTupStr(TupleDatum const & tup,
                    (const_cast<PBuffer>(tup.pData)),
                    str,
                    len);
+}
+
+int
+CalcExtCastTest::cmpTupBool(TupleDatum const & tup, bool val)
+{
+    if (cmpTupNull(tup)) return 0;
+    return *(reinterpret_cast<bool*>
+             (const_cast<PBuffer>(tup.pData))) == val;
 }
 
 int
@@ -424,6 +441,141 @@ CalcExtCastTest::testCalcExtCastStringToVarChar()
     BOOST_CHECK(iter == calc.mWarnings.end());
 }
 
+// cast booleans to char strings
+void
+CalcExtCastTest::testCalcExtCastBooleanToChar()
+{
+    // int8 test values: (null, true, false), 
+    // cast to CHAR(3) and CHAR(4) and CHAR(5)
+    ostringstream pg(""), outloc("");
+    outloc <<  "c,3, c,3, c,3, c,4, c,4, c,4, c,5, c,5, c,5;" << endl;
+    pg << "O " << outloc.str();
+    pg << "L " << outloc.str();
+    pg << "C bo, bo, bo;" << endl;
+    pg << "V , 1, 0;" << endl;
+    pg << "T;" << endl;
+    // cast all to CHAR(3)
+    for (int i=0; i < 3; i++)
+        pg << "CALL 'castA(L" << i << ", C" << i << ");" << endl;
+    // cast all to CHAR(4)
+    for (int i=0; i < 3; i++)
+        pg << "CALL 'castA(L" << (i+3) << ", C" << i << ");" << endl;
+    // cast all to CHAR(5)
+    for (int i=0; i < 3; i++)
+        pg << "CALL 'castA(L" << (i+6) << ", C" << i << ");" << endl;
+    refLocalOutput(pg, 9);      // make output available
+
+    Calculator calc(0);
+    try {
+        calc.assemble(pg.str().c_str());
+    }
+    catch (FennelExcn& ex) {
+        BOOST_MESSAGE("Assemble exception " << ex.getMessage());
+        BOOST_MESSAGE(pg.str());
+        BOOST_REQUIRE(0);
+    }
+
+    TupleDataWithBuffer outTuple(calc.getOutputRegisterDescriptor());
+    TupleDataWithBuffer inTuple(calc.getInputRegisterDescriptor());
+    calc.bind(&inTuple, &outTuple);
+    calc.exec();
+    printOutput(outTuple, calc);
+    deque<CalcMessage>::iterator iter = calc.mWarnings.begin();
+
+    // check results:
+    BOOST_CHECK(cmpTupNull(outTuple[0]));
+
+    // true -> c(3) = invalid char
+    BOOST_CHECK_EQUAL(iter->pc, 1);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, invalidCharErr));
+    iter++;
+
+    // false -> c(3) = invalid char
+    BOOST_CHECK_EQUAL(iter->pc, 2);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, invalidCharErr));
+    iter++;
+
+    BOOST_CHECK(cmpTupNull(outTuple[3]));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[4], "TRUE"));
+
+    // false -> c(4) = invalid char
+    BOOST_CHECK_EQUAL(iter->pc, 5);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, invalidCharErr));
+    iter++;
+
+    BOOST_CHECK(cmpTupNull(outTuple[6]));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[7], "TRUE "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[8], "FALSE"));
+    BOOST_CHECK(iter == calc.mWarnings.end());
+}
+
+// cast booleans to varchar strings
+void
+CalcExtCastTest::testCalcExtCastBooleanToVarChar()
+{
+    // int8 test values: (null, true, false), 
+    // cast to VARCHAR(3) and VARCHAR(4) and VARCHAR(5)
+    ostringstream pg(""), outloc("");
+    outloc <<  "vc,3, vc,3, vc,3, vc,4, vc,4, vc,4, vc,5, vc,5, vc,5;" << endl;
+    pg << "O " << outloc.str();
+    pg << "L " << outloc.str();
+    pg << "C bo, bo, bo;" << endl;
+    pg << "V , 1, 0;" << endl;
+    pg << "T;" << endl;
+    // cast all to VARCHAR(3)
+    for (int i=0; i < 3; i++)
+        pg << "CALL 'castA(L" << i << ", C" << i << ");" << endl;
+    // cast all to VARCHAR(4)
+    for (int i=0; i < 3; i++)
+        pg << "CALL 'castA(L" << (i+3) << ", C" << i << ");" << endl;
+    // cast all to VARCHAR(5)
+    for (int i=0; i < 3; i++)
+        pg << "CALL 'castA(L" << (i+6) << ", C" << i << ");" << endl;
+    refLocalOutput(pg, 9);      // make output available
+
+    Calculator calc(0);
+    try {
+        calc.assemble(pg.str().c_str());
+    }
+    catch (FennelExcn& ex) {
+        BOOST_MESSAGE("Assemble exception " << ex.getMessage());
+        BOOST_MESSAGE(pg.str());
+        BOOST_REQUIRE(0);
+    }
+
+    TupleDataWithBuffer outTuple(calc.getOutputRegisterDescriptor());
+    TupleDataWithBuffer inTuple(calc.getInputRegisterDescriptor());
+    calc.bind(&inTuple, &outTuple);
+    calc.exec();
+    printOutput(outTuple, calc);
+    deque<CalcMessage>::iterator iter = calc.mWarnings.begin();
+
+    // check results:
+    BOOST_CHECK(cmpTupNull(outTuple[0]));
+
+    // true -> vc(3) = invalid char
+    BOOST_CHECK_EQUAL(iter->pc, 1);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, invalidCharErr));
+    iter++;
+
+    // false -> vc(3) = invalid char
+    BOOST_CHECK_EQUAL(iter->pc, 2);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, invalidCharErr));
+    iter++;
+
+    BOOST_CHECK(cmpTupNull(outTuple[3]));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[4], "TRUE"));
+
+    // false -> vc(4) = invalid char
+    BOOST_CHECK_EQUAL(iter->pc, 5);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, invalidCharErr));
+    iter++;
+
+    BOOST_CHECK(cmpTupNull(outTuple[6]));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[7], "TRUE"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[8], "FALSE"));
+    BOOST_CHECK(iter == calc.mWarnings.end());
+}
 
 // cast exact numbers to char strings
 void
@@ -1003,6 +1155,133 @@ CalcExtCastTest::testCalcExtCastDecimalToStringTruncates()
 
     BOOST_CHECK(iter == calc.mWarnings.end());
 }
+
+void CalcExtCastTest::testCalcExtCastCharToBoolean()
+{
+    // test values: null, true, false, unknown, invalid; same with spaces.
+    ostringstream pg(""), outloc("");
+    outloc << "bo, bo, bo, bo, bo, bo, bo, bo;" << endl;
+    pg << "O " << outloc.str();
+    pg << "L " << outloc.str();
+    pg << "C c,4, c,4, c,8, c,5, c,9, c,7, c,11, c,13;" << endl;
+    pg << "V "                  // a null
+       << ", 0x" << stringToHex("tRUe") 
+       << ", 0x" << stringToHex("  true  ")
+       << ", 0x" << stringToHex("faLSe")
+       << ", 0x" << stringToHex("  FALSE  ")
+       << ", 0x" << stringToHex("UnknowN")
+       << ", 0x" << stringToHex("  UnknowN  ")
+       << ", 0x" << stringToHex("  Invalid    ") 
+       << ";" << endl;
+    pg << "T;" << endl;
+    for (int i = 0; i < 8; i++)
+        pg << "CALL 'castA(L"<<i<<",C"<<i<<");"<< endl;
+    refLocalOutput(pg, 8);      // make output available
+
+    Calculator calc(0);
+    try {
+        calc.assemble(pg.str().c_str());
+    }
+    catch (FennelExcn& ex) {
+        BOOST_MESSAGE("Assemble exception " << ex.getMessage());
+        BOOST_MESSAGE(pg.str());
+        BOOST_REQUIRE(0);
+    }
+
+    TupleDataWithBuffer outTuple(calc.getOutputRegisterDescriptor());
+    TupleDataWithBuffer inTuple(calc.getInputRegisterDescriptor());
+    calc.bind(&inTuple, &outTuple);
+    calc.exec();
+    printOutput(outTuple, calc);
+    deque<CalcMessage>::iterator iter = calc.mWarnings.begin();
+
+    BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[0]));
+    BOOST_CHECK_EQUAL(1, cmpTupBool(outTuple[1], true));
+    BOOST_CHECK_EQUAL(1, cmpTupBool(outTuple[2], true));
+    BOOST_CHECK_EQUAL(1, cmpTupBool(outTuple[3], false));
+    BOOST_CHECK_EQUAL(1, cmpTupBool(outTuple[4], false));
+
+    // TODO: SQL2003 says 'unknown' should be treated as null
+    // For now, unknown -> bool = invalid char
+    BOOST_CHECK_EQUAL(iter->pc, 5);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, invalidCharErr));
+    iter++;
+
+    BOOST_CHECK_EQUAL(iter->pc, 6);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, invalidCharErr));
+    iter++;
+
+    // invalid -> bool = invalid char
+    BOOST_CHECK_EQUAL(iter->pc, 7);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, invalidCharErr));
+    iter++;
+
+    BOOST_CHECK(iter == calc.mWarnings.end());
+}
+
+void CalcExtCastTest::testCalcExtCastVarCharToBoolean()
+{
+    // test values: null, true, false, unknown, invalid; same with spaces.
+    ostringstream pg(""), outloc("");
+    outloc << "bo, bo, bo, bo, bo, bo, bo, bo;" << endl;
+    pg << "O " << outloc.str();
+    pg << "L " << outloc.str();
+    pg << "C vc,4, vc,8, vc,8, vc,9, vc,9, vc,7, vc,11, vc,13;" << endl;
+    pg << "V "                  // a null
+       << ", 0x" << stringToHex("tRUe") 
+       << ", 0x" << stringToHex("  true  ")
+       << ", 0x" << stringToHex("faLSe")
+       << ", 0x" << stringToHex("  FALSE  ")
+       << ", 0x" << stringToHex("UnknowN")
+       << ", 0x" << stringToHex("  UnknowN  ")
+       << ", 0x" << stringToHex("  Invalid    ") 
+       << ";" << endl;
+    pg << "T;" << endl;
+    for (int i = 0; i < 8; i++)
+        pg << "CALL 'castA(L"<<i<<",C"<<i<<");"<< endl;
+    refLocalOutput(pg, 8);      // make output available
+
+    Calculator calc(0);
+    try {
+        calc.assemble(pg.str().c_str());
+    }
+    catch (FennelExcn& ex) {
+        BOOST_MESSAGE("Assemble exception " << ex.getMessage());
+        BOOST_MESSAGE(pg.str());
+        BOOST_REQUIRE(0);
+    }
+
+    TupleDataWithBuffer outTuple(calc.getOutputRegisterDescriptor());
+    TupleDataWithBuffer inTuple(calc.getInputRegisterDescriptor());
+    calc.bind(&inTuple, &outTuple);
+    calc.exec();
+    printOutput(outTuple, calc);
+    deque<CalcMessage>::iterator iter = calc.mWarnings.begin();
+
+    BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[0]));
+    BOOST_CHECK_EQUAL(1, cmpTupBool(outTuple[1], true));
+    BOOST_CHECK_EQUAL(1, cmpTupBool(outTuple[2], true));
+    BOOST_CHECK_EQUAL(1, cmpTupBool(outTuple[3], false));
+    BOOST_CHECK_EQUAL(1, cmpTupBool(outTuple[4], false));
+
+    // TODO: SQL2003 says 'unknown' should be treated as null
+    // For now, unknown -> bool = invalid char
+    BOOST_CHECK_EQUAL(iter->pc, 5);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, invalidCharErr));
+    iter++;
+
+    BOOST_CHECK_EQUAL(iter->pc, 6);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, invalidCharErr));
+    iter++;
+
+    // invalid -> bool = invalid char
+    BOOST_CHECK_EQUAL(iter->pc, 7);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, invalidCharErr));
+    iter++;
+
+    BOOST_CHECK(iter == calc.mWarnings.end());
+}
+
 
 void CalcExtCastTest::testCalcExtCastVarCharToExact()
 {

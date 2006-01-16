@@ -94,21 +94,21 @@ public abstract class SqlOperatorTests extends TestCase
     public static final boolean bug315Fixed = false;
 
     /**
-     * Remove this constant when dtbug 242 has been fixed.
-     */
-    public static final boolean dtbug242Fixed = false;
-
-    /**
      * Whether <a href="http://jirahost.eigenbase.org:8080/browse/FNL-3">issue
      * Fnl-3</a> is fixed.
      */
     public static final boolean issueFnl3Fixed = false;
 
     // TODO: Change message when issueFnl3Fixed to something like
+    // "Invalid character for cast: PC=0 Code=22018"
+    public static final String invalidCharMessage = "(?s).*";
+
+    // TODO: Change message when issueFnl3Fixed to something like
     // "Overflow during calculation or cast: PC=0 Code=22003"
     public static final String outOfRangeMessage = "(?s).*";
 
-    public static final String literalOutOfRangeMessage = "(?s).*Numeric literal.*out of range.*";
+    public static final String literalOutOfRangeMessage =
+            "(?s).*Numeric literal.*out of range.*";
 
     /**
      * Regular expression for a SQL TIME(0) value.
@@ -249,14 +249,14 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().setFor(SqlStdOperatorTable.castFunc);
 
         // Test casting for min,max, out of range for numeric types
-        // TODO: Fix test for decimal and approx types
-        for (int i = 0; i < 4/*numericTypeNames.length*/; i++) {
+        // TODO: Fix test for approx types
+        for (int i = 0; i < 5/*numericTypeNames.length*/; i++) {
             String type = numericTypeNames[i];
             if (type.equalsIgnoreCase("BIGINT")) {
                 checkCastToScalarOkay(maxNumericStrings[i], type);
                 if (todo) {
                     // Literal is out or range because negative numbers are
-                    // treated as expressio with the minus as a prefix operator
+                    // treated as expression with the minus as a prefix operator
                     checkCastToScalarOkay(minNumericStrings[i], type);
                 }
                 // Literal of range
@@ -295,6 +295,11 @@ public abstract class SqlOperatorTests extends TestCase
             "cast(-1.25 as decimal(2,1))", "DECIMAL(2, 1) NOT NULL", "-1.3");
         getTester().checkScalarExact(
             "cast(-1.21 as decimal(2,1))", "DECIMAL(2, 1) NOT NULL", "-1.2");
+
+        if (todo) {
+            // 9.99 round to 10.0, should give out of range error
+            getTester().checkFails("cast(9.99 as decimal(2,1))", outOfRangeMessage);
+        }
 
         // decimal to double to integer
         getTester().checkScalarExact("cast( cast(1.25 as double) as integer)", "1");
@@ -380,18 +385,44 @@ public abstract class SqlOperatorTests extends TestCase
                     "3.23000000E+00", "VARCHAR(20) NOT NULL");
         }
 
-        if (dtbug242Fixed) {
-            // boolean to string
-            getTester().checkString(
-                "cast(true as char(8))", "true    ", "CHAR(8) NOT NULL");
-            getTester().checkString(
-                "cast(false as char(8))", "false   ", "CHAR(8) NOT NULL");
+        // boolean to string (char)
+        getTester().checkString(
+            "cast(true as char(4))", "TRUE", "CHAR(4) NOT NULL");
+        getTester().checkString(
+            "cast(false as char(5))", "FALSE", "CHAR(5) NOT NULL");
+        getTester().checkString(
+            "cast(true as char(8))", "TRUE    ", "CHAR(8) NOT NULL");
+        getTester().checkString(
+            "cast(false as char(8))", "FALSE   ", "CHAR(8) NOT NULL");
+        getTester().checkFails("cast(true as char(3))", invalidCharMessage);
+        getTester().checkFails("cast(false as char(4))", invalidCharMessage);
 
-            // string to boolean
-            getTester().checkBoolean("cast('true' as boolean)", Boolean.TRUE);
-            getTester().checkBoolean("cast('false' as boolean)", Boolean.FALSE);
-            getTester().checkFails("cast('blah' as boolean", "message");
-        }
+        // boolean to string (varchar)
+        getTester().checkString(
+            "cast(true as varchar(4))", "TRUE", "VARCHAR(4) NOT NULL");
+        getTester().checkString(
+            "cast(false as varchar(5))", "FALSE", "VARCHAR(5) NOT NULL");
+        getTester().checkString(
+            "cast(true as varchar(8))", "TRUE", "VARCHAR(8) NOT NULL");
+        getTester().checkString(
+            "cast(false as varchar(8))", "FALSE", "VARCHAR(8) NOT NULL");
+        getTester().checkFails("cast(true as varchar(3))", invalidCharMessage);
+        getTester().checkFails("cast(false as varchar(4))", invalidCharMessage);
+
+        // string to boolean
+        getTester().checkBoolean("cast('true' as boolean)", Boolean.TRUE);
+        getTester().checkBoolean("cast('false' as boolean)", Boolean.FALSE);
+        getTester().checkBoolean("cast('  trUe' as boolean)", Boolean.TRUE);
+        getTester().checkBoolean("cast('  fALse' as boolean)", Boolean.FALSE);
+        getTester().checkFails("cast('unknown' as boolean)", invalidCharMessage);
+        getTester().checkFails("cast('blah' as boolean)", invalidCharMessage);
+
+        getTester().checkBoolean(
+                "cast(cast('true' as varchar(10))  as boolean)", Boolean.TRUE);
+        getTester().checkBoolean(
+                "cast(cast('false' as varchar(10)) as boolean)", Boolean.FALSE);
+        getTester().checkFails(
+                "cast(cast('blah' as varchar(10)) as boolean)", invalidCharMessage);
 
         // null
         getTester().checkNull("cast(null as varchar(10))");
@@ -470,11 +501,21 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().setFor(SqlStdOperatorTable.divideOperator);
         getTester().checkScalarExact("10 / 5", "2");
         getTester().checkScalarExact("-10 / 5", "-2");
+        getTester().checkScalarExact("1 / 3", "0");
         getTester().checkScalarApprox(
                 " cast(10.0 as double) / 5", "DOUBLE NOT NULL", 2.0, 0);
         getTester().checkScalarExact(
             "10.0 / 5.0", "DECIMAL(9, 6) NOT NULL", "2.000000");
+        getTester().checkScalarExact(
+            "1.0 / 3.0", "DECIMAL(8, 6) NOT NULL", "0.333333");
+        getTester().checkScalarExact(
+            "100.1 / 0.0001", "DECIMAL(14, 7) NOT NULL", "1001000.0000000");
+        getTester().checkScalarExact(
+            "100.1 / 0.00000001", "DECIMAL(19, 8) NOT NULL", "10010000000.00000000");
         getTester().checkNull("1e1 / cast(null as float)");
+
+        getTester().checkFails(
+            "100.1 / 0.00000000000000001", outOfRangeMessage);
     }
 
     public void testEqualsOperator()
@@ -617,6 +658,12 @@ public abstract class SqlOperatorTests extends TestCase
             "19.68 - 4.2", "DECIMAL(5, 2) NOT NULL", "15.48");
         getTester().checkNull("1e1-cast(null as double)");
         getTester().checkNull("cast(null as tinyint) - cast(null as smallint)");
+
+        if (todo) {
+            // Should throw out of range error
+            getTester().checkFails(
+                    "cast(100 as tinyint) - cast(-100 as tinyint)", outOfRangeMessage);
+        }
     }
 
     public void testMinusDateOperator()
@@ -640,6 +687,12 @@ public abstract class SqlOperatorTests extends TestCase
                 "19.68 * 4.2", "DECIMAL(6, 3) NOT NULL", "82.656");
         getTester().checkNull("2e-3*cast(null as integer)");
         getTester().checkNull("cast(null as tinyint) * cast(4 as smallint)");
+
+        if (todo) {
+            // Should throw out of range error
+            getTester().checkFails(
+                    "cast(100 as tinyint) * cast(100 as tinyint)", outOfRangeMessage);
+        }
     }
 
     public void testNotEqualsOperator()
@@ -674,6 +727,12 @@ public abstract class SqlOperatorTests extends TestCase
             "19.68 + cast(4.2 as float)", "DOUBLE NOT NULL", 23.88, 0);
         getTester().checkNull("cast(null as tinyint)+1");
         getTester().checkNull("1e-2+cast(null as double)");
+
+        if (todo) {
+            // Should throw out of range error
+            getTester().checkFails(
+                    "cast(100 as tinyint) + cast(100 as tinyint)", outOfRangeMessage);
+        }
     }
 
     public void testDescendingOperator()
@@ -1046,6 +1105,7 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkString("nullif('a','bc')", "a", "todo: VARCHAR(2) NOT NULL");
         getTester().checkString("nullif('a',cast(null as varchar(1)))", "a", "todo: VARCHAR(1) NOT NULL");
         getTester().checkNull("nullif(cast(null as varchar(1)),'a')");
+        getTester().checkNull("nullif(cast(null as numeric(4,3)), 4.3)");
         // Error message reflects the fact that Nullif is expanded before it is
         // validated (like a C macro). Not perfect, but good enough.
         getTester().checkInvalid("1 + ^nullif(1, date '2005-8-4')^ + 2",
@@ -1124,6 +1184,9 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkInvalid(
             "^LOCALTIMESTAMP()^",
             "No match found for function signature LOCALTIMESTAMP\\(\\)");
+        getTester().checkInvalid(
+            "LOCALTIMESTAMP(^4000000000^)",
+             literalOutOfRangeMessage);
         getTester().checkScalar(
             "LOCALTIMESTAMP(1)",
             timestampPattern,
@@ -1150,6 +1213,9 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkInvalid(
             "^CURRENT_TIMESTAMP()^",
             "No match found for function signature CURRENT_TIMESTAMP\\(\\)");
+        getTester().checkInvalid(
+            "CURRENT_TIMESTAMP(^4000000000^)",
+             literalOutOfRangeMessage);
         getTester().checkScalar("CURRENT_TIMESTAMP(1)", timestampPattern,
             "TIMESTAMP(1) NOT NULL");
     }

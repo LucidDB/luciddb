@@ -209,17 +209,24 @@ public class SqlTypeAssignmentRules
         coerceRules.put(SqlTypeName.Char, rule.clone());
         coerceRules.put(SqlTypeName.Varchar, rule.clone());
 
-        // varchar is castable from Date, time and timestamp and numbers
+        // varchar is castable from Boolean, Date, time and timestamp and numbers
         rule = (HashSet) coerceRules.get(SqlTypeName.Varchar);
+        rule.add(SqlTypeName.Boolean);
         rule.add(SqlTypeName.Date);
         rule.add(SqlTypeName.Time);
         rule.add(SqlTypeName.Timestamp);
 
-        // char is castable from Date, time and timestamp and numbers
+        // char is castable from Boolean, Date, time and timestamp and numbers
         rule = (HashSet) coerceRules.get(SqlTypeName.Char);
+        rule.add(SqlTypeName.Boolean);
         rule.add(SqlTypeName.Date);
         rule.add(SqlTypeName.Time);
         rule.add(SqlTypeName.Timestamp);
+
+        // Boolean is castable from char and varchar
+        rule = (HashSet) coerceRules.get(SqlTypeName.Boolean);
+        rule.add(SqlTypeName.Char);
+        rule.add(SqlTypeName.Varchar);
 
         // Date, time, and timestamp are castable from
         // char and varchar

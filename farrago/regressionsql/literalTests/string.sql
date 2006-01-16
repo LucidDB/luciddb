@@ -47,8 +47,6 @@ drop table t_char;
 create table t_varchar(varchar_col varchar(30) not null primary key, varchar_col2 varchar(1));
 
 -- negative test
-insert into t_varchar values(true,null);
-insert into t_varchar values(false,null);
 insert into t_varchar values(1e400,null);
 insert into t_varchar values(x'ff',null);
 select * from t_varchar;
@@ -59,6 +57,8 @@ insert into t_varchar values('1234567890123456789012345678901',null);
 select * from t_varchar;
 
 -- positive tests
+insert into t_varchar values(true,null);
+insert into t_varchar values(false,null);
 insert into t_varchar values(4444,null);
 insert into t_varchar values(99999999,null);
 insert into t_varchar values(0.0,null);
