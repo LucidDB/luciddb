@@ -27,6 +27,8 @@ import java.sql.Types;
  * This method has several overloads determining what format
  * to use and what to do if a phone number cannot be formatted
  * into a specific format.
+ *
+ * Ported from //BB/bb713/server/SQL/cleanPhone.java
  */
 public class CleanPhone
 {
