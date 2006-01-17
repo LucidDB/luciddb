@@ -18,7 +18,7 @@
 <!ENTITY skipusers        "true">
 <!ENTITY spamwhilebroken  "true">
 <!ENTITY subjectprefix    "Eigenbase Continuous Integration: ">
-<!ENTITY failureaddress   "jsichi@gmail.com">
+<!ENTITY failureaddress   "build@eigenbase.org">
 <!ENTITY reportwhenfixed  "true">
 <!ENTITY emailmapper      "/home/cruise/open/bootstrap/p4email.txt">
 
