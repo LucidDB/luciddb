@@ -21,11 +21,10 @@ set -e
 set -v
 
 usage() {
-    echo "Usage:  initBuild.sh --with[out]-farrago [--with[out]-fennel] [--with[out]-optimization] [--with[out]-debug] [--skip-fennel[-thirdparty]-build] [--with[out]-tests]"
+    echo "Usage:  initBuild.sh [--with[out]-fennel] [--with[out]-optimization] [--with[out]-debug] [--skip-fennel[-thirdparty]-build] [--with[out]-tests]"
 }
 
 
-farrago_disabled=missing
 skip_tests=true
 FARRAGO_FLAGS=""
 luciddb_dir=$(cd $(dirname $0); pwd)
@@ -35,9 +34,6 @@ shopt -sq extglob
 
 while [ -n "$1" ]; do
     case $1 in
-        --with-farrago) farrago_disabled=false;;
-        --without-farrago) farrago_disabled=true;;
-
         --with-tests)
             skip_tests=false;
             FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
@@ -55,18 +51,8 @@ done
 
 shopt -uq extglob
 
-# Check required options
-if [ $farrago_disabled == "missing" ] ; then
-    usage
-    exit -1;
-fi
-
-if $farrago_disabled ; then
-    echo Farrago disabled.
-else
-    cd ${luciddb_dir}/../farrago
-    ./initBuild.sh ${FARRAGO_FLAGS}
-fi
+cd ${luciddb_dir}/../farrago
+./initBuild.sh ${FARRAGO_FLAGS}
 
 # Build catalog then run tests
 cd ${luciddb_dir}/../farrago
