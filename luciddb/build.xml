@@ -34,6 +34,8 @@
 ]>
 
 <project name="luciddb" basedir="." default="test">
+  <taskdef resource="net/sf/antcontrib/antlib.xml" />
+
   <dirname property="luciddb.dir" file="${ant.file.luciddb}" />
 
   <!-- assume common parent of fennel, farrago and luciddb  -->
@@ -425,8 +427,24 @@
     <property name="release.properties.target" 
       location="${release.lib.dir}/FarragoRelease.properties"/>
 
+    <osfamily property="osfamily"/>
+
     <mkdir dir="${dist.dir}"/>
-    <unzip src="${farrago.dist.file}" dest="${dist.dir}"/>
+
+    <if>
+      <equals arg1="${osfamily}" arg2="unix"/>
+      <then>
+	<exec executable="/bin/tar" spawn="false" dir="${dist.dir}"> 
+          <arg value="--bzip2"/>
+          <arg value="-xf"/>
+          <arg value="${farrago.dist.file}"/>
+        </exec>
+      </then>
+      <else>
+        <unzip src="${farrago.dist.file}" dest="${dist.dir}"/>
+      </else>
+    </if>
+
 
     <ant target="rename-dir-to-luciddb" inheritAll="false">
 	<property name="lu.package.name" value="${package.name}"/>
@@ -454,13 +472,27 @@
       includes="FarragoRelease.properties"/>
     <delete file="${release.properties.target}"/>
 
-    <zip destfile="${dist.dir}/luciddb.zip">
-      <zipfileset dir="${dist.dir}/${lucidera.release.spec}" prefix="${lucidera.release.spec}"/>
-    </zip>
+    <if>
+      <equals arg1="${osfamily}" arg2="unix"/>
+      <then>
+	<exec executable="/bin/tar" spawn="false" dir="${dist.dir}"> 
+          <arg value="--bzip2"/>
+          <arg value="-cf"/>
+          <arg value="${dist.dir}/luciddb.tar.bz2"/>
+          <arg value="${lucidera.release.spec}"/>
+        </exec>
+      </then>
+      <else>
+        <zip destfile="${dist.dir}/luciddb.zip">
+          <zipfileset dir="${dist.dir}/${lucidera.release.spec}" prefix="${lucidera.release.spec}"/>
+        </zip>
+      </else>
+    </if>
+
   </target>
 
   <target name="clean-dist">
-    <delete includeEmptyDirs="true">
+    <delete quiet="true" includeEmptyDirs="true">
       <fileset dir="${dist.dir}"/>
     </delete>
   </target>

@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id$
+# $Id: //open/lu/dev/luciddb/distBuild.sh#1 $
 # LucidDB is a DBMS optimized for business intelligence.
 # Copyright (C) 2006-2006 LucidEra, Inc.
 # Copyright (C) 2006-2006 The Eigenbase Project
