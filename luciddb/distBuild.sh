@@ -72,4 +72,16 @@ if ! ${skip_init_build}; then
     fi
 fi
 
+if $farrago_disabled ; then
+    echo "Skip Farrago Packaging ..."
+else
+    cd ${luciddb_dir}/../farrago
+    ./distBuild.sh --skip-init-build
+fi
+
+# get the thirdparty ant
+cd ${luciddb_dir}/../farrago
+. farragoenv.sh `pwd`/../thirdparty
+
+cd ${luciddb_dir}
 ant dist
