@@ -165,7 +165,7 @@
     <antcall target="backupCatalog"/>
   </target>
 
-  <target name="clean">
+  <target name="clean" depends="clean-dist">
     <antcall target="cleanTestLogs"/>
     <delete quiet="true">
       <fileset dir="${classes.dir}" includes="**/*.java"/>
@@ -444,7 +444,6 @@
         <unzip src="${farrago.dist.file}" dest="${dist.dir}"/>
       </else>
     </if>
-
 
     <ant target="rename-dir-to-luciddb" inheritAll="false">
 	<property name="lu.package.name" value="${package.name}"/>
