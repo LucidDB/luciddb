@@ -106,8 +106,6 @@ public:
         FENNEL_UNIT_TEST_CASE(BTreeTest,testBulkLoadTwoLevelsNewRoot);
         FENNEL_UNIT_TEST_CASE(BTreeTest,testBulkLoadTwoLevelsReuseRoot);
         FENNEL_UNIT_TEST_CASE(BTreeTest,testBulkLoadThreeLevels);
-        // TODO - take off the "extra" once splits on non-leaf nodes in
-        // monotonic mode is fixed
         FENNEL_UNIT_TEST_CASE(BTreeTest,testMonotonicInsert);
         
         StandardTypeDescriptorFactory stdTypeFactory;
