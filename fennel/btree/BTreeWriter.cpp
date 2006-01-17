@@ -406,6 +406,10 @@ uint BTreeWriter::lockParentPage(int height)
         BTreeNode const &node = pageLock.getNodeForRead();
 
         BTreeNodeAccessor &nodeAccessor = getNodeAccessor(node);
+        if (monotonic) {
+            iPosition = nodeAccessor.getKeyCount(node);
+            break;
+        }
 
         // TODO:  deal with duplicates
 
