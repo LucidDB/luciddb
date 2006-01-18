@@ -98,6 +98,9 @@ public class DdlRoutineHandler extends DdlHandler
             }
             validateRoutineParam(param);
         }
+        if (FarragoCatalogUtil.isTableFunction(routine)) {
+            validateAttributeSet(routine);
+        }
         if (routine.getDataAccess() == null) {
             throw validator.newPositionalError(
                 routine,
@@ -180,6 +183,12 @@ public class DdlRoutineHandler extends DdlHandler
         FemRoutine routine,
         FemRoutineParameter returnParam)
     {
+        if (FarragoCatalogUtil.isTableFunction(routine)) {
+            throw validator.newPositionalError(
+                routine,
+                res.ValidatorRoutineReturnTableUnsupported.ex(
+                    repos.getLocalizedObjectName(routine)));
+        }
         if (routine.getDataAccess() == RoutineDataAccessEnum.RDA_NO_SQL) {
             throw validator.newPositionalError(
                 routine,
@@ -259,14 +268,28 @@ public class DdlRoutineHandler extends DdlHandler
             routine.setParameterStyle(
                 RoutineParameterStyleEnum.RPS_JAVA.toString());
         }
-        if (!(routine.getParameterStyle().equals(
-                  RoutineParameterStyleEnum.RPS_JAVA.toString()))) {
+        if (!routine.getParameterStyle().equals(
+                RoutineParameterStyleEnum.RPS_JAVA.toString())
+            && !routine.getParameterStyle().equals(
+                RoutineParameterStyleEnum.RPS_JAVA_FARRAGO.toString()))
+        {
             throw validator.newPositionalError(
                 routine,
                 res.ValidatorRoutineJavaParamStyleOnly.ex(
                     repos.getLocalizedObjectName(routine)));
         }
 
+        if (FarragoCatalogUtil.isTableFunction(routine)) {
+            if (!routine.getParameterStyle().equals(
+                    RoutineParameterStyleEnum.RPS_JAVA_FARRAGO.toString()))
+            {
+                throw validator.newPositionalError(
+                    routine,
+                    res.ValidatorRoutineReturnTableUnsupported.ex(
+                        repos.getLocalizedObjectName(routine)));
+            }
+        }
+        
         if (routine.getExternalName() == null) {
             // must be a method declaration and we haven't seen
             // the definition yet

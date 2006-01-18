@@ -215,19 +215,43 @@ public class FarragoJdbcTest extends FarragoTestCase
         return cal;
     }
 
-    public void testSynchronousCancel()
+    public void testJavaQuerySynchronousCancel()
         throws Exception
     {
-        testCancel(true);
+        testQueryCancel(true, "JAVA");
     }
     
-    public void testAsynchronousCancel()
+    public void testJavaQueryAsynchronousCancel()
         throws Exception
     {
-        testCancel(false);
+        testQueryCancel(false, "JAVA");
     }
 
-    private void testCancel(boolean synchronous)
+    public void testFennelQuerySynchronousCancel()
+        throws Exception
+    {
+        testQueryCancel(true, "FENNEL");
+    }
+    
+    public void testFennelQueryAsynchronousCancel()
+        throws Exception
+    {
+        testQueryCancel(false, "FENNEL");
+    }
+
+    public void testUdxSynchronousCancel()
+        throws Exception
+    {
+        testUdxCancel(true);
+    }
+    
+    public void testUdxAsynchronousCancel()
+        throws Exception
+    {
+        testUdxCancel(false);
+    }
+
+    private void testQueryCancel(boolean synchronous, String executorType)
         throws Exception
     {
         // cleanup
@@ -242,15 +266,47 @@ public class FarragoJdbcTest extends FarragoTestCase
         stmt.execute(sql);
         sql = "create foreign table cancel_test.m(id int not null) "
             + "server sys_mock_foreign_data_server "
-            + "options(executor_impl 'FENNEL', row_count '1000000000')";
+            + "options(executor_impl '"
+            + executorType + "', row_count '1000000000')";
         stmt.execute(sql);
-        sql = "select * from cancel_test.m";
+        if (executorType.equals("FENNEL")) {
+            // For Fennel, we want to make sure it's down in
+            // the ExecStreamGraph when the cancel request arrives
+            sql = "select count(*) from cancel_test.m";
+        } else {
+            // But for Java, we want to test the checkCancel
+            // in FarragoIteratorResultSet, so don't count
+            sql = "select * from cancel_test.m";
+        }
+        executeAndCancel(sql, synchronous);
+    }
+
+    private void testUdxCancel(boolean synchronous)
+        throws Exception
+    {
+        // cleanup
+        String sql = "drop schema cancel_test cascade";
+        try {
+            stmt.execute(sql);
+        } catch (SQLException ex) {
+            // ignore
+        }
+        
+        sql = "create schema cancel_test";
+        stmt.execute(sql);
+        sql = "create function cancel_test.ramp(n int) returns table(i int) "
+            + "language java parameter style system defined java "
+            + "no sql external name "
+            + "'class net.sf.farrago.test.FarragoTestUDR.ramp'";
+        stmt.execute(sql);
+        sql = "select * from table (cancel_test.ramp(1000000000))";
+        executeAndCancel(sql, synchronous);
+    }
+
+    private void executeAndCancel(String sql, boolean synchronous)
+        throws SQLException
+    {
         resultSet = stmt.executeQuery(sql);
-        boolean found;
-        found = resultSet.next();
-        assertTrue(found);
-        found = resultSet.next();
-        assertTrue(found);
         if (synchronous) {
             // cancel immediately
             stmt.cancel();

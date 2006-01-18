@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udf.sql#11 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/ddl/udf.sql#1 $
 0: jdbc:farrago:> -- Test DDL for user-defined functions
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema udftest;
@@ -486,5 +486,32 @@ Error: DDL validation error near line 1, column 8: Invocation name and parameter
 . . . . . . . . > return 20;
 Error: DDL validation error near line 1, column 8: Invocation name and parameter type signature of routine "UDFTEST"."PIFFLE4" conflicts with another routine (state=,code=0)
 0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- UDX
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should succeed
+0: jdbc:farrago:> create function ramp(n int)
+. . . . . . . . > returns table(i int)
+. . . . . . . . > language java
+. . . . . . . . > parameter style system defined java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.ramp';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  wrong parameter style
+0: jdbc:farrago:> create function ramp_bad_param_style(n int)
+. . . . . . . . > returns table(i int)
+. . . . . . . . > language java
+. . . . . . . . > parameter style java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.ramp';
+Error: DDL validation error near line 1, column 8: RETURNS TABLE is illegal for routine "UDFTEST"."RAMP_BAD_PARAM_STYLE"; can only be used with language JAVA and parameter style SYSTEM DEFINED JAVA (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  wrong language
+0: jdbc:farrago:> create function ramp_bad_language(n int)
+. . . . . . . . > returns table(i int)
+. . . . . . . . > contains sql
+. . . . . . . . > return n;
+Error: DDL validation error near line 1, column 8: RETURNS TABLE is illegal for routine "UDFTEST"."RAMP_BAD_LANGUAGE"; can only be used with language JAVA and parameter style SYSTEM DEFINED JAVA (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

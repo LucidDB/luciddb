@@ -120,6 +120,15 @@ public abstract class FarragoTestUDR
     {
         throw new NullPointerException();
     }
+
+    public static void ramp(int n, PreparedStatement resultInserter)
+        throws SQLException
+    {
+        for (int i = 0; i < n; ++i) {
+            resultInserter.setInt(1, i);
+            resultInserter.executeUpdate();
+        }
+    }
 }
 
 // End FarragoTestUDR.java

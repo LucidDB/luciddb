@@ -53,6 +53,17 @@ public interface FarragoSessionRuntimeContext extends FarragoAllocationOwner
     public void openStreams();
 
     /**
+     * Requests cancellation of this execution (either for asynchronous
+     * abort, or because execution has ended).
+     */
+    public void cancel();
+
+    /**
+     * Throws an exception if execution has been canceled.
+     */
+    public void checkCancel();
+    
+    /**
      * @return FennelStreamGraph pinned by loadFennelPlan
      */
     public FennelStreamGraph getFennelStreamGraph();

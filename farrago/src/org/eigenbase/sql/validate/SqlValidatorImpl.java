@@ -675,11 +675,6 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                     selectList, call.getOperands()[0], null, null, null, null,
                     null, SqlParserPos.ZERO);
             return wrapperNode;
-        } else if (node.isA(SqlKind.Insert)) {
-            SqlInsert call = (SqlInsert) node;
-            call.setOperand(
-                SqlInsert.SOURCE_SELECT_OPERAND,
-                call.getSource());
         } else if (node.isA(SqlKind.Delete)) {
             SqlDelete call = (SqlDelete) node;
             final SqlNodeList selectList =
@@ -1476,7 +1471,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                 this, id);
             registerNamespace(usingScope, alias, newNs, forceNullable);
             return newNode;
-
+            
         case SqlKind.LateralORDINAL:
             return registerFrom(
                     parentScope,
@@ -1491,6 +1486,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         case SqlKind.ExceptORDINAL:
         case SqlKind.ValuesORDINAL:
         case SqlKind.UnnestORDINAL:
+        case SqlKind.FunctionORDINAL:
             newNode = node;
             if (alias == null) {
                 // give this anonymous construct a name since later
@@ -1662,7 +1658,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             registerQuery(
                 parentScope,
                 usingScope,
-                insertCall.getSourceSelect(),
+                insertCall.getSource(),
                 null,
                 false);
             break;
@@ -1696,6 +1692,15 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             registerSubqueries(usingScope, call.operands[0]);
             break;
 
+        case SqlKind.FunctionORDINAL:
+            call = (SqlCall) node;
+            ProcedureNamespace procNamespace =
+                new ProcedureNamespace(this, parentScope, call);
+            registerNamespace(
+                usingScope, alias, procNamespace, forceNullable);
+            registerSubqueries(parentScope, call);
+            break;
+            
         case SqlKind.MultisetValueConstructorORDINAL:
         case SqlKind.MultisetQueryConstructorORDINAL:
             call = (SqlCall) node;
@@ -2234,9 +2239,14 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                     false);
         }
 
-        SqlSelect sqlSelect = call.getSourceSelect();
-        validateSelect(sqlSelect, targetRowType);
-        RelDataType sourceRowType = getNamespace(sqlSelect).getRowType();
+        SqlNode source = call.getSource();
+        if (source instanceof SqlSelect) {
+            SqlSelect sqlSelect = (SqlSelect) source;
+            validateSelect(sqlSelect, targetRowType);
+        } else {
+            validateQuery(source);
+        }
+        RelDataType sourceRowType = getNamespace(source).getRowType();
 
         if (!isRowTypeSizeEqual( targetRowType, sourceRowType)) {
             throw EigenbaseResource.instance().UnmatchInsertColumn.ex(

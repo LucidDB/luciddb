@@ -867,7 +867,7 @@ CwmModelElement TableElement(CwmTable table) :
     }
 }
 
-void BasicColumnDefinition(CwmNamedColumnSet table,FemAbstractColumn column) :
+void BasicColumnDefinition(CwmColumnSet table,FemAbstractColumn column) :
 {
     SqlIdentifier columnName;
 }
@@ -887,7 +887,7 @@ void TypedElement(FemAbstractTypedElement element) :
 {
     dataType = DataType()
     {
-        if (null != dataType.getCollectionsTypeName()) {
+        if (dataType.getCollectionsTypeName() != null) {
             FemSqlmultisetType colType = getRepos().newFemSqlmultisetType();
             colType.setName("SYS$MULTISET_" + colType.refMofId());
             FemSqltypeAttribute componentType =
@@ -1558,13 +1558,42 @@ SqlNode ConstructorAssignment() :
 void ReturnsClause(FemRoutine function) :
 {
     FemRoutineParameter returnParam = getRepos().newFemRoutineParameter();
+    returnParam.setName("RETURN");
+    returnParam.setKind(ParameterDirectionKindEnum.PDK_RETURN);
+    function.getParameter().add(returnParam);
 }
 {
-    <RETURNS> TypedElement(returnParam)
+    <RETURNS>
+    (
+        <TABLE>
+        <LPAREN>
+        TableFunctionColumnListElement(function)
+        (<COMMA> TableFunctionColumnListElement(function))*
+        <RPAREN>
+        {
+            // TODO jvs 8-Jan-2006:  should be MULTISET of ROW(x, y, z)
+            returnParam.setType(
+                farragoParser.getStmtValidator().findSqldataType(
+                    new SqlIdentifier(
+                        SqlTypeName.Integer.getName(),
+                        SqlParserPos.ZERO)));
+        }
+        |
+        TypedElement(returnParam)
+        {
+        }
+    )
     {
-        returnParam.setName("RETURN");
-        returnParam.setKind(ParameterDirectionKindEnum.PDK_RETURN);
-        function.getParameter().add(returnParam);
+    }
+}
+
+void TableFunctionColumnListElement(FemRoutine function) :
+{
+    FemViewColumn column = getRepos().newFemViewColumn();
+}
+{
+    BasicColumnDefinition(function, column)
+    {
     }
 }
 
@@ -1706,6 +1735,11 @@ void RoutineParameterStyle(FemRoutine routine) :
         {
             routine.setParameterStyle(
                 RoutineParameterStyleEnum.RPS_JAVA.toString());
+        }
+        | <SYSTEM> <DEFINED> <JAVA>
+        {
+            routine.setParameterStyle(
+                RoutineParameterStyleEnum.RPS_JAVA_FARRAGO.toString());
         }
     )
 }

@@ -1,0 +1,12 @@
+<project name="tch" default="simple-test">
+  <target name="simple-test">
+    <test-suite testunit="simple-test">
+      
+      <test-suite-call testfile="conv_character/test.xml"/>
+      <test-suite-call testfile="conv_numeric/test.xml"/>
+      <test-suite-call testfile="conv_datetime/test.xml"/>
+      <test-suite-call testfile="conv_long/test.xml"/>
+
+    </test-suite>
+  </target>
+</project>

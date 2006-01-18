@@ -108,7 +108,8 @@ abstract class AbstractNamespace implements SqlValidatorNamespace
      */
     protected abstract RelDataType validateImpl();
 
-    public RelDataType getRowType() {
+    public RelDataType getRowType()
+    {
         if (rowType == null) {
             validator.validateNamespace(this);
             Util.permAssert(rowType != null, "validate must set rowType");
@@ -134,7 +135,8 @@ abstract class AbstractNamespace implements SqlValidatorNamespace
             offsetOut);
     }
 
-    public boolean fieldExists(String name) {
+    public boolean fieldExists(String name)
+    {
         final RelDataType rowType = getRowType();
         final RelDataType dataType =
             SqlValidatorUtil.lookupField(rowType, name);

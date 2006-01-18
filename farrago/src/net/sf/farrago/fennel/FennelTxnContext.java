@@ -89,6 +89,10 @@ public class FennelTxnContext
             return hTxn;
         }
 
+        if (fennelDbHandle == null) {
+            return -1;
+        }
+
         fennelDbHandle.getTransientTxnContext().beginTransientTxn();
         try {
             FemCmdBeginTxn cmd = metadataFactory.newFemCmdBeginTxn();
@@ -170,6 +174,9 @@ public class FennelTxnContext
      */
     public FennelSvptHandle newSavepoint()
     {
+        if (fennelDbHandle == null) {
+            return null;
+        }
         fennelDbHandle.getTransientTxnContext().beginTransientTxn();
         try {
             FemCmdSavepoint cmd = metadataFactory.newFemCmdSavepoint();
@@ -220,6 +227,8 @@ public class FennelTxnContext
      */
     public FennelStreamGraph newStreamGraph(FarragoAllocationOwner owner)
     {
+        assert(fennelDbHandle != null);
+        
         fennelDbHandle.getTransientTxnContext().beginTransientTxn();
         try {
             FemCmdCreateExecutionStreamGraph cmdCreate =

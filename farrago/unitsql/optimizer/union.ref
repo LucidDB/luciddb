@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/union.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/union.sql#2 $
 0: jdbc:farrago:> -- Test UNION queries
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'sales';
@@ -228,5 +228,16 @@
 '  FennelMergeRel'
 '    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
 '    FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > insert into depts(name)
+. . . . . . . . > select name from emps union all select name from depts;
+'column0'
+'FennelToIteratorConverter'
+'  FtrsTableModificationRel(table=[[LOCALDB, SALES, DEPTS]], operation=[INSERT], updateColumnList=[[]], flattened=[true])'
+'    FennelCalcRel($f0=[CAST(null):INTEGER NOT NULL], $f1=[$0])'
+'      FennelMergeRel'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

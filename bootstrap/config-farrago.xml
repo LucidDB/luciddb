@@ -47,7 +47,7 @@
 			<artifactspublisher dir="&open_integration.build.home;/farrago/regressionsql" dest="artifacts/farrago&configSuffix;" subdirectory="regressionsql"/>
 
                         <!-- fennel artifacts -->
-			<artifactspublisher dir="&open_integration.build.home;/fennel/test/.testlog" dest="artifacts/farrago&configSuffix;" subdirectory="fennel"/>
+			<artifactspublisher dir="&open_integration.build.home;/fennel/trace" dest="artifacts/farrago&configSuffix;" subdirectory="fennel"/>
 
                         <!--
                         <onfailure>

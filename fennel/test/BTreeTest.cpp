@@ -96,6 +96,7 @@ class BTreeTest : virtual public SegStorageTestBase
         bool deletion);
     void testSearch(SharedByteInputStream,uint nRecords,bool leastUpper);
     void testSearchLast();
+    void testMonotonicInsert();
     
 public:
     explicit BTreeTest()
@@ -105,6 +106,7 @@ public:
         FENNEL_UNIT_TEST_CASE(BTreeTest,testBulkLoadTwoLevelsNewRoot);
         FENNEL_UNIT_TEST_CASE(BTreeTest,testBulkLoadTwoLevelsReuseRoot);
         FENNEL_UNIT_TEST_CASE(BTreeTest,testBulkLoadThreeLevels);
+        FENNEL_UNIT_TEST_CASE(BTreeTest,testMonotonicInsert);
         
         StandardTypeDescriptorFactory stdTypeFactory;
         TupleAttributeDescriptor attrDesc(
@@ -344,6 +346,45 @@ int32_t BTreeTest::readValue()
 {
     return *reinterpret_cast<int32_t const *>(
         tupleData[1].pData);
+}
+
+void BTreeTest::testMonotonicInsert()
+{
+    uint nRecords = 200000;
+    descriptor.rootPageId = NULL_PAGE_ID;
+    BTreeBuilder builder(descriptor,pRandomSegment);
+    
+    keyData.compute(builder.getKeyDescriptor());
+    keyData[0].pData = reinterpret_cast<PConstBuffer>(&record.key);
+
+    tupleData.compute(descriptor.tupleDescriptor);
+
+    builder.createEmptyRoot();
+    descriptor.rootPageId = builder.getRootPageId();
+
+    SegmentAccessor scratchAccessor = pSegmentFactory->newScratchSegment(
+        pCache,
+        1);
+
+    BTreeWriter writer(descriptor,scratchAccessor,true);
+
+    // insert the records monotonically and then read them back to make sure
+    // they got inserted
+    for (uint i = 0; i < nRecords; i++) {
+        record.key = i;
+        writer.insertTupleFromBuffer(
+            reinterpret_cast<PConstBuffer>(&record.key), DUP_ALLOW);
+    }
+
+    BTreeReader reader(descriptor);
+    for (uint i = 0; i < nRecords; ++i) {
+        record.key = i;
+        if (!reader.searchForKey(keyData,DUP_SEEK_ANY)) {
+            BOOST_FAIL("Could not find key #" << i << ":  " << record.key);
+        }
+        reader.getTupleAccessorForRead().unmarshal(tupleData);
+        BOOST_CHECK_EQUAL(record.key,readKey());
+    }
 }
 
 FENNEL_UNIT_TEST_SUITE(BTreeTest);

@@ -32,7 +32,3 @@ SCHEMA_NAME=TESTDATA
 #########################
 
 TABLE_NAME=table_name
-
-# tmp workaround while flatfile does not read file_extension,directory
-file_ext=
-ff_dir=
