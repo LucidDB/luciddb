@@ -21,10 +21,11 @@ set -e
 set -v
 
 usage() {
-    echo "Usage:  distBuild.sh [--skip-init-build]"
+    echo "Usage:  distBuild.sh [--skip-farrago-build] [--skip-init-build]"
 }
 
 
+skip_farrago_build=false
 skip_init_build=false
 INIT_BUILD_FLAGS=""
 luciddb_dir=$(cd $(dirname $0); pwd)
@@ -34,10 +35,11 @@ shopt -sq extglob
 
 while [ -n "$1" ]; do
     case $1 in
-        --skip-init-build)
-            skip_init_build=true;
+         --skip-farrago-build) 
+	    skip_farrago_build=true;
             INIT_BUILD_FLAGS="${INIT_BUILD_FLAGS} $1";;
-
+        --skip-init-build)
+            skip_init_build=true;;
         --*) INIT_BUILD_FLAGS="${INIT_BUILD_FLAGS} $1";;
 
         *) usage; exit -1;;
@@ -51,11 +53,19 @@ shopt -uq extglob
 set -x
 
 if ! ${skip_init_build}; then
-    ./initBuild.sh ${INIT_BUILD_FLAGS} --with-fennel
+    if ${skip_farrago_build}; then
+        ./initBuild.sh ${INIT_BUILD_FLAGS}
+    else
+        ./initBuild.sh ${INIT_BUILD_FLAGS} --with-fennel
+    fi
 fi
 
-cd ${luciddb_dir}/../farrago
-./distBuild.sh --skip-init-build
+if $skip_farrago_build ; then
+    echo "Skip Farrago Packaging ..."
+else
+    cd ${luciddb_dir}/../farrago
+    ./distBuild.sh --skip-init-build
+fi
 
 # get the thirdparty ant
 cd ${luciddb_dir}/../farrago

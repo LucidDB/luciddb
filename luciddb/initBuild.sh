@@ -21,10 +21,11 @@ set -e
 set -v
 
 usage() {
-    echo "Usage:  initBuild.sh [--with[out]-fennel] [--with[out]-optimization] [--with[out]-debug] [--skip-fennel[-thirdparty]-build] [--with[out]-tests]"
+    echo "Usage:  initBuild.sh [--with[out]-fennel] [--with[out]-optimization] [--with[out]-debug] [--skip-farrago-build] [--skip-fennel[-thirdparty]-build] [--with[out]-tests]"
 }
 
 
+farrago_skip_build=false
 skip_tests=true
 FARRAGO_FLAGS=""
 luciddb_dir=$(cd $(dirname $0); pwd)
@@ -34,15 +35,15 @@ shopt -sq extglob
 
 while [ -n "$1" ]; do
     case $1 in
+        --skip-farrago-build) farrago_skip_build=true;;
         --with-tests)
             skip_tests=false;
             FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
         --without-tests)
             skip_tests=true;
             FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
-
         --*) FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
-
+        
         *) usage; exit -1;;
     esac
 
@@ -51,8 +52,12 @@ done
 
 shopt -uq extglob
 
-cd ${luciddb_dir}/../farrago
-./initBuild.sh ${FARRAGO_FLAGS}
+if $farrago_skip_build ; then
+    echo Skipping Farrago build.
+else
+    cd ${luciddb_dir}/../farrago
+    ./initBuild.sh ${FARRAGO_FLAGS}
+fi
 
 # Build catalog then run tests
 cd ${luciddb_dir}/../farrago
