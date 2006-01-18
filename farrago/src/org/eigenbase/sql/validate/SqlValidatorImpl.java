@@ -582,7 +582,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
      *
      * @return rewritten expression
      */
-    private SqlNode performUnconditionalRewrites(SqlNode node)
+    protected SqlNode performUnconditionalRewrites(SqlNode node)
     {
         if (node == null) {
             return node;
