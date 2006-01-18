@@ -109,7 +109,7 @@
   <fail unless="mdrlibs.dir"/>
   <fail unless="rmijdbc.dir"/>
   <fail unless="retroweaver.dir"/>
-
+  <fail unless="emma.dir"/>
 
   <!-- Directories -->
 
@@ -328,6 +328,14 @@
     <pathelement path="${farrago.run.classpath}"/>
   </path>
   <property name="farrago.sqlline.classpath" refid="farrago.sqlline.classpath"/>
+
+  <path id="emma.classpath">
+    <fileset dir="${emma.dir}" includes="lib/*.jar"/>
+  </path>
+  <property name="emma.classpath" refid="emma.classpath"/>
+
+  <taskdef resource="emma_ant.properties" classpathref="emma.classpath"/>
+
   <!-- classpath for running blackhawk based tests -->
   <property name="bh.home" location="${open.dir}/blackhawk/build/dist"/>
 
