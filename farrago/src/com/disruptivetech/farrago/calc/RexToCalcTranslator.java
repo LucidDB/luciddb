@@ -26,19 +26,13 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.type.SqlTypeUtil;
 import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.SaffronProperties;
 import org.eigenbase.util.Util;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.ArrayList;
-
-import com.disruptivetech.farrago.rel.FennelWindowRel;
-
+import java.util.*;
 
 /**
  * Converts expressions in logical format ({@link RexNode}) into calculator
@@ -61,7 +55,6 @@ public class RexToCalcTranslator implements RexVisitor
     CalcProgramBuilder.Register falseReg = builder.newBoolLiteral(false);
     private int nullRegOrdinal = -1;
 
-    final SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
     protected final CalcRexImplementorTable implementorTable =
         CalcRexImplementorTableImpl.threadInstance();
 
@@ -70,7 +63,9 @@ public class RexToCalcTranslator implements RexVisitor
      * is generated from a {@link RexNode} using {@link #getKey(RexNode)}) to
      * the {@link CalcProgramBuilder.Register} which holds its value.
      */
-    private final Map results = new HashMap();
+    private final Map<String, CalcProgramBuilder.Register> results =
+        new HashMap<String, CalcProgramBuilder.Register>();
+
     protected final RexBuilder rexBuilder;
     /**
      * Whether the code generator should short-circuit logical operators.
@@ -85,8 +80,11 @@ public class RexToCalcTranslator implements RexVisitor
      * determinacy.
      */
     private final TypePair [] knownTypes;
+
+    /** @deprecated this can be removed */
     private AggOp aggOp;
     private RexNode[] inputExprs = null;
+    private RexProgram program;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -194,7 +192,7 @@ public class RexToCalcTranslator implements RexVisitor
             };
     }
 
-    private void clearProgram()
+    private void clearProgram(RexProgram program)
     {
         builder.clear();
         trueReg = builder.newBoolLiteral(true);
@@ -202,6 +200,7 @@ public class RexToCalcTranslator implements RexVisitor
         results.clear();
         nullRegOrdinal = -1;
         inputExprs = null;
+        this.program = program;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -233,18 +232,14 @@ public class RexToCalcTranslator implements RexVisitor
     }
 
     /**
-     * Returns whether every expression in a list, and an optional expression,
-     * can be translated.
+     * Returns whether a program can be translated.
      */
-    public boolean canTranslate(RexNode[] exprs, RexNode expr)
+    public boolean canTranslate(RexProgram program)
     {
         boolean deep = true;
         final TranslationTester tester = new TranslationTester(this, deep);
         try {
-            for (int i = 0; i < exprs.length; i++) {
-                exprs[i].accept(tester);
-            }
-            if (expr != null) {
+            for (RexNode expr : program.getExprList()) {
                 expr.accept(tester);
             }
             return true;
@@ -313,10 +308,10 @@ public class RexToCalcTranslator implements RexVisitor
         return new CalcProgramBuilder.RegisterDescriptor(calcType, bytes);
     }
 
-    public Object getKey(RexNode node)
+    public String getKey(RexNode node)
     {
-        if (node instanceof RexInputRef) {
-            return ((RexInputRef) node).getName();
+        if (node instanceof RexSlot) {
+            return ((RexSlot) node).getName();
         }
         return node.toString() + node.getType().toString();
     }
@@ -325,23 +320,26 @@ public class RexToCalcTranslator implements RexVisitor
         RexNode node,
         CalcProgramBuilder.Register register)
     {
-        results.put(
-            getKey(node),
-            register);
+        final String key = getKey(node);
+        results.put(key, register);
     }
 
     /**
      * Returns the register which contains the result of evaluating the given
-     * expression. The node must already have been implemented.
+     * expression.
+     *
+     * <p>If <code>failIfNotFound</code>, the node must already have been
+     * implemented.
      *
      * <p>To check whether the result exists, use
-     * {@link #containsResult(RexNode)}.
+     * {@link #containsResult(RexNode)}, or pass in
+     * <code>failIfNotFound = false</code>.
      */
-    CalcProgramBuilder.Register getResult(RexNode node)
+    CalcProgramBuilder.Register getResult(RexNode node, boolean failIfNotFound)
     {
-        CalcProgramBuilder.Register found =
-            (CalcProgramBuilder.Register) results.get(getKey(node));
-        if (found == null) {
+        final String key = getKey(node);
+        CalcProgramBuilder.Register found = results.get(key);
+        if (found == null && failIfNotFound) {
             throw Util.newInternal("Expression " + node +
                 " has not been implemented as a register");
         }
@@ -351,13 +349,18 @@ public class RexToCalcTranslator implements RexVisitor
     /**
      * Returns whether a given expression has been implemented as a register.
      *
-     * @see #getResult(RexNode)
+     * @see #getResult(RexNode,boolean)
      */
     boolean containsResult(RexNode node)
     {
         return results.get(getKey(node)) != null;
     }
 
+    /**
+     * @deprecated Remove all usages of this method (they all seem to have the
+     * same pattern) and put the pattern into the translator, and remove
+     * the {@link #inputExprs} field
+     */
     protected RexNode[] getInputExprs()
     {
         return inputExprs;
@@ -386,84 +389,47 @@ public class RexToCalcTranslator implements RexVisitor
      *   If <code>inputRowType</code> is not null, the program contains
      *   an input register for every field in the input row type; otherwise
      *   it contains inputs for only those fields used.
-     * @param projectExps Array of expressions to be projected. Must not be
-     *   null, may be empty.
-     * @param conditionExp Filter expression. May be null.
+     * @param program Program consisting of a set of common expressions,
+     *   a list of expressions to project, and an optional condition.
+     *   Must not be null, but the project list may be empty.
      */
-    public String getProgram(
+    public String generateProgram(
         RelDataType inputRowType,
-        RexNode [] projectExps,
-        RexNode conditionExp)
+        RexProgram program)
     {
-        return getProgram(inputRowType, projectExps, conditionExp, AggOp.None);
-    }
+        final List<RexLocalRef> projectRefList = program.getProjectList();
+        RexNode conditionRef = program.getCondition();
+        aggOp = AggOp.None;
 
-    private String getProgram(
-        RelDataType inputRowType,
-        final RexNode[] projectExps,
-        RexNode conditionExp,
-        AggOp aggOp)
-    {
-        clearProgram();
+        clearProgram(program);
 
-        // Stop -1. Figure out the input row type.
-        this.aggOp = aggOp;
-        switch (aggOp.getOrdinal()) {
-        case AggOp.None_ordinal:
-        case AggOp.Init_ordinal:
-            break;
-        case AggOp.Add_ordinal:
-        case AggOp.Drop_ordinal:
-            inputRowType =
-                rexBuilder.getTypeFactory().createStructType(
-                    new RelDataTypeFactory.FieldInfo()
-                    {
-                        public int getFieldCount()
-                        {
-                            return projectExps.length;
-                        }
-
-                        public String getFieldName(int index)
-                        {
-                            return "input$" + index;
-                        }
-
-                        public RelDataType getFieldType(int index)
-                        {
-                            return projectExps[index].getType();
-                        }
-                    });
-            break;
-        default:
-            throw aggOp.unexpected();
-        }
         // Step 0. Create input fields.
         // Create a calculator input for each field in the input relation,
         // regardless of whether the calcualtor program uses them.
         if (inputRowType != null) {
-            final RexInputRef[] inputRefs = RexUtil.toInputRefs(inputRowType);
+            final RexLocalRef[] inputRefs = RexUtil.toLocalRefs(inputRowType);
             for (int i = 0; i < inputRefs.length; i++) {
-                RexInputRef inputRef = inputRefs[i];
-                implementNode(inputRef);
+                RexLocalRef inputRef = inputRefs[i];
+                implement(inputRef);
             }
         }
 
         // Step 1: implement all the filtering logic
-        if (conditionExp != null) {
+        if (conditionRef != null) {
             CalcProgramBuilder.Register filterResult =
-                implementNode(conditionExp);
+                implementNode(conditionRef);
             assert CalcProgramBuilder.OpType.Bool == filterResult.getOpType() :
-                "Condition must be boolean: " + conditionExp;
+                "Condition must be boolean: " + conditionRef;
 
-            //step 2: report the status of the filtering
+            // Step 2: report the status of the filtering
             CalcProgramBuilder.Register statusReg =
                 builder.newStatus(CalcProgramBuilder.OpType.Bool, -1);
 
-            //step 2-1: figure out the status
+            // Step 2-1: figure out the status
             String prepareOutput = newLabel();
             builder.addLabelJumpTrue(prepareOutput, filterResult);
 
-            // row didnt match
+            // row didn't match
             CalcProgramBuilder.move.add(builder, statusReg, trueReg);
             builder.addReturn();
             builder.addLabel(prepareOutput);
@@ -471,26 +437,23 @@ public class RexToCalcTranslator implements RexVisitor
         }
 
         // row matched. Now calculate all the outputs
-        for (int i = 0; i < projectExps.length; i++) {
-            RexNode node = projectExps[i];
-
+        for (RexLocalRef projectRef : projectRefList) {
             // This could probably be optimized by writing to the outputs
             // directly instead of temp registers but harder to (java)
             // implement.
-            implementNode(node);
+            implementNode(projectRef);
         }
 
         // all outputs calculated, now assign results to outputs by reference
         CalcProgramBuilder.Register isNullRes = null;
-        for (int i = 0; i < projectExps.length; i++) {
-            RexNode node = projectExps[i];
+        for (RexLocalRef projectRef : projectRefList) {
             CalcProgramBuilder.RegisterDescriptor desc =
-                getCalcRegisterDescriptor(node);
-            CalcProgramBuilder.Register res = getResult(node);
+                getCalcRegisterDescriptor(projectRef);
+            CalcProgramBuilder.Register res = getResult(projectRef, true);
 
             // check and assert that if type was declared as NOT NULLABLE, value
             // is not null
-            if (!node.getType().isNullable()) {
+            if (!projectRef.getType().isNullable()) {
                 String wasNotNull = newLabel();
                 if (isNullRes == null) {
                     isNullRes =
@@ -518,47 +481,40 @@ public class RexToCalcTranslator implements RexVisitor
 
     /**
      * Translates an array of project expressions and an optional filter
-     * expression into a {@link CalcProgramBuilder} calculator program
-     * using a depth-first recursive algorithm when there are aggregate functions.
+     * expression into a {@link CalcProgramBuilder} calculator program using a
+     * depth-first recursive algorithm when there are aggregate functions.
      *
      * <p>This method is NOT stateless.
      * TODO: Make method stateless -- so you can call this method several times
      * with different inputs -- and therefore the translator is re-usable.
      *
-     * @param inputRowType The type of the input row to the calculator.
-     *   If <code>inputRowType</code> is not null, the program contains
-     *   an input register for every field in the input row type; otherwise
-     *   it contains inputs for only those fields used.
-     * @param inputExps The input expressions for the case where there are 
-     *   calculator expressions that should be computed prior to aggregate
-     *   function calculation. For example, in SUM(a + b), inputExps is (a + b).
-     * @param projectExps Array of expressions to be projected. Must not be
-     *   null, may be empty.
-     * @param conditionExp Filter expression. May be null.
+     * @param program Program, containing pre-expressions, aggregate
+     *   expressions, post-expressions, and optionally a filter.
+     * @param aggOp Aggregate operation (INIT, ADD, or DROP), must not be null.
      */
     public String getAggProgram(
-        RelDataType inputRowType,
-        RexNode [] inputExps,
-        RexNode [] aggs,
-        RexNode [] projectExps,
-        RexNode conditionExp)
-    {
-        return getAggProgram(inputRowType, inputExps, aggs, projectExps,
-                       conditionExp, AggOp.None);
-    }
-
-    private String getAggProgram(
-        RelDataType inputRowType,
-        final RexNode[] inputExps,
-        final RexNode[] aggs,
-        final RexNode[] projectExps,
-        RexNode conditionExp,
+        RexProgram program,
         AggOp aggOp)
     {
-        clearProgram();
+        // The input expressions for the case where there are calculator
+        // expressions that should be computed prior to aggregate function
+        // calculation. For example, in SUM(a + b), inputExprs is (a + b).
+        RexNode [] inputExprs = null; // todo: remove
+        RexNode [] aggs = null;
+        // Array of expressions to be projected. Must not be null, may be
+        // empty.
+        RexLocalRef[] projectExprs =
+            program.getProjectList().toArray(
+                new RexLocalRef[program.getProjectList().size()]);
+        // Filter expression. May be null.
+        RexLocalRef conditionExp = program.getCondition();
+
+        RelDataType inputRowType = program.getInputRowType();
+
+        clearProgram(program);
 
         // Inner Calc Rel has information about expressions needed for arguments to
-        // the aggregate function. So it has RexInputRef's and RexCall's. This 
+        // the aggregate function. So it has RexInputRef's and RexCall's. This
         // information is needed for add and drop programs.
         //
         // Windowed Agg Rel has information about the aggregate functions alone.
@@ -569,8 +525,11 @@ public class RexToCalcTranslator implements RexVisitor
         // program alone. It also needs the outputs of Windowed Agg Rel as inputs.
 
         this.aggOp = aggOp;
-        this.inputExprs = inputExps;
+        assert aggOp != AggOp.None;
+        this.inputExprs = inputExprs;
+
         // Validate aggOp.
+        assert aggOp != null;
         switch (aggOp.getOrdinal()) {
         case AggOp.None_ordinal:
         case AggOp.Init_ordinal:
@@ -588,17 +547,17 @@ public class RexToCalcTranslator implements RexVisitor
             final RexInputRef[] inputRefs = RexUtil.toInputRefs(inputRowType);
             for (int i = 0; i < inputRefs.length; i++) {
                 RexInputRef inputRef = inputRefs[i];
-                implementNode(inputRef);
+                implement(inputRef);
             }
             // Additional inputs for the aggregate functions.
             switch (aggOp.getOrdinal()) {
             case AggOp.None_ordinal:
                 ArrayList al = new ArrayList(1);
                 HashMap dups = new HashMap();
-                // Change the projectExps to map to the correct input refs.
-                fixOutputExps(al, inputRefs.length, inputExps, aggs, projectExps, dups);
+                // Change the projectExprs to map to the correct input refs.
+                fixOutputExps(al, inputRefs.length, inputExprs, aggs, projectExprs, dups);
                 if (conditionExp != null) {
-                    fixOutputExps(al, inputRefs.length, inputExps, aggs,
+                    fixOutputExps(al, inputRefs.length, inputExprs, aggs,
                             new RexNode[] {conditionExp}, dups);
                 }
                 for (int i = 0; i < al.size(); i++) {
@@ -633,20 +592,20 @@ public class RexToCalcTranslator implements RexVisitor
         }
 
         // row matched. Now calculate all the outputs
-        // The projectExps are the overs for a given partition.
-        for (int i = 0; i < projectExps.length; i++) {
-            RexNode node = projectExps[i];
+        // The projectExprs are the overs for a given partition.
+        for (int i = 0; i < projectExprs.length; i++) {
+            RexNode node = projectExprs[i];
             implementNode(node);
         }
 
         // Ref instructions for output program.
         switch (aggOp.getOrdinal()) {
         case AggOp.None_ordinal:
-            for (int i = 0; i < projectExps.length; i++) {
-                RexNode node = projectExps[i];
+            for (int i = 0; i < projectExprs.length; i++) {
+                RexNode node = projectExprs[i];
                 CalcProgramBuilder.RegisterDescriptor desc =
                     getCalcRegisterDescriptor(node);
-                CalcProgramBuilder.Register res = getResult(node);
+                CalcProgramBuilder.Register res = getResult(node, true);
                 //if ok, assign result to output by reference
                 CalcProgramBuilder.Register outReg = builder.newOutput(desc);
                 builder.addRef(outReg, res);
@@ -660,8 +619,9 @@ public class RexToCalcTranslator implements RexVisitor
         return builder.getProgram();
     }
 
-    private void fixOutputExps(ArrayList extInputs, int start, RexNode[] inputExps,
-            RexNode[] aggs, RexNode[] outputExps, HashMap dups)
+    private void fixOutputExps(
+        ArrayList extInputs, int start, RexNode[] inputExps,
+        RexNode[] aggs, RexNode[] outputExps, HashMap dups)
     {
         // Review (murali 2005/08/03): Notice that we are changing the contents of
         // the outputExps here. It may be better to pass a copy of the outputExps
@@ -712,28 +672,39 @@ public class RexToCalcTranslator implements RexVisitor
      */
     CalcProgramBuilder.Register implementNode(RexNode node)
     {
-        if (!containsResult(node)) {
-            node.accept(this);
+        CalcProgramBuilder.Register result = getResult(node, false);
+        if (result == null) {
+           node.accept(this);
+            result = getResult(node, true);
         }
-        final CalcProgramBuilder.Register result = getResult(node);
-        Util.pre(result != null, "result != null");
         return result;
     }
 
     public void visitInputRef(RexInputRef inputRef)
     {
-        implementNode(inputRef);
+        implement(inputRef);
+    }
+
+    public void visitLocalRef(RexLocalRef localRef)
+    {
+        implement(localRef);
     }
 
     public void visitLiteral(RexLiteral literal)
     {
-        implementNode(literal);
+        if (containsResult(literal)) {
+            return;
+        }
+        implement(literal);
     }
 
     public void visitCall(RexCall call)
     {
+        if (containsResult(call)) {
+            return;
+        }
         int before = builder.getCurrentLineNumber();
-        implementNode(call);
+        implement(call);
         int after = builder.getCurrentLineNumber();
         assert (after >= before);
         if (0 != (after - before)) {
@@ -749,7 +720,7 @@ public class RexToCalcTranslator implements RexVisitor
 
     public void visitCorrelVariable(RexCorrelVariable correlVariable)
     {
-        implementNode(correlVariable);
+        implement(correlVariable);
     }
 
     public void visitDynamicParam(RexDynamicParam dynamicParam)
@@ -768,7 +739,7 @@ public class RexToCalcTranslator implements RexVisitor
     {
         final RexNode expr = fieldAccess.getReferenceExpr();
         if (expr instanceof RexCorrelVariable) {
-            implementNode(fieldAccess);
+            implement(fieldAccess);
             return;
         }
         throw FarragoResource.instance().ProgramImplementationError.ex(
@@ -825,7 +796,7 @@ public class RexToCalcTranslator implements RexVisitor
         }
     }
 
-    private void implementNode(RexCall call)
+    private void implement(RexCall call)
     {
         if (containsResult(call)) {
             throw new AssertionError("Shouldn't call this function directly;"
@@ -878,8 +849,8 @@ public class RexToCalcTranslator implements RexVisitor
                 CalcProgramBuilder.Register colReg =
                     builder.newVarcharLiteral(collationToUse);
 
-                //TODO this is only for ascci cmp. Need to pump in colReg when a
-                //fennel function that can take it is born
+                // TODO: this is only for ascii cmp. Need to pump in colReg
+                // when a fennel function that can take it is born.
                 ExtInstructionDefTable.strCmpA.add(
                     builder,
                     new CalcProgramBuilder.Register [] { strCmpResult, reg1, reg2 });
@@ -890,8 +861,9 @@ public class RexToCalcTranslator implements RexVisitor
             }
 
             CalcProgramBuilder.Register zero = builder.newInt4Literal(0);
-            CalcProgramBuilder.Register [] regs =
-            { resultOfCall, strCmpResult, zero };
+            CalcProgramBuilder.Register [] regs = {
+                resultOfCall, strCmpResult, zero
+            };
             if (op.getKind().isA(SqlKind.Equals)) {
                 CalcProgramBuilder.boolNativeEqual.add(builder, regs);
             } else if (op.getKind().isA(SqlKind.NotEquals)) {
@@ -1048,7 +1020,7 @@ public class RexToCalcTranslator implements RexVisitor
         // probably needs to be done for BINARY vs. VARBINARY.
     }
 
-    private void implementNode(RexLiteral node)
+    private void implement(RexLiteral node)
     {
         if (containsResult(node)) {
             throw new AssertionError("Shouldn't call this function directly;"
@@ -1063,30 +1035,44 @@ public class RexToCalcTranslator implements RexVisitor
             builder.newLiteral(desc, value));
     }
 
-    private void implementNode(RexInputRef node)
+    private void implement(RexInputRef node)
     {
         if (containsResult(node)) {
-            throw new AssertionError("Shouldn't call this function directly;"
-                + " use implementNode(RexNode) instead");
+            return; // this method is idempotent
         }
+        final int index = node.getIndex();
+        assert index < program.getInputRowType().getFields().length;
         setResult(
             node,
             builder.newInput(getCalcRegisterDescriptor(node)));
     }
 
-    private void implementNode(RexFieldAccess node)
+    private void implement(RexLocalRef node)
+    {
+        assert !containsResult(node) :
+            "Shouldn't call this function directly;" +
+            " use implementNode(RexNode) instead";
+        // Evaluate the expression and assign to a new result.
+        final int index = node.getIndex();
+        final RexNode expr = program.getExprList().get(index);
+        expr.accept(this);
+        final CalcProgramBuilder.Register result = getResult(expr, true);
+        setResult(node, result);
+    }
+
+    private void implement(RexFieldAccess node)
     {
         if (containsResult(node)) {
             throw new AssertionError("Shouldn't call this function directly;"
-                + " use implementNode(RexFieldAccess) instead");
+                + " use implementNode(RexNode) instead");
         }
 
         final RexNode accessedNode = node.getReferenceExpr();
         assert(accessedNode instanceof RexCorrelVariable);
-        implementNode((RexCorrelVariable) accessedNode);
+        implement((RexCorrelVariable) accessedNode);
     }
 
-    private void implementNode(RexCorrelVariable node)
+    private void implement(RexCorrelVariable node)
     {
         final int id = RelOptQuery.getCorrelOrdinal(node.getName());
         CalcProgramBuilder.Register idReg = builder.newInt4Literal(id);
@@ -1118,43 +1104,76 @@ public class RexToCalcTranslator implements RexVisitor
      * Generates the three programs -- init, add, and drop -- for an array of
      * calls to aggregate functions.
      *
-     * @param inputType The type of the input record.
-     * @param inputExps The input expressions for the case where there are 
-     *   calculator expressions that should be computed prior to aggregate
-     *   function calculation. For example, in SUM(a + b), inputExps is (a + b).
-     * @param aggCalls Array of calls to aggregate functions. Each must be a
-     *    call to a {@link SqlAggFunction}, and have precisely one argument
-     *    of type {@link RexInputRef}.
+     * <p>The aggregate expressions are represented by two {@link RexProgram}
+     * objects. The lower <code>inputProgram</code> computes the input
+     * expressions to the calculator; the upper <code>aggProgram</code>
+     * contains calls to aggregate functions. For example, the expressions
+     *
+     * <pre>Aggs = {
+     *    SUM(a + b),
+     *    SUM(a + b + c),
+     *    COUNT(a + b) * d
+     *    SUM(a + b) + 4
+     * }</pre>
+     *
+     * would be represented by the program
+     *
+     * <pre>aggProgram = {
+     *    exprs = {
+     *       $0,         // a
+     *       $1,         // b
+     *       $2,         // c
+     *       $3,         // d
+     *       $0 + $1,    // a + b
+     *       $4 + $2     // (a + b) + c
+     *       SUM($4),    // SUM(a + b)
+     *       SUM($5),    // SUM(a + b + c)
+     *       COUNT($4),  // COUNT(a + b)
+     *       $8 * $3     // COUNT(a + b) * d
+     *       SUM($4),    // SUM(a + b)
+     *       $10 + 4,    // SUM(a + b) + 4
+     *    },
+     *    projectRefs = {
+     *       $6,         // SUM(a + b)
+     *       $7,         // SUM(a + b + c)
+     *       $9,         // COUNT(a + b) * d
+     *       $11,        // SUM(a + b) + 4
+     *    },
+     *    conditionRef = null
+     * }</pre>
+     *
+     * @param program Aggregate expressions to calculate.
+     *   The program can compute the inputs to the aggregates,
+     *   the aggregates themselves, output expressions, and an output filter.
      * @param programs Output array of programs.
      *
      * @pre programs.length == 3
-     * @pre aggCalls[i].op instanceof SqlAggFunction
-     * @pre aggCalls[i].operands[j] instanceof RexInputRef
      */
     public void getAggProgram(
-        RelDataType inputType,
-        final RexNode[] inputExps,
-        final RexNode[] aggs,
-        final RexCall[] aggCalls,
+        final RexProgram program,
         String[] programs)
     {
         Util.pre(programs.length == 3, "programs.length == 3");
-        for (int i = 0; i < aggCalls.length; i++) {
-            RexCall aggCall = aggCalls[i];
-            Util.pre(aggCall.getOperator() instanceof SqlAggFunction,
-                "aggCalls[i].op instanceof SqlAggFunction");
-            for (int j = 0; j < aggCall.operands.length; j++) {
-                RexNode operand = aggCall.operands[j];
-                Util.pre(operand instanceof RexInputRef,
-                    "aggCalls[i].operands[j] instanceof RexInputRef");
-            }
+        programs[0] = getAggProgram(program, AggOp.Init);
+        programs[1] = getAggProgram(program, AggOp.Add);
+        programs[2] = getAggProgram(program, AggOp.Drop);
+    }
+
+    public RexLiteral getLiteral(RexNode expr)
+    {
+        expr = resolve(expr);
+        assert expr instanceof RexLiteral : expr;
+        final RexLiteral literal = (RexLiteral) expr;
+        return literal;
+    }
+
+    public RexNode resolve(RexNode expr)
+    {
+        if (expr instanceof RexLocalRef) {
+            final int index = ((RexLocalRef) expr).getIndex();
+            expr = program.getExprList().get(index);
         }
-        programs[0] = getAggProgram(inputType, inputExps, aggs, aggCalls,
-                                    null, AggOp.Init);
-        programs[1] = getAggProgram(inputType, inputExps, aggs, aggCalls,
-                                    null, AggOp.Add);
-        programs[2] = getAggProgram(inputType, inputExps, aggs, aggCalls,
-                                    null, AggOp.Drop);
+        return expr;
     }
 
     //~ Inner Classes ---------------------------------------------------------
@@ -1237,7 +1256,10 @@ public class RexToCalcTranslator implements RexVisitor
         }
     }
 
-    private static class AggOp extends EnumeratedValues.BasicValue
+    /**
+     * Enumeration of aggregate operations.
+     */
+    public static class AggOp extends EnumeratedValues.BasicValue
     {
         private AggOp(String name, int ordinal)
         {

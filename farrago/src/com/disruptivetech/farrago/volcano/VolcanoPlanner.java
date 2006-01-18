@@ -23,6 +23,7 @@ package com.disruptivetech.farrago.volcano;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.logging.Level;
 
 import org.eigenbase.oj.rel.JavaRelImplementor;
@@ -42,6 +43,12 @@ import org.eigenbase.util.*;
  */
 public class VolcanoPlanner implements RelOptPlanner
 {
+    //~ Constants -------------------------------------------------------------
+    /**
+     * Regular expression for integer.
+     */
+    private static final Pattern IntegerPattern = Pattern.compile("[0-9]+");
+
     //~ Instance fields -------------------------------------------------------
 
     protected RelSubset root;
@@ -197,6 +204,9 @@ public class VolcanoPlanner implements RelOptPlanner
         assert description != null;
         assert description.indexOf("$") < 0 :
             "Rule's description must not contain '$': " + description;
+        assert !IntegerPattern.matcher(description).matches() :
+            "Rule's description must not be an integer: " +
+            rule.getClass().getName() + ", " + description;
         RelOptRule existingRule =
             (RelOptRule) mapDescToRule.put(description, rule);
         if (existingRule != null) {

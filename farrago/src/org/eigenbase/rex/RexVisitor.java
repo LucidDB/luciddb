@@ -39,6 +39,8 @@ public interface RexVisitor
 
     void visitInputRef(RexInputRef inputRef);
 
+    void visitLocalRef(RexLocalRef localRef);
+
     void visitLiteral(RexLiteral literal);
 
     void visitCall(RexCall call);

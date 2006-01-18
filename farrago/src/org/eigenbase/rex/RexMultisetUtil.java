@@ -26,12 +26,11 @@ import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.SqlOperator;
 
-import java.util.Set;
-import java.util.Iterator;
+import java.util.*;
 import java.util.HashSet;
 
 /**
- * Utility class for various multiset related methods
+ * Utility class for various methods related to multisets.
  *
  * @author Wael Chatila
  * @since Apr 4, 2005
@@ -40,22 +39,46 @@ import java.util.HashSet;
 public class RexMultisetUtil
 {
     /** A set defining all implementable multiset calls */
-    private static final Set multisetOperators = new HashSet();
+    private static final Set multisetOperators = createMultisetOperatorSet();
     public static final SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
 
-    static {
-        multisetOperators.add(SqlStdOperatorTable.cardinalityFunc);
-        multisetOperators.add(SqlStdOperatorTable.castFunc);
-        multisetOperators.add(SqlStdOperatorTable.elementFunc);
-        multisetOperators.add(SqlStdOperatorTable.multisetExceptAllOperator);
-        multisetOperators.add(SqlStdOperatorTable.multisetExceptOperator);
-        multisetOperators.add(SqlStdOperatorTable.multisetIntersectAllOperator);
-        multisetOperators.add(SqlStdOperatorTable.multisetIntersectOperator);
-        multisetOperators.add(SqlStdOperatorTable.multisetUnionAllOperator);
-        multisetOperators.add(SqlStdOperatorTable.multisetUnionOperator);
-        multisetOperators.add(SqlStdOperatorTable.isASetOperator);
-        multisetOperators.add(SqlStdOperatorTable.memberOfOperator);
-        multisetOperators.add(SqlStdOperatorTable.submultisetOfOperator);
+    private static final Set createMultisetOperatorSet() {
+        SqlOperator[] operators = {
+            SqlStdOperatorTable.cardinalityFunc,
+            SqlStdOperatorTable.castFunc,
+            SqlStdOperatorTable.elementFunc,
+            SqlStdOperatorTable.elementSlicefunc,
+            SqlStdOperatorTable.multisetExceptAllOperator,
+            SqlStdOperatorTable.multisetExceptOperator,
+            SqlStdOperatorTable.multisetIntersectAllOperator,
+            SqlStdOperatorTable.multisetIntersectOperator,
+            SqlStdOperatorTable.multisetUnionAllOperator,
+            SqlStdOperatorTable.multisetUnionOperator,
+            SqlStdOperatorTable.isASetOperator,
+            SqlStdOperatorTable.memberOfOperator,
+            SqlStdOperatorTable.submultisetOfOperator
+        };
+        return new HashSet(Arrays.asList(operators));
+    }
+
+    /**
+     * Returns true if any expression in a program contains a mixing between
+     * multiset and non-multiset calls.
+     */
+    public static boolean containsMixing(RexProgram program)
+    {
+        RexCallMultisetOperatorCounter counter =
+            new RexCallMultisetOperatorCounter();
+        for (RexNode expr : program.getExprList()) {
+            counter.reset();
+            expr.accept(counter);
+
+            if (counter.totalCount != counter.multisetCount &&
+                0 != counter.multisetCount) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -64,17 +87,10 @@ public class RexMultisetUtil
      */
     public static boolean containsMixing(RexNode node)
     {
-        RexCallMultisetOperatorCounter countShuttle = new RexCallMultisetOperatorCounter();
-        node.accept(countShuttle);
-        if (countShuttle.totalCount == countShuttle.multisetCount) {
-            return false;
-        }
-
-        if (0 == countShuttle.multisetCount) {
-            return false;
-        }
-
-        return true;
+        RexCallMultisetOperatorCounter counter = new RexCallMultisetOperatorCounter();
+        node.accept(counter);
+        return counter.totalCount != counter.multisetCount &&
+            0 != counter.multisetCount;
     }
 
     /**
@@ -91,20 +107,15 @@ public class RexMultisetUtil
     }
 
     /**
-     * Returns whether a list of expressions, or an optional single expression,
-     * contain a multiset.
+     * Returns whether a program contains a multiset.
      */
-    public static boolean containsMultiset(RexNode[] exprs, RexNode expr)
+    public static boolean containsMultiset(RexProgram program)
     {
         final boolean deep = true;
-        for (int i = 0; i < exprs.length; i++) {
-            if (containsMultiset(exprs[i], deep)) {
+        for (RexNode expr : program.getExprList()) {
+            if (containsMultiset(expr, deep)) {
                 return true;
             }
-        }
-        if (expr != null &&
-            containsMultiset(expr, deep)) {
-            return true;
         }
         return false;
     }
@@ -114,7 +125,7 @@ public class RexMultisetUtil
      * types are of multiset types
      */
     public static boolean isMultisetCast(RexCall call) {
-        if (!call.getOperator().equals(opTab.castFunc)) {
+        if (!call.getOperator().equals(SqlStdOperatorTable.castFunc)) {
             return false;
         }
         return call.getType().getSqlTypeName() == SqlTypeName.Multiset;
@@ -135,14 +146,14 @@ public class RexMultisetUtil
             return null;
         }
         final RexCall call = (RexCall) node;
-        assert(null != call);
+        assert call != null;
         RexCall firstOne = null;
         Iterator it = multisetOperators.iterator();
         while (it.hasNext()) {
             SqlOperator op = (SqlOperator) it.next();
             firstOne = RexUtil.findOperatorCall(op, call);
             if (null != firstOne) {
-                if (firstOne.getOperator().equals(opTab.castFunc) &&
+                if (firstOne.getOperator().equals(SqlStdOperatorTable.castFunc) &&
                     !isMultisetCast(firstOne)) {
                     firstOne = null;
                     continue;
@@ -162,23 +173,31 @@ public class RexMultisetUtil
      * traversed and number of multiset calls traversed.<p>
      * totalCount >= multisetCount always holds true.
      */
-    private static class RexCallMultisetOperatorCounter extends RexShuttle {
+    private static class RexCallMultisetOperatorCounter extends RexVisitorImpl {
         int totalCount = 0;
         int multisetCount = 0;
 
-        public RexNode visitCall(RexCall call)
+        RexCallMultisetOperatorCounter()
         {
-            totalCount++;
-            doSuper:
+            super(true);
+        }
+
+        void reset()
+        {
+            totalCount = 0;
+            multisetCount = 0;
+        }
+
+        public void visitCall(RexCall call)
+        {
+            ++totalCount;
             if (multisetOperators.contains(call.getOperator())) {
-                if (call.getOperator().equals(opTab.castFunc)
-                    && !isMultisetCast(call))
-                {
-                    break doSuper;
+                if (!call.getOperator().equals(SqlStdOperatorTable.castFunc) ||
+                    isMultisetCast(call)) {
+                    ++multisetCount;
                 }
-                multisetCount++;
             }
-            return super.visitCall(call);
+            super.visitCall(call);
         }
     }
 }

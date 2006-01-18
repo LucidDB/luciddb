@@ -36,13 +36,15 @@ import org.eigenbase.rel.ProjectRel;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.RexUtil;
 import org.eigenbase.oj.util.*;
+import org.eigenbase.reltype.RelDataTypeFactory;
 
 
 /**
  * Visitor which walks over an {@link ParseTree OpenJava parse tree} looking
  * for sub-queries. When it finds one, it throws a
- * {@link Toolbox.StopIterationException}.
+ * {@link OJUtil.StopIterationException}.
  *
  * $Id$
  */
@@ -74,19 +76,22 @@ class SubqueryFinder extends ScopeHandler
             RelNode rightRel = queryInfo.convertFromExpToRel(right);
             OJClass rightRowType = Toolbox.getRowType(queryInfo.env, right);
             boolean wrap = rightRowType.isPrimitive();
+            final RelDataTypeFactory typeFactory = queryInfo.cluster.getTypeFactory();
             if (wrap) {
+                final RexNode[] exprs = {
+                    queryInfo.rexBuilder.makeJava(
+                        getEnvironment(),
+                        OJUtil.box(
+                            rightRowType,
+                            RelOptUtil.makeReference(0)))
+                };
                 rightRel =
                     new ProjectRel(
                         queryInfo.cluster,
                         rightRel,
-                        new RexNode [] {
-                            queryInfo.rexBuilder.makeJava(
-                                getEnvironment(),
-                                OJUtil.box(
-                                    rightRowType,
-                                    RelOptUtil.makeReference(0)))
-                        },
-                        new String [] { null },
+                        exprs,
+                        RexUtil.createStructType(
+                            typeFactory, exprs),
                         ProjectRel.Flags.None);
             }
 
@@ -103,16 +108,19 @@ class SubqueryFinder extends ScopeHandler
             } else {
                 // The value may be null, so we have to wrap it as {value,
                 // true} and outer join to that.
+                final RexNode[] exprs = {
+                    queryInfo.rexBuilder.makeRangeReference(
+                        rightRel.getRowType(),
+                        0),
+                    queryInfo.rexBuilder.makeLiteral(true)
+                };
+                final String[] fieldNames = { "v", "b" };
                 rightRel =
                     new ProjectRel(
                         queryInfo.cluster,
                         rightRel,
-                        new RexNode [] {
-                            queryInfo.rexBuilder.makeRangeReference(
-                                rightRel.getRowType(),
-                                0), queryInfo.rexBuilder.makeLiteral(true)
-                        },
-                        new String [] { "v", "b" },
+                        exprs,
+                        RexUtil.createStructType(typeFactory, exprs, fieldNames),
                         ProjectRel.Flags.Boxed);
                 v = RelOptUtil.makeFieldAccess(1, 0);
                 condition =
@@ -175,10 +183,13 @@ class SubqueryFinder extends ScopeHandler
                 "SubqueryFinder: found EXISTS: expr=[" + right + "]");
             RelNode oldFrom = queryInfo.getRoot();
             RelNode rightRel = queryInfo.convertFromExpToRel(right);
+            final RexNode[] exprs = { queryInfo.rexBuilder.makeLiteral(true) };
             RelNode rightProject =
                 new ProjectRel(queryInfo.cluster, rightRel,
-                    new RexNode [] { queryInfo.rexBuilder.makeLiteral(true) },
-                    null, ProjectRel.Flags.None);
+                    exprs,
+                    RexUtil.createStructType(
+                        queryInfo.cluster.getTypeFactory(), exprs),
+                    ProjectRel.Flags.None);
             RelNode rightDistinct =
                 RelOptUtil.createDistinctRel(rightProject);
             queryInfo.leaves.add(rightDistinct);

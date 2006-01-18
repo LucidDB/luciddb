@@ -27,24 +27,18 @@ import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.CalcRel;
 import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.convert.ConverterRule;
 import org.eigenbase.relopt.CallingConvention;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelOptRuleOperand;
 import org.eigenbase.rex.RexMultisetUtil;
-
-
-// REVIEW jvs 11-May-2004:  shouldn't FennelCalcRule extend ConverterRule
-// (just like IterCalcRule)?
 
 /**
  * FennelCalcRule is a rule for implementing {@link CalcRel} via a Fennel
- * Calculator ({@link FennelCalcRel}).
+ * Calculator ({@link FennelCalcRel}).<p/>
  *
  * @author jhyde
  * @version $Id$
  */
-public class FennelCalcRule extends RelOptRule
+public class FennelCalcRule extends ConverterRule
 {
     //~ Static fields/initializers --------------------------------------------
 
@@ -60,11 +54,11 @@ public class FennelCalcRule extends RelOptRule
      */
     private FennelCalcRule()
     {
-        super(new RelOptRuleOperand(
-                CalcRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(RelNode.class, null)
-                }));
+        super(
+            CalcRel.class,
+            CallingConvention.NONE,
+            FennelRel.FENNEL_EXEC_CONVENTION,
+            "FennelCalcRule");
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -75,28 +69,26 @@ public class FennelCalcRule extends RelOptRule
         return FennelRel.FENNEL_EXEC_CONVENTION;
     }
 
-    // implement RelOptRule
-    public void onMatch(RelOptRuleCall call)
+    public RelNode convert(RelNode rel)
     {
-        CalcRel calc = (CalcRel) call.rels[0];
-        RelNode relInput = call.rels[1];
+        CalcRel calc = (CalcRel) rel;
+        RelNode relInput = rel.getInput(0);
         RelNode fennelInput =
             mergeTraitsAndConvert(
                 calc.getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,
                 relInput);
         if (fennelInput == null) {
-            return;
+            return null;
         }
         // If there's a multiset, let FarragoMultisetSplitter work on it first.
-        if (RexMultisetUtil.containsMultiset(
-            calc.projectExprs, calc.getCondition())) {
-            return;
+        if (RexMultisetUtil.containsMultiset(calc.getProgram())) {
+            return null;
         }
 
         final RexToCalcTranslator translator =
             new RexToCalcTranslator(calc.getCluster().getRexBuilder());
-        if (!translator.canTranslate(calc.projectExprs, calc.getCondition())) {
-            return;
+        if (!translator.canTranslate(calc.getProgram())) {
+            return null;
         }
 
         FennelCalcRel fennelCalcRel =
@@ -104,9 +96,8 @@ public class FennelCalcRule extends RelOptRule
                 calc.getCluster(),
                 fennelInput,
                 calc.getRowType(),
-                calc.projectExprs,
-                calc.getCondition());
-        call.transformTo(fennelCalcRel);
+                calc.getProgram());
+        return fennelCalcRel;
     }
 }
 

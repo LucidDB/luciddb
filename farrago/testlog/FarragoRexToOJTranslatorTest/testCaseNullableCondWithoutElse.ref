@@ -1,11 +1,19 @@
 
-ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+static final ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+static {
+    oj_var0.assignFrom( "M" );
+}
 
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var1 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
 
 
-ExecutableStmt.Oj_inner_1 oj_var2 = new ExecutableStmt.Oj_inner_1();
+static final ExecutableStmt.Oj_inner_1 oj_var2 = new ExecutableStmt.Oj_inner_1();
+
+static {
+    oj_var2.assignFrom( "Yes" );
+}
 
 
 ExecutableStmt.Oj_inner_2 oj_var3 = new ExecutableStmt.Oj_inner_2();
@@ -13,14 +21,12 @@ ExecutableStmt.Oj_inner_2 oj_var3 = new ExecutableStmt.Oj_inner_2();
 
 ExecutableStmt.Oj_inner_2 oj_var4 = new ExecutableStmt.Oj_inner_2();
 
-oj_var0.assignFrom( "M" );
 if (ID$3$GENDER.isNull()) {
     oj_var1.setNull( true );
 } else {
     oj_var1.setNull( false );
     oj_var1.value = net.sf.farrago.type.runtime.CharStringComparator.compareCharStrings( ID$3$GENDER, oj_var0 ) == 0;
 }
-oj_var2.assignFrom( "Yes" );
 oj_var3.setNull( true );
 oj_var4.assignFrom( oj_var3 );
 if (!oj_var1.isNull() && oj_var1.getBit()) {

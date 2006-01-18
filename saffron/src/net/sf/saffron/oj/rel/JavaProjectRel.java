@@ -33,26 +33,27 @@ import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexUtil;
-import org.eigenbase.util.Util;
+import org.eigenbase.reltype.RelDataType;
 
 
 /**
  * Implements the {@link ProjectRel} relational
  * expression as Java code.
  */
-public class JavaProjectRel extends ProjectRelBase implements JavaLoopRel,
-    JavaSelfRel
+public class JavaProjectRel
+    extends ProjectRelBase
+    implements JavaLoopRel, JavaSelfRel
 {
     public JavaProjectRel(
         RelOptCluster cluster,
         RelNode child,
         RexNode [] exps,
-        String [] fieldNames,
+        RelDataType rowType,
         int flags)
     {
         super(
             cluster, new RelTraitSet(CallingConvention.JAVA), child, exps,
-            fieldNames, flags);
+            rowType, flags);
         assert (child.getConvention() == CallingConvention.JAVA);
     }
 
@@ -62,7 +63,7 @@ public class JavaProjectRel extends ProjectRelBase implements JavaLoopRel,
             getCluster(),
             RelOptUtil.clone(getChild()),
             RexUtil.clone(exps),
-            Util.clone(fieldNames),
+            rowType,
             getFlags());
         clone.inheritTraitsFrom(this);
         return clone;

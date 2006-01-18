@@ -740,19 +740,15 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             // REVIEW jvs 10-Sept-2003: Once we support single-row queries as
             // rows, need to infer aliases from there.
             SqlNode [] operands = rowConstructor.getOperands();
-            final ArrayList aliasList = new ArrayList();
-            final ArrayList typeList = new ArrayList();
+            final List<String> aliasList = new ArrayList<String>();
+            final List<RelDataType> typeList = new ArrayList<RelDataType>();
             for (int iCol = 0; iCol < operands.length; ++iCol) {
                 final String alias = deriveAlias(operands[iCol], iCol);
                 aliasList.add(alias);
                 final RelDataType type = deriveType(scope, operands[iCol]);
                 typeList.add(type);
             }
-            final RelDataType[] types = (RelDataType [])
-                typeList.toArray(new RelDataType[typeList.size()]);
-            final String[] aliases = (String[])
-                aliasList.toArray(new String[aliasList.size()]);
-            rowTypes[iRow] = typeFactory.createStructType(types, aliases);
+            rowTypes[iRow] = typeFactory.createStructType(typeList, aliasList);
         }
         if (values.getOperands().length == 1) {
             // TODO jvs 10-Oct-2005:  get rid of this workaround once
@@ -2138,8 +2134,8 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         // Validate SELECT list. Expand terms of the form "*" or "TABLE.*".
         final SqlValidatorScope selectScope = getSelectScope(select);
         final ArrayList expandedSelectItems = new ArrayList();
-        final ArrayList aliasList = new ArrayList();
-        final ArrayList typeList = new ArrayList();
+        final List<String> aliasList = new ArrayList<String>();
+        final List<RelDataType> typeList = new ArrayList<RelDataType>();
         for (int i = 0; i < selectItems.size(); i++) {
             SqlNode selectItem = selectItems.get(i);
             if (selectScope instanceof AggregatingScope) {
@@ -2171,11 +2167,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         }
 
         assert typeList.size() == aliasList.size();
-        final RelDataType[] types = (RelDataType [])
-            typeList.toArray(new RelDataType[typeList.size()]);
-        final String[] aliases = (String[])
-            aliasList.toArray(new String[aliasList.size()]);
-        return typeFactory.createStructType(types, aliases);
+        return typeFactory.createStructType(typeList, aliasList);
     }
 
 

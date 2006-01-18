@@ -153,28 +153,25 @@ public abstract class AggregateRelBase extends SingleRel
     {
         private final Aggregation aggregation;
         public final int [] args;
-        private final RelDataType type;
-        private boolean distinctFlag;
+        private boolean distinct;
 
-        public Call(
-            Aggregation aggregation,
-            int [] args,
-            RelDataType type)
+        public Call(Aggregation aggregation, int[] args)
         {
+            assert aggregation != null;
+            assert args != null;
             this.aggregation = aggregation;
             this.args = args;
-            this.type = type;
-            this.distinctFlag = false;
+            this.distinct = false;
         }
 
-        public void setDistinctFalg( boolean flag)
+        public void setDistinct(boolean distinct)
         {
-            distinctFlag = flag;
+            this.distinct = distinct;
         }
 
         public boolean isDistinct()
         {
-            return distinctFlag;
+            return distinct;
         }
         
         public Aggregation getAggregation()
@@ -210,11 +207,6 @@ public abstract class AggregateRelBase extends SingleRel
             Call other = (Call) o;
             return aggregation.equals(other.aggregation)
                 && Arrays.equals(args, other.args);
-        }
-
-        public RelDataType getType()
-        {
-            return type;
         }
     }
 }

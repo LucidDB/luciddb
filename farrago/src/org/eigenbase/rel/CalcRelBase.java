@@ -21,12 +21,10 @@
 */
 package org.eigenbase.rel;
 
-import java.util.*;
-
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
-import org.eigenbase.rex.*;
-import org.eigenbase.util.*;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.RexProgram;
 
 /**
  * <code>CalcRelBase</code> is an abstract base class for implementations
@@ -39,100 +37,57 @@ public abstract class CalcRelBase extends SingleRel
 {
     //~ Instance fields -------------------------------------------------------
 
-    public final RexNode [] projectExprs;
-    private final RexNode conditionExpr;
-    private boolean bAggs = false;
+    protected final RexProgram program;
 
     protected CalcRelBase(
         RelOptCluster cluster,
         RelTraitSet traits,
         RelNode child,
         RelDataType rowType,
-        RexNode [] projectExprs,
-        RexNode conditionExpr)
+        RexProgram program)
     {
         super(cluster, traits, child);
         this.rowType = rowType;
-        this.projectExprs = projectExprs;
-        this.conditionExpr = conditionExpr;
-        bAggs = RexOver.containsOver(projectExprs, conditionExpr);
+        this.program = program;
+        assert isValid(true);
     }
 
-    public RexNode [] getProjectExprs()
+    public boolean isValid(boolean fail)
     {
-        return projectExprs;
+        if (!RelOptUtil.eq(
+            program.getInputRowType(), getChild().getRowType(), true)) {
+            return false;
+        }
+        if (!RelOptUtil.equal(program.getOutputRowType(), rowType, true)) {
+            return false;
+        }
+        if (!program.isValid(true)) {
+            return false;
+        }
+        return true;
     }
 
-    public RexNode getCondition()
+    public RexProgram getProgram()
     {
-        return conditionExpr;
-    }
-
-    public boolean containsAggs()
-    {
-        return bAggs || RexOver.containsOver(projectExprs, conditionExpr);
-    }
-
-    public void setAggs(boolean bAggs)
-    {
-        this.bAggs = bAggs;
+        return program;
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         double dRows = getChild().getRows();
-        int nExprs = projectExprs.length;
-        if (conditionExpr != null) {
-            ++nExprs;
-        }
-        double dCpu = getChild().getRows() * nExprs;
+        double dCpu = getChild().getRows() * program.getExprCount();
         double dIo = 0;
         return planner.makeCost(dRows, dCpu, dIo);
     }
 
-    public static void explainCalc(
-        RelNode rel,
-        RelOptPlanWriter pw,
-        RexNode conditionExpr,
-        RexNode [] projectExprs)
-    {
-        String [] terms = getExplainTerms(rel, projectExprs, conditionExpr);
-        pw.explain(rel, terms, Util.emptyObjectArray);
-    }
-
-    private static String [] getExplainTerms(
-        RelNode rel,
-        RexNode [] projectExprs,
-        RexNode conditionExpr)
-    {
-        ArrayList termList = new ArrayList(projectExprs.length + 2);
-        termList.add("child");
-        final RelDataTypeField [] fields = rel.getRowType().getFields();
-        assert fields.length == projectExprs.length : "fields.length="
-        + fields.length + ", projectExprs.length=" + projectExprs.length;
-        for (int i = 0; i < fields.length; i++) {
-            termList.add(fields[i].getName());
-        }
-        if (conditionExpr != null) {
-            termList.add("condition");
-        }
-        final String [] terms =
-            (String []) termList.toArray(new String[termList.size()]);
-        return terms;
-    }
-
     public RexNode [] getChildExps()
     {
-        final ArrayList list = new ArrayList(Arrays.asList(projectExprs));
-        if (conditionExpr != null) {
-            list.add(conditionExpr);
-        }
-        return (RexNode []) list.toArray(new RexNode[list.size()]);
+        return RexNode.EMPTY_ARRAY;
     }
 
     public void explain(RelOptPlanWriter pw)
     {
-        explainCalc(this, pw, conditionExpr, projectExprs);
+        program.explainCalc(this, pw);
     }
 }
 

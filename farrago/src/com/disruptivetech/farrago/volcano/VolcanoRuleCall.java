@@ -20,15 +20,13 @@
 */
 package com.disruptivetech.farrago.volcano;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Level;
 
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.RelVisitor;
 import org.eigenbase.relopt.*;
 import org.eigenbase.util.Util;
-
 
 /**
  * <code>VolcanoRuleCall</code> implements the {@link RelOptRuleCall} interface
@@ -145,7 +143,8 @@ public class VolcanoRuleCall extends RelOptRuleCall
             }
             
         } catch (Throwable e) {
-            throw Util.newInternal(e, "Error while applying rule " + getRule());
+            throw Util.newInternal(e, "Error while applying rule " +
+                getRule() + ", args " + Arrays.asList(rels));
         }
     }
 

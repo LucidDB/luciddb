@@ -81,6 +81,10 @@ public abstract class DiffTestCase extends TestCase
         compiledIgnoreMatcher = null;
         compiledDiffMatcher = null;
         gcInterval = 0;
+        if (System.getProperty(DiffTestCase.class.getName() + ".verbose", "")
+            != null) {
+            verbose = true;
+        }
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -314,7 +318,7 @@ public abstract class DiffTestCase extends TestCase
             "diff detected at line " + lineNumber + " in " + logFile;
         if (verbose) {
             Assert.assertEquals(
-                message,
+                message + TestUtil.NL,
                 fileContents(refFile),
                 fileContents(logFile));
         }

@@ -38,6 +38,10 @@ public class RexVisitorImpl implements RexVisitor
     {
     }
 
+    public void visitLocalRef(RexLocalRef localRef)
+    {
+    }
+
     public void visitLiteral(RexLiteral literal)
     {
     }
@@ -45,6 +49,16 @@ public class RexVisitorImpl implements RexVisitor
     public void visitOver(RexOver over)
     {
         visitCall(over);
+        if (!deep) {
+            return;
+        }
+        final RexWindow window = over.getWindow();
+        for (int i = 0; i < window.orderKeys.length; i++) {
+            window.orderKeys[i].accept(this);
+        }
+        for (int i = 0; i < window.partitionKeys.length; i++) {
+            window.partitionKeys[i].accept(this);
+        }
     }
 
     public void visitCorrelVariable(RexCorrelVariable correlVariable)

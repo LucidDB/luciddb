@@ -61,6 +61,7 @@ public abstract class RelOptUtil
 
     private static final Variable var0 = new Variable(makeName(0));
     private static final Variable var1 = new Variable(makeName(1));
+    public static final String NL = System.getProperty("line.separator");
 
     //~ Methods ---------------------------------------------------------------
 
@@ -274,14 +275,38 @@ public abstract class RelOptUtil
         return sb.toString();
     }
 
-    public static String [] getFieldNames(RelDataType type)
+    /**
+     * Returns a list of the names of the fields in a given struct type.
+     *
+     * @param type Struct type
+     * @return Array of field types
+     * @see #getFieldNames(RelDataType)
+     */
+    public static List<String> getFieldNames(RelDataType type)
     {
         RelDataTypeField [] fields = type.getFields();
-        String [] names = new String[fields.length];
+        List<String> nameList = new ArrayList<String>();
         for (int i = 0; i < fields.length; ++i) {
-            names[i] = fields[i].getName();
+            nameList.add(fields[i].getName());
         }
-        return names;
+        return nameList;
+    }
+
+    /**
+     * Returns a list of the types of the fields in a given struct type.
+     *
+     * @param type Struct type
+     * @return Array of field types
+     * @see #getFieldNames(RelDataType)
+     */
+    public static List<RelDataType> getFieldTypes(RelDataType type)
+    {
+        final RelDataTypeField[] fields = type.getFields();
+        final List<RelDataType> typeList = new ArrayList<RelDataType>();
+        for (int i = 0; i < fields.length; i++) {
+            typeList.add(fields[i].getType());
+        }
+        return typeList;
     }
 
     public static RelDataType createTypeFromProjection(
@@ -366,7 +391,7 @@ public abstract class RelOptUtil
             } else {
                 conditionExp =
                     cluster.getRexBuilder().makeCall(
-                        cluster.getRexBuilder().getOpTab().andOperator,
+                        SqlStdOperatorTable.andOperator,
                         conditionExp,
                         conditions[i]);
             }
@@ -392,7 +417,10 @@ public abstract class RelOptUtil
             fieldNames[fields.length] =
                 Util.uniqueFieldName(fieldNames, fields.length, extraName);
             ret =
-                new ProjectRel(cluster, ret, expressions, fieldNames,
+                new ProjectRel(
+                    cluster, ret, expressions,
+                    RexUtil.createStructType(
+                        cluster.getTypeFactory(), expressions, fieldNames),
                     ProjectRelBase.Flags.Boxed);
         }
 
@@ -438,7 +466,9 @@ public abstract class RelOptUtil
                 rel.getCluster(),
                 rel,
                 renameExps,
-                renameNames,
+                RexUtil.createStructType(
+                    rel.getCluster().getTypeFactory(),
+                    renameExps, renameNames),
                 ProjectRel.Flags.Boxed);
 
         return renameRel;
@@ -481,13 +511,14 @@ public abstract class RelOptUtil
             }
             RexNode newCondition =
                 rexBuilder.makeCall(
-                    rexBuilder.getOpTab().isNotNullOperator,
+                    SqlStdOperatorTable.isNotNullOperator,
                     rexBuilder.makeInputRef(type, iField));
             if (condition == null) {
                 condition = newCondition;
             } else {
                 condition =
-                    rexBuilder.makeCall(rexBuilder.getOpTab().andOperator,
+                    rexBuilder.makeCall(
+                        SqlStdOperatorTable.andOperator,
                         condition, newCondition);
             }
         }
@@ -515,7 +546,7 @@ public abstract class RelOptUtil
      * @return conversion rel
      */
     public static RelNode createCastRel(
-        RelNode rel,
+        final RelNode rel,
         RelDataType castRowType,
         boolean rename)
     {
@@ -524,17 +555,22 @@ public abstract class RelOptUtil
             // nothing to do
             return rel;
         }
-        String [] fieldNames =
-            rename ? RelOptUtil.getFieldNames(castRowType)
-            : RelOptUtil.getFieldNames(rowType);
-        RexNode [] castExps =
+        RexNode[] castExps =
             RexUtil.generateCastExpressions(rel.getCluster().getRexBuilder(),
                 castRowType, rowType);
-        return new ProjectRel(
-            rel.getCluster(),
+        if (rename) {
+            // Use names and types from castRowType.
+            rowType = castRowType;
+        } else {
+            // Use names from rowType, types from castRowType.
+            rowType = rel.getCluster().getTypeFactory().createStructType(
+                getFieldTypes(castRowType),
+                getFieldNames(rowType));
+        }
+        return new ProjectRel(rel.getCluster(),
             rel,
             castExps,
-            fieldNames,
+            rowType,
             ProjectRel.Flags.Boxed);
     }
 
@@ -655,17 +691,86 @@ public abstract class RelOptUtil
      */
     public static RelDataType createDmlRowType(RelDataTypeFactory typeFactory)
     {
-        RelDataType [] types = new RelDataType[1];
-        String [] fieldNames = new String[1];
-        types[0] = typeFactory.createSqlType(SqlTypeName.Bigint);
-        fieldNames[0] = "ROWCOUNT";
-        return typeFactory.createStructType(types, fieldNames);
+        return typeFactory.createStructType(
+            new RelDataType[] {typeFactory.createSqlType(SqlTypeName.Bigint)},
+            new String[] {"ROWCOUNT"});
     }
 
     /**
-     * Returns a translation of the IS [NOT] DISTINCT FROM sql opertor
-     * @param neg if false then a translation of IS NOT DISTINCT FROM is
-     * returned
+     * Creates a reference to an output field of a relational expression.
+     *
+     * @param rel Relational expression
+     * @param i Field ordinal; if negative, counts from end, so -1 means the
+     *   last field
+     */ 
+    public static RexNode createInputRef(
+        RelNode rel,
+        int i)
+    {
+        final RelDataTypeField[] fields = rel.getRowType().getFields();
+        if (i < 0) {
+            i = fields.length + i;
+        }
+        return rel.getCluster().getRexBuilder().makeInputRef(
+            fields[i].getType(),
+            i);
+    }    
+
+    /**
+     * Returns whether two types are equal using '='.
+
+     * @param type1 First type
+     * @param type2 Second type
+     * @param fail Whether to assert if they are not equal
+     *
+     * @return Whether the types are equal
+     */
+    public static boolean eq(
+        RelDataType type1,
+        RelDataType type2,
+        boolean fail)
+    {
+        if (type1 != type2) {
+            assert !fail :
+                "type mismatch:" + NL +
+                "  type1=" + type1.getFullTypeString() + NL +
+                "  type2=" + type2.getFullTypeString();
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Returns whether two types are equal using
+     * {@link #areRowTypesEqual(RelDataType, RelDataType, boolean)}.
+     * Both types must not be null.
+
+     * @param type1 First type
+     * @param type2 Second type
+     * @param fail Whether to assert if they are not equal
+     *
+     * @return Whether the types are equal
+     */
+    public static boolean equal(
+        RelDataType type1,
+        RelDataType type2,
+        boolean fail)
+    {
+        if (!areRowTypesEqual(type1, type2, false)) {
+            assert !fail :
+                "type mismatch:" + NL +
+                "  type1=" + type1.getFullTypeString() + NL +
+                "  type2=" + type2.getFullTypeString();
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Returns a translation of the <code>IS DISTINCT FROM</code> (or
+     * <code>IS NOT DISTINCT FROM</code>) sql operator.
+     *
+     * @param neg if false, returns a translation of IS NOT DISTINCT FROM
      */
     public static RexNode isDistinctFrom(
         RexBuilder rexBuilder,
@@ -707,32 +812,32 @@ public abstract class RelOptUtil
         RexBuilder rexBuilder,
         RexNode x,
         RexNode y,
-        boolean neg) {
-
-        SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
+        boolean neg)
+    {
         SqlOperator nullOp;
         SqlOperator eqOp;
         if (neg) {
-            nullOp = opTab.isNullOperator;
-            eqOp   = opTab.equalsOperator;
+            nullOp = SqlStdOperatorTable.isNullOperator;
+            eqOp   = SqlStdOperatorTable.equalsOperator;
         } else {
-            nullOp = opTab.isNotNullOperator;
-            eqOp   = opTab.notEqualsOperator;
+            nullOp = SqlStdOperatorTable.isNotNullOperator;
+            eqOp   = SqlStdOperatorTable.notEqualsOperator;
         }
-        RexNode[] whenThenElse = new RexNode[] {
+        RexNode[] whenThenElse = {
             // when x is null
-            rexBuilder.makeCall(opTab.isNullOperator, x),
+            rexBuilder.makeCall(SqlStdOperatorTable.isNullOperator, x),
             // then return y is [not] null
             rexBuilder.makeCall(nullOp, y),
             // when y is null
-            rexBuilder.makeCall(opTab.isNullOperator, y),
+            rexBuilder.makeCall(SqlStdOperatorTable.isNullOperator, y),
             // then return x is [not] null
             rexBuilder.makeCall(nullOp, x),
             // else return x compared to y
             rexBuilder.makeCall(eqOp, x, y)};
-        return rexBuilder.makeCall(opTab.caseOperator, whenThenElse);
+        return rexBuilder.makeCall(
+            SqlStdOperatorTable.caseOperator, whenThenElse);
     }
-    
+
     //~ Inner Classes ---------------------------------------------------------
 
     private static class VariableSetVisitor extends RelVisitor

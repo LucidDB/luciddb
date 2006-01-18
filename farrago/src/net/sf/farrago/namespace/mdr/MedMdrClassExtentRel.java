@@ -183,9 +183,13 @@ class MedMdrClassExtentRel extends TableAccessRelBase implements JavaRel
 
         RexNode [] rexExps = implementProjection(varInputRow);
 
-        return IterCalcRel.implementAbstract(implementor, this,
-            iterExpression, varInputRow, inputRowType, outputRowType, null,
-            rexExps);
+        final RexProgram program =
+            RexProgram.create(
+                inputRowType, rexExps, null, outputRowType,
+                getCluster().getRexBuilder());
+        return IterCalcRel.implementAbstract(
+            implementor, this, iterExpression, varInputRow, inputRowType,
+            outputRowType, program);
     }
 
     RexNode [] implementProjection(Expression inputRow)

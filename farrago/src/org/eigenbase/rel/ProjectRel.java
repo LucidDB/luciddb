@@ -29,7 +29,7 @@ import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexUtil;
-import org.eigenbase.util.Util;
+import org.eigenbase.reltype.RelDataType;
 
 
 /**
@@ -55,6 +55,8 @@ public final class ProjectRel extends ProjectRelBase
      * @param exps set of expressions for the input columns
      * @param fieldNames aliases of the expressions
      * @param flags values as in {@link ProjectRelBase.Flags}
+     *
+     * @deprecated Use {@link #ProjectRel(RelOptCluster, RelNode, RexNode[], RelDataType, int)}
      */
     public ProjectRel(
         RelOptCluster cluster,
@@ -63,12 +65,54 @@ public final class ProjectRel extends ProjectRelBase
         String [] fieldNames,
         int flags)
     {
+        this(
+            cluster, child, exps,
+            RexUtil.createStructType(cluster.getTypeFactory(), exps, fieldNames),
+            flags);
+    }
+
+    /**
+     * Creates a ProjectRel.
+     *
+     * @param cluster {@link RelOptCluster} this relational expression
+     *        belongs to
+     * @param child input relational expression
+     * @param exps set of expressions for the input columns
+     * @param rowType output row type
+     * @param flags values as in {@link ProjectRelBase.Flags}
+     */
+    public ProjectRel(
+        RelOptCluster cluster,
+        RelNode child,
+        RexNode [] exps,
+        RelDataType rowType,
+        int flags)
+    {
         super(
             cluster,
             new RelTraitSet(CallingConvention.NONE),
-            child, exps, fieldNames, flags);
+            child, exps, rowType, flags);
     }
-    
+
+    /**
+     * Creates a ProjectRel.
+     *
+     * @param child input relational expression
+     * @param exps set of expressions for the input columns
+     * @param fieldNames aliases of the expressions, or null to generate
+     *     field names
+     */
+    public static ProjectRel create(
+        RelNode child,
+        RexNode[] exps,
+        String[] fieldNames)
+    {
+        final RelDataType rowType = RexUtil.createStructType(
+            child.getCluster().getTypeFactory(), exps, fieldNames);
+        return new ProjectRel(
+            child.getCluster(), child, exps, rowType, ProjectRel.Flags.Boxed);
+    }
+
     //~ Methods ---------------------------------------------------------------
 
     public Object clone()
@@ -77,7 +121,7 @@ public final class ProjectRel extends ProjectRelBase
             getCluster(),
             RelOptUtil.clone(getChild()),
             RexUtil.clone(exps),
-            Util.clone(fieldNames),
+            rowType,
             getFlags());
         clone.inheritTraitsFrom(this);
         return clone;

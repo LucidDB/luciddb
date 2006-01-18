@@ -38,6 +38,7 @@ import openjava.ptree.*;
 
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.stmt.*;
+import org.eigenbase.oj.rex.RexToOJTranslator;
 import org.eigenbase.rel.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
@@ -156,7 +157,10 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
             IterCalcRel calcRel = (IterCalcRel) topRel;
 
             // grab the RexNode corresponding to our select item
-            RexNode rexNode = calcRel.getChildExps()[0];
+            final RexProgram program = calcRel.getProgram();
+            final RexLocalRef ref =
+                program.getProjectList().get(0);
+            RexNode rexNode = program.getExprList().get(ref.getIndex());
 
             // create objects needed for codegen
             SqlToRelConverter sqlToRelConverter = stmt.getSqlToRelConverter();
@@ -167,9 +171,16 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
             // perform the codegen
             StatementList stmtList = new StatementList();
             MemberDeclarationList memberList = new MemberDeclarationList();
-            Expression translatedExp =
-                relImplementor.translateViaStatements(calcRel, rexNode,
-                    stmtList, memberList);
+            final RexToOJTranslator translator =
+                relImplementor.newStmtTranslator(
+                    calcRel, stmtList, memberList);
+            Expression translatedExp;
+            try {
+                translator.pushProgram(program);
+                translatedExp = translator.translateRexNode(rexNode);
+            } finally {
+                translator.popProgram(program);
+            }
 
             // dump the generated code
             Writer writer = openTestLog();

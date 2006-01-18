@@ -21,28 +21,23 @@
 
 package com.disruptivetech.farrago.rel;
 
+import net.sf.farrago.trace.FarragoTrace;
 import org.eigenbase.rel.CalcRel;
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.util.ArrayQueue;
-import org.eigenbase.util.Util;
-import org.eigenbase.rex.*;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.rex.*;
+import org.eigenbase.util.Util;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Collections;
-import java.util.ListIterator;
-import java.util.Iterator;
 import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.io.StringWriter;
-import java.io.PrintWriter;
-
-import net.sf.farrago.trace.FarragoTrace;
 
 /**
  * CalcRelSplitter operates on a {@link CalcRel} with multiple {@link RexCall}
@@ -67,724 +62,391 @@ public abstract class CalcRelSplitter
 {
     //~ Static fields/initializers --------------------------------------------
 
-    public static final RelType REL_TYPE_EITHER =
-        new RelType("REL_TYPE_EITHER");
-
     private static final Logger ruleTracer =
         FarragoTrace.getOptimizerRuleTracer();
 
     //~ Fields ----------------------------------------------------------------
 
-    /** Used for iterative over forests by level. */
-    private static final Object LEVEL_MARKER = new Object();
+    private final RexProgram program;
+    private final RelDataTypeFactory typeFactory;
 
-    /** The original CalcRel that is being transformed. */
-    protected final CalcRel calc;
-
-    protected final RelType relType1;
-    protected final RelType relType2;
-
-    private ArrayList nodeDataList;
-
-    private int maxRelLevel;
-    private RelType currentRelType;
-    private boolean usedRelLevel;
-    private RelType levelZeroRelType;
+    private final RelType[] relTypes;
+    private final RelOptCluster cluster;
+    private final RelTraitSet traits;
+    private final RelNode child;
+    private final ImplementTester[] testers;
 
     /**
-     * Construct a CalcRelSplitter.  The parameters <code>relType1</code and
-     * <code>relType2</code> must be different references.
+     * Constructs a CalcRelSplitter.
      *
      * @param calc CalcRel to split
-     * @param relType1 First "rel type" (e.g. Java)
-     * @param relType2 Second "rel type" (e.g. Fennel)
+     * @param relTypes Array of rel types, e.g. {Java, Fennel}.
+     *                 Must be distinct.
      */
-    CalcRelSplitter(CalcRel calc, RelType relType1, RelType relType2)
+    CalcRelSplitter(CalcRel calc, RelType[] relTypes)
     {
-        assert(relType1 != relType2): "Rel types must be distinct";
-
-        this.calc = calc;
-        this.relType1 = relType1;
-        this.relType2 = relType2;
-
-        this.maxRelLevel = -1;
-        this.currentRelType = REL_TYPE_EITHER;
-        this.usedRelLevel = false;
+        for (int i = 0; i < relTypes.length; i++) {
+            assert relTypes[i] != null;
+            for (int j = 0; j < i; j++) {
+                assert relTypes[i] != relTypes[j] :
+                    "Rel types must be distinct";
+            }
+        }
+        this.program = calc.getProgram();
+        this.cluster = calc.getCluster();
+        this.traits = calc.getTraits();
+        this.typeFactory = calc.getCluster().getTypeFactory();
+        this.child = calc.getChild();
+        this.relTypes = relTypes;
+        this.testers = new ImplementTester[relTypes.length];
+        for (int i = 0; i < relTypes.length; i++) {
+            testers[i] = new ImplementTester(relTypes[i]);
+        }
     }
-
 
     RelNode execute()
     {
-        buildNodeDataTreeList();
+        // Check that program is valid. In particular, this means that every
+        // expression is trivial (either an atom, or a function applied to
+        // references to atoms) and every expression depends only on
+        // expressions to the left.
+        assert program.isValid(true);
+        final List<RexNode> exprList = program.getExprList();
+        final RexNode[] exprs =
+            (RexNode[]) exprList.toArray(new RexNode[exprList.size()]);
+        assert !RexUtil.containComplexExprs(exprList);
 
-        assignLevels();
-        insertInputRefs();
-        ArrayList[] levelExpressions = transform();
+        // Figure out what level each expression belongs to.
+        int[] exprLevels = new int[exprs.length];
 
+        // The reltype of a level is given by
+        // relTypes[levelTypeOrdinals[level]].
+        int[] levelTypeOrdinals = new int[exprs.length];
+
+        final int inputFieldCount =
+            program.getInputRowType().getFields().length;
+
+        int levelCount = 0;
+        final MaxInputFinder maxInputFinder = new MaxInputFinder(exprLevels);
+        boolean[] relTypesPossibleForTopLevel = new boolean[relTypes.length];
+        Arrays.fill(relTypesPossibleForTopLevel, true);
+        for (int i = 0; i < exprs.length; i++) {
+            RexNode expr = exprs[i];
+
+            if (i < inputFieldCount) {
+                assert expr instanceof RexInputRef;
+                exprLevels[i] = -1;
+                continue;
+            }
+
+            // Deduce the minimum level of the expression. An expression must
+            // be at a level greater than or equal to all of its inputs.
+            int level = maxInputFinder.maxInputFor(expr);
+
+            // Try to implement this expression at this level.
+            // If that is not possible, try to implement it at higher levels.
+            levelLoop:
+            for (;; ++level) {
+                if (level >= levelCount) {
+                    // This is a new level. We can use any reltype we like.
+                    for (int relTypeOrdinal = 0;
+                         relTypeOrdinal < relTypes.length; relTypeOrdinal++) {
+                        if (!relTypesPossibleForTopLevel[relTypeOrdinal]) {
+                            continue;
+                        }
+                        if (testers[relTypeOrdinal].canImplement(expr)) {
+                            // Success. We have found a reltype where we can
+                            // implement this expression.
+                            exprLevels[i] = level;
+                            levelTypeOrdinals[level] = relTypeOrdinal;
+                            assert level == 0 ||
+                                levelTypeOrdinals[level - 1] !=
+                                levelTypeOrdinals[level] :
+                                "successive levels of same type";
+
+                            // Figure out which of the other reltypes are
+                            // still possible for this level.
+                            // Previous reltypes are not possible.
+                            for (int j = 0; j < relTypeOrdinal; ++j) {
+                                relTypesPossibleForTopLevel[j] = false;
+                            }
+                            // Successive reltypes may be possible.
+                            for (int j = relTypeOrdinal + 1;
+                                 j < relTypes.length; ++j) {
+                                if (relTypesPossibleForTopLevel[j]) {
+                                    relTypesPossibleForTopLevel[j] =
+                                        testers[j].canImplement(expr);
+                                }
+                            }
+                            // Move to next level.
+                            levelTypeOrdinals[levelCount] =
+                                firstSet(relTypesPossibleForTopLevel);
+                            ++levelCount;
+                            Arrays.fill(relTypesPossibleForTopLevel, true);
+                            break levelLoop;
+                        }
+                    }
+                    // None of the reltypes still active for this level could
+                    // implement expr. But maybe we could succeed with a new
+                    // level, with all options open?
+                    if (count(relTypesPossibleForTopLevel) < relTypes.length) {
+                        // Move to next level.
+                        levelTypeOrdinals[levelCount] =
+                            firstSet(relTypesPossibleForTopLevel);
+                        ++levelCount;
+                        Arrays.fill(relTypesPossibleForTopLevel, true);
+                        continue;
+                    } else {
+                        // Cannot implement for any reltype.
+                        throw Util.newInternal("cannot implement " + expr);
+                    }
+                } else {
+                    final int levelTypeOrdinal = levelTypeOrdinals[level];
+                    if (testers[levelTypeOrdinal].canImplement(expr)) {
+                        // Success. This expression can be implemented in this
+                        // level's reltype.
+                        exprLevels[i] = level;
+                        break;
+                    }
+                    // Cannot implement this expression in this reltype;
+                    // continue to next level.
+                }
+            }
+        }
+
+        // For each expression, figure out which is the highest level where it
+        // is used.
+        int[] exprMaxUsingLevelOrdinals =
+            new HighestUsageFinder(exprs, exprLevels).
+            getMaxUsingLevelOrdinals();
+
+        // If expressions are used as outputs, mark them as higher than that.
+        final List<RexLocalRef> projectRefList = program.getProjectList();
+        final RexLocalRef conditionRef = program.getCondition();
+        for (RexLocalRef projectRef : projectRefList) {
+            exprMaxUsingLevelOrdinals[projectRef.getIndex()] = levelCount;
+        }
+        if (conditionRef != null) {
+            exprMaxUsingLevelOrdinals[conditionRef.getIndex()] = levelCount;
+        }
+
+        // Print out what we've got.
         if (ruleTracer.isLoggable(Level.FINER)) {
-            traceLevelExpressions(levelExpressions);
+            traceLevelExpressions(
+                exprs, exprLevels, levelTypeOrdinals, levelCount);
         }
 
-        return convertLevelExpressionsToCalcRels(levelExpressions);
-    }
-
-    /**
-     * Traverses the forest of expressions in <code>calc</code>
-     * breadth-first and assigns a level to each node.  Each level
-     * corresponds to a set of nodes that will be implemented
-     * either in rel type 1 or rel type 2.  Nodes can either be
-     * pulled up to their parent node's level (if both are
-     * implementable in the same calc) or pushed down to a lower
-     * level.  The type of level 0 is determined by the first node
-     * that forces a specific calc.  If no node in the first level
-     * of nodes requires a specific calc, level 0 is arbitrarily
-     * implemented in rel type 1.
-     */
-    private void assignLevels()
-    {
-        // A queue used to perform a traversal of the forest,
-        // level by level.
-        ArrayQueue nodeDataQueue = new ArrayQueue();
-        nodeDataQueue.addAll(nodeDataList);
-        nodeDataQueue.add(LEVEL_MARKER);
-
-        // If there is a conditional expression, let it choose what the type
-        // of the first level should be (if it cares). This is necessary
-        // because a conditional cannot be migrated away from the first level.
-        NodeData lastNodeData =
-            (NodeData) nodeDataList.get(nodeDataList.size() - 1);
-        if (lastNodeData.isConditional) {
-            lastNodeData.node.accept(new ChooseRelTypeVisitor());
-        }
-
-        final AssignLevelsVisitor visitor = new AssignLevelsVisitor();
-        int relLevel = 0;
-
-        while (true) {
-            // remove first node
-            Object nodeDataItem = nodeDataQueue.poll();
-
-            if (nodeDataItem == LEVEL_MARKER) {
-                if (nodeDataQueue.isEmpty()) {
-                    break;
+        // Now build the calcs.
+        RelNode rel = child;
+        int[] inputExprOrdinals = identityArray(inputFieldCount);
+        for (int level = 0; level < levelCount; level++) {
+            final int[] projectExprOrdinals;
+            final int conditionExprOrdinal;
+            final RelDataType outputRowType;
+            if (level == levelCount - 1) {
+                outputRowType = program.getOutputRowType();
+                if (conditionRef != null) {
+                    conditionExprOrdinal = conditionRef.getIndex();
+                } else {
+                    conditionExprOrdinal = -1;
                 }
-
-                if (currentRelType == REL_TYPE_EITHER) {
-                    // Top-most level can be implemented as either
-                    // rel type.  Arbitrarily pick one.
-                    currentRelType = relType1;
+                projectExprOrdinals = new int[projectRefList.size()];
+                for (int i = 0; i < projectExprOrdinals.length; i++) {
+                    projectExprOrdinals[i] = projectRefList.get(i).getIndex();
                 }
-
-                if (usedRelLevel) {
-                    if (relLevel == 0) {
-                        // Remember the type of the first level.
-                        levelZeroRelType = currentRelType;
-                    }
-                    // Alternate rel types after the first level.
-                    if (currentRelType == relType1) {
-                        currentRelType = relType2;
-                    } else {
-                        currentRelType = relType1;
-                    }
-                    relLevel++;
-
-                    usedRelLevel = false;
-                }
-
-                nodeDataQueue.add(LEVEL_MARKER);
-                continue;
-            }
-
-            NodeData nodeData = (NodeData) nodeDataItem;
-
-            visitor.nodeData = nodeData;
-            visitor.relLevel = relLevel;
-
-            nodeData.node.accept(visitor);
-
-            if (nodeData.children != null) {
-                nodeDataQueue.addAll(nodeData.children);
-            }
-        }
-    }
-
-    /**
-     * Given that rel type alternates with increasing level, two
-     * levels have the same rel type if they are both odd or both
-     * even.
-     */
-    private boolean sameRelType(int relLevelA, int relLevelB)
-    {
-        return (relLevelA & 0x1) == (relLevelB & 0x1);
-    }
-
-    /**
-     * Internal method that handles adjusting the level at which a
-     * particular expression will be implemented.
-     *
-     * <p>One of <code>isRelType1</code> or <code>isRelType2</code>
-     * must be true.
-     *
-     * @param nodeData data about a particular RexNode
-     * @param relLevel the current rel level
-     * @param isRelType1 if this node can be implemented in rel type 1
-     * @param isRelType2 if this node can be implemented in rel type 2
-     */
-    private void adjustLevel(
-        NodeData nodeData,
-        int relLevel,
-        boolean isRelType1,
-        boolean isRelType2)
-    {
-        if (currentRelType == REL_TYPE_EITHER) {
-            assert (relLevel == 0);
-
-            if (!isRelType1) {
-                currentRelType = relType2;
-            } else if (!isRelType2) {
-                currentRelType = relType1;
-            }
-
-            nodeData.relLevel = relLevel;
-            maxRelLevel = relLevel;
-            usedRelLevel = true;
-        } else if ((currentRelType == relType1 && !isRelType1)
-                   || (currentRelType == relType2 && !isRelType2)) {
-            // Node is mismatched for the rel we'll be using.
-            if ((nodeData.parent != null)
-                && (nodeData.parent.relLevel < relLevel)) {
-                // Pull this node up to previous level.
-                nodeData.relLevel = relLevel - 1;
             } else {
-                // Push this node down into the next rel level.
-                nodeData.relLevel = relLevel + 1;
-                maxRelLevel = Math.max(maxRelLevel, relLevel + 1);
+                outputRowType = null;
+                conditionExprOrdinal = -1;
+                // Project the expressions which are computed at this level or
+                // before, and will be used at later levels.
+                IntList projectExprOrdinalList = new IntList();
+                for (int i = 0; i < exprs.length; i++) {
+                    if (exprLevels[i] <= level &&
+                        exprMaxUsingLevelOrdinals[i] > level) {
+                        projectExprOrdinalList.add(i);
+                    }
+                }
+                projectExprOrdinals = projectExprOrdinalList.toIntArray();
             }
+
+            RexProgram program1 = createProgramForLevel(
+                level, rel.getRowType(), exprs, exprLevels, inputExprOrdinals,
+                projectExprOrdinals, conditionExprOrdinal, outputRowType);
+            final RelType relType = relTypes[levelTypeOrdinals[level]];
+            rel = relType.makeRel(
+                cluster, traits, program1.getOutputRowType(), rel, program1);
+            // The outputs of this level will be the inputs to the next level.
+            inputExprOrdinals = projectExprOrdinals;
+        }
+        return rel;
+    }
+
+    private int[] identityArray(int length)
+    {
+        final int[] ints = new int[length];
+        for (int i = 0; i < ints.length; i++) {
+            ints[i] = i;
+        }
+        return ints;
+    }
+
+    /**
+     * Creates a program containing the expressions for a given level.
+     *
+     * <p>The expression list of the program will consist of all entries in
+     * the expression list <code>allExprs[i]</code> for which the corresponding
+     * level ordinal <code>exprLevels[i]</code> is equal to <code>level</code>.
+     * Expressions are mapped according to <code>inputExprOrdinals</code>.
+     *
+     * @param level Level ordinal
+     * @param inputRowType Input row type
+     * @param allExprs Array of all expressions
+     * @param exprLevels Array of the level ordinal of each expression
+     * @param inputExprOrdinals Ordinals in the expression list of input
+     *         expressions. Input expression <code>i</code> will be found at
+     *         position <code>inputExprOrdinals[i]</code>.
+     * @param projectExprOrdinals Ordinals of the expressions to be output
+     *   this level.
+     * @param conditionExprOrdinal Ordinal of the expression to form the
+     *   condition for this level, or -1 if there is no condition.
+     * @param outputRowType Output row type
+     * @return Relational expression
+     */
+    private RexProgram createProgramForLevel(
+        int level,
+        RelDataType inputRowType,
+        RexNode[] allExprs,
+        int[] exprLevels,
+        int[] inputExprOrdinals,
+        int[] projectExprOrdinals,
+        int conditionExprOrdinal,
+        RelDataType outputRowType)
+    {
+        // Count how many expressions are going to be at this level.
+        int exprCount = inputExprOrdinals.length;
+        for (int i = 0; i < allExprs.length; i++) {
+            if (exprLevels[i] == level) {
+                ++exprCount;
+            }
+        }
+        // Build a list of expressions to form the calc.
+        RexNode[] exprs = new RexNode[exprCount];
+        // exprOrdinals describes what position in allExprs a given expression
+        // in inputExprOrdinals goes to
+        int[] exprOrdinals = new int[exprCount];
+        // exprInverseOrdinals describes where an expression in allExprs comes
+        // from -- from an input, from a calculated expression, or -1 if not
+        // available at this level.
+        int[] exprInverseOrdinals = new int[allExprs.length];
+        Arrays.fill(exprInverseOrdinals, -1);
+        int j = 0;
+
+        // First populate the inputs. They were computed at some previous level
+        // and are used here.
+        for (int i = 0; i < inputExprOrdinals.length; i++) {
+            final int inputExprOrdinal = inputExprOrdinals[i];
+            exprs[j] = new RexInputRef(i, allExprs[inputExprOrdinal].getType());
+            exprOrdinals[j] = inputExprOrdinal;
+            exprInverseOrdinals[inputExprOrdinal] = j;
+            ++j;
+        }
+        // Next populate the computed expressions.
+        final RexShuttle shuttle =
+            new InputToCommonExprConverter(
+                exprInverseOrdinals, exprLevels, level, inputExprOrdinals);
+        for (int i = 0; i < allExprs.length; i++) {
+            if (exprLevels[i] == level) {
+                RexNode expr = allExprs[i];
+                final RexNode translatedExpr = expr.accept(shuttle);
+                exprs[j] = translatedExpr;
+                exprOrdinals[j] = i;
+                assert exprInverseOrdinals[i] == -1;
+                exprInverseOrdinals[i] = j;
+                ++j;
+            }
+        }
+        assert j == exprCount;
+        // Form the projection and condition list. Project and condition
+        // ordinals are offsets into allExprs, so we need to map them into
+        // exprs.
+        final RexLocalRef[] projectRefs =
+            new RexLocalRef[projectExprOrdinals.length];
+        for (int i = 0; i < projectRefs.length; i++) {
+            final int projectExprOrdinal = projectExprOrdinals[i];
+            final int index = exprInverseOrdinals[projectExprOrdinal];
+            assert index >= 0;
+            projectRefs[i] =
+                new RexLocalRef(index, allExprs[projectExprOrdinal].getType());
+        }
+        RexLocalRef conditionRef;
+        if (conditionExprOrdinal >= 0) {
+            final int index = exprInverseOrdinals[conditionExprOrdinal];
+            conditionRef = new RexLocalRef(
+                index, allExprs[conditionExprOrdinal].getType());
         } else {
-            if ((relLevel > 0) && isRelType1 && isRelType2) {
-                // Pull this node up to the previous level.
-                nodeData.relLevel = relLevel - 1;
-            } else if (nodeData.parent != null
-                       && sameRelType(relLevel,
-                                      nodeData.parent.relLevel)) {
-                // Pull this node up to the parent's level
-                // (regardless of how far up that is).
-                nodeData.relLevel = nodeData.parent.relLevel;
-            } else {
-                nodeData.relLevel = relLevel;
-                maxRelLevel = Math.max(maxRelLevel, relLevel);
-                usedRelLevel = true;
-            }
+            conditionRef = null;
         }
-    }
-
-    /**
-     * Traverses the forest of expressions, creating new
-     * RexInputRefs to pass data between levels.  When
-     * RexInputRefs are encountered that at other than the lowest
-     * level, we insert another RexInputRef as a child at the next
-     * level down.  For RexCall nodes, if the node's level is
-     * lower than the current level, we insert a RexInputRef at
-     * the current level to refer to the RexCall at the lower
-     * level.
-     */
-    private void insertInputRefs()
-    {
-        ArrayQueue nodeDataQueue = new ArrayQueue(nodeDataList);
-        nodeDataQueue.add(LEVEL_MARKER);
-
-        int position = 0;
-        int expectedRelLevel = 0;
-
-        // Assign positions and copy RexInputRefs down to the
-        // deepest levels.  Also makes sure that RexDynamicParams
-        // and RexFieldAccesses that cannot be implemented with
-        // their parents have a RexInputRef inserted between the
-        // parent and RexDynamicRef/RexFieldAccess (see
-        // processCallChildren).
-        while (true) {
-            Object nodeDataItem = nodeDataQueue.poll();
-            if (nodeDataItem == LEVEL_MARKER) {
-                if (nodeDataQueue.isEmpty()) {
-                    break;
-                }
-
-                position = 0;
-                expectedRelLevel++;
-                nodeDataQueue.add(LEVEL_MARKER);
-                continue;
-            }
-
-            NodeData nodeData = (NodeData) nodeDataItem;
-            RexNode node = nodeData.node;
-
-            List children = Collections.EMPTY_LIST;
-
-            if (node instanceof RexInputRef) {
-                if (nodeData.relLevel < maxRelLevel) {
-                    // Copy RexInputRefs down to the lowest level.
-                    NodeData childNodeData =
-                        new NodeData(
-                            node, nodeData.isConditional, nodeData);
-                    childNodeData.relLevel = nodeData.relLevel + 1;
-
-                    nodeData.children = new ArrayList();
-                    nodeData.children.add(childNodeData);
-
-                    children = nodeData.children;
-                }
-            } else if (node instanceof RexCall
-                       || node instanceof RexFieldAccess) {
-                assert (nodeData.relLevel >= expectedRelLevel);
-
-                if (nodeData.relLevel > expectedRelLevel) {
-                    // insert an input reference
-                    NodeData inputRefData =
-                        new NodeData(
-                            null, nodeData.isConditional, nodeData.parent);
-                    inputRefData.children = new ArrayList();
-                    inputRefData.children.add(nodeData);
-
-                    if (nodeData.parent != null) {
-                        int parentIndex =
-                            nodeData.parent.children.indexOf(nodeData);
-                        nodeData.parent.children.set(
-                            parentIndex, inputRefData);
-                    } else {
-                        int index = nodeDataList.indexOf(nodeData);
-                        nodeDataList.set(index, inputRefData);
+        if (outputRowType == null) {
+            outputRowType = typeFactory.createStructType(
+                new RelDataTypeFactory.FieldInfo()
+                {
+                    public int getFieldCount()
+                    {
+                        return projectRefs.length;
                     }
 
-                    nodeData = inputRefData;
-
-                    children = nodeData.children;
-                } else {
-                    // pull children up into this NodeData, if necessary
-                    children = new ArrayList();
-
-                    processCallChildren(
-                        children, nodeData, expectedRelLevel, maxRelLevel);
-                }
-            }
-
-            nodeData.position = position++;
-
-            if (children != null) {
-                nodeDataQueue.addAll(children);
-            }
-        }
-    }
-
-
-    /**
-     * Traverses the forest of expressions and converts them into
-     * an array whose elements are an ArrayList containing the
-     * RexNodes for a given level.
-     *
-     * @return the expressions for each level stored in an array
-     *         of ArrayList objects.
-     */
-    private ArrayList[] transform()
-    {
-        ArrayQueue nodeDataQueue = new ArrayQueue(nodeDataList);
-        nodeDataQueue.add(LEVEL_MARKER);
-
-        int expectedRelLevel = 0;
-
-        ArrayList[] levelExpressions = new ArrayList[maxRelLevel + 1];
-        for (int i = 0; i <= maxRelLevel; i++) {
-            levelExpressions[i] = new ArrayList();
-        }
-
-        // Figure out what the actual RexNode trees for each level and
-        // projection are.
-        while (true) {
-            Object nodeDataItem = nodeDataQueue.poll();
-            if (nodeDataItem == LEVEL_MARKER) {
-                if (nodeDataQueue.isEmpty()) {
-                    break;
-                }
-
-                expectedRelLevel++;
-                nodeDataQueue.add(LEVEL_MARKER);
-                continue;
-            }
-
-            ArrayList expressions = levelExpressions[expectedRelLevel];
-            assert(expressions != null);
-
-            NodeData nodeData = (NodeData) nodeDataItem;
-            RexNode node = nodeData.node;
-
-            assert (nodeData.relLevel == expectedRelLevel);
-
-            List children = Collections.EMPTY_LIST;
-
-            if ((node == null) || node instanceof RexInputRef) {
-                if (expectedRelLevel < maxRelLevel) {
-                    NodeData childNodeData =
-                        ((NodeData) nodeData.children.get(0));
-
-                    int index = childNodeData.position;
-
-                    RelDataType type =
-                        ((node == null) ? childNodeData.node.getType()
-                         : node.getType());
-
-                    RexInputRef inputRef = new RexInputRef(index, type);
-
-                    expressions.add(inputRef);
-
-                    children = nodeData.children;
-                } else {
-                    expressions.add(node.clone());
-                }
-            } else if (node instanceof RexCall
-                       || node instanceof RexFieldAccess) {
-                children = new ArrayList();
-
-                RexNode clonedCall =
-                    transformCallChildren(nodeData, children, maxRelLevel);
-
-                expressions.add(clonedCall);
-            } else {
-                expressions.add(node.clone());
-            }
-
-            nodeDataQueue.addAll(children);
-        }
-
-        return levelExpressions;
-    }
-
-
-    /**
-     * Iterates over the array of level expression lists and
-     * converts each level expression list (e.g. each element of
-     * the array) into a CalcRel.
-     *
-     * @return the top-level CalcRel of the converted expressions
-     *         as a RelNode
-     */
-    private RelNode convertLevelExpressionsToCalcRels(
-        ArrayList[] levelExpressions)
-    {
-        // Generate the actual CalcRel objects that represent the
-        // decomposition of the original CalcRel.
-        RelDataTypeFactory typeFactory = calc.getCluster().getTypeFactory();
-        RelNode resultCalcRel = calc.getChild();
-        for (int i = levelExpressions.length - 1; i >= 0; i--) {
-            ArrayList expressions = levelExpressions[i];
-            RelType relType = getLevelType(i);
-            int numNodes = expressions.size();
-            RexNode [] nodes;
-            RexNode conditional = null;
-            RelDataType rowType = calc.getRowType();
-
-            if (i == 0) {
-                // Only the top (furthest downstream) level can have a filter.
-                assert numNodes == nodeDataList.size();
-                NodeData lastNodeData =
-                    (NodeData) nodeDataList.get(numNodes - 1);
-                if (lastNodeData.isConditional) {
-                    conditional = (RexNode) expressions.get(numNodes - 1);
-                    --numNodes;
-                }
-
-                nodes = new RexNode[numNodes];
-                for (int j = 0; j < numNodes; j++) {
-                    nodes[j] = (RexNode) expressions.get(j);
-                    assert !((NodeData) nodeDataList.get(j)).isConditional;
-                }
-            } else {
-                nodes = new RexNode[numNodes];
-                RelDataType [] types = new RelDataType[numNodes];
-                String [] names = new String[numNodes];
-                for (int j = 0; j < numNodes; j++) {
-                    nodes[j] = (RexNode) expressions.get(j);
-                    types[j] = nodes[j].getType();
-                    names[j] = "$" + j;
-                }
-
-                rowType = typeFactory.createStructType(types, names);
-
-            }
-            resultCalcRel = makeRel(
-                relType, calc.getCluster(), calc.getTraits(), rowType,
-                resultCalcRel, nodes, conditional);
-        }
-
-        return resultCalcRel;
-    }
-
-    /**
-     * Returns the {@link RelType} for a given level ordinal.
-     */
-    private RelType getLevelType(int levelOrdinal)
-    {
-        if (levelZeroRelType == relType1) {
-            --levelOrdinal;
-        }
-        boolean even = (levelOrdinal % 2) == 0;
-        return even ? relType2 : relType1;
-    }
-
-    protected RelNode makeRel(
-        RelType relType,
-        RelOptCluster cluster,
-        RelTraitSet traits,
-        RelDataType rowType,
-        RelNode child,
-        RexNode[] exprs,
-        RexNode conditionExpr)
-    {
-        return new CalcRel(
-                cluster,
-                traits,
-                child,
-                rowType,
-                exprs,
-                conditionExpr);
-    }
-
-
-    /**
-     * Iterate over a RexCall's (or RexFieldAccess's) children,
-     * copying RexInputRefs to the next level down (if necessary),
-     * inserting RexInputRefs between a child RexDynamicParam and
-     * the RexCall (if necessary), and recursively processing
-     * child RexCalls and RexFieldAccesses at the same level.
-     */
-    private void processCallChildren(
-        List children,
-        NodeData nodeData,
-        int expectedRelLevel,
-        int maxRelLevel)
-    {
-        for (ListIterator i = nodeData.children.listIterator();
-             i.hasNext();) {
-            NodeData child = (NodeData) i.next();
-
-            if (child.node instanceof RexInputRef) {
-                if (child.relLevel < maxRelLevel) {
-                    NodeData childNodeData =
-                        new NodeData(
-                            child.node, child.isConditional, child);
-                    childNodeData.relLevel = child.relLevel + 1;
-
-                    child.children = new ArrayList();
-                    child.children.add(childNodeData);
-
-                    children.add(childNodeData);
-                }
-            } else if (child.node instanceof RexDynamicParam) {
-                if (child.relLevel > expectedRelLevel) {
-                    NodeData inputRefData =
-                        new NodeData(
-                            null, nodeData.isConditional, nodeData);
-                    inputRefData.children = new ArrayList();
-                    inputRefData.children.add(child);
-                    i.set(inputRefData);
-
-                    children.add(child);
-                }
-            } else if (child.node instanceof RexCall
-                       || child.node instanceof RexFieldAccess) {
-                if (child.relLevel == expectedRelLevel) {
-                    processCallChildren(
-                        children, child, expectedRelLevel, maxRelLevel);
-                } else {
-                    children.add(child);
-                }
-            }
-        }
-    }
-
-
-    /**
-     * Traverses a RexCall's or RexFieldAccess's children and creates
-     * new RexInputRef objects with the correct data.  Essentially
-     * implements the hierarchy created in
-     * {@link #processCallChildren(List, NodeData, int, int)}.
-     *
-     * @return the RexNode that should replace nodeData.node in the
-     *         expression.
-     */
-    private RexNode transformCallChildren(
-        NodeData nodeData,
-        List children,
-        int maxRelLevel)
-    {
-        assert (nodeData.node instanceof RexCall
-                || nodeData.node instanceof RexFieldAccess);
-
-        RexNode clonedNode = (RexNode) nodeData.node.clone();
-
-        for (int i = 0; i < nodeData.children.size(); i++) {
-            NodeData child = (NodeData) nodeData.children.get(i);
-
-            if ((child.node == null)
-                || child.node instanceof RexInputRef) {
-                if (child.relLevel < maxRelLevel) {
-                    assert (child.children.size() == 1);
-                    NodeData grandChild = (NodeData) child.children.get(0);
-
-                    int position = grandChild.position;
-
-                    RexInputRef inputRef =
-                        new RexInputRef(
-                            position, grandChild.node.getType());
-
-                    if (nodeData.node instanceof RexCall) {
-                        ((RexCall) clonedNode).operands[i] = inputRef;
-                    } else {
-                        ((RexFieldAccess) clonedNode).setReferenceExpr(
-                            inputRef);
+                    public String getFieldName(int index)
+                    {
+                        return "$" + index;
                     }
 
-                    children.add(grandChild);
-                }
-            } else if (child.node instanceof RexCall
-                       || child.node instanceof RexFieldAccess) {
-                if (child.relLevel == nodeData.relLevel) {
-                    RexNode clonedChildCall =
-                        transformCallChildren(
-                            child, children, maxRelLevel);
-
-                    if (nodeData.node instanceof RexCall) {
-                        ((RexCall) clonedNode).operands[i] = clonedChildCall;
-                    } else {
-                        ((RexFieldAccess) clonedNode).setReferenceExpr(
-                            clonedChildCall);
+                    public RelDataType getFieldType(int index)
+                    {
+                        return projectRefs[index].getType();
                     }
-                } else {
-                    RexInputRef inputRef =
-                        new RexInputRef(child.position,
-                                        child.node.getType());
-
-                    if (nodeData.node instanceof RexCall) {
-                        ((RexCall) clonedNode).operands[i] = inputRef;
-                    } else {
-                        ((RexFieldAccess) clonedNode).setReferenceExpr(
-                            inputRef);
-                    }
-
-                    children.add(child);
                 }
-            }
+            );
         }
-
-        return clonedNode;
-    }
-
-
-    protected abstract boolean canImplementAs(RexCall call, RelType relType);
-
-    protected abstract boolean canImplementAs(
-        RexDynamicParam param, RelType relType);
-
-    protected abstract boolean canImplementAs(
-        RexFieldAccess field, RelType relType);
-
-    /**
-     * Creates a forest of trees in {@link #nodeDataList} based on
-     * the project and conditional expressions of the given
-     * CalcRel.
-     */
-    private void buildNodeDataTreeList()
-    {
-        nodeDataList = new ArrayList();
-
-        ArrayList baseNodes = new ArrayList();
-        if (calc.projectExprs != null && calc.projectExprs.length > 0) {
-            for (int i = 0; i < calc.projectExprs.length; i++) {
-                RexNode projectExpr = calc.projectExprs[i];
-                baseNodes.add(projectExpr);
-
-                nodeDataList.add(new NodeData(projectExpr, false, null));
-            }
-        }
-        if (calc.getCondition() != null) {
-            baseNodes.add(calc.getCondition());
-            nodeDataList.add(new NodeData(calc.getCondition(), true, null));
-        }
-
-        buildNodeDataTreeList(nodeDataList, baseNodes);
-    }
-
-
-    private static void buildNodeDataTreeList(List nodeDataList,
-                                              List nodeList)
-    {
-        assert (nodeDataList != null);
-        assert (nodeList != null);
-        assert (nodeDataList.size() == nodeList.size());
-
-        Iterator r = nodeDataList.iterator();
-        Iterator n = nodeList.iterator();
-        while (r.hasNext()) {
-            Object nodeDataItem = r.next();
-            RexNode node = (RexNode) n.next();
-
-            if (node instanceof RexCall) {
-                NodeData nodeData = (NodeData) nodeDataItem;
-                RexCall call = (RexCall) node;
-
-                nodeData.children = new ArrayList(call.operands.length);
-
-                for (int i = 0; i < call.operands.length; i++) {
-                    RexNode op = call.operands[i];
-
-                    nodeData.children.add(
-                        new NodeData(
-                            op, nodeData.isConditional, nodeData));
-                }
-
-                buildNodeDataTreeList(
-                    nodeData.children,
-                    Arrays.asList(call.operands));
-            } else if (node instanceof RexFieldAccess) {
-                NodeData nodeData = (NodeData) nodeDataItem;
-                RexFieldAccess fieldAccess = (RexFieldAccess) node;
-
-                nodeData.children = new ArrayList(1);
-
-                nodeData.children.add(
-                    new NodeData(
-                        fieldAccess.getReferenceExpr(), nodeData.isConditional,
-                        nodeData));
-
-                buildNodeDataTreeList(
-                    nodeData.children,
-                    Collections.singletonList(fieldAccess.getReferenceExpr()));
-            }
-        }
+        return new RexProgram(
+            inputRowType,
+            exprs,
+            projectRefs,
+            conditionRef,
+            outputRowType);
     }
 
     /**
      * Traces the given array of level expression lists at the
      * finer level.
      *
-     * @param levelExpressions an array of level expression lists to trace
+     * @param exprs Array expressions
+     * @param exprLevels For each expression, the ordinal of its level
+     * @param levelTypeOrdinals For each level, the ordinal of its reltype
+     *   in the {@link #relTypes} array
+     * @param levelCount The number of levels
      */
-    private void traceLevelExpressions(ArrayList[] levelExpressions)
+    private void traceLevelExpressions(
+        RexNode[] exprs,
+        int[] exprLevels,
+        int[] levelTypeOrdinals,
+        int levelCount)
     {
         StringWriter traceMsg = new StringWriter();
         PrintWriter traceWriter = new PrintWriter(traceMsg);
-        traceWriter.println("FarragoAutoCalcRule result expressions for:");
-        traceWriter.println(calc.toString());
+        traceWriter.println("FarragoAutoCalcRule result expressions for: ");
+        traceWriter.println(program.toString());
 
-        int level = 0;
-        for (int i = 0; i < levelExpressions.length; i++) {
-            ArrayList expressions = levelExpressions[i];
-            traceWriter.println("Rel Level " + level++);
+        for (int level = 0; level < levelCount; level++) {
+            traceWriter.println("Rel Level " + level +
+                ", type " + relTypes[levelTypeOrdinals[level]]);
 
-            int index = 0;
-            for (Iterator j = expressions.iterator(); j.hasNext();) {
-                RexNode node = (RexNode) j.next();
-
-                traceWriter.println("\t" + String.valueOf(index++) + ": "
-                       + node.toString());
+            for (int i = 0; i < exprs.length; i++) {
+                RexNode expr = exprs[i];
+                assert exprLevels[i] >= -1 && exprLevels[i] < levelCount :
+                    "expression's level is out of range";
+                if (exprLevels[i] == level) {
+                    traceWriter.println("\t" + i + ": " + expr);
+                }
             }
             traceWriter.println();
         }
@@ -792,9 +454,55 @@ public abstract class CalcRelSplitter
         ruleTracer.finer(msg);
     }
 
+
+    /**
+     * Returns the number of bits set in an array.
+     */
+    private static int count(boolean[] booleans)
+    {
+        int count = 0;
+        for (int i = 0; i < booleans.length; i++) {
+            if (booleans[i]) {
+                ++count;
+            }
+        }
+        return count;
+    }
+
+    /**
+     * Returns the index of the first set bit in an array.
+     */
+    private static int firstSet(boolean[] booleans)
+    {
+        for (int i = 0; i < booleans.length; i++) {
+            if (booleans[i]) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Searches for a value in a map, and returns the position where it was
+     * found, or -1.
+     *
+     * @param index
+     * @param map
+     * @return
+     */
+    private static int indexOf(int index, int[] map)
+    {
+        for (int i = 0; i < map.length; i++) {
+            if (index == map[i]) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     //~ Inner Classes ---------------------------------------------------------
 
-    public static class RelType
+    public abstract static class RelType
     {
         private final String name;
 
@@ -807,176 +515,225 @@ public abstract class CalcRelSplitter
         {
             return name;
         }
+
+        protected abstract boolean canImplement(RexFieldAccess field);
+
+        protected abstract boolean canImplement(RexDynamicParam param);
+
+        protected abstract boolean canImplement(RexLiteral literal);
+
+        protected abstract boolean canImplement(RexCall call);
+
+        protected RelNode makeRel(
+            RelOptCluster cluster,
+            RelTraitSet traits,
+            RelDataType rowType,
+            RelNode child,
+            RexProgram program)
+        {
+            return new CalcRel(
+                cluster,
+                traits,
+                child,
+                rowType,
+                program);
+        }
     }
 
 
-    private class AssignLevelsVisitor
-        implements RexVisitor
+    /**
+     * Visitor which returns whether an expression can be implemented in a
+     * given type of relational expression.
+     */
+    private class ImplementTester extends RexVisitorImpl
     {
-        NodeData nodeData;
-        int relLevel;
+        private final RelType relType;
 
-        void defaultVisit(RexNode node)
+        public ImplementTester(RelType relType)
         {
-            if (nodeData.parent != null) {
-                nodeData.relLevel = nodeData.parent.relLevel;
-            } else {
-                nodeData.relLevel = 0;
-            }
-        }
-
-        public void visitOver(RexOver over)
-        {
-            visitCall(over);
-        }
-
-        public void visitInputRef(RexInputRef inputRef)
-        {
-            defaultVisit(inputRef);
-        }
-
-        public void visitLiteral(RexLiteral literal)
-        {
-            defaultVisit(literal);
+            super(false);
+            this.relType = relType;
         }
 
         public void visitCall(RexCall call)
         {
-            boolean isRelType1 = canImplementAs(call, relType1);
-            boolean isRelType2 = canImplementAs(call, relType2);
-
-            checkValidRelType(call, isRelType1, isRelType2);
-
-            adjustLevel(nodeData, relLevel, isRelType1, isRelType2);
-        }
-
-        public void visitCorrelVariable(RexCorrelVariable correlVariable)
-        {
-            defaultVisit(correlVariable);
+            if (!relType.canImplement(call)) {
+                throw CannotImplement.instance;
+            }
         }
 
         public void visitDynamicParam(RexDynamicParam dynamicParam)
         {
-            boolean isRelType1 = canImplementAs(dynamicParam, relType1);
-            boolean isRelType2 = canImplementAs(dynamicParam, relType2);
-
-            checkValidRelType(dynamicParam, isRelType1, isRelType2);
-
-            adjustLevel(nodeData, relLevel, isRelType1, isRelType2);
-        }
-
-        public void visitRangeRef(RexRangeRef rangeRef)
-        {
-            defaultVisit(rangeRef);
+            if (!relType.canImplement(dynamicParam)) {
+                throw CannotImplement.instance;
+            }
         }
 
         public void visitFieldAccess(RexFieldAccess fieldAccess)
         {
-            boolean isRelType1 = canImplementAs(fieldAccess, relType1);
-            boolean isRelType2 = canImplementAs(fieldAccess, relType2);
-
-            checkValidRelType(fieldAccess, isRelType1, isRelType2);
-
-            adjustLevel(nodeData, relLevel, isRelType1, isRelType2);
+            if (!relType.canImplement(fieldAccess)) {
+                throw CannotImplement.instance;
+            }
         }
 
-        private void checkValidRelType(
-            RexNode node, boolean isRelType1, boolean isRelType2)
+        public void visitLiteral(RexLiteral literal)
         {
-            // REVIEW: SZ: 8/4/2004: Ideally, this test would
-            // be performed much earlier and this rule would
-            // not perform any work for an unimplementable
-            // CalcRel.  Doing so requires traversing all the
-            // RexNodes in the CalcRel and performing this
-            // test for each RexCall.  The common case is that
-            // the test passes and the rule continues, at
-            // which point we end up here and perform the test
-            // again for each RexCall (and others).  If we add the initial
-            // test, we should probably cache the results (Map
-            // of SqlOperator to rel type?), rather than
-            // testing each RexCall repeatedly.
-            if (!isRelType1 && !isRelType2) {
-                throw Util.newInternal("Implementation of "
-                    + node + " not found");
+            if (!relType.canImplement(literal)) {
+                throw CannotImplement.instance;
+            }
+        }
+
+        public boolean canImplement(RexNode expr)
+        {
+            try {
+                expr.accept(this);
+                return true;
+            } catch (CannotImplement e) {
+                Util.swallow(e, null);
+                return false;
             }
         }
     }
 
+    /**
+     * Control exception for {@link ImplementTester}.
+     */
+    private static class CannotImplement extends RuntimeException
+    {
+        static final CannotImplement instance = new CannotImplement();
+    }
 
     /**
-     * NodeData represents information concerning the final location
-     * of RexNodes in a series of <code>CalcRel</code>s.
+     * Shuttle which converts every reference to an input field in an
+     * expression to a reference to a common sub-expression.
      */
-    private static class NodeData
+    private static class InputToCommonExprConverter extends RexShuttle
     {
-        /** Data regarding the children of the RexCall. */
-        List children;
+        private final int[] exprInverseOrdinals;
+        private final int[] exprLevels;
+        private final int level;
+        private final int[] inputExprOrdinals;
 
-        /** Which CalcRel the RexCall will belong to (0-based). */
-        int relLevel;
+        public InputToCommonExprConverter(
+            int[] exprInverseOrdinals,
+            int[] exprLevels,
+            int level,
+            int[] inputExprOrdinals)
+        {
+            this.exprInverseOrdinals = exprInverseOrdinals;
+            this.exprLevels = exprLevels;
+            this.level = level;
+            this.inputExprOrdinals = inputExprOrdinals;
+        }
 
-        /** This NodeData's parent -- null means top-level. */
-        final NodeData parent;
+        public RexNode visitInputRef(RexInputRef input)
+        {
+            final int index = exprInverseOrdinals[input.getIndex()];
+            assert index >= 0;
+            return new RexLocalRef(index, input.getType());
+        }
 
-        /** The RexNode this NodeData is associated with. */
-        final RexNode node;
+        public RexNode visitLocalRef(RexLocalRef local)
+        {
+            // A reference to a local variable becomes a reference to an input
+            // if the local was computed at a previous level.
+            final int localIndex = local.getIndex();
+            if (exprLevels[localIndex] < level) {
+                int inputIndex = indexOf(localIndex, inputExprOrdinals);
+                assert inputIndex >= 0;
+                return new RexLocalRef(inputIndex, local.getType());
+            } else {
+                // It's a reference to what was a local expression at the
+                // previous level, and was then projected.
+                final int exprIndex = exprInverseOrdinals[localIndex];
+                return new RexLocalRef(exprIndex, local.getType());
+            }
+        }
+    }
+
+    /**
+     * Extension to {@link ArrayList} to help build an array of
+     * <code>int</code> values.
+     */
+    private static class IntList extends ArrayList
+    {
+        public void add(int i)
+        {
+            add(new Integer(i));
+        }
+        public int[] toIntArray()
+        {
+            final int[] ints = new int[size()];
+            for (int i = 0; i < ints.length; i++) {
+                ints[i] = ((Integer) get(i)).intValue();
+            }
+            return ints;
+        }
+    }
+
+    /**
+     * Finds the highest level used by any of the inputs of a given expression.
+     */
+    private static class MaxInputFinder extends RexVisitorImpl
+    {
+        int level;
+        private final int[] exprLevels;
+
+        MaxInputFinder(int[] exprLevels)
+        {
+            super(true);
+            this.exprLevels = exprLevels;
+        }
+
+        public void visitLocalRef(RexLocalRef localRef)
+        {
+            int inputLevel = exprLevels[localRef.getIndex()];
+            level = Math.max(level, inputLevel);
+        }
 
         /**
-         * True if this expression belongs to the original CalcRel's
-         * conditional expression tree.
+         * Returns the highest level of any of the inputs of an expression.
          */
-        final boolean isConditional;
-        int position;
-
-        NodeData(RexNode node, boolean isConditional, NodeData parent)
+        public int maxInputFor(RexNode expr)
         {
-            this.node = node;
-            this.isConditional = isConditional;
-            this.parent = parent;
+            level = 0;
+            expr.accept(this);
+            return level;
         }
     }
 
     /**
-     * Visitor which sets {@link CalcRelSplitter#currentRelType} if the node
-     * being visited can be implemented in one protocol but not the other.
+     * Builds an array of the highest level which contains an expression
+     * which uses each expression as an input.
      */
-    private class ChooseRelTypeVisitor extends RexVisitorImpl
+    private static class HighestUsageFinder extends RexVisitorImpl
     {
-        public ChooseRelTypeVisitor()
-        {
-            super(false);
-        }
+        private final int[] maxUsingLevelOrdinals;
+        private int currentLevel;
 
-        public void visitCall(RexCall call)
+        public HighestUsageFinder(RexNode[] exprs, int[] exprLevels)
         {
-            boolean isRelType1 = canImplementAs(call, relType1);
-            boolean isRelType2 = canImplementAs(call, relType2);
-            xx(isRelType1, isRelType2);
-        }
-
-        public void visitFieldAccess(RexFieldAccess fieldAccess)
-        {
-            boolean isRelType1 = canImplementAs(fieldAccess, relType1);
-            boolean isRelType2 = canImplementAs(fieldAccess, relType2);
-            xx(isRelType1, isRelType2);
-        }
-
-        public void visitDynamicParam(RexDynamicParam param)
-        {
-            boolean isRelType1 = canImplementAs(param, relType1);
-            boolean isRelType2 = canImplementAs(param, relType2);
-            xx(isRelType1, isRelType2);
-        }
-
-        private void xx(boolean isRelType1, boolean isRelType2)
-        {
-            if (isRelType1 && isRelType2) {
-                ;
-            } else if (isRelType1) {
-                currentRelType = relType1;
-            } else {
-                currentRelType = relType2;
+            super(true);
+            this.maxUsingLevelOrdinals = new int[exprs.length];
+            Arrays.fill(maxUsingLevelOrdinals, -1);
+            for (int i = 0; i < exprs.length; i++) {
+                currentLevel = exprLevels[i];
+                exprs[i].accept(this);
             }
+        }
+
+        public int[] getMaxUsingLevelOrdinals()
+        {
+            return maxUsingLevelOrdinals;
+        }
+
+        public void visitLocalRef(RexLocalRef ref)
+        {
+            final int index = ref.getIndex();
+            maxUsingLevelOrdinals[index] =
+                Math.max(maxUsingLevelOrdinals[index], currentLevel);
         }
     }
 }
+
+// End CalcRelSplitter.java

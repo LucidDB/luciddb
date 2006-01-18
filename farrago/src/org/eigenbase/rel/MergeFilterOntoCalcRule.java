@@ -70,42 +70,25 @@ public class MergeFilterOntoCalcRule extends RelOptRule
         // Don't merge a filter onto a calc which contains windowed aggregates.
         // That would effectively be pushing a multiset down through a filter.
         // We'll have chance to merge later, when the over is expanded.
-        if (calc.containsAggs()) {
+        if (calc.getProgram().containsAggs()) {
             return;
         }
 
-        // Expand all references to columns in the condition, and AND with any
-        // existing condition. For example,
-        //
-        // SELECT * FROM (
-        //   SELECT a + b AS x, c AS y
-        //   FROM t
-        //   WHERE c < 6)
-        // WHERE x > 5
-        //
-        // becomes
-        //
-        // SELECT a + b AS x, c AS y
-        // FROM t
-        // WHERE c < 6 AND (a + b) > 5
-        final RexShuttle shuttle =
-            new RexShuttle() {
-                public RexNode visitInputRef(RexInputRef input)
-                {
-                    return calc.projectExprs[input.getIndex()];
-                }
-            };
-        RexNode newCondition = filter.getCondition().accept(shuttle);
-        if (calc.getCondition() != null) {
-            newCondition =
-                calc.getCluster().getRexBuilder().makeCall(
-                    SqlStdOperatorTable.andOperator,
-                    calc.getCondition(), newCondition);
-        }
+        // Create a program containing the filter.
+        final RexBuilder rexBuilder = filter.getCluster().getRexBuilder();
+        final RexProgramBuilder progBuilder =
+            new RexProgramBuilder(calc.getRowType(), rexBuilder);
+        progBuilder.addIdentity();
+        progBuilder.addCondition(filter.getCondition());
+        RexProgram topProgram = progBuilder.getProgram();
+        RexProgram bottomProgram = calc.getProgram();
+
+        // Merge the programs together.
+        RexProgram mergedProgram = RexProgramBuilder.mergePrograms(
+            topProgram, bottomProgram, rexBuilder);
         final CalcRel newCalc =
             new CalcRel(calc.getCluster(), RelOptUtil.clone(calc.traits),
-                calc.getChild(), calc.getRowType(), calc.projectExprs,
-                newCondition);
+                calc.getChild(), filter.getRowType(), mergedProgram);
         call.transformTo(newCalc);
     }
 }

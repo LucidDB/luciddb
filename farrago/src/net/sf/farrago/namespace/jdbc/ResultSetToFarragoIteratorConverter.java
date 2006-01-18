@@ -22,13 +22,8 @@
 */
 package net.sf.farrago.namespace.jdbc;
 
-import java.io.*;
-import java.util.*;
-
 import net.sf.farrago.query.*;
-import net.sf.farrago.runtime.*;
 import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
 
 import openjava.mop.*;
 import openjava.ptree.*;
@@ -37,6 +32,7 @@ import org.eigenbase.oj.rel.JavaRel;
 import org.eigenbase.oj.rel.JavaRelImplementor;
 import org.eigenbase.oj.rel.ResultSetRel;
 import org.eigenbase.oj.util.*;
+import org.eigenbase.oj.rex.RexToOJTranslator;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
 import org.eigenbase.relopt.*;
@@ -150,17 +146,19 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
             rhs = javaRexBuilder.makeAbstractCast(
                     field.getType(),
                     rhs);
-            farragoImplementor.translateAssignment(
-                this,
+            final RexToOJTranslator translator =
+                farragoImplementor.newStmtTranslator(
+                    this,
+                    methodBody,
+                    memberList);
+            translator.translateAssignment(
                 field,
                 new FieldAccess(
                     varTuple,
                     Util.toJavaId(
                         field.getName(),
                         i)),
-                rhs,
-                methodBody,
-                memberList);
+                rhs);
         }
 
         methodBody.add(new ReturnStatement(varTuple));

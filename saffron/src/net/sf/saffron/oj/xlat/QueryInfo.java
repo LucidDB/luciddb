@@ -47,6 +47,7 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeFactoryImpl;
 import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.RexUtil;
 import org.eigenbase.util.Util;
 
 /**
@@ -355,7 +356,7 @@ class QueryInfo
                     cluster,
                     getRoot(),
                     aggInputs,
-                    null,
+                    RexUtil.createStructType(cluster.getTypeFactory(), aggInputs), 
                     ProjectRel.Flags.Boxed));
             setRoot(
                 new AggregateRel(
@@ -412,12 +413,10 @@ class QueryInfo
             rexSelects[i] = convertExpToInternal(selects[i]);
         }
         setRoot(
-            new ProjectRel(
-                cluster,
+            ProjectRel.create(
                 getRoot(),
                 rexSelects,
-                aliases,
-                ProjectRel.Flags.Boxed));
+                aliases));
 
         ExpressionList sortList = queryExp.getSort();
         Expression [] sorts = Util.toArray(sortList);

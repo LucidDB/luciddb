@@ -23,16 +23,9 @@
 
 package org.eigenbase.rel;
 
-import org.eigenbase.rel.FilterRel;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelOptRuleOperand;
-import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.rex.RexBuilder;
-import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.*;
 
 
 /**
@@ -77,20 +70,22 @@ public class FilterToCalcRule extends RelOptRule
             // CalcRel
             return;
         }
-        final RelDataType rowType = rel.getRowType();
-        final RelDataTypeField [] fields = rowType.getFields();
-        RexNode [] exprs = new RexNode[fields.length];
+
+        // Create a program containing a filter.
         final RexBuilder rexBuilder = filter.getCluster().getRexBuilder();
-        for (int i = 0; i < exprs.length; i++) {
-            exprs[i] = rexBuilder.makeInputRef(
-                    fields[i].getType(),
-                    i);
+        final RelDataType inputRowType = rel.getRowType();
+        final RexProgramBuilder programBuilder =
+            new RexProgramBuilder(inputRowType, rexBuilder);
+        programBuilder.addIdentity();
+        if (filter.getCondition() != null) {
+            programBuilder.addCondition(filter.getCondition());
         }
+        final RexProgram program = programBuilder.getProgram();
+
         final CalcRel calc =
             new CalcRel(
-                filter.getCluster(),
-                RelOptUtil.clone(filter.traits), rel, rowType,
-                exprs, filter.getCondition());
+                filter.getCluster(), RelOptUtil.clone(filter.traits), rel,
+                inputRowType, program);
         call.transformTo(calc);
     }
 }

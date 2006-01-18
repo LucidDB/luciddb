@@ -33,7 +33,6 @@ import org.eigenbase.rel.jdbc.JdbcQuery;
 import org.eigenbase.relopt.*;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexUtil;
 
 
@@ -411,8 +410,8 @@ public class OJPlannerFactory
             return new JavaProjectRel(
                 project.getCluster(),
                 javaChild,
-                project.getChildExps(),
-                project.getFieldNames(),
+                project.getProjectExps(),
+                project.getRowType(),
                 project.getFlags());
         }
     }

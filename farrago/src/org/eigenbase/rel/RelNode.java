@@ -260,6 +260,23 @@ public interface RelNode
      * returns "ArrayReader".
      */
     public String getRelTypeName();
+
+    /**
+     * Returns whether this relational expression is valid.
+     *
+     * <p>If assertions are enabled, this method is typically called with
+     * <code>fail</code> = <code>true</code>, as follows:
+     * <blockquote><pre>assert rel.isValid(true)</pre></blockquote>
+     * This signals that the method can throw an {@link AssertionError} if it
+     * is not valid.
+     *
+     * @param fail Whether to fail if invalid
+     * @return Whether relational expression is valid
+     * @throws AssertionError if this relational expression is invalid
+     *           and fail=true
+     *           and assertions are enabled
+     */
+    public boolean isValid(boolean fail);
 }
 
 

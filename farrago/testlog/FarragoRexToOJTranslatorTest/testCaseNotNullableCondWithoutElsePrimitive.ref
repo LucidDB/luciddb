@@ -1,14 +1,30 @@
 
-ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+static final ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+static {
+    oj_var0.assignFrom( "Fred" );
+}
 
 
-ExecutableStmt.Oj_inner_0 oj_var1 = new ExecutableStmt.Oj_inner_0();
+static final ExecutableStmt.Oj_inner_0 oj_var1 = new ExecutableStmt.Oj_inner_0();
+
+static {
+    oj_var1.assignFrom( "Eric" );
+}
 
 
-ExecutableStmt.Oj_inner_1 oj_var2 = new ExecutableStmt.Oj_inner_1();
+static final ExecutableStmt.Oj_inner_1 oj_var2 = new ExecutableStmt.Oj_inner_1();
+
+static {
+    oj_var2.assignFrom( "Wilma" );
+}
 
 
-ExecutableStmt.Oj_inner_0 oj_var3 = new ExecutableStmt.Oj_inner_0();
+static final ExecutableStmt.Oj_inner_0 oj_var3 = new ExecutableStmt.Oj_inner_0();
+
+static {
+    oj_var3.assignFrom( "John" );
+}
 
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var4 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
@@ -16,10 +32,6 @@ net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var4 = new net.
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var5 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
 
-oj_var0.assignFrom( "Fred" );
-oj_var1.assignFrom( "Eric" );
-oj_var2.assignFrom( "Wilma" );
-oj_var3.assignFrom( "John" );
 oj_var4.setNull( true );
 oj_var5.isNull = oj_var4.isNull;
 oj_var5.value = (int) oj_var4.value;

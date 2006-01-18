@@ -147,8 +147,9 @@ class FtrsIndexJoinRule extends RelOptRule
 
         RelDataTypeField [] leftFields = leftRel.getRowType().getFields();
         RelDataType leftType = leftFields[leftOrdinal].getType();
-        RelDataType rightType =
-            scanRel.getRowType().getFields()[rightOrdinal].getType();
+        final RelDataTypeField rightField =
+            scanRel.getRowType().getFields()[rightOrdinal];
+        RelDataType rightType = rightField.getType();
 
         FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(scanRel);
         FarragoTypeFactory typeFactory = stmt.getFarragoTypeFactory();
@@ -198,6 +199,7 @@ class FtrsIndexJoinRule extends RelOptRule
             }
             castExps[leftFieldCount] =
                 rexBuilder.makeCast(rightType, castExps[leftOrdinal]);
+            fieldNames[leftFieldCount] = rightField.getName();
             castRel =
                 new ProjectRel(
                     nullFilterRel.getCluster(),

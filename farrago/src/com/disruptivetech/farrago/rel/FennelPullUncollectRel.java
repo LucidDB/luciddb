@@ -20,17 +20,14 @@
 */
 package com.disruptivetech.farrago.rel;
 
-import net.sf.farrago.query.*;
-import net.sf.farrago.fem.fennel.FemExecutionStreamDef;
-import net.sf.farrago.fem.fennel.FemCollectTupleStreamDef;
-import net.sf.farrago.fem.fennel.FemUncollectTupleStreamDef;
-import net.sf.farrago.fem.fennel.FemTupleDescriptor;
 import net.sf.farrago.catalog.FarragoRepos;
-import org.eigenbase.relopt.*;
+import net.sf.farrago.fem.fennel.FemExecutionStreamDef;
+import net.sf.farrago.fem.fennel.FemUncollectTupleStreamDef;
+import net.sf.farrago.query.*;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.UncollectRel;
+import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.type.SqlTypeName;
 
 /**
  * FennelPullUncollectRel is the relational expression corresponding to an
@@ -49,18 +46,21 @@ public class FennelPullUncollectRel extends FennelSingleRel
 {
     public FennelPullUncollectRel(RelOptCluster cluster, RelNode child) {
         super(cluster, new RelTraitSet(FENNEL_EXEC_CONVENTION), child);
+        assert deriveRowType() != null : "invalid child rowtype";
     }
 
     protected RelDataType deriveRowType()
     {
-        return UncollectRel.deriveUncollectRowType(this);
+        return UncollectRel.deriveUncollectRowType(getChild());
     }
 
-    public RelOptCost computeSelfCost(RelOptPlanner planner) {
+    public RelOptCost computeSelfCost(RelOptPlanner planner)
+    {
         return planner.makeTinyCost();
     }
 
-    public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor) {
+    public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
+    {
         final FarragoRepos repos = FennelRelUtil.getRepos(this);
         FemUncollectTupleStreamDef uncollectStream =
             repos.newFemUncollectTupleStreamDef();
@@ -73,7 +73,8 @@ public class FennelPullUncollectRel extends FennelSingleRel
     }
 
     // override Object (public, does not throw CloneNotSupportedException)
-    public Object clone() {
+    public Object clone()
+    {
         FennelPullUncollectRel clone =
             new FennelPullUncollectRel(
                 getCluster(), RelOptUtil.clone(getChild()));
@@ -82,3 +83,4 @@ public class FennelPullUncollectRel extends FennelSingleRel
     }
 }
 
+// End FennelPullUncollectRel.java

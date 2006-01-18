@@ -217,46 +217,19 @@ public class FarragoRelImplementor extends JavaRelImplementor
         return new FarragoRexToOJTranslator(
             preparingStmt.getRepos(),
             this, rel, implementorTable,
-            null, null);
+            null, null, null);
     }
 
     // override JavaRelImplementor
-    public Expression translateViaStatements(
+    public RexToOJTranslator newStmtTranslator(
         JavaRel rel,
-        RexNode exp,
         StatementList stmtList,
         MemberDeclarationList memberList)
     {
-        FarragoRexToOJTranslator translator =
-            new FarragoRexToOJTranslator(
-                preparingStmt.getRepos(),
-                this, rel, implementorTable,
-                stmtList, memberList);
-        return translator.translateRexNode(exp);
-    }
-
-    // override JavaRelImplementor
-    public void translateAssignment(
-        JavaRel rel,
-        RelDataTypeField lhsField,
-        Expression lhsExp,
-        RexNode rhs,
-        StatementList stmtList,
-        MemberDeclarationList memberList)
-    {
-        FarragoRexToOJTranslator translator =
-            new FarragoRexToOJTranslator(
-                preparingStmt.getRepos(),
-                this, rel, implementorTable,
-                stmtList, memberList);
-        Expression rhsExp = translator.translateRexNode(rhs);
-        translator.convertCastOrAssignment(
-            getPreparingStmt().getRepos().getLocalizedObjectName(
-                lhsField.getName()),
-            lhsField.getType(),
-            rhs.getType(),
-            lhsExp,
-            rhsExp);
+        return new FarragoRexToOJTranslator(
+            preparingStmt.getRepos(),
+            this, rel, implementorTable,
+            stmtList, memberList, null);
     }
 
     // override JavaRelImplementor

@@ -41,6 +41,7 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.util.*;
+import org.eigenbase.sql.type.SqlTypeUtil;
 
 // TODO jvs 22-Feb-2005:  combine FtrsScanToSearchRule with
 // FtrsTableProjectionRule (say FtrsIndexAccessRule?).  Without combining them,
@@ -177,12 +178,15 @@ class FtrsScanToSearchRule extends RelOptRule
 
         // Generate a one-row relation producing the key to search for.
         OneRowRel oneRowRel = new OneRowRel(origScan.getCluster());
+        RelDataType rowType = RexUtil.createStructType(
+            origScan.getCluster().getTypeFactory(),
+            searchExps);
         ProjectRel keyRel =
             new ProjectRel(
                 origScan.getCluster(),
                 oneRowRel,
                 searchExps,
-                null,
+                rowType,
                 ProjectRel.Flags.Boxed);
 
         // Add a filter to remove nulls, since they can never match the

@@ -186,7 +186,10 @@ class RelSet
             if (correl != null) {
                 rel.setCorrelVariable(correl);
             }
-            if (this.rel.getRowType() != rel.getRowType()) {
+
+            // Row types must be the same, except for field names.
+            if (!RelOptUtil.areRowTypesEqual(
+                this.rel.getRowType(), rel.getRowType(), false)) {
                 failType(rel);
             }
         }

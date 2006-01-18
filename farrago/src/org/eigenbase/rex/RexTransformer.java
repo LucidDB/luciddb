@@ -24,6 +24,7 @@
 package org.eigenbase.rex;
 
 import java.util.HashSet;
+import java.util.Set;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
@@ -48,8 +49,7 @@ public class RexTransformer
     private RexNode root;
     private final RexBuilder rexBuilder;
     private int isParentsCount;
-    private final SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
-    private final HashSet transformableOperators = new HashSet();
+    private final Set transformableOperators = new HashSet();
 
     //~ Constructors ----------------------------------------------------------
 
@@ -61,16 +61,16 @@ public class RexTransformer
         this.rexBuilder = rexBuilder;
         isParentsCount = 0;
 
-        transformableOperators.add(opTab.andOperator);
+        transformableOperators.add(SqlStdOperatorTable.andOperator);
 
         /** NOTE the OR operator is NOT missing.
-         * see {@link org.eigenbase.test.RexTransformerTest */
-        transformableOperators.add(opTab.equalsOperator);
-        transformableOperators.add(opTab.notEqualsOperator);
-        transformableOperators.add(opTab.greaterThanOperator);
-        transformableOperators.add(opTab.greaterThanOrEqualOperator);
-        transformableOperators.add(opTab.lessThanOperator);
-        transformableOperators.add(opTab.lessThanOrEqualOperator);
+         * see {@link org.eigenbase.test.RexTransformerTest} */
+        transformableOperators.add(SqlStdOperatorTable.equalsOperator);
+        transformableOperators.add(SqlStdOperatorTable.notEqualsOperator);
+        transformableOperators.add(SqlStdOperatorTable.greaterThanOperator);
+        transformableOperators.add(SqlStdOperatorTable.greaterThanOrEqualOperator);
+        transformableOperators.add(SqlStdOperatorTable.lessThanOperator);
+        transformableOperators.add(SqlStdOperatorTable.lessThanOrEqualOperator);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -100,13 +100,13 @@ public class RexTransformer
         return isNullable(node);
     }
 
-    public RexNode tranformNullSemantics()
+    public RexNode transformNullSemantics()
     {
-        root = tranformNullSemantics(root);
+        root = transformNullSemantics(root);
         return root;
     }
 
-    private RexNode tranformNullSemantics(RexNode node)
+    private RexNode transformNullSemantics(RexNode node)
     {
         assert (isParentsCount >= 0) : "Cannot be negative";
         if (!isBoolean(node)) {
@@ -134,16 +134,16 @@ public class RexTransformer
                     || operand instanceof RexDynamicParam)) {
                 if (isNullable(node)) {
                     RexNode notNullNode =
-                        rexBuilder.makeCall(opTab.isNotNullOperator,
-                            operand);
+                        rexBuilder.makeCall(
+                            SqlStdOperatorTable.isNotNullOperator, operand);
                     RexNode boolNode =
                         rexBuilder.makeLiteral(
                             directlyUnderIs.booleanValue());
                     RexNode eqNode =
-                        rexBuilder.makeCall(opTab.equalsOperator, operand,
-                            boolNode);
+                        rexBuilder.makeCall(SqlStdOperatorTable.equalsOperator,
+                            operand, boolNode);
                     RexNode andBoolNode =
-                        rexBuilder.makeCall(opTab.andOperator,
+                        rexBuilder.makeCall(SqlStdOperatorTable.andOperator,
                             notNullNode, eqNode);
 
                     return andBoolNode;
@@ -152,8 +152,8 @@ public class RexTransformer
                         rexBuilder.makeLiteral(
                             directlyUnderIs.booleanValue());
                     RexNode andBoolNode =
-                        rexBuilder.makeCall(opTab.equalsOperator, node,
-                            boolNode);
+                        rexBuilder.makeCall(SqlStdOperatorTable.equalsOperator,
+                            node, boolNode);
                     return andBoolNode;
                 }
             }
@@ -167,7 +167,7 @@ public class RexTransformer
             //transform children (if any) before transforming node itself
             for (int i = 0; i < call.operands.length; i++) {
                 RexNode operand = call.operands[i];
-                call.operands[i] = tranformNullSemantics(operand);
+                call.operands[i] = transformNullSemantics(operand);
             }
 
             if (null != directlyUnderIs) {
@@ -183,20 +183,21 @@ public class RexTransformer
 
                 if (isTransformable(call.operands[0])) {
                     isNotNullOne =
-                        rexBuilder.makeCall(opTab.isNotNullOperator,
+                        rexBuilder.makeCall(
+                            SqlStdOperatorTable.isNotNullOperator,
                             call.operands[0]);
                 }
 
                 if (isTransformable(call.operands[1])) {
                     isNotNullTwo =
-                        rexBuilder.makeCall(opTab.isNotNullOperator,
+                        rexBuilder.makeCall(SqlStdOperatorTable.isNotNullOperator,
                             call.operands[1]);
                 }
 
                 RexNode intoFinalAnd = null;
                 if ((null != isNotNullOne) && (null != isNotNullTwo)) {
                     intoFinalAnd =
-                        rexBuilder.makeCall(opTab.andOperator,
+                        rexBuilder.makeCall(SqlStdOperatorTable.andOperator,
                             isNotNullOne, isNotNullTwo);
                 } else if (null != isNotNullOne) {
                     intoFinalAnd = isNotNullOne;
@@ -206,7 +207,7 @@ public class RexTransformer
 
                 if (null != intoFinalAnd) {
                     RexNode andNullAndCheckNode =
-                        rexBuilder.makeCall(opTab.andOperator,
+                        rexBuilder.makeCall(SqlStdOperatorTable.andOperator,
                             intoFinalAnd, call);
                     return andNullAndCheckNode;
                 }

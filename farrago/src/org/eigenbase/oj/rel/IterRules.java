@@ -155,8 +155,7 @@ public abstract class IterRules
             }
             // If there's a multiset, let FarragoMultisetSplitter work on it
             // first.
-            if (RexMultisetUtil.containsMultiset(
-                calc.projectExprs, calc.getCondition())) {
+            if (RexMultisetUtil.containsMultiset(calc.getProgram())) {
                 return null;
             }
 
@@ -165,7 +164,7 @@ public abstract class IterRules
             final JavaRelImplementor relImplementor =
                 rel.getCluster().getPlanner().getJavaRelImplementor(rel);
             if (!relImplementor.canTranslate(
-                convertedChild, calc.getCondition(), calc.projectExprs)) {
+                convertedChild, calc.getProgram())) {
                 // Some of the expressions cannot be translated into Java
                 return null;
             }
@@ -173,10 +172,8 @@ public abstract class IterRules
             return new IterCalcRel(
                 rel.getCluster(),
                 convertedChild,
-                calc.projectExprs,
-                calc.getCondition(),
-                RelOptUtil.getFieldNames(calc.getRowType()),
-                IterCalcRel.Flags.Boxed);
+                calc.getProgram(),
+                ProjectRelBase.Flags.Boxed);
         }
     }
 
@@ -205,12 +202,15 @@ public abstract class IterRules
                 return null;
             }
 
-            final RexNode [] exps = project.getChildExps();
-            final RexNode condition = null;
+            final RexNode [] exps = project.getProjectExps();
+            RexProgram program =
+                RexProgram.create(
+                    iterChild.getRowType(), exps, null, project.getRowType(),
+                    project.getCluster().getRexBuilder());
 
              // If there's a multiset, let FarragoMultisetSplitter work on it
             // first.
-            if (RexMultisetUtil.containsMultiset(exps, condition)) {
+            if (RexMultisetUtil.containsMultiset(program)) {
                 return null;
             }
 
@@ -218,7 +218,7 @@ public abstract class IterRules
             // and implement it for Java & C++ calcs.
             final JavaRelImplementor relImplementor =
                 project.getCluster().getPlanner().getJavaRelImplementor(project);
-            if (!relImplementor.canTranslate(iterChild, condition, exps)) {
+            if (!relImplementor.canTranslate(iterChild, program)) {
                 // Some of the expressions cannot be translated into Java
                 return null;
             }
@@ -226,9 +226,7 @@ public abstract class IterRules
             return new IterCalcRel(
                 project.getCluster(),
                 iterChild,
-                exps,
-                condition,
-                project.getFieldNames(),
+                program,
                 project.getFlags());
         }
     }
@@ -273,11 +271,24 @@ public abstract class IterRules
                 return;
             }
 
-            final RexNode [] exps = project.getChildExps();
+            // Create a program containing the expressions from the project
+            // and the filter expression.
+            final RexNode [] exps = project.getProjectExps();
+            final RelDataTypeField[] fields = project.getRowType().getFields();
+            final RelDataType inputRowType = inputRel.getRowType();
+            final RexProgramBuilder programBuilder = new RexProgramBuilder(
+                inputRowType, inputRel.getCluster().getRexBuilder());
+            for (int i = 0; i < exps.length; i++) {
+                programBuilder.addProject(exps[i], fields[i].getName());
+            }
+            if (condition != null) {
+                programBuilder.addCondition(condition);
+            }
+            final RexProgram program = programBuilder.getProgram();
 
             // If there's a multiset, let FarragoMultisetSplitter work on it
             // first.
-            if (RexMultisetUtil.containsMultiset(exps, condition)) {
+            if (RexMultisetUtil.containsMultiset(program)) {
                 return;
             }
 
@@ -285,7 +296,7 @@ public abstract class IterRules
             // and implement it for Java & C++ calcs.
             final JavaRelImplementor relImplementor =
                 call.getPlanner().getJavaRelImplementor(project);
-            if (!relImplementor.canTranslate(iterChild, condition, exps)) {
+            if (!relImplementor.canTranslate(iterChild, program)) {
                 // some of the expressions cannot be translated into Java
                 return;
             }
@@ -293,9 +304,7 @@ public abstract class IterRules
                 new IterCalcRel(
                     project.getCluster(),
                     iterChild,
-                    exps,
-                    condition,
-                    project.getFieldNames(),
+                    program,
                     project.getFlags());
 
             call.transformTo(calcRel);

@@ -109,12 +109,6 @@ public class FarragoAutoCalcRule extends RelOptRule
 {
     //~ Static fields/initializers --------------------------------------------
 
-    private static final CalcRelSplitter.RelType REL_TYPE_JAVA =
-        new CalcRelSplitter.RelType("REL_TYPE_JAVA");
-
-    private static final CalcRelSplitter.RelType REL_TYPE_FENNEL =
-        new CalcRelSplitter.RelType("REL_TYPE_FENNEL");
-
     /**
      * The singleton instance.
      */
@@ -155,12 +149,11 @@ public class FarragoAutoCalcRule extends RelOptRule
 
         // If there's a multiset expression, let FarragoMultisetSplitter work
         // on it first.
-        if (RexMultisetUtil.containsMultiset(
-            calc.projectExprs, calc.getCondition())) {
+        if (RexMultisetUtil.containsMultiset(calc.getProgram())) {
             return;
         }
         // If there's a windowed agg expression, split that out first.
-        if (RexOver.containsOver(calc.projectExprs, calc.getCondition())) {
+        if (RexOver.containsOver(calc.getProgram())) {
             return;
         }
 
@@ -175,7 +168,7 @@ public class FarragoAutoCalcRule extends RelOptRule
         // If can translate, do nothing, and let FennelCalcRule handle this
         // CalcRel.
         if (fennelInput != null &&
-            translator.canTranslate(calc.projectExprs, calc.getCondition())) {
+            translator.canTranslate(calc.getProgram())) {
             return;
         }
 
@@ -188,8 +181,8 @@ public class FarragoAutoCalcRule extends RelOptRule
             calc.getCluster().getPlanner().getJavaRelImplementor(calc);
 
         if (convertedChild != null) {
-            if (relImplementor.canTranslate(convertedChild,
-                        calc.getCondition(), calc.projectExprs)) {
+            if (relImplementor.canTranslate(
+                convertedChild, calc.getProgram())) {
                 // yes: do nothing, let IterCalcRule handle this CalcRel
                 return;
             }
@@ -209,53 +202,69 @@ public class FarragoAutoCalcRule extends RelOptRule
     private static class AutoCalcRelSplitter
         extends CalcRelSplitter
     {
-        private final JavaRelImplementor relImplementor;
-
-        private final RexToCalcTranslator translator;
-
-        private AutoCalcRelSplitter(CalcRel calc, JavaRelImplementor relImplementor, RexToCalcTranslator translator)
+        private AutoCalcRelSplitter(
+            final CalcRel calc,
+            final JavaRelImplementor relImplementor,
+            final RexToCalcTranslator translator)
         {
-            super(calc, REL_TYPE_JAVA, REL_TYPE_FENNEL);
+            super(calc,
+                new RelType[] {
+                    new CalcRelSplitter.RelType("REL_TYPE_JAVA") {
+                        protected boolean canImplement(RexFieldAccess field)
+                        {
+                            return true;
+                        }
 
-            this.relImplementor = relImplementor;
-            this.translator = translator;
+                        protected boolean canImplement(RexDynamicParam param)
+                        {
+                            return true;
+                        }
+
+                        protected boolean canImplement(RexLiteral literal)
+                        {
+                            return true;
+                        }
+
+                        protected boolean canImplement(RexCall call)
+                        {
+                            return relImplementor.canTranslate(calc, call, false);
+                        }
+                    },
+                    new CalcRelSplitter.RelType("REL_TYPE_FENNEL") {
+                        protected boolean canImplement(RexFieldAccess field)
+                        {
+                            // Field access rex nodes are Java-only
+                            return false;
+                        }
+
+                        protected boolean canImplement(RexDynamicParam param)
+                        {
+                            // Dynamic param rex nodes are Java-only
+                            return false;
+                        }
+
+                        protected boolean canImplement(RexLiteral literal)
+                        {
+                            return true;
+                        }
+
+                        protected boolean canImplement(RexCall call)
+                        {
+                            return translator.canTranslate(call, false);
+                        }
+                    }
+                }
+            );
         }
 
         protected boolean canImplement(CalcRel rel)
         {
-            if (RexUtil.requiresDecimalExpansion(rel.getChildExps(), true)) {
+            if (RexUtil.requiresDecimalExpansion(rel.getProgram(), true)) {
                 return false;
             }
             return true;
         }
-        
-        protected boolean canImplementAs(
-            RexCall call, CalcRelSplitter.RelType relType)
-        {
-            if (relType == REL_TYPE_FENNEL) {
-                return translator.canTranslate(call, false);
-            } else if (relType == REL_TYPE_JAVA) {
-                return relImplementor.canTranslate(calc, call, false);
-            } else {
-                assert(false): "Unknown rel type: " + relType;
-                return false;
-            }
-        }
-
-        protected boolean canImplementAs(RexDynamicParam param,
-            RelType relType)
-        {
-            // Dynamic param rex nodes are Java-only
-            return relType == REL_TYPE_JAVA;
-        }
-
-        protected boolean canImplementAs(RexFieldAccess field,
-            RelType relType)
-        {
-            // Field access rex nodes are Java-only
-            return relType == REL_TYPE_JAVA;
-        }
-
-
     }
 }
+
+// End FarragoAutoCalcRule.java

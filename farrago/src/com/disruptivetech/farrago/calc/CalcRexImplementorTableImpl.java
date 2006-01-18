@@ -359,7 +359,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 translator.rexBuilder.makeCast(int8, call.operands[i]);
 
             RexNode newCall;
-            if (opTab.castFunc.equals(call.getOperator())) {
+            if (SqlStdOperatorTable.castFunc.equals(call.getOperator())) {
                 newCall =
                     translator.rexBuilder.makeCast(
                         call.getType(),
@@ -409,7 +409,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 translator.rexBuilder.makeCast(db, call.operands[i]);
 
             RexNode newCall;
-            if (opTab.castFunc.equals(call.getOperator())) {
+            if (SqlStdOperatorTable.castFunc.equals(call.getOperator())) {
                 newCall =
                     translator.rexBuilder.makeCast(
                         call.getType(),
@@ -447,7 +447,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
     private CalcRexImplementorTableImpl initStandard()
     {
         register(
-            opTab.absFunc,
+            SqlStdOperatorTable.absFunc,
             new InstrDefImplementor(ExtInstructionDefTable.abs) {
                 public CalcProgramBuilder.Register implement(
                     RexCall call,
@@ -464,33 +464,36 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             });
 
         register(
-            opTab.plusOperator,
+            SqlStdOperatorTable.plusOperator,
             new BinaryNumericMakeSametypeImplementor(
                 CalcProgramBuilder.nativeAdd));
 
-        registerInstr(opTab.andOperator, CalcProgramBuilder.integralNativeAnd);
+        registerInstr(
+            SqlStdOperatorTable.andOperator,
+            CalcProgramBuilder.integralNativeAnd);
 
         register(
-            opTab.divideOperator,
+            SqlStdOperatorTable.divideOperator,
             new BinaryNumericMakeSametypeImplementor(
                 CalcProgramBuilder.nativeDiv));
 
         register(
-            opTab.caseOperator,
+            SqlStdOperatorTable.caseOperator,
             new CaseImplementor());
 
         register(
-            opTab.castFunc,
+            SqlStdOperatorTable.castFunc,
             new CastImplementor());
 
         if (false) {
             // TODO eventually need an extra argument for charset, in which
             // case we will use the following code
             register(
-                opTab.characterLengthFunc,
+                SqlStdOperatorTable.characterLengthFunc,
                 new AddCharSetNameInstrImplementor("CHAR_LENGTH", -1, 3));
         } else {
-            registerInstr(opTab.characterLengthFunc,
+            registerInstr(
+                SqlStdOperatorTable.characterLengthFunc,
                 ExtInstructionDefTable.charLength);
         }
 
@@ -499,149 +502,188 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         //   RexNode level (they should remain separate functions at the
         //   SqlNode level).
         register(
-            opTab.charLengthFunc,
-            get(opTab.characterLengthFunc));
+            SqlStdOperatorTable.charLengthFunc,
+            get(SqlStdOperatorTable.characterLengthFunc));
 
         register(
-            opTab.concatOperator,
+            SqlStdOperatorTable.concatOperator,
             new ConcatImplementor());
 
         register(
-            opTab.equalsOperator,
+            SqlStdOperatorTable.equalsOperator,
             new BinaryNumericMakeSametypeImplementor(
                 CalcProgramBuilder.boolNativeEqual));
 
         register(
-            opTab.greaterThanOperator,
+            SqlStdOperatorTable.greaterThanOperator,
             new BinaryNumericMakeSametypeImplementor(
                 CalcProgramBuilder.boolNativeGreaterThan));
 
         register(
-            opTab.greaterThanOrEqualOperator,
+            SqlStdOperatorTable.greaterThanOrEqualOperator,
             new BinaryNumericMakeSametypeImplementor(
                 CalcProgramBuilder.boolNativeGreaterOrEqualThan));
 
-        registerInstr(opTab.isNullOperator, CalcProgramBuilder.boolNativeIsNull);
+        registerInstr(
+            SqlStdOperatorTable.isNullOperator,
+            CalcProgramBuilder.boolNativeIsNull);
 
-        registerInstr(opTab.isNotNullOperator,
+        registerInstr(
+            SqlStdOperatorTable.isNotNullOperator,
             CalcProgramBuilder.boolNativeIsNotNull);
 
         register(
-            opTab.isTrueOperator,
+            SqlStdOperatorTable.isTrueOperator,
             new IsBoolImplementor(true));
 
         register(
-            opTab.isNotTrueOperator,
+            SqlStdOperatorTable.isNotTrueOperator,
             new IsNotBoolImplementor(true));
 
         register(
-            opTab.isFalseOperator,
+            SqlStdOperatorTable.isFalseOperator,
             new IsBoolImplementor(false));
 
         register(
-            opTab.isNotFalseOperator,
+            SqlStdOperatorTable.isNotFalseOperator,
             new IsNotBoolImplementor(false));
 
         register(
-            opTab.lessThanOperator,
+            SqlStdOperatorTable.lessThanOperator,
             new BinaryNumericMakeSametypeImplementor(
                 CalcProgramBuilder.boolNativeLessThan));
 
         register(
-            opTab.lessThanOrEqualOperator,
+            SqlStdOperatorTable.lessThanOrEqualOperator,
             new BinaryNumericMakeSametypeImplementor(
                 CalcProgramBuilder.boolNativeLessOrEqualThan));
 
-        registerInstr(opTab.likeOperator, ExtInstructionDefTable.like);
+        registerInstr(
+            SqlStdOperatorTable.likeOperator,
+            ExtInstructionDefTable.like);
 
         register(
-            opTab.lnFunc,
+            SqlStdOperatorTable.lnFunc,
             new MakeOperandsDoubleImplementor(ExtInstructionDefTable.log));
+
         register(
-            opTab.log10Func,
+            SqlStdOperatorTable.log10Func,
             new MakeOperandsDoubleImplementor(ExtInstructionDefTable.log10));
 
-        // TODO: need to know charset aswell. When ready,
+        // TODO: need to know charset as well. When ready,
         // use same construct as with CHAR_LENGTH above
-        registerInstr(opTab.lowerFunc, ExtInstructionDefTable.lower);
+        registerInstr(
+            SqlStdOperatorTable.lowerFunc,
+            ExtInstructionDefTable.lower);
 
         register(
-            opTab.minusOperator,
+            SqlStdOperatorTable.minusOperator,
             new BinaryNumericMakeSametypeImplementor(
                 CalcProgramBuilder.nativeMinus));
 
         register(
-            opTab.modFunc,
+            SqlStdOperatorTable.modFunc,
             new BinaryNumericMakeSametypeImplementor(
                 CalcProgramBuilder.integralNativeMod));
 
         register(
-            opTab.multiplyOperator,
+            SqlStdOperatorTable.multiplyOperator,
             new BinaryNumericMakeSametypeImplementor(
                 CalcProgramBuilder.integralNativeMul));
 
         register(
-            opTab.notEqualsOperator,
+            SqlStdOperatorTable.notEqualsOperator,
             new BinaryNumericMakeSametypeImplementor(
                 CalcProgramBuilder.boolNativeNotEqual));
 
         // todo: optimization. If using 'NOT' in front of 'IS NULL',
         // create a call to the calc instruction 'ISNOTNULL'
-        registerInstr(opTab.notOperator, CalcProgramBuilder.boolNot);
+        registerInstr(
+            SqlStdOperatorTable.notOperator,
+            CalcProgramBuilder.boolNot);
 
-        registerInstr(opTab.orOperator, CalcProgramBuilder.boolOr);
+        registerInstr(
+            SqlStdOperatorTable.orOperator,
+            CalcProgramBuilder.boolOr);
 
         register(
-            opTab.overlayFunc,
+            SqlStdOperatorTable.overlayFunc,
             new BinaryStringMakeSametypeImplementor(
                 ExtInstructionDefTable.overlay, 0, 1));
 
         register(
-            opTab.positionFunc,
+            SqlStdOperatorTable.positionFunc,
             new BinaryStringMakeSametypeImplementor(
                 ExtInstructionDefTable.position));
 
         register(
-            opTab.powFunc,
+            SqlStdOperatorTable.powFunc,
             new MakeOperandsDoubleImplementor(ExtInstructionDefTable.pow));
 
-        registerInstr(opTab.prefixMinusOperator, CalcProgramBuilder.nativeNeg);
+        registerInstr(
+            SqlStdOperatorTable.prefixMinusOperator,
+            CalcProgramBuilder.nativeNeg);
 
         register(
-            opTab.prefixPlusOperator,
+            SqlStdOperatorTable.prefixPlusOperator,
             new IdentityImplementor());
 
         register(
             opTab.reinterpretOperator,
             new ReinterpretCastImplementor());
 
-        registerInstr(opTab.similarOperator, ExtInstructionDefTable.similar);
+        registerInstr(
+            SqlStdOperatorTable.similarOperator,
+            ExtInstructionDefTable.similar);
 
-        registerInstr(opTab.substringFunc, ExtInstructionDefTable.substring);
+        registerInstr(
+            SqlStdOperatorTable.substringFunc,
+            ExtInstructionDefTable.substring);
 
-        registerInstr(opTab.throwOperator, CalcProgramBuilder.raise);
+        registerInstr(
+            SqlStdOperatorTable.throwOperator,
+            CalcProgramBuilder.raise);
 
         register(
-            opTab.trimFunc,
+            SqlStdOperatorTable.trimFunc,
             new TrimImplementor());
 
         // TODO: need to know charset aswell. When ready,
         // use same construct as with CHAR_LENGTH above
-        registerInstr(opTab.upperFunc, ExtInstructionDefTable.upper);
+        registerInstr(
+            SqlStdOperatorTable.upperFunc,
+            ExtInstructionDefTable.upper);
 
-        registerInstr(opTab.localTimeFunc, ExtInstructionDefTable.localTime);
+        registerInstr(
+            SqlStdOperatorTable.localTimeFunc,
+            ExtInstructionDefTable.localTime);
 
-        registerInstr(opTab.localTimestampFunc,
+        registerInstr(
+            SqlStdOperatorTable.localTimestampFunc,
             ExtInstructionDefTable.localTimestamp);
 
+        register(
+            SqlStdOperatorTable.sliceOp,
+            new SliceImplementor());
+
         // Register agg functions.
-        registerAgg(opTab.sumOperator, new SumCalcRexImplementor());
-        registerAgg(opTab.countOperator, new CountCalcRexImplementor());
-        registerAgg(opTab.lastValueOperator, new LastValueCalcRexImplementor());
+        registerAgg(
+            SqlStdOperatorTable.sumOperator,
+            new SumCalcRexImplementor());
+        registerAgg(
+            SqlStdOperatorTable.countOperator,
+            new CountCalcRexImplementor());
+        registerAgg(
+            SqlStdOperatorTable.lastValueOperator,
+            new LastValueCalcRexImplementor());
         if (false) {
             // TODO:
-            registerAgg(opTab.minOperator, new SumCalcRexImplementor());
-            registerAgg(opTab.maxOperator, new SumCalcRexImplementor());
+            registerAgg(
+                SqlStdOperatorTable.minOperator,
+                new SumCalcRexImplementor());
+            registerAgg(
+                SqlStdOperatorTable.maxOperator,
+                new SumCalcRexImplementor());
         }
 
         return this;
@@ -753,18 +795,20 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
 
             if (operand.getType().isNullable()) {
                 RexNode notNullCall =
-                    translator.rexBuilder.makeCall(opTab.isNotNullOperator,
+                    translator.rexBuilder.makeCall(
+                        SqlStdOperatorTable.isNotNullOperator,
                         operand);
                 RexNode eqCall =
                     translator.rexBuilder.makeCall(
-                        opTab.equalsOperator,
+                        SqlStdOperatorTable.equalsOperator,
                         operand,
                         translator.rexBuilder.makeLiteral(boolType));
-                res = translator.rexBuilder.makeCall(opTab.andOperator,
+                res = translator.rexBuilder.makeCall(
+                    SqlStdOperatorTable.andOperator,
                     notNullCall, eqCall);
             } else {
                 res = translator.rexBuilder.makeCall(
-                    opTab.equalsOperator,
+                    SqlStdOperatorTable.equalsOperator,
                     operand,
                     translator.rexBuilder.makeLiteral(boolType));
             }
@@ -787,7 +831,8 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             RexToCalcTranslator translator)
         {
             super.implement(call, translator);
-            res = translator.rexBuilder.makeCall(opTab.notOperator, res);
+            res = translator.rexBuilder.makeCall(
+                SqlStdOperatorTable.notOperator, res);
             return translator.implementNode(res);
         }
     }
@@ -1080,7 +1125,8 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         {
             Util.pre(call.operands.length == 1, "call.operands.length == 1");
 
-            if (RexLiteral.isNullLiteral(call.operands[0])) {
+            final RexNode operand = translator.resolve(call.operands[0]);
+            if (RexLiteral.isNullLiteral(operand)) {
                 CalcProgramBuilder.RegisterDescriptor resultDesc =
                     translator.getCalcRegisterDescriptor(call);
 
@@ -1098,7 +1144,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             }
 
             // Figure out the source and destination types.
-            RelDataType fromType = call.operands[0].getType();
+            RelDataType fromType = operand.getType();
             SqlTypeName fromTypeName = fromType.getSqlTypeName();
             RelDataType toType = call.getType();
             SqlTypeName toTypeName = toType.getSqlTypeName();
@@ -1110,7 +1156,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             }
 
             if (SqlTypeUtil.sameNamedType(toType, fromType)) {
-                RexNode op = call.operands[0];
+                RexNode op = operand;
                 return translator.implementNode(op);
             }
 
@@ -1504,8 +1550,8 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
 
             CalcProgramBuilder.Register resultOfCall =
                 createResultRegister(translator, call);
-            assert call.operands[0] instanceof RexLiteral : call.operands[0];
-            final RexLiteral literal = (RexLiteral) call.operands[0];
+            RexNode op0 = call.operands[0];
+            final RexLiteral literal = translator.getLiteral(op0);
             SqlTrimFunction.Flag flag =
                 (SqlTrimFunction.Flag) literal.getValue();
 
@@ -1542,7 +1588,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
 
             if ((!(call.operands[0] instanceof RexCall)
                 || !((RexCall) call.operands[0]).getOperator().equals(
-                    opTab.concatOperator))) {
+                    SqlStdOperatorTable.concatOperator))) {
                 regList.add(translator.implementNode(call.operands[0]));
             } else {
                 //recursively calling this method again
@@ -1964,6 +2010,19 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         {
             // Do nothing when a row is dropped.
             assert call.operands.length == 1;
+        }
+    }
+
+    /**
+     * Implements the internal {@link SqlStdOperatorTable#sliceOp $SLICE}
+     * operator.
+     */
+    private static class SliceImplementor extends AbstractCalcRexImplementor
+    {
+        public CalcProgramBuilder.Register implement(
+            RexCall call, RexToCalcTranslator translator)
+        {
+            throw new UnsupportedOperationException();
         }
     }
 }

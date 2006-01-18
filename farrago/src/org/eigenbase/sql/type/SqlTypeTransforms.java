@@ -23,7 +23,6 @@ package org.eigenbase.sql.type;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.*;
 
 /**
  * SqlTypeTransforms defines a number of reusable instances of
@@ -144,6 +143,24 @@ public abstract class SqlTypeTransforms
                 RelDataType typeToTransform)
             {
                 return typeToTransform.getComponentType();
+            }
+        };
+    
+    /**
+     * Parameter type-inference transform strategy where a derived type
+     * must be a struct type with precisely one field and the returned type is
+     * the type of that field.
+     */
+    public static final SqlTypeTransform onlyColumn =
+        new SqlTypeTransform()
+        {
+            public RelDataType transformType(
+                SqlOperatorBinding opBinding,
+                RelDataType typeToTransform)
+            {
+                final RelDataTypeField[] fields = typeToTransform.getFields();
+                assert fields.length == 1;
+                return fields[0].getType();
             }
         };
 }

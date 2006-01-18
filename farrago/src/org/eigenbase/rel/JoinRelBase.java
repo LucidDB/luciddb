@@ -202,22 +202,17 @@ public abstract class JoinRelBase extends AbstractRelNode
         RelDataType leftType,
         RelDataType rightType)
     {
-        ArrayList nameList = new ArrayList();
-        ArrayList typeList = new ArrayList();
+        List<String> nameList = new ArrayList<String>();
+        List<RelDataType> typeList = new ArrayList<RelDataType>();
         addFields(leftType, typeList, nameList);
         addFields(rightType, typeList, nameList);
-        String [] fieldNames =
-            (String []) nameList.toArray(new String[nameList.size()]);
-        RelDataType [] types =
-            (RelDataType []) typeList.toArray(
-                new RelDataType[typeList.size()]);
-        return typeFactory.createStructType(types, fieldNames);
+        return typeFactory.createStructType(typeList, nameList);
     }
 
     private static void addFields(
         RelDataType type,
-        ArrayList typeList,
-        ArrayList nameList)
+        List<RelDataType> typeList,
+        List<String> nameList)
     {
         final RelDataTypeField [] fields = type.getFields();
         for (int i = 0; i < fields.length; i++) {

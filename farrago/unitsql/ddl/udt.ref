@@ -1074,7 +1074,7 @@ Error: DDL validation error near line 1, column 34: Must define distinct datatyp
 . . . . . . . . > select v.pair_id, v.coord1.x, v.coord1.y, v.y as y2 
 . . . . . . . . > from viewed_coord_list v;
 'column0'
-'IterCalcRel(PAIR_ID=[$6], X=[$1], Y=[$2], Y2=[$5])'
+'IterCalcRel(expr#0..6=[{inputs}], PAIR_ID=[$t6], X=[$t1], Y=[$t2], Y2=[$t5])'
 '  FennelToIteratorConverter'
 '    FtrsIndexScanRel(table=[[LOCALDB, UDTTEST, STORED_COORD_LIST]], projection=[*], index=[SYS$CONSTRAINT_INDEX$STORED_COORD_LIST$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 

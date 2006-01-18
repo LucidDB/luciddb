@@ -37,8 +37,7 @@ import org.eigenbase.rel.FilterRel;
 import org.eigenbase.rel.ProjectRel;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexTransformer;
+import org.eigenbase.rex.*;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.validate.SqlValidatorUtil;
@@ -50,7 +49,6 @@ import org.eigenbase.util.SaffronProperties;
 
 import java.io.PrintWriter;
 import java.io.Writer;
-
 
 /**
  * Validates that rex expressions get translated to the correct
@@ -159,6 +157,18 @@ public class Rex2CalcPlanTest extends FarragoTestCase
 
         ProjectRel project = (ProjectRel) rootRel;
         FilterRel filter = (FilterRel) project.getInput(0);
+
+        // Create a program builder, and add the project expressions.
+        final RexProgramBuilder programBuilder =
+            new RexProgramBuilder(filter.getInput(0).getRowType(), rexBuilder);
+        final RexNode[] projectExps = project.getProjectExps();
+        for (int i = 0; i < projectExps.length; i++) {
+            programBuilder.addProject(
+                projectExps[i],
+                project.getRowType().getFields()[i].getName());
+        }
+
+        // Add a condition, if any.
         RexNode condition = filter.getCondition();
         if (nullSemantics) {
             condition =
@@ -166,16 +176,20 @@ public class Rex2CalcPlanTest extends FarragoTestCase
                     SqlStdOperatorTable.isTrueOperator,
                     condition);
             condition =
-                new RexTransformer(condition, rexBuilder)
-                .tranformNullSemantics();
+                new RexTransformer(condition, rexBuilder).
+                transformNullSemantics();
         }
+        if (condition != null) {
+            programBuilder.addCondition(condition);
+        }
+
+        final RexProgram program = programBuilder.getProgram();
+
         RexToCalcTranslator translator =
             new RexToCalcTranslator(rexBuilder);
         translator.setGenerateShortCircuit(shortCircuit);
         translator.setGenerateComments(doComments);
-        String actual = translator
-            .getProgram(null, project.getChildExps(), condition)
-            .trim();
+        String actual = translator.generateProgram(null, program).trim();
 
         // dump the generated code
         try {

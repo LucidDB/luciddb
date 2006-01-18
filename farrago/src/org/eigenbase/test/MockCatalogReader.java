@@ -33,11 +33,7 @@ import org.eigenbase.sql.type.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.Util;
 
-import java.util.HashMap;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Vector;
+import java.util.*;
 
 /**
  * Mock implementation of
@@ -238,8 +234,10 @@ public class MockCatalogReader implements SqlValidatorCatalogReader
      */
     public static class MockTable implements SqlValidatorTable
     {
-        private final ArrayList columnNames = new ArrayList();
-        private final ArrayList columnTypes = new ArrayList();
+        private final List<String> columnNameList =
+            new ArrayList<String>();
+        private final List<RelDataType> columnTypeList =
+            new ArrayList<RelDataType>();
         private RelDataType rowType;
         private final String[] names;
 
@@ -260,8 +258,7 @@ public class MockCatalogReader implements SqlValidatorCatalogReader
 
         public void onRegister(RelDataTypeFactory typeFactory) {
             rowType = typeFactory.createStructType(
-                (RelDataType []) columnTypes.toArray(new RelDataType[0]),
-                (String []) columnNames.toArray(new String[0]));
+                columnTypeList, columnNameList);
         }
 
         public String[] getQualifiedName()
@@ -281,8 +278,10 @@ public class MockCatalogReader implements SqlValidatorCatalogReader
 
         public void addColumn(String name, RelDataType type)
         {
-            columnNames.add(name);
-            columnTypes.add(type);
+            columnNameList.add(name);
+            columnTypeList.add(type);
         }
     }
 }
+
+// End MockCatalogReader.java

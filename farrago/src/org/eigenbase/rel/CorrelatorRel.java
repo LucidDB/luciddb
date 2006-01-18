@@ -27,22 +27,21 @@ import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
 
-import openjava.ptree.Expression;
-
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.relopt.RelOptPlanWriter;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.relopt.CallingConvention;
-import org.eigenbase.util.Util;
 import org.eigenbase.reltype.RelDataType;
 
 
 /**
  * A <code>CorrelatorRel</code> behaves like a kind of {@link JoinRel}, but
  * works by setting variables in its environment and restarting its
- * right-hand input.  It is used to represent a correlated query; one
- * implementation option is to de-correlate the expression.
+ * right-hand input.
+ *
+ * <p>A CorrelatorRel is used to represent a correlated query.
+ * One implementation strategy is to de-correlate the expression.
  *
  * @author jhyde
  * @version $Id$
@@ -53,7 +52,7 @@ public final class CorrelatorRel extends JoinRelBase
 {
     //~ Instance fields -------------------------------------------------------
 
-    protected List correlations;
+    protected final List correlations;
 
     //~ Inner Classes ---------------------------------------------------------
 
@@ -98,17 +97,20 @@ public final class CorrelatorRel extends JoinRelBase
      * @param right right  input relational expression
      * @param correlations set of expressions to set as variables each time a
      *        row arrives from the left input
+     * @param joinType
      */
     public CorrelatorRel(
         RelOptCluster cluster,
         RelNode left,
         RelNode right,
-        List correlations)
+        List correlations,
+        int joinType)
     {
         super(cluster, new RelTraitSet(CallingConvention.NONE), left, right,
-            cluster.getRexBuilder().makeLiteral(true), JoinType.LEFT,
+            cluster.getRexBuilder().makeLiteral(true), joinType,
             Collections.EMPTY_SET);
         this.correlations = correlations;
+        assert joinType == JoinType.LEFT || joinType == JoinType.INNER;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -119,7 +121,8 @@ public final class CorrelatorRel extends JoinRelBase
             getCluster(),
             RelOptUtil.clone(left),
             RelOptUtil.clone(right),
-            cloneCorrelations());
+            cloneCorrelations(),
+            joinType);
         clone.inheritTraitsFrom(this);
         return clone;
     }

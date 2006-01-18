@@ -37,6 +37,7 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.util.TestUtil;
 
 import com.disruptivetech.farrago.calc.*;
 
@@ -123,7 +124,7 @@ class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
     //~ Inner Classes ---------------------------------------------------------
 
     /**
-     * Constructs a {@link Calculator} program for translating text
+     * Constructs a Calculator program for translating text
      * from a flat file into typed data. It is assumed that the text
      * has already been processed for quoting and escape characters.
      */
@@ -154,23 +155,31 @@ class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
             RelDataTypeField[] targetTypes = rowType.getFields();
             RelDataType[] sourceTypes = new RelDataType[targetTypes.length];
             String[] sourceNames = new String[targetTypes.length];
-            RexNode[] castExps = new RexNode[targetTypes.length];
 
             for (int i = 0; i < targetTypes.length; i++) {
                 RelDataType targetType = targetTypes[i].getType();
                 sourceTypes[i] = getTextType(typeFactory, targetType);
-                sourceNames[i] = "col" + i;
-                RexNode sourceNode =
-                    rexBuilder.makeInputRef(sourceTypes[i], i);
-                // TODO: call dedicated functions for conversion of dates
-                castExps[i] = rexBuilder.makeCast(targetType, sourceNode);
+                sourceNames[i] = "col" + i; // REVIEW: why not targetTypes.getName()?
             }
             RelDataType inputRowType =
                 typeFactory.createStructType(sourceTypes, sourceNames);
             
+            RexProgramBuilder programBuilder =
+                new RexProgramBuilder(inputRowType, rexBuilder);
+            for (int i = 0; i < targetTypes.length; i++) {
+                RelDataType targetType = targetTypes[i].getType();
+                // TODO: call dedicated functions for conversion of dates
+                programBuilder.addProject(
+                    rexBuilder.makeCast(
+                        targetType,
+                        programBuilder.makeInputRef(i)),
+                    sourceNames[i]);
+            }
+            RexProgram program = programBuilder.getProgram();
+
             RexToCalcTranslator translator =
                 new RexToCalcTranslator(rexBuilder);
-            return translator.getProgram(inputRowType, castExps, null);
+            return translator.generateProgram(inputRowType, program);
         }
 
         /**
@@ -247,21 +256,22 @@ class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
                 typeFactory.createStructType(fieldTypes, fieldNames);
             
             String program = ProgramWriter.write(rowType);
-            assertEquals(
-                "O s4;\n" +
-                "I vc,255;\n" +
-                "L s8, s4, bo;\n" +
-                "C bo, bo, vc,5;\n" +
-                "V 1, 0, 0x3232303034 /* 22004 */;\n" +
-                "T;\n" +
-                "CALL 'castA(L0, I0) /* 0: CAST($0):BIGINT NOT NULL */;\n" +
-                "CAST L1, L0 /* 1: CAST(CAST($0):BIGINT NOT NULL):INTEGER NOT NULL CAST($0):INTEGER NOT NULL */;\n" +
-                "ISNULL L2, L1 /* 2: */;\n" +
-                "JMPF @6, L2 /* 3: */;\n" +
-                "RAISE C2 /* 4: */;\n" +
-                "RETURN /* 5: */;\n" +
-                "REF O0, L1 /* 6: */;\n" +
-                "RETURN /* 7: */;", program);
+            final String[] expecteds = {
+                "O s4;",
+                "I vc,255;",
+                "L s8, s4, bo;",
+                "C bo, bo, vc,5;",
+                "V 1, 0, 0x3232303034 /* 22004 */;",
+                "T;",
+                "CALL 'castA(L0, I0) /* 0: CAST($t0):BIGINT NOT NULL */;",
+                "CAST L1, L0 /* 1: CAST(CAST($t0):BIGINT NOT NULL):INTEGER NOT NULL CAST($t0):INTEGER NOT NULL */;",
+                "ISNULL L2, L1 /* 2: */;",
+                "JMPF @6, L2 /* 3: */;",
+                "RAISE C2 /* 4: */;",
+                "RETURN /* 5: */;",
+                "REF O0, L1 /* 6: */;",
+                "RETURN /* 7: */;"};
+            assertEquals(TestUtil.fold(expecteds), program);
         }
     }
 }
