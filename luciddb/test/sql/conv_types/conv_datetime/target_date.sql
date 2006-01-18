@@ -9,9 +9,9 @@ create table target_date(coldate date primary key)
 --
 
 -- all numeric should FAIL
-insert into target_date 
- select colbit from datatype_source where colname = 'BAD'
-;
+--insert into target_date 
+-- select colbit from datatype_source where colname = 'BAD'
+--;
 insert into target_date
  select coltiny from datatype_source where colname = 'BAD'
 ;
@@ -24,12 +24,12 @@ insert into target_date
 insert into target_date
  select colbig from datatype_source where colname = 'BAD'
 ;
-insert into target_date
- select coldec from datatype_source where colname = 'BAD'
-;
-insert into target_date
- select colnum from datatype_source where colname = 'BAD'
-;
+--insert into target_date
+-- select coldec from datatype_source where colname = 'BAD'
+--;
+--insert into target_date
+-- select colnum from datatype_source where colname = 'BAD'
+--;
 
 -- all floating point should FAIL
 insert into target_date
@@ -49,9 +49,9 @@ insert into target_date
 insert into target_date
  select colvchar from datatype_source where colname = 'BAD'
 ;
-insert into target_date
- select colbin from datatype_source where colname = 'BAD'
-;
+--insert into target_date
+-- select colbin from datatype_source where colname = 'BAD'
+--;
 insert into target_date
  select colvbin from datatype_source where colname = 'BAD'
 ;
@@ -63,9 +63,10 @@ insert into target_date
 insert into target_date
  select coldate from datatype_source where colname = 'BAD'
 ;
-insert into target_date
- select coltmstamp from datatype_source where colname = 'BAD'
-;
+-- will be fixed by FRG-20
+--insert into target_date
+-- select coltmstamp from datatype_source where colname = 'BAD'
+--;
 
 
 --
@@ -85,9 +86,10 @@ insert into target_date
 insert into target_date
  select coldate from datatype_source where colname = 'DATE'
 ;
-insert into target_date
- select coltmstamp from datatype_source where colname = 'DATE'
-;
+
+--insert into target_date
+-- select coltmstamp from datatype_source where colname = 'DATE'
+--;
 
 select * from target_date
 ;

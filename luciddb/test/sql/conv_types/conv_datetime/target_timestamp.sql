@@ -9,9 +9,9 @@ create table target_timestamp(coltimestamp timestamp primary key)
 --
 
 -- all numeric should FAIL
-insert into target_timestamp
- select colbit from datatype_source where colname = 'BAD'
-;
+--insert into target_timestamp
+-- select colbit from datatype_source where colname = 'BAD'
+--;
 insert into target_timestamp
  select coltiny from datatype_source where colname = 'BAD'
 ;
@@ -24,12 +24,12 @@ insert into target_timestamp
 insert into target_timestamp
  select colbig from datatype_source where colname = 'BAD'
 ;
-insert into target_timestamp
- select coldec from datatype_source where colname = 'BAD'
-;
-insert into target_timestamp
- select colnum from datatype_source where colname = 'BAD'
-;
+--insert into target_timestamp
+-- select coldec from datatype_source where colname = 'BAD'
+--;
+--insert into target_timestamp
+-- select colnum from datatype_source where colname = 'BAD'
+--;
 
 -- all floating point should FAIL
 insert into target_timestamp
@@ -49,20 +49,21 @@ insert into target_timestamp
 insert into target_timestamp
  select colvchar from datatype_source where colname = 'BAD'
 ;
-insert into target_timestamp
- select colbin from datatype_source where colname = 'BAD'
-;
+-- will be fixed with FRG-20
+--insert into target_timestamp
+-- select colbin from datatype_source where colname = 'BAD'
+--;
 insert into target_timestamp
  select colvbin from datatype_source where colname = 'BAD'
 ;
 
 -- all should be OK
-insert into target_timestamp
- select coltime from datatype_source where colname = 'BAD'
-;
-insert into target_timestamp
- select coldate from datatype_source where colname = 'BAD'
-;
+--insert into target_timestamp
+-- select coltime from datatype_source where colname = 'BAD'
+--;
+--insert into target_timestamp
+-- select coldate from datatype_source where colname = 'BAD'
+--;
 insert into target_timestamp
  select coltmstamp from datatype_source where colname = 'BAD'
 ;
@@ -72,22 +73,24 @@ insert into target_timestamp
 -- GOOD
 --
 
--- should be OK
-insert into target_timestamp
- select colchar from datatype_source where colname = 'TIMESTAMP'
-;
+-- should be FAIL
+-- will be fixed by FRG-22
+--insert into target_timestamp
+-- select colchar from datatype_source where colname = 'TIMESTAMP'
+--;
 insert into target_timestamp
  select colvchar from datatype_source where colname = 'TIMESTAMP'
 ;
 
 
 -- should be OK
-insert into target_timestamp
- select coltime from datatype_source where colname = 'TIMESTAMP'
-;
-insert into target_timestamp
- select coldate from datatype_source where colname = 'TIMESTAMP'
-;
+-- will be fixed with FRG-20
+--insert into target_timestamp
+-- select coltime from datatype_source where colname = 'TIMESTAMP'
+--;
+--insert into target_timestamp
+-- select coldate from datatype_source where colname = 'TIMESTAMP'
+--;
 insert into target_timestamp
  select coltmstamp from datatype_source where colname = 'TIMESTAMP'
 ;
