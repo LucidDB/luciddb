@@ -240,6 +240,14 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
         boolean includeType);
 
     /**
+     * validate the names provided in a VIEW's explicit column list.
+     *
+     * @param collection Collection of CwmModelElements representing the
+     *        explicity named columns
+     */
+    public void validateViewColumnList(Collection collection);
+
+    /**
      * Creates a new dependency.
      *
      * @param client element which depends on others; we require

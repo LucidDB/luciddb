@@ -1414,6 +1414,11 @@ public class DdlValidator extends FarragoCompoundAllocation
         return null;
     }
 
+    public void validateViewColumnList(Collection collection)
+    {
+       // intentionally empty
+    }
+
     //~ Inner Classes ---------------------------------------------------------
 
     /**
