@@ -62,6 +62,7 @@ class MockConsumerExecStream : public SingleInputExecStream
     TupleData inputTuple;
     TuplePrinter tuplePrinter;
     vector<string> rowStrings;
+    bool recvEOS;
 public:
     // implement ExecStream
     virtual void prepare(MockConsumerExecStreamParams const &params);
@@ -70,6 +71,7 @@ public:
 
     long getRowCount() const { return rowCount; }
     vector<string>& getRowVector() { return rowStrings; }
+    bool getRecvEOS() const { return recvEOS; }
 };
 
 FENNEL_END_NAMESPACE
