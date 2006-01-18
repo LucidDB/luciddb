@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/regressionsql/literalTests/boolean.sql#6 $ 
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/regressionsql/literalTests/boolean.sql#7 $ 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test boolean literal
 0: jdbc:farrago:> values true;
@@ -52,10 +52,8 @@ Messages:
 [0]:PC=0 Code=22018 (state=,code=0)
 0: jdbc:farrago:> insert into t_boolean values(2, 1234);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'INTEGER' to 'BOOLEAN' (state=,code=0)
-0: jdbc:farrago:> -- TODO: Fix error message, shouldn't get
-0: jdbc:farrago:> --       Internal error: type BOOLEAN does not have a scale
 0: jdbc:farrago:> insert into t_boolean values(3, -1234.03);
-Error: java.lang.AssertionError: Internal error: type BOOLEAN does not have a scale (state=,code=0)
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DECIMAL(6, 2)' to 'BOOLEAN' (state=,code=0)
 0: jdbc:farrago:> insert into t_boolean values(4, 1e400);
 Error: From line 1, column 33 to line 1, column 37: Numeric literal '1E400' out of range (state=,code=0)
 0: jdbc:farrago:> insert into t_boolean values(5, -1.2345678901234e-200);
