@@ -36,6 +36,12 @@
 -Djava.util.logging.config.file=${FarragoTrace.properties}
 ">
 
+<!ENTITY FarragoSqlLineProps
+"
+&FarragoProps;
+-Dsqlline.historyFile=${sqlline.hist.file}
+">
+
 ]>
 
 <project name="farrago" basedir="." default="all">
@@ -411,6 +417,7 @@ require version '${required.ant.version}'."/>
       <fileset dir="${testlog.dir}" includes="*.log"/>
       <fileset dir="${testlog.dir}" includes="*.dif"/>
       <fileset dir="${testlog.dir}" includes="*.err"/>
+      <fileset dir="${testlog.dir}" includes="*.history"/>
       <fileset dir="${unitsql.dir}" includes="**/*.log"/>
       <fileset dir="${unitlurql.dir}" includes="**/*.log"/>
       <fileset dir="${regressionsql.dir}" includes="**/*.log"/>
@@ -558,7 +565,7 @@ require version '${required.ant.version}'."/>
       tempdir="${testlog.dir}">
       <classpath refid="farrago.sqlline.classpath"/>
       <jvmarg line="${assertions.jvmarg}"/>
-      <jvmarg line="&FarragoProps;"/>
+      <jvmarg line="&FarragoSqlLineProps;"/>
       <sysproperty key="net.sf.farrago.fileset.unitsql"
         value="${filelist.initsql}"/>
       <formatter type="plain"/>
@@ -838,7 +845,7 @@ require version '${required.ant.version}'."/>
     <farrago.antFork target="forked_junit" classpathref="test.classpath">
       <jvmargs>
         <jvmarg line="${assertions.jvmarg}"/>
-        <jvmarg line="&FarragoProps;"/>
+        <jvmarg line="&FarragoSqlLineProps;"/>
         <syspropertyset>
           <propertyref builtin="commandline"/>
         </syspropertyset>
@@ -893,7 +900,7 @@ require version '${required.ant.version}'."/>
       classpathref="test.classpath">
       <jvmargs>
         <jvmarg line="${assertions.jvmarg}"/>
-        <jvmarg line="&FarragoProps;"/>
+        <jvmarg line="&FarragoSqlLineProps;"/>
         <syspropertyset>
           <propertyref builtin="commandline"/>
         </syspropertyset>
@@ -954,7 +961,7 @@ require version '${required.ant.version}'."/>
       <jvmargs>
         <arg value="-Dnet.sf.farrago.fileset.unitsql=${fileset.unitsql}"/>
         <arg value="-Dcom.lucidera.fileset.unitlurql=${fileset.unitlurql}"/>
-        <arg line="&FarragoProps;"/>
+        <arg line="&FarragoSqlLineProps;"/>
       </jvmargs>
       <programargs>
         <arg value="${junit.class}"/>
@@ -1138,7 +1145,7 @@ require version '${required.ant.version}'."/>
       sourcepath="${farrago.sourcepath}"
       classname="sqlline.SqlLine">
       <jvmargs>
-        <arg line="&FarragoProps;"/>
+        <arg line="&FarragoSqlLineProps;"/>
       </jvmargs>
       <programargs>
         <arg value="-u jdbc:farrago: -d net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver -n sa"/>

@@ -40,6 +40,12 @@
 -Djava.util.logging.config.file=${project.trace.propfile}
 ">
 
+<!ENTITY FarragoSqlLineProps
+"
+&FarragoProps;
+-Dsqlline.historyFile=${sqlline.hist.file}
+">
+
 ]>
 
 <project name="farragoBuildMacros" default="unspecified">
@@ -138,6 +144,9 @@
   <!-- Alias for project.catalog.dir to match runtime properties convention -->
   <property name="FARRAGO_CATALOG_DIR" location="${project.catalog.dir}"/>
 
+  <!-- directory for JUnit run output -->
+  <property name="project.testlog.dir" location="${farrago.dir}/testlog"/>
+
   <!-- directory in which catalog sources are generated -->
   <property name="farrago.catalog.src.dir" 
     location="${farrago.catalog.dir}/java"/>
@@ -183,7 +192,13 @@
   <!-- directory for initialization scripts -->
   <property name="farrago.initsql.dir" location="${farrago.dir}/initsql"/>
 
-
+  <!-- Directory for SqlLine history/properties. We direct SqlLine to 
+       place its history file in sqlline.hist.file by setting the system
+       property sqlline.historyFile. This keeps the normal history
+       file (~/.sqlline/history under Unix) free from the clutter
+       of Farrago sqlline test commands. -->
+  <property name="sqlline.hist.file"
+    location="${project.testlog.dir}/sqlline.history"/>
 
   <!-- Files -->
 
@@ -607,7 +622,7 @@
         tempdir="${testlog.dir}" forkmode="perBatch">
         <classpath refid="farrago.sqlline.classpath"/>
         <jvmarg line="${assertions.jvmarg}"/>
-        <jvmarg line="&FarragoProps;"/>
+        <jvmarg line="&FarragoSqlLineProps;"/>
         <sysproperty key="java.ext.dirs" value="${sqlline.dir}"/>
         <sysproperty key="net.sf.farrago.fileset.unitsql"
           file="@{file}"/>
