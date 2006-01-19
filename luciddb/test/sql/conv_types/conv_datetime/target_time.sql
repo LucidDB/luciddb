@@ -1,7 +1,7 @@
 set schema 's'
 ;
 
-create table target_time(coltime time primary key)
+create table target_time(coltime time)
 ;
 
 --
@@ -91,5 +91,5 @@ insert into target_time
 -- select coltmstamp from datatype_source where colname = 'TIME'
 --;
 
-select * from target_time
+select * from target_time order by 1
 ;

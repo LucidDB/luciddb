@@ -1,7 +1,7 @@
 set schema 's'
 ;
 
-create table target_date(coldate date primary key)
+create table target_date(coldate date)
 ;
 
 --
@@ -91,5 +91,5 @@ insert into target_date
 -- select coltmstamp from datatype_source where colname = 'DATE'
 --;
 
-select * from target_date
+select * from target_date order by 1
 ;

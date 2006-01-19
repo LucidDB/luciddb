@@ -1,7 +1,7 @@
 set schema 's'
 ;
 
-create table target_timestamp(coltimestamp timestamp primary key)
+create table target_timestamp(coltimestamp timestamp)
 ;
 
 --
@@ -96,5 +96,5 @@ insert into target_timestamp
 ;
 
 
-select * from target_timestamp
+select * from target_timestamp order by 1
 ;

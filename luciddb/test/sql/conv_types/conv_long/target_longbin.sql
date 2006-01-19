@@ -1,7 +1,7 @@
 set schema 's'
 ;
 
-create table tlongb (l long varbinary primary key)
+create table tlongb (l long varbinary)
 ;
 
 -- all numeric datatypes should FAIL

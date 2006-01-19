@@ -17,8 +17,6 @@ create table datatype_source(
 ,coldouble double
 ,colfloat float
 ,colreal real
---,primary key (coltiny,colsmall,colint,colbig,coldec,colnum,coldouble,colfloat,colreal)
-,primary key (coltiny,colsmall,colint,colbig,coldouble,colfloat,colreal)
 )
 ;
 

@@ -6,8 +6,8 @@ name_prefix=csv
 # row store or column store #
 #############################
 
-DATA_STORE=sys_ftrs_data_server
-#DATA_STORE=sys_column_store_data_server
+#DATA_STORE=sys_ftrs_data_server
+DATA_STORE=sys_column_store_data_server
 
 ########################
 # foreign data wrapper #

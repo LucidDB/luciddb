@@ -1,0 +1,327 @@
+0: jdbc:luciddb:> -- The table, datatype_source, contains each numeric datatype for use in
+0: jdbc:luciddb:> -- the conversion tests.  The column 'target_type' is the datatype
+0: jdbc:luciddb:> -- 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema s
+. . . . . . . . > ;
+0: jdbc:luciddb:> set schema 's'
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table datatype_source(
+. . . . . . . . >  target_type varchar(10)
+. . . . . . . . > -- min/max values for 'source' or 'target'
+. . . . . . . . > ,range_for varchar(6)
+. . . . . . . . > ,coltiny tinyint
+. . . . . . . . > ,colsmall smallint
+. . . . . . . . > ,colint integer
+. . . . . . . . > ,colbig bigint
+. . . . . . . . > ,coldec decimal(14,4)
+. . . . . . . . > ,colnum numeric(14,4)
+. . . . . . . . > ,coldouble double
+. . . . . . . . > ,colfloat float
+. . . . . . . . > ,colreal real
+. . . . . . . . > )
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source 
+. . . . . . . . > values('tinyint','target',0,0,0,0,0,0,0,0,0)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('tinyint','target',127,127,127,127,127,127,127,127,127)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('tinyint','source',0,-32768,-2147483647,-2147483647,-2147483647,-2147483647,-4294967296,-4294967296,-4294967296)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('tinyint','source',127,32767,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from datatype_source where target_type = 'tinyint' order by 1
+. . . . . . . . > ;
++--------------+------------+----------+-----------+--------------+--------------+-------------------+-------------------+-----------------+-----------------+---------------+
+| TARGET_TYPE  | RANGE_FOR  | COLTINY  | COLSMALL  |    COLINT    |    COLBIG    |      COLDEC       |      COLNUM       |    COLDOUBLE    |    COLFLOAT     |    COLREAL    |
++--------------+------------+----------+-----------+--------------+--------------+-------------------+-------------------+-----------------+-----------------+---------------+
+| tinyint      | target     | 0        | 0         | 0            | 0            | 0.0000            | 0.0000            | 0.0             | 0.0             | 0.0           |
+| tinyint      | target     | 127      | 127       | 127          | 127          | 127.0000          | 127.0000          | 127.0           | 127.0           | 127.0         |
+| tinyint      | source     | 0        | -32768    | -2147483647  | -2147483647  | -2147483647.0000  | -2147483647.0000  | -4.294967296E9  | -4.294967296E9  | -4.2949673E9  |
+| tinyint      | source     | 127      | 32767     | 2147483647   | 2147483647   | 2147483647.0000   | 2147483647.0000   | 4.294967296E9   | 4.294967296E9   | 4.2949673E9   |
++--------------+------------+----------+-----------+--------------+--------------+-------------------+-------------------+-----------------+-----------------+---------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('smallint','target',-32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768)
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=3 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('smallint','target',32767,32767,32767,32767,32767,32767,32767,32767,32767)
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=2 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('smallint','source',0,-32768,-2147483647,-2147483647,-2147483647,-2147483647,-4294967296,-4294967296,-4294967296)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('smallint','source',127,32767,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from datatype_source where target_type = 'smallint' order by 1
+. . . . . . . . > ;
++--------------+------------+----------+-----------+--------------+--------------+-------------------+-------------------+-----------------+-----------------+---------------+
+| TARGET_TYPE  | RANGE_FOR  | COLTINY  | COLSMALL  |    COLINT    |    COLBIG    |      COLDEC       |      COLNUM       |    COLDOUBLE    |    COLFLOAT     |    COLREAL    |
++--------------+------------+----------+-----------+--------------+--------------+-------------------+-------------------+-----------------+-----------------+---------------+
+| smallint     | source     | 0        | -32768    | -2147483647  | -2147483647  | -2147483647.0000  | -2147483647.0000  | -4.294967296E9  | -4.294967296E9  | -4.2949673E9  |
+| smallint     | source     | 127      | 32767     | 2147483647   | 2147483647   | 2147483647.0000   | 2147483647.0000   | 4.294967296E9   | 4.294967296E9   | 4.2949673E9   |
++--------------+------------+----------+-----------+--------------+--------------+-------------------+-------------------+-----------------+-----------------+---------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('integer','target',-2147483647,-2147483647,-2147483647,-2147483647,-2147483647,-2147483647,-4294967296,-4294967296,-4294967296)
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=3 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('integer','target',2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=2 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('integer','source',0,-32768,-2147483647,-2147483647,-2147483647,-2147483647,-4294967296,-4294967296,-4294967296)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('integer','source',127,32767,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from datatype_source where target_type = 'integer' order by 1
+. . . . . . . . > ;
++--------------+------------+----------+-----------+--------------+--------------+-------------------+-------------------+-----------------+-----------------+---------------+
+| TARGET_TYPE  | RANGE_FOR  | COLTINY  | COLSMALL  |    COLINT    |    COLBIG    |      COLDEC       |      COLNUM       |    COLDOUBLE    |    COLFLOAT     |    COLREAL    |
++--------------+------------+----------+-----------+--------------+--------------+-------------------+-------------------+-----------------+-----------------+---------------+
+| integer      | source     | 0        | -32768    | -2147483647  | -2147483647  | -2147483647.0000  | -2147483647.0000  | -4.294967296E9  | -4.294967296E9  | -4.2949673E9  |
+| integer      | source     | 127      | 32767     | 2147483647   | 2147483647   | 2147483647.0000   | 2147483647.0000   | 4.294967296E9   | 4.294967296E9   | 4.2949673E9   |
++--------------+------------+----------+-----------+--------------+--------------+-------------------+-------------------+-----------------+-----------------+---------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('bigint','target',-2147483647,-2147483647,-2147483647,-2147483647,-2147483647,-2147483647,-4294967296,-4294967296,-4294967296)
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=3 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('bigint','target',2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=2 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('bigint','source',0,-32768,-2147483647,-2147483647,-2147483647,-2147483647,-4294967296,-4294967296,-4294967296)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('bigint','source',127,32767,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from datatype_source where target_type = 'bigint' order by 1
+. . . . . . . . > ;
++--------------+------------+----------+-----------+--------------+--------------+-------------------+-------------------+-----------------+-----------------+---------------+
+| TARGET_TYPE  | RANGE_FOR  | COLTINY  | COLSMALL  |    COLINT    |    COLBIG    |      COLDEC       |      COLNUM       |    COLDOUBLE    |    COLFLOAT     |    COLREAL    |
++--------------+------------+----------+-----------+--------------+--------------+-------------------+-------------------+-----------------+-----------------+---------------+
+| bigint       | source     | 0        | -32768    | -2147483647  | -2147483647  | -2147483647.0000  | -2147483647.0000  | -4.294967296E9  | -4.294967296E9  | -4.2949673E9  |
+| bigint       | source     | 127      | 32767     | 2147483647   | 2147483647   | 2147483647.0000   | 2147483647.0000   | 4.294967296E9   | 4.294967296E9   | 4.2949673E9   |
++--------------+------------+----------+-----------+--------------+--------------+-------------------+-------------------+-----------------+-----------------+---------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('decimal','target',-2147483647,-2147483647,-2147483647,-2147483647,-2147483647,-2147483647,-4294967296,-4294967296,-4294967296)
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=3 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('decimal','target',2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=2 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('decimal','source',0,-32768,-2147483647,-2147483647,-2147483647,-2147483647,-4294967296,-4294967296,-4294967296)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('decimal','source',127,32767,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from datatype_source where target_type = 'decimal' order by 1
+. . . . . . . . > ;
++--------------+------------+----------+-----------+--------------+--------------+-------------------+-------------------+-----------------+-----------------+---------------+
+| TARGET_TYPE  | RANGE_FOR  | COLTINY  | COLSMALL  |    COLINT    |    COLBIG    |      COLDEC       |      COLNUM       |    COLDOUBLE    |    COLFLOAT     |    COLREAL    |
++--------------+------------+----------+-----------+--------------+--------------+-------------------+-------------------+-----------------+-----------------+---------------+
+| decimal      | source     | 0        | -32768    | -2147483647  | -2147483647  | -2147483647.0000  | -2147483647.0000  | -4.294967296E9  | -4.294967296E9  | -4.2949673E9  |
+| decimal      | source     | 127      | 32767     | 2147483647   | 2147483647   | 2147483647.0000   | 2147483647.0000   | 4.294967296E9   | 4.294967296E9   | 4.2949673E9   |
++--------------+------------+----------+-----------+--------------+--------------+-------------------+-------------------+-----------------+-----------------+---------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('numeric','target',-2147483647,-2147483647,-2147483647,-2147483647,-2147483647,-2147483647,-4294967296,-4294967296,-4294967296)
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=3 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('numeric','target',2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=2 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('numeric','source',0,-32768,-2147483647,-2147483647,-2147483647,-2147483647,-4294967296,-4294967296,-4294967296)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('numeric','source',127,32767,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from datatype_source where target_type = 'numeric' order by 1
+. . . . . . . . > ;
++--------------+------------+----------+-----------+--------------+--------------+-------------------+-------------------+-----------------+-----------------+---------------+
+| TARGET_TYPE  | RANGE_FOR  | COLTINY  | COLSMALL  |    COLINT    |    COLBIG    |      COLDEC       |      COLNUM       |    COLDOUBLE    |    COLFLOAT     |    COLREAL    |
++--------------+------------+----------+-----------+--------------+--------------+-------------------+-------------------+-----------------+-----------------+---------------+
+| numeric      | source     | 0        | -32768    | -2147483647  | -2147483647  | -2147483647.0000  | -2147483647.0000  | -4.294967296E9  | -4.294967296E9  | -4.2949673E9  |
+| numeric      | source     | 127      | 32767     | 2147483647   | 2147483647   | 2147483647.0000   | 2147483647.0000   | 4.294967296E9   | 4.294967296E9   | 4.2949673E9   |
++--------------+------------+----------+-----------+--------------+--------------+-------------------+-------------------+-----------------+-----------------+---------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('double','target',-2147483647,-2147483647,-2147483647,-2147483647,-2147483647,-2147483647,-4294967296,-4294967296,-4294967296)
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=3 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('double','target',2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=2 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('double','source',0,-32768,-2147483647,-2147483647,-2147483647,-2147483647,-4294967296,-4294967296,-4294967296)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('double','source',127,32767,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from datatype_source where target_type = 'double' order by 1
+. . . . . . . . > ;
++--------------+------------+----------+-----------+--------------+--------------+-------------------+-------------------+-----------------+-----------------+---------------+
+| TARGET_TYPE  | RANGE_FOR  | COLTINY  | COLSMALL  |    COLINT    |    COLBIG    |      COLDEC       |      COLNUM       |    COLDOUBLE    |    COLFLOAT     |    COLREAL    |
++--------------+------------+----------+-----------+--------------+--------------+-------------------+-------------------+-----------------+-----------------+---------------+
+| double       | source     | 0        | -32768    | -2147483647  | -2147483647  | -2147483647.0000  | -2147483647.0000  | -4.294967296E9  | -4.294967296E9  | -4.2949673E9  |
+| double       | source     | 127      | 32767     | 2147483647   | 2147483647   | 2147483647.0000   | 2147483647.0000   | 4.294967296E9   | 4.294967296E9   | 4.2949673E9   |
++--------------+------------+----------+-----------+--------------+--------------+-------------------+-------------------+-----------------+-----------------+---------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('float','target',-2147483647,-2147483647,-2147483647,-2147483647,-2147483647,-2147483647,-4294967296,-4294967296,-4294967296)
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=3 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('float','target',2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=2 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('float','source',0,-32768,-2147483647,-2147483647,-2147483647,-2147483647,-4294967296,-4294967296,-4294967296)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('float','source',127,32767,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from datatype_source where target_type = 'float' order by 1
+. . . . . . . . > ;
++--------------+------------+----------+-----------+--------------+--------------+-------------------+-------------------+-----------------+-----------------+---------------+
+| TARGET_TYPE  | RANGE_FOR  | COLTINY  | COLSMALL  |    COLINT    |    COLBIG    |      COLDEC       |      COLNUM       |    COLDOUBLE    |    COLFLOAT     |    COLREAL    |
++--------------+------------+----------+-----------+--------------+--------------+-------------------+-------------------+-----------------+-----------------+---------------+
+| float        | source     | 0        | -32768    | -2147483647  | -2147483647  | -2147483647.0000  | -2147483647.0000  | -4.294967296E9  | -4.294967296E9  | -4.2949673E9  |
+| float        | source     | 127      | 32767     | 2147483647   | 2147483647   | 2147483647.0000   | 2147483647.0000   | 4.294967296E9   | 4.294967296E9   | 4.2949673E9   |
++--------------+------------+----------+-----------+--------------+--------------+-------------------+-------------------+-----------------+-----------------+---------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('real','target',-2147483647,-2147483647,-2147483647,-2147483647,-2147483647,-2147483647,-4294967296,-4294967296,-4294967296)
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=3 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('real','target',2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=2 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('real','source',0,-32768,-2147483647,-2147483647,-2147483647,-2147483647,-4294967296,-4294967296,-4294967296)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_source
+. . . . . . . . > values('real','source',127,32767,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from datatype_source where target_type = 'real' order by 1
+. . . . . . . . > ;
++--------------+------------+----------+-----------+--------------+--------------+-------------------+-------------------+-----------------+-----------------+---------------+
+| TARGET_TYPE  | RANGE_FOR  | COLTINY  | COLSMALL  |    COLINT    |    COLBIG    |      COLDEC       |      COLNUM       |    COLDOUBLE    |    COLFLOAT     |    COLREAL    |
++--------------+------------+----------+-----------+--------------+--------------+-------------------+-------------------+-----------------+-----------------+---------------+
+| real         | source     | 0        | -32768    | -2147483647  | -2147483647  | -2147483647.0000  | -2147483647.0000  | -4.294967296E9  | -4.294967296E9  | -4.2949673E9  |
+| real         | source     | 127      | 32767     | 2147483647   | 2147483647   | 2147483647.0000   | 2147483647.0000   | 4.294967296E9   | 4.294967296E9   | 4.2949673E9   |
++--------------+------------+----------+-----------+--------------+--------------+-------------------+-------------------+-----------------+-----------------+---------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

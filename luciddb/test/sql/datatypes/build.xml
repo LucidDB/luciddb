@@ -89,7 +89,6 @@
 
   <target name="test">
     <property name="test-suite" value="test.xml"/>
-    <antcall target="restoreCatalog"/>
     <antcall target="gen-sql"/>
     <blackhawk.fork basedir="${datatypes.dir}" 
       testscript="${test-suite}"

@@ -1,7 +1,7 @@
 0: jdbc:luciddb:> set schema 's'
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create table target_time(coltime time primary key)
+0: jdbc:luciddb:> create table target_time(coltime time)
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> --
@@ -103,7 +103,7 @@ Error: Internal error:  bad lexical cast: source type value could not be interpr
 0: jdbc:luciddb:> -- select coltmstamp from datatype_source where colname = 'TIME'
 0: jdbc:luciddb:> --;
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> select * from target_time
+0: jdbc:luciddb:> select * from target_time order by 1
 . . . . . . . . > ;
 +-----------+
 |  COLTIME  |

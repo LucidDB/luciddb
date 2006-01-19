@@ -1,7 +1,7 @@
 0: jdbc:luciddb:> set schema 's'
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create table target_date(coldate date primary key)
+0: jdbc:luciddb:> create table target_date(coldate date)
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> --
@@ -102,7 +102,7 @@ Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast fro
 0: jdbc:luciddb:> -- select coltmstamp from datatype_source where colname = 'DATE'
 0: jdbc:luciddb:> --;
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> select * from target_date
+0: jdbc:luciddb:> select * from target_date order by 1
 . . . . . . . . > ;
 +-------------+
 |   COLDATE   |

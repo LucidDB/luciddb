@@ -10,7 +10,8 @@ set schema 's'
 
 create table datatype_source(
  target_type varchar(10)
-,range_for varchar(6)	   -- min/max values for 'source' or 'target' 
+-- min/max values for 'source' or 'target'
+,range_for varchar(6)
 ,coltiny tinyint
 ,colsmall smallint
 ,colint integer
@@ -40,7 +41,7 @@ insert into datatype_source
 values('tinyint','source',127,32767,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
 ;
 
-select * from datatype_source where target_type = 'tinyint'
+select * from datatype_source where target_type = 'tinyint' order by 1
 ;
 
 
@@ -60,7 +61,7 @@ insert into datatype_source
 values('smallint','source',127,32767,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
 ;
 
-select * from datatype_source where target_type = 'smallint'
+select * from datatype_source where target_type = 'smallint' order by 1
 ;
 
 
@@ -80,7 +81,7 @@ insert into datatype_source
 values('integer','source',127,32767,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
 ;
 
-select * from datatype_source where target_type = 'integer'
+select * from datatype_source where target_type = 'integer' order by 1
 ;
 
 
@@ -100,7 +101,7 @@ insert into datatype_source
 values('bigint','source',127,32767,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
 ;
 
-select * from datatype_source where target_type = 'bigint'
+select * from datatype_source where target_type = 'bigint' order by 1
 ;
 
 
@@ -120,7 +121,7 @@ insert into datatype_source
 values('decimal','source',127,32767,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
 ;
 
-select * from datatype_source where target_type = 'decimal'
+select * from datatype_source where target_type = 'decimal' order by 1
 ;
 
 
@@ -140,7 +141,7 @@ insert into datatype_source
 values('numeric','source',127,32767,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
 ;
 
-select * from datatype_source where target_type = 'numeric'
+select * from datatype_source where target_type = 'numeric' order by 1
 ;
 
 
@@ -160,7 +161,7 @@ insert into datatype_source
 values('double','source',127,32767,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
 ;
 
-select * from datatype_source where target_type = 'double'
+select * from datatype_source where target_type = 'double' order by 1
 ;
 
 
@@ -180,7 +181,7 @@ insert into datatype_source
 values('float','source',127,32767,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
 ;
 
-select * from datatype_source where target_type = 'float'
+select * from datatype_source where target_type = 'float' order by 1
 ;
 
 
@@ -200,5 +201,5 @@ insert into datatype_source
 values('real','source',127,32767,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
 ;
 
-select * from datatype_source where target_type = 'real'
+select * from datatype_source where target_type = 'real' order by 1
 ;

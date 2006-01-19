@@ -5,7 +5,7 @@ set schema 's'
 
 drop table datatype_target
 ;
-create table datatype_target(col integer primary key)
+create table datatype_target(col integer)
 ;
 
 -- tinyint to integer; min/max range for source datatype [same as target]
@@ -15,12 +15,12 @@ insert into datatype_target
   where target_type='integer'
     and range_for='source'
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 
 drop table datatype_target
 ;
-create table datatype_target(col integer primary key)
+create table datatype_target(col integer)
 ;
 
 -- smallint to integer; min/max range for source datatype [same as target]
@@ -30,12 +30,12 @@ insert into datatype_target
   where target_type='integer'
     and range_for='source'
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 
 drop table datatype_target
 ;
-create table datatype_target(col integer primary key)
+create table datatype_target(col integer)
 ;
 
 -- integer to integer; min/max range for source datatype [same as target]
@@ -45,12 +45,12 @@ insert into datatype_target
   where target_type='integer'
     and range_for='source'
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 
 drop table datatype_target
 ;
-create table datatype_target(col integer primary key)
+create table datatype_target(col integer)
 ;
 
 -- bigint to integer; min/max range for target datatype
@@ -60,12 +60,12 @@ insert into datatype_target
   where target_type='integer'
     and range_for='target'
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 
 drop table datatype_target
 ;
-create table datatype_target(col integer primary key)
+create table datatype_target(col integer)
 ;
 
 -- bigint to integer; min/max range for source datatype
@@ -75,12 +75,12 @@ insert into datatype_target
   where target_type='integer'
     and range_for='source'
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 
 drop table datatype_target
 ;
-create table datatype_target(col integer primary key)
+create table datatype_target(col integer)
 ;
 
 -- decimal to integer; min/max range for target datatype
@@ -90,12 +90,12 @@ insert into datatype_target
   where target_type='integer'
     and range_for='target'
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 
 drop table datatype_target
 ;
-create table datatype_target(col integer primary key)
+create table datatype_target(col integer)
 ;
 
 -- decimal to integer; min/max range for source datatype
@@ -105,12 +105,12 @@ insert into datatype_target
   where target_type='integer'
     and range_for='source'
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 
 drop table datatype_target
 ;
-create table datatype_target(col integer primary key)
+create table datatype_target(col integer)
 ;
 
 -- numeric to integer; min/max range for target datatype
@@ -120,12 +120,12 @@ insert into datatype_target
   where target_type='integer'
     and range_for='target'
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 
 drop table datatype_target
 ;
-create table datatype_target(col integer primary key)
+create table datatype_target(col integer)
 ;
 
 -- numeric to integer; min/max range for source datatype
@@ -135,13 +135,13 @@ insert into datatype_target
   where target_type='integer'
     and range_for='source'
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 
 
 drop table datatype_target
 ;
-create table datatype_target(col integer primary key)
+create table datatype_target(col integer)
 ;
 
 -- double to integer; min/max range for target datatype
@@ -151,12 +151,12 @@ insert into datatype_target
   where target_type='integer'
     and range_for='target'
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 
 drop table datatype_target
 ;
-create table datatype_target(col integer primary key)
+create table datatype_target(col integer)
 ;
 
 -- double to integer; min/max range for source datatype
@@ -166,12 +166,12 @@ insert into datatype_target
   where target_type='integer'
     and range_for='source'
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 
 drop table datatype_target
 ;
-create table datatype_target(col integer primary key)
+create table datatype_target(col integer)
 ;
 
 -- float to integer; min/max range for target datatype
@@ -181,12 +181,12 @@ insert into datatype_target
   where target_type='integer'
     and range_for='target'
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 
 drop table datatype_target
 ;
-create table datatype_target(col integer primary key)
+create table datatype_target(col integer)
 ;
 
 -- float to integer; min/max range for source datatype
@@ -196,12 +196,12 @@ insert into datatype_target
   where target_type='integer'
     and range_for='source'
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 
 drop table datatype_target
 ;
-create table datatype_target(col integer primary key)
+create table datatype_target(col integer)
 ;
 
 -- real to integer; min/max range for target datatype
@@ -211,12 +211,12 @@ insert into datatype_target
   where target_type='integer'
     and range_for='target'
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 
 drop table datatype_target
 ;
-create table datatype_target(col integer primary key)
+create table datatype_target(col integer)
 ;
 
 -- real to integer; min/max range for source datatype
@@ -226,18 +226,18 @@ insert into datatype_target
   where target_type='integer'
     and range_for='source'
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 
 drop table datatype_target
 ;
-create table datatype_target(col integer primary key)
+create table datatype_target(col integer)
 ;
 
 -- test to drop scale
 
 insert into datatype_target values(123.456789)
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 -- PASS: if value = 123

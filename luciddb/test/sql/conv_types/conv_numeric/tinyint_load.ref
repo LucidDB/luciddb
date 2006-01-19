@@ -1,0 +1,405 @@
+0: jdbc:luciddb:> set schema 's'
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Test will load all datatypes into a tinyint column.
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+Error: DDL validation error near line 1, column 12: Reference to unknown table "DATATYPE_TARGET" (state=,code=0)
+0: jdbc:luciddb:> create table datatype_target(col tinyint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- tinyint to tinyint; min/max range for source datatype [same as target]
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select coltiny from datatype_source
+. . . . . . . . >   where target_type='tinyint'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
+| 0    |
+| 127  |
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col tinyint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- smallint to tinyint; min/max range for target datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target 
+. . . . . . . . >  select colsmall from datatype_source
+. . . . . . . . >   where target_type='tinyint'
+. . . . . . . . >     and range_for='target'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
+| 0    |
+| 127  |
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col tinyint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- smallint to tinyint; min/max range for source datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colsmall from datatype_source
+. . . . . . . . >   where target_type='tinyint'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ 'tinyint', 'source', 0, -32768, -2147483647, -2147483647, -21474836470000, -21474836470000, -4.29497e+09, -4.29497e+09, -4.29497e+09 ]
+Messages:
+[0]:PC=11 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col tinyint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- integer to tinyint; min/max range for target datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colint from datatype_source
+. . . . . . . . >   where target_type='tinyint'
+. . . . . . . . >     and range_for='target'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
+| 0    |
+| 127  |
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col tinyint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- integer to tinyint; min/max range for source datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colint from datatype_source
+. . . . . . . . >   where target_type='tinyint'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ 'tinyint', 'source', 0, -32768, -2147483647, -2147483647, -21474836470000, -21474836470000, -4.29497e+09, -4.29497e+09, -4.29497e+09 ]
+Messages:
+[0]:PC=11 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col tinyint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- bigint to tinyint; min/max range for target datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colbig from datatype_source
+. . . . . . . . >   where target_type='tinyint'
+. . . . . . . . >     and range_for='target'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
+| 0    |
+| 127  |
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col tinyint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- bigint to tinyint; min/max range for source datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colbig from datatype_source
+. . . . . . . . >   where target_type='tinyint'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ 'tinyint', 'source', 0, -32768, -2147483647, -2147483647, -21474836470000, -21474836470000, -4.29497e+09, -4.29497e+09, -4.29497e+09 ]
+Messages:
+[0]:PC=11 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col tinyint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col tinyint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- decimal to tinyint; min/max range for target datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select coldec from datatype_source
+. . . . . . . . >   where target_type='tinyint'
+. . . . . . . . >     and range_for='target'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
+| 0    |
+| 127  |
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col tinyint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- decimal to tinyint; min/max range for source datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select coldec from datatype_source
+. . . . . . . . >   where target_type='tinyint'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ 'tinyint', 'source', 0, -32768, -2147483647, -2147483647, -21474836470000, -21474836470000, -4.29497e+09, -4.29497e+09, -4.29497e+09 ]
+Messages:
+[0]:PC=21 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col tinyint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- numeric to tinyint; min/max range for target datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colnum from datatype_source
+. . . . . . . . >   where target_type='tinyint'
+. . . . . . . . >     and range_for='target'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
+| 0    |
+| 127  |
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col tinyint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- numeric to tinyint; min/max range for source datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colnum from datatype_source
+. . . . . . . . >   where target_type='tinyint'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ 'tinyint', 'source', 0, -32768, -2147483647, -2147483647, -21474836470000, -21474836470000, -4.29497e+09, -4.29497e+09, -4.29497e+09 ]
+Messages:
+[0]:PC=21 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col tinyint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- double to tinyint; min/max range for target datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select coldouble from datatype_source
+. . . . . . . . >   where target_type='tinyint'
+. . . . . . . . >     and range_for='target'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
+| 0    |
+| 127  |
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col tinyint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- double to tinyint; min/max range for source datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select coldouble from datatype_source
+. . . . . . . . >   where target_type='tinyint'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ 'tinyint', 'source', 0, -32768, -2147483647, -2147483647, -21474836470000, -21474836470000, -4.29497e+09, -4.29497e+09, -4.29497e+09 ]
+Messages:
+[0]:PC=12 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col tinyint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- float to tinyint; min/max range for target datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colfloat from datatype_source
+. . . . . . . . >   where target_type='tinyint'
+. . . . . . . . >     and range_for='target'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
+| 0    |
+| 127  |
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col tinyint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- float to tinyint; min/max range for source datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colfloat from datatype_source
+. . . . . . . . >   where target_type='tinyint'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ 'tinyint', 'source', 0, -32768, -2147483647, -2147483647, -21474836470000, -21474836470000, -4.29497e+09, -4.29497e+09, -4.29497e+09 ]
+Messages:
+[0]:PC=12 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col tinyint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- real to tinyint; min/max range for target datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colreal from datatype_source
+. . . . . . . . >   where target_type='tinyint'
+. . . . . . . . >     and range_for='target'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
+| 0    |
+| 127  |
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col tinyint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- real to tinyint; min/max range for source datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colreal from datatype_source
+. . . . . . . . >   where target_type='tinyint'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ 'tinyint', 'source', 0, -32768, -2147483647, -2147483647, -21474836470000, -21474836470000, -4.29497e+09, -4.29497e+09, -4.29497e+09 ]
+Messages:
+[0]:PC=12 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col tinyint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test to drop scale
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target values(123.456789)
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
+| 123  |
++------+
+0: jdbc:luciddb:> -- PASS: if value = 123
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

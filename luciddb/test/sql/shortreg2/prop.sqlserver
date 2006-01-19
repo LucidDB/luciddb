@@ -6,8 +6,8 @@ name_prefix=mssql
 # row store or column store #
 #############################
 
-DATA_STORE=sys_ftrs_data_server
-#DATA_STORE=sys_column_store_data_server
+#DATA_STORE=sys_ftrs_data_server
+DATA_STORE=sys_column_store_data_server
 
 ########################
 # foreign data wrapper #
@@ -37,9 +37,4 @@ URL=jdbc:jtds:sqlserver://@SERVER@:@PORT@
 # foreign table options #
 #########################
 
-# depending on csvjdbc/flatfile, respectively
 TABLE_NAME=table_name
-
-# tmp workaround while flatfile does not read file_extension
-file_ext=
-ff_dir=
