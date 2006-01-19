@@ -264,6 +264,7 @@ do { \
 
 #endif
 
+// REVIEW: JK 1/19/2006: Replace with cpu_to_be64(x) ?
 // Network to Host conversion for 64 bit quantities
 #define ntohll(x) ( ( (uint64_t) ntohl ((uint32_t)( x )) << 32 ) |  \
                     ntohl ((uint32_t)(x >> 32))) 
