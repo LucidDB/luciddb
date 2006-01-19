@@ -143,7 +143,7 @@ public class FarragoCalcSystemTest extends FarragoTestCase
         exclude.add(opTab.minusDateOperator);
         exclude.add(opTab.throwOperator);
         exclude.add(opTab.reinterpretOperator);
-
+        exclude.add(opTab.sliceOp);
         
         // Eventually need to include these when cast is working
         exclude.add(opTab.overlapsOperator);
@@ -164,6 +164,7 @@ public class FarragoCalcSystemTest extends FarragoTestCase
             if (exclude.contains(op)) {
                 continue;
             }
+
             addTestsForOp(op, suite, VirtualMachine.Fennel);
             addTestsForOp(op, suite, VirtualMachine.Java);
         }
