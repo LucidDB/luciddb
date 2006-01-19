@@ -297,6 +297,7 @@ public class DdlRelationalHandler extends DdlHandler
             if (rowType.getFieldList().size() != columnList.size()) {
                 throw res.ValidatorViewColumnCountMismatch.ex();
             }
+            validator.validateViewColumnList(columnList);
         }
 
         if (analyzedSql.hasDynamicParams) {

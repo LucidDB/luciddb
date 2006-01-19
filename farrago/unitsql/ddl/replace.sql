@@ -120,4 +120,13 @@ select "description" from sys_fem.med."DataWrapper" where "name" = 'FOO_WRAPPER'
                                                                                 
 select * from foo_table;
                                                                                 
-
+--
+-- Bugs!
+--
+create schema bug453;
+set schema 'bug453';
+                                                                                
+CREATE VIEW V1 AS SELECT name FROM SALES.EMPS;
+CREATE VIEW V2 AS SELECT name FROM V1;
+CREATE OR REPLACE VIEW V1 AS SELECT name FROM SALES.EMPS;
+ 

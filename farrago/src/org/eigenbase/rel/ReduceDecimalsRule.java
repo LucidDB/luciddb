@@ -635,6 +635,12 @@ public class ReduceDecimalsRule extends RelOptRule
                     true);
             }
             
+            if (!SqlTypeUtil.isExactNumeric(fromType)
+                || !SqlTypeUtil.isExactNumeric(toType))
+            {
+                throw Util.needToImplement("Cast from '" + fromType.toString()
+                    + "' to '" + toType.toString() + "'");
+            }
             int fromScale = fromType.getScale();
             int toScale = toType.getScale();
             int fromDigits = fromType.getPrecision() - fromScale;
@@ -659,8 +665,14 @@ public class ReduceDecimalsRule extends RelOptRule
                 if (fromScale <= toScale) {
                     scaled = scaleUp(value, toScale-fromScale);
                 } else {
+                    if (toDigits == fromDigits) {
+                        // rounding away from zero may cause an overflow
+                        // for example: cast(9.99 as decimal(2,1))
+                        checkOverflow = true;
+                    }
                     scaled = scaleDown(value, fromScale-toScale);
                 }
+                
                 return encodeValue(scaled, toType, checkOverflow);
             } else {
                 throw Util.needToImplement(

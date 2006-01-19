@@ -294,7 +294,7 @@ public abstract class DdlHandler
             || (typeFamily == SqlTypeFamily.Binary))
         {
             // convert precision to length
-            if (element.getLength() == null) {
+            if (element.getPrecision() != null) {
                 element.setLength(element.getPrecision());
                 element.setPrecision(null);
             }

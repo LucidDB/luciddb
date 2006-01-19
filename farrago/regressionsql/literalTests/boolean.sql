@@ -17,8 +17,6 @@ create table t_boolean2(n int not null primary key, boolean_col boolean not null
 -- negative test
 insert into t_boolean values(1,'not bool');
 insert into t_boolean values(2, 1234);
--- TODO: Fix error message, shouldn't get
---       Internal error: type BOOLEAN does not have a scale
 insert into t_boolean values(3, -1234.03);
 insert into t_boolean values(4, 1e400);
 insert into t_boolean values(5, -1.2345678901234e-200);
