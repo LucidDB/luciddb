@@ -120,7 +120,7 @@ import java.util.Calendar;
  *       of bytes. But here, they are all binary constants, because that's
  *       how they were written.
  *       These constants are always BINARY, never VARBINARY.</td>
- *   <td><code>byte[]</code> or {@link BitString}</td>
+ *   <td>{@link BitString}</td>
  * </tr>
  * <tr>
  *   <td>{@link SqlTypeName#Symbol}</td>

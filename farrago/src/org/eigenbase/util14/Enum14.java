@@ -370,7 +370,7 @@ public class Enum14 implements Cloneable
      * array of {@link Enum14.BasicValue}s will implicitly be
      * created.
      */
-    public interface Value
+    public interface Value extends Comparable
     {
         String getDescription();
 
@@ -451,6 +451,14 @@ public class Enum14 implements Cloneable
         public boolean equals(Object o)
         {
             return super.equals(o);
+        }
+
+        // implement Comparable
+        public int compareTo(Object other)
+        {
+            assert(other instanceof BasicValue);
+            BasicValue otherValue = (BasicValue) other;
+            return ordinal - otherValue.ordinal;
         }
 
         /**

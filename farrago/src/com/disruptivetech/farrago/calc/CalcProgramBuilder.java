@@ -2017,6 +2017,14 @@ public class CalcProgramBuilder
         {
             return type.isNumeric();
         }
+        
+        // implement Comparable
+        public int compareTo(Object other)
+        {
+            assert(other instanceof OpType);
+            OpType otherValue = (OpType) other;
+            return getOrdinal() - otherValue.getOrdinal();
+        }
     }
 
     public static class RegisterDescriptor

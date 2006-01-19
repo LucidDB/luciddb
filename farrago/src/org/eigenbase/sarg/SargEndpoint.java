@@ -27,6 +27,7 @@ import org.eigenbase.rex.*;
 import org.eigenbase.util.*;
 
 import java.util.*;
+import java.math.*;
 
 /**
  * SargEndpoint represents an endpoint of a ({@link SargInterval}).
@@ -135,8 +136,6 @@ public class SargEndpoint implements Comparable<SargEndpoint>
             // REVIEW jvs 16-Jan-2006:  may need to ignore nullability
             assert(coordinate.getType().equals(dataType));
         } else {
-            // TODO jvs 16-Jan-2006:  type conversion, including
-            // setting round for numeric types
             assert(coordinate instanceof RexLiteral);
             RexLiteral literal = (RexLiteral) coordinate;
             if (!RexLiteral.isNullLiteral(literal)) {
@@ -151,6 +150,72 @@ public class SargEndpoint implements Comparable<SargEndpoint>
         this.coordinate = coordinate;
         strictness = !strict ? 0
             : ((boundType == SargBoundType.LOWER) ? 1 : -1);
+        applyRounding();
+    }
+
+    private void applyRounding()
+    {
+        if (!(coordinate instanceof RexLiteral)) {
+            return;
+        }
+        RexLiteral literal = (RexLiteral) coordinate;
+        
+        if (!(literal.getValue() instanceof BigDecimal)) {
+            return;
+        }
+
+        // For numbers, we have to deal with rounding fun and
+        // games.
+        
+        if (SqlTypeUtil.isApproximateNumeric(dataType)) {
+            // REVIEW jvs 18-Jan-2006:  is it necessary to do anything
+            // for approx types here?  Wait until someone complains.
+            return;
+        }
+        
+        // NOTE: defer overflow checks until cast execution.  Broadbase did it
+        // here, but the effect should be the same.  Really, instead of
+        // overflowing at all, right here we should convert the interval to
+        // either unconstrained or empty (e.g. "less than overflow value" is
+        // equivalent to "less than +infinity").
+        
+        BigDecimal bd = (BigDecimal) literal.getValue();
+        BigDecimal bdRounded = bd.setScale(
+            dataType.getScale(),
+            RoundingMode.HALF_UP);
+        coordinate = factory.getRexBuilder().makeExactLiteral(bdRounded);
+
+        // The sign of roundingCompensation should be the opposite of the
+        // rounding direction, so subtract post-rounding value from
+        // pre-rounding.
+        int roundingCompensation = bd.compareTo(bdRounded);
+
+        // rounding takes precedence over the strictness flag.
+        //  Input        round    strictness    output    effective strictness
+        //    >5.9        down            -1       >=6        0
+        //    >=5.9       down             0       >=6        0
+        //    >6.1          up            -1        >6        1
+        //    >=6.1         up             0        >6        1
+        //    <6.1          up             1       <=6        0
+        //    <=6.1         up             0       <=6        0
+        //    <5.9        down             1        <6       -1
+        //    <=5.9       down             0        <6       -1
+        if (roundingCompensation == 0) {
+            return;
+        }
+        if (boundType == SargBoundType.LOWER) {
+            if (roundingCompensation < 0) {
+                strictness = 0;
+            } else {
+                strictness = 1;
+            }
+        } else if (boundType == SargBoundType.UPPER) {
+            if (roundingCompensation > 0) {
+                strictness = 0;
+            } else {
+                strictness = -1;
+            }
+        }
     }
 
     /**
@@ -232,6 +297,12 @@ public class SargEndpoint implements Comparable<SargEndpoint>
      * touches the lower bound of the interval [10, 20), but not
      * of the interval (10, 20).
      *
+     *<p>
+     *
+     * This method will assert if called on an endpoint defined
+     * by a dynamic parameter.  REVIEW:  maybe move it elsewhere
+     * to prevent this possibility, or make it non-public.
+     *
      * @param other the other endpoint to test
      *
      * @return true if touching; false if discontinuous
@@ -248,6 +319,9 @@ public class SargEndpoint implements Comparable<SargEndpoint>
 
     static int compareCoordinates(RexNode coord1, RexNode coord2)
     {
+        assert(coord1 instanceof RexLiteral);
+        assert(coord2 instanceof RexLiteral);
+        
         // null values always sort lowest
         boolean isNull1 = RexLiteral.isNullLiteral(coord1);
         boolean isNull2 = RexLiteral.isNullLiteral(coord2);
@@ -258,16 +332,9 @@ public class SargEndpoint implements Comparable<SargEndpoint>
         } else if (isNull2) {
             return 1;
         } else {
-            // TODO:  the real thing
-            if (coord1 instanceof RexLiteral) {
-                RexLiteral lit1 = (RexLiteral) coord1;
-                RexLiteral lit2 = (RexLiteral) coord2;
-                if (lit1.getValue() instanceof Comparable) {
-                    return ((Comparable) lit1.getValue()).compareTo(
-                        lit2.getValue());
-                }
-            } 
-            return coord1.toString().compareTo(coord2.toString());
+            RexLiteral lit1 = (RexLiteral) coord1;
+            RexLiteral lit2 = (RexLiteral) coord2;
+            return lit1.getValue().compareTo(lit2.getValue());
         }
     }
 

@@ -51,6 +51,8 @@ public class SargTest extends TestCase
     
     private RexNode intLiteral7;
     
+    private RexNode intLiteral8point5;
+    
     private RexNode intLiteral490;
     
     /**
@@ -77,6 +79,8 @@ public class SargTest extends TestCase
             new BigDecimal(7), intType);
         intLiteral490 = rexBuilder.makeExactLiteral(
             new BigDecimal(490), intType);
+        intLiteral8point5 = rexBuilder.makeExactLiteral(
+            new BigDecimal("8.5"), intType);
 
         sargFactory = new SargFactory(rexBuilder);
     }
@@ -123,6 +127,32 @@ public class SargTest extends TestCase
             intLiteral7,
             false);
         assertEquals("<= 7", ep.toString());
+
+        // after rounding, "> 8.5" is equivalent to ">= 9" over the domain
+        // of integers
+        ep.setFinite(
+            SargBoundType.LOWER,
+            intLiteral8point5,
+            true);
+        assertEquals(">= 9", ep.toString());
+        
+        ep.setFinite(
+            SargBoundType.LOWER,
+            intLiteral8point5,
+            false);
+        assertEquals(">= 9", ep.toString());
+
+        ep.setFinite(
+            SargBoundType.UPPER,
+            intLiteral8point5,
+            true);
+        assertEquals("< 9", ep.toString());
+        
+        ep.setFinite(
+            SargBoundType.UPPER,
+            intLiteral8point5,
+            true);
+        assertEquals("< 9", ep.toString());
     }
 
     public void testNullEndpoint()
