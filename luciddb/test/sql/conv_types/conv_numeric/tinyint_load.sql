@@ -274,6 +274,6 @@ create table datatype_target(col tinyint)
 
 insert into datatype_target values(123.456789)
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 -- PASS: if value = 123
