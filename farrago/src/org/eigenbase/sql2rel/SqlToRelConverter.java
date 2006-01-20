@@ -291,6 +291,7 @@ public class SqlToRelConverter
     {
         for (int i = 0; i < bb.subqueries.size(); i++) {
             SqlNode node = (SqlNode) bb.subqueries.get(i);
+            int joinType = JoinRel.JoinType.INNER;
             final RexNode expr = (RexNode) bb.mapSubqueryToExpr.get(node);
             if (expr == null) {
                 RelNode converted;
@@ -327,7 +328,7 @@ public class SqlToRelConverter
                 case SqlKind.ExistsORDINAL: {
                     // "select from emp where exists (Q)"
                     // becomes
-                    // "select from emp join (select *, TRUE from (Q)) q
+                    // "select from emp left join (select *, TRUE from (Q)) q
                     //   on emp.deptno = q.col1
                     //   where q.t is not null
                     SqlCall call = (SqlCall) node;
@@ -339,6 +340,7 @@ public class SqlToRelConverter
                             null,
                             rexBuilder.makeLiteral(true),
                             "$indicator");
+                    joinType = JoinRel.JoinType.LEFT;
                     break;
                 }
                 case SqlKind.SelectORDINAL:
@@ -352,7 +354,7 @@ public class SqlToRelConverter
                     throw Util.newInternal("unexpected kind of subquery :"
                         + node);
                 }
-                final RexNode expression = bb.register(converted);
+                final RexNode expression = bb.register(converted, joinType);
                 bb.mapSubqueryToExpr.put(node, expression);
             }
         }
@@ -1522,10 +1524,11 @@ public class SqlToRelConverter
          * Registers a relational expression.
          *
          * @param rel Relational expression
+         * @param joinType
          * @return Expression with which to refer to the row (or partial row)
          *   coming from this relational expression's side of the join.
          */
-        public RexNode register(RelNode rel)
+        public RexNode register(RelNode rel, int joinType)
         {
             if (root == null) {
                 setRoot(rel);
@@ -1539,7 +1542,7 @@ public class SqlToRelConverter
                     rel,
                     null,
                     SqlJoinOperator.ConditionType.None,
-                    JoinRel.JoinType.INNER);
+                    joinType);
 
                 setRoot(join);
                 return rexBuilder.makeRangeReference(
