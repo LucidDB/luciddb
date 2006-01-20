@@ -27,11 +27,9 @@ import net.sf.farrago.cwm.keysindexes.CwmIndexedFeature;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.fem.sql2003.FemAbstractColumn;
-import net.sf.farrago.fennel.tuple.FennelStandardTypeDescriptor;
-import net.sf.farrago.fennel.tuple.FennelStoredTypeDescriptor;
 import net.sf.farrago.query.*;
-import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.rel.*;
@@ -46,8 +44,7 @@ import org.eigenbase.relopt.*;
  * @version $Id$
  */
 public class LcsTableAppendRel
-    extends TableModificationRelBase
-    implements FennelRel    
+    extends MedAbstractFennelTableModRel
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -57,26 +54,31 @@ public class LcsTableAppendRel
     /** Refinement for TableModificationRelBase.table. */
     final LcsTable lcsTable;
     
-    // REVIEW jvs 27-Dec-2005: Unfortunately, Javadoc doesn't support
-    // the in/out parameter modes available in doxygen; the param
-    // tags below will get chewed up.
-    
     /**
      * Constructor. Currectly only insert is supported.
      * 
-     * @param[in] cluster RelOptCluster for this rel
-     * @param[in] lcsTable target table of insert
-     * @param[in] connection connection
-     * @param[in] child input to the load
-     * @param[in] operation DML operation type
-     * @param[in] updateColumnList
+     * @param cluster RelOptCluster for this rel
+     * @param lcsTable target table of insert
+     * @param connection connection
+     * @param child input to the load
+     * @param operation DML operation type
+     * @param updateColumnList
      */
-    public LcsTableAppendRel(RelOptCluster cluster, LcsTable lcsTable, 
-        RelOptConnection connection, RelNode child,
-        Operation operation, List updateColumnList)
+    public LcsTableAppendRel(
+        RelOptCluster cluster,
+        LcsTable lcsTable, 
+        RelOptConnection connection,
+        RelNode child,
+        Operation operation,
+        List updateColumnList)
     {
         super(cluster, new RelTraitSet(FennelRel.FENNEL_EXEC_CONVENTION),
             lcsTable, connection, child, operation, updateColumnList, true);
+        
+        // Only INSERT is supported currently. 
+        assert (getOperation().getOrdinal()
+            == TableModificationRel.Operation.INSERT_ORDINAL);
+
         this.lcsTable = lcsTable;
         assert lcsTable.getPreparingStmt() ==
             FennelRelUtil.getPreparingStmt(this);   
@@ -86,23 +88,19 @@ public class LcsTableAppendRel
 
     // implement RelNode
     public RelOptCost computeSelfCost(RelOptPlanner planner)
-    {
-        // REVIEW jvs 27-Dec-2005: I know costing is mostly bogus right now,
-        // but copying the formulas from scan here is extra bogus;
-        // should be using child rows and child row type, since
-        // the load itself only produces the rowcount (one row/col).
+    {        
+        double dInputRows = getChild().getRows();
         
-        double dRows = getRows();
         // TODO:  compute page-based I/O cost
         // CPU cost is proportional to number of columns projected
         // I/O cost is proportional to pages of clustered index to write
-        double dCpu = dRows * getRowType().getFieldList().size();
+        double dCpu = dInputRows * getChild().getRowType().getFieldList().size();
 
         int nIndexCols = getIndexGuide().getNumFlattenedClusterCols();
         
-        double dIo = dRows * nIndexCols;
+        double dIo = dInputRows * nIndexCols;
         
-        return planner.makeCost(dRows, dCpu, dIo);
+        return planner.makeCost(dInputRows, dCpu, dIo);
         
     }
 
@@ -119,33 +117,7 @@ public class LcsTableAppendRel
         clone.inheritTraitsFrom(this);
         return clone;
     }
-
-    // implement FennelRel
-    public RelOptConnection getConnection()
-    {
-        return connection;
-    }
-
-    // implement FennelRel
-    public FarragoTypeFactory getFarragoTypeFactory()
-    {
-        return (FarragoTypeFactory) getCluster().getTypeFactory();
-    }
-
-    // implement FennelRel
-    public Object implementFennelChild(FennelRelImplementor implementor)
-    {
-        return implementor.visitChild(this, 0, getChild());
-    }
-    
-    // implement FennelRel
-    public RelFieldCollation [] getCollations()
-    {
-        // TODO:  say it's sorted instead.  This can be done generically for all
-        // FennelRel's guaranteed to return at most one row
-        return RelFieldCollation.emptyCollationArray;
-    }
-    
+        
     private LcsIndexGuide getIndexGuide()
     {
         if (indexGuide == null) {
@@ -159,19 +131,13 @@ public class LcsTableAppendRel
     // Override TableModificationRelBase
     public void explain(RelOptPlanWriter pw)
     {        
-        // REVIEW jvs 27-Dec-2005: We can just leave off operation
-        // and flattened since their value is constant.
-        
         // TODO: 
         // make list of index names available in the verbose mode of
         // explain plan.
         pw.explain(
             this,
-            new String [] {"child", "table", "operation", "flattened"},
-            new Object [] {
-                Arrays.asList(lcsTable.getQualifiedName()), getOperation(),
-                Boolean.valueOf(true),
-            });
+            new String [] {"child", "table"},
+            new Object [] {Arrays.asList(lcsTable.getQualifiedName())});
     }
 
     private FemSplitterStreamDef newSplitter(FarragoRepos repos)
@@ -190,42 +156,13 @@ public class LcsTableAppendRel
     {
         FemBarrierStreamDef barrier = repos.newFemBarrierStreamDef();
 
-        FemTupleDescriptor rowCountTupleDesc = repos.newFemTupleDescriptor();
-
-        // REVIEW jvs 27-Dec-2005: it's better to use
-        // FennelRelUtil.createTupleDescriptorFromRowType(
-        //     repos, getFarragoTypeFactory(), getRowType())
-        // instead of hard-coding here.
-        
-        FemTupleAttrDescriptor rowCountAttrDesc =
-            repos.newFemTupleAttrDescriptor();
-        FennelStoredTypeDescriptor rowCountTypeDesc =
-            FennelStandardTypeDescriptor.INT_64;
-                
-        rowCountAttrDesc.setTypeOrdinal(
-            rowCountTypeDesc.getOrdinal());
-    
-        rowCountTupleDesc.getAttrDescriptor().add(rowCountAttrDesc);
-    
-        barrier.setOutputDesc(rowCountTupleDesc);
+        barrier.setOutputDesc(
+            FennelRelUtil.createTupleDescriptorFromRowType(
+            repos,
+            getFarragoTypeFactory(),
+            getRowType()));
 
         return barrier;
-    }
-
-    private FemBufferingTupleStreamDef newBuffer(FarragoRepos repos)    
-    {
-        FemBufferingTupleStreamDef buffer =
-            repos.newFemBufferingTupleStreamDef();
-    
-        buffer.setInMemory(false);
-        buffer.setMultipass(false);
-    
-        buffer.setOutputDesc(
-            FennelRelUtil.createTupleDescriptorFromRowType(
-                repos,
-                getFarragoTypeFactory(),
-                getChild().getRowType()));
-        return buffer;
     }
     
     private FemLcsClusterAppendStreamDef newClusterAppend(
@@ -236,27 +173,15 @@ public class LcsTableAppendRel
         FemLcsClusterAppendStreamDef clusterAppend = 
             repos.newFemLcsClusterAppendStreamDef();
         
-        // REVIEW jvs 27-Dec-2005: it's better to use
-        // FennelRelUtil.createTupleDescriptorFromRowType(
-        //     repos, getFarragoTypeFactory(), getRowType())
-        // instead of hard-coding here.
-        
         //
         // Set up FemExecutionStreamDef
         //        - setOutputDesc
         //
-        FemTupleDescriptor rowCountTupleDesc = repos.newFemTupleDescriptor();
-       
-        FennelStoredTypeDescriptor rowCountTypeDesc =
-            FennelStandardTypeDescriptor.INT_64;
-        
-        FemTupleAttrDescriptor rowCountAttrDesc =
-            repos.newFemTupleAttrDescriptor();
-        rowCountAttrDesc.setTypeOrdinal(
-                rowCountTypeDesc.getOrdinal());
-        
-        rowCountTupleDesc.getAttrDescriptor().add(rowCountAttrDesc);
-        clusterAppend.setOutputDesc(rowCountTupleDesc);
+        clusterAppend.setOutputDesc(
+            FennelRelUtil.createTupleDescriptorFromRowType(
+                repos,
+                getFarragoTypeFactory(),
+                getRowType()));
 
         //
         // Set up FemIndexAccessorDef
@@ -325,11 +250,6 @@ public class LcsTableAppendRel
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
-        // REVIEW jvs 27-Dec-2005: Should do this in constructor
-        // rather than waiting until here.
-        assert (getOperation().getOrdinal()
-            == TableModificationRel.Operation.INSERT_ORDINAL);
-        
         FemExecutionStreamDef input =
             implementor.visitFennelChild((FennelRel) getChild());
 
@@ -367,30 +287,25 @@ public class LcsTableAppendRel
         //
         FemBarrierStreamDef barrier = newBarrier(repos);
         
-        // REVIEW jvs 27-Dec-2005: this conditional buffering logic was
-        // duplicated from FtrsTableModificationRel; should be factored out
-        // instead, maybe to MedAbstractFennelDataServer
-        
         //
         // 4. Set up buffering if required.
         // We only need a buffer if the target table is also a source.
         //
-        TableAccessMap tableAccessMap = new TableAccessMap(this);
-        
-        if (tableAccessMap.isTableAccessedForRead(lcsTable)) {
-            
-            FemBufferingTupleStreamDef buffer = newBuffer(repos);
-                
+        if (inputNeedBuffer()) {
+            FemBufferingTupleStreamDef buffer = newInputBuffer(repos);
             implementor.addDataFlowFromProducerToConsumer(
                 input,
                 buffer);
-            
             input = buffer;
 
         }
         
         //
         // 5. Link the StreamDefs together.
+        //                               -> clusterAppend ->
+        // input( -> buffer) -> splitter -> clusterAppend -> barrier
+        //                                  ...
+        //                               -> clusterAppned ->
         //
         implementor.addDataFlowFromProducerToConsumer(
             input,

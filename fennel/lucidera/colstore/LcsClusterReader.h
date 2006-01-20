@@ -42,23 +42,25 @@ FENNEL_BEGIN_NAMESPACE
  * for each rowid in the range.  A batch may be "fixed", "compressed", or
  * "variable".
  *
- * Suppose a table has 2 row clusters: one containing columns A, B, and C, and
- * another containing columns D and E.  To read the values of columns A and C,
- * create a LcsClusterReader on the first cluster, and a LcsColumnReader onto
- * this LcsClusterReader for columns A and C.
+ * Suppose a table has 2 column store clusters: one containing columns A, B,
+ * and C, and another containing columns D and E.  To read the values of
+ * columns A and C, create a LcsClusterReader on the first cluster, and two
+ * LcsColumnReader onto this LcsClusterReader, one for each column, A and C.
  *
- * Here's how to use a LcsClusterReader (Scan) and LcsColumnReader (ColScan):
+ * Here's how to use a LcsClusterReader (scan) and LcsColumnReader (colScan)
+ * for doing a full table scan:
  *
- * Scan.Init
- * for i in 0..nClusterCols ColScan[i].Init
- * Scan.Position(first rid)
+ * scan.init
+ * for i in 0..nClusterCols colScan[i].init
+ * scan.position(first rid)
  * do
- *   for i in 0..nClusterCols ColScan[i].Sync
+ *   for i in 0..nClusterCols colScan[i].sync
  *   do
- *     for i in 0..nClusterCols print ColScan[i].GetCurrentValue
- *   while Scan.AdvanceWithinBatch(1)
- * while Scan.NextRange != EOF
- * Scan.Close()
+ *     for i in 0..nClusterCols
+ *         colScan[i].getCurrentValue
+ *   while scan.advance(1)
+ * while scan.nextRange != false
+ * scan.close()
  */
 class LcsClusterReader : public LcsClusterAccessBase
 {
@@ -212,60 +214,39 @@ public:
     /**
      * Returns true if positioned within some range in a batch
      */
-    bool isPositioned() const
-    {
-        return pRangeBatches != NULL;
-    }
+    inline bool isPositioned() const;
 
     /**
      * Returns first rid in a range
      */
-    LcsRid getRangeStartRid() const
-    {
-        return rangeStartRid;
-    }
+    inline LcsRid getRangeStartRid() const;
 
     /**
      * Returns first rid after the end of the current range
      */
-    LcsRid getRangeEndRid() const
-    {
-        return rangeEndRid;
-    }
+    inline LcsRid getRangeEndRid() const;
 
     /**
      * Returns number of rids in the range
      */
-    uint getRangeSize() const
-    {
-        return pRangeBatches->nRow;
-    }
+    inline uint getRangeSize() const;
 
     /**
      * Returns offset within the current range.  E.g., 0 if at first rid in
      * range
      */
-    uint getRangePos() const
-    {
-        return nRangePos;
-    }
+    inline uint getRangePos() const;
 
     /**
      * Returns rid currently positioned at
      */
-    LcsRid getCurrentRid() const
-    {
-        return getRangeStartRid() + getRangePos();
-    }
+    inline LcsRid getCurrentRid() const;
 
     /**
      * Returns number of rids yet to be read. (E.g., 1 if we're at the
      * last rid)
      */
-    uint getRangeRowsLeft() const
-    {
-        return getRangeSize() - getRangePos();
-    }
+    inline uint getRangeRowsLeft() const;
 
     /** 
      * Positions scan on the rid, moving to a new range if necessary
@@ -277,15 +258,72 @@ public:
     bool position(LcsRid rid);
 
     /**
+     * Positions scan on the first rid of the next range
+     */
+    inline bool nextRange();
+
+    /**
+     * Moves "nRids" forward in the current range.
+     *
+     * @param nRids number of rids to move forward
+     *
+     * @return false if we are at the endof the range and therefore
+     * cannot advance the desired number of rids
+     */
+    bool advance(uint nRids);
+
+    /**
      * Advances nRids forward in the current batch
      *
      * @param nRids number of rids to advance
      */
-    void advanceWithinBatch(uint nRids)
-    {
-        nRangePos = nRangePos + nRids;
-    }
+    inline void advanceWithinBatch(uint nRids);
 };
+
+inline bool LcsClusterReader::isPositioned() const
+{
+    return pRangeBatches != NULL;
+}
+
+inline LcsRid LcsClusterReader::getRangeStartRid() const
+{
+    return rangeStartRid;
+}
+
+inline LcsRid LcsClusterReader::getRangeEndRid() const
+{
+    return rangeEndRid;
+}
+
+inline uint LcsClusterReader::getRangeSize() const
+{
+    return pRangeBatches->nRow;
+}
+
+inline uint LcsClusterReader::getRangePos() const
+{
+    return nRangePos;
+}
+
+inline LcsRid LcsClusterReader::getCurrentRid() const
+{
+    return getRangeStartRid() + getRangePos();
+}
+
+inline uint LcsClusterReader::getRangeRowsLeft() const
+{
+    return getRangeSize() - getRangePos();
+}
+
+inline bool LcsClusterReader::nextRange()
+{
+    return position(getRangeEndRid());
+}
+
+inline void LcsClusterReader::advanceWithinBatch(uint nRids)
+{
+    nRangePos = nRangePos + nRids;
+}
 
 FENNEL_END_NAMESPACE
 

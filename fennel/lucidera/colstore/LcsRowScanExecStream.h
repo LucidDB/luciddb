@@ -22,45 +22,17 @@
 #ifndef Fennel_LcsRowScanExecStream_Included
 #define Fennel_LcsRowScanExecStream_Included
 
-#include "fennel/lucidera/colstore/LcsClusterReader.h"
-#include "fennel/exec/ConduitExecStream.h"
-#include "fennel/ftrs/BTreeExecStream.h"
-#include "fennel/tuple/TupleDescriptor.h"
-#include "fennel/tuple/TupleAccessor.h"
-#include "fennel/tuple/TupleProjectionAccessor.h"
 #include "fennel/tuple/TupleDataWithBuffer.h"
-#include <boost/scoped_array.hpp>
+#include "fennel/lucidera/colstore/LcsRowScanBaseExecStream.h"
 
 FENNEL_BEGIN_NAMESPACE
-
-/**
- * Represents a single cluster in a table cluster scan
- */
-struct LcsClusterScanDef : public BTreeExecStreamParams
-{
-    /**
-     * Tuple descriptor of columns that make up the cluster
-     */
-    TupleDescriptor clusterTupleDesc;
-};
-
-typedef std::vector<LcsClusterScanDef> LcsClusterScanDefList;
 
 /**
  * Indicates the clustered indexes that need to be read to scan a table and
  * the columns from the clusters that need to be projected in the scan result.
  */
-struct LcsRowScanExecStreamParams : public ConduitExecStreamParams
+struct LcsRowScanExecStreamParams : public LcsRowScanBaseExecStreamParams
 {
-    /**
-     * Ordered list of cluster scans
-     */
-    LcsClusterScanDefList lcsClusterScanDefs;
-
-    /**
-     * projection from scan
-     */
-    TupleProjection outputProj;
 };
 
 /**
@@ -68,7 +40,7 @@ struct LcsRowScanExecStreamParams : public ConduitExecStreamParams
  * the appropriate clustered indexes defined on the table. The stream
  * returns a projected subset of columns from the table
  */
-class LcsRowScanExecStream : public ConduitExecStream
+class LcsRowScanExecStream : public LcsRowScanBaseExecStream
 {
     /**
      * TupleData for tuple representing incoming stream of RIDs
@@ -76,26 +48,10 @@ class LcsRowScanExecStream : public ConduitExecStream
     TupleData inputTuple;
 
     /**
-     * Projection map that maps columns read from cluster to their position
-     * in the output projection
-     */
-    std::vector<uint> projMap;
-
-    /**
      * Tuple data for projected columns read from all clusters, in projection
      * order
      */
     TupleDataWithBuffer outputTupleData;
-
-    /**
-     * Number of clusters to be scanned
-     */
-    uint nClusters;
-
-    /**
-     * Array containing cluster readers
-     */
-    boost::scoped_array<SharedLcsClusterReader> pClusters;
 
     /**
      * Tuple data for input stream

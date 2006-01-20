@@ -248,6 +248,16 @@ bool TupleDescriptor::storageEqual(
     return true;
 }
 
+TupleStorageByteLength TupleDescriptor::getMaxByteCount() const
+{
+    TupleStorageByteLength length = 0;
+
+    for (uint i = 0; i < size(); i ++) {
+        length += (*this)[i].cbStorage;
+    }
+    return length;
+}
+
 std::ostream &operator<<(std::ostream &str,TupleDescriptor const &tupleDesc)
 {
     str << "{" << std::endl;

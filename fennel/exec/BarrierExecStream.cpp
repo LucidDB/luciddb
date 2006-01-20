@@ -33,23 +33,21 @@ void BarrierExecStream:: prepare(BarrierExecStreamParams const &params)
     ConfluenceExecStream::prepare(params);
 
     /*
-     * The output tuple from the producers should be the same: they all have
-     * just one column recording number of rows processed by the producers.
+     * The output tuple from the producers should be the same, and the output
+     * from barrier should be the same as its input
      */
     outputTupleDesc = inAccessors[0]->getTupleDesc();
-    assert (outputTupleDesc.size() == 1);
 
     for (int i = 1; i < inAccessors.size(); i ++) {
-        assert(inAccessors[0]->getTupleDesc() == inAccessors[i]->getTupleDesc());
+        assert(inAccessors[0]->getTupleDesc() ==
+            inAccessors[i]->getTupleDesc());
     }
-    
-    pOutAccessor->setTupleShape(outputTupleDesc);
+    assert(outputTupleDesc == pOutAccessor->getTupleDesc());
     
     inputTuple.compute(outputTupleDesc);
     outputTuple.compute(outputTupleDesc);
-    outputTuple[0].pData = (PConstBuffer) &rowCount;
 
-    outputTupleAccessor = & pOutAccessor->getScratchTupleAccessor();
+    outputTupleAccessor = &pOutAccessor->getScratchTupleAccessor();
 }
 
 void BarrierExecStream::open(bool restart)
@@ -59,6 +57,7 @@ void BarrierExecStream::open(bool restart)
 
     if (!restart) {
         outputTupleBuffer.reset(new FixedBuffer[outputTupleAccessor->getMaxByteCount()]);
+        outputTupleAccessor->setCurrentTupleBuf(outputTupleBuffer.get());
     }
     isDone = false;
 }
@@ -91,8 +90,9 @@ ExecStreamResult BarrierExecStream::execute(ExecStreamQuantum const &quantum)
                 /*
                  * First time, just copy the input into the output.
                  */
-                rowCount = *reinterpret_cast<RecordNum const *>
-                    (inputTuple[0].pData);
+                outputTupleAccessor->marshal(
+                    inputTuple, outputTupleBuffer.get());
+                outputTupleAccessor->unmarshal(outputTuple);
             } else {
                 permAssert((inAccessors[iInput]->getTupleDesc()).
                             compareTuples(inputTuple, outputTuple) == 0);
@@ -112,8 +112,7 @@ ExecStreamResult BarrierExecStream::execute(ExecStreamQuantum const &quantum)
         }
     }
 
-    // Write a single outputTuple(rowCount) and indicate OVERFLOW.
-    outputTupleAccessor->marshal(outputTuple, outputTupleBuffer.get());
+    // Write a single outputTuple and indicate OVERFLOW.
 
     pOutAccessor->provideBufferForConsumption(outputTupleBuffer.get(), 
         outputTupleBuffer.get() + outputTupleAccessor->getCurrentByteCount());

@@ -29,8 +29,7 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.query.*;
-import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
+import net.sf.farrago.namespace.impl.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
@@ -44,8 +43,8 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class FtrsTableModificationRel extends TableModificationRelBase
-    implements FennelRel
+class FtrsTableModificationRel 
+    extends MedAbstractFennelTableModRel
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -81,18 +80,6 @@ class FtrsTableModificationRel extends TableModificationRelBase
 
     //~ Methods ---------------------------------------------------------------
 
-    // implement FennelRel
-    public RelOptConnection getConnection()
-    {
-        return connection;
-    }
-
-    // implement FennelRel
-    public FarragoTypeFactory getFarragoTypeFactory()
-    {
-        return (FarragoTypeFactory) getCluster().getTypeFactory();
-    }
-
     // implement Cloneable
     public Object clone()
     {
@@ -112,12 +99,6 @@ class FtrsTableModificationRel extends TableModificationRelBase
     {
         // TODO:  the real thing
         return planner.makeTinyCost();
-    }
-
-    // implement FennelRel
-    public Object implementFennelChild(FennelRelImplementor implementor)
-    {
-        return implementor.visitChild(this, 0, getChild());
     }
 
     private List getUpdateCwmColumnList()
@@ -140,7 +121,6 @@ class FtrsTableModificationRel extends TableModificationRelBase
     {
         FemExecutionStreamDef input =
             implementor.visitFennelChild((FennelRel) getChild());
-        FarragoTypeFactory typeFactory = getFarragoTypeFactory();
         if (!(ftrsTable.getCwmColumnSet() instanceof CwmTable)) {
             // e.g. view update
             throw Util.needToImplement(ftrsTable.getCwmColumnSet());
@@ -258,53 +238,22 @@ class FtrsTableModificationRel extends TableModificationRelBase
         while (iter.hasNext()) {
             tableWriterDef.getIndexWriter().add(iter.next());
         }
-
-        // We only need a buffer if the target table is
-        // also a source.
-        boolean needBuffer = true;
-
-        if (getOperation().equals(TableModificationRel.Operation.DELETE)) {
-            needBuffer = false;
-        } else {
-            TableAccessMap tableAccessMap = new TableAccessMap(this);
-            if (!tableAccessMap.isTableAccessedForRead(ftrsTable)) {
-                needBuffer = false;
-            }
-        }
-
-        if (needBuffer) {
-            FemBufferingTupleStreamDef buffer =
-                repos.newFemBufferingTupleStreamDef();
-            buffer.setInMemory(false);
-            buffer.setMultipass(false);
-            buffer.setOutputDesc(
-                FennelRelUtil.createTupleDescriptorFromRowType(
-                    repos,
-                    getFarragoTypeFactory(),
-                    getChild().getRowType()));
-
+        
+        // Set up buffering if required.
+        // We only need a buffer if the target table is also a source.
+        if (inputNeedBuffer()) { 
+            FemBufferingTupleStreamDef buffer = newInputBuffer(repos);
             implementor.addDataFlowFromProducerToConsumer(
                 input,
                 buffer);
-
-            implementor.addDataFlowFromProducerToConsumer(
-                buffer,
-                tableWriterDef);
-        } else {
-            implementor.addDataFlowFromProducerToConsumer(
-                input,
-                tableWriterDef);
+            input = buffer;
         }
+        
+        implementor.addDataFlowFromProducerToConsumer(
+            input,
+            tableWriterDef);
 
         return tableWriterDef;
-    }
-
-    // implement FennelRel
-    public RelFieldCollation [] getCollations()
-    {
-        // TODO:  say it's sorted instead.  This can be done generically for all
-        // FennelRel's guaranteed to return at most one row
-        return RelFieldCollation.emptyCollationArray;
     }
 }
 

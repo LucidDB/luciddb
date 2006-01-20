@@ -419,6 +419,31 @@ public:
     }
 };
 
+/**
+ * A repeating column sequence generator.
+ *
+ * Generates column values in a repeating sequence.  Values repeat after
+ * nSequence values.  E.g., 0, 1, 2, ..., nSequence-1, 0, 1, 2, ...,
+ * nSequence-1, 0, ...
+ */
+class RepeatingSeqColumnGenerator : public ColumnGenerator<int64_t>
+{
+    int nSequence;
+    int64_t curValue;
+
+public:
+    explicit RepeatingSeqColumnGenerator(int nSequenceInit) {
+        assert(nSequenceInit > 0);
+        nSequence = nSequenceInit;
+        curValue = 0;
+    }
+    
+    int64_t next() 
+    {
+        return curValue++ % nSequence;
+    }
+};
+
 FENNEL_END_NAMESPACE
 
 #endif

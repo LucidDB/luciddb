@@ -239,10 +239,6 @@ public:
                                    SegmentAccessor &accessorInit,
                                    SharedTraceTarget pTraceTargetInit,
                                    std::string nameInit);
-
-    /**
-     * Destructor
-     */
     ~LcsClusterNodeWriter();
 
     /**
