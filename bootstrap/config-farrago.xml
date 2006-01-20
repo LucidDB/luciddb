@@ -6,10 +6,14 @@
 
 		<!-- Bootstrappers are run with every build before mod checks -->
 		<bootstrappers>
-			<currentbuildstatusbootstrapper file="logs/farrago/currentbuildstatus.txt"/>
-			<p4bootstrapper p4port="&open_p4port;" p4client="&open_p4client;" p4user="&open_p4user;" path="&open_root;/bootstrap/..."/>
+			<!-- currentbuildstatusbootstrapper file="logs/farrago/currentbuildstatus.txt"/ -->
+			<p4bootstrapper port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/bootstrap/..."/>
 		</bootstrappers>
 
+                <listeners>
+                        <currentbuildstatuslistener file="logs/farrago/currentbuildstatus.txt"/>
+                        <currentbuildstatuslistener file="&open_default.build.home;/../web/logs/farrago&configSuffix;/currentbuildstatus.txt"/>
+                </listeners>
 
 		<!-- Defines where cruise looks for changes, to decide whether to run the build -->
 		<modificationset quietperiod="300">
@@ -21,7 +25,7 @@
 
 		<!-- Configures the actual build loop, how often and which build file/target -->
 		<schedule interval="&build_interval;">
-			<ant buildfile="build-farrago.xml" uselogger="true" usedebug="false" antscript="&ant;" target="integration-build-and-test">
+			<ant buildfile="&open_default.build.home;/bootstrap/build-farrago.xml" uselogger="true" usedebug="false" antscript="&ant;" target="integration-build-and-test">
 			    <property name="open_propfile" value="&open_propfile;"/>
 			    <property name="open_root" value="&open_root;"/>
 			</ant>
@@ -29,18 +33,30 @@
 
 		<!-- directory to write build logs to -->
 		<log dir="logs/farrago">
-			<merge dir="build/farrago/testlog"/>
+			<merge dir="&open_integration.build.home;/farrago/testlog"/>
 		</log>
 
 		<!-- Publishers are run *after* a build completes -->
 		<publishers>
-			<currentbuildstatuspublisher file="logs/farrago/currentbuildstatus.txt"/>
+			<!-- currentbuildstatuspublisher file="logs/farrago/currentbuildstatus.txt"/ -->
 
-			<artifactspublisher dir="build/farrago/trace" dest="artifacts/farrago&configSuffix;" subdirectory="trace"/>
-			<artifactspublisher dir="build/farrago/unitsql" dest="artifacts/farrago&configSuffix;" subdirectory="unitsql"/>
-			<artifactspublisher dir="build/farrago/initsql" dest="artifacts/farrago&configSuffix;" subdirectory="initsql"/>
-			<artifactspublisher dir="build/farrago/regressionsql" dest="artifacts/farrago&configSuffix;" subdirectory="regressionsql"/>
+			<artifactspublisher dir="&open_integration.build.home;/farrago/trace" dest="artifacts/farrago&configSuffix;" subdirectory="trace"/>
+			<artifactspublisher dir="&open_integration.build.home;/farrago/testlog" dest="artifacts/farrago&configSuffix;" subdirectory="testlog"/>
+			<artifactspublisher dir="&open_integration.build.home;/farrago/unitsql" dest="artifacts/farrago&configSuffix;" subdirectory="unitsql"/>
+			<artifactspublisher dir="&open_integration.build.home;/farrago/initsql" dest="artifacts/farrago&configSuffix;" subdirectory="initsql"/>
+			<artifactspublisher dir="&open_integration.build.home;/farrago/regressionsql" dest="artifacts/farrago&configSuffix;" subdirectory="regressionsql"/>
 
+                        <!-- fennel artifacts -->
+			<artifactspublisher dir="&open_integration.build.home;/fennel/trace" dest="artifacts/farrago&configSuffix;" subdirectory="fennel"/>
+
+                        <!--
+                        <onfailure>
+                            <artifactspublisher dir="&open_integration.build.home;/farrago" dest="artifacts/farrago&configSuffix;" subdirectory="farrago"/>
+                            <artifactspublisher dir="&open_integration.build.home;/fennel" dest="artifacts/farrago&configSuffix;" subdirectory="fennel"/>
+                            <artifactspublisher dir="&open_integration.build.home;/saffron" dest="artifacts/farrago&configSuffix;" subdirectory="saffron"/>
+                        </onfailure>
+                        -->
+        
 			<!-- sync up artifacts on jsp machine: CC's scp would copy everything -->
 			<execute command="&rsync_cmd; artifacts/farrago&configSuffix; &rsync_dest;"/>
 
@@ -69,6 +85,7 @@
 			       subjectprefix="&subjectprefix;">
 				<failure address="&failureaddress;"
 				         reportWhenFixed="&reportwhenfixed;"/>
+                                <propertiesmapper file="&emailmapper;"/>
 			</email>
 		</publishers>
 	</project>

@@ -83,6 +83,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
     private final boolean isDml;
     private FennelStreamGraph streamGraph;
     private long currentTime;
+    private boolean isCanceled;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -134,6 +135,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
     // override FarragoCompoundAllocation
     public void closeAllocation()
     {
+        isCanceled = true;
         // make sure all streams get closed BEFORE they are deallocated
         streamOwner.closeAllocation();
         if (!isDml) {
@@ -269,7 +271,8 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
      */
     public String getContextVariable_CURRENT_PATH()
     {
-        return sessionVariables.getFormattedSchemaSearchPath(session.getDatabaseMetaData());
+        return sessionVariables.getFormattedSchemaSearchPath(
+            session.getDatabaseMetaData());
     }
 
     protected long getCurrentTime()
@@ -368,11 +371,12 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
     }
 
     /**
-     * Associates a stream id with a java stream object, so that it can be retrieved
-     * by a native method later. Binds the stream to a specific owner (that will
-     * eventually close it).
+     * Associates a stream id with a java stream object, so that it can be
+     * retrieved by a native method later. Binds the stream to a specific owner
+     * (that will eventually close it).
      */
-    protected void registerJavaStream(int streamId, Object stream, FarragoCompoundAllocation streamOwner)
+    protected void registerJavaStream(
+        int streamId, Object stream, FarragoCompoundAllocation streamOwner)
     {
         streamIdToHandleMap.put(
             new Integer(streamId),
@@ -634,6 +638,23 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
         }
     }
 
+    // implement FarragoSessionRuntimeContext
+    public void cancel()
+    {
+        if (streamGraph != null) {
+            streamGraph.abort();
+        }
+        isCanceled = true;
+    }
+
+    // implement FarragoSessionRuntimeContext
+    public void checkCancel()
+    {
+        if (isCanceled) {
+            throw FarragoResource.instance().ExecutionAborted.ex();
+        }
+    }
+    
     // implement FarragoSessionRuntimeContext
     public RuntimeException handleRoutineInvocationException(
         Throwable ex, String methodName)

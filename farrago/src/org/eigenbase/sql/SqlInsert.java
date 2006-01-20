@@ -42,8 +42,7 @@ public class SqlInsert extends SqlCall
     public static final int TARGET_TABLE_OPERAND = 1;
     public static final int SOURCE_OPERAND = 2;
     public static final int TARGET_COLUMN_LIST_OPERAND = 3;
-    public static final int SOURCE_SELECT_OPERAND = 4;
-    public static final int OPERAND_COUNT = 5;
+    public static final int OPERAND_COUNT = 4;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -73,18 +72,6 @@ public class SqlInsert extends SqlCall
     public SqlIdentifier getTargetTable()
     {
         return (SqlIdentifier) operands[TARGET_TABLE_OPERAND];
-    }
-
-    /**
-     * Gets the source SELECT expression for the data to be inserted.
-     * returns null before the statement
-     * has been expanded by SqlValidator.performUnconditionalRewrites.
-     *
-     * @return the source SELECT for the data to be inserted
-     */
-    public SqlSelect getSourceSelect()
-    {
-        return (SqlSelect) operands[SOURCE_SELECT_OPERAND];
     }
 
     /**

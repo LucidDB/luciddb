@@ -1,6 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/ddl/decimal.sql#1 $
-0: jdbc:farrago:> -- Throws unsupported types at the system, to make sure the errors are
-0: jdbc:farrago:> -- civilized.
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/ddl/decimal.sql#4 $
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema decimal_ddl_test;
 0: jdbc:farrago:> set schema 'decimal_ddl_test';
@@ -10,6 +8,8 @@
 0: jdbc:farrago:> create table td(n integer not null primary key, d decimal);
 0: jdbc:farrago:> create table td5(n integer not null primary key, d decimal(5));
 0: jdbc:farrago:> create table td52(n integer not null primary key, d decimal(5, 2));
+0: jdbc:farrago:> create table td52notnull(n integer not null primary key, 
+. . . . . . . . >     d decimal(5, 2) not null);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Test table creation with numeric type (should be same as decimal)
 0: jdbc:farrago:> create table tn(n integer not null primary key, d numeric);
@@ -35,6 +35,10 @@ Was expecting:
 Error: org.eigenbase.sql.parser.SqlParseException: Encountered "-" at line 1, column 64.
 Was expecting:
     <UNSIGNED_INTEGER_LITERAL> ... (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should give error, precision cannot be 0
+0: jdbc:farrago:> create table tde5(n integer not null primary key, d decimal(0));
+Error: DDL validation error near line 1, column 51: Precision must be positive in definition of column "D" (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Test insert into table (decimal)
 0: jdbc:farrago:> insert into td values(1, 2);
@@ -74,20 +78,59 @@ Error: From line 1, column 28 to line 1, column 46: Numeric literal '92233720368
 0: jdbc:farrago:> insert into td values(23, -9223372036854775808.5);
 Error: From line 1, column 28 to line 1, column 48: Numeric literal '92233720368547758085' out of range (state=,code=0)
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- TODO: Should give error
-0: jdbc:farrago:> -- insert into td5 values(20, 100000);
-0: jdbc:farrago:> -- insert into td5 values(21, 99999.5); 
-0: jdbc:farrago:> -- insert into td5 values(22, -100000);
-0: jdbc:farrago:> -- insert into td5 values(23, -99999.5); 
-0: jdbc:farrago:> -- insert into td52 values(20, 1000.00);
-0: jdbc:farrago:> -- insert into td52 values(21, 999.995);
-0: jdbc:farrago:> -- insert into td52 values(22, -1000.00);
-0: jdbc:farrago:> -- insert into td52 values(23, -999.995); 
+0: jdbc:farrago:> -- should give error
+0: jdbc:farrago:> insert into td5 values(20, 100000);
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=5 Code=22003 (state=,code=0)
+0: jdbc:farrago:> insert into td5 values(21, 99999.5); 
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=14 Code=22003 (state=,code=0)
+0: jdbc:farrago:> insert into td5 values(22, -100000);
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=6 Code=22003 (state=,code=0)
+0: jdbc:farrago:> insert into td5 values(23, -99999.5); 
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=15 Code=22003 (state=,code=0)
+0: jdbc:farrago:> insert into td52 values(20, 1000.00);
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=4 Code=22003 (state=,code=0)
+0: jdbc:farrago:> insert into td52 values(21, 999.995);
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=14 Code=22003 (state=,code=0)
+0: jdbc:farrago:> insert into td52 values(22, -1000.00);
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=5 Code=22003 (state=,code=0)
+0: jdbc:farrago:> insert into td52 values(23, -999.995); 
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=15 Code=22003 (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- null
 0: jdbc:farrago:> insert into td values(30, null);
 0: jdbc:farrago:> insert into td5 values(30, null);
 0: jdbc:farrago:> insert into td52 values(30, null);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should give error
+0: jdbc:farrago:> insert into td52notnull values(30, null);
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=7 Code=22004 (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from td;
 +-----+----+

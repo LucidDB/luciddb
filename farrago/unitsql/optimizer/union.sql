@@ -92,3 +92,7 @@ select * from
 explain plan for
 select * from 
 (select name from emps union all select name from depts);
+
+explain plan for
+insert into depts(name)
+select name from emps union all select name from depts;

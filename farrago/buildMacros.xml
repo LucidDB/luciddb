@@ -343,20 +343,19 @@
     <pathelement path="${farrago.run.classpath}"/>
   </path>
   <property name="farrago.sqlline.classpath" refid="farrago.sqlline.classpath"/>
-  <!-- classpath for running blackhawk (aka tch) based tests -->
-  <property name="tch.home" location="${open.dir}/blackhawk/build/dist"/>
+  <!-- classpath for running blackhawk based tests -->
+  <property name="bh.home" location="${open.dir}/blackhawk/build/dist"/>
 
   <path id="bh.run.classpath">
     <pathelement path="${ant.classpath}"/>
-    <pathelement location="${tch.home}/tchx.jar"/>
-    <pathelement location="${tch.home}/tchx.jar"/>
+    <pathelement location="${bh.home}/bhx.jar"/>
     <pathelement 
-      location="${tch.home}/thirdparty/jakarta/jakarta-regexp-1.2.jar"/>
+      location="${bh.home}/thirdparty/jakarta/jakarta-regexp-1.2.jar"/>
     <pathelement 
-      location="${tch.home}/thirdparty/xmlbeans/apache-xbean.jar"/>
+      location="${bh.home}/thirdparty/xmlbeans/apache-xbean.jar"/>
     <pathelement 
-      location="${tch.home}/thirdparty/jsr173/jsr173_1.0_api.jar"/>
-    <pathelement location="${tch.home}/schema.jar"/>
+      location="${bh.home}/thirdparty/jsr173/jsr173_1.0_api.jar"/>
+    <pathelement location="${bh.home}/schema.jar"/>
   </path>
   <property name="bh.run.classpath" refid="bh.run.classpath"/>    
 
@@ -364,25 +363,25 @@
   <macrodef name="blackhawk.fork">
     <attribute name="basedir" default="."/>
     <attribute name="testscript" default="test.xml"/>
-    <attribute name="tchhome" default="${tch.home}"/>
+    <attribute name="bhhome" default="${bh.home}"/>
     <attribute name="fail.on.error" default="true"/>
     <attribute name="verbose" default="true"/>
     <attribute name="classpathref" default="bh.run.classpath"/>
     <sequential>
       <taskdef 
-        name="tch" 
-        classname="org.apache.beehive.test.tools.tch.TchVMTask"
+        name="bh" 
+        classname="org.eigenbase.blackhawk.BhVMTask"
         classpathref="bh.run.classpath"
         onerror="fail"/>
-      <tch
+      <bh
         testfile="@{basedir}/@{testscript}"
-        tchHome="@{tchhome}"
+        bhHome="@{bhhome}"
         failOnError="@{fail.on.error}"
         verbose="@{verbose}"
         fork="true"
         classpathref="@{classpathref}">
         <jvmarg line="&FarragoProps;"/>
-      </tch>
+      </bh>
     </sequential>
   </macrodef>
 

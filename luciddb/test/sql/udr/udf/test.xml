@@ -1,0 +1,14 @@
+<project name="tch" default="simple-test">
+  <target name="simple-test">
+    <test-suite testunit="simple-test">
+
+      <test name="udfTests">
+        <test-parameter name="jdbc-driver" 
+          value="com.lucidera.jdbc.LucidDbLocalDriver"/>
+        <test-parameter name="sql-file" value="udfInvocation.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+    </test-suite>
+  </target>
+</project>

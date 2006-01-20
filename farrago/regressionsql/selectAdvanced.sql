@@ -102,5 +102,25 @@ insert into s.b values (true, 1);
 select not b from s.b;
 select b or true from s.b;
 select b and true from s.b;
+
+-- a few decimal tests
+create table s.nulldecimal(c decimal(4,2) primary key, d decimal(6,0));
+insert into s.nulldecimal values (19, null);
+insert into s.nulldecimal values (20, 20);
+
+-- should fail
+insert into s.nulldecimal values (null, 20);
+
+-- test whether nullability flags are read correctly
+-- the first column should be detected as not nullable
+-- while the second column should be detected as nullable
+select d from s.nulldecimal;
+
+-- the type of (d*1.0) is decimal(7,1)
+-- casting to decimal(6,1) requires an overflow check
+-- this tests whether the overflow check works with null values
+select cast((d * 1.0) as decimal(6,1)) from s.nulldecimal;
+
 drop table s.b;
+drop table s.nulldecimal;
 drop schema s;

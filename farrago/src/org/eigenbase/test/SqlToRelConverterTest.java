@@ -453,14 +453,16 @@ public class SqlToRelConverterTest extends TestCase
 
     public void testExists() {
         check("select*from emp where exists (select 1 from dept where deptno=55)",
-            "ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7])" + NL +
-            "  FilterRel(condition=[$9])" + NL +
-            "    JoinRel(condition=[true], joinType=[inner])" + NL +
-            "      TableAccessRel(table=[[SALES, EMP]])" + NL +
-            "      ProjectRel(EXPR$0=[$0], $indicator=[true])" + NL +
-            "        ProjectRel(EXPR$0=[1])" + NL +
-            "          FilterRel(condition=[=($0, 55)])" + NL +
-            "            TableAccessRel(table=[[SALES, DEPT]])" + NL);
+            TestUtil.fold(new String[]{
+                "ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7])",
+                "  FilterRel(condition=[$9])",
+                "    JoinRel(condition=[true], joinType=[left])",
+                "      TableAccessRel(table=[[SALES, EMP]])",
+                "      ProjectRel(EXPR$0=[$0], $indicator=[true])",
+                "        ProjectRel(EXPR$0=[1])",
+                "          FilterRel(condition=[=($0, 55)])",
+                "            TableAccessRel(table=[[SALES, DEPT]])",
+                ""}));
 
         check("select*from emp where exists (select 1 from dept where emp.deptno=dept.deptno)",
             "ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7])" + NL +

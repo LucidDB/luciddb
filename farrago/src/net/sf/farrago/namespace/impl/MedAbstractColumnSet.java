@@ -66,6 +66,11 @@ public abstract class MedAbstractColumnSet extends RelOptAbstractTable
      * exists
      *
      * @param rowType row type descriptor
+     *
+     * @param tableProps table-level properties
+     *
+     * @param columnPropMap column-level properties (map from column name to
+     * Properties object)
      */
     protected MedAbstractColumnSet(
         String [] localName,

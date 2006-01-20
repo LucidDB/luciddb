@@ -1121,6 +1121,12 @@ SqlNode TableRef() :
                 SqlParserUtil.toNodeArray(args),
                 pos);
         }
+        |
+        <TABLE> <LPAREN>
+        tableRef = NamedRoutineCall(SqlFunctionCategory.UserDefinedFunction)
+        <RPAREN>
+        {
+        }
     )
     [
         [ <AS> ] alias = Identifier()
@@ -2465,8 +2471,8 @@ SqlDataTypeSpec DataType() :
 {
     SqlIdentifier typeName;
     SqlIdentifier collectionTypeName = null;
-    int scale = 0;
-    int precision = 0;
+    int scale = -1;
+    int precision = -1;
     String charSetName = null;
     SqlParserPos pos;
 }

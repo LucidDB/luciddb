@@ -923,6 +923,9 @@ public abstract class SqlTypeUtil
         // REVIEW jvs 28-Dec-2004:  discriminate between precision/scale
         // zero and unspecified?
 
+        // REVIEW angel 11-Jan-2006:
+        // Use neg numbers to indicate unspecified precision/scale
+
         if (typeName.allowsScale()) {
             return new SqlDataTypeSpec(
                 typeIdentifier,
@@ -934,14 +937,14 @@ public abstract class SqlTypeUtil
             return new SqlDataTypeSpec(
                 typeIdentifier,
                 type.getPrecision(),
-                0,
+                -1,
                 charSetName,
                 SqlParserPos.ZERO);
         } else {
             return new SqlDataTypeSpec(
                 typeIdentifier,
-                0,
-                0,
+                -1,
+                -1,
                 charSetName,
                 SqlParserPos.ZERO);
         }

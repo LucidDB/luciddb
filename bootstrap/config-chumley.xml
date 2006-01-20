@@ -12,7 +12,7 @@
 <!ENTITY aspen_p4client  "cruise.chumley">
 <!ENTITY aspen_p4user    "guest">
 
-<!ENTITY buildresultsbase "http://jhyde.dyndns.org:8008/aspen/buildresults">
+<!ENTITY buildresultsbase "http://jhyde.dyndns.org:8888/aspen/buildresults">
 <!ENTITY mailhost         "smtp.rcn.com">
 <!ENTITY reportsuccess    "fixes">
 <!ENTITY returnname       "Build Monkey">

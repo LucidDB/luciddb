@@ -129,6 +129,12 @@ typedef JniProxyIter<ProxyJavaTupleStreamDef> SharedProxyJavaTupleStreamDef;
 class ProxyKeyAccessorDef;
 typedef JniProxyIter<ProxyKeyAccessorDef> SharedProxyKeyAccessorDef;
 
+class ProxyLbmGeneratorStreamDef;
+typedef JniProxyIter<ProxyLbmGeneratorStreamDef> SharedProxyLbmGeneratorStreamDef;
+
+class ProxyLbmSplicerStreamDef;
+typedef JniProxyIter<ProxyLbmSplicerStreamDef> SharedProxyLbmSplicerStreamDef;
+
 class ProxyLcsClusterAppendStreamDef;
 typedef JniProxyIter<ProxyLcsClusterAppendStreamDef> SharedProxyLcsClusterAppendStreamDef;
 
@@ -229,14 +235,14 @@ class ProxyExecutionStreamDef
 : virtual public JniProxy
 {
 public:
-std::string getName();
-static jmethodID meth_getName;
 SharedProxyTupleDescriptor getOutputDesc();
 static jmethodID meth_getOutputDesc;
-SharedProxyExecStreamDataFlow getInputFlow();
-static jmethodID meth_getInputFlow;
 SharedProxyExecStreamDataFlow getOutputFlow();
 static jmethodID meth_getOutputFlow;
+SharedProxyExecStreamDataFlow getInputFlow();
+static jmethodID meth_getInputFlow;
+std::string getName();
+static jmethodID meth_getName;
 };
 
 class ProxyTupleStreamDef
@@ -645,6 +651,32 @@ int32_t getStreamId();
 static jmethodID meth_getStreamId;
 };
 
+class ProxyLcsRowScanStreamDef
+: virtual public JniProxy, virtual public ProxyTupleStreamDef
+{
+public:
+SharedProxyTupleProjection getOutputProj();
+static jmethodID meth_getOutputProj;
+SharedProxyLcsClusterScanDef getClusterScan();
+static jmethodID meth_getClusterScan;
+};
+
+class ProxyLbmGeneratorStreamDef
+: virtual public JniProxy, virtual public ProxyLcsRowScanStreamDef, virtual public ProxyIndexAccessorDef
+{
+public:
+int32_t getRowCountParamId();
+static jmethodID meth_getRowCountParamId;
+};
+
+class ProxyLbmSplicerStreamDef
+: virtual public JniProxy, virtual public ProxyIndexStreamDef
+{
+public:
+int32_t getRowCountParamId();
+static jmethodID meth_getRowCountParamId;
+};
+
 class ProxyLcsClusterAppendStreamDef
 : virtual public JniProxy, virtual public ProxyIndexStreamDef
 {
@@ -663,16 +695,6 @@ SharedProxyTupleDescriptor getClusterTupleDesc();
 static jmethodID meth_getClusterTupleDesc;
 SharedProxyLcsRowScanStreamDef getRowScan();
 static jmethodID meth_getRowScan;
-};
-
-class ProxyLcsRowScanStreamDef
-: virtual public JniProxy, virtual public ProxyTupleStreamDef
-{
-public:
-SharedProxyTupleProjection getOutputProj();
-static jmethodID meth_getOutputProj;
-SharedProxyLcsClusterScanDef getClusterScan();
-static jmethodID meth_getClusterScan;
 };
 
 class ProxyMergeStreamDef
@@ -829,26 +851,24 @@ class ProxyWindowDef
 : virtual public JniProxy
 {
 public:
-int32_t getOffset();
-static jmethodID meth_getOffset;
 SharedProxyTupleProjection getOrderKeyList();
 static jmethodID meth_getOrderKeyList;
 bool isPhysical();
 static jmethodID meth_isPhysical;
 std::string getRange();
 static jmethodID meth_getRange;
-SharedProxyWindowPartitionDef getPartition();
-static jmethodID meth_getPartition;
 SharedProxyWindowStreamDef getWindowStream();
 static jmethodID meth_getWindowStream;
+SharedProxyWindowPartitionDef getPartition();
+static jmethodID meth_getPartition;
+int32_t getOffset();
+static jmethodID meth_getOffset;
 };
 
 class ProxyWindowPartitionDef
 : virtual public JniProxy
 {
 public:
-SharedProxyWindowDef getWindow();
-static jmethodID meth_getWindow;
 SharedProxyTupleProjection getPartitionKeyList();
 static jmethodID meth_getPartitionKeyList;
 std::string getInitializeProgram();
@@ -859,6 +879,8 @@ std::string getDropProgram();
 static jmethodID meth_getDropProgram;
 SharedProxyTupleDescriptor getBucketDesc();
 static jmethodID meth_getBucketDesc;
+SharedProxyWindowDef getWindow();
+static jmethodID meth_getWindow;
 };
 
 class ProxyWindowStreamDef
@@ -964,6 +986,10 @@ virtual void visit(ProxyJavaTransformStreamDef &)
 virtual void visit(ProxyJavaTupleStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyKeyAccessorDef &)
+{ unhandledVisit(); }
+virtual void visit(ProxyLbmGeneratorStreamDef &)
+{ unhandledVisit(); }
+virtual void visit(ProxyLbmSplicerStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyLcsClusterAppendStreamDef &)
 { unhandledVisit(); }

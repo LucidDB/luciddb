@@ -110,17 +110,23 @@ void BTreeNodeAccessor::splitNode(
     assert(node.nEntries > 1);
     newNode.height = node.height; // split should be of the same height
 
-    // if monotonic, don't actually split the page; leave the left
+    // if monotonic, for leaf page,  
+    // don't actually split the page; leave the left 
     // page as is and force all inserts to go into the new page
     // on the right
-    if (monotonic) {
+    // for internal node,
+    // put the last entry to the right page.
+    if (monotonic && node.height == 0) {
         return;
     }
 
     // Calculate the balance point in bytes
     uint cbNeeded = getEntryByteCount(cbNewTuple);
-    uint cbBalance = (node.cbTotalFree + newNode.cbTotalFree - cbNeeded) / 2;
-    cbBalance = std::max(cbNeeded,cbBalance);
+    uint cbBalance = cbNeeded; 
+    if (!monotonic) {
+        cbBalance = (node.cbTotalFree + newNode.cbTotalFree - cbNeeded) / 2;
+        cbBalance = std::max(cbNeeded,cbBalance);
+    }
 
     // Calculate the corresponding split point in terms of tuples
     uint cbFreeAfterSplit = node.cbTotalFree;

@@ -171,10 +171,10 @@ public abstract class DdlHandler
                 dataType.getTypeName());
 
         element.setType(type);
-        if (dataType.getPrecision() > 0) {
+        if (dataType.getPrecision() >= 0) {
             element.setPrecision(new Integer(dataType.getPrecision()));
         }
-        if (dataType.getScale() > 0) {
+        if (dataType.getScale() >= 0) {
             element.setScale(new Integer(dataType.getScale()));
         }
         if (dataType.getCharSetName() != null) {
@@ -360,6 +360,14 @@ public abstract class DdlHandler
                             element.getPrecision(),
                             maximum,
                             repos.getLocalizedObjectName(abstractElement)));
+                }
+                if (typeFamily == SqlTypeFamily.Numeric) {
+                    if (element.getPrecision().intValue() <= 0) {
+                        throw validator.newPositionalError(
+                            abstractElement,
+                            res.ValidatorPrecisionMustBePositive.ex(
+                                repos.getLocalizedObjectName(abstractElement)));
+                    }
                 }
             }
             if (element.getScale() != null) {

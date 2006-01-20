@@ -623,6 +623,18 @@ public abstract class FarragoCatalogUtil
     }
 
     /**
+     * Determines whether a UDF has a RETURNS TABLE clause.
+     *
+     * @param routine UDF
+     *
+     * @return true if RETURNS TABLE
+     */
+    public static boolean isTableFunction(FemRoutine routine)
+    {
+        return !getStructuralFeatures(routine).isEmpty();
+    }
+
+    /**
      * Returns the URL for a jar with all properties expanded.
      *
      * @param femJar jar to access

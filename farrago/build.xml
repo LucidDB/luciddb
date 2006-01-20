@@ -874,6 +874,7 @@ require version '${required.ant.version}'."/>
   </target>
 
   <target name="test">
+    <antcall target="checkTrace"/>
     <antcall target="cleanExamples"/>
     <antcall target="createCatalog"/>
     <antcall target="buildExamples"/>
@@ -886,6 +887,20 @@ require version '${required.ant.version}'."/>
     <antcall target="compareCatalogExport"/>
     <antcall target="macker"/>
     <antcall target="checkSourceFilePreambles"/>
+  </target>
+
+  <target name="checkTrace">
+    <property file="${FarragoTrace.properties}" prefix="TRACE"/>
+    <ac:if xmlns:ac="antlib:net.sf.antcontrib">
+      <equals arg1="${TRACE.net.sf.farrago.dynamic.level}" arg2="FINE"/>
+      <then>
+        <fail>
+Trace net.sf.farrago.dynamic.level=FINE 
+will cause ant test to fail or run very slowly; 
+please disable it and try again.
+        </fail>
+      </then>
+    </ac:if>
   </target>
 
   <!-- run all regression test cases -->

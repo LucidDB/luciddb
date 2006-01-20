@@ -152,6 +152,14 @@ returns integer
 contains sql
 return case when x = 1 then x else x*factorial(x-1) end;
 
+-- UDX
+create function ramp(n int)
+returns table(i int)
+language java
+parameter style system defined java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.ramp';
+
 -- should fail:  we don't allow mutual recursion either
 create schema crypto
 create function alice(x double)
@@ -230,8 +238,7 @@ values null_preserving_int_to_hex_string(255);
 -- this should return null
 values null_preserving_int_to_hex_string(cast(null as integer));
 
--- FIXME: Hangs
--- values decimal_abs(-54.1234);
+    values decimal_abs(-54.1234);
 
 values atoi('451');
 
@@ -262,6 +269,8 @@ values throw_sql_exception();
 
 -- should fail
 values throw_npe();
+
+select * from table(ramp(5));
 
 set path 'crypto2';
 

@@ -37,13 +37,11 @@
 		<publishers>
 			<currentbuildstatuspublisher file="logs/aspen/currentbuildstatus.txt"/>
 
-			<artifactspublisher dir="build/fennel/trace" dest="artifacts/aspen&configSuffix;" subdirectory="fennel_trace"/>
 			<artifactspublisher dir="build/farrago/trace" dest="artifacts/aspen&configSuffix;" subdirectory="farrago_trace"/>
 			<artifactspublisher dir="build/farrago/unitsql" dest="artifacts/aspen&configSuffix;" subdirectory="farrago_unitsql"/>
 			<artifactspublisher dir="build/farrago/initsql" dest="artifacts/aspen&configSuffix;" subdirectory="farrago_initsql"/>
 			<artifactspublisher dir="build/farrago/regressionsql" dest="artifacts/aspen&configSuffix;" subdirectory="farrago_regressionsql"/>
 			<artifactspublisher dir="build/farrago/testlog" dest="artifacts/aspen&configSuffix;" subdirectory="farrago_testlog"/>
-			<artifactspublisher dir="build/aspen/cpp/aspen/trace" dest="artifacts/aspen&configSuffix;" subdirectory="aspen_cpp_trace"/>
 			<artifactspublisher dir="build/aspen/testlog" dest="artifacts/aspen&configSuffix;" subdirectory="testlog"/>
 			<artifactspublisher dir="build/aspen/initsql" dest="artifacts/aspen&configSuffix;" subdirectory="initsql"/>
 			<artifactspublisher dir="build/aspen/unitsql" dest="artifacts/aspen&configSuffix;" subdirectory="unitsql"/>
@@ -76,7 +74,8 @@
 			       skipusers="&skipusers;"
 			       spamwhilebroken="&spamwhilebroken;"
 			       subjectprefix="&subjectprefix;">
-				<always address="&failureaddress;"/>
+				<failure address="&failureaddress;"
+				         reportWhenFixed="&reportwhenfixed;"/>
 			</email>
 		</publishers>
 	</project>

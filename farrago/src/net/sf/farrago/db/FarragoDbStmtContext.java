@@ -82,8 +82,7 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
     private FarragoCompoundAllocation allocations;
     private String sql;
     
-    private FennelStreamGraph streamGraph;
-    private Object streamGraphMutex = new Integer(0);
+    private FarragoSessionRuntimeContext runningContext;
 
     /**
      * query timeout in seconds, default to 0.
@@ -255,20 +254,19 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
             }
             params.isDml = isDml;
             params.dynamicParamValues = dynamicParamValues;
-            FarragoSessionRuntimeContext context =
+            assert(runningContext == null);
+            FarragoSessionRuntimeContext newContext = 
                 session.getPersonality().newRuntimeContext(params);
             if (allocations != null) {
-                context.addAllocation(allocations);
+                newContext.addAllocation(allocations);
                 allocations = null;
             }
             if (daemon) {
-                context.addAllocation(this);
+                newContext.addAllocation(this);
             }
 
-            resultSet = executableStmt.execute(context);
-            synchronized(streamGraphMutex) {
-                streamGraph = context.getFennelStreamGraph();
-            }
+            resultSet = executableStmt.execute(newContext);
+            runningContext = newContext;
 
             if (queryTimeoutMillis > 0) {
                 IteratorResultSet iteratorRS = (IteratorResultSet) resultSet;
@@ -301,9 +299,7 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
                     throw Util.newInternal(ex);
                 } finally {
                     resultSet = null;
-                    synchronized(streamGraphMutex) {
-                        streamGraph = null;
-                    }
+                    runningContext = null;
                     if (!success) {
                         session.endTransactionIfAuto(false);
                     }
@@ -335,10 +331,9 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
     // implement FarragoSessionStmtContext
     public void cancel()
     {
-        synchronized(streamGraphMutex) {
-            if (streamGraph != null) {
-                streamGraph.abort();
-            }
+        FarragoSessionRuntimeContext contextToCancel = runningContext;
+        if (contextToCancel != null) {
+            contextToCancel.cancel();
         }
     }
 
@@ -352,9 +347,7 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
                 throw Util.newInternal(ex);
             }
             resultSet = null;
-            synchronized(streamGraphMutex) {
-                streamGraph = null;
-            }
+            runningContext = null;
         }
     }
 

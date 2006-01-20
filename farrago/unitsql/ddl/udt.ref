@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/ddl/udt.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/ddl/udt.sql#4 $
 0: jdbc:farrago:> -- Test DDL for user-defined types
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema udttest;
@@ -365,8 +365,13 @@ Error: DDL validation error near line 1, column 33: Reference to unknown user-de
 +---------+
 | 4.0     |
 +---------+
-0: jdbc:farrago:> -- FIXME: should be 4.0000
-0: jdbc:farrago:> -- values slope_dec(new rectilinear_coord_non0_dec(5.0,20.0));
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values slope_dec(new rectilinear_coord_non0_dec(5.0,20.0));
++---------+
+| EXPR$0  |
++---------+
+| 4.0000  |
++---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select t.c.x, t.c.y from (select make_coord(7,9) as c from (values(0))) t;
 +------+------+

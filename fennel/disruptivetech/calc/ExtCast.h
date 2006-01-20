@@ -86,6 +86,25 @@ void
 castStrToApproxA(RegisterRef<double>* result,
                  RegisterRef<char*>* src);
 
+//! castA. Ascii. Char & Varchar
+//! 
+//! Casts a boolean to an Ascii string.
+//!
+//! May throw "22018" data exception - invalid character value for cast
+void
+castBooleanToStrA(RegisterRef<char*>* result,
+                  RegisterRef<int64_t>* src);
+
+
+//! castA. Ascii. Char & Varchar
+//! 
+//! Casts a string to an boolean.
+//!
+//! May throw "22018" data exception - invalid character value for cast
+void
+castStrtoBooleanA(RegisterRef<bool>* result,
+                  RegisterRef<char*>* src);
+
 //! castA. Ascii. String to Varchar
 //!
 //! Casts a string to a variable-length string.

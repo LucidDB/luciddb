@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+// $Id$
+// LucidDB is a DBMS optimized for business intelligence.
+// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006-2006 The Eigenbase Project
+//
+// This program is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation; either version 2 of the License, or (at your option)
+// any later version approved by The Eigenbase Project.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//  
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+-->
+
+<project name="conv_char" basedir="." default="test">
+  <dirname property="conv_char.dir" file="${ant.file.conv_char}" />
+  
+  <property name="open.dir" location="../../../../.."/>
+  <fail unless="open.dir" />
+
+  <property environment="env" />
+
+  <!-- override Farrago -->
+  <property name="project.catalog.dir" location="${open.dir}/luciddb/catalog" />
+  <property name="project.trace.propfile" location="${open.dir}/luciddb/trace/LucidDbTrace.properties" />
+
+  <import file="${open.dir}/farrago/buildMacros.xml" />
+  
+  <property name="classes.dir" location="${open.dir}/luciddb/classes" />
+  <property name="luciddb.plugin.dir" location="${open.dir}/luciddb/plugin" />
+
+  <!-- classpath for running tests via ant -->
+  <path id="test.classpath">
+    <pathelement path="${classes.dir}"/>
+    <pathelement path="${farrago.sqlline.classpath}"/>
+    <pathelement path="${ant.classpath}"/>
+    <pathelement path="${bh.run.classpath}"/>
+    <pathelement path="${luciddb.plugin.dir}/FarragoMedJdbc3p.jar"/>
+  </path>
+  <property name="test.classpath" refid="test.classpath"/>
+  
+  <target name="test">
+    <property name="test-suite" value="test.xml"/>
+    <blackhawk.fork basedir="${conv_char.dir}" 
+      testscript="${test-suite}"
+      classpathref="test.classpath"/>
+  </target>  
+
+  <target name="restoreCatalog">
+    <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>
+  </target>  
+
+</project>

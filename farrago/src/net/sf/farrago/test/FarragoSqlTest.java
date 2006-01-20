@@ -79,6 +79,7 @@ public class FarragoSqlTest extends FarragoTestCase
             }
             if (!SqlOperatorTests.dtbug465fixed) {
                 if (file.contains("unitsql/ddl/decimal.sql") ||
+                    file.contains("unitsql/ddl/udt.sql") ||
                     file.contains("unitsql/optimizer/lcs.sql") ||
                     file.contains("unitsql/expressions/udfInvocation.sql") ||
                     file.contains("regressionsql/multiset.sql") ||

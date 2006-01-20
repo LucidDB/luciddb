@@ -425,3 +425,28 @@ specific piffle4
 contains sql
 return 20;
 
+
+
+-- UDX
+
+-- should succeed
+create function ramp(n int)
+returns table(i int)
+language java
+parameter style system defined java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.ramp';
+
+-- should fail:  wrong parameter style
+create function ramp_bad_param_style(n int)
+returns table(i int)
+language java
+parameter style java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.ramp';
+
+-- should fail:  wrong language
+create function ramp_bad_language(n int)
+returns table(i int)
+contains sql
+return n;

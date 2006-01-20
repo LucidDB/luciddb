@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- $Id$ -->
+<!-- Delegating build script used by Cruise Control to build luciddb. -->
+<project name="build-luciddb" default="build">
+	<property environment="env"/>
+
+	<!-- perforce properties -->
+	<property file="${open_propfile}"/>
+	<property name="p4.client" value="${env.USER}.${env.HOSTNAME}"/>
+
+
+	<!-- regular vs. integration build locations -->
+	<property name="default.build.home" location="."/>
+	<property name="integration.build.home" location="./build"/>
+
+
+	<!-- by default we build "with fennel" and "with tests" -->
+	<property name="luciddb.init.arg" value="--with-fennel"/>
+        <property name="luciddb.init.tests.arg" value="--with-tests"/>
+
+	<!-- perforce synchronization target -->
+	<target name="sync" description="Synchronize the Luciddb project" unless="no-sync">
+		<p4sync view="${open_root}/luciddb/..." failonerror="true"/>
+		<p4sync view="//open/blackhawk/..." failonerror="true"/>
+	</target>
+
+	<!-- basic build targets -->
+	<target name="test"
+	        depends="build"
+	        description="Build and test the Luciddb project and its dependencies in situ -- not compatible with integration builds">
+		<antcall target="do-test"/>
+	</target>
+
+	<target name="build"
+	        depends="thirdparty"
+	        description="Build the Luciddb project and its dependencies in situ -- not compatible with integration builds">
+		<antcall target="do-build"/>
+	</target>
+
+	<target name="cleanbuild"
+	        depends="thirdparty"
+	        description="Configure and build the Luciddb project and its dependencies in situ -- not compatible with integration builds">
+		<antcall target="do-cleanbuild"/>
+	</target>
+
+	<target name="thirdparty">
+		<antcall target="do-thirdparty"/>
+	</target>
+
+
+	<!-- continuous intregration targets -->
+	<target name="integration-build-and-test"
+	        depends="integration-test"
+	        description="Build and test the Luciddb project and its dependencies in a clean tree"/>
+
+	<target name="integration-test" depends="integration-build">
+		<!-- clean build runs tests automagically -->
+	</target>
+
+	<target name="integration-build"
+	        depends="integration-copy,integration-farrago,integration-fennel,integration-thirdparty">
+		<antcall target="do-cleanbuild">
+			<param name="build.home" location="${integration.build.home}"/>
+		</antcall>
+	</target>
+
+	<target name="integration-copy" depends="sync">
+                <!-- copy luciddb -->
+		<delete dir="${integration.build.home}/luciddb"/>
+		<mkdir dir="${integration.build.home}/luciddb"/>
+
+		<!-- ant's copy task doesn't preserve permissions -->
+		<echo message="Copying ./luciddb to ${integration.build.home}/"/>
+		<exec dir="${default.build.home}" executable="cp" failonerror="true">
+			<arg value="-pr"/>
+			<arg value="./luciddb/"/>
+			<arg value="${integration.build.home}/"/>
+		</exec>
+
+                <!-- copy blackhawk -->
+		<delete dir="${integration.build.home}/blackhawk"/>
+		<mkdir dir="${integration.build.home}/blackhawk"/>
+
+		<!-- ant's copy task doesn't preserve permissions -->
+		<echo message="Copying ./blackhawk to ${integration.build.home}/"/>
+		<exec dir="${default.build.home}" executable="cp" failonerror="true">
+			<arg value="-pr"/>
+			<arg value="./blackhawk/"/>
+			<arg value="${integration.build.home}/"/>
+		</exec>
+
+	</target>
+
+	<target name="integration-farrago">
+		<!-- just set up a clean farrago: we'll build it ourselves -->
+		<ant antfile="build-farrago.xml" target="integration-copy" inheritAll="false">
+		    <propertyset>
+		        <propertyref prefix="open_"/>
+		    </propertyset>
+		</ant>
+	</target>
+
+	<target name="integration-fennel">
+		<!-- just set up a clean fennel: we'll build it ourselves -->
+		<ant antfile="build-fennel.xml" target="integration-copy" inheritAll="false">
+		    <propertyset>
+		        <propertyref prefix="open_"/>
+		    </propertyset>
+		</ant>
+	</target>
+
+  	<target name="integration-thirdparty">
+		<antcall target="do-thirdparty">
+			<param name="build.target" value="integration-build"/>
+		</antcall>
+	</target>
+
+
+	<!-- helper targets -->
+
+	<target name="do-test">
+		<property name="build.home" location="${default.build.home}"/>
+		<ant dir="${build.home}/luciddb" target="test" inheritAll="false"/>
+	</target>
+
+	<target name="do-build">
+		<property name="build.home" location="${default.build.home}"/>
+		<ant dir="${build.home}/blackhawk" inheritAll="false"/>
+		<ant dir="${build.home}/luciddb" inheritAll="false"/>
+	</target>
+
+	<target name="do-cleanbuild">
+		<property name="build.home" location="${default.build.home}"/>
+    
+		<exec dir="${build.home}/luciddb" executable="bash" failonerror="true">
+			<arg value="${build.home}/luciddb/initBuild.sh"/>
+			<arg value="${luciddb.init.arg}"/>
+			<arg value="${luciddb.init.tests.arg}"/>
+			<env key="ANT_HOME" file="${build.home}/thirdparty/ant"/>
+			<env key="PATH" path="${env.PATH}:${build.home}/thirdparty/ant/bin/ant"/>
+		</exec>		
+	</target>
+
+	<target name="do-thirdparty">
+		<property name="build.target" value="build"/>
+		<ant antfile="build-thirdparty.xml"
+		     target="${build.target}"
+		     inheritAll="false">
+		    <propertyset>
+		        <propertyref prefix="open_"/>
+		    </propertyset>
+	        </ant>
+	</target>
+</project>

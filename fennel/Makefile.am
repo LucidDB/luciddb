@@ -1,7 +1,5 @@
 include $(top_srcdir)/am_include.mk
 
-AUTOMAKE_OPTIONS=foreign
-
 SUBDIRS=common synch device cache segment txn tuple exec btree \
 db ftrs libfennel test @farrago_subdir@ disruptivetech lucidera build
 

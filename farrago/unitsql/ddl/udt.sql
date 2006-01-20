@@ -326,8 +326,8 @@ deterministic
 return new rectilinear_coord_non0(c.y,c.x);
 
 values slope(new rectilinear_coord_non0(5,20));
--- FIXME: should be 4.0000
--- values slope_dec(new rectilinear_coord_non0_dec(5.0,20.0));
+
+values slope_dec(new rectilinear_coord_non0_dec(5.0,20.0));
 
 select t.c.x, t.c.y from (select make_coord(7,9) as c from (values(0))) t;
 

@@ -14,7 +14,10 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- negative test
 0: jdbc:farrago:> insert into t_char values(true,null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BOOLEAN' to 'CHAR(1)' (state=,code=0)
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=0 Code=22018 (state=,code=0)
 0: jdbc:farrago:> insert into t_char values(1234,null);
 Error: could not calculate results for the following row:
 [ 0 ]
@@ -96,10 +99,6 @@ Messages:
 0: jdbc:farrago:> create table t_varchar(varchar_col varchar(30) not null primary key, varchar_col2 varchar(1));
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- negative test
-0: jdbc:farrago:> insert into t_varchar values(true,null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BOOLEAN' to 'VARCHAR(30)' (state=,code=0)
-0: jdbc:farrago:> insert into t_varchar values(false,null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BOOLEAN' to 'VARCHAR(30)' (state=,code=0)
 0: jdbc:farrago:> insert into t_varchar values(1e400,null);
 Error: From line 1, column 30 to line 1, column 34: Numeric literal '1E400' out of range (state=,code=0)
 0: jdbc:farrago:> insert into t_varchar values(x'ff',null);
@@ -121,6 +120,8 @@ Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast fro
 +---------------------------------+---------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- positive tests
+0: jdbc:farrago:> insert into t_varchar values(true,null);
+0: jdbc:farrago:> insert into t_varchar values(false,null);
 0: jdbc:farrago:> insert into t_varchar values(4444,null);
 0: jdbc:farrago:> insert into t_varchar values(99999999,null);
 0: jdbc:farrago:> insert into t_varchar values(0.0,null);
@@ -160,6 +161,8 @@ Messages:
 | 2004-12-01 12:01:01             |               |
 | 4444                            |               |
 | 99999999                        |               |
+| FALSE                           |               |
+| TRUE                            |               |
 +---------------------------------+---------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop table t_varchar;

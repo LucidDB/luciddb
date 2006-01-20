@@ -24,6 +24,7 @@
 package org.eigenbase.runtime;
 
 import java.util.Iterator;
+import java.util.concurrent.*;
 
 import org.eigenbase.test.EigenbaseTestCase;
 import org.eigenbase.util.Util;
@@ -71,10 +72,17 @@ public abstract class ThreadIterator extends QueueIterator implements Iterator,
     Runnable,
     Iterable
 {
+    private Thread thread;
+    
     //~ Constructors ----------------------------------------------------------
 
     public ThreadIterator()
     {
+    }
+
+    public ThreadIterator(BlockingQueue queue)
+    {
+        super(1, null, queue);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -108,8 +116,25 @@ public abstract class ThreadIterator extends QueueIterator implements Iterator,
 
     protected ThreadIterator start()
     {
-        new Thread(this).start();
+        assert(thread == null);
+        thread = new Thread(this);
+        // Make the thread a daemon so that we don't have to worry
+        // about cleaning it up.  This is important since we can't
+        // be guaranteed that onClose will get called (someone
+        // may create an iterator and then forget about it), so
+        // requiring a join() call would be a bad idea.  Of course,
+        // if someone does forget about it, and the producer
+        // thread gets stuck on a full queue, it will never exit,
+        // and will become a resource leak.
+        thread.setDaemon(true);
+        thread.start();
         return this;
+    }
+
+    // implement QueueIterator
+    protected void onEndOfQueue()
+    {
+        thread = null;
     }
 
     //~ Inner Classes ---------------------------------------------------------
@@ -125,10 +150,20 @@ public abstract class ThreadIterator extends QueueIterator implements Iterator,
             super(s);
         }
 
-        public void testBeatles()
+        public void testBeatlesSynchronous()
+        {
+            testBeatles(null);
+        }
+
+        public void testBeatlesPipelined()
+        {
+            testBeatles(new ArrayBlockingQueue(2));
+        }
+
+        private void testBeatles(BlockingQueue queue)
         {
             Iterator beatles =
-                new ThreadIterator() {
+                new ThreadIterator(queue) {
                         String [] strings;
 
                         public ThreadIterator start(String [] strings)

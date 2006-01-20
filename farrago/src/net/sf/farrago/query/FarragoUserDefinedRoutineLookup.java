@@ -153,9 +153,26 @@ public class FarragoUserDefinedRoutineLookup implements SqlOperatorTable
         RelDataType [] paramTypes = new RelDataType[nParams];
         Iterator paramIter = femRoutine.getParameter().iterator();
         RelDataType returnType = null;
+
+        if (FarragoCatalogUtil.isTableFunction(femRoutine)) {
+            // pretend that table function returns a ROW type,
+            // even though technically it returns a MULTISET of ROW
+            returnType = typeFactory.createStructTypeFromClassifier(femRoutine);
+        }
+        
         for (int i = 0; paramIter.hasNext(); ++i) {
             FemRoutineParameter param = (FemRoutineParameter)
                 paramIter.next();
+
+            // REVIEW jvs 8-Jan-2006:  this is here to avoid problems
+            // with the bogus return type on table functions; get
+            // rid of it once we clean that up
+            if (param.getKind() == ParameterDirectionKindEnum.PDK_RETURN) {
+                if (returnType != null) {
+                    continue;
+                }
+            }
+            
             RelDataType type = typeFactory.createCwmElementType(param);
             
             if (param.getKind() == ParameterDirectionKindEnum.PDK_RETURN) {
@@ -166,8 +183,8 @@ public class FarragoUserDefinedRoutineLookup implements SqlOperatorTable
         }
 
         if (returnType == null) {
-            // for procedures, we make up a dummy return type to allow
-            // invocations to be rewritten as functions
+            // for procedures without dynamic result sets, we make up a dummy
+            // return type to allow invocations to be rewritten as functions
             returnType = typeFactory.createSqlType(SqlTypeName.Integer);
             returnType = typeFactory.createTypeWithNullability(
                 returnType, true);

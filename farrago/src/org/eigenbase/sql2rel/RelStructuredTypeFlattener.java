@@ -396,6 +396,11 @@ public class RelStructuredTypeFlattener
         rewriteGeneric(rel);
     }
 
+    public void rewriteRel(TableFunctionRel rel)
+    {
+        rewriteGeneric(rel);
+    }
+
     public void rewriteRel(ProjectRel rel)
     {
         final List flattenedExps = new ArrayList();

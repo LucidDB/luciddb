@@ -426,7 +426,14 @@ public class SqlLiteral extends SqlNode
         case SqlTypeName.Decimal_ordinal:
         case SqlTypeName.Double_ordinal:
             BigDecimal bd = (BigDecimal) value;
-            return bd.intValue();
+            try {
+                return bd.intValueExact();
+            } catch (ArithmeticException e) {
+                throw SqlUtil.newContextException(
+                    getParserPosition(),
+                    EigenbaseResource.instance().NumberLiteralOutOfRange.ex(
+                        bd.toString()));
+            }
         default:
             throw typeName.unexpected();
         }

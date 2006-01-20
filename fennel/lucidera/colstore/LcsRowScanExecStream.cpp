@@ -233,8 +233,6 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
 
             if (iClu == nClusters) {
                 tupleFound = true;
-                // reset datum pointers, in case of nulls
-                outputTupleData.resetBuffer();
             }
             producePending = true;
         }
@@ -243,6 +241,8 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
         if (tupleFound && !pOutAccessor->produceTuple(outputTupleData)) {
             return EXECRC_BUF_OVERFLOW;
         }
+        // reset datum pointers, in case of nulls
+        outputTupleData.resetBuffer();
         producePending = false;
         
         if (!fullTableScan) {

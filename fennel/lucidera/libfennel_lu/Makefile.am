@@ -16,6 +16,7 @@ libfennel_lu_flatfile_la_LIBADD=\
 	-lfennel_exec \
 	-lfennel_segment \
 	-lfennel_tuple \
+	-lfennel_cache \
 	-lfennel_common
 
 libfennel_lu_sorter_la_SOURCES=
@@ -25,6 +26,7 @@ libfennel_lu_sorter_la_LIBADD=\
 	-lfennel_exec \
 	-lfennel_segment \
 	-lfennel_tuple \
+	-lfennel_cache \
 	-lfennel_common
 
 libfennel_lu_colstore_la_SOURCES=
@@ -36,6 +38,7 @@ libfennel_lu_colstore_la_LIBADD=\
 	-lfennel_ftrs \
 	-lfennel_segment \
 	-lfennel_tuple \
+	-lfennel_cache \
 	-lfennel_common
 
 # Make sure that dependencies are strictly satisfied by failing on

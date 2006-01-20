@@ -165,6 +165,11 @@
 <text>Precision {0,number,#} exceeds maximum of {1,number,#} in definition of {2}</text>
 </exception>
 
+<exception id="420101" name="ValidatorPrecisionMustBePositive"
+    className="org.eigenbase.sql.validate.SqlValidatorException">
+<text>Precision must be positive in definition of {0}</text>
+</exception>
+
 <exception id="420110" name="ValidatorScaleExceeded"
     className="org.eigenbase.sql.validate.SqlValidatorException">
 <text>Scale {0,number,#} exceeds maximum of {1,number,#} in definition of {2}</text>
@@ -394,6 +399,11 @@ column type family is {1} but default value type family is {2}</text>
 <text>Return type of {0} is {1} but external Java method {2} has return type {3}</text>
 </exception>
 
+<exception id="420625" name="ValidatorRoutineReturnTableUnsupported"
+    className="org.eigenbase.sql.validate.SqlValidatorException">
+<text>RETURNS TABLE is illegal for {0}; can only be used with language JAVA and parameter style SYSTEM DEFINED JAVA</text>
+</exception>
+
 <exception id="420630" name="ValidatorRoutineJavaMethodNotPublicStatic"
     className="org.eigenbase.sql.validate.SqlValidatorException">
 <text>External Java method {1} referenced by {0} is not both public and static</text>
@@ -617,6 +627,10 @@ column type family is {1} but default value type family is {2}</text>
 
 <exception id="450110" name="DmlFailure">
 <text>DML statement execution failed.</text>
+</exception>
+
+<exception id="450120" name="ExecutionAborted">
+<text>Execution aborted</text>
 </exception>
 
 <!-- ====================================================================== -->
