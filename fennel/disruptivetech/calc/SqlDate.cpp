@@ -137,14 +137,14 @@ int64_t IsoStringToTimestamp(char *src, int len)
 
 int64_t CurrentTime()
 {
-    ptime p = second_clock::local_time();
+    ptime p = second_clock::universal_time();
     return p.time_of_day().ticks()/1000;
     
 }
 
 int64_t CurrentTimestamp()
 {
-    ptime p = second_clock::local_time();
+    ptime p = second_clock::universal_time();
     return (p - epoc).ticks()/1000;
     
 }

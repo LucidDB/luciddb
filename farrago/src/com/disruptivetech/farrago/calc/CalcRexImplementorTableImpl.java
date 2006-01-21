@@ -662,6 +662,14 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             SqlStdOperatorTable.localTimestampFunc,
             ExtInstructionDefTable.localTimestamp);
 
+        registerInstr(
+            SqlStdOperatorTable.currentTimeFunc,
+            ExtInstructionDefTable.currentTime);
+
+        registerInstr(
+            SqlStdOperatorTable.currentTimestampFunc,
+            ExtInstructionDefTable.currentTimestamp);
+
         register(
             SqlStdOperatorTable.sliceOp,
             new SliceImplementor());
