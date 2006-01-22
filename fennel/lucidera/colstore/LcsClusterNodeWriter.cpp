@@ -69,16 +69,10 @@ LcsClusterNodeWriter::~LcsClusterNodeWriter()
 
 void LcsClusterNodeWriter::Close()
 {
-#if 0
-    // FIXME zfong 18-Jan-2006 : there is currently a problem with
-    // write ahead logging and explicit flush requests; enable this
-    // code once that is fixed
-    //
     // flush and unlock last page written
     if (clusterLock.isLocked()) {
         clusterLock.flushPage(true);
     }
-#endif
     clusterLock.unlock();
 
     bTreeWriter.reset();
@@ -128,11 +122,6 @@ PLcsClusterNode LcsClusterNodeWriter::allocateClusterPage(LcsRid firstRid)
 
     PageId prevPageId = NULL_PAGE_ID;
 
-#if 0
-    // FIXME zfong 18-Jan-2006 : there is currently a problem with
-    // write ahead logging and explicit flush requests; enable this
-    // code once that is fixed
-    //
     if (clusterLock.isLocked()) {
         // Remember the predecessor so that we can chain it below.
         prevPageId = clusterLock.getPageId();
@@ -142,7 +131,6 @@ PLcsClusterNode LcsClusterNodeWriter::allocateClusterPage(LcsRid firstRid)
         // maybe it will be on disk already.
         clusterLock.flushPage(true);
     }
-#endif
 
     clusterPageId = clusterLock.allocatePage();
     if (prevPageId != NULL_PAGE_ID) {

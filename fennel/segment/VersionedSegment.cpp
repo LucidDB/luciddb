@@ -330,11 +330,16 @@ SharedSegment VersionedSegment::getLogSegment() const
     return logSegment;
 }
 
+PageId VersionedSegment::getOnlineRecoveryPageId() const
+{
+    return oldestLogPageId;
+}
+
 PageId VersionedSegment::getRecoveryPageId() const
 {
     if (oldestLogPageId == NULL_PAGE_ID) {
         // if we've truncated the log, then recovery should start from the
-        // first new shadow page
+        // first new shadow page after a crash
         return FIRST_LINEAR_PAGE_ID;
     } else {
         return oldestLogPageId;
