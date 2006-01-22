@@ -102,7 +102,9 @@ public:
         }
         if (!found && !leastUpper && base > 0)
             base--;
-        if ((base != probe) && (base < node.nEntries)) {
+        if (((base != probe) && (base < node.nEntries)) ||
+            (node.nEntries == 1 && node.height != 0)) //one entry: +infinity 
+        {
             accessTupleInline(node,base);
         }
         return base;
