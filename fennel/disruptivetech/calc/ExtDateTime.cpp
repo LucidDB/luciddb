@@ -282,6 +282,22 @@ ExtDateTimeRegister(ExtendedInstructionTable* eit)
              (ExtendedInstruction2<int64_t, int32_t>*) NULL,
              &CurrentTimestamp);
 
+    eit->add("CurrentTime1", params_I64,
+             (ExtendedInstruction1<int64_t>*) NULL,
+             &CurrentTime);
+
+    eit->add("CurrentTimestamp1", params_I64,
+             (ExtendedInstruction1<int64_t>*) NULL,
+             &CurrentTimestamp);
+
+    eit->add("CurrentTime2", params_I64_I32,
+             (ExtendedInstruction2<int64_t, int32_t>*) NULL,
+             &CurrentTime);
+
+    eit->add("CurrentTimestamp2", params_I64_I32,
+             (ExtendedInstruction2<int64_t, int32_t>*) NULL,
+             &CurrentTimestamp);
+
 }
 
 

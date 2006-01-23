@@ -51,7 +51,7 @@ public class PreparedExplanation implements PreparedResult
 
     //~ Constructors ----------------------------------------------------------
 
-    PreparedExplanation(
+    public PreparedExplanation(
         RelNode rel, boolean asXml, SqlExplainLevel detailLevel)
     {
         this.rel = rel;
