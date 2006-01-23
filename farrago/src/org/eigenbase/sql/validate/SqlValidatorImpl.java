@@ -2217,8 +2217,13 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         validateNamespace(targetNamespace);
         SqlValidatorTable table = targetNamespace.getTable();
 
+        // INSERT has an optional column name list.  If present then
+        // reduce the rowtype to the columns specified.  If not present
+        // then the entire target rowtype is used.
         RelDataType targetRowType = table.getRowType();
+        boolean explicitTarget = false;
         if (call.getTargetColumnList() != null) {
+            explicitTarget = true;
             targetRowType =
                 createTargetRowType(
                     targetRowType,
@@ -2228,21 +2233,25 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
 
         SqlSelect sqlSelect = call.getSourceSelect();
         validateSelect(sqlSelect, targetRowType);
+        
         RelDataType sourceRowType = getNamespace(sqlSelect).getRowType();
-
-        if (!isRowTypeSizeEqual( targetRowType, sourceRowType)) {
-            throw EigenbaseResource.instance().UnmatchInsertColumn.ex(
-                new Integer(targetRowType.getFieldList().size()),
-                new Integer(sourceRowType.getFieldList().size()));
-        }
+        checkRowTypeSizes(sourceRowType, targetRowType, explicitTarget);
 
         // TODO:  validate type compatibility, etc.
         validateAccess(table, SqlAccessEnum.INSERT);
     }
-
-    protected boolean isRowTypeSizeEqual(RelDataType rt1, RelDataType rt2)
+    
+    protected void checkRowTypeSizes(
+        RelDataType sourceRowType,
+        RelDataType targetRowType,
+        boolean explictTarget)
     {
-        return rt1.getFieldList().size() == rt2.getFieldList().size();
+        if (sourceRowType.getFieldList().size() !=
+            targetRowType.getFieldList().size()) {
+            throw EigenbaseResource.instance().UnmatchInsertColumn.ex(
+                new Integer(targetRowType.getFieldList().size()),
+                new Integer(sourceRowType.getFieldList().size()));
+        }
     }
 
     /**
