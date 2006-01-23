@@ -508,32 +508,6 @@ public class Util extends Toolbox
     }
 
     /**
-     * Converts a byte array into a bit string or a hex string.
-     *
-     * <p>For example,
-     * <code>toStringFromByteArray(new byte[] {0xAB, 0xCD}, 16)</code> returns
-     * <code>ABCD</code>.
-     */
-    public static String toStringFromByteArray(
-        byte [] value,
-        int radix)
-    {
-        assert (2 == radix) || (16 == radix) : "Make sure that the algorithm below works for your radix";
-        if (0 == value.length) {
-            return "";
-        }
-
-        int trick = radix * radix;
-        StringBuffer ret = new StringBuffer();
-        for (int i = 0; i < value.length; i++) {
-            ret.append(
-                Integer.toString(trick | (0x0ff & value[i]), radix).substring(1));
-        }
-
-        return ret.toString().toUpperCase();
-    }
-
-    /**
      * Formats a {@link BigDecimal} value to a string in scientific notation
      * For example<br>
      * <ul>

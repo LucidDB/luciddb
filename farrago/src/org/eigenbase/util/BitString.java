@@ -23,6 +23,8 @@
 
 package org.eigenbase.util;
 
+import org.eigenbase.util14.ConversionUtil;
+
 import java.math.BigInteger;
 
 
@@ -132,7 +134,7 @@ public class BitString
     public String toHexString()
     {
         byte [] bytes = getAsByteArray();
-        String s = Util.toStringFromByteArray(bytes, 16);
+        String s = ConversionUtil.toStringFromByteArray(bytes, 16);
         switch (bitCount % 8) {
         case 1: // B'1' -> X'1'
         case 2: // B'10' -> X'2'

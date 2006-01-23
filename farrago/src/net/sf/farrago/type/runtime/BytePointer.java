@@ -24,9 +24,9 @@ package net.sf.farrago.type.runtime;
 
 import net.sf.farrago.resource.*;
 
-import org.eigenbase.util.*;
 import org.eigenbase.sql.fun.SqlTrimFunction;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.util14.ConversionUtil;
 
 import java.io.*;
 import java.nio.*;
@@ -607,7 +607,7 @@ public class BytePointer extends ByteArrayInputStream
         int n = count - pos;
         byte [] bytes = new byte[n];
         System.arraycopy(buf, pos, bytes, 0, n);
-        return Util.toStringFromByteArray(bytes, 16);
+        return ConversionUtil.toStringFromByteArray(bytes, 16);
     }
 
     // private static fmt = new DecimalFormat;
