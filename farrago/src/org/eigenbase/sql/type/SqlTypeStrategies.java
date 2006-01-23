@@ -567,6 +567,16 @@ public abstract class SqlTypeStrategies
 
     /**
      * Type-inference strategy whereby the result type of a call is the type of
+     * the second operand. If any of the other operands are nullable the returned
+     * type will also be nullable.
+     */
+    public static final SqlReturnTypeInference
+        rtiNullableSecondArgType =
+        new SqlTypeTransformCascade(
+            rtiSecondArgType, SqlTypeTransforms.toNullable);
+
+    /**
+     * Type-inference strategy whereby the result type of a call is the type of
      * the third operand.
      */
     public static final SqlReturnTypeInference

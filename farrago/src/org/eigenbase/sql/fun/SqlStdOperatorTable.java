@@ -740,10 +740,10 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
             SqlFunctionCategory.Numeric);
 
     public static final SqlFunction modFunc =
-        // FIXME jvs 4-June-2005:  this is incorrect; mod
-        // has to take precision into account
+        // Return type is same as divisor (2nd operand)
+        // SQL2003 Part2 Section 6.27, Syntax Rules 9
         new SqlFunction("MOD", SqlKind.Function,
-            SqlTypeStrategies.rtiLeastRestrictive, null,
+            SqlTypeStrategies.rtiNullableSecondArgType, null,
             SqlTypeStrategies.otcNumericX2,
             SqlFunctionCategory.Numeric);
 

@@ -583,9 +583,9 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 CalcProgramBuilder.nativeMinus));
 
         register(
-            SqlStdOperatorTable.modFunc,
+            SqlStdOperatorTable.modFunc,               
             new BinaryNumericMakeSametypeImplementor(
-                CalcProgramBuilder.integralNativeMod));
+                CalcProgramBuilder.integralNativeMod, true));
 
         register(
             SqlStdOperatorTable.multiplyOperator,
@@ -1307,10 +1307,21 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
     private static class BinaryNumericMakeSametypeImplementor
         extends InstrDefImplementor
     {
+        // Set this to true if the result type need to be same as operands
+        boolean useSameTypeResult = false;
+        
         public BinaryNumericMakeSametypeImplementor(
             CalcProgramBuilder.InstructionDef instr)
         {
             super(instr);
+        }
+
+        public BinaryNumericMakeSametypeImplementor(
+            CalcProgramBuilder.InstructionDef instr,
+            boolean useSameTypeResult)
+        {
+            this(instr);
+            this.useSameTypeResult = useSameTypeResult;
         }
 
         private int getRestrictiveness(
@@ -1359,13 +1370,16 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 return super.implement(call, translator);
             }
 
+            CalcProgramBuilder.RegisterDescriptor rd = null;
             int d = getRestrictiveness(rd0) - getRestrictiveness(rd1);
             if (d != 0) {
                 int small;
                 if (d > 0) {
                     small = 1;
+                    rd = rd0;
                 } else {
                     small = 0;
+                    rd = rd1;
                 }
 
                 RexNode castCall =
@@ -1375,6 +1389,34 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 CalcProgramBuilder.Register newOp =
                     translator.implementNode(castCall);
                 regs.set(small, newOp);
+            }
+
+            if (useSameTypeResult && rd != null) {
+                // Need to use the same type for the result as the operands
+                CalcProgramBuilder.RegisterDescriptor rdCall =
+                    translator.getCalcRegisterDescriptor(call.getType());
+                if (rdCall.getType().isNumeric() &&
+                    (getRestrictiveness(rd) - getRestrictiveness(rdCall) != 0)) {
+                    // Do operation using same type as operands
+                    CalcProgramBuilder.Register tmpRes =
+                        translator.builder.newLocal(rd);
+                    regs.add(0, tmpRes);
+
+                    instr.add(translator.builder, regs);
+
+                    // Cast back to real result type
+                    // TODO: Use real cast (that handles rounding) instead of
+                    // calculator cast that truncates
+                    CalcProgramBuilder.Register res =
+                        createResultRegister(translator, call);
+
+                    ArrayList castRegs = new ArrayList(2);
+                    castRegs.add(res);
+                    castRegs.add(tmpRes);
+                    CalcProgramBuilder.Cast.add(translator.builder, castRegs);
+
+                    return res;
+                }
             }
 
             CalcProgramBuilder.Register res =
