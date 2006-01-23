@@ -21,44 +21,18 @@
 */
 package org.eigenbase.sarg;
 
-import org.eigenbase.reltype.*;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.rex.*;
-import org.eigenbase.util.*;
-
-import java.util.*;
-
 /**
- * SargMutableEndpoint exposes methods for modifying a
- * {@link SargEndpoint}.
+ * Defines the boundary strictness of an endpoint: either open (either strictly
+ * less than or greater than) or closed (exactly equal).
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class SargMutableEndpoint extends SargEndpoint
+public enum SargStrictness
 {
-    /**
-     * @see SargFactory.newEndpoint
-     */
-    SargMutableEndpoint(SargFactory factory, RelDataType dataType)
-    {
-        super(factory, dataType);
-    }
+    OPEN,
 
-    // publicize SargEndpoint
-    public void setInfinity(int infinitude)
-    {
-        super.setInfinity(infinitude);
-    }
-
-    // publicize SargEndpoint
-    public void setFinite(
-        SargBoundType boundType,
-        SargStrictness strictness,
-        RexNode coordinate)
-    {
-        super.setFinite(boundType, strictness, coordinate);
-    }
+    CLOSED
 }
 
-// End SargMutableEndpoint.java
+// End SargStrictness.java

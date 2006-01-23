@@ -77,7 +77,7 @@ public abstract class SargIntervalBase
      */
     public boolean isPoint()
     {
-        return lowerBound.isExact() && upperBound.isExact()
+        return lowerBound.isClosed() && upperBound.isClosed()
             && lowerBound.isTouching(upperBound);
     }
 
@@ -86,7 +86,7 @@ public abstract class SargIntervalBase
      */
     public boolean isEmpty()
     {
-        return !lowerBound.isExact() && !upperBound.isExact()
+        return !lowerBound.isClosed() && !upperBound.isClosed()
             && lowerBound.isNull() && upperBound.isNull();
     }
     
@@ -99,16 +99,23 @@ public abstract class SargIntervalBase
     }
     
     /**
-     * @see SargIntervalExpr.setPoint
+     * Sets this interval to represent a single point (possibly the null
+     * value).
+     *
+     * @param coordinate coordinate of point to set, or null
+     * for the null value
      */
     void setPoint(RexNode coordinate)
     {
-        setLower(coordinate, false);
-        setUpper(coordinate, false);
+        setLower(coordinate, SargStrictness.CLOSED);
+        setUpper(coordinate, SargStrictness.CLOSED);
     }
 
     /**
-     * @see SargIntervalExpr.setNull
+     * Sets this interval to represent a single point matching the null value.
+     *
+     * @param coordinate coordinate of point to set, or null
+     * for the null value
      */
     void setNull()
     {
@@ -116,29 +123,37 @@ public abstract class SargIntervalBase
     }
 
     /**
-     * @see SargIntervalExpr.setLower
+     * Sets the lower bound for this interval.
+     *
+     * @param coordinate coordinate of point to set
+     *
+     * @param boundary strictness
      */
-    void setLower(RexNode coordinate, boolean strict)
+    void setLower(RexNode coordinate, SargStrictness strictness)
     {
         lowerBound.setFinite(
             SargBoundType.LOWER,
-            coordinate,
-            strict);
+            strictness,
+            coordinate);
     }
 
     /**
-     * @see SargIntervalExpr.setUpper
+     * Sets the upper bound for this interval.
+     *
+     * @param coordinate coordinate of point to set
+     *
+     * @param strictness boundary strictness
      */
-    void setUpper(RexNode coordinate, boolean strict)
+    void setUpper(RexNode coordinate, SargStrictness strictness)
     {
         upperBound.setFinite(
             SargBoundType.UPPER,
-            coordinate,
-            strict);
+            strictness,
+            coordinate);
     }
 
     /**
-     * @see SargIntervalExpr.unsetLower
+     * Removes the lower bound for this interval, setting it to -infinity.
      */
     void unsetLower()
     {
@@ -146,7 +161,7 @@ public abstract class SargIntervalBase
     }
 
     /**
-     * @see SargIntervalExpr.unsetUpper
+     * Removes the upper bound for this interval, setting it to +infinity.
      */
     void unsetUpper()
     {
@@ -154,7 +169,8 @@ public abstract class SargIntervalBase
     }
 
     /**
-     * @see SargIntervalExpr.setUnconstrained
+     * Sets this interval to unconstrained (matching everything, including
+     * null).
      */
     void setUnconstrained()
     {
@@ -163,12 +179,12 @@ public abstract class SargIntervalBase
     }
 
     /**
-     * @see SargIntervalExpr.setEmpty
+     * Sets this interval to empty (matching nothing at all).
      */
     void setEmpty()
     {
-        setLower(factory.newNullLiteral(), true);
-        setUpper(factory.newNullLiteral(), true);
+        setLower(factory.newNullLiteral(), SargStrictness.OPEN);
+        setUpper(factory.newNullLiteral(), SargStrictness.OPEN);
     }
 
     // implement SargExpr
@@ -181,7 +197,7 @@ public abstract class SargIntervalBase
     public String toString()
     {
         StringBuilder sb = new StringBuilder();
-        if (lowerBound.isExact()) {
+        if (lowerBound.isClosed()) {
             sb.append("[");
         } else {
             sb.append("(");
@@ -198,7 +214,7 @@ public abstract class SargIntervalBase
             }
         }
         
-        if (upperBound.isExact()) {
+        if (upperBound.isClosed()) {
             sb.append("]");
         } else {
             sb.append(")");

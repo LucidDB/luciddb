@@ -56,15 +56,10 @@ public class SargEndpoint implements Comparable<SargEndpoint>
     protected final RelDataType dataType;
     
     /**
-     * If non-zero, coordinate is null.
-     *
-     * @see getInfinitude
-     */
-    protected int infinitude;
-    
-    /**
      * Coordinate for this endpoint,
-     * constrained to be either {@link RexLiteral} or {@link RexDynamicParam}.
+     * constrained to be either {@link RexLiteral} or {@link RexDynamicParam},
+     * or null to represent infinity (positive or negative infinity is
+     * implied by boundType).
      */
     protected RexNode coordinate;
 
@@ -74,11 +69,9 @@ public class SargEndpoint implements Comparable<SargEndpoint>
     protected SargBoundType boundType;
 
     /**
-     * Strictness before adjustment for rounding.
-     *
      * @see getStrictness
      */
-    protected int strictness;
+    protected SargStrictness strictness;
 
     /**
      * @see SargFactory.newEndpoint
@@ -88,8 +81,7 @@ public class SargEndpoint implements Comparable<SargEndpoint>
         this.factory = factory;
         this.dataType = dataType;
         boundType = SargBoundType.LOWER;
-        strictness = 0;
-        infinitude = -1;
+        strictness = SargStrictness.OPEN;
     }
 
     void copyFrom(SargEndpoint other)
@@ -97,16 +89,20 @@ public class SargEndpoint implements Comparable<SargEndpoint>
         assert(getDataType() == other.getDataType());
         if (other.isFinite()) {
             setFinite(
-                boundType,
-                other.getCoordinate(),
-                !other.isExact());
+                other.getBoundType(),
+                other.getStrictness(),
+                other.getCoordinate());
         } else {
             setInfinity(other.getInfinitude());
         }
     }
     
     /**
-     * @see SargMutableEndpoint.setInfinity
+     * Sets this endpoint to either negative or positive infinity.  An infinite
+     * endpoint implies an open bound (negative infinity implies a lower bound,
+     * while positive infinity implies an upper bound).
+     *
+     * @param infinitude either -1 or +1
      */
     void setInfinity(int infinitude)
     {
@@ -114,24 +110,29 @@ public class SargEndpoint implements Comparable<SargEndpoint>
 
         if (infinitude == -1) {
             boundType = SargBoundType.LOWER;
-            strictness = 1;
         } else {
             boundType = SargBoundType.UPPER;
-            strictness = -1;
         }
-        this.infinitude = infinitude;
+        strictness = SargStrictness.OPEN;
         coordinate = null;
     }
-
+    
     /**
-     * @see SargMutableEndpoint.setFinite
+     * Sets a finite value for this endpoint.
+     *
+     * @param boundType bound type (upper/lower)
+     *
+     * @param strictness boundary strictness
+     *
+     * @param coordinate endpoint position
      */
     void setFinite(
         SargBoundType boundType,
-        RexNode coordinate,
-        boolean strict)
+        SargStrictness strictness,
+        RexNode coordinate)
     {
         // validate the input
+        assert(coordinate != null);
         if (coordinate instanceof RexDynamicParam) {
             // REVIEW jvs 16-Jan-2006:  may need to ignore nullability
             assert(coordinate.getType().equals(dataType));
@@ -145,11 +146,9 @@ public class SargEndpoint implements Comparable<SargEndpoint>
             }
         }
 
-        infinitude = 0;
         this.boundType = boundType;
         this.coordinate = coordinate;
-        strictness = !strict ? 0
-            : ((boundType == SargBoundType.LOWER) ? 1 : -1);
+        this.strictness = strictness;
         applyRounding();
     }
 
@@ -205,37 +204,34 @@ public class SargEndpoint implements Comparable<SargEndpoint>
         }
         if (boundType == SargBoundType.LOWER) {
             if (roundingCompensation < 0) {
-                strictness = 0;
+                strictness = SargStrictness.CLOSED;
             } else {
-                strictness = 1;
+                strictness = SargStrictness.OPEN;
             }
         } else if (boundType == SargBoundType.UPPER) {
             if (roundingCompensation > 0) {
-                strictness = 0;
+                strictness = SargStrictness.CLOSED;
             } else {
-                strictness = -1;
+                strictness = SargStrictness.OPEN;
             }
         }
     }
 
     /**
-     * @return the boundary strictness: -1 for infinitesimally below (open
-     * upper bound, strictly less than), 0 for exact equality (closed
-     * bound), 1 for infinitesimally above (open lower bound, strictly greater
-     * than)
+     * @return true if this endpoint represents a closed (exact) bound; false
+     * if open (strict)
      */
-    public int getStrictness()
+    public boolean isClosed()
     {
-        return strictness;
+        return strictness == SargStrictness.CLOSED;
     }
 
     /**
-     * @return true if this endpoint represents an exact (closed) bound; false
-     * if inexact (open)
+     * @return opposite of isClosed
      */
-    public boolean isExact()
+    public boolean isOpen()
     {
-        return strictness == 0;
+        return strictness == SargStrictness.OPEN;
     }
 
     /**
@@ -244,7 +240,7 @@ public class SargEndpoint implements Comparable<SargEndpoint>
      */
     public boolean isFinite()
     {
-        return infinitude == 0;
+        return coordinate != null;
     }
 
     /**
@@ -253,7 +249,15 @@ public class SargEndpoint implements Comparable<SargEndpoint>
      */
     public int getInfinitude()
     {
-        return infinitude;
+        if (coordinate == null) {
+            if (boundType == SargBoundType.LOWER) {
+                return -1;
+            } else {
+                return 1;
+            }
+        } else {
+            return 0;
+        }
     }
 
     /**
@@ -311,10 +315,10 @@ public class SargEndpoint implements Comparable<SargEndpoint>
     {
         assert(getDataType() == other.getDataType());
         return
-            (infinitude == 0)
-            && (other.infinitude == 0)
+            isFinite()
+            && other.isFinite()
             && (compareCoordinates(coordinate, other.coordinate) == 0)
-            && ((getStrictness() == 0) || (other.getStrictness() == 0));
+            && (isClosed() || other.isClosed());
     }
 
     static int compareCoordinates(RexNode coord1, RexNode coord2)
@@ -341,20 +345,22 @@ public class SargEndpoint implements Comparable<SargEndpoint>
     // implement Object
     public String toString()
     {
-        if (infinitude == -1) {
-            return "-infinity";
-        } else if (infinitude == 1) {
-            return "+infinity";
+        if (coordinate == null) {
+            if (boundType == SargBoundType.LOWER) {
+                return "-infinity";
+            } else {
+                return "+infinity";
+            }
         }
         StringBuilder sb = new StringBuilder();
         if (boundType == SargBoundType.LOWER) {
-            if (getStrictness() == 0) {
+            if (isClosed()) {
                 sb.append(">=");
             } else {
                 sb.append(">");
             }
         } else {
-            if (getStrictness() == 0) {
+            if (isClosed()) {
                 sb.append("<=");
             } else {
                 sb.append("<");
@@ -389,7 +395,43 @@ public class SargEndpoint implements Comparable<SargEndpoint>
 
         // if coordinates are the same, then result is based on comparison of
         // strictness
-        return getStrictness() - other.getStrictness();
+        return getStrictnessSign() - other.getStrictnessSign();
+    }
+
+    /**
+     * @return SargStrictness of this bound
+     */
+    public SargStrictness getStrictness()
+    {
+        return strictness;
+    }
+
+    /**
+     * @return complement of SargStrictness of this bound
+     */
+    public SargStrictness getStrictnessComplement()
+    {
+        return (strictness == SargStrictness.OPEN)
+            ? SargStrictness.CLOSED
+            : SargStrictness.OPEN;
+    }
+
+    /**
+     * @return -1 for infinitesimally below (open upper bound,
+     * strictly less than), 0 for exact equality (closed bound), 1 for
+     * infinitesimally above (open lower bound, strictly greater than)
+     */
+    public int getStrictnessSign()
+    {
+        if (strictness == SargStrictness.CLOSED) {
+            return 0;
+        } else {
+            if (boundType == SargBoundType.LOWER) {
+                return 1;
+            } else {
+                return -1;
+            }
+        }
     }
 
     // override Object
