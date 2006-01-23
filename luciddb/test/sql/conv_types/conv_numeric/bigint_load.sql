@@ -1,8 +1,6 @@
 set schema 's'
 ;
 
-set echo=on
-;
 -- Test will load all datatypes into a bigint column.
 
 drop table datatype_target

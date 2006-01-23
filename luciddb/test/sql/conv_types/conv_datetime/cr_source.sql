@@ -25,14 +25,13 @@ colname varchar(20)
 
 ,colchar char(17)
 ,colvchar varchar(100)
-,colbin binary(11)
+
+--,colbin binary(11)
 ,colvbin varbinary(256)
 
 ,coltime time
 ,coldate date
 ,coltmstamp timestamp
--- ,primary key(colname,colbit,coltiny,colsmall,colint,colbig,coldec,colnum,coldouble,colfloat,colreal,colchar,colvchar,colbin,colvbin,coltime,coldate,coltmstamp)
-,primary key(coltmstamp)
 )
 ;
 
@@ -44,7 +43,9 @@ insert into datatype_source values
 -- '6:40:0', '1917-11-7', '1990-3-24 6:40:0')
 ('BAD', 120, 30000, 45678921, 12121212121212, 
  333333.33333333, 555.55, 7.777777,
- '34-12', '45-56:78', 10101, 11110000111100001111,
+ '34-12', '45-56:78',
+-- CAST(X'15' as binary(11)), 
+X'0F0F0F',
  '6:40:0', '1917-11-7', '1990-3-24 6:40:0')
 ;
 
@@ -73,14 +74,14 @@ values
 insert into datatype_source 
  ( colname, colchar, colvchar, coltime, coltmstamp ) 
 values 
- ( 'TIME', '1060-3-11 4:5:11.321', '1760-3-11 11:11:11',
-   '4:5', '1060-3-11 4:5:11.321' )
+ ( 'TIME', '1400-3-11 4:5:11.321', '1760-3-11 11:11:11',
+   '4:5:5.345', '1060-3-11 4:5:11.321' )
 ;
 
 insert into datatype_source 
  ( colname, colchar, colvchar, coldate, coltmstamp ) 
 values 
- ( 'DATE', '1060-3-11 4:5:11.321', '1760-3-11 11:11:11',
+ ( 'DATE', '1400-3-11 4:5:11.321', '1775-3-11 11:11:11',
    '1963-4-27', '1963-4-27 2:30:34' )
 ;
 
@@ -91,18 +92,18 @@ values
    '2:16:29', '1957-9-29', '1957-9-29 2:16:29.33' )
 ;
 
-
 select * from datatype_source where colname = 'BAD'
 ;
 
-select colchar, colvchar, coltime, coltmstamp 
+select colchar, colvchar, coltime, coltmstamp
  from datatype_source where colname = 'TIME'
 ;
 
-select colchar, colvchar, coldate, coltmstamp 
+select colchar, colvchar, coldate, coltmstamp
  from datatype_source where colname = 'DATE'
 ;
 
-select colchar, colvchar, coltime, coldate, coltmstamp 
+select colchar, colvchar, coltime, coldate, coltmstamp
  from datatype_source where colname = 'TIMESTAMP'
 ;
+

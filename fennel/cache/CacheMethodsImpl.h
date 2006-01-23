@@ -484,6 +484,17 @@ void CacheImpl<PageT,VictimPolicyT>
 {
     StrictMutexGuard pageGuard(page.mutex);
     assert(page.isExclusiveLockHeld());
+    if (page.pMappedPageListener) {
+        if (!page.pMappedPageListener->canFlushPage(page)) {
+            if (async) {
+                // TODO jvs 21-Jan-2006: instead of ignoring request, fail; we
+                // should be using Segment-level logic to avoid ever getting
+                // here
+                return;
+            }
+            permFail("attempt to flush page out of order");
+        }
+    }
     if (page.dataStatus != CachePage::DATA_WRITE) {
         // no flush already in progress, so request one
         writePageAsync(static_cast<PageT &>(page));

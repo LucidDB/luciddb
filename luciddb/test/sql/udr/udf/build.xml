@@ -46,7 +46,6 @@
 
   <target name="test">
     <property name="test-suite" value="test.xml"/>
-    <antcall target="restoreCatalog"/>
     <blackhawk.fork basedir="${udf.dir}" 
       testscript="${test-suite}"
       classpathref="test.classpath"/>

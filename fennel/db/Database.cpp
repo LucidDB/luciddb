@@ -556,6 +556,8 @@ void Database::checkpointImpl(CheckpointType checkpointType)
         pDataSegment->checkpoint(checkpointType);
         LogicalTxnLogCheckpointMemento crashMemento;
         pTxnLog->checkpoint(crashMemento,checkpointType);
+        header.shadowRecoveryPageId =
+            pVersionedSegment->getOnlineRecoveryPageId();
         return;
     }
 

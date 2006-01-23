@@ -59,6 +59,13 @@ struct TupleDatum
     
     inline explicit TupleDatum();
     inline TupleDatum(TupleDatum const &other);
+    
+    /*
+     * Test if this TupleDatum represents NULL value.
+     *
+     * @return true if this TupleDatum represents NULL.
+     */
+    inline bool isNull() const;
 
     /**
      * Copy assignment(shallow copy).
@@ -198,6 +205,11 @@ inline TupleDatum::TupleDatum()
 inline TupleDatum::TupleDatum(TupleDatum const &other)
 {
     copyFrom(other);
+}
+
+inline bool TupleDatum::isNull() const
+{
+    return (!pData);
 }
 
 inline TupleDatum &TupleDatum::operator = (TupleDatum const &other)

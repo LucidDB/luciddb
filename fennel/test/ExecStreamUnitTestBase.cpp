@@ -115,17 +115,51 @@ SharedExecStream ExecStreamUnitTestBase::prepareDAG(
     ExecStreamEmbryo &srcStreamEmbryo,
     ExecStreamEmbryo &splitterStreamEmbryo,
     std::vector<ExecStreamEmbryo> &interStreamEmbryos,
-    ExecStreamEmbryo &destStreamEmbryo)
+    ExecStreamEmbryo &destStreamEmbryo,
+    bool createSink,
+    bool saveSrc)
 {
-    std::vector<ExecStreamEmbryo>::iterator it;
-    
-    pGraphEmbryo->saveStreamEmbryo(srcStreamEmbryo);
+    std::vector<std::vector<ExecStreamEmbryo> > listOfList;
+
+    // Convert interStreamEmbryos to a vector of vectors.  E.g., if
+    // interStreamEmbryos contains (1, 2, 3), it will get converted to:
+    // ((1)) ((2)) ((3))
+    for (uint i = 0; i < interStreamEmbryos.size(); i++) {
+        std::vector<ExecStreamEmbryo> interStreamEmbryoList;
+
+        interStreamEmbryoList.push_back(interStreamEmbryos[i]);
+        listOfList.push_back(interStreamEmbryoList);
+    }
+    return prepareDAG(
+        srcStreamEmbryo, splitterStreamEmbryo, listOfList, destStreamEmbryo,
+        createSink, saveSrc);
+}
+
+SharedExecStream ExecStreamUnitTestBase::prepareDAG(
+    ExecStreamEmbryo &srcStreamEmbryo,
+    ExecStreamEmbryo &splitterStreamEmbryo,
+    std::vector<std::vector<ExecStreamEmbryo> > &interStreamEmbryos,
+    ExecStreamEmbryo &destStreamEmbryo,
+    bool createSink,
+    bool saveSrc)
+{
+    if (saveSrc) {
+        pGraphEmbryo->saveStreamEmbryo(srcStreamEmbryo);
+    }
     pGraphEmbryo->saveStreamEmbryo(splitterStreamEmbryo);
 
     // save all intermediate stream embryos
-    for (it = interStreamEmbryos.begin(); it != interStreamEmbryos.end();
-            ++it) {
-        pGraphEmbryo->saveStreamEmbryo(*it);
+    for (int i = 0; i < interStreamEmbryos.size(); i++) {
+        for (int j = 0; j < interStreamEmbryos[i].size(); j++) {
+            pGraphEmbryo->saveStreamEmbryo(interStreamEmbryos[i][j]);
+        }
+
+        // connect streams in each interStreamEmbryos list in a cascade
+        for (int j = 1; j < interStreamEmbryos[i].size(); j++) {
+            pGraphEmbryo->addDataflow(
+                interStreamEmbryos[i][j-1].getStream()->getName(),
+                interStreamEmbryos[i][j].getStream()->getName());
+        }
     }
 
     pGraphEmbryo->saveStreamEmbryo(destStreamEmbryo);
@@ -135,22 +169,25 @@ SharedExecStream ExecStreamUnitTestBase::prepareDAG(
         splitterStreamEmbryo.getStream()->getName());
 
     // connect all inter streams to src and dest
-    for (it = interStreamEmbryos.begin(); it != interStreamEmbryos.end();
-            ++it) {
-        pGraphEmbryo->addDataflow(splitterStreamEmbryo.getStream()->getName(),
-                                  (*it).getStream()->getName());
-        pGraphEmbryo->addDataflow((*it).getStream()->getName(),
-                                  destStreamEmbryo.getStream()->getName());
+    for (int i = 0; i < interStreamEmbryos.size(); i++) {
+        pGraphEmbryo->addDataflow(
+            splitterStreamEmbryo.getStream()->getName(),
+            interStreamEmbryos[i][0].getStream()->getName());
+        pGraphEmbryo->addDataflow(
+            interStreamEmbryos[i].back().getStream()->getName(),
+            destStreamEmbryo.getStream()->getName());
     }
 
-    SharedExecStream pAdaptedStream =
-        pGraphEmbryo->addAdapterFor(
+    SharedExecStream pAdaptedStream;
+
+    if (createSink) {
+        pAdaptedStream = pGraphEmbryo->addAdapterFor(
             destStreamEmbryo.getStream()->getName(), 0, 
             BUFPROV_PRODUCER);
-    pGraph->addOutputDataflow(
-        pAdaptedStream->getStreamId());
+        pGraph->addOutputDataflow(pAdaptedStream->getStreamId());
 
-    pGraphEmbryo->prepareGraph(shared_from_this(), "");
+        pGraphEmbryo->prepareGraph(shared_from_this(), "");
+    }
 
     return pAdaptedStream;
 }

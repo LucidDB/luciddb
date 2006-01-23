@@ -105,8 +105,9 @@ protected:
         ExecStreamEmbryo &confluenceStreamEmbryo);
 
     /**
-     * Defines and prepares a graph consisting of a source, a splitter, and two
-     * parallel transform streams which flow together into a confluence stream.
+     * Defines and prepares a graph consisting of a source, a splitter, and one
+     * or more parallel transform streams which flow together into a
+     * confluence stream.
      *
      * @param srcStreamEmbryo embryonic source stream which produces tuples
      *
@@ -114,18 +115,58 @@ protected:
      * produces tuples for multiple consumers
      *
      * @param interStreamEmbryos embryonic intermediate streams which
-     * transform tuples
+     * transform tuples; each stream consists of a single embryo
      *
      * @param destStreamEmbryo embryonic confluence stream which processes
      * tuples produced by the interStreamEmbryos
      *
-     * @return output buffer stream
+     * @param createSink if true (the default), creates a final output sink
+     * in the stream graph
+     *
+     * @param saveSrc if true (the default), save the source in the stream
+     * graph; if false, the save has already been done
+     *
+     * @return output buffer stream or null stream if createSink is false
      */
     SharedExecStream prepareDAG(
         ExecStreamEmbryo &srcStreamEmbryo,
         ExecStreamEmbryo &splitterStreamEmbryo,
         std::vector<ExecStreamEmbryo> &interStreamEmbryos,
-        ExecStreamEmbryo &destStreamEmbryo);
+        ExecStreamEmbryo &destStreamEmbryo,
+        bool createSink = true,
+        bool saveSrc = true);
+
+    /**
+     * Defines and prepares a graph consisting of a source, a splitter, and one
+     * or more parallel transform streams which flow together into a
+     * confluence stream.
+     *
+     * @param srcStreamEmbryo embryonic source stream which produces tuples
+     *
+     * @param splitterStreamEmbryo embryonic SplitterExecStream which
+     * produces tuples for multiple consumers
+     *
+     * @param interStreamEmbryosList one or more embryonic intermediate
+     * streams which transform tuples; each stream can have one more embryos
+     *
+     * @param destStreamEmbryo embryonic confluence stream which processes
+     * tuples produced by the interStreamEmbryos
+     *
+     * @param createSink if true (the default), creates a final output sink
+     * in the stream graph
+     *
+     * @param saveSrc if true (the default), save the source in the stream
+     * graph; if false, the save has already been done
+     *
+     * @return output buffer stream or null stream if createSink is false
+     */
+    SharedExecStream prepareDAG(
+        ExecStreamEmbryo &srcStreamEmbryo,
+        ExecStreamEmbryo &splitterStreamEmbryo,
+        std::vector<std::vector<ExecStreamEmbryo> > &interStreamEmbryosList,
+        ExecStreamEmbryo &destStreamEmbryo,
+        bool createSink = true,
+        bool saveSrc = true);
 
     /**
      * Executes the prepared stream graph and verifies that its output

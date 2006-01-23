@@ -25,6 +25,7 @@ package org.eigenbase.oj.rex;
 
 import java.math.*;
 import java.util.*;
+import java.nio.*;
 
 import openjava.mop.*;
 import openjava.ptree.*;
@@ -251,7 +252,8 @@ public class RexToOJTranslator implements RexVisitor
                 Literal.makeLiteral(((BigDecimal) value).doubleValue()));
             break;
         case SqlTypeName.Binary_ordinal:
-            setTranslation(convertByteArrayLiteral((byte []) value));
+            setTranslation(
+                convertByteArrayLiteral(((ByteBuffer) value).array()));
             break;
         case SqlTypeName.Date_ordinal:
         case SqlTypeName.Time_ordinal:

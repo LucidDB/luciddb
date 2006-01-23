@@ -11,22 +11,16 @@
       </init-hook>
 
       <test name="createsource">
-        <test-parameter name="jdbc-driver" 
-          value="com.lucidera.jdbc.LucidDbLocalDriver"/>
         <test-parameter name="sql-file" value="cr_source.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
       <test name="longvarchar" requiresRun="createsource">
-        <test-parameter name="jdbc-driver" 
-          value="com.lucidera.jdbc.LucidDbLocalDriver"/>
         <test-parameter name="sql-file" value="target_longchar.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
       <test name="longvarbin" requiresRun="createsource">
-        <test-parameter name="jdbc-driver" 
-          value="com.lucidera.jdbc.LucidDbLocalDriver"/>
         <test-parameter name="sql-file" value="target_longbin.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>

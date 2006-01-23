@@ -32,7 +32,6 @@ coltiny tinyint
 
 -- ,collchar long varchar
 -- ,collbin long varbinary
-,primary key(coltiny)
 )
 ;
 

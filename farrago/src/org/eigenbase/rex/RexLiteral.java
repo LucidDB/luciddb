@@ -23,6 +23,8 @@
 
 package org.eigenbase.rex;
 
+import java.nio.*;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.math.BigDecimal;
@@ -113,7 +115,7 @@ import org.eigenbase.util14.ConversionUtil;
  *   <td>Binary constant, for example <code>X'7F34'</code>. (The number of
  *       hexits must be even; see above.)
  *       These constants are always BINARY, never VARBINARY.</td>
- *   <td><code>byte[]</code> or {@link BitString}</td>
+ *   <td>{@link ByteBuffer}</td>
  * </tr>
  * <tr>
  *   <td>{@link SqlTypeName#Symbol}</td>
@@ -142,7 +144,7 @@ public class RexLiteral extends RexNode
      * are represented by a {@link BigDecimal}. But since this field is
      * private, it doesn't really matter how the values are stored.
      */
-    private final Object value;
+    private final Comparable value;
 
     /**
      * The real type of this literal, as reported by {@link #getType}.
@@ -168,7 +170,7 @@ public class RexLiteral extends RexNode
      * @pre (value == null) == type.isNullable()
      */
     RexLiteral(
-        Object value,
+        Comparable value,
         RelDataType type,
         SqlTypeName typeName)
     {
@@ -191,7 +193,7 @@ public class RexLiteral extends RexNode
      * these things)
      */
     public static boolean valueMatchesType(
-        Object value,
+        Comparable value,
         SqlTypeName typeName)
     {
         switch (typeName.getOrdinal()) {
@@ -213,7 +215,7 @@ public class RexLiteral extends RexNode
         case SqlTypeName.IntervalYearMonth_ordinal:
             return value == null;
         case SqlTypeName.Binary_ordinal:
-            return value instanceof byte [];
+            return value instanceof ByteBuffer;
         case SqlTypeName.Char_ordinal:
             return value instanceof NlsString;
         case SqlTypeName.Symbol_ordinal:
@@ -227,7 +229,7 @@ public class RexLiteral extends RexNode
     }
 
     private static String toJavaString(
-        Object value,
+        Comparable value,
         SqlTypeName typeName)
     {
         StringWriter sw = new StringWriter();
@@ -262,7 +264,7 @@ public class RexLiteral extends RexNode
      * @param typeName Type family
      */
     private static void printAsJava(
-        Object value,
+        Comparable value,
         PrintWriter pw,
         SqlTypeName typeName,
         boolean java)
@@ -292,8 +294,9 @@ public class RexLiteral extends RexNode
             pw.print(Util.toScientificNotation((BigDecimal) value));
             break;
         case SqlTypeName.Binary_ordinal:
-            assert value instanceof byte [];
-            pw.print(ConversionUtil.toStringFromByteArray((byte []) value, 16));
+            assert value instanceof ByteBuffer;
+            pw.print(ConversionUtil.toStringFromByteArray(
+                         ((ByteBuffer) value).array(), 16));
             break;
         case SqlTypeName.Null_ordinal:
             assert value == null;
@@ -344,7 +347,7 @@ public class RexLiteral extends RexNode
      *
      * @post valueMatchesType(return, typeName)
      */
-    public Object getValue()
+    public Comparable getValue()
     {
         assert valueMatchesType(value, typeName) : value;
         return value;
@@ -357,6 +360,8 @@ public class RexLiteral extends RexNode
     public Object getValue2()
     {
         switch (typeName.getOrdinal()) {
+        case SqlTypeName.Binary_ordinal:
+            return ((ByteBuffer) value).array();
         case SqlTypeName.Char_ordinal:
             return ((NlsString) value).getValue();
         case SqlTypeName.Decimal_ordinal:

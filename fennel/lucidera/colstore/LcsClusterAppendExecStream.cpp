@@ -23,7 +23,6 @@
 #include "fennel/lucidera/colstore/LcsClusterAppendExecStream.h"
 #include "fennel/lucidera/colstore/LcsClusterNode.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
-#include "fennel/tuple/StandardTypeDescriptor.h"
 #include "fennel/btree/BTreeWriter.h"
 #include <boost/scoped_array.hpp>
 
@@ -58,19 +57,19 @@ void LcsClusterAppendExecStream::prepare(
     scratchAccessor = params.scratchAccessor;
     bufferLock.accessSegment(scratchAccessor);
 
-    // the output stream from the loader is a single column representing
-    // the number of rows loaded
+    // The output stream from the loader is either a single column representing
+    // the number of rows loaded or two columns -- number of rows loaded and
+    // starting rid value.  The latter applies when there are
+    // downstream create indexes
     
-    StandardTypeDescriptorFactory stdTypeFactory;
-    TupleAttributeDescriptor attrDesc(
-        stdTypeFactory.newDataType(STANDARD_TYPE_RECORDNUM));
-
     TupleDescriptor outputTupleDesc;
 
-    outputTupleDesc.push_back(attrDesc);
-    pOutAccessor->setTupleShape(outputTupleDesc);
+    outputTupleDesc = pOutAccessor->getTupleDesc();
     outputTuple.compute(outputTupleDesc);
     outputTuple[0].pData = (PConstBuffer) &numRowCompressed;
+    if (outputTupleDesc.size() > 1) {
+        outputTuple[1].pData = (PConstBuffer) &m_startRow;
+    }
 
     outputTupleAccessor = & pOutAccessor->getScratchTupleAccessor();
 
@@ -269,12 +268,18 @@ ExecStreamResult LcsClusterAppendExecStream::Compress(
             }
         }
 
+        // Write out the last block and then free up resources
+        // rather than waiting until stream close. This will keep
+        // resource usage window smaller and avoid interference with 
+        // downstream processing such as writing to unclustered indexes.
         WriteBlock();
-        m_riBlockBuilder->unlockClusterPage();
+        m_riBlockBuilder->Close();
+        Close();
         
-        // outputTuple was already initialized to point to numRowCompressed
-        // in prepare()
-        // Write a single outputTuple(numRowCompressed) and indicate OVERFLOW.
+        // outputTuple was already initialized to point to numRowCompressed/
+        // m_startRow in prepare()
+        // Write a single outputTuple(numRowCompressed, [m_startRow])
+        // and indicate OVERFLOW.
 
         outputTupleAccessor->marshal(outputTuple, outputTupleBuffer.get());
         pOutAccessor->provideBufferForConsumption(outputTupleBuffer.get(), 
@@ -365,7 +370,10 @@ ExecStreamResult LcsClusterAppendExecStream::Compress(
 void LcsClusterAppendExecStream::Close() 
 {
     // free cache blocks and the arrays pointing to them
-    scratchAccessor.pSegment->deallocatePageRange(NULL_PAGE_ID, NULL_PAGE_ID);
+    if (scratchAccessor.pSegment) {
+        scratchAccessor.pSegment->deallocatePageRange(
+            NULL_PAGE_ID, NULL_PAGE_ID);
+    }
     m_rowBlock.reset();
     m_hashBlock.reset();
     m_builderBlock.reset();
@@ -375,10 +383,6 @@ void LcsClusterAppendExecStream::Close()
     m_buf.reset();
     m_maxValueSize.reset();
 
-    // close block-builder
-
-    //m_riBlockBuilder->Close();
-    
     m_riBlockBuilder.reset();
     
 #ifdef NOT_DONE_YET

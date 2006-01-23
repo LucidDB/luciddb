@@ -61,13 +61,7 @@ public class SargIntervalExpr extends SargIntervalBase implements SargExpr
         this.nullSemantics = nullSemantics;
     }
 
-    /**
-     * Sets this interval to represent a single point (possibly the null
-     * value).
-     *
-     * @param coordinate coordinate of point to set, or null
-     * for the null value
-     */
+    // publicize SargIntervalBase
     public void setPoint(RexNode coordinate)
     {
         super.setPoint(coordinate);
@@ -80,71 +74,43 @@ public class SargIntervalExpr extends SargIntervalBase implements SargExpr
         }
     }
 
-    /**
-     * Sets this interval to represent a single point matching the null value.
-     *
-     * @param coordinate coordinate of point to set, or null
-     * for the null value
-     */
+    // publicize SargIntervalBase
     public void setNull()
     {
         super.setNull();
     }
 
-    /**
-     * Sets the lower bound for this interval.
-     *
-     * @param coordinate coordinate of point to set
-     *
-     * @param strict true for an open bound (strictly greater than); false
-     * for a closed bound
-     */
-    public void setLower(RexNode coordinate, boolean strict)
+    // publicize SargIntervalBase
+    public void setLower(RexNode coordinate, SargStrictness strictness)
     {
-        super.setLower(coordinate, strict);
+        super.setLower(coordinate, strictness);
     }
 
-    /**
-     * Sets the upper bound for this interval.
-     *
-     * @param coordinate coordinate of point to set
-     *
-     * @param strict true for an open bound (strictly less than); false
-     * for a closed bound
-     */
-    public void setUpper(RexNode coordinate, boolean strict)
+    // publicize SargIntervalBase
+    public void setUpper(RexNode coordinate, SargStrictness strictness)
     {
-        super.setUpper(coordinate, strict);
+        super.setUpper(coordinate, strictness);
     }
 
-    /**
-     * Removes the lower bound for this interval, setting it to -infinity.
-     */
+    // publicize SargIntervalBase
     public void unsetLower()
     {
         super.unsetLower();
     }
 
-    /**
-     * Removes the upper bound for this interval, setting it to +infinity.
-     */
+    // publicize SargIntervalBase
     public void unsetUpper()
     {
         super.unsetUpper();
     }
 
-    /**
-     * Sets this interval to unconstrained (matching everything, including
-     * null).
-     */
+    // publicize SargIntervalBase
     public void setUnconstrained()
     {
         super.setUnconstrained();
     }
 
-    /**
-     * Sets this interval to empty (matching nothing at all).
-     */
+    // publicize SargIntervalBase
     public void setEmpty()
     {
         super.setEmpty();
@@ -176,8 +142,6 @@ public class SargIntervalExpr extends SargIntervalBase implements SargExpr
             return seq;
         }
 
-        // TODO jvs 17-Jan-2006:  effective strictness
-        
         // Copy the endpoints to the new interval.
         SargInterval interval = new SargInterval(factory, getDataType());
         interval.copyFrom(this);
@@ -197,7 +161,7 @@ public class SargIntervalExpr extends SargIntervalBase implements SargExpr
             // to exclude null.
             interval.setLower(
                 factory.newNullLiteral(),
-                true);
+                SargStrictness.OPEN);
         } else if (nullSemantics == SqlNullSemantics.NULL_MATCHES_ANYTHING) {
             if (!lowerBound.isFinite() || lowerBound.isNull()
                 || upperBound.isNull())

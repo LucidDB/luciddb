@@ -181,6 +181,9 @@ typedef boost::shared_ptr<LcsCompareColKeyUsingOffsetIndex>
 class LcsClusterReader;
 typedef boost::shared_ptr<LcsClusterReader> SharedLcsClusterReader;
 
+class LbmEntry;
+typedef boost::shared_ptr<LbmEntry> SharedLbmEntry;
+
 FENNEL_END_NAMESPACE
 
 #endif

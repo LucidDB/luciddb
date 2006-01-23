@@ -12,7 +12,8 @@ ExternalSortExecStreamTest \
 FlatFileExecStreamTest \
 LcsClusterAppendExecStreamTest \
 LcsMultiClusterAppendTest \
-LcsRowScanExecStreamTest
+LcsRowScanExecStreamTest \
+LbmLoadBitmapTest
 
 TESTS = $(noinst_PROGRAMS)
 
@@ -21,6 +22,7 @@ FlatFileExecStreamTest_SOURCES=FlatFileExecStreamTest.cpp
 LcsClusterAppendExecStreamTest_SOURCES=LcsClusterAppendExecStreamTest.cpp
 LcsMultiClusterAppendTest_SOURCES=LcsMultiClusterAppendTest.cpp
 LcsRowScanExecStreamTest_SOURCES=LcsRowScanExecStreamTest.cpp
+LbmLoadBitmapTest_SOURCES=LbmLoadBitmapTest.cpp
 
 # NOTE:  have to repeat $(EXTRA_LDFLAGS) on mingw due to stupid linker.
 
@@ -30,6 +32,7 @@ LDADD = \
 	-L$(top_builddir)/lucidera/libfennel_lu \
 	-L$(top_builddir)/disruptivetech/libfennel_dt \
 	-l$(TEST_LIB) \
+	-lfennel_lu_bitmap \
 	-lfennel_lu_colstore \
 	-lfennel_lu_flatfile \
 	-lfennel_lu_sorter \

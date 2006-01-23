@@ -38,89 +38,26 @@ import java.util.*;
 public class SargMutableEndpoint extends SargEndpoint
 {
     /**
-     * If rounding was used in converting coordinate to the target type, the
-     * sign of roundingCompensation represents the opposite of the rounding
-     * direction, otherwise it is 0.
-     */
-    private int roundingCompensation;
-
-    /**
-     * Strictness after adjustment for rounding.
-     *
-     * @see getStrictness
-     */
-    private int effectiveStrictness;
-
-    /**
      * @see SargFactory.newEndpoint
      */
     SargMutableEndpoint(SargFactory factory, RelDataType dataType)
     {
         super(factory, dataType);
-        effectiveStrictness = 0;
-        roundingCompensation = 0;
     }
-    
-    /**
-     * Sets this endpoint to either negative or positive infinity.  An infinite
-     * endpoint implies an open bound (negative infinity implies a lower bound,
-     * while positive infinity implies an upper bound).
-     *
-     * @param infinitude either -1 or +1
-     */
+
+    // publicize SargEndpoint
     public void setInfinity(int infinitude)
     {
         super.setInfinity(infinitude);
-        roundingCompensation = 0;
-        setEffectiveStrictness();
-    }
-    
-    /**
-     * Sets this endpoint to a finite bound.
-     *
-     * @param boundType upper or lower bound
-     *
-     * @param coordinate value to set; must match getDataType()
-     *
-     * @param strict true for an open bound (strictly greater or lower); false
-     * for a closed bound
-     */
-    public void setFinite(
-        SargBoundType boundType,
-        RexNode coordinate,
-        boolean strict)
-    {
-        super.setFinite(boundType, coordinate, strict);
-        setEffectiveStrictness();
     }
 
-    private void setEffectiveStrictness()
+    // publicize SargEndpoint
+    public void setFinite(
+        SargBoundType boundType,
+        SargStrictness strictness,
+        RexNode coordinate)
     {
-        // rounding takes precedence over the strictness flag.
-        //  Input        round    strictness    output    effective strictness
-        //    >5.9        down            -1       >=6        0
-        //    >=5.9       down             0       >=6        0
-        //    >6.1          up            -1        >6        1
-        //    >=6.1         up             0        >6        1
-        //    <6.1          up             1       <=6        0
-        //    <=6.1         up             0       <=6        0
-        //    <5.9        down             1        <6       -1
-        //    <=5.9       down             0        <6       -1
-        if (roundingCompensation == 0) {
-            effectiveStrictness = strictness;
-        } else if (boundType == SargBoundType.LOWER) {
-            if (roundingCompensation < 0) {
-                effectiveStrictness = 0;
-            } else {
-                effectiveStrictness = 1;
-            }
-        } else if (boundType == SargBoundType.UPPER) {
-            if (roundingCompensation > 0) {
-                effectiveStrictness = 0;
-            } else {
-                effectiveStrictness = -1;
-            }
-        }
+        super.setFinite(boundType, strictness, coordinate);
     }
 }
 

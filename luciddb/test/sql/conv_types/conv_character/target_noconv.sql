@@ -3,7 +3,7 @@ set schema 's'
 
 drop table datatype_target
 ;
-create table datatype_target(col char(22) primary key)
+create table datatype_target(col char(22))
 ;
 
 insert into datatype_target
@@ -14,7 +14,7 @@ select * from datatype_target
 
 drop table datatype_target
 ;
-create table datatype_target(col char(22) primary key)
+create table datatype_target(col char(22))
 ;
 
 insert into datatype_target 
@@ -25,7 +25,7 @@ select * from datatype_target
 
 drop table datatype_target
 ;
-create table datatype_target(col char(22) primary key)
+create table datatype_target(col char(22))
 ;
 
 
@@ -37,7 +37,7 @@ select * from datatype_target
 
 drop table datatype_target
 ;
-create table datatype_target(col char(22) primary key)
+create table datatype_target(col char(22))
 ;
 
 
@@ -49,7 +49,7 @@ select * from datatype_target
 
 drop table datatype_target
 ;
-create table datatype_target(col char(22) primary key)
+create table datatype_target(col char(22))
 ;
 
 
@@ -61,7 +61,7 @@ select * from datatype_target
 
 drop table datatype_target
 ;
-create table datatype_target(col char(22) primary key)
+create table datatype_target(col char(22))
 ;
 
 
@@ -73,7 +73,7 @@ select * from datatype_target
 
 drop table datatype_target
 ;
-create table datatype_target(col char(22) primary key)
+create table datatype_target(col char(22))
 ;
 
 insert into datatype_target
@@ -84,7 +84,7 @@ select * from datatype_target
 
 drop table datatype_target
 ;
-create table datatype_target(col char(22) primary key)
+create table datatype_target(col char(22))
 ;
 
 insert into datatype_target
@@ -95,7 +95,7 @@ select * from datatype_target
 
 drop table datatype_target
 ;
-create table datatype_target(col char(22) primary key)
+create table datatype_target(col char(22))
 ;
 
 

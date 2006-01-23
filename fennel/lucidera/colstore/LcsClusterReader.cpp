@@ -201,6 +201,18 @@ void LcsClusterReader::setUpBlock()
     rangeEndRid = rangeStartRid + pRangeBatches->nRow;
 }
 
+bool LcsClusterReader::advance(uint nRids)
+{
+    uint newPos = nRangePos + nRids;
+    
+    if (newPos < pRangeBatches->nRow) {
+        nRangePos = newPos;
+        return true;
+    } else {
+        return false;
+    }
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End LcsClusterReader.cpp

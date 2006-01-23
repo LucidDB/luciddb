@@ -117,7 +117,7 @@ public:
     /** Performs a comparison only of type & size, not nullability */
     bool storageEqual(
         TupleDescriptor const &other) const;
-
+    TupleStorageByteLength getMaxByteCount() const;
 };
 
 std::ostream &operator<<(std::ostream &str,TupleDescriptor const &);

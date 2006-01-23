@@ -2,30 +2,30 @@
   <target name="simple-test">
     <test-suite testunit="simple-test">
 
+      <init-hook>
+        <test name="restoreCatalog" testunit="init-test">
+          <ant-task>
+            <ant target="restoreCatalog"/>
+          </ant-task>
+        </test>
+      </init-hook>
+
       <test name="creschema">
-        <test-parameter name="jdbc-driver" 
-          value="com.lucidera.jdbc.LucidDbLocalDriver"/>
         <test-parameter name="sql-file" value="gen/creschema.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
       <test name="importschema" requiresRun="creschema">
-        <test-parameter name="jdbc-driver" 
-          value="com.lucidera.jdbc.LucidDbLocalDriver"/>
         <test-parameter name="sql-file" value="gen/foreigntabl.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
       <test name="tableload" requiresRun="importschema">
-        <test-parameter name="jdbc-driver" 
-          value="com.lucidera.jdbc.LucidDbLocalDriver"/>
         <test-parameter name="sql-file" value="gen/tblload.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
       <test name="types">
-        <test-parameter name="jdbc-driver" 
-          value="com.lucidera.jdbc.LucidDbLocalDriver"/>
         <test-parameter name="sql-file" value="metadatatypes.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>

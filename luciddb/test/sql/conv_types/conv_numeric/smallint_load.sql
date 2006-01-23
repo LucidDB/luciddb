@@ -5,7 +5,7 @@ set schema 's'
 
 drop table datatype_target
 ;
-create table datatype_target(col smallint primary key)
+create table datatype_target(col smallint)
 ;
 
 -- tinyint to smallint; min/max range for source datatype [same as target]
@@ -15,12 +15,12 @@ insert into datatype_target
   where target_type='smallint'
     and range_for='source'
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 
 drop table datatype_target
 ;
-create table datatype_target(col smallint primary key)
+create table datatype_target(col smallint)
 ;
 
 -- smallint to smallint; min/max range for source datatype [same as target]
@@ -30,12 +30,12 @@ insert into datatype_target
   where target_type='smallint'
     and range_for='source'
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 
 drop table datatype_target
 ;
-create table datatype_target(col smallint primary key)
+create table datatype_target(col smallint)
 ;
 
 -- integer to smallint; min/max range for target datatype
@@ -45,12 +45,12 @@ insert into datatype_target
   where target_type='smallint'
     and range_for='target'
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 
 drop table datatype_target
 ;
-create table datatype_target(col smallint primary key)
+create table datatype_target(col smallint)
 ;
 
 -- integer to smallint; min/max range for source datatype
@@ -60,12 +60,12 @@ insert into datatype_target
   where target_type='smallint'
     and range_for='source'
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 
 drop table datatype_target
 ;
-create table datatype_target(col smallint primary key)
+create table datatype_target(col smallint)
 ;
 
 -- bigint to smallint; min/max range for target datatype
@@ -75,12 +75,12 @@ insert into datatype_target
   where target_type='smallint'
     and range_for='target'
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 
 drop table datatype_target
 ;
-create table datatype_target(col smallint primary key)
+create table datatype_target(col smallint)
 ;
 
 -- bigint to smallint; min/max range for source datatype
@@ -90,17 +90,17 @@ insert into datatype_target
   where target_type='smallint'
     and range_for='source'
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 
 drop table datatype_target
 ;
-create table datatype_target(col smallint primary key)
+create table datatype_target(col smallint)
 ;
 
 drop table datatype_target
 ;
-create table datatype_target(col smallint primary key)
+create table datatype_target(col smallint)
 ;
 
 -- decimal to smallint; min/max range for target datatype
@@ -110,12 +110,12 @@ insert into datatype_target
   where target_type='smallint'
     and range_for='target'
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 
 drop table datatype_target
 ;
-create table datatype_target(col smallint primary key)
+create table datatype_target(col smallint)
 ;
 
 -- decimal to smallint; min/max range for source datatype
@@ -125,12 +125,12 @@ insert into datatype_target
   where target_type='smallint'
     and range_for='source'
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 
 drop table datatype_target
 ;
-create table datatype_target(col smallint primary key)
+create table datatype_target(col smallint)
 ;
 
 -- numeric to smallint; min/max range for target datatype
@@ -140,12 +140,12 @@ insert into datatype_target
   where target_type='smallint'
     and range_for='target'
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 
 drop table datatype_target
 ;
-create table datatype_target(col smallint primary key)
+create table datatype_target(col smallint)
 ;
 
 -- numeric to smallint; min/max range for source datatype
@@ -155,12 +155,12 @@ insert into datatype_target
   where target_type='smallint'
     and range_for='source'
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 
 drop table datatype_target
 ;
-create table datatype_target(col smallint primary key)
+create table datatype_target(col smallint)
 ;
 
 -- double to smallint; min/max range for target datatype
@@ -170,12 +170,12 @@ insert into datatype_target
   where target_type='smallint'
     and range_for='target'
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 
 drop table datatype_target
 ;
-create table datatype_target(col smallint primary key)
+create table datatype_target(col smallint)
 ;
 
 -- double to smallint; min/max range for source datatype
@@ -185,12 +185,12 @@ insert into datatype_target
   where target_type='smallint'
     and range_for='source'
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 
 drop table datatype_target
 ;
-create table datatype_target(col smallint primary key)
+create table datatype_target(col smallint)
 ;
 
 -- float to smallint; min/max range for target datatype
@@ -200,12 +200,12 @@ insert into datatype_target
   where target_type='smallint'
     and range_for='target'
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 
 drop table datatype_target
 ;
-create table datatype_target(col smallint primary key)
+create table datatype_target(col smallint)
 ;
 
 -- float to smallint; min/max range for source datatype
@@ -215,12 +215,12 @@ insert into datatype_target
   where target_type='smallint'
     and range_for='source'
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 
 drop table datatype_target
 ;
-create table datatype_target(col smallint primary key)
+create table datatype_target(col smallint)
 ;
 
 -- real to smallint; min/max range for target datatype
@@ -230,12 +230,12 @@ insert into datatype_target
   where target_type='smallint'
     and range_for='target'
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 
 drop table datatype_target
 ;
-create table datatype_target(col smallint primary key)
+create table datatype_target(col smallint)
 ;
 
 -- real to smallint; min/max range for source datatype
@@ -245,18 +245,18 @@ insert into datatype_target
   where target_type='smallint'
     and range_for='source'
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 
 drop table datatype_target
 ;
-create table datatype_target(col smallint primary key)
+create table datatype_target(col smallint)
 ;
 
 -- test to drop scale
 
 insert into datatype_target values(123.456789)
 ;
-select * from datatype_target
+select * from datatype_target order by 1
 ;
 -- PASS: if value = 123

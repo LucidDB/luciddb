@@ -87,8 +87,15 @@ public:
 
     /**
      * @return the PageId of the oldest log page still needed for recovery
+     * after a crash
      */
     PageId getRecoveryPageId() const;
+    
+    /**
+     * @return the PageId of the oldest log page still needed for recovery
+     * while online
+     */
+    PageId getOnlineRecoveryPageId() const;
     
     /**
      * Gets the version number of a locked page.

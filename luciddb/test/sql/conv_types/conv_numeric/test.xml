@@ -11,71 +11,51 @@
       </init-hook>
 
       <test name="createsource">
-        <test-parameter name="jdbc-driver" 
-          value="com.lucidera.jdbc.LucidDbLocalDriver"/>
         <test-parameter name="sql-file" value="cr_source.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
       <test name="tinyint" requiresRun="createsource">
-        <test-parameter name="jdbc-driver" 
-          value="com.lucidera.jdbc.LucidDbLocalDriver"/>
         <test-parameter name="sql-file" value="tinyint_load.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
       <test name="smallint" requiresRun="createsource">
-        <test-parameter name="jdbc-driver" 
-          value="com.lucidera.jdbc.LucidDbLocalDriver"/>
         <test-parameter name="sql-file" value="smallint_load.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
       <test name="integer" requiresRun="createsource">
-        <test-parameter name="jdbc-driver" 
-          value="com.lucidera.jdbc.LucidDbLocalDriver"/>
         <test-parameter name="sql-file" value="integer_load.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
       <test name="bigint" requiresRun="createsource">
-        <test-parameter name="jdbc-driver" 
-          value="com.lucidera.jdbc.LucidDbLocalDriver"/>
         <test-parameter name="sql-file" value="bigint_load.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
       <test name="decimal" requiresRun="createsource">
-        <test-parameter name="jdbc-driver" 
-          value="com.lucidera.jdbc.LucidDbLocalDriver"/>
         <test-parameter name="sql-file" value="decimal_load.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
       <test name="numeric" requiresRun="createsource">
-        <test-parameter name="jdbc-driver" 
-          value="com.lucidera.jdbc.LucidDbLocalDriver"/>
         <test-parameter name="sql-file" value="numeric_load.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
       <test name="double" requiresRun="createsource">
-        <test-parameter name="jdbc-driver" 
-          value="com.lucidera.jdbc.LucidDbLocalDriver"/>
         <test-parameter name="sql-file" value="double_load.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
       <test name="float" requiresRun="createsource">
-        <test-parameter name="jdbc-driver" 
-          value="com.lucidera.jdbc.LucidDbLocalDriver"/>
         <test-parameter name="sql-file" value="float_load.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
       <test name="real" requiresRun="createsource">
-        <test-parameter name="jdbc-driver" 
-          value="com.lucidera.jdbc.LucidDbLocalDriver"/>
         <test-parameter name="sql-file" value="real_load.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>

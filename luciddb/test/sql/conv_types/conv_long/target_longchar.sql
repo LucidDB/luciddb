@@ -1,7 +1,7 @@
 set schema 's'
 ;
 
-create table tlongc (l long varchar primary key)
+create table tlongc (l long varchar)
 ;
 
 -- all numeric datatypes should be OK

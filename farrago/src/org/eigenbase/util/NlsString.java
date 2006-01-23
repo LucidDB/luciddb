@@ -38,7 +38,7 @@ import org.eigenbase.sql.SqlCollation;
  * @since May 28, 2004
  * @version $Id$
  **/
-public class NlsString
+public class NlsString implements Comparable<NlsString>
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -107,6 +107,15 @@ public class NlsString
         return Util.equal(value, that.value) &&
             Util.equal(charSetName, that.charSetName) &&
             Util.equal(collation, that.collation);
+    }
+
+    // implement Comparable
+    public int compareTo(NlsString other)
+    {
+        // TODO jvs 18-Jan-2006:  Actual collation support.  This just uses
+        // the default collation.
+
+        return value.compareTo(other.value);
     }
 
     public String getCharsetName()

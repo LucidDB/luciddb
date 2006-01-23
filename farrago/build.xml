@@ -84,6 +84,8 @@
   <!-- The version of ANT we require. -->
   <property name="required.ant.version" value="1.6.5"/>
 
+  <property name="emma.farrago.classes.dir" location="${farrago.dir}/classes-cov"/>
+
   <condition property="is.correct.ant.version">
     <contains string="${ant.version}" substring="${required.ant.version}"/>
   </condition>
@@ -234,6 +236,13 @@ require version '${required.ant.version}'."/>
     <pathelement path="${ant.classpath}"/>
   </path>
   <property name="test.classpath" refid="test.classpath"/>
+
+  <path id="emma.test.classpath">
+    <pathelement location="${emma.farrago.classes.dir}"/>
+    <pathelement path="${emma.classpath}"/>
+    <pathelement path="${test.classpath}"/>
+  </path>
+  <property name="emma.test.classpath" refid="emma.test.classpath"/>
 
   <!-- classpath for reentrantly invoking ant from createUserRepository -->
   <path id="createUserRepository.classpath">
@@ -1392,6 +1401,103 @@ please disable it and try again.
       rootpath="${farrago.dir}${file.separator}" 
       packagename="net.sf.farrago.test"
       classname="FarragoSqlTestWrapper"/>
+  </target>
+
+  <target name="cov">
+    <antcall target="emmaClean"/>
+    <antcall target="emmaTest"/>
+    <antcall target="emmaReport"/>
+  </target>
+
+  <target name="emmaClean">
+    <delete dir="${emma.farrago.classes.dir}" quiet="true"/>
+    <delete quiet="true">
+      <fileset dir="." includes="coverage.*"/>
+      <fileset dir="coverage"/>
+    </delete>
+    <mkdir dir="coverage"/>
+    <mkdir dir="${emma.farrago.classes.dir}"/>
+  </target>
+
+  <target name="emmaInstr">
+    <mkdir dir="${emma.farrago.classes.dir}"/>
+    <emma verbosity="verbose">
+      <instr 
+        mode="copy" 
+        outdir="${emma.farrago.classes.dir}" 
+        instrpath="${farrago.classes.dir}">
+        <filter excludes="*_Stub*"/>
+      </instr>
+    </emma>
+  </target>
+
+  <target name="emmaTest">
+    <antcall target="checkTrace"/>
+    <antcall target="cleanExamples"/>
+    <antcall target="createCatalog"/>
+    <antcall target="buildExamples"/>
+    <antcall target="retroweaveIfRequested"/>
+    <!-- since some classes get built in here, instrument at the last minute-->
+    <antcall target="emmaInstr"/>
+    <antcall target="testRngPlugin"/>
+    <antcall target="exportCatalog"/>
+    <antcall target="emmaJunit"/>
+    <!-- comment out the following since I merged junit and regression in 
+    emmaJunit-->
+    <!--    <antcall target="regressionWithoutBuild"/>-->
+    <antcall target="testCleanup"/>
+    <antcall target="compareCatalogExport"/>
+    <antcall target="macker"/>
+    <antcall target="checkSourceFilePreambles"/>
+  </target>
+
+  <target name="emmaReport">
+    <emma verbosity="verbose">
+      <report sourcepath="${farrago.src.dir}">
+        <infileset dir="." includes="*.em, *.ec"/>
+        <html/>
+        <xml/>
+        <txt/>
+      </report>
+    </emma>
+  </target>
+
+<!-- combine junit and regression targets -->
+  <target name="emma-forked_junit">
+    <farrago.runTests>
+      <testfileset>
+        <fileset dir="${emma.farrago.classes.dir}">
+<!--          <exclude name="**/test/regression/*Test.class"/>
+          <exclude name="**/test/concurrent/*Test.class"/>-->
+<!--          <include name="net/sf/farrago/test/FarragoQueryTest.class"/>-->
+          <exclude name="**/*ServerTest.class"/>
+          <include name="**/*Test.class"/>
+        </fileset>
+      </testfileset>
+      <junitargs>
+        <sysproperty key="net.sf.farrago.fileset.unitsql"
+          value="${fileset.unitsql}"/>
+        <sysproperty key="com.lucidera.fileset.unitlurql"
+          value="${fileset.unitlurql}"/>
+        <sysproperty key="net.sf.farrago.fileset.regressionsql"
+          value="${fileset.regressionsql}"/>
+        <sysproperty key="net.sf.farrago.fileset.concurrentsql"
+          value="${fileset.concurrentsql}"/>
+      </junitargs>
+    </farrago.runTests>
+  </target>
+
+  <target name="emmaJunit" depends="cleanTestLogs">
+    <farrago.antFork target="emma-forked_junit" classpathref="emma.test.classpath">
+      <jvmargs>
+        <jvmarg line="${assertions.jvmarg}"/>
+        <jvmarg line="&FarragoProps;"/>
+        <syspropertyset>
+          <propertyref builtin="commandline"/>
+        </syspropertyset>
+      </jvmargs>
+    </farrago.antFork>
+    <delete file="${FarragoTrace.log}.lck" quiet="true"/>
   </target>
 
 </project>

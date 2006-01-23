@@ -236,6 +236,31 @@ public:
      */
     void releaseScratchBuffers();
 
+    /**
+     * Positions search key for insert, also detecting duplicate key values
+     *
+     * @param nodeAccessor node accessor for leaf node
+     *
+     * @return true if duplicate key found
+     */
+    bool positionSearchKey(BTreeNodeAccessor &nodeAccessor);
+
+    /**
+     * Checks to ensure that when monotonic insert mode is used,
+     * the keys really are increasing.  Note though that the check
+     * is only done for the 2nd and subsequent keys on a leaf page.
+     * I.e., the check is not done across page boundaries.
+     *
+     * @param nodeAccessor node accessor for leaf node
+     *
+     * @param pTupleBuffer tuple buffer for new key to be inserted
+     *
+     * @return true if new key is > previous key and it will be inserted
+     * in the last position in the node
+     */
+    bool checkMonotonicity(
+        BTreeNodeAccessor &nodeAccessor, PConstBuffer pTupleBuffer);
+
     // implement LogicalTxnParticipant
     virtual LogicalTxnClassId getParticipantClassId() const;
     virtual void describeParticipant(

@@ -516,4 +516,25 @@
 
   </target>
 
+  <target name="createEclipseProject">
+
+    <pathconvert property="eclipse.libpath" refid="luciddb.build.classpath"
+      pathsep="&quot;/&gt;&#10;&lt;classpathentry kind=&quot;lib&quot; path=&quot;"/>
+    <copy file="${luciddb.dir}/eclipse/.project" overwrite="true"
+        tofile="${luciddb.dir}/.project">
+    </copy>
+    <copy file="${luciddb.dir}/eclipse/.classpath" overwrite="true"
+        tofile="${luciddb.dir}/.classpath">
+      <filterset>
+        <filter token="LIBPATH" value="${eclipse.libpath}"/>
+      </filterset>
+    </copy>
+    <replace file="${luciddb.dir}/.classpath" token="${farrago.catalog.src.dir}" value="/farrago/catalog/java"/>
+    <replace file="${luciddb.dir}/.classpath" token="${farrago.classes.dir}" value="/farrago/classes"/>
+    <replace file="${luciddb.dir}/.classpath" token="${classes.dir}" value="classes"/>
+    <copy todir="${luciddb.dir}/.settings" overwrite="true">
+      <fileset dir="${luciddb.dir}/eclipse/.settings"/>
+    </copy>
+  </target>
+
 </project>

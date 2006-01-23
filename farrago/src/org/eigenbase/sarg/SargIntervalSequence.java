@@ -34,7 +34,7 @@ import java.util.*;
  */
 public class SargIntervalSequence
 {
-    private final List<SargInterval> list;
+    final List<SargInterval> list;
 
     SargIntervalSequence()
     {

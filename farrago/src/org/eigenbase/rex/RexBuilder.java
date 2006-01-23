@@ -26,6 +26,8 @@ package org.eigenbase.rex;
 import java.math.BigDecimal;
 import java.util.Calendar;
 
+import java.nio.*;
+
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeField;
@@ -358,7 +360,7 @@ public class RexBuilder
     }
 
     protected RexLiteral makeLiteral(
-        Object o,
+        Comparable o,
         RelDataType type,
         SqlTypeName typeName)
     {
@@ -419,7 +421,7 @@ public class RexBuilder
     public RexLiteral makeBinaryLiteral(byte [] byteArray)
     {
         return makeLiteral(
-            byteArray,
+            ByteBuffer.wrap(byteArray),
             typeFactory.createSqlType(SqlTypeName.Varbinary, byteArray.length),
             SqlTypeName.Binary);
     }

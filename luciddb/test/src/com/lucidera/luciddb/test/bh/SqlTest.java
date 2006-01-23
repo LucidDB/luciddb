@@ -20,15 +20,16 @@
 */
 package com.lucidera.luciddb.test.bh;
 
+import com.lucidera.jdbc.*;
 import java.io.*;
 import java.util.regex.*;
-import org.eigenbase.blackhawk.compose.AutoTest;
-import org.eigenbase.blackhawk.compose.TestContext;
-import org.eigenbase.blackhawk.compose.Parameters;
-import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.jdbc.engine.*;
+import net.sf.farrago.util.*;
+import org.eigenbase.blackhawk.compose.AutoTest;
+import org.eigenbase.blackhawk.compose.Parameters;
+import org.eigenbase.blackhawk.compose.TestContext;
 import sqlline.SqlLine;
-
 /**
  * Simple sql test for bh-base test in the luciddb area
  *
@@ -38,12 +39,8 @@ import sqlline.SqlLine;
 
 public class SqlTest extends AutoTest {
 
-    private String driverName;
-    private String urlPrefix;
-    FarragoJdbcEngineDriver driver;
     String[] args;
     String sqlFile;
-    String jdbcDriverClassName;
     private OutputStream logOutputStream;    
     File sqlFileSansExt;
     File logFile;    
@@ -57,22 +54,33 @@ public class SqlTest extends AutoTest {
 
     public SqlTest(TestContext tc) throws Exception {
         super(tc);
+
+        // set luciddb-specific properties
+        System.setProperty("net.sf.farrago.defaultSessionFactoryLibraryName",
+            "class:com.lucidera.farrago.LucidDbSessionFactory");
+        System.setProperty("net.sf.farrago.test.jdbcDriverClass",
+            "com.lucidera.jdbc.LucidDbLocalDriver");
+
         Parameters param = tc.getParameters();
-        // obtain parameters, these are both required
-        jdbcDriverClassName = param.getString("jdbc-driver");
+        // obtain sql-file parameter - required
         sqlFile = param.getString("sql-file");
+
         // following parameters are not required
+        String driverName = param.getString("jdbc-driver", "");
         String username = param.getString("username", "");
         if (username.equals("")) {
             username = FarragoCatalogInit.SA_USER_NAME;
         }
         String passwd = param.getString("passwd", "");
-        urlPrefix = param.getString("url", "");
-        driverName = jdbcDriverClassName;
+        String urlPrefix = param.getString("url", "");
         if (urlPrefix.equals("")) {
-            Class clazz = Class.forName(jdbcDriverClassName);
-            driver = (FarragoJdbcEngineDriver) clazz.newInstance();
-            driverName = driver.getClass().getName();
+            if (driverName.equals("")) {
+                driverName = FarragoProperties.instance().
+                    testJdbcDriverClass.get();
+            }
+            Class clazz = Class.forName(driverName);
+            LucidDbLocalDriver driver =
+                (LucidDbLocalDriver) clazz.newInstance();
             urlPrefix = driver.getUrlPrefix();
         }
         assert (sqlFile.endsWith(".sql"));
@@ -323,4 +331,4 @@ public class SqlTest extends AutoTest {
 
 
 
-// End SimpleTest.java
+// End SqlTest.java

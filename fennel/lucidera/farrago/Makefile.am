@@ -17,6 +17,7 @@ libfarrago_lu_la_LIBADD = \
 	-lfennel_lu_flatfile \
 	-lfennel_lu_colstore \
 	-lfennel_lu_sorter \
+	-lfennel_lu_bitmap \
 	-lfarrago \
 	-lfennel_db \
 	-lfennel_btree \

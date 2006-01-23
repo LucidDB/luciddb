@@ -373,7 +373,7 @@ void BTreeTest::testMonotonicInsert()
     for (uint i = 0; i < nRecords; i++) {
         record.key = i;
         writer.insertTupleFromBuffer(
-            reinterpret_cast<PConstBuffer>(&record.key), DUP_ALLOW);
+            reinterpret_cast<PConstBuffer>(&record.key), DUP_FAIL);
     }
 
     BTreeReader reader(descriptor);

@@ -76,8 +76,6 @@ uint BTreeWriter::insertTupleFromBuffer(
     
     uint cbTuple = nodeAccessor.tupleAccessor.getCurrentByteCount();
 
-    nodeAccessor.unmarshalKey(searchKeyData);
-
 #if 0
     TuplePrinter tuplePrinter;
     tuplePrinter.print(std::cout, keyDescriptor, searchKeyData);
@@ -88,19 +86,21 @@ uint BTreeWriter::insertTupleFromBuffer(
     // be inserting after where we are positioned except the first time
     // through or after a split, where we will need to do an initial search
     // to setup the appropriate position
-    assert(!(monotonic && distinctness == DUP_FAIL));
+    //
+    // cannot support dups in monotonic mode because we cannot guarantee that
+    // duplicate inserts will insert at the end of all the duplicate keys
+    // if need to reposition after a split
+    assert(!(monotonic && distinctness != DUP_FAIL));
     if (monotonic) {
         if (isPositioned()) {
             ++iTupleOnLeaf;
+            assert(checkMonotonicity(nodeAccessor, pTupleBuffer));
         } else {
-            pageStack.clear();
-            searchForKeyTemplate< true, std::vector<PageId> >(
-                searchKeyData,DUP_SEEK_ANY,true,pageStack);
+            bool duplicate = positionSearchKey(nodeAccessor);
+            permAssert(!duplicate);
         }
     } else {
-        pageStack.clear();
-        bool duplicate = searchForKeyTemplate< true, std::vector<PageId> >(
-            searchKeyData,DUP_SEEK_ANY,true,pageStack);
+        bool duplicate = positionSearchKey(nodeAccessor);
 
         // REVIEW:  This implements the SQL semantics whereby keys with null
         // values are considered duplicates for DISTINCT but not for UNIQUE.
@@ -676,6 +676,32 @@ void BTreeWriter::releaseScratchBuffers()
     scratchPageLock.unlock();
 }
 
+bool BTreeWriter::positionSearchKey(BTreeNodeAccessor &nodeAccessor)
+{
+    nodeAccessor.unmarshalKey(searchKeyData);
+    pageStack.clear();
+    bool duplicate = searchForKeyTemplate< true, std::vector<PageId> >(
+        searchKeyData,DUP_SEEK_ANY,true,pageStack);
+    return duplicate;
+}
+
+bool BTreeWriter::checkMonotonicity(
+    BTreeNodeAccessor &nodeAccessor, PConstBuffer pTupleBuffer)
+{
+    // unmarshal previous key, if accessible
+    if (iTupleOnLeaf == 0) {
+        return true;
+    }
+    BTreeNode const &node = pageLock.getNodeForRead();
+    accessTupleInline(node, iTupleOnLeaf - 1);
+    nodeAccessor.unmarshalKey(comparisonKeyData);
+
+    nodeAccessor.tupleAccessor.setCurrentTupleBuf(pTupleBuffer);
+    nodeAccessor.unmarshalKey(searchKeyData);
+    int keyComp = keyDescriptor.compareTuples(comparisonKeyData, searchKeyData);
+
+    return (keyComp < 0 && node.nEntries == iTupleOnLeaf);
+}
 FENNEL_END_CPPFILE("$Id$");
 
 // End BTreeWriter.cpp

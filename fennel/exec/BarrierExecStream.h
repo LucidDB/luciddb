@@ -53,12 +53,12 @@ class BarrierExecStream : public ConfluenceExecStream
     TupleData inputTuple;
 
     /**
-     * Whether row count has been produced.
+     * Whether output has been produced.
      */
     bool isDone;    
 
     /**
-     * Output tuple which holds the row count.
+     * Output tuple
      */
     TupleData outputTuple;
 
@@ -66,7 +66,7 @@ class BarrierExecStream : public ConfluenceExecStream
      * A reference to the output accessor 
      * contained in SingleOutputExecStream::pOutAccessor
      */
-    TupleAccessor* outputTupleAccessor;
+    TupleAccessor *outputTupleAccessor;
 
     /**
      * buffer holding the outputTuple to provide to the consumers
@@ -77,12 +77,6 @@ class BarrierExecStream : public ConfluenceExecStream
      * 0-based ordinal of next input from which to read
      */
     uint iInput;
-    
-    /**
-     * Number of rows processed.
-     */
-    RecordNum rowCount;
-    
     
 public:
     // implement ExecStream

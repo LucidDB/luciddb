@@ -111,6 +111,14 @@ public class SargFactory
     {
         return rexNull;
     }
+
+    /**
+     * @return RexBuilder used by this factory
+     */
+    public RexBuilder getRexBuilder()
+    {
+        return rexBuilder;
+    }
 }
 
 // End SargFactory.java

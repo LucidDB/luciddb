@@ -18,12 +18,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 set -e
-set -v
 
 usage() {
     echo "Usage:  initBuild.sh [--with[out]-fennel] [--with[out]-optimization] [--with[out]-debug] [--skip-farrago-build] [--skip-fennel[-thirdparty]-build] [--with[out]-tests]"
 }
-
 
 farrago_skip_build=false
 skip_tests=true
@@ -51,6 +49,7 @@ while [ -n "$1" ]; do
 done
 
 shopt -uq extglob
+set -v
 
 if $farrago_skip_build ; then
     echo Skipping Farrago build.

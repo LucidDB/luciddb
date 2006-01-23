@@ -51,6 +51,7 @@ protected:
     
     void testLoadSingleCol(
         uint nRows,
+        uint startRid,
         bool newRoot,
         SharedMockProducerExecStreamGenerator pGeneratorInit, 
         std::string testName = "LcsClusterAppendExecStreamTest");
@@ -163,6 +164,7 @@ void LcsClusterAppendExecStreamTest::verifyClusterPages(std::string testName)
  */
 void LcsClusterAppendExecStreamTest::testLoadSingleCol(
     uint nRows,
+    uint startRid,
     bool newRoot,
     SharedMockProducerExecStreamGenerator pGeneratorInit,
     std::string testName)
@@ -195,7 +197,8 @@ void LcsClusterAppendExecStreamTest::testLoadSingleCol(
     // BTree key only has one column which is the first column.
     (lcsAppendParams.keyProj).push_back(0);
 
-    // output only one value(rows inserted)
+    // output only single row with 2 columns (# rows loaded, starting rid value)
+    lcsAppendParams.outputTupleDesc.push_back(attrDesc_int64);
     lcsAppendParams.outputTupleDesc.push_back(attrDesc_int64);
 
     lcsAppendParams.pRootMap = 0;
@@ -234,7 +237,14 @@ void LcsClusterAppendExecStreamTest::testLoadSingleCol(
         mockStreamEmbryo, lcsAppendStreamEmbryo);
 
     // set up a generator which can produce the expected output
-    RampExecStreamGenerator expectedResultGenerator(mockParams.nRows);
+    vector<boost::shared_ptr<ColumnGenerator<int64_t> > > columnGenerators;
+    SharedInt64ColumnGenerator colGen =
+        SharedInt64ColumnGenerator(new SeqColumnGenerator(nRows));
+    columnGenerators.push_back(colGen);
+    colGen = SharedInt64ColumnGenerator(new SeqColumnGenerator(startRid));
+    columnGenerators.push_back(colGen);
+
+    CompositeExecStreamGenerator expectedResultGenerator(columnGenerators);
 
     verifyOutput(*pOutputStream, 1, expectedResultGenerator);
 
@@ -460,7 +470,8 @@ void LcsClusterAppendExecStreamTest::testSingleColNoDupNewRoot()
     SharedMockProducerExecStreamGenerator pResultGenerator =
         SharedMockProducerExecStreamGenerator(new RampExecStreamGenerator());
     
-    testLoadSingleCol(848, true,  pGenerator, "testSingleColNoDupNewRoot");
+    testLoadSingleCol(
+        848, 0, true,  pGenerator, "testSingleColNoDupNewRoot");
     resetExecStreamTest();
     testScanSingleCol(848, pGenerator, pResultGenerator);
 }
@@ -483,13 +494,15 @@ void LcsClusterAppendExecStreamTest::testSingleColNoDupOldRoot()
     SharedMockProducerExecStreamGenerator pResultGenerator =
         SharedMockProducerExecStreamGenerator(new RampExecStreamGenerator());
 
-    testLoadSingleCol(848, true,  pGenerator,  "testSingleColNoDupOldRoot");
+    testLoadSingleCol(
+        848, 0, true,  pGenerator,  "testSingleColNoDupOldRoot");
     resetExecStreamTest();
     // this will test scans of variable mode batches
     testScanSingleCol(848, pGenerator, pResultGenerator);
 
     resetExecStreamTest();
-    testLoadSingleCol(848, false,  pGenerator,  "testSingleColNoDupOldRoot");
+    testLoadSingleCol(
+        848, 848, false,  pGenerator,  "testSingleColNoDupOldRoot");
 
     resetExecStreamTest();
     pGenerator.reset(new RampExecStreamGenerator(848));
@@ -507,7 +520,8 @@ void LcsClusterAppendExecStreamTest::testSingleColConstNewRoot()
     SharedMockProducerExecStreamGenerator pResultGenerator =
         SharedMockProducerExecStreamGenerator(new ConstExecStreamGenerator(72));
     
-    testLoadSingleCol(848, true, pGenerator, "testSingleColConstNewRoot");
+    testLoadSingleCol(
+        848, 0, true, pGenerator, "testSingleColConstNewRoot");
     resetExecStreamTest();
 
     pGenerator.reset(new RampExecStreamGenerator());
@@ -531,9 +545,11 @@ void LcsClusterAppendExecStreamTest::testSingleColConstOldRoot()
     SharedMockProducerExecStreamGenerator pResultGenerator =
         SharedMockProducerExecStreamGenerator(new ConstExecStreamGenerator(72));
 
-    testLoadSingleCol(10, true,  pGenerator,  "testSingleColConstOldRoot");
+    testLoadSingleCol(
+        10, 0, true,  pGenerator,  "testSingleColConstOldRoot");
     resetExecStreamTest();
-    testLoadSingleCol(10, false,  pGenerator,  "testSingleColConstOldRoot");
+    testLoadSingleCol(
+        10, 10, false,  pGenerator,  "testSingleColConstOldRoot");
 
     resetExecStreamTest();
     pGenerator.reset(new RampExecStreamGenerator());
@@ -550,7 +566,8 @@ void LcsClusterAppendExecStreamTest::testSingleColStairNewRoot()
     SharedMockProducerExecStreamGenerator pResultGenerator =
         SharedMockProducerExecStreamGenerator(new StairCaseExecStreamGenerator(1,  7));
 
-    testLoadSingleCol(848, true, pGenerator, "testSingleColStairNewRoot");
+    testLoadSingleCol(
+        848, 0, true, pGenerator, "testSingleColStairNewRoot");
     resetExecStreamTest();
 
     pGenerator.reset(new RampExecStreamGenerator());
@@ -577,12 +594,14 @@ void LcsClusterAppendExecStreamTest::testSingleColStairOldRoot()
     SharedMockProducerExecStreamGenerator pResultGenerator =
         SharedMockProducerExecStreamGenerator(new StairCaseExecStreamGenerator(1,  7));
 
-    testLoadSingleCol(10, true,  pGenerator,  "testSingleColStairOldRoot");
+    testLoadSingleCol(
+        10, 0, true,  pGenerator,  "testSingleColStairOldRoot");
     resetExecStreamTest();
     testScanSingleCol(10, pRidGenerator, pResultGenerator);
 
     resetExecStreamTest();
-    testLoadSingleCol(10, false,  pGenerator, "testSingleColStairOldRoot");
+    testLoadSingleCol(
+        10, 10, false,  pGenerator, "testSingleColStairOldRoot");
 
     resetExecStreamTest();
     pRidGenerator.reset(new RampExecStreamGenerator(10));
