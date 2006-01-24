@@ -184,6 +184,10 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
                             rhsExp,
                             "toString",
                             new ExpressionList());
+                rhsExp = new MethodCall(
+                            rhsExp,
+                            "trim",
+                            new ExpressionList());
                 String methodName = "parse" + numClassName;
                 if (lhsType.getSqlTypeName().getOrdinal() ==
                        SqlTypeName.Integer_ordinal)
