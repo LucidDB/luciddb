@@ -258,9 +258,7 @@ public abstract class SqlOperatorTests extends TestCase
                 getCastString(value, targetType), expectedError);
     }
 
-    // FIXME jvs 20-Jan-2006:  disabled after breakage during integration
-    // of Julian's blockbuster
-    public void _testCast()
+    public void testCast()
     {
         getTester().setFor(SqlStdOperatorTable.castFunc);
 
