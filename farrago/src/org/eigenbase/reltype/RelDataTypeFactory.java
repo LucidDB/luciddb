@@ -24,6 +24,7 @@
 package org.eigenbase.reltype;
 
 import java.nio.charset.Charset;
+import java.util.List;
 
 import org.eigenbase.sql.SqlCollation;
 import org.eigenbase.sql.SqlIntervalQualifier;
@@ -87,6 +88,22 @@ public interface RelDataTypeFactory
     public RelDataType createStructType(
         RelDataType [] types,
         String [] fieldNames);
+
+    /**
+     * Creates a type which represents a structured collection of fields,
+     * given lists of the names and types of the fields.
+     *
+     * @param typeList types of the fields
+     * @param fieldNameList names of the fields
+     *
+     * @return canonical struct type descriptor
+     *
+     * @pre typeList.size() == fieldNameList.size()
+     * @post return != null
+     */
+    public RelDataType createStructType(
+        List<RelDataType> typeList,
+        List<String> fieldNameList);
 
     /**
      * Creates a type which represents a structured collection of fields,

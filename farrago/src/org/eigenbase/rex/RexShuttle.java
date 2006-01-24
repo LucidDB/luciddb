@@ -28,8 +28,10 @@ package org.eigenbase.rex;
  * Passes over a row-expression, calling a handler method for each node,
  * appropriate to the type of the node.
  *
- * <p>This is an instance of the
- * {@link org.eigenbase.util.Glossary#VisitorPattern Visitor Pattern}.</p>
+ * <p>Like {@link RexVisitor}, this is an instance of the
+ * {@link org.eigenbase.util.Glossary#VisitorPattern Visitor Pattern}.
+ * Use <code>RexShuttle</code> if you would like your methods to return a
+ * value.</p>
  *
  * @author jhyde
  * @since Nov 26, 2003
@@ -43,7 +45,8 @@ public class RexShuttle
     {
         boolean[] update = {false};
         RexNode[] clonedOperands = visitArray(over.operands, update);
-        if (update[0]) {
+        RexWindow window = visitWindow(over.getWindow());
+        if (update[0] || window != over.getWindow()) {
             // REVIEW jvs 8-Mar-2005:  This doesn't take into account
             // the fact that a rewrite may have changed the result type.
             // To do that, we would need to take a RexBuilder and
@@ -53,9 +56,26 @@ public class RexShuttle
                 over.getType(),
                 over.getAggOperator(),
                 clonedOperands,
-                over.getWindow());
+                window);
         } else {
             return over;
+        }
+    }
+
+    public RexWindow visitWindow(RexWindow window)
+    {
+        boolean[] update = {false};
+        RexNode[] clonedOrderKeys = visitArray(window.orderKeys, update);
+        RexNode[] clonedPartitionKeys = visitArray(window.partitionKeys, update);
+        if (update[0]) {
+            return new RexWindow(
+                clonedPartitionKeys,
+                clonedOrderKeys,
+                window.getLowerBound(),
+                window.getUpperBound(),
+                window.isRows());
+        } else {
+            return window;
         }
     }
 
@@ -78,7 +98,7 @@ public class RexShuttle
         }
     }
 
-    private RexNode[] visitArray(RexNode[] exprs, boolean[] update)
+    protected RexNode[] visitArray(RexNode[] exprs, boolean[] update)
     {
         RexNode[] clonedOperands = new RexNode[exprs.length];
         for (int i = 0; i < exprs.length; i++) {
@@ -111,9 +131,14 @@ public class RexShuttle
         }
     }
 
-    public RexNode visitInputRef(RexInputRef input)
+    public RexNode visitInputRef(RexInputRef inputRef)
     {
-        return input;
+        return inputRef;
+    }
+
+    public RexNode visitLocalRef(RexLocalRef localRef)
+    {
+        return localRef;
     }
 
     public RexNode visitLiteral(RexLiteral literal)
@@ -131,6 +156,5 @@ public class RexShuttle
         return rangeRef;
     }
 }
-
 
 // End RexShuttle.java

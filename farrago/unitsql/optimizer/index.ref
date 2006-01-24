@@ -189,11 +189,11 @@
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from depts where deptno=20;
 'column0'
-'IterCalcRel(NAME=[$1])'
+'IterCalcRel(expr#0..1=[{inputs}], NAME=[$t1])'
 '  FennelToIteratorConverter'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]])'
 '      IteratorToFennelConverter'
-'        IterCalcRel(field#0=[20])'
+'        IterCalcRel(expr#0=[{inputs}], expr#1=[20], $0=[$t1])'
 '          IterOneRowRel'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
@@ -202,32 +202,32 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    IteratorToFennelConverter'
-'      IterCalcRel(NAME=[$1])'
+'      IterCalcRel(expr#0..9=[{inputs}], NAME=[$t1])'
 '        FennelToIteratorConverter'
 '          FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]])'
 '            IteratorToFennelConverter'
-'              IterCalcRel(field#0=[20])'
+'              IterCalcRel(expr#0=[{inputs}], expr#1=[20], $0=[$t1])'
 '                IterOneRowRel'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from emps where deptno=20 and gender='M';
 'column0'
-'IterCalcRel(NAME=[$1], condition=[=($3, _ISO-8859-1'M')])'
+'IterCalcRel(expr#0..9=[{inputs}], expr#10=[_ISO-8859-1'M'], expr#11=[=($t3, $t10)], NAME=[$t1], $condition=[$t11])'
 '  FennelToIteratorConverter'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]])'
 '      IteratorToFennelConverter'
-'        IterCalcRel(field#0=[20])'
+'        IterCalcRel(expr#0=[{inputs}], expr#1=[20], $0=[$t1])'
 '          IterOneRowRel'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from emps where empid=3;
 'column0'
-'IterCalcRel(NAME=[$1])'
+'IterCalcRel(expr#0..9=[{inputs}], NAME=[$t1])'
 '  FennelToIteratorConverter'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]])'
 '      FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]])'
 '        IteratorToFennelConverter'
-'          IterCalcRel(field#0=[3])'
+'          IterCalcRel(expr#0=[{inputs}], expr#1=[3], $0=[$t1])'
 '            IterOneRowRel'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
@@ -270,7 +270,7 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    IteratorToFennelConverter'
-'      IterCalcRel(DNAME=[$11], ENAME=[$1])'
+'      IterCalcRel(expr#0..11=[{inputs}], DNAME=[$t11], ENAME=[$t1])'
 '        FennelToIteratorConverter'
 '          FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[2]], inputJoinProj=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]])'
 '            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
@@ -284,7 +284,7 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    IteratorToFennelConverter'
-'      IterCalcRel(DNAME=[$11], ENAME=[$1])'
+'      IterCalcRel(expr#0..11=[{inputs}], DNAME=[$t11], ENAME=[$t1])'
 '        FennelToIteratorConverter'
 '          FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[true], inputKeyProj=[[2]], inputJoinProj=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]])'
 '            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
@@ -298,7 +298,7 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[1, 0]], discardDuplicates=[false])'
 '    IteratorToFennelConverter'
-'      IterCalcRel(ENAME=[$3], DNAME=[$1])'
+'      IterCalcRel(expr#0..11=[{inputs}], ENAME=[$t3], DNAME=[$t1])'
 '        FennelToIteratorConverter'
 '          FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[true], inputKeyProj=[[0]], inputJoinProj=[[0, 1]])'
 '            FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
@@ -312,7 +312,7 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[1, 0]], discardDuplicates=[false])'
 '    IteratorToFennelConverter'
-'      IterCalcRel(ENAME=[$3], DNAME=[$1])'
+'      IterCalcRel(expr#0..11=[{inputs}], ENAME=[$t3], DNAME=[$t1])'
 '        FennelToIteratorConverter'
 '          FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[2, 3]], inputJoinProj=[[0, 1]])'
 '            FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[0]], inputJoinProj=[[0, 1]])'
@@ -327,7 +327,7 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[1, 0]], discardDuplicates=[false])'
 '    IteratorToFennelConverter'
-'      IterCalcRel(ENAME=[$3], DNAME=[$1])'
+'      IterCalcRel(expr#0..11=[{inputs}], ENAME=[$t3], DNAME=[$t1])'
 '        FennelToIteratorConverter'
 '          FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[true], inputKeyProj=[[2, 3]], inputJoinProj=[[0, 1]])'
 '            FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID], uniqueKey=[true], preserveOrder=[false], outer=[true], inputKeyProj=[[0]], inputJoinProj=[[0, 1]])'
@@ -339,11 +339,11 @@
 . . . . . . . . > (select name,age - 20 as age from emps) e
 . . . . . . . . > inner join depts on e.age = depts.deptno;
 'column0'
-'IterCalcRel(ENAME=[$0], AGE=[$1], DNAME=[$3])'
+'IterCalcRel(expr#0..3=[{inputs}], proj#0..1=[{exprs}], DNAME=[$t3])'
 '  FennelToIteratorConverter'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[2]], inputJoinProj=[[0, 1]])'
 '      IteratorToFennelConverter'
-'        IterCalcRel(NAME=[$1], AGE=[-($6, 20)], $f2=[CAST(-($6, 20)):INTEGER NOT NULL], condition=[IS NOT NULL(-($6, 20))])'
+'        IterCalcRel(expr#0..9=[{inputs}], expr#10=[20], expr#11=[-($t6, $t10)], expr#12=[IS NOT NULL($t11)], expr#13=[CAST($t11):INTEGER NOT NULL], NAME=[$t1], AGE=[$t11], DEPTNO=[$t13], $condition=[$t12])'
 '          FennelToIteratorConverter'
 '            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
@@ -353,11 +353,11 @@
 . . . . . . . . > (select name,age - 20 as age from emps) e
 . . . . . . . . > left outer join depts on e.age = depts.deptno;
 'column0'
-'IterCalcRel(ENAME=[$0], AGE=[$1], DNAME=[$3])'
+'IterCalcRel(expr#0..3=[{inputs}], proj#0..1=[{exprs}], DNAME=[$t3])'
 '  FennelToIteratorConverter'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[true], inputKeyProj=[[1]], inputJoinProj=[[0, 1]])'
 '      IteratorToFennelConverter'
-'        IterCalcRel(NAME=[$1], AGE=[-($6, 20)])'
+'        IterCalcRel(expr#0..9=[{inputs}], expr#10=[20], expr#11=[-($t6, $t10)], NAME=[$t1], AGE=[$t11])'
 '          FennelToIteratorConverter'
 '            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
@@ -375,11 +375,11 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    IteratorToFennelConverter'
-'      IterCalcRel(DNAME=[$3], ENAME=[$0])'
+'      IterCalcRel(expr#0..3=[{inputs}], DNAME=[$t3], ENAME=[$t0])'
 '        FennelToIteratorConverter'
 '          FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[2]], inputJoinProj=[[0, 1]])'
 '            IteratorToFennelConverter'
-'              IterCalcRel(NAME=[$1], AGE=[-($6, 20)], $f2=[CAST(-($6, 20)):INTEGER NOT NULL], condition=[IS NOT NULL(-($6, 20))])'
+'              IterCalcRel(expr#0..9=[{inputs}], expr#10=[20], expr#11=[-($t6, $t10)], expr#12=[IS NOT NULL($t11)], expr#13=[CAST($t11):INTEGER NOT NULL], NAME=[$t1], AGE=[$t11], DEPTNO=[$t13], $condition=[$t12])'
 '                FennelToIteratorConverter'
 '                  FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
@@ -387,11 +387,11 @@
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from depts where deptno=?;
 'column0'
-'IterCalcRel(NAME=[$1])'
+'IterCalcRel(expr#0..1=[{inputs}], NAME=[$t1])'
 '  FennelToIteratorConverter'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]])'
 '      IteratorToFennelConverter'
-'        IterCalcRel($f0=[CAST(?0):INTEGER NOT NULL], condition=[IS NOT NULL(?0)])'
+'        IterCalcRel(expr#0=[{inputs}], expr#1=[?0], expr#2=[IS NOT NULL($t1)], expr#3=[CAST($t1):INTEGER NOT NULL], $0=[$t3], $condition=[$t2])'
 '          IterOneRowRel'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 

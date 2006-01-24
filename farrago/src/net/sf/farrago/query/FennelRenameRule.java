@@ -74,7 +74,7 @@ public class FennelRenameRule extends RelOptRule
 
         RelNode inputRel = call.rels[1];
 
-        int n = project.getChildExps().length;
+        int n = project.getProjectExps().length;
         RelDataType inputType = inputRel.getRowType();
         if (inputType.getFieldList().size() != n) {
             return;
@@ -85,7 +85,7 @@ public class FennelRenameRule extends RelOptRule
         String [] fieldNames = new String[n];
         boolean needRename = false;
         for (int i = 0; i < n; ++i) {
-            RexNode exp = project.getChildExps()[i];
+            RexNode exp = project.getProjectExps()[i];
             if (!(exp instanceof RexInputRef)) {
                 return;
             }

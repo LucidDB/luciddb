@@ -23,13 +23,9 @@ package com.disruptivetech.farrago.rel;
 
 import com.disruptivetech.farrago.calc.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-
 import net.sf.farrago.query.*;
 import net.sf.farrago.fem.fennel.*;
 
-import org.eigenbase.rel.CalcRel;
 import org.eigenbase.rel.RelFieldCollation;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.*;
@@ -55,8 +51,7 @@ public class FennelCalcRel extends FennelSingleRel
 {
     //~ Instance fields -------------------------------------------------------
 
-    private final RexNode [] projectExprs;
-    private final RexNode conditionExpr;
+    private final RexProgram program;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -66,22 +61,25 @@ public class FennelCalcRel extends FennelSingleRel
      * @param cluster RelOptCluster for this rel
      * @param child rel producing rows to be Calced
      * @param rowType Row type
-     * @param projectExprs Expressions returned by the calculator
-     * @param conditionExpr Filter condition, may be null
+     * @param program Set of common expressions, projections, and optional
+     *   filter, to be calculated by the calculator
      */
     public FennelCalcRel(
         RelOptCluster cluster,
         RelNode child,
         RelDataType rowType,
-        RexNode [] projectExprs,
-        RexNode conditionExpr)
+        RexProgram program)
     {
         super(cluster, new RelTraitSet(FENNEL_EXEC_CONVENTION), child);
         Util.pre(rowType != null, "rowType != null");
-        Util.pre(projectExprs != null, "projectExprs != null");
-        this.projectExprs = projectExprs;
-        this.conditionExpr = conditionExpr;
+        Util.pre(program != null, "program != null");
+        this.program = program;
         this.rowType = rowType;
+        assert program.isValid(true);
+        assert RelOptUtil.eq(
+            program.getInputRowType(), child.getRowType(), true);
+        assert RelOptUtil.equal( // TODO: use stronger 'eq'
+            program.getOutputRowType(), rowType, true);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -89,49 +87,27 @@ public class FennelCalcRel extends FennelSingleRel
     // implement RelNode
     public Object clone()
     {
-        RexNode clonedConditionExpr =
-            getConditionExpr() != null
-            ? RexUtil.clone(getConditionExpr())
-            : null;
-
         FennelCalcRel clone = new FennelCalcRel(
             getCluster(),
             RelOptUtil.clone(getChild()),
             rowType,
-            RexUtil.clone(getProjectExprs()),
-            clonedConditionExpr);
+            program);
         clone.inheritTraitsFrom(this);
         return clone;
     }
 
-    /**
-     * @return expressions computed by this calculator
-     */
-    public RexNode [] getProjectExprs()
-    {
-        return projectExprs;
-    }
 
     /**
-     * @return filter expression for this calculator, or null if unconditional
+     * @return Program
      */
-    public RexNode getConditionExpr()
+    public RexProgram getProgram()
     {
-        return conditionExpr;
-    }
-
-    public RexNode [] getChildExps()
-    {
-        final ArrayList list = new ArrayList(Arrays.asList(projectExprs));
-        if (conditionExpr != null) {
-            list.add(conditionExpr);
-        }
-        return (RexNode []) list.toArray(new RexNode[list.size()]);
+        return program;
     }
 
     public void explain(RelOptPlanWriter pw)
     {
-        CalcRel.explainCalc(this, pw, conditionExpr, projectExprs);
+        program.explainCalc(this, pw);
     }
 
     // implement RelNode
@@ -144,8 +120,8 @@ public class FennelCalcRel extends FennelSingleRel
         // out higher than IterCalcRel (making it at least deterministic until
         // we have proper costing, and giving preference to Java since it's
         // currently more reliable)
-        return planner.makeCost(rowCount, rowCount * projectExprs.length * 2,
-            0);
+        int exprCount = program.getExprCount();
+        return planner.makeCost(rowCount, rowCount * exprCount * 2, 0);
     }
 
     public boolean isDistinct()
@@ -182,13 +158,12 @@ public class FennelCalcRel extends FennelSingleRel
             implementor.visitFennelChild((FennelRel) getChild()), 
             calcStream);
         
-        calcStream.setFilter(getConditionExpr() != null);
+        calcStream.setFilter(program.getCondition() != null);
         final RexToCalcTranslator translator =
             new RexToCalcTranslator(getCluster().getRexBuilder());
-        final String program = translator.getProgram(
+        final String program = translator.generateProgram(
             getChild().getRowType(),
-            getProjectExprs(),
-            getConditionExpr());
+            getProgram());
         calcStream.setProgram(program);
         return calcStream;
     }

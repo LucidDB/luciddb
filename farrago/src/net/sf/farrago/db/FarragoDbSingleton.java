@@ -25,6 +25,8 @@ import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.*;
 
 /**
@@ -116,6 +118,31 @@ public abstract class FarragoDbSingleton extends FarragoCompoundAllocation
         nReferences--;
     }
 
+    /**
+     * Retrieve a list of connected FarragoSession objects.  Each invocation
+     * produces a new List.  Altering the list has no effect on the 
+     * given FarragoDatabase.
+     * 
+     * <p>The returned FarragoSession objects may be disconnected at any
+     * time.  See {@link FarragoSession#isClosed()}.
+     * 
+     * @param db sessions are retrieved from this FarragoDatabase instance 
+     * @return non-null List of FarragoSession objects
+     */
+    public static synchronized List<FarragoSession> getSessions(
+        FarragoDatabase db)
+    {
+        List<FarragoSession> sessions = new ArrayList<FarragoSession>();
+        
+        for(Object allocation: db.allocations) {
+            if (allocation instanceof FarragoSession) {
+                sessions.add((FarragoSession)allocation);
+            }
+        }
+        
+        return sessions;
+    }
+    
     /**
      * Conditionally shuts down the database depending on the number
      * of references.

@@ -223,16 +223,18 @@ public class ObjectSchemaTest extends SaffronTestCase
                         // apply the join condition as a filter. 't1 == t2' will
                         // become 't2 == t2', which is always true, so the filter
                         // can be removed
+                        final RexNode[] exprs = new RexNode [] {
+                            rexBuilder.makeRangeReference(rel.getRowType(), 0),
+                            RexUtil.clone(tokens[0])
+                        };
+                        final RelDataType rowType = RexUtil.createStructType(
+                            rel.getCluster().getTypeFactory(), exprs);
                         ProjectRel project =
                             new ProjectRel(
                                 rel.getCluster(),
                                 rel,
-                                new RexNode [] {
-                                    rexBuilder.makeRangeReference(
-                                        rel.getRowType(),
-                                        0), RexUtil.clone(tokens[0])
-                                },
-                                null,
+                                exprs,
+                                rowType,
                                 ProjectRel.Flags.Boxed);
                         call.transformTo(project);
                     }

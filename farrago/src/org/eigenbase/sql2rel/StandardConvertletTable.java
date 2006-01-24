@@ -146,6 +146,55 @@ public class StandardConvertletTable extends ReflectiveConvertletTable
                 }
             }
         );
+
+        // Convert "element(<expr>)" to "$element_slice(<expr>)", if the
+        // expression is a multiset of scalars.
+        if (false)
+        registerOp(
+            SqlStdOperatorTable.elementFunc,
+            new SqlRexConvertlet()
+            {
+                public RexNode convertCall(SqlRexContext cx, SqlCall call)
+                {
+                    final SqlNode[] operands = call.getOperands();
+                    Util.permAssert(operands.length == 1, "operands.length == 1");
+                    final SqlNode operand = operands[0];
+                    final RelDataType type = cx.getValidator().getValidatedNodeType(operand);
+                    if (!type.getComponentType().isStruct()) {
+                        return
+                            cx.convertExpression(
+                                SqlStdOperatorTable.elementSlicefunc.createCall(
+                                    operand,
+                                    SqlParserPos.ZERO));
+                    }
+                    // fallback on default behavior
+                    return StandardConvertletTable.this.convertCall(cx, call);
+                }
+            }
+        );
+
+        // Convert "$element_slice(<expr>)" to "element(<expr>).field#0"
+        if (false)
+        registerOp(
+            SqlStdOperatorTable.elementSlicefunc,
+            new SqlRexConvertlet()
+            {
+                public RexNode convertCall(SqlRexContext cx, SqlCall call)
+                {
+                    final SqlNode[] operands = call.getOperands();
+                    Util.permAssert(operands.length == 1, "operands.length == 1");
+                    final SqlNode operand = operands[0];
+                    final RexNode expr =
+                        cx.convertExpression(
+                            SqlStdOperatorTable.elementFunc.createCall(
+                                operand,
+                                SqlParserPos.ZERO));
+                    return cx.getRexBuilder().makeFieldAccess(
+                        expr,
+                        0);
+                }
+            }
+        );
     }
 
     private SqlNode expandAvg(
@@ -221,10 +270,23 @@ public class StandardConvertletTable extends ReflectiveConvertletTable
         SqlMultisetOperator op,
         SqlCall call)
     {
+        final RelDataType originalType =
+            cx.getValidator().getValidatedNodeType(call);
         RexRangeRef rr = cx.getSubqueryExpr(call);
         assert rr != null;
         RelDataType msType = rr.getType().getFields()[0].getType();
-        return cx.getRexBuilder().makeInputRef(msType, rr.getOffset());
+        RexNode expr = cx.getRexBuilder().makeInputRef(msType, rr.getOffset());
+        assert msType.getComponentType().isStruct();
+        if (!originalType.getComponentType().isStruct()) {
+            // If the type is not a struct, the multiset operator will have
+            // wrapped the type as a record. Add a call to the $SLICE operator
+            // to compensate. For example,
+            // if '<ms>' has type 'RECORD (INTEGER x) MULTISET',
+            // then '$SLICE(<ms>) has type 'INTEGER MULTISET'.
+            // This will be removed as the expression is translated.
+            expr = cx.getRexBuilder().makeCall(SqlStdOperatorTable.sliceOp, expr);
+        }
+        return expr;
     }
 
     public RexNode convertJdbc(

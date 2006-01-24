@@ -64,6 +64,10 @@ public class ExtInstructionDefTable
         new CalcProgramBuilder.ExtInstrSizeDef("LocalTime");
     public static final CalcProgramBuilder.ExtInstrDef localTimestamp =
         new CalcProgramBuilder.ExtInstrSizeDef("LocalTimestamp");
+    public static final CalcProgramBuilder.ExtInstrDef currentTime =
+        new CalcProgramBuilder.ExtInstrSizeDef("CurrentTime");
+    public static final CalcProgramBuilder.ExtInstrDef currentTimestamp =
+        new CalcProgramBuilder.ExtInstrSizeDef("CurrentTimestamp");
     public static final CalcProgramBuilder.ExtInstrDef log =
         new CalcProgramBuilder.ExtInstrDef("LN", 2);
     public static final CalcProgramBuilder.ExtInstrDef log10 =

@@ -32,7 +32,6 @@ import org.eigenbase.rel.Aggregation;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.sql.SqlBinaryOperator;
 import org.eigenbase.sql.SqlOperator;
-import org.eigenbase.sql.SqlOperatorTable;
 import org.eigenbase.sql.SqlPrefixOperator;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.util.Util;
@@ -106,48 +105,79 @@ public class OJRexImplementorTableImpl implements OJRexImplementorTable
      */
     protected void initStandard(final SqlStdOperatorTable opTab)
     {
-        registerBinaryOperator(opTab.equalsOperator, BinaryExpression.EQUAL);
+        registerBinaryOperator(
+            SqlStdOperatorTable.equalsOperator,
+            BinaryExpression.EQUAL);
 
-        registerBinaryOperator(opTab.notEqualsOperator, BinaryExpression.NOTEQUAL);
+        registerBinaryOperator(
+            SqlStdOperatorTable.notEqualsOperator,
+            BinaryExpression.NOTEQUAL);
 
-        registerBinaryOperator(opTab.lessThanOperator, BinaryExpression.LESS);
+        registerBinaryOperator(
+            SqlStdOperatorTable.lessThanOperator,
+            BinaryExpression.LESS);
 
-        registerBinaryOperator(opTab.lessThanOrEqualOperator,
+        registerBinaryOperator(
+            SqlStdOperatorTable.lessThanOrEqualOperator,
             BinaryExpression.LESSEQUAL);
 
-        registerBinaryOperator(opTab.greaterThanOperator,
+        registerBinaryOperator(
+            SqlStdOperatorTable.greaterThanOperator,
             BinaryExpression.GREATER);
 
-        registerBinaryOperator(opTab.greaterThanOrEqualOperator,
+        registerBinaryOperator(
+            SqlStdOperatorTable.greaterThanOrEqualOperator,
             BinaryExpression.GREATEREQUAL);
 
-        registerBinaryOperator(opTab.plusOperator, BinaryExpression.PLUS);
+        registerBinaryOperator(
+            SqlStdOperatorTable.plusOperator,
+            BinaryExpression.PLUS);
 
-        registerBinaryOperator(opTab.minusOperator, BinaryExpression.MINUS);
+        registerBinaryOperator(
+            SqlStdOperatorTable.minusOperator,
+            BinaryExpression.MINUS);
 
-        registerBinaryOperator(opTab.multiplyOperator, BinaryExpression.TIMES);
+        registerBinaryOperator(
+            SqlStdOperatorTable.multiplyOperator,
+            BinaryExpression.TIMES);
 
-        registerBinaryOperator(opTab.divideOperator, BinaryExpression.DIVIDE);
+        registerBinaryOperator(
+            SqlStdOperatorTable.divideOperator,
+            BinaryExpression.DIVIDE);
 
-        registerBinaryOperator(opTab.andOperator, BinaryExpression.LOGICAL_AND);
+        registerBinaryOperator(
+            SqlStdOperatorTable.andOperator,
+            BinaryExpression.LOGICAL_AND);
 
-        registerBinaryOperator(opTab.orOperator, BinaryExpression.LOGICAL_OR);
+        registerBinaryOperator(
+            SqlStdOperatorTable.orOperator,
+            BinaryExpression.LOGICAL_OR);
 
-        registerUnaryOperator(opTab.prefixMinusOperator, UnaryExpression.MINUS);
+        registerUnaryOperator(
+            SqlStdOperatorTable.prefixMinusOperator,
+            UnaryExpression.MINUS);
 
-        registerUnaryOperator(opTab.notOperator, UnaryExpression.NOT);
+        registerUnaryOperator(
+            SqlStdOperatorTable.notOperator,
+            UnaryExpression.NOT);
 
         registerOperator(
-            opTab.isTrueOperator,
+            SqlStdOperatorTable.isTrueOperator,
             new OJRexIgnoredCallImplementor());
 
         registerOperator(
-            opTab.castFunc,
+            SqlStdOperatorTable.castFunc,
             new OJRexCastImplementor());
+
+        // We hope that the internal 'slice' operator will be expanded away
+        // before we need to generate code for it.
+        registerOperator(
+            SqlStdOperatorTable.sliceOp,
+            new OJRexIgnoredCallImplementor());
 
         // Register the standard aggregations.
         aggImplementorMap.put(
-            opTab.sumOperator,
+            SqlStdOperatorTable.sumOperator,
             new OJSumAggImplementor());
     }
 

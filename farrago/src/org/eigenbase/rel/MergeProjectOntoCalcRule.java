@@ -23,11 +23,9 @@
 
 package org.eigenbase.rel;
 
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelOptRuleOperand;
-import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.reltype.RelDataTypeField;
 
 
 /**
@@ -72,48 +70,41 @@ public class MergeProjectOntoCalcRule extends RelOptRule
         // through a filter. Transform the project into an identical calc,
         // which we'll have chance to merge later, after the over is
         // expanded.
-        if (RexOver.containsOver(project.getChildExps(), null)) {
+        RexProgram program =
+            RexProgram.create(
+                calc.getRowType(), project.getProjectExps(), null,
+                project.getRowType(), project.getCluster().getRexBuilder());
+        if (RexOver.containsOver(program)) {
             CalcRel projectAsCalc = new CalcRel(
                 project.getCluster(),
                 project.cloneTraits(),
                 calc,
                 project.getRowType(),
-                project.getChildExps(),
-                null);
+                program);
             call.transformTo(projectAsCalc);
             return;
         }
 
-        // Expand all references to columns in the project exprs. For example,
-        //
-        // SELECT x + 1 AS p, x + y AS q FROM (                                         e
-        //   SELECT a + b AS x, c AS y
-        //   FROM t
-        //   WHERE c < 6)
-        //
-        // becomes
-        //
-        // SELECT (a + b) + 1 AS p, (a + b) + c AS q
-        // FROM t
-        // WHERE c < 6
-        final RexNode [] projectExprs = new RexNode[project.exps.length];
-        final RexShuttle shuttle =
-            new RexShuttle() {
-                public RexNode visitInputRef(RexInputRef input)
-                {
-                    return calc.projectExprs[input.getIndex()];
-                }
-            };
-        for (int i = 0; i < projectExprs.length; i++) {
-            projectExprs[i] = project.exps[i].accept(shuttle);
+        // Create a program containing the project node's expressions.
+        final RexBuilder rexBuilder = project.getCluster().getRexBuilder();
+        final RexProgramBuilder progBuilder =
+            new RexProgramBuilder(calc.getRowType(), rexBuilder);
+        final RelDataTypeField[] fields = project.getRowType().getFields();
+        for (int i = 0; i < project.exps.length; i++) {
+            progBuilder.addProject(project.exps[i], fields[i].getName());
         }
+        RexProgram topProgram = progBuilder.getProgram();
+        RexProgram bottomProgram = calc.getProgram();
+
+        // Merge the programs together.
+        RexProgram mergedProgram = RexProgramBuilder.mergePrograms(
+            topProgram, bottomProgram, rexBuilder);
         final CalcRel newCalc =
             new CalcRel(calc.getCluster(), RelOptUtil.clone(calc.traits),
-                calc.getChild(), project.getRowType(), projectExprs,
-                calc.getCondition());
+                calc.getChild(), project.getRowType(), mergedProgram);
         call.transformTo(newCalc);
     }
-}
 
+}
 
 // End MergeProjectOntoCalcRule.java

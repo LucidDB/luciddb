@@ -26,6 +26,7 @@ import net.sf.farrago.resource.FarragoResource;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.util.Util;
+import org.eigenbase.util14.ConversionUtil;
 
 /**
  * FarragoJdbcEngineBinaryParamDef defines a binary parameter. Only accepts 
@@ -58,7 +59,7 @@ class FarragoJdbcEngineBinaryParamDef extends FarragoJdbcEngineParamDef
         final byte [] bytes = (byte []) x;
         if (bytes.length > maxByteCount) {
             throw FarragoResource.instance().ParameterValueTooLong.ex(
-                Util.toStringFromByteArray(bytes,16),
+                ConversionUtil.toStringFromByteArray(bytes,16),
                 type.toString());
         }
         return bytes;

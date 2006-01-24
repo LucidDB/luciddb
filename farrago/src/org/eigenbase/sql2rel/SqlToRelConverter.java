@@ -291,6 +291,7 @@ public class SqlToRelConverter
     {
         for (int i = 0; i < bb.subqueries.size(); i++) {
             SqlNode node = (SqlNode) bb.subqueries.get(i);
+            int joinType = JoinRel.JoinType.INNER;
             final RexNode expr = (RexNode) bb.mapSubqueryToExpr.get(node);
             if (expr == null) {
                 RelNode converted;
@@ -327,7 +328,7 @@ public class SqlToRelConverter
                 case SqlKind.ExistsORDINAL: {
                     // "select from emp where exists (Q)"
                     // becomes
-                    // "select from emp join (select *, TRUE from (Q)) q
+                    // "select from emp left join (select *, TRUE from (Q)) q
                     //   on emp.deptno = q.col1
                     //   where q.t is not null
                     SqlCall call = (SqlCall) node;
@@ -339,6 +340,7 @@ public class SqlToRelConverter
                             null,
                             rexBuilder.makeLiteral(true),
                             "$indicator");
+                    joinType = JoinRel.JoinType.LEFT;
                     break;
                 }
                 case SqlKind.SelectORDINAL:
@@ -352,7 +354,7 @@ public class SqlToRelConverter
                     throw Util.newInternal("unexpected kind of subquery :"
                         + node);
                 }
-                final RexNode expression = bb.register(converted);
+                final RexNode expression = bb.register(converted, joinType);
                 bb.mapSubqueryToExpr.put(node, expression);
             }
         }
@@ -698,16 +700,17 @@ public class SqlToRelConverter
         case SqlKind.UnnestORDINAL:
             call = (SqlCall) ((SqlCall) from).operands[0];
             replaceSubqueries(bb, call);
-            RexNode[] exprs = new RexNode[]{bb.convertExpression(call)};
+            RexNode[] exprs = {bb.convertExpression(call)};
+            final String[] fieldNames = {validator.deriveAlias(call, 0)};
             final RelNode childRel = new ProjectRel(
                 cluster,
                 null != bb.root  ? bb.root : new OneRowRel(cluster),
                 exprs,
-                new String[]{validator.deriveAlias(call, 0)},
+                RexUtil.createStructType(typeFactory, exprs, fieldNames),
                 ProjectRel.Flags.Boxed);
 
             UncollectRel uncollectRel = new UncollectRel(cluster, childRel);
-	    leaves.add(uncollectRel);
+            leaves.add(uncollectRel);
             bb.setRoot(uncollectRel);
             return;
         case SqlKind.FunctionORDINAL:
@@ -773,10 +776,8 @@ public class SqlToRelConverter
                 }
             }
             return new CorrelatorRel(
-                            rightRel.getCluster(),
-                            leftRel,
-                            rightRel,
-                            correlations);
+                rightRel.getCluster(), leftRel, rightRel,
+                correlations, JoinRelBase.JoinType.LEFT);
         }
         RexNode conditionExp =
             convertJoinCondition(bb, condition, conditionType, leftRel,
@@ -899,7 +900,7 @@ public class SqlToRelConverter
                 cluster,
                 bb.root,
                 preExprs,
-                null,
+                RexUtil.createStructType(cluster.getTypeFactory(), preExprs),
                 ProjectRel.Flags.Boxed));
 
         // add the aggregator
@@ -917,7 +918,8 @@ public class SqlToRelConverter
                 cluster,
                 bb.root,
                 selectExprs,
-                selectNames,
+                RexUtil.createStructType(
+                    cluster.getTypeFactory(), selectExprs, selectNames),
                 ProjectRel.Flags.Boxed));
 
         // implement HAVING
@@ -1130,8 +1132,10 @@ public class SqlToRelConverter
                 defaultValueFactory.newColumnDefaultValue(targetTable, i);
         }
 
-        return new ProjectRel(cluster, sourceRel, rhsExps, null,
-                ProjectRel.Flags.Boxed);
+        return new ProjectRel(
+            cluster, sourceRel, rhsExps,
+            RexUtil.createStructType(typeFactory, rhsExps),
+            ProjectRel.Flags.Boxed);
     }
 
     private RelNode convertDelete(SqlDelete call)
@@ -1306,24 +1310,29 @@ public class SqlToRelConverter
                     // select*from unnest(select multiset[empno] from sales.emps);
 
                     fieldNames[jOperand] = SqlUtil.deriveAliasFromOrdinal(jOperand);
-                    // fieldNames[jOperand] = validator.deriveAlias(operand, jOperand);
                 }
-                joinList.set(iRel, new ProjectRel(
-                    cluster, new OneRowRel(cluster), selectList,
-                    fieldNames, ProjectRelBase.Flags.Boxed));
+                final RelDataType rowType =
+                    RexUtil.createStructType(
+                        typeFactory, selectList, fieldNames);
+                joinList.set(
+                    iRel,
+                    new ProjectRel(
+                        cluster, new OneRowRel(cluster), selectList,
+                        rowType, ProjectRelBase.Flags.Boxed));
             }
         }
 
         RelNode ret = (RelNode) joinList.get(0);
         for (int i = 1; i < joinList.size(); i++) {
             RelNode relNode = (RelNode) joinList.get(i);
-            ret = new JoinRel(
-                        cluster,
-                        ret,
-                        relNode,
-                        rexBuilder.makeLiteral(true),
-                        JoinRel.JoinType.INNER,
-                        Collections.EMPTY_SET);
+            ret =
+                new JoinRel(
+                    cluster,
+                    ret,
+                    relNode,
+                    rexBuilder.makeLiteral(true),
+                    JoinRel.JoinType.INNER,
+                    Collections.EMPTY_SET);
         }
         return ret;
     }
@@ -1342,7 +1351,9 @@ public class SqlToRelConverter
             fieldNames[i] = validator.deriveAlias(node, i);
         }
         bb.setRoot(
-            new ProjectRel(cluster, bb.root, exps, fieldNames,
+            new ProjectRel(
+                cluster, bb.root, exps,
+                RexUtil.createStructType(typeFactory, exps, fieldNames),
                 ProjectRel.Flags.Boxed));
     }
 
@@ -1375,7 +1386,7 @@ public class SqlToRelConverter
                     cluster,
                     in,
                     exps,
-                    fieldNames,
+                    RexUtil.createStructType(typeFactory, exps, fieldNames),
                     ProjectRel.Flags.Boxed));
         }
 
@@ -1525,10 +1536,11 @@ public class SqlToRelConverter
          * Registers a relational expression.
          *
          * @param rel Relational expression
+         * @param joinType
          * @return Expression with which to refer to the row (or partial row)
          *   coming from this relational expression's side of the join.
          */
-        public RexNode register(RelNode rel)
+        public RexNode register(RelNode rel, int joinType)
         {
             if (root == null) {
                 setRoot(rel);
@@ -1542,7 +1554,7 @@ public class SqlToRelConverter
                     rel,
                     null,
                     SqlJoinOperator.ConditionType.None,
-                    JoinRel.JoinType.LEFT);
+                    joinType);
 
                 setRoot(join);
                 return rexBuilder.makeRangeReference(
@@ -1788,17 +1800,16 @@ public class SqlToRelConverter
         public void visit(SqlCall call)
         {
             if (agg != null) {
-            final SqlOperator op = call.getOperator();
-            if (op.isAggregator()) {
-                Util.permAssert(
-                    agg != null,
-                    "aggregate fun must occur in aggregation mode");
-                setResult(agg.convertCall(call));
-                return;
-            }
+                final SqlOperator op = call.getOperator();
+                if (op.isAggregator()) {
+                    Util.permAssert(
+                        agg != null,
+                        "aggregate fun must occur in aggregation mode");
+                    setResult(agg.convertCall(call));
+                    return;
+                }
             }
             setResult(exprConverter.convertCall(this, call));
-
         }
 
         // implement SqlVisitor
@@ -1920,9 +1931,9 @@ public class SqlToRelConverter
          * to the elements in {@link #groupExprs}; the remaining elements are
          * for aggregates.
          */
-        private final ArrayList convertedInputExprs = new ArrayList();
-        private final ArrayList inputRefs = new ArrayList();
-        private final ArrayList aggCalls = new ArrayList();
+        private final List convertedInputExprs = new ArrayList();
+        private final List inputRefs = new ArrayList();
+        private final List aggCalls = new ArrayList();
 
         /**
          * Input expressions required by aggregates,
@@ -1975,11 +1986,11 @@ public class SqlToRelConverter
             final Aggregation aggregation = (Aggregation) call.getOperator();
             RelDataType type = validator.getValidatedNodeType(call);
             final AggregateRel.Call aggCall =
-                new AggregateRel.Call(aggregation, args, type);
+                new AggregateRel.Call(aggregation, args);
             SqlLiteral quantifier = call.getFunctionQuantifier();
             if ((null != quantifier) &&
                 (quantifier.getValue() == SqlSelectKeyword.Distinct)) {
-                aggCall.setDistinctFalg(true);
+                aggCall.setDistinct(true);
             }
             int index = aggCalls.size() + groupExprs.size();
             aggCalls.add(aggCall);

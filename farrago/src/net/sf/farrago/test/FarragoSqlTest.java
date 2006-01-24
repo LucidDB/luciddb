@@ -27,6 +27,7 @@ import java.io.*;
 import junit.framework.*;
 
 import net.sf.farrago.util.*;
+import org.eigenbase.sql.test.SqlOperatorTests;
 
 
 /**

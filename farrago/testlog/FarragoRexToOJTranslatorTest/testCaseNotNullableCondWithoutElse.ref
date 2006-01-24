@@ -1,5 +1,9 @@
 
-ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+static final ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+static {
+    oj_var0.assignFrom( "Yes" );
+}
 
 
 ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
@@ -7,7 +11,6 @@ ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
 
 ExecutableStmt.Oj_inner_1 oj_var2 = new ExecutableStmt.Oj_inner_1();
 
-oj_var0.assignFrom( "Yes" );
 oj_var1.setNull( true );
 oj_var2.assignFrom( oj_var1 );
 if (ID$2$DEPTNO == 10) {

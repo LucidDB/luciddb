@@ -22,10 +22,7 @@ package com.disruptivetech.farrago.volcano;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -57,12 +54,16 @@ public class RelSubset extends AbstractRelNode
     //~ Instance fields -------------------------------------------------------
 
     /** List of the relational expressions for which this subset is an input. */
-    ArrayList parents;
-    ArrayList rels;
+    final List parents;
+
+    /** The relational expressions in this subset. */
+    final List rels;
 
     /** cost of best known plan (it may have improved since) */
     RelOptCost bestCost;
-    RelSet set;
+
+    /** The set this subset belongs to. */
+    final RelSet set;
 
     /** best known plan */
     RelNode best;
@@ -165,11 +166,6 @@ public class RelSubset extends AbstractRelNode
         return set.rel.isDistinct();
     }
 
-    ArrayList getParentRels()
-    {
-        return parents;
-    }
-
     Set getParentSubsets()
     {
         HashSet set = new HashSet();
@@ -207,6 +203,10 @@ public class RelSubset extends AbstractRelNode
             planner.listener.relEquivalenceFound(event);
         }
 
+        // If this isn't the first rel in the set, it must have compatible
+        // row type.
+        assert set.rel == null ||
+            RelOptUtil.equal(rel.getRowType(), getRowType(), true);
         rels.add(rel);
         set.addInternal(rel);
         Set variablesSet = RelOptUtil.getVariablesSet(rel);
@@ -302,7 +302,7 @@ public class RelSubset extends AbstractRelNode
                 RelNode cheapest = subset.best;
                 if (cheapest == null) {
                     final String expr = subset.toString();
-                    if (tracer.isLoggable(Level.FINE)) {
+                    if (tracer.isLoggable(Level.WARNING)) {
                         // Dump the planner's expression pool so we can figure
                         // out why we reached impasse.
                         StringWriter sw = new StringWriter();
@@ -311,7 +311,7 @@ public class RelSubset extends AbstractRelNode
                             + "] could not be implemented; planner state:");
                         planner.dump(pw);
                         pw.flush();
-                        tracer.fine(sw.toString());
+                        tracer.warning(sw.toString());
                     }
                     Error e =
                         Util.newInternal("node could not be implemented: "

@@ -232,10 +232,16 @@ public abstract class AbstractRelNode implements RelNode
         return className;
     }
 
+    public boolean isValid(boolean fail)
+    {
+        return true;
+    }
+
     public final RelDataType getRowType()
     {
         if (rowType == null) {
             rowType = deriveRowType();
+            assert rowType != null : this;
         }
         return rowType;
     }
@@ -307,11 +313,15 @@ public abstract class AbstractRelNode implements RelNode
     {
         RelNode [] inputs = getInputs();
         for (int i = 0; i < inputs.length; i++) {
-            RelNode e = planner.ensureRegistered(inputs[i]);
-            if (e != inputs[i]) {
+            final RelNode input = inputs[i];
+            RelNode e = planner.ensureRegistered(input);
+            if (e != input) {
+                // TODO: change 'equal' to 'eq', which is stronger.
+                assert RelOptUtil.equal(input.getRowType(), e.getRowType(), true);
                 replaceInput(i, e);
             }
         }
+        assert isValid(true);
         digest = computeDigest();
         assert digest != null : "post: return != null";
     }
@@ -364,13 +374,15 @@ public abstract class AbstractRelNode implements RelNode
                 {
                     RelNode [] inputs = rel.getInputs();
                     RexNode [] childExps = rel.getChildExps();
-                    assert terms.length == (inputs.length + childExps.length
-                        + values.length) : "terms.length=" + terms.length
-                    + " inputs.length=" + inputs.length + " childExps.length="
-                    + childExps.length + " values.length=" + values.length;
+                    assert terms.length ==
+                        (inputs.length + childExps.length + values.length) :
+                        "terms.length=" + terms.length +
+                        " inputs.length=" + inputs.length +
+                        " childExps.length=" + childExps.length +
+                        " values.length=" + values.length;
                     write(getRelTypeName());
 
-                    for(int i = 0; i < traits.size(); i++) {
+                    for (int i = 0; i < traits.size(); i++) {
                         write(".");
                         write(traits.getTrait(i).toString());
                     }

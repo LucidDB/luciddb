@@ -1,18 +1,27 @@
 
-ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+static final ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+static {
+    oj_var0.assignFrom( "Yes" );
+}
 
 
-ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
+static final ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
+
+static {
+    oj_var1.assignFrom( "No" );
+}
 
 
-ExecutableStmt.Oj_inner_2 oj_var2 = new ExecutableStmt.Oj_inner_2();
+static final ExecutableStmt.Oj_inner_2 oj_var2 = new ExecutableStmt.Oj_inner_2();
+
+static {
+    oj_var2.assignFrom( "Other" );
+}
 
 
 ExecutableStmt.Oj_inner_2 oj_var3 = new ExecutableStmt.Oj_inner_2();
 
-oj_var0.assignFrom( "Yes" );
-oj_var1.assignFrom( "No" );
-oj_var2.assignFrom( "Other" );
 oj_var3.assignFrom( oj_var2 );
 if (ID$9$MANAGER == true) {
     oj_var3.assignFrom( oj_var0 );

@@ -57,6 +57,30 @@ public class RexToOJTranslator implements RexVisitor
     private final OJRexImplementorTable implementorTable;
     private Expression translatedExpr;
 
+    /**
+     * Program which the expression is part of.<ul>
+     *
+     * <li>If this field is set, the expression is interpreted in terms of
+     * output fields of the program.
+     *
+     * <li>If this field is not set, the expression is interpreted in terms of
+     * the inputs to the calculator.</li>
+     * </ul>
+     */
+    private RexProgram program;
+
+    /**
+     * Maps expressions to the variable which has been assigned their value.
+     *
+     * <p>FIXME: Map may be too specific (if we're using identity rather than
+     * structural equivalence to match expressions) and simultaneously not
+     * specific enough (we might mistakenly match expressions which are
+     * equivalent but which come from different programs).
+     */
+    private final Map<Expression,Variable> exprMap =
+        new HashMap<Expression, Variable>();
+    private final Stack<RexProgram> programStack = new Stack<RexProgram>();
+
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -96,6 +120,17 @@ public class RexToOJTranslator implements RexVisitor
         return translatedExpr;
     }
 
+    /**
+     * Returns the current program.
+     *
+     * @see #pushProgram(RexProgram)
+     * @see #popProgram(RexProgram)
+     */
+    public RexProgram getProgram()
+    {
+        return program;
+    }
+
     protected OJRexImplementorTable getImplementorTable()
     {
         return implementorTable;
@@ -106,16 +141,62 @@ public class RexToOJTranslator implements RexVisitor
         return implementor;
     }
 
+    protected RelNode getContextRel()
+    {
+        return contextRel;
+    }
+
     public RelDataTypeFactory getTypeFactory()
     {
         return contextRel.getCluster().getTypeFactory();
     }
 
     // implement RexVisitor
+    public void visitLocalRef(RexLocalRef localRef)
+    {
+        final int index = localRef.getIndex();
+        assert program != null;
+        if (program.getInputRowType().isStruct() &&
+            index < program.getInputRowType().getFields().length) {
+            // It's a reference to an input field.
+            translateInput(localRef.getIndex());
+        } else {
+            // It's a reference to a common sub-expression. Recursively
+            // translate that expression.
+            final RexNode expr = program.getExprList().get(index);
+            assert expr.getType() == localRef.getType();
+            expr.accept(this);
+        }
+    }
+
+    // implement RexVisitor
     public void visitInputRef(RexInputRef inputRef)
     {
-        WhichInputResult inputAndCol = whichInput(
-            inputRef.getIndex(), contextRel);
+        final int index = inputRef.getIndex();
+        if (program != null) {
+            // Lookup the expression.
+            final RexNode expanded = program.getExprList().get(index);
+            assert expanded.getType() == inputRef.getType();
+            final Variable v = exprMap.get(expanded);
+            if (v != null) {
+                // Expression is has already been calculated and assigned to a
+                // variable.
+                setTranslation(v);
+                return;
+            }
+            // Unset program because the new expression is in terms of the
+            // program's inputs. This also prevents infinite expansion.
+            pushProgram(null);
+            expanded.accept(this);
+            popProgram(null);
+            return;
+        }
+        translateInput(index);
+    }
+
+    private void translateInput(final int index)
+    {
+        WhichInputResult inputAndCol = whichInput(index, contextRel);
         if (inputAndCol == null) {
             throw Util.newInternal("input not found");
         }
@@ -294,6 +375,34 @@ public class RexToOJTranslator implements RexVisitor
                 javaFieldName));
     }
 
+    /**
+     * Translates an expression into a Java expression.
+     *
+     * If the program has previously been set via
+     * {@link #pushProgram(RexProgram)}, the expression is interpreted in terms
+     * of the <em>output</em> fields of the program. Suppose that the program
+     * is
+     *
+     * <blockquote><pre>
+     *   exprs: {$0, $1, $0 + $1}
+     *   projectRefs: {$0, $2}
+     *   conditionRef: null</pre></blockquote>
+     *
+     * and the expression is <code>$1 + 5</code>. This would be expanded to
+     * <code>(a + b) + 5</code>, because output field $1 of the program is
+     * defined to be the expression <code>$0 + $1</code> in terms of the input
+     * fields.<p/>
+     *
+     * Sometimes a calculator expression is defined in terms of simpler
+     * calculator expressions. If this is the case, those expressions will be
+     * successively evaluated and assigned to variables. If a variable with the
+     * appropriate value is already in scope, it will be used.<p/>
+     *
+     * If the program is not present, no mapping occurs.
+     *
+     * @param node Expression to be translated.
+     * @return Java translation of expression
+     */
     public Expression translateRexNode(RexNode node)
     {
         if (node instanceof JavaRowExpression) {
@@ -301,7 +410,7 @@ public class RexToOJTranslator implements RexVisitor
         } else {
             node.accept(this);
             Expression expr = translatedExpr;
-            translatedExpr = null;
+            this.translatedExpr = null;
             return expr;
         }
     }
@@ -372,6 +481,68 @@ public class RexToOJTranslator implements RexVisitor
             firstFieldIndex = lastFieldIndex;
         }
         return null;
+    }
+
+    /**
+     * Generates code for an assignment.
+     *
+     * <p>NOTE: This method is only implemented in translators which can
+     * generate sequences of statements. The default implementation of this
+     * method throws {@link UnsupportedOperationException}.
+     *
+     * @param lhsField target field
+     * @param lhs target field as OpenJava
+     * @param rhs the source expression (as RexNode)
+     */
+    public void translateAssignment(RelDataTypeField lhsField,
+        Expression lhs,
+        RexNode rhs)
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Returns a sub-translator to deal with a sub-block.
+     *
+     * <p>The default implementation simply returns this translator.
+     * Other implementations may create a new translator which contains the
+     * expression-to-variable mappings of the sub-block.
+     *
+     * @param stmtList Sub-block to generate code into
+     * @return A translator
+     */
+    public RexToOJTranslator push(StatementList stmtList)
+    {
+        return this;
+    }
+
+    /**
+     * Sets the current program. The previous program will be restored when
+     * {@link #popProgram} is called. The program may be null.
+     *
+     * @param program New current program
+     */
+    public void pushProgram(RexProgram program)
+    {
+        programStack.push(program);
+        this.program = program;
+    }
+
+    /**
+     * Restores the current program to the one before
+     * {@link #pushProgram(RexProgram)} was called.
+     *
+     * @param program The program most recently pushed
+     */
+    public void popProgram(RexProgram program)
+    {
+        Util.pre(program == this.program, "mismatched push/pop");
+        assert programStack.pop() == program;
+        if (programStack.isEmpty()) {
+            this.program = null;
+        } else {
+            this.program = programStack.lastElement();
+        }
     }
 
     //~ Inner Classes ---------------------------------------------------------

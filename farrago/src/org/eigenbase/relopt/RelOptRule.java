@@ -26,7 +26,6 @@ package org.eigenbase.relopt;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.util.Util;
 
-
 /**
  * A <code>RelOptRule</code> transforms an expression into another. It has a
  * list of {@link RelOptRuleOperand}s, which determine whether the rule can be
@@ -55,6 +54,7 @@ public abstract class RelOptRule
     public RelOptRuleOperand [] operands;
 
     private RelTraitSet traits;
+
 
     //~ Constructors ----------------------------------------------------------
 
@@ -240,16 +240,28 @@ public abstract class RelOptRule
         return convert(rel, traits);
     }
 
-
+    /**
+     * Deduces a name for a rule by taking the name of its class and returning
+     * the segment after the last '.' or '$'.
+     *
+     * @param className Name of the rule's class
+     * @return Last segment of the class
+     */
     private static String guessDescription(String className)
     {
         String description = className;
-        int dot =
+        int punc =
             Math.max(
-                description.lastIndexOf('.'),
-                description.lastIndexOf('$'));
-        if (dot >= 0) {
-            description = description.substring(dot + 1);
+                className.lastIndexOf('.'),
+                className.lastIndexOf('$'));
+        if (punc >= 0) {
+            // Examples:
+            //  * "com.foo.Bar" yields "Bar"
+            //  * "com.foo.Bar$Baz" yields "Baz";
+            //  * "com.foo.Bar$1" yields "1" (which as an integer is an invalid
+            //     name, and writer of the rule is encouraged to give it an
+            //     explicit name)
+            description = className.substring(punc + 1);
         }
         return description;
     }

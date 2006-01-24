@@ -216,9 +216,8 @@ outer:
             argIndexes[i] = aggInputList.size();
             aggInputList.add(arg);
         }
-        final RelDataType type = null; // todo:
         AggregateRel.Call aggCall =
-            new AggregateRel.Call(aggregation, argIndexes, type);
+            new AggregateRel.Call(aggregation, argIndexes);
 
         // create a new aggregate call, if there isn't already an
         // identical one

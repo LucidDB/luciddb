@@ -25,11 +25,9 @@ import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.catalog.FarragoRepos;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.CollectRel;
 import org.eigenbase.rel.JoinRel;
 import org.eigenbase.rel.CorrelatorRel;
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.type.SqlTypeName;
 
 import java.util.*;
 
@@ -114,7 +112,7 @@ public class FennelPullCorrelatorRel extends FennelDoubleRel
     protected RelDataType deriveRowType()
     {
         return JoinRel.deriveJoinRowType(
-            left, right, JoinRel.JoinType.LEFT, getCluster().getTypeFactory());
+            left, right, JoinRel.JoinType.INNER, getCluster().getTypeFactory());
     }
 
     // implement FennelRel

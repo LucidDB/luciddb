@@ -360,7 +360,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     }
 
     // implement FarragoSession
-    public boolean isClosed()
+    public synchronized boolean isClosed()
     {
         return (database == null);
     }
@@ -419,7 +419,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     }
 
     // implement FarragoAllocation
-    public void closeAllocation()
+    public synchronized void closeAllocation()
     {
         super.closeAllocation();
         if (isClone || isClosed()) {

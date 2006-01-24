@@ -44,11 +44,6 @@ import org.eigenbase.util.Util;
 public class WindowedAggSplitterRule extends RelOptRule
 {
     //~ Static fields/initializers --------------------------------------------
-    private static final CalcRelSplitter.RelType CalcRelType =
-        new CalcRelSplitter.RelType("CalcRelType");
-
-    private static final CalcRelSplitter.RelType WinAggRelType =
-        new CalcRelSplitter.RelType("WinAggRelType");
 
     /** The {@link Glossary#SingletonPattern singleton} instance. */
     public static final WindowedAggSplitterRule instance =
@@ -73,7 +68,7 @@ public class WindowedAggSplitterRule extends RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
         CalcRel calc = (CalcRel) call.rels[0];
-        if (!RexOver.containsOver(calc.projectExprs, calc.getCondition())) {
+        if (!RexOver.containsOver(calc.getProgram())) {
             return;
         }
         CalcRel calcClone = (CalcRel) calc.clone();
@@ -92,48 +87,75 @@ public class WindowedAggSplitterRule extends RelOptRule
     {
         WindowedAggRelSplitter(CalcRel calc)
         {
-            super(calc, CalcRelType, WinAggRelType);
-        }
+            super(calc, new RelType[] {
+                new CalcRelSplitter.RelType("CalcRelType") {
+                    protected boolean canImplement(RexFieldAccess field)
+                    {
+                        return true;
+                    }
 
-        protected boolean canImplementAs(RexCall call, RelType relType)
-        {
-            return call instanceof RexOver ?
-                relType == WinAggRelType :
-                relType == CalcRelType;
-        }
+                    protected boolean canImplement(RexDynamicParam param)
+                    {
+                        return true;
+                    }
 
-        protected boolean canImplementAs(RexDynamicParam param, RelType relType)
-        {
-            return relType == CalcRelType;
-        }
+                    protected boolean canImplement(RexLiteral literal)
+                    {
+                        return true;
+                    }
 
-        protected boolean canImplementAs(RexFieldAccess field, RelType relType)
-        {
-            return relType == CalcRelType;
-        }
+                    protected boolean canImplement(RexCall call)
+                    {
+                        return !(call instanceof RexOver);
+                    }
 
-        protected RelNode makeRel(
-            RelType relType,
-            RelOptCluster cluster,
-            RelTraitSet traits,
-            RelDataType rowType,
-            RelNode child,
-            RexNode[] exprs,
-            RexNode conditionExpr)
-        {
-            if (relType == CalcRelType) {
-                RelNode node = super.makeRel(
-                    relType, cluster, traits, rowType, child, exprs,
-                    conditionExpr);
-                assert node instanceof CalcRel;
-                ((CalcRel) node).setAggs(true);
-                return node;
-            } else {
-                Util.permAssert(conditionExpr == null,
-                    "FennelWindowRel cannot accept a condition");
-                return new WindowedAggregateRel(
-                    cluster, traits, child, exprs, rowType);
-            }
+                    protected RelNode makeRel(
+                        RelOptCluster cluster,
+                        RelTraitSet traits,
+                        RelDataType rowType,
+                        RelNode child,
+                        RexProgram program)
+                    {
+                        assert !program.containsAggs();
+                        return super.makeRel(cluster, traits, rowType, child, program);
+                    }
+                },
+
+                new CalcRelSplitter.RelType("WinAggRelType") {
+                    protected boolean canImplement(RexFieldAccess field)
+                    {
+                        return false;
+                    }
+
+                    protected boolean canImplement(RexDynamicParam param)
+                    {
+                        return false;
+                    }
+
+                    protected boolean canImplement(RexLiteral literal)
+                    {
+                        return false;
+                    }
+
+                    protected boolean canImplement(RexCall call)
+                    {
+                        return call instanceof RexOver;
+                    }
+
+                    protected RelNode makeRel(
+                        RelOptCluster cluster,
+                        RelTraitSet traits,
+                        RelDataType rowType,
+                        RelNode child,
+                        RexProgram program)
+                    {
+                        Util.permAssert(program.getCondition() == null,
+                            "WindowedAggregateRel cannot accept a condition");
+                        return new WindowedAggregateRel(
+                            cluster, traits, child, program, rowType);
+                    }
+                }
+            });
         }
     }
 }

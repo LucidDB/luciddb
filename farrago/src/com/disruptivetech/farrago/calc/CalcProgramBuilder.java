@@ -36,6 +36,7 @@ import net.sf.farrago.fennel.tuple.FennelStandardTypeDescriptor;
 import org.eigenbase.sql.SqlLiteral;
 import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.Util;
+import org.eigenbase.util14.ConversionUtil;
 
 
 /**
@@ -1812,7 +1813,7 @@ public class CalcProgramBuilder
                 assert charset != null;
                 final ByteBuffer buf = charset.encode(s);
                 writer.print("0x");
-                writer.print(Util.toStringFromByteArray(
+                writer.print(ConversionUtil.toStringFromByteArray(
                         buf.array(),
                         16));
                 if (outputComments) {
@@ -1821,7 +1822,7 @@ public class CalcProgramBuilder
             } else if (value instanceof byte []) {
                 writer.print("0x");
                 writer.print(
-                    Util.toStringFromByteArray((byte []) value, 16));
+                    ConversionUtil.toStringFromByteArray((byte []) value, 16));
             } else if (value instanceof Boolean) {
                 writer.print(((Boolean) value).booleanValue() ? "1" : "0");
             } else if (value instanceof SqlLiteral) {

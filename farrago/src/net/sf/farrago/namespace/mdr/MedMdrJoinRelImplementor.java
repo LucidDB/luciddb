@@ -35,6 +35,7 @@ import openjava.mop.*;
 import openjava.ptree.*;
 
 import org.eigenbase.oj.*;
+import org.eigenbase.oj.rex.RexToOJTranslator;
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.stmt.*;
 import org.eigenbase.oj.util.*;
@@ -344,13 +345,15 @@ class MedMdrJoinRelImplementor
                     // generate a real join row
                     rhs = rightExps[i - nLeft];
                 }
-                implementor.translateAssignment(
-                    joinRel,
+                final RexToOJTranslator translator =
+                    implementor.newStmtTranslator(
+                        joinRel,
+                        stmtList,
+                        memberList);
+                translator.translateAssignment(
                     fields[i],
                     lhs,
-                    rhs,
-                    stmtList,
-                    memberList);
+                    rhs);
             }
         }
     }

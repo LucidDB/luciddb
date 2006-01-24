@@ -33,10 +33,8 @@ import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
-import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
@@ -65,11 +63,11 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
 {
     //~ Instance fields -------------------------------------------------------
 
-    private FarragoRepos repos;
-    private StatementList stmtList;
-    private MemberDeclarationList memberList;
-    private FarragoOJRexCastImplementor castImplementor;
-    private OJClass ojNullablePrimitive;
+    private final FarragoRepos repos;
+    private final StatementList stmtList;
+    private final MemberDeclarationList memberList;
+    private final FarragoOJRexCastImplementor castImplementor;
+    private final OJClass ojNullablePrimitive;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -77,18 +75,13 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
      * Creates a translator based on a {@link OJRexImplementorTable}.
      *
      * @param repos repository
-     *
      * @param relImplementor implementation context
-     *
      * @param contextRel relational expression which is the context for the
-     * row-expressions which are to be translated
-     *
+     *    row-expressions which are to be translated
      * @param implementorTable table of implementations for SQL operators
-     *
      * @param stmtList statement list for side-effects of translation
-     *
      * @param memberList member list for class-level state required by
-     * translation
+     * @param program Program, may be null
      */
     public FarragoRexToOJTranslator(
         FarragoRepos repos,
@@ -96,7 +89,8 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
         RelNode contextRel,
         OJRexImplementorTable implementorTable,
         StatementList stmtList,
-        MemberDeclarationList memberList)
+        MemberDeclarationList memberList,
+        RexProgram program)
     {
         super(relImplementor, contextRel, implementorTable);
         this.repos = repos;
@@ -110,9 +104,24 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
                 SqlStdOperatorTable.castFunc);
 
         ojNullablePrimitive = OJClass.forClass(NullablePrimitive.class);
+        if (program != null) {
+            pushProgram(program);
+        }
     }
 
     //~ Methods ---------------------------------------------------------------
+
+    public RexToOJTranslator push(StatementList stmtList)
+    {
+        // TODO: jhyde, 2005/11/5: The child translator should inherit the
+        //  mapping of expressions to variables, which means it should have a
+        //  pointer to this translator, or at least some of its state.
+        //  Otherwise common expressions will be translated and evaluated
+        //  more than once.
+        return new FarragoRexToOJTranslator(
+            repos, getRelImplementor(), getContextRel(), getImplementorTable(),
+            stmtList, memberList, getProgram());
+    }
 
     public void addMember(MemberDeclaration member)
     {
@@ -165,15 +174,35 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
             return;
         }
 
-        // TODO jvs 22-May-2004:  Initialize once and only once.
-        setTranslation(
-            castImplementor.convertCastToAssignableValue(
-                this,
-                null,
-                type,
-                type,
-                null,
-                getTranslation()));
+        // Create a constant member.
+        Variable variable = getRelImplementor().newVariable();
+        final TypeName typeName = OJUtil.toTypeName(type, getTypeFactory());
+        memberList.add(
+            new FieldDeclaration(
+                new ModifierList(ModifierList.STATIC | ModifierList.FINAL),
+                typeName,
+                variable.toString(),
+                new AllocationExpression(
+                    typeName,
+                    null,
+                    null)));
+
+        // Generate initialization code, and add it as a static initializer.
+        // TODO: Static initializers are painful! We should generate
+        //  constructors so that all SQL types can be initialized using an
+        //  expression.
+        final StatementList statementList = new StatementList();
+        castImplementor.convertCastToAssignableValue(
+            this,
+            statementList,
+            type,
+            type,
+            variable,
+            getTranslation());
+        assert !statementList.isEmpty();
+        memberList.add(
+            new MemberInitializer(statementList, true));
+        setTranslation(variable);
     }
 
     public Variable createScratchVariable(
@@ -194,9 +223,17 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
         return variable;
     }
 
+    /**
+     * Creates a member of this class with a given set of modifiers, and
+     * initializes it with an expression.
+     *
+     * @param ojClass Type of the variable
+     * @param exp Expression to initialize it
+     * @return Variable
+     */
     public Variable createScratchVariableWithExpression(
         OJClass ojClass,
-        Expression  exp)
+        Expression exp)
     {
         Variable variable = getRelImplementor().newVariable();
         memberList.add(
@@ -313,13 +350,28 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
         return repos;
     }
 
+    // override
+    public void translateAssignment(RelDataTypeField lhsField,
+        Expression lhsExp,
+        RexNode rhs)
+    {
+        Expression rhsExp = translateRexNode(rhs);
+        convertCastOrAssignmentWithStmtList(
+            stmtList,
+            getRepos().getLocalizedObjectName(
+                lhsField.getName()),
+            lhsField.getType(),
+            rhs.getType(),
+            lhsExp,
+            rhsExp);
+    }
+
     public void addAssignmentStatement(
         StatementList stmtList,
         Expression funcResult,
         RelDataType retType,
         Variable varResult,
         boolean needCast)
-
     {
         Expression lhsExp;
         if (SqlTypeUtil.isJavaPrimitive(retType) && !retType.isNullable()) {
@@ -340,7 +392,7 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
             
             result = new CastExpression(lhsClass, funcResult);
         }
-        Statement stmt =new ExpressionStatement(
+        Statement stmt = new ExpressionStatement(
                             new AssignmentExpression(
                                 lhsExp,
                                 AssignmentExpression.EQUALS, 

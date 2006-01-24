@@ -33,7 +33,6 @@ import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.fun.SqlDatetimeSubtractionOperator;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.NlsString;
 import org.eigenbase.util.Util;
@@ -224,15 +223,6 @@ public class RexBuilder
             new RexCallBinding(typeFactory, op, exprs));
     }
 
-    private RelDataType [] getTypes(RexNode [] exprs)
-    {
-        RelDataType [] types = new RelDataType[exprs.length];
-        for (int i = 0; i < types.length; i++) {
-            types[i] = exprs[i].getType();
-        }
-        return types;
-    }
-
     /**
      * Creates a call to a windowed agg.
      */
@@ -250,7 +240,7 @@ public class RexBuilder
         assert exprs != null;
         assert partitionKeys != null;
         assert orderKeys != null;
-        final RexOver.RexWindow window = new RexOver.RexWindow(
+        final RexWindow window = new RexWindow(
             partitionKeys, orderKeys, lowerBound, upperBound, physical);
         return new RexOver(type, operator, exprs, window);
     }
@@ -276,7 +266,7 @@ public class RexBuilder
     {
         return new RexCall(
             type,
-            opTab.newOperator,
+            SqlStdOperatorTable.newOperator,
             exprs);
     }
 
@@ -293,7 +283,7 @@ public class RexBuilder
     {
         return new RexCall(
             type,
-            opTab.castFunc,
+            SqlStdOperatorTable.castFunc,
             new RexNode [] { exp });
     }
 
@@ -311,14 +301,16 @@ public class RexBuilder
         RexNode exp,
         RexNode checkOverflow)
     {
-        Util.pre(checkOverflow instanceof RexLiteral, 
-            "checkOverflow instanceof RexLiteral");
-        Util.pre(checkOverflow.getType() == booleanTrue.getType(),
-            "checkOverflow.getType() == booleanTrue.getType()");
+        RexNode[] args;
+        if (checkOverflow != null && checkOverflow.isAlwaysTrue()) {
+            args = new RexNode [] { exp, checkOverflow };
+        } else {
+            args = new RexNode [] { exp };
+        }
         return new RexCall(
             type,
             opTab.reinterpretOperator,
-            new RexNode [] { exp, checkOverflow });      
+            args);
     }
     
     /**

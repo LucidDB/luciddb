@@ -31,7 +31,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, LCSEMPS]])'
-'    FennelCalcRel(EXPR$0=[CAST(10):INTEGER])'
+'    FennelCalcRel(expr#0=[{inputs}], expr#1=[10], expr#2=[CAST($t1):INTEGER], EXPR$0=[$t2])'
 '      FennelOneRowRel'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for 
@@ -39,7 +39,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, LCSEMPS]])'
-'    FennelCalcRel(EMPNO=[CAST($0):INTEGER])'
+'    FennelCalcRel(expr#0..9=[{inputs}], expr#10=[CAST($t0):INTEGER], EMPNO=[$t10])'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> !set outputformat table
 0: jdbc:farrago:> 
@@ -112,7 +112,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, LCSEMPS]])'
-'    FennelCalcRel(EXPR$0=[CAST(10):INTEGER], EXPR$1=[CAST(_ISO-8859-1'Selma'):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], EXPR$2=[CAST(10000):INTEGER])'
+'    FennelCalcRel(expr#0=[{inputs}], expr#1=[10], expr#2=[_ISO-8859-1'Selma'], expr#3=[10000], expr#4=[CAST($t1):INTEGER], expr#5=[CAST($t2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#6=[CAST($t3):INTEGER], EXPR$0=[$t4], EXPR$1=[$t5], EXPR$2=[$t6])'
 '      FennelOneRowRel'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for 
@@ -120,7 +120,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, LCSEMPS]])'
-'    FennelCalcRel(EMPNO=[CAST($0):INTEGER], NAME=[CAST($1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], EMPID=[CAST($5):INTEGER])'
+'    FennelCalcRel(expr#0..9=[{inputs}], expr#10=[CAST($t0):INTEGER], expr#11=[CAST($t1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#12=[CAST($t5):INTEGER], EMPNO=[$t10], NAME=[$t11], EMPID=[$t12])'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> !set outputformat table
 0: jdbc:farrago:> 
@@ -239,19 +239,19 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, LCSEMPS]])'
-'    FennelCalcRel(EXPR$0=[CAST(null):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"])'
+'    FennelCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], EXPR$0=[$t2])'
 '      FennelOneRowRel'
 0: jdbc:farrago:> explain plan for insert into lcsemps values('');
 'column0'
 'FennelToIteratorConverter'
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, LCSEMPS]])'
-'    FennelCalcRel(EXPR$0=[CAST(_ISO-8859-1''):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"])'
+'    FennelCalcRel(expr#0=[{inputs}], expr#1=[_ISO-8859-1''], expr#2=[CAST($t1):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], EXPR$0=[$t2])'
 '      FennelOneRowRel'
 0: jdbc:farrago:> explain plan for insert into lcsemps values('Pescadero');
 'column0'
 'FennelToIteratorConverter'
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, LCSEMPS]])'
-'    FennelCalcRel(EXPR$0=[CAST(_ISO-8859-1'Pescadero'):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"])'
+'    FennelCalcRel(expr#0=[{inputs}], expr#1=[_ISO-8859-1'Pescadero'], expr#2=[CAST($t1):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], EXPR$0=[$t2])'
 '      FennelOneRowRel'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Plans with NULL in the populating stream
@@ -260,7 +260,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, LCSEMPS]])'
-'    FennelCalcRel(CITY=[CAST($4):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"])'
+'    FennelCalcRel(expr#0..9=[{inputs}], expr#10=[CAST($t4):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], CITY=[$t10])'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for 
@@ -268,7 +268,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, LCSEMPS]])'
-'    FennelCalcRel(CITY=[CAST($4):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], condition=[=($0, 100)])'
+'    FennelCalcRel(expr#0..9=[{inputs}], expr#10=[100], expr#11=[=($t0, $t10)], expr#12=[CAST($t4):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], CITY=[$t12], $condition=[$t11])'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> !set outputformat table
 0: jdbc:farrago:> 
@@ -458,7 +458,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, LCSEMPS]])'
-'    FennelCalcRel(EXPR$0=[CAST(10):INTEGER], EXPR$1=[CAST(_ISO-8859-1'Selma'):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"])'
+'    FennelCalcRel(expr#0=[{inputs}], expr#1=[10], expr#2=[_ISO-8859-1'Selma'], expr#3=[CAST($t1):INTEGER], expr#4=[CAST($t2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], EXPR$0=[$t3], EXPR$1=[$t4])'
 '      FennelOneRowRel'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for 
@@ -466,7 +466,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, LCSEMPS]])'
-'    FennelCalcRel(EMPNO=[CAST($0):INTEGER], NAME=[CAST($1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"])'
+'    FennelCalcRel(expr#0..9=[{inputs}], expr#10=[CAST($t0):INTEGER], expr#11=[CAST($t1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], EMPNO=[$t10], NAME=[$t11])'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> !set outputformat table
 0: jdbc:farrago:> 
@@ -518,7 +518,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, MULTICLUSTER]])'
-'    FennelCalcRel(EXPR$0=[CAST(1):INTEGER], EXPR$1=[CAST(_ISO-8859-1'am'):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], EXPR$2=[CAST(100):INTEGER], EXPR$3=[CAST(50):INTEGER], EXPR$4=[CAST(-(10)):INTEGER], EXPR$5=[CAST(1000):INTEGER], EXPR$6=[CAST(null):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], EXPR$7=[CAST(0):INTEGER])'
+'    FennelCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=[_ISO-8859-1'am'], expr#3=[100], expr#4=[50], expr#5=[10], expr#6=[-($t5)], expr#7=[1000], expr#8=[null], expr#9=[CAST($t8):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#10=[0], expr#11=[CAST($t1):INTEGER], expr#12=[CAST($t2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#13=[CAST($t3):INTEGER], expr#14=[CAST($t4):INTEGER], expr#15=[CAST($t6):INTEGER], expr#16=[CAST($t7):INTEGER], expr#17=[CAST($t10):INTEGER], EXPR$0=[$t11], EXPR$1=[$t12], EXPR$2=[$t13], EXPR$3=[$t14], EXPR$4=[$t15], EXPR$5=[$t16], EXPR$6=[$t9], EXPR$7=[$t17])'
 '      FennelOneRowRel'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
@@ -583,7 +583,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, MULTICLUSTER]])'
-'    FennelCalcRel(EMPNO=[CAST($0):INTEGER], NAME=[CAST($1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], EXPR$2=[CAST(0):INTEGER], EXPR$3=[CAST(10):INTEGER], EXPR$4=[CAST(100):INTEGER], EXPR$5=[CAST(1000):INTEGER], CITY=[$4], DEPTNO=[CAST($2):INTEGER])'
+'    FennelCalcRel(expr#0..9=[{inputs}], expr#10=[0], expr#11=[10], expr#12=[100], expr#13=[1000], expr#14=[CAST($t0):INTEGER], expr#15=[CAST($t1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#16=[CAST($t10):INTEGER], expr#17=[CAST($t11):INTEGER], expr#18=[CAST($t12):INTEGER], expr#19=[CAST($t13):INTEGER], expr#20=[CAST($t2):INTEGER], EMPNO=[$t14], NAME=[$t15], EXPR$2=[$t16], EXPR$3=[$t17], EXPR$4=[$t18], EXPR$5=[$t19], CITY=[$t4], DEPTNO=[$t20])'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
@@ -691,7 +691,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, THREECLUSTERS]])'
-'    FennelCalcRel(ID=[CAST($0):INTEGER], NAME=[CAST($1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], EXTRA_FIELD=[CAST($2):CHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"])'
+'    FennelCalcRel(expr#0..2=[{inputs}], expr#3=[CAST($t0):INTEGER], expr#4=[CAST($t1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#5=[CAST($t2):CHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], ID=[$t3], NAME=[$t4], EXTRA_FIELD=[$t5])'
 '      FlatFileFennelRel(table=[[LOCALDB, LCS, FLATFILE_TABLE]])'
 0: jdbc:farrago:> !set outputformat table
 0: jdbc:farrago:> 
@@ -850,13 +850,13 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, RECTANGLES]])'
-'    FennelCalcRel(EXPR$0=[CAST(_ISO-8859-1'Default'):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], $f1=[CAST(false):BOOLEAN], $f2=[CAST(/(CAST(Reinterpret(2.0, false)):DOUBLE NOT NULL, 10)):DOUBLE], $f3=[CAST(/(CAST(Reinterpret(4.0, false)):DOUBLE NOT NULL, 10)):DOUBLE], EXPR$2=[1])'
+'    FennelCalcRel(expr#0=[{inputs}], expr#1=[_ISO-8859-1'Default'], expr#2=[CAST($t1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#3=[false], expr#4=[CAST($t3):BOOLEAN], expr#5=[2.0], expr#6=[Reinterpret($t5)], expr#7=[CAST($t6):DOUBLE NOT NULL], expr#8=[10], expr#9=[/($t7, $t8)], expr#10=[CAST($t9):DOUBLE], expr#11=[4.0], expr#12=[Reinterpret($t11)], expr#13=[CAST($t12):DOUBLE NOT NULL], expr#14=[/($t13, $t8)], expr#15=[CAST($t14):DOUBLE], expr#16=[1], $0=[$t2], $1=[$t4], $2=[$t10], $3=[$t15], $4=[$t16])'
 '      FennelOneRowRel'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from rectangles t;
 'column0'
-'IterCalcRel(NAME=[$0], R=[CASE(IS NULL($1), CAST(null):ObjectSqlType(LOCALDB.LCS.RECTANGLE), NEW($2, $3):ObjectSqlType(LOCALDB.LCS.RECTANGLE))], ID=[$4])'
+'IterCalcRel(expr#0..4=[{inputs}], expr#5=[IS NULL($t1)], expr#6=[null], expr#7=[CAST($t6):ObjectSqlType(LOCALDB.LCS.RECTANGLE)], expr#8=[NEW($t2, $t3):ObjectSqlType(LOCALDB.LCS.RECTANGLE)], expr#9=[CASE($t5, $t7, $t8)], NAME=[$t0], R=[$t9], ID=[$t4])'
 '  FennelToIteratorConverter'
 '    LcsRowScanRel(table=[[LOCALDB, LCS, RECTANGLES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LCS$RECTANGLES$ID, SYS$CLUSTERED_INDEX$LCS$RECTANGLES$NAME, SYS$CLUSTERED_INDEX$LCS$RECTANGLES$R]])'
 0: jdbc:farrago:> 

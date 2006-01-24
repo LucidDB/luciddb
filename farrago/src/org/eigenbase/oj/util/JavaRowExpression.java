@@ -75,7 +75,6 @@ public class JavaRowExpression extends RexNode
 
     public void accept(RexVisitor visitor)
     {
-        throw new UnsupportedOperationException();
     }
 
     public RexNode accept(RexShuttle shuttle)

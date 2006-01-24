@@ -23,12 +23,10 @@
 
 package org.eigenbase.rel;
 
-import java.util.*;
-
-import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
-import org.eigenbase.rex.*;
-import org.eigenbase.util.*;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.rex.RexProgram;
 
 /**
  * A relational expression which computes project expressions and also filters.
@@ -60,10 +58,9 @@ public final class CalcRel extends CalcRelBase
         RelTraitSet traits,
         RelNode child,
         RelDataType rowType,
-        RexNode [] projectExprs,
-        RexNode conditionExpr)
+        RexProgram program)
     {
-        super(cluster, traits, child, rowType, projectExprs, conditionExpr);
+        super(cluster, traits, child, rowType, program);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -72,10 +69,8 @@ public final class CalcRel extends CalcRelBase
     {
         return new CalcRel(
             getCluster(), cloneTraits(), getChild(), rowType,
-            RexUtil.clone(projectExprs),
-            (RexNode) (null==getCondition() ? null : getCondition().clone()));
+            program.copy());
     }
-
 }
 
 // End CalcRel.java

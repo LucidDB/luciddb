@@ -77,12 +77,12 @@ Error: At line 1, column 9: Unknown identifier 'X' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test SYSTEM_USER (but don't actually execute since it's context-dependent)
 0: jdbc:farrago:> explain plan for values (system_user);
-+-----------------------------------------+
-|                 column0                 |
-+-----------------------------------------+
-| IterCalcRel(SYSTEM_USER=[SYSTEM_USER])  |
-|   IterOneRowRel                         |
-+-----------------------------------------+
++--------------------------------------------------------------------------+
+|                                 column0                                  |
++--------------------------------------------------------------------------+
+| IterCalcRel(expr#0=[{inputs}], expr#1=[SYSTEM_USER], SYSTEM_USER=[$t1])  |
+|   IterOneRowRel                                                          |
++--------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Janino had problems with this one (fixed in their 2.0.5 release)
 0: jdbc:farrago:> values true and true;

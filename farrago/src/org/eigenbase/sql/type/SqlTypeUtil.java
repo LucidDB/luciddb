@@ -777,7 +777,7 @@ public abstract class SqlTypeUtil
         if (!recordType.isStruct()) {
             return recordType;
         }
-        List fieldList = new ArrayList();
+        List<RelDataTypeField> fieldList = new ArrayList<RelDataTypeField>();
         boolean nested =
             flattenFields(
                 typeFactory,
@@ -787,14 +787,44 @@ public abstract class SqlTypeUtil
         if (!nested) {
             return recordType;
         }
-        RelDataType [] types = new RelDataType[fieldList.size()];
-        String [] fieldNames = new String[types.length];
-        for (int i = 0; i < types.length; ++i) {
-            RelDataTypeField field = (RelDataTypeField) fieldList.get(i);
-            types[i] = field.getType();
-            fieldNames[i] = field.getName() + "_" + i;
-        }
+        List<RelDataType> types = new ArrayList<RelDataType>();
+        List<String> fieldNames = new ArrayList<String>();
+        int i = -1;
+        for (RelDataTypeField field : fieldList) {
+            ++i;
+            types.add(field.getType());
+            fieldNames.add(field.getName() + "_" + i);
+        }        
         return typeFactory.createStructType(types, fieldNames);
+    }
+
+    
+    /**
+     * Creates a record type with anonymous field names.
+     */ 
+    public static RelDataType createStructType(
+        RelDataTypeFactory typeFactory,
+        final RelDataType[] types)
+    {
+        return typeFactory.createStructType(
+            new RelDataTypeFactory.FieldInfo()
+            {
+                public int getFieldCount()
+                {
+                    return types.length;
+                }
+
+                public String getFieldName(int index)
+                {
+                    return "$" + index;
+                }
+
+                public RelDataType getFieldType(int index)
+                {
+                    return types[index];
+                }
+            }
+        );
     }
 
     public static boolean needsNullIndicator(RelDataType recordType)
@@ -920,9 +950,11 @@ public abstract class SqlTypeUtil
         }
     }
 
-    public static RelDataType createMultisetType(RelDataTypeFactory typeFactory,
-                                             RelDataType type,
-                                             boolean nullable) {
+    public static RelDataType createMultisetType(
+        RelDataTypeFactory typeFactory,
+        RelDataType type,
+        boolean nullable)
+    {
         RelDataType ret = typeFactory.createMultisetType(type, -1);
         return typeFactory.createTypeWithNullability(ret, nullable);
     }
@@ -959,7 +991,7 @@ public abstract class SqlTypeUtil
         SqlValidatorUtil.checkCharsetAndCollateConsistentIfCharType(type);
         return type;
     }
+
 }
 
-
-// End ValidationUtil.java
+// End SqlTypeUtil.java

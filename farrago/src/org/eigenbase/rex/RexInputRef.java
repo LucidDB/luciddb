@@ -24,7 +24,6 @@
 package org.eigenbase.rex;
 
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.util.Util;
 
 
 /**
@@ -49,13 +48,9 @@ import org.eigenbase.util.Util;
  * @author jhyde
  * @since Nov 24, 2003
  * @version $Id$
- **/
-public class RexInputRef extends RexVariable
+ */
+public class RexInputRef extends RexSlot
 {
-    //~ Instance fields -------------------------------------------------------
-
-    private final int index;
-
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -63,23 +58,19 @@ public class RexInputRef extends RexVariable
      *
      * @param index Index of the field in the underlying rowtype
      * @param type Type of the column
+     *
+     * @pre type != null
+     * @pre index >= 0
      */
     public RexInputRef(
         int index,
         RelDataType type)
     {
-        super("$" + index, type);
-        Util.pre(type != null, "type != null");
-        this.index = index;
+        super("$" + index, index, type);
     }
 
     //~ Methods ---------------------------------------------------------------
 
-    public int getIndex()
-    {
-        return index;
-    }
-    
     public Object clone()
     {
         return new RexInputRef(index, type);

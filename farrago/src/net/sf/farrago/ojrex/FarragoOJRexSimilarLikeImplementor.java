@@ -135,12 +135,10 @@ public class FarragoOJRexSimilarLikeImplementor extends FarragoOJRexImplementor
         }
 
         varPattern = translator.createScratchVariableWithExpression(
-                        ojPatternClass, 
-                        expForPattern);
+            ojPatternClass, expForPattern);
 
         varMatcher = translator.createScratchVariableWithExpression(
-                        ojMatcherClass, 
-                        Literal.constantNull());
+            ojMatcherClass, Literal.constantNull());
 
         for (int i = 0; i < operands.length; i++) {
             nullTest = translator.createNullTest(

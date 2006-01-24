@@ -46,11 +46,8 @@ import openjava.ptree.*;
 import org.eigenbase.oj.rex.OJRexImplementor;
 import org.eigenbase.oj.rex.OJRexImplementorTable;
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.rex.RexCall;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 
@@ -152,6 +149,15 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
     }
 
 
+    public void testSimple()
+        throws SQLException
+    {
+        PreparedStatement stmt = connection.prepareStatement(
+            "select cplus(1, 1) from (values (true))");
+        stmt.close();
+    }
+
+
     public void testDynamicParameterInConditional()
         throws SQLException
     {
@@ -231,7 +237,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
 
             registerOperator(
                 jplusFunc,
-                get(opTab.plusOperator));
+                get(SqlStdOperatorTable.plusOperator));
 
             SqlFunction jrowFunc =
                 new SqlFunction("JROW", SqlKind.Function, null,
@@ -382,7 +388,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
             CalcRexImplementorTableImpl.setThreadInstance(cImplTab);
             cImplTab.register(
                 cppFunc,
-                cImplTab.get(opTab.plusOperator));
+                cImplTab.get(SqlStdOperatorTable.plusOperator));
 
             new TestJdbcEngineDriver().register();
         }
@@ -402,3 +408,5 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
         }
     }
 }
+
+// End FarragoAutoCalcRuleTest.java

@@ -36,6 +36,7 @@ import org.eigenbase.util.BitString;
 import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.NlsString;
 import org.eigenbase.util.Util;
+import org.eigenbase.util14.ConversionUtil;
 
 
 /**
@@ -294,7 +295,7 @@ public class RexLiteral extends RexNode
             break;
         case SqlTypeName.Binary_ordinal:
             assert value instanceof ByteBuffer;
-            pw.print(Util.toStringFromByteArray(
+            pw.print(ConversionUtil.toStringFromByteArray(
                          ((ByteBuffer) value).array(), 16));
             break;
         case SqlTypeName.Null_ordinal:

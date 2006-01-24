@@ -567,6 +567,16 @@ public abstract class SqlTypeStrategies
 
     /**
      * Type-inference strategy whereby the result type of a call is the type of
+     * the second operand. If any of the other operands are nullable the returned
+     * type will also be nullable.
+     */
+    public static final SqlReturnTypeInference
+        rtiNullableSecondArgType =
+        new SqlTypeTransformCascade(
+            rtiSecondArgType, SqlTypeTransforms.toNullable);
+
+    /**
+     * Type-inference strategy whereby the result type of a call is the type of
      * the third operand.
      */
     public static final SqlReturnTypeInference
@@ -1065,17 +1075,82 @@ public abstract class SqlTypeStrategies
                 for (int i = 0; i < opBinding.getOperandCount(); i++) {
                     argElementTypes[i] =
                         opBinding.getOperandType(i).getComponentType();
+                    assert argElementTypes[i] != null;
                 }
 
                 ExplicitOperatorBinding newBinding = new
                     ExplicitOperatorBinding(opBinding, argElementTypes);
                 RelDataType biggestElementType =
                     rtiLeastRestrictive.inferReturnType(newBinding);
-                return  opBinding.getTypeFactory().createMultisetType(
+                return opBinding.getTypeFactory().createMultisetType(
                     biggestElementType, -1);
             }
         };
 
+    /**
+     * Returns a multiset of the first column of a multiset. For example,
+     * given <code>RECORD(x INTEGER, y DATE) MULTISET</code>, returns
+     * <code>INTEGER MULTISET</code>.
+     */
+    public static final SqlReturnTypeInference
+        rtiMultisetFirstColumnMultiset =
+        new SqlReturnTypeInference()
+        {
+            public RelDataType inferReturnType(
+                SqlOperatorBinding opBinding)
+            {
+                assert opBinding.getOperandCount() == 1;
+                final RelDataType recordMultisetType =
+                    opBinding.getOperandType(0);
+                RelDataType multisetType =
+                    recordMultisetType.getComponentType();
+                assert multisetType != null :
+                    "expected a multiset type: " + recordMultisetType;
+                final RelDataTypeField[] fields = multisetType.getFields();
+                assert fields.length > 0;
+                final RelDataType firstColType = fields[0].getType();
+                return opBinding.getTypeFactory().createMultisetType(
+                    firstColType, -1);
+            }
+        };
+
+    /**
+     * Returns a multiset of the first column of a multiset. For example,
+     * given <code>INTEGER MULTISET</code>,
+     * returns <code>RECORD(x INTEGER) MULTISET</code>.
+     */
+    public static final SqlReturnTypeInference
+        rtiMultisetRecordMultiset =
+        new SqlReturnTypeInference()
+        {
+            public RelDataType inferReturnType(
+                SqlOperatorBinding opBinding)
+            {
+                assert opBinding.getOperandCount() == 1;
+                final RelDataType multisetType = opBinding.getOperandType(0);
+                RelDataType componentType = multisetType.getComponentType();
+                assert componentType != null :
+                    "expected a multiset type: " + multisetType;
+                return opBinding.getTypeFactory().createMultisetType(
+                    opBinding.getTypeFactory().createStructType(
+                        new RelDataType[] {componentType},
+                        new String[] {"EXPR$0"}
+                    ),
+                    -1);
+            }
+        };
+
+    /**
+     * Returns the type of the only column of a multiset.
+     *
+     * <p>For example, given <code>RECORD(x INTEGER) MULTISET</code>,
+     * returns <code>INTEGER MULTISET</code>.
+     */
+    public static final SqlReturnTypeInference
+        rtiMultisetOnlyColumn =
+        new SqlTypeTransformCascade(
+            rtiMultiset, SqlTypeTransforms.onlyColumn);
+    
     /**
      * Same as {@link #rtiMultiset} but returns with nullablity
      * if any of the operands is nullable

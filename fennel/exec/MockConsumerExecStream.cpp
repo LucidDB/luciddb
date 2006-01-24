@@ -39,6 +39,7 @@ ExecStreamResult MockConsumerExecStream::execute(
     case EXECBUF_UNDERFLOW:
         return EXECRC_BUF_UNDERFLOW;
     case EXECBUF_EOS:
+        recvEOS = true;
         return EXECRC_EOS;
     case EXECBUF_NONEMPTY:
     case EXECBUF_OVERFLOW:

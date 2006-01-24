@@ -25,17 +25,12 @@ package org.eigenbase.rel;
 
 import org.eigenbase.oj.rel.JavaRel;
 import org.eigenbase.oj.rel.JavaRelImplementor;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptCost;
-import org.eigenbase.relopt.RelOptPlanWriter;
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexUtil;
-import org.eigenbase.sql.type.SqlTypeUtil;
-
 
 /**
  * <code>ProjectRelBase</code> is an abstract base class for implementations
@@ -46,7 +41,6 @@ public abstract class ProjectRelBase extends SingleRel
     //~ Instance fields -------------------------------------------------------
 
     protected RexNode [] exps;
-    protected String [] fieldNames;
 
     /** Values defined in {@link Flags}. */
     protected int flags;
@@ -61,7 +55,7 @@ public abstract class ProjectRelBase extends SingleRel
      * @param traits traits of this rel
      * @param child input relational expression
      * @param exps set of expressions for the input columns
-     * @param fieldNames aliases of the expressions
+     * @param rowType output row type
      * @param flags values as in {@link Flags}
      */
     protected ProjectRelBase(
@@ -69,21 +63,18 @@ public abstract class ProjectRelBase extends SingleRel
         RelTraitSet traits,
         RelNode child,
         RexNode [] exps,
-        String [] fieldNames,
+        RelDataType rowType,
         int flags)
     {
         super(cluster, traits, child);
+        assert rowType != null;
+        assert RexUtil.compatibleTypes(exps, rowType, true);
         this.exps = exps;
-        if (fieldNames == null) {
-            fieldNames = new String[exps.length];
-        }
-        assert (exps.length == fieldNames.length);
-        this.fieldNames = fieldNames;
+        this.rowType = rowType;
         this.flags = flags;
 
-        //assert isBoxed();
         if (!isBoxed()) {
-            assert (exps.length == 1);
+            assert exps.length == 1;
         }
     }
 
@@ -94,14 +85,18 @@ public abstract class ProjectRelBase extends SingleRel
         return (flags & Flags.Boxed) == Flags.Boxed;
     }
 
-    public RexNode [] getChildExps()
+    // override AbstractRelNode
+    public RexNode[] getChildExps()
     {
-        return exps;
+        return getProjectExps();
     }
 
-    public String [] getFieldNames()
+    /**
+     * Returns the project expressions.
+     */
+    public RexNode [] getProjectExps()
     {
-        return fieldNames;
+        return exps;
     }
 
     public int getFlags()
@@ -121,8 +116,9 @@ public abstract class ProjectRelBase extends SingleRel
     {
         int i = 0;
         terms[i++] = "child";
-        for (int j = 0; j < fieldNames.length; j++) {
-            String fieldName = fieldNames[j];
+        final RelDataTypeField[] fields = rowType.getFields();
+        for (int j = 0; j < fields.length; j++) {
+            String fieldName = fields[j].getName();
             if (fieldName == null) {
                 fieldName = "field#" + j;
             }
@@ -152,40 +148,6 @@ public abstract class ProjectRelBase extends SingleRel
         RelDataType type = getRowType();
         int field = type.getFieldOrdinal(fieldName);
         return implementor.findRel((JavaRel) this, exps[field]);
-    }
-
-    protected RelDataType deriveRowType()
-    {
-        if (!isBoxed()) {
-            return exps[0].getType();
-        }
-        final RelDataType [] types = RexUtil.collectTypes(exps);
-        if (((flags & Flags.AnonFields) == Flags.AnonFields) && false) {
-            return getCluster().getTypeFactory().createJoinType(types);
-        } else {
-            return getCluster().getTypeFactory().createStructType(
-                new RelDataTypeFactory.FieldInfo() {
-                    public int getFieldCount()
-                    {
-                        return exps.length;
-                    }
-
-                    public String getFieldName(int index)
-                    {
-                        final String fieldName = fieldNames[index];
-                        if (fieldName == null) {
-                            return "$f" + index;
-                        } else {
-                            return fieldName;
-                        }
-                    }
-
-                    public RelDataType getFieldType(int index)
-                    {
-                        return types[index];
-                    }
-                });
-        }
     }
 
     //~ Inner Interfaces ------------------------------------------------------

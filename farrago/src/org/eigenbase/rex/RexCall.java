@@ -233,6 +233,18 @@ public class RexCall extends RexNode
     {
         return op;
     }
+
+    /**
+     * Creates a new call to the same operator with different operands.
+     *
+     * @param type Return type
+     * @param operands Operands to call
+     * @return New call
+     */
+    public RexCall clone(RelDataType type, RexNode[] operands)
+    {
+        return new RexCall(type, op, operands);
+    }
 }
 
 

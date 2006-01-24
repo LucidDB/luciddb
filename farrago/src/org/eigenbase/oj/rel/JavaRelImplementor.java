@@ -239,6 +239,8 @@ public class JavaRelImplementor implements RelImplementor
     {
         if (rel instanceof ProjectRelBase) {
             return ((ProjectRelBase) rel).implementFieldAccess(this, fieldName);
+        } else if (rel instanceof IterCalcRel) {
+            return ((IterCalcRel) rel).implementFieldAccess(this, fieldName);
         } else {
             return null;
         }
@@ -481,23 +483,18 @@ public class JavaRelImplementor implements RelImplementor
      * Determines whether it is possible to implement a set of expressions
      * in Java.
      *
-     * @param condition Condition, may be null
-     * @param exps Expression list
-     * @return whether all expressions can be implemented
+     * @param program Program to translate
+     * @return whether all expressions in the program can be implemented
      */
     public boolean canTranslate(
         RelNode rel,
-        RexNode condition,
-        RexNode [] exps)
+        RexProgram program)
     {
         RexToOJTranslator translator = newTranslator(rel);
         TranslationTester tester = new TranslationTester(translator, true);
-        if ((condition != null) && !tester.canTranslate(condition)) {
-            return false;
-        }
-        for (int i = 0; i < exps.length; i++) {
-            RexNode exp = exps[i];
-            if (!tester.canTranslate(exp)) {
+        final List<RexNode> exprList = program.getExprList();
+        for (RexNode expr : exprList) {
+            if (!tester.canTranslate(expr)) {
                 return false;
             }
         }
@@ -529,6 +526,11 @@ public class JavaRelImplementor implements RelImplementor
      * Generates code for an expression, possibly using multiple statements,
      * scratch variables, and helper functions.
      *
+     * <p>If you want to avoid generating common expressions, it is better to
+     * create a translator using
+     * {@link #newStmtTranslator(JavaRel, StatementList, MemberDeclarationList)}
+     * and use it to translate multiple expressions.
+     *
      * @param rel the relational expression which is the context for exp
      *
      * @param exp the row expression to be translated
@@ -545,43 +547,9 @@ public class JavaRelImplementor implements RelImplementor
         StatementList stmtList,
         MemberDeclarationList memberList)
     {
-        return translate(rel, exp);
-    }
-
-    /**
-     * Generates code for an assignment.  REVIEW:  should assignment
-     * instead be represented as a kind of RexNode?
-     *
-     * @param rel the relational expression which is the context for the lhs
-     * and rhs expressions
-     *
-     * @param lhsField target field
-     *
-     * @param lhs target field as OpenJava
-     *
-     * @param rhs the source expression (as RexNode)
-     *
-     * @param stmtList the assignment code is appended here
-     * (multiple statements may be required for the assignment)
-     *
-     * @param memberList optional member declarations can be appended here (if
-     * needed for reusable scratch space or helper functions; local variables
-     * can also be allocated in stmtList)
-     */
-    public void translateAssignment(
-        JavaRel rel,
-        RelDataTypeField lhsField,
-        Expression lhs,
-        RexNode rhs,
-        StatementList stmtList,
-        MemberDeclarationList memberList)
-    {
-        stmtList.add(
-            new ExpressionStatement(
-                new AssignmentExpression(
-                    lhs,
-                    AssignmentExpression.EQUALS,
-                    translateViaStatements(rel, rhs, stmtList, memberList))));
+        RexToOJTranslator translator =
+            newStmtTranslator(rel, stmtList, memberList);
+        return translator.translateRexNode(exp);
     }
 
     /**
@@ -610,6 +578,30 @@ public class JavaRelImplementor implements RelImplementor
     protected RexToOJTranslator newTranslator(RelNode rel)
     {
         return new RexToOJTranslator(this, rel, implementorTable);
+    }
+
+    /**
+     * Creates a translator which can translate a succession of expressions,
+     * possibly using multiple statements, scratch variables, and helper
+     * functions.
+     *
+     * <p>Typical usage:<blockquote><pre>
+     * Translator translator = newStmtTranslator(rel, stmtList, memberList);
+     * translator.translateRexNode(exp1);
+     * translator.translateRexNode(exp2);
+     * </pre></blockquote>
+     *
+     * @param rel the relational expression which is the context for exp
+     * @param stmtList optional code can be appended here
+     * @param memberList optional member declarations can be appended here (if
+     * needed for reusable scratch space or helper functions; local variables
+     */
+    public RexToOJTranslator newStmtTranslator(
+        final JavaRel rel,
+        StatementList stmtList,
+        MemberDeclarationList memberList)
+    {
+        return newTranslator(rel);
     }
 
     /**

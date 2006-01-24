@@ -26,6 +26,7 @@ package org.eigenbase.rel;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.Util;
+import org.eigenbase.sql.type.SqlTypeUtil;
 
 
 /**

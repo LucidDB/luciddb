@@ -24,9 +24,8 @@ package org.eigenbase.rel;
 
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.rex.RexInputRef;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexOver;
+import org.eigenbase.relopt.RelOptPlanWriter;
+import org.eigenbase.rex.*;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.util.Util;
 
@@ -39,7 +38,7 @@ import org.eigenbase.util.Util;
  */
 public final class WindowedAggregateRel extends SingleRel
 {
-    public final RexNode[] aggs;
+    public final RexProgram program;
 
     /**
      * Creates a WindowedAggregateRel.
@@ -47,49 +46,63 @@ public final class WindowedAggregateRel extends SingleRel
      * @param cluster
      * @param traits
      * @param child
-     * @param aggs Array of expressions. Each expression must be
-     *            either a {@link RexInputRef},  or a {@link RexOver} whose
-     *            arguments are all {@link RexInputRef}.
+     * @param program Program containing an array of expressions.
+     *            The program must not have a
+     *            condition, and each expression must be
+     *            either a {@link RexLocalRef}, or a {@link RexOver} whose
+     *            arguments are all {@link RexLocalRef}.
      * @param rowType
      */
     public WindowedAggregateRel(
         RelOptCluster cluster,
         RelTraitSet traits,
         RelNode child,
-        RexNode[] aggs,
+        RexProgram program,
         RelDataType rowType)
     {
         super(cluster, traits, child);
         this.rowType = rowType;
-        this.aggs = aggs;
-        for (int i = 0; i < aggs.length; i++) {
-            RexNode agg = aggs[i];
+        this.program = program;
+        checkProgram(program);
+    }
+
+    private void checkProgram(RexProgram program)
+    {
+        for (RexNode agg : program.getExprList()) {
             if (agg instanceof RexOver) {
                 RexOver over = (RexOver) agg;
                 for (int j = 0; j < over.operands.length; j++) {
                     RexNode operand = over.operands[j];
-                    Util.pre(operand instanceof RexInputRef,
-                        "aggs[i].operand[j] instanceof RexInputRef");
+                    Util.pre(operand instanceof RexLocalRef,
+                        "aggs[i].operand[j] instanceof RexLocalRef");
                 }
             } else if (agg instanceof RexInputRef) {
                 ;
             } else {
                 Util.pre(false,
-                    "aggs[i] instanceof RexInputRef ||" +
+                    "aggs[i] instanceof RexInputRef || " +
                     "aggs[i] instanceof RexOver");
             }
         }
+        if (program.getCondition() != null) {
+            Util.pre(false, "Agg program must not have condition");
+        }
     }
 
-    public RexNode [] getAggs()
+    public RexProgram getProgram()
     {
-        return aggs;
+        return program;
     }
 
+    public void explain(RelOptPlanWriter pw)
+    {
+        program.explainCalc(this, pw);
+    }
+    
     public Object clone()
     {
         return new WindowedAggregateRel(
-            getCluster(), traits, getChild(), aggs, rowType);
+            getCluster(), traits, getChild(), program, rowType);
     }
 }
 

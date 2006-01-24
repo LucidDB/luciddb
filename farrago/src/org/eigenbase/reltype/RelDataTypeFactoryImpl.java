@@ -23,23 +23,15 @@
 
 package org.eigenbase.reltype;
 
-import java.io.PrintWriter;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.charset.Charset;
-import java.sql.Date;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 
 import org.eigenbase.sql.SqlCollation;
-import org.eigenbase.sql.SqlIntervalQualifier;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.Util;
-import org.eigenbase.oj.util.*;
 
 /**
  * Abstract base for implementations of {@link RelDataTypeFactory}.
@@ -87,6 +79,20 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
         final RelDataTypeField [] fields = new RelDataTypeField[types.length];
         for (int i = 0; i < fields.length; i++) {
             fields[i] = new RelDataTypeFieldImpl(fieldNames[i], i, types[i]);
+        }
+        return canonize(new RelRecordType(fields));
+    }
+
+    // implement RelDataTypeFactory
+    public RelDataType createStructType(
+        List<RelDataType> typeList,
+        List<String> fieldNameList)
+    {
+        final RelDataTypeField [] fields =
+            new RelDataTypeField[typeList.size()];
+        for (int i = 0; i < fields.length; i++) {
+            fields[i] = new RelDataTypeFieldImpl(
+                fieldNameList.get(i), i, typeList.get(i));
         }
         return canonize(new RelRecordType(fields));
     }

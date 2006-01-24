@@ -42,6 +42,8 @@ public class SqlOperandCountRange
         new SqlOperandCountRange(0, 1);
     public static final SqlOperandCountRange One =
         new SqlOperandCountRange(1);
+    public static final SqlOperandCountRange OneOrTwo =
+        new SqlOperandCountRange(1, 2);
     public static final SqlOperandCountRange Two =
         new SqlOperandCountRange(2);
     public static final SqlOperandCountRange TwoOrThree =

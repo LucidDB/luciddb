@@ -30,6 +30,7 @@ import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexUtil;
+import org.eigenbase.rex.RexProgram;
 
 
 /**
@@ -69,18 +70,23 @@ public class ProjectToCalcRule extends RelOptRule
     {
         final ProjectRel project = (ProjectRel) call.rels[0];
         final RelNode child = call.rels[1];
-        if (child instanceof FilterRel || child instanceof ProjectRel
-                || child instanceof CalcRel) {
-            // don't create a CalcRel if the input is, or is potentially, a
-            // CalcRel
+        if (child instanceof FilterRel ||
+            child instanceof ProjectRel ||
+            child instanceof CalcRel) {
+            // Don't create a CalcRel if the input is, or is potentially, a
+            // CalcRel.
             return;
         }
         final RelDataType rowType = project.getRowType();
         final RexNode [] projectExprs = RexUtil.clone(project.exps);
+        final RexProgram program =
+            RexProgram.create(
+                child.getRowType(), projectExprs, null,
+                project.getRowType(), project.getCluster().getRexBuilder());
         final CalcRel calc =
             new CalcRel(
                 project.getCluster(), RelOptUtil.clone(project.traits), child,
-                rowType, projectExprs, null);
+                rowType, program);
         call.transformTo(calc);
     }
 }

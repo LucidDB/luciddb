@@ -1,10 +1,13 @@
 
-ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+static final ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+static {
+    oj_var0.assignFrom( "c" );
+}
 
 
 ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
 
-oj_var0.assignFrom( "c" );
 oj_var1.trim( 2, oj_var0, ID$1$NAME );
 
 return oj_var1;

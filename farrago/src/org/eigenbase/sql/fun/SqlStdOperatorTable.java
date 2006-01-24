@@ -421,17 +421,20 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      */
     public static final SqlAggFunction sumOperator =
         new SqlSumAggFunction(null);
+
     /**
      * <code>COUNT</code> aggregate function.
      */
     public static final SqlAggFunction countOperator =
         new SqlCountAggFunction();
+
     /**
      * <code>MIN</code> aggregate function.
      */
     public static final SqlAggFunction minOperator =
         new SqlMinMaxAggFunction(new RelDataType[0], true,
             SqlMinMaxAggFunction.MINMAX_COMPARABLE);
+
     /**
      * <code>MAX</code> aggregate function.
      */
@@ -649,13 +652,14 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * may be used to reinterpret values of one type as the other. This 
      * operator is similar to a cast, except that it does not alter the 
      * data value. Like a regular cast it accepts one operand and stores 
-     * the target type as the return type.
+     * the target type as the return type. It performs an overflow check
+     * if it has <i>any</i> second operand, whether true or not.
      */
     public static final SqlSpecialOperator reinterpretOperator =
         new SqlSpecialOperator("Reinterpret", SqlKind.Reinterpret) {
         public SqlOperandCountRange getOperandCountRange()
         {
-            return SqlOperandCountRange.Two;
+            return SqlOperandCountRange.OneOrTwo;
         }
 
         
@@ -737,10 +741,10 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
             SqlFunctionCategory.Numeric);
 
     public static final SqlFunction modFunc =
-        // FIXME jvs 4-June-2005:  this is incorrect; mod
-        // has to take precision into account
+        // Return type is same as divisor (2nd operand)
+        // SQL2003 Part2 Section 6.27, Syntax Rules 9
         new SqlFunction("MOD", SqlKind.Function,
-            SqlTypeStrategies.rtiLeastRestrictive, null,
+            SqlTypeStrategies.rtiNullableSecondArgType, null,
             SqlTypeStrategies.otcNumericX2,
             SqlFunctionCategory.Numeric);
 
@@ -862,6 +866,58 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
             SqlTypeStrategies.rtiNullableMultisetElementType, null,
             SqlTypeStrategies.otcMultiset,
             SqlFunctionCategory.System);
+
+    /**
+     * The internal "$SLICE" operator takes a multiset of records and returns a 
+     * multiset of the first column of those records.
+     *
+     * <p>It is introduced when multisets of scalar types are created, in
+     * order to keep types consistent. For example, <code>MULTISET [5]</code>
+     * has type <code>INTEGER MULTISET</code> but is translated to an
+     * expression of type <code>RECORD(INTEGER EXPR$0) MULTISET</code> because
+     * in our internal representation of multisets, every element must be a
+     * record. Applying the "$SLICE" operator to this result converts the type
+     * back to an <code>INTEGER MULTISET</code> multiset value.
+     *
+     * <p><code>$SLICE</code> is often translated away when the multiset type
+     * is converted back to scalar values.
+     */
+    public static final SqlInternalOperator sliceOp =
+        new SqlInternalOperator("$SLICE", SqlKind.Other, 0, false,
+            SqlTypeStrategies.rtiMultisetFirstColumnMultiset,
+            null, SqlTypeStrategies.otcRecordMultiset)
+        {
+        };
+
+    /**
+     * The internal "$ELEMENT_SLICE" operator returns the first field of the
+     * only element of a multiset.<p/>
+     *
+     * It is introduced when multisets of scalar types are created, in
+     * order to keep types consistent. For example,
+     *   <code>ELEMENT(MULTISET [5])</code>
+     * is translated to
+     *   <code>$ELEMENT_SLICE(MULTISET (VALUES ROW (5 EXPR$0))</code>
+     * It is translated away when the multiset type is converted back to scalar
+     * values.<p/>
+     *
+     * NOTE: jhyde, 2006/1/9: Usages of this operator are commented out, but
+     * I'm not deleting the operator, because some multiset tests are disabled,
+     * and we may need this operator to get them working!
+     */
+    public static final SqlInternalOperator elementSlicefunc =
+        new SqlInternalOperator("$ELEMENT_SLICE", SqlKind.Other, 0, false,
+            SqlTypeStrategies.rtiMultisetRecordMultiset,
+            null, SqlTypeStrategies.otcMultiset)
+        {
+            public void unparse(
+                SqlWriter writer, SqlNode[] operands,
+                int leftPrec, int rightPrec)
+            {
+                SqlUtil.unparseFunctionSyntax(this, writer, operands,
+                    true, null);
+            }
+        };
 
     /**
      * The CARDINALITY operator, used to retrieve the number of elements in
