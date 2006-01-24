@@ -327,7 +327,7 @@ public class RexUtil
      * <p>Exceptions to this rule are:
      * <ul>
      *   <li>It's okay to cast decimals to and from char types
-     *   <li>It's okay to cast null literals as decimals
+     *   <li>It's okay to cast nulls as decimals
      *   <li>Casts require expansion if their return type is decimal
      *   <li>Reinterpret casts can handle a decimal operand
      * </ul>
@@ -348,11 +348,12 @@ public class RexUtil
         if (call.isA(RexKind.Reinterpret)) {
             required = false;
         } else if (call.isA(RexKind.Cast)) {
-            if (isNullLiteral(call.operands[0], false)) {
-                return false;
-            }
             RelDataType lhsType = call.getType();
             RelDataType rhsType = call.operands[0].getType();
+            // TODO: clean up isNull and use it instead
+            if (rhsType.getSqlTypeName() == SqlTypeName.Null) {
+                return false;
+            }
             if (SqlTypeUtil.inCharFamily(lhsType)
                 || SqlTypeUtil.inCharFamily(rhsType)) 
             {
@@ -406,6 +407,12 @@ public class RexUtil
             }
         }
         return false;
+    }
+    
+    public static boolean canReinterpretOverflow(RexCall call)
+    {
+        assert(call.isA(RexKind.Reinterpret)) : "call is not a reinterpret";
+        return call.operands.length > 1;
     }
 
     /**
@@ -642,6 +649,23 @@ public class RexUtil
             }
         }
         return true;
+    }
+
+    /** 
+     * Creates a key for {@link RexNode} which is the same as another 
+     * key of another RexNode only if the two have both the same type 
+     * and textual representation. For example, "10" integer and "10"
+     * bigint result in different keys.
+     */
+    public static String makeKey(RexNode expr)
+    {
+        String type = expr.getType().getFullTypeString();
+        String separator = ";";
+        String node = expr.toString();
+        StringBuilder keyBuilder = new StringBuilder(
+            type.length() + separator.length() + node.length());
+        keyBuilder.append(type).append(separator).append(node);
+        return keyBuilder.toString();
     }
 
     /**

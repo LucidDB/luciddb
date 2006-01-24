@@ -1242,12 +1242,19 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             RexCall call,
             RexToCalcTranslator translator)
         {
-            Util.pre(call.operands.length == 2, "call.operands.length == 2");
-            Util.pre(call.operands[1] instanceof RexLiteral,
-                "call.operands[1] instanceof RexLiteral");
+            RexNode valueArg = call.operands[0];
+            boolean checkOverflow = RexUtil.canReinterpretOverflow(call);
+            
             CalcProgramBuilder.Register value = 
-                translator.implementNode(call.operands[0]);
-            if (call.operands[1].isAlwaysTrue()) {
+                translator.implementNode(valueArg);
+            if (checkOverflow) {
+                if (! SqlTypeUtil.isIntType(valueArg.getType())) {
+                    valueArg = 
+                        translator.rexBuilder.makeReinterpretCast(
+                            call.getType(),
+                            valueArg, 
+                            translator.rexBuilder.makeLiteral(false));
+                }
                 // perform overflow check:
                 //     if (value is null) goto [endCheck]
                 //     bool overflowed = ( abs(value) >= overflowValue )
@@ -1255,11 +1262,11 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 //     throw overflow exception
                 // [endCheck]
                 String endCheck = translator.newLabel();
-                if (call.operands[0].getType().isNullable()) {
+                if (valueArg.getType().isNullable()) {
                     RexNode nullCheck = 
                         translator.rexBuilder.makeCall(
                             opTab.isNullOperator,
-                            call.operands[0]);
+                            valueArg);
                     CalcProgramBuilder.Register isNull = 
                         translator.implementNode(nullCheck);
                     translator.builder.addLabelJumpTrue(endCheck, isNull);
@@ -1273,7 +1280,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                     opTab.greaterThanOperator,
                     translator.rexBuilder.makeCall(
                         opTab.absFunc,
-                        call.operands[0]),
+                        valueArg),
                     overflowValue);
                 CalcProgramBuilder.Register overflowed = 
                     translator.implementNode(comparison);
@@ -1523,20 +1530,20 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                     // todo optimize away null check if type known to be non null
                     // same applies the other way (if we have a null literal or a cast(null as xxx))
                     translator.builder.addLabelJumpNull(next, compareResult);
-                    moveOrCast(
+                    implementCaseValue(
                         translator,
                         resultOfCall, 
-                        translator.implementNode(call.operands[i + 1]));
+                        call.operands[i + 1]);
                     translator.builder.addLabelJump(endOfCase);
                     translator.builder.addLabel(next);
                 } else {
                     // we can do some optimizations
                     Boolean val = (Boolean) compareResult.getValue();
                     if (val.booleanValue()) {
-                        moveOrCast(
+                        implementCaseValue(
                             translator,
                             resultOfCall, 
-                            translator.implementNode(call.operands[i + 1]));
+                            call.operands[i + 1]);
                         if (i != 0) {
                             translator.builder.addLabelJump(endOfCase);
                         }
@@ -1551,33 +1558,40 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
 
             if (!elseClauseOptimizedAway) {
                 int elseIndex = call.operands.length - 1;
-                moveOrCast(
+                implementCaseValue(
                     translator,
                     resultOfCall, 
-                    translator.implementNode(call.operands[elseIndex]));
+                    call.operands[elseIndex]);
             }
             translator.builder.addLabel(endOfCase); //this assumes that more instructions will follow
             return resultOfCall;
         }
         
-        private void moveOrCast(
+        private void implementCaseValue(
             RexToCalcTranslator translator, 
             CalcProgramBuilder.Register resultOfCall,
-            CalcProgramBuilder.Register operand)
+            RexNode value)
         {
-            if ((resultOfCall.getOpType() != operand.getOpType())
-                || (resultOfCall.storageBytes != operand.storageBytes))
-            {
-                ExtInstructionDefTable.castA.add(
-                    translator.builder,
-                    new CalcProgramBuilder.Register [] { 
+            translator.newScope();
+            try {
+                CalcProgramBuilder.Register operand =
+                    translator.implementNode(value);
+                if ((resultOfCall.getOpType() != operand.getOpType())
+                    || (resultOfCall.storageBytes != operand.storageBytes))
+                {
+                    ExtInstructionDefTable.castA.add(
+                        translator.builder,
+                        new CalcProgramBuilder.Register [] { 
+                            resultOfCall,
+                            operand });
+                } else {
+                    CalcProgramBuilder.move.add(
+                        translator.builder,
                         resultOfCall,
-                        operand });
-            } else {
-                CalcProgramBuilder.move.add(
-                    translator.builder,
-                    resultOfCall,
-                    operand);
+                        operand);
+                }
+            } finally {
+                translator.popScope();
             }
         }
     }

@@ -301,14 +301,16 @@ public class RexBuilder
         RexNode exp,
         RexNode checkOverflow)
     {
-        Util.pre(checkOverflow instanceof RexLiteral, 
-            "checkOverflow instanceof RexLiteral");
-        Util.pre(checkOverflow.getType() == booleanTrue.getType(),
-            "checkOverflow.getType() == booleanTrue.getType()");
+        RexNode[] args;
+        if (checkOverflow != null && checkOverflow.isAlwaysTrue()) {
+            args = new RexNode [] { exp, checkOverflow };
+        } else {
+            args = new RexNode [] { exp };
+        }
         return new RexCall(
             type,
             opTab.reinterpretOperator,
-            new RexNode [] { exp, checkOverflow });      
+            args);
     }
     
     /**

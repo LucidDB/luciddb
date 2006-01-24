@@ -99,29 +99,63 @@ public class ReduceDecimalsRule extends RelOptRule
             // which applies a visitor to every expression in a program. That
             // method will eliminate common sub-expressions, and be able to
             // handle more complex expressions.
-            RexBuilder builder = rel.getCluster().getRexBuilder();
+            RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
             List<RexNode> newExprList = new ArrayList<RexNode>();
             boolean reduced = false;
             Translator translator = new Translator();
+            /* INTEGRATION ATTEMPT 1 
+             * If we decide to expand individual sub expressions, 
+             * then they will require some rewiring
             for (RexNode expr : program.getExprList()) {
-                RexNode newExpr = translator.reduceDecimals(expr, builder);
+                RexNode newExpr = translator.reduceDecimals(expr, rexBuilder);
                 if (expr != newExpr) {
                     reduced = true;
                 }
                 newExprList.add(newExpr);
             }
+            
             if (! reduced) {
                 assert false : "requiresDecimalExpansion lied";
                 return;
             }
-            final RexProgram newProgram =
-                new RexProgram(
-                    program.getInputRowType(),
-                    newExprList,
-                    new ArrayList<RexLocalRef>(program.getProjectList()),
-                    program.getCondition(),
-                    program.getOutputRowType());
-
+            */
+            
+            // start from old program
+            final RexProgramBuilder progBuilder = new RexProgramBuilder( 
+                program.getInputRowType(),
+                rexBuilder);
+            /* HERE IS THE REWIRING
+            // add new "inputs" to replace old ones
+            List<RexLocalRef> inputMap = new ArrayList<RexLocalRef>();
+                for (RexNode expr: newExprList) {
+                RexShuttle inputReplacer = new InputMapShuttle(inputMap);
+                RexNode mappedExpr = expr.accept(inputReplacer);
+                RexLocalRef newInput = progBuilder.registerInput(mappedExpr);
+                inputMap.add(newInput);
+            }
+            */
+            RexShuttle treeBuilder = new UnreduceShuttle(program.getExprList());
+            for (RexLocalRef project: program.getProjectList()) {
+                /* INTEGRATION ATTEMPT 2
+                 * We can produce simplified code if we start from a 
+                 * full expression tree. (Mostly removing redundant 
+                 * reinterprets.) But this may not work once we 
+                 * cleanup the code to use the visitor pattern. */
+                RexNode treeProject = project.accept(treeBuilder);
+                RexNode newProject = translator.reduceDecimals(treeProject, rexBuilder);
+                RexLocalRef result = progBuilder.registerInput(newProject);
+                progBuilder.addProject(result.getIndex());
+            }
+            RexLocalRef condition = program.getCondition();
+            if (condition != null) {
+                //RexLocalRef newCondition = inputMap.get(condition.getIndex());
+                RexNode treeCondition = condition.accept(treeBuilder);
+                RexNode newCondition = translator.reduceDecimals(treeCondition, rexBuilder);
+                RexLocalRef result = progBuilder.registerInput(newCondition);
+                progBuilder.addCondition(result);
+            }
+            
+            final RexProgram newProgram = progBuilder.getProgram();
             CalcRel newCalcRel = new CalcRel(
                 calcRel.getCluster(),
                 calcRel.getTraits(),
@@ -131,29 +165,36 @@ public class ReduceDecimalsRule extends RelOptRule
             call.transformTo(newCalcRel);
         }
     }
-    
+
     /**
-     * Returns projections from a set of CalcRel expressions
+     * A RexShuttle which maps input references to a list
      */
-    private RexNode[] getProjections(RexNode[] exps, boolean condition)
+    private class InputMapShuttle extends RexShuttle
     {
-        if (condition) {
-            RexNode[] projections = new RexNode[exps.length-1];
-            System.arraycopy(exps, 0, projections, 0, projections.length);
-            return projections;
+        List<RexLocalRef> inputMap;
+        InputMapShuttle(List<RexLocalRef> inputMap) {
+            this.inputMap = inputMap;
         }
-        return exps;
+        public RexNode visitLocalRef(RexLocalRef localRef)
+        {
+            return inputMap.get(localRef.getIndex());
+        }
     }
 
     /**
-     * Returns condition from a set of CalcRel expressions
+     * A RexShuttle which builds up a Rex tree
      */
-    private RexNode getCondition(RexNode[] exps, boolean condition)
+    private class UnreduceShuttle extends RexShuttle
     {
-       if (condition) {
-           return exps[exps.length-1];
-       }
-       return null;
+        List<RexNode> exprs;
+        UnreduceShuttle(List<RexNode> exprs) {
+            this.exprs = exprs;
+        }
+        public RexNode visitLocalRef(RexLocalRef localRef)
+        {
+            RexNode tree = exprs.get(localRef.getIndex());
+            return tree.accept(this);
+        }
     }
 
     public class Translator
@@ -202,7 +243,7 @@ public class ReduceDecimalsRule extends RelOptRule
          */
         private void register(RexNode node, RexNode reducedNode)
         {
-            String key = makeKey(node);
+            String key = RexUtil.makeKey(node);
             if (node == reducedNode) {
                 irreducible.put(key, reducedNode);
             }
@@ -214,18 +255,11 @@ public class ReduceDecimalsRule extends RelOptRule
          */
         private RexNode lookup(RexNode node)
         {
-            String key = makeKey(node);
+            String key = RexUtil.makeKey(node);
             if (irreducible.get(key) != null) {
                 return node;
             }
             return results.get(key);
-        }
-        
-        /**
-         * Makes a key which can be used to find node
-         */
-        private String makeKey(RexNode node) {
-            return  node.getType().getFullTypeString() + ":" + node.toString();
         }
         
         /**
@@ -287,6 +321,8 @@ public class ReduceDecimalsRule extends RelOptRule
                 // NOTE: MinusPrefix is also Arithmetic
                 return new BinaryArithmeticExpander(builder);
             } else if (call.isA(RexKind.Comparison)) {
+                return new BinaryArithmeticExpander(builder);
+            } else if (call.getOperator() == SqlStdOperatorTable.modFunc) {
                 return new BinaryArithmeticExpander(builder);
             } else if (call.isA(RexKind.Reinterpret)) {
                 return new ReinterpretExpander(builder);
@@ -404,7 +440,7 @@ public class ReduceDecimalsRule extends RelOptRule
             caseOperands[0] = builder.makeCall(
                 SqlStdOperatorTable.greaterThanOperator,
                 value,
-                builder.makeExactLiteral(BigDecimal.ZERO));
+                builder.makeExactLiteral(BigDecimal.ZERO, int8));
             RexNode roundFactor = makeRoundFactor(scale);
             caseOperands[1] = builder.makeCall(
                 SqlStdOperatorTable.plusOperator,
@@ -684,7 +720,9 @@ public class ReduceDecimalsRule extends RelOptRule
                 if (fromScale <= toScale) {
                     scaled = scaleUp(value, toScale-fromScale);
                 } else {
-                    if (toDigits == fromDigits) {
+                    if (toDigits == fromDigits
+                        && toScale < fromScale) 
+                    {
                         // rounding away from zero may cause an overflow
                         // for example: cast(9.99 as decimal(2,1))
                         checkOverflow = true;
@@ -717,20 +755,19 @@ public class ReduceDecimalsRule extends RelOptRule
         // implement RexExpander
         public boolean canExpand(RexCall call)
         {
-            if (!(call.isA(RexKind.Arithmetic)||call.isA(RexKind.Comparison))
-                || call.isA(RexKind.MinusPrefix)) 
+            if ((call.isA(RexKind.Arithmetic) 
+                    && !call.isA(RexKind.MinusPrefix))
+                || call.isA(RexKind.Comparison)
+                || call.getOperator() == SqlStdOperatorTable.modFunc)
             {
-                return false;
+                return RexUtil.requiresDecimalExpansion(call, false);
             }
-            return RexUtil.requiresDecimalExpansion(call, false);
+            return false;
         }
         
         // implement RexExpander
         public RexNode expand(RexCall call, RexNode[] operands)
         {
-            Util.pre(
-                (call.isA(RexKind.Arithmetic)||call.isA(RexKind.Comparison)),
-                "call.isA(RexKind.Arithmetic or RexKind.Comparison)");
             Util.pre(operands.length == 2, "operands.length == 2");
             RelDataType typeA = operands[0].getType();
             RelDataType typeB = operands[1].getType();
@@ -763,6 +800,8 @@ public class ReduceDecimalsRule extends RelOptRule
                 return expandTimes(call, operands);
             } else if (call.isA(RexKind.Comparison)) {
                 return expandComparison(call, operands);
+            } else if (call.getOperator() == SqlStdOperatorTable.modFunc) {
+                return expandMod(call, operands);
             } else {
                 throw Util.newInternal(
                     "ReduceDecimalsRule could not expand "
@@ -839,6 +878,27 @@ public class ReduceDecimalsRule extends RelOptRule
                 call.getOperator(),
                 ensureScale(accessValue(operands[0]), scaleA, commonScale),
                 ensureScale(accessValue(operands[1]), scaleB, commonScale));
+        }
+
+        private RexNode expandMod(RexCall call, RexNode[] operands)
+        {
+            if (!SqlTypeUtil.isExactNumeric(typeA)
+                || !SqlTypeUtil.isExactNumeric(typeB)
+                || scaleA != 0 || scaleB != 0) 
+            {
+                // TODO: localized message would be better
+                // or validator message?
+                throw Util.needToImplement("MOD on fractional numbers");
+            }
+            RexNode result = builder.makeCall(
+                call.getOperator(),
+                accessValue(operands[0]),
+                accessValue(operands[1]));
+            RelDataType retType = call.getType();
+            if (SqlTypeUtil.isDecimal(retType)) {
+                return encodeValue(result, retType);
+            }
+            return ensureType(call.getType(), result);
         }
     }
     
@@ -956,8 +1016,8 @@ public class ReduceDecimalsRule extends RelOptRule
             RelDataType outerType = outer.getType();
             RelDataType innerType = inner.getType();
             RelDataType valueType = value.getType();
-            boolean outerCheck = outer.operands[1].isAlwaysTrue();
-            boolean innerCheck = inner.operands[1].isAlwaysTrue();
+            boolean outerCheck = RexUtil.canReinterpretOverflow(outer);
+            boolean innerCheck = RexUtil.canReinterpretOverflow(inner);
             
             if (outerType.getSqlTypeName() != valueType.getSqlTypeName()
                 || outerType.getPrecision() != valueType.getPrecision()

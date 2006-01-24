@@ -143,6 +143,10 @@ public abstract class EncodedSqlDecimal implements AssignableValue
         }
         assignFrom(value);
     }
+    public void reinterpret(long value) 
+    {
+        reinterpret(value, false);
+    }
 
     public void reinterpret(
         NullablePrimitive.NullableLong primitive,
@@ -153,6 +157,10 @@ public abstract class EncodedSqlDecimal implements AssignableValue
             return;
         }
         reinterpret(primitive.value, overflowCheck);
+    }
+    public void reinterpret(NullablePrimitive.NullableLong primitive)
+    {
+        reinterpret(primitive, false);
     }
     
     public void assignTo(NullablePrimitive.NullableLong target)

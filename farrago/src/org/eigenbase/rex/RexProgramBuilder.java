@@ -204,7 +204,8 @@ public class RexProgramBuilder
      */
     private RexLocalRef registerInternal(RexNode expr)
     {
-        RexLocalRef ref = exprMap.get(expr.toString());
+        String key = RexUtil.makeKey(expr);
+        RexLocalRef ref = exprMap.get(key);
         if (ref != null) {
             return ref;
         }
@@ -215,7 +216,7 @@ public class RexProgramBuilder
         exprList.add(expr);
         ref = new RexLocalRef(index, expr.getType());
         localRefList.add(ref);
-        exprMap.put(expr.toString(), ref);
+        exprMap.put(key, ref);
         return ref;
     }
 

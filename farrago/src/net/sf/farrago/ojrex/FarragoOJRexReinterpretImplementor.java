@@ -69,12 +69,19 @@ public class FarragoOJRexReinterpretImplementor
         if (SqlTypeUtil.isDecimal(retType)) {
             // cast long to decimal
             Variable varResult = translator.createScratchVariable(retType);
+            ExpressionList args;
+            if (operands.length == 1) {
+                args = new ExpressionList(operands[0]);
+            } else {
+                assert operands.length == 2;
+                args = new ExpressionList(operands[0], operands[1]);
+            }
             translator.addStatement(
                 new ExpressionStatement(
                     new MethodCall(
                         varResult,
                         EncodedSqlDecimal.REINTERPRET_METHOD_NAME, 
-                        new ExpressionList(operands[0], operands[1]))));
+                        args)));
             retVal = varResult;
         } else if (retType.isNullable()) {
             // cast decimal to nullable long

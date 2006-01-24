@@ -63,8 +63,7 @@ public class RexToCalcTranslator implements RexVisitor
      * is generated from a {@link RexNode} using {@link #getKey(RexNode)}) to
      * the {@link CalcProgramBuilder.Register} which holds its value.
      */
-    private final Map<String, CalcProgramBuilder.Register> results =
-        new HashMap<String, CalcProgramBuilder.Register>();
+    private ExpressionScope scope = new ExpressionScope();
 
     protected final RexBuilder rexBuilder;
     /**
@@ -197,7 +196,7 @@ public class RexToCalcTranslator implements RexVisitor
         builder.clear();
         trueReg = builder.newBoolLiteral(true);
         falseReg = builder.newBoolLiteral(false);
-        results.clear();
+        scope.clear();
         nullRegOrdinal = -1;
         inputExprs = null;
         this.program = program;
@@ -321,7 +320,7 @@ public class RexToCalcTranslator implements RexVisitor
         CalcProgramBuilder.Register register)
     {
         final String key = getKey(node);
-        results.put(key, register);
+        scope.set(key, register);
     }
 
     /**
@@ -338,7 +337,7 @@ public class RexToCalcTranslator implements RexVisitor
     CalcProgramBuilder.Register getResult(RexNode node, boolean failIfNotFound)
     {
         final String key = getKey(node);
-        CalcProgramBuilder.Register found = results.get(key);
+        CalcProgramBuilder.Register found = scope.get(key);
         if (found == null && failIfNotFound) {
             throw Util.newInternal("Expression " + node +
                 " has not been implemented as a register");
@@ -353,7 +352,7 @@ public class RexToCalcTranslator implements RexVisitor
      */
     boolean containsResult(RexNode node)
     {
-        return results.get(getKey(node)) != null;
+        return scope.get(getKey(node)) != null;
     }
 
     /**
@@ -1175,9 +1174,86 @@ public class RexToCalcTranslator implements RexVisitor
         }
         return expr;
     }
+    
+    /**
+     * Creates a new expression scope
+     */
+    public void newScope()
+    {
+        scope = scope.newScope();
+    }
+    
+    /**
+     * Pops the previous expression scope
+     */
+    public void popScope()
+    {
+        scope = scope.popScope();
+    }
 
     //~ Inner Classes ---------------------------------------------------------
 
+    /**
+     * Supports scoping rules for calculator programs. Conditional code, not 
+     * visible outside a block of code, belongs in its own scope.
+     */
+    public class ExpressionScope
+    {
+        private final ExpressionScope parent;
+        private final Map<String, CalcProgramBuilder.Register> results =
+            new HashMap<String, CalcProgramBuilder.Register>();
+        
+        private ExpressionScope(ExpressionScope parent)
+        {
+            this.parent = parent;
+        }
+        
+        /**
+         * Constructs a new scope
+         */
+        public ExpressionScope()
+        {
+            parent = null;
+        }
+        
+        /**
+         * Returns a new scope extending the current scope. Must always 
+         * be matched with popScope or mysterious errors will arise.
+         */
+        public ExpressionScope newScope()
+        {
+            return new ExpressionScope(this);
+        }
+        
+        /**
+         * Returns the parent scope
+         */
+        public ExpressionScope popScope()
+        {
+            assert(parent != null) : "attempted to pop global scope";
+            return parent;
+        }
+        
+        public CalcProgramBuilder.Register get(String key)
+        {
+            CalcProgramBuilder.Register result = results.get(key);
+            if (result == null && parent != null) {
+                result = parent.get(key);
+            }
+            return result;
+        }
+        
+        public void set(String key, CalcProgramBuilder.Register result)
+        {
+            results.put(key, result);
+        }
+        
+        public void clear()
+        {
+            results.clear();
+        }
+    }
+    
     private static class TypePair
     {
         private final RelDataType relDataType;

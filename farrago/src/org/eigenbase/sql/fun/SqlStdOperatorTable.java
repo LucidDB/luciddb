@@ -652,13 +652,14 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * may be used to reinterpret values of one type as the other. This 
      * operator is similar to a cast, except that it does not alter the 
      * data value. Like a regular cast it accepts one operand and stores 
-     * the target type as the return type.
+     * the target type as the return type. It performs an overflow check
+     * if it has <i>any</i> second operand, whether true or not.
      */
     public static final SqlSpecialOperator reinterpretOperator =
         new SqlSpecialOperator("Reinterpret", SqlKind.Reinterpret) {
         public SqlOperandCountRange getOperandCountRange()
         {
-            return SqlOperandCountRange.Two;
+            return SqlOperandCountRange.OneOrTwo;
         }
 
         
