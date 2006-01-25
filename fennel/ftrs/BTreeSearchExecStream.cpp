@@ -229,8 +229,6 @@ bool BTreeSearchExecStream::innerSearchLoop()
                     upperBoundData = inputKeyData;
                 }
             
-                // FIXME jvs 24-Jan-2006:  handle case where we
-                // searched past highest key in tree
                 match = testInterval();
             }
         }
