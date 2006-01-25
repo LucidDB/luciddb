@@ -109,6 +109,16 @@ void CalcExecStream::prepare(CalcExecStreamParams const &params)
     }
 }
 
+void CalcExecStream::open(bool restart)
+{
+    ConduitExecStream::open(restart);
+
+    // Zero out status registers.
+    if (pCalc != NULL) {
+        pCalc->zeroStatusRegister();
+    }
+}
+
 ExecStreamResult CalcExecStream::execute(ExecStreamQuantum const &quantum)
 {
     ExecStreamResult rc = precheckConduitBuffers();

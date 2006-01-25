@@ -42,6 +42,7 @@ using namespace std;
 class CalcMiscTest : virtual public TestBase, public TraceSource
 {
     void testCalcStatusReg();
+    void testCalcStatusRegZero();
     void testCalcRefInst();
     void testCalcReturn();
     void testCalcRaise();
@@ -54,6 +55,7 @@ public:
         srand(time(NULL));
         CalcInit::instance();
         FENNEL_UNIT_TEST_CASE(CalcMiscTest, testCalcStatusReg);
+        FENNEL_UNIT_TEST_CASE(CalcMiscTest, testCalcStatusRegZero);
         FENNEL_UNIT_TEST_CASE(CalcMiscTest, testCalcRefInst);
         FENNEL_UNIT_TEST_CASE(CalcMiscTest, testCalcReturn);
         FENNEL_UNIT_TEST_CASE(CalcMiscTest, testCalcRaise);
@@ -118,6 +120,71 @@ CalcMiscTest::testCalcStatusReg()
                         (const_cast<PBuffer>((*statusTuple)[2].pData))),
                       6);
     
+}
+
+void
+CalcMiscTest::testCalcStatusRegZero()
+{
+    ostringstream pg("");
+
+    pg << "L u2;" << endl;
+    pg << "O u2;" << endl;
+    pg << "S u2, u2;" << endl;
+    pg << "C u2, u2;" << endl;
+    pg << "V 1, 2;" << endl;
+    pg << "T;" << endl;
+    pg << "MOVE L 0, S 0;" << endl;
+    pg << "ADD S 0, L 0, C 0;" << endl;
+    pg << "MOVE L 0, S 1;" << endl;
+    pg << "ADD S 1, L 0, C 1;" << endl;
+
+    // BOOST_MESSAGE(pg.str());
+
+    Calculator calc(0);
+    
+    try {
+        calc.assemble(pg.str().c_str());
+    }
+    catch (FennelExcn& ex) {
+        BOOST_MESSAGE("Assemble exception " << ex.getMessage());
+        BOOST_REQUIRE(0);
+    }
+
+    TupleDataWithBuffer outTuple(calc.getOutputRegisterDescriptor());
+    TupleDataWithBuffer inTuple(calc.getInputRegisterDescriptor());
+
+    calc.bind(&inTuple, &outTuple);
+
+    TupleData const * const statusTuple = calc.getStatusRegister();
+
+    for(int i = 1; i <= 3; i++) {
+        calc.exec();
+
+        BOOST_CHECK_EQUAL(*(reinterpret_cast<uint16_t *>
+                            (const_cast<PBuffer>((*statusTuple)[0].pData))),
+                          i);
+        BOOST_CHECK_EQUAL(*(reinterpret_cast<uint16_t *>
+                            (const_cast<PBuffer>((*statusTuple)[1].pData))),
+                          i * 2);
+    }
+
+    calc.zeroStatusRegister();
+
+    BOOST_CHECK_EQUAL(*(reinterpret_cast<uint16_t *>
+                        (const_cast<PBuffer>((*statusTuple)[0].pData))),
+                      0);
+    BOOST_CHECK_EQUAL(*(reinterpret_cast<uint16_t *>
+                        (const_cast<PBuffer>((*statusTuple)[1].pData))),
+                      0);
+
+    calc.exec();
+
+    BOOST_CHECK_EQUAL(*(reinterpret_cast<uint16_t *>
+                        (const_cast<PBuffer>((*statusTuple)[0].pData))),
+                      1);
+    BOOST_CHECK_EQUAL(*(reinterpret_cast<uint16_t *>
+                        (const_cast<PBuffer>((*statusTuple)[1].pData))),
+                      2);
 }
 
 void

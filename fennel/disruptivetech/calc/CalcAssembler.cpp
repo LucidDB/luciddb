@@ -442,8 +442,13 @@ TupleData* CalcAssembler::createTupleData(TupleDescriptor const& tupleDesc, Fixe
     TupleAccessor tupleAccessor;
     tupleAccessor.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
 
+    int maxByteCount = tupleAccessor.getMaxByteCount();
+
     /* Allocate memory */
-    *buf = new FixedBuffer[tupleAccessor.getMaxByteCount()];
+    *buf = new FixedBuffer[maxByteCount];
+
+    /* Zero the memory. */
+    bzero(*buf, maxByteCount);
 
     /* Link memory - Who will delete this????? */
     tupleAccessor.setCurrentTupleBuf(*buf, false);
