@@ -186,6 +186,14 @@ public:
     //! this tuple never changes.
     TupleData const * const getStatusRegister() const;
     
+    //! Zeroes out the values of all TupleDatum within the Staus Register 
+    //! Tuple.
+    //!
+    //! Typically this is called before the first call to exec() and should
+    //! never be called between calls to exec() unless execution is being
+    //! restarted at the beginning of a series of tuples.
+    void zeroStatusRegister();
+
 
     //! Binds the commonly changing Register Sets Input and Output.
     //!

@@ -77,6 +77,24 @@ public class FarragoSqlTest extends FarragoTestCase
             if (file == null) {
                 break;
             }
+            if (!SqlOperatorTests.dtbug465fixed) {
+                if (file.contains("unitsql/ddl/decimal.sql") ||
+                    file.contains("unitsql/optimizer/lcs.sql") ||
+                    file.contains("unitsql/expressions/udfInvocation.sql") ||
+                    file.contains("regressionsql/multiset.sql") ||
+                    file.contains("regressionsql/cast.sql") ||
+                    file.contains("regressionsql/multiset.sql") ||
+                    file.contains("regressionsql/functions.sql") ||
+                    file.contains("regressionsql/types.sql") ||
+                    file.contains("regressionsql/precedence.sql") ||
+                    file.contains("regressionsql/negative.sql") ||
+                    file.contains("regressionsql/selectAdvanced.sql") ||
+                    file.contains("regressionsql/literalTests/int.sql") ||
+                    file.contains("regressionsql/literalTests/real.sql") ||
+                    file.contains("regressionsql/literalTests/string.sql")) {
+                    continue;
+                }
+            }
             suite.addTest(fac.createSqlTest(file));
         }
         return wrappedSuite(suite);

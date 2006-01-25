@@ -34,6 +34,9 @@ import org.eigenbase.util.DoubleKeyMap;
 import org.eigenbase.util.Util;
 import org.eigenbase.util14.*;
 
+import com.disruptivetech.farrago.calc.CalcProgramBuilder.OpType;
+import com.disruptivetech.farrago.calc.CalcProgramBuilder.Register;
+
 import java.math.*;
 import java.util.*;
 
@@ -655,21 +658,21 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             SqlStdOperatorTable.upperFunc,
             ExtInstructionDefTable.upper);
 
-        registerInstr(
+        register(
             SqlStdOperatorTable.localTimeFunc,
-            ExtInstructionDefTable.localTime);
+            new TimeFunctionImplementor());
 
-        registerInstr(
+        register(
             SqlStdOperatorTable.localTimestampFunc,
-            ExtInstructionDefTable.localTimestamp);
+            new TimeFunctionImplementor());
 
-        registerInstr(
+        register(
             SqlStdOperatorTable.currentTimeFunc,
-            ExtInstructionDefTable.currentTime);
+            new TimeFunctionImplementor());
 
-        registerInstr(
+        register(
             SqlStdOperatorTable.currentTimestampFunc,
-            ExtInstructionDefTable.currentTimestamp);
+            new TimeFunctionImplementor());
 
         register(
             SqlStdOperatorTable.sliceOp,
@@ -2110,7 +2113,95 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             throw new UnsupportedOperationException();
         }
     }
+    
+    private static class TimeFunctionImplementor 
+        extends AbstractCalcRexImplementor
+    {
+        private static Map<SqlOperator, CalcProgramBuilder.ExtInstrDef> 
+            timeFuncs;
+        static {
+            HashMap<SqlOperator, CalcProgramBuilder.ExtInstrDef> map =
+                new HashMap<SqlOperator, CalcProgramBuilder.ExtInstrDef>();
+            
+            map.put(
+                SqlStdOperatorTable.localTimeFunc, 
+                ExtInstructionDefTable.localTime);
+            map.put(
+                SqlStdOperatorTable.localTimestampFunc,
+                ExtInstructionDefTable.localTimestamp);
+            map.put(
+                SqlStdOperatorTable.currentTimeFunc,
+                ExtInstructionDefTable.currentTime);            
+            map.put(
+                SqlStdOperatorTable.currentTimestampFunc,
+                ExtInstructionDefTable.currentTimestamp);
+            
+            timeFuncs = map;
+        }
+        
+        public CalcProgramBuilder.Register implement(
+            RexCall call, RexToCalcTranslator translator)
+        {
+            // precision or nothing
+            assert(call.operands.length <= 1);
+            
+            final CalcProgramBuilder progBuilder = translator.builder;
+
+            SqlOperator operator = call.getOperator();
+
+            CalcProgramBuilder.ExtInstrDef instruction =
+                timeFuncs.get(operator);
+
+            Util.permAssert(
+                instruction != null, "cannot implement " + call.toString());
+
+            RexNode operand = null;
+            if (call.operands.length == 1) {
+                operand = translator.resolve(call.operands[0]);
+            }
+            
+            ArrayList<CalcProgramBuilder.Register> regList =
+                new ArrayList<CalcProgramBuilder.Register>();
+            
+            CalcProgramBuilder.Register timeReg =
+                progBuilder.newStatus(CalcProgramBuilder.OpType.Int8, -1);
+            
+            // Call will be to store time func result in local reg with
+            // optional precision operand.
+            regList.add(timeReg);
+            
+            if (operand != null) {
+                regList.add(translator.implementNode(operand));
+            }
+
+            Register[] registers = 
+                regList.toArray(
+                    new CalcProgramBuilder.Register[regList.size()]);
+            
+            String notZeroLabel = translator.newLabel();
+            
+            CalcProgramBuilder.Register isNotZeroReg = 
+                progBuilder.newLocal(CalcProgramBuilder.OpType.Bool, -1);
+            
+            CalcProgramBuilder.Register zeroReg =
+                progBuilder.newInt8Literal(0);
+            
+            CalcProgramBuilder.boolNativeNotEqual.add(
+                progBuilder, isNotZeroReg, timeReg, zeroReg);
+            
+            progBuilder.addLabelJumpTrue(notZeroLabel, isNotZeroReg);
+
+            // store time func reuslt in local reg
+            instruction.add(progBuilder, registers);
+
+            // dangling label on whatever comes next
+            progBuilder.addLabel(notZeroLabel);
+            
+            return timeReg;
+        }
+    }
 }
 
 
 // End CalcRexImplementorTableImpl.java
+

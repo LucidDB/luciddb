@@ -106,7 +106,9 @@ public class ReduceDecimalsRule extends RelOptRule
             /* INTEGRATION ATTEMPT 1 
              * If we decide to expand individual sub expressions, 
              * then they will require some rewiring
+
             for (RexNode expr : program.getExprList()) {
+
                 RexNode newExpr = translator.reduceDecimals(expr, rexBuilder);
                 if (expr != newExpr) {
                     reduced = true;
@@ -275,6 +277,7 @@ public class ReduceDecimalsRule extends RelOptRule
             RexNode[] newOperands = new RexNode[call.operands.length];
             boolean operandsReduced = false;
             for (int i = 0; i < call.operands.length; i++) {
+
                 newOperands[i] = reduceDecimals(call.operands[i], builder);
                 if (newOperands[i] != call.operands[i]) {
                     operandsReduced = true;
@@ -1042,3 +1045,4 @@ public class ReduceDecimalsRule extends RelOptRule
 }
 
 // End ReduceDecimalsRule.java
+

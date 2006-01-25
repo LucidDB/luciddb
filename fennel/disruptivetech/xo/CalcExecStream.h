@@ -83,6 +83,7 @@ class CalcExecStream : public ConduitExecStream
 
 public:
     virtual void prepare(CalcExecStreamParams const &params);
+    virtual void open(bool restart);
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
 };
 

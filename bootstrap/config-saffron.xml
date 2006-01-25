@@ -6,17 +6,13 @@
 
 		<!-- Bootstrappers are run with every build before mod checks -->
 		<bootstrappers>
-			<!-- currentbuildstatusbootstrapper file="logs/saffron/currentbuildstatus.txt"/ -->
-			<p4bootstrapper port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/bootstrap/..."/>
+			<currentbuildstatusbootstrapper file="logs/saffron/currentbuildstatus.txt"/>
+			<p4bootstrapper p4port="&open_p4port;" p4client="&open_p4client;" p4user="&open_p4user;" path="&open_root;/bootstrap/..."/>
 		</bootstrappers>
 
-                <listeners>
-                        <currentbuildstatuslistener file="logs/saffron/currentbuildstatus.txt"/>
-                        <currentbuildstatuslistener file="&open_default.build.home;/../web/logs/saffron&configSuffix;/currentbuildstatus.txt"/>
-                </listeners>
 
 		<!-- Defines where cruise looks for changes, to decide whether to run the build -->
-		<modificationset quietperiod="300">
+		<modificationset quietperiod="3600">
 			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/farrago/..."/>
 			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/saffron/..."/>
 		</modificationset>
@@ -24,7 +20,7 @@
 
 		<!-- Configures the actual build loop, how often and which build file/target -->
 		<schedule interval="&build_interval;">
-			<ant buildfile="&open_default.build.home;/bootstrap/build-saffron.xml" uselogger="true" usedebug="true" antscript="&ant;" target="integration-build-and-test">
+			<ant buildfile="build-saffron.xml" uselogger="true" usedebug="false" antscript="&ant;" target="integration-build-and-test">
 			    <property name="open_propfile" value="&open_propfile;"/>
 			    <property name="open_root" value="&open_root;"/>
 			</ant>
@@ -32,25 +28,17 @@
 
 		<!-- directory to write build logs to -->
 		<log dir="logs/saffron">
-			<merge dir="&open_integration.build.home;/saffron/testlog"/>
+			<merge dir="build/saffron/testlog"/>
 		</log>
 
 		<!-- Publishers are run *after* a build completes -->
 		<publishers>
-			<!-- currentbuildstatuspublisher file="logs/saffron/currentbuildstatus.txt"/ -->
+			<currentbuildstatuspublisher file="logs/saffron/currentbuildstatus.txt"/>
 
-			<artifactspublisher dir="&open_integration.build.home;/saffron/trace" dest="artifacts/saffron&configSuffix;" subdirectory="trace"/>
+			<artifactspublisher dir="build/saffron/trace" dest="artifacts/saffron&configSuffix;" subdirectory="trace"/>
 
 			<!-- sync up artifacts on jsp machine: CC's scp would copy everything -->
 			<execute command="&rsync_cmd; artifacts/saffron&configSuffix; &rsync_dest;"/>
-
-                        <!--
-                        <onfailure>
-                            <artifactspublisher dir="&open_integration.build.home;/farrago" dest="artifacts/saffron&configSuffix;" subdirectory="farrago"/>
-                            <artifactspublisher dir="&open_integration.build.home;/fennel" dest="artifacts/saffron&configSuffix;" subdirectory="fennel"/>
-                            <artifactspublisher dir="&open_integration.build.home;/saffron" dest="artifacts/saffron&configSuffix;" subdirectory="saffron"/>
-                        </onfailure>
-                        -->
 
 			<scp sourcedir="logs/saffron"
 			     targetuser="&scp_user;"
@@ -77,7 +65,6 @@
 			       subjectprefix="&subjectprefix;">
 				<failure address="&failureaddress;"
 				         reportWhenFixed="&reportwhenfixed;"/>
-                                <propertiesmapper file="&emailmapper;"/>
 			</email>
 		</publishers>
 	</project>

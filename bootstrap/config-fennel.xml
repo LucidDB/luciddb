@@ -6,14 +6,10 @@
 
 		<!-- Bootstrappers are run with every build before mod checks -->
 		<bootstrappers>
-			<!-- currentbuildstatusbootstrapper file="logs/fennel/currentbuildstatus.txt"/ -->
-			<p4bootstrapper port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/bootstrap/..."/>
+			<currentbuildstatusbootstrapper file="logs/fennel/currentbuildstatus.txt"/>
+			<p4bootstrapper p4port="&open_p4port;" p4client="&open_p4client;" p4user="&open_p4user;" path="&open_root;/bootstrap/..."/>
 		</bootstrappers>
 
-                <listeners>
-                        <currentbuildstatuslistener file="logs/fennel/currentbuildstatus.txt"/>
-                        <currentbuildstatuslistener file="&open_default.build.home;/../web/logs/fennel&configSuffix;/currentbuildstatus.txt"/>
-                </listeners>
 
 		<!-- Defines where cruise looks for changes, to decide whether to run the build -->
 		<modificationset quietperiod="300">
@@ -24,7 +20,7 @@
 
 		<!-- Configures the actual build loop, how often and which build file/target -->
 		<schedule interval="&build_interval;">
-			<ant buildfile="&open_default.build.home;/bootstrap/build-fennel.xml" uselogger="true" usedebug="false" antscript="&ant;" target="integration-build-and-test">
+			<ant buildfile="build-fennel.xml" uselogger="true" usedebug="false" antscript="&ant;" target="integration-build-and-test">
 			    <property name="open_propfile" value="&open_propfile;"/>
 			    <property name="open_root" value="&open_root;"/>
 			</ant>
@@ -35,20 +31,12 @@
 
 		<!-- Publishers are run *after* a build completes -->
 		<publishers>
-			<!-- currentbuildstatuspublisher file="logs/fennel/currentbuildstatus.txt"/ -->
+			<currentbuildstatuspublisher file="logs/fennel/currentbuildstatus.txt"/>
 
-			<artifactspublisher dir="&open_integration.build.home;/fennel/trace" dest="artifacts/fennel&configSuffix;"/>
+			<artifactspublisher dir="build/fennel/trace" dest="artifacts/fennel&configSuffix;"/>
 
 			<!-- sync up artifacts on jsp machine: CC's scp would copy everything -->
 			<execute command="&rsync_cmd; artifacts/fennel&configSuffix; &rsync_dest;"/>
-
-                        <!--
-                        <onfailure>
-                            <artifactspublisher dir="&open_integration.build.home;/farrago" dest="artifacts/fennel&configSuffix;" subdirectory="farrago"/>
-                            <artifactspublisher dir="&open_integration.build.home;/fennel" dest="artifacts/fennel&configSuffix;" subdirectory="fennel"/>
-                            <artifactspublisher dir="&open_integration.build.home;/saffron" dest="artifacts/fennel&configSuffix;" subdirectory="saffron"/>
-                        </onfailure>
-                        -->
 
 			<scp sourcedir="logs/fennel"
 			     targetuser="&scp_user;"
@@ -75,7 +63,6 @@
 			       subjectprefix="&subjectprefix;">
 				<failure address="&failureaddress;"
 				         reportWhenFixed="&reportwhenfixed;"/>
-                                <propertiesmapper file="&emailmapper;"/>
 			</email>
 		</publishers>
 	</project>

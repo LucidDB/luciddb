@@ -223,6 +223,22 @@ Calculator::getStatusRegister() const
     return &(mRegisterSetBinding[RegisterReference::EStatus]->asTupleData());
 }
 
+void Calculator::zeroStatusRegister()
+{
+    if (mRegisterSetDescriptor[RegisterReference::EStatus] != NULL) {
+        RegisterSetBinding *statusBinding = 
+            mRegisterSetBinding[RegisterReference::EStatus];
+
+        int ncols = statusBinding->asTupleData().size();
+
+        for(int i = 0; i < ncols; i++) {
+            bzero(
+                const_cast<PBuffer>((*statusBinding)[i].pData),
+                (*statusBinding)[i].cbData);
+        }
+    }
+}
+
 void
 Calculator::continueOnException(bool c)
 {
@@ -252,6 +268,9 @@ Calculator::exec()
         oss << endl << "Input Register: " << endl;
         p.print(oss, getInputRegisterDescriptor(), 
                 mRegisterSetBinding[RegisterReference::EInput]->asTupleData());
+        oss << endl << "Status Register: " << endl;
+        p.print(oss, getStatusRegisterDescriptor(), 
+                mRegisterSetBinding[RegisterReference::EStatus]->asTupleData());
         oss << endl;
         trace(TRACE_FINER, oss.str());
     }
