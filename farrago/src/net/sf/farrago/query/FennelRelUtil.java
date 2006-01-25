@@ -40,8 +40,8 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
-import org.eigenbase.rex.RexNode;
-
+import org.eigenbase.rex.*;
+import org.eigenbase.sarg.*;
 
 /**
  * Static utilities for FennelRel implementations.
@@ -450,7 +450,7 @@ public abstract class FennelRelUtil
     }
 
     /**
-     * Returns the repository that a relational expression belongs to.
+     * @return the preparing stmt that a relational expression belongs to
      */
     public static FarragoPreparingStmt getPreparingStmt(FennelRel rel)
     {
@@ -466,11 +466,175 @@ public abstract class FennelRelUtil
     }
 
     /**
-     * Returnss the repository that a relational expression belongs to.
+     * @return the repository that a relational expression belongs to
      */
     public static FarragoRepos getRepos(FennelRel rel)
     {
         return getPreparingStmt(rel).getRepos();
+    }
+
+    /**
+     * Converts a {@link SargExpr} into a relational expression which produces
+     * a representation for the sequence of resolved intervals expected by
+     * Fennel BTree searches.
+     *
+     * @param keyRowType input row type expected by BTree search
+     *
+     * @param cluster query cluster
+     *
+     * @param sargExpr expression to be converted
+     *
+     * @return corresponding relational expression
+     */
+    public static RelNode convertSargExpr(
+        RelDataType keyRowType,
+        RelOptCluster cluster,
+        SargExpr sargExpr)
+    {
+        List<RelNode> inputs = new ArrayList<RelNode>();
+
+        SargIntervalSequence seq = sargExpr.evaluate();
+        for (SargInterval interval : seq.getList()) {
+            inputs.add(
+                convertInterval(
+                    keyRowType,
+                    cluster,
+                    interval));
+        }
+
+        if (inputs.size() == 1) {
+            return inputs.get(0);
+        }
+        
+        // REVIEW jvs 23-Jan-2006:  if inputs.isEmpty(), we'll return
+        // a union with no inputs here.  The optimizer should
+        // propagate that empty set up as far as it can go.
+
+        // FIXME jvs 23-Jan-2006:  Should not be using a union here,
+        // because order is important.  Need a sequence rel?
+        
+        return new UnionRel(
+            cluster,
+            inputs.toArray(new RelNode[0]),
+            true);
+    }
+
+    /**
+     * Converts a {@link SargInterval} into a relational expression
+     * which produces the interval representation expected
+     * by Fennel BTree searches.
+     *
+     * @param keyRowType input row type expected by BTree search
+     *
+     * @param cluster query cluster
+     *
+     * @param interval interval to be converted
+     *
+     * @return corresponding relational expression
+     */
+    public static RelNode convertInterval(
+        RelDataType keyRowType,
+        RelOptCluster cluster,
+        SargInterval interval)
+    {
+        RexBuilder rexBuilder = cluster.getRexBuilder();
+
+        RexLiteral lowerBoundDirective = convertEndpoint(
+            rexBuilder,
+            interval.getLowerBound());
+
+        RexLiteral upperBoundDirective = convertEndpoint(
+            rexBuilder,
+            interval.getUpperBound());
+
+        RexNode lowerBoundCoordinate = convertCoordinate(
+            rexBuilder,
+            interval.getLowerBound());
+        
+        RexNode upperBoundCoordinate = convertCoordinate(
+            rexBuilder,
+            interval.getUpperBound());
+        
+        RexNode [] searchExps = new RexNode [] {
+            lowerBoundDirective,
+            lowerBoundCoordinate,
+            upperBoundDirective,
+            upperBoundCoordinate,
+        };
+
+        // Generate a one-row relation producing the key to search for.
+        OneRowRel oneRowRel = new OneRowRel(cluster);
+        RelNode keyRel = ProjectRel.create(oneRowRel, searchExps, null);
+
+        // For dynamic parameters, add a filter to remove nulls, since they can
+        // never match in a comparison.  FIXME:  This isn't quite right,
+        // since the other bound may not be a dynamic parameter.
+        if ((lowerBoundCoordinate instanceof RexDynamicParam)
+            || (upperBoundCoordinate instanceof RexDynamicParam))
+        {
+            keyRel = RelOptUtil.createNullFilter(keyRel, null);
+        }
+        
+        // Generate code to cast the keys to the index column type.
+        return RelOptUtil.createCastRel(
+            keyRel, keyRowType, false);
+    }
+
+    /**
+     * Converts a {@link SargEndpoint} into the literal representation for a
+     * lower/upper bound directive expected by Fennel BTree searches.
+     *
+     * @param rexBuilder builder for rex expressions
+     *
+     * @param endpoint endpoint to be converted
+     *
+     * @return literal representation
+     */
+    public static RexLiteral convertEndpoint(
+        RexBuilder rexBuilder,
+        SargEndpoint endpoint)
+    {
+        FennelSearchEndpoint fennelEndpoint;
+        if (endpoint.getBoundType() == SargBoundType.LOWER) {
+            if (endpoint.getStrictness() == SargStrictness.CLOSED) {
+                fennelEndpoint = FennelSearchEndpoint.SEARCH_CLOSED_LOWER;
+            } else if (endpoint.isFinite()) {
+                fennelEndpoint = FennelSearchEndpoint.SEARCH_OPEN_LOWER;
+            } else {
+                fennelEndpoint = FennelSearchEndpoint.SEARCH_UNBOUNDED_LOWER;
+            }
+        } else {
+            if (endpoint.getStrictness() == SargStrictness.CLOSED) {
+                fennelEndpoint = FennelSearchEndpoint.SEARCH_CLOSED_UPPER;
+            } else if (endpoint.isFinite()) {
+                fennelEndpoint = FennelSearchEndpoint.SEARCH_OPEN_UPPER;
+            } else {
+                fennelEndpoint = FennelSearchEndpoint.SEARCH_UNBOUNDED_UPPER;
+            }
+        }
+        return rexBuilder.makeLiteral(fennelEndpoint.getSymbol());
+    }
+
+    /**
+     * Converts a {@link SargEndpoint} into the rex coordinate representation
+     * expected by Fennel BTree searches.
+     *
+     * @param rexBuilder builder for rex expressions
+     *
+     * @param endpoint endpoint to be converted
+     *
+     * @return rex representation
+     */
+    public static RexNode convertCoordinate(
+        RexBuilder rexBuilder,
+        SargEndpoint endpoint)
+    {
+        if (endpoint.isFinite()) {
+            return endpoint.getCoordinate();
+        } else {
+            // infinity gets represented as null
+            return rexBuilder.constantNull();
+        }
     }
 }
 

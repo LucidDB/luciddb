@@ -166,6 +166,9 @@ inline bool BTreeReader::searchForKeyTemplate(
                 // nodes, the upper bound should match at parent and child
                 // levels.)
                 assert(!node.height);
+                if (rightSearchTerminator == NULL_PAGE_ID) {
+                    singular = true;
+                }
             } else {
                 // have to search right
                 pageId = node.rightSibling;

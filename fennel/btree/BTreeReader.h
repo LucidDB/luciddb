@@ -66,6 +66,11 @@ protected:
     uint iTupleOnLeaf;
 
     /**
+     * @see isSingular()
+     */
+    bool singular;
+
+    /**
      * LockMode to use when acquiring lock on root node.
      */
     LockMode rootLockMode;
@@ -248,7 +253,7 @@ public:
     
     /**
      * Searches for the next tuple.  Can be used after either searchFirst
-     * or searchForKey.
+     * or searchForKey, but illegal when isSingular().
      *
      * @return true if next tuple found; false if end of tree reached
      */
@@ -264,11 +269,22 @@ public:
      * endSearch yet
      */
     inline bool isPositioned() const;
+
+    /**
+     * @return true if reader is either unpositioned or past last
+     * entry in tree
+     */
+    inline bool isSingular() const;
 };
 
 inline TupleData &BTreeReader::getSearchKeyForWrite()
 {
     return searchKeyData;
+}
+
+inline bool BTreeReader::isSingular() const
+{
+    return singular;
 }
 
 inline bool BTreeReader::isPositioned() const

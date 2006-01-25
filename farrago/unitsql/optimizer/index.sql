@@ -9,6 +9,27 @@ alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
 -- search unique clustered index
 select name from depts where deptno=20;
 
+select name from depts where deptno > 20 order by name;
+
+select name from depts where deptno >= 20 order by name;
+
+select name from depts where deptno < 20 order by name;
+
+select name from depts where deptno <= 20 order by name;
+
+select name from depts where deptno between 20 and 30 order by name;
+
+select name from depts where deptno > 20 and deptno < 30 order by name;
+
+select name from depts where deptno < 20 or deptno between 30 and 40 
+order by name;
+
+-- search beyond end
+select name from depts where deptno > 50 order by name;
+
+-- search before start
+select name from depts where deptno < 5 order by name;
+
 -- search unique clustered index with a prefix key
 select name from emps where deptno=20 order by 1;
 
@@ -90,6 +111,27 @@ order by 1,2;
 
 explain plan for
 select name from depts where deptno=20;
+
+explain plan for
+select name from depts where deptno > 20;
+
+explain plan for
+select name from depts where deptno >= 20;
+
+explain plan for
+select name from depts where deptno < 20;
+
+explain plan for
+select name from depts where deptno <= 20;
+
+explain plan for
+select name from depts where deptno between 20 and 30;
+
+explain plan for
+select name from depts where deptno > 20 and deptno < 30;
+
+explain plan for
+select name from depts where deptno < 20 or deptno between 30 and 40;
 
 explain plan for
 select name from emps where deptno=20 order by 1;

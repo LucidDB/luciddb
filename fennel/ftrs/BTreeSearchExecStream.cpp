@@ -25,6 +25,7 @@
 #include "fennel/ftrs/BTreeSearchExecStream.h"
 #include "fennel/btree/BTreeReader.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
+#include "fennel/tuple/StandardTypeDescriptor.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -41,13 +42,65 @@ void BTreeSearchExecStream::prepare(BTreeSearchExecStreamParams const &params)
 
     TupleAccessor &inputAccessor = pInAccessor->getConsumptionTupleAccessor();
 
+    
+    if (params.inputDirectiveProj.size()) {
+        assert(params.inputDirectiveProj.size() == 2);
+        // If a directive is present, we must be projecting the keys, otherwise
+        // the directives and keys would be overlapping, which doesn't make
+        // sense.  Also, there should be an even number of keys, because
+        // lower and upper bounds come together in the same tuple.
+        assert(params.inputKeyProj.size() > 0);
+        assert((params.inputKeyProj.size() % 2) == 0);
+        directiveAccessor.bind(inputAccessor, params.inputDirectiveProj);
+        TupleDescriptor inputDirectiveDesc;
+        inputDirectiveDesc.projectFrom(inputDesc, params.inputDirectiveProj);
+
+        // verify that the directive attribute has the correct datatype
+        StandardTypeDescriptorFactory stdTypeFactory;
+        TupleAttributeDescriptor expectedDirectiveDesc(
+            stdTypeFactory.newDataType(STANDARD_TYPE_CHAR));
+        expectedDirectiveDesc.cbStorage = 1;
+        assert(
+            inputDirectiveDesc[LOWER_BOUND_DIRECTIVE] == expectedDirectiveDesc);
+        assert(
+            inputDirectiveDesc[UPPER_BOUND_DIRECTIVE] == expectedDirectiveDesc);
+
+        directiveData.compute(inputDirectiveDesc);
+    }
+    
     if (params.inputKeyProj.size()) {
-        inputKeyAccessor.bind(inputAccessor,params.inputKeyProj);
-        inputKeyDesc.projectFrom(inputDesc,params.inputKeyProj);
+        TupleProjection inputKeyProj = params.inputKeyProj;
+        if (params.inputDirectiveProj.size()) {
+            // The inputKeyProj gives us both lower and upper bounds;
+            // split them because we will access them separately.
+            TupleProjection upperBoundProj;
+            int n = inputKeyProj.size() / 2;
+            // This resize extends...
+            upperBoundProj.resize(n);
+            // ...so we have space to copy...
+            std::copy(
+                inputKeyProj.begin() + n,
+                inputKeyProj.end(),
+                upperBoundProj.begin());
+            // ...whereas this one truncates what was copied.
+            inputKeyProj.resize(n);
+
+            upperBoundAccessor.bind(inputAccessor, upperBoundProj);
+            upperBoundDesc.projectFrom(inputDesc, upperBoundProj);
+            upperBoundData.compute(upperBoundDesc);
+        }
+        inputKeyAccessor.bind(inputAccessor,inputKeyProj);
+        inputKeyDesc.projectFrom(inputDesc,inputKeyProj);
     } else {
         inputKeyDesc = inputDesc;
     }
     inputKeyData.compute(inputKeyDesc);
+
+    if (upperBoundDesc.size()) {
+        // Verify that all the splitting above came out with the same
+        // key type for both lower and upper bounds.
+        assert(upperBoundDesc == inputKeyDesc);
+    }
     
     preFilterNulls = false;
     if (outerJoin && inputKeyDesc.containsNullable()) {
@@ -106,18 +159,11 @@ ExecStreamResult BTreeSearchExecStream::execute(
                 return EXECRC_BUF_OVERFLOW;
             }
             if (pReader->searchNext()) {
-                readerKeyAccessor.unmarshal(readerKeyData);
-                int c = inputKeyDesc.compareTuples(
-                    inputKeyData,readerKeyData);
-                if (c == 0) {
-                    // this is a match
+                if (testInterval()) {
                     projAccessor.unmarshal(
                         tupleData.begin() + nJoinAttributes);
                     // continue with inner fetch loop
                     continue;
-                } else {
-                    assert(c < 0);
-                    // done with all matches
                 }
             }
             pReader->endSearch();
@@ -146,15 +192,50 @@ bool BTreeSearchExecStream::innerSearchLoop()
             inputAccessor.unmarshal(inputKeyData);
         }
 
-        bool found = pReader->searchForKey(inputKeyData,DUP_SEEK_BEGIN);
-        if (preFilterNulls && found && inputKeyData.containsNull()) {
-            // null never matches;
+        readDirectives();
+
+        switch(lowerBoundDirective) {
+        case SEARCH_UNBOUNDED_LOWER:
+            pReader->searchFirst();
+            break;
+        case SEARCH_OPEN_LOWER:
+            pReader->searchForKey(inputKeyData,DUP_SEEK_END);
+            break;
+        case SEARCH_CLOSED_LOWER:
+            pReader->searchForKey(inputKeyData,DUP_SEEK_BEGIN);
+            break;
+        default:
+            permFail(
+                "unexpected lower bound directive:  "
+                << (char) lowerBoundDirective);
+        }
+
+        bool match;
+        if (preFilterNulls && match && inputKeyData.containsNull()) {
+            // null never matches when preFilterNulls is true;
             // TODO:  so don't bother searching, but need a way
             // to fake pReader->isPositioned()
-            found = false;
+            match = false;
+        } else {
+            if (pReader->isSingular()) {
+                // Searched past end of tree.
+                match = false;
+            } else {
+                // Unmarshal upper bound key so we know where to stop
+                // while scanning forward.
+                if (upperBoundDesc.size()) {
+                    upperBoundAccessor.unmarshal(upperBoundData);
+                } else {
+                    upperBoundData = inputKeyData;
+                }
+            
+                // FIXME jvs 24-Jan-2006:  handle case where we
+                // searched past highest key in tree
+                match = testInterval();
+            }
         }
             
-        if (!found) {
+        if (!match) {
             if (!outerJoin) {
                 pInAccessor->consumeTuple();
                 pReader->endSearch();
@@ -175,6 +256,48 @@ bool BTreeSearchExecStream::innerSearchLoop()
         }
     }
     return true;
+}
+
+void BTreeSearchExecStream::readDirectives()
+{
+    if (!directiveAccessor.size()) {
+        // default to point intervals
+        lowerBoundDirective = SEARCH_CLOSED_LOWER;
+        upperBoundDirective = SEARCH_CLOSED_UPPER;
+        return;
+    }
+    
+    directiveAccessor.unmarshal(directiveData);
+
+    // directives can never be null
+    assert(directiveData[LOWER_BOUND_DIRECTIVE].pData);
+    assert(directiveData[UPPER_BOUND_DIRECTIVE].pData);
+    
+    lowerBoundDirective =
+        SearchEndpoint(*(directiveData[LOWER_BOUND_DIRECTIVE].pData));
+    upperBoundDirective =
+        SearchEndpoint(*(directiveData[UPPER_BOUND_DIRECTIVE].pData));
+}
+
+bool BTreeSearchExecStream::testInterval()
+{
+    if (upperBoundDirective == SEARCH_UNBOUNDED_UPPER) {
+        return true;
+    } else {
+        readerKeyAccessor.unmarshal(readerKeyData);
+        int c = inputKeyDesc.compareTuples(
+            upperBoundData,readerKeyData);
+        if (upperBoundDirective == SEARCH_CLOSED_UPPER) {
+            if (c >= 0) {
+                return true;
+            }
+        } else {
+            if (c > 0) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 void BTreeSearchExecStream::closeImpl()

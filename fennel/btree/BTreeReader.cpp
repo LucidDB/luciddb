@@ -38,6 +38,7 @@ BTreeReader::BTreeReader(BTreeDescriptor const &descriptor)
     leafLockMode = LOCKMODE_S;
     comparisonKeyData.compute(keyDescriptor);
     searchKeyData = comparisonKeyData;
+    singular = true;
 }
 
 BTreeReader::~BTreeReader()
@@ -53,6 +54,7 @@ inline void BTreeReader::accessLeafTuple()
 
 bool BTreeReader::searchExtreme(bool first)
 {
+    singular = false;
     pageId = getRootPageId();
     LockMode lockMode = rootLockMode;
     for (;;) {
@@ -70,6 +72,7 @@ bool BTreeReader::searchExtreme(bool first)
                 if (pageId == NULL_PAGE_ID) {
                     // FIXME jvs 11-Nov-2005:  see note in method documentation
                     // for searchLast.
+                    singular = true;
                     return false;
                 }
                 continue;
@@ -104,6 +107,7 @@ bool BTreeReader::searchExtreme(bool first)
 // TODO:  prefetch
 bool BTreeReader::searchNext()
 {
+    assert(!singular);
     assert(pageLock.isLocked());
     assert(!pageLock.getNodeForRead().height);
     ++iTupleOnLeaf;
@@ -116,6 +120,7 @@ bool BTreeReader::searchNext()
         if (pageId == NULL_PAGE_ID) {
             // might as well preserve position
             --iTupleOnLeaf;
+            singular = true;
             return false;
         }
         pageLock.lockPage(pageId,leafLockMode);
@@ -128,6 +133,7 @@ bool BTreeReader::searchNext()
 bool BTreeReader::searchForKey(TupleData const &key,DuplicateSeek dupSeek,
                                bool leastUpper)
 {
+    singular = false;
     NullPageStack nullPageStack;
     bool found = searchForKeyTemplate<false,NullPageStack>(
         key,dupSeek,leastUpper,nullPageStack);
@@ -139,6 +145,7 @@ void BTreeReader::endSearch()
 {
     pLeafNodeAccessor->tupleAccessor.resetCurrentTupleBuf();
     pageLock.unlock();
+    singular = true;
 }
 
 TupleAccessor const &BTreeReader::getTupleAccessorForRead() const

@@ -133,9 +133,15 @@ class FtrsIndexScanRel extends TableAccessRelBase implements FennelRel
     // implement RelNode
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
-        return computeCost(
+        RelOptCost cost = computeCost(
             planner,
             getRows());
+
+        // NOTE jvs 24-Jan-2006:  This is just here to fudge the optimizer
+        // into using index scans where possible.
+        cost = cost.multiplyBy(10);
+
+        return cost;
     }
 
     // implement RelNode

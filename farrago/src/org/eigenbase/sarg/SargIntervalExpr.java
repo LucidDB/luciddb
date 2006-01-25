@@ -152,6 +152,7 @@ public class SargIntervalExpr extends SargIntervalBase implements SargExpr
         // include null values.  Why is this?
         
         if ((nullSemantics == SqlNullSemantics.NULL_MATCHES_NOTHING)
+            && getDataType().isNullable()
             && (lowerBound.isFinite() || upperBound.isFinite())
             && (!lowerBound.isFinite() || lowerBound.isNull()))
         {
