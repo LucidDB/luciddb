@@ -177,7 +177,7 @@ Error: Read no rows from file unitsql/med/example.csv; last error was: Row has t
 0: jdbc:farrago:> import foreign schema testdata
 . . . . . . . . > from server flatfile_server
 . . . . . . . . > into flatfile_schema;
-Error: Support for foreign schema import not available in data server "SYS_BOOT"."FLATFILE_SERVER" (state=,code=0)
+Error: Unknown foreign schema "TESTDATA" (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- TODO: read metadata from bcp files
 0: jdbc:farrago:> -- TODO: read column header names from data file
