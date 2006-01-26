@@ -1,7 +1,5 @@
 -- Test queries with UDF invocations
 
-create schema udftest;
-
 set schema 'udftest';
 
 set path 'udftest';
