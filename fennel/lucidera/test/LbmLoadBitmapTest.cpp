@@ -130,13 +130,13 @@ public:
 
 void LbmLoadBitmapTest::testLoad50()
 {
-    // small load where dump of entries can be done
+    // small load
     uint nRows = 50;
     uint nClusters = 4; 
     std::vector<int> repeatSeqValues;
 
-    // first column is always all unique values; the remaining columns
-    // have a repeating sequence based on the following values
+    // first column will contain all unique values; the remaining columns
+    // have a repeating sequence based on the value set in the vector
     repeatSeqValues.push_back(nRows);
     repeatSeqValues.push_back(5);
     repeatSeqValues.push_back(9);
@@ -197,18 +197,19 @@ void LbmLoadBitmapTest::testAppend()
     repeatSeqValues2.push_back(29);
 
     // load into empty btree
-    testLoad(nRows, nClusters, repeatSeqValues1, true,  true, "testAppendNewRoot");
+    testLoad(
+        nRows, nClusters, repeatSeqValues1, true,  true, "testAppendNewRoot");
 
     // append some new values
     resetExecStreamTest();
-    testLoad(nRows, nClusters, repeatSeqValues2, false, true, "testAppendOldRoot");
+    testLoad(
+        nRows, nClusters, repeatSeqValues2, false, true, "testAppendOldRoot");
 }
 
 /**
  * Loads a table with nClusters clusters, 1 column per cluster, and nRows rows.
- * The first column of the table always has unique values.  The remaining
- * columns have repeating sequences based on the value in the repeatSeqValues
- * vector.  E.g., a repeating sequence of n will have values:
+ * Each column has a repeating sequence of values based on the value in the
+ * repeatSeqValues vector.  E.g., a repeating sequence of n will have values:
  * (0, 1, 2, ..., n-1, 0, 1, 2, ..., n-1, 0, 1, 2, ...).
  *  
  * Bitmap indexes are then created on each column as well as a multi-key
