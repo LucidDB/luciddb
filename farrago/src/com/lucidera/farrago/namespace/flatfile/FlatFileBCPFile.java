@@ -57,7 +57,7 @@ class FlatFileBCPFile
             this.ctrlReader = new FileReader(fileName);
             this.reader = new LineNumberReader(ctrlReader);
         } catch (FileNotFoundException fe) {
-            fe.printStackTrace();
+            // fe.printStackTrace();
             return false;
         }
 

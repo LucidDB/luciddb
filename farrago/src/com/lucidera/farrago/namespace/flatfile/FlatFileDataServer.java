@@ -91,7 +91,7 @@ class FlatFileDataServer extends MedAbstractDataServer
             String name = tableProps.getProperty(
                 FlatFileColumnSet.PROP_FILENAME);
             if (name == null) {
-                return null;
+                name = localName[localName.length-1];
             }
             String extension = params.getControlFileExtenstion();
             String ctrlFilePath = params.getDirectory() + name + extension;
@@ -100,6 +100,8 @@ class FlatFileDataServer extends MedAbstractDataServer
             if (bcpFile.parse()) {
                 rowType = createRowType(
                     typeFactory, bcpFile.types, bcpFile.colNames);
+            } else {
+                return null;
             }
         }
         return new FlatFileColumnSet(localName, rowType, params, tableProps);

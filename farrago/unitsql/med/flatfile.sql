@@ -155,12 +155,61 @@ select * from flatfile_tooFewColumns;
 -- the parser should give up when it's reached the max size
 -- and should interpret this row as multiple rows
 
--- should fail:  required metadata support not available
+-- test: read metadata from bcp files
+
+-- test import foreign schema using wrong schema name
 import foreign schema testdata
 from server flatfile_server
 into flatfile_schema;
 
--- TODO: read metadata from bcp files
+-- test import foreign schema
+import foreign schema bcp
+from server flatfile_server
+into flatfile_schema;
+
+select * from flatfile_schema."example" order by 3;
+
+drop table flatfile_schema."example";
+
+-- test badly qualified import foreign schema
+import foreign schema bcp LIMIT TO ("no_table")
+from server flatfile_server
+into flatfile_schema;
+
+-- test qualified import foreign schema
+import foreign schema bcp LIMIT TO ("example")
+from server flatfile_server
+into flatfile_schema;
+
+select * from flatfile_schema."example" order by 3;
+
+drop table flatfile_schema."example";
+
+import foreign schema bcp LIMIT TO TABLE_NAME LIKE 'e%'
+from server flatfile_server
+into flatfile_schema;
+
+select * from flatfile_schema."example" order by 3;
+
+drop table flatfile_schema."example";
+
+import foreign schema bcp EXCEPT TABLE_NAME LIKE 'e%'
+from server flatfile_server
+into flatfile_schema;
+
+import foreign schema bcp EXCEPT TABLE_NAME LIKE 'E%'
+from server flatfile_server
+into flatfile_schema;
+
+select * from flatfile_schema."example" order by 3;
+
+-- test a table using implicit column definitions
+create foreign table flatfile_implicit_table
+server flatfile_server
+options (filename 'example');
+
+select * from flatfile_implicit_table order by 3;
+
 -- TODO: read column header names from data file
 -- TODO: derive column types by reading first few lines of file
 
