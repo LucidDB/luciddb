@@ -25,6 +25,8 @@ package net.sf.farrago.namespace.impl;
 import java.sql.*;
 import java.util.*;
 
+import javax.sql.*;
+
 import net.sf.farrago.namespace.*;
 
 import org.eigenbase.relopt.*;
@@ -44,6 +46,7 @@ public abstract class MedAbstractDataServer extends MedAbstractBase
 
     private String serverMofId;
     private Properties props;
+    private DataSource loopbackDataSource;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -73,6 +76,20 @@ public abstract class MedAbstractDataServer extends MedAbstractBase
         return props;
     }
 
+    /**
+     * @return current loopback data source
+     */
+    public DataSource getLoopbackDataSource()
+    {
+        return loopbackDataSource;
+    }
+
+    // implement FarragoMedDataServer
+    public void setLoopbackDataSource(DataSource loopbackDataSource)
+    {
+        this.loopbackDataSource = loopbackDataSource;
+    }
+    
     // implement FarragoMedDataServer
     public void registerRules(RelOptPlanner planner)
     {

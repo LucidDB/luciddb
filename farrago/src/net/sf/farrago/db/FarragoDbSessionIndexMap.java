@@ -101,7 +101,8 @@ class FarragoDbSessionIndexMap extends FarragoCompoundAllocation
             database.getDataWrapperCache(),
             database.getPluginClassLoader(),
             repos,
-            database.getFennelDbHandle());
+            database.getFennelDbHandle(),
+            null);
     }
 
     //~ Methods ---------------------------------------------------------------
