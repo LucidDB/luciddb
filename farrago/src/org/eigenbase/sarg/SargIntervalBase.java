@@ -97,6 +97,14 @@ public abstract class SargIntervalBase
     {
         return !lowerBound.isFinite() && !upperBound.isFinite();
     }
+
+    /**
+     * @return the factory which produced this expression
+     */
+    public SargFactory getFactory()
+    {
+        return factory;
+    }
     
     /**
      * Sets this interval to represent a single point (possibly the null

@@ -26,6 +26,7 @@
 
 #include "fennel/ftrs/BTreeReadExecStream.h"
 #include "fennel/exec/ConduitExecStream.h"
+#include "fennel/common/SearchEndpoint.h"
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -49,8 +50,16 @@ struct BTreeSearchExecStreamParams
 
     /**
      * Projection of input attributes to be joined to search results in output.
+     * (May be empty.)
      */
     TupleProjection inputJoinProj;
+    
+    /**
+     * Projection of single input attribute to be used as a directive
+     * controlling interval searches.  If empty, all input keys are
+     * interpreted as point searches.
+     */
+    TupleProjection inputDirectiveProj;
 };
 
 /**
@@ -64,17 +73,31 @@ struct BTreeSearchExecStreamParams
 class BTreeSearchExecStream
     : public BTreeReadExecStream, public ConduitExecStream
 {
+    /**
+     * Ordinals of lower/upper bounds within directive tuple.
+     */
+    enum DirectiveOrdinal {
+        LOWER_BOUND_DIRECTIVE = 0,
+        UPPER_BOUND_DIRECTIVE = 1
+    };
+    
 protected:
     TupleProjectionAccessor inputKeyAccessor;
     TupleProjectionAccessor inputJoinAccessor;
     TupleProjectionAccessor readerKeyAccessor;
-    TupleDescriptor inputKeyDesc;
-    TupleData inputKeyData,readerKeyData;
+    TupleProjectionAccessor directiveAccessor;
+    TupleProjectionAccessor upperBoundAccessor;
+    TupleDescriptor inputKeyDesc, upperBoundDesc;
+    TupleData inputKeyData,upperBoundData,readerKeyData,directiveData;
     bool outerJoin;
     bool preFilterNulls;
     uint nJoinAttributes;
+    SearchEndpoint lowerBoundDirective;
+    SearchEndpoint upperBoundDirective;
 
     bool innerSearchLoop();
+    void readDirectives();
+    bool testInterval();
     
     virtual void closeImpl();
     

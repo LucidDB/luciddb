@@ -1,0 +1,86 @@
+0: jdbc:luciddb:> set schema 'udftest';
+0: jdbc:luciddb:> set path 'udftest';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- define CleanPhone functions
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function clean_phone(str varchar(128))
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
+. . . . . . . . > specific clean_phone_no_format
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.CleanPhone.FunctionExecute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function clean_phone(inStr varchar(128), format integer)
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
+. . . . . . . . > specific clean_phone_int_format
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.CleanPhone.FunctionExecute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function clean_phone(inStr varchar(128), format integer, reject boolean)
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
+. . . . . . . . > specific clean_phone_int_format_rejectable
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.CleanPhone.FunctionExecute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function clean_phone(inStr varchar(128), format varchar(128), reject boolean)
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
+. . . . . . . . > specific clean_phone_str_format_rejectable
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.CleanPhone.FunctionExecute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create view with references ro clean_phone
+0: jdbc:luciddb:> create view fmtphone(fname, lname, phone1, phone2, phone3, phone4) as
+. . . . . . . . > select fname, lname, clean_phone(phone), clean_phone(phone, 0), clean_phone(phone, 1, true), clean_phone(phone, 'ph:999=& 99 !!99999', true)
+. . . . . . . . > from customers;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from fmtphone
+. . . . . . . . > order by 1;
++----------+----------+-----------------+---------------+-----------------+----------------------+
+|  FNAME   |  LNAME   |     PHONE1      |    PHONE2     |     PHONE3      |        PHONE4        |
++----------+----------+-----------------+---------------+-----------------+----------------------+
+| Ephram   | Vestrit  | (321) 345-4321  | 321-345-4321  | (321) 345-4321  | ph:321=& 34 !!54321  |
+| Gregory  | Packery  | (342) 234-2355  | 342-234-2355  | (342) 234-2355  | ph:342=& 23 !!42355  |
+| Lilah    | Lowe     | (234) 412-3442  | 234-412-3442  | (234) 412-3442  | ph:234=& 41 !!23442  |
+| Mark     | Wyatt    | (123) 456-7890  | 123-456-7890  | (123) 456-7890  | ph:123=& 45 !!67890  |
+| Mary     | O Brian  | (234) 456-7843  | 234-456-7843  | (234) 456-7843  | ph:234=& 45 !!67843  |
++----------+----------+-----------------+---------------+-----------------+----------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- clean_phone in expressions
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select phone1 || clean_phone(phone2), phone4 || clean_phone(phone3, 0, true)
+. . . . . . . . > from fmtphone
+. . . . . . . . > order by 1;
++-------------------------------+----------------------------------+
+|            EXPR$0             |              EXPR$1              |
++-------------------------------+----------------------------------+
+| (123) 456-7890(123) 456-7890  | ph:123=& 45 !!67890123-456-7890  |
+| (234) 412-3442(234) 412-3442  | ph:234=& 41 !!23442234-412-3442  |
+| (234) 456-7843(234) 456-7843  | ph:234=& 45 !!67843234-456-7843  |
+| (321) 345-4321(321) 345-4321  | ph:321=& 34 !!54321321-345-4321  |
+| (342) 234-2355(342) 234-2355  | ph:342=& 23 !!42355342-234-2355  |
++-------------------------------+----------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- nested clean_phone
+0: jdbc:luciddb:> values clean_phone(clean_phone('5558459190', 1, false), 'My Phone Number:(999 999 9999)', true); 
++---------------------------------+
+|             EXPR$0              |
++---------------------------------+
+| My Phone Number:(555 845 9190)  |
++---------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values clean_phone(' df        ' || clean_phone('1 2 3 4 5 6 7 8 9 0', 0, true) || '          ');
++------------------------------------+
+|               EXPR$0               |
++------------------------------------+
+|  df        123-456-7890            |
++------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- should fail and throw exception
+0: jdbc:luciddb:> values clean_phone('  fd   1 2 3 4 5 6 7 8 9 0          ', 0, true);
+Error: java.lang.IllegalArgumentException: null (state=,code=0)
+0: jdbc:luciddb:> values clean_phone('sdfjl92378sflkds', 'ph:999-999-9999', true);
+Error: java.lang.IllegalArgumentException: null (state=,code=0)
+0: jdbc:luciddb:> !quit

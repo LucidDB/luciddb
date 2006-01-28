@@ -24,6 +24,8 @@ package net.sf.farrago.namespace.util;
 
 import java.util.*;
 
+import javax.sql.*;
+
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.*;
@@ -51,6 +53,8 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
 
     private FennelDbHandle fennelDbHandle;
 
+    private DataSource loopbackDataSource;
+
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -64,16 +68,22 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
      * @param repos FarragoRepos for wrapper initialization
      *
      * @param fennelDbHandle FennelDbHandle for wrapper initialization
+     *
+     * @param loopbackDataSource a DataSource for
+     * establishing a loopback connection into Farrago, or
+     * null if none is available
      */
     public FarragoDataWrapperCache(
         FarragoAllocationOwner owner,
         FarragoObjectCache sharedCache,
         FarragoPluginClassLoader classLoader,
         FarragoRepos repos,
-        FennelDbHandle fennelDbHandle)
+        FennelDbHandle fennelDbHandle,
+        DataSource loopbackDataSource)
     {
         super(owner, sharedCache, classLoader, repos);
         this.fennelDbHandle = fennelDbHandle;
+        this.loopbackDataSource = loopbackDataSource;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -155,6 +165,7 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
             getSharedCache().pin(mofId, factory, exclusive);
 
         server = (FarragoMedDataServer) addToPrivateCache(entry);
+        server.setLoopbackDataSource(loopbackDataSource);
         return server;
     }
 

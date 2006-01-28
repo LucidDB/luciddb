@@ -182,7 +182,7 @@ public class ReduceDecimalsRule extends RelOptRule
             return inputMap.get(localRef.getIndex());
         }
     }
-
+    
     /**
      * A RexShuttle which builds up a Rex tree
      */
@@ -1043,6 +1043,7 @@ public class ReduceDecimalsRule extends RelOptRule
         }
     }
 }
+
 
 // End ReduceDecimalsRule.java
 

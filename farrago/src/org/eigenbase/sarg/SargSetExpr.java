@@ -79,6 +79,12 @@ public class SargSetExpr implements SargExpr
     }
 
     // implement SargExpr
+    public SargFactory getFactory()
+    {
+        return factory;
+    }
+    
+    // implement SargExpr
     public RelDataType getDataType()
     {
         return dataType;

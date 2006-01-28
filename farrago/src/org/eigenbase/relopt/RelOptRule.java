@@ -178,7 +178,7 @@ public abstract class RelOptRule
      *
      * @post return == null || return.getTraits().matches(toTraits)
      */
-    protected static RelNode convert(RelNode rel, RelTraitSet toTraits)
+    public static RelNode convert(RelNode rel, RelTraitSet toTraits)
     {
         RelTraitSet outTraits = RelOptUtil.clone(rel.getTraits());
         for(int i = 0; i < toTraits.size(); i++) {
@@ -209,7 +209,7 @@ public abstract class RelOptRule
      * @param rel the rel to convert
      * @return converted rel or null if conversion could not be made
      */
-    protected static RelNode mergeTraitsAndConvert(
+    public static RelNode mergeTraitsAndConvert(
         RelTraitSet baseTraits, RelTraitSet newTraits, RelNode rel)
     {
         RelTraitSet traits = RelOptUtil.mergeTraits(baseTraits, newTraits);
@@ -230,7 +230,7 @@ public abstract class RelOptRule
      * @param rel the rel to convert
      * @return converted rel or null if conversion could not be made
      */
-    protected static RelNode mergeTraitsAndConvert(
+    public static RelNode mergeTraitsAndConvert(
         RelTraitSet baseTraits, RelTrait newTrait, RelNode rel)
     {
         RelTraitSet traits = RelOptUtil.clone(baseTraits);
@@ -256,7 +256,7 @@ public abstract class RelOptRule
      * @param rel rel node to modify
      * @param traits traits to merge onto the rel node's traits
      */
-    protected static void mergeTraitsOnto(RelNode rel, RelTraitSet traits)
+    public static void mergeTraitsOnto(RelNode rel, RelTraitSet traits)
     {
         Util.permAssert(
             !rel.getCluster().getPlanner().isRegistered(rel),
