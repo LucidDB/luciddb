@@ -35,6 +35,7 @@ import net.sf.farrago.session.FarragoSessionPlanner;
 import net.sf.farrago.FarragoMetadataFactory;
 import net.sf.farrago.FarragoPackage;
 
+import org.eigenbase.sql.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
@@ -494,6 +495,29 @@ public abstract class FennelRelUtil
         List<RelNode> inputs = new ArrayList<RelNode>();
 
         SargIntervalSequence seq = sargExpr.evaluate();
+
+        if (seq.getList().isEmpty()) {
+            // TODO jvs 27-Jan-2006: in this case, should replace the entire
+            // original expression with a NoRowRel instead, and then teach the
+            // optimizer how to propagate that empty set up as far as it can
+            // go.  For now we just make up an interval which is
+            // guaranteed not to find anything.
+            SargFactory factory = sargExpr.getFactory();
+            SargIntervalExpr emptyIntervalExpr =
+                factory.newIntervalExpr(
+                    sargExpr.getDataType(),
+                    SqlNullSemantics.NULL_MATCHES_NULL);
+            emptyIntervalExpr.setLower(
+                factory.newNullLiteral(),
+                SargStrictness.OPEN);
+            emptyIntervalExpr.setUpper(
+                factory.newNullLiteral(),
+                SargStrictness.OPEN);
+
+            seq = emptyIntervalExpr.evaluate();
+            assert(seq.getList().size() == 1);
+        }
+        
         for (SargInterval interval : seq.getList()) {
             inputs.add(
                 convertInterval(
@@ -506,10 +530,6 @@ public abstract class FennelRelUtil
             return inputs.get(0);
         }
         
-        // REVIEW jvs 23-Jan-2006:  if inputs.isEmpty(), we'll return
-        // a union with no inputs here.  The optimizer should
-        // propagate that empty set up as far as it can go.
-
         // FIXME jvs 23-Jan-2006:  Should not be using a union here,
         // because order is important.  Need a sequence rel?
         

@@ -54,6 +54,11 @@ public interface SargExpr
      * @return immutable ordered sequence of disjoint intervals
      */
     public SargIntervalSequence evaluate();
+
+    /**
+     * @return the factory which produced this expression
+     */
+    public SargFactory getFactory();
 }
 
 // End SargExpr.java

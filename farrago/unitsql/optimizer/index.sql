@@ -1,6 +1,16 @@
 -- $Id$
 -- Test queries which make use of indexes
 
+create schema oj;
+
+create table oj.t1(i int not null primary key, j int unique);
+
+create table oj.t2(i int not null primary key, j int unique);
+
+insert into oj.t1 values (1,null), (2, 2), (3, 3);
+
+insert into oj.t2 values (1,null), (2, 2), (4, 4);
+
 set schema 'sales';
 
 -- force usage of Java calculator
@@ -23,6 +33,9 @@ select name from depts where deptno > 20 and deptno < 30 order by name;
 
 select name from depts where deptno < 20 or deptno between 30 and 40 
 order by name;
+
+-- contradiction:  empty range
+select name from depts where deptno=20 and deptno=30;
 
 -- search beyond end
 select name from depts where deptno > 50 order by name;
@@ -90,6 +103,11 @@ from
 (select name,age - 20 as age from emps) e
 left outer join depts on e.age = depts.deptno;
 
+-- outer join with keys on both sides nullable
+select *
+from oj.t1 left outer join oj.t2
+on t1.j = t2.j;
+
 -- index join which requires swapped join inputs
 select 
     depts.name as dname,e.name as ename
@@ -132,6 +150,9 @@ select name from depts where deptno > 20 and deptno < 30;
 
 explain plan for
 select name from depts where deptno < 20 or deptno between 30 and 40;
+
+explain plan for
+select name from depts where deptno=20 and deptno=30;
 
 explain plan for
 select name from emps where deptno=20 order by 1;
@@ -209,6 +230,11 @@ inner join
 on 
     e.age=depts.deptno
 order by 1,2;
+
+explain plan for
+select *
+from oj.t1 left outer join oj.t2
+on t1.j = t2.j;
 
 -- can only explain plan for dynamic parameter search
 explain plan for

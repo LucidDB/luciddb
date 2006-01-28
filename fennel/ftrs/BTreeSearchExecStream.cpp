@@ -210,8 +210,8 @@ bool BTreeSearchExecStream::innerSearchLoop()
                 << (char) lowerBoundDirective);
         }
 
-        bool match;
-        if (preFilterNulls && match && inputKeyData.containsNull()) {
+        bool match = true;
+        if (preFilterNulls && inputKeyData.containsNull()) {
             // null never matches when preFilterNulls is true;
             // TODO:  so don't bother searching, but need a way
             // to fake pReader->isPositioned()
