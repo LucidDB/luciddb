@@ -120,7 +120,8 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
                 this, sharedDataWrapperCache,
                 session.getPluginClassLoader(),
                 repos,
-                fennelDbHandle);
+                fennelDbHandle,
+                new FarragoSessionDataSource(session));
         privilegeChecker = session.newPrivilegeChecker();
     }
 

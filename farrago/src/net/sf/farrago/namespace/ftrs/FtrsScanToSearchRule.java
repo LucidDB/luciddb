@@ -41,7 +41,8 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.util.*;
-import org.eigenbase.sql.type.SqlTypeUtil;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.sarg.*;
 
 // TODO jvs 22-Feb-2005:  combine FtrsScanToSearchRule with
 // FtrsTableProjectionRule (say FtrsIndexAccessRule?).  Without combining them,
@@ -87,35 +88,32 @@ class FtrsScanToSearchRule extends RelOptRule
 
         FarragoRepos repos = FennelRelUtil.getRepos(scan);
 
-        // TODO: General framework for converting filters into ranges.  Build
-        // on the rex expression pattern-matching framework?  Or maybe ANTLR
-        // tree matching?  Need canonical form, compound keys, inequalities.
         RexNode filterExp = filter.getCondition();
 
         RexNode extraFilter = null;
 
-        if (filterExp.isA(RexKind.And)) {
-            RexCall andExpression = (RexCall) filterExp;
-            filterExp = andExpression.operands[0];
-            extraFilter = andExpression.operands[1];
+        SargFactory sargFactory = new SargFactory(
+            scan.getCluster().getRexBuilder());
+        SargRexAnalyzer rexAnalyzer = sargFactory.newRexAnalyzer();
+        SargBinding sargBinding = rexAnalyzer.analyze(filterExp);
+
+        // TODO jvs 23-Jan-2006:  proper decomposition of conjunctions;
+        // this is just a hack for backwards compatibility in tests
+        if (sargBinding == null) {
+            if (filterExp.isA(RexKind.And)) {
+                RexCall andExpression = (RexCall) filterExp;
+                filterExp = andExpression.operands[0];
+                extraFilter = andExpression.operands[1];
+                sargBinding = rexAnalyzer.analyze(filterExp);
+            }
         }
 
-        if (!filterExp.isA(RexKind.Equals)) {
-            return;
-        }
-        RexCall binaryExpression = (RexCall) filterExp;
-
-        RexNode left = binaryExpression.operands[0];
-        RexNode right = binaryExpression.operands[1];
-        if (!(left instanceof RexInputRef)) {
+        if (sargBinding == null) {
+            // Predicate was not sargable
             return;
         }
 
-        // TODO:  support other types of constant (e.g. CURRENT_USER) on RHS
-        if (!right.isA(RexKind.Literal) && !right.isA(RexKind.DynamicParam)) {
-            return;
-        }
-        RexInputRef fieldAccess = (RexInputRef) left;
+        RexInputRef fieldAccess = sargBinding.getInputRef();
         FemAbstractColumn filterColumn =
             scan.getColumnForFieldAccess(fieldAccess.getIndex());
         assert (filterColumn != null);
@@ -127,13 +125,15 @@ class FtrsScanToSearchRule extends RelOptRule
                 repos, scan.ftrsTable.getCwmColumnSet()).iterator();
             while (iter.hasNext()) {
                 FemLocalIndex index = (FemLocalIndex) iter.next();
-                considerIndex(index, scan, filterColumn, right, call,
+                considerIndex(
+                    index, scan, filterColumn, sargBinding.getExpr(), call,
                     extraFilter);
             }
         } else {
             // if we're already working with an unclustered index scan, either
             // we can convert the filter or not; no other indexes are involved
-            considerIndex(scan.index, scan, filterColumn, right, call,
+            considerIndex(
+                scan.index, scan, filterColumn, sargBinding.getExpr(), call,
                 extraFilter);
         }
     }
@@ -156,7 +156,7 @@ class FtrsScanToSearchRule extends RelOptRule
         FemLocalIndex index,
         FtrsIndexScanRel origScan,
         FemAbstractColumn filterColumn,
-        RexNode searchValue,
+        SargExpr sargExpr,
         RelOptRuleCall call,
         RexNode extraFilter)
     {
@@ -173,64 +173,76 @@ class FtrsScanToSearchRule extends RelOptRule
         
         final RelTraitSet callTraits = call.rels[0].getTraits(); 
 
-        boolean isUnique =
-            index.isUnique() && (index.getIndexedFeature().size() == 1);
+        if (!index.isClustered() && origScan.index.isClustered()) {
+            if (origScan.isOrderPreserving) {
+                // Searching on an unclustered index would destroy the required
+                // scan ordering, so we can't do that.
+                return;
+            }
+        }
 
-        RexNode [] searchExps = new RexNode [] { searchValue };
+        // NOTE jvs 24-Jan-2006: I turned this optimization off because
+        // BTreeSearchUnique can no longer be used with interval inputs.
+        // Turning it back on requires verifying that all intervals are points,
+        // and then suppressing generation of directives.
+        boolean isUnique;
+        if (false) {
+            isUnique =
+                index.isUnique() && (index.getIndexedFeature().size() == 1);
+        } else {
+            isUnique = false;
+        }
 
-        // Generate a one-row relation producing the key to search for.
-        OneRowRel oneRowRel = new OneRowRel(origScan.getCluster());
-        mergeTraitsOnto(oneRowRel, callTraits);
-        
-        RelDataType rowType = RexUtil.createStructType(
-            origScan.getCluster().getTypeFactory(),
-            searchExps);
-        ProjectRel keyRel =
-            new ProjectRel(
-                origScan.getCluster(),
-                oneRowRel,
-                searchExps,
-                rowType,
-                ProjectRel.Flags.Boxed);
-        mergeTraitsOnto(keyRel, callTraits);
-        
-        // Add a filter to remove nulls, since they can never match the
-        // equals condition.
-        RelNode nullFilterRel = RelOptUtil.createNullFilter(keyRel, null);
-
-        mergeTraitsOnto(nullFilterRel, callTraits);
-        
-        // Generate code to cast the literal to the index column type.
+        // Create a type descriptor for the rows representing search
+        // keys along with their directives.  Note that we force
+        // the key type to nullable because we use null for the representation
+        // of infinity (rather than domain-specific junk).
         FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(origScan);
         FarragoTypeFactory typeFactory = stmt.getFarragoTypeFactory();
-        RelDataType lhsRowType =
+        RelDataType directiveType =
+            typeFactory.createSqlType(
+                SqlTypeName.Char,
+                1);
+        RelDataType keyType =
+            typeFactory.createTypeWithNullability(
+                typeFactory.createCwmElementType(filterColumn),
+                true);
+
+        RelDataType keyRowType =
             typeFactory.createStructType(
                 new RelDataType [] {
-                    typeFactory.createCwmElementType(filterColumn)
+                    directiveType,
+                    keyType,
+                    directiveType,
+                    keyType
                 },
-                new String [] { "filterColumn" });
-        RelNode castRel = RelOptUtil.createCastRel(
-            nullFilterRel, lhsRowType, false);
+                new String [] {
+                    "lowerBoundDirective",
+                    "lowerBoundKey",
+                    "upperBoundDirective",
+                    "upperBoundKey"
+                });
+        RelNode sargRel = FennelRelUtil.convertSargExpr(
+            callTraits,
+            keyRowType,
+            origScan.getCluster(),
+            sargExpr);
 
-        mergeTraitsOnto(castRel, callTraits);
-        
         RelNode keyInput =
             mergeTraitsAndConvert(
                 callTraits, FennelRel.FENNEL_EXEC_CONVENTION,
-                castRel);
+                sargRel);
         assert (keyInput != null);
+
+        // Set up projections for the search directive and key.
+        Integer [] inputDirectiveProj = new Integer [] { 0, 2 };
+        Integer [] inputKeyProj = new Integer [] { 1, 3 };
 
         if (!index.isClustered() && origScan.index.isClustered()) {
             // By itself, an unclustered index is not going to produce the
             // requested rows.  Instead, it will produce clustered index keys,
             // which we'll use to drive a parent search against the clustered
             // index.
-            if (origScan.isOrderPreserving) {
-                // Searching on an unclustered index would destroy the required
-                // scan ordering, so we can't do that.
-                return;
-            }
-
             Integer [] clusteredKeyColumns =
                 indexGuide.getClusteredDistinctKeyArray(
                     origScan.index);
@@ -246,12 +258,12 @@ class FtrsScanToSearchRule extends RelOptRule
 
             FtrsIndexSearchRel unclusteredSearch =
                 new FtrsIndexSearchRel(unclusteredScan, keyInput, isUnique,
-                    false, null, null);
+                    false, inputKeyProj, null, inputDirectiveProj);
             mergeTraitsOnto(unclusteredSearch, callTraits);
             
             FtrsIndexSearchRel clusteredSearch =
                 new FtrsIndexSearchRel(origScan, unclusteredSearch, true,
-                    false, null, null);
+                    false, null, null, null);
             mergeTraitsOnto(clusteredSearch, callTraits);
             
             transformCall(call, clusteredSearch, extraFilter);
@@ -259,13 +271,13 @@ class FtrsScanToSearchRule extends RelOptRule
             // A direct search against an index is easier.
             FtrsIndexSearchRel search =
                 new FtrsIndexSearchRel(origScan, keyInput, isUnique, false,
-                    null, null);
+                    inputKeyProj, null, inputDirectiveProj);
             mergeTraitsOnto(search, callTraits);
             
             transformCall(call, search, extraFilter);
         }
     }
-
+    
     private void transformCall(
         RelOptRuleCall call,
         RelNode searchRel,

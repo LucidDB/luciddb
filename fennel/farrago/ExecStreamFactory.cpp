@@ -148,6 +148,11 @@ void ExecStreamFactory::visit(ProxyIndexSearchDef &streamDef)
             params.inputJoinProj,
             streamDef.getInputJoinProj());
     }
+    if (streamDef.getInputDirectiveProj()) {
+        CmdInterpreter::readTupleProjection(
+            params.inputDirectiveProj,
+            streamDef.getInputDirectiveProj());
+    }
     embryo.init(
         streamDef.isUniqueKey()
         ? new BTreeSearchUniqueExecStream() : new BTreeSearchExecStream(),

@@ -27,6 +27,7 @@ import org.eigenbase.sarg.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.fun.*;
 
 import java.math.*;
 import java.util.*;
@@ -62,6 +63,8 @@ public class SargTest extends TestCase
     
     private SargFactory sargFactory;
     
+    private RexBuilder rexBuilder;
+    
     private RelDataType intType;
     
     private RelDataType stringType;
@@ -92,9 +95,11 @@ public class SargTest extends TestCase
         
         RelDataTypeFactory typeFactory = new SqlTypeFactoryImpl();
         intType = typeFactory.createSqlType(SqlTypeName.Integer);
+        intType = typeFactory.createTypeWithNullability(intType, true);
         stringType = typeFactory.createSqlType(SqlTypeName.Varchar, 20);
+        stringType = typeFactory.createTypeWithNullability(stringType, true);
         
-        RexBuilder rexBuilder = new RexBuilder(typeFactory);
+        rexBuilder = new RexBuilder(typeFactory);
         intLiteral7 = rexBuilder.makeExactLiteral(
             new BigDecimal(7), intType);
         intLiteral490 = rexBuilder.makeExactLiteral(
@@ -550,6 +555,79 @@ public class SargTest extends TestCase
     private RexNode createCoordinate(Zodiac z)
     {
         return sargFactory.getRexBuilder().makeLiteral(z.toString());
+    }
+
+    public void testRexAnalyzer()
+    {
+        SargRexAnalyzer rexAnalyzer = sargFactory.newRexAnalyzer();
+        RexNode pred1, pred2, pred3;
+        SargBinding binding;
+        
+        RexNode inputRef8 = rexBuilder.makeInputRef(intType, 8);
+        RexNode inputRef9 = rexBuilder.makeInputRef(intType, 8);
+        
+        // test variable before literal
+        pred1 = rexBuilder.makeCall(
+            SqlStdOperatorTable.lessThanOperator,
+            inputRef8,
+            intLiteral7);
+        binding = rexAnalyzer.analyze(pred1);
+        assertNotNull(binding);
+        assertEquals("(-infinity, 7)", binding.getExpr().toString());
+
+        // test literal before variable
+        pred2 = rexBuilder.makeCall(
+            SqlStdOperatorTable.greaterThanOrEqualOperator,
+            intLiteral490,
+            inputRef9);
+        binding = rexAnalyzer.analyze(pred2);
+        assertNotNull(binding);
+        assertEquals("(-infinity, 490]", binding.getExpr().toString());
+
+        // test AND
+        pred3 = rexBuilder.makeCall(
+            SqlStdOperatorTable.andOperator,
+            pred1,
+            pred2);
+        binding = rexAnalyzer.analyze(pred3);
+        assertNotNull(binding);
+        assertEquals("INTERSECTION( (-infinity, 7) (-infinity, 490] )",
+            binding.getExpr().toString());
+        
+        // test OR
+        pred3 = rexBuilder.makeCall(
+            SqlStdOperatorTable.orOperator,
+            pred1,
+            pred2);
+        binding = rexAnalyzer.analyze(pred3);
+        assertNotNull(binding);
+        assertEquals("UNION( (-infinity, 7) (-infinity, 490] )",
+            binding.getExpr().toString());
+        
+        // test NOT
+        pred3 = rexBuilder.makeCall(
+            SqlStdOperatorTable.notOperator,
+            pred1);
+        binding = rexAnalyzer.analyze(pred3);
+        assertNotNull(binding);
+        assertEquals("COMPLEMENT( (-infinity, 7) )",
+            binding.getExpr().toString());
+        
+        // This one should fail:  two variables
+        pred1 = rexBuilder.makeCall(
+            SqlStdOperatorTable.lessThanOperator,
+            inputRef8,
+            inputRef9);
+        binding = rexAnalyzer.analyze(pred1);
+        assertNull(binding);
+        
+        // This one should fail:  two literals
+        pred1 = rexBuilder.makeCall(
+            SqlStdOperatorTable.lessThanOperator,
+            intLiteral7,
+            intLiteral490);
+        binding = rexAnalyzer.analyze(pred1);
+        assertNull(binding);
     }
 }
 

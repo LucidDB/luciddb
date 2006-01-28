@@ -111,7 +111,8 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
                 params.sharedDataWrapperCache,
                 session.getPluginClassLoader(),
                 params.repos,
-                params.fennelTxnContext.getFennelDbHandle());
+                params.fennelTxnContext.getFennelDbHandle(),
+                new FarragoSessionDataSource(session));
 
         streamOwner = new StreamOwner();
     }

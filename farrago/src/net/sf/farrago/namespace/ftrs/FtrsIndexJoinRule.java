@@ -241,25 +241,26 @@ class FtrsIndexJoinRule extends RelOptRule
                     scanRel.isOrderPreserving);
             FtrsIndexSearchRel unclusteredSearch =
                 new FtrsIndexSearchRel(unclusteredScan, fennelInput, isUnique,
-                    isOuter, inputKeyProj, inputJoinProj);
+                    isOuter, inputKeyProj, inputJoinProj, null);
 
             // tell the search against the clustered index where to find the
             // keys in the output of the unclustered index search, and what to
             // propagate (everything BUT the clustered index key which was
             // tacked onto the end)
             Integer [] clusteredInputKeyProj =
-                FennelRelUtil.newBiasedIotaProjection(clusteredKeyColumns.length,
+                FennelRelUtil.newBiasedIotaProjection(
+                    clusteredKeyColumns.length,
                     inputJoinProj.length);
 
             FtrsIndexSearchRel clusteredSearch =
                 new FtrsIndexSearchRel(scanRel, unclusteredSearch, true,
-                    isOuter, clusteredInputKeyProj, inputJoinProj);
+                    isOuter, clusteredInputKeyProj, inputJoinProj, null);
 
             call.transformTo(clusteredSearch);
         } else {
             FtrsIndexSearchRel searchRel =
                 new FtrsIndexSearchRel(scanRel, fennelInput, isUnique,
-                    isOuter, inputKeyProj, inputJoinProj);
+                    isOuter, inputKeyProj, inputJoinProj, null);
             call.transformTo(searchRel);
         }
     }

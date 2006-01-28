@@ -31,9 +31,8 @@ import net.sf.farrago.type.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 
-
 /**
- * FlatFileDataServer provides a mock implementation of the {@link
+ * FlatFileDataServer provides an implementation of the {@link
  * FarragoMedDataServer} interface.
  *
  * @author John V. Pham
@@ -44,8 +43,8 @@ class FlatFileDataServer extends MedAbstractDataServer
     //~ Static fields/initializers --------------------------------------------
 
     private MedAbstractDataWrapper wrapper;
-    private FlatFileParams params;
-    
+    FlatFileParams params;
+
     //~ Constructors ----------------------------------------------------------
 
     FlatFileDataServer(
@@ -64,7 +63,7 @@ class FlatFileDataServer extends MedAbstractDataServer
     {
         params = new FlatFileParams(getProperties());
         params.decode();
-        
+
         // TODO: validate, e.g. throw an error if directory doesn't exist
     }
 
@@ -72,8 +71,10 @@ class FlatFileDataServer extends MedAbstractDataServer
     public FarragoMedNameDirectory getNameDirectory()
         throws SQLException
     {
-        // TODO: scan directory and files for metadata (Phase II)
-        return null;
+        // scan directory and files for metadata (Phase II)
+        return new FlatFileNameDirectory(
+            this,
+            FarragoMedMetadataQuery.OTN_SCHEMA);
     }
 
     // implement FarragoMedDataServer
@@ -86,10 +87,23 @@ class FlatFileDataServer extends MedAbstractDataServer
         throws SQLException
     {
         if (rowType == null) {
-            // TODO: scan control file/data file for metadata (Phase II)
-            return null;
+            // scan control file/data file for metadata (Phase II)
+            String name = tableProps.getProperty(
+                FlatFileColumnSet.PROP_FILENAME);
+            if (name == null) {
+                name = localName[localName.length-1];
+            }
+            String extension = params.getControlFileExtenstion();
+            String ctrlFilePath = params.getDirectory() + name + extension;
+            FlatFileBCPFile bcpFile =
+                new FlatFileBCPFile(ctrlFilePath, typeFactory);
+            if (bcpFile.parse()) {
+                rowType = createRowType(
+                    typeFactory, bcpFile.types, bcpFile.colNames);
+            } else {
+                return null;
+            }
         }
-
         return new FlatFileColumnSet(localName, rowType, params, tableProps);
     }
 
@@ -116,6 +130,16 @@ class FlatFileDataServer extends MedAbstractDataServer
     {
         return wrapper;
     }
+
+    RelDataType createRowType(
+        FarragoTypeFactory typeFactory,
+        RelDataType[] types,
+        String[] names)
+    {
+        return typeFactory.createStructType(types, names);
+    }
 }
 
+
 // End FlatFileDataServer.java
+

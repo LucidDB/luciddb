@@ -21,44 +21,36 @@
 */
 package org.eigenbase.sarg;
 
-import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
 
 /**
- * SargExpr represents an expression defining a possibly non-contiguous
- * search subset of a scalar domain of a given datatype.
+ * SargBinding represents the binding of a {@link SargExpr} to
+ * a particular {@link RexInputRef}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public interface SargExpr
+public class SargBinding
 {
-    /**
-     * Overrides the default Object.toString.  The result must be
-     * safe for use in a RelNode digest.
-     */
-    public String toString();
+    private final SargExpr expr;
 
-    /**
-     * @return datatype for coordinates of search domain
-     */
-    public RelDataType getDataType();
+    private final RexInputRef inputRef;
 
-    /**
-     * Resolves this expression into a fixed {@link SargIntervalSequence}.
-     *
-     *<p>
-     *
-     * TODO jvs 17-Jan-2006:  add binding for dynamic params so they
-     * can be evaluated as well
-     *
-     * @return immutable ordered sequence of disjoint intervals
-     */
-    public SargIntervalSequence evaluate();
+    public SargBinding(SargExpr expr,RexInputRef inputRef)
+    {
+        this.expr = expr;
+        this.inputRef = inputRef;
+    }
 
-    /**
-     * @return the factory which produced this expression
-     */
-    public SargFactory getFactory();
+    public SargExpr getExpr()
+    {
+        return expr;
+    }
+
+    public RexInputRef getInputRef()
+    {
+        return inputRef;
+    }
 }
 
-// End SargExpr.java
+// End SargBinding.java

@@ -133,10 +133,7 @@ public class SargEndpoint implements Comparable<SargEndpoint>
     {
         // validate the input
         assert(coordinate != null);
-        if (coordinate instanceof RexDynamicParam) {
-            // REVIEW jvs 16-Jan-2006:  may need to ignore nullability
-            assert(coordinate.getType().equals(dataType));
-        } else {
+        if (!(coordinate instanceof RexDynamicParam)) {
             assert(coordinate instanceof RexLiteral);
             RexLiteral literal = (RexLiteral) coordinate;
             if (!RexLiteral.isNullLiteral(literal)) {
@@ -301,12 +298,6 @@ public class SargEndpoint implements Comparable<SargEndpoint>
      * touches the lower bound of the interval [10, 20), but not
      * of the interval (10, 20).
      *
-     *<p>
-     *
-     * This method will assert if called on an endpoint defined
-     * by a dynamic parameter.  REVIEW:  maybe move it elsewhere
-     * to prevent this possibility, or make it non-public.
-     *
      * @param other the other endpoint to test
      *
      * @return true if touching; false if discontinuous
@@ -314,11 +305,32 @@ public class SargEndpoint implements Comparable<SargEndpoint>
     public boolean isTouching(SargEndpoint other)
     {
         assert(getDataType() == other.getDataType());
-        return
-            isFinite()
-            && other.isFinite()
-            && (compareCoordinates(coordinate, other.coordinate) == 0)
-            && (isClosed() || other.isClosed());
+
+        if (!isFinite() || !other.isFinite()) {
+            return false;
+        }
+
+        if ((coordinate instanceof RexDynamicParam)
+            || (other.coordinate instanceof RexDynamicParam))
+        {
+            if ((coordinate instanceof RexDynamicParam)
+                && (other.coordinate instanceof RexDynamicParam))
+            {
+                // make sure it's the same param
+                RexDynamicParam p1 = (RexDynamicParam) coordinate;
+                RexDynamicParam p2 = (RexDynamicParam) other.coordinate;
+                if (p1.getIndex() != p2.getIndex()) {
+                    return false;
+                }
+            } else {
+                // one is a dynamic param but the other isn't
+                return false;
+            }
+        } else if (compareCoordinates(coordinate, other.coordinate) != 0) {
+            return false;
+        }
+
+        return isClosed() || other.isClosed();
     }
 
     static int compareCoordinates(RexNode coord1, RexNode coord2)

@@ -1,0 +1,68 @@
+0: jdbc:luciddb:> set schema 'udftest';
+0: jdbc:luciddb:> set path 'udftest';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- define FYMonth functions
+0: jdbc:luciddb:> create function fymonth(dt date, fm integer)
+. . . . . . . . > returns integer
+. . . . . . . . > language java
+. . . . . . . . > specific fymonth_date
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.FYMonth.FunctionExecute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function fymonth(ts timestamp, fm integer)
+. . . . . . . . > returns integer
+. . . . . . . . > language java
+. . . . . . . . > specific fymonth_ts
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.FYMonth.FunctionExecute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create view referencing fymonth
+0: jdbc:luciddb:> create view fiscal_months(fm, from_date, from_ts) as
+. . . . . . . . > select fm, fymonth(datecol, fm), fymonth(tscol, fm)
+. . . . . . . . > from data_source;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from fiscal_months
+. . . . . . . . > order by 1;
++-----+------------+----------+
+| FM  | FROM_DATE  | FROM_TS  |
++-----+------------+----------+
+| 1   | 9          | 11       |
+| 2   | 12         | 5        |
+| 10  | 6          | 1        |
++-----+------------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- in expressions
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select fm, fymonth(datecol, fm) + fymonth(tscol, fm)
+. . . . . . . . > from data_source
+. . . . . . . . > order by 1;
++-----+---------+
+| FM  | EXPR$1  |
++-----+---------+
+| 1   | 20      |
+| 2   | 17      |
+| 10  | 7       |
++-----+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- nested 
+0: jdbc:luciddb:> select fm, fymonth(datecol, fymonth(datecol, fm))
+. . . . . . . . > from data_source
+. . . . . . . . > order by 1;
++-----+---------+
+| FM  | EXPR$1  |
++-----+---------+
+| 1   | 1       |
+| 2   | 2       |
+| 10  | 10      |
++-----+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- should fail can't invoke using specific name
+0: jdbc:luciddb:> values fymonth_date(DATE'2000-12-25', 2);
+Error: From line 1, column 8 to line 1, column 40: No match found for function signature FYMONTH_DATE(<DATE>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- should fail invalid argument
+0: jdbc:luciddb:> select fm, fymonth(timecol, fm)
+. . . . . . . . > from data_source;
+Error: From line 1, column 12 to line 1, column 31: No match found for function signature FYMONTH(<TIME>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

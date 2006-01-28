@@ -28,6 +28,16 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
+void BTreeSearchUniqueExecStream::prepare(
+    BTreeSearchExecStreamParams const &params)
+{
+    // We don't allow directives for unique searches:  every input key
+    // must be interpreted as a point search.
+    assert(params.inputDirectiveProj.size() == 0);
+    
+    BTreeSearchExecStream::prepare(params);
+}
+
 ExecStreamResult BTreeSearchUniqueExecStream::execute(
     ExecStreamQuantum const &quantum)
 {

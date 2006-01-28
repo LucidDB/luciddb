@@ -56,6 +56,7 @@ class FtrsIndexSearchRel extends FennelSingleRel
     final boolean isOuter;
     final Integer [] inputKeyProj;
     final Integer [] inputJoinProj;
+    final Integer [] inputDirectiveProj;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -68,6 +69,7 @@ class FtrsIndexSearchRel extends FennelSingleRel
      * @param isOuter whether nulls should be made up for unmatched inputs
      * @param inputKeyProj TODO:  doc
      * @param inputJoinProj TODO:  doc
+     * @param inputDirectiveProj TODO:  doc
      */
     public FtrsIndexSearchRel(
         FtrsIndexScanRel scanRel,
@@ -75,7 +77,8 @@ class FtrsIndexSearchRel extends FennelSingleRel
         boolean isUniqueKey,
         boolean isOuter,
         Integer [] inputKeyProj,
-        Integer [] inputJoinProj)
+        Integer [] inputJoinProj,
+        Integer [] inputDirectiveProj)
     {
         super(
             scanRel.getCluster(),
@@ -85,6 +88,7 @@ class FtrsIndexSearchRel extends FennelSingleRel
         this.isOuter = isOuter;
         this.inputKeyProj = inputKeyProj;
         this.inputJoinProj = inputJoinProj;
+        this.inputDirectiveProj = inputDirectiveProj;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -111,7 +115,8 @@ class FtrsIndexSearchRel extends FennelSingleRel
             isUniqueKey,
             isOuter,
             inputKeyProj,
-            inputJoinProj);
+            inputJoinProj,
+            inputDirectiveProj);
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -176,6 +181,7 @@ class FtrsIndexSearchRel extends FennelSingleRel
         Object projection;
         Object inputKeyProjObj;
         Object inputJoinProjObj;
+        Object inputDirectiveProjObj;
 
         if (scanRel.projectedColumns == null) {
             projection = "*";
@@ -194,17 +200,25 @@ class FtrsIndexSearchRel extends FennelSingleRel
         } else {
             inputJoinProjObj = Arrays.asList(inputJoinProj);
         }
+        
+        if (inputDirectiveProj == null) {
+            inputDirectiveProjObj = Collections.EMPTY_LIST;
+        } else {
+            inputDirectiveProjObj = Arrays.asList(inputDirectiveProj);
+        }
         pw.explain(
             this,
             new String [] {
                 "child", "table", "projection", "index", "uniqueKey",
-                "preserveOrder", "outer", "inputKeyProj", "inputJoinProj"
+                "preserveOrder", "outer", "inputKeyProj", "inputJoinProj",
+                "inputDirectiveProj"
             },
             new Object [] {
                 Arrays.asList(scanRel.ftrsTable.getQualifiedName()), projection,
                 scanRel.index.getName(), Boolean.valueOf(isUniqueKey),
                 Boolean.valueOf(scanRel.isOrderPreserving),
-                Boolean.valueOf(isOuter), inputKeyProjObj, inputJoinProjObj
+                Boolean.valueOf(isOuter), inputKeyProjObj, inputJoinProjObj,
+                inputDirectiveProjObj
             });
     }
 
@@ -225,6 +239,10 @@ class FtrsIndexSearchRel extends FennelSingleRel
         if (inputJoinProj != null) {
             searchStream.setInputJoinProj(
                 FennelRelUtil.createTupleProjection(repos, inputJoinProj));
+        }
+        if (inputDirectiveProj != null) {
+            searchStream.setInputDirectiveProj(
+                FennelRelUtil.createTupleProjection(repos, inputDirectiveProj));
         }
 
         implementor.addDataFlowFromProducerToConsumer(

@@ -152,6 +152,7 @@ public class SargIntervalExpr extends SargIntervalBase implements SargExpr
         // include null values.  Why is this?
         
         if ((nullSemantics == SqlNullSemantics.NULL_MATCHES_NOTHING)
+            && getDataType().isNullable()
             && (lowerBound.isFinite() || upperBound.isFinite())
             && (!lowerBound.isFinite() || lowerBound.isNull()))
         {
@@ -173,9 +174,11 @@ public class SargIntervalExpr extends SargIntervalBase implements SargExpr
             }
         }
 
-        if (!interval.isEmpty()) {
-            seq.addInterval(interval);
-        }
+        // NOTE jvs 27-Jan-2006: We don't currently filter out the empty
+        // interval here because we rely on being able to create them
+        // explicitly.  See related comment in FennelRelUtil.convertSargExpr;
+        // if that changes, we could filter out the empty interval here.
+        seq.addInterval(interval);
         
         return seq;
     }

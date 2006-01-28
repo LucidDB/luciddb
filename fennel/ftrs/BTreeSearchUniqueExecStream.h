@@ -40,6 +40,7 @@ class BTreeSearchUniqueExecStream : public BTreeSearchExecStream
 {
 public:
     // implement ExecStream
+    virtual void prepare(BTreeSearchExecStreamParams const &params);
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
 };
 
