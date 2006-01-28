@@ -27,8 +27,6 @@ import java.io.*;
 import junit.framework.*;
 
 import net.sf.farrago.util.*;
-import org.eigenbase.sql.test.SqlOperatorTests;
-
 
 /**
  * FarragoSqlTest is a JUnit harness for executing tests which are implemented

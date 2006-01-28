@@ -170,6 +170,8 @@ class FtrsScanToSearchRule extends RelOptRule
         if (!indexGuide.isValid(index)) {
             return;
         }
+        
+        final RelTraitSet callTraits = call.rels[0].getTraits(); 
 
         boolean isUnique =
             index.isUnique() && (index.getIndexedFeature().size() == 1);
@@ -178,6 +180,8 @@ class FtrsScanToSearchRule extends RelOptRule
 
         // Generate a one-row relation producing the key to search for.
         OneRowRel oneRowRel = new OneRowRel(origScan.getCluster());
+        mergeTraitsOnto(oneRowRel, callTraits);
+        
         RelDataType rowType = RexUtil.createStructType(
             origScan.getCluster().getTypeFactory(),
             searchExps);
@@ -188,11 +192,14 @@ class FtrsScanToSearchRule extends RelOptRule
                 searchExps,
                 rowType,
                 ProjectRel.Flags.Boxed);
-
+        mergeTraitsOnto(keyRel, callTraits);
+        
         // Add a filter to remove nulls, since they can never match the
         // equals condition.
         RelNode nullFilterRel = RelOptUtil.createNullFilter(keyRel, null);
 
+        mergeTraitsOnto(nullFilterRel, callTraits);
+        
         // Generate code to cast the literal to the index column type.
         FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(origScan);
         FarragoTypeFactory typeFactory = stmt.getFarragoTypeFactory();
@@ -205,9 +212,11 @@ class FtrsScanToSearchRule extends RelOptRule
         RelNode castRel = RelOptUtil.createCastRel(
             nullFilterRel, lhsRowType, false);
 
+        mergeTraitsOnto(castRel, callTraits);
+        
         RelNode keyInput =
             mergeTraitsAndConvert(
-                call.rels[0].getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,
+                callTraits, FennelRel.FENNEL_EXEC_CONVENTION,
                 castRel);
         assert (keyInput != null);
 
@@ -233,18 +242,26 @@ class FtrsScanToSearchRule extends RelOptRule
                     origScan.getConnection(),
                     clusteredKeyColumns,
                     origScan.isOrderPreserving);
+            mergeTraitsOnto(unclusteredScan, callTraits);
+
             FtrsIndexSearchRel unclusteredSearch =
                 new FtrsIndexSearchRel(unclusteredScan, keyInput, isUnique,
                     false, null, null);
+            mergeTraitsOnto(unclusteredSearch, callTraits);
+            
             FtrsIndexSearchRel clusteredSearch =
                 new FtrsIndexSearchRel(origScan, unclusteredSearch, true,
                     false, null, null);
+            mergeTraitsOnto(clusteredSearch, callTraits);
+            
             transformCall(call, clusteredSearch, extraFilter);
         } else {
             // A direct search against an index is easier.
             FtrsIndexSearchRel search =
                 new FtrsIndexSearchRel(origScan, keyInput, isUnique, false,
                     null, null);
+            mergeTraitsOnto(search, callTraits);
+            
             transformCall(call, search, extraFilter);
         }
     }
@@ -260,6 +277,7 @@ class FtrsScanToSearchRule extends RelOptRule
                     searchRel.getCluster(),
                     searchRel,
                     extraFilter);
+            mergeTraitsOnto(searchRel, call.rels[0].getTraits());
         }
         call.transformTo(searchRel);
     }

@@ -94,11 +94,6 @@ public abstract class SqlOperatorTests extends TestCase
     public static final boolean bug315Fixed = false;
 
     /**
-     * Remove this constant when dtbug 465 has been fixed.
-     */
-    public static final boolean dtbug465fixed = false;
-
-    /**
      * Whether <a href="http://jirahost.eigenbase.org:8080/browse/FNL-3">issue
      * Fnl-3</a> is fixed.
      */
@@ -322,11 +317,8 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkScalarExact(
             "cast(-1.21 as decimal(2,1))", "DECIMAL(2, 1) NOT NULL", "-1.2");
 
-        if (todo) {
-            // 9.99 round to 10.0, should give out of range error
-            getTester().checkFails("cast(9.99 as decimal(2,1))", outOfRangeMessage);
-        }
-
+        // 9.99 round to 10.0, should give out of range error
+        getTester().checkFails("cast(9.99 as decimal(2,1))", outOfRangeMessage);
     }
 
     public void testCastDecimalToDoubleToInteger() {

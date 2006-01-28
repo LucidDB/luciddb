@@ -110,6 +110,7 @@ public class TimeoutQueueIterator
                         doWork();
                     }
                 };
+        thread.setName("TimeoutQueueIterator" + thread.getName());
         thread.start();
     }
 
@@ -124,6 +125,11 @@ public class TimeoutQueueIterator
     {
         if (thread != null) {
             try {
+                // Empty the queue -- the thread will wait for us to consume
+                // all items in the queue, hanging the join call.
+                while(queueIterator.hasNext()) {
+                    queueIterator.next();
+                }
                 thread.join(timeoutMillis);
             } catch (InterruptedException e) {
             }
