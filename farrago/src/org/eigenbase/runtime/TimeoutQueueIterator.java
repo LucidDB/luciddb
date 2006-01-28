@@ -111,7 +111,6 @@ public class TimeoutQueueIterator
                     }
                 };
         thread.setName("TimeoutQueueIterator" + thread.getName());
-        thread.setDaemon(true);
         thread.start();
     }
 
