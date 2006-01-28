@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/med/mock.sql#2 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/med/mock.sql#3 $
 0: jdbc:farrago:> -- Test mock namespace plugin
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create foreign data wrapper mock_foreign_wrapper
@@ -22,6 +22,13 @@
 . . . . . . . . > foreign_table_name 'MOCK_TABLE',
 . . . . . . . . > executor_impl 'JAVA',
 . . . . . . . . > row_count '3');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create server mock_foreign_dynamic_server
+. . . . . . . . > foreign data wrapper mock_foreign_wrapper
+. . . . . . . . > options (
+. . . . . . . . > foreign_schema_name 'MOCK_SCHEMA', 
+. . . . . . . . > foreign_table_name 'MOCK_TABLE',
+. . . . . . . . > row_count_sql 'select current_row_count from mock_schema.dynamic_row_count');
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema mock_schema;
 0: jdbc:farrago:> 
@@ -227,5 +234,32 @@ Error: One or more tables not found while importing foreign schema "MOCK_SCHEMA"
 0: jdbc:farrago:> -- should fail:  excluded
 0: jdbc:farrago:> select * from mock_exclude_schema.mock_table;
 Error: From line 1, column 15 to line 1, column 33: Table 'MOCK_EXCLUDE_SCHEMA.MOCK_TABLE' not found (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table mock_schema.dynamic_row_count(
+. . . . . . . . >     current_row_count int not null primary key);
+0: jdbc:farrago:> insert into mock_schema.dynamic_row_count values(7);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select count(*) from mock_foreign_dynamic_server.mock_schema.mock_table;
++---------+
+| EXPR$0  |
++---------+
+| 7       |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- now change the current_row_count value and verify that we get
+0: jdbc:farrago:> -- a corresponding number of rows back from the mock
+0: jdbc:farrago:> update mock_schema.dynamic_row_count set current_row_count=21;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- have to flush the plan cache, because the value 7 is still burned
+0: jdbc:farrago:> -- into the old plan and the optimizer doesn't know that it's supposed
+0: jdbc:farrago:> -- to read the new value
+0: jdbc:farrago:> alter system set "codeCacheMaxBytes" = min;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select count(*) from mock_foreign_dynamic_server.mock_schema.mock_table;
++---------+
+| EXPR$0  |
++---------+
+| 21      |
++---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

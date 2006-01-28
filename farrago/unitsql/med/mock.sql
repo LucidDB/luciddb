@@ -23,6 +23,13 @@ foreign_table_name 'MOCK_TABLE',
 executor_impl 'JAVA',
 row_count '3');
 
+create server mock_foreign_dynamic_server
+foreign data wrapper mock_foreign_wrapper
+options (
+foreign_schema_name 'MOCK_SCHEMA', 
+foreign_table_name 'MOCK_TABLE',
+row_count_sql 'select current_row_count from mock_schema.dynamic_row_count');
+
 create schema mock_schema;
 
 set schema 'mock_schema';
@@ -144,3 +151,20 @@ into mock_exclude_schema;
 
 -- should fail:  excluded
 select * from mock_exclude_schema.mock_table;
+
+create table mock_schema.dynamic_row_count(
+    current_row_count int not null primary key);
+insert into mock_schema.dynamic_row_count values(7);
+
+select count(*) from mock_foreign_dynamic_server.mock_schema.mock_table;
+
+-- now change the current_row_count value and verify that we get
+-- a corresponding number of rows back from the mock
+update mock_schema.dynamic_row_count set current_row_count=21;
+
+-- have to flush the plan cache, because the value 7 is still burned
+-- into the old plan and the optimizer doesn't know that it's supposed
+-- to read the new value
+alter system set "codeCacheMaxBytes" = min;
+
+select count(*) from mock_foreign_dynamic_server.mock_schema.mock_table;

@@ -26,6 +26,8 @@ import java.lang.reflect.*;
 import java.sql.*;
 import java.util.*;
 
+import javax.sql.*;
+
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
@@ -57,6 +59,7 @@ class MedMockDataServer extends MedAbstractDataServer
     public static final String PROP_SCHEMA_NAME = "FOREIGN_SCHEMA_NAME";
     public static final String PROP_TABLE_NAME = "FOREIGN_TABLE_NAME";
     public static final String PROP_ROW_COUNT = "ROW_COUNT";
+    public static final String PROP_ROW_COUNT_SQL = "ROW_COUNT_SQL";
     public static final String PROP_EXECUTOR_IMPL = "EXECUTOR_IMPL";
     public static final String PROPVAL_JAVA = "JAVA";
     public static final String PROPVAL_FENNEL = "FENNEL";
@@ -114,10 +117,35 @@ class MedMockDataServer extends MedAbstractDataServer
 
         // TODO jvs 5-Aug-2005:  clean up usage of server properties
         // as defaults
-        
-        long nRows = getLongProperty(
-            tableProps, PROP_ROW_COUNT,
-            getLongProperty(getProperties(), PROP_ROW_COUNT, 10));
+
+        long nRows = -1;
+        String rowCountSql = tableProps.getProperty(PROP_ROW_COUNT_SQL);
+        if (rowCountSql != null) {
+            // Attempt to issue a loopback query into Farrago to
+            // get the number of rows to produce.
+            DataSource loopbackDataSource = getLoopbackDataSource();
+            Connection connection = null;
+            if (loopbackDataSource != null) try {
+                connection = loopbackDataSource.getConnection();
+                Statement stmt = connection.createStatement();
+                ResultSet resultSet = stmt.executeQuery(rowCountSql);
+                if (resultSet.next()) {
+                    nRows = resultSet.getLong(1);
+                }
+            } finally {
+                // It's OK not to clean up stmt and resultSet;
+                // connection.close() will do that for us.
+                if (connection != null) {
+                    connection.close();
+                }
+            }
+        }
+
+        if (nRows == -1) {
+            nRows = getLongProperty(
+                tableProps, PROP_ROW_COUNT,
+                getLongProperty(getProperties(), PROP_ROW_COUNT, 10));
+        }
         
         String executorImpl =
             tableProps.getProperty(

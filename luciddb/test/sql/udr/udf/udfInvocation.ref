@@ -1,7 +1,5 @@
 0: jdbc:luciddb:> -- Test queries with UDF invocations
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create schema udftest;
-0: jdbc:luciddb:> 
 0: jdbc:luciddb:> set schema 'udftest';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> set path 'udftest';

@@ -10,8 +10,28 @@
         </test>
       </init-hook>
 
-      <test name="udfTests">
+      <test name="cr_source">
+        <test-parameter name="sql-file" value="cr_source.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="udfTests" requiresRun="cr_source">
         <test-parameter name="sql-file" value="udfInvocation.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="charReplace" requiresRun="cr_source">
+        <test-parameter name="sql-file" value="char_replace.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="cleanPhone" requiresRun="cr_source">
+        <test-parameter name="sql-file" value="clean_phone.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="fymonth" requiresRun="cr_source">
+        <test-parameter name="sql-file" value="fymonth.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 

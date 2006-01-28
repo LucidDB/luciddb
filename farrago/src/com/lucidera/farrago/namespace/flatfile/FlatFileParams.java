@@ -61,6 +61,7 @@ class FlatFileParams extends MedAbstractBase
     public static final String PROP_NUM_ROWS_SCAN = "NUM_ROWS_SCAN";
     public static final String PROP_WITH_LOGGING = "WITH_LOGGING";
     public static final String PROP_LOG_DIRECTORY = "LOG_DIRECTORY";
+    public static final String PROP_SCHEMA_NAME = "SCHEMA";
 
     public static final String FILE_EXTENSION_PREFIX = ".";
     public static final String LOG_FILE_EXTENSION = "err";
@@ -74,11 +75,13 @@ class FlatFileParams extends MedAbstractBase
     private static final boolean DEFAULT_WITH_HEADER = true;
     private static final int DEFAULT_NUM_ROWS_SCAN = 5;
     private static final boolean DEFAULT_WITH_LOGGING = true;
+    private static final String DEFAULT_SCHEMA_NAME = "BCP";
+    
     
     //~ Instance fields -------------------------------------------------------
 
     private Properties props;
-    private String directory, logDirectory;
+    private String directory, logDirectory, schemaName;
     private String fileExtension, controlFileExtension;
     private char fieldDelimiter, lineDelimiter;
     private char quoteChar, escapeChar;
@@ -135,6 +138,8 @@ class FlatFileParams extends MedAbstractBase
             props, PROP_NUM_ROWS_SCAN, DEFAULT_NUM_ROWS_SCAN);
         logDirectory = decodeDirectory(
             props.getProperty(PROP_LOG_DIRECTORY, null));
+        schemaName =
+            props.getProperty(PROP_SCHEMA_NAME, DEFAULT_SCHEMA_NAME);
     }
     
     /**
@@ -282,6 +287,11 @@ class FlatFileParams extends MedAbstractBase
     public String getLogDirectory() 
     {
         return logDirectory;
+    }
+    
+    public String getSchemaName() 
+    {
+        return schemaName;
     }
 }
 

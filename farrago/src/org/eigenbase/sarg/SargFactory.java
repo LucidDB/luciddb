@@ -26,7 +26,7 @@ import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 
 /**
- * SargFactory creates new instances of various kinds of sarg expressions.
+ * SargFactory creates new instances of various sarg-related objects.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -101,6 +101,14 @@ public class SargFactory
     public SargSetExpr newSetExpr(RelDataType dataType, SargSetOperator setOp)
     {
         return new SargSetExpr(this, dataType, setOp);
+    }
+
+    /**
+     * @return new analyzer for rex expressions
+     */
+    public SargRexAnalyzer newRexAnalyzer()
+    {
+        return new SargRexAnalyzer(this);
     }
 
     /**

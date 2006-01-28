@@ -25,6 +25,8 @@ package net.sf.farrago.namespace;
 import java.sql.*;
 import java.util.*;
 
+import javax.sql.*;
+
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
@@ -54,6 +56,18 @@ public interface FarragoMedDataServer extends FarragoAllocation
 
     //~ Methods ---------------------------------------------------------------
 
+    /**
+     * Sets a loopback DataSource which can be used to issue internal
+     * SQL queries against the containing DBMS.  This may be called
+     * multiple times on the same server instance with different
+     * data sources; the server should use only the last one provided.
+     *
+     * @param loopbackDataSource a DataSource for
+     * establishing a loopback connection into Farrago, or null
+     * if loopback connections are not available in the current context
+     */
+    public void setLoopbackDataSource(DataSource loopbackDataSource);
+    
     /**
      * Gets a FarragoMedNameDirectory corresponding to this server.
      *
