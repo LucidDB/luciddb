@@ -2238,7 +2238,6 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
 
         SqlNode source = call.getSource();
         if (source instanceof SqlSelect) {
-        
             SqlSelect sqlSelect = (SqlSelect) source;
             validateSelect(sqlSelect, targetRowType);
         } else {

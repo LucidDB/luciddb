@@ -94,11 +94,9 @@ public abstract class SqlOperatorTests extends TestCase
     public static final boolean bug315Fixed = false;
 
     /**
-
      * Remove this constant when dtbug 465 has been fixed.
      */
     public static final boolean dtbug465fixed = false;
-
 
     /**
      * Whether <a href="http://jirahost.eigenbase.org:8080/browse/FNL-3">issue
@@ -298,7 +296,6 @@ public abstract class SqlOperatorTests extends TestCase
 
     public void testCastDecimalToInteger() {
         getTester().setFor(SqlStdOperatorTable.castFunc);
-        if (!dtbug465fixed) return;
         // decimal to integer
         getTester().checkScalarExact("cast(1.25 as integer)", "1");
         getTester().checkScalarExact("cast(-1.25 as integer)", "-1");
@@ -310,7 +307,6 @@ public abstract class SqlOperatorTests extends TestCase
     }
 
     public void testCastDecimalToDecimal() {
-        if (!dtbug465fixed) return;
         getTester().setFor(SqlStdOperatorTable.castFunc);
         // decimal to decimal
         getTester().checkScalarExact(
@@ -323,7 +319,6 @@ public abstract class SqlOperatorTests extends TestCase
             "cast(-1.29 as decimal(2,1))", "DECIMAL(2, 1) NOT NULL", "-1.3");
         getTester().checkScalarExact(
             "cast(-1.25 as decimal(2,1))", "DECIMAL(2, 1) NOT NULL", "-1.3");
-        if (!dtbug465fixed) return;
         getTester().checkScalarExact(
             "cast(-1.21 as decimal(2,1))", "DECIMAL(2, 1) NOT NULL", "-1.2");
 
@@ -337,7 +332,6 @@ public abstract class SqlOperatorTests extends TestCase
     public void testCastDecimalToDoubleToInteger() {
         getTester().setFor(SqlStdOperatorTable.castFunc);
 
-        if (!dtbug465fixed) return;
         getTester().checkScalarExact("cast( cast(1.25 as double) as integer)", "1");
         getTester().checkScalarExact("cast( cast(-1.25 as double) as integer)", "-1");
         getTester().checkScalarExact("cast( cast(1.75 as double) as integer)", "2");
@@ -351,14 +345,13 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().setFor(SqlStdOperatorTable.castFunc);
         getTester().checkScalarApprox("cast(1 as double)", "DOUBLE NOT NULL", 1, 0);
         getTester().checkScalarApprox("cast(1.0 as double)", "DOUBLE NOT NULL", 1, 0);
-        if (!dtbug465fixed) return;
         getTester().checkScalarApprox("cast(-5.9 as double)", "DOUBLE NOT NULL", -5.9, 0);
     }
 
     public void testCastNull() {
         getTester().setFor(SqlStdOperatorTable.castFunc);
         // null
-        if (dtbug465fixed) getTester().checkNull("cast(null as decimal(4,3))");
+        getTester().checkNull("cast(null as decimal(4,3))");
         getTester().checkNull("cast(null as double)");
     }
 
@@ -440,7 +433,8 @@ public abstract class SqlOperatorTests extends TestCase
                 "cast(1.29 as varchar(10))", "1.29", "VARCHAR(10) NOT NULL");
         getTester().checkString(
                 "cast(.48 as varchar(10))", ".48", "VARCHAR(10) NOT NULL");
-        if (!dtbug465fixed) return;
+        getTester().checkFails("cast(2.523 as char(2))", stringTruncMessage);
+
         getTester().checkString(
                 "cast(-0.29 as varchar(10))", "-.29", "VARCHAR(10) NOT NULL");
         getTester().checkString(
@@ -601,7 +595,6 @@ public abstract class SqlOperatorTests extends TestCase
     public void testDivideOperator()
     {
         getTester().setFor(SqlStdOperatorTable.divideOperator);
-        if (!dtbug465fixed) return;
         getTester().checkScalarExact("10 / 5", "2");
         getTester().checkScalarExact("-10 / 5", "-2");
         getTester().checkScalarExact("1 / 3", "0");
@@ -636,7 +629,6 @@ public abstract class SqlOperatorTests extends TestCase
     public void testGreaterThanOperator()
     {
         getTester().setFor(SqlStdOperatorTable.greaterThanOperator);
-        if (!dtbug465fixed) return;
         getTester().checkBoolean("1>2", Boolean.FALSE);
         getTester().checkBoolean("cast(-1 as TINYINT)>cast(1 as TINYINT)", Boolean.FALSE);
         getTester().checkBoolean("cast(1 as SMALLINT)>cast(1 as SMALLINT)", Boolean.FALSE);
@@ -683,7 +675,6 @@ public abstract class SqlOperatorTests extends TestCase
     public void testGreaterThanOrEqualOperator()
     {
         getTester().setFor(SqlStdOperatorTable.greaterThanOrEqualOperator);
-        if (!dtbug465fixed) return;
         getTester().checkBoolean("1>=2", Boolean.FALSE);
         getTester().checkBoolean("-1>=1", Boolean.FALSE);
         getTester().checkBoolean("1>=1", Boolean.TRUE);
@@ -712,7 +703,6 @@ public abstract class SqlOperatorTests extends TestCase
     public void testLessThanOperator()
     {
         getTester().setFor(SqlStdOperatorTable.lessThanOperator);
-        if (!dtbug465fixed) return;
         getTester().checkBoolean("1<2", Boolean.TRUE);
         getTester().checkBoolean("-1<1", Boolean.TRUE);
         getTester().checkBoolean("1<1", Boolean.FALSE);
@@ -733,7 +723,6 @@ public abstract class SqlOperatorTests extends TestCase
     public void testLessThanOrEqualOperator()
     {
         getTester().setFor(SqlStdOperatorTable.lessThanOrEqualOperator);
-        if (!dtbug465fixed) return;
         getTester().checkBoolean("1<=2", Boolean.TRUE);
         getTester().checkBoolean("1<=1", Boolean.TRUE);
         getTester().checkBoolean("-1<=1", Boolean.TRUE);
@@ -754,7 +743,6 @@ public abstract class SqlOperatorTests extends TestCase
     public void testMinusOperator()
     {
         getTester().setFor(SqlStdOperatorTable.minusOperator);
-        if (!dtbug465fixed) return;
         getTester().checkScalarExact("-2-1", "-3");
         getTester().checkScalarExact("2-1", "1");
         getTester().checkScalarApprox(
@@ -793,7 +781,6 @@ public abstract class SqlOperatorTests extends TestCase
     public void testMultiplyOperator()
     {
         getTester().setFor(SqlStdOperatorTable.multiplyOperator);
-        if (!dtbug465fixed) return;
         getTester().checkScalarExact("2*3", "6");
         getTester().checkScalarExact("2*-3", "-6");
         getTester().checkScalarExact("+2*3", "6");
@@ -844,7 +831,6 @@ public abstract class SqlOperatorTests extends TestCase
     public void testPlusOperator()
     {
         getTester().setFor(SqlStdOperatorTable.plusOperator);
-        if (!dtbug465fixed) return;
         getTester().checkScalarExact("1+2", "3");
         getTester().checkScalarExact("-1+2", "1");
         getTester().checkScalarApprox(
@@ -1239,7 +1225,6 @@ public abstract class SqlOperatorTests extends TestCase
     public void testAbsFunc()
     {
         getTester().setFor(SqlStdOperatorTable.absFunc);
-        if (!dtbug465fixed) return;
 
         getTester().checkScalarExact("abs(-1)", "1");
         getTester().checkScalarExact("abs(cast(10 as TINYINT))", "TINYINT NOT NULL", "10");

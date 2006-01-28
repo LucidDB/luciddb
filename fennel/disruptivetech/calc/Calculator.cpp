@@ -232,8 +232,9 @@ void Calculator::zeroStatusRegister()
         int ncols = statusBinding->asTupleData().size();
 
         for(int i = 0; i < ncols; i++) {
-            bzero(
+            memset(
                 const_cast<PBuffer>((*statusBinding)[i].pData),
+                0,
                 (*statusBinding)[i].cbData);
         }
     }
