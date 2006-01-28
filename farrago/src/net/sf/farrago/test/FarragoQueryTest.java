@@ -221,6 +221,29 @@ public class FarragoQueryTest extends FarragoTestCase
         }
         return false;
     }
+    
+    public void testAbandonedResultSet() throws Exception
+    {
+        // Start a query that returns N rows where N > 1.  Get the first
+        // row and walk away.  This is similar to a query timeout.
+        
+        String sql = "select deptno, name from sales.depts";
+        preparedStmt = connection.prepareStatement(sql);
+        
+        // won't trigger this, but it causes a different type of result set
+        preparedStmt.setQueryTimeout(60);
+        
+        resultSet = preparedStmt.executeQuery();
+        
+        try {
+            if (!resultSet.next()) {
+                fail("Query has no rows!");
+            }
+        } finally {
+            resultSet.close();
+            resultSet = null;
+        }
+    }
 }
 
 // End FarragoQueryTest.java
