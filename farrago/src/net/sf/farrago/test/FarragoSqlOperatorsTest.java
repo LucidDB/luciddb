@@ -32,6 +32,7 @@ import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.BasicSqlType;
 import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.SqlTypeFactoryImpl;
 import org.eigenbase.test.SqlValidatorTestCase;
 import org.eigenbase.util.Util;
 
@@ -56,7 +57,7 @@ public class FarragoSqlOperatorsTest
 {
 
     //~ Instance fields -------------------------------------------------------
-
+    private static final SqlTypeFactoryImpl sqlTypeFactory = new SqlTypeFactoryImpl();
 
     //~ Constructors ----------------------------------------------------------
 
@@ -369,19 +370,25 @@ public class FarragoSqlOperatorsTest
                 SqlTypeName.getNameForJdbcType(actualTypeOrdinal);
             assertNotNull(actualSqlTypeName);
             assertEquals(actualSqlTypeName.getName(), actualTypeName);
+            BasicSqlType sqlType;
             final int actualNullable = md.isNullable(column);
             if (actualSqlTypeName.allowsScale()) {
-                return new BasicSqlType(
+                sqlType = new BasicSqlType(
                     actualSqlTypeName,
                     md.getPrecision(column),
                     md.getScale(column));
             } else if (actualSqlTypeName.allowsPrecNoScale()) {
-                return new BasicSqlType(
+                sqlType = new BasicSqlType(
                     actualSqlTypeName,
                     md.getPrecision(column));
             } else {
-                return new BasicSqlType(actualSqlTypeName);
+                sqlType = new BasicSqlType(actualSqlTypeName);
             }
+            if (actualNullable == ResultSetMetaData.columnNullable) {
+                sqlType = (BasicSqlType)
+                    sqlTypeFactory.createTypeWithNullability(sqlType, true);
+            }
+            return sqlType;
         }
 
         void checkType(

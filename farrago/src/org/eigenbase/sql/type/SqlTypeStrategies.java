@@ -774,11 +774,13 @@ public abstract class SqlTypeStrategies
      * Let p1, s1 be the precision and scale of the first operand
      * Let p2, s2 be the precision and scale of the second operand
      * Let p, s be the precision and scale of the result,
+     * Let d be the number of whole digits in the result
      *
      * Then the result type is a decimal with:
      * <ul>
-     * <li>s = 19 - p1 + s1 - s2</li>
-     * <li>p = 19</li>
+     * <li>d = p1 - s1 + s2</li>
+     * <li>s <= max(6, s1 + p2 + 1)</li>
+     * <li>p = d + s</li>
      * </ul>
      * p and s are capped at their maximum values
      *
