@@ -137,10 +137,15 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
     private RelDataType leastRestrictiveByCast(RelDataType [] types)
     {
         RelDataType resultType = types[0];
+        boolean anyNullable = resultType.isNullable();
         for (int i = 1; i < types.length; i++) {
             RelDataType type = types[i];
             if (type.getSqlTypeName() == SqlTypeName.Null) {
                 continue;
+            }
+
+            if (type.isNullable()) {
+                anyNullable = true;
             }
 
             if (SqlTypeUtil.canCastFrom(type, resultType, false)) {
@@ -151,7 +156,11 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
                 }
             }
         }
-        return resultType;
+        if (anyNullable) {
+            return createTypeWithNullability(resultType, true);
+        } else {
+            return resultType;
+        }
     }
 
     // implement RelDataTypeFactory
@@ -258,10 +267,29 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
                                 resultType = type;
                             }
                         } else {
-                            // TODO:  the real thing for numerics;
-                            // for now we let leastRestrictiveByCast
-                            // handle it
-                            return null;
+                            // Let the result type have precision (p), scale (s)
+                            // and number of whole digits (d) as follows:
+                            // d = max(p1 - s1, p2 - s2)
+                            // s <= max(s1, s2)
+                            // p = s + d
+
+                            int p1 = resultType.getPrecision();
+                            int p2 = type.getPrecision();
+                            int s1 = resultType.getScale();
+                            int s2 = type.getScale();
+
+                            int dout = Math.max(p1 - s1, p2 - s2);
+                            dout = Math.min(dout, SqlTypeName.MAX_NUMERIC_PRECISION);
+
+                            int scale = Math.max(s1, s2);
+                            scale = Math.min(scale, SqlTypeName.MAX_NUMERIC_PRECISION - dout);
+                            scale = Math.min(scale, SqlTypeName.MAX_NUMERIC_SCALE);
+
+                            int precision = dout + scale;
+                            assert(precision <= SqlTypeName.MAX_NUMERIC_PRECISION);
+                            assert(precision > 0);
+
+                            resultType = createSqlType(SqlTypeName.Decimal, precision, scale);
                         }
                     }
                 } else if (SqlTypeUtil.isApproximateNumeric(resultType)) {

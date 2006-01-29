@@ -284,6 +284,7 @@ public class DdlRelationalHandler extends DdlHandler
         } catch (Throwable ex) {
             throw adjustExceptionParserPosition(view, ex);
         }
+
         RelDataType rowType = analyzedSql.resultType;
 
         List columnList = view.getFeature();
@@ -330,10 +331,11 @@ public class DdlRelationalHandler extends DdlHandler
 
         view.setOriginalDefinition(sql);
         view.getQueryExpression().setBody(analyzedSql.canonicalString);
+        analyzedSql.setModality(view);
 
         validator.createDependency(view, analyzedSql.dependencies);
     }
-
+    
     public FemLocalIndex createUniqueConstraintIndex(
         FemLocalTable table,
         FemAbstractUniqueConstraint constraint)

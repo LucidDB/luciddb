@@ -374,10 +374,10 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("case 1 when 1 then 'one' else 'not one' end",
             "CHAR(7) NOT NULL");
         checkExpType("case when 2<1 then 'impossible' end", "CHAR(10)");
-        checkExpType("case 'one' when 'two' then 2.00 when 'one' then 1 else 3 end",
+        checkExpType("case 'one' when 'two' then 2.00 when 'one' then 1.3 else 3.2 end",
             "DECIMAL(3, 2) NOT NULL");
         checkExpType("case 'one' when 'two' then 2 when 'one' then 1.00 else 3 end",
-            "DECIMAL(3, 2) NOT NULL");
+            "DECIMAL(12, 2) NOT NULL");
         checkExpType("case 1 when 1 then 'one' when 2 then null else 'more' end",
             "CHAR(4)");
         checkExpType("case when TRUE then 'true' else 'false' end",
@@ -887,8 +887,8 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     public void testMultiset() {
         checkExpType("multiset[1]","INTEGER NOT NULL MULTISET NOT NULL");
         checkExpType("multiset[1, CAST(null AS DOUBLE)]", "DOUBLE MULTISET NOT NULL");
-        checkExpType("multiset[1,2.3]","DECIMAL(2, 1) NOT NULL MULTISET NOT NULL");
-        checkExpType("multiset[1,2.3, 4]","DECIMAL(2, 1) NOT NULL MULTISET NOT NULL");
+        checkExpType("multiset[1.3,2.3]","DECIMAL(2, 1) NOT NULL MULTISET NOT NULL");
+        checkExpType("multiset[1,2.3, cast(4 as bigint)]","DECIMAL(19, 0) NOT NULL MULTISET NOT NULL");
         // Don't care about the charset and collation, but it's difficult to
         // avoid printing them as part of the type.
         checkExpType(
@@ -903,7 +903,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "RecordType(INTEGER NOT NULL EXPR$0, INTEGER NOT NULL EXPR$1) NOT NULL MULTISET NOT NULL");
         checkExpType(
             "multiset[ROW(1,2),ROW(3.4,5.4)]",
-            "RecordType(DECIMAL(2, 1) NOT NULL EXPR$0, DECIMAL(2, 1) NOT NULL EXPR$1) NOT NULL MULTISET NOT NULL");
+            "RecordType(DECIMAL(11, 1) NOT NULL EXPR$0, DECIMAL(11, 1) NOT NULL EXPR$1) NOT NULL MULTISET NOT NULL");
         checkExpType(
             "multiset(select*from emp)",
             "RecordType(INTEGER NOT NULL EMPNO," +
@@ -918,7 +918,10 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
     public void testMultisetSetOperators() {
         checkExp("multiset[1] multiset union multiset[1,2.3]");
-        checkExpType("multiset[1] multiset union multiset[1,2.3]", "DECIMAL(2, 1) NOT NULL MULTISET NOT NULL");
+        checkExpType("multiset[324.2] multiset union multiset[23.2,2.32]",
+            "DECIMAL(5, 2) NOT NULL MULTISET NOT NULL");
+        checkExpType("multiset[1] multiset union multiset[1,2.3]",
+            "DECIMAL(11, 1) NOT NULL MULTISET NOT NULL");
         checkExp("multiset[1] multiset union all multiset[1,2.3]");
         checkExp("multiset[1] multiset except multiset[1,2.3]");
         checkExp("multiset[1] multiset except all multiset[1,2.3]");
@@ -2113,8 +2116,10 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     public void testUnnest() {
         checkQueryType("select*from unnest(multiset[1])","INTEGER NOT NULL");
         checkQueryType("select*from unnest(multiset[1, 2])","INTEGER NOT NULL");
-        checkQueryType("select*from unnest(multiset[1, 2.3])","DECIMAL(2, 1) NOT NULL");
-        checkQueryType("select*from unnest(multiset[1, 2.3, 1])","DECIMAL(2, 1) NOT NULL");
+        checkQueryType("select*from unnest(multiset[321.3, 2.33])","DECIMAL(5, 2) NOT NULL");
+        checkQueryType("select*from unnest(multiset[321.3, 4.23e0])","DOUBLE NOT NULL");
+        checkQueryType("select*from unnest(multiset[43.2e1, cast(null as decimal(4,2))])","DOUBLE");
+        checkQueryType("select*from unnest(multiset[1, 2.3, 1])","DECIMAL(11, 1) NOT NULL");
         checkQueryType("select*from unnest(multiset['1','22','333'])","CHAR(3) NOT NULL");
         checkQueryType("select*from unnest(multiset['1','22','333','22'])","CHAR(3) NOT NULL");
         checkFails("select*from unnest(1)","(?s).*Cannot apply 'UNNEST' to arguments of type 'UNNEST.<INTEGER>.'.*");

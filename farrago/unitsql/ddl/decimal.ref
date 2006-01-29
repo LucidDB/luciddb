@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/ddl/decimal.sql#5 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/decimal.sql#2 $
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema decimal_ddl_test;
 0: jdbc:farrago:> set schema 'decimal_ddl_test';
@@ -60,9 +60,6 @@ Error: DDL validation error near line 1, column 51: Precision must be positive i
 0: jdbc:farrago:> insert into td52 values(7, -2.691);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- in range rounding
-0: jdbc:farrago:> -- TODO: Fix error: Numeric literal is out of range
-0: jdbc:farrago:> -- insert into td values(10, 9223372036854775807.13213);
-0: jdbc:farrago:> -- insert into td values(11, -9223372036854775808.12321);
 0: jdbc:farrago:> insert into td5 values(10, 99999.1411312);
 0: jdbc:farrago:> insert into td5 values(11, -99999.123123); 
 0: jdbc:farrago:> insert into td52 values(10, 999.99452324);
@@ -72,11 +69,17 @@ Error: DDL validation error near line 1, column 51: Precision must be positive i
 0: jdbc:farrago:> insert into td values(20, 9223372036854775808);
 Error: From line 1, column 27 to line 1, column 45: Numeric literal '9223372036854775808' out of range (state=,code=0)
 0: jdbc:farrago:> insert into td values(21, 9223372036854775807.5);
-Error: From line 1, column 27 to line 1, column 47: Numeric literal '92233720368547758075' out of range (state=,code=0)
+Error: From line 1, column 27 to line 1, column 47: Numeric literal '9223372036854775807.5' out of range (state=,code=0)
 0: jdbc:farrago:> insert into td values(22, -9223372036854775809);
 Error: From line 1, column 28 to line 1, column 46: Numeric literal '9223372036854775809' out of range (state=,code=0)
 0: jdbc:farrago:> insert into td values(23, -9223372036854775808.5);
-Error: From line 1, column 28 to line 1, column 48: Numeric literal '92233720368547758085' out of range (state=,code=0)
+Error: From line 1, column 28 to line 1, column 48: Numeric literal '9223372036854775808.5' out of range (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- Numeric literal is out of range
+0: jdbc:farrago:> insert into td values(24, 9223372036854775807.13213);
+Error: From line 1, column 27 to line 1, column 51: Numeric literal '9223372036854775807.13213' out of range (state=,code=0)
+0: jdbc:farrago:> insert into td values(25, -9223372036854775808.12321);
+Error: From line 1, column 28 to line 1, column 52: Numeric literal '9223372036854775808.12321' out of range (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should give error
 0: jdbc:farrago:> insert into td5 values(20, 100000);

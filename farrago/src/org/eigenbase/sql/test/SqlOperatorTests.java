@@ -523,6 +523,9 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkScalarExact("case when 'a'='a' then 1 end", "1");
 
         getTester().checkString("case 2 when 1 then 'a' when 2 then 'b' end", "b", "todo: CHAR(1)");
+        getTester().checkScalarExact(
+            "case 2 when 1 then 11.2 when 2 then 4.543 else null end",
+            "DECIMAL(5, 3)", "4.543");
         getTester().checkScalarExact("case 'a' when 'a' then 1 end", "1");
         getTester().checkNull("case 'a' when 'b' then 1 end");
         getTester().checkScalarExact(
@@ -1237,6 +1240,8 @@ public abstract class SqlOperatorTests extends TestCase
     {
         getTester().setFor(SqlStdOperatorTable.nullIfFunc);
         getTester().checkNull("nullif(1,1)");
+        getTester().checkScalarExact("nullif(1.5, 3)", "DECIMAL(2, 1)", "1.5");
+        getTester().checkScalarApprox("nullif(1.5e0, 3e0)", "DOUBLE", 1.5, 0);
         getTester().checkString("nullif('a','bc')", "a", "todo: VARCHAR(2) NOT NULL");
         getTester().checkString("nullif('a',cast(null as varchar(1)))", "a", "todo: VARCHAR(1) NOT NULL");
         getTester().checkNull("nullif(cast(null as varchar(1)),'a')");
