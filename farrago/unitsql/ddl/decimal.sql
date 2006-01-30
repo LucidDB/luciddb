@@ -51,9 +51,6 @@ insert into td52 values(6, -2.695);
 insert into td52 values(7, -2.691);
 
 -- in range rounding
--- TODO: Fix error: Numeric literal is out of range
--- insert into td values(10, 9223372036854775807.13213);
--- insert into td values(11, -9223372036854775808.12321);
 insert into td5 values(10, 99999.1411312);
 insert into td5 values(11, -99999.123123); 
 insert into td52 values(10, 999.99452324);
@@ -64,6 +61,10 @@ insert into td values(20, 9223372036854775808);
 insert into td values(21, 9223372036854775807.5);
 insert into td values(22, -9223372036854775809);
 insert into td values(23, -9223372036854775808.5);
+
+-- Numeric literal is out of range
+insert into td values(24, 9223372036854775807.13213);
+insert into td values(25, -9223372036854775808.12321);
 
 -- should give error
 insert into td5 values(20, 100000);

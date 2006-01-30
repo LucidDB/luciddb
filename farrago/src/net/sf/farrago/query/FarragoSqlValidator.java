@@ -93,9 +93,9 @@ public class FarragoSqlValidator extends SqlValidatorImpl
             // decimal and long have the same precision (as 64-bit integers),
             // so the unscaled value of a decimal must fit into a long.
             BigDecimal bd = (BigDecimal) literal.getValue();
-            bd = new BigDecimal(bd.unscaledValue());
-            long longValue = bd.longValue();
-            if (!BigDecimal.valueOf(longValue).equals(bd)) {
+            BigInteger unscaled = bd.unscaledValue();
+            long longValue = unscaled.longValue();
+            if (!BigInteger.valueOf(longValue).equals(unscaled)) {
                 // overflow
                 throw newValidationError(
                     literal, EigenbaseResource.instance()

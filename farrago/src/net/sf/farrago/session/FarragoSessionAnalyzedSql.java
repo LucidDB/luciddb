@@ -26,6 +26,8 @@ import java.sql.*;
 import java.util.*;
 
 import org.eigenbase.reltype.*;
+import net.sf.farrago.fem.sql2003.FemAbstractColumnSet;
+import net.sf.farrago.fem.sql2003.ModalityTypeEnum;
 
 /**
  * FarragoSessionAnalyzedSql contains the results of the analyzeSql
@@ -77,6 +79,11 @@ public class FarragoSessionAnalyzedSql
     public void setResultType(RelDataType resultType)
     {
         this.resultType = resultType;
+    }
+
+    public void setModality(FemAbstractColumnSet colSet )
+    {
+        colSet.setModality(ModalityTypeEnum.MODALITYTYPE_RELATIONAL);
     }
 }
 

@@ -294,9 +294,9 @@ public class ReduceDecimalsRule extends RelOptRule
          * any operands were reduced. This method returns the original 
          * call if no change was made. 
          *
-         * @param expr expression node to be reduced
+         * @param call expression node to be reduced
          * @param reducedOperands operands, in reduced form
-         * @param rexBuilder
+         * @param builder
          * @return the reduced expressed
          */
         private RexNode reduceNode(
@@ -330,6 +330,8 @@ public class ReduceDecimalsRule extends RelOptRule
             } else if (call.isA(RexKind.Reinterpret)) {
                 return new ReinterpretExpander(builder);
             } else if (call.getOperator() == SqlStdOperatorTable.absFunc) {
+                return new PassThroughExpander(builder);
+            } else if (call.getOperator() == SqlStdOperatorTable.caseOperator) {
                 return new PassThroughExpander(builder);
             } else {
                 return new CastAsDoubleExpander(builder);
@@ -925,7 +927,11 @@ public class ReduceDecimalsRule extends RelOptRule
         {
             RexNode[] newOperands = new RexNode[operands.length];
             for (int i=0; i < operands.length; i++) {
-                newOperands[i] = accessValue(operands[i]);
+                if (SqlTypeUtil.isNumeric(operands[i].getType())) {
+                    newOperands[i] = accessValue(operands[i]);
+                } else {
+                    newOperands[i] = operands[i];
+                }
             }
             return encodeValue(
                 builder.makeCall(call.getOperator(), newOperands),

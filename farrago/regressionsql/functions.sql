@@ -27,6 +27,10 @@ select coalesce(age,-1) from sales.emps order by 1;
 select case slacker when true then 'yes' when false then 'no' end from sales.emps order by 1;
 select case slacker when true then 'yes' when false then 'no' else 'null' end from sales.emps order by 1;
 values CASE WHEN TRUE THEN 9 ELSE 1 END;
+
+values nullif(5.0, 5.0);
+values nullif(4.2, 1);
+values nullif(34e1, 3.4e1);
 select nullif(name,'Wilma') from sales.emps order by 1;
 select nullif(50,age) is null from sales.emps order by 1;
 select nullif(age,50) is null from sales.emps order by 1;
