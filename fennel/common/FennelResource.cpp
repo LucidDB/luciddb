@@ -60,7 +60,8 @@ FennelResource::FennelResource(Locale locale)
       _noColumnDelimiter(this, "noColumnDelimiter"),
       _tooFewColumns(this, "tooFewColumns"),
       _tooManyColumns(this, "tooManyColumns"),
-      _rowTextTooLong(this, "rowTextTooLong")
+      _rowTextTooLong(this, "rowTextTooLong"),
+      _sampleFailed(this, "sampleFailed")
 { }
 
 string FennelResource::sysCallFailed(const std::string &p0) const
@@ -130,6 +131,10 @@ string FennelResource::tooManyColumns() const
 string FennelResource::rowTextTooLong() const
 {
     return _rowTextTooLong.format();
+}
+string FennelResource::sampleFailed(const std::string &p0) const
+{
+    return _sampleFailed.format(p0);
 }
 
 } // end namespace fennel

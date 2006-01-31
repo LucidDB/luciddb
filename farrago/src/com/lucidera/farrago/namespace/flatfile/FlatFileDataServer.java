@@ -23,13 +23,19 @@ package com.lucidera.farrago.namespace.flatfile;
 
 import java.sql.*;
 import java.util.*;
+import java.util.logging.Logger;
+
+import javax.sql.*;
 
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
+import net.sf.farrago.trace.*;
 import net.sf.farrago.type.*;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
 
 /**
  * FlatFileDataServer provides an implementation of the {@link
@@ -42,6 +48,14 @@ class FlatFileDataServer extends MedAbstractDataServer
 {
     //~ Static fields/initializers --------------------------------------------
 
+    private static final Logger tracer = 
+        FarragoTrace.getClassTracer(FlatFileDataServer.class);
+
+    private static int DESCRIBE_COLUMN_LENGTH = 2048;
+    private static String DESCRIBE_COLUMN_NAME = "FIELD_SIZES";
+    private static String QUALIFIED_NAME_SEPARATOR = ".";
+    private static String SQL_QUOTE_CHARACTER = "\"";
+    
     private MedAbstractDataWrapper wrapper;
     FlatFileParams params;
 
@@ -86,6 +100,9 @@ class FlatFileDataServer extends MedAbstractDataServer
         Map columnPropMap)
         throws SQLException
     {
+        String schemaName = getSchemaName(localName);
+        FlatFileParams.SchemaType schemaType = 
+            FlatFileParams.getSchemaType(schemaName, true);
         if (rowType == null) {
             // scan control file/data file for metadata (Phase II)
             String name = tableProps.getProperty(
@@ -101,10 +118,14 @@ class FlatFileDataServer extends MedAbstractDataServer
                 rowType = createRowType(
                     typeFactory, bcpFile.types, bcpFile.colNames);
             } else {
-                return null;
+                rowType = deriveRowType(typeFactory, schemaType, localName);
+                if (rowType == null) {
+                    return null;
+                }
             }
         }
-        return new FlatFileColumnSet(localName, rowType, params, tableProps);
+        return new FlatFileColumnSet(
+            localName, rowType, params, tableProps, schemaType);
     }
 
     // implement FarragoMedDataServer
@@ -137,6 +158,147 @@ class FlatFileDataServer extends MedAbstractDataServer
         String[] names)
     {
         return typeFactory.createStructType(types, names);
+    }
+    
+    /**
+     * Derives the row type of a table when other type information 
+     * is not available. Also derives the row type of internal queries.
+     * 
+     * @throws SQLException
+     */
+    private RelDataType deriveRowType(
+        FarragoTypeFactory typeFactory, 
+        FlatFileParams.SchemaType schemaType,
+        String[] localName) 
+        throws SQLException
+    {
+        List<RelDataType> fieldTypes = new ArrayList<RelDataType>();
+        List<String> fieldNames = new ArrayList<String>();
+
+        switch(schemaType) {
+        case DESCRIBE:
+            fieldTypes.add(
+                typeFactory.createSqlType(
+                    SqlTypeName.Varchar, DESCRIBE_COLUMN_LENGTH));
+            fieldNames.add(DESCRIBE_COLUMN_NAME);
+            break;
+        case SAMPLE:
+            List<Integer> fieldSizes = getFieldSizes(localName);
+            int i = 1;
+            for (Integer size : fieldSizes) {
+                fieldTypes.add(
+                    typeFactory.createSqlType(
+                        SqlTypeName.Varchar, size.intValue()));
+                fieldNames.add("COL" + i++);
+            }
+            break;
+        case QUERY:
+            // TODO
+        default:
+            return null;
+        }
+        return typeFactory.createStructType(fieldTypes, fieldNames);
+    }
+    
+    /**
+     * Returns the sizes of a flat file's fields, based upon an internal 
+     * describe query.
+     */
+    private List<Integer> getFieldSizes(String[] localName) 
+        throws SQLException
+    {
+        // Attempt to issue a loopback query into Farrago to
+        // get the number of rows to produce.
+        DataSource loopbackDataSource = getLoopbackDataSource();
+        Connection connection = null;
+        if (loopbackDataSource != null) try {
+            connection = loopbackDataSource.getConnection();
+            Statement stmt = connection.createStatement();
+            String sql = getDescribeQuery(localName);
+            ResultSet resultSet = stmt.executeQuery(sql);
+            if (resultSet.next()) {
+                String result = resultSet.getString(1);
+                StringTokenizer parser = new StringTokenizer(result);
+                List<Integer> sizes = new ArrayList<Integer>();
+
+                while ( parser.hasMoreTokens() ) {
+                    String token = parser.nextToken();
+                    Integer columnSize;
+                    try {
+                        columnSize = Integer.valueOf(token);
+                    } catch (NumberFormatException e) {
+                        throw Util.newInternal(
+                            "failed to parse sample desc: '" + result + "'");
+                    }
+                    sizes.add(columnSize);
+                }
+                return sizes;
+            }
+        } finally {
+            // It's OK not to clean up stmt and resultSet;
+            // connection.close() will do that for us.
+            if (connection != null) {
+                try {
+                    connection.close();
+                } catch (SQLException ignore) {
+                    tracer.severe("could not close connection");
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Constructs an internal query to describe the results of sampling
+     */
+    private String getDescribeQuery(String[] localName)
+    {
+        assert(localName.length == 3);
+        String[] newName = setSchemaName(
+            localName, FlatFileParams.SchemaType.DESCRIBE.getSchemaName());
+        return "select * from " + getQualifiedName(newName);
+    }
+
+    /**
+     * Constructs a qualified (multi-part) name
+     */
+    private String getQualifiedName(String[] localName)
+    {
+        String qual = quoteName(localName[0]);
+        for (int i = 1; i < localName.length; i++) {
+            qual += QUALIFIED_NAME_SEPARATOR + quoteName(localName[i]);
+        }
+        return qual;
+    }
+    
+    /**
+     * Constructs a quoted name
+     */
+    private String quoteName(String name) 
+    {
+        return SQL_QUOTE_CHARACTER + name + SQL_QUOTE_CHARACTER;
+    }
+
+    /**
+     * Returns the second to last name of localName.
+     * TODO: move this into a better place
+     */
+    private String getSchemaName(String[] localName) 
+    {
+        assert(localName.length > 1);
+        return localName[localName.length - 2];
+    }
+    
+    /**
+     * Sets the second to last name of localName.
+     * TODO: move this into a better place
+     */
+    private String[] setSchemaName(String[] localName, String schemaName)
+    {
+        String[] newName = localName.clone();
+        assert(newName.length > 1);
+        newName[newName.length - 2] = schemaName;
+        return newName;
     }
 }
 

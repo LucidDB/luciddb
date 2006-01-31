@@ -210,6 +210,22 @@ options (filename 'example');
 
 select * from flatfile_implicit_table order by 3;
 
+-- test a describe query. this type of query returns the width of a 
+-- table's fields. it is an internal query, and should not appear in
+-- user level documentation.
+select * from flatfile_server.SAMPLE_DESC."example2";
+
+-- test a sampling queries (which become important in the absence of 
+-- bcp control files). there is no need to order their results, because 
+-- the results appear as they do in the source file. in this case, the 
+-- first line is the "header line". this feature is also undocumented.
+select * from flatfile_server.SAMPLE."example2";
+
+-- test sampling errors
+select * from flatfile_server.SAMPLE."missing";
+
+select * from flatfile_server.SAMPLE."empty";
+
 -- TODO: read column header names from data file
 -- TODO: derive column types by reading first few lines of file
 

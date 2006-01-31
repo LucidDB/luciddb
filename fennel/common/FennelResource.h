@@ -125,6 +125,11 @@ class FennelResource : ResourceBundle
      */
     std::string rowTextTooLong() const;
 
+    /**
+     * <code>sampleFailed</code> is 'Cound not sample data file {0}'
+     */
+    std::string sampleFailed(const std::string &p0) const;
+
     private:
     ResourceDefinition _sysCallFailed;
     ResourceDefinition _duplicateKeyDetected;
@@ -143,6 +148,7 @@ class FennelResource : ResourceBundle
     ResourceDefinition _tooFewColumns;
     ResourceDefinition _tooManyColumns;
     ResourceDefinition _rowTextTooLong;
+    ResourceDefinition _sampleFailed;
 
     template<class _GRB, class _BC, class _BC_ITER>
         friend _GRB *makeInstance(_BC &bundleCache, const Locale &locale);

@@ -54,6 +54,7 @@ class FlatFileColumnSet extends MedAbstractColumnSet
     FlatFileParams params;
     String filePath;
     String logFilePath;
+    FlatFileParams.SchemaType schemaType;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -61,15 +62,18 @@ class FlatFileColumnSet extends MedAbstractColumnSet
         String [] localName,
         RelDataType rowType,
         FlatFileParams params,
-        Properties tableProps)
+        Properties tableProps,
+        FlatFileParams.SchemaType schemaType)
     {
         super(localName, null, rowType, null, null);
+
         this.params = params;
         filePath = makeFilePath(
             localName,
             tableProps.getProperty(PROP_FILENAME, null));
         logFilePath = makeLogFilePath(
             tableProps.getProperty(PROP_LOG_FILENAME, null));
+        this.schemaType = schemaType;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -94,7 +98,7 @@ class FlatFileColumnSet extends MedAbstractColumnSet
         RelOptCluster cluster,
         RelOptConnection connection)
     {
-        return new FlatFileFennelRel(this, cluster, connection);
+        return new FlatFileFennelRel(this, cluster, connection, schemaType);
     }
 
     /**

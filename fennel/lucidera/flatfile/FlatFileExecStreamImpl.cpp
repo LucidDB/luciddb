@@ -42,7 +42,7 @@ FlatFileExecStream *FlatFileExecStream::newFlatFileExecStream()
     return new FlatFileExecStreamImpl();
 }
 
-void FlatFileExecStreamImpl::convertTuple(
+void FlatFileExecStreamImpl::handleTuple(
     const FlatFileRowParseResult &result,
     TupleData &tuple)
 {
@@ -56,10 +56,29 @@ void FlatFileExecStreamImpl::convertTuple(
         pTupleData = &tuple;
     }
 
-    for (uint i=0; i<tuple.size(); i++) {
+    // Describe array is initialized here, because describe requires
+    // an unbounded scan, and the number of fields are not known
+    // until the scan is in progress. Note that we use the first row
+    // to determine how many field sizes to return, an imperfect guess.
+    bool initial = false;
+    if (mode == FLATFILE_MODE_DESCRIBE && fieldSizes.size() == 0) {
+        initial = true;
+        fieldSizes.resize(result.offsets.size());
+    }
+
+    // Prepare values for returning
+    for (uint i = 0; i < result.offsets.size(); i++) {
         char *value = result.current + result.offsets[i];
         uint size = result.sizes[i];
         uint strippedSize = pParser->stripQuoting(value, size, false);
+        if (mode == FLATFILE_MODE_DESCRIBE) {
+            if (initial) {
+                fieldSizes[i] = strippedSize;
+            } else {
+                fieldSizes[i] = max(fieldSizes[i], strippedSize);
+            }
+            continue;
+        }
         if (size == 0) {
             // a value which is empty, (not quoted empty), is null
             (*pTupleData)[i].pData = NULL;
@@ -69,7 +88,7 @@ void FlatFileExecStreamImpl::convertTuple(
             (*pTupleData)[i].cbData = strippedSize;
         }
     }
-            
+
     if (pCalc) {
         try {
             pCalc->exec();
@@ -82,6 +101,36 @@ void FlatFileExecStreamImpl::convertTuple(
             throw CalcExcn(pCalc->warnings(), textDesc, textTuple);
         }    
     }
+
+    if (mode != FLATFILE_MODE_DESCRIBE) {
+        isRowPending = true;
+    }
+}
+
+void FlatFileExecStreamImpl::describeStream(TupleData &tupleData)
+{
+    if (fieldSizes.size() == 0) {
+        throw FennelExcn(
+            FennelResource::instance().sampleFailed(dataFilePath) );
+    }
+    
+    std::ostringstream oss;
+    for (int i = 0; i < fieldSizes.size(); i++) {
+        oss << fieldSizes[i];
+        if (i != fieldSizes.size() - 1) {
+            oss << " ";
+        }
+    }
+    // NOTE: this newly created string is saved as part of the stream 
+    // to avoid being popped off the stack
+    describeResult = oss.str();
+    const char *value = describeResult.c_str();
+    uint cbValue = describeResult.size() * sizeof(char);
+
+    assert(tupleData.size() == 1);
+    tupleData[0].pData = (PConstBuffer) value;
+    tupleData[0].cbData = cbValue;
+    isRowPending = true;
 }
 
 void FlatFileExecStreamImpl::logError(const FlatFileRowParseResult &result)
@@ -219,12 +268,16 @@ void FlatFileExecStreamImpl::prepare(
     scratchAccessor = params.scratchAccessor;
     bufferLock.accessSegment(scratchAccessor);
 
+    mode = params.mode;
     rowDesc = readTupleDescriptor(pOutAccessor->getTupleDesc());
     pBuffer.reset(new FlatFileBuffer(params.dataFilePath));
     pParser.reset(new FlatFileParser(
                       params.fieldDelim, params.rowDelim,
                       params.quoteChar, params.escapeChar));
-    // NOTE: this is a hack used for unit testing without the calculator
+
+    numRowsScan = params.numRowsScan;
+
+    // Initialize calculator if a program was specified
     if (params.calcProgram.size() == 0) return;
     
     try {
@@ -316,6 +369,9 @@ FlatFileRowDescriptor FlatFileExecStreamImpl::readTupleDescriptor(
                 FlatFileColumnDescriptor(FLAT_FILE_MAX_NON_CHAR_VALUE_LEN));
         }
     }
+    if (mode == FLATFILE_MODE_DESCRIBE) {
+        rowDesc.setUnbounded();
+    }
     return rowDesc;
 }
 
@@ -367,28 +423,39 @@ void FlatFileExecStreamImpl::open(bool restart)
         pBuffer->setReadPtr(lastResult.next);
         checkRowDelimiter();
     }
+
+    done = false;
 }
 
 
 ExecStreamResult FlatFileExecStreamImpl::execute(
     ExecStreamQuantum const &quantum)
 {
-    if (pOutAccessor->getState() == EXECBUF_OVERFLOW) {
+    // detect whether scan was previously finished
+    if (done && !isRowPending) {
+        pOutAccessor->markEOS();
+        return EXECRC_EOS;
+    }
+    // detect whether output buffer is capable of accepting more data
+    if (pOutAccessor->getState() == EXECBUF_OVERFLOW
+        || pOutAccessor->getState() == EXECBUF_EOS) {
         return EXECRC_BUF_OVERFLOW;
     }
 
-    for (uint nTuples=0; nTuples < quantum.nTuplesMax; nTuples++) {
+    // read up to the number of (good) tuples specified by quantum
+    for (uint nTuples=0; nTuples < quantum.nTuplesMax;) {
+        // ready the next row for output
         while (!isRowPending) {
-            if (pBuffer->isComplete()
-                && (pBuffer->getReadPtr() >= pBuffer->getEndPtr()))
+            if ((numRowsScan > 0 && numRowsScan == nTuples)
+                || (pBuffer->isComplete()
+                    && (pBuffer->getReadPtr() >= pBuffer->getEndPtr())))
             {
-                detectMajorErrors();
-                pOutAccessor->markEOS();
-                return EXECRC_EOS;
+                done = true;
+                break;
             }
             pParser->scanRow(
                 pBuffer->getReadPtr(),pBuffer->getSize(),rowDesc,lastResult);
-
+            
             switch (lastResult.status) {
             case FlatFileRowParseResult::INCOMPLETE_COLUMN:
             case FlatFileRowParseResult::ROW_TOO_LARGE:
@@ -405,9 +472,9 @@ ExecStreamResult FlatFileExecStreamImpl::execute(
                 continue;
             case FlatFileRowParseResult::NO_STATUS:
                 try {
-                    convertTuple(lastResult, dataTuple);
-                    isRowPending = true;
+                    handleTuple(lastResult, dataTuple);
                     pBuffer->setReadPtr(lastResult.next);
+                    nTuples++;
                 } catch (CalcExcn e) {
                     logError(e.getMessage(), lastResult);
                     nRowErrors++;
@@ -420,11 +487,26 @@ ExecStreamResult FlatFileExecStreamImpl::execute(
             }
         }
 
-        if (!pOutAccessor->produceTuple(dataTuple)) {
-            return EXECRC_BUF_OVERFLOW;
+        // describe produces one row after it's done reading input
+        if (mode == FLATFILE_MODE_DESCRIBE && done && !isRowPending) {
+            describeStream(dataTuple);
         }
-        isRowPending = false;
-        nRowsOutput++;
+
+        // try to output pending rows
+        if (isRowPending) {
+            if (!pOutAccessor->produceTuple(dataTuple)) {
+                return EXECRC_BUF_OVERFLOW;
+            }
+            isRowPending = false;
+            nRowsOutput++;
+        }
+
+        // close stream if no more rows are available
+        if (done) {
+            detectMajorErrors();
+            pOutAccessor->markEOS();
+            return EXECRC_EOS;
+        }
     }
     return EXECRC_QUANTUM_EXPIRED;
 }
