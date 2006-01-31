@@ -128,6 +128,8 @@
   <!-- directory for Farrago compiled class files (other than plugins) -->
   <property name="farrago.classes.dir" location="${farrago.dir}/classes"/>
 
+  <property name="emma.farrago.classes.dir" location="${farrago.dir}/classes-cov"/>
+
   <!-- directory for Farrago compiled plugin .jars -->
   <property name="farrago.plugin.dir" location="${farrago.dir}/plugin"/>
 

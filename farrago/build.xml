@@ -84,8 +84,6 @@
   <!-- The version of ANT we require. -->
   <property name="required.ant.version" value="1.6.5"/>
 
-  <property name="emma.farrago.classes.dir" location="${farrago.dir}/classes-cov"/>
-
   <condition property="is.correct.ant.version">
     <contains string="${ant.version}" substring="${required.ant.version}"/>
   </condition>
