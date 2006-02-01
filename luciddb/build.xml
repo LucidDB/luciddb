@@ -415,7 +415,7 @@
       <fileset dir="coverage"/>
     </delete>
     <mkdir dir="coverage"/>
-    <mkdir dir="${emma.luciddbclasses.dir}"/>
+    <mkdir dir="${emma.luciddb.classes.dir}"/>
   </target>
 
   <target name="emmaInstr" depends="emmaClean">
