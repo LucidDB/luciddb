@@ -24,7 +24,6 @@ import java.util.*;
 import java.util.logging.Level;
 
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.RelVisitor;
 import org.eigenbase.relopt.*;
 import org.eigenbase.util.Util;
 
@@ -69,7 +68,7 @@ public class VolcanoRuleCall extends RelOptRuleCall
             // Make sure traits that the new rel doesn't know about are
             // propagated.
             RelTraitSet rels0Traits = rels[0].getTraits();
-            new TraitPropagationVisitor(getPlanner(), rels0Traits).go(rel);
+            new RelTraitPropagationVisitor(getPlanner(), rels0Traits).go(rel);
 
             if (tracer.isLoggable(Level.FINEST)) {
                 tracer.finest("Rule " + getRule() + " arguments "
@@ -212,45 +211,6 @@ public class VolcanoRuleCall extends RelOptRuleCall
                 rels[operandOrdinal] = rel;
                 matchRecurse(solve + 1);
             }
-        }
-    }
-
-    private static class TraitPropagationVisitor
-        extends RelVisitor
-    {
-        private final RelTraitSet baseTraits;
-        private final RelOptPlanner planner;
-
-        private TraitPropagationVisitor(
-            RelOptPlanner planner, RelTraitSet baseTraits)
-        {
-            this.planner = planner;
-            this.baseTraits = baseTraits;
-        }
-
-        public void visit(RelNode rel, int ordinal, RelNode parent)
-        {
-            if (rel instanceof RelSubset) {
-                return;
-            }
-
-            if (planner.isRegistered(rel)) {
-                return;
-            }
-
-            RelTraitSet relTraits = rel.getTraits();
-            for (int i = 0; i < baseTraits.size(); i++) {
-                if (i >= relTraits.size()) {
-                    // Copy traits that the new rel doesn't know about.
-                    relTraits.addTrait(baseTraits.getTrait(i));
-                } else {
-                    // Verify that the traits are from the same RelTraitDef
-                    assert relTraits.getTrait(i).getTraitDef() ==
-                        baseTraits.getTrait(i).getTraitDef();
-                }
-            }
-
-            rel.childrenAccept(this);
         }
     }
 }

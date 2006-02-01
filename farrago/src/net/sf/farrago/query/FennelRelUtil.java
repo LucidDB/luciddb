@@ -553,7 +553,6 @@ public abstract class FennelRelUtil
             cluster,
             inputs.toArray(new RelNode[0]),
             true);
-        RelOptRule.mergeTraitsOnto(unionRel, callTraits);
         return unionRel;
     }
 
@@ -605,9 +604,7 @@ public abstract class FennelRelUtil
 
         // Generate a one-row relation producing the key to search for.
         OneRowRel oneRowRel = new OneRowRel(cluster);
-        RelOptRule.mergeTraitsOnto(oneRowRel, callTraits);
         RelNode keyRel = ProjectRel.create(oneRowRel, searchExps, null);
-        RelOptRule.mergeTraitsOnto(keyRel, callTraits);
 
         // For dynamic parameters, add a filter to remove nulls, since they can
         // never match in a comparison.  FIXME:  This isn't quite right,
@@ -621,7 +618,6 @@ public abstract class FennelRelUtil
         // Generate code to cast the keys to the index column type.
         RelNode castRel = RelOptUtil.createCastRel(
             keyRel, keyRowType, false);
-        RelOptRule.mergeTraitsOnto(castRel, callTraits);
         return castRel;
     }
 
