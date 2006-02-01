@@ -438,7 +438,7 @@
   <target name="emmaReport">
     <emma verbosity="verbose">
       <report sourcepath="${luciddb.test.dir}/src,${farrago.src.dir}">
-        <infileset dir="${farrago.dir}" includes="*.em, *.ec"/>
+        <infileset dir="${farrago.dir}" includes="*.em"/>
         <infileset dir="." includes="*.em, *.ec"/>
         <html/>
         <xml/>
