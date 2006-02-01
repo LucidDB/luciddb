@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -697,7 +697,9 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                 filterRel,
                 new RexNode[] {RelOptUtil.createInputRef(filterRel, 0)},
                 new String[] {field.getName()});
-        assert RelOptUtil.eq(limitRel.getRowType(), child.getRowType(), true) :
+        assert RelOptUtil.eq(
+            "return.getRowType()", limitRel.getRowType(),
+            "child.getRowType()", child.getRowType(), true) :
             "post: return.getRowType() == child.getRowType()";
         return limitRel;
     }

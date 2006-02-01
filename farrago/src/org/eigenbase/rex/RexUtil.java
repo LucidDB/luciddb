@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2002-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -671,7 +671,7 @@ public class RexUtil
         for (int i = 0; i < fields.length; i++) {
             final RelDataType exprType = exprs[i].getType();
             final RelDataType fieldType = fields[i].getType();
-            if (!RelOptUtil.eq(exprType, fieldType, fail)) {
+            if (!RelOptUtil.eq("type1", exprType, "type2", fieldType, fail)) {
                 return false;
             }
         }
@@ -719,7 +719,7 @@ public class RexUtil
                     "expr[" + i + "] has ordinal " + inputRef.getIndex();
                 return false;
             }
-            if (!RelOptUtil.eq(exprs[i].getType(), fields[i].getType(), fail)) {
+            if (!RelOptUtil.eq("type1", exprs[i].getType(), "type2", fields[i].getType(), fail)) {
                 return false;
             }
         }

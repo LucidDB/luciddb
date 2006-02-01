@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2002-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -1815,20 +1815,17 @@ public class SqlParserTest extends TestCase
     public void testWindowSpec()
     {
         // Correct syntax
-        check("select count(z) over w as foo from Bids window w as (partition by y order by x rows between 2 preceding and 2 following)",
-            "SELECT (COUNT(`Z`) OVER `W`) AS `FOO`" + NL +
-            "FROM `BIDS`" + NL +
-            "WINDOW `W` AS (PARTITION BY `Y`" + NL +
-            "ORDER BY `X`" + NL +
-            "ROWS BETWEEN 2 PRECEDING AND 2 FOLLOWING)"
-            );
+        check(
+            "select count(z) over w as foo from Bids window w as (partition by y order by x rows between 2 preceding and 2 following)",
+            TestUtil.fold(new String[] {
+                "SELECT (COUNT(`Z`) OVER `W`) AS `FOO`",
+                "FROM `BIDS`",
+                "WINDOW `W` AS (PARTITION BY `Y` ORDER BY `X` ROWS BETWEEN 2 PRECEDING AND 2 FOLLOWING)"}));
 
         check("select count(*) over w from emp window w as (rows 2 preceding)",
             "SELECT (COUNT(*) OVER `W`)" + NL +
             "FROM `EMP`" + NL +
-            "WINDOW `W` AS (ROWS 2 PRECEDING)"
-            );
-
+            "WINDOW `W` AS (ROWS 2 PRECEDING)");
 
         // Partition clause out of place. Found after ORDER BY
         checkFails("select count(z) over w as foo "+NL+

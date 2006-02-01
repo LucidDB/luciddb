@@ -1,6 +1,6 @@
 /*
 // Saffron preprocessor and data engine.
-// Copyright (C) 2002-2005 Disruptive Tech
+// Copyright (C) 2002-2006 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -105,7 +105,7 @@ public class ConverterTest extends TestCase
                 testContext.connection,
                 new JavaRexBuilder(testContext.connection.getRelOptSchema()
                         .getTypeFactory()));
-        final RelNode rel = converter.convertQuery(sqlQuery);
+        final RelNode rel = converter.convertQuery(sqlQuery, true, true);
         assertTrue(rel != null);
         final StringWriter sw = new StringWriter();
         final RelOptPlanWriter planWriter =

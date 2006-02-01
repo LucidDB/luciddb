@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2002-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -183,31 +183,20 @@ public class SqlFunction extends SqlOperator
         return(false);
     }
 
-    /*
-     * Validates a call to this operator.
-     * <p/>
-     *
-     * This implementation looks for the quantifier keywords DISTINCT or ALL
-     * as te first operand in the list.  If found then the literal is not
-     * called to validate itself.  Further the function is checked to make
-     * sure that a quantifier is valid for that particular function.
-     *
-     * If the first operand does not appear to be a quantifier then the
-     * parent ValidateCall is invoked to do normal function validation.
-     *
-     * @param call the call to this operator
-     * @param validator the active validator
-     * @param scope validator scope
-     * @param operandScope validator scope in which to validate operands to
-     * this call; usually equal to scope, but not always because some operators
-     * introduce new scopes
-     */
     public void validateCall(
         SqlCall call,
         SqlValidator validator,
         SqlValidatorScope scope,
         SqlValidatorScope operandScope)
     {
+        // This implementation looks for the quantifier keywords DISTINCT or
+        // ALL as the first operand in the list.  If found then the literal is
+        // not called to validate itself.  Further the function is checked to
+        // make sure that a quantifier is valid for that particular function.
+        //
+        // If the first operand does not appear to be a quantifier then the
+        // parent ValidateCall is invoked to do normal function validation.
+
         super.validateCall(call, validator, scope, operandScope);
         if ((null != call.getFunctionQuantifier()) && !isQuantifierAllowed()) {
             throw validator.newValidationError(call.getFunctionQuantifier(),
@@ -215,7 +204,6 @@ public class SqlFunction extends SqlOperator
                 .FunctionQuantifierNotAllowed.ex(call.getOperator().getName()));
         }
     }
-
 }
 
 

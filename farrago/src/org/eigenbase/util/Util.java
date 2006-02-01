@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2002-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -908,6 +908,15 @@ public class Util extends Toolbox
      * {@link java.lang.UnsupportedOperationException} isn't as good, because
      * sometimes we actually want to partially implement an API.
      *
+     * <p>Example usage:
+     * <blockquote><pre><code>class MyVisitor extends BaseVisitor {
+     *     void accept(Foo foo) {
+     *         // Exception will identify which subclass forgot to override
+     *         // this method
+     *         throw Util.needToImplement(this);
+     *     }
+     * }</pre></blockquote>
+     *
      * @param o The object which was the target of the call, or null.
      *   Passing the object gives crucial information if a method needs to be
      *   overridden and a subclass forgot to do so.
@@ -921,6 +930,62 @@ public class Util extends Toolbox
             description = o.getClass().toString() + ": " + o.toString();
         }
         throw new UnsupportedOperationException(description);
+    }
+
+    /**
+     * Flags a piece of code as needing to be cleaned up before you check in.
+     *
+     * <p>Introduce a call to this method to indicate that a piece of code,
+     * or a javadoc comment, needs work before you check in. If you have an IDE
+     * which can easily trace references, this is an easy way to maintain a
+     * to-do list.
+     *
+     * <p><strong>Checked-in code must never call this method</strong>: you
+     * must remove all calls/references to this method before you check in.
+     *
+     * <p>The <code>argument</code> has generic type and determines the
+     * type of the result. This allows you to use the method inside an
+     * expression, for example
+     *
+     * <blockquote><pre><code>int x = Util.deprecated(0, false);</code></pre></blockquote>
+     *
+     * but the usual usage is to pass in a descriptive string.
+     *
+     * <h3>Examples</h3>
+     *
+     * <h4>Example #1: Using <code>deprecated</code> to fail if a piece of
+     * supposedly dead code is reached</h4>
+     *
+     * <blockquote><pre><code>void foo(int x) {
+     *     if (x &lt; 0) {
+     *         // If this code is executed, an error will be thrown.
+     *         Util.deprecated("no longer need to handle negative numbers", true);
+     *         bar(x);
+     *     } else {
+     *         baz(x);
+     *     }
+     * }</code></pre></blockquote>
+     *
+     * <h4>Example #2: Using <code>deprecated</code> to comment out dead
+     * code</h4>
+     *
+     * <blockquote><pre>if (Util.deprecated(false, false)) {
+     *     // This code will not be executed, but an error will not be thrown.
+     *     baz();
+     * }</pre></blockquote>
+     *
+     * @param argument Arbitrary argument to the method.
+     * @param fail Whether to throw an exception if this method is called
+     * @return The value of the <code>argument</code>.
+     *
+     * @deprecated If a piece of code calls this method, it indicates that the
+     *    code needs to be cleaned up.
+     */
+    public static <T> T deprecated(T argument, boolean fail) {
+        if (fail) {
+            throw new UnsupportedOperationException();
+        }
+        return argument;
     }
 
     public static void loadLibrary(String libName)

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2004-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2004-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -191,12 +191,12 @@ public class RelStructuredTypeFlattener
             caseOperands);
     }
 
-    private void setNewForOldRel(RelNode oldRel, RelNode newRel)
+    protected void setNewForOldRel(RelNode oldRel, RelNode newRel)
     {
         oldToNewRelMap.put(oldRel, newRel);
     }
 
-    private RelNode getNewForOldRel(RelNode oldRel)
+    protected RelNode getNewForOldRel(RelNode oldRel)
     {
         return (RelNode) oldToNewRelMap.get(oldRel);
     }
@@ -262,7 +262,7 @@ public class RelStructuredTypeFlattener
         return offset;
     }
 
-    private RexNode flattenFieldAccesses(RexNode exp)
+    protected RexNode flattenFieldAccesses(RexNode exp)
     {
         RewriteRexShuttle shuttle = new RewriteRexShuttle();
         return exp.accept(shuttle);
@@ -608,11 +608,12 @@ public class RelStructuredTypeFlattener
             super.visit(p, ordinal, parent);
 
             currentRel = p;
+            final String visitMethodName = "rewriteRel";
             boolean found = ReflectUtil.invokeVisitor(
                 RelStructuredTypeFlattener.this,
                 currentRel,
                 RelNode.class,
-                "rewriteRel");
+                visitMethodName);
             currentRel = null;
             if (!found) {
                 if (p.getInputs().length == 0) {
@@ -621,7 +622,11 @@ public class RelStructuredTypeFlattener
                     rewriteGeneric(p);
                 }
             }
-            Util.permAssert(found, p.getClass().getName());
+            if (!found) {
+                throw Util.newInternal(
+                    "no '" + visitMethodName + "' method found for class " +
+                    p.getClass().getName());
+            }
         }
     }
 

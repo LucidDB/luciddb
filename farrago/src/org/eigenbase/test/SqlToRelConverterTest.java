@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2002-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -65,20 +65,14 @@ public class SqlToRelConverterTest extends TestCase
         final RelNode rel = tester.convertSqlToRel(sql);
 
         assertTrue(rel != null);
-        final StringWriter sw = new StringWriter();
-        final RelOptPlanWriter planWriter =
-            new RelOptPlanWriter(new PrintWriter(sw));
-        planWriter.setIdPrefix(false);
-        rel.explain(planWriter);
-        planWriter.flush();
-        String actual = sw.toString();
+        String actual = RelOptUtil.toString(rel);
         TestUtil.assertEqualsVerbose(plan, actual);
     }
 
     /**
      * Mock implementation of {@link RelOptSchema}.
      */
-    private static class MockRelOptSchema implements RelOptSchema {
+    protected static class MockRelOptSchema implements RelOptSchema {
         private final SqlValidatorCatalogReader catalogReader;
         private final RelDataTypeFactory typeFactory;
 
@@ -94,9 +88,14 @@ public class SqlToRelConverterTest extends TestCase
         {
             final SqlValidatorTable table = catalogReader.getTable(names);
             final RelDataType rowType = table.getRowType();
-            return new MockColumnSet(
-                names,
-                rowType);
+            return createColumnSet(names, rowType);
+        }
+
+        protected MockColumnSet createColumnSet(
+            String[] names,
+            final RelDataType rowType)
+        {
+            return new MockColumnSet(names, rowType);
         }
 
         public RelDataTypeFactory getTypeFactory()
@@ -109,11 +108,11 @@ public class SqlToRelConverterTest extends TestCase
         {
         }
 
-        class MockColumnSet implements RelOptTable {
+        protected class MockColumnSet implements RelOptTable {
             private final String[] names;
             private final RelDataType rowType;
 
-            MockColumnSet(String[] names, RelDataType rowType)
+            protected MockColumnSet(String[] names, RelDataType rowType)
             {
                 this.names = names;
                 this.rowType = rowType;
@@ -205,6 +204,10 @@ public class SqlToRelConverterTest extends TestCase
          * Returns the {@link SqlOperatorTable} to use.
          */
         SqlOperatorTable getOperatorTable();
+
+        MockRelOptSchema createRelOptSchema(
+            SqlValidatorCatalogReader catalogReader,
+            RelDataTypeFactory typeFactory);
     };
 
     /**
@@ -215,6 +218,7 @@ public class SqlToRelConverterTest extends TestCase
     public static class TesterImpl implements Tester
     {
         private RelOptPlanner planner;
+        private static final boolean Dtbug471Fixed = false;
 
         protected TesterImpl()
         {
@@ -235,9 +239,36 @@ public class SqlToRelConverterTest extends TestCase
             final SqlValidator validator =
                 createValidator(catalogReader, typeFactory);
             final RelOptSchema relOptSchema =
-                new MockRelOptSchema(catalogReader, typeFactory);
+                createRelOptSchema(catalogReader, typeFactory);
             final RelOptConnection relOptConnection =
                 new MockRelOptConnection(relOptSchema);
+            final SqlToRelConverter converter =
+                createSqlToRelConverter(
+                    validator, relOptSchema, relOptConnection, typeFactory);
+            final RelNode rel;
+            if (Dtbug471Fixed) {
+                final SqlNode validatedQuery = validator.validate(sqlQuery);
+                rel = converter.convertQuery(validatedQuery, false, true);
+            } else {
+                rel = converter.convertQuery(sqlQuery, true, true);
+            }
+            Util.post(rel != null, "return != null");
+            return rel;
+        }
+
+        public MockRelOptSchema createRelOptSchema(
+            final SqlValidatorCatalogReader catalogReader,
+            final RelDataTypeFactory typeFactory)
+        {
+            return new MockRelOptSchema(catalogReader, typeFactory);
+        }
+
+        protected SqlToRelConverter createSqlToRelConverter(
+            final SqlValidator validator,
+            final RelOptSchema relOptSchema,
+            final RelOptConnection relOptConnection,
+            final RelDataTypeFactory typeFactory)
+        {
             final SqlToRelConverter converter =
                 new SqlToRelConverter(
                     validator,
@@ -246,9 +277,7 @@ public class SqlToRelConverterTest extends TestCase
                     getPlanner(),
                     relOptConnection,
                     new JavaRexBuilder(typeFactory));
-            final RelNode rel = converter.convertQuery(sqlQuery);
-            Util.post(rel != null, "return != null");
-            return rel;
+            return converter;
         }
 
         protected RelDataTypeFactory createTypeFactory()
@@ -613,13 +642,11 @@ public class SqlToRelConverterTest extends TestCase
             "  w2 as (partition by job order by hiredate rows 3 preceding)," + NL +
             "  w3 as (partition by job order by hiredate range interval '1' second preceding)",
 
-            "ProjectRel(EXPR$0=[SUM($5) OVER (PARTITION BY $2 ORDER BY $4" + NL +
-            "ROWS 2 PRECEDING)], EXPR$1=[SUM($7) OVER (PARTITION BY $2 ORDER BY $4" + NL +
-            "ROWS 2 PRECEDING)], EXPR$2=[SUM($7) OVER (PARTITION BY $2 ORDER BY $4" + NL +
-            "ROWS 3 PRECEDING)])" + NL +
-            "  FilterRel(condition=[>(SUM(-($7, $5)) OVER (PARTITION BY $2 ORDER BY $4" + NL +
-            "ROWS 2 PRECEDING), 999)])" + NL +
-            "    TableAccessRel(table=[[SALES, EMP]])" + NL);
+            TestUtil.fold(new String[] {
+                "ProjectRel(EXPR$0=[SUM($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING)], EXPR$1=[SUM($7) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING)], EXPR$2=[SUM($7) OVER (PARTITION BY $2 ORDER BY $4 ROWS 3 PRECEDING)])",
+                "  FilterRel(condition=[>(SUM(-($7, $5)) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING), 999)])",
+                "    TableAccessRel(table=[[SALES, EMP]])",
+                ""}));
     }
 
     /**
@@ -656,12 +683,10 @@ public class SqlToRelConverterTest extends TestCase
             "from emp" + NL +
             "window w1 as (partition by job order by hiredate rows 2 preceding)",
 
-            "ProjectRel(EXPR$0=[SUM($5) OVER (PARTITION BY $2 ORDER BY $4" + NL +
-            "ROWS 2 PRECEDING)], EXPR$1=[CASE(=(COUNT($5) OVER (PARTITION BY $2 ORDER BY $4" + NL +
-            "ROWS 2 PRECEDING), 0), CAST(null):INTEGER, /(SUM($5) OVER (PARTITION BY $2 ORDER BY $4" + NL +
-            "ROWS 2 PRECEDING), COUNT($5) OVER (PARTITION BY $2 ORDER BY $4" + NL +
-            "ROWS 2 PRECEDING)))])" + NL +
-            "  TableAccessRel(table=[[SALES, EMP]])" + NL);
+            TestUtil.fold(new String[] {
+                "ProjectRel(EXPR$0=[SUM($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING)], EXPR$1=[CASE(=(COUNT($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING), 0), CAST(null):INTEGER, /(SUM($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING), COUNT($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING)))])",
+                "  TableAccessRel(table=[[SALES, EMP]])",
+                ""}));
     }
 
     public void testOverCountStar()
@@ -672,10 +697,10 @@ public class SqlToRelConverterTest extends TestCase
             "from emp" + NL +
             "window w1 as (partition by job order by hiredate rows 2 preceding)",
 
-            "ProjectRel(EXPR$0=[COUNT($5) OVER (PARTITION BY $2 ORDER BY $4" + NL +
-            "ROWS 2 PRECEDING)], EXPR$1=[COUNT() OVER (PARTITION BY $2 ORDER BY $4" + NL +
-            "ROWS 2 PRECEDING)])" + NL +
-            "  TableAccessRel(table=[[SALES, EMP]])" + NL);
+            TestUtil.fold(new String[] {
+                "ProjectRel(EXPR$0=[COUNT($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING)], EXPR$1=[COUNT() OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING)])",
+                "  TableAccessRel(table=[[SALES, EMP]])",
+                ""}));
     }
 
     public void testExplainAsXml() {

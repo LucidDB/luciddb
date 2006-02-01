@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2002-2006 Disruptive Tech
+// Copyright (C) 2005-2006 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -310,7 +310,7 @@ public abstract class FennelWindowRule extends RelOptRule
                 // Look up the aggCall which this expr was translated to.
                 final FennelWindowRel.RexWinAggCall aggCall = aggMap.get(over);
                 assert aggCall != null;
-                assert RelOptUtil.eq(over.getType(), aggCall.getType(), true);
+                assert RelOptUtil.eq("type1", over.getType(), "type2", aggCall.getType(), true);
 
                 // Find the index of the aggCall among all partitions of all
                 // windows.
@@ -319,8 +319,7 @@ public abstract class FennelWindowRule extends RelOptRule
 
                 // Replace expression with a reference to the window slot.
                 final int index = inputFieldCount + aggCallIndex;
-                assert RelOptUtil.eq(
-                    over.getType(), intermediateTypeList.get(index), true);
+                assert RelOptUtil.eq("type1", over.getType(), "type2", intermediateTypeList.get(index), true);
                 return new RexInputRef(index, over.getType());
             }
 
@@ -357,8 +356,7 @@ public abstract class FennelWindowRule extends RelOptRule
         final RexProgram outputProgram;
         if (outCalc == null) {
             outputProgram = builder.getProgram();
-            assert RelOptUtil.eq(
-                outputProgram.getOutputRowType(), winAggRel.getRowType(), true);
+            assert RelOptUtil.eq("type1", outputProgram.getOutputRowType(), "type2", winAggRel.getRowType(), true);
         } else {
             // Merge intermediate program (from winAggRel) with output program
             // (from outCalc).
@@ -366,10 +364,8 @@ public abstract class FennelWindowRule extends RelOptRule
             outputProgram = RexProgramBuilder.mergePrograms(
                 outCalc.getProgram(), intermediateProgram,
                 cluster.getRexBuilder());
-            assert RelOptUtil.eq(
-                outputProgram.getInputRowType(), intermediateRowType, true);
-            assert RelOptUtil.eq(
-                outputProgram.getOutputRowType(), outCalc.getRowType(), true);
+            assert RelOptUtil.eq("type1", outputProgram.getInputRowType(), "type2", intermediateRowType, true);
+            assert RelOptUtil.eq("type1", outputProgram.getOutputRowType(), "type2", outCalc.getRowType(), true);
         }
 
         // Put all these programs together in the final relational expression.

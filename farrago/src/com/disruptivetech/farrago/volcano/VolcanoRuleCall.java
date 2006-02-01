@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2002-2006 Disruptive Tech
+// Copyright (C) 2005-2006 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -62,14 +62,9 @@ public class VolcanoRuleCall extends RelOptRuleCall
     public void transformTo(RelNode rel)
     {
         try {
-            // Check that expression supports the desired convention.
-            if (rel == rels[0]) {
-                return;
-            }
-
-            if (rel instanceof RelSubset || getPlanner().isRegistered(rel)) {
-                return;
-            }
+            // It's possible that rel is a subset or is already registered.
+            // Is there still a point in continuing? Yes, because we might
+            // discover that two sets of expressions are actually equivalent.
 
             // Make sure traits that the new rel doesn't know about are
             // propagated.

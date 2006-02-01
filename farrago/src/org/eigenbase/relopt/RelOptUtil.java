@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2002-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -443,13 +443,14 @@ public abstract class RelOptUtil
         RelNode rel)
     {
         RelDataType inputType = rel.getRowType();
+        RelDataTypeField [] inputFields = inputType.getFields();
+        int n = inputFields.length;
 
-        int n = outputType.getFieldList().size();
+        RelDataTypeField [] outputFields = outputType.getFields();
+        assert outputFields.length == n;
+
         RexNode [] renameExps = new RexNode[n];
         String [] renameNames = new String[n];
-
-        RelDataTypeField [] inputFields = inputType.getFields();
-        RelDataTypeField [] outputFields = outputType.getFields();
 
         final RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
         for (int i = 0; i < n; ++i) {
@@ -628,7 +629,104 @@ public abstract class RelOptUtil
         joinFieldOrdinals[1] = rightFieldAccess.getIndex() - leftFieldCount;
         return true;
     }
+    
+    /**
+     * Splits out the equi-join components of a join condition, and returns
+     * what's left.
+     * 
+     * For example, given the condition
+     * 
+     * <blockquote><code>L.A = R.X
+     * AND L.B = L.C
+     * AND (L.D = 5 OR L.E = R.Y)</code></blockquote>
+     * 
+     * returns<ul>
+     * <li>leftKeys = {A}
+     * <li>rightKeys = {X}
+     * <li>rest = L.B = L.C AND (L.D = 5 OR L.E = R.Y)</li>
+     * </ul>
+     * 
+     * 
+     * @param condition Join condition
+     * @param leftKeys The ordinals of the fields from the left input which 
+     *                 equi-join keys
+     * @param rightKeys The ordinals of the fields from the right input which 
+     *                 are equi-join keys
+     * @return What's left
+     */ 
+    public static RexNode splitJoinCondition(
+        RelNode left,
+        RelNode right,
+        RexNode condition,
+        List<Integer> leftKeys,
+        List<Integer> rightKeys)
+    {
+        List<RexNode> restList = new ArrayList<RexNode>();
+        splitJoinCondition(
+            left.getRowType().getFields().length,
+            condition,
+            leftKeys,
+            rightKeys,
+            restList);
+        // Convert the remainders into a list.
+        switch (restList.size()) {
+        case 0:
+            return null;
+        case 1:
+            return restList.get(0);
+        default:
+            return left.getCluster().getRexBuilder().makeCall(
+                SqlStdOperatorTable.andOperator,
+                (RexNode[]) restList.toArray(
+                    new RexNode[restList.size()]));
+        }
+    }
 
+    private static void splitJoinCondition(
+        final int leftFieldCount,
+        RexNode condition,
+        List<Integer> leftKeys,
+        List<Integer> rightKeys,
+        List<RexNode> nonEquiList)
+    {
+        if (condition instanceof RexCall) {
+            RexCall call = (RexCall) condition;
+            if (call.getOperator() == SqlStdOperatorTable.andOperator) {
+                for (RexNode operand : call.getOperands()) {
+                    splitJoinCondition(leftFieldCount, operand, leftKeys,
+                        rightKeys, nonEquiList);
+                }
+                return;
+            }
+            if (call.getOperator() == SqlStdOperatorTable.equalsOperator) {
+                final RexNode[] operands = call.getOperands();
+                if (operands[0] instanceof RexInputRef &&
+                    operands[1] instanceof RexInputRef) {
+                    RexInputRef op0 = (RexInputRef) operands[0];
+                    RexInputRef op1 = (RexInputRef) operands[1];
+                    if (op0.getIndex() < leftFieldCount &&
+                        op1.getIndex() >= leftFieldCount) {
+                        // Arguments were of form 'leftField = rightField'
+                        leftKeys.add(op0.getIndex());
+                        rightKeys.add(op1.getIndex() - leftFieldCount);
+                        return;
+                    }
+                    if (op1.getIndex() < leftFieldCount &&
+                        op0.getIndex() >= leftFieldCount) {
+                        // Arguments were of form 'rightField = leftField'
+                        leftKeys.add(op1.getIndex());
+                        rightKeys.add(op0.getIndex() - leftFieldCount);
+                        return;
+                    }
+                }
+                // Arguments were not field references, one from each side, so
+                // we fail. Fall through.
+            }
+        }
+        // Add this condition to the list of non-equi-join conditions.
+        nonEquiList.add(condition);
+    }
+    
     public static void registerAbstractRels(RelOptPlanner planner)
     {
         AggregateRel.register(planner);
@@ -719,22 +817,26 @@ public abstract class RelOptUtil
     /**
      * Returns whether two types are equal using '='.
 
+     * @param desc1
      * @param type1 First type
+     * @param desc2
      * @param type2 Second type
      * @param fail Whether to assert if they are not equal
      *
      * @return Whether the types are equal
      */
     public static boolean eq(
-        RelDataType type1,
-        RelDataType type2,
+        final String desc1, RelDataType type1,
+        final String desc2, RelDataType type2,
         boolean fail)
     {
         if (type1 != type2) {
             assert !fail :
                 "type mismatch:" + NL +
-                "  type1=" + type1.getFullTypeString() + NL +
-                "  type2=" + type2.getFullTypeString();
+                desc1 + ":" + NL +
+                type1.getFullTypeString() + NL +
+                desc2 + ":" + NL +
+                type2.getFullTypeString();
             return false;
         }
         return true;
@@ -745,22 +847,28 @@ public abstract class RelOptUtil
      * {@link #areRowTypesEqual(RelDataType, RelDataType, boolean)}.
      * Both types must not be null.
 
+     * @param desc1 Description of role of first type
      * @param type1 First type
+     * @param desc2 Description of role of second type
      * @param type2 Second type
      * @param fail Whether to assert if they are not equal
      *
      * @return Whether the types are equal
      */
     public static boolean equal(
+        final String desc1,
         RelDataType type1,
+        final String desc2,
         RelDataType type2,
         boolean fail)
     {
         if (!areRowTypesEqual(type1, type2, false)) {
             assert !fail :
-                "type mismatch:" + NL +
-                "  type1=" + type1.getFullTypeString() + NL +
-                "  type2=" + type2.getFullTypeString();
+                "Type mismatch:" + NL +
+                desc1 + ":" + NL +
+                type1.getFullTypeString() + NL +
+                desc2 + ":" + NL +
+                type2.getFullTypeString();
             return false;
         }
         return true;
@@ -836,6 +944,21 @@ public abstract class RelOptUtil
             rexBuilder.makeCall(eqOp, x, y)};
         return rexBuilder.makeCall(
             SqlStdOperatorTable.caseOperator, whenThenElse);
+    }
+
+    /**
+     * Converts a relational expression to a string.
+     */
+    public static String toString(final RelNode rel)
+    {
+        final StringWriter sw = new StringWriter();
+        final RelOptPlanWriter planWriter =
+            new RelOptPlanWriter(new PrintWriter(sw));
+        planWriter.setIdPrefix(false);
+        rel.explain(planWriter);
+        planWriter.flush();
+        String string = sw.toString();
+        return string;
     }
 
     //~ Inner Classes ---------------------------------------------------------

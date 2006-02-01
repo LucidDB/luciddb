@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2002-2006 Disruptive Tech
+// Copyright (C) 2005-2006 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -152,7 +152,7 @@ public class Rex2CalcPlanTest extends FarragoTestCase
                 testContext.stmt.getRelOptSchema(), testContext.env,
                 testContext.stmt.getPlanner(),
                 testContext.stmt, rexBuilder);
-        RelNode rootRel = converter.convertQuery(sqlQuery);
+        RelNode rootRel = converter.convertQuery(sqlQuery, true, true);
         assertTrue(rootRel != null);
 
         ProjectRel project = (ProjectRel) rootRel;
