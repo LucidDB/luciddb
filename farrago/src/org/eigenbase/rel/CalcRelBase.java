@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -54,14 +54,18 @@ public abstract class CalcRelBase extends SingleRel
 
     public boolean isValid(boolean fail)
     {
-        if (!RelOptUtil.eq(
-            program.getInputRowType(), getChild().getRowType(), true)) {
+        if (!RelOptUtil.equal(
+            "program's input type", program.getInputRowType(),
+            "child's output type", getChild().getRowType(),
+            fail)) {
             return false;
         }
-        if (!RelOptUtil.equal(program.getOutputRowType(), rowType, true)) {
+        if (!RelOptUtil.equal(
+            "rowtype of program", program.getOutputRowType(),
+            "declared rowtype of rel", rowType, fail)) {
             return false;
         }
-        if (!program.isValid(true)) {
+        if (!program.isValid(fail)) {
             return false;
         }
         return true;

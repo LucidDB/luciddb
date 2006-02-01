@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2004-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -33,6 +33,7 @@ import org.eigenbase.util.Util;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Collections;
 
 /**
  * An operator describing a window specification.
@@ -179,7 +180,7 @@ public class SqlWindowOperator extends SqlOperator {
     {
         assert call.getOperator() == this;
         final SqlWindow window = (SqlWindow) call;
-        final SqlCall windowFunc = window.getWindowFunction();
+        final SqlCall windowCall = window.getWindowCall();
         SqlNode [] operands = call.operands;
         SqlIdentifier refName =
                 (SqlIdentifier) operands[SqlWindow.RefName_OPERAND];
@@ -222,8 +223,8 @@ public class SqlWindowOperator extends SqlOperator {
                 upperBound = operands[SqlWindow.UpperBound_OPERAND];
 
         boolean triggerFunction = false;
-        if (null != windowFunc) {
-            if (windowFunc.isName("RANK") || windowFunc.isName("DENSE_RANK")) {
+        if (null != windowCall) {
+            if (windowCall.isName("RANK") || windowCall.isName("DENSE_RANK")) {
                 triggerFunction = true;
             }
         }
@@ -412,6 +413,25 @@ public class SqlWindowOperator extends SqlOperator {
             }
         }
         return false;
+    }
+
+    public SqlWindow createCurrentRowWindow(final String columnName)
+    {
+        return createCall(
+            null,
+            null,
+            new SqlNodeList(SqlParserPos.ZERO),
+            new SqlNodeList(
+                Collections.singletonList(
+                    new SqlIdentifier(
+                        new String[] {columnName},
+                        SqlParserPos.ZERO)),
+                SqlParserPos.ZERO),
+            true,
+            SqlParserPos.ZERO,
+            createCurrentRow(SqlParserPos.ZERO),
+            createCurrentRow(SqlParserPos.ZERO),
+            SqlParserPos.ZERO);
     }
 
     /**

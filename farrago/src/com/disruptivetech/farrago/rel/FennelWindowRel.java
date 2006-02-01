@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2004-2006 Disruptive Tech
+// Copyright (C) 2005-2006 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -107,7 +107,8 @@ public class FennelWindowRel extends FennelSingleRel
         assert !RexOver.containsOver(outputProgram);
         assert RelOptUtil.getFieldTypes(outputProgram.getInputRowType()).
             equals(outputProgramInputTypes(child.getRowType(), windows));
-        assert RelOptUtil.eq(outputProgram.getOutputRowType(),rowType, true);
+        assert RelOptUtil.eq(
+            "type1", outputProgram.getOutputRowType(), "type2", rowType, true);
         this.rowType = rowType;
         this.outputProgram = outputProgram;
         this.inputProgram = inputProgram;
@@ -211,7 +212,7 @@ public class FennelWindowRel extends FennelSingleRel
 
         // Generate output program.
         RexToCalcTranslator translator =
-            new RexToCalcTranslator(getCluster().getRexBuilder());
+            new RexToCalcTranslator(getCluster().getRexBuilder(), this);
         String program = translator.generateProgram(
             outputProgram.getInputRowType(), outputProgram);
         windowStreamDef.setOutputProgram(program);
@@ -246,15 +247,10 @@ public class FennelWindowRel extends FennelSingleRel
             // 10 preceding and 2 preceding: (8, -2)
             // 3 preceding and 2 following: (5, 2)
             // 2 following and 6 following: (4, 6)
-            long[] upper = getRangeOffset(window.upperBound, "PRECEDING");
-            long[] lower = getRangeOffset(window.lowerBound, "FOLLOWING");
-            long offset = upper[1] * upper[0];
-            if (offset == 0 && lower[1] == -1) {
-                lower[1] = -lower[1];
-                offset = lower[1] * lower[0];
-            }
-            windowDef.setOffset((int) offset);
-            windowDef.setRange((lower[1] * lower[0] + upper[1] * upper[0]) + "");
+            long[] offsetAndRange =
+                getOffsetAndRange(window.lowerBound, window.upperBound);
+            windowDef.setOffset((int) offsetAndRange[0]);
+            windowDef.setRange(offsetAndRange[1] + "");
 
             RelDataType inputRowType = getChild().getRowType();
             assert inputRowType == inputProgram.getInputRowType();
@@ -365,7 +361,22 @@ public class FennelWindowRel extends FennelSingleRel
         return nodes;
     }
 
-    private long[] getRangeOffset(SqlNode node, String strCheck)
+    public static long[] getOffsetAndRange(
+        final SqlNode lowerBound,
+        final SqlNode upperBound)
+    {
+        long[] upper = getRangeOffset(upperBound, "PRECEDING");
+        long[] lower = getRangeOffset(lowerBound, "FOLLOWING");
+        long offset = upper[1] * upper[0];
+        if (offset == 0 && lower[1] == -1) {
+            lower[1] = -lower[1];
+            offset = lower[1] * lower[0];
+        }
+        final long range = (lower[1] * lower[0] + upper[1] * upper[0]);
+        return new long[] {offset, range};
+    }
+
+    private static long[] getRangeOffset(SqlNode node, String strCheck)
     {
         long[] out = new long[2];
         long val = 0;
@@ -465,7 +476,7 @@ public class FennelWindowRel extends FennelSingleRel
                 if (upperBound != null) {
                     buf.append("between ");
                     buf.append(lowerBound.toString());
-                    buf.append("between ");
+                    buf.append(" and ");
                 } else {
                     buf.append(lowerBound.toString());
                 }

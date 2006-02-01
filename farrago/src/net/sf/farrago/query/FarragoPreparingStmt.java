@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2003-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2003-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -496,7 +496,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         getSqlToRelConverter();
         if (analyzedSql.paramRowType == null) {
             // query expression
-            RelNode rootRel = sqlToRelConverter.convertValidatedQuery(sqlNode);
+            RelNode rootRel =
+                sqlToRelConverter.convertQuery(sqlNode, false, true);
             analyzedSql.setResultType(rootRel.getRowType());
             analyzedSql.paramRowType = getParamRowType();
         } else {
@@ -601,7 +602,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         return rootRel;
     }
 
-    RelNode flattenTypes(RelNode rootRel, boolean restructure)
+    protected RelNode flattenTypes(RelNode rootRel, boolean restructure)
     {
         RelStructuredTypeFlattener typeFlattener =
             new RelStructuredTypeFlattener(
@@ -664,7 +665,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             throw Util.newInternal(e,
                 "Error while parsing view definition:  " + queryString);
         }
-        RelNode relNode = sqlToRelConverter.convertQuery(sqlQuery);
+        RelNode relNode = sqlToRelConverter.convertQuery(sqlQuery, true, false);
         --expansionDepth;
         return relNode;
     }

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -68,7 +68,7 @@ public abstract class JoinRelBase extends AbstractRelNode
             || (joinType == JoinType.FULL)); // RIGHT not allowed
         this.joinType = joinType;
     }
-    
+
     public RexNode [] getChildExps()
     {
         return new RexNode [] { condition };
@@ -147,35 +147,19 @@ public abstract class JoinRelBase extends AbstractRelNode
         }
     }
 
-    public int switchJoinType(int joinType)
-    {
-        switch (joinType) {
-        case JoinRel.JoinType.LEFT:
-            return JoinRel.JoinType.RIGHT;
-        case JoinRel.JoinType.RIGHT:
-            return JoinRel.JoinType.LEFT;
-        case JoinRel.JoinType.INNER:
-        case JoinRel.JoinType.FULL:
-            return joinType;
-        default:
-            throw Util.newInternal("invalid join type " + joinType);
-        }
-    }
-
     protected RelDataType deriveRowType()
     {
         return deriveJoinRowType(
-            left, right, joinType, getCluster().getTypeFactory());
+            left.getRowType(), right.getRowType(), joinType,
+            getCluster().getTypeFactory());
     }
 
-    public static RelDataType deriveJoinRowType(RelNode left,
-        RelNode right,
+    public static RelDataType deriveJoinRowType(
+        RelDataType leftType,
+        RelDataType rightType,
         int joinType,
         RelDataTypeFactory typeFactory)
     {
-        RelDataType leftType = left.getRowType();
-        RelDataType rightType = right.getRowType();
-
         switch (joinType) {
         case JoinType.LEFT:
             rightType =

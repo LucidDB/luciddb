@@ -170,14 +170,18 @@ Error: java.lang.AssertionError: null (state=,code=0)
 0: jdbc:farrago:> -- test IS A SET
 0: jdbc:farrago:> explain plan for values multiset[1] is a set;
 Error: java.lang.AssertionError: type mismatch:
-  type1=BOOLEAN NOT NULL
-  type2=BOOLEAN (state=,code=0)
+type1:
+BOOLEAN NOT NULL
+type2:
+BOOLEAN (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test MEMBER OF
 0: jdbc:farrago:> explain plan for values 632 MEMBER OF multiset[2];
 Error: java.lang.AssertionError: type mismatch:
-  type1=BOOLEAN NOT NULL
-  type2=BOOLEAN (state=,code=0)
+type1:
+BOOLEAN NOT NULL
+type2:
+BOOLEAN (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- explain plan for select fusion(multiset[3]) from emps;

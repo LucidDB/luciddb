@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2002-2006 Disruptive Tech
+// Copyright (C) 2005-2006 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -209,91 +209,98 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
     }
 
 
-    //~ Inner Classes ---------------------------------------------------------
-
-    /**
-     * TestOJRexImplementorTable extends FarragoOJRexImplementorTable
-     * and adds the JPLUS operator.
-     */
-    public static class TestOJRexImplementorTable
-        extends FarragoOJRexImplementorTable
+    public static void registerTestJavaOps(
+        FarragoOJRexImplementorTable implementorTable,
+        final SqlStdOperatorTable opTab)
     {
-        public TestOJRexImplementorTable(SqlStdOperatorTable opTab)
-        {
-            super(opTab);
-        }
+        SqlFunction jplusFunc =
+            new SqlFunction("JPLUS", SqlKind.Function,
+                SqlTypeStrategies.rtiLeastRestrictive,
+                SqlTypeStrategies.otiFirstKnown,
+                SqlTypeStrategies.otcNumericX2,
+                SqlFunctionCategory.Numeric);
+        opTab.register(jplusFunc);
 
-        protected void initStandard(final SqlStdOperatorTable opTab)
-        {
-            super.initStandard(opTab);
+        implementorTable.registerOperator(
+            jplusFunc,
+            implementorTable.get(SqlStdOperatorTable.plusOperator));
 
-            SqlFunction jplusFunc =
-                new SqlFunction("JPLUS", SqlKind.Function,
-                    SqlTypeStrategies.rtiLeastRestrictive,
-                    SqlTypeStrategies.otiFirstKnown,
-                    SqlTypeStrategies.otcNumericX2,
-                    SqlFunctionCategory.Numeric);
-            opTab.register(jplusFunc);
-
-            registerOperator(
-                jplusFunc,
-                get(SqlStdOperatorTable.plusOperator));
-
-            SqlFunction jrowFunc =
-                new SqlFunction("JROW", SqlKind.Function, null,
-                    SqlTypeStrategies.otiFirstKnown,
-                    SqlTypeStrategies.otcNumericX2,
-                    SqlFunctionCategory.Numeric)
+        SqlFunction jrowFunc =
+            new SqlFunction("JROW", SqlKind.Function, null,
+                SqlTypeStrategies.otiFirstKnown,
+                SqlTypeStrategies.otcNumericX2,
+                SqlFunctionCategory.Numeric)
+            {
+                public RelDataType inferReturnType(
+                    SqlOperatorBinding opBinding)
                 {
-                    public RelDataType inferReturnType(
-                        SqlOperatorBinding opBinding)
-                    {
-                        assert (opBinding.getOperandCount() == 2);
-                        String [] names = new String [] { "first", "second" };
-                        return opBinding.getTypeFactory().createStructType(
-                            opBinding.collectOperandTypes(), names);
-                    }
-                };
-            opTab.register(jrowFunc);
+                    assert (opBinding.getOperandCount() == 2);
+                    String [] names = new String [] { "first", "second" };
+                    return opBinding.getTypeFactory().createStructType(
+                        opBinding.collectOperandTypes(), names);
+                }
+            };
+        opTab.register(jrowFunc);
 
-            OJRexImplementor jrowFuncImpl =
-                new FarragoOJRexImplementor() {
-                    public Expression implementFarrago(
-                        FarragoRexToOJTranslator trans,
-                        RexCall call,
-                        Expression [] operands)
-                    {
-                        // NOTE: this is untested and is probably
-                        // never called during this test case.
-                        RelDataType rowType = call.getType();
+        OJRexImplementor jrowFuncImpl =
+            new FarragoOJRexImplementor() {
+                public Expression implementFarrago(
+                    FarragoRexToOJTranslator trans,
+                    RexCall call,
+                    Expression [] operands)
+                {
+                    // NOTE: this is untested and is probably
+                    // never called during this test case.
+                    RelDataType rowType = call.getType();
 
-                        Variable rowVar = trans.createScratchVariable(rowType);
+                    Variable rowVar = trans.createScratchVariable(rowType);
 
-                        trans.addStatement(
-                            new ExpressionStatement(
-                                new AssignmentExpression(
-                                    new ArrayAccess(
-                                        rowVar,
-                                        new Literal(Literal.INTEGER, "0")),
-                                    AssignmentExpression.EQUALS,
-                                    operands[0])));
+                    trans.addStatement(
+                        new ExpressionStatement(
+                            new AssignmentExpression(
+                                new ArrayAccess(
+                                    rowVar,
+                                    new Literal(Literal.INTEGER, "0")),
+                                AssignmentExpression.EQUALS,
+                                operands[0])));
 
-                        trans.addStatement(
-                            new ExpressionStatement(
-                                new AssignmentExpression(
-                                    new ArrayAccess(
-                                        rowVar,
-                                        new Literal(Literal.INTEGER, "1")),
-                                    AssignmentExpression.EQUALS,
-                                    operands[1])));
+                    trans.addStatement(
+                        new ExpressionStatement(
+                            new AssignmentExpression(
+                                new ArrayAccess(
+                                    rowVar,
+                                    new Literal(Literal.INTEGER, "1")),
+                                AssignmentExpression.EQUALS,
+                                operands[1])));
 
-                        return rowVar;
-                    }
-                };
+                    return rowVar;
+                }
+            };
 
-            registerOperator(jrowFunc, jrowFuncImpl);
-        }
+        implementorTable.registerOperator(jrowFunc, jrowFuncImpl);
     }
+
+    public static void registerTestCppOps(final SqlStdOperatorTable opTab)
+    {
+        SqlFunction cppFunc =
+            new SqlFunction(
+                "CPLUS", SqlKind.Function,
+                SqlTypeStrategies.rtiLeastRestrictive,
+                SqlTypeStrategies.otiFirstKnown,
+                SqlTypeStrategies.otcNumericX2,
+                SqlFunctionCategory.Numeric);
+        opTab.register(cppFunc);
+
+        CalcRexImplementorTableImpl cImplTab =
+            new CalcRexImplementorTableImpl(
+                CalcRexImplementorTableImpl.std());
+        CalcRexImplementorTableImpl.setThreadInstance(cImplTab);
+        cImplTab.register(
+            cppFunc,
+            cImplTab.get(SqlStdOperatorTable.plusOperator));
+    }
+
+    //~ Inner Classes ---------------------------------------------------------
 
     /**
      * TestDbSessionFactory extends FarragoDefaultSessionFactory and
@@ -302,7 +309,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
     private static class TestDbSessionFactory
         extends FarragoDbSessionFactory
     {
-        private OJRexImplementorTable ojRexImplementor;
+        private final OJRexImplementorTable ojRexImplementor;
 
         TestDbSessionFactory(OJRexImplementorTable ojRexImplementor)
         {
@@ -367,12 +374,13 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
         //~ Static fields/initializers ----------------------------------------
 
         static SqlStdOperatorTable opTab;
-        static TestOJRexImplementorTable testOjRexImplementor;
+        static FarragoOJRexImplementorTable testOjRexImplementor;
 
         static {
             opTab = new SqlStdOperatorTable();
             opTab.init();
-            testOjRexImplementor = new TestOJRexImplementorTable(opTab);
+            testOjRexImplementor = new FarragoOJRexImplementorTable(opTab);
+            registerTestJavaOps(testOjRexImplementor, opTab);
 
             SqlFunction cppFunc =
                 new SqlFunction("CPLUS", SqlKind.Function,

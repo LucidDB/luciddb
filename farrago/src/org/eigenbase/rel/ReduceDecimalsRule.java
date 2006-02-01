@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2002-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -146,7 +146,7 @@ public class ReduceDecimalsRule extends RelOptRule
                 RexNode treeProject = project.accept(treeBuilder);
                 RexNode newProject = translator.reduceDecimals(treeProject, rexBuilder);
                 RexLocalRef result = progBuilder.registerInput(newProject);
-                progBuilder.addProject(result.getIndex());
+                progBuilder.addProject(result.getIndex(), null);
             }
             RexLocalRef condition = program.getCondition();
             if (condition != null) {

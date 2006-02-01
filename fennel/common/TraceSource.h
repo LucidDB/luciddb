@@ -128,6 +128,14 @@ public:
         return name;
     }
 
+    /**
+     * Sets the name of this source. Useful to construct dynamic names for
+     * fine-grained filtering.
+     */
+    void setTraceSourceName(std::string const& n) 
+    {
+        name = n;
+    }
 
     TraceLevel getMinimumTraceLevel() const
     {

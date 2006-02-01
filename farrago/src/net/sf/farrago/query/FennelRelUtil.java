@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2003-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2003-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,8 +26,6 @@ import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
-import net.sf.farrago.fem.med.*;
-import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.fennel.tuple.FennelStandardTypeDescriptor;
 import net.sf.farrago.util.*;
@@ -40,7 +38,6 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.util.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sarg.*;
 
@@ -162,7 +159,7 @@ public abstract class FennelRelUtil
     }
 
     /**
-     * Generates a FemTupleProjection.
+     * Generates a FemTupleProjection from an array of Integers.
      *
      * @param repos the repos for storing transient objects
      * @param projection the projection to generate
@@ -173,13 +170,28 @@ public abstract class FennelRelUtil
         FarragoMetadataFactory repos,
         Integer [] projection)
     {
+        return createTupleProjection(repos, Arrays.asList(projection));
+    }
+
+    /**
+     * Generates a FemTupleProjection from a list of Integers.
+     *
+     * @param repos the repos for storing transient objects
+     * @param projection the projection to generate
+     *
+     * @return generated FemTupleProjection
+     */
+    public static FemTupleProjection createTupleProjection(
+        FarragoMetadataFactory repos,
+        List<Integer> projection)
+    {
         FemTupleProjection tupleProj = repos.newFemTupleProjection();
 
-        for (int i = 0; i < projection.length; ++i) {
+        for (Integer p : projection) {
             FemTupleAttrProjection attrProj =
                 repos.newFemTupleAttrProjection();
             tupleProj.getAttrProjection().add(attrProj);
-            attrProj.setAttributeIndex(projection[i].intValue());
+            attrProj.setAttributeIndex(p);
         }
         return tupleProj;
     }
@@ -541,7 +553,6 @@ public abstract class FennelRelUtil
             cluster,
             inputs.toArray(new RelNode[0]),
             true);
-        RelOptRule.mergeTraitsOnto(unionRel, callTraits);
         return unionRel;
     }
 
@@ -593,9 +604,7 @@ public abstract class FennelRelUtil
 
         // Generate a one-row relation producing the key to search for.
         OneRowRel oneRowRel = new OneRowRel(cluster);
-        RelOptRule.mergeTraitsOnto(oneRowRel, callTraits);
         RelNode keyRel = ProjectRel.create(oneRowRel, searchExps, null);
-        RelOptRule.mergeTraitsOnto(keyRel, callTraits);
 
         // For dynamic parameters, add a filter to remove nulls, since they can
         // never match in a comparison.  FIXME:  This isn't quite right,
@@ -609,7 +618,6 @@ public abstract class FennelRelUtil
         // Generate code to cast the keys to the index column type.
         RelNode castRel = RelOptUtil.createCastRel(
             keyRel, keyRowType, false);
-        RelOptRule.mergeTraitsOnto(castRel, callTraits);
         return castRel;
     }
 

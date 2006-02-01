@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2002-2006 Disruptive Tech
+// Copyright (C) 2005-2006 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -77,9 +77,12 @@ public class FennelCalcRel extends FennelSingleRel
         this.rowType = rowType;
         assert program.isValid(true);
         assert RelOptUtil.eq(
-            program.getInputRowType(), child.getRowType(), true);
+            "program's input type", program.getInputRowType(),
+            "child's output type", child.getRowType(), true);
         assert RelOptUtil.equal( // TODO: use stronger 'eq'
-            program.getOutputRowType(), rowType, true);
+            "program's output type", program.getOutputRowType(),
+            "fennelCalcRel's output rowtype", rowType,
+            true);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -160,7 +163,8 @@ public class FennelCalcRel extends FennelSingleRel
         
         calcStream.setFilter(program.getCondition() != null);
         final RexToCalcTranslator translator =
-            new RexToCalcTranslator(getCluster().getRexBuilder());
+            new RexToCalcTranslator(
+                getCluster().getRexBuilder(), this);
         final String program = translator.generateProgram(
             getChild().getRowType(),
             getProgram());

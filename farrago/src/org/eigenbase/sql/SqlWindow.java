@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2004-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -74,7 +74,7 @@ public class SqlWindow extends SqlCall
      */
     public static final int UpperBound_OPERAND = 6;
 
-    private SqlCall WindowFunction = null;
+    private SqlCall windowCall = null;
 
     /**
      * Creates a window.
@@ -154,14 +154,14 @@ public class SqlWindow extends SqlCall
         return (SqlIdentifier) operands[RefName_OPERAND];
     }
 
-    public void setWindowFunction(SqlCall func)
+    public void setWindowCall(SqlCall windowCall)
     {
-        WindowFunction = func;
+        this.windowCall = windowCall;
     }
 
-    public SqlCall getWindowFunction()
+    public SqlCall getWindowCall()
     {
-        return WindowFunction;
+        return windowCall;
     }
 
 
@@ -269,10 +269,6 @@ public class SqlWindow extends SqlCall
             }
         }
         return true;
-    }
-
-    public boolean isWindowFunctionName(String name) {
-        return (null == WindowFunction) ?  false : WindowFunction.isName(name);
     }
 
 }

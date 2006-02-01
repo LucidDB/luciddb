@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -112,7 +112,8 @@ public class FennelPullCorrelatorRel extends FennelDoubleRel
     protected RelDataType deriveRowType()
     {
         return JoinRel.deriveJoinRowType(
-            left, right, JoinRel.JoinType.INNER, getCluster().getTypeFactory());
+            left.getRowType(), right.getRowType(), JoinRel.JoinType.INNER,
+            getCluster().getTypeFactory());
     }
 
     // implement FennelRel
