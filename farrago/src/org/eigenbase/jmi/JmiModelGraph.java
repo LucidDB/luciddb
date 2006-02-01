@@ -74,17 +74,19 @@ public class JmiModelGraph
      * and edges.
      */
     private final Map map;
+
+    private final RefPackage refRootPackage;
     
     /**
      * Creates a new graph based on the contents of a RefPackage
      * and all of its subpackages.
      *
-     * @param refPackage package on which graph is based
+     * @param refRootPackage package on which graph is based
      */
-    public JmiModelGraph(RefPackage refPackage)
+    public JmiModelGraph(RefPackage refRootPackage)
     {
         this(
-            refPackage,
+            refRootPackage,
             new DirectedMultigraph());
     }
 
@@ -223,11 +225,22 @@ public class JmiModelGraph
     {
         return ((JmiAssocEdge) edge).getRefAssoc();
     }
+
+    /**
+     * @return the JMI reflective representation for the root package
+     * represented by this graph
+     */
+    public RefPackage getRefRootPackage()
+    {
+        return refRootPackage;
+    }
     
-    private JmiModelGraph(RefPackage refPackage, DirectedGraph combinedGraph)
+    private JmiModelGraph(
+        RefPackage refRootPackage, DirectedGraph combinedGraph)
     {
         super(combinedGraph);
-        
+
+        this.refRootPackage = refRootPackage;
         this.combinedGraph = combinedGraph;
         
         inheritanceGraph = new DirectedMultigraph();
@@ -239,8 +252,8 @@ public class JmiModelGraph
             new UnmodifiableDirectedGraph(assocGraph);
         
         map = new HashMap();
-        addMofPackage((MofPackage) refPackage.refMetaObject());
-        addRefPackage(refPackage);
+        addMofPackage((MofPackage) refRootPackage.refMetaObject());
+        addRefPackage(refRootPackage);
     }
 
     private void addMofPackage(MofPackage mofPackage)

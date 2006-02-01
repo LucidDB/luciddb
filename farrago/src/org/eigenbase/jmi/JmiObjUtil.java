@@ -123,13 +123,12 @@ public abstract class JmiObjUtil
         assert (StructuralFeature.class.isAssignableFrom(filterClass));
         List list = new ArrayList();
         MofClass mofClass = (MofClass) refClass.refMetaObject();
-        List superList = mofClass.allSupertypes();
-        Iterator iter = superList.iterator();
-        while (iter.hasNext()) {
-            MofClass mofSuper = (MofClass) iter.next();
-            addFeatures(list, mofSuper, filterClass, includeMultiValued);
+        List superTypes = new ArrayList(mofClass.allSupertypes());
+        superTypes.add(mofClass);
+        for (Object obj : superTypes) {
+            MofClass featuredClass = (MofClass) obj;
+            addFeatures(list, featuredClass, filterClass, includeMultiValued);
         }
-        addFeatures(list, mofClass, filterClass, includeMultiValued);
         return list;
     }
 
@@ -244,6 +243,37 @@ public abstract class JmiObjUtil
     {
         return getJavaInterfaceForProxy(
             refClass.getClass(),
+            "$Impl");
+    }
+
+    /**
+     * Finds the Java interface corresponding to a JMI association
+     *
+     * @param refAssoc the JMI association
+     *
+     * @return corresponding Java interface
+     */
+    public static Class getJavaInterfaceForRefAssoc(RefAssociation refAssoc)
+        throws ClassNotFoundException
+    {
+        return getJavaInterfaceForProxy(
+            refAssoc.getClass(),
+            "$Impl");
+    }
+
+    /**
+     * Finds the Java interface corresponding to object instances of a JMI
+     * class.
+     *
+     * @param refClass the JMI class
+     *
+     * @return corresponding Java interface
+     */
+    public static Class getJavaInterfaceForRefObject(RefClass refClass)
+        throws ClassNotFoundException
+    {
+        return getJavaInterfaceForProxy(
+            refClass.getClass(),
             "Class$Impl");
     }
 
@@ -273,7 +303,7 @@ public abstract class JmiObjUtil
         assert (className.endsWith(classSuffix));
         className =
             className.substring(0, className.length() - classSuffix.length());
-        return Class.forName(className);
+        return Class.forName(className, true, proxyClass.getClassLoader());
     }
 
     /**
@@ -346,21 +376,24 @@ public abstract class JmiObjUtil
     /**
      * Constructs the generated name of an accessor method.
      *
-     * @param typedElement TypedElement to be accessed
+     * @param modelElement ModelElement to be accessed
      *
      * @return constructed accessor name
      */
-    public static String getAccessorName(TypedElement typedElement)
+    public static String getAccessorName(ModelElement modelElement)
     {
         TagProvider tagProvider = new TagProvider();
-        String accessorName = tagProvider.getSubstName(typedElement);
-        String prefix = null;
-        if (typedElement.getType().getName().equals("Boolean")) {
-            if (!accessorName.startsWith("is")) {
-                prefix = "is";
+        String accessorName = tagProvider.getSubstName(modelElement);
+        String prefix = "get";
+        if (modelElement instanceof TypedElement) {
+            TypedElement typedElement = (TypedElement) modelElement;
+            if (typedElement.getType().getName().equals("Boolean")) {
+                if (!accessorName.startsWith("is")) {
+                    prefix = "is";
+                } else {
+                    prefix = null;
+                }
             }
-        } else {
-            prefix = "get";
         }
         if (prefix != null) {
             accessorName =
@@ -370,6 +403,18 @@ public abstract class JmiObjUtil
         return accessorName;
     }
 
+    /**
+     * Constructs the generated name of an enum symbol.
+     *
+     * @param enumSymbol name of enumeration symbol
+     *
+     * @return constructed field name
+     */
+    public static String getEnumFieldName(String enumSymbol)
+    {
+        return TagProvider.mapEnumLiteral(enumSymbol);
+    }
+    
     /**
      * Finds the Java class generated for a particular RefClass.
      *

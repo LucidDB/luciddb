@@ -168,7 +168,7 @@ public class ProxyGen
         Iterator iter = refPackage.refAllClasses().iterator();
         while (iter.hasNext()) {
             RefClass refClass = (RefClass) iter.next();
-            Class clazz = JmiUtil.getJavaInterfaceForRefClass(refClass);
+            Class clazz = JmiUtil.getJavaInterfaceForRefObject(refClass);
             genInterfaces.add(clazz);
             javaToJmiMap.put(clazz, refClass);
         }
@@ -186,7 +186,7 @@ public class ProxyGen
         Iterator iter = refPackage.refAllClasses().iterator();
         while (iter.hasNext()) {
             RefClass refClass = (RefClass) iter.next();
-            Class clazz = JmiUtil.getJavaInterfaceForRefClass(refClass);
+            Class clazz = JmiUtil.getJavaInterfaceForRefObject(refClass);
             baseInterfaces.add(clazz);
             javaToJmiMap.put(clazz, refClass);
         }
