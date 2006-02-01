@@ -187,6 +187,9 @@ SqlStrCmp(char const * const str1,
               int str2LenBytes,
               int trimchar = ' ')
 {
+    assert(str1LenBytes >= 0);
+    assert(str2LenBytes >= 0);
+    
     if (CodeUnitBytes == MaxCodeUnitsPerCodePoint) {
         if (CodeUnitBytes == 1) {
             char const * start = str1;
