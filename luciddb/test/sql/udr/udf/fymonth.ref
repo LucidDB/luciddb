@@ -1,3 +1,5 @@
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/fymonth.sql#2 $
+0: jdbc:luciddb:> -- Test queries for FYMonth UDF
 0: jdbc:luciddb:> set schema 'udftest';
 0: jdbc:luciddb:> set path 'udftest';
 0: jdbc:luciddb:> 
@@ -32,7 +34,6 @@
 +-----+------------+----------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- in expressions
-0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select fm, fymonth(datecol, fm) + fymonth(tscol, fm)
 . . . . . . . . > from data_source
 . . . . . . . . > order by 1;

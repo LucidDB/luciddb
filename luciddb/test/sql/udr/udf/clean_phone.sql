@@ -1,8 +1,9 @@
+-- $Id$
+-- Test queries for CleanPhone UDF
 set schema 'udftest';
 set path 'udftest';
 
 -- define CleanPhone functions
-
 create function clean_phone(str varchar(128))
 returns varchar(128)
 language java
@@ -40,7 +41,6 @@ select * from fmtphone
 order by 1;
 
 -- clean_phone in expressions
-
 select phone1 || clean_phone(phone2), phone4 || clean_phone(phone3, 0, true)
 from fmtphone
 order by 1;

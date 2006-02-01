@@ -1,0 +1,72 @@
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/fy_year.sql#1 $
+0: jdbc:luciddb:> -- Tests for FYYear UDF
+0: jdbc:luciddb:> set schema 'udftest';
+0: jdbc:luciddb:> set path 'udftest';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- define functions
+0: jdbc:luciddb:> create function fy_year(dt date, fm integer)
+. . . . . . . . > returns integer
+. . . . . . . . > language java
+. . . . . . . . > specific fy_year_date
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.applib.FYYear.FunctionExecute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function fy_year(ts timestamp, fm integer)
+. . . . . . . . > returns integer
+. . . . . . . . > language java
+. . . . . . . . > specific fy_year_timestamp
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.applib.FYYear.FunctionExecute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values fy_year(date'2006-12-30', 2);
++---------+
+| EXPR$0  |
++---------+
+| 2007    |
++---------+
+0: jdbc:luciddb:> values fy_year(timestamp'1800-2-25 1:1:11', 4);
++---------+
+| EXPR$0  |
++---------+
+| 1800    |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- these should fail
+0: jdbc:luciddb:> values fy_year(date'1000-4-4', 1);
++---------+
+| EXPR$0  |
++---------+
+| 1000    |
++---------+
+0: jdbc:luciddb:> values fy_year(2005-12-1, 9);
+Error: From line 1, column 8 to line 1, column 28: No match found for function signature FY_YEAR(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create view with reference to fy_year
+0: jdbc:luciddb:> create view fyy(fm, fromdt, fromts) as
+. . . . . . . . > select fm, fy_year(datecol, fm), fy_year(tscol, fm)
+. . . . . . . . > from data_source;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from fyy
+. . . . . . . . > order by 1;
++-----+---------+---------+
+| FM  | FROMDT  | FROMTS  |
++-----+---------+---------+
+| 1   | 1845    | 2010    |
+| 2   | 2006    | 2002    |
+| 10  | 1993    | 2165    |
++-----+---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- in expressions
+0: jdbc:luciddb:> select fm, fy_year(datecol, fm) * fm + fy_year(tscol, fm)/fm
+. . . . . . . . > from data_source
+. . . . . . . . > order by 1;
++-----+---------+
+| FM  | EXPR$1  |
++-----+---------+
+| 1   | 3855    |
+| 2   | 5013    |
+| 10  | 20146   |
++-----+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

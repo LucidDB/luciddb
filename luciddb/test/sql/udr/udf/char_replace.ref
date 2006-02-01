@@ -1,9 +1,9 @@
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/char_replace.sql#2 $
 0: jdbc:luciddb:> -- Test queries for charReplace UDF
 0: jdbc:luciddb:> set schema 'udftest';
 0: jdbc:luciddb:> set path 'udftest';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- define CharReplace functions
-0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create function char_replace(str varchar(128), oldC varchar(128), newC varchar(128)) 
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > language java
@@ -23,15 +23,17 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from new_names
 . . . . . . . . > order by 1;
-+----------+----------+
-|  FIRST   |   LAST   |
-+----------+----------+
-| Ephram   | Vestrit  |
-| GreMory  | Peckery  |
-| Lilah    | Lowe     |
-| Mark     | Wyett    |
-| Mary     | O Brien  |
-+----------+----------+
++---------------+------------+
+|     FIRST     |    LAST    |
++---------------+------------+
+| 2Tito1        |            |
+| Dirk the 3rd  | Treethorn  |
+| Ephram        | Vestrit    |
+| GreMory       | Peckery    |
+| Lilah         | Lowe       |
+| Mark          | Wyett      |
+| Mary          | O Brien    |
++---------------+------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create view new_ages(first, last, newage) as
 . . . . . . . . > select fname, lname, char_replace( cast(age as varchar(10)), 49, 51)
@@ -39,43 +41,49 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from new_ages
 . . . . . . . . > order by 1;
-+----------+----------+---------+
-|  FIRST   |   LAST   | NEWAGE  |
-+----------+----------+---------+
-| Ephram   | Vestrit  | 62      |
-| Gregory  | Packery  | 55      |
-| Lilah    | Lowe     | 27      |
-| Mark     | Wyatt    | 34      |
-| Mary     | O Brian  | 32      |
-+----------+----------+---------+
++---------------+------------+---------+
+|     FIRST     |    LAST    | NEWAGE  |
++---------------+------------+---------+
+| 2Tito1        |            | 37      |
+| Dirk the 3rd  | Treethorn  | 39      |
+| Ephram        | Vestrit    | 62      |
+| Gregory       | Packery    | 55      |
+| Lilah         | Lowe       | 27      |
+| Mark          | Wyatt      | 34      |
+| Mary          | O Brian    | 32      |
++---------------+------------+---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- char_replace in expressions
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select fname || char_replace(fname, 'r', 'K'), lname || char_replace(lname, 'y', 'Y')
 . . . . . . . . > from customers
 . . . . . . . . > order by 1;
-+-----------------+-----------------+
-|     EXPR$0      |     EXPR$1      |
-+-----------------+-----------------+
-| Ephram EphKam   | VestritVestrit  |
-| GregoryGKegoKy  | PackeryPackerY  |
-| Lilah  Lilah    | Lowe   Lowe     |
-| Mark   MaKk     | Wyatt  WYatt    |
-| Mary   MaKy     | O BrianO Brian  |
-+-----------------+-----------------+
++---------------------------+---------------------+
+|          EXPR$0           |       EXPR$1        |
++---------------------------+---------------------+
+| 2Tito1      2Tito1        |                     |
+| Dirk the 3rdDiKk the 3Kd  | TreethornTreethorn  |
+| Ephram      EphKam        | Vestrit  Vestrit    |
+| Gregory     GKegoKy       | Packery  PackerY    |
+| Lilah       Lilah         | Lowe     Lowe       |
+| Mark        MaKk          | Wyatt    WYatt      |
+| Mary        MaKy          | O Brian  O Brian    |
++---------------------------+---------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select first || char_replace(first, 'r', 'K'), cast (newage as integer) + cast (char_replace(newage, 51, 48) as integer)
 . . . . . . . . > from new_ages
 . . . . . . . . > order by 1;
-+-----------------+---------+
-|     EXPR$0      | EXPR$1  |
-+-----------------+---------+
-| Ephram EphKam   | 124     |
-| GregoryGKegoKy  | 110     |
-| Lilah  Lilah    | 54      |
-| Mark   MaKk     | 38      |
-| Mary   MaKy     | 34      |
-+-----------------+---------+
++---------------------------+---------+
+|          EXPR$0           | EXPR$1  |
++---------------------------+---------+
+| 2Tito1      2Tito1        | 44      |
+| Dirk the 3rdDiKk the 3Kd  | 48      |
+| Ephram      EphKam        | 124     |
+| Gregory     GKegoKy       | 110     |
+| Lilah       Lilah         | 54      |
+| Mark        MaKk          | 38      |
+| Mary        MaKy          | 34      |
++---------------------------+---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- nested char_replace
 0: jdbc:luciddb:> values char_replace( char_replace('Moma is a great place to be', 'e', 'E'), 'a', 'A');

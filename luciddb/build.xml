@@ -170,6 +170,15 @@
       classpathref="luciddb.build.classpath">
       <include name="**/*.java" />
     </farrago.javaCompile>    
+
+    <farrago.javaCompile
+      deprecation="off"
+      srcdir="${luciddb.dir}/src"
+      destdir="${classes.dir}"
+      classpathref="luciddb.build.classpath">
+      <include name="**/*.java"/>
+    </farrago.javaCompile>
+
   </target>
 
   <!-- creates catalog and populates with initial metadata -->

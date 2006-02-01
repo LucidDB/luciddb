@@ -1,0 +1,85 @@
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/repeater.sql#1 $
+0: jdbc:luciddb:> -- Test queries for repeater UDF
+0: jdbc:luciddb:> set schema 'udftest';
+0: jdbc:luciddb:> set path 'udftest';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- define function
+0: jdbc:luciddb:> create function repeater(str varchar(128), times integer)
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.applib.repeater.FunctionExecute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values repeater('lola ', 3);
++------------------+
+|      EXPR$0      |
++------------------+
+| lola lola lola   |
++------------------+
+0: jdbc:luciddb:> values repeater('2', 3);
++---------+
+| EXPR$0  |
++---------+
+| 222     |
++---------+
+0: jdbc:luciddb:> values repeater('lola ', 1000000000);
++-----------------------------------------------------------------------------------------------------------------------------------+
+|                                                              EXPR$0                                                               |
++-----------------------------------------------------------------------------------------------------------------------------------+
+| lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lola lol  |
++-----------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- these should fail
+0: jdbc:luciddb:> values repeater(3, 3);
+Error: From line 1, column 8 to line 1, column 21: No match found for function signature REPEATER(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> values repeater('lola ', X'02');
+Error: From line 1, column 8 to line 1, column 31: No match found for function signature REPEATER(<CHARACTER>, <BINARY>) (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create view with reference to repeater
+0: jdbc:luciddb:> create view repview as
+. . . . . . . . > select fname, lname, repeater(sex, 2) 
+. . . . . . . . > from customers;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from repview 
+. . . . . . . . > order by 1;
++---------------+------------+---------+
+|     FNAME     |   LNAME    | EXPR$2  |
++---------------+------------+---------+
+| 2Tito1        |            | FF      |
+| Dirk the 3rd  | Treethorn  | MM      |
+| Ephram        | Vestrit    | MM      |
+| Gregory       | Packery    | MM      |
+| Lilah         | Lowe       | FF      |
+| Mark          | Wyatt      | MM      |
+| Mary          | O Brian    | FF      |
++---------------+------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- in expressions
+0: jdbc:luciddb:> values ('is who? ' || repeater('Voter', 2));
++---------------------+
+|       EXPR$0        |
++---------------------+
+| is who? VoterVoter  |
++---------------------+
+0: jdbc:luciddb:> values(cast (repeater('25', 2) as integer) / 25 - 1);
++---------+
+| EXPR$0  |
++---------+
+| 100     |
++---------+
+0: jdbc:luciddb:> values(cast (repeater('11', 3) as integer) + 10000000000);
++--------------+
+|    EXPR$0    |
++--------------+
+| 10000111111  |
++--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- nested
+0: jdbc:luciddb:> values (repeater( repeater('Voter ', 2) || 'is who? ', 2));
++-------------------------------------------+
+|                  EXPR$0                   |
++-------------------------------------------+
+| Voter Voter is who? Voter Voter is who?   |
++-------------------------------------------+
+0: jdbc:luciddb:> !quit

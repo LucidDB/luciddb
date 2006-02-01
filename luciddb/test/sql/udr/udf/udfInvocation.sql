@@ -1,3 +1,4 @@
+-- $Id$
 -- Test queries with UDF invocations
 
 set schema 'udftest';
