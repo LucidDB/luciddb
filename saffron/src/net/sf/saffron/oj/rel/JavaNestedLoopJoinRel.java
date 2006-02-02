@@ -42,16 +42,20 @@ import org.eigenbase.util.Util;
 /**
  * Implements the {@link JoinRel} relational expression using the
  * nested-loop algorithm, with output as Java code.
+ *
+ * @author jhyde
+ * @version $Id$
  */
-public class JavaNestedLoopJoinRel extends JoinRelBase implements JavaLoopRel,
-    JavaSelfRel
+public class JavaNestedLoopJoinRel
+    extends JoinRelBase
+    implements JavaLoopRel, JavaSelfRel
 {
     public JavaNestedLoopJoinRel(
         RelOptCluster cluster,
         RelNode left,
         RelNode right,
         RexNode condition,
-        int joinType,
+        JoinRelType joinType,
         Set variablesStopped)
     {
         super(

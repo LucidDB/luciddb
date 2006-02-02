@@ -29,8 +29,8 @@ import openjava.ptree.FieldAccess;
 
 import org.eigenbase.oj.*;
 import org.eigenbase.oj.util.*;
-import org.eigenbase.rel.ProjectRel;
 import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.CalcRel;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.RexNode;
@@ -110,9 +110,8 @@ public class ClassSchema implements RelOptSchema
                                 fieldAccess, i);
                         fieldNames[i] = fields[i].getName();
                     }
-                    final ProjectRel project =
-                        new ProjectRel(cluster, exprReader, exps, fieldNames,
-                            ProjectRel.Flags.Boxed);
+                    final RelNode project =
+                        CalcRel.createProject(exprReader, exps, fieldNames);
                     return project;
                 }
             };

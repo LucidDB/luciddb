@@ -105,7 +105,7 @@ public class FennelWindowRel extends FennelSingleRel
         assert child.getConvention() == FennelRel.FENNEL_EXEC_CONVENTION;
         assert !RexOver.containsOver(inputProgram);
         assert !RexOver.containsOver(outputProgram);
-        assert RelOptUtil.getFieldTypes(outputProgram.getInputRowType()).
+        assert RelOptUtil.getFieldTypeList(outputProgram.getInputRowType()).
             equals(outputProgramInputTypes(child.getRowType(), windows));
         assert RelOptUtil.eq(
             "type1", outputProgram.getOutputRowType(), "type2", rowType, true);
@@ -119,7 +119,7 @@ public class FennelWindowRel extends FennelSingleRel
         RelDataType rowType, Window[] windows)
     {
         List<RelDataType> typeList =
-            new ArrayList<RelDataType>(RelOptUtil.getFieldTypes(rowType));
+            new ArrayList<RelDataType>(RelOptUtil.getFieldTypeList(rowType));
         for (Window window : windows) {
             for (Partition partition : window.partitionList) {
                 for (RexWinAggCall over : partition.overList) {

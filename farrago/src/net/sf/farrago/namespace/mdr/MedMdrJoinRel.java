@@ -23,28 +23,15 @@
 package net.sf.farrago.namespace.mdr;
 
 import java.util.*;
-import java.util.List;
 
 import javax.jmi.model.*;
-import javax.jmi.reflect.*;
 
-import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
-
-import openjava.mop.*;
 import openjava.ptree.*;
 
-import org.eigenbase.oj.*;
 import org.eigenbase.oj.rel.*;
-import org.eigenbase.oj.stmt.*;
-import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.runtime.*;
-import org.eigenbase.util.*;
-import org.netbeans.api.mdr.*;
-
 
 /**
  * MedMdrJoinRel is the relational expression corresponding to a join via
@@ -67,14 +54,14 @@ class MedMdrJoinRel extends JoinRelBase implements JavaRel
         RelNode left,
         RelNode right,
         RexNode condition,
-        int joinType,
+        JoinRelType joinType,
         int leftOrdinal,
         Reference rightReference)
     {
         super(
             cluster, new RelTraitSet(CallingConvention.ITERATOR), left, right,
             condition, joinType, Collections.EMPTY_SET);
-        assert ((joinType == JoinType.INNER) || (joinType == JoinType.LEFT));
+        assert ((joinType == JoinRelType.INNER) || (joinType == JoinRelType.LEFT));
 
         this.leftOrdinal = leftOrdinal;
         this.rightReference = rightReference;

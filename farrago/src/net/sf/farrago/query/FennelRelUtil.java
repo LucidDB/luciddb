@@ -604,7 +604,7 @@ public abstract class FennelRelUtil
 
         // Generate a one-row relation producing the key to search for.
         OneRowRel oneRowRel = new OneRowRel(cluster);
-        RelNode keyRel = ProjectRel.create(oneRowRel, searchExps, null);
+        RelNode keyRel = CalcRel.createProject(oneRowRel, searchExps, null);
 
         // For dynamic parameters, add a filter to remove nulls, since they can
         // never match in a comparison.  FIXME:  This isn't quite right,

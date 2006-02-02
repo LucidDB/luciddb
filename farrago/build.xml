@@ -887,6 +887,7 @@ require version '${required.ant.version}'."/>
     <antcall target="cleanExamples"/>
     <antcall target="createCatalog"/>
     <antcall target="buildExamples"/>
+    <antcall target="buildJdbcPlugin"/>
     <antcall target="retroweaveIfRequested"/>
     <antcall target="testRngPlugin"/>
     <antcall target="exportCatalog"/>

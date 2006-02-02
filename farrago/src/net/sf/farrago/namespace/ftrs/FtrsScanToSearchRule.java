@@ -281,9 +281,7 @@ class FtrsScanToSearchRule extends RelOptRule
     {
         if (extraFilter != null) {
             searchRel =
-                new FilterRel(
-                    searchRel.getCluster(),
-                    searchRel,
+                CalcRel.createFilter(searchRel,
                     extraFilter);
         }
         call.transformTo(searchRel);

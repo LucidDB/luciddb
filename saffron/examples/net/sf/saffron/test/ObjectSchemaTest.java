@@ -32,10 +32,7 @@ import openjava.ptree.FieldAccess;
 import openjava.ptree.MethodCall;
 
 import org.eigenbase.oj.util.JavaRexBuilder;
-import org.eigenbase.rel.FilterRel;
-import org.eigenbase.rel.JoinRel;
-import org.eigenbase.rel.ProjectRel;
-import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
@@ -224,18 +221,14 @@ public class ObjectSchemaTest extends SaffronTestCase
                         // become 't2 == t2', which is always true, so the filter
                         // can be removed
                         final RexNode[] exprs = new RexNode [] {
-                            rexBuilder.makeRangeReference(rel.getRowType(), 0),
+                            rexBuilder.makeRangeReference(rel.getRowType(), 0, false),
                             RexUtil.clone(tokens[0])
                         };
-                        final RelDataType rowType = RexUtil.createStructType(
-                            rel.getCluster().getTypeFactory(), exprs);
-                        ProjectRel project =
-                            new ProjectRel(
-                                rel.getCluster(),
+                        RelNode project =
+                            CalcRel.createProject(
                                 rel,
                                 exprs,
-                                rowType,
-                                ProjectRel.Flags.Boxed);
+                                null);
                         call.transformTo(project);
                     }
                 });
@@ -354,7 +347,7 @@ public class ObjectSchemaTest extends SaffronTestCase
                 makeFieldOrMethodCall(
                     rexBuilder.makeRangeReference(
                         rexBuilder.constantNull().getType(),
-                        0),
+                        0, false),
                     fieldName);
 
             // In the many-to-one case, we transform
@@ -428,7 +421,7 @@ public class ObjectSchemaTest extends SaffronTestCase
                                     expressionReader,
                                     oneRel,
                                     rexBuilder.makeLiteral(true),
-                                    JoinRel.JoinType.INNER,
+                                    JoinRelType.INNER,
                                     Collections.EMPTY_SET);
                             newJoin.registerStoppedVariable(correl);
                             call.transformTo(newJoin);

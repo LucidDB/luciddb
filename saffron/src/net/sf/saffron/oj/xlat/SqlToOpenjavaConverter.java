@@ -28,8 +28,8 @@ import net.sf.saffron.jdbc.SaffronJdbcConnection;
 import net.sf.saffron.oj.stmt.OJStatement;
 
 import openjava.ptree.*;
+import openjava.tools.parser.ParserConstants;
 
-import org.eigenbase.rel.JoinRel;
 import org.eigenbase.relopt.RelOptConnection;
 import org.eigenbase.relopt.RelOptSchema;
 import org.eigenbase.relopt.RelOptTable;
@@ -254,10 +254,11 @@ public class SqlToOpenjavaConverter
             if (conditionExp == null) {
                 conditionExp = Literal.makeLiteral(true);
             }
-            if (convertedJoinType == JoinRel.JoinType.RIGHT) {
+            if (convertedJoinType == ParserConstants.RIGHT) {
                 // "class Join" does not support RIGHT, so swap...
-                return new JoinExpression(rightExp, leftExp,
-                    JoinRel.JoinType.LEFT, conditionExp);
+                return new JoinExpression(
+                    rightExp, leftExp,
+                    ParserConstants.LEFT, conditionExp);
             } else {
                 return new JoinExpression(leftExp, rightExp,
                     convertedJoinType, conditionExp);
@@ -280,13 +281,13 @@ public class SqlToOpenjavaConverter
         case SqlJoinOperator.JoinType.Comma_ORDINAL:
         case SqlJoinOperator.JoinType.Inner_ORDINAL:
         case SqlJoinOperator.JoinType.Cross_ORDINAL:
-            return JoinRel.JoinType.INNER;
+            return ParserConstants.INNER;
         case SqlJoinOperator.JoinType.Full_ORDINAL:
-            return JoinRel.JoinType.FULL;
+            return ParserConstants.FULL;
         case SqlJoinOperator.JoinType.Left_ORDINAL:
-            return JoinRel.JoinType.LEFT;
+            return ParserConstants.LEFT;
         case SqlJoinOperator.JoinType.Right_ORDINAL:
-            return JoinRel.JoinType.RIGHT;
+            return ParserConstants.RIGHT;
         default:
             throw joinType.unexpected();
         }

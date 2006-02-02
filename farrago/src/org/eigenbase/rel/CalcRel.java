@@ -23,10 +23,11 @@
 
 package org.eigenbase.rel;
 
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.rex.RexProgram;
+import org.eigenbase.rex.*;
+
+import java.util.Set;
 
 /**
  * A relational expression which computes project expressions and also filters.
@@ -43,6 +44,7 @@ import org.eigenbase.rex.RexProgram;
  *     {@link FilterRel}</li>
  * <li>{@link MergeProjectOntoCalcRule} merges this with a
  *     {@link ProjectRel}</li>
+ * <li>{@link MergeCalcRule} merges two CalcRels</li>
  * </ul></p>
  *
  * @author jhyde
@@ -51,6 +53,7 @@ import org.eigenbase.rex.RexProgram;
  **/
 public final class CalcRel extends CalcRelBase
 {
+    public static final boolean DeprecateProjectAndFilter = false;
     //~ Constructors ----------------------------------------------------------
 
     public CalcRel(
@@ -70,6 +73,86 @@ public final class CalcRel extends CalcRelBase
         return new CalcRel(
             getCluster(), cloneTraits(), getChild(), rowType,
             program.copy());
+    }
+
+    /**
+     * Creates a relational expression which projects a set of expressions.
+     *
+     * @param child input relational expression
+     * @param exprs set of expressions for the input columns
+     * @param fieldNames aliases of the expressions, or null to generate
+     */
+    public static RelNode createProject(
+        RelNode child,
+        RexNode[] exprs,
+        String[] fieldNames)
+    {
+        if (DeprecateProjectAndFilter) {
+            assert fieldNames == null || fieldNames.length == exprs.length;
+            final RelOptCluster cluster = child.getCluster();
+            RexProgramBuilder builder = new RexProgramBuilder(
+                child.getRowType(), cluster.getRexBuilder());
+            int i = -1;
+            for (RexNode expr : exprs) {
+                ++i;
+                final String fieldName = fieldNames == null ? null : fieldNames[i];
+                builder.addProject(expr, fieldName);
+            }
+            final RexProgram program = builder.getProgram();
+            return new CalcRel(
+                cluster,
+                RelOptUtil.clone(child.getTraits()),
+                child,
+                program.getOutputRowType(),
+                program);
+        } else {
+            final ProjectRel project =
+                new ProjectRel(
+                    child.getCluster(), child, exprs, fieldNames,
+                    ProjectRelBase.Flags.Boxed);
+
+            return project;
+        }
+    }
+
+    /**
+     * Creates a relational expression which filters according to a given
+     * condition, returning the same fields as its input.
+     *
+     * @param child Child relational expression
+     * @param condition Condition
+     * @return Relational expression
+     */
+    public static RelNode createFilter(
+        RelNode child,
+        RexNode condition)
+    {
+        if (DeprecateProjectAndFilter) {
+            final RelOptCluster cluster = child.getCluster();
+            RexProgramBuilder builder =
+                new RexProgramBuilder(child.getRowType(), cluster.getRexBuilder());
+            builder.addIdentity();
+            builder.addCondition(condition);
+            final RexProgram program = builder.getProgram();
+            return new CalcRel(
+                cluster,
+                RelOptUtil.clone(child.getTraits()),
+                child,
+                program.getOutputRowType(),
+                program);
+        } else {
+            return new FilterRel(child.getCluster(), child, condition);
+        }
+    }
+
+    public void collectVariablesUsed(Set variableSet)
+    {
+        final RelOptUtil.VariableUsedVisitor vuv =
+            new RelOptUtil.VariableUsedVisitor();
+        for (RexNode expr : program.getExprList()) {
+            expr.accept(vuv);
+        }
+        variableSet.addAll(vuv.variables);
     }
 }
 
