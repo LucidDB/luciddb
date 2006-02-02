@@ -132,6 +132,11 @@ class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
         streamDef.setNumRowsScan(numRowsScan);
         streamDef.setCalcProgram(program);
         streamDef.setHasHeader(header);
+
+        // FIXME: what is substituteCharacter, where should it be set?
+        if (streamDef.getSubstituteCharacter() == null) {
+            streamDef.setSubstituteCharacter("no idea what this is");
+        }
         
         return streamDef;
     }

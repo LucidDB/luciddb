@@ -20,10 +20,13 @@
 */
 package com.lucidera.farrago.namespace.flatfile;
 
-import java.io.IOException;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.LineNumberReader;
+import java.util.regex.Pattern;
 
 import net.sf.farrago.type.*;
 
@@ -31,31 +34,250 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
 
 /**
- * FlatFileBCPFile provides a way to read from control (bcp) files
+ * FlatFileBCPFile provides a way to read/write from/to control (bcp) files
  *
  * @author Sunny Choi
  * @version $Id$
  */
 class FlatFileBCPFile
 {
+    FileWriter ctrlWriter;
     RelDataType[] types;
-    String[] colNames;
-    FileReader ctrlReader;
-    LineNumberReader reader;
     FarragoTypeFactory typeFactory;
+    File ctrlFile;
     String fileName;
+
+    String[] colDataType;
+    String[] colDataLength;
+    String[] colNames;
+
+    private static final String NEWLINE = "\n";
+    private static final String QUOTE = "\"";
+    private static final String TAB = "\t";
+
+    private static final Pattern IntegerPattern =
+        Pattern.compile("^[0-9]+$");
+    private static final Pattern DoublePattern =
+        Pattern.compile("^[0-9]*(\\.)[0-9]+$");
 
     FlatFileBCPFile(String filePath, FarragoTypeFactory typeFactory)
     {
         this.fileName = filePath;
         this.typeFactory = typeFactory;
+        this.ctrlFile = new File(fileName);
+        this.colDataType = null;
+        this.colDataLength = null;
+        this.colNames = null;
     }
 
-    boolean parse()
+    /**
+     * Checks if this file exists
+     */
+    public boolean exists()
+    {
+        return this.ctrlFile.exists();
+    }
+
+    /**
+     * Starts a new bcp file, writes just the version number
+     */
+    public boolean create()
     {
         try {
-            this.ctrlReader = new FileReader(fileName);
-            this.reader = new LineNumberReader(ctrlReader);
+            this.ctrlWriter = new FileWriter(this.ctrlFile, false);
+            ctrlWriter.write("6.0"+NEWLINE);
+        } catch (IOException ie) {
+            ie.printStackTrace();
+            return false;
+        } finally {
+            try {
+                ctrlWriter.close();
+            } catch (IOException ie) {
+                ie.printStackTrace();
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Writes the main body of the control file, given a table row
+     */
+    public boolean write(String[] row, FlatFileParams params)
+    {
+        try {
+            this.ctrlWriter = new FileWriter(this.ctrlFile, true);
+            if (params != null) {
+                expandRowsAndWrite(row, params);
+            } else {
+                for (String col : row) {
+                    ctrlWriter.write(col+NEWLINE);
+                }
+            }
+        } catch (IOException ie) {
+            ie.printStackTrace();
+            return false;
+        } finally {
+            try {
+                ctrlWriter.close();
+            } catch (IOException ie) {
+                ie.printStackTrace();
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Updates, if necessary, the control file's host file data types
+     * and lengths, given a table row of information
+     */
+    public void update(String[] row, boolean isHeader)
+    {
+        if (isHeader) {
+            this.colNames = new String[row.length];
+            int numCol = 0;
+            for (String col : row) {
+                this.colNames[numCol] = col;
+                numCol++;
+            }
+        } else {
+            if (this.colDataType == null) {
+                this.colDataType = new String[row.length];
+                this.colDataLength = new String[row.length];
+            }
+
+            int numCol = 0;
+            for (String col : row) {
+                String newType = getType(col);
+                String newLength= getTypeLength(col);
+
+                if (changeType(this.colDataType[numCol], newType)) {
+                    this.colDataType[numCol] = newType;
+                }
+                if (changeLength(this.colDataLength[numCol], newLength)) {
+                    this.colDataLength[numCol] = newLength;
+                }
+                numCol++;
+            }
+        }
+    }
+
+    private boolean changeType(String origType, String newType)
+    {
+        if (origType == null) {
+            return true;
+        }
+        if (origType.equals("SQLINT")) {
+            return true;
+        }
+        if ((origType.equals("SQLBIGINT")) &&
+            (!newType.equals("SQLINT"))) {
+            return true;
+        }
+        if (origType.equals("SQLVARCHAR")) {
+            return false;
+        }
+        if (newType.equals("SQLVARCHAR")) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean changeLength(String origVal, String newVal)
+    {
+        if (origVal == null) {
+            return true;
+        }
+        if ((Integer.valueOf(origVal).compareTo(
+                 Integer.valueOf(newVal))) < 0) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean expandRowsAndWrite(String[] row, FlatFileParams params)
+    {
+        for (int i=0; i<row.length; i++) {
+            if (this.colDataType[i].equals("SQLVARCHAR")) {
+                int varcharPrec =
+                    ((((Integer.valueOf(
+                            this.colDataLength[i])+128)/256)+1)*256);
+                this.colDataLength[i] = Integer.toString(varcharPrec);
+            }
+            int colNo = i+1;
+            row[i] = colNo + TAB + this.colDataType[i] + TAB + "0" + TAB +
+                this.colDataLength[i] + TAB + QUOTE;
+
+            if (i == row.length-1) {
+                row[i] = row[i].concat(escape(params.getLineDelimiter()));
+            } else {
+                row[i] = row[i].concat(escape(params.getFieldDelimiter()));
+            }
+            row[i] = row[i].concat(QUOTE + TAB + colNo + TAB);
+
+            if (this.colNames == null) {
+                row[i] = row[i].concat("COLUMN" + colNo);
+            } else {
+                row[i] = row[i].concat(this.colNames[i]);
+            }
+            try {
+                this.ctrlWriter.write(row[i]+NEWLINE);
+            } catch (IOException ie) {
+                ie.printStackTrace();
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Assumes from {@link FlatFileParams} that the only escaped
+     * delimiter strings are \n and \t
+     */
+    private String escape(char in)
+    {
+        String out = String.valueOf(in).replace("\n", "\\n");
+        out = out.replace("\t", "\\t");
+        return out;
+    }
+
+    /**
+     * Guess type of String to be one of
+     * VARCHAR, FLOAT, BIGINT, INTEGER
+     */
+    private String getType(String in)
+    {
+        in = in.trim();
+        if (IntegerPattern.matcher(in).matches()) {
+            if (Integer.valueOf(getTypeLength(in)) > 9) {
+                return "SQLBIGINT";
+            } else {
+                return "SQLINT";
+            }
+        }
+        if (DoublePattern.matcher(in).matches()) {
+            return "SQLFLT8";
+        }
+
+        // TODO: support DATE/TIME/TIMESTAMP
+
+        return "SQLVARCHAR";
+    }
+
+    private String getTypeLength(String in)
+    {
+        return Integer.toString(in.trim().length());
+    }
+
+    /**
+     * Parses a control file for the datatypes and column names
+     */
+    public boolean parse()
+    {
+        FileReader ctrlReader;
+        LineNumberReader reader;
+        try {
+            ctrlReader = new FileReader(fileName);
+            reader = new LineNumberReader(ctrlReader);
         } catch (FileNotFoundException fe) {
             // fe.printStackTrace();
             return false;
@@ -68,7 +290,7 @@ class FlatFileBCPFile
                 if (reader.getLineNumber() == 2) {
                     int colNo = Integer.parseInt(line);
                     types = new RelDataType[colNo];
-                    colNames = new String[colNo];
+                    this.colNames = new String[colNo];
                 }
 
                 if (reader.getLineNumber() > 2) {
@@ -84,19 +306,23 @@ class FlatFileBCPFile
                         if (typeName.allowsScale()) {
                             // TODO: how to get scale from bcp?
                             types[reader.getLineNumber()-3] =
-                                typeFactory.createSqlType(
-                                    typeName,
-                                    Integer.parseInt(typeLength),
-                                    0);
+                                typeFactory.createTypeWithNullability(
+                                    typeFactory.createSqlType(typeName,
+                                        Integer.parseInt(typeLength),
+                                        0),
+                                    true);
                         } else {
                             types[reader.getLineNumber()-3] =
-                                typeFactory.createSqlType(
-                                    typeName,
-                                    Integer.parseInt(typeLength));
+                                typeFactory.createTypeWithNullability(
+                                    typeFactory.createSqlType(typeName,
+                                        Integer.parseInt(typeLength)),
+                                    true);
                         }
                     } else {
                         types[reader.getLineNumber()-3] =
-                            typeFactory.createSqlType(typeName);
+                            typeFactory.createTypeWithNullability(
+                                typeFactory.createSqlType(typeName),
+                                true);
                     }
                     colNames[reader.getLineNumber()-3] = colId;
                 }
@@ -116,7 +342,10 @@ class FlatFileBCPFile
         return true;
     }
 
-    static SqlTypeName convertBCPSqlToSqlType(String datatype)
+    /**
+     * Converts a BCP SQL type to one of {@link SqlTypeName}
+     */
+    public static SqlTypeName convertBCPSqlToSqlType(String datatype)
     {
         if (datatype.equals("SQLCHAR") || datatype.equals("SQLNCHAR")) {
             return SqlTypeName.Char;
@@ -162,8 +391,6 @@ class FlatFileBCPFile
             return SqlTypeName.Varchar;
         }
     }
-
 }
 
 // End FlatFileBCPFile.java
-
