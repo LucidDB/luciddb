@@ -156,6 +156,11 @@ public class TableAccessMap
                 return;
             }
             String newAccess;
+            // FIXME jvs 1-Feb-2006:  Don't rely on object type here;
+            // eventually someone is going to write a rule which transforms
+            // to something which doesn't inherit TableModificationRelBase,
+            // and this will break.  Need to make this explicit in
+            // the RelNode interface.
             if (p instanceof TableModificationRelBase) {
                 newAccess = WRITE_ACCESS;
             } else {
