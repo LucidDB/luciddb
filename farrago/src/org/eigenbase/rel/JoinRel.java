@@ -26,9 +26,7 @@ package org.eigenbase.rel;
 import java.util.*;
 
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.util.*;
 
 /**
  * A JoinRel represents two relational expressions joined according to some
@@ -43,7 +41,7 @@ public final class JoinRel extends JoinRelBase
         RelNode left,
         RelNode right,
         RexNode condition,
-        int joinType,
+        JoinRelType joinType,
         Set variablesStopped)
     {
         super(

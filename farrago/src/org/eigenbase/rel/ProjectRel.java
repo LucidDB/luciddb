@@ -55,8 +55,6 @@ public final class ProjectRel extends ProjectRelBase
      * @param exps set of expressions for the input columns
      * @param fieldNames aliases of the expressions
      * @param flags values as in {@link ProjectRelBase.Flags}
-     *
-     * @deprecated Use {@link #ProjectRel(RelOptCluster, RelNode, RexNode[], RelDataType, int)}
      */
     public ProjectRel(
         RelOptCluster cluster,
@@ -92,25 +90,6 @@ public final class ProjectRel extends ProjectRelBase
             cluster,
             new RelTraitSet(CallingConvention.NONE),
             child, exps, rowType, flags);
-    }
-
-    /**
-     * Creates a ProjectRel.
-     *
-     * @param child input relational expression
-     * @param exps set of expressions for the input columns
-     * @param fieldNames aliases of the expressions, or null to generate
-     *     field names
-     */
-    public static ProjectRel create(
-        RelNode child,
-        RexNode[] exps,
-        String[] fieldNames)
-    {
-        final RelDataType rowType = RexUtil.createStructType(
-            child.getCluster().getTypeFactory(), exps, fieldNames);
-        return new ProjectRel(
-            child.getCluster(), child, exps, rowType, ProjectRel.Flags.Boxed);
     }
 
     //~ Methods ---------------------------------------------------------------

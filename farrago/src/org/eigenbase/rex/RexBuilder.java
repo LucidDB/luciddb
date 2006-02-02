@@ -309,14 +309,15 @@ public class RexBuilder
         }
         return new RexCall(
             type,
-            opTab.reinterpretOperator,
+            SqlStdOperatorTable.reinterpretOperator,
             args);
     }
     
     /**
      * Creates a reference to all the fields in the row. That is, the whole
      * row as a single record object.
-     * @param rowType Type of the input row
+     *
+     * @param rowType Type of the input row.
      */
     public RexNode makeRangeReference(RelDataType rowType)
     {
@@ -326,18 +327,24 @@ public class RexBuilder
     /**
      * Creates a reference to all the fields in the row.
      *
-     * For example, if the input row has type <code>T{f0,f1,f2,f3,f4}</code>
+     * <p>For example, if the input row has type <code>T{f0,f1,f2,f3,f4}</code>
      * then <code>makeRangeReference(T{f0,f1,f2,f3,f4}, S{f3,f4}, 3)</code>
      * is an expression which yields the last 2 fields.
      *
-     * @param type    Type of the resulting range record.
-     * @param i       Index of first field
+     * @param type     Type of the resulting range record.
+     * @param offset   Index of first field.
+     * @param nullable Whether the record is nullable.
      */
     public RexNode makeRangeReference(
         RelDataType type,
-        int i)
+        int offset,
+        boolean nullable)
     {
-        return new RexRangeRef(type, i);
+        if (nullable && !type.isNullable()) {
+            type = typeFactory.createTypeWithNullability(
+                type, nullable);
+        }
+        return new RexRangeRef(type, offset);
     }
 
     public RexNode makeInputRef(

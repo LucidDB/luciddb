@@ -81,8 +81,8 @@ class FtrsIndexJoinRule extends RelOptRule
         }
 
         switch (joinRel.getJoinType()) {
-        case JoinRel.JoinType.INNER:
-        case JoinRel.JoinType.LEFT:
+        case INNER:
+        case LEFT:
             break;
         default:
             return;
@@ -136,7 +136,7 @@ class FtrsIndexJoinRule extends RelOptRule
         boolean isUnique =
             index.isUnique() && (index.getIndexedFeature().size() == 1);
 
-        boolean isOuter = (joinRel.getJoinType() == JoinRel.JoinType.LEFT);
+        boolean isOuter = (joinRel.getJoinType() == JoinRelType.LEFT);
 
         if (!FtrsScanToSearchRule.testIndexColumn(index, indexColumn)) {
             return;
@@ -201,12 +201,10 @@ class FtrsIndexJoinRule extends RelOptRule
                 rexBuilder.makeCast(rightType, castExps[leftOrdinal]);
             fieldNames[leftFieldCount] = rightField.getName();
             castRel =
-                new ProjectRel(
-                    nullFilterRel.getCluster(),
+                CalcRel.createProject(
                     nullFilterRel,
                     castExps,
-                    fieldNames,
-                    ProjectRel.Flags.Boxed);
+                    fieldNames);
 
             // key now comes from extra cast field instead
             inputKeyProj = new Integer [] { new Integer(leftFieldCount) };

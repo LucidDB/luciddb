@@ -275,9 +275,9 @@ public abstract class FennelWindowRule extends RelOptRule
         final List<FennelWindowRel.RexWinAggCall> flattenedAggCallList =
             new ArrayList<FennelWindowRel.RexWinAggCall>();
         List<String> intermediateNameList = new ArrayList<String>(
-            RelOptUtil.getFieldNames(child.getRowType()));
+            RelOptUtil.getFieldNameList(child.getRowType()));
         final List<RelDataType> intermediateTypeList = new ArrayList<RelDataType>(
-            RelOptUtil.getFieldTypes(child.getRowType()));
+            RelOptUtil.getFieldTypeList(child.getRowType()));
 
         int i = -1;
         for (FennelWindowRel.Window window : windowList) {
@@ -340,7 +340,7 @@ public abstract class FennelWindowRule extends RelOptRule
         }
 
         final List<String> fieldNames =
-            RelOptUtil.getFieldNames(winAggRel.getRowType());
+            RelOptUtil.getFieldNameList(winAggRel.getRowType());
         i = -1;
         for (RexLocalRef ref : aggProgram.getProjectList()) {
             ++i;

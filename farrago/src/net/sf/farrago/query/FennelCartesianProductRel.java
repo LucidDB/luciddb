@@ -24,7 +24,6 @@ package net.sf.farrago.query;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
-import net.sf.farrago.type.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
@@ -40,7 +39,8 @@ import org.eigenbase.reltype.RelDataType;
  */
 class FennelCartesianProductRel extends FennelDoubleRel
 {
-    int joinType;
+    private final JoinRelType joinType;
+
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -54,9 +54,10 @@ class FennelCartesianProductRel extends FennelDoubleRel
         RelOptCluster cluster,
         RelNode left,
         RelNode right,
-        int joinType)
+        JoinRelType joinType)
     {
         super(cluster, left, right);
+        assert joinType != null;
         this.joinType = joinType;
     }
 
@@ -100,7 +101,7 @@ class FennelCartesianProductRel extends FennelDoubleRel
 
     private boolean isLeftOuter()
     {
-        return JoinRel.JoinType.LEFT == joinType;
+        return JoinRelType.LEFT == joinType;
     }
 
     // implement RelNode

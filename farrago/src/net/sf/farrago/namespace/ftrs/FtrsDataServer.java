@@ -162,7 +162,7 @@ class FtrsDataServer extends MedAbstractFennelDataServer
             collations[i] = new RelFieldCollation(i);
         }
 
-        ProjectRel project = ProjectRel.create(tableScan, projExps, null);
+        RelNode project = CalcRel.createProject(tableScan, projExps, null);
 
         SortRel sort =
             new SortRel(

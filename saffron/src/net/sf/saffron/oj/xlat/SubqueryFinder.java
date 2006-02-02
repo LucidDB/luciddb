@@ -31,9 +31,7 @@ import openjava.mop.Toolbox;
 import openjava.ptree.*;
 import openjava.ptree.util.ScopeHandler;
 
-import org.eigenbase.rel.JoinRel;
-import org.eigenbase.rel.ProjectRel;
-import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexUtil;
@@ -111,17 +109,15 @@ class SubqueryFinder extends ScopeHandler
                 final RexNode[] exprs = {
                     queryInfo.rexBuilder.makeRangeReference(
                         rightRel.getRowType(),
-                        0),
+                        0, false),
                     queryInfo.rexBuilder.makeLiteral(true)
                 };
                 final String[] fieldNames = { "v", "b" };
                 rightRel =
-                    new ProjectRel(
-                        queryInfo.cluster,
+                    CalcRel.createProject(
                         rightRel,
                         exprs,
-                        RexUtil.createStructType(typeFactory, exprs, fieldNames),
-                        ProjectRel.Flags.Boxed);
+                        fieldNames);
                 v = RelOptUtil.makeFieldAccess(1, 0);
                 condition =
                     new FieldAccess(
@@ -145,7 +141,8 @@ class SubqueryFinder extends ScopeHandler
                                 rightRowType.primitiveWrapper(),
                                 rightRowType),
                             rightRowType,
-                            true)), JoinRel.JoinType.LEFT,
+                            true)),
+                    JoinRelType.LEFT,
                     Collections.EMPTY_SET);
             queryInfo.setRoot(join);
 
@@ -196,7 +193,7 @@ class SubqueryFinder extends ScopeHandler
             JoinRel join =
                 new JoinRel(queryInfo.cluster, oldFrom, rightDistinct,
                     queryInfo.rexBuilder.makeLiteral(true),
-                    JoinRel.JoinType.LEFT, Collections.EMPTY_SET);
+                    JoinRelType.LEFT, Collections.EMPTY_SET);
             queryInfo.setRoot(join);
 
             // Replace the 'exists' with a test as to whether the single

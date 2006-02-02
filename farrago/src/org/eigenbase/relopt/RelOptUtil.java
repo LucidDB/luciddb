@@ -279,10 +279,12 @@ public abstract class RelOptUtil
      * Returns a list of the names of the fields in a given struct type.
      *
      * @param type Struct type
-     * @return Array of field types
+     * @return List of field names
+     *
+     * @see #getFieldTypeList(RelDataType)
      * @see #getFieldNames(RelDataType)
      */
-    public static List<String> getFieldNames(RelDataType type)
+    public static List<String> getFieldNameList(RelDataType type)
     {
         RelDataTypeField [] fields = type.getFields();
         List<String> nameList = new ArrayList<String>();
@@ -293,13 +295,30 @@ public abstract class RelOptUtil
     }
 
     /**
-     * Returns a list of the types of the fields in a given struct type.
+     * Returns an array of the names of the fields in a given struct type.
      *
      * @param type Struct type
      * @return Array of field types
-     * @see #getFieldNames(RelDataType)
+     * @see #getFieldNameList(RelDataType)
      */
-    public static List<RelDataType> getFieldTypes(RelDataType type)
+    public static String[] getFieldNames(RelDataType type)
+    {
+        RelDataTypeField[] fields = type.getFields();
+        String[] names = new String[fields.length];
+        for (int i = 0; i < fields.length; ++i) {
+            names[i] = fields[i].getName();
+        }
+        return names;
+    }
+
+    /**
+     * Returns a list of the types of the fields in a given struct type.
+     *
+     * @param type Struct type
+     * @return List of field types
+     * @see #getFieldNameList(RelDataType)
+     */
+    public static List<RelDataType> getFieldTypeList(RelDataType type)
     {
         final RelDataTypeField[] fields = type.getFields();
         final List<RelDataType> typeList = new ArrayList<RelDataType>();
@@ -398,7 +417,7 @@ public abstract class RelOptUtil
         }
 
         if (null != conditionExp) {
-            ret  = new FilterRel(cluster, seekRel, conditionExp);
+            ret  = CalcRel.createFilter(seekRel, conditionExp);
         }
 
         if (null != extraExpr) {
@@ -407,7 +426,7 @@ public abstract class RelOptUtil
             final RexNode [] expressions = new RexNode[fields.length + 1];
             String [] fieldNames = new String[fields.length + 1];
             final RexNode ref = cluster.getRexBuilder().makeRangeReference(
-                rowType, 0);
+                rowType, 0, false);
             for (int j = 0; j < fields.length; j++) {
                 expressions[j] = cluster.getRexBuilder().makeFieldAccess(
                     ref, j);
@@ -417,11 +436,7 @@ public abstract class RelOptUtil
             fieldNames[fields.length] =
                 Util.uniqueFieldName(fieldNames, fields.length, extraName);
             ret =
-                new ProjectRel(
-                    cluster, ret, expressions,
-                    RexUtil.createStructType(
-                        cluster.getTypeFactory(), expressions, fieldNames),
-                    ProjectRelBase.Flags.Boxed);
+                CalcRel.createProject(ret, expressions, fieldNames);
         }
 
         return ret;
@@ -436,9 +451,9 @@ public abstract class RelOptUtil
      * @param rel the rel whose output is to be renamed; rel.getRowType() must
      * be the same as outputType except for field names
      *
-     * @return generated ProjectRel
+     * @return generated relational expression
      */
-    public static ProjectRel createRenameRel(
+    public static RelNode createRenameRel(
         RelDataType outputType,
         RelNode rel)
     {
@@ -462,17 +477,7 @@ public abstract class RelOptUtil
                     inputFields[i].getIndex());
         }
 
-        ProjectRel renameRel =
-            new ProjectRel(
-                rel.getCluster(),
-                rel,
-                renameExps,
-                RexUtil.createStructType(
-                    rel.getCluster().getTypeFactory(),
-                    renameExps, renameNames),
-                ProjectRel.Flags.Boxed);
-
-        return renameRel;
+        return CalcRel.createProject(rel, renameExps, renameNames);
     }
 
     /**
@@ -528,9 +533,7 @@ public abstract class RelOptUtil
             return rel;
         }
 
-        return new FilterRel(
-            rel.getCluster(),
-            rel,
+        return CalcRel.createFilter(rel,
             condition);
     }
 
@@ -557,22 +560,21 @@ public abstract class RelOptUtil
             return rel;
         }
         RexNode[] castExps =
-            RexUtil.generateCastExpressions(rel.getCluster().getRexBuilder(),
-                castRowType, rowType);
+            RexUtil.generateCastExpressions(
+                rel.getCluster().getRexBuilder(), castRowType, rowType);
         if (rename) {
             // Use names and types from castRowType.
-            rowType = castRowType;
+            return CalcRel.createProject(
+                rel,
+                castExps,
+                getFieldNames(castRowType));
         } else {
             // Use names from rowType, types from castRowType.
-            rowType = rel.getCluster().getTypeFactory().createStructType(
-                getFieldTypes(castRowType),
+            return CalcRel.createProject(
+                rel,
+                castExps,
                 getFieldNames(rowType));
         }
-        return new ProjectRel(rel.getCluster(),
-            rel,
-            castExps,
-            rowType,
-            ProjectRel.Flags.Boxed);
     }
 
     /**
@@ -746,6 +748,7 @@ public abstract class RelOptUtil
         planner.addRule(ProjectToCalcRule.instance);
         planner.addRule(MergeFilterOntoCalcRule.instance);
         planner.addRule(MergeProjectOntoCalcRule.instance);
+        planner.addRule(MergeCalcRule.instance);
     }
 
     /**
@@ -982,9 +985,9 @@ public abstract class RelOptUtil
         }
     }
 
-    private static class VariableUsedVisitor extends RexShuttle
+    public static class VariableUsedVisitor extends RexShuttle
     {
-        HashSet variables = new HashSet();
+        public final Set variables = new HashSet();
 
         public RexNode visitCorrelVariable(RexCorrelVariable p)
         {

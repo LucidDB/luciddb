@@ -369,25 +369,28 @@ public class ConverterTest extends TestCase
     public void testQueryInSelect()
     {
         check("select \"gender\", (select \"name\" from \"depts\" where \"deptno\" = \"e\".\"deptno\") from \"emps\" as \"e\"",
-            "ProjectRel(gender=[$3], EXPR$1=[$6])" + NL + 
-            "  CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset2]])" + NL + 
-            "    ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])" + NL + 
-            "    ProjectRel(name=[$1])" + NL + 
-            "      FilterRel(condition=[=($0, $cor0.deptno)])" + NL + 
-            "        ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])" + NL);
+            TestUtil.fold(new String[]{
+                "ProjectRel(gender=[$3], EXPR$1=[IS NULL($6)])",
+                "  CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset2]])",
+                "    ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])",
+                "    ProjectRel(name=[$1])",
+                "      FilterRel(condition=[=($0, $cor0.deptno)])",
+                "        ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])",
+                ""}));
     }
 
     public void testExistsUncorrelated()
     {
         check("select * from \"emps\" where exists (select 1 from \"depts\")",
-            "ProjectRel(empno=[$0], name=[$1], deptno=[$2], gender=[$3], city=[$4], slacker=[$5])"
-            + NL + "  FilterRel(condition=[$7])" + NL
-            + "    JoinRel(condition=[true], joinType=[left])" + NL
-            + "      ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])"
-            + NL + "      ProjectRel(EXPR$0=[$0], $indicator=[true])" + NL
-            + "        ProjectRel(EXPR$0=[1])" + NL
-            + "          ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])"
-            + NL);
+            TestUtil.fold(new String[]{
+                "ProjectRel(empno=[$0], name=[$1], deptno=[$2], gender=[$3], city=[$4], slacker=[$5])",
+                "  FilterRel(condition=[IS NULL($7)])",
+                "    JoinRel(condition=[true], joinType=[left])",
+                "      ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])",
+                "      ProjectRel(EXPR$0=[$0], $indicator=[true])",
+                "        ProjectRel(EXPR$0=[1])",
+                "          ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])",
+                ""}));
     }
 
     // todo: implement IN
@@ -402,22 +405,21 @@ public class ConverterTest extends TestCase
         check("select * from \"emps\" "
             + "where exists (select 1 + 2 from \"depts\" where \"deptno\" > 10) "
             + "or exists (select 'foo' from \"emps\" where \"gender\" = 'Pig')",
-            "ProjectRel(empno=[$0], name=[$1], deptno=[$2], gender=[$3], city=[$4], slacker=[$5])"
-            + NL + "  FilterRel(condition=[OR($7, $9)])" + NL
-            + "    JoinRel(condition=[true], joinType=[left])" + NL
-            + "      JoinRel(condition=[true], joinType=[left])" + NL
-            + "        ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])"
-            + NL + "        ProjectRel(EXPR$0=[$0], $indicator=[true])" + NL
-            + "          ProjectRel(EXPR$0=[+(1, 2)])" + NL
-            + "            FilterRel(condition=[>($0, 10)])" + NL
-            + "              ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])"
-            + NL + "      ProjectRel(EXPR$0=[$0], $indicator=[true])" + NL
-            + "        ProjectRel(EXPR$0=[_ISO-8859-1'foo'])"
-            + NL
-            + "          FilterRel(condition=[=($3, _ISO-8859-1'Pig')])"
-            + NL
-            + "            ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])"
-            + NL);
+            TestUtil.fold(new String[]{
+                "ProjectRel(empno=[$0], name=[$1], deptno=[$2], gender=[$3], city=[$4], slacker=[$5])",
+                "  FilterRel(condition=[OR(IS NULL($7), IS NULL($9))])",
+                "    JoinRel(condition=[true], joinType=[left])",
+                "      JoinRel(condition=[true], joinType=[left])",
+                "        ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])",
+                "        ProjectRel(EXPR$0=[$0], $indicator=[true])",
+                "          ProjectRel(EXPR$0=[+(1, 2)])",
+                "            FilterRel(condition=[>($0, 10)])",
+                "              ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])",
+                "      ProjectRel(EXPR$0=[$0], $indicator=[true])",
+                "        ProjectRel(EXPR$0=[_ISO-8859-1'foo'])",
+                "          FilterRel(condition=[=($3, _ISO-8859-1'Pig')])",
+                "            ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])",
+                ""}));
     }
 
     public void testUnion()

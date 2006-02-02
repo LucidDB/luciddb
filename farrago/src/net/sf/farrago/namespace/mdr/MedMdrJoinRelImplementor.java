@@ -22,25 +22,19 @@
 */
 package net.sf.farrago.namespace.mdr;
 
-import java.util.*;
-
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
-import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.query.*;
 
 import openjava.mop.*;
 import openjava.ptree.*;
 
-import org.eigenbase.oj.*;
 import org.eigenbase.oj.rex.RexToOJTranslator;
 import org.eigenbase.oj.rel.*;
-import org.eigenbase.oj.stmt.*;
 import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
-import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.runtime.*;
@@ -129,7 +123,7 @@ class MedMdrJoinRelImplementor
                 new ExpressionList(
                     leftChildExp,
                     Literal.makeLiteral(
-                        joinRel.getJoinType() == JoinRel.JoinType.LEFT)),
+                        joinRel.getJoinType() == JoinRelType.LEFT)),
                 memberList);
 
         return newIteratorExp;
@@ -296,7 +290,7 @@ class MedMdrJoinRelImplementor
         }
 
         // for an outer join, construct the calcRightNullRow method
-        if (joinRel.getJoinType() == JoinRel.JoinType.LEFT) {
+        if (joinRel.getJoinType() == JoinRelType.LEFT) {
             stmtList = new StatementList();
             MemberDeclaration calcRightNullRowMethodDecl =
                 new MethodDeclaration(new ModifierList(ModifierList.PROTECTED),

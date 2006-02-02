@@ -26,10 +26,7 @@ package org.eigenbase.rel;
 import java.util.Collections;
 import java.util.HashSet;
 
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelOptRuleOperand;
-import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.*;
@@ -65,12 +62,12 @@ public class SwapJoinRule extends RelOptRule
      * not modify <code>join</code>. Returns null if the join cannot be
      * swapped (for example, because it is an outer join).
      */
-    public static ProjectRel swap(JoinRel join)
+    public static RelNode swap(JoinRel join)
     {
         // We cannot swap an asymmetric join
         switch (join.getJoinType()) {
-        case JoinRel.JoinType.LEFT:
-        case JoinRel.JoinType.RIGHT:
+        case LEFT:
+        case RIGHT:
             return null;
         }
         final RexBuilder rexBuilder = join.getCluster().getRexBuilder();
@@ -103,12 +100,10 @@ public class SwapJoinRule extends RelOptRule
                     source);
         }
         final String [] fieldNames = getFieldNames(join.getRowType());
-        return new ProjectRel(
-            join.getCluster(),
+        return CalcRel.createProject(
             newJoin,
             exps,
-            fieldNames,
-            ProjectRel.Flags.Boxed);
+            fieldNames);
     }
 
     private static String [] getFieldNames(RelDataType rowType)
@@ -125,7 +120,7 @@ public class SwapJoinRule extends RelOptRule
     {
         JoinRel join = (JoinRel) call.rels[0];
 
-        final ProjectRel swapped = swap(join);
+        final RelNode swapped = swap(join);
         if (swapped != null) {
             final JoinRel newJoin = (JoinRel) swapped.getInput(0);
             call.transformTo(swapped);
@@ -153,18 +148,15 @@ public class SwapJoinRule extends RelOptRule
                         source);
                 fieldNames[i] = newJoinField.getName();
             }
-            ProjectRel project =
-                new ProjectRel(
-                    swapped.getCluster(),
+            RelNode project =
+                CalcRel.createProject(
                     swapped,
                     exps,
-                    fieldNames,
-                    ProjectRel.Flags.Boxed);
-            
+                    fieldNames);
+
             // Make sure extra traits are carried over from the original rel
-            project.traits = 
-                RelOptUtil.mergeTraits(project.traits, swapped.traits);
-            
+            project = RelOptRule.convert(project, swapped.getTraits());
+
             RelNode rel = call.getPlanner().register(project, newJoin);
             Util.discard(rel);
         }

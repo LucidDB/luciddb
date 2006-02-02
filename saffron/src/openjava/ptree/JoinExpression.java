@@ -12,9 +12,6 @@ import openjava.mop.OJClass;
 import openjava.tools.parser.ParserConstants;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.reltype.RelDataTypeFactoryImpl;
-import org.eigenbase.util.Util;
-import org.eigenbase.oj.*;
 import org.eigenbase.oj.util.*;
 
 /**

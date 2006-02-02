@@ -29,8 +29,7 @@ import javax.jmi.model.StructuralFeature;
 
 import net.sf.farrago.util.JmiUtil;
 
-import org.eigenbase.rel.JoinRel;
-import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 
 
@@ -77,8 +76,8 @@ class MedMdrJoinRule extends RelOptRule
             return;
         }
 
-        if ((joinRel.getJoinType() != JoinRel.JoinType.INNER)
-                && (joinRel.getJoinType() != JoinRel.JoinType.LEFT)) {
+        if ((joinRel.getJoinType() != JoinRelType.INNER)
+                && (joinRel.getJoinType() != JoinRelType.LEFT)) {
             return;
         }
 

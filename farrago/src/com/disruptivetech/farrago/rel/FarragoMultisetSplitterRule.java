@@ -272,12 +272,12 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                     rexBuilder,
                     rexNode.getType(),
                     RelOptUtil.createInputRef(aggregateRel, -1));
-            final ProjectRel projectRel =
-                ProjectRel.create(
+            final RelNode projectRel =
+                CalcRel.createProject(
                     aggregateRel, new RexNode[] {inputRef}, null);
             return new CorrelatorRel(
                 cluster, input, projectRel, correlationList,
-                JoinRelBase.JoinType.INNER);
+                JoinRelType.INNER);
 
         } else if (SqlStdOperatorTable.castFunc == op) {
             // A call to
@@ -305,13 +305,13 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                 rexBuilder.makeCast(
                     type,
                     RelOptUtil.createInputRef(uncollect, 0));
-            ProjectRel castRel = ProjectRel.create(
+            RelNode castRel = CalcRel.createProject(
                 uncollect,
                 new RexNode[]{newCastCall},
                 new String[]{uncollect.getRowType().getFields()[0].getName()});
             return new CorrelatorRel(
                 cluster, input, castRel, correlationList,
-                JoinRelBase.JoinType.LEFT);
+                JoinRelType.LEFT);
 
         } else if (SqlStdOperatorTable.isASetOperator == op) {
             // (ms IS A SET) <=>
@@ -360,7 +360,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             RelNode notExistRel = createExistsPlanSingleRow(filterRel, true);
             return new CorrelatorRel(
                 cluster, input, notExistRel, correlationList,
-                JoinRelBase.JoinType.LEFT);
+                JoinRelType.LEFT);
 
         } else if (SqlStdOperatorTable.elementFunc == op ||
             SqlStdOperatorTable.elementSlicefunc == op) {
@@ -388,7 +388,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             RelNode limitRel = createLimitRel(uncollect);
             return new CorrelatorRel(
                 cluster, input, limitRel, correlationList,
-                JoinRelBase.JoinType.INNER);
+                JoinRelType.INNER);
 
         } else if (op instanceof SqlMultisetSetOperator) {
             // A call to
@@ -438,7 +438,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                 new CollectRel(cluster, setRel, "multiset");
             return new CorrelatorRel(
                 cluster, input, collectRel, correlationList,
-                JoinRelBase.JoinType.INNER);
+                JoinRelType.INNER);
 
         } else if (SqlStdOperatorTable.memberOfOperator == op) {
             // (x MEMBER OF ms) <=>
@@ -500,7 +500,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             RelNode existsRel = createExistsPlanSingleRow(filterRel, false);
             return new CorrelatorRel(
                 cluster, input, existsRel, correlations,
-                JoinRelBase.JoinType.LEFT);
+                JoinRelType.LEFT);
 
         } else if (SqlStdOperatorTable.submultisetOfOperator == op) {
             // (ms1 SUBMULTISET OF ms2 ) <=>
@@ -546,7 +546,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             final RexNode corRef2 =
                 rexBuilder.makeCorrel(
                     rexInput2.getType(), dyn_inIdStr);
-            ProjectRel projectRel2 = ProjectRel.create(
+            RelNode projectRel2 = CalcRel.createProject(
                 new OneRowRel(cluster),
                 new RexNode[]{corRef2},
                 new String[]{"output"+corRef2.toString()});
@@ -572,7 +572,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                         rexBuilder.makeRangeReference(u1.getRowType()), //todo get the right input ref from agg
                         rexBuilder.makeRangeReference(u2.getRowType()), //todo get the right input ref from agg
                         true),
-                    JoinRel.JoinType.LEFT,
+                    JoinRelType.LEFT,
                     Collections.EMPTY_SET);
             RelNode filterRel =
                 RelOptUtil.createExistsPlan(
@@ -589,7 +589,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             RelNode notExistsRel = createExistsPlanSingleRow(filterRel, true);
             return new CorrelatorRel(
                 cluster, input, notExistsRel, correlationList,
-                JoinRelBase.JoinType.LEFT);
+                JoinRelType.LEFT);
 
         } else {
             throw Util.newInternal(
@@ -602,11 +602,11 @@ public class FarragoMultisetSplitterRule extends RelOptRule
         RexLocalRef local,
         List correlationList)
     {
-        ProjectRel corProjectRel = createProject(calc, local, correlationList);
+        RelNode corProjectRel = createProject(calc, local, correlationList);
         return new UncollectRel(calc.getCluster(), corProjectRel);
     }
 
-    private static ProjectRel createProject(
+    private static RelNode createProject(
         CalcRel calc,
         RexLocalRef local,
         List correlationList)
@@ -633,7 +633,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             cluster.getRexBuilder().makeCorrel(
                 local.getType(), dyn_inIdStr);
         // Create and return a projection.
-        return ProjectRel.create(
+        return CalcRel.createProject(
             new OneRowRel (cluster),
             new RexNode[] {corRef},
             new String[] {"output" + corRef.toString()});
@@ -688,12 +688,12 @@ public class FarragoMultisetSplitterRule extends RelOptRule
         RexNode condition =
             rexBuilder.makeCall(
                 SqlStdOperatorTable.caseOperator, whenThenElse);
-        FilterRel filterRel =
-            new FilterRel(cluster, aggregateRel, condition);
+        RelNode filterRel =
+            CalcRel.createFilter(aggregateRel, condition);
         final RelDataTypeField field =
             filterRel.getRowType().getFields()[0];
-        ProjectRel limitRel =
-            ProjectRel.create(
+        RelNode limitRel =
+            CalcRel.createProject(
                 filterRel,
                 new RexNode[] {RelOptUtil.createInputRef(filterRel, 0)},
                 new String[] {field.getName()});
@@ -881,8 +881,8 @@ public class FarragoMultisetSplitterRule extends RelOptRule
         };
         RexNode caseRexNode = cluster.getRexBuilder().makeCall(
             SqlStdOperatorTable.caseOperator, whenThenElse);
-        ProjectRel caseRel =
-            ProjectRel.create(
+        RelNode caseRel =
+            CalcRel.createProject(
                 aggregateRel,
                 new RexNode[]{caseRexNode},
                 new String[]{"case"});
