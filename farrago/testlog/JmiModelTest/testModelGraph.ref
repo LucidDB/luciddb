@@ -1,6 +1,8 @@
 AliasType
 Association
 AssociationEnd
+AssociationEnd:exposedEnd_Exposes_Reference:referrer
+AssociationEnd:referencedEnd_RefersTo_Reference:referent
 Attribute
 BehavioralFeature
 BehavioralFeature_generalizes_Exception
@@ -31,7 +33,6 @@ GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
 GeneralizableElement_generalizes_Classifier
 GeneralizableElement_generalizes_Package
 Import
-Import:importer_Aliases_Namespace:imported
 ModelElement
 ModelElement:dependent_DependsOn_ModelElement:provider
 ModelElement:modelElement_AttachesTo_Tag:tag
@@ -43,6 +44,7 @@ ModelElement_generalizes_Tag
 ModelElement_generalizes_TypedElement
 Namespace
 Namespace:container_Contains_ModelElement:containedElement
+Namespace:imported_Aliases_Import:importer
 Namespace_generalizes_BehavioralFeature
 Namespace_generalizes_GeneralizableElement
 Operation
@@ -51,8 +53,6 @@ Package
 Parameter
 PrimitiveType
 Reference
-Reference:referent_RefersTo_AssociationEnd:referencedEnd
-Reference:referrer_Exposes_AssociationEnd:exposedEnd
 StructuralFeature
 StructuralFeature_generalizes_Attribute
 StructuralFeature_generalizes_Reference
