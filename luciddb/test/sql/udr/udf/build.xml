@@ -55,4 +55,11 @@
     <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>
   </target>  
 
+  <target name="clean">
+    <delete>
+      <fileset dir="${udf.dir}" includes="bh.*"/>
+      <fileset dir="${udf.dir}" includes="*.log"/>
+    </delete>
+  </target>
+
 </project>

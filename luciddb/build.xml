@@ -110,6 +110,9 @@
 
   <property name="dist.dir"
     location="${basedir}/dist"/>
+  
+  <property name="emma.luciddb.classes.dir" location="${luciddb.dir}/classes-cov"/>
+
 
   <!-- Classpaths -->
 
@@ -122,6 +125,15 @@
   </path>
   <property name="test.classpath" refid="test.classpath"/>
 
+  <!-- classpath for emma-instrumented running tests via ant -->
+  <path id="emma.test.classpath">
+    <pathelement path="${emma.luciddb.classes.dir}"/>
+    <pathelement path="${emma.farrago.classes.dir}"/>
+    <pathelement path="${emma.classpath}"/>
+    <pathelement path="${test.classpath}"/>
+  </path>
+  <property name="emma.test.classpath" refid="emma.test.classpath"/>
+
   <path id="luciddb.build.classpath">
     <pathelement path="${test.classpath}"/>
     <pathelement location="${farrago.classes.dir}"/>
@@ -129,7 +141,7 @@
   <property name="luciddb.build.classpath" refid="luciddb.build.classpath"/>
 
   <target name="test" depends="compile,createCatalog,buildJdbcPlugin">
-    <antcall target="xreg"/>
+    <antcall target="shortregSanity"/>
     <antcall target="txn"/>
     <antcall target="bh" />
   </target>
@@ -138,6 +150,12 @@
     <blackhawk.fork basedir="test/sql/shortreg" 
       testscript="test.xml"
       classpathref="test.classpath"/>
+  </target>
+
+  <target name="emmaBh">
+    <blackhawk.fork basedir="test/sql/shortreg" 
+      testscript="test.xml"
+      classpathref="emma.test.classpath"/>
   </target>
     
 
@@ -152,6 +170,15 @@
       classpathref="luciddb.build.classpath">
       <include name="**/*.java" />
     </farrago.javaCompile>    
+
+    <farrago.javaCompile
+      deprecation="off"
+      srcdir="${luciddb.dir}/src"
+      destdir="${classes.dir}"
+      classpathref="luciddb.build.classpath">
+      <include name="**/*.java"/>
+    </farrago.javaCompile>
+
   </target>
 
   <!-- creates catalog and populates with initial metadata -->
@@ -265,10 +292,11 @@
 
   <macrodef name="runSqlTests">
     <attribute name="filelist" default="unspecified"/>
+    <attribute name="sqltest.classpath" default="unspecified"/>
     <sequential>
       <junit printsummary="yes" fork="yes" haltonerror="yes" haltonfailure="yes"
         tempdir="${testlog.dir}">
-        <classpath refid="test.classpath"/>
+        <classpath path="@{sqltest.classpath}"/>
         <jvmarg line="${assertions.jvmarg}"/>
         <jvmarg line="&FarragoProps;"/>
         <sysproperty key="net.sf.farrago.fileset.unitsql"
@@ -306,7 +334,18 @@
         customersload.sql,productsload.sql,salesload.sql,joinEq.sql"/>
     <pathconvert property="filelist.shortregsql" refid="filelist.shortregsql"
       pathsep="${line.separator}" dirsep="${file.separator}" />
-    <runSqlTests filelist="${filelist.shortregsql}"/>
+    <runSqlTests filelist="${filelist.shortregsql}"
+            sqltest.classpath="${test.classpath}"/>
+  </target>
+
+  <target name="emmaShortreg">
+    <filelist dir="${testsrc.dir}/shortreg" id="filelist.shortregsql"
+      files="creschema.sql,locationload.sql,deptload.sql,empload.sql,
+        customersload.sql,productsload.sql,salesload.sql,joinEq.sql"/>
+    <pathconvert property="filelist.shortregsql" refid="filelist.shortregsql"
+      pathsep="${line.separator}" dirsep="${file.separator}" />
+    <runSqlTests filelist="${filelist.shortregsql}"
+            sqltest.classpath="${emma.test.classpath}"/>
   </target>
 
   <target name="txn" depends="compile">
@@ -314,17 +353,39 @@
       files="negative.sql,rollback.sql"/>
     <pathconvert property="filelist.txnsql" refid="filelist.txnsql"
       pathsep="${line.separator}" dirsep="${file.separator}" />
-    <runSqlTests filelist="${filelist.txnsql}"/>
+    <runSqlTests filelist="${filelist.txnsql}"
+            sqltest.classpath="${test.classpath}"/>
+  </target>
+
+  <target name="emmaTxn">
+    <filelist dir="${testsrc.dir}/txn" id="filelist.txnsql"
+      files="negative.sql,rollback.sql"/>
+    <pathconvert property="filelist.txnsql" refid="filelist.txnsql"
+      pathsep="${line.separator}" dirsep="${file.separator}" />
+    <runSqlTests filelist="${filelist.txnsql}"
+            sqltest.classpath="${emma.test.classpath}"/>
   </target>
 
   <!-- Extra Short Regression -->
-  <target name="xreg" depends="compile,createCatalog">
+  <target name="shortregSanity" depends="compile,createCatalog">
     <filelist dir="${testsrc.dir}/shortreg" id="filelist.shortregsql"
       files="creschema.sql,locationload.sql,deptload.sql,empload.sql,
         customersload.sql,productsload.sql,salesload.sql,joinEqSanity.sql"/>
     <pathconvert property="filelist.shortregsql" refid="filelist.shortregsql"
       pathsep="${line.separator}" dirsep="${file.separator}" />
-    <runSqlTests filelist="${filelist.shortregsql}"/>
+    <runSqlTests filelist="${filelist.shortregsql}" 
+      sqltest.classpath="${test.classpath}"/>
+  </target>
+
+  <!-- Extra Short Regression -->
+  <target name="emmaShortregSanity" depends="createCatalog">
+    <filelist dir="${testsrc.dir}/shortreg" id="filelist.shortregsql"
+      files="creschema.sql,locationload.sql,deptload.sql,empload.sql,
+        customersload.sql,productsload.sql,salesload.sql,joinEqSanity.sql"/>
+    <pathconvert property="filelist.shortregsql" refid="filelist.shortregsql"
+      pathsep="${line.separator}" dirsep="${file.separator}" />
+    <runSqlTests filelist="${filelist.shortregsql}" 
+      sqltest.classpath="${emma.test.classpath}"/>
   </target>
 
   <target name="cleanTestLogs">
@@ -338,6 +399,63 @@
     </delete>
     <delete quiet="true" file="${LucidDbTrace.log}"/>
   </target>
+
+  <available file="${farrago.dir}/classes-cov/com" property="farrago.classes-cov.exists"/>
+
+  <target name="cov" if="farrago.classes-cov.exists">
+    <antcall target="emmaClean"/>
+    <antcall target="emmaInstr"/>
+    <antcall target="emmaTest"/>
+    <antcall target="emmaReport"/>
+  </target>
+
+  <target name="covAll" if="farrago.classes-cov.exists">
+    <antcall target="emmaClean"/>
+    <antcall target="emmaInstr"/>
+    <antcall target="emmaTest"/>
+    <antcall target="emmaShortreg"/>
+    <antcall target="emmaReport"/>
+  </target>
+
+  <target name="emmaClean">
+    <delete dir="${emma.luciddb.classes.dir}" quiet="true"/>
+    <delete quiet="true">
+      <fileset dir="." includes="coverage.*"/>
+      <fileset dir="coverage"/>
+    </delete>
+    <mkdir dir="coverage"/>
+    <mkdir dir="${emma.luciddb.classes.dir}"/>
+  </target>
+
+  <target name="emmaInstr" depends="emmaClean">
+    <emma verbosity="verbose">
+      <instr 
+        mode="copy" 
+        outdir="${emma.luciddb.classes.dir}" 
+        instrpath="${classes.dir}">
+        <filter excludes="*_Stub*"/>
+      </instr>
+    </emma>
+  </target>
+ 
+  <target name="emmaTest" depends="emmaInstr">
+    <antcall target="emmaShortregSanity"/>
+    <antcall target="emmaTxn"/>
+    <antcall target="emmaBh" />
+  </target>
+
+  <target name="emmaReport">
+    <emma verbosity="verbose">
+      <report sourcepath="${luciddb.test.dir}/src,${farrago.src.dir}">
+        <infileset dir="${farrago.dir}" includes="*.em"/>
+        <infileset dir="." includes="*.em, *.ec"/>
+        <html/>
+        <xml/>
+        <txt/>
+      </report>
+    </emma>
+  </target>
+
 
   <!-- Experimental Area: Let's see about creating fine-grained tests with dependencies specified -->
 

@@ -152,9 +152,46 @@ public:
 };
 
 /**
- * Describes a vector of columns to be parsed
+ * Describes a vector of columns to be parsed.
+ *
+ * <p>
+ *
+ * There are two main types of scans. An unbounded scan and a bounded
+ * scan. By default, the scan is bounded.
  */
-typedef std::vector<FlatFileColumnDescriptor> FlatFileRowDescriptor;
+class FlatFileRowDescriptor : public std::vector<FlatFileColumnDescriptor> 
+{
+    bool bounded;
+
+public:
+    /**
+     * Maximum number of columns in an unbounded scan
+     */
+    static const int MAX_COLUMNS = 1024;
+
+    /**
+     * Maximum length of a column in an unbounded scan. This is based on
+     * the default farrago maximum length.
+     */
+    static const int MAX_COLUMN_LENGTH = 65535;
+    
+    /**
+     * Construct a new row descriptor
+     */
+    FlatFileRowDescriptor();
+
+    /**
+     * Set scan to run in an unbounded mode, with a dynamic number of
+     * columns, and unbounded column sizes
+     */
+    void setUnbounded();
+    
+    /**
+     * Whether to run regular scan mode, bounded by column descriptions,
+     * or to run in an unbounded scan mode
+     */
+    bool isBounded() const;
+};
 
 /**
  * This class parses fields and rows from a field delimited text buffer.

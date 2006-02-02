@@ -1,0 +1,84 @@
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/date_internal.sql#1 $
+0: jdbc:luciddb:> -- Tests for DateBBInternal UDF
+0: jdbc:luciddb:> set schema 'udftest';
+0: jdbc:luciddb:> set path 'udftest';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- define function
+0: jdbc:luciddb:> create function date_internal(indate bigint)
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.applib.DateBBInternal.FunctionExecute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values date_internal(9223372036854775807);
++------------------------------------+
+|               EXPR$0               |
++------------------------------------+
+| Wed Aug 17 00:12:55 PDT 292277025  |
++------------------------------------+
+0: jdbc:luciddb:> values date_internal(0);
++----------------------------+
+|           EXPR$0           |
++----------------------------+
+| Sat Jan 01 16:00:00 PST 1  |
++----------------------------+
+0: jdbc:luciddb:> values date_internal(-63072000000);
++----------------------------+
+|           EXPR$0           |
++----------------------------+
+| Thu Jan 02 16:00:00 PST 2  |
++----------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- these should fail
+0: jdbc:luciddb:> values date_internal(9223372036854775808);
+Error: From line 1, column 22 to line 1, column 40: Numeric literal '9223372036854775808' out of range (state=,code=0)
+0: jdbc:luciddb:> values date_internal(4.55);
+Error: From line 1, column 8 to line 1, column 26: No match found for function signature DATE_INTERNAL(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> values date_internal(9223372036854775807.01);
+Error: From line 1, column 22 to line 1, column 43: Numeric literal '922337203685477580701' out of range (state=,code=0)
+0: jdbc:luciddb:> values date_internal(9223372036854775807.99);
+Error: From line 1, column 22 to line 1, column 43: Numeric literal '922337203685477580799' out of range (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create view with reference to date_internal
+0: jdbc:luciddb:> create view fromint as
+. . . . . . . . > select fname, date_internal(age * 8640000) 
+. . . . . . . . > from customers;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from fromint
+. . . . . . . . > order by 1;
++---------------+----------------------------+
+|     FNAME     |           EXPR$1           |
++---------------+----------------------------+
+| 2Tito1        | Mon Jan 03 08:48:00 PST 1  |
+| Dirk the 3rd  | Wed Jan 05 13:36:00 PST 1  |
+| Ephram        | Fri Jan 07 20:48:00 PST 1  |
+| Gregory       | Fri Jan 07 04:00:00 PST 1  |
+| Lilah         | Tue Jan 04 08:48:00 PST 1  |
+| Mark          | Wed Jan 05 01:36:00 PST 1  |
+| Mary          | Sun Jan 02 20:48:00 PST 1  |
++---------------+----------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create view todate as
+. . . . . . . . > select date_internal(coltiny), date_internal(colsmall), date_internal(colint), date_internal(colbig) 
+. . . . . . . . > from inttable;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from todate
+. . . . . . . . > order by 1;
++----------------------------+----------------------------+----------------------------+------------------------------+
+|           EXPR$0           |           EXPR$1           |           EXPR$2           |            EXPR$3            |
++----------------------------+----------------------------+----------------------------+------------------------------+
+| Sat Jan 01 15:59:59 PST 1  | Sat Jan 01 16:00:00 PST 1  | Sun Jan 02 04:41:18 PST 1  | Thu Feb 06 11:22:01 PST 385  |
+| Sat Jan 01 16:00:00 PST 1  | Sat Jan 01 16:00:32 PST 1  | Wed Jan 26 12:31:23 PST 1  | Sun Feb 20 09:02:47 PST 1    |
+| Sat Jan 01 16:00:00 PST 1  | Sat Jan 01 15:59:27 PST 1  | Tue Dec 07 19:28:36 PST 1  | Fri Nov 12 22:57:12 PST 1    |
++----------------------------+----------------------------+----------------------------+------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- in expressions
+0: jdbc:luciddb:> values 'Here''s the date:' || date_internal(2207520000000);
++---------------------------------------------+
+|                   EXPR$0                    |
++---------------------------------------------+
+| Here's the date:Sat Dec 15 16:00:00 PST 70  |
++---------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

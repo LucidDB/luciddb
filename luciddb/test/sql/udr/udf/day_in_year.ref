@@ -1,0 +1,92 @@
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/day_in_year.sql#1 $
+0: jdbc:luciddb:> -- Tests for DayInYear UDF
+0: jdbc:luciddb:> set schema 'udftest';
+0: jdbc:luciddb:> set path 'udftest';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- define function
+0: jdbc:luciddb:> create function day_in_year(dt date)
+. . . . . . . . > returns integer
+. . . . . . . . > language java
+. . . . . . . . > specific day_in_year_date
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.applib.DayInYear.FunctionExecute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function day_in_year(ts timestamp)
+. . . . . . . . > returns integer
+. . . . . . . . > language java
+. . . . . . . . > specific day_in_year_timestamp
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.applib.DayInYear.FunctionExecute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function day_in_year(yr integer, mth integer, dt integer)
+. . . . . . . . > returns integer
+. . . . . . . . > language java
+. . . . . . . . > specific day_in_year_ymd
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.applib.DayInYear.FunctionExecute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values day_in_year(date'2006-10-31');
++---------+
+| EXPR$0  |
++---------+
+| 304     |
++---------+
+0: jdbc:luciddb:> values day_in_year(timestamp'2020-1-1 12:59:00');
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:luciddb:> values day_in_year(1988, 5, 22);
++---------+
+| EXPR$0  |
++---------+
+| 143     |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create view with reference to day_in_year
+0: jdbc:luciddb:> create view diy(fm, fromDt, fromTs, fromFm) as
+. . . . . . . . > select fm, day_in_year(datecol), day_in_year(tscol), day_in_year(1999, fm, fm)
+. . . . . . . . > from data_source;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from diy
+. . . . . . . . > order by 1;
++-----+---------+---------+---------+
+| FM  | FROMDT  | FROMTS  | FROMFM  |
++-----+---------+---------+---------+
+| 1   | 268     | 315     | 1       |
+| 2   | 29      | 162     | 33      |
+| 10  | 80      | 292     | 283     |
++-----+---------+---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select fm, day_in_year(fromDt+1800, mod(fromTs, 13), mod(fromFm, 31))
+. . . . . . . . > from diy
+. . . . . . . . > order by 1;
++-----+---------+
+| FM  | EXPR$1  |
++-----+---------+
+| 1   | 61      |
+| 2   | 153     |
+| 10  | 156     |
++-----+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- in expressions
+0: jdbc:luciddb:> select fm, (day_in_year(datecol) + day_in_year(tscol)) / day_in_year(1999, fm, fm) 
+. . . . . . . . > from data_source
+. . . . . . . . > order by 1;
++-----+---------+
+| FM  | EXPR$1  |
++-----+---------+
+| 1   | 583     |
+| 2   | 5       |
+| 10  | 1       |
++-----+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- nested
+0: jdbc:luciddb:> values (day_in_year(2006, day_in_year(date'1800-01-12'), day_in_year(timestamp'1976-01-05 10:50:45')));
++---------+
+| EXPR$0  |
++---------+
+| 339     |
++---------+
+0: jdbc:luciddb:> !quit

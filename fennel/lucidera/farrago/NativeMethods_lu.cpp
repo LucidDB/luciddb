@@ -47,7 +47,10 @@ class ExecStreamSubFactory_lu
     
     char readCharParam(const std::string &val)
     {
-        assert(val.size() == 1);
+        assert(val.size() <= 1);
+        if (val.size() == 0) {
+            return 0;
+        }
         return val.at(0);
     }
 
@@ -97,7 +100,14 @@ class ExecStreamSubFactory_lu
         params.quoteChar = readCharParam(streamDef.getQuoteCharacter());
         params.escapeChar = readCharParam(streamDef.getEscapeCharacter());
         params.header = streamDef.isHasHeader();
+        
+        params.numRowsScan = streamDef.getNumRowsScan();
         params.calcProgram = streamDef.getCalcProgram();
+        if (params.numRowsScan > 0 && params.calcProgram.size() > 0) {
+            params.mode = FLATFILE_MODE_SAMPLE;
+        } else if (params.numRowsScan > 0) {
+            params.mode = FLATFILE_MODE_DESCRIBE;
+        }
         pEmbryo->init(FlatFileExecStream::newFlatFileExecStream(), params);
     }
 

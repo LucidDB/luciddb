@@ -37,7 +37,7 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.util.TestUtil;
+import org.eigenbase.util.*;
 
 import com.disruptivetech.farrago.calc.*;
 
@@ -55,18 +55,21 @@ class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
     //~ Instance fields -------------------------------------------------------
 
     private FlatFileColumnSet columnSet;
+    FlatFileParams.SchemaType schemaType;
 
     //~ Constructors ----------------------------------------------------------
 
     FlatFileFennelRel(
         FlatFileColumnSet columnSet,
         RelOptCluster cluster,
-        RelOptConnection connection)
+        RelOptConnection connection,
+        FlatFileParams.SchemaType schemaType)
     {
         super(
             cluster, new RelTraitSet(FENNEL_EXEC_CONVENTION), columnSet,
             connection);
         this.columnSet = columnSet;
+        this.schemaType = schemaType;
     }
     
     //~ Methods ---------------------------------------------------------------
@@ -89,8 +92,6 @@ class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
         if (params.getWithLogging()) {
             streamDef.setErrorFilePath(columnSet.getLogFilePath());
         }
-        streamDef.setHasHeader(params.getWithHeader());
-        streamDef.setNumRowsScan(params.getNumRowsScan());
         streamDef.setFieldDelimiter(
             Character.toString(params.getFieldDelimiter()));
         streamDef.setRowDelimiter(
@@ -99,8 +100,38 @@ class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
             Character.toString(params.getQuoteChar()));
         streamDef.setEscapeCharacter(
             Character.toString(params.getEscapeChar()));
-        streamDef.setCalcProgram(
-            ProgramWriter.write(columnSet.getRowType()));
+
+        // The schema type is encoded into the number of rows to 
+        // scan and program parameters
+        int numRowsScan = 0;
+        String program = "";
+        switch (schemaType) {
+        case DESCRIBE:
+            numRowsScan = params.getNumRowsScan();
+            break;
+        case SAMPLE:
+            numRowsScan = params.getNumRowsScan();
+            // fall through to get program
+        case QUERY:
+            ProgramWriter pw = 
+                new ProgramWriter(getCluster().getRexBuilder());
+            program = pw.write(rowType);
+            break;
+        default:
+            Util.needToImplement("unsupported schema type");
+            break;
+        }
+        boolean header = params.getWithHeader();
+        if (numRowsScan > 0 && header) {
+            // during a sample or describe query, treat header as any 
+            // other data, but do not count it against the user specified 
+            // number of rows to scan
+            numRowsScan++;
+            header = false;
+        }
+        streamDef.setNumRowsScan(numRowsScan);
+        streamDef.setCalcProgram(program);
+        streamDef.setHasHeader(header);
         
         return streamDef;
     }
@@ -115,8 +146,8 @@ class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
     // implement RelNode
     public Object clone()
     {
-        FlatFileFennelRel clone =
-            new FlatFileFennelRel(columnSet, getCluster(), connection);
+        FlatFileFennelRel clone = new FlatFileFennelRel(
+            columnSet, getCluster(), connection, schemaType);
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -128,8 +159,17 @@ class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
      * from a flat file into typed data. It is assumed that the text
      * has already been processed for quoting and escape characters.
      */
-    static public class ProgramWriter 
+    private class ProgramWriter 
     {
+        RexBuilder rexBuilder;
+        RelDataTypeFactory typeFactory;
+        
+        public ProgramWriter(RexBuilder rexBuilder) 
+        {
+            this.rexBuilder = rexBuilder;
+            typeFactory = rexBuilder.getTypeFactory(); 
+        }
+        
         /**
          * Given the description of the expected data types,
          * generates a program for converting text into typed data.
@@ -146,24 +186,23 @@ class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
          * It relies on a {@link RexToCalcTranslator} to convert the
          * casts into a calculator program.
          */
-        public static String write(RelDataType rowType) 
+        public String write(RelDataType rowType) 
         {
-            RelDataTypeFactory typeFactory = new SqlTypeFactoryImpl();
-            RexBuilder rexBuilder = new RexBuilder(typeFactory);
-
             assert(rowType.isStruct());
             RelDataTypeField[] targetTypes = rowType.getFields();
+
+            // infer source text types
             RelDataType[] sourceTypes = new RelDataType[targetTypes.length];
             String[] sourceNames = new String[targetTypes.length];
-
             for (int i = 0; i < targetTypes.length; i++) {
                 RelDataType targetType = targetTypes[i].getType();
-                sourceTypes[i] = getTextType(typeFactory, targetType);
-                sourceNames[i] = "col" + i; // REVIEW: why not targetTypes.getName()?
+                sourceTypes[i] = getTextType(targetType);
+                sourceNames[i] = targetTypes[i].getName();
             }
             RelDataType inputRowType =
                 typeFactory.createStructType(sourceTypes, sourceNames);
             
+            // construct rex program
             RexProgramBuilder programBuilder =
                 new RexProgramBuilder(inputRowType, rexBuilder);
             for (int i = 0; i < targetTypes.length; i++) {
@@ -177,6 +216,7 @@ class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
             }
             RexProgram program = programBuilder.getProgram();
 
+            // translate to a fennel calc program
             RexToCalcTranslator translator =
                 new RexToCalcTranslator(rexBuilder);
             return translator.generateProgram(inputRowType, program);
@@ -186,9 +226,7 @@ class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
          * Converts a SQL type into a type that can be used by
          * a Fennel FlatFileExecStream to read files.
          */
-        public static RelDataType getTextType(
-            RelDataTypeFactory factory,
-            RelDataType sqlType) 
+        private RelDataType getTextType(RelDataType sqlType) 
         {
             int length = FLAT_FILE_MAX_NON_CHAR_VALUE_LEN;
             switch (sqlType.getSqlTypeName().getOrdinal()) {
@@ -223,55 +261,7 @@ class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
                 assert(false) : "Type is unsupported for flat files: " +
                     sqlType.getSqlTypeName();
             }
-            return factory.createSqlType(SqlTypeName.Varchar, length);
-        }
-    }
-
-    /**
-     * Tests the {@link ProgramWriter}
-     */
-    static public class Tester extends TestCase 
-    {
-        public Tester(String name)
-        {
-            super(name);
-        }
-
-        /** fulfils the requirement of at least one test */
-        public void testSomething()
-        {   
-        }
-        
-        /** disable this test so that it doesn't fail when calc is updated */
-        public void _testProgram() 
-        {
-            RelDataTypeFactory typeFactory = new SqlTypeFactoryImpl();
-            RelDataType fieldType =
-                typeFactory.createSqlType(SqlTypeName.Integer);
-            RelDataType[] fieldTypes = new RelDataType[1];
-            String[] fieldNames = new String[1];
-            fieldTypes[0] = fieldType;
-            fieldNames[0] = "col1";
-            RelDataType rowType =
-                typeFactory.createStructType(fieldTypes, fieldNames);
-            
-            String program = ProgramWriter.write(rowType);
-            final String[] expecteds = {
-                "O s4;",
-                "I vc,255;",
-                "L s8, s4, bo;",
-                "C bo, bo, vc,5;",
-                "V 1, 0, 0x3232303034 /* 22004 */;",
-                "T;",
-                "CALL 'castA(L0, I0) /* 0: CAST($t0):BIGINT NOT NULL */;",
-                "CAST L1, L0 /* 1: CAST(CAST($t0):BIGINT NOT NULL):INTEGER NOT NULL CAST($t0):INTEGER NOT NULL */;",
-                "ISNULL L2, L1 /* 2: */;",
-                "JMPF @6, L2 /* 3: */;",
-                "RAISE C2 /* 4: */;",
-                "RETURN /* 5: */;",
-                "REF O0, L1 /* 6: */;",
-                "RETURN /* 7: */;"};
-            assertEquals(TestUtil.fold(expecteds), program);
+            return typeFactory.createSqlType(SqlTypeName.Varchar, length);
         }
     }
 }

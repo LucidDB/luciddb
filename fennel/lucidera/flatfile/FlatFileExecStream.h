@@ -28,6 +28,16 @@
 FENNEL_BEGIN_NAMESPACE
 
 /**
+ * Describes the type of scan to be performed by an ExecStream
+ */
+enum FlatFileMode 
+{
+    FLATFILE_MODE_QUERY = 0,
+    FLATFILE_MODE_DESCRIBE,
+    FLATFILE_MODE_SAMPLE
+};
+
+/**
  * FlatFileExecStreamParams defines parameters for instantiating a
  * FlatFileExecStream. Currently, ASCII data is supported. More
  * parameters may be needed to support internationalization.
@@ -92,10 +102,17 @@ struct FlatFileExecStreamParams : public SingleOutputExecStreamParams
     bool header;
 
     /**
+     * Specifies number of rows to scan when sampling data.
+     */
+    int numRowsScan;
+
+    /**
      * Converts flat file text into typed data
      */
     std::string calcProgram;
-    
+
+    FlatFileMode mode;
+
     explicit FlatFileExecStreamParams()
     {
         errorFilePath = "";
@@ -104,6 +121,8 @@ struct FlatFileExecStreamParams : public SingleOutputExecStreamParams
         quoteChar = '"';
         escapeChar = '\\';
         header = true;
+        numRowsScan = 0;
+        mode = FLATFILE_MODE_QUERY;
     }
 };
 
@@ -111,20 +130,6 @@ struct FlatFileExecStreamParams : public SingleOutputExecStreamParams
  * FlatFileExecStream parses a text file and produces tuples according to a
  * specified column format. Options support a variety of delimiters and
  * quoting styles. Processing errors are optionally logged to a related file.
- *
- * <p>
- *
- * This implementation does not follow through with conversion of text into
- * native Fennel types. Instead, it scans for the locations of columns in a
- * text buffer and marshalls string values.
- *
- * <p>
- *
- * To actually implement data conversion, a calculator program would be
- * passed in as a parameter to the exec stream. The exec stream would then
- * be able to use a calculator to perform conversions. At the cost of
- * transferring to and from a temporary buffer, all of the conversions
- * could also be handled in a separate CalcExecStream.
  *
  * <p>
  *

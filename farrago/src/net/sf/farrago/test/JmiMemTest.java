@@ -23,10 +23,16 @@ package net.sf.farrago.test;
 
 import net.sf.farrago.*;
 import net.sf.farrago.fem.med.*;
-import net.sf.farrago.cwm.core.*;
 
 import org.eigenbase.jmi.*;
 import org.eigenbase.jmi.mem.*;
+
+import org.netbeans.api.xmi.*;
+
+import java.io.*;
+import java.util.*;
+
+import javax.jmi.reflect.*;
 
 import junit.framework.*;
 
@@ -45,6 +51,10 @@ import junit.framework.*;
  */
 public class JmiMemTest extends FarragoTestCase
 {
+    private static final String TABLE_NAME = "Chips Ahoy";
+    
+    private static final String COLUMN_NAME = "Keebler Elves";
+    
     /**
      * Creates a new JmiMemTest object.
      *
@@ -61,30 +71,117 @@ public class JmiMemTest extends FarragoTestCase
         return wrappedSuite(JmiMemTest.class);
     }
 
-    public void testMemFactory()
+    public void testEarlyBinding()
         throws Exception
     {
         FarragoMemFactory factory = new FarragoMemFactory(
             repos.getModelGraph());
 
         FemLocalTable table = factory.newFemLocalTable();
+        table.setName(TABLE_NAME);
         FemStoredColumn column = factory.newFemStoredColumn();
         table.getFeature().add(column);
         assertSame(table, column.getOwner());
+        assertSame(table, column.refImmediateComposite());
+        assertEquals(TABLE_NAME, table.getName());
+
+        RefClass tableClass = table.refClass();
+        RefObject tableObj = tableClass.refCreateInstance(
+            Collections.singletonList(TABLE_NAME));
+        assertTrue(tableObj instanceof FemLocalTable);
+        table = (FemLocalTable) tableObj;
+        assertEquals(TABLE_NAME, table.getName());
     }
 
-    private static class FarragoMemFactory extends FarragoMetadataFactoryImpl
+    public void testExportImport()
     {
-        private final JmiMemFactory factoryImpl;
+        FarragoMemFactory factory = new FarragoMemFactory(
+            repos.getModelGraph());
+        
+        FemLocalTable table = factory.newFemLocalTable();
+        table.setName(TABLE_NAME);
+        FemStoredColumn column = factory.newFemStoredColumn();
+        column.setName(COLUMN_NAME);
+        table.getFeature().add(column);
+
+        String xmi = JmiObjUtil.exportToXmiString(
+            Collections.singleton(table));
+
+        Collection c = JmiObjUtil.importFromXmiString(
+            factory.getImpl().getRootPackage(), xmi);
+
+        assertEquals(1, c.size());
+
+        Object root = c.iterator().next();
+        assertTrue(root instanceof FemLocalTable);
+        table = (FemLocalTable) root;
+        assertEquals(TABLE_NAME, table.getName());
+
+        c = table.getFeature();
+        assertEquals(1, c.size());
+        Object child = c.iterator().next();
+        assertTrue(child instanceof FemStoredColumn);
+        column = (FemStoredColumn) child;
+        assertEquals(COLUMN_NAME, column.getName());
+    }
+
+    public void testMassiveExportImport()
+        throws Exception
+    {
+        // First, export the entire repository from MDR storage.
+        XMIWriter xmiWriter = XMIWriterFactory.getDefault().createXMIWriter();
+        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+
+        // While exporting, hide FemFennelConfig, because JmiMemFactory
+        // can't currently handle the 1-to-1 association
+        // FarragoConfiguresFennel.
+        repos.beginReposTxn(true);
+        try {
+            repos.getCurrentConfig().getFennelConfig().refDelete();
+            xmiWriter.write(outStream, repos.getFarragoPackage(), "1.2");
+        } finally {
+            // rollback
+            repos.endReposTxn(true);
+        }
+        String xmi1 = outStream.toString();
+
+        // Import into an in-mem repository.
+        FarragoMemFactory factory = new FarragoMemFactory(
+            repos.getModelGraph());
+        Collection c = JmiObjUtil.importFromXmiString(
+            factory.getImpl().getRootPackage(), xmi1);
+
+        // Re-export from there.  This time we use the root objects from
+        // the import because JmiMemFactory has no notion of
+        // extents.
+        outStream = new ByteArrayOutputStream();
+        xmiWriter.write(outStream, c, "1.2");
+        String xmi2 = outStream.toString();
+
+        // Now diff:  thanks to the way default XMI id generation works,
+        // the XMI content should come out the same.
+        xmi1 = xmi1.replaceFirst("timestamp = \'.*\'", "timestamp= XXX");
+        xmi2 = xmi2.replaceFirst("timestamp = \'.*\'", "timestamp= XXX");
+        assertEquals(xmi1, xmi2);
+    }
+
+    private class FarragoMemFactory extends FarragoMetadataFactoryImpl
+    {
+        private final FactoryImpl factoryImpl;
 
         public FarragoMemFactory(JmiModelGraph modelGraph)
         {
             factoryImpl = new FactoryImpl(modelGraph);
             this.setRootPackage((FarragoPackage) factoryImpl.getRootPackage());
         }
+
+        public FactoryImpl getImpl()
+        {
+            return factoryImpl;
+        }
     }
-    
-    private static class FactoryImpl extends JmiModeledMemFactory
+
+    private class FactoryImpl extends JmiModeledMemFactory
     {
         FactoryImpl(JmiModelGraph modelGraph)
         {

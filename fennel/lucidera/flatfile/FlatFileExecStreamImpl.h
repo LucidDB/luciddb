@@ -66,6 +66,13 @@ class FlatFileExecStreamImpl : public FlatFileExecStream
     TupleData textTuple, dataTuple;
     bool isRowPending;
 
+    // for sampling/describe mode
+    FlatFileMode mode;
+    int numRowsScan;
+    bool done;
+    std::vector<uint> fieldSizes;
+    std::string describeResult;
+
     SegPageLock bufferLock;
     SegmentAccessor scratchAccessor;
 
@@ -106,15 +113,23 @@ class FlatFileExecStreamImpl : public FlatFileExecStream
         const TupleDescriptor &tupleDesc);
     
     /**
-     * Converts a text row into a data tuple.
+     * Processes a row of input data. For regular queries and sampling
+     * queries, this produces a tuple. However, for a describe, a tuple
+     * is not produced until the end.
      *
      * @param result result of parsing text row
      *
      * @param tuple tuple data
      */
-    void convertTuple(
+    void handleTuple(
         const FlatFileRowParseResult &result,
         TupleData &tuple);
+
+    /**
+     * Based on rows sampled, generate an output row with a description
+     * of the stream.
+     */
+    void describeStream(TupleData &tupleData);
 
     /**
      * Logs a single error to file. The reason for the error is read

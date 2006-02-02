@@ -22,7 +22,7 @@ package com.lucidera.farrago.namespace.flatfile;
 
 import java.io.File;
 import java.sql.*;
-import java.util.Properties;
+import java.util.*;
 
 import org.eigenbase.util.*;
 
@@ -47,6 +47,43 @@ import net.sf.farrago.namespace.impl.*;
  */
 class FlatFileParams extends MedAbstractBase
 {
+    /**
+     * Enumeration for schema types used by the flat file reader.
+     */
+    public enum SchemaType
+    {
+        QUERY    ("BCP"), 
+        SAMPLE   ("SAMPLE"), 
+        DESCRIBE ("SAMPLE_DESC");
+        
+        //~ Static initialization/methods --------------------------------
+
+        private static Map<String, SchemaType> types;
+        static {
+            types = new HashMap<String, SchemaType>();
+            for (SchemaType type : SchemaType.values()) 
+            {
+                types.put(type.schemaName, type);
+            }
+        }
+
+        public static SchemaType getSchemaType(String schemaName) 
+        {
+            return types.get(schemaName);
+        }
+
+        //~ Instance fields/methods --------------------------------------
+
+        private String schemaName;
+        private SchemaType(String schemaName) {
+            this.schemaName = schemaName;
+        }
+        
+        public String getSchemaName() {
+            return schemaName;
+        }
+    }
+
     //~ Static fields/initializers --------------------------------------------
 
     public static final String PROP_DIRECTORY = "DIRECTORY";
@@ -75,7 +112,6 @@ class FlatFileParams extends MedAbstractBase
     private static final boolean DEFAULT_WITH_HEADER = true;
     private static final int DEFAULT_NUM_ROWS_SCAN = 5;
     private static final boolean DEFAULT_WITH_LOGGING = true;
-    private static final String DEFAULT_SCHEMA_NAME = "BCP";
     
     
     //~ Instance fields -------------------------------------------------------
@@ -138,8 +174,6 @@ class FlatFileParams extends MedAbstractBase
             props, PROP_NUM_ROWS_SCAN, DEFAULT_NUM_ROWS_SCAN);
         logDirectory = decodeDirectory(
             props.getProperty(PROP_LOG_DIRECTORY, null));
-        schemaName =
-            props.getProperty(PROP_SCHEMA_NAME, DEFAULT_SCHEMA_NAME);
     }
     
     /**
@@ -289,9 +323,24 @@ class FlatFileParams extends MedAbstractBase
         return logDirectory;
     }
     
-    public String getSchemaName() 
+    /**
+     * Lookup the type of a schema based upon it's schema name. 
+     * The queryDefault parameter allows the type to default to 
+     * QUERY when the schema name is unrecognized. This is 
+     * useful for foreign tables, which use a local schema name.
+     * 
+     * @param schemaName name of schema to lookup
+     * @param queryDefault whether to make a query the default type
+     */
+    public static SchemaType getSchemaType(
+        String schemaName, 
+        boolean queryDefault) 
     {
-        return schemaName;
+        SchemaType type = SchemaType.getSchemaType(schemaName);
+        if (type == null && queryDefault) {
+            type = SchemaType.QUERY;
+        }
+        return type;
     }
 }
 

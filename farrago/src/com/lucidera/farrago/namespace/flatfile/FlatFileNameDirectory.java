@@ -82,7 +82,9 @@ class FlatFileNameDirectory extends MedAbstractNameDirectory
         throws SQLException
     {
         if (scope.equals(FarragoMedMetadataQuery.OTN_SCHEMA)) {        
-            if (foreignName.equals(server.params.getSchemaName())) {
+            FlatFileParams.SchemaType schemaType = 
+                FlatFileParams.getSchemaType(foreignName, false);
+            if (schemaType != null) {
                 return new FlatFileNameDirectory(server,
                     FarragoMedMetadataQuery.OTN_TABLE);
             } else {
@@ -105,7 +107,7 @@ class FlatFileNameDirectory extends MedAbstractNameDirectory
                 FarragoMedMetadataQuery.OTN_SCHEMA);
             if (wantSchemas) {
                 sink.writeObjectDescriptor(
-                    server.params.getSchemaName(),
+                    FlatFileParams.SchemaType.QUERY.getSchemaName(),
                     FarragoMedMetadataQuery.OTN_SCHEMA,
                     null,
                     Collections.EMPTY_MAP);

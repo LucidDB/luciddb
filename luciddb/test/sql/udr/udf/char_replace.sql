@@ -1,9 +1,9 @@
+-- $Id$
 -- Test queries for charReplace UDF
 set schema 'udftest';
 set path 'udftest';
 
 -- define CharReplace functions
-
 create function char_replace(str varchar(128), oldC varchar(128), newC varchar(128)) 
 returns varchar(128)
 language java

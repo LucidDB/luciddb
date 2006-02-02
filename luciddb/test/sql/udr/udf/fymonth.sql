@@ -1,3 +1,5 @@
+-- $Id$
+-- Test queries for FYMonth UDF
 set schema 'udftest';
 set path 'udftest';
 
@@ -25,7 +27,6 @@ select * from fiscal_months
 order by 1;
 
 -- in expressions
-
 select fm, fymonth(datecol, fm) + fymonth(tscol, fm)
 from data_source
 order by 1;

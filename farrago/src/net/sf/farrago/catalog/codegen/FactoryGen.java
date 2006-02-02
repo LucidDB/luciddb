@@ -179,7 +179,7 @@ public class FactoryGen
                 continue;
             }
             Class classInterface =
-                JmiUtil.getJavaInterfaceForRefClass(refClass);
+                JmiUtil.getJavaInterfaceForRefObject(refClass);
             String unqualifiedInterfaceName =
                 ReflectUtil.getUnqualifiedClassName(classInterface);
             pw.print("    public ");

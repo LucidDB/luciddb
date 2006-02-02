@@ -1,3 +1,4 @@
+-- $Id$
 create schema udftest;
 
 set schema 'udftest';
@@ -17,7 +18,9 @@ insert into customers values
 ('Mary', 'O Brian', 12, 'F', '234-456-7843'),
 ('Gregory', 'Packery', 55, 'M', '(342) 234-2355'),
 ('Ephram', 'Vestrit', 62, 'M', '(321)3454321'),
-('Lilah', 'Lowe', 27, 'F', '   234    412   344  2');
+('Lilah', 'Lowe', 27, 'F', '   234    412   344  2'),
+('Dirk the 3rd', 'Treethorn', 39, 'M', '8622399175'),
+('2Tito1', '', 17, 'F', '888 888 8888');
 
 select * from customers
 order by 1;
@@ -37,3 +40,18 @@ insert into data_source values
 select * from data_source
 order by 1;
 
+create table inttable(
+colname varchar(10),
+coltiny tinyint,
+colsmall smallint,
+colint integer,
+colbig bigint);
+
+insert into inttable values
+('r1', 127, 32767, 2147483647, 4294967296),
+('r2', 0, -32767, -2147483647, -4294967296),
+('r3', -127, 0, 45678921, 12121212121212);
+
+
+select * from inttable
+order by 1;

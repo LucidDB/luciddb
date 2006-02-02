@@ -23,6 +23,22 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
+FlatFileRowDescriptor::FlatFileRowDescriptor() :
+    std::vector<FlatFileColumnDescriptor>()
+{
+    bounded = true;
+}
+
+void FlatFileRowDescriptor::setUnbounded() 
+{
+    bounded = false;
+}
+
+bool FlatFileRowDescriptor::isBounded() const
+{
+    return bounded;
+}
+
 FlatFileRowParseResult::FlatFileRowParseResult()
 {
     reset();
@@ -56,14 +72,29 @@ void FlatFileParser::scanRow(
     FlatFileColumnParseResult columnResult;
 
     result.status = FlatFileRowParseResult::NO_STATUS;
-    result.offsets.resize(columns.size());
-    result.sizes.resize(columns.size());
+    bool bounded = columns.isBounded();
+    uint maxColumns;
+    if (bounded) {
+        maxColumns = columns.size();
+        result.offsets.resize(maxColumns);
+        result.sizes.resize(maxColumns);
+    } else {
+        maxColumns = FlatFileRowDescriptor::MAX_COLUMNS;
+        result.offsets.clear();
+        result.sizes.clear();
+    }
     bool done = false;
-    for (uint i=0; i < columns.size(); i++) {
+    for (uint i=0; i < maxColumns; i++) {
+        int maxLength;
+        if (bounded) {
+            maxLength = columns[i].maxLength;
+        } else {
+            maxLength = FlatFileRowDescriptor::MAX_COLUMN_LENGTH;
+        }
         scanColumn(
             row + offset,
             size - offset,
-            columns[i].maxLength,
+            maxLength,
             columnResult);
         switch (columnResult.type) {
         case FlatFileColumnParseResult::NO_DELIM:
@@ -73,7 +104,7 @@ void FlatFileParser::scanRow(
             done = true;
             break;
         case FlatFileColumnParseResult::ROW_DELIM:
-            if (i+1 != columns.size()) {
+            if (bounded && (i+1 != columns.size())) {
                 if (i == 0) {
                     result.status = FlatFileRowParseResult::NO_COLUMN_DELIM;
                 } else {
@@ -84,7 +115,7 @@ void FlatFileParser::scanRow(
             break;
         case FlatFileColumnParseResult::MAX_LENGTH:
         case FlatFileColumnParseResult::FIELD_DELIM:
-            if (i+1 == columns.size()) {
+            if (bounded && (i+1 == columns.size())) {
                 result.status = FlatFileRowParseResult::TOO_MANY_COLUMNS;
                 done = true;
             }
@@ -92,8 +123,13 @@ void FlatFileParser::scanRow(
         default:
             permAssert(false);
         }
-        result.offsets[i] = offset;
-        result.sizes[i] = columnResult.size;
+        if (bounded) {
+            result.offsets[i] = offset;
+            result.sizes[i] = columnResult.size;
+        } else {
+            result.offsets.push_back(offset);
+            result.sizes.push_back(columnResult.size);            
+        }
         offset = columnResult.next - row;
         if (done) break;
     }

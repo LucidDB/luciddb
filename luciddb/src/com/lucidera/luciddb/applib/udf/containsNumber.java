@@ -1,8 +1,8 @@
 /*
 // $Id$
-// Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Copyright (C) 2005-2005 The Eigenbase Project
+// LucidDB is a DBMS optimized for business intelligence.
+// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006-2006 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -18,29 +18,29 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package com.lucidera.farrago.namespace.flatfile;
+package com.lucidera.luciddb.applib;
 
-import junit.framework.*;
+import java.sql.Types;
 
 /**
- * Test case for flat file name space tests
+ * containsNumber returns 1 if a string contains a number
  *
- * @author John Pham
- * @version $Id$
+ * Ported from //BB/bb713/server/SQL/containsNumber.java
  */
-public class FlatFileTest extends TestCase 
+public class containsNumber
 {
-    public FlatFileTest(String name)
+    public static boolean FunctionExecute( String in )
     {
-        super(name);
-    }
+        int len = in.length();
+        for( int i =0; i < len; i++ )
+        {
+            if( Character.isDigit( in.charAt(i) ) ) {
+                return true;
+            }
+        }
 
-    public static Test suite() 
-    {
-        TestSuite suite = new TestSuite();
-        suite.addTestSuite(FlatFileFennelRel.Tester.class);
-        return suite;
+        return false;
     }
 }
 
-// End FlatFileTest.java
+// End containsNumber.java
