@@ -343,7 +343,7 @@ class InternalTranslator
                 final QueryInfo.LocalLookupResult localLookupResult =
                     (QueryInfo.LocalLookupResult) exp;
                 return rexBuilder.makeRangeReference(localLookupResult.rowType,
-                    localLookupResult.offset);
+                    localLookupResult.offset, false);
             } else {
                 throw Util.newInternal("Unknown LookupResult subtype " + exp);
             }

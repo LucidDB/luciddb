@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2002-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -2312,8 +2312,9 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
     /**
      * Validates access to a table
      */
-    private void validateAccess(SqlValidatorTable table,
-                                SqlAccessEnum requiredAccess)
+    private void validateAccess(
+        SqlValidatorTable table,
+        SqlAccessEnum requiredAccess)
     {
         if (table != null) {
             SqlAccessType access = table.getAllowedAccess();
@@ -2407,7 +2408,9 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
      * @pre names.length > 0
      * @post return != null
      */
-    protected SqlValidatorNamespace lookup(SqlValidatorScope scope, String[] names)
+    protected SqlValidatorNamespace lookup(
+        SqlValidatorScope scope,
+        String[] names)
     {
         Util.pre(names.length > 0, "names.length > 0");
         SqlValidatorNamespace namespace = null;
@@ -2612,10 +2615,10 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             throw windowOrId.getKind().unexpected();
         }
 
-        Util.pre(null == targetWindow.getWindowFunction(),"(null == targetWindow.getWindowFunction()");
-        targetWindow.setWindowFunction(call);
+        Util.pre(null == targetWindow.getWindowCall(),"(null == targetWindow.getWindowFunctionCall()");
+        targetWindow.setWindowCall(call);
         targetWindow.validate(this,scope);
-        targetWindow.setWindowFunction(null);
+        targetWindow.setWindowCall(null);
     }
 
     /**

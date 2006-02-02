@@ -61,11 +61,11 @@ public class RexRangeRef extends RexNode
 
     /**
      * Creates a range reference.
+     *
      * @param rangeType   Type of the record returned
      * @param offset Offset of the first column within the input record
      */
-    RexRangeRef(
-        RelDataType rangeType,
+    RexRangeRef(RelDataType rangeType,
         int offset)
     {
         this.type = rangeType;

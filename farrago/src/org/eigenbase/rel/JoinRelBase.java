@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -45,10 +45,10 @@ public abstract class JoinRelBase extends AbstractRelNode
     protected Set variablesStopped = Collections.EMPTY_SET;
 
     /**
-     * Values must be of enumeration {@link JoinType}, except that {@link
+     * Values must be of enumeration {@link JoinRelType}, except that {@link
      * JoinType#RIGHT} is disallowed.
      */
-    protected int joinType;
+    protected JoinRelType joinType;
 
     protected JoinRelBase(
         RelOptCluster cluster,
@@ -56,7 +56,7 @@ public abstract class JoinRelBase extends AbstractRelNode
         RelNode left,
         RelNode right,
         RexNode condition,
-        int joinType,
+        JoinRelType joinType,
         Set variablesStopped)
     {
         super(cluster, traits);
@@ -64,11 +64,11 @@ public abstract class JoinRelBase extends AbstractRelNode
         this.right = right;
         this.condition = condition;
         this.variablesStopped = variablesStopped;
-        assert ((joinType == JoinType.INNER) || (joinType == JoinType.LEFT)
-            || (joinType == JoinType.FULL)); // RIGHT not allowed
+        assert joinType != null;
+        assert joinType != JoinRelType.RIGHT;
         this.joinType = joinType;
     }
-    
+
     public RexNode [] getChildExps()
     {
         return new RexNode [] { condition };
@@ -84,7 +84,7 @@ public abstract class JoinRelBase extends AbstractRelNode
         return new RelNode [] { left, right };
     }
 
-    public int getJoinType()
+    public JoinRelType getJoinType()
     {
         return joinType;
     }
@@ -120,7 +120,7 @@ public abstract class JoinRelBase extends AbstractRelNode
         pw.explain(
             this,
             new String [] { "left", "right", "condition", "joinType" },
-            new Object [] { JoinType.toString(joinType) });
+            new Object [] { joinType.name().toLowerCase() });
     }
 
     public void registerStoppedVariable(String name)
@@ -147,45 +147,29 @@ public abstract class JoinRelBase extends AbstractRelNode
         }
     }
 
-    public int switchJoinType(int joinType)
-    {
-        switch (joinType) {
-        case JoinRel.JoinType.LEFT:
-            return JoinRel.JoinType.RIGHT;
-        case JoinRel.JoinType.RIGHT:
-            return JoinRel.JoinType.LEFT;
-        case JoinRel.JoinType.INNER:
-        case JoinRel.JoinType.FULL:
-            return joinType;
-        default:
-            throw Util.newInternal("invalid join type " + joinType);
-        }
-    }
-
     protected RelDataType deriveRowType()
     {
         return deriveJoinRowType(
-            left, right, joinType, getCluster().getTypeFactory());
+            left.getRowType(), right.getRowType(), joinType,
+            getCluster().getTypeFactory());
     }
 
-    public static RelDataType deriveJoinRowType(RelNode left,
-        RelNode right,
-        int joinType,
+    public static RelDataType deriveJoinRowType(
+        RelDataType leftType,
+        RelDataType rightType,
+        JoinRelType joinType,
         RelDataTypeFactory typeFactory)
     {
-        RelDataType leftType = left.getRowType();
-        RelDataType rightType = right.getRowType();
-
         switch (joinType) {
-        case JoinType.LEFT:
+        case LEFT:
             rightType =
                 typeFactory.createTypeWithNullability(rightType, true);
             break;
-        case JoinType.RIGHT:
+        case RIGHT:
             leftType =
                 typeFactory.createTypeWithNullability(leftType, true);
             break;
-        case JoinType.FULL:
+        case FULL:
             leftType =
                 typeFactory.createTypeWithNullability(leftType, true);
             rightType =
@@ -236,32 +220,6 @@ public abstract class JoinRelBase extends AbstractRelNode
 
     //~ Inner Classes ---------------------------------------------------------
 
-    /**
-     * Enumeration of join types.
-     */
-    public static abstract class JoinType
-    {
-        public static final int INNER = 0;
-        public static final int LEFT = 1;
-        public static final int RIGHT = 2;
-        public static final int FULL = 3;
-
-        public static final String toString(int i)
-        {
-            switch (i) {
-            case INNER:
-                return "inner";
-            case LEFT:
-                return "left";
-            case RIGHT:
-                return "right";
-            case FULL:
-                return "full";
-            default:
-                throw Util.newInternal("bad JoinType " + i);
-            }
-        }
-    }
 }
 
 // End JoinRelBase.java

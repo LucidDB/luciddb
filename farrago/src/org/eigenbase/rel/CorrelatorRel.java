@@ -104,13 +104,13 @@ public final class CorrelatorRel extends JoinRelBase
         RelNode left,
         RelNode right,
         List correlations,
-        int joinType)
+        JoinRelType joinType)
     {
         super(cluster, new RelTraitSet(CallingConvention.NONE), left, right,
             cluster.getRexBuilder().makeLiteral(true), joinType,
             Collections.EMPTY_SET);
         this.correlations = correlations;
-        assert joinType == JoinType.LEFT || joinType == JoinType.INNER;
+        assert joinType == JoinRelType.LEFT || joinType == JoinRelType.INNER;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -140,7 +140,7 @@ public final class CorrelatorRel extends JoinRelBase
                 "left", "right", "condition", "joinType", "correlations"
             },
             new Object [] {
-                JoinType.toString(joinType),
+                joinType.name().toLowerCase(),
                 correlations
             });
     }

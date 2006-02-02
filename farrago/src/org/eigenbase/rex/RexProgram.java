@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2002-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -504,8 +504,7 @@ public class RexProgram
                 assert !fail;
                 ++failCount;
             }
-            if (!RelOptUtil.eq(
-                localRef.getType(), exprs[index].getType(), fail)) {
+            if (!RelOptUtil.eq("type1", localRef.getType(), "type2", exprs[index].getType(), fail)) {
                 assert !fail;
                 ++failCount;
             }
@@ -524,8 +523,7 @@ public class RexProgram
                 ++failCount;
             }
             final RelDataTypeField typeField = refType.getFields()[index];
-            if (!RelOptUtil.eq(
-                typeField.getType(), fieldAccess.getType(), fail)) {
+            if (!RelOptUtil.eq("type1", typeField.getType(), "type2", fieldAccess.getType(), fail)) {
                 assert !fail;
                 ++failCount;
             }

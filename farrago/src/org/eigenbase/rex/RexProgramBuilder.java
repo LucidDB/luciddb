@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2002-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -140,11 +140,46 @@ public class RexProgramBuilder
      * Adds a projection based upon the <code>index</code>th expression.
      *
      * @param ordinal Index of expression to project
+     * @param name
      * @return the ref created
      */
-    public RexLocalRef addProject(int ordinal)
+    public RexLocalRef addProject(int ordinal, final String name)
     {
-        return addProject(localRefList.get(ordinal), null);
+        return addProject(localRefList.get(ordinal), name);
+    }
+
+    /**
+     * Adds a project expression to the program at a given position.
+     *
+     * <p>The expression specified in terms of the input fields.
+     * If not, call {@link #registerOutput(RexNode)} first.
+     *
+     * @param at Position in project list to add expression
+     * @param expr Expression to add
+     * @param name Name of field in output row type; if null, a unique name
+     *   will be generated when the program is created
+     * @return the ref created
+     */
+    public RexLocalRef addProject(int at, RexNode expr, String name)
+    {
+        final RexLocalRef ref = registerInput(expr);
+        projectRefList.add(at, ref);
+        projectNameList.add(at, name);
+        return ref;
+    }
+
+    /**
+     * Adds a projection based upon the <code>index</code>th expression
+     * at a given position.
+     *
+     * @param at Position in project list to add expression
+     * @param ordinal Index of expression to project
+     * @param name
+     * @return the ref created
+     */
+    public RexLocalRef addProject(int at, int ordinal, final String name)
+    {
+        return addProject(at, localRefList.get(ordinal), name);
     }
 
     /**
@@ -626,8 +661,7 @@ public class RexProgramBuilder
     {
         assert projectRefList.isEmpty();
         final RelDataTypeField[] fields = inputRowType.getFields();
-        final RexInputRef[] refs = new RexInputRef[fields.length];
-        for (int i = 0; i < refs.length; i++) {
+        for (int i = 0; i < fields.length; i++) {
             final RelDataTypeField field = fields[i];
             addProject(new RexInputRef(i, field.getType()), field.getName());
         }
@@ -646,6 +680,14 @@ public class RexProgramBuilder
         assert index < fields.length;
         final RelDataTypeField field = fields[index];
         return new RexLocalRef(index, field.getType());
+    }
+
+    /**
+     * Returns the rowtype of the input to the program
+     */ 
+    public RelDataType getInputRowType()
+    {
+        return inputRowType;
     }
 
     /**
@@ -674,9 +716,8 @@ public class RexProgramBuilder
                 // field. If it is an object type, the rules are different, so
                 // skip the check.
                 assert input.getType().isStruct() ||
-                    RelOptUtil.eq(
-                        input.getType(),
-                        inputRowType.getFields()[index].getType(),
+                    RelOptUtil.eq("type1", input.getType(),
+                        "type2", inputRowType.getFields()[index].getType(),
                         true);
             }
             // Return a reference to the N'th expression, which should be
@@ -693,9 +734,8 @@ public class RexProgramBuilder
                 assert index >= 0;
                 assert index < exprList.size();
                 assert RelOptUtil.eq(
-                    exprList.get(index).getType(),
-                    local.getType(),
-                    true);
+                    "expr type", exprList.get(index).getType(),
+                    "ref type", local.getType(), true);
             }
             return local;
         }
@@ -757,7 +797,7 @@ public class RexProgramBuilder
             // column and find out what common sub-expression IT refers to.
             final int index = input.getIndex();
             final RexLocalRef local = projectRefList.get(index);
-            assert RelOptUtil.eq(local.getType(), input.getType(), true);
+            assert RelOptUtil.eq("type1", local.getType(), "type2", input.getType(), true);
             return local;
         }
 

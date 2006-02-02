@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2005-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2005-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -56,13 +56,16 @@ struct MockConsumerExecStreamParams : public SingleInputExecStreamParams
  */
 class MockConsumerExecStream : public SingleInputExecStream
 {
+protected:
     bool saveData;
     ostream* echoData;
+    vector<string> rowStrings;
+private:
     long rowCount;
     TupleData inputTuple;
     TuplePrinter tuplePrinter;
-    vector<string> rowStrings;
     bool recvEOS;
+    
 public:
     // implement ExecStream
     virtual void prepare(MockConsumerExecStreamParams const &params);

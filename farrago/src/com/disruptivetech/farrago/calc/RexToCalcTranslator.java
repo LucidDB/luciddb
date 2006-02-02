@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2002-2006 Disruptive Tech
+// Copyright (C) 2005-2006 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -31,6 +31,7 @@ import org.eigenbase.sql.type.SqlTypeUtil;
 import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.SaffronProperties;
 import org.eigenbase.util.Util;
+import org.eigenbase.rel.RelNode;
 
 import java.util.*;
 
@@ -66,6 +67,12 @@ public class RexToCalcTranslator implements RexVisitor
     private ExpressionScope scope = new ExpressionScope();
 
     protected final RexBuilder rexBuilder;
+
+    /**
+     * The relational expression this program is being generated for.
+     */
+    private final RelNode rel;
+
     /**
      * Whether the code generator should short-circuit logical operators.
      * The default value is <em>false</em>.
@@ -90,7 +97,13 @@ public class RexToCalcTranslator implements RexVisitor
     public RexToCalcTranslator(
         RexBuilder rexBuilder)
     {
+        this(rexBuilder, null);
+    }
+
+    public RexToCalcTranslator(RexBuilder rexBuilder, RelNode rel)
+    {
         this.rexBuilder = rexBuilder;
+        this.rel = rel;
 
         setGenerateComments(
             SaffronProperties.instance().generateCalcProgramComments.get());
@@ -191,6 +204,17 @@ public class RexToCalcTranslator implements RexVisitor
             };
     }
 
+
+    //~ Methods ---------------------------------------------------------------
+
+    /**
+     * Returns the relational expression this program is being generated for.
+     */
+    public RelNode getRelNode()
+    {
+        return rel;
+    }
+
     private void clearProgram(RexProgram program)
     {
         builder.clear();
@@ -201,8 +225,6 @@ public class RexToCalcTranslator implements RexVisitor
         inputExprs = null;
         this.program = program;
     }
-
-    //~ Methods ---------------------------------------------------------------
 
     public String newLabel()
     {
@@ -315,7 +337,7 @@ public class RexToCalcTranslator implements RexVisitor
         return node.toString() + node.getType().toString();
     }
 
-    void setResult(
+    public void setResult(
         RexNode node,
         CalcProgramBuilder.Register register)
     {
@@ -469,7 +491,7 @@ public class RexToCalcTranslator implements RexVisitor
                 builder.addLabel(wasNotNull);
             }
 
-            //if ok, assign result to output by reference
+            // if ok, assign result to output by reference
             CalcProgramBuilder.Register outReg = builder.newOutput(desc);
             builder.addRef(outReg, res);
         }
@@ -669,11 +691,11 @@ public class RexToCalcTranslator implements RexVisitor
      * @post result != null
      * @post result == getResult(node)
      */
-    CalcProgramBuilder.Register implementNode(RexNode node)
+    public CalcProgramBuilder.Register implementNode(RexNode node)
     {
         CalcProgramBuilder.Register result = getResult(node, false);
         if (result == null) {
-           node.accept(this);
+            node.accept(this);
             result = getResult(node, true);
         }
         return result;

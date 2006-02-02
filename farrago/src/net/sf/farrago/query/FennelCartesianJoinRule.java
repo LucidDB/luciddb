@@ -22,15 +22,8 @@
 */
 package net.sf.farrago.query;
 
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
-
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.convert.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.util.*;
-
 
 /**
  * FennelCartesianJoinRule is a rule for converting an INNER JoinRel with no
@@ -69,8 +62,8 @@ public class FennelCartesianJoinRule extends RelOptRule
         RelNode leftRel = call.rels[1];
         RelNode rightRel = call.rels[2];
 
-        if ((joinRel.getJoinType() != JoinRel.JoinType.INNER) &&
-            (joinRel.getJoinType() != JoinRel.JoinType.LEFT)) {
+        if ((joinRel.getJoinType() != JoinRelType.INNER) &&
+            (joinRel.getJoinType() != JoinRelType.LEFT)) {
             return;
         }
 

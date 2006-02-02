@@ -176,13 +176,11 @@ public class VolcanoPlannerTest extends TestCase
         RexInputRef inputRef =
             new RexInputRef(0,
                 leafRel.getRowType().getFields()[0].getType());
-        ProjectRel projectRel =
-            new ProjectRel(
-                leafRel.getCluster(),
+        RelNode projectRel =
+            CalcRel.createProject(
                 leafRel,
                 new RexNode [] { inputRef },
-                new String [] { "this" },
-                ProjectRel.Flags.Boxed);
+                new String [] { "this" });
         NoneSingleRel singleRel =
             new NoneSingleRel(
                 projectRel.getCluster(),

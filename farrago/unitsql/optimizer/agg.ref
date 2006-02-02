@@ -126,7 +126,7 @@
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[EXPR$0]])'
 '    FennelAggRel(groupCount=[0], agg#0=[COUNT()])'
-'      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[true], $0=[$t2])'
+'      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[true], $f0=[$t2])'
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
@@ -135,7 +135,7 @@
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[EXPR$0]])'
 '    FennelAggRel(groupCount=[0], agg#0=[COUNT(0)])'
-'      FennelRenameRel(fieldNames=[[$0]])'
+'      FennelRenameRel(fieldNames=[[$f0]])'
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[4]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
@@ -144,7 +144,7 @@
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[EXPR$0]])'
 '    FennelAggRel(groupCount=[0], agg#0=[SUM(0)])'
-'      FennelRenameRel(fieldNames=[[$0]])'
+'      FennelRenameRel(fieldNames=[[$f0]])'
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
@@ -153,7 +153,7 @@
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[EXPR$0]])'
 '    FennelAggRel(groupCount=[0], agg#0=[MAX(0)])'
-'      FennelRenameRel(fieldNames=[[$0]])'
+'      FennelRenameRel(fieldNames=[[$f0]])'
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
@@ -162,7 +162,7 @@
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[EXPR$0]])'
 '    FennelAggRel(groupCount=[0], agg#0=[MIN(0)])'
-'      FennelRenameRel(fieldNames=[[$0]])'
+'      FennelRenameRel(fieldNames=[[$f0]])'
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan without implementation for
@@ -170,7 +170,7 @@
 'column0'
 'ProjectRel(DEPTNO=[$0], EXPR$1=[$1])'
 '  AggregateRel(groupCount=[1], agg#0=[MAX(1)])'
-'    ProjectRel($0=[$2], $1=[$1])'
+'    ProjectRel($f0=[$2], $f1=[$1])'
 '      TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -----------------------------
@@ -184,7 +184,7 @@
 '  FennelRenameRel(fieldNames=[[DEPTNO, EXPR$1]])'
 '    FennelAggRel(groupCount=[1], agg#0=[COUNT()])'
 '      FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'        FennelRenameRel(fieldNames=[[$0]])'
+'        FennelRenameRel(fieldNames=[[$f0]])'
 '          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
@@ -195,7 +195,7 @@
 '  FennelRenameRel(fieldNames=[[NAME, EXPR$1]])'
 '    FennelAggRel(groupCount=[1], agg#0=[COUNT()])'
 '      FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'        FennelCalcRel(expr#0..11=[{inputs}], expr#12=[=($t10, $t2)], $0=[$t11], $condition=[$t12])'
+'        FennelCalcRel(expr#0..11=[{inputs}], expr#12=[=($t10, $t2)], $f0=[$t11], $condition=[$t12])'
 '          FennelCartesianProductRel(leftouterjoin=[false])'
 '            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 '            FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
@@ -208,7 +208,7 @@
 '  FennelRenameRel(fieldNames=[[DEPTNO, GENDER, EXPR$2, EXPR$3]])'
 '    FennelAggRel(groupCount=[2], agg#0=[MIN(2)], agg#1=[MAX(3)])'
 '      FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
-'        FennelRenameRel(fieldNames=[[$0, $1, $2, $3]])'
+'        FennelRenameRel(fieldNames=[[$f0, $f1, $f2, $f3]])'
 '          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 3, 6, 6]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
@@ -218,7 +218,7 @@
 '  FennelCalcRel(expr#0..1=[{inputs}], EXPR$0=[$t1])'
 '    FennelAggRel(groupCount=[1], agg#0=[SUM(1)])'
 '      FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'        FennelRenameRel(fieldNames=[[$0, $1]])'
+'        FennelRenameRel(fieldNames=[[$f0, $f1]])'
 '          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 6]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

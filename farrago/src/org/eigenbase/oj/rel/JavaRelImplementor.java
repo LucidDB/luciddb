@@ -616,7 +616,7 @@ public class JavaRelImplementor implements RelImplementor
         int fieldOffset = computeFieldOffset(rel, ordinal);
         return translate(
             rel,
-            rexBuilder.makeRangeReference(rowType, fieldOffset));
+            rexBuilder.makeRangeReference(rowType, fieldOffset, false));
     }
 
     /**

@@ -253,17 +253,14 @@ class FtrsScanToSearchRule extends RelOptRule
                     origScan.getConnection(),
                     clusteredKeyColumns,
                     origScan.isOrderPreserving);
-            mergeTraitsOnto(unclusteredScan, callTraits);
 
             FtrsIndexSearchRel unclusteredSearch =
                 new FtrsIndexSearchRel(unclusteredScan, keyInput, isUnique,
                     false, inputKeyProj, null, inputDirectiveProj);
-            mergeTraitsOnto(unclusteredSearch, callTraits);
             
             FtrsIndexSearchRel clusteredSearch =
                 new FtrsIndexSearchRel(origScan, unclusteredSearch, true,
                     false, null, null, null);
-            mergeTraitsOnto(clusteredSearch, callTraits);
             
             transformCall(call, clusteredSearch, extraFilter);
         } else {
@@ -271,7 +268,6 @@ class FtrsScanToSearchRule extends RelOptRule
             FtrsIndexSearchRel search =
                 new FtrsIndexSearchRel(origScan, keyInput, isUnique, false,
                     inputKeyProj, null, inputDirectiveProj);
-            mergeTraitsOnto(search, callTraits);
             
             transformCall(call, search, extraFilter);
         }
@@ -284,11 +280,8 @@ class FtrsScanToSearchRule extends RelOptRule
     {
         if (extraFilter != null) {
             searchRel =
-                new FilterRel(
-                    searchRel.getCluster(),
-                    searchRel,
+                CalcRel.createFilter(searchRel,
                     extraFilter);
-            mergeTraitsOnto(searchRel, call.rels[0].getTraits());
         }
         call.transformTo(searchRel);
     }

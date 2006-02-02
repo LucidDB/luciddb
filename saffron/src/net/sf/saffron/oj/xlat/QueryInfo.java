@@ -32,7 +32,6 @@ import net.sf.saffron.trace.SaffronTrace;
 import openjava.mop.Environment;
 import openjava.mop.OJClass;
 import openjava.mop.QueryEnvironment;
-import openjava.mop.Toolbox;
 import openjava.ptree.*;
 import openjava.tools.parser.ParserConstants;
 
@@ -45,7 +44,6 @@ import org.eigenbase.relopt.RelOptQuery;
 import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.reltype.RelDataTypeFactoryImpl;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexUtil;
 import org.eigenbase.util.Util;
@@ -204,7 +202,7 @@ class QueryInfo
             Expression rightExp = joinExp.getRight();
             Expression conditionExp = joinExp.getCondition();
             int saffronJoinType = joinExp.getJoinType();
-            int joinType = convertJoinType(saffronJoinType);
+            JoinRelType joinType = convertJoinType(saffronJoinType);
             RelNode left = convertFromExpToRel(leftExp);
             RelNode right = convertFromExpToRel(rightExp);
 
@@ -269,17 +267,17 @@ class QueryInfo
         }
     }
 
-    private static int convertJoinType(int saffronJoinType)
+    private static JoinRelType convertJoinType(int saffronJoinType)
     {
         switch (saffronJoinType) {
         case ParserConstants.INNER:
-            return JoinRel.JoinType.INNER;
+            return JoinRelType.INNER;
         case ParserConstants.LEFT:
-            return JoinRel.JoinType.LEFT;
+            return JoinRelType.LEFT;
         case ParserConstants.RIGHT:
-            return JoinRel.JoinType.RIGHT;
+            return JoinRelType.RIGHT;
         case ParserConstants.FULL:
-            return JoinRel.JoinType.FULL;
+            return JoinRelType.FULL;
         default:
             throw Util.newInternal("Unknown join type " + saffronJoinType);
         }
@@ -352,12 +350,10 @@ class QueryInfo
                 (RexNode []) aggInputList.toArray(
                     new RexNode[aggInputList.size()]);
             setRoot(
-                new ProjectRel(
-                    cluster,
+                CalcRel.createProject(
                     getRoot(),
                     aggInputs,
-                    RexUtil.createStructType(cluster.getTypeFactory(), aggInputs), 
-                    ProjectRel.Flags.Boxed));
+                    null));
             setRoot(
                 new AggregateRel(
                     cluster,
@@ -365,18 +361,22 @@ class QueryInfo
                     preGroups.length,
                     aggCalls));
             if (whereClause != null) {
-                setRoot(new FilterRel(
-                        cluster,
-                        getRoot(),
+                setRoot(
+                    CalcRel.createFilter(getRoot(),
                         rexWhereClause));
             }
             setRoot(
+                queryExp.isBoxed() ?
+                CalcRel.createProject(
+                    getRoot(),
+                    rexSelects,
+                    aliases) :
                 new ProjectRel(
                     cluster,
                     getRoot(),
                     rexSelects,
                     aliases,
-                    queryExp.isBoxed() ? ProjectRel.Flags.Boxed : 0));
+                    0));
 
             ExpressionList sortList = queryExp.getSort();
             Expression [] sorts = Util.toArray(sortList);
@@ -399,9 +399,8 @@ class QueryInfo
         if (whereClause != null) {
             RexNode rexWhereClause = convertExpToInternal(whereClause);
             whereClause = removeSubqueries(whereClause);
-            setRoot(new FilterRel(
-                    cluster,
-                    getRoot(),
+            setRoot(
+                CalcRel.createFilter(getRoot(),
                     rexWhereClause));
         }
 
@@ -413,7 +412,7 @@ class QueryInfo
             rexSelects[i] = convertExpToInternal(selects[i]);
         }
         setRoot(
-            ProjectRel.create(
+            CalcRel.createProject(
                 getRoot(),
                 rexSelects,
                 aliases));
