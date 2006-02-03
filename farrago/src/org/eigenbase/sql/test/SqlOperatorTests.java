@@ -93,6 +93,7 @@ public abstract class SqlOperatorTests extends TestCase
      */
     public static final boolean bug315Fixed = false;
 
+
     /**
      * Whether <a href="http://jirahost.eigenbase.org:8080/browse/FNL-3">issue
      * Fnl-3</a> is fixed.
@@ -425,8 +426,6 @@ public abstract class SqlOperatorTests extends TestCase
                 "cast(1.29 as varchar(10))", "1.29", "VARCHAR(10) NOT NULL");
         getTester().checkString(
                 "cast(.48 as varchar(10))", ".48", "VARCHAR(10) NOT NULL");
-        getTester().checkFails("cast(2.523 as char(2))", stringTruncMessage);
-
         getTester().checkString(
                 "cast(-0.29 as varchar(10))", "-.29", "VARCHAR(10) NOT NULL");
         getTester().checkString(

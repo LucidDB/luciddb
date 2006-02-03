@@ -25,7 +25,6 @@
 		<exec dir="${build.home}/thirdparty" executable="make" failonerror="true">
 			<arg value="fennel"/>
 			<arg value="farrago"/>
-			<arg value="optional"/>
 		</exec>
 	</target>
 
