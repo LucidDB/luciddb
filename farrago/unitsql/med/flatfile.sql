@@ -226,6 +226,10 @@ select * from flatfiledir_schema."example2" order by 3;
 drop table flatfiledir_schema."example2";
 drop table flatfiledir_schema."example";
 
+-- test files with null values
+select * from flatfiledir_schema."withnulls" order by 3;
+drop table flatfiledir_schema."withnulls";
+
 -- test badly qualified import foreign schema
 import foreign schema bcp LIMIT TO ("no_table")
 from server flatfiledir_server

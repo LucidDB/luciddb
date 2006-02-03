@@ -312,10 +312,15 @@ class FlatFileBCPFile
                                         0),
                                     true);
                         } else {
+                            int typeLen = Integer.parseInt(typeLength);
+                            if ((typeName.equals(SqlTypeName.Timestamp)) ||
+                                (typeName.equals(SqlTypeName.Time))) {
+                                typeLen = typeName.getDefaultPrecision();
+                            }
                             types[reader.getLineNumber()-3] =
                                 typeFactory.createTypeWithNullability(
                                     typeFactory.createSqlType(typeName,
-                                        Integer.parseInt(typeLength)),
+                                        typeLen),
                                     true);
                         }
                     } else {

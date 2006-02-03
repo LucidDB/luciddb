@@ -294,6 +294,21 @@ Error: From line 1, column 15 to line 1, column 29: Table 'FLATFILE_SCHEMA.examp
 0: jdbc:farrago:> drop table flatfiledir_schema."example2";
 0: jdbc:farrago:> drop table flatfiledir_schema."example";
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test files with null values
+0: jdbc:farrago:> select * from flatfiledir_schema."withnulls" order by 3;
++------+------------------------------------------+--------------+
+|  ID  |                   NAME                   | EXTRA_FIELD  |
++------+------------------------------------------+--------------+
+|      |                                          |              |
+| 123  |                                          |              |
+|      | Susan, Peter and Dave                    |              |
+|      |                                          |              |
+| 123  | "S,"                                     | F            |
+|      |                                          | G            |
+| 234  | Peter "peg leg", Jimmy & Samantha "Sam"  | G            |
++------+------------------------------------------+--------------+
+0: jdbc:farrago:> drop table flatfiledir_schema."withnulls";
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test badly qualified import foreign schema
 0: jdbc:farrago:> import foreign schema bcp LIMIT TO ("no_table")
 . . . . . . . . > from server flatfiledir_server
