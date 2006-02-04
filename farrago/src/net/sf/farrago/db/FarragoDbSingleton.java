@@ -21,17 +21,14 @@
 */
 package net.sf.farrago.db;
 
-import net.sf.farrago.session.*;
-import net.sf.farrago.trace.*;
-import net.sf.farrago.util.*;
-
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
-import java.util.logging.*;
+import java.util.logging.Logger;
 
-import java.util.concurrent.ConcurrentHashMap;
+import net.sf.farrago.session.FarragoSession;
+import net.sf.farrago.session.FarragoSessionFactory;
+import net.sf.farrago.trace.FarragoTrace;
+import net.sf.farrago.util.FarragoCompoundAllocation;
 
 /**
  * FarragoDbSingleton manages a singleton instance of FarragoDatabase.  It is
@@ -64,8 +61,6 @@ public abstract class FarragoDbSingleton extends FarragoCompoundAllocation
      * {@link #shutdown()}, to help prevent recursive shutdown.
      */
     private static boolean inShutdown;
-    
-    private static ConcurrentHashMap objectsInUse = new ConcurrentHashMap();
     
     //~ Methods ---------------------------------------------------------------
 
@@ -216,27 +211,6 @@ public abstract class FarragoDbSingleton extends FarragoCompoundAllocation
             assert (instance == null);
             return false;
         }
-    }
-    
-    public static void addObjectsInUse(FarragoDbStmtContext context, Set mofIds) {
-        if (mofIds != null) {
-            objectsInUse.put(context, mofIds);
-        }
-    }
-
-    public static void removeObjectsInUse(FarragoDbStmtContext context) {
-        objectsInUse.remove(context);
-    }
-    
-    public static boolean isObjectInUse(String mofId) {
-        Iterator i = objectsInUse.values().iterator();
-        while (i.hasNext()) {
-            Set s = (Set)i.next();
-            if (s.contains(mofId)) {
-                return true;
-            }
-        }
-        return false;
     }
 }
 

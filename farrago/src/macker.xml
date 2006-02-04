@@ -455,7 +455,6 @@
       <include pattern="ojrex.deps" />
       <include pattern="fennel.tuple" />
       <include pattern="query" />
-      <include pattern="db" />
     </pattern>
 
     <access-rule>

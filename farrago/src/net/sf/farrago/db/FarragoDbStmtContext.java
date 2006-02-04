@@ -83,7 +83,8 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
     private String sql;
     
     private FarragoSessionRuntimeContext runningContext;
-
+    private FarragoDdlLockManager ddlLockManager;
+    
     /**
      * query timeout in seconds, default to 0.
      */
@@ -98,10 +99,12 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
      */
     public FarragoDbStmtContext(
         FarragoDbSession session, 
-        FarragoSessionStmtParamDefFactory paramDefFactory)
+        FarragoSessionStmtParamDefFactory paramDefFactory,
+        FarragoDdlLockManager ddlLockManager)
     {
         this.session = session;
         this.paramDefFactory = paramDefFactory;
+        this.ddlLockManager = ddlLockManager;
         updateCount = -1;
     }
 
@@ -155,7 +158,7 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
     private void postprepare()
     {
         if (isPrepared()) {
-            FarragoDbSingleton.addObjectsInUse(this, executableStmt.getReferencedObjectIds());
+            ddlLockManager.addObjectsInUse(this, executableStmt.getReferencedObjectIds());
             final RelDataType dynamicParamRowType =
                 executableStmt.getDynamicParamRowType();
             final RelDataTypeField [] fields = dynamicParamRowType.getFields();
@@ -363,7 +366,7 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
         executableStmt = null;
         sql = null;
         dynamicParamValues = null;
-        FarragoDbSingleton.removeObjectsInUse(this);
+        ddlLockManager.removeObjectsInUse(this);
     }
 
     void traceExecute()

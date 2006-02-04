@@ -34,7 +34,6 @@ import net.sf.farrago.cwm.datatypes.*;
 import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
-import net.sf.farrago.db.FarragoDbSingleton;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fem.sql2003.*;
@@ -788,7 +787,7 @@ public class DdlValidator extends FarragoCompoundAllocation
             replacementTarget = findDuplicate(ddlStmt.getModelElement());
 
             if (replacementTarget != null) {
-                if (FarragoDbSingleton.isObjectInUse(replacementTarget.refMofId())) {
+                if (stmtValidator.getDdlLockManager().isObjectInUse(replacementTarget.refMofId())) {
                     throw FarragoResource.instance().ValidatorReplacedObjectInUse.ex(
                             getRepos().getLocalizedObjectName(
                                 null,
@@ -1438,7 +1437,7 @@ public class DdlValidator extends FarragoCompoundAllocation
      * @param mofId Object MOFID being dropped
      */
     private void checkInUse(final String mofId) {
-        if (FarragoDbSingleton.isObjectInUse(mofId)) {
+        if (stmtValidator.getDdlLockManager().isObjectInUse(mofId)) {
             enqueueValidationExcn(
                 new DeferredException() {
                     EigenbaseException getException()

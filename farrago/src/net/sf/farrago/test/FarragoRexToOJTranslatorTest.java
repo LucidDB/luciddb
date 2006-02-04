@@ -131,7 +131,8 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
                 new FarragoStmtValidator(repos,
                     session.getDatabase().getFennelDbHandle(), session,
                     objCache, objCache,
-                    session.getSessionIndexMap());
+                    session.getSessionIndexMap(),
+                    session.getDatabase().getDdlLockManager());
             allocations.addAllocation(stmtValidator);
             FarragoPreparingStmt stmt =
                 new FarragoPreparingStmt(stmtValidator);
