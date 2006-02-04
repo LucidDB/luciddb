@@ -69,6 +69,9 @@ public class FarragoTestConcurrentCommandExecutor extends Thread
     /** Debugging print stream.  May be null. */
     private final PrintStream debugPrintStream;
 
+    /** Command throwing error **/
+    private FarragoTestConcurrentCommand errorCommand;
+    
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -115,7 +118,7 @@ public class FarragoTestConcurrentCommandExecutor extends Thread
                 jdbcURL, FarragoCatalogInit.SA_USER_NAME, null);
             connection.setAutoCommit(false);
         } catch (Throwable t) {
-            handleError(t, "during connect");
+            handleError(t, "during connect", null);
         }
 
         // stepNumber is used to reconstitute the original step
@@ -148,7 +151,7 @@ public class FarragoTestConcurrentCommandExecutor extends Thread
                 try {
                     command.execute(this);
                 } catch (Throwable t) {
-                    handleError(t, "during step " + stepNumber);
+                    handleError(t, "during step " + stepNumber, command);
                 }
             }
         }
@@ -159,7 +162,7 @@ public class FarragoTestConcurrentCommandExecutor extends Thread
                 connection.close();
             }
         } catch (Throwable t) {
-            handleError(t, "during connection close");
+            handleError(t, "during connection close", null);
         }
     }
 
@@ -168,11 +171,13 @@ public class FarragoTestConcurrentCommandExecutor extends Thread
      */
     private void handleError(
         Throwable error,
-        String when)
+        String when,
+        FarragoTestConcurrentCommand command)
     {
         this.error = error;
         this.when = when;
-
+        this.errorCommand = command;
+        
         if (debugPrintStream != null) {
             debugPrintStream.println(Thread.currentThread().getName() + ": "
                 + when);
@@ -246,6 +251,10 @@ public class FarragoTestConcurrentCommandExecutor extends Thread
         return when;
     }
 
+    public FarragoTestConcurrentCommand getFailureCommand()
+    {
+        return errorCommand;
+    }
 
     public Integer getThreadId()
     {

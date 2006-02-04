@@ -110,6 +110,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
     private static final String FETCH = "@fetch";
     private static final String CLOSE = "@close";
     private static final String SLEEP = "@sleep";
+    private static final String ERR = "@err";
     
     private static final String SQL = "";
     private static final String EOF = null;
@@ -135,6 +136,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
                                               { CLOSE,      THREAD_STATE },
                                               { SLEEP,      THREAD_STATE },
                                               { SQL,        THREAD_STATE },
+                                              { ERR,        THREAD_STATE },
                                               { END,        POST_THREAD_STATE }
                                             } },
 
@@ -145,6 +147,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
                                               { CLOSE,      REPEAT_STATE },
                                               { SLEEP,      REPEAT_STATE },
                                               { SQL,        REPEAT_STATE },
+                                              { ERR,        THREAD_STATE },
                                               { END,        THREAD_STATE } } },
 
         { POST_THREAD_STATE, new Object[][] { { THREAD,     THREAD_STATE },
@@ -157,6 +160,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
     private static final int SLEEP_LEN = SLEEP.length();
     private static final int THREAD_LEN = THREAD.length();
     private static final int TIMEOUT_LEN = TIMEOUT.length();
+    private static final int ERR_LEN = ERR.length();
 
     private static final char[] spaces;
     private static final char[] dashes;
@@ -472,6 +476,21 @@ public class FarragoTestConcurrentScriptedCommandGenerator
                             addCommand(i, order, new PrepareCommand(sql));
                         }
                         order++;
+                    } else if (ERR.equals(command)) {
+                        String startOfSql = 
+                            trimmedLine.substring(ERR_LEN).trim();
+                        
+                        String sql = readSql(startOfSql, in);
+                        boolean isSelect = isSelect(sql);
+                        assert(!isSelect);
+                        
+                        for(int i = threadId; i < nextThreadId; i++) {
+                            addCommand(
+                                i,
+                                order,
+                                ((AbstractCommand)new SqlCommand(sql, true)));
+                        }
+                        order++;
                     } else if (FETCH.equals(command)) {
                         String millisStr = 
                             trimmedLine.substring(FETCH_LEN).trim();
@@ -666,15 +685,20 @@ public class FarragoTestConcurrentScriptedCommandGenerator
     {
         StringBuffer message = new StringBuffer();
         Throwable cause = executor.getFailureCause();
-        message.append(cause.getMessage());
+        FarragoTestConcurrentCommand command = executor.getFailureCommand();
 
-        StackTraceElement[] trace = cause.getStackTrace();
-        for(int i = 0; i < trace.length; i++) {
-            message
-                .append("\n\t")
-                .append(trace[i].toString());
+        if (command == null || !command.isFailureExpected()) {
+            message.append(cause.getMessage());
+            StackTraceElement[] trace = cause.getStackTrace();
+            for(int i = 0; i < trace.length; i++) {
+                message
+                    .append("\n\t")
+                    .append(trace[i].toString());
+            }
+        } else {
+            message.append(cause.getClass().getName() + ": " + cause.getMessage());            
         }
-
+        
         storeMessage(executor.getThreadId(), message.toString());
     }
 
@@ -949,12 +973,19 @@ public class FarragoTestConcurrentScriptedCommandGenerator
     {
         private String sql;
         private long timeout;
-
+        
         private SqlCommand(String sql)
         {
             super(0);
 
             this.sql = sql;
+        }
+
+        private SqlCommand(String sql, boolean errorExpected)
+        {
+            super(0);
+            this.sql = sql;
+            this.markToFail();
         }
 
         private SqlCommand(String sql, long timeout)

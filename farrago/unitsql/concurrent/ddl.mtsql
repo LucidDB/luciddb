@@ -14,19 +14,16 @@
 
 @thread directDrop 
   @sync
-  -- should fail
-  drop view ddl_mt.v;
+  @err drop view ddl_mt.v;
 @end
 
 @thread cascadeDrop 
   @sync
-  -- should fail
-  drop schema ddl_mt cascade;
+  @err drop schema ddl_mt cascade;
 @end
 
 @thread createOrReplace
   @sync
-  -- should fail
-  create or replace view ddl_mt.v as select * from sales.emps;
+  @err create or replace view ddl_mt.v as select * from sales.emps;
 @end
 
