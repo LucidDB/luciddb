@@ -34,6 +34,7 @@ import net.sf.farrago.cwm.datatypes.*;
 import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
+import net.sf.farrago.db.FarragoDbSingleton;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fem.sql2003.*;
@@ -756,10 +757,13 @@ public class DdlValidator extends FarragoCompoundAllocation
         checkValidationExcnQueue();
 
         if (ddlStmt instanceof DdlDropStmt) {
+            checkInUse(ddlStmt.getModelElement().refMofId());
             // Process deletions until a fixpoint is reached, using MDR events
             // to implement RESTRICT/CASCADE.
             while (!deleteQueue.isEmpty()) {
                 RefObject refObj = (RefObject) deleteQueue.iterator().next();
+                checkInUse(refObj.refMofId());
+
                 deleteQueue.remove(refObj);
                 if (!schedulingMap.containsKey(refObj.refMofId())) {
                     if (tracer.isLoggable(Level.FINE)) {
@@ -784,6 +788,14 @@ public class DdlValidator extends FarragoCompoundAllocation
             replacementTarget = findDuplicate(ddlStmt.getModelElement());
 
             if (replacementTarget != null) {
+                if (FarragoDbSingleton.isObjectInUse(replacementTarget.refMofId())) {
+                    throw FarragoResource.instance().ValidatorReplacedObjectInUse.ex(
+                            getRepos().getLocalizedObjectName(
+                                null,
+                                replacementTarget.getName(),
+                                replacementTarget.refClass()));
+                }
+
                 // if this is CREATE OR REPLACE and we've encountered an object to be
                 // replaced, save its dependencies for revalidation and delete it.
                 deleteReplacementTarget(ddlStmt.getModelElement());
@@ -1419,6 +1431,29 @@ public class DdlValidator extends FarragoCompoundAllocation
        // intentionally empty
     }
 
+    /**
+     * Checks if an object is in use by a running statement.  If so,
+     * throw a deferred exception.  Used only in the DROP case.
+     * CREATE OR REPLACE throws a different exception.
+     * @param mofId Object MOFID being dropped
+     */
+    private void checkInUse(final String mofId) {
+        if (FarragoDbSingleton.isObjectInUse(mofId)) {
+            enqueueValidationExcn(
+                new DeferredException() {
+                    EigenbaseException getException()
+                    {
+                        CwmModelElement droppedElement =
+                            (CwmModelElement) getRepos().getMdrRepos().getByMofId(mofId);
+                        throw FarragoResource.instance().ValidatorDropObjectInUse.ex(
+                                getRepos().getLocalizedObjectName(
+                                    droppedElement,
+                                    droppedElement.refClass()));
+                    }
+                });
+        }
+    }
+    
     //~ Inner Classes ---------------------------------------------------------
 
     /**

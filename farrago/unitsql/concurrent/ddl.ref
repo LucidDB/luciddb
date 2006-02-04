@@ -1,0 +1,70 @@
+-- setup
+> create schema ddl_mt;
+0 rows affected.
+> create view ddl_mt.v as select * from sales.depts;
+0 rows affected.
+-- end of setup
+
+-- thread main
+> select * from ddl_mt.v;
++------------+----------------------------------------------------------------------------------------------------------------------------------+
+| DEPTNO     | NAME                                                                                                                             |
++------------+----------------------------------------------------------------------------------------------------------------------------------+
+| 10         | Sales                                                                                                                            |
+| 20         | Marketing                                                                                                                        |
+| 30         | Accounts                                                                                                                         |
++------------+----------------------------------------------------------------------------------------------------------------------------------+
+
+> drop view ddl_mt.v;
+0 rows affected.
+-- end of thread main
+
+-- thread directDrop
+> drop view ddl_mt.v;
+Cannot drop view "DDL_MT"."V" because it is currently in use by a statement
+	net.sf.farrago.resource.FarragoResource$_Def0.ex(FarragoResource.java:1172)
+	net.sf.farrago.ddl.DdlValidator$2.getException(DdlValidator.java:1448)
+	net.sf.farrago.ddl.DdlValidator.checkValidationExcnQueue(DdlValidator.java:1112)
+	net.sf.farrago.ddl.DdlValidator.validate(DdlValidator.java:806)
+	net.sf.farrago.db.FarragoDbSession.validateDdl(FarragoDbSession.java:805)
+	net.sf.farrago.db.FarragoDbSession.prepareImpl(FarragoDbSession.java:783)
+	net.sf.farrago.db.FarragoDbSession.prepare(FarragoDbSession.java:719)
+	net.sf.farrago.db.FarragoDbStmtContext.prepare(FarragoDbStmtContext.java:151)
+	net.sf.farrago.jdbc.engine.FarragoJdbcEngineConnection.prepareStatement(FarragoJdbcEngineConnection.java:293)
+	net.sf.farrago.test.concurrent.FarragoTestConcurrentScriptedCommandGenerator$SqlCommand.doExecute(FarragoTestConcurrentScriptedCommandGenerator.java:986)
+	net.sf.farrago.test.concurrent.FarragoTestConcurrentCommandGenerator$AbstractCommand.execute(FarragoTestConcurrentCommandGenerator.java:582)
+	net.sf.farrago.test.concurrent.FarragoTestConcurrentCommandExecutor.run(FarragoTestConcurrentCommandExecutor.java:149)
+-- end of thread directDrop
+
+-- thread cascadeDrop
+> drop schema ddl_mt cascade;
+Cannot drop view "DDL_MT"."V" because it is currently in use by a statement
+	net.sf.farrago.resource.FarragoResource$_Def0.ex(FarragoResource.java:1172)
+	net.sf.farrago.ddl.DdlValidator$2.getException(DdlValidator.java:1448)
+	net.sf.farrago.ddl.DdlValidator.checkValidationExcnQueue(DdlValidator.java:1112)
+	net.sf.farrago.ddl.DdlValidator.validate(DdlValidator.java:806)
+	net.sf.farrago.db.FarragoDbSession.validateDdl(FarragoDbSession.java:805)
+	net.sf.farrago.db.FarragoDbSession.prepareImpl(FarragoDbSession.java:783)
+	net.sf.farrago.db.FarragoDbSession.prepare(FarragoDbSession.java:719)
+	net.sf.farrago.db.FarragoDbStmtContext.prepare(FarragoDbStmtContext.java:151)
+	net.sf.farrago.jdbc.engine.FarragoJdbcEngineConnection.prepareStatement(FarragoJdbcEngineConnection.java:293)
+	net.sf.farrago.test.concurrent.FarragoTestConcurrentScriptedCommandGenerator$SqlCommand.doExecute(FarragoTestConcurrentScriptedCommandGenerator.java:986)
+	net.sf.farrago.test.concurrent.FarragoTestConcurrentCommandGenerator$AbstractCommand.execute(FarragoTestConcurrentCommandGenerator.java:582)
+	net.sf.farrago.test.concurrent.FarragoTestConcurrentCommandExecutor.run(FarragoTestConcurrentCommandExecutor.java:149)
+-- end of thread cascadeDrop
+
+-- thread createOrReplace
+> create or replace view ddl_mt.v as select * from sales.emps;
+Cannot replace view "V" because it is currently in use by a statement
+	net.sf.farrago.resource.FarragoResource$_Def0.ex(FarragoResource.java:1172)
+	net.sf.farrago.ddl.DdlValidator.validate(DdlValidator.java:792)
+	net.sf.farrago.db.FarragoDbSession.validateDdl(FarragoDbSession.java:805)
+	net.sf.farrago.db.FarragoDbSession.prepareImpl(FarragoDbSession.java:783)
+	net.sf.farrago.db.FarragoDbSession.prepare(FarragoDbSession.java:719)
+	net.sf.farrago.db.FarragoDbStmtContext.prepare(FarragoDbStmtContext.java:151)
+	net.sf.farrago.jdbc.engine.FarragoJdbcEngineConnection.prepareStatement(FarragoJdbcEngineConnection.java:293)
+	net.sf.farrago.test.concurrent.FarragoTestConcurrentScriptedCommandGenerator$SqlCommand.doExecute(FarragoTestConcurrentScriptedCommandGenerator.java:986)
+	net.sf.farrago.test.concurrent.FarragoTestConcurrentCommandGenerator$AbstractCommand.execute(FarragoTestConcurrentCommandGenerator.java:582)
+	net.sf.farrago.test.concurrent.FarragoTestConcurrentCommandExecutor.run(FarragoTestConcurrentCommandExecutor.java:149)
+-- end of thread createOrReplace
+

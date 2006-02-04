@@ -155,6 +155,7 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
     private void postprepare()
     {
         if (isPrepared()) {
+            FarragoDbSingleton.addObjectsInUse(this, executableStmt.getReferencedObjectIds());
             final RelDataType dynamicParamRowType =
                 executableStmt.getDynamicParamRowType();
             final RelDataTypeField [] fields = dynamicParamRowType.getFields();
@@ -362,6 +363,7 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
         executableStmt = null;
         sql = null;
         dynamicParamValues = null;
+        FarragoDbSingleton.removeObjectsInUse(this);
     }
 
     void traceExecute()

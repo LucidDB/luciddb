@@ -1,0 +1,32 @@
+@setup
+  create schema ddl_mt;
+  create view ddl_mt.v as select * from sales.depts;
+@end
+
+@thread main 
+  @prepare select * from ddl_mt.v;
+  @fetch
+  @sync
+  @close
+  -- should succeed
+  drop view ddl_mt.v;
+@end
+
+@thread directDrop 
+  @sync
+  -- should fail
+  drop view ddl_mt.v;
+@end
+
+@thread cascadeDrop 
+  @sync
+  -- should fail
+  drop schema ddl_mt cascade;
+@end
+
+@thread createOrReplace
+  @sync
+  -- should fail
+  create or replace view ddl_mt.v as select * from sales.emps;
+@end
+
