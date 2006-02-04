@@ -34,6 +34,7 @@ void BTreeSearchExecStream::prepare(BTreeSearchExecStreamParams const &params)
     BTreeReadExecStream::prepare(params);
     ConduitExecStream::prepare(params);
     
+    leastUpper = true;
     outerJoin = params.outerJoin;
 
     // TODO:  assert inputDesc is a prefix of BTree key
@@ -73,7 +74,6 @@ void BTreeSearchExecStream::prepare(BTreeSearchExecStreamParams const &params)
         if (params.inputDirectiveProj.size()) {
             // The inputKeyProj gives us both lower and upper bounds;
             // split them because we will access them separately.
-            TupleProjection upperBoundProj;
             int n = inputKeyProj.size() / 2;
             // This resize extends...
             upperBoundProj.resize(n);
@@ -155,6 +155,9 @@ ExecStreamResult BTreeSearchExecStream::execute(
             }
             if (pOutAccessor->produceTuple(tupleData)) {
                 ++nTuples;
+                if (reachedTupleLimit(nTuples)) {
+                    return EXECRC_YIELD;
+                }
             } else {
                 return EXECRC_BUF_OVERFLOW;
             }
@@ -192,6 +195,8 @@ bool BTreeSearchExecStream::innerSearchLoop()
             inputAccessor.unmarshal(inputKeyData);
         }
 
+        setAdditionalKeys();
+
         readDirectives();
 
         switch(lowerBoundDirective) {
@@ -199,10 +204,10 @@ bool BTreeSearchExecStream::innerSearchLoop()
             pReader->searchFirst();
             break;
         case SEARCH_OPEN_LOWER:
-            pReader->searchForKey(inputKeyData,DUP_SEEK_END);
+            pReader->searchForKey(inputKeyData,DUP_SEEK_END,leastUpper);
             break;
         case SEARCH_CLOSED_LOWER:
-            pReader->searchForKey(inputKeyData,DUP_SEEK_BEGIN);
+            pReader->searchForKey(inputKeyData,DUP_SEEK_BEGIN,leastUpper);
             break;
         default:
             permFail(
@@ -282,9 +287,17 @@ bool BTreeSearchExecStream::testInterval()
     if (upperBoundDirective == SEARCH_UNBOUNDED_UPPER) {
         return true;
     } else {
+        int c;
+
         readerKeyAccessor.unmarshal(readerKeyData);
-        int c = inputKeyDesc.compareTuples(
-            upperBoundData,readerKeyData);
+        if (upperBoundDesc.size()) {
+            // need to use upperBoundDesc, as classes derived from this class
+            // may have modified the original upperBoundDesc such that it's
+            // not the same as inputKeyDesc
+            c = upperBoundDesc.compareTuples(upperBoundData,readerKeyData);
+        } else {
+            c = inputKeyDesc.compareTuples(upperBoundData,readerKeyData);
+        }
         if (upperBoundDirective == SEARCH_CLOSED_UPPER) {
             if (c >= 0) {
                 return true;
@@ -302,6 +315,15 @@ void BTreeSearchExecStream::closeImpl()
 {
     ConduitExecStream::closeImpl();
     BTreeReadExecStream::closeImpl();
+}
+
+bool BTreeSearchExecStream::reachedTupleLimit(uint nTuples)
+{
+    return false;
+}
+
+void BTreeSearchExecStream::setAdditionalKeys()
+{
 }
 
 FENNEL_END_CPPFILE("$Id$");

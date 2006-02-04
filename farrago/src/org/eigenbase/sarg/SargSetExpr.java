@@ -145,7 +145,7 @@ public class SargSetExpr implements SargExpr
 	// 
 	// Output:
 	// 1 [1, 3] [-----]
-	// 2 [4, 7]          [--------)
+	// 2 [4, 7)          [--------)
 	// 3 (7, 8]                   (--]
         SargInterval accumulator = null;
         for (SargInterval interval : intervals) {

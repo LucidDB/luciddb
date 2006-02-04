@@ -31,6 +31,7 @@
 #include "fennel/ftrs/BTreeExecStream.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
 #include "fennel/exec/MockProducerExecStream.h"
+#include "fennel/exec/ValuesExecStream.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
 #include "fennel/cache/Cache.h"
 #include "fennel/common/TraceSource.h"
@@ -45,6 +46,7 @@ class LcsClusterAppendExecStreamTest : public ExecStreamUnitTestBase
 protected:
     StandardTypeDescriptorFactory stdTypeFactory;
     TupleAttributeDescriptor attrDesc_int64;
+    TupleAttributeDescriptor attrDesc_char1;
 
     PageId  savedRootPageId;
     BTreeDescriptor btreeDescriptor;
@@ -346,14 +348,18 @@ void LcsClusterAppendExecStreamTest::testScanSingleCol(
 
     // setup input stream
 
-    MockProducerExecStreamParams mockParams;
-    mockParams.outputTupleDesc.push_back(attrDesc_int64);
-    mockParams.nRows = nrows;
-    mockParams.pGenerator = pGenerator;
+    ValuesExecStreamParams valuesParams;
+    PBuffer dummyBuffer;
+    valuesParams.pTupleBuffer = dummyBuffer;
+    valuesParams.outputTupleDesc.push_back(attrDesc_int64);
+    valuesParams.outputTupleDesc.push_back(attrDesc_char1);
+    valuesParams.outputTupleDesc.push_back(attrDesc_char1);
+    // force full table scans
+    valuesParams.bufSize = 0;
 
-    ExecStreamEmbryo mockStreamEmbryo;
-    mockStreamEmbryo.init(new MockProducerExecStream(), mockParams);
-    mockStreamEmbryo.getStream()->setName("MockProducerScanExecStream");
+    ExecStreamEmbryo valuesStreamEmbryo;
+    valuesStreamEmbryo.init(new ValuesExecStream(), valuesParams);
+    valuesStreamEmbryo.getStream()->setName("ValuesExecStream");
 
     // setup parameters into scan
     //  single cluster with only one column, project that single column
@@ -381,7 +387,7 @@ void LcsClusterAppendExecStreamTest::testScanSingleCol(
     scanStreamEmbryo.getStream()->setName("RowScanExecStream");
 
     SharedExecStream pOutputStream = prepareTransformGraph(
-        mockStreamEmbryo, scanStreamEmbryo);
+        valuesStreamEmbryo, scanStreamEmbryo);
     
     // result should be sequence of rows
     verifyOutput(*pOutputStream, nrows, *pResultGenerator);
@@ -398,15 +404,18 @@ void LcsClusterAppendExecStreamTest::testScanMultiCol(
 
     // setup input stream
 
-    MockProducerExecStreamParams mockParams;
-    for (i = 0; i < nCols; i++)
-        mockParams.outputTupleDesc.push_back(attrDesc_int64);
-    mockParams.nRows = nrows;
-    mockParams.pGenerator = pGenerator;
+    ValuesExecStreamParams valuesParams;
+    PBuffer dummyBuffer;
+    valuesParams.pTupleBuffer = dummyBuffer;
+    valuesParams.outputTupleDesc.push_back(attrDesc_int64);
+    valuesParams.outputTupleDesc.push_back(attrDesc_char1);
+    valuesParams.outputTupleDesc.push_back(attrDesc_char1);
+    // force full table scans
+    valuesParams.bufSize = 0;
 
-    ExecStreamEmbryo mockStreamEmbryo;
-    mockStreamEmbryo.init(new MockProducerExecStream(), mockParams);
-    mockStreamEmbryo.getStream()->setName("MockProducerScanExecStream");
+    ExecStreamEmbryo valuesStreamEmbryo;
+    valuesStreamEmbryo.init(new ValuesExecStream(), valuesParams);
+    valuesStreamEmbryo.getStream()->setName("ValuesExecStream");
 
     // setup parameters into scan
     //  single cluster with only n columns, project all columns
@@ -438,7 +447,7 @@ void LcsClusterAppendExecStreamTest::testScanMultiCol(
     scanStreamEmbryo.getStream()->setName("RowScanExecStream");
 
     SharedExecStream pOutputStream = prepareTransformGraph(
-        mockStreamEmbryo, scanStreamEmbryo);
+        valuesStreamEmbryo, scanStreamEmbryo);
     
     // result should be sequence of rows
     verifyOutput(*pOutputStream, nrows, *pResultGenerator);
@@ -450,6 +459,8 @@ void LcsClusterAppendExecStreamTest::testCaseSetUp()
     
     attrDesc_int64 = TupleAttributeDescriptor(
         stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
+    attrDesc_char1 = TupleAttributeDescriptor(
+        stdTypeFactory.newDataType(STANDARD_TYPE_CHAR), false, 1);
 
     savedRootPageId = NULL_PAGE_ID;
 }
@@ -487,7 +498,6 @@ void LcsClusterAppendExecStreamTest::testSingleColNoDupOldRoot()
     // 1. load 848 rows
     // 2. scan first 848 rows
     // 3. load 848 more rows
-    // 4. scan second 848 rows
 
     SharedMockProducerExecStreamGenerator pGenerator =
         SharedMockProducerExecStreamGenerator(new RampExecStreamGenerator());
@@ -503,10 +513,6 @@ void LcsClusterAppendExecStreamTest::testSingleColNoDupOldRoot()
     resetExecStreamTest();
     testLoadSingleCol(
         848, 848, false,  pGenerator,  "testSingleColNoDupOldRoot");
-
-    resetExecStreamTest();
-    pGenerator.reset(new RampExecStreamGenerator(848));
-    testScanSingleCol(848, pGenerator, pResultGenerator);
 }
 
 
@@ -585,7 +591,6 @@ void LcsClusterAppendExecStreamTest::testSingleColStairOldRoot()
     // 1. load 10 rows
     // 2. scan first 10 rows
     // 3. load 10 more rows
-    // 4. scan 2nd 10 rows
 
     SharedMockProducerExecStreamGenerator pGenerator =
         SharedMockProducerExecStreamGenerator(new StairCaseExecStreamGenerator(1, 7));
@@ -602,10 +607,6 @@ void LcsClusterAppendExecStreamTest::testSingleColStairOldRoot()
     resetExecStreamTest();
     testLoadSingleCol(
         10, 10, false,  pGenerator, "testSingleColStairOldRoot");
-
-    resetExecStreamTest();
-    pRidGenerator.reset(new RampExecStreamGenerator(10));
-    testScanSingleCol(10, pRidGenerator, pResultGenerator);
 }
 
 void LcsClusterAppendExecStreamTest::testMultiColNoDupNewRoot()
@@ -634,7 +635,6 @@ void LcsClusterAppendExecStreamTest::testMultiColNoDupOldRoot()
     // 1. load 10 rows
     // 2. scan first 10 rows
     // 3. load 10 more rows
-    // 4. scan 2nd 10 rows
 
     SharedMockProducerExecStreamGenerator pGenerator =
         SharedMockProducerExecStreamGenerator(new RampExecStreamGenerator());
@@ -649,10 +649,6 @@ void LcsClusterAppendExecStreamTest::testMultiColNoDupOldRoot()
 
     resetExecStreamTest();
     testLoadMultiCol(10, 3, false,  pGenerator, "testMultiColNoDupOldRoot");
-
-    resetExecStreamTest();
-    pRidGenerator.reset(new RampExecStreamGenerator(10));
-    testScanMultiCol(10, 3, pRidGenerator, pResultGenerator);
 }
 
 
@@ -727,7 +723,6 @@ void LcsClusterAppendExecStreamTest::testMultiColStairOldRoot()
     // 1. load 10 rows
     // 2. scan first 10 rows
     // 3. load more 10 rows
-    // 4. scan 2nd 10 rows
 
     SharedMockProducerExecStreamGenerator pGenerator =
         SharedMockProducerExecStreamGenerator(new StairCaseExecStreamGenerator(1, 7));
@@ -742,10 +737,6 @@ void LcsClusterAppendExecStreamTest::testMultiColStairOldRoot()
 
     resetExecStreamTest();
     testLoadMultiCol(10, 3, false, pGenerator, "testMultiColStairOldRoot");
-
-    resetExecStreamTest();
-    pRidGenerator.reset(new RampExecStreamGenerator(10));
-    testScanMultiCol(10, 3, pRidGenerator, pResultGenerator);
 }
 
 FENNEL_UNIT_TEST_SUITE(LcsClusterAppendExecStreamTest);

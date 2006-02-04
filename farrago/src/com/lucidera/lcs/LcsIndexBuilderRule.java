@@ -1,9 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
 // Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005-2005 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -19,8 +18,10 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package net.sf.farrago.namespace.ftrs;
+package com.lucidera.lcs;
 
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
@@ -28,25 +29,28 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.util.*;
 
 /**
- * FtrsTableModificationRule is a rule for converting an abstract {@link
- * FarragoIndexBuilderRule} into a corresponding
- * {@link FtrsIndexBuilderRel}.
+ * LcsModificationRule is a rule for converting an abstract {@link
+ * FarragoIndexBuilderRel} into a corresponding
+ * {@link LcsIndexBuilderRel}.
  *
- * @author John V. Sichi
+ * <p>TODO: this rule was copied from FtrsIndexBuilderRule; consider
+ * generalizing it.
+ *
+ * @author John Pham
  * @version $Id$
  */
-public class FtrsIndexBuilderRule extends RelOptRule
+class LcsIndexBuilderRule extends RelOptRule
 {
     /**
-     * Creates a new FtrsIndexBuilderRule object.
+     * Creates a new LcsIndexBuilderRule object.
      */
-    public FtrsIndexBuilderRule()
+    public LcsIndexBuilderRule()
     {
         super(new RelOptRuleOperand(
-                FarragoIndexBuilderRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(RelNode.class, null)
-                }));
+            FarragoIndexBuilderRel.class,
+            new RelOptRuleOperand [] {
+                new RelOptRuleOperand(RelNode.class, null)
+            }));
     }
 
     // implement RelOptRule
@@ -61,7 +65,7 @@ public class FtrsIndexBuilderRule extends RelOptRule
         FarragoIndexBuilderRel builderRel =
             (FarragoIndexBuilderRel) call.rels[0];
 
-        if (!(builderRel.getTable() instanceof FtrsTable)) {
+        if (!(builderRel.getTable() instanceof LcsTable)) {
             return;
         }
 
@@ -74,14 +78,14 @@ public class FtrsIndexBuilderRule extends RelOptRule
             return;
         }
 
-        FtrsIndexBuilderRel ftrsRel =
-            new FtrsIndexBuilderRel(
+        LcsIndexBuilderRel lcsRel =
+            new LcsIndexBuilderRel(
                 builderRel.getCluster(),
                 fennelInput,
                 builderRel.getIndex());
 
-        call.transformTo(ftrsRel);
+        call.transformTo(lcsRel);
     }
 }
 
-// End FtrsIndexBuilderRule.java
+// End LcsIndexBuilderRule.java

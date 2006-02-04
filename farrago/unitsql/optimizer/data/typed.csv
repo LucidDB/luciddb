@@ -1,0 +1,6 @@
+COL1,COL2,COL3
+1,true,first
+2,,
+3,false,third
+4,,""
+5,true,fifth

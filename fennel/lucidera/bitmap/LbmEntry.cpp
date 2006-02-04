@@ -219,7 +219,7 @@ bool LbmEntry::setRIDNewSegment(LcsRid rid)
     
     pSegEnd--;
     currSegByte = pSegEnd;
-    currSegByteStartRID = rid - rid % LbmOneByteSize;
+    currSegByteStartRID = roundToByteBoundary(rid);
     currSegLength = 1;
 
     *currSegByte = (uint8_t)(1 << (opaqueToInt(rid) % LbmOneByteSize));
@@ -262,7 +262,7 @@ bool LbmEntry::setRIDAdjacentSegByte(LcsRid rid)
 
     pSegEnd--;
     currSegByte = pSegEnd;
-    currSegByteStartRID = rid - rid % LbmOneByteSize;
+    currSegByteStartRID = roundToByteBoundary(rid);
     currSegLength ++;
 
     *currSegByte = (uint8_t)(1 << (opaqueToInt(rid) % LbmOneByteSize));
@@ -302,17 +302,6 @@ uint LbmEntry::value2ByteArray(uint value, PBuffer array, uint arraySize)
 }
 
 
-uint LbmEntry::byteArray2Value(PBuffer array, uint arraySize)
-{
-    uint value = 0;
-    while (arraySize > 0) {
-        value = value * (uint)(1<<8) + array[arraySize-1];
-        arraySize --;
-    }
-    return value;
-}
-
-
 void LbmEntry::completeCurrentDesc()
 {
     assert (currSegDescByte);
@@ -334,7 +323,7 @@ bool LbmEntry::completeCurrentDesc(LcsRid rid)
      * Count of zero bits in bytes. Each byte represents 8 RIDs.
      */
     ridDistance = 
-        opaqueToInt(rid - rid % LbmOneByteSize - currSegByteStartRID) 
+        opaqueToInt(roundToByteBoundary(rid) - currSegByteStartRID) 
         / LbmOneByteSize - 1;
 
     if (ridDistance <= 0) {
@@ -795,7 +784,7 @@ bool LbmEntry::mergeEntry(TupleData &inputTuple)
      * Only the last segment byte in the current entry and the first segment
      * byte in the input entry can overlap.
      */
-    assert(inputStartRID >= endRID - endRID % LbmOneByteSize);
+    assert(inputStartRID >= roundToByteBoundary(endRID));
 
     /*
      * First, if there is overlap, move the first byte of the input entry to
@@ -970,11 +959,13 @@ string LbmEntry::printBuffer(PConstBuffer ptr, uint size)
     ostringstream byteStr;
     char *pbuf = new char(2);
 
-    while (size > 0) {
-        sprintf(pbuf, "%x", *((uint8_t *)ptr));    
-        ptr ++;
-        size --;
-        byteStr << pbuf;
+    if (ptr) {
+        while (size > 0) {
+            sprintf(pbuf, "%x", *((uint8_t *)ptr));    
+            ptr ++;
+            size --;
+            byteStr << pbuf;
+        }
     }
 
     return byteStr.str();
@@ -996,7 +987,6 @@ string LbmEntry::printByte(uint8_t byte)
 string LbmEntry::dumpSeg(PBuffer segDesc, PBuffer segDescEnd, PBuffer seg)
 {
     uint segBytes;
-    uint lengthDesc;
     ostringstream entryLine;
     uint zeroBytes;
     uint startPos = 0;
@@ -1006,20 +996,7 @@ string LbmEntry::dumpSeg(PBuffer segDesc, PBuffer segDescEnd, PBuffer seg)
         /*
          * Print the bitmaps.
          */
-        segBytes   = (*segDesc >> LbmHalfByteSize) + 1;
-        lengthDesc = (*segDesc & LbmZeroLengthMask);
-        zeroBytes  = 0;
-
-        segDesc ++;
-
-        if (lengthDesc <= LbmZeroLengthCompact) {
-            zeroBytes = lengthDesc;
-        } else {
-            zeroBytes = 
-                byteArray2Value(segDesc, 
-                    lengthDesc - LbmZeroLengthCompact);
-            segDesc += lengthDesc - LbmZeroLengthCompact;
-        }
+        readSegDescAndAdvance(segDesc, segBytes, zeroBytes);
 
         /*
          * Print the bitmap segment.
@@ -1057,7 +1034,6 @@ string LbmEntry::dumpSegRID(
     LcsRid srid)
 {
     uint segBytes;
-    uint lengthDesc;
     uint zeroBytes;
     ostringstream entryTrace;
     uint8_t bitmapByte;
@@ -1068,19 +1044,7 @@ string LbmEntry::dumpSegRID(
         /*
          * Print the bitmaps.
          */
-        segBytes    = (*segDesc >> LbmHalfByteSize) + 1;
-        lengthDesc  = (*segDesc & LbmZeroLengthMask);
-        zeroBytes   = 0;
-
-        segDesc ++;
-
-        if (lengthDesc <= LbmZeroLengthCompact) {
-            zeroBytes = lengthDesc;
-        } else {
-            zeroBytes = 
-                byteArray2Value(segDesc, lengthDesc - LbmZeroLengthCompact);
-            segDesc += lengthDesc - LbmZeroLengthCompact;
-        }
+        readSegDescAndAdvance(segDesc, segBytes, zeroBytes);
 
         for (i = 0; i < segBytes; i++) {
             seg --;

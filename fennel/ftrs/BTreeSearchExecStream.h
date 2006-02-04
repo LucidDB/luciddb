@@ -94,11 +94,28 @@ protected:
     uint nJoinAttributes;
     SearchEndpoint lowerBoundDirective;
     SearchEndpoint upperBoundDirective;
+    TupleProjection upperBoundProj;
+    bool leastUpper;
 
     bool innerSearchLoop();
     void readDirectives();
     bool testInterval();
+
+    /**
+     * Determines if enough tuples have been produced for this stream
+     *
+     * @param nTuples number of tuples produced thus far
+     *
+     * @return true if tuple limit reached
+     */
+    virtual bool reachedTupleLimit(uint nTuples);
     
+    /**
+     * Sets additional key values for the search, in cases where the key
+     * values are not passed in through the input stream
+     */
+    virtual void setAdditionalKeys();
+
     virtual void closeImpl();
     
 public:

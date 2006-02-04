@@ -1,0 +1,59 @@
+/*
+// $Id$ 
+// Fennel is a library of data storage and processing components.
+// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006-2006 The Eigenbase Project
+//
+// This program is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation; either version 2 of the License, or (at your option)
+// any later version approved by The Eigenbase Project.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+#include "fennel/lucidera/bitmap/LbmSegment.h"
+
+FENNEL_BEGIN_CPPFILE("$Id$");
+
+uint LbmSegment::byteArray2Value(PBuffer array, uint arraySize)
+{
+    uint value = 0;
+    while (arraySize > 0) {
+        value = value * (uint)(1<<8) + array[arraySize-1];
+        arraySize --;
+    }
+    return value;
+}
+
+void LbmSegment::readSegDescAndAdvance(
+    PBuffer &pSegDesc, uint &bmSegLen, uint &zeroBytes)
+{
+    // should only be called in the case where the bit segment has
+    // a descriptor
+    assert(pSegDesc != NULL);
+    bmSegLen = (*pSegDesc >> LbmHalfByteSize) + 1;
+    uint zeroLen = (*pSegDesc & LbmZeroLengthMask);
+
+    // advance past the initial length byte
+    pSegDesc++;
+
+    if (zeroLen <= LbmZeroLengthCompact) {
+        zeroBytes = zeroLen;
+    } else {
+        zeroBytes =
+            byteArray2Value(pSegDesc, zeroLen - LbmZeroLengthCompact);
+        pSegDesc += zeroLen - LbmZeroLengthCompact;
+    }
+}
+
+FENNEL_END_CPPFILE("$Id$");
+
+// End LbmSegment.cpp

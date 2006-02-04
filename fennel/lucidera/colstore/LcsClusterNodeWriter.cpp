@@ -1016,7 +1016,7 @@ RecordNum LcsClusterNodeWriter::MoveFromIndexToTemp()
     // compute the number of rows on the page
     pBatch = (PLcsBatchDir)(m_indexBlock + m_pHdr->oBatch);
     RecordNum nrows = 0;
-    for (b = 0; b < m_batchCount; b = b + nClusterCols) {
+    for (b = 0; b < m_pHdr->nBatch; b = b + nClusterCols) {
         nrows += pBatch[b].nRow;
     }
 

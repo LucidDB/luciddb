@@ -257,6 +257,28 @@ public abstract class FarragoCatalogUtil
         return listOfIndexes;
     }
         
+    /**
+     * Finds all unclustered indexes storing a table's data.
+     * 
+     * @param repos repository storing the table definition
+     * @param table the table to access
+     *
+     * @return list of clustered indexes or an empty list if none
+     */
+    public static List<FemLocalIndex> getUnclusteredIndexes(
+        FarragoRepos repos, CwmClass table)
+    {
+        ArrayList listOfIndexes = new ArrayList();
+        Iterator iter = getTableIndexes(repos, table).iterator();
+
+        while (iter.hasNext()) {
+            FemLocalIndex index = (FemLocalIndex) iter.next();
+            if (! index.isClustered()) {
+                listOfIndexes.add(index);
+            }
+        }
+        return listOfIndexes;
+    }
 
     /**
      * Gets the collection of indexes spanning a table.
