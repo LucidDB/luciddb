@@ -824,6 +824,8 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkBoolean("1=1.0", Boolean.TRUE);
         getTester().checkBoolean("1.34=1.34", Boolean.TRUE);
         getTester().checkBoolean("1=1.34", Boolean.FALSE);
+        getTester().checkBoolean("1e2=100e0", Boolean.TRUE);
+        getTester().checkBoolean("1e2=101", Boolean.FALSE);
         getTester().checkBoolean("'a'='b'", Boolean.FALSE);
         getTester().checkNull("cast(null as boolean)=cast(null as boolean)");
         getTester().checkNull("cast(null as integer)=1");
@@ -840,6 +842,10 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkBoolean("-1.1>-1.2", Boolean.TRUE);
         getTester().checkBoolean("1.1>1.1", Boolean.FALSE);
         getTester().checkBoolean("1.2>1", Boolean.TRUE);
+        getTester().checkBoolean("1.1e1>1.2e1", Boolean.FALSE);
+        getTester().checkBoolean("cast(-1.1 as real) > cast(-1.2 as real)", Boolean.TRUE);
+        getTester().checkBoolean("1.1e2>1.1e2", Boolean.FALSE);
+        getTester().checkBoolean("1.2e0>1", Boolean.TRUE);
         getTester().checkBoolean("true>false", Boolean.TRUE);
         getTester().checkBoolean("true>true", Boolean.FALSE);
         getTester().checkBoolean("false>false", Boolean.FALSE);
@@ -914,6 +920,9 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkBoolean("-1.1<-1.2", Boolean.FALSE);
         getTester().checkBoolean("1.1<1.1", Boolean.FALSE);
         getTester().checkBoolean("1.2<1", Boolean.FALSE);
+        getTester().checkBoolean("cast(1.1 as real)<cast(1.2 as real)", Boolean.TRUE);
+        getTester().checkBoolean("-1.1e-1<-1.2e-1", Boolean.FALSE);
+        getTester().checkBoolean("cast(1.1 as real)<cast(1.1 as real)", Boolean.FALSE);
         getTester().checkBoolean("true<false", Boolean.FALSE);
         getTester().checkBoolean("true<true", Boolean.FALSE);
         getTester().checkBoolean("false<false", Boolean.FALSE);
@@ -1673,11 +1682,23 @@ public abstract class SqlOperatorTests extends TestCase
     public void testCeilFunc()
     {
         getTester().setFor(SqlStdOperatorTable.ceilFunc);
+        getTester().checkScalarApprox("ceil(10.1e0)", "DOUBLE NOT NULL", 11, 0);
+        getTester().checkScalarApprox("ceil(cast(-11.2e0 as real))", "REAL NOT NULL", -11, 0);
+        getTester().checkScalarExact("ceil(100)", "INTEGER NOT NULL", "100");
+        getTester().checkScalarExact("ceil(1.3)", "DECIMAL(2, 0) NOT NULL", "2");
+        getTester().checkScalarExact("ceil(-1.7)", "DECIMAL(2, 0) NOT NULL", "-1");
+        getTester().checkNull("ceiling(cast(null as double))");
     }
 
     public void testFloorFunc()
     {
         getTester().setFor(SqlStdOperatorTable.floorFunc);
+        getTester().checkScalarApprox("floor(2.5e0)", "DOUBLE NOT NULL", 2, 0);
+        getTester().checkScalarApprox("floor(cast(-1.2e0 as real))", "REAL NOT NULL", -2, 0);
+        getTester().checkScalarExact("floor(100)", "INTEGER NOT NULL", "100");
+        getTester().checkScalarExact("floor(1.7)", "DECIMAL(2, 0) NOT NULL", "1");
+        getTester().checkScalarExact("floor(-1.7)", "DECIMAL(2, 0) NOT NULL", "-2");
+        getTester().checkNull("floor(cast(null as decimal(2,0)))");
     }
 
     public void testDenseRankFunc()

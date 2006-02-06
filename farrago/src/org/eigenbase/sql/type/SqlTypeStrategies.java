@@ -688,6 +688,53 @@ public abstract class SqlTypeStrategies
         };
 
     /**
+     * Type-inference strategy for a call where the first argument is a decimal.
+     * The result type of a call is a decimal with a scale of 0, and the same
+     * precision and nullibility as the first argument
+     */
+    public static final SqlReturnTypeInference
+        rtiDecimalNoScale =
+            new SqlReturnTypeInference()
+            {
+                public RelDataType inferReturnType(
+                    SqlOperatorBinding opBinding)
+                {
+                    RelDataType type1 = opBinding.getOperandType(0);
+                    if (SqlTypeUtil.isDecimal(type1))
+                    {
+                        if (type1.getScale() == 0) {
+                            return type1;
+                        } else {
+                            int p = type1.getPrecision();
+                            RelDataType ret;
+                            ret = opBinding.getTypeFactory().createSqlType(
+                                SqlTypeName.Decimal, p, 0);
+                            if (type1.isNullable()) {
+                                opBinding.getTypeFactory().
+                                    createTypeWithNullability(ret, true);
+                            }
+                            return ret;
+                        }
+                    }
+                    return null;
+                }
+            };
+
+    /**
+     * Type-inference strategy whereby the result type of a call is
+     * {@link #rtiDecimalNoScale} with a fallback to
+     * {@link #rtiFirstArgType}
+     *
+     * This rule is used for floor, ceiling. 
+     */
+    public static final SqlReturnTypeInference
+        rtiFirstArgTypeOrExactNoScale =
+        new SqlReturnTypeInferenceChain(
+            new SqlReturnTypeInference[] {
+                rtiDecimalNoScale,
+                rtiFirstArgType} );
+
+    /**
      * Type-inference strategy whereby the result type of a call is
      * the decimal product of two exact numeric operands where at
      * least one of the operands is a decimal.
