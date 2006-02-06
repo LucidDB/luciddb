@@ -23,6 +23,9 @@
 
 package org.eigenbase.util14;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+
 /**
  * Utility functions for converting from one type to another
 *
@@ -58,6 +61,16 @@ public class ConversionUtil {
         }
 
         return ret.toString().toUpperCase();
+    }
+
+    /**
+     * Converts an approximate value into a string, following the SQL 2003
+     * standard.
+     */
+    public static String toStringFromApprox(double d, boolean isFloat)
+    {
+        NumberFormat nf = NumberUtil.getApproxFormatter(isFloat);
+        return nf.format(d);
     }
 
 

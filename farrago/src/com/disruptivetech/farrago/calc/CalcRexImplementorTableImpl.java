@@ -1010,20 +1010,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             doubleKeyMap.put(
                 SqlTypeName.approxTypes,
                 SqlTypeName.charTypes,
-                new UsingInstrImplementor(ExtInstructionDefTable.castA) {
-                    public CalcProgramBuilder.Register implement(
-                        RexCall call,
-                        RexToCalcTranslator translator)
-                    {
-                        RexCall newCall =
-                            implementFirstOperandWithDouble(call, translator,
-                                call.operands[0], 0, false);
-                        if (newCall.equals(call)) {
-                            return super.implement(call, translator);
-                        }
-                        return translator.implementNode(newCall);
-                    }
-                });
+                new UsingInstrImplementor(ExtInstructionDefTable.castA));
             doubleKeyMap.put(
                 SqlTypeName.approxTypes,
                 SqlTypeName.intTypes,

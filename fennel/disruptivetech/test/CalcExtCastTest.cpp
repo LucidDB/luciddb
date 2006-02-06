@@ -1965,12 +1965,9 @@ void CalcExtCastTest::testCalcExtCastApproxToString()
 {
     // double test values: null, 0, +1.98, -1.98, +0.001, -0.001
 
-    // TODO: at present calc/SqlString always produces a string with 16 digits
-    // plus exponents. When it's fixed to produce a shorter string, shorten the
-    // output registers
     ostringstream pg(""), outloc("");
-    outloc << "vc,32, vc,32, vc,32, vc,32, vc,32, vc,32, "
-           << "c,32, c,32, c,32, c,32, c,32, c,32;" << endl;
+    outloc << "vc,16, vc,16, vc,16, vc,16, vc,16, vc,16, "
+           << "c,16, c,16, c,16, c,16, c,16, c,16;" << endl;
     pg << "O " << outloc.str();
     pg << "L " << outloc.str();
     pg << "C d,d,d,d,d,d;" << endl;
@@ -2006,17 +2003,17 @@ void CalcExtCastTest::testCalcExtCastApproxToString()
     // TODO: fix these strings when calc/SqlString produces terser results.
     BOOST_CHECK(cmpTupNull(outTuple[i++]));
     BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[i++], "0E0"));
-    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[i++], "1.9800000000000000E+00"));
-    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[i++], "-1.9800000000000000E+00"));
-    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[i++], "1.0000000000000000E-03"));
-    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[i++], "-1.0000000000000000E-03"));
-    // then the char(6)s
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[i++], "1.98E0"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[i++], "-1.98E0"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[i++], "1E-3"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[i++], "-1E-3"));
+    // then the char(16)s
     BOOST_CHECK(cmpTupNull(outTuple[i++]));
-    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[i++], "0E0                             "));
-    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[i++], "1.9800000000000000E+00          "));
-    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[i++], "-1.9800000000000000E+00         "));
-    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[i++], "1.0000000000000000E-03          "));
-    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[i++], "-1.0000000000000000E-03         "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[i++], "0E0             "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[i++], "1.98E0          "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[i++], "-1.98E0         "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[i++], "1E-3            "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[i++], "-1E-3           "));
     BOOST_CHECK(iter == calc.mWarnings.end());
 }
 

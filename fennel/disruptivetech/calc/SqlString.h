@@ -866,10 +866,41 @@ SqlStrCastToExact(char const * const str,
 
             // STATE: Parse numbers until padChar, end, or illegal char
             bool parsed = false;
+            bool got_nonzero = false;
+            bool overflow = false;
+            int ndigits = 0;
             while (ptr < end) {
                 if (*ptr >= '0' && *ptr <= '9') {
                     // number
-                    rv = (rv * 10) + (*(ptr++) - '0');
+                    if (*ptr != '0') {
+                        got_nonzero = true;
+                    }
+                    // Only start counting digits after 1st nonzero digit
+                    if (got_nonzero) {
+                        ndigits++;
+                    }
+                    if (ndigits <= 18) {
+                        rv = (rv * 10) + (*(ptr++) - '0');
+                    } else if (ndigits == 19) {
+                        // Handle 19th digit overflow
+                        int64_t tmp;
+                        tmp = rv * 10 + (*(ptr++) - '0');
+                        if (tmp < rv) {
+                            if (negative) { 
+                                if (-tmp == std::numeric_limits<int64_t>::min()) {
+                                    // okay
+                                } else {
+                                    overflow = true;
+                                }
+                            } else {
+                                overflow = true;
+                            }                                
+                        }
+                        rv = tmp;
+                    } else {
+                        rv = (rv * 10) + (*(ptr++) - '0');
+                        overflow = true;
+                    }
                     parsed = true;
                 } else if (*ptr == padChar) {
                     // move onto next state, end of number
@@ -896,6 +927,11 @@ SqlStrCastToExact(char const * const str,
                 throw "22018";
             }
 
+            // Throw overflow exception only if parse okay
+            if (overflow) {
+                // data exception -- numeric value out of range
+                throw "22003";
+            }
         } else if (CodeUnitBytes == 2) {
             // TODO: Add UCS2 here
             throw std::logic_error("no UCS2");
@@ -1000,6 +1036,7 @@ SqlStrCastToExact(char const * const str,
             bool parsed = false;
             bool decimal_parsed = false;
             bool roundup = false;
+            bool overflow = false;
             int ignored = 0; 
             int decimal_position = 0;
             int mantissa_digits = 0, parsed_digits = 0;
@@ -1015,7 +1052,7 @@ SqlStrCastToExact(char const * const str,
                     if (mantissa_digits < precision) {
                         if (mantissa_digits < 18) {
                             mantissa = mantissa * 10 + digit;
-                        } else {
+                        } else if (mantissa_digits == 18) {
                             // Handle 19th digit overflow
                             int64_t tmp;
                             tmp = mantissa * 10 + digit;
@@ -1025,14 +1062,16 @@ SqlStrCastToExact(char const * const str,
                                         // okay
                                     } else {
                                         // data exception -- numeric value out of range
-                                        throw "22003";
+                                        overflow = true;
                                     }
                                 } else {
                                     // data exception -- numeric value out of range
-                                    throw "22003";
+                                    overflow = true;
                                 }                                
                             }
                             mantissa = tmp;
+                        } else {
+                            overflow = true;
                         }
 
                         if (mantissa != 0) {
@@ -1095,6 +1134,12 @@ SqlStrCastToExact(char const * const str,
                 // SQL99 Part 2 Section 6.22 General Rule 6.b.i data
                 // exception -- invalid character value for cast
                 throw "22018";
+            }
+
+            // Throw overflow exception only if parse okay
+            if (overflow) {
+                // data exception -- numeric value out of range
+                throw "22003";
             }
 
             if (!decimal_parsed) {
@@ -1199,14 +1244,11 @@ SqlStrCastToApprox(char const * const str,
             char *endptr;
 
             // Skip past any leading whitespace. Allows string with
-            // arbitrary amounts of leading whitespace to still fit
-            // within 250 bytes below.
+            // arbitrary amounts of leading whitespace.
             while (ptr < end && *ptr == padChar) ptr++;
 
-            // assume that any double can fit in 250 bytes;
-            int max = 250;
-            if (end - ptr < max) max = end - ptr;
-            char tmp[256];
+            int max = end - ptr;
+            char tmp[max+1];
             memcpy(tmp, ptr, max);
             tmp[max] = 0;
             rv = strtod(tmp, &endptr);
@@ -1226,6 +1268,13 @@ SqlStrCastToApprox(char const * const str,
                     throw "22018";
                 }
                 ptr++;
+            }
+
+            // Throw exception if overflow
+            double dmax = std::numeric_limits<double>::max();
+            if (rv > dmax || rv < -dmax) {
+                // Overflow
+                throw "22003";
             }
 
         } else if (CodeUnitBytes == 2) {
@@ -1547,6 +1596,7 @@ int
 SqlStrCastFromApprox(char* dest,
                      int destStorageBytes,
                      double src,
+                     bool isFloat,
                      bool fixed,  // e.g. char, else variable (varchar)
                      int padchar = ' ')
 {
@@ -1581,17 +1631,95 @@ SqlStrCastFromApprox(char* dest,
                 //! a x86. This should be parameterized.
                 //! TODO: Parameterize precision and format of conversion.
 
-
+                int max_precision = (isFloat)? 7: 16;
                 char buf[36];      // #.16E should always fit in 22 bytes.
-                rv = snprintf(buf, 35, "%.16E", src);
+                rv = snprintf(buf, 35, "%.*E", max_precision, src);
+
                 // snprintf does not include null termination in length
                 assert(rv >= 0 && rv <= 35);
+
+                // Trim trailing zeros from mantissa, and initial zeros
+                // from exponent
+                int buflen = rv;
+                int last_nonzero = (src < 0)? 1:0;
+                int eindex = last_nonzero + max_precision + 2;
+                int eneg = 0;
+                int explen = 1;
+
+                if ((buflen > eindex) && buf[eindex] == 'E') {
+                    // Normal number with exponent
+
+                    // Round up if needed                    
+                    if ((buf[eindex-1] >= '5') && (buf[eindex-1] <= '9')) {
+                        buf[eindex-1] = '0';
+                        for (int i=eindex-2; i>=last_nonzero; i--) {
+                            if (buf[i] == '9') {
+                                buf[i] = '0';
+                            } else if (buf[i] != '.') {
+                                buf[i]++;
+                                break;
+                            }
+                        }
+
+                        // See if initial digit overflowed (very unlikely)
+                        if (buf[last_nonzero] == '0') {
+                            buf[last_nonzero] = '1';
+                            for (int i=eindex-1; i>last_nonzero+2; i--) {
+                                buf[i] = buf[i-1];
+                            }
+                            buf[last_nonzero+2] = '0';
+
+                            // increment exponent
+                            int exp;
+                            sscanf(buf + eindex + 1, "%d", &exp);
+                            sprintf(buf + eindex + 1, "%d", exp + 1);
+                            buflen = strlen(buf);
+                        }
+                    }
+
+                    // Ignore last digit 
+                    // only need 16 digits in total, 15 digits after '.'
+                    for (int i=eindex-2; i>=0; i--) {
+                        if ((buf[i] >= '1') && (buf[i] <= '9')) {
+                            last_nonzero = i;
+                            break;
+                        }                   
+                    }
+                    eneg = (buf[eindex+1] == '-')? 1:0;
+                    for (int i = eindex + 1; i < buflen; i++) {
+                        if ((buf[i] >= '1') && (buf[i] <= '9')) {
+                            explen = buflen - i;
+                            break;
+                        }
+                    }
+
+                    // final length = mantissa + 'E' + optional '-' + explen
+                    rv = last_nonzero+1 + 1 + eneg + explen;
+                } else {
+                    // Special number (INF, -INF, NaN)
+                    rv = buflen;
+                }
+
                 if (rv <= destStorageBytes) {
-                    memcpy(dest, buf, rv);
+                    if (rv == buflen) {
+                        // Copy all
+                        memcpy(dest, buf, rv);
+                    } else {
+                        // Don't copy trailing zeros of mantissa
+                        memcpy(dest, buf, last_nonzero+1);
+                        rv = last_nonzero+1;
+                        dest[rv++] = 'E';
+                        if (eneg) {
+                            dest[rv++] = '-';
+                        } 
+                        // Copy exponent
+                        memcpy(dest + rv, buf + (buflen - explen), explen);
+                        rv += explen;
+                    }
                 } else {
                     // SQL99 Part 2 Section 6.22 General Rule 8.b.iii.4 (fixed
                     // length) "22001" data exception - string
-                
+                    
                     // SQL99 Part 2 Section 6.22 General Rule 9.b.iii.3
                     // (variable length) "22001" data exception -- string data,
                     // right truncation

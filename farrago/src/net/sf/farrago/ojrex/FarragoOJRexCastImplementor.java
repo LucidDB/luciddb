@@ -175,6 +175,8 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
         }
         if (lhsType != rhsType) {
             String numClassName = SqlTypeUtil.getNumericJavaClassName(lhsType);
+            OJClass lhsClass = OJUtil.typeToOJClass(
+                lhsType, translator.getFarragoTypeFactory());
             if (numClassName != null
                 &&  SqlTypeUtil.inCharOrBinaryFamilies(rhsType)
                 && !SqlTypeUtil.isLob(rhsType))
@@ -200,6 +202,14 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
                                 numClassName),
                             methodName,
                             new ExpressionList(rhsExp));
+
+                Variable outTemp = translator.getRelImplementor().newVariable();
+                translator.addStatement(
+                         new VariableDeclaration(TypeName.forOJClass(lhsClass),
+                         new VariableDeclarator(outTemp.toString(), rhsExp)));
+                rhsExp = outTemp;
+                
+                checkOverflow(translator, stmtList, lhsType, rhsExp);
             }  else if ((lhsType.getSqlTypeName() == SqlTypeName.Boolean)
                     &&  SqlTypeUtil.inCharOrBinaryFamilies(rhsType)
                     && !SqlTypeUtil.isLob(rhsType)) {
@@ -218,8 +228,6 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
             }  else {
                 checkOverflow(translator, stmtList, lhsType, rhsExp);
             }
-            OJClass lhsClass = OJUtil.typeToOJClass(
-                lhsType, translator.getFarragoTypeFactory());
             if (SqlTypeUtil.isExactNumeric(lhsType)
                 && SqlTypeUtil.isApproximateNumeric(rhsType)) {
                 OJClass inClass = OJUtil.typeToOJClass(

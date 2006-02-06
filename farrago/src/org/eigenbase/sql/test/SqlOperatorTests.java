@@ -143,7 +143,7 @@ public abstract class SqlOperatorTests extends TestCase
         "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]");
     public static final boolean todo = false;
 
-    
+
     public static final String[] numericTypeNames =
         new String[] {
             "TINYINT", "SMALLINT", "INTEGER", "BIGINT",
@@ -168,7 +168,10 @@ public abstract class SqlOperatorTests extends TestCase
             Long.toString(Short.MIN_VALUE - 1),
             Long.toString((long) Integer.MIN_VALUE - 1),
             (new BigDecimal(Long.MIN_VALUE)).subtract(BigDecimal.ONE).toString(),
-            "-1000.00"
+            "-1000.00",
+            "1e-46",
+            "1e-324",
+            "1e-324"
         };
 
     public static final String[] maxNumericStrings =
@@ -178,7 +181,7 @@ public abstract class SqlOperatorTests extends TestCase
             Long.toString(Integer.MAX_VALUE),
             Long.toString(Long.MAX_VALUE),
             "999.99",
-            Float.toString(Float.MAX_VALUE),
+            "3.4028234E38", /*Float.toString(Float.MAX_VALUE)*/
             Double.toString(Double.MAX_VALUE),
             Double.toString(Double.MAX_VALUE),
         };
@@ -189,7 +192,10 @@ public abstract class SqlOperatorTests extends TestCase
             Long.toString(Short.MAX_VALUE + 1),
             Long.toString((long) Integer.MAX_VALUE + 1),
             (new BigDecimal(Long.MAX_VALUE)).add(BigDecimal.ONE).toString(),
-            "1000.00"
+            "1000.00",
+            "1e39",
+            "-1e309",
+            "1e309"
         };
 
     public SqlOperatorTests(String testName)
@@ -247,10 +253,30 @@ public abstract class SqlOperatorTests extends TestCase
         return "cast(" + value + " as " + targetType + ")";
     }
 
-    private void checkCastToScalarOkay(String value, String targetType)
+    private void checkCastToApproxOkay(String value, String targetType,
+                                       double expected, double delta)
+    {
+        getTester().checkScalarApprox(
+            getCastString(value, targetType),
+            targetType + " NOT NULL",
+            expected, delta);
+    }
+
+    private void checkCastToStringOkay(String value, String targetType, String expected)
+    {
+        getTester().checkString(
+            getCastString(value, targetType), expected, targetType + " NOT NULL");
+    }
+
+    private void checkCastToScalarOkay(String value, String targetType, String expected)
     {
         getTester().checkScalarExact(
-                getCastString(value, targetType), targetType + " NOT NULL", value);
+            getCastString(value, targetType), targetType + " NOT NULL", expected);
+    }
+
+    private void checkCastToScalarOkay(String value, String targetType)
+    {
+        checkCastToScalarOkay(value, targetType, value);
     }
 
     private void checkCastFails(String value, String targetType, String expectedError)
@@ -259,16 +285,45 @@ public abstract class SqlOperatorTests extends TestCase
                 getCastString(value, targetType), expectedError);
     }
 
-    public void testCast()
+    private void checkCastToString(String value, String type, String expected)
+    {
+        String spaces = "     ";
+        if (expected == null) {
+            expected = value.trim();
+        }
+        int len = expected.length();
+        if (type != null) {
+            value = getCastString(value, type);
+        }
+
+        checkCastFails(value, "VARCHAR(" + (len-1) + ")", stringTruncMessage);
+        checkCastToStringOkay(value, "VARCHAR(" + len + ")", expected);
+        checkCastToStringOkay(value, "VARCHAR(" + (len+5) + ")", expected);
+
+        checkCastFails(value, "CHAR(" + (len-1) + ")", stringTruncMessage);
+        checkCastToStringOkay(value, "CHAR(" + len + ")", expected);
+        checkCastToStringOkay(value, "CHAR(" + (len+5) + ")", expected + spaces);
+    }
+
+    public void testCastExactNumerics()
     {
         getTester().setFor(SqlStdOperatorTable.castFunc);
 
-        // Test casting for min,max, out of range for numeric types
-        // TODO: Fix test for approx types
-        for (int i = 0; i < 5/*numericTypeNames.length*/; i++) {
+        // Test casting for min,max, out of range for exact numeric types
+        for (int i = 0; i < numericTypeNames.length; i++) {
             String type = numericTypeNames[i];
+
+            if (type.equalsIgnoreCase("DOUBLE") ||
+                type.equalsIgnoreCase("FLOAT") ||
+                type.equalsIgnoreCase("REAL")) {
+                // Skip approx types
+                continue;
+            }
+
+            // Convert from literal to type
             if (type.equalsIgnoreCase("BIGINT")) {
                 checkCastToScalarOkay(maxNumericStrings[i], type);
+                // TODO: Enable for bigint too
                 if (todo) {
                     // Literal is out or range because negative numbers are
                     // treated as expression with the minus as a prefix operator
@@ -284,10 +339,127 @@ public abstract class SqlOperatorTests extends TestCase
                 checkCastFails(maxOverflowNumericStrings[i], type, outOfRangeMessage);
                 checkCastFails(minOverflowNumericStrings[i], type, outOfRangeMessage);
             }
+
+            // Convert from string to type
+            checkCastToScalarOkay("'" + maxNumericStrings[i] + "'",
+                type, maxNumericStrings[i]);
+            checkCastToScalarOkay("'" + minNumericStrings[i] + "'",
+                type, minNumericStrings[i]);
+
+            checkCastFails("'" + maxOverflowNumericStrings[i] + "'",
+                type, outOfRangeMessage);
+            checkCastFails("'" + minOverflowNumericStrings[i] + "'",
+                type, outOfRangeMessage);
+
+            // Convert from type to string
+            checkCastToString(maxNumericStrings[i], null, null);
+            checkCastToString(maxNumericStrings[i], type, null);
+
+            // TODO: Enable for bigint too
+            if (!type.equalsIgnoreCase("BIGINT")) {
+                // Literal is out or range because negative numbers are
+                // treated as expression with the minus as a prefix operator
+                checkCastToString(minNumericStrings[i], null, null);
+                checkCastToString(minNumericStrings[i], type, null);
+            }
+
+            checkCastFails("'notnumeric'", type, invalidCharMessage);
         }
 
         getTester().checkScalarExact("cast(1.0 as bigint)", "BIGINT NOT NULL", "1");
         getTester().checkScalarExact("cast(1.0 as int)", "1");
+    }
+
+    public void testCastApproxNumerics()
+    {
+        getTester().setFor(SqlStdOperatorTable.castFunc);
+
+        // Test casting for min,max, out of range for approx numeric types
+        for (int i = 0; i < numericTypeNames.length; i++) {
+            String type = numericTypeNames[i];
+            boolean isFloat;
+
+            if (type.equalsIgnoreCase("DOUBLE") ||
+                type.equalsIgnoreCase("FLOAT")) {
+                isFloat = false;
+            } else if (type.equalsIgnoreCase("REAL")) {
+                isFloat = true;
+            } else {
+                // Skip non-approx types
+                continue;
+            }
+
+            // Convert from literal to type
+            checkCastToApproxOkay(maxNumericStrings[i], type,
+                    Double.parseDouble(maxNumericStrings[i]),
+                    isFloat? 1E32: 0);
+            checkCastToApproxOkay(minNumericStrings[i], type,
+                    Double.parseDouble(minNumericStrings[i]), 0);
+
+            if (isFloat) {
+                checkCastFails(maxOverflowNumericStrings[i], type, outOfRangeMessage);
+                // Underflow: goes to 0
+                checkCastToApproxOkay(minOverflowNumericStrings[i], type, 0, 0);
+            } else {
+                // Double: Literal out of range
+                checkCastFails(maxOverflowNumericStrings[i], type, literalOutOfRangeMessage);
+                // Underflow: goes to 0
+                if (todo) {
+                    checkCastToApproxOkay(minOverflowNumericStrings[i], type, 0, 0);
+                }
+            }
+
+
+            // Convert from string to type
+            checkCastToApproxOkay("'" + maxNumericStrings[i] + "'",
+                type, Double.parseDouble(maxNumericStrings[i]), isFloat? 1E32:0);
+            checkCastToApproxOkay("'" + minNumericStrings[i] + "'",
+                type, Double.parseDouble(minNumericStrings[i]), 0);
+
+            checkCastFails("'" + maxOverflowNumericStrings[i] + "'",
+                type, outOfRangeMessage);
+
+            // Underflow: goes to 0
+            checkCastToApproxOkay("'" + minOverflowNumericStrings[i] + "'",
+                type, 0, 0);
+
+            // Convert from type to string
+
+            // Treated as DOUBLE
+            checkCastToString(maxNumericStrings[i], null,
+                isFloat? null: "1.797693134862316E308");
+
+            /*
+            // TODO: The following tests are slightly different depending on
+            //       whether the java or fennel calc are used.
+            //       Try to make them the same            
+            if (FennelCalc) {
+                // Treated as FLOAT or DOUBLE
+                checkCastToString(maxNumericStrings[i], type,
+                        isFloat? "3.402824E38": "1.797693134862316E308");
+                // Treated as DOUBLE
+                checkCastToString(minNumericStrings[i], null,
+                    isFloat? null: "4.940656458412465E-324");
+                // Treated as FLOAT or DOUBLE
+                checkCastToString(minNumericStrings[i], type,
+                    isFloat? "1.401299E-45": "4.940656458412465E-324");
+            } else if (JavaCalc) {
+                // Treated as FLOAT or DOUBLE
+                checkCastToString(maxNumericStrings[i], type,
+                    isFloat? "3.402823E38": "1.797693134862316E308");
+                // Treated as DOUBLE
+                checkCastToString(minNumericStrings[i], null,
+                    isFloat? null: null);
+                // Treated as FLOAT or DOUBLE
+                checkCastToString(minNumericStrings[i], type,
+                    isFloat? "1.401298E-45": null);
+            }
+            */
+            checkCastFails("'notnumeric'", type, invalidCharMessage);
+        }
+
+        getTester().checkScalarExact("cast(1.0e0 as bigint)", "BIGINT NOT NULL", "1");
+        getTester().checkScalarExact("cast(1.0e0 as int)", "1");
     }
 
     public void testCastDecimalToInteger() {
@@ -346,6 +518,8 @@ public abstract class SqlOperatorTests extends TestCase
         // null
         getTester().checkNull("cast(null as decimal(4,3))");
         getTester().checkNull("cast(null as double)");
+        getTester().checkNull("cast(null as varchar(10))");
+        getTester().checkNull("cast(null as char(10))");
     }
 
     public void testCastDateTime()
@@ -401,7 +575,7 @@ public abstract class SqlOperatorTests extends TestCase
         }
     }
 
-    public void testCastString()
+    public void testCastExactString()
     {
         getTester().setFor(SqlStdOperatorTable.castFunc);
 
@@ -443,34 +617,73 @@ public abstract class SqlOperatorTests extends TestCase
         // integer to string
         getTester().checkString(
                 "cast(9354 as varchar(10))", "9354", "VARCHAR(10) NOT NULL");
+    }
+
+    public void testCastApproxString()
+    {
+        getTester().setFor(SqlStdOperatorTable.castFunc);
 
         // string to double/float/real
         getTester().checkScalarApprox("cast('1' as double)", "DOUBLE NOT NULL", 1, 0);
         getTester().checkScalarApprox("cast('2.3' as float)", "FLOAT NOT NULL", 2.3, 0);
         getTester().checkScalarApprox("cast('-10.2' as real)", "REAL NOT NULL", -10.2, 0);
+        getTester().checkScalarApprox("cast('4e2' as double)", "DOUBLE NOT NULL", 400, 0);
+        getTester().checkScalarApprox("cast('2.1e1' as float)", "FLOAT NOT NULL", 21, 0);
+        getTester().checkScalarApprox("cast('-12e-1' as real)", "REAL NOT NULL", -1.2, 0);
+        getTester().checkScalarApprox("cast(' -43 ' as double)", "DOUBLE NOT NULL", -43, 0);
+        getTester().checkScalarApprox("cast(' 23e-1 ' as float)", "FLOAT NOT NULL", 2.3, 0);
+        getTester().checkScalarApprox("cast(' 123e+1 ' as real)", "REAL NOT NULL", 1230, 0);
 
         // double/float/real to string
-        // NOTE: Both Java and Fennel implementaions no do conform to
-        // SQL.2003 standard, part 2, section 6.12, general rules 10/11, b
-        // since it does not use the shortest character string
-        if (todo) {
-            // Is 4.5000000000000000E+002 in Fennel calc on Windows;
-            // see http://issues.eigenbase.org/browse/FNL-7
-            // Really should be 4.5E2
-            getTester().checkString(
-                "cast(45e1 as varchar(32))",
-                "4.5000000000000000E+02", "VARCHAR(32) NOT NULL");
+        getTester().checkString(
+            "cast(0e0 as varchar(5))",
+            "0E0", "VARCHAR(5) NOT NULL");
 
-            // Is -3.5999999999999996E-03 in java calc
-            getTester().checkString(
-                    "cast(cast(-0.0036 as float) as varchar(32))",
-                    "-3.5999999999999999E-03", "VARCHAR(32) NOT NULL");
+        getTester().checkString(
+            "cast(4e1 as varchar(5))",
+            "4E1", "VARCHAR(5) NOT NULL");
 
-            // Does not fit in fennel calc (because it is doing double)
-            getTester().checkString(
-                    "cast(cast(3.23 as real) as varchar(20))",
-                    "3.23000000E+00", "VARCHAR(20) NOT NULL");
-        }
+        getTester().checkString(
+            "cast(45e1 as varchar(5))",
+            "4.5E2", "VARCHAR(5) NOT NULL");
+
+        getTester().checkString(
+            "cast(4.6834e0 as varchar(50))",
+            "4.6834E0", "VARCHAR(50) NOT NULL");
+
+        getTester().checkString(
+            "cast(4683442.3432498375e0 as varchar(20))",
+            "4.683442343249838E6", "VARCHAR(20) NOT NULL");
+
+        getTester().checkString(
+            "cast(cast(0.1 as real) as char(10))",
+            "1E-1      ", "CHAR(10) NOT NULL");
+
+        getTester().checkString(
+            "cast(cast(-0.0036 as float) as char(10))",
+            "-3.6E-3   ", "CHAR(10) NOT NULL");
+
+        getTester().checkString(
+            "cast(cast(3.23e0 as real) as varchar(20))",
+            "3.23E0", "VARCHAR(20) NOT NULL");
+
+        getTester().checkString(
+            "cast(cast(5.2365439 as real) as varchar(20))",
+            "5.236544E0", "VARCHAR(20) NOT NULL");
+
+        getTester().checkString(
+            "cast(-1e0 as char(6))",
+            "-1E0  ", "CHAR(6) NOT NULL");
+
+        getTester().checkFails(
+                "cast(1.3243232e0 as varchar(4))", stringTruncMessage);
+        getTester().checkFails(
+                "cast(1.9e5 as char(4))", stringTruncMessage);
+    }
+
+    public void testCastBooleanString()
+    {
+        getTester().setFor(SqlStdOperatorTable.castFunc);
 
         // boolean to string (char)
         getTester().checkString(
@@ -510,10 +723,6 @@ public abstract class SqlOperatorTests extends TestCase
                 "cast(cast('false' as varchar(10)) as boolean)", Boolean.FALSE);
         getTester().checkFails(
                 "cast(cast('blah' as varchar(10)) as boolean)", invalidCharMessage);
-
-        // null
-        getTester().checkNull("cast(null as varchar(10))");
-        getTester().checkNull("cast(null as char(10))");
     }
 
     public void testCase()

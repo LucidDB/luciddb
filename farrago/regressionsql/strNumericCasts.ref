@@ -371,23 +371,20 @@ Error: java.lang.NumberFormatException: For input string: "-9223372036854775809"
 0: jdbc:farrago:> 
 0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
 0: jdbc:farrago:> values cast('9223372036854775808' as bigint);
-+-----------------------+
-|        EXPR$0         |
-+-----------------------+
-| -9223372036854775808  |
-+-----------------------+
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=0 Code=22003 (state=,code=0)
 0: jdbc:farrago:> values cast('18446744073709551615' as bigint);
-+---------+
-| EXPR$0  |
-+---------+
-| -1      |
-+---------+
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=0 Code=22003 (state=,code=0)
 0: jdbc:farrago:> values cast('-9223372036854775809' as bigint);
-+----------------------+
-|        EXPR$0        |
-+----------------------+
-| 9223372036854775807  |
-+----------------------+
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=0 Code=22003 (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit
