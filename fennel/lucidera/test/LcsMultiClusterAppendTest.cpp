@@ -224,7 +224,7 @@ void LcsMultiClusterAppendTest::scanCols(uint nRows, uint nCols,
     // setup input rid stream
 
     ValuesExecStreamParams valuesParams;
-    PBuffer dummyBuffer;
+    PBuffer dummyBuffer = NULL;
     valuesParams.pTupleBuffer = dummyBuffer;
     valuesParams.outputTupleDesc.push_back(attrDesc_int64);
     valuesParams.outputTupleDesc.push_back(attrDesc_char1);

@@ -349,7 +349,7 @@ void LcsClusterAppendExecStreamTest::testScanSingleCol(
     // setup input stream
 
     ValuesExecStreamParams valuesParams;
-    PBuffer dummyBuffer;
+    PBuffer dummyBuffer = NULL;
     valuesParams.pTupleBuffer = dummyBuffer;
     valuesParams.outputTupleDesc.push_back(attrDesc_int64);
     valuesParams.outputTupleDesc.push_back(attrDesc_char1);
@@ -405,7 +405,7 @@ void LcsClusterAppendExecStreamTest::testScanMultiCol(
     // setup input stream
 
     ValuesExecStreamParams valuesParams;
-    PBuffer dummyBuffer;
+    PBuffer dummyBuffer = NULL;
     valuesParams.pTupleBuffer = dummyBuffer;
     valuesParams.outputTupleDesc.push_back(attrDesc_int64);
     valuesParams.outputTupleDesc.push_back(attrDesc_char1);
