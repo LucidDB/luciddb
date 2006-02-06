@@ -617,14 +617,14 @@ SqlNode SqlExplain() :
 {
     SqlNode stmt;
     SqlExplainLevel detailLevel = SqlExplainLevel.DIGEST_ATTRIBUTES;
-    boolean withImplementation = true;
+    SqlExplain.Depth depth;
     SqlParserPos pos;
     boolean asXml;
 }
 {
     <EXPLAIN> <PLAN>
     [ detailLevel = ExplainDetailLevel() ]
-    [ withImplementation = WithImplementation() ]
+    depth = ExplainDepth()
     (
         <AS> <XML> { asXml = true; }
         |
@@ -644,29 +644,41 @@ SqlNode SqlExplain() :
             SqlStdOperatorTable.explainOperator,
             stmt,
             SqlLiteral.createEnum(detailLevel, SqlParserPos.ZERO),
-            SqlLiteral.createBoolean(withImplementation, SqlParserPos.ZERO),
+            SqlLiteral.createEnum(depth, SqlParserPos.ZERO),
             SqlLiteral.createBoolean(asXml, SqlParserPos.ZERO),
             pos);
     }
 }
 
 /**
- * Parses WITH | WITHOUT IMPLEMENTATION modifier for EXPLAIN PLAN.
+ * Parses WITH TYPE | WITH IMPLEMENTATION | WITHOUT IMPLEMENTATION modifier for
+ * EXPLAIN PLAN.
  */
-boolean WithImplementation() :
+SqlExplain.Depth ExplainDepth() :
 {
 }
 {
     (
+        LOOKAHEAD(2)
+        <WITH> <TYPE>
+        {
+            return SqlExplain.Depth.Type;
+        }
+        |
         <WITH> <IMPLEMENTATION>
         {
-            return true;
+            return SqlExplain.Depth.Physical;
         }
         |
         <WITHOUT> <IMPLEMENTATION>
         {
-            return false;
+            return SqlExplain.Depth.Logical;
         }
+        |
+        {
+            return SqlExplain.Depth.Physical;
+        }
+        
     )
 }
 

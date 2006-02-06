@@ -37,7 +37,7 @@ public class SqlExplain extends SqlCall
     // constants representing operand positions
     public static final int EXPLICANDUM_OPERAND = 0;
     public static final int DETAIL_LEVEL_OPERAND = 1;
-    public static final int WITH_IMPLEMENTATION_OPERAND = 2;
+    public static final int DEPTH_OPERAND = 2;
     public static final int AS_XML_OPERAND = 3;
     public static final int OPERAND_COUNT = 4;
 
@@ -47,14 +47,14 @@ public class SqlExplain extends SqlCall
         SqlSpecialOperator operator,
         SqlNode explicandum,
         SqlLiteral detailLevel,
-        SqlLiteral withImplementation,
+        SqlLiteral depth,
         SqlLiteral asXml,
         SqlParserPos pos)
     {
         super(operator, new SqlNode[OPERAND_COUNT], pos);
         operands[EXPLICANDUM_OPERAND] = explicandum;
         operands[DETAIL_LEVEL_OPERAND] = detailLevel;
-        operands[WITH_IMPLEMENTATION_OPERAND] = withImplementation;
+        operands[DEPTH_OPERAND] = depth;
         operands[AS_XML_OPERAND] = asXml;
     }
 
@@ -78,11 +78,27 @@ public class SqlExplain extends SqlCall
     }
 
     /**
+     * Returns the level of abstraction at which this plan should be displayed.
+     */
+    public Depth getDepth()
+    {
+        return (Depth) SqlLiteral.enumValue(operands[DEPTH_OPERAND]);
+    }
+
+    /**
      * @return whether physical plan implementation should be returned
      */
     public boolean withImplementation()
     {
-        return SqlLiteral.booleanValue(operands[WITH_IMPLEMENTATION_OPERAND]);
+        return getDepth() == Depth.Physical;
+    }
+
+    /**
+     * @return whether type should be returned
+     */
+    public boolean withType()
+    {
+        return getDepth() == Depth.Type;
     }
 
     /**
@@ -100,7 +116,7 @@ public class SqlExplain extends SqlCall
         int rightPrec)
     {
         writer.keyword("EXPLAIN PLAN");
-        switch(getDetailLevel()) {
+        switch (getDetailLevel()) {
         case NO_ATTRIBUTES:
             writer.keyword("EXCLUDING ATTRIBUTES");
             break;
@@ -111,8 +127,18 @@ public class SqlExplain extends SqlCall
             writer.keyword("INCLUDING ALL ATTRIBUTES");
             break;
         }
-        if (!withImplementation()) {
+        switch (getDepth()) {
+        case Type:
+            writer.keyword("WITH TYPE");
+            break;
+        case Logical:
             writer.keyword("WITHOUT IMPLEMENTATION");
+            break;
+        case Physical:
+            writer.keyword("WITH IMPLEMENTATION");
+            break;
+        default:
+            throw new UnsupportedOperationException();
         }
         if (isXml()) {
             writer.keyword("AS XML");
@@ -123,6 +149,15 @@ public class SqlExplain extends SqlCall
             writer, getOperator().getLeftPrec(), getOperator().getRightPrec());
     }
 
+    /**
+     * The level of abstraction with which to display the plan.
+     */
+    public static enum Depth
+    {
+        Type,
+        Logical,
+        Physical,
+    }
 }
 
 

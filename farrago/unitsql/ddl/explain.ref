@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/ddl/explain.sql#2 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/explain.sql#2 $
 0: jdbc:farrago:> -- Test EXPLAIN command.
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'sales';
@@ -98,5 +98,25 @@
 | 	</Inputs>                                                        |
 | </RelNode>                                                        |
 +-------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- Explain type
+0: jdbc:farrago:> explain plan with type for
+. . . . . . . . > select 1 from depts;
++-----------------------------------------------+
+|                    column0                    |
++-----------------------------------------------+
+| RecordType(INTEGER NOT NULL EXPR$0) NOT NULL  |
++-----------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- Explain type as XML (ignores XML flag)
+0: jdbc:farrago:> explain plan with type as xml for
+. . . . . . . . > select 1 from depts;
++-----------------------------------------------+
+|                    column0                    |
++-----------------------------------------------+
+| RecordType(INTEGER NOT NULL EXPR$0) NOT NULL  |
++-----------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- End explain.sql
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit
