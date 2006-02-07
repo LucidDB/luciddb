@@ -372,7 +372,7 @@
   <taskdef name="blackhawk" 
     classname="org.eigenbase.blackhawk.BhVMTask"
     classpathref="blackhawk.run.classpath"
-    />
+    onerror="ignore"/>
 
   <macrodef name="blackhawk.fork">
     <attribute name="basedir" default="."/>
