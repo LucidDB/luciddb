@@ -1,0 +1,289 @@
+0: jdbc:luciddb:> set schema 's'
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Test will load all datatypes into a double column.
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col double)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- tinyint to double; min/max range for source datatype [same as target]
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select coltiny from datatype_source
+. . . . . . . . >   where target_type='double'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++--------+
+|  COL   |
++--------+
+| 0.0    |
+| 127.0  |
++--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col double)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- smallint to double; min/max range for source datatype [same as target]
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target 
+. . . . . . . . >  select colsmall from datatype_source
+. . . . . . . . >   where target_type='double'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++-----------+
+|    COL    |
++-----------+
+| -32768.0  |
+| 32767.0   |
++-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col double)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- integer to double; min/max range for source datatype [same as target]
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colint from datatype_source
+. . . . . . . . >   where target_type='double'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++-----------------+
+|       COL       |
++-----------------+
+| -2.147483647E9  |
+| 2.147483647E9   |
++-----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col double)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- bigint to double; min/max range for source datatype [same as target]
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colbig from datatype_source
+. . . . . . . . >   where target_type='double'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++-----------------+
+|       COL       |
++-----------------+
+| -2.147483647E9  |
+| 2.147483647E9   |
++-----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col double)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- decimal to double; min/max range for target datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select coldec from datatype_source
+. . . . . . . . >   where target_type='double'
+. . . . . . . . >     and range_for='target'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col double)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- decimal to double; min/max range for source datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select coldec from datatype_source
+. . . . . . . . >   where target_type='double'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++-----------------+
+|       COL       |
++-----------------+
+| -2.147483647E9  |
+| 2.147483647E9   |
++-----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col double)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- numeric to double; min/max range for target datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colnum from datatype_source
+. . . . . . . . >   where target_type='double'
+. . . . . . . . >     and range_for='target'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col double)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- numeric to double; min/max range for source datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colnum from datatype_source
+. . . . . . . . >   where target_type='double'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++-----------------+
+|       COL       |
++-----------------+
+| -2.147483647E9  |
+| 2.147483647E9   |
++-----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col double)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- double to double; min/max range for source datatype [same as target]
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select coldouble from datatype_source
+. . . . . . . . >   where target_type='double'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++-----------------+
+|       COL       |
++-----------------+
+| -4.294967296E9  |
+| 4.294967296E9   |
++-----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col double)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- float to double; min/max range for target datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colfloat from datatype_source
+. . . . . . . . >   where target_type='double'
+. . . . . . . . >     and range_for='target'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col double)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- float to double; min/max range for source datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colfloat from datatype_source
+. . . . . . . . >   where target_type='double'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++-----------------+
+|       COL       |
++-----------------+
+| -4.294967296E9  |
+| 4.294967296E9   |
++-----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col double)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- real to double; min/max range for target datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colreal from datatype_source
+. . . . . . . . >   where target_type='double'
+. . . . . . . . >     and range_for='target'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col double)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- real to double; min/max range for source datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colreal from datatype_source
+. . . . . . . . >   where target_type='double'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++-----------------+
+|       COL       |
++-----------------+
+| -4.294967296E9  |
+| 4.294967296E9   |
++-----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col double)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test to drop scale
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target values(123.456789)
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++-------------+
+|     COL     |
++-------------+
+| 123.456789  |
++-------------+
+0: jdbc:luciddb:> -- PASS: if value = 123.456789
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

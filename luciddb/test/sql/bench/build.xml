@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- 
+<!--
 // $Id$
 // LucidDB is a DBMS optimized for business intelligence.
 // Copyright (C) 2005-2005 LucidEra, Inc.
@@ -14,7 +14,7 @@
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//  
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -25,37 +25,25 @@
 
   <property name="open.dir" location="../../../.."/>
   <fail unless="open.dir" />
+
   <property environment="env" />
+  <property file="run.properties"/>
 
-  <!-- override Farrago -->
-  <property name="project.catalog.dir" location="${open.dir}/luciddb/catalog" />
-  <property name="project.trace.propfile" location="${open.dir}/luciddb/trace/LucidDbTrace.properties" />
+  <taskdef name="var" classname="net.sf.antcontrib.property.Variable" classpath="${ant.classpath}"/>
 
-  <import file="${open.dir}/farrago/buildMacros.xml" />
-  
-  <property name="classes.dir" location="${open.dir}/luciddb/classes" />
-
-  <!-- directory in which sql tests are generated -->
+  <!-- directory where sql is generated -->
   <property name="gensql.dir" value="${bench.dir}/gen" />
-
-  <!-- classpath for running tests via ant -->
-  <path id="test.classpath">
-    <pathelement path="${classes.dir}"/>
-    <pathelement path="${farrago.sqlline.classpath}"/>
-    <pathelement path="${ant.classpath}"/>
-    <pathelement path="${bh.run.classpath}"/>
-  </path>
-  <property name="test.classpath" refid="test.classpath"/>
+  <!-- directory where blackhawk output should go -->
+  <property name="bhlogs.dir" value="${bench.dir}/bh" />
+  <!-- directory where the csv files are copied -->
+  <property name="csv.dir" value="${bench.dir}/csv" />
 
   <target name="gen-sql">
-    <delete dir="${gensql.dir}" quiet="true"/>
-    <mkdir dir="${gensql.dir}"/>
     <filter token="open.dir" value="${open.dir}"/>
+    <filter token="csv.dir" value="${csv.dir}"/>
 
     <!-- generate config.properties file -->
-    <!-- use prop.oracle as default; should set through cmdline -->
-    <property name="config.prop" value="prop.oracle"/>
-    <copy file="${config.prop}" tofile="config.properties" 
+    <copy file="${config.prop}" tofile="config.properties"
       overwrite="true" filtering="true">
       <filterset>
         <filtersfile file="${config.prop}"/>
@@ -73,7 +61,7 @@
         <filtersfile file="config.properties"/>
       </filterset>
     </copy>
-    <copy todir="${gensql.dir}" overwrite="true"
+    <copy todir="${gensql.dir}/${config.prop}" overwrite="true"
       filtering="true">
       <fileset dir="${gensql.dir}tmp"/>
       <filterchain>
@@ -84,22 +72,69 @@
       </filterchain>
     </copy>
     <delete dir="${gensql.dir}tmp" quiet="true"/>
+
+    <!-- copy over all other .sql and .ref files -->
+    <copy todir="${gensql.dir}/${config.prop}">
+      <fileset dir="${bench.dir}">
+        <include name="**/*.sql"/>
+        <include name="**/*.ref"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="copy-csv">
+    <delete dir="${csv.dir}"/>
+    <copy todir="${csv.dir}" overwrite="true">
+      <fileset dir="${csvsource.dir}"/>
+    </copy>
   </target>
 
   <target name="test">
-    <property name="test-suite" value="test.xml"/>
+    <antcall target="copy-csv"/>
     <antcall target="gen-sql"/>
-    <blackhawk.fork basedir="${bench.dir}" 
-      testscript="${test-suite}"
-      classpathref="test.classpath"/>
-  </target>  
+    <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
+  </target>
+
+  <target name="testAllConfigs">
+    <!-- oracle -->
+    <var name="config.prop" value="prop.oracle"/>
+    <antcall target="gen-sql"/>
+    <var name="bh.log.basedir" value="${bench.dir}/bh/${config.prop}"/>
+    <var name="bh.filter.dbs" value="oracle"/>
+    <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
+
+    <!-- sqlserver -->
+    <var name="config.prop" value="prop.sqlserver"/>
+    <antcall target="gen-sql"/>
+    <var name="bh.log.basedir" value="${bench.dir}/bh/${config.prop}"/>
+    <var name="bh.filter.dbs" value="sqlserver"/>
+    <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
+
+    <!-- csvjdbc -->
+    <antcall target="copy-csv"/>
+    <var name="config.prop" value="prop.csvjdbc"/>
+    <antcall target="gen-sql"/>
+    <var name="bh.log.basedir" value="${bench.dir}/bh/${config.prop}"/>
+    <var name="bh.filter.dbs" value="csv"/>
+    <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
+
+    <!-- flatfile -->
+    <antcall target="copy-csv"/>
+    <var name="config.prop" value="prop.flatfile"/>
+    <antcall target="gen-sql"/>
+    <var name="bh.log.basedir" value="${bench.dir}/bh/${config.prop}"/>
+    <var name="bh.filter.dbs" value="flatfile"/>
+    <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
+  </target>
 
   <target name="clean">
     <delete dir="${gensql.dir}"/>
+    <delete dir="${bhlogs.dir}"/>
+    <delete dir="${csv.dir}"/>
   </target>
 
   <target name="restoreCatalog">
     <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>
-  </target>  
+  </target>
 
 </project>

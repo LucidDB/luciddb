@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- 
+<!--
 // $Id$
 // LucidDB is a DBMS optimized for business intelligence.
 // Copyright (C) 2006-2006 LucidEra, Inc.
@@ -14,7 +14,7 @@
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//  
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -26,38 +26,19 @@
   <property name="open.dir" location="../../../../.."/>
   <fail unless="open.dir" />
   <property environment="env" />
-
-  <!-- override Farrago -->
-  <property name="project.catalog.dir" location="${open.dir}/luciddb/catalog" />
-  <property name="project.trace.propfile" location="${open.dir}/luciddb/trace/LucidDbTrace.properties" />
-
-  <import file="${open.dir}/farrago/buildMacros.xml" />
-  
-  <property name="classes.dir" location="${open.dir}/luciddb/classes" />
-
-  <!-- classpath for running tests via ant -->
-  <path id="test.classpath">
-    <pathelement path="${classes.dir}"/>
-    <pathelement path="${farrago.sqlline.classpath}"/>
-    <pathelement path="${ant.classpath}"/>
-    <pathelement path="${bh.run.classpath}"/>
-  </path>
-  <property name="test.classpath" refid="test.classpath"/>
+  <property file="run.properties"/>
 
   <target name="test">
-    <property name="test-suite" value="test.xml"/>
-    <blackhawk.fork basedir="${udf.dir}" 
-      testscript="${test-suite}"
-      classpathref="test.classpath"/>
-  </target>  
+    <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
+  </target>
 
   <target name="restoreCatalog">
     <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>
-  </target>  
+  </target>
 
   <target name="clean">
+    <delete dir="${bh.log.basedir}"/>
     <delete>
-      <fileset dir="${udf.dir}" includes="bh.*"/>
       <fileset dir="${udf.dir}" includes="*.log"/>
     </delete>
   </target>

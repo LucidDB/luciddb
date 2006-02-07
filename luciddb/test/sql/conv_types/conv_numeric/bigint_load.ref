@@ -1,0 +1,308 @@
+0: jdbc:luciddb:> set schema 's'
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Test will load all datatypes into a bigint column.
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col bigint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- tinyint to bigint; min/max range for source datatype [same as target]
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select coltiny from datatype_source
+. . . . . . . . >   where target_type='bigint'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target
+. . . . . . . . > ;
++------+
+| COL  |
++------+
+| 0    |
+| 127  |
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col bigint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- smallint to bigint; min/max range for source datatype [same as target]
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target 
+. . . . . . . . >  select colsmall from datatype_source
+. . . . . . . . >   where target_type='bigint'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target
+. . . . . . . . > ;
++---------+
+|   COL   |
++---------+
+| -32768  |
+| 32767   |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col bigint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- integer to bigint; min/max range for source datatype [same as target]
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colint from datatype_source
+. . . . . . . . >   where target_type='bigint'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target
+. . . . . . . . > ;
++--------------+
+|     COL      |
++--------------+
+| -2147483647  |
+| 2147483647   |
++--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col bigint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- bigint to bigint; min/max range for source datatype [same as target]
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colbig from datatype_source
+. . . . . . . . >   where target_type='bigint'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target
+. . . . . . . . > ;
++--------------+
+|     COL      |
++--------------+
+| -2147483647  |
+| 2147483647   |
++--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col bigint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- decimal to bigint; min/max range for target datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select coldec from datatype_source
+. . . . . . . . >   where target_type='bigint'
+. . . . . . . . >     and range_for='target'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col bigint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- decimal to bigint; min/max range for source datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select coldec from datatype_source
+. . . . . . . . >   where target_type='bigint'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target
+. . . . . . . . > ;
++--------------+
+|     COL      |
++--------------+
+| -2147483647  |
+| 2147483647   |
++--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col bigint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- numeric to bigint; min/max range for target datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colnum from datatype_source
+. . . . . . . . >   where target_type='bigint'
+. . . . . . . . >     and range_for='target'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col bigint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- numeric to bigint; min/max range for source datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colnum from datatype_source
+. . . . . . . . >   where target_type='bigint'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target
+. . . . . . . . > ;
++--------------+
+|     COL      |
++--------------+
+| -2147483647  |
+| 2147483647   |
++--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col bigint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- double to bigint; min/max range for target datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select coldouble from datatype_source
+. . . . . . . . >   where target_type='bigint'
+. . . . . . . . >     and range_for='target'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col bigint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- double to bigint; min/max range for source datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select coldouble from datatype_source
+. . . . . . . . >   where target_type='bigint'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target
+. . . . . . . . > ;
++--------------+
+|     COL      |
++--------------+
+| -4294967296  |
+| 4294967296   |
++--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col bigint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- float to bigint; min/max range for target datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colfloat from datatype_source
+. . . . . . . . >   where target_type='bigint'
+. . . . . . . . >     and range_for='target'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col bigint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- float to bigint; min/max range for source datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colfloat from datatype_source
+. . . . . . . . >   where target_type='bigint'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target
+. . . . . . . . > ;
++--------------+
+|     COL      |
++--------------+
+| -4294967296  |
+| 4294967296   |
++--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col bigint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- real to bigint; min/max range for target datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colreal from datatype_source
+. . . . . . . . >   where target_type='bigint'
+. . . . . . . . >     and range_for='target'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col bigint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- real to bigint; min/max range for source datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colreal from datatype_source
+. . . . . . . . >   where target_type='bigint'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target
+. . . . . . . . > ;
++--------------+
+|     COL      |
++--------------+
+| -4294967296  |
+| 4294967296   |
++--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col bigint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test to drop scale
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target values(123.456789)
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target
+. . . . . . . . > ;
++------+
+| COL  |
++------+
+| 123  |
++------+
+0: jdbc:luciddb:> -- PASS: if value = 123
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

@@ -23,15 +23,17 @@ DATA_LIBRARY=class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper
 SERVER_NAME=@name_prefix@_server
 
 # flatfile options
-DIRECTORY=/mnt/raksha/engineering/testdata/csv_BENCHMARK/
+DIRECTORY=@csv.dir@
 FILE_EXTENSION=.csv
-CTRL_FILE_EXT=
+CTRL_FILE_EXT=.bcp
 FIELD_DELIM=,
 LINE_DELIM=\\n
 QUOTE_CHAR="
 ESCAPE_CHAR=
 WITH_HEADER=yes
 NUM_ROWS_SCAN=1
+
+SCHEMA=BCP
 
 #########################
 # foreign table options #

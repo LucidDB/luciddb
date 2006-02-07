@@ -1,0 +1,289 @@
+0: jdbc:luciddb:> set schema 's'
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Test will load all datatypes into a decimal column.
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col decimal(15,4))
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- tinyint to decimal; min/max range for source datatype [same as target]
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select coltiny from datatype_source
+. . . . . . . . >   where target_type='decimal'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++-----------+
+|    COL    |
++-----------+
+| 0.0000    |
+| 127.0000  |
++-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col decimal(15,4))
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- smallint to decimal; min/max range for source datatype [same as target]
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target 
+. . . . . . . . >  select colsmall from datatype_source
+. . . . . . . . >   where target_type='decimal'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++--------------+
+|     COL      |
++--------------+
+| -32768.0000  |
+| 32767.0000   |
++--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col decimal(15,4))
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- integer to decimal; min/max range for source datatype [same as target]
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colint from datatype_source
+. . . . . . . . >   where target_type='decimal'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++-------------------+
+|        COL        |
++-------------------+
+| -2147483647.0000  |
+| 2147483647.0000   |
++-------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col decimal(15,4))
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- bigint to decimal; min/max range for source datatype [same as target]
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colbig from datatype_source
+. . . . . . . . >   where target_type='decimal'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++-------------------+
+|        COL        |
++-------------------+
+| -2147483647.0000  |
+| 2147483647.0000   |
++-------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col decimal(15,4))
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- decimal to decimal; min/max range for source datatype [same as target]
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select coldec from datatype_source
+. . . . . . . . >   where target_type='decimal'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++-------------------+
+|        COL        |
++-------------------+
+| -2147483647.0000  |
+| 2147483647.0000   |
++-------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col decimal(15,4))
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- numeric to decimal; min/max range for target datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colnum from datatype_source
+. . . . . . . . >   where target_type='decimal'
+. . . . . . . . >     and range_for='target'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col decimal(15,4))
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- numeric to decimal; min/max range for source datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colnum from datatype_source
+. . . . . . . . >   where target_type='decimal'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++-------------------+
+|        COL        |
++-------------------+
+| -2147483647.0000  |
+| 2147483647.0000   |
++-------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col decimal(15,4))
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- double to decimal; min/max range for target datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select coldouble from datatype_source
+. . . . . . . . >   where target_type='decimal'
+. . . . . . . . >     and range_for='target'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col decimal(15,4))
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- double to decimal; min/max range for source datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select coldouble from datatype_source
+. . . . . . . . >   where target_type='decimal'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++-------------------+
+|        COL        |
++-------------------+
+| -4294967296.0000  |
+| 4294967296.0000   |
++-------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col decimal(15,4))
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- float to decimal; min/max range for target datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colfloat from datatype_source
+. . . . . . . . >   where target_type='decimal'
+. . . . . . . . >     and range_for='target'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col decimal(15,4))
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- float to decimal; min/max range for source datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colfloat from datatype_source
+. . . . . . . . >   where target_type='decimal'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++-------------------+
+|        COL        |
++-------------------+
+| -4294967296.0000  |
+| 4294967296.0000   |
++-------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col decimal(15,4))
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- real to decimal; min/max range for target datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colreal from datatype_source
+. . . . . . . . >   where target_type='decimal'
+. . . . . . . . >     and range_for='target'
+. . . . . . . . > ;
+Error: MUL(d,r,r) is not a registered instruction (at line:col 0:1 to 20:40, characters 144242409 to 782) (state=,code=0)
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col decimal(15,4))
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- real to decimal; min/max range for source datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colreal from datatype_source
+. . . . . . . . >   where target_type='decimal'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+Error: MUL(d,r,r) is not a registered instruction (at line:col 0:1 to 20:40, characters 144242409 to 782) (state=,code=0)
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col decimal(15,4))
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test to drop scale
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target values(123.456789)
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++-----------+
+|    COL    |
++-----------+
+| 123.4568  |
++-----------+
+0: jdbc:luciddb:> -- PASS: if value = 123.4567
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

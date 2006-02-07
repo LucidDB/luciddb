@@ -25,31 +25,18 @@
 
   <property name="open.dir" location="../../../.."/>
   <fail unless="open.dir" />
+
   <property environment="env" />
+  <property file="run.properties"/>
 
-  <!-- override Farrago -->
-  <property name="project.catalog.dir" location="${open.dir}/luciddb/catalog" />
-  <property name="project.trace.propfile" location="${open.dir}/luciddb/trace/LucidDbTrace.properties" />
+  <taskdef name="var" classname="net.sf.antcontrib.property.Variable" classpath="${ant.classpath}"/>
 
-  <import file="${open.dir}/farrago/buildMacros.xml" />
-  
-  <property name="classes.dir" location="${open.dir}/luciddb/classes" />
-
-  <!-- directory in which sql tests are generated -->
+  <!-- directory where sql is generated -->
   <property name="gensql.dir" value="${datatypes.dir}/gen" />
-
-  <!-- classpath for running tests via ant -->
-  <path id="test.classpath">
-    <pathelement path="${classes.dir}"/>
-    <pathelement path="${farrago.sqlline.classpath}"/>
-    <pathelement path="${ant.classpath}"/>
-    <pathelement path="${bh.run.classpath}"/>
-  </path>
-  <property name="test.classpath" refid="test.classpath"/>
+  <!-- directory where blackhawk output should go -->
+  <property name="bhlogs.dir" value="${datatypes.dir}/bh" />
 
   <target name="gen-sql">
-    <delete dir="${gensql.dir}" quiet="true"/>
-    <mkdir dir="${gensql.dir}"/>
     <filter token="open.dir" value="${open.dir}"/>
     <filter token="datatypes.dir" value="${datatypes.dir}"/>
 
@@ -74,7 +61,7 @@
         <filtersfile file="config.properties"/>
       </filterset>
     </copy>
-    <copy todir="${gensql.dir}" overwrite="true"
+    <copy todir="${gensql.dir}/${config.prop}" overwrite="true"
       filtering="true">
       <fileset dir="${gensql.dir}tmp"/>
       <filterchain>
@@ -85,18 +72,38 @@
       </filterchain>
     </copy>
     <delete dir="${gensql.dir}tmp" quiet="true"/>
+
+    <!-- copy over all other .sql and .ref files -->
+    <copy todir="${gensql.dir}/${config.prop}">
+      <fileset dir="${datatypes.dir}">
+        <include name="**/*.sql"/>
+        <include name="**/*.ref"/>
+      </fileset>
+    </copy>
   </target>
 
   <target name="test">
-    <property name="test-suite" value="test.xml"/>
     <antcall target="gen-sql"/>
-    <blackhawk.fork basedir="${datatypes.dir}" 
-      testscript="${test-suite}"
-      classpathref="test.classpath"/>
+    <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
   </target>  
+
+  <target name="testAllConfigs">
+    <!-- csvjdbc -->
+    <var name="config.prop" value="prop.csvjdbc"/>
+    <antcall target="gen-sql"/>
+    <var name="bh.log.basedir" value="${datatypes.dir}/bh/${config.prop}"/>
+    <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
+
+    <!-- flatfile -->
+    <var name="config.prop" value="prop.flatfile"/>
+    <antcall target="gen-sql"/>
+    <var name="bh.log.basedir" value="${datatypes.dir}/bh/${config.prop}"/>
+    <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
+  </target>
 
   <target name="clean">
     <delete dir="${gensql.dir}"/>
+    <delete dir="${bhlogs.dir}"/>
   </target>
 
   <target name="restoreCatalog">

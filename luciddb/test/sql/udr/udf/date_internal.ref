@@ -35,9 +35,9 @@ Error: From line 1, column 22 to line 1, column 40: Numeric literal '92233720368
 0: jdbc:luciddb:> values date_internal(4.55);
 Error: From line 1, column 8 to line 1, column 26: No match found for function signature DATE_INTERNAL(<NUMERIC>) (state=,code=0)
 0: jdbc:luciddb:> values date_internal(9223372036854775807.01);
-Error: From line 1, column 22 to line 1, column 43: Numeric literal '922337203685477580701' out of range (state=,code=0)
+Error: From line 1, column 22 to line 1, column 43: Numeric literal '9223372036854775807.01' out of range (state=,code=0)
 0: jdbc:luciddb:> values date_internal(9223372036854775807.99);
-Error: From line 1, column 22 to line 1, column 43: Numeric literal '922337203685477580799' out of range (state=,code=0)
+Error: From line 1, column 22 to line 1, column 43: Numeric literal '9223372036854775807.99' out of range (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create view with reference to date_internal
 0: jdbc:luciddb:> create view fromint as
