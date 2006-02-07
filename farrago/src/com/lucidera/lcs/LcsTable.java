@@ -39,8 +39,11 @@ import org.eigenbase.reltype.*;
  */
 class LcsTable extends MedAbstractColumnSet
 {
+    /** Helper class to manipulate the cluster indexes. */
+    private LcsIndexGuide indexGuide;
+
     private List<FemLocalIndex> clusteredIndexes;
-    
+
     //~ Constructors ----------------------------------------------------------
 
     LcsTable(
@@ -63,13 +66,33 @@ class LcsTable extends MedAbstractColumnSet
             getPreparingStmt().getRepos(),
             getCwmColumnSet());
         return new LcsRowScanRel(
-            cluster, 
+            cluster,
+            null,
             this, 
             clusteredIndexes,
             connection,
             null);
     }
+
+    public LcsIndexGuide getIndexGuide()
+    {
+        if (indexGuide == null) {
+            indexGuide = new LcsIndexGuide(
+                getPreparingStmt().getFarragoTypeFactory(),
+                getCwmColumnSet());
+        }
+        return indexGuide;
+    }
     
+    public List<FemLocalIndex> getClusteredIndexes()
+    {
+        if (clusteredIndexes == null) {
+            clusteredIndexes = FarragoCatalogUtil.getClusteredIndexes(
+                getPreparingStmt().getRepos(),
+                getCwmColumnSet());
+        }
+        return clusteredIndexes;
+    }
 }
 
 // End LcsTable.java

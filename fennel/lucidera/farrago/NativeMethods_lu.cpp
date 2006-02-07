@@ -26,6 +26,8 @@
 #include "fennel/lucidera/flatfile/FlatFileExecStream.h"
 #include "fennel/lucidera/colstore/LcsClusterAppendExecStream.h"
 #include "fennel/lucidera/colstore/LcsRowScanExecStream.h"
+#include "fennel/lucidera/bitmap/LbmGeneratorExecStream.h"
+#include "fennel/lucidera/bitmap/LbmSplicerExecStream.h"
 #include "fennel/db/Database.h"
 #include "fennel/segment/SegmentFactory.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
@@ -52,6 +54,30 @@ class ExecStreamSubFactory_lu
             return 0;
         }
         return val.at(0);
+    }
+
+    DynamicParamId readDynamicParamId(const int val)
+    {
+        // NOTE: zero is a special code for no parameter id
+        uint id = (val < 0) ? 0 : (uint) val;
+        return (DynamicParamId) id;
+    }
+
+    void readClusterScan(
+        ProxyLcsRowScanStreamDef &streamDef,
+        LcsRowScanBaseExecStreamParams &params)
+    {
+        SharedProxyLcsClusterScanDef pClusterScan = streamDef.getClusterScan();
+        for ( ; pClusterScan; ++pClusterScan) {
+            LcsClusterScanDef clusterScanParam;
+            clusterScanParam.pCacheAccessor = params.pCacheAccessor;
+            pExecStreamFactory->readBTreeStreamParams(clusterScanParam,
+                                                      *pClusterScan);
+            pExecStreamFactory->readTupleDescriptor(
+                clusterScanParam.clusterTupleDesc,
+                pClusterScan->getClusterTupleDesc());
+            params.lcsClusterScanDefs.push_back(clusterScanParam);
+        }
     }
 
     // implement FemVisitor
@@ -133,34 +159,40 @@ class ExecStreamSubFactory_lu
     virtual void visit(ProxyLcsRowScanStreamDef &streamDef)
     {
         LcsRowScanExecStreamParams params;
-        pExecStreamFactory->readTupleStreamParams(params, streamDef);
 
-        SharedProxyLcsClusterScanDef pClusterScan = streamDef.getClusterScan();
-        for ( ; pClusterScan; ++pClusterScan) {
-            LcsClusterScanDef clusterScanParam;
-            clusterScanParam.pCacheAccessor = params.pCacheAccessor;
-            pExecStreamFactory->readBTreeStreamParams(clusterScanParam,
-                                                      *pClusterScan);
-            pExecStreamFactory->readTupleDescriptor(
-                clusterScanParam.clusterTupleDesc,
-                pClusterScan->getClusterTupleDesc());
-            params.lcsClusterScanDefs.push_back(clusterScanParam);
-        }
+        pExecStreamFactory->readTupleStreamParams(params, streamDef);
+        readClusterScan(streamDef, params);
         CmdInterpreter::readTupleProjection(params.outputProj,
                                             streamDef.getOutputProj());
+
         pEmbryo->init(new LcsRowScanExecStream(), params);
     }
 
     // implement FemVisitor
     virtual void visit(ProxyLbmGeneratorStreamDef &streamDef)
     {
+        LbmGeneratorExecStreamParams params;
 
+        pExecStreamFactory->readTupleStreamParams(params, streamDef);
+        pExecStreamFactory->readBTreeStreamParams(params, streamDef);
+        readClusterScan(streamDef, params);
+        CmdInterpreter::readTupleProjection(
+            params.outputProj, streamDef.getOutputProj());
+        params.dynParamId =
+            readDynamicParamId(streamDef.getRowCountParamId());
+
+        pEmbryo->init(new LbmGeneratorExecStream(), params);
     }
 
     // implement FemVisitor
     virtual void visit(ProxyLbmSplicerStreamDef &streamDef)
     {
-
+        LbmSplicerExecStreamParams params;
+        pExecStreamFactory->readTupleStreamParams(params, streamDef);
+        pExecStreamFactory->readBTreeStreamParams(params, streamDef);
+        params.dynParamId =
+            readDynamicParamId(streamDef.getRowCountParamId());
+        pEmbryo->init(new LbmSplicerExecStream(), params);
     }
 
     // implement JniProxyVisitor

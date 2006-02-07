@@ -30,6 +30,7 @@
 #include "fennel/tuple/StandardTypeDescriptor.h"
 #include "fennel/tuple/TupleDescriptor.h"
 #include "fennel/exec/MockProducerExecStream.h"
+#include "fennel/exec/ValuesExecStream.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
 #include "fennel/exec/SplitterExecStream.h"
 #include "fennel/exec/BarrierExecStream.h"
@@ -48,6 +49,7 @@ class LcsMultiClusterAppendTest : public ExecStreamUnitTestBase
 protected:
     StandardTypeDescriptorFactory stdTypeFactory;
     TupleAttributeDescriptor attrDesc_int64;
+    TupleAttributeDescriptor attrDesc_char1;
 
     vector<boost::shared_ptr<BTreeDescriptor> > bTreeClusters;
     
@@ -221,16 +223,18 @@ void LcsMultiClusterAppendTest::scanCols(uint nRows, uint nCols,
 {
     // setup input rid stream
 
-    MockProducerExecStreamParams mockParams;
-    for (uint i = 0; i < nCols; i++)
-        mockParams.outputTupleDesc.push_back(attrDesc_int64);
+    ValuesExecStreamParams valuesParams;
+    PBuffer dummyBuffer = NULL;
+    valuesParams.pTupleBuffer = dummyBuffer;
+    valuesParams.outputTupleDesc.push_back(attrDesc_int64);
+    valuesParams.outputTupleDesc.push_back(attrDesc_char1);
+    valuesParams.outputTupleDesc.push_back(attrDesc_char1);
     // set nRows to 0 to force a full table scan
-    mockParams.nRows = 0;
-    mockParams.pGenerator.reset(new RampExecStreamGenerator());
+    valuesParams.bufSize = 0;
 
-    ExecStreamEmbryo mockStreamEmbryo;
-    mockStreamEmbryo.init(new MockProducerExecStream(), mockParams);
-    mockStreamEmbryo.getStream()->setName("MockProducerScanExecStream");
+    ExecStreamEmbryo valuesStreamEmbryo;
+    valuesStreamEmbryo.init(new ValuesExecStream(), valuesParams);
+    valuesStreamEmbryo.getStream()->setName("ValuesExecStream");
 
     // setup parameters into scan
     //  nClusters cluster with nCols columns each
@@ -267,7 +271,7 @@ void LcsMultiClusterAppendTest::scanCols(uint nRows, uint nCols,
     scanStreamEmbryo.getStream()->setName("RowScanExecStream");
 
     SharedExecStream pOutputStream = prepareTransformGraph(
-        mockStreamEmbryo, scanStreamEmbryo);
+        valuesStreamEmbryo, scanStreamEmbryo);
     
     // setup generators for result stream
 
@@ -288,7 +292,8 @@ void LcsMultiClusterAppendTest::testCaseSetUp()
 
     attrDesc_int64 = TupleAttributeDescriptor(
         stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
-
+    attrDesc_char1 = TupleAttributeDescriptor(
+        stdTypeFactory.newDataType(STANDARD_TYPE_CHAR), false, 1);
 }
 
 void LcsMultiClusterAppendTest::testCaseTearDown()

@@ -23,7 +23,8 @@ SingleOutputExecStream.cpp \
 SortedAggExecStream.cpp \
 DiffluenceExecStream.cpp \
 SplitterExecStream.cpp \
-BarrierExecStream.cpp
+BarrierExecStream.cpp \
+ValuesExecStream.cpp
 
 DESIGN_DOCS=\
 ExecStreamDesign.cpp \

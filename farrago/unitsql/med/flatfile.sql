@@ -155,61 +155,6 @@ select * from flatfile_tooFewColumns;
 -- the parser should give up when it's reached the max size
 -- and should interpret this row as multiple rows
 
--- test: read metadata from bcp files
-
--- test import foreign schema using wrong schema name
-import foreign schema testdata
-from server flatfile_server
-into flatfile_schema;
-
--- test import foreign schema
-import foreign schema bcp
-from server flatfile_server
-into flatfile_schema;
-
-select * from flatfile_schema."example" order by 3;
-
-drop table flatfile_schema."example";
-
--- test badly qualified import foreign schema
-import foreign schema bcp LIMIT TO ("no_table")
-from server flatfile_server
-into flatfile_schema;
-
--- test qualified import foreign schema
-import foreign schema bcp LIMIT TO ("example")
-from server flatfile_server
-into flatfile_schema;
-
-select * from flatfile_schema."example" order by 3;
-
-drop table flatfile_schema."example";
-
-import foreign schema bcp LIMIT TO TABLE_NAME LIKE 'e%'
-from server flatfile_server
-into flatfile_schema;
-
-select * from flatfile_schema."example" order by 3;
-
-drop table flatfile_schema."example";
-
-import foreign schema bcp EXCEPT TABLE_NAME LIKE 'e%'
-from server flatfile_server
-into flatfile_schema;
-
-import foreign schema bcp EXCEPT TABLE_NAME LIKE 'E%'
-from server flatfile_server
-into flatfile_schema;
-
-select * from flatfile_schema."example" order by 3;
-
--- test a table using implicit column definitions
-create foreign table flatfile_implicit_table
-server flatfile_server
-options (filename 'example');
-
-select * from flatfile_implicit_table order by 3;
-
 -- test a describe query. this type of query returns the width of a 
 -- table's fields. it is an internal query, and should not appear in
 -- user level documentation.
@@ -226,6 +171,88 @@ select * from flatfile_server.SAMPLE."missing";
 
 select * from flatfile_server.SAMPLE."empty";
 
--- TODO: read column header names from data file
--- TODO: derive column types by reading first few lines of file
+-- test: read metadata from bcp files
 
+-- test import foreign schema using wrong schema name
+import foreign schema testdata
+from server flatfile_server
+into flatfile_schema;
+
+-- test: import foreign schema
+-- the directory contains an empty data file with no control file
+-- fails all imports
+import foreign schema bcp
+from server flatfile_server
+into flatfile_schema;
+
+-- test: should fail; entire import failed
+select * from flatfile_schema."example" order by 3;
+
+-- test a table using implicit column definitions
+create foreign table flatfile_implicit_table
+server flatfile_server
+options (filename 'example');
+
+select * from flatfile_implicit_table order by 3;
+
+-- test import schemas with/without bcp files
+create schema flatfiledir_schema;
+
+set schema 'flatfiledir_schema';
+
+create server flatfiledir_server
+foreign data wrapper local_file_wrapper
+options (
+    directory 'unitsql/med/flatfiles',
+    file_extension 'csv',
+    with_header 'yes', 
+    log_directory 'testlog');
+
+import foreign schema bcp
+from server flatfiledir_server
+into flatfiledir_schema;
+
+select * from flatfiledir_schema."example2" order by 3;
+
+drop schema flatfiledir_schema cascade;
+create schema flatfiledir_schema;
+set schema 'flatfiledir_schema';
+
+import foreign schema bcp EXCEPT TABLE_NAME LIKE 'E%'
+from server flatfiledir_server
+into flatfiledir_schema;
+
+select * from flatfiledir_schema."example2" order by 3;
+drop table flatfiledir_schema."example2";
+drop table flatfiledir_schema."example";
+
+-- test files with null values
+select * from flatfiledir_schema."withnulls" order by 3;
+drop table flatfiledir_schema."withnulls";
+
+-- test badly qualified import foreign schema
+import foreign schema bcp LIMIT TO ("no_table")
+from server flatfiledir_server
+into flatfiledir_schema;
+
+-- test qualified import foreign schema
+import foreign schema bcp LIMIT TO ("example")
+from server flatfiledir_server
+into flatfiledir_schema;
+
+select * from flatfiledir_schema."example" order by 3;
+
+-- test: not imported. fail
+select * from flatfiledir_schema."example2" order by 3;
+
+drop table flatfiledir_schema."example";
+
+import foreign schema bcp LIMIT TO TABLE_NAME LIKE 'e%'
+from server flatfiledir_server
+into flatfiledir_schema;
+
+select * from flatfiledir_schema."example" order by 3;
+drop table flatfiledir_schema."example";
+
+-- test: uses generated bcp
+select * from flatfiledir_server.bcp."example2" order by 3;
