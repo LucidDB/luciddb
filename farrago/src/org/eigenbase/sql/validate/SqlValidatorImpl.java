@@ -1321,6 +1321,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         if (alias == null) {
             alias = "EXPR$";
         }
+//        assert (!aliases.contains(alias));
         if (aliases.contains(alias)) {
             String aliasBase = alias;
             for (int j = 0;; j++) {
@@ -2539,6 +2540,11 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             public RelDataType getRowType()
             {
                 return dataType;
+            }
+
+            public void setRowType(RelDataType rowType)
+            {
+                // intentionally empty
             }
 
             public void validate()

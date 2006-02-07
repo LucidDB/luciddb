@@ -65,6 +65,11 @@ public interface SqlValidatorNamespace
     RelDataType getRowType();
 
     /**
+     * Allows RowType for the namespace to be explicitly set.
+     */
+    void setRowType(RelDataType rowType);
+
+    /**
      * Validates this namespace.
      *
      * <p>If the scope has already been validated, does nothing.</p>
