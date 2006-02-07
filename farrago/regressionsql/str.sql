@@ -71,3 +71,18 @@ values 'a'||cast(null as varchar(1));
 values cast(null as varchar(1))||'b';
 select name||' is from city '||city from sales.emps order by 1;
 select name||' is from city '||city||'.' from sales.emps order by 1;
+
+-- From bug FRG-35
+alter system set "calcVirtualMachine"='CALCVM_FENNEL';
+
+create schema test;
+
+create table test.CUSTOMERS(
+CUSTID integer primary key,
+LNAME varchar(30) not null);
+
+insert into test.customers values (0,'Locicero');
+
+select 1
+FROM test.CUSTOMERS M, test.CUSTOMERS F
+WHERE M.LNAME = F.LNAME;

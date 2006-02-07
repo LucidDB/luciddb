@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/regressionsql/str.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/str.sql#6 $
 0: jdbc:farrago:> -- Full vertical system testing of non function statements
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
@@ -421,5 +421,25 @@
 | Eric is from city San Francisco.  |
 | John is from city Vancouver.      |
 +-----------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- From bug FRG-35
+0: jdbc:farrago:> alter system set "calcVirtualMachine"='CALCVM_FENNEL';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create schema test;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table test.CUSTOMERS(
+. . . . . . . . > CUSTID integer primary key,
+. . . . . . . . > LNAME varchar(30) not null);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> insert into test.customers values (0,'Locicero');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select 1
+. . . . . . . . > FROM test.CUSTOMERS M, test.CUSTOMERS F
+. . . . . . . . > WHERE M.LNAME = F.LNAME;
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit
