@@ -5,6 +5,7 @@
 
 @thread main 
   @prepare select * from ddl_mt.v;
+  @sync
   @fetch
   @sync
   @close
@@ -15,15 +16,18 @@
 @thread directDrop 
   @sync
   @err drop view ddl_mt.v;
+  @sync
 @end
 
 @thread cascadeDrop 
   @sync
   @err drop schema ddl_mt cascade;
+  @sync
 @end
 
 @thread createOrReplace
   @sync
   @err create or replace view ddl_mt.v as select * from sales.emps;
+  @sync
 @end
 
