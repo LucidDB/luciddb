@@ -332,6 +332,7 @@
     <pathelement location="${ant.home}/lib/ant.jar"/>
     <pathelement location="${ant.home}/lib/ant-launcher.jar"/>
     <pathelement location="${ant.home}/lib/junit.jar"/>
+    <pathelement location="${ant.home}/lib/ant-contrib.jar"/>
     <path refid="xerces.classpath"/>
     <pathelement location="${ant.home}/lib/ant-junit.jar"/>
   </path>
@@ -355,7 +356,7 @@
   <!-- classpath for running blackhawk based tests -->
   <property name="bh.home" location="${open.dir}/blackhawk/build/dist"/>
 
-  <path id="bh.run.classpath">
+  <path id="blackhawk.run.classpath">
     <pathelement path="${ant.classpath}"/>
     <pathelement location="${bh.home}/bhx.jar"/>
     <pathelement 
@@ -366,21 +367,25 @@
       location="${bh.home}/thirdparty/jsr173/jsr173_1.0_api.jar"/>
     <pathelement location="${bh.home}/schema.jar"/>
   </path>
-  <property name="bh.run.classpath" refid="bh.run.classpath"/>    
-
+  <property name="blackhawk.run.classpath" refid="blackhawk.run.classpath"/>    
   
+  <taskdef name="blackhawk" 
+    classname="org.eigenbase.blackhawk.BhVMTask"
+    classpathref="blackhawk.run.classpath"
+    />
+
   <macrodef name="blackhawk.fork">
     <attribute name="basedir" default="."/>
     <attribute name="testscript" default="test.xml"/>
     <attribute name="bhhome" default="${bh.home}"/>
     <attribute name="fail.on.error" default="true"/>
     <attribute name="verbose" default="true"/>
-    <attribute name="classpathref" default="bh.run.classpath"/>
+    <attribute name="classpathref" default="blackhawk.run.classpath"/>
     <sequential>
       <taskdef 
         name="bh" 
         classname="org.eigenbase.blackhawk.BhVMTask"
-        classpathref="bh.run.classpath"
+        classpathref="blackhawk.run.classpath"
         onerror="fail"/>
       <bh
         testfile="@{basedir}/@{testscript}"
@@ -393,6 +398,7 @@
       </bh>
     </sequential>
   </macrodef>
+
 
 
   <!-- Macros -->
