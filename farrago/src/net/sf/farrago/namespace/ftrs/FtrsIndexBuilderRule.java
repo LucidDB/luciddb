@@ -61,6 +61,10 @@ public class FtrsIndexBuilderRule extends RelOptRule
         FarragoIndexBuilderRel builderRel =
             (FarragoIndexBuilderRel) call.rels[0];
 
+        if (!(builderRel.getTable() instanceof FtrsTable)) {
+            return;
+        }
+
         RelNode inputRel = call.rels[1];
         RelNode fennelInput =
             mergeTraitsAndConvert(

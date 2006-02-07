@@ -317,8 +317,8 @@ public class JmiModelGraph
             swapEnds = true;
         }
 
-        if ((mofAssocEnds[0].getMultiplicity().getUpper() > 1)
-            && (mofAssocEnds[1].getMultiplicity().getUpper() < 2))
+        if ((mofAssocEnds[0].getMultiplicity().getUpper() != 1)
+            && (mofAssocEnds[1].getMultiplicity().getUpper() == 1))
         {
             swapEnds = true;
         }

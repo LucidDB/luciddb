@@ -49,12 +49,19 @@ public class FarragoIndexBuilderRel extends SingleRel
      */
     private final FemLocalIndex index;
     
+    /**
+     * Table index belongs to
+     */
+    private final RelOptTable table;
+    
     public FarragoIndexBuilderRel(
         RelOptCluster cluster,
+        RelOptTable table,
         RelNode child,
         FemLocalIndex index)
     {
         super(cluster, new RelTraitSet(CallingConvention.NONE), child);
+        this.table = table;
         this.index = index;
     }
 
@@ -63,11 +70,17 @@ public class FarragoIndexBuilderRel extends SingleRel
         return index;
     }
 
+    public RelOptTable getTable()
+    {
+        return table;
+    }
+
     // implement Cloneable
     public Object clone()
     {
         FarragoIndexBuilderRel clone = new FarragoIndexBuilderRel(
             getCluster(),
+            getTable(),
             RelOptUtil.clone(getChild()),
             index);
         clone.inheritTraitsFrom(this);

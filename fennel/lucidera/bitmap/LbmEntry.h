@@ -26,7 +26,7 @@
 #include "fennel/tuple/TupleData.h"
 #include "fennel/tuple/TupleDescriptor.h"
 #include "fennel/tuple/TupleAccessor.h"
-#include "fennel/lucidera/colstore/LcsClusterNode.h"
+#include "fennel/lucidera/bitmap/LbmSegment.h"
 #include <algorithm>
 
 using namespace std;
@@ -39,7 +39,7 @@ FENNEL_BEGIN_NAMESPACE
  * @author Rushan Chen
  * @version $Id$
  */
-class LbmEntry
+class LbmEntry : public LbmSegment
 {
     /**
      * Scratch buffer to store bitmap segments and descriptors.
@@ -64,10 +64,6 @@ class LbmEntry
     /**
      * startRID( if singleton, startRID == RID column in entryTuple)
      */
-    LcsRid startRID;
-    /**
-     * startRID( if singleton, startRID == RID column in entryTuple)
-     */
     LcsRid currSegByteStartRID;
 
     /**
@@ -81,17 +77,12 @@ class LbmEntry
     /**
      * Increment forward from pSegDescStart.
      */ 
-    PBuffer pSegDescStart;
-    PBuffer pSegDescEnd;
     PBuffer currSegDescByte;
     uint currSegDescLength;
-
 
     /**
      * Decrement backward from pBitmapSegStart.
      */ 
-    PBuffer pSegStart;
-    PBuffer pSegEnd;
     PBuffer currSegByte;
     uint currSegLength;
 
@@ -221,65 +212,8 @@ class LbmEntry
      ** STATIC MEMBERS AND METHODS
      **/
 
-    /**
-     * One byte in the bitmap encodes 8 RIDs.
-     */
-    static const uint LbmOneByteSize = 8;
-
-    /**
-     * Use half of a byte to encode the segment length, or the zero bytes
-     * length.
-     */
-    static const uint LbmHalfByteSize = 4;
-
-    /**
-     * Maximum size(in bytes) for a bitmap segment. This size is limited by the
-     * number of bits(=4 bits) in SegDesc to describe the segment length.
-     */
-    static const uint LbmMaxSegSize = 16;
-
-    /**
-     * The first 4 bits of Segment Descriptor byte is used to store the length
-     * of the corresponding segment.
-     */
-    static const uint8_t LbmSegLengthMask = 0xf0;
-
-    /**
-     * The last 4 bits of Segment Descriptor byte is used to store the length
-     * of the "gap" following the corresponding segment(till the next segment
-     * or the next LbmEntry).
-     */
-    static const uint8_t LbmZeroLengthMask = 0x0f;
-
-    /**
-     * If the length of zero bytes(a byte composed of 8 bits of 0s) is less
-     * than 12, the length can be stored within the segment
-     * descriptor. Otherwise, the segment descriptor gives the length of
-     * additional bytes(maximumn is 3 bytes) in which the length is stored. 
-     */
-    static const uint LbmZeroLengthCompact = 12;
-
-   /**
-    * Additional bytes(maximumn is 3 bytes) in which the length is stored. It
-    * is stored with an offset of LbmZeroLengthCompact.
-    * LbmZeroLengthExtended = (uint)LbmZeroLengthMask - LbmZeroLengthCompact.
-    */
-    static const uint LbmZeroLengthExtended = 
-        (uint)LbmZeroLengthMask - LbmZeroLengthCompact;
-
     static const uint LbmMinEntryPerPage = 8;
 
-    /**
-     * Get value stored in a byte array.
-     * The least significant bytes in the value is stored
-     * at the first location in the array.
-     *
-     * @param array a byte array
-     * @param arraySize size of the array(number of bytes)
-     *
-     * @return the value stored in this array.
-     */
-    static uint byteArray2Value(PBuffer array, uint arraySize);
     /**
      * Test if a tuple is singleton.
      *

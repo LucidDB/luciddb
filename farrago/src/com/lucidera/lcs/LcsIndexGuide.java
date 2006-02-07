@@ -20,10 +20,12 @@
 */
 package com.lucidera.lcs;
 
+import java.math.*;
 import java.util.*;
 
 import net.sf.farrago.catalog.FarragoCatalogUtil;
 import net.sf.farrago.catalog.FarragoRepos;
+import net.sf.farrago.cwm.core.VisibilityKindEnum;
 import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
@@ -31,11 +33,17 @@ import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fennel.tuple.FennelStandardTypeDescriptor;
 import net.sf.farrago.fennel.tuple.FennelStoredTypeDescriptor;
-import net.sf.farrago.query.FennelRelUtil;
+import net.sf.farrago.namespace.impl.*;
+import net.sf.farrago.query.*;
+import net.sf.farrago.resource.FarragoResource;
 import net.sf.farrago.type.*;
+import net.sf.farrago.util.JmiUtil;
 
+import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.util.Util;
 
 /**
  * LcsIndexGuide provides information about the mapping from catalog
@@ -65,7 +73,7 @@ class LcsIndexGuide
     private int numUnFlattenedCols;
 
     /**
-     * Construct an IndexGuide using a specific list of indexes
+     * Construct an IndexGuide using a specific list of clustered indexes
      * 
      * @param typeFactory
      * @param table the column store table
@@ -110,6 +118,72 @@ class LcsIndexGuide
             FarragoCatalogUtil.getClusteredIndexes(
                 typeFactory.getRepos(),
                 table));
+    }
+
+    /**
+     * Construct an IndexGuide using an unclustered index
+     * 
+     * @param typeFactory
+     * @param table the column store table
+     * @param unclusteredIndex an unclustered index
+     */
+    LcsIndexGuide(
+        FarragoTypeFactory typeFactory,
+        CwmColumnSet table,
+        FemLocalIndex unclusteredIndex)
+    {
+        this(
+            typeFactory, 
+            table, 
+            getUnclusteredCoverageSet(
+                typeFactory.getRepos(), table, unclusteredIndex));
+    }
+
+    public static List<FemLocalIndex> getUnclusteredCoverageSet(
+        FarragoRepos repos,
+        CwmColumnSet table,
+        FemLocalIndex unclusteredIndex)
+    {
+        //
+        // Get the columns of the index
+        //
+        Set<CwmColumn> requiredColumns = new HashSet<CwmColumn>();
+        for (Object f : unclusteredIndex.getIndexedFeature()) {
+            CwmIndexedFeature indexedFeature = (CwmIndexedFeature) f;
+            requiredColumns.add((CwmColumn) indexedFeature.getFeature());
+        }
+
+        //
+        // Get the clustered indexes of the table
+        //
+        List<FemLocalIndex> clusteredIndexes = 
+            FarragoCatalogUtil.getClusteredIndexes(repos, table);
+
+        //
+        // Find clustered indexes which cover the columns of the index
+        //
+        List<FemLocalIndex> coverageIndexes = 
+            new ArrayList<FemLocalIndex>();
+        for (FemLocalIndex clusteredIndex : clusteredIndexes) {
+            boolean include = false;
+            for (Object f: clusteredIndex.getIndexedFeature()) {
+                CwmIndexedFeature indexedFeature = (CwmIndexedFeature) f;
+                if (requiredColumns.contains(indexedFeature.getFeature())) {
+                    include = true;
+                    requiredColumns.remove(indexedFeature.getFeature());
+                }
+            }
+            if (include) {
+                coverageIndexes.add(clusteredIndex);
+            }
+        }
+        
+        if (! requiredColumns.isEmpty()) {
+            // TODO: user error message
+            throw Util.newInternal("unclustered index could not be covered");
+        }
+        
+        return coverageIndexes;
     }
 
     /**
@@ -440,7 +514,7 @@ class LcsIndexGuide
      * <p>
      *
      * For LCS unclustered indexes, the stored tuple is
-     * [K1, K2, ..., RID, BITMAP], and the key is [K1, K2, ..., RID]
+     * [K1, K2, ..., RID, BITMAP, BITMAP], and the key is [K1, K2, ..., RID]
      *
      * @param index unclustered index 
      *
@@ -470,6 +544,7 @@ class LcsIndexGuide
 
         // add BITMAP
         appendBitmapAttr(tupleDesc);
+        appendBitmapAttr(tupleDesc);
         
         return tupleDesc;
     }
@@ -484,7 +559,7 @@ class LcsIndexGuide
      *
      * @return key attribute projection
      */
-    public FemTupleProjection createUnclusteredBTreeKeyDesc(
+    public FemTupleProjection createUnclusteredBTreeKeyProj(
         FemLocalIndex index)
     {
         // number of key fields = number of columns plus RID
@@ -494,6 +569,456 @@ class LcsIndexGuide
             repos,
             FennelRelUtil.newIotaProjection(n));
     }
+
+    //~ Exec Streams -------------------------------------------------------
+    
+    protected FemSplitterStreamDef newSplitter(SingleRel rel)
+    {
+        FemSplitterStreamDef splitter = repos.newFemSplitterStreamDef();
+        
+        splitter.setOutputDesc(
+            FennelRelUtil.createTupleDescriptorFromRowType(
+                repos,
+                typeFactory,
+                rel.getChild().getRowType()));
+        return splitter;          
+    }
+
+    protected FemBarrierStreamDef newBarrier(FennelRel rel)
+    {
+        FemBarrierStreamDef barrier = repos.newFemBarrierStreamDef();
+
+        barrier.setOutputDesc(
+            FennelRelUtil.createTupleDescriptorFromRowType(
+            repos,
+            typeFactory,
+            rel.getRowType()));
+
+        return barrier;
+    }
+
+    protected FemLcsClusterAppendStreamDef newClusterAppend(
+        FennelRel rel,
+        FemLocalIndex clusterIndex)
+    {
+        FemLcsClusterAppendStreamDef clusterAppend = 
+            repos.newFemLcsClusterAppendStreamDef();
+        
+        defineIndexStream(clusterAppend, rel, clusterIndex, true);
+        
+        //
+        // Set up FemLcsClusterAppendStreamDef
+        //        - setOverwrite
+        //        - setClusterColProj
+        //
+        clusterAppend.setOverwrite(false);
+        
+        Integer[] clusterColProj;
+        clusterColProj = 
+            new Integer[getNumFlattenedClusterCols(clusterIndex)];
+        
+        //
+        // Figure out the projection covering columns contained in each index.
+        //
+        int i = 0;
+        for (Object f : clusterIndex.getIndexedFeature()) {
+            CwmIndexedFeature indexedFeature = (CwmIndexedFeature) f;
+            FemAbstractColumn column = 
+                (FemAbstractColumn) indexedFeature.getFeature();
+            int n = getNumFlattenedSubCols(column.getOrdinal());
+            for (int j = 0; j < n; ++j) {
+                clusterColProj[i] =
+                    flattenOrdinal(column.getOrdinal()) + j;
+                i++;
+            }
+        }
+        
+        clusterAppend.setClusterColProj(
+            FennelRelUtil.createTupleProjection(repos, clusterColProj));
+        
+        return clusterAppend;
+        
+    }
+
+    protected FemLcsRowScanStreamDef newRowScan(
+        FennelRel rel,
+        Integer[] projectedColumns)
+    {
+        FemLcsRowScanStreamDef scanStream = repos.newFemLcsRowScanStreamDef();
+        
+        defineScanStream(scanStream, rel);
+        
+        // setup the output projection relative to the ordered list of
+        // clustered indexes
+        Integer [] clusterProjection = 
+            computeProjectedColumns(projectedColumns);
+        scanStream.setOutputProj(
+            FennelRelUtil.createTupleProjection(repos, clusterProjection));
+        
+        return scanStream;
+    }
+
+    /**
+     * Creates a set of streams for updating a bitmap index
+     */
+    protected LcsCompositeStreamDef newBitmapAppend(
+        FennelRel rel,
+        FemLocalIndex index,
+        FennelRelImplementor implementor,
+        int dynParamId)
+    {
+        // create the streams
+        FemExecutionStreamDef generator = 
+            newGenerator(rel, index, dynParamId);
+        FemExecutionStreamDef sorter = newSorter(index);
+        FemExecutionStreamDef splicer = newSplicer(rel, index, dynParamId);
+        
+        // link them up
+        implementor.addDataFlowFromProducerToConsumer(generator, sorter);
+        implementor.addDataFlowFromProducerToConsumer(sorter, splicer);
+
+        return new LcsCompositeStreamDef(generator, splicer);
+    }
+
+    private FemLbmGeneratorStreamDef newGenerator(
+        FennelRel rel,
+        FemLocalIndex index,
+        int dynParamId)
+    {
+        FemLbmGeneratorStreamDef generator = 
+            repos.newFemLbmGeneratorStreamDef();
+
+        //
+        // Setup cluster scans
+        //
+        defineScanStream(generator, rel);
+
+        //
+        // Setup projection used by unclustered index
+        //
+        List indexFeatures = index.getIndexedFeature();
+        Integer[] indexProjection = new Integer[indexFeatures.size()];
+        for (int i = 0; i < indexFeatures.size(); i++) {
+            CwmIndexedFeature feature = 
+                (CwmIndexedFeature) indexFeatures.get(i);
+            FemAbstractColumn column = 
+                (FemAbstractColumn) feature.getFeature();
+            indexProjection[i] = new Integer(column.getOrdinal());
+        }
+        generator.setOutputProj(
+            FennelRelUtil.createTupleProjection(
+                repos,
+                computeProjectedColumns(indexProjection)));
+
+        //
+        // Setup dynamic param id
+        //
+        generator.setRowCountParamId(dynParamId);
+
+        //
+        // Setup Btree accessor parameters
+        //
+        defineIndexAccessor(generator, rel, index, false);
+
+        //
+        // Set up FemExecutionStreamDef
+        //        - setOutputDesc (same as tupleDesc)
+        //
+        generator.setOutputDesc(
+            createUnclusteredBTreeTupleDesc(index));
+
+        return generator;
+    }
+    
+    private FemSortingStreamDef newSorter(
+        FemLocalIndex index)
+    {
+        FemSortingStreamDef sortingStream =
+            repos.newFemSortingStreamDef();
+
+        //
+        // Bitmap entry keys should be unique, but we save the effort 
+        // of enforcing uniqueness
+        //
+        sortingStream.setDistinctness(DistinctnessEnum.DUP_ALLOW);
+        sortingStream.setKeyProj(createUnclusteredBTreeKeyProj(index));
+        sortingStream.setOutputDesc(createUnclusteredBTreeTupleDesc(index));
+        return sortingStream;
+    }
+    
+    private FemLbmSplicerStreamDef newSplicer(
+        FennelRel rel,
+        FemLocalIndex index,
+        int dynParamId)
+    {
+        FemLbmSplicerStreamDef splicer =
+            repos.newFemLbmSplicerStreamDef();
+
+        //
+        // The splicer is the terminal stream of a bitmap stream set.
+        // It's output type is the same as the rel's: the standard 
+        // Dml output type.
+        //
+        defineIndexStream(splicer, rel, index, false);
+
+        splicer.setRowCountParamId(dynParamId);
+        
+        return splicer;
+    }
+
+    protected FemIndexScanDef newIndexScan(
+        FennelRel rel,
+        FemLocalIndex index)
+    {
+        FemIndexScanDef scanStream = repos.newFemIndexScanDef();
+        defineIndexScan(scanStream, rel, index);
+        return scanStream;
+    }
+
+    protected FemIndexSearchDef newIndexSearch(
+        FennelRel rel,
+        FemLocalIndex index)
+    {
+        FemIndexSearchDef searchStream = repos.newFemIndexSearchDef();
+        defineIndexScan(searchStream, rel, index);
+        return searchStream;
+    }
+
+    private void defineIndexScan(
+        FemIndexScanDef scanStream,
+        FennelRel rel,
+        FemLocalIndex index)
+    {
+
+        defineIndexStream(scanStream, rel, index, false);
+
+        // set FemIndexScanDef
+        //
+        // TODO: handle the case where the index scan satisfy the 
+        // projection out of the LcsRowScanRel. For now, output projection 
+        // is the entire output descriptor: 
+        // [RID, bitmapfield1, bitmapfield2].
+        int outputTupleSize = 
+            scanStream.getOutputDesc().getAttrDescriptor().size();
+        scanStream.setOutputProj(
+            FennelRelUtil.createTupleProjection(repos, 
+                FennelRelUtil.newIotaProjection(outputTupleSize)));
+    }
+
+    private void defineIndexStream(
+        FemIndexStreamDef indexStream,
+        FennelRel rel,
+        FemLocalIndex index,
+        boolean clustered)
+    {
+        //
+        // Set up FemExecutionStreamDef
+        //        - setOutputDesc
+        //
+        indexStream.setOutputDesc(
+            FennelRelUtil.createTupleDescriptorFromRowType(
+                repos,
+                typeFactory,
+                rel.getRowType()));
+
+        defineIndexAccessor(indexStream, rel, index, clustered);
+    }
+    
+    private void defineIndexAccessor(
+        FemIndexAccessorDef indexAccessor,
+        FennelRel rel,
+        FemLocalIndex index,
+        boolean clustered) 
+    {
+        final FarragoPreparingStmt stmt =
+            FennelRelUtil.getPreparingStmt(rel);
+       
+        //
+        // Set up FemIndexAccessorDef
+        //        - setRootPageId
+        //        - setSegmentId
+        //        - setTupleDesc
+        //        - setKeyProj
+        //
+        indexAccessor.setRootPageId(
+            stmt.getIndexMap().getIndexRoot(index));
+        
+        indexAccessor.setSegmentId(
+            LcsDataServer.getIndexSegmentId(index));
+        
+        long indexId = JmiUtil.getObjectId(index);
+        
+        indexAccessor.setIndexId(indexId);
+        
+        FemTupleDescriptor indexTupleDesc;
+        if (clustered) {
+            indexTupleDesc = createClusteredBTreeTupleDesc();
+        } else {
+            indexTupleDesc = createUnclusteredBTreeTupleDesc(index);
+        }
+        indexAccessor.setTupleDesc(indexTupleDesc);
+        
+        FemTupleProjection femProj;
+        if (clustered) {
+            //
+            // The key is simply the RID from the [RID, PageId] mapping stored in
+            // this index.
+            //
+            Integer[] keyProj ={0};
+            femProj = FennelRelUtil.createTupleProjection(repos, keyProj);
+        } else {
+            femProj = createUnclusteredBTreeKeyProj(index);
+        }
+        indexAccessor.setKeyProj(femProj);
+    }
+
+    /**
+     * Fills in a stream definition for this scan.
+     *
+     * @param scanStream stream definition to fill in
+     */
+    private void defineScanStream(
+        FemLcsRowScanStreamDef scanStream,
+        FennelRel rel)
+    {  
+        // setup each cluster scan def
+        for (FemLocalIndex index : clusteredIndexes) {
+            FemLcsClusterScanDef clusterScan = repos.newFemLcsClusterScanDef();
+            defineClusterScan(index, rel, clusterScan);
+            scanStream.getClusterScan().add(clusterScan);
+        }
+    }
+    
+    /**
+     * Fills in a cluster scan def for this scan
+     * 
+     * @param index clustered index corresponding to this can
+     * @param clusterScan clustered scan to fill in
+     */
+    private void defineClusterScan(
+        FemLocalIndex index,
+        FennelRel rel,
+        FemLcsClusterScanDef clusterScan)
+    {
+        final FarragoPreparingStmt stmt =
+            FennelRelUtil.getPreparingStmt(rel);
+        
+        // setup cluster tuple descriptor and add to cluster map
+        FemTupleDescriptor clusterDesc =
+            getClusterTupleDesc(index);
+        clusterScan.setClusterTupleDesc(clusterDesc);
+        
+        // setup index accessor def fields
+        
+        if (!FarragoCatalogUtil.isIndexTemporary(index)) {
+            clusterScan.setRootPageId(stmt.getIndexMap().getIndexRoot(index));
+        } else {
+            // For a temporary index, each execution needs to bind to
+            // a session-private root.  So don't burn anything into
+            // the plan.
+            clusterScan.setRootPageId(-1);
+        }
+
+        clusterScan.setSegmentId(LcsDataServer.getIndexSegmentId(index));
+        clusterScan.setIndexId(JmiUtil.getObjectId(index));
+
+        clusterScan.setTupleDesc(
+            createClusteredBTreeTupleDesc());
+        
+        clusterScan.setKeyProj(
+            createClusteredBTreeRidDesc());
+    }
+    
+    /**
+     * Creates input values for a bitmap index generator
+     * 
+     * <p>
+     * 
+     * The inputs are two columns: [rowCount startRid] 
+     */
+    protected RexNode [] getUnclusteredInputs(RexBuilder builder)
+    {
+        // First obtain the row count and starting row id
+        //
+        // TODO: Make this work for the incremental case
+        BigDecimal rowCount = BigDecimal.ZERO;
+        BigDecimal startRid = BigDecimal.ZERO;
+
+        // TODO: These types must match the fennel types for
+        // RecordNum and LcsRowId
+        RelDataType rowCountType = 
+            typeFactory.createSqlType(SqlTypeName.Bigint);
+        RelDataType ridType = rowCountType;
+
+        return new RexNode[] {
+            builder.makeExactLiteral(rowCount, rowCountType), 
+            builder.makeExactLiteral(startRid, ridType)
+        };
+    }
+    
+    protected RelDataType getUnclusteredInputType() 
+    {
+        // TODO: These types must match the fennel types for
+        // RecordNum and LcsRowId
+        RelDataType rowCountType = 
+            typeFactory.createSqlType(SqlTypeName.Bigint);
+        RelDataType ridType = rowCountType;
+
+        return typeFactory.createStructType(
+            new RelDataType[] { rowCountType, ridType },
+            new String [] { "ROWCOUNT", "SRID" }
+            );
+    }
+
+    protected FemTupleDescriptor getUnclusteredInputDesc() 
+    {
+        return FennelRelUtil.createTupleDescriptorFromRowType(
+            repos,
+            typeFactory,
+            getUnclusteredInputType());
+    }
+
+    // Methods for unclustered(bitmap) index.
+    public RelDataType createUnclusteredBitmapRowType()
+    {
+        RelDataType ridType = 
+            typeFactory.createSqlType(SqlTypeName.Bigint);
+        RelDataType bitmapFieldType1 =
+            typeFactory.createSqlType(SqlTypeName.Varbinary, 4096);
+        RelDataType bitmapFieldType2 = bitmapFieldType1;
+
+        return typeFactory.createStructType(
+            new RelDataType[] {ridType, bitmapFieldType1, bitmapFieldType2},
+            new String [] {"SRID", "SegmentDesc","Segment"}
+            );
+    }
+
+
+    /**
+     * Creates a tuple descriptor for the BTree index corresponding to an
+     * unclustered index.
+     *
+     * <p>
+     *
+     * For LCS unclustered indexes, the stored tuple is
+     * [K1, K2, ..., RID, BITMAP, BITMAP], and the key is [K1, K2, ..., RID]
+     *
+     * @param index unclustered index 
+     *
+     * @return btree tuple descriptor
+     */
+    public FemTupleDescriptor createUnclusteredBitmapTupleDesc()
+    {
+        return FennelRelUtil.createTupleDescriptorFromRowType(
+            repos,
+            typeFactory,
+            createUnclusteredBitmapRowType());
+    }
+
+    public boolean isValid(FemLocalIndex index)
+    {
+        return index.getVisibility() == VisibilityKindEnum.VK_PUBLIC;
+    }    
 }
 
 // End LcsIndexGuide.java

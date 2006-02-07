@@ -41,6 +41,7 @@ import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
 import org.eigenbase.util.*;
 
 
@@ -86,6 +87,8 @@ class LcsDataServer extends MedAbstractFennelDataServer
         // column-store go here
         planner.addRule(new LcsTableAppendRule());
         planner.addRule(new LcsTableProjectionRule());
+        planner.addRule(new LcsIndexBuilderRule());
+        planner.addRule(new LcsIndexAccessRule());
     }
 
     // implement FarragoMedLocalDataServer
@@ -151,14 +154,42 @@ class LcsDataServer extends MedAbstractFennelDataServer
         FemLocalIndex index,
         RelOptCluster cluster)
     {
-        // TODO jvs 29-Dec-2005
-        throw Util.needToImplement("index existing LCS rows");
+        if (index.isClustered()) {
+            // TODO: is this supported?
+            throw Util.needToImplement("new cluster on existing LCS rows");
+        }
+        
+        LcsIndexGuide indexGuide = new LcsIndexGuide(
+            (FarragoTypeFactoryImpl) cluster.getTypeFactory(),
+            FarragoCatalogUtil.getIndexTable(index),
+            index);
+
+        //
+        // Unclustered Lcs indexes are implemented as bitmap indexes.
+        // To construct bitmap indexes, we pass initiation parameters
+        // to the generators as a row of data.
+        // 
+        OneRowRel oneRowRel = new OneRowRel(cluster);
+        RexNode[] inputValues = 
+            indexGuide.getUnclusteredInputs(cluster.getRexBuilder());
+        RelDataType rowType = indexGuide.getUnclusteredInputType();
+        ProjectRel generatorInputs =
+            new ProjectRel(
+                cluster,
+                oneRowRel,
+                inputValues,
+                rowType,
+                ProjectRel.Flags.Boxed);
+
+        return new FarragoIndexBuilderRel(
+            cluster, table, generatorInputs, index);
     }
     
     protected void prepareIndexCmd(
         FemIndexCmd cmd,
         FemLocalIndex index)
     {
+        // FIXME: should not create new type factory
         LcsIndexGuide indexGuide = new LcsIndexGuide(
             new FarragoTypeFactoryImpl(repos),
             FarragoCatalogUtil.getIndexTable(index));
@@ -168,7 +199,7 @@ class LcsDataServer extends MedAbstractFennelDataServer
                 cmd,
                 index);
         } else {
-            prepareClusteredIndexCmd(
+            prepareUnclusteredIndexCmd(
                 indexGuide,
                 cmd,
                 index);
@@ -200,7 +231,7 @@ class LcsDataServer extends MedAbstractFennelDataServer
         cmd.setTupleDesc(
             indexGuide.createUnclusteredBTreeTupleDesc(index));
         cmd.setKeyProj(
-            indexGuide.createUnclusteredBTreeKeyDesc(index));
+            indexGuide.createUnclusteredBTreeKeyProj(index));
     }
 }
 

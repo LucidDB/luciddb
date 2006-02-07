@@ -240,3 +240,177 @@ on t1.j = t2.j;
 explain plan for
 select name from depts where deptno=?;
 
+
+----------------------------------------------
+-- LucidDB column store bitmap indexes test --
+----------------------------------------------
+
+drop schema lbm cascade;
+create schema lbm;
+set schema 'lbm';
+set path 'lbm';
+
+-------------------------------------------------
+-- Some ftrs tests to compare bahevior against --
+-------------------------------------------------
+
+drop table ftrsemps cascade;
+create table ftrsemps(
+    empno integer not null constraint empno_pk primary key,
+    ename varchar(40),
+    deptno integer);
+
+create index deptno_ix on ftrsemps(deptno);
+create index ename_ix on ftrsemps(ename);
+
+insert into ftrsemps 
+select empno+deptno*1000, name, deptno from sales.emps;
+
+!set outputformat csv
+
+-- no sarg pred
+explain plan for
+select * from ftrsemps;
+
+-- the most simple case
+explain plan for
+select * from ftrsemps where deptno = 2;
+
+-- range predicate uses index access
+explain plan for
+select * from ftrsemps where deptno > 2;
+
+-- Merge ranges on the same index key
+explain plan for
+select * from ftrsemps where deptno = 2 or deptno = 10;
+
+-- Should have only one range
+explain plan for
+select * from ftrsemps where deptno = 10 or deptno > 2;
+
+-- recognize AND on the same key
+explain plan for
+select * from ftrsemps where deptno > 2 and deptno < 10;
+
+-- make sure NULL range from sarg analysis is working
+explain plan for
+select * from ftrsemps where deptno = 2 and deptno = 10;
+
+-- Index only access:
+-- It seems index only access is not used here.
+explain plan for
+select deptno from ftrsemps where deptno = 2;
+
+-- index on char types:
+-- simple comparison predicate
+explain plan for
+select ename from ftrsemps where ename = 'ADAM';
+
+-- index on char types:
+-- predicate specific to character types
+explain plan for
+select ename from ftrsemps where ename like 'ADAM%';
+
+-- AND: does recognize one index, but not two
+explain plan for
+select * from ftrsemps where deptno = 2 and ename = 'ADAM';
+
+-- OR: does not use any index access
+explain plan for
+select * from ftrsemps where deptno = 2 or ename = 'ADAM';
+
+!set outputformat table
+
+drop table ftrsemps cascade;
+
+-------------------------------------------------------
+-- Part 1. index created on empty column store table --
+-------------------------------------------------------
+drop table lbmemps cascade;
+create table lbmemps(
+    empno integer,
+    ename varchar(40),
+    deptno integer)
+    server sys_column_store_data_server
+create index deptno_ix on lbmemps(deptno)
+create index ename_ix on lbmemps(ename)
+create index ename_ix on lbmemps(ename)
+create index empno_ix2 on lbmemps(empno)
+;
+
+-- create index on existing column store table does not work yet
+-- create index ename_ix on lbmemps(ename);
+
+-- two indexes on the same column
+-- create index on exisitng column store table does not work yet
+-- create index empno_ix2 on lbmemps(empno);
+
+insert into lbmemps select empno, name, deptno from sales.emps;
+insert into lbmemps select empno, name, deptno from sales.emps;
+
+!set outputformat csv
+
+-- no sarg pred
+explain plan for
+select * from lbmemps;
+
+-- the most simple case
+explain plan for
+select * from lbmemps where deptno = 2;
+
+-- range predicate uses index access
+explain plan for
+select * from lbmemps where deptno > 2;
+
+-- Merge ranges on the same index key
+explain plan for
+select * from lbmemps where deptno = 2 or deptno = 10;
+
+-- Should have only one range
+explain plan for
+select * from lbmemps where deptno = 10 or deptno > 2;
+
+-- recognize AND on the same key
+explain plan for
+select * from lbmemps where deptno > 2 and deptno < 10;
+
+-- make sure NULL range from sarg analysis is working
+explain plan for
+select * from lbmemps where deptno = 2 and deptno = 10;
+
+-- TODO implement index only access.
+explain plan for
+select deptno from lbmemps where deptno = 2;
+
+-- index on char types:
+-- simple comparison predicate
+explain plan for
+select ename from lbmemps where ename = 'ADAM';
+
+-- index on char types:
+-- predicate specific to character types
+explain plan for
+select ename from lbmemps where ename like 'ADAM%';
+
+-- TODO: this is currently not working(not even one index)
+-- AND: does recognize one index, but not two
+explain plan for
+select * from lbmemps where deptno = 2 and ename = 'ADAM';
+
+-- OR: does not use any index access
+explain plan for
+select * from lbmemps where deptno = 2 or ename = 'ADAM';
+
+!set outputformat table
+
+-----------------------------------------------------------
+-- Part 2. index created on non-empty column store table --
+-----------------------------------------------------------
+
+--------------
+-- Clean up --
+--------------
+drop schema lbm cascade;
+
+
+-- End index.sql

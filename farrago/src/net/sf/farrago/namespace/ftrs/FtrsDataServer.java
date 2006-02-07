@@ -170,7 +170,7 @@ class FtrsDataServer extends MedAbstractFennelDataServer
                 project,
                 collations);
         
-        return new FarragoIndexBuilderRel(cluster, sort, index);
+        return new FarragoIndexBuilderRel(cluster, table, sort, index);
     }
     
     // implement MedAbstractFennelDataServer

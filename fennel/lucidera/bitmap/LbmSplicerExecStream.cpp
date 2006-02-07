@@ -38,6 +38,7 @@ void LbmSplicerExecStream::prepare(LbmSplicerExecStreamParams const &params)
     nIdxKeys = treeDescriptor.keyProjection.size() - 1;
 
     dynParamId = params.dynParamId;
+    assert(opaqueToInt(dynParamId) > 0);
 
     uint minEntrySize;
 
@@ -191,7 +192,6 @@ bool LbmSplicerExecStream::existingEntry(TupleData const &bitmapEntry)
         if (match == false) {
             int keyComp = bitmapTupleDesc.compareTuplesKey(
                 bTreeTupleData, bitmapEntry, nIdxKeys);
-            assert(keyComp <= 0);
             if (keyComp == 0) {
                 match = true;
             }

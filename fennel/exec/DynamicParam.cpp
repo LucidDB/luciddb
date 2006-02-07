@@ -88,6 +88,13 @@ DynamicParam &DynamicParamManager::getParamInternal(
     return *(pExisting->second.get());
 }
 
+void DynamicParamManager::readParam(
+    DynamicParamId dynamicParamId, TupleDatum &dest)
+{
+    StrictMutexGuard mutexGuard(mutex);
+    dest.memCopyFrom(getParamInternal(dynamicParamId).datum);
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End DynamicParam.cpp

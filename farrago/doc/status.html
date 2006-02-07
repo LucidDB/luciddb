@@ -56,16 +56,18 @@ all of its contents in the same statement.  The AUTHORIZATION clause
 is currently parsed but ignored since users and roles are not yet
 implemented (under development for 0.6).
 
-<li>CREATE TABLE: every table must have a primary key.  Supported
-column datatypes are BOOLEAN, TINYINT, SMALLINT, INTEGER, BIGINT,
-REAL, DOUBLE (alias DOUBLE PRECISION), VARCHAR (alias CHARACTER
-VARYING), VARBINARY, CHAR (alias CHARACTER), BINARY, DATE, TIME,
-TIMESTAMP, and user-defined type.  Time precision is currently limited
-to seconds, but will eventually be enhanced to microseconds (which
-should be the default for TIMESTAMP according to the SQL standard).
-Timezones are not yet supported.  Support for standard <a
-href="design/CollectionTypes.html">multisets</a> and time intervals
-is currently under development.
+<li>CREATE TABLE: for the default row-store implementation, every
+table must have a primary key.  Supported column datatypes are
+BOOLEAN, TINYINT, SMALLINT, INTEGER, BIGINT, DECIMAL (alias
+NUMERIC) as of 0.6, REAL, DOUBLE (alias DOUBLE PRECISION), VARCHAR (alias
+CHARACTER VARYING), VARBINARY, CHAR (alias CHARACTER), BINARY, DATE,
+TIME, TIMESTAMP, and user-defined type.  Decimal precision is limited
+to 19 digits.  Time precision is currently limited to seconds, but
+will eventually be enhanced to microseconds (which should be the
+default for TIMESTAMP according to the SQL standard).  Timezones are
+not yet supported.  Support for standard <a
+href="design/CollectionTypes.html">multisets</a> and time intervals is
+currently under development.
 
 <li>NOT NULL:  can be specified explicitly on any column; is also implied
 for columns which participate in the table's primary key or clustered index.
@@ -174,7 +176,7 @@ Farrago-specific mechanisms for system extensibility
 
 <ul>
 
-<li>SELECT [DISTINCT] ... FROM ... WHERE ... ORDER BY
+<li>SELECT [DISTINCT] ... FROM ... WHERE ... GROUP BY ... HAVING ... ORDER BY
 
 <li>UNION [ALL]
 
@@ -263,8 +265,7 @@ be selected via the <code>javaCompilerClassName</code> system
 parameter.
 
 <li>All other execution objects are implemented by Fennel, except for
-union (concatenation of Java iterators) and foreign table access (such
-as MDR or JDBC).
+foreign table access (such as MDR or JDBC).
 
 <li>Each DML statement runs in its own implicit subtransaction as required
 by the standard.
@@ -293,9 +294,9 @@ instead).
 
 <h1>What's Broken?</h1>
 
-Besides the absence of great gobs of standard stuff like aggregates,
-fixed-point numerics, referential integrity, etc., it's worth
-mentioning some serious limitations in the features listed above:
+Besides the absence of important standard stuff like referential
+integrity, it's worth mentioning some serious limitations in the
+features listed above:
 
 <ul>
 

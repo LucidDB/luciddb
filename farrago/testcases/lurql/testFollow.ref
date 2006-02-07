@@ -192,11 +192,11 @@ anon_1 { ModelElement }
 anon_1:constraint->Constrains->e_2:constrainedElement
 anon_1:container->Contains->e_2:containedElement
 anon_1:dependent->DependsOn->e_2:provider
-anon_1:importer->Aliases->e_2:imported
+anon_1:exposedEnd->Exposes->e_2:referrer
+anon_1:imported->Aliases->e_2:importer
 anon_1:modelElement->AttachesTo->e_2:tag
 anon_1:operation->CanRaise->e_2:except
-anon_1:referent->RefersTo->e_2:referencedEnd
-anon_1:referrer->Exposes->e_2:exposedEnd
+anon_1:referencedEnd->RefersTo->e_2:referent
 anon_1:supertype->Generalizes->e_2:subtype
 anon_1:type->IsOfType->e_2:typedElements
 e_2 { ModelElement }
@@ -219,11 +219,11 @@ anon_1 { ModelElement }
 anon_1:constraint->Constrains->t_2:constrainedElement
 anon_1:container->Contains->t_2:containedElement
 anon_1:dependent->DependsOn->t_2:provider
-anon_1:importer->Aliases->t_2:imported
+anon_1:exposedEnd->Exposes->t_2:referrer
+anon_1:imported->Aliases->t_2:importer
 anon_1:modelElement->AttachesTo->t_2:tag
 anon_1:operation->CanRaise->t_2:except
-anon_1:referent->RefersTo->t_2:referencedEnd
-anon_1:referrer->Exposes->t_2:exposedEnd
+anon_1:referencedEnd->RefersTo->t_2:referent
 anon_1:supertype->Generalizes->t_2:subtype
 anon_1:type->IsOfType->t_2:typedElements
 t_2 { Tag } where "tagId" = '1'

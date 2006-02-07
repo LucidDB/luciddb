@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/med/flatfile.sql#5 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/med/flatfile.sql#6 $
 0: jdbc:farrago:> -- Test flatfile namespace plugin
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema flatfile_schema;
@@ -173,113 +173,6 @@ Error: Read no rows from file unitsql/med/example.csv; last error was: Row has t
 0: jdbc:farrago:> -- the parser should give up when it's reached the max size
 0: jdbc:farrago:> -- and should interpret this row as multiple rows
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test: read metadata from bcp files
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test import foreign schema using wrong schema name
-0: jdbc:farrago:> import foreign schema testdata
-. . . . . . . . > from server flatfile_server
-. . . . . . . . > into flatfile_schema;
-Error: Unknown foreign schema "TESTDATA" (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test import foreign schema
-0: jdbc:farrago:> import foreign schema bcp
-. . . . . . . . > from server flatfile_server
-. . . . . . . . > into flatfile_schema;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from flatfile_schema."example" order by 3;
-+----------+-------------------------------------------------------------------------------------------------------+---------------------------+
-|    ID    |                                                 NAME                                                  |        EXTRA_FIELD        |
-+----------+-------------------------------------------------------------------------------------------------------+---------------------------+
-| 123      | Jonathan Ackerman                                                                                     | A                         |
-| 234      | Grady O'Neil                                                                                          | B                         |
-| 456      | Susan, Peter and Dave                                                                                 | C                         |
-| 789      | Amelia "meals" Maurice                                                                                | E                         |
-| 123      | "S,"                                                                                                  | F                         |
-| 234      | Peter "peg leg", Jimmy & Samantha "Sam"                                                               | G                         |
-+----------+-------------------------------------------------------------------------------------------------------+---------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> drop table flatfile_schema."example";
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test badly qualified import foreign schema
-0: jdbc:farrago:> import foreign schema bcp LIMIT TO ("no_table")
-. . . . . . . . > from server flatfile_server
-. . . . . . . . > into flatfile_schema;
-Error: One or more tables not found while importing foreign schema "BCP":  [no_table] (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test qualified import foreign schema
-0: jdbc:farrago:> import foreign schema bcp LIMIT TO ("example")
-. . . . . . . . > from server flatfile_server
-. . . . . . . . > into flatfile_schema;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from flatfile_schema."example" order by 3;
-+----------+-------------------------------------------------------------------------------------------------------+---------------------------+
-|    ID    |                                                 NAME                                                  |        EXTRA_FIELD        |
-+----------+-------------------------------------------------------------------------------------------------------+---------------------------+
-| 123      | Jonathan Ackerman                                                                                     | A                         |
-| 234      | Grady O'Neil                                                                                          | B                         |
-| 456      | Susan, Peter and Dave                                                                                 | C                         |
-| 789      | Amelia "meals" Maurice                                                                                | E                         |
-| 123      | "S,"                                                                                                  | F                         |
-| 234      | Peter "peg leg", Jimmy & Samantha "Sam"                                                               | G                         |
-+----------+-------------------------------------------------------------------------------------------------------+---------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> drop table flatfile_schema."example";
-0: jdbc:farrago:> 
-0: jdbc:farrago:> import foreign schema bcp LIMIT TO TABLE_NAME LIKE 'e%'
-. . . . . . . . > from server flatfile_server
-. . . . . . . . > into flatfile_schema;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from flatfile_schema."example" order by 3;
-+----------+-------------------------------------------------------------------------------------------------------+---------------------------+
-|    ID    |                                                 NAME                                                  |        EXTRA_FIELD        |
-+----------+-------------------------------------------------------------------------------------------------------+---------------------------+
-| 123      | Jonathan Ackerman                                                                                     | A                         |
-| 234      | Grady O'Neil                                                                                          | B                         |
-| 456      | Susan, Peter and Dave                                                                                 | C                         |
-| 789      | Amelia "meals" Maurice                                                                                | E                         |
-| 123      | "S,"                                                                                                  | F                         |
-| 234      | Peter "peg leg", Jimmy & Samantha "Sam"                                                               | G                         |
-+----------+-------------------------------------------------------------------------------------------------------+---------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> drop table flatfile_schema."example";
-0: jdbc:farrago:> 
-0: jdbc:farrago:> import foreign schema bcp EXCEPT TABLE_NAME LIKE 'e%'
-. . . . . . . . > from server flatfile_server
-. . . . . . . . > into flatfile_schema;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> import foreign schema bcp EXCEPT TABLE_NAME LIKE 'E%'
-. . . . . . . . > from server flatfile_server
-. . . . . . . . > into flatfile_schema;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from flatfile_schema."example" order by 3;
-+----------+-------------------------------------------------------------------------------------------------------+---------------------------+
-|    ID    |                                                 NAME                                                  |        EXTRA_FIELD        |
-+----------+-------------------------------------------------------------------------------------------------------+---------------------------+
-| 123      | Jonathan Ackerman                                                                                     | A                         |
-| 234      | Grady O'Neil                                                                                          | B                         |
-| 456      | Susan, Peter and Dave                                                                                 | C                         |
-| 789      | Amelia "meals" Maurice                                                                                | E                         |
-| 123      | "S,"                                                                                                  | F                         |
-| 234      | Peter "peg leg", Jimmy & Samantha "Sam"                                                               | G                         |
-+----------+-------------------------------------------------------------------------------------------------------+---------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test a table using implicit column definitions
-0: jdbc:farrago:> create foreign table flatfile_implicit_table
-. . . . . . . . > server flatfile_server
-. . . . . . . . > options (filename 'example');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from flatfile_implicit_table order by 3;
-+----------+-------------------------------------------------------------------------------------------------------+---------------------------+
-|    ID    |                                                 NAME                                                  |        EXTRA_FIELD        |
-+----------+-------------------------------------------------------------------------------------------------------+---------------------------+
-| 123      | Jonathan Ackerman                                                                                     | A                         |
-| 234      | Grady O'Neil                                                                                          | B                         |
-| 456      | Susan, Peter and Dave                                                                                 | C                         |
-| 789      | Amelia "meals" Maurice                                                                                | E                         |
-| 123      | "S,"                                                                                                  | F                         |
-| 234      | Peter "peg leg", Jimmy & Samantha "Sam"                                                               | G                         |
-+----------+-------------------------------------------------------------------------------------------------------+---------------------------+
-0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test a describe query. this type of query returns the width of a 
 0: jdbc:farrago:> -- table's fields. it is an internal query, and should not appear in
 0: jdbc:farrago:> -- user level documentation.
@@ -308,13 +201,171 @@ Error: One or more tables not found while importing foreign schema "BCP":  [no_t
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test sampling errors
 0: jdbc:farrago:> select * from flatfile_server.SAMPLE."missing";
-Error: Could not read data file unitsql/med/missing.csv (state=,code=0)
+Error: From line 1, column 15 to line 1, column 29: Table 'FLATFILE_SERVER.SAMPLE.missing' not found (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from flatfile_server.SAMPLE."empty";
 Error: Cound not sample data file unitsql/med/empty.csv (state=,code=0)
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- TODO: read column header names from data file
-0: jdbc:farrago:> -- TODO: derive column types by reading first few lines of file
+0: jdbc:farrago:> -- test: read metadata from bcp files
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test import foreign schema using wrong schema name
+0: jdbc:farrago:> import foreign schema testdata
+. . . . . . . . > from server flatfile_server
+. . . . . . . . > into flatfile_schema;
+Error: Unknown foreign schema "TESTDATA" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test: import foreign schema
+0: jdbc:farrago:> -- the directory contains an empty data file with no control file
+0: jdbc:farrago:> -- fails all imports
+0: jdbc:farrago:> import foreign schema bcp
+. . . . . . . . > from server flatfile_server
+. . . . . . . . > into flatfile_schema;
+Error: Cound not sample data file unitsql/med/empty.csv (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test: should fail; entire import failed
+0: jdbc:farrago:> select * from flatfile_schema."example" order by 3;
+Error: From line 1, column 15 to line 1, column 29: Table 'FLATFILE_SCHEMA.example' not found (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test a table using implicit column definitions
+0: jdbc:farrago:> create foreign table flatfile_implicit_table
+. . . . . . . . > server flatfile_server
+. . . . . . . . > options (filename 'example');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from flatfile_implicit_table order by 3;
++----------+-------------------------------------------------------------------------------------------------------+---------------------------+
+|    ID    |                                                 NAME                                                  |        EXTRA_FIELD        |
++----------+-------------------------------------------------------------------------------------------------------+---------------------------+
+| 123      | Jonathan Ackerman                                                                                     | A                         |
+| 234      | Grady O'Neil                                                                                          | B                         |
+| 456      | Susan, Peter and Dave                                                                                 | C                         |
+| 789      | Amelia "meals" Maurice                                                                                | E                         |
+| 123      | "S,"                                                                                                  | F                         |
+| 234      | Peter "peg leg", Jimmy & Samantha "Sam"                                                               | G                         |
++----------+-------------------------------------------------------------------------------------------------------+---------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test import schemas with/without bcp files
+0: jdbc:farrago:> create schema flatfiledir_schema;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> set schema 'flatfiledir_schema';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create server flatfiledir_server
+. . . . . . . . > foreign data wrapper local_file_wrapper
+. . . . . . . . > options (
+. . . . . . . . >     directory 'unitsql/med/flatfiles',
+. . . . . . . . >     file_extension 'csv',
+. . . . . . . . >     with_header 'yes', 
+. . . . . . . . >     log_directory 'testlog');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> import foreign schema bcp
+. . . . . . . . > from server flatfiledir_server
+. . . . . . . . > into flatfiledir_schema;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from flatfiledir_schema."example2" order by 3;
++------+------------------------------------------+--------------+
+|  ID  |                   NAME                   | EXTRA_FIELD  |
++------+------------------------------------------+--------------+
+| 123  | Jonathan Ackerman                        | A            |
+| 234  | Grady O'Neil                             | B            |
+| 456  | Susan, Peter and Dave                    | C            |
+| 789  | Amelia "meals" Maurice                   | E            |
+| 123  | "S,"                                     | F            |
+| 234  | Peter "peg leg", Jimmy & Samantha "Sam"  | G            |
++------+------------------------------------------+--------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop schema flatfiledir_schema cascade;
+0: jdbc:farrago:> create schema flatfiledir_schema;
+0: jdbc:farrago:> set schema 'flatfiledir_schema';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> import foreign schema bcp EXCEPT TABLE_NAME LIKE 'E%'
+. . . . . . . . > from server flatfiledir_server
+. . . . . . . . > into flatfiledir_schema;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from flatfiledir_schema."example2" order by 3;
++------+------------------------------------------+--------------+
+|  ID  |                   NAME                   | EXTRA_FIELD  |
++------+------------------------------------------+--------------+
+| 123  | Jonathan Ackerman                        | A            |
+| 234  | Grady O'Neil                             | B            |
+| 456  | Susan, Peter and Dave                    | C            |
+| 789  | Amelia "meals" Maurice                   | E            |
+| 123  | "S,"                                     | F            |
+| 234  | Peter "peg leg", Jimmy & Samantha "Sam"  | G            |
++------+------------------------------------------+--------------+
+0: jdbc:farrago:> drop table flatfiledir_schema."example2";
+0: jdbc:farrago:> drop table flatfiledir_schema."example";
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test files with null values
+0: jdbc:farrago:> select * from flatfiledir_schema."withnulls" order by 3;
++------+------------------------------------------+--------------+
+|  ID  |                   NAME                   | EXTRA_FIELD  |
++------+------------------------------------------+--------------+
+|      |                                          |              |
+| 123  |                                          |              |
+|      | Susan, Peter and Dave                    |              |
+|      |                                          |              |
+| 123  | "S,"                                     | F            |
+|      |                                          | G            |
+| 234  | Peter "peg leg", Jimmy & Samantha "Sam"  | G            |
++------+------------------------------------------+--------------+
+0: jdbc:farrago:> drop table flatfiledir_schema."withnulls";
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test badly qualified import foreign schema
+0: jdbc:farrago:> import foreign schema bcp LIMIT TO ("no_table")
+. . . . . . . . > from server flatfiledir_server
+. . . . . . . . > into flatfiledir_schema;
+Error: One or more tables not found while importing foreign schema "BCP":  [no_table] (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test qualified import foreign schema
+0: jdbc:farrago:> import foreign schema bcp LIMIT TO ("example")
+. . . . . . . . > from server flatfiledir_server
+. . . . . . . . > into flatfiledir_schema;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from flatfiledir_schema."example" order by 3;
++----------+-------------------------------------------------------------------------------------------------------+---------------------------+
+|    ID    |                                                 NAME                                                  |        EXTRA_FIELD        |
++----------+-------------------------------------------------------------------------------------------------------+---------------------------+
+| 123      | Jonathan Ackerman                                                                                     | A                         |
+| 234      | Grady O'Neil                                                                                          | B                         |
+| 456      | Susan, Peter and Dave                                                                                 | C                         |
+| 789      | Amelia "meals" Maurice                                                                                | E                         |
+| 123      | "S,"                                                                                                  | F                         |
+| 234      | Peter "peg leg", Jimmy & Samantha "Sam"                                                               | G                         |
++----------+-------------------------------------------------------------------------------------------------------+---------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test: not imported. fail
+0: jdbc:farrago:> select * from flatfiledir_schema."example2" order by 3;
+Error: From line 1, column 15 to line 1, column 32: Table 'FLATFILEDIR_SCHEMA.example2' not found (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop table flatfiledir_schema."example";
+0: jdbc:farrago:> 
+0: jdbc:farrago:> import foreign schema bcp LIMIT TO TABLE_NAME LIKE 'e%'
+. . . . . . . . > from server flatfiledir_server
+. . . . . . . . > into flatfiledir_schema;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from flatfiledir_schema."example" order by 3;
++----------+-------------------------------------------------------------------------------------------------------+---------------------------+
+|    ID    |                                                 NAME                                                  |        EXTRA_FIELD        |
++----------+-------------------------------------------------------------------------------------------------------+---------------------------+
+| 123      | Jonathan Ackerman                                                                                     | A                         |
+| 234      | Grady O'Neil                                                                                          | B                         |
+| 456      | Susan, Peter and Dave                                                                                 | C                         |
+| 789      | Amelia "meals" Maurice                                                                                | E                         |
+| 123      | "S,"                                                                                                  | F                         |
+| 234      | Peter "peg leg", Jimmy & Samantha "Sam"                                                               | G                         |
++----------+-------------------------------------------------------------------------------------------------------+---------------------------+
+0: jdbc:farrago:> drop table flatfiledir_schema."example";
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test: uses generated bcp
+0: jdbc:farrago:> select * from flatfiledir_server.bcp."example2" order by 3;
++------+------------------------------------------+--------------+
+|  ID  |                   NAME                   | EXTRA_FIELD  |
++------+------------------------------------------+--------------+
+| 123  | Jonathan Ackerman                        | A            |
+| 234  | Grady O'Neil                             | B            |
+| 456  | Susan, Peter and Dave                    | C            |
+| 789  | Amelia "meals" Maurice                   | E            |
+| 123  | "S,"                                     | F            |
+| 234  | Peter "peg leg", Jimmy & Samantha "Sam"  | G            |
++------+------------------------------------------+--------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit
