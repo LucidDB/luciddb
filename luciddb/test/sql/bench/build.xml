@@ -78,6 +78,7 @@
       <fileset dir="${bench.dir}">
         <include name="**/*.sql"/>
         <include name="**/*.ref"/>
+        <exclude name="gen/**"/>
       </fileset>
     </copy>
   </target>
