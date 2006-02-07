@@ -55,11 +55,10 @@ select cast(bi as char(20)) from ints;
 select cast(i as char(6)) from exacts;
 select cast(r as char(6)) from exacts;
 
--- Note: Currently need >= 23 characters to display a double JK 2004/08/11
 -- REVIEW: Results are likely to be non-portable, as float representations
 -- REVIEW: will differ on various processors. Should round or truncate
 -- REVIEW: results lexically. -JK 2004/08/11
-select cast(r as char(9)) from approx;
+select cast(r as char(10)) from approx;
 select cast(d as char(23)) from approx;
 
 --
@@ -95,7 +94,6 @@ select cast(r as varchar(3)) from exacts;
 select cast(r as varchar(3)) from approx;
 select cast(d as varchar(3)) from approx;
 
--- Note: Currently need >= 23 characters to display a double -JK 2004/08/11
 -- REVIEW: Results are likely to be non-portable, as float representations
 -- REVIEW: will differ on various processors. Should round or truncate
 -- REVIEW: results lexically. -JK 2004/08/11

@@ -116,6 +116,11 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
     public FarragoSessionPrivilegeChecker getPrivilegeChecker();
 
     /**
+     * @return the DDL lock manager for this validator
+     */
+    public FarragoDdlLockManager getDdlLockManager();
+    
+    /**
      * Submits a request for access from the current user and/or role to a
      * catalog object via this validator's privilege checker.  Actual checking
      * of the request may be deferred.

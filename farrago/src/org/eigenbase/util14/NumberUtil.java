@@ -25,6 +25,8 @@ package org.eigenbase.util14;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.text.NumberFormat;
+import java.text.DecimalFormat;
 
 /**
  * Utility functions for working with numbers
@@ -34,6 +36,21 @@ import java.math.BigInteger;
  * @since Jan 9, 2006
  */
 public class NumberUtil {
+
+    private static final DecimalFormat floatFormatter;
+    private static final DecimalFormat doubleFormatter;
+
+    static {
+        // TODO: DecimalFormat uses ROUND_HALF_EVEN, not ROUND_HALF_UP
+        // Float: precision of 7 (6 digits after .)
+        floatFormatter = new DecimalFormat();
+        floatFormatter.applyPattern("0.######E0");
+        // Double: precision of 16 (15 digits after .)
+        doubleFormatter = new DecimalFormat();
+        doubleFormatter.applyPattern("0.###############E0");
+    }
+
+    //~ Methods ---------------------------------------------------------------
 
     public static final BigInteger getMaxUnscaled(int precision)
     {
@@ -85,6 +102,10 @@ public class NumberUtil {
         }
     }
 
+    public static NumberFormat getApproxFormatter(boolean isFloat)
+    {
+        return (isFloat)? floatFormatter: doubleFormatter;
+    }
 
 }
 

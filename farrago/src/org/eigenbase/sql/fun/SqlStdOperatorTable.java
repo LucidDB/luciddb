@@ -781,14 +781,14 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     /** The <code>FLOOR</code> function. */
     public static final SqlFunction floorFunc =
         new SqlMonotonicUnaryFunction("FLOOR", SqlKind.Function,
-            SqlTypeStrategies.rtiFirstArgType, null,
+            SqlTypeStrategies.rtiFirstArgTypeOrExactNoScale, null,
             SqlTypeStrategies.otcNumericOrInterval,
             SqlFunctionCategory.Numeric);
 
     /** The <code>CEIL</code> function. */
     public static final SqlFunction ceilFunc =
         new SqlMonotonicUnaryFunction("CEIL", SqlKind.Function,
-            SqlTypeStrategies.rtiFirstArgType, null,
+            SqlTypeStrategies.rtiFirstArgTypeOrExactNoScale, null,
             SqlTypeStrategies.otcNumericOrInterval,
             SqlFunctionCategory.Numeric);
 

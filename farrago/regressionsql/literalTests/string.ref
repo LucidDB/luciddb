@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/regressionsql/literalTests/string.sql#8 $ 
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/literalTests/string.sql#8 $ 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values 'unknown';
 +----------+
@@ -148,7 +148,7 @@ Messages:
 |           VARCHAR_COL           | VARCHAR_COL2  |
 +---------------------------------+---------------+
 | -1.1                            |               |
-| -1.2345678901234000E-200        |               |
+| -1.2345678901234E-200           |               |
 | -1.23E-50                       |               |
 | -1.23E50                        |               |
 | -4444.22                        |               |

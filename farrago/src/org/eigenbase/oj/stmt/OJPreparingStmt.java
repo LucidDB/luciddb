@@ -204,7 +204,7 @@ public abstract class OJPreparingStmt
         SqlNode sqlQuery,
         Class runtimeContextClass,
         SqlValidator validator,
-        boolean needValidation)
+        boolean needsValidation)
     {
         queryString = sqlQuery.toString();
 
@@ -219,36 +219,40 @@ public abstract class OJPreparingStmt
             };
         ClassDeclaration decl = init(arguments);
 
-        boolean explain = false;
-        boolean explainAsXml = false;
-        boolean explainWithImplementation = false;
-        SqlExplainLevel detailLevel = SqlExplainLevel.DIGEST_ATTRIBUTES;
+        SqlExplain sqlExplain = null;
         if (sqlQuery.isA(SqlKind.Explain)) {
-            explain = true;
-
             // dig out the underlying SQL statement
-            SqlExplain sqlExplain = (SqlExplain) sqlQuery;
+            sqlExplain = (SqlExplain) sqlQuery;
             sqlQuery = sqlExplain.getExplicandum();
-            explainWithImplementation = sqlExplain.withImplementation();
-            explainAsXml = sqlExplain.isXml();
-            detailLevel = sqlExplain.getDetailLevel();
         }
 
         SqlToRelConverter sqlToRelConverter =
             getSqlToRelConverter(validator, connection);
         RelNode rootRel =
-            sqlToRelConverter.convertQuery(sqlQuery, needValidation, true);
+            sqlToRelConverter.convertQuery(sqlQuery, needsValidation, true);
 
-        if (explain && !explainWithImplementation) {
-            return new PreparedExplanation(
-                rootRel, explainAsXml, detailLevel);
+        if (sqlExplain != null) {
+            SqlExplain.Depth explainDepth = sqlExplain.getDepth();
+            boolean explainAsXml = sqlExplain.isXml();
+            SqlExplainLevel detailLevel = sqlExplain.getDetailLevel();
+            switch (explainDepth) {
+            case Type:
+                RelDataType resultType =
+                    validator.getValidatedNodeType(sqlQuery);
+                return new PreparedExplanation(
+                    resultType, null, explainAsXml, detailLevel);
+            case Logical:
+                return new PreparedExplanation(
+                    null, rootRel, explainAsXml, detailLevel);
+            case Physical:
+            default:
+                rootRel = optimize(rootRel);
+                return new PreparedExplanation(
+                    null, rootRel, explainAsXml, detailLevel);
+            }
         }
 
         rootRel = optimize(rootRel);
-        if (explain) {
-            return new PreparedExplanation(
-                rootRel, explainAsXml, detailLevel);
-        }
         return implement(
             rootRel,
             sqlQuery.getKind(),

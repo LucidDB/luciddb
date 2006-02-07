@@ -70,6 +70,26 @@ castExactToStrA(RegisterRef<char*>* result,
 
 void
 castApproxToStrA(RegisterRef<char*>* result,
+                 RegisterRef<float>* src)
+{
+    assert(StandardTypeDescriptor::isTextArray(result->type()));
+
+    if (src->isNull()) {
+        result->toNull();
+        result->length(0);
+    } else {
+        result->length(SqlStrCastFromApprox<1,1>
+                       (result->pointer(),
+                        result->storage(),
+                        src->value(),
+                        true,
+                        (result->type() == STANDARD_TYPE_CHAR ?
+                         true : false)));
+    }
+}
+
+void
+castApproxToStrA(RegisterRef<char*>* result,
                  RegisterRef<double>* src)
 {
     assert(StandardTypeDescriptor::isTextArray(result->type()));
@@ -82,6 +102,7 @@ castApproxToStrA(RegisterRef<char*>* result,
                        (result->pointer(),
                         result->storage(),
                         src->value(),
+                        false,
                         (result->type() == STANDARD_TYPE_CHAR ?
                          true : false)));
     }
@@ -303,6 +324,14 @@ ExtCastRegister(ExtendedInstructionTable* eit)
     params_1V_1D.push_back(STANDARD_TYPE_VARCHAR);
     params_1V_1D.push_back(STANDARD_TYPE_DOUBLE);
 
+    vector<StandardTypeDescriptorOrdinal> params_1C_1R;
+    params_1C_1R.push_back(STANDARD_TYPE_CHAR);
+    params_1C_1R.push_back(STANDARD_TYPE_REAL);
+
+    vector<StandardTypeDescriptorOrdinal> params_1V_1R;
+    params_1V_1R.push_back(STANDARD_TYPE_VARCHAR);
+    params_1V_1R.push_back(STANDARD_TYPE_REAL);
+
     vector<StandardTypeDescriptorOrdinal> params_1V_1C;
     params_1V_1C.push_back(STANDARD_TYPE_VARCHAR);
     params_1V_1C.push_back(STANDARD_TYPE_CHAR);
@@ -373,6 +402,13 @@ ExtCastRegister(ExtendedInstructionTable* eit)
              &castApproxToStrA);
     eit->add("castA", params_1V_1D,
              (ExtendedInstruction2<char*, double>*) NULL,
+             &castApproxToStrA);
+
+    eit->add("castA", params_1C_1R,
+             (ExtendedInstruction2<char*, float>*) NULL,
+             &castApproxToStrA);
+    eit->add("castA", params_1V_1R,
+             (ExtendedInstruction2<char*, float>*) NULL,
              &castApproxToStrA);
 
     eit->add("castA", params_1C_1V,

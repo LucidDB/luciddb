@@ -284,7 +284,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         FarragoSessionStmtParamDefFactory paramDefFactory)
     {
         FarragoDbStmtContext stmtContext = 
-            new FarragoDbStmtContext(this, paramDefFactory);
+            new FarragoDbStmtContext(this, paramDefFactory, database.getDdlLockManager());
         addAllocation(stmtContext);
         return stmtContext;
     }
@@ -298,7 +298,8 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             this,
             getDatabase().getCodeCache(),
             getDatabase().getDataWrapperCache(),
-            getSessionIndexMap());
+            getSessionIndexMap(),
+            getDatabase().getDdlLockManager());
     }
 
     // implement FarragoSession

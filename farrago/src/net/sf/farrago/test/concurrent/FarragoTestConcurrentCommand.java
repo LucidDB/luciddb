@@ -75,6 +75,18 @@ public interface FarragoTestConcurrentCommand
         String comment,
         String pattern);
 
+    /**
+     * Returns true if the command should fail.  This allows special error
+     * handling for expected failures that don't have patterns.
+     * @return true if command is expected to fail
+     */
+    boolean isFailureExpected();
+    
+    /**
+     * Set this command to expect a patternless failure.
+     */
+    FarragoTestConcurrentCommand markToFail();
+    
     //~ Inner Classes ---------------------------------------------------------
 
     /** Indicates that a command should have failed, but instead succeeded,

@@ -32,6 +32,7 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.runtime.*;
 import org.eigenbase.util.*;
+import org.eigenbase.reltype.RelDataType;
 
 
 /**
@@ -45,6 +46,7 @@ public class PreparedExplanation implements PreparedResult
 {
     //~ Instance fields -------------------------------------------------------
 
+    private final RelDataType rowType;
     private final RelNode rel;
     private final boolean asXml;
     private final SqlExplainLevel detailLevel;
@@ -52,8 +54,13 @@ public class PreparedExplanation implements PreparedResult
     //~ Constructors ----------------------------------------------------------
 
     public PreparedExplanation(
-        RelNode rel, boolean asXml, SqlExplainLevel detailLevel)
+        RelDataType rowType,
+        RelNode rel,
+        boolean asXml,
+        SqlExplainLevel detailLevel)
     {
+
+        this.rowType = rowType;
         this.rel = rel;
         this.asXml = asXml;
         this.detailLevel = detailLevel;
@@ -63,9 +70,13 @@ public class PreparedExplanation implements PreparedResult
 
     public String getCode()
     {
-        return RelOptUtil.dumpPlan("", rel, asXml, detailLevel);
+        if (rel == null) {
+            return rowType.getFullTypeString();
+        } else {
+            return RelOptUtil.dumpPlan("", rel, asXml, detailLevel);
+        }
     }
-
+    
     public boolean isDml()
     {
         return false;

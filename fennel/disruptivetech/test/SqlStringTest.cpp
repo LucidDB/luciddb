@@ -3130,6 +3130,8 @@ SqlStringTest::testSqlStringCastFromApprox()
     int dst_storage, dst_len, newlen = 0;
     int rand_idx, power_idx;
     int negative;
+    int isFloat;
+    int max_precision;
     double value, newones, exponent;
     char expected_buf[256];
     bool caught;
@@ -3141,7 +3143,6 @@ SqlStringTest::testSqlStringCastFromApprox()
             for (src_len = 0; src_len < 16; src_len++) {
                 for (rand_idx = 0; rand_idx < 1; rand_idx++) {
                     for (negative = 0; negative <= 1; negative++) {
-
                         value = 0;
                         for (power_idx = 0; 
                              // space for (optional) '-' '.', 'E+xx'
@@ -3166,8 +3167,68 @@ SqlStringTest::testSqlStringCastFromApprox()
                         }
                         value = pow(value, 1 + rand() % 80);
 
+                        isFloat = rand() % 2;
+                        if (isFloat) {
+                            value = (float) value;
+                        }
+                        max_precision = (isFloat)? 7: 16;
+
                         if (value) {
-                            sprintf(expected_buf, "%.16E", value);
+                            int i, epos = -1, prec, buflen, exp;
+                            int neg = (value < 0)? 1: 0;
+                            char last_digit;
+                            sprintf(expected_buf, "%.*E", max_precision, value);
+                            buflen = strlen(expected_buf);
+                            epos = neg + max_precision + 2;
+                            if (buflen > epos && expected_buf[epos] == 'E') {
+                                sscanf(expected_buf + epos + 1, "%d", &exp);
+
+                                // Round up if needed
+                                if ((expected_buf[epos-1] >= '5') && 
+                                    (expected_buf[epos-1] <= '9')) {
+                                    expected_buf[epos-1] = '0';
+                                    for (int i=epos-2; i>=neg; i--) {
+                                        if (expected_buf[i] == '9') {
+                                            expected_buf[i] = '0';
+                                        } else if (expected_buf[i] != '.') {
+                                            expected_buf[i]++;
+                                            break;
+                                        }
+                                    }
+                                    
+                                    // See if initial digit overflowed
+                                    if (expected_buf[neg] == '0') {
+                                        expected_buf[neg] = '1';
+                                        for (int i=epos-1; i>neg+2; i--) {
+                                            expected_buf[i] = expected_buf[i-1];
+                                        }
+                                        expected_buf[neg+2] = '0';
+                                        
+                                        // increment exponent
+                                        exp++;
+                                    }
+                                }
+                                
+                                for (i = epos-2; i >= 0; i--) {
+                                    if (expected_buf[i] != '0') {
+                                        if (expected_buf[i] == '.') {
+                                            BOOST_CHECK_EQUAL(i, 1+neg);
+                                            last_digit = expected_buf[i-1];
+                                        } else {
+                                            last_digit = expected_buf[i];
+                                        }
+                                        prec = i-1-neg;
+                                        break;
+                                    }
+                                }
+                                sprintf(expected_buf, "%.*E", prec, value);
+                                buflen = strlen(expected_buf);
+                                epos = (prec > 0)? (neg + prec + 2):(neg + 1);
+                                BOOST_CHECK(buflen > epos);
+                                BOOST_CHECK(expected_buf[epos] == 'E');
+                                expected_buf[epos-1] = last_digit;
+                                sprintf(expected_buf + epos + 1, "%d", exp);
+                            }
                         } else {
                             // per spec, 0 -> '0E0'
                             strcpy(expected_buf, "0E0");
@@ -3199,6 +3260,7 @@ SqlStringTest::testSqlStringCastFromApprox()
                             newlen = SqlStrCastFromApprox<1,1>(dst.mStr,
                                                                dst_storage,
                                                                value,
+                                                               isFloat,
                                                                false);
                         } catch (const char *str) {
                             caught = true;
@@ -3212,6 +3274,10 @@ SqlStringTest::testSqlStringCastFromApprox()
                             BOOST_CHECK(dst.verify());
                             BOOST_CHECK(expect.length() <= dst_storage);
                             BOOST_CHECK(!expect.compare(result));
+                            if (expect.compare(result)) {
+                                BOOST_MESSAGE("Got " << result << 
+                                              ", expected " << expect);
+                            }
                         }
 
                         SqlStringBuffer dst_fix(dst_storage, dst_len,
@@ -3223,6 +3289,7 @@ SqlStringTest::testSqlStringCastFromApprox()
                             newlen = SqlStrCastFromApprox<1,1>(dst_fix.mStr,
                                                                dst_storage,
                                                                value,
+                                                               isFloat,
                                                                true);
                         } catch (const char *str) {
                             caught = true;

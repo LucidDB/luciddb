@@ -964,7 +964,14 @@ public class ReduceDecimalsRule extends RelOptRule
                     newOperands[i] = operands[i];
                 }
             }
-            return builder.makeCall(call.getOperator(), newOperands);
+            RelDataType retType = builder.deriveReturnType(
+                call.getOperator(),
+                builder.getTypeFactory(),
+                operands);
+
+            RexNode ret = builder.makeCall(call.getOperator(), newOperands);
+            ret = ensureType(retType, ret);
+            return ret;
         }
     }
     

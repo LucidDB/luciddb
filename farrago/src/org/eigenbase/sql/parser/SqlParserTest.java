@@ -1447,7 +1447,7 @@ public class SqlParserTest extends TestCase
     {
         check("explain plan for select * from emps",
             fold(new String[] {
-                "EXPLAIN PLAN INCLUDING ATTRIBUTES FOR",
+                "EXPLAIN PLAN INCLUDING ATTRIBUTES WITH IMPLEMENTATION FOR",
                 "SELECT *",
                 "FROM `EMPS`"}));
     }
@@ -1456,7 +1456,7 @@ public class SqlParserTest extends TestCase
     {
         check("explain plan with implementation for select * from emps",
             fold(new String[] {
-                "EXPLAIN PLAN INCLUDING ATTRIBUTES FOR",
+                "EXPLAIN PLAN INCLUDING ATTRIBUTES WITH IMPLEMENTATION FOR",
                 "SELECT *",
                 "FROM `EMPS`"}));
     }
@@ -1468,6 +1468,14 @@ public class SqlParserTest extends TestCase
                 "EXPLAIN PLAN INCLUDING ATTRIBUTES WITHOUT IMPLEMENTATION FOR",
                 "SELECT *",
                 "FROM `EMPS`"}));
+    }
+
+    public void testExplainWithType()
+    {
+        check("explain plan with type for (values (true))",
+            TestUtil.fold(new String[] {
+                "EXPLAIN PLAN INCLUDING ATTRIBUTES WITH TYPE FOR",
+                "(VALUES (ROW(TRUE)))"}));
     }
 
     public void testInsertSelect()
@@ -1509,7 +1517,7 @@ public class SqlParserTest extends TestCase
     public void testExplainInsert()
     {
         check("explain plan for insert into emps1 select * from emps2",
-            "EXPLAIN PLAN INCLUDING ATTRIBUTES FOR"
+            "EXPLAIN PLAN INCLUDING ATTRIBUTES WITH IMPLEMENTATION FOR"
             + NL + "INSERT INTO `EMPS1`" + NL + "(SELECT *"
             + NL + "FROM `EMPS2`)");
     }

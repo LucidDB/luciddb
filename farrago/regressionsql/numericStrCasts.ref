@@ -127,24 +127,28 @@
 | -99.99  |
 +---------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Note: Currently need >= 23 characters to display a double JK 2004/08/11
 0: jdbc:farrago:> -- REVIEW: Results are likely to be non-portable, as float representations
 0: jdbc:farrago:> -- REVIEW: will differ on various processors. Should round or truncate
 0: jdbc:farrago:> -- REVIEW: results lexically. -JK 2004/08/11
-0: jdbc:farrago:> select cast(r as char(9)) from approx;
-Error: could not calculate results for the following row:
-[ 1, 1, 1 ]
-Messages:
-[0]:PC=1 Code=22001 (state=,code=0)
+0: jdbc:farrago:> select cast(r as char(10)) from approx;
++-------------+
+|   EXPR$0    |
++-------------+
+| 1E0         |
+| -1E0        |
+| 0E0         |
+| 3.141593E0  |
+| 3.141593E1  |
++-------------+
 0: jdbc:farrago:> select cast(d as char(23)) from approx;
 +--------------------------+
 |          EXPR$0          |
 +--------------------------+
-| 1.0000000000000000E+00   |
-| -1.0000000000000000E+00  |
+| 1E0                      |
+| -1E0                     |
 | 0E0                      |
-| 3.1415926535897931E+00   |
-| 3.1415926535897931E+01   |
+| 3.141592653589793E0      |
+| 3.141592653589793E1      |
 +--------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
@@ -232,12 +236,12 @@ Messages:
 [0]:PC=0 Code=22001 (state=,code=0)
 0: jdbc:farrago:> select cast(r as char(3)) from approx;
 Error: could not calculate results for the following row:
-[ 1, 1, 1 ]
+[ 2, -1, -1 ]
 Messages:
-[0]:PC=1 Code=22001 (state=,code=0)
+[0]:PC=0 Code=22001 (state=,code=0)
 0: jdbc:farrago:> select cast(d as char(3)) from approx;
 Error: could not calculate results for the following row:
-[ 1, 1, 1 ]
+[ 2, -1, -1 ]
 Messages:
 [0]:PC=0 Code=22001 (state=,code=0)
 0: jdbc:farrago:> 
@@ -272,42 +276,41 @@ Messages:
 [0]:PC=0 Code=22001 (state=,code=0)
 0: jdbc:farrago:> select cast(r as varchar(3)) from approx;
 Error: could not calculate results for the following row:
-[ 1, 1, 1 ]
+[ 2, -1, -1 ]
 Messages:
-[0]:PC=1 Code=22001 (state=,code=0)
+[0]:PC=0 Code=22001 (state=,code=0)
 0: jdbc:farrago:> select cast(d as varchar(3)) from approx;
 Error: could not calculate results for the following row:
-[ 1, 1, 1 ]
+[ 2, -1, -1 ]
 Messages:
 [0]:PC=0 Code=22001 (state=,code=0)
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Note: Currently need >= 23 characters to display a double -JK 2004/08/11
 0: jdbc:farrago:> -- REVIEW: Results are likely to be non-portable, as float representations
 0: jdbc:farrago:> -- REVIEW: will differ on various processors. Should round or truncate
 0: jdbc:farrago:> -- REVIEW: results lexically. -JK 2004/08/11
 0: jdbc:farrago:> select cast(d as varchar(23)) from approx;
-+--------------------------+
-|          EXPR$0          |
-+--------------------------+
-| 1.0000000000000000E+00   |
-| -1.0000000000000000E+00  |
-| 0E0                      |
-| 3.1415926535897931E+00   |
-| 3.1415926535897931E+01   |
-+--------------------------+
++----------------------+
+|        EXPR$0        |
++----------------------+
+| 1E0                  |
+| -1E0                 |
+| 0E0                  |
+| 3.141592653589793E0  |
+| 3.141592653589793E1  |
++----------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- TODO: fennel displays more than 8 digits. (plus signg ...), that caused diff.
 0: jdbc:farrago:> alter system set "calcVirtualMachine"='CALCVM_JAVA';
 0: jdbc:farrago:> select cast(r as varchar(23)) from approx;
-+-----------------+
-|     EXPR$0      |
-+-----------------+
-| 1.0000000E+00   |
-| -1.0000000E+00  |
-| 0E0             |
-| 3.1415927E+00   |
-| 3.1415928E+01   |
-+-----------------+
++-------------+
+|   EXPR$0    |
++-------------+
+| 1E0         |
+| -1E0        |
+| 0E0         |
+| 3.141593E0  |
+| 3.141593E1  |
++-------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop table ints;
 0: jdbc:farrago:> drop table exacts;

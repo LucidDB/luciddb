@@ -21,13 +21,14 @@
 */
 package net.sf.farrago.db;
 
-import net.sf.farrago.session.*;
-import net.sf.farrago.trace.*;
-import net.sf.farrago.util.*;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.*;
+import java.util.logging.Logger;
+
+import net.sf.farrago.session.FarragoSession;
+import net.sf.farrago.session.FarragoSessionFactory;
+import net.sf.farrago.trace.FarragoTrace;
+import net.sf.farrago.util.FarragoCompoundAllocation;
 
 /**
  * FarragoDbSingleton manages a singleton instance of FarragoDatabase.  It is

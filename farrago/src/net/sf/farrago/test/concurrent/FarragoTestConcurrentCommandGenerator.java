@@ -558,7 +558,8 @@ public class FarragoTestConcurrentCommandGenerator
         private boolean shouldFail = false;
         private String failComment = null; // describes an expected error
         private Pattern failPattern = null; // an expected error message
-
+        private boolean failureExpected = false; // failure expected, no pattern
+        
         // implement FarragoTestConcurrentCommand
         public FarragoTestConcurrentCommand markToFail(
             String comment,
@@ -570,6 +571,15 @@ public class FarragoTestConcurrentCommandGenerator
             return this;
         }
 
+        public boolean isFailureExpected() {
+            return failureExpected;
+        }
+        
+        public FarragoTestConcurrentCommand markToFail() {
+            this.failureExpected = true;
+            return this;
+        }
+        
         // subclasses define this to execute themselves
         protected abstract void doExecute(
             FarragoTestConcurrentCommandExecutor exec) throws Exception;

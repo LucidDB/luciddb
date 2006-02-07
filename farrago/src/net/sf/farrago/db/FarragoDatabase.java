@@ -88,7 +88,8 @@ public class FarragoDatabase extends FarragoDbSingleton
     protected FarragoSessionFactory sessionFactory;
     private FarragoPluginClassLoader pluginClassLoader;
     private List modelExtensions;
-
+    private FarragoDdlLockManager ddlLockManager;
+    
     /**
      * Cache of all sorts of stuff.
      */
@@ -235,6 +236,7 @@ public class FarragoDatabase extends FarragoDbSingleton
                     checkpointIntervalMillis);
             }
 
+            ddlLockManager = new FarragoDdlLockManager();
             sessionFactory.specializedInitialization(this);
         } catch (Throwable ex) {
             tracer.throwing("FarragoDatabase", "<init>", ex);
@@ -493,6 +495,14 @@ public class FarragoDatabase extends FarragoDbSingleton
         return fennelDbHandle;
     }
 
+    /**
+     * @return the DDL lock manager associated with this database
+     */
+    public FarragoDdlLockManager getDdlLockManager()
+    {
+        return ddlLockManager;
+    }
+    
     /**
      * Prepares an SQL expression; uses a cached implementation if
      * available, otherwise caches the one generated here.

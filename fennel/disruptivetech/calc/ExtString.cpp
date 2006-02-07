@@ -77,8 +77,8 @@ strCmpA(RegisterRef<int32_t>* result,
         result->toNull();
     } else {
         result->value(SqlStrCmp<1,1>(
-                          str1->pointer(), str1->storage(),
-                          str2->pointer(), str2->storage()));
+                          str1->pointer(), str1->stringLength(),
+                          str2->pointer(), str2->stringLength()));
     }
 }
 
@@ -93,8 +93,8 @@ strCmpOct(RegisterRef<int32_t>* result,
         result->toNull();
     } else {
         result->value(SqlStrCmp_Bin(
-                          str1->pointer(), str1->storage(),
-                          str2->pointer(), str2->storage()));
+                          str1->pointer(), str1->stringLength(),
+                          str2->pointer(), str2->stringLength()));
     }
 }
 

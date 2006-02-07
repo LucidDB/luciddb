@@ -30,3 +30,13 @@ select 1 from depts;
 -- Explain physical plan in XML format.
 explain plan as xml for 
 select 1 from depts;
+
+-- Explain type
+explain plan with type for
+select 1 from depts;
+
+-- Explain type as XML (ignores XML flag)
+explain plan with type as xml for
+select 1 from depts;
+
+-- End explain.sql

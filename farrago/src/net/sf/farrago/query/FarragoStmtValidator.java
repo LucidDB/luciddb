@@ -73,7 +73,8 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
     private final FarragoObjectCache sharedDataWrapperCache;
     private final FarragoSessionParser parser;
     private final FarragoSessionPrivilegeChecker privilegeChecker;
-
+    private final FarragoDdlLockManager ddlLockManager;
+    
     private SqlParserPos parserPos;
 
     //~ Constructors ----------------------------------------------------------
@@ -93,6 +94,9 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
      * @param sharedDataWrapperCache FarragoObjectCache to use for caching
      * FarragoMedDataWrapper instances
      *
+     * @param ddlLockManager FarragoDdlLockManager to use for protecting
+     * catalog objects in use from modification
+     * 
      * @param indexMap FarragoSessionIndexMap to use for index access
      */
     public FarragoStmtValidator(
@@ -101,7 +105,8 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
         FarragoSession session,
         FarragoObjectCache codeCache,
         FarragoObjectCache sharedDataWrapperCache,
-        FarragoSessionIndexMap indexMap)
+        FarragoSessionIndexMap indexMap,
+        FarragoDdlLockManager ddlLockManager)
     {
         this.repos = repos;
         this.fennelDbHandle = fennelDbHandle;
@@ -109,7 +114,8 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
         this.indexMap = indexMap;
         this.session = session;
         this.sharedDataWrapperCache = sharedDataWrapperCache;
-
+        this.ddlLockManager = ddlLockManager;
+        
         parser = session.getPersonality().newParser(session);
         // clone session variables so that any context changes we make during
         // validation are transient
@@ -191,6 +197,12 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
     public FarragoSessionPrivilegeChecker getPrivilegeChecker()
     {
         return privilegeChecker;
+    }
+    
+    // implement FarragoSessionStmtValidator
+    public FarragoDdlLockManager getDdlLockManager()
+    {
+        return ddlLockManager;
     }
     
     // implement FarragoSessionStmtValidator

@@ -1,0 +1,36 @@
+-- setup
+> create schema ddl_mt;
+0 rows affected.
+> create view ddl_mt.v as select * from sales.depts;
+0 rows affected.
+-- end of setup
+
+-- thread main
+> select * from ddl_mt.v;
++------------+----------------------------------------------------------------------------------------------------------------------------------+
+| DEPTNO     | NAME                                                                                                                             |
++------------+----------------------------------------------------------------------------------------------------------------------------------+
+| 10         | Sales                                                                                                                            |
+| 20         | Marketing                                                                                                                        |
+| 30         | Accounts                                                                                                                         |
++------------+----------------------------------------------------------------------------------------------------------------------------------+
+
+> drop view ddl_mt.v;
+0 rows affected.
+-- end of thread main
+
+-- thread directDrop
+> drop view ddl_mt.v;
+net.sf.farrago.util.FarragoUtil$FarragoSqlException: Cannot drop view "DDL_MT"."V" because it is currently in use by a statement
+-- end of thread directDrop
+
+-- thread cascadeDrop
+> drop schema ddl_mt cascade;
+net.sf.farrago.util.FarragoUtil$FarragoSqlException: Cannot drop view "DDL_MT"."V" because it is currently in use by a statement
+-- end of thread cascadeDrop
+
+-- thread createOrReplace
+> create or replace view ddl_mt.v as select * from sales.emps;
+net.sf.farrago.util.FarragoUtil$FarragoSqlException: Cannot replace view "V" because it is currently in use by a statement
+-- end of thread createOrReplace
+
