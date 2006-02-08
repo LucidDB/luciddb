@@ -11,11 +11,11 @@
 // Free Software Foundation; either version 2 of the License, or (at your
 // option) any later version approved by The Eigenbase Project.
 //
-// This library is distributed in the hope that it will be useful, 
+// This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -209,10 +209,10 @@ public abstract class Property
      */
     protected static boolean toBoolean(final String value)
     {
-        String value2 = value.toUpperCase().trim();
-        return value2.equals("1") ||
-                value2.equals("true") ||
-                value2.equals("yes");
+        String trimmedLowerValue = value.toLowerCase().trim();
+        return trimmedLowerValue.equals("1") ||
+                trimmedLowerValue.equals("true") ||
+                trimmedLowerValue.equals("yes");
     }
 
     /**
@@ -324,7 +324,7 @@ public abstract class Property
         /**
          * Converts a trigger or a weak reference to a trigger into a trigger.
          * The result may be null.
-         */ 
+         */
         private Trigger convert(Object o)
         {
             if (o instanceof WeakReference) {

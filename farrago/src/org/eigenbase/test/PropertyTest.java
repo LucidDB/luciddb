@@ -215,8 +215,6 @@ public class PropertyTest extends TestCase
         // All other values mean false.
         prevString = props.booleanProp.setString("");
         Assert.assertEquals(false, props.booleanProp.get());
-        prevString = props.booleanProp.setString("true ");
-        Assert.assertEquals(false, props.booleanProp.get());
         prevString = props.booleanProp.setString("no");
         Assert.assertEquals(false, props.booleanProp.get());
         prevString = props.booleanProp.setString("wombat");
