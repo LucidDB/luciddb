@@ -204,13 +204,15 @@ public abstract class Property
      * but only exists from JDK 1.5 onwards,
      * and only accepts 'true'.
      *
-     * @return true if the string is "1" or "true" or "yes", ignoring case
+     * @return true if the string is "1" or "true" or "yes", ignoring case and
+     *   any leading or trailing spaces
      */
     protected static boolean toBoolean(final String value)
     {
-        return value.equalsIgnoreCase("1") ||
-                value.equalsIgnoreCase("true") ||
-                value.equalsIgnoreCase("yes");
+        String value2 = value.toUpperCase().trim();
+        return value2.equals("1") ||
+                value2.equals("true") ||
+                value2.equals("yes");
     }
 
     /**

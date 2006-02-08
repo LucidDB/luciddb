@@ -204,6 +204,14 @@ public class PropertyTest extends TestCase
         prevString = props.booleanProp.setString("Yes");
         Assert.assertEquals(true, props.booleanProp.get());
 
+        // Leading and trailing spaces are ignored.
+        prevString = props.booleanProp.setString("  yes  ");
+        Assert.assertEquals(true, props.booleanProp.get());
+        prevString = props.booleanProp.setString("false   ");
+        Assert.assertEquals(false, props.booleanProp.get());
+        prevString = props.booleanProp.setString("true ");
+        Assert.assertEquals(true, props.booleanProp.get());
+
         // All other values mean false.
         prevString = props.booleanProp.setString("");
         Assert.assertEquals(false, props.booleanProp.get());
