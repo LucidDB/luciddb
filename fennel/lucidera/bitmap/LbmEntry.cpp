@@ -227,8 +227,10 @@ bool LbmEntry::setRIDNewSegment(LcsRid rid)
     currSegDescByte = pSegDescEnd;
     /*
      * This is a new segment, set number of segment byte to be one.
+     * Note that the stored length is actually (length - 1). So we
+     * store value zero here.
      */
-    *currSegDescByte = (uint8_t) (1 << LbmHalfByteSize);
+    *currSegDescByte = (uint8_t) 0;
 
     pSegDescEnd++;
     currSegDescLength = 1;
