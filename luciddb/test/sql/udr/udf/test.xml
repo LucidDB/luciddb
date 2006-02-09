@@ -37,7 +37,7 @@
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
-      <test name="udfTests" requiresRun="cr_source">
+      <test name="udfInvocation" requiresRun="cr_source">
         <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udf/udfInvocation.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
@@ -92,6 +92,46 @@
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
+      <test name="leftN" requiresRun="cr_source">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udf/leftn.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="rightN" requiresRun="cr_source">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udf/rightn.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="rand" requiresRun="cr_source">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udf/rand.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="cyQuarter" requiresRun="cr_source">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udf/cy_quarter.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="dayNumberOverall" requiresRun="cr_source">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udf/day_number_overall.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="cleanPhoneIntl" requiresRun="cr_source">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udf/clean_phone_intl.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="toDate" requiresRun="cr_source">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udf/to_date.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+<!--
+      <test name="sqlUdfTest">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udf/sqlUdfTest.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+-->
     </test-suite>
   </target>
 </project>

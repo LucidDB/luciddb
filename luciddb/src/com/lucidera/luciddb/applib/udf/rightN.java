@@ -23,41 +23,39 @@ package com.lucidera.luciddb.applib;
 import java.sql.Types;
 
 /**
- * Repeater returns the input string repeated N times
+ * rightN returns the last N characters of the string
  *
- * Ported from //bb/bb713/server/SQL/repeater.java
+ * Ported from //bb/bb713/server/SQL/rightN.java
  */
-public class repeater
+public class rightN
 {
+
     /**
      * Ported from //bb/bb713/server/SQL/BBString.java
-     *
-     * @param in String to be repeated
-     * @param times Number of times to repeat string
-     * @return The repeated string
+     * @param in Input string 
+     * @param len N number of characters to return
+     * @return New String with last N characters of the input string
      * @exception SQLException
      */
-    public static String FunctionExecute( String in, int times )
+    public static String FunctionExecute( String in, int len )
     {
-        if( times < 0 )
-            throw new IllegalArgumentException("repetition amount must be non-negative");
-
-        int len = in.length();
-
-        // clip maximum size of output to 64k
-        if ( ( times * len ) > ( 64 * 1024 ) )
-            times = ( 64 * 1024 ) / len;
-
-        char[] outArray = new char[ times * len ];
-        char[] inArray = in.toCharArray();
-
-        for( int i=0; i<times; i++ )
-        {
-            System.arraycopy( inArray, 0, outArray, i * len, len );
+        if( len < 0 ) {
+            throw new IllegalArgumentException("length must be non-negative");
         }
 
-        return new String( outArray );
+        // TODO: 
+	// Pre-allocate character arrays to reduce number of
+	// object instantiations when executing method on large
+	// result sets.
+        char[] chars = new char[ 2048 ];
+
+        int inlen = in.length();
+        int startPos = Math.max( inlen - len, 0 );
+        in.getChars( startPos, inlen, chars, 0 );
+
+        return new String( chars, 0, inlen - startPos );
     }
+
 }
 
-// End repeater.java
+// End rightN.java

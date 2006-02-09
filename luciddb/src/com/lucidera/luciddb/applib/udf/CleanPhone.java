@@ -18,7 +18,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package com.lucidera.luciddb.test.udr;
+package com.lucidera.luciddb.applib;
 
 import java.sql.Types;
 
@@ -33,12 +33,12 @@ import java.sql.Types;
 public class CleanPhone
 {
     /** Known format: Standard */
-    public static int STANDARD = 0;
+    public static final int STANDARD = 0;
     /** Known format: Parenthetical */
-    public static int PARENTHESIS = 1;
+    public static final int PARENTHESIS = 1;
 
     /** Format masks for known formats */
-    public static String[] KNOWN_FORMATS =
+    public static final String[] KNOWN_FORMATS =
     {
         "999-999-9999",
         "(999) 999-9999"
@@ -47,11 +47,6 @@ public class CleanPhone
     // Store format character array to reduce number of
     // object instantiations when executing method on large
     // result sets.
-    
-    private static int	m_iMaskLen;
-    private static char[] m_caMask;
-    private static char[] m_caReturn;
-    private static boolean m_bInitialized = false;
 
     /**
      * Convert a character to a digit.
@@ -113,13 +108,10 @@ public class CleanPhone
     private static String clean(String in, String mask)
         throws IllegalArgumentException
     {
-        // Initialize the format mask array.
-        // To improve performance, this is done only once.
-        if(!m_bInitialized) {
-            m_caMask = mask.toCharArray();
-            m_iMaskLen = m_caMask.length;
-            m_caReturn = new char[m_iMaskLen];
-        }
+        // TODO: for improved performance, initialize once 
+        char[] m_caMask = mask.toCharArray();
+        int m_iMaskLen = m_caMask.length;
+        char[] m_caReturn = new char[m_iMaskLen];
 
         int inPos = 0;
         for(int used=0; used<m_iMaskLen; used++) {

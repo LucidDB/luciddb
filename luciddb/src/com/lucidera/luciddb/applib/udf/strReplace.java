@@ -29,6 +29,14 @@ import java.sql.Types;
  */
 public class strReplace
 {
+    /**
+     * Ported from //bb/bb713/server/SQL/BBString.java strReplace method
+     * 
+     * @param in Input string
+     * @param oldStr String to be replaced in the input string
+     * @param newStr String to replace oldStr in the input string
+     * @return New String will all occurences of oldStr replaced with newStr
+     */
     public static String FunctionExecute( String in, String oldStr, String newStr )
     {
         if( ( in == null ) || ( oldStr == null ) )

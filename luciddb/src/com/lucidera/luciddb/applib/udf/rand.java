@@ -20,44 +20,35 @@
 */
 package com.lucidera.luciddb.applib;
 
+import java.util.Random;
 import java.sql.Types;
 
 /**
- * Repeater returns the input string repeated N times
+ * rand returns a random integer given a range of numbers.
  *
- * Ported from //bb/bb713/server/SQL/repeater.java
+ * Ported from //BB/bb713/server/SQL/rand.java
  */
-public class repeater
+public class rand
 {
-    /**
-     * Ported from //bb/bb713/server/SQL/BBString.java
-     *
-     * @param in String to be repeated
-     * @param times Number of times to repeat string
-     * @return The repeated string
-     * @exception SQLException
-     */
-    public static String FunctionExecute( String in, int times )
+    private static Random m_oRand;
+
+    public static int FunctionExecute( int minVal, int maxVal )
     {
-        if( times < 0 )
-            throw new IllegalArgumentException("repetition amount must be non-negative");
-
-        int len = in.length();
-
-        // clip maximum size of output to 64k
-        if ( ( times * len ) > ( 64 * 1024 ) )
-            times = ( 64 * 1024 ) / len;
-
-        char[] outArray = new char[ times * len ];
-        char[] inArray = in.toCharArray();
-
-        for( int i=0; i<times; i++ )
-        {
-            System.arraycopy( inArray, 0, outArray, i * len, len );
+        if( maxVal < minVal )
+            throw new IllegalArgumentException("random min must be less than max");
+        if (m_oRand == null) {
+            m_oRand = new Random();
         }
 
-        return new String( outArray );
+        // Generate a double precision number between 0 and 1
+        double randDbl = m_oRand.nextDouble();
+
+        // Now scale that number to the range minVal and maxVal
+        int randInt = minVal +
+            (int) Math.round( randDbl * (double) (maxVal - minVal) );
+
+        return randInt;
     }
 }
 
-// End repeater.java
+// End rand.java

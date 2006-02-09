@@ -1,0 +1,106 @@
+0: jdbc:luciddb:> -- $ ID: //open/lu/dev/luciddb/test/sql/udr/udf/leftn.sql#1 $
+0: jdbc:luciddb:> -- Tests for leftN UDF
+0: jdbc:luciddb:> set schema 'udftest';
+0: jdbc:luciddb:> set path 'udftest';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- define functions
+0: jdbc:luciddb:> create function leftN(str varchar(128), len integer)
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.applib.leftN.FunctionExecute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values leftN('The test string - chop off this portion', 15);
++------------------+
+|      EXPR$0      |
++------------------+
+| The test string  |
++------------------+
+0: jdbc:luciddb:> values leftN('and this?', 0);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values leftN('', 3);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- failures
+0: jdbc:luciddb:> values leftN('Here''s another one', -3);
+Error: java.lang.IllegalArgumentException: length must be non-negative (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create view with reference to leftN
+0: jdbc:luciddb:> create view cutcust as 
+. . . . . . . . > select leftN(fname, 5), leftN(lname, 3), leftN(phone, 7)
+. . . . . . . . > from customers
+. . . . . . . . > where sex = 'M';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from cutcust
+. . . . . . . . > order by 1;
++---------+---------+----------+
+| EXPR$0  | EXPR$1  |  EXPR$2  |
++---------+---------+----------+
+| Dirk    | Tre     | 8622399  |
+| Ephra   | Ves     | (321)34  |
+| Grego   | Pac     | (342) 2  |
+| Mark    | Wya     | 1234567  |
++---------+---------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select fname, leftN(sex, 20)
+. . . . . . . . > from customers
+. . . . . . . . > order by 1;
++---------------+---------+
+|     FNAME     | EXPR$1  |
++---------------+---------+
+| 2Tito1        | F       |
+| Dirk the 3rd  | M       |
+| Ephram        | M       |
+| Gregory       | M       |
+| Lilah         | F       |
+| Mark          | M       |
+| Mary          | F       |
++---------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- in expressions
+0: jdbc:luciddb:> select fname, leftN(phone, 7) || leftN(lname, 3) 
+. . . . . . . . > from customers
+. . . . . . . . > order by 1;
++---------------+-------------+
+|     FNAME     |   EXPR$1    |
++---------------+-------------+
+| 2Tito1        | 888 888     |
+| Dirk the 3rd  | 8622399Tre  |
+| Ephram        | (321)34Ves  |
+| Gregory       | (342) 2Pac  |
+| Lilah         |    234 Low  |
+| Mark          | 1234567Wya  |
+| Mary          | 234-456O B  |
++---------------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- nested
+0: jdbc:luciddb:> values leftN('Here is the original string.', 20);
++-----------------------+
+|        EXPR$0         |
++-----------------------+
+| Here is the original  |
++-----------------------+
+0: jdbc:luciddb:> values leftN(leftN('Here is the original string.', 20), 5);
++---------+
+| EXPR$0  |
++---------+
+| Here    |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- cleanup
+0: jdbc:luciddb:> -- should fail, cutcust dependent on it 
+0: jdbc:luciddb:> drop routine leftN;
+Error: Dropping routine "UDFTEST"."LEFTN" requires CASCADE because other objects still reference it (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- succeeds
+0: jdbc:luciddb:> drop view cutcust;
+0: jdbc:luciddb:> drop routine leftN;
+0: jdbc:luciddb:> !quit

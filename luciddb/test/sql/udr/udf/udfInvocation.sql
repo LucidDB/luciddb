@@ -12,13 +12,13 @@ create function replaceChar(str varchar(128), oldC varchar(128), newC varchar(12
 returns varchar(128)
 language java
 no sql
-external name 'class com.lucidera.luciddb.test.udr.CharReplace.FunctionExecute';
+external name 'class com.lucidera.luciddb.applib.CharReplace.FunctionExecute';
 
 create function replaceCharInt(str varchar(128), oldC integer, newC integer) 
 returns varchar(128)
 language java
 no sql
-external name 'class com.lucidera.luciddb.test.udr.CharReplace.FunctionExecute';
+external name 'class com.lucidera.luciddb.applib.CharReplace.FunctionExecute';
 
 values replaceChar('AA AA AA AA', 'A', 'B');
 values replaceChar('bb bb bb bb', 'b', 'A');
@@ -35,20 +35,20 @@ create function calcFiscalMonth(d Date, firstMo integer)
 returns integer
 language java
 no sql
-external name 'class com.lucidera.luciddb.test.udr.FYMonth.FunctionExecute';
+external name 'class com.lucidera.luciddb.applib.FYMonth.FunctionExecute';
 
 -- fails: cannot override function
 create function calcFiscalMonth(t Timestamp, firstMo integer) 
 returns integer
 language java
 no sql
-external name 'class com.lucidera.luciddb.test.udr.FYMonth.FunctionExecute';
+external name 'class com.lucidera.luciddb.applib.FYMonth.FunctionExecute';
 
 create function calcFiscalMonthT(t Timestamp, firstMo integer) 
 returns integer
 language java
 no sql
-external name 'class com.lucidera.luciddb.test.udr.FYMonth.FunctionExecute';
+external name 'class com.lucidera.luciddb.applib.FYMonth.FunctionExecute';
 
 values calcFiscalMonth(DATE '2005-10-12', 3);
 values calcFiscalMonth(DATE '2006-1-12', 1);
@@ -64,7 +64,7 @@ create function cleanPhone(num varchar(128))
 returns varchar(128)
 language java
 no sql
-external name 'class com.lucidera.luciddb.test.udr.CleanPhone.FunctionExecute';
+external name 'class com.lucidera.luciddb.applib.CleanPhone.FunctionExecute';
 
 values cleanPhone('1 2 3 4 5 6 7 8 9  0');
 values cleanPhone('123456789012');
@@ -73,7 +73,7 @@ create function cleanPhoneFormat(num varchar(128), format integer)
 returns varchar(128)
 language java
 no sql
-external name 'class com.lucidera.luciddb.test.udr.CleanPhone.FunctionExecute';
+external name 'class com.lucidera.luciddb.applib.CleanPhone.FunctionExecute';
 
 values cleanPhoneFormat('123 456 789 012', 1);
 values cleanPhoneFormat('123.456.7890', 0);
@@ -83,7 +83,7 @@ create function cleanPhoneFormRjct(num varchar(128), format integer, reject bool
 returns varchar(128)
 language java
 no sql
-external name 'class com.lucidera.luciddb.test.udr.CleanPhone.FunctionExecute';
+external name 'class com.lucidera.luciddb.applib.CleanPhone.FunctionExecute';
 
 values cleanPhoneFormRjct('1234567890', 1, true);
 values cleanPhoneFormRjct('123456789012', 1, false);
@@ -93,7 +93,7 @@ create function cleanPhoneFormRjct2(num varchar(128), format varchar(128), rejec
 returns varchar(128)
 language java
 no sql
-external name 'class com.lucidera.luciddb.test.udr.CleanPhone.FunctionExecute';
+external name 'class com.lucidera.luciddb.applib.CleanPhone.FunctionExecute';
 
 values cleanPhoneFormRjct2('aBcDeFgHiJkLm', '(999) 999 999 999 9', true);
 values cleanPhoneFormRjct2('1800TESTING', '9-999-999-9999', true);

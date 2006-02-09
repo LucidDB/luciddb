@@ -9,28 +9,28 @@ returns varchar(128)
 language java
 specific clean_phone_no_format
 no sql
-external name 'class com.lucidera.luciddb.test.udr.CleanPhone.FunctionExecute';
+external name 'class com.lucidera.luciddb.applib.CleanPhone.FunctionExecute';
 
 create function clean_phone(inStr varchar(128), format integer)
 returns varchar(128)
 language java
 specific clean_phone_int_format
 no sql
-external name 'class com.lucidera.luciddb.test.udr.CleanPhone.FunctionExecute';
+external name 'class com.lucidera.luciddb.applib.CleanPhone.FunctionExecute';
 
 create function clean_phone(inStr varchar(128), format integer, reject boolean)
 returns varchar(128)
 language java
 specific clean_phone_int_format_rejectable
 no sql
-external name 'class com.lucidera.luciddb.test.udr.CleanPhone.FunctionExecute';
+external name 'class com.lucidera.luciddb.applib.CleanPhone.FunctionExecute';
 
 create function clean_phone(inStr varchar(128), format varchar(128), reject boolean)
 returns varchar(128)
 language java
 specific clean_phone_str_format_rejectable
 no sql
-external name 'class com.lucidera.luciddb.test.udr.CleanPhone.FunctionExecute';
+external name 'class com.lucidera.luciddb.applib.CleanPhone.FunctionExecute';
 
 -- create view with references ro clean_phone
 create view fmtphone(fname, lname, phone1, phone2, phone3, phone4) as

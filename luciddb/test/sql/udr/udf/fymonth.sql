@@ -9,14 +9,14 @@ returns integer
 language java
 specific fymonth_date
 no sql
-external name 'class com.lucidera.luciddb.test.udr.FYMonth.FunctionExecute';
+external name 'class com.lucidera.luciddb.applib.FYMonth.FunctionExecute';
 
 create function fymonth(ts timestamp, fm integer)
 returns integer
 language java
 specific fymonth_ts
 no sql
-external name 'class com.lucidera.luciddb.test.udr.FYMonth.FunctionExecute';
+external name 'class com.lucidera.luciddb.applib.FYMonth.FunctionExecute';
 
 -- create view referencing fymonth
 create view fiscal_months(fm, from_date, from_ts) as
