@@ -1,0 +1,20 @@
+<project name="bh" default="simple-test">
+  <target name="simple-test">
+    <test-suite testunit="simple-test">
+
+      <init-hook>
+        <test name="restoreCatalog" testunit="init-test">
+          <ant-task>
+            <ant target="restoreCatalog"/>
+          </ant-task>
+        </test>
+      </init-hook>
+
+      <test name="compkeyins">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/compositekey/gen/${config.prop}/compkeyins.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+    </test-suite>
+  </target>
+</project>
