@@ -27,13 +27,20 @@
   <fail unless="open.dir" />
 
   <property environment="env" />
+  <!-- REVIEW: run.properties seems like something that should be global for -->
+  <!-- all tests. for instance, testfile being by default test.xml, testhome, -->
+  <!-- should probably be the current dir, etc. The prop config.prop may not -->
+  <!-- belong here, as well as the filter. Those should be in this ant file -->
   <property file="run.properties"/>
 
+  <!-- REVIEW: what is this used for? -->
   <taskdef name="var" classname="net.sf.antcontrib.property.Variable" classpath="${ant.classpath}"/>
 
   <!-- directory where sql is generated -->
   <property name="gensql.dir" value="${bench.dir}/gen" />
   <!-- directory where blackhawk output should go -->
+  <!--REVIEW: this should probably follow the convention of going into -->
+  <!--testlogs? -->
   <property name="bhlogs.dir" value="${bench.dir}/bh" />
   <!-- directory where the csv files are copied -->
   <property name="csv.dir" value="${bench.dir}/csv" />
@@ -86,6 +93,10 @@
   <target name="copy-csv">
     <delete dir="${csv.dir}"/>
     <copy todir="${csv.dir}" overwrite="true">
+      <!-- REVIEW: csvsource.dir shouldn't be defined in run.properties, since -->
+      <!-- it is a "build time" thing. Should probably just have it in this -->
+      <!-- build.xml file. Also, should check that it exists and print out some -->
+      <!-- message if missing-->
       <fileset dir="${csvsource.dir}"/>
     </copy>
   </target>
@@ -98,10 +109,33 @@
 
   <target name="testAllConfigs">
     <!-- oracle -->
+    <!-- REVIEW: I believe this var, config.prop is only used to determine the -->
+    <!-- log.basedir. Is it for anything else for the run? If this is the case -->
+    <!-- you can just use that value in bh.log.basedir, and not bother with setting -->
+    <!-- config.prop --->
     <var name="config.prop" value="prop.oracle"/>
+    <!-- REVIEW: I would have a target that generates all possible sql files, -->
+    <!-- and then have a test target that runs it. The advantage here is that -->
+    <!-- if someone runs bh standalone, they can, without trying to tease out -->
+    <!-- the generation manually, which will be hard. They only need to use a -->
+    <!-- filter to test what they want. -->
+    <!-- REVIEW: Is it possible for test all to simply be one bh call with no -->
+    <!-- filter? and then create separate targets as convenience to run bh with -->
+    <!-- filters. for instance testOracle, which will run bh with the oracle -->
+    <!-- filter. -->
     <antcall target="gen-sql"/>
+    <!-- REVIEW: shouldn't ${bench.dir}/bh be replaced by ${bhlogs.dir}? -->
     <var name="bh.log.basedir" value="${bench.dir}/bh/${config.prop}"/>
     <var name="bh.filter.dbs" value="oracle"/>
+    <!-- REVIEW: i notice that ${config.prop} is being passed to the bh for -->
+    <!-- inclusion in the test.xml. The danger here is that people will need to -->
+    <!-- know BH's behavior for this setting, which isn't  that hard, but still -->
+    <!-- requires some thought. The bigger issue is that the test cases will -->
+    <!-- not be unique. What might be even better is to generate the bh -->
+    <!-- test.xml files along with the sql files. At least at runtime, it's -->
+    <!-- easy to then follow the logic. Another option perhaps is to utilize -->
+    <!-- the name_prefix value rather than the name of the config file for -->
+    <!-- things such as test case name, and test case parameters. -->
     <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
 
     <!-- sqlserver -->
@@ -112,6 +146,7 @@
     <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
 
     <!-- csvjdbc -->
+    <!-- REVIEW: is there a need to copy-csv more than once? -->
     <antcall target="copy-csv"/>
     <var name="config.prop" value="prop.csvjdbc"/>
     <antcall target="gen-sql"/>
