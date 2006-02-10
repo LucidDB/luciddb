@@ -112,7 +112,7 @@
     <!-- REVIEW: I believe this var, config.prop is only used to determine the -->
     <!-- log.basedir. Is it for anything else for the run? If this is the case -->
     <!-- you can just use that value in bh.log.basedir, and not bother with setting -->
-    <!-- config.prop --->
+    <!-- config.prop -->
     <var name="config.prop" value="prop.oracle"/>
     <!-- REVIEW: I would have a target that generates all possible sql files, -->
     <!-- and then have a test target that runs it. The advantage here is that -->
