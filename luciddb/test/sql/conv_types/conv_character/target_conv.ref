@@ -3,7 +3,7 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> drop table datatype_target
 . . . . . . . . > ;
-0: jdbc:luciddb:> create table datatype_target(col char(22))
+0: jdbc:luciddb:> create table datatype_target(col char(15))
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into datatype_target
@@ -11,15 +11,15 @@
 . . . . . . . . > ;
 0: jdbc:luciddb:> select * from datatype_target
 . . . . . . . . > ;
-+-------------------------+
-|           COL           |
-+-------------------------+
-| 127                     |
-+-------------------------+
++------------------+
+|       COL        |
++------------------+
+| 127              |
++------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> drop table datatype_target
 . . . . . . . . > ;
-0: jdbc:luciddb:> create table datatype_target(col char(22))
+0: jdbc:luciddb:> create table datatype_target(col char(15))
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into datatype_target 
@@ -27,15 +27,15 @@
 . . . . . . . . > ;
 0: jdbc:luciddb:> select * from datatype_target
 . . . . . . . . > ;
-+-------------------------+
-|           COL           |
-+-------------------------+
-| 32767                   |
-+-------------------------+
++------------------+
+|       COL        |
++------------------+
+| 32767            |
++------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> drop table datatype_target
 . . . . . . . . > ;
-0: jdbc:luciddb:> create table datatype_target(col char(22))
+0: jdbc:luciddb:> create table datatype_target(col char(15))
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
@@ -44,15 +44,15 @@
 . . . . . . . . > ;
 0: jdbc:luciddb:> select * from datatype_target
 . . . . . . . . > ;
-+-------------------------+
-|           COL           |
-+-------------------------+
-| 2147483647              |
-+-------------------------+
++------------------+
+|       COL        |
++------------------+
+| 2147483647       |
++------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> drop table datatype_target
 . . . . . . . . > ;
-0: jdbc:luciddb:> create table datatype_target(col char(22))
+0: jdbc:luciddb:> create table datatype_target(col char(15))
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
@@ -61,49 +61,49 @@
 . . . . . . . . > ;
 0: jdbc:luciddb:> select * from datatype_target
 . . . . . . . . > ;
-+-------------------------+
-|           COL           |
-+-------------------------+
-| 2147483647              |
-+-------------------------+
++------------------+
+|       COL        |
++------------------+
+| 2147483647       |
++------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> drop table datatype_target
 . . . . . . . . > ;
-0: jdbc:luciddb:> create table datatype_target(col char(22))
+0: jdbc:luciddb:> create table datatype_target(col char(15))
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into datatype_target
 . . . . . . . . >  select cast(coldec as varchar(256)) from datatype_source
 . . . . . . . . > ;
-Error: From line 1, column 42 to line 1, column 47: Unknown identifier 'COLDEC' (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target
 . . . . . . . . > ;
-+------+
-| COL  |
-+------+
-+------+
++------------------+
+|       COL        |
++------------------+
+| 214748.3647      |
++------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> drop table datatype_target
 . . . . . . . . > ;
-0: jdbc:luciddb:> create table datatype_target(col char(22))
+0: jdbc:luciddb:> create table datatype_target(col char(15))
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into datatype_target
 . . . . . . . . >  select cast(colnum as varchar(256)) from datatype_source
 . . . . . . . . > ;
-Error: From line 1, column 42 to line 1, column 47: Unknown identifier 'COLNUM' (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target
 . . . . . . . . > ;
-+------+
-| COL  |
-+------+
-+------+
++------------------+
+|       COL        |
++------------------+
+| 214748.3647      |
++------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> drop table datatype_target
 . . . . . . . . > ;
-0: jdbc:luciddb:> create table datatype_target(col char(22))
+0: jdbc:luciddb:> create table datatype_target(col char(15))
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into datatype_target
@@ -111,15 +111,15 @@ Error: From line 1, column 42 to line 1, column 47: Unknown identifier 'COLNUM' 
 . . . . . . . . > ;
 0: jdbc:luciddb:> select * from datatype_target
 . . . . . . . . > ;
-+-------------------------+
-|           COL           |
-+-------------------------+
-| 4.2949672960000000E+09  |
-+-------------------------+
++------------------+
+|       COL        |
++------------------+
+| 4.294967296E9    |
++------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> drop table datatype_target
 . . . . . . . . > ;
-0: jdbc:luciddb:> create table datatype_target(col char(22))
+0: jdbc:luciddb:> create table datatype_target(col char(15))
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into datatype_target
@@ -127,15 +127,15 @@ Error: From line 1, column 42 to line 1, column 47: Unknown identifier 'COLNUM' 
 . . . . . . . . > ;
 0: jdbc:luciddb:> select * from datatype_target
 . . . . . . . . > ;
-+-------------------------+
-|           COL           |
-+-------------------------+
-| 4.2949672960000000E+09  |
-+-------------------------+
++------------------+
+|       COL        |
++------------------+
+| 4.294967296E9    |
++------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> drop table datatype_target
 . . . . . . . . > ;
-0: jdbc:luciddb:> create table datatype_target(col char(22))
+0: jdbc:luciddb:> create table datatype_target(col char(15))
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
@@ -144,10 +144,10 @@ Error: From line 1, column 42 to line 1, column 47: Unknown identifier 'COLNUM' 
 . . . . . . . . > ;
 0: jdbc:luciddb:> select * from datatype_target
 . . . . . . . . > ;
-+-------------------------+
-|           COL           |
-+-------------------------+
-| 4.2949672960000000E+09  |
-+-------------------------+
++------------------+
+|       COL        |
++------------------+
+| 4.294967E9       |
++------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit
