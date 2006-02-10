@@ -179,7 +179,9 @@ public class SargEndpoint implements Comparable<SargEndpoint>
         BigDecimal bdRounded = bd.setScale(
             dataType.getScale(),
             RoundingMode.HALF_UP);
-        coordinate = factory.getRexBuilder().makeExactLiteral(bdRounded);
+        coordinate = factory.getRexBuilder().makeExactLiteral(
+            bdRounded,
+            dataType);
 
         // The sign of roundingCompensation should be the opposite of the
         // rounding direction, so subtract post-rounding value from
