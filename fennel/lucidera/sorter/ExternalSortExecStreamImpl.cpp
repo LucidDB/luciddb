@@ -81,6 +81,10 @@ void ExternalSortExecStreamImpl::getResourceRequirements(
 
     // REVIEW
     minQuantity.nCachePages += 3;
+
+    // FIXME jvs 9-Feb-2006:  Just to speed things up a bit until
+    // we have proper budgeting.
+    minQuantity.nCachePages += 50;
     
     // TODO
     optQuantity = minQuantity;
@@ -401,6 +405,6 @@ void ExternalSortExecStreamImpl::unreserveRunLoader(
     runLoaderAvailable.notify_all();
 }
 
-FENNEL_END_CPPFILE("$Id: //open/lu/dev/fennel/lucidera/sorter/ExternalSortExecStreamImpl.cpp#1 $");
+FENNEL_END_CPPFILE("$Id$");
 
 // End ExternalSortExecStreamImpl.cpp
