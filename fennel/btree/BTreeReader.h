@@ -234,8 +234,7 @@ public:
     inline bool searchLast();
 
     /**
-     * Searches for a tuple in the tree with the given key.
-     * TODO:  duplicate handling
+     * Searches for a tuple in the tree based on the given key.
      *
      * @param key the key to search for
      *
@@ -245,8 +244,8 @@ public:
      * least upper bound of key; otherwise, it will position on tuple with
      * greatest lower bound
      *
-     * @return true if tuple found; false if not found, in which case
-     * reader is positioned on tuple depending on leastUpper parameter
+     * @return true if tuple found; false if not found, in which case reader is
+     * positioned on tuple depending on leastUpper parameter
      */
     bool searchForKey(TupleData const &key,DuplicateSeek dupSeek,
                       bool leastUpper = true);

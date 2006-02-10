@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/expressions/datatypes.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/expressions/datatypes.sql#2 $
 0: jdbc:farrago:> -- Test expressions with different datatypes
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- VARCHAR comparison
@@ -86,6 +86,58 @@
 'LIT1','LIT2','LIT3','LIT4'
 'pumpkin ','pie','','  '
 0: jdbc:farrago:> !set outputformat table
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- FRG-38:  boundary conditions with index on real datatype
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table rtable (r real primary key);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> insert into rtable values(1);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from rtable;
++------+
+|  R   |
++------+
+| 1.0  |
++------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from rtable where r <> 1.0;
++----+
+| R  |
++----+
++----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from rtable where r = 1.0;
++------+
+|  R   |
++------+
+| 1.0  |
++------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from rtable where r > 1.0;
++----+
+| R  |
++----+
++----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from rtable where r >= 1.0;
++------+
+|  R   |
++------+
+| 1.0  |
++------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from rtable where r < 1.0;
++----+
+| R  |
++----+
++----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from rtable where r <= 1.0;
++------+
+|  R   |
++------+
+| 1.0  |
++------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- End datatypes.sql
 0: jdbc:farrago:> 
