@@ -1,4 +1,4 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/udfInvocation.sql#5 $
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/udfInvocation.sql#6 $
 0: jdbc:luciddb:> -- Test queries with UDF invocations
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> set schema 'udftest';
@@ -193,5 +193,672 @@ Error: java.lang.IllegalArgumentException: null (state=,code=0)
 +-----------------+
 0: jdbc:luciddb:> values cleanPhoneFormRjct2('123-4567-890123', '(999)9999999', true);
 Error: java.lang.IllegalArgumentException: null (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Tests ported from 
+0: jdbc:luciddb:> -- //open/lu/dev/farrago/unitsql/expressions/udfInvocation.sql
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test basic SQL-defined function
+0: jdbc:luciddb:> create function celsius_to_fahrenheit(c double)
+. . . . . . . . > returns double
+. . . . . . . . > contains sql
+. . . . . . . . > return c*1.8 + 32;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test usage of rewritten builtin
+0: jdbc:luciddb:> create function coalesce2(x varchar(128),y varchar(128))
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > contains sql
+. . . . . . . . > return coalesce(x,y);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- should fail:  implicit cast not allowed
+0: jdbc:luciddb:> create function bad_atoi(x varchar(128))
+. . . . . . . . > returns integer
+. . . . . . . . > contains sql
+. . . . . . . . > return x;
+Error: Result expression type VARCHAR(128) from routine "UDFTEST"."BAD_ATOI" does not match declared return type INTEGER (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test that explicit cast does occur
+0: jdbc:luciddb:> create function good_atoi(x varchar(128))
+. . . . . . . . > returns integer
+. . . . . . . . > contains sql
+. . . . . . . . > return cast(x as integer);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test something mildly complicated
+0: jdbc:luciddb:> create function stirfry(x varchar(128))
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > contains sql
+. . . . . . . . > return case when x like 'A%' then upper(x)||'gator' else lower(x) end;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test CALLED ON NULL INPUT
+0: jdbc:luciddb:> create function replace_null(x varchar(128))
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > contains sql
+. . . . . . . . > called on null input
+. . . . . . . . > return coalesce(x,'null and void');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test RETURNS NULL ON NULL INPUT
+0: jdbc:luciddb:> create function dont_replace_null(x varchar(128))
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > contains sql
+. . . . . . . . > returns null on null input
+. . . . . . . . > return coalesce(x,'null and void');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test external Java function
+0: jdbc:luciddb:> create function noargs()
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.noargs';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function substring24(s varchar(128))
+. . . . . . . . > returns varchar(2)
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.substring24';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function prim_int_to_hex_string(i int)
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.toHexString';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function obj_int_to_hex_string(i int)
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > called on null input
+. . . . . . . . > external name 
+. . . . . . . . > 'class net.sf.farrago.test.FarragoTestUDR.toHexString(java.lang.Integer)';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function null_preserving_int_to_hex_string(i int)
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > returns null on null input
+. . . . . . . . > external name 
+. . . . . . . . > 'class net.sf.farrago.test.FarragoTestUDR.toHexString(java.lang.Integer)';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function decimal_abs(n decimal(6, 4)) 
+. . . . . . . . > returns decimal(6, 4)
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name
+. . . . . . . . > 'class net.sf.farrago.test.FarragoTestUDR.decimalAbs(java.math.BigDecimal)';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function atoi(s varchar(128))
+. . . . . . . . > returns int
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.atoi';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function atoi_with_null_for_err(s varchar(128))
+. . . . . . . . > returns int
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.atoiWithNullForErr';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function get_java_property(name varchar(128))
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class java.lang.System.getProperty';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create procedure set_java_property(in name varchar(128),in val varchar(128))
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.setSystemProperty';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function access_sql_illegal()
+. . . . . . . . > returns int
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.accessSql';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function access_sql_legal()
+. . . . . . . . > returns int
+. . . . . . . . > language java
+. . . . . . . . > contains sql
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.accessSql';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function throw_sql_exception()
+. . . . . . . . > returns int
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.throwSQLException';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function throw_npe()
+. . . . . . . . > returns int
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.throwNPE';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test a function that uses another function
+0: jdbc:luciddb:> create function celsius_to_rankine(c double)
+. . . . . . . . > returns double
+. . . . . . . . > contains sql
+. . . . . . . . > return celsius_to_fahrenheit(c) + 459.67;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- should fail:  we don't allow recursion
+0: jdbc:luciddb:> create function factorial(x integer)
+. . . . . . . . > returns integer
+. . . . . . . . > contains sql
+. . . . . . . . > return case when x = 1 then x else x*factorial(x-1) end;
+Error: Object definition contains recursive cycle (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- should fail:  we don't allow mutual recursion either
+0: jdbc:luciddb:> create schema crypto
+. . . . . . . . > create function alice(x double)
+. . . . . . . . > returns double
+. . . . . . . . > contains sql
+. . . . . . . . > return bob(x*13)
+. . . . . . . . > create function bob(x double)
+. . . . . . . . > returns double
+. . . . . . . . > contains sql
+. . . . . . . . > return alice(x/17);
+Error: Object definition contains recursive cycle (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test forward reference
+0: jdbc:luciddb:> create schema crypto2
+. . . . . . . . > create function alice(x double)
+. . . . . . . . > returns double
+. . . . . . . . > contains sql
+. . . . . . . . > return bob(x*13)
+. . . . . . . . > create function bob(x double)
+. . . . . . . . > returns double
+. . . . . . . . > contains sql
+. . . . . . . . > return x/17;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values celsius_to_fahrenheit(0);
++---------+
+| EXPR$0  |
++---------+
+| 32.0    |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values celsius_to_fahrenheit(100);
++---------+
+| EXPR$0  |
++---------+
+| 212.0   |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- should fail due to datatype mismatch
+0: jdbc:luciddb:> values celsius_to_fahrenheit('freezing');
+Error: From line 1, column 8 to line 1, column 40: No match found for function signature CELSIUS_TO_FAHRENHEIT(<CHARACTER>) (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values celsius_to_rankine(0);
++---------+
+| EXPR$0  |
++---------+
+| 491.67  |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values celsius_to_rankine(-273);
++---------------------+
+|       EXPR$0        |
++---------------------+
+| 0.2699999999999818  |
++---------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values coalesce2('hello','goodbye');
++---------+
+| EXPR$0  |
++---------+
+| hello   |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values coalesce2('hello',cast(null as varchar(128)));
++---------+
+| EXPR$0  |
++---------+
+| hello   |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values coalesce2(cast(null as varchar(128)),'goodbye');
++----------+
+|  EXPR$0  |
++----------+
+| goodbye  |
++----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values good_atoi('451');
++---------+
+| EXPR$0  |
++---------+
+| 451     |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- this should fail
+0: jdbc:luciddb:> values good_atoi('nineoneone');
+Error: Cannot assign 'nineoneone' to a NUMERIC value: NumberFormatException (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values stirfry('Alley');
++-------------+
+|   EXPR$0    |
++-------------+
+| ALLEYgator  |
++-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values stirfry('LaRa');
++---------+
+| EXPR$0  |
++---------+
+| lara    |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values replace_null('not null');
++-----------+
+|  EXPR$0   |
++-----------+
+| not null  |
++-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values replace_null(cast(null as varchar(128)));
++----------------+
+|     EXPR$0     |
++----------------+
+| null and void  |
++----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values dont_replace_null('not null');
++-----------+
+|  EXPR$0   |
++-----------+
+| not null  |
++-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values dont_replace_null(cast(null as varchar(128)));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values noargs();
++-----------------------------+
+|           EXPR$0            |
++-----------------------------+
+| get your kicks on route 66  |
++-----------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values substring24('superman');
++---------+
+| EXPR$0  |
++---------+
+| pe      |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- this should fail with a Java exception
+0: jdbc:luciddb:> values substring24(cast(null as varchar(128)));
+Error: java.lang.NullPointerException: null (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values prim_int_to_hex_string(255);
++---------+
+| EXPR$0  |
++---------+
+| ff      |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- this should fail with an SQL exception for NULL detected
+0: jdbc:luciddb:> values prim_int_to_hex_string(cast(null as integer));
+Error: Target "I" cannot be assigned null value (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values obj_int_to_hex_string(255);
++---------+
+| EXPR$0  |
++---------+
+| ff      |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- this should return 'nada'
+0: jdbc:luciddb:> values obj_int_to_hex_string(cast(null as integer));
++---------+
+| EXPR$0  |
++---------+
+| nada    |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values null_preserving_int_to_hex_string(255);
++---------+
+| EXPR$0  |
++---------+
+| ff      |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- this should return null
+0: jdbc:luciddb:> values null_preserving_int_to_hex_string(cast(null as integer));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:>     values decimal_abs(-54.1234);
++----------+
+|  EXPR$0  |
++----------+
+| 54.1234  |
++----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values atoi('451');
++---------+
+| EXPR$0  |
++---------+
+| 451     |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- this should fail with a Java exception
+0: jdbc:luciddb:> values atoi(cast(null as varchar(128)));
+Error: java.lang.NumberFormatException: null (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- this should fail with a Java exception
+0: jdbc:luciddb:> values atoi('Posey');
+Error: java.lang.NumberFormatException: For input string: "Posey" (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values atoi_with_null_for_err('451');
++---------+
+| EXPR$0  |
++---------+
+| 451     |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- this should return null
+0: jdbc:luciddb:> values atoi_with_null_for_err(cast(null as varchar(128)));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- this should return null
+0: jdbc:luciddb:> values atoi_with_null_for_err('Violet');
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> call set_java_property('net.sf.farrago.test.grue', 'lurker');
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values get_java_property('net.sf.farrago.test.grue');
++---------+
+| EXPR$0  |
++---------+
+| lurker  |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values access_sql_illegal();
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values access_sql_legal();
++---------+
+| EXPR$0  |
++---------+
+| 777     |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- should fail
+0: jdbc:luciddb:> values throw_sql_exception();
+Error: nothing but a failure (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- should fail
+0: jdbc:luciddb:> values throw_npe();
+Error: java.lang.NullPointerException: null (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set path 'crypto2';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values alice(12);
++--------------------+
+|       EXPR$0       |
++--------------------+
+| 9.176470588235293  |
++--------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values bob(19);
++---------------------+
+|       EXPR$0        |
++---------------------+
+| 1.1176470588235294  |
++---------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- verify path selection and overloading
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema v1
+. . . . . . . . > 
+. . . . . . . . > create function important_constant()
+. . . . . . . . > returns integer
+. . . . . . . . > contains sql
+. . . . . . . . > return 5
+. . . . . . . . > 
+. . . . . . . . > create function confusing(x integer)
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > specific confusing_integer
+. . . . . . . . > contains sql
+. . . . . . . . > return 'INTEGER:  '||cast(x as varchar(128))
+. . . . . . . . > 
+. . . . . . . . > create function confusing(x smallint)
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > specific confusing_smallint
+. . . . . . . . > contains sql
+. . . . . . . . > return 'SMALLINT:  '||cast(x as varchar(128))
+. . . . . . . . > 
+. . . . . . . . > create function confusing(x varchar(128))
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > specific confusing_varchar
+. . . . . . . . > contains sql
+. . . . . . . . > return 'VARCHAR:  '||x
+. . . . . . . . > 
+. . . . . . . . > create function confusing(x char(20))
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > specific confusing_char
+. . . . . . . . > contains sql
+. . . . . . . . > return 'CHAR:  '||x
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema v2
+. . . . . . . . > 
+. . . . . . . . > create function important_constant()
+. . . . . . . . > returns integer
+. . . . . . . . > contains sql
+. . . . . . . . > return 17
+. . . . . . . . > 
+. . . . . . . . > create function amusing(x smallint,y varchar(128))
+. . . . . . . . > returns integer
+. . . . . . . . > specific amusing1
+. . . . . . . . > contains sql
+. . . . . . . . > return 9
+. . . . . . . . > 
+. . . . . . . . > create function amusing(x bigint,y int)
+. . . . . . . . > returns integer
+. . . . . . . . > specific amusing2
+. . . . . . . . > contains sql
+. . . . . . . . > return 10
+. . . . . . . . > 
+. . . . . . . . > create function amusing(x int,y bigint)
+. . . . . . . . > returns integer
+. . . . . . . . > specific amusing3
+. . . . . . . . > contains sql
+. . . . . . . . > return 11
+. . . . . . . . > 
+. . . . . . . . > create function confusing(x integer)
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > specific confusing_integer
+. . . . . . . . > contains sql
+. . . . . . . . > return 'V2INTEGER:  '||cast(x as varchar(128))
+. . . . . . . . > 
+. . . . . . . . > create function "UPPER"(x integer)
+. . . . . . . . > returns integer
+. . . . . . . . > specific upper1
+. . . . . . . . > contains sql
+. . . . . . . . > return x+1
+. . . . . . . . > 
+. . . . . . . . > create function "UPPER"(x varchar(128))
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > specific upper2
+. . . . . . . . > contains sql
+. . . . . . . . > return x||'_plus_one'
+. . . . . . . . > 
+. . . . . . . . > create function "LOWER"(x integer)
+. . . . . . . . > returns integer
+. . . . . . . . > contains sql
+. . . . . . . . > return x-1
+. . . . . . . . > 
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set path 'v1';
+0: jdbc:luciddb:> values important_constant();
++---------+
+| EXPR$0  |
++---------+
+| 5       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values v2.important_constant();
++---------+
+| EXPR$0  |
++---------+
+| 17      |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set path 'v2';
+0: jdbc:luciddb:> values important_constant();
++---------+
+| EXPR$0  |
++---------+
+| 17      |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values v1.important_constant();
++---------+
+| EXPR$0  |
++---------+
+| 5       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set path 'v1,v2';
+0: jdbc:luciddb:> values important_constant();
++---------+
+| EXPR$0  |
++---------+
+| 5       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set path 'v2,v1';
+0: jdbc:luciddb:> values important_constant();
++---------+
+| EXPR$0  |
++---------+
+| 17      |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set path 'udftest';
+0: jdbc:luciddb:> -- should fail
+0: jdbc:luciddb:> values important_constant();
+Error: From line 1, column 8 to line 1, column 27: No match found for function signature IMPORTANT_CONSTANT() (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set path 'v1';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values confusing(5);
++--------------+
+|    EXPR$0    |
++--------------+
+| INTEGER:  5  |
++--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values confusing(cast(5 as tinyint));
++---------------+
+|    EXPR$0     |
++---------------+
+| SMALLINT:  5  |
++---------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values confusing('hello');
++------------------------------+
+|            EXPR$0            |
++------------------------------+
+| CHAR:  hello                 |
++------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values confusing(cast('hello' as varchar(5)));
++------------------+
+|      EXPR$0      |
++------------------+
+| VARCHAR:  hello  |
++------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set path 'v2,v1';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values confusing(5);
++----------------+
+|     EXPR$0     |
++----------------+
+| V2INTEGER:  5  |
++----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- v2 shouldn't hide the better match from v1 here
+0: jdbc:luciddb:> values confusing('hello');
++------------------------------+
+|            EXPR$0            |
++------------------------------+
+| CHAR:  hello                 |
++------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- verify that parameter filtering is left-to-right
+0: jdbc:luciddb:> values amusing(cast(null as smallint),cast(null as integer));
++---------+
+| EXPR$0  |
++---------+
+| 11      |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test resolution against builtins
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values upper(7);
++---------+
+| EXPR$0  |
++---------+
+| 8       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values upper('cobol');
++-----------------+
+|     EXPR$0      |
++-----------------+
+| cobol_plus_one  |
++-----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values information_schema."UPPER"('cobol');
++---------+
+| EXPR$0  |
++---------+
+| COBOL   |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values lower(7);
++---------+
+| EXPR$0  |
++---------+
+| 6       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values lower('COBOL');
++---------+
+| EXPR$0  |
++---------+
+| cobol   |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- should fail
+0: jdbc:luciddb:> values confusing(true);
+Error: From line 1, column 8 to line 1, column 22: No match found for function signature CONFUSING(<BOOLEAN>) (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit
