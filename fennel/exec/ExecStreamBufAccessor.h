@@ -506,7 +506,7 @@ inline PConstBuffer ExecStreamBufAccessor::getConsumptionEnd() const
 
 inline uint ExecStreamBufAccessor::getConsumptionAvailable() const
 {
-    return (pProducer > pConsumer)? (pProducer - pConsumer) : 0;
+    return getConsumptionEnd() - getConsumptionStart();
 }
 
 inline uint ExecStreamBufAccessor::getConsumptionTuplesAvailable()
@@ -561,7 +561,7 @@ inline PBuffer ExecStreamBufAccessor::getProductionEnd() const
 
 inline uint ExecStreamBufAccessor::getProductionAvailable() const
 {
-    return (pBufEnd > pProducer)? (pBufEnd - pProducer) : 0;
+    return pProducer? (pBufEnd - pProducer) : 0;
 }
 
 inline ExecStreamBufState ExecStreamBufAccessor::getState() const
