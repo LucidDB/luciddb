@@ -571,6 +571,20 @@ public class JmiChangeSet implements MDRPreChangeListener
             obj.refMofId(),
             action);
     }
+
+    /**
+     * Explicitly schedules an object for creation or modification (which one
+     * depends on the result of JmiChangeDispatcher.isNewObject).  This can be
+     * used to include objects for which events were not heard by the listener
+     * mechanism.
+     *
+     * @param obj object whose creation or modification is to be scheduled as
+     * part of this change
+     */
+    public void scheduleObject(RefObject obj)
+    {
+        scheduleModification(obj);
+    }
     
     //~ Inner Classes ---------------------------------------------------------
 
