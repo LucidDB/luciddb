@@ -369,11 +369,15 @@ ExecStreamResult LcsClusterAppendExecStream::Compress(
 
 void LcsClusterAppendExecStream::Close() 
 {
-    // free cache blocks and the arrays pointing to them
+#if 0
+    // FIXME zfong 10-Feb-2006 - once LcsClusterAppend has its own private
+    // scratch segment, deallocate its pages; otherwise, the call below
+    // deallocates all scratch pages associated with the stream graph
     if (scratchAccessor.pSegment) {
         scratchAccessor.pSegment->deallocatePageRange(
             NULL_PAGE_ID, NULL_PAGE_ID);
     }
+#endif
     m_rowBlock.reset();
     m_hashBlock.reset();
     m_builderBlock.reset();

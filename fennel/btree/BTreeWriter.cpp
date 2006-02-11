@@ -274,8 +274,6 @@ void BTreeWriter::splitNode(
     if (leftNode.height == 0) {
         // upperNodeAccessor is different from nodeAccessor.
         BTreeNodeAccessor &upperNodeAccessor = *pNonLeafNodeAccessor;
-        upperNodeAccessor.tupleAccessor.setCurrentTupleBuf(
-               splitTupleBuffer.get());
         nodeAccessor.unmarshalKey(upperNodeAccessor.tupleData);
         upperNodeAccessor.tupleData.back().pData =
            reinterpret_cast<PConstBuffer>(&pageId);
@@ -296,8 +294,6 @@ void BTreeWriter::splitNode(
     nodeAccessor.unmarshalKey(searchKeyData);
     if (leftNode.height == 0) {
         BTreeNodeAccessor &upperNodeAccessor = *pNonLeafNodeAccessor;
-        upperNodeAccessor.tupleAccessor.setCurrentTupleBuf(
-               parentTupleBuffer.get());
         nodeAccessor.unmarshalKey(upperNodeAccessor.tupleData);
         upperNodeAccessor.tupleData.back().pData =
            reinterpret_cast<PConstBuffer>(&newPageId);
