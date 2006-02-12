@@ -561,7 +561,7 @@ inline PBuffer ExecStreamBufAccessor::getProductionEnd() const
 
 inline uint ExecStreamBufAccessor::getProductionAvailable() const
 {
-    return getProductionEnd() - getProductionStart();
+    return pProducer? (pBufEnd - pProducer) : 0;
 }
 
 inline ExecStreamBufState ExecStreamBufAccessor::getState() const

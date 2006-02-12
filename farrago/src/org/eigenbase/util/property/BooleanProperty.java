@@ -94,7 +94,8 @@ public class BooleanProperty extends Property
      */
     public boolean get(boolean defaultValue)
     {
-        final String value = getInternal(Boolean.toString(defaultValue), false);
+        final String value = 
+            getInternal(Boolean.toString(defaultValue), false);
         if (value == null) {
             return defaultValue;
         }
