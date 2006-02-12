@@ -85,16 +85,16 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         DeviceMode openMode = baseMode;
         openMode.create = 1;
         openDevice(openMode,devName);
-        BOOST_CHECK_EQUAL(pRandomAccessDevice->getSizeInBytes(),ZERO_SIZE);
+        BOOST_CHECK_EQUAL(ZERO_SIZE, pRandomAccessDevice->getSizeInBytes());
         pRandomAccessDevice->setSizeInBytes(FULL_SIZE);
-        BOOST_CHECK_EQUAL(pRandomAccessDevice->getSizeInBytes(),FULL_SIZE);
+        BOOST_CHECK_EQUAL(FULL_SIZE, pRandomAccessDevice->getSizeInBytes());
         closeDevice();
         if (openMode.temporary) {
             return;
         }
         openMode.create = 0;
         openDevice(openMode,devName);
-        BOOST_CHECK_EQUAL(pRandomAccessDevice->getSizeInBytes(),FULL_SIZE);
+        BOOST_CHECK_EQUAL(FULL_SIZE, pRandomAccessDevice->getSizeInBytes());
         closeDevice();
     }
 
@@ -104,20 +104,20 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         DeviceMode openMode = baseMode;
         openMode.create = 1;
         openDevice(openMode,devName);
-        BOOST_CHECK_EQUAL(pRandomAccessDevice->getSizeInBytes(),ZERO_SIZE);
+        BOOST_CHECK_EQUAL(ZERO_SIZE, pRandomAccessDevice->getSizeInBytes());
         pRandomAccessDevice->setSizeInBytes(FULL_SIZE);
-        BOOST_CHECK_EQUAL(pRandomAccessDevice->getSizeInBytes(),FULL_SIZE);
+        BOOST_CHECK_EQUAL(FULL_SIZE, pRandomAccessDevice->getSizeInBytes());
         closeDevice();
         if (openMode.temporary) {
             return;
         }
         openMode.create = 0;
         openDevice(openMode,devName);
-        BOOST_CHECK_EQUAL(pRandomAccessDevice->getSizeInBytes(),FULL_SIZE);
+        BOOST_CHECK_EQUAL(FULL_SIZE, pRandomAccessDevice->getSizeInBytes());
         pRandomAccessDevice->setSizeInBytes(HALF_SIZE);
         closeDevice();
         openDevice(openMode,devName);
-        BOOST_CHECK_EQUAL(pRandomAccessDevice->getSizeInBytes(),HALF_SIZE);
+        BOOST_CHECK_EQUAL(HALF_SIZE, pRandomAccessDevice->getSizeInBytes());
         closeDevice();
     }
 
@@ -234,11 +234,23 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         DeviceMode openMode = baseMode;
         openMode.create = 1;
         openDevice(openMode,devName);
+        FileSize cbFile = cbOffset;
+        cbFile += n*cbSector;
+        pRandomAccessDevice->setSizeInBytes(cbFile);
+
+        // close and re-open to get the actual file size
+        if (!openMode.temporary) {
+            closeDevice();
+            openMode.create = 0;
+            openDevice(openMode,devName);
+            FileSize cbFileActual = pRandomAccessDevice->getSizeInBytes();
+            BOOST_CHECK_EQUAL(cbFile, cbFileActual);
+        }
+        
         pScheduler->registerDevice(pRandomAccessDevice);
         std::string s = "Four score and seven years ago.";
         char const *writeBuf = s.c_str();
         uint cb = s.size();
-        pRandomAccessDevice->setSizeInBytes(cbOffset + n*cbSector);
         
         Listener writeListener(n);
         RandomAccessRequest writeRequest;
@@ -254,7 +266,7 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         }
         pScheduler->schedule(writeRequest);
         writeListener.waitForAll();
-        BOOST_CHECK_EQUAL(writeListener.nSuccess,n);
+        BOOST_CHECK_EQUAL(n, writeListener.nSuccess);
         pRandomAccessDevice->flush();
         
         if (!openMode.temporary) {
@@ -279,7 +291,7 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         }
         pScheduler->schedule(readRequest);
         readListener.waitForAll();
-        BOOST_CHECK_EQUAL(readListener.nSuccess,n);
+        BOOST_CHECK_EQUAL(n, readListener.nSuccess);
         for (int i = 0; i < n; i++) {
             std::string s2(reinterpret_cast<char *>(pBuf + i*cbSector),cb);
             BOOST_CHECK_EQUAL(s,s2);
