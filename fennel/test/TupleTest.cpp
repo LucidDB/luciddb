@@ -55,6 +55,7 @@ class TupleTest : virtual public TestBase, public TraceSource
     void testStandardTypesNetworkNullable();
     void testStandardTypesNetworkNotNull();
     void testStandardTypes(TupleFormat,bool nullable);
+    void testDebugAccess();
 
     void traceTuple(TupleData const &tupleData)
     {
@@ -73,6 +74,10 @@ public:
         FENNEL_UNIT_TEST_CASE(TupleTest,testStandardTypesNullable);
         FENNEL_UNIT_TEST_CASE(TupleTest,testStandardTypesNetworkNotNull);
         FENNEL_UNIT_TEST_CASE(TupleTest,testStandardTypesNetworkNullable);
+
+        // This one should fail when TupleAccessor.cpp's DEBUG_TUPLE_ACCESS
+        // is set to 1.
+        FENNEL_EXTRA_UNIT_TEST_CASE(TupleTest,testDebugAccess);
     }
     
     virtual ~TupleTest()
@@ -422,6 +427,22 @@ void TupleTest::writeSampleData(TupleDatum &datum,uint typeOrdinal)
     default:
         assert(false);
     }
+}
+
+void TupleTest::testDebugAccess()
+{
+    StandardTypeDescriptorFactory typeFactory;
+
+    // Just to set up tupleAccessor
+    testStandardTypesNullable();
+
+    boost::scoped_array<FixedBuffer> buf(
+        new FixedBuffer[tupleAccessor.getMaxByteCount()]);
+    memset(buf.get(), 0, tupleAccessor.getMaxByteCount());
+    
+    // This should cause an assertion failure when TupleAccessor.cpp's
+    // DEBUG_TUPLE_ACCESS is set to 1.
+    tupleAccessor.setCurrentTupleBuf(buf.get());
 }
 
 FENNEL_UNIT_TEST_SUITE(TupleTest);

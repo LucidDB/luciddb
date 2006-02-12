@@ -42,8 +42,8 @@ CollectExecStreamTestSuite::CollectExecStreamTestSuite()
     descAttrInt64 = TupleAttributeDescriptor(stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
     descInt64.push_back(descAttrInt64);
     
-    descAttrVarbinary16 = TupleAttributeDescriptor(stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY),true,16);
-    descVarbinary16.push_back(descAttrVarbinary16);
+    descAttrVarbinary32 = TupleAttributeDescriptor(stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY),true,32);
+    descVarbinary32.push_back(descAttrVarbinary32);
 }
 
 void CollectExecStreamTestSuite::testCollectInts()
@@ -56,7 +56,7 @@ void CollectExecStreamTestSuite::testCollectInts()
     mockParams.pGenerator.reset(new RampExecStreamGenerator(1));
 
     CollectExecStreamParams collectParams;
-    collectParams.outputTupleDesc = descVarbinary16;
+    collectParams.outputTupleDesc = descVarbinary32;
 
     ExecStreamEmbryo mockStreamEmbryo;
     mockStreamEmbryo.init(new MockProducerExecStream(), mockParams);
@@ -68,7 +68,7 @@ void CollectExecStreamTestSuite::testCollectInts()
 
 
     // setup the expected result
-    uint8_t intArrayBuff[16];
+    uint8_t intArrayBuff[32];
     uint64_t one = 1;
     TupleData oneData(descInt64);
     oneData[0].pData = (PConstBuffer) &one;
@@ -88,10 +88,12 @@ void CollectExecStreamTestSuite::testCollectInts()
                         ((PBuffer)intArrayBuff)+oneAccessor.getMaxByteCount());
 
     uint8_t varbinaryBuff[1000];
-    TupleData binData(descVarbinary16);
+    TupleData binData(descVarbinary32);
     binData[0].pData = (PConstBuffer) intArrayBuff;
+    binData[0].cbData =
+        oneAccessor.getMaxByteCount() + twoAccessor.getMaxByteCount();
     TupleAccessor binAccessor;
-    binAccessor.compute(descVarbinary16);
+    binAccessor.compute(descVarbinary32);
     binAccessor.marshal(binData, (PBuffer) varbinaryBuff);
 
 
@@ -104,9 +106,9 @@ void CollectExecStreamTestSuite::testCollectInts()
 void CollectExecStreamTestSuite::testCollectUncollect()
 {
     StandardTypeDescriptorFactory stdTypeFactory;
-    uint rows = 511;
+    uint rows = 127;
 
-    TupleAttributeDescriptor tupleDescAttr(stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY),true,rows*sizeof(uint64_t));
+    TupleAttributeDescriptor tupleDescAttr(stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY),true,2*rows*sizeof(uint64_t));
     TupleDescriptor tupleDesc;
     tupleDesc.push_back(tupleDescAttr);
 
@@ -149,11 +151,11 @@ void CollectExecStreamTestSuite::testCollectCollectUncollectUncollect() {
     StandardTypeDescriptorFactory stdTypeFactory;
     uint rows = 3;
 
-    TupleAttributeDescriptor tupleDescAttr1(stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY),true,rows*sizeof(uint64_t));
+    TupleAttributeDescriptor tupleDescAttr1(stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY),true,2*rows*sizeof(uint64_t));
     TupleDescriptor vbDesc1;
     vbDesc1.push_back(tupleDescAttr1);
 
-    TupleAttributeDescriptor tupleDescAttr2(stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY),true,rows*rows*sizeof(uint64_t));
+    TupleAttributeDescriptor tupleDescAttr2(stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY),true,2*rows*rows*sizeof(uint64_t));
     TupleDescriptor vbDesc2;
     vbDesc2.push_back(tupleDescAttr2);
 

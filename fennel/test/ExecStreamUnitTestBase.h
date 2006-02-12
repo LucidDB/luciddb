@@ -167,21 +167,6 @@ protected:
         ExecStreamEmbryo &destStreamEmbryo,
         bool createSink = true,
         bool saveSrc = true);
-
-    /**
-     * Executes the prepared stream graph and verifies that its output
-     * is an expected-size run of constant bytes.
-     *
-     * @param stream output stream from which to read
-     *
-     * @param nBytesExpected number of bytes which stream should produce
-     *
-     * @param byteExpected constant value expected for each byte
-     */
-    void verifyConstantOutput(
-        ExecStream &stream,
-        uint nBytesExpected,
-        uint byteExpected);
     
     /**
      * Executes the prepared stream graph and verifies that its output

@@ -45,6 +45,14 @@ void FtrsTableWriterExecStream::prepare(
     actionType = params.actionType;
     pActionMutex = params.pActionMutex;
     assert(pActionMutex);
+    
+    TupleAccessor &outputTupleAccessor =
+        pOutAccessor->getScratchTupleAccessor();
+    TupleDescriptor const &outputTupleDesc = pOutAccessor->getTupleDesc();
+    outputTuple.compute(outputTupleDesc);
+    outputTuple[0].pData = reinterpret_cast<PBuffer>(&nTuples);
+    outputTupleBuffer.reset(
+        new FixedBuffer[outputTupleAccessor.getMaxByteCount()]);
 }
 
 void FtrsTableWriterExecStream::getResourceRequirements(
@@ -92,13 +100,17 @@ ExecStreamResult FtrsTableWriterExecStream::execute(
         // we've processed all input,  so commit what we've written
         // and return row count as our output
         commitSavepoint();
-        // REVIEW: The format for a 1-tuple with a single non-null uint64_t
-        // value is just the value itself (assuming alignment size no greater
-        // than 64-bit), which is why this works.  But it would be cleaner to
-        // set up a proper TupleAccessor.
+
+        // TODO jvs 11-Feb-2006:  Other streams (e.g.
+        // LcsClusterAppendExecStream) need to do something similar,
+        // so provide some utilities to make it easier.
+        TupleAccessor &outputTupleAccessor =
+            pOutAccessor->getScratchTupleAccessor();
+        outputTupleAccessor.marshal(outputTuple, outputTupleBuffer.get());
         pOutAccessor->provideBufferForConsumption(
-            reinterpret_cast<PConstBuffer>(&nTuples), 
-            reinterpret_cast<PConstBuffer>((&nTuples) + 1));
+            outputTupleBuffer.get(),
+            outputTupleBuffer.get()
+            + outputTupleAccessor.getCurrentByteCount());
         isDone = true;
         return EXECRC_BUF_OVERFLOW;
     }

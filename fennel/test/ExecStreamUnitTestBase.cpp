@@ -219,42 +219,12 @@ void ExecStreamUnitTestBase::tearDownExecStreamTest()
     pGraphEmbryo.reset();
 }
 
-void ExecStreamUnitTestBase::verifyConstantOutput(
-    ExecStream &stream,
-    uint nBytesExpected,
-    uint byteExpected)
-{
-    pGraph->open();
-    pScheduler->start();
-    uint nBytesTotal = 0;
-    for (;;) {
-        ExecStreamBufAccessor &bufAccessor =
-            pScheduler->readStream(stream);
-        if (bufAccessor.getState() == EXECBUF_EOS) {
-            break;
-        }
-        BOOST_REQUIRE(bufAccessor.isConsumptionPossible());
-        uint nBytes = bufAccessor.getConsumptionAvailable();
-        nBytesTotal += nBytes;
-        for (uint i = 0; i < nBytes; ++i) {
-            uint c = bufAccessor.getConsumptionStart()[i];
-            if (c != byteExpected) {
-                BOOST_CHECK_EQUAL(byteExpected,c);
-                return;
-            }
-        }
-        bufAccessor.consumeData(bufAccessor.getConsumptionEnd());
-    }
-    BOOST_CHECK_EQUAL(nBytesExpected,nBytesTotal);
-}
-
 void ExecStreamUnitTestBase::verifyOutput(
     ExecStream &stream,
     uint nRowsExpected,
     MockProducerExecStreamGenerator &generator)
 {
-    // TODO:  assertions about output tuple, or better yet, use proper tuple
-    // access
+    // TODO:  assertions about output tuple
     
     pGraph->open();
     pScheduler->start();
@@ -298,11 +268,10 @@ void ExecStreamUnitTestBase::verifyOutput(
 
 void ExecStreamUnitTestBase::verifyConstantOutput(
     ExecStream &stream, 
-    const TupleData  &expectedTuple,
+    const TupleData &expectedTuple,
     uint nRowsExpected)
 {
-    // TODO:  assertions about output tuple, or better yet, use proper tuple
-    // access
+    // TODO:  assertions about output tuple
     
     pGraph->open();
     pScheduler->start();
