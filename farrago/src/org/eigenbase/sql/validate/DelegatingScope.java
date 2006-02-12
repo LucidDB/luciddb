@@ -38,7 +38,7 @@ import java.util.List;
  * @version $Id$
  * @since Mar 25, 2003
  */
-abstract class DelegatingScope implements SqlValidatorScope 
+public abstract class DelegatingScope implements SqlValidatorScope
 {
     /**
      * Parent scope. This is where to look next to resolve an identifier;
@@ -197,6 +197,11 @@ abstract class DelegatingScope implements SqlValidatorScope
     public SqlNodeList getOrderList()
     {
         return parent.getOrderList();
+    }
+
+    public SqlValidatorScope getParent()
+    {
+        return parent;
     }
 }
 
