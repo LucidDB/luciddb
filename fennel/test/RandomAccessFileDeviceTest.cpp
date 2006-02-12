@@ -121,6 +121,14 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         closeDevice();
     }
 
+    void testLargeFile()
+    {
+        // Create a 5G file in order to test beyond 32-bit unsigned.
+        FileSize cbOffset = 0x40000000; // 1G
+        cbOffset *= 5;
+        testAsyncIO(cbOffset);
+    }
+
     class Listener
     {
         StrictMutex mutex;
@@ -196,12 +204,19 @@ class RandomAccessFileDeviceTest : virtual public TestBase
 
     void testAsyncIO()
     {
+        testAsyncIO(0);
+    }
+
+    void testAsyncIO(FileSize cbOffset)
+    {
         int n = 5;
         uint cbSector = HALF_SIZE;
         VMAllocator allocator(cbSector*n);
         void *pBuf = allocator.allocate();
         try {
-            testAsyncIOImpl(n, cbSector, reinterpret_cast<PBuffer>(pBuf));
+            testAsyncIOImpl(
+                n, cbSector, reinterpret_cast<PBuffer>(pBuf),
+                cbOffset);
         } catch (...) {
             allocator.deallocate(pBuf);
             throw;
@@ -209,7 +224,8 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         allocator.deallocate(pBuf);
     }
     
-    void testAsyncIOImpl(int n, uint cbSector, PBuffer pBuf)
+    void testAsyncIOImpl(
+        int n, uint cbSector, PBuffer pBuf, FileSize cbOffset = 0)
     {
         DeviceAccessScheduler *pScheduler =
             DeviceAccessScheduler::newScheduler(schedParams);
@@ -222,12 +238,12 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         std::string s = "Four score and seven years ago.";
         char const *writeBuf = s.c_str();
         uint cb = s.size();
-        pRandomAccessDevice->setSizeInBytes(n*cbSector);
+        pRandomAccessDevice->setSizeInBytes(cbOffset + n*cbSector);
         
         Listener writeListener(n);
         RandomAccessRequest writeRequest;
         writeRequest.pDevice = pRandomAccessDevice.get();
-        writeRequest.cbOffset = 0;
+        writeRequest.cbOffset = cbOffset;
         writeRequest.cbTransfer=n*cbSector;
         writeRequest.type = RandomAccessRequest::WRITE;
         memcpy(pBuf, writeBuf, cb);
@@ -252,7 +268,7 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         Listener readListener(n);
         RandomAccessRequest readRequest;
         readRequest.pDevice = pRandomAccessDevice.get();
-        readRequest.cbOffset = 0;
+        readRequest.cbOffset = cbOffset;
         readRequest.cbTransfer=n*cbSector;
         readRequest.type = RandomAccessRequest::READ;
         for (int i = 0; i < n; i++) {
@@ -282,6 +298,12 @@ public:
         FENNEL_UNIT_TEST_CASE(RandomAccessFileDeviceTest,testPermanentNoDirect);
         FENNEL_UNIT_TEST_CASE(RandomAccessFileDeviceTest,testTemporary);
         FENNEL_UNIT_TEST_CASE(RandomAccessFileDeviceTest,testPermanentDirect);
+
+        // NOTE jvs 11-Feb-2006:  This is optional since it creates
+        // a 5G file.  On operating systems with sparse-file support, it
+        // doesn't actually take up that much disk space.
+        FENNEL_EXTRA_UNIT_TEST_CASE(
+            RandomAccessFileDeviceTest,testLargeFile);
     }
     
     void testPermanentNoDirect()
