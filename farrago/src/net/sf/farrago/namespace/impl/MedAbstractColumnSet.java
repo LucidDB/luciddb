@@ -27,10 +27,15 @@ import java.util.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.query.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.catalog.*;
 
+import org.eigenbase.rex.*;
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.sql.SqlAccessType;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
 
 
 /**
@@ -168,6 +173,70 @@ public abstract class MedAbstractColumnSet extends RelOptAbstractTable
     public void setAllowedAccess(SqlAccessType allowedAccess)
     {
         this.allowedAccess = allowedAccess;
+    }
+
+    /**
+     * Provides an implementation of the toRel interface method
+     * in terms of an underlying UDX.
+     */
+    protected RelNode toUdxRel(
+        RelOptCluster cluster,
+        RelOptConnection connection,
+        String udxSpecificName,
+        RexNode [] args)
+    {
+        // Parse the specific name of the UDX.
+        SqlIdentifier udxId;
+        try {
+            SqlParser parser = new SqlParser(udxSpecificName);
+            SqlNode parsedId = parser.parseExpression();
+            udxId = (SqlIdentifier) parsedId;
+        } catch (Exception ex) {
+            throw FarragoResource.instance().MedInvalidUdxId.ex(
+                udxSpecificName,
+                ex);
+        }
+
+        // Look up the UDX in the catalog.
+        List list =
+            getPreparingStmt().getSqlOperatorTable().lookupOperatorOverloads(
+                udxId,
+                SqlFunctionCategory.UserDefinedSpecificFunction,
+                SqlSyntax.Function);
+        FarragoUserDefinedRoutine udx = null;
+        if (list.size() == 1) {
+            Object obj = list.iterator().next();
+            if (obj instanceof FarragoUserDefinedRoutine) {
+                udx = (FarragoUserDefinedRoutine) obj;
+                if (!FarragoCatalogUtil.isTableFunction(udx.getFemRoutine())) {
+                    // Not a UDX.
+                    udx = null;
+                }
+            }
+        }
+        if (udx == null) {
+            throw FarragoResource.instance().MedUnknownUdx.ex(
+                udxId.toString());
+        }
+
+        // UDX wants all types nullable, so construct a corresponding
+        // type descriptor for the result of the call.
+        RexBuilder rexBuilder = cluster.getRexBuilder();
+        RelDataTypeFactory typeFactory = rexBuilder.getTypeFactory();
+        RelDataType resultType = typeFactory.createTypeWithNullability(
+            getRowType(), true);
+        
+        // Create a relational algebra expression for invoking the UDX.
+        RexNode rexCall = rexBuilder.makeCall(udx, args);
+        RelNode udxRel =
+            new FarragoJavaUdxRel(cluster, rexCall, resultType);
+
+        // Optimizer wants us to preserve original types,
+        // so cast back for the final result.
+        return RelOptUtil.createCastRel(
+            udxRel,
+            getRowType(),
+            true);
     }
 }
 
