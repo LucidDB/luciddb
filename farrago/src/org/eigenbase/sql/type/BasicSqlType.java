@@ -165,6 +165,8 @@ public class BasicSqlType extends AbstractSqlType
                 // farrago supports only 0 (see SqlTypeName.getDefaultPrecision),
                 // but it should be 6 (microseconds) per SQL99 part 2 section 6.1 syntax rule 30.
                 return 0;  
+            case SqlTypeName.Date_ordinal:
+                return 0;
             default:
                 throw Util.newInternal("type "+typeName+" does not have a precision");
             }
