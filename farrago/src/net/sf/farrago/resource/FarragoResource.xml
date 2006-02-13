@@ -601,6 +601,10 @@ column type family is {1} but default value type family is {2}</text>
 <text>Value ''{0}'' is out of range for parameter of type {1}</text>
 </exception>
 
+<exception id="450023" name="ParameterValueInvalidFormat">
+<text>Value ''{0}'' cannot be converted to parameter of type {1}</text>
+</exception>
+
 <exception id="450030" name="NoDefaultConnection">
 <text>Default connection not available</text>
 </exception>
