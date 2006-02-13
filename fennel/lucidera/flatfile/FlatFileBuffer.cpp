@@ -77,6 +77,10 @@ void FlatFileBuffer::open()
 }
 
 /**
+ * REVIEW zfong 13-Feb-2006: This class is also defined in 
+ * FlatFileExecStreamImpl.cpp. Does it need to be duplicated?
+ */
+/**
  * Specifies parameters for flat file read requests
  */
 class FlatFileBinding : public RandomAccessRequestBinding
