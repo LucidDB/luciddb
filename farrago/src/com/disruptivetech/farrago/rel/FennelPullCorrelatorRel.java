@@ -111,7 +111,7 @@ public class FennelPullCorrelatorRel extends FennelDoubleRel
     {
         return JoinRel.deriveJoinRowType(
             left.getRowType(), right.getRowType(), JoinRelType.INNER,
-            getCluster().getTypeFactory());
+            getCluster().getTypeFactory(), null);
     }
 
     // implement FennelRel

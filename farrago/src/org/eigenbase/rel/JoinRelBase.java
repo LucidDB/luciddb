@@ -151,14 +151,15 @@ public abstract class JoinRelBase extends AbstractRelNode
     {
         return deriveJoinRowType(
             left.getRowType(), right.getRowType(), joinType,
-            getCluster().getTypeFactory());
+            getCluster().getTypeFactory(), null);
     }
 
     public static RelDataType deriveJoinRowType(
         RelDataType leftType,
         RelDataType rightType,
         JoinRelType joinType,
-        RelDataTypeFactory typeFactory)
+        RelDataTypeFactory typeFactory,
+        List<String> fieldNameList)
     {
         switch (joinType) {
         case LEFT:
@@ -178,18 +179,43 @@ public abstract class JoinRelBase extends AbstractRelNode
         default:
             break;
         }
-        return createJoinType(typeFactory, leftType, rightType);
+        return createJoinType(typeFactory, leftType, rightType, fieldNameList);
     }
 
+    /**
+     * Returns the type of joining two relations. The result type consists of
+     * the fields of the left type plus the fields of the right type. The
+     * field name list, if present, overrides the original names of the fields.
+     *
+     * @param typeFactory Type factory
+     * @param leftType Type of left input to join
+     * @param rightType Type of right input to join
+     * @param fieldNameList If not null, overrides the original names of the
+     *                 fields
+     * @return
+     * @pre fieldNameList == null ||
+     *   fieldNameList.size() ==
+     *   leftType.getFields().length +
+     *   rightType.getFields().length
+     */
     public static RelDataType createJoinType(
         RelDataTypeFactory typeFactory,
         RelDataType leftType,
-        RelDataType rightType)
+        RelDataType rightType,
+        List<String> fieldNameList)
     {
+        assert fieldNameList == null ||
+            fieldNameList.size() ==
+            leftType.getFields().length +
+            rightType.getFields().length;
         List<String> nameList = new ArrayList<String>();
         List<RelDataType> typeList = new ArrayList<RelDataType>();
         addFields(leftType, typeList, nameList);
         addFields(rightType, typeList, nameList);
+        if (fieldNameList != null) {
+            assert fieldNameList.size() == nameList.size();
+            nameList = fieldNameList;
+        }
         return typeFactory.createStructType(typeList, nameList);
     }
 

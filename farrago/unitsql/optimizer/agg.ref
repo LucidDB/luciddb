@@ -206,10 +206,10 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[DEPTNO, GENDER, EXPR$2, EXPR$3]])'
-'    FennelAggRel(groupCount=[2], agg#0=[MIN(2)], agg#1=[MAX(3)])'
+'    FennelAggRel(groupCount=[2], agg#0=[MIN(2)], agg#1=[MAX(2)])'
 '      FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
-'        FennelRenameRel(fieldNames=[[$f0, $f1, $f2, $f3]])'
-'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 3, 6, 6]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'        FennelRenameRel(fieldNames=[[$f0, $f1, $f2]])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 3, 6]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select sum(age) from emps group by deptno;

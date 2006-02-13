@@ -28,6 +28,9 @@ import net.sf.farrago.fem.fennel.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.util.Util;
+
+import java.util.List;
 
 
 /**
@@ -49,16 +52,22 @@ class FennelCartesianProductRel extends FennelDoubleRel
      * @param cluster RelOptCluster for this rel
      * @param left left input
      * @param right right input
+     * @param fieldNameList If not null, the row type will have these field
+     *                      names
      */
     public FennelCartesianProductRel(
         RelOptCluster cluster,
         RelNode left,
         RelNode right,
-        JoinRelType joinType)
+        JoinRelType joinType,
+        List<String> fieldNameList)
     {
         super(cluster, left, right);
         assert joinType != null;
         this.joinType = joinType;
+        this.rowType = JoinRel.deriveJoinRowType(
+            left.getRowType(), right.getRowType(), joinType,
+            cluster.getTypeFactory(), fieldNameList);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -66,11 +75,13 @@ class FennelCartesianProductRel extends FennelDoubleRel
     // implement Cloneable
     public Object clone()
     {
-        FennelCartesianProductRel clone = new FennelCartesianProductRel(
-            getCluster(),
-            RelOptUtil.clone(left),
-            RelOptUtil.clone(right),
-            joinType);
+        FennelCartesianProductRel clone =
+            new FennelCartesianProductRel(
+                getCluster(),
+                RelOptUtil.clone(left),
+                RelOptUtil.clone(right),
+                joinType,
+                RelOptUtil.getFieldNameList(rowType));
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -107,9 +118,7 @@ class FennelCartesianProductRel extends FennelDoubleRel
     // implement RelNode
     protected RelDataType deriveRowType()
     {
-        return JoinRel.deriveJoinRowType(
-            left.getRowType(), right.getRowType(), joinType,
-            getCluster().getTypeFactory());
+        throw Util.newInternal("row type should have been set already");
     }
 
     // implement FennelRel

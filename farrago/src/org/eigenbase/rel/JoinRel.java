@@ -31,6 +31,20 @@ import org.eigenbase.rex.*;
 /**
  * A JoinRel represents two relational expressions joined according to some
  * condition.
+ *
+ * <p>Some rules:<ul>
+ *
+ * <li>{@link ExtractJoinFilterRule}  converts an {@link JoinRel inner join} to
+ *     a {@link FilterRel filter} on top of a
+ *     {@link JoinRel cartesian inner join}.
+ *
+ * <li>{@link net.sf.farrago.query.FennelCartesianJoinRule} implements a
+ *     JoinRel as a cartesian product.
+ *
+ * </ul>
+ *
+ * @version $Id$
+ * @author jhyde
  */
 public final class JoinRel extends JoinRelBase
 {

@@ -105,6 +105,8 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
         CalcVirtualMachine calcVM)
     {
         planner.addRule(new RemoveDistinctRule());
+        planner.addRule(RemoveDistinctAggregateRule.instance);
+        planner.addRule(ExtractJoinFilterRule.instance);
         planner.addRule(new UnionToDistinctRule());
         planner.addRule(new UnionEliminatorRule());
         // for set operations, we coerce names to match so that
