@@ -24,7 +24,7 @@
 # an existing one after syncing changes from source control.
 
 usage() {
-    echo "Usage:  initBuild.sh --with[out]-fennel [--with[out]-optimization] [--with[out]-debug] [--skip-fennel[-thirdparty]-build] [--with[out]-tests]"
+    echo "Usage:  initBuild.sh --with[out]-fennel [--with[out]-optimization] [--with[out]-debug] [--without-fennel[-thirdparty]-build] [--with[out]-tests]"
 }
 
 fennel_flag_missing=true
@@ -41,8 +41,10 @@ while [ -n "$1" ]; do
         --without-fennel) fennel_disabled=true;;
         --with?(out)-optimization) OPT_FLAG="$1";;
         --with?(out)-debug) DEBUG_FLAG="$1";;
-        --skip-fennel-build) fennel_skip_build=true;;
-        --skip-fennel-thirdparty-build) FENNEL_BUILD_FLAG="$1";;
+        --skip-fennel-build|--without-fennel-build) 
+            fennel_skip_build=true;;
+        --skip-fennel-thirdparty-build|--without-fennel-thirdparty-build) 
+            FENNEL_BUILD_FLAG="$1";;
         --with-tests)
             skip_tests=false;
             TEST_FLAG="$1";;

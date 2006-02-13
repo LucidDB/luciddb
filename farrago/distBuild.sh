@@ -26,7 +26,7 @@
 # it has poor support for symlinks and file permissions.
 
 usage() {
-    echo "Usage:  distBuild.sh [--skip-init-build]"
+    echo "Usage:  distBuild.sh [--without-init-build]"
 }
 
 if [ ! -e dist/FarragoRelease.properties ]; then
@@ -55,7 +55,8 @@ dist_fennel=true
 
 while [ -n "$1" ]; do
     case $1 in
-        --skip-init-build) init_build=false;;
+        --skip-init-build|--without-init-build) 
+            init_build=false;;
         *) usage; exit -1;;
     esac
     shift
