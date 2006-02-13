@@ -34,7 +34,6 @@ LDADD = \
 	-L$(top_builddir)/lucidera/libfennel_lu \
 	-L$(top_builddir)/disruptivetech/libfennel_dt \
 	-l$(TEST_LIB) \
-	-lfennel_lu_bitmap \
 	-lfennel_lu_colstore \
 	-lfennel_lu_flatfile \
 	-lfennel_lu_sorter \
