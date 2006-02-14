@@ -18,7 +18,4 @@ if [ "!" -d build/aspen ]; then
     mkdir build/aspen
 fi
 
-# can't specify this in config.xml...
-export P4PASSWD=$CRUISE_P4PASSWD
-
-nice cruisecontrol.sh -configfile config-chumley.xml -port 8080
+cruisecontrol.sh -configfile config-chelmsford.xml -port 8080

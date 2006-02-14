@@ -12,14 +12,14 @@
 
 
 		<!-- Defines where cruise looks for changes, to decide whether to run the build -->
-		<modificationset quietperiod="3600">
+		<modificationset quietperiod="300">
 			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/farrago/..."/>
 			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/saffron/..."/>
 		</modificationset>
 
 
 		<!-- Configures the actual build loop, how often and which build file/target -->
-		<schedule interval="&build_interval;">
+		<schedule interval="&build_interval_slow;">
 			<ant buildfile="build-saffron.xml" uselogger="true" usedebug="false" antscript="&ant;" target="integration-build-and-test">
 			    <property name="open_propfile" value="&open_propfile;"/>
 			    <property name="open_root" value="&open_root;"/>
