@@ -7,6 +7,8 @@
 <!ENTITY open_p4user     "guest">
 <!ENTITY open_root       "//open/dt/dev">
 <!ENTITY open_propfile   "chelmsford.perforce.properties">
+<!ENTITY open_default.build.home     "/home/cruise/cruisecontrol">
+<!ENTITY open_integration.build.home "/home/cruise/cruisecontrol/bootstrap/build">
 
 <!ENTITY aspen_p4port    "chumley:1667">
 <!ENTITY aspen_p4client  "cruise.chelmsford">
@@ -30,8 +32,8 @@
 <!ENTITY rsync_cmd        "rsync -az -e &quot;ssh -p 8022&quot; --delete-after">
 <!ENTITY rsync_dest       "aspen@jhyde.dyndns.org:web/artifacts">
 
-<!ENTITY build_interval   "300">
-<!ENTITY build_interval_slow   "3600">
+<!ENTITY build_interval         "3600">
+<!ENTITY build_interval_aspen   "300">
 
 <!ENTITY ant              "./doant.sh">
 
