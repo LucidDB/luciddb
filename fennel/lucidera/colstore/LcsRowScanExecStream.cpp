@@ -20,6 +20,7 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
+#include "fennel/tuple/StandardTypeDescriptor.h"
 #include "fennel/lucidera/colstore/LcsRowScanExecStream.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 
@@ -32,13 +33,23 @@ void LcsRowScanExecStream::prepare(LcsRowScanExecStreamParams const &params)
     inputTuple.compute(pInAccessor->getTupleDesc());
 
     // setup tuple data for input stream
-    // for now, assume the input stream is a stream of rids; 
-    // this will be changed to a bitmap later
     ridTupleData.compute(pInAccessor->getTupleDesc());
+
+#if 0
+    // TODO zfong 1-Feb-2006: enable these asserts once the java side is
+    // changed to pass bitmap segments
+    //
+    // validate input stream parameters
+    TupleDescriptor inputDesc = pInAccessor->getTupleDesc();
+    assert(inputDesc.size() == 3);
+    StandardTypeDescriptorFactory stdTypeFactory;
+    TupleAttributeDescriptor expectedRidDesc(
+        stdTypeFactory.newDataType(STANDARD_TYPE_RECORDNUM));
+    assert(inputDesc[0] == expectedRidDesc);
+#endif
 
     assert(projDescriptor == pOutAccessor->getTupleDesc());
     pOutAccessor->setTupleShape(projDescriptor);
-
     outputTupleData.computeAndAllocate(projDescriptor);
 }
 
@@ -49,6 +60,7 @@ void LcsRowScanExecStream::open(bool restart)
     tupleFound = false;
     nRidsRead = 0;
     fullTableScan = false;
+    ridReader.init(pInAccessor, ridTupleData);
 }
 
 void LcsRowScanExecStream::getResourceRequirements(
@@ -77,12 +89,13 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
 
         while (!producePending) {
             if (!fullTableScan) {
-                if (!pInAccessor->demandData()) {
-                    return EXECRC_BUF_UNDERFLOW;
+                ExecStreamResult rc = ridReader.readRidAndAdvance(rid);
+                if (rc == EXECRC_EOS) {
+                    pOutAccessor->markEOS();
+                    return rc;
+                } else if (rc != EXECRC_YIELD) {
+                    return rc;
                 }
-
-                pInAccessor->unmarshalTuple(ridTupleData);
-                rid = *reinterpret_cast<LcsRid const *> (ridTupleData[0].pData);
             }
 
             // Go through each cluster, forming rows and checking ranges
@@ -137,12 +150,9 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
         outputTupleData.resetBuffer();
         producePending = false;
         
-        if (!fullTableScan) {
-            pInAccessor->consumeTuple();
-        } else {
-
-            // full table scan -- if tuple not found, reached end
-            // of table, else move to next rid
+        if (fullTableScan) {
+            // if tuple not found, reached end of table,
+            // else move to next rid
             if (!tupleFound) {
                 pOutAccessor->markEOS();
                 return EXECRC_EOS;

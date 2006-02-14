@@ -13,7 +13,8 @@ FlatFileExecStreamTest \
 LcsClusterAppendExecStreamTest \
 LcsMultiClusterAppendTest \
 LcsRowScanExecStreamTest \
-LbmLoadBitmapTest
+LbmLoadBitmapTest \
+LbmIndexScanTest
 
 TESTS = $(noinst_PROGRAMS)
 
@@ -23,6 +24,7 @@ LcsClusterAppendExecStreamTest_SOURCES=LcsClusterAppendExecStreamTest.cpp
 LcsMultiClusterAppendTest_SOURCES=LcsMultiClusterAppendTest.cpp
 LcsRowScanExecStreamTest_SOURCES=LcsRowScanExecStreamTest.cpp
 LbmLoadBitmapTest_SOURCES=LbmLoadBitmapTest.cpp
+LbmIndexScanTest_SOURCES=LbmIndexScanTest.cpp
 
 # NOTE:  have to repeat $(EXTRA_LDFLAGS) on mingw due to stupid linker.
 

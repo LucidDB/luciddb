@@ -24,6 +24,7 @@
 
 #include "fennel/tuple/TupleDataWithBuffer.h"
 #include "fennel/lucidera/colstore/LcsRowScanBaseExecStream.h"
+#include "fennel/lucidera/bitmap/LbmRidReader.h"
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -58,6 +59,11 @@ class LcsRowScanExecStream : public LcsRowScanBaseExecStream
      */
     TupleData ridTupleData;
     
+    /**
+     * Rid reader
+     */
+    LbmRidReader ridReader;
+
     /**
      * Number of rids read
      */

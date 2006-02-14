@@ -46,6 +46,7 @@ public abstract class JmiMemFactory
     private final RefPackageImpl rootPackageImpl;
     private final Map<String, Relationship> relationshipMap;
     private final Map<Class, RefObject> metaMap;
+    private final Map<RefObject, RefPackage> pluginPackageMap;
     private final Map<Class, RefClass> classMap;
 
     public JmiMemFactory()
@@ -53,6 +54,7 @@ public abstract class JmiMemFactory
         nextId = new AtomicInteger(0);
         relationshipMap = new HashMap<String, Relationship>();
         metaMap = new HashMap<Class, RefObject>();
+        pluginPackageMap = new HashMap<RefObject, RefPackage>();
         classMap = new HashMap<Class, RefClass>();
         
         this.rootPackageImpl = newRootPackage();
@@ -61,6 +63,71 @@ public abstract class JmiMemFactory
     public RefPackage getRootPackage()
     {
         return (RefPackage) rootPackageImpl.wrap();
+    }
+
+    /**
+     * Associates the MOFID of a persistent object with an in-memory
+     * object.  This is useful when the in-memory object is being
+     * manipulated as a shadow of the persistent object.
+     *
+     * @param obj in-memory object
+     *
+     * @param persistentMofId MOFID of persistent object to set
+     */
+    public void setPersistentMofId(RefBaseObject obj, String persistentMofId)
+    {
+        ElementImpl impl = ((Element) obj).impl();
+        impl.persistentMofId = persistentMofId;
+    }
+
+    /**
+     * Gets the MOFID of a persistent object associated with an in-memory
+     * object.
+     *
+     * @param obj in-memory object
+     *
+     * @return MOFID of persistent object, or null if none set
+     */
+    public String getPersistentMofId(RefBaseObject obj)
+    {
+        ElementImpl impl = ((Element) obj).impl();
+        return impl.persistentMofId;
+    }
+
+    /**
+     * Creates a new package explicitly (rather than reflectively), locating it
+     * as a child of the root package.  This is required for plugin
+     * sub-packages, which don't have corresponding accessor methods on the
+     * root package.
+     *
+     * @param ifacePackage interface corresponding to RefPackage
+     *
+     * @return new RefPackage
+     */
+    public RefPackage newRefPackage(Class ifacePackage)
+    {
+        ElementImpl impl = createImpl(ifacePackage, true);
+        RefPackage refPackage = (RefPackage) impl.wrap();
+        RefObject refMetaObj = null;
+        if (metaMap != null) {
+            refMetaObj = metaMap.get(ifacePackage);
+        }
+        if (refMetaObj != null) {
+            pluginPackageMap.put(refMetaObj, refPackage);
+        }
+        return refPackage;
+    }
+
+    /**
+     * Notifies subclasses that a new object has been created with the
+     * given MOFID.
+     *
+     * @param refObj new object
+     *
+     * @param mofId MOFID assigned
+     */
+    protected void mapMofId(RefBaseObject refObj, String mofId)
+    {
     }
 
     protected abstract RefPackageImpl newRootPackage();
@@ -236,6 +303,7 @@ public abstract class JmiMemFactory
         protected final Class clazz;
         private final int id;
         private final Object proxy;
+        String persistentMofId;
 
         ElementImpl(Class clazz)
         {
@@ -262,6 +330,7 @@ public abstract class JmiMemFactory
                 getClass().getClassLoader(),
                 new Class[] {clazz, Element.class},
                 this);
+            mapMofId((RefBaseObject) proxy, proxyRefMofId());
         }
 
         private void initCollection(final String collectionName)
@@ -322,7 +391,7 @@ public abstract class JmiMemFactory
             } else if (methodName.equals("refOutermostPackage")) {
                 return rootPackageImpl.wrap();
             } else if (methodName.equals("refAllPackages")) {
-                return filterChildren(RefPackage.class);
+                return proxyRefAllPackages();
             } else if (methodName.equals("refAllClasses")) {
                 return filterChildren(RefClass.class);
             } else if (methodName.equals("refAllAssociations")) {
@@ -334,15 +403,15 @@ public abstract class JmiMemFactory
             } else if (methodName.equals("refGetEnum")) {
                 return proxyRefGetEnum(args[0], (String) args[1]);
             } else if (methodName.equals("refGetValue")) {
-                return proxyRefById(args[0]);
+                return proxyRefByMoniker(args[0]);
             } else if (methodName.equals("refSetValue")) {
                 return proxyRefSetValue(args[0], args[1]);
             } else if (methodName.equals("refPackage")) {
-                return proxyRefById(args[0]);
+                return proxyRefPackage(args[0]);
             } else if (methodName.equals("refClass")) {
-                return proxyRefById(args[0]);
+                return proxyRefByMoniker(args[0]);
             } else if (methodName.equals("refAssociation")) {
-                return proxyRefById(args[0]);
+                return proxyRefByMoniker(args[0]);
             } else if (methodName.equals("refAllLinks")) {
                 // REVIEW jvs 30-Jan-2006:  To implement this, we
                 // would have to keep track of extents, which we don't
@@ -386,8 +455,8 @@ public abstract class JmiMemFactory
         protected Object proxySet(
             String attrName, Method method, Object [] args)
         {
-            Class attrClass = method.getReturnType();
             assert args.length == 1;
+            Class attrClass = method.getParameterTypes()[0];
             final Object o = args[0];
             return proxySet(
                 attrName,
@@ -446,16 +515,38 @@ public abstract class JmiMemFactory
             return null;
         }
 
-        protected Object proxyRefById(Object id)
+        protected Object proxyRefPackage(Object moniker)
         {
-            String accessorName = getAccessorName(id);
+            RefPackage refPackage = pluginPackageMap.get(moniker);
+            if (refPackage != null) {
+                return refPackage;
+            }
+            return proxyRefByMoniker(moniker);
+        }
+
+        protected Collection proxyRefAllPackages()
+        {
+            Collection children = filterChildren(RefPackage.class);
+            if (this == rootPackageImpl) {
+                Collection list = new ArrayList();
+                list.addAll(children);
+                list.addAll(pluginPackageMap.values());
+                return list;
+            } else {
+                return children;
+            }
+        }
+
+        protected Object proxyRefByMoniker(Object moniker)
+        {
+            String accessorName = getAccessorName(moniker);
             Object result = get(parseGetter(accessorName));
             return result;
         }
 
-        protected Object proxyRefSetValue(Object id, Object value)
+        protected Object proxyRefSetValue(Object moniker, Object value)
         {
-            String accessorName = getAccessorName(id);
+            String accessorName = getAccessorName(moniker);
             Object result = proxySet(
                 parseGetter(accessorName),
                 value,
@@ -463,20 +554,20 @@ public abstract class JmiMemFactory
             return result;
         }
 
-        private String getAccessorName(Object id)
+        private String getAccessorName(Object moniker)
         {
             // TODO jvs 30-Jan-2006:  handle case where
-            // id instanceof String
-            ModelElement modelElement = (ModelElement) id;
+            // moniker instanceof String
+            ModelElement modelElement = (ModelElement) moniker;
             return JmiObjUtil.getAccessorName(modelElement);
         }
 
-        protected Object proxyRefGetEnum(Object id, String name)
+        protected Object proxyRefGetEnum(Object moniker, String name)
             throws Throwable
         {
             // TODO jvs 30-Jan-2006:  handle case where
-            // id instanceof String
-            ModelElement modelElement = (ModelElement) id;
+            // moniker instanceof String
+            ModelElement modelElement = (ModelElement) moniker;
             String packageName = clazz.getPackage().getName();
             String enumClassName =
                 packageName + "." + modelElement.getName() + "Enum";
@@ -640,7 +731,7 @@ public abstract class JmiMemFactory
             return impl.wrap();
         }
 
-        protected Object filterChildren(Class iface)
+        protected Collection filterChildren(Class iface)
         {
             List list = new ArrayList();
             for (Object obj : values()) {

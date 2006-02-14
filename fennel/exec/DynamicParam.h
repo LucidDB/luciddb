@@ -110,20 +110,21 @@ public:
     /**
      * Accesses a dynamic parameter by reference.
      *
-     *<p>
-     *
-     * NOTE jvs 4-Jan-2006:  This interface is dangerous if there
-     * is a possibility that writeParam may be used from another thread
-     * simultaneously.  If we ever need that, we should add a new
-     * method readParam which would marshal out the current value
-     * while holding onto the manager's mutex.
-     * 
-     *
      * @param dynamicParamId ID with which parameter was created
      *
      * @return read-only reference to dynamic parameter
      */
     DynamicParam const &getParam(DynamicParamId dynamicParamId);
+
+    /**
+     * Reads a dynamic parameter, copying the parameter into caller's
+     * TupleDatum
+     *
+     * @param dynamicParamId ID with which parameter was created
+     *
+     * @param dest destination tupledata for parameter
+     */
+    void readParam(DynamicParamId dynamicParamId, TupleDatum &dest);
 };
 
 inline TupleDatum const &DynamicParam::getDatum() const

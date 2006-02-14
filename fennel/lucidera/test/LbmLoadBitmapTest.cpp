@@ -373,14 +373,7 @@ void LbmLoadBitmapTest::testLoad(
             }
         }
         generatorParams.outputProj = proj;
-        
-        // only the first stream will create and write the dynamic
-        // parameter
-        if (i == 0) {
-            generatorParams.dynParamId = DynamicParamId(1);
-        } else {
-            generatorParams.dynParamId = DynamicParamId(0);
-        }
+        generatorParams.dynParamId = DynamicParamId(i + 1);
 
         boost::shared_ptr<BTreeDescriptor> pBTreeDesc =
             boost::shared_ptr<BTreeDescriptor> (new BTreeDescriptor());
@@ -459,7 +452,7 @@ void LbmLoadBitmapTest::testLoad(
         initBTreeBitmapDesc(
             splicerParams.tupleDesc, splicerParams.keyProj, nKeys);
         initBTreeExecStreamParam(splicerParams, pBTreeDesc);
-        splicerParams.dynParamId = DynamicParamId(1);
+        splicerParams.dynParamId = DynamicParamId(i + 1);
         splicerParams.outputTupleDesc.push_back(attrDesc_int64);
         splicerParams.rootPageId = pBTreeDesc->rootPageId;
 

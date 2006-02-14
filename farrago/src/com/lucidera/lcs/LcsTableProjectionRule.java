@@ -81,8 +81,9 @@ public class LcsTableProjectionRule extends MedAbstractFennelProjectionRule
         final FarragoRepos repos = FennelRelUtil.getRepos(origScan);
         ArrayList indexList = new ArrayList();
 
-        Iterator iter = FarragoCatalogUtil.getTableIndexes(
-            repos, origScan.lcsTable.getCwmColumnSet()).iterator();
+        // Test which clustered indexes are needed to cover the
+        // projectedColumns.
+        Iterator iter = origScan.clusteredIndexes.iterator();
         while (iter.hasNext()) {
             FemLocalIndex index = (FemLocalIndex) iter.next();
 
@@ -98,6 +99,7 @@ public class LcsTableProjectionRule extends MedAbstractFennelProjectionRule
         RelNode projectedScan =
             new LcsRowScanRel(
                 origProject.getCluster(),
+                null,
                 origScan.lcsTable,
                 indexList,
                 origScan.getConnection(),

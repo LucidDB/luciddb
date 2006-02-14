@@ -46,7 +46,7 @@ class FlatFileNameDirectory extends MedAbstractNameDirectory
     final FlatFileDataServer server;
     String scope;
 
-    
+
     //~ Constructors ----------------------------------------------------------
 
     FlatFileNameDirectory(FlatFileDataServer server, String scope)
@@ -68,7 +68,7 @@ class FlatFileNameDirectory extends MedAbstractNameDirectory
         if (!scope.equals(FarragoMedMetadataQuery.OTN_TABLE)) {
             return null;
         }
-        
+
         return server.newColumnSet(
             localName,
             server.getProperties(),
@@ -81,8 +81,8 @@ class FlatFileNameDirectory extends MedAbstractNameDirectory
     public FarragoMedNameDirectory lookupSubdirectory(String foreignName)
         throws SQLException
     {
-        if (scope.equals(FarragoMedMetadataQuery.OTN_SCHEMA)) {        
-            FlatFileParams.SchemaType schemaType = 
+        if (scope.equals(FarragoMedMetadataQuery.OTN_SCHEMA)) {
+            FlatFileParams.SchemaType schemaType =
                 FlatFileParams.getSchemaType(foreignName, false);
             if (schemaType != null) {
                 return new FlatFileNameDirectory(server,
@@ -93,7 +93,6 @@ class FlatFileNameDirectory extends MedAbstractNameDirectory
         }
         return null;
     }
-    
 
     // implement FarragoMedNameDirectory
     public boolean queryMetadata(
@@ -101,7 +100,6 @@ class FlatFileNameDirectory extends MedAbstractNameDirectory
         FarragoMedMetadataSink sink)
         throws SQLException
     {
-
         if (scope.equals(FarragoMedMetadataQuery.OTN_SCHEMA)) {
             boolean wantSchemas = query.getResultObjectTypes().contains(
                 FarragoMedMetadataQuery.OTN_SCHEMA);
@@ -113,7 +111,6 @@ class FlatFileNameDirectory extends MedAbstractNameDirectory
                     Collections.EMPTY_MAP);
             }
         } else {
-            
             boolean wantTables = query.getResultObjectTypes().contains(
                 FarragoMedMetadataQuery.OTN_TABLE);
             if (wantTables) {
@@ -121,7 +118,6 @@ class FlatFileNameDirectory extends MedAbstractNameDirectory
                     return false;
                 }
             }
-            
             boolean wantColumns = query.getResultObjectTypes().contains(
                 FarragoMedMetadataQuery.OTN_COLUMN);
             if (wantColumns) {
@@ -140,7 +136,7 @@ class FlatFileNameDirectory extends MedAbstractNameDirectory
     {
         File dir = new File(server.params.getDirectory());
         String[] files = dir.list(new FlatFileFilter());
-        
+
         for (int i=0; i<files.length; i++) {
             String tableName = files[i].substring(0, files[i].indexOf("."));
             sink.writeObjectDescriptor(
@@ -158,29 +154,52 @@ class FlatFileNameDirectory extends MedAbstractNameDirectory
         throws SQLException
     {
         File dir = new File(server.params.getDirectory());
-        String bcpExt = server.params.getControlFileExtenstion();
-        String[] files = dir.list(new BCPFileFilter());
-        
-        for (int i=0; i<files.length; i++) {
-            String tableName = files[i].substring(0, files[i].indexOf("."));
-            String bcpFilePath =
-                server.params.getDirectory() + tableName + bcpExt;
-            FlatFileBCPFile bcpFile =
-                new FlatFileBCPFile(bcpFilePath, sink.getTypeFactory());
-            if (bcpFile.parse()) {
-                RelDataType[] types = bcpFile.types;
-                String[] colNames = bcpFile.colNames;
-                int ordinal = 0;
-                for (int j=0; j<types.length; j++) {
-                    sink.writeColumnDescriptor(
-                        tableName,
-                        colNames[j],
-                        ordinal,
-                        types[j],
-                        null,
-                        null,
-                        Collections.EMPTY_MAP);
-                    ordinal++;
+        String[] fileNames = dir.list(new FlatFileFilter());
+        synchronized(FlatFileBCPFile.class) {
+            for (int i=0; i<fileNames.length; i++) {
+                String tableName =
+                    fileNames[i].substring(0, fileNames[i].indexOf("."));
+                String bcpFileName = server.params.getDirectory() +
+                    tableName + server.params.getControlFileExtenstion();
+                File testFile = new File(bcpFileName);
+                FlatFileBCPFile bcpFile = new FlatFileBCPFile(bcpFileName,
+                    sink.getTypeFactory());
+                if (!testFile.exists()) {
+                    String[] localName = {
+                        server.getProperties().getProperty("NAME"),
+                        FlatFileParams.SchemaType.QUERY.getSchemaName(),
+                        tableName};
+                    server.sampleAndCreateBcp(localName, bcpFile);
+                }
+            }
+            String bcpExt = server.params.getControlFileExtenstion();
+            String[] files = dir.list(new BCPFileFilter());
+
+            for (int i=0; i<files.length; i++) {
+                String tableName = files[i].
+                    substring(0, files[i].indexOf("."));
+                String bcpFilePath =
+                    server.params.getDirectory() + tableName + bcpExt;
+                FlatFileBCPFile bcpFile =
+                    new FlatFileBCPFile(bcpFilePath, sink.getTypeFactory());
+                if (bcpFile.parse()) {
+                    RelDataType[] types = bcpFile.types;
+                    String[] colNames = bcpFile.colNames;
+                    int ordinal = 0;
+                    for (int j=0; j<types.length; j++) {
+                        RelDataType typeWithNull =
+                            sink.getTypeFactory().createTypeWithNullability(
+                                types[j], true);
+                        sink.writeColumnDescriptor(
+                            tableName,
+                            colNames[j],
+                            ordinal,
+                            typeWithNull,
+                            null,
+                            null,
+                            Collections.EMPTY_MAP);
+                        ordinal++;
+                    }
                 }
             }
         }

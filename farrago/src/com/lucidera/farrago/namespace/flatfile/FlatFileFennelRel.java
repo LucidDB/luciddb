@@ -132,6 +132,11 @@ class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
         streamDef.setNumRowsScan(numRowsScan);
         streamDef.setCalcProgram(program);
         streamDef.setHasHeader(header);
+
+        // TODO: get/set from server options parameters
+        streamDef.setSubstituteCharacter("?");
+        streamDef.setCodePage(0);
+        streamDef.setTranslationRecovery(true);
         
         return streamDef;
     }

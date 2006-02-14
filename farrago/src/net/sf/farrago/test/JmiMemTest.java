@@ -85,6 +85,10 @@ public class JmiMemTest extends FarragoTestCase
         assertSame(table, column.refImmediateComposite());
         assertEquals(TABLE_NAME, table.getName());
 
+        assertNull(factory.getImpl().getPersistentMofId(table));
+        factory.getImpl().setPersistentMofId(table, "XYZZY");
+        assertEquals("XYZZY", factory.getImpl().getPersistentMofId(table));
+
         RefClass tableClass = table.refClass();
         RefObject tableObj = tableClass.refCreateInstance(
             Collections.singletonList(TABLE_NAME));

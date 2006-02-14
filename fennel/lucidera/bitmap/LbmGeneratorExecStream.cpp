@@ -36,6 +36,7 @@ void LbmGeneratorExecStream::prepare(LbmGeneratorExecStreamParams const &params)
     LcsRowScanBaseExecStream::prepare(params);
 
     dynParamId = params.dynParamId;
+    assert(opaqueToInt(dynParamId) > 0);
 
     scratchLock.accessSegment(scratchAccessor);
     scratchPageSize = scratchAccessor.pSegment->getUsablePageSize();
@@ -75,10 +76,8 @@ void LbmGeneratorExecStream::open(bool restart)
     rowCount = 0;
     batchRead = false;
     if (!restart) {
-        if (opaqueToInt(dynParamId) > 0) {
-            pDynamicParamManager->createParam(
-                dynParamId, pInAccessor->getTupleDesc()[0]);
-        }
+        pDynamicParamManager->createParam(
+            dynParamId, pInAccessor->getTupleDesc()[0]);
     }
 }
 
@@ -100,8 +99,9 @@ void LbmGeneratorExecStream::getResourceRequirements(
 void LbmGeneratorExecStream::setResourceAllocation(
     ExecStreamResourceQuantity &quantity)
 {
-    // TODO - should be using quantity.nCachePages and dividing the pages
-    // across the generator and its child classes
+    BTreeExecStream::setResourceAllocation(quantity);
+    LcsRowScanBaseExecStream::setResourceAllocation(quantity);
+
     maxNumScratchPages = 1;
 }
 
@@ -124,10 +124,12 @@ ExecStreamResult LbmGeneratorExecStream::execute(
         currRid = startRid;
         // set number of rows to load in a dynamic parameter that
         // splicer will later read
-        if (opaqueToInt(dynParamId) > 0) {
-            pDynamicParamManager->writeParam(dynParamId, inputTuple[0]);
-        }
+        pDynamicParamManager->writeParam(dynParamId, inputTuple[0]);
         pInAccessor->consumeTuple();
+        if (numRowsToLoad == 0) {
+            pOutAccessor->markEOS();
+            return EXECRC_EOS;
+        }
 
         // position to the starting rid
         for (uint iClu = 0; iClu < nClusters; iClu++) {
@@ -232,7 +234,9 @@ ExecStreamResult LbmGeneratorExecStream::generateMultiKeyBitmaps(
                     // move to the next batch if this particular cluster
                     // reader has reached the end of its batch
                     if (!pScan->nextRange()) {
-                        assert(iClu == 0 && !pClusters[1]->nextRange());
+                        assert(
+                            iClu == 0 &&
+                                (nClusters == 1 || !pClusters[1]->nextRange()));
                         return EXECRC_EOS;
                     }
                     assert(
