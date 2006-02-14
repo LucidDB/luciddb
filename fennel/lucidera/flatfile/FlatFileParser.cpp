@@ -186,7 +186,7 @@ const char *FlatFileParser::scanRowDelim(
 
 bool FlatFileParser::isRowDelim(char c)
 {
-    assert(c != '\r');
+    assert(rowDelim != '\r');
     return (rowDelim == '\n') ? (c == '\r' || c == '\n') : (c == rowDelim);
 }
 

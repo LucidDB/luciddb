@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/expressions/udfInvocation.sql#4 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/expressions/udfInvocation.sql#4 $
 0: jdbc:farrago:> -- Test queries with UDF invocations
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema udftest;
@@ -431,7 +431,8 @@ Error: nothing but a failure (state=,code=0)
 0: jdbc:farrago:> values throw_npe();
 Error: java.lang.NullPointerException: null (state=,code=0)
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from table(ramp(5));
+0: jdbc:farrago:> -- udx invocation
+0: jdbc:farrago:> select * from table(ramp(5)) order by 1;
 +----+
 | I  |
 +----+
@@ -441,6 +442,14 @@ Error: java.lang.NullPointerException: null (state=,code=0)
 | 3  |
 | 4  |
 +----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- udx invocation with restart on RHS of Cartesian product
+0: jdbc:farrago:> select count(*) from sales.depts, table(ramp(5));
++---------+
+| EXPR$0  |
++---------+
+| 15      |
++---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set path 'crypto2';
 0: jdbc:farrago:> 

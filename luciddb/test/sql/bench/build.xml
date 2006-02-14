@@ -33,7 +33,6 @@
   <!-- belong here, as well as the filter. Those should be in this ant file -->
   <property file="run.properties"/>
 
-  <!-- REVIEW: what is this used for? -->
   <taskdef name="var" classname="net.sf.antcontrib.property.Variable" classpath="${ant.classpath}"/>
 
   <!-- directory where sql is generated -->
@@ -101,6 +100,14 @@
     </copy>
   </target>
 
+  <target name="copy-bcp">
+    <copy todir="${csv.dir}" overwrite="true">
+      <fileset dir="${bench.dir}">
+        <include name="**/*.bcp"/>
+      </fileset>
+    </copy>
+  </target>
+
   <target name="test">
     <antcall target="copy-csv"/>
     <antcall target="gen-sql"/>
@@ -124,8 +131,7 @@
     <!-- filters. for instance testOracle, which will run bh with the oracle -->
     <!-- filter. -->
     <antcall target="gen-sql"/>
-    <!-- REVIEW: shouldn't ${bench.dir}/bh be replaced by ${bhlogs.dir}? -->
-    <var name="bh.log.basedir" value="${bench.dir}/bh/${config.prop}"/>
+    <var name="bh.log.basedir" value="${bhlogs.dir}/${config.prop}"/>
     <var name="bh.filter.dbs" value="oracle"/>
     <!-- REVIEW: i notice that ${config.prop} is being passed to the bh for -->
     <!-- inclusion in the test.xml. The danger here is that people will need to -->
@@ -141,7 +147,7 @@
     <!-- sqlserver -->
     <var name="config.prop" value="prop.sqlserver"/>
     <antcall target="gen-sql"/>
-    <var name="bh.log.basedir" value="${bench.dir}/bh/${config.prop}"/>
+    <var name="bh.log.basedir" value="${bhlogs.dir}/${config.prop}"/>
     <var name="bh.filter.dbs" value="sqlserver"/>
     <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
 
@@ -150,7 +156,7 @@
     <antcall target="copy-csv"/>
     <var name="config.prop" value="prop.csvjdbc"/>
     <antcall target="gen-sql"/>
-    <var name="bh.log.basedir" value="${bench.dir}/bh/${config.prop}"/>
+    <var name="bh.log.basedir" value="${bhlogs.dir}/${config.prop}"/>
     <var name="bh.filter.dbs" value="csv"/>
     <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
 
@@ -158,7 +164,16 @@
     <antcall target="copy-csv"/>
     <var name="config.prop" value="prop.flatfile"/>
     <antcall target="gen-sql"/>
-    <var name="bh.log.basedir" value="${bench.dir}/bh/${config.prop}"/>
+    <var name="bh.log.basedir" value="${bhlogs.dir}/${config.prop}"/>
+    <var name="bh.filter.dbs" value="flatfile"/>
+    <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
+
+    <!-- flatfile w/ bcp -->
+    <antcall target="copy-csv"/>
+    <antcall target="copy-bcp"/>
+    <var name="config.prop" value="prop.flatfile"/>
+    <antcall target="gen-sql"/>
+    <var name="bh.log.basedir" value="${bhlogs.dir}/${config.prop}"/>
     <var name="bh.filter.dbs" value="flatfile"/>
     <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
   </target>
