@@ -1,6 +1,6 @@
 /*
 // $Id$
-// Farrago is an extensible data management system.
+// Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2006-2006 The Eigenbase Project
 // Copyright (C) 2006-2006 Disruptive Tech
 // Copyright (C) 2006-2006 LucidEra, Inc.
