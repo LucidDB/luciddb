@@ -217,7 +217,7 @@ outer:
             aggInputList.add(arg);
         }
         AggregateRel.Call aggCall =
-            new AggregateRel.Call(aggregation, argIndexes);
+            new AggregateRel.Call(aggregation, false, argIndexes);
 
         // create a new aggregate call, if there isn't already an
         // identical one

@@ -24,7 +24,6 @@
 package net.sf.farrago.fennel.tuple;
 
 import org.eigenbase.util14.AbstractResultSet;
-import org.eigenbase.util14.NumberUtil;
 
 import java.nio.ByteBuffer;
 import java.sql.*;
@@ -123,8 +122,8 @@ abstract public class FennelTupleResultSet extends AbstractResultSet {
             case Types.DECIMAL:
             case Types.NUMERIC:
                 BigDecimal bd = BigDecimal.valueOf(d.getLong());
-                return NumberUtil.rescaleBigDecimal(
-                    bd, metaData.getScale(columnIndex));
+                bd = bd.movePointLeft(metaData.getScale(columnIndex));
+                return bd;
             case Types.BOOLEAN:
             case Types.BIT:
                 return new Boolean(d.getBoolean());

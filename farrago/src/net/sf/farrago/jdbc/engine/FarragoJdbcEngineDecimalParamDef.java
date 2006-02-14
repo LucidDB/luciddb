@@ -60,7 +60,7 @@ class FarragoJdbcEngineDecimalParamDef extends FarragoJdbcEngineParamDef
             bd = new BigDecimal(((Boolean) value).booleanValue() ? 1 : 0);
         } else {
             try {
-                bd = new BigDecimal(value.toString());
+                bd = new BigDecimal(value.toString().trim());
             } catch (NumberFormatException ex) {
                 throw FarragoResource.instance().ParameterValueIncompatible.ex(
                         value.toString(), type.toString());

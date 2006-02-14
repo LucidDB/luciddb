@@ -23,6 +23,7 @@
 package net.sf.farrago.jdbc.engine;
 
 import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.TimeZone;
 
@@ -49,8 +50,21 @@ class FarragoJdbcEngineTimeParamDef extends FarragoJdbcEngineParamDef
     // implement FarragoSessionStmtParamDef
     public Object scrubValue(Object x)
     {
-        // java.sql.Date, java.sql.Time, java.sql.Timestamp are all OK.
-        if (!(x instanceof java.util.Date)) {
+        if (x == null) {
+            return x;
+        }
+
+        if (x instanceof String) {
+            try {
+                return java.sql.Time.valueOf((String) x);
+            } catch (IllegalArgumentException e) {
+                throw newInvalidFormat(x);
+            }
+        }
+
+        // Only java.sql.Time, java.sql.Timestamp are all OK.
+        // java.sql.Date is not okay (no time information)
+        if (!(x instanceof Timestamp) && !(x instanceof java.sql.Time)) {
             throw newInvalidType(x);
         }
         java.util.Date time = (java.util.Date) x;

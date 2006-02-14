@@ -27,10 +27,8 @@ import org.eigenbase.oj.rel.JavaRel;
 import org.eigenbase.oj.rel.JavaRelImplementor;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexUtil;
+import org.eigenbase.rex.*;
 
 /**
  * <code>ProjectRelBase</code> is an abstract base class for implementations
@@ -68,14 +66,10 @@ public abstract class ProjectRelBase extends SingleRel
     {
         super(cluster, traits, child);
         assert rowType != null;
-        assert RexUtil.compatibleTypes(exps, rowType, true);
         this.exps = exps;
         this.rowType = rowType;
         this.flags = flags;
-
-        if (!isBoxed()) {
-            assert exps.length == 1;
-        }
+        assert isValid(true);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -102,6 +96,29 @@ public abstract class ProjectRelBase extends SingleRel
     public int getFlags()
     {
         return flags;
+    }
+
+    public boolean isValid(boolean fail)
+    {
+        if (!super.isValid(fail)) {
+            return false;
+        }
+        if (!RexUtil.compatibleTypes(exps, getRowType(), true)) {
+            return false;
+        }
+        Checker checker = new Checker(fail, getChild());
+        for (RexNode exp : exps) {
+            exp.accept(checker);
+        }
+        if (checker.failCount > 0) {
+            return false;
+        }
+        if (!isBoxed()) {
+            if (exps.length != 1) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)
@@ -165,6 +182,64 @@ public abstract class ProjectRelBase extends SingleRel
          */
         int Boxed = 1;
         int None = 0;
+    }
+
+    /**
+     * Visitor which walks over a program and checks validity.
+     */
+    private static class Checker extends RexVisitorImpl
+    {
+        private final boolean fail;
+        private final RelNode child;
+        int failCount = 0;
+
+        public Checker(boolean fail, RelNode child)
+        {
+            super(true);
+            this.fail = fail;
+            this.child = child;
+        }
+
+        public void visitInputRef(RexInputRef inputRef)
+        {
+            final int index = inputRef.getIndex();
+            final RelDataTypeField[] fields = child.getRowType().getFields();
+            if (index < 0 || index >= fields.length) {
+                assert !fail;
+                ++failCount;
+            }
+            if (!RelOptUtil.eq(
+                "inputRef", inputRef.getType(),
+                "underlying field", fields[index].getType(), fail)) {
+                assert !fail;
+                ++failCount;
+            }
+        }
+
+        public void visitLocalRef(RexLocalRef localRef)
+        {
+            assert !fail : "localRef invalid in project";
+            ++failCount;
+        }
+
+        public void visitFieldAccess(RexFieldAccess fieldAccess)
+        {
+            super.visitFieldAccess(fieldAccess);
+            final RelDataType refType =
+                fieldAccess.getReferenceExpr().getType();
+            assert refType.isStruct();
+            final RelDataTypeField field = fieldAccess.getField();
+            final int index = field.getIndex();
+            if (index < 0 || index > refType.getFields().length) {
+                assert !fail;
+                ++failCount;
+            }
+            final RelDataTypeField typeField = refType.getFields()[index];
+            if (!RelOptUtil.eq("type1", typeField.getType(), "type2", fieldAccess.getType(), fail)) {
+                assert !fail;
+                ++failCount;
+            }
+        }
     }
 }
 

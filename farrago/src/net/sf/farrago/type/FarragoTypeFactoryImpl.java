@@ -92,7 +92,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     public RelDataType createJoinType(RelDataType [] types)
     {
         assert (types.length == 2);
-        return JoinRel.createJoinType(this, types[0], types[1]);
+        return JoinRel.createJoinType(this, types[0], types[1], null);
     }
 
     // implement FarragoTypeFactory

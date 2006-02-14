@@ -964,6 +964,39 @@ public abstract class RelOptUtil
         return string;
     }
 
+    /**
+     * Renames a relational expression to make its field names the same as
+     * another row type. If the row type is already identical, or if the
+     * row type is too different (the fields are different in number or type)
+     * does nothing.
+     *
+     * @param rel Relational expression
+     * @param desiredRowType Desired row type (including desired field names)
+     * @return Renamed relational expression, or the original expression if
+     *   there is nothing to do or nothing we <em>can</em> do.
+     */
+    public static RelNode renameIfNecessary(
+        RelNode rel,
+        RelDataType desiredRowType)
+    {
+        final RelDataType rowType = rel.getRowType();
+        if (rowType == desiredRowType) {
+            // Nothing to do.
+            return rel;
+        }
+        assert !rowType.equals(desiredRowType);
+
+        if (!areRowTypesEqual(rowType, desiredRowType, false)) {
+            // The row types are different ignoring names. Nothing we can do.
+            return rel;
+        }
+        rel =
+            CalcRel.createRename(
+                rel,
+                getFieldNames(desiredRowType));
+        return rel;
+    }
+
     //~ Inner Classes ---------------------------------------------------------
 
     private static class VariableSetVisitor extends RelVisitor

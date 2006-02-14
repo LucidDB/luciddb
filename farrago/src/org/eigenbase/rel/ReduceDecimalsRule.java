@@ -137,6 +137,8 @@ public class ReduceDecimalsRule extends RelOptRule
             }
             */
             RexShuttle treeBuilder = new UnreduceShuttle(program.getExprList());
+            final Iterator<String> fieldNameIter =
+                RelOptUtil.getFieldNameList(calcRel.getRowType()).iterator();
             for (RexLocalRef project: program.getProjectList()) {
                 /* INTEGRATION ATTEMPT 2
                  * We can produce simplified code if we start from a 
@@ -144,9 +146,11 @@ public class ReduceDecimalsRule extends RelOptRule
                  * reinterprets.) But this may not work once we 
                  * cleanup the code to use the visitor pattern. */
                 RexNode treeProject = project.accept(treeBuilder);
-                RexNode newProject = translator.reduceDecimals(treeProject, rexBuilder);
+                RexNode newProject =
+                    translator.reduceDecimals(treeProject, rexBuilder);
                 RexLocalRef result = progBuilder.registerInput(newProject);
-                progBuilder.addProject(result.getIndex(), null);
+                progBuilder.addProject(
+                    result.getIndex(), fieldNameIter.next());
             }
             RexLocalRef condition = program.getCondition();
             if (condition != null) {

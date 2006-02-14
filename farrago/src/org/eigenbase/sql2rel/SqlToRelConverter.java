@@ -806,7 +806,7 @@ public class SqlToRelConverter
             }
             return new CorrelatorRel(
                 rightRel.getCluster(), leftRel, rightRel,
-                correlations, JoinRelType.LEFT);
+                correlations, joinType);
         }
         RexNode conditionExp =
             convertJoinCondition(bb, condition, conditionType, leftRel,
@@ -1968,9 +1968,12 @@ public class SqlToRelConverter
          * to the elements in {@link #groupExprs}; the remaining elements are
          * for aggregates.
          */
-        private final List convertedInputExprs = new ArrayList();
-        private final List inputRefs = new ArrayList();
-        private final List aggCalls = new ArrayList();
+        private final List<RexNode> convertedInputExprs =
+            new ArrayList<RexNode>();
+        private final List<RexInputRef> inputRefs =
+            new ArrayList<RexInputRef>();
+        private final List<AggregateRelBase.Call> aggCalls =
+            new ArrayList<AggregateRelBase.Call>();
 
         /**
          * Input expressions required by aggregates,
@@ -1988,7 +1991,8 @@ public class SqlToRelConverter
             final int index = groupExprs.size();
             groupExprs.add(expr);
             convertedInputExprs.add(convExpr);
-            inputRefs.add(rexBuilder.makeInputRef(convExpr.getType(), index));
+            final RelDataType type = convExpr.getType();
+            inputRefs.add((RexInputRef) rexBuilder.makeInputRef(type, index));
         }
 
         public RexNode convertCall(SqlCall call)
@@ -2013,6 +2017,7 @@ public class SqlToRelConverter
                     }
                     if (convertedExpr == null) {
                         convertedExpr = bb.convertExpression(operand);
+                        assert convertedExpr != null;
                     }
                     args[i] = lookupOrCreateGroupExpr(convertedExpr);
                 }
@@ -2022,13 +2027,14 @@ public class SqlToRelConverter
             }
             final Aggregation aggregation = (Aggregation) call.getOperator();
             RelDataType type = validator.getValidatedNodeType(call);
-            final AggregateRel.Call aggCall =
-                new AggregateRel.Call(aggregation, args);
+            boolean distinct = false;
             SqlLiteral quantifier = call.getFunctionQuantifier();
             if ((null != quantifier) &&
                 (quantifier.getValue() == SqlSelectKeyword.Distinct)) {
-                aggCall.setDistinct(true);
+                distinct = true;
             }
+            final AggregateRel.Call aggCall =
+                new AggregateRel.Call(aggregation, distinct, args);
             int index = aggCalls.size() + groupExprs.size();
             aggCalls.add(aggCall);
             final RexNode rex = rexBuilder.makeInputRef(type, index);
@@ -2038,8 +2044,8 @@ public class SqlToRelConverter
         private int lookupOrCreateGroupExpr(RexNode expr)
         {
             for (int i = 0; i < convertedInputExprs.size(); i++) {
-                RexNode convertedInputExpr = (RexNode) convertedInputExprs.get(i);
-                if (expr.equals(convertedInputExpr)) {
+                RexNode convertedInputExpr = convertedInputExprs.get(i);
+                if (expr.toString().equals(convertedInputExpr.toString())) {
                     return i;
                 }
             }
@@ -2059,7 +2065,7 @@ public class SqlToRelConverter
             for (int i = 0; i < groupExprs.size(); i++) {
                 SqlNode groupExpr = groupExprs.get(i);
                 if (expr.equalsDeep(groupExpr)) {
-                    return (RexNode) inputRefs.get(i);
+                    return inputRefs.get(i);
                 }
             }
             return null;
@@ -2067,14 +2073,13 @@ public class SqlToRelConverter
 
         public RexNode[] getPreExprs()
         {
-            return (RexNode[]) convertedInputExprs.toArray(
+            return convertedInputExprs.toArray(
                 new RexNode[convertedInputExprs.size()]);
         }
 
         public AggregateRel.Call[] getAggCalls()
         {
-            return (AggregateRel.Call[])
-                aggCalls.toArray(new AggregateRel.Call[aggCalls.size()]);
+            return aggCalls.toArray(new AggregateRel.Call[aggCalls.size()]);
         }
 
         public RelDataTypeFactory getTypeFactory()

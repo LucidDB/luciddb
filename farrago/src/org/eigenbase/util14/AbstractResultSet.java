@@ -1436,8 +1436,10 @@ abstract public class AbstractResultSet implements ResultSet
         }
         if (o instanceof Date) {
             return (Date) o;
-        } else if (o instanceof java.util.Date) {
-            return new Date(((java.util.Date) o).getTime());
+        } else if (o instanceof Timestamp) {
+            return new Date(((Timestamp) o).getTime());
+        } else if (o instanceof String) {
+            return Date.valueOf(((String) o).trim());
         } else {
             throw newConversionError(o, Date.class);
         }
@@ -1456,6 +1458,8 @@ abstract public class AbstractResultSet implements ResultSet
             return ((Double) o).doubleValue();
         } else if (o instanceof Float) {
             return ((Float) o).doubleValue();
+        } else if (o instanceof BigDecimal) {
+            return ((BigDecimal) o).doubleValue();
         } else if (o instanceof String) {
             try {
                 return Double.parseDouble(((String) o).trim());
@@ -1481,6 +1485,8 @@ abstract public class AbstractResultSet implements ResultSet
             return ((Float) o).floatValue();
         } else if (o instanceof Double) {
             return ((Double) o).floatValue();
+        } else if (o instanceof BigDecimal) {
+            return ((BigDecimal) o).floatValue();
         } else if (o instanceof String) {
             try {
                 return Float.parseFloat(((String) o).trim());
@@ -1509,7 +1515,7 @@ abstract public class AbstractResultSet implements ResultSet
         } else if (o instanceof Float) {
             return BigDecimal.valueOf(((Float) o).doubleValue());
         } else if (o instanceof String) {
-            return new BigDecimal((String) o);
+            return new BigDecimal(((String) o).trim());
         } else {
             return BigDecimal.valueOf(toLong_(o));
         }
@@ -1560,6 +1566,8 @@ abstract public class AbstractResultSet implements ResultSet
             return ((Double) o).longValue();
         } else if (o instanceof Float) {
             return ((Float) o).longValue();
+        } else if (o instanceof BigDecimal) {
+            return ((BigDecimal) o).longValue();
         } else if (o instanceof Boolean) {
             if (((Boolean) o).booleanValue()) {
                 return 1;
@@ -1618,6 +1626,10 @@ abstract public class AbstractResultSet implements ResultSet
         }
         if (o instanceof Time) {
             return (Time) o;
+        } else if (o instanceof Timestamp) {
+            return new Time(((Timestamp) o).getTime());
+        } else if (o instanceof String) {
+            return Time.valueOf(((String) o).trim());
         } else {
             throw newConversionError(o, Time.class);
         }
@@ -1634,6 +1646,10 @@ abstract public class AbstractResultSet implements ResultSet
         }
         if (o instanceof Timestamp) {
             return (Timestamp) o;
+        } else if (o instanceof Date) {
+            return new Timestamp(((Date) o).getTime());
+        } else if (o instanceof String) {
+            return Timestamp.valueOf(((String) o).trim());
         } else {
             throw newConversionError(o, Timestamp.class);
         }

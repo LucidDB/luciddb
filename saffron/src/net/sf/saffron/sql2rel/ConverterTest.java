@@ -51,6 +51,8 @@ import java.util.regex.Pattern;
 
 /**
  * Unit test for {@link SqlToRelConverter}.
+ *
+ * @version $Id$
  */
 public class ConverterTest extends TestCase
 {
@@ -371,7 +373,7 @@ public class ConverterTest extends TestCase
         check("select \"gender\", (select \"name\" from \"depts\" where \"deptno\" = \"e\".\"deptno\") from \"emps\" as \"e\"",
             TestUtil.fold(new String[]{
                 "ProjectRel(gender=[$3], EXPR$1=[IS NULL($6)])",
-                "  CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset2]])",
+                "  CorrelatorRel(condition=[true], joinType=[inner], correlations=[[var0=offset2]])",
                 "    ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])",
                 "    ProjectRel(name=[$1])",
                 "      FilterRel(condition=[=($0, $cor0.deptno)])",

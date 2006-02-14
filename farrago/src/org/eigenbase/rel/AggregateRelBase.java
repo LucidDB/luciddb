@@ -147,25 +147,33 @@ public abstract class AggregateRelBase extends SingleRel
             });
     }
 
+    /**
+     * Returns whether any of the aggregates are DISTINCT.
+     */
+    public boolean containsDistinctCall()
+    {
+        for (Call call : aggCalls) {
+            if (call.isDistinct()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     //~ Inner Classes ---------------------------------------------------------
 
     public static class Call
     {
         private final Aggregation aggregation;
         public final int [] args;
-        private boolean distinct;
+        private final boolean distinct;
 
-        public Call(Aggregation aggregation, int[] args)
+        public Call(Aggregation aggregation, boolean distinct, int[] args)
         {
             assert aggregation != null;
             assert args != null;
             this.aggregation = aggregation;
             this.args = args;
-            this.distinct = false;
-        }
-
-        public void setDistinct(boolean distinct)
-        {
             this.distinct = distinct;
         }
 
@@ -188,6 +196,9 @@ public abstract class AggregateRelBase extends SingleRel
         {
             StringBuffer buf = new StringBuffer(aggregation.getName());
             buf.append("(");
+            if (distinct) {
+                buf.append(args.length == 0 ? "DISTINCT" : "DISTINCT ");
+            }
             for (int i = 0; i < args.length; i++) {
                 if (i > 0) {
                     buf.append(", ");
