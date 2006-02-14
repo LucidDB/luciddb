@@ -108,6 +108,10 @@ void LbmGeneratorExecStream::setResourceAllocation(
 ExecStreamResult LbmGeneratorExecStream::execute(
     ExecStreamQuantum const &quantum)
 {
+    if (pOutAccessor->getState() == EXECBUF_EOS) {
+        return EXECRC_EOS;
+    }
+
     // read the start rid and num of rows to load
     
     if (pInAccessor->getState() != EXECBUF_EOS) {
