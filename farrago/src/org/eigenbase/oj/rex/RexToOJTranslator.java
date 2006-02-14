@@ -37,6 +37,7 @@ import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.SqlCaseOperator;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
@@ -68,6 +69,12 @@ public class RexToOJTranslator implements RexVisitor
      * </ul>
      */
     private RexProgram program;
+
+    /**
+     * stmtLists for case expression. each when, then or else
+     * has one statmentList.
+     */
+    private StatementList[] stmtLists;
 
     /**
      * Maps expressions to the variable which has been assigned their value.
@@ -109,6 +116,23 @@ public class RexToOJTranslator implements RexVisitor
     }
 
     //~ Methods ---------------------------------------------------------------
+
+    /**
+     * Returns the corresponding StatementList.
+     *
+     * 
+     * 
+     */
+    public StatementList getCaseStmtList(int i)
+    {
+        if (stmtLists == null) {
+            return null;
+        }
+        if (i < stmtLists.length) {
+            return stmtLists[i];
+        }
+        return null;
+    }
 
     protected void setTranslation(Expression expr)
     {
@@ -277,13 +301,30 @@ public class RexToOJTranslator implements RexVisitor
     // implement RexVisitor
     public void visitCall(RexCall call)
     {
+        boolean bInsideCase;
         RexNode [] operands = call.getOperands();
         Expression [] exprs = new Expression[operands.length];
+        StatementList bkupStmtLists[] = stmtLists;
+        StatementList outStmtList = null;
+        bInsideCase = false;
+        if (call.getOperator() instanceof SqlCaseOperator) {
+            bInsideCase = true;
+            stmtLists = new StatementList[operands.length];
+        }
         for (int i = 0; i < operands.length; i++) {
             RexNode operand = operands[i];
-            exprs[i] = translateRexNode(operand);
+            if (bInsideCase) {
+                stmtLists[i] = new StatementList();
+                RexToOJTranslator subTranslator = push(stmtLists[i]);
+                exprs[i] = subTranslator.translateRexNode(operand);
+            } else {
+                exprs[i] = translateRexNode(operand);
+            }
         }
         Expression callExpr = convertCall(call, exprs);
+        if (bInsideCase) {
+            stmtLists = bkupStmtLists;
+        }
         setTranslation(callExpr);
     }
 
