@@ -18,4 +18,4 @@ if [ "!" -d build/aspen ]; then
     mkdir build/aspen
 fi
 
-cruisecontrol.sh -configfile config-chelmsford.xml -port 8080
+cruisecontrol.sh -configfile /home/cruise/work/config-chelmsford.xml -port 8080

@@ -7,8 +7,8 @@
 <!ENTITY open_p4user     "guest">
 <!ENTITY open_root       "//open/dt/dev">
 <!ENTITY open_propfile   "chelmsford.perforce.properties">
-<!ENTITY open_default.build.home     "/home/cruise/cruisecontrol">
-<!ENTITY open_integration.build.home "/home/cruise/cruisecontrol/bootstrap/build">
+<!ENTITY open_default.build.home     "/home/cruise/work">
+<!ENTITY open_integration.build.home "/home/cruise/work/bootstrap/build">
 
 <!ENTITY aspen_p4port    "chumley:1667">
 <!ENTITY aspen_p4client  "cruise.chelmsford">
@@ -23,14 +23,16 @@
 <!ENTITY spamwhilebroken  "true">
 <!ENTITY subjectprefix    "Continuous Integration: ">
 <!ENTITY failureaddress   "the.team@disruptivetech.com">
+<!ENTITY emailmapper      "/home/cruise/work/bootstrap/p4email.txt">
+
 <!ENTITY reportwhenfixed  "true">
 
-<!ENTITY scp_user         "aspen">
-<!ENTITY scp_host         "jhyde.dyndns.org">
+<!ENTITY scp_user         "cruise">
+<!ENTITY scp_host         "chelmsford">
 <!ENTITY scp_filesep      "/">
-<!ENTITY scp_options      "-P 8022">
-<!ENTITY rsync_cmd        "rsync -az -e &quot;ssh -p 8022&quot; --delete-after">
-<!ENTITY rsync_dest       "aspen@jhyde.dyndns.org:web/artifacts">
+<!ENTITY scp_options      "">
+<!ENTITY rsync_cmd        "rsync -az -e ssh --delete-after">
+<!ENTITY rsync_dest       "cruise@chelmsford:web/artifacts">
 
 <!ENTITY build_interval         "3600">
 <!ENTITY build_interval_aspen   "300">

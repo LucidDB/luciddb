@@ -13,7 +13,7 @@
                 <listeners>
                   <currentbuildstatuslistener file="logs/aspen/currentbuildstatus.txt"/>
                   <!-- TODO: Enable -->
-                  <!-- <currentbuildstatuslistener file="$open_default.build.home;/../web/logs/aspen&configSuffix;/currentbuildstatus.txt"/> -->
+                  <currentbuildstatuslistener file="&open_default.build.home;/../web/logs/aspen&configSuffix;/currentbuildstatus.txt"/> 
                 </listeners>
 
 
@@ -28,7 +28,7 @@
 
 		<!-- Configures the actual build loop, how often and which build file/target -->
 		<schedule interval="&build_interval_aspen;">
-			<ant buildfile="&open_default.build.home;/bootstrap/build-aspen.xml" uselogger="true" usedebug="false" antscript="&ant;" target="integration-build-and-test">
+			<ant buildfile="&open_default.build.home;/build-aspen.xml" uselogger="true" usedebug="false" antscript="&ant;" target="integration-build-and-test">
 			    <property name="open_propfile" value="&open_propfile;"/>
 			    <property name="open_root" value="&open_root;"/>
 			</ant>
