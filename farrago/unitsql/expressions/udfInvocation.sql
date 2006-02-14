@@ -270,7 +270,11 @@ values throw_sql_exception();
 -- should fail
 values throw_npe();
 
-select * from table(ramp(5));
+-- udx invocation
+select * from table(ramp(5)) order by 1;
+
+-- udx invocation with restart on RHS of Cartesian product
+select count(*) from sales.depts, table(ramp(5));
 
 set path 'crypto2';
 

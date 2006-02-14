@@ -42,6 +42,7 @@ import java.lang.reflect.*;
  */
 public abstract class FarragoJavaUdxIterator
     extends ThreadIterator
+    implements RestartableIterator
 {
     private static final int QUEUE_ARRAY_SIZE = 10000;
     
@@ -52,6 +53,10 @@ public abstract class FarragoJavaUdxIterator
     private final FarragoSessionRuntimeContext runtimeContext;
 
     private int iRow;
+
+    private boolean restart;
+
+    private CountDownLatch latch;
 
     protected FarragoJavaUdxIterator(
         FarragoSessionRuntimeContext runtimeContext,
@@ -80,13 +85,17 @@ public abstract class FarragoJavaUdxIterator
 
         // TODO jvs 9-Jan-2006:  shouldn't start until plan is
         // fully loaded
-        start();
+        startWithLatch();
     }
 
     // implement ThreadIterator
     protected void doWork()
     {
-        executeUdx();
+        try {
+            executeUdx();
+        } finally {
+            latch.countDown();
+        }
     }
 
     // NOTE:  called from generated code
@@ -100,6 +109,47 @@ public abstract class FarragoJavaUdxIterator
         return rowObjs[iRow];
     }
 
+    // implement RestartableIterator
+    public void restart()
+    {
+        // Tell the running thread to buzz off.
+        restart = true;
+
+        // Wait for it to die.  (TODO:  If we ever get ThreadIterator
+        // to stop using daemons, change this to use thread.join instead.)
+        try {
+            latch.await();
+        } catch (InterruptedException ex) {
+            throw Util.newInternal(ex);
+        }
+        restart = false;
+
+        reset(1);
+
+        // Nullify thread.
+        onEndOfQueue();
+
+        // Toss anything it was producing.
+        queue.clear();
+
+        // Restart a new thread.
+        startWithLatch();
+    }
+
+    private void startWithLatch()
+    {
+        latch = new CountDownLatch(1);
+        start();
+    }
+
+    private void checkCancel()
+    {
+        runtimeContext.checkCancel();
+        if (restart) {
+            throw new RuntimeException("UDX thread restart");
+        }
+    }
+    
     /**
      * Calls specific UDX to produce result set.  Subclass implementation
      * is typically code-generated.
@@ -113,14 +163,14 @@ public abstract class FarragoJavaUdxIterator
         public int executeUpdate()
             throws SQLException
         {
-            runtimeContext.checkCancel();
+            checkCancel();
             // on a full pipe, timeout every second to check cancellation; we
             // have to do it this way because the iterator above us
             // may not get sucked dry when the cursor is closed, in which
             // case we'll be stuck on the full pipe unless we can check
             // for cancellation
             while (!offer(getCurrentRow(), 1000)) {
-                runtimeContext.checkCancel();
+                checkCancel();
             }
             ++iRow;
             if (iRow >= rowObjs.length) {
