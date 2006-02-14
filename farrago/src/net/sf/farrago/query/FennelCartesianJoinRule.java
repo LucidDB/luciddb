@@ -99,7 +99,8 @@ public class FennelCartesianJoinRule extends RelOptRule
                 joinRel.getCluster(),
                 fennelLeft,
                 fennelRight,
-                joinRel.getJoinType());
+                joinRel.getJoinType(),
+                RelOptUtil.getFieldNameList(joinRel.getRowType()));
         call.transformTo(productRel);
 
         // TODO jvs 15-Feb-2005: In most cases, buffering the

@@ -64,7 +64,7 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
     //~ Instance fields -------------------------------------------------------
 
     private final FarragoRepos repos;
-    private final StatementList stmtList;
+    private StatementList stmtList;
     private final MemberDeclarationList memberList;
     private final FarragoOJRexCastImplementor castImplementor;
     private final OJClass ojNullablePrimitive;
@@ -110,6 +110,7 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
     }
 
     //~ Methods ---------------------------------------------------------------
+    //
 
     public RexToOJTranslator push(StatementList stmtList)
     {

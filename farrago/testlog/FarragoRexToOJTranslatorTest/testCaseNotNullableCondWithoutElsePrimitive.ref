@@ -32,9 +32,6 @@ net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var4 = new net.
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var5 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
 
-oj_var4.setNull( true );
-oj_var5.isNull = oj_var4.isNull;
-oj_var5.value = (int) oj_var4.value;
 if (net.sf.farrago.type.runtime.CharStringComparator.compareCharStrings( ID$1$NAME, oj_var0 ) == 0) {
     oj_var5.isNull = false;
     oj_var5.value = (int) 1;
@@ -50,6 +47,10 @@ if (net.sf.farrago.type.runtime.CharStringComparator.compareCharStrings( ID$1$NA
             if (net.sf.farrago.type.runtime.CharStringComparator.compareCharStrings( ID$1$NAME, oj_var3 ) == 0) {
                 oj_var5.isNull = false;
                 oj_var5.value = (int) 4;
+            } else {
+                oj_var4.setNull( true );
+                oj_var5.isNull = oj_var4.isNull;
+                oj_var5.value = (int) oj_var4.value;
             }
         }
     }

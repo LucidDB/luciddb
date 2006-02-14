@@ -263,7 +263,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             final AggregateRelBase.Call countCall =
                 new AggregateRelBase.Call(
                     SqlStdOperatorTable.countOperator,
-                    new int[0]);
+                    false, new int[0]);
             AggregateRel aggregateRel =
                 new AggregateRel(
                     cluster, uncollect, 1, new AggregateRel.Call[]{countCall});
@@ -341,7 +341,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             final AggregateRelBase.Call countCall =
                 new AggregateRelBase.Call(
                     SqlStdOperatorTable.countOperator,
-                    new int[0]);
+                    false, new int[0]);
             AggregateRel aggregateRel =
                 new AggregateRel(
                     cluster, uncollect, 1, new AggregateRel.Call[]{countCall});
@@ -665,7 +665,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
         final AggregateRelBase.Call countCall =
             new AggregateRelBase.Call(
                 SqlStdOperatorTable.countOperator,
-                new int[0]);
+                false, new int[0]);
         final int groupCount = child.getRowType().getFields().length;
         AggregateRel aggregateRel =
             new AggregateRel(
@@ -857,7 +857,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
         final AggregateRelBase.Call countCall =
             new AggregateRelBase.Call(
                 SqlStdOperatorTable.countOperator,
-                new int[0]);
+                false, new int[0]);
         AggregateRel aggregateRel =
             new AggregateRel(
                 cluster, child, 1, new AggregateRel.Call[]{countCall});

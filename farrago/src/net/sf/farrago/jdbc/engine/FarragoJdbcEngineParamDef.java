@@ -86,4 +86,15 @@ class FarragoJdbcEngineParamDef implements FarragoSessionStmtParamDef
             x.getClass().getName(),
             type.toString());
     }
+
+    /**
+     * Returns an error that the value cannot be converted to the desired SQL
+     * type.
+     */
+    protected EigenbaseException newInvalidFormat(Object x)
+    {
+        return FarragoResource.instance().ParameterValueInvalidFormat.ex(
+            x.toString(),
+            type.toString());
+    }
 }

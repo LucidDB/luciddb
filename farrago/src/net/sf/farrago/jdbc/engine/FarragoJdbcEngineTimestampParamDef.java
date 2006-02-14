@@ -48,8 +48,21 @@ class FarragoJdbcEngineTimestampParamDef extends FarragoJdbcEngineParamDef
     // implement FarragoSessionStmtParamDef
     public Object scrubValue(Object x)
     {
-        // java.sql.Date, java.sql.Time, java.sql.Timestamp are all OK.
-        if (!(x instanceof java.util.Date)) {
+        if (x == null) {
+            return x;
+        }
+
+        if (x instanceof String) {
+            try {
+                return java.sql.Timestamp.valueOf((String) x);
+            } catch (IllegalArgumentException e) {
+                throw newInvalidFormat(x);
+            }
+        }
+
+        // Only java.sql.Date, java.sql.Timestamp are all OK.
+        // java.sql.Time is not okay (no date information)
+        if (!(x instanceof Timestamp) && !(x instanceof java.sql.Date)) {
             throw newInvalidType(x);
         }
         java.util.Date timestamp = (java.util.Date) x;

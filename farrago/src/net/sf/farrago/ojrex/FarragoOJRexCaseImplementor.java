@@ -58,8 +58,6 @@ public class FarragoOJRexCaseImplementor extends FarragoOJRexImplementor
 
         boolean hasElse = ((call.operands.length % 2) == 1);
 
-        int numOfWhen = call.operands.length / 2 ;
-
         Variable varResult = null;
 
         if (SqlTypeUtil.isJavaPrimitive(retType) && !retType.isNullable()) {
@@ -74,14 +72,7 @@ public class FarragoOJRexCaseImplementor extends FarragoOJRexImplementor
             varResult = translator.createScratchVariable(call.getType());
         }
 
-        if (hasElse) {
-            translator.convertCastOrAssignment(
-                call.toString(),
-                call.getType(),
-                call.operands[operands.length - 1].getType(),
-                varResult,
-                operands[operands.length - 1]);
-        } else {
+        if (!hasElse) {
             translator.createSetNullStatement(varResult, true);
         }
 
@@ -89,11 +80,25 @@ public class FarragoOJRexCaseImplementor extends FarragoOJRexImplementor
         IfStatement prevIfStatement = null;
 
         for (i = 0; i < operands.length - 1; i = i + 2) {
+            boolean bHasElseAndLastOne = false;
             Expression cond = operands[ i ];
             Expression value = operands[ i + 1 ];
             boolean isCondNullable = call.operands[i].getType().isNullable();
-            StatementList stmtList = new StatementList();
+            StatementList caseCondStmtList = translator.getCaseStmtList(i);
+            StatementList stmtList = translator.getCaseStmtList(i+1);
+            if (stmtList == null) {
+                stmtList = new StatementList();
+            }
+            if (i == 0) {
+                for (int k = 0; k < caseCondStmtList.size(); k++) {
+                    translator.addStatement(caseCondStmtList.get(k));
+                }
+            }
             IfStatement ifStmt = null;
+
+            if (i == (operands.length - 3)) {
+                bHasElseAndLastOne = true;
+            }
 
             translator.convertCastOrAssignmentWithStmtList(
                 stmtList,
@@ -117,12 +122,22 @@ public class FarragoOJRexCaseImplementor extends FarragoOJRexImplementor
                             notNullTest,
                             BinaryExpression.LOGICAL_AND,
                             getBitCondition);
+                cond = condition;
+            }
 
-                ifStmt = new IfStatement(
-                        condition, 
-                        stmtList);
+            if (bHasElseAndLastOne) {
+                StatementList elseStmtList = 
+                        translator.getCaseStmtList(operands.length - 1);
+                translator.convertCastOrAssignmentWithStmtList(
+                        elseStmtList,
+                        call.toString(),
+                        call.getType(),
+                        call.operands[operands.length - 1].getType(),
+                        varResult,
+                        operands[operands.length - 1]);
+                 ifStmt = new IfStatement( cond, stmtList, elseStmtList);
             } else {
-                ifStmt = new IfStatement(cond, stmtList);
+                 ifStmt = new IfStatement( cond, stmtList);
             }
             if (wholeStatement == null) {
                 wholeStatement = ifStmt;
@@ -130,7 +145,8 @@ public class FarragoOJRexCaseImplementor extends FarragoOJRexImplementor
             if (prevIfStatement == null) {
                 prevIfStatement = ifStmt;
             } else {
-                prevIfStatement.setElseStatements(new StatementList(ifStmt));
+                caseCondStmtList.add(ifStmt);
+                prevIfStatement.setElseStatements(caseCondStmtList);
                 prevIfStatement = ifStmt;
             }
         } 

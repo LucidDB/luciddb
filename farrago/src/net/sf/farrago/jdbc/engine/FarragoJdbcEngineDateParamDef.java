@@ -24,6 +24,7 @@ package net.sf.farrago.jdbc.engine;
 
 import java.util.Calendar;
 import java.util.TimeZone;
+import java.sql.Timestamp;
 
 import org.eigenbase.reltype.RelDataType;
 
@@ -48,9 +49,24 @@ class FarragoJdbcEngineDateParamDef extends FarragoJdbcEngineParamDef
     // implement FarragoSessionStmtParamDef
     public Object scrubValue(Object x)
     {
-        if (!(x instanceof java.util.Date)) {
+        if (x == null) {
+            return null;
+        }
+
+        if (x instanceof String) {
+            try {
+                return java.sql.Date.valueOf((String) x);
+            } catch (IllegalArgumentException e) {
+                throw newInvalidFormat(x);
+            }            
+        }
+
+        // Only java.sql.Date, java.sql.Timestamp are all OK.
+        // java.sql.Time is not okay (no date information)
+        if (!(x instanceof Timestamp) && !(x instanceof java.sql.Date)) {
             throw newInvalidType(x);
         }
+
         java.util.Date date = (java.util.Date) x;
         final long millis = date.getTime();
         final long shiftedMillis;

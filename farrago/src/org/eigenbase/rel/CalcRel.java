@@ -25,6 +25,7 @@ package org.eigenbase.rel;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.*;
 
 import java.util.Set;
@@ -143,6 +144,27 @@ public final class CalcRel extends CalcRelBase
         } else {
             return new FilterRel(child.getCluster(), child, condition);
         }
+    }
+
+    /**
+     * Returns a relational expression which has the same fields as the
+     * underlying expression, but the fields have different names.
+     *
+     * @param rel Relational expression
+     * @param fieldNames Field names
+     * @return Renamed relational expression
+     */
+    public static RelNode createRename(
+        RelNode rel,
+        String[] fieldNames)
+    {
+        final RelDataTypeField[] fields = rel.getRowType().getFields();
+        assert fieldNames.length == fields.length;
+        final RexInputRef[] refs = new RexInputRef[fieldNames.length];
+        for (int i = 0; i < refs.length; i++) {
+            refs[i] = new RexInputRef(i, fields[i].getType());
+        }
+        return createProject(rel, refs, fieldNames);
     }
 
     public void collectVariablesUsed(Set variableSet)

@@ -58,15 +58,22 @@ public class SqlToRelConverterTest extends TestCase
         return new TesterImpl();
     }
 
+    protected DiffRepository getDiffRepos()
+    {
+        return DiffRepository.lookup(SqlToRelConverterTest.class);
+    }
+
     protected void check(
         String sql,
         String plan)
     {
-        final RelNode rel = tester.convertSqlToRel(sql);
+        final DiffRepository diffRepos = getDiffRepos();
+        String sql2 = diffRepos.expand("sql", sql);
+        final RelNode rel = tester.convertSqlToRel(sql2);
 
         assertTrue(rel != null);
         String actual = RelOptUtil.toString(rel);
-        TestUtil.assertEqualsVerbose(plan, actual);
+        diffRepos.assertEquals("plan", plan, actual);
     }
 
     /**
@@ -349,49 +356,36 @@ public class SqlToRelConverterTest extends TestCase
     public void testIntegerLiteral()
     {
         check("select 1 from emp",
-            TestUtil.fold(new String[]{
-                "ProjectRel(EXPR$0=[1])",
-                "  TableAccessRel(table=[[SALES, EMP]])",
-                ""}));
+            "${plan}");
     }
 
     public void testGroup()
     {
         check("select deptno from emp group by deptno",
-            TestUtil.fold(new String[]{
-                "ProjectRel(DEPTNO=[$0])",
-                "  AggregateRel(groupCount=[1])",
-                "    ProjectRel($f0=[$7])",
-                "      TableAccessRel(table=[[SALES, EMP]])",
-                ""}));
+            "${plan}");
+    }
 
+    public void testGroupJustOneAgg()
+    {
         // just one agg
         check("select deptno, sum(sal) from emp group by deptno",
-            TestUtil.fold(new String[]{
-                "ProjectRel(DEPTNO=[$0], EXPR$1=[$1])",
-                "  AggregateRel(groupCount=[1], agg#0=[SUM(1)])",
-                "    ProjectRel($f0=[$7], $f1=[$5])",
-                "      TableAccessRel(table=[[SALES, EMP]])",
-                ""}));
+            "${plan}");
+    }
 
-        // expressions inside and outside aggs
-        check("select deptno + 4, sum(sal), sum(3 + sal), 2 * sum(sal) from emp group by deptno",
-            TestUtil.fold(new String[]{
-                "ProjectRel(EXPR$0=[+($0, 4)], EXPR$1=[$1], EXPR$2=[$2], EXPR$3=[*(2, $3)])",
-                "  AggregateRel(groupCount=[1], agg#0=[SUM(1)], agg#1=[SUM(2)], agg#2=[SUM(3)])",
-                "    ProjectRel($f0=[$7], $f1=[$5], $f2=[+(3, $5)], $f3=[$5])",
-                "      TableAccessRel(table=[[SALES, EMP]])",
-                ""}));
+    public void testGroupExpressionsInsideAndOut()
+    {
+        // Expressions inside and outside aggs.
+        // Common sub-expressions should be eliminated: 'sal' always translates
+        // to expression #2.
+        check("select deptno + 4, sum(sal), sum(3 + sal), 2 * count(sal) from emp group by deptno",
+            "${plan}");
+    }
 
+    public void testHaving()
+    {
         // empty group-by clause, having
         check("select sum(sal + sal) from emp having sum(sal) > 10",
-            TestUtil.fold(new String[]{
-                "ProjectRel(EXPR$0=[$0])",
-                "  FilterRel(condition=[>($1, 10)])",
-                "    AggregateRel(groupCount=[0], agg#0=[SUM(0)], agg#1=[SUM(1)])",
-                "      ProjectRel($f0=[+($5, $5)], $f1=[$5])",
-                "        TableAccessRel(table=[[SALES, EMP]])",
-                ""}));
+            "${plan}");
     }
 
     public void testGroupBug281() {
@@ -399,280 +393,152 @@ public class SqlToRelConverterTest extends TestCase
         //   Internal error:
         //   Type 'RecordType(VARCHAR(128) $f0)' has no field 'NAME'
         check("select name from (select name from dept group by name)",
-            TestUtil.fold(new String[]{
-                "ProjectRel(NAME=[$0])",
-                "  ProjectRel(NAME=[$0])",
-                "    AggregateRel(groupCount=[1])",
-                "      ProjectRel($f0=[$1])",
-                "        TableAccessRel(table=[[SALES, DEPT]])",
-                ""}));
+            "${plan}");
+    }
+
+    public void testGroupBug281b() {
 
         // Try to confuse it with spurious columns.
         check("select name, foo from (" +
             "select deptno, name, count(deptno) as foo " +
             "from dept " +
             "group by name, deptno, name)",
-            TestUtil.fold(new String[]{
-                "ProjectRel(NAME=[$1], FOO=[$2])",
-                "  ProjectRel(DEPTNO=[$1], NAME=[$0], FOO=[$3])",
-                "    AggregateRel(groupCount=[3], agg#0=[COUNT(3)])",
-                "      ProjectRel($f0=[$1], $f1=[$0], $f2=[$1], $f3=[$0])",
-                "        TableAccessRel(table=[[SALES, DEPT]])",
-                ""}));
+            "${plan}");
     }
 
-    public void testUnnest() {
+    public void testAggDistinct()
+    {
+        check(
+            "select deptno, sum(sal), sum(distinct sal), count(*) " +
+            "from emp " +
+            "group by deptno",
+            "${plan}");
+    }
+
+    public void testUnnest()
+    {
         check("select*from unnest(multiset[1,2])",
-            TestUtil.fold(new String[]{
-                "ProjectRel(EXPR$0=[$0])",
-                "  UncollectRel",
-                "    ProjectRel(EXPR$0=[$SLICE($0)])",
-                "      CollectRel",
-                "        UnionRel(all=[true])",
-                "          ProjectRel(EXPR$0=[1])",
-                "            OneRowRel",
-                "          ProjectRel(EXPR$0=[2])",
-                "            OneRowRel",
-                ""}));
+            "${plan}");
+    }
 
+    public void testUnnestSubquery()
+    {
         check("select*from unnest(multiset(select*from dept))",
-            TestUtil.fold(new String[]{
-                "ProjectRel(DEPTNO=[$0], NAME=[$1])",
-                "  UncollectRel",
-                "    ProjectRel(EXPR$0=[$0])",
-                "      CollectRel",
-                "        ProjectRel(DEPTNO=[$0], NAME=[$1])",
-                "          TableAccessRel(table=[[SALES, DEPT]])",
-                ""}));
-
+            "${plan}");
     }
 
-    public void testMultiset() {
+    public void testMultisetSubquery()
+    {
         check("select multiset(select deptno from dept) from (values(true))",
-            TestUtil.fold(new String[]{
-                "ProjectRel(EXPR$0=[$1])",
-                "  JoinRel(condition=[true], joinType=[inner])",
-                "    ProjectRel(EXPR$0=[$0])",
-                "      ProjectRel(EXPR$0=[true])",
-                "        OneRowRel",
-                "    CollectRel",
-                "      ProjectRel(DEPTNO=[$0])",
-                "        TableAccessRel(table=[[SALES, DEPT]])",
-                ""}));
-
-        check("select 'a',multiset[10] from dept",
-            TestUtil.fold(new String[]{
-                "ProjectRel(EXPR$0=[_ISO-8859-1'a'], EXPR$1=[$SLICE($2)])",
-                "  JoinRel(condition=[true], joinType=[inner])",
-                "    TableAccessRel(table=[[SALES, DEPT]])",
-                "    CollectRel",
-                "      UnionRel(all=[true])",
-                "        ProjectRel(EXPR$0=[10])",
-                "          OneRowRel",
-                ""}));
-
-        check("select 'abc',multiset[deptno,sal] from emp",
-            TestUtil.fold(new String[]{
-                "ProjectRel(EXPR$0=[_ISO-8859-1'abc'], EXPR$1=[$SLICE($8)])",
-                "  CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset7, var1=offset5]])",
-                "    TableAccessRel(table=[[SALES, EMP]])",
-                "    CollectRel",
-                "      UnionRel(all=[true])",
-                "        ProjectRel(EXPR$0=[$cor0.DEPTNO])",
-                "          OneRowRel",
-                "        ProjectRel(EXPR$0=[$cor1.SAL])",
-                "          OneRowRel",
-                ""}));
+            "${plan}");
     }
 
-    public void testCorrelationJoin() {
+    public void testMultiset()
+    {
+        check("select 'a',multiset[10] from dept",
+            "${plan}");
+    }
+
+    public void testMultisetOfColumns() {
+        check("select 'abc',multiset[deptno,sal] from emp",
+            "${plan}");
+    }
+
+    public void testCorrelationJoin()
+    {
         check("select *," +
             "         multiset(select * from emp where deptno=dept.deptno) " +
             "               as empset" +
             "      from dept",
-
-            TestUtil.fold(new String[]{
-                "ProjectRel(DEPTNO=[$0], NAME=[$1], EMPSET=[$2])",
-                "  CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset0]])",
-                "    TableAccessRel(table=[[SALES, DEPT]])",
-                "    CollectRel",
-                "      ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7])",
-                "        FilterRel(condition=[=($7, $cor0.DEPTNO)])",
-                "          TableAccessRel(table=[[SALES, EMP]])",
-                ""}));
+            "${plan}");
     }
 
-    public void testExists() {
+    public void testExists()
+    {
         check("select*from emp where exists (select 1 from dept where deptno=55)",
-            TestUtil.fold(new String[]{
-                "ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7])",
-                "  FilterRel(condition=[IS NULL($9)])",
-                "    JoinRel(condition=[true], joinType=[left])",
-                "      TableAccessRel(table=[[SALES, EMP]])",
-                "      ProjectRel(EXPR$0=[$0], $indicator=[true])",
-                "        ProjectRel(EXPR$0=[1])",
-                "          FilterRel(condition=[=($0, 55)])",
-                "            TableAccessRel(table=[[SALES, DEPT]])",
-                ""}));
+            "${plan}");
+    }
 
+    public void testExistsCorrelated()
+    {
         check("select*from emp where exists (select 1 from dept where emp.deptno=dept.deptno)",
-            TestUtil.fold(new String[]{
-                "ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7])",
-                "  FilterRel(condition=[IS NULL($9)])",
-                "    CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset7]])",
-                "      TableAccessRel(table=[[SALES, EMP]])",
-                "      ProjectRel(EXPR$0=[$0], $indicator=[true])",
-                "        ProjectRel(EXPR$0=[1])",
-                "          FilterRel(condition=[=($cor0.DEPTNO, $0)])",
-                "            TableAccessRel(table=[[SALES, DEPT]])",
-                ""}));
+            "${plan}");
     }
 
     public void testUnnestSelect() {
         check("select*from unnest(select multiset[deptno] from dept)",
-            TestUtil.fold(new String[]{
-                "ProjectRel(EXPR$0=[$0])",
-                "  UncollectRel",
-                "    ProjectRel(EXPR$0=[$0])",
-                "      ProjectRel(EXPR$0=[$SLICE($2)])",
-                "        CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset0]])",
-                "          TableAccessRel(table=[[SALES, DEPT]])",
-                "          CollectRel",
-                "            UnionRel(all=[true])",
-                "              ProjectRel(EXPR$0=[$cor0.DEPTNO])",
-                "                OneRowRel",
-                ""}));
+            "${plan}");
     }
 
     public void testLateral() {
         check("select * from emp, LATERAL (select * from dept where emp.deptno=dept.deptno)",
-            TestUtil.fold(new String[]{
-                "ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], DEPTNO0=[$8], NAME=[$9])",
-                "  CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset7]])",
-                "    TableAccessRel(table=[[SALES, EMP]])",
-                "    ProjectRel(DEPTNO=[$0], NAME=[$1])",
-                "      FilterRel(condition=[=($cor0.DEPTNO, $0)])",
-                "        TableAccessRel(table=[[SALES, DEPT]])",
-                ""}));
+            "${plan}");
     }
 
-    public void testElement() {
+    public void testElement()
+    {
         check("select element(multiset[5]) from emp",
-            TestUtil.fold(new String[]{
-                "ProjectRel(EXPR$0=[ELEMENT($SLICE($8))])",
-                "  JoinRel(condition=[true], joinType=[inner])",
-                "    TableAccessRel(table=[[SALES, EMP]])",
-                "    CollectRel",
-                "      UnionRel(all=[true])",
-                "        ProjectRel(EXPR$0=[5])",
-                "          OneRowRel",
-                ""}));
+            "${plan}");
 
-        check("values element(multiset[5])",
-            TestUtil.fold(new String[]{
-                "ProjectRel(EXPR$0=[$0])",
-                "  ProjectRel(EXPR$0=[ELEMENT($SLICE($0))])",
-                "    CollectRel",
-                "      UnionRel(all=[true])",
-                "        ProjectRel(EXPR$0=[5])",
-                "          OneRowRel",
-                ""}));
     }
 
-    public void testUnion() {
+    public void testElementInValues()
+    {
+        check("values element(multiset[5])",
+            "${plan}");
+    }
+
+    public void testUnionAll()
+    {
         // union all
         check( "select empno from emp union all select deptno from dept",
-            TestUtil.fold(new String[]{
-                "UnionRel(all=[true])",
-                "  ProjectRel(EMPNO=[$0])",
-                "    TableAccessRel(table=[[SALES, EMP]])",
-                "  ProjectRel(DEPTNO=[$0])",
-                "    TableAccessRel(table=[[SALES, DEPT]])",
-                ""}));
+            "${plan}");
+    }
 
+    public void testUnion()
+    {
         // union without all
         check("select empno from emp union select deptno from dept",
-            TestUtil.fold(new String[]{
-                "UnionRel(all=[false])",
-                "  ProjectRel(EMPNO=[$0])",
-                "    TableAccessRel(table=[[SALES, EMP]])",
-                "  ProjectRel(DEPTNO=[$0])",
-                "    TableAccessRel(table=[[SALES, DEPT]])",
-                ""}));
+            "${plan}");
+    }
 
+    public void testUnionValues()
+    {
         // union with values
         check("values (10), (20)" + NL +
             "union all" + NL +
             "select 34 from emp" + NL +
             "union all values (30), (45 + 10)",
-            TestUtil.fold(new String[]{
-                "UnionRel(all=[true])",
-                "  UnionRel(all=[true])",
-                "    ProjectRel(EXPR$0=[$0])",
-                "      UnionRel(all=[true])",
-                "        ProjectRel(EXPR$0=[10])",
-                "          OneRowRel",
-                "        ProjectRel(EXPR$0=[20])",
-                "          OneRowRel",
-                "    ProjectRel(EXPR$0=[34])",
-                "      TableAccessRel(table=[[SALES, EMP]])",
-                "  ProjectRel(EXPR$0=[$0])",
-                "    UnionRel(all=[true])",
-                "      ProjectRel(EXPR$0=[30])",
-                "        OneRowRel",
-                "      ProjectRel(EXPR$0=[+(45, 10)])",
-                "        OneRowRel",
-                ""}));
+            "${plan}");
+    }
 
+    public void testUnionSubquery()
+    {
         // union of subquery, inside from list, also values
         check("select deptno from emp as emp0 cross join" + NL +
             " (select empno from emp union all " + NL +
             "  select deptno from dept where deptno > 20 union all" + NL +
             "  values (45), (67))",
-            TestUtil.fold(new String[]{
-                "ProjectRel(DEPTNO=[$7])",
-                "  JoinRel(condition=[true], joinType=[inner])",
-                "    TableAccessRel(table=[[SALES, EMP]])",
-                "    UnionRel(all=[true])",
-                "      UnionRel(all=[true])",
-                "        ProjectRel(EMPNO=[$0])",
-                "          TableAccessRel(table=[[SALES, EMP]])",
-                "        ProjectRel(DEPTNO=[$0])",
-                "          FilterRel(condition=[>($0, 20)])",
-                "            TableAccessRel(table=[[SALES, DEPT]])",
-                "      ProjectRel(EXPR$0=[$0])",
-                "        UnionRel(all=[true])",
-                "          ProjectRel(EXPR$0=[45])",
-                "            OneRowRel",
-                "          ProjectRel(EXPR$0=[67])",
-                "            OneRowRel",
-                ""}));
-
+            "${plan}");
     }
 
-    public void testIsDistinctFrom() {
+    public void testIsDistinctFrom()
+    {
         check("select 1 is distinct from 2 from (values(true))",
-            TestUtil.fold(new String[]{
-                "ProjectRel(EXPR$0=[CASE(IS NULL(1), IS NOT NULL(2), IS NULL(2), IS NOT NULL(1), <>(1, 2))])",
-                "  ProjectRel(EXPR$0=[$0])",
-                "    ProjectRel(EXPR$0=[true])",
-                "      OneRowRel",
-                ""}));
+            "${plan}");
+    }
 
+    public void testIsNotDistinctFrom()
+    {
         check("select 1 is not distinct from 2 from (values(true))",
-            TestUtil.fold(new String[]{
-                "ProjectRel(EXPR$0=[CASE(IS NULL(1), IS NULL(2), IS NULL(2), IS NULL(1), =(1, 2))])",
-                "  ProjectRel(EXPR$0=[$0])",
-                "    ProjectRel(EXPR$0=[true])",
-                "      OneRowRel",
-                ""}));
+            "${plan}");
+    }
+
+    public void testNotLike()
+    {
         // note that 'x not like y' becomes 'not(x like y)'
         check("values ('a' not like 'b' escape 'c')",
-            TestUtil.fold(new String[]{
-                "ProjectRel(EXPR$0=[$0])",
-                "  ProjectRel(EXPR$0=[NOT(LIKE(_ISO-8859-1'a', _ISO-8859-1'b', _ISO-8859-1'c'))])",
-                "    OneRowRel",
-                ""}));
+            "${plan}");
     }
 
     public void testOverMultiple() {
@@ -685,12 +551,7 @@ public class SqlToRelConverterTest extends TestCase
             "window w1 as (partition by job order by hiredate rows 2 preceding)," + NL +
             "  w2 as (partition by job order by hiredate rows 3 preceding)," + NL +
             "  w3 as (partition by job order by hiredate range interval '1' second preceding)",
-
-            TestUtil.fold(new String[] {
-                "ProjectRel(EXPR$0=[SUM($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING)], EXPR$1=[SUM($7) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING)], EXPR$2=[SUM($7) OVER (PARTITION BY $2 ORDER BY $4 ROWS 3 PRECEDING)])",
-                "  FilterRel(condition=[>(SUM(-($7, $5)) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING), 999)])",
-                "    TableAccessRel(table=[[SALES, EMP]])",
-                ""}));
+            "${plan}");
     }
 
     /**
@@ -700,11 +561,7 @@ public class SqlToRelConverterTest extends TestCase
     public void testCase()
     {
         check("values (case 'a' when 'a' then 1 end)",
-            TestUtil.fold(new String[]{
-                "ProjectRel(EXPR$0=[$0])",
-                "  ProjectRel(EXPR$0=[CASE(=(_ISO-8859-1'a', _ISO-8859-1'a'), 1, CAST(null):INTEGER)])",
-                "    OneRowRel",
-                ""}));
+            "${plan}");
     }
 
     /**
@@ -716,11 +573,7 @@ public class SqlToRelConverterTest extends TestCase
     {
         // Note that CHARACTER_LENGTH becomes CHAR_LENGTH.
         check("values (character_length('foo'))",
-            TestUtil.fold(new String[]{
-                "ProjectRel(EXPR$0=[$0])",
-                "  ProjectRel(EXPR$0=[CHAR_LENGTH(_ISO-8859-1'foo')])",
-                "    OneRowRel",
-                ""}));
+            "${plan}");
     }
 
     public void testOverAvg()
@@ -731,10 +584,7 @@ public class SqlToRelConverterTest extends TestCase
             "from emp" + NL +
             "window w1 as (partition by job order by hiredate rows 2 preceding)",
 
-            TestUtil.fold(new String[] {
-                "ProjectRel(EXPR$0=[SUM($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING)], EXPR$1=[CASE(=(COUNT($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING), 0), CAST(null):INTEGER, /(SUM($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING), COUNT($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING)))])",
-                "  TableAccessRel(table=[[SALES, EMP]])",
-                ""}));
+            "${plan}");
     }
 
     public void testOverCountStar()
@@ -745,10 +595,7 @@ public class SqlToRelConverterTest extends TestCase
             "from emp" + NL +
             "window w1 as (partition by job order by hiredate rows 2 preceding)",
 
-            TestUtil.fold(new String[] {
-                "ProjectRel(EXPR$0=[COUNT($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING)], EXPR$1=[COUNT() OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING)])",
-                "  TableAccessRel(table=[[SALES, EMP]])",
-                ""}));
+            "${plan}");
     }
 
     public void testExplainAsXml() {
@@ -760,6 +607,7 @@ public class SqlToRelConverterTest extends TestCase
             new RelOptXmlPlanWriter(pw, SqlExplainLevel.DIGEST_ATTRIBUTES);
         rel.explain(planWriter);
         pw.flush();
+        DiffRepository diffRepos = getDiffRepos();
         TestUtil.assertEqualsVerbose(
             TestUtil.fold(new String[]{
                 "<RelNode type=\"ProjectRel\">",
@@ -788,7 +636,6 @@ public class SqlToRelConverterTest extends TestCase
                 ""}),
             sw.toString());
     }
-
 }
 
-// End ConverterTest.java
+// End SqlToRelConverterTest.java

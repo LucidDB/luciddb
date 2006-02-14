@@ -36,7 +36,6 @@ import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelOptSchema;
 import org.eigenbase.util.*;
 
-
 /**
  * VolcanoPlanner optimizes queries by transforming expressions selectively
  * according to a dynamic programming algorithm.
@@ -470,7 +469,15 @@ public class VolcanoPlanner implements RelOptPlanner
         RelNode equivRel)
     {
         assert !isRegistered(rel) : "pre: isRegistered(rel)";
-        final RelSet set = equivRel == null ? null : getSet(equivRel);
+        final RelSet set;
+        if (equivRel == null) {
+            set = null;
+        } else {
+            assert RelOptUtil.equal(
+                "rel rowtype", rel.getRowType(),
+                "equivRel rowtype", equivRel.getRowType(), true);
+            set = getSet(equivRel);
+        }
         final RelSubset subset = registerImpl(rel, set);
 
         if (tracer.isLoggable(Level.FINE)) {
@@ -1240,8 +1247,11 @@ loop:
         RelSet set,
         RelSubset subset)
     {
-        if ((set != subset.set) && (set != null)
-                && (set.equivalentSet == null)) {
+        if (set != subset.set &&
+            set != null &&
+            set.equivalentSet == null &&
+            subset.set.equivalentSet == null)
+        {
             tracer.finer("Register #" + subset.getId() + " " + subset
                 + ", and merge sets");
             merge(set, subset.set);
@@ -1260,6 +1270,7 @@ loop:
         }
         listener = newListener;
     }
+
 
     //~ Inner Classes ---------------------------------------------------------
 
