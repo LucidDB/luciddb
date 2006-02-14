@@ -1,0 +1,251 @@
+create schema s;
+set schema 's';
+
+CREATE TABLE BENCH1M (
+  KSEQ  INTEGER  
+ ,K2    INTEGER 
+ ,K4    INTEGER 
+ ,K5    INTEGER 
+ ,K10   INTEGER 
+ ,K25   INTEGER 
+ ,K100  INTEGER 
+ ,K1K   INTEGER 
+ ,K10K  INTEGER 
+ ,K40K  INTEGER  
+ ,K100K INTEGER
+ ,K250K INTEGER 
+ ,K500K INTEGER )
+;
+create index B1M_K2_IDX on BENCH1M (k2)
+;
+create index B1M_K4_IDX on BENCH1M (k4)
+;
+create index B1M_K5_IDX on BENCH1M (k5)
+;
+create index B1M_K10_IDX on BENCH1M (k10)
+;
+create index B1M_K25_IDX on BENCH1M (k25)
+;
+create index B1M_K100_IDX on BENCH1M (k100)
+;
+create index B1M_K1K_IDX on BENCH1M (k1k)
+;
+create index B1M_K10K_IDX on BENCH1M (k10k)
+;
+create index B1M_K40K_IDX on BENCH1M (k40k)
+;
+create index B1M_K100K_IDX on BENCH1M (k100k)
+;
+create index B1M_K250K_IDX on BENCH1M (k250k)
+;
+create index B1M_K500K_IDX on BENCH1M (k500k)
+;
+create index B1M_KSEQ_IDX on BENCH1M (kseq)
+;
+
+create foreign data wrapper @DATA_WRAPPER_NAME@
+library '@DATA_LIBRARY@'
+language java;
+
+create server @SERVER_NAME@
+foreign data wrapper @DATA_WRAPPER_NAME@
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    schema_name '@SCHEMA_NAME@',
+    qualifying_catalog_name '@CATALOG_NAME@',
+    table_types '@TABLE_TYPES@',
+    driver_class '@DRIVER_CLASS@'
+
+    directory '@DIRECTORY@',
+    file_extension '@FILE_EXTENSION@',
+    ctrl_file_extension '@CTRL_FILE_EXT@',
+    field_delimiter '@FIELD_DELIM@',
+    line_delimiter '@LINE_DELIM@',
+    quote_char '@QUOTE_CHAR@',
+    escape_char '@ESCAPE_CHAR@',
+    with_header '@WITH_HEADER@',
+    num_rows_scan '@NUM_ROWS_SCAN@'
+);
+
+create schema @name_prefix@_schema;
+set schema '@name_prefix@_schema';
+
+create foreign table BENCH_SOURCE_100 (
+C1 INTEGER,
+C2 INTEGER,
+C4 INTEGER,
+C5 INTEGER,
+C10 INTEGER,
+C25 INTEGER,
+C100 INTEGER,
+C1K INTEGER,
+C10K INTEGER,
+C40K  INTEGER,
+C100K INTEGER, 
+C250K INTEGER,
+C500K INTEGER) 
+server @SERVER_NAME@
+options (
+SCHEMA_NAME '@SCHEMA@',
+@TABLE_NAME@ 'bench100'
+)
+;
+
+create foreign table BENCH_SOURCE_1M (
+C1 INTEGER,
+C2 INTEGER,
+C4 INTEGER,
+C5 INTEGER,
+C10 INTEGER,
+C25 INTEGER,
+C100 INTEGER,
+C1K INTEGER,
+C10K INTEGER,
+C40K  INTEGER,
+C100K INTEGER, 
+C250K INTEGER,
+C500K INTEGER) 
+server @SERVER_NAME@
+options (
+SCHEMA_NAME '@SCHEMA@',
+@TABLE_NAME@ 'bench1M'
+)
+;
+
+set schema 's';
+
+INSERT INTO BENCH1M (KSEQ,K2,K4,K5,K10,K25,K100,K1K,K10K,K40K,K100K,K250K,
+K500K) SELECT C1,C2,C4,C5,C10,C25,C100,C1K,C10K,C40K,C100K,C250K,C500K 
+FROM @name_prefix@_schema.BENCH_SOURCE_100
+;
+INSERT INTO BENCH1M (KSEQ,K2,K4,K5,K10,K25,K100,K1K,K10K,K40K,K100K,K250K,
+K500K) SELECT C1,C2,C4,C5,C10,C25,C100,C1K,C10K,C40K,C100K,C250K,C500K 
+FROM @name_prefix@_schema.BENCH_SOURCE_1M where C4 = 1
+;
+select count(*) from bench1m
+;
+select count(*) from bench1m where k2 between 1 and 2
+;
+select count(*) from bench1m where k4 between 1 and 4
+;
+select count(*) from bench1m where k5 between 1 and 5
+;
+select count(*) from bench1m where k10 between 1 and 10
+;
+select count(*) from bench1m where k25 between 1 and 25
+;
+select count(*) from bench1m where k100 between 1 and 100
+;
+select count(*) from bench1m where k1k between 1 and 1000
+;
+select count(*) from bench1m where k10k between 1 and 10000
+;
+select count(*) from bench1m where k40k between 1 and 40000
+;
+select count(*) from bench1m where k100k between 1 and 100000
+;
+select count(*) from bench1m where k250k between 1 and 250000
+;
+select count(*) from bench1m where k500k between 1 and 500000
+;
+select count(*) from bench1m where kseq between 1 and 1000000
+;
+
+INSERT INTO BENCH1M (KSEQ,K2,K4,K5,K10,K25,K100,K1K,K10K,K40K,K100K,K250K,
+K500K) SELECT C1,C2,C4,C5,C10,C25,C100,C1K,C10K,C40K,C100K,C250K,C500K 
+FROM @name_prefix@_schema.BENCH_SOURCE_1M where C4 = 2
+;
+select count(*) from bench1m
+;
+select count(*) from bench1m where k2 between 1 and 2
+;
+select count(*) from bench1m where k4 between 1 and 4
+;
+select count(*) from bench1m where k5 between 1 and 5
+;
+select count(*) from bench1m where k10 between 1 and 10
+;
+select count(*) from bench1m where k25 between 1 and 25
+;
+select count(*) from bench1m where k100 between 1 and 100
+;
+select count(*) from bench1m where k1k between 1 and 1000
+;
+select count(*) from bench1m where k10k between 1 and 10000
+;
+select count(*) from bench1m where k40k between 1 and 40000
+;
+select count(*) from bench1m where k100k between 1 and 100000
+;
+select count(*) from bench1m where k250k between 1 and 250000
+;
+select count(*) from bench1m where k500k between 1 and 500000
+;
+select count(*) from bench1m where kseq between 1 and 1000000
+;
+INSERT INTO BENCH1M (KSEQ,K2,K4,K5,K10,K25,K100,K1K,K10K,K40K,K100K,K250K,
+K500K) SELECT C1,C2,C4,C5,C10,C25,C100,C1K,C10K,C40K,C100K,C250K,C500K 
+FROM @name_prefix@_schema.BENCH_SOURCE_1M where C4 = 3
+;
+select count(*) from bench1m
+;
+select count(*) from bench1m where k2 between 1 and 2
+;
+select count(*) from bench1m where k4 between 1 and 4
+;
+select count(*) from bench1m where k5 between 1 and 5
+;
+select count(*) from bench1m where k10 between 1 and 10
+;
+select count(*) from bench1m where k25 between 1 and 25
+;
+select count(*) from bench1m where k100 between 1 and 100
+;
+select count(*) from bench1m where k1k between 1 and 1000
+;
+select count(*) from bench1m where k10k between 1 and 10000
+;
+select count(*) from bench1m where k40k between 1 and 40000
+;
+select count(*) from bench1m where k100k between 1 and 100000
+;
+select count(*) from bench1m where k250k between 1 and 250000
+;
+select count(*) from bench1m where k500k between 1 and 500000
+;
+select count(*) from bench1m where kseq between 1 and 1000000
+;
+INSERT INTO BENCH1M (KSEQ,K2,K4,K5,K10,K25,K100,K1K,K10K,K40K,K100K,K250K,
+K500K) SELECT C1,C2,C4,C5,C10,C25,C100,C1K,C10K,C40K,C100K,C250K,C500K 
+FROM @name_prefix@_schema.BENCH_SOURCE_1M where C4 = 4
+;
+select count(*) from bench1m
+;
+select count(*) from bench1m where k2 between 1 and 2
+;
+select count(*) from bench1m where k4 between 1 and 4
+;
+select count(*) from bench1m where k5 between 1 and 5
+;
+select count(*) from bench1m where k10 between 1 and 10
+;
+select count(*) from bench1m where k25 between 1 and 25
+;
+select count(*) from bench1m where k100 between 1 and 100
+;
+select count(*) from bench1m where k1k between 1 and 1000
+;
+select count(*) from bench1m where k10k between 1 and 10000
+;
+select count(*) from bench1m where k40k between 1 and 40000
+;
+select count(*) from bench1m where k100k between 1 and 100000
+;
+select count(*) from bench1m where k250k between 1 and 250000
+;
+select count(*) from bench1m where k500k between 1 and 500000
+;
+select count(*) from bench1m where kseq between 1 and 1000000
+;

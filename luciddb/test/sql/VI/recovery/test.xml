@@ -1,0 +1,50 @@
+<project name="bh" default="simple-test">
+  <target name="simple-test">
+    <test-suite testunit="simple-test">
+
+      <init-hook>
+        <test name="restoreCatalog" testunit="recovery-init-test">
+          <ant-task>
+            <ant target="restoreCatalog"/>
+          </ant-task>
+        </test>
+      </init-hook>
+
+      <test name="table">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/recovery/table.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="failinsert">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/recovery/failinsert.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="fixinsert">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/recovery/fixinsert.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="verifytable">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/recovery/verifytable.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="faildelete">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/recovery/faildelete.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="fixdelete">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/recovery/fixdelete.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="verifytable2">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/recovery/verifytable.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+      
+    </test-suite>
+  </target>
+</project>

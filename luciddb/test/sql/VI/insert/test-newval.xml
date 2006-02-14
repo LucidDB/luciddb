@@ -1,0 +1,30 @@
+<project name="bh" default="newval-test">
+  <target name="newval-test">
+    <test-suite testunit="newval-test">
+
+      <init-hook>
+        <test name="restoreCatalog" testunit="newval-init-test">
+          <ant-task>
+            <ant target="restoreCatalog"/>
+          </ant-task>
+        </test>
+      </init-hook>
+
+      <test name="altersys">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/altersys.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="simple_newvalins">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/simple_newvalins.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="simple_q0">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/simple_q0.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+      
+    </test-suite>
+  </target>
+</project>
