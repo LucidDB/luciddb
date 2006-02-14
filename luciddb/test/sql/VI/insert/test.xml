@@ -1,0 +1,14 @@
+<project name="bh" default="insert-test">
+  <target name="insert-test">
+    <test-suite testunit="insert-test">
+
+      <test-suite-call testfile="test-simple.xml"/>
+      <test-suite-call testfile="test-newval.xml"/>
+      <test-suite-call testfile="test-insert10k.xml"/>
+      <test-suite-call testfile="test-insert10k-2.xml"/>
+      <test-suite-call testfile="test-insert1m.xml"/>
+      <test-suite-call testfile="test-insert2m.xml"/>
+      
+    </test-suite>
+  </target>
+</project>

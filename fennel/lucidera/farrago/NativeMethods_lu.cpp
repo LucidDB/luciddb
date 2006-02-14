@@ -31,6 +31,7 @@
 #include "fennel/db/Database.h"
 #include "fennel/segment/SegmentFactory.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
+#include "fennel/cache/QuotaCacheAccessor.h"
 
 #ifdef __MINGW32__
 #include <windows.h>
@@ -93,14 +94,27 @@ class ExecStreamSubFactory_lu
         
         ExternalSortExecStreamParams params;
 
-        // REVIEW jvs 18-Nov-2004:  what about quota accessor?
-
-        // ExternalSortStream requires a private ScratchSegment
+        pExecStreamFactory->readTupleStreamParams(params, streamDef);
+        
+        // ExternalSortStream requires a private ScratchSegment.  It's very
+        // important to do this AFTER readTupleStreamParams, otherwise the
+        // private one gets reset to the ScratchSegment shared across the whole
+        // graph, and then quite bad things happen.
         params.scratchAccessor =
             pDatabase->getSegmentFactory()->newScratchSegment(
                 pDatabase->getCache());
+
+        // TODO jvs 9-Feb-2006:  call factory to get help with
+        // setting up quota for private scratch segment
+        SharedQuotaCacheAccessor pSuperQuotaAccessor =
+            boost::dynamic_pointer_cast<QuotaCacheAccessor>(
+                params.pCacheAccessor);
+        params.scratchAccessor.pCacheAccessor.reset(
+            new QuotaCacheAccessor(
+                pSuperQuotaAccessor,
+                params.scratchAccessor.pCacheAccessor,
+                UINT_MAX));
         
-        pExecStreamFactory->readTupleStreamParams(params, streamDef);
         params.distinctness = streamDef.getDistinctness();
         params.pTempSegment = pDatabase->getTempSegment();
         params.storeFinalRun = false;

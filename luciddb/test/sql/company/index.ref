@@ -1,0 +1,96 @@
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- index.sql - create company tables with indices
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create tablespace bspace datafile 'bill.dat' size 12800K
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema s;
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table LOCATION(
+. . . . . . . . >   LOCID char(2) primary key,
+. . . . . . . . >   STREET varchar(50),
+. . . . . . . . >   CITY varchar(20),
+. . . . . . . . >   STATE char(2),
+. . . . . . . . >   ZIP numeric(5,0)
+. . . . . . . . > )
+. . . . . . . . > -- tablespace bspace
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- DEPT: Departments in the company
+0: jdbc:luciddb:> create table DEPT (
+. . . . . . . . >   DEPTNO integer primary key,
+. . . . . . . . >   DNAME varchar(20) unique,
+. . . . . . . . >   LOCID CHAR(2)
+. . . . . . . . > -- references location
+. . . . . . . . > )
+. . . . . . . . > -- tablespace bspace
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- EMP: employees in the company
+0: jdbc:luciddb:> create table EMP (
+. . . . . . . . >   EMPNO integer primary key,
+. . . . . . . . >   FNAME varchar(20) not null,
+. . . . . . . . >   LNAME varchar(20) not null,
+. . . . . . . . >   SEX char(1),
+. . . . . . . . >   DEPTNO integer,
+. . . . . . . . > -- references dept,
+. . . . . . . . >   MANAGER integer,
+. . . . . . . . >   LOCID CHAR(2),
+. . . . . . . . > -- references location,
+. . . . . . . . >   SAL integer,
+. . . . . . . . >   COMMISSION integer,
+. . . . . . . . >   HOBBY varchar(20)
+. . . . . . . . > )
+. . . . . . . . > -- tablespace bspace
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table CUSTOMERS(
+. . . . . . . . >   CUSTID integer primary key,
+. . . . . . . . >   FNAME varchar(30),
+. . . . . . . . >   LNAME varchar(30) not null,
+. . . . . . . . >   SEX char(1))
+. . . . . . . . > -- tablespace bspace
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table PRODUCTS(
+. . . . . . . . >   PRODID integer primary key,
+. . . . . . . . >   NAME varchar(30) unique,
+. . . . . . . . >   PRICE numeric(3,2))
+. . . . . . . . > -- tablespace bspace
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table SALES(
+. . . . . . . . >   CUSTID integer,
+. . . . . . . . > -- references customers,
+. . . . . . . . >   EMPNO integer,
+. . . . . . . . > -- references emp,
+. . . . . . . . > --  TS timestamp,
+. . . . . . . . >   PRODID integer,
+. . . . . . . . > -- references products,
+. . . . . . . . >   PRICE numeric(3,2)
+. . . . . . . . > -- possible discount price we sold it for
+. . . . . . . . > )
+. . . . . . . . > -- tablespace bspace
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Additional indices not implicitly created by above constraints
+0: jdbc:luciddb:> -- NOTE: don't forget the analyze the table after the rows are loaded
+0: jdbc:luciddb:> create index EMP_DEPTNO on EMP(DEPTNO);
+0: jdbc:luciddb:> create index EMP_MANAGER on EMP(MANAGER);
+0: jdbc:luciddb:> create index EMP_LOCID on EMP(LOCID);
+0: jdbc:luciddb:> create index EMP_SEX on EMP(SEX);
+0: jdbc:luciddb:> create index EMP_COMMISSION on EMP(COMMISSION);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create index PRODUCTS_PRICE on PRODUCTS(PRICE);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create index SALES_PRICE on SALES(PRICE);
+0: jdbc:luciddb:> create index SALES_EMPNO on SALES(EMPNO);
+0: jdbc:luciddb:> create index SALES_PRODID on SALES(PRODID);
+0: jdbc:luciddb:> create index SALES_CUSTID on SALES(CUSTID);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create index CUSTOMERS_NAME on CUSTOMERS(LNAME, FNAME);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

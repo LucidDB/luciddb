@@ -60,6 +60,7 @@ class MedMockDataServer extends MedAbstractDataServer
     public static final String PROP_TABLE_NAME = "FOREIGN_TABLE_NAME";
     public static final String PROP_ROW_COUNT = "ROW_COUNT";
     public static final String PROP_ROW_COUNT_SQL = "ROW_COUNT_SQL";
+    public static final String PROP_UDX_SPECIFIC_NAME = "UDX_SPECIFIC_NAME";
     public static final String PROP_EXECUTOR_IMPL = "EXECUTOR_IMPL";
     public static final String PROPVAL_JAVA = "JAVA";
     public static final String PROPVAL_FENNEL = "FENNEL";
@@ -155,6 +156,13 @@ class MedMockDataServer extends MedAbstractDataServer
         assert (executorImpl.equals(PROPVAL_JAVA)
             || executorImpl.equals(PROPVAL_FENNEL));
 
+        String udxSpecificName =
+            tableProps.getProperty(PROP_UDX_SPECIFIC_NAME);
+
+        if (udxSpecificName != null) {
+            assert (executorImpl.equals(PROPVAL_JAVA));
+        }
+
         checkNameMatch(
             getForeignSchemaName(),
             tableProps.getProperty(PROP_SCHEMA_NAME));
@@ -163,7 +171,9 @@ class MedMockDataServer extends MedAbstractDataServer
             getForeignTableName(),
             tableProps.getProperty(PROP_TABLE_NAME));
         
-        return new MedMockColumnSet(localName, rowType, nRows, executorImpl);
+        return new MedMockColumnSet(
+            localName, rowType, nRows, executorImpl,
+            udxSpecificName);
     }
 
     private void checkNameMatch(String expectedName, String actualName)

@@ -1,0 +1,35 @@
+# properties
+
+name_prefix=ff
+
+########################
+# foreign data wrapper #
+########################
+
+DATA_WRAPPER_NAME=@name_prefix@_jdbc
+DATA_LIBRARY=class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper
+
+##################
+# foreign server #
+##################
+
+SERVER_NAME=@name_prefix@_server
+
+# flatfile options
+DIRECTORY=@csv.dir@
+FILE_EXTENSION=.tab
+CTRL_FILE_EXT=.bcp
+FIELD_DELIM=,
+LINE_DELIM=\\n
+QUOTE_CHAR="
+ESCAPE_CHAR=
+WITH_HEADER=no
+NUM_ROWS_SCAN=1
+
+SCHEMA=BCP
+
+#########################
+# foreign table options #
+#########################
+
+TABLE_NAME=filename

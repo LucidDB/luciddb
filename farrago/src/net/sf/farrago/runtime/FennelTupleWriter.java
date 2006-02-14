@@ -35,6 +35,11 @@ import java.nio.*;
  */
 public abstract class FennelTupleWriter
 {
+    /**
+     * Matches fennel/tuple/TupleAccessor.cpp.
+     */
+    private static long MAGIC_NUMBER = 0x9897ab509de7dcf5l;
+    
     //~ Methods ---------------------------------------------------------------
 
     /**
@@ -74,6 +79,10 @@ public abstract class FennelTupleWriter
             // REVIEW:  is slice allocation worth it?
             ByteBuffer sliceBuffer = byteBuffer.slice();
             sliceBuffer.order(byteBuffer.order());
+            // In case TupleAccessor's DEBUG_TUPLE_ACCESS is enabled,
+            // store the correct magic number at the beginning of the
+            // marshalled tuple.  TODO:  don't do this unless needed.
+            sliceBuffer.putLong(0, MAGIC_NUMBER);
             marshalTupleOrThrow(sliceBuffer, object);
             int newPosition = byteBuffer.position() + sliceBuffer.position();
 

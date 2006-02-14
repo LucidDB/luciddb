@@ -41,6 +41,26 @@ order by 1;
 select * from literal_view;
 !set outputformat table
 
+-- FRG-38:  boundary conditions with index on real datatype
+
+create table rtable (r real primary key);
+
+insert into rtable values(1);
+
+select * from rtable;
+
+select * from rtable where r <> 1.0;
+
+select * from rtable where r = 1.0;
+
+select * from rtable where r > 1.0;
+
+select * from rtable where r >= 1.0;
+
+select * from rtable where r < 1.0;
+
+select * from rtable where r <= 1.0;
+
 -- End datatypes.sql
 
 

@@ -184,6 +184,8 @@ ExternalSortRC ExternalSortRunLoader::loadRun(
         while (cbCopy < cbAvailable) {
             PConstBuffer pSrcTuple = pSrc + cbCopy;
             uint cbTuple = tupleAccessor.getBufferByteCount(pSrcTuple);
+            assert(cbTuple);
+            assert(cbTuple <= tupleAccessor.getMaxByteCount());
 
             // first make sure we have room for the key pointer
             if (pIndexBuffer >= pIndexBufferEnd) {
@@ -212,9 +214,11 @@ ExternalSortRC ExternalSortRunLoader::loadRun(
             nTuplesLoaded++;
             cbCopy += cbTuple;
         }
-        memcpy(pDataBuffer,pSrc,cbCopy);
-        pDataBuffer += cbCopy;
-        bufAccessor.consumeData(pSrc + cbCopy);
+        if (cbCopy) {
+            memcpy(pDataBuffer,pSrc,cbCopy);
+            pDataBuffer += cbCopy;
+            bufAccessor.consumeData(pSrc + cbCopy);
+        }
         if (overflow) {
             return EXTSORT_OVERFLOW;
         }

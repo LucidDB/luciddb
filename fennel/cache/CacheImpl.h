@@ -485,6 +485,7 @@ public:
     virtual void unlockPage(CachePage &page,LockMode lockMode,TxnId txnId);
     virtual void nicePage(CachePage &page);
     virtual bool isPageMapped(BlockId blockId);
+    virtual CacheAllocator &getAllocator() const;
 };
 
 FENNEL_END_NAMESPACE

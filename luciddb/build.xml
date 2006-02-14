@@ -121,7 +121,8 @@
     <pathelement path="${classes.dir}"/>
     <pathelement path="${farrago.sqlline.classpath}"/>
     <pathelement path="${ant.classpath}"/>
-    <pathelement path="${bh.run.classpath}"/>
+    <pathelement path="${blackhawk.run.classpath}"/>
+    <pathelement path="${luciddb.plugin.dir}/FarragoMedJdbc3p.jar"/>
   </path>
   <property name="test.classpath" refid="test.classpath"/>
 
@@ -140,12 +141,36 @@
   </path>
   <property name="luciddb.build.classpath" refid="luciddb.build.classpath"/>
 
+  <target name="run_blackhawk">
+    <property file="run.properties"/>
+    <blackhawk bhHome="${bh.home}"
+      fork="true"
+      testhome="${testhome}" 
+      testfile="${testfile}"
+      inheritAll="true"
+      testTimeout="false"
+      classpathref="test.classpath">
+      <jvmarg line="&FarragoProps;"/>
+    </blackhawk>
+  </target>
+
   <target name="test" depends="compile,createCatalog,buildJdbcPlugin">
     <antcall target="shortregSanity"/>
-    <antcall target="txn"/>
+    <!-- FIXME jvs 7-Feb-2006:  re-enable once LER-303 is resolved -->
+    <!-- antcall target="txn"/ -->
     <antcall target="bh" />
   </target>
 
+  <!-- all tests, on all configurations, skipping knownFailures -->
+  <target name="testAll" depends="compile,createCatalog,buildJdbcPlugin">
+    <ant dir="test/sql/conv_types" target="test"/>
+    <ant dir="test/sql/datatypes" target="testAllConfigs"/>
+    <ant dir="test/sql/shortreg2" target="testAllConfigs"/>
+    <antcall target="txn"/>
+    <ant dir="test/sql/udr/udf" target="test"/>
+    <ant dir="test/sql/bench" target="testAllConfigs"/>
+  </target>
+  
   <target name="bh">
     <blackhawk.fork basedir="test/sql/shortreg" 
       testscript="test.xml"

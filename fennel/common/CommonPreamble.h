@@ -39,6 +39,11 @@
 #endif
 #define _XOPEN_SOURCE 500
 #define _GNU_SOURCE 1
+
+// Request support for large file offsets (> 4G) without needing special
+// versions of standard I/O calls.
+#define _FILE_OFFSET_BITS 64
+
 #include <inttypes.h>
 #include <stddef.h>
 #include <limits.h>

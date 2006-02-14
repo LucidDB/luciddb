@@ -1,4 +1,4 @@
-<project name="tch" default="simple-test">
+<project name="bh" default="simple-test">
   <target name="simple-test">
     <test-suite testunit="simple-test">
       
@@ -11,37 +11,37 @@
       </init-hook>
 
       <test name="creschema">
-        <test-parameter name="sql-file" value="gen/creschema.sql"/>
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/shortreg2/gen/%{config.prop}/creschema.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
-      <test name="locationload" requiresRun="creschema">
-        <test-parameter name="sql-file" value="gen/locationload.sql"/>
+      <test name="locationload" requiresSuccess="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/shortreg2/gen/%{config.prop}/locationload.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
-      <test name="deptload" requiresRun="creschema">
-        <test-parameter name="sql-file" value="gen/deptload.sql"/>
+      <test name="deptload" requiresSuccess="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/shortreg2/gen/%{config.prop}/deptload.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
-      <test name="empload" requiresRun="creschema">
-        <test-parameter name="sql-file" value="gen/empload.sql"/>
+      <test name="empload" requiresSuccess="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/shortreg2/gen/%{config.prop}/empload.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
-      <test name="customersload" requiresRun="creschema">
-        <test-parameter name="sql-file" value="gen/customersload.sql"/>
+      <test name="customersload" requiresSuccess="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/shortreg2/gen/%{config.prop}/customersload.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
-      <test name="productsload" requiresRun="creschema">
-        <test-parameter name="sql-file" value="gen/productsload.sql"/>
+      <test name="productsload" requiresSuccess="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/shortreg2/gen/%{config.prop}/productsload.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
-      <test name="salesload" requiresRun="creschema">
-        <test-parameter name="sql-file" value="gen/salesload.sql"/>
+      <test name="salesload" requiresSuccess="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/shortreg2/gen/%{config.prop}/salesload.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 

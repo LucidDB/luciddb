@@ -1,0 +1,97 @@
+0: jdbc:luciddb:> -- $ ID: //open/lu/dev/luciddb/test/sql/udr/udf/rightn.sql#1 $
+0: jdbc:luciddb:> -- Tests for rightN UDF
+0: jdbc:luciddb:> set schema 'udftest';
+0: jdbc:luciddb:> set path 'udftest';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- define functions
+0: jdbc:luciddb:> create function rightN(str varchar(128), len integer)
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.applib.rightN.FunctionExecute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values rightN('The test string - chop off this portion', 15);
++------------------+
+|      EXPR$0      |
++------------------+
+| ff this portion  |
++------------------+
+0: jdbc:luciddb:> values rightN('and this?', 0);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values rightN('', 3);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create view with reference to rightN
+0: jdbc:luciddb:> create view cutcust as
+. . . . . . . . > select rightN(fname, 5), rightN(lname, 3), rightN(phone, 7)
+. . . . . . . . > from customers
+. . . . . . . . > where sex = 'M';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from cutcust
+. . . . . . . . > order by 1;
++---------+---------+----------+
+| EXPR$0  | EXPR$1  |  EXPR$2  |
++---------+---------+----------+
+|         |         |          |
+|         | y       |          |
+|         | t       |          |
+| e 3rd   | orn     |          |
++---------+---------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select fname, rightN(sex, 1)
+. . . . . . . . > from customers
+. . . . . . . . > order by 1;
++---------------+---------+
+|     FNAME     | EXPR$1  |
++---------------+---------+
+| 2Tito1        | F       |
+| Dirk the 3rd  | M       |
+| Ephram        | M       |
+| Gregory       | M       |
+| Lilah         | F       |
+| Mark          | M       |
+| Mary          | F       |
++---------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- in expressions
+0: jdbc:luciddb:> select fname, rightN(phone, 7) || rightN(fname, 3) 
+. . . . . . . . > from customers
+. . . . . . . . > order by 1;
++---------------+-------------+
+|     FNAME     |   EXPR$1    |
++---------------+-------------+
+| 2Tito1        |             |
+| Dirk the 3rd  |        3rd  |
+| Ephram        |             |
+| Gregory       |             |
+| Lilah         |  344  2     |
+| Mark          |             |
+| Mary          |             |
++---------------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- nested
+0: jdbc:luciddb:> values rightN('Here is the original string.', 20);
++-----------------------+
+|        EXPR$0         |
++-----------------------+
+| the original string.  |
++-----------------------+
+0: jdbc:luciddb:> values rightN(rightN('Here is the original string.', 20), 5);
++---------+
+| EXPR$0  |
++---------+
+| ring.   |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- cleanup
+0: jdbc:luciddb:> drop view cutcust;
+0: jdbc:luciddb:> drop routine rightN;
+0: jdbc:luciddb:> !quit

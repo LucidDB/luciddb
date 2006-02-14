@@ -1,0 +1,13 @@
+<project name="bh" default="simple-test">
+  <target name="simple-test">
+    <test-suite testunit="simple-test">
+      
+      <!-- without indexes -->
+      <test-suite-call testfile="test-noidx.xml"/>
+
+      <!-- with indexes -->
+      <test-suite-call testfile="test-idx.xml"/>
+
+    </test-suite>
+  </target>
+</project>

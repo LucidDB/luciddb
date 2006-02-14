@@ -1,9 +1,9 @@
-<project name="tch" default="simple-test">
-  <target name="simple-test">
-    <test-suite testunit="simple-test">
+<project name="bh" default="convdate-test">
+  <target name="convdate-test">
+    <test-suite testunit="convdate-test">
       
       <init-hook>
-        <test name="restoreCatalog" testunit="init-test">
+        <test name="restoreCatalog" testunit="convdate-init-test">
           <ant-task>
             <ant target="restoreCatalog"/>
           </ant-task>
@@ -11,22 +11,22 @@
       </init-hook>
 
       <test name="createsource">
-        <test-parameter name="sql-file" value="cr_source.sql"/>
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/conv_types/conv_datetime/cr_source.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
       <test name="converttime" requiresRun="createsource">
-        <test-parameter name="sql-file" value="target_time.sql"/>
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/conv_types/conv_datetime/target_time.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
       <test name="convertdate" requiresRun="createsource">
-        <test-parameter name="sql-file" value="target_date.sql"/>
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/conv_types/conv_datetime/target_date.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
       <test name="converttimestamp" requiresRun="createsource">
-        <test-parameter name="sql-file" value="target_timestamp.sql"/>
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/conv_types/conv_datetime/target_timestamp.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 

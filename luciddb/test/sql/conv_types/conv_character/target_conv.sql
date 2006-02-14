@@ -7,7 +7,7 @@ create table datatype_target(col char(15))
 ;
 
 insert into datatype_target
- select to_char(coltiny) from datatype_source
+ select cast(coltiny as varchar(256)) from datatype_source
 ;
 select * from datatype_target
 ;
@@ -18,7 +18,7 @@ create table datatype_target(col char(15))
 ;
 
 insert into datatype_target 
- select to_char(colsmall) from datatype_source
+ select cast(colsmall as varchar(256)) from datatype_source
 ;
 select * from datatype_target
 ;
@@ -30,7 +30,7 @@ create table datatype_target(col char(15))
 
 
 insert into datatype_target
- select to_char(colint) from datatype_source
+ select cast(colint as varchar(256)) from datatype_source
 ;
 select * from datatype_target
 ;
@@ -42,7 +42,7 @@ create table datatype_target(col char(15))
 
 
 insert into datatype_target
- select to_char(colbig) from datatype_source
+ select cast(colbig as varchar(256)) from datatype_source
 ;
 select * from datatype_target
 ;
@@ -54,7 +54,7 @@ create table datatype_target(col char(15))
 
 
 insert into datatype_target
- select to_char(coldec) from datatype_source
+ select cast(coldec as varchar(256)) from datatype_source
 ;
 select * from datatype_target
 ;
@@ -66,7 +66,7 @@ create table datatype_target(col char(15))
 
 
 insert into datatype_target
- select to_char(colnum) from datatype_source
+ select cast(colnum as varchar(256)) from datatype_source
 ;
 select * from datatype_target
 ;
@@ -77,7 +77,7 @@ create table datatype_target(col char(15))
 ;
 
 insert into datatype_target
- select to_char(coldouble) from datatype_source
+ select cast(coldouble as varchar(256)) from datatype_source
 ;
 select * from datatype_target
 ;
@@ -88,7 +88,7 @@ create table datatype_target(col char(15))
 ;
 
 insert into datatype_target
- select to_char(colfloat) from datatype_source
+ select cast(colfloat as varchar(256)) from datatype_source
 ;
 select * from datatype_target
 ;
@@ -100,7 +100,7 @@ create table datatype_target(col char(15))
 
 
 insert into datatype_target
- select to_char(colreal) from datatype_source
+ select cast(colreal as varchar(256)) from datatype_source
 ;
 select * from datatype_target
 ;

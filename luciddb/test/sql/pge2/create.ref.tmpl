@@ -1,0 +1,176 @@
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- create.sql - create pg&e tables
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema PGE
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Tables ----------------------------------------
+0: jdbc:luciddb:> create table PGE.CUST_SERV_ACCT(
+. . . . . . . . >  CUST_SERV_ACCT_KEY DECIMAL(10,0),
+. . . . . . . . >  CU_ID DECIMAL(10,0),
+. . . . . . . . >  CU_TYP_IND CHAR(1),
+. . . . . . . . >  CUOR_CUST_NM VARCHAR(50),
+. . . . . . . . >  ORGDTL_STR_ID_TXT VARCHAR(10),
+. . . . . . . . >  ORGDTL_NM VARCHAR(50),
+. . . . . . . . >  ORGDTL_DBA_NM VARCHAR(18),
+. . . . . . . . >  CUIN_LST_NM VARCHAR(25),
+. . . . . . . . >  CUIN_FST_NM VARCHAR(25),
+. . . . . . . . >  CUIN_MID_INIT_TXT CHAR(1),
+. . . . . . . . >  CA_ID DECIMAL(10,0),
+. . . . . . . . >  MAIL_ADDR_ID DECIMAL(10,0),
+. . . . . . . . >  SITE_ID DECIMAL(10,0),
+. . . . . . . . >  SERV_ADDR VARCHAR(40),
+. . . . . . . . >  MNCPLT_NM VARCHAR(25),
+. . . . . . . . >  ST_CD CHAR(2),
+. . . . . . . . >  ZIP_CD_NUM CHAR(5),
+. . . . . . . . >  CO_CD CHAR(3),
+. . . . . . . . >  GEOG_KEY DECIMAL(10,0),
+. . . . . . . . >  SITUSE_CD CHAR(2),
+. . . . . . . . >  SAA_ID DECIMAL(10,0),
+. . . . . . . . >  SAA_SEQ_NUM DECIMAL(5,0),
+. . . . . . . . >  SRVPLN_KEY DECIMAL(10,0),
+. . . . . . . . >  CYC_FREQY_CD CHAR(2),
+. . . . . . . . >  ACYC_NUM CHAR(2),
+. . . . . . . . >  CNTLUT_NUM DECIMAL(10,0),
+. . . . . . . . >  IS_DWLGS_VAL DECIMAL(5,0),
+. . . . . . . . >  SERV_SIC_CD CHAR(4),
+. . . . . . . . >  BU_CD CHAR(3),
+. . . . . . . . >  UTIL_TYP_CD CHAR(2),
+. . . . . . . . >  SAA_SPLINSTL_INDCR CHAR(1),
+. . . . . . . . >  SAA_CLRG_ACCT_ID DECIMAL(10,0),
+. . . . . . . . >  SAA_ST_TX_EXM_INDC CHAR(1),
+. . . . . . . . >  IS_SERV_INSTLD_DT TIMESTAMP,
+. . . . . . . . >  RCD_EFF_DT TIMESTAMP,
+. . . . . . . . >  RCD_END_DT TIMESTAMP,
+. . . . . . . . >  PROC_BAT_ID DECIMAL(10,0))
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table PGE.GEOG(
+. . . . . . . . >  GEOG_KEY DECIMAL(10,0),
+. . . . . . . . >  DPT_CD CHAR(3),
+. . . . . . . . >  RVTWN_CD CHAR(3),
+. . . . . . . . >  RVTWN_DESC VARCHAR(30),
+. . . . . . . . >  GEOG_CNTY_CD CHAR(2),
+. . . . . . . . >  GEOG_CNTY_DESC VARCHAR(30),
+. . . . . . . . >  ST_CD CHAR(2),
+. . . . . . . . >  ST_DESC VARCHAR(30),
+. . . . . . . . >  PROC_BATCH_ID VARCHAR(10)
+. . . . . . . . > )
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table PGE.REVN_DTL_RAND(
+. . . . . . . . >  CUST_SERV_ACCT_KEY DECIMAL(10,0),
+. . . . . . . . >  GEOG_KEY DECIMAL(10,0),
+. . . . . . . . >  SRVPLN_KEY DECIMAL(10,0),
+. . . . . . . . >  REVN_YR_MO DECIMAL(6,0),
+. . . . . . . . >  USG_VAL DOUBLE,
+. . . . . . . . >  USG_BILL_THERM DOUBLE,
+. . . . . . . . >  USG_BILL_KWH DOUBLE,
+. . . . . . . . >  USGC_BILL_KW_VAL DOUBLE,
+. . . . . . . . >  RSD_SVC_BILG_AMT DOUBLE,
+. . . . . . . . >  RSD_ST_SLSTX_AMT DOUBLE,
+. . . . . . . . >  RSD_TRSPT_CHRG_AMT DOUBLE,
+. . . . . . . . >  RSD_BALG_CHRG_AMT DOUBLE,
+. . . . . . . . >  RSD_TOP_SRCHRG_AMT DOUBLE,
+. . . . . . . . >  RSD_CCOGA_AMT DOUBLE,
+. . . . . . . . >  RSD_CCOGC_AMT DOUBLE,
+. . . . . . . . >  RSD_CUST_CHRG_AMT DOUBLE,
+. . . . . . . . >  RSD_DMND_CHRG_AMT DOUBLE,
+. . . . . . . . >  RSD_CU_CNT DECIMAL(5,0),
+. . . . . . . . >  SAS_FNL_BIL_INDCR CHAR(1),
+. . . . . . . . >  SAS_TYP_CD CHAR(1),
+. . . . . . . . >  USG_DAYS_NUM DECIMAL(5,0),
+. . . . . . . . >  USG_STRT_DT TIMESTAMP,
+. . . . . . . . >  USG_END_DT TIMESTAMP,
+. . . . . . . . >  CISPD_DT TIMESTAMP,
+. . . . . . . . >  PROC_BAT_ID DECIMAL(10,0))
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table PGE.REVN_PRD(
+. . . . . . . . >  REVN_YR_MO DECIMAL(6,0),
+. . . . . . . . >  REVN_YR_MO_DESC VARCHAR(14),
+. . . . . . . . >  REVN_MO DECIMAL(2,0),
+. . . . . . . . >  REVN_MO_DESC VARCHAR(9),
+. . . . . . . . >  REVN_YR DECIMAL(4,0),
+. . . . . . . . >  REVN_QTR CHAR(1),
+. . . . . . . . >  REVN_QTR_YR CHAR(7),
+. . . . . . . . >  REVN_QTR_YR_DESC VARCHAR(20),
+. . . . . . . . >  USER_ID CHAR(4))
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table PGE.SERV_PLAN(
+. . . . . . . . >  SRVPLN_KEY DECIMAL(10,0),
+. . . . . . . . >  SRVPLN_ID DECIMAL(10,0),
+. . . . . . . . >  SRVPLN_NM VARCHAR(25),
+. . . . . . . . >  SPO_ID DECIMAL(10,0),
+. . . . . . . . >  SPO_NM VARCHAR(25),
+. . . . . . . . >  BU_CD CHAR(3),
+. . . . . . . . >  BU_DESC VARCHAR(30),
+. . . . . . . . >  RC_CD CHAR(2),
+. . . . . . . . >  RC_DESC VARCHAR(30),
+. . . . . . . . >  PROC_BAT_ID DECIMAL(10,0))
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Sources ---------------------------------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign data wrapper @DATA_WRAPPER_NAME@
+. . . . . . . . > library '@DATA_LIBRARY@'
+. . . . . . . . > language java;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server @SERVER_NAME@
+. . . . . . . . > foreign data wrapper @DATA_WRAPPER_NAME@
+. . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     schema_name '@SCHEMA_NAME@',
+. . . . . . . . >     qualifying_catalog_name '@CATALOG_NAME@',
+. . . . . . . . >     table_types '@TABLE_TYPES@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@'
+. . . . . . . . > 
+. . . . . . . . >     directory '@DIRECTORY@',
+. . . . . . . . >     file_extension '@FILE_EXTENSION@',
+. . . . . . . . >     ctrl_file_extension '@CTRL_FILE_EXT@',
+. . . . . . . . >     field_delimiter '@FIELD_DELIM@',
+. . . . . . . . >     line_delimiter '@LINE_DELIM@',
+. . . . . . . . >     quote_char '@QUOTE_CHAR@',
+. . . . . . . . >     escape_char '@ESCAPE_CHAR@',
+. . . . . . . . >     with_header '@WITH_HEADER@',
+. . . . . . . . >     num_rows_scan '@NUM_ROWS_SCAN@'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table PGE.CUST_SERV_ACCT_SRC
+. . . . . . . . > server @SERVER_NAME@
+. . . . . . . . > options (
+. . . . . . . . > SCHEMA_NAME '@SCHEMA@',
+. . . . . . . . > @TABLE_NAME@ 'csa'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table PGE.GEOG_SRC
+. . . . . . . . > server @SERVER_NAME@
+. . . . . . . . > options (
+. . . . . . . . > SCHEMA_NAME '@SCHEMA@',
+. . . . . . . . > @TABLE_NAME@ 'g'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table PGE.REVN_DTL_RAND_SRC
+. . . . . . . . > server @SERVER_NAME@
+. . . . . . . . > options (
+. . . . . . . . > SCHEMA_NAME '@SCHEMA@',
+. . . . . . . . > @TABLE_NAME@ 'rdr'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table PGE.REVN_PRD_SRC
+. . . . . . . . > server @SERVER_NAME@
+. . . . . . . . > options (
+. . . . . . . . > SCHEMA_NAME '@SCHEMA@',
+. . . . . . . . > @TABLE_NAME@ 'rp'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table PGE.SERV_PLAN_SRC
+. . . . . . . . > server @SERVER_NAME@
+. . . . . . . . > options (
+. . . . . . . . > SCHEMA_NAME '@SCHEMA@',
+. . . . . . . . > @TABLE_NAME@ 'sp'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- End create.sql
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

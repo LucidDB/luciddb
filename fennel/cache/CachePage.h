@@ -28,6 +28,7 @@
 #include "fennel/synch/SXMutex.h"
 #include "fennel/device/RandomAccessRequest.h"
 #include "fennel/cache/Cache.h"
+#include "fennel/cache/CacheAllocator.h"
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -317,6 +318,10 @@ public:
         if (isTransferInProgress()) {
             return false;
         }
+#ifdef DEBUG
+        getCache().getAllocator().setProtection(
+            pBuffer, getCache().getPageSize(), false);
+#endif
         return lock.tryUpgrade(txnId);
     }
 

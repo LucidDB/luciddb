@@ -53,6 +53,18 @@ public:
      * @return number of bytes currently allocated
      */
     virtual size_t getBytesAllocated() const = 0;
+
+    /**
+     * Changes protection state for a contiguous range of virtual memory.
+     *
+     * @param pMem start of range
+     *
+     * @param cb number of bytes in range
+     *
+     * @param readOnly true for read-only; false for read-write
+     * (TODO jvs 7-Feb-2006:  support no-access as well)
+     */
+    virtual void setProtection(void *pMem, uint cb, bool readOnly) = 0;
 };
 
 FENNEL_END_NAMESPACE

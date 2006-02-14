@@ -240,10 +240,10 @@ class ProxyExecutionStreamDef
 public:
 SharedProxyTupleDescriptor getOutputDesc();
 static jmethodID meth_getOutputDesc;
-SharedProxyExecStreamDataFlow getOutputFlow();
-static jmethodID meth_getOutputFlow;
 SharedProxyExecStreamDataFlow getInputFlow();
 static jmethodID meth_getInputFlow;
+SharedProxyExecStreamDataFlow getOutputFlow();
+static jmethodID meth_getOutputFlow;
 std::string getName();
 static jmethodID meth_getName;
 };
@@ -662,6 +662,10 @@ class ProxyLcsRowScanStreamDef
 public:
 SharedProxyTupleProjection getOutputProj();
 static jmethodID meth_getOutputProj;
+bool isFullScan();
+static jmethodID meth_isFullScan;
+bool isHasExtraFilter();
+static jmethodID meth_isHasExtraFilter;
 SharedProxyLcsClusterScanDef getClusterScan();
 static jmethodID meth_getClusterScan;
 };
@@ -874,10 +878,10 @@ bool isPhysical();
 static jmethodID meth_isPhysical;
 std::string getRange();
 static jmethodID meth_getRange;
-SharedProxyWindowPartitionDef getPartition();
-static jmethodID meth_getPartition;
 SharedProxyWindowStreamDef getWindowStream();
 static jmethodID meth_getWindowStream;
+SharedProxyWindowPartitionDef getPartition();
+static jmethodID meth_getPartition;
 int32_t getOffset();
 static jmethodID meth_getOffset;
 };

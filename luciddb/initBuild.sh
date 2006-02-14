@@ -20,11 +20,11 @@
 set -e
 
 usage() {
-    echo "Usage:  initBuild.sh [--with[out]-fennel] [--with[out]-optimization] [--with[out]-debug] [--skip-farrago-build] [--skip-fennel[-thirdparty]-build] [--with[out]-tests]"
+    echo "Usage:  initBuild.sh [--with[out]-fennel] [--with[out]-optimization] [--with[out]-debug] [--without-farrago-build] [--without-fennel[-thirdparty]-build] [--with[out]-tests]"
 }
 
-farrago_skip_build=false
-skip_tests=true
+without_farrago_build=false
+without_tests=true
 FARRAGO_FLAGS=""
 luciddb_dir=$(cd $(dirname $0); pwd)
 
@@ -33,12 +33,13 @@ shopt -sq extglob
 
 while [ -n "$1" ]; do
     case $1 in
-        --skip-farrago-build) farrago_skip_build=true;;
+        --without-farrago-build|--skip-farrago-build) 
+            without_farrago_build=true;;
         --with-tests)
-            skip_tests=false;
+            without_tests=false;
             FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
         --without-tests)
-            skip_tests=true;
+            without_tests=true;
             FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
         --*) FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
         
@@ -51,7 +52,7 @@ done
 shopt -uq extglob
 set -v
 
-if $farrago_skip_build ; then
+if $without_farrago_build ; then
     echo Skipping Farrago build.
 else
     cd ${luciddb_dir}/../farrago
@@ -69,7 +70,7 @@ export LD_LIBRARY_PATH=
 cd ${luciddb_dir}
 ant clean
 
-if $skip_tests ; then
+if $without_tests ; then
     ant createCatalog
 else
     cd ${luciddb_dir}/../blackhawk

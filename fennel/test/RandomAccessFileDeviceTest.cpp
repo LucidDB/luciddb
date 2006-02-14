@@ -85,16 +85,16 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         DeviceMode openMode = baseMode;
         openMode.create = 1;
         openDevice(openMode,devName);
-        BOOST_CHECK_EQUAL(pRandomAccessDevice->getSizeInBytes(),ZERO_SIZE);
+        BOOST_CHECK_EQUAL(ZERO_SIZE, pRandomAccessDevice->getSizeInBytes());
         pRandomAccessDevice->setSizeInBytes(FULL_SIZE);
-        BOOST_CHECK_EQUAL(pRandomAccessDevice->getSizeInBytes(),FULL_SIZE);
+        BOOST_CHECK_EQUAL(FULL_SIZE, pRandomAccessDevice->getSizeInBytes());
         closeDevice();
         if (openMode.temporary) {
             return;
         }
         openMode.create = 0;
         openDevice(openMode,devName);
-        BOOST_CHECK_EQUAL(pRandomAccessDevice->getSizeInBytes(),FULL_SIZE);
+        BOOST_CHECK_EQUAL(FULL_SIZE, pRandomAccessDevice->getSizeInBytes());
         closeDevice();
     }
 
@@ -104,21 +104,29 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         DeviceMode openMode = baseMode;
         openMode.create = 1;
         openDevice(openMode,devName);
-        BOOST_CHECK_EQUAL(pRandomAccessDevice->getSizeInBytes(),ZERO_SIZE);
+        BOOST_CHECK_EQUAL(ZERO_SIZE, pRandomAccessDevice->getSizeInBytes());
         pRandomAccessDevice->setSizeInBytes(FULL_SIZE);
-        BOOST_CHECK_EQUAL(pRandomAccessDevice->getSizeInBytes(),FULL_SIZE);
+        BOOST_CHECK_EQUAL(FULL_SIZE, pRandomAccessDevice->getSizeInBytes());
         closeDevice();
         if (openMode.temporary) {
             return;
         }
         openMode.create = 0;
         openDevice(openMode,devName);
-        BOOST_CHECK_EQUAL(pRandomAccessDevice->getSizeInBytes(),FULL_SIZE);
+        BOOST_CHECK_EQUAL(FULL_SIZE, pRandomAccessDevice->getSizeInBytes());
         pRandomAccessDevice->setSizeInBytes(HALF_SIZE);
         closeDevice();
         openDevice(openMode,devName);
-        BOOST_CHECK_EQUAL(pRandomAccessDevice->getSizeInBytes(),HALF_SIZE);
+        BOOST_CHECK_EQUAL(HALF_SIZE, pRandomAccessDevice->getSizeInBytes());
         closeDevice();
+    }
+
+    void testLargeFile()
+    {
+        // Create a 5G file in order to test beyond 32-bit unsigned.
+        FileSize cbOffset = 0x40000000; // 1G
+        cbOffset *= 5;
+        testAsyncIO(cbOffset);
     }
 
     class Listener
@@ -196,12 +204,19 @@ class RandomAccessFileDeviceTest : virtual public TestBase
 
     void testAsyncIO()
     {
+        testAsyncIO(0);
+    }
+
+    void testAsyncIO(FileSize cbOffset)
+    {
         int n = 5;
         uint cbSector = HALF_SIZE;
         VMAllocator allocator(cbSector*n);
         void *pBuf = allocator.allocate();
         try {
-            testAsyncIOImpl(n, cbSector, reinterpret_cast<PBuffer>(pBuf));
+            testAsyncIOImpl(
+                n, cbSector, reinterpret_cast<PBuffer>(pBuf),
+                cbOffset);
         } catch (...) {
             allocator.deallocate(pBuf);
             throw;
@@ -209,7 +224,8 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         allocator.deallocate(pBuf);
     }
     
-    void testAsyncIOImpl(int n, uint cbSector, PBuffer pBuf)
+    void testAsyncIOImpl(
+        int n, uint cbSector, PBuffer pBuf, FileSize cbOffset = 0)
     {
         DeviceAccessScheduler *pScheduler =
             DeviceAccessScheduler::newScheduler(schedParams);
@@ -218,16 +234,28 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         DeviceMode openMode = baseMode;
         openMode.create = 1;
         openDevice(openMode,devName);
+        FileSize cbFile = cbOffset;
+        cbFile += n*cbSector;
+        pRandomAccessDevice->setSizeInBytes(cbFile);
+
+        // close and re-open to get the actual file size
+        if (!openMode.temporary) {
+            closeDevice();
+            openMode.create = 0;
+            openDevice(openMode,devName);
+            FileSize cbFileActual = pRandomAccessDevice->getSizeInBytes();
+            BOOST_CHECK_EQUAL(cbFile, cbFileActual);
+        }
+        
         pScheduler->registerDevice(pRandomAccessDevice);
         std::string s = "Four score and seven years ago.";
         char const *writeBuf = s.c_str();
         uint cb = s.size();
-        pRandomAccessDevice->setSizeInBytes(n*cbSector);
         
         Listener writeListener(n);
         RandomAccessRequest writeRequest;
         writeRequest.pDevice = pRandomAccessDevice.get();
-        writeRequest.cbOffset = 0;
+        writeRequest.cbOffset = cbOffset;
         writeRequest.cbTransfer=n*cbSector;
         writeRequest.type = RandomAccessRequest::WRITE;
         memcpy(pBuf, writeBuf, cb);
@@ -238,7 +266,7 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         }
         pScheduler->schedule(writeRequest);
         writeListener.waitForAll();
-        BOOST_CHECK_EQUAL(writeListener.nSuccess,n);
+        BOOST_CHECK_EQUAL(n, writeListener.nSuccess);
         pRandomAccessDevice->flush();
         
         if (!openMode.temporary) {
@@ -252,7 +280,7 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         Listener readListener(n);
         RandomAccessRequest readRequest;
         readRequest.pDevice = pRandomAccessDevice.get();
-        readRequest.cbOffset = 0;
+        readRequest.cbOffset = cbOffset;
         readRequest.cbTransfer=n*cbSector;
         readRequest.type = RandomAccessRequest::READ;
         for (int i = 0; i < n; i++) {
@@ -263,7 +291,7 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         }
         pScheduler->schedule(readRequest);
         readListener.waitForAll();
-        BOOST_CHECK_EQUAL(readListener.nSuccess,n);
+        BOOST_CHECK_EQUAL(n, readListener.nSuccess);
         for (int i = 0; i < n; i++) {
             std::string s2(reinterpret_cast<char *>(pBuf + i*cbSector),cb);
             BOOST_CHECK_EQUAL(s,s2);
@@ -282,6 +310,12 @@ public:
         FENNEL_UNIT_TEST_CASE(RandomAccessFileDeviceTest,testPermanentNoDirect);
         FENNEL_UNIT_TEST_CASE(RandomAccessFileDeviceTest,testTemporary);
         FENNEL_UNIT_TEST_CASE(RandomAccessFileDeviceTest,testPermanentDirect);
+
+        // NOTE jvs 11-Feb-2006:  This is optional since it creates
+        // a 5G file.  On operating systems with sparse-file support, it
+        // doesn't actually take up that much disk space.
+        FENNEL_EXTRA_UNIT_TEST_CASE(
+            RandomAccessFileDeviceTest,testLargeFile);
     }
     
     void testPermanentNoDirect()

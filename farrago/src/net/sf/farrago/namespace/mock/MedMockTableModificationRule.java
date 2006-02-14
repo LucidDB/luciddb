@@ -82,7 +82,8 @@ class MedMockTableModificationRule extends RelOptRule
                 targetColumnSet.getLocalName(),
                 tableModification.getRowType(),
                 1,
-                targetColumnSet.executorImpl);
+                targetColumnSet.executorImpl,
+                null);
         
         call.transformTo(
             rowCountColumnSet.toRel(

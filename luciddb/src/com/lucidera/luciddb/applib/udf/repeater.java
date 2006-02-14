@@ -29,6 +29,14 @@ import java.sql.Types;
  */
 public class repeater
 {
+    /**
+     * Ported from //bb/bb713/server/SQL/BBString.java
+     *
+     * @param in String to be repeated
+     * @param times Number of times to repeat string
+     * @return The repeated string
+     * @exception SQLException
+     */
     public static String FunctionExecute( String in, int times )
     {
         if( times < 0 )

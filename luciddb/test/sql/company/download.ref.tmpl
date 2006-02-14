@@ -1,0 +1,97 @@
+0: jdbc:luciddb:> -- $Id: download.sql $
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- Download company data from SQL (some) Server
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- setup link to SQL server
+0: jdbc:luciddb:> -- CREATE SCHEMA SQLSERVER USING LINK ODBC_SQLSERVER
+0: jdbc:luciddb:> -- DEFINED BY 'BENCHMARK.dbo';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- /creschema.sql
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign data wrapper @DATA_WRAPPER_NAME@
+. . . . . . . . > library '@DATA_LIBRARY@'
+. . . . . . . . > language java;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server @SERVER_NAME@
+. . . . . . . . > foreign data wrapper @DATA_WRAPPER_NAME@
+. . . . . . . . > options(
+. . . . . . . . > 
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     schema_name '@SCHEMA_NAME@',
+. . . . . . . . >     qualifying_catalog_name '@CATALOG_NAME@',
+. . . . . . . . >     table_types '@TABLE_TYPES@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@'
+. . . . . . . . > 
+. . . . . . . . >     directory '@DIRECTORY@',
+. . . . . . . . >     file_extension '@FILE_EXTENSION@',
+. . . . . . . . >     ctrl_file_extension '@CTRL_FILE_EXT@',
+. . . . . . . . >     field_delimiter '@FIELD_DELIM@',
+. . . . . . . . >     line_delimiter '@LINE_DELIM@',
+. . . . . . . . >     quote_char '@QUOTE_CHAR@',
+. . . . . . . . >     escape_char '@ESCAPE_CHAR@',
+. . . . . . . . >     with_header '@WITH_HEADER@',
+. . . . . . . . >     num_rows_scan '@NUM_ROWS_SCAN@'
+. . . . . . . . > 
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Download
+0: jdbc:luciddb:> INSERT INTO LOCATION SELECT * FROM @SERVER_NAME@."@SCHEMA@".LOCATION;
+0: jdbc:luciddb:> INSERT INTO DEPT SELECT * FROM @SERVER_NAME@."@SCHEMA@".DEPT;
+0: jdbc:luciddb:> INSERT INTO EMP SELECT * FROM @SERVER_NAME@."@SCHEMA@".EMP;
+0: jdbc:luciddb:> INSERT INTO CUSTOMERS SELECT * FROM @SERVER_NAME@."@SCHEMA@".CUSTOMERS;
+0: jdbc:luciddb:> INSERT INTO PRODUCTS SELECT * FROM @SERVER_NAME@."@SCHEMA@".PRODUCTS;
+0: jdbc:luciddb:> INSERT INTO SALES SELECT * FROM @SERVER_NAME@."@SCHEMA@".SALES;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Check the download
+0: jdbc:luciddb:> select count(*) from location;
++---------+
+| EXPR$0  |
++---------+
+| 4       |
++---------+
+0: jdbc:luciddb:> select count(*) from dept;
++---------+
+| EXPR$0  |
++---------+
+| 5       |
++---------+
+0: jdbc:luciddb:> select count(*) from emp;
++---------+
+| EXPR$0  |
++---------+
+| 11      |
++---------+
+0: jdbc:luciddb:> select count(*) from customers;
++---------+
+| EXPR$0  |
++---------+
+| 100     |
++---------+
+0: jdbc:luciddb:> select count(*) from products;
++---------+
+| EXPR$0  |
++---------+
+| 16      |
++---------+
+0: jdbc:luciddb:> select count(*) from sales;
++---------+
+| EXPR$0  |
++---------+
+| 1000    |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- analyze the columns to get the statistics
+0: jdbc:luciddb:> -- analyze table EMP estimate statistics for all columns SAMPLE 100 PERCENT;
+0: jdbc:luciddb:> -- analyze table PRODUCTS estimate statistics for all columns SAMPLE 100 PERCENT;
+0: jdbc:luciddb:> -- analyze table SALES estimate statistics for all columns SAMPLE 100 PERCENT;
+0: jdbc:luciddb:> -- analyze table CUSTOMERS estimate statistics for all columns SAMPLE 100 PERCENT;
+0: jdbc:luciddb:> -- analyze table LOCATION estimate statistics for all columns SAMPLE 100 PERCENT;
+0: jdbc:luciddb:> -- analyze table DEPT estimate statistics for all columns SAMPLE 100 PERCENT;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

@@ -3174,9 +3174,9 @@ SqlStringTest::testSqlStringCastFromApprox()
                         max_precision = (isFloat)? 7: 16;
 
                         if (value) {
-                            int i, epos = -1, prec, buflen, exp;
+                            int i, epos = -1, prec = 0, buflen, exp;
                             int neg = (value < 0)? 1: 0;
-                            char last_digit;
+                            char last_digit = 0;
                             sprintf(expected_buf, "%.*E", max_precision, value);
                             buflen = strlen(expected_buf);
                             epos = neg + max_precision + 2;

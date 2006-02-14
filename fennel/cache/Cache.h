@@ -133,6 +133,8 @@ public:
         return cbPage;
     }
 
+    virtual CacheAllocator &getAllocator() const = 0;
+
 // ----------------------------------------------------------------------
 // Device Registration and Operations
 // ----------------------------------------------------------------------

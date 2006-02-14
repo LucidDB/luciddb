@@ -1,0 +1,150 @@
+<project name="bh" default="simple-test">
+  <target name="simple-test">
+    <test-suite testunit="simple-test">
+
+      <init-hook>
+        <test name="restoreCatalog" testunit="init-test">
+          <ant-task>
+            <ant target="restoreCatalog"/>
+          </ant-task>
+        </test>
+      </init-hook>
+
+      <test name="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/pge2/gen/${config.prop}/create.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="load" requiresSuccess="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/pge2/gen/${config.prop}/load.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="index" requiresSuccess="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/pge2/gen/${config.prop}/createi.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+<!--
+      <test name="cubes" requiresSuccess="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/pge2/gen/${config.prop}/cubes.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="1" requiresSuccess="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/pge2/gen/${config.prop}/1.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="2" requiresSuccess="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/pge2/gen/${config.prop}/2.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="3" requiresSuccess="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/pge2/gen/${config.prop}/3.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="4" requiresSuccess="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/pge2/gen/${config.prop}/4.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="5" requiresSuccess="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/pge2/gen/${config.prop}/5.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="6" requiresSuccess="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/pge2/gen/${config.prop}/6.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="7" requiresSuccess="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/pge2/gen/${config.prop}/7.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="8" requiresSuccess="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/pge2/gen/${config.prop}/8.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="9" requiresSuccess="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/pge2/gen/${config.prop}/9.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="10" requiresSuccess="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/pge2/gen/${config.prop}/10.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="11" requiresSuccess="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/pge2/gen/${config.prop}/11.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="12" requiresSuccess="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/pge2/gen/${config.prop}/12.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="13" requiresSuccess="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/pge2/gen/${config.prop}/13.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="14" requiresSuccess="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/pge2/gen/${config.prop}/14.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="15" requiresSuccess="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/pge2/gen/${config.prop}/15.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="16" requiresSuccess="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/pge2/gen/${config.prop}/16.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="17" requiresSuccess="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/pge2/gen/${config.prop}/17.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="18" requiresSuccess="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/pge2/gen/${config.prop}/18.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="19" requiresSuccess="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/pge2/gen/${config.prop}/19.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="20" requiresSuccess="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/pge2/gen/${config.prop}/20.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="20b" requiresSuccess="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/pge2/gen/${config.prop}/20b.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="21" requiresSuccess="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/pge2/gen/${config.prop}/21.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="22" requiresSuccess="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/pge2/gen/${config.prop}/22.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+-->
+    </test-suite>
+  </target>
+</project>

@@ -681,6 +681,14 @@ column type family is {1} but default value type family is {2}</text>
 <text>Cannot support JDBC type {2} (ordinal {3,number,#}) found in column {1} of table {0}</text>
 </exception>
 
+<exception id="460120" name="MedInvalidUdxId">
+<text>Invalid specific name for SQL/MED UDX:  {0}</text>
+</exception>
+
+<exception id="460130" name="MedUnknownUdx">
+<text>Unknown specific name {0} for SQL/MED UDX</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Database/Session resources 470,000 - 480,000 -->
 <!-- ====================================================================== -->

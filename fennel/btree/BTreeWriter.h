@@ -64,9 +64,11 @@ class BTreeWriter : public BTreeReader, public LogicalTxnParticipant
      */
     std::vector<PageId> pageStack;
 
-    // TODO:  doc
+    /**
+     * Buffer used for storing entry to be inserted into parent node
+     * during split.
+     */
     boost::scoped_array<FixedBuffer> splitTupleBuffer;
-    boost::scoped_array<FixedBuffer> parentTupleBuffer;
 
     /**
      * Buffer used for marshalling in insertTupleData.
@@ -74,7 +76,7 @@ class BTreeWriter : public BTreeReader, public LogicalTxnParticipant
     boost::scoped_array<FixedBuffer> leafTupleBuffer;
 
     /**
-     * If true, inserts are always increasing
+     * If true, caller promises inserts will be strictly increasing.
      */
     bool monotonic;
 
@@ -92,10 +94,8 @@ class BTreeWriter : public BTreeReader, public LogicalTxnParticipant
     void compactNode(BTreePageLock &targetPageLock);
 
     /**
-     * Splits a node to free up space for inserting a tuple, and then performs
-     * the actual insertion.
-     *
-     * @param node the node to be split
+     * Splits the current node locked by pageLock to free up space for
+     * inserting a tuple, and then performs the actual insertion.
      *
      * @param pTupleBuffer buffer containing the tuple being inserted
      *
@@ -103,35 +103,36 @@ class BTreeWriter : public BTreeReader, public LogicalTxnParticipant
      *
      * @param iNewTuple desired 0-based position for new tuple
      */
-    void splitNode(
-        BTreePageLock &pageLock,
+    void splitCurrentNode(
         PConstBuffer pTupleBuffer,
         uint cbTuple,
         uint iNewTuple);
 
     /**
-     * The tree grows by one level. The root node should have two entries
-     * the first entry points to left node and the second entry points 
-     * the right node. The root page id is kept.
+     * Grows the tree by one level, preserving the root PageId.  On entry, the
+     * original root (identified by pageId) should be held by pageLock.  On
+     * return, the new root node will have two entries: the first entry will
+     * point to a copy of the old root on a new page, and the
+     * second entry will point to rightNode.
      *
-     * @param node the left node
+     * @param rightNode the right-hand split of the old root
      *
-     * @param pageId the origianl root page id.
-     *
-     * @param rightNode the right node.
-     *
-     * @param rightPageId the right page id.
+     * @param rightPageId PageId corresponding to rightNode
      */
-    void grow(BTreeNode &node, PageId pageId, 
-              BTreeNode &rightNode, PageId rightPageId);
+    void grow(
+        BTreeNode &rightNode, PageId rightPageId);
 
     /**
-     * try to find the parent page, put the result into pageId.
-     * and lock the parent page inside pageLock.
+     * Finds the parent page by using the page stack (plus searches if root
+     * splits are encountered).  On return, the result is in pageId, and the
+     * parent page has been accquired by pageLock.
      *
      * @param height is the current height of the btree.
+     *
+     * @return 0-based entry position on parent page corresponding
+     * to searchKeyData
      */
-    uint lockParentPage(int height);
+    uint lockParentPage(uint height);
 
     /**
      * Attempts to perform an insertion without splitting, performing
@@ -198,9 +199,10 @@ public:
     /**
      * Inserts a tuple from a marshalled tuple buffer.  If the key already
      * exists, and distinctness is set to DUP_FAIL, a BTreeDuplicateKeyExcn
-     * will be thrown.  If distinctness is set to DUP_DISCARD, the new
-     * tuple is not inserted.  Otherwise (DUP_ALLOW), the tuple is inserted
-     * with a duplicate key.
+     * will be thrown (or an assertion failure if monotonic mode is enabled).
+     * If distinctness is set to DUP_DISCARD, the new tuple is not inserted.
+     * Otherwise (DUP_ALLOW), the tuple is inserted with a duplicate key.
+     * In monotonic mode, only DUP_FAIL is allowed.
      *
      * @param pTupleBuffer buffer containing tuple to be inserted
      *

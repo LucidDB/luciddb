@@ -1,0 +1,30 @@
+<project name="bh" default="insert1m-test">
+  <target name="insert1m-test">
+    <test-suite testunit="insert1m-test">
+
+      <init-hook>
+        <test name="restoreCatalog" testunit="insert1m-init-test">
+          <ant-task>
+            <ant target="restoreCatalog"/>
+          </ant-task>
+        </test>
+      </init-hook>
+
+      <test name="altersys">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/altersys.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="insert1m">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/insert1m.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
+      <test name="q2a_1m">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/q2a_1m.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+      
+    </test-suite>
+  </target>
+</project>

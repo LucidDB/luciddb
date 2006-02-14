@@ -31,9 +31,6 @@ using namespace fennel;
 
 CalcExecStreamTestSuite::CalcExecStreamTestSuite()
 {
-    // NOTE:  work with 64-bit data so that alignment paddings doesn't
-    // introduce zeros.  This will still break with 128-bit alignment.
-    
     StandardTypeDescriptorFactory stdTypeFactory;
     TupleAttributeDescriptor attrDesc(
         stdTypeFactory.newDataType(STANDARD_TYPE_UINT_64));
@@ -180,8 +177,15 @@ void CalcExecStreamTestSuite::testConstant(
     SharedExecStream pOutputStream = prepareTransformGraph(
         mockStreamEmbryo, calcStreamEmbryo);
 
+
+    uint64_t fff = 0xFFFFFFFFFFFFFFFFLL;
+    TupleData expectedTuple;
+    expectedTuple.compute(outputDesc);
+    for (uint i = 0; i < expectedTuple.size(); ++i) {
+        expectedTuple[i].pData = reinterpret_cast<PBuffer>(&fff);
+    }
     verifyConstantOutput(
         *pOutputStream,
-        mockParams.nRows*expectedFactor,
-        0xFF);
+        expectedTuple,
+        mockParams.nRows);
 }

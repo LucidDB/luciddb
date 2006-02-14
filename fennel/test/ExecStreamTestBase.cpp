@@ -67,7 +67,7 @@ void ExecStreamTestBase::testCaseTearDown()
     }
     // destroy the graph
     tearDownExecStreamTest();
-    // free the scheduler last, since an ExecStreamGraph hold a raw Scheduler
+    // free the scheduler last, since an ExecStreamGraph holds a raw Scheduler
     // ptr
     pScheduler.reset(); 
     SegStorageTestBase::testCaseTearDown();

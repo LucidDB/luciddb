@@ -1,0 +1,89 @@
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/clean_phone_intl.sql#1 $
+0: jdbc:luciddb:> set schema 'udftest';
+0: jdbc:luciddb:> set path 'udftest';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table intl(ph varchar(128));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into intl values
+. . . . . . . . > ('5133870'),
+. . . . . . . . > ('513-3870'),
+. . . . . . . . > ('6505133870'),
+. . . . . . . . > ('650-513-3870'),
+. . . . . . . . > ('415-744-9026 ext123'),
+. . . . . . . . > ('1-650-513-3870'),
+. . . . . . . . > ('1415-744-9026'),
+. . . . . . . . > ('14157449026'),
+. . . . . . . . > ('(+886) 2-9876-5432'),
+. . . . . . . . > ('011-886-2-9876-5432'),
+. . . . . . . . > ('01185223456789');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- define functions
+0: jdbc:luciddb:> create function clean_phone_intl(str varchar(128), b boolean)
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.applib.CleanPhoneInternational.FunctionExecute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values clean_phone_intl('23890123809214382109432809', true);
+Error: java.lang.IllegalArgumentException: Incorrect North American phone number (state=,code=0)
+0: jdbc:luciddb:> values clean_phone_intl('fdjk3242478932hfdskf832498', true);
+Error: java.lang.IllegalArgumentException: Incorrect North American phone number (state=,code=0)
+0: jdbc:luciddb:> values clean_phone_intl('23', true);
+Error: java.lang.IllegalArgumentException: Incorrect North American phone number (state=,code=0)
+0: jdbc:luciddb:> values clean_phone_intl('sdf', true);
+Error: java.lang.IllegalArgumentException: This is not a phone number (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values clean_phone_intl('dsf', false);
++---------+
+| EXPR$0  |
++---------+
+| dsf     |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create view with reference to clean_phone_intl
+0: jdbc:luciddb:> create view intlphone(before, after) as
+. . . . . . . . > select ph, clean_phone_intl(ph, true)
+. . . . . . . . > from intl;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from intlphone
+. . . . . . . . > order by 1;
++----------------------+-------------------------+
+|        BEFORE        |          AFTER          |
++----------------------+-------------------------+
+| (+886) 2-9876-5432   | +886 (2) 98765432       |
+| 011-886-2-9876-5432  | +886 (2) 98765432       |
+| 01185223456789       | +852 23456789           |
+| 1-650-513-3870       | +1 (650) 513-3870       |
+| 1415-744-9026        | +1 (415) 744-9026       |
+| 14157449026          | +1 (415) 744-9026       |
+| 415-744-9026 ext123  | +1 (415) 744-9026 x123  |
+| 513-3870             | +1 (650) 513-3870       |
+| 5133870              | +1 (650) 513-3870       |
+| 650-513-3870         | +1 (650) 513-3870       |
+| 6505133870           | +1 (650) 513-3870       |
++----------------------+-------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- in expressions
+0: jdbc:luciddb:> select ph || clean_phone_intl(ph, false)
+. . . . . . . . > from intl
+. . . . . . . . > order by 1;
++--------------------------------------------+
+|                   EXPR$0                   |
++--------------------------------------------+
+| (+886) 2-9876-5432 +886 (2) 98765432       |
+| 011-886-2-9876-5432+886 (2) 98765432       |
+| 01185223456789     +852 23456789           |
+| 1-650-513-3870     +1 (650) 513-3870       |
+| 1415-744-9026      +1 (415) 744-9026       |
+| 14157449026        +1 (415) 744-9026       |
+| 415-744-9026 ext123+1 (415) 744-9026 x123  |
+| 513-3870           +1 (650) 513-3870       |
+| 5133870            +1 (650) 513-3870       |
+| 650-513-3870       +1 (650) 513-3870       |
+| 6505133870         +1 (650) 513-3870       |
++--------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- cleanup
+0: jdbc:luciddb:> drop view intlphone;
+0: jdbc:luciddb:> drop routine clean_phone_intl;
+0: jdbc:luciddb:> !quit

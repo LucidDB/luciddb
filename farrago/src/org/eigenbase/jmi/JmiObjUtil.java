@@ -79,12 +79,10 @@ public abstract class JmiObjUtil
     {
         RefClass refClass = dst.refClass();
         MofClass mofClass = (MofClass) refClass.refMetaObject();
-        Iterator iter = mofClass.getContents().iterator();
+        Iterator iter = getFeatures(
+            dst.refClass(), Attribute.class, false).iterator();
         while (iter.hasNext()) {
             Object obj = iter.next();
-            if (!(obj instanceof Attribute)) {
-                continue;
-            }
             Attribute attr = (Attribute) obj;
             if (!(attr.getScope().equals(ScopeKindEnum.INSTANCE_LEVEL))) {
                 continue;

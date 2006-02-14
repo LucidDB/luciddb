@@ -199,7 +199,7 @@ Messages:
 Error: could not calculate results for the following row:
 [ 'tinyint', 'source', 0, -32768, -2147483647, -2147483647, -21474836470000, -21474836470000, -4.29497e+09, -4.29497e+09, -4.29497e+09 ]
 Messages:
-[0]:PC=21 Code=22003 (state=,code=0)
+[0]:PC=20 Code=22003 (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target order by 1
 . . . . . . . . > ;
 +------+
@@ -243,7 +243,7 @@ Messages:
 Error: could not calculate results for the following row:
 [ 'tinyint', 'source', 0, -32768, -2147483647, -2147483647, -21474836470000, -21474836470000, -4.29497e+09, -4.29497e+09, -4.29497e+09 ]
 Messages:
-[0]:PC=21 Code=22003 (state=,code=0)
+[0]:PC=20 Code=22003 (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target order by 1
 . . . . . . . . > ;
 +------+

@@ -1,0 +1,81 @@
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/cy_quarter.sql#1 $
+0: jdbc:luciddb:> set schema 'udftest';
+0: jdbc:luciddb:> set path 'udftest';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- define functions
+0: jdbc:luciddb:> create function cy_quarter(dt date)
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
+. . . . . . . . > specific cy_quarter_date
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.applib.toCYQuarter.FunctionExecute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function cy_quarter(ts timestamp)
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
+. . . . . . . . > specific cy_quarter_ts
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.applib.toCYQuarter.FunctionExecute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values cy_quarter(DATE'1896-1-11');
++---------+
+| EXPR$0  |
++---------+
+| Q1CY96  |
++---------+
+0: jdbc:luciddb:> values cy_quarter(TIMESTAMP'2001-5-9 9:57:59');
++---------+
+| EXPR$0  |
++---------+
+| Q2CY01  |
++---------+
+0: jdbc:luciddb:> values cy_quarter(DATE'1-1-1');
++---------+
+| EXPR$0  |
++---------+
+| Q1CY01  |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- failures
+0: jdbc:luciddb:> values cy_quarter(TIMESTAMP'2 12:59:21');
+Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIMESTAMP literal '2 12:59:21' at line 1, column 28: not in format 'yyyy-MM-dd HH:mm:ss' (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create view with reference to cy_quarter
+0: jdbc:luciddb:> create view v1(fm, dateQ, tsQ) as
+. . . . . . . . > select fm, cy_quarter(datecol), cy_quarter(tscol)
+. . . . . . . . > from data_source;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from v1
+. . . . . . . . > order by 1;
++-----+---------+---------+
+| FM  |  DATEQ  |   TSQ   |
++-----+---------+---------+
+| 1   | Q3CY45  | Q4CY10  |
+| 2   | Q1CY06  | Q2CY01  |
+| 10  | Q1CY93  | Q4CY64  |
++-----+---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- in expressions
+0: jdbc:luciddb:> select v1.fm, cy_quarter(datecol) || cy_quarter(tscol) || dateQ
+. . . . . . . . > from data_source, v1
+. . . . . . . . > order by 1;
++-----+---------------------+
+| FM  |       EXPR$1        |
++-----+---------------------+
+| 1   | Q1CY93Q4CY64Q3CY45  |
+| 1   | Q1CY06Q2CY01Q3CY45  |
+| 1   | Q3CY45Q4CY10Q3CY45  |
+| 2   | Q1CY93Q4CY64Q1CY06  |
+| 2   | Q3CY45Q4CY10Q1CY06  |
+| 2   | Q1CY06Q2CY01Q1CY06  |
+| 10  | Q3CY45Q4CY10Q1CY93  |
+| 10  | Q1CY06Q2CY01Q1CY93  |
+| 10  | Q1CY93Q4CY64Q1CY93  |
++-----+---------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- cleanup
+0: jdbc:luciddb:> drop view v1;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop routine cy_quarter_date;
+0: jdbc:luciddb:> drop routine cy_quarter_ts;
+0: jdbc:luciddb:> !quit

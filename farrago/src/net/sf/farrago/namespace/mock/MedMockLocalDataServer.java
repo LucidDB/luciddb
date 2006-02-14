@@ -110,7 +110,15 @@ class MedMockLocalDataServer
             tableProps.getProperty(PROP_EXECUTOR_IMPL, PROPVAL_JAVA);
         assert (executorImpl.equals(PROPVAL_JAVA)
             || executorImpl.equals(PROPVAL_FENNEL));
-        return new MedMockColumnSet(localName, rowType, nRows, executorImpl);
+        String udxSpecificName =
+            tableProps.getProperty(PROP_UDX_SPECIFIC_NAME);
+
+        if (udxSpecificName != null) {
+            assert (executorImpl.equals(PROPVAL_JAVA));
+        }
+
+        return new MedMockColumnSet(
+            localName, rowType, nRows, executorImpl, udxSpecificName);
     }
 
     // implement FarragoMedLocalDataServer
@@ -127,7 +135,8 @@ class MedMockLocalDataServer
                 RelOptUtil.createDmlRowType(
                     cluster.getTypeFactory()),
                 1,
-                "JAVA"),
+                "JAVA",
+                null),
             cluster, null);
 
         // Add a dummy project on top to keep the optimizer happy.
