@@ -42,18 +42,18 @@
 		<publishers>
 			<!-- currentbuildstatuspublisher file="logs/aspen/currentbuildstatus.txt"/ -->
 
-			<artifactspublisher dir="&open_integration.build.home;fennel/trace" dest="artifacts/aspen&configSuffix;" subdirectory="fennel_trace"/>
-			<artifactspublisher dir="&open_integration.build.home;farrago/trace" dest="artifacts/aspen&configSuffix;" subdirectory="farrago_trace"/>
-			<artifactspublisher dir="&open_integration.build.home;farrago/unitsql" dest="artifacts/aspen&configSuffix;" subdirectory="farrago_unitsql"/>
-			<artifactspublisher dir="&open_integration.build.home;farrago/initsql" dest="artifacts/aspen&configSuffix;" subdirectory="farrago_initsql"/>
-			<artifactspublisher dir="&open_integration.build.home;farrago/regressionsql" dest="artifacts/aspen&configSuffix;" subdirectory="farrago_regressionsql"/>
-			<artifactspublisher dir="&open_integration.build.home;farrago/testlog" dest="artifacts/aspen&configSuffix;" subdirectory="farrago_testlog"/>
-			<artifactspublisher dir="&open_integration.build.home;aspen/cpp/aspen/trace" dest="artifacts/aspen&configSuffix;" subdirectory="aspen_cpp_trace"/>
-			<artifactspublisher dir="&open_integration.build.home;aspen/testlog" dest="artifacts/aspen&configSuffix;" subdirectory="testlog"/>
-			<artifactspublisher dir="&open_integration.build.home;aspen/initsql" dest="artifacts/aspen&configSuffix;" subdirectory="initsql"/>
-			<artifactspublisher dir="&open_integration.build.home;aspen/unitsql" dest="artifacts/aspen&configSuffix;" subdirectory="unitsql"/>
-			<artifactspublisher dir="&open_integration.build.home;aspen/trace" dest="artifacts/aspen&configSuffix;" subdirectory="trace"/>
-			<artifactspublisher dir="&open_integration.build.home;aspen/testcases" dest="artifacts/aspen&configSuffix;" subdirectory="testcases"/>
+			<artifactspublisher dir="&open_integration.build.home;/fennel/trace" dest="artifacts/aspen&configSuffix;" subdirectory="fennel_trace"/>
+			<artifactspublisher dir="&open_integration.build.home;/farrago/trace" dest="artifacts/aspen&configSuffix;" subdirectory="farrago_trace"/>
+			<artifactspublisher dir="&open_integration.build.home;/farrago/unitsql" dest="artifacts/aspen&configSuffix;" subdirectory="farrago_unitsql"/>
+			<artifactspublisher dir="&open_integration.build.home;/farrago/initsql" dest="artifacts/aspen&configSuffix;" subdirectory="farrago_initsql"/>
+			<artifactspublisher dir="&open_integration.build.home;/farrago/regressionsql" dest="artifacts/aspen&configSuffix;" subdirectory="farrago_regressionsql"/>
+			<artifactspublisher dir="&open_integration.build.home;/farrago/testlog" dest="artifacts/aspen&configSuffix;" subdirectory="farrago_testlog"/>
+			<artifactspublisher dir="&open_integration.build.home;/aspen/cpp/aspen/trace" dest="artifacts/aspen&configSuffix;" subdirectory="aspen_cpp_trace"/>
+			<artifactspublisher dir="&open_integration.build.home;/aspen/testlog" dest="artifacts/aspen&configSuffix;" subdirectory="testlog"/>
+			<artifactspublisher dir="&open_integration.build.home;/aspen/initsql" dest="artifacts/aspen&configSuffix;" subdirectory="initsql"/>
+			<artifactspublisher dir="&open_integration.build.home;/aspen/unitsql" dest="artifacts/aspen&configSuffix;" subdirectory="unitsql"/>
+			<artifactspublisher dir="&open_integration.build.home;/aspen/trace" dest="artifacts/aspen&configSuffix;" subdirectory="trace"/>
+			<artifactspublisher dir="&open_integration.build.home;/aspen/testcases" dest="artifacts/aspen&configSuffix;" subdirectory="testcases"/>
 
 			<!-- sync up artifacts on jsp machine: CC's scp would copy everything -->
 			<execute command="&rsync_cmd; artifacts/aspen&configSuffix; &rsync_dest;"/>
