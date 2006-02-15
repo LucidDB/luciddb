@@ -1053,6 +1053,12 @@ public class ReduceDecimalsRule extends RelOptRule
             if (innerType.isNullable() && !outerType.isNullable()) {
                 return false;
             }
+            // One would think that we could go from Nullable -> Not Nullable
+            // since we are substituting a general type with a more specific 
+            // type. However the optimizer doesn't like it.
+            if (valueType.isNullable() != outerType.isNullable()) {
+                return false;
+            }
             if (innerCheck || outerCheck) {
                 return false;
             }
