@@ -12,7 +12,6 @@
 
                 <listeners>
                   <currentbuildstatuslistener file="logs/aspen/currentbuildstatus.txt"/>
-                  <!-- TODO: Enable -->
                   <currentbuildstatuslistener file="&open_default.build.home;/../web/logs/aspen&configSuffix;/currentbuildstatus.txt"/> 
                 </listeners>
 
@@ -41,7 +40,7 @@
 
 		<!-- Publishers are run *after* a build completes -->
 		<publishers>
-			<currentbuildstatuspublisher file="logs/aspen/currentbuildstatus.txt"/>
+			<!-- currentbuildstatuspublisher file="logs/aspen/currentbuildstatus.txt"/ -->
 
 			<artifactspublisher dir="&open_integration.build.home;fennel/trace" dest="artifacts/aspen&configSuffix;" subdirectory="fennel_trace"/>
 			<artifactspublisher dir="&open_integration.build.home;farrago/trace" dest="artifacts/aspen&configSuffix;" subdirectory="farrago_trace"/>
