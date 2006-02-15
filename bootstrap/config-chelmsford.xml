@@ -14,7 +14,7 @@
 <!ENTITY aspen_p4client  "cruise.chelmsford">
 <!ENTITY aspen_p4user    "guest">
 
-<!ENTITY buildresultsbase "http://temporarily-out-of-service/aspen/buildresults">
+<!ENTITY buildresultsbase "http://zuercher.dyndns.org:8082/cruisecontrol/buildresults">
 <!ENTITY mailhost         "smtp.rcn.com">
 <!ENTITY reportsuccess    "always">
 <!ENTITY returnname       "Build Monkey">
