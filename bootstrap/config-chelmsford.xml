@@ -8,7 +8,7 @@
 <!ENTITY open_root       "//open/dt/dev">
 <!ENTITY open_propfile   "chelmsford.perforce.properties">
 <!ENTITY open_default.build.home     "/home/cruise/work">
-<!ENTITY open_integration.build.home "/home/cruise/work/bootstrap/build">
+<!ENTITY open_integration.build.home "/home/cruise/work/build">
 
 <!ENTITY aspen_p4port    "chumley:1667">
 <!ENTITY aspen_p4client  "cruise.chelmsford">
