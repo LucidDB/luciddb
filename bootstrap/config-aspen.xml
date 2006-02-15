@@ -7,7 +7,7 @@
 		<!-- Bootstrappers are run with every build before mod checks -->
 		<bootstrappers>
 			<!-- <currentbuildstatusbootstrapper file="logs/aspen/currentbuildstatus.txt"/> -->
-			<p4bootstrapper p4port="&open_p4port;" p4client="&open_p4client;" p4user="&open_p4user;" path="&open_root;/bootstrap/..."/>
+			<p4bootstrapper port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/bootstrap/..."/>
 		</bootstrappers>
 
                 <listeners>
