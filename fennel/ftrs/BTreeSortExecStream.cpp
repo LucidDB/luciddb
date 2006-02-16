@@ -42,11 +42,15 @@ void BTreeSortExecStream::prepare(BTreeSortExecStreamParams const &params)
 void BTreeSortExecStream::open(bool restart)
 {
     sorted = false;
-    BTreeBuilder builder(
-        treeDescriptor,
-        treeDescriptor.segmentAccessor.pSegment);
-    builder.createEmptyRoot();
-    treeDescriptor.rootPageId = builder.getRootPageId();
+    if (restart) {
+        truncateTree(false);
+    } else {
+        BTreeBuilder builder(
+            treeDescriptor,
+            treeDescriptor.segmentAccessor.pSegment);
+        builder.createEmptyRoot();
+        treeDescriptor.rootPageId = builder.getRootPageId();
+    }
 
     // NOTE:  do this last so that rootPageId is available
     BTreeInsertExecStream::open(restart);
@@ -103,15 +107,21 @@ ExecStreamResult BTreeSortExecStream::execute(
     return EXECRC_EOS;
 }
 
-void BTreeSortExecStream::closeImpl()
+void BTreeSortExecStream::truncateTree(bool rootless)
 {
-    BTreeInsertExecStream::closeImpl();
     BTreeBuilder builder(
         treeDescriptor,
         treeDescriptor.segmentAccessor.pSegment);
-    bool rootless = true;
     builder.truncate(rootless);
-    treeDescriptor.rootPageId = NULL_PAGE_ID;
+    if (rootless) {
+        treeDescriptor.rootPageId = NULL_PAGE_ID;
+    }
+}
+
+void BTreeSortExecStream::closeImpl()
+{
+    BTreeInsertExecStream::closeImpl();
+    truncateTree(true);
 }
 
 FENNEL_END_CPPFILE("$Id$");

@@ -128,3 +128,18 @@ create table s.nullabledecimal(i int primary key, coldec decimal(2,1));
 insert into s.nullabledecimal values (1, 1.2);
 
 drop schema s cascade;
+
+-- restart required for distinct (FNL-19)
+select sum(c) 
+from sales.depts, 
+(select count(distinct deptno) as c from sales.emps);
+
+-- verify plan for previous query
+!set outputformat csv
+
+explain plan for
+select sum(c) 
+from sales.depts, 
+(select count(distinct deptno) as c from sales.emps);
+
+!set outputformat table
