@@ -41,7 +41,7 @@ while [ -n "$1" ]; do
         --without-tests)
             without_tests=true;
             FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
-        --*) FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
+        --?*) FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
         
         *) usage; exit -1;;
     esac
