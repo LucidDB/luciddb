@@ -50,7 +50,6 @@ while [ -n "$1" ]; do
 done
 
 shopt -uq extglob
-set -v
 
 if $without_farrago_build ; then
     echo Skipping Farrago build.
@@ -58,6 +57,8 @@ else
     cd ${luciddb_dir}/../farrago
     ./initBuild.sh ${FARRAGO_FLAGS}
 fi
+
+set -v
 
 # Build catalog then run tests
 cd ${luciddb_dir}/../farrago
