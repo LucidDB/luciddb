@@ -895,8 +895,79 @@
 0: jdbc:farrago:> drop table rectangles;
 0: jdbc:farrago:> drop type rectangle;
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -------------------------------------
+0: jdbc:farrago:> -- Part 5. Misc tests for bugfixes
+0: jdbc:farrago:> -------------------------------------
+0: jdbc:farrago:> -- Tests LER-312 -- should not create empty cluster pages when no data
+0: jdbc:farrago:> -- is inserted into table
+0: jdbc:farrago:> create table empty(a int) server sys_column_store_data_server;
+0: jdbc:farrago:> create view v(a) as values(1);
+0: jdbc:farrago:> insert into empty select a from v where a = 2;
+0: jdbc:farrago:> select * from empty;
++----+
+| A  |
++----+
++----+
+0: jdbc:farrago:> drop view v;
+0: jdbc:farrago:> drop table empty;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> --
+0: jdbc:farrago:> -- Tests LER-31 -- Not handling appends to existing table when the records
+0: jdbc:farrago:> -- are variable length and stored in either a compressed of variable mode
+0: jdbc:farrago:> -- batch.  Prior testcases do exercise this, but the column size isn't long
+0: jdbc:farrago:> -- enough to cause attempts to read invalid memory.  Note that the "null"
+0: jdbc:farrago:> -- is what causes the testcase below to result in there being enough variation
+0: jdbc:farrago:> -- in the record sizes to cause problems.
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table test_large_chars (a int, i char(100))
+. . . . . . . . >     server sys_column_store_data_server;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> insert into test_large_chars values(1, null);
+0: jdbc:farrago:> insert into test_large_chars values(2, 'asdf');
+0: jdbc:farrago:> insert into test_large_chars values(3,
+. . . . . . . . >     'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from test_large_chars;
++----+-------------------------------------------------------------------------------------------------------+
+| A  |                                                   I                                                   |
++----+-------------------------------------------------------------------------------------------------------+
+| 1  |                                                                                                       |
+| 2  | asdf                                                                                                  |
+| 3  | bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb                              |
++----+-------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> select * from test_large_chars where i is null;
++----+----+
+| A  | I  |
++----+----+
+| 1  |    |
++----+----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop table test_large_chars;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table test_large_varchars (a int, i varchar(100))
+. . . . . . . . >     server sys_column_store_data_server;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> insert into test_large_varchars values(1, null);
+0: jdbc:farrago:> insert into test_large_varchars values(2, 'asdf');
+0: jdbc:farrago:> insert into test_large_varchars values(3,
+. . . . . . . . >     'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from test_large_varchars;
++----+---------------------------------------------------------------------------+
+| A  |                                     I                                     |
++----+---------------------------------------------------------------------------+
+| 1  |                                                                           |
+| 2  | asdf                                                                      |
+| 3  | bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb  |
++----+---------------------------------------------------------------------------+
+0: jdbc:farrago:> select * from test_large_varchars where i is null;
++----+----+
+| A  | I  |
++----+----+
+| 1  |    |
++----+----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop table test_large_varchars;
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Clean up
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- drop schema

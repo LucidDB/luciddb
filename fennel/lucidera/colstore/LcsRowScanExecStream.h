@@ -34,6 +34,15 @@ FENNEL_BEGIN_NAMESPACE
  */
 struct LcsRowScanExecStreamParams : public LcsRowScanBaseExecStreamParams
 {
+    /**
+     * Does this ExecStream perform full scan.
+     */
+    bool isFullScan;
+
+    /**
+     * Does this ExecStream contain extra filter(as a range list input).
+     */
+    bool hasExtraFilter;
 };
 
 /**
@@ -82,7 +91,12 @@ class LcsRowScanExecStream : public LcsRowScanBaseExecStream
     /**
      * true if executing full table scan
      */
-    bool fullTableScan;
+    bool isFullScan;
+
+    /**
+     * true if there's extra range list filter(as the last input)
+     */
+    bool hasExtraFilter;
 
     /** 
      * true if produceTuple pending

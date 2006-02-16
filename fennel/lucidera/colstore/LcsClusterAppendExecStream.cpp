@@ -216,42 +216,6 @@ ExecStreamResult LcsClusterAppendExecStream::Compress(
         return EXECRC_EOS;
     }
 
-    // If this is the first time compress is called, then
-    // start new block (for new table), or load last block
-    // (of existing table).  We do this here rather than in
-    // Init() because for INSERT into T as SELECT * from T
-    // we need to make sure that we extract all the data from
-    // T before modifying the blocks there; use the boolean to
-    // ensure that initialization of cluster page is only done
-    // once
-
-#ifdef NOT_DONE_YET
-    if (!m_bIsLong && !m_bCompressCalled) {
-#else
-    if (!m_bCompressCalled) {
-#endif
-
-        m_bCompressCalled = true;
-    
-        // if the index exists, get last block written
-    
-        PLcsClusterNode pExistingIndexBlock;
-
-        bool found = GetLastBlock(pExistingIndexBlock);
-        if (found) { 
-            // indicate we are updating a leaf
-            m_indexBlock = pExistingIndexBlock;
-        
-            // extract rows and values from last batch so we can 
-            // add to it.
-            LoadExistingBlock();
-        } else {
-            // Start writing a new block
-            StartNewBlock();
-            m_startRow = LcsRid(0);
-        }
-    }
-
     // no more input; produce final row count
 
     if (pInAccessor->getState() == EXECBUF_EOS) {
@@ -292,6 +256,41 @@ ExecStreamResult LcsClusterAppendExecStream::Compress(
     for (i = 0; i < quantum.nTuplesMax; i++) {
         if (!pInAccessor->demandData()) {
             return EXECRC_BUF_UNDERFLOW;
+        }
+
+        // If this is the first time compress is called, then
+        // start new block (for new table), or load last block
+        // (of existing table).  We do this here rather than in
+        // Init() because for INSERT into T as SELECT * from T
+        // we need to make sure that we extract all the data from
+        // T before modifying the blocks there; use the boolean to
+        // ensure that initialization of cluster page is only done
+        // once
+
+#ifdef NOT_DONE_YET
+        if (!m_bIsLong && !m_bCompressCalled) {
+#else
+        if (!m_bCompressCalled) {
+#endif
+            m_bCompressCalled = true;
+        
+            // if the index exists, get last block written
+        
+            PLcsClusterNode pExistingIndexBlock;
+
+            bool found = GetLastBlock(pExistingIndexBlock);
+            if (found) { 
+                // indicate we are updating a leaf
+                m_indexBlock = pExistingIndexBlock;
+            
+                // extract rows and values from last batch so we can 
+                // add to it.
+                LoadExistingBlock();
+            } else {
+                // Start writing a new block
+                StartNewBlock();
+                m_startRow = LcsRid(0);
+            }
         }
 
         // if we have finished processing the previous row, unmarshal
@@ -556,8 +555,8 @@ void LcsClusterAppendExecStream::LoadExistingBlock()
             }
 
             for (j = 0, val = aLeftOverBufs[i].get();
-                 j < anLeftOvers;
-                 j++, val += aiFixedSize[i])
+                j < anLeftOvers;
+                j++, val += TupleDatum().getLcsLength(val))
             {
                 m_hash[i].insert(val, &vOrd, &undoInsert);
                 
@@ -700,7 +699,7 @@ void LcsClusterAppendExecStream::WriteBatch(bool lastBatch)
                 assert(!undoInsert);
                 addValueOrdinal(i, vOrd.getValOrd());
                 m_rowCnt++;
-                val += m_maxValueSize[i];
+                val += TupleDatum().getLcsLength(val);
             }
         }
     }

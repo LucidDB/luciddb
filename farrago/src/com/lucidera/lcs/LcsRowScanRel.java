@@ -39,23 +39,23 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 
-/**
+/*
  * LcsRowScanRel is the relational expression corresponding to a scan on a
  * column store table.
  * 
  * @author Zelaine Fong
  * @version $Id$
  */
-public class LcsRowScanRel extends FennelSingleRel
+public class LcsRowScanRel extends FennelMultipleRel
 {
     //~ Instance fields -------------------------------------------------------
    
     private LcsIndexGuide indexGuide;
     
-    /** Clusters to use for access */
+    // Clusters to use for access.
     final List<FemLocalIndex> clusteredIndexes;
     
-    /** Refinement for super.table */
+    // Refinement for super.table.
     final LcsTable lcsTable;
 
     // TODO: keep the connection property (originally of TableAccessRelbase)
@@ -69,6 +69,12 @@ public class LcsRowScanRel extends FennelSingleRel
     final Integer [] projectedColumns;
     
     FarragoRepos repos;
+    
+    /**
+     * Types of scans to perform.
+     */
+    boolean isFullScan;
+    boolean hasExtraFilter;
     
     //~ Constructors ----------------------------------------------------------
 
@@ -84,17 +90,22 @@ public class LcsRowScanRel extends FennelSingleRel
      */
     public LcsRowScanRel(
         RelOptCluster cluster,
-        RelNode child,
+        RelNode[] children,
         LcsTable lcsTable,
         List<FemLocalIndex> clusteredIndexes,
         RelOptConnection connection,
-        Integer [] projectedColumns)
+        Integer [] projectedColumns,
+        boolean isFullScan,
+        boolean hasExtraFilter)
     {
-        super(cluster, child);
+        super(cluster, children);
         this.lcsTable = lcsTable;
         this.clusteredIndexes = clusteredIndexes;
         this.projectedColumns = projectedColumns;
         this.connection = connection;
+        this.isFullScan = isFullScan;
+        this.hasExtraFilter = hasExtraFilter;
+
         assert (lcsTable.getPreparingStmt() ==
             FennelRelUtil.getPreparingStmt(this));
         
@@ -103,21 +114,13 @@ public class LcsRowScanRel extends FennelSingleRel
     
     //~ Methods ---------------------------------------------------------------
     
-    private RelNode cloneChild()
-    {
-        if (getChild()!= null) {
-            return RelOptUtil.clone(getChild());
-        } else {
-            return null;
-        }
-    }
-
     // implement RelNode
     public Object clone()
     {
         LcsRowScanRel clone = 
-            new LcsRowScanRel(getCluster(), cloneChild(),
-                lcsTable, clusteredIndexes, connection, projectedColumns);
+            new LcsRowScanRel(getCluster(), RelOptUtil.clone(inputs),
+                lcsTable, clusteredIndexes, connection, projectedColumns,
+                isFullScan, hasExtraFilter);
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -131,12 +134,12 @@ public class LcsRowScanRel extends FennelSingleRel
     // overwrite SingleRel
     public double getRows()
     {
-        if (getChild() == null) {
+        if (inputs.length == 0) {
             // full table scan.
             return lcsTable.getRowCount();
         } else {
             // table scan from an input RID stream.
-            return super.getRows();
+            return inputs[0].getRows();
         }
     }
 
@@ -200,7 +203,7 @@ public class LcsRowScanRel extends FennelSingleRel
         // we don't allow clusters to overlap), but is useful in verbose mode.
         // Can't resolve this comment until FRG-8 is completed.
         
-        if (getChild() == null) {
+        if (inputs.length == 0) {
             pw.explain(
                 this,
                 new String [] {"table", "projection", "clustered indexes"},
@@ -217,9 +220,14 @@ public class LcsRowScanRel extends FennelSingleRel
         }
     }
 
+    // overwrite FennelSingleRel
     public Object implementFennelChild(FennelRelImplementor implementor)
     {
-        return Literal.constantNull();
+        if (inputs.length == 0) {
+            return Literal.constantNull();
+        } else {
+            return super.implementFennelChild(implementor);
+        }
     }
 
     // implement FennelRel
@@ -230,48 +238,11 @@ public class LcsRowScanRel extends FennelSingleRel
         FemLcsRowScanStreamDef scanStream = 
         	indexGuide.newRowScan(this, projectedColumns);
         
-        if (getChild() == null) {
-            // for now, create a dummy empty rid stream as input to the scan;
-            // this will trigger a full table scan
-        
-            FemMockTupleStreamDef input = repos.newFemMockTupleStreamDef();
-            input.setRowCount(0);
-        
-            FemTupleDescriptor tupleDesc = repos.newFemTupleDescriptor();
-
-            FennelStoredTypeDescriptor typeDescRID =
-            FennelStandardTypeDescriptor.INT_64;
-            FemTupleAttrDescriptor attrDescRID = repos.newFemTupleAttrDescriptor();
-            attrDescRID.setTypeOrdinal(typeDescRID.getOrdinal());
-            tupleDesc.getAttrDescriptor().add(attrDescRID);
-
-            /*
-             * NOTE: Because MockTupleStream has some asserts that restrict the
-             * data types, the output type here is simply a single field of
-             * INT_64, although LcsROwScan expects input rows like [RID,
-             * BitmapSegDes, BitmapSeg]. Using INT_64 works since no row is
-             * produced(setRowCount(0)), so the consumer will not try to
-             * interprete the types.
-
-            FennelStoredTypeDescriptor typeDescBitmap =
-            FennelStandardTypeDescriptor.VARBINARY;
-
-            FemTupleAttrDescriptor attrDescSegDesc = repos.newFemTupleAttrDescriptor();
-            attrDescSegDesc.setTypeOrdinal(typeDescBitmap.getOrdinal());
-            tupleDesc.getAttrDescriptor().add(attrDescSegDesc);
-
-            FemTupleAttrDescriptor attrDescSeg = repos.newFemTupleAttrDescriptor();
-            attrDescSeg.setTypeOrdinal(typeDescBitmap.getOrdinal());
-            tupleDesc.getAttrDescriptor().add(attrDescSeg);
-
-            */
-
-            input.setOutputDesc(tupleDesc);
-            
-            implementor.addDataFlowFromProducerToConsumer(input, scanStream);
-        } else {
+        for (int i = 0; i < inputs.length; i++) {
+            FemExecutionStreamDef inputStream =
+                implementor.visitFennelChild((FennelRel) inputs[i]);
             implementor.addDataFlowFromProducerToConsumer(
-                implementor.visitFennelChild((FennelRel) getChild()), 
+                inputStream,
                 scanStream);
         }
 
@@ -309,7 +280,7 @@ public class LcsRowScanRel extends FennelSingleRel
 
         RelOptCost cost = planner.makeCost(dRows, dCpu, dIo);
 
-        if (getChild() != null) {
+        if (inputs.length != 0) {
             // table scan from RID stream is less costly.
             // Once we have good cost, the calculation should be 
             // cost * (# of inputRIDs/# of totaltableRows).
@@ -339,27 +310,20 @@ public class LcsRowScanRel extends FennelSingleRel
         return lcsTable;
     }
 
-    public void childrenAccept(RelVisitor visitor)
-    {
-        if (getChild() != null) {
-            super.childrenAccept(visitor);
-        }
-    }
-
     public RelOptConnection getConnection()
     {
         return connection;
     }
-    
-    public RelNode [] getInputs()
-    {
-        if (getChild() == null) {
-            return emptyArray;
-        } else {
-            return super.getInputs();
-        }
-    }
 
+    public boolean getIsFullScan() 
+    {
+        return isFullScan;
+    }
+        
+    public boolean getHasExtraFilter() 
+    {
+        return hasExtraFilter;
+    }
 }
 
 // End LcsRowScanRel.java

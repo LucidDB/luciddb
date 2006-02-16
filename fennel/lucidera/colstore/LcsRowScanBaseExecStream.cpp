@@ -32,7 +32,7 @@ LcsRowScanBaseExecStream::LcsRowScanBaseExecStream()
 void LcsRowScanBaseExecStream::prepare(
     LcsRowScanBaseExecStreamParams const &params)
 {
-    ConduitExecStream::prepare(params);
+    ConfluenceExecStream::prepare(params);
 
     // Copy cluster definition parameters and setup btree readers for each
     // cluster.  Also, setup the full output tuple based on the ordered
@@ -116,7 +116,7 @@ void LcsRowScanBaseExecStream::prepare(
 
 void LcsRowScanBaseExecStream::open(bool restart)
 {
-    ConduitExecStream::open(restart);
+    ConfluenceExecStream::open(restart);
     for (uint i = 0; i < nClusters; i++) {
         pClusters[i]->open();
     }
@@ -126,7 +126,7 @@ void LcsRowScanBaseExecStream::getResourceRequirements(
     ExecStreamResourceQuantity &minQuantity,
     ExecStreamResourceQuantity &optQuantity)
 {
-    ConduitExecStream::getResourceRequirements(minQuantity, optQuantity);
+    ConfluenceExecStream::getResourceRequirements(minQuantity, optQuantity);
 
     // 2 pages per cluster (not taking into account pre-fetches yet)
     // - 1 for cluster page
@@ -138,7 +138,7 @@ void LcsRowScanBaseExecStream::getResourceRequirements(
 
 void LcsRowScanBaseExecStream::closeImpl()
 {
-    ConduitExecStream::closeImpl();
+    ConfluenceExecStream::closeImpl();
     for (uint i = 0; i < nClusters; i++) {
         pClusters[i]->close();
     }

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev_lcs/farrago/unitsql/optimizer/index.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev_lcs/farrago/unitsql/optimizer/index.sql#6 $
 0: jdbc:farrago:> -- Test queries which make use of indexes
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema oj;
@@ -631,6 +631,14 @@ Error: DDL validation error near line 1, column 12: Reference to unknown table "
 '        IterCalcRel(expr#0=[{inputs}], expr#1=['['], expr#2=[2], expr#3=[']'], expr#4=[CAST($t2):INTEGER], $f0=[$t1], $f1=[$t4], $f2=[$t3], $f3=[$t4])'
 '          IterOneRowRel'
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- TODO: this case does not work
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select * from ftrsemps where deptno = -2;
+'column0'
+'IterCalcRel(expr#0..2=[{inputs}], expr#3=[2], expr#4=[-($t3)], expr#5=[=($t2, $t4)], proj#0..2=[{exprs}], $condition=[$t5])'
+'  FennelToIteratorConverter'
+'    FtrsIndexScanRel(table=[[LOCALDB, LBM, FTRSEMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$FTRSEMPS$EMPNO_PK], preserveOrder=[false])'
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- range predicate uses index access
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from ftrsemps where deptno > 2;
@@ -778,124 +786,177 @@ Error: DDL validation error near line 1, column 12: Reference to unknown table "
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- no sarg pred
 0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from lbmemps;
+. . . . . . . . > select * from lbmemps order by empno;
 'column0'
 'FennelToIteratorConverter'
-'  LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from lbmemps order by empno;
+'EMPNO','ENAME','DEPTNO'
+'100','Fred','10'
+'100','Fred','10'
+'110','John','40'
+'110','Eric','20'
+'110','John','40'
+'110','Eric','20'
+'120','Wilma','20'
+'120','Wilma','20'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- the most simple case
 0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from lbmemps where deptno = 2;
+. . . . . . . . > select * from lbmemps where deptno = 20 order by empno;
 'column0'
 'FennelToIteratorConverter'
-'  LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
-'    LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[DEPTNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]])'
-'      IteratorToFennelConverter'
-'        IterCalcRel(expr#0=[{inputs}], expr#1=['['], expr#2=[2], expr#3=[']'], expr#4=[CAST($t2):INTEGER], $f0=[$t1], $f1=[$t4], $f2=[$t3], $f3=[$t4])'
-'          IterOneRowRel'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
+'      LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[DEPTNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'        IteratorToFennelConverter'
+'          IterCalcRel(expr#0=[{inputs}], expr#1=['['], expr#2=[20], expr#3=[']'], expr#4=[CAST($t2):INTEGER], $f0=[$t1], $f1=[$t4], $f2=[$t3], $f3=[$t4])'
+'            IterOneRowRel'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from lbmemps where deptno = 20 order by empno;
+'EMPNO','ENAME','DEPTNO'
+'110','Eric','20'
+'110','Eric','20'
+'120','Wilma','20'
+'120','Wilma','20'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- TODO: this case does not work
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select * from lbmemps where deptno = -2;
+'column0'
+'IterCalcRel(expr#0..2=[{inputs}], expr#3=[2], expr#4=[-($t3)], expr#5=[=($t2, $t4)], proj#0..2=[{exprs}], $condition=[$t5])'
+'  FennelToIteratorConverter'
+'    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- range predicate uses index access
 0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from lbmemps where deptno > 2;
+. . . . . . . . > select * from lbmemps where deptno > 20 order by empno;
 'column0'
 'FennelToIteratorConverter'
-'  LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
-'    LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[DEPTNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]])'
-'      IteratorToFennelConverter'
-'        IterCalcRel(expr#0=[{inputs}], expr#1=['('], expr#2=[2], expr#3=['+'], expr#4=[null], expr#5=[CAST($t2):INTEGER], expr#6=[CAST($t4):INTEGER], $f0=[$t1], $f1=[$t5], $f2=[$t3], $f3=[$t6])'
-'          IterOneRowRel'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
+'      LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[DEPTNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'        IteratorToFennelConverter'
+'          IterCalcRel(expr#0=[{inputs}], expr#1=['('], expr#2=[20], expr#3=['+'], expr#4=[null], expr#5=[CAST($t2):INTEGER], expr#6=[CAST($t4):INTEGER], $f0=[$t1], $f1=[$t5], $f2=[$t3], $f3=[$t6])'
+'            IterOneRowRel'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Merge ranges on the same index key
 0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from lbmemps where deptno = 2 or deptno = 10;
+. . . . . . . . > select * from lbmemps where deptno = 10 or deptno = 20 order by empno;
 'column0'
-'IterCalcRel(expr#0..2=[{inputs}], expr#3=[2], expr#4=[=($t2, $t3)], expr#5=[10], expr#6=[=($t2, $t5)], expr#7=[OR($t4, $t6)], proj#0..2=[{exprs}], $condition=[$t7])'
-'  FennelToIteratorConverter'
-'    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0..2=[{inputs}], expr#3=[10], expr#4=[=($t2, $t3)], expr#5=[20], expr#6=[=($t2, $t5)], expr#7=[OR($t4, $t6)], proj#0..2=[{exprs}], $condition=[$t7])'
+'        FennelToIteratorConverter'
+'          LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Should have only one range
 0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from lbmemps where deptno = 10 or deptno > 2;
+. . . . . . . . > select * from lbmemps where deptno = 20 or deptno > 10 order by empno;
 'column0'
 'FennelToIteratorConverter'
-'  LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
-'    LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[DEPTNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]])'
-'      IteratorToFennelConverter'
-'        IterCalcRel(expr#0=[{inputs}], expr#1=['('], expr#2=[2], expr#3=['+'], expr#4=[null], expr#5=[CAST($t2):INTEGER], expr#6=[CAST($t4):INTEGER], $f0=[$t1], $f1=[$t5], $f2=[$t3], $f3=[$t6])'
-'          IterOneRowRel'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
+'      LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[DEPTNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'        IteratorToFennelConverter'
+'          IterCalcRel(expr#0=[{inputs}], expr#1=['('], expr#2=[10], expr#3=['+'], expr#4=[null], expr#5=[CAST($t2):INTEGER], expr#6=[CAST($t4):INTEGER], $f0=[$t1], $f1=[$t5], $f2=[$t3], $f3=[$t6])'
+'            IterOneRowRel'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- recognize AND on the same key
 0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from lbmemps where deptno > 2 and deptno < 10;
+. . . . . . . . > select * from lbmemps where deptno > 10 and deptno <= 20 order by empno;
 'column0'
 'FennelToIteratorConverter'
-'  LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
-'    LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[DEPTNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]])'
-'      IteratorToFennelConverter'
-'        IterCalcRel(expr#0=[{inputs}], expr#1=['('], expr#2=[2], expr#3=[')'], expr#4=[10], expr#5=[CAST($t2):INTEGER], expr#6=[CAST($t4):INTEGER], $f0=[$t1], $f1=[$t5], $f2=[$t3], $f3=[$t6])'
-'          IterOneRowRel'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
+'      LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[DEPTNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'        IteratorToFennelConverter'
+'          IterCalcRel(expr#0=[{inputs}], expr#1=['('], expr#2=[10], expr#3=[']'], expr#4=[20], expr#5=[CAST($t2):INTEGER], expr#6=[CAST($t4):INTEGER], $f0=[$t1], $f1=[$t5], $f2=[$t3], $f3=[$t6])'
+'            IterOneRowRel'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- make sure NULL range from sarg analysis is working
 0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from lbmemps where deptno = 2 and deptno = 10;
+. . . . . . . . > select * from lbmemps where deptno = 20 and deptno = 10 order by empno;
 'column0'
 'FennelToIteratorConverter'
-'  LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
-'    LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[DEPTNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]])'
-'      IteratorToFennelConverter'
-'        IterCalcRel(expr#0=[{inputs}], expr#1=['('], expr#2=[null], expr#3=[')'], expr#4=[CAST($t2):INTEGER], $f0=[$t1], $f1=[$t4], $f2=[$t3], $f3=[$t4])'
-'          IterOneRowRel'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
+'      LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[DEPTNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'        IteratorToFennelConverter'
+'          IterCalcRel(expr#0=[{inputs}], expr#1=['('], expr#2=[null], expr#3=[')'], expr#4=[CAST($t2):INTEGER], $f0=[$t1], $f1=[$t4], $f2=[$t3], $f3=[$t4])'
+'            IterOneRowRel'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from lbmemps where deptno = 20 and deptno = 10 order by empno;
+'EMPNO','ENAME','DEPTNO'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- TODO implement index only access.
 0: jdbc:farrago:> explain plan for
-. . . . . . . . > select deptno from lbmemps where deptno = 2;
+. . . . . . . . > select deptno from lbmemps where deptno = 20 order by deptno;
 'column0'
-'IterCalcRel(expr#0..2=[{inputs}], DEPTNO=[$t2])'
-'  FennelToIteratorConverter'
-'    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
-'      LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[DEPTNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]])'
-'        IteratorToFennelConverter'
-'          IterCalcRel(expr#0=[{inputs}], expr#1=['['], expr#2=[2], expr#3=[']'], expr#4=[CAST($t2):INTEGER], $f0=[$t1], $f1=[$t4], $f2=[$t3], $f3=[$t4])'
-'            IterOneRowRel'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0..2=[{inputs}], DEPTNO=[$t2])'
+'        FennelToIteratorConverter'
+'          LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
+'            LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[DEPTNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'              IteratorToFennelConverter'
+'                IterCalcRel(expr#0=[{inputs}], expr#1=['['], expr#2=[20], expr#3=[']'], expr#4=[CAST($t2):INTEGER], $f0=[$t1], $f1=[$t4], $f2=[$t3], $f3=[$t4])'
+'                  IterOneRowRel'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- index on char types:
 0: jdbc:farrago:> -- simple comparison predicate
 0: jdbc:farrago:> explain plan for
-. . . . . . . . > select ename from lbmemps where ename = 'ADAM';
+. . . . . . . . > select ename from lbmemps where ename = 'ADAM' order by ename;
 'column0'
-'IterCalcRel(expr#0..2=[{inputs}], ENAME=[$t1])'
-'  FennelToIteratorConverter'
-'    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
-'      LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[ENAME_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]])'
-'        IteratorToFennelConverter'
-'          IterCalcRel(expr#0=[{inputs}], expr#1=['['], expr#2=[_ISO-8859-1'ADAM'], expr#3=[']'], expr#4=[CAST($t2):VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], $f0=[$t1], $f1=[$t4], $f2=[$t3], $f3=[$t4])'
-'            IterOneRowRel'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0..2=[{inputs}], ENAME=[$t1])'
+'        FennelToIteratorConverter'
+'          LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
+'            LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[ENAME_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'              IteratorToFennelConverter'
+'                IterCalcRel(expr#0=[{inputs}], expr#1=['['], expr#2=[_ISO-8859-1'ADAM'], expr#3=[']'], expr#4=[CAST($t2):VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], $f0=[$t1], $f1=[$t4], $f2=[$t3], $f3=[$t4])'
+'                  IterOneRowRel'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- index on char types:
 0: jdbc:farrago:> -- predicate specific to character types
 0: jdbc:farrago:> explain plan for
-. . . . . . . . > select ename from lbmemps where ename like 'ADAM%';
+. . . . . . . . > select ename from lbmemps where ename like 'ADAM%' order by ename;
 'column0'
-'IterCalcRel(expr#0..2=[{inputs}], expr#3=[_ISO-8859-1'ADAM%'], expr#4=[LIKE($t1, $t3)], ENAME=[$t1], $condition=[$t4])'
-'  FennelToIteratorConverter'
-'    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0..2=[{inputs}], expr#3=[_ISO-8859-1'ADAM%'], expr#4=[LIKE($t1, $t3)], ENAME=[$t1], $condition=[$t4])'
+'        FennelToIteratorConverter'
+'          LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- TODO AND: currently does recognize one index, but not two
 0: jdbc:farrago:> -- TODO: this is currently not working(not even one index)
-0: jdbc:farrago:> -- AND: does recognize one index, but not two
 0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from lbmemps where deptno = 2 and ename = 'ADAM';
+. . . . . . . . > select * from lbmemps where deptno = 2 and ename = 'ADAM' order by empno;
 'column0'
-'IterCalcRel(expr#0..2=[{inputs}], expr#3=[2], expr#4=[=($t2, $t3)], expr#5=[_ISO-8859-1'ADAM'], expr#6=[=($t1, $t5)], expr#7=[AND($t4, $t6)], proj#0..2=[{exprs}], $condition=[$t7])'
-'  FennelToIteratorConverter'
-'    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0..2=[{inputs}], expr#3=[2], expr#4=[=($t2, $t3)], expr#5=[_ISO-8859-1'ADAM'], expr#6=[=($t1, $t5)], expr#7=[AND($t4, $t6)], proj#0..2=[{exprs}], $condition=[$t7])'
+'        FennelToIteratorConverter'
+'          LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- OR: does not use any index access
+0: jdbc:farrago:> -- TODO OR: currently does not use any index access
 0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from lbmemps where deptno = 2 or ename = 'ADAM';
+. . . . . . . . > select * from lbmemps where deptno = 2 or ename = 'ADAM' order by empno;
 'column0'
-'IterCalcRel(expr#0..2=[{inputs}], expr#3=[2], expr#4=[=($t2, $t3)], expr#5=[_ISO-8859-1'ADAM'], expr#6=[=($t1, $t5)], expr#7=[OR($t4, $t6)], proj#0..2=[{exprs}], $condition=[$t7])'
-'  FennelToIteratorConverter'
-'    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0..2=[{inputs}], expr#3=[2], expr#4=[=($t2, $t3)], expr#5=[_ISO-8859-1'ADAM'], expr#6=[=($t1, $t5)], expr#7=[OR($t4, $t6)], proj#0..2=[{exprs}], $condition=[$t7])'
+'        FennelToIteratorConverter'
+'          LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set outputformat table
 0: jdbc:farrago:> 

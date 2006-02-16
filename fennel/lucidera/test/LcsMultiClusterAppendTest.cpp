@@ -49,7 +49,7 @@ class LcsMultiClusterAppendTest : public ExecStreamUnitTestBase
 protected:
     StandardTypeDescriptorFactory stdTypeFactory;
     TupleAttributeDescriptor attrDesc_int64;
-    TupleAttributeDescriptor attrDesc_char1;
+    TupleAttributeDescriptor attrDesc_bitmap;
 
     vector<boost::shared_ptr<BTreeDescriptor> > bTreeClusters;
     
@@ -221,25 +221,12 @@ void LcsMultiClusterAppendTest::scanCols(uint nRows, uint nCols,
                                              uint nClusters,
                                              TupleProjection proj)
 {
-    // setup input rid stream
-
-    ValuesExecStreamParams valuesParams;
-    PBuffer dummyBuffer = NULL;
-    valuesParams.pTupleBuffer = dummyBuffer;
-    valuesParams.outputTupleDesc.push_back(attrDesc_int64);
-    valuesParams.outputTupleDesc.push_back(attrDesc_char1);
-    valuesParams.outputTupleDesc.push_back(attrDesc_char1);
-    // set nRows to 0 to force a full table scan
-    valuesParams.bufSize = 0;
-
-    ExecStreamEmbryo valuesStreamEmbryo;
-    valuesStreamEmbryo.init(new ValuesExecStream(), valuesParams);
-    valuesStreamEmbryo.getStream()->setName("ValuesExecStream");
-
     // setup parameters into scan
     //  nClusters cluster with nCols columns each
     
     LcsRowScanExecStreamParams scanParams;
+    scanParams.hasExtraFilter = false;
+    scanParams.isFullScan = true;
     for (uint i = 0; i < nClusters; i++) {
         struct LcsClusterScanDef clusterScanDef;
 
@@ -270,8 +257,7 @@ void LcsMultiClusterAppendTest::scanCols(uint nRows, uint nCols,
     scanStreamEmbryo.init(new LcsRowScanExecStream(), scanParams);
     scanStreamEmbryo.getStream()->setName("RowScanExecStream");
 
-    SharedExecStream pOutputStream = prepareTransformGraph(
-        valuesStreamEmbryo, scanStreamEmbryo);
+    SharedExecStream pOutputStream = prepareSourceGraph(scanStreamEmbryo);
     
     // setup generators for result stream
 
@@ -292,8 +278,9 @@ void LcsMultiClusterAppendTest::testCaseSetUp()
 
     attrDesc_int64 = TupleAttributeDescriptor(
         stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
-    attrDesc_char1 = TupleAttributeDescriptor(
-        stdTypeFactory.newDataType(STANDARD_TYPE_CHAR), false, 1);
+    attrDesc_bitmap = TupleAttributeDescriptor(
+        stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY),
+        true, pRandomSegment->getUsablePageSize()/8);
 }
 
 void LcsMultiClusterAppendTest::testCaseTearDown()
