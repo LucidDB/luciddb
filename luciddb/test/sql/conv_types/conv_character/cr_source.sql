@@ -7,7 +7,6 @@ create schema s
 set schema 's'
 ;
 
--- primary key constraint: LDB-9
 create table datatype_source(
  coltiny tinyint
 ,colsmall smallint
@@ -18,7 +17,6 @@ create table datatype_source(
 ,coldouble double
 ,colfloat float
 ,colreal real
-,primary key(coltiny,colsmall,colint,colbig,coldec,colnum,coldouble,colfloat,colreal)
 )
 ;
 

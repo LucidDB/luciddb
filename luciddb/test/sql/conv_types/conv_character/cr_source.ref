@@ -7,7 +7,6 @@
 0: jdbc:luciddb:> set schema 's'
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- primary key constraint: LDB-9
 0: jdbc:luciddb:> create table datatype_source(
 . . . . . . . . >  coltiny tinyint
 . . . . . . . . > ,colsmall smallint
@@ -18,7 +17,6 @@
 . . . . . . . . > ,coldouble double
 . . . . . . . . > ,colfloat float
 . . . . . . . . > ,colreal real
-. . . . . . . . > ,primary key(coltiny,colsmall,colint,colbig,coldec,colnum,coldouble,colfloat,colreal)
 . . . . . . . . > )
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
