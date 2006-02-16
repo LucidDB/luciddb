@@ -35,8 +35,9 @@ import java.util.*;
  *
  *<ul>
  *<li>if an end is composite, it is the source end
- *<li>if an end has multiplicity > 1, it is the target end if the other
+ *<li>else if an end has multiplicity > 1, it is the target end if the other
  * end has multiplicity <= 1
+ *<li>else if an end is ordered, it is the target end
  *<li>otherwise, the first end is the source end and the second end is
  * the target end
  *</ul>
@@ -95,6 +96,14 @@ public class JmiAssocEdge extends DirectedEdge
     public AssociationEnd getTargetEnd()
     {
         return getEnd(1);
+    }
+
+    /**
+     * @return true iff source end is MOF "first end"
+     */
+    public boolean matchesMofDirection()
+    {
+        return getSourceEnd().equals(mofAssoc.getContents().get(0));
     }
 
     /**

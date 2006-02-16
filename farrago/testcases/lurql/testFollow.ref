@@ -6,7 +6,7 @@ select "s"
 from
 class "Class" as "e"
 then (
-    follow association "Generalizes" backward as "s"
+    follow association "Generalizes" forward as "s"
 );
 
 EXPLANATION:
@@ -65,7 +65,7 @@ class "Class" as "b"
 where
     "name" = 'BehavioralFeature'
 then (
-    follow association "Generalizes" forward as "d"
+    follow association "Generalizes" backward as "d"
 );
 
 EXPLANATION:
@@ -121,7 +121,7 @@ then (
     where
         "name" = 'Import'
     then (
-        follow association "Generalizes" backward as "s"
+        follow association "Generalizes" forward as "s"
     ) gather with parent then (
         follow composite forward destination class "Attribute" as "a"
     )
@@ -197,7 +197,7 @@ anon_1:imported->Aliases->e_2:importer
 anon_1:modelElement->AttachesTo->e_2:tag
 anon_1:operation->CanRaise->e_2:except
 anon_1:referencedEnd->RefersTo->e_2:referent
-anon_1:supertype->Generalizes->e_2:subtype
+anon_1:subtype->Generalizes->e_2:supertype
 anon_1:type->IsOfType->e_2:typedElements
 e_2 { ModelElement }
 
@@ -224,7 +224,7 @@ anon_1:imported->Aliases->t_2:importer
 anon_1:modelElement->AttachesTo->t_2:tag
 anon_1:operation->CanRaise->t_2:except
 anon_1:referencedEnd->RefersTo->t_2:referent
-anon_1:supertype->Generalizes->t_2:subtype
+anon_1:subtype->Generalizes->t_2:supertype
 anon_1:type->IsOfType->t_2:typedElements
 t_2 { Tag } where "tagId" = '1'
 
