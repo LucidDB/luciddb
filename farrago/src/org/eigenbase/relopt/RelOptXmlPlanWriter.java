@@ -92,8 +92,7 @@ public class RelOptXmlPlanWriter extends RelOptPlanWriter
             + values.length) : "terms.length=" + terms.length
             + " inputs.length=" + inputs.length + " children.length="
             + children.length + " values.length=" + values.length;
-        String qualifier = ((AbstractRelNode) rel).getQualifier();
-        String relType = rel.getRelTypeName() + qualifier;
+        String relType = rel.getRelTypeName();
         xmlOutput.beginBeginTag("RelNode");
         xmlOutput.attribute("type", relType);
         //xmlOutput.attribute("id", rel.getId() + "");
@@ -149,8 +148,7 @@ public class RelOptXmlPlanWriter extends RelOptPlanWriter
             + values.length) : "terms.length=" + terms.length
             + " inputs.length=" + inputs.length + " children.length="
             + children.length + " values.length=" + values.length;
-        String qualifier = ((AbstractRelNode) rel).getQualifier();
-        String tagName = rel.getRelTypeName() + qualifier;
+        String tagName = rel.getRelTypeName();
         xmlOutput.beginBeginTag(tagName);
         xmlOutput.attribute("id", rel.getId() + "");
 

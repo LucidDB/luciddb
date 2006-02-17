@@ -147,11 +147,12 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
      */
     public void assignFrom(Object date)
     {
-        assert !isNull : "attempt to assign to null object in SqlDateTimeWithoutTZ";
-        if (null == date) {
+        if (date == null) {
             setNull(true);
             return;
-        } else if (date instanceof Long) {
+        }
+        setNull(false);
+        if (date instanceof Long) {
             value = ((Long) date).longValue();
             return;
         } else if (date instanceof java.util.Date) {
@@ -178,7 +179,7 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
 
     public void assignFrom(long l)
     {
-        assert (!isNull) : "attempt to assign to null object in SqlDateTimeWithoutTZ";
+        setNull(false);
         value = l;
         cal.setTimeInMillis(value);
         timeZoneOffset = defaultZone.getOffset(l);
@@ -202,7 +203,11 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
 
     public void setCal(Calendar cal)
     {
-        assert !isNull : "attempt to assign to null object in SqlDateTimeWithoutTZ";
+        if (cal == null) {
+            setNull(true);
+            return;
+        }
+        setNull(false);
         this.cal = cal;
         value = cal.getTimeInMillis();
         timeZoneOffset = cal.getTimeZone().getOffset(value);
