@@ -31,7 +31,10 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
+
+import net.sf.farrago.resource.*;
 
 /**
  * ReduceDecimalsRule reduces decimal operations (such as casts or 
@@ -382,13 +385,19 @@ public class ReduceDecimalsRule extends RelOptRule
         //~ Protected methods -----------------------------------------------
         
         /** 
-         * Makes a RexLiteral representing 10^scale. If <code>scale</code>
+         * Makes a RexLiteral representing 10^scale. Scale must be less than 
+         * the maximum precision.
+         * 
+         * If <code>scale</code>
          * is non-negative, then the literal returned will be of Bigint type.
          * If <code>scale</code> is negative. The literal returned will be of 
          * an approximate type.
          */
         protected RexNode makeScaleFactor(int scale)
         {
+            if (scale >= SqlTypeName.MAX_NUMERIC_PRECISION) {
+                Util.needToImplement("Could not rescale decimal to required scale");
+            }
             if (scale >= 0) {
                 BigDecimal bd = new BigDecimal(BigInteger.TEN.pow(scale));
                 return builder.makeExactLiteral(bd, int8);
@@ -399,13 +408,17 @@ public class ReduceDecimalsRule extends RelOptRule
         }
 
         /**
-         * Makes an exact numeric RexLiteral representing 10^scale/2
+         * Makes an exact numeric RexLiteral representing 10^scale/2. 
+         * Scale must be less than the maximum precision.
          * 
          * @param scale scale of round factor; must be positive
          */
         protected RexNode makeRoundFactor(int scale)
         {
             Util.pre(scale > 0, "scale > 0");
+            if (scale >= SqlTypeName.MAX_NUMERIC_PRECISION) {
+                Util.needToImplement("Could not rescale decimal to required scale");
+            }
             BigDecimal bd = new BigDecimal(
                 BigInteger.TEN.pow(scale).longValue() / 2);
             return builder.makeExactLiteral(bd, int8);
