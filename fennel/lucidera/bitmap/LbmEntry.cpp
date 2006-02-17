@@ -65,6 +65,13 @@ void LbmEntry::init(
      */
     entryTuple.compute(tupleDesc);
     currentEntrySize = keySize = 0;
+    /**
+     * Compute keysize based on max space that can be occupied by
+     * the keys
+     */
+    for (uint i = 0; i < tupleDesc.size() - 2; i++) {
+        keySize += tupleDesc[i].cbStorage;
+    }
 }
 
 
@@ -109,13 +116,15 @@ void LbmEntry::setEntryTuple(TupleData const &indexTuple)
         if (entryTuple[i].isNull()) {
             entryTuple[i].cbData = 0;
         }
-        currentEntrySize += entryTuple[i].cbData;
-        /*
-         * Remember the key+RID size;
+        /**
+         * Once we hit the rid field, bump up the currentEntrySize past
+         * the max space used by the keys
          */
-        if (i == segmentDescField) {
-            keySize = currentEntrySize;
-        }        
+        if (i == RIDField) {
+            currentEntrySize = keySize;
+        } else {
+            currentEntrySize += entryTuple[i].cbData;
+        }
     }
 
     /*
