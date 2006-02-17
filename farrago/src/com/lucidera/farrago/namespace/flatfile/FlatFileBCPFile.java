@@ -301,14 +301,19 @@ class FlatFileBCPFile
 
                     SqlTypeName typeName =
                         convertBCPSqlToSqlType(datatype);
-
+                    
                     if (typeName.allowsPrec()) {
                         if (typeName.allowsScale()) {
                             // TODO: how to get scale from bcp?
+                            int typeLen =
+                                SqlTypeName.Decimal.MAX_NUMERIC_PRECISION;
+                            if (Integer.parseInt(typeLength) < typeLen) {
+                                typeLen = Integer.parseInt(typeLength);
+                            }
                             types[reader.getLineNumber()-3] =
                                 typeFactory.createTypeWithNullability(
                                     typeFactory.createSqlType(typeName,
-                                        Integer.parseInt(typeLength),
+                                        typeLen,
                                         0),
                                     true);
                         } else {

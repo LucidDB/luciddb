@@ -423,23 +423,22 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
                 try {
                     type =
                         sink.getTypeFactory().createJdbcColumnType(resultSet);
-
+                    
                     if (type.getSqlTypeName() == SqlTypeName.Decimal) {
-
-                        int prc = type.getPrecision();
-                        int scale = type.getScale();
-
-                        if ((prc>SqlTypeName.Decimal.MAX_NUMERIC_PRECISION) ||
-                            (scale>SqlTypeName.Decimal.MAX_NUMERIC_SCALE)) {
-                            type = sink.getTypeFactory().createSqlType(
-                                SqlTypeName.Decimal);
-                        } else {
-                            type = sink.getTypeFactory().createSqlType(
-                                SqlTypeName.Decimal,
-                                type.getPrecision(),
-                                type.getScale());
+                        int prc = SqlTypeName.Decimal.MAX_NUMERIC_PRECISION;
+                        if (type.getPrecision() < prc) {
+                            prc = type.getPrecision();
                         }
+                        int scale = 6; // scale is capped at 6
+                        if (type.getScale() < scale) {
+                            scale = type.getScale();
+                        }
+                        type = sink.getTypeFactory().createSqlType(
+                            SqlTypeName.Decimal,
+                            prc,
+                            scale);
                     }
+                    
                     if (SqlTypeFamily.Datetime.getTypeNames().contains(
                             type.getSqlTypeName()))
                     {
