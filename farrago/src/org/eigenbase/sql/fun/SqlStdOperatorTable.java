@@ -534,12 +534,23 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * The <code>LATERAL<code> operator.
      */
     public static final SqlSpecialOperator lateralOperator =
-        new SqlFunctionalOperator ("LATERAL", SqlKind.Lateral,
+        new SqlFunctionalOperator("LATERAL", SqlKind.Lateral,
             100, true,
             SqlTypeStrategies.rtiFirstArgType,
             null,
             SqlTypeStrategies.otcAny);
 
+    /**
+     * The "table function derived table",
+     * e.g. "<code>SELECT * FROM TABLE(ramp(5))</code>".
+     */
+    public static final SqlSpecialOperator collectionTableOperator =
+        new SqlFunctionalOperator("TABLE", SqlKind.CollectionTable,
+            100, true,
+            SqlTypeStrategies.rtiFirstArgType,
+            null,
+            SqlTypeStrategies.otcAny);
+    
     public static final SqlOverlapsOperator overlapsOperator =
         new SqlOverlapsOperator();
 

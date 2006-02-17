@@ -742,8 +742,11 @@ public class SqlToRelConverter
             leaves.add(uncollectRel);
             bb.setRoot(uncollectRel);
             return;
-        case SqlKind.FunctionORDINAL:
+        case SqlKind.CollectionTableORDINAL:
             call = (SqlCall) from;
+            // Dig out real call; TABLE() wrapper is just syntactic.
+            assert(call.getOperands().length == 1);
+            call = (SqlCall) call.getOperands()[0];
             replaceSubqueries(bb, call);
             RexNode rexCall = bb.convertExpression(call);
             TableFunctionRel callRel = new TableFunctionRel(

@@ -1135,7 +1135,7 @@ SqlNode TableRef() :
         }
         |
         <TABLE> <LPAREN>
-        tableRef = NamedRoutineCall(SqlFunctionCategory.UserDefinedFunction)
+        tableRef = TableFunctionCall()
         <RPAREN>
         {
         }
@@ -1150,6 +1150,31 @@ SqlNode TableRef() :
     ]
     {
         return tableRef;
+    }
+}
+
+SqlNode TableFunctionCall() :
+{
+    SqlNode call;
+    SqlFunctionCategory funcType =
+        SqlFunctionCategory.UserDefinedFunction;
+    SqlParserPos pos = getPos();
+}
+{
+    [
+        <SPECIFIC>
+        {
+            funcType = SqlFunctionCategory.UserDefinedSpecificFunction;
+        }
+    ]
+    {
+    }
+    call = NamedRoutineCall(funcType)
+    {
+        return SqlStdOperatorTable.collectionTableOperator.createCall(
+            call, pos);
+        
+        return call;
     }
 }
 

@@ -160,6 +160,8 @@ parameter style system defined java
 no sql
 external name 'class net.sf.farrago.test.FarragoTestUDR.ramp';
 
+create view ramp_view as select * from table(ramp(3));
+
 -- should fail:  we don't allow mutual recursion either
 create schema crypto
 create function alice(x double)
@@ -272,6 +274,9 @@ values throw_npe();
 
 -- udx invocation
 select * from table(ramp(5)) order by 1;
+
+-- udx invocation via view
+select * from ramp_view order by 1;
 
 -- udx invocation with restart on RHS of Cartesian product
 select count(*) from sales.depts, table(ramp(5));
