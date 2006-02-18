@@ -323,6 +323,10 @@ public class JmiModelGraph
             swapEnds = true;
         }
 
+        if (mofAssocEnds[0].getMultiplicity().isOrdered()) {
+            swapEnds = true;
+        }
+
         if (swapEnds) {
             AssociationEnd tmp = mofAssocEnds[0];
             mofAssocEnds[0] = mofAssocEnds[1];

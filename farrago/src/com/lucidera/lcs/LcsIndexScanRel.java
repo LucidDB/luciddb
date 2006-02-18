@@ -162,9 +162,9 @@ class LcsIndexScanRel extends TableAccessRelBase implements FennelRel
         return lcsTable.getIndexGuide().newIndexScan(this, index);
     }
 
-    public FemIndexSearchDef newIndexSearch()
+    public FemLbmIndexScanStreamDef newLbmIndexSearch(FennelRel rel)
     {
-        return lcsTable.getIndexGuide().newIndexSearch(this, index);
+        return lcsTable.getIndexGuide().newLbmIndexSearch(this, index);
     }
 
     // implement RelNode

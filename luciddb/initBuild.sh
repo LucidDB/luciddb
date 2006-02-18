@@ -41,7 +41,7 @@ while [ -n "$1" ]; do
         --without-tests)
             without_tests=true;
             FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
-        --*) FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
+        --?*) FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
         
         *) usage; exit -1;;
     esac
@@ -50,7 +50,6 @@ while [ -n "$1" ]; do
 done
 
 shopt -uq extglob
-set -v
 
 if $without_farrago_build ; then
     echo Skipping Farrago build.
@@ -58,6 +57,8 @@ else
     cd ${luciddb_dir}/../farrago
     ./initBuild.sh ${FARRAGO_FLAGS}
 fi
+
+set -v
 
 # Build catalog then run tests
 cd ${luciddb_dir}/../farrago
@@ -67,15 +68,14 @@ cd ${luciddb_dir}/../farrago
 export LD_LIBRARY_PATH=
 . ${luciddb_dir}/../fennel/fennelenv.sh ${luciddb_dir}/../fennel
 
+cd ${luciddb_dir}/../blackhawk
+ant
+
 cd ${luciddb_dir}
 ant clean
-
 if $without_tests ; then
     ant createCatalog
 else
-    cd ${luciddb_dir}/../blackhawk
-    ant
-
     cd ${luciddb_dir}
     ant test
 fi

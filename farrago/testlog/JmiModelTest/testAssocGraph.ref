@@ -17,7 +17,7 @@ EnumerationType
 Exception
 Feature
 GeneralizableElement
-GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+GeneralizableElement:subtype_Generalizes_GeneralizableElement:supertype
 Import
 ModelElement
 ModelElement:dependent_DependsOn_ModelElement:provider

@@ -42,14 +42,20 @@ void LbmIndexScanExecStream::prepare(LbmIndexScanExecStreamParams const &params)
     startRidDatum.pData = (PConstBuffer) &startRid;
     startRidDatum.cbData = sizeof(startRid);
 
-    // if the full key is being used, then the rid is part of the key
+    // If the full index key is being used, then the rid is part of the search
+    // key. If the dynamic parameter is used, we can optimize by searching
+    // on the full key including the startRid.
+    // Note: All valid dynamic parameters have higher Id than 0.
     ridInKey =
         treeDescriptor.keyProjection.size() == inputKeyDesc.size() &&
             startRidParamId > DynamicParamId(0);
-    // if the full key without the rid is used as the search key, make
-    // sure there is no start rid parameter
+
+    // If the search key is not the full index key, we can not optimize by
+    // including the startRid in the search key (otherwise the search key will
+    // not be a prefix to the full index key and hence is "unsearchable").
+    // Make sure there is no start rid parameter in this case.
     assert(
-        !(treeDescriptor.keyProjection.size() - 1 == inputKeyDesc.size() &&
+        !(treeDescriptor.keyProjection.size() > inputKeyDesc.size() &&
             startRidParamId > DynamicParamId(0)));
 
     if (ridInKey) {
@@ -100,6 +106,6 @@ void LbmIndexScanExecStream::setAdditionalKeys()
     }
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dev/fennel/lucidera/bitmap/LbmIndexScanExecStream.cpp#1 $");
+FENNEL_END_CPPFILE("$Id$");
 
 // End LbmIndexScanExecStream.cpp

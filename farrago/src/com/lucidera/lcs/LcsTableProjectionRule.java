@@ -95,15 +95,19 @@ public class LcsTableProjectionRule extends MedAbstractFennelProjectionRule
             indexList.add(index);
         }
 
+        // full row scan has no inputs.
+        RelNode [] emptyInput = new RelNode[0];
+
         // REVIEW:  should cluster be from origProject or origScan?
         RelNode projectedScan =
             new LcsRowScanRel(
                 origProject.getCluster(),
-                null,
+                emptyInput,
                 origScan.lcsTable,
                 indexList,
                 origScan.getConnection(),
-                projectedColumns);
+                projectedColumns,
+                true, false);
 
         if (needRename) {
             projectedScan = renameProjectedScan(projectedScan);

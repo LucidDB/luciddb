@@ -444,8 +444,51 @@ select count(*) from rectangles;
 drop table rectangles;
 drop type rectangle;
 
+-------------------------------------
+-- Part 5. Misc tests for bugfixes
+-------------------------------------
+-- Tests LER-312 -- should not create empty cluster pages when no data
+-- is inserted into table
+create table empty(a int) server sys_column_store_data_server;
+create view v(a) as values(1);
+insert into empty select a from v where a = 2;
+select * from empty;
+drop view v;
+drop table empty;
 
---
+-- Tests LER-31 -- Not handling appends to existing table when the records
+-- are variable length and stored in either a compressed of variable mode
+-- batch.  Prior testcases do exercise this, but the column size isn't long
+-- enough to cause attempts to read invalid memory.  Note that the "null"
+-- is what causes the testcase below to result in there being enough variation
+-- in the record sizes to cause problems.
+
+create table test_large_chars (a int, i char(100))
+    server sys_column_store_data_server;
+
+insert into test_large_chars values(1, null);
+insert into test_large_chars values(2, 'asdf');
+insert into test_large_chars values(3,
+    'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb');
+
+select * from test_large_chars;
+select * from test_large_chars where i is null;
+
+drop table test_large_chars;
+
+create table test_large_varchars (a int, i varchar(100))
+    server sys_column_store_data_server;
+
+insert into test_large_varchars values(1, null);
+insert into test_large_varchars values(2, 'asdf');
+insert into test_large_varchars values(3,
+    'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb');
+
+select * from test_large_varchars;
+select * from test_large_varchars where i is null;
+
+drop table test_large_varchars;
+
 -- Clean up
 --
 -- drop schema

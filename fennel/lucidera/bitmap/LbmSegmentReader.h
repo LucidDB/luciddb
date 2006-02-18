@@ -25,7 +25,7 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/tuple/TupleData.h"
 #include "fennel/exec/ExecStreamDefs.h"
-#include "fennel/lucidera/bitmap/LbmSegment.h"
+#include "fennel/lucidera/bitmap/LbmSegmentReaderBase.h"
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -39,42 +39,12 @@ FENNEL_BEGIN_NAMESPACE
  * @author Zelaine Fong
  * @version $Id$
  */
-class LbmSegmentReader : public LbmSegment
+class LbmSegmentReader : public LbmSegmentReaderBase
 {
-    /**
-     * Input stream accessor
-     */
-    SharedExecStreamBufAccessor pInAccessor;
-
     /**
      * True if initial read has been done
      */
     bool firstReadDone;
-
-    /**
-     * Remaining length of the current byte segment
-     */
-    uint byteSegLen;
-
-    /**
-     * Byte offset representing current position in segment
-     */
-    uint byteSegOffset;
-
-    /**
-     * Pointer to tuple data containing input bitmap segment
-     */
-    TupleData *pBitmapSegTuple;
-
-    /**
-     * Number of trailing zero bytes in the current segment
-     */
-    uint zeroBytes;
-
-    /**
-     * Used to construct singleton bitmap
-     */
-    uint8_t singleton;
 
     /**
      * Reads a bitmap segment from the input stream
@@ -115,7 +85,7 @@ public:
      *
      * @returns EXECRC_YIELD if successfully read a bitmap segment
      */
-    ExecStreamResult advanceToByte(uint byteNum);
+    ExecStreamResult advanceToByte(LcsRid byteNum);
 
     /**
      * Reads the current byte segment, based on current position 

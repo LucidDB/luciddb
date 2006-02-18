@@ -132,6 +132,23 @@ public class JmiCorrespondence
     {
         return Collections.unmodifiableSet(deletionSet);
     }
+
+    /**
+     * Adds a collection of "before" objects.  Objects already having
+     * mappings will be ignored.  Others will be considered deletions.
+     *
+     * @param objs objects to add to "before" set
+     */
+    public void augmentBeforeSet(Collection<RefObject> objs)
+    {
+        for (RefObject obj : objs) {
+            if (beforeToAfterMap.containsKey(obj)) {
+                // already mapped
+                continue;
+            }
+            addMapping(obj, null);
+        }
+    }
 }
 
 // End JmiCorrespondence.java

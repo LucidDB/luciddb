@@ -29,73 +29,29 @@ void LbmSegmentReader::init(
     SharedExecStreamBufAccessor &pInAccessorInit,
     TupleData &bitmapSegTuple)
 {
-    pInAccessor = pInAccessorInit;
-    pBitmapSegTuple = &bitmapSegTuple;
-    byteSegLen = 0;
-    byteSegOffset = 0;
-    pSegStart = NULL;
-    pSegDescStart = NULL;
-    pSegDescEnd = NULL;
+    LbmSegmentReaderBase::init(pInAccessorInit, bitmapSegTuple);
     firstReadDone = false;
-    zeroBytes = 0;
 }
 
 ExecStreamResult LbmSegmentReader::readSegment()
 {
-    if (pInAccessor->getState() == EXECBUF_EOS) {
-        return EXECRC_EOS;
-    }
-
-    // consume the previous input if there was one
-    if (pInAccessor->isTupleConsumptionPending()) {
-        pInAccessor->consumeTuple();
-    }
-    if (!pInAccessor->demandData()) {
-        return EXECRC_BUF_UNDERFLOW;
-    }
-
-    // read a new segment and set fields corresponding to the segment --
-    // startRid, descriptor, and segment pointer
-
-    pInAccessor->unmarshalTuple(*pBitmapSegTuple);
-    startRID = *reinterpret_cast<LcsRid const *> ((*pBitmapSegTuple)[0].pData);
-
-    uint segDescLen = (*pBitmapSegTuple)[1].cbData;
-    pSegDescStart = (PBuffer) (*pBitmapSegTuple)[1].pData;
-    // descriptor can be NULL
-    if (pSegDescStart != NULL) {
-        pSegDescEnd = pSegDescStart + segDescLen;
-    } else {
-        pSegDescEnd = NULL;
-    }
-
-    uint segLen;
-    if ((*pBitmapSegTuple)[2].pData) {
-        // note that bit segment is stored backwards
-        segLen = (*pBitmapSegTuple)[2].cbData;
-        pSegStart = (PBuffer) ((*pBitmapSegTuple)[2].pData + segLen - 1);
-    } else {
-        // singletons do not have a corresponding bitmap, so create one
-        segLen = 1;
-        pSegStart = &singleton;
-        singleton = (uint8_t)(1 << (opaqueToInt(startRID) % LbmOneByteSize));
+    ExecStreamResult rc = readBitmapSegTuple();
+    if (rc != EXECRC_YIELD) {
+        return rc;
     }
 
     if (pSegDescStart) {
+        // in the case where the segment contains a descriptor,
         // set some initial values to make the first call to advanceToByte()
         // read the descriptor and point to the first bitmap in the segment
-        byteSegOffset = opaqueToInt(startRID) / LbmOneByteSize;
         byteSegLen = 0;
         return advanceToByte(byteSegOffset);
     }
 
-    // single segment containing a single bitmap
-    byteSegOffset = opaqueToInt(startRID) / LbmOneByteSize;
-    byteSegLen = segLen;
     return EXECRC_YIELD;
 }
 
-ExecStreamResult LbmSegmentReader::advanceToByte(uint byteNum)
+ExecStreamResult LbmSegmentReader::advanceToByte(LcsRid byteNum)
 {
     // read byte segments until find a suitable one
     while (byteSegOffset + byteSegLen <= byteNum) {
@@ -109,25 +65,15 @@ ExecStreamResult LbmSegmentReader::advanceToByte(uint byteNum)
             firstReadDone = true;
             continue;
         }
-    
-        // first, advance byte segment offset and segment pointer by the
-        // length of remaining part of the previous segment and the trailing
-        // zero bytes; in the case where
-        // we have already advanced into the segment, byteSegLen has also
-        // already been decremented accordingly
-        byteSegOffset += byteSegLen + zeroBytes;
-        pSegStart -= byteSegLen;
 
-        // then, read the segment descriptor to determine where the
-        // segment starts and its length; also advance the segment descriptor
-        // to the next descriptor
-        readSegDescAndAdvance(pSegDescStart, byteSegLen, zeroBytes);
+        // advance to the next segment
+        advanceSegment();
     }
 
     // Found a suitable segment, or were on a suitable one to begin
     // with.  Move to correct position within segment.
     if (byteNum > byteSegOffset) {
-        uint delta = byteNum - byteSegOffset;
+        uint delta = opaqueToInt(byteNum - byteSegOffset);
         byteSegLen -= delta;
         pSegStart -= delta;
         byteSegOffset += delta;
@@ -138,7 +84,7 @@ ExecStreamResult LbmSegmentReader::advanceToByte(uint byteNum)
 
 ExecStreamResult LbmSegmentReader::advanceToRid(LcsRid rid)
 {
-    return advanceToByte(opaqueToInt(rid) / LbmOneByteSize);
+    return advanceToByte(rid / LbmOneByteSize);
 }
 
 void LbmSegmentReader::readCurrentByteSegment(

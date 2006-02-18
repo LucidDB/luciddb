@@ -37,7 +37,7 @@ FENNEL_BEGIN_NAMESPACE
 class BTreeExecStreamParams;
 class BTreeReadExecStreamParams;
 class BTreeScanExecStreamParams;
-class BTreeSearcExecStreamhParams;
+class BTreeSearchExecStreamParams;
 class FtrsTableIndexWriterParams;
 class FtrsTableWriterExecStreamParams;
 class JavaExecStreamParams;
@@ -121,7 +121,7 @@ protected:
     void readBTreeReadStreamParams(
         BTreeReadExecStreamParams &,
         ProxyIndexScanDef &);
-    
+
     void readIndexWriterParams(
         FtrsTableIndexWriterParams &,
         ProxyIndexWriterDef &);
@@ -169,6 +169,11 @@ public:
     void readBTreeStreamParams(
         BTreeExecStreamParams &,
         ProxyIndexAccessorDef &);    
+
+    void readBTreeSearchStreamParams(
+        BTreeSearchExecStreamParams &,
+        ProxyIndexSearchDef &);
+
 };
 
 class ExecStreamSubFactory : public boost::noncopyable

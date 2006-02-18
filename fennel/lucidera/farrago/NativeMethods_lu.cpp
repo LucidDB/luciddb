@@ -28,6 +28,7 @@
 #include "fennel/lucidera/colstore/LcsRowScanExecStream.h"
 #include "fennel/lucidera/bitmap/LbmGeneratorExecStream.h"
 #include "fennel/lucidera/bitmap/LbmSplicerExecStream.h"
+#include "fennel/lucidera/bitmap/LbmIndexScanExecStream.h"
 #include "fennel/db/Database.h"
 #include "fennel/segment/SegmentFactory.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
@@ -178,7 +179,8 @@ class ExecStreamSubFactory_lu
         readClusterScan(streamDef, params);
         CmdInterpreter::readTupleProjection(params.outputProj,
                                             streamDef.getOutputProj());
-
+        params.isFullScan = streamDef.isFullScan();
+        params.hasExtraFilter = streamDef.isHasExtraFilter();
         pEmbryo->init(new LcsRowScanExecStream(), params);
     }
 
@@ -207,6 +209,23 @@ class ExecStreamSubFactory_lu
         params.dynParamId =
             readDynamicParamId(streamDef.getRowCountParamId());
         pEmbryo->init(new LbmSplicerExecStream(), params);
+    }
+
+    // implement FemVisitor
+    virtual void visit(ProxyLbmIndexScanStreamDef &streamDef)
+    {
+        LbmIndexScanExecStreamParams params;
+        pExecStreamFactory->readBTreeSearchStreamParams(params, streamDef);
+
+        params.rowLimitParamId =
+            readDynamicParamId(streamDef.getRowLimitParamId());
+
+        params.ignoreRowLimit = streamDef.isIgnoreRowLimit();
+
+        params.startRidParamId =
+            readDynamicParamId(streamDef.getStartRidParamId());
+
+        pEmbryo->init(new LbmIndexScanExecStream(), params);
     }
 
     // implement JniProxyVisitor

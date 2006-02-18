@@ -136,23 +136,7 @@ void ExecStreamFactory::visit(ProxyIndexScanDef &streamDef)
 void ExecStreamFactory::visit(ProxyIndexSearchDef &streamDef)
 {
     BTreeSearchExecStreamParams params;
-    readBTreeReadStreamParams(params, streamDef);
-    params.outerJoin = streamDef.isOuterJoin();
-    if (streamDef.getInputKeyProj()) {
-        CmdInterpreter::readTupleProjection(
-            params.inputKeyProj,
-            streamDef.getInputKeyProj());
-    }
-    if (streamDef.getInputJoinProj()) {
-        CmdInterpreter::readTupleProjection(
-            params.inputJoinProj,
-            streamDef.getInputJoinProj());
-    }
-    if (streamDef.getInputDirectiveProj()) {
-        CmdInterpreter::readTupleProjection(
-            params.inputDirectiveProj,
-            streamDef.getInputDirectiveProj());
-    }
+    readBTreeSearchStreamParams(params, streamDef);
     embryo.init(
         streamDef.isUniqueKey()
         ? new BTreeSearchUniqueExecStream() : new BTreeSearchExecStream(),
@@ -408,6 +392,29 @@ void ExecStreamFactory::readIndexWriterParams(
     readBTreeStreamParams(params, indexWriterDef);
     params.distinctness = indexWriterDef.getDistinctness();
     params.updateInPlace = indexWriterDef.isUpdateInPlace();
+}
+
+void ExecStreamFactory::readBTreeSearchStreamParams(
+    BTreeSearchExecStreamParams &params,
+    ProxyIndexSearchDef &streamDef)
+{
+    readBTreeReadStreamParams(params, streamDef);
+    params.outerJoin = streamDef.isOuterJoin();
+    if (streamDef.getInputKeyProj()) {
+        CmdInterpreter::readTupleProjection(
+            params.inputKeyProj,
+            streamDef.getInputKeyProj());
+    }
+    if (streamDef.getInputJoinProj()) {
+        CmdInterpreter::readTupleProjection(
+            params.inputJoinProj,
+            streamDef.getInputJoinProj());
+    }
+    if (streamDef.getInputDirectiveProj()) {
+        CmdInterpreter::readTupleProjection(
+            params.inputDirectiveProj,
+            streamDef.getInputDirectiveProj());
+    }
 }
 
 ExecStreamSubFactory::~ExecStreamSubFactory()

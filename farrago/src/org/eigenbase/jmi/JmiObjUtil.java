@@ -93,9 +93,32 @@ public abstract class JmiObjUtil
             if (!map.containsKey(attr.getName())) {
                 continue;
             }
+            Object srcVal = map.get(attr.getName());
+            if (srcVal instanceof RefObject) {
+                RefObject srcValObj = (RefObject) srcVal;
+                if (srcValObj.refImmediateComposite() != null) {
+                    // Trying to copy this directly would lead
+                    // to a CompositionViolationException.  Instead,
+                    // clone it and reference the clone instead.
+                    RefObject clone = srcValObj.refClass().refCreateInstance(
+                        Collections.EMPTY_LIST);
+                    copyAttributes(clone, srcValObj);
+                    srcVal = clone;
+
+                    // Also have to refDelete the old value if any,
+                    // otherwise it will become garbage.
+                    RefObject oldVal = (RefObject) dst.refGetValue(attr);
+                    if (oldVal != null) {
+                        // Nullify reference before deleting oldVal,
+                        // otherwise the next refSetValue complains.
+                        dst.refSetValue(attr, null);
+                        oldVal.refDelete();
+                    }
+                }
+            }
             dst.refSetValue(
                 attr,
-                map.get(attr.getName()));
+                srcVal);
         }
     }
 

@@ -91,7 +91,7 @@ public class RelOptPlanWriter extends java.io.PrintWriter
         } else {
             s = "";
         }
-        s = s + rel.getRelTypeName() + ((AbstractRelNode) rel).getQualifier();
+        s = s + rel.getRelTypeName();
 
         for (int i = 0; i < level; i++) {
             print("  ");

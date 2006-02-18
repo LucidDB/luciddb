@@ -52,6 +52,8 @@ class LbmEntry : public LbmSegment
      */
     uint scratchBufferSize;
 
+    uint scratchBufferUsableSize;
+
     /**
      * LbmEntry tuple, same format as output tuple from
      * LbmConstructorExecStream.
@@ -75,6 +77,11 @@ class LbmEntry : public LbmSegment
     uint currentEntrySize;
 
     /**
+     * size(key) + size(SRID)
+     */
+    uint keySize;
+
+    /**
      * Increment forward from pSegDescStart.
      */ 
     PBuffer currSegDescByte;
@@ -92,24 +99,14 @@ class LbmEntry : public LbmSegment
      * @return true if this LbmEntry is a singleton. All LbmEntries start out
      * as a singleton.
      */
-    bool isSingleton() const;
+    inline bool isSingleton() const;
 
     /**
      * Test if a tuple contains a single bitmap.
      *
      * @return true if the tuple contains a single bitmap. 
      */
-    bool isSingleBitmap() const;
-
-    /**
-     * Test if a tuple contains a single bitmap.
-     *
-     * @param inputTuple tuple in which a LbmEntry is stored.
-     *
-     * @return true if the tuple contains a single bitmap. 
-     */
-    bool isSingleBitmap(TupleData const &inputTuple) const;
-
+    inline bool isSingleBitmap() const;
 
     /**
      * Set rid in the current segment byte.
@@ -190,10 +187,14 @@ class LbmEntry : public LbmSegment
      *
      * @param rid the new rid that this entry will try to include
      *
+     * @param reserveSpace the number of bytes to reserve in the scratch buffer
+     *
+     * @param addDesc add descriptors to single bitmap entry
+     *
      * @return true if there is enough room to grow the current entry to rid;
      * false otherwise.
      */
-    bool growEntry(LcsRid rid);
+    bool growEntry(LcsRid rid, uint reserveSpace);
 
     /**
      * This function is called when the last byte of the current entry overlaps
@@ -209,10 +210,24 @@ class LbmEntry : public LbmSegment
     bool adjustEntry(TupleData &inputTuple);
 
     /**
+     * Add segment descriptors to a small single bitmap entry, if the added
+     * descriptor can fit into the leftOverSpace.
+     *
+     * @param[in] the left over space to fit the additional segment
+     * descriptors.
+     * 
+     * @return true if the single bitmap is small and the new descriptors can
+     * fit.
+     */
+    bool addSegDesc(uint leftOverSpace, uint bitmapLength);
+    
+    /**
      ** STATIC MEMBERS AND METHODS
      **/
 
     static const uint LbmMinEntryPerPage = 8;
+
+    static const uint LbmSmallSingleBitmap = 256;
 
     /**
      * Test if a tuple is singleton.
@@ -221,7 +236,16 @@ class LbmEntry : public LbmSegment
      *
      * @return true if the tuple is a singleton. 
      */
-    static bool isSingleton(TupleData const &inputTuple);
+    inline static bool isSingleton(TupleData const &inputTuple);
+
+    /**
+     * Test if a tuple contains a single bitmap.
+     *
+     * @param inputTuple tuple in which a LbmEntry is stored.
+     *
+     * @return true if the tuple contains a single bitmap. 
+     */
+    inline static bool isSingleBitmap(TupleData const &inputTuple);
 
     /**
      * Print the inputTuple as a bitmap index entry. Print out the bitmaps.
@@ -264,6 +288,16 @@ class LbmEntry : public LbmSegment
      */
     static string dumpBitmapRID(PBuffer seg, uint segBytes, 
                                 string prefix, LcsRid srid);
+
+    /**
+     * 
+     * @param[in] the left over space to fit the additional segment
+     * descriptors.
+     * 
+     * @return true if the single bitmap is small and the new descriptors can
+     * fit.
+     */
+    static uint getMergeSpaceRequired(TupleData const &inputTuple);
 
 public:
 
@@ -323,7 +357,7 @@ public:
         TupleDescriptor const &tupleDesc) const;
 
     /**
-     * Merged the current entry with input. The merged entry becomes the
+     * Merge the current entry with input. The merged entry becomes the
      * current. Also needs to handle the singleton case.
      *
      * @param[in|out] inputTuple
@@ -369,6 +403,37 @@ public:
         TupleDescriptor const &indexTupleDesc, uint pageSize,
         uint &minEntrySize, uint &maxEntrySize);
 };
+
+
+/**************************************************
+  Definitions of inline methods for class LbmEntry
+ **************************************************/
+
+inline bool LbmEntry::isSingleton(TupleData const &inputTuple)
+{
+    return (inputTuple[inputTuple.size()-2].isNull() &&
+        inputTuple[inputTuple.size()-1].isNull());
+}
+
+
+inline bool LbmEntry::isSingleton() const
+{
+    return (pSegStart == pSegEnd);
+}
+
+
+inline bool LbmEntry::isSingleBitmap(TupleData const &inputTuple)
+{
+    return (inputTuple[inputTuple.size()-2].isNull() &&
+        !inputTuple[inputTuple.size()-1].isNull());
+}
+
+
+inline bool LbmEntry::isSingleBitmap() const
+{
+    return (pSegDescStart == NULL);
+}
+
 
 FENNEL_END_NAMESPACE
 

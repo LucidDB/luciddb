@@ -1483,7 +1483,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         case SqlKind.ExceptORDINAL:
         case SqlKind.ValuesORDINAL:
         case SqlKind.UnnestORDINAL:
-        case SqlKind.FunctionORDINAL:
+        case SqlKind.CollectionTableORDINAL:
             newNode = node;
             if (alias == null) {
                 // give this anonymous construct a name since later
@@ -1689,7 +1689,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             registerSubqueries(usingScope, call.operands[0]);
             break;
 
-        case SqlKind.FunctionORDINAL:
+        case SqlKind.CollectionTableORDINAL:
             call = (SqlCall) node;
             ProcedureNamespace procNamespace =
                 new ProcedureNamespace(this, parentScope, call);

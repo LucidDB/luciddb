@@ -202,6 +202,7 @@ class LcsIndexAccessRule extends RelOptRule
         assert (keyInput != null);
 
         // Set up projections for the search directive and key.
+        // TODO: multi-key index key proj and directive proj
         Integer [] inputDirectiveProj = new Integer [] { 0, 2 };
         Integer [] inputKeyProj = new Integer [] { 1, 3 };
 
@@ -219,7 +220,7 @@ class LcsIndexAccessRule extends RelOptRule
         
         LcsIndexSearchRel indexSearch =
             new LcsIndexSearchRel(indexScan, keyInput, false,
-                false, null, null, null);
+                false, inputKeyProj, null, inputDirectiveProj);
 
         // check if the index contains all the required columns.
         // TODO: this is not implemented yet. IndexScan/Search always returns
@@ -231,14 +232,21 @@ class LcsIndexAccessRule extends RelOptRule
         //    transformCall(call, indexSearch, extraFilter);
         // } else 
         {
+            RelNode [] inputRels = new RelNode[1];
+            
+            // TODO: add extra range list here to the stream def's.
+            inputRels[0] = indexSearch;
+
+            // Build a RowScan rel based on index search with no extra filters.
             LcsRowScanRel rowScan =
                 new LcsRowScanRel(
                     origRowScan.getCluster(),
-                    indexSearch,
+                    inputRels,
                     origRowScan.lcsTable,
                     origRowScan.clusteredIndexes,
                     origRowScan.getConnection(),
-                    origRowScan.projectedColumns);
+                    origRowScan.projectedColumns,
+                    false, false);
 
             transformCall(call, rowScan, extraFilter);
         }

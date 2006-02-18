@@ -42,7 +42,7 @@ import org.eigenbase.util.*;
  * FlatFileDataServer provides an implementation of the {@link
  * FarragoMedDataServer} interface.
  *
- * @author John V. Pham
+ * @author John Pham
  * @version $Id$
  */
 class FlatFileDataServer extends MedAbstractDataServer
@@ -59,7 +59,6 @@ class FlatFileDataServer extends MedAbstractDataServer
 
     private MedAbstractDataWrapper wrapper;
     FlatFileParams params;
-    String tabPropFilename = null;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -107,40 +106,28 @@ class FlatFileDataServer extends MedAbstractDataServer
             FlatFileParams.getSchemaType(schemaName, true);
         if (rowType == null) {
             // scan control file/data file for metadata (Phase II)
-            String name = tableProps.getProperty(
+            String filename = tableProps.getProperty(
                 FlatFileColumnSet.PROP_FILENAME);
-            if (name == null) {
-                name = localName[localName.length-1];
+            if (filename == null) {
+                filename = getTableName(localName);
             }
-            this.tabPropFilename = name;
             // check data file exists
-            String dataFileName = params.getDirectory() + name +
+            String dataFilePath = params.getDirectory() + filename +
                 params.getFileExtenstion();
-            File dataFile = new File(dataFileName);
+            File dataFile = new File(dataFilePath);
             if (!dataFile.exists()) {
                 return null;
             }
-            String ctrlFilePath = params.getDirectory() + name +
-            	params.getControlFileExtenstion();
 
+            String ctrlFilePath = params.getDirectory() + filename +
+            	params.getControlFileExtenstion();
             FlatFileBCPFile bcpFile =
                 new FlatFileBCPFile(ctrlFilePath, typeFactory);
-            synchronized(FlatFileBCPFile.class) {
-                if (bcpFile.exists()) {
-                    if (bcpFile.parse()) {
-                        rowType = createRowType(
-                            typeFactory, bcpFile.types, bcpFile.colNames);
-                    } else { // couldn't parse control file
-                        return null;
-                    }
-                } else { // no control file exists; generate one
-                    rowType = deriveRowType(
-                        typeFactory, schemaType, localName, bcpFile);
-                }
-                if (rowType == null) {
-                    return null;
-                }
-            }
+            rowType = deriveRowType(
+                typeFactory, schemaType, localName, filename, bcpFile);
+        }
+        if (rowType == null) {
+            return null;
         }
         return new FlatFileColumnSet(
             localName, rowType, params, tableProps, schemaType);
@@ -188,18 +175,15 @@ class FlatFileDataServer extends MedAbstractDataServer
         FarragoTypeFactory typeFactory,
         FlatFileParams.SchemaType schemaType,
         String[] localName,
+        String filename,
         FlatFileBCPFile bcpFile)
         throws SQLException
     {
         List<RelDataType> fieldTypes = new ArrayList<RelDataType>();
         List<String> fieldNames = new ArrayList<String>();
-        String tableName = this.tabPropFilename;
-        if (tableName == null) {
-            tableName = localName[localName.length-1];
-        }
         String[] foreignName = {this.getProperties().getProperty("NAME"),
                                 FlatFileParams.SchemaType.QUERY.getSchemaName(),
-                                tableName};
+                                filename};
 
         switch(schemaType) {
         case DESCRIBE:
@@ -219,17 +203,19 @@ class FlatFileDataServer extends MedAbstractDataServer
             }
             break;
         case QUERY:
-            if (sampleAndCreateBcp(foreignName, bcpFile)) {
-                if (bcpFile.parse()) {
-                    for (RelDataType type : bcpFile.types) {
-            		fieldTypes.add(type);
-                    }
-                    for (String name : bcpFile.colNames) {
-            		fieldNames.add(name);
+            synchronized(FlatFileBCPFile.class) {
+                if (! bcpFile.exists()) {
+                    if (! sampleAndCreateBcp(foreignName, bcpFile)) {
+                        return null;
                     }
                 }
+                if (bcpFile.parse()) {
+                    return createRowType(
+                        typeFactory, bcpFile.types, bcpFile.colNames);
+                }
+                // couldn't parse control file
+                return null;
             }
-            break;
         default:
             return null;
         }
@@ -378,6 +364,16 @@ class FlatFileDataServer extends MedAbstractDataServer
     private String quoteName(String name)
     {
         return SQL_QUOTE_CHARACTER + name + SQL_QUOTE_CHARACTER;
+    }
+
+    /**
+     * Returns the last name of localName.
+     * TODO: move this into a better place
+     */
+    private String getTableName(String[] localName)
+    {
+        assert(localName.length > 0);
+        return localName[localName.length - 1];
     }
 
     /**
