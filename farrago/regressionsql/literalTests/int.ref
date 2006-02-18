@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/regressionsql/literalTests/int.sql#5 $ 
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/literalTests/int.sql#6 $ 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test int literal
 0: jdbc:farrago:> 
@@ -125,7 +125,7 @@ Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast fro
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
-[0]:PC=1 Code=22003 (state=,code=0)
+[0]:PC=0 Code=22003 (state=,code=0)
 0: jdbc:farrago:> insert into t_int values(-1.2345678901234e-200,null);
 0: jdbc:farrago:> -- null value test
 0: jdbc:farrago:> --insert into t_int values(null, null); 
