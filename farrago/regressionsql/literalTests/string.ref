@@ -29,12 +29,12 @@ Error: From line 1, column 27 to line 1, column 31: Numeric literal '1E400' out 
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
-[0]:PC=1 Code=22001 (state=,code=0)
+[0]:PC=0 Code=22001 (state=,code=0)
 0: jdbc:farrago:> insert into t_char values(-1234.03,null);
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
-[0]:PC=1 Code=22001 (state=,code=0)
+[0]:PC=0 Code=22001 (state=,code=0)
 0: jdbc:farrago:> insert into t_char values(x'ff',null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY(1)' to 'CHAR(1)' (state=,code=0)
 0: jdbc:farrago:> -- char(1) too short to hold these - will give error

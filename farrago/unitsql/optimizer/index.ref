@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev_lcs/farrago/unitsql/optimizer/index.sql#6 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/index.sql#5 $
 0: jdbc:farrago:> -- Test queries which make use of indexes
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema oj;
@@ -595,7 +595,7 @@ Error: DDL validation error near line 1, column 13: Reference to unknown schema 
 0: jdbc:farrago:> set path 'lbm';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -------------------------------------------------
-0: jdbc:farrago:> -- Some ftrs tests to compare bahevior against --
+0: jdbc:farrago:> -- Some ftrs tests to compare behavior against --
 0: jdbc:farrago:> -------------------------------------------------
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop table ftrsemps cascade;
@@ -631,13 +631,16 @@ Error: DDL validation error near line 1, column 12: Reference to unknown table "
 '        IterCalcRel(expr#0=[{inputs}], expr#1=['['], expr#2=[2], expr#3=[']'], expr#4=[CAST($t2):INTEGER], $f0=[$t1], $f1=[$t4], $f2=[$t3], $f3=[$t4])'
 '          IterOneRowRel'
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- TODO: this case does not work
+0: jdbc:farrago:> -- negative number in index search
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from ftrsemps where deptno = -2;
 'column0'
-'IterCalcRel(expr#0..2=[{inputs}], expr#3=[2], expr#4=[-($t3)], expr#5=[=($t2, $t4)], proj#0..2=[{exprs}], $condition=[$t5])'
-'  FennelToIteratorConverter'
-'    FtrsIndexScanRel(table=[[LOCALDB, LBM, FTRSEMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$FTRSEMPS$EMPNO_PK], preserveOrder=[false])'
+'FennelToIteratorConverter'
+'  FtrsIndexSearchRel(table=[[LOCALDB, LBM, FTRSEMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$FTRSEMPS$EMPNO_PK], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]])'
+'    FtrsIndexSearchRel(table=[[LOCALDB, LBM, FTRSEMPS]], projection=[[0]], index=[DEPTNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'      IteratorToFennelConverter'
+'        IterCalcRel(expr#0=[{inputs}], expr#1=['['], expr#2=[-2], expr#3=[']'], expr#4=[CAST($t2):INTEGER], $f0=[$t1], $f1=[$t4], $f2=[$t3], $f3=[$t4])'
+'          IterOneRowRel'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- range predicate uses index access
 0: jdbc:farrago:> explain plan for
@@ -822,13 +825,16 @@ Error: DDL validation error near line 1, column 12: Reference to unknown table "
 '120','Wilma','20'
 '120','Wilma','20'
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- TODO: this case does not work
+0: jdbc:farrago:> -- negative number in index search
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from lbmemps where deptno = -2;
 'column0'
-'IterCalcRel(expr#0..2=[{inputs}], expr#3=[2], expr#4=[-($t3)], expr#5=[=($t2, $t4)], proj#0..2=[{exprs}], $condition=[$t5])'
-'  FennelToIteratorConverter'
-'    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
+'FennelToIteratorConverter'
+'  LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
+'    LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[DEPTNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'      IteratorToFennelConverter'
+'        IterCalcRel(expr#0=[{inputs}], expr#1=['['], expr#2=[-2], expr#3=[']'], expr#4=[CAST($t2):INTEGER], $f0=[$t1], $f1=[$t4], $f2=[$t3], $f3=[$t4])'
+'          IterOneRowRel'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- range predicate uses index access
 0: jdbc:farrago:> explain plan for

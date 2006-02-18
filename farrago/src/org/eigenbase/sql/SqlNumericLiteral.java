@@ -76,7 +76,7 @@ public class SqlNumericLiteral extends SqlLiteral
         int leftPrec,
         int rightPrec)
     {
-        writer.literal(toValue());
+	writer.literal(toValue());
     }
 
     public String toValue()

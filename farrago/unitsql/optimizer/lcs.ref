@@ -518,7 +518,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, MULTICLUSTER]])'
-'    FennelCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=[_ISO-8859-1'am'], expr#3=[100], expr#4=[50], expr#5=[10], expr#6=[-($t5)], expr#7=[1000], expr#8=[null], expr#9=[CAST($t8):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#10=[0], expr#11=[CAST($t1):INTEGER], expr#12=[CAST($t2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#13=[CAST($t3):INTEGER], expr#14=[CAST($t4):INTEGER], expr#15=[CAST($t6):INTEGER], expr#16=[CAST($t7):INTEGER], expr#17=[CAST($t10):INTEGER], EXPR$0=[$t11], EXPR$1=[$t12], EXPR$2=[$t13], EXPR$3=[$t14], EXPR$4=[$t15], EXPR$5=[$t16], EXPR$6=[$t9], EXPR$7=[$t17])'
+'    FennelCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=[_ISO-8859-1'am'], expr#3=[100], expr#4=[50], expr#5=[-10], expr#6=[1000], expr#7=[null], expr#8=[CAST($t7):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#9=[0], expr#10=[CAST($t1):INTEGER], expr#11=[CAST($t2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#12=[CAST($t3):INTEGER], expr#13=[CAST($t4):INTEGER], expr#14=[CAST($t5):INTEGER], expr#15=[CAST($t6):INTEGER], expr#16=[CAST($t9):INTEGER], EXPR$0=[$t10], EXPR$1=[$t11], EXPR$2=[$t12], EXPR$3=[$t13], EXPR$4=[$t14], EXPR$5=[$t15], EXPR$6=[$t8], EXPR$7=[$t16])'
 '      FennelOneRowRel'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for

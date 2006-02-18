@@ -251,7 +251,7 @@ set schema 'lbm';
 set path 'lbm';
 
 -------------------------------------------------
--- Some ftrs tests to compare bahevior against --
+-- Some ftrs tests to compare behavior against --
 -------------------------------------------------
 
 drop table ftrsemps cascade;
@@ -276,7 +276,7 @@ select * from ftrsemps;
 explain plan for
 select * from ftrsemps where deptno = 2;
 
--- TODO: this case does not work
+-- negative number in index search
 explain plan for
 select * from ftrsemps where deptno = -2;
 
@@ -366,7 +366,7 @@ select * from lbmemps where deptno = 20 order by empno;
 
 select * from lbmemps where deptno = 20 order by empno;
 
--- TODO: this case does not work
+-- negative number in index search
 explain plan for
 select * from lbmemps where deptno = -2;
 

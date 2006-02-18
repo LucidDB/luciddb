@@ -1822,6 +1822,13 @@ SqlNode Expression3(ExprContext exprContext) :
     SqlParserPos prefixRowOpPos;
 }
 {
+    LOOKAHEAD(2)
+    e = AtomicRowExpression()
+    {
+        checkNonQueryExpression(exprContext);
+        return e;
+    }
+    |
     op = PrefixRowOperator()
     {
         prefixRowOpPos = getPos();
@@ -1831,12 +1838,6 @@ SqlNode Expression3(ExprContext exprContext) :
     {
         SqlParserPos callPos = prefixRowOpPos.plus(e.getParserPosition());
         return op.createCall(e,callPos);
-    }
-    |
-    e = AtomicRowExpression()
-    {
-        checkNonQueryExpression(exprContext);
-        return e;
     }
     |
     {
@@ -2054,8 +2055,8 @@ SqlLiteral StrictLiteral() :
 }
 
 
-/** Parses a numeric literal */
-SqlLiteral NumericLiteral() :
+/** Parses a unsigned numeric literal */
+SqlNumericLiteral UnsignedNumericLiteral() :
 {
 }
 {
@@ -2072,6 +2073,28 @@ SqlLiteral NumericLiteral() :
     <APPROX_NUMERIC_LITERAL>
     {
         return SqlLiteral.createApproxNumeric(token.image, getPos());
+    }
+}
+
+/** Parses a numeric literal (can be signed) */
+SqlLiteral NumericLiteral() :
+{
+    SqlNumericLiteral num;
+}
+{
+    <PLUS> num = UnsignedNumericLiteral()
+    {
+        return num;
+    }
+    |
+    <MINUS> num = UnsignedNumericLiteral()
+    {
+        return SqlLiteral.createNegative(num);
+    }
+    |
+    num = UnsignedNumericLiteral()
+    {
+        return num;
     }
 }
 
@@ -2289,7 +2312,7 @@ SqlIntervalQualifier IntervalQualifier() :
 }
 {
     ( 
-        <YEAR> [ <LPAREN> startPrec = IntLiteral() <RPAREN> ]
+        <YEAR> [ <LPAREN> startPrec = UnsignedIntLiteral() <RPAREN> ]
         [
             LOOKAHEAD(2) <TO> <MONTH>
             {
@@ -2298,10 +2321,10 @@ SqlIntervalQualifier IntervalQualifier() :
         ]
         { start = SqlIntervalQualifier.TimeUnit.Year; }
         |
-        <MONTH> [ <LPAREN> startPrec = IntLiteral() <RPAREN> ]
+        <MONTH> [ <LPAREN> startPrec = UnsignedIntLiteral() <RPAREN> ]
         { start = SqlIntervalQualifier.TimeUnit.Month; }
         |
-        <DAY> [ <LPAREN> startPrec = IntLiteral() <RPAREN> ]
+        <DAY> [ <LPAREN> startPrec = UnsignedIntLiteral() <RPAREN> ]
         [ LOOKAHEAD(2) <TO>
             (
                 <HOUR> { end = SqlIntervalQualifier.TimeUnit.Hour; }
@@ -2312,28 +2335,28 @@ SqlIntervalQualifier IntervalQualifier() :
         ]
         { start = SqlIntervalQualifier.TimeUnit.Day; }
         |
-        <HOUR> [ <LPAREN> startPrec = IntLiteral() <RPAREN> ]
+        <HOUR> [ <LPAREN> startPrec = UnsignedIntLiteral() <RPAREN> ]
         [ LOOKAHEAD(2) <TO>
             (
                 <MINUTE> { end = SqlIntervalQualifier.TimeUnit.Minute; }
                 | <SECOND> { end = SqlIntervalQualifier.TimeUnit.Second; }
-                [ <LPAREN> secondFracPrec = IntLiteral() <RPAREN> ]
+                [ <LPAREN> secondFracPrec = UnsignedIntLiteral() <RPAREN> ]
             )
         ]
         { start = SqlIntervalQualifier.TimeUnit.Hour; }
         |
-        <MINUTE> [ <LPAREN> startPrec = IntLiteral() <RPAREN> ]
+        <MINUTE> [ <LPAREN> startPrec = UnsignedIntLiteral() <RPAREN> ]
         [ LOOKAHEAD(2) <TO>
             (
                 <SECOND> { end = SqlIntervalQualifier.TimeUnit.Second; }
-                [ <LPAREN> secondFracPrec = IntLiteral() <RPAREN> ]
+                [ <LPAREN> secondFracPrec = UnsignedIntLiteral() <RPAREN> ]
             )
         ]
         { start = SqlIntervalQualifier.TimeUnit.Minute; }
         |
         <SECOND>
-        [   <LPAREN> startPrec = IntLiteral()
-            [ <COMMA> secondFracPrec = IntLiteral() ]
+        [   <LPAREN> startPrec = UnsignedIntLiteral()
+            [ <COMMA> secondFracPrec = UnsignedIntLiteral() ]
             <RPAREN>
         ]
         { start = SqlIntervalQualifier.TimeUnit.Second; }
@@ -2488,7 +2511,7 @@ SqlNode NewSpecification() :
 }
 
 //TODO: real parse errors.
-int IntLiteral() :
+int UnsignedIntLiteral() :
 {
     Token t;
 }
@@ -2497,6 +2520,30 @@ int IntLiteral() :
     {
         try {
             return Integer.parseInt(t.image);
+        } catch (NumberFormatException ex) {
+            throw generateParseException();
+        }
+    }
+}
+
+int IntLiteral() :
+{
+    Token t;
+}
+{
+    ( t = <UNSIGNED_INTEGER_LITERAL> | t = <PLUS> <UNSIGNED_INTEGER_LITERAL> ) 
+    {
+        try {
+            return Integer.parseInt(t.image);
+        } catch (NumberFormatException ex) {
+            throw generateParseException();
+        }
+    }
+    |
+    t = <MINUS> <UNSIGNED_INTEGER_LITERAL> 
+    {
+        try {
+            return -Integer.parseInt(t.image);
         } catch (NumberFormatException ex) {
             throw generateParseException();
         }
@@ -2521,10 +2568,10 @@ SqlDataTypeSpec DataType() :
         }
         [
             <LPAREN>
-            precision = IntLiteral()
+            precision = UnsignedIntLiteral()
             [
                 <COMMA>
-                scale = IntLiteral()
+                scale = UnsignedIntLiteral()
             ]
             <RPAREN>
         ]
