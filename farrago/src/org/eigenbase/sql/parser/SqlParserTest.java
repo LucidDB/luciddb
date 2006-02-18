@@ -652,10 +652,10 @@ public class SqlParserTest extends TestCase
     {
         checkExp("1-2+3*4/5/6-7", "(((1 - 2) + (((3 * 4) / 5) / 6)) - 7)");
         checkExp("pow(2,3)", "POW(2, 3)");
-        checkExp("aBs(-2.3e-2)", "ABS((- 2.3E-2))");
+        checkExp("aBs(-2.3e-2)", "ABS(-2.3E-2)");
         checkExp("MOD(5             ,\t\f\r\n2)", "MOD(5, 2)");
         checkExp("ln(5.43  )", "LN(5.43)");
-        checkExp("log10(- -.2  )", "LOG10((- (- 0.2)))");
+        checkExp("log10(- -.2  )", "LOG10((- -0.2))");
     }
 
     public void testExists()
@@ -1025,7 +1025,7 @@ public class SqlParserTest extends TestCase
 
         // Even though it looks like a date, it's just a string.
         checkExp("'2004-06-01'", "'2004-06-01'");
-        checkExp("-.25", "(- 0.25)");
+        checkExp("-.25", "-0.25");
         checkExpSame("TIMESTAMP '2004-06-01 15:55:55'");
         checkExpSame("TIMESTAMP '2004-06-01 15:55:55.900'");
         checkExp("TIMESTAMP '2004-06-01 15:55:55.1234'",
@@ -1139,7 +1139,7 @@ public class SqlParserTest extends TestCase
 
         check("values (- -1" + NL +
             ")",
-            "(VALUES (ROW((- (- 1)))))");
+            "(VALUES (ROW((- -1))))");
 
         check("values (--1+" + NL +
             "2)",
@@ -1207,10 +1207,11 @@ public class SqlParserTest extends TestCase
     {
         //Exacts
         checkExp("1", "1");
-        checkExp("+1.", "(+ 1)");
-        checkExp("-1", "(- 1)");
+        checkExp("+1.", "1");
+        checkExp("-1", "-1");
+        checkExp("- -1", "(- -1)");
         checkExp("1.0", "1.0");
-        checkExp("-3.2", "(- 3.2)");
+        checkExp("-3.2", "-3.2");
         checkExp("1.", "1");
         checkExp(".1", "0.1");
         checkExp("2500000000", "2500000000");
@@ -1218,28 +1219,28 @@ public class SqlParserTest extends TestCase
 
         //Approxs
         checkExp("1e1", "1E1");
-        checkExp("+1e1", "(+ 1E1)");
+        checkExp("+1e1", "1E1");
         checkExp("1.1e1", "1.1E1");
         checkExp("1.1e+1", "1.1E1");
         checkExp("1.1e-1", "1.1E-1");
-        checkExp("+1.1e-1", "(+ 1.1E-1)");
+        checkExp("+1.1e-1", "1.1E-1");
         checkExp("1.E3", "1E3");
         checkExp("1.e-3", "1E-3");
         checkExp("1.e+3", "1E3");
         checkExp(".5E3", "5E2");
-        checkExp("+.5e3", "(+ 5E2)");
-        checkExp("-.5E3", "(- 5E2)");
+        checkExp("+.5e3", "5E2");
+        checkExp("-.5E3", "-5E2");
         checkExp(".5e-32", "5E-33");
 
         //Mix integer/decimals/approx
         checkExp("3. + 2", "(3 + 2)");
-        checkExp("1++2+3", "((1 + (+ 2)) + 3)");
-        checkExp("1- -2", "(1 - (- 2))");
+        checkExp("1++2+3", "((1 + 2) + 3)");
+        checkExp("1- -2", "(1 - -2)");
         checkExp("1++2.3e-4++.5e-6++.7++8",
-            "((((1 + (+ 2.3E-4)) + (+ 5E-7)) + (+ 0.7)) + (+ 8))");
+            "((((1 + 2.3E-4) + 5E-7) + 0.7) + 8)");
         checkExp("1- -2.3e-4 - -.5e-6  -" + NL + "-.7++8",
-            "((((1 - (- 2.3E-4)) - (- 5E-7)) - (- 0.7)) + (+ 8))");
-        checkExp("1+-2.*-3.e-1/-4", "(1 + (((- 2) * (- 3E-1)) / (- 4)))");
+            "((((1 - -2.3E-4) - -5E-7) - -0.7) + 8)");
+        checkExp("1+-2.*-3.e-1/-4", "(1 + ((-2 * -3E-1) / -4))");
     }
 
     public void testParseNumberFails()
@@ -1266,23 +1267,23 @@ public class SqlParserTest extends TestCase
 
     public void testPrecedence2()
     {
-        checkExp("- - 1", "(- (- 1))"); // two prefices
+        checkExp("- - 1", "(- -1)"); // two prefices
     }
 
     public void testPrecedence3()
     {
-        checkExp("- 1 is null", "((- 1) IS NULL)"); // prefix vs. postfix
+        checkExp("- 1 is null", "(-1 IS NULL)"); // prefix vs. postfix
     }
 
     public void testPrecedence4()
     {
-        checkExp("1 - -2", "(1 - (- 2))"); // infix, prefix '-'
+        checkExp("1 - -2", "(1 - -2)"); // infix, prefix '-'
     }
 
     public void testPrecedence5()
     {
-        checkExp("1++2", "(1 + (+ 2))"); // infix, prefix '+'
-        checkExp("1+ +2", "(1 + (+ 2))"); // infix, prefix '+'
+        checkExp("1++2", "(1 + 2)"); // infix, prefix '+'
+        checkExp("1+ +2", "(1 + 2)"); // infix, prefix '+'
     }
 
     public void testPrecedenceSetOps()

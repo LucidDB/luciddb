@@ -576,6 +576,16 @@ public class SqlLiteral extends SqlNode
             typeName, pos);
     }
 
+    public static SqlNumericLiteral createNegative(SqlNumericLiteral num)
+    {
+        return new SqlNumericLiteral(
+            ((BigDecimal) num.getValue()).negate(),
+            num.getPrec(),
+            num.getScale(),
+            num.isExact(),
+            num.getParserPosition());
+    }
+
     public static SqlNumericLiteral createExactNumeric(
         String s,
         SqlParserPos pos)
