@@ -4,7 +4,7 @@
 EXPLAIN AND EXECUTE
 select s
 from class "Class" as e then (
-    follow association Generalizes backward as s
+    follow association Generalizes forward as s
 );
 
 # Find all Classes which have grandchildren.  Instead of specifying the
@@ -21,7 +21,7 @@ from class "Class" as e then (
 EXPLAIN AND EXECUTE
 select d
 from class "Class" as b where name='BehavioralFeature' then (
-    follow association Generalizes forward as d
+    follow association Generalizes backward as d
 );
 
 # Find all non-inherited Attributes of Class 'Import' in Package 'Model'
@@ -42,7 +42,7 @@ select a
 from class Package as p where name='Model' then (
     follow composite forward
     destination class "Class" as c where name='Import' then (
-        follow association Generalizes backward as s
+        follow association Generalizes forward as s
     ) gather with parent then (
         follow composite forward
         destination class Attribute as a

@@ -42,8 +42,8 @@ void LbmGeneratorExecStream::prepare(LbmGeneratorExecStreamParams const &params)
     scratchPageSize = scratchAccessor.pSegment->getUsablePageSize();
 
     // setup input tuple
-    assert(pInAccessor->getTupleDesc().size() == 2);
-    inputTuple.compute(pInAccessor->getTupleDesc());
+    assert(inAccessors[0]->getTupleDesc().size() == 2);
+    inputTuple.compute(inAccessors[0]->getTupleDesc());
 
     // setup tuple used to store key values read from clusters
     bitmapTuple.computeAndAllocate(pOutAccessor->getTupleDesc());
@@ -77,7 +77,7 @@ void LbmGeneratorExecStream::open(bool restart)
     batchRead = false;
     if (!restart) {
         pDynamicParamManager->createParam(
-            dynParamId, pInAccessor->getTupleDesc()[0]);
+            dynParamId, inAccessors[0]->getTupleDesc()[0]);
     }
 }
 
@@ -108,15 +108,19 @@ void LbmGeneratorExecStream::setResourceAllocation(
 ExecStreamResult LbmGeneratorExecStream::execute(
     ExecStreamQuantum const &quantum)
 {
+    if (pOutAccessor->getState() == EXECBUF_EOS) {
+        return EXECRC_EOS;
+    }
+
     // read the start rid and num of rows to load
     
-    if (pInAccessor->getState() != EXECBUF_EOS) {
+    if (inAccessors[0]->getState() != EXECBUF_EOS) {
 
-        if (!pInAccessor->demandData()) {
+        if (!inAccessors[0]->demandData()) {
             return EXECRC_BUF_UNDERFLOW;
         }
 
-        pInAccessor->unmarshalTuple(inputTuple);
+        inAccessors[0]->unmarshalTuple(inputTuple);
         numRowsToLoad =
             *reinterpret_cast<RecordNum const *> (inputTuple[0].pData);
         startRid = 
@@ -125,7 +129,7 @@ ExecStreamResult LbmGeneratorExecStream::execute(
         // set number of rows to load in a dynamic parameter that
         // splicer will later read
         pDynamicParamManager->writeParam(dynParamId, inputTuple[0]);
-        pInAccessor->consumeTuple();
+        inAccessors[0]->consumeTuple();
         if (numRowsToLoad == 0) {
             pOutAccessor->markEOS();
             return EXECRC_EOS;
@@ -284,10 +288,16 @@ void LbmGeneratorExecStream::closeImpl()
     keyCodes.clear();
     bitmapTable.clear();
     scratchPages.clear();
+
+#if 0
+    // FIXME zfong 10-Feb-2006 - once generator has its own private
+    // scratch segment, deallocate its pages; otherwise, the call below
+    // deallocates all scratch pages associated with the stream graph
     if (scratchAccessor.pSegment) {
         scratchAccessor.pSegment->deallocatePageRange(
             NULL_PAGE_ID, NULL_PAGE_ID);
     }
+#endif
 }
 
 bool LbmGeneratorExecStream::generateBitmaps()

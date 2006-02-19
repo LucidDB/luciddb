@@ -20,43 +20,25 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 -->
 
-<project name="conv_types" basedir="." default="gen-sql">
+<project name="conv_types" basedir="." default="test">
   <dirname property="conv_types.dir" file="${ant.file.conv_types}" />
   
   <property name="open.dir" location="../../../.."/>
   <fail unless="open.dir" />
 
   <property environment="env" />
-  <property file="conv_types.props" />
+  <property file="run.properties" />
 
-  <!-- override Farrago -->
-  <property name="project.catalog.dir" location="${open.dir}/luciddb/catalog" />
-  <property name="project.trace.propfile" location="${open.dir}/luciddb/trace/LucidDbTrace.properties" />
-
-  <import file="${open.dir}/farrago/buildMacros.xml" />
-  
-  <property name="classes.dir" location="${open.dir}/luciddb/classes" />
-  <property name="luciddb.plugin.dir" location="${open.dir}/luciddb/plugin" />
-
-  <!-- classpath for running tests via ant -->
-  <path id="test.classpath">
-    <pathelement path="${classes.dir}"/>
-    <pathelement path="${farrago.sqlline.classpath}"/>
-    <pathelement path="${ant.classpath}"/>
-    <pathelement path="${bh.run.classpath}"/>
-    <pathelement path="${luciddb.plugin.dir}/FarragoMedJdbc3p.jar"/>
-  </path>
-  <property name="test.classpath" refid="test.classpath"/>
-  
   <target name="test">
-    <property name="test-suite" value="test.xml"/>
-    <blackhawk.fork basedir="${conv_types.dir}" 
-      testscript="${test-suite}"
-      classpathref="test.classpath"/>
+    <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
   </target>  
 
   <target name="restoreCatalog">
     <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>
+  </target>  
+  
+  <target name="clean">
+    <delete dir="${bh.log.basedir}"/>
   </target>  
 
 </project>

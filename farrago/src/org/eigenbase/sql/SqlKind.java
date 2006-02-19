@@ -329,7 +329,11 @@ public class SqlKind extends EnumeratedValues.BasicValue
     /** Lateral */
     public static final int LateralORDINAL = 167;
     public static final SqlKind Lateral = new SqlKind("LATERAL", LateralORDINAL);
-
+    /** TABLE(exp) in FROM */
+    public static final int CollectionTableORDINAL = 168;
+    public static final SqlKind CollectionTable =
+        new SqlKind("TABLE", CollectionTableORDINAL);
+    
 
     // internal operators (evaluated in validator) 200-299
 

@@ -87,17 +87,32 @@ SharedExecStream ExecStreamUnitTestBase::prepareConfluenceGraph(
     ExecStreamEmbryo &sourceStreamEmbryo2,
     ExecStreamEmbryo &confluenceStreamEmbryo)
 {
-    pGraphEmbryo->saveStreamEmbryo(sourceStreamEmbryo1);
-    pGraphEmbryo->saveStreamEmbryo(sourceStreamEmbryo2);
+    std::vector<ExecStreamEmbryo> sourceStreamEmbryos;
+    sourceStreamEmbryos.push_back(sourceStreamEmbryo1);
+    sourceStreamEmbryos.push_back(sourceStreamEmbryo2);
+    return prepareConfluenceGraph(sourceStreamEmbryos, confluenceStreamEmbryo);
+}
+
+SharedExecStream ExecStreamUnitTestBase::prepareConfluenceGraph(
+    std::vector<ExecStreamEmbryo> &sourceStreamEmbryos,
+    ExecStreamEmbryo &confluenceStreamEmbryo)
+{
+    std::vector<ExecStreamEmbryo>::iterator it;
+
+    for (it = sourceStreamEmbryos.begin(); it != sourceStreamEmbryos.end();
+        ++it)
+    {
+        pGraphEmbryo->saveStreamEmbryo(*it);
+    }
     pGraphEmbryo->saveStreamEmbryo(confluenceStreamEmbryo);
     
-    pGraphEmbryo->addDataflow(
-        sourceStreamEmbryo1.getStream()->getName(),
-        confluenceStreamEmbryo.getStream()->getName());
-
-    pGraphEmbryo->addDataflow(
-        sourceStreamEmbryo2.getStream()->getName(),
-        confluenceStreamEmbryo.getStream()->getName());
+    for (it = sourceStreamEmbryos.begin(); it != sourceStreamEmbryos.end();
+        ++it)
+    {
+        pGraphEmbryo->addDataflow(
+            (*it).getStream()->getName(),
+            confluenceStreamEmbryo.getStream()->getName());
+    }
 
     SharedExecStream pAdaptedStream =
         pGraphEmbryo->addAdapterFor(
@@ -219,42 +234,12 @@ void ExecStreamUnitTestBase::tearDownExecStreamTest()
     pGraphEmbryo.reset();
 }
 
-void ExecStreamUnitTestBase::verifyConstantOutput(
-    ExecStream &stream,
-    uint nBytesExpected,
-    uint byteExpected)
-{
-    pGraph->open();
-    pScheduler->start();
-    uint nBytesTotal = 0;
-    for (;;) {
-        ExecStreamBufAccessor &bufAccessor =
-            pScheduler->readStream(stream);
-        if (bufAccessor.getState() == EXECBUF_EOS) {
-            break;
-        }
-        BOOST_REQUIRE(bufAccessor.isConsumptionPossible());
-        uint nBytes = bufAccessor.getConsumptionAvailable();
-        nBytesTotal += nBytes;
-        for (uint i = 0; i < nBytes; ++i) {
-            uint c = bufAccessor.getConsumptionStart()[i];
-            if (c != byteExpected) {
-                BOOST_CHECK_EQUAL(byteExpected,c);
-                return;
-            }
-        }
-        bufAccessor.consumeData(bufAccessor.getConsumptionEnd());
-    }
-    BOOST_CHECK_EQUAL(nBytesExpected,nBytesTotal);
-}
-
 void ExecStreamUnitTestBase::verifyOutput(
     ExecStream &stream,
     uint nRowsExpected,
     MockProducerExecStreamGenerator &generator)
 {
-    // TODO:  assertions about output tuple, or better yet, use proper tuple
-    // access
+    // TODO:  assertions about output tuple
     
     pGraph->open();
     pScheduler->start();
@@ -298,11 +283,10 @@ void ExecStreamUnitTestBase::verifyOutput(
 
 void ExecStreamUnitTestBase::verifyConstantOutput(
     ExecStream &stream, 
-    const TupleData  &expectedTuple,
+    const TupleData &expectedTuple,
     uint nRowsExpected)
 {
-    // TODO:  assertions about output tuple, or better yet, use proper tuple
-    // access
+    // TODO:  assertions about output tuple
     
     pGraph->open();
     pScheduler->start();
@@ -341,6 +325,60 @@ void ExecStreamUnitTestBase::verifyConstantOutput(
         }
     }
     BOOST_CHECK_EQUAL(nRowsExpected, nRows);
+}
+
+void ExecStreamUnitTestBase::verifyBufferedOutput(
+    ExecStream &stream,
+    TupleDescriptor outputTupleDesc,
+    uint nRowsExpected,
+    PBuffer expectedBuffer)
+{
+    // TODO:  assertions about output tuple, or better yet, use proper tuple
+    // access
+    
+    TupleAccessor expectedOutputAccessor;
+    expectedOutputAccessor.compute(outputTupleDesc);
+    TupleData expectedTuple(outputTupleDesc);
+    uint bufOffset = 0;
+    pGraph->open();
+    pScheduler->start();
+    uint nRows = 0;
+    for (;;) {
+        ExecStreamBufAccessor &bufAccessor =
+            pScheduler->readStream(stream);
+        if (bufAccessor.getState() == EXECBUF_EOS) {
+            break;
+        }
+        BOOST_REQUIRE(bufAccessor.getTupleDesc() == outputTupleDesc);
+        BOOST_REQUIRE(bufAccessor.isConsumptionPossible());
+        const uint nCol = 
+            bufAccessor.getConsumptionTupleAccessor().size();
+        BOOST_REQUIRE(nCol == bufAccessor.getTupleDesc().size());
+        BOOST_REQUIRE(nCol >= 1);
+        TupleData inputTuple;
+        inputTuple.compute(bufAccessor.getTupleDesc());
+        for (;;) {
+            if (!bufAccessor.demandData()) {
+                break;
+            }
+            BOOST_REQUIRE(nRows < nRowsExpected);
+            bufAccessor.unmarshalTuple(inputTuple);
+            expectedOutputAccessor.setCurrentTupleBuf(
+                expectedBuffer + bufOffset);
+            expectedOutputAccessor.unmarshal(expectedTuple);
+            int c = outputTupleDesc.compareTuples(inputTuple, expectedTuple);
+            if (c) {
+                std::cout << "(Row) = (" << nRows << ")"
+                    << " -- Tuples don't match"<< std::endl;
+                BOOST_CHECK_EQUAL(0,c);
+                return;
+            }
+            bufAccessor.consumeTuple();
+            bufOffset += expectedOutputAccessor.getCurrentByteCount();
+            ++nRows;
+        }
+    }
+    BOOST_CHECK_EQUAL(nRowsExpected,nRows);
 }
 
 FENNEL_END_CPPFILE("$Id$");

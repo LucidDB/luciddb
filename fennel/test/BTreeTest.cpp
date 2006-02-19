@@ -45,8 +45,6 @@ class BTreeTest : virtual public SegStorageTestBase
         iValueMax = 1000000000
     };
 
-    // NOTE:  this matches the Fennel Tuple format, so it can be used
-    // directly for input into BTreeBuilder
     struct Record 
     {
         int32_t key;
@@ -55,9 +53,11 @@ class BTreeTest : virtual public SegStorageTestBase
 
     BTreeDescriptor descriptor;
     
+    TupleAccessor tupleAccessor;
     TupleData keyData;
     TupleData tupleData;
     Record record;
+    boost::scoped_array<FixedBuffer> recordBuf;
 
     int32_t readKey();
     int32_t readValue();
@@ -97,6 +97,9 @@ class BTreeTest : virtual public SegStorageTestBase
     void testSearch(SharedByteInputStream,uint nRecords,bool leastUpper);
     void testSearchLast();
     void testMonotonicInsert();
+
+    void marshalRecord();
+    void unmarshalRecord(SharedByteInputStream pInputStream);
     
 public:
     explicit BTreeTest()
@@ -114,6 +117,9 @@ public:
         descriptor.tupleDescriptor.push_back(attrDesc);
         descriptor.tupleDescriptor.push_back(attrDesc);
         descriptor.keyProjection.push_back(0);
+        tupleAccessor.compute(descriptor.tupleDescriptor);
+        recordBuf.reset(new FixedBuffer[tupleAccessor.getMaxByteCount()]);
+        tupleData.compute(descriptor.tupleDescriptor);
     }
 
     virtual void testCaseSetUp();
@@ -135,6 +141,24 @@ void BTreeTest::testCaseTearDown()
     SegStorageTestBase::testCaseTearDown();
 }
 
+void BTreeTest::marshalRecord()
+{
+    tupleData[0].pData = reinterpret_cast<PBuffer>(&record.key);
+    tupleData[1].pData = reinterpret_cast<PBuffer>(&record.value);
+    tupleAccessor.marshal(tupleData, recordBuf.get());
+}
+
+void BTreeTest::unmarshalRecord(SharedByteInputStream pInputStream)
+{
+    PConstBuffer pBuf = pInputStream->getReadPointer(1);
+    tupleAccessor.setCurrentTupleBuf(pBuf);
+    uint cbTuple = tupleAccessor.getCurrentByteCount();
+    tupleAccessor.unmarshal(tupleData);
+    record.key = readKey();
+    record.value = readValue();
+    pInputStream->consumeReadPointer(cbTuple);
+}
+
 void BTreeTest::testBulkLoad(uint nRecords,uint nLevelsExpected,bool newRoot)
 {
     BlockNum nPagesAllocatedInitially =
@@ -145,8 +169,6 @@ void BTreeTest::testBulkLoad(uint nRecords,uint nLevelsExpected,bool newRoot)
     
     keyData.compute(builder.getKeyDescriptor());
     keyData[0].pData = reinterpret_cast<PConstBuffer>(&record.key);
-
-    tupleData.compute(descriptor.tupleDescriptor);
 
     // NOTE jvs 15-Nov-2005:  This looks like it's doing the opposite of
     // what it's supposed to, but it's actually correct.  What we're doing
@@ -173,11 +195,11 @@ void BTreeTest::testBulkLoad(uint nRecords,uint nLevelsExpected,bool newRoot)
         record.key += (randomNumberGenerator(10)) + 2;
         record.value = randomNumberGenerator(iValueMax);
 
-        // NOTE:  don't use pOutputStream->writeValue(record) since
-        // BTreeBuilder expects contiguous tuples
-        PBuffer pBuffer = pOutputStream->getWritePointer(sizeof(record));
-        memcpy(pBuffer,&record,sizeof(record));
-        pOutputStream->consumeWritePointer(sizeof(record));
+        marshalRecord();
+        uint cbTuple = tupleAccessor.getCurrentByteCount();
+        PBuffer pBuffer = pOutputStream->getWritePointer(cbTuple);
+        memcpy(pBuffer,recordBuf.get(),cbTuple);
+        pOutputStream->consumeWritePointer(cbTuple);
     }
     PageId pageId = pOutputStream->getFirstPageId();
     pOutputStream.reset();
@@ -246,7 +268,7 @@ void BTreeTest::testSearch(
 {
     BTreeReader reader(descriptor);
     for (uint i = 0; i < nRecords; ++i) {
-        pInputStream->readValue(record);
+        unmarshalRecord(pInputStream);
         if (!reader.searchForKey(keyData,DUP_SEEK_ANY,leastUpper)) {
             BOOST_FAIL("LeastUpper:" << leastUpper <<
                        ". Could not find key #" << i << ":  " << record.key);
@@ -289,9 +311,9 @@ void BTreeTest::testScan(
         nRecords /= 2;
     }
     for (uint i = 0; i < nRecords; ++i) {
-        pInputStream->readValue(record);
+        unmarshalRecord(pInputStream);
         if (alternating && !deletion) {
-            pInputStream->readValue(record);
+            unmarshalRecord(pInputStream);
         }
         if (!found) {
             BOOST_FAIL("Could not searchNext for key #"
@@ -372,8 +394,9 @@ void BTreeTest::testMonotonicInsert()
     // they got inserted
     for (uint i = 0; i < nRecords; i++) {
         record.key = i;
+        marshalRecord();
         writer.insertTupleFromBuffer(
-            reinterpret_cast<PConstBuffer>(&record.key), DUP_FAIL);
+            recordBuf.get(), DUP_FAIL);
     }
 
     BTreeReader reader(descriptor);

@@ -1,4 +1,4 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/clean_phone.sql#2 $
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/clean_phone.sql#3 $
 0: jdbc:luciddb:> -- Test queries for CleanPhone UDF
 0: jdbc:luciddb:> set schema 'udftest';
 0: jdbc:luciddb:> set path 'udftest';
@@ -9,28 +9,28 @@
 . . . . . . . . > language java
 . . . . . . . . > specific clean_phone_no_format
 . . . . . . . . > no sql
-. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.CleanPhone.FunctionExecute';
+. . . . . . . . > external name 'class com.lucidera.luciddb.applib.CleanPhone.FunctionExecute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create function clean_phone(inStr varchar(128), format integer)
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > language java
 . . . . . . . . > specific clean_phone_int_format
 . . . . . . . . > no sql
-. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.CleanPhone.FunctionExecute';
+. . . . . . . . > external name 'class com.lucidera.luciddb.applib.CleanPhone.FunctionExecute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create function clean_phone(inStr varchar(128), format integer, reject boolean)
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > language java
 . . . . . . . . > specific clean_phone_int_format_rejectable
 . . . . . . . . > no sql
-. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.CleanPhone.FunctionExecute';
+. . . . . . . . > external name 'class com.lucidera.luciddb.applib.CleanPhone.FunctionExecute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create function clean_phone(inStr varchar(128), format varchar(128), reject boolean)
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > language java
 . . . . . . . . > specific clean_phone_str_format_rejectable
 . . . . . . . . > no sql
-. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.CleanPhone.FunctionExecute';
+. . . . . . . . > external name 'class com.lucidera.luciddb.applib.CleanPhone.FunctionExecute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create view with references ro clean_phone
 0: jdbc:luciddb:> create view fmtphone(fname, lname, phone1, phone2, phone3, phone4) as

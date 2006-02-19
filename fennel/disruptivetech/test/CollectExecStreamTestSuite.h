@@ -35,8 +35,8 @@ class CollectExecStreamTestSuite : public ExecStreamUnitTestBase
 {
     TupleAttributeDescriptor descAttrInt64;
     TupleDescriptor descInt64;
-    TupleAttributeDescriptor descAttrVarbinary16;
-    TupleDescriptor descVarbinary16;
+    TupleAttributeDescriptor descAttrVarbinary32;
+    TupleDescriptor descVarbinary32;
 
 public:
     explicit CollectExecStreamTestSuite(); 

@@ -24,12 +24,15 @@ package net.sf.farrago.namespace.mock;
 
 import java.sql.*;
 import java.util.*;
+import java.math.*;
 
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.query.*;
 
+import org.eigenbase.rex.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
 import org.eigenbase.rel.jdbc.*;
@@ -52,6 +55,7 @@ class MedMockColumnSet extends MedAbstractColumnSet
 
     final long nRows;
     final String executorImpl;
+    final String udxSpecificName;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -59,11 +63,13 @@ class MedMockColumnSet extends MedAbstractColumnSet
         String [] localName,
         RelDataType rowType,
         long nRows,
-        String executorImpl)
+        String executorImpl,
+        String udxSpecificName)
     {
         super(localName, null, rowType, null, null);
         this.nRows = nRows;
         this.executorImpl = executorImpl;
+        this.udxSpecificName = udxSpecificName;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -79,13 +85,31 @@ class MedMockColumnSet extends MedAbstractColumnSet
         RelOptCluster cluster,
         RelOptConnection connection)
     {
-        if (executorImpl.equals(MedMockDataServer.PROPVAL_JAVA)) {
-            return new MedMockIterRel(this, cluster, connection);
-        } else {
+        if (executorImpl.equals(MedMockDataServer.PROPVAL_FENNEL)) {
+            // Use Fennel ExecStream.
             return new MedMockFennelRel(this, cluster, connection);
         }
+        
+        assert(executorImpl.equals(MedMockDataServer.PROPVAL_JAVA));
+        
+        if (udxSpecificName == null) {
+            // Use boring Java iterator.
+            return new MedMockIterRel(this, cluster, connection);
+        }
+
+        // Otherwise, use the UDX supplied by the user.  All we have to do is
+        // construct the arguments.
+        RexBuilder rexBuilder = cluster.getRexBuilder();
+        RexNode arg = rexBuilder.makeExactLiteral(
+            new BigDecimal(nRows));
+
+        // Call to super handles the rest.
+        return toUdxRel(
+            cluster,
+            connection,
+            udxSpecificName,
+            new RexNode [] { arg });
     }
 }
-
 
 // End MedMockColumnSet.java

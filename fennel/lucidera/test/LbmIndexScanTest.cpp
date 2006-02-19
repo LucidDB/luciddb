@@ -22,7 +22,6 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/test/ExecStreamUnitTestBase.h"
 #include "fennel/lucidera/colstore/LcsClusterAppendExecStream.h"
-#include "fennel/lucidera/colstore/LcsRowScanExecStream.h"
 #include "fennel/lucidera/sorter/ExternalSortExecStream.h"
 #include "fennel/lucidera/bitmap/LbmGeneratorExecStream.h"
 #include "fennel/lucidera/bitmap/LbmSplicerExecStream.h"
@@ -56,6 +55,21 @@ protected:
     StandardTypeDescriptorFactory stdTypeFactory;
     TupleAttributeDescriptor attrDesc_char1;
     TupleAttributeDescriptor attrDesc_int64;
+    TupleAttributeDescriptor attrDesc_bitmap;
+
+    /**
+     * Size of bitmap columns
+     */
+    uint bitmapColSize;
+    
+    /**
+     * Tuple descriptor for a bitmap segment: (rid, segment descriptor, bitmap
+     * segments)
+     */
+    TupleDescriptor bitmapTupleDesc;
+
+    TupleData bitmapTupleData;
+    TupleAccessor bitmapTupleAccessor;
 
     /**
      * BTrees corresponding to the clusters
@@ -122,58 +136,59 @@ protected:
      *
      * (0, 1, 2, ..., n-1, 0, 1, 2, ..., n-1, 0, 1, 2, ...).
      *  
-     * Bitmap indexes are then created on each column as well as a multi-key
-     * index that is created on all columns.
+     * Then a single bitmap index is created on all columns.
      *
      * @param nRows number of rows to load
      * @param nClusters number of clusters to create
      * @param repeatSeqValues repeating sequence values for each column
      * @param newRoot if true, append to existing table
      */
-    void loadTableAndIndexes(
+    void loadTableAndIndex(
         uint nRows, uint nClusters, std::vector<int> const &repeatSeqValues, 
         bool newRoot);
 
     /**
-     * Tests scans on the table created in loadTableAndIndexes, scanning
-     * through each of the indexes
+     * Tests equality scan on the table created in loadTableAndIndex, using
+     * the entire index key (minus the rid)
      *
      * @param nRows total number of rows in the table
-     * @param nClusters number of clusters on the table
-     * @param repeatSeqValues1 initial repeating sequence values for each column
-     * @param repeatSeqValues2 second set of repeating sequence values for
-     * each column appended to the table; if no append was done, this is
-     * an empty list
+     * @param nKeys number of keys in the index (excluding startrid)
+     * @param repeatSeqValues initial repeating sequence values for each column
      */
-    void testScan(
-        uint nRows, uint nClusters, std::vector<int> const &repeatSeqValues1,
-        std::vector<int> const &repeatSeqValues2);
+    void testScanFullKey(
+        uint nRows, uint nKeys, std::vector<int> const &repeatSeqValues);
 
     /**
-     * Performs equality searches on a single index
+     * Tests equality scan on the table created in loadTableAndIndex, using
+     * the all keys except the rid and the last key
      *
-     * @param idxToScan ordinal representing index to scan; if equal to
-     * nClusters, this represents the multi-key index; otherwise, should be
-     * a single column index
+     * @param nRows total number of rows in the table
+     * @param nKeys number of keys in the index (excluding startrid)
+     * @param repeatSeqValues initial repeating sequence values for each column
+     */
+    void testScanPartialKey(
+        uint nRows, uint nKeys, std::vector<int> const &repeatSeqValues);
+
+    /**
+     * Performs an index search using the key values/directives passed in
      *
-     * @param nClusters number of clusters in the table on which the index
-     * is created
+     * @param totalKeys total number of keys in the index (excluding startrid)
      *
-     * @param nInputTuples number of search/key directive tuples
+     * @param nKeys number of keys to use in index search; always excludes
+     * startrid
+     *
+     * @param bufSize size of input buffer containing search keys/directive
      *
      * @param inputBuffer buffer containing search key/directive tuples to
      * be passed into the index scan
      *
-     * @param proj columns to be projected in the scan
+     * @param expectedNBitmaps expected number of bitmaps in result
      *
-     * @param expectedNRows number of rows the scan should return
-     *
-     * @param expectedVals expected column values in scan result
+     * @param expectedBitmaps buffer containing expected bitmap result
      */
     void testScanIdx(
-        uint idxToScan, uint nClusters, uint bufSize, PBuffer inputBuffer,
-        TupleProjection const &proj, uint expectedNRows,
-        boost::scoped_array<uint64_t> const &expectedVals);
+        uint totalKeys, uint nKeys, uint bufSize, PBuffer inputBuffer,
+        uint expectedNBitmaps, PBuffer expectedBitmaps);
 
     /**
      * Initializes input search key and directives for an equality search
@@ -193,79 +208,173 @@ protected:
         TupleAccessor &inputTupleAccessor, TupleData &inputTupleData,
         boost::scoped_array<FixedBuffer> &inputBuffer);
 
+    /**
+     * Generate bitmaps to used in verifying result of bitmap index scan
+     *
+     * @param nRows number of rows in index
+     *
+     * @param start initial rid value
+     *
+     * @param skipRows generate rids every "skipRows" rows; i.e., if skipRows
+     * == 1, there are no gaps in the rids
+     *
+     * @param pBuf buffer where bitmap segment tuples will be marshalled
+     *
+     * @param bufSize amount of space currently used within pBuf
+     *
+     * @param fullBufSize size of pBuf
+     *
+     * @param nBitmaps returns number of bitmaps generated
+     */
+    void generateBitmaps(
+        uint nRows, uint start, uint skipRows, PBuffer pBuf, uint &bufSize,
+        uint fullBufSize, uint &nBitmaps);
+
+    void produceEntry(
+        LbmEntry &lbmEntry, TupleAccessor &bitmapTupleAccessor, PBuffer pBuf,
+        uint &bufSize, uint &nBitmaps);
+
+    void setSearchKey(
+        char lowerDirective, char upperDirective, uint64_t lowerVal,
+        uint64_t upperVal, PBuffer inputBuf, uint &offset,
+        TupleAccessor &inputTupleAccessor, TupleData &inputTupleData);
+
 public:
     explicit LbmIndexScanTest()
     {
-        FENNEL_UNIT_TEST_CASE(LbmIndexScanTest, testScan10000);
-        FENNEL_UNIT_TEST_CASE(LbmIndexScanTest, testAppendScan);
+        FENNEL_UNIT_TEST_CASE(LbmIndexScanTest, testScan1000);
+        FENNEL_UNIT_TEST_CASE(LbmIndexScanTest, testMultipleRanges);
     }
 
     void testCaseSetUp();
     void testCaseTearDown();
 
-    void testScan10000();
-    void testAppendScan();
+    void testScan1000();
+    void testMultipleRanges();
 };
 
-void LbmIndexScanTest::testScan10000()
+void LbmIndexScanTest::testScan1000()
 {
-    uint nRows = 10000;
-    uint nClusters = 4; 
+    // with a 3-key index, 1000 rows will generate a 2-level btree, which
+    // should suffice for this testcase
+    uint nRows = 1000;
+    uint nClusters = 3; 
     std::vector<int> repeatSeqValues;
 
     // load the data
-    repeatSeqValues.push_back(nRows);
+    repeatSeqValues.push_back(1);
     repeatSeqValues.push_back(5);
     repeatSeqValues.push_back(9);
-    repeatSeqValues.push_back(19);
-    loadTableAndIndexes(nRows, nClusters, repeatSeqValues, true);
+    loadTableAndIndex(nRows, nClusters, repeatSeqValues, true);
 
-    // scan each index
-    std::vector<int> emptySeqValues;
-    testScan(nRows, nClusters, repeatSeqValues, emptySeqValues);
+    // scan on all keys
+    testScanFullKey(nRows, nClusters, repeatSeqValues);
+
+    // scan on (nClusters - 1) keys
+    testScanPartialKey(nRows, nClusters, repeatSeqValues);
 }
 
-void LbmIndexScanTest::testAppendScan()
+void LbmIndexScanTest::testMultipleRanges()
 {
-    uint nRows = 100;
-    uint nClusters = 4; 
-    std::vector<int> repeatSeqValues1;
-    std::vector<int> repeatSeqValues2;
+    uint nRows = 1000;
+    uint nClusters = 1; 
+    std::vector<int> repeatSeqValues;
 
-    // Set up the column generators for empty load and append.
+    // load a table with a single index on a single column
+    repeatSeqValues.push_back(100);
+    loadTableAndIndex(nRows, nClusters, repeatSeqValues, true);
 
-    // column 1
-    repeatSeqValues1.push_back(nRows);
-    repeatSeqValues2.push_back(nRows);
+    // scan on all keys, just to make sure all key values really are there
+    testScanFullKey(nRows, nClusters, repeatSeqValues);
 
-    // column 2
-    repeatSeqValues1.push_back(23);
-    repeatSeqValues2.push_back(31);
-
-    // column 3
-    repeatSeqValues1.push_back(1);
-    repeatSeqValues2.push_back(2);
-
-    // column 4
-    repeatSeqValues1.push_back(7);
-    repeatSeqValues2.push_back(29);
-
-    // load into empty btree
-    loadTableAndIndexes(nRows, nClusters, repeatSeqValues1, true);
-
-    // append some new values
     resetExecStreamTest();
-    loadTableAndIndexes(nRows, nClusters, repeatSeqValues2, false);
+    
+    // setup the following search keys:
+    // 1. key < 10
+    // 2. key > 40 and <= 70
+    // 3. key > 80
+    
+    TupleAttributeDescriptor attrDesc_nullableInt64 =
+        TupleAttributeDescriptor(
+            stdTypeFactory.newDataType(STANDARD_TYPE_INT_64),
+            true, sizeof(uint64_t));
 
-    testScan(nRows * 2, nClusters, repeatSeqValues1, repeatSeqValues2);
+    TupleDescriptor inputTupleDesc;
+    for (uint i = 0; i < 2; i++) {
+        inputTupleDesc.push_back(attrDesc_char1);
+        inputTupleDesc.push_back(attrDesc_nullableInt64);
+    }
+    TupleData inputTupleData(inputTupleDesc);
+    TupleAccessor inputTupleAccessor;
+    inputTupleAccessor.compute(inputTupleDesc);
+
+    uint nInputTuples = 3;
+    boost::scoped_array<FixedBuffer> inputBuffer;
+    inputBuffer.reset(
+        new FixedBuffer[nInputTuples * inputTupleAccessor.getMaxByteCount()]);
+    PBuffer inputBuf = inputBuffer.get();
+    uint offset = 0;
+    
+    setSearchKey(
+        '-', ')', 0, 10, inputBuf, offset, inputTupleAccessor, inputTupleData);
+    setSearchKey(
+        '(', ']', 40, 70, inputBuf, offset, inputTupleAccessor,
+        inputTupleData);
+    setSearchKey(
+        '[', '+', 80, 0, inputBuf, offset, inputTupleAccessor,
+        inputTupleData);
+
+    // setup the expected bitmap result values
+    boost::scoped_array<FixedBuffer> expectedBitmaps;
+    uint bufferSize = ((nRows/repeatSeqValues[0]/8 + 1) * 60) * 24;
+    expectedBitmaps.reset(new FixedBuffer[bufferSize]);
+    PBuffer bitmapBuf = expectedBitmaps.get();
+    uint expectedNBitmaps = 0;
+    uint expectedBufSize = 0;
+    // for each range, generate the bitmap values for each key in the desired
+    // range
+    for (uint i = 0; i < 10; i++) {
+        generateBitmaps(
+            nRows, i, repeatSeqValues[0], bitmapBuf, expectedBufSize,
+            bufferSize, expectedNBitmaps);
+    }
+    for (uint i = 41; i <= 70; i++) {
+        generateBitmaps(
+            nRows, i, repeatSeqValues[0], bitmapBuf, expectedBufSize,
+            bufferSize, expectedNBitmaps);
+    }
+    for (uint i = 80; i < repeatSeqValues[0]; i++) {
+        generateBitmaps(
+            nRows, i, repeatSeqValues[0], bitmapBuf, expectedBufSize,
+            bufferSize, expectedNBitmaps);
+    }
+
+    testScanIdx(
+        nClusters, nClusters, offset, inputBuf, expectedNBitmaps,
+        bitmapBuf);
 }
 
-void LbmIndexScanTest::testScan(
-    uint nRows, uint nClusters, std::vector<int> const &repeatSeqValues1,
-    std::vector<int> const &repeatSeqValues2)
+void LbmIndexScanTest::setSearchKey(
+    char lowerDirective, char upperDirective, uint64_t lowerVal,
+    uint64_t upperVal, PBuffer inputBuf, uint &offset,
+    TupleAccessor &inputTupleAccessor, TupleData &inputTupleData)
 {
-    // search for key = <value>
-    uint nKeys = 1;
+    inputTupleData[0].pData = (PConstBuffer) &lowerDirective;
+    inputTupleData[2].pData = (PConstBuffer) &upperDirective;
+    if (lowerDirective != '-') {
+        inputTupleData[1].pData = (PConstBuffer) &lowerVal;
+    }
+    if (upperDirective != '+') {
+        inputTupleData[3].pData = (PConstBuffer) &upperVal;
+    }
+    inputTupleAccessor.marshal(inputTupleData, inputBuf + offset);
+    offset += inputTupleAccessor.getCurrentByteCount();
+}
+
+void LbmIndexScanTest::testScanFullKey(
+    uint nRows, uint nKeys, std::vector<int> const &repeatSeqValues)
+{
+    // search for key0 = <val0>, key1 = <val1>, ..., key(n-1) = <val(n-1)>
     uint nInputTuples = 1;
     boost::scoped_array<uint64_t> vals;
     char lowerDirective;
@@ -278,105 +387,103 @@ void LbmIndexScanTest::testScan(
         nKeys, nInputTuples, vals, lowerDirective, upperDirective,
         inputTupleAccessor, inputTupleData, inputBuffer);
 
-    // scan through each of the single column indexes,
-    // searching for each of the possible values in the column
-    TupleProjection proj;
-    proj.push_back(0);
-    for (uint i = 0; i < nClusters; i++) {
-        uint maxVal;
-        if (repeatSeqValues2.size() == 0) {
-            maxVal = repeatSeqValues1[i];
-        } else {
-            maxVal = std::max(repeatSeqValues1[i], repeatSeqValues2[i]);
-        }
-        for (uint j = 0; j < maxVal; j++) {
-            vals[0] = j;
-            inputTupleAccessor.marshal(inputTupleData, inputBuffer.get());
-            // number of rows depends on start value, sequence used, 
-            // and whether 1 or 2 sets of sequences were used
-            uint expectedNRows = 0;
-            if (repeatSeqValues2.size() == 0) {
-                expectedNRows +=
-                    (nRows - 1 - vals[0]) / repeatSeqValues1[i] + 1;
-            } else {
-                if (j < repeatSeqValues1[i]) {
-                    expectedNRows +=
-                        (nRows/2 - 1 - vals[0]) / repeatSeqValues1[i] + 1;
-                }
-                if (j < repeatSeqValues2[i]) {
-                    expectedNRows +=
-                        (nRows/2 - 1 - vals[0]) / repeatSeqValues2[i] + 1;
-                }
-            }
-            testScanIdx(
-                i, nClusters, inputTupleAccessor.getCurrentByteCount(),
-                inputBuffer.get(), proj, expectedNRows, vals);
-        }
+    // do a search on each possible key combo
+    uint skipRows = 1;
+    for (uint i = 0; i < nKeys; i++) {
+        skipRows *= repeatSeqValues[i];
     }
+    for (uint i = 0; i < skipRows; i++) {
 
-    // search for key0=<val0>, key1=<val1>, etc.
-    nKeys = nClusters;
-    initEqualSearch(
-        nKeys, nInputTuples, vals, lowerDirective, upperDirective,
-        inputTupleAccessor, inputTupleData, inputBuffer);
-
-    // scan through each of the columns in the index; determine the possible
-    // key value combinations by generating the possible key values; this
-    // array will then be used to determine how many occurrences exist for a 
-    // particular set of key values
-    proj.clear();
-    for (uint i = 0; i < nClusters; i++) {
-        proj.push_back(i);
-    }
-
-    // do lookups on the first set of sequence values; see if the same
-    // key values exist in the second sequence; note that we take advantage
-    // of the fact that the first column always contains sequential values
-    uint n;
-    n = (repeatSeqValues2.size() == 0) ? 1 : 2;
-    for (uint i = 0; i < nRows/n; i++) {
-        for (uint j = 0; j < nClusters; j++) {
-            vals[j] = i % repeatSeqValues1[j];
+        // generate input keys for search
+        for (uint j = 0; j < nKeys; j++) {
+            vals[j] = i % repeatSeqValues[j];
         }
         inputTupleAccessor.marshal(inputTupleData, inputBuffer.get());
-        uint expectedNRows = 1;
-        if (repeatSeqValues2.size() > 0) {
-            uint j;
-            for (j = 0; j < nClusters; j++) {
-                if (vals[j] != i % repeatSeqValues2[j]) {
-                    break;
-                }
-            }
-            if (j == nClusters) {
-                expectedNRows++;
-            }
-        }
+
+        // generate expected bitmap result
+        boost::scoped_array<FixedBuffer> expectedBitmaps;
+        uint bufferSize = (nRows/skipRows + 1) * 16;
+        expectedBitmaps.reset(new FixedBuffer[bufferSize]);
+        uint expectedNBitmaps = 0;
+        uint expectedBufSize = 0;
+        generateBitmaps(
+            nRows, i, skipRows, expectedBitmaps.get(), expectedBufSize,
+            bufferSize, expectedNBitmaps);
+
         testScanIdx(
-            nClusters, nClusters, inputTupleAccessor.getCurrentByteCount(),
-            inputBuffer.get(), proj, expectedNRows, vals);
+            nKeys, nKeys, inputTupleAccessor.getCurrentByteCount(),
+            inputBuffer.get(), expectedNBitmaps, expectedBitmaps.get());
     }
-    // now, do a lookup on the second set of sequence values; ignoring the
-    // ones we've already looked up
-    if (repeatSeqValues2.size() > 0) {
-        for (uint i = 0; i < nRows/n; i++) {
-            for (uint j = 0; j < nClusters; j++) {
-                vals[j] = i % repeatSeqValues2[j];
-            }
-            uint j;
-            for (j = 0; j < nClusters; j++) {
-                if (vals[j] != i % repeatSeqValues1[j]) {
+}
+
+void LbmIndexScanTest::testScanPartialKey(
+    uint nRows, uint nKeys, std::vector<int> const &repeatSeqValues)
+{
+    // search for key0 = 0, key1 = 0, ..., key(n-2) = 0
+    uint nInputTuples = 1;
+    boost::scoped_array<uint64_t> vals;
+    char lowerDirective;
+    char upperDirective;
+    TupleAccessor inputTupleAccessor;
+    TupleData inputTupleData;
+    boost::scoped_array<FixedBuffer> inputBuffer;
+
+    initEqualSearch(
+        nKeys - 1, nInputTuples, vals, lowerDirective, upperDirective,
+        inputTupleAccessor, inputTupleData, inputBuffer);
+
+    // generate input keys for search
+    for (uint j = 0; j < nKeys - 1; j++) {
+        vals[j] = 0;
+    }
+    inputTupleAccessor.marshal(inputTupleData, inputBuffer.get());
+
+    // Generate one set of bitmaps for each key combo that can be combined
+    // with the partial key. E.g., if there are 3 keys, generate the
+    // bitmaps that would be obtained from searching for (0, 0, 0), (0, 0, 1),
+    // ..., (0, 0, repeatSeqValues[nKeys-1] - 1)
+
+    uint skipRows = 1;
+    for (uint i = 0; i < nKeys - 1; i++) {
+        skipRows *= repeatSeqValues[i];
+    }
+    boost::scoped_array<FixedBuffer> expectedBitmaps;
+    uint bufferSize = (nRows/skipRows/8 + 1) * 12 * repeatSeqValues[nKeys-1];
+    expectedBitmaps.reset(new FixedBuffer[bufferSize]);
+    PBuffer bitmapBuf = expectedBitmaps.get();
+    uint expectedNBitmaps = 0;
+    uint curBufSize = 0;
+
+    for (uint i = 0; i < repeatSeqValues[nKeys - 1]; i++) {
+
+        uint start;
+        if (i == 0) {
+            start = 0;
+        } else {
+            // look for the first rid where the last key is equal to "i" and
+            // the preceeding keys are all 0
+            for (start = i; start < nRows; start += repeatSeqValues[nKeys-1]) {
+                uint j;
+                for (j = 0; j < nKeys - 1; j++) {
+                    if (start % repeatSeqValues[j] != 0) {
+                        break;
+                    }
+                }
+                if (j == nKeys - 1) {
                     break;
                 }
             }
-            if (j == nClusters) {
+            if (start >= nRows) {
                 continue;
             }
-            inputTupleAccessor.marshal(inputTupleData, inputBuffer.get());
-            testScanIdx(
-                nClusters, nClusters, inputTupleAccessor.getCurrentByteCount(),
-                inputBuffer.get(), proj, 1, vals);
         }
+        generateBitmaps(
+            nRows, start, skipRows * repeatSeqValues[nKeys-1],
+            bitmapBuf, curBufSize, bufferSize, expectedNBitmaps);
     }
+    testScanIdx(
+        nKeys, nKeys - 1, inputTupleAccessor.getCurrentByteCount(),
+        inputBuffer.get(), expectedNBitmaps, bitmapBuf);
 }
 
 void LbmIndexScanTest::initEqualSearch(
@@ -408,17 +515,53 @@ void LbmIndexScanTest::initEqualSearch(
     inputTupleAccessor.compute(inputTupleDesc);
 
     inputBuffer.reset(
-        new uint8_t[nInputTuples * inputTupleAccessor.getMaxByteCount()]);
+        new FixedBuffer[nInputTuples * inputTupleAccessor.getMaxByteCount()]);
 }
 
-void LbmIndexScanTest::loadTableAndIndexes(
+void LbmIndexScanTest::generateBitmaps(
+    uint nRows, uint start, uint skipRows, PBuffer pBuf, uint &bufSize,
+    uint fullBufSize, uint &nBitmaps)
+{
+    LbmEntry lbmEntry;
+    boost::scoped_array<FixedBuffer> entryBuf;
+    LcsRid rid = LcsRid(start);
+
+    // setup an LbmEntry with the initial rid value
+    entryBuf.reset(new FixedBuffer[bitmapColSize]);
+    lbmEntry.init(entryBuf.get(), bitmapColSize, bitmapTupleDesc);
+    bitmapTupleData[0].pData = (PConstBuffer) &rid;
+    lbmEntry.setEntryTuple(bitmapTupleData);
+
+    // add on the remaining rids
+    for (rid = LcsRid(start + skipRows); rid < LcsRid(nRows); rid += skipRows) {
+        if (!lbmEntry.setRID(LcsRid(rid))) {
+            // exhausted buffer space, so write the tuple to the output
+            // buffer and reset LbmEntry
+            produceEntry(
+                lbmEntry, bitmapTupleAccessor, pBuf, bufSize, nBitmaps);
+            lbmEntry.setEntryTuple(bitmapTupleData);
+        }
+    }
+    // write out the last LbmEntry
+    produceEntry(lbmEntry, bitmapTupleAccessor, pBuf, bufSize, nBitmaps);
+    
+    assert(bufSize <= fullBufSize);
+}
+
+void LbmIndexScanTest::produceEntry(
+    LbmEntry &lbmEntry, TupleAccessor &bitmapTupleAccessor, PBuffer pBuf,
+    uint &bufSize, uint &nBitmaps)
+{
+    TupleData bitmapTuple = lbmEntry.produceEntryTuple();
+    bitmapTupleAccessor.marshal(bitmapTuple, pBuf + bufSize);
+    bufSize += bitmapTupleAccessor.getCurrentByteCount();
+    ++nBitmaps;
+}
+
+void LbmIndexScanTest::loadTableAndIndex(
     uint nRows, uint nClusters, std::vector<int> const &repeatSeqValues,
     bool newRoot)
 {
-    // Logic in testScan() in the append case depends on the following
-    // condition
-    assert(repeatSeqValues[0] == nRows);
-
     // 0. reset member fields.
     for (uint i = 0; i < bTreeClusters.size(); i++) {
         bTreeClusters[i]->segmentAccessor.reset();
@@ -529,127 +672,101 @@ void LbmIndexScanTest::loadTableAndIndexes(
         new SplitterExecStream(), splitterParams);
     splitterStreamEmbryo.getStream()->setName("BitmapSplitterExecStream");
 
-    // create streams for bitmap generator, sort, and bitmap splicer,
-    // 1 index on each column and then an index on all columns
+    // create streams for bitmap generator, sort, and bitmap splicer to
+    // build an index on all columns
    
     std::vector<std::vector<ExecStreamEmbryo> > createBitmapStreamList;
-    for (uint i = 0; i < nClusters + 1; i++) {
-
-        if (i == 1 && nClusters == 1) {
-            /*
-             * There's only one column. 
-             * Do not bother to build the composite index.
-             */
-            break;
-        }
-
         std::vector<ExecStreamEmbryo> createBitmapStream;
 
-        // 6. setup generator
-        
-        LbmGeneratorExecStreamParams generatorParams;
-        struct LcsClusterScanDef clusterScanDef;
-        clusterScanDef.clusterTupleDesc.push_back(attrDesc_int64);
+    // 6. setup generator
+    
+    LbmGeneratorExecStreamParams generatorParams;
+    struct LcsClusterScanDef clusterScanDef;
+    clusterScanDef.clusterTupleDesc.push_back(attrDesc_int64);
 
-        // first nCluster generators only scan a single column; the
-        // last one scans all columns
-        if (i < nClusters) {
-            initClusterScanDef(generatorParams, clusterScanDef, i);
-        } else {
-            for (uint j = 0; j < nClusters; j++) {
-                initClusterScanDef(generatorParams, clusterScanDef, j);
-            }
-        }
-
-        TupleProjection proj;
-        if (i < nClusters) {
-            proj.push_back(0);
-        } else {
-            for (uint j = 0; j < nClusters; j++) {
-                proj.push_back(j);
-            }
-        }
-        generatorParams.outputProj = proj;
-        generatorParams.dynParamId = DynamicParamId(i + 1);
-
-        boost::shared_ptr<BTreeDescriptor> pBTreeDesc =
-            boost::shared_ptr<BTreeDescriptor> (new BTreeDescriptor());
-        bTreeBitmaps.push_back(pBTreeDesc);
-
-        // BTree tuple desc has the key columns + starting Rid + varbinary
-        // field for bit segments/bit descriptors
-        uint nKeys;
-        if (i < nClusters) {
-            nKeys = 1;
-        } else {
-            nKeys = nClusters;
-        }
-        initBTreeTupleDesc(generatorParams.outputTupleDesc, nKeys);
-
-        initBTreeBitmapDesc(
-            generatorParams.tupleDesc, generatorParams.keyProj, nKeys);
-        initBTreeExecStreamParam(generatorParams, pBTreeDesc);
-
-        // create an empty page to start the btree
-
-        if (newRoot) {
-            BTreeBuilder builder(*pBTreeDesc, pRandomSegment);
-            builder.createEmptyRoot();
-            savedBTreeBitmapRootIds.push_back(builder.getRootPageId());
-        }
-        generatorParams.rootPageId = pBTreeDesc->rootPageId =
-            savedBTreeBitmapRootIds[i];
-
-        ExecStreamEmbryo generatorStreamEmbryo;
-        generatorStreamEmbryo.init(
-            new LbmGeneratorExecStream(), generatorParams);
-        std::ostringstream oss;
-        oss << "LbmGeneratorExecStream" << "#" << i;
-        generatorStreamEmbryo.getStream()->setName(oss.str());
-        createBitmapStream.push_back(generatorStreamEmbryo);
-
-        // 7. setup sorter
-        
-        ExternalSortExecStreamParams sortParams;
-        initBTreeBitmapDesc(
-            sortParams.outputTupleDesc, sortParams.keyProj, nKeys);
-        sortParams.distinctness = DUP_ALLOW;
-        sortParams.pTempSegment = pRandomSegment;
-        sortParams.pCacheAccessor = pCache;
-        sortParams.scratchAccessor =
-            pSegmentFactory->newScratchSegment(pCache, 10);
-        sortParams.storeFinalRun = false;
-        
-        ExecStreamEmbryo sortStreamEmbryo;
-        sortStreamEmbryo.init(
-            ExternalSortExecStream::newExternalSortExecStream(), sortParams);
-        sortStreamEmbryo.getStream()->setName("ExternalSortExecStream");
-        std::ostringstream oss2;
-        oss2 << "ExternalSortExecStream" << "#" << i;
-        sortStreamEmbryo.getStream()->setName(oss2.str());
-        createBitmapStream.push_back(sortStreamEmbryo);
-
-        // 8. setup splicer
-
-        LbmSplicerExecStreamParams splicerParams;
-        initBTreeBitmapDesc(
-            splicerParams.tupleDesc, splicerParams.keyProj, nKeys);
-        initBTreeExecStreamParam(splicerParams, pBTreeDesc);
-        splicerParams.dynParamId = DynamicParamId(i + 1);
-        splicerParams.outputTupleDesc.push_back(attrDesc_int64);
-        splicerParams.rootPageId = pBTreeDesc->rootPageId;
-
-        ExecStreamEmbryo splicerStreamEmbryo;
-        splicerStreamEmbryo.init(new LbmSplicerExecStream(), splicerParams);
-        std::ostringstream oss3;
-        oss3 << "LbmSplicerExecStream" << "#" << i;
-        splicerStreamEmbryo.getStream()->setName(oss3.str());
-        createBitmapStream.push_back(splicerStreamEmbryo);
-
-        // connect the sorter and splicer to generator and then add this
-        // newly connected stream to the list of create bitmap stream embryos
-        createBitmapStreamList.push_back(createBitmapStream);
+    for (uint j = 0; j < nClusters; j++) {
+        initClusterScanDef(generatorParams, clusterScanDef, j);
     }
+
+    TupleProjection proj;
+    for (uint j = 0; j < nClusters; j++) {
+        proj.push_back(j);
+    }
+    generatorParams.outputProj = proj;
+    generatorParams.dynParamId = DynamicParamId(1);
+
+    boost::shared_ptr<BTreeDescriptor> pBTreeDesc =
+        boost::shared_ptr<BTreeDescriptor> (new BTreeDescriptor());
+    bTreeBitmaps.push_back(pBTreeDesc);
+
+    // BTree tuple desc has the key columns + starting Rid + varbinary
+    // field for bit segments/bit descriptors
+    uint nKeys = nClusters;
+    initBTreeTupleDesc(generatorParams.outputTupleDesc, nKeys);
+
+    initBTreeBitmapDesc(
+        generatorParams.tupleDesc, generatorParams.keyProj, nKeys);
+    initBTreeExecStreamParam(generatorParams, pBTreeDesc);
+
+    // create an empty page to start the btree
+
+    if (newRoot) {
+        BTreeBuilder builder(*pBTreeDesc, pRandomSegment);
+        builder.createEmptyRoot();
+        savedBTreeBitmapRootIds.push_back(builder.getRootPageId());
+    }
+    generatorParams.rootPageId = pBTreeDesc->rootPageId =
+        savedBTreeBitmapRootIds[0];
+
+    ExecStreamEmbryo generatorStreamEmbryo;
+    generatorStreamEmbryo.init(
+        new LbmGeneratorExecStream(), generatorParams);
+    std::ostringstream oss;
+    oss << "LbmGeneratorExecStream" << "#" << 0;
+    generatorStreamEmbryo.getStream()->setName(oss.str());
+    createBitmapStream.push_back(generatorStreamEmbryo);
+
+    // 7. setup sorter
+    
+    ExternalSortExecStreamParams sortParams;
+    initBTreeBitmapDesc(
+        sortParams.outputTupleDesc, sortParams.keyProj, nKeys);
+    sortParams.distinctness = DUP_ALLOW;
+    sortParams.pTempSegment = pRandomSegment;
+    sortParams.pCacheAccessor = pCache;
+    sortParams.scratchAccessor =
+        pSegmentFactory->newScratchSegment(pCache, 10);
+    sortParams.storeFinalRun = false;
+    
+    ExecStreamEmbryo sortStreamEmbryo;
+    sortStreamEmbryo.init(
+        ExternalSortExecStream::newExternalSortExecStream(), sortParams);
+    sortStreamEmbryo.getStream()->setName("ExternalSortExecStream");
+    std::ostringstream oss2;
+    oss2 << "ExternalSortExecStream" << "#" << 0;
+    sortStreamEmbryo.getStream()->setName(oss2.str());
+    createBitmapStream.push_back(sortStreamEmbryo);
+
+    // 8. setup splicer
+
+    LbmSplicerExecStreamParams splicerParams;
+    initBTreeBitmapDesc(
+        splicerParams.tupleDesc, splicerParams.keyProj, nKeys);
+    initBTreeExecStreamParam(splicerParams, pBTreeDesc);
+    splicerParams.dynParamId = DynamicParamId(1);
+    splicerParams.outputTupleDesc.push_back(attrDesc_int64);
+    splicerParams.rootPageId = pBTreeDesc->rootPageId;
+
+    ExecStreamEmbryo splicerStreamEmbryo;
+    splicerStreamEmbryo.init(new LbmSplicerExecStream(), splicerParams);
+    std::ostringstream oss3;
+    oss3 << "LbmSplicerExecStream" << "#" << 0;
+    splicerStreamEmbryo.getStream()->setName(oss3.str());
+    createBitmapStream.push_back(splicerStreamEmbryo);
+
+    // connect the sorter and splicer to generator and then add this
+    // newly connected stream to the list of create bitmap stream embryos
+    createBitmapStreamList.push_back(createBitmapStream);
 
     // 9. setup barrier stream for create bitmaps
 
@@ -723,33 +840,39 @@ void LbmIndexScanTest::initBTreeTupleDesc(
     for (uint i = 0; i < nKeys; i++) {
         tupleDesc.push_back(attrDesc_int64);
     }
-    // add on the rid
-    tupleDesc.push_back(attrDesc_int64);
-
-    uint varColSize;
-
-    // The default page size is 4K.
-    varColSize = pRandomSegment->getUsablePageSize()/8;
-    // varColSize = 256;
-
-    tupleDesc.push_back(
-        TupleAttributeDescriptor(
-            stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY), true,
-            varColSize));
-    tupleDesc.push_back(
-        TupleAttributeDescriptor(
-            stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY), true,
-            varColSize));
+    // add on the rid and bitmaps
+    tupleDesc.push_back(bitmapTupleDesc[0]);
+    tupleDesc.push_back(bitmapTupleDesc[1]);
+    tupleDesc.push_back(bitmapTupleDesc[2]);
 }
 
 void LbmIndexScanTest::testCaseSetUp()
 {    
     ExecStreamUnitTestBase::testCaseSetUp();
 
+    bitmapColSize = pRandomSegment->getUsablePageSize()/8;
+    attrDesc_bitmap = TupleAttributeDescriptor(
+        stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY),
+        true, bitmapColSize);
     attrDesc_char1 = TupleAttributeDescriptor(
         stdTypeFactory.newDataType(STANDARD_TYPE_CHAR), false, 1);
     attrDesc_int64 = TupleAttributeDescriptor(
         stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
+    attrDesc_char1 = TupleAttributeDescriptor(
+        stdTypeFactory.newDataType(STANDARD_TYPE_CHAR), false, 1);
+
+    bitmapTupleDesc.clear();
+    bitmapTupleDesc.push_back(attrDesc_int64);
+    bitmapTupleDesc.push_back(attrDesc_bitmap);
+    bitmapTupleDesc.push_back(attrDesc_bitmap);
+
+    bitmapTupleData.compute(bitmapTupleDesc);
+    bitmapTupleData[1].pData = NULL;
+    bitmapTupleData[1].cbData = 0;
+    bitmapTupleData[2].pData = NULL;
+    bitmapTupleData[2].cbData = 0;
+        
+    bitmapTupleAccessor.compute(bitmapTupleDesc);
 }
 
 void LbmIndexScanTest::testCaseTearDown()
@@ -769,20 +892,12 @@ void LbmIndexScanTest::testCaseTearDown()
 }
 
 void LbmIndexScanTest::testScanIdx(
-    uint idxToScan, uint nClusters, uint bufSize, PBuffer inputBuffer,
-    TupleProjection const &proj, uint expectedNRows,
-    boost::scoped_array<uint64_t> const &expectedValues)
+    uint totalKeys, uint nKeys, uint bufSize, PBuffer inputBuffer,
+    uint expectedNBitmaps, PBuffer expectedBitmaps)
 {
     resetExecStreamTest();
 
-    uint nKeys;
-    if (idxToScan < nClusters) {
-        nKeys = 1;
-    } else {
-        nKeys = nClusters;
-    }
-
-    // setup input into index scan; mock stream will read tuples from
+    // setup input into index scan; values stream will read tuples from
     // inputBuffer
 
     ValuesExecStreamParams valuesParams;
@@ -810,12 +925,12 @@ void LbmIndexScanTest::testScanIdx(
 
     // initialize parameters for btree read
     initBTreeBitmapDesc(
-        indexScanParams.tupleDesc, indexScanParams.keyProj, nKeys);
-    initBTreeExecStreamParam(indexScanParams, bTreeBitmaps[idxToScan]);
-    indexScanParams.rootPageId = bTreeBitmaps[idxToScan]->rootPageId =
-        savedBTreeBitmapRootIds[idxToScan];
+        indexScanParams.tupleDesc, indexScanParams.keyProj, totalKeys);
+    initBTreeExecStreamParam(indexScanParams, bTreeBitmaps[0]);
+    indexScanParams.rootPageId = bTreeBitmaps[0]->rootPageId =
+        savedBTreeBitmapRootIds[0];
     TupleProjection outputProj;
-    for (uint i = nKeys; i < nKeys + 3; i++) {
+    for (uint i = totalKeys; i < totalKeys + 3; i++) {
         outputProj.push_back(i);
     }
     indexScanParams.outputProj = outputProj;
@@ -833,63 +948,18 @@ void LbmIndexScanTest::testScanIdx(
     indexScanParams.inputDirectiveProj.push_back(nKeys + 1);
 
     // output is bitmap btree tuple without the key values, but with the rid
-    initBTreeTupleDesc(indexScanParams.outputTupleDesc, 0);
+    indexScanParams.outputTupleDesc = bitmapTupleDesc;
 
     ExecStreamEmbryo indexScanStreamEmbryo;
     indexScanStreamEmbryo.init(new LbmIndexScanExecStream(), indexScanParams);
     indexScanStreamEmbryo.getStream()->setName("IndexScanStream");
 
-    std::vector<ExecStreamEmbryo> scanStreams;
-    scanStreams.push_back(indexScanStreamEmbryo);
-
-    // setup parameters into scan
-    //  nClusters cluster with 1 column each
-    
-    LcsRowScanExecStreamParams rowScanParams;
-    struct LcsClusterScanDef clusterScanDef;
-
-    clusterScanDef.clusterTupleDesc.push_back(attrDesc_int64);
-    if (idxToScan < nClusters) {
-        initClusterScanDef(rowScanParams, clusterScanDef, idxToScan);
-    } else {
-        for (uint i = 0; i < nClusters; i++) {
-            initClusterScanDef(rowScanParams, clusterScanDef, i);
-        }
-    }
-
-    // setup scan projection
-    rowScanParams.outputProj = proj;
-    for (uint i = 0; i < proj.size(); i++) {
-        rowScanParams.outputTupleDesc.push_back(attrDesc_int64);
-    }
-
-    ExecStreamEmbryo rowScanStreamEmbryo;
-    rowScanStreamEmbryo.init(new LcsRowScanExecStream(), rowScanParams);
-    rowScanStreamEmbryo.getStream()->setName("RowScanExecStream");
-    scanStreams.push_back(rowScanStreamEmbryo);
-
     SharedExecStream pOutputStream = prepareTransformGraph(
-        valuesStreamEmbryo, scanStreams);
+        valuesStreamEmbryo, indexScanStreamEmbryo);
     
-    // setup generators for result stream
-
-    vector<boost::shared_ptr<ColumnGenerator<int64_t> > > columnGenerators;
-    if (idxToScan < nClusters) {
-        SharedInt64ColumnGenerator col =
-            SharedInt64ColumnGenerator(
-                new ConstColumnGenerator(expectedValues[0]));
-        columnGenerators.push_back(col);
-    } else {
-        for (uint i = 0; i < nClusters; i++) {
-            SharedInt64ColumnGenerator col =
-                SharedInt64ColumnGenerator(
-                    new ConstColumnGenerator(expectedValues[i]));
-            columnGenerators.push_back(col);
-        }
-    }
-
-    CompositeExecStreamGenerator resultGenerator(columnGenerators);
-    verifyOutput(*pOutputStream, expectedNRows, resultGenerator);
+    bitmapTupleAccessor.setCurrentTupleBuf(expectedBitmaps);
+    verifyBufferedOutput(
+        *pOutputStream, bitmapTupleDesc, expectedNBitmaps, expectedBitmaps);
 }
 
 FENNEL_UNIT_TEST_SUITE(LbmIndexScanTest);

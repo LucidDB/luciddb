@@ -58,6 +58,7 @@ public:
 // ----------------------------------------------------------------------
     virtual void *allocate();
     virtual void deallocate(void *pMem);
+    virtual void setProtection(void *pMem, uint cb, bool readOnly);
     virtual size_t getBytesAllocated() const;
 };
 

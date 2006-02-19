@@ -27,6 +27,8 @@
 #include "fennel/ftrs/FtrsTableWriter.h"
 #include "fennel/exec/ConduitExecStream.h"
 
+#include <boost/scoped_array.hpp>
+
 FENNEL_BEGIN_NAMESPACE
 
 class FtrsTableWriterFactory;
@@ -83,6 +85,16 @@ class FtrsTableWriterExecStream
      * Whether row count has been produced.
      */
     bool isDone;
+
+    /**
+     * Buffer holding result rowcount.
+     */
+    boost::scoped_array<FixedBuffer> outputTupleBuffer;
+
+    /**
+     * Tuple for producing result rowcount.
+     */
+    TupleData outputTuple;
 
     void createSavepoint();
     void commitSavepoint();

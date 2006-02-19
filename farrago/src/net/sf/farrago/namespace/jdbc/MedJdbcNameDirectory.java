@@ -423,13 +423,22 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
                 try {
                     type =
                         sink.getTypeFactory().createJdbcColumnType(resultSet);
-
-                    // TODO jvs 7-Dec-2005: get rid of this once
-                    // we support DECIMAL type; for now fake it as VARCHAR
+                    
                     if (type.getSqlTypeName() == SqlTypeName.Decimal) {
+                        int prc = SqlTypeName.Decimal.MAX_NUMERIC_PRECISION;
+                        if (type.getPrecision() < prc) {
+                            prc = type.getPrecision();
+                        }
+                        int scale = 6; // scale is capped at 6
+                        if (type.getScale() < scale) {
+                            scale = type.getScale();
+                        }
                         type = sink.getTypeFactory().createSqlType(
-                            SqlTypeName.Double);
+                            SqlTypeName.Decimal,
+                            prc,
+                            scale);
                     }
+                    
                     if (SqlTypeFamily.Datetime.getTypeNames().contains(
                             type.getSqlTypeName()))
                     {

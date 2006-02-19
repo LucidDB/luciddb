@@ -1,4 +1,4 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/fymonth.sql#2 $
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/fymonth.sql#3 $
 0: jdbc:luciddb:> -- Test queries for FYMonth UDF
 0: jdbc:luciddb:> set schema 'udftest';
 0: jdbc:luciddb:> set path 'udftest';
@@ -9,14 +9,14 @@
 . . . . . . . . > language java
 . . . . . . . . > specific fymonth_date
 . . . . . . . . > no sql
-. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.FYMonth.FunctionExecute';
+. . . . . . . . > external name 'class com.lucidera.luciddb.applib.FYMonth.FunctionExecute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create function fymonth(ts timestamp, fm integer)
 . . . . . . . . > returns integer
 . . . . . . . . > language java
 . . . . . . . . > specific fymonth_ts
 . . . . . . . . > no sql
-. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.FYMonth.FunctionExecute';
+. . . . . . . . > external name 'class com.lucidera.luciddb.applib.FYMonth.FunctionExecute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create view referencing fymonth
 0: jdbc:luciddb:> create view fiscal_months(fm, from_date, from_ts) as

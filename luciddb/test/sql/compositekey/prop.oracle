@@ -1,0 +1,26 @@
+# properties
+
+name_prefix=orcl
+
+########################
+# foreign data wrapper #
+########################
+
+DATA_WRAPPER_NAME=@name_prefix@_jdbc
+DATA_LIBRARY=@open.dir@/luciddb/plugin/FarragoMedJdbc3p.jar
+
+##################
+# foreign server #
+##################
+
+SERVER=akela.lucidera.com
+PORT=1521
+USERNAME=schoi
+PASSWORD=schoi
+SID=XE
+SCHEMA=SCHOI
+TABLE_NAME=TABLE_NAME
+
+SERVER_NAME=@name_prefix@_server
+DRIVER_CLASS=oracle.jdbc.driver.OracleDriver
+URL=jdbc:oracle:thin:@@SERVER@:@PORT@:@SID@

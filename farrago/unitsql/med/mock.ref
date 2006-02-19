@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/med/mock.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/med/mock.sql#4 $
 0: jdbc:farrago:> -- Test mock namespace plugin
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create foreign data wrapper mock_foreign_wrapper
@@ -43,6 +43,21 @@
 . . . . . . . . >     id int not null)
 . . . . . . . . > server mock_foreign_server
 . . . . . . . . > options (executor_impl 'JAVA', row_count '3');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function ramp(n int)
+. . . . . . . . > returns table(i int)
+. . . . . . . . > language java
+. . . . . . . . > parameter style system defined java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.ramp';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create foreign table mock_ramp_udx_table(
+. . . . . . . . >     id int not null)
+. . . . . . . . > server mock_foreign_server
+. . . . . . . . > options (
+. . . . . . . . >     executor_impl 'JAVA', 
+. . . . . . . . >     udx_specific_name 'mock_schema.ramp',
+. . . . . . . . >     row_count '3');
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create table mock_empty_table(
 . . . . . . . . >     id int not null primary key)
@@ -90,6 +105,15 @@ Error: Mock foreign object "BACH_TABLE" not found (state=,code=0)
 | 0   |
 | 0   |
 | 0   |
++-----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from mock_ramp_udx_table;
++-----+
+| ID  |
++-----+
+| 0   |
+| 1   |
+| 2   |
 +-----+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from mock_empty_table;

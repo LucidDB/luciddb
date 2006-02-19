@@ -132,8 +132,14 @@ public:
     virtual PConstBuffer getEntryForRead(
         BTreeNode const &node,uint iEntry) = 0;
 
+    // NOTE jvs 10-Feb-2006:  This is commented out to indicate that subclasses
+    // need to implement a corresponding inline to be usable with
+    // BTreeKeyedNodeAccessor; avoid declaring it virtual to make sure the
+    // compiler doesn't get confused about whether it should be inlined.
+    /*
     virtual PConstBuffer getEntryForReadInline(
         BTreeNode const &node,uint iEntry) = 0;
+    */
 
     /**
      * Receives notification from BTreeAccessBase after tupleDescriptor has
@@ -169,7 +175,7 @@ public:
     virtual void accessTuple(BTreeNode const &node,uint iEntry) = 0;
 
     /**
-     * Searches for a tuple by its key.
+     * Searches for a tuple based on a key.
      *
      * @param node the node to search
      *
@@ -185,6 +191,8 @@ public:
      * @param scratchKey key to be used as a temp variable in comparisons
      *
      * @param found same semantics as BTreeReader::binarySearch
+     *
+     * @return result of search as 0-based index of tuple on node
      */
     virtual uint binarySearch(
         BTreeNode const &node,

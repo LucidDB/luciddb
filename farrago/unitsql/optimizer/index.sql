@@ -251,7 +251,7 @@ set schema 'lbm';
 set path 'lbm';
 
 -------------------------------------------------
--- Some ftrs tests to compare bahevior against --
+-- Some ftrs tests to compare behavior against --
 -------------------------------------------------
 
 drop table ftrsemps cascade;
@@ -275,6 +275,10 @@ select * from ftrsemps;
 -- the most simple case
 explain plan for
 select * from ftrsemps where deptno = 2;
+
+-- negative number in index search
+explain plan for
+select * from ftrsemps where deptno = -2;
 
 -- range predicate uses index access
 explain plan for
@@ -352,54 +356,64 @@ insert into lbmemps select empno, name, deptno from sales.emps;
 
 -- no sarg pred
 explain plan for
-select * from lbmemps;
+select * from lbmemps order by empno;
+
+select * from lbmemps order by empno;
 
 -- the most simple case
 explain plan for
-select * from lbmemps where deptno = 2;
+select * from lbmemps where deptno = 20 order by empno;
+
+select * from lbmemps where deptno = 20 order by empno;
+
+-- negative number in index search
+explain plan for
+select * from lbmemps where deptno = -2;
 
 -- range predicate uses index access
 explain plan for
-select * from lbmemps where deptno > 2;
+select * from lbmemps where deptno > 20 order by empno;
 
 -- Merge ranges on the same index key
 explain plan for
-select * from lbmemps where deptno = 2 or deptno = 10;
+select * from lbmemps where deptno = 10 or deptno = 20 order by empno;
 
 -- Should have only one range
 explain plan for
-select * from lbmemps where deptno = 10 or deptno > 2;
+select * from lbmemps where deptno = 20 or deptno > 10 order by empno;
 
 -- recognize AND on the same key
 explain plan for
-select * from lbmemps where deptno > 2 and deptno < 10;
+select * from lbmemps where deptno > 10 and deptno <= 20 order by empno;
 
 -- make sure NULL range from sarg analysis is working
 explain plan for
-select * from lbmemps where deptno = 2 and deptno = 10;
+select * from lbmemps where deptno = 20 and deptno = 10 order by empno;
+
+select * from lbmemps where deptno = 20 and deptno = 10 order by empno;
 
 -- TODO implement index only access.
 explain plan for
-select deptno from lbmemps where deptno = 2;
+select deptno from lbmemps where deptno = 20 order by deptno;
 
 -- index on char types:
 -- simple comparison predicate
 explain plan for
-select ename from lbmemps where ename = 'ADAM';
+select ename from lbmemps where ename = 'ADAM' order by ename;
 
 -- index on char types:
 -- predicate specific to character types
 explain plan for
-select ename from lbmemps where ename like 'ADAM%';
+select ename from lbmemps where ename like 'ADAM%' order by ename;
 
+-- TODO AND: currently does recognize one index, but not two
 -- TODO: this is currently not working(not even one index)
--- AND: does recognize one index, but not two
 explain plan for
-select * from lbmemps where deptno = 2 and ename = 'ADAM';
+select * from lbmemps where deptno = 2 and ename = 'ADAM' order by empno;
 
--- OR: does not use any index access
+-- TODO OR: currently does not use any index access
 explain plan for
-select * from lbmemps where deptno = 2 or ename = 'ADAM';
+select * from lbmemps where deptno = 2 or ename = 'ADAM' order by empno;
 
 !set outputformat table
 

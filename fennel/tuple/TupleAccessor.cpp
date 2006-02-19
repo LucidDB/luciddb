@@ -36,6 +36,22 @@ const bool TupleAccessor::BOOL_TRUE = true;
 
 const bool TupleAccessor::BOOL_FALSE = false;
 
+// NOTE jvs 11-Feb-2006: Set this to 1 to debug problems with
+// TupleAccessor::setCurrentTupleBuf being passed invalid tuple images.
+// Typical symptom is a Boost assertion failure in ~TupleAccessor when
+// dynamic_bitset detects invalid bits set.  When this is set to 1, we write a
+// magic number as a prefix every time a tuple is marshalled, and verify it
+// when setCurrentTupleBuf is called.  CAUTION: do NOT check in changes with
+// this set to 1!  Also realize that this affects on-disk storage, so if you
+// run without it and generate a datafile, then run with it and read that
+// datafile, you should expect an assertion failure.
+#define DEBUG_TUPLE_ACCESS 0
+
+/**
+ * Matches net.sf.farrago.runtime.FennelTupleWriter.
+ */
+static const MagicNumber TUPLE_MAGIC_NUMBER = 0x9897ab509de7dcf5LL;
+
 TupleAccessor::TupleAccessor()
 {
     pTupleBuf = NULL;
@@ -90,6 +106,10 @@ void TupleAccessor::compute(
     // sum of total storage size seen so far; this is used as an accumulator
     // for assigning actual offsets
     cbMaxStorage = 0;
+
+#if DEBUG_TUPLE_ACCESS
+    cbMaxStorage += sizeof(MagicNumber);
+#endif
 
     // first pass over all attributes in logical order:  collate them into
     // storage classes and precompute everything we can
@@ -373,6 +393,11 @@ void TupleAccessor::setCurrentTupleBuf(PConstBuffer pTupleBufInit, bool valid)
     if (!isMAXU(iBitFieldOffset)) {
         // if buffer holds a valid marshalled tuple, load its bitFields
         if (valid) {
+#if DEBUG_TUPLE_ACCESS
+            assert(
+                *reinterpret_cast<MagicNumber const *>(pTupleBuf)
+                == TUPLE_MAGIC_NUMBER);
+#endif
             // TODO:  trick dynamic_bitset to avoid copy
             boost::from_block_range(
                 pTupleBuf + iBitFieldOffset,
@@ -441,8 +466,12 @@ void TupleAccessor::unmarshal(TupleData &tuple,uint iFirstDatum) const
 
 void TupleAccessor::marshal(TupleData const &tuple,PBuffer pTupleBufDest)
 {
+#if DEBUG_TUPLE_ACCESS
+    *reinterpret_cast<MagicNumber *>(pTupleBufDest) = TUPLE_MAGIC_NUMBER;
+#endif
+    
     pTupleBuf = pTupleBufDest;
-
+            
     uint iNextVarOffset = iFirstVarOffset;
     StoredValueOffset *pNextVarEndOffset =
         referenceIndirectOffset(pTupleBufDest,iFirstVarEndIndirectOffset);
@@ -470,8 +499,9 @@ void TupleAccessor::marshal(TupleData const &tuple,PBuffer pTupleBufDest)
                     *reinterpret_cast<bool const *>(value.pData);
             }
         } else {
-            // if you hit this assert, most likely the result produced an null but type derivation in 
-            // SqlValidator derived an non nullable result type
+            // if you hit this assert, most likely the result produced a null
+            // but type derivation in SqlValidator derived a non-nullable
+            // result type
             assert(!isMAXU(accessor.iNullBit));
         }
         if (!isMAXU(accessor.iEndIndirectOffset)) {

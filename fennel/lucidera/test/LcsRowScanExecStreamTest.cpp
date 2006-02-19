@@ -23,12 +23,14 @@
 #include "fennel/test/ExecStreamUnitTestBase.h"
 #include "fennel/lucidera/colstore/LcsClusterAppendExecStream.h"
 #include "fennel/lucidera/colstore/LcsRowScanExecStream.h"
+#include "fennel/lucidera/bitmap/LbmEntry.h"
 #include "fennel/btree/BTreeBuilder.h"
 #include "fennel/ftrs/BTreeInsertExecStream.h"
 #include "fennel/ftrs/BTreeSearchExecStream.h"
 #include "fennel/ftrs/BTreeExecStream.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
 #include "fennel/tuple/TupleDescriptor.h"
+#include "fennel/tuple/TupleAccessor.h"
 #include "fennel/exec/MockProducerExecStream.h"
 #include "fennel/exec/ValuesExecStream.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
@@ -49,7 +51,8 @@ class LcsRowScanExecStreamTest : public ExecStreamUnitTestBase
 protected:
     StandardTypeDescriptorFactory stdTypeFactory;
     TupleAttributeDescriptor attrDesc_int64;
-    TupleAttributeDescriptor attrDesc_char1;
+    TupleAttributeDescriptor attrDesc_bitmap;
+    uint bitmapColSize;
 
     vector<boost::shared_ptr<BTreeDescriptor> > bTreeClusters;
     
@@ -91,14 +94,34 @@ protected:
                       TupleProjection proj, uint skipRows,
                       uint expectedNumRows);
 
+    /**
+     * Generate bitmaps to pass as input into row scan exec stream
+     *
+     * @param nRows number of rows in table
+     *
+     * @param skipRows generate rids every "skipRows" rows; i.e., if skipRows
+     * == 1, there are no gaps in the rids
+     *
+     * @param bitmapTupleDesc tuple descriptor for bitmap segment
+     *
+     * @param pBuf buffer where bitmap segment tuples will be marshalled
+     *
+     * @return size of the buffer containing the marshalled tuples
+     */
+    int generateBitmaps(
+        uint nRows, uint skipRows, TupleDescriptor const &btitmapTupleDesc,
+        PBuffer pBuf);
+
+    void produceEntry(
+        LbmEntry &lbmEntry, TupleAccessor &bitmapTupleAccessor, PBuffer pBuf,
+        int &bufSize);
+
 public:
     explicit LcsRowScanExecStreamTest()
     {
         FENNEL_UNIT_TEST_CASE(LcsRowScanExecStreamTest, testScans);
-#if 0
         FENNEL_UNIT_TEST_CASE(LcsRowScanExecStreamTest, testScanOnEmptyCluster);
         FENNEL_UNIT_TEST_CASE(LcsRowScanExecStreamTest, testScanPastEndOfCluster);
-#endif
     }
 
     void testCaseSetUp();
@@ -212,22 +235,37 @@ void LcsRowScanExecStreamTest::testScanCols(uint nRows, uint nCols,
     // setup input rid stream
 
     ValuesExecStreamParams valuesParams;
-    PBuffer dummyBuffer = NULL;
-    valuesParams.pTupleBuffer = dummyBuffer;
-    valuesParams.outputTupleDesc.push_back(attrDesc_int64);
-    valuesParams.outputTupleDesc.push_back(attrDesc_char1);
-    valuesParams.outputTupleDesc.push_back(attrDesc_char1);
-    // note: currently only works where nRows = 0
-    valuesParams.bufSize = nRows/skipRows;
-
+    boost::scoped_array<uint8_t> pBuffer;
     ExecStreamEmbryo valuesStreamEmbryo;
-    valuesStreamEmbryo.init(new ValuesExecStream(), valuesParams);
-    valuesStreamEmbryo.getStream()->setName("ValuesExecStream");
+    LcsRowScanExecStreamParams scanParams;
+
+    scanParams.hasExtraFilter = false;
+
+    if (nRows > 0) {
+        valuesParams.outputTupleDesc.push_back(attrDesc_int64);
+        valuesParams.outputTupleDesc.push_back(attrDesc_bitmap);
+        valuesParams.outputTupleDesc.push_back(attrDesc_bitmap);
+        // set buffer size to max number of bytes required to represent each
+        // bit (nRows/8) plus max number of segments (nRows/bitmapColSize)
+        // times 8 bytes for each starting rid in the segment
+        uint bufferSize = std::max(
+            16, (int) (nRows/8 + nRows/bitmapColSize * 8));
+        pBuffer.reset(new uint8_t[bufferSize]);
+        valuesParams.pTupleBuffer = pBuffer.get();
+        valuesParams.bufSize = generateBitmaps(
+            nRows, skipRows, valuesParams.outputTupleDesc, pBuffer.get());
+        assert(valuesParams.bufSize <= bufferSize);
+        valuesStreamEmbryo.init(new ValuesExecStream(), valuesParams);
+        valuesStreamEmbryo.getStream()->setName("ValuesExecStream");
+        scanParams.isFullScan = false;
+    } else {
+        scanParams.isFullScan = true;
+    }
+
 
     // setup parameters into scan
     //  nClusters cluster with nCols columns each
     
-    LcsRowScanExecStreamParams scanParams;
     for (uint i = 0; i < nClusters; i++) {
         struct LcsClusterScanDef clusterScanDef;
 
@@ -247,19 +285,23 @@ void LcsRowScanExecStreamTest::testScanCols(uint nRows, uint nCols,
     }
 
     // setup projection
-
     scanParams.outputProj = proj;
     for (uint i = 0; i < proj.size(); i++) {
         scanParams.outputTupleDesc.push_back(attrDesc_int64);
     }
 
     ExecStreamEmbryo scanStreamEmbryo;
-
     scanStreamEmbryo.init(new LcsRowScanExecStream(), scanParams);
     scanStreamEmbryo.getStream()->setName("RowScanExecStream");
+    SharedExecStream pOutputStream;
 
-    SharedExecStream pOutputStream = prepareTransformGraph(
-        valuesStreamEmbryo, scanStreamEmbryo);
+    if (nRows > 0) {
+        pOutputStream = 
+            prepareTransformGraph(valuesStreamEmbryo, scanStreamEmbryo);
+    } else {
+        // full scan
+        pOutputStream = prepareSourceGraph(scanStreamEmbryo);
+    }
     
     // setup generators for result stream
 
@@ -273,6 +315,54 @@ void LcsRowScanExecStreamTest::testScanCols(uint nRows, uint nCols,
 
     CompositeExecStreamGenerator resultGenerator(columnGenerators);
     verifyOutput(*pOutputStream, expectedNumRows, resultGenerator);
+}
+
+int LcsRowScanExecStreamTest::generateBitmaps(
+    uint nRows, uint skipRows, TupleDescriptor const &bitmapTupleDesc,
+    PBuffer pBuf)
+{
+    int bufSize = 0;
+    LbmEntry lbmEntry;
+    boost::scoped_array<uint8_t> entryBuf;
+    TupleAccessor bitmapTupleAccessor;
+    LcsRid rid = LcsRid(0);
+
+    TupleData bitmapTupleData(bitmapTupleDesc);
+    bitmapTupleData[0].pData = (PConstBuffer) &rid;
+    bitmapTupleData[1].pData = NULL;
+    bitmapTupleData[1].cbData = 0;
+    bitmapTupleData[2].pData = NULL;
+    bitmapTupleData[2].cbData = 0;
+        
+    bitmapTupleAccessor.compute(bitmapTupleDesc);
+
+    // setup an LbmEntry with the initial rid value
+    entryBuf.reset(new uint8_t[bitmapColSize]);
+    lbmEntry.init(entryBuf.get(), bitmapColSize, bitmapTupleDesc);
+    lbmEntry.setEntryTuple(bitmapTupleData);
+
+    // add on the remaining rids
+    for (rid = LcsRid(skipRows); rid < LcsRid(nRows); rid += skipRows) {
+        if (!lbmEntry.setRID(LcsRid(rid))) {
+            // if exhausted buffer space, write the tuple to the output
+            // buffer and reset LbmEntry
+            produceEntry(lbmEntry, bitmapTupleAccessor, pBuf, bufSize);
+            lbmEntry.setEntryTuple(bitmapTupleData);
+        }
+    }
+    // write out the last LbmEntry
+    produceEntry(lbmEntry, bitmapTupleAccessor, pBuf, bufSize);
+    
+    return bufSize;
+}
+
+void LcsRowScanExecStreamTest::produceEntry(
+    LbmEntry &lbmEntry, TupleAccessor &bitmapTupleAccessor, PBuffer pBuf,
+    int &bufSize)
+{
+    TupleData bitmapTuple = lbmEntry.produceEntryTuple();
+    bitmapTupleAccessor.marshal(bitmapTuple, pBuf + bufSize);
+    bufSize += bitmapTupleAccessor.getCurrentByteCount();
 }
 
 void LcsRowScanExecStreamTest::testScans()
@@ -296,7 +386,7 @@ void LcsRowScanExecStreamTest::testScans()
     for (uint i = 0; i < nClusters; i++)
         for (uint j = 0; j < nCols; j++)
             proj.push_back(i * nCols + j);
-    testScanCols(0, nCols, nClusters, proj, 1, nRows);
+    testScanCols(nRows, nCols, nClusters, proj, 1, nRows);
     resetExecStreamTest();
 
     // project columns 22, 10, 12, 26, 1, 35, 15, 5, 17, 30, 4, 20, 7, and 13
@@ -316,18 +406,19 @@ void LcsRowScanExecStreamTest::testScans()
     proj.push_back(7);
     proj.push_back(13);
 
-#if 0
-    /**
-     * Disable these tests now that the input into row scan are compressed
-     * bitmaps representing rids
-     */
     testScanCols(nRows, nCols, nClusters, proj, 1, nRows);
     resetExecStreamTest();
 
     // read every 7 rows, same projection as above
-    testScanCols(nRows, nCols, nClusters, proj, 7, nRows/7);
+    testScanCols(
+        nRows, nCols, nClusters, proj, 7, (int) ceil((double) nRows/7));
     resetExecStreamTest();
-#endif 
+    
+
+    // read every 37 rows, same projection as above
+    testScanCols(
+        nRows, nCols, nClusters, proj, 37, (int) ceil((double) nRows/37));
+    resetExecStreamTest();
 
     // full table scan -- input stream is empty
     testScanCols(0, nCols, nClusters, proj, 1, nRows);
@@ -386,8 +477,10 @@ void LcsRowScanExecStreamTest::testCaseSetUp()
     
     attrDesc_int64 = TupleAttributeDescriptor(
         stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
-    attrDesc_char1 = TupleAttributeDescriptor(
-        stdTypeFactory.newDataType(STANDARD_TYPE_CHAR), false, 1);
+    bitmapColSize = pRandomSegment->getUsablePageSize()/8;
+    attrDesc_bitmap = TupleAttributeDescriptor(
+        stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY),
+        true, bitmapColSize);
 }
 
 void LcsRowScanExecStreamTest::testCaseTearDown()

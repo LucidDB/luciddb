@@ -222,7 +222,8 @@ class LcsIndexSearchRel extends FennelSingleRel
     {
         FarragoRepos repos = FennelRelUtil.getRepos(this);
 
-        FemIndexSearchDef indexSearchStream = indexScanRel.newIndexSearch();
+        FemLbmIndexScanStreamDef indexSearchStream = 
+            indexScanRel.newLbmIndexSearch(this);
 
         indexSearchStream.setUniqueKey(isUniqueKey);
         indexSearchStream.setOuterJoin(isOuter);
@@ -231,15 +232,21 @@ class LcsIndexSearchRel extends FennelSingleRel
             indexSearchStream.setInputKeyProj(
                 FennelRelUtil.createTupleProjection(repos, inputKeyProj));
         }
+
         if (inputJoinProj != null) {
             indexSearchStream.setInputJoinProj(
                 FennelRelUtil.createTupleProjection(repos, inputJoinProj));
         }
+
         if (inputDirectiveProj != null) {
             indexSearchStream.setInputDirectiveProj(
                 FennelRelUtil.createTupleProjection(repos, inputDirectiveProj));
         }
 
+        indexSearchStream.setRowLimitParamId(0);
+        indexSearchStream.setIgnoreRowLimit(true);
+        indexSearchStream.setStartRidParamId(0);
+        
         implementor.addDataFlowFromProducerToConsumer(
             implementor.visitFennelChild((FennelRel) getChild()), 
             indexSearchStream);

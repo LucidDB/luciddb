@@ -22,7 +22,7 @@
 #ifndef Fennel_LcsRowScanBaseExecStream_Included
 #define Fennel_LcsRowScanBaseExecStream_Included
 
-#include "fennel/exec/ConduitExecStream.h"
+#include "fennel/exec/ConfluenceExecStream.h"
 #include "fennel/ftrs/BTreeExecStream.h"
 #include "fennel/tuple/TupleDescriptor.h"
 #include "fennel/tuple/TupleDataWithBuffer.h"
@@ -47,7 +47,7 @@ typedef std::vector<LcsClusterScanDef> LcsClusterScanDefList;
  * Indicates the clustered indexes that need to be read to scan a table and
  * the columns from the clusters that need to be projected in the scan result.
  */
-struct LcsRowScanBaseExecStreamParams : public ConduitExecStreamParams
+struct LcsRowScanBaseExecStreamParams : public ConfluenceExecStreamParams
 {
     /**
      * Ordered list of cluster scans
@@ -63,7 +63,7 @@ struct LcsRowScanBaseExecStreamParams : public ConduitExecStreamParams
 /**
  * Implements basic elements required to scan clusters in an exec stream
  */
-class LcsRowScanBaseExecStream : public ConduitExecStream
+class LcsRowScanBaseExecStream : public ConfluenceExecStream
 {
 protected:
     /**

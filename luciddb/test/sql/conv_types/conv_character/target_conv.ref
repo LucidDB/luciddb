@@ -1,0 +1,153 @@
+0: jdbc:luciddb:> set schema 's'
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col char(15))
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select cast(coltiny as varchar(256)) from datatype_source
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target
+. . . . . . . . > ;
++------------------+
+|       COL        |
++------------------+
+| 127              |
++------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col char(15))
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target 
+. . . . . . . . >  select cast(colsmall as varchar(256)) from datatype_source
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target
+. . . . . . . . > ;
++------------------+
+|       COL        |
++------------------+
+| 32767            |
++------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col char(15))
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select cast(colint as varchar(256)) from datatype_source
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target
+. . . . . . . . > ;
++------------------+
+|       COL        |
++------------------+
+| 2147483647       |
++------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col char(15))
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select cast(colbig as varchar(256)) from datatype_source
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target
+. . . . . . . . > ;
++------------------+
+|       COL        |
++------------------+
+| 2147483647       |
++------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col char(15))
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select cast(coldec as varchar(256)) from datatype_source
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target
+. . . . . . . . > ;
++------------------+
+|       COL        |
++------------------+
+| 214748.3647      |
++------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col char(15))
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select cast(colnum as varchar(256)) from datatype_source
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target
+. . . . . . . . > ;
++------------------+
+|       COL        |
++------------------+
+| 214748.3647      |
++------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col char(15))
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select cast(coldouble as varchar(256)) from datatype_source
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target
+. . . . . . . . > ;
++------------------+
+|       COL        |
++------------------+
+| 4.294967296E9    |
++------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col char(15))
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select cast(colfloat as varchar(256)) from datatype_source
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target
+. . . . . . . . > ;
++------------------+
+|       COL        |
++------------------+
+| 4.294967296E9    |
++------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col char(15))
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select cast(colreal as varchar(256)) from datatype_source
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target
+. . . . . . . . > ;
++------------------+
+|       COL        |
++------------------+
+| 4.294967E9       |
++------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

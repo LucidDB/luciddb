@@ -44,6 +44,21 @@ create foreign table mock_java_table(
 server mock_foreign_server
 options (executor_impl 'JAVA', row_count '3');
 
+create function ramp(n int)
+returns table(i int)
+language java
+parameter style system defined java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.ramp';
+
+create foreign table mock_ramp_udx_table(
+    id int not null)
+server mock_foreign_server
+options (
+    executor_impl 'JAVA', 
+    udx_specific_name 'mock_schema.ramp',
+    row_count '3');
+
 create table mock_empty_table(
     id int not null primary key)
 server mock_local_server;
@@ -75,6 +90,8 @@ insert into mock_empty_table values (5);
 select * from mock_fennel_table;
 
 select * from mock_java_table;
+
+select * from mock_ramp_udx_table;
 
 select * from mock_empty_table;
 

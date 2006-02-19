@@ -31,12 +31,7 @@ import org.eigenbase.oj.util.*;
 import org.eigenbase.oj.rel.JavaRelImplementor;
 import org.eigenbase.oj.rel.ResultSetRel;
 import org.eigenbase.rel.AbstractRelNode;
-import org.eigenbase.relopt.CallingConvention;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptConnection;
-import org.eigenbase.relopt.RelOptCost;
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
@@ -131,12 +126,21 @@ public class JdbcQuery extends AbstractRelNode implements ResultSetRel
         return dataSource;
     }
 
-    public String getQualifier()
+    // override RelNode
+    public void explain(RelOptPlanWriter pw)
+    {
+        pw.explain(
+            this,
+            new String [] { "foreignSql" },
+            new Object [] { getForeignSql() });
+    }
+
+    public String getForeignSql()
     {
         if (queryString == null) {
             queryString = sql.toSqlString(dialect);
         }
-        return "[" + queryString + "]";
+        return queryString;
     }
 
     public Object clone()
@@ -176,7 +180,7 @@ public class JdbcQuery extends AbstractRelNode implements ResultSetRel
     public void onRegister(RelOptPlanner planner)
     {
         super.onRegister(planner);
-        Util.discard(getQualifier()); // compute query string now
+        Util.discard(getForeignSql()); // compute query string now
     }
 
     public static void register(RelOptPlanner planner)

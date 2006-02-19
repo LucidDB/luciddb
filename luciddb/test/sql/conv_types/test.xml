@@ -1,4 +1,4 @@
-<project name="tch" default="simple-test">
+<project name="bh" default="simple-test">
   <target name="simple-test">
     <test-suite testunit="simple-test">
       

@@ -25,6 +25,7 @@ import java.util.*;
 import java.util.logging.*;
 
 import javax.jmi.reflect.*;
+import javax.jmi.model.*;
 
 import org.eigenbase.trace.*;
 import org.eigenbase.resource.*;
@@ -85,7 +86,7 @@ public class JmiChangeSet implements MDRPreChangeListener
      * Set of objects which a recursive deletion has encountered but not yet
      * processed.
      */
-    private Set<RefObject> deleteQueue;
+    private final Set<RefObject> deleteQueue;
 
     /**
      * Thread binding to prevent cross-talk.
@@ -354,14 +355,15 @@ public class JmiChangeSet implements MDRPreChangeListener
             transitMap = schedulingMap;
             schedulingMap = new LinkedHashMap<String, JmiValidationAction>();
 
+            setOrdinalsInTransitMap();
+
             boolean progress = false;
             boolean unvalidatedDependency = false;
             for (Map.Entry<String, JmiValidationAction> mapEntry
                      : transitMap.entrySet())
             {
                 RefObject obj =
-                    (RefObject) getMdrRepos().getByMofId(
-                        (String) mapEntry.getKey());
+                    (RefObject) getMdrRepos().getByMofId(mapEntry.getKey());
                 if (obj == null) {
                     continue;
                 }
@@ -542,7 +544,15 @@ public class JmiChangeSet implements MDRPreChangeListener
         getMdrRepos().beginTrans(true);
     }
 
-    private void scheduleDeletion(RefObject obj)
+    /**
+     * Explicitly schedules an object for deletion.  Objects may
+     * also be scheduled for deletion implicitly via cascades, or
+     * by listening for refDelete events.
+     *
+     * @param obj object whose deletion is to be scheduled as
+     * part of this change
+     */
+    public void scheduleDeletion(RefObject obj)
     {
         assert (!validatedMap.containsKey(obj));
 
@@ -570,6 +580,109 @@ public class JmiChangeSet implements MDRPreChangeListener
         schedulingMap.put(
             obj.refMofId(),
             action);
+    }
+
+    /**
+     * Explicitly schedules an object for creation or modification (which one
+     * depends on the result of JmiChangeDispatcher.isNewObject).  This can be
+     * used to include objects for which events were not heard by the listener
+     * mechanism.
+     *
+     * @param obj object whose creation or modification is to be scheduled as
+     * part of this change
+     */
+    public void scheduleObject(RefObject obj)
+    {
+        scheduleModification(obj);
+    }
+
+    /**
+     * Requests that events on an object be ignored.
+     *
+     * @param obj object to be ignored
+     */
+    public void scheduleIgnore(RefObject obj)
+    {
+        schedulingMap.remove(obj.refMofId());
+        validatedMap.put(obj, JmiValidationAction.MODIFICATION);
+    }
+
+    /**
+     * Calls setOrdinals for each object being created or modified in
+     * transitMap.
+     */
+    private void setOrdinalsInTransitMap()
+    {
+        for (Map.Entry<String, JmiValidationAction> mapEntry
+                 : transitMap.entrySet())
+        {
+            JmiValidationAction action = mapEntry.getValue();
+            if (action == JmiValidationAction.DELETION) {
+                continue;
+            }
+            RefObject refObj =
+                (RefObject) getMdrRepos().getByMofId(mapEntry.getKey());
+            setOrdinals(refObj);
+        }
+    }
+
+    /**
+     * Sets the "ordinal" attribute of all objects which are targets of ordered
+     * composite associations with the given object as the source.  The ordinal
+     * attribute (if it exists) is set to match the 0-based association order.
+     *
+     * @param refObj source of associations to maintain
+     */
+    private void setOrdinals(RefObject refObj)
+    {
+        JmiModelView modelView = dispatcher.getModelView();
+        JmiClassVertex classVertex =
+            modelView.getModelGraph().getVertexForRefClass(
+                refObj.refClass());
+        assert(classVertex != null);
+        Set edges = modelView.getAllOutgoingAssocEdges(classVertex);
+        for (Object edgeObj : edges) {
+            JmiAssocEdge edge = (JmiAssocEdge) edgeObj;
+            if (edge.getSourceEnd().getAggregation()
+                != AggregationKindEnum.COMPOSITE)
+            {
+                continue;
+            }
+            if (!edge.getTargetEnd().getMultiplicity().isOrdered()) {
+                continue;
+            }
+            JmiClassVertex targetVertex = (JmiClassVertex) edge.getTarget();
+            List targetFeatures = JmiObjUtil.getFeatures(
+                targetVertex.getRefClass(),
+                Attribute.class,
+                false);
+            
+            Collection targets = edge.getRefAssoc().refQuery(
+                edge.getSourceEnd(),
+                refObj);
+
+            // It's an ordered end, so it should be a List.
+            assert(targets instanceof List);
+
+            int nextOrdinal = 0;
+            for (Object targetObj : targets) {
+                RefObject target = (RefObject) targetObj;
+                Integer oldOrdinal = null;
+                Integer newOrdinal = nextOrdinal;
+                ++nextOrdinal;
+                try {
+                    oldOrdinal = (Integer) target.refGetValue("ordinal");
+                } catch (InvalidNameException ex) {
+                    // No ordinal attribute to be maintained.
+                    continue;
+                }
+                // Avoid unnecessary updates in the case where ordinals
+                // are already correct.
+                if (oldOrdinal != newOrdinal) {
+                    target.refSetValue("ordinal", newOrdinal);
+                }
+            }
+        }
     }
     
     //~ Inner Classes ---------------------------------------------------------

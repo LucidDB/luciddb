@@ -70,7 +70,7 @@ public class QueueIterator implements Iterator
     protected boolean hasNext;
     protected Throwable throwable;
 
-    private BlockingQueue queue;
+    protected BlockingQueue queue;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -114,6 +114,14 @@ public class QueueIterator implements Iterator
     }
 
     //~ Methods ---------------------------------------------------------------
+
+    protected void reset(int n)
+    {
+        hasNext = true;
+        next = null;
+        throwable = null;
+        numProducers = n;
+    }
 
     /**
      * Producer calls <code>done</code> to say that there are no more objects,

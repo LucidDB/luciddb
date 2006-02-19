@@ -1,0 +1,35 @@
+# properties
+
+name_prefix=mssql
+
+#############################
+# row store or column store #
+#############################
+
+#DATA_STORE=sys_ftrs_data_server
+DATA_STORE=sys_column_store_data_server
+
+########################
+# foreign data wrapper #
+########################
+
+DATA_WRAPPER_NAME=@name_prefix@_jdbc
+DATA_LIBRARY=@open.dir@/luciddb/plugin/FarragoMedJdbc3p.jar
+
+##################
+# foreign server #
+##################
+
+SERVER=akela.lucidera.com
+PORT=1433
+USERNAME=sa
+PASSWORD=ketajo
+CATALOG_NAME=BENCHMARK
+SCHEMA=dbo
+TABLE_NAME=TABLE_NAME
+## Comma-separated list of table types wanted, without spaces
+TABLE_TYPES=TABLE
+
+SERVER_NAME=@name_prefix@_server
+DRIVER_CLASS=net.sourceforge.jtds.jdbc.Driver
+URL=jdbc:jtds:sqlserver://@SERVER@:@PORT@

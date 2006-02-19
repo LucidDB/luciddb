@@ -33,7 +33,7 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * BTreeKeyedNodeAccessor is a template for implementing some of the virtual
  * methods in the BTreeNodeAccessor interface.  It requires the class used to
- * instantiated NodeAccessor to implement a getEntryForReadInline method.
+ * instantiate NodeAccessor to implement a getEntryForReadInline method.
  */
 template <class NodeAccessor,class KeyAccessor>
 class BTreeKeyedNodeAccessor : public NodeAccessor
@@ -100,11 +100,13 @@ public:
                 nKeys -= (split + 1);
             }
         }
-        if (!found && !leastUpper && base > 0)
+        if (!found && !leastUpper && (base > 0)) {
             base--;
+        }
         if (((base != probe) && (base < node.nEntries)) ||
-            (node.nEntries == 1 && node.height != 0)) //one entry: +infinity 
+            ((node.nEntries == 1) && (node.height != 0)))
         {
+            // one entry: +infinity            
             accessTupleInline(node,base);
         }
         return base;

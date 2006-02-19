@@ -62,16 +62,18 @@ class LcsTable extends MedAbstractColumnSet
         RelOptCluster cluster,
         RelOptConnection connection)
     {
+        RelNode [] emptyInput = new RelNode[0];
+
         clusteredIndexes = FarragoCatalogUtil.getClusteredIndexes(
             getPreparingStmt().getRepos(),
             getCwmColumnSet());
         return new LcsRowScanRel(
             cluster,
-            null,
-            this, 
+            emptyInput,
+            this,
             clusteredIndexes,
             connection,
-            null);
+            null, true, false);
     }
 
     public LcsIndexGuide getIndexGuide()

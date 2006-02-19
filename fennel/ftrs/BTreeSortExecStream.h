@@ -54,6 +54,8 @@ class BTreeSortExecStream : public BTreeInsertExecStream
     bool sorted;
     
     virtual void closeImpl();
+
+    void truncateTree(bool rootless);
     
 public:
     // implement ExecStream

@@ -8,14 +8,14 @@ create function char_replace(str varchar(128), oldC varchar(128), newC varchar(1
 returns varchar(128)
 language java
 no sql
-external name 'class com.lucidera.luciddb.test.udr.CharReplace.FunctionExecute';
+external name 'class com.lucidera.luciddb.applib.CharReplace.FunctionExecute';
 
 create function char_replace(str varchar(128), oldC integer, newC integer) 
 returns varchar(128)
 language java
 specific char_replace_int
 no sql
-external name 'class com.lucidera.luciddb.test.udr.CharReplace.FunctionExecute';
+external name 'class com.lucidera.luciddb.applib.CharReplace.FunctionExecute';
 -- create views with reference to char_replace
 create view new_names(first, last) as
 select char_replace(fname, 'g', 'M'), char_replace(lname, 'a', 'e') 

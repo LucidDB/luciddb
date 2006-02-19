@@ -224,6 +224,17 @@ PageT *CacheImpl<PageT,VictimPolicyT>
         while (page->dataStatus == CachePage::DATA_WRITE) {
             page->waitForPendingIO(pageGuard);
         }
+#ifdef DEBUG
+        bufferAllocator.setProtection(page->pBuffer, cbPage, false);
+#endif
+    } else {
+        // TODO jvs 7-Feb-2006:  protection for other cases
+#ifdef DEBUG
+        StrictMutexGuard pageGuard(page->mutex);
+        if (page->nReferences == 1) {
+            bufferAllocator.setProtection(page->pBuffer, cbPage, true);
+        }
+#endif
     }
     return page;
 }
@@ -243,6 +254,7 @@ void CacheImpl<PageT,VictimPolicyT>
         // originated from lockScratchPage()
         bFree = true;
     } else {
+        bufferAllocator.setProtection(page.pBuffer, cbPage, false);
         page.lock.release(lockMode,txnId);
     }
     page.nReferences--;
@@ -947,6 +959,13 @@ void CacheImpl<PageT,VictimPolicyT>
     }
     request.bindingList.push_back(page);
     getDeviceAccessScheduler(*pDevice).schedule(request);
+}
+
+template <class PageT,class VictimPolicyT>
+CacheAllocator &CacheImpl<PageT,VictimPolicyT>
+::getAllocator() const
+{
+    return bufferAllocator;
 }
 
 template <class PageT,class VictimPolicyT>

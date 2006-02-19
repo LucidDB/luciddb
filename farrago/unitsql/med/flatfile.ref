@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/med/flatfile.sql#6 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/med/flatfile.sql#8 $
 0: jdbc:farrago:> -- Test flatfile namespace plugin
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema flatfile_schema;
@@ -176,7 +176,7 @@ Error: Read no rows from file unitsql/med/example.csv; last error was: Row has t
 0: jdbc:farrago:> -- test a describe query. this type of query returns the width of a 
 0: jdbc:farrago:> -- table's fields. it is an internal query, and should not appear in
 0: jdbc:farrago:> -- user level documentation.
-0: jdbc:farrago:> select * from flatfile_server.SAMPLE_DESC."example2";
+0: jdbc:farrago:> select * from flatfile_server.SAMPLE_DESC."example";
 +--------------+
 | FIELD_SIZES  |
 +--------------+
@@ -187,7 +187,7 @@ Error: Read no rows from file unitsql/med/example.csv; last error was: Row has t
 0: jdbc:farrago:> -- bcp control files). there is no need to order their results, because 
 0: jdbc:farrago:> -- the results appear as they do in the source file. in this case, the 
 0: jdbc:farrago:> -- first line is the "header line". this feature is also undocumented.
-0: jdbc:farrago:> select * from flatfile_server.SAMPLE."example2";
+0: jdbc:farrago:> select * from flatfile_server.SAMPLE."example";
 +-------+-------------------------+--------------+
 | COL1  |          COL2           |     COL3     |
 +-------+-------------------------+--------------+

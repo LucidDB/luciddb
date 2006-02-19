@@ -1,0 +1,365 @@
+0: jdbc:luciddb:> set schema 's'
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Test will load all datatypes into a smallint column.
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col smallint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- tinyint to smallint; min/max range for source datatype [same as target]
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select coltiny from datatype_source
+. . . . . . . . >   where target_type='smallint'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
+| 0    |
+| 127  |
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col smallint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- smallint to smallint; min/max range for source datatype [same as target]
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target 
+. . . . . . . . >  select colsmall from datatype_source
+. . . . . . . . >   where target_type='smallint'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++---------+
+|   COL   |
++---------+
+| -32768  |
+| 32767   |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col smallint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- integer to smallint; min/max range for target datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colint from datatype_source
+. . . . . . . . >   where target_type='smallint'
+. . . . . . . . >     and range_for='target'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col smallint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- integer to smallint; min/max range for source datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colint from datatype_source
+. . . . . . . . >   where target_type='smallint'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ 'smallint', 'source', 0, -32768, -2147483647, -2147483647, -21474836470000, -21474836470000, -4.29497e+09, -4.29497e+09, -4.29497e+09 ]
+Messages:
+[0]:PC=11 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col smallint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- bigint to smallint; min/max range for target datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colbig from datatype_source
+. . . . . . . . >   where target_type='smallint'
+. . . . . . . . >     and range_for='target'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col smallint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- bigint to smallint; min/max range for source datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colbig from datatype_source
+. . . . . . . . >   where target_type='smallint'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ 'smallint', 'source', 0, -32768, -2147483647, -2147483647, -21474836470000, -21474836470000, -4.29497e+09, -4.29497e+09, -4.29497e+09 ]
+Messages:
+[0]:PC=11 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col smallint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col smallint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- decimal to smallint; min/max range for target datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select coldec from datatype_source
+. . . . . . . . >   where target_type='smallint'
+. . . . . . . . >     and range_for='target'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col smallint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- decimal to smallint; min/max range for source datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select coldec from datatype_source
+. . . . . . . . >   where target_type='smallint'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ 'smallint', 'source', 0, -32768, -2147483647, -2147483647, -21474836470000, -21474836470000, -4.29497e+09, -4.29497e+09, -4.29497e+09 ]
+Messages:
+[0]:PC=20 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col smallint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- numeric to smallint; min/max range for target datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colnum from datatype_source
+. . . . . . . . >   where target_type='smallint'
+. . . . . . . . >     and range_for='target'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col smallint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- numeric to smallint; min/max range for source datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colnum from datatype_source
+. . . . . . . . >   where target_type='smallint'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ 'smallint', 'source', 0, -32768, -2147483647, -2147483647, -21474836470000, -21474836470000, -4.29497e+09, -4.29497e+09, -4.29497e+09 ]
+Messages:
+[0]:PC=20 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col smallint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- double to smallint; min/max range for target datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select coldouble from datatype_source
+. . . . . . . . >   where target_type='smallint'
+. . . . . . . . >     and range_for='target'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col smallint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- double to smallint; min/max range for source datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select coldouble from datatype_source
+. . . . . . . . >   where target_type='smallint'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ 'smallint', 'source', 0, -32768, -2147483647, -2147483647, -21474836470000, -21474836470000, -4.29497e+09, -4.29497e+09, -4.29497e+09 ]
+Messages:
+[0]:PC=12 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col smallint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- float to smallint; min/max range for target datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colfloat from datatype_source
+. . . . . . . . >   where target_type='smallint'
+. . . . . . . . >     and range_for='target'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col smallint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- float to smallint; min/max range for source datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colfloat from datatype_source
+. . . . . . . . >   where target_type='smallint'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ 'smallint', 'source', 0, -32768, -2147483647, -2147483647, -21474836470000, -21474836470000, -4.29497e+09, -4.29497e+09, -4.29497e+09 ]
+Messages:
+[0]:PC=12 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col smallint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- real to smallint; min/max range for target datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colreal from datatype_source
+. . . . . . . . >   where target_type='smallint'
+. . . . . . . . >     and range_for='target'
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col smallint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- real to smallint; min/max range for source datatype
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target
+. . . . . . . . >  select colreal from datatype_source
+. . . . . . . . >   where target_type='smallint'
+. . . . . . . . >     and range_for='source'
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ 'smallint', 'source', 0, -32768, -2147483647, -2147483647, -21474836470000, -21474836470000, -4.29497e+09, -4.29497e+09, -4.29497e+09 ]
+Messages:
+[0]:PC=12 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table datatype_target
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table datatype_target(col smallint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test to drop scale
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into datatype_target values(123.456789)
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from datatype_target order by 1
+. . . . . . . . > ;
++------+
+| COL  |
++------+
+| 123  |
++------+
+0: jdbc:luciddb:> -- PASS: if value = 123
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

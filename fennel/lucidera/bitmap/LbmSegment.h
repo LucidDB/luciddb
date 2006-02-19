@@ -54,11 +54,6 @@ protected:
     PBuffer pSegEnd;
 
     /**
-     * One byte in the bitmap encodes 8 RIDs.
-     */
-    static const uint LbmOneByteSize = 8;
-
-    /**
      * Use half of a byte to encode the segment length, or the zero bytes
      * length.
      */
@@ -127,6 +122,7 @@ protected:
     static void readSegDescAndAdvance(
         PBuffer &pSegDesc, uint &bmSegLen, uint &zeroBytes);
 
+public:
     /**
      * Rounds a rid value down to the nearest byte boundary
      *
@@ -134,12 +130,38 @@ protected:
      *
      * @return rounded rid value
      */
-    inline LcsRid roundToByteBoundary(LcsRid rid);
+    static inline LcsRid roundToByteBoundary(LcsRid rid);
+
+    /**
+     * Sets the length descriptor for a segment with zero trailing zeros
+     *
+     * @param segDescByte byte that will be set with the segment length
+     *
+     * @param segLen length of the segment
+     *
+     * @return true if length can be encoded in a segment descriptor
+     */
+    static inline bool setSegLength(uint8_t &segDescByte, uint segLen);
+
+    /**
+     * One byte in the bitmap encodes 8 RIDs.
+     */
+    static const uint LbmOneByteSize = 8;
+
 };
 
 inline LcsRid LbmSegment::roundToByteBoundary(LcsRid rid)
 {
     return rid - rid % LbmOneByteSize;
+}
+
+inline bool LbmSegment::setSegLength(uint8_t &segDescByte, uint segLen)
+{
+    if (segLen > LbmMaxSegSize) {
+        return false;
+    }
+    segDescByte = (uint8_t) ((segLen - 1) << LbmHalfByteSize);
+    return true;
 }
 
 FENNEL_END_NAMESPACE

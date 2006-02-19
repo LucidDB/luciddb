@@ -157,7 +157,7 @@ inline bool BTreeReader::searchForKeyTemplate(
         }
                 
         if (iKeyBound == node.nEntries) {
-            assert(!found);
+            assert(!found || (dupSeek == DUP_SEEK_END));
             // What we're searching for is bigger than everything on
             // this node.
             if (node.rightSibling == rightSearchTerminator) {

@@ -3,10 +3,16 @@ include $(top_srcdir)/am_include.mk
 noinst_LTLIBRARIES=libbitmap.la
 libbitmap_la_SOURCES=\
 LbmSegment.cpp \
+LbmSegmentReaderBase.cpp \
 LbmSegmentReader.cpp \
+LbmSeqSegmentReader.cpp \
 LbmRidReader.cpp \
+LbmSegmentWriter.cpp \
 LbmIndexScanExecStream.cpp \
 LbmGeneratorExecStream.cpp \
 LbmSplicerExecStream.cpp\
 LbmEntry.cpp \
-LbmEntryDump.cpp
+LbmEntryDump.cpp \
+LbmIntersectExecStream.cpp \
+LbmUnionWorkspace.cpp \
+LbmUnionExecStream.cpp

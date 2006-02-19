@@ -154,6 +154,20 @@ size_t VMAllocator::getBytesAllocated() const
     return nAllocs*cbAlloc;
 }
 
+void VMAllocator::setProtection(void *pMem, uint cb, bool readOnly)
+{
+    // FIXME jvs 7-Feb-2006:  use autoconf to get HAVE_MPROTECT instead
+#ifdef HAVE_MMAP
+    int prot = PROT_READ;
+    if (!readOnly) {
+        prot |= PROT_WRITE;
+    }
+    if (::mprotect(pMem, cb, prot)) {
+        throw SysCallExcn("mprotect failed");
+    }
+#endif
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End VMAllocator.cpp

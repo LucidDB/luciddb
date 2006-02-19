@@ -46,7 +46,7 @@ class LcsClusterAppendExecStreamTest : public ExecStreamUnitTestBase
 protected:
     StandardTypeDescriptorFactory stdTypeFactory;
     TupleAttributeDescriptor attrDesc_int64;
-    TupleAttributeDescriptor attrDesc_char1;
+    TupleAttributeDescriptor attrDesc_bitmap;
 
     PageId  savedRootPageId;
     BTreeDescriptor btreeDescriptor;
@@ -346,25 +346,13 @@ void LcsClusterAppendExecStreamTest::testScanSingleCol(
 {
     SharedMockProducerExecStreamGenerator pGenerator = pGeneratorInit;
 
-    // setup input stream
-
-    ValuesExecStreamParams valuesParams;
-    PBuffer dummyBuffer = NULL;
-    valuesParams.pTupleBuffer = dummyBuffer;
-    valuesParams.outputTupleDesc.push_back(attrDesc_int64);
-    valuesParams.outputTupleDesc.push_back(attrDesc_char1);
-    valuesParams.outputTupleDesc.push_back(attrDesc_char1);
-    // force full table scans
-    valuesParams.bufSize = 0;
-
-    ExecStreamEmbryo valuesStreamEmbryo;
-    valuesStreamEmbryo.init(new ValuesExecStream(), valuesParams);
-    valuesStreamEmbryo.getStream()->setName("ValuesExecStream");
-
     // setup parameters into scan
     //  single cluster with only one column, project that single column
     
     LcsRowScanExecStreamParams scanParams;
+    scanParams.hasExtraFilter = false;
+    scanParams.isFullScan = true;
+
     struct LcsClusterScanDef clusterScanDef;
 
     clusterScanDef.clusterTupleDesc.push_back(attrDesc_int64);
@@ -386,8 +374,7 @@ void LcsClusterAppendExecStreamTest::testScanSingleCol(
     scanStreamEmbryo.init(new LcsRowScanExecStream(), scanParams);
     scanStreamEmbryo.getStream()->setName("RowScanExecStream");
 
-    SharedExecStream pOutputStream = prepareTransformGraph(
-        valuesStreamEmbryo, scanStreamEmbryo);
+    SharedExecStream pOutputStream = prepareSourceGraph(scanStreamEmbryo);
     
     // result should be sequence of rows
     verifyOutput(*pOutputStream, nrows, *pResultGenerator);
@@ -402,25 +389,12 @@ void LcsClusterAppendExecStreamTest::testScanMultiCol(
     uint i;
     SharedMockProducerExecStreamGenerator pGenerator = pGeneratorInit;
 
-    // setup input stream
-
-    ValuesExecStreamParams valuesParams;
-    PBuffer dummyBuffer = NULL;
-    valuesParams.pTupleBuffer = dummyBuffer;
-    valuesParams.outputTupleDesc.push_back(attrDesc_int64);
-    valuesParams.outputTupleDesc.push_back(attrDesc_char1);
-    valuesParams.outputTupleDesc.push_back(attrDesc_char1);
-    // force full table scans
-    valuesParams.bufSize = 0;
-
-    ExecStreamEmbryo valuesStreamEmbryo;
-    valuesStreamEmbryo.init(new ValuesExecStream(), valuesParams);
-    valuesStreamEmbryo.getStream()->setName("ValuesExecStream");
-
     // setup parameters into scan
     //  single cluster with only n columns, project all columns
     
     LcsRowScanExecStreamParams scanParams;
+    scanParams.hasExtraFilter = false;
+    scanParams.isFullScan = true;
     struct LcsClusterScanDef clusterScanDef;
 
     for (i = 0; i < nCols; i++)
@@ -446,8 +420,7 @@ void LcsClusterAppendExecStreamTest::testScanMultiCol(
     scanStreamEmbryo.init(new LcsRowScanExecStream(), scanParams);
     scanStreamEmbryo.getStream()->setName("RowScanExecStream");
 
-    SharedExecStream pOutputStream = prepareTransformGraph(
-        valuesStreamEmbryo, scanStreamEmbryo);
+    SharedExecStream pOutputStream = prepareSourceGraph(scanStreamEmbryo);
     
     // result should be sequence of rows
     verifyOutput(*pOutputStream, nrows, *pResultGenerator);
@@ -459,8 +432,9 @@ void LcsClusterAppendExecStreamTest::testCaseSetUp()
     
     attrDesc_int64 = TupleAttributeDescriptor(
         stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
-    attrDesc_char1 = TupleAttributeDescriptor(
-        stdTypeFactory.newDataType(STANDARD_TYPE_CHAR), false, 1);
+    attrDesc_bitmap = TupleAttributeDescriptor(
+        stdTypeFactory.newDataType(STANDARD_TYPE_CHAR),
+        true, pRandomSegment->getUsablePageSize()/8);
 
     savedRootPageId = NULL_PAGE_ID;
 }

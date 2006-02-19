@@ -105,6 +105,22 @@ protected:
         ExecStreamEmbryo &confluenceStreamEmbryo);
 
     /**
+     * Defines and prepares a graph consisting of two source streams
+     * and one confluence stream.
+     *
+     * @param sourceStreamEmbryoList list of embryonic source streams that
+     * produce tuples
+     *
+     * @param confluenceStreamEmbryo embryonic confluence stream which processes
+     * tuples produced by the sourceStreamEmbryos
+     *
+     * @return output buffer stream
+     */
+    SharedExecStream prepareConfluenceGraph(
+        std::vector<ExecStreamEmbryo> &sourceStreamEmbryos,
+        ExecStreamEmbryo &confluenceStreamEmbryo);
+
+    /**
      * Defines and prepares a graph consisting of a source, a splitter, and one
      * or more parallel transform streams which flow together into a
      * confluence stream.
@@ -167,21 +183,6 @@ protected:
         ExecStreamEmbryo &destStreamEmbryo,
         bool createSink = true,
         bool saveSrc = true);
-
-    /**
-     * Executes the prepared stream graph and verifies that its output
-     * is an expected-size run of constant bytes.
-     *
-     * @param stream output stream from which to read
-     *
-     * @param nBytesExpected number of bytes which stream should produce
-     *
-     * @param byteExpected constant value expected for each byte
-     */
-    void verifyConstantOutput(
-        ExecStream &stream,
-        uint nBytesExpected,
-        uint byteExpected);
     
     /**
      * Executes the prepared stream graph and verifies that its output
@@ -212,6 +213,24 @@ protected:
         ExecStream &stream, 
         const TupleData  &expectedTuple,
         uint nRowsExpected);
+
+    /**
+     * Executes the prepared stream graph and verifies the resultant tuples
+     * against a set of tuples supplied in an input buffer.
+     *
+     * @param stream output stream from which to read
+     *
+     * @param outputTupleDesc descriptor of expected output tuple
+     *
+     * @param nRowsExpected number of rows expected
+     *
+     * @param expectedBuffer buffer containing expected tuples
+     */
+    void verifyBufferedOutput(
+        ExecStream &stream,
+        TupleDescriptor outputTupleDesc,
+        uint nRowsExpected,
+        PBuffer expectedBuffer);
 
     /**
      * Reset stream graph so multiple iterations of a method can be called

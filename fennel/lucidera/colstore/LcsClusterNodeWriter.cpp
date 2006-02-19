@@ -268,6 +268,7 @@ void LcsClusterNodeWriter::RollBackLastBatch(uint column, PBuffer pBuf)
 
     uint16_t rows[LcsMaxRollBack];      // row index storage
     int origSzLeft;
+    uint len;
 
     // load last batch, nBatch must be at least 1
     pBatch = (PLcsBatchDir)(m_pBlock[column] + m_batchOffset[column]);
@@ -298,10 +299,11 @@ void LcsClusterNodeWriter::RollBackLastBatch(uint column, PBuffer pBuf)
         pValOffsets = (uint16_t *)(m_pBlock[column] + m_batch[column].oVal);
 
         // fill up buffer with batches values
-        for (i = 0; i < m_batch[column].nRow;
-                i++, pBuf += m_batch[column].recSize)
-            memcpy(pBuf, m_pBlock[column] + pValOffsets[rows[i]],
-                    m_batch[column].recSize);
+        for (i = 0; i < m_batch[column].nRow; i++, pBuf += len) {
+            len = TupleDatum().getLcsLength(
+                m_pBlock[column] + pValOffsets[rows[i]]);
+            memcpy(pBuf, m_pBlock[column] + pValOffsets[rows[i]], len);
+        }
 
     } else if (m_batch[column].mode == LCS_FIXED) {
         // fixed size record batch
@@ -314,10 +316,10 @@ void LcsClusterNodeWriter::RollBackLastBatch(uint column, PBuffer pBuf)
         pValOffsets = (uint16_t *)(m_pBlock[column] + m_batch[column].oVal);
 
         // fill up buffer with batches values
-        for (i = 0; i < m_batch[column].nRow;
-                i++, pBuf += m_batch[column].recSize)
-            memcpy(pBuf, m_pBlock[column] + pValOffsets[i],
-                    m_batch[column].recSize);
+        for (i = 0; i < m_batch[column].nRow; i++, pBuf += len) {
+            len = TupleDatum().getLcsLength(m_pBlock[column] + pValOffsets[i]);
+            memcpy(pBuf, m_pBlock[column] + pValOffsets[i], len);
+        }
     }
 
     // Reset the last batch
@@ -523,13 +525,14 @@ void LcsClusterNodeWriter::PutCompressedBatch(uint column, PBuffer pRows,
     // greater then 8
 
     if (m_batch[column].nRow > 8) {
+        uint len;
         pOffs = (uint16_t *)(m_pBlock[column] + m_batch[column].oVal);
         for (i = round8Boundary((uint32_t) m_batch[column].nRow);
-                i < m_batch[column].nRow;
-                i++, pBuf += m_batch[column].recSize) {
+            i < m_batch[column].nRow; i++, pBuf += len)
+        {
             iRow = ((uint16_t *) pRows)[i];
-            memcpy(pBuf, m_pBlock[column] + pOffs[iRow],
-                    m_batch[column].recSize);
+            len = TupleDatum().getLcsLength(m_pBlock[column] + pOffs[iRow]);
+            memcpy(pBuf, m_pBlock[column] + pOffs[iRow], len);
         }
         m_batch[column].nRow = round8Boundary((uint32_t) m_batch[column].nRow);
     }
@@ -675,8 +678,9 @@ void LcsClusterNodeWriter::PutFixedVarBatch(uint column, uint16_t *pRows,
         // ValueSource will get all the values fron the block
         src = ValueSource(localLastVal, localpValBank, localoValBank,
                             localpBlock, pRows[i]);
-        memcpy(pVal, src, m_batch[column].recSize);
-        pVal += m_batch[column].recSize;
+        uint len = TupleDatum().getLcsLength(src);
+        memcpy(pVal, src, len);
+        pVal += len;
     }
 
     if (m_pValBank[column]) {

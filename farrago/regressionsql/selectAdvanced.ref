@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/regressionsql/selectAdvanced.sql#6 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/regressionsql/selectAdvanced.sql#4 $
 0: jdbc:farrago:> -- Full vertical system testing of advanced select statements
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
@@ -319,8 +319,44 @@ Messages:
 | 20.0    |
 +---------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> drop table s.b;
-0: jdbc:farrago:> drop table s.nulldecimal;
-0: jdbc:farrago:> drop schema s;
+0: jdbc:farrago:> -- this tests whether a non-nullable value can be inserted into 
+0: jdbc:farrago:> -- a nullable column. the values are the exact same type except 
+0: jdbc:farrago:> -- nullability to try to fool decimal cast reduction
+0: jdbc:farrago:> create table s.nullabledecimal(i int primary key, coldec decimal(2,1));
+0: jdbc:farrago:> insert into s.nullabledecimal values (1, 1.2);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop schema s cascade;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- restart required for distinct (FNL-19)
+0: jdbc:farrago:> select sum(c) 
+. . . . . . . . > from sales.depts, 
+. . . . . . . . > (select count(distinct deptno) as c from sales.emps);
++---------+
+| EXPR$0  |
++---------+
+| 9       |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- verify plan for previous query
+0: jdbc:farrago:> !set outputformat csv
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select sum(c) 
+. . . . . . . . > from sales.depts, 
+. . . . . . . . > (select count(distinct deptno) as c from sales.emps);
+'column0'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[EXPR$0]])'
+'    FennelAggRel(groupCount=[0], agg#0=[SUM(0)])'
+'      FennelCalcRel(expr#0..2=[{inputs}], $f0=[$t2])'
+'        FennelCartesianProductRel(leftouterjoin=[false])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'          FennelRenameRel(fieldNames=[[C]])'
+'            FennelAggRel(groupCount=[0], agg#0=[COUNT(0)])'
+'              FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'                FennelRenameRel(fieldNames=[[$f0]])'
+'                  FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !set outputformat table
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

@@ -263,11 +263,6 @@ public abstract class AbstractRelNode implements RelNode
         return emptyArray;
     }
 
-    public String getQualifier()
-    {
-        return "";
-    }
-
     public double getRows()
     {
         return 1.0;

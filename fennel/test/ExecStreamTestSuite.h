@@ -38,7 +38,6 @@ using namespace fennel;
 class ExecStreamTestSuite : public ExecStreamUnitTestBase
 {
 protected:
-    void verifyZeroedOutput(ExecStream &stream,uint nBytesExpected);
     void testCartesianJoinExecStream(uint nRowsLeft,uint nRowsRight);
     void testGroupAggExecStreamNrows(uint nrows);
     

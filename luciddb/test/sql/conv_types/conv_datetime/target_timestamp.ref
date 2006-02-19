@@ -53,7 +53,7 @@ Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast fro
 0: jdbc:luciddb:> insert into target_timestamp
 . . . . . . . . >  select colchar from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: Internal error:  Day of month value is out of range 1..31 (state=,code=0)
+Error: Internal error:  Year is out of valid range: 1400..10000 (state=,code=0)
 0: jdbc:luciddb:> insert into target_timestamp
 . . . . . . . . >  select colvchar from datatype_source where colname = 'BAD'
 . . . . . . . . > ;

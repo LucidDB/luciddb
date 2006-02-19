@@ -1,0 +1,75 @@
+0: jdbc:luciddb:> -- Tests for toDate UDF
+0: jdbc:luciddb:> set schema 'udftest';
+0: jdbc:luciddb:> set path 'udftest';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table strdates (colname varchar(10), colstr varchar(50), colmask varchar(50));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into strdates values
+. . . . . . . . > ('GOOD', '10f 12t 1999p', 'DDf MMt YYYYp'),
+. . . . . . . . > ('GOOD', '1468 30 08', 'YYYY DD MM'),
+. . . . . . . . > ('GOOD', '11p 19t 1650g', 'MMp DDt YYYYg'),
+. . . . . . . . > ('GOOD', '10 2001 31', 'mM YyYy Dd'),
+. . . . . . . . > ('GOOD', '1995.01.05', 'YYYY.MM.DD'),
+. . . . . . . . > ('GOOD', '8 67 1', 'm yy d');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- define function
+0: jdbc:luciddb:> create function to_date(str varchar(128), mask varchar(50), rej boolean)
+. . . . . . . . > returns date
+. . . . . . . . > language java
+. . . . . . . . > specific to_date_choice
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.applib.toDate.FunctionExecute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function to_date(str varchar(128), mask varchar(50))
+. . . . . . . . > returns date
+. . . . . . . . > language java
+. . . . . . . . > specific to_date_no_choice
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.applib.toDate.FunctionExecute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- failures
+0: jdbc:luciddb:> values to_date('JAN, 23 2009', 'mmm, dd yyyy');
+Error: Invalid digit input string (state=,code=0)
+0: jdbc:luciddb:> values to_date('12m, 9d, 1004y', 'mmm, 23m, 1004y');
+Error: Invalid digit input string (state=,code=0)
+0: jdbc:luciddb:> values to_date('7-9-97', 'DD-MM-YY');
+Error: Invalid digit input string (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create view with reference
+0: jdbc:luciddb:> create view td as
+. . . . . . . . > select colname, to_date(colstr, colmask)
+. . . . . . . . > from strdates;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from td
+. . . . . . . . > order by 1;
++----------+-------------+
+| COLNAME  |   EXPR$1    |
++----------+-------------+
+| GOOD     | 1999-12-10  |
+| GOOD     | 1468-08-30  |
+| GOOD     | 1650-11-19  |
+| GOOD     | 2001-10-31  |
+| GOOD     | 1995-01-05  |
+| GOOD     | 1967-08-01  |
++----------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- nested
+0: jdbc:luciddb:> select to_date( cast( to_date(colstr, colmask) as varchar(50)), 'YYYY-MM-DD') 
+. . . . . . . . > from strdates;
++-------------+
+|   EXPR$0    |
++-------------+
+| 1999-12-10  |
+| 1468-08-30  |
+| 1650-11-19  |
+| 2001-10-31  |
+| 1995-01-05  |
+| 1967-08-01  |
++-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- cleanup
+0: jdbc:luciddb:> drop view td;
+0: jdbc:luciddb:> drop table strdates;
+0: jdbc:luciddb:> drop routine to_date_choice;
+0: jdbc:luciddb:> drop routine to_date_no_choice;
+0: jdbc:luciddb:> !quit

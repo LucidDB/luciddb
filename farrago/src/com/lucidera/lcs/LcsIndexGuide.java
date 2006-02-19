@@ -54,6 +54,8 @@ import org.eigenbase.util.Util;
  */
 class LcsIndexGuide
 {
+    private static final int LbmBitmapSegMaxSize = 512;
+
     private FarragoTypeFactory typeFactory;
     
     private FarragoRepos repos;
@@ -472,7 +474,7 @@ class LcsIndexGuide
         // maximum entry size of 1/8 of a page.  Should probably make it
         // communicate with native code about this to get the right number
         // automatically.
-        attrDesc.setByteLength(4096);
+        attrDesc.setByteLength(LbmBitmapSegMaxSize);
     }
 
     // TODO jvs 6-Jan-2005:  use this in LcsTableAppendRel.
@@ -549,6 +551,20 @@ class LcsIndexGuide
         return tupleDesc;
     }
     
+    public FemTupleDescriptor createUnclusteredBTreeBitmapDesc()
+    {
+        FemTupleDescriptor tupleDesc = repos.newFemTupleDescriptor();
+
+        // add RID
+        appendInt64Attr(tupleDesc);
+
+        // add BITMAP
+        appendBitmapAttr(tupleDesc);
+        appendBitmapAttr(tupleDesc);
+        
+        return tupleDesc;
+    }
+
     /**
      * Creates a tuple projection for the key attributes of the BTree index
      * corresponding to an unclustered index.
@@ -568,6 +584,25 @@ class LcsIndexGuide
         return FennelRelUtil.createTupleProjection(
             repos,
             FennelRelUtil.newIotaProjection(n));
+    }
+
+    public FemTupleProjection createUnclusteredBTreeBitmapProj(
+        FemLocalIndex index)
+    {
+        List bitmapProj = new ArrayList();
+
+        // bitmap tuple format is 
+        //    [key0, key1..., keyN, RID, SegmentDesc, Segment]
+        // the bitmap fields are:      
+        //                         {RID, SegmentDesc, Segment]
+        int startPos = index.getIndexedFeature().size();
+        
+        bitmapProj.add(startPos);
+        bitmapProj.add(startPos + 1);
+        bitmapProj.add(startPos + 2);
+
+        return FennelRelUtil.createTupleProjection(
+            repos, bitmapProj);
     }
 
     //~ Exec Streams -------------------------------------------------------
@@ -641,7 +676,7 @@ class LcsIndexGuide
     }
 
     protected FemLcsRowScanStreamDef newRowScan(
-        FennelRel rel,
+        LcsRowScanRel rel,
         Integer[] projectedColumns)
     {
         FemLcsRowScanStreamDef scanStream = repos.newFemLcsRowScanStreamDef();
@@ -654,7 +689,9 @@ class LcsIndexGuide
             computeProjectedColumns(projectedColumns);
         scanStream.setOutputProj(
             FennelRelUtil.createTupleProjection(repos, clusterProjection));
-        
+        scanStream.setFullScan(rel.getIsFullScan());
+        scanStream.setHasExtraFilter(rel.getHasExtraFilter());
+
         return scanStream;
     }
 
@@ -775,11 +812,11 @@ class LcsIndexGuide
         return scanStream;
     }
 
-    protected FemIndexSearchDef newIndexSearch(
+    protected FemLbmIndexScanStreamDef newLbmIndexSearch(
         FennelRel rel,
         FemLocalIndex index)
     {
-        FemIndexSearchDef searchStream = repos.newFemIndexSearchDef();
+        FemLbmIndexScanStreamDef searchStream = repos.newFemLbmIndexScanStreamDef();
         defineIndexScan(searchStream, rel, index);
         return searchStream;
     }
@@ -796,13 +833,9 @@ class LcsIndexGuide
         //
         // TODO: handle the case where the index scan satisfy the 
         // projection out of the LcsRowScanRel. For now, output projection 
-        // is the entire output descriptor: 
-        // [RID, bitmapfield1, bitmapfield2].
-        int outputTupleSize = 
-            scanStream.getOutputDesc().getAttrDescriptor().size();
+        // maps to [RID, bitmapfield1, bitmapfield2].
         scanStream.setOutputProj(
-            FennelRelUtil.createTupleProjection(repos, 
-                FennelRelUtil.newIotaProjection(outputTupleSize)));
+                createUnclusteredBTreeBitmapProj(index));
     }
 
     private void defineIndexStream(
@@ -983,12 +1016,18 @@ class LcsIndexGuide
     {
         RelDataType ridType = 
             typeFactory.createSqlType(SqlTypeName.Bigint);
-        RelDataType bitmapFieldType1 =
-            typeFactory.createSqlType(SqlTypeName.Varbinary, 4096);
-        RelDataType bitmapFieldType2 = bitmapFieldType1;
+        RelDataType bitmapType =
+            typeFactory.createSqlType(SqlTypeName.Varbinary,
+                LbmBitmapSegMaxSize);
+
+        RelDataType segDescType = 
+            typeFactory.createTypeWithNullability(bitmapType, true);
+
+        RelDataType segType = 
+            typeFactory.createTypeWithNullability(bitmapType, true);
 
         return typeFactory.createStructType(
-            new RelDataType[] {ridType, bitmapFieldType1, bitmapFieldType2},
+            new RelDataType[] {ridType, segDescType, segType},
             new String [] {"SRID", "SegmentDesc","Segment"}
             );
     }

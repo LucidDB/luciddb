@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+// $Id$
+// LucidDB is a DBMS optimized for business intelligence.
+// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005-2005 The Eigenbase Project
+//
+// This program is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation; either version 2 of the License, or (at your option)
+// any later version approved by The Eigenbase Project.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//  
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+-->
+
+<project name="company" basedir="." default="gen-sql">
+  <dirname property="company.dir" file="${ant.file.company}" />
+
+  <property name="open.dir" location="../../../.."/>
+  <fail unless="open.dir" />
+
+  <property environment="env" />
+  <property file="run.properties"/>
+
+  <taskdef name="var" classname="net.sf.antcontrib.property.Variable" classpath="${ant.classpath}"/>
+
+  <!-- directory where sql is generated -->
+  <property name="gensql.dir" value="${company.dir}/gen" />
+  <!-- directory where blackhawk output should go -->
+  <property name="bhlogs.dir" value="${company.dir}/bh" />
+
+  <target name="gen-sql">
+    <filter token="open.dir" value="${open.dir}"/>
+    <filter token="company.dir" value="${company.dir}"/>
+
+    <!-- generate config.properties file -->
+    <copy file="${config.prop}" tofile="config.properties" 
+      overwrite="true" filtering="true">
+      <filterset>
+        <filtersfile file="${config.prop}"/>
+      </filterset>
+    </copy>
+
+    <!-- generate all sql files -->
+    <copy todir="${gensql.dir}tmp" overwrite="true"
+      filtering="true">
+      <fileset dir="${company.dir}">
+        <include name="**/*.tmpl"/>
+      </fileset>
+      <mapper type="glob" from="*.tmpl" to="*"/>
+      <filterset>
+        <filtersfile file="config.properties"/>
+      </filterset>
+    </copy>
+    <copy todir="${gensql.dir}/${config.prop}" overwrite="true"
+      filtering="true">
+      <fileset dir="${gensql.dir}tmp"/>
+      <filterchain>
+        <tokenfilter>
+          <replaceregex pattern="^.*. . >.*@.*@.*" 
+            replace=". . . . . . . . > " flags="s"/>
+          <replaceregex pattern="^.*@.*@.*" replace="" flags="s"/>
+        </tokenfilter>
+      </filterchain>
+    </copy>
+    <delete dir="${gensql.dir}tmp" quiet="true"/>
+
+    <!-- copy over all other .sql and .ref files -->
+    <copy todir="${gensql.dir}/${config.prop}">
+      <fileset dir="${company.dir}">
+        <include name="**/*.sql"/>
+        <include name="**/*.ref"/>
+        <exclude name="gen/**"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="test">
+    <antcall target="gen-sql"/>
+    <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
+  </target>
+
+  <target name="testAllConfigs">
+    <!-- oracle -->
+    <var name="config.prop" value="prop.oracle"/>
+    <antcall target="gen-sql"/>
+    <var name="bh.log.basedir" value="${company.dir}/bh/${config.prop}"/>    
+    <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
+
+    <!-- sqlserver -->
+    <var name="config.prop" value="prop.sqlserver"/>
+    <antcall target="gen-sql"/>
+    <var name="bh.log.basedir" value="${company.dir}/bh/${config.prop}"/>    
+    <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
+
+    <!-- csvjdbc -->
+    <var name="config.prop" value="prop.csvjdbc"/>
+    <antcall target="gen-sql"/>
+    <var name="bh.log.basedir" value="${company.dir}/bh/${config.prop}"/>
+    <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
+
+    <!-- flatfile -->
+    <var name="config.prop" value="prop.flatfile"/>
+    <antcall target="gen-sql"/>
+    <var name="bh.log.basedir" value="${company.dir}/bh/${config.prop}"/>    
+    <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
+  </target>
+  
+  <target name="clean">
+    <delete dir="${gensql.dir}"/>
+    <delete dir="${bhlogs.dir}"/>
+  </target>  
+
+  <target name="restoreCatalog">
+    <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>
+  </target>  
+
+</project>

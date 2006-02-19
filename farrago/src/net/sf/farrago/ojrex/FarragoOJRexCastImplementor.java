@@ -385,7 +385,8 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
         {
             // Boolean or Numeric to String.
             // sometimes the Integer got slipped by.
-            if (rhsType.isNullable()) {
+            if (rhsType.isNullable()
+                && (! SqlTypeUtil.isDecimal(rhsType))) {
                 rhsExp = new FieldAccess(
                                 rhsExp, 
                                 NullablePrimitive.VALUE_FIELD_NAME);

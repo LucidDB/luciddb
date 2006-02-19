@@ -1,4 +1,4 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/char_replace.sql#2 $
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/char_replace.sql#3 $
 0: jdbc:luciddb:> -- Test queries for charReplace UDF
 0: jdbc:luciddb:> set schema 'udftest';
 0: jdbc:luciddb:> set path 'udftest';
@@ -8,14 +8,14 @@
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > language java
 . . . . . . . . > no sql
-. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.CharReplace.FunctionExecute';
+. . . . . . . . > external name 'class com.lucidera.luciddb.applib.CharReplace.FunctionExecute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create function char_replace(str varchar(128), oldC integer, newC integer) 
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > language java
 . . . . . . . . > specific char_replace_int
 . . . . . . . . > no sql
-. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.CharReplace.FunctionExecute';
+. . . . . . . . > external name 'class com.lucidera.luciddb.applib.CharReplace.FunctionExecute';
 0: jdbc:luciddb:> -- create views with reference to char_replace
 0: jdbc:luciddb:> create view new_names(first, last) as
 . . . . . . . . > select char_replace(fname, 'g', 'M'), char_replace(lname, 'a', 'e') 

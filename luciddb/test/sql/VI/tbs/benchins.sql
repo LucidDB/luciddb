@@ -1,0 +1,56 @@
+create tablespace TBB_BENCH_TS datafile 'bench_ts.dat' size 16000K
+;
+create tablespace TBB_BENCHIDX_TS datafile 'benchidx_ts.dat' size 16000K
+;
+select file_size, path, free_blocks from files where path like 'bench%'
+order by 1, 2, 3
+;
+CREATE TABLE BENCH100 (
+  KSEQ  INTEGER  
+ ,K2    INTEGER 
+ ,K4    INTEGER 
+ ,K5    INTEGER 
+ ,K10   INTEGER 
+ ,K25   INTEGER 
+ ,K100  INTEGER 
+ ,K1K   INTEGER 
+ ,K10K  INTEGER 
+ ,K40K  INTEGER  
+ ,K100K INTEGER
+ ,K250K INTEGER 
+ ,K500K INTEGER ) TABLESPACE TBB_BENCH_TS
+INDEX TABLESPACE TBB_BENCHIDX_TS
+;
+create index B100_K2_IDX on bench100 (k2)
+;
+create index B100_K4_IDX on bench100 (k4)
+;
+create index B100_K5_IDX on bench100 (k5)
+;
+create index B100_K100_IDX on bench100 (k100)
+;
+--
+select file_size, path, free_blocks from files where path like 'bench%'
+order by 1, 2, 3
+;
+create source BENCH_SOURCE_100 (
+C1 INTEGER,
+C2 INTEGER,
+C4 INTEGER,
+C5 INTEGER,
+C10 INTEGER,
+C25 INTEGER,
+C100 INTEGER,
+C1K INTEGER,
+C10K INTEGER,
+C40K  INTEGER,
+C100K INTEGER, 
+C250K INTEGER,
+C500K INTEGER) 
+USING LINK ODBC_SQLSERVER defined by 
+'SELECT KSEQ,K2,K4,K5,K10,K25,K100,K1K,K10K,K40K,K100K,K250K,K500K FROM BENCHMARK.dbo.BENCH100'
+;
+INSERT INTO BENCH100 (KSEQ,K2,K4,K5,K10,K25,K100,K1K,K10K,K40K,K100K,K250K,
+K500K) SELECT C1,C2,C4,C5,C10,C25,C100,C1K,C10K,C40K,C100K,C250K,C500K 
+FROM BENCH_SOURCE_100
+;

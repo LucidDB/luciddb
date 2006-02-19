@@ -30,23 +30,22 @@ void LcsRowScanExecStream::prepare(LcsRowScanExecStreamParams const &params)
 {
     LcsRowScanBaseExecStream::prepare(params);
 
-    inputTuple.compute(pInAccessor->getTupleDesc());
+    isFullScan = params.isFullScan;
+    hasExtraFilter = params.hasExtraFilter;
 
-    // setup tuple data for input stream
-    ridTupleData.compute(pInAccessor->getTupleDesc());
-
-#if 0
-    // TODO zfong 1-Feb-2006: enable these asserts once the java side is
-    // changed to pass bitmap segments
-    //
-    // validate input stream parameters
-    TupleDescriptor inputDesc = pInAccessor->getTupleDesc();
-    assert(inputDesc.size() == 3);
-    StandardTypeDescriptorFactory stdTypeFactory;
-    TupleAttributeDescriptor expectedRidDesc(
-        stdTypeFactory.newDataType(STANDARD_TYPE_RECORDNUM));
-    assert(inputDesc[0] == expectedRidDesc);
-#endif
+    // Set up input if not full scan(which has no input)
+    if (!isFullScan) {
+        // setup tuple data for input stream
+        ridTupleData.compute(inAccessors[0]->getTupleDesc());
+    
+        // validate input stream parameters
+        TupleDescriptor inputDesc = inAccessors[0]->getTupleDesc();
+        assert(inputDesc.size() == 3);
+        StandardTypeDescriptorFactory stdTypeFactory;
+        TupleAttributeDescriptor expectedRidDesc(
+            stdTypeFactory.newDataType(STANDARD_TYPE_RECORDNUM));
+        assert(inputDesc[0] == expectedRidDesc);
+    }
 
     assert(projDescriptor == pOutAccessor->getTupleDesc());
     pOutAccessor->setTupleShape(projDescriptor);
@@ -59,8 +58,12 @@ void LcsRowScanExecStream::open(bool restart)
     producePending = false;
     tupleFound = false;
     nRidsRead = 0;
-    fullTableScan = false;
-    ridReader.init(pInAccessor, ridTupleData);
+    if (isFullScan) {
+        rid = LcsRid(0);
+    } else {
+        // only initialize LBmRidReader if not full scan.
+        ridReader.init(inAccessors[0], ridTupleData);
+    }
 }
 
 void LcsRowScanExecStream::getResourceRequirements(
@@ -72,15 +75,11 @@ void LcsRowScanExecStream::getResourceRequirements(
 
 ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
 {
-    if (!fullTableScan && pInAccessor->getState() == EXECBUF_EOS) {
-        // if the input stream is empty, do a full table scan
-        if (nRidsRead == 0) {
-            fullTableScan = true;
-            rid = LcsRid(0);
-        } else {
-            pOutAccessor->markEOS();
-            return EXECRC_EOS;
-        }
+    if (!isFullScan && inAccessors[0]->getState() == EXECBUF_EOS) {
+        // Check for input EOS if not full table scan.
+        // Full table scan does not have any input.
+        pOutAccessor->markEOS();
+        return EXECRC_EOS;
     }
 
     for (uint i = 0; i < quantum.nTuplesMax; i++) {
@@ -88,7 +87,7 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
         uint iClu;
 
         while (!producePending) {
-            if (!fullTableScan) {
+            if (!isFullScan) {
                 ExecStreamResult rc = ridReader.readRidAndAdvance(rid);
                 if (rc == EXECRC_EOS) {
                     pOutAccessor->markEOS();
@@ -150,7 +149,7 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
         outputTupleData.resetBuffer();
         producePending = false;
         
-        if (fullTableScan) {
+        if (isFullScan) {
             // if tuple not found, reached end of table,
             // else move to next rid
             if (!tupleFound) {

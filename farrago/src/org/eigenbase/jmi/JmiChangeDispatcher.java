@@ -42,6 +42,11 @@ public interface JmiChangeDispatcher
     public MDRepository getMdrRepos();
     
     /**
+     * @return metamodel for objects being changed
+     */
+    public JmiModelView getModelView();
+    
+    /**
      * @return {@link JmiDeletionAction} governing the change
      */
     public JmiDeletionAction getDeletionAction();

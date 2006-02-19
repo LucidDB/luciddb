@@ -39,12 +39,6 @@
 
 using namespace fennel;
 
-void ExecStreamTestSuite::verifyZeroedOutput(
-    ExecStream &stream,uint nBytesExpected)
-{
-    verifyConstantOutput(stream,nBytesExpected,0);
-}
-
 void ExecStreamTestSuite::testScratchBufferExecStream()
 {
     StandardTypeDescriptorFactory stdTypeFactory;
@@ -101,9 +95,16 @@ void ExecStreamTestSuite::testCopyExecStream()
     SharedExecStream pOutputStream = prepareTransformGraph(
         mockStreamEmbryo,copyStreamEmbryo);
 
-    verifyZeroedOutput(
+    int32_t zero = 0;
+    TupleDescriptor expectedDesc;
+    expectedDesc.push_back(attrDesc);
+    TupleData expectedTuple;
+    expectedTuple.compute(expectedDesc);
+    expectedTuple[0].pData = reinterpret_cast<PBuffer>(&zero);
+    verifyConstantOutput(
         *pOutputStream,
-        mockParams.nRows*sizeof(int32_t));
+        expectedTuple,
+        mockParams.nRows);
 }
 
 void ExecStreamTestSuite::testMergeExecStream()
@@ -138,9 +139,16 @@ void ExecStreamTestSuite::testMergeExecStream()
         mockStreamEmbryo2,
         mergeStreamEmbryo);
 
-    verifyZeroedOutput(
+    int32_t zero = 0;
+    TupleDescriptor expectedDesc;
+    expectedDesc.push_back(attrDesc);
+    TupleData expectedTuple;
+    expectedTuple.compute(expectedDesc);
+    expectedTuple[0].pData = reinterpret_cast<PBuffer>(&zero);
+    verifyConstantOutput(
         *pOutputStream,
-        2*paramsMock.nRows*sizeof(int32_t));
+        expectedTuple,
+        2*paramsMock.nRows);
 }
 
 void ExecStreamTestSuite::testSegBufferExecStream()
@@ -169,9 +177,16 @@ void ExecStreamTestSuite::testSegBufferExecStream()
     SharedExecStream pOutputStream = prepareTransformGraph(
         mockStreamEmbryo, bufStreamEmbryo);
 
-    verifyZeroedOutput(
+    int32_t zero = 0;
+    TupleDescriptor expectedDesc;
+    expectedDesc.push_back(attrDesc);
+    TupleData expectedTuple;
+    expectedTuple.compute(expectedDesc);
+    expectedTuple[0].pData = reinterpret_cast<PBuffer>(&zero);
+    verifyConstantOutput(
         *pOutputStream,
-        mockParams.nRows*sizeof(int32_t));
+        expectedTuple,
+        mockParams.nRows);
 }
 
 void ExecStreamTestSuite::testCartesianJoinExecStream(
@@ -209,9 +224,18 @@ void ExecStreamTestSuite::testCartesianJoinExecStream(
         innerStreamEmbryo,
         joinStreamEmbryo);
 
-    verifyZeroedOutput(
+    int32_t zero = 0;
+    TupleDescriptor expectedDesc;
+    expectedDesc.push_back(attrDesc);
+    expectedDesc.push_back(attrDesc);
+    TupleData expectedTuple;
+    expectedTuple.compute(expectedDesc);
+    expectedTuple[0].pData = reinterpret_cast<PBuffer>(&zero);
+    expectedTuple[1].pData = reinterpret_cast<PBuffer>(&zero);
+    verifyConstantOutput(
         *pOutputStream,
-        nRowsOuter*nRowsInner*2*sizeof(int32_t));
+        expectedTuple,
+        nRowsOuter*nRowsInner);
 }
 
 void ExecStreamTestSuite::testCountAggExecStream()

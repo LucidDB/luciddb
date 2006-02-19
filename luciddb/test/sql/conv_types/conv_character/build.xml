@@ -27,35 +27,18 @@
   <fail unless="open.dir" />
 
   <property environment="env" />
+  <property file="run.properties"/>
 
-  <!-- override Farrago -->
-  <property name="project.catalog.dir" location="${open.dir}/luciddb/catalog" />
-  <property name="project.trace.propfile" location="${open.dir}/luciddb/trace/LucidDbTrace.properties" />
-
-  <import file="${open.dir}/farrago/buildMacros.xml" />
-  
-  <property name="classes.dir" location="${open.dir}/luciddb/classes" />
-  <property name="luciddb.plugin.dir" location="${open.dir}/luciddb/plugin" />
-
-  <!-- classpath for running tests via ant -->
-  <path id="test.classpath">
-    <pathelement path="${classes.dir}"/>
-    <pathelement path="${farrago.sqlline.classpath}"/>
-    <pathelement path="${ant.classpath}"/>
-    <pathelement path="${bh.run.classpath}"/>
-    <pathelement path="${luciddb.plugin.dir}/FarragoMedJdbc3p.jar"/>
-  </path>
-  <property name="test.classpath" refid="test.classpath"/>
-  
   <target name="test">
-    <property name="test-suite" value="test.xml"/>
-    <blackhawk.fork basedir="${conv_char.dir}" 
-      testscript="${test-suite}"
-      classpathref="test.classpath"/>
+    <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
   </target>  
 
   <target name="restoreCatalog">
     <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>
   </target>  
+
+  <target name="clean">
+    <delete dir="${bh.log.basedir}"/>
+  </target>
 
 </project>
