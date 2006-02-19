@@ -34,7 +34,6 @@ import org.eigenbase.util.DoubleKeyMap;
 import org.eigenbase.util.Util;
 import org.eigenbase.util14.*;
 
-import com.disruptivetech.farrago.calc.CalcProgramBuilder.OpType;
 import com.disruptivetech.farrago.calc.CalcProgramBuilder.Register;
 
 import java.math.*;
@@ -1522,7 +1521,8 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                     translator.builder.addLabelJumpNull(next, compareResult);
                     implementCaseValue(
                         translator,
-                        resultOfCall, 
+                        resultOfCall,
+                        call.getType(),
                         call.operands[i + 1]);
                     translator.builder.addLabelJump(endOfCase);
                     translator.builder.addLabel(next);
@@ -1532,7 +1532,8 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                     if (val.booleanValue()) {
                         implementCaseValue(
                             translator,
-                            resultOfCall, 
+                            resultOfCall,
+                            call.getType(),
                             call.operands[i + 1]);
                         if (i != 0) {
                             translator.builder.addLabelJump(endOfCase);
@@ -1550,7 +1551,8 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 int elseIndex = call.operands.length - 1;
                 implementCaseValue(
                     translator,
-                    resultOfCall, 
+                    resultOfCall,
+                    call.getType(),
                     call.operands[elseIndex]);
             }
             translator.builder.addLabel(endOfCase); //this assumes that more instructions will follow
@@ -1560,21 +1562,31 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         private void implementCaseValue(
             RexToCalcTranslator translator, 
             CalcProgramBuilder.Register resultOfCall,
+            RelDataType resultDataType,
             RexNode value)
         {
             translator.newScope();
             try {
-                CalcProgramBuilder.Register operand =
-                    translator.implementNode(value);
-                if ((resultOfCall.getOpType() != operand.getOpType())
-                    || (resultOfCall.storageBytes != operand.storageBytes))
-                {
-                    ExtInstructionDefTable.castA.add(
+                RelDataType valueType = value.getType();
+
+                // TODO: Don't need cast if only nullability differs
+                boolean castNeeded = !resultDataType.equals(valueType);
+
+                if (castNeeded) {
+                    // Do cast from original type to result type
+                    RexNode castCall =
+                        translator.rexBuilder.makeCast(
+                            resultDataType,
+                            value);
+                    CalcProgramBuilder.Register newOp =
+                        translator.implementNode(castCall);
+                    CalcProgramBuilder.move.add(
                         translator.builder,
-                        new CalcProgramBuilder.Register [] { 
-                            resultOfCall,
-                            operand });
+                        resultOfCall,
+                        newOp);
                 } else {
+                    CalcProgramBuilder.Register operand =
+                        translator.implementNode(value);
                     CalcProgramBuilder.move.add(
                         translator.builder,
                         resultOfCall,

@@ -284,7 +284,6 @@ public class ReduceDecimalsRule extends RelOptRule
             RexNode[] newOperands = new RexNode[call.operands.length];
             boolean operandsReduced = false;
             for (int i = 0; i < call.operands.length; i++) {
-
                 newOperands[i] = reduceDecimals(call.operands[i], builder);
                 if (newOperands[i] != call.operands[i]) {
                     operandsReduced = true;
@@ -339,7 +338,12 @@ public class ReduceDecimalsRule extends RelOptRule
             } else if (call.getOperator() == SqlStdOperatorTable.absFunc) {
                 return new PassThroughExpander(builder);
             } else if (call.getOperator() == SqlStdOperatorTable.caseOperator) {
-                return new PassThroughExpander(builder);
+                RexExpander castExpander =  new CastAsCallExpander(builder);
+                if (castExpander.canExpand(call)) {
+                    return castExpander;
+                } else {
+                    return new PassThroughExpander(builder);
+                }
             } else {
                 return new CastAsDoubleExpander(builder);
             }
@@ -926,7 +930,8 @@ public class ReduceDecimalsRule extends RelOptRule
     
     /**
      * An expander that substitutes decimals with their integer 
-     * representations. The output is reinterpreted as the input type.
+     * representations. If the output is decimal, the output is
+     * reinterpreted from the integer representation into a decimal.
      */
     private class PassThroughExpander extends RexExpander
     {
@@ -950,37 +955,100 @@ public class ReduceDecimalsRule extends RelOptRule
                     newOperands[i] = operands[i];
                 }
             }
-            return encodeValue(
-                builder.makeCall(call.getOperator(), newOperands),
-                call.getType());
+
+            RexNode newCall = builder.makeCall(call.getOperator(), newOperands);
+            if (SqlTypeUtil.isDecimal(call.getType())) {
+                return encodeValue(newCall, call.getType());
+            } else {
+                return newCall;
+            }
         }
     }
-    
+
     /**
      * An expander which casts decimal arguments as doubles
      */
-    private class CastAsDoubleExpander extends RexExpander
+    private class CastAsDoubleExpander extends CastAsTypeExpander
     {
         public CastAsDoubleExpander(RexBuilder builder)
         {
             super(builder);
         }
-        
+
+        public RelDataType getTargetType(RexCall call)
+        {
+            return real8;
+        }
+    }
+
+    /**
+     * An expander which casts decimal arguments as call return type
+     */
+    private class CastAsCallExpander extends CastAsTypeExpander
+    {
+        public CastAsCallExpander(RexBuilder builder)
+        {
+            super(builder);
+        }
+
+        public RelDataType getTargetType(RexCall call)
+        {
+            return call.getType();
+        }
+    }
+
+    /**
+     * An expander which casts decimal arguments as another type
+     */
+    private abstract class CastAsTypeExpander extends RexExpander
+    {
+        public CastAsTypeExpander(RexBuilder builder)
+        {
+            super(builder);
+        }
+
+        public abstract RelDataType getTargetType(RexCall call);
+
         public boolean canExpand(RexCall call)
         {
-            return RexUtil.requiresDecimalExpansion(call, false);
+            RelDataType targetType = getTargetType(call);
+            if (SqlTypeUtil.isDecimal(targetType)) {
+                // Make sure decimal operand types has different precision
+                // or scale from targetType
+                boolean needExpansion = false;
+                for (int i = 0; i < call.operands.length; i++) {
+                    RelDataType operandType = call.operands[i].getType();
+                    if (SqlTypeUtil.isDecimal(operandType)) {
+                        if ((operandType.getPrecision() != targetType.getPrecision()) ||
+                            (operandType.getScale() != targetType.getScale())) {
+                            needExpansion = true;
+                            break;
+                        }
+                    }
+                }
+                if (needExpansion) {
+                    return RexUtil.requiresDecimalExpansion(call, false);
+                } else {
+                    return false;
+                }
+            } else {
+                return RexUtil.requiresDecimalExpansion(call, false);
+            }
         }
-        
+
         public RexNode expand(RexCall call, RexNode[] operands)
         {
+            RelDataType targetType = getTargetType(call);
+
             RexNode[] newOperands = new RexNode[operands.length];
             for (int i=0; i < operands.length; i++) {
                 if (SqlTypeUtil.isDecimal(operands[i].getType())) {
-                    newOperands[i] = ensureType(real8, operands[i]);
+                    newOperands[i] = ensureType(targetType, operands[i]);
                 } else {
                     newOperands[i] = operands[i];
                 }
             }
+
             RelDataType retType = builder.deriveReturnType(
                 call.getOperator(),
                 builder.getTypeFactory(),
@@ -991,10 +1059,10 @@ public class ReduceDecimalsRule extends RelOptRule
             return ret;
         }
     }
-    
+
     /**
      * This expander simplifies reinterpret calls. Consider (1.0+1)*1.
-     * The inner operation encodes a decimal (Reinterpret(...)) which the 
+     * The inner operation encodes a decimal (Reinterpret(...)) which the
      * outer operation immediately decodes: (Reinterpret(Reinterpret(...))).
      * Arithmetic overflow is handled by underlying integer operations, so 
      * we don't have to consider it. Simply remove the nested Reinterpret.

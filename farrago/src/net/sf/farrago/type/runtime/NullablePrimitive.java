@@ -99,21 +99,14 @@ public abstract class NullablePrimitive implements NullableValue,
         } else if (obj instanceof Number) {
             setNull(false);
             setNumber((Number) obj);
-        } else if (obj instanceof NullablePrimitive) {
-            NullablePrimitive nullable = (NullablePrimitive) obj;
-            assignFrom(nullable.getNullableData());
+        } else if (obj instanceof DataValue) {
+            DataValue dataValue = (DataValue) obj;
+            assignFrom(dataValue.getNullableData());
         } else if (obj instanceof Boolean) {
             setNull(false);
             Boolean b = (Boolean) obj;
             setNumber(b.booleanValue() ? INT_ONE : INT_ZERO);
         } else {
-            if (obj instanceof NullableValue) {
-                NullableValue nullable = (NullableValue) obj;
-                if (nullable.isNull()) {
-                    setNull(true);
-                    return;
-                }
-            }
             setNull(false);
             String s = obj.toString();
             Number n;

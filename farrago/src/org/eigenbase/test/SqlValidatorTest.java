@@ -416,6 +416,8 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExp("nullif(1,2)");
         checkExpType("nullif(1,2)", "INTEGER");
         checkExpType("nullif('a','b')", "CHAR(1)");
+        checkExpType("nullif(345.21, 2)", "DECIMAL(5, 2)");
+        checkExpType("nullif(345.21, 2e0)", "DECIMAL(5, 2)");
     }
 
     public void testCoalesce() {
@@ -1104,9 +1106,11 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         // addition operator
         checkExpType("cast(1 as TINYINT) + cast(5 as INTEGER)", "INTEGER NOT NULL");
         checkExpType("cast(null as SMALLINT) + cast(5 as BIGINT)", "BIGINT");
-        checkExpType("cast(1 as REAL) + cast(5 as INTEGER)", "DOUBLE NOT NULL");
+        checkExpType("cast(1 as REAL) + cast(5 as INTEGER)", "REAL NOT NULL");
         checkExpType("cast(null as REAL) + cast(5 as DOUBLE)", "DOUBLE");
+        checkExpType("cast(null as REAL) + cast(5 as REAL)", "REAL");
 
+        checkExpType("cast(1 as DECIMAL(5, 2)) + cast(1 as REAL)", "DOUBLE NOT NULL");
         checkExpType("cast(1 as DECIMAL(5, 2)) + cast(1 as DOUBLE)", "DOUBLE NOT NULL");
         checkExpType("cast(null as DECIMAL(5, 2)) + cast(1 as DOUBLE)", "DOUBLE");
 
@@ -1125,8 +1129,9 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         // substraction operator
         checkExpType("cast(1 as TINYINT) - cast(5 as BIGINT)", "BIGINT NOT NULL");
         checkExpType("cast(null as INTEGER) - cast(5 as SMALLINT)", "INTEGER");
-        checkExpType("cast(1 as INTEGER) - cast(5 as REAL)", "DOUBLE NOT NULL");
+        checkExpType("cast(1 as INTEGER) - cast(5 as REAL)", "REAL NOT NULL");
         checkExpType("cast(null as REAL) - cast(5 as DOUBLE)", "DOUBLE");
+        checkExpType("cast(null as REAL) - cast(5 as REAL)", "REAL");
 
         checkExpType("cast(1 as DECIMAL(5, 2)) - cast(1 as DOUBLE)", "DOUBLE NOT NULL");
         checkExpType("cast(null as DOUBLE) - cast(1 as DECIMAL)", "DOUBLE");
@@ -1146,7 +1151,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         // multiply operator
         checkExpType("cast(1 as TINYINT) * cast(5 as INTEGER)", "INTEGER NOT NULL");
         checkExpType("cast(null as SMALLINT) * cast(5 as BIGINT)", "BIGINT");
-        checkExpType("cast(1 as REAL) * cast(5 as INTEGER)", "DOUBLE NOT NULL");
+        checkExpType("cast(1 as REAL) * cast(5 as INTEGER)", "REAL NOT NULL");
         checkExpType("cast(null as REAL) * cast(5 as DOUBLE)", "DOUBLE");
 
         checkExpType("cast(1 as DECIMAL(7, 3)) * 1.654", "DECIMAL(11, 6) NOT NULL");
@@ -1167,7 +1172,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         // divide operator
         checkExpType("cast(1 as TINYINT) / cast(5 as INTEGER)", "INTEGER NOT NULL");
         checkExpType("cast(null as SMALLINT) / cast(5 as BIGINT)", "BIGINT");
-        checkExpType("cast(1 as REAL) / cast(5 as INTEGER)", "DOUBLE NOT NULL");
+        checkExpType("cast(1 as REAL) / cast(5 as INTEGER)", "REAL NOT NULL");
         checkExpType("cast(null as REAL) / cast(5 as DOUBLE)", "DOUBLE");
         checkExpType("cast(1 as DECIMAL(7, 3)) / 1.654", "DECIMAL(15, 8) NOT NULL");
         checkExpType("cast(null as DECIMAL(7, 3)) / cast (1.654 as DOUBLE)", "DOUBLE");
