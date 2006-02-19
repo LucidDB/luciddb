@@ -149,8 +149,6 @@ require version '${required.ant.version}'."/>
   <fileset dir="${regressionsql.dir}" id="fileset.regressionsql.win">
     <include name="**/*.sql"/>
     <exclude name="**/numericStrCasts.sql"/>
-    <exclude name="**/literalTests/real.sql"/>
-    <exclude name="**/literalTests/string.sql"/>
   </fileset>
   <pathconvert property="fileset.regressionsql.win" 
     refid="fileset.regressionsql.win"
