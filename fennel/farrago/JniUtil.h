@@ -233,6 +233,12 @@ public:
      */
     static jmethodID methGetIndexRoot;
 
+    /**
+     * Java method RhBase64.decode.
+     */
+    static jmethodID methBase64Decode;
+    static jclass classRhBase64;
+
 
     /**
      * Initializes JNI debugging.

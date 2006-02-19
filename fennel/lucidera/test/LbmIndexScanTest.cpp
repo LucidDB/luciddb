@@ -187,7 +187,8 @@ protected:
      * @param expectedBitmaps buffer containing expected bitmap result
      */
     void testScanIdx(
-        uint totalKeys, uint nKeys, uint bufSize, PBuffer inputBuffer,
+        uint totalKeys, uint nKeys, uint bufSize,
+        boost::shared_array<FixedBuffer> inputBuffer,
         uint expectedNBitmaps, PBuffer expectedBitmaps);
 
     /**
@@ -206,7 +207,7 @@ protected:
         uint nKeys, uint nInputTuples, boost::scoped_array<uint64_t> &vals, 
         char &lowerDirective, char &upperDirective,
         TupleAccessor &inputTupleAccessor, TupleData &inputTupleData,
-        boost::scoped_array<FixedBuffer> &inputBuffer);
+        boost::shared_array<FixedBuffer> &inputBuffer);
 
     /**
      * Generate bitmaps to used in verifying result of bitmap index scan
@@ -309,12 +310,12 @@ void LbmIndexScanTest::testMultipleRanges()
     inputTupleAccessor.compute(inputTupleDesc);
 
     uint nInputTuples = 3;
-    boost::scoped_array<FixedBuffer> inputBuffer;
+    boost::shared_array<FixedBuffer> inputBuffer;
     inputBuffer.reset(
         new FixedBuffer[nInputTuples * inputTupleAccessor.getMaxByteCount()]);
     PBuffer inputBuf = inputBuffer.get();
     uint offset = 0;
-    
+
     setSearchKey(
         '-', ')', 0, 10, inputBuf, offset, inputTupleAccessor, inputTupleData);
     setSearchKey(
@@ -350,7 +351,7 @@ void LbmIndexScanTest::testMultipleRanges()
     }
 
     testScanIdx(
-        nClusters, nClusters, offset, inputBuf, expectedNBitmaps,
+        nClusters, nClusters, offset, inputBuffer, expectedNBitmaps,
         bitmapBuf);
 }
 
@@ -381,7 +382,7 @@ void LbmIndexScanTest::testScanFullKey(
     char upperDirective;
     TupleAccessor inputTupleAccessor;
     TupleData inputTupleData;
-    boost::scoped_array<FixedBuffer> inputBuffer;
+    boost::shared_array<FixedBuffer> inputBuffer;
 
     initEqualSearch(
         nKeys, nInputTuples, vals, lowerDirective, upperDirective,
@@ -412,7 +413,7 @@ void LbmIndexScanTest::testScanFullKey(
 
         testScanIdx(
             nKeys, nKeys, inputTupleAccessor.getCurrentByteCount(),
-            inputBuffer.get(), expectedNBitmaps, expectedBitmaps.get());
+            inputBuffer, expectedNBitmaps, expectedBitmaps.get());
     }
 }
 
@@ -426,7 +427,7 @@ void LbmIndexScanTest::testScanPartialKey(
     char upperDirective;
     TupleAccessor inputTupleAccessor;
     TupleData inputTupleData;
-    boost::scoped_array<FixedBuffer> inputBuffer;
+    boost::shared_array<FixedBuffer> inputBuffer;
 
     initEqualSearch(
         nKeys - 1, nInputTuples, vals, lowerDirective, upperDirective,
@@ -483,14 +484,14 @@ void LbmIndexScanTest::testScanPartialKey(
     }
     testScanIdx(
         nKeys, nKeys - 1, inputTupleAccessor.getCurrentByteCount(),
-        inputBuffer.get(), expectedNBitmaps, bitmapBuf);
+        inputBuffer, expectedNBitmaps, bitmapBuf);
 }
 
 void LbmIndexScanTest::initEqualSearch(
     uint nKeys, uint nInputTuples, boost::scoped_array<uint64_t> &vals, 
     char &lowerDirective, char &upperDirective,
     TupleAccessor &inputTupleAccessor, TupleData &inputTupleData,
-    boost::scoped_array<FixedBuffer> &inputBuffer)
+    boost::shared_array<FixedBuffer> &inputBuffer)
 {
     TupleDescriptor inputTupleDesc;
     for (uint i = 0; i < 2; i++) {
@@ -892,7 +893,8 @@ void LbmIndexScanTest::testCaseTearDown()
 }
 
 void LbmIndexScanTest::testScanIdx(
-    uint totalKeys, uint nKeys, uint bufSize, PBuffer inputBuffer,
+    uint totalKeys, uint nKeys, uint bufSize,
+    boost::shared_array<FixedBuffer> inputBuffer,
     uint expectedNBitmaps, PBuffer expectedBitmaps)
 {
     resetExecStreamTest();

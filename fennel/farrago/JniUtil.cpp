@@ -50,6 +50,8 @@ jmethodID JniUtil::methRestart = 0;
 jmethodID JniUtil::methGetJavaStreamHandle = 0;
 jmethodID JniUtil::methGetIndexRoot = 0;
 jmethodID JniUtil::methToString = 0;
+jmethodID JniUtil::methBase64Decode;
+jclass JniUtil::classRhBase64;
 
 AtomicCounter JniUtil::handleCount;
 
@@ -87,10 +89,9 @@ void JniUtil::initDebug(char const *envVarName)
         // is disturbing but useful.
         _sleep(600000);
 #else
-        // On many versions of Linux, a "cont" in gdb will wake this
+        // On older versions of Linux, a "cont" in gdb will wake this
         // sleep up immediately, which is disturbing but useful.
-        // Under Fedora Core 2 (and possibly others -- it may be
-        // related to the version of gdb) the continue command resumes
+        // On newer versions, the continue command resumes
         // the sleep().  So, if $envVarName > 1, wait for SIGHUP.
         // Use the "signal 1" command to wake the pause up.
         if (atoi(pDebug) == 1) {
@@ -174,6 +175,7 @@ jint JniUtil::init(JavaVM *pVmInit)
     jclass classObject = pEnv->FindClass("java/lang/Object");
     jclass classCollection = pEnv->FindClass("java/util/Collection");
     jclass classIterator = pEnv->FindClass("java/util/Iterator");
+    classRhBase64 = pEnv->FindClass("org/eigenbase/util/RhBase64");
     jclass classJavaTupleStream = pEnv->FindClass(
         "net/sf/farrago/runtime/JavaTupleStream");
     jclass classJavaPullTupleStream = pEnv->FindClass(
@@ -200,6 +202,8 @@ jint JniUtil::init(JavaVM *pVmInit)
         "(J)J");
     methToString = pEnv->GetMethodID(
         classObject,"toString","()Ljava/lang/String;");
+    methBase64Decode = pEnv->GetStaticMethodID(
+        classRhBase64,"decode","(Ljava/lang/String;)[B");
     return jniVersion;
 }
 

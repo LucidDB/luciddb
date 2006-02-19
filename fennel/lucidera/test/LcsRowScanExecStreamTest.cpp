@@ -235,7 +235,7 @@ void LcsRowScanExecStreamTest::testScanCols(uint nRows, uint nCols,
     // setup input rid stream
 
     ValuesExecStreamParams valuesParams;
-    boost::scoped_array<uint8_t> pBuffer;
+    boost::shared_array<FixedBuffer> pBuffer;
     ExecStreamEmbryo valuesStreamEmbryo;
     LcsRowScanExecStreamParams scanParams;
 
@@ -251,7 +251,7 @@ void LcsRowScanExecStreamTest::testScanCols(uint nRows, uint nCols,
         uint bufferSize = std::max(
             16, (int) (nRows/8 + nRows/bitmapColSize * 8));
         pBuffer.reset(new uint8_t[bufferSize]);
-        valuesParams.pTupleBuffer = pBuffer.get();
+        valuesParams.pTupleBuffer = pBuffer;
         valuesParams.bufSize = generateBitmaps(
             nRows, skipRows, valuesParams.outputTupleDesc, pBuffer.get());
         assert(valuesParams.bufSize <= bufferSize);

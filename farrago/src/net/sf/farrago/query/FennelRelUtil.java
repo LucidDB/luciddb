@@ -27,11 +27,10 @@ import java.util.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fennel.*;
-import net.sf.farrago.fennel.tuple.FennelStandardTypeDescriptor;
+import net.sf.farrago.fennel.tuple.*;
 import net.sf.farrago.util.*;
-import net.sf.farrago.session.FarragoSessionPlanner;
-import net.sf.farrago.FarragoMetadataFactory;
-import net.sf.farrago.FarragoPackage;
+import net.sf.farrago.session.*;
+import net.sf.farrago.*;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.rel.*;
@@ -246,6 +245,30 @@ public abstract class FennelRelUtil
         int byteLength = SqlTypeUtil.getMaxByteSize(type);
         attrDesc.setByteLength(byteLength);
         attrDesc.setNullable(type.isNullable());
+    }
+
+    /**
+     * Creates a FennelTupleDescriptor for a RelDataType which is a row.
+     *
+     * @param rowType row type descriptor
+     *
+     * @return generated tuple descriptor
+     */
+    public static FennelTupleDescriptor convertRowTypeToFennelTupleDesc(
+        RelDataType rowType)
+    {
+        FennelTupleDescriptor tupleDesc = new FennelTupleDescriptor();
+        for (RelDataTypeField field : rowType.getFields()) {
+            RelDataType type = field.getType();
+            FennelTupleAttributeDescriptor attrDesc =
+                new FennelTupleAttributeDescriptor(
+                    FennelRelUtil.convertSqlTypeNameToFennelType(
+                        type.getSqlTypeName()),
+                    type.isNullable(),
+                    SqlTypeUtil.getMaxByteSize(type));
+            tupleDesc.add(attrDesc);
+        }
+        return tupleDesc;
     }
 
     /**

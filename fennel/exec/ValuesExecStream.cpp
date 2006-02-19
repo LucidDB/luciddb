@@ -49,7 +49,7 @@ ExecStreamResult ValuesExecStream::execute(
     }
 
     pOutAccessor->provideBufferForConsumption(
-        pTupleBuffer, pTupleBuffer + bufSize);
+        pTupleBuffer.get(), pTupleBuffer.get() + bufSize);
     produced = true;
     return EXECRC_BUF_OVERFLOW;
 }
