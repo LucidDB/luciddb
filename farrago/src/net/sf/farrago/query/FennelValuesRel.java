@@ -55,6 +55,19 @@ public class FennelValuesRel extends AbstractRelNode implements FennelRel
 {
     private final List<List<RexLiteral>> tuples;
 
+    /**
+     * Creates a new FennelValuesRel.  Note that tuples passed in become owned
+     * by this rel (without a deep copy), so caller must not modify them after
+     * this call, otherwise bad things will happen.
+     *
+     * @param cluster .
+     *
+     * @param rowType row type for tuples produced by this rel
+     *
+     * @param tuples 2-dimensional array of tuple values to be produced; outer
+     * list contains tuples; each inner list is one tuple; all tuples must be
+     * of same length, conforming to rowType
+     */
     public FennelValuesRel(
         RelOptCluster cluster,
         RelDataType rowType,
@@ -63,6 +76,33 @@ public class FennelValuesRel extends AbstractRelNode implements FennelRel
         super(cluster, new RelTraitSet(FENNEL_EXEC_CONVENTION));
         this.rowType = rowType;
         this.tuples = tuples;
+        assert(assertRowType());
+    }
+
+    /**
+     * @return true if all tuples match rowType; otherwise, assert
+     * on mismatch
+     */
+    private boolean assertRowType()
+    {
+        for (List<RexLiteral> tuple : tuples) {
+            RelDataTypeField [] fields = rowType.getFields();
+            assert(tuple.size() == fields.length);
+            int i = 0;
+            for (RexLiteral literal : tuple) {
+                RelDataType fieldType = fields[i++].getType();
+                // TODO jvs 19-Feb-2006: strengthen this a bit.  For example,
+                // overflow, rounding, and truncation must already have been
+                // dealt with.
+                if (!RexLiteral.isNullLiteral(literal)) {
+                    assert(
+                        SqlTypeUtil.canAssignFrom(
+                            fieldType,
+                            literal.getType()));
+                }
+            }
+        }
+        return true;
     }
 
     // override Object
@@ -81,16 +121,37 @@ public class FennelValuesRel extends AbstractRelNode implements FennelRel
     // implement RelNode
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
-        return planner.makeTinyCost();
+        double dRows = getRows();
+        // CPU is negligible since ValuesExecStream just hands off
+        // the entire buffer to its consumer.
+        double dCpu = 1;
+        double dIo = 0;
+        return planner.makeCost(dRows, dCpu, dIo);
+    }
+    
+    // implement RelNode
+    public double getRows()
+    {
+        return tuples.size();
     }
 
     // implement RelNode
     public void explain(RelOptPlanWriter pw)
     {
+        // A little adapter just to get the tuples to come out
+        // with curly brackets instead of square brackets.  Plus
+        // more whitespace for readability.
+        List renderList = new ArrayList();
+        for (List<RexLiteral> tuple : tuples) {
+            String s = tuple.toString();
+            assert(s.startsWith("["));
+            assert(s.endsWith("]"));
+            renderList.add("{ " + s.substring(1, s.length() - 1) + " }");
+        }
         pw.explain(
             this,
             new String [] { "tuples" },
-            new Object [] { tuples });
+            new Object [] { renderList });
     }
 
     // implement FennelRel
@@ -105,7 +166,9 @@ public class FennelValuesRel extends AbstractRelNode implements FennelRel
         FennelTupleData tupleData = new FennelTupleData(tupleDesc);
 
         // TODO jvs 18-Feb-2006:  query Fennel to get alignment and
-        // DEBUG_TUPLE_ACCESS?
+        // DEBUG_TUPLE_ACCESS?  And maybe we should always use network
+        // byte order in case this plan is going to get shipped
+        // somewhere else?
         FennelTupleAccessor tupleAccessor = new FennelTupleAccessor();
         tupleAccessor.compute(tupleDesc);
         ByteBuffer tupleBuffer = ByteBuffer.allocate(
@@ -118,12 +181,40 @@ public class FennelValuesRel extends AbstractRelNode implements FennelRel
             int i = 0;
             tupleBuffer.clear();
             for (RexLiteral literal : tuple) {
-                FennelTupleDatum datum = tupleData.getDatum(i++);
+                FennelTupleDatum datum = tupleData.getDatum(i);
+                RelDataType fieldType = rowType.getFields()[i].getType();
+                ++i;
+                // Start with a null.
                 datum.reset();
-                if (!RexLiteral.isNullLiteral(literal)) {
-                    // TODO:  handle non-numerics
-                    BigDecimal bigDecimal = (BigDecimal) literal.getValue();
-                    datum.setLong(bigDecimal.unscaledValue().longValue());
+                if (RexLiteral.isNullLiteral(literal)) {
+                    continue;
+                }
+                Comparable value = literal.getValue();
+                if (value instanceof BigDecimal) {
+                    BigDecimal bigDecimal = (BigDecimal) value;
+                    switch (fieldType.getSqlTypeName().getOrdinal()) {
+                    case SqlTypeName.Real_ordinal:
+                        datum.setFloat(bigDecimal.floatValue());
+                        break;
+                    case SqlTypeName.Float_ordinal:
+                    case SqlTypeName.Double_ordinal:
+                        datum.setDouble(bigDecimal.doubleValue());
+                        break;
+                    default:
+                        datum.setLong(bigDecimal.unscaledValue().longValue());
+                        break;
+                    }
+                } else if (value instanceof Calendar) {
+                    Calendar cal = (Calendar) value;
+                    // TODO:  eventually, timezone
+                    datum.setLong(cal.getTimeInMillis());
+                } else if (value instanceof NlsString) {
+                    NlsString nlsString = (NlsString) value;
+                    datum.setString(nlsString.getValue());
+                } else {
+                    assert(value instanceof ByteBuffer);
+                    ByteBuffer byteBuffer = (ByteBuffer) value;
+                    datum.setBytes(byteBuffer.array());
                 }
             }
             tupleAccessor.marshal(tupleData, tupleBuffer);

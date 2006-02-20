@@ -11,10 +11,10 @@
 |   FennelToIteratorConverter                                            |
 |     FennelCartesianProductRel(leftouterjoin=[false])                   |
 |       FennelCalcRel(expr#0=[{inputs}], expr#1=[true], EXPR$0=[$t1])    |
-|         FennelValuesRel(tuples=[[[0]]])                                |
+|         FennelValuesRel(tuples=[[{ 0 }]])                              |
 |       FennelPullCollectRel                                             |
 |         FennelCalcRel(expr#0=[{inputs}], expr#1=[622], EXPR$0=[$t1])   |
-|           FennelValuesRel(tuples=[[[0]]])                              |
+|           FennelValuesRel(tuples=[[{ 0 }]])                            |
 +------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

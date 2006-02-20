@@ -530,8 +530,6 @@ public abstract class FennelRelUtil
         RelOptCluster cluster,
         SargExpr sargExpr)
     {
-        List<RelNode> inputs = new ArrayList<RelNode>();
-
         SargIntervalSequence seq = sargExpr.evaluate();
 
         if (seq.getList().isEmpty()) {
@@ -555,22 +553,58 @@ public abstract class FennelRelUtil
             seq = emptyIntervalExpr.evaluate();
             assert(seq.getList().size() == 1);
         }
-        
+
+        List<List<RexNode>> inputTuples = new ArrayList<List<RexNode>>();
+
+        boolean allLiteral = true;
         for (SargInterval interval : seq.getList()) {
+            List<RexNode> inputTuple =
+                convertIntervalToTuple(
+                    cluster.getRexBuilder(),
+                    interval);
+            inputTuples.add(inputTuple);
+            for (RexNode value : inputTuple) {
+                if (!(value instanceof RexLiteral)) {
+                    allLiteral = false;
+                    break;
+                }
+            }
+        }
+
+        if (allLiteral) {
+            // Since all tuple values are literals, we can optimize
+            // to use the FennelValuesRel representation.
+            return new FennelValuesRel(
+                cluster,
+                keyRowType,
+                (List) inputTuples);
+        }
+
+        // Otherwise, we have to convert to UnionAll ({PROJECT(ONEROW)}*)
+        // representation.
+        
+        // TODO jvs 19-Feb-2006:  It doesn't have to be all-or-nothing.
+        // We could split it up with one FennelValuesRel in the UnionAll
+        // taking care of all the literals.  Typical case would be
+        // something like WHERE x IN (10, 20, ?)
+
+        // FIXME jvs 23-Jan-2006:  But should not be using a UnionAll here,
+        // because order may be important.  What to do?
+        
+        List<RelNode> inputs = new ArrayList<RelNode>();
+
+        for (List<RexNode> inputTuple : inputTuples) {
             inputs.add(
-                convertInterval(
+                convertIntervalTupleToRel(
                     callTraits,
                     keyRowType,
                     cluster,
-                    interval));
+                    inputTuple));
         }
 
         if (inputs.size() == 1) {
             return inputs.get(0);
         }
-        
-        // FIXME jvs 23-Jan-2006:  Should not be using a union here,
-        // because order is important.  Need a sequence rel?
         
         UnionRel unionRel = new UnionRel(
             cluster,
@@ -580,28 +614,19 @@ public abstract class FennelRelUtil
     }
 
     /**
-     * Converts a {@link SargInterval} into a relational expression
-     * which produces the interval representation expected
-     * by Fennel BTree searches.
+     * Converts a {@link SargInterval} into the directive tuple representation
+     * expected by Fennel BTree searches.
      *
-     * @param callTraits traits to apply to new rels generated
-     *
-     * @param keyRowType input row type expected by BTree search
-     *
-     * @param cluster query cluster
+     * @param rexBuilder builder for tuple values
      *
      * @param interval interval to be converted
      *
-     * @return corresponding relational expression
+     * @return corresponding tuple
      */
-    public static RelNode convertInterval(
-        RelTraitSet callTraits,
-        RelDataType keyRowType,
-        RelOptCluster cluster,
+    public static List<RexNode> convertIntervalToTuple(
+        RexBuilder rexBuilder,
         SargInterval interval)
     {
-        RexBuilder rexBuilder = cluster.getRexBuilder();
-
         RexLiteral lowerBoundDirective = convertEndpoint(
             rexBuilder,
             interval.getLowerBound());
@@ -617,23 +642,46 @@ public abstract class FennelRelUtil
         RexNode upperBoundCoordinate = convertCoordinate(
             rexBuilder,
             interval.getUpperBound());
-        
-        RexNode [] searchExps = new RexNode [] {
-            lowerBoundDirective,
-            lowerBoundCoordinate,
-            upperBoundDirective,
-            upperBoundCoordinate,
-        };
 
+        return Arrays.asList(
+            new RexNode [] {
+                lowerBoundDirective,
+                lowerBoundCoordinate,
+                upperBoundDirective,
+                upperBoundCoordinate,
+            });
+    }
+    
+    /**
+     * Converts the tuple representation of a {@link SargInterval} into a
+     * relational expression.
+     *
+     * @param callTraits traits to apply to new rels generated
+     *
+     * @param keyRowType input row type expected by BTree search
+     *
+     * @param cluster query cluster
+     *
+     * @param tuple tuple to be converted
+     *
+     * @return corresponding relational expression
+     */
+    public static RelNode convertIntervalTupleToRel(
+        RelTraitSet callTraits,
+        RelDataType keyRowType,
+        RelOptCluster cluster,
+        List<RexNode> tuple)
+    {
         // Generate a one-row relation producing the key to search for.
         OneRowRel oneRowRel = new OneRowRel(cluster);
-        RelNode keyRel = CalcRel.createProject(oneRowRel, searchExps, null);
+        RelNode keyRel = CalcRel.createProject(
+            oneRowRel, tuple.toArray(RexNode.EMPTY_ARRAY), null);
 
         // For dynamic parameters, add a filter to remove nulls, since they can
         // never match in a comparison.  FIXME:  This isn't quite right,
         // since the other bound may not be a dynamic parameter.
-        if ((lowerBoundCoordinate instanceof RexDynamicParam)
-            || (upperBoundCoordinate instanceof RexDynamicParam))
+        if ((tuple.get(1) instanceof RexDynamicParam)
+            || (tuple.get(3) instanceof RexDynamicParam))
         {
             keyRel = RelOptUtil.createNullFilter(keyRel, null);
         }

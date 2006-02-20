@@ -133,6 +133,15 @@ public class SargIntervalExpr extends SargIntervalBase implements SargExpr
     {
         SargIntervalSequence seq = new SargIntervalSequence();
 
+        // If at least one of the bounds got flipped by overflow, the
+        // result is empty.
+        if ((lowerBound.getBoundType() != SargBoundType.LOWER) 
+            || (upperBound.getBoundType() != SargBoundType.UPPER))
+        {
+            // empty sequence
+            return seq;
+        }
+
         // Under the default null semantics, if one of the endpoints is
         // known to be null, the result is empty.
         if ((nullSemantics == SqlNullSemantics.NULL_MATCHES_NOTHING)
