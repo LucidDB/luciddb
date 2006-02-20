@@ -409,6 +409,11 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
             SqlTypeStrategies.otiReturnType,
             SqlTypeStrategies.otcNumericOrInterval);
 
+    /**
+     * Keyword which allows an identifier to be explicitly flagged as a table.
+     * For example, <code>select * from (TABLE t)</code> or <code>TABLE
+     * t</code>. See also {@link #collectionTableOperator}.
+     */
     public static final SqlPrefixOperator explicitTableOperator =
         new SqlPrefixOperator("TABLE", SqlKind.ExplicitTable, 1, null, null,
             null);
@@ -541,8 +546,12 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
             SqlTypeStrategies.otcAny);
 
     /**
-     * The "table function derived table",
+     * The "table function derived table" operator, which a table-valued
+     * function into a relation,
      * e.g. "<code>SELECT * FROM TABLE(ramp(5))</code>".
+     *
+     * <p>This operator has function syntax (with one argument), whereas
+     * {@link #explicitTableOperator} is a prefix operator.
      */
     public static final SqlSpecialOperator collectionTableOperator =
         new SqlFunctionalOperator("TABLE", SqlKind.CollectionTable,

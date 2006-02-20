@@ -34,7 +34,7 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.fun.SqlCaseOperator;
 import org.eigenbase.sql.parser.SqlParser;
-import org.eigenbase.sql.type.SqlTypeFactoryImpl;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.sql2rel.SqlToRelConverter;
 import org.eigenbase.util.*;
@@ -226,6 +226,7 @@ public class SqlToRelConverterTest extends TestCase
     {
         private RelOptPlanner planner;
         private static final boolean Dtbug471Fixed = false;
+        private SqlOperatorTable opTab;
 
         protected TesterImpl()
         {
@@ -316,9 +317,20 @@ public class SqlToRelConverterTest extends TestCase
                 typeFactory);
         }
 
-        public SqlOperatorTable getOperatorTable()
+        public final SqlOperatorTable getOperatorTable()
         {
-            return SqlStdOperatorTable.instance();
+            if (opTab == null) {
+                opTab = createOperatorTable();
+            }
+            return opTab;
+        }
+
+        protected SqlOperatorTable createOperatorTable()
+        {
+            final MockSqlOperatorTable opTab =
+                new MockSqlOperatorTable(SqlStdOperatorTable.instance());
+            MockSqlOperatorTable.addRamp(opTab);
+            return opTab;
         }
 
         public SqlValidatorCatalogReader createCatalogReader(
@@ -348,8 +360,8 @@ public class SqlToRelConverterTest extends TestCase
         {
             return true;
         }
-
     }
+
 
     //~ TESTS --------------------------------
 
@@ -412,6 +424,30 @@ public class SqlToRelConverterTest extends TestCase
             "select deptno, sum(sal), sum(distinct sal), count(*) " +
             "from emp " +
             "group by deptno",
+            "${plan}");
+    }
+
+    public void testSelectDistinct()
+    {
+        check("select distinct sal + 5 from emp",
+            "${plan}");
+    }
+
+    public void testSelectDistinctGroup()
+    {
+        check("select distinct sum(sal) from emp group by deptno",
+            "${plan}");
+    }
+
+    public void testExplicitTable()
+    {
+        check("table emp",
+            "${plan}");
+    }
+
+    public void testCollectionTable()
+    {
+        check("select * from table(ramp(3))",
             "${plan}");
     }
 
@@ -607,7 +643,6 @@ public class SqlToRelConverterTest extends TestCase
             new RelOptXmlPlanWriter(pw, SqlExplainLevel.DIGEST_ATTRIBUTES);
         rel.explain(planWriter);
         pw.flush();
-        DiffRepository diffRepos = getDiffRepos();
         TestUtil.assertEqualsVerbose(
             TestUtil.fold(new String[]{
                 "<RelNode type=\"ProjectRel\">",
