@@ -106,6 +106,15 @@ public class FarragoJdbcTest extends FarragoTestCase
         makeCalendar("JST", 2004, 11, 21, 16, 22, 33, 456);
     private static final Time time = new Time(sydneyCal.getTime().getTime());
     private static final Date date = new Date(sydneyCal.getTime().getTime());
+    private static final Timestamp timestamp =
+        new Timestamp(sydneyCal.getTime().getTime());
+
+    private static final String dateStr = date.toString();
+    private static final String timeStr = time.toString();
+    private static final String timestampStr = timestamp.toString();
+
+    private static final Time timeNoDate = Time.valueOf(timeStr);
+    private static final Date dateNoTime = Date.valueOf(dateStr);
 
     static {
         // Sanity check, assuming local time is PST
@@ -118,8 +127,6 @@ public class FarragoJdbcTest extends FarragoTestCase
         }
     }
 
-    private static final Timestamp timestamp =
-        new Timestamp(sydneyCal.getTime().getTime());
     private static final Byte tinyIntObj = new Byte(minByte);
     private static final Short smallIntObj = new Short(maxShort);
     private static final Integer integerObj = new Integer(minInt);
@@ -1059,7 +1066,7 @@ public class FarragoJdbcTest extends FarragoTestCase
                         case CHAR:
                         case VARCHAR:
                         case DATE:
-                            columnValues += ", DATE '" +  date + "'";
+                            columnValues += ", DATE '" +  dateStr + "'";
                             break;
                         // TOOD: Enable for TIMESTAMP when cast from DATE to TIMESTAMP is supported
                         case TIMESTAMP:
@@ -1076,7 +1083,7 @@ public class FarragoJdbcTest extends FarragoTestCase
                         case CHAR:
                         case VARCHAR:
                         case TIME:
-                            columnValues += ", TIME '" +  time + "'";
+                            columnValues += ", TIME '" +  timeStr + "'";
                             break;
                         // TOOD: Enable for TIMESTAMP when cast from TIME to TIMESTAMP is supported
                         case TIMESTAMP:
@@ -1093,7 +1100,7 @@ public class FarragoJdbcTest extends FarragoTestCase
                         case CHAR:
                         case VARCHAR:
                         case TIMESTAMP:
-                            columnValues += ", TIMESTAMP '" +  timestamp + "'";
+                            columnValues += ", TIMESTAMP '" +  timestampStr + "'";
                             break;
                         // TOOD: Enable for DATE when cast from TIMESTAMP to DATE is supported
                         case DATE:
@@ -1146,13 +1153,13 @@ public class FarragoJdbcTest extends FarragoTestCase
                             columnValues += "x'" + hexBytes + "'";
                             break;
                         case DATE:
-                            columnValues += "DATE '" + date + "'";
+                            columnValues += "DATE '" + dateStr + "'";
                             break;
                         case TIME:
-                            columnValues += "TIME '" + time + "'";
+                            columnValues += "TIME '" + timeStr + "'";
                             break;
                         case TIMESTAMP:
-                            columnValues += "TIMESTAMP '" + timestamp + "'";
+                            columnValues += "TIMESTAMP '" + timestampStr + "'";
                             break;
                         default:
                             columnValues += "null";
@@ -1166,11 +1173,11 @@ public class FarragoJdbcTest extends FarragoTestCase
                 break;
             }
 
-            System.out.println("Columns: " + columnValues);
             int res =
                 statement.executeUpdate(ins_query + "(" + columnValues + ")");
             assertEquals(1, res);
         }
+        statement.close();
     }
 
     public void testDataTypes()
@@ -1183,16 +1190,12 @@ public class FarragoJdbcTest extends FarragoTestCase
         String query =
             "select " + columnStr + " from datatypes_schema.datatypes_table";
 
-        System.out.println("connection " + connection);
         preparedStmt = connection.prepareStatement(query);
-        System.out.println("stmt " + preparedStmt);
 
         resultSet = preparedStmt.executeQuery();
-        System.out.println("rs " + resultSet);
         int id;
         while (resultSet.next()) {
             id = resultSet.getInt(1);
-            System.out.println("checking row " + id);
             switch (id) {
             case 100:
                 assertEquals(
@@ -1863,41 +1866,38 @@ public class FarragoJdbcTest extends FarragoTestCase
 
                 break;
             case 116:
-                // TODO: fix
-                if (todo) {
                 assertEquals(
-                    date.getTime(),
+                    dateNoTime.getTime(),
                     resultSet.getDate(CHAR).getTime());
                 assertEquals(
-                    date.getTime(),
+                    dateNoTime.getTime(),
                     resultSet.getDate(VARCHAR).getTime());
                 assertEquals(
-                    date.getTime(),
+                    dateNoTime.getTime(),
                     resultSet.getDate(DATE).getTime());
+                if (todo) {
                 assertEquals(
-                    date.getTime(),
+                    dateNoTime.getTime(),
                     resultSet.getDate(TIMESTAMP).getTime());
                 }
                 break;
             case 117:
-                // TODO: fix
-                if (todo) {
                 assertEquals(
-                    time.getTime(),
+                    timeNoDate.getTime(),
                     resultSet.getTime(CHAR).getTime());
                 assertEquals(
-                    time.getTime(),
+                    timeNoDate.getTime(),
                     resultSet.getTime(VARCHAR).getTime());
                 assertEquals(
-                    time.getTime(),
+                    timeNoDate.getTime(),
                     resultSet.getTime(TIME).getTime());
+                if (todo) {
                 assertEquals(
-                    time.getTime(),
+                    timeNoDate.getTime(),
                     resultSet.getTime(TIMESTAMP).getTime());
                 }
                 break;
             case 118:
-                // TODO: fix
                 if (todo) {
                 assertEquals(
                     timestamp.getTime(),
@@ -1971,10 +1971,9 @@ public class FarragoJdbcTest extends FarragoTestCase
                     assertEquals(bytes[i], resBytes[i]);
                 }
 
-                // TODO: Fix
+                assertEquals(dateNoTime, resultSet.getObject(DATE));
+                assertEquals(timeNoDate, resultSet.getObject(TIME));
                 if (todo) {
-                assertEquals(date, resultSet.getObject(DATE));
-                assertEquals(time, resultSet.getObject(TIME));
                 assertEquals(timestamp, resultSet.getObject(TIMESTAMP));
                 }
                 break;
@@ -1988,6 +1987,8 @@ public class FarragoJdbcTest extends FarragoTestCase
 
         resultSet.close();
         resultSet = null;
+
+        connection.rollback();
     }
 
     /**
@@ -1999,6 +2000,7 @@ public class FarragoJdbcTest extends FarragoTestCase
         String dateSql =
             "values (DATE '2004-12-21', TIME '12:22:33'," + ""
             + " TIMESTAMP '2004-12-21 12:22:33')";
+
         preparedStmt = connection.prepareStatement(dateSql);
         resultSet = preparedStmt.executeQuery();
 
