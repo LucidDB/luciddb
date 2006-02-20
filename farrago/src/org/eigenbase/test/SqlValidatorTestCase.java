@@ -516,12 +516,19 @@ public class SqlValidatorTestCase extends TestCase
      */
     public class TesterImpl implements Tester, SqlTester
     {
-        final MockSqlOperatorTable opTab =
-            new MockSqlOperatorTable(SqlStdOperatorTable.instance());
+        protected final SqlOperatorTable opTab;
 
         public TesterImpl()
         {
+            opTab = createOperatorTable();
+        }
+
+        protected SqlOperatorTable createOperatorTable()
+        {
+            MockSqlOperatorTable opTab =
+                new MockSqlOperatorTable(SqlStdOperatorTable.instance());
             MockSqlOperatorTable.addRamp(opTab);
+            return opTab;
         }
 
         public SqlValidator getValidator()
