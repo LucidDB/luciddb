@@ -16,42 +16,46 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  
 */
 package com.lucidera.luciddb.applib;
 
-import java.util.Random;
-import java.sql.Types;
-
 /**
- * rand returns a random integer given a range of numbers.
+ * ApplibResource tests
  *
- * Ported from //BB/bb713/server/SQL/rand.java
+ * @author Elizabeth Lin
+ * @version $Id$
  */
-public class rand
+public class ApplibResourceTest
 {
-    private static Random m_oRand;
-
-    public static int FunctionExecute( int minVal, int maxVal )
+    /**
+     * Test function to try ApplibResource messages
+     */
+    public static int tryApplibResourceStr()
     {
-        if( maxVal < minVal ) {
-            throw new IllegalArgumentException(
-                ApplibResourceObject.get().MinNotSmallerThanMax.ex());
-        }
+        ApplibResource res = ApplibResourceObject.get();
 
-        if (m_oRand == null) {
-            m_oRand = new Random();
-        }
-
-        // Generate a double precision number between 0 and 1
-        double randDbl = m_oRand.nextDouble();
-
-        // Now scale that number to the range minVal and maxVal
-        int randInt = minVal +
-            (int) Math.round( randDbl * (double) (maxVal - minVal) );
-
-        return randInt;
+        System.out.println("Fiscal Year Quarter:"
+            + res.FiscalYearQuarter.str("6", "11"));
+        System.out.println("Exception as message:"
+            + res.LenSpecifyNonNegative.str());
+        return Integer.parseInt(res.PhoneLocalAreaCode.str());
     }
+
+    /**
+     * Test function to try ApplibResource exception
+     */
+    public static int tryApplibResourceEx(boolean b) 
+        throws IllegalArgumentException
+    {
+        if (b) {
+            throw new IllegalArgumentException(
+                ApplibResourceObject.get().InvalidFirstMonth.ex());
+        } else {
+            return 0;
+        }
+    }
+
 }
 
-// End rand.java
+// End ApplibResourceTest.java

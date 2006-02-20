@@ -1,41 +1,34 @@
--- $ ID: //open/lu/dev/luciddb/test/sql/udr/udf/rightn.sql#1 $
+-- $ ID: //open/lu/dev/luciddb/test/sql/udr/udf/rightn.sql#2 $
 -- Tests for rightN UDF
 set schema 'udftest';
 set path 'udftest';
 
--- define functions
-create function rightN(str varchar(128), len integer)
-returns varchar(128)
-language java
-no sql
-external name 'class com.lucidera.luciddb.applib.rightN.FunctionExecute';
 
-values rightN('The test string - chop off this portion', 15);
-values rightN('and this?', 0);
-values rightN('', 3);
+values applib.rightN('The test string - chop off this portion', 15);
+values applib.rightN('and this?', 0);
+values applib.rightN('', 3);
 
--- create view with reference to rightN
+-- create view with reference to applib.rightN
 create view cutcust as
-select rightN(fname, 5), rightN(lname, 3), rightN(phone, 7)
+select applib.rightN(fname, 5), applib.rightN(lname, 3), applib.rightN(phone, 7)
 from customers
 where sex = 'M';
 
 select * from cutcust
 order by 1;
 
-select fname, rightN(sex, 1)
+select fname, applib.rightN(sex, 1)
 from customers
 order by 1;
 
 -- in expressions
-select fname, rightN(phone, 7) || rightN(fname, 3) 
+select fname, applib.rightN(phone, 7) || applib.rightN(fname, 3) 
 from customers
 order by 1;
 
 -- nested
-values rightN('Here is the original string.', 20);
-values rightN(rightN('Here is the original string.', 20), 5);
+values applib.rightN('Here is the original string.', 20);
+values applib.rightN(applib.rightN('Here is the original string.', 20), 5);
 
 -- cleanup
 drop view cutcust;
-drop routine rightN;

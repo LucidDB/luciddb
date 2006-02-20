@@ -112,6 +112,7 @@ public class CleanPhone
         char[] m_caMask = mask.toCharArray();
         int m_iMaskLen = m_caMask.length;
         char[] m_caReturn = new char[m_iMaskLen];
+        ApplibResource res = ApplibResourceObject.get();
 
         int inPos = 0;
         for(int used=0; used<m_iMaskLen; used++) {
@@ -124,11 +125,12 @@ public class CleanPhone
                         // got valid digit, so break
                         c = digitConvert(in.charAt(inPos++));
                         break;
-                    }// not valid, keep looping
-                    catch(IllegalArgumentException e1) {}
-                    // out of input characters, throw exception
-                    catch(StringIndexOutOfBoundsException e2) {
-                        throw new IllegalArgumentException();
+                    } catch(IllegalArgumentException e1) {
+                        // not valid, keep looping
+                    } catch(StringIndexOutOfBoundsException e2) {
+                        // out of input characters, throw exception
+                        throw new IllegalArgumentException(
+                            res.PhoneNumberAndMaskMismatch.ex());
                     }
                 }
                 m_caReturn[used] = c;
@@ -143,19 +145,20 @@ public class CleanPhone
             try {
                 char c = in.charAt(inPos++);
                 // too long if this is anything but whitespace.
-                if(!Character.isWhitespace(c))
+                if(!Character.isWhitespace(c)) {
                     tooLong = true;
-            }
-            // not valid, keep looping
-            catch(IllegalArgumentException e1) {}
-            // out of input characters, throw exception
-            catch(StringIndexOutOfBoundsException e2) {
+                }
+            } catch(IllegalArgumentException e1) {
+                // not valid, keep looping
+            } catch(StringIndexOutOfBoundsException e2) {
+                // out of input characters, break out of loop
                 break;
             }
         } // while
 
         if(tooLong) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException(
+                res.PhoneNumberAndMaskMismatch.ex());
         }
 
         return new String(m_caReturn);
@@ -208,7 +211,8 @@ public class CleanPhone
         try {
             format = KNOWN_FORMATS[format_type];
         } catch(ArrayIndexOutOfBoundsException e) {
-            throw new IllegalArgumentException("invalid phone output format");
+            throw new IllegalArgumentException(
+                ApplibResourceObject.get().InvalidPhoneOutputFmt.ex());
         }
 		 
         return FunctionExecute(in, format, reject);

@@ -1,28 +1,22 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/date_internal.sql#1 $
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/date_internal.sql#2 $
 0: jdbc:luciddb:> -- Tests for DateBBInternal UDF
 0: jdbc:luciddb:> set schema 'udftest';
 0: jdbc:luciddb:> set path 'udftest';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- define function
-0: jdbc:luciddb:> create function date_internal(indate bigint)
-. . . . . . . . > returns varchar(128)
-. . . . . . . . > language java
-. . . . . . . . > no sql
-. . . . . . . . > external name 'class com.lucidera.luciddb.applib.DateBBInternal.FunctionExecute';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> values date_internal(9223372036854775807);
+0: jdbc:luciddb:> values applib.date_internal(9223372036854775807);
 +------------------------------------+
 |               EXPR$0               |
 +------------------------------------+
 | Wed Aug 17 00:12:55 PDT 292277025  |
 +------------------------------------+
-0: jdbc:luciddb:> values date_internal(0);
+0: jdbc:luciddb:> values applib.date_internal(0);
 +----------------------------+
 |           EXPR$0           |
 +----------------------------+
 | Sat Jan 01 16:00:00 PST 1  |
 +----------------------------+
-0: jdbc:luciddb:> values date_internal(-63072000000);
+0: jdbc:luciddb:> values applib.date_internal(-63072000000);
 +----------------------------+
 |           EXPR$0           |
 +----------------------------+
@@ -30,18 +24,18 @@
 +----------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- these should fail
-0: jdbc:luciddb:> values date_internal(9223372036854775808);
-Error: From line 1, column 22 to line 1, column 40: Numeric literal '9223372036854775808' out of range (state=,code=0)
-0: jdbc:luciddb:> values date_internal(4.55);
-Error: From line 1, column 8 to line 1, column 26: No match found for function signature DATE_INTERNAL(<NUMERIC>) (state=,code=0)
-0: jdbc:luciddb:> values date_internal(9223372036854775807.01);
-Error: From line 1, column 22 to line 1, column 43: Numeric literal '9223372036854775807.01' out of range (state=,code=0)
-0: jdbc:luciddb:> values date_internal(9223372036854775807.99);
-Error: From line 1, column 22 to line 1, column 43: Numeric literal '9223372036854775807.99' out of range (state=,code=0)
+0: jdbc:luciddb:> values applib.date_internal(9223372036854775808);
+Error: From line 1, column 29 to line 1, column 47: Numeric literal '9223372036854775808' out of range (state=,code=0)
+0: jdbc:luciddb:> values applib.date_internal(4.55);
+Error: From line 1, column 15 to line 1, column 33: No match found for function signature DATE_INTERNAL(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> values applib.date_internal(9223372036854775807.01);
+Error: From line 1, column 29 to line 1, column 50: Numeric literal '9223372036854775807.01' out of range (state=,code=0)
+0: jdbc:luciddb:> values applib.date_internal(9223372036854775807.99);
+Error: From line 1, column 29 to line 1, column 50: Numeric literal '9223372036854775807.99' out of range (state=,code=0)
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- create view with reference to date_internal
+0: jdbc:luciddb:> -- create view with reference to applib.date_internal
 0: jdbc:luciddb:> create view fromint as
-. . . . . . . . > select fname, date_internal(age * 8640000) 
+. . . . . . . . > select fname, applib.date_internal(age * 8640000) 
 . . . . . . . . > from customers;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from fromint
@@ -59,7 +53,7 @@ Error: From line 1, column 22 to line 1, column 43: Numeric literal '92233720368
 +---------------+----------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create view todate as
-. . . . . . . . > select date_internal(coltiny), date_internal(colsmall), date_internal(colint), date_internal(colbig) 
+. . . . . . . . > select applib.date_internal(coltiny), applib.date_internal(colsmall), applib.date_internal(colint), applib.date_internal(colbig) 
 . . . . . . . . > from inttable;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from todate
@@ -73,7 +67,7 @@ Error: From line 1, column 22 to line 1, column 43: Numeric literal '92233720368
 +----------------------------+----------------------------+----------------------------+------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- in expressions
-0: jdbc:luciddb:> values 'Here''s the date:' || date_internal(2207520000000);
+0: jdbc:luciddb:> values 'Here''s the date:' || applib.date_internal(2207520000000);
 +---------------------------------------------+
 |                   EXPR$0                    |
 +---------------------------------------------+
@@ -81,4 +75,7 @@ Error: From line 1, column 22 to line 1, column 43: Numeric literal '92233720368
 +---------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- cleanup
+0: jdbc:luciddb:> drop view fromint;
+0: jdbc:luciddb:> drop view todate;
 0: jdbc:luciddb:> !quit

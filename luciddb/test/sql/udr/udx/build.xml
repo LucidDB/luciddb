@@ -1,4 +1,5 @@
-/*
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
 // $Id$
 // LucidDB is a DBMS optimized for business intelligence.
 // Copyright (C) 2006-2006 LucidEra, Inc.
@@ -17,41 +18,29 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
-package com.lucidera.luciddb.applib;
+-->
 
-import java.util.Random;
-import java.sql.Types;
+<project name="benchmark" basedir="." default="test">
+  <dirname property="udx.dir" file="${ant.file.udx}" />
 
-/**
- * rand returns a random integer given a range of numbers.
- *
- * Ported from //BB/bb713/server/SQL/rand.java
- */
-public class rand
-{
-    private static Random m_oRand;
+  <property name="open.dir" location="../../../../.."/>
+  <fail unless="open.dir" />
+  <property environment="env" />
+  <property file="run.properties"/>
 
-    public static int FunctionExecute( int minVal, int maxVal )
-    {
-        if( maxVal < minVal ) {
-            throw new IllegalArgumentException(
-                ApplibResourceObject.get().MinNotSmallerThanMax.ex());
-        }
+  <target name="test">
+    <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
+  </target>
 
-        if (m_oRand == null) {
-            m_oRand = new Random();
-        }
+  <target name="restoreCatalog">
+    <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>
+  </target>
 
-        // Generate a double precision number between 0 and 1
-        double randDbl = m_oRand.nextDouble();
+  <target name="clean">
+    <delete dir="${bh.log.basedir}"/>
+    <delete>
+      <fileset dir="${udx.dir}" includes="*.log"/>
+    </delete>
+  </target>
 
-        // Now scale that number to the range minVal and maxVal
-        int randInt = minVal +
-            (int) Math.round( randDbl * (double) (maxVal - minVal) );
-
-        return randInt;
-    }
-}
-
-// End rand.java
+</project>

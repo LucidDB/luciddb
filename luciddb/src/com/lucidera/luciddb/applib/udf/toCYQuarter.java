@@ -70,15 +70,15 @@ public class toCYQuarter
      *
      * Ported from //bb/bb713/server/Java/Broadbase/TimeDimensionInternal.java
      */
-    private static String getCalendarQuarter( int quarterIn, int yearIn )
+    public static String getCalendarQuarter( int quarterIn, int yearIn )
     {
-        Integer year = ((yearIn % 100) >= 0)
-            ? new Integer (yearIn % 100 ) : new Integer(100 + (yearIn % 100));
-        Integer quarter = new Integer( quarterIn );
-		
-        String strYear = ( year.intValue() < 10 )
-            ? "0" + year.toString() : year.toString();
-        String ret = "Q" + quarter.toString() + "CY" + strYear;
+        int year = ((yearIn % 100) >= 0)
+            ? (yearIn % 100 ) : (100 + (yearIn % 100));
+        String strYear = ( year < 10 )
+            ? "0" + Integer.toString(year) : Integer.toString(year);
+        String ret = ApplibResourceObject.get().CalendarQuarter.str(
+            Integer.toString(quarterIn), strYear);
+
         return ret;
     }
 
