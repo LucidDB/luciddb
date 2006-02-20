@@ -1450,7 +1450,8 @@ public class SqlParserTest extends TestCase
         checkFails("select * from table emp",
             "(?s).*Encountered \"emp\" at line 1, column 21.*");
 
-        checkFails("select * from (table (select empno from emp))", "xx");
+        checkFails("select * from (table ^(^select empno from emp))",
+            "(?s)Encountered \"\\(\".*");
     }
 
     public void testCollectionTable()
