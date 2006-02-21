@@ -295,13 +295,26 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
                 } else if (SqlTypeUtil.isApproximateNumeric(resultType)) {
                     // already approximate; promote to double just in case
                     // TODO:  only promote when required
-                    resultType = createDoublePrecisionType();
+                    if (SqlTypeUtil.isDecimal(type)) {
+                        // Only promote to double for decimal types
+                        resultType = createDoublePrecisionType();
+                    }
                 } else {
                     return null;
                 }
             } else if (SqlTypeUtil.isApproximateNumeric(type)) {
-                if (type != resultType) {
-                    resultType = createDoublePrecisionType();
+                if (SqlTypeUtil.isApproximateNumeric(resultType)) {
+                    if (type.getPrecision() > resultType.getPrecision()) {
+                        resultType = type;
+                    }
+                } else if (SqlTypeUtil.isExactNumeric(resultType)) {
+                    if (SqlTypeUtil.isDecimal(resultType)) {
+                        resultType = createDoublePrecisionType();
+                    } else {
+                        resultType = type;
+                    }
+                } else {
+                    return null;
                 }
             } else if (SqlTypeUtil.isInterval(type)) {
                 // TODO jvs 4-June-2005:  This shouldn't be necessary;

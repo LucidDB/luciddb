@@ -24,7 +24,6 @@ package net.sf.farrago.type.runtime;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
-import org.eigenbase.util.*;
 import org.eigenbase.util14.NumberUtil;
 
 import net.sf.farrago.resource.FarragoResource;
@@ -207,8 +206,13 @@ public abstract class EncodedSqlDecimal implements AssignableValue
                 parent.setNull(true);
             } else if (obj instanceof EncodedSqlDecimal) {
                 EncodedSqlDecimal decimal = (EncodedSqlDecimal) obj;
-                parent.setNull(decimal.isNull());
-                parent.value = decimal.value;
+                if ((decimal.getScale() == parent.getScale()) &&
+                    (decimal.getPrecision() == parent.getPrecision())) {
+                    parent.setNull(decimal.isNull());
+                    parent.value = decimal.value;
+                } else {
+                    super.assignFrom(decimal.getNullableData());
+                }
             } else {
                 super.assignFrom(obj);
             }

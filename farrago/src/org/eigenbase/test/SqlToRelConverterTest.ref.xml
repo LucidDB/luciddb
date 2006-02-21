@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<!--   $Id$   -->
+<!--    $Id$    -->
 <Root>
     <TestCase name="testCase">
         <Resource name="plan">
@@ -744,6 +744,50 @@ window w1 as (partition by job order by hiredate rows 2 preceding)]]>
         <Resource name="plan">
             <![CDATA[ProjectRel(EXPR$0=[1])
   TableAccessRel(table=[[SALES, EMP]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testSelectDistinct">
+        <Resource name="sql">
+            <![CDATA[select distinct sal + 5 from emp]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[AggregateRel(groupCount=[1])
+  ProjectRel(EXPR$0=[+($5, 5)])
+    TableAccessRel(table=[[SALES, EMP]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testSelectDistinctGroup">
+        <Resource name="sql">
+            <![CDATA[select distinct sum(sal) from emp group by deptno]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[AggregateRel(groupCount=[1])
+  ProjectRel(EXPR$0=[$1])
+    AggregateRel(groupCount=[1], agg#0=[SUM(1)])
+      ProjectRel($f0=[$7], $f1=[$5])
+        TableAccessRel(table=[[SALES, EMP]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testExplicitTable">
+        <Resource name="sql">
+            <![CDATA[table emp]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7])
+  TableAccessRel(table=[[SALES, EMP]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCollectionTable">
+        <Resource name="sql">
+            <![CDATA[select * from table(ramp(3))]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[ProjectRel(I=[$0])
+  TableFunctionRel(invocation=[RAMP(3)])
 ]]>
         </Resource>
     </TestCase>

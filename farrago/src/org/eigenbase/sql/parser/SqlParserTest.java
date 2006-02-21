@@ -1422,6 +1422,13 @@ public class SqlParserTest extends TestCase
     public void testExplicitTable()
     {
         check("table emp", "(TABLE `EMP`)");
+
+        checkFails("table ^123^", 
+            "Encountered \"123\" at line 1, column 7\\." + NL +
+            "Was expecting one of:" + NL +
+            "    <IDENTIFIER> \\.\\.\\." + NL +
+            "    <QUOTED_IDENTIFIER> \\.\\.\\." + NL +
+            "    ");
     }
 
     public void testExplicitTableOrdered()
@@ -1442,6 +1449,17 @@ public class SqlParserTest extends TestCase
     {
         checkFails("select * from table emp",
             "(?s).*Encountered \"emp\" at line 1, column 21.*");
+
+        checkFails("select * from (table ^(^select empno from emp))",
+            "(?s)Encountered \"\\(\".*");
+    }
+
+    public void testCollectionTable()
+    {
+        check("select * from table(ramp(3, 4))",
+            TestUtil.fold(new String[]{
+                "SELECT *",
+                "FROM (TABLE(`RAMP`(3, 4)))"}));
     }
 
     public void testExplain()
