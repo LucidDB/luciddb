@@ -144,7 +144,8 @@ public class SqlTestGen
                     }
                 }
 
-                public RelDataType getResultType(String sql) {
+                public RelDataType getColumnType(String sql)
+                {
                     return null;
                 }
 

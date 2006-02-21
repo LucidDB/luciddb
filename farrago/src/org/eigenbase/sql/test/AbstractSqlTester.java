@@ -82,6 +82,34 @@ public abstract class AbstractSqlTester implements SqlTester
         check(query, AnyTypeChecker, result, delta);
     }
 
+    /**
+     * Helper function to get the string representation of a RelDataType
+     * (include precision/scale but no charset or collation)
+     */
+    public static String getTypeString(RelDataType sqlType)
+    {
+        switch (sqlType.getSqlTypeName().getOrdinal()) {
+            case SqlTypeName.Varchar_ordinal:
+                String actual = "VARCHAR(" + sqlType.getPrecision() + ")";
+                return sqlType.isNullable() ?
+                    actual :
+                    actual + " NOT NULL";
+            case SqlTypeName.Char_ordinal:
+                actual = "CHAR(" + sqlType.getPrecision() + ")";
+                return sqlType.isNullable() ?
+                    actual :
+                    actual + " NOT NULL";
+            default:
+                // Get rid of the verbose charset/collation stuff.
+                // TODO: There's probably a better way to do this.
+                final String s = sqlType.getFullTypeString();
+                final String s2 = s.replace(
+                    " CHARACTER SET \"ISO-8859-1\" COLLATE \"ISO-8859-1$en_US$primary\"",
+                    "");
+                return s2;
+        }
+    }
+
     public static String generateAggQuery(String expr, String[] inputValues)
     {
         StringBuffer buf = new StringBuffer();
@@ -241,10 +269,7 @@ public abstract class AbstractSqlTester implements SqlTester
 
         public void checkType(RelDataType type)
         {
-            String actual = type.toString();
-            if (!type.isNullable()) {
-                actual += " NOT NULL";
-            }
+            String actual = getTypeString(type);
             TestCase.assertEquals(expected, actual);
         }
     }

@@ -567,6 +567,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         switch (node.getKind().getOrdinal()) {
         case SqlKind.AsORDINAL:
         case SqlKind.OverORDINAL:
+        case SqlKind.CollectionTableORDINAL:
             return getNamespace(((SqlCall) node).operands[0]);
         default:
             return (SqlValidatorNamespace) namespaces.get(node);
@@ -1396,24 +1397,60 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
     private SqlNode registerFrom(
         SqlValidatorScope parentScope,
         SqlValidatorScope usingScope,
-        SqlNode node,
+        final SqlNode node,
         String alias,
         boolean forceNullable)
     {
-        SqlNode newNode;
-        switch (node.getKind().getOrdinal()) {
+        final SqlKind kind = node.getKind();
+
+        // Add an alias if necessary.
+        SqlNode newNode = node;
+        if (alias == null) {
+            switch (kind.getOrdinal()) {
+            case SqlKind.IdentifierORDINAL:
+                alias = deriveAlias(node, -1);
+                if (shouldExpandIdentifiers()) {
+                    newNode = SqlValidatorUtil.addAlias(node, alias);
+                }
+                break;
+
+            case SqlKind.SelectORDINAL:
+            case SqlKind.UnionORDINAL:
+            case SqlKind.IntersectORDINAL:
+            case SqlKind.ExceptORDINAL:
+            case SqlKind.ValuesORDINAL:
+            case SqlKind.UnnestORDINAL:
+            case SqlKind.FunctionORDINAL:
+            case SqlKind.CollectionTableORDINAL:
+                // give this anonymous construct a name since later
+                // query processing stages rely on it
+                alias = deriveAlias(node, nextGeneratedId++);
+                if (shouldExpandIdentifiers()) {
+                    // Since we're expanding identifiers, we should make the
+                    // aliases explicit too, otherwise the expanded query
+                    // will not be consistent if we convert back to SQL, e.g.
+                    // "select EXPR$1.EXPR$2 from values (1)".
+                    newNode = SqlValidatorUtil.addAlias(node, alias);
+                }
+                break;
+            }
+        }
+
+        switch (kind.getOrdinal()) {
         case SqlKind.AsORDINAL:
-            final SqlCall sqlCall = (SqlCall) node;
-            if (alias == null) {
-                alias = sqlCall.operands[1].toString();
+            {
+                final SqlCall call = (SqlCall) node;
+                if (alias == null) {
+                    alias = call.operands[1].toString();
+                }
+                final SqlNode expr = call.operands[0];
+                final SqlNode newExpr = registerFrom(
+                    parentScope, usingScope, expr, alias, forceNullable);
+                if (newExpr != expr) {
+                    call.setOperand(0, newExpr);
+                }
+                return node;
             }
-            final SqlNode expr = sqlCall.operands[0];
-            final SqlNode newExpr = registerFrom(
-                parentScope, usingScope, expr, alias, forceNullable);
-            if (newExpr != expr) {
-                sqlCall.setOperand(0, newExpr);
-            }
-            return node;
 
         case SqlKind.JoinORDINAL:
             final SqlJoin join = (SqlJoin) node;
@@ -1456,13 +1493,6 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             return join;
 
         case SqlKind.IdentifierORDINAL:
-            newNode = node;
-            if (alias == null) {
-                alias = deriveAlias(node, -1);
-                if (shouldExpandIdentifiers()) {
-                    newNode = SqlValidatorUtil.addAlias(node, alias);
-                }
-            }
             final SqlIdentifier id = (SqlIdentifier) node;
             final IdentifierNamespace newNs = new IdentifierNamespace(
                 this, id);
@@ -1471,11 +1501,28 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             
         case SqlKind.LateralORDINAL:
             return registerFrom(
-                    parentScope,
-                    usingScope,
-                    ((SqlCall) node).operands[0],
-                    alias,
-                    forceNullable);
+                parentScope,
+                usingScope,
+                ((SqlCall) node).operands[0],
+                alias,
+                forceNullable);
+
+        case SqlKind.CollectionTableORDINAL:
+            {
+                SqlCall call = (SqlCall) node;
+                final SqlNode operand = call.operands[0];
+                final SqlNode newOperand =
+                    registerFrom(
+                        parentScope,
+                        usingScope,
+                        operand,
+                        alias,
+                        forceNullable);
+                if (newOperand != operand) {
+                    call.setOperand(0, newOperand);
+                }
+                return newNode;
+            }
 
         case SqlKind.SelectORDINAL:
         case SqlKind.UnionORDINAL:
@@ -1483,34 +1530,20 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         case SqlKind.ExceptORDINAL:
         case SqlKind.ValuesORDINAL:
         case SqlKind.UnnestORDINAL:
-        case SqlKind.CollectionTableORDINAL:
-            newNode = node;
-            if (alias == null) {
-                // give this anonymous construct a name since later
-                // query processing stages rely on it
-                alias = deriveAlias(node, nextGeneratedId++);
-                if (shouldExpandIdentifiers()) {
-                    // Since we're expanding identifiers, we should make the
-                    // aliases explicit too, otherwise the expanded query
-                    // will not be consistent if we convert back to SQL, e.g.
-                    // "select EXPR$1.EXPR$2 from values (1)".
-                    newNode = SqlValidatorUtil.addAlias(node, alias);
-                }
-            }
+        case SqlKind.FunctionORDINAL:
             registerQuery(parentScope, usingScope, node, alias, forceNullable);
             return newNode;
 
         case SqlKind.OverORDINAL:
             if (!shouldAllowOverRelation()) {
-                throw node.getKind().unexpected();
+                throw kind.unexpected();
             }
             SqlCall call = (SqlCall) node;
-            final OverScope overScope = new OverScope(usingScope,call);
+            final OverScope overScope = new OverScope(usingScope, call);
             scopes.put(call, overScope);
             final SqlNode operand = call.operands[0];
             final SqlNode newOperand =
-                registerFrom(parentScope, overScope, operand, alias,
-                    false);
+                registerFrom(parentScope, overScope, operand, alias, false);
             if (newOperand != operand) {
                 call.setOperand(0, newOperand);
             }
@@ -1518,15 +1551,15 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             ArrayList tableNames = overScope.childrenNames;
             for (int i = 0; i < tableNames.size(); i++) {
                 String tableName = (String) tableNames.get(i);
-                final SqlValidatorNamespace childSpace = overScope.getChild(tableName);
-                registerNamespace(usingScope,tableName, childSpace,
-                    false);
+                final SqlValidatorNamespace childSpace =
+                    overScope.getChild(tableName);
+                registerNamespace(usingScope, tableName, childSpace, false);
             }
 
             return call;
 
         default:
-            throw node.getKind().unexpected();
+            throw kind.unexpected();
         }
     }
 
@@ -1689,7 +1722,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             registerSubqueries(usingScope, call.operands[0]);
             break;
 
-        case SqlKind.CollectionTableORDINAL:
+        case SqlKind.FunctionORDINAL:
             call = (SqlCall) node;
             ProcedureNamespace procNamespace =
                 new ProcedureNamespace(this, parentScope, call);
@@ -2239,6 +2272,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
 
         SqlNode source = call.getSource();
         if (source instanceof SqlSelect) {
+        
             SqlSelect sqlSelect = (SqlSelect) source;
             validateSelect(sqlSelect, targetRowType);
         } else {

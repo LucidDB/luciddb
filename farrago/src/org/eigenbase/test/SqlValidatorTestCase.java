@@ -27,16 +27,16 @@ import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.test.AbstractSqlTester;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.SqlParseException;
 import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.sql.parser.SqlParserUtil;
 import org.eigenbase.sql.type.SqlTypeFactoryImpl;
-import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.validate.SqlValidatorUtil;
 import org.eigenbase.util.*;
@@ -122,9 +122,22 @@ public class SqlValidatorTestCase extends TestCase
             String expectedMsgPattern);
 
         /**
-         * Returns the data type of the first column of a SQL query.
-         * For example, <code>getResultType("VALUES (1, 'foo')")</code>
+         * Returns the data type of the sole column of a SQL query.
+         *
+         * <p>For example, <code>getResultType("VALUES (1")</code>
          * returns <code>INTEGER</code>.
+         *
+         * <p>Fails if query returns more than one column.
+         *
+         * @see #getResultType(String)
+         */
+        RelDataType getColumnType(String sql);
+
+        /**
+         * Returns the data type of the row returned by a SQL query.
+         *
+         * <p>For example, <code>getResultType("VALUES (1, 'foo')")</code>
+         * returns <code>RecordType(INTEGER EXPR$0, CHAR(3) EXPR#1)</code>.
          */
         RelDataType getResultType(String sql);
 
@@ -138,11 +151,20 @@ public class SqlValidatorTestCase extends TestCase
             Charset expectedCharset);
 
         /**
-         * Checks that the first column of a query has the expected type.
+         * Checks that a query returns one column of an expected type.
          * For example,
-         * <code>checkType(VALUES (1 + 2), "INTEGER NOT NULL")</code>.
+         * <code>checkType("VALUES (1 + 2)", "INTEGER NOT NULL")</code>.
          */
-        void checkQueryType(
+        void checkColumnType(
+            String sql,
+            String expected);
+
+        /**
+         * Checks that a query returns one column of an expected type. For
+         * example, <code>checkType("select empno, name from emp"
+         * "{EMPNO INTEGER NOT NULL, NAME VARCHAR(10) NOT NULL}")</code>.
+         */
+        void checkResultType(
             String sql,
             String expected);
 
@@ -228,24 +250,42 @@ public class SqlValidatorTestCase extends TestCase
         String sql,
         String expected)
     {
-        checkQueryType(buildQuery(sql), expected);
+        checkColumnType(buildQuery(sql), expected);
     }
 
     /**
-     * Checks that the first column returned by a query has the expected type.
-     * For example,
+     * Checks that a query returns a single column, and that the column has the
+     * expected type. For example,
      * <blockquote><code>
-     * checkQueryType("SELECT empno FROM Emp", "INTEGER NOT NULL");
+     * checkColumnType("SELECT empno FROM Emp", "INTEGER NOT NULL");
      * </code></blockquote>
      *
      * @param sql Query
      * @param expected Expected type, including nullability
      */
-    public void checkQueryType(
+    public void checkColumnType(
         String sql,
         String expected)
     {
-        tester.checkQueryType(sql, expected);
+        tester.checkColumnType(sql, expected);
+    }
+
+    /**
+     * Checks that a query returns a row of the expected type.
+     * For example,
+     *
+     * <blockquote><code> checkResultType("select empno, name from emp",
+     * "{EMPNO INTEGER NOT NULL, NAME VARCHAR(10) NOT NULL}");
+     * </code></blockquote>
+     *
+     * @param sql Query
+     * @param expected Expected row type
+     */
+    public void checkResultType(
+        String sql,
+        String expected)
+    {
+        tester.checkResultType(sql, expected);
     }
 
     /**
@@ -475,11 +515,26 @@ public class SqlValidatorTestCase extends TestCase
      */
     public class TesterImpl implements Tester, SqlTester
     {
+        protected final SqlOperatorTable opTab;
+
+        public TesterImpl()
+        {
+            opTab = createOperatorTable();
+        }
+
+        protected SqlOperatorTable createOperatorTable()
+        {
+            MockSqlOperatorTable opTab =
+                new MockSqlOperatorTable(SqlStdOperatorTable.instance());
+            MockSqlOperatorTable.addRamp(opTab);
+            return opTab;
+        }
 
         public SqlValidator getValidator()
         {
             final RelDataTypeFactory typeFactory = new SqlTypeFactoryImpl();
-            return SqlValidatorUtil.newValidator(SqlStdOperatorTable.instance(),
+            return SqlValidatorUtil.newValidator(
+                opTab,
                 new MockCatalogReader(typeFactory),
                 typeFactory);
         }
@@ -521,14 +576,22 @@ public class SqlValidatorTestCase extends TestCase
             checkEx(thrown, expectedMsgPattern, sap);
         }
 
+        public RelDataType getColumnType(String sql)
+        {
+            RelDataType rowType = getResultType(sql);
+            final RelDataTypeField[] fields = rowType.getFields();
+            assertEquals("expected query to return 1 field", 1, fields.length);
+            RelDataType actualType = fields[0].getType();
+            return actualType;
+        }
+
         public RelDataType getResultType(String sql)
         {
             SqlValidator validator = getValidator();
             SqlNode n = parseAndValidate(validator, sql);
 
             RelDataType rowType = validator.getValidatedNodeType(n);
-            RelDataType actualType = rowType.getFields()[0].getType();
-            return actualType;
+            return rowType;
         }
 
         protected SqlNode parseAndValidate(SqlValidator validator, String sql)
@@ -557,16 +620,23 @@ public class SqlValidatorTestCase extends TestCase
             return sqlNode;
         }
 
-        public void checkQueryType(String sql, String expected)
+        public void checkColumnType(String sql, String expected)
         {
-            RelDataType actualType = getResultType(sql);
+            RelDataType actualType = getColumnType(sql);
             if (expected.startsWith("todo:")) {
                 Util.permAssert(
                     !SqlOperatorTests.bug315Fixed,
                     "After bug 315 is fixed, no type should start 'todo:'");
                 return; // don't check the type for now
             }
-            String actual = getTypeString(actualType);
+            String actual = AbstractSqlTester.getTypeString(actualType);
+            assertEquals(expected, actual);
+        }
+
+        public void checkResultType(String sql, String expected)
+        {
+            RelDataType actualType = getResultType(sql);
+            String actual = AbstractSqlTester.getTypeString(actualType);
             assertEquals(expected, actual);
         }
 
@@ -595,32 +665,15 @@ public class SqlValidatorTestCase extends TestCase
 
         public void checkType(String expression, String type)
         {
-            checkQueryType(buildQuery(expression), type);
+            checkColumnType(buildQuery(expression), type);
         }
 
-        private String getTypeString(RelDataType sqlType)
-        {
-            switch (sqlType.getSqlTypeName().getOrdinal()) {
-            case SqlTypeName.Varchar_ordinal:
-                String actual = "VARCHAR(" + sqlType.getPrecision() + ")";
-                return sqlType.isNullable() ?
-                    actual :
-                    actual + " NOT NULL";
-            case SqlTypeName.Char_ordinal:
-                actual = "CHAR(" + sqlType.getPrecision() + ")";
-                return sqlType.isNullable() ?
-                    actual :
-                    actual + " NOT NULL";
-            default:
-                return sqlType.getFullTypeString();
-            }
-        }
-
-        public void checkCollation(String sql,
+        public void checkCollation(
+            String sql,
             String expectedCollationName,
             SqlCollation.Coercibility expectedCoercibility)
         {
-            RelDataType actualType = getResultType(buildQuery(sql));
+            RelDataType actualType = getColumnType(buildQuery(sql));
             SqlCollation collation = actualType.getCollation();
 
             String actualName = collation.getCollationName();
@@ -630,10 +683,11 @@ public class SqlValidatorTestCase extends TestCase
             assertEquals(expectedCoercibilityOrd, actualCoercibility);
         }
 
-        public void checkCharset(String sql,
+        public void checkCharset(
+            String sql,
             Charset expectedCharset)
         {
-            RelDataType actualType = tester.getResultType(buildQuery(sql));
+            RelDataType actualType = tester.getColumnType(buildQuery(sql));
             Charset actualCharset = actualType.getCharset();
 
             if (!expectedCharset.equals(actualCharset)) {
@@ -747,7 +801,7 @@ public class SqlValidatorTestCase extends TestCase
             // All it does is check the return type.
 
             // Parse and validate. There should be no errors.
-            RelDataType actualType = getResultType(query);
+            RelDataType actualType = getColumnType(query);
 
             // Check result type.
             typeChecker.checkType(actualType);

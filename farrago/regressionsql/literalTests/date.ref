@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/regressionsql/literalTests/date.sql#5 $ 
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/literalTests/date.sql#6 $ 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test date literal
 0: jdbc:farrago:> 
@@ -373,7 +373,10 @@ Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '2003-13
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- negative test
 0: jdbc:farrago:> insert into t_date values('string value',null);
-Error: Internal error:  bad lexical cast: source type value could not be interpreted as target (state=,code=0)
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=0 Code=22007 (state=,code=0)
 0: jdbc:farrago:> insert into t_date values(true,null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BOOLEAN' to 'DATE' (state=,code=0)
 0: jdbc:farrago:> insert into t_date values(1234,null);
@@ -383,7 +386,7 @@ Error: From line 1, column 27 to line 1, column 31: Numeric literal '1E400' out 
 0: jdbc:farrago:> insert into t_date values(-1.2345678901234e-200,null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DOUBLE' to 'DATE' (state=,code=0)
 0: jdbc:farrago:> insert into t_date values(-1234.03,null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DOUBLE' to 'DATE' (state=,code=0)
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DECIMAL(6, 2)' to 'DATE' (state=,code=0)
 0: jdbc:farrago:> insert into t_date values(x'ff',null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY(1)' to 'DATE' (state=,code=0)
 0: jdbc:farrago:> insert into t_date values(time '12:01:01',null);

@@ -246,7 +246,10 @@ public class SqlKind extends EnumeratedValues.BasicValue
     public static final int ValuesORDINAL = 144;
     public static final SqlKind Values = new SqlKind("Values", ValuesORDINAL);
 
-    /** ExplicitTable */
+    /**
+     * ExplicitTable, e.g. <code>select * from (TABLE t)</code> or
+     * <code>TABLE t</code>. See also {@link #CollectionTable}.
+     */
     public static final int ExplicitTableORDINAL = 145;
     public static final SqlKind ExplicitTable =
         new SqlKind("ExplicitTable", ExplicitTableORDINAL);
@@ -329,11 +332,15 @@ public class SqlKind extends EnumeratedValues.BasicValue
     /** Lateral */
     public static final int LateralORDINAL = 167;
     public static final SqlKind Lateral = new SqlKind("LATERAL", LateralORDINAL);
-    /** TABLE(exp) in FROM */
+
+    /**
+     * Table operator which converts user-defined transform into a relation,
+     * for example, <code>select * from TABLE(udx(x, y, z))</code>.
+     * See also the {@link #ExplicitTable} prefix operator.
+     */
     public static final int CollectionTableORDINAL = 168;
     public static final SqlKind CollectionTable =
         new SqlKind("TABLE", CollectionTableORDINAL);
-    
 
     // internal operators (evaluated in validator) 200-299
 
