@@ -87,7 +87,17 @@ FileDevice::FileDevice(
         throw SysCallExcn(oss.str());
     }
 
-    cbFile = GetFileSize(HANDLE(handle),NULL);
+    DWORD cbHigh = 0;
+    DWORD cbLow = GetFileSize(HANDLE(handle),&cbHigh);
+    if (cbLow == INVALID_FILE_SIZE) {
+        std::ostringstream oss;
+        oss << "Failed to get size for file " << filename;
+        throw SysCallExcn(oss.str());
+    }
+    LARGE_INTEGER cbLarge;
+    cbLarge.LowPart = cbLow;
+    cbLarge.HighPart = cbHigh;
+    cbFile = cbLarge.QuadPart;
 
 #else
     
@@ -162,12 +172,12 @@ void FileDevice::flush()
 void FileDevice::setSizeInBytes(FileSize cbFileNew)
 {
 #ifdef __MINGW32__
-    DWORD rc = SetFilePointer(HANDLE(handle),cbFileNew,NULL,FILE_BEGIN);
-    if (rc == INVALID_SET_FILE_POINTER) {
+    LARGE_INTEGER cbLarge;
+    cbLarge.QuadPart = cbFileNew;
+    if (!SetFilePointerEx(HANDLE(handle),cbLarge,NULL,FILE_BEGIN)) {
         throw SysCallExcn("Resize file failed:  SetFilePointer");
     }
-    rc = SetEndOfFile(HANDLE(handle));
-    if (!rc) {
+    if (!SetEndOfFile(HANDLE(handle))) {
         throw SysCallExcn("Resize file failed:  SetEndOfFile");
     }
 #else
