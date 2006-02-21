@@ -56,9 +56,9 @@ int TimeToIsoString(char *dest, boost::posix_time::ptime t);
 int DateToIsoString(char *dest, boost::posix_time::ptime t);
 int TimestampToIsoString(char *dest, boost::posix_time::ptime t);
 
-int64_t IsoStringToTime(char *src, int len);
-int64_t IsoStringToDate(char *src, int len);
-int64_t IsoStringToTimestamp(char *src, int len);
+int64_t IsoStringToTime(char const * const src, int len);
+int64_t IsoStringToDate(char const * const src, int len);
+int64_t IsoStringToTimestamp(char const * const src, int len);
 
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint, SqlDateTimeType dateTimeType>
 int

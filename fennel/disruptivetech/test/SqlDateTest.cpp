@@ -51,6 +51,11 @@ static int64_t const ticks_per_hour = ticks_per_day/24;
 static int64_t const ticks_per_minute = ticks_per_hour/60;
 static int64_t const ticks_per_sec = ticks_per_minute/60;
 
+enum SqlStrToDateConvAction {
+    StrToDate,
+    StrToTime,
+    StrToTimestamp
+};
 
 class SqlDateTest : virtual public TestBase, public TraceSource
 {
@@ -61,6 +66,11 @@ class SqlDateTest : virtual public TestBase, public TraceSource
                                      int number,
                                      char character);
 
+    void testSqlStrToDate_Ascii_Helper(SqlStrToDateConvAction action,
+                                       uint64_t value,
+                                       char const * const src,
+                                       int len,
+                                       bool errorExpected);
     void testSqlStrToDate_Ascii();
     
     void testLocalTime();
@@ -235,31 +245,93 @@ SqlDateTest::testSqlTimeToStr_Ascii()
     }
 }
 
+
+// Helper to testSqlStrToDate_Ascii 
+void
+SqlDateTest::testSqlStrToDate_Ascii_Helper(SqlStrToDateConvAction action,
+                                           uint64_t value,
+                                           char const * const src,
+                                           int len,
+                                           bool errorExpected)
+
+{
+    int64_t t;
+    bool caught = false;
+
+    try {
+        switch (action) {
+        case StrToDate:
+            t = IsoStringToDate(src, len);
+            break;
+        case StrToTime:
+            t = IsoStringToTime(src, len);
+            break;
+        case StrToTimestamp:
+            t = IsoStringToTimestamp(src, len);
+            break;
+        default:
+            BOOST_CHECK(false);
+        }
+    } catch (const char *str) {
+        caught = true;
+        BOOST_CHECK_EQUAL(strcmp(str, "22007"), 0);
+    } catch (...) {
+        // unexpected exception
+        BOOST_CHECK(false);
+    }
+    BOOST_CHECK_EQUAL(errorExpected, caught);
+    if (!caught) {
+        BOOST_CHECK_EQUAL(value, t);
+    }
+}
+
+
+
 void
 SqlDateTest::testSqlStrToDate_Ascii()
 {
-
-    char dateStr[11] = "2000-10-21" ;
-    
-    int64_t t = IsoStringToDate(dateStr, 10);
-    //    cout << "2000-10-21 = " << t << endl;
     int64_t oct2k = 972086400000LL; // GMT + 0; - in milliseconds
-    BOOST_CHECK_EQUAL(t,oct2k);
+    testSqlStrToDate_Ascii_Helper(
+        StrToDate, oct2k, "2000-10-21", 10, false);
+    testSqlStrToDate_Ascii_Helper(
+        StrToDate, oct2k, "  2000-10-21  ", 14, false);
+    testSqlStrToDate_Ascii_Helper(
+        StrToDate, oct2k, "junk", 4, true);
+    testSqlStrToDate_Ascii_Helper(
+        StrToDate, oct2k, "2000-23-23", 10, true);
 
-    char timeStr[9] = "14:21:01";
-    t = IsoStringToTime(timeStr, 8);
-    //    cout << "14:21:01 = " << t << endl;
+    int64_t fourteen21 = ( ticks_per_hour*14 + 
+                           ticks_per_minute * 21 + ticks_per_sec * 1) /1000;
+    testSqlStrToDate_Ascii_Helper(
+        StrToTime, fourteen21, "14:21:01", 8, false);
+    testSqlStrToDate_Ascii_Helper(
+        StrToTime, fourteen21, "  14:21:01  ", 12, false);
+    // TODO: Fractional seconds not handled
+    //testSqlStrToDate_Ascii_Helper(
+    //    StrToTime, fourteen21 + 987, "  14:21:01.987  ", 12, false);
+    testSqlStrToDate_Ascii_Helper(
+        StrToTime, fourteen21, "12:61:01", 8, true);
+    testSqlStrToDate_Ascii_Helper(
+        StrToTime, fourteen21, "junk", 4, true);
+    testSqlStrToDate_Ascii_Helper(
+        StrToTime, fourteen21, "12:34", 5, true);
         
-    int64_t fourteen21 = ( ticks_per_hour*14 + ticks_per_minute * 21 + ticks_per_sec * 1) /1000;
-
-    BOOST_CHECK_EQUAL(t, fourteen21);
-
-    char timestampStr[20] = "2000-10-21 14:21:01";
-    t =  IsoStringToTimestamp(timestampStr, 19);
-    
-    //    cout << "2000-10-21 14:21:01 = " << t << endl;  
-    BOOST_CHECK_EQUAL(t, oct2k + fourteen21);      
-    
+    int64_t ts = oct2k + fourteen21;
+    testSqlStrToDate_Ascii_Helper(
+        StrToTimestamp, ts, "2000-10-21 14:21:01", 19, false);
+    // TODO: Fractional seconds not handled
+    //testSqlStrToDate_Ascii_Helper(
+    //    StrToTimestamp, ts + 323, "2000-10-21 14:21:01.323", 19, false);
+    testSqlStrToDate_Ascii_Helper(
+        StrToTimestamp, ts, "  2000-10-21 14:21:01  ", 23, false);
+    testSqlStrToDate_Ascii_Helper(
+        StrToTimestamp, ts, "2000-10-21 27:21:01", 19, true);
+    testSqlStrToDate_Ascii_Helper(
+        StrToTimestamp, ts, "2000-10-32 01:21:01", 19, true);
+    testSqlStrToDate_Ascii_Helper(
+        StrToTimestamp, ts, "junk", 4, true);
+    testSqlStrToDate_Ascii_Helper(
+        StrToTimestamp, ts, "2323-6-25", 9, true);
 }
 
 
@@ -270,14 +342,8 @@ SqlDateTest::testLocalTime()
     int64_t t = CurrentTime();
     int64_t ts = CurrentTimestamp();
 
-
-
     cout << "Time = " << t << endl;
-    
-    //    BOOST_CHECK_EQUAL(t, oct2k + fourteen21);      
-    
     cout << "Time = " << ts << endl;
-
 }
 
 

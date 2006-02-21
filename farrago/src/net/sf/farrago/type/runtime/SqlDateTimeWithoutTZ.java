@@ -255,7 +255,7 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
             if (format == null) {
                 format = getFormat();
             }
-            Calendar cal = SqlParserUtil.parseDateFormat(date, format, tz);
+            Calendar cal = SqlParserUtil.parseDateFormat(date.trim(), format, tz);
             if (cal != null) {
                 java.util.Date parsedDate = cal.getTime();
                 assignFrom(parsedDate);
@@ -300,7 +300,7 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
                 format = getFormat();
             }
             SqlParserUtil.PrecisionTime pt =
-                SqlParserUtil.parsePrecisionDateTimeLiteral(date, format, tz);
+                SqlParserUtil.parsePrecisionDateTimeLiteral(date.trim(), format, tz);
             if (pt != null) {
                 java.util.Date parsedDate = pt.getCalendar().getTime();
                 assignFrom(parsedDate);
@@ -348,7 +348,7 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
                 format = getFormat();
             }
             SqlParserUtil.PrecisionTime pt =
-                SqlParserUtil.parsePrecisionDateTimeLiteral(date, format, tz);
+                SqlParserUtil.parsePrecisionDateTimeLiteral(date.trim(), format, tz);
             if (pt != null) {
                 java.util.Date parsedDate = pt.getCalendar().getTime();
                 assignFrom(parsedDate);

@@ -37,7 +37,6 @@ import org.eigenbase.sql.parser.SqlParseException;
 import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.sql.parser.SqlParserUtil;
 import org.eigenbase.sql.type.SqlTypeFactoryImpl;
-import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.validate.SqlValidatorUtil;
 import org.eigenbase.util.*;
@@ -630,14 +629,14 @@ public class SqlValidatorTestCase extends TestCase
                     "After bug 315 is fixed, no type should start 'todo:'");
                 return; // don't check the type for now
             }
-            String actual = getTypeString(actualType);
+            String actual = AbstractSqlTester.getTypeString(actualType);
             assertEquals(expected, actual);
         }
 
         public void checkResultType(String sql, String expected)
         {
             RelDataType actualType = getResultType(sql);
-            String actual = getTypeString(actualType);
+            String actual = AbstractSqlTester.getTypeString(actualType);
             assertEquals(expected, actual);
         }
 
@@ -667,30 +666,6 @@ public class SqlValidatorTestCase extends TestCase
         public void checkType(String expression, String type)
         {
             checkColumnType(buildQuery(expression), type);
-        }
-
-        private String getTypeString(RelDataType sqlType)
-        {
-            switch (sqlType.getSqlTypeName().getOrdinal()) {
-            case SqlTypeName.Varchar_ordinal:
-                String actual = "VARCHAR(" + sqlType.getPrecision() + ")";
-                return sqlType.isNullable() ?
-                    actual :
-                    actual + " NOT NULL";
-            case SqlTypeName.Char_ordinal:
-                actual = "CHAR(" + sqlType.getPrecision() + ")";
-                return sqlType.isNullable() ?
-                    actual :
-                    actual + " NOT NULL";
-            default:
-                // Get rid of the verbose charset/collation stuff.
-                // TODO: There's probably a better way to do this.
-                final String s = sqlType.getFullTypeString();
-                final String s2 = s.replace(
-                    " CHARACTER SET \"ISO-8859-1\" COLLATE \"ISO-8859-1$en_US$primary\"",
-                    "");
-                return s2;
-            }
         }
 
         public void checkCollation(
