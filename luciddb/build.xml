@@ -67,6 +67,7 @@
 
   <property name="luciddb.test.dir" location="${luciddb.dir}/test" />
   <property name="luciddb.plugin.dir" location="${luciddb.dir}/plugin" />
+  <property name="applib.dir" location="${luciddb.plugin.dir}/applib" />
 
   <!-- directory in which catalog data is stored -->
   <property name="catalog.dir" location="${luciddb.dir}/catalog" />
@@ -113,7 +114,6 @@
   
   <property name="emma.luciddb.classes.dir" location="${luciddb.dir}/classes-cov"/>
 
-
   <!-- Classpaths -->
 
   <!-- classpath for running tests via ant -->
@@ -141,6 +141,13 @@
   </path>
   <property name="luciddb.build.classpath" refid="luciddb.build.classpath"/>
 
+  <path id="applib.build.classpath">
+    <pathelement path="${applib.dir}"/>
+    <pathelement location="${resgen.dir}/lib/eigenbase-resgen.jar"/>
+    <pathelement location="${resgen.dir}/lib/eignebase-xom.jar"/>
+  </path>
+  <property name="applib.build.classpath" refid="applib.build.classpath"/>
+
   <target name="run_blackhawk">
     <property file="run.properties"/>
     <blackhawk bhHome="${bh.home}"
@@ -156,18 +163,18 @@
 
   <target name="test" depends="compile,createCatalog,buildJdbcPlugin">
     <antcall target="shortregSanity"/>
-    <!-- FIXME jvs 7-Feb-2006:  re-enable once LER-303 is resolved -->
-    <!-- antcall target="txn"/ -->
+    <antcall target="txn" />
     <antcall target="bh" />
   </target>
 
   <!-- all tests, on all configurations, skipping knownFailures -->
-  <target name="testAll" depends="compile,createCatalog,buildJdbcPlugin">
+  <target name="testAll" depends="compile,createCatalog,buildJdbcPlugin,applibPlugin">
     <ant dir="test/sql/conv_types" target="test"/>
     <ant dir="test/sql/datatypes" target="testAllConfigs"/>
     <ant dir="test/sql/shortreg2" target="testAllConfigs"/>
     <antcall target="txn"/>
     <ant dir="test/sql/udr/udf" target="test"/>
+    <ant dir="test/sql/udr/udx" target="test"/>
     <ant dir="test/sql/bench" target="testAllConfigs"/>
   </target>
   
@@ -187,7 +194,6 @@
   <target name="compile" depends="clean,makeOutputDirs">
     <!-- compile farrago first -->    
     <ant dir="${farrago.dir}" target="compile"/>
-
     <farrago.javaCompile
       deprecation="off"
       srcdir="${luciddb.test.dir}/src"
@@ -195,15 +201,6 @@
       classpathref="luciddb.build.classpath">
       <include name="**/*.java" />
     </farrago.javaCompile>    
-
-    <farrago.javaCompile
-      deprecation="off"
-      srcdir="${luciddb.dir}/src"
-      destdir="${classes.dir}"
-      classpathref="luciddb.build.classpath">
-      <include name="**/*.java"/>
-    </farrago.javaCompile>
-
   </target>
 
   <!-- creates catalog and populates with initial metadata -->
@@ -297,6 +294,16 @@
       overwrite="true"/>
   </target>
 
+  <target name="makePluginDirs">
+    <mkdir dir="${luciddb.plugin.dir}"/>
+    <mkdir dir="${luciddb.plugin.dir}/applib"/>
+  </target>
+
+  <!-- task for generating resources -->
+  <taskdef name="resgen" classname="org.eigenbase.resgen.ResourceGenTask">
+    <classpath refid="farrago.run.classpath"/>
+  </taskdef>
+
   <target name="runInitSql" >
     <filelist dir="${farrago.initsql.dir}" id="filelist.initsql"
       files="createStorageWrappers.sql,createSqljSchema.sql,createJdbcViews.sql"/>
@@ -336,9 +343,8 @@
 
   <!-- create FarragoMedJdbc3p plugin jar -->
   <!-- FarragoMedJdbc.jar + jtds and oracle jdbc drivers -->
-  <target name="buildJdbcPlugin">
+  <target name="buildJdbcPlugin" depends="makePluginDirs">
     <!-- assume farrago jdbc plugin has already been created -->
-    <mkdir dir="${luciddb.plugin.dir}"/>
     <jar jarfile="${luciddb.plugin.dir}/FarragoMedJdbc3p.jar"
       filesetmanifest="merge">
       <zipgroupfileset dir="${farrago.plugin.dir}">
@@ -353,6 +359,86 @@
     </jar>
   </target>
 
+<!-- create applib plugin jar -->
+  <target name="applibPlugin">
+    <antcall target="buildApplibPlugin"/>
+    <antcall target="runApplibInitSql"/>
+  </target>
+
+  <target name="buildApplibPlugin" 
+    depends="makePluginDirs,checkApplibPluginUptodate" 
+    unless="plugin.applib.uptodate">
+    <antcall target="generateApplibResource"/>
+    <farrago.javaCompile
+      deprecation="off"
+      srcdir="${luciddb.dir}/src"
+      destdir="${applib.dir}"
+      classpathref="applib.build.classpath">
+      <include name="**/applib/**/*.java"/>
+    </farrago.javaCompile>
+    <copy todir="${applib.dir}"> 
+      <fileset dir="${luciddb.dir}/src/com/lucidera/luciddb/applib/initsql">
+        <include name="installApplib.sql"/>
+        <include name="installApplib.ref"/>
+      </fileset>
+    </copy>
+    <jar jarfile="${luciddb.plugin.dir}/applib.jar">
+      <fileset dir="${applib.dir}">
+        <include name="**/applib/**/*"/>
+      </fileset>
+    </jar>
+  </target>
+
+  <target name="generateApplibResource">
+    <antcall target="compileExceptions"/>
+    <resgen
+      srcdir="${luciddb.dir}/src"
+      destdir="${luciddb.dir}/src"
+      resdir="${applib.dir}"
+      style="functor"
+      locales="en_US">
+      <include name="com/lucidera/luciddb/applib/ApplibResource.xml"/>
+    </resgen>
+  </target>
+
+  <target name="compileExceptions">
+    <ant dir="${farrago.dir}" target="compileExceptions"/>
+    <copy todir="${applib.dir}">
+      <fileset dir="${farrago.dir}/classes">
+        <include name="**/EigenbaseException.class"/>
+        <include name="**/EigenbaseContextException.class"/>
+        <include name="**/EigenbaseFeatureException.class"/>
+        <include name="**/SqlValidatorException.class"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="checkApplibPluginUptodate">
+    <uptodate property="plugin.applib.uptodate"
+      targetfile="${luciddb.plugin.dir}/applib.jar">
+      <srcfiles dir="${luciddb.dir}/src">
+        <include name="**/applib/**/*.java"/>
+        <include name="**/applib/**/*.xml"/>
+        <include name="**/applib/**/installApplib.*"/>
+      </srcfiles>
+      <mapper 
+        type="glob" 
+        from="*.java" 
+        to="${applib.dir}/**/applib/*.class"/>
+    </uptodate>
+  </target>
+
+  <target name="runApplibInitSql">
+    <filelist dir="${applib.dir}" id="filelist.ApplibInitSql"
+      files="installApplib.sql"/>
+    <pathconvert property="filelist.ApplibInitSql" 
+      refid="filelist.ApplibInitSql" pathsep="${line.separator}"
+      dirsep="${file.separator}" />
+    <runSqlTests filelist="${filelist.ApplibInitSql}"
+      sqltest.classpath="${test.classpath}"/>
+  </target>
+
+
   <target name="shortreg" depends="compile" >
     <filelist dir="${testsrc.dir}/shortreg" id="filelist.shortregsql"
       files="creschema.sql,locationload.sql,deptload.sql,empload.sql,
@@ -362,6 +448,7 @@
     <runSqlTests filelist="${filelist.shortregsql}"
             sqltest.classpath="${test.classpath}"/>
   </target>
+
 
   <target name="emmaShortreg">
     <filelist dir="${testsrc.dir}/shortreg" id="filelist.shortregsql"
@@ -480,7 +567,6 @@
       </report>
     </emma>
   </target>
-
 
   <!-- Experimental Area: Let's see about creating fine-grained tests with dependencies specified -->
 

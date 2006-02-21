@@ -213,6 +213,9 @@ typedef JniProxyIter<ProxyTxnHandle> SharedProxyTxnHandle;
 class ProxyUncollectTupleStreamDef;
 typedef JniProxyIter<ProxyUncollectTupleStreamDef> SharedProxyUncollectTupleStreamDef;
 
+class ProxyValuesStreamDef;
+typedef JniProxyIter<ProxyValuesStreamDef> SharedProxyValuesStreamDef;
+
 class ProxyWindowDef;
 typedef JniProxyIter<ProxyWindowDef> SharedProxyWindowDef;
 
@@ -238,14 +241,14 @@ class ProxyExecutionStreamDef
 : virtual public JniProxy
 {
 public:
+std::string getName();
+static jmethodID meth_getName;
 SharedProxyTupleDescriptor getOutputDesc();
 static jmethodID meth_getOutputDesc;
 SharedProxyExecStreamDataFlow getInputFlow();
 static jmethodID meth_getInputFlow;
 SharedProxyExecStreamDataFlow getOutputFlow();
 static jmethodID meth_getOutputFlow;
-std::string getName();
-static jmethodID meth_getName;
 };
 
 class ProxyTupleStreamDef
@@ -868,10 +871,20 @@ class ProxyUncollectTupleStreamDef
 public:
 };
 
+class ProxyValuesStreamDef
+: virtual public JniProxy, virtual public ProxyTupleStreamDef
+{
+public:
+std::string getTupleBytesBase64();
+static jmethodID meth_getTupleBytesBase64;
+};
+
 class ProxyWindowDef
 : virtual public JniProxy
 {
 public:
+int32_t getOffset();
+static jmethodID meth_getOffset;
 SharedProxyTupleProjection getOrderKeyList();
 static jmethodID meth_getOrderKeyList;
 bool isPhysical();
@@ -882,14 +895,14 @@ SharedProxyWindowStreamDef getWindowStream();
 static jmethodID meth_getWindowStream;
 SharedProxyWindowPartitionDef getPartition();
 static jmethodID meth_getPartition;
-int32_t getOffset();
-static jmethodID meth_getOffset;
 };
 
 class ProxyWindowPartitionDef
 : virtual public JniProxy
 {
 public:
+SharedProxyWindowDef getWindow();
+static jmethodID meth_getWindow;
 SharedProxyTupleProjection getPartitionKeyList();
 static jmethodID meth_getPartitionKeyList;
 std::string getInitializeProgram();
@@ -900,8 +913,6 @@ std::string getDropProgram();
 static jmethodID meth_getDropProgram;
 SharedProxyTupleDescriptor getBucketDesc();
 static jmethodID meth_getBucketDesc;
-SharedProxyWindowDef getWindow();
-static jmethodID meth_getWindow;
 };
 
 class ProxyWindowStreamDef
@@ -1063,6 +1074,8 @@ virtual void visit(ProxyTxnCmd &)
 virtual void visit(ProxyTxnHandle &)
 { unhandledVisit(); }
 virtual void visit(ProxyUncollectTupleStreamDef &)
+{ unhandledVisit(); }
+virtual void visit(ProxyValuesStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyWindowDef &)
 { unhandledVisit(); }

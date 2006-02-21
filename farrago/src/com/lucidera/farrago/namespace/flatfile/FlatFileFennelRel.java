@@ -144,6 +144,8 @@ class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
     // implement FennelRel
     public RelFieldCollation [] getCollations()
     {
+        // REVIEW jvs 18-Feb-2006:  how so?
+        
         // trivially sorted
         return new RelFieldCollation [] { new RelFieldCollation(0) };
     }

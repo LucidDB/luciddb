@@ -28,7 +28,7 @@ import java.sql.Types;
  *
  * Ported from //BB/bb713/server/SQL/charReplace.java
 */
-public class CharReplace
+public abstract class CharReplace
 {
     public static String FunctionExecute(String in, int oldChar, int newChar)
     {
@@ -38,13 +38,15 @@ public class CharReplace
     public static String FunctionExecute(
         String in, String oldChar, String newChar)
     {
+        ApplibResource res = ApplibResourceObject.get();
+
         if(oldChar.length() != 1) {
             throw new IllegalArgumentException(
-                "replacing string should be a char");
+                res.ReplacedCharSpecifyOneChar.ex());
         }
         if(newChar.length() != 1) {
             throw new IllegalArgumentException(
-                "replacement string should be a char");
+                res.ReplacementCharSpecifyOneChar.ex());
         }
 
         return in.replace(oldChar.charAt(0), newChar.charAt(0));

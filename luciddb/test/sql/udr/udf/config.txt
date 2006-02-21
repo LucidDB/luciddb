@@ -1,7 +1,0 @@
-# Information about telephone system in customer's country and region
-PhoneLocalCountryCode=1
-PhoneLocalAreaCode=650
-PhoneLocalNumberLength=7
-PhoneOutsideLineAccess=
-PhoneDomesticDialCode=1
-PhoneInternationalDialCode=011

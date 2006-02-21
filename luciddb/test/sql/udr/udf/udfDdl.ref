@@ -5,7 +5,6 @@
 0: jdbc:luciddb:> create schema udftest2;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> set schema 'udftest';
-0: jdbc:luciddb:> 
 0: jdbc:luciddb:> set path 'udftest';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- test SQL-defined functions

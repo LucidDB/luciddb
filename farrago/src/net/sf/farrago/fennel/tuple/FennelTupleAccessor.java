@@ -620,6 +620,10 @@ public final class FennelTupleAccessor
     {
         return (FennelAttributeAccessor) attrAccessors.get(iAttribute);
     }
+
+    // REVIEW jvs 19-Feb-2006:  The comment below says tupleBuf
+    // becomes the current buffer, and that's the case in the original
+    // Fennel code, but I don't think it's actually happening here.
     
     /**
      * Marshalls a tuple's values into a buffer.

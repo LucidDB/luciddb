@@ -35,7 +35,8 @@ public class FYMonth
     private static int calculate(int month, int firstMonth)
     {
         if((firstMonth < 1) || (firstMonth > 12)) {
-            throw new IllegalArgumentException("invalid first month");
+            throw new IllegalArgumentException(
+                ApplibResourceObject.get().InvalidFirstMonth.ex());
         }
 
         if(month >= firstMonth) {

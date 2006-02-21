@@ -34,8 +34,11 @@ public class rand
 
     public static int FunctionExecute( int minVal, int maxVal )
     {
-        if( maxVal < minVal )
-            throw new IllegalArgumentException("random min must be less than max");
+        if( maxVal < minVal ) {
+            throw new IllegalArgumentException(
+                ApplibResourceObject.get().MinNotSmallerThanMax.ex());
+        }
+
         if (m_oRand == null) {
             m_oRand = new Random();
         }

@@ -149,8 +149,6 @@ require version '${required.ant.version}'."/>
   <fileset dir="${regressionsql.dir}" id="fileset.regressionsql.win">
     <include name="**/*.sql"/>
     <exclude name="**/numericStrCasts.sql"/>
-    <exclude name="**/literalTests/real.sql"/>
-    <exclude name="**/literalTests/string.sql"/>
   </fileset>
   <pathconvert property="fileset.regressionsql.win" 
     refid="fileset.regressionsql.win"
@@ -715,15 +713,7 @@ require version '${required.ant.version}'."/>
     depends="makeClassesDir,checkResourceUptodate,copyFennelResources"
     unless="resource.uptodate">
     <!-- Exception classes need to exist for reflection -->
-    <farrago.javaCompile
-      srcdir="${farrago.src.dir}"
-      destdir="${farrago.classes.dir}"
-      classpathref="farrago.3p.classpath">
-      <include name="**/EigenbaseException.java" />
-      <include name="**/EigenbaseContextException.java" />
-      <include name="**/EigenbaseFeatureException.java" />
-      <include name="**/SqlValidatorException.java" />
-    </farrago.javaCompile>
+    <antcall target="compileExceptions"/>
     <taskdef name="resgen" classname="org.eigenbase.resgen.ResourceGenTask">
       <classpath refid="farrago.run.classpath"/>
     </taskdef>
@@ -751,6 +741,18 @@ require version '${required.ant.version}'."/>
       locales="en_US">
       <include name="org/eigenbase/resource/EigenbaseResource.xml"/>
     </resgen>
+  </target>
+
+  <target name="compileExceptions">
+    <farrago.javaCompile
+      srcdir="${farrago.src.dir}"
+      destdir="${farrago.classes.dir}"
+      classpathref="farrago.3p.classpath">
+      <include name="**/EigenbaseException.java" />
+      <include name="**/EigenbaseContextException.java" />
+      <include name="**/EigenbaseFeatureException.java" />
+      <include name="**/SqlValidatorException.java" />
+    </farrago.javaCompile>
   </target>
 
   <target name="checkFennelResourceUptodate">

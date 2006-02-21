@@ -28,6 +28,7 @@ import org.eigenbase.util.*;
 
 import java.util.*;
 import java.math.*;
+import java.nio.*;
 
 /**
  * SargEndpoint represents an endpoint of a ({@link SargInterval}).
@@ -146,48 +147,39 @@ public class SargEndpoint implements Comparable<SargEndpoint>
         this.boundType = boundType;
         this.coordinate = coordinate;
         this.strictness = strictness;
-        applyRounding();
+        convertToTargetType();
     }
 
-    private void applyRounding()
+    private void convertToTargetType()
     {
         if (!(coordinate instanceof RexLiteral)) {
+            // Dynamic parameters are always cast to the target type before
+            // comparison, so they are guaranteed not to need any special
+            // conversion logic.
             return;
         }
+        
         RexLiteral literal = (RexLiteral) coordinate;
         
-        if (!(literal.getValue() instanceof BigDecimal)) {
+        if (RexLiteral.isNullLiteral(literal)) {
             return;
         }
 
-        // For numbers, we have to deal with rounding fun and
-        // games.
-        
-        if (SqlTypeUtil.isApproximateNumeric(dataType)) {
-            // REVIEW jvs 18-Jan-2006:  is it necessary to do anything
-            // for approx types here?  Wait until someone complains.
+        Comparable value = literal.getValue();
+        int roundingCompensation;
+
+        if (value instanceof BigDecimal) {
+            roundingCompensation = convertNumber((BigDecimal) value);
+        } else if (value instanceof NlsString) {
+            roundingCompensation = convertString((NlsString) value);
+        } else if (value instanceof ByteBuffer) {
+            roundingCompensation = convertBytes((ByteBuffer) value);
+        } else {
+            // NOTE jvs 19-Feb-2006:  Once we support fractional time
+            // precision, need to handle that here.
             return;
         }
         
-        // NOTE: defer overflow checks until cast execution.  Broadbase did it
-        // here, but the effect should be the same.  Really, instead of
-        // overflowing at all, right here we should convert the interval to
-        // either unconstrained or empty (e.g. "less than overflow value" is
-        // equivalent to "less than +infinity").
-        
-        BigDecimal bd = (BigDecimal) literal.getValue();
-        BigDecimal bdRounded = bd.setScale(
-            dataType.getScale(),
-            RoundingMode.HALF_UP);
-        coordinate = factory.getRexBuilder().makeExactLiteral(
-            bdRounded,
-            dataType);
-
-        // The sign of roundingCompensation should be the opposite of the
-        // rounding direction, so subtract post-rounding value from
-        // pre-rounding.
-        int roundingCompensation = bd.compareTo(bdRounded);
-
         // rounding takes precedence over the strictness flag.
         //  Input        round    strictness    output    effective strictness
         //    >5.9        down            -1       >=6        0
@@ -214,6 +206,101 @@ public class SargEndpoint implements Comparable<SargEndpoint>
                 strictness = SargStrictness.OPEN;
             }
         }
+    }
+
+    private int convertString(NlsString value)
+    {
+        // For character strings, have to deal with truncation (complicated by
+        // padding rules).
+        
+        String s = value.getValue();
+        if (s.length() <= dataType.getPrecision()) {
+            // No truncation required.
+            return 0;
+        }
+        String truncated = s.substring(0, dataType.getPrecision());
+        coordinate = factory.getRexBuilder().makeCharLiteral(
+            new NlsString(
+                truncated, value.getCharsetName(), value.getCollation()));
+
+        // NOTE jvs 19-Feb-2006:  this implements the PAD SPACE attribute
+        // on collation.  If we ever support the NO PAD attribute,
+        // we should skip this for collations with that attribute enabled.
+        boolean allTrailingSpaces = true;
+        for (int i = dataType.getPrecision(); i < s.length(); ++i) {
+            if (s.charAt(i) != ' ') {
+                allTrailingSpaces = false;
+                break;
+            }
+        }
+        if (allTrailingSpaces) {
+            // For PAD SPACE, trailing spaces have no effect on comparison,
+            // so it's the same as if no truncation took place.
+            return 0;
+        }
+
+        // Truncation is always "down" in coordinate space, so rounding
+        // compensation is always "up".
+        return 1;
+    }
+
+    private int convertBytes(ByteBuffer value)
+    {
+        // For binary strings, have to deal with truncation.
+        
+        byte [] a = value.array();
+        if (a.length <= dataType.getPrecision()) {
+            // No truncation required.
+            return 0;
+        }
+        byte [] truncated = new byte[dataType.getPrecision()];
+        System.arraycopy(a, 0, truncated, 0, dataType.getPrecision());
+        coordinate = factory.getRexBuilder().makeBinaryLiteral(truncated);
+
+
+        // Truncation is always "down" in coordinate space, so rounding
+        // compensation is always "up".
+        return 1;
+    }
+
+    private int convertNumber(BigDecimal value)
+    {
+        if (SqlTypeUtil.isApproximateNumeric(dataType)) {
+            // REVIEW jvs 18-Jan-2006: is it necessary to do anything for
+            // approx types here?  Wait until someone complains.  May at least
+            // have to deal with case of double->float overflow.
+            return 0;
+        }
+
+        // For exact numerics, we have to deal with rounding/overflow fun and
+        // games.
+        
+        // REVIEW jvs 19-Feb-2006: Why do we make things complicated with
+        // RoundingMode.HALF_UP?  We could just use RoundingMode.FLOOR so the
+        // compensation direction would always be the same.  Maybe because this
+        // code was ported from Broadbase, where the conversion library didn't
+        // support multiple rounding modes.
+        
+        BigDecimal roundedValue = value.setScale(
+            dataType.getScale(),
+            RoundingMode.HALF_UP);
+        
+        if (roundedValue.precision() > dataType.getPrecision()) {
+            // Overflow.  Convert to infinity.  Note that this may
+            // flip the bound type, which isn't really correct,
+            // but we handle that outside in SargIntervalExpr.evaluate.
+            setInfinity(roundedValue.signum());
+            return 0;
+        }
+
+        coordinate = factory.getRexBuilder().makeExactLiteral(
+            roundedValue,
+            dataType);
+
+        // The sign of roundingCompensation should be the opposite of the
+        // rounding direction, so subtract post-rounding value from
+        // pre-rounding.
+        return value.compareTo(roundedValue);
     }
 
     /**

@@ -26,6 +26,8 @@
 
 #include "fennel/exec/SingleOutputExecStream.h"
 
+#include <boost/shared_array.hpp>
+
 FENNEL_BEGIN_NAMESPACE
 
 /**
@@ -41,7 +43,7 @@ struct ValuesExecStreamParams : public SingleOutputExecStreamParams
     /**
      * Buffer containing tuples that stream will produce
      */
-    PBuffer pTupleBuffer;
+    boost::shared_array<FixedBuffer> pTupleBuffer;
 };
 
 /**
@@ -61,7 +63,7 @@ class ValuesExecStream : public SingleOutputExecStream
     /**
      * Pointer to start of input tuple buffer
      */
-    PBuffer pTupleBuffer;
+    boost::shared_array<FixedBuffer> pTupleBuffer;
     
     /**
      * True if stream has passed on its buffer to its consumer

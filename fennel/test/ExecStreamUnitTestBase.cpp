@@ -333,8 +333,7 @@ void ExecStreamUnitTestBase::verifyBufferedOutput(
     uint nRowsExpected,
     PBuffer expectedBuffer)
 {
-    // TODO:  assertions about output tuple, or better yet, use proper tuple
-    // access
+    // TODO:  assertions about output tuple
     
     TupleAccessor expectedOutputAccessor;
     expectedOutputAccessor.compute(outputTupleDesc);

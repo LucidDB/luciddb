@@ -40,7 +40,8 @@ public class rightN
     public static String FunctionExecute( String in, int len )
     {
         if( len < 0 ) {
-            throw new IllegalArgumentException("length must be non-negative");
+            throw new IllegalArgumentException(
+                ApplibResourceObject.get().LenSpecifyNonNegative.ex());
         }
 
         // TODO: 

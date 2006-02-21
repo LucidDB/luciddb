@@ -47,19 +47,16 @@ public class CleanPhoneInternational
     {
         String ret;
   
-        PhoneNumberContext ctx = PhoneNumberContext.getPhoneNumberContext("config.txt");
+        PhoneNumberContext ctx = PhoneNumberContext.get();
 
-        try
-        {
+        try {
             ret = ctx.toCanonicalString( in );
-
-        }
-        catch( IllegalArgumentException e )
-        {
-            if( reject )
+        } catch (IllegalArgumentException e) {
+            if( reject ) {
                 throw e;
-            else
+            } else {
                 ret = in;
+            }
         }
         return ret;
     }

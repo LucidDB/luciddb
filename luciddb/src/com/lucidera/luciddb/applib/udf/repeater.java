@@ -39,20 +39,22 @@ public class repeater
      */
     public static String FunctionExecute( String in, int times )
     {
-        if( times < 0 )
-            throw new IllegalArgumentException("repetition amount must be non-negative");
+        if( times < 0 ) {
+            throw new IllegalArgumentException(
+                ApplibResourceObject.get().RepSpecifyNonNegative.ex());
+        }
 
         int len = in.length();
 
         // clip maximum size of output to 64k
-        if ( ( times * len ) > ( 64 * 1024 ) )
+        if ( ( times * len ) > ( 64 * 1024 ) ) {
             times = ( 64 * 1024 ) / len;
+        }
 
         char[] outArray = new char[ times * len ];
         char[] inArray = in.toCharArray();
 
-        for( int i=0; i<times; i++ )
-        {
+        for( int i=0; i<times; i++ ) {
             System.arraycopy( inArray, 0, outArray, i * len, len );
         }
 

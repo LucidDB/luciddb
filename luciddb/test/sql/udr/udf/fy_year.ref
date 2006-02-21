@@ -1,30 +1,16 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/fy_year.sql#1 $
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/fy_year.sql#2 $
 0: jdbc:luciddb:> -- Tests for FYYear UDF
 0: jdbc:luciddb:> set schema 'udftest';
 0: jdbc:luciddb:> set path 'udftest';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- define functions
-0: jdbc:luciddb:> create function fy_year(dt date, fm integer)
-. . . . . . . . > returns integer
-. . . . . . . . > language java
-. . . . . . . . > specific fy_year_date
-. . . . . . . . > no sql
-. . . . . . . . > external name 'class com.lucidera.luciddb.applib.FYYear.FunctionExecute';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create function fy_year(ts timestamp, fm integer)
-. . . . . . . . > returns integer
-. . . . . . . . > language java
-. . . . . . . . > specific fy_year_timestamp
-. . . . . . . . > no sql
-. . . . . . . . > external name 'class com.lucidera.luciddb.applib.FYYear.FunctionExecute';
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> values fy_year(date'2006-12-30', 2);
+0: jdbc:luciddb:> values applib.fy_year(date'2006-12-30', 2);
 +---------+
 | EXPR$0  |
 +---------+
 | 2007    |
 +---------+
-0: jdbc:luciddb:> values fy_year(timestamp'1800-2-25 1:1:11', 4);
+0: jdbc:luciddb:> values applib.fy_year(timestamp'1800-2-25 1:1:11', 4);
 +---------+
 | EXPR$0  |
 +---------+
@@ -32,18 +18,14 @@
 +---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- these should fail
-0: jdbc:luciddb:> values fy_year(date'1000-4-4', 1);
-+---------+
-| EXPR$0  |
-+---------+
-| 1000    |
-+---------+
-0: jdbc:luciddb:> values fy_year(2005-12-1, 9);
-Error: From line 1, column 8 to line 1, column 28: No match found for function signature FY_YEAR(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> values applib.fy_year(date'1000-4-4', 13);
+Error: First month must be between 1 and 12 (state=,code=0)
+0: jdbc:luciddb:> values applib.fy_year('2005-12-1', 9);
+Error: From line 1, column 15 to line 1, column 37: No match found for function signature FY_YEAR(<CHARACTER>, <NUMERIC>) (state=,code=0)
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- create view with reference to fy_year
+0: jdbc:luciddb:> -- create view with reference to applib.fy_year
 0: jdbc:luciddb:> create view fyy(fm, fromdt, fromts) as
-. . . . . . . . > select fm, fy_year(datecol, fm), fy_year(tscol, fm)
+. . . . . . . . > select fm, applib.fy_year(datecol, fm), applib.fy_year(tscol, fm)
 . . . . . . . . > from data_source;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from fyy
@@ -57,7 +39,7 @@ Error: From line 1, column 8 to line 1, column 28: No match found for function s
 +-----+---------+---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- in expressions
-0: jdbc:luciddb:> select fm, fy_year(datecol, fm) * fm + fy_year(tscol, fm)/fm
+0: jdbc:luciddb:> select fm, applib.fy_year(datecol, fm) * fm + applib.fy_year(tscol, fm)/fm
 . . . . . . . . > from data_source
 . . . . . . . . > order by 1;
 +-----+---------+
@@ -68,5 +50,7 @@ Error: From line 1, column 8 to line 1, column 28: No match found for function s
 | 10  | 20146   |
 +-----+---------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- cleanup
+0: jdbc:luciddb:> drop view fyy;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

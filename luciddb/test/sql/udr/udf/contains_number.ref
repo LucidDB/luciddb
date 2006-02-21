@@ -1,29 +1,22 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/contains_number.sql#1 $
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/contains_number.sql#2 $
 0: jdbc:luciddb:> -- Test queries for containsNumber UDF
 0: jdbc:luciddb:> set schema 'udftest';
 0: jdbc:luciddb:> set path 'udftest';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- define function
-0: jdbc:luciddb:> create function contains_number(str varchar(128))
-. . . . . . . . > returns boolean
-. . . . . . . . > language java
-. . . . . . . . > no sql
-. . . . . . . . > external name 'class com.lucidera.luciddb.applib.containsNumber.FunctionExecute';
-0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- basic tests
-0: jdbc:luciddb:> values contains_number('a');
+0: jdbc:luciddb:> values applib.contains_number('a');
 +---------+
 | EXPR$0  |
 +---------+
 | false   |
 +---------+
-0: jdbc:luciddb:> values contains_number('Ahsdkj6sadsal');
+0: jdbc:luciddb:> values applib.contains_number('Ahsdkj6sadsal');
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:luciddb:> values contains_number('gsdfglksjf^%$^$%dslkfjskfjw~!@$EWFDZVcxvkjdsifio#@%^$_
+0: jdbc:luciddb:> values applib.contains_number('gsdfglksjf^%$^$%dslkfjskfjw~!@$EWFDZVcxvkjdsifio#@%^$_
 . . . . . . . . > +@fdjgklfdirue');
 +---------+
 | EXPR$0  |
@@ -31,9 +24,9 @@
 | false   |
 +---------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- create view with reference to contains_number
+0: jdbc:luciddb:> -- create view with reference to applib.contains_number
 0: jdbc:luciddb:> create view has_number(fname, fcol, phcol) as
-. . . . . . . . > select fname, contains_number(fname), contains_number(phone) 
+. . . . . . . . > select fname, applib.contains_number(fname), applib.contains_number(phone) 
 . . . . . . . . > from customers;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from has_number 
@@ -52,7 +45,7 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- in expressions
 0: jdbc:luciddb:> select * from customers
-. . . . . . . . > where contains_number(fname)
+. . . . . . . . > where applib.contains_number(fname)
 . . . . . . . . > order by 1;
 +---------------+------------+------+------+-------------------------+
 |     FNAME     |   LNAME    | AGE  | SEX  |          PHONE          |
@@ -62,7 +55,7 @@
 +---------------+------------+------+------+-------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from customers
-. . . . . . . . > where contains_number(fname) 
+. . . . . . . . > where applib.contains_number(fname) 
 . . . . . . . . > and sex = 'F'
 . . . . . . . . > order by 1;
 +---------------+------------+------+------+-------------------------+
@@ -70,6 +63,9 @@
 +---------------+------------+------+------+-------------------------+
 | 2Tito1        |            | 17   | F    | 888 888 8888            |
 +---------------+------------+------+------+-------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- cleanup 
+0: jdbc:luciddb:> drop view has_number;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

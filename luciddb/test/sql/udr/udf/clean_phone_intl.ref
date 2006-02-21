@@ -1,10 +1,10 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/clean_phone_intl.sql#1 $
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/clean_phone_intl.sql#2 $
 0: jdbc:luciddb:> set schema 'udftest';
 0: jdbc:luciddb:> set path 'udftest';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create table intl(ph varchar(128));
+0: jdbc:luciddb:> create table international(ph varchar(128));
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> insert into intl values
+0: jdbc:luciddb:> insert into international values
 . . . . . . . . > ('5133870'),
 . . . . . . . . > ('513-3870'),
 . . . . . . . . > ('6505133870'),
@@ -17,35 +17,28 @@
 . . . . . . . . > ('011-886-2-9876-5432'),
 . . . . . . . . > ('01185223456789');
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- define functions
-0: jdbc:luciddb:> create function clean_phone_intl(str varchar(128), b boolean)
-. . . . . . . . > returns varchar(128)
-. . . . . . . . > language java
-. . . . . . . . > no sql
-. . . . . . . . > external name 'class com.lucidera.luciddb.applib.CleanPhoneInternational.FunctionExecute';
+0: jdbc:luciddb:> values applib.clean_phone_international('23890123809214382109432809', true);
+Error: Incorrect North American phone number (state=,code=0)
+0: jdbc:luciddb:> values applib.clean_phone_international('fdjk3242478932hfdskf832498', true);
+Error: Incorrect North American phone number (state=,code=0)
+0: jdbc:luciddb:> values applib.clean_phone_international('23', true);
+Error: Incorrect North American phone number (state=,code=0)
+0: jdbc:luciddb:> values applib.clean_phone_international('sdf', true);
+Error: This is not a phone number (state=,code=0)
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> values clean_phone_intl('23890123809214382109432809', true);
-Error: java.lang.IllegalArgumentException: Incorrect North American phone number (state=,code=0)
-0: jdbc:luciddb:> values clean_phone_intl('fdjk3242478932hfdskf832498', true);
-Error: java.lang.IllegalArgumentException: Incorrect North American phone number (state=,code=0)
-0: jdbc:luciddb:> values clean_phone_intl('23', true);
-Error: java.lang.IllegalArgumentException: Incorrect North American phone number (state=,code=0)
-0: jdbc:luciddb:> values clean_phone_intl('sdf', true);
-Error: java.lang.IllegalArgumentException: This is not a phone number (state=,code=0)
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> values clean_phone_intl('dsf', false);
+0: jdbc:luciddb:> values applib.clean_phone_international('dsf', false);
 +---------+
 | EXPR$0  |
 +---------+
 | dsf     |
 +---------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- create view with reference to clean_phone_intl
-0: jdbc:luciddb:> create view intlphone(before, after) as
-. . . . . . . . > select ph, clean_phone_intl(ph, true)
-. . . . . . . . > from intl;
+0: jdbc:luciddb:> -- create view with reference to applib.clean_phone_international
+0: jdbc:luciddb:> create view internationalphone(before, after) as
+. . . . . . . . > select ph, applib.clean_phone_international(ph, true)
+. . . . . . . . > from international;
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> select * from intlphone
+0: jdbc:luciddb:> select * from internationalphone
 . . . . . . . . > order by 1;
 +----------------------+-------------------------+
 |        BEFORE        |          AFTER          |
@@ -64,8 +57,8 @@ Error: java.lang.IllegalArgumentException: This is not a phone number (state=,co
 +----------------------+-------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- in expressions
-0: jdbc:luciddb:> select ph || clean_phone_intl(ph, false)
-. . . . . . . . > from intl
+0: jdbc:luciddb:> select ph || applib.clean_phone_international(ph, false)
+. . . . . . . . > from international
 . . . . . . . . > order by 1;
 +--------------------------------------------+
 |                   EXPR$0                   |
@@ -84,6 +77,6 @@ Error: java.lang.IllegalArgumentException: This is not a phone number (state=,co
 +--------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- cleanup
-0: jdbc:luciddb:> drop view intlphone;
-0: jdbc:luciddb:> drop routine clean_phone_intl;
+0: jdbc:luciddb:> drop view internationalphone;
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

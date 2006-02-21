@@ -34,27 +34,28 @@ public class FYQuarter
 {
     public static String FunctionExecute( int year, int month, int firstMonth )
     {
-        if( ( firstMonth < 1 ) || ( firstMonth > 12 ) )
-            throw new IllegalArgumentException("invalid first month");
+        if( ( firstMonth < 1 ) || ( firstMonth > 12 ) ) {
+            throw new IllegalArgumentException(
+                ApplibResourceObject.get().InvalidFirstMonth.ex());
+        }
 
-        if( month >= firstMonth )
-        {
+        if( month >= firstMonth ) {
             month = month - firstMonth;
             if( firstMonth > 1 )
                 year++;
-        }
-        else
+        } else {
             month = month - firstMonth + 12;
+        }
 
-        // TODO: changes for Locale - elin 01.30.2006
-        Integer quarter = new Integer(month / 3 + 1);
-        Integer intYear = ((year % 100) >= 0)
-            ? new Integer(year % 100) : new Integer(100 + (year % 100));
+        int quarter = (month / 3) + 1;
+        int intYear = ((year % 100) >= 0)
+            ? (year % 100) : (100 + (year % 100));
  
-        String strYear = (intYear.intValue() < 10)
-            ? "0" + intYear.toString() : intYear.toString();
+        String strYear = (intYear < 10)
+            ? "0" + Integer.toString(intYear) : Integer.toString(intYear);
 
-        String ret = "Q" + quarter.toString() + "FY" + strYear;
+        String ret = ApplibResourceObject.get().FiscalYearQuarter.str(
+            Integer.toString(quarter), strYear);
         return ret;
     }
 
@@ -67,8 +68,10 @@ public class FYQuarter
      */
     public static String FunctionExecute( Date in, int firstMonth )
     {
-        if( ( firstMonth < 1 ) || ( firstMonth > 12 ) )
-            throw new IllegalArgumentException("invalid first month");
+        if( ( firstMonth < 1 ) || ( firstMonth > 12 ) ) {
+            throw new IllegalArgumentException(
+                ApplibResourceObject.get().InvalidFirstMonth.ex());
+        }
 
         int year = in.getYear();
         int month = in.getMonth() + 1;
@@ -84,8 +87,10 @@ public class FYQuarter
      */
     public static String FunctionExecute( Timestamp in, int firstMonth )
     {
-        if( ( firstMonth < 1 ) || ( firstMonth > 12 ) )
-            throw new IllegalArgumentException("invalid first month");
+        if( ( firstMonth < 1 ) || ( firstMonth > 12 ) ) {
+            throw new IllegalArgumentException(
+                ApplibResourceObject.get().InvalidFirstMonth.ex());
+        }
 
         int year = in.getYear();
         int month = in.getMonth() + 1;
