@@ -251,20 +251,6 @@ require version '${required.ant.version}'."/>
 
   <!-- Targets -->
 
-  <!--
-
-  Declare mdr task used for catalog manipulation.  Note that in order
-  to use this task, we always fork an ant subprocess using java (not
-  ant or antcall).  There are two reasons for this.  Most importantly,
-  it makes sure that the repository is shut down properly.  Without
-  this, invocations of mdr sometimes interfere with our own java tasks
-  (e.g. populateCatalog).  Another reason is that it gives us a chance
-  to set Java properties, most importantly the one that controls the
-  mdr logging level, so we can suppress some spurious exception
-  reports.
-
-  -->
-
   <!-- default target:  assumes catalog has already been created -->
   <target name="all"
     depends="compile, rmi, buildJdbcPlugin"/>
