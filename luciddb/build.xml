@@ -163,8 +163,7 @@
 
   <target name="test" depends="compile,createCatalog,buildJdbcPlugin">
     <antcall target="shortregSanity"/>
-    <!-- FIXME jvs 7-Feb-2006:  re-enable once LER-303 is resolved -->
-    <!-- antcall target="txn"/ -->
+    <antcall target="txn" />
     <antcall target="bh" />
   </target>
 
