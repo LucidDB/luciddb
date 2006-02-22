@@ -1,10 +1,10 @@
 /*
 // $Id$
-// Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Package org.eigenbase is a class library of data management components.
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -20,27 +20,27 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package net.sf.farrago.util;
-
-import org.eigenbase.util.ClosableAllocationOwner;
+package org.eigenbase.util;
 
 /**
- * FarragoAllocationOwner represents an object which can take ownership of
- * FarragoAllocations and guarantee that they will be cleaned up correctly
+ * ClosableAllocationOwner represents an object which can take ownership of
+ * ClosableAllocations and guarantee that they will be cleaned up correctly
  * when its own closeAllocation() is called.
- *
- * <p>
- * REVIEW: SWZ: 2/22/2006: New code should use ClosableAllocationOwner directly
- * when possible.  Eventually remove this interface and replace all usages with
- * ClosableAllocationOwner.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public interface FarragoAllocationOwner 
-    extends ClosableAllocationOwner, FarragoAllocation
+public interface ClosableAllocationOwner extends ClosableAllocation
 {
+    //~ Methods ---------------------------------------------------------------
+
+    /**
+     * Assigns ownership of a ClosableAllocation to this owner.
+     *
+     * @param allocation the ClosableAllocation to take over
+     */
+    public void addAllocation(ClosableAllocation allocation);
 }
 
 
-// End FarragoAllocationOwner.java
+// End ClosableAllocationOwner.java

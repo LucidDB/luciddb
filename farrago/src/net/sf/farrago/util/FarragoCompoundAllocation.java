@@ -22,68 +22,27 @@
 */
 package net.sf.farrago.util;
 
-import java.util.*;
-
+import org.eigenbase.util.CompoundClosableAllocation;
 
 /**
  * FarragoCompoundAllocation represents a collection of FarragoAllocations
  * which share a common lifecycle.  It guarantees that allocations are closed
  * in the reverse order in which they were added.
  *
+ * <p>
+ * REVIEW: SWZ: 2/22/2006: New code should use CompoundClosableAllocation
+ * directly when possible.  Eventually remove this class and replace all 
+ * usages with CompoundClosableAllocation.
+ *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoCompoundAllocation implements FarragoAllocationOwner
+public class FarragoCompoundAllocation extends CompoundClosableAllocation 
+    implements FarragoAllocationOwner
 {
-    //~ Instance fields -------------------------------------------------------
-
-    /**
-     * List of owned FarragoAllocation objects.
-     */
-    protected List allocations;
-
-    //~ Constructors ----------------------------------------------------------
-
     public FarragoCompoundAllocation()
     {
-        allocations = new LinkedList();
-    }
-
-    //~ Methods ---------------------------------------------------------------
-
-    // implement FarragoAllocationOwner
-    public void addAllocation(FarragoAllocation allocation)
-    {
-        allocations.add(allocation);
-    }
-
-    // implement FarragoAllocation
-    public void closeAllocation()
-    {
-        // traverse in reverse order
-        ListIterator iter = allocations.listIterator(allocations.size());
-        while (iter.hasPrevious()) {
-            FarragoAllocation allocation = (FarragoAllocation) iter.previous();
-
-            // NOTE:  nullify the entry just retrieved so that if allocation
-            // calls back to forgetAllocation, it won't find itself
-            // (this prevents a ConcurrentModificationException)
-            iter.set(null);
-            allocation.closeAllocation();
-        }
-        allocations.clear();
-    }
-
-    /**
-     * Forgets an allocation without closing it.
-     *
-     * @param allocation the allocation to forget
-     *
-     * @return whether the allocation was known
-     */
-    public boolean forgetAllocation(FarragoAllocation allocation)
-    {
-        return allocations.remove(allocation);
+        super();
     }
 }
 
