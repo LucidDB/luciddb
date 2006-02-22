@@ -1,0 +1,50 @@
+Pre-requisites:
+---------------
+
+If running for the first time, mount //raksha so that
+/mnt/raksha/engineering/testdata/csv_BENCH on local machine exists.
+
+(See http://redsquare.jot.com/WikiHome/HomeDirectories
+for instructions on how to do this)
+
+Otherwise, a local copy of flatfiles will be used, unless manually deleted.
+
+
+To run against all sources:
+---------------------------
+(1) in run.properties*, set:
+
+testfile=test-all.xml
+
+(2) run "ant test"
+
+
+To run against one source:
+--------------------------
+(1) in run.properties*, set: 
+
+testfile="test.xml" (or test-csv.xml if using csvjdbc)
+config.prop=prop.[flatfile | oracle | sqlserver | csvjdbc]
+
+(2) run "ant test"
+
+
+Relevant ANT targets:
+---------------------
+
+"test" will run bh. (it will not generate the sql files, unless
+they do not exist)
+
+"gen-all-sql" will generate sql files for all sources.
+
+"clean" will clean all testlogs, csv-copy, and generated sql files
+
+"clean-csv" will "clean" plus delete snapshot of raksha's csv files
+
+
+Note *:
+--------
+If prefer not to modify run.properties, can set it all from the
+command line:
+
+"ant test -Dtestfile=test.xml -Dconfig.prop=prop.flatfile"
