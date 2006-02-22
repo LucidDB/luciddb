@@ -18,8 +18,8 @@
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
-      <test name="importschema" requiresSuccess="creschema">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/bench/gen/%{config.prop}/importschema.sql"/>
+      <test name="benchfileload" requiresSuccess="creschema">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/bench/gen/%{config.prop}/benchfileload.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
