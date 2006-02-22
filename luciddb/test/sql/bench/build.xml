@@ -49,10 +49,10 @@
     <filter token="csv.dir" value="${csv.copy.dir}"/>
 
     <!-- generate config.properties file -->
-    <copy file="${config.prop}" tofile="config.properties"
+    <copy file="${prop.source}" tofile="config.properties"
       overwrite="true" filtering="true">
       <filterset>
-        <filtersfile file="${config.prop}"/>
+        <filtersfile file="${prop.source}"/>
       </filterset>
     </copy>
 
@@ -67,7 +67,7 @@
         <filtersfile file="config.properties"/>
       </filterset>
     </copy>
-    <copy todir="${gensql.dir}/${config.prop}" overwrite="true"
+    <copy todir="${gensql.dir}/${prop.source}" overwrite="true"
       filtering="true">
       <fileset dir="${gensql.dir}tmp"/>
       <filterchain>
@@ -80,7 +80,7 @@
     <delete dir="${gensql.dir}tmp" quiet="true"/>
 
     <!-- copy over all other .sql and .ref files -->
-    <copy todir="${gensql.dir}/${config.prop}">
+    <copy todir="${gensql.dir}/${prop.source}">
       <fileset dir="${bench.dir}">
         <include name="**/*.sql"/>
         <include name="**/*.ref"/>
@@ -97,7 +97,7 @@
       <then/>
       <else>
         <foreach list="prop.oracle,prop.sqlserver,prop.flatfile,prop.csvjdbc" 
-          param="config.prop"
+          param="prop.source"
           target="gen-sql"/>
       </else>
     </if>
