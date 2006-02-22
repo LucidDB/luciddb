@@ -691,7 +691,7 @@ public class BytePointer extends ByteArrayInputStream
     {
         boolean negative = false;
         if (l < 0) {
-            l = -l;
+            // can not do l = -l becuase -Long.MIN_VALUE=Long.MIN_VALUE
             negative = true;
         }
         int len = 0;
@@ -731,6 +731,9 @@ public class BytePointer extends ByteArrayInputStream
             int i = 0;
             for (templ=l; i < digits; i++, templ = templ/10) {
                 int currentDigit = (int) (templ % 10);
+                if (negative) {
+                    currentDigit = -currentDigit;
+                }
                 ownBytes[len - 1 - i] = (byte) ('0' + (char) currentDigit);
                 if (scale > 0 && i == scale - 1) {
                     i++;
