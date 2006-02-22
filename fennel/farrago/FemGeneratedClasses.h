@@ -679,6 +679,8 @@ class ProxyLbmGeneratorStreamDef
 public:
 int32_t getRowCountParamId();
 static jmethodID meth_getRowCountParamId;
+bool isCreateIndex();
+static jmethodID meth_isCreateIndex;
 };
 
 class ProxyLbmIndexScanStreamDef
@@ -889,10 +891,10 @@ bool isPhysical();
 static jmethodID meth_isPhysical;
 std::string getRange();
 static jmethodID meth_getRange;
-SharedProxyWindowStreamDef getWindowStream();
-static jmethodID meth_getWindowStream;
 SharedProxyWindowPartitionDef getPartition();
 static jmethodID meth_getPartition;
+SharedProxyWindowStreamDef getWindowStream();
+static jmethodID meth_getWindowStream;
 int32_t getOffset();
 static jmethodID meth_getOffset;
 };
