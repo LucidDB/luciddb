@@ -1,44 +1,44 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/fymonth.sql#4 $
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/fymonth.sql#5 $
 0: jdbc:luciddb:> -- Test queries for FYMonth UDF
 0: jdbc:luciddb:> set schema 'udftest';
 0: jdbc:luciddb:> set path 'udftest';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> values applib.fymonth(DATE '2005-10-12', 3);
+0: jdbc:luciddb:> values applib.fiscal_month(DATE '2005-10-12', 3);
 +---------+
 | EXPR$0  |
 +---------+
 | 8       |
 +---------+
-0: jdbc:luciddb:> values applib.fymonth(DATE '2006-1-12', 1);
+0: jdbc:luciddb:> values applib.fiscal_month(DATE '2006-1-12', 1);
 +---------+
 | EXPR$0  |
 +---------+
 | 1       |
 +---------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> values applib.fymonth(TIMESTAMP '2006-2-12 13:00:00', 3);
+0: jdbc:luciddb:> values applib.fiscal_month(TIMESTAMP '2006-2-12 13:00:00', 3);
 +---------+
 | EXPR$0  |
 +---------+
 | 12      |
 +---------+
-0: jdbc:luciddb:> values applib.fymonth(TIMESTAMP '1999-3-3 00:00:00', 3);
+0: jdbc:luciddb:> values applib.fiscal_month(TIMESTAMP '1999-3-3 00:00:00', 3);
 +---------+
 | EXPR$0  |
 +---------+
 | 1       |
 +---------+
-0: jdbc:luciddb:> values applib.fymonth(TIMESTAMP '2006-4-12 13:00:00', 3);
+0: jdbc:luciddb:> values applib.fiscal_month(TIMESTAMP '2006-4-12 13:00:00', 3);
 +---------+
 | EXPR$0  |
 +---------+
 | 2       |
 +---------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- create view referencing applib.fymonth
+0: jdbc:luciddb:> -- create view referencing applib.fiscal_month
 0: jdbc:luciddb:> create view fiscal_months(fm, from_date, from_ts) as
-. . . . . . . . > select fm, applib.fymonth(datecol, fm), applib.fymonth(tscol, fm)
+. . . . . . . . > select fm, applib.fiscal_month(datecol, fm), applib.fiscal_month(tscol, fm)
 . . . . . . . . > from data_source;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from fiscal_months
@@ -52,7 +52,7 @@
 +-----+------------+----------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- in expressions
-0: jdbc:luciddb:> select fm, applib.fymonth(datecol, fm) + applib.fymonth(tscol, fm)
+0: jdbc:luciddb:> select fm, applib.fiscal_month(datecol, fm) + applib.fiscal_month(tscol, fm)
 . . . . . . . . > from data_source
 . . . . . . . . > order by 1;
 +-----+---------+
@@ -64,7 +64,7 @@
 +-----+---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- nested 
-0: jdbc:luciddb:> select fm, applib.fymonth(datecol, applib.fymonth(datecol, fm))
+0: jdbc:luciddb:> select fm, applib.fiscal_month(datecol, applib.fiscal_month(datecol, fm))
 . . . . . . . . > from data_source
 . . . . . . . . > order by 1;
 +-----+---------+
@@ -76,13 +76,13 @@
 +-----+---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- should fail can't invoke using specific name
-0: jdbc:luciddb:> values applib.fymonth_date(DATE'2000-12-25', 2);
-Error: From line 1, column 15 to line 1, column 47: No match found for function signature FYMONTH_DATE(<DATE>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> values applib.fiscal_month_date(DATE'2000-12-25', 2);
+Error: From line 1, column 15 to line 1, column 52: No match found for function signature FISCAL_MONTH_DATE(<DATE>, <NUMERIC>) (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- should fail invalid argument
-0: jdbc:luciddb:> select fm, applib.fymonth(timecol, fm)
+0: jdbc:luciddb:> select fm, applib.fiscal_month(timecol, fm)
 . . . . . . . . > from data_source;
-Error: From line 1, column 19 to line 1, column 38: No match found for function signature FYMONTH(<TIME>, <NUMERIC>) (state=,code=0)
+Error: From line 1, column 19 to line 1, column 43: No match found for function signature FISCAL_MONTH(<TIME>, <NUMERIC>) (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- cleanup
 0: jdbc:luciddb:> drop view fiscal_months;

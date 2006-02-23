@@ -4,25 +4,25 @@
 0: jdbc:luciddb:> set path 'udftest';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> values applib.fy_quarter(1210, 8, 4);
+0: jdbc:luciddb:> values applib.fiscal_quarter(1210, 8, 4);
 +---------+
 | EXPR$0  |
 +---------+
 | Q2FY11  |
 +---------+
-0: jdbc:luciddb:> values applib.fy_quarter(date'2222-12-25', 6);
+0: jdbc:luciddb:> values applib.fiscal_quarter(date'2222-12-25', 6);
 +---------+
 | EXPR$0  |
 +---------+
 | Q3FY23  |
 +---------+
-0: jdbc:luciddb:> values applib.fy_quarter(timestamp'1879-8-05 10:29:45.05', 1);
+0: jdbc:luciddb:> values applib.fiscal_quarter(timestamp'1879-8-05 10:29:45.05', 1);
 +---------+
 | EXPR$0  |
 +---------+
 | Q3FY79  |
 +---------+
-0: jdbc:luciddb:> values applib.fy_quarter(date'1601-11-12', 12);
+0: jdbc:luciddb:> values applib.fiscal_quarter(date'1601-11-12', 12);
 +---------+
 | EXPR$0  |
 +---------+
@@ -30,19 +30,19 @@
 +---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- these should fail
-0: jdbc:luciddb:> values applib.fy_quarter(date'2000-7-30', 3, 2);
-Error: From line 1, column 15 to line 1, column 47: No match found for function signature FY_QUARTER(<DATE>, <NUMERIC>, <NUMERIC>) (state=,code=0)
-0: jdbc:luciddb:> values applib.fy_quarter('2001-9-12', 3);
-Error: From line 1, column 15 to line 1, column 40: No match found for function signature FY_QUARTER(<CHARACTER>, <NUMERIC>) (state=,code=0)
-0: jdbc:luciddb:> values applib.fy_quarter(timestamp'1800-13-01 12:45:38', 1);
-Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIMESTAMP literal '1800-13-01 12:45:38' at line 1, column 35: not in format 'yyyy-MM-dd HH:mm:ss' (state=,code=0)
+0: jdbc:luciddb:> values applib.fiscal_quarter(date'2000-7-30', 3, 2);
+Error: From line 1, column 15 to line 1, column 51: No match found for function signature FISCAL_QUARTER(<DATE>, <NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> values applib.fiscal_quarter('2001-9-12', 3);
+Error: From line 1, column 15 to line 1, column 44: No match found for function signature FISCAL_QUARTER(<CHARACTER>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> values applib.fiscal_quarter(timestamp'1800-13-01 12:45:38', 1);
+Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIMESTAMP literal '1800-13-01 12:45:38' at line 1, column 39: not in format 'yyyy-MM-dd HH:mm:ss' (state=,code=0)
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- create view with reference to applib.fy_quarter
-0: jdbc:luciddb:> create view fy(fm, fromdt, fromts) as
-. . . . . . . . > select fm, applib.fy_quarter(datecol, fm), applib.fy_quarter(tscol, fm)
+0: jdbc:luciddb:> -- create view with reference to applib.fiscal_quarter
+0: jdbc:luciddb:> create view fiscal(fm, fromdt, fromts) as
+. . . . . . . . > select fm, applib.fiscal_quarter(datecol, fm), applib.fiscal_quarter(tscol, fm)
 . . . . . . . . > from data_source;
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> select * from fy 
+0: jdbc:luciddb:> select * from fiscal 
 . . . . . . . . > order by 1;
 +-----+---------+---------+
 | FM  | FROMDT  | FROMTS  |
@@ -53,7 +53,7 @@ Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIMESTAMP literal '18
 +-----+---------+---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- in expressions
-0: jdbc:luciddb:> select fm, 'combo: ' || applib.fy_quarter(datecol, fm) || applib.fy_quarter(tscol, fm)
+0: jdbc:luciddb:> select fm, 'combo: ' || applib.fiscal_quarter(datecol, fm) || applib.fiscal_quarter(tscol, fm)
 . . . . . . . . > from data_source
 . . . . . . . . > order by 1;
 +-----+----------------------+
@@ -65,6 +65,6 @@ Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIMESTAMP literal '18
 +-----+----------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- cleanup
-0: jdbc:luciddb:> drop view fy;
+0: jdbc:luciddb:> drop view fiscal;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

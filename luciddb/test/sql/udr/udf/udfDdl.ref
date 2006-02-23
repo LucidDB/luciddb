@@ -1,4 +1,4 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/udfDdl.sql#1 $
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/udfDdl.sql#2 $
 0: jdbc:luciddb:> -- Ported from //open/lu/dev/farrago/unitsql/ddl/udf.sql
 0: jdbc:luciddb:> -- Test DDL for user-defined functions
 0: jdbc:luciddb:> 

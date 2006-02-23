@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!--
+/*
 // $Id$
 // LucidDB is a DBMS optimized for business intelligence.
 // Copyright (C) 2006-2006 LucidEra, Inc.
@@ -14,29 +13,37 @@
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//  
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
--->
+*/
+package com.lucidera.luciddb.applib.resource;
 
-<project name="tch" default="simple-test">
-  <target name="simple-test">
-    <test-suite testunit="simple-test">
-      
-      <init-hook>
-        <test name="restoreCatalog" testunit="init-test">
-          <ant-task>
-            <ant target="restoreCatalog"/>
-          </ant-task>
-        </test>
-      </init-hook>
+/**
+ * Contains a singleton instance of {@link ApplibResource} class for default 
+ * locale.  Note: this is a workaround since ApplibResource.instance() has
+ * problems loading the bundle from the jar. 
+ *
+ * @author Elizabeth Lin
+ * @version $Id$
+ */
+public class ApplibResourceObject
+{
+    private static final ApplibResource res;
+    
+    static 
+    {
+        try {
+            res = new ApplibResource();
+        } catch (Throwable ex) {
+            throw new Error(ex);
+        }
+    }
 
-      <test name="timeDimension">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udx/timeDimension.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
-      </test>
+    public static ApplibResource get() {
+        return res;
+    }
+}
 
-    </test-suite>
-  </target>
-</project>
+// End ApplibResourceObject.java

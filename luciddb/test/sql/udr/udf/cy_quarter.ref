@@ -1,21 +1,21 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/cy_quarter.sql#2 $
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/cy_quarter.sql#3 $
 0: jdbc:luciddb:> set schema 'udftest';
 0: jdbc:luciddb:> set path 'udftest';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> values applib.cy_quarter(DATE'1896-1-11');
+0: jdbc:luciddb:> values applib.calendar_quarter(DATE'1896-1-11');
 +---------+
 | EXPR$0  |
 +---------+
 | Q1CY96  |
 +---------+
-0: jdbc:luciddb:> values applib.cy_quarter(TIMESTAMP'2001-5-9 9:57:59');
+0: jdbc:luciddb:> values applib.calendar_quarter(TIMESTAMP'2001-5-9 9:57:59');
 +---------+
 | EXPR$0  |
 +---------+
 | Q2CY01  |
 +---------+
-0: jdbc:luciddb:> values applib.cy_quarter(DATE'1-1-1');
+0: jdbc:luciddb:> values applib.calendar_quarter(DATE'1-1-1');
 +---------+
 | EXPR$0  |
 +---------+
@@ -23,12 +23,12 @@
 +---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- failures
-0: jdbc:luciddb:> values applib.cy_quarter(TIMESTAMP'2 12:59:21');
-Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIMESTAMP literal '2 12:59:21' at line 1, column 35: not in format 'yyyy-MM-dd HH:mm:ss' (state=,code=0)
+0: jdbc:luciddb:> values applib.calendar_quarter(TIMESTAMP'2 12:59:21');
+Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIMESTAMP literal '2 12:59:21' at line 1, column 41: not in format 'yyyy-MM-dd HH:mm:ss' (state=,code=0)
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- create view with reference to applib.cy_quarter
+0: jdbc:luciddb:> -- create view with reference to applib.calendar_quarter
 0: jdbc:luciddb:> create view v1(fm, dateQ, tsQ) as
-. . . . . . . . > select fm, applib.cy_quarter(datecol), applib.cy_quarter(tscol)
+. . . . . . . . > select fm, applib.calendar_quarter(datecol), applib.calendar_quarter(tscol)
 . . . . . . . . > from data_source;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from v1
@@ -42,7 +42,7 @@ Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIMESTAMP literal '2 
 +-----+---------+---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- in expressions
-0: jdbc:luciddb:> select v1.fm, applib.cy_quarter(datecol) || applib.cy_quarter(tscol) || dateQ
+0: jdbc:luciddb:> select v1.fm, applib.calendar_quarter(datecol) || applib.calendar_quarter(tscol) || dateQ
 . . . . . . . . > from data_source, v1
 . . . . . . . . > order by 1;
 +-----+---------------------+

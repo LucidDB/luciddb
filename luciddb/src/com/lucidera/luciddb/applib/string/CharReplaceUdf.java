@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!--
+/*
 // $Id$
 // LucidDB is a DBMS optimized for business intelligence.
 // Copyright (C) 2006-2006 LucidEra, Inc.
@@ -14,29 +13,41 @@
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//  
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
--->
+*/
+package com.lucidera.luciddb.applib.string;
 
-<project name="tch" default="simple-test">
-  <target name="simple-test">
-    <test-suite testunit="simple-test">
-      
-      <init-hook>
-        <test name="restoreCatalog" testunit="init-test">
-          <ant-task>
-            <ant target="restoreCatalog"/>
-          </ant-task>
-        </test>
-      </init-hook>
+import java.sql.Types;
+import com.lucidera.luciddb.applib.resource.*;
 
-      <test name="timeDimension">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udx/timeDimension.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
-      </test>
+/**
+ * CharReplace replaces all occurrences of the old character in a string
+ * with the new character.
+ *
+ * Ported from //BB/bb713/server/SQL/charReplace.java
+*/
+public abstract class CharReplaceUdf
+{
+    public static String execute(String in, int oldChar, int newChar)
+    {
+        return in.replace((char)oldChar, (char)newChar);
+    }
+    
+    public static String execute(
+        String in, String oldChar, String newChar)
+    {
+        ApplibResource res = ApplibResourceObject.get();
 
-    </test-suite>
-  </target>
-</project>
+        if(oldChar.length() != 1) {
+            throw res.ReplacedCharSpecifyOneChar.ex();
+        }
+        if(newChar.length() != 1) {
+            throw res.ReplacementCharSpecifyOneChar.ex();
+        }
+
+        return in.replace(oldChar.charAt(0), newChar.charAt(0));
+    }
+}

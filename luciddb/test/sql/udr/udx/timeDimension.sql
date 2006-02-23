@@ -51,31 +51,31 @@ select * from table(applib.time_dimension( 1994, 1, 1, 1995, 1, -1 ));
 
 select 
  time_key, 
- applib.toCYQuarter( time_key ), 
- applib.toFYQuarter( time_key, 4 ), 
- applib.toFYMonth( time_key, 4 ), 
- applib.toFYYear( time_key, 4 )
+ applib.calendar_quarter( time_key ), 
+ applib.fiscal_quarter( time_key, 4 ), 
+ applib.fiscal_month( time_key, 4 ), 
+ applib.fiscal_year( time_key, 4 )
 from table(applib.time_dimension( 1999, 1, 1, 1999, 12, 31 ))
 order by time_key;
 
 -- Negative tests
 
-select time_key, applib.toFYQuarter( time_key, 0 ) 
+select time_key, applib.fiscal_quarter( time_key, 0 ) 
 from table(applib.time_dimension( 1994, 1, 1, 1994, 1, 1 ));
 
-select time_key, applib.toFYQuarter( time_key, 13 ) 
+select time_key, applib.fiscal_quarter( time_key, 13 ) 
 from table(applib.time_dimension( 1994, 1, 1, 1994, 1, 1 ));
 
-select time_key, applib.toFYMonth( time_key, 0 ) 
+select time_key, applib.fiscal_month( time_key, 0 ) 
 from table(applib.time_dimension( 1994, 1, 1, 1994, 1, 1 ));
 
-select time_key, applib.toFYMonth( time_key, 13 ) 
+select time_key, applib.fiscal_month( time_key, 13 ) 
 from table(applib.time_dimension( 1994, 1, 1, 1994, 1, 1 ));
 
-select time_key, applib.toFYYear( time_key, 0 ) 
+select time_key, applib.fiscal_year( time_key, 0 ) 
 from table(applib.time_dimension( 1994, 1, 1, 1994, 1, 1 ));
 
-select time_key, applib.toFYYear( time_key, 13 ) 
+select time_key, applib.fiscal_year( time_key, 13 ) 
 from table(applib.time_dimension( 1994, 1, 1, 1994, 1, 1 ));
 
 -- create views w/ reference to time_dimension
