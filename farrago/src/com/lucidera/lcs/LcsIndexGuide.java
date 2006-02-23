@@ -702,11 +702,12 @@ class LcsIndexGuide
         FennelRel rel,
         FemLocalIndex index,
         FennelRelImplementor implementor,
+        boolean createIndex,
         int dynParamId)
     {
         // create the streams
         FemExecutionStreamDef generator = 
-            newGenerator(rel, index, dynParamId);
+            newGenerator(rel, index, createIndex, dynParamId);
         FemExecutionStreamDef sorter = newSorter(index);
         FemExecutionStreamDef splicer = newSplicer(rel, index, dynParamId);
         
@@ -720,6 +721,7 @@ class LcsIndexGuide
     private FemLbmGeneratorStreamDef newGenerator(
         FennelRel rel,
         FemLocalIndex index,
+        boolean createIndex,
         int dynParamId)
     {
         FemLbmGeneratorStreamDef generator = 
@@ -746,6 +748,11 @@ class LcsIndexGuide
             FennelRelUtil.createTupleProjection(
                 repos,
                 computeProjectedColumns(indexProjection)));
+        
+        // 
+        // Setup index creation flag
+        //
+        generator.setCreateIndex(createIndex);
 
         //
         // Setup dynamic param id

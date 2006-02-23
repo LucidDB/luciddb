@@ -45,16 +45,6 @@ inline void ReadBits(uint8_t b, uint nBits, uint fromBits, uint16_t *v,
 }
 
 /**
- * Copies nBits(1,2,4), starting at fromBits from byte B to uint8_t V,
- * starting at toBits
- */
-inline void ReadBits(uint8_t b, uint nBits, uint fromBits, uint8_t *v,
-                     uint toBits)
-{
-    *v |= (((b & (((1 << nBits) -1) << fromBits)) >> fromBits) << toBits);
-}
-
-/**
  * Calculates the # of bits it takes to encode n different values
  * correct the number so that no more then 2 vectors (1,2,4,8,16) wide are
  * required.
@@ -407,81 +397,6 @@ inline void ReadBitVec5(uint16_t *v, const PtrVec p, uint pos)
  * @param pos first row of interest
  */
 inline void ReadBitVec3(uint16_t *v, const PtrVec p, uint pos)
-{
-    // clear the destination
-    *v = 0;
-    ReadBits(p[0][pos/4], 2, (pos*2) % 8, v, 0);
-    ReadBits(p[1][pos/8], 1, pos % 8, v, 2);
-}
-
-inline void ReadByteBitVec0(uint16_t *v, const PtrVec p, uint pos)
-{
-    // ARG_USED(p);
-    // ARG_USED(pos);
-    *v = 0;
-}
-
-inline void ReadByteBitVec8(uint16_t *v, const PtrVec p, uint pos)
-{
-    *v = *(p[0] + pos);
-}
-
-inline void ReadByteBitVec4(uint16_t *v, const PtrVec p, uint pos)
-{
-    // clear the destination
-    *v = 0;
-    ReadBits(p[0][pos/2], 4, (pos*4) % 8, v, 0);
-}
-
-inline void ReadByteBitVec2(uint16_t *v, const PtrVec p, uint pos)
-{
-    // clear the destination
-    *v = 0;
-    ReadBits(p[0][pos/4], 2, (pos*2) % 8, v, 0);
-}
-
-inline void ReadByteBitVec1(uint16_t *v, const PtrVec p, uint pos)
-{
-    // clear the destination
-    *v = 0;
-    ReadBits(p[0][pos/8], 1, pos % 8, v, 0);
-}
-
-inline void ReadByteBitVec12(uint16_t *v, const PtrVec p, uint pos)
-{
-    *v = *(p[0] + pos);
-    ReadBits(p[1][pos/2], 4, (pos*4) % 8, v, 8);
-}
-
-inline void ReadByteBitVec10(uint16_t *v, const PtrVec p, uint pos)
-{
-    *v = *(p[0] + pos);
-    ReadBits(p[1][pos/4], 2, (pos*2) % 8, v, 8);
-}
-
-inline void ReadByteBitVec9(uint16_t *v, const PtrVec p, uint pos)
-{
-    *v = *(p[0] + pos);
-    ReadBits(p[1][pos/8], 1, pos % 8, v, 8);
-}
-
-inline void ReadByteBitVec6(uint16_t *v, const PtrVec p, uint pos)
-{
-    // clear the destination
-    *v = 0;
-    ReadBits(p[0][pos/2], 4, (pos*4) % 8, v, 0);
-    ReadBits(p[1][pos/4], 2, (pos*2) % 8, v, 4);
-}
-
-inline void ReadByteBitVec5(uint16_t *v, const PtrVec p, uint pos)
-{
-    // clear the destination
-    *v = 0;
-    ReadBits(p[0][pos/2], 4, (pos*4) % 8, v, 0);
-    ReadBits(p[1][pos/8], 1, pos % 8, v, 4);
-}
-
-inline void ReadByteBitVec3(uint16_t *v, const PtrVec p, uint pos)
 {
     // clear the destination
     *v = 0;

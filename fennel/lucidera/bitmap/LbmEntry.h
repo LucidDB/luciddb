@@ -85,7 +85,6 @@ class LbmEntry : public LbmSegment
      * Increment forward from pSegDescStart.
      */ 
     PBuffer currSegDescByte;
-    uint currSegDescLength;
 
     /**
      * Decrement backward from pBitmapSegStart.
@@ -109,11 +108,19 @@ class LbmEntry : public LbmSegment
     inline bool isSingleBitmap() const;
 
     /**
+     * Set rid in the specified segment byte.
+     *
+     * @param pSegBtye the specified segment byte.
+     * @param rid the rid to set the bit for.
+     */
+    inline void setRIDSegByte(PBuffer pSegByte, LcsRid rid);
+
+    /**
      * Set rid in the current segment byte.
      *
      * @param rid the rid to set the bit for.
      */
-    void setRIDCurrentSegByte(LcsRid rid);
+    inline void setRIDCurrentSegByte(LcsRid rid);
 
     /**
      * Set rid in an adjacent segment byte.
@@ -135,25 +142,29 @@ class LbmEntry : public LbmSegment
     bool setRIDNewSegment(LcsRid rid);
     
     /**
-     * Store value in a byte array. 
-     * The least significant bytes in the value is stored
-     * at the first location in the array.
-     *
-     * @param value
-     * @param array a byte array
-     * @param arraySize size of the array(number of bytes)
-     *
-     * @return number of bytes used to store the value; 0 if the value requires
-     * more than arraySize bytes to store.
+     * reset segment related member fields.
      */
-    uint value2ByteArray(uint value, PBuffer array, uint arraySize);
+    inline void resetSegment();
+
+    /**
+     * Open a new segment for write. This is called when building or growing an
+     * entry.
+     *
+     * @param rid the rid to set in the new segment.
+     */
+    bool openNewSegment(LcsRid rid);
+
+    /**
+     * Open the last segment for write. This is called on existing entries.
+     */
+    void openLastSegment();
 
     /**
      * Write out the current segment descriptor with no zero bits following the
      * current segment. This is ONLY called when the next RID is known to be in
      * the adjacent byte.
      */
-    void completeCurrentDesc();
+    void closeCurrentSegment();
 
     /**
      * Write out the current segment descriptor.
@@ -164,7 +175,13 @@ class LbmEntry : public LbmSegment
      * @return if the LbmEntry can encode the zero bits following the last 
      * segment and the rid to be inserted.
      */
-    bool completeCurrentDesc(LcsRid rid);
+    bool closeCurrentSegment(LcsRid rid);
+
+    /**
+     * Is the segment open for write?
+     * @return true if segment is open for write
+     */
+    inline bool isSegmentOpen();
 
     /*
      * Get the last segment descriptor and calculate the number of rows
@@ -179,7 +196,13 @@ class LbmEntry : public LbmSegment
      *
      * @return number of rows contained in this entry.
      */
-    uint getRowCount(uint &lastLengthDescBytes, uint &lastZeroBytes);
+    uint getRowCount(PBuffer &lastSegDescByte, uint &lastZeroRIDs);
+
+    uint getRowCount(TupleData const &inputTuple);
+
+    uint getCompressedRowCount(
+        PBuffer pDescStart, PBuffer pDescEnd,
+        PBuffer &lastSegDescByte, uint &lastZeroRIDs);
 
     /**
      * Grow entry to encode zeros until rid(to be exact, the byte that encodes 
@@ -210,17 +233,20 @@ class LbmEntry : public LbmSegment
     bool adjustEntry(TupleData &inputTuple);
 
     /**
-     * Add segment descriptors to a small single bitmap entry, if the added
-     * descriptor can fit into the leftOverSpace.
+     * Add segment descriptors to a single bitmap entry, if the resulting
+     * entry can have reservedSpace free.
      *
-     * @param[in] the left over space to fit the additional segment
-     * descriptors.
+     * @param[in] bitmap segment length to add descriptors for.
      * 
-     * @return true if the single bitmap is small and the new descriptors can
-     * fit.
+     * @return true if the new descriptors can fit.
      */
-    bool addSegDesc(uint leftOverSpace, uint bitmapLength);
+    bool addSegDesc(uint reservedSpace, uint bitmapLength);
     
+    /**
+     * Morph a singleton entry into a compressed bitmap entry.
+     */
+    bool singleton2Bitmap();
+
     /**
      ** STATIC MEMBERS AND METHODS
      **/
@@ -298,6 +324,20 @@ class LbmEntry : public LbmSegment
      * fit.
      */
     static uint getMergeSpaceRequired(TupleData const &inputTuple);
+
+    /**
+     * Generate a vector of the RIDs contained in a bitmap segment
+     */
+    static void generateSegRIDs(
+        PBuffer segDesc, PBuffer segDescEnd, PBuffer seg,
+        std::vector<LcsRid> &ridValues, LcsRid srid);
+
+    /**
+     * Generate a vector of RIDs contained in a single bitmap segment
+     */
+    static void generateBitmapRIDs(
+        PBuffer seg, uint segBytes, std::vector<LcsRid> &ridValues,
+        LcsRid srid);
 
 public:
 
@@ -379,6 +419,11 @@ public:
     string toString();
 
     /**
+     * Returns number of rows represented by the entry
+     */
+    uint getRowCount();
+
+    /**
      ** STATIC METHODS
      **/
 
@@ -402,6 +447,17 @@ public:
     static void getSizeBounds(
         TupleDescriptor const &indexTupleDesc, uint pageSize,
         uint &minEntrySize, uint &maxEntrySize);
+
+    /**
+     * Generates a vector of RIDs corresponding to the rid values represented
+     * by a bitmap entry
+     *
+     * @param inputTuple tupledata corresponding to bitmap entry
+     * @param ridValues returns vector of rid values
+     */
+    static void generateRIDs(
+        TupleData const &inputTuple, std::vector<LcsRid> &ridValues);
+
 };
 
 
@@ -434,6 +490,29 @@ inline bool LbmEntry::isSingleBitmap() const
     return (pSegDescStart == NULL);
 }
 
+inline void LbmEntry::setRIDSegByte(PBuffer pSegByte, LcsRid rid)
+{
+    assert(pSegByte);
+    *pSegByte |= (uint8_t)(1 << (opaqueToInt(rid) % LbmOneByteSize));
+}
+
+inline void LbmEntry::setRIDCurrentSegByte(LcsRid rid)
+{
+    setRIDSegByte(currSegByte, rid);
+}
+
+inline bool LbmEntry::isSegmentOpen()
+{
+    return (currSegDescByte != NULL);
+}
+
+inline void LbmEntry::resetSegment()
+{
+    currSegByte = NULL;
+    currSegLength = 0;
+    currSegByteStartRID = (LcsRid)0;
+    currSegDescByte = NULL;
+}
 
 FENNEL_END_NAMESPACE
 

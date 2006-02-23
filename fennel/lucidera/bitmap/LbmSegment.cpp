@@ -33,6 +33,29 @@ uint LbmSegment::byteArray2Value(PBuffer array, uint arraySize)
     return value;
 }
 
+
+uint LbmSegment::value2ByteArray(uint value, PBuffer array, uint arraySize)
+{
+    assert(value!=0);
+
+    uint size = 0;
+
+    while (value > 0 && size < arraySize) {
+        array[size] = (uint8_t)(value & 0xff);
+        value = value >> LbmOneByteSize;
+        size ++;
+    }
+    /*
+     * If size reaches the maximum, it means that the value can not be encoded
+     * within an array of arraySize. Return 0 in that case.
+     */
+    if (size == arraySize) 
+        size = 0;
+
+    return size;
+}
+
+
 void LbmSegment::readSegDescAndAdvance(
     PBuffer &pSegDesc, uint &bmSegLen, uint &zeroBytes)
 {

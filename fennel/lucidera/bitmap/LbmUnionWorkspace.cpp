@@ -24,48 +24,43 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-void LbmUnionWorkspace::init(
-    PBuffer buffer, uint bufferSize, uint maxSegmentSize)
+void LbmUnionWorkspace::init(SharedByteBuffer pBuffer, uint maxSegmentSize)
 {
-    int mergeAreaSize = bufferSize - maxSegmentSize;
-    mergeArea.init(buffer, mergeAreaSize);
-
-    segmentArea = buffer + mergeAreaSize;
+    mergeArea.init(pBuffer);
     this->maxSegmentSize = maxSegmentSize;
-
     reset();
-}
-
-uint LbmUnionWorkspace::getRidLimit()
-{
-    return mergeArea.getCapacity() - maxSegmentSize;
 }
 
 void LbmUnionWorkspace::reset()
 {
     mergeArea.reset();
     segment.reset();
-    limited = false;
-    highestByte = (LcsRid) 0;
-}
-
-void LbmUnionWorkspace::advance(LcsRid requestedSrid)
-{
-    mergeArea.setMin(getByteNumber(requestedSrid));
-}
-
-void LbmUnionWorkspace::advanceSegment()
-{
-    // get the index to the byte past the end of the segment
-    LcsRid segmentEndByte = segment.byteNum + segment.len;
-    mergeArea.setMin(segmentEndByte);
-}
-
-void LbmUnionWorkspace::setLimit(LcsRid productionLimitRid)
-{
     limited = true;
-    LcsRid invalidRid = productionLimitRid + 1;
-    productionLimitByte = getByteNumber(invalidRid) - 1;
+    productionLimitByte = (LcsRid) 0;
+}
+
+void LbmUnionWorkspace::advanceToSrid(LcsRid requestedSrid)
+{
+    advanceToByteNum(getByteNumber(requestedSrid));
+}
+
+void LbmUnionWorkspace::advanceToByteNum(LcsRid requestedByteNum)
+{
+    if (requestedByteNum > mergeArea.getStart()) {
+        mergeArea.advance(requestedByteNum);
+    }
+}
+
+void LbmUnionWorkspace::advancePastSegment()
+{
+    LcsRid endByteNum = segment.byteNum + segment.len;
+    advanceToByteNum(endByteNum);
+}
+
+void LbmUnionWorkspace::setProductionLimit(LcsRid productionLimitRid)
+{
+    productionLimitByte = getByteNumber(productionLimitRid);
+    limited = true;
 }
 
 void LbmUnionWorkspace::removeLimit()
@@ -75,7 +70,7 @@ void LbmUnionWorkspace::removeLimit()
 
 bool LbmUnionWorkspace::isEmpty() const
 {
-    for (LcsRid i = mergeArea.getStartByte(); i < highestByte; i++) {
+    for (LcsRid i = mergeArea.getStart(); i < mergeArea.getEnd(); i++) {
         if (mergeArea.getByte(i) != 0) {
             return false;
         }
@@ -90,49 +85,72 @@ bool LbmUnionWorkspace::canProduce()
 
 const LbmByteSegment &LbmUnionWorkspace::getSegment()
 {
-    if (! segment.isNull() && segment.byteNum >= mergeArea.getStartByte()) {
-        // we already a valid segment
+    // update segment to current starting position
+    segment.advanceToByteNum(mergeArea.getStart());
+
+    // if we already a valid segment, return the segment
+    if (! segment.isNull()) {
         return segment;
     }
-    // nullify segment
+
+    // read to the production limit, but not past the end
+    LcsRid readLimit = productionLimitByte;
+    if (readLimit > mergeArea.getEnd()) {
+        readLimit = mergeArea.getEnd();
+    }
+    if (! limited) {
+        readLimit = mergeArea.getEnd();
+    }
+
+    // begin with a null segment
     segment.reset();
 
     // skip past whitespace
-    LcsRid i = mergeArea.getStartByte();
-    while (i < productionLimitByte && mergeArea.getByte(i) == 0) {
+    LcsRid i = mergeArea.getStart();
+    while (i < readLimit && mergeArea.getByte(i) == 0) {
         i++;
     }
-    mergeArea.setMin(i);
+    mergeArea.advance(i);
+    LcsRid start = i;
 
-    // find length of segment
+    // find length of segment (only use the contiguous part)
     uint len = 0;
-    while(i < productionLimitByte && mergeArea.getByte(i) != 0) {
+    while(i < readLimit && mergeArea.getByte(i) != 0) {
         i++;
         len++;
         if (len == maxSegmentSize) {
             break;
         }
     }
-    if (mergeArea.getByte(i) != 0 && len != maxSegmentSize) {
-        // we only have a partial segment, do not return it yet
-        return segment;
-    }
+    len = mergeArea.getContiguousMemSize(start, len);
 
-    // copy to segment area
-    LcsRid byteNum = mergeArea.getStartByte();
-    for (uint j = 0; j < len; j++) {
-        segmentArea[j] = mergeArea.getByte(byteNum+j);
+    if (len > 0) {
+        segment.byteNum = start;
+        segment.byteSeg = mergeArea.getMem(start, len);
+        segment.len = len;
     }
-    segment.byteNum = byteNum;
-    segment.byteSeg = segmentArea;
-    segment.len = len;
     return segment;
 }
 
-bool LbmUnionWorkspace::addSegment(const LbmByteSegment &segment)
+bool LbmUnionWorkspace::addSegment(const LbmByteSegment &segmentIn)
 {
-    return mergeArea.mergeByteSegment(
-        segment.byteNum, segment.byteSeg, segment.len);
+    LbmByteSegment segment = segmentIn;
+
+    // return false if segment cannot fit into merge area
+    if (segment.getEnd() > mergeArea.getLimit()) {
+        return false;
+    }
+
+    // return true if merge area is already advanced beyond segment
+    if (segment.getEnd() < mergeArea.getStart()) {
+        return true;
+    }
+
+    segment.advanceToByteNum(mergeArea.getStart());
+    if (! segment.isNull()) {
+        mergeArea.mergeMem(segment.byteNum, segment.byteSeg, segment.len);
+    }
+    return true;
 }
 
 FENNEL_END_CPPFILE("$Id$");

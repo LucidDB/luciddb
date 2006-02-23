@@ -695,6 +695,7 @@ void LbmIndexScanTest::loadTableAndIndex(
     }
     generatorParams.outputProj = proj;
     generatorParams.dynParamId = DynamicParamId(1);
+    generatorParams.createIndex = false;
 
     boost::shared_ptr<BTreeDescriptor> pBTreeDesc =
         boost::shared_ptr<BTreeDescriptor> (new BTreeDescriptor());

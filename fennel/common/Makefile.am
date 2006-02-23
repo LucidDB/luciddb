@@ -23,6 +23,7 @@ libcommon_la_SOURCES=\
 Backtrace.cpp \
 ByteArrayInputStream.cpp \
 ByteArrayOutputStream.cpp \
+ByteBuffer.cpp \
 ByteInputStream.cpp \
 ByteOutputStream.cpp \
 ByteStream.cpp \

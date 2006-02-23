@@ -184,6 +184,9 @@ typedef boost::shared_ptr<LcsClusterReader> SharedLcsClusterReader;
 class LbmEntry;
 typedef boost::shared_ptr<LbmEntry> SharedLbmEntry;
 
+class ByteBuffer;
+typedef boost::shared_ptr<ByteBuffer> SharedByteBuffer;
+
 FENNEL_END_NAMESPACE
 
 #endif
