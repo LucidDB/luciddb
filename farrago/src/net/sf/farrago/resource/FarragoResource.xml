@@ -694,6 +694,26 @@ column type family is {1} but default value type family is {2}</text>
 </exception>
 
 <!-- ====================================================================== -->
+<!-- Flat File Data wrapper resources 469,000 - 470,000 -->
+<!-- ====================================================================== -->
+
+<exception id="469000" name="InvalidDirectory">
+<text>Directory {0} does not exist</text>
+</exception>
+
+<exception id="469010" name="FileWriteFailed">
+<text>Cannot open {0} to write</text>
+</exception>
+
+<exception id="469020" name="FileNotFound">
+<text>Control file {0} not found</text>
+</exception>
+
+<exception id="469030" name="InvalidControlFile">
+<text>Control file {0} is not valid</text>
+</exception>
+
+<!-- ====================================================================== -->
 <!-- Database/Session resources 470,000 - 480,000 -->
 <!-- ====================================================================== -->
 
