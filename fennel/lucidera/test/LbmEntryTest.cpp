@@ -86,7 +86,7 @@ class LbmEntryTest : virtual public SegStorageTestBase
     bool compareExpected(
         LbmEntry *entry, std::vector<LcsRid> const &ridValues, uint &ridPos);
 
-    void recurseCombos(uint nEntries, std::vector<uint> &eTypes);
+    void recurseCombos(uint curr, uint nEntries, std::vector<uint> &eTypes);
 
     void generateBitmaps(
         EntryType etype, std::vector<LcsRid> &ridValues,
@@ -558,48 +558,41 @@ void LbmEntryTest::testCombos()
     for (uint i = 0; i < nEntries; i++) {
         eTypes.push_back(0);
     }
-    recurseCombos(nEntries, eTypes);
+    recurseCombos(0, nEntries, eTypes);
 }
 
-void LbmEntryTest::recurseCombos(uint nEntries, std::vector<uint> &eTypes)
+void LbmEntryTest::recurseCombos(
+    uint curr, uint nEntries, std::vector<uint> &eTypes)
 {
     std::vector<LcsRid> ridValues;
     std::vector<uint> nRidsPerBitmap;
 
-    // generate the "nEntries" bitmaps
-    for (uint i = 0; i < nEntries; i++) {
-        generateBitmaps(EntryType(eTypes[i]), ridValues, nRidsPerBitmap);
+    uint nETypes = (curr == 0) ? 3 : 9;
+    for (uint i = 0; i < nETypes; i++) {
+        eTypes[curr] = i;
+        if (curr < nEntries - 1) {
+            recurseCombos(curr + 1, nEntries, eTypes);
+        } else {
+
+            // generate the "nEntries" bitmaps
+            for (uint n = 0; n < nEntries; n++) {
+                generateBitmaps(
+                    EntryType(eTypes[n]), ridValues, nRidsPerBitmap);
+            }
+
+            // generate the last entry
+            ridValues.push_back(ridValues.back() + 16);
+            nRidsPerBitmap.push_back(1);
+
+            // merge them
+            testMergeEntry(ridValues, nRidsPerBitmap, nEntries * 24);
+
+            ridValues.clear();
+            nRidsPerBitmap.clear();
+            entryTupleDesc.clear();
+            entryTuple.clear();
+        }
     }
-
-    // generate the last entry
-    ridValues.push_back(ridValues.back() + 16);
-    nRidsPerBitmap.push_back(1);
-
-    // merge them
-    testMergeEntry(ridValues, nRidsPerBitmap, nEntries * 24);
-
-    ridValues.clear();
-    nRidsPerBitmap.clear();
-    entryTupleDesc.clear();
-    entryTuple.clear();
-
-    // recursively go through the remaining combinations; note
-    // that for the first entry, since there are no previous
-    // entries for that entry, we only need to consider the 
-    // first 3 cases
-    uint idx = nEntries - 1;
-    while (idx > 0 &&
-        ((idx != 0 && eTypes[idx] == 8) || (idx == 0 && eTypes[idx] == 2)))
-    {
-        eTypes[idx] = 0;
-        idx--;
-    }
-    if (idx == 0 && eTypes[idx] == 2) {
-        // all combinations have been generated
-        return;
-    }
-    eTypes[idx]++;
-    recurseCombos(nEntries, eTypes);
 }
 
 void LbmEntryTest::generateBitmaps(
