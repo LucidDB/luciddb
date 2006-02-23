@@ -59,7 +59,7 @@
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
-[0]:PC=3 Code=22003 (state=,code=0)
+[0]:PC=2 Code=22003 (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into datatype_source
 . . . . . . . . > values('smallint','target',32767,32767,32767,32767,32767,32767,32767,32767,32767)
@@ -93,7 +93,7 @@ Messages:
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
-[0]:PC=3 Code=22003 (state=,code=0)
+[0]:PC=2 Code=22003 (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into datatype_source
 . . . . . . . . > values('integer','target',2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
@@ -127,7 +127,7 @@ Messages:
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
-[0]:PC=3 Code=22003 (state=,code=0)
+[0]:PC=2 Code=22003 (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into datatype_source
 . . . . . . . . > values('bigint','target',2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
@@ -161,7 +161,7 @@ Messages:
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
-[0]:PC=3 Code=22003 (state=,code=0)
+[0]:PC=2 Code=22003 (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into datatype_source
 . . . . . . . . > values('decimal','target',2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
@@ -195,7 +195,7 @@ Messages:
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
-[0]:PC=3 Code=22003 (state=,code=0)
+[0]:PC=2 Code=22003 (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into datatype_source
 . . . . . . . . > values('numeric','target',2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
@@ -229,7 +229,7 @@ Messages:
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
-[0]:PC=3 Code=22003 (state=,code=0)
+[0]:PC=2 Code=22003 (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into datatype_source
 . . . . . . . . > values('double','target',2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
@@ -263,7 +263,7 @@ Messages:
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
-[0]:PC=3 Code=22003 (state=,code=0)
+[0]:PC=2 Code=22003 (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into datatype_source
 . . . . . . . . > values('float','target',2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
@@ -297,7 +297,7 @@ Messages:
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
-[0]:PC=3 Code=22003 (state=,code=0)
+[0]:PC=2 Code=22003 (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into datatype_source
 . . . . . . . . > values('real','target',2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)

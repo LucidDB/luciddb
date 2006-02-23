@@ -215,14 +215,12 @@
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- real to numeric; min/max range for target datatype
-0: jdbc:luciddb:> -- LDB-8
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into datatype_target
 . . . . . . . . >  select colreal from datatype_source
 . . . . . . . . >   where target_type='numeric'
 . . . . . . . . >     and range_for='target'
 . . . . . . . . > ;
-Error: MUL(d,r,r) is not a registered instruction (at line:col 0:-1860248840 to 20:40, characters 144242409 to 782) (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target order by 1
 . . . . . . . . > ;
 +------+
@@ -236,20 +234,20 @@ Error: MUL(d,r,r) is not a registered instruction (at line:col 0:-1860248840 to 
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- real to numeric; min/max range for source datatype
-0: jdbc:luciddb:> -- LDB-8
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into datatype_target
 . . . . . . . . >  select colreal from datatype_source
 . . . . . . . . >   where target_type='numeric'
 . . . . . . . . >     and range_for='source'
 . . . . . . . . > ;
-Error: MUL(d,r,r) is not a registered instruction (at line:col 0:-1860248840 to 20:40, characters 144242409 to 782) (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target order by 1
 . . . . . . . . > ;
-+------+
-| COL  |
-+------+
-+------+
++-------------------+
+|        COL        |
++-------------------+
+| -4294967296.0000  |
+| 4294967296.0000   |
++-------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> drop table datatype_target
 . . . . . . . . > ;

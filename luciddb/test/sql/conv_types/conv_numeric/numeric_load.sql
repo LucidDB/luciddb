@@ -159,7 +159,6 @@ create table datatype_target(col numeric(15,4))
 ;
 
 -- real to numeric; min/max range for target datatype
--- LDB-8
 
 insert into datatype_target
  select colreal from datatype_source
@@ -175,7 +174,6 @@ create table datatype_target(col numeric(15,4))
 ;
 
 -- real to numeric; min/max range for source datatype
--- LDB-8
 
 insert into datatype_target
  select colreal from datatype_source
