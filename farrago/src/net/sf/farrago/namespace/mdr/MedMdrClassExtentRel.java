@@ -43,6 +43,7 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.util.*;
+import org.eigenbase.runtime.*;
 
 
 /**
@@ -154,7 +155,7 @@ class MedMdrClassExtentRel extends TableAccessRelBase implements JavaRel
                 new ArrayInitializer(nameList)));
     }
 
-    public Expression getIteratorExpression()
+    public Expression getCollectionExpression()
     {
         Expression metaClassExpression =
             new CastExpression(
@@ -163,6 +164,13 @@ class MedMdrClassExtentRel extends TableAccessRelBase implements JavaRel
         Expression collectionExpression =
             new MethodCall(metaClassExpression, "refAllOfType",
                 new ExpressionList());
+        return collectionExpression;
+    }
+    
+    public Expression getIteratorExpression()
+    {
+        Expression collectionExpression = getCollectionExpression();
+        
         Expression iterExpression =
             new MethodCall(collectionExpression, "iterator",
                 new ExpressionList());
@@ -173,8 +181,6 @@ class MedMdrClassExtentRel extends TableAccessRelBase implements JavaRel
     // implement RelNode
     public ParseTree implement(JavaRelImplementor implementor)
     {
-        Expression iterExpression = getIteratorExpression();
-
         Variable varInputRow = implementor.newVariable();
 
         RelDataType inputRowType =
@@ -187,9 +193,22 @@ class MedMdrClassExtentRel extends TableAccessRelBase implements JavaRel
             RexProgram.create(
                 inputRowType, rexExps, null, outputRowType,
                 getCluster().getRexBuilder());
-        return IterCalcRel.implementAbstract(
-            implementor, this, iterExpression, varInputRow, inputRowType,
-            outputRowType, program);
+
+        if (!CallingConvention.ENABLE_NEW_ITER) {
+            Expression iterExpression = getIteratorExpression();
+            return IterCalcRel.implementAbstract(
+                implementor, this, iterExpression, varInputRow, inputRowType,
+                outputRowType, program);
+        } else {
+            Expression collectionExpression = getCollectionExpression();
+            Expression adapterExp = new AllocationExpression(
+                OJUtil.typeNameForClass(RestartableCollectionTupleIter.class),
+                new ExpressionList(
+                    collectionExpression));
+            return IterCalcRel.implementAbstractNewIter(
+                implementor, this, adapterExp, varInputRow, inputRowType,
+                outputRowType, program);
+        }
     }
 
     RexNode [] implementProjection(Expression inputRow)

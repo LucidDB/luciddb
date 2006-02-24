@@ -251,7 +251,7 @@ public class IterCalcRel extends SingleRel implements JavaRel
         return newIteratorExp;
     }
 
-    private static Expression implementAbstractNewIter(
+    public static Expression implementAbstractNewIter(
         JavaRelImplementor implementor,
         JavaRel rel,
         Expression childExp,

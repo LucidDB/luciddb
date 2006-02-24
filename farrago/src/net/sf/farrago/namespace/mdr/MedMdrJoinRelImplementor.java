@@ -35,10 +35,13 @@ import org.eigenbase.oj.rex.RexToOJTranslator;
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.runtime.*;
 import org.eigenbase.util.*;
+import org.eigenbase.runtime.*;
+
 import org.netbeans.api.mdr.*;
 
 
@@ -116,10 +119,15 @@ class MedMdrJoinRelImplementor
         // construct the open method
         generateOpen();
 
+        Class nestedLoopClass =
+            CallingConvention.ENABLE_NEW_ITER
+            ? NestedLoopCalcTupleIter.class
+            : NestedLoopCalcIterator.class;
+
         // put it all together in an anonymous class definition
         Expression newIteratorExp =
             new AllocationExpression(
-                OJUtil.typeNameForClass(NestedLoopCalcIterator.class),
+                OJUtil.typeNameForClass(nestedLoopClass),
                 new ExpressionList(
                     leftChildExp,
                     Literal.makeLiteral(
@@ -437,10 +445,17 @@ class MedMdrJoinRelImplementor
                                 .getName()),
                         varLeftObj));
         }
-        return new MethodCall(
-            collectionExpr,
-            "iterator",
-            new ExpressionList());
+        if (!CallingConvention.ENABLE_NEW_ITER) {
+            return new MethodCall(
+                collectionExpr,
+                "iterator",
+                new ExpressionList());
+        } else {
+            return new AllocationExpression(
+                OJUtil.typeNameForClass(RestartableCollectionTupleIter.class),
+                new ExpressionList(
+                    collectionExpr));
+        }
     }
 
     private Expression generateManyToOneLookup()
@@ -463,6 +478,7 @@ class MedMdrJoinRelImplementor
                 new MethodCall(varRepository,
                     "getByMofId",
                     new ExpressionList(varLeftObj)));
+
         return new ConditionalExpression(
             new BinaryExpression(
                 varLeftObj,
