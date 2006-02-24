@@ -2272,7 +2272,6 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
 
         SqlNode source = call.getSource();
         if (source instanceof SqlSelect) {
-        
             SqlSelect sqlSelect = (SqlSelect) source;
             validateSelect(sqlSelect, targetRowType);
         } else {
@@ -2280,21 +2279,45 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         }
         RelDataType sourceRowType = getNamespace(source).getRowType();
         checkRowTypeSizes(sourceRowType, targetRowType, explicitTarget);
+        checkTypeAssignment(sourceRowType, targetRowType, explicitTarget);
 
-        // TODO:  validate type compatibility, etc.
         validateAccess(table, SqlAccessEnum.INSERT);
     }
-    
+
     protected void checkRowTypeSizes(
         RelDataType sourceRowType,
         RelDataType targetRowType,
-        boolean explictTarget)
+        boolean explicitTarget)
     {
         if (sourceRowType.getFieldList().size() !=
-            targetRowType.getFieldList().size()) {
+            targetRowType.getFieldList().size())
+        {
             throw EigenbaseResource.instance().UnmatchInsertColumn.ex(
                 new Integer(targetRowType.getFieldList().size()),
                 new Integer(sourceRowType.getFieldList().size()));
+        }
+    }
+
+    protected void checkTypeAssignment(
+        RelDataType sourceRowType,
+        RelDataType targetRowType,
+        boolean explicitTarget)
+    {
+        // NOTE jvs 23-Feb-2006: subclasses may allow for extra targets
+        // representing system-maintained columns, so stop after all sources
+        // matched
+        RelDataTypeField [] sourceFields = sourceRowType.getFields();
+        RelDataTypeField [] targetFields = targetRowType.getFields();
+        for (int i = 0; i < sourceFields.length; ++i) {
+            RelDataType sourceType = sourceFields[i].getType();
+            RelDataType targetType = targetFields[i].getType();
+            if (!SqlTypeUtil.canAssignFrom(targetType, sourceType)) {
+                throw EigenbaseResource.instance().TypeNotAssignable.ex(
+                    targetFields[i].getName(),
+                    targetType.toString(),
+                    sourceFields[i].getName(),
+                    sourceType.toString());
+            }
         }
     }
 
@@ -2312,8 +2335,6 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         SqlValidatorTable table = targetNamespace.getTable();
 
         validateAccess(table, SqlAccessEnum.DELETE);
-
-        // TODO:  validate etc.
     }
 
     /**
@@ -2338,6 +2359,9 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                 true);
 
         validateSelect(select, targetRowType);
+
+        RelDataType sourceRowType = getNamespace(select).getRowType();
+        checkTypeAssignment(sourceRowType, targetRowType, true);
 
         validateAccess(table, SqlAccessEnum.UPDATE);
 

@@ -16,6 +16,26 @@ options (
     with_header 'yes', 
     log_directory 'testlog');
 
+create foreign table matrix3x3(
+    a tinyint,
+    b integer,
+    c bigint)
+server test_data
+options (filename 'matrix3x3');
+
+create foreign table matrix9x9(
+    a1 tinyint,
+    b1 integer,
+    c1 bigint,
+    a2 tinyint,
+    b2 integer,
+    c2 bigint, 
+    a3 tinyint,
+    b3 integer,
+    c3 bigint) 
+server test_data
+options (filename 'matrix9x9');
+
 -----------------------------------------------------
 -- Part 1. Indexes based on single column clusters --
 -----------------------------------------------------
@@ -36,7 +56,7 @@ insert into single values (1,2,3);
 insert into single values (0,0,0);
 
 insert into single 
-select * from test_data.BCP."matrix3x3";
+select * from matrix3x3;
 
 drop index single_one;
 
@@ -53,7 +73,7 @@ create index single_one_multi
 on single(b, c);
 
 insert into single 
-select * from test_data.BCP."matrix3x3";
+select * from matrix3x3;
 
 truncate table single;
 drop index single_one_multi;
@@ -68,7 +88,7 @@ create index single_two_c
 on single(c);
 
 insert into single 
-select * from test_data.BCP."matrix3x3";
+select * from matrix3x3;
 
 drop table single;
 
@@ -82,7 +102,7 @@ create table single(
 server sys_column_store_data_server;
 
 insert into single 
-select * from test_data.BCP."matrix3x3";
+select * from matrix3x3;
 
 drop table single;
 
@@ -104,16 +124,16 @@ create clustered index multi_all on multi(a, b, c);
 create index multi_multikey on multi(a, b);
 
 insert into multi 
-select * from test_data.BCP."matrix3x3";
+select * from matrix3x3;
 
 insert into multi 
-select * from test_data.BCP."matrix3x3";
+select * from matrix3x3;
 
 insert into multi 
-select * from test_data.BCP."matrix3x3";
+select * from matrix3x3;
 
 insert into multi 
-select * from test_data.BCP."matrix3x3";
+select * from matrix3x3;
 
 truncate table multi;
 drop index multi_multikey;
@@ -124,7 +144,7 @@ drop index multi_multikey;
 create index multi_multikey on multi(c, a, b);
 
 insert into multi 
-select * from test_data.BCP."matrix3x3";
+select * from matrix3x3;
 
 truncate table multi;
 drop index multi_multikey;
@@ -136,7 +156,7 @@ create index multi_singlekey_b on multi(b);
 create index multi_singlekey_c on multi(c);
 
 insert into multi 
-select * from test_data.BCP."matrix3x3";
+select * from matrix3x3;
 
 truncate table multi;
 drop index multi_singlekey_b;
@@ -149,7 +169,7 @@ create index multi_multikey_cb on multi(c, b);
 create index multi_multikey_ba on multi(b, a);
 
 insert into multi 
-select * from test_data.BCP."matrix3x3";
+select * from matrix3x3;
 
 -- try some nulls, and reverse data
 create foreign table matrix3x3_alt(
@@ -166,7 +186,7 @@ options (filename 'matrix3x3_alt');
 
 -- some more data
 -- insert into multi 
--- select * from test_data.BCP."matrix3x3";
+-- select * from matrix3x3;
 
 drop index multi_multikey_cb;
 drop index multi_multikey_ba;
@@ -204,7 +224,7 @@ create index multimulti_subset_b on multimulti(a2,b2);
 create index multimulti_subset_c on multimulti(c2,a2);
 
 insert into multimulti
-select * from test_data.BCP."matrix9x9";
+select * from matrix9x9;
 
 truncate table multimulti;
 drop index multimulti_subset_a;
@@ -220,7 +240,7 @@ create index multimulti_mixed_b on multimulti(b1,b2,b3);
 create index multimulti_mixed_c on multimulti(c1,c2,b2);
 
 insert into multimulti
-select * from test_data.BCP."matrix9x9";
+select * from matrix9x9;
 
 -- some alternate data (descending, nulls)
 create foreign table matrix9x9_alt(
@@ -242,13 +262,13 @@ options (filename 'matrix9x9_alt');
 -- select * from matrix9x9_alt;
 
 -- insert into multimulti
--- select * from test_data.BCP."matrix9x9";
+-- select * from matrix9x9;
 
 -- insert into multimulti
 -- select * from matrix9x9_alt;
 
 -- insert into multimulti
--- select * from test_data.BCP."matrix9x9";
+-- select * from matrix9x9;
 
 drop table multimulti;
 

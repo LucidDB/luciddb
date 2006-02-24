@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/lbm.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/lbm.sql#2 $
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -------------------------------------
 0: jdbc:farrago:> -- Sql level test for Bitmap Index --
@@ -15,6 +15,26 @@
 . . . . . . . . >     file_extension 'csv',
 . . . . . . . . >     with_header 'yes', 
 . . . . . . . . >     log_directory 'testlog');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create foreign table matrix3x3(
+. . . . . . . . >     a tinyint,
+. . . . . . . . >     b integer,
+. . . . . . . . >     c bigint)
+. . . . . . . . > server test_data
+. . . . . . . . > options (filename 'matrix3x3');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create foreign table matrix9x9(
+. . . . . . . . >     a1 tinyint,
+. . . . . . . . >     b1 integer,
+. . . . . . . . >     c1 bigint,
+. . . . . . . . >     a2 tinyint,
+. . . . . . . . >     b2 integer,
+. . . . . . . . >     c2 bigint, 
+. . . . . . . . >     a3 tinyint,
+. . . . . . . . >     b3 integer,
+. . . . . . . . >     c3 bigint) 
+. . . . . . . . > server test_data
+. . . . . . . . > options (filename 'matrix9x9');
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -----------------------------------------------------
 0: jdbc:farrago:> -- Part 1. Indexes based on single column clusters --
@@ -36,7 +56,7 @@
 0: jdbc:farrago:> insert into single values (0,0,0);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> insert into single 
-. . . . . . . . > select * from test_data.BCP."matrix3x3";
+. . . . . . . . > select * from matrix3x3;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop index single_one;
 0: jdbc:farrago:> 
@@ -53,7 +73,7 @@
 . . . . . . . . > on single(b, c);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> insert into single 
-. . . . . . . . > select * from test_data.BCP."matrix3x3";
+. . . . . . . . > select * from matrix3x3;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> truncate table single;
 0: jdbc:farrago:> drop index single_one_multi;
@@ -68,7 +88,7 @@
 . . . . . . . . > on single(c);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> insert into single 
-. . . . . . . . > select * from test_data.BCP."matrix3x3";
+. . . . . . . . > select * from matrix3x3;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop table single;
 0: jdbc:farrago:> 
@@ -82,7 +102,7 @@
 . . . . . . . . > server sys_column_store_data_server;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> insert into single 
-. . . . . . . . > select * from test_data.BCP."matrix3x3";
+. . . . . . . . > select * from matrix3x3;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop table single;
 0: jdbc:farrago:> 
@@ -104,16 +124,16 @@
 0: jdbc:farrago:> create index multi_multikey on multi(a, b);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> insert into multi 
-. . . . . . . . > select * from test_data.BCP."matrix3x3";
+. . . . . . . . > select * from matrix3x3;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> insert into multi 
-. . . . . . . . > select * from test_data.BCP."matrix3x3";
+. . . . . . . . > select * from matrix3x3;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> insert into multi 
-. . . . . . . . > select * from test_data.BCP."matrix3x3";
+. . . . . . . . > select * from matrix3x3;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> insert into multi 
-. . . . . . . . > select * from test_data.BCP."matrix3x3";
+. . . . . . . . > select * from matrix3x3;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> truncate table multi;
 0: jdbc:farrago:> drop index multi_multikey;
@@ -124,7 +144,7 @@
 0: jdbc:farrago:> create index multi_multikey on multi(c, a, b);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> insert into multi 
-. . . . . . . . > select * from test_data.BCP."matrix3x3";
+. . . . . . . . > select * from matrix3x3;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> truncate table multi;
 0: jdbc:farrago:> drop index multi_multikey;
@@ -136,7 +156,7 @@
 0: jdbc:farrago:> create index multi_singlekey_c on multi(c);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> insert into multi 
-. . . . . . . . > select * from test_data.BCP."matrix3x3";
+. . . . . . . . > select * from matrix3x3;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> truncate table multi;
 0: jdbc:farrago:> drop index multi_singlekey_b;
@@ -149,7 +169,7 @@
 0: jdbc:farrago:> create index multi_multikey_ba on multi(b, a);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> insert into multi 
-. . . . . . . . > select * from test_data.BCP."matrix3x3";
+. . . . . . . . > select * from matrix3x3;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- try some nulls, and reverse data
 0: jdbc:farrago:> create foreign table matrix3x3_alt(
@@ -166,7 +186,7 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- some more data
 0: jdbc:farrago:> -- insert into multi 
-0: jdbc:farrago:> -- select * from test_data.BCP."matrix3x3";
+0: jdbc:farrago:> -- select * from matrix3x3;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop index multi_multikey_cb;
 0: jdbc:farrago:> drop index multi_multikey_ba;
@@ -204,7 +224,7 @@
 0: jdbc:farrago:> create index multimulti_subset_c on multimulti(c2,a2);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> insert into multimulti
-. . . . . . . . > select * from test_data.BCP."matrix9x9";
+. . . . . . . . > select * from matrix9x9;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> truncate table multimulti;
 0: jdbc:farrago:> drop index multimulti_subset_a;
@@ -220,7 +240,7 @@
 0: jdbc:farrago:> create index multimulti_mixed_c on multimulti(c1,c2,b2);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> insert into multimulti
-. . . . . . . . > select * from test_data.BCP."matrix9x9";
+. . . . . . . . > select * from matrix9x9;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- some alternate data (descending, nulls)
 0: jdbc:farrago:> create foreign table matrix9x9_alt(
@@ -242,13 +262,13 @@
 0: jdbc:farrago:> -- select * from matrix9x9_alt;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- insert into multimulti
-0: jdbc:farrago:> -- select * from test_data.BCP."matrix9x9";
+0: jdbc:farrago:> -- select * from matrix9x9;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- insert into multimulti
 0: jdbc:farrago:> -- select * from matrix9x9_alt;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- insert into multimulti
-0: jdbc:farrago:> -- select * from test_data.BCP."matrix9x9";
+0: jdbc:farrago:> -- select * from matrix9x9;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop table multimulti;
 0: jdbc:farrago:> 

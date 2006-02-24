@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/regressionsql/types.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/regressionsql/types.sql#4 $
 0: jdbc:farrago:> -- Throws unsupported types at the system, to make sure the errors are
 0: jdbc:farrago:> -- civilized.
 0: jdbc:farrago:> 
@@ -40,6 +40,18 @@
 +---------+
 | 1.20    |
 +---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- Test assignment rules
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail
+0: jdbc:farrago:> insert into sales.depts values(10,20);
+Error: Cannot assign to target field 'NAME' of type VARCHAR(128) from source field 'EXPR$1' of type INTEGER (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail
+0: jdbc:farrago:> update sales.depts set deptno='Infinitum';
+Error: Cannot assign to target field 'DEPTNO' of type INTEGER from source field 'EXPR$0' of type CHAR(9) (state=,code=0)
+0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- TODO: Test unsupported types
 0: jdbc:farrago:> 
