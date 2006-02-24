@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/ddl/med.sql#9 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/ddl/med.sql#4 $
 0: jdbc:farrago:> -- Test SQL/MED DDL
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- create a private wrapper for mdr (don't use the standard mdr wrapper)
@@ -338,6 +338,17 @@ Error: One or more tables not found while importing foreign schema "SALES":  [SP
 0: jdbc:farrago:> -- should fail:  not there
 0: jdbc:farrago:> select deptno from demo_import_schema.dept order by deptno;
 Error: From line 1, column 20 to line 1, column 37: Table 'DEMO_IMPORT_SCHEMA.DEPT' not found (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test booleans, since they need special handling
+0: jdbc:farrago:> select * from demo_import_schema.bitflip order by b1,b2;
++--------+--------+
+|   B1   |   B2   |
++--------+--------+
+|        | true   |
+| false  | false  |
+| false  | true   |
+| true   | true   |
++--------+--------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop schema demo_import_schema cascade;
 0: jdbc:farrago:> create schema demo_import_schema;

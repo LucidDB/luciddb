@@ -195,6 +195,9 @@ select empno from demo_import_schema.emp order by empno;
 -- should fail:  not there
 select deptno from demo_import_schema.dept order by deptno;
 
+-- test booleans, since they need special handling
+select * from demo_import_schema.bitflip order by b1,b2;
+
 drop schema demo_import_schema cascade;
 create schema demo_import_schema;
 
