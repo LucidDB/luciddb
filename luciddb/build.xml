@@ -31,6 +31,12 @@
 -Dnet.sf.farrago.test.jdbcDriverClass=com.lucidera.jdbc.LucidDbLocalDriver
 ">
 
+<!ENTITY FarragoSqlLineProps
+"
+&FarragoProps;
+-Dsqlline.historyFile=${sqlline.hist.file}
+">
+
 ]>
 
 <project name="luciddb" basedir="." default="test">
@@ -91,12 +97,13 @@
   <property name="project.catalog.dir" location="${catalog.dir}" />
   <property name="project.trace.propfile" location="${LucidDbTrace.properties}" />
 
-  <import file="${open.dir}/farrago/buildMacros.xml" />
-
   <!-- directory for JUnit run output -->
   <property name="testlog.dir" location="${luciddb.dir}/testlog"/>
 
   <property name="testsrc.dir" location="${luciddb.test.dir}/sql"/>
+
+  <property name="project.testlog.dir" location="${testlog.dir}" />
+  <import file="${open.dir}/farrago/buildMacros.xml" />
 
   <!-- Template developer configuration file. -->
   <property name="FarragoConfTemplate.xmi"
@@ -167,7 +174,7 @@
       inheritAll="true"
       testTimeout="false"
       classpathref="test.classpath">
-      <jvmarg line="&FarragoProps;"/>
+      <jvmarg line="&FarragoSqlLineProps;"/>
     </blackhawk>
   </target>
 
@@ -330,7 +337,7 @@
       tempdir="${testlog.dir}">
       <classpath refid="farrago.sqlline.classpath"/>
       <jvmarg line="${assertions.jvmarg}"/>
-      <jvmarg line="&FarragoProps;"/>
+      <jvmarg line="&FarragoSqlLineProps;"/>
       <sysproperty key="net.sf.farrago.fileset.unitsql"
         value="${filelist.initsql}"/>
       <formatter type="plain"/>
@@ -347,7 +354,7 @@
         tempdir="${testlog.dir}">
         <classpath path="@{sqltest.classpath}"/>
         <jvmarg line="${assertions.jvmarg}"/>
-        <jvmarg line="&FarragoProps;"/>
+        <jvmarg line="&FarragoSqlLineProps;"/>
         <sysproperty key="net.sf.farrago.fileset.unitsql"
           value="@{filelist}"/>
         <formatter type="plain"/>
@@ -587,7 +594,7 @@
         tempdir="${testlog.dir}">
         <classpath refid="test.classpath"/>
         <jvmarg line="${assertions.jvmarg}"/>
-        <jvmarg line="&FarragoProps;"/>
+        <jvmarg line="&FarragoSqlLineProps;"/>
         <sysproperty key="net.sf.farrago.fileset.unitsql"
           value="@{filelist}"/>
         <formatter type="plain"/>
@@ -616,7 +623,7 @@
       tempdir="${testlog.dir}">
       <classpath refid="test.classpath"/>
       <jvmarg line="${assertions.jvmarg}"/>
-      <jvmarg line="&FarragoProps;"/>
+      <jvmarg line="&FarragoSqlLineProps;"/>
       <sysproperty key="net.sf.farrago.fileset.unitsql"
         value="${sql.files}"/>
       <formatter type="plain"/>
