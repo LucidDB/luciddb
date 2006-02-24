@@ -5,7 +5,7 @@
 SESSION_FACTORY="class:com.lucidera.farrago.LucidDbSessionFactory"
 
 SERVER_JAVA_ARGS="-ea -esa -cp classes:`cat ../farrago/classpath.gen` \
-  -Dnet.sf.farrago.home=../farrago \
+  -Dnet.sf.farrago.home=. \
   -Dnet.sf.farrago.catalog=./catalog \
   -Djava.util.logging.config.file=trace/LucidDbTrace.properties \
   -Dnet.sf.farrago.defaultSessionFactoryLibraryName=${SESSION_FACTORY}"

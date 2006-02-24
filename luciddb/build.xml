@@ -167,12 +167,14 @@
 
   <target name="run_blackhawk">
     <property file="run.properties"/>
+    <property name="fail.on.error" value="true"/>
     <blackhawk bhHome="${bh.home}"
       fork="true"
       testhome="${testhome}" 
       testfile="${testfile}"
       inheritAll="true"
       testTimeout="false"
+      failOnError="${fail.on.error}"
       classpathref="test.classpath">
       <jvmarg line="&FarragoSqlLineProps;"/>
     </blackhawk>
