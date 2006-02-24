@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2002-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -74,11 +74,27 @@ public class IterConcatenateRel extends UnionRelBase implements JavaRel
 
     protected OJClass getCompoundIteratorClass()
     {
-        return OJClass.forClass(org.eigenbase.runtime.CompoundIterator.class);
+        if (CallingConvention.ENABLE_NEW_ITER) {
+            return OJClass.forClass(
+                org.eigenbase.runtime.CompoundTupleIter.class);
+        } else {
+            return OJClass.forClass(
+                org.eigenbase.runtime.CompoundIterator.class);
+        }
     }
 
     public ParseTree implement(JavaRelImplementor implementor)
     {
+        // If CallingConvention.ENABLE_NEW_ITER:
+        // Generate
+        //   new CompoundTupleIter(
+        //     new TupleIter[] {<<input0>>, ...})
+        // If any input is infinite, should instead generate
+        //   new CompoundParallelTupleIter(
+        //     new TupleIter[] {<<input0>>, ...})
+        // but there's no way to tell, so we can't.
+
+        // Else:
         // Generate
         //   new CompoundIterator(
         //     new Iterator[] {<<input0>>, ...})
@@ -97,7 +113,9 @@ public class IterConcatenateRel extends UnionRelBase implements JavaRel
             getCompoundIteratorClass(),
             new ExpressionList(
                 new ArrayAllocationExpression(
-                    OJUtil.clazzIterator,
+                    (CallingConvention.ENABLE_NEW_ITER
+                     ? OJUtil.clazzTupleIter
+                     : OJUtil.clazzIterator),
                     new ExpressionList(null),
                     new ArrayInitializer(exps))));
     }

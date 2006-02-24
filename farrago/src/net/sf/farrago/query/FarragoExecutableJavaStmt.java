@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -29,11 +29,11 @@ import java.util.*;
 
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
-import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.runtime.TupleIter;
 import org.eigenbase.util.*;
 
 
@@ -122,13 +122,24 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
             // to prefetch any data, since the Fennel streams aren't open yet.
             // In particular, Java iterator implementations must not do
             // prefetch in the constructor (always wait for hasNext/next).
-            Iterator iter =
-                (Iterator) method.invoke(
-                    null,
-                    new Object [] { runtimeContext });
-            ResultSet resultSet =
-                new FarragoIteratorResultSet(iter, rowClass, rowType,
-                    runtimeContext);
+            ResultSet resultSet;
+            if (CallingConvention.ENABLE_NEW_ITER) {
+                TupleIter iter =
+                    (TupleIter) method.invoke(
+                        null,
+                        new Object [] { runtimeContext });
+                resultSet =
+                    new FarragoTupleIterResultSet(iter, rowClass, rowType,
+                        runtimeContext);
+            } else {
+                Iterator iter =
+                    (Iterator) method.invoke(
+                        null,
+                        new Object [] { runtimeContext });
+                resultSet =
+                    new FarragoIteratorResultSet(iter, rowClass, rowType,
+                        runtimeContext);
+            }
 
             if (xmiFennelPlan != null) {
                 // Finally, it's safe to open all streams.

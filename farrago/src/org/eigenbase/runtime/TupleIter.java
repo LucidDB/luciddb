@@ -41,6 +41,24 @@ import org.eigenbase.util.ClosableAllocation;
  */
 public interface TupleIter extends ClosableAllocation
 {
+    //~ Static fields/initializers --------------------------------------------
+
+    public static final TupleIter EMPTY_ITERATOR =
+        new TupleIter() {
+            public Object fetchNext()
+            {
+                return NoDataReason.END_OF_DATA;
+            }
+
+            public void restart()
+            {
+            }
+
+            public void closeAllocation()
+            {
+            }
+        };
+
     /**
      * NoDataReason provides a reason why no data was returned by a
      * call to {@link #fetchNext()}.
