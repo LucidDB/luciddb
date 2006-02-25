@@ -68,7 +68,7 @@ public class RelOptUtilTest extends TestCase
         RelDataType t2 = typeFactory.createStructType(
             new RelDataType[]{
                 t1,
-                typeFactory.createMultisetType(t1, 1000),
+                typeFactory.createMultisetType(t1, -1),
             },
             new String[]{
                 "f0",
