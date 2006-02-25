@@ -9,73 +9,77 @@
 0: jdbc:luciddb:> --
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- all numeric should FAIL
-0: jdbc:luciddb:> --insert into target_time
-0: jdbc:luciddb:> -- select colbit from datatype_source where colname = 'BAD'
-0: jdbc:luciddb:> --;
+0: jdbc:luciddb:> insert into target_time
+. . . . . . . . >  select colbit from datatype_source where colname = 'BAD'
+. . . . . . . . > ;
+Error: Cannot assign to target field 'COLTIME' of type TIME from source field 'COLBIT' of type BOOLEAN (state=,code=0)
 0: jdbc:luciddb:> insert into target_time
 . . . . . . . . >  select coltiny from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'TINYINT' to 'TIME' (state=,code=0)
+Error: Cannot assign to target field 'COLTIME' of type TIME from source field 'COLTINY' of type TINYINT (state=,code=0)
 0: jdbc:luciddb:> insert into target_time
 . . . . . . . . >  select colsmall from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'SMALLINT' to 'TIME' (state=,code=0)
+Error: Cannot assign to target field 'COLTIME' of type TIME from source field 'COLSMALL' of type SMALLINT (state=,code=0)
 0: jdbc:luciddb:> insert into target_time
 . . . . . . . . >  select colint from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'INTEGER' to 'TIME' (state=,code=0)
+Error: Cannot assign to target field 'COLTIME' of type TIME from source field 'COLINT' of type INTEGER (state=,code=0)
 0: jdbc:luciddb:> insert into target_time
 . . . . . . . . >  select colbig from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BIGINT' to 'TIME' (state=,code=0)
-0: jdbc:luciddb:> --insert into target_time
-0: jdbc:luciddb:> -- select coldec from datatype_source where colname = 'BAD'
-0: jdbc:luciddb:> --;
-0: jdbc:luciddb:> --insert into target_time
-0: jdbc:luciddb:> -- select colnum from datatype_source where colname = 'BAD'
-0: jdbc:luciddb:> --;
+Error: Cannot assign to target field 'COLTIME' of type TIME from source field 'COLBIG' of type BIGINT (state=,code=0)
+0: jdbc:luciddb:> insert into target_time
+. . . . . . . . >  select coldec from datatype_source where colname = 'BAD'
+. . . . . . . . > ;
+Error: Cannot assign to target field 'COLTIME' of type TIME from source field 'COLDEC' of type DECIMAL(10, 4) (state=,code=0)
+0: jdbc:luciddb:> insert into target_time
+. . . . . . . . >  select colnum from datatype_source where colname = 'BAD'
+. . . . . . . . > ;
+Error: Cannot assign to target field 'COLTIME' of type TIME from source field 'COLNUM' of type DECIMAL(16, 2) (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- all floating point should FAIL
 0: jdbc:luciddb:> insert into target_time
 . . . . . . . . >  select coldouble from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DOUBLE' to 'TIME' (state=,code=0)
+Error: Cannot assign to target field 'COLTIME' of type TIME from source field 'COLDOUBLE' of type DOUBLE (state=,code=0)
 0: jdbc:luciddb:> insert into target_time
 . . . . . . . . >  select colfloat from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DOUBLE' to 'TIME' (state=,code=0)
+Error: Cannot assign to target field 'COLTIME' of type TIME from source field 'COLFLOAT' of type DOUBLE (state=,code=0)
 0: jdbc:luciddb:> insert into target_time
 . . . . . . . . >  select colreal from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'REAL' to 'TIME' (state=,code=0)
+Error: Cannot assign to target field 'COLTIME' of type TIME from source field 'COLREAL' of type REAL (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- all char/binary should FAIL
-0: jdbc:luciddb:> -- will be fixed with FRG-22
-0: jdbc:luciddb:> --insert into target_time
-0: jdbc:luciddb:> -- select colchar from datatype_source where colname = 'BAD'
-0: jdbc:luciddb:> --;
-0: jdbc:luciddb:> --insert into target_time
-0: jdbc:luciddb:> -- select colvchar from datatype_source where colname = 'BAD'
-0: jdbc:luciddb:> --;
-0: jdbc:luciddb:> --insert into target_time
-0: jdbc:luciddb:> -- select colbin from datatype_source where colname = 'BAD'
-0: jdbc:luciddb:> --;
+0: jdbc:luciddb:> insert into target_time
+. . . . . . . . >  select colchar from datatype_source where colname = 'BAD'
+. . . . . . . . > ;
+Error: Cannot assign to target field 'COLTIME' of type TIME from source field 'COLCHAR' of type CHAR(17) (state=,code=0)
+0: jdbc:luciddb:> insert into target_time
+. . . . . . . . >  select colvchar from datatype_source where colname = 'BAD'
+. . . . . . . . > ;
+Error: Cannot assign to target field 'COLTIME' of type TIME from source field 'COLVCHAR' of type VARCHAR(100) (state=,code=0)
+0: jdbc:luciddb:> insert into target_time
+. . . . . . . . >  select colbin from datatype_source where colname = 'BAD'
+. . . . . . . . > ;
+Error: From line 1, column 33 to line 1, column 38: Unknown identifier 'COLBIN' (state=,code=0)
 0: jdbc:luciddb:> insert into target_time
 . . . . . . . . >  select colvbin from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY(256)' to 'TIME' (state=,code=0)
+Error: Cannot assign to target field 'COLTIME' of type TIME from source field 'COLVBIN' of type VARBINARY(256) (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- only the second should FAIL
 0: jdbc:luciddb:> insert into target_time
 . . . . . . . . >  select coltime from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
 0: jdbc:luciddb:> insert into target_time
-. . . . . . . . >  select coldate from datatype_source where colname = 'BAD'
+. . . . . . . . >  select cast (coldate as time) from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DATE' to 'TIME' (state=,code=0)
-0: jdbc:luciddb:> -- will be fixed by FRG-20
+Error: Cast function cannot convert value of type DATE to type TIME (state=,code=0)
 0: jdbc:luciddb:> insert into target_time
-. . . . . . . . >  select coltmstamp from datatype_source where colname = 'BAD'
+. . . . . . . . >  select cast (coltmstamp as time) from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'TIMESTAMP' to 'TIME' (state=,code=0)
 0: jdbc:luciddb:> 
@@ -84,11 +88,11 @@ Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast fro
 0: jdbc:luciddb:> insert into target_time
 . . . . . . . . >  select colchar from datatype_source where colname = 'TIME'
 . . . . . . . . > ;
-Error: Internal error:  bad lexical cast: source type value could not be interpreted as target (state=,code=0)
+Error: Cannot assign to target field 'COLTIME' of type TIME from source field 'COLCHAR' of type CHAR(17) (state=,code=0)
 0: jdbc:luciddb:> insert into target_time
 . . . . . . . . >  select colvchar from datatype_source where colname = 'TIME'
 . . . . . . . . > ;
-Error: Internal error:  bad lexical cast: source type value could not be interpreted as target (state=,code=0)
+Error: Cannot assign to target field 'COLTIME' of type TIME from source field 'COLVCHAR' of type VARCHAR(100) (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> --
 0: jdbc:luciddb:> -- GOOD
@@ -98,10 +102,11 @@ Error: Internal error:  bad lexical cast: source type value could not be interpr
 0: jdbc:luciddb:> insert into target_time
 . . . . . . . . >  select coltime from datatype_source where colname = 'TIME'
 . . . . . . . . > ;
-0: jdbc:luciddb:> -- will be fixed in FRG-20
-0: jdbc:luciddb:> --insert into target_time
-0: jdbc:luciddb:> -- select coltmstamp from datatype_source where colname = 'TIME'
-0: jdbc:luciddb:> --;
+0: jdbc:luciddb:> -- FRG-20
+0: jdbc:luciddb:> insert into target_time
+. . . . . . . . >  select cast (coltmstamp as time) from datatype_source where colname = 'TIME'
+. . . . . . . . > ;
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'TIMESTAMP' to 'TIME' (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from target_time order by 1
 . . . . . . . . > ;
