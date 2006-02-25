@@ -107,22 +107,8 @@ public abstract class AggregateRelBase extends SingleRel
         }
         for (int i = 0; i < aggCalls.length; i++) {
             final Call aggCall = aggCalls[i];
-            int nOperands = aggCall.args.length;
-            RexNode [] operands = new RexNode[nOperands];
-            for (int j = 0; j < nOperands; ++j) {
-                int iInput = aggCall.args[j];
-                operands[j] = new RexInputRef(
-                    iInput,
-                    childType.getFields()[iInput].getType());
-            }
-            // TODO jvs 5-Oct-2005:  clean up Aggregation interface
-            SqlAggFunction aggFunction = (SqlAggFunction) aggCall.aggregation;
-            RexCallBinding callBinding = new RexCallBinding(
-                getCluster().getTypeFactory(),
-                aggFunction, 
-                operands);
-            types[groupCount + i] =
-                aggFunction.inferReturnType(callBinding);
+            assert typeMatchesInferred(aggCall, true);
+            types[groupCount + i] = aggCall.getType();
         }
         return getCluster().getTypeFactory().createStructType(
             new RelDataTypeFactory.FieldInfo() {
@@ -148,6 +134,26 @@ public abstract class AggregateRelBase extends SingleRel
     }
 
     /**
+     * Returns whether the inferred type of a {@link Call} matches the type
+     * it was given when it was created.
+     *
+     * @param aggCall Aggregate call
+     * @param fail Whether to fail if the types do not match
+     * @return Whether the inferred and declared types match
+     */
+    private boolean typeMatchesInferred(final Call aggCall, final boolean fail)
+    {
+        SqlAggFunction aggFunction = (SqlAggFunction) aggCall.aggregation;
+        AggCallBinding callBinding = aggCall.createBinding(this);
+        RelDataType type = aggFunction.inferReturnType(callBinding);
+        RelDataType expectedType = aggCall.getType();
+        return RelOptUtil.eq(
+            "aggCall type", expectedType,
+            "inferred type", type,
+            fail);
+    }
+
+    /**
      * Returns whether any of the aggregates are DISTINCT.
      */
     public boolean containsDistinctCall()
@@ -167,11 +173,18 @@ public abstract class AggregateRelBase extends SingleRel
         private final Aggregation aggregation;
         public final int [] args;
         private final boolean distinct;
+        private final RelDataType type;
 
-        public Call(Aggregation aggregation, boolean distinct, int[] args)
+        public Call(
+            Aggregation aggregation,
+            boolean distinct,
+            int[] args,
+            RelDataType type)
         {
+            this.type = type;
             assert aggregation != null;
             assert args != null;
+            assert type != null;
             this.aggregation = aggregation;
             this.args = args;
             this.distinct = distinct;
@@ -190,6 +203,11 @@ public abstract class AggregateRelBase extends SingleRel
         public int [] getArgs()
         {
             return args;
+        }
+
+        public RelDataType getType()
+        {
+            return type;
         }
 
         public String toString()
@@ -217,7 +235,56 @@ public abstract class AggregateRelBase extends SingleRel
             }
             Call other = (Call) o;
             return aggregation.equals(other.aggregation)
+                && distinct == other.distinct
                 && Arrays.equals(args, other.args);
+        }
+
+        /**
+         * Creates a binding of this call in the context of an
+         * {@link AggregateRel}, which can then be used to infer the return
+         * type.
+         */
+        public AggCallBinding createBinding(AggregateRelBase aggregateRelBase)
+        {
+            return new AggCallBinding(
+                aggregateRelBase.getCluster().getTypeFactory(),
+                (SqlAggFunction) aggregation,
+                aggregateRelBase,
+                args);
+        }
+    }
+
+    /**
+     * Implementation of the {@link SqlOperatorBinding} interface for
+     * an {@link Call aggregate call} applied to a set of operands in the
+     * context of a {@link AggregateRel}.
+     */
+    public static class AggCallBinding extends SqlOperatorBinding
+    {
+        private final AggregateRelBase aggregateRel;
+        private final int[] operands;
+
+        AggCallBinding(
+            RelDataTypeFactory typeFactory,
+            SqlAggFunction aggFunction,
+            AggregateRelBase aggregateRel,
+            int[] operands)
+        {
+            super(typeFactory, aggFunction);
+            this.aggregateRel = aggregateRel;
+            this.operands = operands;
+        }
+
+        public int getOperandCount()
+        {
+            return operands.length;
+        }
+
+        public RelDataType getOperandType(int ordinal)
+        {
+            final RelDataType childType = aggregateRel.getChild().getRowType();
+            int operand = operands[ordinal];
+            return childType.getFields()[operand].getType();
         }
     }
 }

@@ -32,6 +32,8 @@ import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.util.Util;
 
 import java.util.*;
+import java.lang.reflect.TypeVariable;
+import java.lang.reflect.Array;
 
 /**
  * Rule to remove distinct aggregates from a {@link AggregateRel}.
@@ -89,22 +91,49 @@ public final class RemoveDistinctAggregateRule extends RelOptRule
             return;
         }
 
-        // For each set of operands, find and rewrite all calls which have that
-        // set of operands.
-        RelNode rel = aggregate.getChild();
-        final AggregateRelBase.Call[] newAggCalls = aggregate.aggCalls.clone();
-        for (List<Integer> argList : argListSets) {
-            rel = doRewrite(aggregate, rel, argList, newAggCalls);
+        // Create a list of the expressions which will yield the final result.
+        // Initially, the expressions point to the input field.
+        RelDataTypeField[] aggFields = aggregate.getRowType().getFields();
+        RexInputRef[] refs = new RexInputRef[aggFields.length];
+        String[] fieldNames = RelOptUtil.getFieldNames(aggregate.getRowType());
+        final int groupCount = aggregate.getGroupCount();
+        for (int i = 0; i < groupCount; i++) {
+            refs[i] = new RexInputRef(i, aggFields[i].getType());
         }
 
-        // Create an aggregate with the new aggregate list.
-        AggregateRel newAggregate = new AggregateRel(
-            aggregate.getCluster(),
-            rel,
-            aggregate.groupCount,
-            newAggCalls);
+        // Aggregate the original relation, including any non-distinct aggs.
+        List<AggregateRelBase.Call> newAggCallList =
+            new ArrayList<AggregateRelBase.Call>();
+        int i = -1;
+        for (AggregateRelBase.Call aggCall : aggregate.aggCalls) {
+            ++i;
+            if (aggCall.isDistinct()) {
+                continue;
+            }
+            assert refs[groupCount + i] == null;
+            refs[groupCount + i] =
+                new RexInputRef(
+                    groupCount + newAggCallList.size(),
+                    aggFields[i].getType());
+            newAggCallList.add(aggCall);
+        }
 
-        call.transformTo(newAggregate);
+        RelNode rel = new AggregateRel(
+            aggregate.getCluster(),
+            aggregate.getChild(),
+            groupCount,
+            (AggregateRelBase.Call[]) newAggCallList.toArray(
+                new AggregateRelBase.Call[newAggCallList.size()]));
+
+        // For each set of operands, find and rewrite all calls which have that
+        // set of operands.
+        for (List<Integer> argList : argListSets) {
+            rel = doRewrite(aggregate, rel, argList, refs);
+        }
+
+        rel = CalcRel.createProject(rel, refs, fieldNames);
+
+        call.transformTo(rel);
     }
 
     /**
@@ -133,11 +162,16 @@ public final class RemoveDistinctAggregateRule extends RelOptRule
         // to the agg function.
         Map<Integer,Integer> sourceOf = new HashMap<Integer, Integer>();
         final AggregateRel distinct =
-            createSelectDistinct(aggregate, sourceOf, argList);
+            createSelectDistinct(aggregate, argList, sourceOf);
 
-        // Create an aggregate on top.
-        AggregateRel newAggregate =
-            createTopAgg(aggregate, argList, sourceOf, distinct);
+        // Create an aggregate on top, with the new aggregate list.
+        final AggregateRelBase.Call[] newAggCalls = aggregate.aggCalls.clone();
+        rewriteAggCalls(newAggCalls, argList, sourceOf);
+        AggregateRel newAggregate = new AggregateRel(
+            aggregate.getCluster(),
+            distinct,
+            aggregate.groupCount,
+            newAggCalls);
 
         return newAggregate;
     }
@@ -153,17 +187,19 @@ public final class RemoveDistinctAggregateRule extends RelOptRule
      * @param left Child relational expression (either the original aggregate,
      *   or the output from the previous call to this method)
      * @param argList Arguments to the distinct aggregate function
-     * @param newAggCalls Array of calls. Those relating to this arg list will
-     *   be modified
+     * @param refs Array of expressions which will be the projected by the
+     *   result of this rule. Those relating to this arg list will be modified
      * @return Relational expression
      */
     private RelNode doRewrite(
         AggregateRel aggregate,
         RelNode left,
         List<Integer> argList,
-        AggregateRelBase.Call[] newAggCalls)
+        RexInputRef[] refs)
     {
         final RexBuilder rexBuilder = aggregate.getCluster().getRexBuilder();
+        final int groupCount = aggregate.getGroupCount();
+        final RelDataTypeField[] leftFields = left.getRowType().getFields();
 
         // AggregateRel(
         //   child,
@@ -187,31 +223,90 @@ public final class RemoveDistinctAggregateRule extends RelOptRule
         //
         // becomes
         //
-        //   SELECT e.deptno, SUM(e.sal), COUNT(d.gender)
+        //   SELECT e.deptno, adsal.sum_sal, adgender.count_gender
         //   FROM Emps AS e
         //   JOIN (
-        //     SELECT DISTINCT deptno, gender
-        //     FROM Emps) AS de
-        //   ON e.deptno = de.deptno
-        //   GROUP BY e.deptno, de.deptno
+        //     SELECT deptno, COUNT(gender) AS count_gender
+        //     FROM (
+        //       SELECT DISTINCT deptno, gender
+        //       FROM Emps) AS dgender
+        //     GROUP BY deptno) AS adgender
+        //   ON e.deptno = adgender.deptno
+        //   JOIN (
+        //     SELECT deptno, SUM(sal) AS sum_sal
+        //     FROM (
+        //       SELECT DISTINCT deptno, sal
+        //       FROM Emps) AS dsal
+        //     GROUP BY deptno) AS adsal
+        //   ON e.deptno = adsal.deptno
+        //   GROUP BY e.deptno
 
         // Project the columns of the GROUP BY plus the arguments
         // to the agg function.
         Map<Integer,Integer> sourceOf = new HashMap<Integer, Integer>();
         final AggregateRel distinct =
-            createSelectDistinct(aggregate, sourceOf, argList);
+            createSelectDistinct(aggregate, argList, sourceOf);
+
+        // Now compute the aggregate functions on top of the distinct dataset.
+        // Each distinct agg becomes a non-distinct call to the corresponding
+        // field from the right; for example,
+        //   "COUNT(DISTINCT e.sal)"
+        // becomes
+        //   "COUNT(distinct_e.sal)".
+        List<AggregateRelBase.Call> aggCallList =
+            new ArrayList<AggregateRelBase.Call>();
+        final AggregateRelBase.Call[] aggCalls = aggregate.getAggCalls();
+
+        for (int i = 0; i < aggCalls.length; i++) {
+            final AggregateRelBase.Call aggCall = aggCalls[i];
+            // Ignore agg calls which are not distinct or have the wrong set
+            // arguments. If we're rewriting aggs whose args are {sal}, we will
+            // rewrite COUNT(DISTINCT sal) and SUM(DISTINCT sal) but ignore
+            // COUNT(DISTINCT gender) or SUM(sal).
+            if (!aggCall.isDistinct()) {
+                continue;
+            }
+            if (!equals(aggCall.getArgs(), argList)) {
+                continue;
+            }
+            // Re-map arguments.
+            final int[] newArgs = aggCall.getArgs().clone();
+            for (int j = 0; j < newArgs.length; j++) {
+                newArgs[j] = sourceOf.get(newArgs[j]);
+            }
+            final AggregateRelBase.Call newAggCall =
+                new AggregateRelBase.Call(
+                    aggCall.getAggregation(),
+                    false,
+                    newArgs,
+                    aggCall.getType());
+            assert refs[groupCount + i] == null;
+            refs[groupCount + i] =
+                new RexInputRef(
+                    leftFields.length + groupCount + aggCallList.size(),
+                    newAggCall.getType());
+            aggCallList.add(newAggCall);
+        }
+
+        AggregateRelBase.Call[] newAggCalls = (AggregateRelBase.Call[])
+            aggCallList.toArray(new AggregateRelBase.Call[aggCallList.size()]);
+        AggregateRel distinctAgg =
+            new AggregateRel(
+                aggregate.getCluster(),
+                distinct,
+                groupCount,
+                newAggCalls);
+
 
         // Create the join condition. It is of the form
         //  'left.f0 = right.f0 and left.f1 = right.f1 and ...'
         // where {f0, f1, ...} are the GROUP BY fields.
         final RelDataTypeField[] distinctFields =
-            distinct.getRowType().getFields();
-        final RelDataTypeField[] leftFields =
-            left.getRowType().getFields();
-        RexNode condition = null;
-        for (Integer arg : argList) {
-            final int leftOrdinal = arg;
-            final int rightOrdinal = sourceOf.get(arg);
+            distinctAgg.getRowType().getFields();
+        RexNode condition = rexBuilder.makeLiteral(true);
+        for (int i = 0; i < groupCount; ++i) {
+            final int leftOrdinal = i;
+            final int rightOrdinal = sourceOf.get(i);
             RexNode equi = rexBuilder.makeCall(
                 SqlStdOperatorTable.equalsOperator,
                 new RexInputRef(
@@ -220,7 +315,7 @@ public final class RemoveDistinctAggregateRule extends RelOptRule
                 new RexInputRef(
                     leftFields.length + rightOrdinal,
                     distinctFields[rightOrdinal].getType()));
-            if (condition == null) {
+            if (i == 0) {
                 condition = equi;
             } else {
                 condition = rexBuilder.makeCall(
@@ -235,40 +330,17 @@ public final class RemoveDistinctAggregateRule extends RelOptRule
             new JoinRel(
                 aggregate.getCluster(),
                 left,
-                distinct,
+                distinctAgg,
                 condition,
                 JoinRelType.INNER,
                 Collections.emptySet());
 
-        xxxxx(newAggCalls, argList, sourceOf);
-
         return join;
     }
 
-    /**
-     * @deprecated maybe inline this
-     */ 
-    private static AggregateRel createTopAgg(
-        AggregateRel aggregate,
+    private static void rewriteAggCalls(
+        AggregateRelBase.Call[] newAggCalls,
         List<Integer> argList,
-        Map<Integer, Integer> sourceOf,
-        final RelNode child)
-    {
-        final AggregateRelBase.Call[] newAggCalls = aggregate.aggCalls.clone();
-        xxxxx(newAggCalls, argList, sourceOf);
-
-        // Create an aggregate with the new aggregate list.
-        AggregateRel newAggregate = new AggregateRel(
-            aggregate.getCluster(),
-            child,
-            aggregate.groupCount,
-            newAggCalls);
-        return newAggregate;
-    }
-
-    private static void xxxxx(
-        final AggregateRelBase.Call[] newAggCalls, 
-        List<Integer> argList, 
         Map<Integer, Integer> sourceOf)
     {
         // Rewrite the agg calls. Each distinct agg becomes a non-distinct call
@@ -297,15 +369,45 @@ public final class RemoveDistinctAggregateRule extends RelOptRule
                 new AggregateRelBase.Call(
                     aggCall.getAggregation(),
                     false,
-                    newArgs);
+                    newArgs,
+                    aggCall.getType());
             newAggCalls[i] = newAggCall;
         }
     }
 
+    /**
+     * Given an {@link AggregateRel} and the ordinals of the arguments to a
+     * particular call to an aggregate function, creates a 'select distinct'
+     * relational expression which projects the group columns and those
+     * arguments but nothing else.
+     *
+     * <p>For example, given
+     *
+     * <blockquote><pre>select f0, count(distinct f1), count(distinct f2)
+     * from t group by f0</pre></blockquote>
+     *
+     * and the arglist
+     *
+     * <blockquote>{2}</blockquote>
+     *
+     * returns
+     *
+     * <blockquote><pre>select distinct f0, f2 from t</pre></blockquote>
+     '
+     * <p>The <code>sourceOf</code> map is populated with the source of each
+     * column; in this case sourceOf.get(0) = 0, and sourceOf.get(1) = 2.</p>
+     *
+     * @param aggregate Aggregate relational expression
+     * @param argList Ordinals of columns to distinctify
+     * @param sourceOf Out paramer, is populated with a map of where each
+     *          output field came from
+     * @return Aggregate relational expression which projects the required
+     *          columns
+     */
     private static AggregateRel createSelectDistinct(
         AggregateRel aggregate,
-        Map<Integer, Integer> sourceOf,
-        List<Integer> argList)
+        List<Integer> argList,
+        Map<Integer, Integer> sourceOf)
     {
         List<RexNode> exprList = new ArrayList<RexNode>();
         List<String> nameList = new ArrayList<String>();

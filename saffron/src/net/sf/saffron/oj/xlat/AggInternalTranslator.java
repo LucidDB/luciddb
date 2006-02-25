@@ -151,10 +151,9 @@ class AggInternalTranslator extends InternalTranslator
             return null;
         }
         RelDataType[] argTypes2 = new RelDataType[argTypes.length];
-        final RelDataTypeFactory relDataTypeFactory =
-            OJUtil.threadTypeFactory();
+        final RelDataTypeFactory typeFactory = OJUtil.threadTypeFactory();
         for (int i = 0; i < argTypes.length; i++) {
-            argTypes2[i] = OJUtil.ojToType(relDataTypeFactory, argTypes[i]);
+            argTypes2[i] = OJUtil.ojToType(typeFactory, argTypes[i]);
         }
         return BuiltinAggregation.create(
             method.getName(),
@@ -216,8 +215,10 @@ outer:
             argIndexes[i] = aggInputList.size();
             aggInputList.add(arg);
         }
+        final RelDataTypeFactory typeFactory = OJUtil.threadTypeFactory();
+        RelDataType type = aggregation.getReturnType(typeFactory);
         AggregateRel.Call aggCall =
-            new AggregateRel.Call(aggregation, false, argIndexes);
+            new AggregateRel.Call(aggregation, false, argIndexes, type);
 
         // create a new aggregate call, if there isn't already an
         // identical one

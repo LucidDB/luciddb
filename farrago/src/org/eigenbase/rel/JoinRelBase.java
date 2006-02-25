@@ -66,6 +66,7 @@ public abstract class JoinRelBase extends AbstractRelNode
         this.variablesStopped = variablesStopped;
         assert joinType != null;
         assert joinType != JoinRelType.RIGHT;
+        assert condition != null;
         this.joinType = joinType;
     }
 
