@@ -239,8 +239,8 @@ public class FarragoMultisetSplitterRule extends RelOptRule
         final RelOptCluster cluster = calc.getCluster();
         final RexBuilder rexBuilder = cluster.getRexBuilder();
         final SqlOperator op = rexCall.getOperator();
-        final RelDataType componentType = rexCall.operands[0].getType().getComponentType();
-
+        final RelDataType componentType =
+            rexCall.operands[0].getType().getComponentType();
 
         if (SqlStdOperatorTable.cardinalityFunc == op) {
             // A call to
@@ -259,11 +259,16 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             //            OneRowRel
             List correlationList = new ArrayList();
             UncollectRel uncollect =
-                createUncollect(calc, (RexLocalRef) rexCall.operands[0], correlationList);
+                createUncollect(
+                    calc, (RexLocalRef) rexCall.operands[0], correlationList);
+            RelDataType countType =
+                SqlStdOperatorTable.countOperator.inferReturnType(
+                    rexBuilder.getTypeFactory(),
+                    new RelDataType[0]);
             final AggregateRelBase.Call countCall =
                 new AggregateRelBase.Call(
                     SqlStdOperatorTable.countOperator,
-                    false, new int[0]);
+                    false, new int[0], countType);
             AggregateRel aggregateRel =
                 new AggregateRel(
                     cluster, uncollect, 1, new AggregateRel.Call[]{countCall});
@@ -337,11 +342,16 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             //                 OneRowRel
             List correlationList = new ArrayList();
             UncollectRel uncollect =
-                createUncollect(calc, (RexLocalRef) rexCall.operands[0], correlationList);
+                createUncollect(
+                    calc, (RexLocalRef) rexCall.operands[0], correlationList);
+            RelDataType countType =
+                SqlStdOperatorTable.countOperator.inferReturnType(
+                    rexBuilder.getTypeFactory(),
+                    new RelDataType[0]);
             final AggregateRelBase.Call countCall =
                 new AggregateRelBase.Call(
                     SqlStdOperatorTable.countOperator,
-                    false, new int[0]);
+                    false, new int[0], countType);
             AggregateRel aggregateRel =
                 new AggregateRel(
                     cluster, uncollect, 1, new AggregateRel.Call[]{countCall});
@@ -623,6 +633,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                 local = (RexLocalRef) call.getOperands()[0];
             }
         }
+        Util.discard(slice);
         // Create a correlation, and add it to the list.
         RelOptCluster cluster = calc.getCluster();
         final String dyn_inIdStr = cluster.getQuery().createCorrel();
@@ -662,15 +673,19 @@ public class FarragoMultisetSplitterRule extends RelOptRule
         final RexBuilder rexBuilder = cluster.getRexBuilder();
 
         // TODO wael 3/29/05: need to create proper count agg call def.
+        RelDataType countType =
+            SqlStdOperatorTable.countOperator.inferReturnType(
+                rexBuilder.getTypeFactory(),
+                new RelDataType[0]);
         final AggregateRelBase.Call countCall =
             new AggregateRelBase.Call(
                 SqlStdOperatorTable.countOperator,
-                false, new int[0]);
+                false, new int[0], countType);
         final int groupCount = child.getRowType().getFields().length;
         AggregateRel aggregateRel =
             new AggregateRel(
                 cluster, child, groupCount,
-                new AggregateRel.Call[]{countCall});
+                new AggregateRel.Call[] {countCall});
         RexNode[] whenThenElse = new RexNode[] {
             // when
             rexBuilder.makeCall(
@@ -854,10 +869,14 @@ public class FarragoMultisetSplitterRule extends RelOptRule
 
     public RelNode createExistsPlanSingleRow(RelNode child, boolean neg) {
         RelOptCluster cluster = child.getCluster();
+        RelDataType countType =
+            SqlStdOperatorTable.countOperator.inferReturnType(
+                cluster.getTypeFactory(),
+                new RelDataType[0]);
         final AggregateRelBase.Call countCall =
             new AggregateRelBase.Call(
                 SqlStdOperatorTable.countOperator,
-                false, new int[0]);
+                false, new int[0], countType);
         AggregateRel aggregateRel =
             new AggregateRel(
                 cluster, child, 1, new AggregateRel.Call[]{countCall});

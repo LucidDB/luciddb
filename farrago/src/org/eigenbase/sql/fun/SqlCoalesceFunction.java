@@ -24,7 +24,6 @@ package org.eigenbase.sql.fun;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.resource.EigenbaseResource;
 
 /**
  * The <code>COALESCE</code> function.
@@ -43,12 +42,8 @@ public class SqlCoalesceFunction extends SqlFunction
     // override SqlOperator
     public SqlNode rewriteCall(SqlValidator validator, SqlCall call)
     {
-        if ((null != call.getFunctionQuantifier()) && !isQuantifierAllowed()) {
-            throw validator.newValidationError(call.getFunctionQuantifier(),
-                EigenbaseResource.instance()
-                .FunctionQuantifierNotAllowed.ex(
-                    call.getOperator().getName()));
-        }
+        validateQuantifier(validator, call); // check DISTINCT/ALL
+
         SqlNode [] operands = call.getOperands();
         SqlParserPos pos = call.getParserPosition();
 
@@ -57,16 +52,15 @@ public class SqlCoalesceFunction extends SqlFunction
 
         //todo optimize when know operand is not null.
 
-        int i;
-        for (i = 0; ((i + 1) < operands.length); ++i) {
+        for (int i = 0; i + 1 < operands.length; ++i) {
             whenList.add(
                 SqlStdOperatorTable.isNotNullOperator.createCall(
                     operands[i], pos));
             thenList.add(operands[i]);
         }
+        SqlNode elseExpr = operands[operands.length - 1];
         final SqlCall newCall = SqlStdOperatorTable.caseOperator.createCall(
-            null, whenList, thenList,
-            operands[i], pos);
+            null, whenList, thenList, elseExpr, pos);
         newCall.setFunctionQuantifier(call.getFunctionQuantifier());
         return newCall;
     }

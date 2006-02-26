@@ -38,12 +38,21 @@ public class ExplicitOperatorBinding extends SqlOperatorBinding
         SqlOperatorBinding delegate,
         RelDataType[] types)
     {
-        super(
+        this(
             delegate.getTypeFactory(),
-            delegate.getOperator());
-        this.types = types;
+            delegate.getOperator(),
+            types);
     }
 
+    public ExplicitOperatorBinding(
+        RelDataTypeFactory typeFactory,
+        SqlOperator operator,
+        RelDataType[] types)
+    {
+        super(typeFactory, operator);
+        this.types = types;
+    }
+    
     // implement SqlOperatorBinding
     public int getOperandCount()
     {

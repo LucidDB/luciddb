@@ -35,12 +35,6 @@ import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.util.Util;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-
 /**
  * A <code>SqlOperator</code> is a type of node in a SQL parse tree (it is NOT
  * a node in a SQL parse tree). It includes functions, operators such as '=',
@@ -459,6 +453,21 @@ public abstract class SqlOperator
         // Derived type should have overridden this method, since it didn't
         // supply a type inference rule.
         throw Util.needToImplement(this);
+    }
+
+    /**
+     * Infers the type of a call to this operator with a given set of operand
+     * types. Shorthand for {@link #inferReturnType(SqlOperatorBinding)}.
+     */
+    public final RelDataType inferReturnType(
+        RelDataTypeFactory typeFactory,
+        RelDataType[] operandTypes)
+    {
+        return inferReturnType(
+            new ExplicitOperatorBinding(
+                typeFactory,
+                this,
+                operandTypes));
     }
 
     /**

@@ -997,6 +997,21 @@ public abstract class RelOptUtil
         return rel;
     }
 
+    public static String dumpType(RelDataType type)
+    {
+        final StringWriter sw = new StringWriter();
+        final PrintWriter pw = new PrintWriter(sw);
+        final TypeDumper typeDumper = new TypeDumper(pw);
+        if (type.isStruct()) {
+            typeDumper.acceptFields(type.getFields());
+        } else {
+            typeDumper.accept(type);
+        }
+        pw.flush();
+        return sw.toString();
+    }
+
+
     //~ Inner Classes ---------------------------------------------------------
 
     private static class VariableSetVisitor extends RelVisitor
@@ -1026,6 +1041,63 @@ public abstract class RelOptUtil
         {
             variables.add(p.getName());
             return p;
+        }
+    }
+
+    public static class TypeDumper
+    {
+        private final String extraIndent = "  ";
+        private String indent;
+        private final PrintWriter pw;
+
+        TypeDumper(PrintWriter pw)
+        {
+            this.pw = pw;
+            this.indent = "";
+        }
+
+        void accept(RelDataType type)
+        {
+            if (type.isStruct()) {
+                final RelDataTypeField[] fields = type.getFields();
+                // RECORD (
+                //   I INTEGER NOT NULL,
+                //   J VARCHAR(240))
+                pw.println("RECORD (");
+                String prevIndent = indent;
+                this.indent = indent + extraIndent;
+                acceptFields(fields);
+                this.indent = prevIndent;
+                pw.print(")");
+                if (!type.isNullable()) {
+                    pw.print(" NOT NULL");
+                }
+            } else if (type instanceof MultisetSqlType) {
+                // E.g. "INTEGER NOT NULL MULTISET NOT NULL"
+                accept(type.getComponentType());
+                pw.print(" MULTISET");
+                if (!type.isNullable()) {
+                    pw.print(" NOT NULL");
+                }
+            } else {
+                // E.g. "INTEGER"
+                // E.g. "VARCHAR(240) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL"
+                pw.print(type.getFullTypeString());
+            }
+        }
+
+        private void acceptFields(final RelDataTypeField[] fields)
+        {
+            for (int i = 0; i < fields.length; i++) {
+                RelDataTypeField field = fields[i];
+                if (i > 0) {
+                    pw.println(",");
+                }
+                pw.print(indent);
+                pw.print(field.getName());
+                pw.print(" ");
+                accept(field.getType());
+            }
         }
     }
 }

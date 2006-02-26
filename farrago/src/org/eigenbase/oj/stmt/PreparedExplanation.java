@@ -71,12 +71,12 @@ public class PreparedExplanation implements PreparedResult
     public String getCode()
     {
         if (rel == null) {
-            return rowType.getFullTypeString();
+            return RelOptUtil.dumpType(rowType);
         } else {
             return RelOptUtil.dumpPlan("", rel, asXml, detailLevel);
         }
     }
-    
+
     public boolean isDml()
     {
         return false;

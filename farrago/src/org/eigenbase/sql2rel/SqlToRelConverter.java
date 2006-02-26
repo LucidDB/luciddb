@@ -2037,7 +2037,7 @@ public class SqlToRelConverter
                 distinct = true;
             }
             final AggregateRel.Call aggCall =
-                new AggregateRel.Call(aggregation, distinct, args);
+                new AggregateRel.Call(aggregation, distinct, args, type);
             int index = aggCalls.size() + groupExprs.size();
             aggCalls.add(aggCall);
             final RexNode rex = rexBuilder.makeInputRef(type, index);
