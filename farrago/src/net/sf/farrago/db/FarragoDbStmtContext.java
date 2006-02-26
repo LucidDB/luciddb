@@ -43,6 +43,8 @@ import org.eigenbase.runtime.IteratorResultSet;
 import org.eigenbase.sql.SqlKind;
 import org.eigenbase.util.*;
 
+import sun.security.krb5.internal.crypto.d;
+
 
 /**
  * FarragoDbStmtContext implements the
@@ -90,6 +92,8 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
      */
     private int queryTimeoutMillis = 0;
 
+    private Integer executingStmtInfoKey;
+    
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -242,6 +246,11 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
     }
 
     // implement FarragoSessionStmtContext
+    public String getSql() {
+        return sql;
+    }
+    
+    // implement FarragoSessionStmtContext
     public void execute()
     {
         assert (isPrepared());
@@ -268,6 +277,12 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
             if (daemon) {
                 newContext.addAllocation(this);
             }
+
+            Set<String> objectsInUse = executableStmt.getReferencedObjectIds();
+            FarragoSessionExecutingStmtInfo info = new FarragoSessionExecutingStmtInfo(sql,
+                    dynamicParamValues, (String[])objectsInUse.toArray(new String[objectsInUse.size()]));
+            executingStmtInfoKey = info.getId();
+            session.getSessionInfo().addExecutingStmtInfo(info);
 
             resultSet = executableStmt.execute(newContext);
             runningContext = newContext;
@@ -307,6 +322,9 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
                     if (!success) {
                         session.endTransactionIfAuto(false);
                     }
+                    if (executingStmtInfoKey != null) {
+                        session.getSessionInfo().removeExecutingStmtInfo(executingStmtInfoKey);
+                    }
                 }
             }
         }
@@ -339,6 +357,9 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
         if (contextToCancel != null) {
             contextToCancel.cancel();
         }
+        if (executingStmtInfoKey != null) {
+            session.getSessionInfo().removeExecutingStmtInfo(executingStmtInfoKey);
+        }
     }
 
     // implement FarragoSessionStmtContext
@@ -352,6 +373,9 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
             }
             resultSet = null;
             runningContext = null;
+            if (executingStmtInfoKey != null) {
+                session.getSessionInfo().removeExecutingStmtInfo(executingStmtInfoKey);
+            }
         }
     }
 

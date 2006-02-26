@@ -26,6 +26,7 @@ import java.sql.DatabaseMetaData;
 
 import net.sf.farrago.catalog.FarragoRepos;
 import net.sf.farrago.util.FarragoAllocation;
+import net.sf.farrago.util.FarragoSessionInfo;
 import net.sf.farrago.plugin.*;
 
 import org.eigenbase.reltype.*;
@@ -255,7 +256,14 @@ public interface FarragoSession extends FarragoAllocation
     public Collection executeLurqlQuery(
         String lurql,
         Map argMap);
-}
 
+    /**
+     * Returns a FarragoSessionInfo object which contains information
+     * on the runtime state of the session (e.g., active statements).
+     * 
+     * @return FarragoSessionInfo object
+     */
+    public FarragoSessionInfo getSessionInfo();
+}
 
 // End FarragoSession.java

@@ -100,6 +100,8 @@
     <pattern name="dt.test" class="com.disruptivetech.farrago.test.*" />
 
     <pattern name="plannerviz" class="net.sf.farrago.plannerviz.**" />
+    
+    <pattern name="syslib" class="net.sf.farrago.syslib.**" />
 
     <!-- explicit list of all farrago components above -->
     <pattern name="farrago.explicit">
@@ -155,6 +157,7 @@
       <include pattern="test"/>
       <include pattern="dt.test"/>
       <include pattern="plannerviz"/>
+      <include pattern="syslib"/>
     </pattern>
 
     <!-- Below are the actual rules. -->
