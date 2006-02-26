@@ -23,6 +23,8 @@
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/lucidera/bitmap/LbmUnionExecStream.h"
 
+#include <math.h>
+
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 LbmUnionExecStream::LbmUnionExecStream()
@@ -35,14 +37,15 @@ LbmUnionExecStream::LbmUnionExecStream()
 void LbmUnionExecStream::prepare(LbmUnionExecStreamParams const &params)
 {
     ConfluenceExecStream::prepare(params);
-
+    maxRid = params.maxRid;
+    
     // set dynanmic parameter ids
     ridLimitParamId = params.ridLimitParamId;
+    assert(opaqueToInt(ridLimitParamId) > 0);
+
+    // optional parameters
     startRidParamId = params.startRidParamId;
     segmentLimitParamId = params.segmentLimitParamId;
-    assert(opaqueToInt(ridLimitParamId) > 0);
-    assert(opaqueToInt(startRidParamId) > 0);
-    assert(opaqueToInt(segmentLimitParamId) > 0);
 
     // setup tupledatums for writing dynamic parameter values
     ridLimitDatum.pData = (PConstBuffer) &ridLimit;
@@ -58,6 +61,7 @@ void LbmUnionExecStream::prepare(LbmUnionExecStreamParams const &params)
     scratchAccessor = params.scratchAccessor;
     workspacePageLock.accessSegment(scratchAccessor);
     writerPageLock.accessSegment(scratchAccessor);
+    pageSize = scratchAccessor.pSegment->getUsablePageSize();
 }
 
 void LbmUnionExecStream::getResourceRequirements(
@@ -66,11 +70,11 @@ void LbmUnionExecStream::getResourceRequirements(
 {
     ConfluenceExecStream::getResourceRequirements(minQuantity, optQuantity);
 
-    // 2 scratch pages for constructing output bitmap segments
+    // at least 2 scratch pages for constructing output bitmap segments
     //   - 1 for workspace
     //   - 1 for writer
     minQuantity.nCachePages += 2;
-    optQuantity = minQuantity;
+    optQuantity.nCachePages += computeOptWorkspacePages(maxRid) + 1;
 }
 
 void LbmUnionExecStream::setResourceAllocation(
@@ -78,11 +82,9 @@ void LbmUnionExecStream::setResourceAllocation(
 {
     ConfluenceExecStream::setResourceAllocation(quantity);
 
-    // TODO: have workspace use multiple pages
-    // nWorkspacePages = 1;
-    
-    // TODO: calculate ridLimit here, rather than in open
-    ridLimit = 0;
+    // TODO: can we just grab all the remaining pages like this?
+    nWorkspacePages = quantity.nCachePages;
+    ridLimit = computeRidLimit(nWorkspacePages);
 }
 
 void LbmUnionExecStream::open(bool restart)
@@ -97,13 +99,18 @@ void LbmUnionExecStream::open(bool restart)
         segmentWriter.init(
             writerBuf, writerBufSize, pOutAccessor->getTupleDesc());
 
-        // allocate output buffer and a temporary buffer for merging
-        // together segments
-        uint workspaceBufSize = scratchAccessor.pSegment->getUsablePageSize();
-        workspacePageLock.allocatePage();
-        PBuffer workspaceBuf = workspacePageLock.getPage().getWritableData();
-        workspace.init(workspaceBuf, workspaceBufSize, writerBufSize);
-        ridLimit = workspace.getRidLimit();
+        // allocate byte buffer for merging segments
+        boost::shared_array<PBuffer> ppBuffers(new PBuffer[nWorkspacePages]);
+        assert(ppBuffers != NULL);
+        for (uint i = 0; i < nWorkspacePages; i++) {
+            workspacePageLock.allocatePage();
+            ppBuffers[i] = workspacePageLock.getPage().getWritableData();
+        }
+        VirtualByteBuffer *pVirtualBuffer = new VirtualByteBuffer();
+        pVirtualBuffer->init(ppBuffers, nWorkspacePages, pageSize);
+        SharedByteBuffer pWorkspaceBuffer(pVirtualBuffer);
+        uint maxSegmentSize = writerBufSize;
+        workspace.init(pWorkspaceBuffer, maxSegmentSize);
 
         // create dynamic parameters
         pDynamicParamManager->createParam(
@@ -127,10 +134,15 @@ ExecStreamResult LbmUnionExecStream::execute(
         return EXECRC_EOS;
      }
 
-     requestedSrid = (LcsRid) *reinterpret_cast<RecordNum const *>(
-         pDynamicParamManager->getParam(startRidParamId).getDatum().pData);
-     segmentsRemaining = *reinterpret_cast<uint const *>(
-         pDynamicParamManager->getParam(segmentLimitParamId).getDatum().pData);
+     if (isConsumerSridSet()) {
+         requestedSrid = (LcsRid) *reinterpret_cast<RecordNum const *>(
+             pDynamicParamManager->getParam(startRidParamId).getDatum().pData);
+     }
+     if (isSegmentLimitSet()) {
+         segmentsRemaining = *reinterpret_cast<uint const *>(
+             pDynamicParamManager->getParam(segmentLimitParamId)
+             .getDatum().pData);
+     }
 
      for (uint i = 0; i < quantum.nTuplesMax; i++) {
         while (! producePending) {
@@ -167,6 +179,32 @@ void LbmUnionExecStream::closeImpl()
     pDynamicParamManager->deleteParam(ridLimitParamId);
 }
 
+uint LbmUnionExecStream::computeOptWorkspacePages(LcsRid maxRid) 
+{
+    LcsRid bytes = (maxRid / LbmSegment::LbmOneByteSize) + 1;
+    // save half a page for building segments
+    bytes += pageSize / 2;
+    double pages = ((double) opaqueToInt(bytes)) / pageSize;
+    return (uint) ceil(pages);
+}
+
+uint LbmUnionExecStream::computeRidLimit(uint nWorkspacePages)
+{
+    // save half a page for building segments
+    uint bytes = (uint) ((nWorkspacePages - 0.5) * pageSize);
+    return bytes * LbmSegment::LbmOneByteSize;
+}
+
+bool LbmUnionExecStream::isConsumerSridSet()
+{
+    return (opaqueToInt(startRidParamId) > 0);
+}
+
+bool LbmUnionExecStream::isSegmentLimitSet()
+{
+    return (opaqueToInt(segmentLimitParamId) > 0);
+}
+
 ExecStreamResult LbmUnionExecStream::readSegment()
 {
     if (writePending) {
@@ -186,15 +224,18 @@ bool LbmUnionExecStream::writeSegment()
 
     // as an optimization, signal workspace to avoid Rids not 
     // required by a downstream INTERSECT 
-    workspace.advance(requestedSrid);
+    if (isConsumerSridSet()) {
+        workspace.advanceToSrid(requestedSrid);
+    }
 
     // eagerly flush segments
     LcsRid currentSrid = segmentReader.getSrid();
-    workspace.setLimit(currentSrid - 1);
+    workspace.setProductionLimit(currentSrid - 1);
     if (!transfer()) {
         return false;
     }
 
+    // flushing the workspace should make enough room for the next tuple
     assert(workspace.addSegment(inputSegment));
     writePending = false;
     return true;
@@ -209,15 +250,19 @@ void LbmUnionExecStream::transferLast()
 bool LbmUnionExecStream::transfer()
 {
     while (workspace.canProduce()) {
-        if (segmentsRemaining == 0) {
+        if (isSegmentLimitSet() && segmentsRemaining == 0) {
             return false;
         }
+
         const LbmByteSegment &seg = workspace.getSegment();
         if (! segmentWriter.addSegment(seg.getSrid(), seg.byteSeg, seg.len)) {
             return false;
         }
-        workspace.advanceSegment();
-        segmentsRemaining--;
+        workspace.advancePastSegment();
+
+        if (isSegmentLimitSet()) {
+            segmentsRemaining--;
+        }
     }
     return true;
 }

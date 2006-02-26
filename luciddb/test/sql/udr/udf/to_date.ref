@@ -1,4 +1,4 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/to_date.sql#2 $
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/to_date.sql#3 $
 0: jdbc:luciddb:> -- Tests for toDate UDF
 0: jdbc:luciddb:> set schema 'udftest';
 0: jdbc:luciddb:> set path 'udftest';
@@ -15,16 +15,16 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- failures
-0: jdbc:luciddb:> values applib.to_date('JAN, 23 2009', 'mmm, dd yyyy');
+0: jdbc:luciddb:> values applib.convert_date('JAN, 23 2009', 'mmm, dd yyyy');
 Error: Invalid digit input string (state=,code=0)
-0: jdbc:luciddb:> values applib.to_date('12m, 9d, 1004y', 'mmm, 23m, 1004y');
+0: jdbc:luciddb:> values applib.convert_date('12m, 9d, 1004y', 'mmm, 23m, 1004y');
 Error: Invalid digit input string (state=,code=0)
-0: jdbc:luciddb:> values applib.to_date('7-9-97', 'DD-MM-YY');
+0: jdbc:luciddb:> values applib.convert_date('7-9-97', 'DD-MM-YY');
 Error: Invalid digit input string (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create view with reference
 0: jdbc:luciddb:> create view td as
-. . . . . . . . > select colname, applib.to_date(colstr, colmask)
+. . . . . . . . > select colname, applib.convert_date(colstr, colmask)
 . . . . . . . . > from strdates;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from td
@@ -41,7 +41,7 @@ Error: Invalid digit input string (state=,code=0)
 +----------+-------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- nested
-0: jdbc:luciddb:> select applib.to_date( cast( applib.to_date(colstr, colmask) as varchar(50)), 'YYYY-MM-DD') 
+0: jdbc:luciddb:> select applib.convert_date( cast( applib.convert_date(colstr, colmask) as varchar(50)), 'YYYY-MM-DD') 
 . . . . . . . . > from strdates;
 +-------------+
 |   EXPR$0    |

@@ -9,9 +9,9 @@ create table target_date(coldate date)
 --
 
 -- all numeric should FAIL
---insert into target_date 
--- select colbit from datatype_source where colname = 'BAD'
---;
+insert into target_date 
+ select colbit from datatype_source where colname = 'BAD'
+;
 insert into target_date
  select coltiny from datatype_source where colname = 'BAD'
 ;
@@ -24,12 +24,12 @@ insert into target_date
 insert into target_date
  select colbig from datatype_source where colname = 'BAD'
 ;
---insert into target_date
--- select coldec from datatype_source where colname = 'BAD'
---;
---insert into target_date
--- select colnum from datatype_source where colname = 'BAD'
---;
+insert into target_date
+ select coldec from datatype_source where colname = 'BAD'
+;
+insert into target_date
+ select colnum from datatype_source where colname = 'BAD'
+;
 
 -- all floating point should FAIL
 insert into target_date
@@ -63,10 +63,9 @@ insert into target_date
 insert into target_date
  select coldate from datatype_source where colname = 'BAD'
 ;
--- will be fixed by FRG-20
---insert into target_date
--- select coltmstamp from datatype_source where colname = 'BAD'
---;
+insert into target_date
+ select cast (coltmstamp as date) from datatype_source where colname = 'BAD'
+;
 
 
 --
@@ -74,11 +73,12 @@ insert into target_date
 --
 
 -- should be OK
+-- FRG-20
 insert into target_date
- select colchar from datatype_source where colname = 'DATE'
+ select cast (cast (colchar as timestamp) as date) from datatype_source where colname = 'DATE'
 ;
 insert into target_date
- select colvchar from datatype_source where colname = 'DATE'
+ select cast (cast (colvchar as timestamp) as date) from datatype_source where colname = 'DATE'
 ;
 
 
@@ -86,10 +86,10 @@ insert into target_date
 insert into target_date
  select coldate from datatype_source where colname = 'DATE'
 ;
-
---insert into target_date
--- select coltmstamp from datatype_source where colname = 'DATE'
---;
+-- FRG-20
+insert into target_date
+ select cast (coltmstamp as date) from datatype_source where colname = 'DATE'
+;
 
 select * from target_date order by 1
 ;

@@ -18,7 +18,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 set -e
-set -v
 
 usage() {
     echo "Usage:  distBuild.sh [--without-farrago-build] [--without-init-build]"
@@ -49,8 +48,6 @@ done
 
 shopt -uq extglob
 
-set -x
-
 if ! ${without_init_build}; then
     if ${without_farrago_build}; then
         ./initBuild.sh ${INIT_BUILD_FLAGS}
@@ -58,6 +55,9 @@ if ! ${without_init_build}; then
         ./initBuild.sh ${INIT_BUILD_FLAGS} --with-fennel
     fi
 fi
+
+set -x
+set -v
 
 if $without_farrago_build ; then
     echo "Skip Farrago Packaging ..."

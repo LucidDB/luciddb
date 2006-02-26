@@ -57,7 +57,6 @@ public class UtilTest extends TestCase
         TestSuite suite = new TestSuite();
         suite.addTestSuite(UtilTest.class);
         suite.addTestSuite(BinaryHeap.BinaryHeapTestCase.class);
-        suite.addTestSuite(ThreadIterator.Test.class);
         suite.addTestSuite(TimeoutIteratorTest.class);
         return suite;
     }

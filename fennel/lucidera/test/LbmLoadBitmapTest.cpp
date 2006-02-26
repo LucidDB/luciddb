@@ -373,6 +373,7 @@ void LbmLoadBitmapTest::testLoad(
         }
         generatorParams.outputProj = proj;
         generatorParams.dynParamId = DynamicParamId(i + 1);
+        generatorParams.createIndex = false;
 
         boost::shared_ptr<BTreeDescriptor> pBTreeDesc =
             boost::shared_ptr<BTreeDescriptor> (new BTreeDescriptor());

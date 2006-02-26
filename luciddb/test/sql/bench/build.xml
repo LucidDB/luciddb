@@ -27,11 +27,18 @@
   <fail unless="open.dir" />
 
   <property environment="env" />
+  <!--REVIEW: I'd recommend that the testfile remain "test.xml" and you have
+  something like benchtest.xml as what is called repeatedly. But, also keep in 
+  mind that eventually these test.xml files will be called from another test.xml
+  file, so if there is something dependent on a local ant call to execute, we
+  want to avoid it. So, perhaps eventually, we'll have one top level run.properties
+  file that is global to all runs. Is that possible?-->
   <property file="run.properties"/>
 
   <taskdef name="foreach" classname="net.sf.antcontrib.logic.ForEach" classpath="${ant.classpath}"/>
   <taskdef name="if" classname="net.sf.antcontrib.logic.IfTask" classpath="${ant.classpath}"/>
   
+  <!-- REVIEW: how is this dir created? -->
   <!-- directory where sql is generated -->
   <property name="gensql.dir" value="${bench.dir}/gen" />
 
@@ -103,10 +110,16 @@
     </if>
   </target>
   
+  <!-- REVIEW: If we need a global blackhawk ant target, can we make
+  it a macro and import it? And also, if we use run.properties to set 
+  characteristics  make it explicitly passed into the macro -->
+  <!-- REVIEW: I don't see how test case names are being parameterized.-->
   <target name="test" depends="gen-all-sql">
     <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
   </target>
   
+  <!-- REVIEW: who calls this target? If it is never called, the csv tests will
+  presumably not run properly. -->
   <!-- restore from local copy of csv files -->
   <target name="copy-csv">
     <available file="${csv.dir}" type="dir"
@@ -131,6 +144,9 @@
     </if>
   </target>
   
+  <!-- REVIEW: this is only called when there is no local copy. what 
+  happens if raksha is refreshed, and out of sync with the local copy?
+  perhaps the ant "sync" task will work here? or unix rsync.-->
   <!-- refresh from //raksha -->
   <target name="copy-remote-csv">
     <!-- refresh raksha -->

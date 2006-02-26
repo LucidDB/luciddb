@@ -196,6 +196,7 @@ class ExecStreamSubFactory_lu
             params.outputProj, streamDef.getOutputProj());
         params.dynParamId =
             readDynamicParamId(streamDef.getRowCountParamId());
+        params.createIndex = streamDef.isCreateIndex();
 
         pEmbryo->init(new LbmGeneratorExecStream(), params);
     }

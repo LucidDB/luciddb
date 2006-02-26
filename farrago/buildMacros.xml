@@ -49,6 +49,7 @@
 ]>
 
 <project name="farragoBuildMacros" default="unspecified">
+  <taskdef resource="net/sf/antcontrib/antlib.xml" />
 
   <!-- Project locations and properties -->
 
@@ -408,9 +409,10 @@
     <attribute name="target" default="unspecifiedTarget"/>
     <attribute name="classpathref" default="ant.classpath"/>
     <attribute name="jvm" default="${farrago.jre.dir}/bin/java"/>
+    <attribute name="failonerror" default="true"/>
     <element name="jvmargs" optional="yes"/>
     <sequential>
-      <java classname="org.apache.tools.ant.Main" fork="true" failonerror="true"
+      <java classname="org.apache.tools.ant.Main" fork="true" failonerror="@{failonerror}"
         classpathref="@{classpathref}" jvm="@{jvm}">
         <jvmargs/>
         <arg value="${farrago.forkVerbosity}"/>
@@ -607,6 +609,7 @@
 
   <!-- Macro for running JUnit and sqlline tests -->
   <macrodef name="farrago.runTests">
+    <attribute name="targetonerror" default=""/>
     <element name="testfileset" optional="no"/>
     <element name="junitargs" optional="yes"/>
     <sequential>
@@ -624,6 +627,17 @@
         <test todir="${testlog.dir}" if="junit.class"
           name="${junit.class}" />
       </junit>
+      <if>
+        <and>
+          <isset property="junit.failure"/>
+          <not>
+            <equals arg1="@{targetonerror}" arg2=""/>
+          </not>
+        </and>
+      <then>
+        <antcall target="@{targetonerror}"/>
+      </then>
+      </if>
       <fail message="Test failure(s)" if="junit.failure"/>
     </sequential>
   </macrodef>

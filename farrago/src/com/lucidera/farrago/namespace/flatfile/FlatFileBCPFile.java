@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.regex.Pattern;
 
+import net.sf.farrago.resource.FarragoResource;
 import net.sf.farrago.type.*;
 
 import org.eigenbase.reltype.*;
@@ -87,13 +88,13 @@ class FlatFileBCPFile
             this.ctrlWriter = new FileWriter(this.ctrlFile, false);
             ctrlWriter.write("6.0"+NEWLINE);
         } catch (IOException ie) {
-            ie.printStackTrace();
-            return false;
+            throw FarragoResource.instance().FileWriteFailed.ex(
+                this.fileName);
         } finally {
             try {
                 ctrlWriter.close();
-            } catch (IOException ie) {
-                ie.printStackTrace();
+            } catch (Exception ie) {
+                return false;
             }
         }
         return true;
@@ -114,13 +115,13 @@ class FlatFileBCPFile
                 }
             }
         } catch (IOException ie) {
-            ie.printStackTrace();
-            return false;
+            throw FarragoResource.instance().FileWriteFailed.ex(
+                this.fileName);
         } finally {
             try {
                 ctrlWriter.close();
-            } catch (IOException ie) {
-                ie.printStackTrace();
+            } catch (Exception ie) {
+                return false;
             }
         }
         return true;
@@ -222,8 +223,8 @@ class FlatFileBCPFile
             try {
                 this.ctrlWriter.write(row[i]+NEWLINE);
             } catch (IOException ie) {
-                ie.printStackTrace();
-                return false;
+                throw FarragoResource.instance().FileWriteFailed.ex(
+                    this.fileName);
             }
         }
         return true;
@@ -279,8 +280,8 @@ class FlatFileBCPFile
             ctrlReader = new FileReader(fileName);
             reader = new LineNumberReader(ctrlReader);
         } catch (FileNotFoundException fe) {
-            // fe.printStackTrace();
-            return false;
+            throw FarragoResource.instance().FileNotFound.ex(
+                this.fileName);
         }
 
         String line;
@@ -337,15 +338,14 @@ class FlatFileBCPFile
                     colNames[reader.getLineNumber()-3] = colId;
                 }
             }
-        } catch (IOException ie) {
-            ie.printStackTrace();
-            return false;
+        } catch (Exception ie) {
+            throw FarragoResource.instance().InvalidControlFile.ex(
+                this.fileName);
         } finally {
             try {
                 reader.close();
                 ctrlReader.close();
-            } catch (IOException ie) {
-                ie.printStackTrace();
+            } catch (Exception ie) {
                 return false;
             }
         }

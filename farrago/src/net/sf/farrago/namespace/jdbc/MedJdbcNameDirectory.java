@@ -432,6 +432,9 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
                         int scale = 6; // scale is capped at 6
                         if (type.getScale() < scale) {
                             scale = type.getScale();
+                            if (scale < 0) {
+                                scale = 0;
+                            }
                         }
                         type = sink.getTypeFactory().createSqlType(
                             SqlTypeName.Decimal,

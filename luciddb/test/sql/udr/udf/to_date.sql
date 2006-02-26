@@ -15,20 +15,20 @@ insert into strdates values
 
 
 -- failures
-values applib.to_date('JAN, 23 2009', 'mmm, dd yyyy');
-values applib.to_date('12m, 9d, 1004y', 'mmm, 23m, 1004y');
-values applib.to_date('7-9-97', 'DD-MM-YY');
+values applib.convert_date('JAN, 23 2009', 'mmm, dd yyyy');
+values applib.convert_date('12m, 9d, 1004y', 'mmm, 23m, 1004y');
+values applib.convert_date('7-9-97', 'DD-MM-YY');
 
 -- create view with reference
 create view td as
-select colname, applib.to_date(colstr, colmask)
+select colname, applib.convert_date(colstr, colmask)
 from strdates;
 
 select * from td
 order by 1;
 
 -- nested
-select applib.to_date( cast( applib.to_date(colstr, colmask) as varchar(50)), 'YYYY-MM-DD') 
+select applib.convert_date( cast( applib.convert_date(colstr, colmask) as varchar(50)), 'YYYY-MM-DD') 
 from strdates;
 
 -- cleanup

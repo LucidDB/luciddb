@@ -39,7 +39,7 @@ using namespace fennel;
 struct InputData
 {
     /**
-     * Number of bytes in each bitmap segment
+     * Number of bytes in each bitmap entry.
      */
     uint bitmapSize; 
 
@@ -335,10 +335,8 @@ void LbmIntersectExecStreamTest::testSingleBitmaps()
     input.skipRows = 4;
     inputData.push_back(input);
 
-    // expected result -- every 4 bits set; need to set result bitmap size
-    // to twice the input bitmap sizes because two bitmaps will get merged,
-    // but no more
-    input.bitmapSize = 40;
+    // expected result -- every 4 bits set
+    input.bitmapSize = nRows/8;
     input.startRid = LcsRid(0);
     input.skipRows = 4;
     inputData.push_back(input);

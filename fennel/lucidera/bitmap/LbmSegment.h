@@ -107,6 +107,20 @@ protected:
     static uint byteArray2Value(PBuffer array, uint arraySize);
 
     /**
+     * Store value in a byte array. 
+     * The least significant bytes in the value is stored
+     * at the first location in the array.
+     *
+     * @param value
+     * @param array a byte array
+     * @param arraySize size of the array(number of bytes)
+     *
+     * @return number of bytes used to store the value; 0 if the value requires
+     * more than arraySize bytes to store.
+     */
+    static uint value2ByteArray(uint value, PBuffer array, uint arraySize);
+
+    /**
      * Decodes the lengths stored in the descriptor for a segment, based
      * on where the segment descriptor is currently pointing, and advances
      * the segment descriptor to the next descriptor
@@ -144,6 +158,20 @@ public:
     static inline bool setSegLength(uint8_t &segDescByte, uint segLen);
 
     /**
+     * Get the segment length encoded in SegmentDescriptor.
+     *
+     * @param segDescByte the seg desc byte with segment length encoded.
+     */
+    static inline uint getSegLength(uint8_t segDescByte);
+
+    /**
+     * Get the number of bytes to store the length of zero bytes.
+     *
+     * @param segDescByte the seg desc byte with length of zero bytes encoded.
+     */
+    static inline uint getZeroLengthByteCount(uint8_t segDescByte);
+
+    /**
      * One byte in the bitmap encodes 8 RIDs.
      */
     static const uint LbmOneByteSize = 8;
@@ -152,7 +180,7 @@ public:
 
 inline LcsRid LbmSegment::roundToByteBoundary(LcsRid rid)
 {
-    return rid - rid % LbmOneByteSize;
+    return (rid - rid % LbmOneByteSize);
 }
 
 inline bool LbmSegment::setSegLength(uint8_t &segDescByte, uint segLen)
@@ -162,6 +190,21 @@ inline bool LbmSegment::setSegLength(uint8_t &segDescByte, uint segLen)
     }
     segDescByte = (uint8_t) ((segLen - 1) << LbmHalfByteSize);
     return true;
+}
+
+inline uint LbmSegment::getSegLength(uint8_t segDescByte)
+{
+    return (((segDescByte & LbmSegLengthMask) >> LbmHalfByteSize) + 1);
+}
+
+inline uint LbmSegment::getZeroLengthByteCount(uint8_t segDescByte)
+{
+    uint lengthBytes = segDescByte & LbmZeroLengthMask;
+    if (lengthBytes > LbmZeroLengthCompact) {
+        return (lengthBytes - LbmZeroLengthCompact);
+    } else {
+        return 0;
+    }
 }
 
 FENNEL_END_NAMESPACE

@@ -32,12 +32,7 @@
         </test>
       </init-hook>
 
-      <test name="installJar">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udx/installJar.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
-      </test>
-
-      <test name="timeDimension" requiresRun="installJar">
+      <test name="timeDimension">
         <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udx/timeDimension.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>

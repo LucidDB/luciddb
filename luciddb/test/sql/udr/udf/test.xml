@@ -42,11 +42,6 @@
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
-      <test name="installJar">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udf/installJar.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
-      </test>
-
       <test name="cr_source">
         <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udf/cr_source.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
@@ -57,87 +52,87 @@
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
-      <test name="charReplace" requiresRun="installJar,cr_source">
+      <test name="charReplace" requiresRun="cr_source">
         <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udf/char_replace.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
-      <test name="cleanPhone" requiresRun="installJar,cr_source">
+      <test name="cleanPhone" requiresRun="cr_source">
         <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udf/clean_phone.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
-      <test name="fymonth" requiresRun="installJar,cr_source">
+      <test name="fymonth" requiresRun="cr_source">
         <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udf/fymonth.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
-      <test name="containsNumber" requiresRun="installJar,cr_source">
+      <test name="containsNumber" requiresRun="cr_source">
         <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udf/contains_number.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
-      <test name="repeater" requiresRun="installJar,cr_source">
+      <test name="repeater" requiresRun="cr_source">
         <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udf/repeater.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
-      <test name="strReplace" requiresRun="installJar,cr_source">
+      <test name="strReplace" requiresRun="cr_source">
         <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udf/str_replace.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
-      <test name="dateInternal" requiresRun="installJar,cr_source">
+      <test name="dateInternal" requiresRun="cr_source">
         <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udf/date_internal.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
-      <test name="dayInYear" requiresRun="installJar,cr_source">
+      <test name="dayInYear" requiresRun="cr_source">
         <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udf/day_in_year.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
-      <test name="fyQuarter" requiresRun="installJar,cr_source">
+      <test name="fyQuarter" requiresRun="cr_source">
         <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udf/fy_quarter.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
-      <test name="fyYear" requiresRun="installJar,cr_source">
+      <test name="fyYear" requiresRun="cr_source">
         <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udf/fy_year.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
-      <test name="leftN" requiresRun="installJar,cr_source">
+      <test name="leftN" requiresRun="cr_source">
         <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udf/leftn.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
-      <test name="rightN" requiresRun="installJar,cr_source">
+      <test name="rightN" requiresRun="cr_source">
         <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udf/rightn.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
-      <test name="rand" requiresRun="installJar,cr_source">
+      <test name="rand" requiresRun="cr_source">
         <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udf/rand.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
-      <test name="cyQuarter" requiresRun="installJar,cr_source">
+      <test name="cyQuarter" requiresRun="cr_source">
         <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udf/cy_quarter.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
-      <test name="dayNumberOverall" requiresRun="installJar,cr_source">
+      <test name="dayNumberOverall" requiresRun="cr_source">
         <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udf/day_number_overall.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
-      <test name="cleanPhoneIntl" requiresRun="installJar,cr_source">
+      <test name="cleanPhoneIntl" requiresRun="cr_source">
         <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udf/clean_phone_intl.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
-      <test name="toDate" requiresRun="installJar,cr_source">
+      <test name="toDate" requiresRun="cr_source">
         <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udf/to_date.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>

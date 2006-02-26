@@ -37,6 +37,7 @@ void LbmGeneratorExecStream::prepare(LbmGeneratorExecStreamParams const &params)
 
     dynParamId = params.dynParamId;
     assert(opaqueToInt(dynParamId) > 0);
+    createIndex = params.createIndex;
 
     scratchLock.accessSegment(scratchAccessor);
     scratchPageSize = scratchAccessor.pSegment->getUsablePageSize();
@@ -121,26 +122,34 @@ ExecStreamResult LbmGeneratorExecStream::execute(
         }
 
         inAccessors[0]->unmarshalTuple(inputTuple);
-        numRowsToLoad =
-            *reinterpret_cast<RecordNum const *> (inputTuple[0].pData);
-        startRid = 
-            *reinterpret_cast<LcsRid const *> (inputTuple[1].pData);
+
+        // in the case of create index, the number of rows affected
+        // is returned as 0, since the statement is a DDL
+        if (createIndex) {
+            numRowsToLoad = 0;
+            startRid = LcsRid(0);
+        } else {
+            numRowsToLoad =
+                *reinterpret_cast<RecordNum const *> (inputTuple[0].pData);
+            startRid = 
+                *reinterpret_cast<LcsRid const *> (inputTuple[1].pData);
+        }
         currRid = startRid;
+
         // set number of rows to load in a dynamic parameter that
         // splicer will later read
         pDynamicParamManager->writeParam(dynParamId, inputTuple[0]);
         inAccessors[0]->consumeTuple();
-        if (numRowsToLoad == 0) {
-            pOutAccessor->markEOS();
-            return EXECRC_EOS;
-        }
 
         // position to the starting rid
         for (uint iClu = 0; iClu < nClusters; iClu++) {
 
             SharedLcsClusterReader &pScan = pClusters[iClu];
-            bool rc = pScan->position(startRid);
-            assert(rc);
+            if (!pScan->position(startRid)) {
+                // empty table
+                pOutAccessor->markEOS();
+                return EXECRC_EOS;
+            }
             syncColumns(pScan);
         }
 
@@ -183,7 +192,9 @@ ExecStreamResult LbmGeneratorExecStream::execute(
         return rc;
     case EXECRC_EOS:
         // no more rows to process
-        assert(rowCount == numRowsToLoad);
+        if (!createIndex) {
+            assert(rowCount == numRowsToLoad);
+        }
         pOutAccessor->markEOS();
         return EXECRC_EOS;
     default:

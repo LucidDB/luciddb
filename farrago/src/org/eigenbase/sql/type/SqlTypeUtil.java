@@ -623,6 +623,9 @@ public abstract class SqlTypeUtil
     {
         // TODO jvs 2-Jan-2005:  handle all the other cases like
         // rows, collections, UDT's
+        if (fromType.getSqlTypeName() == SqlTypeName.Null) {
+            return toType.isNullable();
+        }
         return toType.getFamily() == fromType.getFamily();
     }
 

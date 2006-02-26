@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/literalTests/int.sql#6 $ 
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/regressionsql/literalTests/int.sql#2 $ 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test int literal
 0: jdbc:farrago:> 
@@ -101,22 +101,19 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- negative test
 0: jdbc:farrago:> insert into t_int values('true',null);
-Error: could not calculate results for the following row:
-[ 0 ]
-Messages:
-[0]:PC=0 Code=22018 (state=,code=0)
+Error: Cannot assign to target field 'INT_COL' of type INTEGER from source field 'EXPR$0' of type CHAR(4) (state=,code=0)
 0: jdbc:farrago:> insert into t_int values(TRUE,null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BOOLEAN' to 'INTEGER' (state=,code=0)
+Error: Cannot assign to target field 'INT_COL' of type INTEGER from source field 'EXPR$0' of type BOOLEAN (state=,code=0)
 0: jdbc:farrago:> insert into t_int values(1e400,null);
 Error: From line 1, column 26 to line 1, column 30: Numeric literal '1E400' out of range (state=,code=0)
 0: jdbc:farrago:> insert into t_int values(x'ff',null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY(1)' to 'INTEGER' (state=,code=0)
+Error: Cannot assign to target field 'INT_COL' of type INTEGER from source field 'EXPR$0' of type BINARY(1) (state=,code=0)
 0: jdbc:farrago:> insert into t_int values(date '1999-01-08',null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DATE' to 'INTEGER' (state=,code=0)
+Error: Cannot assign to target field 'INT_COL' of type INTEGER from source field 'EXPR$0' of type DATE (state=,code=0)
 0: jdbc:farrago:> insert into t_int values(time '12:01:01',null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'TIME(0)' to 'INTEGER' (state=,code=0)
+Error: Cannot assign to target field 'INT_COL' of type INTEGER from source field 'EXPR$0' of type TIME(0) (state=,code=0)
 0: jdbc:farrago:> insert into t_int values(timestamp '2004-12-01 12:01:01',null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'TIMESTAMP(0)' to 'INTEGER' (state=,code=0)
+Error: Cannot assign to target field 'INT_COL' of type INTEGER from source field 'EXPR$0' of type TIMESTAMP(0) (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- insert the right value
 0: jdbc:farrago:> insert into t_int values(-1235.03,null);

@@ -21,6 +21,16 @@ values (cast(null as decimal(5, 2)));
 
 values (cast(1.2 as decimal(5,2)));
 
+
+-- Test assignment rules
+
+-- should fail
+insert into sales.depts values(10,20);
+
+-- should fail
+update sales.depts set deptno='Infinitum';
+
+
 -- TODO: Test unsupported types
 
 -- End types.sql

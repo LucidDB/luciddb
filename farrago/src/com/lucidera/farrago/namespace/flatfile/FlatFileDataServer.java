@@ -30,6 +30,7 @@ import javax.sql.*;
 
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
+import net.sf.farrago.resource.FarragoResource;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.type.*;
 
@@ -80,6 +81,11 @@ class FlatFileDataServer extends MedAbstractDataServer
         params.decode();
 
         // TODO: validate, e.g. throw an error if directory doesn't exist
+        File dir = new File(params.getDirectory());
+        if (!dir.exists() && !params.getDirectory().equals("")) {
+            throw FarragoResource.instance().InvalidDirectory.ex(
+                params.getDirectory());
+        }
     }
 
     // implement FarragoMedDataServer
@@ -293,9 +299,14 @@ class FlatFileDataServer extends MedAbstractDataServer
             String[] cols = new String[rsmeta.getColumnCount()];
             String[] numRows = {Integer.toString(rsmeta.getColumnCount())};
 
-            bcpFile.create(); // write version
-            bcpFile.write(numRows, null); // write numCols
-
+            if (!bcpFile.create()) { // write version
+                throw FarragoResource.instance().FileWriteFailed.ex(
+                    bcpFile.fileName);
+            }
+            if (!bcpFile.write(numRows, null)) { // write numCols
+                throw FarragoResource.instance().FileWriteFailed.ex(
+                    bcpFile.fileName);
+            }
             boolean skipNext = params.getWithHeader();
             while (resultSet.next()) {
                 for (int j=0; j<cols.length; j++) {
@@ -308,7 +319,10 @@ class FlatFileDataServer extends MedAbstractDataServer
                     bcpFile.update(cols, false);
                 }
             }
-            bcpFile.write(cols, params);
+            if (!bcpFile.write(cols, params)) {
+                throw FarragoResource.instance().FileWriteFailed.ex(
+                    bcpFile.fileName);
+            }
             return true;
         } finally {
             // It's OK not to clean up stmt and resultSet;

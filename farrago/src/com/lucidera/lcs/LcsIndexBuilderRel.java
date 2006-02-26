@@ -96,7 +96,7 @@ class LcsIndexBuilderRel extends FennelSingleRel
         // FIXME: we need some system of generating new param ids 
         // per graph.
         LcsCompositeStreamDef bitmapSet
-            = indexGuide.newBitmapAppend(this, index, implementor, 1);
+            = indexGuide.newBitmapAppend(this, index, implementor, true, 1);
 
         // TODO: review recovery behavior
         implementor.addDataFlowFromProducerToConsumer(

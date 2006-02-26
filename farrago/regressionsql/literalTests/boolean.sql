@@ -32,10 +32,6 @@ insert into t_boolean values(103, false);
 insert into t_boolean values(104, FALSE);
 insert into t_boolean values(105, null);
 insert into t_boolean values(106, unknown);
-insert into t_boolean values(107, 'true');
-insert into t_boolean values(108, '  TRUE  ');
-insert into t_boolean values(109, 'false');
-insert into t_boolean values(110, '  FALSE  ');
 
 select * from t_boolean;
 
@@ -48,8 +44,6 @@ insert into t_boolean2 values(1, null);
 insert into t_boolean2 values(2, unknown); 
 insert into t_boolean2 values(3, true);
 insert into t_boolean2 values(4, false);
-insert into t_boolean2 values(5, 'true');
-insert into t_boolean2 values(6, 'false');
 
 select * from t_boolean2;
 

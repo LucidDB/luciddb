@@ -152,6 +152,10 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>Number of INSERT target columns ({0,number}) does not equal number of source items ({1,number})</text>
 </exception>
 
+<exception id="120075" name="TypeNotAssignable">
+    <text>Cannot assign to target field ''{0}'' of type {1} from source field ''{2}'' of type {3}</text>
+</exception>
+
 <exception id="120080" name="TableNameNotFound" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Table ''{0}'' not found</text>
 </exception>

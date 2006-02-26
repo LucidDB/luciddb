@@ -1459,7 +1459,7 @@ public class SqlParserTest extends TestCase
         check("select * from table(ramp(3, 4))",
             TestUtil.fold(new String[]{
                 "SELECT *",
-                "FROM (TABLE(`RAMP`(3, 4)))"}));
+                "FROM TABLE(`RAMP`(3, 4))"}));
     }
 
     public void testExplain()

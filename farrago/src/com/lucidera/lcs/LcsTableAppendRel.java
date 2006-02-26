@@ -244,7 +244,7 @@ public class LcsTableAppendRel
             LcsIndexGuide ucxIndexGuide = getIndexGuide(unclusteredIndex);
             bitmapAppendDefs.add( 
                 ucxIndexGuide.newBitmapAppend(
-                	this, unclusteredIndex, implementor, dynParamId));
+                	this, unclusteredIndex, implementor, false, dynParamId));
             dynParamId++;
         }
          

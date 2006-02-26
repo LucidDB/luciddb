@@ -400,7 +400,6 @@ create table lbmemps(
     server sys_column_store_data_server
 create index deptno_ix on lbmemps(deptno)
 create index ename_ix on lbmemps(ename)
-create index ename_ix on lbmemps(ename)
 create index empno_ix2 on lbmemps(empno)
 ;
 

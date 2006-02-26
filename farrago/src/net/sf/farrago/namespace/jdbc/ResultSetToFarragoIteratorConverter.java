@@ -128,10 +128,14 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
             Expression rhsExp;
             if ((SqlTypeUtil.isJavaPrimitive(type)) && !type.isNullable()) {
                 // TODO:  make this official:  java.sql and java.nio
-                // use the same accessor names, happily
+                // use the same accessor names, happily,
+                // (except for boolean, sadly)
                 String methodName =
                     ReflectUtil.getByteBufferReadMethod(
                         factory.getClassForPrimitive(type)).getName();
+                if (type.getSqlTypeName() == SqlTypeName.Boolean) {
+                    methodName = "getBoolean";
+                }
                 rhsExp =
                     new MethodCall(castResultSet, methodName, colPosExpList);
             } else if (SqlTypeUtil.inCharFamily(type)) {

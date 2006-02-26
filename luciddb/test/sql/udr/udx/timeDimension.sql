@@ -1,4 +1,4 @@
--- $ID: //open/lu/dev/luciddb/test/sql/udr/udx/timeDimension.sql#1 $ 
+-- $ID: //open/lu/dev/luciddb/test/sql/udr/udx/timeDimension.sql#3 $ 
 -- Tests for TimeDimension UDX
 
 create schema udxtest;
@@ -6,37 +6,12 @@ set schema 'udxtest';
 
 -- Positive tests
 
-select * from table(applib.time_dimension(1997, 2, 29, 1997, 4, 1));
-
-select   
-  TIME_KEY,
-  DAY_OF_WEEK,
-  WEEKEND,
-  DAY_NUMBER_IN_WEEK,
-  DAY_NUMBER_IN_MONTH,
-  DAY_NUMBER_IN_YEAR,
-  WEEK_NUMBER_IN_YEAR,
-  MONTH_NAME,
-  MONTH_NUMBER_IN_YEAR,
-  QUARTER,
-  YR,
-  CALENDAR_QUARTER,
-  FIRST_DAY_OF_WEEK
-from table(applib.time_dimension(1997, 2, 1, 1997, 2, 29))
-order by TIME_KEY;
+select * from table(applib.time_dimension(1997, 2, 29, 1997, 3, 2))
+order by time_key_seq;
 
 select * from 
-(select * from table(applib.time_dimension(1997, 1, 31, 1997, 3, 1)))
+(select * from table(applib.time_dimension(2060, 1, 31, 2060, 2, 1)))
 order by time_key_seq;
-
-select * from table(applib.time_dimension(2060, 0, 1, 2060, 2, 1))
-order by 1;
-
-select * from table(applib.time_dimension(2006, 2, 1, 2006, 2, 1))
-order by time_key_seq;
-
-select * from table(applib.time_dimension( 1814, 1, 1, 1821, 12, 31))
-order by day_of_week, time_key_seq;
 
 -- Negative tests
 
@@ -51,31 +26,31 @@ select * from table(applib.time_dimension( 1994, 1, 1, 1995, 1, -1 ));
 
 select 
  time_key, 
- applib.toCYQuarter( time_key ), 
- applib.toFYQuarter( time_key, 4 ), 
- applib.toFYMonth( time_key, 4 ), 
- applib.toFYYear( time_key, 4 )
-from table(applib.time_dimension( 1999, 1, 1, 1999, 12, 31 ))
+ applib.calendar_quarter( time_key ), 
+ applib.fiscal_quarter( time_key, 4 ), 
+ applib.fiscal_month( time_key, 4 ), 
+ applib.fiscal_year( time_key, 4 )
+from table(applib.time_dimension( 1821, 11, 29, 1821, 12, 1 ))
 order by time_key;
 
 -- Negative tests
 
-select time_key, applib.toFYQuarter( time_key, 0 ) 
+select time_key, applib.fiscal_quarter( time_key, 0 ) 
 from table(applib.time_dimension( 1994, 1, 1, 1994, 1, 1 ));
 
-select time_key, applib.toFYQuarter( time_key, 13 ) 
+select time_key, applib.fiscal_quarter( time_key, 13 ) 
 from table(applib.time_dimension( 1994, 1, 1, 1994, 1, 1 ));
 
-select time_key, applib.toFYMonth( time_key, 0 ) 
+select time_key, applib.fiscal_month( time_key, 0 ) 
 from table(applib.time_dimension( 1994, 1, 1, 1994, 1, 1 ));
 
-select time_key, applib.toFYMonth( time_key, 13 ) 
+select time_key, applib.fiscal_month( time_key, 13 ) 
 from table(applib.time_dimension( 1994, 1, 1, 1994, 1, 1 ));
 
-select time_key, applib.toFYYear( time_key, 0 ) 
+select time_key, applib.fiscal_year( time_key, 0 ) 
 from table(applib.time_dimension( 1994, 1, 1, 1994, 1, 1 ));
 
-select time_key, applib.toFYYear( time_key, 13 ) 
+select time_key, applib.fiscal_year( time_key, 13 ) 
 from table(applib.time_dimension( 1994, 1, 1, 1994, 1, 1 ));
 
 -- create views w/ reference to time_dimension
@@ -86,22 +61,12 @@ from table(applib.time_dimension(1997, 1, 1, 1997, 2, 1));
 
 select * from td1;
 
-create view td2 as 
-select time_key, day_of_week, weekend, calendar_quarter 
-from table(applib.time_dimension(1997, 1, 1, 1997, 2, 1));
-
-select * from td2;
-
-
 create table udxtest.period (
 time_key_seq integer,
 time_key date,
 quarter integer,
 yr integer,
 calendar_quarter varchar(15) );
-
-select * from udxtest.period
-order by time_key;
 
 insert into udxtest.period
 select 
@@ -111,7 +76,7 @@ g_period.quarter,
 g_period.yr,
 g_period.calendar_quarter
 from
-(select * from table(applib.time_dimension(1995, 1, 1, 1996, 12, 31)))g_period;
+(select * from table(applib.time_dimension(1996, 5, 1, 1996, 5, 31)))g_period;
 
 select * from udxtest.period
 order by 1;
@@ -124,7 +89,8 @@ t_period.quarter,
 t_period.yr,
 t_period.calendar_quarter
 from
-(select * from table(applib.time_dimension(1996, 10, 1, 1996, 10, 31)))t_period;
+(select * from table(applib.time_dimension(1996, 5, 12, 1996, 6, 2)))t_period;
+
 select period.time_key, count(period.time_key_seq)
 from period
 group by period.time_key

@@ -23,6 +23,7 @@ libcommon_la_SOURCES=\
 Backtrace.cpp \
 ByteArrayInputStream.cpp \
 ByteArrayOutputStream.cpp \
+ByteBuffer.cpp \
 ByteInputStream.cpp \
 ByteOutputStream.cpp \
 ByteStream.cpp \
@@ -56,6 +57,7 @@ ETAGS_ARGS=$(DESIGN_DOCS)
 if !STATIC_TEST_LIBRARY
 noinst_PROGRAMS = testBacktrace
 testBacktrace_SOURCES=testBacktrace.cpp
-testBacktrace_DEPENDENCIES=Backtrace.cpp Backtrace.h
+testBacktrace_DEPENDENCIES=Backtrace.cpp Backtrace.h libcommon.la
 testBacktrace_LDADD=-lcommon
 endif
+

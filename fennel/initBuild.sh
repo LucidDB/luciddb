@@ -2,7 +2,7 @@
 # $Id$
 
 usage() {
-    echo "Usage:  initBuild.sh [--with[out]-farrago] [--with[out]-icu] [--with[out]-optimization] [--with[out]-debug] [--skip-thirdparty-build] [--with[out]-tests]"
+    echo "Usage:  initBuild.sh [--with[out]-farrago] [--with[out]-icu] [--with[out]-optimization] [--with[out]-debug] [--without[-fennel]-thirdparty-build] [--with[out]-tests]"
 }
 
 build_thirdparty=true
@@ -19,7 +19,8 @@ while [ -n "$1" ]; do
         --with?(out)-icu) ICU_FLAG="$1";;
         --with?(out)-optimization) OPT_FLAG="$1";;
         --with?(out)-debug) DEBUG_FLAG="$1";;
-        --skip?(-fennel)-thirdparty-build) build_thirdparty=false;;
+        --skip?(-fennel)-thirdparty-build|--without?(-fennel)-thirdparty-build) 
+            build_thirdparty=false;;
         --with-tests) skip_tests=false;;
         --without-tests) skip_tests=true;;
         *) usage; exit -1;;

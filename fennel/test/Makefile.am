@@ -43,6 +43,7 @@ BTreeTest \
 BacktraceTest
 
 TESTS = $(noinst_PROGRAMS)
+$(noinst_PROGRAMS): $(lib_LTLIBRARIES)
 
 TestOptionsTest_SOURCES=TestOptionsTest.cpp
 

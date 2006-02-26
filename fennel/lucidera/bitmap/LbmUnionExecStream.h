@@ -39,15 +39,25 @@ FENNEL_BEGIN_NAMESPACE
 struct LbmUnionExecStreamParams : public ConfluenceExecStreamParams
 {
     /**
+     * Maximum rid of the table being processed
+     */
+    LcsRid maxRid;
+
+    /**
      * Parameter id for the dynamic parameter used to limit the 
      * number of rids that should appear in an input tuple. Producers
      * for this stream should respect the limitation.
+     *
+     * This parameter is set by the union stream during open.
      */
     DynamicParamId ridLimitParamId;
 
     /**
      * Parameter id for the dynamic parameter used to request filtering
      * of rids output. This dynamic parameter may be set by consumers.
+     *
+     * This parameter is optional and is read during execute. If not
+     * used, this parameter should be set to zero.
      */
     DynamicParamId startRidParamId;
 
@@ -55,6 +65,9 @@ struct LbmUnionExecStreamParams : public ConfluenceExecStreamParams
      * Parameter id for the dynamic parameter used to limit the
      * number of segments this stream should produce on a single
      * execute. May be set by consumers.
+     *
+     * This parameter is optional and is read during execute. If not
+     * used, this parameter should be set to zero.
      */
     DynamicParamId segmentLimitParamId;
 };
@@ -69,6 +82,7 @@ struct LbmUnionExecStreamParams : public ConfluenceExecStreamParams
 class LbmUnionExecStream : public ConfluenceExecStream
 {
     // see LbmUnionExecStreamParams
+    LcsRid maxRid;
     DynamicParamId ridLimitParamId;
     DynamicParamId startRidParamId;
     DynamicParamId segmentLimitParamId;
@@ -82,6 +96,16 @@ class LbmUnionExecStream : public ConfluenceExecStream
      * Number of rids that should appear in input tuples
      */
     RecordNum ridLimit;
+
+    /**
+     * Usable page size
+     */
+    uint pageSize;
+
+    /**
+     * Number of pages reserved for the workspace
+     */
+    uint nWorkspacePages;
 
     /**
      * Reads input tuples
@@ -153,6 +177,28 @@ class LbmUnionExecStream : public ConfluenceExecStream
      * set by a consumer
      */
     uint segmentsRemaining;
+
+    /**
+     * Compute the optimum number of pages for the union, based on the
+     * maximum number of rids in the table
+     */
+    uint computeOptWorkspacePages(LcsRid maxRid);
+
+    /**
+     * Returns the maximum tuple size the workspace can handle and
+     * still produce segments of reasonable size
+     */
+    uint computeRidLimit(uint nWorkspacePages);
+
+    /**
+     * Whether stream has a parameter for consumer start rid
+     */
+    bool isConsumerSridSet();
+
+    /**
+     * Whether stream has a segment limit
+     */
+    bool isSegmentLimitSet();
 
     /**
      * Reads a byte segment.  If the previous byte segment was 
