@@ -129,6 +129,9 @@ typedef JniProxyIter<ProxyJavaTupleStreamDef> SharedProxyJavaTupleStreamDef;
 class ProxyKeyAccessorDef;
 typedef JniProxyIter<ProxyKeyAccessorDef> SharedProxyKeyAccessorDef;
 
+class ProxyLbmChopperStreamDef;
+typedef JniProxyIter<ProxyLbmChopperStreamDef> SharedProxyLbmChopperStreamDef;
+
 class ProxyLbmGeneratorStreamDef;
 typedef JniProxyIter<ProxyLbmGeneratorStreamDef> SharedProxyLbmGeneratorStreamDef;
 
@@ -137,6 +140,9 @@ typedef JniProxyIter<ProxyLbmIndexScanStreamDef> SharedProxyLbmIndexScanStreamDe
 
 class ProxyLbmSplicerStreamDef;
 typedef JniProxyIter<ProxyLbmSplicerStreamDef> SharedProxyLbmSplicerStreamDef;
+
+class ProxyLbmUnionStreamDef;
+typedef JniProxyIter<ProxyLbmUnionStreamDef> SharedProxyLbmUnionStreamDef;
 
 class ProxyLcsClusterAppendStreamDef;
 typedef JniProxyIter<ProxyLcsClusterAppendStreamDef> SharedProxyLcsClusterAppendStreamDef;
@@ -659,6 +665,14 @@ int32_t getStreamId();
 static jmethodID meth_getStreamId;
 };
 
+class ProxyLbmChopperStreamDef
+: virtual public JniProxy, virtual public ProxyTupleStreamDef
+{
+public:
+int32_t getRidLimitParamId();
+static jmethodID meth_getRidLimitParamId;
+};
+
 class ProxyLcsRowScanStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
@@ -701,6 +715,18 @@ class ProxyLbmSplicerStreamDef
 public:
 int32_t getRowCountParamId();
 static jmethodID meth_getRowCountParamId;
+};
+
+class ProxyLbmUnionStreamDef
+: virtual public JniProxy, virtual public ProxyTupleStreamDef
+{
+public:
+int32_t getRidLimitParamId();
+static jmethodID meth_getRidLimitParamId;
+int32_t getConsumerSridParamId();
+static jmethodID meth_getConsumerSridParamId;
+int32_t getSegmentLimitParamId();
+static jmethodID meth_getSegmentLimitParamId;
 };
 
 class ProxyLcsClusterAppendStreamDef
@@ -891,10 +917,10 @@ bool isPhysical();
 static jmethodID meth_isPhysical;
 std::string getRange();
 static jmethodID meth_getRange;
-SharedProxyWindowPartitionDef getPartition();
-static jmethodID meth_getPartition;
 SharedProxyWindowStreamDef getWindowStream();
 static jmethodID meth_getWindowStream;
+SharedProxyWindowPartitionDef getPartition();
+static jmethodID meth_getPartition;
 int32_t getOffset();
 static jmethodID meth_getOffset;
 };
@@ -1021,11 +1047,15 @@ virtual void visit(ProxyJavaTupleStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyKeyAccessorDef &)
 { unhandledVisit(); }
+virtual void visit(ProxyLbmChopperStreamDef &)
+{ unhandledVisit(); }
 virtual void visit(ProxyLbmGeneratorStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyLbmIndexScanStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyLbmSplicerStreamDef &)
+{ unhandledVisit(); }
+virtual void visit(ProxyLbmUnionStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyLcsClusterAppendStreamDef &)
 { unhandledVisit(); }
