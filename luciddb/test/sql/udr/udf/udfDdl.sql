@@ -5,7 +5,6 @@
 create schema udftest2;
 
 set schema 'udftest';
-
 set path 'udftest';
 
 -- test SQL-defined functions

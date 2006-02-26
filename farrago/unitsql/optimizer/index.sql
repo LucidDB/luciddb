@@ -11,6 +11,10 @@ insert into oj.t1 values (1,null), (2, 2), (3, 3);
 
 insert into oj.t2 values (1,null), (2, 2), (4, 4);
 
+create table oj.t3(v varchar(15) not null primary key);
+insert into oj.t3 
+values ('Mesmer'), ('Houdini'), ('Copperfield'), ('Mandrake');
+
 set schema 'sales';
 
 -- force usage of Java calculator
@@ -33,6 +37,35 @@ select name from depts where deptno > 20 and deptno < 30 order by name;
 
 select name from depts where deptno < 20 or deptno between 30 and 40 
 order by name;
+
+-- scaling
+select name from depts where deptno=20.00;
+
+-- scaling with rounding:  strictness change
+select name from depts where deptno > 19.6 order by name;
+
+-- scaling with rounding:  strictness change the other way
+select name from depts where deptno >= 20.1 order by name;
+
+-- no match:  overflow
+select name from depts where deptno=20000000000000;
+
+-- no match:  overflow
+select name from depts where deptno>20000000000000;
+
+-- all match:  negative overflow
+select name from depts where deptno>-20000000000000 order by name;
+
+-- no match:  make sure truncation doesn't make it look like one
+select v from oj.t3 where v='Houdini                 xyz';
+
+-- no match for Houdini:  make sure truncation doesn't make it look like one
+select v from oj.t3 where v >= 'Houdini                 xyz'
+order by v;
+
+-- match for Houdini:  make sure truncation doesn't obscure that
+select v from oj.t3 where v <= 'Houdini                 xyz'
+order by v;
 
 -- contradiction:  empty range
 select name from depts where deptno=20 and deptno=30;
@@ -150,6 +183,35 @@ select name from depts where deptno > 20 and deptno < 30;
 
 explain plan for
 select name from depts where deptno < 20 or deptno between 30 and 40;
+
+explain plan for
+select name from depts where deptno=20.00;
+
+explain plan for
+select name from depts where deptno > 19.6 order by name;
+
+explain plan for
+select name from depts where deptno >= 20.1 order by name;
+
+explain plan for
+select name from depts where deptno=20000000000000;
+
+explain plan for
+select name from depts where deptno>20000000000000;
+
+explain plan for
+select name from depts where deptno>-20000000000000 order by name;
+
+explain plan for
+select v from oj.t3 where v='Houdini                 xyz';
+
+explain plan for
+select v from oj.t3 where v >= 'Houdini                 xyz'
+order by v;
+
+explain plan for
+select v from oj.t3 where v <= 'Houdini                 xyz'
+order by v;
 
 explain plan for
 select name from depts where deptno=20 and deptno=30;

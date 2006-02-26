@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,14 +25,15 @@ package net.sf.farrago.runtime;
 import net.sf.farrago.fennel.FennelStreamGraph;
 import net.sf.farrago.fennel.FennelStreamHandle;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
+import org.eigenbase.runtime.RestartableIterator;
 
+import java.util.NoSuchElementException;
 
 /**
  * FennelIterator implements the {@link java.util.Iterator} and
- * {@link org.eigenbase.runtime.RestartableIterator} interfaces by reading
- * tuples from a Fennel ExecStream.
+ * {@link RestartableIterator} interfaces by reading tuples from a
+ * Fennel ExecStream.  It does this by adapting a FennelTupleIter to
+ * the {@link RestartableIterator} interface.
  *
  * <p>FennelIterator only deals with raw byte buffers; it delegates to a
  * {@link FennelTupleReader} object the responsibility to unmarshal individual
@@ -41,11 +42,11 @@ import java.nio.ByteOrder;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FennelIterator extends FennelAbstractIterator
+public class FennelIterator extends FennelTupleIter 
+    implements RestartableIterator
 {
     //~ Instance fields -------------------------------------------------------
-    private final FennelStreamGraph streamGraph;
-    private final FennelStreamHandle streamHandle;
+    private Object next;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -64,38 +65,51 @@ public class FennelIterator extends FennelAbstractIterator
         FennelStreamHandle streamHandle,
         int bufferSize)
     {
-        super(tupleReader);
-        this.streamGraph = streamGraph;
-        this.streamHandle = streamHandle;
-
-        // In this implementation of FennelAbstractIterator, byteBuffer and
-        // bufferAsArray are effectively final. In other implementations, they
-        // might be set by populateBuffer.
-        bufferAsArray = new byte[bufferSize];
-        byteBuffer = ByteBuffer.wrap(bufferAsArray);
-        byteBuffer.order(ByteOrder.nativeOrder());
-        byteBuffer.clear();
-        byteBuffer.limit(0);
+        super(tupleReader, streamGraph, streamHandle, bufferSize);
+        this.next = null;
     }
 
     //~ Methods ---------------------------------------------------------------
 
-    // implement RestartableIterator
-    public void restart()
+    // implement Iterator
+    // Note that we hold the buffer whenever this returns true.
+    public boolean hasNext()
     {
-        super.restart();
-        bufferAsArray = byteBuffer.array();
-        byteBuffer.clear();
-        byteBuffer.limit(0);
-        streamGraph.restart(streamHandle);
+        if (next != null) {
+            return true;
+        }
+
+        Object fetched = fetchNext();
+        if (fetched == NoDataReason.END_OF_DATA) {
+            return false;
+        }
+
+        // Old-style iterator convention doesn't handle anything but
+        // END_OF_DATA
+        assert(!(fetched instanceof NoDataReason));
+
+        next = fetched;
+
+        return true;
     }
 
-    protected int populateBuffer()
+    // implement Iterator
+    public Object next()
     {
-        byteBuffer.clear();
-        return streamGraph.fetch(streamHandle, bufferAsArray);
+        if (!hasNext()) {
+            throw new NoSuchElementException();
+        }
+
+        Object result = next;
+        next = null;
+        return result;
     }
 
+    // implement Iterator
+    public void remove()
+    {
+        throw new UnsupportedOperationException();
+    }
 }
 
 

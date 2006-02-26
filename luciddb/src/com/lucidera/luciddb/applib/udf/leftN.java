@@ -33,7 +33,8 @@ public class leftN
     public static String FunctionExecute( String in, int len )
     {
         if ( len < 0 ) {
-            throw new IllegalArgumentException("length must be non-negative");
+            throw new IllegalArgumentException(
+                ApplibResourceObject.get().LenSpecifyNonNegative.ex());
         }
 
         // TODO:
@@ -48,8 +49,9 @@ public class leftN
 
         // make sure we don't overflow our buffer
         // save one space for a null terminator
-        if ( maxLen >= chars.length )
+        if ( maxLen >= chars.length ) {
             maxLen = chars.length - 1;
+        }
 
         // get the characters
         in.getChars( 0, maxLen, chars, 0 );

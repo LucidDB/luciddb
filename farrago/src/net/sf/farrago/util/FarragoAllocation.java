@@ -22,22 +22,22 @@
 */
 package net.sf.farrago.util;
 
+import org.eigenbase.util.ClosableAllocation;
 
 /**
  * FarragoAllocation represents an object which requires a call in order to
  * release resources early rather than waiting for finalization.
  *
+ * <p>
+ * REVIEW: SWZ: 2/22/2006: New code should use ClosableAllocation directly
+ * when possible.  Eventually remove this interface and replace all usages
+ * with ClosableAllocation.
+ *
  * @author John V. Sichi
  * @version $Id$
  */
-public interface FarragoAllocation
+public interface FarragoAllocation extends ClosableAllocation
 {
-    //~ Methods ---------------------------------------------------------------
-
-    /**
-     * Closes this object.
-     */
-    public void closeAllocation();
 }
 
 

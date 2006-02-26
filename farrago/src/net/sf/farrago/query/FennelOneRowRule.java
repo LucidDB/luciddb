@@ -22,15 +22,17 @@
 */
 package net.sf.farrago.query;
 
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleOperand;
-import org.eigenbase.relopt.CallingConvention;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.rel.OneRowRel;
+import org.eigenbase.relopt.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
+
+import java.util.*;
+import java.math.*;
 
 /**
- * FennelOneRowRule generates an XO who simple outputs a single one row with the
- * value 0.
+ * FennelOneRowRule provides an implementation for {@link OneRowRel}
+ * in terms of {@link FennelValuesRel}.
  *
  * @author Wael Chatila
  * @since Feb 4, 2005
@@ -49,15 +51,24 @@ public class FennelOneRowRule extends RelOptRule {
         return FennelRel.FENNEL_EXEC_CONVENTION;
     }
 
-    public void onMatch(RelOptRuleCall call) {
-        OneRowRel  oneRowRel = (OneRowRel) call.rels[0];
-        if (oneRowRel.getClass() != OneRowRel.class) {
-            return;
-        }
+    public void onMatch(RelOptRuleCall call)
+    {
+        OneRowRel oneRowRel = (OneRowRel) call.rels[0];
 
-        FennelOneRowRel fennelOneRowRel =
-            new FennelOneRowRel(oneRowRel.getCluster());
-        call.transformTo(fennelOneRowRel);
+        RexBuilder rexBuilder = oneRowRel.getCluster().getRexBuilder();
+        RexLiteral literalZero = rexBuilder.makeExactLiteral(
+            new BigDecimal(0));
+
+        List<List<RexLiteral>> tuples =
+            Collections.singletonList(
+                Collections.singletonList(
+                    literalZero));
+
+        RelDataType rowType =
+            OneRowRel.deriveOneRowType(oneRowRel.getCluster().getTypeFactory());
+
+        FennelValuesRel valuesRel =
+            new FennelValuesRel(oneRowRel.getCluster(), rowType, tuples);
+        call.transformTo(valuesRel);
     }
 }
-

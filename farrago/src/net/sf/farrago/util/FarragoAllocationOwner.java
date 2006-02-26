@@ -22,25 +22,24 @@
 */
 package net.sf.farrago.util;
 
+import org.eigenbase.util.ClosableAllocationOwner;
 
 /**
  * FarragoAllocationOwner represents an object which can take ownership of
  * FarragoAllocations and guarantee that they will be cleaned up correctly
  * when its own closeAllocation() is called.
  *
+ * <p>
+ * REVIEW: SWZ: 2/22/2006: New code should use ClosableAllocationOwner directly
+ * when possible.  Eventually remove this interface and replace all usages with
+ * ClosableAllocationOwner.
+ *
  * @author John V. Sichi
  * @version $Id$
  */
-public interface FarragoAllocationOwner extends FarragoAllocation
+public interface FarragoAllocationOwner 
+    extends ClosableAllocationOwner, FarragoAllocation
 {
-    //~ Methods ---------------------------------------------------------------
-
-    /**
-     * Assigns ownership of a FarragoAllocation to this owner.
-     *
-     * @param allocation the FarragoAllocation to take over
-     */
-    public void addAllocation(FarragoAllocation allocation);
 }
 
 

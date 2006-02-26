@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2002-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,6 +22,8 @@
 */
 
 package org.eigenbase.test;
+
+import org.eigenbase.runtime.TupleIter;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -121,6 +123,38 @@ public abstract class EigenbaseTestCase extends TestCase
     }
 
     /**
+     * Returns a TupleIter over the elements of an array.
+     */
+    public static TupleIter makeTupleIter(final Object [] a)
+    {
+        return new TupleIter()
+            {
+                private List data = Arrays.asList(a);
+                private Iterator iter = data.iterator();
+
+                public Object fetchNext()
+                {
+                    if (iter.hasNext()) {
+                        return iter.next();
+                    }
+
+                    return NoDataReason.END_OF_DATA;
+                }
+
+                public void restart()
+                {
+                    iter = data.iterator();
+                }
+
+                public void closeAllocation()
+                {
+                    iter = null;
+                    data = null;
+                }
+            };
+    }
+
+    /**
      * Converts an iterator to a list.
      */
     protected static List toList(Iterator iterator)
@@ -155,6 +189,25 @@ public abstract class EigenbaseTestCase extends TestCase
         ArrayList list = new ArrayList();
         while (iterator.hasNext()) {
             list.add(iterator.next());
+        }
+        assertEquals(list, a);
+    }
+
+    /**
+     * Checks that a TupleIter returns the same objects as the contents of an
+     * array.
+     */
+    protected void assertEquals(
+        TupleIter iterator,
+        Object[] a)
+    {
+        ArrayList list = new ArrayList();
+        while(true) {
+            Object next = iterator.fetchNext();
+            if (next == TupleIter.NoDataReason.END_OF_DATA) {
+                break;
+            }
+            list.add(next);
         }
         assertEquals(list, a);
     }

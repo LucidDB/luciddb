@@ -112,6 +112,7 @@ jmethodID ProxyTupleDescriptor::meth_getAttrDescriptor = 0;
 jmethodID ProxyTupleProjection::meth_getAttrProjection = 0;
 jmethodID ProxyTupleStreamGraphCmd::meth_getStreamGraphHandle = 0;
 jmethodID ProxyTxnCmd::meth_getTxnHandle = 0;
+jmethodID ProxyValuesStreamDef::meth_getTupleBytesBase64 = 0;
 jmethodID ProxyWindowDef::meth_getOrderKeyList = 0;
 jmethodID ProxyWindowDef::meth_isPhysical = 0;
 jmethodID ProxyWindowDef::meth_getRange = 0;
@@ -453,6 +454,10 @@ visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(ne
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemUncollectTupleStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyUncollectTupleStreamDef>));
+
+jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemValuesStreamDef");
+visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyValuesStreamDef>));
+ProxyValuesStreamDef::meth_getTupleBytesBase64 = pEnv->GetMethodID(jClass,"getTupleBytesBase64","()Ljava/lang/String;");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemWindowDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyWindowDef>));
@@ -1204,6 +1209,11 @@ p->pEnv = pEnv;
 p->jObject = pEnv->CallObjectMethod(jObject,meth_getTxnHandle);
 if (!p->jObject) p.reset();
 return p;
+}
+
+std::string ProxyValuesStreamDef::getTupleBytesBase64()
+{
+return constructString(pEnv->CallObjectMethod(jObject,meth_getTupleBytesBase64));
 }
 
 SharedProxyTupleProjection ProxyWindowDef::getOrderKeyList()

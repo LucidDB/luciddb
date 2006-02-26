@@ -1,0 +1,27 @@
+<project name="bh" default="simple-test">
+  <target name="simple-test">
+    <test-suite testunit="simple-test">
+
+      <test-suite-call testfile="test.xml">
+        <test-unit-modifier value="oracle"/>
+        <property name="config.prop" value="prop.oracle"/>
+      </test-suite-call>
+
+      <test-suite-call testfile="test.xml">
+        <test-unit-modifier value="sqlserver"/>
+        <property name="config.prop" value="prop.sqlserver"/>
+      </test-suite-call>
+
+      <test-suite-call testfile="test.xml">
+        <test-unit-modifier value="flatfile"/>
+        <property name="config.prop" value="prop.flatfile"/>
+      </test-suite-call>
+
+      <test-suite-call testfile="test-csv.xml">
+        <test-unit-modifier value="csvjdbc"/>
+        <property name="config.prop" value="prop.csvjdbc"/>
+      </test-suite-call>
+
+    </test-suite>
+  </target>
+</project>

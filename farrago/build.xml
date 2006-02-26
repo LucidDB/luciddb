@@ -149,8 +149,6 @@ require version '${required.ant.version}'."/>
   <fileset dir="${regressionsql.dir}" id="fileset.regressionsql.win">
     <include name="**/*.sql"/>
     <exclude name="**/numericStrCasts.sql"/>
-    <exclude name="**/literalTests/real.sql"/>
-    <exclude name="**/literalTests/string.sql"/>
   </fileset>
   <pathconvert property="fileset.regressionsql.win" 
     refid="fileset.regressionsql.win"
@@ -252,20 +250,6 @@ require version '${required.ant.version}'."/>
 
 
   <!-- Targets -->
-
-  <!--
-
-  Declare mdr task used for catalog manipulation.  Note that in order
-  to use this task, we always fork an ant subprocess using java (not
-  ant or antcall).  There are two reasons for this.  Most importantly,
-  it makes sure that the repository is shut down properly.  Without
-  this, invocations of mdr sometimes interfere with our own java tasks
-  (e.g. populateCatalog).  Another reason is that it gives us a chance
-  to set Java properties, most importantly the one that controls the
-  mdr logging level, so we can suppress some spurious exception
-  reports.
-
-  -->
 
   <!-- default target:  assumes catalog has already been created -->
   <target name="all"
@@ -715,15 +699,7 @@ require version '${required.ant.version}'."/>
     depends="makeClassesDir,checkResourceUptodate,copyFennelResources"
     unless="resource.uptodate">
     <!-- Exception classes need to exist for reflection -->
-    <farrago.javaCompile
-      srcdir="${farrago.src.dir}"
-      destdir="${farrago.classes.dir}"
-      classpathref="farrago.3p.classpath">
-      <include name="**/EigenbaseException.java" />
-      <include name="**/EigenbaseContextException.java" />
-      <include name="**/EigenbaseFeatureException.java" />
-      <include name="**/SqlValidatorException.java" />
-    </farrago.javaCompile>
+    <antcall target="compileExceptions"/>
     <taskdef name="resgen" classname="org.eigenbase.resgen.ResourceGenTask">
       <classpath refid="farrago.run.classpath"/>
     </taskdef>
@@ -751,6 +727,18 @@ require version '${required.ant.version}'."/>
       locales="en_US">
       <include name="org/eigenbase/resource/EigenbaseResource.xml"/>
     </resgen>
+  </target>
+
+  <target name="compileExceptions">
+    <farrago.javaCompile
+      srcdir="${farrago.src.dir}"
+      destdir="${farrago.classes.dir}"
+      classpathref="farrago.3p.classpath">
+      <include name="**/EigenbaseException.java" />
+      <include name="**/EigenbaseContextException.java" />
+      <include name="**/EigenbaseFeatureException.java" />
+      <include name="**/SqlValidatorException.java" />
+    </farrago.javaCompile>
   </target>
 
   <target name="checkFennelResourceUptodate">

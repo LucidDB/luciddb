@@ -63,8 +63,9 @@ struct BitmapInput
     /**
      * Buffers storing the bitmap segments
      */
-    boost::scoped_array<FixedBuffer> bufArray;
-    PBuffer pBuf;
+    boost::shared_array<FixedBuffer> bufArray;
+    
+    boost::shared_array<FixedBuffer> pBuf;
 
     /**
      * Amount of space currently used in buffer
@@ -401,7 +402,7 @@ void LbmIntersectExecStreamTest::testIntersect(
     if (inputData[nInputs].bitmapSize > 0) {
         initBitmapInput(bmInputs[nInputs], nRows, inputData[nInputs]);
     } else {
-        bmInputs[nInputs].pBuf = NULL;
+        bmInputs[nInputs].pBuf.reset();
         bmInputs[nInputs].nBitmaps = 0;
     }
 
@@ -419,12 +420,12 @@ void LbmIntersectExecStreamTest::testIntersect(
     SharedExecStream pOutputStream = prepareConfluenceGraph(
         valuesStreamEmbryoList, intersectEmbryo);
 
-    if (bmInputs[nInputs].pBuf) {
-        bitmapTupleAccessor.setCurrentTupleBuf(bmInputs[nInputs].pBuf);
+    if (bmInputs[nInputs].pBuf.get()) {
+        bitmapTupleAccessor.setCurrentTupleBuf(bmInputs[nInputs].pBuf.get());
     }
     verifyBufferedOutput(
         *pOutputStream, bitmapTupleDesc, bmInputs[nInputs].nBitmaps,
-        bmInputs[nInputs].pBuf);
+        bmInputs[nInputs].pBuf.get());
 }
 
 void LbmIntersectExecStreamTest::initBitmapInput(
@@ -432,7 +433,7 @@ void LbmIntersectExecStreamTest::initBitmapInput(
 {
     bmInput.fullBufSize = (nRows/inputData.skipRows) * 16;
     bmInput.bufArray.reset(new FixedBuffer[bmInput.fullBufSize]);
-    bmInput.pBuf = bmInput.bufArray.get();
+    bmInput.pBuf = bmInput.bufArray;
     bmInput.nBitmaps = 0;
     bmInput.currBufSize = 0;
     generateBitmaps(nRows, inputData, bmInput);
@@ -478,7 +479,7 @@ void LbmIntersectExecStreamTest::produceEntry(
 {
     TupleData bitmapTuple = lbmEntry.produceEntryTuple();
     bitmapTupleAccessor.marshal(
-        bitmapTuple, bmInput.pBuf + bmInput.currBufSize);
+        bitmapTuple, bmInput.pBuf.get() + bmInput.currBufSize);
     bmInput.currBufSize += bitmapTupleAccessor.getCurrentByteCount();
     ++bmInput.nBitmaps;
 }

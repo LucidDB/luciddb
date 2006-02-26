@@ -2,46 +2,34 @@
   <target name="simple-test">
     <test-suite testunit="simple-test">
 
-      <test-metadata>
-        <db>oracle sqlserver csv flatfile</db>
-      </test-metadata>      
-      
       <init-hook>
         <test name="restoreCatalog" testunit="init-test">
           <ant-task>
             <ant target="restoreCatalog"/>
           </ant-task>
+          <ant-task>
+            <ant target="copy-csv"/>
+          </ant-task>
         </test>
       </init-hook>
 
       <test name="creschema">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/bench/gen/${config.prop}/creschema.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
-      </test>
-
-      <test name="benchfileload" requiresSuccess="creschema">
-        <test-metadata>
-          <db>csv</db>
-        </test-metadata>
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/bench/gen/${config.prop}/benchfileload.sql"/>
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/bench/gen/%{config.prop}/creschema.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
       <test name="importschema" requiresSuccess="creschema">
-        <test-metadata>
-          <db>oracle sqlserver flatfile</db>
-        </test-metadata>
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/bench/gen/${config.prop}/importschema.sql"/>
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/bench/gen/%{config.prop}/importschema.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
       <test name="benchload" requiresSuccess="creschema">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/bench/gen/${config.prop}/benchload.sql"/>
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/bench/gen/%{config.prop}/benchload.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
       <test name="benchqueries" requiresSuccess="benchload">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/bench/gen/${config.prop}/benchqueries.sql"/>
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/bench/gen/%{config.prop}/benchqueries.sql"/>
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 

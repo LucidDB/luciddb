@@ -1,0 +1,89 @@
+0: jdbc:luciddb:> -- $ID: //open/lu/dev/luciddb/test/sql/udr/udx/installJar.sql#1 $
+0: jdbc:luciddb:> create schema applib;
+0: jdbc:luciddb:> set schema 'applib';
+0: jdbc:luciddb:> set path 'applib';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> call sqlj.install_jar('file:../../../../plugin/applib.jar','applibJar', 0);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- define functions
+0: jdbc:luciddb:> create function applib.time_dimension(startYr int, startMth int, startDay int, endYr int, endMth int, endDay int)
+. . . . . . . . > returns table(
+. . . . . . . . >   TIME_KEY_SEQ int,
+. . . . . . . . >   TIME_KEY date,
+. . . . . . . . >   DAY_OF_WEEK varchar(10),
+. . . . . . . . >   WEEKEND varchar(1),
+. . . . . . . . >   DAY_NUMBER_IN_WEEK int,
+. . . . . . . . >   DAY_NUMBER_IN_MONTH int,
+. . . . . . . . >   DAY_NUMBER_IN_YEAR int,
+. . . . . . . . >   DAY_NUMBER_OVERALL int,
+. . . . . . . . >   WEEK_NUMBER_IN_YEAR int,
+. . . . . . . . >   WEEK_NUMBER_OVERALL int,
+. . . . . . . . >   MONTH_NAME varchar(10),
+. . . . . . . . >   MONTH_NUMBER_IN_YEAR int,
+. . . . . . . . >   MONTH_NUMBER_OVERALL int,
+. . . . . . . . >   QUARTER int,
+. . . . . . . . >   YR int,
+. . . . . . . . >   CALENDAR_QUARTER varchar(6),
+. . . . . . . . >   FIRST_DAY_OF_WEEK date)
+. . . . . . . . > language java
+. . . . . . . . > parameter style system defined java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.TimeDimension.FunctionExecute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- ApplibResource tests
+0: jdbc:luciddb:> create function tryApplibResourceStr()
+. . . . . . . . > returns int
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.ApplibResourceTest.tryApplibResourceStr';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function tryApplibResourceEx(bl boolean)
+. . . . . . . . > returns int
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.ApplibResourceTest.tryApplibResourceEx';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values tryApplibResourceStr();
+Fiscal Year Quarter:Q6FY11
+Exception as message:Length must be non-negative
++---------+
+| EXPR$0  |
++---------+
+| 650     |
++---------+
+0: jdbc:luciddb:> values tryApplibResourceEx(true);
+Error: First month must be between 1 and 12 (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- helper UDFs for TimeDimension
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function applib.toCYQuarter(dt date)
+. . . . . . . . > returns varchar(6)
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.toCYQuarter.FunctionExecute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function applib.toFYQuarter(dt date, fm int)
+. . . . . . . . > returns varchar(6)
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.FYQuarter.FunctionExecute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function applib.toFYMonth(dt date, fm int)
+. . . . . . . . > returns int
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.FYMonth.FunctionExecute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function applib.toFYYear(dt date, fm int)
+. . . . . . . . > returns int
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.FYYear.FunctionExecute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

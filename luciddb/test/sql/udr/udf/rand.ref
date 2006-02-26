@@ -1,32 +1,25 @@
-0: jdbc:luciddb:> -- $ ID: //open/lu/dev/luciddb/test/sql/udr/udf/rand.sql#1 $
+0: jdbc:luciddb:> -- $ ID: //open/lu/dev/luciddb/test/sql/udr/udf/rand.sql#2 $
 0: jdbc:luciddb:> -- Tests for rand UDF
 0: jdbc:luciddb:> -- commented out tests because function is nondeterministic
 0: jdbc:luciddb:> set schema 'udftest';
 0: jdbc:luciddb:> set path 'udftest';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- define functions
-0: jdbc:luciddb:> create function rand(minVal integer, maxVal integer)
-. . . . . . . . > returns integer
-. . . . . . . . > language java
-. . . . . . . . > not deterministic
-. . . . . . . . > no sql
-. . . . . . . . > external name 'class com.lucidera.luciddb.applib.rand.FunctionExecute';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> --values rand(1, 100);
-0: jdbc:luciddb:> --values rand(0, 0);
+0: jdbc:luciddb:> --values applib.rand(1, 100);
+0: jdbc:luciddb:> --values applib.rand(0, 0);
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- failures
-0: jdbc:luciddb:> values rand (9, 2);
-Error: java.lang.IllegalArgumentException: random min must be less than max (state=,code=0)
-0: jdbc:luciddb:> values rand(1.1, 3);
-Error: From line 1, column 8 to line 1, column 19: No match found for function signature RAND(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> values applib.rand (9, 2);
+Error: Min value must be less than max value (state=,code=0)
+0: jdbc:luciddb:> values applib.rand(1.1, 3);
+Error: From line 1, column 15 to line 1, column 26: No match found for function signature RAND(<NUMERIC>, <NUMERIC>) (state=,code=0)
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- create view with reference to rand
+0: jdbc:luciddb:> -- create view with reference to applib.rand
 0: jdbc:luciddb:> create view randt as
-. . . . . . . . > select colname, rand(coltiny, coltiny+50) as rcoltiny, rand(colsmall, colsmall+100) as rcolsmall
+. . . . . . . . > select colname, applib.rand(coltiny, coltiny+50) as rcoltiny, applib.rand(colsmall, colsmall+100) as rcolsmall
 . . . . . . . . > from inttable;
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> --select * from randt
+0: jdbc:luciddb:> --select * from applib.randt
 0: jdbc:luciddb:> --order by 1;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select randt.colname, rcoltiny between coltiny and coltiny+50
@@ -55,11 +48,11 @@ Error: From line 1, column 8 to line 1, column 19: No match found for function s
 0: jdbc:luciddb:> -- in expressions
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create view v2 as
-. . . . . . . . > select colname, rand(coltiny, coltiny+5) + rand(colsmall, colsmall+10)
+. . . . . . . . > select colname, applib.rand(coltiny, coltiny+5) + applib.rand(colsmall, colsmall+10)
 . . . . . . . . > from inttable;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- nested
-0: jdbc:luciddb:> values rand(1, rand(5, 10)) between 1 and 10;
+0: jdbc:luciddb:> values applib.rand(1, applib.rand(5, 10)) between 1 and 10;
 +---------+
 | EXPR$0  |
 +---------+
@@ -69,5 +62,5 @@ Error: From line 1, column 8 to line 1, column 19: No match found for function s
 0: jdbc:luciddb:> -- cleanup
 0: jdbc:luciddb:> drop view v2;
 0: jdbc:luciddb:> drop view randt;
-0: jdbc:luciddb:> drop routine rand;
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

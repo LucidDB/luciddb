@@ -38,9 +38,11 @@ public class toDayNumberOverall
     private static java.util.Date convertToGmt( java.util.Date localDate ) 
         throws SQLException
     {
+        ApplibResource res = ApplibResourceObject.get();
+
         if (localFormatter == null) {
-            localFormatter = new SimpleDateFormat("yyyy-MM-dd");
-            utcFormatter = new SimpleDateFormat("yyyy-MM-dd");
+            localFormatter = new SimpleDateFormat(res.LocalDateFormat.str());
+            utcFormatter = new SimpleDateFormat(res.UtcDateFormat.str());
             utcFormatter.setTimeZone( TimeZone.getTimeZone("UTC") );
         }
 
@@ -49,7 +51,7 @@ public class toDayNumberOverall
         try {
             gmtDate = utcFormatter.parse(dateString);
         } catch (ParseException e) {
-            throw new SQLException("toDayNumberOverall: internal parse error");
+            throw new SQLException(res.DayNumOverallParseError.str());
         }
         return gmtDate;
     }

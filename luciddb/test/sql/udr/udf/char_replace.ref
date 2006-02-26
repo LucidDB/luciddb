@@ -1,24 +1,48 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/char_replace.sql#3 $
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/char_replace.sql#4 $
 0: jdbc:luciddb:> -- Test queries for charReplace UDF
 0: jdbc:luciddb:> set schema 'udftest';
 0: jdbc:luciddb:> set path 'udftest';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- define CharReplace functions
-0: jdbc:luciddb:> create function char_replace(str varchar(128), oldC varchar(128), newC varchar(128)) 
-. . . . . . . . > returns varchar(128)
-. . . . . . . . > language java
-. . . . . . . . > no sql
-. . . . . . . . > external name 'class com.lucidera.luciddb.applib.CharReplace.FunctionExecute';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create function char_replace(str varchar(128), oldC integer, newC integer) 
-. . . . . . . . > returns varchar(128)
-. . . . . . . . > language java
-. . . . . . . . > specific char_replace_int
-. . . . . . . . > no sql
-. . . . . . . . > external name 'class com.lucidera.luciddb.applib.CharReplace.FunctionExecute';
-0: jdbc:luciddb:> -- create views with reference to char_replace
+0: jdbc:luciddb:> values applib.char_replace('AA AA AA AA', 'A', 'B');
++--------------+
+|    EXPR$0    |
++--------------+
+| BB BB BB BB  |
++--------------+
+0: jdbc:luciddb:> values applib.char_replace('bb bb bb bb', 'b', 'A');
++--------------+
+|    EXPR$0    |
++--------------+
+| AA AA AA AA  |
++--------------+
+0: jdbc:luciddb:> values applib.char_replace('111111', 49, 51);
++---------+
+| EXPR$0  |
++---------+
+| 333333  |
++---------+
+0: jdbc:luciddb:> values applib.char_replace('//////', 47, 42);
++---------+
+| EXPR$0  |
++---------+
+| ******  |
++---------+
+0: jdbc:luciddb:> values applib.char_replace('******', 42, 49);
++---------+
+| EXPR$0  |
++---------+
+| 111111  |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- failures
+0: jdbc:luciddb:> values applib.char_replace('bbbbbbbb', 'b', 'AA');
+Error: Replacement character must be a single character (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create views with reference to applib.char_replace
 0: jdbc:luciddb:> create view new_names(first, last) as
-. . . . . . . . > select char_replace(fname, 'g', 'M'), char_replace(lname, 'a', 'e') 
+. . . . . . . . > select applib.char_replace(fname, 'g', 'M'), applib.char_replace(lname, 'a', 'e') 
 . . . . . . . . > from customers;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from new_names
@@ -36,7 +60,7 @@
 +---------------+------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create view new_ages(first, last, newage) as
-. . . . . . . . > select fname, lname, char_replace( cast(age as varchar(10)), 49, 51)
+. . . . . . . . > select fname, lname, applib.char_replace( cast(age as varchar(10)), 49, 51)
 . . . . . . . . > from customers;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from new_ages
@@ -53,9 +77,9 @@
 | Mary          | O Brian    | 32      |
 +---------------+------------+---------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- char_replace in expressions
+0: jdbc:luciddb:> -- applib.char_replace in expressions
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> select fname || char_replace(fname, 'r', 'K'), lname || char_replace(lname, 'y', 'Y')
+0: jdbc:luciddb:> select fname || applib.char_replace(fname, 'r', 'K'), lname || applib.char_replace(lname, 'y', 'Y')
 . . . . . . . . > from customers
 . . . . . . . . > order by 1;
 +---------------------------+---------------------+
@@ -70,7 +94,7 @@
 | Mary        MaKy          | O Brian  O Brian    |
 +---------------------------+---------------------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> select first || char_replace(first, 'r', 'K'), cast (newage as integer) + cast (char_replace(newage, 51, 48) as integer)
+0: jdbc:luciddb:> select first || applib.char_replace(first, 'r', 'K'), cast (newage as integer) + cast (applib.char_replace(newage, 51, 48) as integer)
 . . . . . . . . > from new_ages
 . . . . . . . . > order by 1;
 +---------------------------+---------+
@@ -85,13 +109,15 @@
 | Mary        MaKy          | 34      |
 +---------------------------+---------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- nested char_replace
-0: jdbc:luciddb:> values char_replace( char_replace('Moma is a great place to be', 'e', 'E'), 'a', 'A');
+0: jdbc:luciddb:> -- nested applib.char_replace
+0: jdbc:luciddb:> values applib.char_replace( applib.char_replace('Moma is a great place to be', 'e', 'E'), 'a', 'A');
 +------------------------------+
 |            EXPR$0            |
 +------------------------------+
 | MomA is A grEAt plAcE to bE  |
 +------------------------------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- cleanup
+0: jdbc:luciddb:> drop view new_names;
+0: jdbc:luciddb:> drop view new_ages;
 0: jdbc:luciddb:> !quit

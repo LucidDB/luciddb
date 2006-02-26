@@ -2,9 +2,9 @@
 set schema 'udftest';
 set path 'udftest';
 
-create table intl(ph varchar(128));
+create table international(ph varchar(128));
 
-insert into intl values
+insert into international values
 ('5133870'),
 ('513-3870'),
 ('6505133870'),
@@ -17,33 +17,25 @@ insert into intl values
 ('011-886-2-9876-5432'),
 ('01185223456789');
 
--- define functions
-create function clean_phone_intl(str varchar(128), b boolean)
-returns varchar(128)
-language java
-no sql
-external name 'class com.lucidera.luciddb.applib.CleanPhoneInternational.FunctionExecute';
+values applib.clean_phone_international('23890123809214382109432809', true);
+values applib.clean_phone_international('fdjk3242478932hfdskf832498', true);
+values applib.clean_phone_international('23', true);
+values applib.clean_phone_international('sdf', true);
 
-values clean_phone_intl('23890123809214382109432809', true);
-values clean_phone_intl('fdjk3242478932hfdskf832498', true);
-values clean_phone_intl('23', true);
-values clean_phone_intl('sdf', true);
+values applib.clean_phone_international('dsf', false);
 
-values clean_phone_intl('dsf', false);
+-- create view with reference to applib.clean_phone_international
+create view internationalphone(before, after) as
+select ph, applib.clean_phone_international(ph, true)
+from international;
 
--- create view with reference to clean_phone_intl
-create view intlphone(before, after) as
-select ph, clean_phone_intl(ph, true)
-from intl;
-
-select * from intlphone
+select * from internationalphone
 order by 1;
 
 -- in expressions
-select ph || clean_phone_intl(ph, false)
-from intl
+select ph || applib.clean_phone_international(ph, false)
+from international
 order by 1;
 
 -- cleanup
-drop view intlphone;
-drop routine clean_phone_intl;
+drop view internationalphone;

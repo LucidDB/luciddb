@@ -35,6 +35,7 @@
 #include "fennel/exec/SegBufferExecStream.h"
 #include "fennel/exec/SplitterExecStream.h"
 #include "fennel/exec/BarrierExecStream.h"
+#include "fennel/exec/ValuesExecStream.h"
 #include "fennel/exec/ExecStreamGraphEmbryo.h"
 #include "fennel/ftrs/FtrsTableWriterFactory.h"
 #include "fennel/exec/CartesianJoinExecStream.h"
@@ -287,6 +288,31 @@ void ExecStreamFactory::visit(ProxyBarrierStreamDef &streamDef)
     BarrierExecStreamParams params;
     readTupleStreamParams(params, streamDef);
     embryo.init(new BarrierExecStream(), params);
+}
+
+void ExecStreamFactory::visit(ProxyValuesStreamDef &streamDef)
+{
+    ValuesExecStreamParams params;
+    readTupleStreamParams(params, streamDef);
+
+    // Get the Java String object so that we can pass it to the decoder.
+    jobject tupleBytesBase64 = streamDef.pEnv->CallObjectMethod(
+        streamDef.jObject, ProxyValuesStreamDef::meth_getTupleBytesBase64);
+
+    // Call back into Java again to perform the decode.
+    jbyteArray jbytes = (jbyteArray) streamDef.pEnv->CallStaticObjectMethod(
+        JniUtil::classRhBase64,
+        JniUtil::methBase64Decode,
+        tupleBytesBase64);
+
+    // Copy the bytes from Java to our tuple buffer.
+    params.bufSize = streamDef.pEnv->GetArrayLength(jbytes);
+    params.pTupleBuffer.reset(new FixedBuffer[params.bufSize]);
+    streamDef.pEnv->GetByteArrayRegion(
+        jbytes, 0, params.bufSize,
+        reinterpret_cast<jbyte *>(params.pTupleBuffer.get()));
+    
+    embryo.init(new ValuesExecStream(), params);
 }
 
 void ExecStreamFactory::readExecStreamParams(

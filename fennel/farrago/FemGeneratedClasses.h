@@ -213,6 +213,9 @@ typedef JniProxyIter<ProxyTxnHandle> SharedProxyTxnHandle;
 class ProxyUncollectTupleStreamDef;
 typedef JniProxyIter<ProxyUncollectTupleStreamDef> SharedProxyUncollectTupleStreamDef;
 
+class ProxyValuesStreamDef;
+typedef JniProxyIter<ProxyValuesStreamDef> SharedProxyValuesStreamDef;
+
 class ProxyWindowDef;
 typedef JniProxyIter<ProxyWindowDef> SharedProxyWindowDef;
 
@@ -868,6 +871,14 @@ class ProxyUncollectTupleStreamDef
 public:
 };
 
+class ProxyValuesStreamDef
+: virtual public JniProxy, virtual public ProxyTupleStreamDef
+{
+public:
+std::string getTupleBytesBase64();
+static jmethodID meth_getTupleBytesBase64;
+};
+
 class ProxyWindowDef
 : virtual public JniProxy
 {
@@ -1063,6 +1074,8 @@ virtual void visit(ProxyTxnCmd &)
 virtual void visit(ProxyTxnHandle &)
 { unhandledVisit(); }
 virtual void visit(ProxyUncollectTupleStreamDef &)
+{ unhandledVisit(); }
+virtual void visit(ProxyValuesStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyWindowDef &)
 { unhandledVisit(); }

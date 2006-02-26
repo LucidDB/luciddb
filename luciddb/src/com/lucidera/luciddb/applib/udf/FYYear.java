@@ -33,11 +33,14 @@ public class FYYear
 {
     private static int calculate( int year, int month, int firstMonth )
     {
-        if( ( firstMonth < 1 ) || ( firstMonth > 12 ) )
-            throw new IllegalArgumentException("invalid first month");
+        if( ( firstMonth < 1 ) || ( firstMonth > 12 ) ) {
+            throw new IllegalArgumentException(
+                ApplibResourceObject.get().InvalidFirstMonth.ex());
+        }
 
-        if( ( firstMonth != 1 ) && ( month >= firstMonth ) )
+        if( ( firstMonth != 1 ) && ( month >= firstMonth ) ) {
             year++;
+        }
 
         return year + 1900;
     }

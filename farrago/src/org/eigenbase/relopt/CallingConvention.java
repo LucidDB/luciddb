@@ -42,6 +42,11 @@ public class CallingConvention implements RelTrait
 {
     //~ Static fields/initializers --------------------------------------------
 
+    // REVIEW: SWZ: 2/22/2006: This flag enables use of the the interface
+    // org.eigenbase.runtime.TupleIter in place of java.util.Iterator or
+    // org.eigenbase.runtime.RestartableIterator for CallingConvention.ITERATOR
+    public static boolean ENABLE_NEW_ITER = false;
+
     private static int maxOrdinal;
 
     /**

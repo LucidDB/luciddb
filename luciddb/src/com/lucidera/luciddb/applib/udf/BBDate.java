@@ -26,9 +26,11 @@ import java.util.Calendar;
 
 
 /**
- * Class for date conversions.
- *
+ * Class for date conversions
  * Ported from //bb/bb713/server/SQL/BBDate.java
+ *
+ * @author Elizabeth Lin
+ * @version $Id$
  */
 public class BBDate
 {
@@ -71,18 +73,22 @@ public class BBDate
      */
     private void standardize( String in, String mask ) throws SQLException
     {
+        ApplibResource res = ApplibResourceObject.get();
         int inLen = in.length();
 
-        if( inLen > MAX_CHAR_LEN ) inLen = MAX_CHAR_LEN;
+        if( inLen > MAX_CHAR_LEN ) {
+            inLen = MAX_CHAR_LEN;
+        }
 
         // An instance of this UDF class is instantiated for the query;
         // initialize the mask upon instantiation to improve performance
         // when multiple records are processed.
         // NOTE: this would break if we reused instances across queries.
-        if( m_iMaskLen == 0 )
-        {
+        if( m_iMaskLen == 0 ) {
             m_iMaskLen = mask.length();
-            if( m_iMaskLen > MAX_CHAR_LEN ) m_iMaskLen = MAX_CHAR_LEN;
+            if( m_iMaskLen > MAX_CHAR_LEN ) {
+                m_iMaskLen = MAX_CHAR_LEN;
+            }
             mask.toUpperCase().getChars( 0, m_iMaskLen, m_caMask, 0 );
         }
 
@@ -90,16 +96,9 @@ public class BBDate
         in.toUpperCase().getChars( 0, inLen, m_caIn, 0 );
 
         // Strip trailing spaces (faster than trim())
-        while( m_caIn[ inLen-1 ] == ' ' )
+        while( m_caIn[ inLen-1 ] == ' ' ) {
             inLen--;
-
-/*
-  Disable this check to support 97-1-1 for YY-MM-DD format mask.
-
-  if( inLen != maskLen )
-  throw new SQLException( "String <" + in + "> doesn't match mask <" +
-  mask + ">" );
-*/
+        }
 
         // Maximum number of allowed digits
         int yearDigits = 4;
@@ -113,13 +112,10 @@ public class BBDate
         m_iMonth = 0;		// default month: January
         m_iDate = 1;		// default date: 1
 
-        for( int i=m_iMaskLen-1; i>=0; i-- )
-        {
-            switch( m_caMask[ i ] )
-            {
+        for( int i=m_iMaskLen-1; i>=0; i-- ) {
+            switch( m_caMask[ i ] ) {
             case 'Y':
-                switch( --yearDigits )
-                {
+                switch( --yearDigits ) {
                 case 3:
                     m_iYear += toDigit( m_caIn[ i ] );
                     break;
@@ -133,12 +129,11 @@ public class BBDate
                     m_iYear += ( toDigit( m_caIn[ i ] ) - 1 ) * 1000;
                     break;
                 default:
-                    throw new SQLException("Invalid year format mask");
+                    throw new SQLException(res.InvalidYearFmtMask.str());
                 }
                 break;
             case 'M':
-                switch( --monthDigits )
-                {
+                switch( --monthDigits ) {
                 case 1:
                     m_iMonth += toDigit( m_caIn[ i ] ) - 1;
                     break;
@@ -146,12 +141,11 @@ public class BBDate
                     m_iMonth += toDigit( m_caIn[ i ] ) * 10;
                     break;
                 default:
-                    throw new SQLException("Invalid month format mask");
+                    throw new SQLException(res.InvalidMonthFmtMask.str());
                 }
                 break;
             case 'D':
-                switch( --dayDigits )
-                {
+                switch( --dayDigits ) {
                 case 1:
                     m_iDate += toDigit( m_caIn[ i ] ) - 1;
                     break;
@@ -159,50 +153,79 @@ public class BBDate
                     m_iDate += toDigit( m_caIn[ i ] ) * 10;
                     break;
                 default:
-                    throw new SQLException("Invalid day format mask");
+                    throw new SQLException(res.InvalidDayFmtMask.str());
                 }
                 break;
             case 'N':
                 // better have M-O-N
-                if( i < 2 )
+                if( i < 2 ) {
                     break;
+                }
                 m_caMonth[ 2 ] = m_caIn[ i ];
-                if( m_caMask[ i-1 ] != 'O' )
+                if( m_caMask[ i-1 ] != 'O' ) {
                     break;
+                }
                 m_caMonth[ 1 ] = m_caIn[ --i ];
-                if( m_caMask[ i-1 ] != 'M' )
+                if( m_caMask[ i-1 ] != 'M' ) {
                     break;
+                }
                 m_caMonth[ 0 ] = m_caIn[ --i ];
-                if( --monthDigits < 0 )
-                    throw new SQLException("Invalid month format mask");
+                if( --monthDigits < 0 ) {
+                    throw new SQLException(res.InvalidMonthFmtMask.str());
+                }
                 monthDigits = 0;
                 // Ugly, but faster than string comparisons in Java
-                if( m_caMonth[ 0 ] == 'J' && m_caMonth[ 1 ] == 'A' && m_caMonth[ 2 ] == 'N' )		// JAN
+                if( m_caMonth[ 0 ] == 'J' && m_caMonth[ 1 ] == 'A' 
+                    && m_caMonth[ 2 ] == 'N' )  // JAN
+                {
                     m_iMonth = 0;
-                else if( m_caMonth[ 0 ] == 'F' && m_caMonth[ 1 ] == 'E' && m_caMonth[ 2 ] == 'B' )	// FEB
+                } else if( m_caMonth[ 0 ] == 'F' && m_caMonth[ 1 ] == 'E' 
+                    && m_caMonth[ 2 ] == 'B' )	// FEB
+                {
                     m_iMonth = 1;
-                else if( m_caMonth[ 0 ] == 'M' && m_caMonth[ 1 ] == 'A' && m_caMonth[ 2 ] == 'R' )	// MAR
+                } else if( m_caMonth[ 0 ] == 'M' && m_caMonth[ 1 ] == 'A' 
+                    && m_caMonth[ 2 ] == 'R' )	// MAR
+                {
                     m_iMonth = 2;
-                else if( m_caMonth[ 0 ] == 'A' && m_caMonth[ 1 ] == 'P' && m_caMonth[ 2 ] == 'R' )	// APR
+                } else if( m_caMonth[ 0 ] == 'A' && m_caMonth[ 1 ] == 'P' 
+                    && m_caMonth[ 2 ] == 'R' )	// APR
+                {
                     m_iMonth = 3;
-                else if( m_caMonth[ 0 ] == 'M' && m_caMonth[ 1 ] == 'A' && m_caMonth[ 2 ] == 'Y' )	// MAY
+                } else if( m_caMonth[ 0 ] == 'M' && m_caMonth[ 1 ] == 'A' 
+                    && m_caMonth[ 2 ] == 'Y' )	// MAY
+                {
                     m_iMonth = 4;
-                else if( m_caMonth[ 0 ] == 'J' && m_caMonth[ 1 ] == 'U' && m_caMonth[ 2 ] == 'N' )	// JUN
+                } else if( m_caMonth[ 0 ] == 'J' && m_caMonth[ 1 ] == 'U' 
+                    && m_caMonth[ 2 ] == 'N' )	// JUN
+                {
                     m_iMonth = 5;
-                else if( m_caMonth[ 0 ] == 'J' && m_caMonth[ 1 ] == 'U' && m_caMonth[ 2 ] == 'L' )	// JUL
+                } else if( m_caMonth[ 0 ] == 'J' && m_caMonth[ 1 ] == 'U' 
+                    && m_caMonth[ 2 ] == 'L' )	// JUL
+                {
                     m_iMonth = 6;
-                else if( m_caMonth[ 0 ] == 'A' && m_caMonth[ 1 ] == 'U' && m_caMonth[ 2 ] == 'G' )	// AUG
+                } else if( m_caMonth[ 0 ] == 'A' && m_caMonth[ 1 ] == 'U'
+                    && m_caMonth[ 2 ] == 'G' )	// AUG
+                {
                     m_iMonth = 7;
-                else if( m_caMonth[ 0 ] == 'S' && m_caMonth[ 1 ] == 'E' && m_caMonth[ 2 ] == 'P' )	// SEP
+                } else if( m_caMonth[ 0 ] == 'S' && m_caMonth[ 1 ] == 'E' 
+                    && m_caMonth[ 2 ] == 'P' )	// SEP
+                {
                     m_iMonth = 8;
-                else if( m_caMonth[ 0 ] == 'O' && m_caMonth[ 1 ] == 'C' && m_caMonth[ 2 ] == 'T' )	// OCT
+                } else if( m_caMonth[ 0 ] == 'O' && m_caMonth[ 1 ] == 'C' 
+                    && m_caMonth[ 2 ] == 'T' )	// OCT
+                {
                     m_iMonth = 9;
-                else if( m_caMonth[ 0 ] == 'N' && m_caMonth[ 1 ] == 'O' && m_caMonth[ 2 ] == 'V' )	// NOV
+                } else if( m_caMonth[ 0 ] == 'N' && m_caMonth[ 1 ] == 'O' 
+                    && m_caMonth[ 2 ] == 'V' )	// NOV
+                {
                     m_iMonth = 10;
-                else if( m_caMonth[ 0 ] == 'D' && m_caMonth[ 1 ] == 'E' && m_caMonth[ 2 ] == 'C' )	// DEC
+                } else if( m_caMonth[ 0 ] == 'D' && m_caMonth[ 1 ] == 'E' 
+                    && m_caMonth[ 2 ] == 'C' )	// DEC
+                {
                     m_iMonth = 11;
-                else
-                    throw new SQLException("Invalid month input string");
+                } else {
+                    throw new SQLException(res.InvalidMonthInputString.str());
+                }
                 break;
             default:
                 break;
@@ -214,13 +237,16 @@ public class BBDate
     {
         int ret;
 
-        if( in == ' ' )
+        if( in == ' ' ) {
             ret = 0;
-        else
+        } else {
             ret = in - '0';
+        }
 
-        if( ( ret < 0 ) || ( ret > 9 ) )
-            throw new SQLException("Invalid digit input string");
+        if( ( ret < 0 ) || ( ret > 9 ) ) {
+            throw new SQLException(
+                ApplibResourceObject.get().InvalidDigitInputString.str());
+        }
 
         return ret;
     }

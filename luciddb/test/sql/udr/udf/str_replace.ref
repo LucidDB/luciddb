@@ -1,34 +1,28 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/str_replace.sql#1 $
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/str_replace.sql#2 $
 0: jdbc:luciddb:> -- Tests for strReplace UDF
 0: jdbc:luciddb:> set schema 'udftest';
 0: jdbc:luciddb:> set path 'udftest';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- define function
-0: jdbc:luciddb:> create function str_replace(inStr varchar(128), oldStr varchar(128), newStr varchar(128))
-. . . . . . . . > returns varchar(128)
-. . . . . . . . > language java
-. . . . . . . . > no sql
-. . . . . . . . > external name "class com.lucidera.luciddb.applib.strReplace.FunctionExecute";
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> values (str_replace('This is my test string let''s try this test out! yay!', '''', 'apostrophe'));
+0: jdbc:luciddb:> values (applib.str_replace('This is my test string let''s try this test out! yay!', '''', 'apostrophe'));
 +----------------------------------------------------------------+
 |                             EXPR$0                             |
 +----------------------------------------------------------------+
 | This is my test string letapostrophes try this test out! yay!  |
 +----------------------------------------------------------------+
-0: jdbc:luciddb:> values (str_replace('This is my test string let''s try this test out! yay!', 'test', 'simple test'));
+0: jdbc:luciddb:> values (applib.str_replace('This is my test string let''s try this test out! yay!', 'test', 'simple test'));
 +---------------------------------------------------------------------+
 |                               EXPR$0                                |
 +---------------------------------------------------------------------+
 | This is my simple test string let's try this simple test out! yay!  |
 +---------------------------------------------------------------------+
-0: jdbc:luciddb:> values str_replace('3204jwsd213980djsakl##@@@ djsflkds#@', '#', 'Hohoho!');
+0: jdbc:luciddb:> values applib.str_replace('3204jwsd213980djsakl##@@@ djsflkds#@', '#', 'Hohoho!');
 +---------------------------------------------------------+
 |                         EXPR$0                          |
 +---------------------------------------------------------+
 | 3204jwsd213980djsaklHohoho!Hohoho!@@@ djsflkdsHohoho!@  |
 +---------------------------------------------------------+
-0: jdbc:luciddb:> values str_replace('This shouldn''t change', 'f', 'yyyy');
+0: jdbc:luciddb:> values applib.str_replace('This shouldn''t change', 'f', 'yyyy');
 +------------------------+
 |         EXPR$0         |
 +------------------------+
@@ -36,12 +30,12 @@
 +------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- these should fail
-0: jdbc:luciddb:> values str_replace(3434, 3, 5);
-Error: From line 1, column 8 to line 1, column 30: No match found for function signature STR_REPLACE(<NUMERIC>, <NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> values applib.str_replace(3434, 3, 5);
+Error: From line 1, column 15 to line 1, column 37: No match found for function signature STR_REPLACE(<NUMERIC>, <NUMERIC>, <NUMERIC>) (state=,code=0)
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- create view with reference to str_replace
+0: jdbc:luciddb:> -- create view with reference to applib.str_replace
 0: jdbc:luciddb:> create view changedph (fname, phone, chphone)as
-. . . . . . . . > select fname, phone, str_replace(phone, '234', '###') 
+. . . . . . . . > select fname, phone, applib.str_replace(phone, '234', '###') 
 . . . . . . . . > from customers;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from changedph
@@ -59,7 +53,7 @@ Error: From line 1, column 8 to line 1, column 30: No match found for function s
 +---------------+-------------------------+-------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create view fixph (fname, chphone, fphone) as
-. . . . . . . . > select fname, chphone, str_replace(chphone, '###', '999')
+. . . . . . . . > select fname, chphone, applib.str_replace(chphone, '###', '999')
 . . . . . . . . > from changedph;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from fixph
@@ -93,7 +87,7 @@ Error: From line 1, column 8 to line 1, column 30: No match found for function s
 +---------------+-----------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- nested
-0: jdbc:luciddb:> select fname, str_replace( str_replace(phone, '234', '999'), '999', 'abcde')
+0: jdbc:luciddb:> select fname, applib.str_replace( applib.str_replace(phone, '234', '999'), '999', 'abcde')
 . . . . . . . . > from customers
 . . . . . . . . > order by 1;
 +---------------+---------------------------+
@@ -107,4 +101,9 @@ Error: From line 1, column 8 to line 1, column 30: No match found for function s
 | Mark          | 1abcde567890              |
 | Mary          | abcde-456-7843            |
 +---------------+---------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- cleanup
+0: jdbc:luciddb:> drop view fixph;
+0: jdbc:luciddb:> drop view changedph;
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

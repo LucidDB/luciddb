@@ -1,3 +1,4 @@
+-- $Id$
 -- Tests for toDate UDF
 set schema 'udftest';
 set path 'udftest';
@@ -12,40 +13,24 @@ insert into strdates values
 ('GOOD', '1995.01.05', 'YYYY.MM.DD'),
 ('GOOD', '8 67 1', 'm yy d');
 
--- define function
-create function to_date(str varchar(128), mask varchar(50), rej boolean)
-returns date
-language java
-specific to_date_choice
-no sql
-external name 'class com.lucidera.luciddb.applib.toDate.FunctionExecute';
-
-create function to_date(str varchar(128), mask varchar(50))
-returns date
-language java
-specific to_date_no_choice
-no sql
-external name 'class com.lucidera.luciddb.applib.toDate.FunctionExecute';
 
 -- failures
-values to_date('JAN, 23 2009', 'mmm, dd yyyy');
-values to_date('12m, 9d, 1004y', 'mmm, 23m, 1004y');
-values to_date('7-9-97', 'DD-MM-YY');
+values applib.to_date('JAN, 23 2009', 'mmm, dd yyyy');
+values applib.to_date('12m, 9d, 1004y', 'mmm, 23m, 1004y');
+values applib.to_date('7-9-97', 'DD-MM-YY');
 
 -- create view with reference
 create view td as
-select colname, to_date(colstr, colmask)
+select colname, applib.to_date(colstr, colmask)
 from strdates;
 
 select * from td
 order by 1;
 
 -- nested
-select to_date( cast( to_date(colstr, colmask) as varchar(50)), 'YYYY-MM-DD') 
+select applib.to_date( cast( applib.to_date(colstr, colmask) as varchar(50)), 'YYYY-MM-DD') 
 from strdates;
 
 -- cleanup
 drop view td;
 drop table strdates;
-drop routine to_date_choice;
-drop routine to_date_no_choice;

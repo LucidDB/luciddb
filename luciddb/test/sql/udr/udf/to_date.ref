@@ -1,3 +1,4 @@
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/to_date.sql#2 $
 0: jdbc:luciddb:> -- Tests for toDate UDF
 0: jdbc:luciddb:> set schema 'udftest';
 0: jdbc:luciddb:> set path 'udftest';
@@ -12,32 +13,18 @@
 . . . . . . . . > ('GOOD', '1995.01.05', 'YYYY.MM.DD'),
 . . . . . . . . > ('GOOD', '8 67 1', 'm yy d');
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- define function
-0: jdbc:luciddb:> create function to_date(str varchar(128), mask varchar(50), rej boolean)
-. . . . . . . . > returns date
-. . . . . . . . > language java
-. . . . . . . . > specific to_date_choice
-. . . . . . . . > no sql
-. . . . . . . . > external name 'class com.lucidera.luciddb.applib.toDate.FunctionExecute';
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create function to_date(str varchar(128), mask varchar(50))
-. . . . . . . . > returns date
-. . . . . . . . > language java
-. . . . . . . . > specific to_date_no_choice
-. . . . . . . . > no sql
-. . . . . . . . > external name 'class com.lucidera.luciddb.applib.toDate.FunctionExecute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- failures
-0: jdbc:luciddb:> values to_date('JAN, 23 2009', 'mmm, dd yyyy');
+0: jdbc:luciddb:> values applib.to_date('JAN, 23 2009', 'mmm, dd yyyy');
 Error: Invalid digit input string (state=,code=0)
-0: jdbc:luciddb:> values to_date('12m, 9d, 1004y', 'mmm, 23m, 1004y');
+0: jdbc:luciddb:> values applib.to_date('12m, 9d, 1004y', 'mmm, 23m, 1004y');
 Error: Invalid digit input string (state=,code=0)
-0: jdbc:luciddb:> values to_date('7-9-97', 'DD-MM-YY');
+0: jdbc:luciddb:> values applib.to_date('7-9-97', 'DD-MM-YY');
 Error: Invalid digit input string (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create view with reference
 0: jdbc:luciddb:> create view td as
-. . . . . . . . > select colname, to_date(colstr, colmask)
+. . . . . . . . > select colname, applib.to_date(colstr, colmask)
 . . . . . . . . > from strdates;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from td
@@ -54,7 +41,7 @@ Error: Invalid digit input string (state=,code=0)
 +----------+-------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- nested
-0: jdbc:luciddb:> select to_date( cast( to_date(colstr, colmask) as varchar(50)), 'YYYY-MM-DD') 
+0: jdbc:luciddb:> select applib.to_date( cast( applib.to_date(colstr, colmask) as varchar(50)), 'YYYY-MM-DD') 
 . . . . . . . . > from strdates;
 +-------------+
 |   EXPR$0    |
@@ -70,6 +57,5 @@ Error: Invalid digit input string (state=,code=0)
 0: jdbc:luciddb:> -- cleanup
 0: jdbc:luciddb:> drop view td;
 0: jdbc:luciddb:> drop table strdates;
-0: jdbc:luciddb:> drop routine to_date_choice;
-0: jdbc:luciddb:> drop routine to_date_no_choice;
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit
