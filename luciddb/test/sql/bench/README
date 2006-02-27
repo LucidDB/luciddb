@@ -7,14 +7,14 @@ If running for the first time, mount //raksha so that
 (See http://redsquare.jot.com/WikiHome/HomeDirectories
 for instructions on how to do this)
 
-Otherwise, a local copy of flatfiles will be used, unless manually deleted.
+Otherwise, if raksha is not available, a local copy of raksha's csv files will be used.
 
 
 To run against all sources:
 ---------------------------
 (1) in run.properties*, set:
 
-testfile=test-all.xml
+testfile=test.xml
 
 (2) run "ant test"
 
@@ -23,7 +23,7 @@ To run against one source:
 --------------------------
 (1) in run.properties*, set: 
 
-testfile="test.xml" (or test-csv.xml if using csvjdbc)
+testfile="benchtest.xml" (or benchcsvtest.xml if using csvjdbc)
 config.prop=prop.[flatfile | oracle | sqlserver | csvjdbc]
 
 (2) run "ant test"
@@ -47,4 +47,4 @@ Note *:
 If prefer not to modify run.properties, can set it all from the
 command line:
 
-"ant test -Dtestfile=test.xml -Dconfig.prop=prop.flatfile"
+"ant test -Dtestfile=benchtest.xml -Dconfig.prop=prop.flatfile"
