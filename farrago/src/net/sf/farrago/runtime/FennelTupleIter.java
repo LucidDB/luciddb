@@ -25,33 +25,31 @@ package net.sf.farrago.runtime;
 import net.sf.farrago.fennel.FennelStreamGraph;
 import net.sf.farrago.fennel.FennelStreamHandle;
 
-import org.eigenbase.runtime.RestartableIterator;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
-import java.util.NoSuchElementException;
 
 /**
- * FennelIterator implements the {@link java.util.Iterator} and
- * {@link RestartableIterator} interfaces by reading tuples from a
- * Fennel ExecStream.  It does this by adapting a FennelTupleIter to
- * the {@link RestartableIterator} interface.
+ * FennelTupleIter implements the {@link org.eigenbase.runtime.TupleIter} 
+ * interfaces by reading tuples from a Fennel ExecStream.
  *
- * <p>FennelIterator only deals with raw byte buffers; it delegates to a
+ * <p>FennelTupleIter only deals with raw byte buffers; it delegates to a
  * {@link FennelTupleReader} object the responsibility to unmarshal individual
  * fields.
  *
- * @author John V. Sichi
+ * @author John V. Sichi, Stephan Zuercher
  * @version $Id$
  */
-public class FennelIterator extends FennelTupleIter 
-    implements RestartableIterator
+public class FennelTupleIter extends FennelAbstractTupleIter
 {
     //~ Instance fields -------------------------------------------------------
-    private Object next;
+    private final FennelStreamGraph streamGraph;
+    private final FennelStreamHandle streamHandle;
 
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Creates a new FennelIterator object.
+     * Creates a new FennelTupleIter object.
      *
      * @param tupleReader FennelTupleReader to use to interpret Fennel data
      * @param streamGraph underlying FennelStreamGraph
@@ -59,58 +57,50 @@ public class FennelIterator extends FennelTupleIter
      * @param bufferSize number of bytes in buffer used for fetching from
      *     Fennel
      */
-    public FennelIterator(
+    public FennelTupleIter(
         FennelTupleReader tupleReader,
         FennelStreamGraph streamGraph,
         FennelStreamHandle streamHandle,
         int bufferSize)
     {
-        super(tupleReader, streamGraph, streamHandle, bufferSize);
-        this.next = null;
+        super(tupleReader);
+        this.streamGraph = streamGraph;
+        this.streamHandle = streamHandle;
+
+        // In this implementation of FennelAbstractTupleIter, byteBuffer and
+        // bufferAsArray are effectively final. In other implementations, they
+        // might be set by populateBuffer.
+        bufferAsArray = new byte[bufferSize];
+        byteBuffer = ByteBuffer.wrap(bufferAsArray);
+        byteBuffer.order(ByteOrder.nativeOrder());
+        byteBuffer.clear();
+        byteBuffer.limit(0);
     }
 
     //~ Methods ---------------------------------------------------------------
 
-    // implement Iterator
-    // Note that we hold the buffer whenever this returns true.
-    public boolean hasNext()
+    // override FennelAbstractTupleIter
+    public void restart()
     {
-        if (next != null) {
-            return true;
-        }
-
-        Object fetched = fetchNext();
-        if (fetched == NoDataReason.END_OF_DATA) {
-            return false;
-        }
-
-        // Old-style iterator convention doesn't handle anything but
-        // END_OF_DATA
-        assert(!(fetched instanceof NoDataReason));
-
-        next = fetched;
-
-        return true;
+        super.restart();
+        bufferAsArray = byteBuffer.array();
+        byteBuffer.clear();
+        byteBuffer.limit(0);
+        streamGraph.restart(streamHandle);
     }
 
-    // implement Iterator
-    public Object next()
+    // implement TupleIter
+    public void closeAllocation()
     {
-        if (!hasNext()) {
-            throw new NoSuchElementException();
-        }
-
-        Object result = next;
-        next = null;
-        return result;
+        // REVIEW: SWZ: 2/23/2006: Deallocate byteBuffer here?
     }
 
-    // implement Iterator
-    public void remove()
+    protected int populateBuffer()
     {
-        throw new UnsupportedOperationException();
+        byteBuffer.clear();
+        return streamGraph.fetch(streamHandle, bufferAsArray);
     }
 }
 
 
-// End FennelIterator.java
+// End FennelTupleIter.java

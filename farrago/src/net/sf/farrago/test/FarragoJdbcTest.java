@@ -264,14 +264,10 @@ public class FarragoJdbcTest extends FarragoTestCase
         testUdxCancel(true);
     }
 
-    private static final boolean frg31Fixed = false;
-
     public void testUdxAsynchronousCancel()
         throws Exception
     {
-        if (frg31Fixed) {
-            testUdxCancel(false);
-        }
+        testUdxCancel(false);
     }
 
     private void testQueryCancel(boolean synchronous, String executorType)

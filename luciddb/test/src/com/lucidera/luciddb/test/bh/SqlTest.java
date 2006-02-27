@@ -52,7 +52,8 @@ public class SqlTest extends AutoTest {
     private String ignorePatterns;
     Matcher compiledIgnoreMatcher;
 
-    public SqlTest(TestContext tc) throws Exception {
+    public SqlTest(TestContext tc) throws Exception
+    {
         super(tc);
 
         // set luciddb-specific properties
@@ -99,6 +100,9 @@ public class SqlTest extends AutoTest {
 
     public boolean testSql() 
     {
+        diffMasks = "";
+        addDiffMask("\\$Id.*\\$");
+        
         PrintStream savedOut = System.out;
         PrintStream savedErr = System.err;
         FileInputStream inputStream = null;

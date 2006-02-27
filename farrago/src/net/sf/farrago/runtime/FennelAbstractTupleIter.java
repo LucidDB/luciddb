@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,17 +22,14 @@
 */
 package net.sf.farrago.runtime;
 
-import org.eigenbase.runtime.RestartableIterator;
-
 import java.nio.ByteBuffer;
-import java.util.NoSuchElementException;
-
+import org.eigenbase.runtime.TupleIter;
 
 /**
- * FennelAbstractIterator implements the {@link RestartableIterator} interface
+ * FennelAbstractTupleIter implements the {@link TupleIter} interface
  * by unmarshalling Fennel tuples from a buffer.
  *
- * <p>FennelAbstractIterator only deals with raw byte buffers; it is the
+ * <p>FennelAbstractTupleIter only deals with raw byte buffers; it is the
  * responsibility of the contained {@link FennelTupleReader} object to
  * unmarshal individual fields.
  *
@@ -42,10 +39,10 @@ import java.util.NoSuchElementException;
  * {@link #requestData()} method to tell the producer that it is safe to
  * start producing more data.
  *
- * @author John V. Sichi
+ * @author John V. Sichi, Stephan Zuercher
  * @version $Id$
  */
-public abstract class FennelAbstractIterator implements RestartableIterator
+public abstract class FennelAbstractTupleIter implements TupleIter
 {
     protected final FennelTupleReader tupleReader;
     protected ByteBuffer byteBuffer;
@@ -53,11 +50,11 @@ public abstract class FennelAbstractIterator implements RestartableIterator
     private boolean endOfData;
 
     /**
-     * Creates a new FennelIterator object.
+     * Creates a new FennelAbstractTupleIter object.
      *
      * @param tupleReader FennelTupleReader to use to interpret Fennel data
      */
-    public FennelAbstractIterator(FennelTupleReader tupleReader)
+    public FennelAbstractTupleIter(FennelTupleReader tupleReader)
     {
         this.tupleReader = tupleReader;
         this.endOfData = false;
@@ -82,38 +79,38 @@ public abstract class FennelAbstractIterator implements RestartableIterator
     }
 
 
-    // implement RestartableIterator
+    // implement TupleIter
     public void restart()
     {
         this.endOfData = false;
     }
 
-    // implement Iterator
-    // Note that we hold the buffer whenever this returns true.
-    public boolean hasNext()
+    // implement TupleIter
+    // Note that we hold the buffer whenever this returns something other
+    // than NoDataReason.
+    public Object fetchNext()
     {
         if (endOfData) {
-            return false;
+            return NoDataReason.END_OF_DATA;
         } else if (byteBuffer.hasRemaining()) {
-            return true;
+            return unmarshal();
         }
+
         int cb = populateBuffer();
         if (cb == 0) {
             bufferAsArray = null;
             endOfData = true;
-            return false;
+            return NoDataReason.END_OF_DATA;
+        } else if (cb < 0) {
+            return NoDataReason.UNDERFLOW;
         }
+
         byteBuffer.limit(cb);
-        return true;
+        return unmarshal();
     }
 
-    // implement Iterator
-    public Object next()
+    private Object unmarshal()
     {
-        if (!hasNext()) {
-            throw new NoSuchElementException();
-        }
-
         // REVIEW:  is slice allocation worth it?
         ByteBuffer sliceBuffer = byteBuffer.slice();
         sliceBuffer.order(byteBuffer.order());
@@ -131,26 +128,23 @@ public abstract class FennelAbstractIterator implements RestartableIterator
             requestData();
         }
         return obj;
-    }
+    }        
 
-    // override to trace the buffer state after next(), but before refill
+    // override to trace the buffer state after unmarshal(), but before refill
     protected void traceNext(Object val)
     {
     }
 
-    // implement Iterator
-    public void remove()
-    {
-        throw new UnsupportedOperationException();
-    }
-
     /**
-     * Populates the buffer with a new batch of data, and returns the size in bytes.
-     * The buffer position is set to the start.
-     * The call blocks til the buffer is filled.
-     * A subclass can implement this to fill the buffer itself,
-     * or it can work by allowing an outside object to fill the buffer.
-     * @return The number of bytes now in the buffer. 0 means end of stream.
+     * Populates the buffer with a new batch of data, and returns the
+     * size in bytes.  The buffer position is set to the start.  The
+     * call may block until the buffer is filled or it may return an
+     * indication that there is no data currently available.  A
+     * subclass can implement this to fill the buffer itself, or it
+     * can work by allowing an outside object to fill the buffer.
+     *
+     * @return The number of bytes now in the buffer. 0 means end of stream. 
+     *         Less than 0 means no data currently available.
      */
     protected abstract int populateBuffer();
 
@@ -166,4 +160,4 @@ public abstract class FennelAbstractIterator implements RestartableIterator
     }
 }
 
-// End FennelAbstractIterator.java
+// End FennelAbstractTupleIter.java

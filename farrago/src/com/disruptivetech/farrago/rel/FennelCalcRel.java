@@ -76,7 +76,7 @@ public class FennelCalcRel extends FennelSingleRel
         this.program = program;
         this.rowType = rowType;
         assert program.isValid(true);
-        assert RelOptUtil.eq(
+        assert RelOptUtil.equal(
             "program's input type", program.getInputRowType(),
             "child's output type", child.getRowType(), true);
         assert RelOptUtil.equal( // TODO: use stronger 'eq'

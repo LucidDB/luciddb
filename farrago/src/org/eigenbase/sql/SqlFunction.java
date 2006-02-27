@@ -34,6 +34,9 @@ import org.eigenbase.resource.EigenbaseResource;
 /**
  * A <code>SqlFunction</code> is a type of operator which has conventional
  * function-call syntax.
+ *
+ * @author jhyde
+ * @version $Id$
  */
 public class SqlFunction extends SqlOperator
 {
@@ -178,9 +181,14 @@ public class SqlFunction extends SqlOperator
         return this.functionType;
     }
 
+    /**
+     * Returns whether this function allows a <code>DISTINCT</code> or
+     * <code>ALL</code> quantifier. The default is <code>false</code>; some
+     * aggregate functions return <code>true</code>.
+     */ 
     public boolean isQuantifierAllowed()
     {
-        return(false);
+        return false;
     }
 
     public void validateCall(
@@ -198,6 +206,15 @@ public class SqlFunction extends SqlOperator
         // parent ValidateCall is invoked to do normal function validation.
 
         super.validateCall(call, validator, scope, operandScope);
+        validateQuantifier(validator, call);
+    }
+
+    /**
+     * Throws a validation error if a DISTINCT or ALL quantifier is present
+     * but not allowed.
+     */
+    protected void validateQuantifier(SqlValidator validator, SqlCall call)
+    {
         if ((null != call.getFunctionQuantifier()) && !isQuantifierAllowed()) {
             throw validator.newValidationError(call.getFunctionQuantifier(),
                 EigenbaseResource.instance()

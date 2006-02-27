@@ -158,7 +158,11 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
                 dbHandle,
                 tupleDesc);
 
-        // Generate
+        // For new iter convention generate:
+        //   connection.newFennelTupleIter(
+        //       new FennelTupleReader(){...},
+        //       << childrens' code >>);
+        // else for old iter convention, generate
         //   connection.newFennelIterator(
         //       new FennelTupleReader(){...},
         //       << childrens' code >>);
@@ -400,10 +404,18 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
         argList.add(Literal.makeLiteral(rootStreamName));
         argList.add(Literal.makeLiteral(rootStreamId));
         argList.add(childrenExp);
-        return new MethodCall(
-            connectionVariable,
-            "newFennelIterator",
-            argList);
+        
+        if (CallingConvention.ENABLE_NEW_ITER) {
+            return new MethodCall(
+                connectionVariable,
+                "newFennelTupleIter",
+                argList);
+        } else {
+            return new MethodCall(
+                connectionVariable,
+                "newFennelIterator",
+                argList);
+        }
     }
 
     /**

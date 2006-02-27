@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,20 +21,21 @@
 */
 package net.sf.farrago.runtime;
 
+import org.eigenbase.runtime.RestartableIterator;
 import org.eigenbase.util.ArrayQueue;
 import net.sf.farrago.trace.FarragoTrace;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.NoSuchElementException;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 
 
 /**
- * FennelPipeIterator implements the
- * {@link org.eigenbase.runtime.RestartableIterator} interface, receiving
- * data from a producer as {@link ByteBuffer} objects, and unmarshalling them
- * to a consumer.
+ * FennelPipeIterator implements the {@link RestartableIterator}
+ * interface, receiving data from a producer as {@link ByteBuffer}
+ * objects, and unmarshalling them to a consumer.
  *
  * <p> A FennelPipeIterator has a C++ peer, a JavaSinkExecstream.
  * The peer sends marshalled data, wrapped as a ByteBuffer.
@@ -47,13 +48,16 @@ import java.util.logging.Level;
  * @author Julian Hyde
  * @version $Id$
  */
-public class FennelPipeIterator extends FennelAbstractIterator
+public class FennelPipeIterator extends FennelAbstractTupleIter 
+    implements RestartableIterator
 {
     private static final Logger tracer = FarragoTrace.getFennelPipeIteratorTracer();
 
     // byteBuffer is the current buffer, and belongs exclusively to the reader (this object)
 
     private ArrayQueue moreBuffers = null; // buffers from the writer, not yet read
+
+    private Object next = null; // current row
 
     /** adds a buffer to the buffer queue. The writer peer calls this. */
     private void enqueue(ByteBuffer bb)
@@ -104,31 +108,84 @@ public class FennelPipeIterator extends FennelAbstractIterator
         byteBuffer.limit(0);
     }
 
-    // override FennelAbstractIterator to trace
+    // override FennelAbstractTupleIter to trace
     public void restart()
     {
         tracer.fine(this.toString());
         super.restart();
     }
 
-    // override FennelAbstractIterator to trace
+    // implement Iterator
     public boolean hasNext()
     {
-        boolean val = super.hasNext();
-        if (!val || tracer.isLoggable(Level.FINER)) {
-            String msg = getStatus(this.toString()) + " => " +val;
-            if (!val)
-                tracer.fine(msg);
-            else
-                tracer.finer(msg);
+        if (next != null) {
+            traceHasNext(true);
+            return true;
         }
-        return val;
+
+        Object fetched = fetchNext();
+        if (fetched == NoDataReason.END_OF_DATA) {
+            traceHasNext(false);
+            return false;
+        }
+
+        // Old-style iterator convention doesn't handle anything but
+        // END_OF_DATA
+        assert(!(fetched instanceof NoDataReason));
+
+        next = fetched;
+
+        traceHasNext(true);
+        return true;
     }
 
+    private void traceHasNext(boolean hasNextResult)
+    {
+        if (!tracer.isLoggable(Level.FINE)) {
+            return;
+        }
+
+        if (!hasNextResult || tracer.isLoggable(Level.FINER)) {
+            String msg = getStatus(this.toString()) + " => " + hasNextResult;
+
+            if (!hasNextResult) {
+                tracer.fine(msg);
+            } else {
+                tracer.finer(msg);
+            }
+        }
+    }
+            
+    // implement Iterator
+    public Object next()
+    {
+        if (!hasNext()) {
+            throw new NoSuchElementException();
+        }
+
+        Object result = next;
+        next = null;
+        return result;
+    }
+
+
+    // override FennelAbstractTupleIter
     protected void traceNext(Object val)
     {
         if (tracer.isLoggable(Level.FINER)) 
             tracer.finer(getStatus(this.toString())+" => " + val);
+    }
+
+    // implement Iterator
+    public void remove()
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    // implement TupleIter
+    public void closeAllocation()
+    {
+        // REVIEW: SWZ: 2/23/2006: Deallocate byteBuffer here?
     }
 
     protected int populateBuffer()

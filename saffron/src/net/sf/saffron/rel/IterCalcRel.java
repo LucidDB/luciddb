@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2002-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2002-2005 Disruptive Tech
+// Copyright (C) 2005-2005 LucidEra, Inc.
+// Portions Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -33,8 +33,6 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.runtime.CalcIterator;
-import org.eigenbase.runtime.CalcTupleIter;
-import org.eigenbase.runtime.TupleIter;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.util.Util;
 
@@ -43,8 +41,8 @@ import java.util.List;
 
 /**
  * <code>IterCalcRel</code> is an iterator implementation of a combination of
- * {@link ProjectRel} above an optional {@link FilterRel}.  It takes a
- * {@link TupleIter iterator} as input, and for each row applies the filter condition if defined.
+ * {@link ProjectRel} above an optional {@link FilterRel}.  It takes an
+ * iterator as input, and for each row applies the filter condition if defined.
  * Rows passing the filter expression are transformed via projection and
  * returned.  Note that the same object is always returned (with different
  * values), so parents must not buffer the result.
@@ -151,12 +149,6 @@ public class IterCalcRel extends SingleRel implements JavaRel
         final RelDataType outputRowType,
         RexProgram program)
     {
-        if (CallingConvention.ENABLE_NEW_ITER) {
-            return implementAbstractNewIter(
-                implementor, rel, childExp, varInputRow, inputRowType,
-                outputRowType, program);
-        }
-        
         RelDataTypeFactory typeFactory = implementor.getTypeFactory();
         OJClass outputRowClass = OJUtil.typeToOJClass(
             outputRowType, typeFactory);
@@ -251,127 +243,6 @@ public class IterCalcRel extends SingleRel implements JavaRel
         return newIteratorExp;
     }
 
-    public static Expression implementAbstractNewIter(
-        JavaRelImplementor implementor,
-        JavaRel rel,
-        Expression childExp,
-        Variable varInputRow,
-        final RelDataType inputRowType,
-        final RelDataType outputRowType,
-        RexProgram program)
-    {
-        RelDataTypeFactory typeFactory = implementor.getTypeFactory();
-        OJClass outputRowClass = OJUtil.typeToOJClass(
-            outputRowType, typeFactory);
-        OJClass inputRowClass = OJUtil.typeToOJClass(
-            inputRowType, typeFactory);
-
-        Variable varOutputRow = implementor.newVariable();
-
-        FieldDeclaration rowVarDecl =
-            new FieldDeclaration(new ModifierList(ModifierList.PRIVATE),
-                TypeName.forOJClass(outputRowClass),
-                varOutputRow.toString(),
-                new AllocationExpression(
-                    outputRowClass,
-                    new ExpressionList()));
-
-        StatementList whileBody = new StatementList();
-
-        Variable varInputObj = implementor.newVariable();
-
-        whileBody.add(
-            new VariableDeclaration(
-                OJUtil.typeNameForClass(Object.class),
-                varInputObj.toString(),
-                new MethodCall(
-                    new FieldAccess("inputIterator"),
-                    "fetchNext",
-                    new ExpressionList())));
-
-        StatementList ifNoDataReasonBody = new StatementList();
-
-        whileBody.add(
-            new IfStatement(
-                new InstanceofExpression(
-                    varInputObj,
-                    OJUtil.typeNameForClass(TupleIter.NoDataReason.class)),
-                ifNoDataReasonBody));
-
-        ifNoDataReasonBody.add(
-            new ReturnStatement(varInputObj));
-
-        whileBody.add(
-            new VariableDeclaration(
-                TypeName.forOJClass(inputRowClass),
-                varInputRow.toString(),
-                new CastExpression(
-                    TypeName.forOJClass(inputRowClass),
-                    varInputObj)));
-
-        MemberDeclarationList memberList = new MemberDeclarationList();
-
-        StatementList condBody;
-        RexToOJTranslator translator =
-            implementor.newStmtTranslator(rel, whileBody, memberList);
-        try {
-            translator.pushProgram(program);
-            if (program.getCondition() != null) {
-                condBody = new StatementList();
-                RexNode rexIsTrue =
-                    rel.getCluster().getRexBuilder().makeCall(
-                        SqlStdOperatorTable.isTrueOperator,
-                        new RexNode [] { program.getCondition() });
-                Expression conditionExp =
-                    translator.translateRexNode(rexIsTrue);
-                whileBody.add(new IfStatement(conditionExp, condBody));
-            } else {
-                condBody = whileBody;
-            }
-
-            RexToOJTranslator condTranslator = translator.push(condBody);
-            RelDataTypeField [] fields = outputRowType.getFields();
-            final List<RexLocalRef> projectRefList = program.getProjectList();
-            int i = -1;
-            for (RexLocalRef rhs : projectRefList) {
-                ++i;
-                String javaFieldName = Util.toJavaId(
-                    fields[i].getName(),
-                    i);
-                Expression lhs = new FieldAccess(varOutputRow, javaFieldName);
-                condTranslator.translateAssignment(fields[i], lhs, rhs);
-            }
-        } finally {
-            translator.popProgram(program);
-        }
-
-        condBody.add(new ReturnStatement(varOutputRow));
-
-        WhileStatement whileStmt =
-            new WhileStatement(
-                Literal.makeLiteral(true),
-                whileBody);
-
-        StatementList nextMethodBody = new StatementList();
-        nextMethodBody.add(whileStmt);
-
-        MemberDeclaration fetchNextMethodDecl =
-            new MethodDeclaration(
-                new ModifierList(ModifierList.PUBLIC),
-                OJUtil.typeNameForClass(Object.class), "fetchNext",
-                new ParameterList(), null, nextMethodBody);
-
-        memberList.add(rowVarDecl);
-        memberList.add(fetchNextMethodDecl);
-        Expression newTupleIterExp =
-            new AllocationExpression(
-                OJUtil.typeNameForClass(CalcTupleIter.class),
-                new ExpressionList(childExp),
-                memberList);
-
-        return newTupleIterExp;
-    }
-
     public ParseTree implement(JavaRelImplementor implementor)
     {
         Expression childExp =
@@ -382,9 +253,8 @@ public class IterCalcRel extends SingleRel implements JavaRel
         Variable varInputRow = implementor.newVariable();
         implementor.bind(getChild(), varInputRow);
 
-        return implementAbstract(
-            implementor, this, childExp, varInputRow, inputRowType,
-            outputRowType, program);
+        return implementAbstract(implementor, this, childExp, varInputRow,
+            inputRowType, outputRowType, program);
     }
 
     public RexProgram getProgram()

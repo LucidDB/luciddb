@@ -30,6 +30,7 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.util.*;
+import org.eigenbase.runtime.*;
 
 import net.sf.farrago.runtime.*;
 
@@ -93,7 +94,7 @@ public class FarragoJavaUdxRel extends TableFunctionRelBase
                 new ParameterList(), null, executeMethodBody);
         memberList.add(executeMethodDecl);
 
-        Expression iterExp =
+        Expression iteratorExp =
             new AllocationExpression(
                 OJUtil.typeNameForClass(FarragoJavaUdxIterator.class),
                 new ExpressionList(
@@ -101,7 +102,19 @@ public class FarragoJavaUdxRel extends TableFunctionRelBase
                     new ClassLiteral(TypeName.forOJClass(outputRowClass))),
                 memberList);
 
-        return iterExp;
+        // TODO jvs 23-Feb-2006:  get rid of adapter and write
+        // a new TupleIter implementation so that we can take
+        // advantage of the closeAllocation call.
+        
+        if (CallingConvention.ENABLE_NEW_ITER) {
+            Expression tupleIterExp = new AllocationExpression(
+                OJUtil.typeNameForClass(RestartableIteratorTupleIter.class),
+                new ExpressionList(
+                    iteratorExp));
+            return tupleIterExp;
+        } else {
+            return iteratorExp;
+        }
     }
 }
 

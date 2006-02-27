@@ -568,6 +568,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         case SqlKind.AsORDINAL:
         case SqlKind.OverORDINAL:
         case SqlKind.CollectionTableORDINAL:
+        case SqlKind.OrderByORDINAL:
             return getNamespace(((SqlCall) node).operands[0]);
         default:
             return (SqlValidatorNamespace) namespaces.get(node);
