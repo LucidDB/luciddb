@@ -123,6 +123,12 @@ void LogicalTxnLog::removeTxn(SharedLogicalTxn pTxn)
 
 void LogicalTxnLog::commitTxn(SharedLogicalTxn pTxn)
 {
+    commitTxnImpl(pTxn);
+    removeTxn(pTxn);
+}
+
+void LogicalTxnLog::commitTxnImpl(SharedLogicalTxn pTxn)
+{
     LogicalTxnEventMemento memento;
     memento.event = LogicalTxnEventMemento::EVENT_COMMIT;
     memento.txnId = pTxn->txnId;
@@ -138,6 +144,12 @@ void LogicalTxnLog::commitTxn(SharedLogicalTxn pTxn)
         pSegment->checkpoint(CHECKPOINT_FLUSH_AND_UNMAP);
         committedLongLogSegments.push_back(pSegment);
     } else {
+        if (!pTxn->svpt.cbLogged) {
+            // NOTE jvs 27-Feb-2006: "empty commit" is an important
+            // optimization for queries in autocommit mode, where JDBC
+            // specifies a commit whenever a cursor is closed.
+            return;
+        }
         CompoundId::setPageId(memento.logPosition.segByteId,NULL_PAGE_ID);
         CompoundId::setByteOffset(
             memento.logPosition.segByteId,
@@ -155,6 +167,11 @@ void LogicalTxnLog::commitTxn(SharedLogicalTxn pTxn)
         pOutputStream->writeBytes(pBuffer,cbActual);
     }
 
+    commitTxnWithGroup(mutexGuard);
+}
+
+void LogicalTxnLog::commitTxnWithGroup(StrictMutexGuard &mutexGuard)
+{
     boost::xtime groupCommitExpiration;
     if (groupCommitInterval) {
         convertTimeout(groupCommitInterval,groupCommitExpiration);
@@ -188,7 +205,6 @@ void LogicalTxnLog::commitTxn(SharedLogicalTxn pTxn)
             // spurious wakeup:  go 'round again
         }
     }
-    removeTxn(pTxn);
 }
 
 void LogicalTxnLog::rollbackTxn(SharedLogicalTxn pTxn)
