@@ -115,6 +115,8 @@ public class FarragoJdbcTest extends FarragoTestCase
 
     private static final Time timeNoDate = Time.valueOf(timeStr);
     private static final Date dateNoTime = Date.valueOf(dateStr);
+    private static final Timestamp timestampNoPrec =
+        new Timestamp(timestamp.getTime() - 456);
 
     static {
         // Sanity check, assuming local time is PST
@@ -853,9 +855,10 @@ public class FarragoJdbcTest extends FarragoTestCase
                     // NOTE: conversion between varchars/binary is not
                     // permitted in SQL, but allowed in JDBC
                     if (sqlType.ordinal == BOOLEAN) {
-                        columnValues += ", 'false'";
+                        columnValues += ", cast('false' as boolean)";
                     } else if (numCharTypes.contains(sqlType)) {
-                        columnValues += ", '" + stringValue + "'";
+                        columnValues += ", cast('" + stringValue + "' as "
+                            + sqlType.string + ")";
                     } else {
                         columnValues += ", null";
                     }
@@ -865,7 +868,8 @@ public class FarragoJdbcTest extends FarragoTestCase
                 for (int j=0; j<TestSqlType.all.length; j++) {
                     TestSqlType sqlType = TestSqlType.all[j];
                     if (numCharTypes.contains(sqlType)) {
-                        columnValues += ", " + minByte;
+                        columnValues += ", cast(" + minByte + " as "
+                            + sqlType.string + ")";
                     } else {
                         columnValues += ", null";
                     }
@@ -875,7 +879,8 @@ public class FarragoJdbcTest extends FarragoTestCase
                 for (int j=0; j<TestSqlType.all.length; j++) {
                     TestSqlType sqlType = TestSqlType.all[j];
                     if (numCharTypes.contains(sqlType)) {
-                        columnValues += ", " + maxByte;
+                        columnValues += ", cast(" + maxByte + " as "
+                            + sqlType.string + ")";
                     } else {
                         columnValues += ", null";
                     }
@@ -887,7 +892,8 @@ public class FarragoJdbcTest extends FarragoTestCase
                     if (numCharTypes.contains(sqlType)) {
                         if (sqlType.checkIsValid(Short.valueOf(minShort), true)
                             == TestSqlType.VALID) {
-                            columnValues += ", " + minShort;
+                            columnValues += ", cast(" + minShort + " as "
+                                + sqlType.string + ")";
                         }  else {
                             columnValues += ", null";
                         }
@@ -902,7 +908,8 @@ public class FarragoJdbcTest extends FarragoTestCase
                     if (numCharTypes.contains(sqlType)) {
                         if (sqlType.checkIsValid(Short.valueOf(maxShort), true)
                             == TestSqlType.VALID) {
-                            columnValues += ", " + maxShort;
+                            columnValues += ", cast(" + maxShort + " as "
+                                + sqlType.string + ")";
                         }  else {
                             columnValues += ", null";
                         }
@@ -917,7 +924,8 @@ public class FarragoJdbcTest extends FarragoTestCase
                     if (numCharTypes.contains(sqlType)) {
                         if (sqlType.checkIsValid(Integer.valueOf(minInt), true)
                             == TestSqlType.VALID) {
-                            columnValues += ", " + minInt;
+                            columnValues += ", cast(" + minInt + " as "
+                                + sqlType.string + ")";
                         }  else {
                             columnValues += ", null";
                         }
@@ -932,7 +940,8 @@ public class FarragoJdbcTest extends FarragoTestCase
                     if (numCharTypes.contains(sqlType)) {
                         if (sqlType.checkIsValid(Integer.valueOf(maxInt), true)
                             == TestSqlType.VALID) {
-                            columnValues += ", " + maxInt;
+                            columnValues += ", cast(" + maxInt + " as "
+                                + sqlType.string + ")";
                         }  else {
                             columnValues += ", null";
                         }
@@ -947,9 +956,8 @@ public class FarragoJdbcTest extends FarragoTestCase
                     if (numCharTypes.contains(sqlType)) {
                         if (sqlType.checkIsValid(Long.valueOf(minLong), true)
                             == TestSqlType.VALID) {
-                            // TODO: Fix to be literal minLong when minLong
-                            // is accepted as literal in farrago
-                            columnValues += ", " + "'" + minLong + "'";
+                            columnValues += ", cast(" + minLong + " as "
+                                + sqlType.string + ")";
                         }  else {
                             columnValues += ", null";
                         }
@@ -964,7 +972,8 @@ public class FarragoJdbcTest extends FarragoTestCase
                     if (numCharTypes.contains(sqlType)) {
                         if (sqlType.checkIsValid(Long.valueOf(maxLong), true)
                             == TestSqlType.VALID) {
-                            columnValues += ", " + maxLong;
+                            columnValues += ", cast(" + maxLong + " as "
+                                + sqlType.string + ")";
                         }  else {
                             columnValues += ", null";
                         }
@@ -977,10 +986,11 @@ public class FarragoJdbcTest extends FarragoTestCase
                 for (int j=0; j<TestSqlType.all.length; j++) {
                     TestSqlType sqlType = TestSqlType.all[j];
                     if (approxCharTypes.contains(sqlType)) {
-
-                        columnValues += ", " + minFloat;
+                        columnValues += ", cast(" + minFloat + " as "
+                            + sqlType.string + ")";
                     } else if (numCharTypes.contains(sqlType)) {
-                        columnValues += ", " + floatValue1;
+                        columnValues += ", cast(" + floatValue1 + " as "
+                            + sqlType.string + ")";
                     } else {
                         columnValues += ", null";
                     }
@@ -991,9 +1001,11 @@ public class FarragoJdbcTest extends FarragoTestCase
                     TestSqlType sqlType = TestSqlType.all[j];
                     if (approxCharTypes.contains(sqlType)) {
                         //columnValues += ", " + maxFloat;
-                        columnValues += ", 3.4028234E38";
+                        columnValues += ", cast(3.4028234E38 as "
+                            + sqlType.string + ")";
                     } else if (numCharTypes.contains(sqlType)) {
-                        columnValues += ", " + floatValue2;
+                        columnValues += ", cast(" + floatValue2 + " as "
+                            + sqlType.string + ")";
                     } else {
                         columnValues += ", null";
                     }
@@ -1003,9 +1015,11 @@ public class FarragoJdbcTest extends FarragoTestCase
                 for (int j=0; j<TestSqlType.all.length; j++) {
                     TestSqlType sqlType = TestSqlType.all[j];
                     if (approxCharTypes.contains(sqlType)) {
-                        columnValues += ", " + minDouble;
+                        columnValues += ", cast(" + minDouble + " as "
+                            + sqlType.string + ")";
                     } else if (numCharTypes.contains(sqlType)) {
-                        columnValues += ", " + doubleValue1;
+                        columnValues += ", cast(" + doubleValue1 + " as "
+                            + sqlType.string + ")";
                     } else {
                         columnValues += ", null";
                     }
@@ -1016,9 +1030,11 @@ public class FarragoJdbcTest extends FarragoTestCase
                     TestSqlType sqlType = TestSqlType.all[j];
                     if (approxCharTypes.contains(sqlType) &&
                         sqlType.ordinal != REAL) {
-                        columnValues += ", " + maxDouble;
+                        columnValues += ", cast(" + maxDouble + " as "
+                            + sqlType.string + ")";
                     } else if (numCharTypes.contains(sqlType)) {
-                        columnValues += ", " + doubleValue2;
+                        columnValues += ", cast(" + doubleValue2 + " as "
+                            + sqlType.string + ")";
                     } else {
                         columnValues += ", null";
                     }
@@ -1028,9 +1044,11 @@ public class FarragoJdbcTest extends FarragoTestCase
                 for (int j=0; j<TestSqlType.all.length; j++) {
                     TestSqlType sqlType = TestSqlType.all[j];
                     if (numCharTypes.contains(sqlType)) {
-                        columnValues += ", 1";
+                        columnValues += ", cast(1 as "
+                            + sqlType.string + ")";
                     } else if (sqlType.ordinal == BOOLEAN) {
-                        columnValues += ", " + boolValue;
+                        columnValues += ", cast(" + boolValue + " as "
+                            + sqlType.string + ")";
                     } else {
                         columnValues += ", null";
                     }
@@ -1040,7 +1058,8 @@ public class FarragoJdbcTest extends FarragoTestCase
                 for (int j=0; j<TestSqlType.all.length; j++) {
                     TestSqlType sqlType = TestSqlType.all[j];
                     if (numCharTypes.contains(sqlType)) {
-                        columnValues += ", " + bigDecimalValue;
+                        columnValues += ", cast(" + bigDecimalValue + " as "
+                            + sqlType.string + ")";
                     } else {
                         columnValues += ", null";
                     }
@@ -1065,11 +1084,13 @@ public class FarragoJdbcTest extends FarragoTestCase
                     switch (sqlType.ordinal) {
                         case CHAR:
                         case VARCHAR:
+                        case TIMESTAMP:
+                            columnValues += ", cast(DATE '" +  dateStr
+                                + "' as " + sqlType.string + ")";
+                            break;
                         case DATE:
                             columnValues += ", DATE '" +  dateStr + "'";
                             break;
-                        // TOOD: Enable for TIMESTAMP when cast from DATE to TIMESTAMP is supported
-                        case TIMESTAMP:
                         default:
                             columnValues += ", null";
                             break;
@@ -1082,11 +1103,13 @@ public class FarragoJdbcTest extends FarragoTestCase
                     switch (sqlType.ordinal) {
                         case CHAR:
                         case VARCHAR:
+                        case TIMESTAMP:
+                            columnValues += ", cast(TIME '" +  timeStr
+                                + "' as " + sqlType.string + ")";
+                            break;
                         case TIME:
                             columnValues += ", TIME '" +  timeStr + "'";
                             break;
-                        // TOOD: Enable for TIMESTAMP when cast from TIME to TIMESTAMP is supported
-                        case TIMESTAMP:
                         default:
                             columnValues += ", null";
                             break;
@@ -1099,11 +1122,14 @@ public class FarragoJdbcTest extends FarragoTestCase
                     switch (sqlType.ordinal) {
                         case CHAR:
                         case VARCHAR:
+                        case DATE:
+                        case TIME:
+                            columnValues += ", cast(TIMESTAMP '" +  timestampStr
+                                + "' as " + sqlType.string + ")";
+                            break;
                         case TIMESTAMP:
                             columnValues += ", TIMESTAMP '" +  timestampStr + "'";
                             break;
-                        // TOOD: Enable for DATE when cast from TIMESTAMP to DATE is supported
-                        case DATE:
                         default:
                             columnValues += ", null";
                             break;
@@ -1875,11 +1901,9 @@ public class FarragoJdbcTest extends FarragoTestCase
                 assertEquals(
                     dateNoTime.getTime(),
                     resultSet.getDate(DATE).getTime());
-                if (todo) {
                 assertEquals(
                     dateNoTime.getTime(),
                     resultSet.getDate(TIMESTAMP).getTime());
-                }
                 break;
             case 117:
                 assertEquals(
@@ -1891,19 +1915,17 @@ public class FarragoJdbcTest extends FarragoTestCase
                 assertEquals(
                     timeNoDate.getTime(),
                     resultSet.getTime(TIME).getTime());
-                if (todo) {
                 assertEquals(
                     timeNoDate.getTime(),
                     resultSet.getTime(TIMESTAMP).getTime());
-                }
                 break;
             case 118:
-                if (todo) {
+                // TODO: Should these be timestamp with or without precision?
                 assertEquals(
-                    timestamp.getTime(),
+                    timestampNoPrec.getTime(),
                     resultSet.getTimestamp(CHAR).getTime());
                 assertEquals(
-                    timestamp.getTime(),
+                    timestampNoPrec.getTime(),
                     resultSet.getTimestamp(VARCHAR).getTime());
                 assertEquals(
                     timestamp.getTime(),
@@ -1914,7 +1936,6 @@ public class FarragoJdbcTest extends FarragoTestCase
                 assertEquals(
                     timestamp.getTime(),
                     resultSet.getTimestamp(TIMESTAMP).getTime());
-                }
                 break;
             case 119:
                 assertEquals(
@@ -1973,9 +1994,7 @@ public class FarragoJdbcTest extends FarragoTestCase
 
                 assertEquals(dateNoTime, resultSet.getObject(DATE));
                 assertEquals(timeNoDate, resultSet.getObject(TIME));
-                if (todo) {
                 assertEquals(timestamp, resultSet.getObject(TIMESTAMP));
-                }
                 break;
             default:
 

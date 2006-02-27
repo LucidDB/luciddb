@@ -299,11 +299,15 @@ SqlDateTest::testSqlStrToDate_Ascii()
         StrToDate, oct2k, "junk", 4, true);
     testSqlStrToDate_Ascii_Helper(
         StrToDate, oct2k, "2000-23-23", 10, true);
+    testSqlStrToDate_Ascii_Helper(
+        StrToDate, oct2k, "2000-2-30", 10, true);
 
     int64_t fourteen21 = ( ticks_per_hour*14 + 
                            ticks_per_minute * 21 + ticks_per_sec * 1) /1000;
     testSqlStrToDate_Ascii_Helper(
         StrToTime, fourteen21, "14:21:01", 8, false);
+    testSqlStrToDate_Ascii_Helper(
+        StrToTime, fourteen21, "14:21:1", 7, false);
     testSqlStrToDate_Ascii_Helper(
         StrToTime, fourteen21, "  14:21:01  ", 12, false);
     // TODO: Fractional seconds not handled
@@ -319,6 +323,8 @@ SqlDateTest::testSqlStrToDate_Ascii()
     int64_t ts = oct2k + fourteen21;
     testSqlStrToDate_Ascii_Helper(
         StrToTimestamp, ts, "2000-10-21 14:21:01", 19, false);
+    testSqlStrToDate_Ascii_Helper(
+        StrToTimestamp, ts, "2000-10-21 14:21:1", 18, false);
     // TODO: Fractional seconds not handled
     //testSqlStrToDate_Ascii_Helper(
     //    StrToTimestamp, ts + 323, "2000-10-21 14:21:01.323", 19, false);

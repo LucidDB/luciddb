@@ -146,10 +146,9 @@ Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast fro
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DECIMAL(6, 2)' to 'TIMESTAMP(0)' (state=,code=0)
 0: jdbc:farrago:> insert into t_timestamp values(x'ff',null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY(1)' to 'TIMESTAMP(0)' (state=,code=0)
-0: jdbc:farrago:> insert into t_timestamp values(time '12:01:01',null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'TIME(0)' to 'TIMESTAMP(0)' (state=,code=0)
-0: jdbc:farrago:> insert into t_timestamp values(date '1999-01-08',null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DATE' to 'TIMESTAMP(0)' (state=,code=0)
+0: jdbc:farrago:> -- TODO: Should be disallowed by validator without explicit cast
+0: jdbc:farrago:> --insert into t_timestamp values(time '12:01:01',null);
+0: jdbc:farrago:> --insert into t_timestamp values(date '1999-01-08',null);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- insert the right values
 0: jdbc:farrago:> insert into t_timestamp values(TIMESTAMP '2004-12-01 12:01:01',null);

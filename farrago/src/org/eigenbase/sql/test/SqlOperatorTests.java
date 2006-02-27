@@ -147,7 +147,6 @@ public abstract class SqlOperatorTests extends TestCase
         "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]");
     public static final boolean todo = false;
 
-
     public static final String[] numericTypeNames =
         new String[] {
             "TINYINT", "SMALLINT", "INTEGER", "BIGINT",
@@ -355,11 +354,8 @@ public abstract class SqlOperatorTests extends TestCase
             checkCastToString(maxNumericStrings[i], null, null);
             checkCastToString(maxNumericStrings[i], type, null);
 
-            // TODO: Enable for bigint too (fails in the java calc)
-            if (!type.equalsIgnoreCase("BIGINT")) {
-                checkCastToString(minNumericStrings[i], null, null);
-                checkCastToString(minNumericStrings[i], type, null);
-            }
+            checkCastToString(minNumericStrings[i], null, null);
+            checkCastToString(minNumericStrings[i], type, null);
 
             checkCastFails("'notnumeric'", type, invalidCharMessage);
         }
@@ -396,17 +392,13 @@ public abstract class SqlOperatorTests extends TestCase
 
             if (isFloat) {
                 checkCastFails(maxOverflowNumericStrings[i], type, outOfRangeMessage);
-                // Underflow: goes to 0
-                checkCastToApproxOkay(minOverflowNumericStrings[i], type, 0, 0);
             } else {
                 // Double: Literal out of range
                 checkCastFails(maxOverflowNumericStrings[i], type, literalOutOfRangeMessage);
-                // Underflow: goes to 0
-                if (todo) {
-                    checkCastToApproxOkay(minOverflowNumericStrings[i], type, 0, 0);
-                }
             }
 
+            // Underflow: goes to 0
+            checkCastToApproxOkay(minOverflowNumericStrings[i], type, 0, 0);
 
             // Convert from string to type
             checkCastToApproxOkay("'" + maxNumericStrings[i] + "'",
@@ -508,7 +500,6 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkScalarExact("cast( cast(1.75 as double) as integer)", "2");
         getTester().checkScalarExact("cast( cast(-1.75 as double) as integer)", "-2");
         getTester().checkScalarExact("cast( cast(1.5 as double) as integer)", "2");
-
         getTester().checkScalarExact("cast( cast(-1.5 as double) as integer)", "-2");
     }
 
@@ -533,16 +524,30 @@ public abstract class SqlOperatorTests extends TestCase
         // Test cast for date/time/timestamp
         getTester().setFor(SqlStdOperatorTable.castFunc);
 
-        if (todo) {
-        // TODO: Should the final result have the precision?
+        // TODO: precision should not be included
         getTester().checkScalar(
                 "cast(TIMESTAMP '1945-02-24 12:42:25.34' as TIMESTAMP)",
                 "1945-02-24 12:42:25.34",
                 "TIMESTAMP(0) NOT NULL");
+
         getTester().checkScalar(
                 "cast(TIME '12:42:25.34' as TIME)",
-                "12:42:25.34",
+                "12:42:25",
                 "TIME(0) NOT NULL");
+
+        if (todo) {
+        // test rounding
+        getTester().checkScalar(
+                "cast(TIME '12:42:25.9' as TIME)",
+                "12:42:26",
+                "TIME(0) NOT NULL");
+
+        // test precision
+        getTester().checkScalar(
+                "cast(TIME '12:42:25.34' as TIME(2))",
+                "12:42:25.34",
+                "TIME(2) NOT NULL");
+        }
 
         getTester().checkScalar(
                 "cast(DATE '1945-02-24' as DATE)",
@@ -554,9 +559,17 @@ public abstract class SqlOperatorTests extends TestCase
                 "cast(TIMESTAMP '1945-02-24 12:42:25.34' as TIME)",
                 "12:42:25",
                 "TIME(0) NOT NULL");
+
+        // TODO: Should recasted timestamp still contain date info?
+        getTester().checkScalar(
+                "cast(cast(TIMESTAMP '1945-02-24 12:42:25.34' as TIME) as TIMESTAMP)",
+                "1945-02-24 12:42:25.34",
+                "TIMESTAMP(0) NOT NULL");
+
+        // TODO: precision should not be included
         getTester().checkScalar(
                 "cast(TIME '12:42:25.34' as TIMESTAMP)",
-                datePattern + " 12:42:25",
+                "1970-01-01 12:42:25.34",
                 "TIMESTAMP(0) NOT NULL");
 
         // timestamp <-> date
@@ -564,11 +577,18 @@ public abstract class SqlOperatorTests extends TestCase
                 "cast(TIMESTAMP '1945-02-24 12:42:25.34' as DATE)",
                 "1945-02-24",
                 "DATE NOT NULL");
+
+        // TODO: Should recasted timestamp still contain time info?
+        getTester().checkScalar(
+                "cast(cast(TIMESTAMP '1945-02-24 12:42:25.34' as DATE) as TIMESTAMP)",
+                "1945-02-24 12:42:25.34",
+                "TIMESTAMP(0) NOT NULL");
+
+        // TODO: precision should not be included
         getTester().checkScalar(
                 "cast(DATE '1945-02-24' as TIMESTAMP)",
-                "1945-02-24 00:00:00",
+                "1945-02-24 00:00:00.0",
                 "TIMESTAMP(0) NOT NULL");
-        }
 
         // time <-> string
         checkCastToString("TIME '12:42:25'", null, "12:42:25");
@@ -579,13 +599,19 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkScalar(
             "cast('12:42:25' as TIME)", "12:42:25", "TIME(0) NOT NULL");
         getTester().checkScalar(
+            "cast('1:42:25' as TIME)", "01:42:25", "TIME(0) NOT NULL");
+        getTester().checkScalar(
+            "cast('1:2:25' as TIME)", "01:02:25", "TIME(0) NOT NULL");
+        getTester().checkScalar(
             "cast('  12:42:25  ' as TIME)", "12:42:25", "TIME(0) NOT NULL");
         getTester().checkScalar(
             "cast('12:42:25.34' as TIME)", "12:42:25", "TIME(0) NOT NULL");
+
         if (todo) {
             getTester().checkScalar(
                 "cast('12:42:25.34' as TIME(2))", "12:42:25.34", "TIME(2) NOT NULL");
         }
+
         getTester().checkFails("cast('nottime' as TIME)", badDatetimeMessage);
         getTester().checkFails("cast('1241241' as TIME)", badDatetimeMessage);
         getTester().checkFails("cast('12:54:78' as TIME)", badDatetimeMessage);
@@ -595,6 +621,7 @@ public abstract class SqlOperatorTests extends TestCase
             "TIMESTAMP '1945-02-24 12:42:25'",
             null,
             "1945-02-24 12:42:25");
+
         if (todo) {
             checkCastToString(
             "TIMESTAMP '1945-02-24 12:42:25.34'",
@@ -602,16 +629,21 @@ public abstract class SqlOperatorTests extends TestCase
             "1945-02-24 12:42:25.34");
         }
 
-        if (todo) {
+        // TODO: precision should not be included
         getTester().checkScalar(
             "cast('1945-02-24 12:42:25' as TIMESTAMP)",
-            "1945-02-24 12:42:25", "TIMESTAMP(0) NOT NULL");
+            "1945-02-24 12:42:25.0", "TIMESTAMP(0) NOT NULL");
+        getTester().checkScalar(
+            "cast('1945-2-2 12:2:5' as TIMESTAMP)",
+            "1945-02-02 12:02:05.0", "TIMESTAMP(0) NOT NULL");
         getTester().checkScalar(
             "cast('  1945-02-24 12:42:25  ' as TIMESTAMP)",
-            "1945-02-24 12:42:25", "TIMESTAMP(0) NOT NULL");
+            "1945-02-24 12:42:25.0", "TIMESTAMP(0) NOT NULL");
         getTester().checkScalar(
             "cast('1945-02-24 12:42:25.34' as TIMESTAMP)",
-            "1945-02-24 12:42:25", "TIMESTAMP(0) NOT NULL");
+            "1945-02-24 12:42:25.34", "TIMESTAMP(0) NOT NULL");
+
+        if (todo) {
         getTester().checkScalar(
             "cast('1945-02-24 12:42:25.34' as TIMESTAMP(2))",
             "1945-02-24 12:42:25.34", "TIMESTAMP(2) NOT NULL");
@@ -623,6 +655,7 @@ public abstract class SqlOperatorTests extends TestCase
 
         // date <-> string
         checkCastToString("DATE '1945-02-24'", null, "1945-02-24");
+        checkCastToString("DATE '1945-2-24'", null, "1945-02-24");
 
         getTester().checkScalar(
             "cast('1945-02-24' as DATE)", "1945-02-24", "DATE NOT NULL");
@@ -631,8 +664,6 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkFails("cast('notdate' as DATE)", badDatetimeMessage);
         getTester().checkFails("cast('52534253' as DATE)", badDatetimeMessage);
         getTester().checkFails("cast('1945-30-24' as DATE)", badDatetimeMessage);
-
-        // TODO: invalid casts
 
         // cast null
         getTester().checkNull("cast(null as date)");
@@ -1834,6 +1865,7 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkScalarExact("ceil(100)", "INTEGER NOT NULL", "100");
         getTester().checkScalarExact("ceil(1.3)", "DECIMAL(2, 0) NOT NULL", "2");
         getTester().checkScalarExact("ceil(-1.7)", "DECIMAL(2, 0) NOT NULL", "-1");
+        getTester().checkNull("ceiling(cast(null as decimal(2,0)))");
         getTester().checkNull("ceiling(cast(null as double))");
     }
 
@@ -1846,6 +1878,7 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkScalarExact("floor(1.7)", "DECIMAL(2, 0) NOT NULL", "1");
         getTester().checkScalarExact("floor(-1.7)", "DECIMAL(2, 0) NOT NULL", "-2");
         getTester().checkNull("floor(cast(null as decimal(2,0)))");
+        getTester().checkNull("floor(cast(null as real))");
     }
 
     public void testDenseRankFunc()

@@ -98,8 +98,9 @@ insert into t_timestamp values(1e400,null);
 insert into t_timestamp values(-1.2345678901234e-200,null);
 insert into t_timestamp values(-1234.03,null);
 insert into t_timestamp values(x'ff',null);
-insert into t_timestamp values(time '12:01:01',null);
-insert into t_timestamp values(date '1999-01-08',null);
+-- TODO: Should be disallowed by validator without explicit cast
+--insert into t_timestamp values(time '12:01:01',null);
+--insert into t_timestamp values(date '1999-01-08',null);
 
 -- insert the right values
 insert into t_timestamp values(TIMESTAMP '2004-12-01 12:01:01',null);

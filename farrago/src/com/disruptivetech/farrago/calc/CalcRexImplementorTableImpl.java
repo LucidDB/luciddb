@@ -1070,6 +1070,21 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castTimestampToStr));
 
+            // Timestamp to date, time types
+            doubleKeyMap.put(
+                SqlTypeName.Timestamp,
+                SqlTypeName.datetimeTypes,
+                new UsingInstrImplementor(CalcProgramBuilder.Cast));
+            // date, time to timestamp
+            doubleKeyMap.put(
+                SqlTypeName.Date,
+                SqlTypeName.Timestamp,
+                new UsingInstrImplementor(CalcProgramBuilder.Cast));
+            doubleKeyMap.put(
+                SqlTypeName.Time,
+                SqlTypeName.Timestamp,
+                new UsingInstrImplementor(CalcProgramBuilder.Cast));
+
             doubleKeyMap.put(
                 SqlTypeName.charTypes,
                 SqlTypeName.booleanTypes,
@@ -1115,7 +1130,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 SqlTypeName.charTypes,
                 SqlTypeName.charTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castA));
-            
+
             doubleKeyMap.put(
                 SqlTypeName.Decimal,
                 SqlTypeName.charTypes,
