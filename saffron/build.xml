@@ -276,7 +276,6 @@
         srcdir="${java.dir}"
         destdir="${classes.dir}"
         debug="${project.build.debug}"
-        source="1.4"
         classpathref="saffron.build.classpath">
       <include name="**/*.java" />
       <exclude name="openjava/ptree/util/ParseTreeTranslator.java" />
