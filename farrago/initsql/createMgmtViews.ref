@@ -1,52 +1,52 @@
-0: jdbc:farrago:> -- This script creates a view schema used for database management 
-0: jdbc:farrago:>                                                                                 
-0: jdbc:farrago:> !set verbose true
-0: jdbc:farrago:>                                                                                 
-0: jdbc:farrago:> -- create views in system-owned schema sys_boot.mgmt
-0: jdbc:farrago:> create schema sys_boot.mgmt;
-0: jdbc:farrago:> set schema 'sys_boot.mgmt';
-0: jdbc:farrago:> set path 'sys_boot.mgmt';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create function statements()
-. . . . . . . . > returns table(id int, sqlStmt varchar(1024), createTime timestamp, parameters varchar(1024))
-. . . . . . . . > language java
-. . . . . . . . > parameter style system defined java
-. . . . . . . . > no sql
-. . . . . . . . > external name 'class net.sf.farrago.syslib.FarragoManagementUDR.statements';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create view statements_view as
-. . . . . . . . >   select * from table(statements());
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- todo:  grant this only to a privileged user
-0: jdbc:farrago:> grant select on statements_view to public;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create function sessions()
-. . . . . . . . > returns table(id int, url varchar(256), currentUserName varchar(256), currentRoleName varchar(256), sessionUserName varchar(256), systemUserName varchar(256), catalogName varchar(256), schemaName varchar(256), isClosed boolean, isAutoCommit boolean, isTxnInProgress boolean)
-. . . . . . . . > 
-. . . . . . . . > language java
-. . . . . . . . > parameter style system defined java
-. . . . . . . . > no sql
-. . . . . . . . > external name 'class net.sf.farrago.syslib.FarragoManagementUDR.sessions';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create view sessions_view as
-. . . . . . . . >   select * from table(sessions());
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- todo:  grant this only to a privileged user
-0: jdbc:farrago:> grant select on sessions_view to public;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create function objectsInUse()
-. . . . . . . . > returns table(stmtId int, mofId varchar(32))
-. . . . . . . . > 
-. . . . . . . . > language java
-. . . . . . . . > parameter style system defined java
-. . . . . . . . > no sql
-. . . . . . . . > external name 'class net.sf.farrago.syslib.FarragoManagementUDR.objectsInUse';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create view objectsInUse_view as
-. . . . . . . . >   select * from table(objectsInUse());
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- todo:  grant this only to a privileged user
-0: jdbc:farrago:> grant select on objectsInUse_view to public;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+0: jdbc:sqlstream:> -- This script creates a view schema used for database management 
+0: jdbc:sqlstream:>                                                                                 
+0: jdbc:sqlstream:> !set verbose true
+0: jdbc:sqlstream:>                                                                                 
+0: jdbc:sqlstream:> -- create views in system-owned schema sys_boot.mgmt
+0: jdbc:sqlstream:> create schema sys_boot.mgmt;
+0: jdbc:sqlstream:> set schema 'sys_boot.mgmt';
+0: jdbc:sqlstream:> set path 'sys_boot.mgmt';
+0: jdbc:sqlstream:> 
+0: jdbc:sqlstream:> create function statements()
+. . . . . . . . . > returns table(id int, sql_stmt varchar(1024), create_time timestamp, parameters varchar(1024))
+. . . . . . . . . > language java
+. . . . . . . . . > parameter style system defined java
+. . . . . . . . . > no sql
+. . . . . . . . . > external name 'class net.sf.farrago.syslib.FarragoManagementUDR.statements';
+0: jdbc:sqlstream:> 
+0: jdbc:sqlstream:> create view statements_view as
+. . . . . . . . . >   select * from table(statements());
+0: jdbc:sqlstream:> 
+0: jdbc:sqlstream:> -- todo:  grant this only to a privileged user
+0: jdbc:sqlstream:> grant select on statements_view to public;
+0: jdbc:sqlstream:> 
+0: jdbc:sqlstream:> create function sessions()
+. . . . . . . . . > returns table(id int, url varchar(128), current_user_name varchar(128), current_role_name varchar(128), session_user_name varchar(128), system_user_name varchar(128), catalog_name varchar(128), schema_name varchar(128), is_closed boolean, is_auto_commit boolean, is_txn_in_progress boolean)
+. . . . . . . . . > 
+. . . . . . . . . > language java
+. . . . . . . . . > parameter style system defined java
+. . . . . . . . . > no sql
+. . . . . . . . . > external name 'class net.sf.farrago.syslib.FarragoManagementUDR.sessions';
+0: jdbc:sqlstream:> 
+0: jdbc:sqlstream:> create view sessions_view as
+. . . . . . . . . >   select * from table(sessions());
+0: jdbc:sqlstream:> 
+0: jdbc:sqlstream:> -- todo:  grant this only to a privileged user
+0: jdbc:sqlstream:> grant select on sessions_view to public;
+0: jdbc:sqlstream:> 
+0: jdbc:sqlstream:> create function objectsInUse()
+. . . . . . . . . > returns table(stmt_id int, mof_id varchar(32))
+. . . . . . . . . > 
+. . . . . . . . . > language java
+. . . . . . . . . > parameter style system defined java
+. . . . . . . . . > no sql
+. . . . . . . . . > external name 'class net.sf.farrago.syslib.FarragoManagementUDR.objectsInUse';
+0: jdbc:sqlstream:> 
+0: jdbc:sqlstream:> create view objects_in_use_view as
+. . . . . . . . . >   select * from table(objectsInUse());
+0: jdbc:sqlstream:> 
+0: jdbc:sqlstream:> -- todo:  grant this only to a privileged user
+0: jdbc:sqlstream:> grant select on objects_in_use_view to public;
+0: jdbc:sqlstream:> 
+0: jdbc:sqlstream:> 
+0: jdbc:sqlstream:> !quit

@@ -20,42 +20,31 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package net.sf.farrago.util;
+package net.sf.farrago.session;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 
-public class FarragoSessionInfo
+public interface FarragoSessionInfo
 {
-    //~ Instance fields -------------------------------------------------------
-
-    private Map<Integer, FarragoSessionExecutingStmtInfo> statements;
-
-    //~ Constructors ----------------------------------------------------------
-
-    public FarragoSessionInfo()
-    {
-        statements = new HashMap<Integer, FarragoSessionExecutingStmtInfo>();
-    }
-
     //~ Methods ---------------------------------------------------------------
 
-    public Integer [] getExecutingStmtIds()
-    {
-        return statements.keySet().toArray(new Integer[statements.size()]);
-    }
+    /**
+     * Returns unique identifier for this session.
+     * @return unique session identifier
+     */
+    long getId();
 
-    public FarragoSessionExecutingStmtInfo getExecutingStmtInfo(Integer id)
-    {
-        return statements.get(id);
-    }
-    
-    public void addExecutingStmtInfo(FarragoSessionExecutingStmtInfo info) {
-        statements.put(info.getId(), info);
-    }
-    
-    public void removeExecutingStmtInfo(Integer id) {
-        statements.remove(id);
-    }
+    /**
+     * Returns a list of identifiers of currently running statements.
+     * @return List of unique statement identifiers
+     */
+    List<Long> getExecutingStmtIds();
+
+    /**
+     * Given a statement identifier, return an object containing its details.
+     * @param id Unique identifier of a statement
+     * @return FarragoSessionExecutingStmtInfo containing statement details
+     */
+    FarragoSessionExecutingStmtInfo getExecutingStmtInfo(Long id);
 }

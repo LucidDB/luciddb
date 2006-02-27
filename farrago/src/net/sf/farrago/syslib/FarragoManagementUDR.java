@@ -25,13 +25,14 @@ package net.sf.farrago.syslib;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.Arrays;
 import java.util.List;
 
 import net.sf.farrago.db.FarragoDbSingleton;
 import net.sf.farrago.session.FarragoSession;
+import net.sf.farrago.session.FarragoSessionExecutingStmtInfo;
+import net.sf.farrago.session.FarragoSessionInfo;
 import net.sf.farrago.session.FarragoSessionVariables;
-import net.sf.farrago.util.FarragoSessionExecutingStmtInfo;
-import net.sf.farrago.util.FarragoSessionInfo;
 
 
 /**
@@ -50,8 +51,6 @@ public abstract class FarragoManagementUDR
 
     /**
      * Populates a table of information on currently executing statements.
-     *
-     * returns table(id int, sqlStmt varchar(1024), createTime timestamp, parameters varchar(1024)
      */
     public static void statements(PreparedStatement resultInserter)
         throws SQLException
@@ -60,14 +59,13 @@ public abstract class FarragoManagementUDR
                 .getSessions();
         for (FarragoSession s : sessions) {
             FarragoSessionInfo info = s.getSessionInfo();
-            Integer [] ids = info.getExecutingStmtIds();
-            for (int x = 0; x < ids.length; x++) {
+            List<Long> ids = info.getExecutingStmtIds();
+            for (long id : ids) {
                 FarragoSessionExecutingStmtInfo stmtInfo =
-                    info.getExecutingStmtInfo(ids[x]);
-
+                    info.getExecutingStmtInfo(id);
                 if (stmtInfo != null) {
                     int i = 0;
-                    resultInserter.setInt(++i, ids[x]);
+                    resultInserter.setLong(++i, id);
                     resultInserter.setString(
                         ++i,
                         stmtInfo.getSql());
@@ -76,7 +74,7 @@ public abstract class FarragoManagementUDR
                         new Timestamp(stmtInfo.getStartTime()));
                     resultInserter.setString(
                         ++i,
-                        arrayToString(stmtInfo.getParameters()));
+                        Arrays.asList(stmtInfo.getParameters()).toString());
                     resultInserter.executeUpdate();
                 }
             }
@@ -85,7 +83,6 @@ public abstract class FarragoManagementUDR
 
     /**
      * Populates a table of catalog objects in use by active statements.
-     * returns table(stmtId int, mofId varchar(32))
      *
      * @param resultInserter
      * @throws SQLException
@@ -96,16 +93,16 @@ public abstract class FarragoManagementUDR
         List<FarragoSession> sessions = FarragoDbSingleton.getSessions();
         for (FarragoSession s : sessions) {
             FarragoSessionInfo info = s.getSessionInfo();
-            Integer [] ids = info.getExecutingStmtIds();
-            for (int x = 0; x < ids.length; x++) {
+            List<Long> ids = info.getExecutingStmtIds();
+            for (long id : ids) {
                 FarragoSessionExecutingStmtInfo stmtInfo =
-                    info.getExecutingStmtInfo(ids[x]);
+                    info.getExecutingStmtInfo(id);
                 if (stmtInfo != null) {
-                    String [] mofIds = stmtInfo.getObjectsInUse();
-                    for (int y = 0; y < mofIds.length; y++) {
+                    List<String> mofIds = stmtInfo.getObjectsInUse();
+                    for (String mofId : mofIds) {
                         int i = 0;
-                        resultInserter.setInt(++i, ids[x]);
-                        resultInserter.setString(++i, mofIds[y]);
+                        resultInserter.setLong(++i, id);
+                        resultInserter.setString(++i, mofId);
                         resultInserter.executeUpdate();
                     }
                 }
@@ -115,7 +112,6 @@ public abstract class FarragoManagementUDR
 
     /**
      * Populates a table of currently active sessions.
-     * returns table(id int, url varchar(256), currentUserName varchar(256), currentRoleName varchar(256), sessionUserName varchar(256), systemUserName varchar(256), catalogName varchar(256), schemaName varchar(256), isClosed boolean, isAutoCommit boolean, isTxnInProgress boolean)
      *
      * @param resultInserter
      * @throws SQLException
@@ -127,9 +123,10 @@ public abstract class FarragoManagementUDR
         for (FarragoSession s : sessions) {
             int i = 0;
             FarragoSessionVariables v = s.getSessionVariables();
-            resultInserter.setInt(
+            FarragoSessionInfo info = s.getSessionInfo();
+            resultInserter.setLong(
                 ++i,
-                s.hashCode());
+                info.getId());
             resultInserter.setString(
                 ++i,
                 s.getUrl());
@@ -150,23 +147,5 @@ public abstract class FarragoManagementUDR
                 s.isTxnInProgress());
             resultInserter.executeUpdate();
         }
-    }
-
-    private static String arrayToString(Object [] array)
-    {
-        StringBuilder sb = new StringBuilder();
-        if (array != null) {
-            for (int i = 0; i < array.length; i++) {
-                if (array[i] != null) {
-                    sb.append(array[i].toString());
-                } else {
-                    sb.append("[NULL]");
-                }
-                if (i < (array.length - 1)) {
-                    sb.append(", ");
-                }
-            }
-        }
-        return sb.toString();
     }
 }

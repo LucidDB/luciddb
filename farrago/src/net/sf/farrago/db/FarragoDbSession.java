@@ -129,7 +129,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     
     private FarragoSessionPrivilegeMap privilegeMap;
 
-    private FarragoSessionInfo sessionInfo;
+    private FarragoDbSessionInfo sessionInfo;
     
     //~ Constructors ----------------------------------------------------------
 
@@ -223,7 +223,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         
         personality = sessionFactory.newSessionPersonality(this, null);
         defaultPersonality = personality;
-        sessionInfo = new FarragoSessionInfo();
+        sessionInfo = new FarragoDbSessionInfo(database.getUniqueId());
     }
 
     //~ Methods ---------------------------------------------------------------

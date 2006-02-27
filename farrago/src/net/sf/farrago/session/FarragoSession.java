@@ -26,7 +26,6 @@ import java.sql.DatabaseMetaData;
 
 import net.sf.farrago.catalog.FarragoRepos;
 import net.sf.farrago.util.FarragoAllocation;
-import net.sf.farrago.util.FarragoSessionInfo;
 import net.sf.farrago.plugin.*;
 
 import org.eigenbase.reltype.*;

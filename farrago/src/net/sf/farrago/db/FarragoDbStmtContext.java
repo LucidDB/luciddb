@@ -43,8 +43,6 @@ import org.eigenbase.runtime.IteratorResultSet;
 import org.eigenbase.sql.SqlKind;
 import org.eigenbase.util.*;
 
-import sun.security.krb5.internal.crypto.d;
-
 
 /**
  * FarragoDbStmtContext implements the
@@ -92,7 +90,7 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
      */
     private int queryTimeoutMillis = 0;
 
-    private Integer executingStmtInfoKey;
+    private long executingStmtInfoKey;
     
     //~ Constructors ----------------------------------------------------------
 
@@ -279,10 +277,14 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
             }
 
             Set<String> objectsInUse = executableStmt.getReferencedObjectIds();
-            FarragoSessionExecutingStmtInfo info = new FarragoSessionExecutingStmtInfo(sql,
-                    dynamicParamValues, (String[])objectsInUse.toArray(new String[objectsInUse.size()]));
-            executingStmtInfoKey = info.getId();
-            session.getSessionInfo().addExecutingStmtInfo(info);
+            executingStmtInfoKey = session.getDatabase().getUniqueId();
+            
+            FarragoSessionExecutingStmtInfo info = new FarragoDbSessionExecutingStmtInfo(
+                    executingStmtInfoKey,
+                    sql,
+                    Arrays.asList(dynamicParamValues),
+                    Arrays.asList(objectsInUse.toArray(new String[objectsInUse.size()])));
+            ((FarragoDbSessionInfo)session.getSessionInfo()).addExecutingStmtInfo(info);
 
             resultSet = executableStmt.execute(newContext);
             runningContext = newContext;
@@ -322,9 +324,8 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
                     if (!success) {
                         session.endTransactionIfAuto(false);
                     }
-                    if (executingStmtInfoKey != null) {
-                        session.getSessionInfo().removeExecutingStmtInfo(executingStmtInfoKey);
-                    }
+                    getSessionInfo().removeExecutingStmtInfo(executingStmtInfoKey);
+                    executingStmtInfoKey = 0;
                 }
             }
         }
@@ -357,9 +358,8 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
         if (contextToCancel != null) {
             contextToCancel.cancel();
         }
-        if (executingStmtInfoKey != null) {
-            session.getSessionInfo().removeExecutingStmtInfo(executingStmtInfoKey);
-        }
+        getSessionInfo().removeExecutingStmtInfo(executingStmtInfoKey);
+        executingStmtInfoKey = 0;
     }
 
     // implement FarragoSessionStmtContext
@@ -373,9 +373,8 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
             }
             resultSet = null;
             runningContext = null;
-            if (executingStmtInfoKey != null) {
-                session.getSessionInfo().removeExecutingStmtInfo(executingStmtInfoKey);
-            }
+            getSessionInfo().removeExecutingStmtInfo(executingStmtInfoKey);
+            executingStmtInfoKey = 0;
         }
     }
 
@@ -406,6 +405,11 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
             tracer.finer("?" + (i + 1) + " = [" + dynamicParamValues[i] + "]");
         }
     }
+    
+    private FarragoDbSessionInfo getSessionInfo() {
+        return (FarragoDbSessionInfo)session.getSessionInfo();
+    }
+
 }
 
 

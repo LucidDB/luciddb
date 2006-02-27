@@ -8,7 +8,7 @@ set schema 'sys_boot.mgmt';
 set path 'sys_boot.mgmt';
 
 create function statements()
-returns table(id int, sqlStmt varchar(1024), createTime timestamp, parameters varchar(1024))
+returns table(id int, sql_stmt varchar(1024), create_time timestamp, parameters varchar(1024))
 language java
 parameter style system defined java
 no sql
@@ -21,7 +21,7 @@ create view statements_view as
 grant select on statements_view to public;
 
 create function sessions()
-returns table(id int, url varchar(256), currentUserName varchar(256), currentRoleName varchar(256), sessionUserName varchar(256), systemUserName varchar(256), catalogName varchar(256), schemaName varchar(256), isClosed boolean, isAutoCommit boolean, isTxnInProgress boolean)
+returns table(id int, url varchar(128), current_user_name varchar(128), current_role_name varchar(128), session_user_name varchar(128), system_user_name varchar(128), catalog_name varchar(128), schema_name varchar(128), is_closed boolean, is_auto_commit boolean, is_txn_in_progress boolean)
 
 language java
 parameter style system defined java
@@ -35,16 +35,16 @@ create view sessions_view as
 grant select on sessions_view to public;
 
 create function objectsInUse()
-returns table(stmtId int, mofId varchar(32))
+returns table(stmt_id int, mof_id varchar(32))
 
 language java
 parameter style system defined java
 no sql
 external name 'class net.sf.farrago.syslib.FarragoManagementUDR.objectsInUse';
 
-create view objectsInUse_view as
+create view objects_in_use_view as
   select * from table(objectsInUse());
 
 -- todo:  grant this only to a privileged user
-grant select on objectsInUse_view to public;
+grant select on objects_in_use_view to public;
 

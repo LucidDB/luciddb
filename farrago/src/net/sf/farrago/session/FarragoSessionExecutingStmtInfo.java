@@ -20,80 +20,45 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package net.sf.farrago.util;
+package net.sf.farrago.session;
+
+import java.util.List;
 
 
 /**
  * FarragoSessionExecuctingStmtInfo contains information about executing statements.
  */
-public class FarragoSessionExecutingStmtInfo
+public interface FarragoSessionExecutingStmtInfo
 {
-    //~ Instance fields -------------------------------------------------------
-
-    private Integer id;
-    private String sql;
-    private long startTime;
-    private Object [] parameters;
-    private String[] objectsInUse;
-
-    //~ Constructors ----------------------------------------------------------
-
-    public FarragoSessionExecutingStmtInfo(
-        String sql,
-        Object [] parameters,
-        String[] objectsInUse)
-    {
-        this.sql = sql;
-        this.startTime = System.currentTimeMillis();
-        this.parameters = parameters;
-        this.objectsInUse = objectsInUse;
-        this.id = this.hashCode();
-    }
-
     //~ Methods ---------------------------------------------------------------
 
     /**
      * Returns the unique identifier for this executing statement.
-     * @return
+     * @return Unique statement ID
      */
-    public Integer getId()
-    {
-        return id;
-    }
+    long getId();
 
     /**
      * Returns the SQL statement being executed.
      * @return SQL statement
      */
-    public String getSql()
-    {
-        return sql;
-    }
+    String getSql();
 
     /**
      * Returns any dynamic parameters used to execute this statement.
-     * @return Object[] of dynamic parameters to the statement
+     * @return List of dynamic parameters to the statement
      */
-    public Object [] getParameters()
-    {
-        return parameters;
-    }
+    List<Object> getParameters();
 
     /**
      * Returns time the statement began executing, in ms.
      * @return Start time in ms
      */
-    public long getStartTime()
-    {
-        return startTime;
-    }
+    long getStartTime();
 
     /**
      * Returns an array of catalog object mofIds in use by this statement.
-     * @return String[] of catalog object mofIds
+     * @return List of catalog object mofIds
      */
-    public String[] getObjectsInUse()
-    {
-        return objectsInUse;
-    }
+    List<String> getObjectsInUse();
 }
