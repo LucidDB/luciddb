@@ -82,10 +82,18 @@ public abstract class FarragoJavaUdxIterator
             null,
             new Class [] { PreparedStatement.class },
             new PreparedStatementInvocationHandler());
+    }
 
-        // TODO jvs 9-Jan-2006:  shouldn't start until plan is
-        // fully loaded
-        startWithLatch();
+    // override QueueIterator
+    public boolean hasNext()
+    {
+        if (latch == null) {
+            // NOTE: we don't actually start the thread until the first call to
+            // hasNext, because first we need "this" to be fully constructed,
+            // including subclasses; also the Fennel plan needs to be loaded.
+            startWithLatch();
+        }
+        return super.hasNext();
     }
 
     // implement ThreadIterator
@@ -113,16 +121,18 @@ public abstract class FarragoJavaUdxIterator
     public void restart()
     {
         // Tell the running thread to buzz off.
-        restart = true;
+        if (latch != null) {
+            restart = true;
 
-        // Wait for it to die.  (TODO:  If we ever get ThreadIterator
-        // to stop using daemons, change this to use thread.join instead.)
-        try {
-            latch.await();
-        } catch (InterruptedException ex) {
-            throw Util.newInternal(ex);
+            // Wait for it to die.  (TODO:  If we ever get ThreadIterator
+            // to stop using daemons, change this to use thread.join instead.)
+            try {
+                latch.await();
+            } catch (InterruptedException ex) {
+                throw Util.newInternal(ex);
+            }
+            restart = false;
         }
-        restart = false;
 
         reset(1);
 
