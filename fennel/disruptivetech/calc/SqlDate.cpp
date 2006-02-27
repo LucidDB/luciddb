@@ -96,7 +96,7 @@ int64_t IsoStringToDate(const char * const src, int len)
     std::string s(src,len);
     trimSpaces(s);
 
-    regex dateExp("\\d\\d\\d\\d-\\d\\d-\\d\\d");
+    regex dateExp("\\d+-\\d+-\\d+");
     if (regex_match(s, dateExp)) {
         try {
             date_duration td = boost::gregorian::from_string(s) - epoc.date();
@@ -121,7 +121,7 @@ int64_t IsoStringToTime(const char * const src, int len)
     // TODO: Try updated boost library to see if we can get
     // TODO: rid of this tiresome check
     cmatch what;
-    regex timeExp("(\\d\\d):(\\d\\d):(\\d\\d)(\\.\\d+)?");
+    regex timeExp("(\\d+):(\\d+):(\\d+)(\\.\\d+)?");
     if (regex_match(s.c_str(), what, timeExp)) {
         try {
             int hour = atoi(what[1].first);
@@ -155,8 +155,8 @@ int64_t IsoStringToTimestamp(const char * const src, int len)
     // TODO: Try updated boost library to see if we can get
     // TODO: rid of this tiresome check
     cmatch what;    
-    regex timestampExp("\\d\\d\\d\\d-\\d\\d-\\d\\d +"
-                       "(\\d\\d):(\\d\\d):(\\d\\d)(\\.\\d+)?");
+    regex timestampExp("\\d+-\\d+-\\d+ +"
+                       "(\\d+):(\\d+):(\\d+)(\\.\\d+)?");
     if (regex_match(s.c_str(), what, timestampExp)) {
         try {
             int hour = atoi(what[1].first);

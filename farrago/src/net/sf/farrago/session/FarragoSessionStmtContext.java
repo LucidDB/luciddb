@@ -171,6 +171,8 @@ public interface FarragoSessionStmtContext extends FarragoAllocation
     public void setQueryTimeout(int milliseconds);
 
     public int getQueryTimeout();
+    
+    public String getSql();
 }
 
 

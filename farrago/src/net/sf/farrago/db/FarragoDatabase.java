@@ -26,6 +26,7 @@ import java.io.*;
 import java.sql.*;
 import java.util.*;
 import java.net.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.*;
 
 import javax.jmi.reflect.*;
@@ -105,6 +106,11 @@ public class FarragoDatabase extends FarragoDbSingleton
      */
     private File traceConfigFile;
 
+    /**
+     * Provides unique identifiers for sessions and statements.
+     */
+    private AtomicLong uniqueId = new AtomicLong();
+    
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -501,6 +507,14 @@ public class FarragoDatabase extends FarragoDbSingleton
     public FarragoDdlLockManager getDdlLockManager()
     {
         return ddlLockManager;
+    }
+    
+    /**
+     * @return next unique identifier
+     */
+    public long getUniqueId()
+    {
+        return uniqueId.incrementAndGet();
     }
     
     /**

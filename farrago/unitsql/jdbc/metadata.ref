@@ -25,6 +25,7 @@
 +---------------------+----------------+
 | INFORMATION_SCHEMA  | LOCALDB        |
 | JDBC_METADATA       | SYS_BOOT       |
+| MGMT                | SYS_BOOT       |
 | SALES               | LOCALDB        |
 | SQLJ                | LOCALDB        |
 | SYS_BOOT            | SYS_BOOT       |
@@ -90,6 +91,9 @@
 | SYS_BOOT   | JDBC_METADATA  | TYPE_INFO_VIEW                   | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | JDBC_METADATA  | UDTS_VIEW                        | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | JDBC_METADATA  | UDTS_VIEW_INTERNAL               | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | OBJECTS_IN_USE_VIEW              | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | SESSIONS_VIEW                    | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | STATEMENTS_VIEW                  | VIEW        |          |           |             |            |                            |                 |
 +------------+----------------+----------------------------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test getColumns
@@ -134,6 +138,7 @@
 | INFORMATION_SCHEMA    | LOCALDB        |
 | JDBC_METADATA         | SYS_BOOT       |
 | METADATA_TEST_SCHEMA  | LOCALDB        |
+| MGMT                  | SYS_BOOT       |
 | SALES                 | LOCALDB        |
 | SQLJ                  | LOCALDB        |
 | SYS_BOOT              | SYS_BOOT       |
@@ -256,6 +261,7 @@
 +---------------------+----------------+
 | INFORMATION_SCHEMA  | LOCALDB        |
 | JDBC_METADATA       | SYS_BOOT       |
+| MGMT                | SYS_BOOT       |
 | SALES               | LOCALDB        |
 | SQLJ                | LOCALDB        |
 | SYS_BOOT            | SYS_BOOT       |

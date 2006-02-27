@@ -90,6 +90,8 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
      */
     private int queryTimeoutMillis = 0;
 
+    private long executingStmtInfoKey;
+    
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -242,6 +244,11 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
     }
 
     // implement FarragoSessionStmtContext
+    public String getSql() {
+        return sql;
+    }
+    
+    // implement FarragoSessionStmtContext
     public void execute()
     {
         assert (isPrepared());
@@ -268,6 +275,16 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
             if (daemon) {
                 newContext.addAllocation(this);
             }
+
+            Set<String> objectsInUse = executableStmt.getReferencedObjectIds();
+            executingStmtInfoKey = session.getDatabase().getUniqueId();
+            
+            FarragoSessionExecutingStmtInfo info = new FarragoDbSessionExecutingStmtInfo(
+                    executingStmtInfoKey,
+                    sql,
+                    Arrays.asList(dynamicParamValues),
+                    Arrays.asList(objectsInUse.toArray(new String[objectsInUse.size()])));
+            ((FarragoDbSessionInfo)session.getSessionInfo()).addExecutingStmtInfo(info);
 
             resultSet = executableStmt.execute(newContext);
             runningContext = newContext;
@@ -307,6 +324,8 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
                     if (!success) {
                         session.endTransactionIfAuto(false);
                     }
+                    getSessionInfo().removeExecutingStmtInfo(executingStmtInfoKey);
+                    executingStmtInfoKey = 0;
                 }
             }
         }
@@ -339,6 +358,8 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
         if (contextToCancel != null) {
             contextToCancel.cancel();
         }
+        getSessionInfo().removeExecutingStmtInfo(executingStmtInfoKey);
+        executingStmtInfoKey = 0;
     }
 
     // implement FarragoSessionStmtContext
@@ -352,6 +373,8 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
             }
             resultSet = null;
             runningContext = null;
+            getSessionInfo().removeExecutingStmtInfo(executingStmtInfoKey);
+            executingStmtInfoKey = 0;
         }
     }
 
@@ -382,6 +405,11 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
             tracer.finer("?" + (i + 1) + " = [" + dynamicParamValues[i] + "]");
         }
     }
+    
+    private FarragoDbSessionInfo getSessionInfo() {
+        return (FarragoDbSessionInfo)session.getSessionInfo();
+    }
+
 }
 
 

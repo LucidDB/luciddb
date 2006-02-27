@@ -86,7 +86,7 @@ import java.util.Map;
  * </pre></code></blockquote>
  *
  * <p>If any of the testcases fails, a log file is generated, called
- * <code>com/acme/test/MyTest.xml</code> containing the actual output.
+ * <code>com/acme/test/MyTest.log.xml</code> containing the actual output.
  * The log file is otherwise identical to the reference log, so once the
  * log file has been verified, it can simply be copied over to become the new
  * reference log.</p>
@@ -97,9 +97,8 @@ import java.util.Map;
  *
  * <p>The {@link #lookup} method ensures that all test cases share the same
  * instance of the repository. This is important more than one one test case
- * fails. The shared instance insures that the generated <code>.xml</code> file
+ * fails. The shared instance ensures that the generated <code>.log.xml</code> file
  * contains the actual for <em>both</em> test cases.
- *
  *
  * @author jhyde
  * @version $Id$
@@ -599,7 +598,7 @@ public class DiffRepository
 
         case Node.COMMENT_NODE:
             Comment comment = (Comment) node;
-            out.print("<!-- " + comment.getNodeValue() + " -->" + TestUtil.NL);
+            out.print("<!--" + comment.getNodeValue() + "-->" + TestUtil.NL);
             break;
 
         default:
@@ -654,7 +653,7 @@ public class DiffRepository
         DiffRepository diffRepos = mapClassToRepos.get(clazz);
         if (diffRepos == null) {
             final File refFile = findFile(clazz, ".ref.xml");
-            final File logFile = findFile(clazz, ".xml");
+            final File logFile = findFile(clazz, ".log.xml");
             diffRepos = new DiffRepository(refFile, logFile, baseRepos);
             mapClassToRepos.put(clazz, diffRepos);
         }

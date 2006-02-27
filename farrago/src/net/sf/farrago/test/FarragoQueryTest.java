@@ -130,6 +130,7 @@ public class FarragoQueryTest extends FarragoTestCase
         Set refSet = new HashSet();
         refSet.add("INFORMATION_SCHEMA");
         refSet.add("JDBC_METADATA");
+        refSet.add("MGMT");
         refSet.add("SALES");
         refSet.add("SQLJ");
         refSet.add("SYS_BOOT");

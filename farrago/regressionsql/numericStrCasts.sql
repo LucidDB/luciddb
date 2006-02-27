@@ -15,12 +15,7 @@ insert into ints values (1, 1, 1, 1);
 insert into ints values (2, -1, -1, -1);
 insert into ints values (3, 0, 0, 0);
 insert into ints values (4, 32767, 2147483647, 9223372036854775807);
--- REVIEW: SZ: 8/5/2004: Unary minus is treated separately from the
--- number itself.  Currently we use Java longs for literal validation
--- and since 9223372036854775808 is Long.MAX_LONG + 1, the literal
--- -9223372036854775808 appears invalid.  Once we have support for
--- arbitrary precision numerics, this limitation will likely go away.
-insert into ints values (5, -32768, -2147483648, -9223372036854775807);
+insert into ints values (5, -32768, -2147483648, -9223372036854775808);
 
 create table exacts (
     x integer not null primary key,

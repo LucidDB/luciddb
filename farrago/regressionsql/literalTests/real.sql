@@ -42,8 +42,7 @@ insert into t_real values(1e400,null);
 -- insert the right value
 insert into t_real values(1234.999,null);
 insert into t_real values(-4567890123456789.9,null);
--- TODO fennel shows -0E0 and java shows 0E0.
--- insert into t_real values(-1.2345678901234e-200,null);
+insert into t_real values(-1.2345678901234e-200,null);
 
 -- null value test
 --insert into t_real values(null, null); 
@@ -52,8 +51,7 @@ select * from t_real;
 
 drop table t_real;
 
-alter system set "calcVirtualMachine"='CALCVM_FENNEL';
--- TODO: fennel reports underflow, java does not.
+-- Underflow, value goes to 0
 values 1e-400;
 values -1e-400;
 drop schema test;

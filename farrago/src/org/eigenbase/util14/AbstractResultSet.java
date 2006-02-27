@@ -1648,6 +1648,8 @@ abstract public class AbstractResultSet implements ResultSet
             return (Timestamp) o;
         } else if (o instanceof Date) {
             return new Timestamp(((Date) o).getTime());
+        } else if (o instanceof Time) {
+            return new Timestamp(((Time) o).getTime());
         } else if (o instanceof String) {
             return Timestamp.valueOf(((String) o).trim());
         } else {
