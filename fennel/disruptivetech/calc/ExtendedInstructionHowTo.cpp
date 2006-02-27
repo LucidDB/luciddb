@@ -34,8 +34,8 @@ Instruction objects into Calculator.
 
 <h3>Adding Extended Instructions</h3>
 <p>
-Please see the Calculator Technical Specification for details
-on how Calculator works internally.
+Please see the <a href="../doc/calculator-compact.html">Calculator Technical
+Specification</a> for details on how the Calculator works internally.
 </p>
 <p>
 ExtendedInstructions are in some sense like call-outs for
