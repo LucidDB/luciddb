@@ -84,6 +84,7 @@
 | CSV_SCHEMA          | LOCALDB        |
 | INFORMATION_SCHEMA  | LOCALDB        |
 | JDBC_METADATA       | SYS_BOOT       |
+| MGMT                | SYS_BOOT       |
 | SALES               | LOCALDB        |
 | SQLJ                | LOCALDB        |
 | SYS_BOOT            | SYS_BOOT       |
@@ -164,6 +165,7 @@ Error: DDL validation error near line 1, column 31: Reference to unknown foreign
 +---------------------+----------------+
 | INFORMATION_SCHEMA  | LOCALDB        |
 | JDBC_METADATA       | SYS_BOOT       |
+| MGMT                | SYS_BOOT       |
 | SALES               | LOCALDB        |
 | SQLJ                | LOCALDB        |
 | SYS_BOOT            | SYS_BOOT       |

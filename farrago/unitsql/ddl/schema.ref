@@ -11,6 +11,7 @@
 +---------------------+----------------+
 | INFORMATION_SCHEMA  | LOCALDB        |
 | JDBC_METADATA       | SYS_BOOT       |
+| MGMT                | SYS_BOOT       |
 | S                   | LOCALDB        |
 | SALES               | LOCALDB        |
 | SQLJ                | LOCALDB        |
@@ -27,6 +28,7 @@ Error: Dropping schema "LOCALDB"."S" requires CASCADE because other objects stil
 +---------------------+----------------+
 | INFORMATION_SCHEMA  | LOCALDB        |
 | JDBC_METADATA       | SYS_BOOT       |
+| MGMT                | SYS_BOOT       |
 | S                   | LOCALDB        |
 | SALES               | LOCALDB        |
 | SQLJ                | LOCALDB        |
@@ -43,6 +45,7 @@ Error: Dropping schema "LOCALDB"."S" requires CASCADE because other objects stil
 +---------------------+----------------+
 | INFORMATION_SCHEMA  | LOCALDB        |
 | JDBC_METADATA       | SYS_BOOT       |
+| MGMT                | SYS_BOOT       |
 | S                   | LOCALDB        |
 | SALES               | LOCALDB        |
 | SQLJ                | LOCALDB        |
@@ -58,6 +61,7 @@ Error: Dropping schema "LOCALDB"."S" requires CASCADE because other objects stil
 +---------------------+----------------+
 | INFORMATION_SCHEMA  | LOCALDB        |
 | JDBC_METADATA       | SYS_BOOT       |
+| MGMT                | SYS_BOOT       |
 | SALES               | LOCALDB        |
 | SQLJ                | LOCALDB        |
 | SYS_BOOT            | SYS_BOOT       |
