@@ -1,25 +1,25 @@
-0: jdbc:sqlstream:> -- Test management views
-0: jdbc:sqlstream:> 
-0: jdbc:sqlstream:> select count(url) from sys_boot.mgmt.sessions_view;
+0: jdbc:farrago:> -- Test management views
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select count(url) from sys_boot.mgmt.sessions_view;
 +---------+
 | EXPR$0  |
 +---------+
-| 3       |
+| 2       |
 +---------+
-0: jdbc:sqlstream:> 
-0: jdbc:sqlstream:> select sql_stmt from sys_boot.mgmt.statements_view;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select sql_stmt from sys_boot.mgmt.statements_view;
 +-----------------------------------------------------+
 |                      SQL_STMT                       |
 +-----------------------------------------------------+
 | select sql_stmt from sys_boot.mgmt.statements_view  |
 +-----------------------------------------------------+
-0: jdbc:sqlstream:> 
-0: jdbc:sqlstream:> select count(mof_id) from sys_boot.mgmt.objects_in_use_view;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select count(mof_id) from sys_boot.mgmt.objects_in_use_view;
 +---------+
 | EXPR$0  |
 +---------+
-| 1       |
+| 2       |
 +---------+
-0: jdbc:sqlstream:> 
-0: jdbc:sqlstream:> 
-0: jdbc:sqlstream:> !quit
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit
