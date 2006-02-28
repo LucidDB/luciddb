@@ -53,7 +53,7 @@ const uint MaxReadBatch = 64;
 LcsClusterDump::LcsClusterDump(const BTreeDescriptor &bTreeDescriptor,
                                TraceLevel traceLevelInit,
                                SharedTraceTarget pTraceTargetInit,
-                               string nameInit) :
+                               std::string nameInit) :
     LcsClusterAccessBase(bTreeDescriptor),
     TraceSource(pTraceTargetInit, nameInit)
 {

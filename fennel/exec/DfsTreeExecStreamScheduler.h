@@ -53,7 +53,7 @@ class DfsTreeExecStreamScheduler : public ExecStreamScheduler
      * @param stream currrent execution stream
      * @param edge returns edge to consumer to execute next
      * @param current returns id of consumer to execute next
-     * @param nonState state to skip when looking for next consumer
+     * @param skipState state to skip when looking for next consumer
      *
      * @return false if reached sink vertex, else true
      */

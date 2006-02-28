@@ -69,7 +69,7 @@ class LbmEntryTest : virtual public SegStorageTestBase
     /**
      * Main test routine for exercising mergeEntry.
      *
-     * @param vector of rid values to construct bitmaps for
+     * @param ridValues vector of rid values to construct bitmaps for
      * @param nRidsPerBitmap vector of values indicating how many rids
      * to include in each bitmap
      * @param scratchBufferSize size of scratch buffer used to construct

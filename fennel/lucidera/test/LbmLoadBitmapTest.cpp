@@ -496,7 +496,7 @@ void LbmLoadBitmapTest::testLoad(
     }
 }
 
-void::LbmLoadBitmapTest::initBTreeExecStreamParam(
+void LbmLoadBitmapTest::initBTreeExecStreamParam(
     BTreeExecStreamParams &param, shared_ptr<BTreeDescriptor> pBTreeDesc)
 {
     param.scratchAccessor = pSegmentFactory->newScratchSegment(pCache, 10);

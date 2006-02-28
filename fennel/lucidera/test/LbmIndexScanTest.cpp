@@ -110,15 +110,19 @@ protected:
     /**
      * Initializes BTreeExecStreamParam corresponding to a bitmap index
      *
+     * @param tupleDesc tuple descriptor corresponding to bitmap index
+     * @param keyProj projection corresponding to the bitmap index keys;
+     * excludes start rid
      * @param nKeys number of keys in the bitmap index; excludes start
      * rid from key count 
      */
     void  initBTreeBitmapDesc(
-        TupleDescriptor &param, TupleProjection &keyProj, uint nKeys);
+        TupleDescriptor &tupleDesc, TupleProjection &keyProj, uint nKeys);
 
     /**
      * Initializes a tuple descriptor corresponding to a bitmap index
      *
+     * @param tupleDesc tuple descriptor corresponding to bitmap index
      * @param nKeys number of keys in the bitmap index; excludes start
      * rid from key count
      */
@@ -792,7 +796,7 @@ void LbmIndexScanTest::loadTableAndIndex(
     verifyOutput(*pOutputStream, 1, expectedResultGenerator);
 }
 
-void::LbmIndexScanTest::initBTreeExecStreamParam(
+void LbmIndexScanTest::initBTreeExecStreamParam(
     BTreeExecStreamParams &param, shared_ptr<BTreeDescriptor> pBTreeDesc)
 {
     param.scratchAccessor = pSegmentFactory->newScratchSegment(pCache, 10);

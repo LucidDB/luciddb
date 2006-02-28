@@ -55,7 +55,7 @@ public:
      *
      * @param scratchBufferInit scratch buffer for constructing bitmap segments
      *
-     * @param scratchBufferInitSize size of scratch buffer
+     * @param scratchBufferSizeInit size of scratch buffer
      *
      * @param bitmapTupleDesc descriptor of the tuple that will represent
      * the constructed bitmap segment
