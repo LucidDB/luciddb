@@ -123,12 +123,6 @@ void LogicalTxnLog::removeTxn(SharedLogicalTxn pTxn)
 
 void LogicalTxnLog::commitTxn(SharedLogicalTxn pTxn)
 {
-    commitTxnImpl(pTxn);
-    removeTxn(pTxn);
-}
-
-void LogicalTxnLog::commitTxnImpl(SharedLogicalTxn pTxn)
-{
     LogicalTxnEventMemento memento;
     memento.event = LogicalTxnEventMemento::EVENT_COMMIT;
     memento.txnId = pTxn->txnId;
@@ -148,6 +142,8 @@ void LogicalTxnLog::commitTxnImpl(SharedLogicalTxn pTxn)
             // NOTE jvs 27-Feb-2006: "empty commit" is an important
             // optimization for queries in autocommit mode, where JDBC
             // specifies a commit whenever a cursor is closed.
+            StrictMutexGuard mutexGuard(mutex);
+            removeTxn(pTxn);
             return;
         }
         CompoundId::setPageId(memento.logPosition.segByteId,NULL_PAGE_ID);
@@ -168,6 +164,7 @@ void LogicalTxnLog::commitTxnImpl(SharedLogicalTxn pTxn)
     }
 
     commitTxnWithGroup(mutexGuard);
+    removeTxn(pTxn);
 }
 
 void LogicalTxnLog::commitTxnWithGroup(StrictMutexGuard &mutexGuard)
