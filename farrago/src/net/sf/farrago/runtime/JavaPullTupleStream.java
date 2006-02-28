@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,6 +25,8 @@ package net.sf.farrago.runtime;
 import java.nio.*;
 import java.util.*;
 
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.runtime.TupleIter;
 import org.eigenbase.util.*;
 
 /**
@@ -41,7 +43,8 @@ public class JavaPullTupleStream implements JavaTupleStream
     //~ Instance fields -------------------------------------------------------
 
     private FennelTupleWriter tupleWriter;
-    private Iterator iter;
+    private final Iterator iter;
+    private final TupleIter tupleIter;
     private Object next;
 
     //~ Constructors ----------------------------------------------------------
@@ -56,8 +59,27 @@ public class JavaPullTupleStream implements JavaTupleStream
         FennelTupleWriter tupleWriter,
         Iterator iter)
     {
+        assert(!CallingConvention.ENABLE_NEW_ITER);
         this.tupleWriter = tupleWriter;
         this.iter = iter;
+        this.tupleIter = null;
+        next = null;
+    }
+
+    /**
+     * Constructs a new JavaPullTupleStream.
+     *
+     * @param tupleWriter the FennelTupleWriter to use for marshalling tuples
+     * @param iter Iterator producing objects
+     */
+    public JavaPullTupleStream(
+        FennelTupleWriter tupleWriter,
+        TupleIter tupleIter)
+    {
+        assert(CallingConvention.ENABLE_NEW_ITER);
+        this.tupleWriter = tupleWriter;
+        this.iter = null;
+        this.tupleIter = tupleIter;
         next = null;
     }
 
@@ -70,10 +92,15 @@ public class JavaPullTupleStream implements JavaTupleStream
      *        is allocated from within native code so that cache pages can be
      *        used, and so that data never needs to be copied
      *
-     * @return number of bytes written to buffer
+     * @return number of bytes written to buffer; 0 indicates end of stream;
+     *         less than 0 indicates no data currently available
      */
     private int fillBuffer(ByteBuffer byteBuffer)
     {
+        if (tupleIter != null) {
+            return fillBufferFromTupleIter(byteBuffer);
+        }
+
         if (next == null) {
             if (!iter.hasNext()) {
                 return 0;
@@ -96,10 +123,66 @@ public class JavaPullTupleStream implements JavaTupleStream
         return byteBuffer.limit();
     }
 
+    /**
+     * Called from native code.
+     *
+     * @param byteBuffer target buffer for marshalled tuples; note that this
+     *        is allocated from within native code so that cache pages can be
+     *        used, and so that data never needs to be copied
+     *
+     * @return number of bytes written to buffer, 0 indicates end of stream,
+     *         less than 0 indicates iterator underflow
+     */
+    private int fillBufferFromTupleIter(ByteBuffer byteBuffer)
+    {
+        if (next == null) {
+            Object o = tupleIter.fetchNext();
+            
+            if (o == TupleIter.NoDataReason.END_OF_DATA) {
+                return 0;
+            } else if (o == TupleIter.NoDataReason.UNDERFLOW) {
+                return -1;
+            }
+            
+            next = o;
+        }
+        
+        byteBuffer.order(ByteOrder.nativeOrder());
+        byteBuffer.clear();
+        
+        for (;;) {
+            if (!tupleWriter.marshalTuple(byteBuffer, next)) {
+                break;
+            }
+            
+            Object o = tupleIter.fetchNext();
+            
+            if (o == TupleIter.NoDataReason.END_OF_DATA) {
+                // Will return 0 on next call to this method.
+                next = null;
+                break;
+            } else if (o == TupleIter.NoDataReason.UNDERFLOW) {
+                // We've marshalled at least one tuple, so we don't
+                // return -1 here. Will try again on next call to this 
+                // method.
+                next = null;
+                break;
+            }
+            
+            next = o;
+        }
+        byteBuffer.flip();
+        return byteBuffer.limit();
+    }
+
     // implement JavaTupleStream
     public void restart()
     {
-        Util.restartIterator(iter);
+        if (iter != null) {
+            Util.restartIterator(iter);
+        } else {
+            tupleIter.restart();
+        }
         next = null;
     }
 }

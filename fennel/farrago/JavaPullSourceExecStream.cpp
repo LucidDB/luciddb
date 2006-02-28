@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2004-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -82,11 +82,13 @@ ExecStreamResult JavaPullSourceExecStream::execute(ExecStreamQuantum const &)
     assert(javaTupleStream);
     uint cb = pEnv->CallIntMethod(
         javaTupleStream,JniUtil::methFillBuffer,javaByteBuffer);
-    if (cb) {
+    if (cb > 0) {
         pOutAccessor->provideBufferForConsumption(
             bufferLock.getPage().getWritableData(),
             bufferLock.getPage().getWritableData() + cb);
         return EXECRC_BUF_OVERFLOW;
+    } else if (cb < 0) {
+        return EXECRC_BUF_UNDERFLOW;
     } else {
         pOutAccessor->markEOS();
         return EXECRC_EOS;
