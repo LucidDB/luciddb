@@ -66,6 +66,20 @@ public class SqlTest extends TestCase {
         System.setProperty("net.sf.farrago.test.jdbcDriverClass",
             "com.lucidera.jdbc.LucidDbLocalDriver");
 
+        String eigenhome = System.getenv("EIGEN_HOME");
+        System.setProperty("java.util.logging.config.file",
+            eigenhome + File.separator +
+            "luciddb" + File.separator +
+            "trace" + File.separator +
+            "LucidDbTrace.properties");
+        System.setProperty("net.sf.farrago.home",
+            eigenhome + File.separator +
+            "luciddb");
+        System.setProperty("net.sf.farrago.catalog",
+            eigenhome + File.separator +
+            "luciddb" + File.separator +
+            "catalog");
+
         // obtain sql-file parameter - required
         sqlFile = System.getProperty("sql-file", null);
         if (sqlFile == null) {
