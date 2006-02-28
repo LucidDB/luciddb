@@ -14,23 +14,19 @@
       </init-hook>
 
       <test name="creschema">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/bench/gen/%{config.prop}/creschema.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <sql file="${open.dir}/luciddb/test/sql/bench/gen/${config.prop}/creschema.sql"/>
       </test>
 
       <test name="importschema" requiresSuccess="creschema">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/bench/gen/%{config.prop}/importschema.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <sql file="${open.dir}/luciddb/test/sql/bench/gen/${config.prop}/importschema.sql"/>
       </test>
 
       <test name="benchload" requiresSuccess="creschema">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/bench/gen/%{config.prop}/benchload.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <sql file="${open.dir}/luciddb/test/sql/bench/gen/${config.prop}/benchload.sql"/>
       </test>
 
       <test name="benchqueries" requiresSuccess="benchload">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/bench/gen/%{config.prop}/benchqueries.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <sql file="${open.dir}/luciddb/test/sql/bench/gen/${config.prop}/benchqueries.sql"/>
       </test>
 
     </test-suite>
