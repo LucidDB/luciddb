@@ -175,7 +175,7 @@ public:
     /**
      * Initializes cluster reader with column readers
      *
-     * @param total number of columns in the cluster
+     * @param nClusterColsInit total number of columns in the cluster
      *
      * @param clusterProj list of columns to be read from cluster; column
      * numbers are 0-based relative to the cluster

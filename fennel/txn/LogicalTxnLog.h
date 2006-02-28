@@ -110,6 +110,8 @@ class LogicalTxnLog
 
     void checkpointTxn(SharedLogicalTxn pTxn);
 
+    void commitTxnWithGroup(StrictMutexGuard &mutexGuard);
+
 public:
 
     /**

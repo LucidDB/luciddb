@@ -180,7 +180,7 @@
     </blackhawk>
   </target>
 
-  <target name="test" depends="compile,createCatalog,buildJdbcPlugin">
+  <target name="test" depends="createCatalog,buildJdbcPlugin">
     <antcall target="shortregSanity"/>
     <!-- TODO jvs 27-Feb-2006:  re-enable once LER-303 is fixed -->
     <!-- antcall target="txn" /-->
@@ -190,7 +190,7 @@
   </target>
 
   <!-- all tests, on all configurations, skipping knownFailures -->
-  <target name="testAll" depends="compile,createCatalog,buildJdbcPlugin">
+  <target name="testAll" depends="createCatalog,buildJdbcPlugin">
     <ant dir="test/sql/conv_types" target="test"/>
     <ant dir="test/sql/datatypes" target="testAllConfigs"/>
     <ant dir="test/sql/shortreg2" target="testAllConfigs"/>
@@ -228,7 +228,7 @@
   </target>
 
   <!-- creates catalog and populates with initial metadata -->
-  <target name="createCatalog">
+  <target name="createCatalog" depends="compile">
     <antcall target="makeOutputDirs"/>
     <antcall target="copyFarragoCatalog"/>
     <antcall target="importConfig"/>
@@ -499,7 +499,7 @@
   </target>
 
   <!-- Extra Short Regression -->
-  <target name="shortregSanity" depends="compile,createCatalog">
+  <target name="shortregSanity" depends="createCatalog">
     <filelist dir="${testsrc.dir}/shortreg" id="filelist.shortregsql"
       files="creschema.sql,locationload.sql,deptload.sql,empload.sql,
         customersload.sql,productsload.sql,salesload.sql,joinEqSanity.sql"/>
@@ -656,7 +656,7 @@
     </antcall>
   </target>
 
-  <target name="test-setup" depends="compile,createCatalog">
+  <target name="test-setup" depends="createCatalog">
     <filelist dir="${testsrc.log}/shortreg" id="filelist.setup"
       files="creschema.sql,locationload.sql,deptload.sql,empload.sql,
         customersload.sql,productsload.sql,salesload.sql"/>

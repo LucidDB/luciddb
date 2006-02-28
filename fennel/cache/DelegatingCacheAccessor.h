@@ -54,7 +54,7 @@ public:
         MappedPageListener *pMappedPageListener = NULL,
         TxnId txnId = IMPLICIT_TXN_ID);
     virtual void unlockPage(
-        CachePage &page,LockMode lockMode,TxnId = IMPLICIT_TXN_ID);
+        CachePage &page,LockMode lockMode,TxnId txnId = IMPLICIT_TXN_ID);
     virtual void discardPage(BlockId blockId);
     virtual void prefetchPage(
         BlockId blockId,

@@ -1,0 +1,34 @@
+<project name="bh" default="simple-test">
+  <target name="simple-test">
+    <test-suite testunit="simple-test">
+
+      <init-hook>
+        <test name="restoreCatalog" testunit="init-test">
+          <ant-task>
+            <ant target="restoreCatalog"/>
+          </ant-task>
+          <ant-task>
+            <ant target="copy-csv"/>
+          </ant-task>
+        </test>
+      </init-hook>
+
+      <test name="creschema">
+        <sql file="${open.dir}/luciddb/test/sql/bench/gen/${config.prop}/creschema.sql"/>
+      </test>
+
+      <test name="importschema" requiresSuccess="creschema">
+        <sql file="${open.dir}/luciddb/test/sql/bench/gen/${config.prop}/importschema.sql"/>
+      </test>
+
+      <test name="benchload" requiresSuccess="creschema">
+        <sql file="${open.dir}/luciddb/test/sql/bench/gen/${config.prop}/benchload.sql"/>
+      </test>
+
+      <test name="benchqueries" requiresSuccess="benchload">
+        <sql file="${open.dir}/luciddb/test/sql/bench/gen/${config.prop}/benchqueries.sql"/>
+      </test>
+
+    </test-suite>
+  </target>
+</project>

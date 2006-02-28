@@ -306,7 +306,7 @@ class LbmGeneratorExecStream : public BTreeExecStream, LcsRowScanBaseExecStream
      * always 0 in the case of a batch that is either non-compressed or has
      * more than 1 key
      *
-     * @param initBitmap tupledata containing the initial bitmap entry value;
+     * @param keyvalue tupledata containing the initial bitmap entry value;
      * i.e., only the key value and rid are set
      *
      * @param rid rid to be added

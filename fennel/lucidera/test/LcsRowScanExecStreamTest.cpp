@@ -109,7 +109,7 @@ protected:
      * @return size of the buffer containing the marshalled tuples
      */
     int generateBitmaps(
-        uint nRows, uint skipRows, TupleDescriptor const &btitmapTupleDesc,
+        uint nRows, uint skipRows, TupleDescriptor const &bitmapTupleDesc,
         PBuffer pBuf);
 
     void produceEntry(

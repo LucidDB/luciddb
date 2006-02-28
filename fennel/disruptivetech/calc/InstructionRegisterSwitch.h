@@ -24,12 +24,12 @@
 //
 */
 
-//! Note: Must ifdef out unused code, as a c++ compiler will
-//! instantiate all paths and not attempt to do constant reduction or
-//! otherwise follow the logic of the program.  Without this technique,
-//! or something similar, the compiler would try to instantiate a
-//! BoolAnd(RegisterRef<float>) which trips other compile-time
-//! checks. (And is just generally a bad idea.
+// Note: Must ifdef out unused code, as a c++ compiler will
+// instantiate all paths and not attempt to do constant reduction or
+// otherwise follow the logic of the program.  Without this technique,
+// or something similar, the compiler would try to instantiate a
+// BoolAnd(RegisterRef<float>) which trips other compile-time
+// checks. (And is just generally a bad idea.
 
 // Do not prevent multiple includes of this file. 
 

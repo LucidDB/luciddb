@@ -99,9 +99,11 @@ class LcsColumnReader
 
 public:
     /**
-     * Initializes a scan of column "colOrd"
+     * Initializes a scan of column "colOrdInit"
      *
-     * @param colOrd column number within cluster; 0-based
+     * @param pScanInit cluster reader containing column to be initialized
+     *
+     * @param colOrdInit column number within cluster; 0-based
      */
     void init(LcsClusterReader *pScanInit, uint colOrdInit)
     {

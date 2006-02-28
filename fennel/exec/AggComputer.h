@@ -82,7 +82,7 @@ public:
      *
      * @param iInputAttrIndex 0-based tuple attribute index
      */
-    void setInputAttrIndex(uint iInputAttrInit);
+    void setInputAttrIndex(uint iInputAttrIndex);
 
     /**
      * Clears an accumulator.
@@ -107,7 +107,7 @@ public:
     /**
      * Computes an output based on accumulator state.
      *
-     * @param outputData receives reference to computed output in preparation
+     * @param outputDatum receives reference to computed output in preparation
      * for marshalling result
      *
      * @param accumulatorDatum final in-memory accumulator state

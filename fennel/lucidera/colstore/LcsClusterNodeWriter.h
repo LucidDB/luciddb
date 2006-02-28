@@ -175,11 +175,11 @@ private:
      *
      * @param pValBank buffer storing values in the value bank
      *
-     * @oValBank offset of first value for column in the value bank
+     * @param oValBank offset of first value for column in the value bank
      *
-     * @pBlock temporary block for column
+     * @param pBlock temporary block for column
      *
-     * @f desired offset
+     * @param f desired offset
      *
      * @return address corresponding to offset
      */
@@ -318,11 +318,7 @@ public:
      *
      * @param column column we want the value for
      *
-     * @thisVal offset of the value currently positioned at
-     *
-     * @szVal number of bytes in the value referenced by "thisVal"
-     *
-     * @return offset of the value after "thisVal"
+     * @param thisVal offset of the value currently positioned at
      */
     uint16_t GetNextVal(uint column, uint16_t thisVal);
 
@@ -394,7 +390,7 @@ public:
      *
      * @param pVal value to be undone
      *
-     * @param bFirstTimeInBatch true if the value being undone is the first
+     * @param bFirstInBatch true if the value being undone is the first
      * such value for the batch
      */
     void UndoValue(uint column, PBuffer pVal, bool bFirstInBatch);

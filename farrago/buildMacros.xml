@@ -380,8 +380,9 @@
     <attribute name="testscript" default="test.xml"/>
     <attribute name="bhhome" default="${bh.home}"/>
     <attribute name="fail.on.error" default="true"/>
-    <attribute name="verbose" default="true"/>
+    <attribute name="verbose" default="false"/>
     <attribute name="classpathref" default="blackhawk.run.classpath"/>
+    <attribute name="inheritAll" default="true"/>
     <sequential>
       <taskdef 
         name="bh" 
@@ -393,9 +394,10 @@
         bhHome="@{bhhome}"
         failOnError="@{fail.on.error}"
         verbose="@{verbose}"
+        inheritAll="@{inheritAll}"
         fork="true"
         classpathref="@{classpathref}">
-        <jvmarg line="&FarragoProps;"/>
+        <jvmarg line="&FarragoSqlLineProps;"/>
       </bh>
     </sequential>
   </macrodef>

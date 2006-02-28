@@ -108,7 +108,7 @@ protected:
      * Defines and prepares a graph consisting of two source streams
      * and one confluence stream.
      *
-     * @param sourceStreamEmbryoList list of embryonic source streams that
+     * @param sourceStreamEmbryos list of embryonic source streams that
      * produce tuples
      *
      * @param confluenceStreamEmbryo embryonic confluence stream which processes
