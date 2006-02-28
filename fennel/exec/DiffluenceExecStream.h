@@ -55,7 +55,7 @@ public:
     // implement ExecStream
     virtual void prepare(DiffluenceExecStreamParams const &params);
     virtual void setOutputBufAccessors(
-        std::vector<SharedExecStreamBufAccessor> const &outAccessorsInit);
+        std::vector<SharedExecStreamBufAccessor> const &outAccessors);
     virtual void open(bool restart);
     /**
      * Indicate to the consumer if the buffer is provided by this exec stream

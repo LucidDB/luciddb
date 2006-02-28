@@ -221,7 +221,7 @@ public:
     virtual std::vector<SharedExecStream> getSortedStreams();
     virtual int getStreamCount();
     virtual int getDataflowCount();
-    virtual void renderGraphviz(std::ostream &);
+    virtual void renderGraphviz(std::ostream &dotStream);
     virtual bool isAcyclic();
 };
 
