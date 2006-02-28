@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,23 +22,15 @@
 */
 package net.sf.farrago.namespace.mock;
 
-import java.sql.*;
-
-import net.sf.farrago.util.*;
-
 import openjava.mop.*;
 import openjava.ptree.*;
 
 import org.eigenbase.oj.rel.*;
-import org.eigenbase.oj.stmt.*;
 import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.jdbc.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.sql.*;
 import org.eigenbase.sql2rel.*;
-import org.eigenbase.util.*;
 
 /**
  * MedMockIterRel provides a mock implementation for
@@ -85,7 +77,7 @@ class MedMockIterRel
 
         Expression iterExp =
             new AllocationExpression(
-                OJUtil.typeNameForClass(MedMockIterator.class),
+                OJUtil.typeNameForClass(getIteratorClass()),
                 new ExpressionList(
                     newRowExp,
                     Literal.makeLiteral(columnSet.nRows)));
@@ -93,6 +85,15 @@ class MedMockIterRel
         return iterExp;
     }
 
+    private Class getIteratorClass()
+    {
+        if (CallingConvention.ENABLE_NEW_ITER) {
+            return MedMockTupleIter.class;
+        } else {
+            return MedMockIterator.class;
+        }
+    }
+    
     // implement RelNode
     public Object clone()
     {

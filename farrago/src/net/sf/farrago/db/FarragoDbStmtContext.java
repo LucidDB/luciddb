@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,7 +39,7 @@ import org.eigenbase.oj.stmt.*;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.runtime.IteratorResultSet;
+import org.eigenbase.runtime.AbstractIterResultSet;
 import org.eigenbase.sql.SqlKind;
 import org.eigenbase.util.*;
 
@@ -290,7 +290,8 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
             runningContext = newContext;
 
             if (queryTimeoutMillis > 0) {
-                IteratorResultSet iteratorRS = (IteratorResultSet) resultSet;
+                AbstractIterResultSet iteratorRS = 
+                    (AbstractIterResultSet) resultSet;
                 iteratorRS.setTimeout(queryTimeoutMillis);
             }
             success = true;
