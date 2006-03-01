@@ -260,8 +260,6 @@ class LbmUnionWorkspace
     inline LcsRid getByteNumber(LcsRid rid);
 
 public:
-    virtual ~LbmUnionWorkspace() {};
-
     /**
      * Initialize the workspace
      */
