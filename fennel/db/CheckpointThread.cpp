@@ -45,14 +45,18 @@ void CheckpointThread::run()
         if (quit) {
             return;
         }
+
+        // NOTE jvs 28-Feb-2006:  reset checkpointType here; we used
+        // to do it after checkpoint completion, but that led to a
+        // race condition whereby we might miss a new checkpoint request
+        // by overwriting it.
+        CheckpointType currentType = checkpointType;
+        checkpointType = CHECKPOINT_DISCARD;
         mutexGuard.unlock();
         
         SXMutexExclusiveGuard actionMutexGuard(actionMutex);
-        database.checkpointImpl(checkpointType);
+        database.checkpointImpl(currentType);
         actionMutexGuard.unlock();
-
-        mutexGuard.lock();
-        checkpointType = CHECKPOINT_DISCARD;
     }
 }
 
