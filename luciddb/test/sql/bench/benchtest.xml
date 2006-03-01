@@ -3,14 +3,8 @@
     <test-suite testunit="simple-test">
 
       <init-hook>
-        <test name="restoreCatalog" testunit="init-test">
-          <ant-task>
-            <ant target="restoreCatalog"/>
-          </ant-task>
-          <ant-task>
-            <ant target="copy-csv"/>
-          </ant-task>
-        </test>
+        <ant target="restoreCatalog"/>
+        <ant target="copy-csv"/>
       </init-hook>
 
       <test name="creschema">
