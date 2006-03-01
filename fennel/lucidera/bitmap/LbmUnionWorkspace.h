@@ -96,6 +96,8 @@ class CircularBuffer
     virtual uint indexToOffset(IndexT index) const = 0;
     
 public:
+    virtual ~CircularBuffer() {};
+
     /**
      * Initialize a new zeroed buffer spanning from 0 to size - 1
      */
@@ -258,6 +260,8 @@ class LbmUnionWorkspace
     inline LcsRid getByteNumber(LcsRid rid);
 
 public:
+    virtual ~LbmUnionWorkspace() {};
+
     /**
      * Initialize the workspace
      */
