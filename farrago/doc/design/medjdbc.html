@@ -112,6 +112,21 @@ all table types is returned.  No spaces are allowed in the list
 unless they make up part of the type name, e.g. 'SYSTEM TABLE'. 
 </td>
 </tr>
+<tr>
+<td>EXTENDED_OPTIONS</td>
+<td>
+If set to 'TRUE', unrecognized options are passed through to the JDBC
+driver as properties; otherwise, they are ignored.  The default is 'FALSE'.
+</td>
+</tr>
+<tr>
+<td>TYPE_SUBSTITUTION</td>
+<td>
+If set to 'TRUE' (the default), datatypes which are not supported
+by Farrago are replaced with the best available substitute.  If set to
+'FALSE', unsupported datatypes result in errors.
+</td>
+</tr>
 </table>
 <p>
 
