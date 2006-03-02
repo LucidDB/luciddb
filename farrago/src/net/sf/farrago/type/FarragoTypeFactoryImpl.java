@@ -277,7 +277,9 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     }
 
     // implement FarragoTypeFactory
-    public RelDataType createResultSetType(final ResultSetMetaData metaData)
+    public RelDataType createResultSetType(
+        final ResultSetMetaData metaData,
+        final boolean substitute)
     {
         return createStructType(
             new RelDataTypeFactory.FieldInfo() {
@@ -310,17 +312,22 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                         boolean isNullable =
                             (metaData.isNullable(iOneBased)
                                 != ResultSetMetaData.columnNoNulls);
-                        RelDataType type = createJdbcType(
-                            typeOrdinal, precision, scale, isNullable);
-                        if (type == null) {
+                        try {
+                            RelDataType type = createJdbcType(
+                                typeOrdinal, precision, scale, isNullable,
+                                substitute);
+                            return (RelDataType) type;
+                        } catch (Throwable ex) {
                             throw newUnsupportedJdbcType(
                                 metaData.getTableName(iOneBased),
                                 metaData.getColumnName(iOneBased),
                                 metaData.getColumnTypeName(iOneBased),
-                                typeOrdinal);
+                                typeOrdinal,
+                                precision,
+                                scale,
+                                ex);
                         }
-                        return type;
-                    } catch (SQLException ex) {
+                    } catch (Throwable ex) {
                         throw newSqlTypeException(ex);
                     }
                 }
@@ -328,7 +335,9 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     }
 
     // implement FarragoTypeFactory
-    public RelDataType createJdbcColumnType(ResultSet getColumnsResultSet)
+    public RelDataType createJdbcColumnType(
+        ResultSet getColumnsResultSet,
+        boolean substitute)
     {
         try {
             int typeOrdinal = getColumnsResultSet.getInt(5);
@@ -337,17 +346,23 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             boolean isNullable =
                 getColumnsResultSet.getInt(11)
                 != DatabaseMetaData.columnNoNulls;
-            RelDataType type =
-                createJdbcType(typeOrdinal, precision, scale, isNullable);
-            if (type == null) {
+            try {
+                RelDataType type =
+                    createJdbcType(
+                        typeOrdinal, precision, scale, isNullable,
+                        substitute);
+                return (RelDataType) type;
+            } catch (Throwable ex) {
                 throw newUnsupportedJdbcType(
                     getColumnsResultSet.getString(3),
                     getColumnsResultSet.getString(4),
                     getColumnsResultSet.getString(6),
-                    typeOrdinal);
+                    typeOrdinal,
+                    precision,
+                    scale,
+                    ex);
             }
-            return type;
-        } catch (SQLException ex) {
+        } catch (Throwable ex) {
             throw newSqlTypeException(ex);
         }
     }
@@ -356,44 +371,105 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         int typeOrdinal,
         int precision,
         int scale,
-        boolean isNullable)
+        boolean isNullable,
+        boolean substitute)
+        throws Throwable
     {
-        SqlTypeName typeName = SqlTypeName.getNameForJdbcType(typeOrdinal);
-        if (typeName == null) {
-            return null;
-        }
+        RelDataType type;
 
-        if (SqlTypeFamily.getFamilyForSqlType(typeName)
-            == SqlTypeFamily.Character)
-        {
-            if ((precision == 0) || (precision > 65535)) {
-                // REVIEW jvs 4-Mar-2004: Need a good way to
-                // handle drivers like hsqldb which return 0 or
-                // large numbers to indicate unlimited
-                // precision.
-                precision = 2048;
+        int unknownCharPrecision = 1024;
+        
+        // TODO jvs 1-Mar-2006: Avoid using try/catch for substitution;
+        // instead, get lower levels to participate.  Particularly bad is
+        // catching Throwable, which could be an assertion error which has
+        // nothing to do with type construction.  Also, supply more information
+        // in cases where we currently just throw a plain
+        // UnsupportedOperationException.
+        try {
+            SqlTypeName typeName = SqlTypeName.getNameForJdbcType(typeOrdinal);
+            if (typeName == null) {
+                if (!substitute) {
+                    throw new UnsupportedOperationException();
+                }
+                typeName = SqlTypeName.Varchar;
+                precision = unknownCharPrecision;
+            }
+
+            if (SqlTypeUtil.inCharFamily(typeName)) {
+                // NOTE jvs 4-Mar-2004: This is for drivers like hsqldb which
+                // return 0 or large numbers to indicate unlimited precision.
+                if ((precision == 0) || (precision > 65535)) {
+                    if (!substitute) {
+                        throw new UnsupportedOperationException();
+                    }
+                    precision = unknownCharPrecision;
+                }
+            }
+
+            // TODO jvs 7-Dec-2005: proper datetime precision lowering once we
+            // support anything greater than 0 for datetime precision; for now
+            // we just toss datetime precision.
+            boolean isDatetime =
+                SqlTypeFamily.Datetime.getTypeNames().contains(typeName);
+
+            if (typeName == SqlTypeName.Decimal) {
+                // Limit DECIMAL precision and scale.
+                int maxPrecision = SqlTypeName.Decimal.MAX_NUMERIC_PRECISION;
+                if ((precision > maxPrecision) || (scale > precision)) {
+                    if (!substitute) {
+                        throw new UnsupportedOperationException();
+                    }
+                    precision = maxPrecision;
+
+                    // In the case where we lost precision, we cap the scale at
+                    // 6.  This is an arbitrary decision just like the scale of
+                    // division, and we expect to have to revisit it; perhaps
+                    // we could allow it to be overridden via a column-level
+                    // SQL/MED storage option.
+                    int cappedScale = 6;
+                    if (scale > cappedScale) {
+                        scale = cappedScale;
+                    }
+                }
+                if (scale < 0) {
+                    if (!substitute) {
+                        throw new UnsupportedOperationException();
+                    }
+                    scale = 0;
+                }
+                type = createSqlType(
+                    typeName,
+                    precision,
+                    scale);
+            } else if (typeName.allowsScale()) {
+                // This is probably never used because Decimal is the
+                // only type which supports scale.
+                type = createSqlType(
+                    typeName, precision, scale);
+            } else if (typeName.allowsPrec() && !isDatetime) {
+                type = createSqlType(
+                    typeName, precision);
+            } else {
+                type = createSqlType(
+                    typeName);
+            }
+        } catch (Throwable ex) {
+            if (substitute) {
+                // last resort
+                type = createSqlType(
+                    SqlTypeName.Varchar,
+                    unknownCharPrecision);
+            } else {
+                // Rethrow
+                throw ex;
             }
         }
-
-        RelDataType type;
-        if (typeName.allowsScale()) {
-            type = createSqlType(
-                typeName, precision, scale);
-        } else if (typeName.allowsPrec()) {
-            type = createSqlType(
-                typeName, precision);
-        } else {
-            type = createSqlType(
-                typeName);
-        }
-
         type = createTypeWithNullability(
-            type,
-            isNullable);
+            type, isNullable);
         return type;
     }
     
-    private EigenbaseException newSqlTypeException(SQLException ex)
+    private EigenbaseException newSqlTypeException(Throwable ex)
     {
         return FarragoResource.instance().JdbcDriverTypeInfoFailed.ex(ex);
     }
@@ -402,13 +478,23 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         String tableName,
         String columnName,
         String typeName,
-        int typeOrdinal)
+        int typeOrdinal,
+        int precision,
+        int scale,
+        Throwable ex)
     {
+        if (ex instanceof UnsupportedOperationException) {
+            // hide this because it's not a real excn
+            ex = null;
+        }
         return FarragoResource.instance().JdbcDriverTypeUnsupported.ex(
             repos.getLocalizedObjectName(tableName),
             repos.getLocalizedObjectName(columnName),
             repos.getLocalizedObjectName(typeName),
-            typeOrdinal);
+            typeOrdinal,
+            precision,
+            scale,
+            ex);
     }
 
     int generateClassId()
