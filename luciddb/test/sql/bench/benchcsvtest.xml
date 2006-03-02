@@ -8,19 +8,19 @@
       </init-hook>
 
       <test name="creschema">
-        <sql file="${open.dir}/luciddb/test/sql/bench/gen/${config.prop}/creschema.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/bench/gen/${config.prop}/creschema.sql"/>
       </test>
 
       <test name="benchfileload" requiresSuccess="creschema">
-        <sql file="${open.dir}/luciddb/test/sql/bench/gen/${config.prop}/benchfileload.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/bench/gen/${config.prop}/benchfileload.sql"/>
       </test>
 
       <test name="benchload" requiresSuccess="creschema">
-        <sql file="${open.dir}/luciddb/test/sql/bench/gen/${config.prop}/benchload.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/bench/gen/${config.prop}/benchload.sql"/>
       </test>
 
       <test name="benchqueries" requiresSuccess="benchload">
-        <sql file="${open.dir}/luciddb/test/sql/bench/gen/${config.prop}/benchqueries.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/bench/gen/${config.prop}/benchqueries.sql"/>
       </test>
 
     </test-suite>
