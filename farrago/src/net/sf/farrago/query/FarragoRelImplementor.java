@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2003-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2003-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -140,6 +140,15 @@ public class FarragoRelImplementor extends JavaRelImplementor
         consumer.getInputFlow().add(flow);
     }
     
+    protected FemTupleDescriptor computeStreamDefOutputDesc(RelDataType rowType)
+    {
+        return FennelRelUtil.createTupleDescriptorFromRowType(
+            preparingStmt.getRepos(),
+            preparingStmt.getTypeFactory(),
+            rowType);
+    }
+
+
     private void registerStreamDef(
         FemExecutionStreamDef streamDef,
         RelNode rel,
@@ -157,13 +166,8 @@ public class FarragoRelImplementor extends JavaRelImplementor
         // REVIEW jvs 15-Nov-2004:  This is dangerous because rowType
         // may not be correct all the way down.
         if (streamDef.getOutputDesc() == null) {
-            streamDef.setOutputDesc(
-                FennelRelUtil.createTupleDescriptorFromRowType(
-                    preparingStmt.getRepos(),
-                    preparingStmt.getTypeFactory(),
-                    rowType));
+            streamDef.setOutputDesc(computeStreamDefOutputDesc(rowType));
         }
-
         // recursively ensure all inputs have also been registered
         for (Object obj : streamDef.getInputFlow()) {
             FemExecStreamDataFlow flow = (FemExecStreamDataFlow) obj;

@@ -123,7 +123,7 @@ public abstract class FennelRelUtil
      * @return generated tuple descriptor
      */
     public static FemTupleDescriptor createTupleDescriptorFromRowType(
-        FarragoMetadataFactory repos,
+        FarragoRepos repos,
         RelDataTypeFactory typeFactory,
         RelDataType rowType)
     {
