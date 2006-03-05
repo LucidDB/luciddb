@@ -90,25 +90,40 @@ public interface FarragoTypeFactory extends OJTypeFactory
 
     /**
      * Creates a type which represents the row datatype of a JDBC
-     * ResultSet.
+     * ResultSet.  Optionally, unsupported types can be replaced
+     * with substitutes.  In the worst case, the substitute
+     * is VARCHAR(1024).  Less drastic examples are ignoring
+     * datetime fractional seconds precision or capping numeric
+     * precision at our maximum.
      *
      * @param metaData metadata for JDBC ResultSet
      *
+     * @param substitute if true, use substitutions; if false,
+     * throw exception for unsupported types or type attributes
+     *
      * @return generated type
      */
-    public RelDataType createResultSetType(ResultSetMetaData metaData);
+    public RelDataType createResultSetType(
+        ResultSetMetaData metaData,
+        boolean substitute);
 
     /**
-     * Creates a type which represents column metadata returned
-     * by the {@link DatabaseMetaData#getColumns} call.
+     * Creates a type which represents column metadata returned by the {@link
+     * DatabaseMetaData#getColumns} call.  See {@link #createResultSetType} for
+     * details on type substitutions.
      *
      * @param getColumnsResultSet {@link ResultSet} positioned on
      * a row returned from the getColumns call; result set position
      * is unchanged by this method
      *
+     * @param substitute if true, use substitutions; if false,
+     * throw exception for unsupported types or type attributes
+     *
      * @return generated type
      */
-    public RelDataType createJdbcColumnType(ResultSet getColumnsResultSet);
+    public RelDataType createJdbcColumnType(
+        ResultSet getColumnsResultSet,
+        boolean substitute);
 
     /**
      * Creates a type which represents a MOF feature.
