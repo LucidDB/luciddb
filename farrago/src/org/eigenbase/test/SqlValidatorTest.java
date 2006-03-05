@@ -797,6 +797,12 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "(?s).*Cast function cannot convert value of type DOUBLE to type BOOLEAN.*");
         checkExpFails("cast(true as numeric)",
             "(?s).*Cast function cannot convert value of type BOOLEAN to type DECIMAL.*");
+        checkExpFails("cast(DATE '1243-12-01' as TIME)",
+            "(?s).*Cast function cannot convert value of type DATE to type TIME.*");
+        checkExpFails("cast(TIME '12:34:01' as DATE)",
+            "(?s).*Cast function cannot convert value of type TIME\\(0\\) to type DATE.*");
+
+
     }
 
     public void testDateTime()

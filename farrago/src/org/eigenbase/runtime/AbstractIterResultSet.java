@@ -69,8 +69,9 @@ public abstract class AbstractIterResultSet extends AbstractResultSet
     }
     
     /**
-     * Sets the timeout that this IteratorResultSet will wait for a row from
-     * the underlying iterator.
+     * Sets the timeout that this AbstractIterResultSet will wait for a row from
+     * the underlying iterator.  Note that the timeout must be implemented
+     * in the abstract method {@link #next()}.
      *
      * @param timeoutMillis Timeout in milliseconds. Must be greater than zero.
      * @pre timeoutMillis > 0

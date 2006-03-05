@@ -129,6 +129,8 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     
     private FarragoSessionPrivilegeMap privilegeMap;
 
+    private FarragoDbSessionInfo sessionInfo;
+    
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -221,6 +223,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         
         personality = sessionFactory.newSessionPersonality(this, null);
         defaultPersonality = personality;
+        sessionInfo = new FarragoDbSessionInfo(database.getUniqueId());
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -277,6 +280,11 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     public List getModelExtensions()
     {
         return database.getModelExtensions();
+    }
+
+    // implement FarragoSession
+    public FarragoSessionInfo getSessionInfo() {
+        return sessionInfo;
     }
 
     // implement FarragoSession
@@ -852,7 +860,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             }
         }
     }
-
+    
     //~ Inner Classes ---------------------------------------------------------
 
     private class DdlExecutionVisitor extends DdlVisitor

@@ -440,6 +440,11 @@ public class RexBuilder
      */
     public RexLiteral makeApproxLiteral(BigDecimal bd)
     {
+        // Validator should catch if underflow is allowed
+        // If underflow is allowed, let underflow become zero
+        if (bd.doubleValue() == 0) {
+            bd = BigDecimal.ZERO;
+        }
         return makeLiteral(
             bd,
             typeFactory.createSqlType(SqlTypeName.Double),

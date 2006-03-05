@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,7 +23,10 @@
 package net.sf.farrago.runtime;
 
 import net.sf.farrago.session.FarragoSessionRuntimeParams;
+
+import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.runtime.RestartableIterator;
+import org.eigenbase.runtime.TupleIter;
 
 /**
  * Sandbox for experiments in code generation.
@@ -51,10 +54,25 @@ public class FarragoGeneratedCodeExamples
         FarragoSessionRuntimeParams params = null;
         FarragoRuntimeContext cx = new FarragoRuntimeContext(params);
 
-        int streamId = 0;
-        FennelTupleWriter tupleWriter = null;
-        RestartableIterator iter = null;
-        cx.newJavaTupleStream(streamId, tupleWriter, iter);
+        {
+            assert(!CallingConvention.ENABLE_NEW_ITER);
+
+            // Old-style iterator convention
+            int streamId = 0;
+            FennelTupleWriter tupleWriter = null;
+            RestartableIterator iter = null;
+            cx.newJavaTupleStream(streamId, tupleWriter, iter);
+        }
+        
+        {
+            assert(CallingConvention.ENABLE_NEW_ITER);
+            
+            // New-style iterator convention
+            int streamId = 0;
+            FennelTupleWriter tupleWriter = null;
+            TupleIter tupleIter = null;
+            cx.newJavaTupleStream(streamId, tupleWriter, tupleIter);
+        }
     }
 }
 

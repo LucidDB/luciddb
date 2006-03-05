@@ -143,7 +143,13 @@ public abstract class FarragoDbSingleton extends FarragoCompoundAllocation
         
         return sessions;
     }
-    
+
+    public static synchronized List<FarragoSession> getSessions()
+    {
+        assert(instance != null);
+        return getSessions(instance);
+    }
+
     /**
      * Conditionally shuts down the database depending on the number
      * of references.

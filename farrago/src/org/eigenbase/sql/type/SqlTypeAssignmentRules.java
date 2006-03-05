@@ -230,7 +230,7 @@ public class SqlTypeAssignmentRules
 
         // Date, time, and timestamp are castable from
         // char and varchar
-        // Date is assignable from ...
+        // Date is castable from ...
         rule = new HashSet();
         rule.add(SqlTypeName.Date);
         rule.add(SqlTypeName.Timestamp);
@@ -238,7 +238,7 @@ public class SqlTypeAssignmentRules
         rule.add(SqlTypeName.Varchar);
         coerceRules.put(SqlTypeName.Date, rule);
 
-        // Time is assignable from ...
+        // Time is castable from ...
         rule = new HashSet();
         rule.add(SqlTypeName.Time);
         rule.add(SqlTypeName.Timestamp);
@@ -246,8 +246,11 @@ public class SqlTypeAssignmentRules
         rule.add(SqlTypeName.Varchar);
         coerceRules.put(SqlTypeName.Time, rule);
 
+        // Timestamp is castable from ...
         rule = new HashSet();
         rule.add(SqlTypeName.Timestamp);
+        rule.add(SqlTypeName.Date);
+        rule.add(SqlTypeName.Time);
         rule.add(SqlTypeName.Char);
         rule.add(SqlTypeName.Varchar);
         coerceRules.put(SqlTypeName.Timestamp, rule);

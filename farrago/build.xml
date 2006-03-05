@@ -546,7 +546,7 @@ require version '${required.ant.version}'."/>
   <!-- determine list of all SQL scripts to run during catalog init -->
   <target name="determineInitSql" >
     <filelist dir="${farrago.initsql.dir}" id="filelist.initsql"
-      files="createStorageWrappers.sql,createSqljSchema.sql,createJdbcViews.sql,createSalesSchema.sql"/>
+      files="createStorageWrappers.sql,createSqljSchema.sql,createJdbcViews.sql,createSalesSchema.sql,createMgmtViews.sql"/>
     <pathconvert property="filelist.initsql" refid="filelist.initsql"
       pathsep="${line.separator}" dirsep="${file.separator}" />
   </target>

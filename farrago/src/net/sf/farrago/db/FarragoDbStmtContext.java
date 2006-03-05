@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,7 +39,7 @@ import org.eigenbase.oj.stmt.*;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.runtime.IteratorResultSet;
+import org.eigenbase.runtime.AbstractIterResultSet;
 import org.eigenbase.sql.SqlKind;
 import org.eigenbase.util.*;
 
@@ -90,6 +90,8 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
      */
     private int queryTimeoutMillis = 0;
 
+    private long executingStmtInfoKey;
+    
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -242,6 +244,11 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
     }
 
     // implement FarragoSessionStmtContext
+    public String getSql() {
+        return sql;
+    }
+    
+    // implement FarragoSessionStmtContext
     public void execute()
     {
         assert (isPrepared());
@@ -269,11 +276,22 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
                 newContext.addAllocation(this);
             }
 
+            Set<String> objectsInUse = executableStmt.getReferencedObjectIds();
+            executingStmtInfoKey = session.getDatabase().getUniqueId();
+            
+            FarragoSessionExecutingStmtInfo info = new FarragoDbSessionExecutingStmtInfo(
+                    executingStmtInfoKey,
+                    sql,
+                    Arrays.asList(dynamicParamValues),
+                    Arrays.asList(objectsInUse.toArray(new String[objectsInUse.size()])));
+            ((FarragoDbSessionInfo)session.getSessionInfo()).addExecutingStmtInfo(info);
+
             resultSet = executableStmt.execute(newContext);
             runningContext = newContext;
 
             if (queryTimeoutMillis > 0) {
-                IteratorResultSet iteratorRS = (IteratorResultSet) resultSet;
+                AbstractIterResultSet iteratorRS = 
+                    (AbstractIterResultSet) resultSet;
                 iteratorRS.setTimeout(queryTimeoutMillis);
             }
             success = true;
@@ -307,6 +325,8 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
                     if (!success) {
                         session.endTransactionIfAuto(false);
                     }
+                    getSessionInfo().removeExecutingStmtInfo(executingStmtInfoKey);
+                    executingStmtInfoKey = 0;
                 }
             }
         }
@@ -339,6 +359,8 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
         if (contextToCancel != null) {
             contextToCancel.cancel();
         }
+        getSessionInfo().removeExecutingStmtInfo(executingStmtInfoKey);
+        executingStmtInfoKey = 0;
     }
 
     // implement FarragoSessionStmtContext
@@ -352,6 +374,8 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
             }
             resultSet = null;
             runningContext = null;
+            getSessionInfo().removeExecutingStmtInfo(executingStmtInfoKey);
+            executingStmtInfoKey = 0;
         }
     }
 
@@ -382,6 +406,11 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
             tracer.finer("?" + (i + 1) + " = [" + dynamicParamValues[i] + "]");
         }
     }
+    
+    private FarragoDbSessionInfo getSessionInfo() {
+        return (FarragoDbSessionInfo)session.getSessionInfo();
+    }
+
 }
 
 
