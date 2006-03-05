@@ -1110,11 +1110,6 @@ please disable it and try again.
       </packageset>
       <packageset dir="${farrago.src.dir}">
         <include name="**"/>
-        <!-- 2005-07-28 hersker: Jdk15Test.java kills javadoc 
-           build on pre-1.5 systems; eliminate test dir for now.
-           TODO: figure out how to conditionally eliminate 
-           just the Jdk15Test.java file. -->
-	<exclude name="net/sf/farrago/test/"/>
       </packageset>
       <packageset dir="${farrago.dir}/examples/plannerviz/src">
         <include name="**"/>
@@ -1125,11 +1120,12 @@ please disable it and try again.
       <packageset dir="${farrago.dir}/examples/rng/catalog/java">
         <include name="**"/>
       </packageset>
-      <link href="http://www.netbeans.org/download/dev/javadoc/MdrAPIs"/>
+      <link href="http://www.netbeans.org/download/dev/javadoc/org-netbeans-api-mdr"/>
       <link href="http://java.sun.com/products/jmi/jmi-1_0-fr-doc"/>
-	  <link href="http://java.sun.com/j2se/1.4.2/docs/api"/>
-	  <link href="http://java.sun.com/j2ee/1.4/docs/api"/>
+      <link href="http://java.sun.com/j2se/1.5.0/docs/api"/>
       <link href="http://www.junit.org/junit/javadoc/3.8.1"/>
+      <link href="http://www.janino.net/javadoc"/>
+      <link href="http://www.csg.is.titech.ac.jp/openjava/OpenJava_1.1/htdocs"/>
     </javadoc>
   </target>
 
