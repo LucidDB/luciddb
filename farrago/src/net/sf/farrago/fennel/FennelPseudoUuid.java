@@ -39,6 +39,13 @@ public class FennelPseudoUuid implements java.io.Serializable
     //~ Static fields/initializers --------------------------------------------
     public static final int UUID_LENGTH = 16;
 
+    /**
+     * SerialVersionUID created with JDK 1.5 serialver tool.
+     * Prevents incompatible class conflict when serialized
+     * from JDK 1.5-built server to JDK 1.4-built client.
+     */
+    static final long serialVersionUID = -2855644871776413634L;
+
     //~ Instance fields -------------------------------------------------------
     private final byte[] uuid;
 
