@@ -103,9 +103,7 @@ public:
         FENNEL_UNIT_TEST_CASE(DatabaseTest,testRecoverDataFromFuzzyCheckpoint);
         FENNEL_UNIT_TEST_CASE(DatabaseTest,testRecoverDataFromRollback);
 
-        // TODO jvs 6-Mar-2006:  Make this run always once
-        // LER-303 is fixed.
-        FENNEL_EXTRA_UNIT_TEST_CASE(DatabaseTest,testForceTxns);
+        FENNEL_UNIT_TEST_CASE(DatabaseTest,testForceTxns);
     }
     
     virtual ~DatabaseTest()
@@ -275,18 +273,10 @@ void DatabaseTest::testForceTxns()
     addTxnParticipant(pTxn);
     executeIncrementAction(10, ACTION_INCREMENT_FORCE);
     verifyData(15);
-    {
-        // attempt to mimic LER-303 by allocating a new page
-        // in addition to updating the existing page
-        SegmentAccessor segmentAccessor(pDatabase->getDataSegment(),pCache);
-        TestPageLock pageLock(segmentAccessor);
-        PageId newPageId = pageLock.allocatePage();
-        pageLock.getNodeForWrite().x = 0;
-        pageLock.flushPage(true);
-        pageLock.unlock();
-    }
     pTxn->rollback();
     pTxn.reset();
+    // Give the background flush thread time to flush the data page
+    snooze(3);
     pDatabase->checkpointImpl(CHECKPOINT_DISCARD);
     pDatabase->recoverPhysical();
     verifyData(5);
