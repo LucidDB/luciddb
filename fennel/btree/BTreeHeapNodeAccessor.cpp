@@ -118,6 +118,6 @@ uint BTreeHeapNodeAccessor::getEntryByteCount(uint cb)
     return getEntrySizeWithOverhead(cb);
 }
 
-FENNEL_END_CPPFILE("$Id: //open/lu/dev/fennel/btree/BTreeHeapNodeAccessor.cpp#1 $");
+FENNEL_END_CPPFILE("$Id$");
 
 // End BTreeHeapNodeAccessor.cpp
