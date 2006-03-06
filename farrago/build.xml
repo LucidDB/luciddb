@@ -1092,8 +1092,8 @@ please disable it and try again.
     <farrago.createEmacsTags filesetPropertyName="fileset.taggable"/>
   </target>
 
-  <!-- generate Farrago javadoc (clean first to get rid of dummy classes) -->
-  <target name="javadoc" depends="clean, compile">
+  <!-- generate Farrago javadoc -->
+  <target name="javadoc">
     <delete includeEmptyDirs="true" quiet="true">
       <fileset dir="${javadoc.dir}" includes="*"/>
     </delete>
@@ -1134,7 +1134,8 @@ please disable it and try again.
   </target>
 
   <!-- create the documentation tarball -->
-  <target name="buildDoc" depends="javadoc">
+  <target name="buildDoc" 
+    depends="cleanExamples, createCatalog, buildExamples, javadoc">
     <delete file="${farrago.dir}/doc.tar" />
     <delete file="${farrago.dir}/doc.tar.gz" />
     <tar tarfile="${farrago.dir}/doc.tar">
