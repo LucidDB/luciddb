@@ -47,6 +47,8 @@ class DatabaseTest
 {
     static const LogicalActionType ACTION_INCREMENT;
     
+    static const LogicalActionType ACTION_INCREMENT_FORCE;
+    
     struct TestNode : public StoredNode
     {
         static const MagicNumber MAGIC_NUMBER = 0xa496c71bff0d41bdLL;
@@ -62,6 +64,7 @@ class DatabaseTest
 
     void loadDatabase();
     void executeIncrementAction(int i);
+    void executeIncrementAction(int i, LogicalActionType action);
     void executeIncrementTxn(int i);
     void executeCheckpointedTxn(
         int i,int j,bool commit,CheckpointType = CHECKPOINT_FLUSH_ALL);
@@ -86,6 +89,9 @@ public:
         cacheParams.readConfig(configMap);
         pCache = Cache::newCache(cacheParams);
 
+        // FIXME jvs 6-Mar-2006:  some of these tests depend on
+        // being run in this sequence; make each test self-contained
+
         FENNEL_UNIT_TEST_CASE(DatabaseTest,testCreateEmpty);
         FENNEL_UNIT_TEST_CASE(DatabaseTest,testLoadEmpty);
         FENNEL_UNIT_TEST_CASE(DatabaseTest,testRecoverEmpty);
@@ -96,6 +102,10 @@ public:
         FENNEL_UNIT_TEST_CASE(DatabaseTest,testRecoverDataFromCheckpoint);
         FENNEL_UNIT_TEST_CASE(DatabaseTest,testRecoverDataFromFuzzyCheckpoint);
         FENNEL_UNIT_TEST_CASE(DatabaseTest,testRecoverDataFromRollback);
+
+        // TODO jvs 6-Mar-2006:  Make this run always once
+        // LER-303 is fixed.
+        FENNEL_EXTRA_UNIT_TEST_CASE(DatabaseTest,testForceTxns);
     }
     
     virtual ~DatabaseTest()
@@ -110,7 +120,7 @@ public:
     void testCreateEmpty();
     void testLoadEmpty();
     void testRecoverEmpty();
-
+    
     void testCreateData();
     void testLoadData();
     void testRecoverData(bool);
@@ -120,6 +130,7 @@ public:
     void testRecoverDataFromRollback();
     void testRecoverDataWithFlush();
     void testRecoverDataWithoutFlush();
+    void testForceTxns();
     
     // implement LogicalTxnParticipant
     virtual LogicalTxnClassId getParticipantClassId() const;
@@ -138,6 +149,8 @@ public:
 };
 
 const LogicalActionType DatabaseTest::ACTION_INCREMENT = 1;
+
+const LogicalActionType DatabaseTest::ACTION_INCREMENT_FORCE = 2;
 
 void DatabaseTest::testCreateEmpty()
 {
@@ -249,6 +262,37 @@ void DatabaseTest::testRecoverDataFromRollback()
     verifyData(15);
 }
 
+void DatabaseTest::testForceTxns()
+{
+    configMap.setStringParam(
+        "forceTxns","true");
+    testCreateData();
+    pDatabase->checkpointImpl();
+    verifyData(5);
+    pDatabase.reset();
+    loadDatabase();
+    SharedLogicalTxn pTxn = pDatabase->getTxnLog()->newLogicalTxn(pCache);
+    addTxnParticipant(pTxn);
+    executeIncrementAction(10, ACTION_INCREMENT_FORCE);
+    verifyData(15);
+    {
+        // attempt to mimic LER-303 by allocating a new page
+        // in addition to updating the existing page
+        SegmentAccessor segmentAccessor(pDatabase->getDataSegment(),pCache);
+        TestPageLock pageLock(segmentAccessor);
+        PageId newPageId = pageLock.allocatePage();
+        pageLock.getNodeForWrite().x = 0;
+        pageLock.flushPage(true);
+        pageLock.unlock();
+    }
+    pTxn->rollback();
+    pTxn.reset();
+    pDatabase->checkpointImpl(CHECKPOINT_DISCARD);
+    pDatabase->recoverPhysical();
+    verifyData(5);
+    pDatabase.reset();
+}
+
 void DatabaseTest::loadDatabase()
 {
     pDatabase = Database::newDatabase(
@@ -271,9 +315,12 @@ void DatabaseTest::undoLogicalAction(
     LogicalActionType actionType,
     ByteInputStream &logStream)
 {
-    assert(actionType == ACTION_INCREMENT);
     int i;
     logStream.readValue(i);
+    if (actionType == ACTION_INCREMENT_FORCE) {
+        return;
+    }
+    assert(actionType == ACTION_INCREMENT);
     SegmentAccessor segmentAccessor(pDatabase->getDataSegment(),pCache);
     TestPageLock pageLock(segmentAccessor);
     pageLock.lockExclusive(pageId);
@@ -284,9 +331,12 @@ void DatabaseTest::redoLogicalAction(
     LogicalActionType actionType,
     ByteInputStream &logStream)
 {
-    assert(actionType == ACTION_INCREMENT);
     int i;
     logStream.readValue(i);
+    if (actionType == ACTION_INCREMENT_FORCE) {
+        return;
+    }
+    assert(actionType == ACTION_INCREMENT);
     SegmentAccessor segmentAccessor(pDatabase->getDataSegment(),pCache);
     TestPageLock pageLock(segmentAccessor);
     pageLock.lockExclusive(pageId);
@@ -304,8 +354,13 @@ SharedLogicalTxnParticipant DatabaseTest::loadParticipant(
 
 void DatabaseTest::executeIncrementAction(int i)
 {
+    executeIncrementAction(i, ACTION_INCREMENT);
+}
+
+void DatabaseTest::executeIncrementAction(int i, LogicalActionType action)
+{
     ByteOutputStream &logStream =
-        getLogicalTxn()->beginLogicalAction(*this,ACTION_INCREMENT);
+        getLogicalTxn()->beginLogicalAction(*this,action);
     logStream.writeValue(i);
     getLogicalTxn()->endLogicalAction();
     SegmentAccessor segmentAccessor(pDatabase->getDataSegment(),pCache);
