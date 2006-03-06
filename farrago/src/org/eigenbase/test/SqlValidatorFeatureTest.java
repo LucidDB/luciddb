@@ -104,6 +104,23 @@ public class SqlValidatorFeatureTest extends SqlValidatorTestCase
             EigenbaseResource.instance().SQLFeature_E051_01);
     }
 
+    // NOTE jvs 6-Mar-2006:  carets don't come out properly placed
+    // for INTERSECT/EXCEPT, so don't bother
+
+    public void testIntersect()
+    {
+        checkFeature(
+            "select name from dept intersect select name from dept",
+            EigenbaseResource.instance().SQLFeature_F302);
+    }
+
+    public void testExcept()
+    {
+        checkFeature(
+            "select name from dept except select name from dept",
+            EigenbaseResource.instance().SQLFeature_E071_03);
+    }
+
     private void checkFeature(String sql, ResourceDefinition feature)
     {
         // Test once with feature enabled:  should pass
