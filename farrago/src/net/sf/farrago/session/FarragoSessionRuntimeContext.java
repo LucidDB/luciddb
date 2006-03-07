@@ -71,10 +71,15 @@ public interface FarragoSessionRuntimeContext extends FarragoAllocationOwner
     /**
      * Pushes a routine invocation onto the context stack.
      *
+     * @param udrContext context holder for routine invocation
+     * instance within statement being executed
+     *
      * @param allowSql whether SQL execution should be allowed in
      * this routine
      */
-    public void pushRoutineInvocation(boolean allowSql);
+    public void pushRoutineInvocation(
+        FarragoSessionUdrContext udrContext,
+        boolean allowSql);
 
     /**
      * Pops a routine invocation from the context stack.

@@ -438,7 +438,10 @@ public class JavaRelImplementor implements RelImplementor
         return new Variable(base + generateVariableId());
     }
 
-    private int generateVariableId()
+    /**
+     * @return unique generated variable ID
+     */
+    public int generateVariableId()
     {
         return nextVariableId++;
     }
