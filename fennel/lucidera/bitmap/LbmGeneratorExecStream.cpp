@@ -109,10 +109,6 @@ void LbmGeneratorExecStream::setResourceAllocation(
 ExecStreamResult LbmGeneratorExecStream::execute(
     ExecStreamQuantum const &quantum)
 {
-    if (pOutAccessor->getState() == EXECBUF_EOS) {
-        return EXECRC_EOS;
-    }
-
     // read the start rid and num of rows to load
     
     if (inAccessors[0]->getState() != EXECBUF_EOS) {
@@ -156,6 +152,10 @@ ExecStreamResult LbmGeneratorExecStream::execute(
         // initialize bitmap table to a single entry, assuming we're
         // starting with singleton bitmaps
         initBitmapTable(1);
+    }
+
+    if (pOutAccessor->getState() == EXECBUF_EOS) {
+        return EXECRC_EOS;
     }
 
     // take care of any pending flushes first
