@@ -1323,7 +1323,6 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         if (alias == null) {
             alias = "EXPR$";
         }
-//        assert (!aliases.contains(alias));
         if (aliases.contains(alias)) {
             String aliasBase = alias;
             for (int j = 0;; j++) {
@@ -1651,16 +1650,21 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             break;
 
         case SqlKind.IntersectORDINAL:
+            validateFeature(
+                EigenbaseResource.instance().SQLFeature_F302,
+                node.getParserPosition());
+            registerSetop(parentScope, usingScope, node, alias, forceNullable);
+            break;
+            
         case SqlKind.ExceptORDINAL:
+            validateFeature(
+                EigenbaseResource.instance().SQLFeature_E071_03,
+                node.getParserPosition());
+            registerSetop(parentScope, usingScope, node, alias, forceNullable);
+            break;
+            
         case SqlKind.UnionORDINAL:
-            final SetopNamespace setopNamespace =
-                new SetopNamespace(this, (SqlCall) node);
-            registerNamespace(usingScope, alias, setopNamespace, forceNullable);
-            call = (SqlCall) node;
-            // A setop is in the same scope as its parent.
-            scopes.put(call, parentScope);
-            registerQuery(parentScope, null, call.operands[0], null, false);
-            registerQuery(parentScope, null, call.operands[1], null, false);
+            registerSetop(parentScope, usingScope, node, alias, forceNullable);
             break;
 
         case SqlKind.ValuesORDINAL:
@@ -1752,6 +1756,23 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         default:
             throw node.getKind().unexpected();
         }
+    }
+
+    private void registerSetop(
+        SqlValidatorScope parentScope,
+        SqlValidatorScope usingScope,
+        SqlNode node,
+        String alias,
+        boolean forceNullable)
+    {
+        SqlCall call = (SqlCall) node;
+        final SetopNamespace setopNamespace =
+            new SetopNamespace(this, call);
+        registerNamespace(usingScope, alias, setopNamespace, forceNullable);
+        // A setop is in the same scope as its parent.
+        scopes.put(call, parentScope);
+        registerQuery(parentScope, null, call.operands[0], null, false);
+        registerQuery(parentScope, null, call.operands[1], null, false);
     }
 
     public boolean isAggregate(SqlSelect select) {
@@ -1880,10 +1901,6 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
     {
         SqlNode left = join.getLeft();
         SqlNode right = join.getRight();
-//        Namespace leftNs = getNamespace(left);
-//        final RelDataType leftRowType = leftNs.getRowType();
-//        Namespace rightNs = getNamespace(right);
-//        final RelDataType rightRowType = rightNs.getRowType();
         SqlNode condition = join.getCondition();
         boolean natural = join.isNatural();
         SqlJoinOperator.JoinType joinType = join.getJoinType();
@@ -2365,8 +2382,6 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         checkTypeAssignment(sourceRowType, targetRowType, true);
 
         validateAccess(table, SqlAccessEnum.UPDATE);
-
-        // TODO:  validate type compatibility
     }
 
     /**
