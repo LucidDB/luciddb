@@ -29,6 +29,7 @@ import junit.framework.AssertionFailedError;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.SqlOperator;
+import org.eigenbase.util.Bug;
 
 
 /**
@@ -165,7 +166,7 @@ public abstract class AbstractSqlTester implements SqlTester
         String sql = buildQuery(expression);
         TypeChecker typeChecker =
             expectedType.startsWith("todo:") &&
-            !SqlOperatorTests.bug315Fixed  ?
+            !Bug.Dt315Fixed  ?
             AnyTypeChecker :
             new StringTypeChecker(expectedType);
         check(sql, typeChecker, new Double(expectedResult), delta);
@@ -194,7 +195,7 @@ public abstract class AbstractSqlTester implements SqlTester
         String sql = buildQuery(expression);
         TypeChecker typeChecker =
             expectedType.startsWith("todo:") &&
-            !SqlOperatorTests.bug315Fixed ?
+            !Bug.Dt315Fixed ?
             AnyTypeChecker :
             new StringTypeChecker(expectedType);
         check(sql, typeChecker, result, 0);

@@ -43,7 +43,7 @@ import java.util.List;
  * @author jhyde
  * @since Nov 23, 2003
  * @version $Id$
- **/
+ */
 public class RexUtil
 {
     //~ Static fields/initializers --------------------------------------------
@@ -76,6 +76,36 @@ public class RexUtil
         RexNode [] exps2 = new RexNode[exps.length];
         for (int i = 0; i < exps.length; i++) {
             exps2[i] = clone(exps[i]);
+        }
+        return exps2;
+    }
+
+    /**
+     * Returns a copy of a {@link RexInputRef} array.
+     */
+    public static RexInputRef [] clone(RexInputRef [] exps)
+    {
+        if (null == exps) {
+            return null;
+        }
+        RexInputRef [] exps2 = new RexInputRef[exps.length];
+        for (int i = 0; i < exps.length; i++) {
+            exps2[i] = (RexInputRef) clone(exps[i]);
+        }
+        return exps2;
+    }
+
+    /**
+     * Returns a copy of a {@link RexLocalRef} array.
+     */
+    public static RexLocalRef[] clone(RexLocalRef [] exps)
+    {
+        if (null == exps) {
+            return null;
+        }
+        RexLocalRef[] exps2 = new RexLocalRef[exps.length];
+        for (int i = 0; i < exps.length; i++) {
+            exps2[i] = (RexLocalRef) clone(exps[i]);
         }
         return exps2;
     }
@@ -130,18 +160,12 @@ public class RexUtil
         RexNode [] castExps = new RexNode[fieldCount];
         assert fieldCount == rhsExps.length;
         for (int i = 0; i < fieldCount; ++i) {
-            RelDataTypeField lhsField = lhsFields[i];
-            RelDataType lhsType = lhsField.getType();
-            RelDataType rhsType = rhsExps[i].getType();
-            if (lhsType.equals(rhsType)) {
-                castExps[i] = rhsExps[i];
-            } else {
-                castExps[i] = rexBuilder.makeCast(lhsType, rhsExps[i]);
-            }
+            castExps[i] =
+                maybeCast(rexBuilder, lhsFields[i].getType(), rhsExps[i]);
         }
         return castExps;
     }
-
+    
     /**
      * Casts an expression to desired type, or returns the expression unchanged
      * if it is already the correct type.
@@ -217,24 +241,27 @@ public class RexUtil
     }
 
     /**
-     * Returns wheter a given node contains a RexCall with a specified operator
+     * Returns whether a given node contains a RexCall with a specified
+     * operator.
+     *
      * @param operator to look for
      * @param node a RexNode tree
      */
-    public static RexCall findOperatorCall(final SqlOperator operator,
-                                           RexNode node)
+    public static RexCall findOperatorCall(
+        final SqlOperator operator,
+        RexNode node)
     {
         try {
-            RexShuttle shuttle = new RexShuttle() {
-                public RexNode visitCall(RexCall call)
+            RexVisitor visitor = new RexVisitorImpl(true) {
+                public void visitCall(RexCall call)
                 {
                     if (call.getOperator().equals(operator)) {
                         throw new Util.FoundOne(call);
                     }
-                    return super.visitCall(call);
+                    super.visitCall(call);
                 }
             };
-            node.accept(shuttle);
+            node.accept(visitor);
             return null;
         } catch (Util.FoundOne e) {
             Util.swallow(e, null);
@@ -243,19 +270,19 @@ public class RexUtil
     }
 
     /**
-     * Creates an array of {@link RexInputRef}, one for each field of a given
-     * rowtype.
+     * Creates an array of {@link RexInputRef} objects, one for each field of a
+     * given rowtype.
      */
     public static RexInputRef[] toInputRefs(RelDataType rowType)
     {
         final RelDataTypeField[] fields = rowType.getFields();
-        final RexInputRef[] rexNodes = new RexInputRef[fields.length];
-        for (int i = 0; i < rexNodes.length; i++) {
-            rexNodes[i] = new RexInputRef(i, fields[i].getType());
+        final RexInputRef[] refs = new RexInputRef[fields.length];
+        for (int i = 0; i < refs.length; i++) {
+            refs[i] = new RexInputRef(i, fields[i].getType());
         }
-        return rexNodes;
+        return refs;
     }
-    
+
     /**
      * Creates an array of {@link RexLocalRef} objects, one for each field of a
      * given rowtype.
