@@ -51,12 +51,27 @@ parameter style system defined java
 no sql
 external name 'class net.sf.farrago.test.FarragoTestUDR.ramp';
 
+create function longer_ramp(n int)
+returns table(i int)
+language java
+parameter style system defined java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.longerRamp';
+
 create foreign table mock_ramp_udx_table(
     id int not null)
 server mock_foreign_server
 options (
     executor_impl 'JAVA', 
     udx_specific_name 'mock_schema.ramp',
+    row_count '3');
+
+create foreign table mock_longer_ramp_udx_table(
+    id int not null)
+server mock_foreign_server
+options (
+    executor_impl 'JAVA', 
+    udx_specific_name 'mock_schema.longer_ramp',
     row_count '3');
 
 create table mock_empty_table(
@@ -92,6 +107,8 @@ select * from mock_fennel_table;
 select * from mock_java_table;
 
 select * from mock_ramp_udx_table;
+
+select * from mock_longer_ramp_udx_table;
 
 select * from mock_empty_table;
 

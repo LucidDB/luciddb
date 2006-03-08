@@ -666,15 +666,18 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
     }
 
     // implement FarragoSessionRuntimeContext
-    public void pushRoutineInvocation(boolean allowSql)
+    public void pushRoutineInvocation(
+        FarragoSessionUdrContext udrContext,
+        boolean allowSql)
     {
         // TODO jvs 19-Jan-2005: set system properties sqlj.defaultconnection
         // and sqlj.runtime per SQL:2003 13:12.1.2.  Also other
         // context stuff.
 
-        RoutineInvocationFrame frame = new RoutineInvocationFrame();
+        FarragoUdrInvocationFrame frame = new FarragoUdrInvocationFrame();
         frame.context = this;
         frame.allowSql = allowSql;
+        frame.udrContext = udrContext;
 
         List stack = getInvocationStack();
         stack.add(frame);
@@ -688,7 +691,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
 
         List stack = getInvocationStack();
         assert(!stack.isEmpty());
-        RoutineInvocationFrame frame = (RoutineInvocationFrame)
+        FarragoUdrInvocationFrame frame = (FarragoUdrInvocationFrame)
             stack.remove(stack.size() - 1);
         assert(frame.context == this);
         if (frame.connection != null) {
@@ -738,6 +741,22 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
         return stack;
     }
 
+    static FarragoUdrInvocationFrame getUdrInvocationFrame()
+    {
+        List stack = (List) threadInvocationStack.get();
+        if ((stack == null) || (stack.isEmpty())) {
+            throw new IllegalStateException("No UDR executing.");
+        }
+        FarragoUdrInvocationFrame frame = peekStackFrame(stack);
+        return frame;
+    }
+
+    private static FarragoUdrInvocationFrame peekStackFrame(List stack)
+    {
+        assert(!stack.isEmpty());
+        return (FarragoUdrInvocationFrame) stack.get(stack.size() - 1);
+    }
+
     /**
      * Creates a new default connection attached to the session of the current
      * thread.
@@ -749,8 +768,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
             throw FarragoResource.instance().NoDefaultConnection.ex();
         }
 
-        RoutineInvocationFrame frame =
-            (RoutineInvocationFrame) stack.get(stack.size() - 1);
+        FarragoUdrInvocationFrame frame = peekStackFrame(stack);
 
         if (!frame.allowSql) {
             throw FarragoResource.instance().NoDefaultConnection.ex();
@@ -793,18 +811,6 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
             }
             allocations.clear();
         }
-    }
-
-    /**
-     * Inner class for entries on the routine invocation stack.
-     */
-    private static class RoutineInvocationFrame
-    {
-        FarragoRuntimeContext context;
-
-        boolean allowSql;
-
-        Connection connection;
     }
 }
 

@@ -22,8 +22,13 @@
 */
 package net.sf.farrago.test;
 
+import net.sf.farrago.runtime.*;
+
 import java.sql.*;
-import java.math.BigDecimal;
+import java.math.*;
+import java.util.*;
+
+import org.eigenbase.util.*;
 
 /**
  * FarragoTestUDR contains definitions for user-defined routines used
@@ -121,6 +126,32 @@ public abstract class FarragoTestUDR
         throw new NullPointerException();
     }
 
+    public static long generateRandomNumber(long seed)
+    {
+        Random r = (Random) FarragoUdrRuntime.getContext();
+        if (r == null) {
+            r = new Random(seed);
+            FarragoUdrRuntime.setContext(r);
+        }
+        return r.nextLong();
+    }
+
+    public static int gargle()
+    {
+        Object obj = FarragoUdrRuntime.getContext();
+        if (obj == null) {
+            ClosableAllocation trigger = new ClosableAllocation() 
+                {
+                    public void closeAllocation()
+                    {
+                        System.setProperty("feeble","minded");
+                    }
+                };
+            FarragoUdrRuntime.setContext(trigger);
+        }
+        return 0;
+    }
+
     public static void ramp(int n, PreparedStatement resultInserter)
         throws SQLException
     {
@@ -128,6 +159,16 @@ public abstract class FarragoTestUDR
             resultInserter.setInt(1, i);
             resultInserter.executeUpdate();
         }
+    }
+
+    public static void longerRamp(int n, PreparedStatement resultInserter)
+        throws SQLException
+    {
+        // Let the data server decide how to transform n (as a matter of fact,
+        // it will double it).
+        Integer nBoxed = (Integer)
+            FarragoUdrRuntime.getDataServerRuntimeSupport(new Integer(n));
+        ramp(nBoxed.intValue(), resultInserter);
     }
 }
 

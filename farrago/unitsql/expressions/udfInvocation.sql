@@ -140,6 +140,23 @@ language java
 no sql
 external name 'class net.sf.farrago.test.FarragoTestUDR.throwNPE';
 
+
+-- test UDF which depends on FarragoUdrRuntime
+create function generate_random_number(seed bigint)
+returns bigint
+language java
+no sql
+not deterministic
+external name 'class net.sf.farrago.test.FarragoTestUDR.generateRandomNumber';
+
+-- test UDF which depends on FarragoUdrRuntime, with
+-- ClosableAllocation support
+create function gargle()
+returns integer
+language java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.gargle';
+
 -- test a function that uses another function
 create function celsius_to_rankine(c double)
 returns double
@@ -271,6 +288,24 @@ values throw_sql_exception();
 
 -- should fail
 values throw_npe();
+
+-- runtime context
+select generate_random_number(42) as rng from sales.depts order by 1;
+
+-- runtime context:  verify that the two instances produce
+-- identical sequences independently (no interference)
+select generate_random_number(42) as rng1, generate_random_number(42) as rng2
+from sales.depts order by 1;
+
+-- runtime context:  verify that the two instances produce
+-- different sequences independently (no interference)
+select generate_random_number(42) as rng1, generate_random_number(43) as rng2
+from sales.depts order by 1;
+
+-- runtime context:  verify closeAllocation
+values get_java_property('feeble');
+values gargle();
+values get_java_property('feeble');
 
 -- udx invocation
 select * from table(ramp(5)) order by 1;
@@ -425,4 +460,3 @@ values lower('COBOL');
 
 -- should fail
 values confusing(true);
-

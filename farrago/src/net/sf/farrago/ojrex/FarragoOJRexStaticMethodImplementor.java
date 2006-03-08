@@ -29,6 +29,8 @@ import openjava.mop.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.reltype.*;
 
+import net.sf.farrago.session.*;
+
 /**
  * FarragoOJRexStaticMethodImplementor implements {@link OJRexImplementor}
  * by generating a call to a static Java method.
@@ -85,12 +87,37 @@ public class FarragoOJRexStaticMethodImplementor
             method.getName(),
             exprList);
 
+        String invocationId =
+            method.getName()
+            + ":"
+            + translator.getRelImplementor().generateVariableId();
+
+        FarragoOJRexRelImplementor farragoImplementor =
+            (FarragoOJRexRelImplementor) translator.getRelImplementor();
+        String serverMofId = farragoImplementor.getServerMofId();
+
+        Expression serverMofIdExpr =
+            (serverMofId == null) ? Literal.constantNull()
+            : Literal.makeLiteral(serverMofId);
+
+        OJClass ojContextHolderClass =
+            OJClass.forClass(FarragoSessionUdrContext.class);
+        Variable contextHolder =
+            translator.createScratchVariableWithExpression(
+                ojContextHolderClass,
+                new AllocationExpression(
+                    TypeName.forOJClass(ojContextHolderClass),
+                    new ExpressionList(
+                        Literal.makeLiteral(invocationId),
+                        serverMofIdExpr)));
+
         translator.addStatement(
             new ExpressionStatement(
                 new MethodCall(
                     translator.getRelImplementor().getConnectionVariable(),
                     "pushRoutineInvocation",
                     new ExpressionList(
+                        contextHolder,
                         Literal.makeLiteral(allowSql)))));
 
         TryStatement tryStmt = new TryStatement(null, null, null);

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/expressions/udfInvocation.sql#5 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/expressions/udfInvocation.sql#6 $
 0: jdbc:farrago:> -- Test queries with UDF invocations
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema udftest;
@@ -140,6 +140,23 @@ Error: Result expression type VARCHAR(128) from routine "UDFTEST"."BAD_ATOI" doe
 . . . . . . . . > language java
 . . . . . . . . > no sql
 . . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.throwNPE';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test UDF which depends on FarragoUdrRuntime
+0: jdbc:farrago:> create function generate_random_number(seed bigint)
+. . . . . . . . > returns bigint
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > not deterministic
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.generateRandomNumber';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test UDF which depends on FarragoUdrRuntime, with
+0: jdbc:farrago:> -- ClosableAllocation support
+0: jdbc:farrago:> create function gargle()
+. . . . . . . . > returns integer
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.gargle';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test a function that uses another function
 0: jdbc:farrago:> create function celsius_to_rankine(c double)
@@ -433,6 +450,60 @@ Error: nothing but a failure (state=,code=0)
 0: jdbc:farrago:> values throw_npe();
 Error: java.lang.NullPointerException: null (state=,code=0)
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- runtime context
+0: jdbc:farrago:> select generate_random_number(42) as rng from sales.depts order by 1;
++-----------------------+
+|          RNG          |
++-----------------------+
+| -5843495416241995736  |
+| -5025562857975149833  |
+| 5694868678511409995   |
++-----------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- runtime context:  verify that the two instances produce
+0: jdbc:farrago:> -- identical sequences independently (no interference)
+0: jdbc:farrago:> select generate_random_number(42) as rng1, generate_random_number(42) as rng2
+. . . . . . . . > from sales.depts order by 1;
++-----------------------+-----------------------+
+|         RNG1          |         RNG2          |
++-----------------------+-----------------------+
+| -5843495416241995736  | -5843495416241995736  |
+| -5025562857975149833  | -5025562857975149833  |
+| 5694868678511409995   | 5694868678511409995   |
++-----------------------+-----------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- runtime context:  verify that the two instances produce
+0: jdbc:farrago:> -- different sequences independently (no interference)
+0: jdbc:farrago:> select generate_random_number(42) as rng1, generate_random_number(43) as rng2
+. . . . . . . . > from sales.depts order by 1;
++-----------------------+-----------------------+
+|         RNG1          |         RNG2          |
++-----------------------+-----------------------+
+| -5843495416241995736  | -2715953330829768452  |
+| -5025562857975149833  | -5027215341191833961  |
+| 5694868678511409995   | -2231744817504418815  |
++-----------------------+-----------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- runtime context:  verify closeAllocation
+0: jdbc:farrago:> values get_java_property('feeble');
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> values gargle();
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:farrago:> values get_java_property('feeble');
++---------+
+| EXPR$0  |
++---------+
+| minded  |
++---------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- udx invocation
 0: jdbc:farrago:> select * from table(ramp(5)) order by 1;
 +----+
@@ -709,6 +780,5 @@ Error: From line 1, column 8 to line 1, column 27: No match found for function s
 0: jdbc:farrago:> -- should fail
 0: jdbc:farrago:> values confusing(true);
 Error: From line 1, column 8 to line 1, column 22: No match found for function signature CONFUSING(<BOOLEAN>) (state=,code=0)
-0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

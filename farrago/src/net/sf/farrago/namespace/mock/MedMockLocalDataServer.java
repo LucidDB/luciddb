@@ -118,6 +118,7 @@ class MedMockLocalDataServer
         }
 
         return new MedMockColumnSet(
+            this,
             localName, rowType, nRows, executorImpl, udxSpecificName);
     }
 
@@ -131,6 +132,7 @@ class MedMockLocalDataServer
         // rowcount of 0.
         MedMockIterRel rel = new MedMockIterRel(
             new MedMockColumnSet(
+                this,
                 table.getQualifiedName(),
                 RelOptUtil.createDmlRowType(
                     cluster.getTypeFactory()),
