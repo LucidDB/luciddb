@@ -51,7 +51,7 @@ import org.eigenbase.util.*;
  * @version $Id$
  */
 public class FarragoRelImplementor extends JavaRelImplementor
-    implements FennelRelImplementor
+    implements FennelRelImplementor, FarragoOJRexRelImplementor
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -59,6 +59,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
     OJClass ojAssignableValue;
     OJClass ojBytePointer;
     private Set streamDefSet;
+    private String serverMofId;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -80,6 +81,23 @@ public class FarragoRelImplementor extends JavaRelImplementor
     }
 
     //~ Methods ---------------------------------------------------------------
+
+    /**
+     * Sets the MOFID of the foreign server associated with the
+     * expression being implemented.
+     *
+     * @param serverMofId MOFID to set, or null to clear
+     */
+    public void setServerMofId(String serverMofId)
+    {
+        this.serverMofId = serverMofId;
+    }
+
+    // implement FarragoOJRexRelImplementor
+    public String getServerMofId()
+    {
+        return serverMofId;
+    }
 
     // implement FennelRelImplementor
     public FarragoRepos getRepos()
@@ -148,7 +166,6 @@ public class FarragoRelImplementor extends JavaRelImplementor
             rowType);
     }
 
-
     private void registerStreamDef(
         FemExecutionStreamDef streamDef,
         RelNode rel,
@@ -178,7 +195,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
 
     /**
      * Constructs a globally unique name for an execution stream.  This name is
-     * used to label and find C++ ExecutionStreams.
+     * used to label and find C++ ExecStreams.
      *
      * @param streamDef stream definition
      *

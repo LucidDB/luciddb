@@ -2,7 +2,7 @@
 ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
 
 
-net.sf.farrago.session.FarragoSessionUdrContext oj_var2 = new net.sf.farrago.session.FarragoSessionUdrContext( "decryptPublicKey:1" );
+net.sf.farrago.session.FarragoSessionUdrContext oj_var2 = new net.sf.farrago.session.FarragoSessionUdrContext( "decryptPublicKey:1", null );
 
 
 ExecutableStmt.Oj_inner_1 oj_var5 = new ExecutableStmt.Oj_inner_1();

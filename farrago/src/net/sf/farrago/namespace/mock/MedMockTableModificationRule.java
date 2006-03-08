@@ -79,6 +79,7 @@ class MedMockTableModificationRule extends RelOptRule
         // single value returned will be 0, which is what we want
         MedMockColumnSet rowCountColumnSet =
             new MedMockColumnSet(
+                targetColumnSet.server,
                 targetColumnSet.getLocalName(),
                 tableModification.getRowType(),
                 1,

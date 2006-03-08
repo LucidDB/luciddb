@@ -53,6 +53,7 @@ class MedMockColumnSet extends MedAbstractColumnSet
 {
     //~ Instance fields -------------------------------------------------------
 
+    final MedMockDataServer server;
     final long nRows;
     final String executorImpl;
     final String udxSpecificName;
@@ -60,6 +61,7 @@ class MedMockColumnSet extends MedAbstractColumnSet
     //~ Constructors ----------------------------------------------------------
 
     MedMockColumnSet(
+        MedMockDataServer server,
         String [] localName,
         RelDataType rowType,
         long nRows,
@@ -67,6 +69,7 @@ class MedMockColumnSet extends MedAbstractColumnSet
         String udxSpecificName)
     {
         super(localName, null, rowType, null, null);
+        this.server = server;
         this.nRows = nRows;
         this.executorImpl = executorImpl;
         this.udxSpecificName = udxSpecificName;
@@ -108,6 +111,7 @@ class MedMockColumnSet extends MedAbstractColumnSet
             cluster,
             connection,
             udxSpecificName,
+            server.getServerMofId(),
             new RexNode [] { arg });
     }
 }

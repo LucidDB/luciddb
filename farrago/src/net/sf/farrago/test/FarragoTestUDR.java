@@ -160,6 +160,16 @@ public abstract class FarragoTestUDR
             resultInserter.executeUpdate();
         }
     }
+
+    public static void longerRamp(int n, PreparedStatement resultInserter)
+        throws SQLException
+    {
+        // Let the data server decide how to transform n (as a matter of fact,
+        // it will double it).
+        Integer nBoxed = (Integer)
+            FarragoUdrRuntime.getDataServerRuntimeSupport(new Integer(n));
+        ramp(nBoxed.intValue(), resultInserter);
+    }
 }
 
 // End FarragoTestUDR.java

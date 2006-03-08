@@ -19,51 +19,23 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package net.sf.farrago.session;
+package net.sf.farrago.ojrex;
 
 /**
- * This class provides internal support for the implementation of {@link
- * net.sf.farrago.runtime.FarragoUdrRuntime}.  One instance is allocated to
- * correspond to each code-generated method invocation.
+ * FarragoOJRexRelImplementor defines services provided by
+ * {@link net.sf.farrago.query.FarragoRelImplementor} to
+ * classes in package {@link net.sf.farrago.ojrex}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoSessionUdrContext
+public interface FarragoOJRexRelImplementor
 {
-    private final String invocationId;
-
-    private final String serverMofId;
-
-    private Object obj;
-
-    public FarragoSessionUdrContext(
-        String invocationId,
-        String serverMofId)
-    {
-        this.invocationId = invocationId;
-        this.serverMofId = serverMofId;
-    }
-
-    public String getInvocationId()
-    {
-        return invocationId;
-    }
-
-    public String getServerMofId()
-    {
-        return serverMofId;
-    }
-
-    public Object getObject()
-    {
-        return obj;
-    }
-
-    public void setObject(Object obj)
-    {
-        this.obj = obj;
-    }
+    /**
+     * @return MOFID of the foreign server associated with the
+     * expression being implemented
+     */
+    public String getServerMofId();
 }
 
-// End FarragoSessionUdrContext.java
+// End FarragoOJRexRelImplementor.java

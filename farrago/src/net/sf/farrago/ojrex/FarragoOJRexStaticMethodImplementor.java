@@ -92,6 +92,14 @@ public class FarragoOJRexStaticMethodImplementor
             + ":"
             + translator.getRelImplementor().generateVariableId();
 
+        FarragoOJRexRelImplementor farragoImplementor =
+            (FarragoOJRexRelImplementor) translator.getRelImplementor();
+        String serverMofId = farragoImplementor.getServerMofId();
+
+        Expression serverMofIdExpr =
+            (serverMofId == null) ? Literal.constantNull()
+            : Literal.makeLiteral(serverMofId);
+
         OJClass ojContextHolderClass =
             OJClass.forClass(FarragoSessionUdrContext.class);
         Variable contextHolder =
@@ -100,7 +108,8 @@ public class FarragoOJRexStaticMethodImplementor
                 new AllocationExpression(
                     TypeName.forOJClass(ojContextHolderClass),
                     new ExpressionList(
-                        Literal.makeLiteral(invocationId))));
+                        Literal.makeLiteral(invocationId),
+                        serverMofIdExpr)));
 
         translator.addStatement(
             new ExpressionStatement(

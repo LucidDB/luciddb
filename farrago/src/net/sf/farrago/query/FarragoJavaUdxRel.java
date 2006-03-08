@@ -44,6 +44,8 @@ import net.sf.farrago.runtime.*;
 public class FarragoJavaUdxRel extends TableFunctionRelBase
     implements JavaRel
 {
+    private final String serverMofId;
+    
     /**
      * Creates a <code>FarragoJavaUdxRel</code>.
      *
@@ -53,15 +55,20 @@ public class FarragoJavaUdxRel extends TableFunctionRelBase
      * @param rexCall function invocation expression
      *
      * @param rowType row type produced by function
+     *
+     * @param serverMofId MOFID of data server to associate with this UDX
+     * invocation, or null for none
      */
     public FarragoJavaUdxRel(
-        RelOptCluster cluster, RexNode rexCall, RelDataType rowType)
+        RelOptCluster cluster, RexNode rexCall, RelDataType rowType,
+        String serverMofId)
     {
         super(
             cluster,
             new RelTraitSet(CallingConvention.ITERATOR),
             rexCall,
             rowType);
+        this.serverMofId = serverMofId;
     }
 
     // implement RelNode
@@ -71,6 +78,24 @@ public class FarragoJavaUdxRel extends TableFunctionRelBase
         return planner.makeTinyCost();
     }
 
+    // override TableFunctionRelBase
+    public void explain(RelOptPlanWriter pw)
+    {
+        if (serverMofId == null) {
+            super.explain(pw);
+            return;
+        }
+
+        // NOTE jvs 7-Mar-2006:  including the serverMofId means
+        // we can't use EXPLAIN PLAN in diff-based testing because
+        // the MOFID isn't deterministic.
+        
+        pw.explain(
+            this,
+            new String [] { "invocation", "serverMofId" },
+            new Object [] { serverMofId } );
+    }
+    
     // implement JavaRel
     public ParseTree implement(JavaRelImplementor implementor)
     {
@@ -82,11 +107,19 @@ public class FarragoJavaUdxRel extends TableFunctionRelBase
         MemberDeclarationList memberList = new MemberDeclarationList();
         
         StatementList executeMethodBody = new StatementList();
+
+        // Set up server MOFID context while generating method call
+        // so that it will be available to the UDX at runtime in case
+        // it needs to call back to the foreign data server.
+        FarragoRelImplementor farragoImplementor =
+            (FarragoRelImplementor) implementor;
+        farragoImplementor.setServerMofId(serverMofId);
         implementor.translateViaStatements(
             this,
             getCall(),
             executeMethodBody,
             memberList);
+        farragoImplementor.setServerMofId(null);
 
         MemberDeclaration executeMethodDecl =
             new MethodDeclaration(new ModifierList(ModifierList.PROTECTED),

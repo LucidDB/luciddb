@@ -172,6 +172,7 @@ class MedMockDataServer extends MedAbstractDataServer
             tableProps.getProperty(PROP_TABLE_NAME));
         
         return new MedMockColumnSet(
+            this,
             localName, rowType, nRows, executorImpl,
             udxSpecificName);
     }
@@ -191,7 +192,12 @@ class MedMockDataServer extends MedAbstractDataServer
     public Object getRuntimeSupport(Object param)
         throws SQLException
     {
-        return null;
+        if (param instanceof Integer) {
+            // Double the input.
+            return new Integer(2*((Integer) param).intValue());
+        } else {
+            return null;
+        }
     }
 
     // implement FarragoMedDataServer

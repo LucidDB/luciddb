@@ -178,11 +178,29 @@ public abstract class MedAbstractColumnSet extends RelOptAbstractTable
     /**
      * Provides an implementation of the toRel interface method
      * in terms of an underlying UDX.
+     *
+     * @param cluster same as for toRel
+     *
+     * @param connection same as for toRel
+     *
+     * @param udxSpecificName specific name with which the UDX was created
+     * (either via the SPECIFIC keyword or the invocation name if SPECIFIC was
+     * not specified); this can be a qualified name, possibly with quoted
+     * identifiers, e.g. x.y.z or x."y".z
+     *
+     * @param serverMofId if not null, the invoked UDX can access the data
+     * server with the given MOFID at runtime via {@link
+     * FarragoUdrRuntime.getDataServerRuntimeSupport}
+     *
+     * @param args arguments to UDX invocation
+     *
+     * @return generated relational expression producing the UDX results
      */
     protected RelNode toUdxRel(
         RelOptCluster cluster,
         RelOptConnection connection,
         String udxSpecificName,
+        String serverMofId,
         RexNode [] args)
     {
         // Parse the specific name of the UDX.
@@ -229,7 +247,7 @@ public abstract class MedAbstractColumnSet extends RelOptAbstractTable
         // Create a relational algebra expression for invoking the UDX.
         RexNode rexCall = rexBuilder.makeCall(udx, args);
         RelNode udxRel =
-            new FarragoJavaUdxRel(cluster, rexCall, resultType);
+            new FarragoJavaUdxRel(cluster, rexCall, resultType, serverMofId);
 
         // Optimizer wants us to preserve original types,
         // so cast back for the final result.
