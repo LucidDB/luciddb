@@ -54,6 +54,8 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
 
     final String schemaName;
 
+    final boolean shouldSubstituteTypes;
+
     //~ Constructors ----------------------------------------------------------
 
     MedJdbcNameDirectory(MedJdbcDataServer server)
@@ -65,6 +67,10 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
     {
         this.server = server;
         this.schemaName = schemaName;
+        shouldSubstituteTypes = getBooleanProperty(
+            server.getProperties(),
+            MedJdbcDataServer.PROP_TYPE_SUBSTITUTION,
+            true);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -152,7 +158,9 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
                     }
                     md = rs.getMetaData();
                 }
-                rowType = typeFactory.createResultSetType(md);
+                rowType = typeFactory.createResultSetType(
+                    md,
+                    shouldSubstituteTypes);
             } finally {
                 if (rs != null) {
                     rs.close();
@@ -333,7 +341,7 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
 
         // decide on column retrieval plan
         double dMatching = (double) tableListActual.size();
-        // +1:  avoid divided by zero
+        // +1:  avoid division by zero
         double dReturned = (double) nTablesReturned + 1;
         if (dMatching / dReturned > 0.3) {
             // a significant portion of the tables returned are matches,
@@ -419,57 +427,9 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
                 String columnName = resultSet.getString(4);
                 boolean isNullable =
                     resultSet.getInt(11) != DatabaseMetaData.columnNoNulls;
-                RelDataType type;
-                try {
-                    type =
-                        sink.getTypeFactory().createJdbcColumnType(resultSet);
-                    
-                    if (type.getSqlTypeName() == SqlTypeName.Decimal) {
-                        int prc = SqlTypeName.Decimal.MAX_NUMERIC_PRECISION;
-                        if (type.getPrecision() < prc) {
-                            prc = type.getPrecision();
-                        }
-                        int scale = 6; // scale is capped at 6
-                        if (type.getScale() < scale) {
-                            scale = type.getScale();
-                            if (scale < 0) {
-                                scale = 0;
-                            }
-                        }
-                        type = sink.getTypeFactory().createSqlType(
-                            SqlTypeName.Decimal,
-                            prc,
-                            scale);
-                    }
-                    
-                    if (SqlTypeFamily.Datetime.getTypeNames().contains(
-                            type.getSqlTypeName()))
-                    {
-                        // TODO jvs 7-Dec-2005: proper precision lowering
-                        // once we support anything greater than 0
-                        // for datetime precision; for now we just
-                        // toss the precision.
-                        type = sink.getTypeFactory().createSqlType(
-                            type.getSqlTypeName());
-                    }
-                } catch (Throwable ex) {
-                    // TODO jvs 7-Dec-2005: post this as a warning once we have
-                    // warning support set up.  For now the only way to see it
-                    // is to look at the trace log.  The reason we carry on
-                    // here is that a lot of tables may contain types we don't
-                    // support, and it's a pain for the user to have to exclude
-                    // them one by one via trial and error.
-                    type =
-                        sink.getTypeFactory().createSqlType(
-                            SqlTypeName.Varchar,
-                            1024);
-                }
-
-                // In case we tailored the type, preserve
-                // its original nullability.
-                type = sink.getTypeFactory().createTypeWithNullability(
-                    type, isNullable);
-                    
+                RelDataType type =
+                    sink.getTypeFactory().createJdbcColumnType(
+                        resultSet, shouldSubstituteTypes);
                 String remarks = resultSet.getString(12);
                 String defaultValue = resultSet.getString(13);
                 int ordinalZeroBased = resultSet.getInt(17) - 1;

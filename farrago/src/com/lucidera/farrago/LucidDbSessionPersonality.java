@@ -57,6 +57,16 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
             return false;
         }
         
+        // LucidDB doesn't yet support EXCEPT.
+        if (feature == EigenbaseResource.instance().SQLFeature_E071_03) {
+            return false;
+        }
+        
+        // LucidDB doesn't yet support INTERSECT.
+        if (feature == EigenbaseResource.instance().SQLFeature_F302) {
+            return false;
+        }
+        
         return super.supportsFeature(feature);
     }
 }

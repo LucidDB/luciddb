@@ -63,10 +63,10 @@ class MedJdbcDataServer extends MedAbstractDataServer
     public static final String PROP_TABLE_NAME = "TABLE_NAME";
     public static final String PROP_TABLE_TYPES = "TABLE_TYPES";
     public static final String PROP_EXT_OPTIONS = "EXTENDED_OPTIONS";
+    public static final String PROP_TYPE_SUBSTITUTION = "TYPE_SUBSTITUTION";
     public static final String PROP_VERSION = "VERSION";
     public static final String PROP_NAME = "NAME";
     public static final String PROP_TYPE = "TYPE";
-    public static final String VALUE_TRUE = "TRUE";
 
     //~ Instance fields -------------------------------------------------------
 
@@ -101,11 +101,8 @@ class MedJdbcDataServer extends MedAbstractDataServer
         String password = props.getProperty(PROP_PASSWORD);
         schemaName = props.getProperty(PROP_SCHEMA_NAME);
         catalogName = props.getProperty(PROP_CATALOG_NAME);
-        String extensionOptions = props.getProperty(PROP_EXT_OPTIONS);
 
-        if (extensionOptions != null && 
-            extensionOptions.compareToIgnoreCase(VALUE_TRUE) == 0) 
-        {
+        if (getBooleanProperty(props, PROP_EXT_OPTIONS, false)) {
             connectProps = (Properties) props.clone();
             // or remove the properties of unknown?
             connectProps.remove(PROP_URL);
@@ -115,6 +112,7 @@ class MedJdbcDataServer extends MedAbstractDataServer
             connectProps.remove(PROP_NAME);
             connectProps.remove(PROP_TYPE);
             connectProps.remove(PROP_EXT_OPTIONS);
+            connectProps.remove(PROP_TYPE_SUBSTITUTION);
         }
 
         String tableTypeString = props.getProperty(PROP_TABLE_TYPES);

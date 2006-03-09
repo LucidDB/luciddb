@@ -1,6 +1,6 @@
-pre-cm-Precondition:
-post-cm-Postcondition:
-sql.92-a-Reference to <a href="http://farrago.sf.net/api/org/eigenbase/util/Glossary.html#Sql92">SQL&45;92</a> standard:
-sql.99-a-Reference to <a href="http://farrago.sf.net/api/org/eigenbase/util/Glossary.html#Sql99">SQL:1999</a> standard:
-sql.2003-a-Reference to <a href="http://farrago.sf.net/api/org/eigenbase/util/Glossary.html#Sql2003">SQL:2003</a> standard:
-testcase-cmt-JUnit testcase:
+pre:cm:"Precondition:"
+post:cm:"Postcondition:"
+sql.92:a:Reference to <a href="http://farrago.sf.net/api/org/eigenbase/util/Glossary.html#Sql92">SQL-92</a> standard:
+sql.99:a:Reference to <a href="http://farrago.sf.net/api/org/eigenbase/util/Glossary.html#Sql99">SQL:1999</a> standard:
+sql.2003:a:Reference to <a href="http://farrago.sf.net/api/org/eigenbase/util/Glossary.html#Sql2003">SQL:2003</a> standard:
+testcase:cmt:"JUnit testcase:"

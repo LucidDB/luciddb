@@ -109,8 +109,8 @@ public class VolcanoRuleCall extends RelOptRuleCall
     protected void onMatch()
     {
         try {
-            if (tracer.isLoggable(Level.FINEST)) {
-                tracer.finest("Apply rule [" + getRule() + "] to ["
+            if (tracer.isLoggable(Level.FINE)) {
+                tracer.fine("Apply rule [" + getRule() + "] to ["
                     + RelOptUtil.toString(rels) + "]");
             }
             

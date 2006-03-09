@@ -682,7 +682,7 @@ column type family is {1} but default value type family is {2}</text>
 </exception>
 
 <exception id="460110" name="JdbcDriverTypeUnsupported">
-<text>Cannot support JDBC type {2} (ordinal {3,number,#}) found in column {1} of table {0}</text>
+<text>Cannot support JDBC type {2} (ordinal {3,number,#}, precision {4,number,#}, scale {5,number,#}) found in column {1} of table {0}</text>
 </exception>
 
 <exception id="460120" name="MedInvalidUdxId">

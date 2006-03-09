@@ -182,8 +182,7 @@
 
   <target name="test" depends="createCatalog,buildJdbcPlugin">
     <antcall target="shortregSanity"/>
-    <!-- TODO jvs 27-Feb-2006:  re-enable once LER-303 is fixed -->
-    <!-- antcall target="txn" /-->
+    <antcall target="txn" />
     <antcall target="bh" />
     <ant dir="test/sql/udr/udf" target="test"/>
     <ant dir="test/sql/udr/udx" target="test"/>

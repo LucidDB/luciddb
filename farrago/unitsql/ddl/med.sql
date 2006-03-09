@@ -223,3 +223,49 @@ into demo_import_schema;
 select empno from demo_import_schema.emp order by empno;
 -- should fail:  not there
 select deptno from demo_import_schema.dept order by deptno;
+
+-- negative test for type_substitution option; hsqldb VARCHAR comes
+-- back as precision 0, which we don't accept
+
+create foreign data wrapper test_jdbc
+library '${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'
+language java;
+
+create server hsqldb_nosub
+foreign data wrapper test_jdbc
+options(
+    driver_class 'org.hsqldb.jdbcDriver',
+    url 'jdbc:hsqldb:testcases/hsqldb/scott',
+    user_name 'SA',
+    table_types 'TABLE,VIEW',
+    type_substitution 'FALSE');
+
+-- should fail: direct table reference without creating a foreign table
+select * from hsqldb_nosub.sales.dept order by deptno;
+
+-- should fail: view against said reference
+create view demo_schema.dept_nosub_direct_view as
+select * from hsqldb_nosub.sales.dept order by deptno;
+
+-- should fail: foreign table without column type info
+create foreign table demo_schema.dept_inferred_nosub
+server hsqldb_nosub
+options(schema_name 'SALES', table_name 'DEPT');
+
+-- should succeed: foreign table with column type info
+create foreign table demo_schema.dept_nosub(
+    dno integer,
+    dname char(20),
+    loc char(20))
+server hsqldb_nosub
+options(schema_name 'SALES', table_name 'DEPT');
+
+-- should succeed: query against foreign table with column type info
+select * from demo_schema.dept_nosub order by dno;
+
+-- should succeed: view against foreign table with column type info
+create view demo_schema.dept_nosub_view as
+select * from demo_schema.dept_nosub;
+
+-- should succeed: query against said view
+select * from demo_schema.dept_nosub_view order by dno;

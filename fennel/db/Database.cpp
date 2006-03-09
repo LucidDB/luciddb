@@ -553,11 +553,14 @@ void Database::checkpointImpl(CheckpointType checkpointType)
 
     if (checkpointType == CHECKPOINT_DISCARD) {
         recoveryRequired = true;
+        // NOTE jvs 6-Mar-2006:  record this BEFORE anything else,
+        // since pDataSegment->checkpoint(CHECKPOINT_DISCARD) will
+        // destroy it
+        header.shadowRecoveryPageId =
+            pVersionedSegment->getOnlineRecoveryPageId();
         pDataSegment->checkpoint(checkpointType);
         LogicalTxnLogCheckpointMemento crashMemento;
         pTxnLog->checkpoint(crashMemento,checkpointType);
-        header.shadowRecoveryPageId =
-            pVersionedSegment->getOnlineRecoveryPageId();
         return;
     }
 
