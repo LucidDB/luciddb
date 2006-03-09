@@ -110,18 +110,6 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
         }
     };
 
-    /** 
-     * List of child Fennel stream def is stored here for 
-     * IteratorToFennelConverter's later use.  Only true when this convert is 
-     * used in "location 2" (see class description).  This is a list because
-     * a single rel might appear twice in the plan.
-     */
-    // REVIEW: SWZ: 3/8/2006: This assumes that if it appears twice, it appears
-    // twice associated with the same IteratorToFennelConverter.  Is it 
-    // possible to re-use a single FennelToIteratorConverter with two
-    // different IteratorToFennelConverters?  If so, this is broken.
-    private List<FemExecutionStreamDef> childStreamDefList;
-    
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -494,11 +482,11 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
                 (childrenExp instanceof MethodCall &&
                     ((MethodCall)childrenExp).getName().startsWith("dummy")));
 
-            // Save for later retrieval.
-            if (childStreamDefList == null) {
-                childStreamDefList = new ArrayList<FemExecutionStreamDef>();
-            }
-            childStreamDefList.add(rootStream);
+            // Register this stream def with our ancestral 
+            // IteratorToFennelConverter.  Note that this converter instance
+            // might appear in several branches of the planner's tree (e.g.,
+            // it can have different ancestors at different times)
+            registerChildWithAncestor(implementor, rootStream);
             
             ExpressionList argList = new ExpressionList();
             argList.add(newTupleReaderExp);
@@ -554,10 +542,21 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
         return false;
     }
     
-    List<FemExecutionStreamDef> getChildStreamDefs()
+    private void registerChildWithAncestor(
+        JavaRelImplementor implementor, FemExecutionStreamDef streamDef)
     {
-        assert(childStreamDefList != null);
-        return childStreamDefList;
+        List ancestors = implementor.getAncestorRels(this);
+        for(Object temp: ancestors) {
+            RelNode ancestor = (RelNode)temp;
+            
+            if (ancestor instanceof IteratorToFennelConverter) {
+                ((IteratorToFennelConverter)ancestor).registerChildStreamDef(
+                    streamDef);
+                return;
+            }
+        }
+        
+        assert(false): "Ancestor IteratorToFennelConverter not found";
     }
     
     /**

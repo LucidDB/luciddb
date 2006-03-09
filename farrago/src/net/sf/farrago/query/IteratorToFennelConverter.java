@@ -76,6 +76,7 @@ public class IteratorToFennelConverter extends ConverterRel
 
     private String farragoTransformClassName;
     private String farragoTransformStreamName;
+    private List<FemExecutionStreamDef> childStreamDefs;
     
     //~ Constructors ----------------------------------------------------------
 
@@ -438,6 +439,23 @@ public class IteratorToFennelConverter extends ConverterRel
         return farragoTransformStreamName;
     }
     
+    /**
+     * Registers the FemExecutionStreamDef(s) that form the inputs to this
+     * converter's FemExecutionStreamDef.
+     * 
+     * @param childStreamDef child stream def to register
+     */
+    void registerChildStreamDef(FemExecutionStreamDef childStreamDef)
+    {
+        assert(CallingConvention.ENABLE_NEW_ITER);
+        
+        if (childStreamDefs == null) {
+            childStreamDefs = new ArrayList<FemExecutionStreamDef>();
+        }
+        
+        childStreamDefs.add(childStreamDef);
+    }
+    
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
@@ -447,22 +465,12 @@ public class IteratorToFennelConverter extends ConverterRel
             FemJavaTransformStreamDef streamDef =
                 implementor.getRepos().newFemJavaTransformStreamDef();
 
-            // Hunt down all Fennel children, implement them, and register
-            // them as producers to the consuming JavaTransformStreamDef.
-            List<FennelToIteratorConverter> fennelChildren = 
-                findFennelChildren(this.getChild());
-            for(FennelToIteratorConverter fennelChild: fennelChildren) {
-                
-                List<FemExecutionStreamDef> childStreamDefs =
-                    fennelChild.getChildStreamDefs();
-                
-                for(FemExecutionStreamDef childStreamDef: childStreamDefs) {
-                    implementor.addDataFlowFromProducerToConsumer(
-                        childStreamDef,
-                        streamDef);
-                }
+            for(FemExecutionStreamDef childStreamDef: childStreamDefs) {
+                implementor.addDataFlowFromProducerToConsumer(
+                    childStreamDef,
+                    streamDef);
             }
-            
+
             streamDef.setStreamId(getId());
             streamDef.setJavaClassName(farragoTransformClassName);
             
@@ -485,15 +493,6 @@ public class IteratorToFennelConverter extends ConverterRel
         }
     }
     
-    private List<FennelToIteratorConverter> findFennelChildren(RelNode rel)
-    {
-        ChildConverterRelVisitor visitor = new ChildConverterRelVisitor();
-        
-        visitor.go(rel);
-        
-        return visitor.getConverters();
-    }
-
     // implement FennelRel
     public RelFieldCollation [] getCollations()
     {
@@ -510,39 +509,6 @@ public class IteratorToFennelConverter extends ConverterRel
     public static void register(RelOptPlanner planner)
     {
         planner.addRule(Rule);
-    }
-
-    /**
-     * ChildConverterRelVisitor traverses a RelNode tree and finds the first
-     * FennelToIteratorConverter on each branch.
-     */
-    private class ChildConverterRelVisitor extends RelVisitor
-    {
-        private final List<FennelToIteratorConverter> converterChildren = 
-            new ArrayList<FennelToIteratorConverter>();
-        
-        private List<FennelToIteratorConverter> getConverters()
-        {
-            return converterChildren;
-        }
-        
-        public void visit(RelNode node, int ordinal, RelNode parent)
-        {
-            if (node instanceof FennelToIteratorConverter) {
-                FennelToIteratorConverter conv = 
-                    (FennelToIteratorConverter)node;
-                
-                // A single converter may be registered as a child more than
-                // once.  See review comment on
-                // FennelToIteratorConverter.childStreamDefList.
-                if (!converterChildren.contains(conv)) {
-                    converterChildren.add(conv);
-                }
-            } else {
-                // Visit this node's children.
-                super.visit(node, ordinal, parent);
-            }
-        }
     }
 
     /**
