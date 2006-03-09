@@ -26,6 +26,7 @@ package org.eigenbase.test;
 import junit.framework.TestCase;
 import org.eigenbase.sql.SqlCollation;
 import org.eigenbase.sql.SqlIntervalQualifier;
+import org.eigenbase.util.Bug;
 
 import java.nio.charset.Charset;
 import java.util.logging.Logger;
@@ -50,7 +51,6 @@ public class SqlValidatorTest extends SqlValidatorTestCase
      * yellow in Intellij and maybe someone will fix them.
      */
     protected static final boolean todo = false;
-    private static final boolean bug269fixed = false;
     public static final boolean todoTypeInference = false;
 
     protected final Logger logger = Logger.getLogger(getClass().getName());
@@ -2133,7 +2133,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "Expression 'EMPNO' is not being grouped");
         check("select case empno when 10 then timestamp '1969-04-29 12:34:56.0' else null end from emp " +
             "group by case empno when 10 then timestamp '1969-04-29 12:34:56' else null end");
-        if (bug269fixed) {
+        if (Bug.Dt269Fixed) {
             check("select case empno when 10 then 'foo bar' else null end from emp " +
                 "group by case empno when 10 then 'foo bar' else null end");
         }

@@ -1,7 +1,7 @@
 Building Cruise Control
 -----------------------
 
-Extract cruisecontrol-2.3.1.zip, change to its main subdirectory and
+Extract cruisecontrol-2.1.5.tar.gz, change to its main subdirectory and
 run build.sh or build.bat.  Cruisecontrol should build and run its
 unit tests.
 
@@ -98,23 +98,6 @@ apply this patch:
 http://tinyurl.com/7v7ck 
 
 -------------------------
-
-
-14-Feb-2006:
--------------------------
-Note it may be necessary to add additional properties to
-<machine>.perforce.properties, namely:
-
-default.build.home=/path/to/[work]
-integration.build.home=/path/to/bootstrap/build
-
-Also add those same properties to config-<machine>.xml as:
-
-<!ENTITY open_default.build.home     "/path/to/[work]">
-<!ENTITY open_integration.build.home "/path/to/bootstrap/build">
-
--------------------------
-
 
 Win32 Notes from JVS 20-Sept-2004
 ---------------------------------

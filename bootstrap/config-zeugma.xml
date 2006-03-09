@@ -43,6 +43,7 @@
 
 
 <cruisecontrol>
+	&saffronProject;
 	&fennelProject;
 	&farragoProject;
 </cruisecontrol>
