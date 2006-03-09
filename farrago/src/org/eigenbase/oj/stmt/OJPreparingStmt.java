@@ -530,6 +530,37 @@ public abstract class OJPreparingStmt
         Class [] parameterTypes,
         String [] parameterNames)
     {
+        try {
+            Class clazz = compileClass(packageName, className, s);
+            Object o = clazz.newInstance();
+            Method method =
+                clazz.getDeclaredMethod(
+                    getTempMethodName(),
+                    parameterTypes);
+            return new BoundMethod(o, method, parameterNames);
+        } catch (InstantiationException e) {
+            throw Util.newInternal(e);
+        } catch (IllegalAccessException e) {
+            throw Util.newInternal(e);
+        } catch (NoSuchMethodException e) {
+            throw Util.newInternal(e);
+        }
+    }
+
+    /**
+     * Compile a single class with the given source in the given package.
+     * 
+     * @param packageName package name, if null the className must be fully
+     *                    qualified
+     * @param className simple class name unless packageName is null
+     * @param source source code for the class
+     * @return a Class based on source
+     */
+    protected Class compileClass(
+        String packageName,
+        String className,
+        String source)
+    {
         JavaCompilerArgs args = javaCompiler.getArgs();
         args.clear();
         String initialArgs =
@@ -553,7 +584,7 @@ public abstract class OJPreparingStmt
         javaCompiler.getArgs().setFullClassName(fullClassName);
         if (javaCompiler.getArgs().supportsSetSource()) {
             javaCompiler.getArgs().setSource(
-                s,
+                source,
                 javaFile.toString());
         } else {
             writeJavaFile = true;
@@ -570,7 +601,7 @@ public abstract class OJPreparingStmt
                         + fullClassName);
                 }
                 FileWriter fw = new FileWriter(javaFile);
-                fw.write(s);
+                fw.write(source);
                 fw.close();
             } catch (java.io.IOException e2) {
                 throw Util.newInternal(e2,
@@ -580,24 +611,12 @@ public abstract class OJPreparingStmt
 
         javaCompiler.compile();
         try {
-            Class clazz =
+            return
                 Class.forName(
                     fullClassName,
                     true,
                     javaCompiler.getClassLoader());
-            Object o = clazz.newInstance();
-            Method method =
-                clazz.getDeclaredMethod(
-                    getTempMethodName(),
-                    parameterTypes);
-            return new BoundMethod(o, method, parameterNames);
         } catch (ClassNotFoundException e) {
-            throw Util.newInternal(e);
-        } catch (InstantiationException e) {
-            throw Util.newInternal(e);
-        } catch (IllegalAccessException e) {
-            throw Util.newInternal(e);
-        } catch (NoSuchMethodException e) {
             throw Util.newInternal(e);
         }
     }

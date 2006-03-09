@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2003-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2003-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 1999-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,6 +24,7 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/farrago/NativeMethods.h"
 #include "fennel/farrago/CmdInterpreter.h"
+#include "fennel/farrago/JavaTransformExecStream.h"
 #include "fennel/farrago/JniUtil.h"
 #include "fennel/tuple/TupleAccessor.h"
 #include "fennel/tuple/AttributeAccessor.h"
@@ -120,6 +121,43 @@ Java_net_sf_farrago_fennel_FennelStorage_tupleStreamFetch(
         pEnv->SetByteArrayRegion(
             byteArray,0,cbActual,(jbyte *)(pBuffer));
         bufAccessor.consumeData(pBuffer + cbActual);
+        return cbActual;
+    } catch (std::exception &ex) {
+        pEnv.handleExcn(ex);
+        return 0;
+    }
+}
+
+extern "C" JNIEXPORT jint JNICALL
+Java_net_sf_farrago_fennel_FennelStorage_tupleStreamTransformFetch(
+    JNIEnv *pEnvInit, jclass, jlong hStream, jint inputOrdinal, 
+    jbyteArray byteArray)
+{
+    JniEnvRef pEnv(pEnvInit);
+    try {
+        ExecStream &stream =
+            CmdInterpreter::getExecStreamFromLong(hStream);
+
+        uint iInput = static_cast<uint>(inputOrdinal);
+
+        SharedExecStreamBufAccessor bufAccessor =
+            stream.getGraph().getStreamInputAccessor(
+                stream.getStreamId(), iInput);
+
+        if (bufAccessor->getState() == EXECBUF_EOS) {
+            return 0;
+        }
+
+        if (!bufAccessor->isConsumptionPossible()) {
+            return -1;
+        }
+
+        uint cbActual = bufAccessor->getConsumptionAvailable();
+        PConstBuffer pBuffer = bufAccessor->getConsumptionStart();
+        assert(uint(pEnv->GetArrayLength(byteArray)) >= cbActual);
+        pEnv->SetByteArrayRegion(
+            byteArray,0,cbActual,(jbyte *)(pBuffer));
+        bufAccessor->consumeData(pBuffer + cbActual);
         return cbActual;
     } catch (std::exception &ex) {
         pEnv.handleExcn(ex);

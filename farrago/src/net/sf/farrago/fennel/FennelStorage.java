@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -133,6 +133,24 @@ public class FennelStorage
      */
     static native int tupleStreamFetch(
         long hStream,
+        byte [] byteArray)
+        throws SQLException;
+
+    /**
+     * Fetches a buffer of rows from a stream.  Specifically, the stream must
+     * be a JavaTransformExecStream. If unpositioned, this fetches the first 
+     * rows.  Does not block if no data is available.
+     *
+     * @param hStream handle to stream
+     * @param execStreamInputOrdinal ordinal of the input to fetch from
+     * @param byteArray output buffer receives complete tuples
+     *
+     * @return number of bytes fetched (0 indicates end of stream, less than
+     *         0 indicates no data currently availble)
+     */
+    static native int tupleStreamTransformFetch(
+        long hStream,
+        int execSTreamInputOrdinal,
         byte [] byteArray)
         throws SQLException;
 

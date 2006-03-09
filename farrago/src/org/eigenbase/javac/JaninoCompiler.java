@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2002-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2002-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2002-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -66,8 +66,12 @@ public class JaninoCompiler implements JavaCompiler
         // Janino to compile directly from the generated string source instead
         // of from a file.  (It's possible to do that with the SimpleCompiler
         // class, but then we don't avoid the bytecode storage.)
+        ClassLoader parentClassLoader = args.getClassLoader();
+        if (classLoader != null) {
+            parentClassLoader = classLoader;
+        }
         classLoader = new JavaSourceClassLoader(
-            args.getClassLoader(), 
+            parentClassLoader, 
             new File[] { new File(args.destdir) },
             null,
             DebuggingInformation.NONE);

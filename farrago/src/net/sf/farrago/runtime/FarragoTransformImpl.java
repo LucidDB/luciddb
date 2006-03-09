@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,38 +21,100 @@
 */
 package net.sf.farrago.runtime;
 
-import org.eigenbase.util.Util;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+
+import org.eigenbase.runtime.TupleIter;
 
 /**
- * Default implementation of {@link FarragoTransform}.
+ * FarragoTransformImpl provides a base class for generated implementations
+ * of {@link FarragoTransform}.
  *
- * @author Julian Hyde
+ * @author Julian Hyde, Stephan Zuercher
  * @version $Id$
  */
 public abstract class FarragoTransformImpl implements FarragoTransform
 {
-    public void init(FarragoRuntimeContext connection, Binding[] bindings)
+    private FennelTupleWriter tupleWriter;
+    private TupleIter tupleIter;
+    private Object next;
+    
+    /**
+     * Initialze this FarragoTransformImpl.  Generated FarragoTransform
+     * implementations should pass their generated FennelTupleWriter and
+     * TupleIter implementations here.
+     * 
+     * @param tupleWriter FennelTupleWriter that can marshal this transform's
+     *                    output tuple format.
+     * @param tupleIter TupleIter that performs this transform's work
+     */
+    protected void init(FennelTupleWriter tupleWriter, TupleIter tupleIter)
     {
-        // Bind all of the ports.
-        //
-        // FIXME: Sort bindings into same order as ports first.
-        for (int i = 0; i < bindings.length; i++) {
-            Binding binding = bindings[i];
-            bindPort(binding);
+        this.tupleWriter = tupleWriter;
+        this.tupleIter = tupleIter;
+        this.next = null;
+    }
+    
+    /**
+     * Execute this transform.  Execution continues until the underlying
+     * {@link #tupleIter} returns END_OF_DATA or UNDERFLOW or until the
+     * underlying {@link #tupleWriter} can no longer marshal tuples into
+     * the output buffer.
+     * 
+     * @return number of bytes marshaled into outputBuffer; 0 on END_OF_DATA;
+     *         -1 on UNDERFLOW
+     */
+    public int execute(ByteBuffer outputBuffer)
+    {
+        if (next == null) {
+            // Nothing fetched but unmarshaled.
+            Object o = tupleIter.fetchNext();
+            
+            if (o == TupleIter.NoDataReason.END_OF_DATA) {
+                return 0;
+            } else if (o == TupleIter.NoDataReason.UNDERFLOW) {
+                return -1;
+            }
+            
+            next = o;
         }
+        
+        outputBuffer.order(ByteOrder.nativeOrder());
+        outputBuffer.clear();
+        
+        for(;;) {
+            if (!tupleWriter.marshalTuple(outputBuffer, next)) {
+                // Not enough room to marshal the tuple.  We assume that
+                // the buffer is large enough for at least one tuple, otherwise
+                // this method may incorrectly return 0 (end of stream). 
+                break;
+            }
+            
+            Object o = tupleIter.fetchNext();
+            if (o == TupleIter.NoDataReason.END_OF_DATA) {
+                // Will return 0 on next call to this method -- we've already
+                // marshaled at least one tuple that we need to return.
+                next = null;
+                break;
+            } else if (o == TupleIter.NoDataReason.UNDERFLOW) {
+                // We marshaled at least one tuple, so don't return -1.
+                next = null;
+                break;
+            }
+            
+            next = o;
+        }
+        
+        outputBuffer.flip();
+        return outputBuffer.limit();
     }
-
-    public void execute(FarragoRuntimeContext context)
+    
+    /**
+     * Restart the underlying {@link #tupleIter}.
+     */
+    public void restart()
     {
-        // do nothing
-    }
-
-    protected void bindPort(Binding binding)
-    {
-        final Port port = binding.getPort(this);
-        final Object bind = binding.getObjectToBind(this);
-        final Object bound = port.bind(bind);
-        Util.discard(bound);
+        tupleIter.restart();
     }
 }
 

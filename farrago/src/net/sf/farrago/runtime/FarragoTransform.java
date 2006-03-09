@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,194 +21,76 @@
 */
 package net.sf.farrago.runtime;
 
-import java.util.List;
+import java.nio.ByteBuffer;
 
 /**
  * A piece of generated code must implement this interface if it is to
- * be callable from a Java execution object.
+ * be callable from a Fennel JavaTransformExecStream wrapper.
  *
- * @author Julian Hyde
+ * @author Julian Hyde, Stephan Zuercher
  * @version $Id$
  */
 public interface FarragoTransform
 {
     /**
-     * Returns a list of this transform's ports ({@link Port}), including the
-     * objects they are bound to.
-     */
-    List getPorts();
-
-    /**
-     * Binds all ports, and initializes the transform.
-     *
-     * <p>For each port, the transform first calls
-     * {@link Binding#getPort(FarragoTransform)} to identify the port to be
-     * bound. It must not return null.
-     * Then the transform obtains the object to be bound, by calling the
-     * {@link Binding#getObjectToBind(FarragoTransform)} method.
+     * Binds all inputs and initializes the transform.
+     * 
+     * <p>This method is typically generated.  It is called by Fennel's
+     * JavaTransformExecStream.
+     * 
+     * @param connection the FarragoRuntimeContext associated with the query
+     *                   this transform is participating in.
+     * @param farragoTransformStreamName the globally unique name of the
+     *                                   ExecStream invoking this method
+     * @param inputBindings bindings between the transforms input streamIds
+     *                      and the ordinal assigned to them in the stream
+     *                      graph
      */
     void init(
-        FarragoRuntimeContext connection,
-        FarragoTransform.Binding[] bindings);
+        FarragoRuntimeContext connection, 
+        String farragoTransformStreamName, 
+        InputBinding[] inputBindings);
 
     /**
-     * Does a quantum of work.
+     * Does a quantum of work.  Called by Fennel's JavaTransformExecStream.
+     * 
+     * @return bytes marshalled into outputBuffer; 0 means end of stream, 
+     *         less than 0 indicates an input underflow
      */
-    void execute(FarragoRuntimeContext context);
-
+    int execute(ByteBuffer outputBuffer);
+    
     /**
-     * A port is an point where a transform needs to be connected to an
-     * input or an output.
+     * Restarts this transform's underlying TupleIter(s).
      */
-    interface Port
+    void restart();
+    
+    /**
+     * InputBinding binds a JavaTransformExecStream input's streamId to the 
+     * ordinal assigned to that input by the stream graph. InputBinding 
+     * objects are instantiated via JNI during initialization of 
+     * JavaTransformExecStream.
+     */
+    public static class InputBinding
     {
-        /**
-         * Returns the transform that this port belongs to.
-         */
-        FarragoTransform getTransform();
-
-        /**
-         * ID of port, unique within the transform.
-         */
-        int getOrdinal();
-
-        /**
-         * Whether input or output.
-         */
-        boolean isInput();
-
-        /**
-         * Binds this port to an object. The object must appropriate for the
-         * type of port.
-         *
-         * @return The bound object, usually the same as the argument.
-         */
-        Object bind(Object o);
-
-        /**
-         * Returns the object bound to this port.
-         */
-        Object getBound();
-    }
-
-    /**
-     * Binding of an object to a port.
-     *
-     * <p>A simple binding (see {@link BindingImpl}) just pairs a port name
-     * with an object to bind it to. A more complex binding can create an
-     * object dynamically.
-     */
-    interface Binding
-    {
-        /**
-         * Looks up the corresponding port.
-         *
-         * @throws IllegalArgumentException if the port is not found
-         */
-        Port getPort(FarragoTransform transform);
-
-        /**
-         * Returns the object to connect to.
-         *
-         * <p>This method is called once, when the transform is instantiated.
-         * For advanced transforms, this method can serve as a callback to do
-         * setup work.
-         */
-        Object getObjectToBind(FarragoTransform transform);
-    }
-
-    /**
-     * Basic implementation of {@link Port}.
-     */
-    public static class PortImpl
-        implements Port
-    {
-        private final FarragoTransform transform;
+        private final String inputStreamName;
         private final int ordinal;
-        private final boolean input;
-        private Object bound;
-
-        public PortImpl(FarragoTransform transform, int ordinal, boolean input)
+        
+        public InputBinding(String inputStreamName, int ordinal)
         {
-            this.transform = transform;
+            this.inputStreamName = inputStreamName;
             this.ordinal = ordinal;
-            this.input = input;
         }
-
-        public FarragoTransform getTransform()
+        
+        public String getInputStreamName()
         {
-            return transform;
+            return inputStreamName;
         }
-
+        
         public int getOrdinal()
         {
             return ordinal;
         }
-
-        public boolean isInput()
-        {
-            return input;
-        }
-
-        public Object bind(Object bindee)
-        {
-            return bound = bindee;
-        }
-
-        public Object getBound()
-        {
-            return bound;
-        }
-    }
-
-    /**
-     * Basic implementation of {@link Binding}.
-     */
-    public static class BindingImpl
-        implements Binding
-    {
-        private final int portOrdinal;
-        private final Object bindee;
-
-        public BindingImpl(int portOrdinal, Object bindee)
-        {
-            this.portOrdinal = portOrdinal;
-            this.bindee = bindee;
-        }
-
-        public Port getPort(FarragoTransform transform)
-        {
-            Port port = lookupPort(transform.getPorts(), portOrdinal);
-            if (port == null) {
-                throw new IllegalArgumentException("invalid portid " + portOrdinal);
-            }
-            return port;
-        }
-
-        public Object getObjectToBind(FarragoTransform transform)
-        {
-            return bindee;
-        }
-
-        /**
-         * Looks up a port with a given ID.
-         *
-         * @param ports List of {@link Port} objects to search
-         * @param portId Sought ID
-         * @return port
-         */
-        private static FarragoTransform.Port lookupPort(
-            List ports, int portId)
-        {
-            for (int i = 0; i < ports.size(); i++) {
-                Port port = (Port) ports.get(i);
-                if (port.getOrdinal() == portId) {
-                    return port;
-                }
-            }
-            return null;
-        }
-    }
+    }    
 }
 
 // End FarragoTransform.java

@@ -88,7 +88,14 @@ public class CompoundTupleIter implements TupleIter
 
     public void restart()
     {
-        for(int index = 0; index <= i; index++) {
+        // fetchNext() can be called repeatedly after it returns END_OF_DATA.
+        // Even if it isn't, it uses recursion which implies an extra call
+        // when END_OF_DATA on the last iterator is reached.
+        // Each extra call increments i.  We want to restart all iterators
+        // that we've touched (e.g. 0 to i, inclusive) but need to compensate
+        // i that's grown too large.
+        final int maxIndex = Math.min(i,  iterators.length - 1);
+        for(int index = 0; index <= maxIndex; index++) {
             iterators[index].restart();
         }
 

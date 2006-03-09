@@ -79,6 +79,14 @@ JNIEXPORT jint JNICALL Java_net_sf_farrago_fennel_FennelStorage_tupleStreamFetch
 
 /*
  * Class:     net_sf_farrago_fennel_FennelStorage
+ * Method:    tupleStreamTransformFetch
+ * Signature: (JI[B)I
+ */
+JNIEXPORT jint JNICALL Java_net_sf_farrago_fennel_FennelStorage_tupleStreamTransformFetch
+  (JNIEnv *, jclass, jlong, jint, jbyteArray);
+
+/*
+ * Class:     net_sf_farrago_fennel_FennelStorage
  * Method:    tupleStreamRestart
  * Signature: (J)V
  */

@@ -52,6 +52,12 @@ jmethodID JniUtil::methGetIndexRoot = 0;
 jmethodID JniUtil::methToString = 0;
 jmethodID JniUtil::methBase64Decode;
 jclass JniUtil::classRhBase64;
+jmethodID JniUtil::methFarragoTransformInit = 0;
+jmethodID JniUtil::methFarragoTransformExecute = 0;
+jmethodID JniUtil::methFarragoTransformRestart = 0;
+jclass JniUtil::classFarragoTransformInputBinding = 0;
+jmethodID JniUtil::methFarragoTransformInputBindingCons = 0;
+jmethodID JniUtil::methFarragoRuntimeContextStatementClassForName = 0;
 
 AtomicCounter JniUtil::handleCount;
 
@@ -175,13 +181,29 @@ jint JniUtil::init(JavaVM *pVmInit)
     jclass classObject = pEnv->FindClass("java/lang/Object");
     jclass classCollection = pEnv->FindClass("java/util/Collection");
     jclass classIterator = pEnv->FindClass("java/util/Iterator");
-    classRhBase64 = pEnv->FindClass("org/eigenbase/util/RhBase64");
+
+    // Make sure this jclass is a global ref or the JVM might move it on us.
+    jclass tempRhBase64 = pEnv->FindClass("org/eigenbase/util/RhBase64");
+    classRhBase64 = (jclass)pEnv->NewGlobalRef(tempRhBase64);
+
     jclass classJavaTupleStream = pEnv->FindClass(
         "net/sf/farrago/runtime/JavaTupleStream");
     jclass classJavaPullTupleStream = pEnv->FindClass(
         "net/sf/farrago/runtime/JavaPullTupleStream");
     jclass classFennelJavaStreamMap = pEnv->FindClass(
         "net/sf/farrago/fennel/FennelJavaStreamMap");
+    jclass classFarragoTransform = pEnv->FindClass(
+        "net/sf/farrago/runtime/FarragoTransform");
+
+    // Make sure this jclass is a global ref of the JVM might move it on us.
+    jclass tempInputBinding =
+        pEnv->FindClass(
+            "net/sf/farrago/runtime/FarragoTransform$InputBinding");
+    classFarragoTransformInputBinding = 
+        (jclass)pEnv->NewGlobalRef(tempInputBinding);
+
+    jclass classFarragoRuntimeContext = pEnv->FindClass(
+        "net/sf/farrago/runtime/FarragoRuntimeContext");
     methGetClassName = pEnv->GetMethodID(
         classClass,"getName","()Ljava/lang/String;");
     methIterator = pEnv->GetMethodID(
@@ -204,6 +226,23 @@ jint JniUtil::init(JavaVM *pVmInit)
         classObject,"toString","()Ljava/lang/String;");
     methBase64Decode = pEnv->GetStaticMethodID(
         classRhBase64,"decode","(Ljava/lang/String;)[B");
+    methFarragoTransformInit = pEnv->GetMethodID(
+        classFarragoTransform, "init", 
+        "(Lnet/sf/farrago/runtime/FarragoRuntimeContext;Ljava/lang/String;[Lnet/sf/farrago/runtime/FarragoTransform$InputBinding;)V");
+    methFarragoTransformExecute = pEnv->GetMethodID(
+        classFarragoTransform, "execute", "(Ljava/nio/ByteBuffer;)I");
+    methFarragoTransformRestart = pEnv->GetMethodID(
+        classFarragoTransform, "restart", "()V");
+    methFarragoTransformInputBindingCons =
+        pEnv->GetMethodID(
+            classFarragoTransformInputBinding, "<init>", 
+            "(Ljava/lang/String;I)V");
+    methFarragoRuntimeContextStatementClassForName =
+        pEnv->GetMethodID(
+            classFarragoRuntimeContext,
+            "statementClassForName",
+            "(Ljava/lang/String;)Ljava/lang/Class;");
+
     return jniVersion;
 }
 

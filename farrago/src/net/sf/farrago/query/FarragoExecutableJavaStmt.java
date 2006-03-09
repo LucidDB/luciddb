@@ -64,6 +64,7 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
     // just the class name, and dynamically load it per-execution.  This
     // will keep cache memory usage down.
     private final Class rowClass;
+    private final ClassLoader statementClassLoader;
     private final RelDataType rowType;
     private final Method method;
     private final String xmiFennelPlan;
@@ -74,6 +75,7 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
     FarragoExecutableJavaStmt(
         File packageDir,
         Class rowClass,
+        ClassLoader statementClassLoader,
         RelDataType preparedRowType,
         RelDataType dynamicParamRowType,
         Method method,
@@ -85,6 +87,7 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
 
         this.packageDir = packageDir;
         this.rowClass = rowClass;
+        this.statementClassLoader = statementClassLoader;
         this.method = method;
         this.xmiFennelPlan = xmiFennelPlan;
         this.referencedObjectIds = referencedObjectIds;
@@ -110,6 +113,8 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
     public ResultSet execute(FarragoSessionRuntimeContext runtimeContext)
     {
         try {
+            runtimeContext.setStatementClassLoader(statementClassLoader);
+            
             if (xmiFennelPlan != null) {
                 runtimeContext.loadFennelPlan(xmiFennelPlan);
             }

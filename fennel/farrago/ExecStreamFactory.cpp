@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2003-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2003-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 1999-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,6 +25,7 @@
 #include "fennel/farrago/ExecStreamFactory.h"
 #include "fennel/farrago/JavaPullSourceExecStream.h"
 #include "fennel/farrago/JavaSinkExecStream.h"
+#include "fennel/farrago/JavaTransformExecStream.h"
 #include "fennel/farrago/CmdInterpreter.h"
 #include "fennel/ftrs/BTreeScanExecStream.h"
 #include "fennel/ftrs/BTreeSearchExecStream.h"
@@ -160,6 +161,15 @@ void ExecStreamFactory::visit(ProxyJavaSinkStreamDef &streamDef)
     params.pStreamGraphHandle = pStreamGraphHandle;
     params.javaFennelPipeIterId = streamDef.getStreamId();
     embryo.init(new JavaSinkExecStream(), params);
+}
+
+void ExecStreamFactory::visit(ProxyJavaTransformStreamDef &streamDef)
+{
+    JavaTransformExecStreamParams params;
+    readTupleStreamParams(params, streamDef);
+    params.pStreamGraphHandle = pStreamGraphHandle;
+    params.javaClassName = streamDef.getJavaClassName();
+    embryo.init(new JavaTransformExecStream(), params);
 }
 
 void ExecStreamFactory::visit(ProxyTableInserterDef &streamDef)

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 1999-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -239,6 +239,35 @@ public:
     static jmethodID methBase64Decode;
     static jclass classRhBase64;
 
+    /** 
+     * Java method FarragoTransform.init.
+     */
+    static jmethodID methFarragoTransformInit;
+
+    /** 
+     * Java method FarragoTransform.execute.
+     */
+    static jmethodID methFarragoTransformExecute;
+
+    /** 
+     * Java method FarragoTransform.restart.
+     */
+    static jmethodID methFarragoTransformRestart;
+
+    /**
+     * Java class FarragoTransform.InputBinding.
+     */
+    static jclass classFarragoTransformInputBinding;
+
+    /**
+     * Java constructor FarragoTransform.InputBinding.InputBinding.
+     */
+    static jmethodID methFarragoTransformInputBindingCons;
+
+    /**
+     * Java method FarragoRuntimeContext.statementClassForName.
+     */
+    static jmethodID methFarragoRuntimeContextStatementClassForName;
 
     /**
      * Initializes JNI debugging.

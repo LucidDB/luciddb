@@ -36,6 +36,8 @@ import java.nio.ByteOrder;
  * <p>FennelTupleIter only deals with raw byte buffers; it delegates to a
  * {@link FennelTupleReader} object the responsibility to unmarshal individual
  * fields.
+ * 
+ * <p>FennelTupleIter's implementation of {@link #populateBuffer()} blocks.
  *
  * @author John V. Sichi, Stephan Zuercher
  * @version $Id$
@@ -53,7 +55,8 @@ public class FennelTupleIter extends FennelAbstractTupleIter
      *
      * @param tupleReader FennelTupleReader to use to interpret Fennel data
      * @param streamGraph underlying FennelStreamGraph
-     * @param streamHandle handle to underlying Fennel TupleStream
+     * @param streamHandle handle to underlying Fennel ExecStream that
+     *                    this TupleIter reads from
      * @param bufferSize number of bytes in buffer used for fetching from
      *     Fennel
      */
@@ -95,6 +98,12 @@ public class FennelTupleIter extends FennelAbstractTupleIter
         // REVIEW: SWZ: 2/23/2006: Deallocate byteBuffer here?
     }
 
+    /**
+     * Blocking implementation of {@link FennelTupleIter#populateBuffer()}.
+     * 
+     * @return number of bytes read into {@link FennelTupleIter#byteBuffer}
+     *         or 0 for end of stream.
+     */
     protected int populateBuffer()
     {
         byteBuffer.clear();

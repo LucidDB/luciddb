@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -120,6 +120,18 @@ public class FennelStreamGraph implements FarragoAllocation
         }
     }
 
+    private void traceStreamHandle(
+        String operation,
+        FennelStreamHandle streamHandle,
+        int execStreamInputOrdinal)
+    {
+        if (tracer.isLoggable(Level.FINE)) {
+            tracer.fine(operation + " streamHandle = "
+                + streamHandle.getLongHandle() + " input ordinal = " 
+                + execStreamInputOrdinal);
+        }
+    }
+
     /**
      * Opens a prepared stream graph.
      *
@@ -162,6 +174,36 @@ public class FennelStreamGraph implements FarragoAllocation
         try {
             return FennelStorage.tupleStreamFetch(
                 streamHandle.getLongHandle(),
+                byteArray);
+        } catch (SQLException ex) {
+            throw fennelDbHandle.handleNativeException(ex);
+        }
+    }
+    
+    /**
+     * Fetches a buffer of rows from a stream.  If unpositioned, this
+     * fetches the first rows.
+     *
+     * @param streamHandle handle to JavaTransformExecStream from which to 
+     *                     fetch
+     * @param execStreamInputOrdinal ordinal of the stream's input
+     *
+     * @param byteArray output buffer receives complete tuples
+     *
+     * @return number of bytes fetched (0 indicates end of stream, less than
+     *         0 indicates no data currently available)
+     */
+    public int transformFetch(
+        FennelStreamHandle streamHandle,
+        int execStreamInputOrdinal,
+        byte [] byteArray)
+    {
+        traceStreamHandle(
+            "transformFetch", streamHandle, execStreamInputOrdinal);
+        try {
+            return FennelStorage.tupleStreamTransformFetch(
+                streamHandle.getLongHandle(),
+                execStreamInputOrdinal,
                 byteArray);
         } catch (SQLException ex) {
             throw fennelDbHandle.handleNativeException(ex);

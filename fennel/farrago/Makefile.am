@@ -17,6 +17,7 @@ JavaSourceExecStream.cpp \
 JavaPullSourceExecStream.cpp \
 JavaPushSourceExecStream.cpp \
 JavaTraceTarget.cpp \
+JavaTransformExecStream.cpp \
 JniProxy.cpp \
 JniPseudoUuid.cpp \
 JniUtil.cpp \
