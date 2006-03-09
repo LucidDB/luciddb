@@ -559,8 +559,20 @@ void Database::checkpointImpl(CheckpointType checkpointType)
         header.shadowRecoveryPageId =
             pVersionedSegment->getOnlineRecoveryPageId();
         pDataSegment->checkpoint(checkpointType);
-        LogicalTxnLogCheckpointMemento crashMemento;
-        pTxnLog->checkpoint(crashMemento,checkpointType);
+        if (!forceTxns) {
+            // REVIEW jvs 8-Mar-2006:  I put in the forceTxns test
+            // because when forceTxn is true, we actually use
+            // CHECKPOINT_DISCARD for rollback, and there we DON'T
+            // want to remove the other uncommitted transactions,
+            // which is a side-effect of LogicalTxnLog::checkpoint(DISCARD).
+            // Really, for forceTxns, we shouldn't be using
+            // LogicalTxnLog at all.  And we should discriminate
+            // between CHECKPOINT_DISCARD used to simulate a crash in
+            // tests and CHECKPOINT_DISCARD used to implement rollback
+            // as part of forceTxns.
+            LogicalTxnLogCheckpointMemento crashMemento;
+            pTxnLog->checkpoint(crashMemento,checkpointType);
+        }
         return;
     }
 
