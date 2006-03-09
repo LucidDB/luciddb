@@ -95,7 +95,7 @@ void LbmSegmentReader::readCurrentByteSegment(
     byteSeg = pSegStart;
     len = byteSegLen;
     // assumes advanceToByte() has been called to move to a segment
-    // that has actual bits set
+    // that has actual bits set, and intermediate zeros have been removed
     assert(*byteSeg != 0);
     assert(len > 0);
 }

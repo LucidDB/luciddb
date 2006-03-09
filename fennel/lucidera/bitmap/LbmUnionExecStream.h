@@ -88,6 +88,11 @@ class LbmUnionExecStream : public ConfluenceExecStream
     DynamicParamId segmentLimitParamId;
 
     /**
+     * True if dynamic parameters have been created
+     */
+    bool dynParamsCreated;
+
+    /**
      * Tuple datum used to store dynamic paramter for ridLimit
      */
     TupleDatum ridLimitDatum;

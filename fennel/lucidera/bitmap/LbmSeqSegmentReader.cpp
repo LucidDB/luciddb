@@ -42,12 +42,16 @@ ExecStreamResult LbmSeqSegmentReader::readSegmentAndAdvance(
             return rc;
         }
 
-        // single bitmap case
         if (!pSegDescStart) {
+            // single bitmap case
             byteNum = byteSegOffset;
             byteSeg = pSegStart;
             len = byteSegLen;
             return EXECRC_YIELD;
+        } else {
+            // set byteSegLen to 0 to force advanceSegment()
+            // to read the initial segment
+            byteSegLen = 0;
         }
     }
 

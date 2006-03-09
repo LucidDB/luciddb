@@ -76,6 +76,11 @@ class LbmIntersectExecStream : public ConfluenceExecStream
     DynamicParamId startRidParamId;
 
     /**
+     * True if dynamic parameters have been created
+     */
+    bool dynParamsCreated;
+
+    /**
      * Tuple datum used to store dynamic paramter for rowLimit
      */
     TupleDatum rowLimitDatum;
@@ -121,9 +126,9 @@ class LbmIntersectExecStream : public ConfluenceExecStream
     boost::scoped_array<FixedBuffer> outputBuf;
 
     /**
-     * Size of output buffer
+     * Amount of space available in buffer for bitmaps
      */
-    uint outputBufSize;
+    uint bitmapBufSize;
 
     /**
      * Temporary buffer for AND'ing together byte segments
@@ -162,11 +167,6 @@ class LbmIntersectExecStream : public ConfluenceExecStream
     bool producePending;
 
     /**
-     * True if segment currently under construction
-     */
-    bool activeSegment;
-
-    /**
      * Current rid value to be added to the bitmap segment
      */
     LcsRid addRid;
@@ -189,6 +189,16 @@ class LbmIntersectExecStream : public ConfluenceExecStream
      * @return false if buffer overflow occurred writing out a segment
      */
     bool intersectSegments(uint len);
+
+    /**
+     * Add the intersected segments to the segment under construction.  If
+     * the segment fills up, write it to the output buffer and continue
+     * constructing the rest of the segment.  Leading, trailing, and
+     * intermediate zeros in the segment are removed.
+     *
+     * @return false if buffer overflow occurred writing out a segment
+     */
+    bool addSegments();
 
 public:
     explicit LbmIntersectExecStream();

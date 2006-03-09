@@ -65,7 +65,6 @@ public abstract class FennelRelUtil
         FemTupleDescriptor tupleDesc)
     {
         if (fennelDbHandle == null) {
-            String tupleAccessorXmiString = "<xmiAccessor/>";
             return tupleDescriptorToAccessor(repos, tupleDesc);
         }
         String tupleAccessorXmiString =
@@ -101,8 +100,6 @@ public abstract class FennelRelUtil
         tupleAccessor.setBitFieldOffset(-1);
         java.util.List attrDescriptors = tupleDesc.getAttrDescriptor();
         for (int i = 0; i < attrDescriptors.size(); i++) {
-            FemTupleAttrDescriptor attrDescriptor =
-                (FemTupleAttrDescriptor) attrDescriptors.get(i);
             FemTupleAttrAccessor attrAccessor =
                 repos.newFemTupleAttrAccessor();
             attrAccessor.setNullBitIndex(-1);
@@ -510,25 +507,14 @@ public abstract class FennelRelUtil
     }
 
     /**
-     * Converts a {@link SargExpr} into a relational expression which produces
-     * a representation for the sequence of resolved intervals expected by
-     * Fennel BTree searches.
-     *
-     * @param callTraits traits to apply to new rels generated
-     *
-     * @param keyRowType input row type expected by BTree search
-     *
-     * @param cluster query cluster
-     *
-     * @param sargExpr expression to be converted
-     *
-     * @return corresponding relational expression
+     * Converts a {@link SargExpr} into a {@link SargIntervalSequence}.
+     * 
+     * @param sargExpr expression to be oncverted
+     * 
+     * @return corresponding SargIntervalSequence
      */
-    public static RelNode convertSargExpr(
-        RelTraitSet callTraits,
-        RelDataType keyRowType,
-        RelOptCluster cluster,
-        SargExpr sargExpr)
+    public static SargIntervalSequence evaluateSargExpr(
+    	SargExpr sargExpr)
     {
         SargIntervalSequence seq = sargExpr.evaluate();
 
@@ -553,22 +539,118 @@ public abstract class FennelRelUtil
             seq = emptyIntervalExpr.evaluate();
             assert(seq.getList().size() == 1);
         }
+        
+        return seq;
+    }
 
+    /**
+     * Pivot a list of (@link SargIntervalSequence}, with each list element
+     * representing the sequence of value intervals corresponding to a column;
+     * to a list of {@link SargInterval} lists, with each element(a list)
+     * representing the value intervals covering all the columns.
+     * 
+     * e.g. for the following  predicates
+     *  a = 2
+     *  b = 3
+     *  1 < c <= 4, c > 10
+     *  
+     *  The input looks like
+     *   {([, 2, ], 2)}
+     *   {([, 3, ], 3)}
+     *   {((, 1, ], 4), ((, 10, +, null)}
+     *   
+     * The output will be
+     *   {([, 2, ], 2), ([, 3, ], 3), ((,  1, ], 4)}
+     *   {([, 2, ], 2), ([, 3, ], 3), ((, 10, ), +)}
+     *   
+     * @param sargSeqList list of SargIntervalSequence representing the expression
+     * to be converted
+     *
+     * @return the list of {@link SargInterval} lists.
+     * 
+     * @note
+     * 1. the prefix columns can only have point intervals.
+     * 2. This function is added to better support the unbounded multi-column key
+     *    case, which is currently disabled in BTree code.
+     */
+    private static List<List<SargInterval>> pivotSargSeqList(
+        List<SargIntervalSequence> sargSeqList)
+    {
+        List<List<SargInterval>> resList =
+            new ArrayList<List<SargInterval>>();
+        
+        int columnCount = sargSeqList.size();
+        
+        List<SargInterval> prefixList =
+            new ArrayList<SargInterval>();
+
+        for (int i = 0; i < columnCount - 1; i ++) {
+            SargIntervalSequence sargSeq = sargSeqList.get(i);
+            List<SargInterval> intervalList = sargSeq.getList();
+            int intervalCount = intervalList.size();
+            
+            // prefix columns: should only have one interval
+            // and should also be a point interval
+            assert ((intervalCount == 1));
+            SargInterval interval =  intervalList.get(0);
+            assert (interval.isPoint());                
+            prefixList.add(interval);
+        }
+
+        // Add interval from the last IntervalSequence which is the only Sequence
+        // that maybe range sequence.
+        for (SargInterval interval : sargSeqList.get(columnCount - 1).getList()) {
+            List<SargInterval> completeList =
+                new ArrayList<SargInterval>();
+                
+            completeList.addAll(prefixList);
+            completeList.add(interval);
+            resList.add(completeList);
+        }
+        
+        return  resList;
+    }
+    
+    /**
+     * Converts a list of {@link SargIntervalSequence} into a relational expression which produces
+     * a representation for the sequence of resolved intervals expected by
+     * Fennel BTree searches.
+     *
+     * @param callTraits traits to apply to new rels generated
+     *
+     * @param keyRowType input row type expected by BTree search
+     *
+     * @param cluster query cluster
+     *
+     * @param sargSeqList list of SargIntervalSequence representing the expression
+     * to be converted
+     *
+     * @return corresponding relational expression
+     */
+    public static RelNode convertSargExpr(
+        RelTraitSet callTraits,
+        RelDataType keyRowType,
+        RelOptCluster cluster,
+        List<SargIntervalSequence> sargSeqList)
+    {
         List<List<RexNode>> inputTuples = new ArrayList<List<RexNode>>();
-
         boolean allLiteral = true;
-        for (SargInterval interval : seq.getList()) {
-            List<RexNode> inputTuple =
-                convertIntervalToTuple(
+        List<List<SargInterval>> pivotList = pivotSargSeqList(sargSeqList);
+                
+        for (List<SargInterval> intervalList1 : pivotList) {
+            List<RexNode> tuple =
+                convertIntervalListToTuple(
                     cluster.getRexBuilder(),
-                    interval);
-            inputTuples.add(inputTuple);
-            for (RexNode value : inputTuple) {
+                    intervalList1);
+
+            for (RexNode value : tuple) {
                 if (!(value instanceof RexLiteral)) {
                     allLiteral = false;
                     break;
                 }
             }
+
+            inputTuples.add(tuple);            
         }
 
         if (allLiteral) {
@@ -610,48 +692,93 @@ public abstract class FennelRelUtil
             cluster,
             inputs.toArray(new RelNode[0]),
             true);
-        return unionRel;
+        return unionRel;        
     }
 
     /**
-     * Converts a {@link SargInterval} into the directive tuple representation
+     * Converts a {@link SargExpr} into a relational expression which produces
+     * a representation for the sequence of resolved intervals expected by
+     * Fennel BTree searches.
+     *
+     * @param callTraits traits to apply to new rels generated
+     *
+     * @param keyRowType input row type expected by BTree search
+     *
+     * @param cluster query cluster
+     *
+     * @param sargExpr expression to be converted
+     *
+     * @return corresponding relational expression
+     */
+    public static RelNode convertSargExpr(
+        RelTraitSet callTraits,
+        RelDataType keyRowType,
+        RelOptCluster cluster,
+        SargExpr sargExpr)
+    {
+        SargIntervalSequence sargSeq = evaluateSargExpr(sargExpr);
+        List<SargIntervalSequence> sargSeqList = new ArrayList<SargIntervalSequence>();
+        sargSeqList.add(sargSeq);
+        
+        return convertSargExpr(callTraits, keyRowType, cluster, sargSeqList);
+    }
+    
+    /**
+     * Converts a list of {@link SargInterval} representing intervals on 
+     * multiple columns into the directive tuple representation
      * expected by Fennel BTree searches.
      *
      * @param rexBuilder builder for tuple values
      *
-     * @param interval interval to be converted
+     * @param intervalList intervalList to be converted
      *
      * @return corresponding tuple
      */
-    public static List<RexNode> convertIntervalToTuple(
+    public static List<RexNode> convertIntervalListToTuple(
         RexBuilder rexBuilder,
-        SargInterval interval)
+        List<SargInterval> intervalList)
     {
-        RexLiteral lowerBoundDirective = convertEndpoint(
-            rexBuilder,
-            interval.getLowerBound());
-
-        RexLiteral upperBoundDirective = convertEndpoint(
-            rexBuilder,
-            interval.getUpperBound());
-
-        RexNode lowerBoundCoordinate = convertCoordinate(
-            rexBuilder,
-            interval.getLowerBound());
+        int length = intervalList.size();
         
-        RexNode upperBoundCoordinate = convertCoordinate(
-            rexBuilder,
-            interval.getUpperBound());
+        assert (length >= 1);
+        
+        List<RexNode> lowerBound = new ArrayList<RexNode>();
+        List<RexNode> upperBound = new ArrayList<RexNode>();
+        
+        RexLiteral lowerBoundDirective
+         = convertEndpoint(rexBuilder,
+                           intervalList.get(length-1).getLowerBound());
+        lowerBound.add(lowerBoundDirective);
+        
+        RexLiteral upperBoundDirective
+        = convertEndpoint(rexBuilder,
+                          intervalList.get(length-1).getUpperBound());
+        
+        upperBound.add(upperBoundDirective);
+        
+        for (int i = 0; i < length; i ++) {
+            SargInterval interval =  intervalList.get(i);
 
-        return Arrays.asList(
-            new RexNode [] {
-                lowerBoundDirective,
-                lowerBoundCoordinate,
-                upperBoundDirective,
-                upperBoundCoordinate,
-            });
+            assert (interval.isPoint() || (i == (length - 1)));    
+        
+            RexNode lowerBoundCoordinate = convertCoordinate(
+                rexBuilder,
+                interval.getLowerBound());
+        
+            lowerBound.add(lowerBoundCoordinate);
+            
+            RexNode upperBoundCoordinate = convertCoordinate(
+                rexBuilder,
+                interval.getUpperBound());
+            
+            upperBound.add(upperBoundCoordinate);
+        }
+
+        lowerBound.addAll(upperBound);
+        
+        return lowerBound;
     }
-    
+
     /**
      * Converts the tuple representation of a {@link SargInterval} into a
      * relational expression.
@@ -747,6 +874,12 @@ public abstract class FennelRelUtil
             // infinity gets represented as null
             return rexBuilder.constantNull();
         }
+    }
+    
+    public static FennelRelImplementor getRelImplementor(FennelRel rel)
+    {
+    	return (FennelRelImplementor)
+    	    getPreparingStmt(rel).getRelImplementor(rel.getCluster().getRexBuilder());
     }
 }
 

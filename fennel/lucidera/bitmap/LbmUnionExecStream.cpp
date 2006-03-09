@@ -29,9 +29,9 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 
 LbmUnionExecStream::LbmUnionExecStream()
 {
-    ridLimitParamId = DynamicParamId(0);
-    startRidParamId = DynamicParamId(0);
-    segmentLimitParamId = DynamicParamId(0);
+    dynParamsCreated = false;
+    // until we get a better estimate in setResourceAllocation
+    nWorkspacePages = 1;
 }
 
 void LbmUnionExecStream::prepare(LbmUnionExecStreamParams const &params)
@@ -55,7 +55,6 @@ void LbmUnionExecStream::prepare(LbmUnionExecStreamParams const &params)
 
     // initialize reader
     inputTuple.compute(inAccessors[0]->getTupleDesc());
-    segmentReader.init(inAccessors[0], inputTuple);
 
     // output buffer will come from scratch segment
     scratchAccessor = params.scratchAccessor;
@@ -75,6 +74,9 @@ void LbmUnionExecStream::getResourceRequirements(
     //   - 1 for writer
     minQuantity.nCachePages += 2;
     optQuantity.nCachePages += computeOptWorkspacePages(maxRid) + 1;
+
+    // cheat for now, until we get the chopper going
+    minQuantity = optQuantity;
 }
 
 void LbmUnionExecStream::setResourceAllocation(
@@ -83,7 +85,7 @@ void LbmUnionExecStream::setResourceAllocation(
     ConfluenceExecStream::setResourceAllocation(quantity);
 
     // TODO: can we just grab all the remaining pages like this?
-    nWorkspacePages = quantity.nCachePages;
+    nWorkspacePages = quantity.nCachePages - 1;
     ridLimit = computeRidLimit(nWorkspacePages);
 }
 
@@ -95,9 +97,9 @@ void LbmUnionExecStream::open(bool restart)
         // TODO: get the max writer buffer size from some segment library
         uint writerBufSize = scratchAccessor.pSegment->getUsablePageSize()/8;
         writerPageLock.allocatePage();
-        PBuffer writerBuf = workspacePageLock.getPage().getWritableData();
+        PBuffer writerBuf = writerPageLock.getPage().getWritableData();
         segmentWriter.init(
-            writerBuf, writerBufSize, pOutAccessor->getTupleDesc());
+            writerBuf, writerBufSize, pOutAccessor->getTupleDesc(), false);
 
         // allocate byte buffer for merging segments
         boost::shared_array<PBuffer> ppBuffers(new PBuffer[nWorkspacePages]);
@@ -105,16 +107,19 @@ void LbmUnionExecStream::open(bool restart)
         for (uint i = 0; i < nWorkspacePages; i++) {
             workspacePageLock.allocatePage();
             ppBuffers[i] = workspacePageLock.getPage().getWritableData();
+            workspacePageLock.unlock();
         }
-        VirtualByteBuffer *pVirtualBuffer = new VirtualByteBuffer();
-        pVirtualBuffer->init(ppBuffers, nWorkspacePages, pageSize);
-        SharedByteBuffer pWorkspaceBuffer(pVirtualBuffer);
-        uint maxSegmentSize = writerBufSize;
+        ByteBuffer *pBuffer = new ByteBuffer();
+        pBuffer->init(ppBuffers, nWorkspacePages, pageSize);
+        SharedByteBuffer pWorkspaceBuffer(pBuffer);
+        // FIXME: put this logic in the bitmap tuple builder
+        uint maxSegmentSize = writerBufSize - 8;
         workspace.init(pWorkspaceBuffer, maxSegmentSize);
 
         // create dynamic parameters
         pDynamicParamManager->createParam(
             ridLimitParamId, pOutAccessor->getTupleDesc()[0]);
+        dynParamsCreated = true;
         pDynamicParamManager->writeParam(ridLimitParamId, ridLimitDatum);
     } else {
         workspace.reset();
@@ -124,6 +129,7 @@ void LbmUnionExecStream::open(bool restart)
     writePending = false;
     producePending = false;
     isDone = false;
+    segmentReader.init(inAccessors[0], inputTuple);
 }
 
 ExecStreamResult LbmUnionExecStream::execute(
@@ -155,7 +161,7 @@ ExecStreamResult LbmUnionExecStream::execute(
                     break;
                 }
                 isDone = true;
-                return EXECRC_BUF_OVERFLOW;
+                return EXECRC_EOS;
             }
             if (status != EXECRC_YIELD) {
                 return status;
@@ -176,16 +182,26 @@ ExecStreamResult LbmUnionExecStream::execute(
 void LbmUnionExecStream::closeImpl()
 {
     ConfluenceExecStream::closeImpl();
-    pDynamicParamManager->deleteParam(ridLimitParamId);
+    if (dynParamsCreated) {
+        pDynamicParamManager->deleteParam(ridLimitParamId);
+    }
+
+    // FIXME: deallocate pages
 }
 
 uint LbmUnionExecStream::computeOptWorkspacePages(LcsRid maxRid) 
 {
+    if (maxRid == (LcsRid) 0) {
+        return 4;
+    }
+    
     LcsRid bytes = (maxRid / LbmSegment::LbmOneByteSize) + 1;
-    // save half a page for building segments
-    bytes += pageSize / 2;
+    // save a quarter of a page for building segments
+    bytes += pageSize / 4;
     double pages = ((double) opaqueToInt(bytes)) / pageSize;
-    return (uint) ceil(pages);
+
+    uint pagesDesired = (uint) ceil(pages);
+    return std::min((uint) 4, pagesDesired);
 }
 
 uint LbmUnionExecStream::computeRidLimit(uint nWorkspacePages)
@@ -230,9 +246,12 @@ bool LbmUnionExecStream::writeSegment()
 
     // eagerly flush segments
     LcsRid currentSrid = segmentReader.getSrid();
-    workspace.setProductionLimit(currentSrid - 1);
+    workspace.setProductionLimit(currentSrid);
     if (!transfer()) {
         return false;
+    }
+    if (workspace.isEmpty()) {
+        workspace.advanceToSrid(currentSrid);
     }
 
     // flushing the workspace should make enough room for the next tuple
@@ -254,8 +273,10 @@ bool LbmUnionExecStream::transfer()
             return false;
         }
 
-        const LbmByteSegment &seg = workspace.getSegment();
-        if (! segmentWriter.addSegment(seg.getSrid(), seg.byteSeg, seg.len)) {
+        LbmByteSegment seg = workspace.getSegment();
+        seg.reverse();
+        LcsRid startRid = seg.getSrid();
+        if (! segmentWriter.addSegment(startRid, seg.byteSeg, seg.len)) {
             return false;
         }
         workspace.advancePastSegment();
@@ -273,6 +294,7 @@ bool LbmUnionExecStream::produceTuple()
 
     outputTuple = segmentWriter.produceSegmentTuple();
     if (pOutAccessor->produceTuple(outputTuple)) {
+        segmentWriter.reset();
         producePending = false;
         return true;
     }

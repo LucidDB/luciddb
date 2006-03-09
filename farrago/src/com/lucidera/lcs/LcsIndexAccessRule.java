@@ -22,24 +22,19 @@ package com.lucidera.lcs;
 
 import java.util.*;
 
-import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fem.med.*;
-import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.cwm.keysindexes.*;
 
-import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.convert.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.util.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sarg.*;
+import org.eigenbase.sql.fun.*;
 
 /**
  * LcsIndexAccessRule is a rule for converting FilterRel+LcsRowScanRel
@@ -51,21 +46,21 @@ import org.eigenbase.sarg.*;
 class LcsIndexAccessRule extends RelOptRule
 {
     //~ Constructors ----------------------------------------------------------
-
+    
     /**
      * Creates a new LcsIndexAccessRule object.
      */
     public LcsIndexAccessRule()
     {
         super(new RelOptRuleOperand(
-                FilterRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(LcsRowScanRel.class, null)
-                }));
+            FilterRel.class,
+            new RelOptRuleOperand [] {
+                new RelOptRuleOperand(LcsRowScanRel.class, null)
+            }));
     }
-
+    
     //~ Methods ---------------------------------------------------------------
-
+    
     // implement RelOptRule
     public CallingConvention getOutConvention()
     {
@@ -77,177 +72,186 @@ class LcsIndexAccessRule extends RelOptRule
     {
         FilterRel filter = (FilterRel) call.rels[0];
         LcsRowScanRel origRowScan = (LcsRowScanRel) call.rels[1];
-
-        FarragoRepos repos = FennelRelUtil.getRepos(origRowScan);
-
-        RexNode filterExp = filter.getCondition();
-
-        RexNode extraFilter = null;
-
-        SargFactory sargFactory = new SargFactory(
-            origRowScan.getCluster().getRexBuilder());
+        
+        // If LcsRowScanRel already has input(s), it means Sarg Analysis has 
+        // already been done for the predicates in this FilterRel, and LcsIndexSearchRel
+        // and/or residual SargRel have been allocated as inputs to LcsRowScanRel.
+        if (origRowScan.getInputs().length > 0) {
+            return;
+        }
+        
+        RexBuilder rexBuilder = origRowScan.getCluster().getRexBuilder();
+        SargFactory sargFactory = new SargFactory(rexBuilder);            
         SargRexAnalyzer rexAnalyzer = sargFactory.newRexAnalyzer();
-        SargBinding sargBinding = rexAnalyzer.analyze(filterExp);
-
-        if (sargBinding == null) {
+        
+        RexNode filterExp = filter.getCondition();
+        
+        List<SargBinding> sargBindingList = rexAnalyzer.analyzeAll(filterExp);
+        
+        if (sargBindingList.isEmpty()) {
             // Predicate was not sargable
             return;
         }
-
-        RexInputRef fieldAccess = sargBinding.getInputRef();
-        FemAbstractColumn filterColumn =
-            origRowScan.getColumnForFieldAccess(fieldAccess.getIndex());
-        assert (filterColumn != null);
-
-        Iterator iter = FarragoCatalogUtil.getUnclusteredIndexes(
-            repos, origRowScan.lcsTable.getCwmColumnSet()).iterator();
-
-        while (iter.hasNext()) {
-            FemLocalIndex index = (FemLocalIndex) iter.next();
-            considerIndex(
-                index, origRowScan, filterColumn, sargBinding.getExpr(), call,
-                extraFilter);
-        }
+        
+        considerIndex(origRowScan, sargBindingList, call, rexAnalyzer);
     }
+    
+    //~ Private Methods -------------------------------------------------------
 
-    // check if the index has the same prefix
-    static boolean testIndexColumn(
-        FemLocalIndex index,
-        CwmColumn column)
+    private static class CandidateIndex
     {
-        List indexedFeatures = index.getIndexedFeature();
-        CwmIndexedFeature indexedFeature =
-            (CwmIndexedFeature) indexedFeatures.get(0);
-        CwmColumn indexedColumn = (CwmColumn) indexedFeature.getFeature();
-        if (!column.equals(indexedColumn)) {
-            return false;
+        FemLocalIndex index;
+        int matchedPos;
+        List<SargIntervalSequence> sargSeqList;
+        
+        CandidateIndex(
+            FemLocalIndex index, 
+            int matchedPos, 
+            List<SargIntervalSequence> sargSeqList)
+        {
+            this.index = index;
+            this.matchedPos = matchedPos;    
+            this.sargSeqList = sargSeqList;
         }
-        return true;
     }
-
+    
     private void considerIndex(
-        FemLocalIndex index,
         LcsRowScanRel origRowScan,
-        FemAbstractColumn filterColumn,
-        SargExpr sargExpr,
+        List<SargBinding> sargBindingList,
         RelOptRuleCall call,
-        RexNode extraFilter)
+        SargRexAnalyzer rexAnalyzer)
     {
-        // TODO:  support compound keys
-        if (!testIndexColumn(index, filterColumn)) {
-            return;
-        }
-
+        FennelRelImplementor relImplementor = 
+            FennelRelUtil.getRelImplementor(origRowScan);
+        
+        // By default, these parameters are not used:
+        // ParamId == 0 menas this param is in valid.
+        int startRidParamId = 0;
+        int rowLimitParamId = 0;
+        
         LcsIndexGuide indexGuide = origRowScan.lcsTable.getIndexGuide();
-
-        if (!indexGuide.isValid(index)) {
+        RexBuilder rexBuilder = origRowScan.getCluster().getRexBuilder();
+        
+        Map<CwmColumn, SargIntervalSequence> col2SeqMap =
+            getCol2SeqMap(origRowScan, sargBindingList);
+        
+        List<List<CwmColumn>> colLists = 
+            getSargColLists(origRowScan, sargBindingList, col2SeqMap);
+        
+        Map<FemLocalIndex, Integer> index2PosMap =
+            indexGuide.getIndex2PosMap(colLists);
+        
+        // Use a tree set here so that the indexes are searched in a fixed order, to
+        // make the plan output stable.
+        // Note we could optimize the order by using a different comparator function.
+        // For example, search the index with the longest matched keys first, or when
+        // proper costing is in place, search the most selective index (wrt to key values)
+        // first.
+        TreeSet<FemLocalIndex> indexSet = 
+            new TreeSet<FemLocalIndex>(new LcsIndexGuide.IndexLengthComparator());
+        
+        indexSet.addAll(index2PosMap.keySet());
+        
+        if (indexSet.size() == 0) {
+            // no index usable
             return;
         }
         
-        final RelTraitSet callTraits = call.rels[0].getTraits(); 
-
-        // NOTE jvs 24-Jan-2006: I turned this optimization off because
-        // BTreeSearchUnique can no longer be used with interval inputs.
-        // Turning it back on requires verifying that all intervals are points,
-        // and then suppressing generation of directives.
-        boolean isUnique;
-        if (false) {
-            isUnique =
-                index.isUnique() && (index.getIndexedFeature().size() == 1);
-        } else {
-            isUnique = false;
+        List<SargBinding> residualSargBindingList = 
+            getResidualSargBinding(
+                origRowScan,
+                sargBindingList,
+                index2PosMap);
+        
+        RexNode extraFilter = null;
+        
+        // TODO since LcsRowScan does not support residual ranges now
+        // change the residual into RexNodes and evaluate them in FilterRel
+        // after all rows are retrieved.
+        RexNode residualRexNode = 
+            rexAnalyzer.getResidualSargRexNode(residualSargBindingList);
+        
+        RexNode postFilterRexNode =
+            rexAnalyzer.getPostFilterRexNode();
+        
+        if (residualRexNode != null && postFilterRexNode != null) {
+            extraFilter = 
+                rexBuilder.makeCall(
+                    SqlStdOperatorTable.andOperator,
+                    residualRexNode, postFilterRexNode);
+        } else if (residualRexNode != null) {
+            extraFilter = residualRexNode;
+        } else if (postFilterRexNode != null) {
+            extraFilter = postFilterRexNode;
         }
-
-        // Create a type descriptor for the rows representing search
-        // keys along with their directives.  Note that we force
-        // the key type to nullable because we use null for the representation
-        // of infinity (rather than domain-specific junk).
-        FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(origRowScan);
-        FarragoTypeFactory typeFactory = stmt.getFarragoTypeFactory();
-        RelDataType directiveType =
-            typeFactory.createSqlType(
-                SqlTypeName.Char,
-                1);
-        RelDataType keyType =
-            typeFactory.createTypeWithNullability(
-                typeFactory.createCwmElementType(filterColumn),
-                true);
-
-        RelDataType keyRowType =
-            typeFactory.createStructType(
-                new RelDataType [] {
-                    directiveType,
-                    keyType,
-                    directiveType,
-                    keyType
-                },
-                new String [] {
-                    "lowerBoundDirective",
-                    "lowerBoundKey",
-                    "upperBoundDirective",
-                    "upperBoundKey"
-                });
-
-        RelNode sargRel = FennelRelUtil.convertSargExpr(
-            callTraits,
-            keyRowType,
-            origRowScan.getCluster(),
-            sargExpr);
-
-        RelNode keyInput =
-            mergeTraitsAndConvert(
-                callTraits, FennelRel.FENNEL_EXEC_CONVENTION,
-                sargRel);
-
-        assert (keyInput != null);
-
-        // Set up projections for the search directive and key.
-        // TODO: multi-key index key proj and directive proj
-        Integer [] inputDirectiveProj = new Integer [] { 0, 2 };
-        Integer [] inputKeyProj = new Integer [] { 1, 3 };
-
         
-        // First construct an index scan, and then try to add index search.
-        // TODO: do we need the orderPreserving property?It is set to false now.
-        LcsIndexScanRel indexScan =
-            new LcsIndexScanRel(
+        // AND the INDEX search rels together.
+        RelNode [] indexRels = new RelNode[indexSet.size()];
+        boolean requireIntersect = indexRels.length > 1;
+        
+        Iterator iter = indexSet.iterator();        
+        int i = 0;
+        
+        if (requireIntersect) {
+            // Allocate AND here
+            rowLimitParamId = relImplementor.allocateDynamicParam();
+            startRidParamId = relImplementor.allocateDynamicParam();
+        }
+        
+        while (iter.hasNext()) {
+            FemLocalIndex index = (FemLocalIndex)(iter.next());
+            int matchedPos = index2PosMap.get(index);
+            
+            List<SargIntervalSequence> sargSeqList =
+                getIndexSargSeq(indexGuide, index, matchedPos, col2SeqMap);
+            
+            CandidateIndex candidate = new CandidateIndex(index, matchedPos, sargSeqList);
+            
+            FennelRel indexRel = 
+                newIndexRel(call,
+                            origRowScan,
+                            candidate,
+                            startRidParamId,
+                            rowLimitParamId);
+            indexRels[i] = indexRel;
+            i ++;
+        }
+        
+        RelNode [] rowScanInputRels = new RelNode[1];
+        
+        if (requireIntersect) {
+            FennelRel intersectRel = new LcsIndexIntersectRel(
                 origRowScan.getCluster(),
+                indexRels,
                 origRowScan.lcsTable,
-                index,
-                origRowScan.getConnection(),
-                null,
-                false);
+                startRidParamId,
+                rowLimitParamId);
+            rowScanInputRels[0] = intersectRel;
+        } else {
+            rowScanInputRels[0] = indexRels[0];
+        }
         
-        LcsIndexSearchRel indexSearch =
-            new LcsIndexSearchRel(indexScan, keyInput, false,
-                false, inputKeyProj, null, inputDirectiveProj);
-
         // check if the index contains all the required columns.
         // TODO: this is not implemented yet. IndexScan/Search always returns
         // the [SRID, bitmap1, bitmap2] which is sent to drive a LcsRowScan
         //
         // if ((origRowScan.projectedColumns.size() == 1) &&
         // !testIndexColumn(index, filterColumn)) {
-            // A direct search against an index is easier.
+        // A direct search against an index is easier.
         //    transformCall(call, indexSearch, extraFilter);
         // } else 
         {
-            RelNode [] inputRels = new RelNode[1];
-            
-            // TODO: add extra range list here to the stream def's.
-            inputRels[0] = indexSearch;
-
             // Build a RowScan rel based on index search with no extra filters.
             LcsRowScanRel rowScan =
                 new LcsRowScanRel(
                     origRowScan.getCluster(),
-                    inputRels,
+                    rowScanInputRels,
                     origRowScan.lcsTable,
                     origRowScan.clusteredIndexes,
                     origRowScan.getConnection(),
                     origRowScan.projectedColumns,
                     false, false);
-
+            
             transformCall(call, rowScan, extraFilter);
         }
     }
@@ -263,7 +267,260 @@ class LcsIndexAccessRule extends RelOptRule
         }
         call.transformTo(rel);
     }
+    
+    private Map<CwmColumn, SargIntervalSequence> getCol2SeqMap(
+        LcsRowScanRel origRowScan,
+        List<SargBinding> sargBindingList)
+    {
+        Map<CwmColumn, SargIntervalSequence> colMap =
+            new HashMap<CwmColumn, SargIntervalSequence>();
+        
+        for (int i = 0; i < sargBindingList.size(); i ++) {
+            SargBinding sargBinding = sargBindingList.get(i);
+            RexInputRef fieldAccess = sargBinding.getInputRef();
+            FemAbstractColumn filterColumn =
+                origRowScan.getColumnForFieldAccess(fieldAccess.getIndex());
+            assert (filterColumn != null);
+            
+            SargIntervalSequence sargSeq = 
+                FennelRelUtil.evaluateSargExpr(sargBinding.getExpr());
+            
+            colMap.put(filterColumn, sargSeq);
+        }            
+        
+        return colMap;
+    }
+    
+    private List<SargIntervalSequence> getIndexSargSeq (
+        LcsIndexGuide indexGuide,
+        FemLocalIndex index,
+        int matchedPos,
+        Map<CwmColumn, SargIntervalSequence> col2SeqMap)
+    {
+        List<SargIntervalSequence> seqList =
+            new ArrayList<SargIntervalSequence>();
+        
+        for (int pos = 0; pos < matchedPos; pos++) {
+            CwmColumn col = indexGuide.getIndexColumn(index, pos);
+            SargIntervalSequence sargSeq = col2SeqMap.get(col);
+            seqList.add(sargSeq);
+        }
+        
+        return seqList;
+    }
+    
+    private List<List<CwmColumn>> getSargColLists(
+        LcsRowScanRel origRowScan,
+        List<SargBinding> sargBindingList,
+        Map<CwmColumn, SargIntervalSequence> col2SeqMap)
+    {
+        List<List<CwmColumn>> retLists = new ArrayList<List<CwmColumn>>();;
+        List<CwmColumn> pointColumnList = new ArrayList<CwmColumn>(); 
+        List<CwmColumn> rangeColumnList = new ArrayList<CwmColumn>(); 
+        
+        for (int i = 0; i < sargBindingList.size(); i ++) {
+            SargBinding sargBinding = sargBindingList.get(i);
+            RexInputRef fieldAccess = sargBinding.getInputRef();
+            FemAbstractColumn filterColumn =
+                origRowScan.getColumnForFieldAccess(fieldAccess.getIndex());
+            assert (filterColumn != null);
+            
+            SargIntervalSequence sargSeq = col2SeqMap.get(filterColumn);
+            
+            if (sargSeq.isPoint()) {
+                pointColumnList.add(filterColumn);
+            } else {
+                rangeColumnList.add(filterColumn);
+            }            
+        }
+        
+        retLists.add(0, pointColumnList);
+        retLists.add(1, rangeColumnList);
+        return retLists;
+    }
+    
+    private List<SargBinding> getResidualSargBinding(
+        LcsRowScanRel origRowScan,
+        List<SargBinding> sargBindingList,
+        Map<FemLocalIndex, Integer> index2PosMap)
+    {
+        LcsIndexGuide indexGuide = origRowScan.lcsTable.getIndexGuide();
+        List<CwmColumn> sargColList = new ArrayList<CwmColumn>();
+        
+        for (int i = 0; i < sargBindingList.size(); i ++) {
+            SargBinding sargBinding = sargBindingList.get(i);
+            RexInputRef fieldAccess = sargBinding.getInputRef();
+            FemAbstractColumn filterColumn =
+                origRowScan.getColumnForFieldAccess(fieldAccess.getIndex());
+            assert (filterColumn != null);
+            
+            sargColList.add(i, filterColumn);
+        }
+        
+        Iterator iter = index2PosMap.keySet().iterator();
+        
+        while (iter.hasNext()) {
+            FemLocalIndex index = (FemLocalIndex)(iter.next());
+            
+            for (int pos = 0; pos < index2PosMap.get(index).intValue(); pos++) {
+                int i = sargColList.indexOf(indexGuide.getIndexColumn(index, pos));
+                sargBindingList.remove(i);
+                sargColList.remove(i);
+            }
+        }
+        
+        return sargBindingList;
+    }
+    
+    private FennelRel newIndexRel (
+        RelOptRuleCall call,
+        LcsRowScanRel origRowScan,
+        CandidateIndex candidate,
+        int startRidParamId,
+        int rowLimitParamId)
+    {
+        FemLocalIndex index = candidate.index;
+        int matchedPos = candidate.matchedPos;
+        List<SargIntervalSequence> sargSeqList = candidate.sargSeqList;
+        
+        FennelRelImplementor relImplementor = 
+            FennelRelUtil.getRelImplementor(origRowScan);
+        LcsIndexGuide indexGuide = origRowScan.lcsTable.getIndexGuide();
+        final RelTraitSet callTraits = call.rels[0].getTraits(); 
+        
+        assert (sargSeqList.size() == matchedPos);
+        int indexKeyLength = index.getIndexedFeature().size();
+        boolean partialMatch = matchedPos < indexKeyLength;
+        
+        // NOTE jvs 24-Jan-2006: I turned this optimization off because
+        // BTreeSearchUnique can no longer be used with interval inputs.
+        // Turning it back on requires verifying that all intervals are points,
+        // and then suppressing generation of directives.
+        boolean isUnique;
+        if (false) {
+            isUnique =
+                index.isUnique() && (indexKeyLength == 1);
+        } else {
+            isUnique = false;
+        }
+        
+        // Create a type descriptor for the rows representing search
+        // keys along with their directives.  Note that we force
+        // the key type to nullable because we use null for the representation
+        // of infinity (rather than domain-specific junk).
+        FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(origRowScan);
+        FarragoTypeFactory typeFactory = stmt.getFarragoTypeFactory();
+        RelDataType directiveType =
+            typeFactory.createSqlType(
+                SqlTypeName.Char,
+                1);
+        
+        int keyRowLength = matchedPos * 2 + 2;
+        int keyRowMidPoint = keyRowLength / 2;
+        int lowerBoundKeyBase = 1;
+        int upperBoundKeyBase = keyRowMidPoint + 1;
+        
+        RelDataType[] dataTypes = new RelDataType[keyRowLength];
+        String[]      typeDescriptions = new String[keyRowLength];
+        
+        dataTypes[0] = directiveType;
+        dataTypes[keyRowMidPoint] = directiveType;
+        
+        typeDescriptions[0] = "lowerBoundDirective";
+        typeDescriptions[keyRowMidPoint] = "upperBoundDirective";
+        
+        for (int pos = 0; pos < matchedPos; pos ++) {
+            CwmColumn filterColumn = 
+                indexGuide.getIndexColumn(index, pos);
+        
+            RelDataType keyType =
+                typeFactory.createTypeWithNullability(
+                    typeFactory.createCwmElementType((FemAbstractColumn)filterColumn),
+                    true);
+            dataTypes[lowerBoundKeyBase + pos] = keyType;
+            dataTypes[upperBoundKeyBase + pos] = keyType;
+            
+            typeDescriptions[lowerBoundKeyBase + pos] = "lowerBoundKey";
+            typeDescriptions[upperBoundKeyBase + pos] = "upperBoundKey";
+            
+        }
+            
+        RelDataType keyRowType =
+            typeFactory.createStructType(dataTypes, typeDescriptions);
 
+        RelNode sargRel;
+        
+        sargRel = FennelRelUtil.convertSargExpr(
+            callTraits,
+            keyRowType,
+            origRowScan.getCluster(),
+            sargSeqList);
+        
+        // NOTE: For now the multi-column search key only supports equality
+        // search on each column. requireUnion==false for this case.
+        boolean requireUnion = 
+            (sargSeqList.size() == 1) &&
+            (sargSeqList.get(0).isRange() ||
+             (sargSeqList.get(0).isPoint() && partialMatch));
+        
+        RelNode keyInput =
+            mergeTraitsAndConvert(
+                callTraits, FennelRel.FENNEL_EXEC_CONVENTION,
+                sargRel);
+        
+        assert (keyInput != null);
+        
+        // Set up projections for the search directive and key.
+        // TODO: multi-key index key proj and directive proj
+        Integer [] inputDirectiveProj = new Integer [] { 0, (matchedPos + 1) };
+        Integer [] inputKeyProj = new Integer [matchedPos * 2];
+        for (int i = 0; i < matchedPos; i ++) {
+            inputKeyProj[i] = i + 1;
+            inputKeyProj[i + matchedPos] = matchedPos + i + 2;            
+        }
+        
+        // First construct an index scan, and then try to add index search.
+        // TODO: do we need the orderPreserving property?It is set to false now.
+        LcsIndexScanRel indexScan =
+            new LcsIndexScanRel(
+                origRowScan.getCluster(),
+                origRowScan.lcsTable,
+                index,
+                origRowScan.getConnection(),
+                null,
+                false);
+        
+        int startRidParamIdForSearch =
+            requireUnion ? 0 : startRidParamId;
+        
+        LcsIndexSearchRel indexSearch =
+            new LcsIndexSearchRel(
+                keyInput,
+                indexScan,
+                false,
+                false,
+                inputKeyProj,
+                null,
+                inputDirectiveProj,
+                startRidParamIdForSearch,
+                rowLimitParamId);
+        
+        FennelRel inputRel = indexSearch;
+        
+        if (requireUnion) {
+            int chopperRidLimitParamId = 
+                relImplementor.allocateDynamicParam();
+            
+            inputRel = new LcsIndexMergeRel(
+                origRowScan.lcsTable,
+                indexSearch,
+                startRidParamId,
+                rowLimitParamId,
+                chopperRidLimitParamId);
+        }
+        
+        return inputRel;
+    }
 }
 
-// End LcsIndexAccessRule.java
+//End LcsIndexAccessRule.java

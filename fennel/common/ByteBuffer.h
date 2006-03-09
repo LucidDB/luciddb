@@ -32,22 +32,31 @@ FENNEL_BEGIN_NAMESPACE
 typedef uint8_t UnsignedByte;
     
 /**
- * Byte buffer is an abstract interface for accessing an array of bytes.
- * The bytes may or may not be contiguous. It has an interface for
- * accessing one byte at a time (less overhead), and an interface for
- * accessing runs of bytes (more overhead, but processes one chunk at
- * a time). The methods setMem and copyMem are similar to memset and
- * memcpy. Indexes are zero-based.
+ * ByteBuffer allows access to an array of buffers as a single
+ * memory space. It allows for optimization with direct memory access.
+ * It has an interface for accessing one byte at a time (less overhead),
+ * and an interface for accessing runs of bytes (more overhead, but
+ * processes one memory chunk at a time). The methods setMem and
+ * copyMem are similar to memset and memcpy.
  *
+ * This class neither allocates nor deallocates memory, except through
+ * shared pointers. As usual, indexes are zero-based.
+ *    
  * @author John Pham
  * @version $Id$
  */
 class ByteBuffer
 {
+    boost::shared_array<PBuffer> ppBuffers;
+    uint nBuffers;
+    uint bufferSize;
+    uint bufferMask;
+    uint bufferShift;
+
     /**
      * Merges (OR's) one buffer into another
      */
-    static inline void memmerge(PBuffer dest, PConstBuffer src, uint len) 
+    static void memmerge(PBuffer dest, PConstBuffer src, uint len) 
     {
         PBuffer end = dest + len;
         while (dest < end) {
@@ -55,97 +64,20 @@ class ByteBuffer
         }
     }
 
-public:
-    virtual ~ByteBuffer();
-
-    /**
-     * Returns the size of the buffer, in bytes
-     */
-    virtual uint getSize() = 0;
-
-    /**
-     * Returns the byte at pos
-     */
-    virtual UnsignedByte getByte(uint pos) = 0;
-
-    /**
-     * Sets byte at pos
-     */
-    virtual void setByte(uint pos, UnsignedByte b) = 0;
-
-    /**
-     * Merges (OR's) byte at pos
-     */
-    virtual void mergeByte(uint pos, UnsignedByte b) = 0;
-
-    /**
-     * Returns the size of contiguous memory starting from a position
-     *
-     * @param pos memory position
-     * @param max if specified, limits the memory size returned
-     */
-    virtual uint getContiguousMemSize(uint pos, uint max = 0) = 0;
-
-    /**
-     * Returns a pointer to contiguous memory. Always returns a valid
-     * value if [len <= getContiguousMemSize]. Contiguous memory pointers
-     * are valid until the buffer is modified.
-     *
-     * When [len > getContiguousMemSize], implementations may attempt to
-     * construct contiguous memory. In this case, the memory is no good
-     * for writing, only for reading. The lifetime of the pointer is
-     * implementation dependent. It may only valid the until the buffer
-     * is modified or until next call to getMem.
-     *
-     * If contiguous memory cannot be constructed, this method returns NULL.
-     *
-     * @param pos memory position
-     * @param len desired memory length
-     */
-    virtual PBuffer getMem(uint pos, uint len) = 0;
-
-    /**
-     * Initializes a run of bytes in the buffer
-     */
-    virtual void setMem(uint pos, UnsignedByte value, uint len);
-
-    /**
-     * Copies a run of bytes into the buffer
-     */
-    virtual void copyMem(uint pos, PConstBuffer mem, uint len);
-
-    /**
-     * Merges (OR's) a run of bytes into the buffer; similar to memmerge
-     */
-    virtual void mergeMem(uint pos, PConstBuffer mem, uint len);
-};
-
-/**
- * VirtualByteBuffer allows access to a collection of buffers as a single
- * memory space. It provides virtual memory with potential optimization
- * through direct memory access. This class neither allocates nor
- * deallocates memory, except through shared pointers.
- */
-class VirtualByteBuffer : public ByteBuffer
-{
-    boost::shared_array<PBuffer> ppBuffers;
-    uint nBuffers;
-    uint bufferSize;
-
     /**
      * Returns offsets to use for a buffer access
      */
     inline void getOffset(uint pos, uint &i, uint &j)
     {
-        i = pos / bufferSize;
-        j = pos % bufferSize;
+        i = pos >> bufferShift;
+        j = pos & bufferMask;
         assert(i < nBuffers);
         assert(j < bufferSize);
     }
 
 public:
-    explicit VirtualByteBuffer();
-    virtual ~VirtualByteBuffer();
+    explicit ByteBuffer();
+    ~ByteBuffer();
 
     /**
      * Provides storage for the virtual byte buffer 
@@ -153,13 +85,79 @@ public:
     void init(
         boost::shared_array<PBuffer> ppBuffers, uint nBuffers, uint bufSize);
 
-    // refine ByteBuffer
-    virtual uint getSize();
-    virtual UnsignedByte getByte(uint pos);
-    virtual void setByte(uint pos, UnsignedByte b);
-    virtual void mergeByte(uint pos, UnsignedByte b);
-    virtual uint getContiguousMemSize(uint pos, uint max = 0);
-    virtual PBuffer getMem(uint pos, uint len);
+    /**
+     * Returns the size of the buffer, in bytes
+     */
+    uint getSize();
+
+    /**
+     * Returns the byte at pos
+     */
+    inline UnsignedByte getByte(uint pos) 
+    {
+        uint i, j;
+        getOffset(pos, i, j);
+        return ppBuffers[i][j];
+    }
+
+    /**
+     * Sets byte at pos
+     */
+    inline void setByte(uint pos, UnsignedByte b)
+    {
+        uint i, j;
+        getOffset(pos, i, j);
+        ppBuffers[i][j] = b;
+    }
+
+    /**
+     * Merges (OR's) byte at pos
+     */
+    inline void mergeByte(uint pos, UnsignedByte b)
+    {
+        uint i, j;
+        getOffset(pos, i, j);
+        ppBuffers[i][j] |= b;
+    }
+
+    /**
+     * Returns the size of contiguous memory starting from a position
+     *
+     * @param pos memory position
+     * @param max if nonzero, limits the memory size returned
+     */
+    inline uint getContiguousMemSize(uint pos, uint max)
+    {
+        uint size = bufferSize - (pos & bufferMask);
+        return max ? std::min(max, size) : size;
+    }
+
+    /**
+     * Returns a pointer to contiguous memory.
+     *
+     * @param pos memory position
+     */
+    inline PBuffer getMem(uint pos)
+    {
+        uint i, j;
+        getOffset(pos, i, j);
+        return &ppBuffers[i][j];
+    }
+
+    /**
+     * Initializes a run of bytes in the buffer
+     */
+    void setMem(uint pos, UnsignedByte value, uint len);
+
+    /**
+     * Copies a run of bytes into the buffer
+     */
+    void copyMem(uint pos, PConstBuffer mem, uint len);
+
+    /**
+     * Merges (OR's) a run of bytes into the buffer; similar to memmerge
+     */
+    void mergeMem(uint pos, PConstBuffer mem, uint len);
 };
 
 /**
@@ -216,7 +214,7 @@ protected:
     {
         assert(index >= start);
         assert(index < start + bufferSize);
-        return indexToOffset((index - start) % bufferSize);
+        return indexToOffset((index - start + startOffset) % bufferSize);
     }
 
     /**
@@ -309,9 +307,9 @@ public:
     /**
      * Returns contiguous memory at position or NULL
      */
-    virtual PBuffer getMem(IndexT index, uint len)
+    virtual PBuffer getMem(IndexT index)
     {
-        return buffer->getMem(getOffset(index), len);
+        return buffer->getMem(getOffset(index));
     }
 
     /**
@@ -339,15 +337,28 @@ public:
     void advanceEnd(IndexT pos)
     {
         assert(pos > end);
-        assert(pos < getLimit());
+        assert(pos <= getLimit());
 
         uint len = indexToOffset(pos - end);
-        uint chunkSize = getUnwrappedMemSize(pos, len);
+        uint chunkSize = getUnwrappedMemSize(end, len);
         buffer->setMem(getOffset(end), 0, chunkSize);
         if (chunkSize < len) {
             buffer->setMem(0, 0, len - chunkSize);
         }
         end = pos;
+    }
+
+    /**
+     * Merge a byte into the buffer
+     */
+    void mergeByte(IndexT index, UnsignedByte val) 
+    {
+        assert(index >= start);
+        assert(index < getLimit());
+        if (index >= end) {
+            advanceEnd(index + 1);
+        }
+        buffer->mergeByte(getOffset(index), val);
     }
 
     /**

@@ -60,6 +60,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
     OJClass ojBytePointer;
     private Set streamDefSet;
     private String serverMofId;
+    private int nextParamId;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -78,6 +79,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
         ojBytePointer = OJClass.forClass(BytePointer.class);
 
         streamDefSet = new HashSet();
+        nextParamId = 1;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -103,6 +105,11 @@ public class FarragoRelImplementor extends JavaRelImplementor
     public FarragoRepos getRepos()
     {
         return preparingStmt.getRepos();
+    }
+
+    public int allocateDynamicParam()
+    {
+        return nextParamId++;
     }
 
     // implement FennelRelImplementor

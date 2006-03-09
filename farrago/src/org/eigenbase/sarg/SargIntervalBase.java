@@ -91,6 +91,15 @@ public abstract class SargIntervalBase
     }
     
     /**
+     * @return whether this represents a (non-empty, non-point)
+     * range interval
+     */
+    public boolean isRange()
+    {
+        return (!isPoint() && !isEmpty());
+    }
+
+    /**
      * @return whether this represents the universal set
      */
     public boolean isUnconstrained()

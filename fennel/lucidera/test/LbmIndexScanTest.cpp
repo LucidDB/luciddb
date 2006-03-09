@@ -532,8 +532,9 @@ void LbmIndexScanTest::generateBitmaps(
     LcsRid rid = LcsRid(start);
 
     // setup an LbmEntry with the initial rid value
-    entryBuf.reset(new FixedBuffer[bitmapColSize]);
-    lbmEntry.init(entryBuf.get(), bitmapColSize, bitmapTupleDesc);
+    entryBuf.reset(new FixedBuffer[bitmapColSize + sizeof(LcsRid)]);
+    lbmEntry.init(
+        entryBuf.get(), bitmapColSize + sizeof(LcsRid), bitmapTupleDesc);
     bitmapTupleData[0].pData = (PConstBuffer) &rid;
     lbmEntry.setEntryTuple(bitmapTupleData);
 
@@ -927,7 +928,6 @@ void LbmIndexScanTest::testScanIdx(
 
     // initialize parameters specific to indexScan
     indexScanParams.rowLimitParamId = DynamicParamId(0);
-    indexScanParams.ignoreRowLimit = true;
     indexScanParams.startRidParamId = DynamicParamId(0);
 
     // initialize parameters for btree read
