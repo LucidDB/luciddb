@@ -76,9 +76,15 @@ public abstract class CalcRelBase extends SingleRel
         return program;
     }
 
+    public double getRows()
+    {
+        return FilterRel.estimateFilteredRows(
+            getChild(), program.getCondition());
+    }
+
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
-        double dRows = getChild().getRows();
+        double dRows = getRows();
         double dCpu = getChild().getRows() * program.getExprCount();
         double dIo = 0;
         return planner.makeCost(dRows, dCpu, dIo);

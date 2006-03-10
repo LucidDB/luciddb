@@ -82,7 +82,12 @@ public abstract class FilterRelBase extends SingleRel
     // override RelNode
     public double getRows()
     {
-        return getChild().getRows() * RexUtil.getSelectivity(condition);
+        return estimateFilteredRows(getChild(), condition);
+    }
+
+    public static double estimateFilteredRows(RelNode child, RexNode condition)
+    {
+        return child.getRows() * RexUtil.getSelectivity(condition);
     }
 
     public void explain(RelOptPlanWriter pw)

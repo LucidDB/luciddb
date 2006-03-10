@@ -88,9 +88,15 @@ public class IterCalcRel extends SingleRel implements JavaRel
         program.explainCalc(this, pw);
     }
 
+    public double getRows()
+    {
+        return FilterRel.estimateFilteredRows(
+            getChild(), program.getCondition());
+    }
+
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
-        double dRows = getChild().getRows();
+        double dRows = getRows();
         double dCpu = getChild().getRows() * program.getExprCount();
         double dIo = 0;
         return planner.makeCost(dRows, dCpu, dIo);
@@ -105,11 +111,6 @@ public class IterCalcRel extends SingleRel implements JavaRel
             getFlags());
         clone.inheritTraitsFrom(this);
         return clone;
-    }
-
-    protected RelDataType deriveRowType()
-    {
-        return super.deriveRowType();    //To change body of overridden methods use File | Settings | File Templates.
     }
 
     public int getFlags()
