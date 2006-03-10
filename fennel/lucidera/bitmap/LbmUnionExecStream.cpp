@@ -30,8 +30,6 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 LbmUnionExecStream::LbmUnionExecStream()
 {
     dynParamsCreated = false;
-    // until we get a better estimate in setResourceAllocation
-    nWorkspacePages = 1;
 }
 
 void LbmUnionExecStream::prepare(LbmUnionExecStreamParams const &params)
@@ -100,7 +98,11 @@ void LbmUnionExecStream::open(bool restart)
         PBuffer writerBuf = writerPageLock.getPage().getWritableData();
         segmentWriter.init(
             writerBuf, writerBufSize, pOutAccessor->getTupleDesc(), false);
-
+        // still have plenty of space for merging
+        reverseArea = writerBuf + writerBufSize;
+        reverseAreaSize =
+            scratchAccessor.pSegment->getUsablePageSize() - writerBufSize;
+        
         // allocate byte buffer for merging segments
         boost::shared_array<PBuffer> ppBuffers(new PBuffer[nWorkspacePages]);
         assert(ppBuffers != NULL);
@@ -112,8 +114,7 @@ void LbmUnionExecStream::open(bool restart)
         ByteBuffer *pBuffer = new ByteBuffer();
         pBuffer->init(ppBuffers, nWorkspacePages, pageSize);
         SharedByteBuffer pWorkspaceBuffer(pBuffer);
-        // FIXME: put this logic in the bitmap tuple builder
-        uint maxSegmentSize = writerBufSize - 8;
+        uint maxSegmentSize = LbmSegment::LbmMaxSegSize;
         workspace.init(pWorkspaceBuffer, maxSegmentSize);
 
         // create dynamic parameters
@@ -191,23 +192,17 @@ void LbmUnionExecStream::closeImpl()
 
 uint LbmUnionExecStream::computeOptWorkspacePages(LcsRid maxRid) 
 {
-    if (maxRid == (LcsRid) 0) {
-        return 4;
-    }
-    
-    LcsRid bytes = (maxRid / LbmSegment::LbmOneByteSize) + 1;
-    // save a quarter of a page for building segments
-    bytes += pageSize / 4;
-    double pages = ((double) opaqueToInt(bytes)) / pageSize;
-
-    uint pagesDesired = (uint) ceil(pages);
-    return std::min((uint) 4, pagesDesired);
+    // TODO: come up with a better estimate once we have statistics
+    return 2;
 }
 
 uint LbmUnionExecStream::computeRidLimit(uint nWorkspacePages)
 {
-    // save half a page for building segments
-    uint bytes = (uint) ((nWorkspacePages - 0.5) * pageSize);
+    // save a quarter page for building segments
+    // based upon the idea that the largest segment could be
+    // 1/8 of a page along with 1/8 of a page for "growing" a
+    // segment before writing it out (not true as of 2006-03-08)
+    uint bytes = (uint) ((nWorkspacePages - 0.25) * pageSize);
     return bytes * LbmSegment::LbmOneByteSize;
 }
 
@@ -274,9 +269,13 @@ bool LbmUnionExecStream::transfer()
         }
 
         LbmByteSegment seg = workspace.getSegment();
-        seg.reverse();
+        assert(seg.len < reverseAreaSize);
+        PBuffer reverseStart = reverseArea + seg.len - 1;
+        for (uint i = 0; i < seg.len; i++) {
+            reverseStart[-i] = seg.byteSeg[i];
+        }
         LcsRid startRid = seg.getSrid();
-        if (! segmentWriter.addSegment(startRid, seg.byteSeg, seg.len)) {
+        if (! segmentWriter.addSegment(startRid, reverseArea, seg.len)) {
             return false;
         }
         workspace.advancePastSegment();

@@ -101,8 +101,8 @@ const LbmByteSegment &LbmUnionWorkspace::getSegment()
 
     // do not try to begin a segment, unless we can guarantee it has had 
     // a chance to mature (grow to maximum segment size)
-    LcsRid startLimit = (readLimit > (LcsRid) maxSegmentSize)
-        ? (readLimit - maxSegmentSize) : (LcsRid) 0;
+    LcsRid startLimit = (productionLimitByte > (LcsRid) maxSegmentSize)
+        ? (productionLimitByte - maxSegmentSize) : (LcsRid) 0;
 
     if (! limited) {
         startLimit = readLimit = mergeArea.getEnd();

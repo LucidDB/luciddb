@@ -57,14 +57,18 @@ void LbmRidReader::init(
 {
     pInAccessor = pInAccessorInit;
     segmentReader.init(pInAccessor, bitmapSegTuple);
-    moveNext = false;
     firstReadDone = false;
-    
-    // set state information so that first call to readRidAndAdvance
+    nextRid = LcsRid(0);
+    resetState();
+}
+
+void LbmRidReader::resetState()
+{
+    // set state information so that next call to readRidAndAdvance
     // will read "nextRid"
+    moveNext = false;
     curByte = 0;
     curRid = LcsRid(7);
-    nextRid = LcsRid(0);
 }
 
 ExecStreamResult LbmRidReader::searchForNextRid()
@@ -91,12 +95,13 @@ ExecStreamResult LbmRidReader::searchForNextRid()
         b >>= shift;
         bitOffset += shift;
 
-        // if we didn't find any1thing, then get another byte and try again
+        // if we didn't find anything, then get another byte and try again
         if (b == 0) {
             bitOffset = 0;
 
             ExecStreamResult rc = segmentReader.advanceToRid(nextRid);
             if (rc != EXECRC_YIELD) {
+                resetState();
                 return rc;
             }
             firstReadDone = true;

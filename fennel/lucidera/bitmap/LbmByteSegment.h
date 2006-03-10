@@ -104,26 +104,6 @@ public:
             len -= diff;
         }
     }
-
-    /**
-     * Reverses the byte order convention of the byte segment from
-     * in-order to reverse-order or vice versa.
-     */
-    void reverse() 
-    {
-        if (len == 0) {
-            return;
-        }
-        
-        PBuffer start = byteSeg;
-        PBuffer end = byteSeg + len - 1;
-        UnsignedByte tmp;
-        while (start < end) {
-            tmp = *start;
-            *start++ = *end;
-            *end-- = tmp;
-        }
-    }
 };
 
 FENNEL_END_NAMESPACE

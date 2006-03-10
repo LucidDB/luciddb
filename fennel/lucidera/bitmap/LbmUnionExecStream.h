@@ -153,6 +153,13 @@ class LbmUnionExecStream : public ConfluenceExecStream
     LbmByteSegment inputSegment;
 
     /**
+     * Scratch area to use for reversing output segments
+     */
+    PBuffer reverseArea;
+
+    uint reverseAreaSize;
+
+    /**
      * Output tuple data containing OR'd bitmap segments
      */
     TupleData outputTuple;
