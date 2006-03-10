@@ -90,6 +90,11 @@ public interface FarragoSessionFactory extends FarragoSessionPersonalityFactory
         FennelDbHandle fennelDbHandle);
 
     /**
+     * @return a new transaction manager
+     */
+    public FarragoSessionTxnMgr newTxnMgr();
+
+    /**
      * Loads a model extension plugin instance.
      *
      * @param pluginClassLoader FarragoPluginClassLoader to use

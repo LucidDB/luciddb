@@ -128,6 +128,23 @@ public interface FarragoSession extends FarragoAllocation
     public boolean isTxnInProgress();
 
     /**
+     * Gets the ID of the current transaction on this session,
+     * optionally initiating a new transaction if none is currently active.
+     *
+     * @param createIfNeeded if true and no transaction is active,
+     * create a new one
+     *
+     * @return transaction ID, or null if no transaction active
+     * and !createIfNeeded
+     */
+    public FarragoSessionTxnId getTxnId(boolean createIfNeeded);
+
+    /**
+     * @return transaction manager for this session
+     */
+    public FarragoSessionTxnMgr getTxnMgr();
+
+    /**
      * @return whether this session is in autocommit mode
      */
     public boolean isAutoCommit();

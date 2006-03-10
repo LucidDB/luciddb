@@ -79,9 +79,10 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
         Method method,
         String xmiFennelPlan,
         boolean isDml,
-        Set referencedObjectIds)
+        Set referencedObjectIds,
+        TableAccessMap tableAccessMap)
     {
-        super(dynamicParamRowType, isDml);
+        super(dynamicParamRowType, isDml, tableAccessMap);
 
         this.packageDir = packageDir;
         this.rowClass = rowClass;

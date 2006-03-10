@@ -83,6 +83,11 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     /** Fennel transaction context for this session */
     private FennelTxnContext fennelTxnContext;
 
+    /**
+     * Current transaction ID, or null if none active.
+     */
+    private FarragoSessionTxnId txnId;
+
     /** Qualifiers to assume for unqualified object references */
     private FarragoSessionVariables sessionVariables;
 
@@ -377,12 +382,31 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     // implement FarragoSession
     public boolean isTxnInProgress()
     {
+        // TODO jvs 9-Mar-2006:  Unify txn state.
+        if (txnId != null) {
+            return true;
+        }
         if (fennelTxnContext == null) {
             return false;
         }
         return fennelTxnContext.isTxnInProgress();
     }
 
+    // implement FarragoSession
+    public FarragoSessionTxnId getTxnId(boolean createIfNeeded)
+    {
+        if ((txnId == null) && createIfNeeded) {
+            txnId = getTxnMgr().beginTxn(this);
+        }
+        return txnId;
+    }
+    
+    // implement FarragoSession
+    public FarragoSessionTxnMgr getTxnMgr()
+    {
+        return database.getTxnMgr();
+    }
+    
     // implement FarragoSession
     public void setAutoCommit(boolean autoCommit)
     {
@@ -537,20 +561,29 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     void commitImpl()
     {
         tracer.info("commit");
-        fennelTxnContext.commit();
-        onEndOfTransaction();
+        if (fennelTxnContext != null) {
+            fennelTxnContext.commit();
+        }
+        onEndOfTransaction(FarragoSessionTxnEnd.COMMIT);
         sessionIndexMap.onCommit();
     }
 
     void rollbackImpl()
     {
         tracer.info("rollback");
-        fennelTxnContext.rollback();
-        onEndOfTransaction();
+        if (fennelTxnContext != null) {
+            fennelTxnContext.rollback();
+        }
+        onEndOfTransaction(FarragoSessionTxnEnd.ROLLBACK);
     }
 
-    private void onEndOfTransaction()
+    private void onEndOfTransaction(
+        FarragoSessionTxnEnd eot)
     {
+        if (txnId != null) {
+            getTxnMgr().endTxn(txnId, eot);
+            txnId = null;
+        }
         savepointList.clear();
         Iterator iter = txnCodeCache.values().iterator();
         while (iter.hasNext()) {

@@ -160,7 +160,8 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
     private void postprepare()
     {
         if (isPrepared()) {
-            ddlLockManager.addObjectsInUse(this, executableStmt.getReferencedObjectIds());
+            ddlLockManager.addObjectsInUse(
+                this, executableStmt.getReferencedObjectIds());
             final RelDataType dynamicParamRowType =
                 executableStmt.getDynamicParamRowType();
             final RelDataTypeField [] fields = dynamicParamRowType.getFields();
@@ -279,12 +280,20 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
             Set<String> objectsInUse = executableStmt.getReferencedObjectIds();
             executingStmtInfoKey = session.getDatabase().getUniqueId();
             
-            FarragoSessionExecutingStmtInfo info = new FarragoDbSessionExecutingStmtInfo(
+            FarragoSessionExecutingStmtInfo info =
+                new FarragoDbSessionExecutingStmtInfo(
                     executingStmtInfoKey,
                     sql,
                     Arrays.asList(dynamicParamValues),
-                    Arrays.asList(objectsInUse.toArray(new String[objectsInUse.size()])));
-            ((FarragoDbSessionInfo)session.getSessionInfo()).addExecutingStmtInfo(info);
+                    Arrays.asList(
+                        objectsInUse.toArray(new String[objectsInUse.size()])));
+            FarragoDbSessionInfo sessionInfo = 
+                (FarragoDbSessionInfo) session.getSessionInfo();
+            sessionInfo.addExecutingStmtInfo(info);
+
+            // Acquire locks (or whatever transaction manager wants) on all
+            // tables accessed by this statement.
+            accessTables();
 
             resultSet = executableStmt.execute(newContext);
             runningContext = newContext;
@@ -338,6 +347,20 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
         }
     }
 
+    private void accessTables()
+    {
+        TableAccessMap accessMap = executableStmt.getTableAccessMap();
+        FarragoSessionTxnMgr txnMgr = 
+            session.getDatabase().getTxnMgr();
+        FarragoSessionTxnId txnId = session.getTxnId(true);
+        for (List<String> tableName : accessMap.getTablesAccessed()) {
+            txnMgr.accessTable(
+                txnId,
+                tableName,
+                accessMap.getTableAccessMode(tableName));
+        }
+    }
+    
     // implement FarragoSessionStmtContext
     public ResultSet getResultSet()
     {
@@ -366,17 +389,18 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
     // implement FarragoSessionStmtContext
     public void closeResultSet()
     {
-        if (resultSet != null) {
-            try {
-                resultSet.close();
-            } catch (Throwable ex) {
-                throw Util.newInternal(ex);
-            }
-            resultSet = null;
-            runningContext = null;
-            getSessionInfo().removeExecutingStmtInfo(executingStmtInfoKey);
-            executingStmtInfoKey = 0;
+        if (resultSet == null) {
+            return;
         }
+        try {
+            resultSet.close();
+        } catch (Throwable ex) {
+            throw Util.newInternal(ex);
+        }
+        resultSet = null;
+        runningContext = null;
+        getSessionInfo().removeExecutingStmtInfo(executingStmtInfoKey);
+        executingStmtInfoKey = 0;
     }
 
     // implement FarragoSessionStmtContext

@@ -98,11 +98,13 @@ public abstract class MedAbstractFennelTableModRel
         boolean needBuffer = false;
 
         //
-        // Except for Delete, if the target table is also the source, buffering is required.
+        // Except for Delete, if the target table is also the source, buffering
+        // is required.
         //
         if (!getOperation().equals(TableModificationRel.Operation.DELETE)) {
             TableAccessMap tableAccessMap = new TableAccessMap(this);
-            if (tableAccessMap.isTableAccessedForRead(table)) {
+            List<String> tableName = tableAccessMap.getQualifiedName(table);
+            if (tableAccessMap.isTableAccessedForRead(tableName)) {
                 needBuffer = true;
             }
         }
