@@ -532,9 +532,9 @@ void LbmIndexScanTest::generateBitmaps(
     LcsRid rid = LcsRid(start);
 
     // setup an LbmEntry with the initial rid value
-    entryBuf.reset(new FixedBuffer[bitmapColSize + sizeof(LcsRid)]);
-    lbmEntry.init(
-        entryBuf.get(), bitmapColSize + sizeof(LcsRid), bitmapTupleDesc);
+    uint scratchBufSize = LbmEntry::getScratchBufferSize(bitmapColSize);
+    entryBuf.reset(new FixedBuffer[scratchBufSize]);
+    lbmEntry.init(entryBuf.get(), scratchBufSize, bitmapTupleDesc);
     bitmapTupleData[0].pData = (PConstBuffer) &rid;
     lbmEntry.setEntryTuple(bitmapTupleData);
 

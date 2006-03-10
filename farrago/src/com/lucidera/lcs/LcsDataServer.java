@@ -89,6 +89,10 @@ class LcsDataServer extends MedAbstractFennelDataServer
         planner.addRule(new LcsTableProjectionRule());
         planner.addRule(new LcsIndexBuilderRule());
         planner.addRule(new LcsIndexAccessRule());
+        
+        // rules specific to LucidEra optimizer
+        planner.addRule(new AddRedundantSemiJoinRule());
+        planner.addRule(new LcsIndexSemiJoinRule());
     }
 
     // implement FarragoMedLocalDataServer

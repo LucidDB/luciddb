@@ -212,7 +212,9 @@ public abstract class JoinRelBase extends AbstractRelNode
         List<String> nameList = new ArrayList<String>();
         List<RelDataType> typeList = new ArrayList<RelDataType>();
         addFields(leftType, typeList, nameList);
-        addFields(rightType, typeList, nameList);
+        if (rightType != null) {
+            addFields(rightType, typeList, nameList);
+        }
         if (fieldNameList != null) {
             assert fieldNameList.size() == nameList.size();
             nameList = fieldNameList;

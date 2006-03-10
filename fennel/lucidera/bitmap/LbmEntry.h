@@ -458,6 +458,25 @@ public:
     static void generateRIDs(
         TupleData const &inputTuple, std::vector<LcsRid> &ridValues);
 
+    
+    /**
+     * Returns the ideal scratch buffer size to provide when initializing
+     * an instance of LbmEntry. Providing a buffer of the appropriate size
+     * ensures that generated tuple data will fit into the bounds of the
+     * required tuple type.
+     *
+     * @param bitmapColSize size of a bitmap column in the generated tuple
+     */
+    static uint getScratchBufferSize(uint bitmapColSize);
+
+    /**
+     * Returns the maximum size of a bitmap segment for a given column size.
+     * A portion of the column size is reserved for generating a segment
+     * directory for the bitmap segment.
+     *
+     * @param bitmapColSize size of a bitmap column in the generated tuple
+     */
+    static uint getMaxBitmapSize(uint bitmapColSize);
 };
 
 

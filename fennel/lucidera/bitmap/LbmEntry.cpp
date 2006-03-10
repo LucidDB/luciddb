@@ -1496,6 +1496,23 @@ void LbmEntry::generateBitmapRIDs(
     }
 }
 
-FENNEL_END_CPPFILE("$Id$");
+uint LbmEntry::getScratchBufferSize(uint bitmapColSize) 
+{
+    // size of scratch buffer should be the max size of one of
+    // the bitmap columns plus space for the rid plus space for an
+    // optional zero extension
+    return bitmapColSize + sizeof(LcsRid) + LbmZeroLengthExtended;
+}
+
+uint LbmEntry::getMaxBitmapSize(uint bitmapColSize)
+{
+    // reserve a portion of the bitmap for building a segment
+    // directory; this is actually slightly more than necessary, but
+    // it's not too much of a loss
+    assert (bitmapColSize % LbmMaxSegSize == 0);
+    return bitmapColSize - (bitmapColSize / LbmMaxSegSize);
+}
+
+FENNEL_END_CPPFILE("$Id: //open/lu/dev/fennel/lucidera/bitmap/LbmEntry.cpp#7 $");
 
 // End LbmEntry.cpp

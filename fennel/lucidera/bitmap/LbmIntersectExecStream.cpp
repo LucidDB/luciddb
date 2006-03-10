@@ -63,16 +63,16 @@ void LbmIntersectExecStream::open(bool restart)
 {
     ConfluenceExecStream::open(restart);
     if (!restart) {
-
         // allocate output buffer and a temporary buffer for "AND'ing"
-        // together segments; size of output buffer is the max size of one of
-        // the bitmap columns plus space for the rid, whereas temporary
-        // buffer only needs space for bitmaps
-        bitmapBufSize = pOutAccessor->getTupleDesc()[1].cbStorage;
-        uint outputBufSize = bitmapBufSize + sizeof(LcsRid);
+        // together segments; the output buffer size is based on the size
+        // required for building an LbmEntry, while the temporary buffer
+        // should not be larger than an LbmEntry supports
+        uint bitmapColSize = pOutAccessor->getTupleDesc()[1].cbStorage;
+        uint outputBufSize = LbmEntry::getScratchBufferSize(bitmapColSize);
         outputBuf.reset(new FixedBuffer[outputBufSize]);
         segmentWriter.init(
             outputBuf.get(), outputBufSize, pOutAccessor->getTupleDesc(), true);
+        bitmapBufSize = LbmEntry::getMaxBitmapSize(bitmapColSize);
         byteSegBuf.reset(new FixedBuffer[bitmapBufSize]); 
         pByteSegBuf = byteSegBuf.get();
 

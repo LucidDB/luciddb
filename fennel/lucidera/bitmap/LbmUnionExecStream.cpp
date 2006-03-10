@@ -92,8 +92,8 @@ void LbmUnionExecStream::open(bool restart)
     ConfluenceExecStream::open(restart);
 
     if (!restart) {
-        // TODO: get the max writer buffer size from some segment library
-        uint writerBufSize = scratchAccessor.pSegment->getUsablePageSize()/8;
+        uint bitmapColSize = pOutAccessor->getTupleDesc()[1].cbStorage;
+        uint writerBufSize = LbmEntry::getScratchBufferSize(bitmapColSize);
         writerPageLock.allocatePage();
         PBuffer writerBuf = writerPageLock.getPage().getWritableData();
         segmentWriter.init(
@@ -114,7 +114,7 @@ void LbmUnionExecStream::open(bool restart)
         ByteBuffer *pBuffer = new ByteBuffer();
         pBuffer->init(ppBuffers, nWorkspacePages, pageSize);
         SharedByteBuffer pWorkspaceBuffer(pBuffer);
-        uint maxSegmentSize = LbmSegment::LbmMaxSegSize;
+        uint maxSegmentSize = LbmEntry::getMaxBitmapSize(bitmapColSize);
         workspace.init(pWorkspaceBuffer, maxSegmentSize);
 
         // create dynamic parameters

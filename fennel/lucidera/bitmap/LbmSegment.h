@@ -89,6 +89,12 @@ protected:
         (uint)LbmZeroLengthMask - LbmZeroLengthCompact;
 
     /**
+     * Maximum size(in bytes) for a bitmap segment. This size is limited by the
+     * number of bits(=4 bits) in SegDesc to describe the segment length.
+     */
+    static const uint LbmMaxSegSize = 16;
+
+    /**
      * Get value stored in a byte array.
      * The least significant bytes in the value is stored
      * at the first location in the array.
@@ -131,12 +137,6 @@ protected:
         PBuffer &pSegDesc, uint &bmSegLen, uint &zeroBytes);
 
 public:
-    /**
-     * Maximum size(in bytes) for a bitmap segment. This size is limited by the
-     * number of bits(=4 bits) in SegDesc to describe the segment length.
-     */
-    static const uint LbmMaxSegSize = 16;
-
     /**
      * Rounds a rid value down to the nearest byte boundary
      *

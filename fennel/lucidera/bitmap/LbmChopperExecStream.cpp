@@ -63,8 +63,8 @@ void LbmChopperExecStream::open(bool restart)
     ConfluenceExecStream::open(restart);
 
     if (!restart) {
-        // TODO: get the max writer buffer size from some segment library
-        uint writerBufSize = pageSize/8;
+        uint bitmapColSize = pOutAccessor->getTupleDesc()[1].cbStorage;
+        uint writerBufSize = LbmEntry::getScratchBufferSize(bitmapColSize);
         writerPageLock.allocatePage();
         PBuffer writerBuf = writerPageLock.getPage().getWritableData();
         segmentWriter.init(

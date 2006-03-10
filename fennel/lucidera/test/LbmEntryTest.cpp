@@ -297,7 +297,9 @@ void LbmEntryTest::testMergeEntry(
 
     PBuffer mergeBuf = allocateBuf(bufferLock);
     LbmEntry mEntry;
-    mEntry.init(mergeBuf, bitmapColSize + sizeof(LcsRid), entryTupleDesc);
+    mEntry.init(
+        mergeBuf, LbmEntry::getScratchBufferSize(bitmapColSize),
+        entryTupleDesc);
     mEntry.setEntryTuple(entryList[0].entryTuple);
     for (uint i = 1; i < entryList.size(); i++) {
         if (mEntry.mergeEntry(entryList[i].entryTuple)) {
@@ -330,7 +332,8 @@ void LbmEntryTest::newLbmEntry(
 
     listElement.pBuf = allocateBuf(bufferLock);
     listElement.entry.init(
-        listElement.pBuf, bitmapColSize + sizeof(LcsRid), entryTupleDesc);
+        listElement.pBuf, LbmEntry::getScratchBufferSize(bitmapColSize),
+        entryTupleDesc);
     entryList.push_back(listElement);
     entryTuple[0].pData = (PConstBuffer) &startRid;
     entryList.back().entry.setEntryTuple(entryTuple);
@@ -340,14 +343,15 @@ PBuffer LbmEntryTest::allocateBuf(SegPageLock &bufferLock)
 {
     // allocate a new scratch page if not enough space is left on
     // the current
-    if (bufUsed + bitmapColSize + sizeof(LcsRid) > bufSize) {
+    uint scratchBufSize = LbmEntry::getScratchBufferSize(bitmapColSize);
+    if (bufUsed + scratchBufSize > bufSize) {
         bufferLock.allocatePage();
         pBuf = bufferLock.getPage().getWritableData();
         bufferLock.unlock();
         bufUsed = 0;
     }
     PBuffer retBuf = pBuf + bufUsed;
-    bufUsed += bitmapColSize + sizeof(LcsRid);
+    bufUsed += scratchBufSize;
     return retBuf;
 }
 
@@ -427,7 +431,8 @@ void LbmEntryTest::testldb35()
     
     listElement.pBuf = allocateBuf(bufferLock);
     listElement.entry.init(
-        listElement.pBuf, bitmapColSize + sizeof(LcsRid), entryTupleDesc);
+        listElement.pBuf, LbmEntry::getScratchBufferSize(bitmapColSize),
+        entryTupleDesc);
     entryList.push_back(listElement);
     LcsRid rid = LcsRid(98061);
     ridValues.push_back(rid);
@@ -444,7 +449,8 @@ void LbmEntryTest::testldb35()
 
     listElement.pBuf = allocateBuf(bufferLock);
     listElement.entry.init(
-        listElement.pBuf, bitmapColSize + sizeof(LcsRid), entryTupleDesc);
+        listElement.pBuf, LbmEntry::getScratchBufferSize(bitmapColSize),
+        entryTupleDesc);
     entryList.push_back(listElement);
     rid = LcsRid(98070);
     ridValues.push_back(rid);
@@ -464,7 +470,8 @@ void LbmEntryTest::testldb35()
 
     listElement.pBuf = allocateBuf(bufferLock);
     listElement.entry.init(
-        listElement.pBuf, bitmapColSize + sizeof(LcsRid), entryTupleDesc);
+        listElement.pBuf, LbmEntry::getScratchBufferSize(bitmapColSize),
+        entryTupleDesc);
     entryList.push_back(listElement);
     rid = LcsRid(99992);
     ridValues.push_back(rid);
@@ -483,7 +490,8 @@ void LbmEntryTest::testldb35()
 
     listElement.pBuf = allocateBuf(bufferLock);
     listElement.entry.init(
-        listElement.pBuf, bitmapColSize + sizeof(LcsRid), entryTupleDesc);
+        listElement.pBuf, LbmEntry::getScratchBufferSize(bitmapColSize),
+        entryTupleDesc);
     entryList.push_back(listElement);
     rid = LcsRid(100133);
     ridValues.push_back(rid);
@@ -496,7 +504,8 @@ void LbmEntryTest::testldb35()
 
     listElement.pBuf = allocateBuf(bufferLock);
     listElement.entry.init(
-        listElement.pBuf, bitmapColSize + sizeof(LcsRid), entryTupleDesc);
+        listElement.pBuf, LbmEntry::getScratchBufferSize(bitmapColSize),
+        entryTupleDesc);
     entryList.push_back(listElement);
     rid = LcsRid(100792);
     ridValues.push_back(rid);
@@ -513,7 +522,9 @@ void LbmEntryTest::testldb35()
     uint ridPos = 0;
     PBuffer mergeBuf = allocateBuf(bufferLock);
     LbmEntry mEntry;
-    mEntry.init(mergeBuf, bitmapColSize + sizeof(LcsRid), entryTupleDesc);
+    mEntry.init(
+        mergeBuf, LbmEntry::getScratchBufferSize(bitmapColSize),
+        entryTupleDesc);
 
     mEntry.setEntryTuple(entryList[0].entryTuple);
     for (uint i = 1; i < entryList.size(); i++) {
