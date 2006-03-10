@@ -137,7 +137,7 @@ class LcsIndexSearchRel extends FennelSingleRel
     }
     
     // implement RelNode
-    public RelDataType deriveRowType()
+    protected RelDataType deriveRowType()
     {
         if (inputJoinProj != null) {
             // TODO: this part is no implemented yet.

@@ -106,7 +106,7 @@ class LcsIndexBuilderRel extends FennelSingleRel
     }
 
     // implement RelNode
-    public RelDataType deriveRowType()
+    protected RelDataType deriveRowType()
     {
         return RelOptUtil.createDmlRowType(getCluster().getTypeFactory());
     }

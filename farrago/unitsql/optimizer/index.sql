@@ -512,6 +512,12 @@ select ename from lbmemps where ename like 'ADAM%' order by ename;
 select ename from lbmemps where ename like 'ADAM%' order by ename;
 
 explain plan for
+select * from lbmemps where deptno = 10 and ename = 'Fred' order by empno;
+
+select * from lbmemps where deptno = 10 and ename = 'Fred' order by empno;
+
+-- test composite key indexes
+explain plan for
 select * from lbmemps where empno = 100 and deptno = 10 order by empno;
 
 select * from lbmemps where empno = 100 and deptno = 10 order by empno;
@@ -525,17 +531,24 @@ explain plan for
 select * from lbmemps where empno = 100 and deptno >= 10 order by empno;
 
 select * from lbmemps where empno = 100 and deptno >= 10 order by empno;
-
-explain plan for
-select * from lbmemps where deptno = 10 and ename = 'Fred' order by empno;
-
-select * from lbmemps where deptno = 10 and ename = 'Fred' order by empno;
 
 -- test "not null" data type
 explain plan for
 select * from lbmemps where empno between 100 and 200 and deptno = 20 order by empno;
 
 select * from lbmemps where empno between 100 and 200 and deptno = 20 order by empno;
+
+-- test multiple inputs to Intersect
+explain plan for
+select * 
+from lbmemps
+where empno between 100 and 200 and deptno = 20 and ename = 'Eric'
+order by empno;
+
+select * 
+from lbmemps
+where empno between 100 and 200 and deptno = 20 and ename = 'Eric'
+order by empno;
 
 -- TODO OR: currently does not use any index access
 explain plan for

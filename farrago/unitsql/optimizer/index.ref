@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev_lcs/farrago/unitsql/optimizer/index.sql#17 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev_lcs/farrago/unitsql/optimizer/index.sql#18 $
 0: jdbc:farrago:> -- Test queries which make use of indexes
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema oj;
@@ -1145,6 +1145,24 @@ Error: DDL validation error near line 1, column 12: Reference to unknown table "
 'ENAME'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
+. . . . . . . . > select * from lbmemps where deptno = 10 and ename = 'Fred' order by empno;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
+'      LcsIndexIntersectRel'
+'        LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[ENAME_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'          FennelValuesRel(tuples=[[{ '[', _ISO-8859-1'Fred', ']', _ISO-8859-1'Fred' }]])'
+'        LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[DEPTNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'          FennelValuesRel(tuples=[[{ '[', 10, ']', 10 }]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from lbmemps where deptno = 10 and ename = 'Fred' order by empno;
+'EMPNO','ENAME','DEPTNO'
+'100','Fred','10'
+'100','Fred','10'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test composite key indexes
+0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from lbmemps where empno = 100 and deptno = 10 order by empno;
 'column0'
 'FennelToIteratorConverter'
@@ -1191,23 +1209,6 @@ Error: DDL validation error near line 1, column 12: Reference to unknown table "
 '100','Fred','10'
 '100','Fred','10'
 0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from lbmemps where deptno = 10 and ename = 'Fred' order by empno;
-'column0'
-'FennelToIteratorConverter'
-'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
-'      LcsIndexIntersectRel'
-'        LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[ENAME_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
-'          FennelValuesRel(tuples=[[{ '[', _ISO-8859-1'Fred', ']', _ISO-8859-1'Fred' }]])'
-'        LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[DEPTNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
-'          FennelValuesRel(tuples=[[{ '[', 10, ']', 10 }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from lbmemps where deptno = 10 and ename = 'Fred' order by empno;
-'EMPNO','ENAME','DEPTNO'
-'100','Fred','10'
-'100','Fred','10'
-0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test "not null" data type
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from lbmemps where empno between 100 and 200 and deptno = 20 order by empno;
@@ -1228,6 +1229,33 @@ Error: DDL validation error near line 1, column 12: Reference to unknown table "
 '110','Eric','20'
 '120','Wilma','20'
 '120','Wilma','20'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test multiple inputs to Intersect
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select * 
+. . . . . . . . > from lbmemps
+. . . . . . . . > where empno between 100 and 200 and deptno = 20 and ename = 'Eric'
+. . . . . . . . > order by empno;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
+'      LcsIndexIntersectRel'
+'        LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[ENAME_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'          FennelValuesRel(tuples=[[{ '[', _ISO-8859-1'Eric', ']', _ISO-8859-1'Eric' }]])'
+'        LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[DEPTNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'          FennelValuesRel(tuples=[[{ '[', 20, ']', 20 }]])'
+'        LcsIndexMergeRel'
+'          LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[EMPNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'            FennelValuesRel(tuples=[[{ '[', 100, ']', 200 }]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * 
+. . . . . . . . > from lbmemps
+. . . . . . . . > where empno between 100 and 200 and deptno = 20 and ename = 'Eric'
+. . . . . . . . > order by empno;
+'EMPNO','ENAME','DEPTNO'
+'110','Eric','20'
+'110','Eric','20'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- TODO OR: currently does not use any index access
 0: jdbc:farrago:> explain plan for

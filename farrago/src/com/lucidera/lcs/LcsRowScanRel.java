@@ -144,7 +144,7 @@ public class LcsRowScanRel extends FennelMultipleRel
     }
 
     // implement RelNode
-    public RelDataType deriveRowType()
+    protected RelDataType deriveRowType()
     {
         RelDataType flattenedRowType =
             getIndexGuide().getFlattenedRowType();

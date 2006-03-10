@@ -25,6 +25,7 @@ import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.RelDataType;
 
 /**
  * LcsIndexIntersectRel is a relation for intersecting the results of two index
@@ -110,6 +111,13 @@ class LcsIndexIntersectRel extends FennelMultipleRel
         }
         pw.explain(
             this, names, new Object[] { });
+    }
+
+    // implement RelNode
+    protected RelDataType deriveRowType()
+    {
+        assert (getInputs().length >= 1);
+        return getInput(0).getRowType();
     }
     
     // implement FennelRel
