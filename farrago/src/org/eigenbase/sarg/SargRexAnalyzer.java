@@ -176,7 +176,7 @@ public class SargRexAnalyzer
                 if (nextRef.getIndex() == currRef.getIndex()) {
                     // build new SargExpr
                     SargSetExpr expr =
-                        factory.newSetExpr(boundInputRef.getType(), 
+                        factory.newSetExpr(currSargExpr.getDataType(), 
                             SargSetOperator.INTERSECTION);
                     expr.addChild(currSargExpr);
                     expr.addChild(nextSargExpr);
@@ -223,6 +223,8 @@ public class SargRexAnalyzer
 
         SargBinding sargBinding;
 
+        // Flatten out the RexNode tree into a list of terms that
+        // are AND'ed together
         decompCF(rexPredicate);
 
         for (RexNode rexPred : rexCFList) {
@@ -234,7 +236,13 @@ public class SargRexAnalyzer
                 rexPostFilterList.add(rexPred);
             }
         }
-        
+
+        // Reset the state variables used during analyze, just for sanity sake.
+        failed = false;
+        boundInputRef = null;
+        clearLeaf();
+
+        // Combine the AND terms back together.
         recompCF();
 
         return sargBindingList;

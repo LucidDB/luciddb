@@ -394,7 +394,7 @@ drop table ftrsemps cascade;
 -------------------------------------------------------
 drop table lbmemps cascade;
 create table lbmemps(
-    empno integer,
+    empno integer not null,
     ename varchar(40),
     deptno integer)
     server sys_column_store_data_server
@@ -530,6 +530,12 @@ explain plan for
 select * from lbmemps where deptno = 10 and ename = 'Fred' order by empno;
 
 select * from lbmemps where deptno = 10 and ename = 'Fred' order by empno;
+
+-- test "not null" data type
+explain plan for
+select * from lbmemps where empno between 100 and 200 and deptno = 20 order by empno;
+
+select * from lbmemps where empno between 100 and 200 and deptno = 20 order by empno;
 
 -- TODO OR: currently does not use any index access
 explain plan for
