@@ -23,14 +23,11 @@ package com.lucidera.lcs;
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.keysindexes.CwmIndexedFeature;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.namespace.impl.*;
-import net.sf.farrago.fem.sql2003.FemAbstractColumn;
 import net.sf.farrago.query.*;
-import net.sf.farrago.util.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
@@ -44,10 +41,10 @@ import org.eigenbase.relopt.*;
  * @version $Id$
  */
 public class LcsTableAppendRel
-    extends MedAbstractFennelTableModRel
+extends MedAbstractFennelTableModRel
 {
     //~ Instance fields -------------------------------------------------------
-
+    
     /** Refinement for TableModificationRelBase.table. */
     final LcsTable lcsTable;
     
@@ -75,14 +72,14 @@ public class LcsTableAppendRel
         // Only INSERT is supported currently. 
         assert (getOperation().getOrdinal()
             == TableModificationRel.Operation.INSERT_ORDINAL);
-
+        
         this.lcsTable = lcsTable;
         assert lcsTable.getPreparingStmt() ==
             FennelRelUtil.getPreparingStmt(this);   
     }
-
+    
     //~ Methods ---------------------------------------------------------------
-
+    
     // implement RelNode
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {        
@@ -92,7 +89,7 @@ public class LcsTableAppendRel
         // CPU cost is proportional to number of columns projected
         // I/O cost is proportional to pages of clustered index to write
         double dCpu = dInputRows * getChild().getRowType().getFieldList().size();
-
+        
         int nIndexCols = lcsTable.getIndexGuide().getNumFlattenedClusterCols();
         
         double dIo = dInputRows * nIndexCols;
@@ -100,7 +97,7 @@ public class LcsTableAppendRel
         return planner.makeCost(dInputRows, dCpu, dIo);
         
     }
-
+    
     // implement Cloneable
     public Object clone()
     {
@@ -114,8 +111,8 @@ public class LcsTableAppendRel
         clone.inheritTraitsFrom(this);
         return clone;
     }
-        
-
+    
+    
     /**
      * Returns an index guide specific to an unclustered index
      */
@@ -126,7 +123,7 @@ public class LcsTableAppendRel
             lcsTable.getCwmColumnSet(),
             unclusteredIndex);
     }
-
+    
     // Override TableModificationRelBase
     public void explain(RelOptPlanWriter pw)
     {        
@@ -138,17 +135,17 @@ public class LcsTableAppendRel
             new String [] {"child", "table"},
             new Object [] {Arrays.asList(lcsTable.getQualifiedName())});
     }
-
+    
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         FemExecutionStreamDef input =
             implementor.visitFennelChild((FennelRel) getChild());
-
+        
         CwmTable table = (CwmTable) lcsTable.getCwmColumnSet();
         FarragoRepos repos = FennelRelUtil.getRepos(this);
         LcsIndexGuide indexGuide = lcsTable.getIndexGuide();
-       
+        
         //
         // 1. Setup the SplitterStreamDef
         //
@@ -160,9 +157,9 @@ public class LcsTableAppendRel
         //    - For each index, set up the corresponding clusterAppend stream
         //      def.
         //
-            
+        
         ArrayList<FemLcsClusterAppendStreamDef> clusterAppendDefs = 
-        	new ArrayList<FemLcsClusterAppendStreamDef>();
+            new ArrayList<FemLcsClusterAppendStreamDef>();
         
         // Get the clustered indexes associated with this table.
         List<FemLocalIndex> clusteredIndexes =
@@ -172,7 +169,7 @@ public class LcsTableAppendRel
             clusterAppendDefs.add(
                 indexGuide.newClusterAppend(this, clusteredIndex));
         }
-         
+        
         //
         // 3. Setup the BarrierStreamDef.
         //
@@ -200,7 +197,7 @@ public class LcsTableAppendRel
         implementor.addDataFlowFromProducerToConsumer(
             input,
             splitter);
-            
+        
         for (Object streamDef : clusterAppendDefs) {
             FemLcsClusterAppendStreamDef clusterAppend =
                 (FemLcsClusterAppendStreamDef) streamDef;
@@ -211,7 +208,7 @@ public class LcsTableAppendRel
                 clusterAppend,
                 barrier);                
         }
-
+        
         //
         // 6. If there are no unclustered indexes, stop at the barrier
         //
@@ -220,7 +217,7 @@ public class LcsTableAppendRel
         if (unclusteredIndexes.size() == 0) {
             return barrier;
         }
-
+        
         // Update clustered index scans
         for (Object streamDef : clusterAppendDefs) {
             FemLcsClusterAppendStreamDef clusterAppend =
@@ -229,36 +226,34 @@ public class LcsTableAppendRel
                 indexGuide.getUnclusteredInputDesc());
         }
         barrier.setOutputDesc(indexGuide.getUnclusteredInputDesc());
-
+        
         //
         // 7. Setup unclustered indices.
         //    - For each index, set up the corresponding bitmap append
         //
         ArrayList<LcsCompositeStreamDef> bitmapAppendDefs = 
-        	new ArrayList<LcsCompositeStreamDef>();
+            new ArrayList<LcsCompositeStreamDef>();
         
-        // FIXME: we need some system of generating new param ids 
-        // per graph.
-        int dynParamId = 1;
         for (FemLocalIndex unclusteredIndex : unclusteredIndexes) {
             LcsIndexGuide ucxIndexGuide = getIndexGuide(unclusteredIndex);
+            int dynParamId = implementor.allocateDynamicParam();
             bitmapAppendDefs.add( 
                 ucxIndexGuide.newBitmapAppend(
-                	this, unclusteredIndex, implementor, false, dynParamId));
+                    this, unclusteredIndex, implementor, false, dynParamId));
             dynParamId++;
         }
-         
+        
         //
         // 8. Setup a bitmap SplitterStreamDef
         //
         FemSplitterStreamDef bitmapSplitter = 
-        	indexGuide.newSplitter(this);
+            indexGuide.newSplitter(this);
         
         //
         // 9. Setup a bitmap BarrierStreamDef
         //
         FemBarrierStreamDef bitmapBarrier = 
-        	indexGuide.newBarrier(this);
+            indexGuide.newBarrier(this);
         
         //
         // 10. Link the bitmap StreamDefs together.
@@ -267,11 +262,11 @@ public class LcsTableAppendRel
         //                                  ...
         //                     -> bitmap append streams ->
         //
-
+        
         implementor.addDataFlowFromProducerToConsumer(
             barrier,
             bitmapSplitter);
-
+        
         for (Object streamDef : bitmapAppendDefs) {
             LcsCompositeStreamDef bitmapAppend =
                 (LcsCompositeStreamDef) streamDef;

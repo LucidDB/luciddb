@@ -394,14 +394,18 @@ drop table ftrsemps cascade;
 -------------------------------------------------------
 drop table lbmemps cascade;
 create table lbmemps(
-    empno integer,
+    empno integer not null,
     ename varchar(40),
     deptno integer)
     server sys_column_store_data_server
-create index deptno_ix on lbmemps(deptno)
+create index empno_ix on lbmemps(empno, deptno)
 create index ename_ix on lbmemps(ename)
-create index empno_ix2 on lbmemps(empno)
+create index deptno_ix on lbmemps(deptno)
 ;
+
+create table lbmdepts(
+    deptno integer)
+server sys_column_store_data_server;
 
 -- create index on existing column store table does not work yet
 -- create index ename_ix on lbmemps(ename);
@@ -431,20 +435,30 @@ select * from lbmemps where deptno = 20 order by empno;
 explain plan for
 select * from lbmemps where deptno = -2;
 
+select * from lbmemps where deptno = -2;
+
 -- range predicate uses index access
 explain plan for
+select * from lbmemps where deptno > 20 order by empno;
+
 select * from lbmemps where deptno > 20 order by empno;
 
 -- Merge ranges on the same index key
 explain plan for
 select * from lbmemps where deptno = 10 or deptno = 20 order by empno;
 
+select * from lbmemps where deptno = 10 or deptno = 20 order by empno;
+
 -- Should have only one range
 explain plan for
 select * from lbmemps where deptno = 20 or deptno > 10 order by empno;
 
+select * from lbmemps where deptno = 20 or deptno > 10 order by empno;
+
 -- recognize AND on the same key
 explain plan for
+select * from lbmemps where deptno > 10 and deptno <= 20 order by empno;
+
 select * from lbmemps where deptno > 10 and deptno <= 20 order by empno;
 
 -- make sure NULL range from sarg analysis is working
@@ -453,8 +467,34 @@ select * from lbmemps where deptno = 20 and deptno = 10 order by empno;
 
 select * from lbmemps where deptno = 20 and deptno = 10 order by empno;
 
+-- make sure Merge is allocated on top of index search if 
+-- partial key is used in search
+explain plan for
+select * from lbmemps where empno = 10 order by empno;
+
+select * from lbmemps where empno = 10 order by empno;
+
+explain plan for
+select * from lbmemps where empno = 10 and empno = 20 order by empno;
+
+select * from lbmemps where empno = 10 and empno = 20 order by empno;
+
+-- OR on same column is supported
+explain plan for
+select *
+from lbmemps
+where (empno = 110 or empno = 120) and (deptno = 10 or deptno = 20)
+order by empno;
+
+select *
+from lbmemps
+where (empno = 110 or empno = 120) and (deptno = 10 or deptno = 20)
+order by empno;
+
 -- TODO implement index only access.
 explain plan for
+select deptno from lbmemps where deptno = 20 order by deptno;
+
 select deptno from lbmemps where deptno = 20 order by deptno;
 
 -- index on char types:
@@ -462,19 +502,132 @@ select deptno from lbmemps where deptno = 20 order by deptno;
 explain plan for
 select ename from lbmemps where ename = 'ADAM' order by ename;
 
+select ename from lbmemps where ename = 'ADAM' order by ename;
+
 -- index on char types:
 -- predicate specific to character types
 explain plan for
 select ename from lbmemps where ename like 'ADAM%' order by ename;
 
--- TODO AND: currently does recognize one index, but not two
--- TODO: this is currently not working(not even one index)
+select ename from lbmemps where ename like 'ADAM%' order by ename;
+
 explain plan for
-select * from lbmemps where deptno = 2 and ename = 'ADAM' order by empno;
+select * from lbmemps where deptno = 10 and ename = 'Fred' order by empno;
+
+select * from lbmemps where deptno = 10 and ename = 'Fred' order by empno;
+
+-- test composite key indexes
+explain plan for
+select * from lbmemps where empno = 100 and deptno = 10 order by empno;
+
+select * from lbmemps where empno = 100 and deptno = 10 order by empno;
+
+explain plan for
+select * from lbmemps where deptno = 10 and empno = 100 order by empno;
+
+select * from lbmemps where deptno = 10 and empno = 100 order by empno;
+
+explain plan for
+select * from lbmemps where empno = 100 and deptno >= 10 order by empno;
+
+select * from lbmemps where empno = 100 and deptno >= 10 order by empno;
+
+-- test "not null" data type
+explain plan for
+select * from lbmemps where empno between 100 and 200 and deptno = 20 order by empno;
+
+select * from lbmemps where empno between 100 and 200 and deptno = 20 order by empno;
+
+-- test multiple inputs to Intersect
+explain plan for
+select * 
+from lbmemps
+where empno between 100 and 200 and deptno = 20 and ename = 'Eric'
+order by empno;
+
+select * 
+from lbmemps
+where empno between 100 and 200 and deptno = 20 and ename = 'Eric'
+order by empno;
 
 -- TODO OR: currently does not use any index access
 explain plan for
-select * from lbmemps where deptno = 2 or ename = 'ADAM' order by empno;
+select * from lbmemps where deptno = 2 or ename = 'Fred' order by empno;
+
+select * from lbmemps where deptno = 2 or ename = 'Fred' order by empno;
+
+----------------------------------------------------------
+-- Tests to exercise using startrid in bitmap index search
+----------------------------------------------------------
+
+create server test_data
+foreign data wrapper sys_file_wrapper
+options (
+    directory 'unitsql/optimizer/data',
+    file_extension 'csv',
+    with_header 'yes',
+    log_directory 'testlog');
+
+create foreign table ridsearchdata(a int, b int, c int)
+    server test_data
+    options (filename 'ridsearchdata');
+
+create table ridsearchtable(fakerid int, a int, b int)
+    server sys_column_store_data_server;
+create index i_a on ridsearchtable(a);
+create index i_b on ridsearchtable(b);
+insert into ridsearchtable select * from ridsearchdata;
+
+!set outputformat csv
+explain plan for select * from ridsearchtable where b = 0 and a = 2;
+explain plan for select * from ridsearchtable where b = 0 and a = 3;
+explain plan for select * from ridsearchtable where b = 0 and a = 1;
+
+!set outputformat table
+select * from ridsearchtable order by fakerid;
+select * from ridsearchtable where b = 0 and a = 2;
+select * from ridsearchtable where b = 0 and a = 3;
+-- no rows
+select * from ridsearchtable where b = 0 and a = 1;
+
+-- reverse the order of the index creation and repeat
+
+drop table ridsearchtable;
+create table ridsearchtable(fakerid int, a int, b int)
+    server sys_column_store_data_server;
+create index i_b on ridsearchtable(b);
+create index i_a on ridsearchtable(a);
+insert into ridsearchtable select * from ridsearchdata;
+
+!set outputformat csv
+explain plan for select * from ridsearchtable where b = 0 and a = 2;
+explain plan for select * from ridsearchtable where b = 0 and a = 3;
+explain plan for select * from ridsearchtable where b = 0 and a = 1;
+
+!set outputformat table
+select * from ridsearchtable order by fakerid;
+select * from ridsearchtable where b = 0 and a = 2;
+select * from ridsearchtable where b = 0 and a = 3;
+-- no rows
+select * from ridsearchtable where b = 0 and a = 1;
+
+-- Some join tests --
+---------------------
+-- TODO: filter above join is not pushed down
+!set outputformat csv
+explain plan for 
+select * from lbmdepts, lbmemps where lbmemps.deptno = 2;
+
+select * from lbmdepts, lbmemps where lbmemps.deptno = 2;
+
+-- However, if filter is in an inline view, the index path is used
+-- because the view is not merged.
+explain plan for 
+select * from lbmdepts, 
+              (select * from lbmemps where lbmemps.deptno = 2) view;
+
+select * from lbmdepts, 
+              (select * from lbmemps where lbmemps.deptno = 2) view;
 
 !set outputformat table
 
@@ -485,7 +638,7 @@ select * from lbmemps where deptno = 2 or ename = 'ADAM' order by empno;
 --------------
 -- Clean up --
 --------------
+drop server test_data cascade;
 drop schema lbm cascade;
-
 
 -- End index.sql

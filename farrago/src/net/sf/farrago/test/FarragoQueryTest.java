@@ -24,6 +24,7 @@ package net.sf.farrago.test;
 
 import net.sf.farrago.session.*;
 import net.sf.farrago.resource.*;
+import net.sf.farrago.db.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.security.*;
@@ -31,6 +32,8 @@ import net.sf.farrago.fem.security.*;
 import java.util.*;
 
 import junit.framework.*;
+
+import org.eigenbase.relopt.*;
 
 /**
  * FarragoQueryTest tests miscellaneous aspects of Farrago query
@@ -161,7 +164,7 @@ public class FarragoQueryTest extends FarragoTestCase
         argMap.put("tableName", tableName);
         FarragoJdbcEngineConnection farragoConnection =
             (FarragoJdbcEngineConnection) connection;
-        FarragoSession session = (FarragoSession)
+        FarragoSession session =
             farragoConnection.getSession();
         Collection result = session.executeLurqlQuery(
             lurql, argMap);
@@ -208,7 +211,7 @@ public class FarragoQueryTest extends FarragoTestCase
         argMap.put("granteeName", granteeName);
         FarragoJdbcEngineConnection farragoConnection =
             (FarragoJdbcEngineConnection) connection;
-        FarragoSession session = (FarragoSession)
+        FarragoSession session =
             farragoConnection.getSession();
         Collection result = session.executeLurqlQuery(
             lurql, argMap);
@@ -243,6 +246,75 @@ public class FarragoQueryTest extends FarragoTestCase
         } finally {
             resultSet.close();
             resultSet = null;
+        }
+    }
+
+    /**
+     * Tests that the transaction manager correctly notifies listeners of table
+     * accesses.
+     */
+    public void testTxnMgrListener()
+        throws Exception
+    {
+        FarragoJdbcEngineConnection farragoConnection =
+            (FarragoJdbcEngineConnection) connection;
+        FarragoSession session = farragoConnection.getSession();
+        FarragoSessionTxnMgr txnMgr = session.getTxnMgr();
+        TxnListener listener = new TxnListener();
+        txnMgr.addListener(listener);
+        try {
+            String sql =
+                "select * from sales.depts";
+            resultSet = stmt.executeQuery(sql);
+            resultSet.close();
+            connection.commit();
+        } finally {
+            txnMgr.removeListener(listener);
+        }
+
+        List<String> expectedName = Arrays.asList(
+            new String [] {
+                "LOCALDB",
+                "SALES",
+                "DEPTS"
+            });
+
+        assertEquals("begin", listener.events.get(0));
+        assertEquals(expectedName, listener.events.get(1));
+        assertEquals(TableAccessMap.Mode.READ_ACCESS, listener.events.get(2));
+        assertEquals(FarragoSessionTxnEnd.COMMIT, listener.events.get(3));
+    }
+
+    private static class TxnListener implements FarragoSessionTxnListener
+    {
+        List<Object> events;
+
+        TxnListener()
+        {
+            events = new ArrayList<Object>();
+        }
+        
+        public void transactionBegun(
+            FarragoSession session,
+            FarragoSessionTxnId txnId)
+        {
+            events.add("begin");
+        }
+
+        public void tableAccessed(
+            FarragoSessionTxnId txnId,
+            List<String> localTableName,
+            TableAccessMap.Mode accessType)
+        {
+            events.add(localTableName);
+            events.add(accessType);
+        }
+
+        public void transactionEnded(
+            FarragoSessionTxnId txnId,
+            FarragoSessionTxnEnd endType)
+        {
+            events.add(endType);
         }
     }
 }

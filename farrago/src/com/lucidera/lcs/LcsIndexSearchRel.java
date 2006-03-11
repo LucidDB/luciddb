@@ -22,11 +22,8 @@ package com.lucidera.lcs;
 
 import java.util.*;
 
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.query.*;
-import net.sf.farrago.type.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
@@ -43,17 +40,23 @@ import org.eigenbase.rex.RexNode;
 class LcsIndexSearchRel extends FennelSingleRel
 {
     //~ Instance fields -------------------------------------------------------
-
+    
     /** Aggregation used since multiple inheritance is unavailable. */
     final LcsIndexScanRel indexScanRel;
+    
     final boolean isUniqueKey;
     final boolean isOuter;
+    
     final Integer [] inputKeyProj;
     final Integer [] inputJoinProj;
     final Integer [] inputDirectiveProj;
-
+    
+    int startRidParamId;
+    int rowLimitParamId;
+    boolean ignoreRowLimit;
+    
     //~ Constructors ----------------------------------------------------------
-
+    
     /**
      * Creates a new LcsIndexSearchRel object.
      *
@@ -66,55 +69,64 @@ class LcsIndexSearchRel extends FennelSingleRel
      * @param inputDirectiveProj TODO:  doc
      */
     public LcsIndexSearchRel(
-        LcsIndexScanRel indexScanRel,
         RelNode child,
+        LcsIndexScanRel indexScanRel,
         boolean isUniqueKey,
         boolean isOuter,
         Integer [] inputKeyProj,
         Integer [] inputJoinProj,
-        Integer [] inputDirectiveProj)
+        Integer [] inputDirectiveProj,
+        int startRidParamId,
+        int rowLimitParamId)
     {
         super(
             indexScanRel.getCluster(),
             child);
         this.indexScanRel = indexScanRel;
+        
         this.isUniqueKey = isUniqueKey;
         this.isOuter = isOuter;
         this.inputKeyProj = inputKeyProj;
         this.inputJoinProj = inputJoinProj;
         this.inputDirectiveProj = inputDirectiveProj;
+        
+        this.startRidParamId = startRidParamId;
+        this.rowLimitParamId = rowLimitParamId;
+        ignoreRowLimit = (this.rowLimitParamId == 0);
     }
-
+    
     //~ Methods ---------------------------------------------------------------
-
+    
     // override Rel
     public RexNode [] getChildExps()
     {
         return indexScanRel.getChildExps();
     }
-
+    
     // override Rel
     public double getRows()
     {
         // TODO:  this is only true when isUniqueKey
         return getChild().getRows();
     }
-
+    
     // implement Cloneable
     public Object clone()
     {
         LcsIndexSearchRel clone = new LcsIndexSearchRel(
-            indexScanRel,
             RelOptUtil.clone(getChild()),
+            indexScanRel,
             isUniqueKey,
             isOuter,
             inputKeyProj,
             inputJoinProj,
-            inputDirectiveProj);
+            inputDirectiveProj,
+            startRidParamId,
+            rowLimitParamId);
         clone.inheritTraitsFrom(this);
         return clone;
     }
-
+    
     // implement RelNode
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
@@ -123,9 +135,9 @@ class LcsIndexSearchRel extends FennelSingleRel
             planner,
             getRows());
     }
-
+    
     // implement RelNode
-    public RelDataType deriveRowType()
+    protected RelDataType deriveRowType()
     {
         if (inputJoinProj != null) {
             // TODO: this part is no implemented yet.
@@ -139,29 +151,29 @@ class LcsIndexSearchRel extends FennelSingleRel
                         {
                             return inputJoinProj.length;
                         }
-
+                        
                         public String getFieldName(int index)
                         {
                             int i = inputJoinProj[index].intValue();
                             return childFields[i].getName();
                         }
-
+                        
                         public RelDataType getFieldType(int index)
                         {
                             int i = inputJoinProj[index].intValue();
                             return childFields[i].getType();
                         }
                     });
-
+            
             RelDataType rightType = indexScanRel.getRowType();
-
+            
             // for outer join, have to make left side nullable
             if (isOuter) {
                 rightType =
                     getFarragoTypeFactory().createTypeWithNullability(rightType,
                         true);
             }
-
+            
             return getCluster().getTypeFactory().createJoinType(
                 new RelDataType [] { leftType, rightType });
         } else {
@@ -169,7 +181,7 @@ class LcsIndexSearchRel extends FennelSingleRel
             return indexScanRel.getRowType();
         }
     }
-
+    
     // implement RelNode
     public void explain(RelOptPlanWriter pw)
     {
@@ -177,19 +189,19 @@ class LcsIndexSearchRel extends FennelSingleRel
         Object inputKeyProjObj;
         Object inputJoinProjObj;
         Object inputDirectiveProjObj;
-
+        
         if (indexScanRel.projectedColumns == null) {
             projection = "*";
         } else {
             projection = Arrays.asList(indexScanRel.projectedColumns);
         }
-
+        
         if (inputKeyProj == null) {
             inputKeyProjObj = "*";
         } else {
             inputKeyProjObj = Arrays.asList(inputKeyProj);
         }
-
+        
         if (inputJoinProj == null) {
             inputJoinProjObj = Collections.EMPTY_LIST;
         } else {
@@ -216,51 +228,46 @@ class LcsIndexSearchRel extends FennelSingleRel
                 inputDirectiveProjObj
             });
     }
-
+    
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
-        FarragoRepos repos = FennelRelUtil.getRepos(this);
-
         FemLbmIndexScanStreamDef indexSearchStream = 
-            indexScanRel.newLbmIndexSearch(this);
-
-        indexSearchStream.setUniqueKey(isUniqueKey);
-        indexSearchStream.setOuterJoin(isOuter);
-
-        if (inputKeyProj != null) {
-            indexSearchStream.setInputKeyProj(
-                FennelRelUtil.createTupleProjection(repos, inputKeyProj));
-        }
-
-        if (inputJoinProj != null) {
-            indexSearchStream.setInputJoinProj(
-                FennelRelUtil.createTupleProjection(repos, inputJoinProj));
-        }
-
-        if (inputDirectiveProj != null) {
-            indexSearchStream.setInputDirectiveProj(
-                FennelRelUtil.createTupleProjection(repos, inputDirectiveProj));
-        }
-
-        indexSearchStream.setRowLimitParamId(0);
-        indexSearchStream.setIgnoreRowLimit(true);
-        indexSearchStream.setStartRidParamId(0);
+            indexScanRel.lcsTable.getIndexGuide().newIndexSearch(
+                indexScanRel,
+                indexScanRel.index,
+                isUniqueKey,
+                isOuter,
+                inputKeyProj,
+                inputJoinProj,
+                inputDirectiveProj,
+                startRidParamId,
+                rowLimitParamId,
+                ignoreRowLimit);
         
         implementor.addDataFlowFromProducerToConsumer(
             implementor.visitFennelChild((FennelRel) getChild()), 
             indexSearchStream);
-
+        
         return indexSearchStream;
     }
-
+    
     // override Rel
     public RelOptTable getTable()
     {
         return indexScanRel.getTable();
     }
-
+    
     // TODO: implement getCollations()
+    
+    /**
+     * Sets the search's row limit parameter id. If set to a non-zero 
+     * value, the search will limit the size of the tuples it produces.
+     */
+    public void setRowLimitParamId(int paramId) {
+        rowLimitParamId = paramId;
+        ignoreRowLimit = (paramId == 0);
+    }
 }
 
-// End LcsIndexSearchRel.java
+//End LcsIndexSearchRel.java

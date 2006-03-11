@@ -92,14 +92,20 @@ const LbmByteSegment &LbmUnionWorkspace::getSegment()
     if (! segment.isNull()) {
         return segment;
     }
-
+    
     // read to the production limit, but not past the end
     LcsRid readLimit = productionLimitByte;
     if (readLimit > mergeArea.getEnd()) {
         readLimit = mergeArea.getEnd();
     }
+
+    // do not try to begin a segment, unless we can guarantee it has had 
+    // a chance to mature (grow to maximum segment size)
+    LcsRid startLimit = (productionLimitByte > (LcsRid) maxSegmentSize)
+        ? (productionLimitByte - maxSegmentSize) : (LcsRid) 0;
+
     if (! limited) {
-        readLimit = mergeArea.getEnd();
+        startLimit = readLimit = mergeArea.getEnd();
     }
 
     // begin with a null segment
@@ -113,6 +119,10 @@ const LbmByteSegment &LbmUnionWorkspace::getSegment()
     mergeArea.advance(i);
     LcsRid start = i;
 
+    if (start > startLimit) {
+        return segment;
+    }
+
     // find length of segment (only use the contiguous part)
     uint len = 0;
     while(i < readLimit && mergeArea.getByte(i) != 0) {
@@ -122,11 +132,12 @@ const LbmByteSegment &LbmUnionWorkspace::getSegment()
             break;
         }
     }
-    len = mergeArea.getContiguousMemSize(start, len);
+    uint contigLen = mergeArea.getContiguousMemSize(start, len);
+    len = std::min(len, contigLen);
 
     if (len > 0) {
         segment.byteNum = start;
-        segment.byteSeg = mergeArea.getMem(start, len);
+        segment.byteSeg = mergeArea.getMem(start);
         segment.len = len;
     }
     return segment;
@@ -148,7 +159,12 @@ bool LbmUnionWorkspace::addSegment(const LbmByteSegment &segmentIn)
 
     segment.advanceToByteNum(mergeArea.getStart());
     if (! segment.isNull()) {
-        mergeArea.mergeMem(segment.byteNum, segment.byteSeg, segment.len);
+        LcsRid next = segment.byteNum;
+        LcsRid last = next + segment.len;
+        PBuffer read = segment.byteSeg;
+        while (next < last) {
+            mergeArea.mergeByte(next++, *read--);
+        }
     }
     return true;
 }

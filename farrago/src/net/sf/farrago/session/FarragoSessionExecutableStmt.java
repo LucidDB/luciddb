@@ -27,6 +27,7 @@ import java.util.*;
 
 import net.sf.farrago.util.*;
 
+import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 
 
@@ -38,7 +39,7 @@ import org.eigenbase.reltype.*;
  *
  *<p>
  *
- * NOTE: FarragoSessionExecutableStmt implementations must kept as lean as
+ * NOTE: FarragoSessionExecutableStmt implementations must be kept as lean as
  * possible for optimal caching (we want memory usage to be minimum, and usage
  * estimation to be as accurate as possible).  In particular, they must have no
  * references to information needed only during preparation; all of that should
@@ -87,6 +88,11 @@ public interface FarragoSessionExecutableStmt extends FarragoAllocationOwner
      * is executed
      */
     public Set getReferencedObjectIds();
+
+    /**
+     * @return map of access modes for all tables referenced
+     */
+    public TableAccessMap getTableAccessMap();
 }
 
 

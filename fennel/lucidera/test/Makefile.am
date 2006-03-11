@@ -29,8 +29,8 @@ LcsRowScanExecStreamTest_SOURCES=LcsRowScanExecStreamTest.cpp
 LbmEntryTest_SOURCES=LbmEntryTest.cpp
 LbmLoadBitmapTest_SOURCES=LbmLoadBitmapTest.cpp
 LbmIndexScanTest_SOURCES=LbmIndexScanTest.cpp
-LbmIntersectExecStreamTest_SOURCES=LbmIntersectExecStreamTest.cpp
-LbmUnionExecStreamTest_SOURCES=LbmUnionExecStreamTest.cpp
+LbmIntersectExecStreamTest_SOURCES=LbmExecStreamTestBase.cpp LbmIntersectExecStreamTest.cpp 
+LbmUnionExecStreamTest_SOURCES=LbmExecStreamTestBase.cpp LbmUnionExecStreamTest.cpp
 
 # NOTE:  have to repeat $(EXTRA_LDFLAGS) on mingw due to stupid linker.
 

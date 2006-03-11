@@ -596,7 +596,7 @@ public abstract class RelOptUtil
     }
 
     public static boolean analyzeSimpleEquiJoin(
-        JoinRel joinRel,
+        JoinRelBase joinRel,
         int [] joinFieldOrdinals)
     {
         RexNode joinExp = joinRel.getCondition();

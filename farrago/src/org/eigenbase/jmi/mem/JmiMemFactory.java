@@ -412,6 +412,11 @@ public abstract class JmiMemFactory
                 return proxyRefByMoniker(args[0]);
             } else if (methodName.equals("refAssociation")) {
                 return proxyRefByMoniker(args[0]);
+            } else if (methodName.equals("refDelete")) {
+                // REVIEW jvs 9-Mar-2006: this is to allow code to be reusable
+                // across persistent and mem repositories, but the behavior
+                // will be different!
+                return null;
             } else if (methodName.equals("refAllLinks")) {
                 // REVIEW jvs 30-Jan-2006:  To implement this, we
                 // would have to keep track of extents, which we don't

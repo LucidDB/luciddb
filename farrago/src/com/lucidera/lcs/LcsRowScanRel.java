@@ -144,7 +144,7 @@ public class LcsRowScanRel extends FennelMultipleRel
     }
 
     // implement RelNode
-    public RelDataType deriveRowType()
+    protected RelDataType deriveRowType()
     {
         RelDataType flattenedRowType =
             getIndexGuide().getFlattenedRowType();
@@ -236,7 +236,7 @@ public class LcsRowScanRel extends FennelMultipleRel
         FarragoRepos repos = FennelRelUtil.getRepos(this);
 
         FemLcsRowScanStreamDef scanStream = 
-        	indexGuide.newRowScan(this, projectedColumns);
+            indexGuide.newRowScan(this, projectedColumns);
         
         for (int i = 0; i < inputs.length; i++) {
             FemExecutionStreamDef inputStream =

@@ -589,8 +589,8 @@ public class VolcanoPlanner implements RelOptPlanner
         }
         RelOptCost cost = rel.computeSelfCost(this);
         if (!VolcanoCost.ZERO.isLt(cost)) {
-            throw Util.newInternal("Cost " + cost + " of " + rel
-                + " must be positive.");
+            // cost must be positive, so nudge it
+            cost = makeTinyCost();
         }
         RelNode [] inputs = rel.getInputs();
         for (int i = 0, n = inputs.length; i < n; i++) {

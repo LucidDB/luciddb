@@ -74,6 +74,12 @@ class LbmRidReader : public LbmSegment
     LcsRid nextRid;
 
     /**
+     * Resets state variables so next call to rid reader will read a new
+     * tuple from the input stream
+     */
+    void resetState();
+
+    /**
      * Scans forward in the current byte segment until you hit a set bit.  If
      * the current byte segment is exhausted, new segments are read in.
      *

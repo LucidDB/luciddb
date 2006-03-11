@@ -24,79 +24,10 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/common/ByteBuffer.h"
+#include "fennel/lucidera/bitmap/LbmByteSegment.h"
 #include "fennel/lucidera/bitmap/LbmSegment.h"
 
 FENNEL_BEGIN_NAMESPACE
-
-/**
- * This class encapsulates a single byte segment, as opposed to
- * a tuple which contains a set of them
- */    
-class LbmByteSegment
-{
-public:
-    LcsRid byteNum;
-    PBuffer byteSeg;
-    uint len;
-
-    inline void reset() 
-    {
-        byteNum = (LcsRid) 0;
-        byteSeg = NULL;
-        len = 0;
-    }
-
-    /**
-     * Returns the Srid of the starting byte (not the first rid set)
-     */
-    inline LcsRid getSrid() const
-    {
-        return (LcsRid) (byteNum * LbmSegment::LbmOneByteSize);
-    }
-
-    /**
-     * Whether the segment has valid data
-     */
-    inline bool isNull() const
-    {
-        return byteSeg == NULL;
-    }
-
-    /**
-     * Returns the end byte number
-     */
-    inline LcsRid getEnd() const
-    {
-        return byteNum + len;
-    }
-
-    /**
-     * Ensures the segment begins with the requested byte number.
-     * As a result, the beginning of the segment or even the entire
-     * segment may be truncated.
-     */
-    void advanceToByteNum(LcsRid newStartByteNum) 
-    {
-        // ignore null values
-        if (isNull()) {
-            return;
-        }
-        
-        // check if the segment will have valid data after truncation
-        if (getEnd() <= newStartByteNum) {
-            reset();
-            return;
-        }
-
-        // advance the segment in place if required
-        if (byteNum < newStartByteNum) {
-            uint diff = opaqueToInt(newStartByteNum - byteNum);
-            byteNum += diff;
-            byteSeg += diff;
-            len -= diff;
-        }
-    }
-};
 
 typedef OpaqueIndexedCircularBuffer<LcsRid> LbmUnionMergeArea;
 
@@ -138,6 +69,11 @@ class LbmUnionWorkspace
      */
     inline static LcsRid getByteNumber(LcsRid rid);
 
+    /**
+     * Advance the workspace to the requested byte number
+     */
+    void advanceToByteNum(LcsRid requestedByteNum);
+
 public:
     /**
      * Initialize the workspace
@@ -153,11 +89,6 @@ public:
      * Advance the workspace to the requested Srid
      */
     void advanceToSrid(LcsRid requestedSrid);
-
-    /**
-     * Advance the workspace to the requested byte number
-     */
-    void advanceToByteNum(LcsRid requestedByteNum);
 
     /**
      * Advance the workspace past the current workspace segment

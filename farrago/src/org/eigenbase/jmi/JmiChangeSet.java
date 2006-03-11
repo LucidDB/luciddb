@@ -444,8 +444,6 @@ public class JmiChangeSet implements MDRPreChangeListener
                         newElement = other;
                         oldElement = element;
                     } else {
-                        // TODO:  remove this later when RENAME is supported
-                        assert (dispatcher.isNewObject(element));
                         newElement = element;
                         oldElement = other;
                     }

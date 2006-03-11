@@ -84,6 +84,11 @@ class LbmGeneratorExecStream : public BTreeExecStream, LcsRowScanBaseExecStream
     DynamicParamId dynParamId;
 
     /**
+     * True if dynamic parameters have been created
+     */
+    bool dynParamsCreated;
+
+    /**
      * True if index is being loaded as part of a create index statement
      */
     bool createIndex;

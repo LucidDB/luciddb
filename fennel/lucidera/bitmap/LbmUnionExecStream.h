@@ -88,6 +88,11 @@ class LbmUnionExecStream : public ConfluenceExecStream
     DynamicParamId segmentLimitParamId;
 
     /**
+     * True if dynamic parameters have been created
+     */
+    bool dynParamsCreated;
+
+    /**
      * Tuple datum used to store dynamic paramter for ridLimit
      */
     TupleDatum ridLimitDatum;
@@ -146,6 +151,13 @@ class LbmUnionExecStream : public ConfluenceExecStream
      * Segment currently being read
      */
     LbmByteSegment inputSegment;
+
+    /**
+     * Scratch area to use for reversing output segments
+     */
+    PBuffer reverseArea;
+
+    uint reverseAreaSize;
 
     /**
      * Output tuple data containing OR'd bitmap segments

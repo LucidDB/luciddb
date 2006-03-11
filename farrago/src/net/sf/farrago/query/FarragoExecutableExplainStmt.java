@@ -58,7 +58,7 @@ class FarragoExecutableExplainStmt extends FarragoExecutableStmtImpl
         RelDataType dynamicParamRowType,
         String explanation)
     {
-        super(dynamicParamRowType, false);
+        super(dynamicParamRowType, false, new TableAccessMap());
 
         this.explanation = explanation;
     }

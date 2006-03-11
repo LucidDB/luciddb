@@ -22,6 +22,7 @@ package com.lucidera.lcs;
 
 import java.math.*;
 import java.util.*;
+import java.lang.Integer;
 
 import net.sf.farrago.catalog.FarragoCatalogUtil;
 import net.sf.farrago.catalog.FarragoRepos;
@@ -33,9 +34,7 @@ import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fennel.tuple.FennelStandardTypeDescriptor;
 import net.sf.farrago.fennel.tuple.FennelStoredTypeDescriptor;
-import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.query.*;
-import net.sf.farrago.resource.FarragoResource;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.JmiUtil;
 
@@ -55,7 +54,7 @@ import org.eigenbase.util.Util;
 class LcsIndexGuide
 {
     private static final int LbmBitmapSegMaxSize = 512;
-
+    
     private FarragoTypeFactory typeFactory;
     
     private FarragoRepos repos;
@@ -63,17 +62,19 @@ class LcsIndexGuide
     private RelDataType unflattenedRowType;
     
     private RelDataType flattenedRowType;
-
+    
     private int [] flatteningMap;
     
     private List<FemLocalIndex> clusteredIndexes;
     
-    private List clusterMap;
+    private List<FemLocalIndex> unclusteredIndexes;
+    
+    private List<Integer> clusterMap;
     
     private int numFlattenedCols;
     
     private int numUnFlattenedCols;
-
+    
     /**
      * Construct an IndexGuide using a specific list of clustered indexes
      * 
@@ -102,10 +103,12 @@ class LcsIndexGuide
         numFlattenedCols = flattenedRowType.getFieldList().size();
         
         this.clusteredIndexes = clusteredIndexes;
+        this.unclusteredIndexes = 
+            FarragoCatalogUtil.getUnclusteredIndexes(repos, table);
         
         createClusterMap(clusteredIndexes);
     }
-
+    
     /**
      * Construct an IndexGuide using the default list of indexes
      * @param typeFactory
@@ -121,7 +124,7 @@ class LcsIndexGuide
                 typeFactory.getRepos(),
                 table));
     }
-
+    
     /**
      * Construct an IndexGuide using an unclustered index
      * 
@@ -140,7 +143,7 @@ class LcsIndexGuide
             getUnclusteredCoverageSet(
                 typeFactory.getRepos(), table, unclusteredIndex));
     }
-
+    
     public static List<FemLocalIndex> getUnclusteredCoverageSet(
         FarragoRepos repos,
         CwmColumnSet table,
@@ -154,13 +157,13 @@ class LcsIndexGuide
             CwmIndexedFeature indexedFeature = (CwmIndexedFeature) f;
             requiredColumns.add((CwmColumn) indexedFeature.getFeature());
         }
-
+        
         //
         // Get the clustered indexes of the table
         //
         List<FemLocalIndex> clusteredIndexes = 
             FarragoCatalogUtil.getClusteredIndexes(repos, table);
-
+        
         //
         // Find clustered indexes which cover the columns of the index
         //
@@ -187,7 +190,7 @@ class LcsIndexGuide
         
         return coverageIndexes;
     }
-
+    
     /**
      * @return the flattened row type for the indexed table
      */
@@ -218,7 +221,7 @@ class LcsIndexGuide
      */
     private void createClusterMap(List<FemLocalIndex> clusteredIndexes)
     {
-        clusterMap = new ArrayList();
+        clusterMap = new ArrayList<Integer>();
         
         for (FemLocalIndex index : clusteredIndexes) {
             for (Object f : index.getIndexedFeature()) {
@@ -239,7 +242,7 @@ class LcsIndexGuide
     private void addClusterCols(int colOrdinal)
     {
         int nColsToAdd = getNumFlattenedSubCols(colOrdinal);
-
+        
         colOrdinal = flattenOrdinal(colOrdinal);
         
         for (int i = colOrdinal; i < colOrdinal + nColsToAdd; i++) {
@@ -266,7 +269,7 @@ class LcsIndexGuide
         }
         return nCols;
     }
-
+    
     /**
      * Retrieves number of columns in a clustered index
      * 
@@ -321,13 +324,13 @@ class LcsIndexGuide
         List flattenedColList = flattenedRowType.getFieldList();
         
         for (Object f : index.getIndexedFeature()) {
-
+            
             CwmIndexedFeature indexedFeature = (CwmIndexedFeature) f;
             FemAbstractColumn column = 
                 (FemAbstractColumn) indexedFeature.getFeature();
             int numSubCols = getNumFlattenedSubCols(column.getOrdinal());
             int colOrd = flattenOrdinal(column.getOrdinal());
-
+            
             // add an entry for each subcolumn within a complex type
             for (int i = colOrd; i < colOrd + numSubCols; i++) {
                 RelDataTypeField field = 
@@ -340,7 +343,7 @@ class LcsIndexGuide
         }
         return tupleDesc;
     }
-
+    
     /**
      * Creates a projection list relative to the cluster columns
      * 
@@ -369,7 +372,7 @@ class LcsIndexGuide
         }
         return proj;
     }
-
+    
     private Integer computeProjectedColumn(int i)
     {
         int j = clusterMap.indexOf(i);
@@ -430,7 +433,7 @@ class LcsIndexGuide
         assert(i != -1);
         return i;
     }
-
+    
     /**
      * Creates a tuple descriptor for the BTree index corresponding to a
      * clustered index.  For LCS clustered indexes, the stored tuple is always
@@ -442,7 +445,7 @@ class LcsIndexGuide
     public FemTupleDescriptor createClusteredBTreeTupleDesc()
     {
         FemTupleDescriptor tupleDesc = repos.newFemTupleDescriptor();
-
+        
         // add RID
         appendInt64Attr(tupleDesc);
         
@@ -451,7 +454,7 @@ class LcsIndexGuide
         
         return tupleDesc;
     }
-
+    
     private void appendInt64Attr(FemTupleDescriptor tupleDesc)
     {
         FennelStoredTypeDescriptor typeDesc =
@@ -460,7 +463,7 @@ class LcsIndexGuide
         tupleDesc.getAttrDescriptor().add(attrDesc);
         attrDesc.setTypeOrdinal(typeDesc.getOrdinal());
     }
-
+    
     private void appendBitmapAttr(FemTupleDescriptor tupleDesc)
     {
         FennelStoredTypeDescriptor typeDesc =
@@ -469,16 +472,16 @@ class LcsIndexGuide
         tupleDesc.getAttrDescriptor().add(attrDesc);
         attrDesc.setTypeOrdinal(typeDesc.getOrdinal());
         attrDesc.setNullable(true);
-
+        
         // REVIEW jvs 6-Jan-2006: this is based on a 32K page size with a
         // maximum entry size of 1/8 of a page.  Should probably make it
         // communicate with native code about this to get the right number
         // automatically.
         attrDesc.setByteLength(LbmBitmapSegMaxSize);
     }
-
+    
     // TODO jvs 6-Jan-2005:  use this in LcsTableAppendRel.
-
+    
     /**
      * Creates a tuple projection for the RID attribute of the BTree index
      * corresponding to a clustered index.
@@ -508,7 +511,7 @@ class LcsIndexGuide
             repos,
             new Integer [] { 1 });
     }
-
+    
     /**
      * Creates a tuple descriptor for the BTree index corresponding to an
      * unclustered index.
@@ -528,7 +531,7 @@ class LcsIndexGuide
         assert(!index.isClustered());
         
         FemTupleDescriptor tupleDesc = repos.newFemTupleDescriptor();
-
+        
         // add K1, K2, ...
         Iterator iter = index.getIndexedFeature().iterator();
         while (iter.hasNext()) {
@@ -540,10 +543,10 @@ class LcsIndexGuide
                 tupleDesc,
                 typeFactory.createCwmElementType(column));
         }
-
+        
         // add RID
         appendInt64Attr(tupleDesc);
-
+        
         // add BITMAP
         appendBitmapAttr(tupleDesc);
         appendBitmapAttr(tupleDesc);
@@ -554,17 +557,17 @@ class LcsIndexGuide
     public FemTupleDescriptor createUnclusteredBTreeBitmapDesc()
     {
         FemTupleDescriptor tupleDesc = repos.newFemTupleDescriptor();
-
+        
         // add RID
         appendInt64Attr(tupleDesc);
-
+        
         // add BITMAP
         appendBitmapAttr(tupleDesc);
         appendBitmapAttr(tupleDesc);
         
         return tupleDesc;
     }
-
+    
     /**
      * Creates a tuple projection for the key attributes of the BTree index
      * corresponding to an unclustered index.
@@ -585,12 +588,12 @@ class LcsIndexGuide
             repos,
             FennelRelUtil.newIotaProjection(n));
     }
-
+    
     public FemTupleProjection createUnclusteredBTreeBitmapProj(
         FemLocalIndex index)
     {
-        List bitmapProj = new ArrayList();
-
+        List<Integer> bitmapProj = new ArrayList<Integer>();
+        
         // bitmap tuple format is 
         //    [key0, key1..., keyN, RID, SegmentDesc, Segment]
         // the bitmap fields are:      
@@ -600,11 +603,11 @@ class LcsIndexGuide
         bitmapProj.add(startPos);
         bitmapProj.add(startPos + 1);
         bitmapProj.add(startPos + 2);
-
+        
         return FennelRelUtil.createTupleProjection(
             repos, bitmapProj);
     }
-
+    
     //~ Exec Streams -------------------------------------------------------
     
     protected FemSplitterStreamDef newSplitter(SingleRel rel)
@@ -618,20 +621,20 @@ class LcsIndexGuide
                 rel.getChild().getRowType()));
         return splitter;          
     }
-
+    
     protected FemBarrierStreamDef newBarrier(FennelRel rel)
     {
         FemBarrierStreamDef barrier = repos.newFemBarrierStreamDef();
-
+        
         barrier.setOutputDesc(
             FennelRelUtil.createTupleDescriptorFromRowType(
-            repos,
-            typeFactory,
-            rel.getRowType()));
-
+                repos,
+                typeFactory,
+                rel.getRowType()));
+        
         return barrier;
     }
-
+    
     protected FemLcsClusterAppendStreamDef newClusterAppend(
         FennelRel rel,
         FemLocalIndex clusterIndex)
@@ -674,7 +677,7 @@ class LcsIndexGuide
         return clusterAppend;
         
     }
-
+    
     protected FemLcsRowScanStreamDef newRowScan(
         LcsRowScanRel rel,
         Integer[] projectedColumns)
@@ -691,10 +694,10 @@ class LcsIndexGuide
             FennelRelUtil.createTupleProjection(repos, clusterProjection));
         scanStream.setFullScan(rel.getIsFullScan());
         scanStream.setHasExtraFilter(rel.getHasExtraFilter());
-
+        
         return scanStream;
     }
-
+    
     /**
      * Creates a set of streams for updating a bitmap index
      */
@@ -714,10 +717,10 @@ class LcsIndexGuide
         // link them up
         implementor.addDataFlowFromProducerToConsumer(generator, sorter);
         implementor.addDataFlowFromProducerToConsumer(sorter, splicer);
-
+        
         return new LcsCompositeStreamDef(generator, splicer);
     }
-
+    
     private FemLbmGeneratorStreamDef newGenerator(
         FennelRel rel,
         FemLocalIndex index,
@@ -726,12 +729,12 @@ class LcsIndexGuide
     {
         FemLbmGeneratorStreamDef generator = 
             repos.newFemLbmGeneratorStreamDef();
-
+        
         //
         // Setup cluster scans
         //
         defineScanStream(generator, rel);
-
+        
         //
         // Setup projection used by unclustered index
         //
@@ -753,24 +756,24 @@ class LcsIndexGuide
         // Setup index creation flag
         //
         generator.setCreateIndex(createIndex);
-
+        
         //
         // Setup dynamic param id
         //
         generator.setRowCountParamId(dynParamId);
-
+        
         //
         // Setup Btree accessor parameters
         //
         defineIndexAccessor(generator, rel, index, false);
-
+        
         //
         // Set up FemExecutionStreamDef
         //        - setOutputDesc (same as tupleDesc)
         //
         generator.setOutputDesc(
             createUnclusteredBTreeTupleDesc(index));
-
+        
         return generator;
     }
     
@@ -779,7 +782,7 @@ class LcsIndexGuide
     {
         FemSortingStreamDef sortingStream =
             repos.newFemSortingStreamDef();
-
+        
         //
         // Bitmap entry keys should be unique, but we save the effort 
         // of enforcing uniqueness
@@ -797,54 +800,87 @@ class LcsIndexGuide
     {
         FemLbmSplicerStreamDef splicer =
             repos.newFemLbmSplicerStreamDef();
-
+        
         //
         // The splicer is the terminal stream of a bitmap stream set.
         // It's output type is the same as the rel's: the standard 
         // Dml output type.
         //
         defineIndexStream(splicer, rel, index, false);
-
+        
         splicer.setRowCountParamId(dynParamId);
         
         return splicer;
     }
-
+    
     protected FemIndexScanDef newIndexScan(
         FennelRel rel,
         FemLocalIndex index)
     {
         FemIndexScanDef scanStream = repos.newFemIndexScanDef();
         defineIndexScan(scanStream, rel, index);
+        
         return scanStream;
     }
-
-    protected FemLbmIndexScanStreamDef newLbmIndexSearch(
+    
+    protected FemLbmIndexScanStreamDef newIndexSearch(
         FennelRel rel,
-        FemLocalIndex index)
+        FemLocalIndex index,
+        boolean isUniqueKey,
+        boolean isOuter,
+        Integer [] inputKeyProj,
+        Integer [] inputJoinProj,
+        Integer [] inputDirectiveProj,
+        int startRidParamId,
+        int rowLimitParamId,
+        boolean ignoreRowLimit)
     {
-        FemLbmIndexScanStreamDef searchStream = repos.newFemLbmIndexScanStreamDef();
+        FemLbmIndexScanStreamDef searchStream =
+            repos.newFemLbmIndexScanStreamDef();
         defineIndexScan(searchStream, rel, index);
+        
+        searchStream.setStartRidParamId(startRidParamId);
+        searchStream.setRowLimitParamId(rowLimitParamId);
+        searchStream.setIgnoreRowLimit(ignoreRowLimit);
+        
+        searchStream.setUniqueKey(isUniqueKey);
+        searchStream.setOuterJoin(isOuter);
+        
+        if (inputKeyProj != null) {
+            searchStream.setInputKeyProj(
+                FennelRelUtil.createTupleProjection(repos, inputKeyProj));
+        }
+        
+        if (inputJoinProj != null) {
+            searchStream.setInputJoinProj(
+                FennelRelUtil.createTupleProjection(repos, inputJoinProj));
+        }
+        
+        if (inputDirectiveProj != null) {
+            searchStream.setInputDirectiveProj(
+                FennelRelUtil.createTupleProjection(repos, inputDirectiveProj));
+        }
+        
         return searchStream;
     }
-
+    
     private void defineIndexScan(
         FemIndexScanDef scanStream,
         FennelRel rel,
         FemLocalIndex index)
     {
-
+        
         defineIndexStream(scanStream, rel, index, false);
-
+        
         // set FemIndexScanDef
         //
         // TODO: handle the case where the index scan satisfy the 
         // projection out of the LcsRowScanRel. For now, output projection 
         // maps to [RID, bitmapfield1, bitmapfield2].
         scanStream.setOutputProj(
-                createUnclusteredBTreeBitmapProj(index));
+            createUnclusteredBTreeBitmapProj(index));
     }
-
+    
     private void defineIndexStream(
         FemIndexStreamDef indexStream,
         FennelRel rel,
@@ -860,7 +896,7 @@ class LcsIndexGuide
                 repos,
                 typeFactory,
                 rel.getRowType()));
-
+        
         defineIndexAccessor(indexStream, rel, index, clustered);
     }
     
@@ -872,7 +908,7 @@ class LcsIndexGuide
     {
         final FarragoPreparingStmt stmt =
             FennelRelUtil.getPreparingStmt(rel);
-       
+        
         //
         // Set up FemIndexAccessorDef
         //        - setRootPageId
@@ -911,7 +947,7 @@ class LcsIndexGuide
         }
         indexAccessor.setKeyProj(femProj);
     }
-
+    
     /**
      * Fills in a stream definition for this scan.
      *
@@ -958,10 +994,10 @@ class LcsIndexGuide
             // the plan.
             clusterScan.setRootPageId(-1);
         }
-
+        
         clusterScan.setSegmentId(LcsDataServer.getIndexSegmentId(index));
         clusterScan.setIndexId(JmiUtil.getObjectId(index));
-
+        
         clusterScan.setTupleDesc(
             createClusteredBTreeTupleDesc());
         
@@ -983,13 +1019,13 @@ class LcsIndexGuide
         // TODO: Make this work for the incremental case
         BigDecimal rowCount = BigDecimal.ZERO;
         BigDecimal startRid = BigDecimal.ZERO;
-
+        
         // TODO: These types must match the fennel types for
         // RecordNum and LcsRowId
         RelDataType rowCountType = 
             typeFactory.createSqlType(SqlTypeName.Bigint);
         RelDataType ridType = rowCountType;
-
+        
         return new RexNode[] {
             builder.makeExactLiteral(rowCount, rowCountType), 
             builder.makeExactLiteral(startRid, ridType)
@@ -1003,13 +1039,13 @@ class LcsIndexGuide
         RelDataType rowCountType = 
             typeFactory.createSqlType(SqlTypeName.Bigint);
         RelDataType ridType = rowCountType;
-
+        
         return typeFactory.createStructType(
             new RelDataType[] { rowCountType, ridType },
             new String [] { "ROWCOUNT", "SRID" }
-            );
+        );
     }
-
+    
     protected FemTupleDescriptor getUnclusteredInputDesc() 
     {
         return FennelRelUtil.createTupleDescriptorFromRowType(
@@ -1017,8 +1053,12 @@ class LcsIndexGuide
             typeFactory,
             getUnclusteredInputType());
     }
-
-    // Methods for unclustered(bitmap) index.
+    
+    // ~ Methods for unclustered(bitmap) index ------------------------
+    
+    /**
+     * Creates a bitmap data row type, [SRID, SegmentDir, Segments]
+     */
     public RelDataType createUnclusteredBitmapRowType()
     {
         RelDataType ridType = 
@@ -1026,32 +1066,21 @@ class LcsIndexGuide
         RelDataType bitmapType =
             typeFactory.createSqlType(SqlTypeName.Varbinary,
                 LbmBitmapSegMaxSize);
-
+        
         RelDataType segDescType = 
             typeFactory.createTypeWithNullability(bitmapType, true);
-
+        
         RelDataType segType = 
             typeFactory.createTypeWithNullability(bitmapType, true);
-
+        
         return typeFactory.createStructType(
             new RelDataType[] {ridType, segDescType, segType},
             new String [] {"SRID", "SegmentDesc","Segment"}
-            );
+        );
     }
-
-
+    
     /**
-     * Creates a tuple descriptor for the BTree index corresponding to an
-     * unclustered index.
-     *
-     * <p>
-     *
-     * For LCS unclustered indexes, the stored tuple is
-     * [K1, K2, ..., RID, BITMAP, BITMAP], and the key is [K1, K2, ..., RID]
-     *
-     * @param index unclustered index 
-     *
-     * @return btree tuple descriptor
+     * Creates a tuple descriptor for bitmap data
      */
     public FemTupleDescriptor createUnclusteredBitmapTupleDesc()
     {
@@ -1060,11 +1089,223 @@ class LcsIndexGuide
             typeFactory,
             createUnclusteredBitmapRowType());
     }
-
+    
+    /**
+     * Creates a key projection for bitmap data. The only key column 
+     * is the first column, SRID
+     */
+    public FemTupleProjection createUnclusteredBitmapKeyProj()
+    {
+        return FennelRelUtil.createTupleProjection(
+            repos,
+            FennelRelUtil.newIotaProjection(1));
+    }
+    
     public boolean isValid(FemLocalIndex index)
     {
         return index.getVisibility() == VisibilityKindEnum.VK_PUBLIC;
     }    
+    
+    protected FemSortingStreamDef newBitmapSorter()
+    {
+        FemSortingStreamDef sortingStream =
+            repos.newFemSortingStreamDef();
+        sortingStream.setDistinctness(DistinctnessEnum.DUP_ALLOW);
+        sortingStream.setKeyProj(createUnclusteredBitmapKeyProj());
+        sortingStream.setOutputDesc(createUnclusteredBitmapTupleDesc());
+        return sortingStream;
+    }
+    
+    protected FemLbmIntersectStreamDef newBitmapIntersect(
+        int startRidParamId,
+        int rowLimitParamId)
+    {
+        FemLbmIntersectStreamDef intersectStream =
+            repos.newFemLbmIntersectStreamDef();
+        
+        intersectStream.setStartRidParamId(startRidParamId);
+        intersectStream.setRowLimitParamId(rowLimitParamId);
+        
+        intersectStream.setOutputDesc(createUnclusteredBitmapTupleDesc());
+        
+        return intersectStream;
+        
+    }
+    
+    /**
+     * This is the algorithm that maps indexes to search key columns.
+     * It does so by finding the shortest (in terms of key length) index to map to the
+     * longest list of columns(in the case of composite key idnexes). The index selection is
+     * expressed using a map where all selected indexes and  the matched key positions are
+     * remembered. 
+     * 
+     * @param colLists two column lists: 
+     *     the first one contains the "point interval" columns,
+     *     the secod one contains the "range interval" columns.
+     * @return a map from selected index to its associated matched key position.
+     */
+    public Map<FemLocalIndex, Integer> getIndex2PosMap(
+        List<List<CwmColumn>> colLists)
+    {
+        assert (colLists.size() == 2);
+        
+        List<CwmColumn> pointColumnList = colLists.get(0);
+        List<CwmColumn> rangeColumnList = colLists.get(1);
+        
+        Map<CwmColumn, FemLocalIndex> col2IndexMap = new HashMap<CwmColumn, FemLocalIndex>();
+        Map<FemLocalIndex, Integer> index2PosMap = new HashMap<FemLocalIndex, Integer>();
+        boolean matchedAll = false;
+        
+        // Sort the index based on length(and a unique identifier to break ties),
+        // so that index with fewer key columns are searched first(and preferred).
+        TreeSet<FemLocalIndex> indexSet = 
+            new TreeSet<FemLocalIndex>(new IndexLengthComparator());
+        
+        indexSet.addAll(unclusteredIndexes);
+        
+        // First process the columns with point predicates.
+        // Objective is to maximize the index key oclumns matched.
+        while (pointColumnList.size() > 0 && !matchedAll) {
+            
+            // TODO: match the shortest index with the maximum matched positions
+            Iterator iter = indexSet.iterator();
+            int maxMatchedPos = 0;
+            FemLocalIndex maxMatchedIndex = null;
+            int matchedPos = 0;
+            
+            while (iter.hasNext()) {
+                FemLocalIndex index = (FemLocalIndex) iter.next();
+                
+                if (isValid(index)) {
+                    matchedPos = 0;
+                    
+                    CwmColumn col = getIndexColumn(index, matchedPos);
+                    
+                    while ((col != null) && pointColumnList.contains(col)) {
+                        matchedPos ++;
+                        col = getIndexColumn(index, matchedPos);
+                    }
+                    
+                    // try to match one more column from the interval column list
+                    // TODO (March 08, 2006 rchen)
+                    // This is to be enabled once BTreeSearch handles unbounded
+                    // ranges for mutli-column keys. Note depending on the directive
+                    // convention, FennelUtil.convertIntervalListToTuple might need
+                    // to be changed to use the correct directives in search keys.
+                    if (false && 
+                        rangeColumnList.contains(getIndexColumn(index, matchedPos))) {
+                        matchedPos ++;
+                    }
+                    
+                    // Pick the index with the biggest matchedPos.
+                    if (maxMatchedPos < matchedPos) {
+                        maxMatchedPos = matchedPos;
+                        maxMatchedIndex = index;
+                    }
+                }
+            }
+            
+            if (maxMatchedIndex != null) {
+                // Find a maximum matched index, from the set of indexes to use
+                // and columns to match
+                for (int i = 0; i < maxMatchedPos; i++) {
+                    // remember which index a column is mapped to.
+                    CwmColumn matchedCol = getIndexColumn(maxMatchedIndex, i); 
+                    col2IndexMap.put(matchedCol, maxMatchedIndex);
+                    
+                    // remove matched columns from the set.
+                    if (!pointColumnList.remove(matchedCol)) {
+                        // last column might come from the interval list.
+                        assert(rangeColumnList.remove(matchedCol));
+                    }
+                }
+                
+                // remove matched index from the set.
+                indexSet.remove(maxMatchedIndex);
+                
+                // remember for each matched index, how many positions are matched.
+                index2PosMap.put(maxMatchedIndex, new Integer(maxMatchedPos));
+            } else {
+                // no more match possible, get out of here
+                matchedAll = true;
+            }
+        }
+        
+        Iterator iter = indexSet.iterator();
+        
+        // Process the columns with range predicates:
+        // Simple assign the shortest index with matching first key column
+        int maxMatchedPos = 1;
+        while (rangeColumnList.size() > 0 && iter.hasNext()) {
+            FemLocalIndex index = (FemLocalIndex) iter.next();
+            CwmColumn firstCol = getIndexColumn(index, maxMatchedPos - 1);
+            if ((firstCol != null) && rangeColumnList.contains(firstCol)) {
+                col2IndexMap.put(firstCol, index);
+                index2PosMap.put(index, new Integer(maxMatchedPos));
+                rangeColumnList.remove(firstCol);
+                iter.remove();
+            }
+        }
+        
+        return index2PosMap;
+    }
+    
+    public static class IndexLengthComparator implements Comparator<FemLocalIndex>
+    {
+        IndexLengthComparator()
+        {
+        }
+        
+        public int compare(FemLocalIndex index1, FemLocalIndex index2)
+        {
+            int compRes =
+                (((FemLocalIndex)index1).getIndexedFeature().size() -
+                    ((FemLocalIndex)index2).getIndexedFeature().size());
+            
+            if (compRes == 0) {
+                compRes = index1.getStorageId().compareTo(index2.getStorageId());
+            }
+            
+            return compRes;
+        }
+        
+        public boolean equals(Object obj)
+        {
+            return (obj instanceof IndexLengthComparator);
+        }
+    }
+    
+    public CwmColumn getIndexColumn(
+        FemLocalIndex index,
+        int position)
+    {
+        List indexedFeatures = index.getIndexedFeature();
+        
+        if (position < 0 || position >= indexedFeatures.size()) {
+            return null;
+        }
+        
+        CwmIndexedFeature indexedFeature =
+            (CwmIndexedFeature) indexedFeatures.get(position);
+        
+        return ((CwmColumn) indexedFeature.getFeature());
+    }
+    
+    public boolean testIndexColumn(
+        FemLocalIndex index,
+        int position,
+        CwmColumn column)
+    {
+        if (!column.equals(getIndexColumn(index, position))) {
+            return false;
+        }
+        return true;
+    }
+    
+    public List<FemLocalIndex> getUnclusteredIndexes()
+    {
+        return unclusteredIndexes;
+    }
 }
 
-// End LcsIndexGuide.java
+//End LcsIndexGuide.java

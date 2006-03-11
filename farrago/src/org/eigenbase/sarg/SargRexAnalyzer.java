@@ -53,13 +53,21 @@ public class SargRexAnalyzer
 
     private List<SargExpr> exprStack;
 
+    private List<RexNode> rexCFList;
+
+    private List<RexNode> rexPostFilterList;
+
+    private List<SargBinding> sargBindingList;
+
+    private Map<SargExpr, RexNode> sarg2RexMap;
+
     SargRexAnalyzer(
         SargFactory factory)
     {
         this.factory = factory;
 
         convertletMap = new HashMap<SqlOperator, CallConvertlet>();
-        
+
         registerConvertlet(
             SqlStdOperatorTable.equalsOperator,
             new ComparisonConvertlet(
@@ -113,6 +121,185 @@ public class SargRexAnalyzer
         convertletMap.put(op, convertlet);
     }
 
+    /**
+     * Decompose a rex predicate into list of RexNodes that are AND'ed together
+     *
+     * @param rexPredicate predicate to be analyzed
+     */
+    public void decompCF(RexNode rexPredicate)
+    {
+        if (rexPredicate.isA(RexKind.And)) {
+            final RexNode[] operands = ((RexCall) rexPredicate).getOperands();
+            for (int i = 0; i < operands.length; i++) {
+                RexNode operand = operands[i];
+                decompCF(operand);
+            }
+        } else {
+            rexCFList.add(rexPredicate);            
+        }
+    }
+
+    /**
+     * Reconstruct a rex predicate from a list of SargExprs which will be 
+     * AND'ed together.
+     */
+    public void recompCF()
+    {
+        SargBinding currBinding, nextBinding;
+        RexInputRef currRef, nextRef;
+        SargExpr    currSargExpr, nextSargExpr;
+        RexNode     currAndNode;
+        boolean     recomp;
+        ListIterator iter;
+        
+        for (int i = 0; i < sargBindingList.size(); i++) {
+            currBinding  = sargBindingList.get(i);
+            currRef      = currBinding.getInputRef();
+            currSargExpr = currBinding.getExpr();
+            currAndNode = sarg2RexMap.get(currSargExpr);
+
+            // don't need this anymore
+            // will be have new mapping put back if currSargExpr remain
+            // unchanged.
+            sarg2RexMap.remove(currSargExpr);
+
+            recomp = false;
+
+            // search the rest of the list to find SargExpr on the same col.
+            iter = sargBindingList.listIterator(i + 1);
+
+            while (iter.hasNext()) {
+                nextBinding  = (SargBinding) iter.next();
+                nextRef      = nextBinding.getInputRef();
+                nextSargExpr = nextBinding.getExpr();
+
+                if (nextRef.getIndex() == currRef.getIndex()) {
+                    // build new SargExpr
+                    SargSetExpr expr =
+                        factory.newSetExpr(currSargExpr.getDataType(), 
+                            SargSetOperator.INTERSECTION);
+                    expr.addChild(currSargExpr);
+                    expr.addChild(nextSargExpr);
+
+                    // build new RexNode
+                    currAndNode =
+                        factory.getRexBuilder().makeCall(
+                            SqlStdOperatorTable.andOperator,
+                            currAndNode,
+                            sarg2RexMap.get(nextSargExpr));
+
+                    currSargExpr = expr;
+
+                    sarg2RexMap.remove(nextSargExpr);
+                    iter.remove();
+
+                    recomp = true;
+                }
+            }
+
+            if (recomp) {
+                SargBinding newBinding =  new SargBinding(currSargExpr, currRef);
+                sargBindingList.remove(i);
+                sargBindingList.add(i, newBinding);
+            }
+
+            sarg2RexMap.put(currSargExpr, currAndNode);
+        }   
+    }
+
+    /**
+     * Analyzes a rex predicate.
+     *
+     * @param rexPredicate predicate to be analyzed
+     *
+     * @return a list of SargBindings contained in the input rex predicate 
+     */
+    public List<SargBinding> analyzeAll(RexNode rexPredicate)
+    {
+        rexCFList = new ArrayList<RexNode>();
+        sargBindingList = new ArrayList<SargBinding>();
+        sarg2RexMap = new HashMap<SargExpr, RexNode>();
+        rexPostFilterList = new ArrayList<RexNode>();
+
+        SargBinding sargBinding;
+
+        // Flatten out the RexNode tree into a list of terms that
+        // are AND'ed together
+        decompCF(rexPredicate);
+
+        for (RexNode rexPred : rexCFList) {
+        	sargBinding = analyze(rexPred);
+            if (sargBinding != null) {
+                sargBindingList.add(sargBinding);
+                sarg2RexMap.put(sargBinding.getExpr(), rexPred);
+            } else {
+                rexPostFilterList.add(rexPred);
+            }
+        }
+
+        // Reset the state variables used during analyze, just for sanity sake.
+        failed = false;
+        boundInputRef = null;
+        clearLeaf();
+
+        // Combine the AND terms back together.
+        recompCF();
+
+        return sargBindingList;
+    }
+
+
+    /**
+     * Reconstruct a rex predicate from the non-sargable filter predicates
+     * which are AND'ed together.
+     * 
+     * @return the rex predicate reconstructed from the non-sargable predicates.
+     */
+    public RexNode getPostFilterRexNode()
+    {
+        if (rexPostFilterList.isEmpty()) {
+            return null;
+        }
+
+        RexNode newAndNode = rexPostFilterList.get(0);
+ 
+        for (int i = 1; i < rexPostFilterList.size(); i++) {
+            newAndNode =
+                factory.getRexBuilder().makeCall(
+                    SqlStdOperatorTable.andOperator,
+                    newAndNode,
+                    rexPostFilterList.get(i));
+        }
+
+        return newAndNode;
+    }
+
+    /**
+     * Reconstruct a rex predicate from a list of SargBindings which are 
+     * AND'ed together.
+     * 
+     * @param residualSargList list of SargBindings to be converted.
+     * 
+     * @return the rex predicate reconstructed from the list of SargBindings.
+     */
+    public RexNode getResidualSargRexNode(List<SargBinding> residualSargList)
+    {
+        if (residualSargList.isEmpty()) {
+            return null;
+        }
+
+        RexNode newAndNode = sarg2RexMap.get(residualSargList.get(0).getExpr());
+
+        for (int i = 1; i < residualSargList.size(); i++) {
+            RexNode nextNode= sarg2RexMap.get(residualSargList.get(i).getExpr());
+            newAndNode =
+                factory.getRexBuilder().makeCall(
+                    SqlStdOperatorTable.andOperator,
+                    newAndNode, nextNode);
+        }
+        return newAndNode;
+    }
+    
     /**
      * Analyzes a rex predicate.
      *
