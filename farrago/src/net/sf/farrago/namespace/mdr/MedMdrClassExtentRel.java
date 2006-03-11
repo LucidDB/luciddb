@@ -167,17 +167,6 @@ class MedMdrClassExtentRel extends TableAccessRelBase implements JavaRel
         return collectionExpression;
     }
     
-    public Expression getIteratorExpression()
-    {
-        Expression collectionExpression = getCollectionExpression();
-        
-        Expression iterExpression =
-            new MethodCall(collectionExpression, "iterator",
-                new ExpressionList());
-
-        return iterExpression;
-    }
-
     // implement RelNode
     public ParseTree implement(JavaRelImplementor implementor)
     {
@@ -195,9 +184,13 @@ class MedMdrClassExtentRel extends TableAccessRelBase implements JavaRel
                 getCluster().getRexBuilder());
 
         if (!CallingConvention.ENABLE_NEW_ITER) {
-            Expression iterExpression = getIteratorExpression();
+            Expression collectionExpression = getCollectionExpression();
+            Expression adapterExp = new AllocationExpression(
+                OJUtil.typeNameForClass(RestartableCollectionIterator.class),
+                new ExpressionList(
+                    collectionExpression));
             return IterCalcRel.implementAbstract(
-                implementor, this, iterExpression, varInputRow, inputRowType,
+                implementor, this, adapterExp, varInputRow, inputRowType,
                 outputRowType, program);
         } else {
             Expression collectionExpression = getCollectionExpression();
