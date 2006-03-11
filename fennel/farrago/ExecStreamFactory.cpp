@@ -159,7 +159,7 @@ void ExecStreamFactory::visit(ProxyJavaSinkStreamDef &streamDef)
     JavaSinkExecStreamParams params;
     readExecStreamParams(params, streamDef);
     params.pStreamGraphHandle = pStreamGraphHandle;
-    params.javaFennelPipeIterId = streamDef.getStreamId();
+    params.javaFennelPipeTupleIterId = streamDef.getStreamId();
     embryo.init(new JavaSinkExecStream(), params);
 }
 

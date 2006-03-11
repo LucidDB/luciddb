@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2004-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -33,26 +33,26 @@ JavaSinkExecStream::JavaSinkExecStream()
 {
     lastResult = EXECRC_QUANTUM_EXPIRED; // neutral
     pStreamGraphHandle = NULL;
-    javaFennelPipeIterId = 0;
-    javaFennelPipeIter = NULL;
+    javaFennelPipeTupleIterId = 0;
+    javaFennelPipeTupleIter = NULL;
 }
 
 void JavaSinkExecStream::prepare(JavaSinkExecStreamParams const &params)
 {
     SingleInputExecStream::prepare(params);
     pStreamGraphHandle = params.pStreamGraphHandle;
-    javaFennelPipeIterId = params.javaFennelPipeIterId;
+    javaFennelPipeTupleIterId = params.javaFennelPipeTupleIterId;
 
     JniEnvAutoRef pEnv;
-    jclass classFennelPipeIter = pEnv->FindClass(
-        "net/sf/farrago/runtime/FennelPipeIterator");
-    assert(classFennelPipeIter);
-    methFennelPipeIterator_write = pEnv->GetMethodID(
-        classFennelPipeIter, "write", "(Ljava/nio/ByteBuffer;I)V");
-    assert(methFennelPipeIterator_write);
-    methFennelPipeIterator_getByteBuffer = pEnv->GetMethodID(
-        classFennelPipeIter, "getByteBuffer", "(I)Ljava/nio/ByteBuffer;");
-    assert(methFennelPipeIterator_getByteBuffer);
+    jclass classFennelPipeTupleIter = pEnv->FindClass(
+        "net/sf/farrago/runtime/FennelPipeTupleIter");
+    assert(classFennelPipeTupleIter);
+    methFennelPipeTupleIter_write = pEnv->GetMethodID(
+        classFennelPipeTupleIter, "write", "(Ljava/nio/ByteBuffer;I)V");
+    assert(methFennelPipeTupleIter_write);
+    methFennelPipeTupleIter_getByteBuffer = pEnv->GetMethodID(
+        classFennelPipeTupleIter, "getByteBuffer", "(I)Ljava/nio/ByteBuffer;");
+    assert(methFennelPipeTupleIter_getByteBuffer);
 
     jclass classByteBuffer = pEnv->FindClass("java/nio/ByteBuffer");
     assert(classByteBuffer);
@@ -66,15 +66,15 @@ void JavaSinkExecStream::open(bool restart)
     FENNEL_TRACE(TRACE_FINE, "open");
     SingleInputExecStream::open(restart);
 
-    // Find our FennelPipeIterator peer
+    // Find our FennelPipeTupleIter peer
     JniEnvAutoRef pEnv;
-    jlong hJavaFennelPipeIter = pEnv->CallLongMethod(
+    jlong hJavaFennelPipeTupleIter = pEnv->CallLongMethod(
         pStreamGraphHandle->javaRuntimeContext,
         JniUtil::methGetJavaStreamHandle,
-        javaFennelPipeIterId);
-    javaFennelPipeIter = 
-        CmdInterpreter::getObjectFromLong(hJavaFennelPipeIter);
-    assert(javaFennelPipeIter);
+        javaFennelPipeTupleIterId);
+    javaFennelPipeTupleIter = 
+        CmdInterpreter::getObjectFromLong(hJavaFennelPipeTupleIter);
+    assert(javaFennelPipeTupleIter);
 }
 
 ExecStreamResult JavaSinkExecStream::execute(ExecStreamQuantum const &)
@@ -82,7 +82,7 @@ ExecStreamResult JavaSinkExecStream::execute(ExecStreamQuantum const &)
     ExecStreamBufAccessor &inAccessor = *pInAccessor;
     switch (inAccessor.getState()) {
     case EXECBUF_EMPTY:
-        // Nothing to read, so don't send anything to Java. FennelPipeIter
+        // Nothing to read, so don't send anything to Java. FennelPipeTupleIter
         // would interpret a 0-length buffer as end-of-stream, which is not the
         // case.
         FENNEL_TRACE(TRACE_FINE, "no input");
@@ -117,7 +117,7 @@ void JavaSinkExecStream::sendData(PConstBuffer src, uint size)
     // REVIEW: Could give the ByteBuffer a longer lifecycle.
     JniEnvAutoRef pEnv;
     jobject javaByteBuf = pEnv->CallObjectMethod(
-        javaFennelPipeIter, methFennelPipeIterator_getByteBuffer, size);
+        javaFennelPipeTupleIter, methFennelPipeTupleIter_getByteBuffer, size);
     assert(javaByteBuf);
 
     // copy the data, allowing upstream XO to produce more output
@@ -125,10 +125,10 @@ void JavaSinkExecStream::sendData(PConstBuffer src, uint size)
 
     // Send to the iterator, calling the method
     //   void FennelIterPipe.write(ByteBuffer, int byteCount)
-    FENNEL_TRACE(TRACE_FINE, "call FennelPipeIterator.write " << size << " bytes");
-    pEnv->CallVoidMethod(javaFennelPipeIter, methFennelPipeIterator_write,
+    FENNEL_TRACE(TRACE_FINE, "call FennelPipeTupleIter.write " << size << " bytes");
+    pEnv->CallVoidMethod(javaFennelPipeTupleIter, methFennelPipeTupleIter_write,
                          javaByteBuf, size);
-    FENNEL_TRACE(TRACE_FINE, "FennelPipeIterator.write returned");
+    FENNEL_TRACE(TRACE_FINE, "FennelPipeTupleIter.write returned");
 }
 
 void JavaSinkExecStream::stuffByteBuffer(jobject byteBuffer, PConstBuffer src, uint size)
@@ -156,12 +156,12 @@ void JavaSinkExecStream::closeImpl()
     FENNEL_TRACE(TRACE_FINE, "closing");
 
     // If java peer is waiting for more data, send it a final EOS
-    if (javaFennelPipeIter && (lastResult != EXECRC_EOS)) {
+    if (javaFennelPipeTupleIter && (lastResult != EXECRC_EOS)) {
         FixedBuffer dummy[1];
         sendData(dummy, 0);
     }
 
-    javaFennelPipeIter = NULL;
+    javaFennelPipeTupleIter = NULL;
     SingleInputExecStream::closeImpl();
 }
 

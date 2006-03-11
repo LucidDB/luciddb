@@ -148,9 +148,7 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
 
         boolean useTransformer = false;
         if (CallingConvention.ENABLE_NEW_ITER) {
-            List ancestors = implementor.getAncestorRels(this);
-
-            if (isTransformerInput(ancestors)) {
+            if (isTransformerInput(implementor)) {
                 useTransformer = true;
             }
         }
@@ -480,8 +478,9 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
                 (childrenExp instanceof Literal &&
                     ((Literal)childrenExp).getLiteralType() == Literal.NULL) || 
                 (childrenExp instanceof MethodCall &&
-                    ((MethodCall)childrenExp).getName().startsWith("dummy")));
-
+                    ((MethodCall)childrenExp).getName().startsWith("dummy"))):
+                        childrenExp.toString();
+                
             // Register this stream def with our ancestral 
             // IteratorToFennelConverter.  Note that this converter instance
             // might appear in several branches of the planner's tree (e.g.,
@@ -524,12 +523,13 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
      * a FarragoTransform.  In other words, is one of the ancestors to
      * this rel an IteratorToFennelConverter.
      * 
-     * @param ancestors list of ancestors to this rel
+     * @param implementor implementor in use
      * @return true if this rel is an input to a FarragoTransform, false 
      *         otherwise
      */
-    private boolean isTransformerInput(List ancestors)
+    protected boolean isTransformerInput(JavaRelImplementor implementor)
     {
+        List ancestors = implementor.getAncestorRels(this);
         for(Object o: ancestors) {
             RelNode ancestor = (RelNode)o;
             

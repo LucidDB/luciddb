@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -37,7 +37,7 @@ FENNEL_BEGIN_NAMESPACE
 struct JavaSinkExecStreamParams : public SingleInputExecStreamParams
 {
     CmdInterpreter::StreamGraphHandle *pStreamGraphHandle;
-    int javaFennelPipeIterId;
+    int javaFennelPipeTupleIterId;
 };
 
 /**
@@ -51,10 +51,10 @@ class JavaSinkExecStream : public SingleInputExecStream
 {
     ExecStreamResult lastResult;
     CmdInterpreter::StreamGraphHandle *pStreamGraphHandle;
-    int javaFennelPipeIterId;
-    jobject javaFennelPipeIter;         // our java peer, a FennelPipeIterator
-    jmethodID methFennelPipeIterator_write; // its method 'write(ByteBuffer, int byteCount)'
-    jmethodID methFennelPipeIterator_getByteBuffer; // its method 'getByteBuffer(int size)'
+    int javaFennelPipeTupleIterId;
+    jobject javaFennelPipeTupleIter;         // our java peer, a FennelPipeTupleIter
+    jmethodID methFennelPipeTupleIter_write; // its method 'write(ByteBuffer, int byteCount)'
+    jmethodID methFennelPipeTupleIter_getByteBuffer; // its method 'getByteBuffer(int size)'
     jmethodID methByteBuffer_array;     // java method ByteBuffer.array()
 
     /// sends data to the java peer
