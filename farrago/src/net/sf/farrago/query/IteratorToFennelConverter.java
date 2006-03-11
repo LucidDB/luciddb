@@ -93,6 +93,8 @@ public class IteratorToFennelConverter extends ConverterRel
         super(
             cluster, CallingConventionTraitDef.instance,
             new RelTraitSet(FENNEL_EXEC_CONVENTION), child);
+        
+        childStreamDefs = new ArrayList<FemExecutionStreamDef>();
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -448,11 +450,7 @@ public class IteratorToFennelConverter extends ConverterRel
     void registerChildStreamDef(FemExecutionStreamDef childStreamDef)
     {
         assert(CallingConvention.ENABLE_NEW_ITER);
-        
-        if (childStreamDefs == null) {
-            childStreamDefs = new ArrayList<FemExecutionStreamDef>();
-        }
-        
+                
         childStreamDefs.add(childStreamDef);
     }
     
