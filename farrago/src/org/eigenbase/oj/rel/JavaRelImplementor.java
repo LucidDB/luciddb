@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2002-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -351,6 +351,12 @@ public class JavaRelImplementor implements RelImplementor
         if (parent != null) {
             assert (child == parent.getInputs()[ordinal]);
         }
+        createFrame(parent, ordinal, child);
+        return visitChildInternal(child);
+    }
+
+    protected void createFrame(RelNode parent, int ordinal, RelNode child)
+    {
         Frame frame = new Frame();
         frame.rel = child;
         frame.parent = parent;
@@ -366,7 +372,6 @@ public class JavaRelImplementor implements RelImplementor
                 mapCorrel2Frame.put(correl, frame);
             }
         }
-        return visitChildInternal(child);
     }
 
     public Object visitChildInternal(RelNode child)

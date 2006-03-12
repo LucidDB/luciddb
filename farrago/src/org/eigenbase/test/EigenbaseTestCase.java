@@ -167,6 +167,25 @@ public abstract class EigenbaseTestCase extends TestCase
     }
 
     /**
+     * Converts a TupleIter to a list.
+     */
+    protected static List toList(TupleIter tupleIter)
+    {
+        ArrayList list = new ArrayList();
+        while(true) {
+            Object o = tupleIter.fetchNext();
+            if (o == TupleIter.NoDataReason.END_OF_DATA) {
+                return list;
+            } else if (o == TupleIter.NoDataReason.UNDERFLOW) {
+                // Busy loops.
+                continue;
+            }
+            
+            list.add(o);
+        }
+    }
+
+    /**
      * Converts an enumeration to a list.
      */
     protected static List toList(Enumeration enumeration)

@@ -225,7 +225,6 @@ public class SqlToRelConverterTest extends TestCase
     public static class TesterImpl implements Tester
     {
         private RelOptPlanner planner;
-        private static final boolean Dtbug471Fixed = false;
         private SqlOperatorTable opTab;
 
         protected TesterImpl()
@@ -254,7 +253,7 @@ public class SqlToRelConverterTest extends TestCase
                 createSqlToRelConverter(
                     validator, relOptSchema, relOptConnection, typeFactory);
             final RelNode rel;
-            if (Dtbug471Fixed) {
+            if (Bug.Dt471Fixed) {
                 final SqlNode validatedQuery = validator.validate(sqlQuery);
                 rel = converter.convertQuery(validatedQuery, false, true);
             } else {

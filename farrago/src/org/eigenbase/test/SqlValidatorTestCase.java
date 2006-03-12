@@ -81,7 +81,7 @@ public class SqlValidatorTestCase extends TestCase
      * todo: Set this to true, make all the tests succeed, then remove it.
      */
     private static final boolean FailIfNoPosition =
-        SqlOperatorTests.bug315Fixed;
+        Bug.Dt315Fixed;
 
     private String buildQuery(String expression)
     {
@@ -625,7 +625,7 @@ public class SqlValidatorTestCase extends TestCase
             RelDataType actualType = getColumnType(sql);
             if (expected.startsWith("todo:")) {
                 Util.permAssert(
-                    !SqlOperatorTests.bug315Fixed,
+                    !Bug.Dt315Fixed,
                     "After bug 315 is fixed, no type should start 'todo:'");
                 return; // don't check the type for now
             }
@@ -749,7 +749,7 @@ public class SqlValidatorTestCase extends TestCase
             String sql = buildQuery(expression);
             TypeChecker typeChecker =
                 expectedType.startsWith("todo:") &&
-                !SqlOperatorTests.bug315Fixed  ?
+                !Bug.Dt315Fixed  ?
                 AbstractSqlTester.AnyTypeChecker :
                 new AbstractSqlTester.StringTypeChecker(expectedType);
             check(sql, typeChecker, new Double(expectedResult), delta);
@@ -778,7 +778,7 @@ public class SqlValidatorTestCase extends TestCase
             String sql = buildQuery(expression);
             TypeChecker typeChecker =
                 expectedType.startsWith("todo:") &&
-                !SqlOperatorTests.bug315Fixed ?
+                !Bug.Dt315Fixed ?
                 AbstractSqlTester.AnyTypeChecker :
                 new AbstractSqlTester.StringTypeChecker(expectedType);
             check(sql, typeChecker, result, 0);
@@ -811,7 +811,7 @@ public class SqlValidatorTestCase extends TestCase
         {
             // After bug 315 is fixed, take this assert out: the other assert
             // will be sufficient.
-            if (!SqlOperatorTests.bug315Fixed) {
+            if (!Bug.Dt315Fixed) {
                 assertTrue(
                     "All negative tests must contain an error location",
                     expression.indexOf('^') >= 0);
