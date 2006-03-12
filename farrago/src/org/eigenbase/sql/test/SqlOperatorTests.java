@@ -26,6 +26,7 @@ import junit.framework.TestCase;
 import org.eigenbase.sql.SqlJdbcFunctionCall;
 import org.eigenbase.sql.SqlOperator;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.util.Bug;
 
 import java.util.regex.Pattern;
 import java.math.BigDecimal;
@@ -88,42 +89,30 @@ import static org.eigenbase.util.TestUtil.NL;
  */
 public abstract class SqlOperatorTests extends TestCase
 {
-    /**
-     * Remove this constant when dtbug 315 has been fixed.
-     */
-    public static final boolean bug315Fixed = false;
-
-    /**
-     * Whether <a href="http://jirahost.eigenbase.org:8080/browse/FNL-3">issue
-     * Fnl-3</a> is fixed.
-     */
-    public static final boolean issueFnl3Fixed = false;
-    
-    /**
-     * Whether <a href="http://jirahost.eigenbase.org:8080/browse/FRG-26">
-     * issue FRG-26</a> is fixed.
-     */
-    public static final boolean issueFrg26Fixed = false;
-
-    // TODO: Change message when issueFnl3Fixed to something like
+    // TODO: Change message when Fnl3Fixed to something like
     // "Invalid character for cast: PC=0 Code=22018"
-    public static final String invalidCharMessage = "(?s).*";
+    public static final String invalidCharMessage =
+        Bug.Fnl3Fixed ? null : "(?s).*";
 
-    // TODO: Change message when issueFnl3Fixed to something like
+    // TODO: Change message when Fnl3Fixed to something like
     // "Overflow during calculation or cast: PC=0 Code=22003"
-    public static final String outOfRangeMessage = "(?s).*";
+    public static final String outOfRangeMessage =
+        Bug.Fnl3Fixed ? null : "(?s).*";
 
-    // TODO: Change message when issueFnl3Fixed to something like
+    // TODO: Change message when Fnl3Fixed to something like
     // "Division by zero: PC=0 Code=22012"
-    public static final String divisionByZeroMessage = "(?s).*";
+    public static final String divisionByZeroMessage =
+        Bug.Fnl3Fixed ? null : "(?s).*";
 
-    // TODO: Change message when issueFnl3Fixed to something like
+    // TODO: Change message when Fnl3Fixed to something like
     // "String right truncation: PC=0 Code=22001"
-    public static final String stringTruncMessage = "(?s).*";
+    public static final String stringTruncMessage =
+        Bug.Fnl3Fixed ? null : "(?s).*";
 
-    // TODO: Change message when issueFnl3Fixed to something like
+    // TODO: Change message when Fnl3Fixed to something like
     // "Invalid datetime format: PC=0 Code=22007"
-    public static final String badDatetimeMessage = "(?s).*";
+    public static final String badDatetimeMessage =
+        Bug.Fnl3Fixed ? null : "(?s).*";
 
     public static final String literalOutOfRangeMessage =
             "(?s).*Numeric literal.*out of range.*";
@@ -707,7 +696,7 @@ public abstract class SqlOperatorTests extends TestCase
 
         // string to integer
         getTester().checkScalarExact("cast('6543' as integer)", "6543");
-        if (issueFrg26Fixed) {
+        if (Bug.Frg26Fixed) {
             getTester().checkScalarExact("cast(' -123 ' as int)", "-123");
         }
         getTester().checkScalarExact(
@@ -1787,7 +1776,7 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkNull("trim(cast(null as varchar(1)) from 'a')");
         getTester().checkNull("trim('a' from cast(null as varchar(1)))");
 
-        if (issueFnl3Fixed) {
+        if (Bug.Fnl3Fixed) {
             // SQL:2003 6.29.9: trim string must have length=1.
             // Failure occurs at runtime.
             //
