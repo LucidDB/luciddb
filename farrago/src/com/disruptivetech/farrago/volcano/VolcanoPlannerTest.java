@@ -207,6 +207,68 @@ public class VolcanoPlannerTest extends TestCase
     }
 
     /**
+     * This doesn't work because BadRemoveSingleRule attempts to use a pattern
+     * which spans calling conventions, which doesn't work in general.
+     */
+    public void _testRemoveSingleBad()
+    {
+        VolcanoPlanner planner = new VolcanoPlanner();
+        planner.ambitious = true;
+        planner.addRelTraitDef(CallingConventionTraitDef.instance);
+
+        planner.addRule(new PhysLeafRule());
+        planner.addRule(new BadRemoveSingleRule());
+
+        NoneLeafRel leafRel = new NoneLeafRel(
+                newCluster(planner),
+                "a");
+        NoneSingleRel singleRel =
+            new NoneSingleRel(
+                leafRel.getCluster(),
+                leafRel);
+        RelNode convertedRel =
+            planner.changeTraits(
+                singleRel, new RelTraitSet(PHYS_CALLING_CONVENTION));
+        planner.setRoot(convertedRel);
+        RelNode result = planner.chooseDelegate().findBestExp();
+        assertTrue(result instanceof PhysLeafRel);
+        PhysLeafRel resultLeaf = (PhysLeafRel) result;
+        assertEquals("c", resultLeaf.getLabel());
+    }
+
+    /**
+     * This works (in contrast to testRemoveSingleBad) because
+     * it uses a completely-physical pattern (requiring 
+     * GoodSingleRule to fire first).
+     */
+    public void testRemoveSingleGood()
+    {
+        VolcanoPlanner planner = new VolcanoPlanner();
+        planner.ambitious = true;
+        planner.addRelTraitDef(CallingConventionTraitDef.instance);
+
+        planner.addRule(new PhysLeafRule());
+        planner.addRule(new GoodSingleRule());
+        planner.addRule(new GoodRemoveSingleRule());
+
+        NoneLeafRel leafRel = new NoneLeafRel(
+                newCluster(planner),
+                "a");
+        NoneSingleRel singleRel =
+            new NoneSingleRel(
+                leafRel.getCluster(),
+                leafRel);
+        RelNode convertedRel =
+            planner.changeTraits(
+                singleRel, new RelTraitSet(PHYS_CALLING_CONVENTION));
+        planner.setRoot(convertedRel);
+        RelNode result = planner.chooseDelegate().findBestExp();
+        assertTrue(result instanceof PhysLeafRel);
+        PhysLeafRel resultLeaf = (PhysLeafRel) result;
+        assertEquals("c", resultLeaf.getLabel());
+    }
+
+    /**
      * Tests whether planner correctly notifies listeners of events.
      */
     public void testListener()
@@ -554,8 +616,11 @@ public class VolcanoPlannerTest extends TestCase
     }
 
     // NOTE:  BadSingleRule doesn't work because it explicitly specifies
-    // PhysLeafRel rather than RelNode for the single input.  I'm
-    // not sure if this should work (it does in other contexts)?
+    // PhysLeafRel rather than RelNode for the single input.
+    // Since the PhysLeafRel is in a different subset from the original
+    // NoneLeafRel, BadSingleRule never sees it.  (GoodSingleRule
+    // sees the NoneLeafRel instead and fires off of that; later
+    // the NoneLeafRel gets converted into a PhysLeafRel).
     private static class BadSingleRule extends RelOptRule
     {
         BadSingleRule()
@@ -580,7 +645,7 @@ public class VolcanoPlannerTest extends TestCase
             RelNode childRel = call.rels[1];
             RelNode physInput =
                 mergeTraitsAndConvert(
-                    singleRel.getTraits(), PHYS_CALLING_CONVENTION, childRel);                
+                    singleRel.getTraits(), PHYS_CALLING_CONVENTION, childRel);
             call.transformTo(
                 new PhysSingleRel(
                     singleRel.getCluster(),
@@ -612,6 +677,64 @@ public class VolcanoPlannerTest extends TestCase
             call.transformTo(new PhysLeafRel(
                     childRel.getCluster(),
                     "b"));
+        }
+    }
+
+    private static class GoodRemoveSingleRule extends RelOptRule
+    {
+        GoodRemoveSingleRule()
+        {
+            super(new RelOptRuleOperand(
+                    PhysSingleRel.class,
+                    new RelOptRuleOperand [] {
+                        new RelOptRuleOperand(PhysLeafRel.class, null)
+                    }));
+        }
+
+        // implement RelOptRule
+        public CallingConvention getOutConvention()
+        {
+            return PHYS_CALLING_CONVENTION;
+        }
+
+        // implement RelOptRule
+        public void onMatch(RelOptRuleCall call)
+        {
+            PhysSingleRel singleRel = (PhysSingleRel) call.rels[0];
+            PhysLeafRel leafRel = (PhysLeafRel) call.rels[1];
+            call.transformTo(
+                new PhysLeafRel(
+                    singleRel.getCluster(),
+                    "c"));
+        }
+    }
+
+    private static class BadRemoveSingleRule extends RelOptRule
+    {
+        BadRemoveSingleRule()
+        {
+            super(new RelOptRuleOperand(
+                    NoneSingleRel.class,
+                    new RelOptRuleOperand [] {
+                        new RelOptRuleOperand(PhysLeafRel.class, null)
+                    }));
+        }
+
+        // implement RelOptRule
+        public CallingConvention getOutConvention()
+        {
+            return PHYS_CALLING_CONVENTION;
+        }
+
+        // implement RelOptRule
+        public void onMatch(RelOptRuleCall call)
+        {
+            NoneSingleRel singleRel = (NoneSingleRel) call.rels[0];
+            PhysLeafRel leafRel = (PhysLeafRel) call.rels[1];
+            call.transformTo(
+                new PhysLeafRel(
+                    singleRel.getCluster(),
+                    "c"));
         }
     }
 
