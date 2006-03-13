@@ -181,9 +181,8 @@
   </target>
 
   <target name="test" depends="createCatalog,buildJdbcPlugin">
-    <antcall target="shortregSanity"/>
     <antcall target="txn" />
-    <antcall target="bh" />
+    <antcall target="bhShortregSanity" />
     <ant dir="test/sql/udr/udf" target="test"/>
     <ant dir="test/sql/udr/udx" target="test"/>
   </target>
@@ -200,7 +199,7 @@
     <ant dir="test/sql/bench" target="testAllConfigs"/>
   </target>
   
-  <target name="bh">
+  <target name="bhShortregSanity">
     <blackhawk.fork basedir="test/sql/shortreg" 
       testscript="test.xml"
       classpathref="test.classpath"/>
@@ -426,14 +425,10 @@
   <target name="checkApplibPluginUptodate">
     <uptodate property="plugin.applib.uptodate"
       targetfile="${luciddb.plugin.dir}/applib.jar">
-      <srcfiles dir="${luciddb.dir}/src">
+      <srcfiles dir="${luciddb.dir}/src"> 
         <include name="**/applib/**/*.java"/>
         <include name="**/applib/**/*.xml"/>
       </srcfiles>
-      <mapper 
-        type="glob" 
-        from="*.java" 
-        to="${applib.dir}/**/applib/*.class"/>
     </uptodate>
   </target>
 
@@ -479,7 +474,7 @@
             sqltest.classpath="${emma.test.classpath}"/>
   </target>
 
-  <target name="txn" depends="compile">
+  <target name="txn">
     <filelist dir="${testsrc.dir}/txn" id="filelist.txnsql"
       files="negative.sql,rollback.sql"/>
     <pathconvert property="filelist.txnsql" refid="filelist.txnsql"
