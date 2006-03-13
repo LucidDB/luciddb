@@ -93,17 +93,25 @@ public:
 };
 
 /**
- * An implementation of JniEnvRef which can be used in contexts where
- * no JNIEnv * is available for initialization.
+ * An implementation of JniEnvRef which can be used in contexts where no JNIEnv
+ * is available yet.  When an environment is already available, it is used
+ * automatically, but when unavailable, this class takes care of attaching the
+ * thread (in the constructor) and detaching it (in the destructor).
+ * For threads created within Fennel, attach/detach can be optimized
+ * by allocating a JniEnvAutoRef on a thread's initial stack frame
+ * so that it will be available to all methods called.
  */
 class JniEnvAutoRef : public JniEnvRef
 {
+    bool needDetach;
+    
 public:
     /**
-     * Default constructor:  use thread-local JNIEnv pointer.
+     * Uses GetEnv to access current thread's JNIEnv pointer.
      */
     explicit JniEnvAutoRef();
 
+    ~JniEnvAutoRef();
 };
 
 class ConfigMap;
@@ -171,13 +179,22 @@ class JniUtil
     static jmethodID methToString;
 
     /**
-     * Gets the JNIEnv for the current thread.  Can be used in contexts
+     * Attaches a JNIEnv for the current thread.  Can be used in contexts
      * where the JNIEnv hasn't been passed down from the native entry point.
+     *
+     * @param needDetach receives true if thread needs to be detached;
+     * false if it was already attached on entry
      *
      * @return current thread's JNIEnv
      */
-    static JNIEnv *getJavaEnv();
+    static JNIEnv *getAttachedJavaEnv(bool &needDetach);
 
+    /**
+     * Detaches the JNIEnv for the current thread (undoes effect
+     * of getAttachedJavaEnv in the case where needDetach received true).
+     */
+    static void detachJavaEnv();
+    
     /**
      * Counter for all handles opened by Farrago.
      */
