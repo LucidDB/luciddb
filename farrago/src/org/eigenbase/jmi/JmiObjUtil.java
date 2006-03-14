@@ -94,9 +94,25 @@ public abstract class JmiObjUtil
                 continue;
             }
             Object srcVal = map.get(attr.getName());
+
+            Object oldVal = dst.refGetValue(attr);
+            
+            if ((oldVal == null) && (srcVal == null)) {
+            	continue;
+            }
+            if ((oldVal != null) && (oldVal.equals(srcVal))) {
+            	continue;
+            }
+            
             if (srcVal instanceof RefObject) {
                 RefObject srcValObj = (RefObject) srcVal;
                 if (srcValObj.refImmediateComposite() != null) {
+                	RefObject oldValRef = (RefObject) oldVal;
+                	
+                	if (compositeEquals(oldValRef, srcValObj)) {
+                		continue;
+                	}
+                		                	
                     // Trying to copy this directly would lead
                     // to a CompositionViolationException.  Instead,
                     // clone it and reference the clone instead.
@@ -107,21 +123,30 @@ public abstract class JmiObjUtil
 
                     // Also have to refDelete the old value if any,
                     // otherwise it will become garbage.
-                    RefObject oldVal = (RefObject) dst.refGetValue(attr);
-                    if (oldVal != null) {
+                    
+                    if (oldValRef != null) {
                         // Nullify reference before deleting oldVal,
                         // otherwise the next refSetValue complains.
                         dst.refSetValue(attr, null);
-                        oldVal.refDelete();
+                        oldValRef.refDelete();
                     }
                 }
             }
+
             dst.refSetValue(
                 attr,
                 srcVal);
         }
     }
 
+    private static boolean compositeEquals(RefObject obj1, RefObject obj2) {
+    	SortedMap map1 = getAttributeValues(obj1);
+    	SortedMap map2 = getAttributeValues(obj2);
+    	
+    	return map1.equals(map2);
+    }
+    
+    
     /**
      * Gets a List of instance-level StructuralFeatures for a RefClass.
      *
