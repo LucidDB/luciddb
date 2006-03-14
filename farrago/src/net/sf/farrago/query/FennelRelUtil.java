@@ -40,8 +40,6 @@ import org.eigenbase.sql.type.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sarg.*;
 
-import sun.security.krb5.internal.crypto.t;
-
 /**
  * Static utilities for FennelRel implementations.
  *
