@@ -44,7 +44,7 @@ import java.util.regex.Pattern;
 
 
 /**
- * FarragoSqlOperatorsTest runs operator tests defined in
+ * FarragoSqlOperatorsSuite runs operator tests defined in
  * {@link SqlOperatorTests} against a Farrago database.
  *
  * <p>The entry point is the {@link #suite} method.
@@ -53,7 +53,7 @@ import java.util.regex.Pattern;
  * @since May 25, 2004
  * @version $Id$
  */
-public class FarragoSqlOperatorsTest
+public class FarragoSqlOperatorsSuite
 {
 
     //~ Instance fields -------------------------------------------------------
@@ -61,7 +61,7 @@ public class FarragoSqlOperatorsTest
 
     //~ Constructors ----------------------------------------------------------
 
-    private FarragoSqlOperatorsTest() {}
+    private FarragoSqlOperatorsSuite() {}
 
     //~ Methods ---------------------------------------------------------------
 
@@ -427,4 +427,4 @@ public class FarragoSqlOperatorsTest
     }
 }
 
-// End FarragoSqlOperatorsTest.java
+// End FarragoSqlOperatorsSuite.java
