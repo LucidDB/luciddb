@@ -66,6 +66,12 @@ public abstract class Bug
      */
     public static final boolean Fnl3Fixed = false;
 
+    /**
+     * Whether <a href="http://jirahost.eigenbase.org:8080/browse/FRG-72">issue
+     * Frg-72</a> is fixed.
+     */
+    public static final boolean Frg72Fixed = false;
+
     public static final boolean Dt269Fixed = false;
 
     public static final boolean Dt315Fixed = false;

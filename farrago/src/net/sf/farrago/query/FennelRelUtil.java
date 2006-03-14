@@ -40,6 +40,8 @@ import org.eigenbase.sql.type.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sarg.*;
 
+import sun.security.krb5.internal.crypto.t;
+
 /**
  * Static utilities for FennelRel implementations.
  *
@@ -678,12 +680,19 @@ public abstract class FennelRelUtil
             oneRowRel, tuple.toArray(RexNode.EMPTY_ARRAY), null);
 
         // For dynamic parameters, add a filter to remove nulls, since they can
-        // never match in a comparison.  FIXME:  This isn't quite right,
-        // since the other bound may not be a dynamic parameter.
-        if ((tuple.get(1) instanceof RexDynamicParam)
-            || (tuple.get(3) instanceof RexDynamicParam))
-        {
-            keyRel = RelOptUtil.createNullFilter(keyRel, null);
+        // never match in a comparison.
+        ArrayList<Integer> filterFieldOrdinals = new ArrayList<Integer>(2);
+        for(int ordinal = 0; ordinal < tuple.size(); ordinal++) {
+            if (tuple.get(ordinal) instanceof RexDynamicParam) {
+                filterFieldOrdinals.add(ordinal);
+            }
+        }
+        if (!filterFieldOrdinals.isEmpty()) {
+            keyRel = 
+                RelOptUtil.createNullFilter(
+                    keyRel, 
+                    filterFieldOrdinals.toArray(
+                        new Integer[filterFieldOrdinals.size()]));
         }
         
         // Generate code to cast the keys to the index column type.
