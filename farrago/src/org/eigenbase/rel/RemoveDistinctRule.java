@@ -37,6 +37,12 @@ public class RemoveDistinctRule extends RelOptRule
 
     public RemoveDistinctRule()
     {
+        // REVIEW jvs 14-Mar-2006: We have to explicitly mention the child here
+        // to make sure the rule re-fires after the child changes (e.g. via
+        // RemoveTrivialProjectRule), since that may change our information
+        // about whether the child is distinct.  If we clean up the inference
+        // of distinct to make it correct up-front, we can get rid of the
+        // reference to the child here.
         super(new RelOptRuleOperand(
                 AggregateRel.class,
                 new RelOptRuleOperand [] {

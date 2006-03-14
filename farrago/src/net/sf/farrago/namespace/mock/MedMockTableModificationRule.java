@@ -48,9 +48,7 @@ class MedMockTableModificationRule extends RelOptRule
     {
         super(new RelOptRuleOperand(
                 TableModificationRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(RelNode.class, null)
-                }));
+                null));
     }
 
     //~ Methods ---------------------------------------------------------------

@@ -116,11 +116,13 @@
 |       FennelPullCollectRel                                                       |
 |         FennelMergeRel                                                           |
 |           FennelPullUncollectRel                                                 |
-|             FennelCalcRel(expr#0=[{inputs}], expr#1=[$cor0], output$cor0=[$t1])  |
-|               FennelValuesRel(tuples=[[{ 0 }]])                                  |
+|             IteratorToFennelConverter                                            |
+|               IterCalcRel(expr#0=[{inputs}], expr#1=[$cor0], output$cor0=[$t1])  |
+|                 IterOneRowRel                                                    |
 |           FennelPullUncollectRel                                                 |
-|             FennelCalcRel(expr#0=[{inputs}], expr#1=[$cor1], output$cor1=[$t1])  |
-|               FennelValuesRel(tuples=[[{ 0 }]])                                  |
+|             IteratorToFennelConverter                                            |
+|               IterCalcRel(expr#0=[{inputs}], expr#1=[$cor1], output$cor1=[$t1])  |
+|                 IterOneRowRel                                                    |
 +----------------------------------------------------------------------------------+
 0: jdbc:farrago:> explain plan for values multiset[1] multiset union distinct multiset[2];
 +------------------------------------------------------------------------------------+

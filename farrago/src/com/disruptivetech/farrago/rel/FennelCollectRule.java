@@ -41,9 +41,7 @@ public class FennelCollectRule extends RelOptRule {
     public FennelCollectRule() {
         super(new RelOptRuleOperand(
                 CollectRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(RelNode.class, null)
-                }));
+                null));
     }
 
     // implement RelOptRule
@@ -54,7 +52,7 @@ public class FennelCollectRule extends RelOptRule {
 
     public void onMatch(RelOptRuleCall call) {
         CollectRel collectRel = (CollectRel) call.rels[0];
-        RelNode relInput = call.rels[1];
+        RelNode relInput = collectRel.getChild();
         RelNode fennelInput =
             mergeTraitsAndConvert(
                 collectRel.getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,

@@ -122,9 +122,7 @@ public class AbstractConverter extends ConverterRel
         {
             super(new RelOptRuleOperand(
                     AbstractConverter.class,
-                    new RelOptRuleOperand [] {
-                        new RelOptRuleOperand(RelNode.class, null)
-                    }));
+                    null));
         }
 
         public void onMatch(RelOptRuleCall call)

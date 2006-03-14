@@ -53,9 +53,7 @@ public class FilterToCalcRule extends RelOptRule
     {
         super(new RelOptRuleOperand(
                 FilterRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(RelNode.class, null)
-                }));
+                null));
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -63,13 +61,7 @@ public class FilterToCalcRule extends RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
         final FilterRel filter = (FilterRel) call.rels[0];
-        final RelNode rel = call.rels[1];
-        if (rel instanceof FilterRel || rel instanceof ProjectRel
-                || rel instanceof CalcRel) {
-            // don't create a CalcRel if the input is, or is potentially, a
-            // CalcRel
-            return;
-        }
+        final RelNode rel = filter.getChild();
 
         // Create a program containing a filter.
         final RexBuilder rexBuilder = filter.getCluster().getRexBuilder();

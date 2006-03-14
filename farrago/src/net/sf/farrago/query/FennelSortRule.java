@@ -51,9 +51,7 @@ public class FennelSortRule extends RelOptRule
     {
         super(new RelOptRuleOperand(
                 SortRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(RelNode.class, null)
-                }));
+                null));
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -68,7 +66,7 @@ public class FennelSortRule extends RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
         SortRel sortRel = (SortRel) call.rels[0];
-        RelNode relInput = call.rels[1];
+        RelNode relInput = sortRel.getChild();
         RelNode fennelInput =
             mergeTraitsAndConvert(
                 sortRel.getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,

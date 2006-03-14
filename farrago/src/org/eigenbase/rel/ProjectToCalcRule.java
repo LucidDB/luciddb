@@ -59,9 +59,7 @@ public class ProjectToCalcRule extends RelOptRule
     {
         super(new RelOptRuleOperand(
                 ProjectRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(RelNode.class, null),
-                }));
+                null));
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -69,14 +67,7 @@ public class ProjectToCalcRule extends RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
         final ProjectRel project = (ProjectRel) call.rels[0];
-        final RelNode child = call.rels[1];
-        if (child instanceof FilterRel ||
-            child instanceof ProjectRel ||
-            child instanceof CalcRel) {
-            // Don't create a CalcRel if the input is, or is potentially, a
-            // CalcRel.
-            return;
-        }
+        final RelNode child = project.getChild();
         final RelDataType rowType = project.getRowType();
         final RexNode [] projectExprs = RexUtil.clone(project.exps);
         final RexProgram program =

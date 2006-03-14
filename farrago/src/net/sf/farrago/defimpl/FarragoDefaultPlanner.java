@@ -164,11 +164,6 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
                 || calcVM.equals(CalcVirtualMachineEnum.CALCVM_AUTO)) {
             // use Java code generation for calculating expressions
             planner.addRule(IterRules.IterCalcRule.instance);
-            
-            // TODO jvs 6-May-2004:  these should be redundant now, but when
-            // I remove them, some queries fail.  Find out why.
-            planner.addRule(IterRules.ProjectToIteratorRule.instance);
-            planner.addRule(IterRules.ProjectedFilterToIteratorRule.instance);
         }
 
         if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_AUTO) && fennelEnabled) {
