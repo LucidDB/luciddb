@@ -49,10 +49,7 @@ public class SwapJoinRule extends RelOptRule
     {
         super(new RelOptRuleOperand(
                 JoinRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(RelNode.class, null),
-                    new RelOptRuleOperand(RelNode.class, null)
-                }));
+                null));
     }
 
     //~ Methods ---------------------------------------------------------------

@@ -48,9 +48,7 @@ class LcsIndexBuilderRule extends RelOptRule
     {
         super(new RelOptRuleOperand(
             FarragoIndexBuilderRel.class,
-            new RelOptRuleOperand [] {
-                new RelOptRuleOperand(RelNode.class, null)
-            }));
+            null));
     }
 
     // implement RelOptRule
@@ -69,7 +67,7 @@ class LcsIndexBuilderRule extends RelOptRule
             return;
         }
 
-        RelNode inputRel = call.rels[1];
+        RelNode inputRel = builderRel.getChild();
         RelNode fennelInput =
             mergeTraitsAndConvert(
                 call.rels[0].getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,

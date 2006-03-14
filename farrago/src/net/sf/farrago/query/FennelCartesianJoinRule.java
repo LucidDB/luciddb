@@ -40,10 +40,7 @@ public class FennelCartesianJoinRule extends RelOptRule
     {
         super(new RelOptRuleOperand(
                 JoinRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(RelNode.class, null),
-                    new RelOptRuleOperand(RelNode.class, null)
-                }));
+                null));
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -59,8 +56,8 @@ public class FennelCartesianJoinRule extends RelOptRule
     {
         JoinRel joinRel = (JoinRel) call.rels[0];
 
-        RelNode leftRel = call.rels[1];
-        RelNode rightRel = call.rels[2];
+        RelNode leftRel = joinRel.getLeft();
+        RelNode rightRel = joinRel.getRight();
 
         if ((joinRel.getJoinType() != JoinRelType.INNER) &&
             (joinRel.getJoinType() != JoinRelType.LEFT)) {

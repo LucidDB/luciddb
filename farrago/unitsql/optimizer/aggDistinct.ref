@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/optimizer/agg.sql#5 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/aggDistinct.sql#1 $
 0: jdbc:farrago:> -- Test distinct aggregate queries
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'sales';
@@ -237,16 +237,19 @@ Error: From line 1, column 23 to line 1, column 25: Unknown identifier 'SAL' (st
 '              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[9, 3, 0]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 '          FennelAggRel(groupCount=[0], agg#0=[COUNT(0)])'
 '            FennelSortRel(key=[[0]], discardDuplicates=[true])'
-'              FennelCalcRel(expr#0..9=[{inputs}], $f0=[$t9])'
-'                FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'              FennelCalcRel(expr#0..2=[{inputs}], $f0=[$t0])'
+'                FennelRenameRel(fieldNames=[[$f0, $f1, $f2]])'
+'                  FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[9, 3, 0]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 '        FennelAggRel(groupCount=[0], agg#0=[COUNT(0)])'
 '          FennelSortRel(key=[[0]], discardDuplicates=[true])'
-'            FennelCalcRel(expr#0..9=[{inputs}], $f1=[$t3])'
-'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'            FennelCalcRel(expr#0..2=[{inputs}], $f1=[$t1])'
+'              FennelRenameRel(fieldNames=[[$f0, $f1, $f2]])'
+'                FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[9, 3, 0]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 '      FennelAggRel(groupCount=[0], agg#0=[SUM(0)], agg#1=[SUM(0)])'
 '        FennelSortRel(key=[[0]], discardDuplicates=[true])'
-'          FennelCalcRel(expr#0..9=[{inputs}], $f2=[$t0])'
-'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'          FennelCalcRel(expr#0..2=[{inputs}], $f2=[$t2])'
+'            FennelRenameRel(fieldNames=[[$f0, $f1, $f2]])'
+'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[9, 3, 0]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select count(distinct sal + empno) + deptno, sum(distinct sal) + deptno
@@ -288,13 +291,15 @@ Error: From line 1, column 40 to line 1, column 42: Unknown identifier 'SAL' (st
 '    FennelCartesianProductRel(leftouterjoin=[false])'
 '      FennelAggRel(groupCount=[1], agg#0=[COUNT()])'
 '        FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'          FennelCalcRel(expr#0..9=[{inputs}], expr#10=[0], expr#11=[<($t2, $t10)], $f0=[$t2], $f1=[$t0], $condition=[$t11])'
-'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'          FennelCalcRel(expr#0..9=[{inputs}], $f0=[$t2], $f1=[$t0])'
+'            FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'              FennelValuesRel(tuples=[[{ '-', null, ')', 0 }]])'
 '      FennelAggRel(groupCount=[1], agg#0=[COUNT(1)])'
 '        FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '          FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
-'            FennelCalcRel(expr#0..9=[{inputs}], expr#10=[0], expr#11=[<($t2, $t10)], $f0=[$t2], $f1=[$t0], $condition=[$t11])'
-'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'            FennelCalcRel(expr#0..9=[{inputs}], $f0=[$t2], $f1=[$t0])'
+'              FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'                FennelValuesRel(tuples=[[{ '-', null, ')', 0 }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select count(distinct e.slacker and e.manager) from emps as e group by deptno;
@@ -324,13 +329,15 @@ Error: From line 1, column 40 to line 1, column 42: Unknown identifier 'SAL' (st
 '          FennelAggRel(groupCount=[1], agg#0=[SUM(1)])'
 '            FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '              FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
-'                FennelCalcRel(expr#0..9=[{inputs}], $f0=[$t2], $f1=[$t6])'
-'                  FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'                FennelCalcRel(expr#0..2=[{inputs}], proj#0..1=[{exprs}])'
+'                  FennelRenameRel(fieldNames=[[$f0, $f1, $f2]])'
+'                    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 6, 3]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 '      FennelAggRel(groupCount=[1], agg#0=[COUNT(1)])'
 '        FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '          FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
-'            FennelCalcRel(expr#0..9=[{inputs}], $f0=[$t2], $f2=[$t3])'
-'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'            FennelCalcRel(expr#0..2=[{inputs}], $f0=[$t0], $f2=[$t2])'
+'              FennelRenameRel(fieldNames=[[$f0, $f1, $f2]])'
+'                FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 6, 3]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify plans for joins
 0: jdbc:farrago:> 

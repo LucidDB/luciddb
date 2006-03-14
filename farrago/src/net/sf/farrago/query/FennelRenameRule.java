@@ -51,9 +51,7 @@ public class FennelRenameRule extends RelOptRule
     {
         super(new RelOptRuleOperand(
                 ProjectRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(RelNode.class, null)
-                }));
+                null));
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -72,7 +70,7 @@ public class FennelRenameRule extends RelOptRule
             return;
         }
 
-        RelNode inputRel = call.rels[1];
+        RelNode inputRel = project.getChild();
 
         int n = project.getProjectExps().length;
         RelDataType inputType = inputRel.getRowType();

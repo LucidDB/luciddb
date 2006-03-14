@@ -315,6 +315,10 @@ public class LcsRowScanRel extends FennelMultipleRel
         return connection;
     }
 
+    // REVIEW jvs 13-Mar-2006:  naming convention is to leave off the "get"
+    // when the attribute is already boolean, so just "isFullScan()"
+    // and "hasExtraFilter()"
+
     public boolean getIsFullScan() 
     {
         return isFullScan;

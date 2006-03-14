@@ -46,9 +46,7 @@ public class LcsTableAppendRule extends RelOptRule
     {
         super(new RelOptRuleOperand(
                 TableModificationRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(RelNode.class, null)
-                }));
+                null));
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -80,7 +78,7 @@ public class LcsTableAppendRule extends RelOptRule
             return;
         }
         
-        RelNode inputRel = call.rels[1];
+        RelNode inputRel = tableModification.getChild();
 
         // Require input types to match expected types exactly.  This
         // is accomplished by the usage of CoerceInputsRule.

@@ -1,8 +1,8 @@
 -- $Id$
 -- Test NOT NULL constraints
 
--- FIXME jvs 12-June-2005:  the error messages resulting from both
--- statements below are unhelpful.
+-- use Java calc because it gives better error messages
+alter system set "calcVirtualMachine"='CALCVM_JAVA';
 
 -- NOT NULL enforcement:  should fail
 insert into sales.depts values (null,'Nullification');

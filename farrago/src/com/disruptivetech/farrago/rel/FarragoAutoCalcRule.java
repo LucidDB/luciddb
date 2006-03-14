@@ -124,9 +124,7 @@ public class FarragoAutoCalcRule extends RelOptRule
     {
         super(new RelOptRuleOperand(
                 CalcRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(RelNode.class, null)
-                }));
+                null));
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -145,7 +143,7 @@ public class FarragoAutoCalcRule extends RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
         CalcRel calc = (CalcRel) call.rels[0];
-        RelNode relInput = call.rels[1];
+        RelNode relInput = calc.getChild();
 
         // If there's a multiset expression, let FarragoMultisetSplitter work
         // on it first.
