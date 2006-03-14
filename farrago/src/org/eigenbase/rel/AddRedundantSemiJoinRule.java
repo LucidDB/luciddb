@@ -43,20 +43,14 @@ public class AddRedundantSemiJoinRule extends RelOptRule
     {
         super(new RelOptRuleOperand(
                 JoinRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(RelNode.class, null),
-                    new RelOptRuleOperand(RelNode.class, null)             
-                }));
+                null));
     }
 
     public void onMatch(RelOptRuleCall call)
     {
         JoinRel origJoinRel = (JoinRel) call.rels[0];
-        
-        // terminate if we've already created a semijoin
-        if (call.rels[1] instanceof SemiJoinRel ||
-            call.rels[2] instanceof SemiJoinRel)
-        {
+
+        if (origJoinRel.isSemiJoinDone()) {
             return;
         }
         
@@ -69,18 +63,19 @@ public class AddRedundantSemiJoinRule extends RelOptRule
 
         RelNode semiJoin = new SemiJoinRel(
             origJoinRel.getCluster(),
-            call.rels[1],
-            call.rels[2],
+            origJoinRel.getLeft(),
+            origJoinRel.getRight(),
             origJoinRel.getCondition(),
             joinFieldOrdinals[1]);
        
         RelNode newJoinRel = new JoinRel(
             origJoinRel.getCluster(),
             semiJoin,
-            call.rels[2],
+            origJoinRel.getRight(),
             origJoinRel.getCondition(),
             JoinRelType.INNER,
-            Collections.EMPTY_SET);
+            Collections.EMPTY_SET,
+            true);
 
         call.transformTo(newJoinRel);
     }

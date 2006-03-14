@@ -68,13 +68,17 @@ public final class ExtractJoinFilterRule extends RelOptRule
             return;
         }
 
+        // NOTE jvs 14-Mar-2006:  See SwapJoinRule for why we
+        // preserve attribute semiJoinDone here.
+
         RelNode cartesianJoinRel = new JoinRel(
             joinRel.getCluster(),
             joinRel.getLeft(),
             joinRel.getRight(),
             joinRel.getCluster().getRexBuilder().makeLiteral(true),
             joinRel.getJoinType(),
-            Collections.emptySet());
+            Collections.emptySet(),
+            joinRel.isSemiJoinDone());
 
         RelNode filterRel = CalcRel.createFilter(
             cartesianJoinRel,

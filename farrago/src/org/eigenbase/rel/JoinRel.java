@@ -48,6 +48,11 @@ import org.eigenbase.rex.*;
  */
 public final class JoinRel extends JoinRelBase
 {
+    // NOTE jvs 14-Mar-2006:  Normally we don't use state like this
+    // to control rule firing, but due to the non-local nature of
+    // semijoin optimizations, it's pretty much required.
+    private final boolean semiJoinDone;
+    
     //~ Constructors ----------------------------------------------------------
 
     public JoinRel(
@@ -58,9 +63,23 @@ public final class JoinRel extends JoinRelBase
         JoinRelType joinType,
         Set variablesStopped)
     {
+        this(
+            cluster, left, right, condition, joinType, variablesStopped, false);
+    }
+
+    public JoinRel(
+        RelOptCluster cluster,
+        RelNode left,
+        RelNode right,
+        RexNode condition,
+        JoinRelType joinType,
+        Set variablesStopped,
+        boolean semiJoinDone)
+    {
         super(
             cluster, new RelTraitSet(CallingConvention.NONE), left, right,
             condition, joinType, variablesStopped);
+        this.semiJoinDone = semiJoinDone;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -73,9 +92,37 @@ public final class JoinRel extends JoinRelBase
             RelOptUtil.clone(right),
             RexUtil.clone(condition),
             joinType,
-            new HashSet(variablesStopped));
+            new HashSet(variablesStopped),
+            isSemiJoinDone());
         clone.inheritTraitsFrom(this);
         return clone;
+    }
+
+    public void explain(RelOptPlanWriter pw)
+    {
+        // NOTE jvs 14-Mar-2006: Do it this way so that semijoin state doesn't
+        // clutter things up in optimizers that don't use semijoins.
+        if (!semiJoinDone) {
+            super.explain(pw);
+            return;
+        }
+        pw.explain(
+            this,
+            new String [] {
+                "left", "right", "condition", "joinType", "semiJoinDone"
+            },
+            new Object [] {
+                joinType.name().toLowerCase(), semiJoinDone
+            });
+    }
+    
+    /**
+     * @return true if this join has already spawned a {@link SemiJoinRel}
+     * via {@link AddRedundantSemiJoinRule}; false otherwise
+     */
+    public boolean isSemiJoinDone()
+    {
+        return semiJoinDone;
     }
 }
 

@@ -54,7 +54,7 @@ public class RexUtil
 
     public static double getSelectivity(RexNode exp)
     {
-        return 0.5;
+        return 0.1;
     }
 
     /**
