@@ -86,6 +86,7 @@ void MockConsumerExecStream::prepare(
     SingleInputExecStream::prepare(params);
     saveData = params.saveData;
     echoData = params.echoData;
+    recvEOS = false;
 }
 
 void MockConsumerExecStream::open(bool restart)
@@ -94,6 +95,7 @@ void MockConsumerExecStream::open(bool restart)
     rowCount = 0;
     rowStrings.clear();
     inputTuple.compute(pInAccessor->getTupleDesc());
+    recvEOS = false;
 }
 
 
