@@ -264,6 +264,11 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         return implementingClassDecl;
     }
     
+    protected Argument[] getImplementingArgs()
+    {
+        return implementingArgs;
+    }
+    
     // implement FarragoSessionPreparingStmt
     public void postValidate(SqlNode sqlNode)
     {
