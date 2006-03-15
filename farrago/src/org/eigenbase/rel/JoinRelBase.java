@@ -100,6 +100,20 @@ public abstract class JoinRelBase extends AbstractRelNode
         return right;
     }
 
+    public static double estimateJoinedRows(
+        RelNode left, RelNode right, RexNode condition)
+    {
+        double product = left.getRows() * right.getRows();
+        // TODO:  correlation factor
+        return product * RexUtil.getSelectivity(condition);
+    }
+
+    // implement RelNode
+    public double getRows()
+    {
+        return estimateJoinedRows(left, right, condition);
+    }
+
     public void setVariablesStopped(HashSet set)
     {
         variablesStopped = set;

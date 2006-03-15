@@ -105,8 +105,15 @@ class MedMdrJoinRel extends JoinRelBase implements JavaRel
     // implement RelNode
     public double getRows()
     {
-        // REVIEW:  this assumes a one-to-many join
-        return right.getRows();
+        if (rightReference == null) {
+            // TODO:  selectivity
+            // many-to-one
+            return left.getRows();
+        } else {
+            // one-to-many:  assume a fanout of five, capped by the
+            // total number of rows on the right
+            return Math.min(5 * left.getRows(), right.getRows());
+        }
     }
 
     // implement RelNode

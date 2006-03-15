@@ -318,6 +318,14 @@ void TupleAccessor::compute(
     cbMinStorage = cbMaxStorage;
     cbMaxStorage += cbVarDataMax;
 
+    // Avoid 0-byte tuples, because it's very hard to count something
+    // that isn't there.  This bumps them up to 1-byte, which will get
+    // further bumped up to the minimum alignment unit below.
+    if (!cbMaxStorage) {
+        cbMinStorage = 1;
+        cbMaxStorage = 1;
+    }
+
     // now round the entire row width up to the next alignment boundary;
     // this only affects the end of the row, which is why it is done
     // AFTER computing cbMaxStorage based on the unaligned cbMinStorage
@@ -339,8 +347,7 @@ void TupleAccessor::initFixedAccessors(
 
 uint TupleAccessor::getBufferByteCount(PConstBuffer pBuf) const
 {
-    if (isMAXU(iLastVarEndIndirectOffset)) {
-        // fixed-width tuple
+    if (isFixedWidth()) {
         return cbMaxStorage;
     } else {
         // variable-width tuple:  use the end of the last variable-width

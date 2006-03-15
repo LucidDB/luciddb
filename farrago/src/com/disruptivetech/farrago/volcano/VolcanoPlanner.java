@@ -765,6 +765,7 @@ public class VolcanoPlanner implements RelOptPlanner
                             assert (inputSet.subsets.contains(inputSubset));
                         }
                     }
+                    pw.print(", non-cumulative rows=" + rel.getRows());
                     pw.println(", cost=" + getCost(rel));
                 }
             }

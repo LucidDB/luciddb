@@ -268,8 +268,9 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, LCSEMPS]])'
-'    FennelCalcRel(expr#0..9=[{inputs}], expr#10=[100], expr#11=[=($t0, $t10)], expr#12=[CAST($t4):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], CITY=[$t12], $condition=[$t11])'
-'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FennelCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], CITY=[$t1])'
+'      FennelCalcRel(expr#0..9=[{inputs}], expr#10=[100], expr#11=[=($t0, $t10)], CITY=[$t4], $condition=[$t11])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> !set outputformat table
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Locate a NULL value from the source table.

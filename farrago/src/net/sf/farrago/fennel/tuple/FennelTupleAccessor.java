@@ -386,6 +386,14 @@ public final class FennelTupleAccessor
         minStorage  = maxStorage;
         maxStorage += varDataMax;
 
+        // Avoid 0-byte tuples, because it's very hard to count something
+        // that isn't there.  This bumps them up to 1-byte, which will get
+        // further bumped up to the minimum alignment unit below.
+        if (maxStorage == 0) {
+            minStorage = 1;
+            maxStorage = 1;
+        }
+
         // now round the entire row width up to the next alignment boundary;
         // this only affects the end of the row, which is why it is done
         // AFTER computing maxStorage based on the unaligned minStorage

@@ -81,6 +81,13 @@ public final class SemiJoinRel extends JoinRelBase
         return clone;
     }
     
+    // implement RelNode
+    public double getRows()
+    {
+        // TODO:  correlation factor
+        return left.getRows() * RexUtil.getSelectivity(condition);
+    }
+
     /**
      * @return returns rowtype representing only the left join input
      */

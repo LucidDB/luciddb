@@ -52,8 +52,19 @@ public class RexUtil
 
     //~ Methods ---------------------------------------------------------------
 
+    /**
+     * Returns a guess for the selectivity of an expression.
+     *
+     * @param exp expression of interest, or null for none (implying
+     * a selectivity of 1.0)
+     *
+     * @return guessed selectivity
+     */
     public static double getSelectivity(RexNode exp)
     {
+        if ((exp == null) || exp.isAlwaysTrue()) {
+            return 1;
+        } 
         return 0.1;
     }
 

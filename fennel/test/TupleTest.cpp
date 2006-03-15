@@ -55,6 +55,7 @@ class TupleTest : virtual public TestBase, public TraceSource
     void testStandardTypesNetworkNullable();
     void testStandardTypesNetworkNotNull();
     void testStandardTypes(TupleFormat,bool nullable);
+    void testZeroByteTuple();
     void testDebugAccess();
 
     void traceTuple(TupleData const &tupleData)
@@ -74,6 +75,7 @@ public:
         FENNEL_UNIT_TEST_CASE(TupleTest,testStandardTypesNullable);
         FENNEL_UNIT_TEST_CASE(TupleTest,testStandardTypesNetworkNotNull);
         FENNEL_UNIT_TEST_CASE(TupleTest,testStandardTypesNetworkNullable);
+        FENNEL_UNIT_TEST_CASE(TupleTest,testZeroByteTuple);
 
         // This one should fail when TupleAccessor.cpp's DEBUG_TUPLE_ACCESS
         // is set to 1.
@@ -443,6 +445,27 @@ void TupleTest::testDebugAccess()
     // This should cause an assertion failure when TupleAccessor.cpp's
     // DEBUG_TUPLE_ACCESS is set to 1.
     tupleAccessor.setCurrentTupleBuf(buf.get());
+}
+
+void TupleTest::testZeroByteTuple()
+{
+    StandardTypeDescriptorFactory typeFactory;
+    tupleDesc.clear();
+    tupleDesc.push_back(
+        TupleAttributeDescriptor(
+            typeFactory.newDataType(STANDARD_TYPE_CHAR),
+            false,
+            0));
+    TupleAccessor tupleAccessor;
+    tupleAccessor.compute(tupleDesc);
+
+    // verify that we didn't end up with a 0-byte tuple layout,
+    // and that the min and max are equal since it's fixed-width
+    BOOST_CHECK(tupleAccessor.getMinByteCount());
+    BOOST_CHECK(tupleAccessor.getMaxByteCount());
+    BOOST_CHECK_EQUAL(
+        tupleAccessor.getMinByteCount(),
+        tupleAccessor.getMaxByteCount());
 }
 
 FENNEL_UNIT_TEST_SUITE(TupleTest);
