@@ -51,6 +51,12 @@ public class JaninoCompiler implements JavaCompiler
     // implement JavaCompiler
     public void compile()
     {
+        // REVIEW: SWZ: 3/12/2006: When this method is invoked multiple times,
+        // it creates a series of JavaSourceClassLoader objects, each with
+        // the previous as its parent ClassLoader.  If we refactored this
+        // class and its callers to specify all code to compile in one
+        // go, we could probably just use a single JavaSourceClassLoader.
+        
         // REVIEW jvs 29-Sept-2004: we used to delegate to
         // ClassLoader.getSystemClassLoader(), but for some reason that didn't
         // work when run from ant's junit task without forking.  Should

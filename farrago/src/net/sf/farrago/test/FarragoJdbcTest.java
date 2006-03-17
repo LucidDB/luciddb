@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,6 +39,7 @@ import java.sql.Date;
 
 import org.eigenbase.util14.NumberUtil;
 import org.eigenbase.util14.ConversionUtil;
+import org.eigenbase.util.Bug;
 
 /**
  * FarragoJdbcTest tests specifics of the Farrago implementation of the JDBC
@@ -2386,6 +2387,86 @@ public class FarragoJdbcTest extends FarragoTestCase
             0,
             getResultSetCount());
         preparedStmt.setString(1, null);
+        resultSet = preparedStmt.executeQuery();
+        assertEquals(
+            0,
+            getResultSetCount());
+    }
+
+    /**
+     * Tests valid usage of multiple dynamic parameters.
+     */
+    public void testMultipleDynamicParameters1()
+        throws Exception
+    {
+        // NOTE: This query tests FennelRelUtil.convertIntervalTupleToRel()'s
+        // createNullFilter call.
+        String sql = 
+            "select empid from sales.emps where deptno >= ? AND age < ?";
+        preparedStmt = connection.prepareStatement(sql);
+
+        preparedStmt.setInt(1, 20);
+        preparedStmt.setInt(2, 75);
+        resultSet = preparedStmt.executeQuery();
+        compareResultSet(Collections.singleton("1"));
+
+        preparedStmt.setInt(1, 10);
+        preparedStmt.setInt(2, 75);
+        resultSet = preparedStmt.executeQuery();
+        compareResultSet(
+            new HashSet<String>(Arrays.asList(new String[] { "30", "1" })));
+
+        preparedStmt.setInt(1, 100);
+        preparedStmt.setInt(2, 100);
+        resultSet = preparedStmt.executeQuery();
+        assertEquals(
+            0,
+            getResultSetCount());
+
+        preparedStmt.setInt(1, 0);
+        preparedStmt.setInt(2, 18);
+        resultSet = preparedStmt.executeQuery();
+        assertEquals(
+            0,
+            getResultSetCount());
+    }
+
+    /**
+     * Tests valid usage of multiple dynamic parameters.
+     */
+    public void testMultipleDynamicParameters2()
+        throws Exception
+    {
+        if (!Bug.Frg72Fixed) {
+            return;
+        }
+
+        // NOTE: This query tests FennelRelUtil.convertIntervalTupleToRel()'s
+        // createNullFilter call.
+        String sql = 
+            "select empid from sales.emps where deptno >= ? and deptno < ?";
+        preparedStmt = connection.prepareStatement(sql);
+
+        preparedStmt.setInt(1, 20);
+        preparedStmt.setInt(2, 30);
+        resultSet = preparedStmt.executeQuery();
+        compareResultSet(
+            new HashSet<String>(Arrays.asList(new String[] { "3", "1" })));
+
+        preparedStmt.setInt(1, 30);
+        preparedStmt.setInt(2, 40);
+        resultSet = preparedStmt.executeQuery();
+        compareResultSet(Collections.singleton("2"));
+
+        preparedStmt.setObject(1, null);
+        preparedStmt.setInt(2, 100);
+        resultSet = preparedStmt.executeQuery();
+        assertEquals(
+            0,
+            getResultSetCount());
+
+        preparedStmt.setInt(1, 0);
+        preparedStmt.setObject(2, null);
         resultSet = preparedStmt.executeQuery();
         assertEquals(
             0,
