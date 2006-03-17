@@ -23,6 +23,8 @@
 
 package net.sf.farrago.fennel.tuple;
 
+import java.io.Serializable;
+
 /**
  * FennelTupleAttributeDescriptor holds metadata describing a particular
  * entry in a tuple. These are contained in a FennelTupleDescriptor
@@ -31,9 +33,11 @@ package net.sf.farrago.fennel.tuple;
  * @author Mike Bennett
  * @version $Id$
  */
-public class FennelTupleAttributeDescriptor
-    implements java.io.Serializable
+public class FennelTupleAttributeDescriptor implements Serializable
 {
+    /** SerialVersionUID created with JDK 1.5 serialver tool. */
+    private static final long serialVersionUID = -4582426550989158154L;
+
     /**
      *  the FennelStoredTypeDescriptor of this attribute.
      */

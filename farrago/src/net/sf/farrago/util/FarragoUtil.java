@@ -192,6 +192,9 @@ public abstract class FarragoUtil
      */
     public static class FarragoSqlException extends SQLException
     {
+        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        private static final long serialVersionUID = -2302810435386763566L;
+
         /**
          * Original exception. Marked 'transient' so that it does not
          * prevent this exception from being serializable.
