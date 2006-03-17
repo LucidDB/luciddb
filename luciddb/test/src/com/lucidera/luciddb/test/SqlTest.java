@@ -41,7 +41,6 @@ public class SqlTest extends TestCase {
 
     String[] args;
     String sqlFile;
-    String sqlFiles;
     private OutputStream logOutputStream;
     File sqlFileSansExt;
     File logFile;
@@ -81,13 +80,7 @@ public class SqlTest extends TestCase {
             "catalog");
 
         // obtain sql-file parameter - required
-        sqlFile = System.getProperty("sql-file", null);
-        if (sqlFile == null) {
-            sqlFiles = System.getProperty("sql-files");
-            sqlFile = sqlFiles.substring(0,sqlFiles.indexOf(";"));
-            System.setProperty("sql-files",
-                sqlFiles.substring(sqlFiles.indexOf(";")+1));
-        }
+        sqlFile = System.getProperty("sql-file");
         // following parameters are not required
         String driverName = System.getProperty("jdbc-driver", "");
         username = System.getProperty("username", "");

@@ -21,7 +21,11 @@
 
 package com.lucidera.luciddb.test;
 
-import org.eigenbase.blackhawk.extension.exectask.junit.JunitExecTask;
+import java.util.Properties;
+
+import org.eigenbase.blackhawk.core.AntProperties;
+import org.eigenbase.blackhawk.core.test.*;
+import org.eigenbase.blackhawk.extension.exectask.junit.*;
 
 /**
  * Uses JUnitRunner to run a junit test.
@@ -29,19 +33,28 @@ import org.eigenbase.blackhawk.extension.exectask.junit.JunitExecTask;
 public class SqlExecTask extends JunitExecTask
 {
 
-    static String files = null;
+    String sqlfile = null;
+
+    public TestLogicTask getTestLogicTask()
+    {
+
+        Properties props = getParameters().getAll();
+        props.setProperty("sql-file", this.sqlfile);
+        BasicInternalParameters params = new BasicInternalParameters(props);
+
+        return new JunitTestLogicTask(
+            getTestClassName(),
+            params,
+            getResultHandler(),
+            getMethodNamesToRun(),
+            AntProperties.isJunitValidateMethodNamesEnabled(),
+            AntProperties.isJunitLogOnlyFailureEnabled());
+    }
 
     public void setFile(String in)
     {
         testClassName = "com.lucidera.luciddb.test.SqlTest";
-
-        if (files == null) {
-            files = in;
-        } else {
-            files = files + ";" + in;
-        }
-        
-        System.setProperty("sql-files", files);
+        this.sqlfile = in;
     }
 
 }
