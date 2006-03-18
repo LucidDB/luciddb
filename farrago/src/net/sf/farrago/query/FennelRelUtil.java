@@ -544,34 +544,40 @@ public abstract class FennelRelUtil
     }
 
     /**
-     * Pivot a list of (@link SargIntervalSequence}, with each list element
+     * Pivots a list of (@link SargIntervalSequence}, with each list element
      * representing the sequence of value intervals corresponding to a column;
-     * to a list of {@link SargInterval} lists, with each element(a list)
+     * to a list of {@link SargInterval} lists, with each element (a list)
      * representing the value intervals covering all the columns.
      * 
-     * e.g. for the following  predicates
+     * e.g. for the following predicates
+     *<pre><code>
      *  a = 2
      *  b = 3
      *  1 < c <= 4, c > 10
+     *</code></pre>
      *  
      *  The input looks like
+     *<pre><code>
      *   {([, 2, ], 2)}
      *   {([, 3, ], 3)}
      *   {((, 1, ], 4), ((, 10, +, null)}
+     *</code></pre>
      *   
      * The output will be
+     *<pre><code>
      *   {([, 2, ], 2), ([, 3, ], 3), ((,  1, ], 4)}
      *   {([, 2, ], 2), ([, 3, ], 3), ((, 10, ), +)}
+     *</code></pre>
      *   
-     * @param sargSeqList list of SargIntervalSequence representing the expression
-     * to be converted
+     * @param sargSeqList list of SargIntervalSequence representing the
+     * expression to be converted
      *
      * @return the list of {@link SargInterval} lists.
      * 
      * @note
      * 1. the prefix columns can only have point intervals.
-     * 2. This function is added to better support the unbounded multi-column key
-     *    case, which is currently disabled in BTree code.
+     * 2. This function is added to better support the unbounded multi-column
+     * key case, which is currently disabled in BTree code.
      */
     private static List<List<SargInterval>> pivotSargSeqList(
         List<SargIntervalSequence> sargSeqList)
@@ -597,9 +603,11 @@ public abstract class FennelRelUtil
             prefixList.add(interval);
         }
 
-        // Add interval from the last IntervalSequence which is the only Sequence
-        // that maybe range sequence.
-        for (SargInterval interval : sargSeqList.get(columnCount - 1).getList()) {
+        // Add interval from the last IntervalSequence which is the only
+        // Sequence that may be range sequence.
+        for (SargInterval interval
+                 : sargSeqList.get(columnCount - 1).getList())
+        {
             List<SargInterval> completeList =
                 new ArrayList<SargInterval>();
                 
@@ -612,9 +620,9 @@ public abstract class FennelRelUtil
     }
     
     /**
-     * Converts a list of {@link SargIntervalSequence} into a relational expression which produces
-     * a representation for the sequence of resolved intervals expected by
-     * Fennel BTree searches.
+     * Converts a list of {@link SargIntervalSequence} into a relational
+     * expression which produces a representation for the sequence of resolved
+     * intervals expected by Fennel BTree searches.
      *
      * @param callTraits traits to apply to new rels generated
      *
@@ -622,8 +630,8 @@ public abstract class FennelRelUtil
      *
      * @param cluster query cluster
      *
-     * @param sargSeqList list of SargIntervalSequence representing the expression
-     * to be converted
+     * @param sargSeqList list of SargIntervalSequence representing the
+     * expression to be converted
      *
      * @return corresponding relational expression
      */
@@ -746,13 +754,13 @@ public abstract class FennelRelUtil
         List<RexNode> upperBound = new ArrayList<RexNode>();
         
         RexLiteral lowerBoundDirective
-         = convertEndpoint(rexBuilder,
-                           intervalList.get(length-1).getLowerBound());
+            = convertEndpoint(rexBuilder,
+                intervalList.get(length-1).getLowerBound());
         lowerBound.add(lowerBoundDirective);
         
         RexLiteral upperBoundDirective
-        = convertEndpoint(rexBuilder,
-                          intervalList.get(length-1).getUpperBound());
+            = convertEndpoint(rexBuilder,
+                intervalList.get(length-1).getUpperBound());
         
         upperBound.add(upperBoundDirective);
         
@@ -799,6 +807,8 @@ public abstract class FennelRelUtil
         RelOptCluster cluster,
         List<RexNode> tuple)
     {
+        RexBuilder rexBuilder = cluster.getRexBuilder();
+        
         // Generate a one-row relation producing the key to search for.
         OneRowRel oneRowRel = new OneRowRel(cluster);
         RelNode keyRel = CalcRel.createProject(
@@ -808,8 +818,20 @@ public abstract class FennelRelUtil
         // never match in a comparison.
         ArrayList<Integer> filterFieldOrdinals = new ArrayList<Integer>(2);
         for(int ordinal = 0; ordinal < tuple.size(); ordinal++) {
-            if (tuple.get(ordinal) instanceof RexDynamicParam) {
+            RexNode value = tuple.get(ordinal);
+            if (value instanceof RexDynamicParam) {
                 filterFieldOrdinals.add(ordinal);
+            } else if (RexLiteral.isNullLiteral(value)) {
+                // Bare nulls cause Java codegen problems if they don't get
+                // a cast on top; so add a possibly redundant cast and
+                // hope that another optimizer rule will eliminate it as
+                // needed.  Note that we don't generate the cast down in
+                // convertCoordinate because that makes the plans ugly in the
+                // common case where we are able to use FennelValuesRel.
+                RexNode rexCast = rexBuilder.makeCast(
+                    keyRowType.getFields()[ordinal].getType(),
+                    value);
+                tuple.set(ordinal, rexCast);
             }
         }
         if (!filterFieldOrdinals.isEmpty()) {
@@ -886,7 +908,8 @@ public abstract class FennelRelUtil
     public static FennelRelImplementor getRelImplementor(FennelRel rel)
     {
     	return (FennelRelImplementor)
-    	    getPreparingStmt(rel).getRelImplementor(rel.getCluster().getRexBuilder());
+    	    getPreparingStmt(rel).getRelImplementor(
+                rel.getCluster().getRexBuilder());
     }
 }
 
