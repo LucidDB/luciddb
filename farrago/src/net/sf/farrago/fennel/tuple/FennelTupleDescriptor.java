@@ -25,6 +25,7 @@ package net.sf.farrago.fennel.tuple;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.io.Serializable;
 
 /**
  * FennelTupleDescriptor provides the metadata describing a tuple. This
@@ -34,9 +35,11 @@ import java.util.List;
  * @author Mike Bennett
  * @version $Id$
  */
-public class FennelTupleDescriptor
-    implements java.io.Serializable
+public class FennelTupleDescriptor implements Serializable
 {
+    /** SerialVersionUID created with JDK 1.5 serialver tool. */
+    private static final long serialVersionUID = -7075506007273800588L;
+
     /**
      * a collection of the FennelTupleAttributeDescriptor objects
      * we're keeping.

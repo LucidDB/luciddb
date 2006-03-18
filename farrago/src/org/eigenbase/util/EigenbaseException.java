@@ -46,7 +46,7 @@ public class EigenbaseException extends RuntimeException
      * Prevents incompatible class conflict when serialized
      * from JDK 1.5-built server to JDK 1.4-built client.
      */
-    static final long serialVersionUID = -1314522633397794178L;
+    private static final long serialVersionUID = -1314522633397794178L;
 
     private static Logger tracer =
         Logger.getLogger(EigenbaseException.class.getName());

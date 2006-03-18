@@ -402,6 +402,9 @@ public class Enum14 implements Cloneable
      */
     public static class BasicValue implements Value, Serializable
     {
+        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        private static final long serialVersionUID = -7944099370846909699L;
+
         private final String description;
         private final String name;
         private final int ordinal;
@@ -488,6 +491,9 @@ public class Enum14 implements Cloneable
     public static abstract class SerializableValue extends BasicValue
         implements Serializable
     {
+        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        private static final long serialVersionUID = 1534436036499327177L;
+
         /**
          * Ordinal value which, when deserialized, can be used by
          * {@link #readResolve} to locate a matching instance in

@@ -41,6 +41,9 @@ public abstract class FennelStandardTypeDescriptor
     extends Enum14.BasicValue
     implements FennelStoredTypeDescriptor
 {
+    /** SerialVersionUID created with JDK 1.5 serialver tool. */
+    private static final long serialVersionUID = 5514431391550418871L;
+
     public static final int MIN_ORDINAL = 1;
     public static final int INT_8_ORDINAL = 1;
     public static final int UINT_8_ORDINAL = 2;
@@ -299,6 +302,9 @@ public abstract class FennelStandardTypeDescriptor
         extends FennelStandardTypeDescriptor
         implements FennelStoredTypeDescriptor, Serializable
     {
+        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        private static final long serialVersionUID = 2487596130623297086L;
+
         FennelType(String name, int ordinal)
         {
             super(name, ordinal);
@@ -345,6 +351,9 @@ public abstract class FennelStandardTypeDescriptor
      */
     private static abstract class FennelNumericType extends FennelType
     {
+        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        private static final long serialVersionUID = 1126249335998415507L;
+
         private final int bitCount;
         private final int fixedByteCount;
         private final boolean signed;
@@ -421,6 +430,9 @@ public abstract class FennelStandardTypeDescriptor
      */
     private static class Type_INT_8 extends FennelNumericType
     {
+        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        private static final long serialVersionUID = -1929462493400009575L;
+
         Type_INT_8()
         {
             super("s1", INT_8_ORDINAL, 0, 1, true, true);
@@ -442,6 +454,9 @@ public abstract class FennelStandardTypeDescriptor
      */
     private static class Type_UINT_8 extends FennelNumericType
     {
+        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        private static final long serialVersionUID = 4611295449204872120L;
+
         Type_UINT_8()
         {
             super("u1", UINT_8_ORDINAL, 0, 1, false, true);
@@ -463,6 +478,9 @@ public abstract class FennelStandardTypeDescriptor
      */
     private static class Type_INT_16 extends FennelNumericType
     {
+        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        private static final long serialVersionUID = 7178036227179809714L;
+
         Type_INT_16()
         {
             super("s2", INT_16_ORDINAL, 0, 2, true, true);
@@ -484,6 +502,9 @@ public abstract class FennelStandardTypeDescriptor
      */
     private static class Type_UINT_16 extends FennelNumericType
     {
+        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        private static final long serialVersionUID = -4187803364067898572L;
+
         Type_UINT_16()
         {
             super("u2", UINT_16_ORDINAL, 0, 2, false, true);
@@ -505,6 +526,9 @@ public abstract class FennelStandardTypeDescriptor
      */
     private static class Type_INT_32 extends FennelNumericType
     {
+        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        private static final long serialVersionUID = 4459795783565074222L;
+
         Type_INT_32()
         {
             super("s4", INT_32_ORDINAL, 0, 4, true, true);
@@ -526,6 +550,9 @@ public abstract class FennelStandardTypeDescriptor
      */
     private static class Type_UINT_32 extends FennelNumericType
     {
+        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        private static final long serialVersionUID = 4551603883805108096L;
+
         Type_UINT_32()
         {
             super("u4", UINT_32_ORDINAL, 0, 4, false, true);
@@ -547,6 +574,9 @@ public abstract class FennelStandardTypeDescriptor
      */
     private static class Type_INT_64 extends FennelNumericType
     {
+        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        private static final long serialVersionUID = 6188765410255919222L;
+
         Type_INT_64()
         {
             super("s8", INT_64_ORDINAL, 0, 8, true, true);
@@ -568,6 +598,9 @@ public abstract class FennelStandardTypeDescriptor
      */
     private static class Type_UINT_64 extends FennelNumericType
     {
+        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        private static final long serialVersionUID = -2632732624177829892L;
+
         Type_UINT_64()
         {
             super("u8", UINT_64_ORDINAL, 0, 8, false, true);
@@ -589,6 +622,9 @@ public abstract class FennelStandardTypeDescriptor
      */
     private static class Type_REAL extends FennelNumericType
     {
+        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        private static final long serialVersionUID = 8925748663583683424L;
+
         Type_REAL()
         {
             super("r", REAL_ORDINAL, 0, 4, true, false);
@@ -610,6 +646,9 @@ public abstract class FennelStandardTypeDescriptor
      */
     private static class Type_DOUBLE extends FennelNumericType
     {
+        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        private static final long serialVersionUID = -2610530167912464104L;
+
         public Type_DOUBLE()
         {
             super("d", DOUBLE_ORDINAL, 0, 8, true, false);
@@ -631,6 +670,9 @@ public abstract class FennelStandardTypeDescriptor
      */
     private static class Type_BOOL extends FennelNumericType
     {
+        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        private static final long serialVersionUID = 1589041391248552300L;
+
         public Type_BOOL()
         {
             super("bo", BOOL_ORDINAL, 1, 1, false, true);
@@ -658,6 +700,9 @@ public abstract class FennelStandardTypeDescriptor
      */
     private static class Type_CHAR extends FennelType
     {
+        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        private static final long serialVersionUID = 422697645810009320L;
+
         Type_CHAR()
         {
             super("c", CHAR_ORDINAL);
@@ -700,6 +745,9 @@ public abstract class FennelStandardTypeDescriptor
      */
     private static class Type_VARCHAR extends FennelType
     {
+        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        private static final long serialVersionUID = 563172148879378524L;
+
         Type_VARCHAR()
         {
             super("vc", VARCHAR_ORDINAL);
@@ -737,6 +785,9 @@ public abstract class FennelStandardTypeDescriptor
      */
     private static class Type_BINARY extends FennelType
     {
+        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        private static final long serialVersionUID = -2878656484355172778L;
+
         Type_BINARY()
         {
             super("b", BINARY_ORDINAL);
@@ -779,6 +830,9 @@ public abstract class FennelStandardTypeDescriptor
      */
     private static class Type_VARBINARY extends FennelType
     {
+        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        private static final long serialVersionUID = -8867996175313892900L;
+
         Type_VARBINARY()
         {
             super("vb", VARBINARY_ORDINAL);

@@ -23,6 +23,7 @@
 package net.sf.farrago.fennel;
 
 import java.util.Arrays;
+import java.io.Serializable;
 
 /**
  * FennelPseudoUuid represents universal unique identifiers (UUIDs).  UUIDs
@@ -36,7 +37,7 @@ import java.util.Arrays;
  * @author Stephan Zuercher
  * @version $Id$
  */
-public class FennelPseudoUuid implements java.io.Serializable
+public class FennelPseudoUuid implements Serializable
 {
     //~ Static fields/initializers --------------------------------------------
     public static final int UUID_LENGTH = 16;
@@ -46,7 +47,7 @@ public class FennelPseudoUuid implements java.io.Serializable
      * Prevents incompatible class conflict when serialized
      * from JDK 1.5-built server to JDK 1.4-built client.
      */
-    static final long serialVersionUID = -2855644871776413634L;
+    private static final long serialVersionUID = -2855644871776413634L;
 
     //~ Instance fields -------------------------------------------------------
     private final byte[] uuid;

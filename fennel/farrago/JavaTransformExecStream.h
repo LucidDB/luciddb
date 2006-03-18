@@ -22,8 +22,8 @@
 #ifndef Fennel_JavaTransformExecStream_Included
 #define Fennel_JavaTransformExecStream_Included
 
+#include "fennel/exec/ExecStream.h"
 #include "fennel/exec/ExecStreamDefs.h"
-#include "fennel/exec/ConfluenceExecStream.h"
 #include "fennel/farrago/CmdInterpreter.h"
 #include "fennel/segment/SegPageLock.h"
 #include "fennel/tuple/TupleData.h"
@@ -35,8 +35,18 @@
 FENNEL_BEGIN_NAMESPACE
 
 struct JavaTransformExecStreamParams : 
-    virtual public ConfluenceExecStreamParams
+    virtual public ExecStreamParams
 {
+    /**
+     * Mimic SingleOutputExecStreamParams, but may be uninitialized.
+     */
+    TupleDescriptor outputTupleDesc;
+
+    /**
+     * Mimic SingleOutputExecStreamParams, but may be uninitialized.
+     */
+    TupleFormat outputTupleFormat;
+
     /**
      * Java class name.
      */
@@ -47,8 +57,7 @@ struct JavaTransformExecStreamParams :
      */
     CmdInterpreter::StreamGraphHandle *pStreamGraphHandle;
 
-    JavaTransformExecStreamParams()
-        : javaClassName("") {}
+    explicit JavaTransformExecStreamParams();
 };
 
 
@@ -56,7 +65,7 @@ struct JavaTransformExecStreamParams :
  * JavaTransformExecStream represents a sequence of Java transforms
  * encapsulated within a Fennel ExecStream.
  */
-class JavaTransformExecStream :	virtual public ConfluenceExecStream
+class JavaTransformExecStream :	virtual public ExecStream
 {
     CmdInterpreter::StreamGraphHandle *pStreamGraphHandle;
 
@@ -79,17 +88,26 @@ class JavaTransformExecStream :	virtual public ConfluenceExecStream
      */
     SegPageLock bufferLock;
 
+  protected:
+    std::vector<SharedExecStreamBufAccessor> inAccessors;
+    SharedExecStreamBufAccessor pOutAccessor;
+
   public:
     JavaTransformExecStream();
 
     // implement ExecStream
     virtual void prepare(JavaTransformExecStreamParams const &params);
+    virtual void setInputBufAccessors(
+        std::vector<SharedExecStreamBufAccessor> const &inAccessors);
+    virtual void setOutputBufAccessors(
+        std::vector<SharedExecStreamBufAccessor> const &outAccessors);
     virtual void getResourceRequirements(
         ExecStreamResourceQuantity &minQuantity,
         ExecStreamResourceQuantity &optQuantity);
     virtual void open(bool restart);
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
     virtual void closeImpl();
+    virtual ExecStreamBufProvision getInputBufProvision() const;
     virtual ExecStreamBufProvision getOutputBufProvision() const;
 };
 
