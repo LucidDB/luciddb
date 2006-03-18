@@ -809,13 +809,8 @@ public abstract class FennelRelUtil
     {
         RexBuilder rexBuilder = cluster.getRexBuilder();
         
-        // Generate a one-row relation producing the key to search for.
-        OneRowRel oneRowRel = new OneRowRel(cluster);
-        RelNode keyRel = CalcRel.createProject(
-            oneRowRel, tuple.toArray(RexNode.EMPTY_ARRAY), null);
-
         // For dynamic parameters, add a filter to remove nulls, since they can
-        // never match in a comparison.
+        // never match in a comparison.  Also add casts for bare nulls.
         ArrayList<Integer> filterFieldOrdinals = new ArrayList<Integer>(2);
         for(int ordinal = 0; ordinal < tuple.size(); ordinal++) {
             RexNode value = tuple.get(ordinal);
@@ -834,6 +829,12 @@ public abstract class FennelRelUtil
                 tuple.set(ordinal, rexCast);
             }
         }
+        
+        // Generate a one-row relation producing the key to search for.
+        OneRowRel oneRowRel = new OneRowRel(cluster);
+        RelNode keyRel = CalcRel.createProject(
+            oneRowRel, tuple.toArray(RexNode.EMPTY_ARRAY), null);
+
         if (!filterFieldOrdinals.isEmpty()) {
             keyRel = 
                 RelOptUtil.createNullFilter(
