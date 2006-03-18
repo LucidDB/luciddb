@@ -75,7 +75,6 @@ public class IteratorToFennelConverter extends ConverterRel
     //~ Instance fields -------------------------------------------------------
 
     private String farragoTransformClassName;
-    private String farragoTransformStreamName;
     private List<FemExecutionStreamDef> childStreamDefs;
     
     //~ Constructors ----------------------------------------------------------
@@ -402,9 +401,9 @@ public class IteratorToFennelConverter extends ConverterRel
                 newTupleWriterExp,
                 childExp);
             
-            farragoTransformClassName = 
+            setFarragoTransformClassName( 
                 stmt.getEnvironment().getPackage() + "." 
-                + transformDecl.getName();
+                + transformDecl.getName());
             
             farragoRelImplementor.addTransform(transformDecl);
             
@@ -436,11 +435,6 @@ public class IteratorToFennelConverter extends ConverterRel
         return parseTree;
     }
 
-    public String getFarragoTransformStreamName()
-    {
-        return farragoTransformStreamName;
-    }
-    
     /**
      * Registers the FemExecutionStreamDef(s) that form the inputs to this
      * converter's FemExecutionStreamDef.
@@ -452,6 +446,12 @@ public class IteratorToFennelConverter extends ConverterRel
         assert(CallingConvention.ENABLE_NEW_ITER);
                 
         childStreamDefs.add(childStreamDef);
+    }
+    
+    protected void setFarragoTransformClassName(String className)
+    {
+        assert(farragoTransformClassName == null);
+        farragoTransformClassName = className;
     }
     
     // implement FennelRel
@@ -472,12 +472,6 @@ public class IteratorToFennelConverter extends ConverterRel
             streamDef.setStreamId(getId());
             streamDef.setJavaClassName(farragoTransformClassName);
             
-            // register early so we can learn our stream def's name
-            implementor.registerRelStreamDef(streamDef, this, getRowType());
-
-            // Remember our global stream name.
-            farragoTransformStreamName = streamDef.getName();
-
             return streamDef;
         } else {
             // NOTE: In this case, child stream defs do not need to be
