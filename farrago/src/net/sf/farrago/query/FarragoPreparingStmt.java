@@ -106,6 +106,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     private RelDataType originalRowType;
     private SqlIdentifier dmlTarget;
     private PrivilegedAction dmlAction;
+    private TableAccessMap tableAccessMap;
 
     /**
      * Name of Java package containing code generated for this statement.
@@ -175,7 +176,6 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     {
         return true;
     }
-
 
     public FarragoSessionStmtValidator getStmtValidator()
     {
@@ -269,6 +269,11 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         return implementingArgs;
     }
     
+    protected TableAccessMap getTableAccessMap()
+    {
+        return tableAccessMap;
+    }
+
     // implement FarragoSessionPreparingStmt
     public void postValidate(SqlNode sqlNode)
     {
@@ -316,6 +321,11 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         PreparedResult preparedResult =
             super.prepareSql(rootRel, sqlKind, logical, implementingClassDecl,
                 implementingArgs);
+        // When rootRel is a logical plan, optimize() sets the map, but for a
+        // physical plan, set it here:
+        if (!logical) {
+            tableAccessMap = new TableAccessMap(rootRel);
+        }
         return implement(preparedResult);
     }
 
@@ -458,6 +468,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                 streamGraphTracer.fine(xmiFennelPlan);
             }
 
+            assert(tableAccessMap != null);
             executableStmt =
                 new FarragoExecutableJavaStmt(
                     packageDir,
@@ -468,7 +479,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                     preparedExecution.getMethod(),
                     xmiFennelPlan,
                     preparedResult.isDml(),
-                    getReferencedObjectIds());
+                    getReferencedObjectIds(),
+                    tableAccessMap);
         } else {
             assert (preparedResult instanceof PreparedExplanation);
             executableStmt =
@@ -590,6 +602,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                     false,
                     SqlExplainLevel.DIGEST_ATTRIBUTES));
         }
+
         rootRel = super.optimize(rootRel);
         if (dumpPlan) {
             planDumpTracer.fine(
@@ -599,6 +612,16 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                     false,
                     SqlExplainLevel.ALL_ATTRIBUTES));
         }
+        
+        // REVIEW jvs 9-Mar-2006: Perhaps we should compute two
+        // tableAccessMaps, one before and one after optimization, and then
+        // merge them.  Leaving out ones from before could lead us to avoid
+        // locking a table which gets pruned, which might be good for
+        // concurrency in some circumstances, but bad for correctness in
+        // others.  Leaving out ones from after would screw up an optimizer
+        // which supports materialized view rewrite.
+        tableAccessMap = new TableAccessMap(rootRel);
+        
         return rootRel;
     }
 

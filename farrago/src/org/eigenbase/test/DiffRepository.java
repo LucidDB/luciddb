@@ -112,11 +112,6 @@ public class DiffRepository
     private final File refFile;
     private final File logFile;
 
-    /**
-     * Workspace for {@link #getCurrentTestCaseName(boolean)}
-     */
-    private static final Throwable runtimeException = new Throwable();
-
     /*
     Example XML document:
 
@@ -172,6 +167,9 @@ public class DiffRepository
      */
     private static File getFileBase(Class clazz)
     {
+        // REVIEW jvs 12-Mar-2006: should probably change this to use
+        // EIGEN_HOME if it is set.
+        
         String javaFileName =
             clazz.getName().replace('.', File.separatorChar) + ".java";
         File file = new File(System.getProperty("user.dir"));
@@ -395,13 +393,18 @@ public class DiffRepository
      */
     private String getCurrentTestCaseName(boolean fail)
     {
+        // REVIEW jvs 12-Mar-2006: Too clever by half.  Someone might not know
+        // about this and use a private helper method whose name also starts
+        // with test. Perhaps just require them to pass in getName() from the
+        // calling TestCase's setUp method and store it in a thread-local,
+        // failing here if they forgot?
+        
         // Clever, this. Dump the stack and look up it for a method which
         // looks like a testcase name, e.g. "testFoo".
         final StackTraceElement[] stackTrace;
-        synchronized (runtimeException) {
-            runtimeException.fillInStackTrace();
-            stackTrace = runtimeException.getStackTrace();
-        }
+        Throwable runtimeException = new Throwable();
+        runtimeException.fillInStackTrace();
+        stackTrace = runtimeException.getStackTrace();
         for (int i = 0; i < stackTrace.length; i++) {
             StackTraceElement stackTraceElement = stackTrace[i];
             final String methodName = stackTraceElement.getMethodName();

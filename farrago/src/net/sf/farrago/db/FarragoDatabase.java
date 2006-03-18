@@ -90,6 +90,7 @@ public class FarragoDatabase extends FarragoDbSingleton
     private FarragoPluginClassLoader pluginClassLoader;
     private List modelExtensions;
     private FarragoDdlLockManager ddlLockManager;
+    private FarragoSessionTxnMgr txnMgr;
     
     /**
      * Cache of all sorts of stuff.
@@ -243,6 +244,7 @@ public class FarragoDatabase extends FarragoDbSingleton
             }
 
             ddlLockManager = new FarragoDdlLockManager();
+            txnMgr = sessionFactory.newTxnMgr();
             sessionFactory.specializedInitialization(this);
         } catch (Throwable ex) {
             tracer.throwing("FarragoDatabase", "<init>", ex);
@@ -284,6 +286,14 @@ public class FarragoDatabase extends FarragoDbSingleton
     public List getModelExtensions()
     {
         return modelExtensions;
+    }
+
+    /**
+     * @return transaction manager for this database
+     */
+    public FarragoSessionTxnMgr getTxnMgr()
+    {
+        return txnMgr;
     }
 
     private File getBootUrlFile()

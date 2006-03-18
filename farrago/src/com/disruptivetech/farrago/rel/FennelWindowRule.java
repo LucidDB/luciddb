@@ -66,10 +66,7 @@ public abstract class FennelWindowRule extends RelOptRule
                         new RelOptRuleOperand [] {
                             new RelOptRuleOperand(
                                 CalcRel.class,
-                                new RelOptRuleOperand [] {
-                                    new RelOptRuleOperand(
-                                        RelNode.class,
-                                        null)})
+                                null)
                         })
                 }))
         {
@@ -83,7 +80,7 @@ public abstract class FennelWindowRule extends RelOptRule
                 final WindowedAggregateRel winAgg =
                     (WindowedAggregateRel) call.rels[1];
                 final CalcRel inCalc = (CalcRel) call.rels[2];
-                final RelNode child = call.rels[3];
+                final RelNode child = inCalc.getChild();
                 if (inCalc.getProgram().getCondition() != null) {
                     // FennelWindowRel cannot filter its input. Leave it to
                     // the Calc-on-Win rule.
@@ -149,11 +146,8 @@ public abstract class FennelWindowRule extends RelOptRule
                 new RelOptRuleOperand [] {
                     new RelOptRuleOperand(
                         CalcRel.class,
-                        new RelOptRuleOperand [] {
-                            new RelOptRuleOperand(
-                                RelNode.class,
-                                null)})
-                        }))
+                        null)
+                }))
         {
             {
                 description = "FennelWindowRule.WinOnCalc";
@@ -167,7 +161,7 @@ public abstract class FennelWindowRule extends RelOptRule
                 if (inCalc.getProgram().getCondition() != null) {
                     return;
                 }
-                final RelNode child = call.rels[2];
+                final RelNode child = inCalc.getChild();
                 createRels(call, null, winAgg, inCalc, child);
             }
         };

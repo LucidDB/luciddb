@@ -45,9 +45,7 @@ public class UnionEliminatorRule extends RelOptRule
     {
         super(new RelOptRuleOperand(
                 UnionRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(RelNode.class, null)
-                }));
+                null));
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -61,7 +59,12 @@ public class UnionEliminatorRule extends RelOptRule
         if (union.isDistinct()) {
             return;
         }
-        RelNode child = call.rels[1];
+
+        // REVIEW jvs 14-Mar-2006:  why don't we need to register
+        // the equivalence here like we do in RemoveDistinctRule?
+        // And is the clone actually required here?
+        
+        RelNode child = union.getInputs()[0];
         call.transformTo(RelOptUtil.clone(child));
     }
 }

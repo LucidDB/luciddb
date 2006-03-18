@@ -185,7 +185,7 @@ public class VolcanoRuleCall extends RelOptRuleCall
                 if (operand.ordinalInParent < inputs.length) {
                     RelSubset subset =
                         (RelSubset) inputs[operand.ordinalInParent];
-                    successors = subset.rels;
+                    successors = subset.set.getRelsFromAllSubsets();
                 } else {
                     // The operand expects parentRel to have a certain number
                     // of inputs and it does not.
@@ -202,9 +202,10 @@ public class VolcanoRuleCall extends RelOptRuleCall
                     // We know that the previous operand was *a* child of
                     // its parent, but now check that it is the *correct*
                     // child
-                    final RelSubset input =
-                        (RelSubset) rel.getInput(previousOperand.ordinalInParent);
-                    if (!input.rels.contains(rels[previousOperandOrdinal])) {
+                    final RelSubset input = (RelSubset)
+                        rel.getInput(previousOperand.ordinalInParent);
+                    List inputRels = input.set.getRelsFromAllSubsets();
+                    if (!inputRels.contains(rels[previousOperandOrdinal])) {
                         continue;
                     }
                 }

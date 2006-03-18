@@ -49,6 +49,11 @@ class LbmSegmentWriter
      */
     bool firstWrite;
 
+    /**
+     * True if zeros should be removed from the bitmap segments.
+     */
+    bool removeZeros;
+
 public:
     /**
      * Initializes a new segment writer object
@@ -59,10 +64,15 @@ public:
      *
      * @param bitmapTupleDesc descriptor of the tuple that will represent
      * the constructed bitmap segment
+     *
+     * @param removeZeros true if zeros should be removed before
+     * writing out segments; should only be true in cases like intersection
+     * where it is possible to have zeros; whereas, union should
+     * not
      */
     void init(
         PBuffer scratchBufferInit, uint scratchBufferSizeInit,
-        TupleDescriptor const &bitmapTupleDesc);
+        TupleDescriptor const &bitmapTupleDesc, bool removeZeros);
 
     /**
      * Resets a segment writer object to start writing out a new bitmap
@@ -71,7 +81,13 @@ public:
     void reset();
 
     /**
-     * Adds a new byte segment to the bitmap segment under construction
+     * Returns whether the segment writer has added any segments
+     */
+    bool isEmpty();
+
+    /**
+     * Adds a new byte segment to the bitmap segment under construction.
+     * Removes zeros if specified during intialization.
      *
      * @param startRid starting rid of segment
      *
@@ -79,9 +95,11 @@ public:
      *
      * @param len length of the byte segment
      *
-     * @return false if not enough space to add the new segment
+     * @return false if not enough space to add the new segment, in which
+     * case startRid, pByteSeg, and len represent the remaining portions of
+     * the segment that have not been written out yet
      */
-    bool addSegment(LcsRid startRid, PBuffer pByteSeg, uint len);
+    bool addSegment(LcsRid &startRid, PBuffer &pByteSeg, uint &len);
 
     /**
      * Produces the current segment constructed thus far in tupledata format

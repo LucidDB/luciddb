@@ -48,9 +48,7 @@ public class FennelAggRule extends RelOptRule
     {
         super(new RelOptRuleOperand(
                 AggregateRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(RelNode.class, null)
-                }));
+                null));
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -84,7 +82,7 @@ public class FennelAggRule extends RelOptRule
             }
         }
         
-        RelNode relInput = call.rels[1];
+        RelNode relInput = aggRel.getChild();
         RelNode fennelInput;
         
         if (aggRel.getGroupCount() > 0) {

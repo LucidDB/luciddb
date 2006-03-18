@@ -29,6 +29,9 @@
 #include "fennel/lucidera/bitmap/LbmGeneratorExecStream.h"
 #include "fennel/lucidera/bitmap/LbmSplicerExecStream.h"
 #include "fennel/lucidera/bitmap/LbmIndexScanExecStream.h"
+#include "fennel/lucidera/bitmap/LbmChopperExecStream.h"
+#include "fennel/lucidera/bitmap/LbmUnionExecStream.h"
+#include "fennel/lucidera/bitmap/LbmIntersectExecStream.h"
 #include "fennel/db/Database.h"
 #include "fennel/segment/SegmentFactory.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
@@ -221,12 +224,55 @@ class ExecStreamSubFactory_lu
         params.rowLimitParamId =
             readDynamicParamId(streamDef.getRowLimitParamId());
 
-        params.ignoreRowLimit = streamDef.isIgnoreRowLimit();
-
         params.startRidParamId =
             readDynamicParamId(streamDef.getStartRidParamId());
 
         pEmbryo->init(new LbmIndexScanExecStream(), params);
+    }
+
+    // implement FemVisitor
+    virtual void visit(ProxyLbmChopperStreamDef &streamDef)
+    {
+        LbmChopperExecStreamParams params;
+        pExecStreamFactory->readTupleStreamParams(params, streamDef);
+
+        params.ridLimitParamId =
+            readDynamicParamId(streamDef.getRidLimitParamId());
+        pEmbryo->init(new LbmChopperExecStream(), params);
+    }
+
+    // implement FemVisitor
+    virtual void visit(ProxyLbmUnionStreamDef &streamDef)
+    {
+        LbmUnionExecStreamParams params;
+        pExecStreamFactory->readTupleStreamParams(params, streamDef);
+
+        params.startRidParamId = 
+            readDynamicParamId(streamDef.getConsumerSridParamId());
+
+        params.segmentLimitParamId =
+            readDynamicParamId(streamDef.getSegmentLimitParamId());
+
+        params.ridLimitParamId =
+            readDynamicParamId(streamDef.getRidLimitParamId());
+
+        params.maxRid = (LcsRid) 0;
+
+        pEmbryo->init(new LbmUnionExecStream(), params);
+    }
+
+    // implement FemVisitor
+    virtual void visit(ProxyLbmIntersectStreamDef &streamDef)
+    {
+        LbmIntersectExecStreamParams params;
+        pExecStreamFactory->readTupleStreamParams(params, streamDef);
+
+        params.rowLimitParamId =
+            readDynamicParamId(streamDef.getRowLimitParamId());
+        params.startRidParamId =
+            readDynamicParamId(streamDef.getStartRidParamId());
+
+        pEmbryo->init(new LbmIntersectExecStream(), params);
     }
 
     // implement JniProxyVisitor

@@ -225,3 +225,17 @@ explain plan for
 select dname 
 from hsqldb_demo.sales.dept
 where deptno=20;
+
+-- join on pseudocolumn (FRG-69)
+
+explain plan for
+select 
+    e."name" as exception_name,
+    p."name" as param_name
+from
+    mof_repository.model."Exception" e
+inner join
+    mof_repository.model."Parameter" p
+on 
+    e."mofId" = p."mofClassName"
+;

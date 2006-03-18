@@ -24,116 +24,99 @@
 #include "fennel/common/ByteBuffer.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
-
-ByteBuffer::~ByteBuffer() {}
-
-void ByteBuffer::setMem(uint pos, UnsignedByte value, uint len) 
-{
-    assert(pos + len < getSize());
-    uint current = pos;
-    uint remaining = len;
-    uint chunkLen;
-
-    while (remaining > 0) {
-        chunkLen = getContiguousMemSize(current, remaining);
-        memset(getMem(current, chunkLen), value, chunkLen);
-        current += chunkLen;
-        remaining -= chunkLen;
-    }
-}
-
-void ByteBuffer::copyMem(uint pos, PConstBuffer mem, uint len)
-{
-    assert(pos + len < getSize());
-    uint current = pos;
-    PConstBuffer currentMem = mem;
-    uint remaining = len;
-    uint chunkLen;
-
-    while (remaining > 0) {
-        chunkLen = getContiguousMemSize(current, remaining);
-        memcpy(getMem(current, chunkLen), currentMem, chunkLen);
-        current += chunkLen;
-        currentMem += chunkLen;
-        remaining -= chunkLen;
-    }
-}
-
-void ByteBuffer::mergeMem(uint pos, PConstBuffer mem, uint len)
-{
-    assert(pos + len < getSize());
-    uint current = pos;
-    PConstBuffer currentMem = mem;
-    uint remaining = len;
-    uint chunkLen;
-
-    while (remaining > 0) {
-        chunkLen = getContiguousMemSize(current, remaining);
-        memmerge(getMem(current, chunkLen), currentMem, chunkLen);
-        current += chunkLen;
-        currentMem += chunkLen;
-        remaining -= chunkLen;
-    }
-}
-
-VirtualByteBuffer::VirtualByteBuffer()
+ByteBuffer::ByteBuffer()
 {
     nBuffers = 0;
     bufferSize = 0;
 }
 
-VirtualByteBuffer::~VirtualByteBuffer()
+ByteBuffer::~ByteBuffer()
 {
 }
 
-void VirtualByteBuffer::init(
+void ByteBuffer::init(
     boost::shared_array<PBuffer> ppBuffers, uint nBuffers, uint bufSize)
 {
     this->ppBuffers = ppBuffers;
     this->nBuffers = nBuffers;
     this->bufferSize = bufSize;
+
+    // Currently we use bit masking (rather than mod) to calculate virtual
+    // offsets. This scheme requires that the buffer size be a power of 2.
+    // If this cannot be guaranteed, we should change to another scheme.
+    bufferMask = bufSize - 1;
+    assert((bufferMask & bufSize) == 0);
+
+    bufferShift = 0;
+    uint tmp = bufferMask;
+    while (tmp > 0) {
+        bufferShift++;
+        tmp >>=1;
+    }
 }
 
-uint VirtualByteBuffer::getSize() 
+uint ByteBuffer::getSize() 
 {
     return nBuffers * bufferSize;
 }
 
-UnsignedByte VirtualByteBuffer::getByte(uint pos)
+void ByteBuffer::setMem(uint pos, UnsignedByte value, uint len) 
 {
-    uint i, j;
-    getOffset(pos, i, j);
-    return ppBuffers[i][j];
-}
+    assert(pos + len <= getSize());
 
-void VirtualByteBuffer::setByte(uint pos, UnsignedByte b)
-{
-    uint i, j;
-    getOffset(pos, i, j);
-    ppBuffers[i][j] = b;
-}
+    uint chunkLen = getContiguousMemSize(pos, len);
+    memset(getMem(pos), value, chunkLen);
 
-void VirtualByteBuffer::mergeByte(uint pos, UnsignedByte b)
-{
-    uint i, j;
-    getOffset(pos, i, j);
-    ppBuffers[i][j] |= b;
-}
-
-uint VirtualByteBuffer::getContiguousMemSize(uint pos, uint max)
-{
-    uint size = bufferSize - (pos % bufferSize);
-    return max ? std::min(max, size) : size;
-}
-
-PBuffer VirtualByteBuffer::getMem(uint pos, uint len)
-{
-    if (len <= getContiguousMemSize(pos)) {
-        return NULL;
+    if (chunkLen < len) {
+        uint current = pos + chunkLen;
+        uint remaining = len - chunkLen;
+        while (remaining > 0) {
+            chunkLen = getContiguousMemSize(current, remaining);
+            memset(getMem(current), value, chunkLen);
+            current += chunkLen;
+            remaining -= chunkLen;
+        }
     }
-    uint i, j;
-    getOffset(pos, i, j);
-    return &ppBuffers[i][j];
+}
+
+void ByteBuffer::copyMem(uint pos, PConstBuffer mem, uint len)
+{
+    assert(pos + len <= getSize());
+
+    uint chunkLen = getContiguousMemSize(pos, len);
+    memcpy(getMem(pos), mem, chunkLen);
+
+    if (chunkLen < len) {
+        uint current = pos + chunkLen;
+        PConstBuffer currentMem = mem + chunkLen;
+        uint remaining = len - chunkLen;
+        while (remaining > 0) {
+            chunkLen = getContiguousMemSize(current, remaining);
+            memcpy(getMem(current), currentMem, chunkLen);
+            current += chunkLen;
+            remaining -= chunkLen;
+        }
+    }
+}
+
+void ByteBuffer::mergeMem(uint pos, PConstBuffer mem, uint len)
+{
+    assert(pos + len <= getSize());
+
+    uint chunkLen = getContiguousMemSize(pos, len);
+    memmerge(getMem(pos), mem, chunkLen);
+
+    if (chunkLen < len) {
+        uint current = pos + chunkLen;
+        PConstBuffer currentMem = mem + chunkLen;
+        uint remaining = len - chunkLen;
+        while (remaining > 0) {
+            chunkLen = getContiguousMemSize(current, remaining);
+            memmerge(getMem(current), currentMem, chunkLen);
+            current += chunkLen;
+            remaining -= chunkLen;
+        }
+    }
 }
 
 FENNEL_END_CPPFILE("$Id$");

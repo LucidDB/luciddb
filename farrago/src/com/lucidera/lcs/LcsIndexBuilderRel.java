@@ -93,10 +93,10 @@ class LcsIndexBuilderRel extends FennelSingleRel
             typeFactory,
             FarragoCatalogUtil.getIndexTable(index),
             index);
-        // FIXME: we need some system of generating new param ids 
-        // per graph.
+        int paramId = implementor.allocateDynamicParam();
         LcsCompositeStreamDef bitmapSet
-            = indexGuide.newBitmapAppend(this, index, implementor, true, 1);
+            = indexGuide.newBitmapAppend(
+                this, index, implementor, true, paramId);
 
         // TODO: review recovery behavior
         implementor.addDataFlowFromProducerToConsumer(
@@ -106,7 +106,7 @@ class LcsIndexBuilderRel extends FennelSingleRel
     }
 
     // implement RelNode
-    public RelDataType deriveRowType()
+    protected RelDataType deriveRowType()
     {
         return RelOptUtil.createDmlRowType(getCluster().getTypeFactory());
     }

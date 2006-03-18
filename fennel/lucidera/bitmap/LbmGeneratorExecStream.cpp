@@ -27,7 +27,7 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 
 LbmGeneratorExecStream::LbmGeneratorExecStream()
 {
-    dynParamId = DynamicParamId(0);
+    dynParamsCreated = false;
 }
 
 void LbmGeneratorExecStream::prepare(LbmGeneratorExecStreamParams const &params)
@@ -37,6 +37,7 @@ void LbmGeneratorExecStream::prepare(LbmGeneratorExecStreamParams const &params)
 
     dynParamId = params.dynParamId;
     assert(opaqueToInt(dynParamId) > 0);
+
     createIndex = params.createIndex;
 
     scratchLock.accessSegment(scratchAccessor);
@@ -79,6 +80,7 @@ void LbmGeneratorExecStream::open(bool restart)
     if (!restart) {
         pDynamicParamManager->createParam(
             dynParamId, inAccessors[0]->getTupleDesc()[0]);
+        dynParamsCreated = true;
     }
 }
 
@@ -293,7 +295,7 @@ void LbmGeneratorExecStream::closeImpl()
 {
     BTreeExecStream::closeImpl();
     LcsRowScanBaseExecStream::closeImpl();
-    if (opaqueToInt(dynParamId) > 0) {
+    if (dynParamsCreated) {
         pDynamicParamManager->deleteParam(dynParamId);
     }
     keyCodes.clear();

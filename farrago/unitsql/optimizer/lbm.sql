@@ -58,29 +58,59 @@ insert into single values (0,0,0);
 insert into single 
 select * from matrix3x3;
 
+--
+-- 1.1.1 Create index on existing data
+--
 drop index single_one;
 
 create index single_one_recreated
 on single(b);
 
-truncate table single;
-drop index single_one_recreated;
+--
+-- 1.1.2 Try a few range selections
+--
+
+select * from single where b < 10;
+
+insert into single 
+select * from matrix3x3;
+
+select * from single where b > 15;
+select * from single where b < 30;
+select * from single where b > 15 and b < 30;
+select * from single where b > 50;
+
+drop table single;
 
 --
 -- 1.2 One multi-column index on a table without a primary key
+-- TODO: once we support delete, we will not need to drop table every time
 --
+create table single(
+    a tinyint,
+    b integer,
+    c bigint) 
+server sys_column_store_data_server;
+
 create index single_one_multi 
 on single(b, c);
 
 insert into single 
 select * from matrix3x3;
 
-truncate table single;
-drop index single_one_multi;
+drop table single;
 
 --
 -- 1.3 Several single column indexes on a table without a primary key
 --
+create table single(
+    a tinyint,
+    b integer,
+    c bigint) 
+server sys_column_store_data_server;
+
+set schema 'lbm';
+
 create index single_two_b
 on single(b);
 
@@ -135,36 +165,53 @@ select * from matrix3x3;
 insert into multi 
 select * from matrix3x3;
 
-truncate table multi;
-drop index multi_multikey;
+drop table multi;
 
 --
 -- 2.2 An index with multiple columns, rearranged
 --
+create table multi(
+    a tinyint,
+    b integer,
+    c bigint) 
+server sys_column_store_data_server
+create clustered index multi_all on multi(a, b, c);
+
 create index multi_multikey on multi(c, a, b);
 
 insert into multi 
 select * from matrix3x3;
 
-truncate table multi;
-drop index multi_multikey;
+drop table multi;
 
 --
 -- 2.3 Multiple single columns indexes
 --
+create table multi(
+    a tinyint,
+    b integer,
+    c bigint) 
+server sys_column_store_data_server
+create clustered index multi_all on multi(a, b, c);
+
 create index multi_singlekey_b on multi(b);
 create index multi_singlekey_c on multi(c);
 
 insert into multi 
 select * from matrix3x3;
 
-truncate table multi;
-drop index multi_singlekey_b;
-drop index multi_singlekey_c;
+drop table multi;
 
 --
 -- 2.4 Multiple multi columns indexes
 --
+create table multi(
+    a tinyint,
+    b integer,
+    c bigint) 
+server sys_column_store_data_server
+create clustered index multi_all on multi(a, b, c);
+
 create index multi_multikey_cb on multi(c, b);
 create index multi_multikey_ba on multi(b, a);
 
@@ -179,20 +226,12 @@ create foreign table matrix3x3_alt(
 server test_data
 options (filename 'matrix3x3_alt');
 
--- FIXME: these fail with the truncate/drop index scheme
-
--- insert into multi
--- select * from matrix3x3_alt;
+insert into multi
+select * from matrix3x3_alt;
 
 -- some more data
--- insert into multi 
--- select * from matrix3x3;
-
-drop index multi_multikey_cb;
-drop index multi_multikey_ba;
-
-create index multi_multikey_cb_recreated on multi(c, b);
-create index multi_multikey_ba_recreated on multi(b, a);
+insert into multi 
+select * from matrix3x3;
 
 drop table multi;
 
@@ -226,14 +265,25 @@ create index multimulti_subset_c on multimulti(c2,a2);
 insert into multimulti
 select * from matrix9x9;
 
-truncate table multimulti;
-drop index multimulti_subset_a;
-drop index multimulti_subset_b;
-drop index multimulti_subset_c;
+drop table multimulti;
 
 --
 -- 3.2 Indexes based on multiple clusters
 --
+create table multimulti(
+    a1 tinyint,
+    b1 integer,
+    c1 bigint,
+    a2 bigint,
+    b2 integer,
+    c2 tinyint, 
+    a3 bigint,
+    b3 tinyint,
+    c3 integer) 
+server sys_column_store_data_server
+create clustered index multi_1 on multimulti(a1, b1, c1)
+create clustered index multi_2 on multimulti(a2, b2, c2)
+create clustered index multi_3 on multimulti(a3, b3, c3);
 
 create index multimulti_mixed_a on multimulti(a1,a2,a3);
 create index multimulti_mixed_b on multimulti(b1,b2,b3);
@@ -256,19 +306,20 @@ create foreign table matrix9x9_alt(
 server test_data
 options (filename 'matrix9x9_alt');
 
--- FIXME: these no longer work with the truncate table / drop index testing
+insert into multimulti
+select * from matrix9x9_alt;
 
--- insert into multimulti
--- select * from matrix9x9_alt;
+insert into multimulti
+select * from matrix9x9;
 
--- insert into multimulti
--- select * from matrix9x9;
+insert into multimulti
+select * from matrix9x9_alt;
 
--- insert into multimulti
--- select * from matrix9x9_alt;
+insert into multimulti
+select * from matrix9x9;
 
--- insert into multimulti
--- select * from matrix9x9;
+insert into multimulti (a2, b2, c2)
+select * from matrix3x3;
 
 drop table multimulti;
 
@@ -307,7 +358,7 @@ create index typed_j on typed(j);
 create index typed_k on typed(k);
 create index typed_l on typed(l);
 create index typed_m on typed(m);
-create index typed_n on typed(n);
+create index typed_m on typed(n);
 
 -- surprisingly these don't cause any problems
 -- not sure how to input a binary field
@@ -327,8 +378,7 @@ insert into typed values(
     '3rd',false,DATE'2001-12-12',TIME'23:11:08',
     TIMESTAMP'2001-12-12 23:11:08',0.06);
 
--- FIXME: this doesn't work
-
+-- FIXME: this causes a crash
 -- insert into typed (a,d,e,f,g,h,i,j,k,l,m,n)
 -- select * from test_data.BCP."typed";
 

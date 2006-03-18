@@ -75,6 +75,16 @@ public class LcsTableProjectionRule extends MedAbstractFennelProjectionRule
             return;
         }
 
+        // TODO jvs 13-Mar-2006:  I put this in for safety so
+        // that once residuals get implemented, we don't accidentally
+        // project away the clustered indexes needed to evaluate them;
+        // but the right thing to do is to union those with the
+        // real projection list in order to come up with the
+        // set of clustered indexes needed.
+        if (origScan.getHasExtraFilter()) {
+            return;
+        }
+
         // Find all the clustered indexes that reference columns in
         // the projection list.  If the index references any column
         // in the projection, then it needs to be used in the scan.
@@ -95,19 +105,17 @@ public class LcsTableProjectionRule extends MedAbstractFennelProjectionRule
             indexList.add(index);
         }
 
-        // full row scan has no inputs.
-        RelNode [] emptyInput = new RelNode[0];
-
         // REVIEW:  should cluster be from origProject or origScan?
         RelNode projectedScan =
             new LcsRowScanRel(
                 origProject.getCluster(),
-                emptyInput,
+                origScan.getInputs(),
                 origScan.lcsTable,
                 indexList,
                 origScan.getConnection(),
                 projectedColumns,
-                true, false);
+                origScan.getIsFullScan(),
+                origScan.getHasExtraFilter());
 
         if (needRename) {
             projectedScan = renameProjectedScan(projectedScan);

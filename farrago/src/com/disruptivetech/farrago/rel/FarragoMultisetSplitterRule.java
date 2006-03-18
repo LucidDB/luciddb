@@ -84,9 +84,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
     {
         super(new RelOptRuleOperand(
             CalcRel.class,
-            new RelOptRuleOperand [] {
-                new RelOptRuleOperand(RelNode.class, null)
-            }));
+            null));
     }
 
     //~ Methods ---------------------------------------------------------------

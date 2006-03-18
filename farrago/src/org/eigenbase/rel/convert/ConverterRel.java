@@ -94,6 +94,11 @@ public abstract class ConverterRel extends SingleRel
             + inTraits + " traits");
     }
 
+    public boolean isDistinct()
+    {
+        return getChild().isDistinct();
+    }
+
     protected CallingConvention getInputConvention()
     {
         return

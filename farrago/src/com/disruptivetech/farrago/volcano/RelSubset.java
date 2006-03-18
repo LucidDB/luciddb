@@ -127,6 +127,11 @@ public class RelSubset extends AbstractRelNode
         return planner.makeZeroCost();
     }
 
+    public double getRows()
+    {
+        return bestCost.getRows();
+    }
+
     // implement RelNode
     public void explain(RelOptPlanWriter pw)
     {

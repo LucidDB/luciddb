@@ -26,8 +26,7 @@ import com.disruptivetech.farrago.calc.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.fem.fennel.*;
 
-import org.eigenbase.rel.RelFieldCollation;
-import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.rex.*;
@@ -113,18 +112,24 @@ public class FennelCalcRel extends FennelSingleRel
         program.explainCalc(this, pw);
     }
 
+    public double getRows()
+    {
+        return FilterRel.estimateFilteredRows(
+            getChild(), program.getCondition());
+    }
+
     // implement RelNode
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         // TODO:  the real thing
-        double rowCount = getRows();
 
         // NOTE jvs 26-July-2004: factor of 2 is to make sure cost always comes
         // out higher than IterCalcRel (making it at least deterministic until
         // we have proper costing, and giving preference to Java since it's
         // currently more reliable)
         int exprCount = program.getExprCount();
-        return planner.makeCost(rowCount, rowCount * exprCount * 2, 0);
+        return planner.makeCost(
+            getRows(), getChild().getRows() * exprCount * 2, 0);
     }
 
     public boolean isDistinct()

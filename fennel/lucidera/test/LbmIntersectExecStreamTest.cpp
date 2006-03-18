@@ -20,11 +20,7 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
-#include "fennel/test/ExecStreamUnitTestBase.h"
-#include "fennel/tuple/StandardTypeDescriptor.h"
-#include "fennel/exec/ValuesExecStream.h"
-#include "fennel/exec/ExecStreamEmbryo.h"
-#include "fennel/lucidera/bitmap/LbmEntry.h"
+#include "fennel/lucidera/test/LbmExecStreamTestBase.h"
 #include "fennel/lucidera/bitmap/LbmIntersectExecStream.h"
 #include <stdarg.h>
 
@@ -33,93 +29,10 @@
 using namespace fennel;
 
 /**
- * Structure for passing input data corresponding to bitmap inputs and
- * expected result
- */
-struct InputData
-{
-    /**
-     * Number of bytes in each bitmap entry.
-     */
-    uint bitmapSize; 
-
-    /**
-     * Initial rid value represented in the bitmap
-     */
-    LcsRid startRid;
-
-    /**
-     * Number of rids to skip in between each rid
-     */
-    uint skipRows;
-};
-
-/**
- * Structure containing information about the constructed bitmaps corresponding
- * the inputs and expected result
- */
-struct BitmapInput
-{
-    /**
-     * Buffers storing the bitmap segments
-     */
-    boost::shared_array<FixedBuffer> bufArray;
-    
-    boost::shared_array<FixedBuffer> pBuf;
-
-    /**
-     * Amount of space currently used in buffer
-     */
-    uint currBufSize;
-
-    /**
-     * Size of the buffer
-     */
-    uint fullBufSize;
-
-    /**
-     * Number of bitmap segments
-     */
-    uint nBitmaps;
-};
-
-/**
  * Testcase for Intersect exec stream
  */
-class LbmIntersectExecStreamTest : public ExecStreamUnitTestBase
+class LbmIntersectExecStreamTest : public LbmExecStreamTestBase
 {
-protected:
-    StandardTypeDescriptorFactory stdTypeFactory;
-    TupleAttributeDescriptor attrDesc_int64;
-    TupleAttributeDescriptor attrDesc_bitmap;
-
-    /**
-     * Size of bitmap columns
-     */
-    uint bitmapColSize;
-    
-    /**
-     * Tuple descriptor, tupledata, and accessor for a bitmap segment:
-     * (rid, segment descriptor, bitmap segments)
-     */
-    TupleDescriptor bitmapTupleDesc;
-    TupleData bitmapTupleData;
-    TupleAccessor bitmapTupleAccessor;
-
-    void initBitmapInput(
-        BitmapInput &bmInput, uint nRows, InputData const &inputData);
-
-    void generateBitmaps(
-        uint nRows, InputData const &inputData, BitmapInput &bmInput);
-
-    void produceEntry(
-        LbmEntry &lbmEntry, TupleAccessor &bitmapTupleAccessor,
-        BitmapInput &bmInput);
-
-    void initValuesExecStream(
-        uint idx, ValuesExecStreamParams &valuesParams,
-        ExecStreamEmbryo &valuesStreamEmbryo, BitmapInput &bmInput);
-
     void testIntersect(
         uint nInputs, uint nRows, std::vector<InputData> const &inputData);
 
@@ -133,10 +46,8 @@ public:
         FENNEL_UNIT_TEST_CASE(LbmIntersectExecStreamTest, testLargeInputs);
         FENNEL_UNIT_TEST_CASE(LbmIntersectExecStreamTest, testSingleBitmaps);
         FENNEL_UNIT_TEST_CASE(LbmIntersectExecStreamTest, testEmptyResult);
+        FENNEL_UNIT_TEST_CASE(LbmIntersectExecStreamTest, testZeros);
     }
-
-    void testCaseSetUp();
-    void testCaseTearDown();
 
     void test2Inputs();
     void test3Inputs();
@@ -145,6 +56,7 @@ public:
     void testLargeInputs();
     void testSingleBitmaps();
     void testEmptyResult();
+    void testZeros();
 };
 
 void LbmIntersectExecStreamTest::test2Inputs()
@@ -167,7 +79,7 @@ void LbmIntersectExecStreamTest::test2Inputs()
     inputData.push_back(input);
 
     // expected result -- every other bit set, starting at 10
-    input.bitmapSize = nRows/8;
+    input.bitmapSize = resultBitmapSize(10, nRows);
     input.startRid = LcsRid(10);
     input.skipRows = 2;
     inputData.push_back(input);
@@ -201,7 +113,7 @@ void LbmIntersectExecStreamTest::test3Inputs()
     inputData.push_back(input);
 
     // expected result -- every 6 rids set, starting at 36
-    input.bitmapSize = nRows/8;
+    input.bitmapSize = resultBitmapSize(36, nRows);
     input.startRid = LcsRid(36);
     input.skipRows = 2*3;
     inputData.push_back(input);
@@ -242,7 +154,7 @@ void LbmIntersectExecStreamTest::testGaps()
     inputData.push_back(input);
 
     // expected result -- every 3*11*19 rids set, starting at 3*11*19
-    input.bitmapSize = nRows/8;
+    input.bitmapSize = resultBitmapSize(3*11*19, nRows);
     input.startRid = LcsRid(3*11*19);
     input.skipRows = 3*11*19;
     inputData.push_back(input);
@@ -257,7 +169,7 @@ void LbmIntersectExecStreamTest::testGaps()
 void LbmIntersectExecStreamTest::testLargeOutput()
 {
     uint nInputs = 2;
-    uint nRows = 10000;
+    uint nRows = 100000;
     std::vector<InputData> inputData;
     InputData input;
 
@@ -274,7 +186,7 @@ void LbmIntersectExecStreamTest::testLargeOutput()
     inputData.push_back(input);
 
     // expected result -- every 16 bits set
-    input.bitmapSize = nRows/8;
+    input.bitmapSize = resultBitmapSize(0, nRows);
     input.startRid = LcsRid(0);
     input.skipRows = 16;
     inputData.push_back(input);
@@ -305,7 +217,7 @@ void LbmIntersectExecStreamTest::testLargeInputs()
     inputData.push_back(input);
 
     // expected result -- every 8*15 bits set
-    input.bitmapSize = nRows/8;
+    input.bitmapSize = resultBitmapSize(0, nRows);
     input.startRid = LcsRid(0);
     input.skipRows = 8*15;
     inputData.push_back(input);
@@ -336,7 +248,7 @@ void LbmIntersectExecStreamTest::testSingleBitmaps()
     inputData.push_back(input);
 
     // expected result -- every 4 bits set
-    input.bitmapSize = nRows/8;
+    input.bitmapSize = resultBitmapSize(0, nRows);
     input.startRid = LcsRid(0);
     input.skipRows = 4;
     inputData.push_back(input);
@@ -375,6 +287,38 @@ void LbmIntersectExecStreamTest::testEmptyResult()
     testIntersect(nInputs, nRows, inputData);
 }
 
+/**
+ * Testcase where AND'd segments will result in certain bytes containing
+ * zeroes
+ */
+void LbmIntersectExecStreamTest::testZeros()
+{
+    uint nInputs = 2;
+    uint nRows = 4000;
+    std::vector<InputData> inputData;
+    InputData input;
+
+    // bitmap input 1 -- every 3 bits set, starting at 3
+    input.bitmapSize = 9;
+    input.startRid = LcsRid(3);
+    input.skipRows = 3;
+    inputData.push_back(input);
+
+    // bitmap input 2 -- every 4 bits set, starting at 4
+    input.bitmapSize = 9;
+    input.startRid = LcsRid(4);
+    input.skipRows = 4;
+    inputData.push_back(input);
+
+    // expected result -- every 12 bits set, starting at 12
+    input.bitmapSize = resultBitmapSize(12, nRows);
+    input.startRid = LcsRid(12);
+    input.skipRows = 12;
+    inputData.push_back(input);
+
+    testIntersect(nInputs, nRows, inputData);
+}
+
 void LbmIntersectExecStreamTest::testIntersect(
     uint nInputs, uint nRows, std::vector<InputData> const &inputData)
 {
@@ -400,7 +344,7 @@ void LbmIntersectExecStreamTest::testIntersect(
     if (inputData[nInputs].bitmapSize > 0) {
         initBitmapInput(bmInputs[nInputs], nRows, inputData[nInputs]);
     } else {
-        bmInputs[nInputs].pBuf.reset();
+        bmInputs[nInputs].bufArray.reset();
         bmInputs[nInputs].nBitmaps = 0;
     }
 
@@ -418,112 +362,9 @@ void LbmIntersectExecStreamTest::testIntersect(
     SharedExecStream pOutputStream = prepareConfluenceGraph(
         valuesStreamEmbryoList, intersectEmbryo);
 
-    if (bmInputs[nInputs].pBuf.get()) {
-        bitmapTupleAccessor.setCurrentTupleBuf(bmInputs[nInputs].pBuf.get());
-    }
     verifyBufferedOutput(
         *pOutputStream, bitmapTupleDesc, bmInputs[nInputs].nBitmaps,
-        bmInputs[nInputs].pBuf.get());
-}
-
-void LbmIntersectExecStreamTest::initBitmapInput(
-    BitmapInput &bmInput, uint nRows, InputData const &inputData)
-{
-    bmInput.fullBufSize = (nRows/inputData.skipRows) * 16;
-    bmInput.bufArray.reset(new FixedBuffer[bmInput.fullBufSize]);
-    bmInput.pBuf = bmInput.bufArray;
-    bmInput.nBitmaps = 0;
-    bmInput.currBufSize = 0;
-    generateBitmaps(nRows, inputData, bmInput);
-}
-
-void LbmIntersectExecStreamTest::generateBitmaps(
-    uint nRows, InputData const &inputData, BitmapInput &bmInput)
-{
-    LbmEntry lbmEntry;
-    boost::scoped_array<FixedBuffer> entryBuf;
-    LcsRid rid = LcsRid(inputData.startRid);
-
-    // setup an LbmEntry with the initial rid value
-    entryBuf.reset(new FixedBuffer[bitmapColSize]);
-    lbmEntry.init(entryBuf.get(), bitmapColSize, bitmapTupleDesc);
-    bitmapTupleData[0].pData = (PConstBuffer) &rid;
-    lbmEntry.setEntryTuple(bitmapTupleData);
-
-    // add on the remaining rids
-    for (rid = LcsRid(inputData.startRid + inputData.skipRows);
-        rid < LcsRid(nRows); rid += inputData.skipRows)
-    {
-        if ((rid > LcsRid(0) &&
-                opaqueToInt(rid % (inputData.bitmapSize*8)) == 0) ||
-            !lbmEntry.setRID(LcsRid(rid)))
-        {
-            // either hit desired number of rids per bitmap segment or
-            // exhausted buffer space, so write the tuple to the output
-            // buffer and reset LbmEntry
-            produceEntry(lbmEntry, bitmapTupleAccessor, bmInput);
-            lbmEntry.setEntryTuple(bitmapTupleData);
-        }
-    }
-    // write out the last LbmEntry
-    produceEntry(lbmEntry, bitmapTupleAccessor, bmInput);
-    
-    assert(bmInput.currBufSize <= bmInput.fullBufSize);
-}
-
-void LbmIntersectExecStreamTest::produceEntry(
-    LbmEntry &lbmEntry, TupleAccessor &bitmapTupleAccessor, 
-    BitmapInput &bmInput)
-{
-    TupleData bitmapTuple = lbmEntry.produceEntryTuple();
-    bitmapTupleAccessor.marshal(
-        bitmapTuple, bmInput.pBuf.get() + bmInput.currBufSize);
-    bmInput.currBufSize += bitmapTupleAccessor.getCurrentByteCount();
-    ++bmInput.nBitmaps;
-}
-
-void LbmIntersectExecStreamTest::initValuesExecStream(
-    uint idx, ValuesExecStreamParams &valuesParams,
-    ExecStreamEmbryo &valuesStreamEmbryo, BitmapInput &bmInput)
-{
-    valuesParams.outputTupleDesc = bitmapTupleDesc;
-    valuesParams.pTupleBuffer = bmInput.pBuf;
-    valuesParams.bufSize = bmInput.currBufSize;
-
-    valuesStreamEmbryo.init(new ValuesExecStream(), valuesParams);
-    std::ostringstream oss;
-    oss << "InputValuesExecStream" << "#" << idx;
-    valuesStreamEmbryo.getStream()->setName(oss.str());
-}
-
-void LbmIntersectExecStreamTest::testCaseSetUp()
-{    
-    ExecStreamUnitTestBase::testCaseSetUp();
-
-    attrDesc_int64 = TupleAttributeDescriptor(
-        stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
-    bitmapColSize = pRandomSegment->getUsablePageSize()/8;
-    attrDesc_bitmap = TupleAttributeDescriptor(
-        stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY),
-        true, bitmapColSize);
-
-    bitmapTupleDesc.push_back(attrDesc_int64);
-    bitmapTupleDesc.push_back(attrDesc_bitmap);
-    bitmapTupleDesc.push_back(attrDesc_bitmap);
-
-    bitmapTupleData.compute(bitmapTupleDesc);
-    bitmapTupleData[1].pData = NULL;
-    bitmapTupleData[1].cbData = 0;
-    bitmapTupleData[2].pData = NULL;
-    bitmapTupleData[2].cbData = 0;
-        
-    bitmapTupleAccessor.compute(bitmapTupleDesc);
-}
-
-void LbmIntersectExecStreamTest::testCaseTearDown()
-{
-    ExecStreamUnitTestBase::testCaseTearDown();
-    bitmapTupleDesc.clear();
+        bmInputs[nInputs].bufArray.get());
 }
 
 FENNEL_UNIT_TEST_SUITE(LbmIntersectExecStreamTest);

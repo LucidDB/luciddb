@@ -55,8 +55,7 @@ public class FarragoReleaseProperties extends Properties
     
     /**
      * @return the {@link org.eigenbase.util.Glossary#SingletonPattern
-     * singleton} properties object, constructed from {@link
-     * FarragoProperties#getCatalogDir}.
+     * singleton} properties object
      */
     public static synchronized FarragoReleaseProperties instance()
     {

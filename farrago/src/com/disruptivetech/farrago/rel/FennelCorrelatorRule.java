@@ -44,10 +44,7 @@ public class FennelCorrelatorRule extends RelOptRule {
     public FennelCorrelatorRule() {
         super(new RelOptRuleOperand(
                 CorrelatorRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(RelNode.class, null),
-                    new RelOptRuleOperand(RelNode.class, null)
-                }));
+                null));
     }
 
     // implement RelOptRule
@@ -58,7 +55,7 @@ public class FennelCorrelatorRule extends RelOptRule {
 
     public void onMatch(RelOptRuleCall call) {
         CorrelatorRel correlatorRel = (CorrelatorRel) call.rels[0];
-        RelNode relLeftInput = call.rels[1];
+        RelNode relLeftInput = correlatorRel.getLeft();
         RelNode fennelLeftInput =
             mergeTraitsAndConvert(
                 correlatorRel.getTraits(),
@@ -68,7 +65,7 @@ public class FennelCorrelatorRule extends RelOptRule {
             return;
         }
 
-        RelNode relRightInput = call.rels[2];
+        RelNode relRightInput = correlatorRel.getRight();
         RelNode fennelRightInput =
             mergeTraitsAndConvert(
                 correlatorRel.getTraits(),

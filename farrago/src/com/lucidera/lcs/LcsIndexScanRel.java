@@ -23,23 +23,17 @@ package com.lucidera.lcs;
 import java.util.*;
 import java.util.List;
 
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.*;
 import net.sf.farrago.cwm.keysindexes.*;
-import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.query.*;
-import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
 
 import openjava.ptree.Literal;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -160,11 +154,6 @@ class LcsIndexScanRel extends TableAccessRelBase implements FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         return lcsTable.getIndexGuide().newIndexScan(this, index);
-    }
-
-    public FemLbmIndexScanStreamDef newLbmIndexSearch(FennelRel rel)
-    {
-        return lcsTable.getIndexGuide().newLbmIndexSearch(this, index);
     }
 
     // implement RelNode

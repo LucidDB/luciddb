@@ -106,6 +106,20 @@ class RelSet
         return parents;
     }
 
+    /**
+     * @return all of the {@link RelNode}s contained by any subset
+     * of this set (does not include the subset objects themselves)
+     */
+    public ArrayList getRelsFromAllSubsets()
+    {
+        ArrayList rels = new ArrayList();
+        for (int i = 0; i < subsets.size(); i++) {
+            RelSubset subset = (RelSubset) subsets.get(i);
+            rels.addAll(subset.rels);
+        }
+        return rels;
+    }
+
     public RelSubset getSubset(RelTraitSet traits)
     {
         for (int i = 0; i < subsets.size(); i++) {

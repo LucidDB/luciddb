@@ -52,9 +52,7 @@ public class FennelDistinctSortRule extends RelOptRule
     {
         super(new RelOptRuleOperand(
                 AggregateRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(RelNode.class, null)
-                }));
+                null));
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -72,7 +70,7 @@ public class FennelDistinctSortRule extends RelOptRule
         if (agg.getAggCalls().length > 0) {
             return;
         }
-        RelNode relInput = call.rels[1];
+        RelNode relInput = agg.getChild();
         int n = relInput.getRowType().getFieldList().size();
         if (agg.getGroupCount() < n) {
             return;

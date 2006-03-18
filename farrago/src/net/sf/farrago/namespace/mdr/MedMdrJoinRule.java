@@ -99,6 +99,10 @@ class MedMdrJoinRule extends RelOptRule
             // right hand side), which we will represent with a null reference
             reference = null;
         } else {
+            if (rightOrdinal > features.size()) {
+                // Pseudocolumn such as mofClassName:  can't join.
+                return;
+            }
             StructuralFeature feature =
                 (StructuralFeature) features.get(rightOrdinal);
             if (!(feature instanceof Reference)) {

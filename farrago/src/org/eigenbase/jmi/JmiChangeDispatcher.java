@@ -106,7 +106,7 @@ public interface JmiChangeDispatcher
      *
      * @param container namespace in which collision occurred
      *
-     * @param newElement new element being defined with duplicate name
+     * @param newElement element being created or updated with duplicate name
      *
      * @param oldElement existing element with same name
      *

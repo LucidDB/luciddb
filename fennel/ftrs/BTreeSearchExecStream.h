@@ -88,18 +88,26 @@ protected:
     TupleProjectionAccessor directiveAccessor;
     TupleProjectionAccessor upperBoundAccessor;
     TupleDescriptor inputKeyDesc, upperBoundDesc;
-    TupleData inputKeyData,upperBoundData,readerKeyData,directiveData;
+    TupleData inputKeyData,upperBoundData,readerKeyData,directiveData,
+        *pSearchKey;
     bool outerJoin;
     bool preFilterNulls;
     uint nJoinAttributes;
     SearchEndpoint lowerBoundDirective;
     SearchEndpoint upperBoundDirective;
-    TupleProjection upperBoundProj;
     bool leastUpper;
 
     bool innerSearchLoop();
     void readDirectives();
     bool testInterval();
+
+    /**
+     * Determines if the next key value is within the upper bound search
+     * range
+     *
+     * @return true if next key value is within upper bound search range
+     */
+    bool checkNextKey();
 
     /**
      * Determines if enough tuples have been produced for this stream

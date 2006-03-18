@@ -41,11 +41,6 @@ struct LbmIndexScanExecStreamParams : public BTreeSearchExecStreamParams
     DynamicParamId rowLimitParamId;
 
     /**
-     * True if the dynamic parameter rowLimit parameter should be ignored
-     */
-    bool ignoreRowLimit;
-
-    /**
      * Parameter id representing the dynamic parameter used to set the
      * starting rid value for bitmap entries
      */
@@ -75,7 +70,7 @@ class LbmIndexScanExecStream : public BTreeSearchExecStream
     DynamicParamId rowLimitParamId;
 
     /**
-     * True if the dynamic parameter rowLimit parameter should be ignored
+     * True if row limit does not apply
      */
     bool ignoreRowLimit;
 
@@ -104,6 +99,11 @@ class LbmIndexScanExecStream : public BTreeSearchExecStream
      * Tuple datum used to store dynamic parameter for startRid
      */
     TupleDatum startRidDatum;
+
+    /**
+     * Tuple data used as search key that includes rid
+     */
+    TupleData ridSearchKeyData;
 
     /**
      * Checks if number of tuples produced has reached limit.  Always returns

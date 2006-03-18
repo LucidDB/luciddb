@@ -246,14 +246,26 @@ jint JniUtil::init(JavaVM *pVmInit)
     return jniVersion;
 }
 
-JNIEnv *JniUtil::getJavaEnv()
+JNIEnv *JniUtil::getAttachedJavaEnv(bool &needDetach)
 {
-    void *pEnv;
-    // REVIEW:  need to DetachCurrentThread somewhere?
-    jint rc = pVm->AttachCurrentThreadAsDaemon(&pEnv,NULL);
-    assert(rc == JNI_OK);
+    void *pEnv = NULL;
+    jint rc = pVm->GetEnv(&pEnv,jniVersion);
+    if (rc == JNI_OK) {
+        // previously attached, so it would be wrong to detach in destructor
+        needDetach = false;
+        return static_cast<JNIEnv *>(pEnv);
+    }
+    needDetach = true;
+    rc = pVm->AttachCurrentThread(&pEnv,NULL);
+    assert(rc == 0);
     assert(pEnv);
     return static_cast<JNIEnv *>(pEnv);
+}
+
+void JniUtil::detachJavaEnv()
+{
+    jint rc = pVm->DetachCurrentThread();
+    assert(rc == 0);
 }
 
 std::string JniUtil::getClassName(jclass jClass)
@@ -347,8 +359,15 @@ JniExceptionChecker::~JniExceptionChecker()
 }
 
 JniEnvAutoRef::JniEnvAutoRef()
-    : JniEnvRef(JniUtil::getJavaEnv())
+    : JniEnvRef(JniUtil::getAttachedJavaEnv(needDetach))
 {
+}
+
+JniEnvAutoRef::~JniEnvAutoRef()
+{
+    if (needDetach) {
+        JniUtil::detachJavaEnv();
+    }
 }
 
 void JniEnvRef::handleExcn(std::exception &ex)

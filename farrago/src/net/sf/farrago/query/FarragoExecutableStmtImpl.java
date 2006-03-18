@@ -45,16 +45,19 @@ abstract class FarragoExecutableStmtImpl extends FarragoCompoundAllocation
     //~ Instance fields -------------------------------------------------------
 
     private final boolean isDml;
-    private RelDataType dynamicParamRowType;
+    private final RelDataType dynamicParamRowType;
+    private final TableAccessMap tableAccessMap;
 
     //~ Constructors ----------------------------------------------------------
 
     protected FarragoExecutableStmtImpl(
         RelDataType dynamicParamRowType,
-        boolean isDml)
+        boolean isDml,
+        TableAccessMap tableAccessMap)
     {
         this.isDml = isDml;
         this.dynamicParamRowType = dynamicParamRowType;
+        this.tableAccessMap = tableAccessMap;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -75,6 +78,12 @@ abstract class FarragoExecutableStmtImpl extends FarragoCompoundAllocation
     public Set getReferencedObjectIds()
     {
         return Collections.EMPTY_SET;
+    }
+    
+    // implement FarragoSessionExecutableStmt
+    public TableAccessMap getTableAccessMap()
+    {
+        return tableAccessMap;
     }
 }
 

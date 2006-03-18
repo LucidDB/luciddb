@@ -28,6 +28,8 @@ import java.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 
+// TODO jvs 9-Mar-2006:  move this class to another package; it
+// doesn't really belong here.
 
 /**
  * <code>TableAccessMap</code> represents the tables accessed by a query plan,
@@ -41,32 +43,43 @@ public class TableAccessMap
 {
     //~ Static fields/initializers --------------------------------------------
 
-    /**
-     * Table is accessed for read only.
-     */
-    public static final String READ_ACCESS = "R";
+    public static enum Mode 
+    {
+        /**
+         * Table is not accessed at all.
+         */
+        NO_ACCESS,
+        
+        /**
+         * Table is accessed for read only.
+         */
+        READ_ACCESS,
 
-    /**
-     * Table is accessed for write only.
-     */
-    public static final String WRITE_ACCESS = "W";
+        /**
+         * Table is accessed for write only.
+         */
+        WRITE_ACCESS,
 
-    /**
-     * Table is accessed for both read and write.
-     */
-    public static final String READWRITE_ACCESS = "RW";
-
-    /**
-     * Table is not accessed at all.
-     */
-    public static final String NO_ACCESS = "N";
+        /**
+         * Table is accessed for both read and write.
+         */
+        READWRITE_ACCESS
+    }
 
     //~ Instance fields -------------------------------------------------------
 
-    private Map accessMap;
+    private final Map<List<String>, Mode> accessMap;
 
     //~ Constructors ----------------------------------------------------------
 
+    /**
+     * Constructs a permanently empty TableAccessMap.
+     */
+    public TableAccessMap()
+    {
+        accessMap = Collections.EMPTY_MAP;
+    }
+    
     /**
      * Constructs a TableAccessMap for all tables accessed by a RelNode and
      * its descendants.
@@ -75,7 +88,11 @@ public class TableAccessMap
      */
     public TableAccessMap(RelNode rel)
     {
-        accessMap = new HashMap();
+        // NOTE jvs 9-Mar-2006: This method must NOT retain a reference to the
+        // input rel, because we use it for cached statements, and we don't
+        // want to retain any rel references after preparation completes.
+        
+        accessMap = new HashMap<List<String>, Mode>();
         RelOptUtil.go(
             new TableRelVisitor(),
             rel);
@@ -84,58 +101,75 @@ public class TableAccessMap
     //~ Methods ---------------------------------------------------------------
 
     /**
+     * @return set of qualified names for all tables accessed
+     */
+    public Set<List<String>> getTablesAccessed()
+    {
+        return accessMap.keySet();
+    }
+
+    /**
      * Determines whether a table is accessed at all.
      *
-     * @param table the table of interest
+     * @param tableName qualified name of the table of interest
      *
      * @return true if table is accessed
      */
-    public boolean isTableAccessed(RelOptTable table)
+    public boolean isTableAccessed(List<String> tableName)
     {
-        return accessMap.containsKey(getKey(table));
+        return accessMap.containsKey(tableName);
     }
 
     /**
      * Determines whether a table is accessed for read.
      *
-     * @param table the table of interest
+     * @param tableName qualified name of the table of interest
      *
      * @return true if table is accessed for read
      */
-    public boolean isTableAccessedForRead(RelOptTable table)
+    public boolean isTableAccessedForRead(List<String> tableName)
     {
-        return getTableAccessMode(table).indexOf("R") > -1;
+        Mode mode = getTableAccessMode(tableName);
+        return (mode == Mode.READ_ACCESS) || (mode == Mode.READWRITE_ACCESS);
     }
 
     /**
      * Determines whether a table is accessed for write.
      *
-     * @param table the table of interest
+     * @param tableName qualified name of the table of interest
      *
      * @return true if table is accessed for write
      */
-    public boolean isTableAccessedForWrite(RelOptTable table)
+    public boolean isTableAccessedForWrite(List<String> tableName)
     {
-        return getTableAccessMode(table).indexOf("W") > -1;
+        Mode mode = getTableAccessMode(tableName);
+        return (mode == Mode.WRITE_ACCESS) || (mode == Mode.READWRITE_ACCESS);
     }
 
     /**
      * Determines the access mode of a table.
      *
-     * @param table the table of interest
+     * @param tableName qualified name of the table of interest
      *
-     * @return one of the xxx_ACCESS constants
+     * @return access mode
      */
-    public String getTableAccessMode(RelOptTable table)
+    public Mode getTableAccessMode(List<String> tableName)
     {
-        String s = (String) accessMap.get(getKey(table));
-        if (s == null) {
-            return NO_ACCESS;
+        Mode mode = accessMap.get(tableName);
+        if (mode == null) {
+            return Mode.NO_ACCESS;
         }
-        return s;
+        return mode;
     }
 
-    private Object getKey(RelOptTable table)
+    /**
+     * Constructs a qualified name for an optimizer table reference.
+     *
+     * @param table table of interest
+     *
+     * @return qualified name
+     */
+    public List<String> getQualifiedName(RelOptTable table)
     {
         return Arrays.asList(table.getQualifiedName());
     }
@@ -155,21 +189,21 @@ public class TableAccessMap
             if (table == null) {
                 return;
             }
-            String newAccess;
+            Mode newAccess;
             // FIXME jvs 1-Feb-2006:  Don't rely on object type here;
             // eventually someone is going to write a rule which transforms
             // to something which doesn't inherit TableModificationRelBase,
             // and this will break.  Need to make this explicit in
             // the RelNode interface.
             if (p instanceof TableModificationRelBase) {
-                newAccess = WRITE_ACCESS;
+                newAccess = Mode.WRITE_ACCESS;
             } else {
-                newAccess = READ_ACCESS;
+                newAccess = Mode.READ_ACCESS;
             }
-            Object key = getKey(table);
-            String oldAccess = (String) accessMap.get(key);
-            if ((oldAccess != null) && !oldAccess.equals(newAccess)) {
-                newAccess = READWRITE_ACCESS;
+            List<String> key = getQualifiedName(table);
+            Mode oldAccess = accessMap.get(key);
+            if ((oldAccess != null) && (oldAccess != newAccess)) {
+                newAccess = Mode.READWRITE_ACCESS;
             }
             accessMap.put(key, newAccess);
         }

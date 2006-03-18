@@ -32,54 +32,36 @@ void LbmIndexScanExecStream::prepare(LbmIndexScanExecStreamParams const &params)
     BTreeSearchExecStream::prepare(params);
 
     rowLimitParamId = params.rowLimitParamId;
+    ignoreRowLimit = (rowLimitParamId == DynamicParamId(0));
+    if (!ignoreRowLimit) {
+        // tupledatum for dynamic parameter
+        rowLimitDatum.pData = (PConstBuffer) &rowLimit;
+        rowLimitDatum.cbData = sizeof(rowLimit);
+    }
+
     startRidParamId = params.startRidParamId;
-    ignoreRowLimit =
-        params.ignoreRowLimit || rowLimitParamId == DynamicParamId(0);
-
-    // setup tupledatums for copying dynamic parameters
-    rowLimitDatum.pData = (PConstBuffer) &rowLimit;
-    rowLimitDatum.cbData = sizeof(rowLimit);
-    startRidDatum.pData = (PConstBuffer) &startRid;
-    startRidDatum.cbData = sizeof(startRid);
-
-    // If the full index key is being used, then the rid is part of the search
-    // key. If the dynamic parameter is used, we can optimize by searching
-    // on the full key including the startRid.
-    // Note: All valid dynamic parameters have higher Id than 0.
-    ridInKey =
-        treeDescriptor.keyProjection.size() == inputKeyDesc.size() &&
-            startRidParamId > DynamicParamId(0);
-
-    // If the search key is not the full index key, we can not optimize by
-    // including the startRid in the search key (otherwise the search key will
-    // not be a prefix to the full index key and hence is "unsearchable").
-    // Make sure there is no start rid parameter in this case.
-    assert(
-        !(treeDescriptor.keyProjection.size() > inputKeyDesc.size() &&
-            startRidParamId > DynamicParamId(0)));
-
+    ridInKey = (startRidParamId > DynamicParamId(0));
     if (ridInKey) {
-        // if the rid is part of the key, make sure rids are expected to be
-        // outputted in the first key and a rid is the last btree
-        // search key
+        // make sure full key minus rid is specified as search key
+        assert(inputKeyDesc.size() == treeDescriptor.keyProjection.size() -1);
+
+        startRidDatum.pData = (PConstBuffer) &startRid;
+        startRidDatum.cbData = sizeof(startRid);
+
+        // add on the rid to the btree search key
+        TupleDescriptor ridKeyDesc = inputKeyDesc;
+
         StandardTypeDescriptorFactory stdTypeFactory;
-        TupleAttributeDescriptor expectedRidDesc(
+        TupleAttributeDescriptor attrDesc(
             stdTypeFactory.newDataType(STANDARD_TYPE_RECORDNUM));
-        assert(params.outputTupleDesc[0] == expectedRidDesc);
-        assert(inputKeyDesc[inputKeyDesc.size() - 1] == expectedRidDesc);
-        assert(lowerBoundDirective == SEARCH_OPEN_LOWER);
-        assert(upperBoundDirective == SEARCH_CLOSED_UPPER);
+        ridKeyDesc.push_back(attrDesc);
+        ridSearchKeyData.compute(ridKeyDesc);
+        // rid is last key
+        ridSearchKeyData[ridSearchKeyData.size() - 1].pData =
+            (PConstBuffer) &startRid;
 
         // need to look for greatest lower bound if searching on rid
         leastUpper = false;
-
-        // remove the rid from the upper bound key, since the rid is only
-        // needed to initiate the lower bound search
-        upperBoundProj.pop_back();
-        upperBoundAccessor.bind(
-            pInAccessor->getConsumptionTupleAccessor(), upperBoundProj);
-        upperBoundDesc.projectFrom(pInAccessor->getTupleDesc(), upperBoundProj);
-        upperBoundData.compute(upperBoundDesc);
     }
 }
 
@@ -90,7 +72,7 @@ bool LbmIndexScanExecStream::reachedTupleLimit(uint nTuples)
     }
 
     // read the parameter the first time through
-    if (nTuples == 1) {
+    if (nTuples == 0) {
         pDynamicParamManager->readParam(rowLimitParamId, rowLimitDatum);
     }
     return (nTuples >= rowLimit);
@@ -99,10 +81,20 @@ bool LbmIndexScanExecStream::reachedTupleLimit(uint nTuples)
 void LbmIndexScanExecStream::setAdditionalKeys()
 {
     if (ridInKey) {
-        pDynamicParamManager->readParam(startRidParamId, startRidDatum);
+        // make sure we really are doing an equality search
+        assert(lowerBoundDirective == SEARCH_CLOSED_LOWER);
+        assert(upperBoundDirective == SEARCH_CLOSED_UPPER);
 
-        // rid is the last key
-        inputKeyData[inputKeyData.size() - 1].pData = (PConstBuffer) &startRid;
+        // Copy the inputKeyData into the tupledata that contains the 
+        // rid key.
+        for (uint i = 0; i < inputKeyData.size(); i++) {
+            ridSearchKeyData[i] = inputKeyData[i];
+        }
+        pDynamicParamManager->readParam(startRidParamId, startRidDatum);
+        pSearchKey = &ridSearchKeyData;
+
+    } else {
+        pSearchKey = &inputKeyData;
     }
 }
 

@@ -354,4 +354,26 @@
 '    MedJdbcQueryRel(foreignSql=[SELECT *'
 'FROM "SALES"."DEPT"])'
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- join on pseudocolumn (FRG-69)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select 
+. . . . . . . . >     e."name" as exception_name,
+. . . . . . . . >     p."name" as param_name
+. . . . . . . . > from
+. . . . . . . . >     mof_repository.model."Exception" e
+. . . . . . . . > inner join
+. . . . . . . . >     mof_repository.model."Parameter" p
+. . . . . . . . > on 
+. . . . . . . . >     e."mofId" = p."mofClassName"
+. . . . . . . . > ;
+'column0'
+'IterCalcRel(expr#0..14=[{inputs}], expr#15=[=($t5, $t14)], EXCEPTION_NAME=[$t0], PARAM_NAME=[$t7], $condition=[$t15])'
+'  FennelToIteratorConverter'
+'    FennelCartesianProductRel(leftouterjoin=[false])'
+'      IteratorToFennelConverter'
+'        MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Exception]])'
+'      IteratorToFennelConverter'
+'        MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Parameter]])'
+0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

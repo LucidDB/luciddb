@@ -1,5 +1,5 @@
 /*
-// $Id$
+ // $Id$
 // Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2006-2006 The Eigenbase Project
 // Copyright (C) 2006-2006 Disruptive Tech
@@ -39,6 +39,32 @@ public class SargIntervalSequence
     SargIntervalSequence()
     {
         list = new ArrayList<SargInterval>();
+    }
+
+    /**
+     * @return true if this sequence represents a point range.
+     */
+    public boolean isPoint()
+    {
+    	return (list.size() == 1 && list.get(0).isPoint());
+    }
+    
+    /**
+     * @return true if this sequence represents an empty range.
+     */
+    public boolean isEmpty()
+    {
+    	return (list.size() == 1 && list.get(0).isEmpty());
+    }
+    
+    /**
+     * @return true if this sequence represents a non-point, 
+     * non-empty range.
+     */
+    public boolean isRange()
+    {
+    	return (list.size() > 1 || 
+    			(list.size() == 1 && list.get(0).isRange()));
     }
 
     /**

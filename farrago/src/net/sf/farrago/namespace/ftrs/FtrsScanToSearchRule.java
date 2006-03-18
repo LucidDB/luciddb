@@ -41,6 +41,7 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.util.*;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sarg.*;
 
@@ -84,35 +85,45 @@ class FtrsScanToSearchRule extends RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
         FilterRel filter = (FilterRel) call.rels[0];
+
         FtrsIndexScanRel scan = (FtrsIndexScanRel) call.rels[1];
-
         FarragoRepos repos = FennelRelUtil.getRepos(scan);
-
-        RexNode filterExp = filter.getCondition();
-
-        RexNode extraFilter = null;
-
-        SargFactory sargFactory = new SargFactory(
-            scan.getCluster().getRexBuilder());
+        RexBuilder rexBuilder = scan.getCluster().getRexBuilder();
+        SargFactory sargFactory = new SargFactory(rexBuilder);
         SargRexAnalyzer rexAnalyzer = sargFactory.newRexAnalyzer();
-        SargBinding sargBinding = rexAnalyzer.analyze(filterExp);
+        
+        RexNode filterExp = filter.getCondition();
+        RexNode extraFilter = null;
+        
+        List<SargBinding> sargBindingList = rexAnalyzer.analyzeAll(filterExp);
 
-        // TODO jvs 23-Jan-2006:  proper decomposition of conjunctions;
-        // this is just a hack for backwards compatibility in tests
-        if (sargBinding == null) {
-            if (filterExp.isA(RexKind.And)) {
-                RexCall andExpression = (RexCall) filterExp;
-                filterExp = andExpression.operands[0];
-                extraFilter = andExpression.operands[1];
-                sargBinding = rexAnalyzer.analyze(filterExp);
-            }
-        }
-
-        if (sargBinding == null) {
+        if (sargBindingList.isEmpty()) {
             // Predicate was not sargable
             return;
         }
 
+        // only support one sargBinding now.
+        SargBinding sargBinding = sargBindingList.get(0);
+        sargBindingList.remove(0);
+
+        // and make the rest residual for now
+        RexNode residualRexNode = 
+            rexAnalyzer.getResidualSargRexNode(sargBindingList);
+
+        RexNode postFilterRexNode =
+            rexAnalyzer.getPostFilterRexNode();
+
+        if (residualRexNode != null && postFilterRexNode != null) {
+            extraFilter = 
+                rexBuilder.makeCall(
+                    SqlStdOperatorTable.andOperator,
+                    residualRexNode, postFilterRexNode);
+        } else if (residualRexNode != null) {
+            extraFilter = residualRexNode;
+        } else if (postFilterRexNode != null) {
+            extraFilter = postFilterRexNode;
+        }
+        
         RexInputRef fieldAccess = sargBinding.getInputRef();
         FemAbstractColumn filterColumn =
             scan.getColumnForFieldAccess(fieldAccess.getIndex());
@@ -281,8 +292,7 @@ class FtrsScanToSearchRule extends RelOptRule
     {
         if (extraFilter != null) {
             searchRel =
-                CalcRel.createFilter(searchRel,
-                    extraFilter);
+                CalcRel.createFilter(searchRel, extraFilter);
         }
         call.transformTo(searchRel);
     }

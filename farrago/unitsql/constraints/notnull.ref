@@ -1,18 +1,15 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/constraints/notnull.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/constraints/notnull.sql#1 $
 0: jdbc:farrago:> -- Test NOT NULL constraints
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- FIXME jvs 12-June-2005:  the error messages resulting from both
-0: jdbc:farrago:> -- statements below are unhelpful.
+0: jdbc:farrago:> -- use Java calc because it gives better error messages
+0: jdbc:farrago:> alter system set "calcVirtualMachine"='CALCVM_JAVA';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOT NULL enforcement:  should fail
 0: jdbc:farrago:> insert into sales.depts values (null,'Nullification');
-Error: could not calculate results for the following row:
-[ 0 ]
-Messages:
-[0]:PC=4 Code=22004 (state=,code=0)
+Error: Target CAST($t2):INTEGER NOT NULL cannot be assigned null value (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOT NULL enforcement:  should fail due to implicit NULL
 0: jdbc:farrago:> insert into sales.emps(name,empno) values ('wael',300);
-Error: Target CAST($t3):INTEGER NOT NULL cannot be assigned null value (state=,code=0)
+Error: Target CAST($t4):INTEGER NOT NULL cannot be assigned null value (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit
