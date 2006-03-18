@@ -28,6 +28,12 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
+JavaTransformExecStreamParams::JavaTransformExecStreamParams()
+{
+    outputTupleFormat = TUPLE_FORMAT_STANDARD;
+    javaClassName = "";
+}
+
 JavaTransformExecStream::JavaTransformExecStream()
 {
     pStreamGraphHandle = NULL;
@@ -35,16 +41,48 @@ JavaTransformExecStream::JavaTransformExecStream()
     farragoTransform = NULL;
 }
 
+void JavaTransformExecStream::setInputBufAccessors(
+    std::vector<SharedExecStreamBufAccessor> const &inAccessorsInit)
+{
+    inAccessors = inAccessorsInit;
+}
+
+void JavaTransformExecStream::setOutputBufAccessors(
+    std::vector<SharedExecStreamBufAccessor> const &outAccessors)
+{
+    assert(outAccessors.size() <= 1);
+
+    if (outAccessors.size() > 0) {
+        pOutAccessor = outAccessors[0];
+    }
+}
+
 void JavaTransformExecStream::prepare(
     JavaTransformExecStreamParams const &params)
 {
-    ConfluenceExecStream::prepare(params);
+    ExecStream::prepare(params);
+
+    if (pOutAccessor) {
+        assert(pOutAccessor->getProvision() == getOutputBufProvision());
+        if (pOutAccessor->getTupleDesc().empty()) {
+            assert(!params.outputTupleDesc.empty());
+            pOutAccessor->setTupleShape(
+                params.outputTupleDesc,
+                params.outputTupleFormat);
+        }
+    }
+
+    for (uint i = 0; i < inAccessors.size(); ++i) {
+        assert(inAccessors[i]->getProvision() == getInputBufProvision());
+    }
 
     JniEnvAutoRef pEnv;
 
     farragoTransformClassName = params.javaClassName;
     pStreamGraphHandle = params.pStreamGraphHandle;
 
+    // TODO: SWZ: 3/17/06: Avoid allocating scratch space when there's
+    // no output accessor.  Also need to change getResourceRequirements.
     scratchAccessor = params.scratchAccessor;
     bufferLock.accessSegment(scratchAccessor);
 }
@@ -53,7 +91,7 @@ void JavaTransformExecStream::getResourceRequirements(
     ExecStreamResourceQuantity &minQuantity,
     ExecStreamResourceQuantity &optQuantity)
 {
-    ConfluenceExecStream::getResourceRequirements(minQuantity,optQuantity);
+    ExecStream::getResourceRequirements(minQuantity,optQuantity);
 
     // one page for scratch buffer
     minQuantity.nCachePages += 1;
@@ -64,11 +102,21 @@ void JavaTransformExecStream::open(bool restart)
 {
     FENNEL_TRACE(TRACE_FINER, "open" << (restart? " (restart)" : ""));
 
-    ConfluenceExecStream::open(restart);
+    ExecStream::open(restart);
 
     JniEnvAutoRef pEnv;
 
     if (restart) {
+        if (pOutAccessor) {
+            pOutAccessor->clear();
+        }
+
+        // restart inputs
+        for (uint i = 0; i < inAccessors.size(); ++i) {
+            inAccessors[i]->clear();
+            pGraph->getStreamInput(getStreamId(),i)->open(true);
+        }
+
         assert(farragoTransform);
 
         pEnv->CallVoidMethod(
@@ -172,16 +220,18 @@ ExecStreamResult JavaTransformExecStream::execute(
 {
     FENNEL_TRACE(TRACE_FINEST, "execute");
 
-    switch(pOutAccessor->getState()) {
-    case EXECBUF_NONEMPTY:
-    case EXECBUF_OVERFLOW:
-        FENNEL_TRACE(TRACE_FINEST, "overflow");
-        return EXECRC_BUF_OVERFLOW;
-    case EXECBUF_EOS:
-        FENNEL_TRACE(TRACE_FINEST, "eos");
-        return EXECRC_EOS;
-    default:
-        break;
+    if (pOutAccessor) {
+        switch(pOutAccessor->getState()) {
+        case EXECBUF_NONEMPTY:
+        case EXECBUF_OVERFLOW:
+            FENNEL_TRACE(TRACE_FINEST, "overflow");
+            return EXECRC_BUF_OVERFLOW;
+        case EXECBUF_EOS:
+            FENNEL_TRACE(TRACE_FINEST, "eos");
+            return EXECRC_EOS;
+        default:
+            break;
+        }
     }
 
     for (uint i = 0; i < inAccessors.size(); ++i) {
@@ -193,13 +243,6 @@ ExecStreamResult JavaTransformExecStream::execute(
         }
     }
     
-    // REVIEW: SWZ: 3/7/2006: Should we abort with
-    // EXECRC_BUF_UNDERFLOW if all inputs are empty?  This saves some
-    // work on first execution (presuming that the Java XOs can't do
-    // any work at all without at least one input tuple, but
-    // conceivably we could generate output without input on
-    // subsequent execs.
-
     JniEnvAutoRef pEnv;
     assert(farragoTransform);
     int cb = pEnv->CallIntMethod(
@@ -210,6 +253,7 @@ ExecStreamResult JavaTransformExecStream::execute(
     FENNEL_TRACE(TRACE_FINER, "read " << cb << " bytes");
 
     if (cb > 0) {
+        assert(pOutAccessor);
         pOutAccessor->provideBufferForConsumption(
             bufferLock.getPage().getWritableData(),
             bufferLock.getPage().getWritableData() + cb);
@@ -222,7 +266,9 @@ ExecStreamResult JavaTransformExecStream::execute(
     } else {
         FENNEL_TRACE(TRACE_FINEST, "marking EOS");
 
-        pOutAccessor->markEOS();
+        if (pOutAccessor) {
+            pOutAccessor->markEOS();
+        }
         return EXECRC_EOS;
     }
 }
@@ -245,11 +291,15 @@ void JavaTransformExecStream::closeImpl()
 
     bufferLock.unlock();
 
-    ConfluenceExecStream::closeImpl();
+    ExecStream::closeImpl();
 }
 
-ExecStreamBufProvision
-JavaTransformExecStream::getOutputBufProvision() const
+ExecStreamBufProvision JavaTransformExecStream::getInputBufProvision() const
+{
+    return BUFPROV_PRODUCER;
+}
+
+ExecStreamBufProvision JavaTransformExecStream::getOutputBufProvision() const
 {
     return BUFPROV_PRODUCER;
 }

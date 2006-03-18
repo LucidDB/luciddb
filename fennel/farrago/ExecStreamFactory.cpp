@@ -166,7 +166,11 @@ void ExecStreamFactory::visit(ProxyJavaSinkStreamDef &streamDef)
 void ExecStreamFactory::visit(ProxyJavaTransformStreamDef &streamDef)
 {
     JavaTransformExecStreamParams params;
-    readTupleStreamParams(params, streamDef);
+
+    readExecStreamParams(params, streamDef);
+
+    readTupleDescriptor(params.outputTupleDesc, streamDef.getOutputDesc());
+
     params.pStreamGraphHandle = pStreamGraphHandle;
     params.javaClassName = streamDef.getJavaClassName();
     embryo.init(new JavaTransformExecStream(), params);
