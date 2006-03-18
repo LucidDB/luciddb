@@ -153,22 +153,27 @@ ExecStreamResult LbmUnionExecStream::execute(
 
      for (uint i = 0; i < quantum.nTuplesMax; i++) {
         while (! producePending) {
+            // yield control if segment limit is reached
+            if (isSegmentLimitSet() && segmentsRemaining == 0) {
+                return EXECRC_QUANTUM_EXPIRED;
+            }
+
             ExecStreamResult status = readSegment();
             if (status == EXECRC_EOS) {
                 // flush any remaining data as last tuple(s)
-                if (! workspace.isEmpty()) {
+                isDone = workspace.isEmpty() && segmentWriter.isEmpty();
+                if (! isDone) {
                     transferLast();
                     producePending = true;
                     break;
                 }
-                isDone = true;
                 return EXECRC_EOS;
             }
             if (status != EXECRC_YIELD) {
                 return status;
             }
             if (! writeSegment()) {
-                producePending = true;
+                producePending = (! segmentWriter.isEmpty());
             }
         }
 
@@ -290,6 +295,7 @@ bool LbmUnionExecStream::transfer()
 bool LbmUnionExecStream::produceTuple()
 {
     assert(producePending);
+    assert(! segmentWriter.isEmpty());
 
     outputTuple = segmentWriter.produceSegmentTuple();
     if (pOutAccessor->produceTuple(outputTuple)) {

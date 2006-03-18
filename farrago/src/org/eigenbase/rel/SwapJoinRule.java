@@ -74,6 +74,13 @@ public class SwapJoinRule extends RelOptRule
             new VariableReplacer(rexBuilder, leftRowType, rightRowType);
         final RexNode oldCondition = RexUtil.clone(join.getCondition());
         RexNode condition = variableReplacer.go(oldCondition);
+
+        // NOTE jvs 14-Mar-2006: We preserve attribute semiJoinDone after the
+        // swap.  This way, we will generate one semijoin for the original
+        // join, and one for the swapped join, and no more.  This
+        // doesn't prevent us from seeing any new combinations assuming
+        // that the planner tries the desired order (semijoins after swaps).
+
         JoinRel newJoin =
             new JoinRel(
                 join.getCluster(),
@@ -81,7 +88,8 @@ public class SwapJoinRule extends RelOptRule
                 join.getLeft(),
                 condition,
                 join.getJoinType(),
-                Collections.EMPTY_SET);
+                Collections.EMPTY_SET,
+                join.isSemiJoinDone());
         if (!join.getVariablesStopped().isEmpty()) {
             newJoin.setVariablesStopped(
                 new HashSet(join.getVariablesStopped()));
