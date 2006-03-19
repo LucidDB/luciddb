@@ -442,6 +442,10 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>Illegal use of dynamic parameter</text>
 </exception>
 
+<exception id="130090" name="InvalidBoolean">
+    <text>''{0}'' is not a valid boolean value</text>
+</exception>
+
 <!--
 ======================================================================
 The exceptions below define Eigenbase features which can be

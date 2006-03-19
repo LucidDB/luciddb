@@ -23,6 +23,8 @@
 
 package org.eigenbase.util14;
 
+import org.eigenbase.resource.EigenbaseResource;
+
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
@@ -73,6 +75,25 @@ public class ConversionUtil {
         return nf.format(d);
     }
 
+    /**
+     * Converts a string into a boolean
+     */
+    public static Boolean toBoolean(String str)
+    {
+        if (str == null) {
+            return null;
+        }
+        str = str.trim();
+        if (str.equalsIgnoreCase("TRUE")) {
+            return Boolean.TRUE;
+        } else if (str.equalsIgnoreCase("FALSE")) {
+            return Boolean.FALSE;
+        } else if (str.equalsIgnoreCase("UNKNOWN")) {
+            return null;
+        } else {
+            throw EigenbaseResource.instance().InvalidBoolean.ex(str);
+        }
+    }
 
 }
 

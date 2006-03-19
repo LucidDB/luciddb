@@ -122,7 +122,7 @@ public class FarragoJdbcEngineDriver extends FarragoAbstractJdbcDriver
      */
     static SQLException newSqlException(Throwable ex)
     {
-        return FarragoUtil.newSqlException(ex, tracer);
+        return FarragoJdbcUtil.newSqlException(ex, tracer);
     }
 }
 

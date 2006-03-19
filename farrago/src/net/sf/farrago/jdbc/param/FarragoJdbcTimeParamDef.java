@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -20,14 +20,12 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package net.sf.farrago.jdbc.engine;
+package net.sf.farrago.jdbc.param;
 
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.TimeZone;
-
-import org.eigenbase.reltype.RelDataType;
 
 /**
  * FarragoJdbcEngineTimeParamDef defines a time parameter. Converts parameters 
@@ -36,27 +34,28 @@ import org.eigenbase.reltype.RelDataType;
  * @author Julian Hyde
  * @version $Id$
  */
-class FarragoJdbcEngineTimeParamDef extends FarragoJdbcEngineParamDef
+class FarragoJdbcTimeParamDef extends FarragoJdbcParamDef
 {
     static final TimeZone gmtZone = TimeZone.getTimeZone("GMT");
     
-    public FarragoJdbcEngineTimeParamDef(
+    public FarragoJdbcTimeParamDef(
         String paramName,
-        RelDataType type)
+        FarragoParamFieldMetaData paramMetaData)
     {
-        super(paramName, type);
+        super(paramName, paramMetaData);
     }
 
     // implement FarragoSessionStmtParamDef
     public Object scrubValue(Object x)
     {
         if (x == null) {
+            checkNullable();
             return x;
         }
 
         if (x instanceof String) {
             try {
-                return java.sql.Time.valueOf((String) x);
+                return Time.valueOf((String) x);
             } catch (IllegalArgumentException e) {
                 throw newInvalidFormat(x);
             }
@@ -64,7 +63,7 @@ class FarragoJdbcEngineTimeParamDef extends FarragoJdbcEngineParamDef
 
         // Only java.sql.Time, java.sql.Timestamp are all OK.
         // java.sql.Date is not okay (no time information)
-        if (!(x instanceof Timestamp) && !(x instanceof java.sql.Time)) {
+        if (!(x instanceof Timestamp) && !(x instanceof Time)) {
             throw newInvalidType(x);
         }
         java.util.Date time = (java.util.Date) x;
