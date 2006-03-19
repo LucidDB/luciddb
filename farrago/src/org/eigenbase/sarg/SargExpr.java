@@ -22,6 +22,9 @@
 package org.eigenbase.sarg;
 
 import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
+
+import java.util.*;
 
 /**
  * SargExpr represents an expression defining a possibly non-contiguous
@@ -59,6 +62,14 @@ public interface SargExpr
      * @return the factory which produced this expression
      */
     public SargFactory getFactory();
+
+    /**
+     * Collects all dynamic parameters referenced by this
+     * expression.
+     *
+     * @param dynamicParams receives dynamic parameter references
+     */
+    public void collectDynamicParams(Set<RexDynamicParam> dynamicParams);
 }
 
 // End SargExpr.java
