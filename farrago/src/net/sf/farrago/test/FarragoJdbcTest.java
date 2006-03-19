@@ -2432,19 +2432,16 @@ public class FarragoJdbcTest extends FarragoTestCase
     }
 
     /**
-     * Tests valid usage of multiple dynamic parameters.
+     * Tests valid usage of multiple dynamic parameters, including
+     * the fix for FRG-72.
      */
     public void testMultipleDynamicParameters2()
         throws Exception
     {
-        if (!Bug.Frg72Fixed) {
-            return;
-        }
-
         // NOTE: This query tests FennelRelUtil.convertIntervalTupleToRel()'s
         // createNullFilter call.
         String sql = 
-            "select empid from sales.emps where deptno >= ? and deptno < ?";
+            "select empid from sales.emps where deptno >= ? and deptno <= ?";
         preparedStmt = connection.prepareStatement(sql);
 
         preparedStmt.setInt(1, 20);
