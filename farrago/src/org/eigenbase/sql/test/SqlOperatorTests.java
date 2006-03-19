@@ -117,6 +117,8 @@ public abstract class SqlOperatorTests extends TestCase
     public static final String literalOutOfRangeMessage =
             "(?s).*Numeric literal.*out of range.*";
 
+    public static final boolean todo = false;
+
     /**
      * Regular expression for a SQL TIME(0) value.
      */
@@ -133,7 +135,6 @@ public abstract class SqlOperatorTests extends TestCase
      */
     public static final Pattern datePattern = Pattern.compile(
         "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]");
-    public static final boolean todo = false;
 
     public static final String[] numericTypeNames =
         new String[] {
@@ -1119,7 +1120,8 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkNull("1e1-cast(null as double)");
         getTester().checkNull("cast(null as tinyint) - cast(null as smallint)");
 
-        if (todo) {
+        // TODO: Fix bug
+        if (Bug.Fn25Fixed) {
             // Should throw out of range error
             getTester().checkFails(
                     "cast(100 as tinyint) - cast(-100 as tinyint)", outOfRangeMessage);
@@ -1163,7 +1165,7 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkNull("2e-3*cast(null as integer)");
         getTester().checkNull("cast(null as tinyint) * cast(4 as smallint)");
 
-        if (todo) {
+        if (Bug.Fn25Fixed) {
             // Should throw out of range error
             getTester().checkFails(
                     "cast(100 as tinyint) * cast(-2 as tinyint)", outOfRangeMessage);
@@ -1214,7 +1216,7 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkNull("cast(null as tinyint)+1");
         getTester().checkNull("1e-2+cast(null as double)");
 
-        if (todo) {
+        if (Bug.Fn25Fixed) {
             // Should throw out of range error
             getTester().checkFails(
                     "cast(100 as tinyint) + cast(100 as tinyint)", outOfRangeMessage);
@@ -1633,8 +1635,8 @@ public abstract class SqlOperatorTests extends TestCase
         // validated (like a C macro). Not perfect, but good enough.
         getTester().checkInvalid("1 + ^nullif(1, date '2005-8-4')^ + 2",
             "(?s)Cannot apply '=' to arguments of type '<INTEGER> = <DATE>'\\..*");
-        // TODO: fix bug 324.
-        if (todo) {
+        // TODO: fix frg 65 (dtbug 324).
+        if (Bug.Frg65Fixed) {
         getTester().checkInvalid("1 + ^nullif(1, 2, 3)^ + 2",
             "invalid number of arguments to NULLIF");
         }
