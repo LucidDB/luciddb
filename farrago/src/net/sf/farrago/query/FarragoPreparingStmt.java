@@ -177,7 +177,6 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         return true;
     }
 
-
     public FarragoSessionStmtValidator getStmtValidator()
     {
         return stmtValidator;
@@ -270,6 +269,11 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         return implementingArgs;
     }
     
+    protected TableAccessMap getTableAccessMap()
+    {
+        return tableAccessMap;
+    }
+
     // implement FarragoSessionPreparingStmt
     public void postValidate(SqlNode sqlNode)
     {
@@ -317,6 +321,11 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         PreparedResult preparedResult =
             super.prepareSql(rootRel, sqlKind, logical, implementingClassDecl,
                 implementingArgs);
+        // When rootRel is a logical plan, optimize() sets the map, but for a
+        // physical plan, set it here:
+        if (!logical) {
+            tableAccessMap = new TableAccessMap(rootRel);
+        }
         return implement(preparedResult);
     }
 

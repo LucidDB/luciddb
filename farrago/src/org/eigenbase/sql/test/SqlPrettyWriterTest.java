@@ -56,7 +56,7 @@ public class SqlPrettyWriterTest extends DiffTestCase
 
     protected File getTestlogRoot() throws Exception
     {
-        return new File(System.getProperty("net.sf.farrago.home"), "src");
+        return new File(System.getProperty("net.sf.farrago.home"), "testlog");
     }
 
     protected static String fold(String[] strings)
