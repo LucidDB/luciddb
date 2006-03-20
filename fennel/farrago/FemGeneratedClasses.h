@@ -252,10 +252,10 @@ class ProxyExecutionStreamDef
 public:
 SharedProxyTupleDescriptor getOutputDesc();
 static jmethodID meth_getOutputDesc;
-SharedProxyExecStreamDataFlow getInputFlow();
-static jmethodID meth_getInputFlow;
 SharedProxyExecStreamDataFlow getOutputFlow();
 static jmethodID meth_getOutputFlow;
+SharedProxyExecStreamDataFlow getInputFlow();
+static jmethodID meth_getInputFlow;
 std::string getName();
 static jmethodID meth_getName;
 };
@@ -330,6 +330,8 @@ class ProxyCmdBeginTxn
 public:
 SharedProxyTxnHandle getResultHandle();
 static jmethodID meth_getResultHandle;
+bool isReadOnly();
+static jmethodID meth_isReadOnly;
 };
 
 class ProxyCmdCheckpoint
