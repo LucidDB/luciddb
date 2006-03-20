@@ -102,6 +102,53 @@ public abstract class Bug
      * DT bug 501: "insert fails..."
      */
     public static final boolean Dt501Fixed = false;
+
+    // -----------------------------------------------------------------------
+    // Developers should create new fields here, in their own section. This
+    // will make merge conflicts much less likely than if everyone is
+    // appending.
+
+    // angel
+
+    // elin
+
+    // emberson
+
+    // fliang
+
+    // fzhang
+
+    // hersker
+
+    // jack
+
+    // jhyde
+
+    // johnk
+
+    // jouellette
+
+    // jpham
+
+    // jvs
+
+    // kkrueger
+
+    // mberkowitz
+
+    // murali
+
+    // rchen
+
+    // schoi
+
+    // stephan
+
+    // tleung
+
+    // xluo
+
+    // zfong    
 }
 
 // End Bug.java
