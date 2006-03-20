@@ -36,6 +36,9 @@ import java.sql.ParameterMetaData;
  */
 public class FarragoParamFieldMetaData implements Serializable
 {
+    /** SerialVersionUID created with JDK 1.5 serialver tool. */
+    private static final long serialVersionUID = 5042520840301805755L;
+
     /** SQL paramMetaData of this field. */
     public int     type;
 
