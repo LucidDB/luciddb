@@ -1,10 +1,21 @@
-create tablespace TBB_BENCH_TS datafile 'bench_ts.dat' size 16000K
-;
-create tablespace TBB_BENCHIDX_TS datafile 'benchidx_ts.dat' size 16000K
-;
-select file_size, path, free_blocks from files where path like 'bench%'
-order by 1, 2, 3
-;
+create foreign data wrapper test_jdbc
+library '${FARRAGO_HOME}/plugin/FarragoMedJdbc3p.jar'
+language java;
+
+create server orcl_server
+foreign data wrapper test_jdbc
+options(
+    url 'jdbc:oracle:thin:@akela.lucidera.com:1521:XE',
+    user_name 'schoi',
+    password 'schoi',
+    driver_class 'oracle.jdbc.driver.OracleDriver'
+);
+
+create schema orcl_schema;
+create schema s;
+
+set schema 's';
+
 CREATE TABLE BENCH100 (
   KSEQ  INTEGER  
  ,K2    INTEGER 
@@ -18,8 +29,7 @@ CREATE TABLE BENCH100 (
  ,K40K  INTEGER  
  ,K100K INTEGER
  ,K250K INTEGER 
- ,K500K INTEGER ) TABLESPACE TBB_BENCH_TS
-INDEX TABLESPACE TBB_BENCHIDX_TS
+ ,K500K INTEGER )
 ;
 create index B100_K2_IDX on bench100 (k2)
 ;
@@ -30,10 +40,10 @@ create index B100_K5_IDX on bench100 (k5)
 create index B100_K100_IDX on bench100 (k100)
 ;
 --
-select file_size, path, free_blocks from files where path like 'bench%'
-order by 1, 2, 3
-;
-create source BENCH_SOURCE_100 (
+
+set schema 'orcl_schema';
+
+create foreign table BENCH_SOURCE_100 (
 C1 INTEGER,
 C2 INTEGER,
 C4 INTEGER,
@@ -47,10 +57,16 @@ C40K  INTEGER,
 C100K INTEGER, 
 C250K INTEGER,
 C500K INTEGER) 
-USING LINK ODBC_SQLSERVER defined by 
-'SELECT KSEQ,K2,K4,K5,K10,K25,K100,K1K,K10K,K40K,K100K,K250K,K500K FROM BENCHMARK.dbo.BENCH100'
+server orcl_server
+options (
+SCHEMA_NAME 'SCHOI',
+table_name 'bench100'
+)
 ;
+
+set schema 's';
+
 INSERT INTO BENCH100 (KSEQ,K2,K4,K5,K10,K25,K100,K1K,K10K,K40K,K100K,K250K,
 K500K) SELECT C1,C2,C4,C5,C10,C25,C100,C1K,C10K,C40K,C100K,C250K,C500K 
-FROM BENCH_SOURCE_100
+FROM orcl_schema.BENCH_SOURCE_100
 ;

@@ -1,0 +1,68 @@
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- SET ECHO=ON
+0: jdbc:luciddb:> select count(*) from BENCH1M where K2 = 2 and KSEQ = 3
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:luciddb:> select count(*) from BENCH1M where K2 = 2 and K100K = 3
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 5       |
++---------+
+0: jdbc:luciddb:> select count(*) from BENCH1M where K2 = 2 and K10K = 3
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 42      |
++---------+
+0: jdbc:luciddb:> select count(*) from BENCH1M where K2 = 2 and K1K = 3
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 501     |
++---------+
+0: jdbc:luciddb:> select count(*) from BENCH1M where K2 = 2 and K100 = 3
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 4939    |
++---------+
+0: jdbc:luciddb:> select count(*) from BENCH1M where K2 = 2 and K25 = 3
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 20013   |
++---------+
+0: jdbc:luciddb:> select count(*) from BENCH1M where K2 = 2 and K10 = 3
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 49809   |
++---------+
+0: jdbc:luciddb:> select count(*) from BENCH1M where K2 = 2 and K5 = 3
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 99786   |
++---------+
+0: jdbc:luciddb:> select count(*) from BENCH1M where K2 = 2 and K4 = 3
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 124973  |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

@@ -1,0 +1,91 @@
+<!-- Run benchmark load and query tests for 100 rows -->
+<project name="bh" default="tbs-test">
+  <target name="tbs-test">
+    <test-suite testunit="tbs100-test">
+
+      <init-hook>
+        <ant target="restoreCatalog"/>
+      </init-hook>
+
+      <test name="creschema">
+        <test-metadata>
+          <withIndex value="true"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/idx/creschema.sql"/>
+      </test>
+        
+      <test name="benchIns" requiresSuccess="creschema">
+        <test-metadata>
+          <withIndex value="true"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/idx/benchins.sql"/>
+      </test>
+
+      <test name="q0" requiresSuccess="creschema,benchIns">
+        <test-metadata>
+          <withIndex value="true"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/idx/q0.sql"/>
+      </test>
+
+      <test name="qor" requiresSuccess="creschema,benchIns">
+        <test-metadata>
+          <withIndex value="true"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/idx/qor.sql"/>
+      </test>
+
+      <test name="q1" requiresSuccess="creschema,benchIns">
+        <test-metadata>
+          <withIndex value="true"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/idx/q1.sql"/>
+      </test>
+
+      <test name="q2a" requiresSuccess="creschema,benchIns">
+        <test-metadata>
+          <withIndex value="true"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/idx/q2a.sql"/>
+      </test>
+
+      <test name="q3a" requiresSuccess="creschema,benchIns">
+        <test-metadata>
+          <withIndex value="true"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/idx/q3a.sql"/>
+      </test>
+
+      <test name="q3b" requiresSuccess="creschema,benchIns">
+        <test-metadata>
+          <withIndex value="true"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/idx/q3b.sql"/>
+      </test>
+
+      <test name="qin" requiresSuccess="creschema,benchIns">
+        <test-metadata>
+          <knownFailure value="true"/>
+          <withIndex value="true"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/idx/qin.sql"/>
+      </test>
+
+      <test name="qjoin001" requiresSuccess="creschema,benchIns">
+        <test-metadata>
+          <withIndex value="true"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/idx/qjoin001.sql"/>
+      </test>
+
+      <test name="qjoin002" requiresSuccess="creschema,benchIns">
+        <test-metadata>
+          <knownFailure value="true"/>
+          <withIndex value="true"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/idx/qjoin002.sql"/>
+      </test>
+
+    </test-suite>
+  </target>
+</project>        

@@ -1,0 +1,126 @@
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select KSEQ, K1K from bench100
+. . . . . . . . > where
+. . . . . . . . >       (Kseq between 40 and 50
+. . . . . . . . >   OR   Kseq between 60 and 70
+. . . . . . . . >   OR   Kseq between 70 and 80
+. . . . . . . . >   OR   Kseq between 90 and 100
+. . . . . . . . >   OR   Kseq between 110 and 120)
+. . . . . . . . >   AND  K100K = 3
+. . . . . . . . > order by 1;
++-------+------+
+| KSEQ  | K1K  |
++-------+------+
++-------+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select KSEQ, K1K from bench100
+. . . . . . . . > where
+. . . . . . . . >       (Kseq between 40 and 50
+. . . . . . . . >   OR   Kseq between 60 and 70
+. . . . . . . . >   OR   Kseq between 70 and 80
+. . . . . . . . >   OR   Kseq between 90 and 100
+. . . . . . . . >   OR   Kseq between 110 and 120)
+. . . . . . . . >   AND  K10K = 3
+. . . . . . . . > order by 1;
++-------+------+
+| KSEQ  | K1K  |
++-------+------+
++-------+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select KSEQ, K1K from bench100
+. . . . . . . . > where
+. . . . . . . . >       (Kseq between 40 and 50
+. . . . . . . . >   OR   Kseq between 60 and 70
+. . . . . . . . >   OR   Kseq between 70 and 80
+. . . . . . . . >   OR   Kseq between 90 and 100
+. . . . . . . . >   OR   Kseq between 110 and 120)
+. . . . . . . . >   AND  K1K = 3
+. . . . . . . . > order by 1;
++-------+------+
+| KSEQ  | K1K  |
++-------+------+
++-------+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select KSEQ, K1K from bench100
+. . . . . . . . > where
+. . . . . . . . >       (Kseq between 40 and 50
+. . . . . . . . >   OR   Kseq between 60 and 70
+. . . . . . . . >   OR   Kseq between 70 and 80
+. . . . . . . . >   OR   Kseq between 90 and 100
+. . . . . . . . >   OR   Kseq between 110 and 120)
+. . . . . . . . >   AND  K100 = 3
+. . . . . . . . > order by 1;
++-------+------+
+| KSEQ  | K1K  |
++-------+------+
++-------+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select KSEQ, K1K from bench100
+. . . . . . . . > where
+. . . . . . . . >       (Kseq between 40 and 50
+. . . . . . . . >   OR   Kseq between 60 and 70
+. . . . . . . . >   OR   Kseq between 70 and 80
+. . . . . . . . >   OR   Kseq between 90 and 100
+. . . . . . . . >   OR   Kseq between 110 and 120)
+. . . . . . . . >   AND  K10 = 3
+. . . . . . . . > order by 1;
++-------+------+
+| KSEQ  | K1K  |
++-------+------+
+| 40    | 226  |
+| 41    | 308  |
+| 80    | 168  |
+| 91    | 800  |
+| 93    | 524  |
+| 97    | 341  |
+| 100   | 5    |
++-------+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select KSEQ, K1K from bench100
+. . . . . . . . > where
+. . . . . . . . >       (Kseq between 40 and 50
+. . . . . . . . >   OR   Kseq between 60 and 70
+. . . . . . . . >   OR   Kseq between 70 and 80
+. . . . . . . . >   OR   Kseq between 90 and 100
+. . . . . . . . >   OR   Kseq between 110 and 120)
+. . . . . . . . >   AND  K5 = 3
+. . . . . . . . > order by 1;
++-------+------+
+| KSEQ  | K1K  |
++-------+------+
+| 43    | 30   |
+| 61    | 542  |
+| 67    | 298  |
+| 73    | 516  |
+| 90    | 18   |
+| 93    | 524  |
+| 96    | 19   |
++-------+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select KSEQ, K1K from bench100
+. . . . . . . . > where
+. . . . . . . . >       (Kseq between 40 and 50
+. . . . . . . . >   OR   Kseq between 60 and 70
+. . . . . . . . >   OR   Kseq between 70 and 80
+. . . . . . . . >   OR   Kseq between 90 and 100
+. . . . . . . . >   OR   Kseq between 110 and 120)
+. . . . . . . . >   AND  K4 = 3
+. . . . . . . . > order by 1;
++-------+------+
+| KSEQ  | K1K  |
++-------+------+
+| 41    | 308  |
+| 44    | 342  |
+| 46    | 336  |
+| 49    | 238  |
+| 60    | 663  |
+| 62    | 32   |
+| 70    | 891  |
+| 74    | 580  |
+| 77    | 599  |
+| 80    | 168  |
+| 93    | 524  |
++-------+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

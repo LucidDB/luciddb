@@ -1,28 +1,38 @@
-<project name="bh" default="flip-test">
-  <target name="flip-test">
-    <test-suite testunit="flip-test">
+<project name="bh" default="vi-flip-test">
+  <target name="vi-flip-test">
+    <test-suite testunit="vi-flip-test">
 
       <init-hook>
-        <test name="restoreCatalog" testunit="flip-init-test">
-          <ant-task>
-            <ant target="restoreCatalog"/>
-          </ant-task>
-        </test>
+        <ant target="restoreCatalog"/>
       </init-hook>
 
-      <test name="flip100">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/flip/gen/${config.prop}/flip100.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      <test name="creschema">
+        <test-metadata>
+          <withIndex value="true"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/flip/creschema.sql"/>
+      </test>
+
+      <test name="flip100" requiresSuccess="creschema">
+        <test-metadata>
+          <withIndex value="true"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/flip/flip100.sql"/>
       </test>
       
-      <test name="flip10k">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/flip/gen/${config.prop}/flip10k.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      <test name="flip10k" requiresSuccess="creschema">
+        <test-metadata>
+          <withIndex value="true"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/flip/flip10k.sql"/>
       </test>
       
-      <test name="delete">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/flip/gen/${config.prop}/del_k2_2.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      <test name="delk2" requiresSuccess="creschema">
+        <test-metadata>
+          <knownFailure value="true"/>
+          <withIndex value="true"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/flip/del_k2_2.sql"/>
       </test>
 
     </test-suite>

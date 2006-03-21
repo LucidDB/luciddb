@@ -1,0 +1,82 @@
+0: jdbc:luciddb:> -- $Id: download.sql $
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- Download company data from SQL (some) Server
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- setup link to SQL server
+0: jdbc:luciddb:> -- CREATE SCHEMA SQLSERVER USING LINK ODBC_SQLSERVER
+0: jdbc:luciddb:> -- DEFINED BY 'BENCHMARK.dbo';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- /creschema.sql
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign data wrapper orcl_jdbc
+. . . . . . . . > library '${FARRAGO_HOME}/plugin/FarragoMedJdbc3p.jar'
+. . . . . . . . > language java;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server orcl_server
+. . . . . . . . > foreign data wrapper orcl_jdbc
+. . . . . . . . > options(
+. . . . . . . . >     url 'jdbc:oracle:thin:@akela.lucidera.com:1521:XE',
+. . . . . . . . >     user_name 'schoi',
+. . . . . . . . >     password 'schoi',
+. . . . . . . . >     driver_class 'oracle.jdbc.driver.OracleDriver'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Download
+0: jdbc:luciddb:> INSERT INTO LOCATION SELECT * FROM orcl_server."SCHOI".LOCATION;
+0: jdbc:luciddb:> INSERT INTO DEPT SELECT * FROM orcl_server."SCHOI".DEPT;
+0: jdbc:luciddb:> INSERT INTO EMP SELECT * FROM orcl_server."SCHOI".EMP;
+0: jdbc:luciddb:> INSERT INTO CUSTOMERS SELECT * FROM orcl_server."SCHOI".CUSTOMERS;
+0: jdbc:luciddb:> INSERT INTO PRODUCTS SELECT * FROM orcl_server."SCHOI".PRODUCTS;
+0: jdbc:luciddb:> INSERT INTO SALES SELECT * FROM orcl_server."SCHOI".SALES;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Check the download
+0: jdbc:luciddb:> select count(*) from location;
++---------+
+| EXPR$0  |
++---------+
+| 4       |
++---------+
+0: jdbc:luciddb:> select count(*) from dept;
++---------+
+| EXPR$0  |
++---------+
+| 5       |
++---------+
+0: jdbc:luciddb:> select count(*) from emp;
++---------+
+| EXPR$0  |
++---------+
+| 11      |
++---------+
+0: jdbc:luciddb:> select count(*) from customers;
++---------+
+| EXPR$0  |
++---------+
+| 100     |
++---------+
+0: jdbc:luciddb:> select count(*) from products;
++---------+
+| EXPR$0  |
++---------+
+| 16      |
++---------+
+0: jdbc:luciddb:> select count(*) from sales;
++---------+
+| EXPR$0  |
++---------+
+| 1000    |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- analyze the columns to get the statistics
+0: jdbc:luciddb:> -- analyze table EMP estimate statistics for all columns SAMPLE 100 PERCENT;
+0: jdbc:luciddb:> -- analyze table PRODUCTS estimate statistics for all columns SAMPLE 100 PERCENT;
+0: jdbc:luciddb:> -- analyze table SALES estimate statistics for all columns SAMPLE 100 PERCENT;
+0: jdbc:luciddb:> -- analyze table CUSTOMERS estimate statistics for all columns SAMPLE 100 PERCENT;
+0: jdbc:luciddb:> -- analyze table LOCATION estimate statistics for all columns SAMPLE 100 PERCENT;
+0: jdbc:luciddb:> -- analyze table DEPT estimate statistics for all columns SAMPLE 100 PERCENT;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

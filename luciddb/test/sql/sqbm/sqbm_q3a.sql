@@ -1,3 +1,5 @@
+set schema 's';
+
 select SUM(K1K) from bench1M
 where
 Kseq between 400000 and 500000

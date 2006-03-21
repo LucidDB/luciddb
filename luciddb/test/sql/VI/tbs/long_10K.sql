@@ -2,6 +2,8 @@
 -- long.sql - a long query on BENCH10K
 --
 
+set schema 's';
+
 select KSEQ from BENCH10K
 WHERE K100K=1000
 OR K10K=1002

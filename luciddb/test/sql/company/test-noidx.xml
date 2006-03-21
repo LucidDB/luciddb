@@ -1,135 +1,171 @@
-<project name="bh" default="noidx-test">
-  <target name="noidx-test">
-    <test-suite testunit="noidx-test">
+<project name="bh" default="company-noidx-test">
+  <target name="company-noidx-test">
+    <test-suite testunit="company-noidx-test">
       
-      <test-metadata>
-        <knownFailure value="true"/>
-      </test-metadata>
-
       <init-hook>
-        <test name="restoreCatalog" testunit="init-test">
-          <ant-task>
-            <ant target="restoreCatalog"/>
-          </ant-task>
-        </test>
+        <ant target="restoreCatalog"/>
       </init-hook>
 
       <!-- Create schema (without indexes), load data, then run queries -->
 
       <test name="create">
         <test-metadata>
-          <knownFailure value="false"/>
+          <withIndex value="false"/>
         </test-metadata>
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/company/gen/%{config.prop}/create.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/create.sql"/>
       </test>
 
       <test name="download" requiresSuccess="create">
         <test-metadata>
-          <knownFailure value="false"/>
+          <withIndex value="false"/>
         </test-metadata>
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/company/gen/%{config.prop}/download.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/download.sql"/>
       </test>
 
+      <!-- These are duplicated in shortreg & shortreg2 -->
       <test name="joinEq" requiresSuccess="download">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/company/gen/%{config.prop}/joinEq.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <test-metadata>
+          <withIndex value="false"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/joinEq.sql"/>
       </test>
 
       <test name="joinRng" requiresSuccess="download">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/company/gen/%{config.prop}/joinRng.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <test-metadata>
+          <withIndex value="false"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/joinRng.sql"/>
       </test>
 
       <test name="joinMisc" requiresSuccess="download">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/company/gen/%{config.prop}/joinMisc.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <test-metadata>
+          <withIndex value="false"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/joinMisc.sql"/>
       </test>
 
       <test name="joinSemi" requiresSuccess="download">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/company/gen/%{config.prop}/joinSemi.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <test-metadata>
+          <withIndex value="false"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/joinSemi.sql"/>
       </test>
 
       <test name="agg" requiresSuccess="download">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/company/gen/%{config.prop}/agg.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <test-metadata>
+          <withIndex value="false"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/agg.sql"/>
       </test>
 
       <test name="aggJoinEq" requiresSuccess="download">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/company/gen/%{config.prop}/aggJoinEq.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <test-metadata>
+          <withIndex value="false"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/aggJoinEq.sql"/>
       </test>
 
       <test name="aggJoinRng" requiresSuccess="download">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/company/gen/%{config.prop}/aggJoinRng.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <test-metadata>
+          <withIndex value="false"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/aggJoinRng.sql"/>
       </test>
 
       <test name="agg_cust" requiresSuccess="download">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/company/gen/%{config.prop}/agg_cust.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <test-metadata>
+          <withIndex value="false"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/agg_cust.sql"/>
       </test>
 
       <test name="aggJoinEq_cust" requiresSuccess="download">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/company/gen/%{config.prop}/aggJoinEq_cust.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <test-metadata>
+          <withIndex value="false"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/aggJoinEq_cust.sql"/>
       </test>
 
       <test name="aggJoinRng_cust" requiresSuccess="download">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/company/gen/%{config.prop}/aggJoinRng_cust.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <test-metadata>
+          <withIndex value="false"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/aggJoinRng_cust.sql"/>
       </test>
 
       <test name="aggDistinct" requiresSuccess="download">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/company/gen/%{config.prop}/aggDistinct.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <test-metadata>
+          <withIndex value="false"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/aggDistinct.sql"/>
       </test>
 
       <test name="null" requiresSuccess="download">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/company/gen/%{config.prop}/null.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <test-metadata>
+          <withIndex value="false"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/null.sql"/>
       </test>
 
       <test name="order" requiresSuccess="download">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/company/gen/%{config.prop}/order.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <test-metadata>
+          <withIndex value="false"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/order.sql"/>
       </test>
 
       <test name="scalarSubquery" requiresSuccess="download">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/company/gen/%{config.prop}/scalarSubquery.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <test-metadata>
+          <withIndex value="false"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/scalarSubquery.sql"/>
       </test>
 
       <test name="rangeNConv" requiresSuccess="download">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/company/gen/%{config.prop}/rangeNConv.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <test-metadata>
+          <withIndex value="false"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/rangeNConv.sql"/>
       </test>
 
       <test name="subFrom" requiresSuccess="download">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/company/gen/%{config.prop}/subFrom.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <test-metadata>
+          <knownFailure value="true"/>
+          <withIndex value="false"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/subFrom.sql"/>
       </test>
 
       <test name="subExists" requiresSuccess="download">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/company/gen/%{config.prop}/subExists.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <test-metadata>
+          <knownFailure value="true"/>
+          <withIndex value="false"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/subExists.sql"/>
       </test>
 
       <test name="subIn" requiresSuccess="download">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/company/gen/%{config.prop}/subIn.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <test-metadata>
+          <knownFailure value="true"/>
+          <withIndex value="false"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/subIn.sql"/>
       </test>
 
       <test name="subMisc" requiresSuccess="download">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/company/gen/%{config.prop}/subMisc.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <test-metadata>
+          <knownFailure value="true"/>
+          <withIndex value="false"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/subMisc.sql"/>
       </test>
 
       <test name="subMult" requiresSuccess="download">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/company/gen/%{config.prop}/subMult.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <test-metadata>
+          <knownFailure value="true"/>
+          <withIndex value="false"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/subMult.sql"/>
       </test>
 
     </test-suite>

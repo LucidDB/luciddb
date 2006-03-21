@@ -1,0 +1,129 @@
+-- create tablespace TBB_BENCH_TS datafile 'bench_ts.dat' size 128000K;
+
+create foreign data wrapper mssql_jdbc
+library '${FARRAGO_HOME}/plugin/FarragoMedJdbc3p.jar'
+language java;
+
+create server mssql_server
+foreign data wrapper mssql_jdbc
+options(
+    url 'jdbc:jtds:sqlserver://akela.lucidera.com:1433',
+    user_name 'sa',
+    password 'ketajo',
+
+    qualifying_catalog_name 'BENCHMARK',
+    table_types 'TABLE',
+    driver_class 'net.sourceforge.jtds.jdbc.Driver'
+);
+
+create schema mssql_schema;
+
+set schema 'mssql_schema';
+
+create schema s;
+set schema 's';
+
+CREATE TABLE BENCH1M (
+  KSEQ  INTEGER  primary key
+ ,K2    INTEGER
+ ,K4    INTEGER
+ ,K5    INTEGER
+ ,K10   INTEGER
+ ,K25   INTEGER
+ ,K100  INTEGER
+ ,K1K   INTEGER
+ ,K10K  INTEGER
+ ,K40K  INTEGER
+ ,K100K INTEGER
+ ,K250K INTEGER
+ ,K500K INTEGER
+ ,S1    VARCHAR(8)
+ ,S2    VARCHAR(20)
+ ,S3    VARCHAR(20)
+ ,S4    VARCHAR(20)
+ ,S5    VARCHAR(20)
+ ,S6    VARCHAR(20)
+ ,S7    VARCHAR(20)
+ ,S8    VARCHAR(20)
+)
+-- CLUSTER (s1, s2, s3, s4, s5, s6, s7, s8)
+-- TABLESPACE TBB_BENCH_TS
+;
+
+CREATE INDEX B1M_K2_IDX ON BENCH1M(K2)
+;
+CREATE INDEX B1M_K4_IDX ON BENCH1M(K4)
+;
+CREATE INDEX B1M_K5_IDX ON BENCH1M(K5)
+;
+CREATE INDEX B1M_K10_IDX ON BENCH1M(K10)
+;
+CREATE INDEX B1M_K25_IDX ON BENCH1M(K25)
+;
+CREATE INDEX B1M_K100_IDX ON BENCH1M(K100)
+;
+CREATE INDEX B1M_K1K_IDX ON BENCH1M(K1K)
+;
+CREATE INDEX B1M_K10K_IDX ON BENCH1M(K10K)
+;
+CREATE INDEX B1M_K40K_IDX ON BENCH1M(K40K)
+;
+CREATE INDEX B1M_K100K_IDX ON BENCH1M(K100K)
+;
+CREATE INDEX B1M_K250K_IDX ON BENCH1M(K250K)
+;
+CREATE INDEX B1M_K500K_IDX ON BENCH1M(K500K)
+;
+
+-- composite indices (for Q5)
+
+CREATE INDEX B1M_K2_K100_IDX ON BENCH1M(K2,K100)
+;
+CREATE INDEX B1M_K4_K25_IDX ON BENCH1M(K4,K25)
+;
+CREATE INDEX B1M_K10_K25_IDX ON BENCH1M(K10,K25)
+;
+
+
+CREATE FOREIGN TABLE BENCH_SOURCE (
+C1 INTEGER,
+C2 INTEGER,
+C4 INTEGER,
+C5 INTEGER,
+C10 INTEGER,
+C25 INTEGER,
+C100 INTEGER,
+C1K INTEGER,
+C10K INTEGER,
+C40K  INTEGER,
+C100K INTEGER,
+C250K INTEGER,
+C500K INTEGER
+-- not sure if there is/ever will be a way to update foreign tables like this
+-- ,S1    VARCHAR(8)
+-- ,S2    VARCHAR(20)
+-- ,S3    VARCHAR(20)
+-- ,S4    VARCHAR(20)
+-- ,S5    VARCHAR(20)
+-- ,S6    VARCHAR(20)
+-- ,S7    VARCHAR(20)
+-- ,S8    VARCHAR(20)
+)
+-- USING 
+-- LINK ODBC_SQLSERVER DEFINED BY
+-- 'select kseq,k2,K4,K5,K10,K25,K100,K1K,K10K,K40K,K100K,k250k,k500k, ''12345678'', ''12345678900987654321'', ''12345678900987654321'', ''12345678900987654321'', ''12345678900987654321'', ''12345678900987654321'', ''12345678900987654321'', ''12345678900987654321'' from BENCHMARK.dbo.bench1M'
+-- ;
+server mssql_server
+options (
+SCHEMA_NAME 'dbo',
+TABLE_NAME 'bench1M'
+)
+;
+
+insert into bench1m (kseq,k2,k4,k5,k10,k25,k100,k1K,k10k,k40k,k100k,k250k,
+k500k, s1, s2, s3, s4, s5, s6, s7, s8)
+select c1,c2,c4,c5,c10,c25,c100,c1k,c10k,c40k,c100k,c250k,c500k,
+--s1, s2, s3, s4, s5, s6, s7, s8
+'12345678', '12345678900987654321', '12345678900987654321', '12345678900987654321', '12345678900987654321', '12345678900987654321', '12345678900987654321', '12345678900987654321'
+from bench_source
+;

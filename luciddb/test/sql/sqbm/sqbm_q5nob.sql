@@ -1,5 +1,7 @@
 -- sqbm Q5 without order by
 
+set schema 's';
+
 SELECT K2, K100, COUNT(*) FROM BENCH1M
 GROUP BY K2, K100
 ;

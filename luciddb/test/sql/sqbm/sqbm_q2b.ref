@@ -1,0 +1,93 @@
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from bench1m 
+. . . . . . . . > where
+. . . . . . . . >     k2 = 2 and not (Kseq = 3)
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 500401  |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from bench1m 
+. . . . . . . . > where
+. . . . . . . . >     k2 = 2 and not (K100K = 3)
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 500397  |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from bench1m 
+. . . . . . . . > where
+. . . . . . . . >     k2 = 2 and not (K10K = 3)
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 500360  |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from bench1m 
+. . . . . . . . > where
+. . . . . . . . >     k2 = 2 and not (K1K = 3)
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 499900  |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from bench1m 
+. . . . . . . . > where
+. . . . . . . . >     k2 = 2 and not (K100 = 3)
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 495463  |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from bench1m 
+. . . . . . . . > where
+. . . . . . . . >     k2 = 2 and not (K25 = 3)
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 480389  |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from bench1m 
+. . . . . . . . > where
+. . . . . . . . >     k2 = 2 and not (K10 = 3)
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 450593  |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from bench1m 
+. . . . . . . . > where
+. . . . . . . . >     k2 = 2 and not (K5 = 3)
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 400616  |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from bench1m 
+. . . . . . . . > where
+. . . . . . . . >     k2 = 2 and not (K4 = 3)
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 375429  |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

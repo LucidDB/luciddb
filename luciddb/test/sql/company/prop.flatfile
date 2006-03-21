@@ -2,6 +2,13 @@
 
 name_prefix=ff
 
+#############################
+# row store or column store #
+#############################
+
+#DATA_STORE=sys_ftrs_data_server
+DATA_STORE=sys_column_store_data_server
+
 ########################
 # foreign data wrapper #
 ########################
@@ -16,14 +23,14 @@ DATA_LIBRARY=class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper
 SERVER_NAME=@name_prefix@_server
 
 # flatfile options
-DIRECTORY=@company.dir@
+DIRECTORY=@csv.copy.dir@
 FILE_EXTENSION=.csv
-CTRL_FILE_EXT=
+CTRL_FILE_EXT=.bcp
 FIELD_DELIM=,
 LINE_DELIM=\\n
 QUOTE_CHAR="
 ESCAPE_CHAR=
-WITH_HEADER=yes
+WITH_HEADER=no
 NUM_ROWS_SCAN=1
 
 SCHEMA=BCP

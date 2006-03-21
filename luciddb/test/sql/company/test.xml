@@ -1,13 +1,13 @@
-<project name="bh" default="simple-test">
-  <target name="simple-test">
-    <test-suite testunit="simple-test">
+<project name="bh" default="company-test">
+  <target name="company-test">
+    <test-suite testunit="company-test">
       
       <!-- without indexes -->
       <test-suite-call testfile="test-noidx.xml"/>
 
       <!-- with indexes -->
       <test-suite-call testfile="test-idx.xml"/>
-
+  
     </test-suite>
   </target>
 </project>

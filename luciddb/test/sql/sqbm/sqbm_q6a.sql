@@ -1,3 +1,5 @@
+set schema 's';
+
 SELECT COUNT(*) FROM BENCH1M B2, BENCH1M B1
 WHERE
      B1.K100K = 49

@@ -1,0 +1,10 @@
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT KSEQ from BENCH10K where K2 = 0 OR K2 = 3
+. . . . . . . . > order by 1;
++-------+
+| KSEQ  |
++-------+
++-------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

@@ -1,0 +1,74 @@
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select SUM(K1K) from bench1M
+. . . . . . . . > where
+. . . . . . . . > Kseq between 400000 and 500000
+. . . . . . . . > and K100K = 3
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 643     |
++---------+
+0: jdbc:luciddb:> select SUM(K1K) from bench1M
+. . . . . . . . > where
+. . . . . . . . > Kseq between 400000 and 500000
+. . . . . . . . > and K10K = 3
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 2745    |
++---------+
+0: jdbc:luciddb:> select SUM(K1K) from bench1M
+. . . . . . . . > where
+. . . . . . . . > Kseq between 400000 and 500000
+. . . . . . . . > and K100 = 3
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 492013  |
++---------+
+0: jdbc:luciddb:> select SUM(K1K) from bench1M
+. . . . . . . . > where
+. . . . . . . . > Kseq between 400000 and 500000
+. . . . . . . . > and K25 = 3
+. . . . . . . . > ;
++----------+
+|  EXPR$0  |
++----------+
+| 2050299  |
++----------+
+0: jdbc:luciddb:> select SUM(K1K) from bench1M
+. . . . . . . . > where
+. . . . . . . . > Kseq between 400000 and 500000
+. . . . . . . . > and K10 = 3
+. . . . . . . . > ;
++----------+
+|  EXPR$0  |
++----------+
+| 4973120  |
++----------+
+0: jdbc:luciddb:> select SUM(K1K) from bench1M
+. . . . . . . . > where
+. . . . . . . . > Kseq between 400000 and 500000
+. . . . . . . . > and K5 = 3
+. . . . . . . . > ;
++-----------+
+|  EXPR$0   |
++-----------+
+| 10112456  |
++-----------+
+0: jdbc:luciddb:> select SUM(K1K) from bench1M
+. . . . . . . . > where
+. . . . . . . . > Kseq between 400000 and 500000
+. . . . . . . . > and K4 = 3
+. . . . . . . . > ;
++-----------+
+|  EXPR$0   |
++-----------+
+| 12480930  |
++-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit
