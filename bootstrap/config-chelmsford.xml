@@ -30,7 +30,7 @@
 <!ENTITY scp_user         "cruise">
 <!ENTITY scp_host         "chelmsford">
 <!ENTITY scp_filesep      "/">
-<!ENTITY scp_options      "">
+<!ENTITY scp_options      "-P 9022">
 <!ENTITY rsync_cmd        "rsync -az -e &quot;ssh -p 9022&quot; --delete-after">
 <!ENTITY rsync_dest       "cruise@chelmsford:web/artifacts">
 
