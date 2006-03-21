@@ -492,6 +492,8 @@ class LcsIndexAccessRule extends RelOptRule
         
         int startRidParamIdForSearch =
             requireUnion ? 0 : startRidParamId;
+        int rowLimitParamIdForSearch =
+            requireUnion ? 0 : rowLimitParamId;
         
         LcsIndexSearchRel indexSearch =
             new LcsIndexSearchRel(
@@ -503,7 +505,7 @@ class LcsIndexAccessRule extends RelOptRule
                 null,
                 inputDirectiveProj,
                 startRidParamIdForSearch,
-                rowLimitParamId);
+                rowLimitParamIdForSearch);
         
         FennelRel inputRel = indexSearch;
         
