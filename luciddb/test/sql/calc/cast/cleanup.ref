@@ -1,0 +1,10 @@
+0: jdbc:luciddb:> ------------------------------------------------------------------------------
+0: jdbc:luciddb:> -----
+0: jdbc:luciddb:> --  Cleanup after ourselves
+0: jdbc:luciddb:> -----
+0: jdbc:luciddb:> ------------------------------------------------------------------------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> DROP SCHEMA CST CASCADE
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

@@ -1,0 +1,541 @@
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- basic decimal tests
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema s;
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- 19 digit literals
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table d1 (d decimal (19,0));
+0: jdbc:luciddb:> insert into d1 values (9223372036854775807.);
+0: jdbc:luciddb:> -- FRG-46
+0: jdbc:luciddb:> insert into d1 values (-92.23372036854775808);
+0: jdbc:luciddb:> insert into d1 values (-922337203685477580.9);
+Error: From line 1, column 25 to line 1, column 44: Numeric literal '-922337203685477580.9' out of range (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from d1;
++----------------------+
+|          D           |
++----------------------+
+| 9223372036854775807  |
+| 91                   |
++----------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- arithmetic
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table dt(d decimal(10,5), d2 decimal(2,2));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into dt values(-2.123456, 0.12);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select d+d2 from dt;
++-----------+
+|  EXPR$0   |
++-----------+
+| -2.00346  |
++-----------+
+0: jdbc:luciddb:> select d-d2 from dt;
++-----------+
+|  EXPR$0   |
++-----------+
+| -2.24346  |
++-----------+
+0: jdbc:luciddb:> select d/d2 from dt;
++---------------+
+|    EXPR$0     |
++---------------+
+| -17.69550000  |
++---------------+
+0: jdbc:luciddb:> select d*d2 from dt;
++-------------+
+|   EXPR$0    |
++-------------+
+| -0.2548152  |
++-------------+
+0: jdbc:luciddb:> select abs(d) from dt;
++----------+
+|  EXPR$0  |
++----------+
+| 2.12346  |
++----------+
+0: jdbc:luciddb:> select mod ((cast (d as decimal (10,0))), cast (d2 as decimal(1,0))) from dt;
+Error: java.lang.ArithmeticException: / by zero (state=,code=0)
+0: jdbc:luciddb:> select mod ((cast (d as decimal (10,0))), cast ('9.09' as decimal(1,0))) from dt;
++---------+
+| EXPR$0  |
++---------+
+| -2      |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> alter system set "calcVirtualMachine"='CALCVM_JAVA';
+0: jdbc:luciddb:> -- casting
+0: jdbc:luciddb:> create table dectable (d decimal(2,0));
+0: jdbc:luciddb:> create table inttable (i integer);
+0: jdbc:luciddb:> create table doubletable (d double);
+0: jdbc:luciddb:> -- spec defines
+0: jdbc:luciddb:> create table floattable (f float(10));
+Error: DDL validation error near line 1, column 26: Precision specification not allowed on datatype "DOUBLE" in definition of column "F" (state=,code=0)
+0: jdbc:luciddb:> create table floattable (f float);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- decimal source
+0: jdbc:luciddb:> insert into dectable values(10);
+0: jdbc:luciddb:> insert into inttable select d from dectable;
+0: jdbc:luciddb:> insert into doubletable select d from dectable;
+0: jdbc:luciddb:> insert into floattable select d from dectable;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from inttable order by 1;
++-----+
+|  I  |
++-----+
+| 10  |
++-----+
+0: jdbc:luciddb:> select * from doubletable order by 1;
++-------+
+|   D   |
++-------+
+| 10.0  |
++-------+
+0: jdbc:luciddb:> select * from floattable order by 1;
++-------+
+|   F   |
++-------+
+| 10.0  |
++-------+
+0: jdbc:luciddb:> select * from dectable order by 1;
++-----+
+|  D  |
++-----+
+| 10  |
++-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- integer source
+0: jdbc:luciddb:> insert into inttable values(15.5);
+0: jdbc:luciddb:> insert into dectable select i from inttable;
+0: jdbc:luciddb:> insert into floattable select i from inttable;
+0: jdbc:luciddb:> insert into doubletable select i from inttable;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- double source
+0: jdbc:luciddb:> insert into doubletable values(1.999);
+0: jdbc:luciddb:> insert into inttable select d from doubletable;
+0: jdbc:luciddb:> insert into dectable select d from doubletable;
+0: jdbc:luciddb:> insert into floattable select d from doubletable;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- FRG-54
+0: jdbc:luciddb:> select * from inttable order by 1;
++-----+
+|  I  |
++-----+
+| 1   |
+| 10  |
+| 10  |
+| 10  |
+| 16  |
+| 16  |
++-----+
+0: jdbc:luciddb:> select * from doubletable order by 1;
++--------+
+|   D    |
++--------+
+| 1.999  |
+| 10.0   |
+| 10.0   |
+| 16.0   |
++--------+
+0: jdbc:luciddb:> select * from floattable order by 1;
++--------+
+|   F    |
++--------+
+| 1.999  |
+| 10.0   |
+| 10.0   |
+| 10.0   |
+| 10.0   |
+| 16.0   |
+| 16.0   |
++--------+
+0: jdbc:luciddb:> select * from dectable order by 1;
++-----+
+|  D  |
++-----+
+| 1   |
+| 10  |
+| 10  |
+| 10  |
+| 10  |
+| 16  |
+| 16  |
++-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> alter system set "calcVirtualMachine"='CALCVM_FENNEL';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table dectable;
+0: jdbc:luciddb:> drop table inttable;
+0: jdbc:luciddb:> drop table doubletable;
+0: jdbc:luciddb:> drop table floattable;
+0: jdbc:luciddb:> -- casting
+0: jdbc:luciddb:> create table dectable (d decimal(2,0));
+0: jdbc:luciddb:> create table inttable (i integer);
+0: jdbc:luciddb:> create table doubletable (d double);
+0: jdbc:luciddb:> -- spec defines
+0: jdbc:luciddb:> create table floattable (f float(10));
+Error: DDL validation error near line 1, column 26: Precision specification not allowed on datatype "DOUBLE" in definition of column "F" (state=,code=0)
+0: jdbc:luciddb:> create table floattable (f float);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- decimal source
+0: jdbc:luciddb:> insert into dectable values(10);
+0: jdbc:luciddb:> insert into inttable select d from dectable;
+0: jdbc:luciddb:> insert into doubletable select d from dectable;
+0: jdbc:luciddb:> insert into floattable select d from dectable;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from inttable order by 1;
++-----+
+|  I  |
++-----+
+| 10  |
++-----+
+0: jdbc:luciddb:> select * from doubletable order by 1;
++-------+
+|   D   |
++-------+
+| 10.0  |
++-------+
+0: jdbc:luciddb:> select * from floattable order by 1;
++-------+
+|   F   |
++-------+
+| 10.0  |
++-------+
+0: jdbc:luciddb:> select * from dectable order by 1;
++-----+
+|  D  |
++-----+
+| 10  |
++-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- integer source
+0: jdbc:luciddb:> insert into inttable values(15.5);
+0: jdbc:luciddb:> insert into dectable select i from inttable;
+0: jdbc:luciddb:> insert into floattable select i from inttable;
+0: jdbc:luciddb:> insert into doubletable select i from inttable;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- double source
+0: jdbc:luciddb:> insert into doubletable values(1.999);
+0: jdbc:luciddb:> insert into inttable select d from doubletable;
+0: jdbc:luciddb:> insert into dectable select d from doubletable;
+0: jdbc:luciddb:> insert into floattable select d from doubletable;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- FRG-54
+0: jdbc:luciddb:> select * from inttable order by 1;
++-----+
+|  I  |
++-----+
+| 2   |
+| 10  |
+| 10  |
+| 10  |
+| 16  |
+| 16  |
++-----+
+0: jdbc:luciddb:> select * from doubletable order by 1;
++--------+
+|   D    |
++--------+
+| 1.999  |
+| 10.0   |
+| 10.0   |
+| 16.0   |
++--------+
+0: jdbc:luciddb:> select * from floattable order by 1;
++--------+
+|   F    |
++--------+
+| 1.999  |
+| 10.0   |
+| 10.0   |
+| 10.0   |
+| 10.0   |
+| 16.0   |
+| 16.0   |
++--------+
+0: jdbc:luciddb:> select * from dectable order by 1;
++-----+
+|  D  |
++-----+
+| 2   |
+| 10  |
+| 10  |
+| 10  |
+| 10  |
+| 16  |
+| 16  |
++-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> alter system set "calcVirtualMachine"='CALCVM_AUTO';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values cast (123.45 as decimal(8,4));
++-----------+
+|  EXPR$0   |
++-----------+
+| 123.4500  |
++-----------+
+0: jdbc:luciddb:> values cast (1234.5678 as decimal(8,4));
++------------+
+|   EXPR$0   |
++------------+
+| 1234.5678  |
++------------+
+0: jdbc:luciddb:> values cast (1234.567890 as decimal(8,4));
++------------+
+|   EXPR$0   |
++------------+
+| 1234.5679  |
++------------+
+0: jdbc:luciddb:> values cast (12345.567890 as decimal(8,4));
+Error: Overflow during calculation or cast. (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- from literals
+0: jdbc:luciddb:> values cast (9223372036854775807 as decimal(19,0));
++----------------------+
+|        EXPR$0        |
++----------------------+
+| 9223372036854775807  |
++----------------------+
+0: jdbc:luciddb:> values cast (9223372036854775808 as decimal(19,0));
+Error: From line 1, column 14 to line 1, column 32: Numeric literal '9223372036854775808' out of range (state=,code=0)
+0: jdbc:luciddb:> values cast ('-9223372036854775808' as decimal(19,0));
++-----------------------+
+|        EXPR$0         |
++-----------------------+
+| -9223372036854775808  |
++-----------------------+
+0: jdbc:luciddb:> values cast (-9223372036854775809 as decimal(19,0));
+Error: From line 1, column 15 to line 1, column 33: Numeric literal '-9223372036854775809' out of range (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- from char/varchar
+0: jdbc:luciddb:> values cast (cast ('.9176543210987654321' as char(20)) as decimal(19,19));
++------------------------+
+|         EXPR$0         |
++------------------------+
+| 0.9176543210987654321  |
++------------------------+
+0: jdbc:luciddb:> values cast (cast ('-918765432109876543.2' as varchar(100)) as decimal(19,1));
++------------------------+
+|         EXPR$0         |
++------------------------+
+| -918765432109876543.2  |
++------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values cast (cast ('-918765432109876543.5' as varchar(100)) as decimal(19,0));
++----------------------+
+|        EXPR$0        |
++----------------------+
+| -918765432109876544  |
++----------------------+
+0: jdbc:luciddb:> values cast (cast ('-918765432109876543.5' as varchar(100)) as decimal(19,3));
+Error: Overflow during calculation or cast. (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- to char/varchar
+0: jdbc:luciddb:> values cast (cast (-918765432109876543.2 as decimal(19,1)) as char(21));
++------------------------+
+|         EXPR$0         |
++------------------------+
+| -918765432109876543.2  |
++------------------------+
+0: jdbc:luciddb:> values cast (cast (.9176543210987654321 as decimal(19,19)) as varchar(20));
++-----------------------+
+|        EXPR$0         |
++-----------------------+
+| .9176543210987654321  |
++-----------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table strtable (s varchar(100));
+0: jdbc:luciddb:> -- FRG-56: remove primary key once FRG is fixed.
+0: jdbc:luciddb:> create table dTable2 (d decimal (10,2) primary key);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into strtable values('002');
+0: jdbc:luciddb:> insert into strtable values(' -002');
+0: jdbc:luciddb:> insert into strtable values(' 00020 ');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from strtable order by 1;
++----------+
+|    S     |
++----------+
+|  -002    |
+|  00020   |
+| 002      |
++----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into dTable2 select cast(s as integer) from strtable;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into dTable2 values(cast ('002.5' as decimal(10,2)));
+0: jdbc:luciddb:> insert into dTable2 values(cast (' -002.3' as decimal(10,2)));
+0: jdbc:luciddb:> insert into dTable2 values(cast (' +0023.0000 ' as decimal(10,2)));
+0: jdbc:luciddb:> insert into dTable2 values(cast (' -0012345678.9099 ' as decimal(10,2)));
+0: jdbc:luciddb:> insert into dTable2 values(cast (' -0012345678.9999 ' as decimal(10,2)));
+0: jdbc:luciddb:> insert into dTable2 values(cast (' -1012345678.9999 ' as decimal(10,2)));
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=0 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from dTable2 order by 1;
++---------------+
+|       D       |
++---------------+
+| -12345679.00  |
+| -12345678.91  |
+| -2.30         |
+| -2.00         |
+| 2.00          |
+| 2.50          |
+| 20.00         |
+| 23.00         |
++---------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select floor(d) from dTable2 order by 1;
++------------+
+|   EXPR$0   |
++------------+
+| -12345679  |
+| -12345679  |
+| -3         |
+| -2         |
+| 2          |
+| 2          |
+| 20         |
+| 23         |
++------------+
+0: jdbc:luciddb:> select ceil(d) from dTable2 order by 1;
++------------+
+|   EXPR$0   |
++------------+
+| -12345679  |
+| -12345678  |
+| -2         |
+| -2         |
+| 2          |
+| 3          |
+| 20         |
+| 23         |
++------------+
+0: jdbc:luciddb:> select exp(d) from dTable2 order by 1;
++----------------------+
+|        EXPR$0        |
++----------------------+
+| 0.0                  |
+| 0.0                  |
+| 0.10025884372280375  |
+| 0.1353352832366127   |
+| 7.38905609893065     |
+| 12.182493960703473   |
+| 4.851651954097903E8  |
+| 9.744803446248903E9  |
++----------------------+
+0: jdbc:luciddb:> select ln(abs(d)) from dTable2 order by 1;
++---------------------+
+|       EXPR$0        |
++---------------------+
+| 0.6931471805599453  |
+| 0.6931471805599453  |
+| 0.8329091229351039  |
+| 0.9162907318741551  |
+| 2.995732273553991   |
+| 3.1354942159291497  |
+| 16.328816673983972  |
+| 16.328816681273974  |
++---------------------+
+0: jdbc:luciddb:> select mod(cast (d as decimal(10,0)), 99999999999999) from dTable2 order by 1;
++------------+
+|   EXPR$0   |
++------------+
+| -12345679  |
+| -12345679  |
+| -2         |
+| -2         |
+| 2          |
+| 3          |
+| 20         |
+| 23         |
++------------+
+0: jdbc:luciddb:> -- round
+0: jdbc:luciddb:> -- log
+0: jdbc:luciddb:> -- sqrt
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- type derivation:
+0: jdbc:luciddb:> values cast(12.3 as decimal(4,2)) + cast(12.3 as decimal(4,1));
++---------+
+| EXPR$0  |
++---------+
+| 24.60   |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- nullability
+0: jdbc:luciddb:> values cast(null as decimal(1,1));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values cast (cast (null as varchar(256)) as decimal(6,3));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values cast(null as decimal(6,2)) + 3.25;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- overflow
+0: jdbc:luciddb:> values cast(100000 as char(4));
+Error: Overflow during calculation or cast. (state=,code=0)
+0: jdbc:luciddb:> -- FRG-46
+0: jdbc:luciddb:> values cast (1.2 as decimal(19,18)) + 10;
++------------------------+
+|         EXPR$0         |
++------------------------+
+| -7.246744073709551616  |
++------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- negative (P,S)
+0: jdbc:luciddb:> values cast (0 as decimal(1,-1));
+Error: org.eigenbase.sql.parser.SqlParseException: Encountered "-" at line 1, column 29.
+Was expecting:
+    <UNSIGNED_INTEGER_LITERAL> ... (state=,code=0)
+0: jdbc:luciddb:> values cast (null as decimal(0,0));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values cast (null as decimal(-1,1));
+Error: org.eigenbase.sql.parser.SqlParseException: Encountered "-" at line 1, column 30.
+Was expecting:
+    <UNSIGNED_INTEGER_LITERAL> ... (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Validation checks:
+0: jdbc:luciddb:> values ('1.2' < cast(2.0 as decimal (2,1)));
+Error: From line 1, column 9 to line 1, column 42: Cannot apply '<' to arguments of type '<CHAR(3)> < <DECIMAL(2, 1)>'. Supported form(s): '<COMPARABLE_TYPE> < <COMPARABLE_TYPE>' (state=,code=0)
+0: jdbc:luciddb:> values (cast ('1.2' as decimal (2,1)) < cast(2.0 as decimal (2,1)));
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table strT (s char(4));
+0: jdbc:luciddb:> insert into strT values (cast(1 as integer));
+Error: Cannot assign to target field 'S' of type CHAR(4) from source field 'EXPR$0' of type INTEGER (state=,code=0)
+0: jdbc:luciddb:> insert into strT values (cast(-1.9 as decimal(2,1)));
+Error: Cannot assign to target field 'S' of type CHAR(4) from source field 'EXPR$0' of type DECIMAL(2, 1) (state=,code=0)
+0: jdbc:luciddb:> select * from strT;
++----+
+| S  |
++----+
++----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

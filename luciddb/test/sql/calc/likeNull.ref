@@ -1,0 +1,19 @@
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- this used to crash the server (bug 12836)
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table nullLike;
+Error: DDL validation error near line 1, column 12: Reference to unknown table "NULLLIKE" (state=,code=0)
+0: jdbc:luciddb:> create table nullLike(v varchar(30));
+0: jdbc:luciddb:> insert into nullLike 
+. . . . . . . . > values(null);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from nullLike where v like '1%';
++----+
+| V  |
++----+
++----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

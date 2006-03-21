@@ -1,0 +1,34 @@
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- Bug 3314
+0: jdbc:luciddb:> -- Owner: Boris
+0: jdbc:luciddb:> -- Abstract: CALC, PARSER, and CONVERSIONS need to round instead of trunc
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table high (x numeric(19,12));
+0: jdbc:luciddb:> create table low (x numeric(19,10));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into high values (25.12345678909876);
+0: jdbc:luciddb:> insert into low select * from high;
+0: jdbc:luciddb:> insert into low values (123456789.555555555555555);
+Error: From line 1, column 25 to line 1, column 49: Numeric literal '123456789.555555555555555' out of range (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from high;
++------------------+
+|        X         |
++------------------+
+| 25.123456789099  |
++------------------+
+0: jdbc:luciddb:> select * from low;
++----------------+
+|       X        |
++----------------+
+| 25.1234567891  |
++----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table high;
+0: jdbc:luciddb:> drop table low;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

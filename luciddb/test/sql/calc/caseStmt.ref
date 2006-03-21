@@ -1,0 +1,308 @@
+0: jdbc:luciddb:> -- test CASE statement
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Test against our standard data set
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT n1, (CASE WHEN (n1 < -100) THEN -100
+. . . . . . . . >  WHEN (n1 < 0) THEN 0
+. . . . . . . . >  WHEN (n1 < 100) THEN 100
+. . . . . . . . >  ELSE 1000
+. . . . . . . . > END)
+. . . . . . . . > FROM TEST_INTEGER_TABLE ORDER BY n1;
++--------------+---------+
+|      N1      | EXPR$1  |
++--------------+---------+
+|              | 1000    |
+| -2147483648  | -100    |
+| -123456      | -100    |
+| -1000        | -100    |
+| -100         | 0       |
+| -1           | 0       |
+| 0            | 100     |
+| 1            | 100     |
+| 100          | 1000    |
+| 1000         | 1000    |
+| 123456       | 1000    |
+| 2147483647   | 1000    |
++--------------+---------+
+0: jdbc:luciddb:> SELECT n1, (CASE WHEN (n1 < -100) THEN -100
+. . . . . . . . >  WHEN (n1 < 0) THEN 0
+. . . . . . . . >  WHEN (n1 < 100) THEN 100
+. . . . . . . . >  ELSE 1000
+. . . . . . . . > END)
+. . . . . . . . > FROM TEST_NUMERIC_TABLE ORDER BY n1;
++------------+---------+
+|     N1     | EXPR$1  |
++------------+---------+
+|            | 1000    |
+| -99999999  | -100    |
+| -1100      | -100    |
+| -111       | -100    |
+| -1         | 0       |
+| 0          | 100     |
+| 1          | 100     |
+| 111        | 1000    |
+| 1100       | 1000    |
+| 12345      | 1000    |
+| 99999999   | 1000    |
++------------+---------+
+0: jdbc:luciddb:> SELECT n1, (CASE WHEN (n1 < -100) THEN -100
+. . . . . . . . >  WHEN (n1 < 0) THEN 0
+. . . . . . . . >  WHEN (n1 < 100) THEN 100
+. . . . . . . . >  ELSE 1000
+. . . . . . . . > END)
+. . . . . . . . > FROM TEST_REAL_TABLE ORDER BY n1;
++-------------+---------+
+|     N1      | EXPR$1  |
++-------------+---------+
+|             | 1000    |
+| -1.233E31   | -100    |
+| -1234567.0  | -100    |
+| -1.0        | 0       |
+| -0.123456   | 0       |
+| -1.233E-29  | 0       |
+| 1.0E-37     | 100     |
+| 1.233E-29   | 100     |
+| 0.123456    | 100     |
+| 1.0         | 100     |
+| 1.001       | 100     |
+| 1234567.0   | 1000    |
+| 1.233E31    | 1000    |
++-------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Mix up strings and non-strings
+0: jdbc:luciddb:> -- Return a string from a numeric value
+0: jdbc:luciddb:> SELECT n1, (CASE WHEN (n1 < -100) THEN 'Kirk'
+. . . . . . . . >  WHEN (n1 < 0) THEN 'Julian'
+. . . . . . . . >  WHEN (n1 < 100) THEN 'Bill'
+. . . . . . . . >  ELSE 'Tai'
+. . . . . . . . > END)
+. . . . . . . . > FROM TEST_INTEGER_TABLE ORDER BY n1;
++--------------+---------+
+|      N1      | EXPR$1  |
++--------------+---------+
+|              | Tai     |
+| -2147483648  | Kirk    |
+| -123456      | Kirk    |
+| -1000        | Kirk    |
+| -100         | Julian  |
+| -1           | Julian  |
+| 0            | Bill    |
+| 1            | Bill    |
+| 100          | Tai     |
+| 1000         | Tai     |
+| 123456       | Tai     |
+| 2147483647   | Tai     |
++--------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Return a combination of strings and non-strings
+0: jdbc:luciddb:> SELECT n1, (CASE WHEN (n1 < -100) THEN -100
+. . . . . . . . >  WHEN (n1 < 0) THEN 'Kirk'
+. . . . . . . . >  WHEN (n1 < 100) THEN NULL
+. . . . . . . . >  ELSE 1000e-12
+. . . . . . . . > END)
+. . . . . . . . > FROM TEST_INTEGER_TABLE ORDER BY n1;
+Error: From line 1, column 13 to line 1, column 116: Illegal mixing of types in CASE or COALESCE statement (state=,code=0)
+0: jdbc:luciddb:> -- Return null
+0: jdbc:luciddb:> SELECT n1, (CASE WHEN (n1 < -100) THEN NULL
+. . . . . . . . >  WHEN (n1 < 0) THEN NULL
+. . . . . . . . >  WHEN (n1 < 100) THEN NULL
+. . . . . . . . >  ELSE NULL
+. . . . . . . . > END)
+. . . . . . . . > FROM TEST_INTEGER_TABLE ORDER BY n1;
+Error: ELSE clause or at least one THEN clause must be non-NULL (state=,code=0)
+0: jdbc:luciddb:> -- Output into an expression with null
+0: jdbc:luciddb:> SELECT n1, (CASE WHEN (n1 < -100) THEN NULL
+. . . . . . . . >  WHEN (n1 < 0) THEN NULL
+. . . . . . . . >  WHEN (n1 < 100) THEN NULL
+. . . . . . . . >  ELSE NULL
+. . . . . . . . > END) * 14.553
+. . . . . . . . > FROM TEST_INTEGER_TABLE ORDER BY n1;
+Error: ELSE clause or at least one THEN clause must be non-NULL (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Check null values
+0: jdbc:luciddb:> -- simulate NVL(col, 0)
+0: jdbc:luciddb:> SELECT n1, (CASE WHEN n1 IS NULL THEN 0
+. . . . . . . . >  ELSE n1
+. . . . . . . . > END)
+. . . . . . . . > FROM TEST_INTEGER_TABLE ORDER BY n1;
++--------------+--------------+
+|      N1      |    EXPR$1    |
++--------------+--------------+
+|              | 0            |
+| -2147483648  | -2147483648  |
+| -123456      | -123456      |
+| -1000        | -1000        |
+| -100         | -100         |
+| -1           | -1           |
+| 0            | 0            |
+| 1            | 1            |
+| 100          | 100          |
+| 1000         | 1000         |
+| 123456       | 123456       |
+| 2147483647   | 2147483647   |
++--------------+--------------+
+0: jdbc:luciddb:> SELECT n1, (CASE WHEN n1 IS NULL THEN 0
+. . . . . . . . >  ELSE n1
+. . . . . . . . > END)
+. . . . . . . . > FROM TEST_NUMERIC_TABLE ORDER BY n1;
++------------+------------+
+|     N1     |   EXPR$1   |
++------------+------------+
+|            | 0          |
+| -99999999  | -99999999  |
+| -1100      | -1100      |
+| -111       | -111       |
+| -1         | -1         |
+| 0          | 0          |
+| 1          | 1          |
+| 111        | 111        |
+| 1100       | 1100       |
+| 12345      | 12345      |
+| 99999999   | 99999999   |
++------------+------------+
+0: jdbc:luciddb:> SELECT n1, (CASE WHEN n1 IS NULL THEN 0
+. . . . . . . . >  ELSE n1
+. . . . . . . . > END)
+. . . . . . . . > FROM TEST_REAL_TABLE ORDER BY n1;
++-------------+-------------+
+|     N1      |   EXPR$1    |
++-------------+-------------+
+|             | 0.0         |
+| -1.233E31   | -1.233E31   |
+| -1234567.0  | -1234567.0  |
+| -1.0        | -1.0        |
+| -0.123456   | -0.123456   |
+| -1.233E-29  | -1.233E-29  |
+| 1.0E-37     | 1.0E-37     |
+| 1.233E-29   | 1.233E-29   |
+| 0.123456    | 0.123456    |
+| 1.0         | 1.0         |
+| 1.001       | 1.001       |
+| 1234567.0   | 1234567.0   |
+| 1.233E31    | 1.233E31    |
++-------------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Do funky null <> null semantics so that it's in the regression
+0: jdbc:luciddb:> SELECT n1, (CASE n1 WHEN NULL THEN 0 ELSE n1 END)
+. . . . . . . . > FROM TEST_INTEGER_TABLE WHERE n1 IS NULL ORDER BY n1;
+Error: From line 1, column 13 to line 1, column 48: Cannot apply '=' to arguments of type '<INTEGER> = <NULL>'. Supported form(s): '<COMPARABLE_TYPE> = <COMPARABLE_TYPE>' (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, (CASE n1 WHEN NULL THEN 0 ELSE n1 END)
+. . . . . . . . > FROM TEST_NUMERIC_TABLE WHERE n1 IS NULL ORDER BY n1;
+Error: From line 1, column 13 to line 1, column 48: Cannot apply '=' to arguments of type '<DECIMAL(8, 0)> = <NULL>'. Supported form(s): '<COMPARABLE_TYPE> = <COMPARABLE_TYPE>' (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, (CASE n1 WHEN NULL THEN 0 ELSE n1 END)
+. . . . . . . . > FROM TEST_REAL_TABLE WHERE n1 IS NULL ORDER BY n1;
+Error: From line 1, column 13 to line 1, column 48: Cannot apply '=' to arguments of type '<DOUBLE> = <NULL>'. Supported form(s): '<COMPARABLE_TYPE> = <COMPARABLE_TYPE>' (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Test more general short-form case statements
+0: jdbc:luciddb:> SELECT n1, (CASE n1 WHEN 0 THEN -100
+. . . . . . . . >  WHEN -1 THEN 0
+. . . . . . . . >  WHEN 123456 THEN 100
+. . . . . . . . >  ELSE 1000
+. . . . . . . . > END)
+. . . . . . . . > FROM TEST_INTEGER_TABLE ORDER BY n1;
++--------------+---------+
+|      N1      | EXPR$1  |
++--------------+---------+
+|              | 1000    |
+| -2147483648  | 1000    |
+| -123456      | 1000    |
+| -1000        | 1000    |
+| -100         | 1000    |
+| -1           | 0       |
+| 0            | -100    |
+| 1            | 1000    |
+| 100          | 1000    |
+| 1000         | 1000    |
+| 123456       | 100     |
+| 2147483647   | 1000    |
++--------------+---------+
+0: jdbc:luciddb:> SELECT n1, (CASE n1 WHEN 'Bunny Rabbit' THEN -100
+. . . . . . . . >  WHEN -1 THEN 0
+. . . . . . . . >  WHEN 123456 THEN 100
+. . . . . . . . >  ELSE 1000
+. . . . . . . . > END)
+. . . . . . . . > FROM TEST_INTEGER_TABLE ORDER BY n1;
+Error: From line 1, column 13 to line 1, column 102: Cannot apply '=' to arguments of type '<INTEGER> = <CHAR(12)>'. Supported form(s): '<COMPARABLE_TYPE> = <COMPARABLE_TYPE>' (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, (CASE n1 WHEN 0 THEN -100
+. . . . . . . . >  WHEN {ts '1976-08-11'} THEN 0
+. . . . . . . . >  WHEN 123456 THEN 100
+. . . . . . . . >  ELSE 1000
+. . . . . . . . > END)
+. . . . . . . . > FROM TEST_INTEGER_TABLE ORDER BY n1;
+Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIMESTAMP literal '1976-08-11' at line 1, column 60: not in format 'yyyy-MM-dd HH:mm:ss' (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- CHAR VARCHAR Comparison
+0: jdbc:luciddb:> SELECT c2, (CASE c2 WHEN 'KIRK' THEN 100
+. . . . . . . . >  WHEN 'kirk' THEN 200
+. . . . . . . . >  WHEN '123456789X' THEN 1000
+. . . . . . . . >  ELSE 0
+. . . . . . . . > END)
+. . . . . . . . > FROM TEST_CHAR_TABLE ORDER BY c2;
++-------------+---------+
+|     C2      | EXPR$1  |
++-------------+---------+
+|             | 0       |
+| 123456789X  | 1000    |
+| 4155551212  | 0       |
+| KIRK        | 100     |
+| KIRK        | 100     |
+| Kirk Is     | 0       |
+| bBbB   bBb  | 0       |
+| kirk        | 200     |
+| kirk is     | 0       |
++-------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Expressions inside the case statements
+0: jdbc:luciddb:> SELECT n1, n2, (CASE WHEN (n1 + n2 < -100) THEN 'Fi'
+. . . . . . . . >  WHEN (n1 * 10 - n2 < 0) THEN 'Feye'
+. . . . . . . . >  WHEN (n1 + n2 * 3 > 100) THEN 'Fo'
+. . . . . . . . >  WHEN (n1 * n2 > 0) THEN 'Fum'
+. . . . . . . . >  ELSE 'I smell the blood of an Englishman'
+. . . . . . . . > END)
+. . . . . . . . > FROM TEST_INTEGER_TABLE ORDER BY n1, n2;
++--------------+----------+-------------------------------------+
+|      N1      |    N2    |               EXPR$2                |
++--------------+----------+-------------------------------------+
+|              |          | I smell the blood of an Englishman  |
+| -2147483648  | -32768   | Fo                                  |
+| -123456      | -234567  | Fi                                  |
+| -1000        | -2000    | Fi                                  |
+| -100         | -200     | Fi                                  |
+| -1           | -2       | Feye                                |
+| 0            | 0        | I smell the blood of an Englishman  |
+| 1            | 2        | Fum                                 |
+| 100          | 200      | Fo                                  |
+| 1000         | 2000     | Fo                                  |
+| 123456       | 234567   | Fo                                  |
+| 2147483647   | 32767    | Fi                                  |
++--------------+----------+-------------------------------------+
+0: jdbc:luciddb:> SELECT n1, n2, (CASE WHEN (n1 + n2 < -100) THEN n1 + n2
+. . . . . . . . >  WHEN (n1 * 10 - n2 < 0) THEN n1 * 10 - n2
+. . . . . . . . >  WHEN (n1 + n2 * 3 > 100) THEN n1 + n2 * 3
+. . . . . . . . >  WHEN (n1 * n2 > 0) THEN n1 * n2
+. . . . . . . . >  ELSE NULL
+. . . . . . . . > END)
+. . . . . . . . > FROM TEST_INTEGER_TABLE ORDER BY n1, n2;
++--------------+----------+--------------+
+|      N1      |    N2    |    EXPR$2    |
++--------------+----------+--------------+
+|              |          |              |
+| -2147483648  | -32768   | 2147385344   |
+| -123456      | -234567  | -358023      |
+| -1000        | -2000    | -3000        |
+| -100         | -200     | -300         |
+| -1           | -2       | -8           |
+| 0            | 0        |              |
+| 1            | 2        | 2            |
+| 100          | 200      | 700          |
+| 1000         | 2000     | 7000         |
+| 123456       | 234567   | 827157       |
+| 2147483647   | 32767    | -2147450882  |
++--------------+----------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- End test
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

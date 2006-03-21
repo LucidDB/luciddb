@@ -1,0 +1,275 @@
+0: jdbc:luciddb:> -- Create the Test tables for the rest of the calculator test.
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create tablespace calc_test_space datafile 'CalcTest.dat' size 9600K;
+0: jdbc:luciddb:> create schema s;
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Note that I'd like to eliminate the boris table, but it's there (seemingly)
+0: jdbc:luciddb:> -- to stay. Therefore I'm creating other test tables that have all the other types
+0: jdbc:luciddb:> -- that we'll use later. When writing new tests or sql statements don't use
+0: jdbc:luciddb:> -- boris.
+0: jdbc:luciddb:> create table boris
+. . . . . . . . > (
+. . . . . . . . > nnull numeric(8,0),
+. . . . . . . . > n1 numeric(8,0),
+. . . . . . . . > n2 numeric(8,0),
+. . . . . . . . > n3 numeric(8,0),
+. . . . . . . . > snull varchar(40),
+. . . . . . . . > s1 varchar(40),
+. . . . . . . . > s2 varchar(40),
+. . . . . . . . > s3 varchar(40)
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Integer table
+0: jdbc:luciddb:> CREATE TABLE TEST_INTEGER_TABLE
+. . . . . . . . > (
+. . . . . . . . > n1 INTEGER,
+. . . . . . . . > n2 INTEGER,
+. . . . . . . . > n3 INTEGER,
+. . . . . . . . > n4 INTEGER,
+. . . . . . . . > n5 INTEGER
+. . . . . . . . > );
+0: jdbc:luciddb:> -- Always have a null row to start.
+0: jdbc:luciddb:> INSERT INTO TEST_INTEGER_TABLE VALUES(null, null, null, null, null);
+0: jdbc:luciddb:> INSERT INTO TEST_INTEGER_TABLE VALUES(0, 0, 0, 0, 0);
+0: jdbc:luciddb:> INSERT INTO TEST_INTEGER_TABLE VALUES(1, 2, 3, 4, 5);
+0: jdbc:luciddb:> INSERT INTO TEST_INTEGER_TABLE VALUES(-1, -2, -3, -4, -5);
+0: jdbc:luciddb:> INSERT INTO TEST_INTEGER_TABLE VALUES(100, 200, 300, 400, 500);
+0: jdbc:luciddb:> INSERT INTO TEST_INTEGER_TABLE VALUES(-100, -200, -300, -400, -500);
+0: jdbc:luciddb:> INSERT INTO TEST_INTEGER_TABLE VALUES(1000, 2000, 3000, 4000, 5000);
+0: jdbc:luciddb:> INSERT INTO TEST_INTEGER_TABLE VALUES(-1000, -2000, -3000, -4000, -5000);
+0: jdbc:luciddb:> INSERT INTO TEST_INTEGER_TABLE VALUES(123456, 234567, 345678, 456789, 567890);
+0: jdbc:luciddb:> INSERT INTO TEST_INTEGER_TABLE VALUES(-123456, -234567, -345678, -456789, -567890);
+0: jdbc:luciddb:> INSERT INTO TEST_INTEGER_TABLE VALUES(2147483647, 32767, 127, 8, 1);
+0: jdbc:luciddb:> INSERT INTO TEST_INTEGER_TABLE VALUES(-2147483648, -32768, -128, -7, 0);
+0: jdbc:luciddb:> SELECT * FROM TEST_INTEGER_TABLE ORDER BY n1,n2,n3,n4,n5;
++--------------+----------+----------+----------+----------+
+|      N1      |    N2    |    N3    |    N4    |    N5    |
++--------------+----------+----------+----------+----------+
+|              |          |          |          |          |
+| -2147483648  | -32768   | -128     | -7       | 0        |
+| -123456      | -234567  | -345678  | -456789  | -567890  |
+| -1000        | -2000    | -3000    | -4000    | -5000    |
+| -100         | -200     | -300     | -400     | -500     |
+| -1           | -2       | -3       | -4       | -5       |
+| 0            | 0        | 0        | 0        | 0        |
+| 1            | 2        | 3        | 4        | 5        |
+| 100          | 200      | 300      | 400      | 500      |
+| 1000         | 2000     | 3000     | 4000     | 5000     |
+| 123456       | 234567   | 345678   | 456789   | 567890   |
+| 2147483647   | 32767    | 127      | 8        | 1        |
++--------------+----------+----------+----------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Numeric table. This one will have values that span between INT32 and INT64
+0: jdbc:luciddb:> CREATE TABLE TEST_NUMERIC_TABLE
+. . . . . . . . > (
+. . . . . . . . > n1 NUMERIC(8,0),
+. . . . . . . . > n2 NUMERIC(12,0),
+. . . . . . . . > n3 NUMERIC(12,5),
+. . . . . . . . > n4 NUMERIC(8,3),
+. . . . . . . . > n5 NUMERIC(15,10)
+. . . . . . . . > );
+0: jdbc:luciddb:> -- Always have a null row to start.
+0: jdbc:luciddb:> INSERT INTO TEST_NUMERIC_TABLE VALUES(null, null, null, null, null);
+0: jdbc:luciddb:> INSERT INTO TEST_NUMERIC_TABLE VALUES(0, 0, 0, 0, 0);
+0: jdbc:luciddb:> INSERT INTO TEST_NUMERIC_TABLE VALUES(1, 2, 3, 4, 5);
+0: jdbc:luciddb:> INSERT INTO TEST_NUMERIC_TABLE VALUES(-1, -2, -3, -4, -5);
+0: jdbc:luciddb:> INSERT INTO TEST_NUMERIC_TABLE VALUES(111, 222, 333, 444, 555);
+0: jdbc:luciddb:> INSERT INTO TEST_NUMERIC_TABLE VALUES(-111, -222, -333, -444, -555);
+0: jdbc:luciddb:> INSERT INTO TEST_NUMERIC_TABLE VALUES(1100, 2200, 3300.33, 4400.44, 5500.55);
+0: jdbc:luciddb:> INSERT INTO TEST_NUMERIC_TABLE VALUES(-1100, -2200, -3300.33, -4400.44, -5500.55);
+0: jdbc:luciddb:> INSERT INTO TEST_NUMERIC_TABLE VALUES(12345, 23456, 124.443, 98.887, 948.48373229);
+0: jdbc:luciddb:> INSERT INTO TEST_NUMERIC_TABLE VALUES(99999999, 999999999999, 9999999.99999, 99999.999, 99999.9999999999);
+0: jdbc:luciddb:> INSERT INTO TEST_NUMERIC_TABLE VALUES(-99999999, -999999999999, -9999999.99999, -99999.999, -99999.9999999999);
+0: jdbc:luciddb:> SELECT * FROM TEST_NUMERIC_TABLE ORDER BY n1,n2,n3,n4,n5;
++------------+----------------+-----------------+-------------+--------------------+
+|     N1     |       N2       |       N3        |     N4      |         N5         |
++------------+----------------+-----------------+-------------+--------------------+
+|            |                |                 |             |                    |
+| -99999999  | -999999999999  | -9999999.99999  | -99999.999  | -99999.9999999999  |
+| -1100      | -2200          | -3300.33000     | -4400.440   | -5500.5500000000   |
+| -111       | -222           | -333.00000      | -444.000    | -555.0000000000    |
+| -1         | -2             | -3.00000        | -4.000      | -5.0000000000      |
+| 0          | 0              | 0.00000         | 0.000       | 0E-10              |
+| 1          | 2              | 3.00000         | 4.000       | 5.0000000000       |
+| 111        | 222            | 333.00000       | 444.000     | 555.0000000000     |
+| 1100       | 2200           | 3300.33000      | 4400.440    | 5500.5500000000    |
+| 12345      | 23456          | 124.44300       | 98.887      | 948.4837322900     |
+| 99999999   | 999999999999   | 9999999.99999   | 99999.999   | 99999.9999999999   |
++------------+----------------+-----------------+-------------+--------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- REAL table. This one will have reals and doubles.
+0: jdbc:luciddb:> CREATE TABLE TEST_REAL_TABLE
+. . . . . . . . > (
+. . . . . . . . > n1 FLOAT,
+. . . . . . . . > n2 REAL,
+. . . . . . . . > n3 REAL,
+. . . . . . . . > n4 DOUBLE,
+. . . . . . . . > n5 DOUBLE
+. . . . . . . . > );
+0: jdbc:luciddb:> -- Always have a null row to start.
+0: jdbc:luciddb:> INSERT INTO TEST_REAL_TABLE VALUES(null, null, null, null, null);
+0: jdbc:luciddb:> INSERT INTO TEST_REAL_TABLE VALUES(1, 2, 3, 4, 5);
+0: jdbc:luciddb:> INSERT INTO TEST_REAL_TABLE VALUES(-1, -2, -3, -4, -5);
+0: jdbc:luciddb:> INSERT INTO TEST_REAL_TABLE VALUES(1.001, 2.002, 3.003, 4.004, 5.005);
+0: jdbc:luciddb:> INSERT INTO TEST_REAL_TABLE VALUES(1234567, 1234567, 1234567, 123456789012345, 123456789012345);
+0: jdbc:luciddb:> INSERT INTO TEST_REAL_TABLE VALUES(0.123456, 0.123456, 0.123456, 0.12345678901234, 0.12345678901234);
+0: jdbc:luciddb:> INSERT INTO TEST_REAL_TABLE VALUES(-1234567, -1234567, -1234567, -123456789012345, -123456789012345);
+0: jdbc:luciddb:> INSERT INTO TEST_REAL_TABLE VALUES(-0.123456, -0.123456, -0.123456, -0.12345678901234, -0.12345678901234);
+0: jdbc:luciddb:> INSERT INTO TEST_REAL_TABLE VALUES(12.33e30, 12.55e30, 12.77e31, 12876.32e202, 33324.443e303);
+0: jdbc:luciddb:> INSERT INTO TEST_REAL_TABLE VALUES(12.33e-30, 12.55e-30, 12.77e-31, 12876.32e-202, 33324.443e-303);
+0: jdbc:luciddb:> INSERT INTO TEST_REAL_TABLE VALUES(-12.33e30, -12.55e30, -12.77e31, -12876.32e202, -33324.443e303);
+0: jdbc:luciddb:> INSERT INTO TEST_REAL_TABLE VALUES(-12.33e-30, -12.55e-30, -12.77e-31, -12876.32e-202, -33324.443e-303);
+0: jdbc:luciddb:> INSERT INTO TEST_REAL_TABLE VALUES(1.0e-37, 1.0e38, 1.0e38, 1.0e-307, 1.0e308);
+0: jdbc:luciddb:> SELECT * FROM TEST_REAL_TABLE ORDER BY n1,n2,n3,n4,n5;
++-------------+-------------+-------------+-----------------------+-----------------------+
+|     N1      |     N2      |     N3      |          N4           |          N5           |
++-------------+-------------+-------------+-----------------------+-----------------------+
+|             |             |             |                       |                       |
+| -1.233E31   | -1.255E31   | -1.277E32   | -1.287632E206         | -3.3324443E307        |
+| -1234567.0  | -1234567.0  | -1234567.0  | -1.23456789012345E14  | -1.23456789012345E14  |
+| -1.0        | -2.0        | -3.0        | -4.0                  | -5.0                  |
+| -0.123456   | -0.123456   | -0.123456   | -0.12345678901234     | -0.12345678901234     |
+| -1.233E-29  | -1.255E-29  | -1.277E-30  | -1.287632E-198        | -3.3324443E-299       |
+| 1.0E-37     | 1.0E38      | 1.0E38      | 1.0E-307              | 1.0E308               |
+| 1.233E-29   | 1.255E-29   | 1.277E-30   | 1.287632E-198         | 3.3324443E-299        |
+| 0.123456    | 0.123456    | 0.123456    | 0.12345678901234      | 0.12345678901234      |
+| 1.0         | 2.0         | 3.0         | 4.0                   | 5.0                   |
+| 1.001       | 2.002       | 3.003       | 4.004                 | 5.005                 |
+| 1234567.0   | 1234567.0   | 1234567.0   | 1.23456789012345E14   | 1.23456789012345E14   |
+| 1.233E31    | 1.255E31    | 1.277E32    | 1.287632E206          | 3.3324443E307         |
++-------------+-------------+-------------+-----------------------+-----------------------+
+0: jdbc:luciddb:> -- Also test the very small numbers ; IDBA doesn't display them properly.
+0: jdbc:luciddb:> SELECT n1, n1 * 1e35 FROM TEST_REAL_TABLE
+. . . . . . . . > WHERE n1 < 0.00000001 AND n1 > -0.00000001
+. . . . . . . . > ORDER BY n1;
++-------------+-------------+
+|     N1      |   EXPR$1    |
++-------------+-------------+
+| -1.233E-29  | -1233000.0  |
+| 1.0E-37     | 0.01        |
+| 1.233E-29   | 1233000.0   |
++-------------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- CHAR table.
+0: jdbc:luciddb:> CREATE TABLE TEST_CHAR_TABLE
+. . . . . . . . > (
+. . . . . . . . > c1 CHAR(5),
+. . . . . . . . > c2 CHAR(10),
+. . . . . . . . > c3 CHAR(20),
+. . . . . . . . > c4 CHAR(40),
+. . . . . . . . > c5 CHAR(254)
+. . . . . . . . > );
+0: jdbc:luciddb:> -- Always have a null row to start.
+0: jdbc:luciddb:> INSERT INTO TEST_CHAR_TABLE VALUES(null, null, null, null, null);
+0: jdbc:luciddb:> INSERT INTO TEST_CHAR_TABLE VALUES(
+. . . . . . . . > '12345',
+. . . . . . . . > '123456789X',
+. . . . . . . . > '123456789X123456789x',
+. . . . . . . . > '123456789X123456789x123456789X123456789X',
+. . . . . . . . > '123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-1234'
+. . . . . . . . > );
+0: jdbc:luciddb:> INSERT INTO TEST_CHAR_TABLE VALUES('KIRK', 'KIRK', 'KIRK', 'KIRK', 'KIRK');
+0: jdbc:luciddb:> INSERT INTO TEST_CHAR_TABLE VALUES('KIRK ', 'KIRK   ', 'KIRK   ', 'KIRK    ', 'KIRK         ');
+0: jdbc:luciddb:> INSERT INTO TEST_CHAR_TABLE VALUES('  kirk', 'kirk', '  kirk', 'kirk', '  kirk');
+0: jdbc:luciddb:> INSERT INTO TEST_CHAR_TABLE VALUES('Kirk', 'Kirk Is', 'Kirk Is Not', 'Kirk Is Not Boris', 'Kirk Is Not Boris, Thank God');
+0: jdbc:luciddb:> INSERT INTO TEST_CHAR_TABLE VALUES('kirk', 'kirk is', 'kirk is not', 'kirk is not boris', 'kirk is not boris, thank <insert possible ACLU suit here>');
+0: jdbc:luciddb:> INSERT INTO TEST_CHAR_TABLE VALUES('aAaA', 'bBbB   bBbB', 'cCcC    cCcCcC', 'hghgh    uiuiIIIU', 'POOOPOIUOJLJLJ   fkdlfjdTJKTJ dkljf JFDK dfjkld FJDK');
+0: jdbc:luciddb:> INSERT INTO TEST_CHAR_TABLE VALUES('  x  ', '4155551212', '8009763345', '800BROADBA', '011441719566412');
+0: jdbc:luciddb:> SELECT * FROM TEST_CHAR_TABLE ORDER BY c1,c2,c3,c4,c5;
++--------+-------------+-----------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|   C1   |     C2      |          C3           |                    C4                     |                                                                                                                               C5                                                                                                                                |
++--------+-------------+-----------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|        |             |                       |                                           |                                                                                                                                                                                                                                                                 |
+|   kir  | kirk        |   kirk                | kirk                                      |   kirk                                                                                                                                                                                                                                                          |
+|   x    | 4155551212  | 8009763345            | 800BROADBA                                | 011441719566412                                                                                                                                                                                                                                                 |
+| 12345  | 123456789X  | 123456789X123456789x  | 123456789X123456789x123456789X123456789X  | 123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-1234  |
+| KIRK   | KIRK        | KIRK                  | KIRK                                      | KIRK                                                                                                                                                                                                                                                            |
+| KIRK   | KIRK        | KIRK                  | KIRK                                      | KIRK                                                                                                                                                                                                                                                            |
+| Kirk   | Kirk Is     | Kirk Is Not           | Kirk Is Not Boris                         | Kirk Is Not Boris, Thank God                                                                                                                                                                                                                                    |
+| aAaA   | bBbB   bBb  | cCcC    cCcCcC        | hghgh    uiuiIIIU                         | POOOPOIUOJLJLJ   fkdlfjdTJKTJ dkljf JFDK dfjkld FJDK                                                                                                                                                                                                            |
+| kirk   | kirk is     | kirk is not           | kirk is not boris                         | kirk is not boris, thank <insert possible ACLU suit here>                                                                                                                                                                                                       |
++--------+-------------+-----------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Varchar table
+0: jdbc:luciddb:> CREATE TABLE TEST_VARCHAR_TABLE
+. . . . . . . . > (
+. . . . . . . . > s1 VARCHAR(5),
+. . . . . . . . > s2 VARCHAR(10),
+. . . . . . . . > s3 VARCHAR(20),
+. . . . . . . . > s4 VARCHAR(40),
+. . . . . . . . > s5 VARCHAR(256)
+. . . . . . . . > );
+0: jdbc:luciddb:> -- Always have a null row to start.
+0: jdbc:luciddb:> INSERT INTO TEST_VARCHAR_TABLE VALUES(null, null, null, null, null);
+0: jdbc:luciddb:> INSERT INTO TEST_VARCHAR_TABLE VALUES(
+. . . . . . . . > '12345',
+. . . . . . . . > '123456789X',
+. . . . . . . . > '123456789X123456789x',
+. . . . . . . . > '123456789X123456789x123456789X123456789X',
+. . . . . . . . > '123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-1234'
+. . . . . . . . > );
+0: jdbc:luciddb:> INSERT INTO TEST_VARCHAR_TABLE VALUES('KIRK', 'KIRK', 'KIRK', 'KIRK', 'KIRK');
+0: jdbc:luciddb:> INSERT INTO TEST_VARCHAR_TABLE VALUES('KIRK ', 'KIRK   ', 'KIRK   ', 'KIRK    ', 'KIRK         ');
+0: jdbc:luciddb:> INSERT INTO TEST_VARCHAR_TABLE VALUES('  kirk', 'kirk', '  kirk', 'kirk', '  kirk');
+0: jdbc:luciddb:> INSERT INTO TEST_VARCHAR_TABLE VALUES('Kirk', 'Kirk Is', 'Kirk Is Not', 'Kirk Is Not Boris', 'Kirk Is Not Boris, Thank God');
+0: jdbc:luciddb:> INSERT INTO TEST_VARCHAR_TABLE VALUES('kirk', 'kirk is', 'kirk is not', 'kirk is not boris', 'kirk is not boris, thank <insert possible ACLU suit here>');
+0: jdbc:luciddb:> INSERT INTO TEST_VARCHAR_TABLE VALUES('aAaA', 'bBbB   bBbB', 'cCcC    cCcCcC', 'hghgh    uiuiIIIU', 'POOOPOIUOJLJLJ   fkdlfjdTJKTJ dkljf JFDK dfjkld FJDK');
+0: jdbc:luciddb:> INSERT INTO TEST_VARCHAR_TABLE VALUES('  x  ', '4155551212', '8009763345', '800BROADBA', '011441719566412');
+0: jdbc:luciddb:> SELECT * FROM TEST_VARCHAR_TABLE ORDER BY s1,s2,s3,s4,s5;
++--------+-------------+-----------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|   S1   |     S2      |          S3           |                    S4                     |                                                                                                                               S5                                                                                                                                |
++--------+-------------+-----------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|        |             |                       |                                           |                                                                                                                                                                                                                                                                 |
+|   kir  | kirk        |   kirk                | kirk                                      |   kirk                                                                                                                                                                                                                                                          |
+|   x    | 4155551212  | 8009763345            | 800BROADBA                                | 011441719566412                                                                                                                                                                                                                                                 |
+| 12345  | 123456789X  | 123456789X123456789x  | 123456789X123456789x123456789X123456789X  | 123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-1234  |
+| KIRK   | KIRK        | KIRK                  | KIRK                                      | KIRK                                                                                                                                                                                                                                                            |
+| KIRK   | KIRK        | KIRK                  | KIRK                                      | KIRK                                                                                                                                                                                                                                                            |
+| Kirk   | Kirk Is     | Kirk Is Not           | Kirk Is Not Boris                         | Kirk Is Not Boris, Thank God                                                                                                                                                                                                                                    |
+| aAaA   | bBbB   bBb  | cCcC    cCcCcC        | hghgh    uiuiIIIU                         | POOOPOIUOJLJLJ   fkdlfjdTJKTJ dkljf JFDK dfjkld FJDK                                                                                                                                                                                                            |
+| kirk   | kirk is     | kirk is not           | kirk is not boris                         | kirk is not boris, thank <insert possible ACLU suit here>                                                                                                                                                                                                       |
++--------+-------------+-----------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Date table
+0: jdbc:luciddb:> CREATE TABLE TEST_DATE_TABLE
+. . . . . . . . > (
+. . . . . . . . > d1 DATE,
+. . . . . . . . > d2 DATE,
+. . . . . . . . > t1 TIME,
+. . . . . . . . > t2 TIME,
+. . . . . . . . > ts1 TIMESTAMP,
+. . . . . . . . > ts2 TIMESTAMP
+. . . . . . . . > );
+0: jdbc:luciddb:> INSERT INTO test_date_table VALUES(NULL, NULL, NULL, NULL, NULL, NULL);
+0: jdbc:luciddb:> INSERT INTO test_date_table VALUES(cast ('1999-01-02' as date), cast('1999-02-03' as date), cast ('12:22' as time), cast ('02:33' as time), cast('1999-03-04' as timestamp), cast('1999-04-05' as timestamp));
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=2 Code=22007 (state=,code=0)
+0: jdbc:luciddb:> INSERT INTO test_date_table VALUES(cast('1999-06-07' as date), cast('1999-07-08' as date), cast ('12:22' as time), cast ('02:33' as time), cast('1999-09-10' as timestamp), cast('1999-08-09' as timestamp));
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=2 Code=22007 (state=,code=0)
+0: jdbc:luciddb:> INSERT INTO test_date_table VALUES(cast('1999-09-10' as date), cast('1999-10-11' as date), cast ('12:22' as time), cast ('02:33' as time), cast('1999-08-09' as timestamp), cast('1999-05-06' as timestamp));
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=2 Code=22007 (state=,code=0)
+0: jdbc:luciddb:> INSERT INTO test_date_table VALUES(cast('1999-11-12' as date), cast('1999-12-11' as date), cast ('12:22' as time), cast ('02:33' as time), cast('1999-12-31' as timestamp), cast('1999-12-01' as timestamp));
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=2 Code=22007 (state=,code=0)
+0: jdbc:luciddb:> -- FRG-22 TODO: check timestamp results after fix
+0: jdbc:luciddb:> SELECT * FROM TEST_DATE_TABLE ORDER BY d1,d2,t1,t2,ts1,ts2;
++-----+-----+-----+-----+------+------+
+| D1  | D2  | T1  | T2  | TS1  | TS2  |
++-----+-----+-----+-----+------+------+
+|     |     |     |     |      |      |
++-----+-----+-----+-----+------+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- End CreateTestTables.sql
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

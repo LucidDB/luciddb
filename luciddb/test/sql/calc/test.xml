@@ -1,0 +1,209 @@
+<project name="bh" default="simple-test">
+  <target name="simple-test">
+    <test-suite testunit="simple-test">
+
+      <init-hook>
+        <test name="restoreCatalog" testunit="init-test">
+          <ant-task>
+            <ant target="restoreCatalog"/>
+          </ant-task>
+        </test>
+      </init-hook>
+
+      <test name="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/CreateTestTables.sql"/>
+      </test>
+      
+      <test name="null" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/null.sql"/>
+      </test>
+
+      <test name="funcString" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/funcString.sql"/>
+      </test>
+
+      <test name="funcMath" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/funcMath.sql"/>
+      </test>
+
+<!--
+      <test name="funcDate" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/funcDate.sql"/>
+      </test>
+
+      <test name="funcConvert" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/funcConvert.sql"/>
+      </test>
+
+      <test name="funcInterval" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/funcInterval.sql"/>
+      </test>
+-->
+
+      <test name="mathBinary" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/mathBinary.sql"/>
+      </test>
+
+      <test name="mathUnary" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/mathUnary.sql"/>
+      </test>
+
+      <test name="caseStmt" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/caseStmt.sql"/>
+      </test>
+
+      <test name="errMsg" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/errMsg.sql"/>
+      </test>
+
+      <test name="precision" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/precision.sql"/>
+      </test>
+
+      <test name="implicitConversion" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/implicitConversion.sql"/>
+      </test>
+
+      <test name="explicitConversion" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/explicitConversion.sql"/>
+      </test>
+
+      <test name="range" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/range.sql"/>
+      </test>
+
+<!--
+      <test name="mathDate" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/mathDate.sql"/>
+      </test>
+-->
+
+      <test name="inlineSetup" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/inlineSetup.sql"/>
+      </test>
+
+      <test name="inline" requiresSuccess="inlineSetup">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/inline.sql"/>
+      </test>
+
+      <test name="realDowncast" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/realDowncast.sql"/>
+      </test>
+
+      <test name="binary" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/binary.sql"/>
+      </test>
+
+      <test name="charVarchar" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/charVarchar.sql"/>
+      </test>
+
+      <test name="like" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/like.sql"/>
+      </test>
+
+      <test name="booleanExpressions" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/booleanExpressions.sql"/>
+      </test>
+
+      <test name="funcStringCover" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/funcStringCover.sql"/>
+      </test>
+
+      <test name="funcMathCover" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/funcMathCover.sql"/>
+      </test>
+
+      <test name="divisionScale" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/divisionScale.sql"/>
+      </test>
+
+      <test name="inList" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/inList.sql"/>
+      </test>
+
+      <test name="likeNull" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/likeNull.sql"/>
+      </test>
+
+<!--
+      <test name="bug1484" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug1484.sql"/>
+      </test>
+-->
+
+      <test name="bug1504" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug1504.sql"/>
+      </test>
+
+      <test name="bug2380" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug2380.sql"/>
+      </test>
+
+      <test name="bug2533" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug2533.sql"/>
+      </test>
+
+      <test name="bug3314" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug3314.sql"/>
+      </test>
+
+      <test name="bug6604" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug6604.sql"/>
+      </test>
+
+<!--
+      <test name="bug8665" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug8665.sql"/>
+      </test>
+-->
+
+      <test name="bugs" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/bugs.sql"/>
+      </test>
+
+      <test name="bug10248" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug10248.sql"/>
+      </test>
+
+<!--
+      <test name="bug11665" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug11665.sql"/>
+      </test>
+-->
+
+      <test name="bug11810" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug11810.sql"/>
+      </test>
+
+<!--
+      <test name="bug12473" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug12473.sql"/>
+      </test>
+
+      <test name="bug8895" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug8895.sql"/>
+      </test>
+
+      <test name="bug12903" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug12903.sql"/>
+      </test>
+
+      <test name="bug12909" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug12909.sql"/>
+      </test>
+
+      <test name="bug9125" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug9125.sql"/>
+      </test>
+
+      <test name="bug55046" requiresSuccess="cretables">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug55046.sql"/>
+      </test>
+-->
+
+      <test-suite-call testfile="cast/test.xml"/>
+
+    </test-suite>
+  </target>
+</project>

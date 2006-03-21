@@ -1,0 +1,62 @@
+0: jdbc:luciddb:> -- Setup the data for the inline tests
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table bill;
+Error: DDL validation error near line 1, column 12: Reference to unknown table "BILL" (state=,code=0)
+0: jdbc:luciddb:> create table bill(n numeric(9,0));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into bill(n) values(null);
+0: jdbc:luciddb:> insert into bill(n) values(10);
+0: jdbc:luciddb:> insert into bill(n) values(100);
+0: jdbc:luciddb:> insert into bill(n) values(1000);
+0: jdbc:luciddb:> insert into bill(n) values(10000);
+0: jdbc:luciddb:> insert into bill(n) values(100000);
+0: jdbc:luciddb:> insert into bill(n) values(1000000);
+0: jdbc:luciddb:> insert into bill(n) values(10000000);
+0: jdbc:luciddb:> insert into bill(n) values(100000000);
+0: jdbc:luciddb:> insert into bill(n) values(-10);
+0: jdbc:luciddb:> insert into bill(n) values(-100);
+0: jdbc:luciddb:> insert into bill(n) values(-1000);
+0: jdbc:luciddb:> insert into bill(n) values(-10000);
+0: jdbc:luciddb:> insert into bill(n) values(-100000);
+0: jdbc:luciddb:> insert into bill(n) values(-1000000);
+0: jdbc:luciddb:> insert into bill(n) values(-10000000);
+0: jdbc:luciddb:> insert into bill(n) values(-100000000);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table bill2;
+Error: DDL validation error near line 1, column 12: Reference to unknown table "BILL2" (state=,code=0)
+0: jdbc:luciddb:> create table bill2(n numeric(15,0));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into bill2(n) values(null);
+0: jdbc:luciddb:> insert into bill2(n) values(10);
+0: jdbc:luciddb:> insert into bill2(n) values(100);
+0: jdbc:luciddb:> insert into bill2(n) values(1000);
+0: jdbc:luciddb:> insert into bill2(n) values(10000);
+0: jdbc:luciddb:> insert into bill2(n) values(100000);
+0: jdbc:luciddb:> insert into bill2(n) values(1000000);
+0: jdbc:luciddb:> insert into bill2(n) values(10000000);
+0: jdbc:luciddb:> insert into bill2(n) values(100000000);
+0: jdbc:luciddb:> insert into bill2(n) values(1000000000);
+0: jdbc:luciddb:> insert into bill2(n) values(10000000000);
+0: jdbc:luciddb:> insert into bill2(n) values(100000000000);
+0: jdbc:luciddb:> insert into bill2(n) values(1000000000000);
+0: jdbc:luciddb:> insert into bill2(n) values(10000000000000);
+0: jdbc:luciddb:> insert into bill2(n) values(100000000000000);
+0: jdbc:luciddb:> insert into bill2(n) values(-10);
+0: jdbc:luciddb:> insert into bill2(n) values(-100);
+0: jdbc:luciddb:> insert into bill2(n) values(-1000);
+0: jdbc:luciddb:> insert into bill2(n) values(-10000);
+0: jdbc:luciddb:> insert into bill2(n) values(-100000);
+0: jdbc:luciddb:> insert into bill2(n) values(-1000000);
+0: jdbc:luciddb:> insert into bill2(n) values(-10000000);
+0: jdbc:luciddb:> insert into bill2(n) values(-100000000);
+0: jdbc:luciddb:> insert into bill2(n) values(-1000000000);
+0: jdbc:luciddb:> insert into bill2(n) values(-10000000000);
+0: jdbc:luciddb:> insert into bill2(n) values(-100000000000);
+0: jdbc:luciddb:> insert into bill2(n) values(-1000000000000);
+0: jdbc:luciddb:> insert into bill2(n) values(-10000000000000);
+0: jdbc:luciddb:> insert into bill2(n) values(-100000000000000);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

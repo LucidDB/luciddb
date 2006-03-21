@@ -1,0 +1,15 @@
+<project name="bh" default="simple-test">
+  <target name="simple-test">
+    <test-suite testunit="simple-test">
+
+      <init-hook>
+        <ant target="restoreCatalog"/>
+      </init-hook>
+
+      <test name="decimals">
+        <junit-sql file="${open.dir}/luciddb/test/sql/numerics/decimals.sql"/>
+      </test>
+
+    </test-suite>
+  </target>
+</project>
