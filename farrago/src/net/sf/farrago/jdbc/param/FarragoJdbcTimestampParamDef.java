@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -20,12 +20,10 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package net.sf.farrago.jdbc.engine;
+package net.sf.farrago.jdbc.param;
 
 import java.sql.Timestamp;
 import java.util.TimeZone;
-
-import org.eigenbase.reltype.RelDataType;
 
 /**
  * FarragoJdbcEngineTimestampParamDef defines a Timestamp parameter. Converts 
@@ -34,27 +32,28 @@ import org.eigenbase.reltype.RelDataType;
  * @author Julian Hyde
  * @version $Id$
  */
-class FarragoJdbcEngineTimestampParamDef extends FarragoJdbcEngineParamDef
+class FarragoJdbcTimestampParamDef extends FarragoJdbcParamDef
 {
     static final TimeZone defaultZone = TimeZone.getDefault();
 
-    FarragoJdbcEngineTimestampParamDef(
+    FarragoJdbcTimestampParamDef(
         String paramName,
-        RelDataType type)
+        FarragoParamFieldMetaData paramMetaData)
     {
-        super(paramName, type);
+        super(paramName, paramMetaData);
     }
 
     // implement FarragoSessionStmtParamDef
     public Object scrubValue(Object x)
     {
         if (x == null) {
+            checkNullable();
             return x;
         }
 
         if (x instanceof String) {
             try {
-                return java.sql.Timestamp.valueOf((String) x);
+                return Timestamp.valueOf((String) x);
             } catch (IllegalArgumentException e) {
                 throw newInvalidFormat(x);
             }

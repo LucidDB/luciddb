@@ -23,10 +23,14 @@
 package net.sf.farrago.jdbc.engine;
 
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.type.SqlTypeName;
 
 import net.sf.farrago.session.FarragoSessionStmtParamDef;
 import net.sf.farrago.session.FarragoSessionStmtParamDefFactory;
+import net.sf.farrago.jdbc.param.FarragoParamFieldMetaData;
+import net.sf.farrago.jdbc.param.FarragoJdbcParamDef;
+import net.sf.farrago.jdbc.param.FarragoJdbcParamDefFactory;
+
+import java.sql.ParameterMetaData;
 
 /**
  * FarragoJdbcEngineParamDefFactory implements 
@@ -42,25 +46,13 @@ public class FarragoJdbcEngineParamDefFactory
     public FarragoSessionStmtParamDef newParamDef(
         String paramName, RelDataType type)
     {
-        final SqlTypeName sqlTypeName = type.getSqlTypeName();
-        switch (sqlTypeName.getOrdinal()) {
-        case SqlTypeName.Char_ordinal:
-        case SqlTypeName.Varchar_ordinal:
-            return new FarragoJdbcEngineStringParamDef(paramName, type);
-        case SqlTypeName.Binary_ordinal:
-        case SqlTypeName.Varbinary_ordinal:
-            return new FarragoJdbcEngineBinaryParamDef(paramName, type);
-        case SqlTypeName.Date_ordinal:
-            return new FarragoJdbcEngineDateParamDef(paramName, type);
-        case SqlTypeName.Timestamp_ordinal:
-            return new FarragoJdbcEngineTimestampParamDef(paramName, type);
-        case SqlTypeName.Time_ordinal:
-            return new FarragoJdbcEngineTimeParamDef(paramName, type);
-        case SqlTypeName.Decimal_ordinal:
-            return new FarragoJdbcEngineDecimalParamDef(paramName, type);
-        default:
-            return new FarragoJdbcEngineParamDef(paramName, type);
-        }
+        FarragoParamFieldMetaData paramMetaData =
+            FarragoParamFieldMetaDataFactory.newParamFieldMetaData(
+                type, ParameterMetaData.parameterModeIn);
+
+        FarragoJdbcParamDef param =
+            FarragoJdbcParamDefFactory.newParamDef(paramName, paramMetaData, false);
+        return new FarragoJdbcEngineParamDef(param, type);
     }
 }
 

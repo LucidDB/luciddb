@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -20,12 +20,8 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package net.sf.farrago.jdbc.engine;
+package net.sf.farrago.jdbc.param;
 
-import net.sf.farrago.resource.FarragoResource;
-
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.util.Util;
 import org.eigenbase.util14.ConversionUtil;
 
 /**
@@ -35,22 +31,23 @@ import org.eigenbase.util14.ConversionUtil;
  * @author Julian Hyde
  * @version $Id$
  */
-class FarragoJdbcEngineBinaryParamDef extends FarragoJdbcEngineParamDef
+class FarragoJdbcBinaryParamDef extends FarragoJdbcParamDef
 {
     private final int maxByteCount;
 
-    public FarragoJdbcEngineBinaryParamDef(
+    public FarragoJdbcBinaryParamDef(
         String paramName,
-        RelDataType type)
+        FarragoParamFieldMetaData paramMetaData)
     {
-        super(paramName, type);
-        maxByteCount = type.getPrecision();
+        super(paramName, paramMetaData);
+        maxByteCount = paramMetaData.precision;
     }
 
     // implement FarragoSessionStmtParamDef
     public Object scrubValue(Object x)
     {
         if (x == null) {
+            checkNullable();
             return x;
         }
         if (!(x instanceof byte [])) {
@@ -58,9 +55,8 @@ class FarragoJdbcEngineBinaryParamDef extends FarragoJdbcEngineParamDef
         }
         final byte [] bytes = (byte []) x;
         if (bytes.length > maxByteCount) {
-            throw FarragoResource.instance().ParameterValueTooLong.ex(
-                ConversionUtil.toStringFromByteArray(bytes,16),
-                type.toString());
+            throw newValueTooLong(
+                ConversionUtil.toStringFromByteArray(bytes,16));
         }
         return bytes;
     }

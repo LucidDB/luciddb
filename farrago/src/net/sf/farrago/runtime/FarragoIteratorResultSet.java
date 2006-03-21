@@ -31,6 +31,7 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.session.*;
+import net.sf.farrago.jdbc.FarragoJdbcUtil;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
@@ -98,7 +99,7 @@ public class FarragoIteratorResultSet extends IteratorResultSet
             return super.next();
         } catch (Throwable ex) {
             // trace exceptions as part of JDBC API
-            throw FarragoUtil.newSqlException(ex, jdbcTracer);
+            throw FarragoJdbcUtil.newSqlException(ex, jdbcTracer);
         }
     }
 

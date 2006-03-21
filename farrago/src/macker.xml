@@ -30,6 +30,12 @@
       <include class="org.eigenbase.****" />
     </pattern>
 
+    <pattern name="util14" >
+          <include class="org.eigenbase.util14.**" />
+          <include class="org.eigenbase.util.Util" />
+          <include class="org.eigenbase.util.EigenbaseException" />
+    </pattern>
+
     <pattern name="farrago">
       <include class="net.sf.farrago.****" />
       <include class="com.disruptivetech.****" />
@@ -69,6 +75,7 @@
     <pattern name="jdbc.engine" class="net.sf.farrago.jdbc.engine.*" />
     <pattern name="jdbc.client" class="net.sf.farrago.jdbc.client.*" />
     <pattern name="jdbc.rmi" class="net.sf.farrago.jdbc.rmi.*" />
+    <pattern name="jdbc.param" class="net.sf.farrago.jdbc.param.*" />
     <pattern name="server" class="net.sf.farrago.server.*" />
     <pattern name="namespace.impl" class="net.sf.farrago.namespace.impl.*" />
     <pattern name="namespace.mdr" class="net.sf.farrago.namespace.mdr.*" />
@@ -133,6 +140,7 @@
       <include pattern="jdbc.engine"/>
       <include pattern="jdbc.client"/>
       <include pattern="jdbc.rmi"/>
+      <include pattern="jdbc.param"/>
       <include pattern="server"/>
       <include pattern="namespace.impl"/>
       <include pattern="namespace.mdr"/>
@@ -535,9 +543,33 @@
       </deny>
     </access-rule>
 
+    <pattern name="jdbc.param.deps">
+      <include pattern="fennel.tuple.deps" />
+      <include pattern="jdbc.param" />
+    </pattern>
+
+    <access-rule>
+      <message>jdbc.param dependency violation</message>
+      <deny>
+        <from pattern="jdbc.param" />
+        <to pattern="eigenbase" />
+        <allow>
+          <to pattern="util14" />
+        </allow>
+      </deny>
+      <deny>
+        <from pattern="jdbc.param" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="jdbc.param.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
     <pattern name="jdbc.engine.deps">
       <include pattern="db.deps" />
       <include pattern="jdbc.deps" />
+      <include pattern="jdbc.param.deps" />
       <include pattern="jdbc.engine" />
     </pattern>
 
