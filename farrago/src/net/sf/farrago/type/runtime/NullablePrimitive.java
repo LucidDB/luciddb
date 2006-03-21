@@ -27,6 +27,7 @@ import java.math.*;
 import net.sf.farrago.resource.*;
 
 import org.eigenbase.util.*;
+import org.eigenbase.util14.NumberUtil;
 
 
 /**
@@ -305,7 +306,7 @@ public abstract class NullablePrimitive implements NullableValue,
         // implement NullablePrimitive
         protected void setNumber(Number number)
         {
-            value = number.byteValue();
+            value = (byte) NumberUtil.round(number.doubleValue());
         }
     }
 
@@ -350,7 +351,7 @@ public abstract class NullablePrimitive implements NullableValue,
         // implement NullablePrimitive
         protected void setNumber(Number number)
         {
-            value = number.intValue();
+            value = (int) NumberUtil.round(number.doubleValue());
         }
     }
 
@@ -365,7 +366,7 @@ public abstract class NullablePrimitive implements NullableValue,
         // implement NullablePrimitive
         protected void setNumber(Number number)
         {
-            value = number.longValue();
+            value = NumberUtil.round(number.doubleValue());
         }
     }
 
@@ -380,7 +381,7 @@ public abstract class NullablePrimitive implements NullableValue,
         // implement NullablePrimitive
         protected void setNumber(Number number)
         {
-            value = number.shortValue();
+            value = (short) NumberUtil.round(number.doubleValue());
         }
     }
 }

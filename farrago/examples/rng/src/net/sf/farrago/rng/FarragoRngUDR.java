@@ -28,6 +28,7 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.rngmodel.*;
 import net.sf.farrago.rngmodel.rngschema.*;
 
+import net.sf.farrago.jdbc.FarragoJdbcUtil;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.util.*;
@@ -94,7 +95,7 @@ public abstract class FarragoRngUDR
                     refRngClass);
             return rng_next_int_internal(n, rngName, getFilename(rng));
         } catch (Throwable ex) {
-            throw FarragoUtil.newSqlException(ex, tracer);
+            throw FarragoJdbcUtil.newSqlException(ex, tracer);
         }
 
         // NOTE jvs 7-Apr-2005:  no need for cleanup; default connection
@@ -131,7 +132,7 @@ public abstract class FarragoRngUDR
             writeSerialized(file, random);
             return value;
         } catch (Throwable ex) {
-            throw FarragoUtil.newSqlException(ex, tracer);
+            throw FarragoJdbcUtil.newSqlException(ex, tracer);
         }
     }
     
