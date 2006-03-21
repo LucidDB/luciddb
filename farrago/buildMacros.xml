@@ -301,6 +301,7 @@
     <pathelement location="${janino.dir}/lib/janino.jar"/>
     <pathelement location="${openjava.dir}/openjava.jar"/>
     <pathelement location="${hsqldb.dir}/lib/hsqldb.jar"/>
+    <pathelement location="${thirdparty.dir}/commons-transaction-1.1.jar"/>
     <pathelement path="${farrago.custom.classpath}"/>
   </path>
   <property name="farrago.3p.classpath" refid="farrago.3p.classpath"/>

@@ -68,19 +68,16 @@ public interface FarragoSessionTxnMgr
         FarragoSession session);
 
     /**
-     * Notifies transaction manager that a table is about to be accessed.
+     * Notifies transaction manager that a collection of tables is about to be
+     * accessed.
      *
      * @param txnId ID of accessing transaction
      *
-     * @param localTableName qualified name of table as it is known in the
-     * local catalog
-     *
-     * @param accessType type of table access
+     * @param tableAccessMap information about planned table accesses
      */
-    public void accessTable(
+    public void accessTables(
         FarragoSessionTxnId txnId,
-        List<String> localTableName,
-        TableAccessMap.Mode accessType);
+        TableAccessMap tableAccessMap);
 
     /**
      * Notifies transaction manager that a transaction is ending.

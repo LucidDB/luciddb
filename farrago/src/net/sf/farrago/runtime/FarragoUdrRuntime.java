@@ -89,6 +89,18 @@ public abstract class FarragoUdrRuntime
             serverMofId,
             param);
     }
+
+    /**
+     * Tests to see whether the statement invoking this UDR has been cancelled;
+     * if so, an exception is thrown.  UDR's which take a lot of CPU time can
+     * call this periodically in order to be responsive to cancel within calls.
+     */
+    public static void checkCancel()
+    {
+        FarragoUdrInvocationFrame frame =
+            FarragoRuntimeContext.getUdrInvocationFrame();
+        frame.context.checkCancel();
+    }
 }
 
 // End FarragoUdrRuntime.java

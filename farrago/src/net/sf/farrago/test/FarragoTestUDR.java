@@ -136,6 +136,19 @@ public abstract class FarragoTestUDR
         return r.nextLong();
     }
 
+    public static int sleep(int seconds)
+    {
+        try {
+            for (int i = 0; i < seconds; ++i) {
+                Thread.sleep(1000);
+                FarragoUdrRuntime.checkCancel();
+            }
+        } catch (InterruptedException ex) {
+            // ignore
+        }
+        return 0;
+    }
+
     public static int gargle()
     {
         Object obj = FarragoUdrRuntime.getContext();

@@ -29,6 +29,7 @@ import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.security.*;
 
+import java.sql.*;
 import java.util.*;
 
 import junit.framework.*;
@@ -156,6 +157,68 @@ public class FarragoQueryTest extends FarragoTestCase
         checkLurqlTableSchema(lurql, "CATALOGS_VIEW", "JDBC_METADATA");
     }
 
+    /**
+     * Verifies non-standard behavior preventing more than one
+     * statement active at a time in autocommit mode.
+     */
+    public void testAutocommitCursorLimit()
+        throws Exception
+    {
+        // TODO jvs 20-Mar-2006:  move this test to FarragoJdbcTest
+        // after that gets refactored.
+
+        String sql =
+            "select name from sales.depts";
+        Statement stmt2 = null;
+        connection.setAutoCommit(true);
+        try {
+            // First, open a cursor.
+            resultSet = stmt.executeQuery(sql);
+
+            // Now, try to open another one on the same connection while the
+            // first one is still open: should fail.
+            stmt2 = connection.createStatement();
+            resultSet = stmt2.executeQuery(sql);
+        } catch (SQLException ex) {
+            // verify expected error message
+            Assert.assertTrue(
+                "Expected message about cursor still open but got '"
+                + ex.getMessage() +"'",
+                ex.getMessage().indexOf("cursor is still open") > -1);
+            ex.getMessage();
+        } finally {
+            if (stmt2 != null) {
+                stmt2.close();
+            }
+            connection.setAutoCommit(false);
+        }
+    }
+
+    /**
+     * Verifies that multiple statements can be active when not in autocommit
+     * mode.
+     */
+    public void testNoAutocommitCursorLimit()
+        throws Exception
+    {
+        String sql =
+            "select name from sales.depts";
+        Statement stmt2 = null;
+        try {
+            // First, open a cursor.
+            resultSet = stmt.executeQuery(sql);
+
+            // Now, try to open another one on the same connection while the
+            // first one is still open.
+            stmt2 = connection.createStatement();
+            resultSet = stmt2.executeQuery(sql);
+        } finally {
+            if (stmt2 != null) {
+                stmt2.close();
+            }
+        }
+    }
+    
     private void checkLurqlTableSchema(
         String lurql, String tableName, String schemaName)
         throws Exception
@@ -183,7 +246,7 @@ public class FarragoQueryTest extends FarragoTestCase
      * exist.
      */
     public void testCheckSecurityRoleCyleLurqlQuery()
-    throws Exception
+        throws Exception
     {
         // CREATE ROLE ROLE_1, ROLE_2
         // GRANT ROLE_2 TO ROLE_1

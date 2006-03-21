@@ -46,7 +46,8 @@ public interface FarragoSessionTxnListener
         FarragoSessionTxnId txnId);
 
     /**
-     * Notifies listener of a call to FarragoSessionTxnMgr.accessTable.
+     * Notifies listener of the effect of a call to
+     * FarragoSessionTxnMgr.accessTable.
      *
      * @param txnId ID of transaction in which access is occurring
      *

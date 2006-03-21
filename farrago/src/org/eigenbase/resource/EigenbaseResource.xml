@@ -484,6 +484,15 @@ TBD: naming convention for extension features
 </exception>
 
 <!-- ====================================================================== -->
+<!-- Extensions -->
+<!-- ====================================================================== -->
+
+<exception name="SQLConformance_MultipleActiveAutocommitStatements">
+    <property name="FeatureDefinition">Eigenbase-defined</property>
+    <text>Execution of a new autocommit statement while a cursor is still open on same connection is not supported</text>
+</exception>
+
+<!-- ====================================================================== -->
 
 <!-- End of last error section ============================================ -->
 

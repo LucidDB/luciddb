@@ -29,7 +29,8 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 
 // TODO jvs 9-Mar-2006:  move this class to another package; it
-// doesn't really belong here.
+// doesn't really belong here.  Also, use a proper class for table
+// names instead of List<String>.
 
 /**
  * <code>TableAccessMap</code> represents the tables accessed by a query plan,

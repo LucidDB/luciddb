@@ -41,6 +41,7 @@ public class FennelTxnContext
     private final FarragoMetadataFactory metadataFactory;
     private final FennelDbHandle fennelDbHandle;
     private long hTxn;
+    private boolean readOnly;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -69,11 +70,27 @@ public class FennelTxnContext
         return fennelDbHandle;
     }
 
+    // REVIEW jvs 20-Mar-2006: This txn-initiation API needs to be cleaned up
+    // (get rid of implicit start and unification with Farrago-level txn mgmt),
+    // along with enforcement of read-only transactions.
+
     /**
      * Forces a transaction to begin unless one is already in progress.
      */
     public void initiateTxn()
     {
+        assert(!readOnly);
+        getTxnHandleLong();
+    }
+
+    /**
+     * Starts a read-only transaction; no transaction is allowed to be
+     * in progress already.
+     */
+    public void initiateReadOnlyTxn()
+    {
+        assert(hTxn == 0);
+        readOnly = true;
         getTxnHandleLong();
     }
 
@@ -96,6 +113,7 @@ public class FennelTxnContext
         fennelDbHandle.getTransientTxnContext().beginTransientTxn();
         try {
             FemCmdBeginTxn cmd = metadataFactory.newFemCmdBeginTxn();
+            cmd.setReadOnly(readOnly);
             cmd.setDbHandle(fennelDbHandle.getFemDbHandle(metadataFactory));
             fennelDbHandle.executeCmd(cmd);
             hTxn = cmd.getResultHandle().getLongHandle();
@@ -140,7 +158,7 @@ public class FennelTxnContext
         }
 
         // TODO:  determine whether txn is still in progress if excn is thrown
-        hTxn = 0;
+        onEndOfTxn();
     }
 
     /**
@@ -162,7 +180,13 @@ public class FennelTxnContext
         }
 
         // TODO:  determine whether txn is still in progress if excn is thrown
+        onEndOfTxn();
+    }
+
+    private void onEndOfTxn()
+    {
         hTxn = 0;
+        readOnly = false;
     }
 
     /**

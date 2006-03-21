@@ -279,16 +279,21 @@ void CmdInterpreter::visit(ProxyCmdBeginTxn &cmd)
     SXMutexSharedGuard actionMutexGuard(
         pDb->getCheckpointThread()->getActionMutex());
 
-    if (pDb->shouldForceTxns()) {
+    bool readOnly = cmd.isReadOnly();
+
+    if (!readOnly && pDb->shouldForceTxns()) {
         // We're equating transactions with checkpoints, so take
         // out an extra lock to block checkpoints for the duration
-        // of the transaction.
+        // of the transaction.  But we don't need to do this for
+        // queries because checkpoints only care about dirty
+        // persistent pages.
         pDb->getCheckpointThread()->getActionMutex().waitFor(LOCKMODE_S);
     }
 
     std::auto_ptr<TxnHandle> pTxnHandle(newTxnHandle());
     JniUtil::incrementHandleCount(TXNHANDLE_TRACE_TYPE_STR, pTxnHandle.get());
     pTxnHandle->pDb = pDb;
+    pTxnHandle->readOnly = readOnly;
     // TODO:  CacheAccessor factory
     pTxnHandle->pTxn = pDb->getTxnLog()->newLogicalTxn(pDb->getCache());
     
@@ -332,8 +337,9 @@ void CmdInterpreter::visit(ProxyCmdCommit &cmd)
         pTxnHandle->pTxn->commitSavepoint(svptId);
     } else {
         pTxnHandle->pTxn->commit();
+        bool readOnly = pTxnHandle->readOnly;
         deleteAndNullify(pTxnHandle);
-        if (pDb->shouldForceTxns()) {
+        if (!readOnly && pDb->shouldForceTxns()) {
             // release the checkpoint lock acquired at BeginTxn
             pDb->getCheckpointThread()->getActionMutex().release(
                 LOCKMODE_S);
@@ -360,8 +366,9 @@ void CmdInterpreter::visit(ProxyCmdRollback &cmd)
         pTxnHandle->pTxn->rollback(&svptId);
     } else {
         pTxnHandle->pTxn->rollback();
+        bool readOnly = pTxnHandle->readOnly;
         deleteAndNullify(pTxnHandle);
-        if (pDb->shouldForceTxns()) {
+        if (!readOnly && pDb->shouldForceTxns()) {
             // implement rollback by simulating crash recovery,
             // reverting all pages modified by transaction
 
