@@ -190,21 +190,12 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
                 methodBody));
 
         return new AllocationExpression(
-            TypeName.forOJClass(OJClass.forClass(getResultSetIteratorClass())),
+            TypeName.forOJClass(OJClass.forClass(ResultSetTupleIter.class)),
             new ExpressionList(
                 new CastExpression(
                     TypeName.forOJClass(OJUtil.clazzResultSet),
                     childObj)),
             memberList);
-    }
-    
-    private Class getResultSetIteratorClass()
-    {
-        if (CallingConvention.ENABLE_NEW_ITER) {
-            return ResultSetTupleIter.class;
-        } else {
-            return ResultSetIterator.class;
-        }
     }
 }
 

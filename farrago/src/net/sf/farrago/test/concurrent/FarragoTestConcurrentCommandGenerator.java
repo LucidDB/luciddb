@@ -43,7 +43,7 @@ import junit.framework.TestCase;
 
 import net.sf.farrago.trace.FarragoTrace;
 
-import org.eigenbase.runtime.IteratorResultSet;
+import org.eigenbase.runtime.*;
 import org.eigenbase.util.Util;
 
 
@@ -829,7 +829,7 @@ public class FarragoTestConcurrentCommandGenerator
 
                     rows.add(row);
                 }
-            } catch (IteratorResultSet.SqlTimeoutException e) {
+            } catch (AbstractIterResultSet.SqlTimeoutException e) {
                 if (!timeoutSet) {
                     throw e;
                 }

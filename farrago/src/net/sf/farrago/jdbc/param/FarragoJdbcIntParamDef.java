@@ -25,7 +25,6 @@ package net.sf.farrago.jdbc.param;
 import java.math.BigDecimal;
 import java.sql.Types;
 
-import org.eigenbase.util.Util;
 import org.eigenbase.util14.NumberUtil;
 
 /**
@@ -65,7 +64,7 @@ class FarragoJdbcIntParamDef extends FarragoJdbcParamDef
             default:
                 min = 0;
                 max = 0;
-                Util.permAssert(false, "Integral paramMetaData expected");
+                assert(false) : "Integral paramMetaData expected";
         }
     }
 

@@ -25,8 +25,6 @@ package net.sf.farrago.jdbc.param;
 import java.math.BigDecimal;
 import java.sql.Types;
 
-import org.eigenbase.util.Util;
-
 /**
  * FarragoJdbcEngineDecimalParamDef defines a approximate numeric parameter.
  * 
@@ -57,7 +55,7 @@ class FarragoJdbcApproxParamDef extends FarragoJdbcParamDef
             default:
                 min = 0;
                 max = 0;
-                Util.permAssert(false, "Approximate paramMetaData expected");
+                assert(false) : "Approximate paramMetaData expected";
         }
     }
 

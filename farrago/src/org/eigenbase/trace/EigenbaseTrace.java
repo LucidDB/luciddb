@@ -32,7 +32,6 @@ import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.oj.util.OJClassMap;
 import org.eigenbase.util.property.Property;
 import org.eigenbase.runtime.CompoundIterator;
-import org.eigenbase.runtime.CompoundParallelIterator;
 import org.eigenbase.jmi.JmiChangeSet;
 
 /**
@@ -153,19 +152,6 @@ public abstract class EigenbaseTrace
     public static Logger getCompoundIteratorTracer()
     {
         return Logger.getLogger(CompoundIterator.class.getName());
-    }
-
-    /**
-     * The "org.eigenbase.runtime.CompoundParallelIterator" tracer
-     * traces {@link CompoundParallelIterator}.<ul>
-     * <li>{@link Level#FINE} shows synchronization among the consumer and the
-     *     source Iterators.
-     * <li>{@link Level#FINER} shows every element.
-     * </ul>
-     */
-    public static Logger getCompoundParallelIteratorTracer()
-    {
-        return Logger.getLogger(CompoundParallelIterator.class.getName());
     }
 }
 

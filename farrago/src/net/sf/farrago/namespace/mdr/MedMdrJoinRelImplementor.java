@@ -119,10 +119,7 @@ class MedMdrJoinRelImplementor
         // construct the open method
         generateOpen();
 
-        Class nestedLoopClass =
-            CallingConvention.ENABLE_NEW_ITER
-            ? NestedLoopCalcTupleIter.class
-            : NestedLoopCalcIterator.class;
+        Class nestedLoopClass = NestedLoopCalcTupleIter.class;
 
         // put it all together in an anonymous class definition
         Expression newIteratorExp =
@@ -445,17 +442,10 @@ class MedMdrJoinRelImplementor
                                 .getName()),
                         varLeftObj));
         }
-        if (!CallingConvention.ENABLE_NEW_ITER) {
-            return new MethodCall(
-                collectionExpr,
-                "iterator",
-                new ExpressionList());
-        } else {
-            return new AllocationExpression(
-                OJUtil.typeNameForClass(RestartableCollectionTupleIter.class),
-                new ExpressionList(
-                    collectionExpr));
-        }
+        return new AllocationExpression(
+            OJUtil.typeNameForClass(RestartableCollectionTupleIter.class),
+            new ExpressionList(
+                collectionExpr));
     }
 
     private Expression generateManyToOneLookup()

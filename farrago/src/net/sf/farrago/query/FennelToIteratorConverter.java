@@ -58,10 +58,8 @@ import org.eigenbase.sql.type.*;
  * that are read by FarragoResultSetIterator or FarragoResultSetTupleIter.
  * Location 2 means the converter is one of the N roots of a sequence of 
  * JavaRels that are converted back to Fennel convention by an 
- * IteratorToFennelConverter.
+ * IteratorToFennelConverter.  These locations are handled differently:
  * 
- * <p>When {@link CallingConvention#ENABLE_NEW_ITER} is enabled (e.g., 
- * new-style iterators are in use), it operates in one of two modes:  
  * <ol>
  * <li>
  *   When in location 1, it generates Iterator convention code that reads from 
@@ -147,10 +145,8 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
             : getChild().getClass().getName();
 
         boolean useTransformer = false;
-        if (CallingConvention.ENABLE_NEW_ITER) {
-            if (isTransformerInput(implementor)) {
-                useTransformer = true;
-            }
+        if (isTransformerInput(implementor)) {
+            useTransformer = true;
         }
         
         // Give children a chance to generate code.  Most FennelRels don't
@@ -200,12 +196,8 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
                 dbHandle,
                 tupleDesc);
 
-        // For new iter convention generate:
+        // Generate code like this:
         //   connection.newFennelTupleIter(
-        //       new FennelTupleReader(){...},
-        //       << childrens' code >>);
-        // else for old iter convention, generate
-        //   connection.newFennelIterator(
         //       new FennelTupleReader(){...},
         //       << childrens' code >>);
         // The first ... requires some explanation.  Using the information
@@ -439,8 +431,8 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
                 memberDeclList);
 
         if (!useTransformer) {
-            // Pass tuple reader to FarragoRuntimeContext.newFennelIterator to 
-            // produce a FennelIterator, which will invoke our generated 
+            // Pass tuple reader to FarragoRuntimeContext.newFennelTupleIter to 
+            // produce a FennelTupleIter, which will invoke our generated 
             // FennelTupleReader to unmarshal
             ExpressionList argList = new ExpressionList();
             argList.add(newTupleReaderExp);
@@ -448,23 +440,15 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
             argList.add(Literal.makeLiteral(rootStreamId));
             argList.add(childrenExp);
             
-            if (CallingConvention.ENABLE_NEW_ITER) {
-                return new MethodCall(
-                    connectionVariable,
-                    "newFennelTupleIter",
-                    argList);
-            } else {
-                return new MethodCall(
-                    connectionVariable,
-                    "newFennelIterator",
-                    argList);
-            }
+            return new MethodCall(
+                connectionVariable,
+                "newFennelTupleIter",
+                argList);
         } else {
             // Pass tuple reader to 
             // FarragoRuntimeContext.newFennelTransformTupleIter to produce
             // a FennelTupleIter, which will invoke our generated 
             // FennelTupleReader to unmarshal
-            assert(CallingConvention.ENABLE_NEW_ITER);
             
             // IteratorToFennelConverter will just return a literal null.
             // FennelDoubleRel will return a MethodCall to 

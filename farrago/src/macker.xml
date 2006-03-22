@@ -31,9 +31,9 @@
     </pattern>
 
     <pattern name="util14" >
-          <include class="org.eigenbase.util14.**" />
-          <include class="org.eigenbase.util.Util" />
-          <include class="org.eigenbase.util.EigenbaseException" />
+      <include class="org.eigenbase.util14.*" />
+      <include class="org.eigenbase.util.property.*" />
+      <include class="org.eigenbase.util.EigenbaseException" />
     </pattern>
 
     <pattern name="farrago">
@@ -189,6 +189,13 @@
 
     <access-rule>
       <message>release dependency violation</message>
+      <deny>
+        <from pattern="release" />
+        <to pattern="eigenbase" />
+        <allow>
+          <to pattern="util14" />
+        </allow>
+      </deny>
       <deny>
         <from pattern="release" />
         <to pattern="farrago" />
@@ -350,7 +357,14 @@
     </pattern> 
  
     <access-rule> 
-      <message>tuple dependency violation</message> 
+      <message>fennel.tuple dependency violation</message> 
+      <deny>
+        <from pattern="fennel.tuple" />
+        <to pattern="eigenbase" />
+        <allow>
+          <to pattern="util14" />
+        </allow>
+      </deny>
       <deny> 
         <from pattern="fennel.tuple" /> 
         <to pattern="farrago" /> 
@@ -536,6 +550,13 @@
       <message>jdbc dependency violation</message>
       <deny>
         <from pattern="jdbc" />
+        <to pattern="eigenbase" />
+        <allow>
+          <to pattern="util14" />
+        </allow>
+      </deny>
+      <deny>
+        <from pattern="jdbc" />
         <to pattern="farrago" />
         <allow>
           <to pattern="jdbc.deps" />
@@ -593,6 +614,13 @@
       <message>jdbc.rmi dependency violation</message>
       <deny>
         <from pattern="jdbc.rmi" />
+        <to pattern="eigenbase" />
+        <allow>
+          <to pattern="util14" />
+        </allow>
+      </deny>
+      <deny>
+        <from pattern="jdbc.rmi" />
         <to pattern="farrago" />
         <allow>
           <to pattern="jdbc.rmi.deps" />
@@ -609,6 +637,13 @@
 
     <access-rule>
       <message>jdbc.client dependency violation</message>
+      <deny>
+        <from pattern="jdbc.client" />
+        <to pattern="eigenbase" />
+        <allow>
+          <to pattern="util14" />
+        </allow>
+      </deny>
       <deny>
         <from pattern="jdbc.client" />
         <to pattern="farrago" />

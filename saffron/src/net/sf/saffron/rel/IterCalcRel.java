@@ -32,9 +32,10 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.runtime.CalcIterator;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.util.Util;
+
+import net.sf.saffron.runtime.*;
 
 import java.util.*;
 import java.util.List;

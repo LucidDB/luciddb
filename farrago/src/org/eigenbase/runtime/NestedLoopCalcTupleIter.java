@@ -149,4 +149,4 @@ public abstract class NestedLoopCalcTupleIter extends CalcTupleIter
 }
 
 
-// End NestedLoopCalcIterator.java
+// End NestedLoopCalcTupleIter.java

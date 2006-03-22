@@ -129,23 +129,13 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
             // In particular, Java iterator implementations must not do
             // prefetch in the constructor (always wait for hasNext/next).
             ResultSet resultSet;
-            if (CallingConvention.ENABLE_NEW_ITER) {
-                TupleIter iter =
-                    (TupleIter) method.invoke(
-                        null,
-                        new Object [] { runtimeContext });
-                resultSet =
-                    new FarragoTupleIterResultSet(iter, rowClass, rowType,
-                        runtimeContext);
-            } else {
-                Iterator iter =
-                    (Iterator) method.invoke(
-                        null,
-                        new Object [] { runtimeContext });
-                resultSet =
-                    new FarragoIteratorResultSet(iter, rowClass, rowType,
-                        runtimeContext);
-            }
+            TupleIter iter =
+                (TupleIter) method.invoke(
+                    null,
+                    new Object [] { runtimeContext });
+            resultSet =
+                new FarragoTupleIterResultSet(iter, rowClass, rowType,
+                    runtimeContext);
 
             if (xmiFennelPlan != null) {
                 // Finally, it's safe to open all streams.

@@ -563,7 +563,7 @@ and {@link net.sf.farrago.query.IteratorToFennelConverter}).
 Whew.  Now we actually want to execute the generated code.  This part
 is easy.  We use reflection to invoke the generated execute() method,
 which returns an Iterator instance, and pass that to a new instance of
-{@link net.sf.farrago.runtime.FarragoIteratorResultSet}, which
+{@link net.sf.farrago.runtime.FarragoTupleIterResultSet}, which
 produces JDBC result data and metadata, as well as taking care of
 cleanup when the result set is closed.
 

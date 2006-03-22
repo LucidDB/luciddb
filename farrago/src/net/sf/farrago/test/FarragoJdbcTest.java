@@ -297,7 +297,7 @@ public class FarragoJdbcTest extends FarragoTestCase
             sql = "select count(*) from cancel_test.m";
         } else {
             // But for Java, we want to test the checkCancel
-            // in FarragoIteratorResultSet, so don't count
+            // in FarragoTupleIterResultSet, so don't count
             sql = "select * from cancel_test.m";
         }
         executeAndCancel(sql, synchronous);

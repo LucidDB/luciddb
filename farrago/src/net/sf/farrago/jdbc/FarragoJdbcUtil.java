@@ -23,8 +23,7 @@
 package net.sf.farrago.jdbc;
 
 import org.eigenbase.util.EigenbaseException;
-import org.eigenbase.sql.validate.SqlValidatorException;
-import org.eigenbase.sql.parser.SqlParseException;
+import org.eigenbase.util14.*;
 
 import java.sql.SQLException;
 import java.util.logging.Logger;
@@ -60,7 +59,7 @@ public class FarragoJdbcUtil {
         SQLException sqlExcn;
         if (ex instanceof EigenbaseException) {
             // TODO:  map for SQLState
-            if (cause instanceof SqlValidatorException) {
+            if (cause instanceof EigenbaseValidatorException) {
                 // We're looking at
                 //   ex = "Validation error at line 5, column 10"
                 //   ex.cause = "Bad column 'FOO'"
@@ -97,7 +96,7 @@ public class FarragoJdbcUtil {
         // we stop at the SqlParseException which is just above it.
         if (cause == null) {
             return sqlExcn;
-        } else if (ex instanceof SqlParseException) {
+        } else if (ex instanceof EigenbaseParserException) {
             return sqlExcn;
         } else {
             // NOTE jvs 18-June-2004:  reverse the order so that

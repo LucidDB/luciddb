@@ -28,10 +28,14 @@ import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-
 /**
  * A <code>ResultSetIterator</code> is an adapter which converts a {@link
  * ResultSet} to a {@link Iterator}.
+ *
+ *<p>
+ *
+ * NOTE jvs 21-Mar-2006: This class is no longer used except by Saffron, but is
+ * generally useful.  Should probably be moved to a utility package.
  */
 public class ResultSetIterator implements RestartableIterator
 {
@@ -47,7 +51,7 @@ public class ResultSetIterator implements RestartableIterator
     {
         // NOTE jvs 4-Mar-2004:  I changed this to not call makeRow() from
         // this constructor, since subclasses aren't initialized yet.  Now
-        // it follows the same pattern as CalcIterator.
+        // it follows the same pattern as CalcTupleIter.
         this.resultSet = resultSet;
         endOfStream = false;
     }

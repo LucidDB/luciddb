@@ -144,12 +144,12 @@ public abstract class FarragoTrace
 
 
     /**
-     * The tracer "net.sf.farrago.runtime.FarragoIteratorResultSet"
-     * traces {@link FarragoIteratorResultSet}.
+     * The tracer "net.sf.farrago.runtime.FarragoTupleIterResultSet"
+     * traces {@link FarragoTupleIterResultSet}.
      */
-    public static Logger getFarragoIteratorResultSetTracer()
+    public static Logger getFarragoTupleIterResultSetTracer()
     {
-        return getClassTracer(FarragoIteratorResultSet.class);
+        return getClassTracer(FarragoTupleIterResultSet.class);
     }
 
     /**

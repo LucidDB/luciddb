@@ -34,9 +34,13 @@ import org.eigenbase.test.EigenbaseTestCase;
 /**
  * <code>CompoundIterator</code> creates an iterator out of several.
  * CompoundIterator is serial: it yields all the elements of its first input
- * Iterator, then all those of its second input, etc. When all inputs are exhausted,
- * it is done.
- * (Cf {@link CompoundParallelIterator}.)
+ * Iterator, then all those of its second input, etc. When all inputs are
+ * exhausted, it is done.
+ *
+ *<p>
+ *
+ * NOTE jvs 21-Mar-2006: This class is no longer used except by Saffron, but is
+ * generally useful.  Should probably be moved to a utility package.
  */
 public class CompoundIterator implements RestartableIterator
 {
@@ -155,45 +159,6 @@ public class CompoundIterator implements RestartableIterator
                 new String [] { "a", null, "b", "c" });
         }
 
-
-        // makes a trivial CalcIterator on top of a base Iterator
-        private static CalcIterator makeCalcIterator(final Iterator base)
-        {
-            return new CalcIterator(base) {
-                    protected Object calcNext() {
-                        return base.hasNext()? base.next() : null;
-                    }
-                };
-        }
-
-        public void testCompoundCalcIter()
-        {
-            Iterator iterator =
-                new CompoundIterator(new Iterator [] {
-                    makeCalcIterator(makeIterator(new String [] { "a", "b" })),
-                    makeCalcIterator(makeIterator(new String [] { "c" }))
-                });
-            assertEquals(
-                iterator,
-                new String [] { "a", "b", "c" });
-        }
-
-        public void testCompoundCalcIterFirstEmpty()
-        {
-            Iterator iterator =
-                new CompoundIterator(new Iterator [] {
-                    makeCalcIterator(makeIterator(new String [] {  })),
-                    makeCalcIterator(makeIterator(new String [] { "a" })),
-                    makeCalcIterator(makeIterator(new String [] {  })),
-                    makeCalcIterator(makeIterator(new String [] {  })),
-                    makeCalcIterator(makeIterator(new String [] { "b", "c" })),
-                    makeCalcIterator(makeIterator(new String [] {  }))
-                });
-            assertEquals(
-                iterator,
-                new String [] { "a", "b", "c" });
-        }
-
         // a boxed value (see BoxIterator below)
         static class Box 
         {
@@ -260,21 +225,6 @@ public class CompoundIterator implements RestartableIterator
                     new BoxIterator(makeIterator(new String[] {"400", "401", "402", "403"})),
                     new BoxIterator(makeIterator(new String[] {"500", "501", "502", "503"})),
                     new BoxIterator(makeIterator(new String[] {"600", "601", "602", "603"}))
-                });
-            assertUnboxedEquals(
-                iterator,
-                new String[] {"400", "401", "402", "403",
-                              "500", "501", "502", "503",
-                              "600", "601", "602", "603" });
-        }
-
-        public void testCompoundBoxedCalcIter()
-        {
-            Iterator iterator =
-                new CompoundIterator(new Iterator[] {
-                    new BoxIterator(makeCalcIterator(makeIterator(new String[] {"400", "401", "402", "403"}))),
-                    new BoxIterator(makeCalcIterator(makeIterator(new String[] {"500", "501", "502", "503"}))),
-                    new BoxIterator(makeCalcIterator(makeIterator(new String[] {"600", "601", "602", "603"})))
                 });
             assertUnboxedEquals(
                 iterator,

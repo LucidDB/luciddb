@@ -30,10 +30,11 @@ import org.eigenbase.runtime.TupleIter;
 import org.eigenbase.util.*;
 
 /**
- * JavaPullTupleStream is the counterpart of a Fennel C++ JavaPullSource XO
- * On request from its C++ peer, it gets rows from a Java Iterator, converts them to fennel
- * tuples, and marshals them into a buffer provided by the peer.
- * It runs as a subroutine to the XO, which waits for it to complete.
+ * JavaPullTupleStream is the counterpart of a Fennel C++ JavaPullSource XO On
+ * request from its C++ peer, it gets rows from a Java {@link TupleIter},
+ * converts them to fennel tuples, and marshals them into a buffer provided by
+ * the peer.  It runs as a subroutine to the XO, which waits for it to
+ * complete.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -57,26 +58,8 @@ public class JavaPullTupleStream implements JavaTupleStream
      */
     public JavaPullTupleStream(
         FennelTupleWriter tupleWriter,
-        Iterator iter)
-    {
-        assert(!CallingConvention.ENABLE_NEW_ITER);
-        this.tupleWriter = tupleWriter;
-        this.iter = iter;
-        this.tupleIter = null;
-        next = null;
-    }
-
-    /**
-     * Constructs a new JavaPullTupleStream.
-     *
-     * @param tupleWriter the FennelTupleWriter to use for marshalling tuples
-     * @param iter Iterator producing objects
-     */
-    public JavaPullTupleStream(
-        FennelTupleWriter tupleWriter,
         TupleIter tupleIter)
     {
-        assert(CallingConvention.ENABLE_NEW_ITER);
         this.tupleWriter = tupleWriter;
         this.iter = null;
         this.tupleIter = tupleIter;

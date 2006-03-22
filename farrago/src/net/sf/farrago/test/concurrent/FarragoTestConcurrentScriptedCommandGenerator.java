@@ -51,7 +51,7 @@ import net.sf.farrago.trace.FarragoTrace;
 
 import net.sf.farrago.catalog.*;
 
-import org.eigenbase.runtime.IteratorResultSet;
+import org.eigenbase.runtime.*;
 import org.eigenbase.util.Util;
 
 
@@ -759,7 +759,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
 
                 rowCount++;
             }
-        } catch (IteratorResultSet.SqlTimeoutException e) {
+        } catch (AbstractIterResultSet.SqlTimeoutException e) {
             if (!timeoutSet) {
                 throw e;
             }
@@ -1028,7 +1028,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
                 } else {
                     storeMessage(executor.getThreadId(), "1 row affected.");
                 }
-            } catch (IteratorResultSet.SqlTimeoutException e) {
+            } catch (AbstractIterResultSet.SqlTimeoutException e) {
                 if (!timeoutSet) {
                     throw e;
                 }
