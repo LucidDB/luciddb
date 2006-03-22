@@ -1,0 +1,183 @@
+0: jdbc:luciddb:> -- test for precision (per Bill's request)
+0: jdbc:luciddb:> -- Was calc9.sql
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Check precision on computed results
+0: jdbc:luciddb:> values (1.23 + 1.22222, 1.23 - 1.22222);
++----------+----------+
+|  EXPR$0  |  EXPR$1  |
++----------+----------+
+| 2.45222  | 0.00778  |
++----------+----------+
+0: jdbc:luciddb:> values (1000.21 * 1000000);
++----------------+
+|     EXPR$0     |
++----------------+
+| 1000210000.00  |
++----------------+
+0: jdbc:luciddb:> values (543.1234567 + .1 + .1 + .1 + .1);
++--------------+
+|    EXPR$0    |
++--------------+
+| 543.5234567  |
++--------------+
+0: jdbc:luciddb:> values (100.2468 / 50.1234);
++----------------+
+|     EXPR$0     |
++----------------+
+| 2.00000000000  |
++----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Check really big precision numeric types
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> DROP TABLE foo
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table foo (x decimal(19,4))
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into foo values (123456789012345)
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into foo values (123456789012345.1234)
+. . . . . . . . > ;
+0: jdbc:luciddb:> -- TODO: update once FRG-40 is fixed
+0: jdbc:luciddb:> insert into foo values (1234567890123456)
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into foo values (123456789012345.12345)
+. . . . . . . . > ;
+Error: From line 1, column 25 to line 1, column 45: Numeric literal '123456789012345.12345' out of range (state=,code=0)
+0: jdbc:luciddb:> SELECT * FROM FOO order by 1;
++------------------------+
+|           X            |
++------------------------+
+| -610106517247499.1616  |
+| 123456789012345.0000   |
+| 123456789012345.1234   |
++------------------------+
+0: jdbc:luciddb:> SELECT x * 10 FROM FOO order by 1;
++------------------------+
+|         EXPR$0         |
++------------------------+
+| -610106517247505.1616  |
+| -610106517247503.9276  |
+| -567041950362126.1312  |
++------------------------+
+0: jdbc:luciddb:> SELECT x * 100 FROM FOO order by 1;
++------------------------+
+|         EXPR$0         |
++------------------------+
+| -567041950362186.1312  |
+| -567041950362173.7912  |
+| -136396281508395.8272  |
++------------------------+
+0: jdbc:luciddb:> SELECT x * 1000 FROM FOO order by 1;
++------------------------+
+|         EXPR$0         |
++------------------------+
+| -136396281508995.8272  |
+| -136396281508872.4272  |
+| 480711592286996.8896   |
++------------------------+
+0: jdbc:luciddb:> SELECT x * 10000 FROM FOO order by 1;
++------------------------+
+|         EXPR$0         |
++------------------------+
+| -726907299242896.5888  |
+| 480711592280996.8896   |
+| 480711592282230.8896   |
++------------------------+
+0: jdbc:luciddb:> SELECT x * 100000 FROM FOO order by 1;
++------------------------+
+|         EXPR$0         |
++------------------------+
+| -726907299302896.5888  |
+| -726907299290556.5888  |
+| 109624637054854.7584   |
++------------------------+
+0: jdbc:luciddb:> DROP TABLE FOO;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --  Check insertion into a decimal column of a really big
+0: jdbc:luciddb:> -- decimal
+0: jdbc:luciddb:> -- FRG-44
+0: jdbc:luciddb:> CREATE TABLE FOO (x DECIMAL);
+0: jdbc:luciddb:> INSERT INTO FOO VALUES (0.1234567890123456789);
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Could not rescale decimal to required scale (state=,code=0)
+0: jdbc:luciddb:> SELECT * FROM FOO order by 1;
++----+
+| X  |
++----+
++----+
+0: jdbc:luciddb:> SELECT x * 10 FROM FOO order by 1;
++---------+
+| EXPR$0  |
++---------+
++---------+
+0: jdbc:luciddb:> SELECT x * 100 FROM FOO order by 1;
++---------+
+| EXPR$0  |
++---------+
++---------+
+0: jdbc:luciddb:> SELECT x / 10 FROM FOO order by 1;
++---------+
+| EXPR$0  |
++---------+
++---------+
+0: jdbc:luciddb:> SELECT X / 100 FROM FOO order by 1;
++---------+
+| EXPR$0  |
++---------+
++---------+
+0: jdbc:luciddb:> DROP TABLE FOO;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table foo (x numeric(7,0), y numeric(9,0))
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into foo values (1234567, 123456789)
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into foo values (7654321, 987654321)
+. . . . . . . . > ;
+0: jdbc:luciddb:> select x * 1000000 from foo order by 1
+. . . . . . . . > ;
++----------------+
+|     EXPR$0     |
++----------------+
+| 1234567000000  |
+| 7654321000000  |
++----------------+
+0: jdbc:luciddb:> -- LDB-21 overflow
+0: jdbc:luciddb:> values (1234567 * 1000000)
+. . . . . . . . > ;
++-------------+
+|   EXPR$0    |
++-------------+
+| 1911386048  |
++-------------+
+0: jdbc:luciddb:> values (123456789 + 1)
+. . . . . . . . > ;
++------------+
+|   EXPR$0   |
++------------+
+| 123456790  |
++------------+
+0: jdbc:luciddb:> select y + 1 from foo order by 1
+. . . . . . . . > ;
++------------+
+|   EXPR$0   |
++------------+
+| 123456790  |
+| 987654322  |
++------------+
+0: jdbc:luciddb:> drop table foo
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Check what happens when we multiply two numbers and the sum
+0: jdbc:luciddb:> -- of scales of operands is greater than then maximum allowable
+0: jdbc:luciddb:> -- scale
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values( cast (.2 as decimal (11,9)) * cast (.3 as decimal (12,10)))
+. . . . . . . . > ;
++------------------------+
+|         EXPR$0         |
++------------------------+
+| 0.0600000000000000000  |
++------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

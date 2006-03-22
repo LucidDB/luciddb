@@ -1,0 +1,168 @@
+0: jdbc:luciddb:> -- test all types with implicit and explicit calc coercion
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table calctypes
+. . . . . . . . > (
+. . . . . . . . > s1 char(30),
+. . . . . . . . > s2 varchar(30),
+. . . . . . . . > n1 integer,
+. . . . . . . . > n2 numeric(8,4),
+. . . . . . . . > n3 numeric(6,2),
+. . . . . . . . > f1 float,
+. . . . . . . . > f2 double,
+. . . . . . . . > t1 time,
+. . . . . . . . > d1 date,
+. . . . . . . . > ts1 timestamp
+. . . . . . . . > )
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into calctypes values ('9:21:43', '1996-11-30', 10, 12.9876, 24.12, 6.5, 12.8, TIME '9:21:43', DATE '1996-11-30', TIMESTAMP '1996-11-30 9:21:43')
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select n1 * f1, n1 / f1, n2 + f2, n2 - f2 from calctypes
+. . . . . . . . > ;
++---------+---------------------+----------+----------------------+
+| EXPR$0  |       EXPR$1        |  EXPR$2  |        EXPR$3        |
++---------+---------------------+----------+----------------------+
+| 65.0    | 1.5384615384615385  | 25.7876  | 0.18759999999999977  |
++---------+---------------------+----------+----------------------+
+0: jdbc:luciddb:> -- TODO: UDF
+0: jdbc:luciddb:> -- select f1 + { fn convert(s1,SQL_NUMERIC) } from calctypes
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check out where clause
+0: jdbc:luciddb:> select d1 from calctypes where d1 < date '1996-02-14'
+. . . . . . . . > ;
++-----+
+| D1  |
++-----+
++-----+
+0: jdbc:luciddb:> -- TODO: UDF
+0: jdbc:luciddb:> -- select d1 from calctypes where { fn convert(d1,SQL_TIMESTAMP) } > ts1
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> select d1 from calctypes where t1 < time '9:21:55'
+. . . . . . . . > ;
++-------------+
+|     D1      |
++-------------+
+| 1996-11-30  |
++-------------+
+0: jdbc:luciddb:> select d1 from calctypes where f1 != n2
+. . . . . . . . > ;
+Error: org.eigenbase.sql.parser.SqlParseException: Lexical error at line 1, column 35.  Encountered: "!" (33), after : "" (state=,code=0)
+0: jdbc:luciddb:> select d1 from calctypes where f2 > f1
+. . . . . . . . > ;
++-------------+
+|     D1      |
++-------------+
+| 1996-11-30  |
++-------------+
+0: jdbc:luciddb:> select d1 from calctypes where 10.523 > 10.5
+. . . . . . . . > ;
++-------------+
+|     D1      |
++-------------+
+| 1996-11-30  |
++-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Implicit int --> float conversion
+0: jdbc:luciddb:> drop table foo
+. . . . . . . . > ;
+Error: DDL validation error near line 1, column 12: Reference to unknown table "FOO" (state=,code=0)
+0: jdbc:luciddb:> create table foo (x real, y int)
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into foo values (354.1234, 3)
+. . . . . . . . > ;
+0: jdbc:luciddb:> -- FRG-49
+0: jdbc:luciddb:> select avg(b.x), sum(b.x) from foo a, foo b where a.y = b.y
+. . . . . . . . > ;
+Error: java.lang.AssertionError: Internal error: node could not be implemented: Subset#5.ITERATOR (state=,code=0)
+0: jdbc:luciddb:> drop table foo
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- date to timestamp implicit conversion
+0: jdbc:luciddb:> select d1 from calctypes where d1 < ts1
+. . . . . . . . > ;
+Error: From line 1, column 32 to line 1, column 39: Cannot apply '<' to arguments of type '<DATE> < <TIMESTAMP>'. Supported form(s): '<COMPARABLE_TYPE> < <COMPARABLE_TYPE>' (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select d1 from calctypes where d1 < cast (ts1 as date)
+. . . . . . . . > ;
++-------------+
+|     D1      |
++-------------+
+| 1996-11-30  |
++-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- errors
+0: jdbc:luciddb:> select d1 + 1, d1 - 10, t1 + 1000, t1 - 1000, ts1 + 1000, ts1 - 1000 from calctypes
+. . . . . . . . > ;
+Error: From line 1, column 8 to line 1, column 13: Cannot apply '+' to arguments of type '<DATE> + <INTEGER>'. Supported form(s): '<NUMERIC> + <NUMERIC>'
+'<DATETIME_INTERVAL> + <DATETIME_INTERVAL>' (state=,code=0)
+0: jdbc:luciddb:> select n1 * f1, n1 / f1, n2 + f2, n2 - f2, n1 + '10', n2 + '10.555' from calctypes
+. . . . . . . . > ;
+Error: From line 1, column 44 to line 1, column 52: Cannot apply '+' to arguments of type '<INTEGER> + <CHAR(2)>'. Supported form(s): '<NUMERIC> + <NUMERIC>'
+'<DATETIME_INTERVAL> + <DATETIME_INTERVAL>' (state=,code=0)
+0: jdbc:luciddb:> select f1 + s1 from calctypes
+. . . . . . . . > ;
+Error: From line 1, column 8 to line 1, column 14: Cannot apply '+' to arguments of type '<DOUBLE> + <CHAR(30)>'. Supported form(s): '<NUMERIC> + <NUMERIC>'
+'<DATETIME_INTERVAL> + <DATETIME_INTERVAL>' (state=,code=0)
+0: jdbc:luciddb:> select d1 from calctypes where f1 > '4.2345'
+. . . . . . . . > ;
+Error: From line 1, column 32 to line 1, column 44: Cannot apply '>' to arguments of type '<DOUBLE> > <CHAR(6)>'. Supported form(s): '<COMPARABLE_TYPE> > <COMPARABLE_TYPE>' (state=,code=0)
+0: jdbc:luciddb:> select d1 from calctypes where f1 < '10.234552'
+. . . . . . . . > ;
+Error: From line 1, column 32 to line 1, column 47: Cannot apply '<' to arguments of type '<DOUBLE> < <CHAR(9)>'. Supported form(s): '<COMPARABLE_TYPE> < <COMPARABLE_TYPE>' (state=,code=0)
+0: jdbc:luciddb:> select ts1 * 2 from calctypes
+. . . . . . . . > ;
+Error: From line 1, column 8 to line 1, column 14: Cannot apply '*' to arguments of type '<TIMESTAMP> * <INTEGER>'. Supported form(s): '<NUMERIC> * <NUMERIC>'
+'<DATETIME_INTERVAL> * <NUMERIC>'
+'<NUMERIC> * <DATETIME_INTERVAL>' (state=,code=0)
+0: jdbc:luciddb:> select ts1 / 2 from calctypes
+. . . . . . . . > ;
+Error: From line 1, column 8 to line 1, column 14: Cannot apply '/' to arguments of type '<TIMESTAMP> / <INTEGER>'. Supported form(s): '<NUMERIC> / <NUMERIC>'
+'<DATETIME_INTERVAL> / <NUMERIC>' (state=,code=0)
+0: jdbc:luciddb:> select d1 * 2 from calctypes
+. . . . . . . . > ;
+Error: From line 1, column 8 to line 1, column 13: Cannot apply '*' to arguments of type '<DATE> * <INTEGER>'. Supported form(s): '<NUMERIC> * <NUMERIC>'
+'<DATETIME_INTERVAL> * <NUMERIC>'
+'<NUMERIC> * <DATETIME_INTERVAL>' (state=,code=0)
+0: jdbc:luciddb:> select d1 / 2 from calctypes
+. . . . . . . . > ;
+Error: From line 1, column 8 to line 1, column 13: Cannot apply '/' to arguments of type '<DATE> / <INTEGER>'. Supported form(s): '<NUMERIC> / <NUMERIC>'
+'<DATETIME_INTERVAL> / <NUMERIC>' (state=,code=0)
+0: jdbc:luciddb:> select t1 * 2 from calctypes
+. . . . . . . . > ;
+Error: From line 1, column 8 to line 1, column 13: Cannot apply '*' to arguments of type '<TIME> * <INTEGER>'. Supported form(s): '<NUMERIC> * <NUMERIC>'
+'<DATETIME_INTERVAL> * <NUMERIC>'
+'<NUMERIC> * <DATETIME_INTERVAL>' (state=,code=0)
+0: jdbc:luciddb:> select t1 / 2 from calctypes
+. . . . . . . . > ;
+Error: From line 1, column 8 to line 1, column 13: Cannot apply '/' to arguments of type '<TIME> / <INTEGER>'. Supported form(s): '<NUMERIC> / <NUMERIC>'
+'<DATETIME_INTERVAL> / <NUMERIC>' (state=,code=0)
+0: jdbc:luciddb:> select d1 + t1 from calctypes
+. . . . . . . . > ;
+Error: From line 1, column 8 to line 1, column 14: Cannot apply '+' to arguments of type '<DATE> + <TIME>'. Supported form(s): '<NUMERIC> + <NUMERIC>'
+'<DATETIME_INTERVAL> + <DATETIME_INTERVAL>' (state=,code=0)
+0: jdbc:luciddb:> select d1 - t1 from calctypes
+. . . . . . . . > ;
+Error: From line 1, column 8 to line 1, column 14: Cannot apply '-' to arguments of type '<DATE> - <TIME>'. Supported form(s): '<NUMERIC> - <NUMERIC>'
+'<DATETIME_INTERVAL> - <DATETIME_INTERVAL>'
+'<DATETIME> - <DATETIME_INTERVAL>' (state=,code=0)
+0: jdbc:luciddb:> select f1 + d1 from calctypes
+. . . . . . . . > ;
+Error: From line 1, column 8 to line 1, column 14: Cannot apply '+' to arguments of type '<DOUBLE> + <DATE>'. Supported form(s): '<NUMERIC> + <NUMERIC>'
+'<DATETIME_INTERVAL> + <DATETIME_INTERVAL>' (state=,code=0)
+0: jdbc:luciddb:> select f1 - d1 from calctypes
+. . . . . . . . > ;
+Error: From line 1, column 8 to line 1, column 14: Cannot apply '-' to arguments of type '<DOUBLE> - <DATE>'. Supported form(s): '<NUMERIC> - <NUMERIC>'
+'<DATETIME_INTERVAL> - <DATETIME_INTERVAL>'
+'<DATETIME> - <DATETIME_INTERVAL>' (state=,code=0)
+0: jdbc:luciddb:> select * from calctypes where t1 > d1
+. . . . . . . . > ;
+Error: From line 1, column 31 to line 1, column 37: Cannot apply '>' to arguments of type '<TIME> > <DATE>'. Supported form(s): '<COMPARABLE_TYPE> > <COMPARABLE_TYPE>' (state=,code=0)
+0: jdbc:luciddb:> select * from calctypes where f1 > ts1
+. . . . . . . . > ;
+Error: From line 1, column 31 to line 1, column 38: Cannot apply '>' to arguments of type '<DOUBLE> > <TIMESTAMP>'. Supported form(s): '<COMPARABLE_TYPE> > <COMPARABLE_TYPE>' (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

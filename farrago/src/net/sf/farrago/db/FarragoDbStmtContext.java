@@ -39,6 +39,8 @@ import org.eigenbase.oj.stmt.*;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.resgen.*;
+import org.eigenbase.resource.*;
 import org.eigenbase.runtime.AbstractIterResultSet;
 import org.eigenbase.sql.SqlKind;
 import org.eigenbase.util.*;
@@ -153,15 +155,23 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
         unprepare();
         allocations = new FarragoCompoundAllocation();
         this.sql = sql;
-        executableStmt = session.prepare(sql, allocations, isExecDirect, null);
-        postprepare();
+        executableStmt = session.prepare(
+            this, sql, allocations, isExecDirect, null);
+        finishPrepare();
     }
 
-    private void postprepare()
+    void lockObjectsInUse(FarragoSessionExecutableStmt newExecutableStmt)
+    {
+        // TODO jvs 17-Mar-2006:  as a sanity check, verify at the
+        // beginning of each execution that all objects still exist
+        // (to make sure that a DROP didn't sneak in somehow)
+        ddlLockManager.addObjectsInUse(
+            this, newExecutableStmt.getReferencedObjectIds());
+    }
+
+    private void finishPrepare()
     {
         if (isPrepared()) {
-            ddlLockManager.addObjectsInUse(
-                this, executableStmt.getReferencedObjectIds());
             final RelDataType dynamicParamRowType =
                 executableStmt.getDynamicParamRowType();
             final RelDataTypeField [] fields = dynamicParamRowType.getFields();
@@ -198,7 +208,10 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
         executableStmt =
             session.getDatabase().implementStmt(prep, plan, kind, logical,
                 allocations);
-        postprepare();
+        if (isPrepared()) {
+            lockObjectsInUse(executableStmt);
+        }
+        finishPrepare();
     }
 
     // implement FarragoSessionStmtContext
@@ -258,6 +271,10 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
         boolean isDml = executableStmt.isDml();
         boolean success = false;
 
+        if (session.isAutoCommit()) {
+            startAutocommitTxn(!isDml);
+        }
+        
         try {
             FarragoSessionRuntimeParams params =
                 session.newRuntimeContextParams();
@@ -334,16 +351,33 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
                     if (!success) {
                         session.endTransactionIfAuto(false);
                     }
-                    getSessionInfo().removeExecutingStmtInfo(executingStmtInfoKey);
+                    getSessionInfo().removeExecutingStmtInfo(
+                        executingStmtInfoKey);
                     executingStmtInfoKey = 0;
                 }
             }
         }
 
         // NOTE:  for result sets, autocommit is taken care of by
-        // FarragoIteratorResultSet and FennelTxnContext
+        // FarragoTupleIterResultSet and FennelTxnContext
         if (resultSet == null) {
             session.endTransactionIfAuto(true);
+        }
+    }
+
+    private void startAutocommitTxn(boolean readOnly)
+    {
+        if (session.isTxnInProgress()) {
+            ResourceDefinition stmtFeature = EigenbaseResource.instance()
+                .SQLConformance_MultipleActiveAutocommitStatements;
+            if (!session.getPersonality().supportsFeature(stmtFeature)) {
+                throw EigenbaseResource.instance()
+                    .SQLConformance_MultipleActiveAutocommitStatements.ex();
+            }
+        } else {
+            if (readOnly) {
+                session.getFennelTxnContext().initiateReadOnlyTxn();
+            }
         }
     }
 
@@ -353,12 +387,9 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
         FarragoSessionTxnMgr txnMgr = 
             session.getDatabase().getTxnMgr();
         FarragoSessionTxnId txnId = session.getTxnId(true);
-        for (List<String> tableName : accessMap.getTablesAccessed()) {
-            txnMgr.accessTable(
-                txnId,
-                tableName,
-                accessMap.getTableAccessMode(tableName));
-        }
+        txnMgr.accessTables(
+            txnId,
+            accessMap);
     }
     
     // implement FarragoSessionStmtContext

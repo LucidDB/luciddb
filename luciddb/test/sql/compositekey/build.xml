@@ -91,7 +91,7 @@
   </target>
 
   <target name="test">
-    <antcall target="copy-csv"/>
+<!--    <antcall target="copy-csv"/> -->
     <antcall target="gen-sql"/>
     <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
   </target>

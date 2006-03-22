@@ -111,6 +111,7 @@ public class FarragoDbSessionFactory implements FarragoSessionFactory
         return new FennelTxnContext(repos, fennelDbHandle);
     }
 
+    // implement FarragoSessionFactory
     public FarragoSessionTxnMgr newTxnMgr()
     {
         return new FarragoDbNullTxnMgr();

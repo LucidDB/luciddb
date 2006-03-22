@@ -1,0 +1,181 @@
+0: jdbc:luciddb:> -- test explicit conversions in the calculator
+0: jdbc:luciddb:> -- loading is the best way to excercise this code
+0: jdbc:luciddb:> -- Was calc11.sql
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table calcstring (s1 char(30))
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table calcdec (num integer)
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table calcnum (num numeric(8,4))
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table calcfloat (f1 float)
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table calcdouble (f2 double)
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table calcdate (d1 date)
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table calctime (t1 time)
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table calcts (ts timestamp)
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into calcstring select s1 from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into calcstring select s2 from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into calcstring select cast (n1 as varchar(30)) from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into calcstring select cast (n2 as char(30)) from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into calcstring select cast (n3 as char(50)) from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into calcstring select cast (f1 as char(30)) from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into calcstring select cast (f2 as char(30)) from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into calcstring select cast (t1 as char(30)) from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into calcstring select cast (d1 as char(30)) from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into calcstring select cast (ts1 as char(30)) from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from calcstring order by 1
+. . . . . . . . > ;
++---------------------------------+
+|               S1                |
++---------------------------------+
+| 09:21:43                        |
+| 1.28E1                          |
+| 10                              |
+| 12.9876                         |
+| 1996-11-30                      |
+| 1996-11-30                      |
+| 1996-11-30 09:21:43             |
+| 24.12                           |
+| 6.5E0                           |
+| 9:21:43                         |
++---------------------------------+
+0: jdbc:luciddb:> insert into calcdec select cast ('54' as integer) from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into calcdec select n2 from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into calcdec select n3 from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into calcdec select f1 from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into calcdec select f2 from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from calcdec order by 1
+. . . . . . . . > ;
++------+
+| NUM  |
++------+
+| 7    |
+| 13   |
+| 13   |
+| 24   |
+| 54   |
++------+
+0: jdbc:luciddb:> insert into calcnum select n1 from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into calcnum select f1 from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into calcnum select f2 from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into calcnum select cast ('543.123' as numeric(10,3)) from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from calcnum order by 1
+. . . . . . . . > ;
++-----------+
+|    NUM    |
++-----------+
+| 6.5000    |
+| 10.0000   |
+| 12.8000   |
+| 543.1230  |
++-----------+
+0: jdbc:luciddb:> insert into calcfloat select n1 from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into calcfloat select n2 from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into calcfloat select n3 from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into calcfloat select f2 from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into calcfloat select cast ('1234.987654' as numeric(10,6)) from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from calcfloat order by 1
+. . . . . . . . > ;
++--------------+
+|      F1      |
++--------------+
+| 10.0         |
+| 12.8         |
+| 12.9876      |
+| 24.12        |
+| 1234.987654  |
++--------------+
+0: jdbc:luciddb:> insert into calcdouble select cast ('1234.0987654' as numeric(11,7)) from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into calcdouble select n1 from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into calcdouble select n2 from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into calcdouble select n3 from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into calcdouble select f1 from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from calcdouble order by 1
+. . . . . . . . > ;
++---------------+
+|      F2       |
++---------------+
+| 6.5           |
+| 10.0          |
+| 12.9876       |
+| 24.12         |
+| 1234.0987654  |
++---------------+
+0: jdbc:luciddb:> insert into calcdate select cast (s2 as date) from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+0: jdbc:luciddb:> -- FRG-20
+0: jdbc:luciddb:> insert into calcdate select cast (ts1 as date) from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'TIMESTAMP' to 'DATE' (state=,code=0)
+0: jdbc:luciddb:> select * from calcdate order by 1
+. . . . . . . . > ;
++-------------+
+|     D1      |
++-------------+
+| 1996-11-30  |
++-------------+
+0: jdbc:luciddb:> -- FRG-20
+0: jdbc:luciddb:> insert into calctime select cast (s1 as time) from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ '9:21:43                       ', '1996-11-30', 10, 129876, 2412, 6.5, 12.8, 33703000, 849312000000, 849345703000 ]
+Messages:
+[0]:PC=6 Code=22007 (state=,code=0)
+0: jdbc:luciddb:> -- FRG-20
+0: jdbc:luciddb:> insert into calctime select cast (ts1 as time) from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'TIMESTAMP' to 'TIME' (state=,code=0)
+0: jdbc:luciddb:> select * from calctime order by 1
+. . . . . . . . > ;
++-----+
+| T1  |
++-----+
++-----+
+0: jdbc:luciddb:> -- FRG-20
+0: jdbc:luciddb:> insert into calcts select cast (cast (s1 as time) as timestamp) from calctypes where n1 + 100 > 0
+. . . . . . . . > ;
+Error: Cast function cannot convert value of type TIME to type TIMESTAMP (state=,code=0)
+0: jdbc:luciddb:> select * from calcts order by 1
+. . . . . . . . > ;
++-----+
+| TS  |
++-----+
++-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

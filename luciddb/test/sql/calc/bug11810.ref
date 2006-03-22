@@ -1,0 +1,21 @@
+0: jdbc:luciddb:> -- see bug description for more details
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE SCHEMA BUG11810
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE TABLE BUG11810.T1(COL1 decimal(19,8), COL2 bigint)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> INSERT INTO BUG11810.T1 VALUES(4.00000, 2)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- the result of division used to be incorrect
+0: jdbc:luciddb:> SELECT COL1 / COL2 FROM BUG11810.T1
+. . . . . . . . > ;
++-------------+
+|   EXPR$0    |
++-------------+
+| 2.00000000  |
++-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

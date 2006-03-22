@@ -1,0 +1,31 @@
+0: jdbc:luciddb:> -- calc18.sql   test real64 --> real32 conversions
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table tab2(a real)
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into tab2 values (0.01)
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into tab2 values (100)
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into tab2 values (300E-4)
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into tab2 values (500E-4)
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into tab2 values (0.05)
+. . . . . . . . > ;
+0: jdbc:luciddb:> select a from tab2 order by a
+. . . . . . . . > ;
++--------+
+|   A    |
++--------+
+| 0.01   |
+| 0.03   |
+| 0.05   |
+| 0.05   |
+| 100.0  |
++--------+
+0: jdbc:luciddb:> drop table tab2
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

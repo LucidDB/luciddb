@@ -1,0 +1,102 @@
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select COUNT(*) from BENCH1M
+. . . . . . . . > where
+. . . . . . . . >       (Kseq between 40000 and 41000
+. . . . . . . . >   OR   Kseq between 42000 and 43000
+. . . . . . . . >   OR   Kseq between 44000 and 45000
+. . . . . . . . >   OR   Kseq between 46000 and 47000
+. . . . . . . . >   OR   Kseq between 48000 and 50000)
+. . . . . . . . >   AND  K100K = 3
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:luciddb:> select COUNT(*) from BENCH1M
+. . . . . . . . > where
+. . . . . . . . >       (Kseq between 40000 and 41000
+. . . . . . . . >   OR   Kseq between 42000 and 43000
+. . . . . . . . >   OR   Kseq between 44000 and 45000
+. . . . . . . . >   OR   Kseq between 46000 and 47000
+. . . . . . . . >   OR   Kseq between 48000 and 50000)
+. . . . . . . . >   AND  K10K = 3
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:luciddb:> select COUNT(*) from BENCH1M
+. . . . . . . . > where
+. . . . . . . . >       (Kseq between 40000 and 41000
+. . . . . . . . >   OR   Kseq between 42000 and 43000
+. . . . . . . . >   OR   Kseq between 44000 and 45000
+. . . . . . . . >   OR   Kseq between 46000 and 47000
+. . . . . . . . >   OR   Kseq between 48000 and 50000)
+. . . . . . . . >   AND  K100 = 3
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 55      |
++---------+
+0: jdbc:luciddb:> select COUNT(*) from BENCH1M
+. . . . . . . . > where
+. . . . . . . . >       (Kseq between 40000 and 41000
+. . . . . . . . >   OR   Kseq between 42000 and 43000
+. . . . . . . . >   OR   Kseq between 44000 and 45000
+. . . . . . . . >   OR   Kseq between 46000 and 47000
+. . . . . . . . >   OR   Kseq between 48000 and 50000)
+. . . . . . . . >   AND  K25 = 3
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 245     |
++---------+
+0: jdbc:luciddb:> select COUNT(*) from BENCH1M
+. . . . . . . . > where
+. . . . . . . . >       (Kseq between 40000 and 41000
+. . . . . . . . >   OR   Kseq between 42000 and 43000
+. . . . . . . . >   OR   Kseq between 44000 and 45000
+. . . . . . . . >   OR   Kseq between 46000 and 47000
+. . . . . . . . >   OR   Kseq between 48000 and 50000)
+. . . . . . . . >   AND  K10 = 3
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 581     |
++---------+
+0: jdbc:luciddb:> select COUNT(*) from BENCH1M
+. . . . . . . . > where
+. . . . . . . . >       (Kseq between 40000 and 41000
+. . . . . . . . >   OR   Kseq between 42000 and 43000
+. . . . . . . . >   OR   Kseq between 44000 and 45000
+. . . . . . . . >   OR   Kseq between 46000 and 47000
+. . . . . . . . >   OR   Kseq between 48000 and 50000)
+. . . . . . . . >   AND  K5 = 3
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 1224    |
++---------+
+0: jdbc:luciddb:> select COUNT(*) from BENCH1M
+. . . . . . . . > where
+. . . . . . . . >       (Kseq between 40000 and 41000
+. . . . . . . . >   OR   Kseq between 42000 and 43000
+. . . . . . . . >   OR   Kseq between 44000 and 45000
+. . . . . . . . >   OR   Kseq between 46000 and 47000
+. . . . . . . . >   OR   Kseq between 48000 and 50000)
+. . . . . . . . >   AND  K4 = 3
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 1503    |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

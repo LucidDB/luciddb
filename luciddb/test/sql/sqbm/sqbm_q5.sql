@@ -1,3 +1,5 @@
+set schema 's';
+
 SELECT K2, K100, COUNT(*) FROM BENCH1M
 GROUP BY K2, K100
 ORDER BY 1,2

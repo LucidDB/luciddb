@@ -1,0 +1,39 @@
+0: jdbc:luciddb:> -- bug fixed  (bug: )
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table bugs (x varchar(30), y char(30));
+0: jdbc:luciddb:> insert into bugs values ('testme', 'testme');
+0: jdbc:luciddb:> select * from bugs where x=y;
++---------+---------------------------------+
+|    X    |                Y                |
++---------+---------------------------------+
+| testme  | testme                          |
++---------+---------------------------------+
+0: jdbc:luciddb:> select * from bugs where x='testme   ';
++---------+---------------------------------+
+|    X    |                Y                |
++---------+---------------------------------+
+| testme  | testme                          |
++---------+---------------------------------+
+0: jdbc:luciddb:> select * from bugs where x=x;
++---------+---------------------------------+
+|    X    |                Y                |
++---------+---------------------------------+
+| testme  | testme                          |
++---------+---------------------------------+
+0: jdbc:luciddb:> select * from bugs where y=y;
++---------+---------------------------------+
+|    X    |                Y                |
++---------+---------------------------------+
+| testme  | testme                          |
++---------+---------------------------------+
+0: jdbc:luciddb:> select * from bugs where y='testme   ';
++---------+---------------------------------+
+|    X    |                Y                |
++---------+---------------------------------+
+| testme  | testme                          |
++---------+---------------------------------+
+0: jdbc:luciddb:> drop table bugs;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

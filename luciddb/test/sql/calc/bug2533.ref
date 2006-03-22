@@ -1,0 +1,35 @@
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- Bug 2533
+0: jdbc:luciddb:> -- Owner: Boris
+0: jdbc:luciddb:> -- Abstract: A nested POWER() built-in {POWER(POWER(n1,2), 2)) } returns 0..
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table bug2533tab ( n1 integer)
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into bug2533tab values(2)
+. . . . . . . . > ;
+0: jdbc:luciddb:> select POW(POW(n1,2), 2) from bug2533tab
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 16.0    |
++---------+
+0: jdbc:luciddb:> select POW(POW(n1,2), 0.5) from bug2533tab
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 2.0     |
++---------+
+0: jdbc:luciddb:> select POW(n1,0.5) from bug2533tab
+. . . . . . . . > ;
++---------------------+
+|       EXPR$0        |
++---------------------+
+| 1.4142135623730951  |
++---------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

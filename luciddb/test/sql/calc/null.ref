@@ -1,0 +1,452 @@
+0: jdbc:luciddb:> -- test NULL situations
+0: jdbc:luciddb:> -- Was calc1.sql
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into boris (n1,n2,n3,s1,s2,s3) values(3, 4.5, 6, 'string1', 'string2', '   string3  ')
+. . . . . . . . > ;
+0: jdbc:luciddb:> select
+. . . . . . . . > substring('julian', 1, 3),
+. . . . . . . . > substring('tai', 1, 0),
+. . . . . . . . > 'V' || substring('meeten', 1, 0) || 'W',
+. . . . . . . . > 'X' || snull || 'Y',
+. . . . . . . . > char_length(snull),
+. . . . . . . . > substring(snull, 1),
+. . . . . . . . > substring(snull, 3),
+. . . . . . . . > substring(snull, 2, 10),
+. . . . . . . . > trim(snull),
+. . . . . . . . > -- rpad(snull, 5, 'a'),
+. . . . . . . . > -- lpad(snull, 5, 'b'),
+. . . . . . . . > upper(snull),
+. . . . . . . . > -- nvl(snull, s1),
+. . . . . . . . > case when (snull like '%') then 1 else 0 end,
+. . . . . . . . > case when (snull like '%GOP') then 1 else 0 end,
+. . . . . . . . > case when (snull like '') then 1 else 0 end,
+. . . . . . . . > case when ('bunny' like '') then 1 else 0 end,
+. . . . . . . . > nnull + 1,
+. . . . . . . . > nnull + 2.5,
+. . . . . . . . > -- nvl(nnull, n1),
+. . . . . . . . > 1 / nnull
+. . . . . . . . > from boris order by 1
+. . . . . . . . > ;
++---------+---------+---------+---------+---------+---------+---------+---------+---------+---------+----------+----------+----------+----------+----------+----------+----------+
+| EXPR$0  | EXPR$1  | EXPR$2  | EXPR$3  | EXPR$4  | EXPR$5  | EXPR$6  | EXPR$7  | EXPR$8  | EXPR$9  | EXPR$10  | EXPR$11  | EXPR$12  | EXPR$13  | EXPR$14  | EXPR$15  | EXPR$16  |
++---------+---------+---------+---------+---------+---------+---------+---------+---------+---------+----------+----------+----------+----------+----------+----------+----------+
+| jul     |         | VW      |         |         |         |         |         |         |         | 0        | 0        | 0        | 0        |          |          |          |
++---------+---------+---------+---------+---------+---------+---------+---------+---------+---------+----------+----------+----------+----------+----------+----------+----------+
+0: jdbc:luciddb:> -- Okay, that old query was just lame. Rewrite it into several statements,
+0: jdbc:luciddb:> -- pulling from multiple tables.
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT c1, SUBSTRING(c1, 1, 0) FROM TEST_CHAR_TABLE ORDER BY c1;
++--------+---------+
+|   C1   | EXPR$1  |
++--------+---------+
+|        |         |
+|   kir  |         |
+|   x    |         |
+| 12345  |         |
+| KIRK   |         |
+| KIRK   |         |
+| Kirk   |         |
+| aAaA   |         |
+| kirk   |         |
++--------+---------+
+0: jdbc:luciddb:> SELECT c2, SUBSTRING(c2, 1, 0) FROM TEST_CHAR_TABLE ORDER BY c2;
++-------------+---------+
+|     C2      | EXPR$1  |
++-------------+---------+
+|             |         |
+| 123456789X  |         |
+| 4155551212  |         |
+| KIRK        |         |
+| KIRK        |         |
+| Kirk Is     |         |
+| bBbB   bBb  |         |
+| kirk        |         |
+| kirk is     |         |
++-------------+---------+
+0: jdbc:luciddb:> SELECT c3, SUBSTRING(c3, 1, 0) FROM TEST_CHAR_TABLE ORDER BY c3;
++-----------------------+---------+
+|          C3           | EXPR$1  |
++-----------------------+---------+
+|                       |         |
+|   kirk                |         |
+| 123456789X123456789x  |         |
+| 8009763345            |         |
+| KIRK                  |         |
+| KIRK                  |         |
+| Kirk Is Not           |         |
+| cCcC    cCcCcC        |         |
+| kirk is not           |         |
++-----------------------+---------+
+0: jdbc:luciddb:> SELECT c4, SUBSTRING(c4, 1, 0) FROM TEST_CHAR_TABLE ORDER BY c4;
++-------------------------------------------+---------+
+|                    C4                     | EXPR$1  |
++-------------------------------------------+---------+
+|                                           |         |
+| 123456789X123456789x123456789X123456789X  |         |
+| 800BROADBA                                |         |
+| KIRK                                      |         |
+| KIRK                                      |         |
+| Kirk Is Not Boris                         |         |
+| hghgh    uiuiIIIU                         |         |
+| kirk                                      |         |
+| kirk is not boris                         |         |
++-------------------------------------------+---------+
+0: jdbc:luciddb:> SELECT c5, SUBSTRING(c5, 1, 0) FROM TEST_CHAR_TABLE ORDER BY c5;
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------+
+|                                                                                                                               C5                                                                                                                                | EXPR$1  |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------+
+|                                                                                                                                                                                                                                                                 |         |
+|   kirk                                                                                                                                                                                                                                                          |         |
+| 011441719566412                                                                                                                                                                                                                                                 |         |
+| 123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-1234  |         |
+| KIRK                                                                                                                                                                                                                                                            |         |
+| KIRK                                                                                                                                                                                                                                                            |         |
+| Kirk Is Not Boris, Thank God                                                                                                                                                                                                                                    |         |
+| POOOPOIUOJLJLJ   fkdlfjdTJKTJ dkljf JFDK dfjkld FJDK                                                                                                                                                                                                            |         |
+| kirk is not boris, thank <insert possible ACLU suit here>                                                                                                                                                                                                       |         |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------+
+0: jdbc:luciddb:> SELECT s1, SUBSTRING(s1, 1, 0) FROM TEST_VARCHAR_TABLE ORDER BY s1;
++--------+---------+
+|   S1   | EXPR$1  |
++--------+---------+
+|        |         |
+|   kir  |         |
+|   x    |         |
+| 12345  |         |
+| KIRK   |         |
+| KIRK   |         |
+| Kirk   |         |
+| aAaA   |         |
+| kirk   |         |
++--------+---------+
+0: jdbc:luciddb:> SELECT s2, SUBSTRING(s2, 1, 0) FROM TEST_VARCHAR_TABLE ORDER BY s2;
++-------------+---------+
+|     S2      | EXPR$1  |
++-------------+---------+
+|             |         |
+| 123456789X  |         |
+| 4155551212  |         |
+| KIRK        |         |
+| KIRK        |         |
+| Kirk Is     |         |
+| bBbB   bBb  |         |
+| kirk        |         |
+| kirk is     |         |
++-------------+---------+
+0: jdbc:luciddb:> SELECT s3, SUBSTRING(s3, 1, 0) FROM TEST_VARCHAR_TABLE ORDER BY s3;
++-----------------------+---------+
+|          S3           | EXPR$1  |
++-----------------------+---------+
+|                       |         |
+|   kirk                |         |
+| 123456789X123456789x  |         |
+| 8009763345            |         |
+| KIRK                  |         |
+| KIRK                  |         |
+| Kirk Is Not           |         |
+| cCcC    cCcCcC        |         |
+| kirk is not           |         |
++-----------------------+---------+
+0: jdbc:luciddb:> SELECT s4, SUBSTRING(s4, 1, 0) FROM TEST_VARCHAR_TABLE ORDER BY s4;
++-------------------------------------------+---------+
+|                    S4                     | EXPR$1  |
++-------------------------------------------+---------+
+|                                           |         |
+| 123456789X123456789x123456789X123456789X  |         |
+| 800BROADBA                                |         |
+| KIRK                                      |         |
+| KIRK                                      |         |
+| Kirk Is Not Boris                         |         |
+| hghgh    uiuiIIIU                         |         |
+| kirk                                      |         |
+| kirk is not boris                         |         |
++-------------------------------------------+---------+
+0: jdbc:luciddb:> SELECT s5, SUBSTRING(s5, 1, 0) FROM TEST_VARCHAR_TABLE ORDER BY s5;
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------+
+|                                                                                                                               S5                                                                                                                                | EXPR$1  |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------+
+|                                                                                                                                                                                                                                                                 |         |
+|   kirk                                                                                                                                                                                                                                                          |         |
+| 011441719566412                                                                                                                                                                                                                                                 |         |
+| 123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-1234  |         |
+| KIRK                                                                                                                                                                                                                                                            |         |
+| KIRK                                                                                                                                                                                                                                                            |         |
+| Kirk Is Not Boris, Thank God                                                                                                                                                                                                                                    |         |
+| POOOPOIUOJLJLJ   fkdlfjdTJKTJ dkljf JFDK dfjkld FJDK                                                                                                                                                                                                            |         |
+| kirk is not boris, thank <insert possible ACLU suit here>                                                                                                                                                                                                       |         |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------+
+0: jdbc:luciddb:> SELECT c1, c1 || SUBSTRING(c1, 1, 0) || c1 FROM TEST_CHAR_TABLE ORDER BY c1;
++--------+-------------+
+|   C1   |   EXPR$1    |
++--------+-------------+
+|        |             |
+|   kir  |   kir  kir  |
+|   x    |   x    x    |
+| 12345  | 1234512345  |
+| KIRK   | KIRK KIRK   |
+| KIRK   | KIRK KIRK   |
+| Kirk   | Kirk Kirk   |
+| aAaA   | aAaA aAaA   |
+| kirk   | kirk kirk   |
++--------+-------------+
+0: jdbc:luciddb:> SELECT c2, c2 || SUBSTRING(c2, 1, 0) || c2 FROM TEST_CHAR_TABLE ORDER BY c2;
++-------------+-----------------------+
+|     C2      |        EXPR$1         |
++-------------+-----------------------+
+|             |                       |
+| 123456789X  | 123456789X123456789X  |
+| 4155551212  | 41555512124155551212  |
+| KIRK        | KIRK      KIRK        |
+| KIRK        | KIRK      KIRK        |
+| Kirk Is     | Kirk Is   Kirk Is     |
+| bBbB   bBb  | bBbB   bBbbBbB   bBb  |
+| kirk        | kirk      kirk        |
+| kirk is     | kirk is   kirk is     |
++-------------+-----------------------+
+0: jdbc:luciddb:> SELECT c3, c3 || SUBSTRING(c3, 1, 0) || c3 FROM TEST_CHAR_TABLE ORDER BY c3;
++-----------------------+-------------------------------------------+
+|          C3           |                  EXPR$1                   |
++-----------------------+-------------------------------------------+
+|                       |                                           |
+|   kirk                |   kirk                kirk                |
+| 123456789X123456789x  | 123456789X123456789x123456789X123456789x  |
+| 8009763345            | 8009763345          8009763345            |
+| KIRK                  | KIRK                KIRK                  |
+| KIRK                  | KIRK                KIRK                  |
+| Kirk Is Not           | Kirk Is Not         Kirk Is Not           |
+| cCcC    cCcCcC        | cCcC    cCcCcC      cCcC    cCcCcC        |
+| kirk is not           | kirk is not         kirk is not           |
++-----------------------+-------------------------------------------+
+0: jdbc:luciddb:> SELECT s1, s1 || SUBSTRING(s1, 1, 0) || s1 FROM TEST_VARCHAR_TABLE ORDER BY s1;
++--------+-------------+
+|   S1   |   EXPR$1    |
++--------+-------------+
+|        |             |
+|   kir  |   kir  kir  |
+|   x    |   x    x    |
+| 12345  | 1234512345  |
+| KIRK   | KIRK KIRK   |
+| KIRK   | KIRKKIRK    |
+| Kirk   | KirkKirk    |
+| aAaA   | aAaAaAaA    |
+| kirk   | kirkkirk    |
++--------+-------------+
+0: jdbc:luciddb:> SELECT s2, s2 || SUBSTRING(s2, 1, 0) || s2 FROM TEST_VARCHAR_TABLE ORDER BY s2;
++-------------+-----------------------+
+|     S2      |        EXPR$1         |
++-------------+-----------------------+
+|             |                       |
+| 123456789X  | 123456789X123456789X  |
+| 4155551212  | 41555512124155551212  |
+| KIRK        | KIRK   KIRK           |
+| KIRK        | KIRKKIRK              |
+| Kirk Is     | Kirk IsKirk Is        |
+| bBbB   bBb  | bBbB   bBbbBbB   bBb  |
+| kirk        | kirkkirk              |
+| kirk is     | kirk iskirk is        |
++-------------+-----------------------+
+0: jdbc:luciddb:> SELECT s3, s3 || SUBSTRING(s3, 1, 0) || s3 FROM TEST_VARCHAR_TABLE ORDER BY s3;
++-----------------------+-------------------------------------------+
+|          S3           |                  EXPR$1                   |
++-----------------------+-------------------------------------------+
+|                       |                                           |
+|   kirk                |   kirk  kirk                              |
+| 123456789X123456789x  | 123456789X123456789x123456789X123456789x  |
+| 8009763345            | 80097633458009763345                      |
+| KIRK                  | KIRK   KIRK                               |
+| KIRK                  | KIRKKIRK                                  |
+| Kirk Is Not           | Kirk Is NotKirk Is Not                    |
+| cCcC    cCcCcC        | cCcC    cCcCcCcCcC    cCcCcC              |
+| kirk is not           | kirk is notkirk is not                    |
++-----------------------+-------------------------------------------+
+0: jdbc:luciddb:> -- SELECT n1, NVL(n1, 0) FROM TEST_INTEGER_TABLE ORDER BY *;
+0: jdbc:luciddb:> -- SELECT n1, NVL(n1, 0) FROM TEST_NUMERIC_TABLE ORDER BY *;
+0: jdbc:luciddb:> -- SELECT n1, NVL(n1, 0) FROM TEST_REAL_TABLE ORDER BY *;
+0: jdbc:luciddb:> SELECT n1 + 1 FROM TEST_INTEGER_TABLE WHERE n1 IS NULL;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> SELECT n1 + 1 FROM TEST_NUMERIC_TABLE WHERE n1 IS NULL;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> SELECT n1 + 1 FROM TEST_REAL_TABLE WHERE n1 IS NULL;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> SELECT n1 + 1.5 FROM TEST_INTEGER_TABLE WHERE n1 IS NULL;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> SELECT n1 + 1.5 FROM TEST_NUMERIC_TABLE WHERE n1 IS NULL;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> SELECT n1 + 1.5 FROM TEST_REAL_TABLE WHERE n1 IS NULL;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> SELECT n1 * 1 FROM TEST_INTEGER_TABLE WHERE n1 IS NULL;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> SELECT n1 * 1 FROM TEST_NUMERIC_TABLE WHERE n1 IS NULL;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> SELECT n1 * 1 FROM TEST_REAL_TABLE WHERE n1 IS NULL;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> SELECT n1 * 1.5 FROM TEST_INTEGER_TABLE WHERE n1 IS NULL;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> SELECT n1 * 1.5 FROM TEST_NUMERIC_TABLE WHERE n1 IS NULL;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> SELECT n1 * 1.5 FROM TEST_REAL_TABLE WHERE n1 IS NULL;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> SELECT n1 * 2 FROM TEST_INTEGER_TABLE WHERE n1 IS NULL;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> SELECT n1 * 2 FROM TEST_NUMERIC_TABLE WHERE n1 IS NULL;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> SELECT n1 * 2 FROM TEST_REAL_TABLE WHERE n1 IS NULL;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> SELECT n1 * 2.5 FROM TEST_INTEGER_TABLE WHERE n1 IS NULL;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> SELECT n1 * 2.5 FROM TEST_NUMERIC_TABLE WHERE n1 IS NULL;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> SELECT n1 * 2.5 FROM TEST_REAL_TABLE WHERE n1 IS NULL;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> SELECT n1 / 2 FROM TEST_INTEGER_TABLE WHERE n1 IS NULL;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> SELECT n1 / 2 FROM TEST_NUMERIC_TABLE WHERE n1 IS NULL;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> SELECT n1 / 2 FROM TEST_REAL_TABLE WHERE n1 IS NULL;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> SELECT n1 / 2.5 FROM TEST_INTEGER_TABLE WHERE n1 IS NULL;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> SELECT n1 / 2.5 FROM TEST_NUMERIC_TABLE WHERE n1 IS NULL;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> SELECT n1 / 2.5 FROM TEST_REAL_TABLE WHERE n1 IS NULL;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> SELECT 1 / n1 FROM TEST_INTEGER_TABLE WHERE n1 IS NULL;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> SELECT 1 / n1 FROM TEST_NUMERIC_TABLE WHERE n1 IS NULL;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> SELECT 1 / n1 FROM TEST_REAL_TABLE WHERE n1 IS NULL;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- bug 15100 (dealing with types of NVL arguments)
+0: jdbc:luciddb:> -- select nvl(1234.56, cast(-1 as float)) from onerow;
+0: jdbc:luciddb:> -- select nvl(cast(null as decimal(18,2)), cast(-1 as float)) from onerow;
+0: jdbc:luciddb:> -- select nvl(null, cast(-1 as float)) from onerow;
+0: jdbc:luciddb:> -- select nvl(null, null) from onerow;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- bug 15606 (another bug re: types of NVL arguments)
+0: jdbc:luciddb:> create table bug15606(i int);
+0: jdbc:luciddb:> insert into bug15606 values (null);
+0: jdbc:luciddb:> -- this select used to output nothing
+0: jdbc:luciddb:> -- select nvl(i,-99) from  bug15606;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- bug 10532 (another bug re: types of NVL arguments)
+0: jdbc:luciddb:> CREATE TABLE bug10532 (c1 VARCHAR(10),c2 VARCHAR(64));
+0: jdbc:luciddb:> INSERT INTO bug10532 VALUES (NULL,'This is a very long string as you can see');
+0: jdbc:luciddb:> -- CREATE VIEW view10532 AS SELECT
+0: jdbc:luciddb:> -- NVL(c1,c2) as Newcol FROM SYSTEM.bug10532;
+0: jdbc:luciddb:> -- this select used to output nothing
+0: jdbc:luciddb:> -- SELECT * from view10532;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- End of test
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

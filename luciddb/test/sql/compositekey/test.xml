@@ -15,6 +15,11 @@
         <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
+      <test name="compkeyqueries" requiresSuccess="compkeyins">
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/compositekey/gen/${config.prop}/compkeyqueries.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+      </test>
+
     </test-suite>
   </target>
 </project>

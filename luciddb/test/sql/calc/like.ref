@@ -1,0 +1,71 @@
+0: jdbc:luciddb:> -- TEsts on the like operator
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table foo
+. . . . . . . . > ;
+Error: DDL validation error near line 1, column 12: Reference to unknown table "FOO" (state=,code=0)
+0: jdbc:luciddb:> create table foo (x varchar(30))
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into foo values ('TESTER')
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into foo values ('MONSTER')
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into foo values ('RICH')
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into foo values ('CREATURE')
+. . . . . . . . > ;
+0: jdbc:luciddb:> select * from foo where x like '%ER%' order by 1
+. . . . . . . . > ;
++----------+
+|    X     |
++----------+
+| MONSTER  |
+| TESTER   |
++----------+
+0: jdbc:luciddb:> select * from foo where x like '%*E*R%' escape '*'
+. . . . . . . . > ;
+Error: Invalid escape sequence: %*E*R% at 1 (state=,code=0)
+0: jdbc:luciddb:> select * from foo where x like '%ER*%' escape '*'
+. . . . . . . . > ;
++----+
+| X  |
++----+
++----+
+0: jdbc:luciddb:> select * from foo where x like '%ERR%' escape 'R'
+. . . . . . . . > ;
++----------+
+|    X     |
++----------+
+| TESTER   |
+| MONSTER  |
++----------+
+0: jdbc:luciddb:> select * from foo where x like '%ER%' escape 'R'
+. . . . . . . . > ;
++----+
+| X  |
++----+
++----+
+0: jdbc:luciddb:> drop table foo
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- The following sequence was inspired by bug 6633,
+0: jdbc:luciddb:> -- which I could not reproduce in 2.0.
+0: jdbc:luciddb:> DROP TABLE french;
+Error: DDL validation error near line 1, column 12: Reference to unknown table "FRENCH" (state=,code=0)
+0: jdbc:luciddb:> CREATE TABLE french (c VARCHAR(100));
+0: jdbc:luciddb:> INSERT INTO french (c) VALUES ('SociÃ©tÃ© TitanitÃ©');
+0: jdbc:luciddb:> SELECT * FROM french;
++----------------------+
+|          C           |
++----------------------+
+| SociÃ©tÃ© TitanitÃ©  |
++----------------------+
+0: jdbc:luciddb:> SELECT * FROM french WHERE c LIKE '%Ti%';
++----------------------+
+|          C           |
++----------------------+
+| SociÃ©tÃ© TitanitÃ©  |
++----------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

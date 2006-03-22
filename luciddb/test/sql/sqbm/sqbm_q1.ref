@@ -1,0 +1,84 @@
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT COUNT(*) FROM BENCH1M 
+. . . . . . . . > WHERE KSEQ = 2
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:luciddb:> SELECT COUNT(*) FROM BENCH1M
+. . . . . . . . > WHERE K100K = 2
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 11      |
++---------+
+0: jdbc:luciddb:> SELECT COUNT(*) FROM BENCH1M
+. . . . . . . . > WHERE K10K = 2
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 105     |
++---------+
+0: jdbc:luciddb:> SELECT COUNT(*) FROM BENCH1M
+. . . . . . . . > WHERE K1K = 2
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 998     |
++---------+
+0: jdbc:luciddb:> SELECT COUNT(*) FROM BENCH1M
+. . . . . . . . > WHERE K100 = 2
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 9952    |
++---------+
+0: jdbc:luciddb:> SELECT COUNT(*) FROM BENCH1M
+. . . . . . . . > WHERE K25 = 2
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 40089   |
++---------+
+0: jdbc:luciddb:> SELECT COUNT(*) FROM BENCH1M
+. . . . . . . . > WHERE K10 = 2
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 100501  |
++---------+
+0: jdbc:luciddb:> SELECT COUNT(*) FROM BENCH1M
+. . . . . . . . > WHERE K5 = 2
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 200425  |
++---------+
+0: jdbc:luciddb:> SELECT COUNT(*) FROM BENCH1M
+. . . . . . . . > WHERE K4 = 2
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 249725  |
++---------+
+0: jdbc:luciddb:> SELECT COUNT(*) FROM BENCH1M
+. . . . . . . . > WHERE K2 = 2
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 500402  |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

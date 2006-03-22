@@ -1,0 +1,23 @@
+0: jdbc:luciddb:> -- booleanExpressions.sql
+0: jdbc:luciddb:> -- Tests boolean expressions, both in filters as well as in select statements.
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Although IDBA may show that many very very small floats and doubles
+0: jdbc:luciddb:> -- are equal to 0, they're not, so check that we have the right number
+0: jdbc:luciddb:> -- coming out.
+0: jdbc:luciddb:> -- This test should return 0, since none of the values are actually EQUAL
+0: jdbc:luciddb:> -- to zero.
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT COUNT(*)
+. . . . . . . . > FROM TEST_REAL_TABLE
+. . . . . . . . > WHERE n1 = 0.0;
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- End of test
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

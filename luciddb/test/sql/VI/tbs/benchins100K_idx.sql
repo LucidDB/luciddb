@@ -1,10 +1,5 @@
-create tablespace TBB_BENCH_TS datafile 'bench_ts.dat' size 16000K
-;
-create tablespace TBB_BENCHIDX_TS datafile 'benchidx_ts.dat' size 16000K
-;
-select file_size, path, free_blocks from files where path like 'bench%'
-order by 1, 2, 3
-;
+set schema 's';
+
 CREATE TABLE BENCH100K (
   KSEQ  INTEGER  
  ,K2    INTEGER 
@@ -18,8 +13,7 @@ CREATE TABLE BENCH100K (
  ,K40K  INTEGER  
  ,K100K INTEGER 
  ,K250K INTEGER 
- ,K500K INTEGER ) TABLESPACE TBB_BENCH_TS
-INDEX TABLESPACE TBB_BENCHIDX_TS
+ ,K500K INTEGER ) 
 ;
 CREATE INDEX B100K_K2_IDX ON BENCH100K(K2)
 ;
@@ -41,10 +35,10 @@ CREATE INDEX B100K_K40K_IDX ON BENCH100K(K40K)
 ;
 CREATE INDEX B100K_K100K_IDX ON BENCH100K(K100K)
 ;
-select file_size, path, free_blocks from files where path like 'bench%'
-order by 1, 2, 3
-;
-CREATE SOURCE BENCH_SOURCE_100K (
+
+set schema 'orcl_schema';
+
+CREATE foreign table orcl_schema.BENCH_SOURCE_100K (
 C1 INTEGER,
 C2 INTEGER,
 C4 INTEGER,
@@ -58,10 +52,15 @@ C40K  INTEGER,
 C100K INTEGER, 
 C250K INTEGER,
 C500K INTEGER) 
-using link ODBC_SQLSERVER defined by 
-'SELECT KSEQ,K2,K4,K5,K10,K25,K100,K1K,K10K,K40K,K100K,K250K,K500K FROM BENCHMARK.dbo.BENCH100K'
-;
+server orcl_server
+options (
+SCHEMA_NAME 'SCHOI',
+table_name 'bench100K'
+);
+
+set schema 's';
+
 INSERT INTO BENCH100K (KSEQ,K2,K4,K5,K10,K25,K100,K1K,K10K,K40K,K100K,K250K,
 K500K) SELECT C1,C2,C4,C5,C10,C25,C100,C1K,C10K,C40K,C100K,C250K,C500K 
-FROM BENCH_SOURCE_100K
+FROM orcl_schema.BENCH_SOURCE_100K
 ;

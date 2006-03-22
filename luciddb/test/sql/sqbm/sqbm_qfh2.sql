@@ -1,6 +1,7 @@
 -- 
 -- test from hell: ultra joins
 --
+set schema 's';
 
 select count(*), sum(b1.k10 - b2.k25)
 from bench1m b1, bench1m b2

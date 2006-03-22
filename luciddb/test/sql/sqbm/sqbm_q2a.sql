@@ -1,3 +1,5 @@
+set schema 's';
+
 -- SET ECHO=ON
 select count(*) from BENCH1M where K2 = 2 and KSEQ = 3
 ;

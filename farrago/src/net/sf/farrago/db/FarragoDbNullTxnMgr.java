@@ -22,6 +22,7 @@
 package net.sf.farrago.db;
 
 import net.sf.farrago.session.*;
+import net.sf.farrago.type.runtime.*;
 
 import java.util.*;
 import java.util.concurrent.atomic.*;
@@ -74,7 +75,51 @@ public class FarragoDbNullTxnMgr implements FarragoSessionTxnMgr
     }
 
     // implement FarragoSessionTxnMgr
-    public void accessTable(
+    public void accessTables(
+        FarragoSessionTxnId txnId,
+        TableAccessMap accessMap)
+    {
+        // NOTE jvs 17-Mar-2006: We reorder table accesses to minimize spurious
+        // deadlocks.  Take write locks before read locks because read->write
+        // upgrade is a very common deadlock.  And sort by table name so that
+        // all statements use the same ordering.
+
+        List<List<String>> tableNames = new ArrayList<List<String>>(
+            accessMap.getTablesAccessed());
+
+        Collections.sort(tableNames, new CharStringComparator());
+
+        // TODO jvs 17-Mar-2006:  use a LockOrderComparator to do
+        // the job more cleanly.
+
+        // First deal with WRITE_ACCESS and READWRITE_ACCESS.
+        for (List<String> tableName : tableNames) {
+            TableAccessMap.Mode accessType =
+                accessMap.getTableAccessMode(tableName);
+            if (accessType == TableAccessMap.Mode.READ_ACCESS) {
+                continue;
+            }
+            accessTablePrivate(
+                txnId,
+                tableName,
+                accessType);
+        }
+
+        // Then deal with READ_ACCESS.
+        for (List<String> tableName : tableNames) {
+            TableAccessMap.Mode accessType =
+                accessMap.getTableAccessMode(tableName);
+            if (accessType != TableAccessMap.Mode.READ_ACCESS) {
+                continue;
+            }
+            accessTablePrivate(
+                txnId,
+                tableName,
+                accessType);
+        }
+    }
+
+    private void accessTablePrivate(
         FarragoSessionTxnId txnId,
         List<String> localTableName,
         TableAccessMap.Mode accessType)
@@ -82,6 +127,26 @@ public class FarragoDbNullTxnMgr implements FarragoSessionTxnMgr
         for (FarragoSessionTxnListener listener : listeners) {
             listener.tableAccessed(txnId, localTableName, accessType);
         }
+        accessTable(txnId, localTableName, accessType);
+    }
+
+    /**
+     * Called by accessTables for each table accessed.  Default
+     * implementation is to do nothing; subclasses override this
+     * to take real actions such as calling a lock manager.
+     *
+     * @param txnId ID of accessing transaction
+     *
+     * @param localTableName qualified name of table as it is known in the
+     * local catalog
+     *
+     * @param accessType type of table access
+     */
+    protected void accessTable(
+        FarragoSessionTxnId txnId,
+        List<String> localTableName,
+        TableAccessMap.Mode accessType)
+    {
     }
 
     // implement FarragoSessionTxnMgr

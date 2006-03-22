@@ -73,6 +73,7 @@ public:
         SharedDatabase pDb;
         SharedLogicalTxn pTxn;
         SharedFtrsTableWriterFactory pFtrsTableWriterFactory;
+        bool readOnly;
 
         virtual ~TxnHandle();           // make class polymorphic
     };

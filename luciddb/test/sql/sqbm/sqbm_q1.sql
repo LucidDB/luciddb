@@ -1,3 +1,5 @@
+set schema 's';
+
 SELECT COUNT(*) FROM BENCH1M 
 WHERE KSEQ = 2
 ;

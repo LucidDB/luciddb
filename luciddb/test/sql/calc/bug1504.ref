@@ -1,0 +1,76 @@
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- bug1504 - aggregation on reals
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table sample1504(cola double);
+0: jdbc:luciddb:> insert into sample1504 values(5.25);
+0: jdbc:luciddb:> insert into sample1504 values(19.50);
+0: jdbc:luciddb:> insert into sample1504 values(55.75);
+0: jdbc:luciddb:> select * from sample1504 order by 1;
++--------+
+|  COLA  |
++--------+
+| 5.25   |
+| 19.5   |
+| 55.75  |
++--------+
+0: jdbc:luciddb:> -- FRG-49
+0: jdbc:luciddb:> select min(cola), max(cola), avg(cola), sum(cola) from sample1504 order by 1;
+Error: java.lang.AssertionError: Internal error: node could not be implemented: Subset#4.ITERATOR (state=,code=0)
+0: jdbc:luciddb:> select min(cola), max(cola), sum(cola) from sample1504 order by 1;
++---------+---------+---------+
+| EXPR$0  | EXPR$1  | EXPR$2  |
++---------+---------+---------+
+| 5.25    | 55.75   | 80.5    |
++---------+---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table sample1504;
+0: jdbc:luciddb:> create table sample1504(cola float);
+0: jdbc:luciddb:> insert into sample1504 values(5.25);
+0: jdbc:luciddb:> insert into sample1504 values(19.50);
+0: jdbc:luciddb:> insert into sample1504 values(55.75);
+0: jdbc:luciddb:> select * from sample1504 order by 1;
++--------+
+|  COLA  |
++--------+
+| 5.25   |
+| 19.5   |
+| 55.75  |
++--------+
+0: jdbc:luciddb:> -- FRG-49
+0: jdbc:luciddb:> select min(cola), max(cola), avg(cola), sum(cola) from sample1504 order by 1;
+Error: java.lang.AssertionError: Internal error: node could not be implemented: Subset#4.ITERATOR (state=,code=0)
+0: jdbc:luciddb:> select min(cola), max(cola), sum(cola) from sample1504 order by 1;
++---------+---------+---------+
+| EXPR$0  | EXPR$1  | EXPR$2  |
++---------+---------+---------+
+| 5.25    | 55.75   | 80.5    |
++---------+---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table sample1504;
+0: jdbc:luciddb:> create table sample1504(cola real);
+0: jdbc:luciddb:> insert into sample1504 values(5.25);
+0: jdbc:luciddb:> insert into sample1504 values(19.50);
+0: jdbc:luciddb:> insert into sample1504 values(55.75);
+0: jdbc:luciddb:> select * from sample1504 order by 1;
++--------+
+|  COLA  |
++--------+
+| 5.25   |
+| 19.5   |
+| 55.75  |
++--------+
+0: jdbc:luciddb:> -- FRG-49
+0: jdbc:luciddb:> select min(cola), max(cola), avg(cola), sum(cola) from sample1504 order by 1;
+Error: java.lang.AssertionError: Internal error: node could not be implemented: Subset#4.ITERATOR (state=,code=0)
+0: jdbc:luciddb:> select min(cola), max(cola), sum(cola) from sample1504 order by 1;
++---------+---------+---------+
+| EXPR$0  | EXPR$1  | EXPR$2  |
++---------+---------+---------+
+| 5.25    | 55.75   | 80.5    |
++---------+---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

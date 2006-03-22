@@ -32,6 +32,7 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.resgen.*;
+import org.eigenbase.resource.*;
 
 import net.sf.farrago.session.*;
 import net.sf.farrago.db.*;
@@ -327,7 +328,19 @@ public class FarragoDefaultSessionPersonality
     // implement FarragoSessionPersonality
     public boolean supportsFeature(ResourceDefinition feature)
     {
-        // By default, support everything
+        // TODO jvs 20-Mar-2006: Fix this non-conforming behavior.  According
+        // to the JDBC spec, each statement in an autocommit connection is
+        // supposed to execute in its own private transaction.  Farrago's
+        // support for this isn't done yet, so for now we prevent
+        // multiple active statements on an autocommit connection
+        // (unless a personality specifically enables it).
+        ResourceDefinition maasFeature = EigenbaseResource.instance()
+            .SQLConformance_MultipleActiveAutocommitStatements;
+        if (feature == maasFeature) {
+            return false;
+        }
+        
+        // By default, support everything except the above.
         return true;
     }
 }

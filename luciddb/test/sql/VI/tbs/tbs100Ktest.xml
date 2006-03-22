@@ -1,0 +1,69 @@
+<!-- Run benchmark load and query tests for 100K rows with indices -->
+<project name="bh" default="tbs-test">
+  <target name="tbs-test">
+    <test-suite testunit="tbs100K-test">
+
+      <init-hook>
+        <ant target="restoreCatalog"/>
+      </init-hook>
+
+      <test name="creschema">
+        <test-metadata>
+          <withIndex value="false"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/noidx/creschema.sql"/>
+      </test>
+        
+      <test name="benchIns100k" requiresSuccess="creschema">
+        <test-metadata>
+          <withIndex value="false"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/noidx/benchins100K.sql"/>
+      </test>
+
+      <test name="q0_100k" requiresSuccess="creschema,benchIns100k">
+        <test-metadata>
+          <withIndex value="false"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/noidx/q0_100K.sql"/>
+      </test>
+
+      <test name="qor_100k" requiresSuccess="creschema,benchIns100k">
+        <test-metadata>
+          <withIndex value="false"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/noidx/qor_100k.sql"/>
+      </test>
+
+      <test name="q1_100k" requiresSuccess="creschema,benchIns100k">
+        <test-metadata>
+          <withIndex value="false"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/noidx/q1_100k.sql"/>
+      </test>
+
+      <test name="q2a_100k" requiresSuccess="creschema,benchIns100k">
+        <test-metadata>
+          <withIndex value="false"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/noidx/q2a_100k.sql"/>
+      </test>
+
+      <test name="q3a_100k" requiresSuccess="creschema,benchIns100k">
+        <test-metadata>
+          <withIndex value="false"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/noidx/q3a_100k.sql"/>
+      </test>
+
+      <test name="q3b_100k" requiresSuccess="creschema,benchIns100k">
+        <test-metadata>
+          <withIndex value="false"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/noidx/q3b_100k.sql"/>
+      </test>
+
+      <!-- tests for multiple insert -->
+    </test-suite>
+  </target>
+</project>        

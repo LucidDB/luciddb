@@ -1,8 +1,14 @@
+set schema 's';
+
 SELECT KSEQ FROM BENCH10K WHERE K100 BETWEEN 10 AND 20 AND K25 = 5
-;
+order by 1;
+
+-- IN not supported yet, P2
 SELECT KSEQ FROM BENCH10K WHERE K4 IN (1,2)               
-;   
+order by 1;
+   
 SELECT KSEQ FROM BENCH10K WHERE K100 BETWEEN 10 AND 20 AND K25 = 5
-;
+order by 1;
+
 SELECT KSEQ FROM BENCH10K WHERE K100 BETWEEN 10 AND 20 OR K25 = 5
-;
+order by 1;

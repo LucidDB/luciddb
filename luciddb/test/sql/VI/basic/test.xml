@@ -3,16 +3,14 @@
     <test-suite testunit="basic-test">
 
       <init-hook>
-        <test name="restoreCatalog" testunit="basic-init-test">
-          <ant-task>
-            <ant target="restoreCatalog"/>
-          </ant-task>
-        </test>
+        <ant target="restoreCatalog"/>
       </init-hook>
 
       <test name="viload">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/basic/gen/${config.prop}/viload.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <test-metadata>
+          <withIndex value="true"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/basic/viload.sql"/>
       </test>
       
     </test-suite>

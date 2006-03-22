@@ -1,0 +1,16 @@
+0: jdbc:luciddb:> ------------------------------------------------------------------------------
+0: jdbc:luciddb:> -----
+0: jdbc:luciddb:> -- Basic setup for our tests
+0: jdbc:luciddb:> -----
+0: jdbc:luciddb:> ------------------------------------------------------------------------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --{{{ Run basic setup
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --create shema
+0: jdbc:luciddb:> CREATE SCHEMA CST
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --}}}
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

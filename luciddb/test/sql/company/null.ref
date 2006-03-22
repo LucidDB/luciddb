@@ -1,0 +1,160 @@
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- null tests: test queries on columns with NULLS
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- single table
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME from EMP where COMMISSION is NULL order by 1;
++-----------+
+|   LNAME   |
++-----------+
+| Andrews   |
+| Brown     |
+| Bush      |
+| Fratz     |
+| Guy       |
+| Jones     |
+| Reynolds  |
+| Webber    |
++-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME, COMMISSION from EMP where COMMISSION is NOT NULL order by 1,2;
++-----------+-------------+
+|   LNAME   | COMMISSION  |
++-----------+-------------+
+| Nife      | 5           |
+| Roy       | 7           |
+| Williams  | 10          |
++-----------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME, COMMISSION from EMP where COMMISSION=10 order by 1,2;
++-----------+-------------+
+|   LNAME   | COMMISSION  |
++-----------+-------------+
+| Williams  | 10          |
++-----------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME, COMMISSION from EMP where COMMISSION<>10 order by 1,2;
++--------+-------------+
+| LNAME  | COMMISSION  |
++--------+-------------+
+| Nife   | 5           |
+| Roy    | 7           |
++--------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME, COMMISSION from EMP where NOT (COMMISSION=10) order by 1,2;
++-----------+-------------+
+|   LNAME   | COMMISSION  |
++-----------+-------------+
+| Andrews   |             |
+| Brown     |             |
+| Bush      |             |
+| Fratz     |             |
+| Guy       |             |
+| Jones     |             |
+| Nife      | 5           |
+| Reynolds  |             |
+| Roy       | 7           |
+| Webber    |             |
++-----------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME, COMMISSION from EMP where COMMISSION < 10 order by 1,2;
++--------+-------------+
+| LNAME  | COMMISSION  |
++--------+-------------+
+| Nife   | 5           |
+| Roy    | 7           |
++--------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME, COMMISSION from EMP where COMMISSION > 5 order by 1,2;
++-----------+-------------+
+|   LNAME   | COMMISSION  |
++-----------+-------------+
+| Roy       | 7           |
+| Williams  | 10          |
++-----------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- join on nulls
+0: jdbc:luciddb:> -- bitmap indexes not supported yet for joins, extremely slow
+0: jdbc:luciddb:> --select L.LNAME, R.LNAME, L.COMMISSION
+0: jdbc:luciddb:> --from EMP L, EMP R
+0: jdbc:luciddb:> --where L.COMMISSION = R.COMMISSION
+0: jdbc:luciddb:> --order by 1,2,3;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --select L.LNAME, R.LNAME, L.COMMISSION
+0: jdbc:luciddb:> --from EMP L, EMP R
+0: jdbc:luciddb:> --where NOT L.COMMISSION = R.COMMISSION
+0: jdbc:luciddb:> --order by 1,2,3;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --select L.LNAME, R.LNAME, L.COMMISSION
+0: jdbc:luciddb:> --from EMP L, EMP R
+0: jdbc:luciddb:> --where L.COMMISSION <> R.COMMISSION
+0: jdbc:luciddb:> --order by 1,2,3;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --select L.LNAME, R.LNAME, L.COMMISSION
+0: jdbc:luciddb:> --from EMP L, EMP R
+0: jdbc:luciddb:> --where L.COMMISSION < R.COMMISSION
+0: jdbc:luciddb:> --order by 1,2,3;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --select L.LNAME, R.LNAME, L.COMMISSION
+0: jdbc:luciddb:> --from EMP L, EMP R
+0: jdbc:luciddb:> --where L.COMMISSION >= R.COMMISSION
+0: jdbc:luciddb:> --order by 1,2,3;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- count (should not count null rows, except for count(*))
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from EMP;
++---------+
+| EXPR$0  |
++---------+
+| 11      |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(COMMISSION) from EMP;
++---------+
+| EXPR$0  |
++---------+
+| 3       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- order by (puts nulls first)
+0: jdbc:luciddb:> select lname, commission from emp order by 2,1;
++-----------+-------------+
+|   LNAME   | COMMISSION  |
++-----------+-------------+
+| Andrews   |             |
+| Brown     |             |
+| Bush      |             |
+| Fratz     |             |
+| Guy       |             |
+| Jones     |             |
+| Reynolds  |             |
+| Webber    |             |
+| Nife      | 5           |
+| Roy       | 7           |
+| Williams  | 10          |
++-----------+-------------+
+0: jdbc:luciddb:> select lname, commission from emp order by 2 DESC,1 DESC;
+Error: java.lang.UnsupportedOperationException: class org.eigenbase.sql.SqlCall: 2 DESC (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Aggregates on empty tables should return 0 or NULL depending on the aggregate and group by ( Bugid 1578 )
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*), 1+count(*), sum(emp.deptno), count(emp.deptno)
+. . . . . . . . >  from emp,dept where emp.deptno=dept.deptno and emp.empno<0 and dept.locid='zz';
++---------+---------+---------+---------+
+| EXPR$0  | EXPR$1  | EXPR$2  | EXPR$3  |
++---------+---------+---------+---------+
+| 0       | 1       |         | 0       |
++---------+---------+---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*), 1+count(*), sum(emp.deptno), count(emp.deptno)
+. . . . . . . . >  from emp,dept where emp.deptno=dept.deptno and emp.empno<0 and dept.locid='zz' group by emp.deptno;
++---------+---------+---------+---------+
+| EXPR$0  | EXPR$1  | EXPR$2  | EXPR$3  |
++---------+---------+---------+---------+
++---------+---------+---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

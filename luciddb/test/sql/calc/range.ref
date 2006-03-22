@@ -1,0 +1,33 @@
+0: jdbc:luciddb:> -- test more bugs  (range of numeric types)
+0: jdbc:luciddb:> -- Was calc13.sql
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table numbers (a tinyint, b smallint, c numeric (7,3))
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into numbers values (120, 32000, 1234.123)
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into numbers values (-120, -32000, -1234.123)
+. . . . . . . . > ;
+0: jdbc:luciddb:> insert into numbers values (130, 66000, 12345.123)
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=0 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> insert into numbers values (-130, -66000, -12345.123)
+. . . . . . . . > ;
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=0 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> select * from numbers order by 1
+. . . . . . . . > ;
++-------+---------+------------+
+|   A   |    B    |     C      |
++-------+---------+------------+
+| -120  | -32000  | -1234.123  |
+| 120   | 32000   | 1234.123   |
++-------+---------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

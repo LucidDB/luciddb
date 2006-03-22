@@ -1,0 +1,1342 @@
+0: jdbc:luciddb:> ------------------------------------------------------------------------------
+0: jdbc:luciddb:> -----
+0: jdbc:luciddb:> --  Tests for basic CAST functionality
+0: jdbc:luciddb:> -----
+0: jdbc:luciddb:> ------------------------------------------------------------------------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Create and populate a table with all datatypes we support
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> alter system set "codeCacheMaxBytes"=min;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE TABLE CST.alltypes (
+. . . . . . . . > t1 bigint primary key, 
+. . . . . . . . > -- t2 bit, 
+. . . . . . . . > t2 boolean, 
+. . . . . . . . > t3 char(21),
+. . . . . . . . > t4 date, 
+. . . . . . . . > t5 decimal, 
+. . . . . . . . > t6 double,
+. . . . . . . . > t7 float, 
+. . . . . . . . > t8 integer, 
+. . . . . . . . > -- t9 long varbinary,
+. . . . . . . . > -- t10 long varchar,
+. . . . . . . . > t11_1 numeric(8,4), t11_2 numeric(6,2), 
+. . . . . . . . > t12 real, 
+. . . . . . . . > t13 smallint,
+. . . . . . . . > t14 time, 
+. . . . . . . . > t15 timestamp, 
+. . . . . . . . > t16 tinyint, 
+. . . . . . . . > t17 varbinary(10), 
+. . . . . . . . > t18 varchar(23))
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --populate the table
+0: jdbc:luciddb:> INSERT INTO CST.alltypes VALUES (
+. . . . . . . . > 124429,
+. . . . . . . . > -- 1, 
+. . . . . . . . > true, 
+. . . . . . . . > 'v lesu rodilas', 
+. . . . . . . . > date '1996-11-30', 
+. . . . . . . . > 4.56, 
+. . . . . . . . > 134.23321, 
+. . . . . . . . > 223.1123,
+. . . . . . . . > 1324259, 
+. . . . . . . . > -- B'101',
+. . . . . . . . > -- 'v lesu on rosla',
+. . . . . . . . > 12.3, 45.3,
+. . . . . . . . > 1232.4581,
+. . . . . . . . > 69,
+. . . . . . . . > time '9:21:43',
+. . . . . . . . > timestamp '1996-11-30 9:21:43',
+. . . . . . . . > 15,
+. . . . . . . . > X'1101001010',
+. . . . . . . . > 'zimoy i letom stroynaya')
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --see what we have in there
+0: jdbc:luciddb:> SELECT * 
+. . . . . . . . > FROM CST.alltypes
+. . . . . . . . > ;
++---------+-------+------------------------+-------------+-----+------------+-----------+----------+----------+--------+------------+------+-----------+------------------------+------+-------------+--------------------------+
+|   T1    |  T2   |           T3           |     T4      | T5  |     T6     |    T7     |    T8    |  T11_1   | T11_2  |    T12     | T13  |    T14    |          T15           | T16  |     T17     |           T18            |
++---------+-------+------------------------+-------------+-----+------------+-----------+----------+----------+--------+------------+------+-----------+------------------------+------+-------------+--------------------------+
+| 124429  | true  | v lesu rodilas         | 1996-11-30  | 5   | 134.23321  | 223.1123  | 1324259  | 12.3000  | 45.30  | 1232.4581  | 69   | 09:21:43  | 1996-11-30 09:21:43.0  | 15   | 1101001010  | zimoy i letom stroynaya  |
++---------+-------+------------------------+-------------+-----+------------+-----------+----------+----------+--------+------------+------+-----------+------------------------+------+-------------+--------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- t1
+0: jdbc:luciddb:> SELECT t1, CAST (t1 AS bigint) FROM CST.alltypes;
++---------+---------+
+|   T1    | EXPR$1  |
++---------+---------+
+| 124429  | 124429  |
++---------+---------+
+0: jdbc:luciddb:> -- SELECT t1, CAST (t1 AS bit) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t1, CAST (t1 AS boolean) FROM CST.alltypes;
+Error: Cast function cannot convert value of type BIGINT to type BOOLEAN (state=,code=0)
+0: jdbc:luciddb:> SELECT t1, CAST (t1 AS char(21)) FROM CST.alltypes;
++---------+------------------------+
+|   T1    |         EXPR$1         |
++---------+------------------------+
+| 124429  | 124429                 |
++---------+------------------------+
+0: jdbc:luciddb:> SELECT t1, CAST (t1 AS date) FROM CST.alltypes;
+Error: Cast function cannot convert value of type BIGINT to type DATE (state=,code=0)
+0: jdbc:luciddb:> SELECT t1, CAST (t1 AS decimal) FROM CST.alltypes;
++---------+---------+
+|   T1    | EXPR$1  |
++---------+---------+
+| 124429  | 124429  |
++---------+---------+
+0: jdbc:luciddb:> SELECT t1, CAST (t1 AS double) FROM CST.alltypes;
++---------+-----------+
+|   T1    |  EXPR$1   |
++---------+-----------+
+| 124429  | 124429.0  |
++---------+-----------+
+0: jdbc:luciddb:> SELECT t1, CAST (t1 AS float) FROM CST.alltypes;
++---------+-----------+
+|   T1    |  EXPR$1   |
++---------+-----------+
+| 124429  | 124429.0  |
++---------+-----------+
+0: jdbc:luciddb:> SELECT t1, CAST (t1 AS integer) FROM CST.alltypes;
++---------+---------+
+|   T1    | EXPR$1  |
++---------+---------+
+| 124429  | 124429  |
++---------+---------+
+0: jdbc:luciddb:> -- SELECT t1, CAST (t1 AS long varbinary) FROM CST.alltypes;
+0: jdbc:luciddb:> -- SELECT t1, CAST (t1 AS long varchar) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t1, CAST (t1 AS numeric(8,4)) FROM CST.alltypes;
+Error: Overflow during calculation or cast. (state=,code=0)
+0: jdbc:luciddb:> SELECT t1, CAST (t1 AS numeric(6,2)) FROM CST.alltypes;
+Error: Overflow during calculation or cast. (state=,code=0)
+0: jdbc:luciddb:> SELECT t1, CAST (t1 AS real) FROM CST.alltypes;
++---------+-----------+
+|   T1    |  EXPR$1   |
++---------+-----------+
+| 124429  | 124429.0  |
++---------+-----------+
+0: jdbc:luciddb:> SELECT t1, CAST (t1 AS smallint) FROM CST.alltypes;
+Error: Overflow during calculation or cast. (state=,code=0)
+0: jdbc:luciddb:> SELECT t1, CAST (t1 AS time) FROM CST.alltypes;
+Error: Cast function cannot convert value of type BIGINT to type TIME (state=,code=0)
+0: jdbc:luciddb:> SELECT t1, CAST (t1 AS timestamp) FROM CST.alltypes;
+Error: Cast function cannot convert value of type BIGINT to type TIMESTAMP (state=,code=0)
+0: jdbc:luciddb:> SELECT t1, CAST (t1 AS tinyint) FROM CST.alltypes;
+Error: Overflow during calculation or cast. (state=,code=0)
+0: jdbc:luciddb:> SELECT t1, CAST (t1 AS varbinary(10)) FROM CST.alltypes;
+Error: Cast function cannot convert value of type BIGINT to type VARBINARY(10) (state=,code=0)
+0: jdbc:luciddb:> SELECT t1, CAST (t1 AS varchar(23)) FROM CST.alltypes;
++---------+---------+
+|   T1    | EXPR$1  |
++---------+---------+
+| 124429  | 124429  |
++---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- t2
+0: jdbc:luciddb:> SELECT t2, CAST (t2 AS bigint) FROM CST.alltypes;
+Error: Cast function cannot convert value of type BOOLEAN to type BIGINT (state=,code=0)
+0: jdbc:luciddb:> -- SELECT t2, CAST (t2 AS bit) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t2, CAST (t2 AS boolean) FROM CST.alltypes;
++-------+---------+
+|  T2   | EXPR$1  |
++-------+---------+
+| true  | true    |
++-------+---------+
+0: jdbc:luciddb:> SELECT t2, CAST (t2 AS char(21)) FROM CST.alltypes;
++-------+------------------------+
+|  T2   |         EXPR$1         |
++-------+------------------------+
+| true  | TRUE                   |
++-------+------------------------+
+0: jdbc:luciddb:> SELECT t2, CAST (t2 AS date) FROM CST.alltypes;
+Error: Cast function cannot convert value of type BOOLEAN to type DATE (state=,code=0)
+0: jdbc:luciddb:> SELECT t2, CAST (t2 AS decimal) FROM CST.alltypes;
+Error: Cast function cannot convert value of type BOOLEAN to type DECIMAL (state=,code=0)
+0: jdbc:luciddb:> SELECT t2, CAST (t2 AS double) FROM CST.alltypes;
+Error: Cast function cannot convert value of type BOOLEAN to type DOUBLE (state=,code=0)
+0: jdbc:luciddb:> SELECT t2, CAST (t2 AS float) FROM CST.alltypes;
+Error: Cast function cannot convert value of type BOOLEAN to type FLOAT (state=,code=0)
+0: jdbc:luciddb:> SELECT t2, CAST (t2 AS integer) FROM CST.alltypes;
+Error: Cast function cannot convert value of type BOOLEAN to type INTEGER (state=,code=0)
+0: jdbc:luciddb:> -- SELECT t2, CAST (t2 AS long varbinary) FROM CST.alltypes;
+0: jdbc:luciddb:> -- SELECT t2, CAST (t2 AS long varchar) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t2, CAST (t2 AS numeric(8,4)) FROM CST.alltypes;
+Error: Cast function cannot convert value of type BOOLEAN to type DECIMAL(8, 4) (state=,code=0)
+0: jdbc:luciddb:> SELECT t2, CAST (t2 AS numeric(6,2)) FROM CST.alltypes;
+Error: Cast function cannot convert value of type BOOLEAN to type DECIMAL(6, 2) (state=,code=0)
+0: jdbc:luciddb:> SELECT t2, CAST (t2 AS real) FROM CST.alltypes;
+Error: Cast function cannot convert value of type BOOLEAN to type REAL (state=,code=0)
+0: jdbc:luciddb:> SELECT t2, CAST (t2 AS smallint) FROM CST.alltypes;
+Error: Cast function cannot convert value of type BOOLEAN to type SMALLINT (state=,code=0)
+0: jdbc:luciddb:> SELECT t2, CAST (t2 AS time) FROM CST.alltypes;
+Error: Cast function cannot convert value of type BOOLEAN to type TIME (state=,code=0)
+0: jdbc:luciddb:> SELECT t2, CAST (t2 AS timestamp) FROM CST.alltypes;
+Error: Cast function cannot convert value of type BOOLEAN to type TIMESTAMP (state=,code=0)
+0: jdbc:luciddb:> SELECT t2, CAST (t2 AS tinyint) FROM CST.alltypes;
+Error: Cast function cannot convert value of type BOOLEAN to type TINYINT (state=,code=0)
+0: jdbc:luciddb:> SELECT t2, CAST (t2 AS varbinary(10)) FROM CST.alltypes;
+Error: Cast function cannot convert value of type BOOLEAN to type VARBINARY(10) (state=,code=0)
+0: jdbc:luciddb:> SELECT t2, CAST (t2 AS varchar(23)) FROM CST.alltypes;
++-------+---------+
+|  T2   | EXPR$1  |
++-------+---------+
+| true  | TRUE    |
++-------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- t3
+0: jdbc:luciddb:> SELECT t3, CAST (t3 AS bigint) FROM CST.alltypes;
+Error: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
+0: jdbc:luciddb:> -- SELECT t3, CAST (t3 AS bit) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t3, CAST (t3 AS boolean) FROM CST.alltypes;
+Error: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
+0: jdbc:luciddb:> SELECT t3, CAST (t3 AS char(21)) FROM CST.alltypes;
++------------------------+------------------------+
+|           T3           |         EXPR$1         |
++------------------------+------------------------+
+| v lesu rodilas         | v lesu rodilas         |
++------------------------+------------------------+
+0: jdbc:luciddb:> SELECT t3, CAST (t3 AS date) FROM CST.alltypes;
+Error: Cannot assign 'v lesu rodilas       ' to a DATE value: not in format 'yyyy-MM-dd' (state=,code=0)
+0: jdbc:luciddb:> SELECT t3, CAST (t3 AS decimal) FROM CST.alltypes;
+Error: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
+0: jdbc:luciddb:> SELECT t3, CAST (t3 AS double) FROM CST.alltypes;
+Error: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
+0: jdbc:luciddb:> SELECT t3, CAST (t3 AS float) FROM CST.alltypes;
+Error: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
+0: jdbc:luciddb:> SELECT t3, CAST (t3 AS integer) FROM CST.alltypes;
+Error: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
+0: jdbc:luciddb:> -- SELECT t3, CAST (t3 AS long varbinary) FROM CST.alltypes;
+0: jdbc:luciddb:> -- SELECT t3, CAST (t3 AS long varchar) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t3, CAST (t3 AS numeric(8,4)) FROM CST.alltypes;
+Error: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
+0: jdbc:luciddb:> SELECT t3, CAST (t3 AS numeric(6,2)) FROM CST.alltypes;
+Error: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
+0: jdbc:luciddb:> SELECT t3, CAST (t3 AS real) FROM CST.alltypes;
+Error: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
+0: jdbc:luciddb:> SELECT t3, CAST (t3 AS smallint) FROM CST.alltypes;
+Error: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
+0: jdbc:luciddb:> SELECT t3, CAST (t3 AS time) FROM CST.alltypes;
+Error: Cannot assign 'v lesu rodilas       ' to a TIME value: not in format 'HH:mm:ss' (state=,code=0)
+0: jdbc:luciddb:> SELECT t3, CAST (t3 AS timestamp) FROM CST.alltypes;
+Error: Cannot assign 'v lesu rodilas       ' to a TIMESTAMP value: not in format 'yyyy-MM-dd HH:mm:ss' (state=,code=0)
+0: jdbc:luciddb:> SELECT t3, CAST (t3 AS tinyint) FROM CST.alltypes;
+Error: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
+0: jdbc:luciddb:> SELECT t3, CAST (t3 AS varbinary(10)) FROM CST.alltypes;
+Error: Cast function cannot convert value of type CHAR(21) to type VARBINARY(10) (state=,code=0)
+0: jdbc:luciddb:> SELECT t3, CAST (t3 AS varchar(23)) FROM CST.alltypes;
++------------------------+------------------------+
+|           T3           |         EXPR$1         |
++------------------------+------------------------+
+| v lesu rodilas         | v lesu rodilas         |
++------------------------+------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- t4
+0: jdbc:luciddb:> SELECT t4, CAST (t4 AS bigint) FROM CST.alltypes;
+Error: Cannot assign '1996-11-30' to a NUMERIC value: NumberFormatException (state=,code=0)
+0: jdbc:luciddb:> -- SELECT t4, CAST (t4 AS bit) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t4, CAST (t4 AS boolean) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DATE to type BOOLEAN (state=,code=0)
+0: jdbc:luciddb:> SELECT t4, CAST (t4 AS char(21)) FROM CST.alltypes;
++-------------+------------------------+
+|     T4      |         EXPR$1         |
++-------------+------------------------+
+| 1996-11-30  | 1996-11-30             |
++-------------+------------------------+
+0: jdbc:luciddb:> SELECT t4, CAST (t4 AS date) FROM CST.alltypes;
++-------------+-------------+
+|     T4      |   EXPR$1    |
++-------------+-------------+
+| 1996-11-30  | 1996-11-30  |
++-------------+-------------+
+0: jdbc:luciddb:> SELECT t4, CAST (t4 AS decimal) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DATE to type DECIMAL (state=,code=0)
+0: jdbc:luciddb:> SELECT t4, CAST (t4 AS double) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DATE to type DOUBLE (state=,code=0)
+0: jdbc:luciddb:> SELECT t4, CAST (t4 AS float) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DATE to type FLOAT (state=,code=0)
+0: jdbc:luciddb:> SELECT t4, CAST (t4 AS integer) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DATE to type INTEGER (state=,code=0)
+0: jdbc:luciddb:> -- SELECT t4, CAST (t4 AS long varbinary) FROM CST.alltypes;
+0: jdbc:luciddb:> -- SELECT t4, CAST (t4 AS long varchar) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t4, CAST (t4 AS numeric(8,4)) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DATE to type DECIMAL(8, 4) (state=,code=0)
+0: jdbc:luciddb:> SELECT t4, CAST (t4 AS numeric(6,2)) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DATE to type DECIMAL(6, 2) (state=,code=0)
+0: jdbc:luciddb:> SELECT t4, CAST (t4 AS real) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DATE to type REAL (state=,code=0)
+0: jdbc:luciddb:> SELECT t4, CAST (t4 AS smallint) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DATE to type SMALLINT (state=,code=0)
+0: jdbc:luciddb:> SELECT t4, CAST (t4 AS time) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DATE to type TIME (state=,code=0)
+0: jdbc:luciddb:> -- FRG-20
+0: jdbc:luciddb:> SELECT t4, CAST (t4 AS timestamp) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DATE to type TIMESTAMP (state=,code=0)
+0: jdbc:luciddb:> SELECT t4, CAST (t4 AS tinyint) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DATE to type TINYINT (state=,code=0)
+0: jdbc:luciddb:> SELECT t4, CAST (t4 AS varbinary(10)) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DATE to type VARBINARY(10) (state=,code=0)
+0: jdbc:luciddb:> SELECT t4, CAST (t4 AS varchar(23)) FROM CST.alltypes;
++-------------+-------------+
+|     T4      |   EXPR$1    |
++-------------+-------------+
+| 1996-11-30  | 1996-11-30  |
++-------------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- t5
+0: jdbc:luciddb:> SELECT t5, CAST (t5 AS bigint) FROM CST.alltypes;
++-----+---------+
+| T5  | EXPR$1  |
++-----+---------+
+| 5   | 5       |
++-----+---------+
+0: jdbc:luciddb:> -- SELECT t5, CAST (t5 AS bit) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t5, CAST (t5 AS boolean) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DECIMAL to type BOOLEAN (state=,code=0)
+0: jdbc:luciddb:> SELECT t5, CAST (t5 AS char(21)) FROM CST.alltypes;
++-----+------------------------+
+| T5  |         EXPR$1         |
++-----+------------------------+
+| 5   | 5                      |
++-----+------------------------+
+0: jdbc:luciddb:> SELECT t5, CAST (t5 AS date) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DECIMAL to type DATE (state=,code=0)
+0: jdbc:luciddb:> SELECT t5, CAST (t5 AS decimal) FROM CST.alltypes;
++-----+---------+
+| T5  | EXPR$1  |
++-----+---------+
+| 5   | 5       |
++-----+---------+
+0: jdbc:luciddb:> SELECT t5, CAST (t5 AS double) FROM CST.alltypes;
++-----+---------+
+| T5  | EXPR$1  |
++-----+---------+
+| 5   | 5.0     |
++-----+---------+
+0: jdbc:luciddb:> SELECT t5, CAST (t5 AS float) FROM CST.alltypes;
++-----+---------+
+| T5  | EXPR$1  |
++-----+---------+
+| 5   | 5.0     |
++-----+---------+
+0: jdbc:luciddb:> SELECT t5, CAST (t5 AS integer) FROM CST.alltypes;
++-----+---------+
+| T5  | EXPR$1  |
++-----+---------+
+| 5   | 5       |
++-----+---------+
+0: jdbc:luciddb:> -- SELECT t5, CAST (t5 AS long varbinary) FROM CST.alltypes;
+0: jdbc:luciddb:> -- SELECT t5, CAST (t5 AS long varchar) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t5, CAST (t5 AS numeric(8,4)) FROM CST.alltypes;
++-----+---------+
+| T5  | EXPR$1  |
++-----+---------+
+| 5   | 5.0000  |
++-----+---------+
+0: jdbc:luciddb:> SELECT t5, CAST (t5 AS numeric(6,2)) FROM CST.alltypes;
++-----+---------+
+| T5  | EXPR$1  |
++-----+---------+
+| 5   | 5.00    |
++-----+---------+
+0: jdbc:luciddb:> SELECT t5, CAST (t5 AS real) FROM CST.alltypes;
++-----+---------+
+| T5  | EXPR$1  |
++-----+---------+
+| 5   | 5.0     |
++-----+---------+
+0: jdbc:luciddb:> SELECT t5, CAST (t5 AS smallint) FROM CST.alltypes;
++-----+---------+
+| T5  | EXPR$1  |
++-----+---------+
+| 5   | 5       |
++-----+---------+
+0: jdbc:luciddb:> SELECT t5, CAST (t5 AS time) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DECIMAL to type TIME (state=,code=0)
+0: jdbc:luciddb:> SELECT t5, CAST (t5 AS timestamp) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DECIMAL to type TIMESTAMP (state=,code=0)
+0: jdbc:luciddb:> SELECT t5, CAST (t5 AS tinyint) FROM CST.alltypes;
++-----+---------+
+| T5  | EXPR$1  |
++-----+---------+
+| 5   | 5       |
++-----+---------+
+0: jdbc:luciddb:> SELECT t5, CAST (t5 AS varbinary(10)) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DECIMAL to type VARBINARY(10) (state=,code=0)
+0: jdbc:luciddb:> SELECT t5, CAST (t5 AS varchar(23)) FROM CST.alltypes;
++-----+---------+
+| T5  | EXPR$1  |
++-----+---------+
+| 5   | 5       |
++-----+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- t6
+0: jdbc:luciddb:> SELECT t6, CAST (t6 AS bigint) FROM CST.alltypes;
++------------+---------+
+|     T6     | EXPR$1  |
++------------+---------+
+| 134.23321  | 134     |
++------------+---------+
+0: jdbc:luciddb:> -- SELECT t6, CAST (t6 AS bit) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t6, CAST (t6 AS boolean) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DOUBLE to type BOOLEAN (state=,code=0)
+0: jdbc:luciddb:> SELECT t6, CAST (t6 AS char(21)) FROM CST.alltypes;
++------------+------------------------+
+|     T6     |         EXPR$1         |
++------------+------------------------+
+| 134.23321  | 1.3423321E2            |
++------------+------------------------+
+0: jdbc:luciddb:> SELECT t6, CAST (t6 AS date) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DOUBLE to type DATE (state=,code=0)
+0: jdbc:luciddb:> SELECT t6, CAST (t6 AS decimal) FROM CST.alltypes;
++------------+---------+
+|     T6     | EXPR$1  |
++------------+---------+
+| 134.23321  | 134     |
++------------+---------+
+0: jdbc:luciddb:> SELECT t6, CAST (t6 AS double) FROM CST.alltypes;
++------------+------------+
+|     T6     |   EXPR$1   |
++------------+------------+
+| 134.23321  | 134.23321  |
++------------+------------+
+0: jdbc:luciddb:> SELECT t6, CAST (t6 AS float) FROM CST.alltypes;
++------------+------------+
+|     T6     |   EXPR$1   |
++------------+------------+
+| 134.23321  | 134.23321  |
++------------+------------+
+0: jdbc:luciddb:> SELECT t6, CAST (t6 AS integer) FROM CST.alltypes;
++------------+---------+
+|     T6     | EXPR$1  |
++------------+---------+
+| 134.23321  | 134     |
++------------+---------+
+0: jdbc:luciddb:> -- SELECT t6, CAST (t6 AS long varbinary) FROM CST.alltypes;
+0: jdbc:luciddb:> -- SELECT t6, CAST (t6 AS long varchar) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t6, CAST (t6 AS numeric(8,4)) FROM CST.alltypes;
++------------+-----------+
+|     T6     |  EXPR$1   |
++------------+-----------+
+| 134.23321  | 134.2332  |
++------------+-----------+
+0: jdbc:luciddb:> SELECT t6, CAST (t6 AS numeric(6,2)) FROM CST.alltypes;
++------------+---------+
+|     T6     | EXPR$1  |
++------------+---------+
+| 134.23321  | 134.23  |
++------------+---------+
+0: jdbc:luciddb:> SELECT t6, CAST (t6 AS real) FROM CST.alltypes;
++------------+------------+
+|     T6     |   EXPR$1   |
++------------+------------+
+| 134.23321  | 134.23322  |
++------------+------------+
+0: jdbc:luciddb:> SELECT t6, CAST (t6 AS smallint) FROM CST.alltypes;
++------------+---------+
+|     T6     | EXPR$1  |
++------------+---------+
+| 134.23321  | 134     |
++------------+---------+
+0: jdbc:luciddb:> SELECT t6, CAST (t6 AS time) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DOUBLE to type TIME (state=,code=0)
+0: jdbc:luciddb:> SELECT t6, CAST (t6 AS timestamp) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DOUBLE to type TIMESTAMP (state=,code=0)
+0: jdbc:luciddb:> SELECT t6, CAST (t6 AS tinyint) FROM CST.alltypes;
++------------+---------+
+|     T6     | EXPR$1  |
++------------+---------+
+| 134.23321  | -122    |
++------------+---------+
+0: jdbc:luciddb:> SELECT t6, CAST (t6 AS varbinary(10)) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DOUBLE to type VARBINARY(10) (state=,code=0)
+0: jdbc:luciddb:> SELECT t6, CAST (t6 AS varchar(23)) FROM CST.alltypes;
++------------+--------------+
+|     T6     |    EXPR$1    |
++------------+--------------+
+| 134.23321  | 1.3423321E2  |
++------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- t7
+0: jdbc:luciddb:> SELECT t7, CAST (t7 AS bigint) FROM CST.alltypes;
++-----------+---------+
+|    T7     | EXPR$1  |
++-----------+---------+
+| 223.1123  | 223     |
++-----------+---------+
+0: jdbc:luciddb:> -- SELECT t7, CAST (t7 AS bit) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t7, CAST (t7 AS boolean) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DOUBLE to type BOOLEAN (state=,code=0)
+0: jdbc:luciddb:> SELECT t7, CAST (t7 AS char(21)) FROM CST.alltypes;
++-----------+------------------------+
+|    T7     |         EXPR$1         |
++-----------+------------------------+
+| 223.1123  | 2.231123E2             |
++-----------+------------------------+
+0: jdbc:luciddb:> SELECT t7, CAST (t7 AS date) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DOUBLE to type DATE (state=,code=0)
+0: jdbc:luciddb:> SELECT t7, CAST (t7 AS decimal) FROM CST.alltypes;
++-----------+---------+
+|    T7     | EXPR$1  |
++-----------+---------+
+| 223.1123  | 223     |
++-----------+---------+
+0: jdbc:luciddb:> SELECT t7, CAST (t7 AS double) FROM CST.alltypes;
++-----------+-----------+
+|    T7     |  EXPR$1   |
++-----------+-----------+
+| 223.1123  | 223.1123  |
++-----------+-----------+
+0: jdbc:luciddb:> SELECT t7, CAST (t7 AS float) FROM CST.alltypes;
++-----------+-----------+
+|    T7     |  EXPR$1   |
++-----------+-----------+
+| 223.1123  | 223.1123  |
++-----------+-----------+
+0: jdbc:luciddb:> SELECT t7, CAST (t7 AS integer) FROM CST.alltypes;
++-----------+---------+
+|    T7     | EXPR$1  |
++-----------+---------+
+| 223.1123  | 223     |
++-----------+---------+
+0: jdbc:luciddb:> -- SELECT t7, CAST (t7 AS long varbinary) FROM CST.alltypes;
+0: jdbc:luciddb:> -- SELECT t7, CAST (t7 AS long varchar) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t7, CAST (t7 AS numeric(8,4)) FROM CST.alltypes;
++-----------+-----------+
+|    T7     |  EXPR$1   |
++-----------+-----------+
+| 223.1123  | 223.1123  |
++-----------+-----------+
+0: jdbc:luciddb:> SELECT t7, CAST (t7 AS numeric(6,2)) FROM CST.alltypes;
++-----------+---------+
+|    T7     | EXPR$1  |
++-----------+---------+
+| 223.1123  | 223.11  |
++-----------+---------+
+0: jdbc:luciddb:> SELECT t7, CAST (t7 AS real) FROM CST.alltypes;
++-----------+-----------+
+|    T7     |  EXPR$1   |
++-----------+-----------+
+| 223.1123  | 223.1123  |
++-----------+-----------+
+0: jdbc:luciddb:> SELECT t7, CAST (t7 AS smallint) FROM CST.alltypes;
++-----------+---------+
+|    T7     | EXPR$1  |
++-----------+---------+
+| 223.1123  | 223     |
++-----------+---------+
+0: jdbc:luciddb:> SELECT t7, CAST (t7 AS time) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DOUBLE to type TIME (state=,code=0)
+0: jdbc:luciddb:> SELECT t7, CAST (t7 AS timestamp) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DOUBLE to type TIMESTAMP (state=,code=0)
+0: jdbc:luciddb:> SELECT t7, CAST (t7 AS tinyint) FROM CST.alltypes;
++-----------+---------+
+|    T7     | EXPR$1  |
++-----------+---------+
+| 223.1123  | -33     |
++-----------+---------+
+0: jdbc:luciddb:> SELECT t7, CAST (t7 AS varbinary(10)) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DOUBLE to type VARBINARY(10) (state=,code=0)
+0: jdbc:luciddb:> SELECT t7, CAST (t7 AS varchar(23)) FROM CST.alltypes;
++-----------+-------------+
+|    T7     |   EXPR$1    |
++-----------+-------------+
+| 223.1123  | 2.231123E2  |
++-----------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- t8
+0: jdbc:luciddb:> SELECT t8, CAST (t8 AS bigint) FROM CST.alltypes;
++----------+----------+
+|    T8    |  EXPR$1  |
++----------+----------+
+| 1324259  | 1324259  |
++----------+----------+
+0: jdbc:luciddb:> -- SELECT t8, CAST (t8 AS bit) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t8, CAST (t8 AS boolean) FROM CST.alltypes;
+Error: Cast function cannot convert value of type INTEGER to type BOOLEAN (state=,code=0)
+0: jdbc:luciddb:> SELECT t8, CAST (t8 AS char(21)) FROM CST.alltypes;
++----------+------------------------+
+|    T8    |         EXPR$1         |
++----------+------------------------+
+| 1324259  | 1324259                |
++----------+------------------------+
+0: jdbc:luciddb:> SELECT t8, CAST (t8 AS date) FROM CST.alltypes;
+Error: Cast function cannot convert value of type INTEGER to type DATE (state=,code=0)
+0: jdbc:luciddb:> SELECT t8, CAST (t8 AS decimal) FROM CST.alltypes;
++----------+----------+
+|    T8    |  EXPR$1  |
++----------+----------+
+| 1324259  | 1324259  |
++----------+----------+
+0: jdbc:luciddb:> SELECT t8, CAST (t8 AS double) FROM CST.alltypes;
++----------+------------+
+|    T8    |   EXPR$1   |
++----------+------------+
+| 1324259  | 1324259.0  |
++----------+------------+
+0: jdbc:luciddb:> SELECT t8, CAST (t8 AS float) FROM CST.alltypes;
++----------+------------+
+|    T8    |   EXPR$1   |
++----------+------------+
+| 1324259  | 1324259.0  |
++----------+------------+
+0: jdbc:luciddb:> SELECT t8, CAST (t8 AS integer) FROM CST.alltypes;
++----------+----------+
+|    T8    |  EXPR$1  |
++----------+----------+
+| 1324259  | 1324259  |
++----------+----------+
+0: jdbc:luciddb:> -- SELECT t8, CAST (t8 AS long varbinary) FROM CST.alltypes;
+0: jdbc:luciddb:> -- SELECT t8, CAST (t8 AS long varchar) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t8, CAST (t8 AS numeric(8,4)) FROM CST.alltypes;
+Error: Overflow during calculation or cast. (state=,code=0)
+0: jdbc:luciddb:> SELECT t8, CAST (t8 AS numeric(6,2)) FROM CST.alltypes;
+Error: Overflow during calculation or cast. (state=,code=0)
+0: jdbc:luciddb:> SELECT t8, CAST (t8 AS real) FROM CST.alltypes;
++----------+------------+
+|    T8    |   EXPR$1   |
++----------+------------+
+| 1324259  | 1324259.0  |
++----------+------------+
+0: jdbc:luciddb:> SELECT t8, CAST (t8 AS smallint) FROM CST.alltypes;
++----------+---------+
+|    T8    | EXPR$1  |
++----------+---------+
+| 1324259  | 13539   |
++----------+---------+
+0: jdbc:luciddb:> SELECT t8, CAST (t8 AS time) FROM CST.alltypes;
+Error: Cast function cannot convert value of type INTEGER to type TIME (state=,code=0)
+0: jdbc:luciddb:> SELECT t8, CAST (t8 AS timestamp) FROM CST.alltypes;
+Error: Cast function cannot convert value of type INTEGER to type TIMESTAMP (state=,code=0)
+0: jdbc:luciddb:> SELECT t8, CAST (t8 AS tinyint) FROM CST.alltypes;
++----------+---------+
+|    T8    | EXPR$1  |
++----------+---------+
+| 1324259  | -29     |
++----------+---------+
+0: jdbc:luciddb:> SELECT t8, CAST (t8 AS varbinary(10)) FROM CST.alltypes;
+Error: Cast function cannot convert value of type INTEGER to type VARBINARY(10) (state=,code=0)
+0: jdbc:luciddb:> SELECT t8, CAST (t8 AS varchar(23)) FROM CST.alltypes;
++----------+----------+
+|    T8    |  EXPR$1  |
++----------+----------+
+| 1324259  | 1324259  |
++----------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- t9
+0: jdbc:luciddb:> SELECT t9, CAST (t9 AS bigint) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+0: jdbc:luciddb:> -- SELECT t9, CAST (t9 AS bit) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t9, CAST (t9 AS boolean) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+0: jdbc:luciddb:> SELECT t9, CAST (t9 AS char(21)) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+0: jdbc:luciddb:> SELECT t9, CAST (t9 AS date) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+0: jdbc:luciddb:> SELECT t9, CAST (t9 AS decimal) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+0: jdbc:luciddb:> SELECT t9, CAST (t9 AS double) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+0: jdbc:luciddb:> SELECT t9, CAST (t9 AS float) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+0: jdbc:luciddb:> SELECT t9, CAST (t9 AS integer) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+0: jdbc:luciddb:> -- SELECT t9, CAST (t9 AS long varbinary) FROM CST.alltypes;
+0: jdbc:luciddb:> -- SELECT t9, CAST (t9 AS long varchar) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t9, CAST (t9 AS numeric(8,4)) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+0: jdbc:luciddb:> SELECT t9, CAST (t9 AS numeric(6,2)) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+0: jdbc:luciddb:> SELECT t9, CAST (t9 AS real) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+0: jdbc:luciddb:> SELECT t9, CAST (t9 AS smallint) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+0: jdbc:luciddb:> SELECT t9, CAST (t9 AS time) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+0: jdbc:luciddb:> SELECT t9, CAST (t9 AS timestamp) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+0: jdbc:luciddb:> SELECT t9, CAST (t9 AS tinyint) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+0: jdbc:luciddb:> SELECT t9, CAST (t9 AS varbinary(10)) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+0: jdbc:luciddb:> SELECT t9, CAST (t9 AS varchar(23)) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- t10
+0: jdbc:luciddb:> SELECT t10, CAST (t10 AS bigint) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+0: jdbc:luciddb:> -- SELECT t10, CAST (t10 AS bit) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t10, CAST (t10 AS boolean) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+0: jdbc:luciddb:> SELECT t10, CAST (t10 AS char(21)) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+0: jdbc:luciddb:> SELECT t10, CAST (t10 AS date) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+0: jdbc:luciddb:> SELECT t10, CAST (t10 AS decimal) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+0: jdbc:luciddb:> SELECT t10, CAST (t10 AS double) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+0: jdbc:luciddb:> SELECT t10, CAST (t10 AS float) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+0: jdbc:luciddb:> SELECT t10, CAST (t10 AS integer) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+0: jdbc:luciddb:> -- SELECT t10, CAST (t10 AS long varbinary) FROM CST.alltypes;
+0: jdbc:luciddb:> -- SELECT t10, CAST (t10 AS long varchar) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t10, CAST (t10 AS numeric(8,4)) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+0: jdbc:luciddb:> SELECT t10, CAST (t10 AS numeric(6,2)) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+0: jdbc:luciddb:> SELECT t10, CAST (t10 AS real) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+0: jdbc:luciddb:> SELECT t10, CAST (t10 AS smallint) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+0: jdbc:luciddb:> SELECT t10, CAST (t10 AS time) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+0: jdbc:luciddb:> SELECT t10, CAST (t10 AS timestamp) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+0: jdbc:luciddb:> SELECT t10, CAST (t10 AS tinyint) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+0: jdbc:luciddb:> SELECT t10, CAST (t10 AS varbinary(10)) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+0: jdbc:luciddb:> SELECT t10, CAST (t10 AS varchar(23)) FROM CST.alltypes;
+Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- t11_1
+0: jdbc:luciddb:> SELECT t11_1, CAST (t11_1 AS bigint) FROM CST.alltypes;
++----------+---------+
+|  T11_1   | EXPR$1  |
++----------+---------+
+| 12.3000  | 12      |
++----------+---------+
+0: jdbc:luciddb:> -- SELECT t11_1, CAST (t11_1 AS bit) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t11_1, CAST (t11_1 AS boolean) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DECIMAL(8, 4) to type BOOLEAN (state=,code=0)
+0: jdbc:luciddb:> SELECT t11_1, CAST (t11_1 AS char(21)) FROM CST.alltypes;
++----------+------------------------+
+|  T11_1   |         EXPR$1         |
++----------+------------------------+
+| 12.3000  | 12.3000                |
++----------+------------------------+
+0: jdbc:luciddb:> SELECT t11_1, CAST (t11_1 AS date) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DECIMAL(8, 4) to type DATE (state=,code=0)
+0: jdbc:luciddb:> SELECT t11_1, CAST (t11_1 AS decimal) FROM CST.alltypes;
++----------+---------+
+|  T11_1   | EXPR$1  |
++----------+---------+
+| 12.3000  | 12      |
++----------+---------+
+0: jdbc:luciddb:> SELECT t11_1, CAST (t11_1 AS double) FROM CST.alltypes;
++----------+---------+
+|  T11_1   | EXPR$1  |
++----------+---------+
+| 12.3000  | 12.3    |
++----------+---------+
+0: jdbc:luciddb:> SELECT t11_1, CAST (t11_1 AS float) FROM CST.alltypes;
++----------+---------+
+|  T11_1   | EXPR$1  |
++----------+---------+
+| 12.3000  | 12.3    |
++----------+---------+
+0: jdbc:luciddb:> SELECT t11_1, CAST (t11_1 AS integer) FROM CST.alltypes;
++----------+---------+
+|  T11_1   | EXPR$1  |
++----------+---------+
+| 12.3000  | 12      |
++----------+---------+
+0: jdbc:luciddb:> -- SELECT t11_1, CAST (t11_1 AS long varbinary) FROM CST.alltypes;
+0: jdbc:luciddb:> -- SELECT t11_1, CAST (t11_1 AS long varchar) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t11_1, CAST (t11_1 AS numeric(8,4)) FROM CST.alltypes;
++----------+----------+
+|  T11_1   |  EXPR$1  |
++----------+----------+
+| 12.3000  | 12.3000  |
++----------+----------+
+0: jdbc:luciddb:> SELECT t11_1, CAST (t11_1 AS numeric(6,2)) FROM CST.alltypes;
++----------+---------+
+|  T11_1   | EXPR$1  |
++----------+---------+
+| 12.3000  | 12.30   |
++----------+---------+
+0: jdbc:luciddb:> SELECT t11_1, CAST (t11_1 AS real) FROM CST.alltypes;
++----------+---------+
+|  T11_1   | EXPR$1  |
++----------+---------+
+| 12.3000  | 12.3    |
++----------+---------+
+0: jdbc:luciddb:> SELECT t11_1, CAST (t11_1 AS smallint) FROM CST.alltypes;
++----------+---------+
+|  T11_1   | EXPR$1  |
++----------+---------+
+| 12.3000  | 12      |
++----------+---------+
+0: jdbc:luciddb:> SELECT t11_1, CAST (t11_1 AS time) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DECIMAL(8, 4) to type TIME (state=,code=0)
+0: jdbc:luciddb:> SELECT t11_1, CAST (t11_1 AS timestamp) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DECIMAL(8, 4) to type TIMESTAMP (state=,code=0)
+0: jdbc:luciddb:> SELECT t11_1, CAST (t11_1 AS tinyint) FROM CST.alltypes;
++----------+---------+
+|  T11_1   | EXPR$1  |
++----------+---------+
+| 12.3000  | 12      |
++----------+---------+
+0: jdbc:luciddb:> SELECT t11_1, CAST (t11_1 AS varbinary(10)) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DECIMAL(8, 4) to type VARBINARY(10) (state=,code=0)
+0: jdbc:luciddb:> SELECT t11_1, CAST (t11_1 AS varchar(23)) FROM CST.alltypes;
++----------+----------+
+|  T11_1   |  EXPR$1  |
++----------+----------+
+| 12.3000  | 12.3000  |
++----------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- t11_2
+0: jdbc:luciddb:> SELECT t11_2, CAST (t11_2 AS bigint) FROM CST.alltypes;
++--------+---------+
+| T11_2  | EXPR$1  |
++--------+---------+
+| 45.30  | 45      |
++--------+---------+
+0: jdbc:luciddb:> -- SELECT t11_2, CAST (t11_2 AS bit) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t11_2, CAST (t11_2 AS boolean) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DECIMAL(6, 2) to type BOOLEAN (state=,code=0)
+0: jdbc:luciddb:> SELECT t11_2, CAST (t11_2 AS char(21)) FROM CST.alltypes;
++--------+------------------------+
+| T11_2  |         EXPR$1         |
++--------+------------------------+
+| 45.30  | 45.30                  |
++--------+------------------------+
+0: jdbc:luciddb:> SELECT t11_2, CAST (t11_2 AS date) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DECIMAL(6, 2) to type DATE (state=,code=0)
+0: jdbc:luciddb:> SELECT t11_2, CAST (t11_2 AS decimal) FROM CST.alltypes;
++--------+---------+
+| T11_2  | EXPR$1  |
++--------+---------+
+| 45.30  | 45      |
++--------+---------+
+0: jdbc:luciddb:> SELECT t11_2, CAST (t11_2 AS double) FROM CST.alltypes;
++--------+---------+
+| T11_2  | EXPR$1  |
++--------+---------+
+| 45.30  | 45.3    |
++--------+---------+
+0: jdbc:luciddb:> SELECT t11_2, CAST (t11_2 AS float) FROM CST.alltypes;
++--------+---------+
+| T11_2  | EXPR$1  |
++--------+---------+
+| 45.30  | 45.3    |
++--------+---------+
+0: jdbc:luciddb:> SELECT t11_2, CAST (t11_2 AS integer) FROM CST.alltypes;
++--------+---------+
+| T11_2  | EXPR$1  |
++--------+---------+
+| 45.30  | 45      |
++--------+---------+
+0: jdbc:luciddb:> -- SELECT t11_2, CAST (t11_2 AS long varbinary) FROM CST.alltypes;
+0: jdbc:luciddb:> -- SELECT t11_2, CAST (t11_2 AS long varchar) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t11_2, CAST (t11_2 AS numeric(8,4)) FROM CST.alltypes;
++--------+----------+
+| T11_2  |  EXPR$1  |
++--------+----------+
+| 45.30  | 45.3000  |
++--------+----------+
+0: jdbc:luciddb:> SELECT t11_2, CAST (t11_2 AS numeric(6,2)) FROM CST.alltypes;
++--------+---------+
+| T11_2  | EXPR$1  |
++--------+---------+
+| 45.30  | 45.30   |
++--------+---------+
+0: jdbc:luciddb:> SELECT t11_2, CAST (t11_2 AS real) FROM CST.alltypes;
++--------+---------+
+| T11_2  | EXPR$1  |
++--------+---------+
+| 45.30  | 45.3    |
++--------+---------+
+0: jdbc:luciddb:> SELECT t11_2, CAST (t11_2 AS smallint) FROM CST.alltypes;
++--------+---------+
+| T11_2  | EXPR$1  |
++--------+---------+
+| 45.30  | 45      |
++--------+---------+
+0: jdbc:luciddb:> SELECT t11_2, CAST (t11_2 AS time) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DECIMAL(6, 2) to type TIME (state=,code=0)
+0: jdbc:luciddb:> SELECT t11_2, CAST (t11_2 AS timestamp) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DECIMAL(6, 2) to type TIMESTAMP (state=,code=0)
+0: jdbc:luciddb:> SELECT t11_2, CAST (t11_2 AS tinyint) FROM CST.alltypes;
++--------+---------+
+| T11_2  | EXPR$1  |
++--------+---------+
+| 45.30  | 45      |
++--------+---------+
+0: jdbc:luciddb:> SELECT t11_2, CAST (t11_2 AS varbinary(10)) FROM CST.alltypes;
+Error: Cast function cannot convert value of type DECIMAL(6, 2) to type VARBINARY(10) (state=,code=0)
+0: jdbc:luciddb:> SELECT t11_2, CAST (t11_2 AS varchar(23)) FROM CST.alltypes;
++--------+---------+
+| T11_2  | EXPR$1  |
++--------+---------+
+| 45.30  | 45.30   |
++--------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- t12
+0: jdbc:luciddb:> SELECT t12, CAST (t12 AS bigint) FROM CST.alltypes;
++------------+---------+
+|    T12     | EXPR$1  |
++------------+---------+
+| 1232.4581  | 1232    |
++------------+---------+
+0: jdbc:luciddb:> -- SELECT t12, CAST (t12 AS bit) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t12, CAST (t12 AS boolean) FROM CST.alltypes;
+Error: Cast function cannot convert value of type REAL to type BOOLEAN (state=,code=0)
+0: jdbc:luciddb:> SELECT t12, CAST (t12 AS char(21)) FROM CST.alltypes;
++------------+------------------------+
+|    T12     |         EXPR$1         |
++------------+------------------------+
+| 1232.4581  | 1.232458E3             |
++------------+------------------------+
+0: jdbc:luciddb:> SELECT t12, CAST (t12 AS date) FROM CST.alltypes;
+Error: Cast function cannot convert value of type REAL to type DATE (state=,code=0)
+0: jdbc:luciddb:> SELECT t12, CAST (t12 AS decimal) FROM CST.alltypes;
++------------+---------+
+|    T12     | EXPR$1  |
++------------+---------+
+| 1232.4581  | 1232    |
++------------+---------+
+0: jdbc:luciddb:> SELECT t12, CAST (t12 AS double) FROM CST.alltypes;
++------------+---------------------+
+|    T12     |       EXPR$1        |
++------------+---------------------+
+| 1232.4581  | 1232.4581298828125  |
++------------+---------------------+
+0: jdbc:luciddb:> SELECT t12, CAST (t12 AS float) FROM CST.alltypes;
++------------+---------------------+
+|    T12     |       EXPR$1        |
++------------+---------------------+
+| 1232.4581  | 1232.4581298828125  |
++------------+---------------------+
+0: jdbc:luciddb:> SELECT t12, CAST (t12 AS integer) FROM CST.alltypes;
++------------+---------+
+|    T12     | EXPR$1  |
++------------+---------+
+| 1232.4581  | 1232    |
++------------+---------+
+0: jdbc:luciddb:> -- SELECT t12, CAST (t12 AS long varbinary) FROM CST.alltypes;
+0: jdbc:luciddb:> -- SELECT t12, CAST (t12 AS long varchar) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t12, CAST (t12 AS numeric(8,4)) FROM CST.alltypes;
++------------+------------+
+|    T12     |   EXPR$1   |
++------------+------------+
+| 1232.4581  | 1232.4581  |
++------------+------------+
+0: jdbc:luciddb:> SELECT t12, CAST (t12 AS numeric(6,2)) FROM CST.alltypes;
++------------+----------+
+|    T12     |  EXPR$1  |
++------------+----------+
+| 1232.4581  | 1232.45  |
++------------+----------+
+0: jdbc:luciddb:> SELECT t12, CAST (t12 AS real) FROM CST.alltypes;
++------------+------------+
+|    T12     |   EXPR$1   |
++------------+------------+
+| 1232.4581  | 1232.4581  |
++------------+------------+
+0: jdbc:luciddb:> SELECT t12, CAST (t12 AS smallint) FROM CST.alltypes;
++------------+---------+
+|    T12     | EXPR$1  |
++------------+---------+
+| 1232.4581  | 1232    |
++------------+---------+
+0: jdbc:luciddb:> SELECT t12, CAST (t12 AS time) FROM CST.alltypes;
+Error: Cast function cannot convert value of type REAL to type TIME (state=,code=0)
+0: jdbc:luciddb:> SELECT t12, CAST (t12 AS timestamp) FROM CST.alltypes;
+Error: Cast function cannot convert value of type REAL to type TIMESTAMP (state=,code=0)
+0: jdbc:luciddb:> SELECT t12, CAST (t12 AS tinyint) FROM CST.alltypes;
++------------+---------+
+|    T12     | EXPR$1  |
++------------+---------+
+| 1232.4581  | -48     |
++------------+---------+
+0: jdbc:luciddb:> SELECT t12, CAST (t12 AS varbinary(10)) FROM CST.alltypes;
+Error: Cast function cannot convert value of type REAL to type VARBINARY(10) (state=,code=0)
+0: jdbc:luciddb:> SELECT t12, CAST (t12 AS varchar(23)) FROM CST.alltypes;
++------------+-------------+
+|    T12     |   EXPR$1    |
++------------+-------------+
+| 1232.4581  | 1.232458E3  |
++------------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- t13
+0: jdbc:luciddb:> SELECT t13, CAST (t13 AS bigint) FROM CST.alltypes;
++------+---------+
+| T13  | EXPR$1  |
++------+---------+
+| 69   | 69      |
++------+---------+
+0: jdbc:luciddb:> -- SELECT t13, CAST (t13 AS bit) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t13, CAST (t13 AS boolean) FROM CST.alltypes;
+Error: Cast function cannot convert value of type SMALLINT to type BOOLEAN (state=,code=0)
+0: jdbc:luciddb:> SELECT t13, CAST (t13 AS char(21)) FROM CST.alltypes;
++------+------------------------+
+| T13  |         EXPR$1         |
++------+------------------------+
+| 69   | 69                     |
++------+------------------------+
+0: jdbc:luciddb:> SELECT t13, CAST (t13 AS date) FROM CST.alltypes;
+Error: Cast function cannot convert value of type SMALLINT to type DATE (state=,code=0)
+0: jdbc:luciddb:> SELECT t13, CAST (t13 AS decimal) FROM CST.alltypes;
++------+---------+
+| T13  | EXPR$1  |
++------+---------+
+| 69   | 69      |
++------+---------+
+0: jdbc:luciddb:> SELECT t13, CAST (t13 AS double) FROM CST.alltypes;
++------+---------+
+| T13  | EXPR$1  |
++------+---------+
+| 69   | 69.0    |
++------+---------+
+0: jdbc:luciddb:> SELECT t13, CAST (t13 AS float) FROM CST.alltypes;
++------+---------+
+| T13  | EXPR$1  |
++------+---------+
+| 69   | 69.0    |
++------+---------+
+0: jdbc:luciddb:> SELECT t13, CAST (t13 AS integer) FROM CST.alltypes;
++------+---------+
+| T13  | EXPR$1  |
++------+---------+
+| 69   | 69      |
++------+---------+
+0: jdbc:luciddb:> -- SELECT t13, CAST (t13 AS long varbinary) FROM CST.alltypes;
+0: jdbc:luciddb:> -- SELECT t13, CAST (t13 AS long varchar) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t13, CAST (t13 AS numeric(8,4)) FROM CST.alltypes;
++------+----------+
+| T13  |  EXPR$1  |
++------+----------+
+| 69   | 69.0000  |
++------+----------+
+0: jdbc:luciddb:> SELECT t13, CAST (t13 AS numeric(6,2)) FROM CST.alltypes;
++------+---------+
+| T13  | EXPR$1  |
++------+---------+
+| 69   | 69.00   |
++------+---------+
+0: jdbc:luciddb:> SELECT t13, CAST (t13 AS real) FROM CST.alltypes;
++------+---------+
+| T13  | EXPR$1  |
++------+---------+
+| 69   | 69.0    |
++------+---------+
+0: jdbc:luciddb:> SELECT t13, CAST (t13 AS smallint) FROM CST.alltypes;
++------+---------+
+| T13  | EXPR$1  |
++------+---------+
+| 69   | 69      |
++------+---------+
+0: jdbc:luciddb:> SELECT t13, CAST (t13 AS time) FROM CST.alltypes;
+Error: Cast function cannot convert value of type SMALLINT to type TIME (state=,code=0)
+0: jdbc:luciddb:> SELECT t13, CAST (t13 AS timestamp) FROM CST.alltypes;
+Error: Cast function cannot convert value of type SMALLINT to type TIMESTAMP (state=,code=0)
+0: jdbc:luciddb:> SELECT t13, CAST (t13 AS tinyint) FROM CST.alltypes;
++------+---------+
+| T13  | EXPR$1  |
++------+---------+
+| 69   | 69      |
++------+---------+
+0: jdbc:luciddb:> SELECT t13, CAST (t13 AS varbinary(10)) FROM CST.alltypes;
+Error: Cast function cannot convert value of type SMALLINT to type VARBINARY(10) (state=,code=0)
+0: jdbc:luciddb:> SELECT t13, CAST (t13 AS varchar(23)) FROM CST.alltypes;
++------+---------+
+| T13  | EXPR$1  |
++------+---------+
+| 69   | 69      |
++------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- t14
+0: jdbc:luciddb:> SELECT t14, CAST (t14 AS bigint) FROM CST.alltypes;
+Error: Cannot assign '09:21:43' to a NUMERIC value: NumberFormatException (state=,code=0)
+0: jdbc:luciddb:> -- SELECT t14, CAST (t14 AS bit) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t14, CAST (t14 AS boolean) FROM CST.alltypes;
+Error: Cast function cannot convert value of type TIME to type BOOLEAN (state=,code=0)
+0: jdbc:luciddb:> SELECT t14, CAST (t14 AS char(21)) FROM CST.alltypes;
++-----------+------------------------+
+|    T14    |         EXPR$1         |
++-----------+------------------------+
+| 09:21:43  | 09:21:43               |
++-----------+------------------------+
+0: jdbc:luciddb:> SELECT t14, CAST (t14 AS date) FROM CST.alltypes;
+Error: Cast function cannot convert value of type TIME to type DATE (state=,code=0)
+0: jdbc:luciddb:> SELECT t14, CAST (t14 AS decimal) FROM CST.alltypes;
+Error: Cast function cannot convert value of type TIME to type DECIMAL (state=,code=0)
+0: jdbc:luciddb:> SELECT t14, CAST (t14 AS double) FROM CST.alltypes;
+Error: Cast function cannot convert value of type TIME to type DOUBLE (state=,code=0)
+0: jdbc:luciddb:> SELECT t14, CAST (t14 AS float) FROM CST.alltypes;
+Error: Cast function cannot convert value of type TIME to type FLOAT (state=,code=0)
+0: jdbc:luciddb:> SELECT t14, CAST (t14 AS integer) FROM CST.alltypes;
+Error: Cast function cannot convert value of type TIME to type INTEGER (state=,code=0)
+0: jdbc:luciddb:> -- SELECT t14, CAST (t14 AS long varbinary) FROM CST.alltypes;
+0: jdbc:luciddb:> -- SELECT t14, CAST (t14 AS long varchar) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t14, CAST (t14 AS numeric(8,4)) FROM CST.alltypes;
+Error: Cast function cannot convert value of type TIME to type DECIMAL(8, 4) (state=,code=0)
+0: jdbc:luciddb:> SELECT t14, CAST (t14 AS numeric(6,2)) FROM CST.alltypes;
+Error: Cast function cannot convert value of type TIME to type DECIMAL(6, 2) (state=,code=0)
+0: jdbc:luciddb:> SELECT t14, CAST (t14 AS real) FROM CST.alltypes;
+Error: Cast function cannot convert value of type TIME to type REAL (state=,code=0)
+0: jdbc:luciddb:> SELECT t14, CAST (t14 AS smallint) FROM CST.alltypes;
+Error: Cast function cannot convert value of type TIME to type SMALLINT (state=,code=0)
+0: jdbc:luciddb:> SELECT t14, CAST (t14 AS time) FROM CST.alltypes;
++-----------+-----------+
+|    T14    |  EXPR$1   |
++-----------+-----------+
+| 09:21:43  | 09:21:43  |
++-----------+-----------+
+0: jdbc:luciddb:> SELECT t14, CAST (t14 AS timestamp) FROM CST.alltypes;
+Error: Cast function cannot convert value of type TIME to type TIMESTAMP (state=,code=0)
+0: jdbc:luciddb:> SELECT t14, CAST (t14 AS tinyint) FROM CST.alltypes;
+Error: Cast function cannot convert value of type TIME to type TINYINT (state=,code=0)
+0: jdbc:luciddb:> SELECT t14, CAST (t14 AS varbinary(10)) FROM CST.alltypes;
+Error: Cast function cannot convert value of type TIME to type VARBINARY(10) (state=,code=0)
+0: jdbc:luciddb:> SELECT t14, CAST (t14 AS varchar(23)) FROM CST.alltypes;
++-----------+-----------+
+|    T14    |  EXPR$1   |
++-----------+-----------+
+| 09:21:43  | 09:21:43  |
++-----------+-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- t15
+0: jdbc:luciddb:> SELECT t15, CAST (t15 AS bigint) FROM CST.alltypes;
+Error: Cannot assign '1996-11-30 09:21:43.0' to a NUMERIC value: NumberFormatException (state=,code=0)
+0: jdbc:luciddb:> -- SELECT t15, CAST (t15 AS bit) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t15, CAST (t15 AS boolean) FROM CST.alltypes;
+Error: Cast function cannot convert value of type TIMESTAMP to type BOOLEAN (state=,code=0)
+0: jdbc:luciddb:> SELECT t15, CAST (t15 AS char(21)) FROM CST.alltypes;
++------------------------+------------------------+
+|          T15           |         EXPR$1         |
++------------------------+------------------------+
+| 1996-11-30 09:21:43.0  | 1996-11-30 09:21:43    |
++------------------------+------------------------+
+0: jdbc:luciddb:> SELECT t15, CAST (t15 AS date) FROM CST.alltypes;
++------------------------+-------------+
+|          T15           |   EXPR$1    |
++------------------------+-------------+
+| 1996-11-30 09:21:43.0  | 1996-11-30  |
++------------------------+-------------+
+0: jdbc:luciddb:> SELECT t15, CAST (t15 AS decimal) FROM CST.alltypes;
+Error: Cast function cannot convert value of type TIMESTAMP to type DECIMAL (state=,code=0)
+0: jdbc:luciddb:> SELECT t15, CAST (t15 AS double) FROM CST.alltypes;
+Error: Cast function cannot convert value of type TIMESTAMP to type DOUBLE (state=,code=0)
+0: jdbc:luciddb:> SELECT t15, CAST (t15 AS float) FROM CST.alltypes;
+Error: Cast function cannot convert value of type TIMESTAMP to type FLOAT (state=,code=0)
+0: jdbc:luciddb:> SELECT t15, CAST (t15 AS integer) FROM CST.alltypes;
+Error: Cast function cannot convert value of type TIMESTAMP to type INTEGER (state=,code=0)
+0: jdbc:luciddb:> -- SELECT t15, CAST (t15 AS long varbinary) FROM CST.alltypes;
+0: jdbc:luciddb:> -- SELECT t15, CAST (t15 AS long varchar) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t15, CAST (t15 AS numeric(8,4)) FROM CST.alltypes;
+Error: Cast function cannot convert value of type TIMESTAMP to type DECIMAL(8, 4) (state=,code=0)
+0: jdbc:luciddb:> SELECT t15, CAST (t15 AS numeric(6,2)) FROM CST.alltypes;
+Error: Cast function cannot convert value of type TIMESTAMP to type DECIMAL(6, 2) (state=,code=0)
+0: jdbc:luciddb:> SELECT t15, CAST (t15 AS real) FROM CST.alltypes;
+Error: Cast function cannot convert value of type TIMESTAMP to type REAL (state=,code=0)
+0: jdbc:luciddb:> SELECT t15, CAST (t15 AS smallint) FROM CST.alltypes;
+Error: Cast function cannot convert value of type TIMESTAMP to type SMALLINT (state=,code=0)
+0: jdbc:luciddb:> SELECT t15, CAST (t15 AS time) FROM CST.alltypes;
++------------------------+-----------+
+|          T15           |  EXPR$1   |
++------------------------+-----------+
+| 1996-11-30 09:21:43.0  | 09:21:43  |
++------------------------+-----------+
+0: jdbc:luciddb:> SELECT t15, CAST (t15 AS timestamp) FROM CST.alltypes;
++------------------------+------------------------+
+|          T15           |         EXPR$1         |
++------------------------+------------------------+
+| 1996-11-30 09:21:43.0  | 1996-11-30 09:21:43.0  |
++------------------------+------------------------+
+0: jdbc:luciddb:> SELECT t15, CAST (t15 AS tinyint) FROM CST.alltypes;
+Error: Cast function cannot convert value of type TIMESTAMP to type TINYINT (state=,code=0)
+0: jdbc:luciddb:> SELECT t15, CAST (t15 AS varbinary(10)) FROM CST.alltypes;
+Error: Cast function cannot convert value of type TIMESTAMP to type VARBINARY(10) (state=,code=0)
+0: jdbc:luciddb:> SELECT t15, CAST (t15 AS varchar(23)) FROM CST.alltypes;
++------------------------+----------------------+
+|          T15           |        EXPR$1        |
++------------------------+----------------------+
+| 1996-11-30 09:21:43.0  | 1996-11-30 09:21:43  |
++------------------------+----------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- t16
+0: jdbc:luciddb:> SELECT t16, CAST (t16 AS bigint) FROM CST.alltypes;
++------+---------+
+| T16  | EXPR$1  |
++------+---------+
+| 15   | 15      |
++------+---------+
+0: jdbc:luciddb:> -- SELECT t16, CAST (t16 AS bit) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t16, CAST (t16 AS boolean) FROM CST.alltypes;
+Error: Cast function cannot convert value of type TINYINT to type BOOLEAN (state=,code=0)
+0: jdbc:luciddb:> SELECT t16, CAST (t16 AS char(21)) FROM CST.alltypes;
++------+------------------------+
+| T16  |         EXPR$1         |
++------+------------------------+
+| 15   | 15                     |
++------+------------------------+
+0: jdbc:luciddb:> SELECT t16, CAST (t16 AS date) FROM CST.alltypes;
+Error: Cast function cannot convert value of type TINYINT to type DATE (state=,code=0)
+0: jdbc:luciddb:> SELECT t16, CAST (t16 AS decimal) FROM CST.alltypes;
++------+---------+
+| T16  | EXPR$1  |
++------+---------+
+| 15   | 15      |
++------+---------+
+0: jdbc:luciddb:> SELECT t16, CAST (t16 AS double) FROM CST.alltypes;
++------+---------+
+| T16  | EXPR$1  |
++------+---------+
+| 15   | 15.0    |
++------+---------+
+0: jdbc:luciddb:> SELECT t16, CAST (t16 AS float) FROM CST.alltypes;
++------+---------+
+| T16  | EXPR$1  |
++------+---------+
+| 15   | 15.0    |
++------+---------+
+0: jdbc:luciddb:> SELECT t16, CAST (t16 AS integer) FROM CST.alltypes;
++------+---------+
+| T16  | EXPR$1  |
++------+---------+
+| 15   | 15      |
++------+---------+
+0: jdbc:luciddb:> -- SELECT t16, CAST (t16 AS long varbinary) FROM CST.alltypes;
+0: jdbc:luciddb:> -- SELECT t16, CAST (t16 AS long varchar) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t16, CAST (t16 AS numeric(8,4)) FROM CST.alltypes;
++------+----------+
+| T16  |  EXPR$1  |
++------+----------+
+| 15   | 15.0000  |
++------+----------+
+0: jdbc:luciddb:> SELECT t16, CAST (t16 AS numeric(6,2)) FROM CST.alltypes;
++------+---------+
+| T16  | EXPR$1  |
++------+---------+
+| 15   | 15.00   |
++------+---------+
+0: jdbc:luciddb:> SELECT t16, CAST (t16 AS real) FROM CST.alltypes;
++------+---------+
+| T16  | EXPR$1  |
++------+---------+
+| 15   | 15.0    |
++------+---------+
+0: jdbc:luciddb:> SELECT t16, CAST (t16 AS smallint) FROM CST.alltypes;
++------+---------+
+| T16  | EXPR$1  |
++------+---------+
+| 15   | 15      |
++------+---------+
+0: jdbc:luciddb:> SELECT t16, CAST (t16 AS time) FROM CST.alltypes;
+Error: Cast function cannot convert value of type TINYINT to type TIME (state=,code=0)
+0: jdbc:luciddb:> SELECT t16, CAST (t16 AS timestamp) FROM CST.alltypes;
+Error: Cast function cannot convert value of type TINYINT to type TIMESTAMP (state=,code=0)
+0: jdbc:luciddb:> SELECT t16, CAST (t16 AS tinyint) FROM CST.alltypes;
++------+---------+
+| T16  | EXPR$1  |
++------+---------+
+| 15   | 15      |
++------+---------+
+0: jdbc:luciddb:> SELECT t16, CAST (t16 AS varbinary(10)) FROM CST.alltypes;
+Error: Cast function cannot convert value of type TINYINT to type VARBINARY(10) (state=,code=0)
+0: jdbc:luciddb:> SELECT t16, CAST (t16 AS varchar(23)) FROM CST.alltypes;
++------+---------+
+| T16  | EXPR$1  |
++------+---------+
+| 15   | 15      |
++------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- t17
+0: jdbc:luciddb:> SELECT t17, CAST (t17 AS bigint) FROM CST.alltypes;
+Error: Cast function cannot convert value of type VARBINARY(10) to type BIGINT (state=,code=0)
+0: jdbc:luciddb:> -- SELECT t17, CAST (t17 AS bit) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t17, CAST (t17 AS boolean) FROM CST.alltypes;
+Error: Cast function cannot convert value of type VARBINARY(10) to type BOOLEAN (state=,code=0)
+0: jdbc:luciddb:> SELECT t17, CAST (t17 AS char(21)) FROM CST.alltypes;
+Error: Cast function cannot convert value of type VARBINARY(10) to type CHAR(21) (state=,code=0)
+0: jdbc:luciddb:> SELECT t17, CAST (t17 AS date) FROM CST.alltypes;
+Error: Cast function cannot convert value of type VARBINARY(10) to type DATE (state=,code=0)
+0: jdbc:luciddb:> SELECT t17, CAST (t17 AS decimal) FROM CST.alltypes;
+Error: Cast function cannot convert value of type VARBINARY(10) to type DECIMAL (state=,code=0)
+0: jdbc:luciddb:> SELECT t17, CAST (t17 AS double) FROM CST.alltypes;
+Error: Cast function cannot convert value of type VARBINARY(10) to type DOUBLE (state=,code=0)
+0: jdbc:luciddb:> SELECT t17, CAST (t17 AS float) FROM CST.alltypes;
+Error: Cast function cannot convert value of type VARBINARY(10) to type FLOAT (state=,code=0)
+0: jdbc:luciddb:> SELECT t17, CAST (t17 AS integer) FROM CST.alltypes;
+Error: Cast function cannot convert value of type VARBINARY(10) to type INTEGER (state=,code=0)
+0: jdbc:luciddb:> -- SELECT t17, CAST (t17 AS long varbinary) FROM CST.alltypes;
+0: jdbc:luciddb:> -- SELECT t17, CAST (t17 AS long varchar) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t17, CAST (t17 AS numeric(8,4)) FROM CST.alltypes;
+Error: Cast function cannot convert value of type VARBINARY(10) to type DECIMAL(8, 4) (state=,code=0)
+0: jdbc:luciddb:> SELECT t17, CAST (t17 AS numeric(6,2)) FROM CST.alltypes;
+Error: Cast function cannot convert value of type VARBINARY(10) to type DECIMAL(6, 2) (state=,code=0)
+0: jdbc:luciddb:> SELECT t17, CAST (t17 AS real) FROM CST.alltypes;
+Error: Cast function cannot convert value of type VARBINARY(10) to type REAL (state=,code=0)
+0: jdbc:luciddb:> SELECT t17, CAST (t17 AS smallint) FROM CST.alltypes;
+Error: Cast function cannot convert value of type VARBINARY(10) to type SMALLINT (state=,code=0)
+0: jdbc:luciddb:> SELECT t17, CAST (t17 AS time) FROM CST.alltypes;
+Error: Cast function cannot convert value of type VARBINARY(10) to type TIME (state=,code=0)
+0: jdbc:luciddb:> SELECT t17, CAST (t17 AS timestamp) FROM CST.alltypes;
+Error: Cast function cannot convert value of type VARBINARY(10) to type TIMESTAMP (state=,code=0)
+0: jdbc:luciddb:> SELECT t17, CAST (t17 AS tinyint) FROM CST.alltypes;
+Error: Cast function cannot convert value of type VARBINARY(10) to type TINYINT (state=,code=0)
+0: jdbc:luciddb:> SELECT t17, CAST (t17 AS varbinary(10)) FROM CST.alltypes;
++-------------+-------------+
+|     T17     |   EXPR$1    |
++-------------+-------------+
+| 1101001010  | 1101001010  |
++-------------+-------------+
+0: jdbc:luciddb:> SELECT t17, CAST (t17 AS varchar(23)) FROM CST.alltypes;
+Error: Cast function cannot convert value of type VARBINARY(10) to type VARCHAR(23) (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- t18
+0: jdbc:luciddb:> SELECT t18, CAST (t18 AS bigint) FROM CST.alltypes;
+Error: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
+0: jdbc:luciddb:> -- SELECT t18, CAST (t18 AS bit) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t18, CAST (t18 AS boolean) FROM CST.alltypes;
+Error: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
+0: jdbc:luciddb:> SELECT t18, CAST (t18 AS char(21)) FROM CST.alltypes;
++--------------------------+------------------------+
+|           T18            |         EXPR$1         |
++--------------------------+------------------------+
+| zimoy i letom stroynaya  | zimoy i letom stroyna  |
++--------------------------+------------------------+
+0: jdbc:luciddb:> SELECT t18, CAST (t18 AS date) FROM CST.alltypes;
+Error: Cannot assign 'zimoy i letom stroynaya' to a DATE value: not in format 'yyyy-MM-dd' (state=,code=0)
+0: jdbc:luciddb:> SELECT t18, CAST (t18 AS decimal) FROM CST.alltypes;
+Error: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
+0: jdbc:luciddb:> SELECT t18, CAST (t18 AS double) FROM CST.alltypes;
+Error: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
+0: jdbc:luciddb:> SELECT t18, CAST (t18 AS float) FROM CST.alltypes;
+Error: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
+0: jdbc:luciddb:> SELECT t18, CAST (t18 AS integer) FROM CST.alltypes;
+Error: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
+0: jdbc:luciddb:> -- SELECT t18, CAST (t18 AS long varbinary) FROM CST.alltypes;
+0: jdbc:luciddb:> -- SELECT t18, CAST (t18 AS long varchar) FROM CST.alltypes;
+0: jdbc:luciddb:> SELECT t18, CAST (t18 AS numeric(8,4)) FROM CST.alltypes;
+Error: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
+0: jdbc:luciddb:> SELECT t18, CAST (t18 AS numeric(6,2)) FROM CST.alltypes;
+Error: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
+0: jdbc:luciddb:> SELECT t18, CAST (t18 AS real) FROM CST.alltypes;
+Error: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
+0: jdbc:luciddb:> SELECT t18, CAST (t18 AS smallint) FROM CST.alltypes;
+Error: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
+0: jdbc:luciddb:> SELECT t18, CAST (t18 AS time) FROM CST.alltypes;
+Error: Cannot assign 'zimoy i letom stroynaya' to a TIME value: not in format 'HH:mm:ss' (state=,code=0)
+0: jdbc:luciddb:> SELECT t18, CAST (t18 AS timestamp) FROM CST.alltypes;
+Error: Cannot assign 'zimoy i letom stroynaya' to a TIMESTAMP value: not in format 'yyyy-MM-dd HH:mm:ss' (state=,code=0)
+0: jdbc:luciddb:> SELECT t18, CAST (t18 AS tinyint) FROM CST.alltypes;
+Error: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
+0: jdbc:luciddb:> SELECT t18, CAST (t18 AS varbinary(10)) FROM CST.alltypes;
+Error: Cast function cannot convert value of type VARCHAR(23) to type VARBINARY(10) (state=,code=0)
+0: jdbc:luciddb:> SELECT t18, CAST (t18 AS varchar(23)) FROM CST.alltypes;
++--------------------------+--------------------------+
+|           T18            |          EXPR$1          |
++--------------------------+--------------------------+
+| zimoy i letom stroynaya  | zimoy i letom stroynaya  |
++--------------------------+--------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

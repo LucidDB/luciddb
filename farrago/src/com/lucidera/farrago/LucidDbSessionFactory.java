@@ -51,6 +51,12 @@ public class LucidDbSessionFactory extends FarragoDefaultSessionFactory
         // Tell Fennel to checkpoint after each transaction.
         map.put("forceTxns", "true");
     }
+    
+    // implement FarragoSessionFactory
+    public FarragoSessionTxnMgr newTxnMgr()
+    {
+        return new LucidDbTxnMgr();
+    }
 }
 
 // End LucidDbSessionFactory.java

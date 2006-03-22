@@ -1,0 +1,87 @@
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- stats.sql - test statistic gathering
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --set echo=on
+0: jdbc:luciddb:> --set plan=both
+0: jdbc:luciddb:> --alter session set explainplandetail=3;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --analyze table emp estimate statistics for all columns sample 100 percent;
+0: jdbc:luciddb:> --select * from histogram_bars where table_name='EMP' and column_name='EMPNO';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from emp where empno=105;
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:luciddb:> select count(*) from emp where empno<105;
++---------+
+| EXPR$0  |
++---------+
+| 5       |
++---------+
+0: jdbc:luciddb:> select count(*) from emp where empno=101 or empno=105 or empno=107;
++---------+
+| EXPR$0  |
++---------+
+| 3       |
++---------+
+0: jdbc:luciddb:> --select count(*) from emp where empno in (101, 105, 107);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --analyze table sales estimate statistics for all columns sample 100 percent;
+0: jdbc:luciddb:> --select * from histogram_bars where table_name='SALES' and column_name='PRICE';
+0: jdbc:luciddb:> --select * from histogram_bars where table_name='SALES' and column_name='PRODID';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from sales where price<1;
++---------+
+| EXPR$0  |
++---------+
+| 105     |
++---------+
+0: jdbc:luciddb:> select count(*) from sales where prodid=10010;
++---------+
+| EXPR$0  |
++---------+
+| 68      |
++---------+
+0: jdbc:luciddb:> --select count(*) from emp,dept where emp.deptno=dept.deptno and dname='Marketing';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --analyze table sales estimate statistics for all columns sample 10 percent;
+0: jdbc:luciddb:> --select * from histogram_bars where table_name='SALES' and column_name='PRICE';
+0: jdbc:luciddb:> --select * from histogram_bars where table_name='SALES' and column_name='PRODID';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from sales where price<1;
++---------+
+| EXPR$0  |
++---------+
+| 105     |
++---------+
+0: jdbc:luciddb:> select count(*) from sales where prodid=10010;
++---------+
+| EXPR$0  |
++---------+
+| 68      |
++---------+
+0: jdbc:luciddb:> --select count(*) from emp,dept where emp.deptno=dept.deptno and dname='Marketing';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --analyze table sales estimate statistics for all columns sample 1 percent;
+0: jdbc:luciddb:> --select * from histogram_bars where table_name='SALES' and column_name='PRICE';
+0: jdbc:luciddb:> --select * from histogram_bars where table_name='SALES' and column_name='PRODID';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from sales where price<1;
++---------+
+| EXPR$0  |
++---------+
+| 105     |
++---------+
+0: jdbc:luciddb:> select count(*) from sales where prodid=10010;
++---------+
+| EXPR$0  |
++---------+
+| 68      |
++---------+
+0: jdbc:luciddb:> --select count(*) from emp,dept where emp.deptno=dept.deptno and dname='Marketing';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

@@ -1,0 +1,62 @@
+set schema 's';
+
+CREATE TABLE BENCH100 (
+  KSEQ  INTEGER  
+ ,K2    INTEGER 
+ ,K4    INTEGER 
+ ,K5    INTEGER 
+ ,K10   INTEGER 
+ ,K25   INTEGER 
+ ,K100  INTEGER 
+ ,K1K   INTEGER 
+ ,K10K  INTEGER 
+ ,K40K  INTEGER  
+ ,K100K INTEGER
+ ,K250K INTEGER 
+ ,K500K INTEGER ) 
+;
+create index B100_K4_IDX on bench100 (K4)
+;
+create index B100_K2K4_IDX on bench100 (K2,k4)
+;
+create index B100_K250KK500K_IDX on bench100 (K250k,k500k)
+;
+create index B100_K100KK10_IDX on bench100 (K100k,k10)
+;
+
+set schema 'orcl_schema';
+
+create foreign table orcl_schema.BENCH_SOURCE_100 (
+C1 INTEGER,
+C2 INTEGER,
+C4 INTEGER,
+C5 INTEGER,
+C10 INTEGER,
+C25 INTEGER,
+C100 INTEGER,
+C1K INTEGER,
+C10K INTEGER,
+C40K  INTEGER,
+C100K INTEGER, 
+C250K INTEGER,
+C500K INTEGER)
+server orcl_server
+options (
+SCHEMA_NAME 'SCHOI',
+table_name 'bench100'
+);
+
+set schema 's';
+
+INSERT INTO BENCH100 (KSEQ,K2,K4,K5,K10,K25,K100,K1K,K10K,K40K,K100K,K250K,
+K500K) SELECT C1,C2,C4,C5,C10,C25,C100,C1K,C10K,C40K,C100K,C250K,C500K 
+FROM orcl_schema.BENCH_SOURCE_100
+;
+
+-- Deletes not working yet
+delete from bench100 where k25=2
+;
+delete from bench100 where k25=12
+;
+delete from bench100 where k25=22
+;

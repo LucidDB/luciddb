@@ -1,6 +1,7 @@
 -- 
 -- test from hell: ultra joins with large group by
 --
+set schema 's';
 
 select b1.k100k, count(b1.k100k), sum(b1.k10), sum(b2.k25)
 from bench1m b1, bench1m b2

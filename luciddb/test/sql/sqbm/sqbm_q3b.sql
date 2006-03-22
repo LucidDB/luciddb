@@ -1,3 +1,5 @@
+set schema 's';
+
 select COUNT(*) from BENCH1M
 where
       (Kseq between 40000 and 41000

@@ -1,0 +1,124 @@
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- BUG3680
+0: jdbc:luciddb:> -- create big concat index.  This should cause some new node blocks to be 
+0: jdbc:luciddb:> -- created 
+0: jdbc:luciddb:> --set plan=BOTH
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !set outputformat csv
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create index B1M_KSEQ_K500K_K250K on bench1M(KSEQ, K500K, K250K)
+. . . . . . . . > ;
+0: jdbc:luciddb:> drop index B1M_K500K_IDX
+. . . . . . . . > ;
+0: jdbc:luciddb:> drop index B1M_K10_IDX
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for select count(*) from bench1M where K10 = 2;
+'column0'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[EXPR$0]])'
+'    FennelAggRel(groupCount=[0], agg#0=[COUNT()])'
+'      FennelCalcRel(expr#0..20=[{inputs}], expr#21=[true], $f0=[$t21])'
+'        LcsRowScanRel(table=[[LOCALDB, S, BENCH1M]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$BENCH1M$K10, SYS$CLUSTERED_INDEX$S$BENCH1M$K100, SYS$CLUSTERED_INDEX$S$BENCH1M$K100K, SYS$CLUSTERED_INDEX$S$BENCH1M$K10K, SYS$CLUSTERED_INDEX$S$BENCH1M$K1K, SYS$CLUSTERED_INDEX$S$BENCH1M$K2, SYS$CLUSTERED_INDEX$S$BENCH1M$K25, SYS$CLUSTERED_INDEX$S$BENCH1M$K250K, SYS$CLUSTERED_INDEX$S$BENCH1M$K4, SYS$CLUSTERED_INDEX$S$BENCH1M$K40K, SYS$CLUSTERED_INDEX$S$BENCH1M$K5, SYS$CLUSTERED_INDEX$S$BENCH1M$K500K, SYS$CLUSTERED_INDEX$S$BENCH1M$KSEQ, SYS$CLUSTERED_INDEX$S$BENCH1M$S1, SYS$CLUSTERED_INDEX$S$BENCH1M$S2, SYS$CLUSTERED_INDEX$S$BENCH1M$S3, SYS$CLUSTERED_INDEX$S$BENCH1M$S4, SYS$CLUSTERED_INDEX$S$BENCH1M$S5, SYS$CLUSTERED_INDEX$S$BENCH1M$S6, SYS$CLUSTERED_INDEX$S$BENCH1M$S7, SYS$CLUSTERED_INDEX$S$BENCH1M$S8]])'
+'          LcsIndexMergeRel'
+'            LcsIndexSearchRel(table=[[LOCALDB, S, BENCH1M]], projection=[*], index=[B1M_K10_K25_IDX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'              FennelValuesRel(tuples=[[{ '[', 2, ']', 2 }]])'
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from bench1M where K10 = 2
+. . . . . . . . > ;
+'EXPR$0'
+'100501'
+0: jdbc:luciddb:> create index B1M_K10_IDX on bench1M(K10)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for select count(*) from bench1M where K10 = 2;
+'column0'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[EXPR$0]])'
+'    FennelAggRel(groupCount=[0], agg#0=[COUNT()])'
+'      FennelCalcRel(expr#0..20=[{inputs}], expr#21=[true], $f0=[$t21])'
+'        LcsRowScanRel(table=[[LOCALDB, S, BENCH1M]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$BENCH1M$K10, SYS$CLUSTERED_INDEX$S$BENCH1M$K100, SYS$CLUSTERED_INDEX$S$BENCH1M$K100K, SYS$CLUSTERED_INDEX$S$BENCH1M$K10K, SYS$CLUSTERED_INDEX$S$BENCH1M$K1K, SYS$CLUSTERED_INDEX$S$BENCH1M$K2, SYS$CLUSTERED_INDEX$S$BENCH1M$K25, SYS$CLUSTERED_INDEX$S$BENCH1M$K250K, SYS$CLUSTERED_INDEX$S$BENCH1M$K4, SYS$CLUSTERED_INDEX$S$BENCH1M$K40K, SYS$CLUSTERED_INDEX$S$BENCH1M$K5, SYS$CLUSTERED_INDEX$S$BENCH1M$K500K, SYS$CLUSTERED_INDEX$S$BENCH1M$KSEQ, SYS$CLUSTERED_INDEX$S$BENCH1M$S1, SYS$CLUSTERED_INDEX$S$BENCH1M$S2, SYS$CLUSTERED_INDEX$S$BENCH1M$S3, SYS$CLUSTERED_INDEX$S$BENCH1M$S4, SYS$CLUSTERED_INDEX$S$BENCH1M$S5, SYS$CLUSTERED_INDEX$S$BENCH1M$S6, SYS$CLUSTERED_INDEX$S$BENCH1M$S7, SYS$CLUSTERED_INDEX$S$BENCH1M$S8]])'
+'          LcsIndexSearchRel(table=[[LOCALDB, S, BENCH1M]], projection=[*], index=[B1M_K10_IDX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'            FennelValuesRel(tuples=[[{ '[', 2, ']', 2 }]])'
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from bench1M where K10 = 2
+. . . . . . . . > ;
+'EXPR$0'
+'100501'
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop index B1M_K5_IDX
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for select count(*) from bench1M where K5 = 2;
+'column0'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[EXPR$0]])'
+'    FennelAggRel(groupCount=[0], agg#0=[COUNT()])'
+'      FennelCalcRel(expr#0..20=[{inputs}], expr#21=[2], expr#22=[=($t3, $t21)], expr#23=[true], $f0=[$t23], $condition=[$t22])'
+'        LcsRowScanRel(table=[[LOCALDB, S, BENCH1M]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$BENCH1M$K10, SYS$CLUSTERED_INDEX$S$BENCH1M$K100, SYS$CLUSTERED_INDEX$S$BENCH1M$K100K, SYS$CLUSTERED_INDEX$S$BENCH1M$K10K, SYS$CLUSTERED_INDEX$S$BENCH1M$K1K, SYS$CLUSTERED_INDEX$S$BENCH1M$K2, SYS$CLUSTERED_INDEX$S$BENCH1M$K25, SYS$CLUSTERED_INDEX$S$BENCH1M$K250K, SYS$CLUSTERED_INDEX$S$BENCH1M$K4, SYS$CLUSTERED_INDEX$S$BENCH1M$K40K, SYS$CLUSTERED_INDEX$S$BENCH1M$K5, SYS$CLUSTERED_INDEX$S$BENCH1M$K500K, SYS$CLUSTERED_INDEX$S$BENCH1M$KSEQ, SYS$CLUSTERED_INDEX$S$BENCH1M$S1, SYS$CLUSTERED_INDEX$S$BENCH1M$S2, SYS$CLUSTERED_INDEX$S$BENCH1M$S3, SYS$CLUSTERED_INDEX$S$BENCH1M$S4, SYS$CLUSTERED_INDEX$S$BENCH1M$S5, SYS$CLUSTERED_INDEX$S$BENCH1M$S6, SYS$CLUSTERED_INDEX$S$BENCH1M$S7, SYS$CLUSTERED_INDEX$S$BENCH1M$S8]])'
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from bench1M where K5 = 2
+. . . . . . . . > ;
+'EXPR$0'
+'200425'
+0: jdbc:luciddb:> create index B1M_K5_IDX on bench1M(K5)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for select count(*) from bench1M where K5 = 2;
+'column0'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[EXPR$0]])'
+'    FennelAggRel(groupCount=[0], agg#0=[COUNT()])'
+'      FennelCalcRel(expr#0..20=[{inputs}], expr#21=[true], $f0=[$t21])'
+'        LcsRowScanRel(table=[[LOCALDB, S, BENCH1M]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$BENCH1M$K10, SYS$CLUSTERED_INDEX$S$BENCH1M$K100, SYS$CLUSTERED_INDEX$S$BENCH1M$K100K, SYS$CLUSTERED_INDEX$S$BENCH1M$K10K, SYS$CLUSTERED_INDEX$S$BENCH1M$K1K, SYS$CLUSTERED_INDEX$S$BENCH1M$K2, SYS$CLUSTERED_INDEX$S$BENCH1M$K25, SYS$CLUSTERED_INDEX$S$BENCH1M$K250K, SYS$CLUSTERED_INDEX$S$BENCH1M$K4, SYS$CLUSTERED_INDEX$S$BENCH1M$K40K, SYS$CLUSTERED_INDEX$S$BENCH1M$K5, SYS$CLUSTERED_INDEX$S$BENCH1M$K500K, SYS$CLUSTERED_INDEX$S$BENCH1M$KSEQ, SYS$CLUSTERED_INDEX$S$BENCH1M$S1, SYS$CLUSTERED_INDEX$S$BENCH1M$S2, SYS$CLUSTERED_INDEX$S$BENCH1M$S3, SYS$CLUSTERED_INDEX$S$BENCH1M$S4, SYS$CLUSTERED_INDEX$S$BENCH1M$S5, SYS$CLUSTERED_INDEX$S$BENCH1M$S6, SYS$CLUSTERED_INDEX$S$BENCH1M$S7, SYS$CLUSTERED_INDEX$S$BENCH1M$S8]])'
+'          LcsIndexSearchRel(table=[[LOCALDB, S, BENCH1M]], projection=[*], index=[B1M_K5_IDX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'            FennelValuesRel(tuples=[[{ '[', 2, ']', 2 }]])'
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from bench1M where K5 = 2
+. . . . . . . . > ;
+'EXPR$0'
+'200425'
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop index B1M_K25_IDX
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for select count(*) from bench1M where K25 = 2;
+'column0'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[EXPR$0]])'
+'    FennelAggRel(groupCount=[0], agg#0=[COUNT()])'
+'      FennelCalcRel(expr#0..20=[{inputs}], expr#21=[2], expr#22=[=($t5, $t21)], expr#23=[true], $f0=[$t23], $condition=[$t22])'
+'        LcsRowScanRel(table=[[LOCALDB, S, BENCH1M]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$BENCH1M$K10, SYS$CLUSTERED_INDEX$S$BENCH1M$K100, SYS$CLUSTERED_INDEX$S$BENCH1M$K100K, SYS$CLUSTERED_INDEX$S$BENCH1M$K10K, SYS$CLUSTERED_INDEX$S$BENCH1M$K1K, SYS$CLUSTERED_INDEX$S$BENCH1M$K2, SYS$CLUSTERED_INDEX$S$BENCH1M$K25, SYS$CLUSTERED_INDEX$S$BENCH1M$K250K, SYS$CLUSTERED_INDEX$S$BENCH1M$K4, SYS$CLUSTERED_INDEX$S$BENCH1M$K40K, SYS$CLUSTERED_INDEX$S$BENCH1M$K5, SYS$CLUSTERED_INDEX$S$BENCH1M$K500K, SYS$CLUSTERED_INDEX$S$BENCH1M$KSEQ, SYS$CLUSTERED_INDEX$S$BENCH1M$S1, SYS$CLUSTERED_INDEX$S$BENCH1M$S2, SYS$CLUSTERED_INDEX$S$BENCH1M$S3, SYS$CLUSTERED_INDEX$S$BENCH1M$S4, SYS$CLUSTERED_INDEX$S$BENCH1M$S5, SYS$CLUSTERED_INDEX$S$BENCH1M$S6, SYS$CLUSTERED_INDEX$S$BENCH1M$S7, SYS$CLUSTERED_INDEX$S$BENCH1M$S8]])'
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from bench1M where K25 = 2
+. . . . . . . . > ;
+'EXPR$0'
+'40089'
+0: jdbc:luciddb:> create index B1M_K25_IDX on bench1M(K25)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for select count(*) from bench1M where K25 = 2;
+'column0'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[EXPR$0]])'
+'    FennelAggRel(groupCount=[0], agg#0=[COUNT()])'
+'      FennelCalcRel(expr#0..20=[{inputs}], expr#21=[true], $f0=[$t21])'
+'        LcsRowScanRel(table=[[LOCALDB, S, BENCH1M]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$BENCH1M$K10, SYS$CLUSTERED_INDEX$S$BENCH1M$K100, SYS$CLUSTERED_INDEX$S$BENCH1M$K100K, SYS$CLUSTERED_INDEX$S$BENCH1M$K10K, SYS$CLUSTERED_INDEX$S$BENCH1M$K1K, SYS$CLUSTERED_INDEX$S$BENCH1M$K2, SYS$CLUSTERED_INDEX$S$BENCH1M$K25, SYS$CLUSTERED_INDEX$S$BENCH1M$K250K, SYS$CLUSTERED_INDEX$S$BENCH1M$K4, SYS$CLUSTERED_INDEX$S$BENCH1M$K40K, SYS$CLUSTERED_INDEX$S$BENCH1M$K5, SYS$CLUSTERED_INDEX$S$BENCH1M$K500K, SYS$CLUSTERED_INDEX$S$BENCH1M$KSEQ, SYS$CLUSTERED_INDEX$S$BENCH1M$S1, SYS$CLUSTERED_INDEX$S$BENCH1M$S2, SYS$CLUSTERED_INDEX$S$BENCH1M$S3, SYS$CLUSTERED_INDEX$S$BENCH1M$S4, SYS$CLUSTERED_INDEX$S$BENCH1M$S5, SYS$CLUSTERED_INDEX$S$BENCH1M$S6, SYS$CLUSTERED_INDEX$S$BENCH1M$S7, SYS$CLUSTERED_INDEX$S$BENCH1M$S8]])'
+'          LcsIndexSearchRel(table=[[LOCALDB, S, BENCH1M]], projection=[*], index=[B1M_K25_IDX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'            FennelValuesRel(tuples=[[{ '[', 2, ']', 2 }]])'
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from bench1M where K25 = 2
+. . . . . . . . > ;
+'EXPR$0'
+'40089'
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table bench1m
+. . . . . . . . > ;
+0: jdbc:luciddb:> --select tablespace_name, total_blocks, free_blocks from dba_tablespaces
+0: jdbc:luciddb:> --where tablespace_name = 'TBB_BENCH_TS'
+0: jdbc:luciddb:> --;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !set outputformat table
+0: jdbc:luciddb:> !quit

@@ -1,0 +1,1924 @@
+0: jdbc:luciddb:> -- funcMathCover.sql
+0: jdbc:luciddb:> -- Cover all internal math functions in the calculator
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT n1, ABS(n1) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: could not calculate results for the following row:
+[ -2147483648, -32768, -128, -7, 0 ]
+Messages:
+[0]:PC=2 Code=22003 (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, ABS(n2) FROM TEST_INTEGER_TABLE ORDER BY 1;
++----------+---------+
+|    N2    | EXPR$1  |
++----------+---------+
+|          |         |
+| -234567  | 234567  |
+| -32768   | 32768   |
+| -2000    | 2000    |
+| -200     | 200     |
+| -2       | 2       |
+| 0        | 0       |
+| 2        | 2       |
+| 200      | 200     |
+| 2000     | 2000    |
+| 32767    | 32767   |
+| 234567   | 234567  |
++----------+---------+
+0: jdbc:luciddb:> SELECT n3, ABS(n3) FROM TEST_INTEGER_TABLE ORDER BY 1;
++----------+---------+
+|    N3    | EXPR$1  |
++----------+---------+
+|          |         |
+| -345678  | 345678  |
+| -3000    | 3000    |
+| -300     | 300     |
+| -128     | 128     |
+| -3       | 3       |
+| 0        | 0       |
+| 3        | 3       |
+| 127      | 127     |
+| 300      | 300     |
+| 3000     | 3000    |
+| 345678   | 345678  |
++----------+---------+
+0: jdbc:luciddb:> SELECT n4, ABS(n4) FROM TEST_INTEGER_TABLE ORDER BY 1;
++----------+---------+
+|    N4    | EXPR$1  |
++----------+---------+
+|          |         |
+| -456789  | 456789  |
+| -4000    | 4000    |
+| -400     | 400     |
+| -7       | 7       |
+| -4       | 4       |
+| 0        | 0       |
+| 4        | 4       |
+| 8        | 8       |
+| 400      | 400     |
+| 4000     | 4000    |
+| 456789   | 456789  |
++----------+---------+
+0: jdbc:luciddb:> SELECT n5, ABS(n5) FROM TEST_INTEGER_TABLE ORDER BY 1;
++----------+---------+
+|    N5    | EXPR$1  |
++----------+---------+
+|          |         |
+| -567890  | 567890  |
+| -5000    | 5000    |
+| -500     | 500     |
+| -5       | 5       |
+| 0        | 0       |
+| 0        | 0       |
+| 1        | 1       |
+| 5        | 5       |
+| 500      | 500     |
+| 5000     | 5000    |
+| 567890   | 567890  |
++----------+---------+
+0: jdbc:luciddb:> SELECT n1, ABS(n1) FROM TEST_NUMERIC_TABLE ORDER BY 1;
++------------+-----------+
+|     N1     |  EXPR$1   |
++------------+-----------+
+|            |           |
+| -99999999  | 99999999  |
+| -1100      | 1100      |
+| -111       | 111       |
+| -1         | 1         |
+| 0          | 0         |
+| 1          | 1         |
+| 111        | 111       |
+| 1100       | 1100      |
+| 12345      | 12345     |
+| 99999999   | 99999999  |
++------------+-----------+
+0: jdbc:luciddb:> SELECT n2, ABS(n2) FROM TEST_NUMERIC_TABLE ORDER BY 1;
++----------------+---------------+
+|       N2       |    EXPR$1     |
++----------------+---------------+
+|                |               |
+| -999999999999  | 999999999999  |
+| -2200          | 2200          |
+| -222           | 222           |
+| -2             | 2             |
+| 0              | 0             |
+| 2              | 2             |
+| 222            | 222           |
+| 2200           | 2200          |
+| 23456          | 23456         |
+| 999999999999   | 999999999999  |
++----------------+---------------+
+0: jdbc:luciddb:> SELECT n3, ABS(n3) FROM TEST_NUMERIC_TABLE ORDER BY 1;
++-----------------+----------------+
+|       N3        |     EXPR$1     |
++-----------------+----------------+
+|                 |                |
+| -9999999.99999  | 9999999.99999  |
+| -3300.33000     | 3300.33000     |
+| -333.00000      | 333.00000      |
+| -3.00000        | 3.00000        |
+| 0.00000         | 0.00000        |
+| 3.00000         | 3.00000        |
+| 124.44300       | 124.44300      |
+| 333.00000       | 333.00000      |
+| 3300.33000      | 3300.33000     |
+| 9999999.99999   | 9999999.99999  |
++-----------------+----------------+
+0: jdbc:luciddb:> SELECT n4, ABS(n4) FROM TEST_NUMERIC_TABLE ORDER BY 1;
++-------------+------------+
+|     N4      |   EXPR$1   |
++-------------+------------+
+|             |            |
+| -99999.999  | 99999.999  |
+| -4400.440   | 4400.440   |
+| -444.000    | 444.000    |
+| -4.000      | 4.000      |
+| 0.000       | 0.000      |
+| 4.000       | 4.000      |
+| 98.887      | 98.887     |
+| 444.000     | 444.000    |
+| 4400.440    | 4400.440   |
+| 99999.999   | 99999.999  |
++-------------+------------+
+0: jdbc:luciddb:> SELECT n5, ABS(n5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
++--------------------+-------------------+
+|         N5         |      EXPR$1       |
++--------------------+-------------------+
+|                    |                   |
+| -99999.9999999999  | 99999.9999999999  |
+| -5500.5500000000   | 5500.5500000000   |
+| -555.0000000000    | 555.0000000000    |
+| -5.0000000000      | 5.0000000000      |
+| 0E-10              | 0E-10             |
+| 5.0000000000       | 5.0000000000      |
+| 555.0000000000     | 555.0000000000    |
+| 948.4837322900     | 948.4837322900    |
+| 5500.5500000000    | 5500.5500000000   |
+| 99999.9999999999   | 99999.9999999999  |
++--------------------+-------------------+
+0: jdbc:luciddb:> SELECT n1, ABS(n1) FROM TEST_REAL_TABLE ORDER BY 1;
++-------------+------------+
+|     N1      |   EXPR$1   |
++-------------+------------+
+|             |            |
+| -1.233E31   | 1.233E31   |
+| -1234567.0  | 1234567.0  |
+| -1.0        | 1.0        |
+| -0.123456   | 0.123456   |
+| -1.233E-29  | 1.233E-29  |
+| 1.0E-37     | 1.0E-37    |
+| 1.233E-29   | 1.233E-29  |
+| 0.123456    | 0.123456   |
+| 1.0         | 1.0        |
+| 1.001       | 1.001      |
+| 1234567.0   | 1234567.0  |
+| 1.233E31    | 1.233E31   |
++-------------+------------+
+0: jdbc:luciddb:> SELECT n2, ABS(n2) FROM TEST_REAL_TABLE ORDER BY 1;
++-------------+------------+
+|     N2      |   EXPR$1   |
++-------------+------------+
+|             |            |
+| -1.255E31   | 1.255E31   |
+| -1234567.0  | 1234567.0  |
+| -2.0        | 2.0        |
+| -0.123456   | 0.123456   |
+| -1.255E-29  | 1.255E-29  |
+| 1.255E-29   | 1.255E-29  |
+| 0.123456    | 0.123456   |
+| 2.0         | 2.0        |
+| 2.002       | 2.002      |
+| 1234567.0   | 1234567.0  |
+| 1.255E31    | 1.255E31   |
+| 1.0E38      | 1.0E38     |
++-------------+------------+
+0: jdbc:luciddb:> SELECT n3, ABS(n3) FROM TEST_REAL_TABLE ORDER BY 1;
++-------------+------------+
+|     N3      |   EXPR$1   |
++-------------+------------+
+|             |            |
+| -1.277E32   | 1.277E32   |
+| -1234567.0  | 1234567.0  |
+| -3.0        | 3.0        |
+| -0.123456   | 0.123456   |
+| -1.277E-30  | 1.277E-30  |
+| 1.277E-30   | 1.277E-30  |
+| 0.123456    | 0.123456   |
+| 3.0         | 3.0        |
+| 3.003       | 3.003      |
+| 1234567.0   | 1234567.0  |
+| 1.277E32    | 1.277E32   |
+| 1.0E38      | 1.0E38     |
++-------------+------------+
+0: jdbc:luciddb:> SELECT n4, ABS(n4) FROM TEST_REAL_TABLE ORDER BY 1;
++-----------------------+----------------------+
+|          N4           |        EXPR$1        |
++-----------------------+----------------------+
+|                       |                      |
+| -1.287632E206         | 1.287632E206         |
+| -1.23456789012345E14  | 1.23456789012345E14  |
+| -4.0                  | 4.0                  |
+| -0.12345678901234     | 0.12345678901234     |
+| -1.287632E-198        | 1.287632E-198        |
+| 1.0E-307              | 1.0E-307             |
+| 1.287632E-198         | 1.287632E-198        |
+| 0.12345678901234      | 0.12345678901234     |
+| 4.0                   | 4.0                  |
+| 4.004                 | 4.004                |
+| 1.23456789012345E14   | 1.23456789012345E14  |
+| 1.287632E206          | 1.287632E206         |
++-----------------------+----------------------+
+0: jdbc:luciddb:> SELECT n5, ABS(n5) FROM TEST_REAL_TABLE ORDER BY 1;
++-----------------------+----------------------+
+|          N5           |        EXPR$1        |
++-----------------------+----------------------+
+|                       |                      |
+| -3.3324443E307        | 3.3324443E307        |
+| -1.23456789012345E14  | 1.23456789012345E14  |
+| -5.0                  | 5.0                  |
+| -0.12345678901234     | 0.12345678901234     |
+| -3.3324443E-299       | 3.3324443E-299       |
+| 3.3324443E-299        | 3.3324443E-299       |
+| 0.12345678901234      | 0.12345678901234     |
+| 5.0                   | 5.0                  |
+| 5.005                 | 5.005                |
+| 1.23456789012345E14   | 1.23456789012345E14  |
+| 3.3324443E307         | 3.3324443E307        |
+| 1.0E308               | 1.0E308              |
++-----------------------+----------------------+
+0: jdbc:luciddb:> SELECT n1, ACOS(n1) FROM TEST_INTEGER_TABLE WHERE n1 < 1 AND n1 > -1 ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ACOS(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, ACOS(n2) FROM TEST_INTEGER_TABLE WHERE n2 < 1 AND n2 > -1 ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ACOS(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, ACOS(n3) FROM TEST_INTEGER_TABLE WHERE n3 < 1 AND n3 > -1 ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ACOS(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, ACOS(n4) FROM TEST_INTEGER_TABLE WHERE n4 < 1 AND n4 > -1 ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ACOS(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, ACOS(n5) FROM TEST_INTEGER_TABLE WHERE n5 < 1 AND n5 > -1 ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ACOS(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, ACOS(n1) FROM TEST_NUMERIC_TABLE WHERE n1 < 1 AND n1 > -1 ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ACOS(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, ACOS(n2) FROM TEST_NUMERIC_TABLE WHERE n2 < 1 AND n2 > -1 ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ACOS(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, ACOS(n3) FROM TEST_NUMERIC_TABLE WHERE n3 < 1 AND n3 > -1 ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ACOS(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, ACOS(n4) FROM TEST_NUMERIC_TABLE WHERE n4 < 1 AND n4 > -1 ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ACOS(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, ACOS(n5) FROM TEST_NUMERIC_TABLE WHERE n5 < 1 AND n5 > -1 ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ACOS(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, ACOS(n1) FROM TEST_REAL_TABLE WHERE n1 < 1 AND n1 > -1 ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ACOS(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, ACOS(n2) FROM TEST_REAL_TABLE WHERE n2 < 1 AND n2 > -1 ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ACOS(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, ACOS(n3) FROM TEST_REAL_TABLE WHERE n3 < 1 AND n3 > -1 ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ACOS(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, ACOS(n4) FROM TEST_REAL_TABLE WHERE n4 < 1 AND n4 > -1 ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ACOS(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, ACOS(n5) FROM TEST_REAL_TABLE WHERE n5 < 1 AND n5 > -1 ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ACOS(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, ASIN(n1) FROM TEST_INTEGER_TABLE WHERE n1 < 1 AND n1 > -1 ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ASIN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, ASIN(n2) FROM TEST_INTEGER_TABLE WHERE n2 < 1 AND n2 > -1 ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ASIN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, ASIN(n3) FROM TEST_INTEGER_TABLE WHERE n3 < 1 AND n3 > -1 ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ASIN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, ASIN(n4) FROM TEST_INTEGER_TABLE WHERE n4 < 1 AND n4 > -1 ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ASIN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, ASIN(n5) FROM TEST_INTEGER_TABLE WHERE n5 < 1 AND n5 > -1 ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ASIN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, ASIN(n1) FROM TEST_NUMERIC_TABLE WHERE n1 < 1 AND n1 > -1 ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ASIN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, ASIN(n2) FROM TEST_NUMERIC_TABLE WHERE n2 < 1 AND n2 > -1 ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ASIN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, ASIN(n3) FROM TEST_NUMERIC_TABLE WHERE n3 < 1 AND n3 > -1 ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ASIN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, ASIN(n4) FROM TEST_NUMERIC_TABLE WHERE n4 < 1 AND n4 > -1 ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ASIN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, ASIN(n5) FROM TEST_NUMERIC_TABLE WHERE n5 < 1 AND n5 > -1 ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ASIN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, ASIN(n1) FROM TEST_REAL_TABLE WHERE n1 < 1 AND n1 > -1 ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ASIN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, ASIN(n2) FROM TEST_REAL_TABLE WHERE n2 < 1 AND n2 > -1 ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ASIN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, ASIN(n3) FROM TEST_REAL_TABLE WHERE n3 < 1 AND n3 > -1 ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ASIN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, ASIN(n4) FROM TEST_REAL_TABLE WHERE n4 < 1 AND n4 > -1 ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ASIN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, ASIN(n5) FROM TEST_REAL_TABLE WHERE n5 < 1 AND n5 > -1 ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ASIN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, ATAN(n1) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ATAN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, ATAN(n2) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ATAN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, ATAN(n3) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ATAN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, ATAN(n4) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ATAN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, ATAN(n5) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ATAN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, ATAN(n1) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ATAN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, ATAN(n2) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ATAN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, ATAN(n3) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ATAN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, ATAN(n4) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ATAN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, ATAN(n5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ATAN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, ATAN(n1) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ATAN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, ATAN(n2) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ATAN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, ATAN(n3) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ATAN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, ATAN(n4) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ATAN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, ATAN(n5) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature ATAN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, CEIL(n1) FROM TEST_INTEGER_TABLE ORDER BY 1;
++--------------+--------------+
+|      N1      |    EXPR$1    |
++--------------+--------------+
+|              |              |
+| -2147483648  | -2147483648  |
+| -123456      | -123456      |
+| -1000        | -1000        |
+| -100         | -100         |
+| -1           | -1           |
+| 0            | 0            |
+| 1            | 1            |
+| 100          | 100          |
+| 1000         | 1000         |
+| 123456       | 123456       |
+| 2147483647   | 2147483647   |
++--------------+--------------+
+0: jdbc:luciddb:> SELECT n2, CEIL(n2) FROM TEST_INTEGER_TABLE ORDER BY 1;
++----------+----------+
+|    N2    |  EXPR$1  |
++----------+----------+
+|          |          |
+| -234567  | -234567  |
+| -32768   | -32768   |
+| -2000    | -2000    |
+| -200     | -200     |
+| -2       | -2       |
+| 0        | 0        |
+| 2        | 2        |
+| 200      | 200      |
+| 2000     | 2000     |
+| 32767    | 32767    |
+| 234567   | 234567   |
++----------+----------+
+0: jdbc:luciddb:> SELECT n3, CEIL(n3) FROM TEST_INTEGER_TABLE ORDER BY 1;
++----------+----------+
+|    N3    |  EXPR$1  |
++----------+----------+
+|          |          |
+| -345678  | -345678  |
+| -3000    | -3000    |
+| -300     | -300     |
+| -128     | -128     |
+| -3       | -3       |
+| 0        | 0        |
+| 3        | 3        |
+| 127      | 127      |
+| 300      | 300      |
+| 3000     | 3000     |
+| 345678   | 345678   |
++----------+----------+
+0: jdbc:luciddb:> SELECT n4, CEIL(n4) FROM TEST_INTEGER_TABLE ORDER BY 1;
++----------+----------+
+|    N4    |  EXPR$1  |
++----------+----------+
+|          |          |
+| -456789  | -456789  |
+| -4000    | -4000    |
+| -400     | -400     |
+| -7       | -7       |
+| -4       | -4       |
+| 0        | 0        |
+| 4        | 4        |
+| 8        | 8        |
+| 400      | 400      |
+| 4000     | 4000     |
+| 456789   | 456789   |
++----------+----------+
+0: jdbc:luciddb:> SELECT n5, CEIL(n5) FROM TEST_INTEGER_TABLE ORDER BY 1;
++----------+----------+
+|    N5    |  EXPR$1  |
++----------+----------+
+|          |          |
+| -567890  | -567890  |
+| -5000    | -5000    |
+| -500     | -500     |
+| -5       | -5       |
+| 0        | 0        |
+| 0        | 0        |
+| 1        | 1        |
+| 5        | 5        |
+| 500      | 500      |
+| 5000     | 5000     |
+| 567890   | 567890   |
++----------+----------+
+0: jdbc:luciddb:> SELECT n1, CEIL(n1) FROM TEST_NUMERIC_TABLE ORDER BY 1;
++------------+------------+
+|     N1     |   EXPR$1   |
++------------+------------+
+|            |            |
+| -99999999  | -99999999  |
+| -1100      | -1100      |
+| -111       | -111       |
+| -1         | -1         |
+| 0          | 0          |
+| 1          | 1          |
+| 111        | 111        |
+| 1100       | 1100       |
+| 12345      | 12345      |
+| 99999999   | 99999999   |
++------------+------------+
+0: jdbc:luciddb:> SELECT n2, CEIL(n2) FROM TEST_NUMERIC_TABLE ORDER BY 1;
++----------------+----------------+
+|       N2       |     EXPR$1     |
++----------------+----------------+
+|                |                |
+| -999999999999  | -999999999999  |
+| -2200          | -2200          |
+| -222           | -222           |
+| -2             | -2             |
+| 0              | 0              |
+| 2              | 2              |
+| 222            | 222            |
+| 2200           | 2200           |
+| 23456          | 23456          |
+| 999999999999   | 999999999999   |
++----------------+----------------+
+0: jdbc:luciddb:> -- FRG-52
+0: jdbc:luciddb:> SELECT n3, CEIL(n3) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: java.lang.AssertionError: Internal error: Cannot add expression of different type to set: 
+set type is RecordType(DECIMAL(12, 5) N3, DECIMAL(12, 0) NOT NULL EXPR$1) NOT NULL
+expression type is RecordType(DECIMAL(12, 5) N3, DECIMAL(12, 0) EXPR$1) NOT NULL
+set is com.disruptivetech.farrago.volcano.RelSet@16a9600
+expression is CalcRel.NONE(child=Subset#0.FENNEL_EXEC,expr#0..4={inputs},expr#5=Reinterpret($t2),expr#6=CAST($t5):DOUBLE,expr#7=100000,expr#8=/($t6, $t7),expr#9=CEIL($t8),expr#10=CAST($t9):BIGINT,expr#11=true,expr#12=Reinterpret($t10, $t11),N3=$t2,EXPR$1=$t12) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, CEIL(n4) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: java.lang.AssertionError: Internal error: Cannot add expression of different type to set: 
+set type is RecordType(DECIMAL(8, 3) N4, DECIMAL(8, 0) NOT NULL EXPR$1) NOT NULL
+expression type is RecordType(DECIMAL(8, 3) N4, DECIMAL(8, 0) EXPR$1) NOT NULL
+set is com.disruptivetech.farrago.volcano.RelSet@13f65f2
+expression is CalcRel.NONE(child=Subset#0.FENNEL_EXEC,expr#0..4={inputs},expr#5=Reinterpret($t3),expr#6=CAST($t5):DOUBLE,expr#7=1000,expr#8=/($t6, $t7),expr#9=CEIL($t8),expr#10=CAST($t9):BIGINT,expr#11=true,expr#12=Reinterpret($t10, $t11),N4=$t3,EXPR$1=$t12) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, CEIL(n5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: java.lang.AssertionError: Internal error: Cannot add expression of different type to set: 
+set type is RecordType(DECIMAL(15, 10) N5, DECIMAL(15, 0) NOT NULL EXPR$1) NOT NULL
+expression type is RecordType(DECIMAL(15, 10) N5, DECIMAL(15, 0) EXPR$1) NOT NULL
+set is com.disruptivetech.farrago.volcano.RelSet@6b4325
+expression is CalcRel.NONE(child=Subset#0.FENNEL_EXEC,expr#0..4={inputs},expr#5=Reinterpret($t4),expr#6=CAST($t5):DOUBLE,expr#7=10000000000,expr#8=/($t6, $t7),expr#9=CEIL($t8),expr#10=CAST($t9):BIGINT,expr#11=true,expr#12=Reinterpret($t10, $t11),N5=$t4,EXPR$1=$t12) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, CEIL(n1) FROM TEST_REAL_TABLE ORDER BY 1;
++-------------+-------------+
+|     N1      |   EXPR$1    |
++-------------+-------------+
+|             |             |
+| -1.233E31   | -1.233E31   |
+| -1234567.0  | -1234567.0  |
+| -1.0        | -1.0        |
+| -0.123456   | -0.0        |
+| -1.233E-29  | -0.0        |
+| 1.0E-37     | 1.0         |
+| 1.233E-29   | 1.0         |
+| 0.123456    | 1.0         |
+| 1.0         | 1.0         |
+| 1.001       | 2.0         |
+| 1234567.0   | 1234567.0   |
+| 1.233E31    | 1.233E31    |
++-------------+-------------+
+0: jdbc:luciddb:> SELECT n2, CEIL(n2) FROM TEST_REAL_TABLE ORDER BY 1;
++-------------+-------------+
+|     N2      |   EXPR$1    |
++-------------+-------------+
+|             |             |
+| -1.255E31   | -1.255E31   |
+| -1234567.0  | -1234567.0  |
+| -2.0        | -2.0        |
+| -0.123456   | -0.0        |
+| -1.255E-29  | -0.0        |
+| 1.255E-29   | 1.0         |
+| 0.123456    | 1.0         |
+| 2.0         | 2.0         |
+| 2.002       | 3.0         |
+| 1234567.0   | 1234567.0   |
+| 1.255E31    | 1.255E31    |
+| 1.0E38      | 1.0E38      |
++-------------+-------------+
+0: jdbc:luciddb:> SELECT n3, CEIL(n3) FROM TEST_REAL_TABLE ORDER BY 1;
++-------------+-------------+
+|     N3      |   EXPR$1    |
++-------------+-------------+
+|             |             |
+| -1.277E32   | -1.277E32   |
+| -1234567.0  | -1234567.0  |
+| -3.0        | -3.0        |
+| -0.123456   | -0.0        |
+| -1.277E-30  | -0.0        |
+| 1.277E-30   | 1.0         |
+| 0.123456    | 1.0         |
+| 3.0         | 3.0         |
+| 3.003       | 4.0         |
+| 1234567.0   | 1234567.0   |
+| 1.277E32    | 1.277E32    |
+| 1.0E38      | 1.0E38      |
++-------------+-------------+
+0: jdbc:luciddb:> SELECT n4, CEIL(n4) FROM TEST_REAL_TABLE ORDER BY 1;
++-----------------------+-----------------------+
+|          N4           |        EXPR$1         |
++-----------------------+-----------------------+
+|                       |                       |
+| -1.287632E206         | -1.287632E206         |
+| -1.23456789012345E14  | -1.23456789012345E14  |
+| -4.0                  | -4.0                  |
+| -0.12345678901234     | -0.0                  |
+| -1.287632E-198        | -0.0                  |
+| 1.0E-307              | 1.0                   |
+| 1.287632E-198         | 1.0                   |
+| 0.12345678901234      | 1.0                   |
+| 4.0                   | 4.0                   |
+| 4.004                 | 5.0                   |
+| 1.23456789012345E14   | 1.23456789012345E14   |
+| 1.287632E206          | 1.287632E206          |
++-----------------------+-----------------------+
+0: jdbc:luciddb:> SELECT n5, CEIL(n5) FROM TEST_REAL_TABLE ORDER BY 1;
++-----------------------+-----------------------+
+|          N5           |        EXPR$1         |
++-----------------------+-----------------------+
+|                       |                       |
+| -3.3324443E307        | -3.3324443E307        |
+| -1.23456789012345E14  | -1.23456789012345E14  |
+| -5.0                  | -5.0                  |
+| -0.12345678901234     | -0.0                  |
+| -3.3324443E-299       | -0.0                  |
+| 3.3324443E-299        | 1.0                   |
+| 0.12345678901234      | 1.0                   |
+| 5.0                   | 5.0                   |
+| 5.005                 | 6.0                   |
+| 1.23456789012345E14   | 1.23456789012345E14   |
+| 3.3324443E307         | 3.3324443E307         |
+| 1.0E308               | 1.0E308               |
++-----------------------+-----------------------+
+0: jdbc:luciddb:> SELECT n1, COS(n1) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature COS(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, COS(n2) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature COS(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, COS(n3) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature COS(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, COS(n4) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature COS(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, COS(n5) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature COS(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, COS(n1) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature COS(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, COS(n2) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature COS(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, COS(n3) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature COS(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, COS(n4) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature COS(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, COS(n5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature COS(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, COS(n1) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature COS(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, COS(n2) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature COS(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, COS(n3) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature COS(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, COS(n4) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature COS(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, COS(n5) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature COS(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, COSH(n1) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature COSH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, COSH(n2) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature COSH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, COSH(n3) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature COSH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, COSH(n4) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature COSH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, COSH(n5) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature COSH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, COSH(n1) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature COSH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, COSH(n2) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature COSH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, COSH(n3) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature COSH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, COSH(n4) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature COSH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, COSH(n5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature COSH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, COSH(n1) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature COSH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, COSH(n2) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature COSH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, COSH(n3) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature COSH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, COSH(n4) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature COSH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, COSH(n5) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature COSH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, EXP(n1) FROM TEST_INTEGER_TABLE ORDER BY 1;
++--------------+------------------------+
+|      N1      |         EXPR$1         |
++--------------+------------------------+
+|              |                        |
+| -2147483648  | 0.0                    |
+| -123456      | 0.0                    |
+| -1000        | 0.0                    |
+| -100         | 3.720075976020836E-44  |
+| -1           | 0.36787944117144233    |
+| 0            | 1.0                    |
+| 1            | 2.7182818284590455     |
+| 100          | 2.6881171418161356E43  |
+| 1000         | Infinity               |
+| 123456       | Infinity               |
+| 2147483647   | Infinity               |
++--------------+------------------------+
+0: jdbc:luciddb:> SELECT n2, EXP(n2) FROM TEST_INTEGER_TABLE ORDER BY 1;
++----------+-------------------------+
+|    N2    |         EXPR$1          |
++----------+-------------------------+
+|          |                         |
+| -234567  | 0.0                     |
+| -32768   | 0.0                     |
+| -2000    | 0.0                     |
+| -200     | 1.3838965267367376E-87  |
+| -2       | 0.1353352832366127      |
+| 0        | 1.0                     |
+| 2        | 7.38905609893065        |
+| 200      | 7.225973768125749E86    |
+| 2000     | Infinity                |
+| 32767    | Infinity                |
+| 234567   | Infinity                |
++----------+-------------------------+
+0: jdbc:luciddb:> SELECT n3, EXP(n3) FROM TEST_INTEGER_TABLE ORDER BY 1;
++----------+-------------------------+
+|    N3    |         EXPR$1          |
++----------+-------------------------+
+|          |                         |
+| -345678  | 0.0                     |
+| -3000    | 0.0                     |
+| -300     | 5.148200222412013E-131  |
+| -128     | 2.572209372642415E-56   |
+| -3       | 0.049787068367863944    |
+| 0        | 1.0                     |
+| 3        | 20.085536923187668      |
+| 127      | 1.4302079958348105E55   |
+| 300      | 1.9424263952412558E130  |
+| 3000     | Infinity                |
+| 345678   | Infinity                |
++----------+-------------------------+
+0: jdbc:luciddb:> SELECT n4, EXP(n4) FROM TEST_INTEGER_TABLE ORDER BY 1;
++----------+--------------------------+
+|    N4    |          EXPR$1          |
++----------+--------------------------+
+|          |                          |
+| -456789  | 0.0                      |
+| -4000    | 0.0                      |
+| -400     | 1.9151695967140057E-174  |
+| -7       | 9.118819655545162E-4     |
+| -4       | 0.01831563888873418      |
+| 0        | 1.0                      |
+| 4        | 54.598150033144236       |
+| 8        | 2980.9579870417283       |
+| 400      | 5.221469689764144E173    |
+| 4000     | Infinity                 |
+| 456789   | Infinity                 |
++----------+--------------------------+
+0: jdbc:luciddb:> SELECT n5, EXP(n5) FROM TEST_INTEGER_TABLE ORDER BY 1;
++----------+-------------------------+
+|    N5    |         EXPR$1          |
++----------+-------------------------+
+|          |                         |
+| -567890  | 0.0                     |
+| -5000    | 0.0                     |
+| -500     | 7.124576406741286E-218  |
+| -5       | 0.006737946999085467    |
+| 0        | 1.0                     |
+| 0        | 1.0                     |
+| 1        | 2.7182818284590455      |
+| 5        | 148.4131591025766       |
+| 500      | 1.4035922178528373E217  |
+| 5000     | Infinity                |
+| 567890   | Infinity                |
++----------+-------------------------+
+0: jdbc:luciddb:> SELECT n1, EXP(n1) FROM TEST_NUMERIC_TABLE ORDER BY 1;
++------------+------------------------+
+|     N1     |         EXPR$1         |
++------------+------------------------+
+|            |                        |
+| -99999999  | 0.0                    |
+| -1100      | 0.0                    |
+| -111       | 6.213159586848109E-49  |
+| -1         | 0.36787944117144233    |
+| 0          | 1.0                    |
+| 1          | 2.7182818284590455     |
+| 111        | 1.609487066961518E48   |
+| 1100       | Infinity               |
+| 12345      | Infinity               |
+| 99999999   | Infinity               |
++------------+------------------------+
+0: jdbc:luciddb:> SELECT n2, EXP(n2) FROM TEST_NUMERIC_TABLE ORDER BY 1;
++----------------+------------------------+
+|       N2       |         EXPR$1         |
++----------------+------------------------+
+|                |                        |
+| -999999999999  | 0.0                    |
+| -2200          | 0.0                    |
+| -222           | 3.860335205164256E-97  |
+| -2             | 0.1353352832366127     |
+| 0              | 1.0                    |
+| 2              | 7.38905609893065       |
+| 222            | 2.5904486187163903E96  |
+| 2200           | Infinity               |
+| 23456          | Infinity               |
+| 999999999999   | Infinity               |
++----------------+------------------------+
+0: jdbc:luciddb:> SELECT n3, EXP(n3) FROM TEST_NUMERIC_TABLE ORDER BY 1;
++-----------------+-------------------------+
+|       N3        |         EXPR$1          |
++-----------------+-------------------------+
+|                 |                         |
+| -9999999.99999  | 0.0                     |
+| -3300.33000     | 0.0                     |
+| -333.00000      | 2.398487868841356E-145  |
+| -3.00000        | 0.049787068367863944    |
+| 0.00000         | 1.0                     |
+| 3.00000         | 20.085536923187668      |
+| 124.44300       | 1.1089404149789781E54   |
+| 333.00000       | 4.169293549452358E144   |
+| 3300.33000      | Infinity                |
+| 9999999.99999   | Infinity                |
++-----------------+-------------------------+
+0: jdbc:luciddb:> SELECT n4, EXP(n4) FROM TEST_NUMERIC_TABLE ORDER BY 1;
++-------------+--------------------------+
+|     N4      |          EXPR$1          |
++-------------+--------------------------+
+|             |                          |
+| -99999.999  | 0.0                      |
+| -4400.440   | 0.0                      |
+| -444.000    | 1.4902187896230561E-193  |
+| -4.000      | 0.01831563888873418      |
+| 0.000       | 1.0                      |
+| 4.000       | 54.598150033144236       |
+| 98.887      | 8.832393957632021E42     |
+| 444.000     | 6.710424046209653E192    |
+| 4400.440    | Infinity                 |
+| 99999.999   | Infinity                 |
++-------------+--------------------------+
+0: jdbc:luciddb:> SELECT n5, EXP(n5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
++--------------------+-------------------------+
+|         N5         |         EXPR$1          |
++--------------------+-------------------------+
+|                    |                         |
+| -99999.9999999999  | 0.0                     |
+| -5500.5500000000   | 0.0                     |
+| -555.0000000000    | 9.258967159247676E-242  |
+| -5.0000000000      | 0.006737946999085467    |
+| 0E-10              | 1.0                     |
+| 5.0000000000       | 148.4131591025766       |
+| 555.0000000000     | 1.0800340716202018E241  |
+| 948.4837322900     | Infinity                |
+| 5500.5500000000    | Infinity                |
+| 99999.9999999999   | Infinity                |
++--------------------+-------------------------+
+0: jdbc:luciddb:> SELECT n1, EXP(n1) FROM TEST_REAL_TABLE ORDER BY 1;
++-------------+----------------------+
+|     N1      |        EXPR$1        |
++-------------+----------------------+
+|             |                      |
+| -1.233E31   | 0.0                  |
+| -1234567.0  | 0.0                  |
+| -1.0        | 0.36787944117144233  |
+| -0.123456   | 0.8838605302518451   |
+| -1.233E-29  | 1.0                  |
+| 1.0E-37     | 1.0                  |
+| 1.233E-29   | 1.0                  |
+| 0.123456    | 1.1314002218371064   |
+| 1.0         | 2.7182818284590455   |
+| 1.001       | 2.7210014698815783   |
+| 1234567.0   | Infinity             |
+| 1.233E31    | Infinity             |
++-------------+----------------------+
+0: jdbc:luciddb:> SELECT n2, EXP(n2) FROM TEST_REAL_TABLE ORDER BY 1;
++-------------+---------------------+
+|     N2      |       EXPR$1        |
++-------------+---------------------+
+|             |                     |
+| -1.255E31   | 0.0                 |
+| -1234567.0  | 0.0                 |
+| -2.0        | 0.1353352832366127  |
+| -0.123456   | 0.8838605291189672  |
+| -1.255E-29  | 1.0                 |
+| 1.255E-29   | 1.0                 |
+| 0.123456    | 1.1314002232872653  |
+| 2.0         | 7.38905609893065    |
+| 2.002       | 7.403849691062087   |
+| 1234567.0   | Infinity            |
+| 1.255E31    | Infinity            |
+| 1.0E38      | Infinity            |
++-------------+---------------------+
+0: jdbc:luciddb:> SELECT n3, EXP(n3) FROM TEST_REAL_TABLE ORDER BY 1;
++-------------+-----------------------+
+|     N3      |        EXPR$1         |
++-------------+-----------------------+
+|             |                       |
+| -1.277E32   | 0.0                   |
+| -1234567.0  | 0.0                   |
+| -3.0        | 0.049787068367863944  |
+| -0.123456   | 0.8838605291189672    |
+| -1.277E-30  | 1.0                   |
+| 1.277E-30   | 1.0                   |
+| 0.123456    | 1.1314002232872653    |
+| 3.0         | 20.085536923187668    |
+| 3.003       | 20.1458844320036      |
+| 1234567.0   | Infinity              |
+| 1.277E32    | Infinity              |
+| 1.0E38      | Infinity              |
++-------------+-----------------------+
+0: jdbc:luciddb:> SELECT n4, EXP(n4) FROM TEST_REAL_TABLE ORDER BY 1;
++-----------------------+----------------------+
+|          N4           |        EXPR$1        |
++-----------------------+----------------------+
+|                       |                      |
+| -1.287632E206         | 0.0                  |
+| -1.23456789012345E14  | 0.0                  |
+| -4.0                  | 0.01831563888873418  |
+| -0.12345678901234     | 0.8838598328752549   |
+| -1.287632E-198        | 1.0                  |
+| 1.0E-307              | 1.0                  |
+| 1.287632E-198         | 1.0                  |
+| 0.12345678901234      | 1.131401114526195    |
+| 4.0                   | 54.598150033144236   |
+| 4.004                 | 54.81698000144017    |
+| 1.23456789012345E14   | Infinity             |
+| 1.287632E206          | Infinity             |
++-----------------------+----------------------+
+0: jdbc:luciddb:> SELECT n5, EXP(n5) FROM TEST_REAL_TABLE ORDER BY 1;
++-----------------------+-----------------------+
+|          N5           |        EXPR$1         |
++-----------------------+-----------------------+
+|                       |                       |
+| -3.3324443E307        | 0.0                   |
+| -1.23456789012345E14  | 0.0                   |
+| -5.0                  | 0.006737946999085467  |
+| -0.12345678901234     | 0.8838598328752549    |
+| -3.3324443E-299       | 1.0                   |
+| 3.3324443E-299        | 1.0                   |
+| 0.12345678901234      | 1.131401114526195     |
+| 5.0                   | 148.4131591025766     |
+| 5.005                 | 149.15708315838788    |
+| 1.23456789012345E14   | Infinity              |
+| 3.3324443E307         | Infinity              |
+| 1.0E308               | Infinity              |
++-----------------------+-----------------------+
+0: jdbc:luciddb:> SELECT n1, FLOOR(n1) FROM TEST_INTEGER_TABLE ORDER BY 1;
++--------------+--------------+
+|      N1      |    EXPR$1    |
++--------------+--------------+
+|              |              |
+| -2147483648  | -2147483648  |
+| -123456      | -123456      |
+| -1000        | -1000        |
+| -100         | -100         |
+| -1           | -1           |
+| 0            | 0            |
+| 1            | 1            |
+| 100          | 100          |
+| 1000         | 1000         |
+| 123456       | 123456       |
+| 2147483647   | 2147483647   |
++--------------+--------------+
+0: jdbc:luciddb:> SELECT n2, FLOOR(n2) FROM TEST_INTEGER_TABLE ORDER BY 1;
++----------+----------+
+|    N2    |  EXPR$1  |
++----------+----------+
+|          |          |
+| -234567  | -234567  |
+| -32768   | -32768   |
+| -2000    | -2000    |
+| -200     | -200     |
+| -2       | -2       |
+| 0        | 0        |
+| 2        | 2        |
+| 200      | 200      |
+| 2000     | 2000     |
+| 32767    | 32767    |
+| 234567   | 234567   |
++----------+----------+
+0: jdbc:luciddb:> SELECT n3, FLOOR(n3) FROM TEST_INTEGER_TABLE ORDER BY 1;
++----------+----------+
+|    N3    |  EXPR$1  |
++----------+----------+
+|          |          |
+| -345678  | -345678  |
+| -3000    | -3000    |
+| -300     | -300     |
+| -128     | -128     |
+| -3       | -3       |
+| 0        | 0        |
+| 3        | 3        |
+| 127      | 127      |
+| 300      | 300      |
+| 3000     | 3000     |
+| 345678   | 345678   |
++----------+----------+
+0: jdbc:luciddb:> SELECT n4, FLOOR(n4) FROM TEST_INTEGER_TABLE ORDER BY 1;
++----------+----------+
+|    N4    |  EXPR$1  |
++----------+----------+
+|          |          |
+| -456789  | -456789  |
+| -4000    | -4000    |
+| -400     | -400     |
+| -7       | -7       |
+| -4       | -4       |
+| 0        | 0        |
+| 4        | 4        |
+| 8        | 8        |
+| 400      | 400      |
+| 4000     | 4000     |
+| 456789   | 456789   |
++----------+----------+
+0: jdbc:luciddb:> SELECT n5, FLOOR(n5) FROM TEST_INTEGER_TABLE ORDER BY 1;
++----------+----------+
+|    N5    |  EXPR$1  |
++----------+----------+
+|          |          |
+| -567890  | -567890  |
+| -5000    | -5000    |
+| -500     | -500     |
+| -5       | -5       |
+| 0        | 0        |
+| 0        | 0        |
+| 1        | 1        |
+| 5        | 5        |
+| 500      | 500      |
+| 5000     | 5000     |
+| 567890   | 567890   |
++----------+----------+
+0: jdbc:luciddb:> SELECT n1, FLOOR(n1) FROM TEST_NUMERIC_TABLE ORDER BY 1;
++------------+------------+
+|     N1     |   EXPR$1   |
++------------+------------+
+|            |            |
+| -99999999  | -99999999  |
+| -1100      | -1100      |
+| -111       | -111       |
+| -1         | -1         |
+| 0          | 0          |
+| 1          | 1          |
+| 111        | 111        |
+| 1100       | 1100       |
+| 12345      | 12345      |
+| 99999999   | 99999999   |
++------------+------------+
+0: jdbc:luciddb:> SELECT n2, FLOOR(n2) FROM TEST_NUMERIC_TABLE ORDER BY 1;
++----------------+----------------+
+|       N2       |     EXPR$1     |
++----------------+----------------+
+|                |                |
+| -999999999999  | -999999999999  |
+| -2200          | -2200          |
+| -222           | -222           |
+| -2             | -2             |
+| 0              | 0              |
+| 2              | 2              |
+| 222            | 222            |
+| 2200           | 2200           |
+| 23456          | 23456          |
+| 999999999999   | 999999999999   |
++----------------+----------------+
+0: jdbc:luciddb:> -- FRG-52
+0: jdbc:luciddb:> SELECT n3, FLOOR(n3) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: java.lang.AssertionError: Internal error: Cannot add expression of different type to set: 
+set type is RecordType(DECIMAL(12, 5) N3, DECIMAL(12, 0) NOT NULL EXPR$1) NOT NULL
+expression type is RecordType(DECIMAL(12, 5) N3, DECIMAL(12, 0) EXPR$1) NOT NULL
+set is com.disruptivetech.farrago.volcano.RelSet@c1ebbf
+expression is CalcRel.NONE(child=Subset#0.FENNEL_EXEC,expr#0..4={inputs},expr#5=Reinterpret($t2),expr#6=CAST($t5):DOUBLE,expr#7=100000,expr#8=/($t6, $t7),expr#9=FLOOR($t8),expr#10=CAST($t9):BIGINT,expr#11=true,expr#12=Reinterpret($t10, $t11),N3=$t2,EXPR$1=$t12) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, FLOOR(n4) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: java.lang.AssertionError: Internal error: Cannot add expression of different type to set: 
+set type is RecordType(DECIMAL(8, 3) N4, DECIMAL(8, 0) NOT NULL EXPR$1) NOT NULL
+expression type is RecordType(DECIMAL(8, 3) N4, DECIMAL(8, 0) EXPR$1) NOT NULL
+set is com.disruptivetech.farrago.volcano.RelSet@9e3ccc
+expression is CalcRel.NONE(child=Subset#0.FENNEL_EXEC,expr#0..4={inputs},expr#5=Reinterpret($t3),expr#6=CAST($t5):DOUBLE,expr#7=1000,expr#8=/($t6, $t7),expr#9=FLOOR($t8),expr#10=CAST($t9):BIGINT,expr#11=true,expr#12=Reinterpret($t10, $t11),N4=$t3,EXPR$1=$t12) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, FLOOR(n5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: java.lang.AssertionError: Internal error: Cannot add expression of different type to set: 
+set type is RecordType(DECIMAL(15, 10) N5, DECIMAL(15, 0) NOT NULL EXPR$1) NOT NULL
+expression type is RecordType(DECIMAL(15, 10) N5, DECIMAL(15, 0) EXPR$1) NOT NULL
+set is com.disruptivetech.farrago.volcano.RelSet@d7b381
+expression is CalcRel.NONE(child=Subset#0.FENNEL_EXEC,expr#0..4={inputs},expr#5=Reinterpret($t4),expr#6=CAST($t5):DOUBLE,expr#7=10000000000,expr#8=/($t6, $t7),expr#9=FLOOR($t8),expr#10=CAST($t9):BIGINT,expr#11=true,expr#12=Reinterpret($t10, $t11),N5=$t4,EXPR$1=$t12) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, FLOOR(n1) FROM TEST_REAL_TABLE ORDER BY 1;
++-------------+-------------+
+|     N1      |   EXPR$1    |
++-------------+-------------+
+|             |             |
+| -1.233E31   | -1.233E31   |
+| -1234567.0  | -1234567.0  |
+| -1.0        | -1.0        |
+| -0.123456   | -1.0        |
+| -1.233E-29  | -1.0        |
+| 1.0E-37     | 0.0         |
+| 1.233E-29   | 0.0         |
+| 0.123456    | 0.0         |
+| 1.0         | 1.0         |
+| 1.001       | 1.0         |
+| 1234567.0   | 1234567.0   |
+| 1.233E31    | 1.233E31    |
++-------------+-------------+
+0: jdbc:luciddb:> SELECT n2, FLOOR(n2) FROM TEST_REAL_TABLE ORDER BY 1;
++-------------+-------------+
+|     N2      |   EXPR$1    |
++-------------+-------------+
+|             |             |
+| -1.255E31   | -1.255E31   |
+| -1234567.0  | -1234567.0  |
+| -2.0        | -2.0        |
+| -0.123456   | -1.0        |
+| -1.255E-29  | -1.0        |
+| 1.255E-29   | 0.0         |
+| 0.123456    | 0.0         |
+| 2.0         | 2.0         |
+| 2.002       | 2.0         |
+| 1234567.0   | 1234567.0   |
+| 1.255E31    | 1.255E31    |
+| 1.0E38      | 1.0E38      |
++-------------+-------------+
+0: jdbc:luciddb:> SELECT n3, FLOOR(n3) FROM TEST_REAL_TABLE ORDER BY 1;
++-------------+-------------+
+|     N3      |   EXPR$1    |
++-------------+-------------+
+|             |             |
+| -1.277E32   | -1.277E32   |
+| -1234567.0  | -1234567.0  |
+| -3.0        | -3.0        |
+| -0.123456   | -1.0        |
+| -1.277E-30  | -1.0        |
+| 1.277E-30   | 0.0         |
+| 0.123456    | 0.0         |
+| 3.0         | 3.0         |
+| 3.003       | 3.0         |
+| 1234567.0   | 1234567.0   |
+| 1.277E32    | 1.277E32    |
+| 1.0E38      | 1.0E38      |
++-------------+-------------+
+0: jdbc:luciddb:> SELECT n4, FLOOR(n4) FROM TEST_REAL_TABLE ORDER BY 1;
++-----------------------+-----------------------+
+|          N4           |        EXPR$1         |
++-----------------------+-----------------------+
+|                       |                       |
+| -1.287632E206         | -1.287632E206         |
+| -1.23456789012345E14  | -1.23456789012345E14  |
+| -4.0                  | -4.0                  |
+| -0.12345678901234     | -1.0                  |
+| -1.287632E-198        | -1.0                  |
+| 1.0E-307              | 0.0                   |
+| 1.287632E-198         | 0.0                   |
+| 0.12345678901234      | 0.0                   |
+| 4.0                   | 4.0                   |
+| 4.004                 | 4.0                   |
+| 1.23456789012345E14   | 1.23456789012345E14   |
+| 1.287632E206          | 1.287632E206          |
++-----------------------+-----------------------+
+0: jdbc:luciddb:> SELECT n5, FLOOR(n5) FROM TEST_REAL_TABLE ORDER BY 1;
++-----------------------+-----------------------+
+|          N5           |        EXPR$1         |
++-----------------------+-----------------------+
+|                       |                       |
+| -3.3324443E307        | -3.3324443E307        |
+| -1.23456789012345E14  | -1.23456789012345E14  |
+| -5.0                  | -5.0                  |
+| -0.12345678901234     | -1.0                  |
+| -3.3324443E-299       | -1.0                  |
+| 3.3324443E-299        | 0.0                   |
+| 0.12345678901234      | 0.0                   |
+| 5.0                   | 5.0                   |
+| 5.005                 | 5.0                   |
+| 1.23456789012345E14   | 1.23456789012345E14   |
+| 3.3324443E307         | 3.3324443E307         |
+| 1.0E308               | 1.0E308               |
++-----------------------+-----------------------+
+0: jdbc:luciddb:> SELECT n1, LN(ABS(n1)) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: could not calculate results for the following row:
+[ 0, 0, 0, 0, 0 ]
+Messages:
+[0]:PC=4 Code=22023 (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, LN(ABS(n2)) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: could not calculate results for the following row:
+[ 0, 0, 0, 0, 0 ]
+Messages:
+[0]:PC=4 Code=22023 (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, LN(ABS(n3)) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: could not calculate results for the following row:
+[ 0, 0, 0, 0, 0 ]
+Messages:
+[0]:PC=4 Code=22023 (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, LN(ABS(n4)) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: could not calculate results for the following row:
+[ 0, 0, 0, 0, 0 ]
+Messages:
+[0]:PC=4 Code=22023 (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, LN(ABS(n5)) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: could not calculate results for the following row:
+[ 0, 0, 0, 0, 0 ]
+Messages:
+[0]:PC=4 Code=22023 (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, LN(ABS(n1)) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: could not calculate results for the following row:
+[ 0, 0, 0, 0, 0 ]
+Messages:
+[0]:PC=2 Code=22023 (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, LN(ABS(n2)) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: could not calculate results for the following row:
+[ 0, 0, 0, 0, 0 ]
+Messages:
+[0]:PC=2 Code=22023 (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, LN(ABS(n3)) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: could not calculate results for the following row:
+[ 0, 0, 0, 0, 0 ]
+Messages:
+[0]:PC=4 Code=22023 (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, LN(ABS(n4)) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: could not calculate results for the following row:
+[ 0, 0, 0, 0, 0 ]
+Messages:
+[0]:PC=4 Code=22023 (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, LN(ABS(n5)) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: could not calculate results for the following row:
+[ 0, 0, 0, 0, 0 ]
+Messages:
+[0]:PC=4 Code=22023 (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, LN(ABS(n1)) FROM TEST_REAL_TABLE ORDER BY 1;
++-------------+-----------------------+
+|     N1      |        EXPR$1         |
++-------------+-----------------------+
+|             |                       |
+| -1.233E31   | 71.58958810699762     |
+| -1234567.0  | 14.02623085927966     |
+| -1.0        | 0.0                   |
+| -0.123456   | -2.091870461698873    |
+| -1.233E-29  | -66.56551747264511    |
+| 1.0E-37     | -85.19564844077969    |
+| 1.233E-29   | -66.56551747264511    |
+| 0.123456    | -2.091870461698873    |
+| 1.0         | 0.0                   |
+| 1.001       | 9.995003330834232E-4  |
+| 1234567.0   | 14.02623085927966     |
+| 1.233E31    | 71.58958810699762     |
++-------------+-----------------------+
+0: jdbc:luciddb:> SELECT n2, LN(ABS(n2)) FROM TEST_REAL_TABLE ORDER BY 1;
++-------------+----------------------+
+|     N2      |        EXPR$1        |
++-------------+----------------------+
+|             |                      |
+| -1.255E31   | 71.607273485498      |
+| -1234567.0  | 14.02623085927966    |
+| -2.0        | 0.6931471805599453   |
+| -0.123456   | -2.0918704513167268  |
+| -1.255E-29  | -66.54783214505072   |
+| 1.255E-29   | -66.54783214505072   |
+| 0.123456    | -2.0918704513167268  |
+| 2.0         | 0.6931471805599453   |
+| 2.002       | 0.6941467275763858   |
+| 1234567.0   | 14.02623085927966    |
+| 1.255E31    | 71.607273485498      |
+| 1.0E38      | 87.4982335018023     |
++-------------+----------------------+
+0: jdbc:luciddb:> SELECT n3, LN(ABS(n3)) FROM TEST_REAL_TABLE ORDER BY 1;
++-------------+----------------------+
+|     N3      |        EXPR$1        |
++-------------+----------------------+
+|             |                      |
+| -1.277E32   | 73.92723658861622    |
+| -1234567.0  | 14.02623085927966    |
+| -3.0        | 1.0986122886681098   |
+| -0.123456   | -2.0918704513167268  |
+| -1.277E-30  | -68.83303922786286   |
+| 1.277E-30   | -68.83303922786286   |
+| 0.123456    | -2.0918704513167268  |
+| 3.0         | 1.0986122886681098   |
+| 3.003       | 1.0996117959878182   |
+| 1234567.0   | 14.02623085927966    |
+| 1.277E32    | 73.92723658861622    |
+| 1.0E38      | 87.4982335018023     |
++-------------+----------------------+
+0: jdbc:luciddb:> SELECT n4, LN(ABS(n4)) FROM TEST_REAL_TABLE ORDER BY 1;
++-----------------------+----------------------+
+|          N4           |        EXPR$1        |
++-----------------------+----------------------+
+|                       |                      |
+| -1.287632E206         | 474.58533402934574   |
+| -1.23456789012345E14  | 32.44691232423229    |
+| -4.0                  | 1.3862943611198906   |
+| -0.12345678901234     | -2.0918640706784393  |
+| -1.287632E-198        | -455.6590435402487   |
+| 1.0E-307              | -706.893623549172    |
+| 1.287632E-198         | -455.6590435402487   |
+| 0.12345678901234      | -2.0918640706784393  |
+| 4.0                   | 1.3862943611198906   |
+| 4.004                 | 1.387293861452974    |
+| 1.23456789012345E14   | 32.44691232423229    |
+| 1.287632E206          | 474.58533402934574   |
++-----------------------+----------------------+
+0: jdbc:luciddb:> SELECT n5, LN(ABS(n5)) FROM TEST_REAL_TABLE ORDER BY 1;
++-----------------------+----------------------+
+|          N5           |        EXPR$1        |
++-----------------------+----------------------+
+|                       |                      |
+| -3.3324443E307        | 708.0973296079245    |
+| -1.23456789012345E14  | 32.44691232423229    |
+| -5.0                  | 1.6094379124341003   |
+| -0.12345678901234     | -2.0918640706784393  |
+| -3.3324443E-299       | -687.2692367464672   |
+| 3.3324443E-299        | -687.2692367464672   |
+| 0.12345678901234      | -2.0918640706784393  |
+| 5.0                   | 1.6094379124341003   |
+| 5.005                 | 1.6104374127671839   |
+| 1.23456789012345E14   | 32.44691232423229    |
+| 3.3324443E307         | 708.0973296079245    |
+| 1.0E308               | 709.1962086421661    |
++-----------------------+----------------------+
+0: jdbc:luciddb:> SELECT n1, LOG(ABS(n1)) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature LOG(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, LOG(ABS(n2)) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature LOG(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, LOG(ABS(n3)) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature LOG(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, LOG(ABS(n4)) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature LOG(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, LOG(ABS(n5)) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature LOG(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, LOG(ABS(n1)) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature LOG(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, LOG(ABS(n2)) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature LOG(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, LOG(ABS(n3)) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature LOG(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, LOG(ABS(n4)) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature LOG(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, LOG(ABS(n5)) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature LOG(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, LOG(ABS(n1)) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature LOG(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, LOG(ABS(n2)) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature LOG(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, LOG(ABS(n3)) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature LOG(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, LOG(ABS(n4)) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature LOG(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, LOG(ABS(n5)) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature LOG(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, MOD(n1, 5) FROM TEST_INTEGER_TABLE ORDER BY 1;
++--------------+---------+
+|      N1      | EXPR$1  |
++--------------+---------+
+|              |         |
+| -2147483648  | -3      |
+| -123456      | -1      |
+| -1000        | 0       |
+| -100         | 0       |
+| -1           | -1      |
+| 0            | 0       |
+| 1            | 1       |
+| 100          | 0       |
+| 1000         | 0       |
+| 123456       | 1       |
+| 2147483647   | 2       |
++--------------+---------+
+0: jdbc:luciddb:> SELECT n2, MOD(n2, 5) FROM TEST_INTEGER_TABLE ORDER BY 1;
++----------+---------+
+|    N2    | EXPR$1  |
++----------+---------+
+|          |         |
+| -234567  | -2      |
+| -32768   | -3      |
+| -2000    | 0       |
+| -200     | 0       |
+| -2       | -2      |
+| 0        | 0       |
+| 2        | 2       |
+| 200      | 0       |
+| 2000     | 0       |
+| 32767    | 2       |
+| 234567   | 2       |
++----------+---------+
+0: jdbc:luciddb:> SELECT n3, MOD(n3, 5) FROM TEST_INTEGER_TABLE ORDER BY 1;
++----------+---------+
+|    N3    | EXPR$1  |
++----------+---------+
+|          |         |
+| -345678  | -3      |
+| -3000    | 0       |
+| -300     | 0       |
+| -128     | -3      |
+| -3       | -3      |
+| 0        | 0       |
+| 3        | 3       |
+| 127      | 2       |
+| 300      | 0       |
+| 3000     | 0       |
+| 345678   | 3       |
++----------+---------+
+0: jdbc:luciddb:> SELECT n4, MOD(n4, 5) FROM TEST_INTEGER_TABLE ORDER BY 1;
++----------+---------+
+|    N4    | EXPR$1  |
++----------+---------+
+|          |         |
+| -456789  | -4      |
+| -4000    | 0       |
+| -400     | 0       |
+| -7       | -2      |
+| -4       | -4      |
+| 0        | 0       |
+| 4        | 4       |
+| 8        | 3       |
+| 400      | 0       |
+| 4000     | 0       |
+| 456789   | 4       |
++----------+---------+
+0: jdbc:luciddb:> SELECT n5, MOD(n5, 5) FROM TEST_INTEGER_TABLE ORDER BY 1;
++----------+---------+
+|    N5    | EXPR$1  |
++----------+---------+
+|          |         |
+| -567890  | 0       |
+| -5000    | 0       |
+| -500     | 0       |
+| -5       | 0       |
+| 0        | 0       |
+| 0        | 0       |
+| 1        | 1       |
+| 5        | 0       |
+| 500      | 0       |
+| 5000     | 0       |
+| 567890   | 0       |
++----------+---------+
+0: jdbc:luciddb:> SELECT n1, MOD(n1, 5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
++------------+---------+
+|     N1     | EXPR$1  |
++------------+---------+
+|            |         |
+| -99999999  | -4      |
+| -1100      | 0       |
+| -111       | -1      |
+| -1         | -1      |
+| 0          | 0       |
+| 1          | 1       |
+| 111        | 1       |
+| 1100       | 0       |
+| 12345      | 0       |
+| 99999999   | 4       |
++------------+---------+
+0: jdbc:luciddb:> SELECT n2, MOD(n2, 5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
++----------------+---------+
+|       N2       | EXPR$1  |
++----------------+---------+
+|                |         |
+| -999999999999  | -4      |
+| -2200          | 0       |
+| -222           | -2      |
+| -2             | -2      |
+| 0              | 0       |
+| 2              | 2       |
+| 222            | 2       |
+| 2200           | 0       |
+| 23456          | 1       |
+| 999999999999   | 4       |
++----------------+---------+
+0: jdbc:luciddb:> -- FRG-52
+0: jdbc:luciddb:> SELECT n3, MOD(n3, 5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: java.lang.UnsupportedOperationException: class java.lang.String: MOD on fractional numbers (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, MOD(n4, 5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: java.lang.UnsupportedOperationException: class java.lang.String: MOD on fractional numbers (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, MOD(n5, 5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: java.lang.UnsupportedOperationException: class java.lang.String: MOD on fractional numbers (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, MOD(n1, 5) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: MOD(d,d,d) is not a registered instruction (at line:col 0:0 to 8:24, characters 0 to 128) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, MOD(n2, 5) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: MOD(r,r,r) is not a registered instruction (at line:col 0:0 to 8:24, characters 0 to 126) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, MOD(n3, 5) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: MOD(r,r,r) is not a registered instruction (at line:col 0:0 to 8:24, characters 0 to 126) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, MOD(n4, 5) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: MOD(d,d,d) is not a registered instruction (at line:col 0:0 to 8:24, characters 0 to 128) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, MOD(n5, 5) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: MOD(d,d,d) is not a registered instruction (at line:col 0:0 to 8:24, characters 0 to 128) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, POW(n1, 5) FROM TEST_INTEGER_TABLE ORDER BY 1;
++--------------+-------------------------+
+|      N1      |         EXPR$1          |
++--------------+-------------------------+
+|              |                         |
+| -2147483648  | -4.5671926166590716E46  |
+| -123456      | -2.8678802168634497E25  |
+| -1000        | -1.0E15                 |
+| -100         | -1.0E10                 |
+| -1           | -1.0                    |
+| 0            | 0.0                     |
+| 1            | 1.0                     |
+| 100          | 1.0E10                  |
+| 1000         | 1.0E15                  |
+| 123456       | 2.8678802168634497E25   |
+| 2147483647   | 4.5671926060252477E46   |
++--------------+-------------------------+
+0: jdbc:luciddb:> SELECT n2, POW(n2, 5) FROM TEST_INTEGER_TABLE ORDER BY 1;
++----------+------------------------+
+|    N2    |         EXPR$1         |
++----------+------------------------+
+|          |                        |
+| -234567  | -7.101246158180558E26  |
+| -32768   | -3.777893186295716E22  |
+| -2000    | -3.2E16                |
+| -200     | -3.2E11                |
+| -2       | -32.0                  |
+| 0        | 0.0                    |
+| 2        | 32.0                   |
+| 200      | 3.2E11                 |
+| 2000     | 3.2E16                 |
+| 32767    | 3.777316760726711E22   |
+| 234567   | 7.101246158180558E26   |
++----------+------------------------+
+0: jdbc:luciddb:> SELECT n3, POW(n3, 5) FROM TEST_INTEGER_TABLE ORDER BY 1;
++----------+-------------------------+
+|    N3    |         EXPR$1          |
++----------+-------------------------+
+|          |                         |
+| -345678  | -4.9358130624825083E27  |
+| -3000    | -2.43E17                |
+| -300     | -2.43E12                |
+| -128     | -3.4359738368E10        |
+| -3       | -243.0                  |
+| 0        | 0.0                     |
+| 3        | 243.0                   |
+| 127      | 3.3038369407E10         |
+| 300      | 2.43E12                 |
+| 3000     | 2.43E17                 |
+| 345678   | 4.9358130624825083E27   |
++----------+-------------------------+
+0: jdbc:luciddb:> SELECT n4, POW(n4, 5) FROM TEST_INTEGER_TABLE ORDER BY 1;
++----------+-------------------------+
+|    N4    |         EXPR$1          |
++----------+-------------------------+
+|          |                         |
+| -456789  | -1.9887408077497464E28  |
+| -4000    | -1.024E18               |
+| -400     | -1.024E13               |
+| -7       | -16807.0                |
+| -4       | -1024.0                 |
+| 0        | 0.0                     |
+| 4        | 1024.0                  |
+| 8        | 32768.0                 |
+| 400      | 1.024E13                |
+| 4000     | 1.024E18                |
+| 456789   | 1.9887408077497464E28   |
++----------+-------------------------+
+0: jdbc:luciddb:> SELECT n5, POW(n5, 5) FROM TEST_INTEGER_TABLE ORDER BY 1;
++----------+------------------------+
+|    N5    |         EXPR$1         |
++----------+------------------------+
+|          |                        |
+| -567890  | -5.906376210761976E28  |
+| -5000    | -3.125E18              |
+| -500     | -3.125E13              |
+| -5       | -3125.0                |
+| 0        | 0.0                    |
+| 0        | 0.0                    |
+| 1        | 1.0                    |
+| 5        | 3125.0                 |
+| 500      | 3.125E13               |
+| 5000     | 3.125E18               |
+| 567890   | 5.906376210761976E28   |
++----------+------------------------+
+0: jdbc:luciddb:> SELECT n1, POW(n1, 5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
++------------+------------------------+
+|     N1     |         EXPR$1         |
++------------+------------------------+
+|            |                        |
+| -99999999  | -9.999999500000008E39  |
+| -1100      | -1.61051E15            |
+| -111       | -1.6850581551E10       |
+| -1         | -1.0                   |
+| 0          | 0.0                    |
+| 1          | 1.0                    |
+| 111        | 1.6850581551E10        |
+| 1100       | 1.61051E15             |
+| 12345      | 2.8671833852463546E20  |
+| 99999999   | 9.999999500000008E39   |
++------------+------------------------+
+0: jdbc:luciddb:> SELECT n2, POW(n2, 5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
++----------------+-----------------------+
+|       N2       |        EXPR$1         |
++----------------+-----------------------+
+|                |                       |
+| -999999999999  | -9.99999999995E59     |
+| -2200          | -5.153632E16          |
+| -222           | -5.39218609632E11     |
+| -2             | -32.0                 |
+| 0              | 0.0                   |
+| 2              | 32.0                  |
+| 222            | 5.39218609632E11      |
+| 2200           | 5.153632E16           |
+| 23456          | 7.100186636671596E21  |
+| 999999999999   | 9.99999999995E59      |
++----------------+-----------------------+
+0: jdbc:luciddb:> SELECT n3, POW(n3, 5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
++-----------------+-------------------------+
+|       N3        |         EXPR$1          |
++-----------------+-------------------------+
+|                 |                         |
+| -9999999.99999  | -9.999999999949996E34   |
+| -3300.33000     | -3.9154964610430669E17  |
+| -333.00000      | -4.094691316893E12      |
+| -3.00000        | -243.0                  |
+| 0.00000         | 0.0                     |
+| 3.00000         | 243.0                   |
+| 124.44300       | 2.984367909390338E10    |
+| 333.00000       | 4.094691316893E12       |
+| 3300.33000      | 3.9154964610430669E17   |
+| 9999999.99999   | 9.999999999949996E34    |
++-----------------+-------------------------+
+0: jdbc:luciddb:> SELECT n4, POW(n4, 5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
++-------------+--------------------------+
+|     N4      |          EXPR$1          |
++-------------+--------------------------+
+|             |                          |
+| -99999.999  | -9.999999500000007E24    |
+| -4400.440   | -1.64998698605271526E18  |
+| -444.000    | -1.7254995508224E13      |
+| -4.000      | -1024.0                  |
+| 0.000       | 0.0                      |
+| 4.000       | 1024.0                   |
+| 98.887      | 9.455750580576664E9      |
+| 444.000     | 1.7254995508224E13       |
+| 4400.440    | 1.64998698605271526E18   |
+| 99999.999   | 9.999999500000007E24     |
++-------------+--------------------------+
+0: jdbc:luciddb:> SELECT n5, POW(n5, 5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
++--------------------+-------------------------+
+|         N5         |         EXPR$1          |
++--------------------+-------------------------+
+|                    |                         |
+| -99999.9999999999  | -9.999999999999947E24   |
+| -5500.5500000000   | -5.0353606752097065E18  |
+| -555.0000000000    | -5.2658067346875E13     |
+| -5.0000000000      | -3125.0                 |
+| 0E-10              | 0.0                     |
+| 5.0000000000       | 3125.0                  |
+| 555.0000000000     | 5.2658067346875E13      |
+| 948.4837322900     | 7.676255700638676E14    |
+| 5500.5500000000    | 5.0353606752097065E18   |
+| 99999.9999999999   | 9.999999999999947E24    |
++--------------------+-------------------------+
+0: jdbc:luciddb:> SELECT n1, POW(n1, 5) FROM TEST_REAL_TABLE ORDER BY 1;
++-------------+---------------------------+
+|     N1      |          EXPR$1           |
++-------------+---------------------------+
+|             |                           |
+| -1.233E31   | -2.849806567461393E155    |
+| -1234567.0  | -2.867961522709958E30     |
+| -1.0        | -1.0                      |
+| -0.123456   | -2.867880216863449E-5     |
+| -1.233E-29  | -2.8498065674613935E-145  |
+| 1.0E-37     | 1.0000000000000003E-185   |
+| 1.233E-29   | 2.8498065674613935E-145   |
+| 0.123456    | 2.867880216863449E-5      |
+| 1.0         | 1.0                       |
+| 1.001       | 1.0050100100050003        |
+| 1234567.0   | 2.867961522709958E30      |
+| 1.233E31    | 2.849806567461393E155     |
++-------------+---------------------------+
+0: jdbc:luciddb:> SELECT n2, POW(n2, 5) FROM TEST_REAL_TABLE ORDER BY 1;
++-------------+---------------------------+
+|     N2      |          EXPR$1           |
++-------------+---------------------------+
+|             |                           |
+| -1.255E31   | -3.113283675565368E155    |
+| -1234567.0  | -2.867961522709958E30     |
+| -2.0        | -32.0                     |
+| -0.123456   | -2.867880365737216E-5     |
+| -1.255E-29  | -3.1132828831418746E-145  |
+| 1.255E-29   | 3.1132828831418746E-145   |
+| 0.123456    | 2.867880365737216E-5      |
+| 2.0         | 32.0                      |
+| 2.002       | 32.16032782691949         |
+| 1234567.0   | 2.867961522709958E30      |
+| 1.255E31    | 3.113283675565368E155     |
+| 1.0E38      | 9.999998401428564E189     |
++-------------+---------------------------+
+0: jdbc:luciddb:> SELECT n3, POW(n3, 5) FROM TEST_REAL_TABLE ORDER BY 1;
++-------------+---------------------------+
+|     N3      |          EXPR$1           |
++-------------+---------------------------+
+|             |                           |
+| -1.277E32   | -3.3958974273546794E160   |
+| -1234567.0  | -2.867961522709958E30     |
+| -3.0        | -243.0                    |
+| -0.123456   | -2.867880365737216E-5     |
+| -1.277E-30  | -3.3958965639776683E-150  |
+| 1.277E-30   | 3.3958965639776683E-150   |
+| 0.123456    | 2.867880365737216E-5      |
+| 3.0         | 243.0                     |
+| 3.003       | 244.21744096249347        |
+| 1234567.0   | 2.867961522709958E30      |
+| 1.277E32    | 3.3958974273546794E160    |
+| 1.0E38      | 9.999998401428564E189     |
++-------------+---------------------------+
+0: jdbc:luciddb:> SELECT n4, POW(n4, 5) FROM TEST_REAL_TABLE ORDER BY 1;
++-----------------------+-------------------------+
+|          N4           |         EXPR$1          |
++-----------------------+-------------------------+
+|                       |                         |
+| -1.287632E206         | -Infinity               |
+| -1.23456789012345E14  | -2.867971861733625E70   |
+| -4.0                  | -1024.0                 |
+| -0.12345678901234     | -2.8679718617330445E-5  |
+| -1.287632E-198        | 0.0                     |
+| 1.0E-307              | 0.0                     |
+| 1.287632E-198         | 0.0                     |
+| 0.12345678901234      | 2.8679718617330445E-5   |
+| 4.0                   | 1024.0                  |
+| 4.004                 | 1029.1302502451204      |
+| 1.23456789012345E14   | 2.867971861733625E70    |
+| 1.287632E206          | Infinity                |
++-----------------------+-------------------------+
+0: jdbc:luciddb:> SELECT n5, POW(n5, 5) FROM TEST_REAL_TABLE ORDER BY 1;
++-----------------------+-------------------------+
+|          N5           |         EXPR$1          |
++-----------------------+-------------------------+
+|                       |                         |
+| -3.3324443E307        | -Infinity               |
+| -1.23456789012345E14  | -2.867971861733625E70   |
+| -5.0                  | -3125.0                 |
+| -0.12345678901234     | -2.8679718617330445E-5  |
+| -3.3324443E-299       | 0.0                     |
+| 3.3324443E-299        | 0.0                     |
+| 0.12345678901234      | 2.8679718617330445E-5   |
+| 5.0                   | 3125.0                  |
+| 5.005                 | 3140.656281265628       |
+| 1.23456789012345E14   | 2.867971861733625E70    |
+| 3.3324443E307         | Infinity                |
+| 1.0E308               | Infinity                |
++-----------------------+-------------------------+
+0: jdbc:luciddb:> SELECT n1, ROUND(n1, 5) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature ROUND(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, ROUND(n2, 5) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature ROUND(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, ROUND(n3, 5) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature ROUND(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, ROUND(n4, 5) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature ROUND(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, ROUND(n5, 5) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature ROUND(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, ROUND(n1, 5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature ROUND(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, ROUND(n2, 5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature ROUND(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, ROUND(n3, 5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature ROUND(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, ROUND(n4, 5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature ROUND(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, ROUND(n5, 5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature ROUND(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, ROUND(n1, 5) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature ROUND(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, ROUND(n2, 5) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature ROUND(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, ROUND(n3, 5) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature ROUND(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, ROUND(n4, 5) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature ROUND(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, ROUND(n5, 5) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature ROUND(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, SIGN(n1) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature SIGN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, SIGN(n2) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature SIGN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, SIGN(n3) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature SIGN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, SIGN(n4) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature SIGN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, SIGN(n5) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature SIGN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, SIGN(n1) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature SIGN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, SIGN(n2) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature SIGN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, SIGN(n3) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature SIGN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, SIGN(n4) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature SIGN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, SIGN(n5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature SIGN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, SIGN(n1) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature SIGN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, SIGN(n2) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature SIGN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, SIGN(n3) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature SIGN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, SIGN(n4) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature SIGN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, SIGN(n5) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature SIGN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, SIN(n1) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature SIN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, SIN(n2) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature SIN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, SIN(n3) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature SIN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, SIN(n4) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature SIN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, SIN(n5) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature SIN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, SIN(n1) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature SIN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, SIN(n2) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature SIN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, SIN(n3) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature SIN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, SIN(n4) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature SIN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, SIN(n5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature SIN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, SIN(n1) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature SIN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, SIN(n2) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature SIN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, SIN(n3) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature SIN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, SIN(n4) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature SIN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, SIN(n5) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature SIN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, SINH(n1) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature SINH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, SINH(n2) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature SINH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, SINH(n3) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature SINH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, SINH(n4) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature SINH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, SINH(n5) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature SINH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, SINH(n1) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature SINH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, SINH(n2) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature SINH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, SINH(n3) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature SINH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, SINH(n4) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature SINH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, SINH(n5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature SINH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, SINH(n1) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature SINH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, SINH(n2) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature SINH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, SINH(n3) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature SINH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, SINH(n4) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature SINH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, SINH(n5) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature SINH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, SQRT(ABS(n1)) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 24: No match found for function signature SQRT(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, SQRT(ABS(n2)) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 24: No match found for function signature SQRT(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, SQRT(ABS(n3)) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 24: No match found for function signature SQRT(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, SQRT(ABS(n4)) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 24: No match found for function signature SQRT(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, SQRT(ABS(n5)) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 24: No match found for function signature SQRT(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, SQRT(ABS(n1)) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 24: No match found for function signature SQRT(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, SQRT(ABS(n2)) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 24: No match found for function signature SQRT(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, SQRT(ABS(n3)) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 24: No match found for function signature SQRT(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, SQRT(ABS(n4)) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 24: No match found for function signature SQRT(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, SQRT(ABS(n5)) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 24: No match found for function signature SQRT(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, SQRT(ABS(n1)) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 24: No match found for function signature SQRT(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, SQRT(ABS(n2)) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 24: No match found for function signature SQRT(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, SQRT(ABS(n3)) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 24: No match found for function signature SQRT(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, SQRT(ABS(n4)) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 24: No match found for function signature SQRT(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, SQRT(ABS(n5)) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 24: No match found for function signature SQRT(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, TAN(n1) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature TAN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, TAN(n2) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature TAN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, TAN(n3) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature TAN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, TAN(n4) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature TAN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, TAN(n5) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature TAN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, TAN(n1) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature TAN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, TAN(n2) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature TAN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, TAN(n3) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature TAN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, TAN(n4) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature TAN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, TAN(n5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature TAN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, TAN(n1) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature TAN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, TAN(n2) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature TAN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, TAN(n3) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature TAN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, TAN(n4) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature TAN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, TAN(n5) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 18: No match found for function signature TAN(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, TANH(n1) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature TANH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, TANH(n2) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature TANH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, TANH(n3) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature TANH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, TANH(n4) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature TANH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, TANH(n5) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature TANH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, TANH(n1) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature TANH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, TANH(n2) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature TANH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, TANH(n3) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature TANH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, TANH(n4) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature TANH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, TANH(n5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature TANH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, TANH(n1) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature TANH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, TANH(n2) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature TANH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, TANH(n3) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature TANH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, TANH(n4) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature TANH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, TANH(n5) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 19: No match found for function signature TANH(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, TRUNC(n1, 2) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature TRUNC(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, TRUNC(n2, 2) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature TRUNC(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, TRUNC(n3, 2) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature TRUNC(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, TRUNC(n4, 2) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature TRUNC(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, TRUNC(n5, 2) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature TRUNC(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, TRUNC(n1, 2) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature TRUNC(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, TRUNC(n2, 2) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature TRUNC(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, TRUNC(n3, 2) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature TRUNC(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, TRUNC(n4, 2) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature TRUNC(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, TRUNC(n5, 2) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature TRUNC(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, TRUNC(n1, 2) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature TRUNC(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, TRUNC(n2, 2) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature TRUNC(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, TRUNC(n3, 2) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature TRUNC(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, TRUNC(n4, 2) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature TRUNC(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, TRUNC(n5, 2) FROM TEST_REAL_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 23: No match found for function signature TRUNC(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> -- VALUERANGE only valid for integers
+0: jdbc:luciddb:> SELECT n1, VALUERANGE(n1, 10) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 29: No match found for function signature VALUERANGE(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n2, VALUERANGE(n2, 10) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 29: No match found for function signature VALUERANGE(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n3, VALUERANGE(n3, 10) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 29: No match found for function signature VALUERANGE(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n4, VALUERANGE(n4, 10) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 29: No match found for function signature VALUERANGE(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n5, VALUERANGE(n5, 10) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 29: No match found for function signature VALUERANGE(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, VALUERANGE(n1, 5.4) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 30: No match found for function signature VALUERANGE(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> SELECT n1, VALUERANGE(n1, (SELECT MIN(N2) FROM TEST_REAL_TABLE))
+. . . . . . . . > FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: From line 1, column 12 to line 1, column 64: No match found for function signature VALUERANGE(<NUMERIC>, <RecordType(REAL EXPR$0)>) (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- End test
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

@@ -297,7 +297,8 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         FarragoSessionStmtParamDefFactory paramDefFactory)
     {
         FarragoDbStmtContext stmtContext = 
-            new FarragoDbStmtContext(this, paramDefFactory, database.getDdlLockManager());
+            new FarragoDbStmtContext(
+                this, paramDefFactory, database.getDdlLockManager());
         addAllocation(stmtContext);
         return stmtContext;
     }
@@ -352,11 +353,14 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             clone.isClone = true;
             clone.allocations = new LinkedList();
             clone.savepointList = new ArrayList();
-            // NOTE jvs 30-Dec-2005:  Autocommit on an internal
-            // session is usually unwanted because it would
-            // interfere with the transaction of the top-level
-            // statement.
-            clone.isAutoCommit = false;
+            if (isTxnInProgress()) {
+                // Calling statement has already started a transaction:
+                // make sure clone doesn't interfere by autocommitting.
+                clone.isAutoCommit = false;
+            } else {
+                // Otherwise, inherit autocommit setting.
+                clone.isAutoCommit = isAutoCommit;
+            }
             if (inheritedVariables == null) {
                 inheritedVariables = sessionVariables;
             }
@@ -465,7 +469,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
                 // NOTE jvs 10-May-2005:  Technically,  we're supposed to throw
                 // an invalid state exception here.  However, it's very
                 // unlikely that the caller is going to handle it properly,
-                // so instead we roll back here.  If they wanted their
+                // so instead we roll back.  If they wanted their
                 // changes committed, they should have said so.
                 rollbackImpl();
             }
@@ -516,7 +520,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             getAnalysisBlock(typeFactory);
         analyzedSql.paramRowType = paramRowType;
         FarragoSessionExecutableStmt stmt = prepare(
-            sql, null, false, analyzedSql);
+            null, sql, null, false, analyzedSql);
         assert (stmt == null);
         if (typeFactory != null) {
             // Have to copy types into the caller's factory since
@@ -533,7 +537,8 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         return analyzedSql;
     }
 
-    public FarragoSessionAnalyzedSql getAnalysisBlock(RelDataTypeFactory typeFactory)
+    public FarragoSessionAnalyzedSql getAnalysisBlock(
+        RelDataTypeFactory typeFactory)
     {
         return new FarragoSessionAnalyzedSql();
     }
@@ -728,7 +733,20 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         }
     }
 
+    // REVIEW jvs 17-Mar-2006: extension projects may still need this, and may
+    // need to pass something better than null for stmtContext; if not,
+    // eliminate; szuercher would probably know
     protected FarragoSessionExecutableStmt prepare(
+        String sql,
+        FarragoAllocationOwner owner,
+        boolean isExecDirect,
+        FarragoSessionAnalyzedSql analyzedSql)
+    {
+        return prepare(null, sql, owner, isExecDirect, analyzedSql);
+    }
+    
+    protected FarragoSessionExecutableStmt prepare(
+        FarragoDbStmtContext stmtContext,
         String sql,
         FarragoAllocationOwner owner,
         boolean isExecDirect,
@@ -736,10 +754,11 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     {
         tracer.info(sql);
 
-        // TODO jvs 11-Aug-2004:  Get rid of this big mutex.  It needs to stay
-        // until we have proper object-level DDL-locking.  For now the
-        // contention is the same as that due to the TODO below since the
-        // MDR write lock is exclusive.
+        // TODO jvs 20-Mar-2006: Get rid of this big mutex.  First we need
+        // to make object-level DDL-locking incremental (rather than deferring
+        // it all to the end of preparation).  For now the contention is the
+        // same as that due to the TODO below since the MDR write lock is
+        // exclusive.
         synchronized (database.DDL_LOCK) {
             FarragoReposTxnContext reposTxnContext =
                 new FarragoReposTxnContext(repos);
@@ -748,8 +767,8 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             // read lock and only upgrade to write once we know we're dealing
             // with DDL.  However, at the moment that doesn't work because a
             // write txn is required for creating transient objects.  And MDR
-            // doesn't support upgrade.  It might be possible to reorder
-            // catalog access to solve this.
+            // doesn't support upgrade.  Use JmiMemFactory to solve this
+            // by creating transient objects in a separate repository.
             reposTxnContext.beginWriteTxn();
 
             boolean [] pRollback = new boolean[1];
@@ -761,6 +780,15 @@ public class FarragoDbSession extends FarragoCompoundAllocation
                 stmt =
                     prepareImpl(sql, owner, isExecDirect, analyzedSql,
                         stmtValidator, reposTxnContext, pRollback);
+                // NOTE jvs 17-Mar-2006:  We have to do this here
+                // rather than in FarragoDbStmtContext.finishPrepare
+                // to ensure that's there's no window in between
+                // when we release the mutex and lock the objects;
+                // otherwise a DROP might slip in and yank them out
+                // from under us.
+                if ((stmt != null) && (stmtContext != null)) {
+                    stmtContext.lockObjectsInUse(stmt);
+                }
             } finally {
                 if (stmtValidator != null) {
                     stmtValidator.closeAllocation();
