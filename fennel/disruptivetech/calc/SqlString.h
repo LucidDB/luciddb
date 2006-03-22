@@ -1330,7 +1330,12 @@ SqlStrCastFromExact(char* dest,
             // would fit.
 
             char buf[36];      // #%lld should always fit in 21 bytes.
-            rv = snprintf(buf, 35, "%lld", src);
+
+            // TODO: Bug on mingw where int64_t is not handled correctly
+            //       by snprintf %lld
+            // Windows (MS dll) uses %I64d but that causes warning with gcc -Wall
+            rv = snprintf(buf, 35, "%" FMT_INT64, src);
+
             // snprintf does not return null termination in length
             assert(rv >= 0 && rv <= 35);
             if (rv <= destStorageBytes) {
@@ -1352,7 +1357,7 @@ SqlStrCastFromExact(char* dest,
             // Older glibc returns -1 from snprintf. logic gets 
             // complicated
             
-            rv = snprintf(dest, destStorageBytes, "%lld", src);
+            rv = snprintf(dest, destStorageBytes, "%" FMT_INT64, src);
             if (rv == destStorageBytes) {
                 // Would have fit, except for the null termination. Do
                 // over into a temporary buf, copy results back.
@@ -1361,7 +1366,7 @@ SqlStrCastFromExact(char* dest,
                 // not acceptable, see ALTERNATIVE_IMPLEMENTATION below
 
                 char buf[36];      // should always fit in 21 bytes.
-                rv = snprintf(buf, 35, "%lld", src);
+                rv = snprintf(buf, 35, "%" FMT_INT64, src);
                 assert(rv == destStorageBytes);
                 memcpy(dest, buf, destStorageBytes);
             } else if (rv > destStorageBytes) {
@@ -1384,7 +1389,7 @@ SqlStrCastFromExact(char* dest,
             // if storage >= 22 bytes, snprintf directly into dest
             // as a first-order optimization. 
             if (destStorageBytes >= 22) {
-                rv = snprintf(dest, destStorageBytes, "%lld", src);
+                rv = snprintf(dest, destStorageBytes, "%" FMT_INT64, src);
                 assert(rv <= destStorageBytes); // impossible?
                 if (rv > destStorageBytes) {
                     // Just in case 22 byte assumption isn't valid
@@ -1405,7 +1410,7 @@ SqlStrCastFromExact(char* dest,
                 // issue wasting one byte.
 
                 char buf[24];
-                rv = snprintf(buf, destStorageBytes, "%lld", src);
+                rv = snprintf(buf, destStorageBytes, "%" FMT_INT64, src);
                 if (rv > destStorageBytes) {
                     // SQL99 Part 2 Section 6.22 General Rule 8.a.iv (fixed
                     // length) "22001" data exception -- string data, right
@@ -1473,7 +1478,7 @@ SqlStrCastFromExact(char* dest,
                 // Positive Scale
                 int ndigits, decimal, sign = 0;
                 char buf[36];      // #%lld should always fit in 21 bytes.
-                rv = snprintf(buf, 35, "%lld", abs(src));
+                rv = snprintf(buf, 35, "%" FMT_INT64, abs(src));
                 // snprintf does not return null termination in length
                 assert(rv >= 0 && rv <= 35);
                 
@@ -1530,7 +1535,7 @@ SqlStrCastFromExact(char* dest,
                 int nzeros = (src != 0)? -scale: 0;
                 int len;
                 char buf[36];      // #%lld should always fit in 21 bytes.
-                rv = snprintf(buf, 35, "%lld", src);
+                rv = snprintf(buf, 35, "%" FMT_INT64, src);
                 // snprintf does not return null termination in length
                 assert(rv >= 0 && rv <= 35);
 
@@ -1605,7 +1610,6 @@ SqlStrCastFromApprox(char* dest,
     if (MaxCodeUnitsPerCodePoint == 1) {
         if (CodeUnitBytes == 1) {
             // ASCII
-
             if (src == 0.0) {
                 // 6.22 General Rule 8, case b i 2 and
                 // 6.22 General Rule 9, case b i 2
@@ -1638,6 +1642,14 @@ SqlStrCastFromApprox(char* dest,
                 // snprintf does not include null termination in length
                 assert(rv >= 0 && rv <= 35);
 
+                if (src > std::numeric_limits<double>::max()) {
+                    strcpy(buf, "INF");
+                    rv = 3;
+                } else if (src < -std::numeric_limits<double>::max()) {
+                    strcpy(buf, "-INF");
+                    rv = 4;
+                }
+                
                 // Trim trailing zeros from mantissa, and initial zeros
                 // from exponent
                 int buflen = rv;
