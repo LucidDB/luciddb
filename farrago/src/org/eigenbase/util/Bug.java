@@ -55,16 +55,25 @@ public abstract class Bug
 
 
     /**
-     * Whether <a href="http://jirahost.eigenbase.org:8080/browse/FRG-26">
+     * Whether <a href="http://issues.eigenbase.org/browse/FRG-26">
      * issue FRG-26</a> is fixed.
      */
     public static final boolean Frg26Fixed = false;
 
+    /** Also filed as dtbug324 */
+    public static final boolean Frg65Fixed = false;
+
     /**
-     * Whether <a href="http://jirahost.eigenbase.org:8080/browse/FNL-3">issue
+     * Whether <a href="http://issues.eigenbase.org/browse/FNL-3">issue
      * Fnl-3</a> is fixed.
      */
     public static final boolean Fnl3Fixed = false;
+
+    /**
+     * Whether <a href="http://issues.eigenbase.org/browse/FNL-25">issue
+     * FNL-25</a> is fixed.  (also filed as dtbug 153)
+     */
+    public static final boolean Fn25Fixed = false;
 
     public static final boolean Dt269Fixed = false;
 
@@ -86,6 +95,53 @@ public abstract class Bug
      * DT bug 501: "insert fails..."
      */
     public static final boolean Dt501Fixed = false;
+
+    // -----------------------------------------------------------------------
+    // Developers should create new fields here, in their own section. This
+    // will make merge conflicts much less likely than if everyone is
+    // appending.
+
+    // angel
+
+    // elin
+
+    // emberson
+
+    // fliang
+
+    // fzhang
+
+    // hersker
+
+    // jack
+
+    // jhyde
+
+    // johnk
+
+    // jouellette
+
+    // jpham
+
+    // jvs
+
+    // kkrueger
+
+    // mberkowitz
+
+    // murali
+
+    // rchen
+
+    // schoi
+
+    // stephan
+
+    // tleung
+
+    // xluo
+
+    // zfong    
 }
 
 // End Bug.java

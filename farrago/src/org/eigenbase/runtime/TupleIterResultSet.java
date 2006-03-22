@@ -53,7 +53,7 @@ public class TupleIterResultSet extends AbstractIterResultSet
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Sets the timeout that this IteratorResultSet will wait for a row from
+     * Sets the timeout that this TupleIterResultSet will wait for a row from
      * the underlying iterator.
      *
      * @param timeoutMillis Timeout in milliseconds. Must be greater than zero.

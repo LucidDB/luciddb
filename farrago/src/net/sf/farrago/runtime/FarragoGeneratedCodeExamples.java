@@ -56,25 +56,10 @@ public class FarragoGeneratedCodeExamples
         FarragoSessionRuntimeParams params = null;
         FarragoRuntimeContext cx = new FarragoRuntimeContext(params);
 
-        {
-            assert(!CallingConvention.ENABLE_NEW_ITER);
-
-            // Old-style iterator convention
-            int streamId = 0;
-            FennelTupleWriter tupleWriter = null;
-            RestartableIterator iter = null;
-            cx.newJavaTupleStream(streamId, tupleWriter, iter);
-        }
-        
-        {
-            assert(CallingConvention.ENABLE_NEW_ITER);
-            
-            // New-style iterator convention
-            int streamId = 0;
-            FennelTupleWriter tupleWriter = null;
-            TupleIter tupleIter = null;
-            cx.newJavaTupleStream(streamId, tupleWriter, tupleIter);
-        }
+        int streamId = 0;
+        FennelTupleWriter tupleWriter = null;
+        TupleIter tupleIter = null;
+        cx.newJavaTupleStream(streamId, tupleWriter, tupleIter);
     }
 
     /**

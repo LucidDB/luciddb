@@ -1661,4 +1661,4 @@ abstract public class AbstractResultSet implements ResultSet
 }
 
 
-// End IteratorResultSet.java
+// End AbstractResultSet.java

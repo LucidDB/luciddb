@@ -23,6 +23,7 @@ package org.eigenbase.sarg;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.*;
+import org.eigenbase.rex.*;
 
 import java.util.*;
 
@@ -116,6 +117,14 @@ public class SargSetExpr implements SargExpr
             return evaluateComplement();
         default:
             throw Util.newInternal(setOp.toString());
+        }
+    }
+
+    // implement SargExpr
+    public void collectDynamicParams(Set<RexDynamicParam> dynamicParams)
+    {
+        for (SargExpr child : children) {
+            child.collectDynamicParams(dynamicParams);
         }
     }
 

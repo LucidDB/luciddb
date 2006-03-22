@@ -138,16 +138,11 @@ public class FarragoJavaUdxRel extends TableFunctionRelBase
         // TODO jvs 23-Feb-2006:  get rid of adapter and write
         // a new TupleIter implementation so that we can take
         // advantage of the closeAllocation call.
-        
-        if (CallingConvention.ENABLE_NEW_ITER) {
-            Expression tupleIterExp = new AllocationExpression(
-                OJUtil.typeNameForClass(RestartableIteratorTupleIter.class),
-                new ExpressionList(
-                    iteratorExp));
-            return tupleIterExp;
-        } else {
-            return iteratorExp;
-        }
+        Expression tupleIterExp = new AllocationExpression(
+            OJUtil.typeNameForClass(RestartableIteratorTupleIter.class),
+            new ExpressionList(
+                iteratorExp));
+        return tupleIterExp;
     }
 }
 

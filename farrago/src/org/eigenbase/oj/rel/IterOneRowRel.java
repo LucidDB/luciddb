@@ -70,31 +70,16 @@ public class IterOneRowRel extends OneRowRelBase implements JavaRel
                 TypeName.forOJClass(outputRowClass),
                 new ExpressionList());
 
-        if (CallingConvention.ENABLE_NEW_ITER) {
-            Expression iterExp =
-                new AllocationExpression(
-                    OJUtil.typeNameForClass(
-                        RestartableCollectionTupleIter.class),
-                    new ExpressionList(
-                        new MethodCall(
-                            OJUtil.typeNameForClass(Collections.class),
-                            "singletonList",
-                            new ExpressionList(newRowExp))));
-            
+        Expression iterExp =
+            new AllocationExpression(
+                OJUtil.typeNameForClass(
+                    RestartableCollectionTupleIter.class),
+                new ExpressionList(
+                    new MethodCall(
+                        OJUtil.typeNameForClass(Collections.class),
+                        "singletonList",
+                        new ExpressionList(newRowExp))));
             return iterExp;
-        } else {
-            Expression iterExp =
-                new AllocationExpression(
-                    OJUtil.typeNameForClass(
-                        RestartableCollectionIterator.class),
-                    new ExpressionList(
-                        new MethodCall(
-                            OJUtil.typeNameForClass(Collections.class),
-                            "singletonList",
-                            new ExpressionList(newRowExp))));
-            
-            return iterExp;
-        }
     }
 }
 

@@ -1,10 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2006-2006 The Eigenbase Project
+// Copyright (C) 2006-2006 Disruptive Tech
+// Copyright (C) 2006-2006 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -20,29 +19,18 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package org.eigenbase.runtime;
-
-import java.util.*;
+package org.eigenbase.util14;
 
 /**
- * RestartableIterator extends the Iterator interface with a method
- * for restarting to the beginning of the collection.
- *
- *<p>
- *
- * TODO jvs 21-Mar-2006: This interface is no longer used except by Saffron,
- * so we should move it to Saffron.
+ * This is a tagging interface to allow {@link
+ * org.eigenbase.sql.validate.SqlValidatorException} to be identified without
+ * adding a dependency on it from client-side code.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public interface RestartableIterator extends Iterator
+public interface EigenbaseValidatorException
 {
-    /**
-     * Restarts this iterator, so that a subsequent call to next() returns
-     * the first element in the collection being iterated.
-     */
-    public void restart();
 }
 
-// End RestartableIterator.java
+// End EigenbaseValidatorException.java

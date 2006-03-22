@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/index.sql#11 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/optimizer/index.sql#10 $
 0: jdbc:farrago:> -- Test queries which make use of indexes
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema oj;
@@ -720,10 +720,42 @@
 '        IterCalcRel(expr#0=[{inputs}], expr#1=['['], expr#2=[?0], expr#3=[']'], expr#4=[IS NOT NULL($t2)], expr#5=[AND($t4, $t4)], $f0=[$t1], $f1=[$t2], $f2=[$t3], $f3=[$t2], $condition=[$t5])'
 '          IterOneRowRel'
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- can't yet support usage of index when predicate on dynamic param
+0: jdbc:farrago:> -- is combined with another predicate on same column;
+0: jdbc:farrago:> -- at least make sure we recompose it correctly (FRG-72)
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select name from depts where deptno > ? and deptno < 30;
+'column0'
+'IterCalcRel(expr#0..1=[{inputs}], expr#2=[?0], expr#3=[>($t0, $t2)], expr#4=[30], expr#5=[<($t0, $t4)], expr#6=[AND($t3, $t5)], NAME=[$t1], $condition=[$t6])'
+'  FennelToIteratorConverter'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select name from depts where deptno > ? and deptno < ?;
+'column0'
+'IterCalcRel(expr#0..1=[{inputs}], expr#2=[?0], expr#3=[>($t0, $t2)], expr#4=[?1], expr#5=[<($t0, $t4)], expr#6=[AND($t3, $t5)], NAME=[$t1], $condition=[$t6])'
+'  FennelToIteratorConverter'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- this one should work because predicates are on different columns
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select name from depts where deptno > ? and name='Hysteria';
+'column0'
+'IterCalcRel(expr#0..1=[{inputs}], expr#2=[_ISO-8859-1'Hysteria'], expr#3=[=($t1, $t2)], NAME=[$t1], $condition=[$t3])'
+'  FennelToIteratorConverter'
+'    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'      IteratorToFennelConverter'
+'        IterCalcRel(expr#0=[{inputs}], expr#1=['('], expr#2=[?0], expr#3=['+'], expr#4=[null], expr#5=[CAST($t4):INTEGER], expr#6=[IS NOT NULL($t2)], $f0=[$t1], $f1=[$t2], $f2=[$t3], $f3=[$t5], $condition=[$t6])'
+'          IterOneRowRel'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> ----------------------------------------------
 0: jdbc:farrago:> -- LucidDB column store bitmap indexes test --
 0: jdbc:farrago:> ----------------------------------------------
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- REVIEW jvs 18-Mar-2006:  should not be pre-dropping stuff like this;
+0: jdbc:farrago:> -- it generates an error in the .ref file, which is confusing.
+0: jdbc:farrago:> -- Test framework takes care of pre-drop (so you don't have to 
+0: jdbc:farrago:> -- post-drop either).
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop schema lbm cascade;
 Error: DDL validation error near line 1, column 13: Reference to unknown schema "LOCALDB"."LBM" (state=,code=0)

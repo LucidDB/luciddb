@@ -277,6 +277,7 @@ require version '${required.ant.version}'."/>
       <include name="net/sf/farrago/release/**/*.java" />
       <include name="net/sf/farrago/jdbc/*.java" />
       <include name="net/sf/farrago/jdbc/client/**/*.java" />
+      <include name="net/sf/farrago/jdbc/param/**/*.java" />
       <include name="net/sf/farrago/jdbc/rmi/**/*.java" />
     </farrago.javaCompileClient>
     <farrago.javaCompile
@@ -304,7 +305,7 @@ require version '${required.ant.version}'."/>
       deprecation="off"
       srcdir="${farrago.src.dir}"
       destdir="${farrago.classes.dir}"
-      classpathref="farrago.build.classpath">
+      classpathref="farrago.build.classpath">      
       <include name="org/eigenbase/**/*.java" />
       <include name="com/disruptivetech/farrago/volcano/**/*.java" />
       <exclude name="org/eigenbase/inventory/**/*.java" />

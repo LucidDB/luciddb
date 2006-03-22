@@ -24,7 +24,7 @@ package net.sf.farrago.test;
 
 import junit.framework.*;
 import net.sf.farrago.test.regression.FarragoCalcSystemTest;
-import net.sf.farrago.util.FarragoUtil;
+import net.sf.farrago.jdbc.FarragoJdbcUtil;
 import org.eigenbase.sql.SqlOperator;
 import org.eigenbase.sql.parser.SqlParserUtil;
 import org.eigenbase.sql.test.AbstractSqlTester;
@@ -309,7 +309,7 @@ public class FarragoSqlOperatorsSuite
                     boolean hasNext = resultSet.next();
                     Util.discard(hasNext);
                 }
-            } catch (FarragoUtil.FarragoSqlException ex) {
+            } catch (FarragoJdbcUtil.FarragoSqlException ex) {
                 // The exception returned by the JDBC driver is dumbed down,
                 // and doesn't contain the full position information.
                 // Use the undiluted error instead.

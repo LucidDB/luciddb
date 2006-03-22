@@ -107,6 +107,14 @@ public class NumberUtil {
         return (isFloat)? floatFormatter: doubleFormatter;
     }
 
+    public static long round(double d)
+    {
+        if (d < 0) {
+            return -Math.round(-d);
+        } else {
+            return Math.round(d);
+        }
+    }
 }
 
 // End NumberUtil.java

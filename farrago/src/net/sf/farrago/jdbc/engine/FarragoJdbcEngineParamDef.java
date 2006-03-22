@@ -22,11 +22,10 @@
 */
 package net.sf.farrago.jdbc.engine;
 
-import net.sf.farrago.resource.FarragoResource;
 import net.sf.farrago.session.FarragoSessionStmtParamDef;
+import net.sf.farrago.jdbc.param.FarragoJdbcParamDef;
 
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.util.EigenbaseException;
 
 /**
  * Enforces constraints on parameters.
@@ -49,19 +48,19 @@ import org.eigenbase.util.EigenbaseException;
  */
 class FarragoJdbcEngineParamDef implements FarragoSessionStmtParamDef
 {
+    final FarragoJdbcParamDef param;
     final RelDataType type;
-    final String paramName;
 
-    FarragoJdbcEngineParamDef(String paramName, RelDataType type)
+    FarragoJdbcEngineParamDef(FarragoJdbcParamDef param, RelDataType type)
     {
+        this.param = param;
         this.type = type;
-        this.paramName = paramName;
     }
 
     // implement FarragoSessionStmtParamDef
     public String getParamName()
     {
-        return paramName;
+        return param.getParamName();
     }
     
     // implement FarragoSessionStmtParamDef
@@ -73,28 +72,7 @@ class FarragoJdbcEngineParamDef implements FarragoSessionStmtParamDef
     // implement FarragoSessionStmtParamDef
     public Object scrubValue(Object x)
     {
-        return x;
+        return param.scrubValue(x);
     }
 
-    /**
-     * Returns an error that the value is not valid for the desired SQL
-     * type.
-     */
-    protected EigenbaseException newInvalidType(Object x)
-    {
-        return FarragoResource.instance().ParameterValueIncompatible.ex(
-            x.getClass().getName(),
-            type.toString());
-    }
-
-    /**
-     * Returns an error that the value cannot be converted to the desired SQL
-     * type.
-     */
-    protected EigenbaseException newInvalidFormat(Object x)
-    {
-        return FarragoResource.instance().ParameterValueInvalidFormat.ex(
-            x.toString(),
-            type.toString());
-    }
 }

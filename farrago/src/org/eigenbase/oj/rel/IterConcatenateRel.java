@@ -74,18 +74,12 @@ public class IterConcatenateRel extends UnionRelBase implements JavaRel
 
     protected OJClass getCompoundIteratorClass()
     {
-        if (CallingConvention.ENABLE_NEW_ITER) {
-            return OJClass.forClass(
-                org.eigenbase.runtime.CompoundTupleIter.class);
-        } else {
-            return OJClass.forClass(
-                org.eigenbase.runtime.CompoundIterator.class);
-        }
+        return OJClass.forClass(
+            org.eigenbase.runtime.CompoundTupleIter.class);
     }
 
     public ParseTree implement(JavaRelImplementor implementor)
     {
-        // If CallingConvention.ENABLE_NEW_ITER:
         // Generate
         //   new CompoundTupleIter(
         //     new TupleIter[] {<<input0>>, ...})
@@ -94,14 +88,6 @@ public class IterConcatenateRel extends UnionRelBase implements JavaRel
         //     new TupleIter[] {<<input0>>, ...})
         // but there's no way to tell, so we can't.
 
-        // Else:
-        // Generate
-        //   new CompoundIterator(
-        //     new Iterator[] {<<input0>>, ...})
-        // If any input is infinite, should instead generate
-        //   new CompoundParallelIterator(
-        //     new Iterator[] {<<input0>>, ...})
-        // but there's no way to tell, so we can't.
         // REVIEW: mb 9-Sep-2005: add a predicate RelNode.isInfinite().
         ExpressionList exps = new ExpressionList();
         for (int i = 0; i < inputs.length; i++) {
@@ -113,9 +99,7 @@ public class IterConcatenateRel extends UnionRelBase implements JavaRel
             getCompoundIteratorClass(),
             new ExpressionList(
                 new ArrayAllocationExpression(
-                    (CallingConvention.ENABLE_NEW_ITER
-                     ? OJUtil.clazzTupleIter
-                     : OJUtil.clazzIterator),
+                    OJUtil.clazzTupleIter,
                     new ExpressionList(null),
                     new ArrayInitializer(exps))));
     }

@@ -302,10 +302,27 @@ on t1.j = t2.j;
 explain plan for
 select name from depts where deptno=?;
 
+-- can't yet support usage of index when predicate on dynamic param
+-- is combined with another predicate on same column;
+-- at least make sure we recompose it correctly (FRG-72)
+explain plan for
+select name from depts where deptno > ? and deptno < 30;
+
+explain plan for
+select name from depts where deptno > ? and deptno < ?;
+
+-- this one should work because predicates are on different columns
+explain plan for
+select name from depts where deptno > ? and name='Hysteria';
 
 ----------------------------------------------
 -- LucidDB column store bitmap indexes test --
 ----------------------------------------------
+
+-- REVIEW jvs 18-Mar-2006:  should not be pre-dropping stuff like this;
+-- it generates an error in the .ref file, which is confusing.
+-- Test framework takes care of pre-drop (so you don't have to 
+-- post-drop either).
 
 drop schema lbm cascade;
 create schema lbm;

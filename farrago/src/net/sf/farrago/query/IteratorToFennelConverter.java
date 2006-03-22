@@ -74,9 +74,12 @@ public class IteratorToFennelConverter extends ConverterRel
 
     //~ Instance fields -------------------------------------------------------
 
-    private String farragoTransformClassName;
-    private String farragoTransformStreamName;
-    private List<FemExecutionStreamDef> childStreamDefs;
+    private int javaImplInvocationCount;
+    private int fennelImplInvocationCount;
+    
+    private Map<Integer, String> farragoTransformClassNameMap;
+
+    private Map<Integer, List<FemExecutionStreamDef>> childStreamDefsMap;
     
     //~ Constructors ----------------------------------------------------------
 
@@ -94,7 +97,11 @@ public class IteratorToFennelConverter extends ConverterRel
             cluster, CallingConventionTraitDef.instance,
             new RelTraitSet(FENNEL_EXEC_CONVENTION), child);
         
-        childStreamDefs = new ArrayList<FemExecutionStreamDef>();
+        farragoTransformClassNameMap = new HashMap<Integer, String>();
+        javaImplInvocationCount = 0;
+        fennelImplInvocationCount = 0;
+        childStreamDefsMap = 
+            new HashMap<Integer, List<FemExecutionStreamDef>>();
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -298,7 +305,7 @@ public class IteratorToFennelConverter extends ConverterRel
     {
         String className =
             "Transformer" + (implementor.getTransforms().size() + 1);
-        
+
         MemberDeclarationList memberList = new MemberDeclarationList();
         
         // public class TransformerX extends FarragoTransformImpl
@@ -378,6 +385,12 @@ public class IteratorToFennelConverter extends ConverterRel
             throw cannotImplement();
         }
 
+        javaImplInvocationCount++;
+        
+        // init child stream defs for this invocation
+        childStreamDefsMap.put(
+            javaImplInvocationCount, new ArrayList<FemExecutionStreamDef>());
+
         RelDataType rowType = getChild().getRowType();
 
         // Cheeky! We happen to know it's a FarragoRelImplementor (for now).
@@ -393,38 +406,19 @@ public class IteratorToFennelConverter extends ConverterRel
         Expression newTupleWriterExp =
             generateTupleWriter(stmt, farragoRelImplementor, rowType);
 
-        ParseTree parseTree;
-        
-        if (CallingConvention.ENABLE_NEW_ITER) {
-            ClassDeclaration transformDecl = generateTransformer(
-                stmt, 
-                farragoRelImplementor,
-                newTupleWriterExp,
-                childExp);
+        ClassDeclaration transformDecl = generateTransformer(
+            stmt, 
+            farragoRelImplementor,
+            newTupleWriterExp,
+            childExp);
             
-            farragoTransformClassName = 
-                stmt.getEnvironment().getPackage() + "." 
-                + transformDecl.getName();
+        setFarragoTransformClassName( 
+            stmt.getEnvironment().getPackage() + "." 
+            + transformDecl.getName());
             
-            farragoRelImplementor.addTransform(transformDecl);
+        farragoRelImplementor.addTransform(transformDecl);
             
-            parseTree = Literal.constantNull();
-        } else {
-            // and pass this to FarragoRuntimeContext.newJavaTupleStream to produce
-            // a JavaTupleStream, which will invoke our generated FennelTupleWriter
-            // to marshal
-            ExpressionList exprList = new ExpressionList();
-            exprList.add(Literal.makeLiteral(getId()));
-            exprList.add(newTupleWriterExp);
-            exprList.add(childExp);
-
-            final MethodCall methodCall = new MethodCall(
-                stmt.getConnectionVariable(),
-                "newJavaTupleStream",
-                exprList);
-            
-            parseTree = methodCall;
-        }
+        ParseTree parseTree = Literal.constantNull();
         
         if (tracer.isLoggable(Level.FINE)) {
             tracer.log(
@@ -436,11 +430,6 @@ public class IteratorToFennelConverter extends ConverterRel
         return parseTree;
     }
 
-    public String getFarragoTransformStreamName()
-    {
-        return farragoTransformStreamName;
-    }
-    
     /**
      * Registers the FemExecutionStreamDef(s) that form the inputs to this
      * converter's FemExecutionStreamDef.
@@ -449,46 +438,57 @@ public class IteratorToFennelConverter extends ConverterRel
      */
     void registerChildStreamDef(FemExecutionStreamDef childStreamDef)
     {
-        assert(CallingConvention.ENABLE_NEW_ITER);
-                
+        assert(childStreamDefsMap.containsKey(javaImplInvocationCount));
+        
+        List<FemExecutionStreamDef> childStreamDefs =
+            childStreamDefsMap.get(javaImplInvocationCount);
         childStreamDefs.add(childStreamDef);
+    }
+    
+    protected void setFarragoTransformClassName(String className)
+    {
+        assert(
+            !farragoTransformClassNameMap.containsKey(
+                javaImplInvocationCount));
+        
+        farragoTransformClassNameMap.put(javaImplInvocationCount, className);
     }
     
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
-        if (CallingConvention.ENABLE_NEW_ITER) {
-            assert(farragoTransformClassName != null);
-
-            FemJavaTransformStreamDef streamDef =
-                implementor.getRepos().newFemJavaTransformStreamDef();
-
-            for(FemExecutionStreamDef childStreamDef: childStreamDefs) {
-                implementor.addDataFlowFromProducerToConsumer(
-                    childStreamDef,
-                    streamDef);
-            }
-
-            streamDef.setStreamId(getId());
-            streamDef.setJavaClassName(farragoTransformClassName);
+        fennelImplInvocationCount++;
             
-            // register early so we can learn our stream def's name
-            implementor.registerRelStreamDef(streamDef, this, getRowType());
-
-            // Remember our global stream name.
-            farragoTransformStreamName = streamDef.getName();
-
-            return streamDef;
-        } else {
-            // NOTE: In this case, child stream defs do not need to be
-            // implemented -- this was already done in 
-            // FennelToIteratorConverter.
+        assert(
+            farragoTransformClassNameMap.containsKey(
+                fennelImplInvocationCount));
+        assert(childStreamDefsMap.containsKey(fennelImplInvocationCount));
             
-            FemJavaTupleStreamDef streamDef =
-                implementor.getRepos().newFemJavaTupleStreamDef();
-            streamDef.setStreamId(getId());
-            return streamDef;
+        // A single instance of this class may appear in multiple
+        // locations throughout a plan.  The methods implementFennelChild
+        // and toStreamDef are called once each for each location.  The
+        // following assumes that order in which toStreamDef is called
+        // for each location is the same as that for implementFennelChild.
+        String farragoTransformClassName = 
+            farragoTransformClassNameMap.get(fennelImplInvocationCount);
+
+        List<FemExecutionStreamDef> childStreamDefs =
+            childStreamDefsMap.get(fennelImplInvocationCount);
+            
+        FemJavaTransformStreamDef streamDef =
+            implementor.getRepos().newFemJavaTransformStreamDef();
+
+        for(FemExecutionStreamDef childStreamDef: childStreamDefs) {
+            implementor.addDataFlowFromProducerToConsumer(
+                childStreamDef,
+                streamDef);
         }
+        childStreamDefs.clear();
+            
+        streamDef.setStreamId(getId());
+        streamDef.setJavaClassName(farragoTransformClassName);
+            
+        return streamDef;
     }
     
     // implement FennelRel

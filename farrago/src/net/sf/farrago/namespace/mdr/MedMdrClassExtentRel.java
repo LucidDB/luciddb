@@ -183,25 +183,14 @@ class MedMdrClassExtentRel extends TableAccessRelBase implements JavaRel
                 inputRowType, rexExps, null, outputRowType,
                 getCluster().getRexBuilder());
 
-        if (!CallingConvention.ENABLE_NEW_ITER) {
-            Expression collectionExpression = getCollectionExpression();
-            Expression adapterExp = new AllocationExpression(
-                OJUtil.typeNameForClass(RestartableCollectionIterator.class),
-                new ExpressionList(
-                    collectionExpression));
-            return IterCalcRel.implementAbstract(
-                implementor, this, adapterExp, varInputRow, inputRowType,
-                outputRowType, program);
-        } else {
-            Expression collectionExpression = getCollectionExpression();
-            Expression adapterExp = new AllocationExpression(
-                OJUtil.typeNameForClass(RestartableCollectionTupleIter.class),
-                new ExpressionList(
-                    collectionExpression));
-            return IterCalcRel.implementAbstractNewIter(
-                implementor, this, adapterExp, varInputRow, inputRowType,
-                outputRowType, program);
-        }
+        Expression collectionExpression = getCollectionExpression();
+        Expression adapterExp = new AllocationExpression(
+            OJUtil.typeNameForClass(RestartableCollectionTupleIter.class),
+            new ExpressionList(
+                collectionExpression));
+        return IterCalcRel.implementAbstractTupleIter(
+            implementor, this, adapterExp, varInputRow, inputRowType,
+            outputRowType, program);
     }
 
     RexNode [] implementProjection(Expression inputRow)

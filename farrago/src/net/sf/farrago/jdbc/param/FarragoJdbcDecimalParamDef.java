@@ -20,14 +20,12 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package net.sf.farrago.jdbc.engine;
+package net.sf.farrago.jdbc.param;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
-import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.util14.NumberUtil;
-import net.sf.farrago.resource.FarragoResource;
 
 /**
  * FarragoJdbcEngineDecimalParamDef defines a Decimal parameter.
@@ -35,36 +33,38 @@ import net.sf.farrago.resource.FarragoResource;
  * @author Angel Chang
  * @version $Id$
  */
-class FarragoJdbcEngineDecimalParamDef extends FarragoJdbcEngineParamDef
+class FarragoJdbcDecimalParamDef extends FarragoJdbcParamDef
 {
     final BigInteger maxUnscaled;
     final BigInteger minUnscaled;
 
-    FarragoJdbcEngineDecimalParamDef(
+    FarragoJdbcDecimalParamDef(
         String paramName,
-        RelDataType type)
+        FarragoParamFieldMetaData paramMetaData)
     {
-        super(paramName, type);
-        maxUnscaled = NumberUtil.getMaxUnscaled(type.getPrecision());
-        minUnscaled = NumberUtil.getMinUnscaled(type.getPrecision());
+        super(paramName, paramMetaData);
+        maxUnscaled = NumberUtil.getMaxUnscaled(paramMetaData.precision);
+        minUnscaled = NumberUtil.getMinUnscaled(paramMetaData.precision);
     }
 
     private BigDecimal getBigDecimal(Object value, int scale)
     {
         BigDecimal bd;
         if (value == null) {
+            checkNullable();
             return null;
         } else if (value instanceof Number) {
             bd = NumberUtil.toBigDecimal((Number) value);
         } else if (value instanceof Boolean) {
             bd = new BigDecimal(((Boolean) value).booleanValue() ? 1 : 0);
-        } else {
+        } else if (value instanceof String) {
             try {
                 bd = new BigDecimal(value.toString().trim());
             } catch (NumberFormatException ex) {
-                throw FarragoResource.instance().ParameterValueIncompatible.ex(
-                        value.toString(), type.toString());
+                throw newInvalidFormat(value);
             }
+        } else {
+            throw newInvalidType(value);
         }
         bd = NumberUtil.rescaleBigDecimal(bd, scale);
         return bd;
@@ -73,14 +73,10 @@ class FarragoJdbcEngineDecimalParamDef extends FarragoJdbcEngineParamDef
     // implement FarragoSessionStmtParamDef
     public Object scrubValue(Object x)
     {
-        BigDecimal n = getBigDecimal(x, type.getScale());
+        BigDecimal n = getBigDecimal(x, paramMetaData.scale);
         if (n != null) {
             BigInteger usv = n.unscaledValue();
-            if ((usv.compareTo(maxUnscaled) > 0) ||
-                (usv.compareTo(minUnscaled) < 0)) {
-                throw FarragoResource.instance().ParameterValueOutOfRange.ex(
-                        x.toString(), type.toString());
-            }
+            checkRange(usv, minUnscaled, maxUnscaled);
         }
         return n;
     }

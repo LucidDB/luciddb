@@ -77,21 +77,12 @@ class MedMockIterRel
 
         Expression iterExp =
             new AllocationExpression(
-                OJUtil.typeNameForClass(getIteratorClass()),
+                OJUtil.typeNameForClass(MedMockTupleIter.class),
                 new ExpressionList(
                     newRowExp,
                     Literal.makeLiteral(columnSet.nRows)));
 
         return iterExp;
-    }
-
-    private Class getIteratorClass()
-    {
-        if (CallingConvention.ENABLE_NEW_ITER) {
-            return MedMockTupleIter.class;
-        } else {
-            return MedMockIterator.class;
-        }
     }
     
     // implement RelNode

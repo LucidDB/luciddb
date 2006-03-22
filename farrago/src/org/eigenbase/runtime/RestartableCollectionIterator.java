@@ -27,8 +27,12 @@ import java.util.*;
 /**
  * <code>RestartableCollectionIterator</code> implements the
  * {@link RestartableIterator} interface in terms of an underlying
- * {@link Collection}.  It is used to implement
- * {@link org.eigenbase.oj.rel.IterOneRowRel}.
+ * {@link Collection}.
+ *
+ *<p>
+ *
+ * TODO jvs 21-Mar-2006: This class is no longer used except by Saffron,
+ * so we should move it to Saffron.
  *
  * @author John V. Sichi
  * @version $Id$

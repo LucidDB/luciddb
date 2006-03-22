@@ -25,6 +25,8 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.rex.*;
 
+import java.util.*;
+
 /**
  * SargIntervalExpr represents an expression which can be resolved to a
  * fixed {@link SargInterval}.
@@ -190,6 +192,17 @@ public class SargIntervalExpr extends SargIntervalBase implements SargExpr
         seq.addInterval(interval);
         
         return seq;
+    }
+
+    // implement SargExpr
+    public void collectDynamicParams(Set<RexDynamicParam> dynamicParams)
+    {
+        if (lowerBound.getCoordinate() instanceof RexDynamicParam) {
+            dynamicParams.add((RexDynamicParam) lowerBound.getCoordinate());
+        }
+        if (upperBound.getCoordinate() instanceof RexDynamicParam) {
+            dynamicParams.add((RexDynamicParam) upperBound.getCoordinate());
+        }
     }
 }
 

@@ -22,6 +22,8 @@
 */
 package org.eigenbase.sql.parser;
 
+import org.eigenbase.util14.EigenbaseParserException;
+
 import java.util.Collection;
 import java.util.TreeSet;
 
@@ -32,7 +34,9 @@ import java.util.TreeSet;
  * @author John V. Sichi
  * @version $Id$
  */
-public class SqlParseException extends Exception
+public class SqlParseException
+    extends Exception
+    implements EigenbaseParserException
 {
     private final SqlParserPos pos;
     private final int[][] expectedTokenSequences;

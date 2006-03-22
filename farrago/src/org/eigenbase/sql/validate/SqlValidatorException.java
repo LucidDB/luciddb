@@ -27,6 +27,8 @@ package org.eigenbase.sql.validate;
 // dependencies on other Eigenbase/Farrago code.
 import java.util.logging.Logger;
 
+import org.eigenbase.util14.EigenbaseValidatorException;
+
 /**
  * Exception thrown while validating a SQL statement.
  *
@@ -38,7 +40,10 @@ import java.util.logging.Logger;
  * @since Oct 28, 2004
  * @version $Id$
  **/
-public class SqlValidatorException extends Exception {
+public class SqlValidatorException
+    extends Exception
+    implements EigenbaseValidatorException
+{
     //~ Static fields/initializers --------------------------------------------
 
     private static Logger tracer =

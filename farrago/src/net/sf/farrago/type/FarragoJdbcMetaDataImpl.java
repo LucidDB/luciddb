@@ -211,7 +211,12 @@ public class FarragoJdbcMetaDataImpl
     protected boolean isFieldSigned(int fieldOrdinal)
     {
         // TODO
-        return false;
+        RelDataType type = getFieldType(fieldOrdinal);
+        if (SqlTypeUtil.isNumeric(type)) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     protected boolean isFieldCurrency(int fieldOrdinal)

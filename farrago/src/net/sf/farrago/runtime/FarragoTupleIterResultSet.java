@@ -30,6 +30,7 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.session.*;
+import net.sf.farrago.jdbc.FarragoJdbcUtil;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.runtime.*;
@@ -47,7 +48,7 @@ public class FarragoTupleIterResultSet extends TupleIterResultSet
     //~ Static fields/initializers --------------------------------------------
 
     private static final Logger tracer =
-        FarragoTrace.getFarragoIteratorResultSetTracer();
+        FarragoTrace.getFarragoTupleIterResultSetTracer();
     private static final Logger jdbcTracer =
         FarragoTrace.getFarragoJdbcEngineDriverTracer();
 
@@ -59,7 +60,7 @@ public class FarragoTupleIterResultSet extends TupleIterResultSet
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Creates a new FarragoIteratorResultSet object.
+     * Creates a new FarragoTupleIterResultSet object.
      *
      * @param tupleIter underlying iterator
      * @param clazz Class for objects which iterator will produce
@@ -96,7 +97,7 @@ public class FarragoTupleIterResultSet extends TupleIterResultSet
             return super.next();
         } catch (Throwable ex) {
             // trace exceptions as part of JDBC API
-            throw FarragoUtil.newSqlException(ex, jdbcTracer);
+            throw FarragoJdbcUtil.newSqlException(ex, jdbcTracer);
         }
     }
 
@@ -124,7 +125,7 @@ public class FarragoTupleIterResultSet extends TupleIterResultSet
         super.close();
     }
 
-    // implement IteratorResultSet
+    // implement AbstractResultSet
     protected Object getRaw(int columnIndex)
     {
         Object obj = super.getRaw(columnIndex);
@@ -140,4 +141,4 @@ public class FarragoTupleIterResultSet extends TupleIterResultSet
 }
 
 
-// End FarragoIteratorResultSet.java
+// End FarragoTupleIterResultSet.java
