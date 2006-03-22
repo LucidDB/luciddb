@@ -177,7 +177,8 @@ dnl lack of symlinks makes it hard to load the correct JNI DLL.
 dnl Mingw tweaks
 if test "$target_os" = "mingw32"
 then
-    CXXFLAGS="$CXXFLAGS -mthreads"
+    dnl Use -Wno-format so we can use %I64 in printf/scanf without warning
+    CXXFLAGS="$CXXFLAGS -Wno-format -mthreads"
     postdeps="-lstdc++"
     EXTRA_LDFLAGS="-lstdc++ -lws2_32 -lrpcrt4 -Wl,--kill-at -Wl,--export-all-symbols -Wl,--allow-multiple-definition -no-undefined"
     dnl BOOST_LINKAGE=runtime-link-dynamic

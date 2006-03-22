@@ -2075,7 +2075,7 @@ SqlStringTest::testSqlStringCastToExact()
 #endif
 
                 // positive test, "1234   "
-                sprintf(buf, "%lld", value);
+                sprintf(buf, "%" FMT_INT64, value);
                 BOOST_REQUIRE(strlen(buf) <= src_len);
                 testSqlStringCastToExact_Helper(value,
                                                 buf,
@@ -2085,7 +2085,7 @@ SqlStringTest::testSqlStringCastToExact()
 
                 // positive test, "+123   "
                 if (src_len >= 2 && value >= 0) {
-                    sprintf(buf, "+%lld", value / 10);
+                    sprintf(buf, "+%" FMT_INT64, value / 10);
                     BOOST_REQUIRE(strlen(buf) <= src_len);
                     testSqlStringCastToExact_Helper(value / 10,
                                                     buf,
@@ -2096,7 +2096,7 @@ SqlStringTest::testSqlStringCastToExact()
 
 
                 // positive test, "  123", " 1234", "12345", "123456"
-                sprintf(buf, "%5lld", value);
+                sprintf(buf, "%5" FMT_INT64, value);
                 testSqlStringCastToExact_Helper(value,
                                                 buf,
                                                 src_storage,
@@ -2104,7 +2104,7 @@ SqlStringTest::testSqlStringCastToExact()
                                                 false);
 
                 // positive test, "            1234"
-                sprintf(buf, "%20lld", value);
+                sprintf(buf, "%20" FMT_INT64, value);
                 testSqlStringCastToExact_Helper(value,
                                                 buf,
                                                 src_storage,
@@ -2112,7 +2112,7 @@ SqlStringTest::testSqlStringCastToExact()
                                                 false);
 
                 // positive test, "000000000000001234"
-                sprintf(buf, "%020lld", value);
+                sprintf(buf, "%020" FMT_INT64, value);
                 testSqlStringCastToExact_Helper(value,
                                                 buf,
                                                 src_storage,
@@ -2121,7 +2121,7 @@ SqlStringTest::testSqlStringCastToExact()
 
 
                 // positive test, "0001234  "
-                sprintf(buf, "%07lld", value);
+                sprintf(buf, "%07" FMT_INT64, value);
                 testSqlStringCastToExact_Helper(value,
                                                 buf,
                                                 src_storage,
@@ -2129,7 +2129,7 @@ SqlStringTest::testSqlStringCastToExact()
                                                 false);
 
                 // negative test, "a234   "
-                sprintf(buf, "%lld", value);
+                sprintf(buf, "%" FMT_INT64, value);
                 buf[0] = 'a';
                 testSqlStringCastToExact_Helper(value,
                                                 buf,
@@ -2139,7 +2139,7 @@ SqlStringTest::testSqlStringCastToExact()
 
                 // negative test, "1a34   "
                 if (src_len > 2) {
-                    sprintf(buf, "%lld", value);
+                    sprintf(buf, "%" FMT_INT64, value);
                     buf[1] = 'a';
                     testSqlStringCastToExact_Helper(value,
                                                     buf,
@@ -2150,7 +2150,7 @@ SqlStringTest::testSqlStringCastToExact()
 
                 // negative test, "1 23 "
                 if (src_len > 3 && value >= 100) {
-                    sprintf(buf, "%lld", value);
+                    sprintf(buf, "%" FMT_INT64, value);
                     buf[1] = ' ';
                     testSqlStringCastToExact_Helper(value,
                                                     buf,
@@ -2169,7 +2169,7 @@ SqlStringTest::testSqlStringCastToExact()
 
                 // negative test, "- 3"
                 if (src_len > 3) {
-                    sprintf(buf, "%lld", value);
+                    sprintf(buf, "%" FMT_INT64, value);
                     buf[0] = '-';
                     buf[1] = ' ';
                     testSqlStringCastToExact_Helper(value,
@@ -2181,7 +2181,7 @@ SqlStringTest::testSqlStringCastToExact()
 
                 // negative test, "+ 3"
                 if (src_len > 3) {
-                    sprintf(buf, "%lld", value);
+                    sprintf(buf, "%" FMT_INT64, value);
                     buf[0] = '-';
                     buf[1] = ' ';
                     testSqlStringCastToExact_Helper(value,
@@ -2320,7 +2320,7 @@ SqlStringTest::testSqlStringCastToDecimal()
                 scale = 0;
 
                 // positive test, "1234   "
-                sprintf(buf, "%lld", value);
+                sprintf(buf, "%" FMT_INT64, value);
                 precision = (value < 0)? strlen(buf)-1: strlen(buf);
                 BOOST_REQUIRE(strlen(buf) <= src_len);
                 testSqlStringCastToDecimal_Helper(value,
@@ -2334,7 +2334,7 @@ SqlStringTest::testSqlStringCastToDecimal()
 
                 // positive test, "+123   "
                 if (src_len >= 2 && value >= 0) {
-                    sprintf(buf, "+%lld", value / 10);
+                    sprintf(buf, "+%" FMT_INT64, value / 10);
                     BOOST_REQUIRE(strlen(buf) <= src_len);
                     testSqlStringCastToDecimal_Helper(value / 10,
                                                       precision,
@@ -2348,7 +2348,7 @@ SqlStringTest::testSqlStringCastToDecimal()
 
 
                 // positive test, "  123", " 1234", "12345", "123456"
-                sprintf(buf, "%5lld", value);
+                sprintf(buf, "%5" FMT_INT64, value);
                 testSqlStringCastToDecimal_Helper(value,
                                                   precision,
                                                   scale,
@@ -2359,7 +2359,7 @@ SqlStringTest::testSqlStringCastToDecimal()
                                                   false);
 
                 // positive test, "            1234"
-                sprintf(buf, "%20lld", value);
+                sprintf(buf, "%20" FMT_INT64, value);
                 testSqlStringCastToDecimal_Helper(value,
                                                   precision,
                                                   scale,
@@ -2370,7 +2370,7 @@ SqlStringTest::testSqlStringCastToDecimal()
                                                   false);
 
                 // positive test, "000000000000001234"
-                sprintf(buf, "%020lld", value);
+                sprintf(buf, "%020" FMT_INT64, value);
                 testSqlStringCastToDecimal_Helper(value,
                                                   precision,
                                                   scale,
@@ -2382,7 +2382,7 @@ SqlStringTest::testSqlStringCastToDecimal()
 
 
                 // positive test, "0001234  "
-                sprintf(buf, "%07lld", value);
+                sprintf(buf, "%07" FMT_INT64, value);
                 testSqlStringCastToDecimal_Helper(value,
                                                   precision,
                                                   scale,
@@ -2393,7 +2393,7 @@ SqlStringTest::testSqlStringCastToDecimal()
                                                   false);
 
                 // positive test, ".1234"
-                sprintf(buf, ".%lld", value);
+                sprintf(buf, ".%" FMT_INT64, value);
                 if (value < 0) {
                     buf[0] = '-';
                     buf[1] = '.';
@@ -2410,7 +2410,7 @@ SqlStringTest::testSqlStringCastToDecimal()
 
 
                 // positive test, ".1234e3" = "123.4"
-                sprintf(buf, ".%llde3", value);
+                sprintf(buf, ".%" FMT_INT64 "e3", value);
                 if (value < 0) {
                     buf[0] = '-';
                     buf[1] = '.';
@@ -2438,7 +2438,7 @@ SqlStringTest::testSqlStringCastToDecimal()
 
                 // positive test, "1234e-3"
                 uint64_t tmp;
-                sprintf(buf, "%llde-3", value);
+                sprintf(buf, "%" FMT_INT64 "e-3", value);
                 
                 testSqlStringCastToDecimal_Helper(value,
                                                   precision,
@@ -2479,7 +2479,7 @@ SqlStringTest::testSqlStringCastToDecimal()
 
                 // negative test, out of range
                 if (abs(value) >= 10) {
-                    sprintf(buf, "%lld", value);                    
+                    sprintf(buf, "%" FMT_INT64, value);                    
                     testSqlStringCastToDecimal_Helper(value,
                                                       precision-1,
                                                       scale,
@@ -2491,7 +2491,7 @@ SqlStringTest::testSqlStringCastToDecimal()
                 }                
 
                 // negative test, "123e"
-                sprintf(buf, "%llde", value);
+                sprintf(buf, "%" FMT_INT64 "e", value);
                 testSqlStringCastToDecimal_Helper(value,
                                                   precision,
                                                   scale,
@@ -2502,7 +2502,7 @@ SqlStringTest::testSqlStringCastToDecimal()
                                                   true);
             
                 // negative test, "a234   "
-                sprintf(buf, "%lld", value);
+                sprintf(buf, "%" FMT_INT64, value);
                 buf[0] = 'a';
                 testSqlStringCastToDecimal_Helper(value,
                                                   precision,
@@ -2515,7 +2515,7 @@ SqlStringTest::testSqlStringCastToDecimal()
 
                 // negative test, "1a34   "
                 if (src_len > 2) {
-                    sprintf(buf, "%lld", value);
+                    sprintf(buf, "%" FMT_INT64, value);
                     buf[1] = 'a';
                     testSqlStringCastToDecimal_Helper(value,
                                                       precision,
@@ -2529,7 +2529,7 @@ SqlStringTest::testSqlStringCastToDecimal()
 
                 // negative test, "1 23 "
                 if (src_len > 3 && value >= 100) {
-                    sprintf(buf, "%lld", value);
+                    sprintf(buf, "%" FMT_INT64, value);
                     buf[1] = ' ';
                     testSqlStringCastToDecimal_Helper(value,
                                                       precision,
@@ -2554,7 +2554,7 @@ SqlStringTest::testSqlStringCastToDecimal()
 
                 // negative test, "- 3"
                 if (src_len > 3) {
-                    sprintf(buf, "%lld", value);
+                    sprintf(buf, "%" FMT_INT64, value);
                     buf[0] = '-';
                     buf[1] = ' ';
                     testSqlStringCastToDecimal_Helper(value,
@@ -2569,7 +2569,7 @@ SqlStringTest::testSqlStringCastToDecimal()
 
                 // negative test, "+ 3"
                 if (src_len > 3) {
-                    sprintf(buf, "%lld", value);
+                    sprintf(buf, "%" FMT_INT64, value);
                     buf[0] = '-';
                     buf[1] = ' ';
                     testSqlStringCastToDecimal_Helper(value,
@@ -2893,7 +2893,6 @@ SqlStringTest::testSqlStringCastFromExact()
     int rand_idx, power_idx;
     int negative;
     int64_t value, newones;
-    char expected_buf[256];
     bool caught;
     
     // strlen(MAX_VAL(int64_t))=19, strlen(MIN_VAL(int64_t))=20
@@ -2919,9 +2918,10 @@ SqlStringTest::testSqlStringCastFromExact()
                         if (negative) { 
                             value *= -1;
                         }
-                        
-                        sprintf(expected_buf, "%lld", value);
-                        string expect(expected_buf);
+
+                        ostringstream ostr("");
+                        ostr << value;
+                        string expect = ostr.str();
                         string expect_fix(expect); // right padded (CHAR)
                         if (expect_fix.length() < dst_storage) {
                             expect_fix.append(dst_storage -
@@ -3020,7 +3020,7 @@ SqlStringTest::testSqlStringCastFromDecimal()
                         scale = rand() % 25 - 5;
 
                         if (scale == 0) {
-                            sprintf(expected_buf, "%lld", value);
+                            sprintf(expected_buf, "%" FMT_INT64, value);
                         } else if (scale > 0) {
                             whole = value;
                             for (int i = 0; i < scale; i++) {
@@ -3028,7 +3028,7 @@ SqlStringTest::testSqlStringCastFromDecimal()
                             }
 
                             if (whole != 0) {
-                                sprintf(expected_buf, "%lld", whole);
+                                sprintf(expected_buf, "%" FMT_INT64, whole);
                             } else {
                                 if (value < 0) {
                                     expected_buf[0] = '-';
@@ -3051,7 +3051,7 @@ SqlStringTest::testSqlStringCastFromDecimal()
                             }
                             expected_buf[len+scale+1] = '\0';
                         } else if (scale < 0) {
-                            sprintf(expected_buf, "%lld", value);
+                            sprintf(expected_buf, "%" FMT_INT64, value);
                             if (value != 0) {
                                 int len = strlen(expected_buf);
                                 memset(expected_buf + len, '0', -scale);
@@ -3173,7 +3173,11 @@ SqlStringTest::testSqlStringCastFromApprox()
                         }
                         max_precision = (isFloat)? 7: 16;
 
-                        if (value) {
+                        if (value > std::numeric_limits<double>::max()) {
+                            strcpy(expected_buf, "INF");
+                        } else if (value < -std::numeric_limits<double>::max()) {
+                            strcpy(expected_buf, "-INF");
+                        } else if (value) {
                             int i, epos = -1, prec = 0, buflen, exp;
                             int neg = (value < 0)? 1: 0;
                             char last_digit = 0;
@@ -3276,7 +3280,8 @@ SqlStringTest::testSqlStringCastFromApprox()
                             BOOST_CHECK(!expect.compare(result));
                             if (expect.compare(result)) {
                                 BOOST_MESSAGE("Got " << result << 
-                                              ", expected " << expect);
+                                    ", expected " << expect <<
+                                    ", value " << value);
                             }
                         }
 
