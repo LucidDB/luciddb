@@ -66,6 +66,7 @@ public abstract class FarragoManagementUDR
                 if (stmtInfo != null) {
                     int i = 0;
                     resultInserter.setLong(++i, id);
+                    resultInserter.setLong(++i, info.getId());
                     resultInserter.setString(
                         ++i,
                         stmtInfo.getSql());
