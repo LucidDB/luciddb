@@ -36,9 +36,9 @@
 0: jdbc:luciddb:> CREATE INDEX B100K_K100K_IDX ON BENCH100K(K100K)
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> set schema 'csv_schema';
+0: jdbc:luciddb:> set schema 'orcl_schema';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> CREATE foreign table csv_schema.BENCH_SOURCE_100K (
+0: jdbc:luciddb:> CREATE foreign table orcl_schema.BENCH_SOURCE_100K (
 . . . . . . . . > C1 INTEGER,
 . . . . . . . . > C2 INTEGER,
 . . . . . . . . > C4 INTEGER,
@@ -52,9 +52,9 @@
 . . . . . . . . > C100K INTEGER, 
 . . . . . . . . > C250K INTEGER,
 . . . . . . . . > C500K INTEGER) 
-. . . . . . . . > server csv_server
+. . . . . . . . > server orcl_server
 . . . . . . . . > options (
-. . . . . . . . > 
+. . . . . . . . > SCHEMA_NAME 'SCHOI',
 . . . . . . . . > table_name 'bench100K'
 . . . . . . . . > );
 0: jdbc:luciddb:> 
@@ -62,7 +62,7 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> INSERT INTO BENCH100K (KSEQ,K2,K4,K5,K10,K25,K100,K1K,K10K,K40K,K100K,K250K,
 . . . . . . . . > K500K) SELECT C1,C2,C4,C5,C10,C25,C100,C1K,C10K,C40K,C100K,C250K,C500K 
-. . . . . . . . > FROM csv_schema.BENCH_SOURCE_100K
+. . . . . . . . > FROM orcl_schema.BENCH_SOURCE_100K
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

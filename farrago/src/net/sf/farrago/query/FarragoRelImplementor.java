@@ -31,6 +31,7 @@ import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.catalog.FarragoRepos;
 import net.sf.farrago.runtime.FarragoTransform;
+import net.sf.farrago.fennel.*;
 
 import openjava.mop.*;
 import openjava.ptree.*;
@@ -60,7 +61,12 @@ public class FarragoRelImplementor extends JavaRelImplementor
     OJClass ojBytePointer;
     private Set streamDefSet;
     private String serverMofId;
-    private int nextParamId;
+    private long nextRelParamId;
+    private int nextDynamicParamId;
+
+    // ordered from child rel to parent rel; for now only
+    // includes FennelRels during StreamDef generation
+    private List<RelScope> scopeStack;
 
     /** 
      * List of ClassDeclarations representing generated Java code not
@@ -85,7 +91,12 @@ public class FarragoRelImplementor extends JavaRelImplementor
         ojBytePointer = OJClass.forClass(BytePointer.class);
 
         streamDefSet = new HashSet();
-        nextParamId = 1;
+        scopeStack = new LinkedList<RelScope>();
+        nextRelParamId = 1;
+        // REVIEW jvs 22-Mar-2006:  does this match how user-level
+        // dynamic params get mapped into Fennel?
+        nextDynamicParamId =
+            preparingStmt.getSqlToRelConverter().getDynamicParamCount() + 1;
         transformDeclarations = new ArrayList<ClassDeclaration>();
     }
 
@@ -116,13 +127,42 @@ public class FarragoRelImplementor extends JavaRelImplementor
 
     public int allocateDynamicParam()
     {
-        return nextParamId++;
+        return (int) allocateRelParamId().longValue();
+    }
+
+    public FennelRelParamId allocateRelParamId()
+    {
+        return new FennelRelParamId(nextRelParamId++);
+    }
+    
+    public FennelDynamicParamId translateParamId(
+        FennelRelParamId relParamId)
+    {
+        assert(!scopeStack.isEmpty());
+        
+        // Check for an existing translation.
+        for (RelScope scope : scopeStack) {
+            FennelDynamicParamId dynamicParamId =
+                scope.paramMap.get(relParamId);
+            if (dynamicParamId != null) {
+                return dynamicParamId;
+            }
+        }
+
+        // None found:  make up a new one and add it to current scope.
+        FennelDynamicParamId dynamicParamId =
+            new FennelDynamicParamId(nextDynamicParamId++);
+        RelScope scope = scopeStack.get(0);
+        scope.paramMap.put(relParamId, dynamicParamId);
+        return dynamicParamId;
     }
 
     // implement FennelRelImplementor
     public FemExecutionStreamDef visitFennelChild(FennelRel rel)
     {
+        scopeStack.add(0, new RelScope());
         FemExecutionStreamDef streamDef = rel.toStreamDef(this);
+        scopeStack.remove(0);
         registerRelStreamDef(streamDef, rel, null);
         return streamDef;
     }
@@ -310,6 +350,16 @@ public class FarragoRelImplementor extends JavaRelImplementor
         public OJAggImplementor get(Aggregation aggregation)
         {
             return delegate.get(aggregation);
+        }
+    }
+
+    private static class RelScope
+    {
+        Map<FennelRelParamId, FennelDynamicParamId> paramMap;
+
+        RelScope()
+        {
+            paramMap = new HashMap<FennelRelParamId, FennelDynamicParamId>();
         }
     }
 }

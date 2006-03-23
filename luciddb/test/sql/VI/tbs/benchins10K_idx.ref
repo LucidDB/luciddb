@@ -60,7 +60,7 @@
 . . . . . . . . > C500K INTEGER) 
 . . . . . . . . > server orcl_server
 . . . . . . . . > options (
-. . . . . . . . > SCHEMA_NAME 'SCHOI'
+. . . . . . . . > SCHEMA_NAME 'SCHOI',
 . . . . . . . . > table_name 'bench10K'
 . . . . . . . . > )
 . . . . . . . . > ;
