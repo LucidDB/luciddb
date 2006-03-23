@@ -23,21 +23,13 @@
 package net.sf.farrago.db;
 
 import java.sql.*;
-import java.util.*;
 import java.util.logging.*;
 
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.query.*;
 import net.sf.farrago.resource.FarragoResource;
-import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
-import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
-import net.sf.farrago.fennel.*;
 
-import org.eigenbase.oj.stmt.*;
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.resgen.*;
 import org.eigenbase.resource.*;
@@ -54,46 +46,21 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoDbStmtContext implements FarragoSessionStmtContext
+public class FarragoDbStmtContext extends FarragoDbStmtContextBase
+    implements FarragoSessionStmtContext
 {
-    //~ Static fields/initializers --------------------------------------------
-
-    private static final Logger tracer =
-        FarragoTrace.getDatabaseStatementContextTracer();
-
     //~ Instance fields -------------------------------------------------------
 
     private int updateCount;
-    private FarragoDbSession session;
-
-    private final FarragoSessionStmtParamDefFactory paramDefFactory;
-    
-    /**
-     * Definitions of dynamic parameters.
-     */
-    private FarragoSessionStmtParamDef [] dynamicParamDefs;
-    
-    /**
-     * Current dynamic parameter bindings.
-     */
-    private Object [] dynamicParamValues;
-    
-    private boolean daemon;
     private ResultSet resultSet;
     private FarragoSessionExecutableStmt executableStmt;
     private FarragoCompoundAllocation allocations;
-    private String sql;
-    
     private FarragoSessionRuntimeContext runningContext;
-    private FarragoDdlLockManager ddlLockManager;
-    
     /**
      * query timeout in seconds, default to 0.
      */
     private int queryTimeoutMillis = 0;
 
-    private long executingStmtInfoKey;
-    
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -106,28 +73,12 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
         FarragoSessionStmtParamDefFactory paramDefFactory,
         FarragoDdlLockManager ddlLockManager)
     {
-        this.session = session;
-        this.paramDefFactory = paramDefFactory;
-        this.ddlLockManager = ddlLockManager;
+        super(session, paramDefFactory, ddlLockManager);
+
         updateCount = -1;
     }
 
     //~ Methods ---------------------------------------------------------------
-
-    // implement FarragoAllocation
-    public void closeAllocation()
-    {
-        unprepare();
-
-        // purge self from session's list
-        session.forgetAllocation(this);
-    }
-
-    // implement FarragoSessionStmtContext
-    public FarragoSession getSession()
-    {
-        return session;
-    }
 
     // implement FarragoSessionStmtContext
     public boolean isPrepared()
@@ -139,12 +90,6 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
     public boolean isPreparedDml()
     {
         return executableStmt.isDml();
-    }
-
-    // implement FarragoSessionStmtContext
-    public void daemonize()
-    {
-        daemon = true;
     }
 
     // implement FarragoSessionStmtContext
@@ -160,34 +105,12 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
         finishPrepare();
     }
 
-    void lockObjectsInUse(FarragoSessionExecutableStmt newExecutableStmt)
-    {
-        // TODO jvs 17-Mar-2006:  as a sanity check, verify at the
-        // beginning of each execution that all objects still exist
-        // (to make sure that a DROP didn't sneak in somehow)
-        ddlLockManager.addObjectsInUse(
-            this, newExecutableStmt.getReferencedObjectIds());
-    }
-
     private void finishPrepare()
     {
         if (isPrepared()) {
             final RelDataType dynamicParamRowType =
                 executableStmt.getDynamicParamRowType();
-            final RelDataTypeField [] fields = dynamicParamRowType.getFields();
-
-            // Allocate an array to hold parameter values.
-            dynamicParamValues = new Object[fields.length];
-
-            // Allocate an array of validators, one for each parameter.
-            dynamicParamDefs = new FarragoSessionStmtParamDef[fields.length];
-            for (int i = 0; i < fields.length; i++) {
-                final RelDataTypeField field = fields[i];
-                dynamicParamDefs[i] =
-                    paramDefFactory.newParamDef(
-                        field.getName(), 
-                        field.getType());
-            }
+            initDynamicParams(dynamicParamRowType);
         } else {
             // always zero for DDL
             updateCount = 0;
@@ -229,23 +152,6 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
     }
 
     // implement FarragoSessionStmtContext
-    public void setDynamicParam(
-        int parameterIndex,
-        Object x)
-    {
-        assert (isPrepared());
-        Object y = dynamicParamDefs[parameterIndex].scrubValue(x);
-        dynamicParamValues[parameterIndex] = y;
-    }
-
-    // implement FarragoSessionStmtContext
-    public void clearParameters()
-    {
-        assert (isPrepared());
-        Arrays.fill(dynamicParamValues, null);
-    }
-
-    // implement FarragoSessionStmtContext
     public void setQueryTimeout(int millis)
     {
         queryTimeoutMillis = millis;
@@ -257,11 +163,6 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
         return queryTimeoutMillis;
     }
 
-    // implement FarragoSessionStmtContext
-    public String getSql() {
-        return sql;
-    }
-    
     // implement FarragoSessionStmtContext
     public void execute()
     {
@@ -294,23 +195,11 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
                 newContext.addAllocation(this);
             }
 
-            Set<String> objectsInUse = executableStmt.getReferencedObjectIds();
-            executingStmtInfoKey = session.getDatabase().getUniqueId();
-            
-            FarragoSessionExecutingStmtInfo info =
-                new FarragoDbSessionExecutingStmtInfo(
-                    executingStmtInfoKey,
-                    sql,
-                    Arrays.asList(dynamicParamValues),
-                    Arrays.asList(
-                        objectsInUse.toArray(new String[objectsInUse.size()])));
-            FarragoDbSessionInfo sessionInfo = 
-                (FarragoDbSessionInfo) session.getSessionInfo();
-            sessionInfo.addExecutingStmtInfo(info);
+            initExecutingStmtInfo(executableStmt);
 
             // Acquire locks (or whatever transaction manager wants) on all
             // tables accessed by this statement.
-            accessTables();
+            accessTables(executableStmt);
 
             resultSet = executableStmt.execute(newContext);
             runningContext = newContext;
@@ -351,9 +240,7 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
                     if (!success) {
                         session.endTransactionIfAuto(false);
                     }
-                    getSessionInfo().removeExecutingStmtInfo(
-                        executingStmtInfoKey);
-                    executingStmtInfoKey = 0;
+                    clearExecutingStmtInfo();
                 }
             }
         }
@@ -381,17 +268,6 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
         }
     }
 
-    private void accessTables()
-    {
-        TableAccessMap accessMap = executableStmt.getTableAccessMap();
-        FarragoSessionTxnMgr txnMgr = 
-            session.getDatabase().getTxnMgr();
-        FarragoSessionTxnId txnId = session.getTxnId(true);
-        txnMgr.accessTables(
-            txnId,
-            accessMap);
-    }
-    
     // implement FarragoSessionStmtContext
     public ResultSet getResultSet()
     {
@@ -413,8 +289,7 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
         if (contextToCancel != null) {
             contextToCancel.cancel();
         }
-        getSessionInfo().removeExecutingStmtInfo(executingStmtInfoKey);
-        executingStmtInfoKey = 0;
+        clearExecutingStmtInfo();
     }
 
     // implement FarragoSessionStmtContext
@@ -430,8 +305,7 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
         }
         resultSet = null;
         runningContext = null;
-        getSessionInfo().removeExecutingStmtInfo(executingStmtInfoKey);
-        executingStmtInfoKey = 0;
+        clearExecutingStmtInfo();
     }
 
     // implement FarragoSessionStmtContext
@@ -445,27 +319,9 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
         executableStmt = null;
         sql = null;
         dynamicParamValues = null;
-        ddlLockManager.removeObjectsInUse(this);
+        
+        super.unprepare();
     }
-
-    void traceExecute()
-    {
-        if (!tracer.isLoggable(Level.FINE)) {
-            return;
-        }
-        tracer.fine(sql);
-        if (!tracer.isLoggable(Level.FINER)) {
-            return;
-        }
-        for (int i = 0; i < dynamicParamValues.length; ++i) {
-            tracer.finer("?" + (i + 1) + " = [" + dynamicParamValues[i] + "]");
-        }
-    }
-    
-    private FarragoDbSessionInfo getSessionInfo() {
-        return (FarragoDbSessionInfo)session.getSessionInfo();
-    }
-
 }
 
 
