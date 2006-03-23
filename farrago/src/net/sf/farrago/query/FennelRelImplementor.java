@@ -23,6 +23,7 @@ package net.sf.farrago.query;
 
 import net.sf.farrago.fem.fennel.FemExecutionStreamDef;
 import net.sf.farrago.catalog.FarragoRepos;
+import net.sf.farrago.fennel.*;
 
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelImplementor;
@@ -91,15 +92,42 @@ public interface FennelRelImplementor extends RelImplementor
      * Returns the repository.
      */
     public FarragoRepos getRepos();
-    
+
     /**
      * Reserves a Fennel dynamic parameter. This method finds a 
      * unique identifier which may be used to reference a Fennel 
      * dynamic parameter. No subsequent calls, made to the same 
      * implementor, will return the same identifier. The identifier
      * returned will be greater than zero.
+     *
+     *<p>
+     *
+     * TODO jvs 22-Mar-2006: Eliminate this deprecated method once all calling
+     * code has been changed to use allocateRelParamId instead.
      */
     public int allocateDynamicParam();
+    
+    /**
+     * Reserves a Fennel dynamic parameter.  The reserving rel can use {@link
+     * #translateParamId(FennelRelParamId)} later as part of its toStreamDef
+     * implementation to convert this into a final {@link
+     * FennelDynamicParamId}, which can then be referenced from stream
+     * definitions.
+     *
+     * @return parameter reservation ID
+     */
+    public FennelRelParamId allocateRelParamId();
+
+    /**
+     * Translates a {@link FennelRelParamId} into a {@link
+     * FennelDynamicParamId} based on the current scope.
+     *
+     * @param relParamId reserved ID to be translated
+     *
+     * @return physical ID to use in final plan
+     */
+    public FennelDynamicParamId translateParamId(
+        FennelRelParamId relParamId);
 }
 
 
