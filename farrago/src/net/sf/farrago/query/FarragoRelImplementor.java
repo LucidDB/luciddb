@@ -30,7 +30,6 @@ import net.sf.farrago.ojrex.*;
 import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.catalog.FarragoRepos;
-import net.sf.farrago.runtime.FarragoTransform;
 
 import openjava.mop.*;
 import openjava.ptree.*;
@@ -61,6 +60,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
     private Set streamDefSet;
     private String serverMofId;
     private int nextParamId;
+    private int nextTransformId;
 
     /** 
      * List of ClassDeclarations representing generated Java code not
@@ -86,6 +86,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
 
         streamDefSet = new HashSet();
         nextParamId = 1;
+        nextTransformId = 1;
         transformDeclarations = new ArrayList<ClassDeclaration>();
     }
 
@@ -153,6 +154,11 @@ public class FarragoRelImplementor extends JavaRelImplementor
     public void addTransform(ClassDeclaration transform)
     {
         transformDeclarations.add(transform);
+    }
+    
+    public int allocateTransform()
+    {
+        return nextTransformId++;
     }
     
     public FarragoPreparingStmt getPreparingStmt()
