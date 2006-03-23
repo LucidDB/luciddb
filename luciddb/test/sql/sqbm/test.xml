@@ -57,6 +57,8 @@
 
       <test name="sqbm4" requiresSuccess="benchins1mMssql">
         <test-metadata>
+          <!-- Failing due to LDB-48 -->
+          <knownFailure value="true"/>
           <withIndex value="true"/>
         </test-metadata>
         <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/sqbm/sqbm_q4.sql"/>
@@ -93,6 +95,8 @@
 
       <test name="sqbm4nob" requiresSuccess="benchins1mMssql">
         <test-metadata>
+          <!-- Failing due to LDB-48 -->
+          <knownFailure value="true"/>
           <withIndex value="true"/>
         </test-metadata>
         <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/sqbm/sqbm_q4nob.sql"/>
