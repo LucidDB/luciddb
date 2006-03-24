@@ -35,13 +35,13 @@ FENNEL_BEGIN_NAMESPACE
 class LbmByteSegment
 {
 public:
-    LcsRid byteNum;
+    LbmByteNumber byteNum;
     PBuffer byteSeg;
     uint len;
 
     inline void reset() 
     {
-        byteNum = (LcsRid) 0;
+        byteNum = (LbmByteNumber) 0;
         byteSeg = NULL;
         len = 0;
     }
@@ -51,7 +51,7 @@ public:
      */
     inline LcsRid getSrid() const
     {
-        return (LcsRid) (byteNum * LbmSegment::LbmOneByteSize);
+        return byteNumberToRid(byteNum);
     }
 
     /**
@@ -65,7 +65,7 @@ public:
     /**
      * Returns the end byte number
      */
-    inline LcsRid getEnd() const
+    inline LbmByteNumber getEnd() const
     {
         return byteNum + len;
     }
@@ -75,7 +75,7 @@ public:
      */
     inline LcsRid getEndRid() const
     {
-        return getEnd() * 8;
+        return byteNumberToRid(getEnd());
     }
 
     /**
@@ -83,7 +83,7 @@ public:
      * As a result, the beginning of the segment or even the entire
      * segment may be truncated.
      */
-    void advanceToByteNum(LcsRid newStartByteNum) 
+    void advanceToByteNum(LbmByteNumber newStartByteNum) 
     {
         // ignore null values
         if (isNull()) {

@@ -52,7 +52,7 @@ protected:
     /**
      * Byte offset representing current position in segment
      */
-    LcsRid byteSegOffset;
+    LbmByteNumber byteSegOffset;
 
     /**
      * Pointer to tuple data containing input bitmap segment

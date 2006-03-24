@@ -85,7 +85,7 @@ public:
      *
      * @returns EXECRC_YIELD if successfully read a bitmap segment
      */
-    ExecStreamResult advanceToByte(LcsRid byteNum);
+    ExecStreamResult advanceToByte(LbmByteNumber byteNum);
 
     /**
      * Reads the current byte segment, based on current position 

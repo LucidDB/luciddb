@@ -175,12 +175,14 @@ public:
      * One byte in the bitmap encodes 8 RIDs.
      */
     static const uint LbmOneByteSize = 8;
-
+    static const uint LbmOneByteSizeBitShift = 3;
+    static const LcsRidPrimitive LbmOneByteSizeBitMask =
+        0xfffffffffffffff8ULL;
 };
 
 inline LcsRid LbmSegment::roundToByteBoundary(LcsRid rid)
 {
-    return (rid - rid % LbmOneByteSize);
+    return LcsRid(opaqueToInt(rid) & LbmOneByteSizeBitMask);
 }
 
 inline bool LbmSegment::setSegLength(uint8_t &segDescByte, uint segLen)
@@ -205,6 +207,30 @@ inline uint LbmSegment::getZeroLengthByteCount(uint8_t segDescByte)
     } else {
         return 0;
     }
+}
+
+/**
+ * Offset into the byte representation of row ids, in which each
+ * row id is encoded as a single bit
+ */
+DEFINE_OPAQUE_INTEGER(LbmByteNumber, uint64_t);
+
+/**
+ * Returns the byte number of a rid
+ */
+inline LbmByteNumber ridToByteNumber(LcsRid rid)
+{
+    return LbmByteNumber(
+        opaqueToInt(rid) >> LbmSegment::LbmOneByteSizeBitShift);
+}
+
+/**
+ * Returns the rid corresponding to a byte offset
+ */
+inline LcsRid byteNumberToRid(LbmByteNumber byteNum)
+{
+    return LcsRid(
+        opaqueToInt(byteNum) << LbmSegment::LbmOneByteSizeBitShift);
 }
 
 FENNEL_END_NAMESPACE

@@ -32,7 +32,7 @@ void LbmSegmentReaderBase::init(
     pInAccessor = pInAccessorInit;
     pBitmapSegTuple = &bitmapSegTuple;
     byteSegLen = 0;
-    byteSegOffset = LcsRid(0);
+    byteSegOffset = LbmByteNumber(0);
     pSegStart = NULL;
     pSegDescStart = NULL;
     pSegDescEnd = NULL;
@@ -57,7 +57,7 @@ ExecStreamResult LbmSegmentReaderBase::readBitmapSegTuple()
 
     // extract starting rid and compute its equivalent byte segment number
     startRID = *reinterpret_cast<LcsRid const *> ((*pBitmapSegTuple)[0].pData);
-    byteSegOffset = startRID / LbmOneByteSize;
+    byteSegOffset = ridToByteNumber(startRID);
     zeroBytes = 0;
 
     // determine where the segment descriptor starts and ends, if there is
