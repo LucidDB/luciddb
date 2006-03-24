@@ -26,6 +26,7 @@
     <orderEntry type="library" name="sqlline" level="project" />
     <orderEntry type="library" name="xml" level="project" />
     <orderEntry type="library" name="tools" level="project" />
+    <orderEntry type="library" name="commons-transaction" level="project" />
     <orderEntryProperties />
   </component>
 </module>
