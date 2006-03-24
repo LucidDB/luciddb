@@ -3,34 +3,39 @@
 <!DOCTYPE cruisecontrol [
 
 <!ENTITY open_p4port     "chumley:1666">
-<!ENTITY open_p4client   "cruise.chumley">
+<!ENTITY open_p4client   "cruise.chelmsford">
 <!ENTITY open_p4user     "guest">
 <!ENTITY open_root       "//open/dt/dev">
-<!ENTITY open_propfile   "chumley.perforce.properties">
+<!ENTITY open_propfile   "chelmsford.perforce.properties">
+<!ENTITY open_default.build.home     "/home/cruise/work">
+<!ENTITY open_integration.build.home "/home/cruise/work/build">
 
 <!ENTITY aspen_p4port    "chumley:1667">
-<!ENTITY aspen_p4client  "cruise.chumley">
+<!ENTITY aspen_p4client  "cruise.chelmsford">
 <!ENTITY aspen_p4user    "guest">
 
-<!ENTITY buildresultsbase "http://jhyde.dyndns.org:8888/aspen/buildresults">
+<!ENTITY buildresultsbase "http://zuercher.dyndns.org:8082/cruisecontrol/buildresults">
 <!ENTITY mailhost         "smtp.rcn.com">
-<!ENTITY reportsuccess    "fixes">
+<!ENTITY reportsuccess    "always">
 <!ENTITY returnname       "Build Monkey">
 <!ENTITY returnaddress    "buildmonkey@fishtaco.org">
 <!ENTITY skipusers        "true">
 <!ENTITY spamwhilebroken  "true">
 <!ENTITY subjectprefix    "Continuous Integration: ">
 <!ENTITY failureaddress   "the.team@disruptivetech.com">
+<!ENTITY emailmapper      "/home/cruise/work/bootstrap/p4email.txt">
+
 <!ENTITY reportwhenfixed  "true">
 
-<!ENTITY scp_user         "aspen">
-<!ENTITY scp_host         "jhyde.dyndns.org">
+<!ENTITY scp_user         "cruise">
+<!ENTITY scp_host         "chelmsford">
 <!ENTITY scp_filesep      "/">
-<!ENTITY scp_options      "-P 8022">
-<!ENTITY rsync_cmd        "rsync -az -e &quot;ssh -p 8022&quot; --delete-after">
-<!ENTITY rsync_dest       "aspen@jhyde.dyndns.org:web/artifacts">
+<!ENTITY scp_options      "-P 9022">
+<!ENTITY rsync_cmd        "rsync -az -e &quot;ssh -p 9022&quot; --delete-after">
+<!ENTITY rsync_dest       "cruise@chelmsford:web/artifacts">
 
-<!ENTITY build_interval   "3600">
+<!ENTITY build_interval         "3600">
+<!ENTITY build_interval_aspen   "300">
 
 <!ENTITY ant              "./doant.sh">
 
@@ -45,7 +50,7 @@
 
 <cruisecontrol>
 	&saffronProject;
-	&fennelProject;
-	&farragoProject;
+	<!-- &fennelProject; -->
+	<!-- &farragoProject; -->
 	&aspenProject;
 </cruisecontrol>
