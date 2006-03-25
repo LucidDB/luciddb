@@ -63,10 +63,10 @@
     <filter token="csv.dir" value="${csv.copy.dir}"/>
 
     <!-- generate config.properties file -->
-    <copy file="${prop.source}" tofile="config.properties"
+    <copy file="prop.${prop.source}" tofile="config.properties"
       overwrite="true" filtering="true">
       <filterset>
-        <filtersfile file="${prop.source}"/>
+        <filtersfile file="prop.${prop.source}"/>
       </filterset>
     </copy>
 
@@ -110,7 +110,7 @@
       <isset property="sql.generated"/>
       <then/>
       <else>
-        <foreach list="prop.oracle,prop.sqlserver,prop.flatfile,prop.csvjdbc" 
+        <foreach list="oracle,sqlserver,flatfile,csvjdbc" 
           param="prop.source"
           target="gen-sql"/>
       </else>

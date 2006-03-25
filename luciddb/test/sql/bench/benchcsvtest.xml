@@ -1,6 +1,6 @@
-<project name="bh" default="simple-test">
-  <target name="simple-test">
-    <test-suite testunit="simple-test">
+<project name="bh" default="benchcsvtest">
+  <target name="benchcsvtest">
+    <test-suite testunit="benchcsvtest">
 
       <init-hook>
         <ant target="restoreCatalog"/>
@@ -8,19 +8,19 @@
       </init-hook>
 
       <test name="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/bench/gen/${config.prop}/creschema.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/bench/gen/${foreign.db}/creschema.sql"/>
       </test>
 
       <test name="benchfileload" requiresSuccess="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/bench/gen/${config.prop}/benchfileload.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/bench/gen/${foreign.db}/benchfileload.sql"/>
       </test>
 
       <test name="benchload" requiresSuccess="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/bench/gen/${config.prop}/benchload.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/bench/gen/${foreign.db}/benchload.sql"/>
       </test>
 
       <test name="benchqueries" requiresSuccess="benchload">
-        <junit-sql file="${open.dir}/luciddb/test/sql/bench/gen/${config.prop}/benchqueries.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/bench/gen/${foreign.db}/benchqueries.sql"/>
       </test>
 
     </test-suite>

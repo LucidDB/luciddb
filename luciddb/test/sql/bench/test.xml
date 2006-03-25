@@ -1,25 +1,25 @@
-<project name="bh" default="simple-test">
-  <target name="simple-test">
-    <test-suite testunit="simple-test">
+<project name="bh" default="bench">
+  <target name="bench">
+    <test-suite testunit="bench">
 
       <test-suite-call testfile="benchtest.xml">
         <test-unit-modifier value="oracle"/>
-        <property name="config.prop" value="prop.oracle"/>
+        <property name="foreign.db" value="oracle"/>
       </test-suite-call>
 
       <test-suite-call testfile="benchtest.xml">
         <test-unit-modifier value="sqlserver"/>
-        <property name="config.prop" value="prop.sqlserver"/>
+        <property name="foreign.db" value="sqlserver"/>
       </test-suite-call>
 
       <test-suite-call testfile="benchtest.xml">
         <test-unit-modifier value="flatfile"/>
-        <property name="config.prop" value="prop.flatfile"/>
+        <property name="foreign.db" value="flatfile"/>
       </test-suite-call>
 
-      <test-suite-call testfile="benchcsvtest.xml">
+      <test-suite-call testfile="benchtest-csvjdbc.xml">
         <test-unit-modifier value="csvjdbc"/>
-        <property name="config.prop" value="prop.csvjdbc"/>
+        <property name="foreign.db" value="csvjdbc"/>
       </test-suite-call>
 
     </test-suite>
