@@ -82,6 +82,8 @@ public:
      * Ensures the segment begins with the requested byte number.
      * As a result, the beginning of the segment or even the entire
      * segment may be truncated.
+     *
+     * This function assumes bytes are reverse order.
      */
     void advanceToByteNum(LbmByteNumber newStartByteNum) 
     {
@@ -103,6 +105,25 @@ public:
             byteSeg -= diff;
             len -= diff;
         }
+    }
+
+    /**
+     * Prints a byte segment.
+     *
+     * This function assumes bytes are in order.
+     */
+    void print(std::ostream &output) 
+    {
+        output << std::dec << opaqueToInt(byteNum) << ".";
+        output << std::dec << len << " (";
+        for (uint i = 0; i < len; i++) {
+            uint val = byteSeg[i];
+            if (i > 0) {
+                output << ",";
+            }
+            output << std::hex << val;
+        }
+        output << ")" << std::endl;
     }
 };
 

@@ -88,14 +88,6 @@ bool LbmUnionWorkspace::canProduce()
 
 const LbmByteSegment &LbmUnionWorkspace::getSegment()
 {
-    // update segment to current starting position
-    segment.advanceToByteNum(LbmByteNumber(mergeArea.getStart()));
-
-    // if we already a valid segment, return the segment
-    if (! segment.isNull()) {
-        return segment;
-    }
-
     // limit for the beginning of a segment; we don't begin a segment
     // unless it has had time to mature (grow to maximum size)
     LbmByteNumberPrimitive startLimit;
