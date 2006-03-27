@@ -137,34 +137,12 @@ require version '${required.ant.version}'."/>
     "${farrago.src.dir}/net/sf/farrago/test/FarragoSqlTestWrapper.java"/>
 
   <!-- a fileset of all SQL regression tests -->
-  <fileset dir="${regressionsql.dir}" id="fileset.regressionsql.std">
+  <fileset dir="${regressionsql.dir}" id="fileset.regressionsql">
     <include name="**/*.sql"/>
   </fileset>
-  <pathconvert property="fileset.regressionsql.std" 
-    refid="fileset.regressionsql.std"
+  <pathconvert property="fileset.regressionsql" 
+    refid="fileset.regressionsql"
     pathsep="${line.separator}" dirsep="${file.separator}" />
-
-  <!-- TODO jvs 19-Sept-2004:  temporary hack -->
-  <!-- a fileset of all SQL regression tests to run on Windows -->
-  <fileset dir="${regressionsql.dir}" id="fileset.regressionsql.win">
-    <include name="**/*.sql"/>
-    <exclude name="**/numericStrCasts.sql"/>
-  </fileset>
-  <pathconvert property="fileset.regressionsql.win" 
-    refid="fileset.regressionsql.win"
-    pathsep="${line.separator}" dirsep="${file.separator}" />
-
-  <condition property="fileset.regressionsql" 
-    value="${fileset.regressionsql.std}">
-    <not>
-      <os family="windows"/>
-    </not>
-  </condition>
-
-  <condition property="fileset.regressionsql" 
-    value="${fileset.regressionsql.win}">
-    <os family="windows"/>
-  </condition>
 
   <!-- a fileset of all SQL concurrency tests -->
   <fileset dir="${unitsql.dir}" id="fileset.concurrentsql">
