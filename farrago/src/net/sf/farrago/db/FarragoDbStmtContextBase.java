@@ -30,6 +30,8 @@ import java.util.logging.Logger;
 import org.eigenbase.relopt.TableAccessMap;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeField;
+import org.eigenbase.resgen.ResourceDefinition;
+import org.eigenbase.resource.EigenbaseResource;
 
 import net.sf.farrago.session.FarragoSession;
 import net.sf.farrago.session.FarragoSessionExecutableStmt;
@@ -129,6 +131,9 @@ public abstract class FarragoDbStmtContextBase
     // implement FarragoSessionStmtContext
     public void unprepare()
     {
+        sql = null;
+        dynamicParamValues = null;
+
         ddlLockManager.removeObjectsInUse(this);
     }
     
@@ -151,6 +156,30 @@ public abstract class FarragoDbStmtContextBase
     public String getSql()
     {
         return sql;
+    }
+
+    /**
+     * Starts an auto commit transaction.
+     * 
+     * <p>Call near the beginning of 
+     * {@link FarragoSessionStmtContext#execute()}.
+     * 
+     * @param readOnly true if statement is read only (e.g. not DML)
+     */
+    protected void startAutocommitTxn(boolean readOnly)
+    {
+        if (session.isTxnInProgress()) {
+            ResourceDefinition stmtFeature = EigenbaseResource.instance()
+                .SQLConformance_MultipleActiveAutocommitStatements;
+            if (!session.getPersonality().supportsFeature(stmtFeature)) {
+                throw EigenbaseResource.instance()
+                    .SQLConformance_MultipleActiveAutocommitStatements.ex();
+            }
+        } else {
+            if (readOnly) {
+                session.getFennelTxnContext().initiateReadOnlyTxn();
+            }
+        }
     }
 
     /**
@@ -208,7 +237,8 @@ public abstract class FarragoDbStmtContextBase
      * See FarragoDbSession.
      * 
      * <p>Call from 
-     * {@link FarragoSessionStmtContext#prepare(RelNode, SqlKind, boolean, FarragoSessionPreparingStmt)}
+     * {@link FarragoSessionStmtContext#prepare(RelNode, SqlKind, boolean, 
+     *                                            FarragoSessionPreparingStmt)}
      * after preparation is complete.
      * 
      * @param newExecutableStmt
@@ -227,7 +257,8 @@ public abstract class FarragoDbStmtContextBase
      * Initialize the session's {@link FarragoSessionExecutingStmtInfo}.
      * 
      * <p>Call before
-     * {@link FarragoSessionExecutableStmt#execute(FarragoSessionRuntimeContext)}.
+     * {@link FarragoSessionExecutableStmt#execute(
+     *                                          FarragoSessionRuntimeContext)}.
      * 
      * @param executableStmt executable statement
      */
@@ -267,7 +298,7 @@ public abstract class FarragoDbStmtContextBase
      * 
      * <p>Optionally, call from {@link FarragoSessionStmtContext#execute()}.
      */
-    void traceExecute()
+    protected void traceExecute()
     {
         if (!tracer.isLoggable(Level.FINE)) {
             return;
