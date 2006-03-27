@@ -1,6 +1,6 @@
 <project name="bh" default="populatetest">
   <target name="populatetest">
-    <test-suite testunit="populatetest">
+    <test-suite name="populatetest">
 
       <init-hook>
         <ant target="restoreCatalog"/>

@@ -1,115 +1,121 @@
-<project name="bh" default="simple-test">
-  <target name="simple-test">
-    <test-suite name="simple-test">
+<project name="bh" default="pge">
+  <target name="pge">
+    <test-suite name="pge">
 
       <init-hook>
         <ant target="restoreCatalog"/>
       </init-hook>
 
       <test name="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${config.prop}/createOrcl.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/createOrcl.sql"/>
       </test>
 
       <test name="index" requiresSuccess="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${config.prop}/index.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/index.sql"/>
       </test>
-<!--
+
       <test name="cubes" requiresSuccess="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${config.prop}/cubes.sql"/>
+        <test-metadata>
+          <knownFailure value="true"/>
+        </test-metadat>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/cubes.sql"/>
       </test>
 
       <test name="1" requiresSuccess="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${config.prop}/1.sql"/>
+        <test-metadata>
+          <knownFailure value="true"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/1.sql"/>
       </test>
 
       <test name="2" requiresSuccess="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${config.prop}/2.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/2.sql"/>
       </test>
 
       <test name="3" requiresSuccess="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${config.prop}/3.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/3.sql"/>
       </test>
 
       <test name="4" requiresSuccess="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${config.prop}/4.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/4.sql"/>
       </test>
 
       <test name="5" requiresSuccess="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${config.prop}/5.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/5.sql"/>
       </test>
 
       <test name="6" requiresSuccess="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${config.prop}/6.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/6.sql"/>
       </test>
 
       <test name="7" requiresSuccess="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${config.prop}/7.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/7.sql"/>
       </test>
 
       <test name="8" requiresSuccess="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${config.prop}/8.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/8.sql"/>
       </test>
 
       <test name="9" requiresSuccess="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${config.prop}/9.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/9.sql"/>
       </test>
 
       <test name="10" requiresSuccess="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${config.prop}/10.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/10.sql"/>
       </test>
 
       <test name="11" requiresSuccess="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${config.prop}/11.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/11.sql"/>
       </test>
 
       <test name="12" requiresSuccess="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${config.prop}/12.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/12.sql"/>
       </test>
 
       <test name="13" requiresSuccess="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${config.prop}/13.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/13.sql"/>
       </test>
 
       <test name="14" requiresSuccess="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${config.prop}/14.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/14.sql"/>
       </test>
 
       <test name="15" requiresSuccess="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${config.prop}/15.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/15.sql"/>
       </test>
 
       <test name="16" requiresSuccess="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${config.prop}/16.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/16.sql"/>
       </test>
 
       <test name="17" requiresSuccess="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${config.prop}/17.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/17.sql"/>
       </test>
 
       <test name="18" requiresSuccess="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${config.prop}/18.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/18.sql"/>
       </test>
 
       <test name="19" requiresSuccess="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${config.prop}/19.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/19.sql"/>
       </test>
 
       <test name="20" requiresSuccess="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${config.prop}/20.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/20.sql"/>
       </test>
 
       <test name="20b" requiresSuccess="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${config.prop}/20b.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/20b.sql"/>
       </test>
 
       <test name="21" requiresSuccess="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${config.prop}/21.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/21.sql"/>
       </test>
 
       <test name="22" requiresSuccess="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${config.prop}/22.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/22.sql"/>
       </test>
--->
+
     </test-suite>
   </target>
 </project>
