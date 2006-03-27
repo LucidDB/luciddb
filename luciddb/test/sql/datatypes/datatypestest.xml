@@ -1,6 +1,6 @@
 <project name="bh" default="datatypestest">
   <target name="datatypestest">
-    <test-suite testunit="datatypestest">
+    <test-suite name="datatypestest">
 
       <init-hook>
         <ant target="restoreCatalog"/>
