@@ -7,35 +7,35 @@
       </init-hook>
 
       <test name="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/creschema.sql"/>
+        <junit-sql file="test/sql/shortreg/creschema.sql"/>
       </test>
 
       <test name="locationload">
-        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/locationload.sql"/>
+        <junit-sql file="test/sql/shortreg/locationload.sql"/>
       </test>
 
       <test name="deptload">
-        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/deptload.sql"/>
+        <junit-sql file="test/sql/shortreg/deptload.sql"/>
       </test>
 
       <test name="empload">
-        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/empload.sql"/>
+        <junit-sql file="test/sql/shortreg/empload.sql"/>
       </test>
 
       <test name="customersload">
-        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/customersload.sql"/>
+        <junit-sql file="test/sql/shortreg/customersload.sql"/>
       </test>
 
       <test name="productsload">
-        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/productsload.sql"/>
+        <junit-sql file="test/sql/shortreg/productsload.sql"/>
       </test>
 
       <test name="salesload">
-        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/salesload.sql"/>
+        <junit-sql file="test/sql/shortreg/salesload.sql"/>
       </test>
 
       <test name="joinEqSanity" requiresRun="salesload">
-        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/joinEqSanity.sql"/>
+        <junit-sql file="test/sql/shortreg/joinEqSanity.sql"/>
       </test>
 
 
