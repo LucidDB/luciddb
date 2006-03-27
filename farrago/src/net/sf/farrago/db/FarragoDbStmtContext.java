@@ -22,20 +22,25 @@
 */
 package net.sf.farrago.db;
 
-import java.sql.*;
-import java.util.logging.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.logging.Level;
 
 import net.sf.farrago.resource.FarragoResource;
-import net.sf.farrago.session.*;
-import net.sf.farrago.util.*;
+import net.sf.farrago.session.FarragoSessionExecutableStmt;
+import net.sf.farrago.session.FarragoSessionPreparingStmt;
+import net.sf.farrago.session.FarragoSessionRuntimeContext;
+import net.sf.farrago.session.FarragoSessionRuntimeParams;
+import net.sf.farrago.session.FarragoSessionStmtContext;
+import net.sf.farrago.session.FarragoSessionStmtParamDefFactory;
+import net.sf.farrago.util.FarragoCompoundAllocation;
+import net.sf.farrago.util.FarragoDdlLockManager;
 
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.reltype.*;
-import org.eigenbase.resgen.*;
-import org.eigenbase.resource.*;
+import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.runtime.AbstractIterResultSet;
 import org.eigenbase.sql.SqlKind;
-import org.eigenbase.util.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -252,22 +257,6 @@ public class FarragoDbStmtContext extends FarragoDbStmtContextBase
         }
     }
 
-    private void startAutocommitTxn(boolean readOnly)
-    {
-        if (session.isTxnInProgress()) {
-            ResourceDefinition stmtFeature = EigenbaseResource.instance()
-                .SQLConformance_MultipleActiveAutocommitStatements;
-            if (!session.getPersonality().supportsFeature(stmtFeature)) {
-                throw EigenbaseResource.instance()
-                    .SQLConformance_MultipleActiveAutocommitStatements.ex();
-            }
-        } else {
-            if (readOnly) {
-                session.getFennelTxnContext().initiateReadOnlyTxn();
-            }
-        }
-    }
-
     // implement FarragoSessionStmtContext
     public ResultSet getResultSet()
     {
@@ -317,8 +306,6 @@ public class FarragoDbStmtContext extends FarragoDbStmtContextBase
             allocations = null;
         }
         executableStmt = null;
-        sql = null;
-        dynamicParamValues = null;
         
         super.unprepare();
     }

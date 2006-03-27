@@ -110,9 +110,9 @@ public class NumberUtil {
     public static long round(double d)
     {
         if (d < 0) {
-            return -Math.round(-d);
+            return (long) (d - 0.5);
         } else {
-            return Math.round(d);
+            return (long) (d + 0.5);
         }
     }
 }
