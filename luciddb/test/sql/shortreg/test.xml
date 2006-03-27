@@ -7,43 +7,35 @@
       </init-hook>
 
       <test name="creschema">
-        <test-parameter name="sql-file" value="test/sql/shortreg/creschema.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="test/sql/shortreg/creschema.sql"/>
       </test>
 
       <test name="locationload">
-        <test-parameter name="sql-file" value="test/sql/shortreg/locationload.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="test/sql/shortreg/locationload.sql"/>
       </test>
 
       <test name="deptload">
-        <test-parameter name="sql-file" value="test/sql/shortreg/deptload.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="test/sql/shortreg/deptload.sql"/>
       </test>
 
       <test name="empload">
-        <test-parameter name="sql-file" value="test/sql/shortreg/empload.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="test/sql/shortreg/empload.sql"/>
       </test>
 
       <test name="customersload">
-        <test-parameter name="sql-file" value="test/sql/shortreg/customersload.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="test/sql/shortreg/customersload.sql"/>
       </test>
 
       <test name="productsload">
-        <test-parameter name="sql-file" value="test/sql/shortreg/productsload.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="test/sql/shortreg/productsload.sql"/>
       </test>
 
       <test name="salesload">
-        <test-parameter name="sql-file" value="test/sql/shortreg/salesload.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="test/sql/shortreg/salesload.sql"/>
       </test>
 
       <test name="joinEqSanity" requiresRun="salesload">
-        <test-parameter name="sql-file" value="test/sql/shortreg/joinEqSanity.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="test/sql/shortreg/joinEqSanity.sql"/>
       </test>
 
 
