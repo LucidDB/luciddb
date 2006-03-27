@@ -28,7 +28,7 @@ import java.sql.Types;
 import org.eigenbase.util14.NumberUtil;
 
 /**
- * FarragoJdbcEngineDecimalParamDef defines a integer parameter.
+ * FarragoJdbcEngineIntParamDef defines a integer parameter.
  * 
  * @author Angel Chang
  * @version $Id$

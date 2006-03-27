@@ -1563,11 +1563,11 @@ abstract public class AbstractResultSet implements ResultSet
         } else if (o instanceof Byte) {
             return ((Byte) o).longValue();
         } else if (o instanceof Double) {
-            return ((Double) o).longValue();
+            return NumberUtil.round(((Double) o).doubleValue());
         } else if (o instanceof Float) {
-            return ((Float) o).longValue();
+            return NumberUtil.round(((Float) o).doubleValue());
         } else if (o instanceof BigDecimal) {
-            return ((BigDecimal) o).longValue();
+            return NumberUtil.round(((BigDecimal) o).doubleValue());
         } else if (o instanceof Boolean) {
             if (((Boolean) o).booleanValue()) {
                 return 1;

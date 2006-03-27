@@ -67,6 +67,7 @@ public class FarragoJdbcFennelTupleParamDef extends FarragoJdbcParamDef {
                 min = Long.valueOf(Long.MIN_VALUE);
                 max = Long.valueOf(Long.MAX_VALUE);
                 break;
+            case Types.NUMERIC:
             case Types.DECIMAL:
                 min = NumberUtil.getMinUnscaled(paramMetaData.precision);
                 max = NumberUtil.getMaxUnscaled(paramMetaData.precision);
@@ -104,6 +105,7 @@ public class FarragoJdbcFennelTupleParamDef extends FarragoJdbcParamDef {
             case Types.BIGINT:
                 datum.setLong(b? 1: 0);
                 break;
+            case Types.NUMERIC:
             case Types.DECIMAL:
                 datum.setLong(b?
                     BigInteger.TEN.pow(paramMetaData.scale).longValue(): 0);
@@ -158,6 +160,7 @@ public class FarragoJdbcFennelTupleParamDef extends FarragoJdbcParamDef {
                 checkRange(val, min.longValue(), max.longValue());
                 datum.setLong((long) val);
                 break;
+            case Types.NUMERIC:
             case Types.DECIMAL:
                 BigDecimal bd = NumberUtil.rescaleBigDecimal(
                     BigDecimal.valueOf(val), paramMetaData.scale);
@@ -206,6 +209,7 @@ public class FarragoJdbcFennelTupleParamDef extends FarragoJdbcParamDef {
                 checkRange(n, min.longValue(), max.longValue());
                 datum.setLong(n);
                 break;
+            case Types.NUMERIC:
             case Types.DECIMAL:
                 BigDecimal bd = NumberUtil.rescaleBigDecimal(
                     BigDecimal.valueOf(val), paramMetaData.scale);
@@ -263,6 +267,7 @@ public class FarragoJdbcFennelTupleParamDef extends FarragoJdbcParamDef {
                 checkRange(bd.doubleValue(), min.doubleValue(), max.doubleValue());
                 datum.setLong(bd.longValue());
                 break;
+            case Types.NUMERIC:
             case Types.DECIMAL:
                 bd = NumberUtil.rescaleBigDecimal(val, paramMetaData.scale);
                 checkRange(bd.unscaledValue(), (BigInteger) min, (BigInteger) max);
@@ -319,6 +324,7 @@ public class FarragoJdbcFennelTupleParamDef extends FarragoJdbcParamDef {
                     throw newInvalidFormat(val);
                 }
                 break;
+            case Types.NUMERIC:
             case Types.DECIMAL:
                 try {
                     BigDecimal bd = NumberUtil.rescaleBigDecimal(

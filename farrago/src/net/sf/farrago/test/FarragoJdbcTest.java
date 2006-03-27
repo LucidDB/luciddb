@@ -39,7 +39,6 @@ import java.sql.Date;
 
 import org.eigenbase.util14.NumberUtil;
 import org.eigenbase.util14.ConversionUtil;
-import org.eigenbase.util.Bug;
 
 /**
  * FarragoJdbcTest tests specifics of the Farrago implementation of the JDBC
@@ -647,12 +646,11 @@ public class FarragoJdbcTest extends FarragoTestCase
         checkResults(TestJavaType.String);
         checkSet(TestJavaType.String, TestSqlType.all, "1");
         checkResults(TestJavaType.String);
-        if (todo) {
-            // Need to throw exception for numbers and booleans when
-            // string cannot be converted
-            checkSet(TestJavaType.String, TestSqlType.all, "string");
-            checkResults(TestJavaType.String);
-        }
+
+        // SetXxx should throw exception for numbers and booleans when
+        // string cannot be converted
+        checkSet(TestJavaType.String, TestSqlType.all, "string");
+        checkResults(TestJavaType.String);
     }
 
     private void checkResults(TestJavaType javaType)
@@ -2892,19 +2890,18 @@ public class FarragoJdbcTest extends FarragoTestCase
                         return VALID;
                     }
                     if (value instanceof Number) {
-                        return isBetween((Number) value, 0, 1) ? VALID
-                        : OUTOFRANGE;
+                        return VALID;
                     }
                     if (value instanceof String) {
                         String str = ((String) value).trim();
                         if (str.equalsIgnoreCase("TRUE") ||
-                            str.equalsIgnoreCase("FALSE")) {
+                            str.equalsIgnoreCase("FALSE") ||
+                            str.equalsIgnoreCase("UNKNOWN")) {
                             return VALID;
                         }
                         try {
-                            long n = Long.parseLong(str);
-                            return isBetween(new Long(n), 0, 1) ? VALID
-                            : OUTOFRANGE;
+                            java.lang.Double.parseDouble(str);
+                            return VALID;
                         } catch (NumberFormatException e) {
                             return BADFORMAT;
                         }
@@ -2924,9 +2921,11 @@ public class FarragoJdbcTest extends FarragoTestCase
                             return new Boolean(true);
                         } else if (str.equalsIgnoreCase("FALSE")) {
                             return new Boolean(false);
+                        } else if (str.equalsIgnoreCase("UNKNOWN")) {
+                            return null;
                         }
 
-                        long n = Long.parseLong(str);
+                        double n = java.lang.Double.parseDouble(str);
                         return new Boolean(n != 0);
                     }
                     return super.getExpected(value);
@@ -3213,6 +3212,7 @@ public class FarragoJdbcTest extends FarragoTestCase
         public static final int OUTOFRANGE = 2;
         public static final int TOOLONG = 3;
         public static final int BADFORMAT = 4;
+        public static final int NOTNULLABLE = 5;
         public static final String [] validityName =
         { "valid", "invalid", "out of range", "too long", "bad format", "not nullable"};
         public static final Pattern exceptionPatterns[] =
@@ -3404,8 +3404,8 @@ public class FarragoJdbcTest extends FarragoTestCase
                 return VALID;
             }
             try {
-                BigDecimal expected = (BigDecimal) getExpected(value);
-                if (expected != null) {
+                if (value instanceof Number || value instanceof String ) {
+                    BigDecimal expected = (BigDecimal) getExpected(value);
                     BigInteger usv = expected.unscaledValue();
                     if (strict) {
                         if (usv.compareTo(getMaxUnscaled()) > 0) {
@@ -3414,10 +3414,11 @@ public class FarragoJdbcTest extends FarragoTestCase
                             return OUTOFRANGE;
                         }
                     }
+                } else {
+                    return INVALID;
                 }
-
-            } catch (Exception ex) {
-                return INVALID;
+            } catch (NumberFormatException ex) {
+                return BADFORMAT;
             }
             return VALID;
         }

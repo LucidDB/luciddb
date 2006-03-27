@@ -57,6 +57,9 @@ public class FarragoJdbcParamDefFactory
         FarragoParamFieldMetaData paramMetaData)
     {
         switch (paramMetaData.type) {
+        case Types.BIT:
+        case Types.BOOLEAN:
+            return new FarragoJdbcBooleanParamDef(paramName, paramMetaData);
         case Types.TINYINT:
         case Types.SMALLINT:
         case Types.INTEGER:
@@ -67,6 +70,7 @@ public class FarragoJdbcParamDefFactory
         case Types.DOUBLE:
             return new FarragoJdbcApproxParamDef(paramName, paramMetaData);
         case Types.DECIMAL:
+        case Types.NUMERIC:
             return new FarragoJdbcDecimalParamDef(paramName, paramMetaData);
         case Types.CHAR:
         case Types.VARCHAR:
