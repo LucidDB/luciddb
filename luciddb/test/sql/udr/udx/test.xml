@@ -29,7 +29,8 @@
       </init-hook>
 
       <test name="timeDimension">
-        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/timeDimension.sql"/>
+        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udx/timeDimension.sql"/>
+        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
       </test>
 
     </test-suite>
