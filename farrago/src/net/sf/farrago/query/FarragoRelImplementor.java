@@ -31,6 +31,7 @@ import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.catalog.FarragoRepos;
 import net.sf.farrago.fennel.*;
+import net.sf.farrago.fennel.*;
 
 import openjava.mop.*;
 import openjava.ptree.*;
