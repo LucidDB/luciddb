@@ -29,8 +29,29 @@
   <property environment="env" />
   <property file="run.properties"/>
 
+  <!-- override Farrago -->
+  <property name="project.catalog.dir" location="${open.dir}/luciddb/catalog" />
+  <property name="project.trace.propfile" location="${open.dir}/luciddb/trace/LucidDbTrace.properties" />
+  <property name="project.testlog.dir" location="${open.dir}/luciddb/testlog" />
+  <import file="${open.dir}/farrago/buildMacros.xml" />
+
+  <!-- directory where blackhawk output should go -->
+  <property name="bh.log.basedir" value="${conv_long.dir}/testlog" />
+
+  <!-- classpath for running tests via ant -->
+  <path id="test.classpath">
+    <pathelement path="${open.dir}/luciddb/classes"/>
+    <pathelement path="${farrago.sqlline.classpath}"/>
+    <pathelement path="${ant.classpath}"/>
+    <pathelement path="${blackhawk.run.classpath}"/>
+  </path>
+  <property name="test.classpath" refid="test.classpath"/>
+
   <target name="test">
-    <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
+    <blackhawk.fork
+      basedir="${conv_long.dir}"
+      testscript="${testfile}"
+      classpathref="test.classpath"/>
   </target>
 
   <target name="restoreCatalog">
@@ -39,6 +60,9 @@
 
   <target name="clean">
     <delete dir="${bh.log.basedir}"/>
+    <delete>
+      <fileset dir="${conv_long.dir}" includes="*.log"/>
+    </delete>
   </target>
 
 </project>

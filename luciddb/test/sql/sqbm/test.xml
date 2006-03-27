@@ -1,6 +1,6 @@
-<project name="bh" default="sqbm-test">
-  <target name="sqbm-test">
-    <test-suite name="sqbm-test">
+<project name="bh" default="sqbm">
+  <target name="sqbm">
+    <test-suite name="sqbm">
 
       <init-hook>
         <ant target="restoreCatalog"/>

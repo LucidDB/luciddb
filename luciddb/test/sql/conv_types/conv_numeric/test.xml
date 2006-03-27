@@ -1,6 +1,6 @@
-<project name="bh" default="convnumeric-test">
-  <target name="convnumeric-test">
-    <test-suite name="convnumeric-test">
+<project name="bh" default="conv_numeric">
+  <target name="conv_numeric">
+    <test-suite name="conv_numeric">
       
       <init-hook>
         <ant target="restoreCatalog"/>
@@ -45,7 +45,6 @@
       <test name="real" requiresRun="createsource">
         <junit-sql file="${open.dir}/luciddb/test/sql/conv_types/conv_numeric/real_load.sql"/>
       </test>
-
 
     </test-suite>
   </target>

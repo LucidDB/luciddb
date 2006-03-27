@@ -60,9 +60,9 @@ Error: DDL validation error near line 1, column 12: Reference to unknown table "
 . . . . . . . . >     and range_for='source'
 . . . . . . . . > ;
 Error: could not calculate results for the following row:
-[ 'tinyint', 'source', 0, -32768, -2147483647, -2147483647, -21474836470000, -21474836470000, -4.29497e+09, -4.29497e+09, -4.29497e+09 ]
+[ -32768 ]
 Messages:
-[0]:PC=11 Code=22003 (state=,code=0)
+[0]:PC=0 Code=22003 (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target order by 1
 . . . . . . . . > ;
 +------+
@@ -104,9 +104,9 @@ Messages:
 . . . . . . . . >     and range_for='source'
 . . . . . . . . > ;
 Error: could not calculate results for the following row:
-[ 'tinyint', 'source', 0, -32768, -2147483647, -2147483647, -21474836470000, -21474836470000, -4.29497e+09, -4.29497e+09, -4.29497e+09 ]
+[ -2147483647 ]
 Messages:
-[0]:PC=11 Code=22003 (state=,code=0)
+[0]:PC=0 Code=22003 (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target order by 1
 . . . . . . . . > ;
 +------+
@@ -148,9 +148,9 @@ Messages:
 . . . . . . . . >     and range_for='source'
 . . . . . . . . > ;
 Error: could not calculate results for the following row:
-[ 'tinyint', 'source', 0, -32768, -2147483647, -2147483647, -21474836470000, -21474836470000, -4.29497e+09, -4.29497e+09, -4.29497e+09 ]
+[ -2147483647 ]
 Messages:
-[0]:PC=11 Code=22003 (state=,code=0)
+[0]:PC=0 Code=22003 (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target order by 1
 . . . . . . . . > ;
 +------+
@@ -197,9 +197,9 @@ Messages:
 . . . . . . . . >     and range_for='source'
 . . . . . . . . > ;
 Error: could not calculate results for the following row:
-[ 'tinyint', 'source', 0, -32768, -2147483647, -2147483647, -21474836470000, -21474836470000, -4.29497e+09, -4.29497e+09, -4.29497e+09 ]
+[ -21474836470000 ]
 Messages:
-[0]:PC=20 Code=22003 (state=,code=0)
+[0]:PC=9 Code=22003 (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target order by 1
 . . . . . . . . > ;
 +------+
@@ -241,9 +241,9 @@ Messages:
 . . . . . . . . >     and range_for='source'
 . . . . . . . . > ;
 Error: could not calculate results for the following row:
-[ 'tinyint', 'source', 0, -32768, -2147483647, -2147483647, -21474836470000, -21474836470000, -4.29497e+09, -4.29497e+09, -4.29497e+09 ]
+[ -21474836470000 ]
 Messages:
-[0]:PC=20 Code=22003 (state=,code=0)
+[0]:PC=9 Code=22003 (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target order by 1
 . . . . . . . . > ;
 +------+
@@ -285,9 +285,9 @@ Messages:
 . . . . . . . . >     and range_for='source'
 . . . . . . . . > ;
 Error: could not calculate results for the following row:
-[ 'tinyint', 'source', 0, -32768, -2147483647, -2147483647, -21474836470000, -21474836470000, -4.29497e+09, -4.29497e+09, -4.29497e+09 ]
+[ -4.29497e+09 ]
 Messages:
-[0]:PC=12 Code=22003 (state=,code=0)
+[0]:PC=1 Code=22003 (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target order by 1
 . . . . . . . . > ;
 +------+
@@ -329,9 +329,9 @@ Messages:
 . . . . . . . . >     and range_for='source'
 . . . . . . . . > ;
 Error: could not calculate results for the following row:
-[ 'tinyint', 'source', 0, -32768, -2147483647, -2147483647, -21474836470000, -21474836470000, -4.29497e+09, -4.29497e+09, -4.29497e+09 ]
+[ -4.29497e+09 ]
 Messages:
-[0]:PC=12 Code=22003 (state=,code=0)
+[0]:PC=1 Code=22003 (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target order by 1
 . . . . . . . . > ;
 +------+
@@ -373,9 +373,9 @@ Messages:
 . . . . . . . . >     and range_for='source'
 . . . . . . . . > ;
 Error: could not calculate results for the following row:
-[ 'tinyint', 'source', 0, -32768, -2147483647, -2147483647, -21474836470000, -21474836470000, -4.29497e+09, -4.29497e+09, -4.29497e+09 ]
+[ -4.29497e+09 ]
 Messages:
-[0]:PC=12 Code=22003 (state=,code=0)
+[0]:PC=1 Code=22003 (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target order by 1
 . . . . . . . . > ;
 +------+

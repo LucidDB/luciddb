@@ -1,0 +1,44 @@
+Default settings:
+------------------
+
+By default, tests in this directory run against both flatfile and csvjdbc 
+sources and tests which are known failures will not be run.
+
+
+To run against all sources:
+---------------------------
+(1) in run.properties*, set:
+
+testfile=test.xml
+
+(2) run "ant test"
+
+
+To run against a specific source:
+--------------------------
+(1) in run.properties*, set: 
+
+testfile="datatypestest.xml"
+foreign.db=[flatfile | csvjdbc]
+
+(2) run "ant test"
+
+
+Relevant ANT targets:
+---------------------
+
+"test" will run bh. (it will not generate the sql files, unless
+they do not exist)
+
+"gen-all-sql" will generate sql files for all sources.
+
+"clean" will clean all testlogs, and generated sql files
+
+
+
+Note *:
+--------
+If prefer not to modify run.properties, can set it all from the
+command line:
+
+"ant test -Dtestfile=datatypestest.xml -Dforeign.db=flatfile"

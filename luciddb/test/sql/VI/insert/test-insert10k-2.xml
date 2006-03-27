@@ -1,69 +1,69 @@
-<project name="bh" default="insert10k-2-test">
-  <target name="insert10k-2-test">
-    <test-suite name="insert10k-2-test">
+<project name="bh" default="test-insert10k-2">
+  <target name="test-insert10k-2">
+    <test-suite name="test-insert10k-2">
 
       <init-hook>
         <ant target="restoreCatalog"/>
       </init-hook>
 
       <test name="rangekseqins">
-        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/rangekseqins.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/rangekseqins.sql"/>
       </test>
 
       <test name="selectall_k2">
-        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/selectall_k2.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/selectall_k2.sql"/>
       </test>
 
       <test name="selectall_k4">
-        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/selectall_k4.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/selectall_k4.sql"/>
       </test>
 
       <test name="selectall_k5">
-        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/selectall_k5.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/selectall_k5.sql"/>
       </test>
 
       <test name="selectall_k10">
-        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/selectall_k10.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/selectall_k10.sql"/>
       </test>
 
       <test name="selectall_k25">
-        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/selectall_k25.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/selectall_k25.sql"/>
       </test>
 
       <test name="selectall_k100">
-        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/selectall_k100.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/selectall_k100.sql"/>
       </test>
 
       <test name="selectall_k1k">
-        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/selectall_k1k.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/selectall_k1k.sql"/>
       </test>
 
       <test name="selectall_k10k">
-        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/selectall_k10k.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/selectall_k10k.sql"/>
       </test>
 
       <test name="selectall_k40k">
-        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/selectall_k40k.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/selectall_k40k.sql"/>
       </test>
 
       <test name="selectall_k100k">
-        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/selectall_k100k.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/selectall_k100k.sql"/>
       </test>
 
       <test name="selectall_k250k">
-        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/selectall_k250k.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/selectall_k250k.sql"/>
       </test>
 
       <test name="selectall_k500k">
-        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/selectall_k500k.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/selectall_k500k.sql"/>
       </test>
 
       <test name="selectall_kseq">
-        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/selectall_kseq.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/selectall_kseq.sql"/>
       </test>
 
       <test name="all">
-        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/all.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/all.sql"/>
       </test>
 
     </test-suite>

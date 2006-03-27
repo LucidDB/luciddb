@@ -81,7 +81,6 @@ Error: Cast function cannot convert value of type DATE to type TIME (state=,code
 0: jdbc:luciddb:> insert into target_time
 . . . . . . . . >  select cast (coltmstamp as time) from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'TIMESTAMP' to 'TIME' (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- all should FAIL
 0: jdbc:luciddb:> -- implicit converstion fron a timestamp string not supported
@@ -106,15 +105,17 @@ Error: Cannot assign to target field 'COLTIME' of type TIME from source field 'C
 0: jdbc:luciddb:> insert into target_time
 . . . . . . . . >  select cast (coltmstamp as time) from datatype_source where colname = 'TIME'
 . . . . . . . . > ;
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'TIMESTAMP' to 'TIME' (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from target_time order by 1
 . . . . . . . . > ;
 +-----------+
 |  COLTIME  |
 +-----------+
+| 21:19:51  |
+| 04:05:11  |
 | 00:00:00  |
 | 04:05:05  |
+| 06:40:00  |
 | 06:40:00  |
 +-----------+
 0: jdbc:luciddb:> 

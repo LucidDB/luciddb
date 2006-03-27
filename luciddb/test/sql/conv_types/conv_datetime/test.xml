@@ -1,6 +1,6 @@
-<project name="bh" default="convdate-test">
-  <target name="convdate-test">
-    <test-suite name="convdate-test">
+<project name="bh" default="conv_datetime">
+  <target name="conv_datetime">
+    <test-suite name="conv_datetime">
       
       <init-hook>
         <ant target="restoreCatalog"/>

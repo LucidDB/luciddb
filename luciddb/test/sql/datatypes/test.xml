@@ -1,30 +1,17 @@
-<project name="tch" default="simple-test">
-  <target name="simple-test">
-    <test-suite name="simple-test">
+<project name="bh" default="datatypes-test">
+  <target name="datatypes-test">
+    <test-suite name="datatypes-test">
 
-      <init-hook>
-        <ant target="restoreCatalog"/>
-      </init-hook>
+      <test-suite-call testfile="datatypestest.xml">
+        <test-unit-modifier value="csvjdbc"/>
+        <property name="foreign.db" value="csvjdbc"/>
+      </test-suite-call>
 
-      <test name="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${config.prop}/creschema.sql"/>
-      </test>
-
-      <test name="importschema" requiresRun="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${config.prop}/foreigntabl.sql"/>
-      </test>
-
-      <test name="tableload" requiresRun="importschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${config.prop}/tblload.sql"/>
-      </test>
-
-      <test name="types">
-        <test-metadata> 
-          <knownFailure value="true"/>
-        </test-metadata>
-        <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${config.prop}/metadatatypes.sql"/>
-      </test>
-
+      <test-suite-call testfile="datatypestest.xml">
+        <test-unit-modifier value="flatfile"/>
+        <property name="foreign.db" value="flatfile"/>
+      </test-suite-call>
+      
     </test-suite>
   </target>
 </project>

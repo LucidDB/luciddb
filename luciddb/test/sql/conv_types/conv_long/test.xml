@@ -1,6 +1,6 @@
-<project name="bh" default="convlong-test">
-  <target name="convlong-test">
-    <test-suite name="convlong-test">
+<project name="bh" default="conv_long">
+  <target name="conv_long">
+    <test-suite name="conv_long">
       
       <test-metadata> 
         <knownFailure value="true"/>

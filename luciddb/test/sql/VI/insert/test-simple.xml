@@ -1,17 +1,17 @@
-<project name="bh" default="simple-test">
-  <target name="simple-test">
-    <test-suite name="simple-test">
+<project name="bh" default="test-simple">
+  <target name="test-simple">
+    <test-suite name="test-simple">
 
       <init-hook>
         <ant target="restoreCatalog"/>
       </init-hook>
 
       <test name="altersys">
-        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/altersys.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/altersys.sql"/>
       </test>
 
       <test name="simpleins">
-        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/simpleins.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/simpleins.sql"/>
       </test>
       
     </test-suite>

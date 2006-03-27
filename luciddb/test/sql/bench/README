@@ -1,3 +1,10 @@
+Default settings:
+------------------
+
+By default, tests in this directory run against all sources and tests which 
+are known failures will not be run.
+
+
 Pre-requisites:
 ---------------
 
@@ -24,7 +31,7 @@ To run against one source:
 (1) in run.properties*, set: 
 
 testfile="benchtest.xml" (or benchcsvtest.xml if using csvjdbc)
-config.prop=prop.[flatfile | oracle | sqlserver | csvjdbc]
+foreign.db=[flatfile | oracle | sqlserver | csvjdbc]
 
 (2) run "ant test"
 
@@ -47,4 +54,4 @@ Note *:
 If prefer not to modify run.properties, can set it all from the
 command line:
 
-"ant test -Dtestfile=benchtest.xml -Dconfig.prop=prop.flatfile"
+"ant test -Dtestfile=benchtest.xml -Dforeign.db=flatfile"

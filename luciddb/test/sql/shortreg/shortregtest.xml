@@ -1,0 +1,44 @@
+<project name="bh" default="shortregtest">
+  <target name="shortregtest">
+    <test-suite name="shortregtest">
+
+      <init-hook>
+        <ant target="restoreCatalog"/>
+      </init-hook>
+
+      <test name="creschema">
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/gen/${foreign.db}/creschema.sql"/>
+      </test>
+
+      <test name="locationload">
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/gen/${foreign.db}/locationload.sql"/>
+      </test>
+
+      <test name="deptload">
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/gen/${foreign.db}/deptload.sql"/>
+      </test>
+
+      <test name="empload">
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/gen/${foreign.db}/empload.sql"/>
+      </test>
+
+      <test name="customersload">
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/gen/${foreign.db}/customersload.sql"/>
+      </test>
+
+      <test name="productsload">
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/gen/${foreign.db}/productsload.sql"/>
+      </test>
+
+      <test name="salesload">
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/gen/${foreign.db}/salesload.sql"/>
+      </test>
+
+      <test name="joinEqSanity" requiresRun="salesload">
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/gen/${foreign.db}/joinEqSanity.sql"/>
+      </test>
+
+
+    </test-suite>
+  </target>
+</project>

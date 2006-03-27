@@ -1,17 +1,17 @@
-<project name="bh" default="simple-test">
-  <target name="simple-test">
-    <test-suite name="simple-test">
+<project name="bh" default="compositekey">
+  <target name="compositekey">
+    <test-suite name="compositekey">
 
       <init-hook>
         <ant target="restoreCatalog"/>
       </init-hook>
 
       <test name="compkeyins">
-        <junit-sql file="${open.dir}/luciddb/test/sql/compositekey/gen/${config.prop}/compkeyins.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/compositekey/gen/${foreign.db}/compkeyins.sql"/>
       </test>
 
       <test name="compkeyqueries" requiresSuccess="compkeyins">
-        <junit-sql file="${open.dir}/luciddb/test/sql/compositekey/gen/${config.prop}/compkeyqueries.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/compositekey/gen/${foreign.db}/compkeyqueries.sql"/>
       </test>
 
     </test-suite>

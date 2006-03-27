@@ -1,6 +1,6 @@
-<project name="bh" default="insert-test">
-  <target name="insert-test">
-    <test-suite name="insert-test">
+<project name="bh" default="insert">
+  <target name="insert">
+    <test-suite name="insert">
 
       <test-suite-call testfile="test-simple.xml"/>
       <test-suite-call testfile="test-newval.xml"/>

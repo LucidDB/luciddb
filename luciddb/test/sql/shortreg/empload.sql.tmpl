@@ -1,4 +1,4 @@
-CREATE foreign table csv_schema.SHORTREG_EMP_SRC (
+CREATE foreign table @name_prefix@_schema.SHORTREG_EMP_SRC (
 EMPNO INTEGER,
 FNAME VARCHAR(20),
 LNAME VARCHAR(20),
@@ -10,9 +10,12 @@ SAL INTEGER,
 COMMISSION INTEGER,
 HOBBY VARCHAR(20)
 )
-server csv_server
-options (table_name 'emp');
+server @SERVER_NAME@
+options (
+SCHEMA_NAME '@SCHEMA@',
+@TABLE_NAME@ 'EMP'
+);
 
 INSERT INTO s.EMP
 SELECT EMPNO,FNAME,LNAME,SEX,DEPTNO,MANAGER,LOCID,SAL,COMMISSION,HOBBY
-FROM csv_schema.SHORTREG_EMP_SRC;
+FROM @name_prefix@_schema.SHORTREG_EMP_SRC;

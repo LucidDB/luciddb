@@ -1,21 +1,21 @@
-<project name="bh" default="insert1m-test">
-  <target name="insert1m-test">
-    <test-suite name="insert1m-test">
+<project name="bh" default="test-insert1m">
+  <target name="test-insert1m">
+    <test-suite name="test-insert1m">
 
       <init-hook>
         <ant target="restoreCatalog"/>
       </init-hook>
 
       <test name="altersys">
-        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/altersys.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/altersys.sql"/>
       </test>
 
       <test name="insert1m">
-        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/insert1m.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/insert1m.sql"/>
       </test>
 
       <test name="q2a_1m">
-        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/q2a_1m.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/q2a_1m.sql"/>
       </test>
       
     </test-suite>

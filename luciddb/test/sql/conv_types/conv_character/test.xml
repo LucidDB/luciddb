@@ -1,6 +1,6 @@
-<project name="bh" default="convchar-test">
-  <target name="convchar-test">
-    <test-suite name="convchar-test">
+<project name="bh" default="conv_char">
+  <target name="conv_char">
+    <test-suite name="conv_char">
       
       <init-hook>
         <ant target="restoreCatalog"/>

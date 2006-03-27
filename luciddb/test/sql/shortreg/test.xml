@@ -1,43 +1,21 @@
-<project name="tch" default="simple-test">
-  <target name="simple-test">
-    <test-suite name="simple-test">
+<project name="bh" default="shortreg">
+  <target name="shortreg">
+    <test-suite name="shortreg">
 
-      <init-hook>
-        <ant target="restoreCatalog"/>
-      </init-hook>
+      <test-suite-call testfile="shortregtest.xml">
+        <test-unit-modifier value="oracle"/>
+        <property name="foreign.db" value="oracle"/>
+      </test-suite-call>
 
-      <test name="creschema">
-        <junit-sql file="test/sql/shortreg/creschema.sql"/>
-      </test>
+      <test-suite-call testfile="shortregtest.xml">
+        <test-unit-modifier value="sqlserver"/>
+        <property name="foreign.db" value="sqlserver"/>
+      </test-suite-call>
 
-      <test name="locationload">
-        <junit-sql file="test/sql/shortreg/locationload.sql"/>
-      </test>
-
-      <test name="deptload">
-        <junit-sql file="test/sql/shortreg/deptload.sql"/>
-      </test>
-
-      <test name="empload">
-        <junit-sql file="test/sql/shortreg/empload.sql"/>
-      </test>
-
-      <test name="customersload">
-        <junit-sql file="test/sql/shortreg/customersload.sql"/>
-      </test>
-
-      <test name="productsload">
-        <junit-sql file="test/sql/shortreg/productsload.sql"/>
-      </test>
-
-      <test name="salesload">
-        <junit-sql file="test/sql/shortreg/salesload.sql"/>
-      </test>
-
-      <test name="joinEqSanity" requiresRun="salesload">
-        <junit-sql file="test/sql/shortreg/joinEqSanity.sql"/>
-      </test>
-
+      <test-suite-call testfile="shortregtest.xml">
+        <test-unit-modifier value="flatfile"/>
+        <property name="foreign.db" value="flatfile"/>
+      </test-suite-call>
 
     </test-suite>
   </target>

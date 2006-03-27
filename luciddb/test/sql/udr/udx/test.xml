@@ -20,9 +20,9 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 -->
 
-<project name="tch" default="simple-test">
-  <target name="simple-test">
-    <test-suite name="simple-test">
+<project name="bh" default="udx">
+  <target name="udx">
+    <test-suite name="udx">
       
       <init-hook>
         <ant target="restoreCatalog"/>
