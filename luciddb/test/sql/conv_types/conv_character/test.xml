@@ -1,28 +1,21 @@
 <project name="bh" default="convchar-test">
   <target name="convchar-test">
-    <test-suite testunit="convchar-test">
+    <test-suite name="convchar-test">
       
       <init-hook>
-        <test name="restoreCatalog" testunit="convchar-init-test">
-          <ant-task>
-            <ant target="restoreCatalog"/>
-          </ant-task>
-        </test>
+        <ant target="restoreCatalog"/>
       </init-hook>
 
       <test name="createsource">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/conv_types/conv_character/cr_source.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/conv_types/conv_character/cr_source.sql"/>
       </test>
 
       <test name="noconvert" requiresRun="createsource">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/conv_types/conv_character/target_noconv.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/conv_types/conv_character/target_noconv.sql"/>
       </test>
 
       <test name="convert" requiresRun="createsource">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/conv_types/conv_character/target_conv.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/conv_types/conv_character/target_conv.sql"/>
       </test>
 
     </test-suite>

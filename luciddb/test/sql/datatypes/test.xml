@@ -1,36 +1,28 @@
 <project name="tch" default="simple-test">
   <target name="simple-test">
-    <test-suite testunit="simple-test">
+    <test-suite name="simple-test">
 
       <init-hook>
-        <test name="restoreCatalog" testunit="init-test">
-          <ant-task>
-            <ant target="restoreCatalog"/>
-          </ant-task>
-        </test>
+        <ant target="restoreCatalog"/>
       </init-hook>
 
       <test name="creschema">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/datatypes/gen/${config.prop}/creschema.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${config.prop}/creschema.sql"/>
       </test>
 
       <test name="importschema" requiresRun="creschema">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/datatypes/gen/${config.prop}/foreigntabl.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${config.prop}/foreigntabl.sql"/>
       </test>
 
       <test name="tableload" requiresRun="importschema">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/datatypes/gen/${config.prop}/tblload.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${config.prop}/tblload.sql"/>
       </test>
 
       <test name="types">
         <test-metadata> 
           <knownFailure value="true"/>
         </test-metadata>
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/datatypes/gen/${config.prop}/metadatatypes.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${config.prop}/metadatatypes.sql"/>
       </test>
 
     </test-suite>

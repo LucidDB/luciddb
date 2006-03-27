@@ -1,23 +1,17 @@
 <project name="bh" default="simple-test">
   <target name="simple-test">
-    <test-suite testunit="simple-test">
+    <test-suite name="simple-test">
 
       <init-hook>
-        <test name="restoreCatalog" testunit="pop-init-test">
-          <ant-task>
-            <ant target="restoreCatalog"/>
-          </ant-task>
-        </test>
+        <ant target="restoreCatalog"/>
       </init-hook>
 
       <test name="createIdx">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/populate/gen/${config.prop}/createIdx.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/populate/gen/${config.prop}/createIdx.sql"/>
       </test>
       
       <test name="createIdx2">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/populate/gen/${config.prop}/createidx2.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/populate/gen/${config.prop}/createidx2.sql"/>
       </test>
 
     </test-suite>

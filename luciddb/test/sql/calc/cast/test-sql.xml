@@ -1,25 +1,21 @@
 <project name="bh" default="calc-cast-test">
   <target name="calc-cast-test">
-    <test-suite testunit="calc-cast-test">
+    <test-suite name="calc-cast-test">
 
       <init-hook>
-        <test name="restoreCatalog" testunit="init-test">
-          <ant-task>
-            <ant target="restoreCatalog"/>
-          </ant-task>
-        </test>
+        <ant target="restoreCatalog"/>
       </init-hook>
 
       <test name="setup">
-        <sql file="${open.dir}/luciddb/test/sql/calc/cast/setup.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/cast/setup.sql"/>
       </test>
 
       <test name="basic">
-        <sql file="${open.dir}/luciddb/test/sql/calc/cast/basic.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/cast/basic.sql"/>
       </test>
 
       <test name="cleanup">
-        <sql file="${open.dir}/luciddb/test/sql/calc/cast/cleanup.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/cast/cleanup.sql"/>
       </test>
 
     </test-suite>

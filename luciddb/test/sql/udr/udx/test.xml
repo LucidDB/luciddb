@@ -22,19 +22,14 @@
 
 <project name="tch" default="simple-test">
   <target name="simple-test">
-    <test-suite testunit="simple-test">
+    <test-suite name="simple-test">
       
       <init-hook>
-        <test name="restoreCatalog" testunit="init-test">
-          <ant-task>
-            <ant target="restoreCatalog"/>
-          </ant-task>
-        </test>
+        <ant target="restoreCatalog"/>
       </init-hook>
 
       <test name="timeDimension">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/udr/udx/timeDimension.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/timeDimension.sql"/>
       </test>
 
     </test-suite>

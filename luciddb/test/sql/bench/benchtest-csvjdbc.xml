@@ -1,6 +1,6 @@
 <project name="bh" default="benchcsvtest">
   <target name="benchcsvtest">
-    <test-suite testunit="benchcsvtest">
+    <test-suite name="benchcsvtest">
 
       <init-hook>
         <ant target="restoreCatalog"/>

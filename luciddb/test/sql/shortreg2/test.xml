@@ -1,48 +1,37 @@
 <project name="bh" default="simple-test">
   <target name="simple-test">
-    <test-suite testunit="simple-test">
+    <test-suite name="simple-test">
       
       <init-hook>
-        <test name="restoreCatalog" testunit="init-test">
-          <ant-task>
-            <ant target="restoreCatalog"/>
-          </ant-task>
-        </test>
+        <ant target="restoreCatalog"/>
       </init-hook>
 
       <test name="creschema">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/shortreg2/gen/%{config.prop}/creschema.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg2/gen/${config.prop}/creschema.sql"/>
       </test>
 
       <test name="locationload" requiresSuccess="creschema">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/shortreg2/gen/%{config.prop}/locationload.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg2/gen/${config.prop}/locationload.sql"/>
       </test>
 
       <test name="deptload" requiresSuccess="creschema">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/shortreg2/gen/%{config.prop}/deptload.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg2/gen/${config.prop}/deptload.sql"/>
       </test>
 
       <test name="empload" requiresSuccess="creschema">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/shortreg2/gen/%{config.prop}/empload.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg2/gen/${config.prop}/empload.sql"/>
       </test>
 
       <test name="customersload" requiresSuccess="creschema">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/shortreg2/gen/%{config.prop}/customersload.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg2/gen/${config.prop}/customersload.sql"/>
       </test>
 
       <test name="productsload" requiresSuccess="creschema">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/shortreg2/gen/%{config.prop}/productsload.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg2/gen/${config.prop}/productsload.sql"/>
       </test>
 
       <test name="salesload" requiresSuccess="creschema">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/shortreg2/gen/%{config.prop}/salesload.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg2/gen/${config.prop}/salesload.sql"/>
       </test>
 
       <test-suite-call testfile="test-queries.xml"/>
