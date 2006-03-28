@@ -6,6 +6,17 @@ create schema lcs;
 set schema 'lcs';
 set path 'lcs';
 
+-- set session personality to LucidDB so all tables
+-- will be column-store by default
+
+-- fake jar since we don't actually build a separate jar for LucidDB yet
+create jar luciddb_plugin 
+library 'class com.lucidera.farrago.LucidDbSessionFactory' 
+options(0);
+
+alter session implementation set jar luciddb_plugin;
+
+
 ---------------------------------
 -- Part 1. Single Cluster test --
 ---------------------------------
@@ -15,7 +26,7 @@ set path 'lcs';
 -- Without specifying the clustered index clause in create table, a default 
 -- index will be created for each column.
 -- Also, LCS tables do not require primary keys.
-create table lcsemps(empno int) server sys_column_store_data_server;
+create table lcsemps(empno int);
 
 -- verify creation of system-defined clustered index
 !indexes LCSEMPS
@@ -60,7 +71,6 @@ drop table lcsemps;
 -- index will be created for each column.
 -- Also, LCS tables do not require primary keys.
 create table lcsemps(empno int, name varchar(128), empid int) 
-server sys_column_store_data_server
 create clustered index explicit_lcsemps_all on lcsemps(empno, name, empid);
 
 -- verify creation of system-defined clustered indices
@@ -106,7 +116,7 @@ drop table lcsemps;
 -- Without specifying the clustered index clause in create table, a default 
 -- index will be created for each column.
 -- Also, LCS tables do not require primary keys.
-create table lcsemps(city varchar(20)) server sys_column_store_data_server;
+create table lcsemps(city varchar(20));
 
 -- verify creation of system-defined clustered index
 !indexes LCSEMPS
@@ -164,7 +174,7 @@ drop table lcsemps;
 --
 -- 1.4 Bug case
 --
-create table lcsemps(city varchar(20)) server sys_column_store_data_server;
+create table lcsemps(city varchar(20));
 
 insert into lcsemps select city from sales.emps;
 
@@ -193,7 +203,7 @@ drop table lcsemps;
 --
 -- 1.5 Bugcase
 --
-create table lcsemps(city varchar(20)) server sys_column_store_data_server;
+create table lcsemps(city varchar(20));
 
 insert into lcsemps select city from sales.emps;
 
@@ -221,8 +231,7 @@ drop table lcsemps;
 -- Without specifying the clustered index clause in create table, a default 
 -- index will be created for each column.
 -- Also, LCS tables do not require primary keys.
-create table lcsemps(empno int, name varchar(128)) 
-server sys_column_store_data_server;
+create table lcsemps(empno int, name varchar(128));
 
 -- verify creation of system-defined clustered indices
 !indexes LCSEMPS
@@ -258,7 +267,6 @@ drop table lcsemps;
 create table multicluster(
     c0 int, c1 varchar(128), c2 int, c3 int, c4 int, c5 int, c6 varchar(128),
     c7 int)
-server sys_column_store_data_server
 create clustered index i_c0 on multicluster(c0)
 create clustered index i_c1_c2 on multicluster(c1, c2)
 create clustered index i_c3_c4_c5 on multicluster(c3, c4)
@@ -314,8 +322,7 @@ drop table multicluster;
 --
 -- 2.3 Try a different source
 --
-create table threeclusters(c0 int, c1 varchar(128), c2 char(2))
-server sys_column_store_data_server;
+create table threeclusters(c0 int, c1 varchar(128), c2 char(2));
 
 create foreign data wrapper flatfile_foreign_wrapper
 library 'class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper'
@@ -359,7 +366,6 @@ drop table flatfile_table;
 -------------------------------------
 create table tencols(c0 int, c1 int, c2 int, c3 int, c4 int, c5 int, c6 int,
                      c7 int, c8 int, c9 int)
-    server sys_column_store_data_server
 create clustered index i_c0 on tencols(c0)
 create clustered index i_c1_c2 on tencols(c1, c2)
 create clustered index i_c3_c4_c5 on tencols(c3, c4, c5)
@@ -399,9 +405,7 @@ create type rectangle as (
     height double default 4.0
 ) final;
 
-create table rectangles(name varchar(128), r rectangle, id int not null)
-server sys_column_store_data_server
-;
+create table rectangles(name varchar(128), r rectangle, id int not null);
 
 -- verify that three indexes are created (not four)
 !indexes RECTANGLES
@@ -449,7 +453,7 @@ drop type rectangle;
 -------------------------------------
 -- Tests LER-312 -- should not create empty cluster pages when no data
 -- is inserted into table
-create table empty(a int) server sys_column_store_data_server;
+create table empty(a int);
 create view v(a) as values(1);
 insert into empty select a from v where a = 2;
 select * from empty;
@@ -463,8 +467,7 @@ drop table empty;
 -- is what causes the testcase below to result in there being enough variation
 -- in the record sizes to cause problems.
 
-create table test_large_chars (a int, i char(100))
-    server sys_column_store_data_server;
+create table test_large_chars (a int, i char(100));
 
 insert into test_large_chars values(1, null);
 insert into test_large_chars values(2, 'asdf');
@@ -476,8 +479,7 @@ select * from test_large_chars where i is null;
 
 drop table test_large_chars;
 
-create table test_large_varchars (a int, i varchar(100))
-    server sys_column_store_data_server;
+create table test_large_varchars (a int, i varchar(100));
 
 insert into test_large_varchars values(1, null);
 insert into test_large_varchars values(2, 'asdf');
@@ -490,7 +492,11 @@ select * from test_large_varchars where i is null;
 drop table test_large_varchars;
 
 -- Clean up
---
+
+alter session implementation set default;
+
+drop jar luciddb_plugin options(0);
+
 -- drop schema
 drop schema lcs;
 

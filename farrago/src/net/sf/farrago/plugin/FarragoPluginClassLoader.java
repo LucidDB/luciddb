@@ -143,6 +143,16 @@ public class FarragoPluginClassLoader extends URLClassLoader
         String jarUrl,
         String jarAttributeName)
     {
+        if (isLibraryClass(jarUrl)) {
+            try {
+                String className = getLibraryClassReference(jarUrl);
+                return Class.forName(className);
+            } catch (Throwable ex) {
+                throw FarragoResource.instance().PluginJarLoadFailed.ex(
+                    jarUrl,
+                    ex);
+            }
+        }
         jarUrl =
             FarragoProperties.instance().expandProperties(jarUrl);
         String className;
