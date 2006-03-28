@@ -72,7 +72,10 @@ public class SqlToRelConverterTest extends TestCase
         final RelNode rel = tester.convertSqlToRel(sql2);
 
         assertTrue(rel != null);
-        String actual = RelOptUtil.toString(rel);
+        // NOTE jvs 28-Mar-2006:  insert leading newline so
+        // that plans come out nicely stacked instead of first
+        // line immediately after CDATA start
+        String actual = NL + RelOptUtil.toString(rel);
         diffRepos.assertEquals("plan", plan, actual);
     }
 
