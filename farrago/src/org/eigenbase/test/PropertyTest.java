@@ -683,6 +683,10 @@ public class PropertyTest extends TestCase
      */
     public void testVetoChangeValueManyTimes() throws Exception
     {
+        if (System.getProperty("java.vm.name").startsWith("BEA JRockit(R)")) {
+            System.out.println("Not running for JRockit (FRG-100)");
+            return;
+        }
         for (int i = 0; i < 1000; ++i) {
             testVetoChangeValue();
         }

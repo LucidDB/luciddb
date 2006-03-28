@@ -38,6 +38,15 @@
   <!-- directory where blackhawk output should go -->
   <property name="bh.log.basedir" value="${sqbm.dir}/testlog" />
 
+  <!-- classpath for running tests via ant -->
+  <path id="test.classpath">
+    <pathelement path="${open.dir}/luciddb/classes"/>
+    <pathelement path="${farrago.sqlline.classpath}"/>
+    <pathelement path="${ant.classpath}"/>
+    <pathelement path="${blackhawk.run.classpath}"/>
+  </path>
+  <property name="test.classpath" refid="test.classpath"/>
+
   <target name="test">
     <blackhawk.fork
       basedir="${sqbm.dir}"
