@@ -51,7 +51,7 @@ ExecStreamResult LbmSegmentReader::readSegment()
     return EXECRC_YIELD;
 }
 
-ExecStreamResult LbmSegmentReader::advanceToByte(LcsRid byteNum)
+ExecStreamResult LbmSegmentReader::advanceToByte(LbmByteNumber byteNum)
 {
     // read byte segments until find a suitable one
     while (byteSegOffset + byteSegLen <= byteNum) {
@@ -84,14 +84,14 @@ ExecStreamResult LbmSegmentReader::advanceToByte(LcsRid byteNum)
 
 ExecStreamResult LbmSegmentReader::advanceToRid(LcsRid rid)
 {
-    return advanceToByte(rid / LbmOneByteSize);
+    return advanceToByte(ridToByteNumber(rid));
 }
 
 void LbmSegmentReader::readCurrentByteSegment(
     LcsRid &startRid, PBuffer &byteSeg, uint &len)
 {
     assert(firstReadDone);
-    startRid = LcsRid(byteSegOffset * LbmOneByteSize);
+    startRid = byteNumberToRid(byteSegOffset);
     byteSeg = pSegStart;
     len = byteSegLen;
     // assumes advanceToByte() has been called to move to a segment

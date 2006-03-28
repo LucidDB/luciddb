@@ -54,6 +54,26 @@ class ByteBuffer
     uint bufferShift;
 
     /**
+     * Returns which buffer to use to access pos
+     */
+    inline uint getI(uint pos) 
+    {
+        uint i = pos >> bufferShift;
+        assert(i < nBuffers);
+        return i;
+    }
+
+    /**
+     * Returns offset within buffer to use to access pos
+     */
+    inline uint getJ(uint pos)
+    {
+        uint j = pos & bufferMask;
+        assert(j < bufferSize);
+        return j;
+    }
+
+    /**
      * Merges (OR's) one buffer into another
      */
     static void memmerge(PBuffer dest, PConstBuffer src, uint len) 
@@ -64,20 +84,8 @@ class ByteBuffer
         }
     }
 
-    /**
-     * Returns offsets to use for a buffer access
-     */
-    inline void getOffset(uint pos, uint &i, uint &j)
-    {
-        i = pos >> bufferShift;
-        j = pos & bufferMask;
-        assert(i < nBuffers);
-        assert(j < bufferSize);
-    }
-
 public:
     explicit ByteBuffer();
-    ~ByteBuffer();
 
     /**
      * Provides storage for the virtual byte buffer 
@@ -95,9 +103,7 @@ public:
      */
     inline UnsignedByte getByte(uint pos) 
     {
-        uint i, j;
-        getOffset(pos, i, j);
-        return ppBuffers[i][j];
+        return ppBuffers[getI(pos)][getJ(pos)];
     }
 
     /**
@@ -105,9 +111,7 @@ public:
      */
     inline void setByte(uint pos, UnsignedByte b)
     {
-        uint i, j;
-        getOffset(pos, i, j);
-        ppBuffers[i][j] = b;
+        ppBuffers[getI(pos)][getJ(pos)] = b;
     }
 
     /**
@@ -115,21 +119,7 @@ public:
      */
     inline void mergeByte(uint pos, UnsignedByte b)
     {
-        uint i, j;
-        getOffset(pos, i, j);
-        ppBuffers[i][j] |= b;
-    }
-
-    /**
-     * Returns the size of contiguous memory starting from a position
-     *
-     * @param pos memory position
-     * @param max if nonzero, limits the memory size returned
-     */
-    inline uint getContiguousMemSize(uint pos, uint max)
-    {
-        uint size = bufferSize - (pos & bufferMask);
-        return max ? std::min(max, size) : size;
+        ppBuffers[getI(pos)][getJ(pos)] |= b;
     }
 
     /**
@@ -137,11 +127,10 @@ public:
      *
      * @param pos memory position
      */
-    inline PBuffer getMem(uint pos)
+    inline PBuffer getMem(uint pos, uint &size)
     {
-        uint i, j;
-        getOffset(pos, i, j);
-        return &ppBuffers[i][j];
+        size = bufferSize - getJ(pos);
+        return &ppBuffers[getI(pos)][getJ(pos)];
     }
 
     /**
@@ -161,35 +150,29 @@ public:
 };
 
 /**
- * This class represents an ascending circular buffer. It's like an array
- * whose start and end are not fixed. At any time the buffer is valid for
- * entries between start and end. However, the start may be increased, as
- * data is read. The end may be increased as more data is written. The
+ * ByteWindow represents a window into a large array of bytes. It's like an
+ * array whose start and end are not fixed. At any time, the buffer is valid
+ * for entries between start and end. However, the start may be advanced, as
+ * data is read. The end may be advanced as more data is written. The
  * amount of data is limited by the buffer's capacity, and data cannot be
  * written past the limit. 
  *
- * Note that other implementations differ from this one, because they focus
- * on reader/writer control and synchronization. Unlike other
- * implementations, this buffer does NOT provide synchronization.
- *
- * The contents of a CircularBuffer can be considered to be initialized
- * to zero. The CircularBuffer neither allocates nor frees any memory.
- * It is templatized to support different kinds of indexes, such as opaque
- * integers.
+ * The contents of a ByteWindow can be considered to be initialized
+ * to zero. A ByteWindow neither allocates nor frees any memory.
+ * It is templatized to support different kinds of indexes.
  */
 template <class IndexT>
-class AbstractCircularBuffer
+class ByteWindow
 {
-protected:
     /**
      * Internal buffer
      */
-    SharedByteBuffer buffer;
+    SharedByteBuffer pBuffer;
 
     /**
-     * Size of internal buffer
+     * Maximum size of window
      */
-    uint bufferSize;
+    uint windowSize;
 
     /**
      * Offset of current start index
@@ -213,36 +196,32 @@ protected:
     inline uint getOffset(IndexT index)  const
     {
         assert(index >= start);
-        assert(index < start + bufferSize);
-        return indexToOffset((index - start + startOffset) % bufferSize);
+        assert(index < start + windowSize);
+        uint pos = index - start + startOffset;
+        if (pos >= windowSize) {
+            pos -= windowSize;
+        }
+        return pos;
     }
-
-    /**
-     * Casts an index to an integer offset
-     */
-    virtual uint indexToOffset(IndexT index) const = 0;
 
     /**
      * Returns size of buffer starting at index, which is not wrapped
-     * by the circular buffer. Returns up to max.
+     * by the circular buffer.
      */
-    inline uint getUnwrappedMemSize(IndexT index, uint max) 
+    inline uint getUnwrappedMemSize(IndexT index) 
     {
-        uint len = bufferSize - getOffset(index);
-        return max ? std::min(len, max) : len;
+        assert(start <= index && index <= start + windowSize);
+        return windowSize - getOffset(index);
     }
 
 public:
-    virtual ~AbstractCircularBuffer() 
-    {}
-
     /**
      * Initialize a buffer, valid from index 0
      */
-    void init(SharedByteBuffer buffer)
+    void init(SharedByteBuffer pBuffer)
     {
-        this->buffer = buffer;
-        bufferSize = buffer->getSize();
+        this->pBuffer = pBuffer;
+        windowSize = pBuffer->getSize();
         reset();
     }
 
@@ -252,7 +231,7 @@ public:
     void reset()
     {
         startOffset = 0;
-        start = end = (IndexT) 0;
+        start = end = 0;
     }
 
     /**
@@ -260,7 +239,7 @@ public:
      */
     inline uint getCapacity() const
     {
-        return bufferSize;
+        return windowSize;
     }
 
     /**
@@ -284,32 +263,15 @@ public:
      */
     inline IndexT getLimit()
     {
-        return start + bufferSize;
+        return start + windowSize;
     }
 
     /**
-     * Returns the value of the byte at the specified index
+     * Returns contiguous memory at position
      */
-    inline UnsignedByte getByte(IndexT index) const
+    PBuffer getMem(IndexT index, uint &size)
     {
-        assert(index >= start && index < end);
-        return buffer->getByte(getOffset(index));
-    }
-
-    /**
-     * Returns the size of contiguous memory available at a position
-     */
-    virtual uint getContiguousMemSize(IndexT index, uint max)
-    {
-        return buffer->getContiguousMemSize(getOffset(index), max);
-    }
-
-    /**
-     * Returns contiguous memory at position or NULL
-     */
-    virtual PBuffer getMem(IndexT index)
-    {
-        return buffer->getMem(getOffset(index));
+        return pBuffer->getMem(getOffset(index), size);
     }
 
     /**
@@ -339,13 +301,22 @@ public:
         assert(pos > end);
         assert(pos <= getLimit());
 
-        uint len = indexToOffset(pos - end);
-        uint chunkSize = getUnwrappedMemSize(end, len);
-        buffer->setMem(getOffset(end), 0, chunkSize);
-        if (chunkSize < len) {
-            buffer->setMem(0, 0, len - chunkSize);
+        uint len = pos - end;
+        uint chunkSize = std::min(len, getUnwrappedMemSize(end));
+        pBuffer->setMem(getOffset(end), 0, chunkSize);
+        if (len > chunkSize) {
+            pBuffer->setMem(0, 0, len - chunkSize);
         }
         end = pos;
+    }
+
+    /**
+     * Returns the value of the byte at the specified index
+     */
+    inline UnsignedByte getByte(IndexT index) const
+    {
+        assert(index >= start && index < end);
+        return pBuffer->getByte(getOffset(index));
     }
 
     /**
@@ -358,7 +329,7 @@ public:
         if (index >= end) {
             advanceEnd(index + 1);
         }
-        buffer->mergeByte(getOffset(index), val);
+        pBuffer->mergeByte(getOffset(index), val);
     }
 
     /**
@@ -367,7 +338,7 @@ public:
     void mergeMem(IndexT index, PConstBuffer byteSeg, uint len)
     {
         assert(index >= start);
-        assert(len < bufferSize);
+        assert(len < windowSize);
         assert(index + len <= getLimit());
         assert(len > 0);
         
@@ -377,37 +348,11 @@ public:
             advanceEnd(writeEnd);
         }
 
-        // write byte-wise for small writes
-        if (len < 3) {
-            for (uint i = 0; i < len; i++) {
-                buffer->mergeByte(getOffset(index + i), byteSeg[i]);
-            }
-            return;
+        uint chunkSize = std::min(len, getUnwrappedMemSize(index));
+        pBuffer->mergeMem(getOffset(index), byteSeg, chunkSize);
+        if (len > chunkSize) {
+            pBuffer->mergeMem(0, byteSeg + chunkSize, len - chunkSize);
         }
-
-        uint chunkSize = getUnwrappedMemSize(index, len);
-        buffer->mergeMem(getOffset(index), byteSeg, chunkSize);
-        if (chunkSize < len) {
-            buffer->mergeMem(0, byteSeg + chunkSize, len - chunkSize);
-        }
-    }
-};
-
-template <class IndexT>
-class CircularBuffer : public AbstractCircularBuffer<IndexT>
-{
-    inline uint indexToOffset(IndexT index) const
-    {
-        return (uint) index;
-    }
-};
-
-template <class IndexT>
-class OpaqueIndexedCircularBuffer : public AbstractCircularBuffer<IndexT>
-{
-    inline uint indexToOffset(IndexT index) const
-    {
-        return (uint) opaqueToInt(index);
     }
 };
 

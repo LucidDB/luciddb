@@ -1,28 +1,21 @@
-<project name="bh" default="newval-test">
-  <target name="newval-test">
-    <test-suite testunit="newval-test">
+<project name="bh" default="test-newval">
+  <target name="test-newval">
+    <test-suite name="test-newval">
 
       <init-hook>
-        <test name="restoreCatalog" testunit="newval-init-test">
-          <ant-task>
-            <ant target="restoreCatalog"/>
-          </ant-task>
-        </test>
+        <ant target="restoreCatalog"/>
       </init-hook>
 
       <test name="altersys">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/altersys.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <javatest testclass="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/altersys.sql"/>
       </test>
 
       <test name="simple_newvalins">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/simple_newvalins.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <javatest testclass="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/simple_newvalins.sql"/>
       </test>
 
       <test name="simple_q0">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/simple_q0.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <javatest testclass="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/simple_q0.sql"/>
       </test>
       
     </test-suite>

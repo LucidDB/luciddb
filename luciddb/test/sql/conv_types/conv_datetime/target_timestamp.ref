@@ -103,12 +103,10 @@ Error: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from sourc
 0: jdbc:luciddb:> insert into target_timestamp
 . . . . . . . . >  select cast (coltime as timestamp) from datatype_source where colname = 'TIMESTAMP'
 . . . . . . . . > ;
-Error: Cast function cannot convert value of type TIME to type TIMESTAMP (state=,code=0)
 0: jdbc:luciddb:> -- FRG-20
 0: jdbc:luciddb:> insert into target_timestamp
 . . . . . . . . >  select cast (coldate as timestamp) from datatype_source where colname = 'TIMESTAMP'
 . . . . . . . . > ;
-Error: Cast function cannot convert value of type DATE to type TIMESTAMP (state=,code=0)
 0: jdbc:luciddb:> insert into target_timestamp
 . . . . . . . . >  select coltmstamp from datatype_source where colname = 'TIMESTAMP'
 . . . . . . . . > ;
@@ -119,8 +117,12 @@ Error: Cast function cannot convert value of type DATE to type TIMESTAMP (state=
 +-------------------------+
 |      COLTIMESTAMP       |
 +-------------------------+
+| 1957-09-29 00:00:00.0   |
 | 1957-09-29 01:16:29.33  |
+| 1970-01-01 02:12:47.0   |
+| 1970-01-01 02:16:29.0   |
 | 1990-03-24 06:40:00.0   |
+| 2002-11-16 00:00:00.0   |
 | 2002-11-16 02:12:47.0   |
 +-------------------------+
 0: jdbc:luciddb:> 

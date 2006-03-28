@@ -1,6 +1,6 @@
 <project name="bh" default="tbs-test">
   <target name="tbs-test">
-    <test-suite testunit="tbs-test">
+    <test-suite name="tbs-test">
 
       <!-- 100 row tests: -->
       <!-- q0 qor q1 q2a q3a q3b qin qjoin001 qjoin002 -->

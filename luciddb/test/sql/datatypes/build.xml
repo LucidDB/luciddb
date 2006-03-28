@@ -29,24 +29,39 @@
   <property environment="env" />
   <property file="run.properties"/>
 
-  <taskdef name="var" classname="net.sf.antcontrib.property.Variable" classpath="${ant.classpath}"/>
+  <!-- override Farrago -->
+  <property name="project.catalog.dir" location="${open.dir}/luciddb/catalog" />
+  <property name="project.trace.propfile" location="${open.dir}/luciddb/trace/LucidDbTrace.properties" />
+  <property name="project.testlog.dir" location="${open.dir}/luciddb/testlog" />
+  <import file="${open.dir}/farrago/buildMacros.xml" />
+
+  <taskdef name="foreach" classname="net.sf.antcontrib.logic.ForEach" classpath="${ant.classpath}"/>
+  <taskdef name="if" classname="net.sf.antcontrib.logic.IfTask" classpath="${ant.classpath}"/>
 
   <!-- directory where sql is generated -->
   <property name="gensql.dir" value="${datatypes.dir}/gen" />
+
   <!-- directory where blackhawk output should go -->
-  <property name="bhlogs.dir" value="${datatypes.dir}/bh" />
+  <property name="bh.log.basedir" value="${datatypes.dir}/testlog" />
+
+  <!-- classpath for running tests via ant -->
+  <path id="test.classpath">
+    <pathelement path="${open.dir}/luciddb/classes"/>
+    <pathelement path="${farrago.sqlline.classpath}"/>
+    <pathelement path="${ant.classpath}"/>
+    <pathelement path="${blackhawk.run.classpath}"/>
+  </path>
+  <property name="test.classpath" refid="test.classpath"/>
 
   <target name="gen-sql">
     <filter token="open.dir" value="${open.dir}"/>
     <filter token="datatypes.dir" value="${datatypes.dir}"/>
 
     <!-- generate config.properties file -->
-    <!-- use prop.oracle as default; should set through cmdline -->
-    <property name="config.prop" value="prop.csvjdbc"/>
-    <copy file="${config.prop}" tofile="config.properties" 
+    <copy file="prop.${prop.source}" tofile="config.properties" 
       overwrite="true" filtering="true">
       <filterset>
-        <filtersfile file="${config.prop}"/>
+        <filtersfile file="prop.${prop.source}"/>
       </filterset>
     </copy>
 
@@ -61,7 +76,7 @@
         <filtersfile file="config.properties"/>
       </filterset>
     </copy>
-    <copy todir="${gensql.dir}/${config.prop}" overwrite="true"
+    <copy todir="${gensql.dir}/${prop.source}" overwrite="true"
       filtering="true">
       <fileset dir="${gensql.dir}tmp"/>
       <filterchain>
@@ -74,7 +89,7 @@
     <delete dir="${gensql.dir}tmp" quiet="true"/>
 
     <!-- copy over all other .sql and .ref files -->
-    <copy todir="${gensql.dir}/${config.prop}">
+    <copy todir="${gensql.dir}/${prop.source}">
       <fileset dir="${datatypes.dir}">
         <include name="**/*.sql"/>
         <include name="**/*.ref"/>
@@ -83,28 +98,29 @@
     </copy>
   </target>
 
-  <target name="test">
-    <antcall target="gen-sql"/>
-    <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
-  </target>  
-
-  <target name="testAllConfigs">
-    <!-- csvjdbc -->
-    <var name="config.prop" value="prop.csvjdbc"/>
-    <antcall target="gen-sql"/>
-    <var name="bh.log.basedir" value="${datatypes.dir}/bh/${config.prop}"/>
-    <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
-
-    <!-- flatfile -->
-    <var name="config.prop" value="prop.flatfile"/>
-    <antcall target="gen-sql"/>
-    <var name="bh.log.basedir" value="${datatypes.dir}/bh/${config.prop}"/>
-    <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
+  <target name="gen-all-sql">
+    <available file="${gensql.dir}" type="dir" property="sql.generated"/>
+    <if>
+      <isset property="sql.generated"/>
+      <then/>
+      <else>
+        <foreach list="csvjdbc,flatfile"
+          param="prop.source"
+          target="gen-sql"/>
+      </else>
+    </if>
   </target>
+
+  <target name="test" depends="gen-all-sql">
+    <blackhawk.fork
+      basedir="${datatypes.dir}"
+      testscript="${testfile}"
+      classpathref="test.classpath"/>
+  </target>  
 
   <target name="clean">
     <delete dir="${gensql.dir}"/>
-    <delete dir="${bhlogs.dir}"/>
+    <delete dir="${bh.log.basedir}"/>
   </target>
 
   <target name="restoreCatalog">

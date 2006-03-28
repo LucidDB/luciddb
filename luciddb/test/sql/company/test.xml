@@ -1,6 +1,6 @@
 <project name="bh" default="company-test">
   <target name="company-test">
-    <test-suite testunit="company-test">
+    <test-suite name="company-test">
       
       <!-- without indexes -->
       <test-suite-call testfile="test-noidx.xml"/>

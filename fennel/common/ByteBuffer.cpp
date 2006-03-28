@@ -30,10 +30,6 @@ ByteBuffer::ByteBuffer()
     bufferSize = 0;
 }
 
-ByteBuffer::~ByteBuffer()
-{
-}
-
 void ByteBuffer::init(
     boost::shared_array<PBuffer> ppBuffers, uint nBuffers, uint bufSize)
 {
@@ -63,59 +59,61 @@ uint ByteBuffer::getSize()
 void ByteBuffer::setMem(uint pos, UnsignedByte value, uint len) 
 {
     assert(pos + len <= getSize());
+    uint current = pos;
+    uint remaining = len;
 
-    uint chunkLen = getContiguousMemSize(pos, len);
-    memset(getMem(pos), value, chunkLen);
-
-    if (chunkLen < len) {
-        uint current = pos + chunkLen;
-        uint remaining = len - chunkLen;
-        while (remaining > 0) {
-            chunkLen = getContiguousMemSize(current, remaining);
-            memset(getMem(current), value, chunkLen);
-            current += chunkLen;
-            remaining -= chunkLen;
+    while (remaining > 0) {
+        uint chunkLen;
+        PBuffer mem = getMem(current, chunkLen);
+        if (chunkLen >= remaining) {
+            memset(mem, value, remaining);
+            break;
         }
+        memset(mem, value, chunkLen);
+        current += chunkLen;
+        remaining -= chunkLen;
     }
 }
 
-void ByteBuffer::copyMem(uint pos, PConstBuffer mem, uint len)
+void ByteBuffer::copyMem(uint pos, PConstBuffer data, uint len)
 {
     assert(pos + len <= getSize());
+    uint current = pos;
+    PConstBuffer currentData = data;
+    uint remaining = len;
 
-    uint chunkLen = getContiguousMemSize(pos, len);
-    memcpy(getMem(pos), mem, chunkLen);
-
-    if (chunkLen < len) {
-        uint current = pos + chunkLen;
-        PConstBuffer currentMem = mem + chunkLen;
-        uint remaining = len - chunkLen;
-        while (remaining > 0) {
-            chunkLen = getContiguousMemSize(current, remaining);
-            memcpy(getMem(current), currentMem, chunkLen);
-            current += chunkLen;
-            remaining -= chunkLen;
+    while (remaining > 0) {
+        uint chunkLen;
+        PBuffer mem = getMem(current, chunkLen);
+        if (chunkLen >= remaining) {
+            memcpy(mem, currentData, remaining);
+            break;
         }
+        memcpy(mem, currentData, chunkLen);
+        current += chunkLen;
+        currentData += chunkLen;
+        remaining -= chunkLen;
     }
 }
 
-void ByteBuffer::mergeMem(uint pos, PConstBuffer mem, uint len)
+void ByteBuffer::mergeMem(uint pos, PConstBuffer data, uint len)
 {
     assert(pos + len <= getSize());
+    uint current = pos;
+    PConstBuffer currentData = data;
+    uint remaining = len;
 
-    uint chunkLen = getContiguousMemSize(pos, len);
-    memmerge(getMem(pos), mem, chunkLen);
-
-    if (chunkLen < len) {
-        uint current = pos + chunkLen;
-        PConstBuffer currentMem = mem + chunkLen;
-        uint remaining = len - chunkLen;
-        while (remaining > 0) {
-            chunkLen = getContiguousMemSize(current, remaining);
-            memmerge(getMem(current), currentMem, chunkLen);
-            current += chunkLen;
-            remaining -= chunkLen;
+    while (remaining > 0) {
+        uint chunkLen;
+        PBuffer mem = getMem(current, chunkLen);
+        if (chunkLen >= remaining) {
+            memmerge(mem, currentData, remaining);
+            break;
         }
+        memmerge(mem, currentData, chunkLen);
+        current += chunkLen;
+        currentData += chunkLen;
+        remaining -= chunkLen;
     }
 }
 

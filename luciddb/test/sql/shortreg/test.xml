@@ -1,55 +1,21 @@
-<project name="tch" default="simple-test">
-  <target name="simple-test">
-    <test-suite testunit="simple-test">
+<project name="bh" default="shortreg">
+  <target name="shortreg">
+    <test-suite name="shortreg">
 
-      <init-hook>
-        <test name="restoreCatalog" testunit="init-test">
-          <ant-task>
-            <ant target="restoreCatalog"/>
-          </ant-task>
-        </test>
-      </init-hook>
+      <test-suite-call testfile="shortregtest.xml">
+        <test-unit-modifier value="oracle"/>
+        <property name="foreign.db" value="oracle"/>
+      </test-suite-call>
 
-      <test name="creschema">
-        <test-parameter name="sql-file" value="test/sql/shortreg/creschema.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
-      </test>
+      <test-suite-call testfile="shortregtest.xml">
+        <test-unit-modifier value="sqlserver"/>
+        <property name="foreign.db" value="sqlserver"/>
+      </test-suite-call>
 
-      <test name="locationload">
-        <test-parameter name="sql-file" value="test/sql/shortreg/locationload.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
-      </test>
-
-      <test name="deptload">
-        <test-parameter name="sql-file" value="test/sql/shortreg/deptload.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
-      </test>
-
-      <test name="empload">
-        <test-parameter name="sql-file" value="test/sql/shortreg/empload.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
-      </test>
-
-      <test name="customersload">
-        <test-parameter name="sql-file" value="test/sql/shortreg/customersload.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
-      </test>
-
-      <test name="productsload">
-        <test-parameter name="sql-file" value="test/sql/shortreg/productsload.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
-      </test>
-
-      <test name="salesload">
-        <test-parameter name="sql-file" value="test/sql/shortreg/salesload.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
-      </test>
-
-      <test name="joinEqSanity" requiresRun="salesload">
-        <test-parameter name="sql-file" value="test/sql/shortreg/joinEqSanity.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
-      </test>
-
+      <test-suite-call testfile="shortregtest.xml">
+        <test-unit-modifier value="flatfile"/>
+        <property name="foreign.db" value="flatfile"/>
+      </test-suite-call>
 
     </test-suite>
   </target>

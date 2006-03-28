@@ -1,0 +1,18 @@
+<project name="bh" default="luciddb">
+  <target name="luciddb">
+    <test-suite name="luciddb">
+
+      <test-suite-call testfile="test/sql/txn/test.xml"/>
+
+      <test-suite-call testfile="test/sql/shortreg/shortregtest.xml">
+        <test-suite-modifier value="flatfile"/>
+        <property name="foreign.db" value="flatfile"/>
+      </test-suite-call>
+
+      <test-suite-call testfile="test/sql/udr/udf/test.xml"/>
+
+      <test-suite-call testfile="test/sql/udr/udx/test.xml"/>
+
+    </test-suite>
+  </target>
+</project>

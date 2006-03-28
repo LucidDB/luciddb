@@ -29,7 +29,7 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-typedef OpaqueIndexedCircularBuffer<LcsRid> LbmUnionMergeArea;
+typedef ByteWindow<LbmByteNumberPrimitive> LbmUnionMergeArea;
 
 /**
  * The union workspace merges byte segments
@@ -57,7 +57,7 @@ class LbmUnionWorkspace
     /**
      * Byte number of the last byte which can be produced
      */
-    LcsRid productionLimitByte;
+    LbmByteNumber productionLimitByte;
 
     /**
      * A segment that can be returned by the workspace
@@ -65,14 +65,9 @@ class LbmUnionWorkspace
     LbmByteSegment segment;
 
     /**
-     * Returns the byte number the row id is located in
-     */
-    inline static LcsRid getByteNumber(LcsRid rid);
-
-    /**
      * Advance the workspace to the requested byte number
      */
-    void advanceToByteNum(LcsRid requestedByteNum);
+    void advanceToByteNum(LbmByteNumber requestedByteNum);
 
 public:
     /**
@@ -137,11 +132,6 @@ public:
      */
     bool addSegment(const LbmByteSegment &segment);
 };
-
-inline LcsRid LbmUnionWorkspace::getByteNumber(LcsRid rid)    
-{
-    return rid / LbmSegment::LbmOneByteSize;
-}
 
 FENNEL_END_NAMESPACE
 

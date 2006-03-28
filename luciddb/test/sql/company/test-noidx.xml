@@ -1,6 +1,6 @@
 <project name="bh" default="company-noidx-test">
   <target name="company-noidx-test">
-    <test-suite testunit="company-noidx-test">
+    <test-suite name="company-noidx-test">
       
       <init-hook>
         <ant target="restoreCatalog"/>

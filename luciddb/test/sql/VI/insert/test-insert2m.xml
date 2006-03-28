@@ -1,28 +1,21 @@
-<project name="bh" default="insert2m-test">
-  <target name="insert2m-test">
-    <test-suite testunit="insert2m-test">
+<project name="bh" default="test-insert2m">
+  <target name="test-insert2m">
+    <test-suite name="test-insert2m">
 
       <init-hook>
-        <test name="restoreCatalog" testunit="insert2m-init-test">
-          <ant-task>
-            <ant target="restoreCatalog"/>
-          </ant-task>
-        </test>
+        <ant target="restoreCatalog"/>
       </init-hook>
 
       <test name="altersys">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/altersys.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/altersys.sql"/>
       </test>
 
       <test name="insert2m">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/insert2m.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/insert2m.sql"/>
       </test>
 
       <test name="q2a_2m">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/q2a_2m.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/q2a_2m.sql"/>
       </test>
       
     </test-suite>

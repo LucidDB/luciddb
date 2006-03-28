@@ -1,6 +1,6 @@
 <project name="bh" default="vi-flip-test">
   <target name="vi-flip-test">
-    <test-suite testunit="vi-flip-test">
+    <test-suite name="vi-flip-test">
 
       <init-hook>
         <ant target="restoreCatalog"/>
