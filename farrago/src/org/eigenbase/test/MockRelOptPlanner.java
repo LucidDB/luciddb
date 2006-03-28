@@ -24,6 +24,9 @@ package org.eigenbase.test;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.oj.rel.*;
+import org.eigenbase.util.*;
+
+import java.util.*;
 
 /**
  * MockRelOptPlanner is a mock implementation of the {@link RelOptPlanner}
@@ -35,6 +38,10 @@ import org.eigenbase.oj.rel.*;
 public class MockRelOptPlanner implements RelOptPlanner
 {
     private RelNode root;
+
+    private RelOptRule rule;
+
+    private RelNode transformationResult;
 
     // implement RelOptPlanner
     public void setRoot(RelNode rel)
@@ -57,6 +64,23 @@ public class MockRelOptPlanner implements RelOptPlanner
     // implement RelOptPlanner
     public boolean addRule(RelOptRule rule)
     {
+        assert(this.rule == null)
+            : "MockRelOptPlanner only supports a single rule";
+        this.rule = rule;
+
+        // TODO jvs 28-Mar-2006:  share common utility with other planners
+        Walker operandWalker = new Walker(rule.getOperand());
+        ArrayList operandsOfRule = new ArrayList();
+        while (operandWalker.hasMoreElements()) {
+            RelOptRuleOperand operand =
+                (RelOptRuleOperand) operandWalker.nextElement();
+            operand.setRule(rule);
+            operand.setParent((RelOptRuleOperand) operandWalker.getParent());
+            operandsOfRule.add(operand);
+        }
+        rule.operands =
+            (RelOptRuleOperand [])
+            operandsOfRule.toArray(RelOptRuleOperand.noOperands);
         return false;
     }
 
@@ -81,7 +105,70 @@ public class MockRelOptPlanner implements RelOptPlanner
     // implement RelOptPlanner
     public RelNode findBestExp()
     {
+        if (rule != null) {
+            matchRecursive(root, null, -1);
+        }
         return root;
+    }
+
+    private boolean matchRecursive(
+        RelNode rel, RelNode parent, int ordinalInParent)
+    {
+        List<RelNode> bindings = new ArrayList<RelNode>();
+        if (match(rule.getOperand(), rel, bindings)) {
+            MockRuleCall call = new MockRuleCall(
+                this,
+                rule.getOperand(),
+                bindings.toArray(RelNode.emptyArray));
+            rule.onMatch(call);
+        }
+        
+        if (transformationResult != null) {
+            if (parent == null) {
+                root = transformationResult;
+            } else {
+                parent.replaceInput(ordinalInParent, transformationResult);
+            }
+            return true;
+        }
+
+        RelNode [] children = rel.getInputs();
+        for (int i = 0; i < children.length; ++i) {
+            if (matchRecursive(children[i], rel, i)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean match(
+        RelOptRuleOperand operand,
+        RelNode rel,
+        List<RelNode> bindings)
+    {
+        if (!operand.matches(rel)) {
+            return false;
+        }
+        bindings.add(rel);
+        Object [] childOperands = operand.getChildren();
+        if (childOperands == null) {
+            return true;
+        }
+        int n = childOperands.length;
+        RelNode [] childRels = rel.getInputs();
+        if (n != childRels.length) {
+            return false;
+        }
+        for (int i = 0; i < n; ++i) {
+            if (!match(
+                    (RelOptRuleOperand) childOperands[i],
+                    childRels[i],
+                    bindings))
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     // implement RelOptPlanner
@@ -157,6 +244,23 @@ public class MockRelOptPlanner implements RelOptPlanner
     // implement RelOptPlanner
     public void addListener(RelOptListener newListener)
     {
+    }
+
+    private class MockRuleCall extends RelOptRuleCall
+    {
+        MockRuleCall(
+            RelOptPlanner planner,
+            RelOptRuleOperand operand,
+            RelNode [] rels)
+        {
+            super(planner, operand, rels);
+        }
+        
+        // implement RelOptRuleCall
+        public void transformTo(RelNode rel)
+        {
+            transformationResult = rel;
+        }
     }
 }
 
