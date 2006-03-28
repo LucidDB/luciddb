@@ -27,11 +27,11 @@ import org.eigenbase.relopt.*;
 /**
  * Unit test for rules in {@link org.eigenbase.rel} and subpackages.  As input,
  * the test supplies a SQL statement and a single rule; the SQL is translated
- * into relational algebra and then fed into a mock planner.  The mocker
- * planner fires the rule on every pattern match in a depth-first left-to-right
- * traversal of the tree until the rule succeeds in applying its transform.
- * (For rules which call transformTo more than once, only the last result is
- * used.)  The plan before and after "optimization" is diffed against
+ * into relational algebra and then fed into a mock planner.  The mock planner
+ * fires the rule on every pattern match in a depth-first left-to-right
+ * preorder traversal of the tree until the rule succeeds in applying its
+ * transform.  (For rules which call transformTo more than once, only the last
+ * result is used.)  The plan before and after "optimization" is diffed against
  * a .ref file using {@link DiffRepository}.
  *
  *<p>
