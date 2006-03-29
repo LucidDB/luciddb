@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2003-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2003-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -110,7 +110,7 @@ public class FarragoDatabase extends FarragoDbSingleton
     /**
      * Provides unique identifiers for sessions and statements.
      */
-    private AtomicLong uniqueId = new AtomicLong();
+    private AtomicLong uniqueId = new AtomicLong(1);
     
     //~ Constructors ----------------------------------------------------------
 
@@ -520,6 +520,7 @@ public class FarragoDatabase extends FarragoDbSingleton
     }
     
     /**
+     * Gets a unique identifier: never 0.
      * @return next unique identifier
      */
     public long getUniqueId()
@@ -527,6 +528,39 @@ public class FarragoDatabase extends FarragoDbSingleton
         return uniqueId.incrementAndGet();
     }
     
+    // REVIEW mberkowitz 28-Mar-06: Is it better for the FarragoDatabase 
+    // to save a map (id -> FarragoSessionInfo)
+    // and a map (id -> FarragoSessionExecutingStmtInfo)?
+
+    /** look up session info by session id.
+     * @param id
+     * @return FarragoSessionInfo
+     */
+    public FarragoSessionInfo findSessionInfo(long id)
+    {
+        for (FarragoSession s : getSessions(this)) {
+            FarragoSessionInfo info = s.getSessionInfo();
+            if (info.getId() == id)
+                return info;
+        }
+        return null;
+    }
+
+    /** look up executing statement info by statement id.
+     * @param id
+     * @return FarragoSessionExecutingStmtInfo 
+     */
+    public FarragoSessionExecutingStmtInfo findExecutingStmtInfo(long id)
+    {
+        for (FarragoSession s : getSessions(this)) {
+            FarragoSessionExecutingStmtInfo info =
+                s.getSessionInfo().getExecutingStmtInfo(id);
+            if (info != null)
+                return info;
+        }
+        return null;
+    }
+
     /**
      * Prepares an SQL expression; uses a cached implementation if
      * available, otherwise caches the one generated here.
