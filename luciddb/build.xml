@@ -187,6 +187,34 @@
     <ant dir="test/sql/shortreg" target="gen-all-sql"/>
   </target>
 
+<!-- Begin Experiment -->
+  <taskdef name="foreach" classname="net.sf.antcontrib.logic.ForEach" classpath="${ant.classpath}"/>
+  <taskdef name="if" classname="net.sf.antcontrib.logic.IfTask" classpath="${ant.classpath}"/>
+
+  <target name="gen-all-sql-x">
+    <foreach param="target.file" target="ant-gen-sql">
+      <fileset dir="${basedir}/test/sql">
+        <!-- either include each directory explicitly, or include all
+        by name="**/build.xml", and either put dummy "gen-all-sql" targets
+        for everyone, or do explicit excludes -->
+        <include name="shortreg/build.xml"/>
+        <include name="bench/build.xml"/>
+        <exclude name="VI/**"/>
+      </fileset>
+    </foreach>
+  </target>
+
+  <target name="ant-gen-sql">
+    <echo>
+      This is the target.file: ${target.file}
+    </echo>
+    <ant antfile="${target.file}" target="gen-all-sql" inheritAll="false"/>
+  </target>
+
+<!-- End Experiment-->
+
+
+
   <target name="test" depends="createCatalog,buildJdbcPlugin,gen-all-sql">
     <blackhawk.fork
       basedir="${luciddb.dir}"
