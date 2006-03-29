@@ -20,6 +20,8 @@
 */
 package com.lucidera.luciddb.applib.contrib;
 
+import net.sf.farrago.runtime.*;
+
 import java.util.Date;
 
 /**
@@ -39,7 +41,7 @@ public class InternalDateUdf
             return null;
         }
 
-        java.util.Date d;
+        java.util.Date d = (java.util.Date) FarragoUdrRuntime.getContext();
 
         // Use conversions as in bbdates.h.
         // This gives the delta between Broadbase time 0 and UTC time 0
@@ -50,7 +52,13 @@ public class InternalDateUdf
         // Apply delta to get UTC time from time passed in
         in -= delta;
 
-        d = new java.util.Date( in );
+        if (d == null) {
+            d = new java.util.Date(in);
+            FarragoUdrRuntime.setContext(d);
+            return d.toString();
+        }
+
+        d.setTime( in );
         return d.toString();
     }
 }

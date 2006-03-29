@@ -21,7 +21,9 @@
 package com.lucidera.luciddb.applib.string;
 
 import java.sql.Types;
+import java.nio.CharBuffer;
 import com.lucidera.luciddb.applib.resource.*;
+import net.sf.farrago.runtime.*;
 
 /**
  * leftN returns the first N characters of the string
@@ -37,11 +39,14 @@ public class LeftNUdf
             throw ApplibResourceObject.get().LenSpecifyNonNegative.ex();
         }
 
-        // TODO:
-        // Pre-allocate character arrays to reduce number of
-        // object instantiations when executing method on large
-        // result sets.
-        char[] chars = new char[ 2048 ];
+        char[] chars;
+        CharBuffer cb = (CharBuffer)FarragoUdrRuntime.getContext();
+        if (cb == null) {
+            chars = new char[ 2048 ];
+            cb = CharBuffer.wrap(chars);
+            FarragoUdrRuntime.setContext(cb);
+        }
+        chars = cb.array();
 
         // we want either the left len characters or all the characters if the
         // total length of the string is already less than len

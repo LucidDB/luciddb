@@ -4,7 +4,9 @@ set path 'udftest';
 
 
 values applib.day_number_overall(DATE'2343-5-30');
+values applib.day_number_overall(DATE'1510-08-03');
 values applib.day_number_overall(TIMESTAMP'1674-10-09 08:00:59');
+values applib.day_number_overall(TIMESTAMP'2010-12-1 04:43:01');
 
 -- failures
 values applib.day_number_overall(DATE'2341');

@@ -38,7 +38,6 @@ import com.lucidera.luciddb.applib.resource.*;
  */
 public class PhoneNumberContext
 {
-    private static PhoneNumberContext _instance = null;
     /*
      *  Instance variables
      */
@@ -60,7 +59,7 @@ public class PhoneNumberContext
         "231", "352", "853", "356", "968", "507",
         "221", "65",  "597"};
 
-    private PhoneNumberContext() 
+    public PhoneNumberContext() 
     {
         res = ApplibResourceObject.get();
 	localCountryCode = res.PhoneLocalCountryCode.str();
@@ -77,14 +76,6 @@ public class PhoneNumberContext
 	outsideLineAccess = res.PhoneOutsideLineAccess.str();
 	domesticDialCode = res.PhoneDomesticDialCode.str();
 	internationalDialCode = res.PhoneInternationalDialCode.str();
-    }
-
-    public static synchronized PhoneNumberContext get()
-    {
-        if (_instance == null) {
-            _instance = new PhoneNumberContext();
-        }
-        return _instance;
     }
 
     /**
@@ -534,43 +525,43 @@ public class PhoneNumberContext
 	try
 	{
 	    System.out.println("San Mateo, California:");
-            get();
-	    testOne("5133870");
-	    testOne("513-3870");
-	    testOne("6505133870");
-	    testOne("650-513-3870");
-	    testOne("415-744-9026 ext123");
-	    testOne("1-650-513-3870");
-	    testOne("1415-744-9026");
-	    testOne("14157449026");
-	    testOne("(+886) 2-9876-5432");
-	    testOne("011-886-2-9876-5432");
-	    testOne("01185223456789");
+            PhoneNumberContext pnc = new PhoneNumberContext();
+	    testOne(pnc,"5133870");
+	    testOne(pnc,"513-3870");
+	    testOne(pnc, "6505133870");
+	    testOne(pnc, "650-513-3870");
+	    testOne(pnc, "415-744-9026 ext123");
+	    testOne(pnc, "1-650-513-3870");
+	    testOne(pnc, "1415-744-9026");
+	    testOne(pnc, "14157449026");
+	    testOne(pnc, "(+886) 2-9876-5432");
+	    testOne(pnc, "011-886-2-9876-5432");
+	    testOne(pnc, "01185223456789");
 
 	    System.out.println("Taipei, Taiwan:");
-	    _instance.localCountryCode = "886";
-	    _instance.localAreaCode = "2";
-	    _instance.localNumberLength = 8;
-	    _instance.domesticDialCode = "0";
-	    _instance.internationalDialCode = "002";
-	    testOne("2345-6789");
-	    testOne("0223456789");
-	    testOne("(07) 234-5678");
-	    testOne("886-7-234-5678");
-	    testOne("+1 650-513-3870");
-	    testOne("+14157449026x666");
-	    testOne("002-852-2345-6789 x10");
-	    testOne("00216505133870");
+	    pnc.localCountryCode = "886";
+	    pnc.localAreaCode = "2";
+	    pnc.localNumberLength = 8;
+	    pnc.domesticDialCode = "0";
+	    pnc.internationalDialCode = "002";
+	    testOne(pnc, "2345-6789");
+	    testOne(pnc, "0223456789");
+	    testOne(pnc, "(07) 234-5678");
+	    testOne(pnc, "886-7-234-5678");
+	    testOne(pnc, "+1 650-513-3870");
+	    testOne(pnc, "+14157449026x666");
+	    testOne(pnc, "002-852-2345-6789 x10");
+	    testOne(pnc, "00216505133870");
 
 	    System.out.println("Hong Kong:");
-	    _instance.localCountryCode = "852";
-	    _instance.localAreaCode = "";
-	    _instance.localNumberLength = 8;
-	    _instance.domesticDialCode = "";
-	    _instance.internationalDialCode = "001";
-	    testOne("2345-6789");
-	    testOne("852-2345-6789");
-	    testOne("0011-650-513-3870");
+	    pnc.localCountryCode = "852";
+	    pnc.localAreaCode = "";
+	    pnc.localNumberLength = 8;
+	    pnc.domesticDialCode = "";
+	    pnc.internationalDialCode = "001";
+	    testOne(pnc, "2345-6789");
+	    testOne(pnc, "852-2345-6789");
+	    testOne(pnc, "0011-650-513-3870");
 	}
 	catch (Exception x)
 	{
@@ -578,11 +569,11 @@ public class PhoneNumberContext
 	}
     }
 
-    private static void testOne(String phoneNumberStr)
+    private static void testOne(PhoneNumberContext pnc, String phoneNumberStr)
     {
-	PhoneNumber pn = _instance.parsePhoneNumber(phoneNumberStr);
+	PhoneNumber pn = pnc.parsePhoneNumber(phoneNumberStr);
 	System.out.println("'" + phoneNumberStr + "' -> '" + pn.toString() 
-            + "' -> '" + _instance.toDialString(pn) + "'");
+            + "' -> '" + pnc.toDialString(pn) + "'");
     }
 }
 
