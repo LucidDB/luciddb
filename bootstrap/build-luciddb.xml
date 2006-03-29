@@ -21,7 +21,6 @@
 	<!-- perforce synchronization target -->
 	<target name="sync" description="Synchronize the Luciddb project" unless="no-sync">
 		<p4sync view="${open_root}/luciddb/..." failonerror="true"/>
-		<p4sync view="//open/blackhawk/..." failonerror="true"/>
 	</target>
 
 	<!-- basic build targets -->
@@ -76,19 +75,6 @@
 			<arg value="./luciddb/"/>
 			<arg value="${integration.build.home}/"/>
 		</exec>
-
-                <!-- copy blackhawk -->
-		<delete dir="${integration.build.home}/blackhawk"/>
-		<mkdir dir="${integration.build.home}/blackhawk"/>
-
-		<!-- ant's copy task doesn't preserve permissions -->
-		<echo message="Copying ./blackhawk to ${integration.build.home}/"/>
-		<exec dir="${default.build.home}" executable="cp" failonerror="true">
-			<arg value="-pr"/>
-			<arg value="./blackhawk/"/>
-			<arg value="${integration.build.home}/"/>
-		</exec>
-
 	</target>
 
 	<target name="integration-farrago">
@@ -125,7 +111,6 @@
 
 	<target name="do-build">
 		<property name="build.home" location="${default.build.home}"/>
-		<ant dir="${build.home}/blackhawk" inheritAll="false"/>
 		<ant dir="${build.home}/luciddb" inheritAll="false"/>
 	</target>
 
