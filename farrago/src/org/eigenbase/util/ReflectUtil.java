@@ -268,9 +268,10 @@ public abstract class ReflectUtil
     /**
      * Looks up a visit method.
      *
-     * @param visitor object whose visit method is to be invoked
+     * @param visitorClass class of object whose visit method is to be invoked
      *
-     * @param visitee object to be passed as a parameter to the visit method
+     * @param visiteeClass class of object to be passed as a parameter to the
+     * visit method
      *
      * @param visitMethodName name of visit method
      *
@@ -281,11 +282,44 @@ public abstract class ReflectUtil
         Class visiteeClass,
         String visitMethodName)
     {
+        return lookupVisitMethod(
+            visitorClass, visiteeClass, visitMethodName,
+            Collections.EMPTY_LIST);
+    }
+    
+    /**
+     * Looks up a visit method taking additional parameters beyond
+     * the overloaded visitee type.
+     *
+     * @param visitorClass class of object whose visit method is to be invoked
+     *
+     * @param visiteeClass class of object to be passed as a parameter to the
+     * visit method
+     *
+     * @param visitMethodName name of visit method
+     *
+     * @param additionalParameterTypes list of additional parameter types
+     *
+     * @return method found, or null if none found
+     */
+    public static Method lookupVisitMethod(
+        Class visitorClass,
+        Class visiteeClass,
+        String visitMethodName,
+        List<Class> additionalParameterTypes)
+    {
         // TODO jvs 28-Nov-2004:  cache results in a dispatch map
+
+        Class [] paramTypes = new Class[1 + additionalParameterTypes.size()];
+        int iParam = 0;
+        paramTypes[iParam++] = visiteeClass;
+        for (Class paramType : additionalParameterTypes) {
+            paramTypes[iParam++] = paramType;
+        }
     
         try {
             return visitorClass.getMethod(
-                visitMethodName, new Class [] { visiteeClass });
+                visitMethodName, paramTypes);
         } catch (NoSuchMethodException ex) {
             // not found:  carry on with lookup
         }
@@ -295,13 +329,15 @@ public abstract class ReflectUtil
         Class superClass = visiteeClass.getSuperclass();
         if (superClass != null) {
             candidateMethod = lookupVisitMethod(
-                visitorClass, superClass, visitMethodName);
+                visitorClass, superClass, visitMethodName,
+                additionalParameterTypes);
         }
 
         Class [] interfaces = visiteeClass.getInterfaces();
         for (int i = 0; i < interfaces.length; ++i) {
             Method method = lookupVisitMethod(
-                visitorClass, interfaces[i], visitMethodName);
+                visitorClass, interfaces[i], visitMethodName,
+                additionalParameterTypes);
             if (method != null) {
                 if (candidateMethod != null) {
                     if (method != candidateMethod) {

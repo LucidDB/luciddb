@@ -47,7 +47,7 @@ public enum JoinRelType
      * Returns whether a join of this type may generate NULL values on the
      * left-hand side.
      */
-    boolean generatesNullsOnLeft()
+    public boolean generatesNullsOnLeft()
     {
         return this == RIGHT || this == FULL;
     }

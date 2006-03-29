@@ -24,7 +24,8 @@
 package org.eigenbase.relopt;
 
 import org.eigenbase.oj.rel.JavaRelImplementor;
-import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.trace.EigenbaseTrace;
 
 import java.util.logging.Logger;
@@ -35,7 +36,7 @@ import java.util.logging.Logger;
  * relational expression into a semantically equivalent relational
  * expression, according to a given set of rules and a cost model.
  */
-public interface RelOptPlanner
+public interface RelOptPlanner extends RelMetadataProvider
 {
     //~ Static fields/initializers --------------------------------------------
 

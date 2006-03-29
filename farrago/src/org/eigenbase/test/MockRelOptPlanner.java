@@ -23,6 +23,7 @@ package org.eigenbase.test;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.util.*;
 
@@ -246,6 +247,24 @@ public class MockRelOptPlanner implements RelOptPlanner
     {
     }
 
+    // implement RelMetadataProvider
+    public Object getRelMetadata(
+        RelNode rel,
+        String metadataQueryName,
+        Object [] args)
+    {
+        return null;
+    }
+
+    // implement RelMetadataProvider
+    public Object mergeRelMetadata(
+        String metadataQueryName,
+        Object md1,
+        Object md2)
+    {
+        return null;
+    }
+    
     private class MockRuleCall extends RelOptRuleCall
     {
         MockRuleCall(

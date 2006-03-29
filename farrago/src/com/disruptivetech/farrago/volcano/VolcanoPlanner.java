@@ -29,6 +29,7 @@ import java.util.logging.Level;
 import org.eigenbase.oj.rel.JavaRelImplementor;
 import org.eigenbase.oj.rex.OJRexImplementorTableImpl;
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.rel.convert.ConverterRel;
 import org.eigenbase.rel.convert.ConverterRule;
 import org.eigenbase.relopt.*;
@@ -1272,6 +1273,24 @@ loop:
         listener = newListener;
     }
 
+    // implement RelMetadataProvider
+    public Object getRelMetadata(
+        RelNode rel,
+        String metadataQueryName,
+        Object [] args)
+    {
+        // TODO jvs 28-Mar-2006:  caching inside of RelSet
+        return null;
+    }
+
+    // implement RelMetadataProvider
+    public Object mergeRelMetadata(
+        String metadataQueryName,
+        Object md1,
+        Object md2)
+    {
+        return null;
+    }
 
     //~ Inner Classes ---------------------------------------------------------
 
