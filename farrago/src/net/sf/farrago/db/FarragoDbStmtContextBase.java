@@ -270,6 +270,7 @@ public abstract class FarragoDbStmtContextBase
         
         FarragoSessionExecutingStmtInfo info =
             new FarragoDbSessionExecutingStmtInfo(
+                this,
                 executingStmtInfoKey,
                 sql,
                 Arrays.asList(dynamicParamValues),

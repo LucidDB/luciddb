@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.List;
 
 import net.sf.farrago.session.FarragoSessionExecutingStmtInfo;
+import net.sf.farrago.session.FarragoSessionStmtContext;
 
 
 /**
@@ -40,6 +41,7 @@ public class FarragoDbSessionExecutingStmtInfo
 {
     //~ Instance fields -------------------------------------------------------
 
+    private FarragoSessionStmtContext stmt;
     private long id;
     private String sql;
     private long startTime;
@@ -48,12 +50,14 @@ public class FarragoDbSessionExecutingStmtInfo
 
     //~ Constructors ----------------------------------------------------------
 
-    public FarragoDbSessionExecutingStmtInfo(
+    FarragoDbSessionExecutingStmtInfo(
+        FarragoSessionStmtContext stmt,
         long id,
         String sql,
         List<Object> parameters,
         List<String> objectsInUse)
     {
+        this.stmt = stmt;
         this.id = id;
         this.sql = sql;
         this.startTime = System.currentTimeMillis();
@@ -62,6 +66,13 @@ public class FarragoDbSessionExecutingStmtInfo
     }
 
     //~ Methods ---------------------------------------------------------------
+
+    // implement FarragoSessionExecutingStmtInfo
+    public FarragoSessionStmtContext getStmtContext()
+    {
+        return stmt;
+    }
+
 
     // implement FarragoSessionExecutingStmtInfo
     public long getId()
