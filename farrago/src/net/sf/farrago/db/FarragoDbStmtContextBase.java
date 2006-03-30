@@ -85,7 +85,7 @@ public abstract class FarragoDbStmtContextBase
 
     private FarragoDdlLockManager ddlLockManager;
 
-    private long executingStmtInfoKey;    
+    private FarragoSessionExecutingStmtInfo info = null;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -120,6 +120,12 @@ public abstract class FarragoDbStmtContextBase
     public FarragoSession getSession()
     {
         return session;
+    }
+
+    // implement FarragoSessionStmtContext
+    public FarragoSessionExecutingStmtInfo getExecutingStmtInfo()
+    {
+        return info;
     }
 
     // implement FarragoSessionStmtContext
@@ -266,16 +272,13 @@ public abstract class FarragoDbStmtContextBase
         FarragoSessionExecutableStmt executableStmt)
     {
         Set<String> objectsInUse = executableStmt.getReferencedObjectIds();
-        executingStmtInfoKey = session.getDatabase().getUniqueId();
-        
-        FarragoSessionExecutingStmtInfo info =
-            new FarragoDbSessionExecutingStmtInfo(
-                this,
-                executingStmtInfoKey,
-                sql,
-                Arrays.asList(dynamicParamValues),
-                Arrays.asList(
-                    objectsInUse.toArray(new String[objectsInUse.size()])));
+        info = new FarragoDbSessionExecutingStmtInfo(
+            this,
+            session.getDatabase(),
+            sql,
+            Arrays.asList(dynamicParamValues),
+            Arrays.asList(
+                objectsInUse.toArray(new String[objectsInUse.size()])));
         FarragoDbSessionInfo sessionInfo = 
             (FarragoDbSessionInfo) session.getSessionInfo();
         sessionInfo.addExecutingStmtInfo(info);
@@ -290,8 +293,11 @@ public abstract class FarragoDbStmtContextBase
      */
     protected void clearExecutingStmtInfo()
     {
-        getSessionInfo().removeExecutingStmtInfo(executingStmtInfoKey);
-        executingStmtInfoKey = 0;
+        if (info == null)
+            return;
+        long key = info.getId();
+        getSessionInfo().removeExecutingStmtInfo(key);
+        info = null;
     }
     
     /**

@@ -228,7 +228,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         
         personality = sessionFactory.newSessionPersonality(this, null);
         defaultPersonality = personality;
-        sessionInfo = new FarragoDbSessionInfo(this, database.getUniqueId());
+        sessionInfo = new FarragoDbSessionInfo(this, database);
     }
 
     //~ Methods ---------------------------------------------------------------

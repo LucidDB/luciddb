@@ -45,17 +45,19 @@ public class FarragoDbSessionInfo implements FarragoSessionInfo
 {
     //~ Instance fields -------------------------------------------------------
 
-    private FarragoSession session;
     private long id;
+    private FarragoSession session;
+    private FarragoDatabase database;
     private Map<Long, FarragoSessionExecutingStmtInfo> statements;
     // REVIEW mberkowitz 28-Mar-2006: maybe have 1 map id->info in FarragoDatabase.
 
     //~ Constructors ----------------------------------------------------------
 
-    public FarragoDbSessionInfo(FarragoSession session, long id)
+    FarragoDbSessionInfo(FarragoSession session, FarragoDatabase database)
     {
+        this.id = database.getUniqueId();
         this.session = session;
-        this.id = id;
+        this.database = database;
         statements = new ConcurrentHashMap<Long, FarragoSessionExecutingStmtInfo>();
     }
 
@@ -64,6 +66,11 @@ public class FarragoDbSessionInfo implements FarragoSessionInfo
     public FarragoSession getSession()
     {
         return session;
+    }
+
+    FarragoDatabase getDatabase()
+    {
+        return database;
     }
 
     public long getId()
