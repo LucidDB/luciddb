@@ -60,6 +60,9 @@ typedef JniProxyIter<ProxyCmdSavepoint> SharedProxyCmdSavepoint;
 class ProxyCmdTruncateIndex;
 typedef JniProxyIter<ProxyCmdTruncateIndex> SharedProxyCmdTruncateIndex;
 
+class ProxyCmdVerifyIndex;
+typedef JniProxyIter<ProxyCmdVerifyIndex> SharedProxyCmdVerifyIndex;
+
 class ProxyCollectTupleStreamDef;
 typedef JniProxyIter<ProxyCollectTupleStreamDef> SharedProxyCollectTupleStreamDef;
 
@@ -95,6 +98,9 @@ typedef JniProxyIter<ProxyGenericStreamDef> SharedProxyGenericStreamDef;
 
 class ProxyHandle;
 typedef JniProxyIter<ProxyHandle> SharedProxyHandle;
+
+class ProxyIndexAccessCmd;
+typedef JniProxyIter<ProxyIndexAccessCmd> SharedProxyIndexAccessCmd;
 
 class ProxyIndexAccessorDef;
 typedef JniProxyIter<ProxyIndexAccessorDef> SharedProxyIndexAccessorDef;
@@ -252,10 +258,10 @@ class ProxyExecutionStreamDef
 public:
 SharedProxyTupleDescriptor getOutputDesc();
 static jmethodID meth_getOutputDesc;
-SharedProxyExecStreamDataFlow getOutputFlow();
-static jmethodID meth_getOutputFlow;
 SharedProxyExecStreamDataFlow getInputFlow();
 static jmethodID meth_getInputFlow;
+SharedProxyExecStreamDataFlow getOutputFlow();
+static jmethodID meth_getOutputFlow;
 std::string getName();
 static jmethodID meth_getName;
 };
@@ -422,12 +428,18 @@ bool isInput();
 static jmethodID meth_isInput;
 };
 
-class ProxyCmdDropIndex
+class ProxyIndexAccessCmd
 : virtual public JniProxy, virtual public ProxyIndexCmd
 {
 public:
 int64_t getRootPageId();
 static jmethodID meth_getRootPageId;
+};
+
+class ProxyCmdDropIndex
+: virtual public JniProxy, virtual public ProxyIndexAccessCmd
+{
+public:
 };
 
 class ProxyCmdOpenDatabase
@@ -466,6 +478,12 @@ static jmethodID meth_getResultHandle;
 
 class ProxyCmdTruncateIndex
 : virtual public JniProxy, virtual public ProxyCmdDropIndex
+{
+public:
+};
+
+class ProxyCmdVerifyIndex
+: virtual public JniProxy, virtual public ProxyIndexAccessCmd
 {
 public:
 };
@@ -1016,6 +1034,8 @@ virtual void visit(ProxyCmdSavepoint &)
 { unhandledVisit(); }
 virtual void visit(ProxyCmdTruncateIndex &)
 { unhandledVisit(); }
+virtual void visit(ProxyCmdVerifyIndex &)
+{ unhandledVisit(); }
 virtual void visit(ProxyCollectTupleStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyCorrelation &)
@@ -1039,6 +1059,8 @@ virtual void visit(ProxyFlatFileTupleStreamDef &)
 virtual void visit(ProxyGenericStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyHandle &)
+{ unhandledVisit(); }
+virtual void visit(ProxyIndexAccessCmd &)
 { unhandledVisit(); }
 virtual void visit(ProxyIndexAccessorDef &)
 { unhandledVisit(); }

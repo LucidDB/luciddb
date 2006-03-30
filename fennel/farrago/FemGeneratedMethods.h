@@ -20,7 +20,6 @@ jmethodID ProxyCmdCreateExecutionStreamGraph::meth_getResultHandle = 0;
 jmethodID ProxyCmdCreateStreamHandle::meth_getResultHandle = 0;
 jmethodID ProxyCmdCreateStreamHandle::meth_getStreamName = 0;
 jmethodID ProxyCmdCreateStreamHandle::meth_isInput = 0;
-jmethodID ProxyCmdDropIndex::meth_getRootPageId = 0;
 jmethodID ProxyCmdOpenDatabase::meth_getResultHandle = 0;
 jmethodID ProxyCmdOpenDatabase::meth_isCreateDatabase = 0;
 jmethodID ProxyCmdOpenDatabase::meth_getParams = 0;
@@ -36,8 +35,8 @@ jmethodID ProxyEndTxnCmd::meth_getSvptHandle = 0;
 jmethodID ProxyExecStreamDataFlow::meth_getProducer = 0;
 jmethodID ProxyExecStreamDataFlow::meth_getConsumer = 0;
 jmethodID ProxyExecutionStreamDef::meth_getOutputDesc = 0;
-jmethodID ProxyExecutionStreamDef::meth_getOutputFlow = 0;
 jmethodID ProxyExecutionStreamDef::meth_getInputFlow = 0;
+jmethodID ProxyExecutionStreamDef::meth_getOutputFlow = 0;
 jmethodID ProxyExecutionStreamDef::meth_getName = 0;
 jmethodID ProxyFlatFileTupleStreamDef::meth_getDataFilePath = 0;
 jmethodID ProxyFlatFileTupleStreamDef::meth_getErrorFilePath = 0;
@@ -54,6 +53,7 @@ jmethodID ProxyFlatFileTupleStreamDef::meth_getSubstituteCharacter = 0;
 jmethodID ProxyGenericStreamDef::meth_getType = 0;
 jmethodID ProxyGenericStreamDef::meth_getContent = 0;
 jmethodID ProxyHandle::meth_getLongHandle = 0;
+jmethodID ProxyIndexAccessCmd::meth_getRootPageId = 0;
 jmethodID ProxyIndexAccessorDef::meth_getRootPageId = 0;
 jmethodID ProxyIndexAccessorDef::meth_getSegmentId = 0;
 jmethodID ProxyIndexAccessorDef::meth_getIndexId = 0;
@@ -202,7 +202,6 @@ ProxyCmdCreateStreamHandle::meth_isInput = pEnv->GetMethodID(jClass,"isInput","(
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdDropIndex");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmdDropIndex>));
-ProxyCmdDropIndex::meth_getRootPageId = pEnv->GetMethodID(jClass,"getRootPageId","()J");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdOpenDatabase");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmdOpenDatabase>));
@@ -223,6 +222,9 @@ ProxyCmdSavepoint::meth_getResultHandle = pEnv->GetMethodID(jClass,"getResultHan
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdTruncateIndex");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmdTruncateIndex>));
+
+jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdVerifyIndex");
+visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmdVerifyIndex>));
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCollectTupleStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCollectTupleStreamDef>));
@@ -260,8 +262,8 @@ ProxyExecStreamDataFlow::meth_getConsumer = pEnv->GetMethodID(jClass,"getConsume
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemExecutionStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyExecutionStreamDef>));
 ProxyExecutionStreamDef::meth_getOutputDesc = pEnv->GetMethodID(jClass,"getOutputDesc","()Lnet/sf/farrago/fem/fennel/FemTupleDescriptor;");
-ProxyExecutionStreamDef::meth_getOutputFlow = pEnv->GetMethodID(jClass,"getOutputFlow","()Ljava/util/List;");
 ProxyExecutionStreamDef::meth_getInputFlow = pEnv->GetMethodID(jClass,"getInputFlow","()Ljava/util/List;");
+ProxyExecutionStreamDef::meth_getOutputFlow = pEnv->GetMethodID(jClass,"getOutputFlow","()Ljava/util/List;");
 ProxyExecutionStreamDef::meth_getName = pEnv->GetMethodID(jClass,"getName","()Ljava/lang/String;");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemFlatFileTupleStreamDef");
@@ -287,6 +289,10 @@ ProxyGenericStreamDef::meth_getContent = pEnv->GetMethodID(jClass,"getContent","
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemHandle");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyHandle>));
 ProxyHandle::meth_getLongHandle = pEnv->GetMethodID(jClass,"getLongHandle","()J");
+
+jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemIndexAccessCmd");
+visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyIndexAccessCmd>));
+ProxyIndexAccessCmd::meth_getRootPageId = pEnv->GetMethodID(jClass,"getRootPageId","()J");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemIndexAccessorDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyIndexAccessorDef>));
@@ -623,11 +629,6 @@ bool ProxyCmdCreateStreamHandle::isInput()
 return pEnv->CallBooleanMethod(jObject,meth_isInput);
 }
 
-int64_t ProxyCmdDropIndex::getRootPageId()
-{
-return pEnv->CallLongMethod(jObject,meth_getRootPageId);
-}
-
 SharedProxyDbHandle ProxyCmdOpenDatabase::getResultHandle()
 {
 SharedProxyDbHandle p;
@@ -746,21 +747,21 @@ if (!p->jObject) p.reset();
 return p;
 }
 
-SharedProxyExecStreamDataFlow ProxyExecutionStreamDef::getOutputFlow()
-{
-SharedProxyExecStreamDataFlow p;
-p->pEnv = pEnv;
-p->jObject = pEnv->CallObjectMethod(jObject,meth_getOutputFlow);
-p.jIter = JniUtil::getIter(p->pEnv,p->jObject);
-++p;
-return p;
-}
-
 SharedProxyExecStreamDataFlow ProxyExecutionStreamDef::getInputFlow()
 {
 SharedProxyExecStreamDataFlow p;
 p->pEnv = pEnv;
 p->jObject = pEnv->CallObjectMethod(jObject,meth_getInputFlow);
+p.jIter = JniUtil::getIter(p->pEnv,p->jObject);
+++p;
+return p;
+}
+
+SharedProxyExecStreamDataFlow ProxyExecutionStreamDef::getOutputFlow()
+{
+SharedProxyExecStreamDataFlow p;
+p->pEnv = pEnv;
+p->jObject = pEnv->CallObjectMethod(jObject,meth_getOutputFlow);
 p.jIter = JniUtil::getIter(p->pEnv,p->jObject);
 ++p;
 return p;
@@ -844,6 +845,11 @@ return constructString(pEnv->CallObjectMethod(jObject,meth_getContent));
 int64_t ProxyHandle::getLongHandle()
 {
 return pEnv->CallLongMethod(jObject,meth_getLongHandle);
+}
+
+int64_t ProxyIndexAccessCmd::getRootPageId()
+{
+return pEnv->CallLongMethod(jObject,meth_getRootPageId);
 }
 
 int64_t ProxyIndexAccessorDef::getRootPageId()
