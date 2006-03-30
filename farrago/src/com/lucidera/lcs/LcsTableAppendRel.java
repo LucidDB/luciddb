@@ -30,6 +30,7 @@ import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 
 
@@ -83,7 +84,7 @@ extends MedAbstractFennelTableModRel
     // implement RelNode
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {        
-        double dInputRows = getChild().getRows();
+        double dInputRows = RelMetadataQuery.getRowCount(getChild());
         
         // TODO:  compute page-based I/O cost
         // CPU cost is proportional to number of columns projected

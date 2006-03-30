@@ -84,6 +84,11 @@ class RelSet
     Set variablesUsed;
     int id;
 
+    /**
+     * Reentrancy flag.
+     */
+    boolean inMetadataQuery;
+
     //~ Constructors ----------------------------------------------------------
 
     RelSet()
@@ -112,11 +117,6 @@ class RelSet
      */
     public ArrayList getRelsFromAllSubsets()
     {
-        ArrayList rels = new ArrayList();
-        for (int i = 0; i < subsets.size(); i++) {
-            RelSubset subset = (RelSubset) subsets.get(i);
-            rels.addAll(subset.rels);
-        }
         return rels;
     }
 

@@ -24,6 +24,7 @@ import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
 
@@ -86,7 +87,7 @@ class LcsIndexIntersectRel extends FennelMultipleRel
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         // TODO: getRows() returns only 1 row.
-        double dRows = getRows();
+        double dRows = RelMetadataQuery.getRowCount(this);
         
         // TODO:  compute page-based I/O cost
         // CPU cost is proportional to number of columns projected

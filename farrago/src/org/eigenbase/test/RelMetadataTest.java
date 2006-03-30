@@ -54,6 +54,14 @@ public class RelMetadataTest extends SqlToRelTestBase
     // Tests for getPercentageOriginalRows
     // ----------------------------------------------------------------------
 
+    private RelNode convertSql(String sql)
+    {
+        RelNode rel = tester.convertSqlToRel(sql);
+        DefaultRelMetadataProvider provider = new DefaultRelMetadataProvider();
+        rel.getCluster().setMetadataProvider(provider);
+        return rel;
+    }
+    
     private void checkPercentageOriginalRows(String sql, double expected)
     {
         checkPercentageOriginalRows(sql, expected, EPSILON);
@@ -62,9 +70,7 @@ public class RelMetadataTest extends SqlToRelTestBase
     private void checkPercentageOriginalRows(
         String sql, double expected, double epsilon)
     {
-        RelNode rel = tester.convertSqlToRel(sql);
-        DefaultRelMetadataProvider provider = new DefaultRelMetadataProvider();
-        rel.getCluster().setMetadataProvider(provider);
+        RelNode rel = convertSql(sql);
         Double result = RelMetadataQuery.getPercentageOriginalRows(rel);
         assertTrue(result != null);
         assertEquals(expected, result.doubleValue(), epsilon);
@@ -156,9 +162,7 @@ public class RelMetadataTest extends SqlToRelTestBase
 
     private Set<RelColumnOrigin> checkColumnOrigin(String sql)
     {
-        RelNode rel = tester.convertSqlToRel(sql);
-        DefaultRelMetadataProvider provider = new DefaultRelMetadataProvider();
-        rel.getCluster().setMetadataProvider(provider);
+        RelNode rel = convertSql(sql);
         return RelMetadataQuery.getColumnOrigins(rel, 0);
     }
     
@@ -169,7 +173,7 @@ public class RelMetadataTest extends SqlToRelTestBase
         assertTrue(result.isEmpty());
     }
 
-    private void checkColumnOrigin(
+    public static void checkColumnOrigin(
         RelColumnOrigin rco,
         String expectedTableName,
         String expectedColumnName,
@@ -369,6 +373,58 @@ public class RelMetadataTest extends SqlToRelTestBase
             "EMP",
             "ENAME",
             false);
+    }
+
+    private void checkRowCount(
+        String sql,
+        double expected)
+    {
+        RelNode rel = convertSql(sql);
+        Double result = RelMetadataQuery.getRowCount(rel);
+        assertTrue(result != null);
+        assertEquals(expected, result.doubleValue());
+    }
+
+    public void testRowCountEmp()
+    {
+        checkRowCount(
+            "select * from emp",
+            EMP_SIZE);
+    }
+
+    public void testRowCountDept()
+    {
+        checkRowCount(
+            "select * from dept",
+            DEPT_SIZE);
+    }
+
+    public void testRowCountCartesian()
+    {
+        checkRowCount(
+            "select * from emp,dept",
+            EMP_SIZE * DEPT_SIZE);
+    }
+
+    public void testRowCountJoin()
+    {
+        checkRowCount(
+            "select * from emp inner join dept on emp.deptno = dept.deptno",
+            EMP_SIZE * DEPT_SIZE * DEFAULT_SELECTIVITY);
+    }
+
+    public void testRowCountUnion()
+    {
+        checkRowCount(
+            "select ename from emp union all select name from dept",
+            EMP_SIZE + DEPT_SIZE);
+    }
+
+    public void testRowCountFilter()
+    {
+        checkRowCount(
+            "select * from emp where ename='Mathilda'",
+            EMP_SIZE * DEFAULT_SELECTIVITY);
     }
 }
 

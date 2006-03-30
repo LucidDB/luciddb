@@ -30,6 +30,7 @@ import org.eigenbase.rel.AbstractRelNode;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.RelVisitor;
 import org.eigenbase.rel.convert.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.trace.EigenbaseTrace;
@@ -133,7 +134,7 @@ public class RelSubset extends AbstractRelNode
         if (best == null) {
             return VolcanoCost.INFINITY.getRows();
         } else {
-            return best.getRows();
+            return RelMetadataQuery.getRowCount(best);
         }
     }
 

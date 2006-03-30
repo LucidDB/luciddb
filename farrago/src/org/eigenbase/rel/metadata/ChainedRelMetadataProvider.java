@@ -45,31 +45,20 @@ public class ChainedRelMetadataProvider implements RelMetadataProvider
     }
 
     /**
-     * Adds a provider.  Chain order matters, since the first provider which
-     * answers a query is used.
+     * Adds a provider, giving it higher priority than all those already in
+     * chain.  Chain order matters, since the first provider which answers a
+     * query is used.
      *
      * @param provider provider to add
      *
      * @param metadataQueryNames set of metadata query names
      * this provider knows how to answer; if null,
      * provider will be tried for all queries
-     *
-     * @param atEnd true to add at end of chain; false to
-     * add at beginning of chain
      */
     public void addProvider(
-        RelMetadataProvider provider,
-        Set<String> metadataQueryNames,
-        boolean atEnd)
+        RelMetadataProvider provider)
     {
-        if (atEnd) {
-            providers.add(provider);
-        } else {
-            providers.add(0, provider);
-        }
-
-        // TODO jvs 29-Mar-2006:  remember metadataQueryNames
-        // and use it for filtering during invocation
+        providers.add(0, provider);
     }
 
     // implement RelMetadataProvider
@@ -81,22 +70,6 @@ public class ChainedRelMetadataProvider implements RelMetadataProvider
         for (RelMetadataProvider provider : providers) {
             Object result = provider.getRelMetadata(
                 rel, metadataQueryName, args);
-            if (result != null) {
-                return result;
-            }
-        }
-        return null;
-    }
-    
-    // implement RelMetadataProvider
-    public Object mergeRelMetadata(
-        String metadataQueryName,
-        Object md1,
-        Object md2)
-    {
-        for (RelMetadataProvider provider : providers) {
-            Object result = provider.mergeRelMetadata(
-                metadataQueryName, md1, md2);
             if (result != null) {
                 return result;
             }

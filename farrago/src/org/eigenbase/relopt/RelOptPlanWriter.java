@@ -28,6 +28,7 @@ import java.util.HashSet;
 import org.eigenbase.sql.*;
 import org.eigenbase.rel.AbstractRelNode;
 import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.util.Util;
 
@@ -116,8 +117,9 @@ public class RelOptPlanWriter extends java.io.PrintWriter
             }
         }
         if (detailLevel == SqlExplainLevel.ALL_ATTRIBUTES) {
-            print(": cost = ");
-            print(rel.computeSelfCost(rel.getCluster().getPlanner()));
+            print(": rowcount = " + RelMetadataQuery.getRowCount(rel));
+            print(", cumulative cost = ");
+            print(RelMetadataQuery.getNonCumulativeCost(rel));
         }
         println("");
         level++;

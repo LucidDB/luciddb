@@ -34,6 +34,7 @@ import org.eigenbase.relopt.RelOptQuery;
 import org.eigenbase.relopt.RelOptTable;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.rex.RexNode;
 
 
@@ -171,6 +172,12 @@ public interface RelNode
     /**
      * Returns an estimate of the number of rows this relational expression
      * will return.
+     *
+     *<p>
+     *
+     * NOTE jvs 29-Mar-2006: Don't call this method directly.  Instead, use
+     * {@link RelMetadataQuery#getRowCount}, which gives plugins a chance to
+     * override the rel's default ideas about row count.
      */
     public double getRows();
 
@@ -215,6 +222,13 @@ public interface RelNode
     /**
      * Returns the cost of this plan (not including children). The base
      * implementation throws an error; derived classes should override.
+     *
+     *<p>
+     *
+     * NOTE jvs 29-Mar-2006:  Don't call this method directly.
+     * Instead, use {@link RelMetadataQuery#getNonCumulativeCost},
+     * which gives plugins a chance to override the rel's default ideas
+     * about cost.
      */
     public RelOptCost computeSelfCost(RelOptPlanner planner);
 

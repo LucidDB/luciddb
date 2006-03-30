@@ -31,6 +31,7 @@ import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.RexNode;
@@ -103,7 +104,7 @@ class FtrsIndexSearchRel extends FennelSingleRel
     public double getRows()
     {
         // TODO:  this is only true when isUniqueKey
-        return getChild().getRows();
+        return RelMetadataQuery.getRowCount(getChild());
     }
 
     // implement Cloneable
@@ -127,7 +128,7 @@ class FtrsIndexSearchRel extends FennelSingleRel
         // TODO:  refined costing
         return scanRel.computeCost(
             planner,
-            getRows());
+            RelMetadataQuery.getRowCount(this));
     }
 
     // implement RelNode

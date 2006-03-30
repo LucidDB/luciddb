@@ -83,8 +83,11 @@ public class RelOptCluster
         this.rexBuilder = rexBuilder;
         this.originalExpression = rexBuilder.makeLiteral("?");
 
-        // By default, use the planner as a metadata provider.
-        metadataProvider = planner;
+        // set up a default rel metadata provider,
+        // giving the planner first crack at everything
+        DefaultRelMetadataProvider defaultMetadataProvider =
+            new DefaultRelMetadataProvider();
+        metadataProvider = defaultMetadataProvider;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -134,6 +137,12 @@ public class RelOptCluster
         return metadataProvider;
     }
 
+    /**
+     * Overrides the default metadata provider for this
+     * cluster.
+     *
+     * @param metadataProvider custom provider
+     */
     public void setMetadataProvider(RelMetadataProvider metadataProvider)
     {
         this.metadataProvider = metadataProvider;

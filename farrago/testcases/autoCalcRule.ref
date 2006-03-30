@@ -137,17 +137,18 @@
 +-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farragotest:> 
 0: jdbc:farragotest:> explain plan for select jplus(cplus(deptno, 1), 2), cplus(jplus(deptno, 1), 2) from sales.emps where slacker;
-+---------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                            column0                                                                            |
-+---------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| IterCalcRel(expr#0..2=[{inputs}], expr#3=[JPLUS($t0, $t1)], EXPR$0=[$t3], EXPR$1=[$t2])                                                                       |
-|   FennelToIteratorConverter                                                                                                                                   |
-|     FennelCalcRel(expr#0..3=[{inputs}], expr#4=[CPLUS($t0, $t1)], expr#5=[CPLUS($t3, $t2)], $0=[$t4], $1=[$t2], $2=[$t5])                                     |
-|       IteratorToFennelConverter                                                                                                                               |
-|         IterCalcRel(expr#0..9=[{inputs}], expr#10=[1], expr#11=[2], expr#12=[JPLUS($t2, $t10)], $0=[$t2], $1=[$t10], $2=[$t11], $3=[$t12], $condition=[$t8])  |
-|           FennelToIteratorConverter                                                                                                                           |
-|             FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])        |
-+---------------------------------------------------------------------------------------------------------------------------------------------------------------+
++-----------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                          column0                                                                          |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(expr#0..2=[{inputs}], expr#3=[JPLUS($t0, $t1)], EXPR$0=[$t3], EXPR$1=[$t2])                                                                   |
+|   FennelToIteratorConverter                                                                                                                               |
+|     FennelCalcRel(expr#0..3=[{inputs}], expr#4=[CPLUS($t0, $t1)], expr#5=[CPLUS($t3, $t2)], $0=[$t4], $1=[$t2], $2=[$t5])                                 |
+|       IteratorToFennelConverter                                                                                                                           |
+|         IterCalcRel(expr#0..9=[{inputs}], expr#10=[1], expr#11=[2], expr#12=[JPLUS($t2, $t10)], $0=[$t2], $1=[$t10], $2=[$t11], $3=[$t12])                |
+|           FennelToIteratorConverter                                                                                                                       |
+|             FennelCalcRel(expr#0..9=[{inputs}], proj#0..9=[{exprs}], $condition=[$t8])                                                                    |
+|               FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])  |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farragotest:> 
 0: jdbc:farragotest:> -- Test top-most level can be implemented in any calc and last
 0: jdbc:farragotest:> -- expression isn't a RexCall.  dtbug 210

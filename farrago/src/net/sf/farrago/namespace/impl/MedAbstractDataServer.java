@@ -30,6 +30,7 @@ import javax.sql.*;
 import net.sf.farrago.namespace.*;
 
 import org.eigenbase.relopt.*;
+import org.eigenbase.rel.metadata.*;
 
 
 /**
@@ -95,6 +96,11 @@ public abstract class MedAbstractDataServer extends MedAbstractBase
     {
     }
 
+    // implement FarragoMedDataServer
+    public void registerRelMetadataProviders(ChainedRelMetadataProvider chain)
+    {
+    }
+    
     // implement FarragoAllocation
     public void closeAllocation()
     {

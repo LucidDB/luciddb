@@ -24,11 +24,10 @@ package org.eigenbase.rel.metadata;
 import org.eigenbase.rel.*;
 
 /**
- * RelMetadataProvider defines an interface for obtaining and
- * combining metadata about relational expressions.  This interface
- * is weakly-typed and is not intended to be called directly in
- * most contexts; instead, use a strongly-typed facade such
- * as {@link RelMetadataQuery}.
+ * RelMetadataProvider defines an interface for obtaining metadata about
+ * relational expressions.  This interface is weakly-typed and is not intended
+ * to be called directly in most contexts; instead, use a strongly-typed facade
+ * such as {@link RelMetadataQuery}.
  *
  *<p>
  *
@@ -51,29 +50,15 @@ public interface RelMetadataProvider
      * depend on query name; must have well-defined hashCode/equals for use by
      * caching); null can be used instead of empty array
      *
-     * @return metadata result (actual type depends on query name)
+     * @return metadata result (actual type depends on query name),
+     * or null if the provider cannot answer the given query/rel
+     * combination; it is better to return null than to
+     * return a possibly incorrect answer
      */
     public Object getRelMetadata(
         RelNode rel,
         String metadataQueryName,
         Object [] args);
-
-    /**
-     * Combines two results from the same metadata query on different
-     * expressions.
-     *
-     * @param metadataQueryName name of query which produced md1 and md2
-     *
-     * @param md1 metadata result obtained via getRelMetadata
-     *
-     * @param md2 another metadata result compatible with md1
-     *
-     * @return result of combining md1 with md2
-     */
-    public Object mergeRelMetadata(
-        String metadataQueryName,
-        Object md1,
-        Object md2);
 }
 
 // End RelMetadataProvider.java

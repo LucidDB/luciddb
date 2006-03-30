@@ -35,7 +35,7 @@ import java.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class RelMdPercentageOriginalRows extends ReflectiveRelMetadataProvider
+public class RelMdPercentageOriginalRows extends ReflectiveRelMetadataProvider
 {
     public Double getPercentageOriginalRows(AggregateRelBase rel)
     {
@@ -63,7 +63,7 @@ class RelMdPercentageOriginalRows extends ReflectiveRelMetadataProvider
         // case where a huge table has been completely filtered away.
         
         for (RelNode input : rel.getInputs()) {
-            double rowCount = input.getRows();
+            double rowCount = RelMetadataQuery.getRowCount(input);
             double percentage =
                 RelMetadataQuery.getPercentageOriginalRows(input);
             if (percentage != 0.0) {
@@ -116,9 +116,22 @@ class RelMdPercentageOriginalRows extends ReflectiveRelMetadataProvider
         // filtering is the effect of single-table filters) with the percentage
         // filtering performed by the child.
         double relPercentage = quotientForPercentage(
-            rel.getRows(),
-            child.getRows());
+            RelMetadataQuery.getRowCount(rel),
+            RelMetadataQuery.getRowCount(child));
         return relPercentage * childPercentage;
+    }
+
+    // Catch-all for getRowCount, which is lonely so it doesn't want to live in
+    // a class all by itself.
+    public Double getRowCount(RelNode rel)
+    {
+        return rel.getRows();
+    }
+
+    // Ditto for getNonCumulativeCost
+    public RelOptCost getNonCumulativeCost(RelNode rel)
+    {
+        return rel.computeSelfCost(rel.getCluster().getPlanner());
     }
 
     private static double quotientForPercentage(

@@ -24,6 +24,7 @@ package net.sf.farrago.test;
 
 import net.sf.farrago.session.*;
 import net.sf.farrago.resource.*;
+import net.sf.farrago.type.*;
 import net.sf.farrago.db.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.cwm.relational.*;
@@ -35,6 +36,8 @@ import java.util.*;
 import junit.framework.*;
 
 import org.eigenbase.relopt.*;
+import org.eigenbase.rel.metadata.*;
+import org.eigenbase.test.*;
 
 /**
  * FarragoQueryTest tests miscellaneous aspects of Farrago query
@@ -310,6 +313,46 @@ public class FarragoQueryTest extends FarragoTestCase
             resultSet.close();
             resultSet = null;
         }
+    }
+
+    /**
+     * Tests relational expression metadata derivation via
+     * FarragoSession.analyzeSql.
+     */
+    public void testRelMetadata()
+    {
+        String sql =
+            "select deptno, max(name) from sales.depts"
+            + " where name like '%E%G' group by deptno";
+        FarragoJdbcEngineConnection farragoConnection =
+            (FarragoJdbcEngineConnection) connection;
+        FarragoSession session = farragoConnection.getSession();
+        FarragoSessionAnalyzedSql analyzedSql =
+            session.analyzeSql(
+                sql,
+                new FarragoTypeFactoryImpl(session.getRepos()),
+                null,
+                true);
+        
+        Set<RelColumnOrigin> rcoSet = analyzedSql.columnOrigins.get(0);
+        assertEquals(1, rcoSet.size());
+        RelMetadataTest.checkColumnOrigin(
+            rcoSet.iterator().next(),
+            "DEPTS",
+            "DEPTNO",
+            false);
+        
+        rcoSet = analyzedSql.columnOrigins.get(1);
+        assertEquals(1, rcoSet.size());
+        RelMetadataTest.checkColumnOrigin(
+            rcoSet.iterator().next(),
+            "DEPTS",
+            "NAME",
+            true);
+
+        // By default, tables without stats are assumed to have
+        // 100 rows, and default selectivity assumption is 10%.
+        assertEquals(10.0, analyzedSql.rowCount);
     }
 
     /**

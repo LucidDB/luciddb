@@ -36,6 +36,7 @@ import net.sf.farrago.util.*;
 import openjava.ptree.Literal;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 
@@ -128,7 +129,7 @@ public class LcsRowScanRel extends FennelMultipleRel
     // implement RelNode
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
-        return computeCost(planner, getRows());
+        return computeCost(planner, RelMetadataQuery.getRowCount(this));
     }
 
     // overwrite SingleRel
@@ -139,7 +140,7 @@ public class LcsRowScanRel extends FennelMultipleRel
             return lcsTable.getRowCount();
         } else {
             // table scan from an input RID stream.
-            return inputs[0].getRows();
+            return RelMetadataQuery.getRowCount(inputs[0]);
         }
     }
 

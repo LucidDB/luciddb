@@ -247,22 +247,9 @@ public class MockRelOptPlanner implements RelOptPlanner
     {
     }
 
-    // implement RelMetadataProvider
-    public Object getRelMetadata(
-        RelNode rel,
-        String metadataQueryName,
-        Object [] args)
+    // implement RelOptPlanner
+    public void registerMetadataProviders(ChainedRelMetadataProvider chain)
     {
-        return null;
-    }
-
-    // implement RelMetadataProvider
-    public Object mergeRelMetadata(
-        String metadataQueryName,
-        Object md1,
-        Object md2)
-    {
-        return null;
     }
     
     private class MockRuleCall extends RelOptRuleCall

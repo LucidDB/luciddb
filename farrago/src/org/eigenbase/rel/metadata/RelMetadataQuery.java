@@ -22,6 +22,7 @@
 package org.eigenbase.rel.metadata;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
 
 import java.util.*;
@@ -45,10 +46,10 @@ import java.util.*;
  *
  * <li>Write a new provider class <code>RelMdXyz</code> in this package.
  * Follow the pattern from an existing class such as {@link
- * RelMdColumnOrigins}, *overloading on all of the logical relational
- * expressions to which the query *applies.  If your new metadata query takes
- * parameters, be sure to register *them in the constructor via a call to
- * {@link *ReflectiveRelMetadataProvider#mapParameterTypes}.
+ * RelMdColumnOrigins}, overloading on all of the logical relational
+ * expressions to which the query applies.  If your new metadata query takes
+ * parameters, be sure to register them in the constructor via a call to
+ * {@link ReflectiveRelMetadataProvider#mapParameterTypes}.
  *
  * <li>Register your provider class in {@link DefaultRelMetadataProvider}.
  *
@@ -78,6 +79,47 @@ import java.util.*;
  */
 public abstract class RelMetadataQuery
 {
+    /**
+     * Estimates the number of rows which will be returned by a relational
+     * expression.  The default implementation for this query asks the rel
+     * itself via {@link RelNode#getRows}, but metadata providers can override
+     * this with their own cost models.
+     *
+     * @param rel the relational expression
+     *
+     * @return estimated row count, or null if no reliable estimate can be
+     * determined
+     */
+    public static Double getRowCount(RelNode rel)
+    {
+        Double result = 
+            (Double) rel.getCluster().getMetadataProvider().getRelMetadata(
+                rel, "getRowCount", null);
+        assert(assertNonNegative(result));
+        return result;
+    }
+
+    /**
+     * Estimates the cost of executing a relational expression, not counting
+     * the cost of its inputs.  (However, the non-cumulative cost is still
+     * usually dependent on the row counts of the inputs.) The default
+     * implementation for this query asks the rel itself via {@link
+     * RelNode#computeSelfCost}, but metadata providers can override this with
+     * their own cost models.
+     *
+     * @param rel the relational expression
+     *
+     * @return estimated cost, or null if no reliable estimate can be
+     * determined
+     */
+    public static RelOptCost getNonCumulativeCost(RelNode rel)
+    {
+        RelOptCost result = 
+            (RelOptCost) rel.getCluster().getMetadataProvider().getRelMetadata(
+                rel, "getNonCumulativeCost", null);
+        return result;
+    }
+    
     /**
      * Estimates the percentage of the number of rows actually produced by an
      * expression out of the number of rows it would produce if all
@@ -154,6 +196,16 @@ public abstract class RelMetadataQuery
         double d = result.doubleValue();
         assert(d >= 0.0);
         assert(d <= 1.0);
+        return true;
+    }
+
+    private static boolean assertNonNegative(Double result)
+    {
+        if (result == null) {
+            return true;
+        }
+        double d = result.doubleValue();
+        assert(d >= 0.0);
         return true;
     }
 }

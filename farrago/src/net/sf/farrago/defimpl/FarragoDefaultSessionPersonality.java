@@ -31,6 +31,7 @@ import org.eigenbase.oj.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.fun.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.resgen.*;
 import org.eigenbase.resource.*;
 
@@ -342,6 +343,13 @@ public class FarragoDefaultSessionPersonality
         
         // By default, support everything except the above.
         return true;
+    }
+
+    // implement FarragoSessionPersonality
+    public void registerRelMetadataProviders(ChainedRelMetadataProvider chain)
+    {
+        // TODO jvs 29-Mar-2006:  add providers for
+        // Farrago-specific rels
     }
 }
 

@@ -340,7 +340,7 @@ public abstract class ReflectUtil
                 additionalParameterTypes);
             if (method != null) {
                 if (candidateMethod != null) {
-                    if (method != candidateMethod) {
+                    if (!method.equals(candidateMethod)) {
                         throw new IllegalArgumentException(
                             "dispatch ambiguity between "
                             + candidateMethod

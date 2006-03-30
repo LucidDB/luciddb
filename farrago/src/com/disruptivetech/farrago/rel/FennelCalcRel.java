@@ -27,6 +27,7 @@ import net.sf.farrago.query.*;
 import net.sf.farrago.fem.fennel.*;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.rex.*;
@@ -129,7 +130,8 @@ public class FennelCalcRel extends FennelSingleRel
         // currently more reliable)
         int exprCount = program.getExprCount();
         return planner.makeCost(
-            getRows(), getChild().getRows() * exprCount * 2, 0);
+            RelMetadataQuery.getRowCount(this),
+            RelMetadataQuery.getRowCount(getChild()) * exprCount * 2, 0);
     }
 
     public boolean isDistinct()

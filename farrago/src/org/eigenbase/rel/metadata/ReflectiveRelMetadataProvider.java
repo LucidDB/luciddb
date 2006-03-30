@@ -108,15 +108,6 @@ public abstract class ReflectiveRelMetadataProvider
             }
         }
     }
-
-    // implement RelMetadataProvider
-    public Object mergeRelMetadata(
-        String metadataQueryName,
-        Object md1,
-        Object md2)
-    {
-        return null;
-    }
 }
 
 // End ReflectiveRelMetadataProvider.java

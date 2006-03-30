@@ -25,6 +25,7 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 
@@ -58,7 +59,8 @@ class FennelMergeRel extends FennelMultipleRel
     // implement RelNode
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
-        return planner.makeCost(getRows(), 0.0, 0.0);
+        return planner.makeCost(
+            RelMetadataQuery.getRowCount(this), 0.0, 0.0);
     }
     
     // implement RelNode

@@ -588,7 +588,7 @@ public class VolcanoPlanner implements RelOptPlanner
         if (rel.getTraits().getTrait(0) == CallingConvention.NONE) {
             return makeInfiniteCost();
         }
-        RelOptCost cost = rel.computeSelfCost(this);
+        RelOptCost cost = RelMetadataQuery.getNonCumulativeCost(rel);
         if (!VolcanoCost.ZERO.isLt(cost)) {
             // cost must be positive, so nudge it
             cost = makeTinyCost();
@@ -766,8 +766,8 @@ public class VolcanoPlanner implements RelOptPlanner
                             assert (inputSet.subsets.contains(inputSubset));
                         }
                     }
-                    pw.print(", non-cumulative rows=" + rel.getRows());
-                    pw.println(", cost=" + getCost(rel));
+                    pw.print(", rowcount=" + RelMetadataQuery.getRowCount(rel));
+                    pw.println(", cumulative cost=" + getCost(rel));
                 }
             }
         }
@@ -1027,7 +1027,7 @@ public class VolcanoPlanner implements RelOptPlanner
 loop:
         while (true) {
             // First, try to do the node itself.
-            RelOptCost nodeCost = rel.computeSelfCost(this);
+            RelOptCost nodeCost = RelMetadataQuery.getNonCumulativeCost(rel);
             if (!nodeCost.isLt(targetCost)) {
                 int beforeCount = registerCount;
                 if (ruleQueue.remove(rel)) {
@@ -1273,25 +1273,13 @@ loop:
         listener = newListener;
     }
 
-    // implement RelMetadataProvider
-    public Object getRelMetadata(
-        RelNode rel,
-        String metadataQueryName,
-        Object [] args)
+    // implement RelOptPlanner
+    public void registerMetadataProviders(ChainedRelMetadataProvider chain)
     {
-        // TODO jvs 28-Mar-2006:  caching inside of RelSet
-        return null;
+        chain.addProvider(
+            new VolcanoRelMetadataProvider());
     }
-
-    // implement RelMetadataProvider
-    public Object mergeRelMetadata(
-        String metadataQueryName,
-        Object md1,
-        Object md2)
-    {
-        return null;
-    }
-
+    
     //~ Inner Classes ---------------------------------------------------------
 
     /**

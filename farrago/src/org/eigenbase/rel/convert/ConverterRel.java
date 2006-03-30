@@ -34,6 +34,7 @@ import org.eigenbase.relopt.CallingConventionTraitDef;
 import org.eigenbase.relopt.RelTraitDef;
 import org.eigenbase.relopt.RelTrait;
 import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.util.Util;
 
 
@@ -82,8 +83,8 @@ public abstract class ConverterRel extends SingleRel
     // implement RelNode
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
-        double dRows = getChild().getRows();
-        double dCpu = getChild().getRows();
+        double dRows = RelMetadataQuery.getRowCount(getChild());
+        double dCpu = dRows;
         double dIo = 0;
         return planner.makeCost(dRows, dCpu, dIo);
     }

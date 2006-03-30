@@ -31,6 +31,7 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.relopt.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.reltype.*;
 
 
@@ -142,6 +143,17 @@ public interface FarragoMedDataServer extends FarragoAllocation
      * be registered
      */
     public void registerRules(RelOptPlanner planner);
+
+    /**
+     * Gives this wrapper a chance to register one or more {@link
+     * RelMetadataProvider}s in the chain which will be used to answer
+     * relational expression metadata queries during optimization.
+     * Wrappers which define their own relational expressions will
+     * generally need to supply corresponding metadata providers.
+     *
+     * @param chain receives wrappers's custom providers, if any
+     */
+    public void registerRelMetadataProviders(ChainedRelMetadataProvider chain);
 }
 
 

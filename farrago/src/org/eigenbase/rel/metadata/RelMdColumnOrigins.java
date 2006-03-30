@@ -162,6 +162,24 @@ public class RelMdColumnOrigins extends ReflectiveRelMetadataProvider
         return createDerivedColumnOrigins(set);
     }
     
+    public Set<RelColumnOrigin> getColumnOrigins(
+        FilterRelBase rel,
+        int iOutputColumn)
+    {
+        return RelMetadataQuery.getColumnOrigins(
+            rel.getChild(),
+            iOutputColumn);
+    }
+    
+    public Set<RelColumnOrigin> getColumnOrigins(
+        SortRel rel,
+        int iOutputColumn)
+    {
+        return RelMetadataQuery.getColumnOrigins(
+            rel.getChild(),
+            iOutputColumn);
+    }
+    
     // Catch-all rule when none of the others apply.
     public Set<RelColumnOrigin> getColumnOrigins(
         RelNode rel,
@@ -172,24 +190,9 @@ public class RelMdColumnOrigins extends ReflectiveRelMetadataProvider
         // it's up to the plugin writer to override with the
         // correct information.
 
-        if (rel.getInputs().length > 1) {
-            // No generic logic available for multiple inputs.
+        if (rel.getInputs().length > 0) {
+            // No generic logic available for non-leaf rels.
             return null;
-        }
-
-        if (rel.getInputs().length == 1) {
-            RelNode child = rel.getInputs()[0];
-            if (child.getRowType() != rel.getRowType()) {
-                // No generic logic available.
-                return null;
-            }
-            // Assume no column translation.  This covers things
-            // like FilterRel and SortRel, but can also do the wrong
-            // thing for others like ProjectRel, which need to
-            // be overridden explicitly.
-            return RelMetadataQuery.getColumnOrigins(
-                child,
-                iOutputColumn);
         }
         
         Set<RelColumnOrigin> set = new HashSet<RelColumnOrigin>();
@@ -200,6 +203,16 @@ public class RelMdColumnOrigins extends ReflectiveRelMetadataProvider
             // VALUES clause, so we return an empty set.
             return set;
         }
+
+        // Detect the case where a physical table expression is performing
+        // projection, and say we don't know instead of making any assumptions.
+        // (Theoretically we could try to map the projection using column
+        // names.)  This detection assumes the table expression doesn't handle
+        // rename as well.
+        if (table.getRowType() != rel.getRowType()) {
+            return null;
+        }
+        
         set.add(new RelColumnOrigin(table, iOutputColumn, false));
         return set;
     }

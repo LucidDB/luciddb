@@ -36,7 +36,7 @@ import java.util.logging.Logger;
  * relational expression into a semantically equivalent relational
  * expression, according to a given set of rules and a cost model.
  */
-public interface RelOptPlanner extends RelMetadataProvider
+public interface RelOptPlanner
 {
     //~ Static fields/initializers --------------------------------------------
 
@@ -198,6 +198,17 @@ public interface RelOptPlanner extends RelMetadataProvider
      * @param newListener new listener to be notified of events
      */
     public void addListener(RelOptListener newListener);
+
+    /**
+     * Gives this planner a chance to register one or more {@link
+     * RelMetadataProvider}s in the chain which will be used to answer metadata
+     * queries.  Planners which use their own relational expressions internally
+     * to represent concepts such as equivalence classes will generally need to
+     * supply corresponding metadata providers.
+     *
+     * @param chain receives planner's custom providers, if any
+     */
+    public void registerMetadataProviders(ChainedRelMetadataProvider chain);
 }
 
 

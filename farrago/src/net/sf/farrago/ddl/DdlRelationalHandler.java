@@ -280,7 +280,8 @@ public class DdlRelationalHandler extends DdlHandler
                 session.analyzeSql(
                     sql,
                     validator.getTypeFactory(),
-                    null);
+                    null,
+                    false);
         } catch (Throwable ex) {
             throw adjustExceptionParserPosition(view, ex);
         }

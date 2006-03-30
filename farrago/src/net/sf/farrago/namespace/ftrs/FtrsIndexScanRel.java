@@ -38,6 +38,7 @@ import net.sf.farrago.util.*;
 import openjava.ptree.Literal;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.*;
@@ -135,7 +136,7 @@ class FtrsIndexScanRel extends TableAccessRelBase implements FennelRel
     {
         RelOptCost cost = computeCost(
             planner,
-            getRows());
+            RelMetadataQuery.getRowCount(this));
 
         // NOTE jvs 24-Jan-2006:  This is just here to fudge the optimizer
         // into using index scans where possible.

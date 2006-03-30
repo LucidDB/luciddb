@@ -514,10 +514,12 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     public FarragoSessionAnalyzedSql analyzeSql(
         String sql,
         RelDataTypeFactory typeFactory,
-        RelDataType paramRowType)
+        RelDataType paramRowType,
+        boolean optimize)
     {
         FarragoSessionAnalyzedSql analyzedSql =
             getAnalysisBlock(typeFactory);
+        analyzedSql.optimized = optimize;
         analyzedSql.paramRowType = paramRowType;
         FarragoSessionExecutableStmt stmt = prepare(
             null, sql, null, false, analyzedSql);

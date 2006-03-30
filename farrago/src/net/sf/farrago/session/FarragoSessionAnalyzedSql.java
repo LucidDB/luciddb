@@ -26,8 +26,9 @@ import java.sql.*;
 import java.util.*;
 
 import org.eigenbase.reltype.*;
-import net.sf.farrago.fem.sql2003.FemAbstractColumnSet;
-import net.sf.farrago.fem.sql2003.ModalityTypeEnum;
+import org.eigenbase.rel.metadata.*;
+
+import net.sf.farrago.fem.sql2003.*;
 
 /**
  * FarragoSessionAnalyzedSql contains the results of the analyzeSql
@@ -41,6 +42,12 @@ public class FarragoSessionAnalyzedSql
 {
     //~ Instance fields -------------------------------------------------------
 
+    /**
+     * True if post-optimization analysis was requested.
+     * If false, some fields noted below are invalid.
+     */
+    public boolean optimized;
+    
     /**
      * The text of the SQL expression after expansion by the validator.  This
      * contains no context-dependent information (e.g. all objects are fully
@@ -75,6 +82,18 @@ public class FarragoSessionAnalyzedSql
      * True if the expression contains dynamic parameter markers.
      */
     public boolean hasDynamicParams;
+
+    /**
+     * Information about column origins, in same order as resultType row;
+     * null if expression is not a query.
+     */
+    public List<Set<RelColumnOrigin>> columnOrigins;
+
+    /**
+     * Estimated number of rows returned; invalid if expression is
+     * not a query, or no optimization was requested.
+     */
+    public double rowCount;
 
     public void setResultType(RelDataType resultType)
     {
