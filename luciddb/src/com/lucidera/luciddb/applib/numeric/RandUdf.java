@@ -23,6 +23,7 @@ package com.lucidera.luciddb.applib.numeric;
 import java.util.Random;
 import java.sql.Types;
 import com.lucidera.luciddb.applib.resource.*;
+import net.sf.farrago.runtime.*;
 
 /**
  * rand returns a random integer given a range of numbers.
@@ -31,7 +32,6 @@ import com.lucidera.luciddb.applib.resource.*;
  */
 public class RandUdf
 {
-    private static Random m_oRand;
 
     public static int execute( int minVal, int maxVal ) throws ApplibException
     {
@@ -39,12 +39,13 @@ public class RandUdf
             throw ApplibResourceObject.get().MinNotSmallerThanMax.ex();
         }
 
-        if (m_oRand == null) {
-            m_oRand = new Random();
+        Random oRand = (Random)FarragoUdrRuntime.getContext();
+        if (oRand == null) {
+            oRand = new Random();
         }
 
         // Generate a double precision number between 0 and 1
-        double randDbl = m_oRand.nextDouble();
+        double randDbl = oRand.nextDouble();
 
         // Now scale that number to the range minVal and maxVal
         int randInt = minVal +

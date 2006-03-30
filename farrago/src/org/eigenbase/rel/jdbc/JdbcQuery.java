@@ -32,6 +32,7 @@ import org.eigenbase.oj.rel.JavaRelImplementor;
 import org.eigenbase.oj.rel.ResultSetRel;
 import org.eigenbase.rel.AbstractRelNode;
 import org.eigenbase.relopt.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
@@ -159,7 +160,7 @@ public class JdbcQuery extends AbstractRelNode implements ResultSetRel
         // know relative speed of the other CPU, or the bandwidth. This
         // estimate selfishly deals with the cost to THIS system, but it still
         // neglects the effects of latency.
-        double rows = getRows() / 2;
+        double rows = RelMetadataQuery.getRowCount(this) / 2;
 
         // Very difficult to estimate the cost of a remote query: (a) we don't
         // know what plans are available to the remote RDBMS, (b) we don't

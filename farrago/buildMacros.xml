@@ -356,7 +356,7 @@
   <taskdef resource="emma_ant.properties" classpathref="emma.classpath"/>
 
   <!-- classpath for running blackhawk based tests -->
-  <property name="bh.home" location="${open.dir}/blackhawk/build/dist"/>
+  <property name="bh.home" location="${thirdparty.dir}/blackhawk"/>
 
   <path id="blackhawk.run.classpath">
     <pathelement path="${ant.classpath}"/>

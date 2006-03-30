@@ -77,18 +77,12 @@ public class DateConversionHelper
             inLen = MAX_CHAR_LEN;
         }
 
-        // An instance of this UDF class is instantiated for the query;
-        // initialize the mask upon instantiation to improve performance
-        // when multiple records are processed.
-        // NOTE: this would break if we reused instances across queries.
-        if( maskLen == 0 ) {
-            maskLen = mask.length();
-            if( maskLen > MAX_CHAR_LEN ) {
-                maskLen = MAX_CHAR_LEN;
-            }
-            mask.toUpperCase().getChars( 0, maskLen, caMask, 0 );
-        } 
-
+        maskLen = mask.length();
+        if( maskLen > MAX_CHAR_LEN ) {
+            maskLen = MAX_CHAR_LEN;
+        }
+        mask.toUpperCase().getChars( 0, maskLen, caMask, 0 );
+        
         // TODO: Improve performance here by eliminating toUpperCase() 
         in.toUpperCase().getChars( 0, inLen, caIn, 0 );
 
@@ -241,7 +235,8 @@ public class DateConversionHelper
         }
 
         if( ( ret < 0 ) || ( ret > 9 ) ) {
-            throw ApplibResourceObject.get().InvalidDigitInputString.ex();
+            throw ApplibResourceObject.get().InvalidDigitInputString.ex(
+                String.valueOf(caMask, 0, maskLen), String.valueOf(caIn));
         }
 
         return ret;

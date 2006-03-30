@@ -25,6 +25,7 @@ import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.catalog.FarragoRepos;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.reltype.RelDataType;
 
 import java.util.*;
@@ -96,7 +97,7 @@ public class FennelPullCorrelatorRel extends FennelDoubleRel
     // implement RelNode
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
-        double rowCount = getRows();
+        double rowCount = RelMetadataQuery.getRowCount(this);
         return planner.makeCost(rowCount, 0,
             rowCount * getRowType().getFieldList().size());
     }

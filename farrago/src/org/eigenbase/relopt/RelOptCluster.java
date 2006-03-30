@@ -25,12 +25,11 @@ package org.eigenbase.relopt;
 
 import openjava.mop.Environment;
 
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.rex.RexBuilder;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexToSqlTranslator;
+import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
 
 
 /**
@@ -58,6 +57,7 @@ public class RelOptCluster
     private RexNode originalExpression;
     private final RexBuilder rexBuilder;
     private RexToSqlTranslator rexToSqlTranslator;
+    private RelMetadataProvider metadataProvider;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -82,6 +82,12 @@ public class RelOptCluster
         this.typeFactory = typeFactory;
         this.rexBuilder = rexBuilder;
         this.originalExpression = rexBuilder.makeLiteral("?");
+
+        // set up a default rel metadata provider,
+        // giving the planner first crack at everything
+        DefaultRelMetadataProvider defaultMetadataProvider =
+            new DefaultRelMetadataProvider();
+        metadataProvider = defaultMetadataProvider;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -124,6 +130,22 @@ public class RelOptCluster
     public RexBuilder getRexBuilder()
     {
         return rexBuilder;
+    }
+
+    public RelMetadataProvider getMetadataProvider()
+    {
+        return metadataProvider;
+    }
+
+    /**
+     * Overrides the default metadata provider for this
+     * cluster.
+     *
+     * @param metadataProvider custom provider
+     */
+    public void setMetadataProvider(RelMetadataProvider metadataProvider)
+    {
+        this.metadataProvider = metadataProvider;
     }
 }
 

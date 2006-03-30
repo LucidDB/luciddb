@@ -22,6 +22,7 @@
 package org.eigenbase.rel;
 
 import org.eigenbase.relopt.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexProgram;
@@ -84,8 +85,9 @@ public abstract class CalcRelBase extends SingleRel
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
-        double dRows = getRows();
-        double dCpu = getChild().getRows() * program.getExprCount();
+        double dRows = RelMetadataQuery.getRowCount(this);
+        double dCpu = RelMetadataQuery.getRowCount(getChild())
+            * program.getExprCount();
         double dIo = 0;
         return planner.makeCost(dRows, dCpu, dIo);
     }

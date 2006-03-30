@@ -39,4 +39,25 @@ select 1 from depts;
 explain plan with type as xml for
 select 1 from depts;
 
+-- Apply a tweak to the session personality and verify that
+-- the costing changes accordingly.
+
+create schema s;
+set schema 's';
+
+-- first explain without tweak
+explain plan including all attributes for
+select count(*) from (values(0));
+
+create jar test_personality_plugin 
+library 'class net.sf.farrago.test.FarragoTestPersonalityFactory' 
+options(0);
+
+alter session implementation set jar test_personality_plugin;
+
+-- explain again with tweak
+explain plan including all attributes for
+select count(*) from (values(0));
+
+
 -- End explain.sql

@@ -26,6 +26,7 @@ import org.eigenbase.oj.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.jmi.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.resgen.*;
 import org.eigenbase.reltype.RelDataType;
 
@@ -200,6 +201,17 @@ public interface FarragoSessionPersonality extends FarragoStreamFactoryProvider
      * @return true iff feature is supported
      */
     public boolean supportsFeature(ResourceDefinition feature);
+
+    /**
+     * Gives this personality a chance to register one or more {@link
+     * RelMetadataProvider}s in the chain which will be used to answer
+     * relational expression metadata queries during optimization.
+     * Personalities which define their own relational expressions will
+     * generally need to supply corresponding metadata providers.
+     *
+     * @param chain receives personality's custom providers, if any
+     */
+    public void registerRelMetadataProviders(ChainedRelMetadataProvider chain);
 }
 
 // End FarragoSessionPersonality.java

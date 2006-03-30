@@ -32,6 +32,7 @@ import net.sf.farrago.query.*;
 import openjava.ptree.Literal;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 
@@ -114,7 +115,7 @@ class LcsIndexScanRel extends TableAccessRelBase implements FennelRel
     {
         RelOptCost cost = computeCost(
             planner,
-            getRows());
+            RelMetadataQuery.getRowCount(this));
 
         return cost;
     }

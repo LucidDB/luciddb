@@ -42,6 +42,14 @@ import java.io.*;
  * SqlToRelTestBase is an abstract base for tests which involve conversion
  * from SQL to relational algebra.
  *
+ *<p>
+ *
+ * SQL statements to be translated can use the schema defined in {@link
+ * MockCatalogReader}; note that this is slightly different from Farrago's
+ * SALES schema.  If you get a parser or validator error from your test SQL,
+ * look down in the stack until you see "Caused by", which will usually tell
+ * you the real error.
+ *
  * @author jhyde
  * @version $Id$
  */
@@ -109,7 +117,14 @@ public class SqlToRelTestBase extends TestCase
             }
 
             public double getRowCount() {
-                return 0;
+                // use something other than 0 to give costing tests
+                // some room, and make emps bigger than depts for
+                // join asymmetry
+                if (names[names.length - 1].equals("EMP")) {
+                    return 1000;
+                } else {
+                    return 100;
+                }
             }
 
             public RelDataType getRowType() {

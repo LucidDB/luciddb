@@ -9,12 +9,24 @@
 +---------+
 | 136384  |
 +---------+
+0: jdbc:luciddb:> values applib.day_number_overall(DATE'1510-08-03');
++----------+
+|  EXPR$0  |
++----------+
+| -167788  |
++----------+
 0: jdbc:luciddb:> values applib.day_number_overall(TIMESTAMP'1674-10-09 08:00:59');
 +----------+
 |  EXPR$0  |
 +----------+
 | -107830  |
 +----------+
+0: jdbc:luciddb:> values applib.day_number_overall(TIMESTAMP'2010-12-1 04:43:01');
++---------+
+| EXPR$0  |
++---------+
+| 14944   |
++---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- failures
 0: jdbc:luciddb:> values applib.day_number_overall(DATE'2341');

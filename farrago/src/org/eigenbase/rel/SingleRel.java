@@ -24,6 +24,7 @@
 package org.eigenbase.rel;
 
 import org.eigenbase.relopt.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.Util;
 import org.eigenbase.sql.type.SqlTypeUtil;
@@ -78,7 +79,7 @@ public abstract class SingleRel extends AbstractRelNode
     public double getRows()
     {
         // Not necessarily correct, but a better default than Rel's 1.0
-        return child.getRows();
+        return RelMetadataQuery.getRowCount(child);
     }
 
     public void childrenAccept(RelVisitor visitor)

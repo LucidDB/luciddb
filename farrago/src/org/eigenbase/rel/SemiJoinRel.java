@@ -26,6 +26,7 @@ package org.eigenbase.rel;
 import java.util.*;
 
 import org.eigenbase.relopt.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 
@@ -85,7 +86,8 @@ public final class SemiJoinRel extends JoinRelBase
     public double getRows()
     {
         // TODO:  correlation factor
-        return left.getRows() * RexUtil.getSelectivity(condition);
+        return RelMetadataQuery.getRowCount(left)
+            * RexUtil.getSelectivity(condition);
     }
 
     /**

@@ -24,6 +24,7 @@
 package org.eigenbase.rel;
 
 import org.eigenbase.relopt.*;
+import org.eigenbase.rel.metadata.*;
 
 /**
  * <code>IntersectRel</code> returns the intersection of the rows of its
@@ -58,7 +59,7 @@ public final class IntersectRel extends SetOpRel
         // REVIEW jvs 30-May-2005:  I just pulled this out of a hat.
         double dRows = Double.MAX_VALUE;
         for (int i = 0; i < inputs.length; i++) {
-            dRows = Math.min(dRows, inputs[i].getRows());
+            dRows = Math.min(dRows, RelMetadataQuery.getRowCount(inputs[i]));
         }
         dRows *= 0.25;
         return dRows;

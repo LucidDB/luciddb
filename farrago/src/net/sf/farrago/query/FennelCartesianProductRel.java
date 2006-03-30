@@ -26,6 +26,7 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.util.Util;
@@ -90,7 +91,7 @@ class FennelCartesianProductRel extends FennelDoubleRel
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         // TODO:  account for buffering I/O and CPU
-        double rowCount = getRows();
+        double rowCount = RelMetadataQuery.getRowCount(this);
         return planner.makeCost(rowCount, 0,
             rowCount * getRowType().getFieldList().size());
     }
@@ -98,7 +99,8 @@ class FennelCartesianProductRel extends FennelDoubleRel
     // implement RelNode
     public double getRows()
     {
-        return left.getRows() * right.getRows();
+        return RelMetadataQuery.getRowCount(left)
+            * RelMetadataQuery.getRowCount(right);
     }
 
     // override RelNode

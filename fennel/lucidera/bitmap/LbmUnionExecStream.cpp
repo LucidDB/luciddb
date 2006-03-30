@@ -251,7 +251,8 @@ bool LbmUnionExecStream::writeSegment()
     }
 
     // flushing the workspace should make enough room for the next tuple
-    assert(workspace.addSegment(inputSegment));
+    bool success = workspace.addSegment(inputSegment);
+    assert(success);
     writePending = false;
     return true;
 }

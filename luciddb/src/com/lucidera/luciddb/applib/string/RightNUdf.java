@@ -21,7 +21,9 @@
 package com.lucidera.luciddb.applib.string;
 
 import java.sql.Types;
+import java.nio.CharBuffer;
 import com.lucidera.luciddb.applib.resource.*;
+import net.sf.farrago.runtime.*;
 
 /**
  * rightN returns the last N characters of the string
@@ -44,11 +46,14 @@ public class RightNUdf
             throw ApplibResourceObject.get().LenSpecifyNonNegative.ex();
         }
 
-        // TODO: 
-	// Pre-allocate character arrays to reduce number of
-	// object instantiations when executing method on large
-	// result sets.
-        char[] chars = new char[ 2048 ];
+        char[] chars;
+        CharBuffer cb = (CharBuffer)FarragoUdrRuntime.getContext();
+        if (cb == null) {
+            chars = new char[ 2048 ];
+            cb = CharBuffer.wrap(chars);
+            FarragoUdrRuntime.setContext(cb);
+        }
+        chars = cb.array();
 
         int inlen = in.length();
         int startPos = Math.max( inlen - len, 0 );

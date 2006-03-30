@@ -40,9 +40,10 @@ import org.eigenbase.relopt.*;
  *
  *<ol>
  *
- *<li>Add a new public test method for your rule, following the
- * existing examples.  You'll have to come up with an SQL statement
- * to which your rule will apply in a meaningful way.
+ *<li>Add a new public test method for your rule, following the existing
+ * examples.  You'll have to come up with an SQL statement to which your rule
+ * will apply in a meaningful way.  See {@link SqlToRelTestBase} class comments
+ * for details on the schema.
  *
  *<li>Run the test.  It should fail.  Inspect the output in
  * RelOptRulesTest.log.xml; verify that the "planBefore" is the

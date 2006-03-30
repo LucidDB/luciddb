@@ -52,6 +52,7 @@ import org.eigenbase.oj.rel.JavaRelImplementor;
 import org.eigenbase.oj.stmt.*;
 import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
@@ -107,6 +108,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     private SqlIdentifier dmlTarget;
     private PrivilegedAction dmlAction;
     private TableAccessMap tableAccessMap;
+    private ChainedRelMetadataProvider relMetadataProvider;
 
     /**
      * Name of Java package containing code generated for this statement.
@@ -167,6 +169,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             stmtValidator, this, null);
 
         clearDmlValidation();
+
+        relMetadataProvider = new DefaultRelMetadataProvider();
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -505,10 +509,12 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         SqlNode sqlNode,
         final FarragoSessionAnalyzedSql analyzedSql)
     {
+        RelNode rootRel = null;
+        
         getSqlToRelConverter();
         if (analyzedSql.paramRowType == null) {
             // query expression
-            RelNode rootRel =
+            rootRel =
                 sqlToRelConverter.convertQuery(sqlNode, false, true);
             analyzedSql.setResultType(rootRel.getRowType());
             analyzedSql.paramRowType = getParamRowType();
@@ -530,6 +536,44 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                 }
             };
         sqlNode.accept(dynamicParamFinder);
+
+        // For queries, fill in some more information.
+        if (rootRel != null) {
+            // Make sure we have RelMetadataProvider set up.
+            finalizeRelMetadata(rootRel);
+
+            if (analyzedSql.optimized) {
+                rootRel = optimize(rootRel);
+            
+                // From here on, use the planner's notion of root, because the
+                // rootRel it returned to us may have lost some metadata.
+                // TODO: clean this up.
+                rootRel = planner.getRoot();
+            }
+            
+            // Derive information about origin of each column
+            List<Set<RelColumnOrigin>> columnOrigins =
+                new ArrayList<Set<RelColumnOrigin>>();
+            List fieldList = analyzedSql.resultType.getFieldList();
+            for (int i = 0; i < fieldList.size(); ++i) {
+                Set<RelColumnOrigin> rcoSet = 
+                    RelMetadataQuery.getColumnOrigins(rootRel, i);
+                if (rcoSet == null) {
+                    // If we don't know, assume none.
+                    columnOrigins.add(Collections.EMPTY_SET);
+                } else {
+                    columnOrigins.add(rcoSet);
+                }
+            }
+            analyzedSql.columnOrigins =
+                Collections.unmodifiableList(columnOrigins);
+
+            if (analyzedSql.optimized) {
+                analyzedSql.rowCount =
+                    RelMetadataQuery.getRowCount(
+                        rootRel);
+            }
+        }
     }
 
     void analyzeRoutineDependencies(SqlNode sqlNode)
@@ -603,6 +647,11 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                     SqlExplainLevel.DIGEST_ATTRIBUTES));
         }
 
+        // Now that all plugins have been seen (flattening above expanded
+        // views), we can finalize the relational expression metadata query
+        // providers to use during optimization.
+        finalizeRelMetadata(rootRel);
+        
         rootRel = super.optimize(rootRel);
         if (dumpPlan) {
             planDumpTracer.fine(
@@ -623,6 +672,25 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         tableAccessMap = new TableAccessMap(rootRel);
         
         return rootRel;
+    }
+
+    private void finalizeRelMetadata(RelNode rootRel)
+    {
+        if (relMetadataProvider == null) {
+            // already finalized
+            return;
+        }
+        
+        // Let the planner hook itself in last so it can be at the head of the
+        // chain.
+        getSession().getPersonality().registerRelMetadataProviders(
+            relMetadataProvider);
+        planner.registerMetadataProviders(relMetadataProvider);
+        rootRel.getCluster().setMetadataProvider(relMetadataProvider);
+
+        // Remind ourselves that we're done setting this guy up,
+        // so any further access to it is an error.
+        relMetadataProvider = null;
     }
 
     protected RelNode flattenTypes(RelNode rootRel, boolean restructure)
@@ -945,6 +1013,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             // class name, on the assumption that it should be unique regardless
             // of classloader, JAR, etc.  Is that correct?
             server.registerRules(planner);
+            assert(relMetadataProvider != null);
+            server.registerRelMetadataProviders(relMetadataProvider);
         }
         return server;
     }

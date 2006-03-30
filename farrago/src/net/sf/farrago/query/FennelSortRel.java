@@ -29,6 +29,7 @@ import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.util.*;
 
@@ -108,7 +109,7 @@ public class FennelSortRel extends FennelSingleRel
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         // TODO:  the real thing
-        double rowCount = getRows();
+        double rowCount = RelMetadataQuery.getRowCount(this);
         double bytesPerRow = 1;
         return planner.makeCost(
             rowCount,

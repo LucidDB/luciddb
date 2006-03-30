@@ -24,6 +24,7 @@ import java.sql.*;
 import java.text.*;
 import java.util.*;
 import com.lucidera.luciddb.applib.resource.*;
+import net.sf.farrago.runtime.*;
 
 /**
  * Convert a date to an absolute day number.  Useful for having integer date
@@ -34,17 +35,20 @@ import com.lucidera.luciddb.applib.resource.*;
 public class DayNumberOverallUdf
 {
     // Convert date, of local time zone, to equivalent date in GMT time
-    private static DateFormat localFormatter;
-    private static DateFormat utcFormatter;
     private static java.util.Date convertToGmt( java.util.Date localDate ) 
         throws ApplibException
     {
         ApplibResource res = ApplibResourceObject.get();
 
+        DateFormat localFormatter = (DateFormat)FarragoUdrRuntime.getContext();
+        DateFormat utcFormatter = (DateFormat)FarragoUdrRuntime.getContext();
         if (localFormatter == null) {
             localFormatter = new SimpleDateFormat(res.LocalDateFormat.str());
+            FarragoUdrRuntime.setContext(localFormatter);
             utcFormatter = new SimpleDateFormat(res.UtcDateFormat.str());
             utcFormatter.setTimeZone( TimeZone.getTimeZone("UTC") );
+            FarragoUdrRuntime.setContext(utcFormatter);
+
         }
 
         String dateString = localFormatter.format(localDate);
