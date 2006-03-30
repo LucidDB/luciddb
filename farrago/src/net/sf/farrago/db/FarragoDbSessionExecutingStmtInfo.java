@@ -41,8 +41,9 @@ public class FarragoDbSessionExecutingStmtInfo
 {
     //~ Instance fields -------------------------------------------------------
 
-    private FarragoSessionStmtContext stmt;
     private long id;
+    private FarragoSessionStmtContext stmt;
+    private FarragoDatabase database;
     private String sql;
     private long startTime;
     private List<Object> parameters;
@@ -52,13 +53,14 @@ public class FarragoDbSessionExecutingStmtInfo
 
     FarragoDbSessionExecutingStmtInfo(
         FarragoSessionStmtContext stmt,
-        long id,
+        FarragoDatabase database,
         String sql,
         List<Object> parameters,
         List<String> objectsInUse)
     {
         this.stmt = stmt;
-        this.id = id;
+        this.database = database;
+        this.id = database.getUniqueId();
         this.sql = sql;
         this.startTime = System.currentTimeMillis();
         this.parameters = Collections.unmodifiableList(parameters);
@@ -73,6 +75,10 @@ public class FarragoDbSessionExecutingStmtInfo
         return stmt;
     }
 
+    FarragoDatabase getDatabase()
+    {
+        return database;
+    }
 
     // implement FarragoSessionExecutingStmtInfo
     public long getId()

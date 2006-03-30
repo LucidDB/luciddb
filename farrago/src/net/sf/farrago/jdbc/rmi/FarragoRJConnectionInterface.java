@@ -38,6 +38,11 @@ import java.util.Properties;
 public interface FarragoRJConnectionInterface extends RJConnectionInterface
 {
     /**
+     * @see net.sf.farrago.jdbc.FarragoConnection#getFarragoSessionId
+     */
+    long getFarragoSessionId() throws RemoteException;
+
+    /**
      * @see net.sf.farrago.jdbc.FarragoConnection#getWrapper
      */
     String findMofId(String wrapperName) throws RemoteException, SQLException;
