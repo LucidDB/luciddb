@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,18 +23,19 @@
 package net.sf.farrago.jdbc.engine;
 
 import java.sql.*;
-
+import net.sf.farrago.jdbc.FarragoStatement;
 import net.sf.farrago.session.FarragoSessionStmtContext;
-
+import net.sf.farrago.session.FarragoSessionExecutingStmtInfo;
 
 /**
- * FarragoJdbcEngineStatement implements the {@link java.sql.Statement}
- * interface for the Farrago JDBC driver.
+ * FarragoJdbcEngineStatement implements the {@link java.sql.Statement} interface for
+ * the Farrago JDBC driver, including extensions from 
+ * {@link net.sf.farrago.jdbc.FarragoStatement}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoJdbcEngineStatement implements Statement
+public class FarragoJdbcEngineStatement implements FarragoStatement
 {
     //~ Static fields/initializers --------------------------------------------
 
@@ -425,7 +426,17 @@ public class FarragoJdbcEngineStatement implements Statement
     {
         throw new UnsupportedOperationException();
     }
-}
 
+    // implement FarragoStatement
+    public long getFarragoExecutingStmtId()
+    {
+        if (stmtContext == null)
+            return 0;
+        FarragoSessionExecutingStmtInfo info = stmtContext.getExecutingStmtInfo();
+        if (info == null)
+            return 0;
+        return info.getId();
+    }
+}
 
 // End FarragoJdbcEngineStatement.java
