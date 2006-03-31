@@ -144,17 +144,15 @@ public class FennelTxnContext
      */
     public void commit()
     {
-        if (!isTxnInProgress()) {
-            return;
-        }
-
-        fennelDbHandle.getTransientTxnContext().beginTransientTxn();
-        try {
-            FemCmdCommit cmd = metadataFactory.newFemCmdCommit();
-            cmd.setTxnHandle(getTxnHandle());
-            fennelDbHandle.executeCmd(cmd);
-        } finally {
-            fennelDbHandle.getTransientTxnContext().endTransientTxn();
+        if (isTxnInProgress()) {
+            fennelDbHandle.getTransientTxnContext().beginTransientTxn();
+            try {
+                FemCmdCommit cmd = metadataFactory.newFemCmdCommit();
+                cmd.setTxnHandle(getTxnHandle());
+                fennelDbHandle.executeCmd(cmd);
+            } finally {
+                fennelDbHandle.getTransientTxnContext().endTransientTxn();
+            }
         }
 
         // TODO:  determine whether txn is still in progress if excn is thrown
@@ -166,17 +164,15 @@ public class FennelTxnContext
      */
     public void rollback()
     {
-        if (!isTxnInProgress()) {
-            return;
-        }
-
-        fennelDbHandle.getTransientTxnContext().beginTransientTxn();
-        try {
-            FemCmdRollback cmd = metadataFactory.newFemCmdRollback();
-            cmd.setTxnHandle(getTxnHandle());
-            fennelDbHandle.executeCmd(cmd);
-        } finally {
-            fennelDbHandle.getTransientTxnContext().endTransientTxn();
+        if (isTxnInProgress()) {
+            fennelDbHandle.getTransientTxnContext().beginTransientTxn();
+            try {
+                FemCmdRollback cmd = metadataFactory.newFemCmdRollback();
+                cmd.setTxnHandle(getTxnHandle());
+                fennelDbHandle.executeCmd(cmd);
+            } finally {
+                fennelDbHandle.getTransientTxnContext().endTransientTxn();
+            }
         }
 
         // TODO:  determine whether txn is still in progress if excn is thrown

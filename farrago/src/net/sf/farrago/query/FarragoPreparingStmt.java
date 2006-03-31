@@ -680,13 +680,23 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             // already finalized
             return;
         }
-        
-        // Let the planner hook itself in last so it can be at the head of the
-        // chain.
+
+        // Give personality priority over anything set up so far.
         getSession().getPersonality().registerRelMetadataProviders(
             relMetadataProvider);
-        planner.registerMetadataProviders(relMetadataProvider);
-        rootRel.getCluster().setMetadataProvider(relMetadataProvider);
+
+        // Add caching on top of all that.
+        CachingRelMetadataProvider cacheProvider = 
+            new CachingRelMetadataProvider(relMetadataProvider, planner);
+
+        // Put the planner at the head of its own chain before all the rest.
+        // It's a bad idea to cache the planner's results.
+
+        ChainedRelMetadataProvider plannerChain =
+            new ChainedRelMetadataProvider();
+        plannerChain.addProvider(cacheProvider);
+        planner.registerMetadataProviders(plannerChain);
+        rootRel.getCluster().setMetadataProvider(plannerChain);
 
         // Remind ourselves that we're done setting this guy up,
         // so any further access to it is an error.

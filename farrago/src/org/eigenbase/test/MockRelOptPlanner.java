@@ -252,6 +252,12 @@ public class MockRelOptPlanner implements RelOptPlanner
     {
     }
     
+    // implement RelOptPlanner
+    public long getRelMetadataTimestamp(RelNode rel)
+    {
+        return 0;
+    }
+    
     private class MockRuleCall extends RelOptRuleCall
     {
         MockRuleCall(
