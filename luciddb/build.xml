@@ -198,6 +198,7 @@
   </target>
 
   <target name="test-nondb">
+    <property file="run.properties"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh-nondb"/>
     <blackhawk.fork
       basedir="${luciddb.dir}"
@@ -206,6 +207,7 @@
   </target>
 
   <target name="test-flatfile">
+    <property file="run.properties"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh-flatfile"/>
     <blackhawk.fork
       basedir="${luciddb.dir}"
@@ -214,6 +216,7 @@
   </target>
 
   <target name="test-oracle">
+    <property file="run.properties"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh-oracle"/>
     <blackhawk.fork
       basedir="${luciddb.dir}"
@@ -222,6 +225,7 @@
   </target>
 
   <target name="test-sqlserver">
+    <property file="run.properties"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh-sqlserver"/>
     <blackhawk.fork
       basedir="${luciddb.dir}"
@@ -230,6 +234,7 @@
   </target>
 
   <target name="test-csvjdbc">
+    <property file="run.properties"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh-csvjdbc"/>
     <blackhawk.fork
       basedir="${luciddb.dir}"
