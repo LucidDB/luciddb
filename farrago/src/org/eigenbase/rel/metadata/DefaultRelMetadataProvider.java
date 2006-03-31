@@ -30,15 +30,13 @@ import java.util.*;
  * DefaultRelMetadataProvider supplies a default implementation of the {@link
  * RelMetadataProvider} interface.  It provides generic formulas and derivation
  * rules for the standard logical algebra; coverage corresponds to the methods
- * declared in {@link RelMetadataQuery}.  It also supplies caching.
+ * declared in {@link RelMetadataQuery}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public class DefaultRelMetadataProvider extends ChainedRelMetadataProvider
 {
-    private final Map<List, Object> cache;
-    
     /**
      * Creates a new default provider.  This provider defines
      * "catch-all" handlers for generic RelNodes, so it should
@@ -51,43 +49,6 @@ public class DefaultRelMetadataProvider extends ChainedRelMetadataProvider
         
         addProvider(
             new RelMdColumnOrigins());
-
-        cache = new HashMap<List, Object>();
-    }
-
-
-    // implement RelMetadataProvider
-    public Object getRelMetadata(
-        RelNode rel,
-        String metadataQueryName,
-        Object [] args)
-    {
-        // REVIEW jvs 29-Mar-2006:  Some queries may not be
-        // cacheable, or may need to have their cached values
-        // flushed.  That requires some meta-metadata, plus
-        // interaction with the planner.
-        
-        // Check cache first.
-        List hashKey;
-        if (args != null) {
-            hashKey = new ArrayList(args.length + 2);
-            hashKey.add(rel);
-            hashKey.add(metadataQueryName);
-            hashKey.addAll(Arrays.asList(args));
-        } else {
-            hashKey = Arrays.asList(rel, metadataQueryName);
-        }
-        Object result = cache.get(hashKey);
-        if (result != null) {
-            return result;
-        }
-
-        // Cache miss.
-        result = super.getRelMetadata(rel, metadataQueryName, args);
-        if (result != null) {
-            cache.put(hashKey, result);
-        }
-        return result;
     }
 }
 
