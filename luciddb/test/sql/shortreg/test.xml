@@ -2,20 +2,63 @@
   <target name="shortreg">
     <test-suite name="shortreg">
 
-      <test-suite-call testfile="shortregtest.xml">
-        <test-unit-modifier value="oracle"/>
-        <property name="foreign.db" value="oracle"/>
-      </test-suite-call>
+      <test-suite-call testfile="sanity.xml"/>
 
-      <test-suite-call testfile="shortregtest.xml">
-        <test-unit-modifier value="sqlserver"/>
-        <property name="foreign.db" value="sqlserver"/>
-      </test-suite-call>
+      <test name="compIdx">
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/gen/${foreign.db}/compIdx.sql"/>
+      </test>
 
-      <test-suite-call testfile="shortregtest.xml">
-        <test-unit-modifier value="flatfile"/>
-        <property name="foreign.db" value="flatfile"/>
-      </test-suite-call>
+      <test name="rangeNConv">
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/gen/${foreign.db}/rangeNConv.sql"/>
+      </test>
+
+      <test name="subFrom">
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/gen/${foreign.db}/subFrom.sql"/>
+      </test>
+
+      <test name="aggJoinEq">
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/gen/${foreign.db}/aggJoinEq.sql"/>
+      </test>
+
+      <test name="joinEq">
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/gen/${foreign.db}/joinEq.sql"/>
+      </test>
+
+      <test name="joinFiltExp">
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/gen/${foreign.db}/joinFiltExp.sql"/>
+      </test>
+
+      <test name="joinFilt">
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/gen/${foreign.db}/joinFilt.sql"/>
+      </test>
+
+      <test name="joinMisc">
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/gen/${foreign.db}/joinMisc.sql"/>
+      </test>
+
+      <test name="joinRng">
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/gen/${foreign.db}/joinRng.sql"/>
+      </test>
+
+      <test name="joinSemi">
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/gen/${foreign.db}/joinSemi.sql"/>
+      </test>
+
+      <test name="negJoinFilt">
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/gen/${foreign.db}/negJoinFilt.sql"/>
+      </test>
+
+      <test name="order">
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/gen/${foreign.db}/order.sql"/>
+      </test>
+
+      <test name="subIn">
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/gen/${foreign.db}/subIn.sql"/>
+      </test>
+
+      <test name="subMisc">
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/gen/${foreign.db}/subMisc.sql"/>
+      </test>
 
     </test-suite>
   </target>

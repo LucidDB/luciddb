@@ -105,10 +105,7 @@
   <property name="project.testlog.dir" location="${testlog.dir}" />
   <import file="${open.dir}/farrago/buildMacros.xml" />
 
-  <!-- directory for blackhawk output -->
-  <property name="bh.log.basedir" value="${luciddb.dir}/testlog/bh" />
-
-  <!-- Template developer configuration file. -->
+   <!-- Template developer configuration file. -->
   <property name="FarragoConfTemplate.xmi"
     location="${farrago.xmi.dir}/FarragoConfTemplate.xmi"/>
 
@@ -170,6 +167,7 @@
 
   <target name="gen-all-sql">
     <ant dir="test/sql/shortreg" target="gen-all-sql"/>
+    <ant dir="test/sql/VI/tbs" target="gen-all-sql"/>
   </target>
 
 <!-- Begin Experiment -->
@@ -177,42 +175,82 @@
   <taskdef name="if" classname="net.sf.antcontrib.logic.IfTask" classpath="${ant.classpath}"/>
 
   <target name="gen-all-sql-x">
-    <foreach param="target.file" target="ant-gen-sql">
+    <property name="target.name" value="gen-all-sql"/>
+    <foreach param="target.file" target="call-subdir-target" inheritAll="true">
       <fileset dir="${basedir}/test/sql">
-        <!-- either include each directory explicitly, or include all
-        by name="**/build.xml", and either put dummy "gen-all-sql" targets
-        for everyone, or do explicit excludes -->
-        <include name="shortreg/build.xml"/>
-        <include name="bench/build.xml"/>
-        <include name="company/build.xml"/>
-        <include name="compositekey/build.xml"/>
-        <include name="datatypes/build.xml"/>
-        <include name="pge/build.xml"/>
-        <include name="pge2/build.xml"/>
-        <include name="VI/insert/build.xml"/>
-        <include name="VI/populate/build.xml"/>
-        <include name="VI/tbs/build.xml"/>
+        <include name="**/build.xml"/>
+        <exclude name="calc/**"/>
+        <exclude name="conv_types/**"/>
+        <exclude name="numerics/build.xml"/>
+        <exclude name="txn/build.xml"/>
+        <exclude name="udr/**"/>
+        <exclude name="VI/recovery/build.xml"/>
+        <exclude name="VI/build.xml"/>
       </fileset>
     </foreach>
   </target>
 
-  <target name="ant-gen-sql">
+  <target name="call-subdir-target">
     <echo>
       This is the target.file: ${target.file}
     </echo>
-    <ant antfile="${target.file}" target="gen-all-sql" inheritAll="false"/>
+    <ant antfile="${target.file}" target="${target.name}" inheritAll="false"/>
   </target>
 
   <target name="test-nondb">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-nondb"/>
     <blackhawk.fork
       basedir="${luciddb.dir}"
       testscript="test-nightly-nondb.xml"
       classpathref="test.classpath"/>
   </target>
 
+  <target name="test-flatfile">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-flatfile"/>
+    <blackhawk.fork
+      basedir="${luciddb.dir}"
+      testscript="test-nightly-flatfile.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="test-oracle">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-oracle"/>
+    <blackhawk.fork
+      basedir="${luciddb.dir}"
+      testscript="test-nightly-oracle.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="test-sqlserver">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-sqlserver"/>
+    <blackhawk.fork
+      basedir="${luciddb.dir}"
+      testscript="test-nightly-sqlserver.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="test-csvjdbc">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-csvjdbc"/>
+    <blackhawk.fork
+      basedir="${luciddb.dir}"
+      testscript="test-nightly-csvjdbc.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="clean-subdirs">
+    <property name="target.name" value="clean"/>
+    <foreach param="target.file" target="call-subdir-target" inheritAll="true">
+      <fileset dir="${basedir}/test/sql">
+        <include name="**/build.xml"/>
+      </fileset>
+    </foreach>
+  </target>
+
 <!-- End Experiment-->
 
   <target name="test" depends="cleanApplib,createCatalog,buildJdbcPlugin,gen-all-sql">
+    <property file="run.properties"/>
+    <property name="bh.log.basedir" value="${testlog.dir}/bh"/>
     <blackhawk.fork
       basedir="${luciddb.dir}"
       testscript="test.xml"
@@ -269,6 +307,7 @@
     <ant dir="test/sql/txn" target="clean"/>
     <ant dir="test/sql/udr/udf" target="clean"/>
     <ant dir="test/sql/udr/udx" target="clean"/>
+    <ant dir="test/sql/VI/tbs" target="clean"/>
   </target>
 
   <!-- Copies the Farrago unconfigured catalog to our catalog directory. -->

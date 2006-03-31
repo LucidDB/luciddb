@@ -4,7 +4,7 @@
 
       <init-hook>
         <ant target="restoreCatalog"/>
-        <ant target="copy-csv"/>
+        <ant dir="${open.dir}/luciddb/test/sql/bench" target="copy-csv"/>
       </init-hook>
 
       <test name="creschema">

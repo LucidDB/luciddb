@@ -136,7 +136,7 @@
           overwrite="false"
           failonerror="false"
           verbose="true">
-          <fileset dir="${csvsource.dir}"/>
+          <fileset dir="${csvsource.dir}" includes="*.tab"/>
         </sync>
       </then>
     </if>

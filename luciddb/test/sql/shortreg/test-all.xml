@@ -1,0 +1,22 @@
+<project name="bh" default="shortreg-all">
+  <target name="shortreg-all">
+    <test-suite name="shortreg-all">
+
+      <test-suite-call testfile="test.xml">
+        <test-unit-modifier value="oracle"/>
+        <property name="foreign.db" value="oracle"/>
+      </test-suite-call>
+
+      <test-suite-call testfile="test.xml">
+        <test-unit-modifier value="sqlserver"/>
+        <property name="foreign.db" value="sqlserver"/>
+      </test-suite-call>
+
+      <test-suite-call testfile="test.xml">
+        <test-unit-modifier value="flatfile"/>
+        <property name="foreign.db" value="flatfile"/>
+      </test-suite-call>
+
+    </test-suite>
+  </target>
+</project>
