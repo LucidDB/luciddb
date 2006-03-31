@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2003-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2003-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -228,7 +228,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         
         personality = sessionFactory.newSessionPersonality(this, null);
         defaultPersonality = personality;
-        sessionInfo = new FarragoDbSessionInfo(database.getUniqueId());
+        sessionInfo = new FarragoDbSessionInfo(this, database);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -735,20 +735,9 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         }
     }
 
-    // REVIEW jvs 17-Mar-2006: extension projects may still need this, and may
-    // need to pass something better than null for stmtContext; if not,
-    // eliminate; szuercher would probably know
-    protected FarragoSessionExecutableStmt prepare(
-        String sql,
-        FarragoAllocationOwner owner,
-        boolean isExecDirect,
-        FarragoSessionAnalyzedSql analyzedSql)
-    {
-        return prepare(null, sql, owner, isExecDirect, analyzedSql);
-    }
     
     protected FarragoSessionExecutableStmt prepare(
-        FarragoDbStmtContext stmtContext,
+        FarragoDbStmtContextBase stmtContext,
         String sql,
         FarragoAllocationOwner owner,
         boolean isExecDirect,

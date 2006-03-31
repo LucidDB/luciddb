@@ -26,7 +26,7 @@ import java.math.BigDecimal;
 import java.sql.Types;
 
 /**
- * FarragoJdbcEngineDecimalParamDef defines a approximate numeric parameter.
+ * FarragoJdbcEngineApproxParamDef defines a approximate numeric parameter.
  * 
  * @author Angel Chang
  * @version $Id$

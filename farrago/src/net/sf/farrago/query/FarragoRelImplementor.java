@@ -30,7 +30,7 @@ import net.sf.farrago.ojrex.*;
 import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.catalog.FarragoRepos;
-import net.sf.farrago.runtime.FarragoTransform;
+import net.sf.farrago.fennel.*;
 import net.sf.farrago.fennel.*;
 
 import openjava.mop.*;
@@ -67,6 +67,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
     // ordered from child rel to parent rel; for now only
     // includes FennelRels during StreamDef generation
     private List<RelScope> scopeStack;
+    private int nextTransformId;
 
     /** 
      * List of ClassDeclarations representing generated Java code not
@@ -97,6 +98,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
         // dynamic params get mapped into Fennel?
         nextDynamicParamId =
             preparingStmt.getSqlToRelConverter().getDynamicParamCount() + 1;
+        nextTransformId = 1;
         transformDeclarations = new ArrayList<ClassDeclaration>();
     }
 
@@ -193,6 +195,11 @@ public class FarragoRelImplementor extends JavaRelImplementor
     public void addTransform(ClassDeclaration transform)
     {
         transformDeclarations.add(transform);
+    }
+    
+    public int allocateTransform()
+    {
+        return nextTransformId++;
     }
     
     public FarragoPreparingStmt getPreparingStmt()

@@ -60,6 +60,11 @@ public class FarragoRJConnectionServer extends RJConnectionServer
         return farragoConnection.findMofId(wrapperName);
     }
 
+    public long getFarragoSessionId() throws RemoteException
+    {
+        return farragoConnection.getFarragoSessionId();
+    }
+
     public FarragoRJMedDataWrapperInterface getWrapper(
         final String mofId,
         final String libraryName,

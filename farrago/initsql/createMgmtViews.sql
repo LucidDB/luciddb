@@ -8,7 +8,7 @@ set schema 'sys_boot.mgmt';
 set path 'sys_boot.mgmt';
 
 create function statements()
-returns table(id int, sql_stmt varchar(1024), create_time timestamp, parameters varchar(1024))
+returns table(id int, session_id int, sql_stmt varchar(1024), create_time timestamp, parameters varchar(1024))
 language java
 parameter style system defined java
 no sql

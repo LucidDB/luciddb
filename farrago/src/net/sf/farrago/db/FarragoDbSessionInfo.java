@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -31,6 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import net.sf.farrago.session.FarragoSessionExecutingStmtInfo;
 import net.sf.farrago.session.FarragoSessionInfo;
+import net.sf.farrago.session.FarragoSession;
 
 
 /**
@@ -45,17 +46,32 @@ public class FarragoDbSessionInfo implements FarragoSessionInfo
     //~ Instance fields -------------------------------------------------------
 
     private long id;
+    private FarragoSession session;
+    private FarragoDatabase database;
     private Map<Long, FarragoSessionExecutingStmtInfo> statements;
+    // REVIEW mberkowitz 28-Mar-2006: maybe have 1 map id->info in FarragoDatabase.
 
     //~ Constructors ----------------------------------------------------------
 
-    public FarragoDbSessionInfo(long id)
+    FarragoDbSessionInfo(FarragoSession session, FarragoDatabase database)
     {
-        this.id = id;
+        this.id = database.getUniqueId();
+        this.session = session;
+        this.database = database;
         statements = new ConcurrentHashMap<Long, FarragoSessionExecutingStmtInfo>();
     }
 
     //~ Methods ---------------------------------------------------------------
+
+    public FarragoSession getSession()
+    {
+        return session;
+    }
+
+    FarragoDatabase getDatabase()
+    {
+        return database;
+    }
 
     public long getId()
     {

@@ -323,7 +323,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         boolean logical)
     {
         PreparedResult preparedResult =
-            super.prepareSql(rootRel, sqlKind, logical, implementingClassDecl,
+            prepareSql(rootRel, sqlKind, logical, implementingClassDecl,
                 implementingArgs);
         // When rootRel is a logical plan, optimize() sets the map, but for a
         // physical plan, set it here:
@@ -601,7 +601,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         sqlNode.accept(udfInvocationFinder);
     }
 
-    private Set getReferencedObjectIds()
+    protected Set getReferencedObjectIds()
     {
         Set set = new HashSet();
         Iterator iter = allDependencies.iterator();
