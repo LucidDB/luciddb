@@ -1,48 +1,80 @@
 <!-- This file is an XML fragment with the -->
 <!-- CruiseControl config for Saffron -->
 
-	<project name="saffron&configSuffix;">
-		<labelincrementer defaultLabel="saffron.1"/>
+<project name="saffron&configSuffix;">
+    <labelincrementer 
+        port="&open_p4port;" 
+        client="&open_p4client;" 
+        user="&open_p4user;" 
+        view="&open_root;/..." />
 
-		<!-- Bootstrappers are run with every build before mod checks -->
-		<bootstrappers>
-			<!-- currentbuildstatusbootstrapper file="logs/saffron/currentbuildstatus.txt"/ -->
-			<p4bootstrapper port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/bootstrap/..."/>
-		</bootstrappers>
+	<!-- Bootstrappers are run with every build before mod checks -->
+	<bootstrappers>
+		<!-- currentbuildstatusbootstrapper file="logs/saffron/currentbuildstatus.txt"/ -->
+		<p4bootstrapper port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/bootstrap/..."/>
+	</bootstrappers>
 
-                <listeners>
-                        <currentbuildstatuslistener file="logs/saffron/currentbuildstatus.txt"/>
-                        <currentbuildstatuslistener file="&open_default.build.home;/../web/logs/saffron&configSuffix;/currentbuildstatus.txt"/>
-                </listeners>
+    <listeners>
+        <currentbuildstatuslistener file="logs/saffron/currentbuildstatus.txt"/>
+        <!--
+        <currentbuildstatuslistener file="&open_default.build.home;/../web/logs/saffron&configSuffix;/currentbuildstatus.txt"/>
+        -->
+    </listeners>
 
-		<!-- Defines where cruise looks for changes, to decide whether to run the build -->
-		<modificationset quietperiod="300">
-			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/farrago/..."/>
-			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/saffron/..."/>
-		</modificationset>
+	<!-- Defines where cruise looks for changes, to decide whether to run the build -->
+	<modificationset quietperiod="300">
+		<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/fennel/..."/>
+		<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/farrago/..."/>
+		<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/saffron/..."/>
+	</modificationset>
 
 
-		<!-- Configures the actual build loop, how often and which build file/target -->
-		<schedule interval="&build_interval;">
-			<ant buildfile="&open_default.build.home;/bootstrap/build-saffron.xml" uselogger="true" usedebug="true" antscript="&ant;" target="integration-build-and-test">
-			    <property name="open_propfile" value="&open_propfile;"/>
-			    <property name="open_root" value="&open_root;"/>
-			</ant>
-		</schedule>
+	<!-- Configures the actual build loop, how often and which build file/target -->
+	<schedule interval="&build_interval;">
+		<ant buildfile="&open_default.build.home;/bootstrap/build-saffron.xml" uselogger="true" usedebug="true" antscript="&ant;" target="integration-build-and-test">
+            <property name="p4.port" value="&open_p4port;"/>
+            <property name="p4.user" value="&open_p4user;"/>
+            <property name="p4.client" value="&open_p4client;"/>
 
-		<!-- directory to write build logs to -->
-		<log dir="logs/saffron">
-			<merge dir="&open_integration.build.home;/saffron/testlog"/>
-		</log>
+            <property name="default.build.home" value="&open_default.build.home;"/>
+            <property name="integration.build.home" value="&open_integration.build.home;"/>
+            <property name="open.build.home" value="&open_integration.build.home;"/>
 
-		<!-- Publishers are run *after* a build completes -->
-		<publishers>
-			<!-- currentbuildstatuspublisher file="logs/saffron/currentbuildstatus.txt"/ -->
+		    <property name="open_root" value="&open_root;"/>
+		</ant>
+	</schedule>
 
-			<artifactspublisher dir="&open_integration.build.home;/saffron/trace" dest="artifacts/saffron&configSuffix;" subdirectory="trace"/>
+	<!-- directory to write build logs to -->
+	<log dir="logs/saffron">
+		<merge dir="&open_integration.build.home;/saffron/testlog"/>
+	</log>
 
-			<!-- sync up artifacts on jsp machine: CC's scp would copy everything -->
-			<execute command="&rsync_cmd; artifacts/saffron&configSuffix; &rsync_dest;"/>
+	<!-- Publishers are run *after* a build completes -->
+	<publishers>
+        <onsuccess>
+            <antpublisher 
+                antscript="&ant;"
+                antworkingdir="&red.bootstrap.dir;"
+                buildfile="set-p4-counter.xml"
+                uselogger="true"
+                usedebug="true"
+                target="set.p4.counter">
+
+                <property name="p4.port" value="&open_p4port;"/>
+                <property name="p4.user" value="&open_p4user;"/>
+                <property name="p4.client" value="&open_p4client;"/>
+
+                <property name="p4.counter.name" value="lu_dev_saffron_ok"/>
+            </antpublisher>
+        </onsuccess>
+
+        <artifactspublisher 
+            dir="&open_integration.build.home;/saffron/trace" 
+            dest="artifacts/saffron&configSuffix;" 
+            subdirectory="trace"/>
+
+	    <!-- sync up artifacts on jsp machine: CC's scp would copy everything -->
+	    <execute command="&rsync_cmd; artifacts/saffron&configSuffix; &rsync_dest;"/>
 
                         <!--
                         <onfailure>
@@ -52,14 +84,14 @@
                         </onfailure>
                         -->
 
-			<scp sourcedir="logs/saffron"
+	    <scp sourcedir="logs/saffron"
 			     targetuser="&scp_user;"
 			     targethost="&scp_host;"
 			     targetseparator="&scp_filesep;"
 			     targetdir="web/logs/saffron&configSuffix;"
                              options="&scp_options;"/>
 			
-			<scp sourcedir="logs/saffron"
+	    <scp sourcedir="logs/saffron"
 			     file="currentbuildstatus.txt"
 			     targetuser="&scp_user;"
 			     targethost="&scp_host;"
@@ -67,7 +99,7 @@
 			     targetdir="web/logs/saffron&configSuffix;"
                              options="&scp_options;"/>
 			
-			<email buildresultsurl="&buildresultsbase;/saffron&configSuffix;"
+	    <email buildresultsurl="&buildresultsbase;/saffron&configSuffix;"
 			       mailhost="&mailhost;"
 			       reportsuccess="&reportsuccess;"
 			       returnname="&returnname;"
@@ -75,10 +107,16 @@
 			       skipusers="&skipusers;"
 			       spamwhilebroken="&spamwhilebroken;"
 			       subjectprefix="&subjectprefix;">
-				<failure address="&failureaddress;"
-				         reportWhenFixed="&reportwhenfixed;"/>
-                                <propertiesmapper file="&emailmapper;"/>
-			</email>
-		</publishers>
-	</project>
+	        <failure address="&failureaddress;" reportWhenFixed="&reportwhenfixed;"/>
+            <propertiesmapper file="&emailmapper;"/>
+
+            <always address="fzhang@lucidera.com"/>
+	    </email>
+
+	</publishers>
+
+    <plugin name="labelincrementer"
+        classname="net.sourceforge.cruisecontrol.labelincrementers.P4ChangelistLabelIncrementer"/>
+
+</project>
 

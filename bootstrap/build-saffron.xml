@@ -3,15 +3,10 @@
 <project name="build-saffron" default="build">
 	<property environment="env"/>
 
-	<!-- perforce properties -->
-	<property file="${open_propfile}"/>
-	<property name="p4.client" value="${env.USER}.${env.HOSTNAME}"/>
-
-
-	<!-- regular vs. integration build locations -->
+    <!-- regular vs. integration build locations 
 	<property name="default.build.home" location="."/>
 	<property name="integration.build.home" location="./build"/>
-
+    -->
 
 	<!-- perforce synchronization target -->
 	<target name="sync" description="Synchronize the Saffron project" unless="no-sync">
@@ -66,10 +61,11 @@
 		<mkdir dir="${integration.build.home}/saffron"/>
 
 		<!-- ant's copy task doesn't preserve permissions -->
-		<echo message="Copying ./saffron to ${integration.build.home}/"/>
+        <echo message="Copying ./saffron and ./fennel to ${integration.build.home}/"/>
 		<exec dir="${default.build.home}" executable="cp" failonerror="true">
-			<arg value="-pr"/>
+			<arg value="-fr"/>
 			<arg value="./saffron/"/>
+			<arg value="./fennel/"/>
 			<arg value="${integration.build.home}/"/>
 		</exec>
 	</target>
