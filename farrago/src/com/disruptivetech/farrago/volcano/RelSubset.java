@@ -73,6 +73,9 @@ public class RelSubset extends AbstractRelNode
     /** whether findBestPlan is being called */
     boolean active;
 
+    /** Timestamp for metadata validity */
+    long timestamp;
+
     //~ Constructors ----------------------------------------------------------
 
     RelSubset(
@@ -260,6 +263,8 @@ public class RelSubset extends AbstractRelNode
         VolcanoPlanner planner,
         RelNode rel)
     {
+        ++timestamp;
+        
         final RelOptCost cost = planner.getCost(rel);
         if (cost.isLt(bestCost)) {
             tracer.finer("Subset cost improved: subset [" + this

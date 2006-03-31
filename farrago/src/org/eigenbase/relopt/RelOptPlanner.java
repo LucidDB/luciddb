@@ -209,6 +209,17 @@ public interface RelOptPlanner
      * @param chain receives planner's custom providers, if any
      */
     public void registerMetadataProviders(ChainedRelMetadataProvider chain);
+
+    /**
+     * Gets a timestamp for a given rel's metadata.  This timestamp
+     * is used by {@link CachingRelMetadataProvider} to decide
+     * whether cached metadata has gone stale.
+     *
+     * @param rel rel of interest
+     *
+     * @return timestamp of last change which might affect metadata derivation
+     */
+    public long getRelMetadataTimestamp(RelNode rel);
 }
 
 

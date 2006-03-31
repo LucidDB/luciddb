@@ -687,7 +687,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
 
         // Add caching on top of all that.
         CachingRelMetadataProvider cacheProvider = 
-            new CachingRelMetadataProvider(relMetadataProvider);
+            new CachingRelMetadataProvider(relMetadataProvider, planner);
 
         // Put the planner at the head of its own chain before all the rest.
         // It's a bad idea to cache the planner's results.

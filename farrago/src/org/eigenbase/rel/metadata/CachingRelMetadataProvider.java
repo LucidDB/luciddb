@@ -23,6 +23,7 @@ package org.eigenbase.rel.metadata;
 
 import org.eigenbase.util.*;
 import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
 
 import java.util.*;
 
@@ -35,15 +36,20 @@ import java.util.*;
  */
 public class CachingRelMetadataProvider implements RelMetadataProvider
 {
-    private final Map<List, Object> cache;
+    private final Map<List, CacheEntry> cache;
     
     private final RelMetadataProvider underlyingProvider;
     
-    public CachingRelMetadataProvider(RelMetadataProvider underlyingProvider)
+    private final RelOptPlanner planner;
+    
+    public CachingRelMetadataProvider(
+        RelMetadataProvider underlyingProvider,
+        RelOptPlanner planner)
     {
         this.underlyingProvider = underlyingProvider;
+        this.planner = planner;
 
-        cache = new HashMap<List, Object>();
+        cache = new HashMap<List, CacheEntry>();
     }
     
     // implement RelMetadataProvider
@@ -52,12 +58,10 @@ public class CachingRelMetadataProvider implements RelMetadataProvider
         String metadataQueryName,
         Object [] args)
     {
-        // REVIEW jvs 29-Mar-2006:  Some queries may not be
-        // cacheable, or may need to have their cached values
-        // flushed.  That requires some meta-metadata, plus
-        // interaction with the planner.
-        
-        // Check cache first.
+        // TODO jvs 30-Mar-2006: Use meta-metadata to decide which metadata
+        // query results can stay fresh until the next Ice Age.
+
+        // Compute hash key.
         List hashKey;
         if (args != null) {
             hashKey = new ArrayList(args.length + 2);
@@ -67,18 +71,36 @@ public class CachingRelMetadataProvider implements RelMetadataProvider
         } else {
             hashKey = Arrays.asList(rel, metadataQueryName);
         }
-        Object result = cache.get(hashKey);
-        if (result != null) {
-            return result;
-        }
 
-        // Cache miss.
-        result = underlyingProvider.getRelMetadata(
+        long timestamp = planner.getRelMetadataTimestamp(rel);
+
+        // Perform cache lookup.
+        CacheEntry entry = cache.get(hashKey);
+        if (entry != null) {
+            if (timestamp == entry.timestamp) {
+                return entry.result;
+            } else {
+                // Cache results are stale.
+            }
+        }
+        
+        // Cache miss or stale.
+        Object result = underlyingProvider.getRelMetadata(
             rel, metadataQueryName, args);
         if (result != null) {
-            cache.put(hashKey, result);
+            entry = new CacheEntry();
+            entry.timestamp = timestamp;
+            entry.result = result;
+            cache.put(hashKey, entry);
         }
         return result;
+    }
+
+    private static class CacheEntry 
+    {
+        long timestamp;
+
+        Object result;
     }
 }
 

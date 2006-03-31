@@ -1279,6 +1279,17 @@ loop:
         chain.addProvider(
             new VolcanoRelMetadataProvider());
     }
+
+    // implement RelOptPlanner
+    public long getRelMetadataTimestamp(RelNode rel)
+    {
+        RelSubset subset = getSubset(rel);
+        if (subset == null) {
+            return 0;
+        } else {
+            return subset.timestamp;
+        }
+    }
     
     //~ Inner Classes ---------------------------------------------------------
 
