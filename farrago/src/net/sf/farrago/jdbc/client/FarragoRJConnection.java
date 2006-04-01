@@ -62,13 +62,12 @@ class FarragoRJConnection extends RJConnection
         return (FarragoRJConnectionInterface) rmiConnection_;
     }
 
-    public long getFarragoSessionId() 
+    public long getFarragoSessionId() throws SQLException
     {
         try {
             return getFarragoRmiCon().getFarragoSessionId();
         } catch (RemoteException e) {
-            return 0;
-            // throw new SQLException(e.getMessage());
+            throw new SQLException(e.getMessage());
         }
     }
 

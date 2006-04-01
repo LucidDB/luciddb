@@ -37,7 +37,7 @@ import java.util.Properties;
  **/
 public interface FarragoConnection extends java.sql.Connection
 {
-    long getFarragoSessionId();
+    long getFarragoSessionId() throws SQLException;
 
     String findMofId(String wrapperName)
         throws SQLException;

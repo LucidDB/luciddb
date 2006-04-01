@@ -34,5 +34,5 @@ import java.sql.SQLException;
 public interface FarragoStatement extends java.sql.Statement
 {
     /** @return a non-zero identifier, unique for each executing statement */
-    long getFarragoExecutingStmtId();
+    long getFarragoExecutingStmtId() throws SQLException;
 }

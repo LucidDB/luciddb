@@ -40,7 +40,8 @@ public interface FarragoRJConnectionInterface extends RJConnectionInterface
     /**
      * @see net.sf.farrago.jdbc.FarragoConnection#getFarragoSessionId
      */
-    long getFarragoSessionId() throws RemoteException;
+    long getFarragoSessionId() throws RemoteException, SQLException;
+
 
     /**
      * @see net.sf.farrago.jdbc.FarragoConnection#getWrapper
