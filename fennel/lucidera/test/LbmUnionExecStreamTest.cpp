@@ -285,62 +285,62 @@ void LbmUnionExecStreamTest::testBuffer(SharedByteBuffer pByteBuffer)
 
     // merge area should be able to use arbitrary offsets and zero values
     // 0000 0011 1111 11xx
-    mergeArea.advance((LcsRid) 10000);
-    mergeArea.mergeMem((LcsRid) 10006, ones, 8);
+    mergeArea.advance(10000);
+    mergeArea.mergeMem(10006, ones, 8);
     FixedBuffer result0[16] = { 0,0,0,0, 0,0,1,1, 1,1,1,1, 1,1 };
     verifyMerge(mergeArea, result0);
 
     // xxxx x011 1111 11xx
-    mergeArea.advance((LcsRid) 10005);
+    mergeArea.advance(10005);
     FixedBuffer result1[16] = { 0,1,1, 1,1,1,1, 1,1 };
     verifyMerge(mergeArea, result1);
 
     // merge area should wrap around
     // 2222 2011 3333 3322
-    mergeArea.mergeMem((LcsRid) 10008, twos, 13);
+    mergeArea.mergeMem(10008, twos, 13);
     FixedBuffer result2[16] = { 0,1,1, 3,3,3,3, 3,3,2,2, 2,2,2,2, 2 };
     verifyMerge(mergeArea, result2);
 
     // 2222 2xx1 3333 3322
-    mergeArea.advance((LcsRid) 10007);
+    mergeArea.advance(10007);
     FixedBuffer result3[16] = { 1, 3,3,3,3, 3,3,2,2, 2,2,2,2, 2 };
     verifyMerge(mergeArea, result3);
 
     // 6662 2xx1 3377 7766
-    mergeArea.mergeMem((LcsRid) 10010, fours, 9);
+    mergeArea.mergeMem(10010, fours, 9);
     FixedBuffer result4[16] = { 1, 3,3,7,7, 7,7,6,6, 6,6,6,2, 2 };
     verifyMerge(mergeArea, result4);
 
     // 0011 1122 2244 4400
-    mergeArea.advance((LcsRid) 10030);
-    mergeArea.mergeMem((LcsRid) 10040, fours, 4);
-    mergeArea.mergeMem((LcsRid) 10036, twos, 4);
-    mergeArea.mergeMem((LcsRid) 10032, ones, 4);
-    mergeArea.mergeMem((LcsRid) 10044, zeroes, 2);
+    mergeArea.advance(10030);
+    mergeArea.mergeMem(10040, fours, 4);
+    mergeArea.mergeMem(10036, twos, 4);
+    mergeArea.mergeMem(10032, ones, 4);
+    mergeArea.mergeMem(10044, zeroes, 2);
     FixedBuffer result5[16] = { 0,0,1,1, 1,1,2,2, 2,2,4,4, 4,4,0,0 };
     verifyMerge(mergeArea, result5);
 
     // index too low
-    mergeArea.advance((LcsRid) 10032);
-    // CHECK_THROWN(mergeArea.getByte((LcsRid) 10031);
+    mergeArea.advance(10032);
+    // CHECK_THROWN(mergeArea.getByte(10031);
 
     // index too high
-    // CHECK_THROWN(mergeArea.getByte((LcsRid) 10046));
+    // CHECK_THROWN(mergeArea.getByte(10046));
 
     // can't write past bound
-    // CHECK_THROWN(mergeArea.mergeMem((LcsRid) 10048, zeroes, 2));
+    // CHECK_THROWN(mergeArea.mergeMem(10048, zeroes, 2));
 
     // can't go backwards
-    // CHECK_THROWN(mergeArea.advance((LcsRid) 10031));
+    // CHECK_THROWN(mergeArea.advance(10031));
 
     // this should be ok
-    mergeArea.advance((LcsRid) 10032);
+    mergeArea.advance(10032);
 }
 
 void LbmUnionExecStreamTest::verifyMerge(
     LbmUnionMergeArea area, PConstBuffer reference)
 {
-    LcsRid start = area.getStart();
+    LbmByteNumberPrimitive start = area.getStart();
     uint size = opaqueToInt(area.getEnd() - start);
     
     for (uint i = 0; i < size; i++) {

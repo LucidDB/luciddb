@@ -1,0 +1,28 @@
+<project name="bh" default="benchcsvtest">
+  <target name="benchcsvtest">
+    <test-suite name="benchcsvtest">
+
+      <init-hook>
+        <ant target="restoreCatalog"/>
+        <ant target="copy-csv"/>
+      </init-hook>
+
+      <test name="creschema">
+        <junit-sql file="${open.dir}/luciddb/test/sql/bench/gen/${foreign.db}/creschema.sql"/>
+      </test>
+
+      <test name="benchfileload" requiresSuccess="creschema">
+        <junit-sql file="${open.dir}/luciddb/test/sql/bench/gen/${foreign.db}/benchfileload.sql"/>
+      </test>
+
+      <test name="benchload" requiresSuccess="creschema">
+        <junit-sql file="${open.dir}/luciddb/test/sql/bench/gen/${foreign.db}/benchload.sql"/>
+      </test>
+
+      <test name="benchqueries" requiresSuccess="benchload">
+        <junit-sql file="${open.dir}/luciddb/test/sql/bench/gen/${foreign.db}/benchqueries.sql"/>
+      </test>
+
+    </test-suite>
+  </target>
+</project>

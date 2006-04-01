@@ -1,0 +1,16 @@
+0: jdbc:luciddb:> create foreign table @name_prefix@_schema.SHORTREG_CUSTOMERS_SRC (
+. . . . . . . . > CUSTID INTEGER,
+. . . . . . . . > FNAME VARCHAR(30),
+. . . . . . . . > LNAME VARCHAR(30),
+. . . . . . . . > SEX VARCHAR(1)
+. . . . . . . . > )
+. . . . . . . . > server @SERVER_NAME@
+. . . . . . . . > options (
+. . . . . . . . > SCHEMA_NAME '@SCHEMA@',
+. . . . . . . . > @TABLE_NAME@ 'CUSTOMERS'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> INSERT INTO s.CUSTOMERS
+. . . . . . . . > SELECT CUSTID,FNAME,LNAME,SEX FROM @name_prefix@_schema.SHORTREG_CUSTOMERS_SRC;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

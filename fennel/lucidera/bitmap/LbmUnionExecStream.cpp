@@ -142,8 +142,10 @@ ExecStreamResult LbmUnionExecStream::execute(
      }
 
      if (isConsumerSridSet()) {
+         // avoid RIDs not required by the downstream consumer
          requestedSrid = (LcsRid) *reinterpret_cast<RecordNum const *>(
              pDynamicParamManager->getParam(startRidParamId).getDatum().pData);
+         workspace.advanceToSrid(requestedSrid);
      }
      if (isSegmentLimitSet()) {
          segmentsRemaining = *reinterpret_cast<uint const *>(
@@ -237,12 +239,6 @@ ExecStreamResult LbmUnionExecStream::readSegment()
 bool LbmUnionExecStream::writeSegment()
 {
     assert(writePending = true);
-
-    // as an optimization, signal workspace to avoid Rids not 
-    // required by a downstream INTERSECT 
-    if (isConsumerSridSet()) {
-        workspace.advanceToSrid(requestedSrid);
-    }
 
     // eagerly flush segments
     LcsRid currentSrid = segmentReader.getSrid();

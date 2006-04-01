@@ -477,6 +477,21 @@ public class DdlRoutineHandler extends DdlHandler
     {
         // TODO jvs 19-Jan-2005: implement deployment descriptors
         String urlString = FarragoCatalogUtil.getJarUrl(jar);
+        if (FarragoPluginClassLoader.isLibraryClass(urlString)) {
+            // Verify that we can load the class.
+            String className =
+                FarragoPluginClassLoader.getLibraryClassReference(
+                    urlString);
+            try {
+                Class.forName(className);
+            } catch (Throwable ex) {
+                throw res.ValidatorInvalidJarUrl.ex(
+                    repos.getLocalizedObjectName(urlString),
+                    repos.getLocalizedObjectName(jar),
+                    ex);
+            }
+            return;
+        }
         URL url;
         try {
             url = new URL(urlString);

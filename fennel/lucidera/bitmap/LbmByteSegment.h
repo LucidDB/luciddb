@@ -35,13 +35,13 @@ FENNEL_BEGIN_NAMESPACE
 class LbmByteSegment
 {
 public:
-    LcsRid byteNum;
+    LbmByteNumber byteNum;
     PBuffer byteSeg;
     uint len;
 
     inline void reset() 
     {
-        byteNum = (LcsRid) 0;
+        byteNum = (LbmByteNumber) 0;
         byteSeg = NULL;
         len = 0;
     }
@@ -51,7 +51,7 @@ public:
      */
     inline LcsRid getSrid() const
     {
-        return (LcsRid) (byteNum * LbmSegment::LbmOneByteSize);
+        return byteNumberToRid(byteNum);
     }
 
     /**
@@ -65,7 +65,7 @@ public:
     /**
      * Returns the end byte number
      */
-    inline LcsRid getEnd() const
+    inline LbmByteNumber getEnd() const
     {
         return byteNum + len;
     }
@@ -75,15 +75,17 @@ public:
      */
     inline LcsRid getEndRid() const
     {
-        return getEnd() * 8;
+        return byteNumberToRid(getEnd());
     }
 
     /**
      * Ensures the segment begins with the requested byte number.
      * As a result, the beginning of the segment or even the entire
      * segment may be truncated.
+     *
+     * This function assumes bytes are reverse order.
      */
-    void advanceToByteNum(LcsRid newStartByteNum) 
+    void advanceToByteNum(LbmByteNumber newStartByteNum) 
     {
         // ignore null values
         if (isNull()) {
@@ -103,6 +105,25 @@ public:
             byteSeg -= diff;
             len -= diff;
         }
+    }
+
+    /**
+     * Prints a byte segment.
+     *
+     * This function assumes bytes are in order.
+     */
+    void print(std::ostream &output) 
+    {
+        output << std::dec << opaqueToInt(byteNum) << ".";
+        output << std::dec << len << " (";
+        for (uint i = 0; i < len; i++) {
+            uint val = byteSeg[i];
+            if (i > 0) {
+                output << ",";
+            }
+            output << std::hex << val;
+        }
+        output << ")" << std::endl;
     }
 };
 

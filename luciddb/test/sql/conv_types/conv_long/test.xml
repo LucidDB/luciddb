@@ -1,32 +1,25 @@
-<project name="bh" default="convlong-test">
-  <target name="convlong-test">
-    <test-suite testunit="convlong-test">
+<project name="bh" default="conv_long">
+  <target name="conv_long">
+    <test-suite name="conv_long">
       
       <test-metadata> 
         <knownFailure value="true"/>
       </test-metadata>
 
       <init-hook>
-        <test name="restoreCatalog" testunit="convlong-init-test">
-          <ant-task>
-            <ant target="restoreCatalog"/>
-          </ant-task>
-        </test>
+        <ant target="restoreCatalog"/>
       </init-hook>
 
       <test name="createsource">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/conv_types/conv_long/cr_source.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/conv_types/conv_long/cr_source.sql"/>
       </test>
 
       <test name="longvarchar" requiresRun="createsource">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/conv_types/conv_long/target_longchar.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/conv_types/conv_long/target_longchar.sql"/>
       </test>
 
       <test name="longvarbin" requiresRun="createsource">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/conv_types/conv_long/target_longbin.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/conv_types/conv_long/target_longbin.sql"/>
       </test>
 
     </test-suite>

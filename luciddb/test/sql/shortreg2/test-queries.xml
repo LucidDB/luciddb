@@ -1,86 +1,71 @@
 <project name="bh" default="simple-test">
   <target name="simple-test">
-    <test-suite testunit="simple-test">
+    <test-suite name="simple-test">
 
       <test name="joinEqSanity">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/shortreg2/gen/%{config.prop}/joinEqSanity.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg2/gen/${config.prop}/joinEqSanity.sql"/>
       </test>
 
       <test name="compIdx">
         <test-metadata> 
           <knownFailure value="true"/>
         </test-metadata>        
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/shortreg2/gen/%{config.prop}/compIdx.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg2/gen/${config.prop}/compIdx.sql"/>
       </test>
 
       <test name="rangeNConv">
         <test-metadata> 
           <knownFailure value="true"/>
         </test-metadata>
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/shortreg2/gen/%{config.prop}/rangeNConv.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg2/gen/${config.prop}/rangeNConv.sql"/>
       </test>
 
       <test name="subFrom">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/shortreg2/gen/%{config.prop}/subFrom.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg2/gen/${config.prop}/subFrom.sql"/>
       </test>
 <!-- 
       <test name="aggJoinEq">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/shortreg2/gen/%{config.prop}/aggJoinEq.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg2/gen/${config.prop}/aggJoinEq.sql"/>
       </test>
 
       <test name="joinEq">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/shortreg2/gen/%{config.prop}/joinEq.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg2/gen/${config.prop}/joinEq.sql"/>
       </test>
 
       <test name="joinFiltExp">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/shortreg2/gen/%{config.prop}/joinFiltExp.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg2/gen/${config.prop}/joinFiltExp.sql"/>
       </test>
 
       <test name="joinFilt">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/shortreg2/gen/%{config.prop}/joinFilt.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg2/gen/${config.prop}/joinFilt.sql"/>
       </test>
 
       <test name="joinMisc">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/shortreg2/gen/%{config.prop}/joinMisc.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg2/gen/${config.prop}/joinMisc.sql"/>
       </test>
 
       <test name="joinRng">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/shortreg2/gen/%{config.prop}/joinRng.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg2/gen/${config.prop}/joinRng.sql"/>
       </test>
 
       <test name="joinSemi">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/shortreg2/gen/%{config.prop}/joinSemi.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg2/gen/${config.prop}/joinSemi.sql"/>
       </test>
 
       <test name="negJoinFilt">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/shortreg2/gen/%{config.prop}/negJoinFilt.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg2/gen/${config.prop}/negJoinFilt.sql"/>
       </test>
 
       <test name="order">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/shortreg2/gen/%{config.prop}/order.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg2/gen/${config.prop}/order.sql"/>
       </test>
 
       <test name="subIn">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/shortreg2/gen/%{config.prop}/subIn.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg2/gen/${config.prop}/subIn.sql"/>
       </test>
 
       <test name="subMisc">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/shortreg2/gen/%{config.prop}/subMisc.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg2/gen/${config.prop}/subMisc.sql"/>
       </test>
 -->
     </test-suite>

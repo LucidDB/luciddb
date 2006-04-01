@@ -1,38 +1,17 @@
-<project name="tch" default="simple-test">
-  <target name="simple-test">
-    <test-suite testunit="simple-test">
+<project name="bh" default="datatypes-test">
+  <target name="datatypes-test">
+    <test-suite name="datatypes-test">
 
-      <init-hook>
-        <test name="restoreCatalog" testunit="init-test">
-          <ant-task>
-            <ant target="restoreCatalog"/>
-          </ant-task>
-        </test>
-      </init-hook>
+      <test-suite-call testfile="datatypestest.xml">
+        <test-suite-modifier value="csvjdbc"/>
+        <property name="foreign.db" value="csvjdbc"/>
+      </test-suite-call>
 
-      <test name="creschema">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/datatypes/gen/${config.prop}/creschema.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
-      </test>
-
-      <test name="importschema" requiresRun="creschema">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/datatypes/gen/${config.prop}/foreigntabl.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
-      </test>
-
-      <test name="tableload" requiresRun="importschema">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/datatypes/gen/${config.prop}/tblload.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
-      </test>
-
-      <test name="types">
-        <test-metadata> 
-          <knownFailure value="true"/>
-        </test-metadata>
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/datatypes/gen/${config.prop}/metadatatypes.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
-      </test>
-
+      <test-suite-call testfile="datatypestest.xml">
+        <test-suite-modifier value="flatfile"/>
+        <property name="foreign.db" value="flatfile"/>
+      </test-suite-call>
+      
     </test-suite>
   </target>
 </project>

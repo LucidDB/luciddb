@@ -142,40 +142,37 @@
 0: jdbc:luciddb:> -- FRG-20
 0: jdbc:luciddb:> insert into calcdate select cast (ts1 as date) from calctypes where n1 + 100 > 0
 . . . . . . . . > ;
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'TIMESTAMP' to 'DATE' (state=,code=0)
 0: jdbc:luciddb:> select * from calcdate order by 1
 . . . . . . . . > ;
 +-------------+
 |     D1      |
 +-------------+
 | 1996-11-30  |
+| 1996-11-30  |
 +-------------+
 0: jdbc:luciddb:> -- FRG-20
 0: jdbc:luciddb:> insert into calctime select cast (s1 as time) from calctypes where n1 + 100 > 0
 . . . . . . . . > ;
-Error: could not calculate results for the following row:
-[ '9:21:43                       ', '1996-11-30', 10, 129876, 2412, 6.5, 12.8, 33703000, 849312000000, 849345703000 ]
-Messages:
-[0]:PC=6 Code=22007 (state=,code=0)
 0: jdbc:luciddb:> -- FRG-20
 0: jdbc:luciddb:> insert into calctime select cast (ts1 as time) from calctypes where n1 + 100 > 0
 . . . . . . . . > ;
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'TIMESTAMP' to 'TIME' (state=,code=0)
 0: jdbc:luciddb:> select * from calctime order by 1
 . . . . . . . . > ;
-+-----+
-| T1  |
-+-----+
-+-----+
++-----------+
+|    T1     |
++-----------+
+| 09:21:43  |
+| 09:21:43  |
++-----------+
 0: jdbc:luciddb:> -- FRG-20
 0: jdbc:luciddb:> insert into calcts select cast (cast (s1 as time) as timestamp) from calctypes where n1 + 100 > 0
 . . . . . . . . > ;
-Error: Cast function cannot convert value of type TIME to type TIMESTAMP (state=,code=0)
 0: jdbc:luciddb:> select * from calcts order by 1
 . . . . . . . . > ;
-+-----+
-| TS  |
-+-----+
-+-----+
++------------------------+
+|           TS           |
++------------------------+
+| 1970-01-01 09:21:43.0  |
++------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

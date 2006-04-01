@@ -33,7 +33,7 @@ void LbmSeqSegmentReader::init(
 }
 
 ExecStreamResult LbmSeqSegmentReader::readSegmentAndAdvance(
-    LcsRid &byteNum, PBuffer &byteSeg, uint &len)
+    LbmByteNumber &byteNum, PBuffer &byteSeg, uint &len)
 {
     if (pSegDescStart >= pSegDescEnd) {
         // read a new bitmap segment tuple from the input stream

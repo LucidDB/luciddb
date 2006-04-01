@@ -1,15 +1,14 @@
 <project name="tch" default="simple-test">
   <target name="simple-test">
-    <test-suite testunit="oracle-tmp-test">
+    <test-suite name="oracle-tmp-test">
 
       <test name="joinEqSanity">
         <test-parameter name="jdbc-driver" 
           value="oracle.jdbc.driver.OracleDriver"/>
-        <test-parameter name="sql-file" value="joinEqSanity.sql"/>
         <test-parameter name="username" value="schoi"/>
         <test-parameter name="passwd" value="schoi"/>
         <test-parameter name="url" value="jdbc:oracle:thin:@akela.lucidera.com:1521:XE"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg2/gen/${config.prop}/joinEqSanity.sql"/>
       </test>
 
     </test-suite>

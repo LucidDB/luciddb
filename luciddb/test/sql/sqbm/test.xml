@@ -1,6 +1,6 @@
-<project name="bh" default="sqbm-test">
-  <target name="sqbm-test">
-    <test-suite testunit="sqbm-test">
+<project name="bh" default="sqbm">
+  <target name="sqbm">
+    <test-suite name="sqbm">
 
       <init-hook>
         <ant target="restoreCatalog"/>
@@ -10,8 +10,7 @@
         <test-metadata>
           <withIndex value="true"/>
         </test-metadata>
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/sqbm/benchins1m_idx.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/benchins1m_idx.sql"/>
       </test>
 
       <!--  Official Queries -->
@@ -19,58 +18,49 @@
         <test-metadata>
           <withIndex value="true"/>
         </test-metadata>
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/sqbm/sqbm_q1.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q1.sql"/>
       </test>
 
       <test name="sqbm2a" requiresSuccess="benchins1mMssql">
         <test-metadata>
           <withIndex value="true"/>
         </test-metadata>
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/sqbm/sqbm_q2a.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q2a.sql"/>
       </test>
 
       <test name="sqbm2b" requiresSuccess="benchins1mMssql">
         <test-metadata>
           <withIndex value="true"/>
         </test-metadata>
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/sqbm/sqbm_q2b.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q2b.sql"/>
       </test>
 
       <test name="sqbm3a" requiresSuccess="benchins1mMssql">
         <test-metadata>
           <withIndex value="true"/>
         </test-metadata>
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/sqbm/sqbm_q3a.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q3a.sql"/>
       </test>
 
       <test name="sqbm3b" requiresSuccess="benchins1mMssql">
         <test-metadata>
           <withIndex value="true"/>
         </test-metadata>
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/sqbm/sqbm_q3b.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q3b.sql"/>
       </test>
 
       <test name="sqbm4" requiresSuccess="benchins1mMssql">
         <test-metadata>
-          <!-- Failing due to LDB-48 -->
-          <knownFailure value="true"/>
           <withIndex value="true"/>
         </test-metadata>
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/sqbm/sqbm_q4.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q4.sql"/>
       </test>
 
       <test name="sqbm5" requiresSuccess="benchins1mMssql">
         <test-metadata>
           <withIndex value="true"/>
         </test-metadata>
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/sqbm/sqbm_q5.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q5.sql"/>
       </test>
 
       <!-- doesn't use bitmap indexes yet -->
@@ -79,8 +69,7 @@
           <knownFailure value="true"/>
           <withIndex value="true"/>
         </test-metadata>
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/sqbm/sqbm_q6a.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q6a.sql"/>
       </test>
 
       <!-- doesn't use bitmap indexes yet, very slow -->
@@ -89,8 +78,7 @@
           <knownFailure value="true"/>
           <withIndex value="true"/>
         </test-metadata>
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/sqbm/sqbm_q6b.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q6b.sql"/>
       </test>
 
       <test name="sqbm4nob" requiresSuccess="benchins1mMssql">
@@ -99,16 +87,14 @@
           <knownFailure value="true"/>
           <withIndex value="true"/>
         </test-metadata>
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/sqbm/sqbm_q4nob.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q4nob.sql"/>
       </test>
 
       <test name="sqbm5nob" requiresSuccess="benchins1mMssql">
         <test-metadata>
           <withIndex value="true"/>
         </test-metadata>
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/sqbm/sqbm_q5nob.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q5nob.sql"/>
       </test>
 
       <!-- doesn't use bitmap indexes yet, very slow -->
@@ -117,8 +103,7 @@
           <knownFailure value="true"/>
           <withIndex value="true"/>
         </test-metadata>
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/sqbm/sqbm_q6bnob.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q6bnob.sql"/>
       </test>
 
       <!-- stress tests -->
@@ -127,8 +112,7 @@
           <knownFailure value="true"/>
           <withIndex value="true"/>
         </test-metadata>
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/sqbm/sqbm_qfh1.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_qfh1.sql"/>
       </test>
 
       <test name="sqbmqfh2" requiresSuccess="benchins1mMssql">
@@ -136,8 +120,7 @@
           <knownFailure value="true"/>
           <withIndex value="true"/>
         </test-metadata>
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/sqbm/sqbm_qfh2.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_qfh2.sql"/>
       </test>
 
       <test name="sqbmqfh3" requiresSuccess="benchins1mMssql">
@@ -145,8 +128,7 @@
           <knownFailure value="true"/>
           <withIndex value="true"/>
         </test-metadata>
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/sqbm/sqbm_qfh3.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_qfh3.sql"/>
       </test>
 
       <test name="sqbmqfh4" requiresSuccess="benchins1mMssql">
@@ -154,8 +136,7 @@
           <knownFailure value="true"/>
           <withIndex value="true"/>
         </test-metadata>
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/sqbm/sqbm_qfh4.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_qfh4.sql"/>
       </test>
 
       <!--  HHJ testing for Aggregates -->
@@ -164,8 +145,7 @@
           <knownFailure value="true"/>
           <withIndex value="true"/>
         </test-metadata>
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/sqbm/hhjswing_q1.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/hhjswing_q1.sql"/>
       </test>
 
       <test name="hhjswing2" requiresSuccess="benchins1mMssql">
@@ -173,8 +153,7 @@
           <knownFailure value="true"/>
           <withIndex value="true"/>
         </test-metadata>
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/sqbm/hhjswing_q2.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/hhjswing_q2.sql"/>
       </test>
 
       <test name="hhjswing3" requiresSuccess="benchins1mMssql">
@@ -182,8 +161,7 @@
           <knownFailure value="true"/>
           <withIndex value="true"/>
         </test-metadata>
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/sqbm/hhjswing_q3.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/hhjswing_q3.sql"/>
       </test>
 
       <!-- run queries in parallel -->
@@ -194,8 +172,7 @@
         <test-metadata>
           <withIndex value="true"/>
         </test-metadata>
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/sqbm/dropindexes.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/dropindexes.sql"/>
       </test>
 
     </test-suite>

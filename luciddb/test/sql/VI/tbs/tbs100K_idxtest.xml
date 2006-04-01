@@ -1,7 +1,7 @@
 <!-- Run benchmark load and query tests for 100K rows with indices -->
 <project name="bh" default="tbs-test">
   <target name="tbs-test">
-    <test-suite testunit="tbs100K-idxtest">
+    <test-suite name="tbs100K-idxtest">
 
       <init-hook>
         <ant target="restoreCatalog"/>

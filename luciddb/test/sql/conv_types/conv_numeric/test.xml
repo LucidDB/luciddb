@@ -1,65 +1,50 @@
-<project name="bh" default="convnumeric-test">
-  <target name="convnumeric-test">
-    <test-suite testunit="convnumeric-test">
+<project name="bh" default="conv_numeric">
+  <target name="conv_numeric">
+    <test-suite name="conv_numeric">
       
       <init-hook>
-        <test name="restoreCatalog" testunit="convnumeric-init-test">
-          <ant-task>
-            <ant target="restoreCatalog"/>
-          </ant-task>
-        </test>
+        <ant target="restoreCatalog"/>
       </init-hook>
 
       <test name="createsource">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/conv_types/conv_numeric/cr_source.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/conv_types/conv_numeric/cr_source.sql"/>
       </test>
 
       <test name="tinyint" requiresRun="createsource">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/conv_types/conv_numeric/tinyint_load.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/conv_types/conv_numeric/tinyint_load.sql"/>
       </test>
 
       <test name="smallint" requiresRun="createsource">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/conv_types/conv_numeric/smallint_load.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/conv_types/conv_numeric/smallint_load.sql"/>
       </test>
 
       <test name="integer" requiresRun="createsource">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/conv_types/conv_numeric/integer_load.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/conv_types/conv_numeric/integer_load.sql"/>
       </test>
 
       <test name="bigint" requiresRun="createsource">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/conv_types/conv_numeric/bigint_load.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/conv_types/conv_numeric/bigint_load.sql"/>
       </test>
 
       <test name="decimal" requiresRun="createsource">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/conv_types/conv_numeric/decimal_load.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/conv_types/conv_numeric/decimal_load.sql"/>
       </test>
 
       <test name="numeric" requiresRun="createsource">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/conv_types/conv_numeric/numeric_load.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/conv_types/conv_numeric/numeric_load.sql"/>
       </test>
 
       <test name="double" requiresRun="createsource">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/conv_types/conv_numeric/double_load.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/conv_types/conv_numeric/double_load.sql"/>
       </test>
 
       <test name="float" requiresRun="createsource">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/conv_types/conv_numeric/float_load.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/conv_types/conv_numeric/float_load.sql"/>
       </test>
 
       <test name="real" requiresRun="createsource">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/conv_types/conv_numeric/real_load.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/conv_types/conv_numeric/real_load.sql"/>
       </test>
-
 
     </test-suite>
   </target>

@@ -1,7 +1,7 @@
 <!-- Run benchmark load and query tests for 100 rows -->
 <project name="bh" default="tbs-test">
   <target name="tbs-test">
-    <test-suite testunit="tbs100-test">
+    <test-suite name="tbs100-test">
 
       <init-hook>
         <ant target="restoreCatalog"/>

@@ -29,24 +29,44 @@
   <property environment="env" />
   <property file="run.properties"/>
 
-  <taskdef name="var" classname="net.sf.antcontrib.property.Variable" classpath="${ant.classpath}"/>
+  <!-- override Farrago -->
+  <property name="project.catalog.dir" location="${open.dir}/luciddb/catalog" />
+  <property name="project.trace.propfile" location="${open.dir}/luciddb/trace/LucidDbTrace.properties" />
+  <property name="project.testlog.dir" location="${open.dir}/luciddb/testlog" />
+  <import file="${open.dir}/farrago/buildMacros.xml" />
+
+  <taskdef name="foreach" classname="net.sf.antcontrib.logic.ForEach" classpath="${ant.classpath}"/>
+  <taskdef name="if" classname="net.sf.antcontrib.logic.IfTask" classpath="${ant.classpath}"/>
 
   <!-- directory where sql is generated -->
   <property name="gensql.dir" value="${vi_insert.dir}/gen" />
+
   <!-- directory where blackhawk output should go -->
-  <property name="bhlogs.dir" value="${vi_insert.dir}/bh" />
+  <property name="bh.log.basedir" value="${vi_insert.dir}/testlog" />
+
   <!-- directory where the csv files are copied -->
+  <property name="csvsource.dir" value="/mnt/raksha/engineering/testdata/csv_BENCH"/>
   <property name="csv.dir" value="${vi_insert.dir}/csv" />
+  <property name="csv.copy.dir" value="${vi_insert.dir}/csv-copy" />
+
+  <!-- classpath for running tests via ant -->
+  <path id="test.classpath">
+    <pathelement path="${open.dir}/luciddb/classes"/>
+    <pathelement path="${farrago.sqlline.classpath}"/>
+    <pathelement path="${ant.classpath}"/>
+    <pathelement path="${blackhawk.run.classpath}"/>
+  </path>
+  <property name="test.classpath" refid="test.classpath"/>
 
   <target name="gen-sql">
     <filter token="open.dir" value="${open.dir}"/>
-    <filter token="csv.dir" value="${csv.dir}"/>
+    <filter token="csv.dir" value="${csv.copy.dir}"/>
 
     <!-- generate config.properties file -->
-    <copy file="${config.prop}" tofile="config.properties"
+    <copy file="prop.${prop.source}" tofile="config.properties"
       overwrite="true" filtering="true">
       <filterset>
-        <filtersfile file="${config.prop}"/>
+        <filtersfile file="prop.${prop.source}"/>
       </filterset>
     </copy>
 
@@ -61,7 +81,7 @@
         <filtersfile file="config.properties"/>
       </filterset>
     </copy>
-    <copy todir="${gensql.dir}/${config.prop}" overwrite="true"
+    <copy todir="${gensql.dir}/${prop.source}" overwrite="true"
       filtering="true">
       <fileset dir="${gensql.dir}tmp"/>
       <filterchain>
@@ -74,7 +94,7 @@
     <delete dir="${gensql.dir}tmp" quiet="true"/>
 
     <!-- copy over all other .sql and .ref files -->
-    <copy todir="${gensql.dir}/${config.prop}">
+    <copy todir="${gensql.dir}/${prop.source}">
       <fileset dir="${vi_insert.dir}">
         <include name="**/*.sql"/>
         <include name="**/*.ref"/>
@@ -82,51 +102,70 @@
       </fileset>
     </copy>
   </target>
+  
+  <target name="gen-all-sql">
+    <available file="${gensql.dir}" type="dir"
+      property="sql.generated"/>
+    <if>
+      <isset property="sql.generated"/>
+      <then/>
+      <else>
+        <foreach list="oracle,sqlserver,flatfile,csvjdbc" 
+          param="prop.source"
+          target="gen-sql"/>
+      </else>
+    </if>
+  </target>
+
+  <target name="test" depends="gen-all-sql">
+    <blackhawk.fork
+      basedir="${vi_insert.dir}"
+      testscript="${testfile}"
+      classpathref="test.classpath"/>
+  </target>
 
   <target name="copy-csv">
-    <delete dir="${csv.dir}"/>
-    <copy todir="${csv.dir}" overwrite="true">
-      <fileset dir="${csvsource.dir}"/>
-    </copy>
-  </target>
-
-  <target name="test">
-    <antcall target="copy-csv"/>
-    <antcall target="gen-sql"/>
-    <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
-  </target>
-
-  <target name="testAllConfigs">
-    <!-- oracle -->
-    <var name="config.prop" value="prop.oracle"/>
-    <antcall target="gen-sql"/>
-    <var name="bh.log.basedir" value="${vi_insert.dir}/bh/${config.prop}"/>
-    <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
-
-    <!-- sqlserver -->
-    <var name="config.prop" value="prop.sqlserver"/>
-    <antcall target="gen-sql"/>
-    <var name="bh.log.basedir" value="${vi_insert.dir}/bh/${config.prop}"/>
-    <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
-
-    <!-- csvjdbc -->
-    <antcall target="copy-csv"/>
-    <var name="config.prop" value="prop.csvjdbc"/>
-    <antcall target="gen-sql"/>
-    <var name="bh.log.basedir" value="${vi_insert.dir}/bh/${config.prop}"/>
-    <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
-
-    <!-- flatfile -->
-    <antcall target="copy-csv"/>
-    <var name="config.prop" value="prop.flatfile"/>
-    <antcall target="gen-sql"/>
-    <var name="bh.log.basedir" value="${vi_insert.dir}/bh/${config.prop}"/>
-    <ant dir="${open.dir}/luciddb" target="run_blackhawk"/>
+    <available file="${csvsource.dir}" type="dir"
+      property="raksha.available"/>
+    <if>
+      <isset property="raksha.available"/>
+      <then>
+        <!-- sync raksha <-> csv.dir -->
+        <sync todir="${csv.dir}" 
+          overwrite="false"
+          failonerror="false"
+          verbose="true">
+          <fileset dir="${csvsource.dir}"/>
+        </sync>
+      </then>
+    </if>
+    <available file="${csv.dir}" type="dir"
+      property="csv.available"/>
+    <if>
+      <isset property="csv.available"/>
+      <then> 
+        <!-- sync csv.dir <-> csv-copy.dir -->
+        <sync todir="${csv.copy.dir}"
+          overwrite="true"
+          verbose="true"
+          failonerror="true">
+          <fileset dir="${csv.dir}"/>
+        </sync>
+      </then>
+      <else>
+        <echo message="!! NO CSV FILES !!"/>
+      </else>
+    </if>
   </target>
 
   <target name="clean">
     <delete dir="${gensql.dir}"/>
-    <delete dir="${bhlogs.dir}"/>
+    <delete dir="${bh.log.basedir}"/>
+    <delete dir="${csv.dir}"/>
+  </target>
+
+  <target name="clean-csv">
+    <antcall target="clean"/>
     <delete dir="${csv.dir}"/>
   </target>
 

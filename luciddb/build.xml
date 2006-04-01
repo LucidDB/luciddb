@@ -105,6 +105,9 @@
   <property name="project.testlog.dir" location="${testlog.dir}" />
   <import file="${open.dir}/farrago/buildMacros.xml" />
 
+  <!-- directory for blackhawk output -->
+  <property name="bh.log.basedir" value="${luciddb.dir}/testlog/bh" />
+
   <!-- Template developer configuration file. -->
   <property name="FarragoConfTemplate.xmi"
     location="${farrago.xmi.dir}/FarragoConfTemplate.xmi"/>
@@ -180,25 +183,24 @@
     </blackhawk>
   </target>
 
-  <target name="test" depends="createCatalog,buildJdbcPlugin">
-    <antcall target="txn" />
-    <antcall target="bhShortregSanity" />
+  <target name="gen-all-sql">
+    <ant dir="test/sql/shortreg" target="gen-all-sql"/>
+  </target>
+
+  <target name="test" depends="createCatalog,buildJdbcPlugin,gen-all-sql">
+    <blackhawk.fork
+      basedir="${luciddb.dir}"
+      testscript="test.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="test-old" depends="createCatalog,buildJdbcPlugin">
+    <ant dir="test/sql/txn" target="test"/>
+    <ant dir="test/sql/shortreg" target="test"/>
     <ant dir="test/sql/udr/udf" target="test"/>
     <ant dir="test/sql/udr/udx" target="test"/>
   </target>
 
-  <!-- all tests, on all configurations, skipping knownFailures -->
-  <target name="testAll" depends="createCatalog,buildJdbcPlugin">
-    <ant dir="test/sql/conv_types" target="test"/>
-    <ant dir="test/sql/datatypes" target="testAllConfigs"/>
-    <ant dir="test/sql/shortreg2" target="testAllConfigs"/>
-    <antcall target="txn"/>
-    <!-- TODO: fix directories for udr sql tests -->
-    <ant dir="test/sql/udr/udf" target="test"/>
-    <ant dir="test/sql/udr/udx" target="test"/>
-    <ant dir="test/sql/bench" target="testAllConfigs"/>
-  </target>
-  
   <target name="bhShortregSanity">
     <blackhawk.fork basedir="test/sql/shortreg" 
       testscript="test.xml"
@@ -244,6 +246,10 @@
     <delete quiet="true">
       <fileset dir="${classes.dir}" includes="**/*.java"/>
     </delete>
+    <ant dir="test/sql/shortreg" target="clean"/>
+    <ant dir="test/sql/txn" target="clean"/>
+    <ant dir="test/sql/udr/udf" target="clean"/>
+    <ant dir="test/sql/udr/udx" target="clean"/>
   </target>
 
   <!-- Copies the Farrago unconfigured catalog to our catalog directory. -->

@@ -1,93 +1,73 @@
-<project name="bh" default="insert10k-test">
-  <target name="insert10k-test">
-    <test-suite testunit="insert10k-test">
+<project name="bh" default="test-insert10k">
+  <target name="test-insert10k">
+    <test-suite name="test-insert10k">
 
       <init-hook>
-        <test name="restoreCatalog" testunit="insert10k-init-test">
-          <ant-task>
-            <ant target="restoreCatalog"/>
-          </ant-task>
-        </test>
+        <ant target="restoreCatalog"/>
       </init-hook>
 
       <test name="altersys">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/altersys.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/altersys.sql"/>
       </test>
 
       <test name="rangek5ins">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/rangek5ins.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/rangek5ins.sql"/>
       </test>
 
       <test name="selectall_k2">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/selectall_k2.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/selectall_k2.sql"/>
       </test>
 
       <test name="selectall_k4">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/selectall_k4.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/selectall_k4.sql"/>
       </test>
 
       <test name="selectall_k5">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/selectall_k5.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/selectall_k5.sql"/>
       </test>
 
       <test name="selectall_k10">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/selectall_k10.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/selectall_k10.sql"/>
       </test>
 
       <test name="selectall_k25">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/selectall_k25.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/selectall_k25.sql"/>
       </test>
 
       <test name="selectall_k100">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/selectall_k100.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/selectall_k100.sql"/>
       </test>
 
       <test name="selectall_k1k">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/selectall_k1k.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/selectall_k1k.sql"/>
       </test>
 
       <test name="selectall_k10k">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/selectall_k10k.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/selectall_k10k.sql"/>
       </test>
 
       <test name="selectall_k40k">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/selectall_k40k.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/selectall_k40k.sql"/>
       </test>
 
       <test name="selectall_k100k">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/selectall_k100k.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/selectall_k100k.sql"/>
       </test>
 
       <test name="selectall_k250k">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/selectall_k250k.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/selectall_k250k.sql"/>
       </test>
 
       <test name="selectall_k500k">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/selectall_k500k.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/selectall_k500k.sql"/>
       </test>
 
       <test name="selectall_kseq">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/selectall_kseq.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/selectall_kseq.sql"/>
       </test>
 
       <test name="all">
-        <test-parameter name="sql-file" value="%{open.dir}/luciddb/test/sql/VI/insert/gen/${config.prop}/all.sql"/>
-        <javatest testclass="com.lucidera.luciddb.test.bh.SqlTest"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/all.sql"/>
       </test>
       
     </test-suite>

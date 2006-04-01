@@ -1,6 +1,6 @@
 <project name="bh" default="basic-test">
   <target name="basic-test">
-    <test-suite testunit="basic-test">
+    <test-suite name="basic-test">
 
       <init-hook>
         <ant target="restoreCatalog"/>

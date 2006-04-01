@@ -1,0 +1,49 @@
+<?xml version="1.0" ?>
+<Root>
+    <TestCase name="testUnionToDistinctRule">
+        <Resource name="sql">
+            <![CDATA[select * from dept union select * from dept]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+AggregateRel(groupCount=[2])
+  UnionRel(all=[true])
+    ProjectRel(DEPTNO=[$0], NAME=[$1])
+      TableAccessRel(table=[[SALES, DEPT]])
+    ProjectRel(DEPTNO=[$0], NAME=[$1])
+      TableAccessRel(table=[[SALES, DEPT]])
+]]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+UnionRel(all=[false])
+  ProjectRel(DEPTNO=[$0], NAME=[$1])
+    TableAccessRel(table=[[SALES, DEPT]])
+  ProjectRel(DEPTNO=[$0], NAME=[$1])
+    TableAccessRel(table=[[SALES, DEPT]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testExtractJoinFilterRule">
+        <Resource name="sql">
+            <![CDATA[select 1 from emp inner join dept on emp.deptno=dept.deptno]]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+ProjectRel(EXPR$0=[1])
+  JoinRel(condition=[=($7, $8)], joinType=[inner])
+    TableAccessRel(table=[[SALES, EMP]])
+    TableAccessRel(table=[[SALES, DEPT]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+ProjectRel(EXPR$0=[1])
+  FilterRel(condition=[=($7, $8)])
+    JoinRel(condition=[true], joinType=[inner])
+      TableAccessRel(table=[[SALES, EMP]])
+      TableAccessRel(table=[[SALES, DEPT]])
+]]>
+        </Resource>
+    </TestCase>
+</Root>

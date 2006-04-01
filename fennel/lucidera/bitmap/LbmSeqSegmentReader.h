@@ -64,7 +64,7 @@ public:
      * @param len returns length of current byte segment
      */
     ExecStreamResult readSegmentAndAdvance(
-        LcsRid &byteNum, PBuffer &byteSeg, uint &len);
+        LbmByteNumber &byteNum, PBuffer &byteSeg, uint &len);
 
     /**
      * Returns the start rid of the current tuple

@@ -22,6 +22,8 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/lucidera/bitmap/LbmUnionWorkspace.h"
 
+#include "boost/format.hpp"
+
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 void LbmUnionWorkspace::init(SharedByteBuffer pBuffer, uint maxSegmentSize)
@@ -36,30 +38,30 @@ void LbmUnionWorkspace::reset()
     mergeArea.reset();
     segment.reset();
     limited = true;
-    productionLimitByte = (LcsRid) 0;
+    productionLimitByte = (LbmByteNumber) 0;
 }
 
 void LbmUnionWorkspace::advanceToSrid(LcsRid requestedSrid)
 {
-    advanceToByteNum(getByteNumber(requestedSrid));
+    advanceToByteNum(ridToByteNumber(requestedSrid));
 }
 
-void LbmUnionWorkspace::advanceToByteNum(LcsRid requestedByteNum)
+void LbmUnionWorkspace::advanceToByteNum(LbmByteNumber requestedByteNum)
 {
-    if (requestedByteNum > mergeArea.getStart()) {
-        mergeArea.advance(requestedByteNum);
+    if (opaqueToInt(requestedByteNum) > mergeArea.getStart()) {
+        mergeArea.advance(opaqueToInt(requestedByteNum));
     }
 }
 
 void LbmUnionWorkspace::advancePastSegment()
 {
-    LcsRid endByteNum = segment.byteNum + segment.len;
+    LbmByteNumber endByteNum = segment.byteNum + segment.len;
     advanceToByteNum(endByteNum);
 }
 
 void LbmUnionWorkspace::setProductionLimit(LcsRid productionLimitRid)
 {
-    productionLimitByte = getByteNumber(productionLimitRid);
+    productionLimitByte = ridToByteNumber(productionLimitRid);
     limited = true;
 }
 
@@ -70,7 +72,8 @@ void LbmUnionWorkspace::removeLimit()
 
 bool LbmUnionWorkspace::isEmpty() const
 {
-    for (LcsRid i = mergeArea.getStart(); i < mergeArea.getEnd(); i++) {
+    LbmByteNumberPrimitive i;
+    for (i = mergeArea.getStart(); i < mergeArea.getEnd(); i++) {
         if (mergeArea.getByte(i) != 0) {
             return false;
         }
@@ -85,39 +88,36 @@ bool LbmUnionWorkspace::canProduce()
 
 const LbmByteSegment &LbmUnionWorkspace::getSegment()
 {
-    // update segment to current starting position
-    segment.advanceToByteNum(mergeArea.getStart());
+    // limit for the beginning of a segment; we don't begin a segment
+    // unless it has had time to mature (grow to maximum size)
+    LbmByteNumberPrimitive startLimit;
 
-    // if we already a valid segment, return the segment
-    if (! segment.isNull()) {
-        return segment;
-    }
-    
-    // read to the production limit, but not past the end
-    LcsRid readLimit = productionLimitByte;
-    if (readLimit > mergeArea.getEnd()) {
-        readLimit = mergeArea.getEnd();
-    }
+    // limit for reading; we can read to the production limit, but not
+    // past the end
+    LbmByteNumberPrimitive readLimit;
 
-    // do not try to begin a segment, unless we can guarantee it has had 
-    // a chance to mature (grow to maximum segment size)
-    LcsRid startLimit = (productionLimitByte > (LcsRid) maxSegmentSize)
-        ? (productionLimitByte - maxSegmentSize) : (LcsRid) 0;
-
-    if (! limited) {
+    // if production limit is past end of current data, then it can all
+    // be written out due to the gap in data
+    LbmByteNumberPrimitive productionLimit = opaqueToInt(productionLimitByte);
+    if ( (!limited) || (productionLimit > mergeArea.getEnd()) )
+    {
         startLimit = readLimit = mergeArea.getEnd();
+    } else {
+        readLimit = productionLimit;
+        startLimit = (productionLimit > maxSegmentSize)
+            ? (productionLimit - maxSegmentSize) : 0;
     }
 
     // begin with a null segment
     segment.reset();
 
     // skip past whitespace
-    LcsRid i = mergeArea.getStart();
+    LbmByteNumberPrimitive i = mergeArea.getStart();
     while (i < readLimit && mergeArea.getByte(i) == 0) {
         i++;
     }
     mergeArea.advance(i);
-    LcsRid start = i;
+    LbmByteNumberPrimitive start = i;
 
     if (start > startLimit) {
         return segment;
@@ -132,12 +132,13 @@ const LbmByteSegment &LbmUnionWorkspace::getSegment()
             break;
         }
     }
-    uint contigLen = mergeArea.getContiguousMemSize(start, len);
+    uint contigLen;
+    PBuffer mem = mergeArea.getMem(start, contigLen);
     len = std::min(len, contigLen);
 
     if (len > 0) {
-        segment.byteNum = start;
-        segment.byteSeg = mergeArea.getMem(start);
+        segment.byteNum = LbmByteNumber(start);
+        segment.byteSeg = mem;
         segment.len = len;
     }
     return segment;
@@ -148,19 +149,19 @@ bool LbmUnionWorkspace::addSegment(const LbmByteSegment &segmentIn)
     LbmByteSegment segment = segmentIn;
 
     // return false if segment cannot fit into merge area
-    if (segment.getEnd() > mergeArea.getLimit()) {
+    if (opaqueToInt(segment.getEnd()) > mergeArea.getLimit()) {
         return false;
     }
 
     // return true if merge area is already advanced beyond segment
-    if (segment.getEnd() < mergeArea.getStart()) {
+    if (opaqueToInt(segment.getEnd()) < mergeArea.getStart()) {
         return true;
     }
 
-    segment.advanceToByteNum(mergeArea.getStart());
+    segment.advanceToByteNum(LbmByteNumber(mergeArea.getStart()));
     if (! segment.isNull()) {
-        LcsRid next = segment.byteNum;
-        LcsRid last = next + segment.len;
+        LbmByteNumberPrimitive next = opaqueToInt(segment.byteNum);
+        LbmByteNumberPrimitive last = next + segment.len;
         PBuffer read = segment.byteSeg;
         while (next < last) {
             mergeArea.mergeByte(next++, *read--);
