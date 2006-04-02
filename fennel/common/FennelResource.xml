@@ -57,58 +57,60 @@
     <text>Row size ({0,number,#} bytes) exceeds maximum ({1,number,#} bytes); row data:  {2}</text>
   </message>
 
-  <message id="440060" name="rowTypeTooLong">
-    <text>Maximum row size ({0,number,#} bytes) exceeds limit ({1,number,#} bytes)</text>
-  </message>
-
   <!-- message id range 441000-441999 reserved for external data wrapper -->
 
-  <message id="441000" name="readDataFailed">
+  <!-- message id range 441900-441999 reserved for flatfile data wrapper -->
+
+  <message id="441900" name="readDataFailed">
     <text>Could not read data file {0}</text>
   </message>
 
-  <message id="441000" name="dataTransferFailed">
+  <message id="441905" name="dataTransferFailed">
     <text>Could not access file {0} (size {1,number,#} bytes)</text>
   </message>
 
-  <message id="441010" name="writeLogFailed">
+  <message id="441910" name="writeLogFailed">
     <text>Could not write log file {0}</text>
   </message>
 
-  <message id="441020" name="noRowsReturned">
+  <message id="441915" name="noRowsReturned">
     <text>Read no rows from file {0}; last error was: {1}</text>
   </message>
 
-  <message id="441030" name="errorsEncountered">
+  <message id="441920" name="errorsEncountered">
     <text>Encountered errors while processing file {0}; please see log file {1} for more information</text>
   </message>
 
-  <message id="441040" name="noRowDelimiter">
+  <message id="441925" name="noRowDelimiter">
     <text>Data file {0} has no row delimiter</text>
   </message>
 
-  <message id="441050" name="incompleteColumn">
+  <message id="441930" name="incompleteColumn">
     <text>Column has no delimiter</text>
   </message>
 
-  <message id="441060" name="noColumnDelimiter">
+  <message id="441935" name="noColumnDelimiter">
     <text>Row has no column delimiter</text>
   </message>
 
-  <message id="441070" name="tooFewColumns">
+  <message id="441940" name="tooFewColumns">
     <text>Row has too few columns</text>
   </message>
 
-  <message id="441080" name="tooManyColumns">
+  <message id="441945" name="tooManyColumns">
     <text>Row has too many columns</text>
   </message>
 
-  <message id="441090" name="rowTextTooLong">
+  <message id="441950" name="rowTextTooLong">
     <text>Row text was too large</text>
   </message>
 
-  <message id="441090" name="sampleFailed">
-    <text>Cound not sample data file {0}</text>
+  <message id="441955" name="flatfileDescribeFailed">
+    <text>Could not derive column sizes for data file {0}</text>
+  </message>
+
+  <message id="441960" name="flatfileNoHeader">
+    <text>Could not read header from data file {0}</text>
   </message>
 
 </resourceBundle>
