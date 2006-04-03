@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/med/flatfile.sql#10 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/med/flatfile.sql#11 $
 0: jdbc:farrago:> -- Test flatfile namespace plugin
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema flatfile_schema;
@@ -403,6 +403,38 @@ Error: Cannot derive column types for file unitsql/med/flatfiles/nullheader.txt 
 | but     |     | nulls  |     |
 |         | in  | data   |     |
 +---------+-----+--------+-----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- FIXME: throws null pointer exception
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- 3.9 Select when BCP file is empty
+0: jdbc:farrago:> --
+0: jdbc:farrago:> create server flatfile_server_badbcp
+. . . . . . . . > foreign data wrapper local_file_wrapper
+. . . . . . . . > options (
+. . . . . . . . >     directory 'unitsql/med/flatfiles',
+. . . . . . . . >     control_file_extension 'bcp2',
+. . . . . . . . >     file_extension 'txt',
+. . . . . . . . >     with_header 'no',
+. . . . . . . . >     log_directory 'testlog');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- select * from flatfile_server_badbcp.BCP."nobcpheader";
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- 3.10 Select when BCP contains no columns
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- WARNING: this causes a crash
+0: jdbc:farrago:> -- select * from flatfile_server_badbcp.BCP."nobcpcolumns";
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- 3.11 Invalid BCP column definitions
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- select * from flatfile_server_badbcp.BCP."toofewbcpcolumns";
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from flatfile_server_badbcp.BCP."toomanybcpcolumns";
+Error: Control file unitsql/med/flatfiles/toomanybcpcolumns.bcp2 is not valid (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from flatfile_server_badbcp.BCP."invalidbcpcolumns";
+Error: Control file unitsql/med/flatfiles/invalidbcpcolumns.bcp2 is not valid (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> ---------------------------------------------------------------------------

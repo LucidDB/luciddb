@@ -67,6 +67,13 @@ void FlatFileExecStreamImpl::handleTuple(
         }
         // Ignore rows with wrong number of columns
         if (fieldSizes.size() != result.offsets.size()) {
+            FlatFileRowParseResult detail = result;
+            if (detail.offsets.size() > fieldSizes.size()) {
+                detail.status = FlatFileRowParseResult::TOO_MANY_COLUMNS;
+            } else {
+                detail.status = FlatFileRowParseResult::TOO_FEW_COLUMNS;
+            }
+            logError(detail);
             return;
         }
     }

@@ -361,7 +361,6 @@ create index typed_m on typed(m);
 create index typed_m on typed(n);
 
 -- surprisingly these don't cause any problems
--- not sure how to input a binary field
 insert into typed values(
     1,X'deadbeef',null,'first',
     0.16,1,1,1,
@@ -378,10 +377,26 @@ insert into typed values(
     '3rd',false,DATE'2001-12-12',TIME'23:11:08',
     TIMESTAMP'2001-12-12 23:11:08',0.06);
 
+-- NOTE: cannot input a binary field from a flat file yet
+create foreign table typed_src(
+    a int,
+    d char(10),
+    e decimal(6,2),
+    f smallint,
+    g real,
+    h double,
+    i varchar(256),
+    j boolean,
+    k date,
+    l time,
+    m timestamp,
+    n numeric(10,2)) 
+server test_data
+options (filename 'typed');
+
 -- FIXME: this causes a crash
 -- insert into typed (a,d,e,f,g,h,i,j,k,l,m,n)
--- select * from test_data.BCP."typed";
+-- select * from typed_src;
 
 -- cleanup
-
 drop server test_data cascade;

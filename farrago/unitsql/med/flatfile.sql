@@ -316,6 +316,36 @@ select * from flatfile_server_empty.BCP."nullheader";
 --
 select * from flatfile_server_empty.BCP."nulldata";
 
+-- FIXME: throws null pointer exception
+--
+-- 3.9 Select when BCP file is empty
+--
+create server flatfile_server_badbcp
+foreign data wrapper local_file_wrapper
+options (
+    directory 'unitsql/med/flatfiles',
+    control_file_extension 'bcp2',
+    file_extension 'txt',
+    with_header 'no',
+    log_directory 'testlog');
+
+-- select * from flatfile_server_badbcp.BCP."nobcpheader";
+
+--
+-- 3.10 Select when BCP contains no columns
+--
+-- WARNING: this causes a crash
+-- select * from flatfile_server_badbcp.BCP."nobcpcolumns";
+
+--
+-- 3.11 Invalid BCP column definitions
+--
+-- select * from flatfile_server_badbcp.BCP."toofewbcpcolumns";
+
+select * from flatfile_server_badbcp.BCP."toomanybcpcolumns";
+
+select * from flatfile_server_badbcp.BCP."invalidbcpcolumns";
+
 
 ---------------------------------------------------------------------------
 -- Part 4. Reading metadata from bcp files                               --
