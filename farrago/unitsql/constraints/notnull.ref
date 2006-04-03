@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/constraints/notnull.sql#4 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/constraints/notnull.sql#1 $
 0: jdbc:farrago:> -- Test NOT NULL constraints
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- use Java calc because it gives better error messages
@@ -11,33 +11,5 @@ Error: Target CAST($t2):INTEGER NOT NULL cannot be assigned null value (state=,c
 0: jdbc:farrago:> -- NOT NULL enforcement:  should fail due to implicit NULL
 0: jdbc:farrago:> insert into sales.emps(name,empno) values ('wael',300);
 Error: Target CAST($t4):INTEGER NOT NULL cannot be assigned null value (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test inserting multiple values, some wih nulls. Only the nulls should be rejected
-0: jdbc:farrago:> -- REVIEW: the java calc rejects all, the fennel calc rejects only the nulls.
-0: jdbc:farrago:> -- Which is correct?
-0: jdbc:farrago:> create table sales.fake(
-. . . . . . . . >     deptno integer not null primary key, 
-. . . . . . . . >     name varchar(128) not null);
-0: jdbc:farrago:> insert into sales.fake values (null, 'Null'),(100, 'Fish'), (null, 'Null Again'), (200, 'Fowl'), (null, 'and again');
-Error: Target CAST($t0):INTEGER NOT NULL cannot be assigned null value (state=,code=0)
-0: jdbc:farrago:> select * from sales.fake;
-+---------+-------+
-| DEPTNO  | NAME  |
-+---------+-------+
-+---------+-------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- repeat with Fennel calc
-0: jdbc:farrago:> alter system set "calcVirtualMachine"='CALCVM_FENNEL';
-0: jdbc:farrago:> insert into sales.fake values (null, 'Null');
-0: jdbc:farrago:> insert into sales.fake values (null, 'Null Again'),(100, 'Fish'), (null, 'again'), (200, 'Fowl'), (null, 'and again');
-0: jdbc:farrago:> select * from sales.fake;
-+---------+-------------+
-| DEPTNO  |    NAME     |
-+---------+-------------+
-| 100     | Fish        |
-| 200     | Fowl        |
-+---------+-------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> drop table sales.fake;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

@@ -37,8 +37,9 @@ FENNEL_BEGIN_NAMESPACE
 struct CalcExecStreamParams : public ConduitExecStreamParams
 {
     std::string program;
-
     bool isFilter;
+    bool stopOnCalcError;
+    CalcExecStreamParams() :program(), isFilter(false), stopOnCalcError(true) {}
 };
 
 /**
@@ -80,6 +81,11 @@ class CalcExecStream : public ConduitExecStream
      * cardinality.
      */
     TupleDatum const *pFilterDatum;
+
+    /** when true, execute() aborts on a Calculator error;
+     * when false, it skips the offending row.
+     */
+    bool stopOnCalcError;
 
 public:
     virtual void prepare(CalcExecStreamParams const &params);

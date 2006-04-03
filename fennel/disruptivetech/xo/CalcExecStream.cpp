@@ -31,6 +31,7 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 void CalcExecStream::prepare(CalcExecStreamParams const &params)
 {
     ConduitExecStream::prepare(params);
+    stopOnCalcError = params.stopOnCalcError;
 
     try {
         // Force instantiation of the calculator's instruction tables.
@@ -128,58 +129,61 @@ ExecStreamResult CalcExecStream::execute(ExecStreamQuantum const &quantum)
 
 #define TRACE_RETURN FENNEL_TRACE(TRACE_FINE, "read " << nRead << " rows, wrote " << nWritten)
 
-    try {
-        FENNEL_TRACE(TRACE_FINER, "start execute loop");
-        uint nRead = 0;
-        uint nWritten = 0;
-        while (nRead < quantum.nTuplesMax) {
-            while (!pInAccessor->isTupleConsumptionPending()) {
-                if (!pInAccessor->demandData()) {
-                    TRACE_RETURN;
-                    return EXECRC_BUF_UNDERFLOW;
-                }
-
-                FENNEL_TRACE(TRACE_FINER, "input row " << nRead);
-                pInAccessor->unmarshalTuple(inputData);
-                pCalc->exec();
-                bool skip = false;
-                if (! pCalc->mWarnings.empty()) {
-                    // calculator failed to produce a row
-                    // REVIEW: Do we need to distinguish errors from warnings here?
-                    // TODO: notify scheduler (interface TBD)
-                    //  which can warn user or produce other side effects.
-                    FENNEL_TRACE(TRACE_WARNING, "calculator error " << pCalc->warnings());
-                    skip = true;
-                } else if (pFilterDatum) {
-                    bool filterDiscard =
-                        *reinterpret_cast<bool const *>(pFilterDatum->pData);
-                    if (filterDiscard) {
-                        skip = true;
-                    }
-                }
-                if (skip) {
-                    FENNEL_TRACE(TRACE_FINER, "skip row " << nRead);
-                    pInAccessor->consumeTuple();
-                    ++nRead;
-                }
-            }
-        
-            FENNEL_TRACE(TRACE_FINER, "output row " << nWritten);
-            if (!pOutAccessor->produceTuple(outputData)) {
+    FENNEL_TRACE(TRACE_FINER, "start execute loop");
+    uint nRead = 0;
+    uint nWritten = 0;
+    while (nRead < quantum.nTuplesMax) {
+        while (!pInAccessor->isTupleConsumptionPending()) {
+            if (!pInAccessor->demandData()) {
                 TRACE_RETURN;
-                return EXECRC_BUF_OVERFLOW;
+                return EXECRC_BUF_UNDERFLOW;
             }
-            ++nWritten;
-            pInAccessor->consumeTuple();
-            ++nRead;
-        }
-        TRACE_RETURN;
-        return EXECRC_QUANTUM_EXPIRED;
 
-    } catch (FennelExcn e) {
-        FENNEL_TRACE(TRACE_SEVERE, "error executing calculator: " << e.getMessage());
-        throw e;
+            FENNEL_TRACE(TRACE_FINER, "input row " << nRead);
+            pInAccessor->unmarshalTuple(inputData);
+            try {
+                pCalc->exec();
+            }  catch (FennelExcn e) {
+                FENNEL_TRACE(TRACE_SEVERE, "error executing calculator: " << e.getMessage());
+                throw e;
+            }
+            bool skip = false;
+            if (! pCalc->mWarnings.empty()) {
+                // calculator failed to produce a row
+                // REVIEW: Do we need to distinguish errors from warnings here?
+                // TODO: notify scheduler (interface TBD)
+                //  which can warn user or produce other side effects.
+                FENNEL_TRACE(TRACE_WARNING, "calculator error " << pCalc->warnings());
+                if (stopOnCalcError) {
+                    throw CalcExcn(pCalc->warnings(), inputDesc, inputData);
+                }
+                skip = true;
+            } else if (pFilterDatum) {
+                bool filterDiscard =
+                    *reinterpret_cast<bool const *>(pFilterDatum->pData);
+                if (filterDiscard) {
+                    skip = true;
+                }
+            }
+            if (skip) {
+                FENNEL_TRACE(TRACE_FINER, "skip row " << nRead);
+                pInAccessor->consumeTuple();
+                ++nRead;
+            }
+        }
+        
+        FENNEL_TRACE(TRACE_FINER, "output row " << nWritten);
+        if (!pOutAccessor->produceTuple(outputData)) {
+            TRACE_RETURN;
+            return EXECRC_BUF_OVERFLOW;
+        }
+        ++nWritten;
+        pInAccessor->consumeTuple();
+        ++nRead;
     }
+    TRACE_RETURN;
+    return EXECRC_QUANTUM_EXPIRED;
+
 #undef TRACE_RETURN
 }
 
