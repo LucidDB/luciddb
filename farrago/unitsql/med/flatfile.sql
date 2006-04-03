@@ -304,20 +304,17 @@ select * from flatfile_server_fixed.SAMPLE_DESC."fixed";
 --
 -- 3.6 Test sampling of a file perhaps with header, but with no data
 --
--- FIXME: this causes a null pointer exception
--- select * from flatfile_server_empty.BCP."emptydata";
+select * from flatfile_server_empty.BCP."emptydata";
 
 --
 -- 3.7 Test sampling of a file with nulls in header
 --
--- FIXME: this causes a null pointer exception
--- select * from flatfile_server_empty.BCP."nullheader";
+select * from flatfile_server_empty.BCP."nullheader";
 
 --
 -- 3.8 Test sampling of a file with nulls in data
 --
--- FIXME: this causes a null pointer exception
--- select * from flatfile_server_empty.BCP."nulldata";
+select * from flatfile_server_empty.BCP."nulldata";
 
 
 ---------------------------------------------------------------------------
@@ -367,29 +364,27 @@ options (
     with_header 'yes', 
     log_directory 'testlog');
 
--- FIXME: the following tests are broken now that sampling nulls is fixed
---
--- import foreign schema bcp
--- from server flatfiledir_server
--- into flatfiledir_schema;
+import foreign schema bcp
+from server flatfiledir_server
+into flatfiledir_schema;
 
--- select * from flatfiledir_schema."example2" order by 3;
+select * from flatfiledir_schema."example2" order by 3;
 
--- drop schema flatfiledir_schema cascade;
--- create schema flatfiledir_schema;
--- set schema 'flatfiledir_schema';
+drop schema flatfiledir_schema cascade;
+create schema flatfiledir_schema;
+set schema 'flatfiledir_schema';
 
--- import foreign schema bcp EXCEPT TABLE_NAME LIKE 'E%'
--- from server flatfiledir_server
--- into flatfiledir_schema;
+import foreign schema bcp EXCEPT TABLE_NAME LIKE 'E%'
+from server flatfiledir_server
+into flatfiledir_schema;
 
--- select * from flatfiledir_schema."example2" order by 3;
--- drop table flatfiledir_schema."example2";
--- drop table flatfiledir_schema."example";
+select * from flatfiledir_schema."example2" order by 3;
+drop table flatfiledir_schema."example2";
+drop table flatfiledir_schema."example";
 
 -- test files with null values
--- select * from flatfiledir_schema."withnulls" order by 3;
--- drop table flatfiledir_schema."withnulls";
+select * from flatfiledir_schema."withnulls" order by 3;
+drop table flatfiledir_schema."withnulls";
 
 -- test badly qualified import foreign schema
 import foreign schema bcp LIMIT TO ("no_table")

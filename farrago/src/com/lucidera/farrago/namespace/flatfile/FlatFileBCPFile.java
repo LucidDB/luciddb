@@ -88,6 +88,11 @@ class FlatFileBCPFile
             this.ctrlWriter = new FileWriter(this.ctrlFile, false);
             ctrlWriter.write("6.0"+NEWLINE);
         } catch (IOException ie) {
+            try {
+                this.ctrlWriter.close();
+                this.ctrlFile.delete();
+            } catch (IOException ex) {
+            }
             throw FarragoResource.instance().FileWriteFailed.ex(
                 this.fileName);
         } finally {
@@ -115,6 +120,11 @@ class FlatFileBCPFile
                 }
             }
         } catch (IOException ie) {
+            try {
+                this.ctrlWriter.close();
+                this.ctrlFile.delete();
+            } catch (IOException ex) {
+            }
             throw FarragoResource.instance().FileWriteFailed.ex(
                 this.fileName);
         } finally {
@@ -164,6 +174,9 @@ class FlatFileBCPFile
 
     private boolean changeType(String origType, String newType)
     {
+        if (newType == null) {
+            return false;
+        }
         if (origType == null) {
             return true;
         }
@@ -185,6 +198,9 @@ class FlatFileBCPFile
 
     private boolean changeLength(String origVal, String newVal)
     {
+        if (newVal == null) {
+            return false;
+        }
         if (origVal == null) {
             return true;
         }
@@ -197,7 +213,24 @@ class FlatFileBCPFile
 
     private boolean expandRowsAndWrite(String[] row, FlatFileParams params)
     {
+        if (this.colDataType == null) {
+            String txtFile = this.fileName.substring(
+                0,(this.fileName.length()-4));
+            try {
+                this.ctrlWriter.close();
+                this.ctrlFile.delete();
+            } catch (IOException ie) {
+            }
+            throw FarragoResource.instance().CannotDeriveColumnTypes.ex(
+                txtFile+params.getFileExtenstion());
+        }
         for (int i=0; i<row.length; i++) {
+            if (this.colDataType[i] == null) {
+                // TODO: return warning that column values were all null
+                // setting column to type SQLVARCHAR/256
+                this.colDataType[i] = "SQLVARCHAR";
+                this.colDataLength[i] = "1";
+            }
             if (this.colDataType[i].equals("SQLVARCHAR")) {
                 int varcharPrec =
                     ((((Integer.valueOf(
@@ -215,7 +248,7 @@ class FlatFileBCPFile
             }
             row[i] = row[i].concat(QUOTE + TAB + colNo + TAB);
 
-            if (this.colNames == null) {
+            if (this.colNames == null || this.colNames[i] == null) {
                 row[i] = row[i].concat("COLUMN" + colNo);
             } else {
                 row[i] = row[i].concat(this.colNames[i]);
@@ -223,6 +256,11 @@ class FlatFileBCPFile
             try {
                 this.ctrlWriter.write(row[i]+NEWLINE);
             } catch (IOException ie) {
+                try {
+                    this.ctrlWriter.close();
+                    this.ctrlFile.delete();
+                } catch (IOException ex) {
+                }
                 throw FarragoResource.instance().FileWriteFailed.ex(
                     this.fileName);
             }
@@ -247,6 +285,9 @@ class FlatFileBCPFile
      */
     private String getType(String in)
     {
+        if (in == null) {
+            return null;
+        }
         in = in.trim();
         if (IntegerPattern.matcher(in).matches()) {
             if (Integer.valueOf(getTypeLength(in)) > 9) {
@@ -266,6 +307,9 @@ class FlatFileBCPFile
 
     private String getTypeLength(String in)
     {
+        if (in == null) {
+            return null;
+        }
         return Integer.toString(in.trim().length());
     }
 
@@ -302,7 +346,7 @@ class FlatFileBCPFile
 
                     SqlTypeName typeName =
                         convertBCPSqlToSqlType(datatype);
-                    
+
                     if (typeName.allowsPrec()) {
                         if (typeName.allowsScale()) {
                             // TODO: how to get scale from bcp?

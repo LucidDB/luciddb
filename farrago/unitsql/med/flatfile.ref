@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/med/flatfile.sql#9 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/med/flatfile.sql#10 $
 0: jdbc:farrago:> -- Test flatfile namespace plugin
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema flatfile_schema;
@@ -384,20 +384,25 @@ Error: Cannot derive column sizes for fixed position data file 'fixed' (state=,c
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- 3.6 Test sampling of a file perhaps with header, but with no data
 0: jdbc:farrago:> --
-0: jdbc:farrago:> -- FIXME: this causes a null pointer exception
-0: jdbc:farrago:> -- select * from flatfile_server_empty.BCP."emptydata";
+0: jdbc:farrago:> select * from flatfile_server_empty.BCP."emptydata";
+Error: Cannot derive column types for file unitsql/med/flatfiles/emptydata.txt (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- 3.7 Test sampling of a file with nulls in header
 0: jdbc:farrago:> --
-0: jdbc:farrago:> -- FIXME: this causes a null pointer exception
-0: jdbc:farrago:> -- select * from flatfile_server_empty.BCP."nullheader";
+0: jdbc:farrago:> select * from flatfile_server_empty.BCP."nullheader";
+Error: Cannot derive column types for file unitsql/med/flatfiles/nullheader.txt (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- 3.8 Test sampling of a file with nulls in data
 0: jdbc:farrago:> --
-0: jdbc:farrago:> -- FIXME: this causes a null pointer exception
-0: jdbc:farrago:> -- select * from flatfile_server_empty.BCP."nulldata";
+0: jdbc:farrago:> select * from flatfile_server_empty.BCP."nulldata";
++---------+-----+--------+-----+
+| header  | no  | nulls  | ok  |
++---------+-----+--------+-----+
+| but     |     | nulls  |     |
+|         | in  | data   |     |
++---------+-----+--------+-----+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> ---------------------------------------------------------------------------
@@ -460,29 +465,57 @@ Error: From line 1, column 15 to line 1, column 29: Table 'FLATFILE_SCHEMA.examp
 . . . . . . . . >     with_header 'yes', 
 . . . . . . . . >     log_directory 'testlog');
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- FIXME: the following tests are broken now that sampling nulls is fixed
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- import foreign schema bcp
-0: jdbc:farrago:> -- from server flatfiledir_server
-0: jdbc:farrago:> -- into flatfiledir_schema;
+0: jdbc:farrago:> import foreign schema bcp
+. . . . . . . . > from server flatfiledir_server
+. . . . . . . . > into flatfiledir_schema;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- select * from flatfiledir_schema."example2" order by 3;
+0: jdbc:farrago:> select * from flatfiledir_schema."example2" order by 3;
++------+------------------------------------------+--------------+
+|  ID  |                   NAME                   | EXTRA_FIELD  |
++------+------------------------------------------+--------------+
+| 123  | Jonathan Ackerman                        | A            |
+| 234  | Grady O'Neil                             | B            |
+| 456  | Susan, Peter and Dave                    | C            |
+| 789  | Amelia "meals" Maurice                   | E            |
+| 123  | "S,"                                     | F            |
+| 234  | Peter "peg leg", Jimmy & Samantha "Sam"  | G            |
++------+------------------------------------------+--------------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- drop schema flatfiledir_schema cascade;
-0: jdbc:farrago:> -- create schema flatfiledir_schema;
-0: jdbc:farrago:> -- set schema 'flatfiledir_schema';
+0: jdbc:farrago:> drop schema flatfiledir_schema cascade;
+0: jdbc:farrago:> create schema flatfiledir_schema;
+0: jdbc:farrago:> set schema 'flatfiledir_schema';
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- import foreign schema bcp EXCEPT TABLE_NAME LIKE 'E%'
-0: jdbc:farrago:> -- from server flatfiledir_server
-0: jdbc:farrago:> -- into flatfiledir_schema;
+0: jdbc:farrago:> import foreign schema bcp EXCEPT TABLE_NAME LIKE 'E%'
+. . . . . . . . > from server flatfiledir_server
+. . . . . . . . > into flatfiledir_schema;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- select * from flatfiledir_schema."example2" order by 3;
-0: jdbc:farrago:> -- drop table flatfiledir_schema."example2";
-0: jdbc:farrago:> -- drop table flatfiledir_schema."example";
+0: jdbc:farrago:> select * from flatfiledir_schema."example2" order by 3;
++------+------------------------------------------+--------------+
+|  ID  |                   NAME                   | EXTRA_FIELD  |
++------+------------------------------------------+--------------+
+| 123  | Jonathan Ackerman                        | A            |
+| 234  | Grady O'Neil                             | B            |
+| 456  | Susan, Peter and Dave                    | C            |
+| 789  | Amelia "meals" Maurice                   | E            |
+| 123  | "S,"                                     | F            |
+| 234  | Peter "peg leg", Jimmy & Samantha "Sam"  | G            |
++------+------------------------------------------+--------------+
+0: jdbc:farrago:> drop table flatfiledir_schema."example2";
+0: jdbc:farrago:> drop table flatfiledir_schema."example";
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test files with null values
-0: jdbc:farrago:> -- select * from flatfiledir_schema."withnulls" order by 3;
-0: jdbc:farrago:> -- drop table flatfiledir_schema."withnulls";
+0: jdbc:farrago:> select * from flatfiledir_schema."withnulls" order by 3;
++------+------------------------------------------+--------------+
+|  ID  |                   NAME                   | EXTRA_FIELD  |
++------+------------------------------------------+--------------+
+|      |                                          |              |
+| 123  |                                          |              |
+|      | Susan, Peter and Dave                    |              |
+| 123  | "S,"                                     | F            |
+|      |                                          | G            |
+| 234  | Peter "peg leg", Jimmy & Samantha "Sam"  | G            |
++------+------------------------------------------+--------------+
+0: jdbc:farrago:> drop table flatfiledir_schema."withnulls";
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test badly qualified import foreign schema
 0: jdbc:farrago:> import foreign schema bcp LIMIT TO ("no_table")
