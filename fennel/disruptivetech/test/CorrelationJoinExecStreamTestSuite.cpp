@@ -31,9 +31,11 @@
 
 using namespace fennel;
 
-CorrelationJoinExecStreamTestSuite::CorrelationJoinExecStreamTestSuite()
+CorrelationJoinExecStreamTestSuite::CorrelationJoinExecStreamTestSuite(bool addAllTests)
 {
-    FENNEL_UNIT_TEST_CASE(CorrelationJoinExecStreamTestSuite,testCorrelationJoin);
+    if (addAllTests) {
+        FENNEL_UNIT_TEST_CASE(CorrelationJoinExecStreamTestSuite,testCorrelationJoin);
+    }
 
     StandardTypeDescriptorFactory stdTypeFactory;
 

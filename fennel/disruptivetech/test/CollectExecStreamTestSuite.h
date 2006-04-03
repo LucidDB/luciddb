@@ -39,7 +39,7 @@ class CollectExecStreamTestSuite : public ExecStreamUnitTestBase
     TupleDescriptor descVarbinary32;
 
 public:
-    explicit CollectExecStreamTestSuite(); 
+    explicit CollectExecStreamTestSuite(bool addAllTests = true); 
 
     /**
      * Tests an stream input ints gets collected into an continues array

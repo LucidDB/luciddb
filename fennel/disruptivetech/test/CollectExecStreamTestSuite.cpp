@@ -31,11 +31,13 @@
 
 using namespace fennel;
 
-CollectExecStreamTestSuite::CollectExecStreamTestSuite()
+CollectExecStreamTestSuite::CollectExecStreamTestSuite(bool addAllTests)
 {
-    FENNEL_UNIT_TEST_CASE(CollectExecStreamTestSuite,testCollectInts);
-    FENNEL_UNIT_TEST_CASE(CollectExecStreamTestSuite,testCollectUncollect);
-    FENNEL_UNIT_TEST_CASE(CollectExecStreamTestSuite,testCollectCollectUncollectUncollect);
+    if (addAllTests) {
+        FENNEL_UNIT_TEST_CASE(CollectExecStreamTestSuite,testCollectInts);
+        FENNEL_UNIT_TEST_CASE(CollectExecStreamTestSuite,testCollectUncollect);
+        FENNEL_UNIT_TEST_CASE(CollectExecStreamTestSuite,testCollectCollectUncollectUncollect);
+    }
 
     StandardTypeDescriptorFactory stdTypeFactory;
 
