@@ -1,10 +1,9 @@
 /*
 // $Id$
-// Farrago is an extensible data management system.
+// Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2006-2006 The Eigenbase Project
 // Copyright (C) 2006-2006 Disruptive Tech
 // Copyright (C) 2006-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -20,36 +19,52 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package net.sf.farrago.jdbc;
+
+package org.eigenbase.util14;
 
 import java.sql.*;
 import java.util.*;
 
-
 /**
- * FarragoConnectStringParser is a utility class that parses a
- * JDBC connect string according to the OLE DB connect string syntax
- * described at
- * http://msdn.microsoft.com/library/default.asp?url=/library/en-us/oledb/htm/oledbconnectionstringsyntax.asp
- *
+ * ConnectStringParser is a utility class that parses or creates a JDBC
+ * connect string according to the OLE DB connect string syntax described at
+ * <a href="http://msdn.microsoft.com/library/default.asp?url=/library/en-us/oledb/htm/oledbconnectionstringsyntax.asp">
+ * OLE DB Connection String Syntax</a>.
+ * <p>
  * This code adapted from Mondrian code at
- * http://perforce.eigenbase.org:8080/open/mondrian/src/main/mondrian/olap/Util.java
- *
+ * <a href="http://perforce.eigenbase.org:8080/open/mondrian/src/main/mondrian/olap/Util.java">
+ * Util.java</a>.
+ * <p>
  * The primary differences between this and its Mondrian progenitor are:
  * <ul>
- * <li>use of regular {@link Properties} rather than Mondrian's
- * order-preserving and case-insensitive PropertyList
- * (found in Util.java at link above)</li>
+ * <li>use of regular {@link Properties} for compatibility with the
+ * JDBC API (replaces Mondrian's use of its own order-preserving and
+ * case-insensitive PropertyList, found in Util.java at link above)</li>
  * <li>ability to pass to {@link #parse} a pre-existing Properties object into
  * which properties are to be parsed, possibly overriding prior values</li>
  * <li>use of {@link SQLException}s rather than
  * unchecked {@link RuntimeException}s</li>
+ * <li>static members for parsing and creating connect strings</li>
  * </ul>
  *
+ * <p>
+ * ConnectStringParser has a private constructor.
+ * Callers use the static members:
+ * <dl>
+ * <dt>{@link #parse(String)}</dt>
+ *  <dd>Parses the connect string into a new Properties object.</dd>
+ * <dt>{@link #parse(String, Properties)}</dt>
+ *  <dd>Parses the connect string into an existing Properties object.</dd>
+ * <dt>{@link #getParamString(Properties)}</dt>
+ *  <dd>Returns a param string, quoted and escaped as needed,
+ *      to represent the supplied name-value pairs.</dd>
+ * </dl>
+ *
  * @author adapted by Steve Herskovitz from Mondrian
+ * @since Apr 03, 2006
  * @version $Id$
  */
-public class FarragoConnectStringParser {
+public class ConnectStringParser {
     private final String s;
     private final int n;
     private int i;
@@ -58,7 +73,13 @@ public class FarragoConnectStringParser {
 
     //~ Methods ---------------------------------------------------------------
 
-    public FarragoConnectStringParser(String s) {
+    /**
+     * Creates a new connect string parser.
+     * @param s connect string to parse
+     * @see #parse(String)
+     * @see #parse(String, Properties)
+     */
+    private ConnectStringParser(String s) {
         this.s = s;
         this.i = 0;
         this.n = s.length();
@@ -67,19 +88,35 @@ public class FarragoConnectStringParser {
     }
 
     /**
-     * Parse the connect string into a Properties object.
-     * Note that the string can only be parsed once.
-     * Subsequent calls return empty Properties.
+     * Parses the connect string into a new Properties object.
+     * @param s connect string to parse
      * @return properties object with parsed params
      * @throws SQLException error parsing name-value pairs
      */
-    public Properties parse() throws SQLException
+    public static Properties parse(String s) throws SQLException
     {
-        return parse(null);
+        return parse(s, null);
     }
 
     /**
-     * Parse the connect string into a Properties object.
+     * Parses the connect string into an existing Properties object.
+     * @param s connect string to parse
+     * @param props optional properties object, may be <code>null</code>
+     * @return properties object with parsed params; if an input
+     *      <code>props</code> was supplied, any duplicate properties
+     *      will have been replaced by those from the connect string.
+     * @throws SQLException error parsing name-value pairs
+     */
+    public static Properties parse(String s, Properties props) throws SQLException
+    {
+        if (props == null) {
+            props = new Properties();
+        }
+        return (new ConnectStringParser(s)).parse(props);
+    }
+
+    /**
+     * Parses the connect string into a Properties object.
      * Note that the string can only be parsed once.
      * Subsequent calls return empty/unchanged Properties.
      * @param props optional properties object, may be <code>null</code>
@@ -88,7 +125,7 @@ public class FarragoConnectStringParser {
      *      will have been replaced by those from the connect string.
      * @throws SQLException error parsing name-value pairs
      */
-    public Properties parse(Properties props) throws SQLException
+    Properties parse(Properties props) throws SQLException
     {
         if (props == null) {
             props = new Properties();
@@ -98,6 +135,7 @@ public class FarragoConnectStringParser {
         }
         return props;
     }
+
     /**
      * Reads "name=value;" or "name=value<EOF>".
      * @throws SQLException error parsing value
@@ -237,6 +275,84 @@ public class FarragoConnectStringParser {
                 "' contains unterminated quoted value '" +
                 valueBuf.toString() + "'");
     }
+
+    /**
+     * Returns a param string, quoted and escaped as needed, to
+     * represent the supplied name-value pairs.
+     * @param props name-value pairs
+     * @return param string, never <code>null</code>
+     */
+    public static String getParamString(Properties props)
+    {
+        if (props == null) {
+            return "";
+        }
+
+        StringBuffer buf = new StringBuffer();
+        Enumeration enumer = props.propertyNames();
+        while (enumer.hasMoreElements()) {
+            String name = (String)enumer.nextElement();
+            String value = props.getProperty(name);
+            String quote = "";
+            if (buf.length() > 0) {
+                buf.append(';');
+            }
+
+            // write parameter name
+            if (name.startsWith(" ") || name.endsWith(" ")) {
+                quote = "'";
+                buf.append(quote);
+            }
+            int len = name.length();
+            for (int i=0; i < len; ++i) {
+                char c = name.charAt(i);
+                if (c == '=') {
+                    buf.append('=');
+                }
+                buf.append(c);
+            }
+
+            buf.append(quote);      // might be empty
+            quote = "";
+
+            buf.append('=');
+
+            // write parameter value
+            len = value.length();
+            boolean hasSemi = value.indexOf(';') >= 0;
+            boolean hasSQ = value.indexOf("'") >= 0;
+            boolean hasDQ = value.indexOf('"') >= 0;
+            if (value.startsWith(" ") || value.endsWith(" ")) {
+                quote = "'";
+            } else if (hasSemi || hasSQ || hasDQ) {
+                // try to choose the least painful quote
+                if (value.startsWith("\"")) {
+                    quote = "'";
+                } else if (value.startsWith("'")) {
+                    quote = "\"";
+                } else {
+                   quote = hasSQ? "\"" : "'";
+                }
+            }
+            char q;
+            if (quote.length() > 0) {
+                buf.append(quote);
+                q = quote.charAt(0);
+            } else {
+                q = '\0';
+            }
+            for (int i=0; i < len; ++i) {
+                char c = value.charAt(i);
+                if (c == q) {
+                    buf.append(q);
+                }
+                buf.append(c);
+            }
+            buf.append(quote);      // might be empty
+        }
+
+        return buf.toString();
+    }
 }
 
-// End FarragoConnectStringParser.java
+// End ConnectStringParser.java

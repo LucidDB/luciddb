@@ -27,6 +27,8 @@ import net.sf.farrago.release.*;
 import java.sql.*;
 import java.util.*;
 
+import org.eigenbase.util14.ConnectStringParser;
+
 
 /**
  * FarragoAbstractJdbcDriver is an abstract base for the client and engine
@@ -158,9 +160,7 @@ public abstract class FarragoAbstractJdbcDriver implements Driver
         String uri = connectionURI.substring(0, i);
         String params = connectionURI.substring(i+1);
 
-        FarragoConnectStringParser parser =
-            new FarragoConnectStringParser(params);
-        parser.parse(info);     // throws SQLException
+        ConnectStringParser.parse(params, info);
 
         return uri;
     }

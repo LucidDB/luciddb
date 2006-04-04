@@ -39,9 +39,10 @@ import java.sql.Date;
 
 import org.eigenbase.util14.NumberUtil;
 import org.eigenbase.util14.ConversionUtil;
+import org.eigenbase.util14.ConnectStringParser;
 import net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver;
 import net.sf.farrago.jdbc.engine.FarragoJdbcEngineConnection;
-import net.sf.farrago.jdbc.FarragoConnectStringParser;
+import org.eigenbase.util14.ConnectStringParser;
 import net.sf.farrago.catalog.FarragoCatalogInit;
 
 /**
@@ -2777,82 +2778,10 @@ public class FarragoJdbcTest extends FarragoTestCase
     /** Tests engine driver URIs with connection params. */
     public void testConnectStrings() throws Exception
     {
-        // test the parser directly with examples from OLE DB documentation
-        String[][] quads = {
-            // {reason for test, key, val, string to parse},
-            {"printable chars",
-                "Jet OLE DB:System Database", "c:\\system.mda",
-                "Jet OLE DB:System Database=c:\\system.mda"},
-            {"key embedded semi",
-                "Authentication;Info", "Column 5",
-                "Authentication;Info=Column 5"},
-            {"key embedded equal",
-                "Verification=Security", "True",
-                "Verification==Security=True"},
-            {"key many equals",
-                "Many==One", "Valid",
-                "Many====One=Valid"},
-            {"key too many equal",
-                "TooMany=", "False",
-                "TooMany===False"},
-            {"value embedded quote and semi",
-                "ExtProps", "Data Source='localhost';Key Two='value 2'",
-                "ExtProps=\"Data Source='localhost';Key Two='value 2'\""},
-            {"value embedded double quote and semi",
-                "ExtProps", "Integrated Security=\"SSPI\";Key Two=\"value 2\"",
-                "ExtProps='Integrated Security=\"SSPI\";Key Two=\"value 2\"'"},
-            {"value double quoted",
-                "DataSchema", "\"MyCustTable\"",
-                "DataSchema='\"MyCustTable\"'"},
-            {"value single quoted",
-                "DataSchema", "'MyCustTable'",
-                "DataSchema=\"'MyCustTable'\""},
-            {"value double quoted double trouble",
-                "Caption", "\"Company's \"new\" customer\"",
-                "Caption=\"\"\"Company's \"\"new\"\" customer\"\"\""},
-            {"value single quoted double trouble",
-                "Caption", "\"Company's \"new\" customer\"",
-                "Caption='\"Company''s \"new\" customer\"'"},
-            {"embedded blanks and trim",
-                "My Keyword", "My Value",
-                " My Keyword = My Value ;MyNextValue=Value"},
-            {"value single quotes preserve blanks",
-                "My Keyword", " My Value ",
-                " My Keyword =' My Value ';MyNextValue=Value"},
-            {"value double quotes preserve blanks",
-                "My Keyword", " My Value ",
-                " My Keyword =\" My Value \";MyNextValue=Value"},
-            {"last redundant key wins",
-                "SomeKey", "NextValue",
-                "SomeKey=FirstValue;SomeKey=NextValue"},
-        };
-        for (int i=0; i < quads.length; ++i) {
-            String why = quads[i][0];
-            String key = quads[i][1];
-            String val = quads[i][2];
-            String str = quads[i][3];
-//            tracer.info("parse: " +str);
-            Properties props = (new FarragoConnectStringParser(str)).parse();
-//            tracer.info("props: " +toStringProperties(props));
-            assertEquals(why, val, props.get(key));
-        }
-
-        // force some parsing errors
-        try {
-            (new FarragoConnectStringParser("key='can't parse'")).parse();
-            fail("quoted value ended too soon");
-        } catch (SQLException e) {
-            assertExceptionMatches(e, ".*quoted value ended.*position 9.*");
-        }
-        try {
-            (new FarragoConnectStringParser("key='\"can''t parse\"")).parse();
-            fail("unterminated quoted value");
-        } catch (SQLException e) {
-            assertExceptionMatches(e, ".*unterminated quoted value.*");
-        }
-
-        // test the parser through the driver
         final String driverURI = "jdbc:farrago:";
+
+        // create a sample connect string with various complications.
+        // note that the parser itself is tested in eigenbase.
         final int maxParams = 6;
         HashMap ref = new HashMap();
         StringBuffer params = new StringBuffer();
@@ -2880,7 +2809,7 @@ public class FarragoJdbcTest extends FarragoTestCase
         String uri = driverURI +params.toString();
         tracer.info("loaded: " +uri);
 
-        // use driver's implementing method to test the parsing
+        // test the driver's use of the connect string parser
         FarragoJdbcEngineDriver driver = newJdbcEngineDriver();
         Properties parsedProps = new Properties();
         String strippedUri = driver.parseConnectionParams(uri, parsedProps);
