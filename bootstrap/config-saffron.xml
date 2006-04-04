@@ -16,9 +16,6 @@
 
     <listeners>
         <currentbuildstatuslistener file="logs/saffron/currentbuildstatus.txt"/>
-        <!--
-        <currentbuildstatuslistener file="&open_default.build.home;/../web/logs/saffron&configSuffix;/currentbuildstatus.txt"/>
-        -->
     </listeners>
 
 	<!-- Defines where cruise looks for changes, to decide whether to run the build -->
@@ -64,7 +61,7 @@
                 <property name="p4.user" value="&open_p4user;"/>
                 <property name="p4.client" value="&open_p4client;"/>
 
-                <property name="p4.counter.name" value="lu_dev_saffron_ok"/>
+                <property name="p4.counter.name" value="&saffron.p4.counter.ok;"/>
             </antpublisher>
         </onsuccess>
 
