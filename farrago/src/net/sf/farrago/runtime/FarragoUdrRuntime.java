@@ -21,6 +21,7 @@
 */
 package net.sf.farrago.runtime;
 
+import net.sf.farrago.session.FarragoSession;
 import org.eigenbase.util.*;
 
 /**
@@ -101,6 +102,19 @@ public abstract class FarragoUdrRuntime
             FarragoRuntimeContext.getUdrInvocationFrame();
         frame.context.checkCancel();
     }
+
+    /**
+     * Gets the session which called the UDR. 
+     * Only system UDR's are allowed to call this.
+     * @return a FarragoSession
+     */
+    public static FarragoSession getSession()
+    {
+        FarragoUdrInvocationFrame frame =
+            FarragoRuntimeContext.getUdrInvocationFrame();
+        return frame.udrContext.getSession();
+    }
+
 }
 
 // End FarragoUdrRuntime.java

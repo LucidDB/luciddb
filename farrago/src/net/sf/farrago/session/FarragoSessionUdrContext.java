@@ -32,9 +32,9 @@ package net.sf.farrago.session;
 public class FarragoSessionUdrContext
 {
     private final String invocationId;
-
     private final String serverMofId;
 
+    private FarragoSession session;
     private Object obj;
 
     public FarragoSessionUdrContext(
@@ -43,6 +43,8 @@ public class FarragoSessionUdrContext
     {
         this.invocationId = invocationId;
         this.serverMofId = serverMofId;
+        this.obj = null;
+        this.session = null;
     }
 
     public String getInvocationId()
@@ -53,6 +55,16 @@ public class FarragoSessionUdrContext
     public String getServerMofId()
     {
         return serverMofId;
+    }
+
+    public FarragoSession getSession()
+    {
+        return session;
+    }
+
+    public void setSession(FarragoSession session)
+    {
+        this.session = session;
     }
 
     public Object getObject()
