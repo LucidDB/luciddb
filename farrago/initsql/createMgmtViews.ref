@@ -45,8 +45,24 @@
 0: jdbc:farrago:> create view objects_in_use_view as
 . . . . . . . . >   select * from table(objectsInUse());
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- todo:  grant this only to a privileged user
+0: jdbc:farrago:> -- TODO: grant this only to a privileged user
 0: jdbc:farrago:> grant select on objects_in_use_view to public;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- lets an administrator kill an executing statement
+0: jdbc:farrago:> -- TODO: grant this only to a privileged user
+0: jdbc:farrago:> create procedure kill_statement(in id bigint)
+. . . . . . . . >   language java
+. . . . . . . . >   parameter style java
+. . . . . . . . >   no sql
+. . . . . . . . >   external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatement';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- lets an administrator kill a running session
+0: jdbc:farrago:> -- TODO: grant this only to a privileged user
+0: jdbc:farrago:> create procedure kill_session(in id bigint)
+. . . . . . . . >   language java
+. . . . . . . . >   parameter style java
+. . . . . . . . >   no sql
+. . . . . . . . >   external name 'class net.sf.farrago.syslib.FarragoKillUDR.killSession';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit
