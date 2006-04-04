@@ -130,6 +130,40 @@ public abstract class FarragoAbstractJdbcDriver implements Driver
                 + this + ": " + e.toString());
         }
     }
+
+    /**
+     * Parses params from connection string into {@link Properties} object,
+     * returning the stripped URI.
+     *
+     * @param connectionURI connection string with optional params
+     * @param info Properties object;
+     *      pass <code>null</code> to just get the stripped URI
+     * @return connection URI stripped of params;
+     *      parameters parsed into <code>info</code> if not <code>null</code>.
+     * @throws SQLException
+     */
+    public String parseConnectionParams(String connectionURI, Properties info)
+        throws SQLException
+    {
+        if (connectionURI == null) {
+            return null;
+        }
+
+        // separate the URI and connection params at the first semicolon
+        int i = connectionURI.indexOf(';');
+        if (i < 0) {
+            return connectionURI;
+        }
+
+        String uri = connectionURI.substring(0, i);
+        String params = connectionURI.substring(i+1);
+
+        FarragoConnectStringParser parser =
+            new FarragoConnectStringParser(params);
+        parser.parse(info);     // throws SQLException
+
+        return uri;
+    }
 }
 
 

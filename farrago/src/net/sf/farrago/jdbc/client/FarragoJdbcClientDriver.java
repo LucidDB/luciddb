@@ -75,6 +75,12 @@ public class FarragoJdbcClientDriver extends FarragoAbstractJdbcDriver
             return null;
         }
 
+        // don't modify user's properties: use only as our defaults
+        Properties driverProps = new Properties(info);
+
+        // move any params from the URI to the properties
+        String driverUrl = parseConnectionParams(url, driverProps);
+
         Driver rmiDriver;
         try {
             rmiDriver = new CustomRJDriver();
@@ -82,9 +88,8 @@ public class FarragoJdbcClientDriver extends FarragoAbstractJdbcDriver
             throw new SQLException(ex.getMessage());
         }
 
-        // transform the URL into a form understood by
-        // RmiJdbc
-        String urlRmi = url.substring(getUrlPrefix().length());
+        // transform the URL into a form understood by RmiJdbc
+        String urlRmi = driverUrl.substring(getUrlPrefix().length());
         String [] split = urlRmi.split(":");
         if (split.length == 1) {
             // no port number, so append default
@@ -97,7 +102,7 @@ public class FarragoJdbcClientDriver extends FarragoAbstractJdbcDriver
         // NOTE:  can't call DriverManager.connect here, because that
         // would deadlock in the case where client and server are
         // running in the same VM
-        return rmiDriver.connect(urlRmi, info);
+        return rmiDriver.connect(urlRmi, driverProps);
     }
 
     private static class CustomRJDriver extends org.objectweb.rmijdbc.Driver 

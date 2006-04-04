@@ -77,9 +77,12 @@ public class FarragoServerTest extends TestCase
         // NOTE: can't call DriverManager.getConnection here, because that
         // would deadlock
         FarragoJdbcClientDriver clientDriver = new FarragoJdbcClientDriver();
+        // N.B. it is better practice to put the login credentials in the
+        // Properties object rather than on the URL, but this is a convenient
+        // test of the client driver's connect string processing.
         Connection connection =
             clientDriver.connect(
-                clientDriver.getUrlPrefix() + "localhost",
+                clientDriver.getUrlPrefix() + "localhost;user=sa",
                 new Properties());
         boolean stopped;
         try {
@@ -101,9 +104,12 @@ public class FarragoServerTest extends TestCase
         FarragoJdbcEngineDriver serverDriver = new FarragoJdbcEngineDriver();
         server.start(serverDriver);
         FarragoJdbcClientDriver clientDriver = new FarragoJdbcClientDriver();
+        // N.B. it is better practice to put the login credentials in the
+        // Properties object rather than on the URL, but this is a convenient
+        // test of the client driver's connect string processing.
         Connection connection =
             clientDriver.connect(
-                clientDriver.getUrlPrefix() + "localhost",
+                clientDriver.getUrlPrefix() + "localhost;user=sa",
                 new Properties());
         connection.createStatement().execute("set schema 'sales'");
         killServer();
