@@ -197,7 +197,7 @@
     <ant antfile="${target.file}" target="${target.name}" inheritAll="false"/>
   </target>
 
-  <target name="test-nondb" depends="gen-all-sql-x">
+  <target name="test-nondb">
     <property file="run.properties"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh-nondb"/>
     <blackhawk.fork
@@ -206,7 +206,7 @@
       classpathref="test.classpath"/>
   </target>
 
-  <target name="test-flatfile" depends="gen-all-sql-x">
+  <target name="test-flatfile">
     <property file="run.properties"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh-flatfile"/>
     <blackhawk.fork
@@ -215,7 +215,7 @@
       classpathref="test.classpath"/>
   </target>
 
-  <target name="test-oracle" depends="gen-all-sql-x">
+  <target name="test-oracle">
     <property file="run.properties"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh-oracle"/>
     <blackhawk.fork
@@ -224,7 +224,7 @@
       classpathref="test.classpath"/>
   </target>
 
-  <target name="test-sqlserver" depends="gen-all-sql-x">
+  <target name="test-sqlserver">
     <property file="run.properties"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh-sqlserver"/>
     <blackhawk.fork
@@ -233,7 +233,7 @@
       classpathref="test.classpath"/>
   </target>
 
-  <target name="test-csvjdbc" depends="gen-all-sql-x">
+  <target name="test-csvjdbc">
     <property file="run.properties"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh-csvjdbc"/>
     <blackhawk.fork
@@ -249,6 +249,14 @@
         <include name="**/build.xml"/>
       </fileset>
     </foreach>
+  </target>
+
+  <target name="test-nightly-all" depends="cleanApplib,createCatalog,buildJdbcPlugin,clean-subdirs,gen-all-sql-x">
+    <antcall target="test-nondb"/>
+    <antcall target="test-flatfile"/>
+    <antcall target="test-oracle"/>
+    <antcall target="test-sqlserver"/>
+    <antcall target="test-csvjdbc"/>
   </target>
 
 <!-- End Experiment-->
