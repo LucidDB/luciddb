@@ -251,12 +251,15 @@
     </foreach>
   </target>
 
-  <target name="test-nightly-all" depends="cleanApplib,createCatalog,buildJdbcPlugin,clean-subdirs,gen-all-sql-x">
+  <target name="test-nightly-all-init" 
+      depends="cleanApplib,createCatalog,buildJdbcPlugin,clean-subdirs,gen-all-sql-x">
+      <!-- the following target will be called from initBuild.sh
     <antcall target="test-nondb"/>
     <antcall target="test-flatfile"/>
     <antcall target="test-oracle"/>
     <antcall target="test-sqlserver"/>
     <antcall target="test-csvjdbc"/>
+      -->
   </target>
 
 <!-- End Experiment-->
