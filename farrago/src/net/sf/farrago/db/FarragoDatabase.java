@@ -561,6 +561,50 @@ public class FarragoDatabase extends FarragoDbSingleton
         return null;
     }
 
+    /** 
+     * Kill a farrago session.
+     * @param id session identifier
+     */
+    public void killSession(long id) throws Throwable
+    {
+        tracer.info("killSession "+ id);
+        FarragoSessionInfo info = findSessionInfo(id);
+        if (info == null) {
+            throw new Throwable("session not found: "+id); // i18n
+        }
+        FarragoDbSession target = (FarragoDbSession) info.getSession();
+        if (target.isClosed()) {
+            tracer.info("killSession "+ id +": already closed");
+            return;
+        }
+        target.closeAllocation();
+    }
+
+    /**
+     * Kill an executing statement: cancel it and deallocate it.
+     * @param statement id
+     * @return success
+     */
+    public void killExecutingStmt(long id) throws Throwable
+    {
+        tracer.info("killExecutingStmt " + id);
+        FarragoSessionExecutingStmtInfo info = findExecutingStmtInfo(id);
+        if (info == null) {
+            tracer.info("killExecutingStmt "+ id +": statement not found");
+            throw new Throwable("executing statement not found: "+id); // i18n
+        }
+        FarragoSessionStmtContext stmt = info.getStmtContext();
+        if (tracer.isLoggable(Level.INFO)) {
+            tracer.info(
+                "killStatement "+ id + 
+                "(session "+ stmt.getSession().getSessionInfo().getId() + "), " +
+                stmt.getSql());
+        }
+        stmt.cancel();
+        stmt.unprepare();
+     }
+
+
     /**
      * Prepares an SQL expression; uses a cached implementation if
      * available, otherwise caches the one generated here.
