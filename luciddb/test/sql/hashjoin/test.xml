@@ -1,0 +1,15 @@
+<project name="bh" default="hashjoin">
+  <target name="hashjoin">
+    <test-suite name="hashjoin">
+
+      <init-hook>
+        <ant target="restoreCatalog"/>
+      </init-hook>
+
+      <test name="hhjoin">
+        <junit-sql file="${open.dir}/luciddb/test/sql/hashjoin/hhjoin.sql"/>
+      </test>
+
+    </test-suite>
+  </target>
+</project>

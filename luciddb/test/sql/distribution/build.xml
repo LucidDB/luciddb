@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
+<!-- 
 // $Id$
 // LucidDB is a DBMS optimized for business intelligence.
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006-2006 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -14,14 +14,14 @@
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//
+//  
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 -->
 
-<project name="pge" basedir="." default="test">
-  <dirname property="pge.dir" file="${ant.file.pge}" />
+<project name="distribution" basedir="." default="test">
+  <dirname property="distribution.dir" file="${ant.file.distribution}" />
 
   <property name="open.dir" location="../../../.."/>
   <fail unless="open.dir" />
@@ -35,20 +35,14 @@
   <property name="project.testlog.dir" location="${open.dir}/luciddb/testlog" />
   <import file="${open.dir}/farrago/buildMacros.xml" />
 
-  <taskdef name="foreach" classname="net.sf.antcontrib.logic.ForEach" classpath="${ant.classpath}"/>
-  <taskdef name="if" classname="net.sf.antcontrib.logic.IfTask" classpath="${ant.classpath}"/>
-
-  <!-- directory where sql is generated -->
-  <property name="gensql.dir" value="${pge.dir}/gen" />
-
   <!-- directory where blackhawk output should go -->
-  <property name="bh.log.basedir" value="${pge.dir}/testlog" />
+  <property name="bh.log.basedir" value="${distribution.dir}/testlog" />
 
   <!-- directory of csv files -->
-  <property name="csvsource.dir" value="/mnt/raksha/engineering/testdata/From_dif_delphi/eng/testdata/pge"/>
-
-  <property name="csv.dir" value="${pge.dir}/csv" />
-  <property name="csv.copy.dir" value="${pge.dir}/csv-copy" />
+  <property name="csvsource.dir" value="/mnt/raksha/engineering/testdata/csv_BENCH"/>
+  <property name="csv.dir" value="${distribution.dir}/csv" />
+  <property name="csv.copy.dir" value="${distribution.dir}/csv-copy" />
+  <property name="data.dir" value="${open.dir}/luciddb/test/data" />
 
   <!-- classpath for running tests via ant -->
   <path id="test.classpath">
@@ -59,68 +53,29 @@
   </path>
   <property name="test.classpath" refid="test.classpath"/>
 
-  <target name="gen-sql">
-    <filter token="open.dir" value="${open.dir}"/>
-    <filter token="csv.dir" value="${csv.copy.dir}"/>
-
-    <!-- generate config.properties file -->
-    <copy file="prop.${prop.source}" tofile="config.properties"
-      overwrite="true" filtering="true">
-      <filterset>
-        <filtersfile file="prop.${prop.source}"/>
-      </filterset>
-    </copy>
-
-    <!-- generate all sql files -->
-    <copy todir="${gensql.dir}tmp" overwrite="true"
-      filtering="true">
-      <fileset dir="${pge.dir}">
-        <include name="**/*.tmpl"/>
-      </fileset>
-      <mapper type="glob" from="*.tmpl" to="*"/>
-      <filterset>
-        <filtersfile file="config.properties"/>
-      </filterset>
-    </copy>
-    <copy todir="${gensql.dir}/${prop.source}" overwrite="true"
-      filtering="true">
-      <fileset dir="${gensql.dir}tmp"/>
-      <filterchain>
-        <tokenfilter>
-          <replaceregex pattern="^.*. . >.*@.*@.*" replace=". . . . . . . . > " flags="s"/>
-          <replaceregex pattern="^.*@.*@.*" replace="" flags="s"/>
-        </tokenfilter>
-      </filterchain>
-    </copy>
-    <delete dir="${gensql.dir}tmp" quiet="true"/>
-
-    <!-- copy over all other .sql and .ref files -->
-    <copy todir="${gensql.dir}/${prop.source}">
-      <fileset dir="${pge.dir}">
-        <include name="**/*.sql"/>
-        <include name="**/*.ref"/>
-        <exclude name="gen/**"/>
-      </fileset>
-    </copy>
-  </target>
-  
   <target name="gen-all-sql">
-    <available file="${gensql.dir}" type="dir"
-      property="sql.generated"/>
+    <uptodate property="gensql.uptodate">
+      <srcfiles dir="${distribution.dir}" includes="*.tmpl"/>
+      <mapper type="glob" from="*.tmpl" to="*"/>
+    </uptodate>
     <if>
-      <isset property="sql.generated"/>
+      <isset property="gensql.uptodate"/>
       <then/>
       <else>
-        <foreach list="oracle,sqlserver,flatfile,csvjdbc" 
-          param="prop.source"
-          target="gen-sql"/>
+        <copy todir="${distribution.dir}" overwrite="true">
+          <fileset dir="${distribution.dir}" includes="*.tmpl"/>
+          <filterset>
+            <filter token="DIR" value="${csv.copy.dir}"/>
+          </filterset>
+          <globmapper from="*.tmpl" to="*"/>
+        </copy>
       </else>
     </if>
   </target>
 
   <target name="test" depends="gen-all-sql">
     <blackhawk.fork
-      basedir="${pge.dir}"
+      basedir="${distribution.dir}"
       testscript="${testfile}"
       classpathref="test.classpath"/>
   </target>
@@ -136,7 +91,7 @@
           overwrite="false"
           failonerror="false"
           verbose="true">
-          <fileset dir="${csvsource.dir}"/>
+          <fileset dir="${csvsource.dir}" includes="bench100.csv"/>
         </sync>
       </then>
     </if>
@@ -154,19 +109,30 @@
         </sync>
       </then>
       <else>
-        <echo message="!! NO CSV FILES !!"/>
+        <!-- sync data.dir <-> csv-copy.dir -->
+        <sync todir="${csv.copy.dir}"
+          overwrite="true"
+          verbose="true"
+          failonerror="true">
+          <fileset dir="${data.dir}" includes="bench100.csv"/>
+        </sync>
+        <echo message="!! NO REMOTE CSV FILES !!"/>
       </else>
     </if>
   </target>
 
   <target name="clean">
-    <delete dir="${gensql.dir}"/>
+    <delete>
+      <fileset dir="${distribution.dir}">
+        <include name="creschema.sql"/>
+        <include name="creschema.ref"/>
+      </fileset>
+    </delete>
     <delete dir="${bh.log.basedir}"/>
     <delete dir="${csv.copy.dir}"/>
   </target>
 
-  <target name="clean-csv">
-    <antcall target="clean"/>
+  <target name="clean-csv" depends="clean">
     <delete dir="${csv.dir}"/>
   </target>
 

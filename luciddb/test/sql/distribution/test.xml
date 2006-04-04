@@ -1,0 +1,58 @@
+<project name="bh" default="distribution">
+  <target name="distribution">
+    <test-suite name="distribution">
+
+      <init-hook>
+        <ant target="restoreCatalog"/>
+        <ant dir="${open.dir}/luciddb/test/sql/distribution" target="copy-csv"/>
+      </init-hook>
+
+      <test name="creschema">
+        <junit-sql file="${open.dir}/luciddb/test/sql/distribution/creschema.sql"/>
+      </test>
+
+      <test name="distins" requiresSuccess="creschema">
+        <junit-sql file="${open.dir}/luciddb/test/sql/distribution/distins.sql"/>
+      </test>
+
+      <test name="hashagg" requiresSuccess="distins">
+        <test-metadata>
+          <knownFailure value="true"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/distribution/hashagg.sql"/>
+      </test>
+
+      <test name="join1empty" requiresSuccess="distins">
+        <junit-sql file="${open.dir}/luciddb/test/sql/distribution/join1empty.sql"/>
+      </test>
+
+      <test name="join1match" requiresSuccess="distins">
+        <junit-sql file="${open.dir}/luciddb/test/sql/distribution/join1match.sql"/>
+      </test>
+
+      <test name="join2empty" requiresSuccess="distins">
+        <junit-sql file="${open.dir}/luciddb/test/sql/distribution/join2empty.sql"/>
+      </test>
+
+      <test name="joinNoMatch" requiresSuccess="distins">
+        <junit-sql file="${open.dir}/luciddb/test/sql/distribution/joinNoMatch.sql"/>
+      </test>
+
+      <test name="joins" requiresSuccess="distins">
+        <junit-sql file="${open.dir}/luciddb/test/sql/distribution/joins.sql"/>
+      </test>
+
+      <test name="joins2" requiresSuccess="distins">
+        <test-metadata>
+          <knownFailure value="true"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/distribution/joins2.sql"/>
+      </test>
+
+      <test name="largeselect" requiresSuccess="distins">
+        <junit-sql file="${open.dir}/luciddb/test/sql/distribution/largeselect.sql"/>
+      </test>
+
+    </test-suite>
+  </target>
+</project>
