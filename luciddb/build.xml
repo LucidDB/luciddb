@@ -186,6 +186,8 @@
         <exclude name="udr/**"/>
         <exclude name="VI/recovery/build.xml"/>
         <exclude name="VI/build.xml"/>
+        <exclude name="hashjoin/**"/>
+        <exclude name="distribution/**"/>
       </fileset>
     </foreach>
   </target>
@@ -208,6 +210,7 @@
 
   <target name="test-flatfile">
     <property file="run.properties"/>
+    <property name="foreign.db" value="flatfile"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh-flatfile"/>
     <blackhawk.fork
       basedir="${luciddb.dir}"
@@ -217,6 +220,7 @@
 
   <target name="test-oracle">
     <property file="run.properties"/>
+    <property name="foreign.db" value="oracle"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh-oracle"/>
     <blackhawk.fork
       basedir="${luciddb.dir}"
@@ -226,6 +230,7 @@
 
   <target name="test-sqlserver">
     <property file="run.properties"/>
+    <property name="foreign.db" value="sqlserver"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh-sqlserver"/>
     <blackhawk.fork
       basedir="${luciddb.dir}"
@@ -235,6 +240,7 @@
 
   <target name="test-csvjdbc">
     <property file="run.properties"/>
+    <property name="foreign.db" value="csvjdbc"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh-csvjdbc"/>
     <blackhawk.fork
       basedir="${luciddb.dir}"
@@ -251,15 +257,9 @@
     </foreach>
   </target>
 
-  <target name="test-nightly-all-init" 
-      depends="cleanApplib,createCatalog,buildJdbcPlugin,clean-subdirs,gen-all-sql-x">
-      <!-- the following target will be called from initBuild.sh
-    <antcall target="test-nondb"/>
-    <antcall target="test-flatfile"/>
-    <antcall target="test-oracle"/>
-    <antcall target="test-sqlserver"/>
-    <antcall target="test-csvjdbc"/>
-      -->
+  <target name="test-nightly-all-init" depends="cleanApplib,createCatalog,buildJdbcPlugin">
+    <antcall target="clean-subdirs"/>
+    <antcall target="gen-all-sql-x"/>
   </target>
 
 <!-- End Experiment-->
