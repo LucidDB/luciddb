@@ -1,4 +1,3 @@
-
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
