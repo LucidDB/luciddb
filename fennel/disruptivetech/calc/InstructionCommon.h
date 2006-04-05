@@ -51,6 +51,7 @@
 #include "fennel/disruptivetech/calc/ExtDateTime.h"
 #include "fennel/disruptivetech/calc/ExtCast.h"
 #include "fennel/disruptivetech/calc/ExtDynamicVariable.h"
+#include "fennel/disruptivetech/calc/ExtWinAggFuncs.h"
 
 #endif
 

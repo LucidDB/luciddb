@@ -46,8 +46,8 @@ CalcInit::instance()
     ExtRegExpRegister(InstructionFactory::getExtendedInstructionTable());
     ExtCastRegister(InstructionFactory::getExtendedInstructionTable());
     ExtDynamicVariableRegister(InstructionFactory::getExtendedInstructionTable());
-
-
+    ExtWinAggFuncRegister(InstructionFactory::getExtendedInstructionTable());
+    
     // Add new init calls here
 
     return _instance;
