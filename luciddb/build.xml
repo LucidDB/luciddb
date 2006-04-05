@@ -171,7 +171,7 @@
   </target>
 
   <target name="gen-bh-report">
-    <xslt basedir="testlog" destdir="testlog/bh" style="bh-html.xsl" includes="**/bh.xml" extension=".html"/>
+    <xslt basedir="testlog" destdir="testlog" style="bh-html.xsl" includes="**/bh.xml" extension=".html"/>
   </target>
 
   <target name="gen-bh-report-all">
@@ -279,6 +279,7 @@
       basedir="${luciddb.dir}"
       testscript="test.xml"
       classpathref="test.classpath"/>
+    <antcall target="gen-bh-report"/>
   </target>
 
   
