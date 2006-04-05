@@ -22,6 +22,7 @@ package com.lucidera.luciddb.applib.datetime;
 
 import java.sql.*;
 import com.lucidera.luciddb.applib.resource.*;
+import net.sf.farrago.runtime.*;
 
 /**
  * Convert a string to a date, using a specified date format mask.
@@ -45,7 +46,11 @@ public class ConvertDateUdf
         throws ApplibException
     {
         Date ret;
-        DateConversionHelper dch = new DateConversionHelper();
+        DateConversionHelper dch = (DateConversionHelper)FarragoUdrRuntime.getContext();
+        if (dch == null) {
+            dch = new DateConversionHelper();
+            FarragoUdrRuntime.setContext(dch);
+        }
 
         try
         {

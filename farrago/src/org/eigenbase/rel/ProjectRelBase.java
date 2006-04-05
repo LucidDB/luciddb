@@ -26,6 +26,7 @@ package org.eigenbase.rel;
 import org.eigenbase.oj.rel.JavaRel;
 import org.eigenbase.oj.rel.JavaRelImplementor;
 import org.eigenbase.relopt.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.*;
@@ -123,8 +124,8 @@ public abstract class ProjectRelBase extends SingleRel
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
-        double dRows = getChild().getRows();
-        double dCpu = getChild().getRows() * exps.length;
+        double dRows = RelMetadataQuery.getRowCount(getChild());
+        double dCpu = dRows * exps.length;
         double dIo = 0;
         return planner.makeCost(dRows, dCpu, dIo);
     }

@@ -29,6 +29,7 @@ import java.util.logging.Level;
 import org.eigenbase.oj.rel.JavaRelImplementor;
 import org.eigenbase.oj.rex.OJRexImplementorTableImpl;
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.rel.convert.ConverterRel;
 import org.eigenbase.rel.convert.ConverterRule;
 import org.eigenbase.relopt.*;
@@ -587,7 +588,7 @@ public class VolcanoPlanner implements RelOptPlanner
         if (rel.getTraits().getTrait(0) == CallingConvention.NONE) {
             return makeInfiniteCost();
         }
-        RelOptCost cost = rel.computeSelfCost(this);
+        RelOptCost cost = RelMetadataQuery.getNonCumulativeCost(rel);
         if (!VolcanoCost.ZERO.isLt(cost)) {
             // cost must be positive, so nudge it
             cost = makeTinyCost();
@@ -765,8 +766,8 @@ public class VolcanoPlanner implements RelOptPlanner
                             assert (inputSet.subsets.contains(inputSubset));
                         }
                     }
-                    pw.print(", non-cumulative rows=" + rel.getRows());
-                    pw.println(", cost=" + getCost(rel));
+                    pw.print(", rowcount=" + RelMetadataQuery.getRowCount(rel));
+                    pw.println(", cumulative cost=" + getCost(rel));
                 }
             }
         }
@@ -1026,7 +1027,7 @@ public class VolcanoPlanner implements RelOptPlanner
 loop:
         while (true) {
             // First, try to do the node itself.
-            RelOptCost nodeCost = rel.computeSelfCost(this);
+            RelOptCost nodeCost = RelMetadataQuery.getNonCumulativeCost(rel);
             if (!nodeCost.isLt(targetCost)) {
                 int beforeCount = registerCount;
                 if (ruleQueue.remove(rel)) {
@@ -1272,7 +1273,24 @@ loop:
         listener = newListener;
     }
 
+    // implement RelOptPlanner
+    public void registerMetadataProviders(ChainedRelMetadataProvider chain)
+    {
+        chain.addProvider(
+            new VolcanoRelMetadataProvider());
+    }
 
+    // implement RelOptPlanner
+    public long getRelMetadataTimestamp(RelNode rel)
+    {
+        RelSubset subset = getSubset(rel);
+        if (subset == null) {
+            return 0;
+        } else {
+            return subset.timestamp;
+        }
+    }
+    
     //~ Inner Classes ---------------------------------------------------------
 
     /**

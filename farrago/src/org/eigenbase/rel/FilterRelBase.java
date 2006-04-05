@@ -22,6 +22,7 @@
 package org.eigenbase.rel;
 
 import org.eigenbase.relopt.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.rex.*;
 
 /**
@@ -73,8 +74,8 @@ public abstract class FilterRelBase extends SingleRel
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
-        double dRows = getRows();
-        double dCpu = getChild().getRows();
+        double dRows = RelMetadataQuery.getRowCount(this);
+        double dCpu = RelMetadataQuery.getRowCount(getChild());
         double dIo = 0;
         return planner.makeCost(dRows, dCpu, dIo);
     }
@@ -87,7 +88,8 @@ public abstract class FilterRelBase extends SingleRel
 
     public static double estimateFilteredRows(RelNode child, RexNode condition)
     {
-        return child.getRows() * RexUtil.getSelectivity(condition);
+        return RelMetadataQuery.getRowCount(child)
+            * RexUtil.getSelectivity(condition);
     }
 
     public void explain(RelOptPlanWriter pw)

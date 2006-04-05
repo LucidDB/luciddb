@@ -436,8 +436,7 @@ class RuleQueue
     private double toDouble(RelOptCost cost)
     {
         if (cost.isInfinite()) {
-            // REVIEW:  shouldn't this be bigger?
-            return 1e+3;
+            return 1e+30;
         } else {
             return cost.getCpu() + cost.getRows() + cost.getIo();
         }

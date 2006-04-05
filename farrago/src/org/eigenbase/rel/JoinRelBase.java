@@ -24,6 +24,7 @@ package org.eigenbase.rel;
 import java.util.*;
 
 import org.eigenbase.relopt.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.util.*;
@@ -103,7 +104,8 @@ public abstract class JoinRelBase extends AbstractRelNode
     public static double estimateJoinedRows(
         RelNode left, RelNode right, RexNode condition)
     {
-        double product = left.getRows() * right.getRows();
+        double product = RelMetadataQuery.getRowCount(left)
+            * RelMetadataQuery.getRowCount(right);
         // TODO:  correlation factor
         return product * RexUtil.getSelectivity(condition);
     }

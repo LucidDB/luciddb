@@ -168,39 +168,58 @@
   </path>
   <property name="applib.run.classpath" refid="applib.run.classpath"/>
 
-  <target name="run_blackhawk">
-    <property file="run.properties"/>
-    <property name="fail.on.error" value="true"/>
-    <blackhawk bhHome="${bh.home}"
-      fork="true"
-      testhome="${testhome}" 
-      testfile="${testfile}"
-      inheritAll="true"
-      testTimeout="false"
-      failOnError="${fail.on.error}"
-      classpathref="test.classpath">
-      <jvmarg line="&FarragoSqlLineProps;"/>
-    </blackhawk>
-  </target>
-
   <target name="gen-all-sql">
     <ant dir="test/sql/shortreg" target="gen-all-sql"/>
   </target>
 
-  <target name="test" depends="createCatalog,buildJdbcPlugin,gen-all-sql">
+<!-- Begin Experiment -->
+  <taskdef name="foreach" classname="net.sf.antcontrib.logic.ForEach" classpath="${ant.classpath}"/>
+  <taskdef name="if" classname="net.sf.antcontrib.logic.IfTask" classpath="${ant.classpath}"/>
+
+  <target name="gen-all-sql-x">
+    <foreach param="target.file" target="ant-gen-sql">
+      <fileset dir="${basedir}/test/sql">
+        <!-- either include each directory explicitly, or include all
+        by name="**/build.xml", and either put dummy "gen-all-sql" targets
+        for everyone, or do explicit excludes -->
+        <include name="shortreg/build.xml"/>
+        <include name="bench/build.xml"/>
+        <include name="company/build.xml"/>
+        <include name="compositekey/build.xml"/>
+        <include name="datatypes/build.xml"/>
+        <include name="pge/build.xml"/>
+        <include name="pge2/build.xml"/>
+        <include name="VI/insert/build.xml"/>
+        <include name="VI/populate/build.xml"/>
+        <include name="VI/tbs/build.xml"/>
+      </fileset>
+    </foreach>
+  </target>
+
+  <target name="ant-gen-sql">
+    <echo>
+      This is the target.file: ${target.file}
+    </echo>
+    <ant antfile="${target.file}" target="gen-all-sql" inheritAll="false"/>
+  </target>
+
+  <target name="test-nondb">
+    <blackhawk.fork
+      basedir="${luciddb.dir}"
+      testscript="test-nightly-nondb.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+<!-- End Experiment-->
+
+  <target name="test" depends="cleanApplib,createCatalog,buildJdbcPlugin,gen-all-sql">
     <blackhawk.fork
       basedir="${luciddb.dir}"
       testscript="test.xml"
       classpathref="test.classpath"/>
   </target>
 
-  <target name="test-old" depends="createCatalog,buildJdbcPlugin">
-    <ant dir="test/sql/txn" target="test"/>
-    <ant dir="test/sql/shortreg" target="test"/>
-    <ant dir="test/sql/udr/udf" target="test"/>
-    <ant dir="test/sql/udr/udx" target="test"/>
-  </target>
-
+  
   <target name="bhShortregSanity">
     <blackhawk.fork basedir="test/sql/shortreg" 
       testscript="test.xml"
@@ -524,8 +543,7 @@
     <delete includeEmptyDirs="true" quiet="true">
       <fileset dir="${testlog.dir}" includes="*.xml"/>
       <fileset dir="${testlog.dir}" includes="*.txt"/>
-      <fileset dir="${testlog.dir}/shortreg"/><!-- delete eventually-->
-      <fileset dir="${testlog.dir}/txn"/><!-- delete eventually-->
+      <fileset dir="${testlog.dir}/bh"/>
       <fileset dir="${testsrc.dir}" includes="**/*.log"/>
       <fileset dir="${testsrc.dir}" includes="**/*.dif"/>
     </delete>

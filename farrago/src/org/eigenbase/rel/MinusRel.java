@@ -24,6 +24,7 @@
 package org.eigenbase.rel;
 
 import org.eigenbase.relopt.*;
+import org.eigenbase.rel.metadata.*;
 
 /**
  * <code>MinusRel</code> returns the rows of its first input minus any
@@ -56,9 +57,9 @@ public final class MinusRel extends SetOpRel
     public double getRows()
     {
         // REVIEW jvs 30-May-2005:  I just pulled this out of a hat.
-        double dRows = inputs[0].getRows();
+        double dRows = RelMetadataQuery.getRowCount(inputs[0]);
         for (int i = 1; i < inputs.length; i++) {
-            dRows -= 0.5*inputs[i].getRows();
+            dRows -= 0.5 * RelMetadataQuery.getRowCount(inputs[i]);
         }
         if (dRows < 0) {
             dRows = 0;

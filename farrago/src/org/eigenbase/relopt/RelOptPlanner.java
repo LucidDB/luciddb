@@ -24,7 +24,8 @@
 package org.eigenbase.relopt;
 
 import org.eigenbase.oj.rel.JavaRelImplementor;
-import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.trace.EigenbaseTrace;
 
 import java.util.logging.Logger;
@@ -197,6 +198,28 @@ public interface RelOptPlanner
      * @param newListener new listener to be notified of events
      */
     public void addListener(RelOptListener newListener);
+
+    /**
+     * Gives this planner a chance to register one or more {@link
+     * RelMetadataProvider}s in the chain which will be used to answer metadata
+     * queries.  Planners which use their own relational expressions internally
+     * to represent concepts such as equivalence classes will generally need to
+     * supply corresponding metadata providers.
+     *
+     * @param chain receives planner's custom providers, if any
+     */
+    public void registerMetadataProviders(ChainedRelMetadataProvider chain);
+
+    /**
+     * Gets a timestamp for a given rel's metadata.  This timestamp
+     * is used by {@link CachingRelMetadataProvider} to decide
+     * whether cached metadata has gone stale.
+     *
+     * @param rel rel of interest
+     *
+     * @return timestamp of last change which might affect metadata derivation
+     */
+    public long getRelMetadataTimestamp(RelNode rel);
 }
 
 

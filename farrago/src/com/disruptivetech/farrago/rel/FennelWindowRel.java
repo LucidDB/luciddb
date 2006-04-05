@@ -27,6 +27,7 @@ import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.query.*;
 import org.eigenbase.rel.CalcRel;
 import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeField;
@@ -182,8 +183,7 @@ public class FennelWindowRel extends FennelSingleRel
         // TODO #1. Add memory cost. Memory cost is higher for MIN and MAX
         //    than say SUM and COUNT (because they maintain a binary tree).
         // TODO #2. MIN and MAX have higher CPU cost than SUM and COUNT.
-        RelOptCost childCost = planner.getCost(getChild());
-        final double rowsIn = childCost.getRows();
+        final double rowsIn = RelMetadataQuery.getRowCount(getChild());
         int count = windows.length;
         for (int i = 0; i < windows.length; i++) {
             Window window = windows[i];

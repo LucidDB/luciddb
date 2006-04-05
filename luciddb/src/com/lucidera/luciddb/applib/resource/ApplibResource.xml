@@ -84,7 +84,7 @@
 </exception>
 
 <exception id="900050" name="InvalidDigitInputString">
-<text>Invalid digit input string</text>
+<text>Invalid digit input string: caMask={0} caIn={1}</text>
 </exception>
 
 <exception id="900060" name="InvalidPhoneNumber">

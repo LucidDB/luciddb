@@ -30,6 +30,7 @@ import openjava.ptree.*;
 
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
 
@@ -97,7 +98,7 @@ class MedMdrJoinRel extends JoinRelBase implements JavaRel
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         // TODO:  refine
-        double rowCount = getRows();
+        double rowCount = RelMetadataQuery.getRowCount(this);
         return planner.makeCost(rowCount, 0,
             rowCount * getRowType().getFieldList().size());
     }
@@ -108,11 +109,13 @@ class MedMdrJoinRel extends JoinRelBase implements JavaRel
         if (rightReference == null) {
             // TODO:  selectivity
             // many-to-one
-            return left.getRows();
+            return RelMetadataQuery.getRowCount(left);
         } else {
             // one-to-many:  assume a fanout of five, capped by the
             // total number of rows on the right
-            return Math.min(5 * left.getRows(), right.getRows());
+            return Math.min(
+                5 * RelMetadataQuery.getRowCount(left),
+                RelMetadataQuery.getRowCount(right));
         }
     }
 

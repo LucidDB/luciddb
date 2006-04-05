@@ -372,7 +372,8 @@ public class DdlRoutineHandler extends DdlHandler
                 FarragoUserDefinedRoutine.removeReturnPrefix(
                     routine.getBody().getBody()),
                 typeFactory,
-                paramRowType);
+                paramRowType,
+                false);
         } catch (Throwable ex) {
             throw adjustExceptionParserPosition(routine, ex);
         }
@@ -441,7 +442,8 @@ public class DdlRoutineHandler extends DdlHandler
             analyzedSql = session.analyzeSql(
                 expr.toSqlString(sqlDialect),
                 typeFactory,
-                paramRowType);
+                paramRowType,
+                false);
             if (analyzedSql.hasDynamicParams) {
                 throw res.ValidatorInvalidRoutineDynamicParam.ex();
             }

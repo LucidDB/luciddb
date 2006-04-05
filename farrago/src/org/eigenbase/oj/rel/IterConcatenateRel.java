@@ -27,6 +27,7 @@ import openjava.mop.OJClass;
 import openjava.ptree.*;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
@@ -65,8 +66,9 @@ public class IterConcatenateRel extends UnionRelBase implements JavaRel
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
-        double dRows = getRows();
-        // favor a Nexus over a CompoundIterator, due to hassles of java/c++/java data transfer
+        double dRows = RelMetadataQuery.getRowCount(this);
+        // favor a Nexus over a CompoundIterator, due to hassles of
+        // java/c++/java data transfer
         double dCpu = 1000;
         double dIo = 1000;
         return planner.makeCost(dRows, dCpu, dIo);

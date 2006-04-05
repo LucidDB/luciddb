@@ -24,6 +24,7 @@ import java.sql.Types;
 import java.util.Properties;
 import java.sql.SQLException;
 import com.lucidera.luciddb.applib.resource.*;
+import net.sf.farrago.runtime.*;
 
 /**
  * Format an input phone number in a specified format.
@@ -49,7 +50,12 @@ public class CleanPhoneInternationalUdf
     {
         String ret;
   
-        PhoneNumberContext ctx = PhoneNumberContext.get();
+        PhoneNumberContext ctx = 
+            (PhoneNumberContext)FarragoUdrRuntime.getContext();
+        if (ctx == null) {
+            ctx = new PhoneNumberContext();
+            FarragoUdrRuntime.setContext(ctx);
+        }
 
         try {
             ret = ctx.toCanonicalString( in );

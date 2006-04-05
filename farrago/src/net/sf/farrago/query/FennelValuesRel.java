@@ -22,6 +22,7 @@
 package net.sf.farrago.query;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
@@ -121,7 +122,7 @@ public class FennelValuesRel extends AbstractRelNode implements FennelRel
     // implement RelNode
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
-        double dRows = getRows();
+        double dRows = RelMetadataQuery.getRowCount(this);
         // CPU is negligible since ValuesExecStream just hands off
         // the entire buffer to its consumer.
         double dCpu = 1;

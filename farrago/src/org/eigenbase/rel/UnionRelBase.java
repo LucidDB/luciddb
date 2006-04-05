@@ -22,6 +22,7 @@
 package org.eigenbase.rel;
 
 import org.eigenbase.relopt.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.reltype.*;
 
 /**
@@ -63,7 +64,7 @@ public abstract class UnionRelBase extends SetOpRel
     {
         double dRows = 0;
         for (int i = 0; i < rel.getInputs().length; i++) {
-            dRows += rel.getInputs()[i].getRows();
+            dRows += RelMetadataQuery.getRowCount(rel.getInputs()[i]);
         }
         return dRows;
     }

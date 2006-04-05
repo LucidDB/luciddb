@@ -252,12 +252,16 @@ public interface FarragoSession extends FarragoAllocation
      * a function body with these parameters; if null, expression is
      * expected to be a query
      *
+     * @param optimize if true, run optimizer as part of analysis;
+     * otherwise, skip optimization, returning less information
+     *
      * @return FarragoSessionAnalyzedSql derived from the query
      */
     public FarragoSessionAnalyzedSql analyzeSql(
         String sql,
         RelDataTypeFactory typeFactory,
-        RelDataType paramRowType);
+        RelDataType paramRowType,
+        boolean optimize);
 
     /**
      * Executes a LURQL query against the repository.

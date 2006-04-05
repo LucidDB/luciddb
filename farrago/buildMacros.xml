@@ -350,6 +350,9 @@
   <!-- classpath for running blackhawk (aka tch) based tests -->
   <property name="tch.home" location="${open.dir}/blackhawk/build/dist"/>
 
+  <!-- classpath for running blackhawk based tests -->
+  <property name="bh.home" location="${thirdparty.dir}/blackhawk"/>
+
   <path id="blackhawk.run.classpath">
     <pathelement path="${ant.classpath}"/>
     <pathelement location="${tch.home}/tchx.jar"/>

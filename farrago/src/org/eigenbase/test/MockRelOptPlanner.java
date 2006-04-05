@@ -23,6 +23,7 @@ package org.eigenbase.test;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.util.*;
 
@@ -246,6 +247,17 @@ public class MockRelOptPlanner implements RelOptPlanner
     {
     }
 
+    // implement RelOptPlanner
+    public void registerMetadataProviders(ChainedRelMetadataProvider chain)
+    {
+    }
+    
+    // implement RelOptPlanner
+    public long getRelMetadataTimestamp(RelNode rel)
+    {
+        return 0;
+    }
+    
     private class MockRuleCall extends RelOptRuleCall
     {
         MockRuleCall(

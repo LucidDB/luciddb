@@ -223,7 +223,8 @@ public:
 
     uint getNext()
     {
-        assert(findNext());
+        bool hasNext = findNext();
+        assert(hasNext);
         prev = next;
         next = BIG_NUMBER;
         return prev;

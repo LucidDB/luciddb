@@ -30,6 +30,7 @@ import org.eigenbase.rel.AbstractRelNode;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.RelVisitor;
 import org.eigenbase.rel.convert.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.trace.EigenbaseTrace;
@@ -71,6 +72,9 @@ public class RelSubset extends AbstractRelNode
 
     /** whether findBestPlan is being called */
     boolean active;
+
+    /** Timestamp for metadata validity */
+    long timestamp;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -133,7 +137,7 @@ public class RelSubset extends AbstractRelNode
         if (best == null) {
             return VolcanoCost.INFINITY.getRows();
         } else {
-            return best.getRows();
+            return RelMetadataQuery.getRowCount(best);
         }
     }
 
@@ -259,6 +263,8 @@ public class RelSubset extends AbstractRelNode
         VolcanoPlanner planner,
         RelNode rel)
     {
+        ++timestamp;
+        
         final RelOptCost cost = planner.getCost(rel);
         if (cost.isLt(bestCost)) {
             tracer.finer("Subset cost improved: subset [" + this
