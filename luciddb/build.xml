@@ -170,6 +170,14 @@
     <ant dir="test/sql/VI/tbs" target="gen-all-sql"/>
   </target>
 
+  <target name="gen-bh-report">
+    <xslt basedir="testlog" destdir="testlog/bh" style="bh-html.xsl" includes="**/bh.xml" extension=".html"/>
+  </target>
+
+  <target name="gen-bh-report-all">
+    <xslt basedir="." destdir="testlog/bh" style="bh-html.xsl" includes="**/bh.xml" extension=".html"/>
+  </target>
+
 <!-- Begin Experiment -->
   <taskdef name="foreach" classname="net.sf.antcontrib.logic.ForEach" classpath="${ant.classpath}"/>
   <taskdef name="if" classname="net.sf.antcontrib.logic.IfTask" classpath="${ant.classpath}"/>
