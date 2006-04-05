@@ -69,7 +69,6 @@
   <xsl:if test="position() mod 2 != 1">
     <xsl:attribute  name="style">background-color:#dddddd</xsl:attribute>
   </xsl:if>
-  <xsl:apply-templates/>
 <td><xsl:value-of select="test-case/@testsuitename"/>(<xsl:value-of select="test-case/@testsuitemodifiers"/>)</td>
 <td><xsl:value-of select="test-case/@testcasename"/></td>
 <td><xsl:value-of select="test-case/@basename"/></td>
@@ -78,7 +77,7 @@
 <td><xsl:value-of select="@exectime"/></td>
 <td><xsl:value-of select="test-case/@testpath"/></td>
 <td><xsl:value-of select="@isdone"/></td>
-<td><xsl:value-of select="test-case/execution-output/output-details/."/></td>
+<td><xsl:value-of select="execution-output/output-details/."/></td>
 </tr>
 </xsl:template>
 
