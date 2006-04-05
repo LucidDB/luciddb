@@ -38,6 +38,10 @@
 </xsl:template>
 <xsl:template match="test-result">
 <tr class="unittests-data">
+  <xsl:if test="position() mod 2 != 1">
+    <xsl:attribute  name="style">background-color:#dddddd</xsl:attribute>
+  </xsl:if>
+  <xsl:apply-templates/>
 <td><xsl:value-of select="test-case/@testsuitemodifiers"/><xsl:value-of select="test-case/@testsuitename"/></td>
 <td><xsl:value-of select="test-case/@testcasename"/></td>
 <td><xsl:value-of select="test-case/@basename"/></td>
