@@ -21,10 +21,11 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-package org.eigenbase.rel;
+package org.eigenbase.rel.rules;
 
 import java.util.*;
 
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 
 /**
@@ -50,23 +51,35 @@ public class AddRedundantSemiJoinRule extends RelOptRule
     {
         JoinRel origJoinRel = (JoinRel) call.rels[0];
 
-        if (origJoinRel.isSemiJoinDone()) {
+        if (origJoinRel.isSemiJoinDone() || origJoinRel.isMultiJoinDone()) {
+            return;
+        }
+
+        // can't process outer joins using semijoins
+        if (origJoinRel.getJoinType() != JoinRelType.INNER) {
             return;
         }
         
         // determine if we have a valid join condition
-        // TODO - currently do not support multi-key joins
-        int [] joinFieldOrdinals = new int[2];
-        if (!RelOptUtil.analyzeSimpleEquiJoin(origJoinRel, joinFieldOrdinals)) {
+        List<Integer> leftKeys = new ArrayList<Integer>();
+        List<Integer> rightKeys = new ArrayList<Integer>();
+        RelOptUtil.splitJoinCondition(
+            origJoinRel.getLeft(),
+            origJoinRel.getRight(),
+            origJoinRel.getCondition(),
+            leftKeys,
+            rightKeys);
+        if (leftKeys.size() == 0) {
             return;
         }
-
+        
         RelNode semiJoin = new SemiJoinRel(
             origJoinRel.getCluster(),
             origJoinRel.getLeft(),
             origJoinRel.getRight(),
             origJoinRel.getCondition(),
-            joinFieldOrdinals[1]);
+            leftKeys,
+            rightKeys);
        
         RelNode newJoinRel = new JoinRel(
             origJoinRel.getCluster(),
@@ -75,7 +88,8 @@ public class AddRedundantSemiJoinRule extends RelOptRule
             origJoinRel.getCondition(),
             JoinRelType.INNER,
             Collections.EMPTY_SET,
-            true);
+            true,
+            origJoinRel.isMultiJoinDone());
 
         call.transformTo(newJoinRel);
     }

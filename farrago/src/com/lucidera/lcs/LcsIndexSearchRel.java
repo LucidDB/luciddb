@@ -52,9 +52,8 @@ class LcsIndexSearchRel extends FennelSingleRel
     final Integer [] inputJoinProj;
     final Integer [] inputDirectiveProj;
     
-    int startRidParamId;
-    int rowLimitParamId;
-    boolean ignoreRowLimit;
+    FennelRelParamId startRidParamId;
+    FennelRelParamId rowLimitParamId;
     
     //~ Constructors ----------------------------------------------------------
     
@@ -77,8 +76,8 @@ class LcsIndexSearchRel extends FennelSingleRel
         Integer [] inputKeyProj,
         Integer [] inputJoinProj,
         Integer [] inputDirectiveProj,
-        int startRidParamId,
-        int rowLimitParamId)
+        FennelRelParamId startRidParamId,
+        FennelRelParamId rowLimitParamId)
     {
         super(
             indexScanRel.getCluster(),
@@ -93,7 +92,6 @@ class LcsIndexSearchRel extends FennelSingleRel
         
         this.startRidParamId = startRidParamId;
         this.rowLimitParamId = rowLimitParamId;
-        ignoreRowLimit = (this.rowLimitParamId == 0);
     }
     
     //~ Methods ---------------------------------------------------------------
@@ -219,14 +217,16 @@ class LcsIndexSearchRel extends FennelSingleRel
             new String [] {
                 "child", "table", "projection", "index", "uniqueKey",
                 "preserveOrder", "outer", "inputKeyProj", "inputJoinProj",
-                "inputDirectiveProj"
+                "inputDirectiveProj", "startRidParamId", "rowLimitParamId"
             },
             new Object [] {
                 Arrays.asList(indexScanRel.lcsTable.getQualifiedName()), projection,
                 indexScanRel.index.getName(), Boolean.valueOf(isUniqueKey),
                 Boolean.valueOf(indexScanRel.isOrderPreserving),
                 Boolean.valueOf(isOuter), inputKeyProjObj, inputJoinProjObj,
-                inputDirectiveProjObj
+                inputDirectiveProjObj, 
+                (startRidParamId == null) ? 0 : startRidParamId,
+                (rowLimitParamId == null) ? 0 : rowLimitParamId
             });
     }
     
@@ -242,9 +242,8 @@ class LcsIndexSearchRel extends FennelSingleRel
                 inputKeyProj,
                 inputJoinProj,
                 inputDirectiveProj,
-                startRidParamId,
-                rowLimitParamId,
-                ignoreRowLimit);
+                implementor.translateParamId(startRidParamId),
+                implementor.translateParamId(rowLimitParamId));
         
         implementor.addDataFlowFromProducerToConsumer(
             implementor.visitFennelChild((FennelRel) getChild()), 
@@ -262,12 +261,29 @@ class LcsIndexSearchRel extends FennelSingleRel
     // TODO: implement getCollations()
     
     /**
+     * Sets the search's startRid parameter id. If set to a non-zero 
+     * value, the search will initiate a search starting at the startRid
+     * parameter value.
+     * 
+     * @param paramId parameter id to be set
+     */
+    public void setStartRidParamId(FennelRelParamId paramId) {
+        startRidParamId = paramId;
+    }
+    
+    /**
      * Sets the search's row limit parameter id. If set to a non-zero 
      * value, the search will limit the size of the tuples it produces.
+     * 
+     * @param paramId parameter id to be set
      */
-    public void setRowLimitParamId(int paramId) {
+    public void setRowLimitParamId(FennelRelParamId paramId) {
         rowLimitParamId = paramId;
-        ignoreRowLimit = (paramId == 0);
+    }
+    
+    public LcsIndexScanRel getIndexScan()
+    {
+        return indexScanRel;
     }
 }
 

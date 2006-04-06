@@ -1,0 +1,549 @@
+0: jdbc:farrago:> -- $Id: //open/lu/dev_lcs/farrago/unitsql/optimizer/semijoin.sql#16 $
+0: jdbc:farrago:> -- Tests semijoin transformations
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create schema sj;
+0: jdbc:farrago:> set schema 'sj';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- set session personality to LucidDB so all tables
+0: jdbc:farrago:> -- will be column-store by default
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- fake jar since we don't actually build a separate jar for LucidDB yet
+0: jdbc:farrago:> create jar luciddb_plugin 
+. . . . . . . . > library 'class com.lucidera.farrago.LucidDbSessionFactory' 
+. . . . . . . . > options(0);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> alter session implementation set jar luciddb_plugin;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table t(
+. . . . . . . . >     a int, b char(20), c varchar(20) not null,
+. . . . . . . . >     d varchar(128) not null);
+0: jdbc:farrago:> create index it_d on t(d);
+0: jdbc:farrago:> create index it_bd on t(b, d);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> insert into t values(1, 'abcdef', 'no match', 'this is row 1');
+0: jdbc:farrago:> insert into t values(2, 'abcdef', 'ghijkl', 'this is row 2');
+0: jdbc:farrago:> insert into t values(3, 'abcdef', 'ghijkl', 'this is row 3');
+0: jdbc:farrago:> insert into t values(4, null, 'ghijkl', 'this is row 4');
+0: jdbc:farrago:> insert into t values(5, null, 'ghijkl', 'no match');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- although this table has the same number of rows as t, we will force this
+0: jdbc:farrago:> -- to be the dimension table in the semijoin by putting a dummy filter on
+0: jdbc:farrago:> -- the table
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table smalltable(
+. . . . . . . . >     s1 varchar(128) not null, s2 int, s3 varchar(128) not null,
+. . . . . . . . >         s4 varchar(128) not null);
+0: jdbc:farrago:> insert into smalltable values('this is row 1', 1, 'abcdef', 'ghijkl');
+0: jdbc:farrago:> insert into smalltable values('this is row 2', 2, 'abcdef', 'ghijkl');
+0: jdbc:farrago:> insert into smalltable values('this is row 3', 3, 'abcdef', 'ghijkl');
+0: jdbc:farrago:> insert into smalltable values('this is row 4', 4, 'abcdef', 'ghijkl');
+0: jdbc:farrago:> insert into smalltable values('this is row 5', 5, 'abcdef', 'ghijkl');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- explain plan tests
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !set outputformat csv
+0: jdbc:farrago:> 
+0: jdbc:farrago:> ----------------------
+0: jdbc:farrago:> -- single column joins
+0: jdbc:farrago:> ----------------------
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for select *
+. . . . . . . . >     from t inner join smalltable s
+. . . . . . . . >     on t.b = s.s3 and s.s1 = 'this is row 1' 
+. . . . . . . . >     order by a;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..7=[{inputs}], expr#8=[=($t1, $t6)], proj#0..7=[{exprs}], $condition=[$t8])'
+'      FennelCartesianProductRel(leftouterjoin=[false])'
+'        LcsRowScanRel(table=[[LOCALDB, SJ, T]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$T$A, SYS$CLUSTERED_INDEX$SJ$T$B, SYS$CLUSTERED_INDEX$SJ$T$C, SYS$CLUSTERED_INDEX$SJ$T$D]])'
+'          LcsIndexMergeRel'
+'            LcsIndexSearchRel(table=[[LOCALDB, SJ, T]], projection=[*], index=[IT_BD], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'              FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'                FennelCalcRel(expr#0..3=[{inputs}], expr#4=[_ISO-8859-1'this is row 1'], expr#5=[=($t0, $t4)], expr#6=[CAST($t2):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], S3=[$t6], $condition=[$t5])'
+'                  LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S4]])'
+'        FennelCalcRel(expr#0..3=[{inputs}], expr#4=[_ISO-8859-1'this is row 1'], expr#5=[=($t0, $t4)], proj#0..3=[{exprs}], $condition=[$t5])'
+'          LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S4]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for select *
+. . . . . . . . >     from t inner join smalltable s
+. . . . . . . . >     on t.d = s.s1 where s.s2 > 0 order by a;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..7=[{inputs}], expr#8=[=($t3, $t4)], proj#0..7=[{exprs}], $condition=[$t8])'
+'      FennelCartesianProductRel(leftouterjoin=[false])'
+'        LcsRowScanRel(table=[[LOCALDB, SJ, T]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$T$A, SYS$CLUSTERED_INDEX$SJ$T$B, SYS$CLUSTERED_INDEX$SJ$T$C, SYS$CLUSTERED_INDEX$SJ$T$D]])'
+'          LcsIndexMergeRel'
+'            LcsIndexSearchRel(table=[[LOCALDB, SJ, T]], projection=[*], index=[IT_D], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'              FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'                FennelCalcRel(expr#0..3=[{inputs}], expr#4=[0], expr#5=[>($t1, $t4)], S1=[$t0], $condition=[$t5])'
+'                  LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S4]])'
+'        FennelCalcRel(expr#0..3=[{inputs}], expr#4=[0], expr#5=[>($t1, $t4)], proj#0..3=[{exprs}], $condition=[$t5])'
+'          LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S4]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -----------------
+0: jdbc:farrago:> -- negative cases
+0: jdbc:farrago:> -----------------
+0: jdbc:farrago:> -- no index available to process join
+0: jdbc:farrago:> explain plan for select *
+. . . . . . . . >     from t inner join smalltable s
+. . . . . . . . >     on t.c = s.s4 where s.s2 > 0;
+'column0'
+'FennelToIteratorConverter'
+'  FennelCalcRel(expr#0..7=[{inputs}], expr#8=[=($t2, $t7)], proj#0..7=[{exprs}], $condition=[$t8])'
+'    FennelCartesianProductRel(leftouterjoin=[false])'
+'      LcsRowScanRel(table=[[LOCALDB, SJ, T]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$T$A, SYS$CLUSTERED_INDEX$SJ$T$B, SYS$CLUSTERED_INDEX$SJ$T$C, SYS$CLUSTERED_INDEX$SJ$T$D]])'
+'      FennelCalcRel(expr#0..3=[{inputs}], expr#4=[0], expr#5=[>($t1, $t4)], proj#0..3=[{exprs}], $condition=[$t5])'
+'        LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S4]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- filter not of the form cola = colb
+0: jdbc:farrago:> explain plan for select *
+. . . . . . . . >     from t inner join smalltable s
+. . . . . . . . >     on t.d = upper(s.s1) where s.s2 > 0;
+'column0'
+'FennelToIteratorConverter'
+'  FennelCalcRel(expr#0..7=[{inputs}], expr#8=[UPPER($t4)], expr#9=[=($t3, $t8)], proj#0..7=[{exprs}], $condition=[$t9])'
+'    FennelCartesianProductRel(leftouterjoin=[false])'
+'      LcsRowScanRel(table=[[LOCALDB, SJ, T]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$T$A, SYS$CLUSTERED_INDEX$SJ$T$B, SYS$CLUSTERED_INDEX$SJ$T$C, SYS$CLUSTERED_INDEX$SJ$T$D]])'
+'      FennelCalcRel(expr#0..3=[{inputs}], expr#4=[0], expr#5=[>($t1, $t4)], proj#0..3=[{exprs}], $condition=[$t5])'
+'        LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S4]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- outer join
+0: jdbc:farrago:> -- TODO - add a testcase for outer joins once we support these on lcs tables
+0: jdbc:farrago:> 
+0: jdbc:farrago:> ---------------------
+0: jdbc:farrago:> -- multi-column joins
+0: jdbc:farrago:> ---------------------
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for select *
+. . . . . . . . >     from t inner join smalltable s
+. . . . . . . . >     on t.d = s.s1 and t.b = s.s3 where s.s2 > 0 order by a;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..7=[{inputs}], expr#8=[=($t3, $t4)], expr#9=[=($t1, $t6)], expr#10=[AND($t8, $t9)], proj#0..7=[{exprs}], $condition=[$t10])'
+'      FennelCartesianProductRel(leftouterjoin=[false])'
+'        LcsRowScanRel(table=[[LOCALDB, SJ, T]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$T$A, SYS$CLUSTERED_INDEX$SJ$T$B, SYS$CLUSTERED_INDEX$SJ$T$C, SYS$CLUSTERED_INDEX$SJ$T$D]])'
+'          LcsIndexMergeRel'
+'            LcsIndexSearchRel(table=[[LOCALDB, SJ, T]], projection=[*], index=[IT_BD], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'              FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
+'                FennelCalcRel(expr#0..3=[{inputs}], expr#4=[0], expr#5=[>($t1, $t4)], expr#6=[CAST($t2):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], S3=[$t6], S1=[$t0], $condition=[$t5])'
+'                  LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S4]])'
+'        FennelCalcRel(expr#0..3=[{inputs}], expr#4=[0], expr#5=[>($t1, $t4)], proj#0..3=[{exprs}], $condition=[$t5])'
+'          LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S4]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- same as above except join columns are reversed
+0: jdbc:farrago:> explain plan for select *
+. . . . . . . . >     from t inner join smalltable s
+. . . . . . . . >     on t.b = s.s3 and s.s1 = t.d where s.s2 > 0 order by a;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..7=[{inputs}], expr#8=[=($t1, $t6)], expr#9=[=($t4, $t3)], expr#10=[AND($t8, $t9)], proj#0..7=[{exprs}], $condition=[$t10])'
+'      FennelCartesianProductRel(leftouterjoin=[false])'
+'        LcsRowScanRel(table=[[LOCALDB, SJ, T]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$T$A, SYS$CLUSTERED_INDEX$SJ$T$B, SYS$CLUSTERED_INDEX$SJ$T$C, SYS$CLUSTERED_INDEX$SJ$T$D]])'
+'          LcsIndexMergeRel'
+'            LcsIndexSearchRel(table=[[LOCALDB, SJ, T]], projection=[*], index=[IT_BD], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'              FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
+'                FennelCalcRel(expr#0..3=[{inputs}], expr#4=[0], expr#5=[>($t1, $t4)], expr#6=[CAST($t2):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], S3=[$t6], S1=[$t0], $condition=[$t5])'
+'                  LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S4]])'
+'        FennelCalcRel(expr#0..3=[{inputs}], expr#4=[0], expr#5=[>($t1, $t4)], proj#0..3=[{exprs}], $condition=[$t5])'
+'          LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S4]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- join on 3 columns but index only on 2 columns
+0: jdbc:farrago:> explain plan for select *
+. . . . . . . . >     from t inner join smalltable s
+. . . . . . . . >     on s.s1 = t.d and s.s3 = t.b and t.c = s.s4 where s.s2 > 0
+. . . . . . . . >     order by a;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..7=[{inputs}], expr#8=[=($t4, $t3)], expr#9=[=($t6, $t1)], expr#10=[AND($t8, $t9)], expr#11=[=($t2, $t7)], expr#12=[AND($t10, $t11)], proj#0..7=[{exprs}], $condition=[$t12])'
+'      FennelCartesianProductRel(leftouterjoin=[false])'
+'        LcsRowScanRel(table=[[LOCALDB, SJ, T]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$T$A, SYS$CLUSTERED_INDEX$SJ$T$B, SYS$CLUSTERED_INDEX$SJ$T$C, SYS$CLUSTERED_INDEX$SJ$T$D]])'
+'          LcsIndexMergeRel'
+'            LcsIndexSearchRel(table=[[LOCALDB, SJ, T]], projection=[*], index=[IT_BD], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'              FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
+'                FennelCalcRel(expr#0..3=[{inputs}], expr#4=[0], expr#5=[>($t1, $t4)], expr#6=[CAST($t2):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], S3=[$t6], S1=[$t0], $condition=[$t5])'
+'                  LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S4]])'
+'        FennelCalcRel(expr#0..3=[{inputs}], expr#4=[0], expr#5=[>($t1, $t4)], proj#0..3=[{exprs}], $condition=[$t5])'
+'          LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S4]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> ---------------------------------------
+0: jdbc:farrago:> -- run queries above that use semijoins
+0: jdbc:farrago:> ---------------------------------------
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !set outputformat table
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select *
+. . . . . . . . >     from t inner join smalltable s
+. . . . . . . . >     on t.b = s.s3 and s.s1 = 'this is row 1' order by a;
++----+-----------------------+-----------+----------------+----------------+-----+---------+---------+
+| A  |           B           |     C     |       D        |       S1       | S2  |   S3    |   S4    |
++----+-----------------------+-----------+----------------+----------------+-----+---------+---------+
+| 1  | abcdef                | no match  | this is row 1  | this is row 1  | 1   | abcdef  | ghijkl  |
+| 2  | abcdef                | ghijkl    | this is row 2  | this is row 1  | 1   | abcdef  | ghijkl  |
+| 3  | abcdef                | ghijkl    | this is row 3  | this is row 1  | 1   | abcdef  | ghijkl  |
++----+-----------------------+-----------+----------------+----------------+-----+---------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select *
+. . . . . . . . >     from t inner join smalltable s
+. . . . . . . . >     on t.d = s.s1 where s.s2 > 0 order by a;
++----+-----------------------+-----------+----------------+----------------+-----+---------+---------+
+| A  |           B           |     C     |       D        |       S1       | S2  |   S3    |   S4    |
++----+-----------------------+-----------+----------------+----------------+-----+---------+---------+
+| 1  | abcdef                | no match  | this is row 1  | this is row 1  | 1   | abcdef  | ghijkl  |
+| 2  | abcdef                | ghijkl    | this is row 2  | this is row 2  | 2   | abcdef  | ghijkl  |
+| 3  | abcdef                | ghijkl    | this is row 3  | this is row 3  | 3   | abcdef  | ghijkl  |
+| 4  |                       | ghijkl    | this is row 4  | this is row 4  | 4   | abcdef  | ghijkl  |
++----+-----------------------+-----------+----------------+----------------+-----+---------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select *
+. . . . . . . . >     from t inner join smalltable s
+. . . . . . . . >     on t.d = s.s1 and t.b = s.s3 where s.s2 > 0 order by a;
++----+-----------------------+-----------+----------------+----------------+-----+---------+---------+
+| A  |           B           |     C     |       D        |       S1       | S2  |   S3    |   S4    |
++----+-----------------------+-----------+----------------+----------------+-----+---------+---------+
+| 1  | abcdef                | no match  | this is row 1  | this is row 1  | 1   | abcdef  | ghijkl  |
+| 2  | abcdef                | ghijkl    | this is row 2  | this is row 2  | 2   | abcdef  | ghijkl  |
+| 3  | abcdef                | ghijkl    | this is row 3  | this is row 3  | 3   | abcdef  | ghijkl  |
++----+-----------------------+-----------+----------------+----------------+-----+---------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select *
+. . . . . . . . >     from t inner join smalltable s
+. . . . . . . . >     on t.b = s.s3 and s.s1 = t.d where s.s2 > 0 order by a;
++----+-----------------------+-----------+----------------+----------------+-----+---------+---------+
+| A  |           B           |     C     |       D        |       S1       | S2  |   S3    |   S4    |
++----+-----------------------+-----------+----------------+----------------+-----+---------+---------+
+| 1  | abcdef                | no match  | this is row 1  | this is row 1  | 1   | abcdef  | ghijkl  |
+| 2  | abcdef                | ghijkl    | this is row 2  | this is row 2  | 2   | abcdef  | ghijkl  |
+| 3  | abcdef                | ghijkl    | this is row 3  | this is row 3  | 3   | abcdef  | ghijkl  |
++----+-----------------------+-----------+----------------+----------------+-----+---------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select *
+. . . . . . . . >     from t inner join smalltable s
+. . . . . . . . >     on s.s1 = t.d and s.s3 = t.b and t.c = s.s4 where s.s2 > 0
+. . . . . . . . >     order by a;
++----+-----------------------+---------+----------------+----------------+-----+---------+---------+
+| A  |           B           |    C    |       D        |       S1       | S2  |   S3    |   S4    |
++----+-----------------------+---------+----------------+----------------+-----+---------+---------+
+| 2  | abcdef                | ghijkl  | this is row 2  | this is row 2  | 2   | abcdef  | ghijkl  |
+| 3  | abcdef                | ghijkl  | this is row 3  | this is row 3  | 3   | abcdef  | ghijkl  |
++----+-----------------------+---------+----------------+----------------+-----+---------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> ------------------
+0: jdbc:farrago:> -- n-way semijoins
+0: jdbc:farrago:> ------------------
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table sales(
+. . . . . . . . >     sid int, product_id int, salesperson int, customer int, quantity int);
+0: jdbc:farrago:> create index i_sales_pid on sales(product_id);
+0: jdbc:farrago:> create index i_sales_sp on sales(salesperson);
+0: jdbc:farrago:> create index i_sales_cust on sales(customer);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table product(id int, name char(20), color char(10), size char(1));
+0: jdbc:farrago:> create table salesperson(id int, name char(20), age int);
+0: jdbc:farrago:> create table customer(id int, company char(20), city char(20));
+0: jdbc:farrago:> create table state(city char(20), state char(20));
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create index i_customer_city on customer(city);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> insert into product values(1, 'radio', 'black', 'S');
+0: jdbc:farrago:> insert into product values(2, 'phone', 'white', 'M');
+0: jdbc:farrago:> insert into salesperson values(1, 'XYZ', 30);
+0: jdbc:farrago:> insert into salesperson values(2, 'UVW', 40);
+0: jdbc:farrago:> insert into customer values(1, 'ABC', 'San Mateo');
+0: jdbc:farrago:> insert into customer values(2, 'DEF', 'New York City');
+0: jdbc:farrago:> insert into state values('San Mateo', 'CA');
+0: jdbc:farrago:> insert into state values('New York City', 'New York');
+0: jdbc:farrago:> insert into sales values(1, 1, 1, 1, 10);
+0: jdbc:farrago:> insert into sales values(2, 1, 1, 2, 20);
+0: jdbc:farrago:> insert into sales values(3, 1, 2, 1, 30);
+0: jdbc:farrago:> insert into sales values(4, 1, 2, 2, 40);
+0: jdbc:farrago:> insert into sales values(5, 2, 1, 1, 50);
+0: jdbc:farrago:> insert into sales values(6, 2, 1, 2, 60);
+0: jdbc:farrago:> insert into sales values(7, 2, 2, 1, 70);
+0: jdbc:farrago:> insert into sales values(8, 2, 2, 2, 80);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !set outputformat csv
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . >     select sid, p.name, p.color, p.size, s.quantity
+. . . . . . . . >         from sales s, product p
+. . . . . . . . >         where
+. . . . . . . . >             s.product_id = p.id and p.size = 'S'
+. . . . . . . . >         order by sid;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..8=[{inputs}], expr#9=[=($t1, $t5)], SID=[$t0], NAME=[$t6], COLOR=[$t7], SIZE=[$t8], QUANTITY=[$t4], $condition=[$t9])'
+'      FennelCartesianProductRel(leftouterjoin=[false])'
+'        LcsRowScanRel(table=[[LOCALDB, SJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SJ$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SJ$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SJ$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SJ$SALES$SID]])'
+'          LcsIndexMergeRel'
+'            LcsIndexSearchRel(table=[[LOCALDB, SJ, SALES]], projection=[*], index=[I_SALES_PID], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'              FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'                FennelCalcRel(expr#0..3=[{inputs}], expr#4=[_ISO-8859-1'S'], expr#5=[=($t3, $t4)], expr#6=[IS NOT NULL($t0)], expr#7=[AND($t5, $t6)], ID=[$t0], $condition=[$t7])'
+'                  LcsRowScanRel(table=[[LOCALDB, SJ, PRODUCT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$PRODUCT$COLOR, SYS$CLUSTERED_INDEX$SJ$PRODUCT$ID, SYS$CLUSTERED_INDEX$SJ$PRODUCT$NAME, SYS$CLUSTERED_INDEX$SJ$PRODUCT$SIZE]])'
+'        FennelCalcRel(expr#0..3=[{inputs}], expr#4=[_ISO-8859-1'S'], expr#5=[=($t3, $t4)], proj#0..3=[{exprs}], $condition=[$t5])'
+'          LcsRowScanRel(table=[[LOCALDB, SJ, PRODUCT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$PRODUCT$COLOR, SYS$CLUSTERED_INDEX$SJ$PRODUCT$ID, SYS$CLUSTERED_INDEX$SJ$PRODUCT$NAME, SYS$CLUSTERED_INDEX$SJ$PRODUCT$SIZE]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- push semijoin past filter
+0: jdbc:farrago:> explain plan for
+. . . . . . . . >     select sid, p.name, p.color, p.size, s.quantity
+. . . . . . . . >         from sales s, product p
+. . . . . . . . >         where
+. . . . . . . . >             s.product_id = p.id and p.size = 'S' and sid > 2
+. . . . . . . . >         order by sid;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..8=[{inputs}], expr#9=[=($t1, $t5)], SID=[$t0], NAME=[$t6], COLOR=[$t7], SIZE=[$t8], QUANTITY=[$t4], $condition=[$t9])'
+'      FennelCartesianProductRel(leftouterjoin=[false])'
+'        FennelCalcRel(expr#0..4=[{inputs}], expr#5=[2], expr#6=[>($t0, $t5)], proj#0..4=[{exprs}], $condition=[$t6])'
+'          LcsRowScanRel(table=[[LOCALDB, SJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SJ$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SJ$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SJ$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SJ$SALES$SID]])'
+'            LcsIndexMergeRel'
+'              LcsIndexSearchRel(table=[[LOCALDB, SJ, SALES]], projection=[*], index=[I_SALES_PID], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'                FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'                  FennelCalcRel(expr#0..3=[{inputs}], expr#4=[_ISO-8859-1'S'], expr#5=[=($t3, $t4)], expr#6=[IS NOT NULL($t0)], expr#7=[AND($t5, $t6)], ID=[$t0], $condition=[$t7])'
+'                    LcsRowScanRel(table=[[LOCALDB, SJ, PRODUCT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$PRODUCT$COLOR, SYS$CLUSTERED_INDEX$SJ$PRODUCT$ID, SYS$CLUSTERED_INDEX$SJ$PRODUCT$NAME, SYS$CLUSTERED_INDEX$SJ$PRODUCT$SIZE]])'
+'        FennelCalcRel(expr#0..3=[{inputs}], expr#4=[_ISO-8859-1'S'], expr#5=[=($t3, $t4)], proj#0..3=[{exprs}], $condition=[$t5])'
+'          LcsRowScanRel(table=[[LOCALDB, SJ, PRODUCT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$PRODUCT$COLOR, SYS$CLUSTERED_INDEX$SJ$PRODUCT$ID, SYS$CLUSTERED_INDEX$SJ$PRODUCT$NAME, SYS$CLUSTERED_INDEX$SJ$PRODUCT$SIZE]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- push semijoin past joins
+0: jdbc:farrago:> explain plan for
+. . . . . . . . >     select sid, p.name, p.color, p.size, sp.name, s.quantity
+. . . . . . . . >         from sales s, product p, salesperson sp
+. . . . . . . . >         where
+. . . . . . . . >             s.product_id = p.id and
+. . . . . . . . >             s.salesperson = sp.id
+. . . . . . . . >         order by sid;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..11=[{inputs}], expr#12=[=($t1, $t8)], SID=[$t0], NAME=[$t9], COLOR=[$t10], SIZE=[$t11], NAME=[$t6], QUANTITY=[$t4], $condition=[$t12])'
+'      FennelCartesianProductRel(leftouterjoin=[false])'
+'        FennelCalcRel(expr#0..7=[{inputs}], expr#8=[=($t2, $t5)], proj#0..7=[{exprs}], $condition=[$t8])'
+'          FennelCartesianProductRel(leftouterjoin=[false])'
+'            LcsRowScanRel(table=[[LOCALDB, SJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SJ$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SJ$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SJ$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SJ$SALES$SID]])'
+'              LcsIndexIntersectRel(startRidParamId=[2], rowLimitParamId=[3])'
+'                LcsIndexMergeRel'
+'                  LcsIndexSearchRel(table=[[LOCALDB, SJ, SALES]], projection=[*], index=[I_SALES_SP], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]], startRidParamId=[2], rowLimitParamId=[3])'
+'                    FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'                      FennelCalcRel(expr#0=[{inputs}], expr#1=[IS NOT NULL($t0)], ID=[$t0], $condition=[$t1])'
+'                        LcsRowScanRel(table=[[LOCALDB, SJ, SALESPERSON]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SALESPERSON$ID]])'
+'                LcsIndexMergeRel'
+'                  LcsIndexSearchRel(table=[[LOCALDB, SJ, SALES]], projection=[*], index=[I_SALES_PID], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]], startRidParamId=[2], rowLimitParamId=[3])'
+'                    FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'                      FennelCalcRel(expr#0=[{inputs}], expr#1=[IS NOT NULL($t0)], ID=[$t0], $condition=[$t1])'
+'                        LcsRowScanRel(table=[[LOCALDB, SJ, PRODUCT]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$PRODUCT$ID]])'
+'            LcsRowScanRel(table=[[LOCALDB, SJ, SALESPERSON]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SALESPERSON$AGE, SYS$CLUSTERED_INDEX$SJ$SALESPERSON$ID, SYS$CLUSTERED_INDEX$SJ$SALESPERSON$NAME]])'
+'        LcsRowScanRel(table=[[LOCALDB, SJ, PRODUCT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$PRODUCT$COLOR, SYS$CLUSTERED_INDEX$SJ$PRODUCT$ID, SYS$CLUSTERED_INDEX$SJ$PRODUCT$NAME, SYS$CLUSTERED_INDEX$SJ$PRODUCT$SIZE]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . >     select sid, p.name, p.color, p.size, sp.name, c.company
+. . . . . . . . >         from sales s, product p, salesperson sp, customer c
+. . . . . . . . >         where
+. . . . . . . . >             s.product_id = p.id and
+. . . . . . . . >             s.salesperson = sp.id and 
+. . . . . . . . >             s.customer = c.id
+. . . . . . . . >         order by sid;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..14=[{inputs}], expr#15=[=($t1, $t11)], SID=[$t0], NAME=[$t12], COLOR=[$t13], SIZE=[$t14], NAME=[$t9], COMPANY=[$t6], $condition=[$t15])'
+'      FennelCartesianProductRel(leftouterjoin=[false])'
+'        FennelCalcRel(expr#0..10=[{inputs}], expr#11=[=($t2, $t8)], proj#0..10=[{exprs}], $condition=[$t11])'
+'          FennelCartesianProductRel(leftouterjoin=[false])'
+'            FennelCalcRel(expr#0..7=[{inputs}], expr#8=[=($t3, $t5)], proj#0..7=[{exprs}], $condition=[$t8])'
+'              FennelCartesianProductRel(leftouterjoin=[false])'
+'                LcsRowScanRel(table=[[LOCALDB, SJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SJ$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SJ$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SJ$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SJ$SALES$SID]])'
+'                  LcsIndexIntersectRel(startRidParamId=[2], rowLimitParamId=[3])'
+'                    LcsIndexMergeRel'
+'                      LcsIndexSearchRel(table=[[LOCALDB, SJ, SALES]], projection=[*], index=[I_SALES_CUST], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]], startRidParamId=[2], rowLimitParamId=[3])'
+'                        FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'                          FennelCalcRel(expr#0=[{inputs}], expr#1=[IS NOT NULL($t0)], ID=[$t0], $condition=[$t1])'
+'                            LcsRowScanRel(table=[[LOCALDB, SJ, CUSTOMER]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$CUSTOMER$ID]])'
+'                    LcsIndexMergeRel'
+'                      LcsIndexSearchRel(table=[[LOCALDB, SJ, SALES]], projection=[*], index=[I_SALES_SP], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]], startRidParamId=[2], rowLimitParamId=[3])'
+'                        FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'                          FennelCalcRel(expr#0=[{inputs}], expr#1=[IS NOT NULL($t0)], ID=[$t0], $condition=[$t1])'
+'                            LcsRowScanRel(table=[[LOCALDB, SJ, SALESPERSON]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SALESPERSON$ID]])'
+'                    LcsIndexMergeRel'
+'                      LcsIndexSearchRel(table=[[LOCALDB, SJ, SALES]], projection=[*], index=[I_SALES_PID], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]], startRidParamId=[2], rowLimitParamId=[3])'
+'                        FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'                          FennelCalcRel(expr#0=[{inputs}], expr#1=[IS NOT NULL($t0)], ID=[$t0], $condition=[$t1])'
+'                            LcsRowScanRel(table=[[LOCALDB, SJ, PRODUCT]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$PRODUCT$ID]])'
+'                LcsRowScanRel(table=[[LOCALDB, SJ, CUSTOMER]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$CUSTOMER$CITY, SYS$CLUSTERED_INDEX$SJ$CUSTOMER$COMPANY, SYS$CLUSTERED_INDEX$SJ$CUSTOMER$ID]])'
+'            LcsRowScanRel(table=[[LOCALDB, SJ, SALESPERSON]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SALESPERSON$AGE, SYS$CLUSTERED_INDEX$SJ$SALESPERSON$ID, SYS$CLUSTERED_INDEX$SJ$SALESPERSON$NAME]])'
+'        LcsRowScanRel(table=[[LOCALDB, SJ, PRODUCT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$PRODUCT$COLOR, SYS$CLUSTERED_INDEX$SJ$PRODUCT$ID, SYS$CLUSTERED_INDEX$SJ$PRODUCT$NAME, SYS$CLUSTERED_INDEX$SJ$PRODUCT$SIZE]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- push semijoin past filter and join
+0: jdbc:farrago:> explain plan for
+. . . . . . . . >     select sid, p.name, p.color, p.size, sp.name, s.quantity
+. . . . . . . . >         from sales s, product p, salesperson sp
+. . . . . . . . >         where
+. . . . . . . . >             s.sid < 3 and
+. . . . . . . . >             s.product_id = p.id and
+. . . . . . . . >             s.salesperson = sp.id
+. . . . . . . . >         order by sid;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..11=[{inputs}], expr#12=[=($t1, $t8)], SID=[$t0], NAME=[$t9], COLOR=[$t10], SIZE=[$t11], NAME=[$t6], QUANTITY=[$t4], $condition=[$t12])'
+'      FennelCartesianProductRel(leftouterjoin=[false])'
+'        FennelCalcRel(expr#0..7=[{inputs}], expr#8=[=($t2, $t5)], proj#0..7=[{exprs}], $condition=[$t8])'
+'          FennelCartesianProductRel(leftouterjoin=[false])'
+'            FennelCalcRel(expr#0..4=[{inputs}], expr#5=[3], expr#6=[<($t0, $t5)], proj#0..4=[{exprs}], $condition=[$t6])'
+'              LcsRowScanRel(table=[[LOCALDB, SJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SJ$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SJ$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SJ$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SJ$SALES$SID]])'
+'                LcsIndexIntersectRel(startRidParamId=[2], rowLimitParamId=[3])'
+'                  LcsIndexMergeRel'
+'                    LcsIndexSearchRel(table=[[LOCALDB, SJ, SALES]], projection=[*], index=[I_SALES_SP], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]], startRidParamId=[2], rowLimitParamId=[3])'
+'                      FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'                        FennelCalcRel(expr#0=[{inputs}], expr#1=[IS NOT NULL($t0)], ID=[$t0], $condition=[$t1])'
+'                          LcsRowScanRel(table=[[LOCALDB, SJ, SALESPERSON]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SALESPERSON$ID]])'
+'                  LcsIndexMergeRel'
+'                    LcsIndexSearchRel(table=[[LOCALDB, SJ, SALES]], projection=[*], index=[I_SALES_PID], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]], startRidParamId=[2], rowLimitParamId=[3])'
+'                      FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'                        FennelCalcRel(expr#0=[{inputs}], expr#1=[IS NOT NULL($t0)], ID=[$t0], $condition=[$t1])'
+'                          LcsRowScanRel(table=[[LOCALDB, SJ, PRODUCT]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$PRODUCT$ID]])'
+'            LcsRowScanRel(table=[[LOCALDB, SJ, SALESPERSON]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SALESPERSON$AGE, SYS$CLUSTERED_INDEX$SJ$SALESPERSON$ID, SYS$CLUSTERED_INDEX$SJ$SALESPERSON$NAME]])'
+'        LcsRowScanRel(table=[[LOCALDB, SJ, PRODUCT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$PRODUCT$COLOR, SYS$CLUSTERED_INDEX$SJ$PRODUCT$ID, SYS$CLUSTERED_INDEX$SJ$PRODUCT$NAME, SYS$CLUSTERED_INDEX$SJ$PRODUCT$SIZE]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- chained join
+0: jdbc:farrago:> explain plan for
+. . . . . . . . >     select sid, c.company, c.city, st.state
+. . . . . . . . >         from sales s, customer c, state st
+. . . . . . . . >         where
+. . . . . . . . >             s.customer = c.id and
+. . . . . . . . >             c.city = st.city and st.state = 'New York'
+. . . . . . . . >         order by sid;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..9=[{inputs}], expr#10=[=($t9, $t0)], SID=[$t2], COMPANY=[$t8], CITY=[$t9], STATE=[$t1], $condition=[$t10])'
+'      FennelCartesianProductRel(leftouterjoin=[false])'
+'        FennelCartesianProductRel(leftouterjoin=[false])'
+'          FennelCalcRel(expr#0..1=[{inputs}], expr#2=[_ISO-8859-1'New York'], expr#3=[=($t1, $t2)], proj#0..1=[{exprs}], $condition=[$t3])'
+'            LcsRowScanRel(table=[[LOCALDB, SJ, STATE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$STATE$CITY, SYS$CLUSTERED_INDEX$SJ$STATE$STATE]])'
+'          LcsRowScanRel(table=[[LOCALDB, SJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SJ$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SJ$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SJ$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SJ$SALES$SID]])'
+'            LcsIndexMergeRel'
+'              LcsIndexSearchRel(table=[[LOCALDB, SJ, SALES]], projection=[*], index=[I_SALES_CUST], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'                FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'                  FennelCalcRel(expr#0=[{inputs}], expr#1=[IS NOT NULL($t0)], ID=[$t0], $condition=[$t1])'
+'                    LcsRowScanRel(table=[[LOCALDB, SJ, CUSTOMER]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$CUSTOMER$ID]])'
+'                      LcsIndexMergeRel'
+'                        LcsIndexSearchRel(table=[[LOCALDB, SJ, CUSTOMER]], projection=[*], index=[I_CUSTOMER_CITY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'                          FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'                            FennelCalcRel(expr#0..1=[{inputs}], expr#2=[IS NOT NULL($t0)], CITY=[$t0], $condition=[$t2])'
+'                              FennelCalcRel(expr#0..1=[{inputs}], expr#2=[_ISO-8859-1'New York'], expr#3=[=($t1, $t2)], proj#0..1=[{exprs}], $condition=[$t3])'
+'                                LcsRowScanRel(table=[[LOCALDB, SJ, STATE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$STATE$CITY, SYS$CLUSTERED_INDEX$SJ$STATE$STATE]])'
+'        LcsRowScanRel(table=[[LOCALDB, SJ, CUSTOMER]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$CUSTOMER$CITY, SYS$CLUSTERED_INDEX$SJ$CUSTOMER$COMPANY, SYS$CLUSTERED_INDEX$SJ$CUSTOMER$ID]])'
+'          LcsIndexMergeRel'
+'            LcsIndexSearchRel(table=[[LOCALDB, SJ, CUSTOMER]], projection=[*], index=[I_CUSTOMER_CITY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'              FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'                FennelCalcRel(expr#0..1=[{inputs}], expr#2=[IS NOT NULL($t0)], CITY=[$t0], $condition=[$t2])'
+'                  FennelCalcRel(expr#0..1=[{inputs}], expr#2=[_ISO-8859-1'New York'], expr#3=[=($t1, $t2)], proj#0..1=[{exprs}], $condition=[$t3])'
+'                    LcsRowScanRel(table=[[LOCALDB, SJ, STATE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$STATE$CITY, SYS$CLUSTERED_INDEX$SJ$STATE$STATE]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> ------------------
+0: jdbc:farrago:> -- run the queries
+0: jdbc:farrago:> ------------------
+0: jdbc:farrago:> !set outputformat table
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select sid, p.name, p.color, p.size, s.quantity
+. . . . . . . . >     from sales s, product p
+. . . . . . . . >     where
+. . . . . . . . >         s.product_id = p.id and p.size = 'S'
+. . . . . . . . >     order by sid;
++------+-----------------------+-------------+-------+-----------+
+| SID  |         NAME          |    COLOR    | SIZE  | QUANTITY  |
++------+-----------------------+-------------+-------+-----------+
+| 1    | radio                 | black       | S     | 10        |
+| 2    | radio                 | black       | S     | 20        |
+| 3    | radio                 | black       | S     | 30        |
+| 4    | radio                 | black       | S     | 40        |
++------+-----------------------+-------------+-------+-----------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select sid, p.name, p.color, p.size, s.quantity
+. . . . . . . . >     from sales s, product p
+. . . . . . . . >     where
+. . . . . . . . >         s.product_id = p.id and p.size = 'S' and sid > 2
+. . . . . . . . >     order by sid;
++------+-----------------------+-------------+-------+-----------+
+| SID  |         NAME          |    COLOR    | SIZE  | QUANTITY  |
++------+-----------------------+-------------+-------+-----------+
+| 3    | radio                 | black       | S     | 30        |
+| 4    | radio                 | black       | S     | 40        |
++------+-----------------------+-------------+-------+-----------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select sid, p.name, p.color, p.size, sp.name, s.quantity
+. . . . . . . . >     from sales s, product p, salesperson sp
+. . . . . . . . >     where
+. . . . . . . . >         s.product_id = p.id and
+. . . . . . . . >         s.salesperson = sp.id
+. . . . . . . . >     order by sid;
++------+-----------------------+-------------+-------+-----------------------+-----------+
+| SID  |         NAME          |    COLOR    | SIZE  |         NAME          | QUANTITY  |
++------+-----------------------+-------------+-------+-----------------------+-----------+
+| 1    | radio                 | black       | S     | XYZ                   | 10        |
+| 2    | radio                 | black       | S     | XYZ                   | 20        |
+| 3    | radio                 | black       | S     | UVW                   | 30        |
+| 4    | radio                 | black       | S     | UVW                   | 40        |
+| 5    | phone                 | white       | M     | XYZ                   | 50        |
+| 6    | phone                 | white       | M     | XYZ                   | 60        |
+| 7    | phone                 | white       | M     | UVW                   | 70        |
+| 8    | phone                 | white       | M     | UVW                   | 80        |
++------+-----------------------+-------------+-------+-----------------------+-----------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select sid, p.name, p.color, p.size, sp.name, c.company
+. . . . . . . . >     from sales s, product p, salesperson sp, customer c
+. . . . . . . . >     where
+. . . . . . . . >         s.product_id = p.id and
+. . . . . . . . >         s.salesperson = sp.id and 
+. . . . . . . . >         s.customer = c.id
+. . . . . . . . >     order by sid;
++------+-----------------------+-------------+-------+-----------------------+-----------------------+
+| SID  |         NAME          |    COLOR    | SIZE  |         NAME          |        COMPANY        |
++------+-----------------------+-------------+-------+-----------------------+-----------------------+
+| 1    | radio                 | black       | S     | XYZ                   | ABC                   |
+| 2    | radio                 | black       | S     | XYZ                   | DEF                   |
+| 3    | radio                 | black       | S     | UVW                   | ABC                   |
+| 4    | radio                 | black       | S     | UVW                   | DEF                   |
+| 5    | phone                 | white       | M     | XYZ                   | ABC                   |
+| 6    | phone                 | white       | M     | XYZ                   | DEF                   |
+| 7    | phone                 | white       | M     | UVW                   | ABC                   |
+| 8    | phone                 | white       | M     | UVW                   | DEF                   |
++------+-----------------------+-------------+-------+-----------------------+-----------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select sid, p.name, p.color, p.size, sp.name, s.quantity
+. . . . . . . . >     from sales s, product p, salesperson sp
+. . . . . . . . >     where
+. . . . . . . . >         s.sid < 3 and
+. . . . . . . . >         s.product_id = p.id and
+. . . . . . . . >         s.salesperson = sp.id
+. . . . . . . . >     order by sid;
++------+-----------------------+-------------+-------+-----------------------+-----------+
+| SID  |         NAME          |    COLOR    | SIZE  |         NAME          | QUANTITY  |
++------+-----------------------+-------------+-------+-----------------------+-----------+
+| 1    | radio                 | black       | S     | XYZ                   | 10        |
+| 2    | radio                 | black       | S     | XYZ                   | 20        |
++------+-----------------------+-------------+-------+-----------------------+-----------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select sid, c.company, c.city, st.state
+. . . . . . . . >     from sales s, customer c, state st
+. . . . . . . . >     where
+. . . . . . . . >         s.customer = c.id and
+. . . . . . . . >         c.city = st.city and st.state = 'New York'
+. . . . . . . . >         order by sid;
++------+-----------------------+-----------------------+-----------------------+
+| SID  |        COMPANY        |         CITY          |         STATE         |
++------+-----------------------+-----------------------+-----------------------+
+| 2    | DEF                   | New York City         | New York              |
+| 4    | DEF                   | New York City         | New York              |
+| 6    | DEF                   | New York City         | New York              |
+| 8    | DEF                   | New York City         | New York              |
++------+-----------------------+-----------------------+-----------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

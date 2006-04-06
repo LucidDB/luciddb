@@ -21,6 +21,7 @@
 */
 package org.eigenbase.sarg;
 
+import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
@@ -129,25 +130,6 @@ public class SargRexAnalyzer
     // (It used to be one-shot, but no longer.)
 
     /**
-     * Decomposes a rex predicate into a list of RexNodes that are AND'ed
-     * together.
-     *
-     * @param rexPredicate predicate to be analyzed
-     */
-    public void decompCF(RexNode rexPredicate)
-    {
-        if (rexPredicate.isA(RexKind.And)) {
-            final RexNode[] operands = ((RexCall) rexPredicate).getOperands();
-            for (int i = 0; i < operands.length; i++) {
-                RexNode operand = operands[i];
-                decompCF(operand);
-            }
-        } else {
-            rexCFList.add(rexPredicate);            
-        }
-    }
-
-    /**
      * Reconstructs a rex predicate from a list of SargExprs which will be 
      * AND'ed together.
      */
@@ -245,7 +227,7 @@ public class SargRexAnalyzer
 
         // Flatten out the RexNode tree into a list of terms that
         // are AND'ed together
-        decompCF(rexPredicate);
+        RelOptUtil.decompCF(rexPredicate, rexCFList);
 
         for (RexNode rexPred : rexCFList) {
             sargBinding = analyze(rexPred);

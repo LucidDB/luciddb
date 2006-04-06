@@ -46,4 +46,27 @@ ProjectRel(EXPR$0=[1])
 ]]>
         </Resource>
     </TestCase>
+    <TestCase name="testAddRedundantSemiJoinRule">
+        <Resource name="sql">
+            <![CDATA[select 1 from emp inner join dept on emp.deptno = dept.deptno]]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+ProjectRel(EXPR$0=[1])
+  JoinRel(condition=[=($7, $8)], joinType=[inner])
+    TableAccessRel(table=[[SALES, EMP]])
+    TableAccessRel(table=[[SALES, DEPT]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+ProjectRel(EXPR$0=[1])
+  JoinRel(condition=[=($7, $8)], joinType=[inner], semiJoinDone=[true], multiJoinDone=[false])
+    SemiJoinRel(condition=[=($7, $8)], joinType=[inner])
+      TableAccessRel(table=[[SALES, EMP]])
+      TableAccessRel(table=[[SALES, DEPT]])
+    TableAccessRel(table=[[SALES, DEPT]])
+]]>
+        </Resource>
+    </TestCase>
 </Root>

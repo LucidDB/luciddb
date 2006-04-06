@@ -291,7 +291,7 @@ class LbmEntry : public LbmSegment
     /**
      * Print all "size" bytes starting form "ptr".
      */
-    static string printBuffer(PConstBuffer ptr, uint size);
+    static string printDatum(TupleDatum const &tupleDatum);
 
     /**
      * Print all bits in a byte.
@@ -330,13 +330,13 @@ class LbmEntry : public LbmSegment
      */
     static void generateSegRIDs(
         PBuffer segDesc, PBuffer segDescEnd, PBuffer seg,
-        std::vector<LcsRid> &ridValues, LcsRid srid);
+        vector<LcsRid> &ridValues, LcsRid srid);
 
     /**
      * Generate a vector of RIDs contained in a single bitmap segment
      */
     static void generateBitmapRIDs(
-        PBuffer seg, uint segBytes, std::vector<LcsRid> &ridValues,
+        PBuffer seg, uint segBytes, vector<LcsRid> &ridValues,
         LcsRid srid);
 
 public:
@@ -456,7 +456,7 @@ public:
      * @param ridValues returns vector of rid values
      */
     static void generateRIDs(
-        TupleData const &inputTuple, std::vector<LcsRid> &ridValues);
+        TupleData const &inputTuple, vector<LcsRid> &ridValues);
 
     
     /**

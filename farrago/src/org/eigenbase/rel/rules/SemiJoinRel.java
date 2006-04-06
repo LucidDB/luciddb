@@ -21,10 +21,11 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-package org.eigenbase.rel;
+package org.eigenbase.rel.rules;
 
 import java.util.*;
 
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.reltype.*;
@@ -43,7 +44,8 @@ public final class SemiJoinRel extends JoinRelBase
 
     //~ Instance fields -------------------------------------------------------
 
-    private int rightOrdinal;
+    private List<Integer> leftKeys;
+    private List<Integer> rightKeys;
     
     //~ Constructors ----------------------------------------------------------
 
@@ -52,20 +54,22 @@ public final class SemiJoinRel extends JoinRelBase
      * @param left left join input
      * @param right right join input
      * @param condition join condition
-     * @param rightOrdinal ordinal from the right input that participates in
-     * the join
+     * @param leftKeys left keys of the semijoin
+     * @param rightKeys right keys of the semijoin
      */
     public SemiJoinRel(
         RelOptCluster cluster,
         RelNode left,
         RelNode right,
         RexNode condition,
-        int rightOrdinal)
+        List<Integer> leftKeys,
+        List<Integer> rightKeys)
     {
         super(
             cluster, new RelTraitSet(CallingConvention.NONE), left, right,
             condition, JoinRelType.INNER, Collections.EMPTY_SET);
-        this.rightOrdinal = rightOrdinal;
+        this.leftKeys = leftKeys;
+        this.rightKeys = rightKeys;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -77,7 +81,8 @@ public final class SemiJoinRel extends JoinRelBase
             RelOptUtil.clone(left),
             RelOptUtil.clone(right),
             RexUtil.clone(condition),
-            getRightOrdinal());
+            new ArrayList<Integer>(getLeftKeys()),
+            new ArrayList<Integer>(getRightKeys()));
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -100,9 +105,14 @@ public final class SemiJoinRel extends JoinRelBase
             getCluster().getTypeFactory(), null);
     }
     
-    public int getRightOrdinal()
+    public List<Integer> getLeftKeys()
     {
-        return rightOrdinal;
+        return leftKeys;
+    }
+    
+    public List<Integer> getRightKeys()
+    {
+        return rightKeys;
     }
 
 }

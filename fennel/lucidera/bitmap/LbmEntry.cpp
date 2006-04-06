@@ -20,6 +20,8 @@
 */
 
 #include "fennel/lucidera/bitmap/LbmEntry.h"
+#include <iomanip>
+#include <sstream>
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -1020,18 +1022,21 @@ TupleData const &LbmEntry::produceEntryTuple()
     return entryTuple;
 }
 
-string LbmEntry::printBuffer(PConstBuffer ptr, uint size)
+string LbmEntry::printDatum(TupleDatum const &tupleDatum)
 {
     ostringstream byteStr;
-    char *pbuf = new char(2);
+    PConstBuffer ptr = tupleDatum.pData;
+    uint size = tupleDatum.cbData;
 
     if (ptr) {        
+        /*
+         * pData stores bytes backwards.
+         */
         PConstBuffer tmpPtr = ptr + size;
         while (size > 0) {
             tmpPtr --;
-            sprintf(pbuf, "%02x", *((uint8_t *)tmpPtr));    
+            byteStr << hex << setw(2) << setfill('0')  << (uint)(*tmpPtr);
             size --;
-            byteStr << pbuf;
         }
     }
 
@@ -1197,8 +1202,7 @@ string LbmEntry::toBitmapString(TupleData const&inputTuple)
     tupleTrace << "Key [";
     
     for (uint i = 0; i < tupleSize - 3 ; i ++) {
-        tupleTrace 
-            << printBuffer(inputTuple[i].pData, inputTuple[i].cbData);
+        tupleTrace << printDatum(inputTuple[i]);
         if (i < tupleSize - 4) {
             tupleTrace << "|";
         }
@@ -1257,8 +1261,7 @@ string LbmEntry::toRIDString(TupleData const &inputTuple)
 
     keyTrace << "Key [";
     for (uint i = 0; i < tupleSize - 3 ; i ++) {
-        keyTrace 
-            << printBuffer(inputTuple[i].pData, inputTuple[i].cbData);
+        keyTrace << printDatum(inputTuple[i]);
         if (i < tupleSize - 4) {
             keyTrace << "|";
         }
@@ -1315,8 +1318,7 @@ string LbmEntry::toString()
     tupleTrace << "Key [";
     
     for (uint i = 0; i < tupleSize - 3 ; i ++) {
-        tupleTrace 
-            << printBuffer(entryTuple[i].pData, entryTuple[i].cbData);
+        tupleTrace << printDatum(entryTuple[i]);
         if (i < tupleSize - 4) {
             tupleTrace << "|";
         }
@@ -1412,7 +1414,7 @@ void LbmEntry::getSizeBounds(
 }
 
 void LbmEntry::generateRIDs(
-    TupleData const &inputTuple, std::vector<LcsRid> &ridValues)
+    TupleData const &inputTuple, vector<LcsRid> &ridValues)
 {
     uint tupleSize = inputTuple.size();
     LcsRid inputStartRID = *((LcsRid *)inputTuple[tupleSize - 3].pData);
@@ -1447,7 +1449,7 @@ void LbmEntry::generateRIDs(
 
 void LbmEntry::generateSegRIDs(
     PBuffer segDesc, PBuffer segDescEnd, PBuffer seg,
-    std::vector<LcsRid> &ridValues, LcsRid srid)
+    vector<LcsRid> &ridValues, LcsRid srid)
 {
     uint segBytes;
     uint zeroBytes;
@@ -1478,7 +1480,7 @@ void LbmEntry::generateSegRIDs(
 }
 
 void LbmEntry::generateBitmapRIDs(
-    PBuffer seg, uint segBytes, std::vector<LcsRid> &ridValues, LcsRid srid)
+    PBuffer seg, uint segBytes, vector<LcsRid> &ridValues, LcsRid srid)
 {
     uint byteLength;
     uint8_t bitmapByte;
@@ -1513,6 +1515,6 @@ uint LbmEntry::getMaxBitmapSize(uint bitmapColSize)
     return bitmapColSize - (bitmapColSize / LbmMaxSegSize);
 }
 
-FENNEL_END_CPPFILE("$Id: //open/lu/dev/fennel/lucidera/bitmap/LbmEntry.cpp#7 $");
+FENNEL_END_CPPFILE("$Id: //open/lu/dev/fennel/lucidera/bitmap/LbmEntry.cpp#8 $");
 
 // End LbmEntry.cpp

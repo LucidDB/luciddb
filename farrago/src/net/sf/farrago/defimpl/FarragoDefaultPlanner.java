@@ -30,13 +30,10 @@ import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.fem.config.*;
 
-import org.eigenbase.oj.*;
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.convert.*;
+import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.util.*;
-
 
 /**
  * FarragoDefaultPlanner extends {@link VolcanoPlanner} to request
@@ -131,6 +128,8 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
 
         planner.addRule(
             new ReduceDecimalsRule(CalcRel.class));
+        
+        planner.addRule(new PushFilterRule());
         
         if (fennelEnabled) {
             planner.addRule(new FennelSortRule());

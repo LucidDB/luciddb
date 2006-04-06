@@ -41,8 +41,8 @@ class LcsIndexIntersectRel extends FennelMultipleRel
     //~ Instance fields -------------------------------------------------------
     
     final LcsTable lcsTable;
-    int startRidParamId;
-    int rowLimitParamId;
+    FennelRelParamId startRidParamId;
+    FennelRelParamId rowLimitParamId;
     
     //~ Constructors ----------------------------------------------------------
     
@@ -55,8 +55,8 @@ class LcsIndexIntersectRel extends FennelMultipleRel
         RelOptCluster cluster,
         RelNode[] inputs,
         LcsTable lcsTable,
-        int startRidParamId,
-        int rowLimitParamId)
+        FennelRelParamId startRidParamId,
+        FennelRelParamId rowLimitParamId)
     {
         super (cluster, inputs);
         assert (inputs.length > 1);
@@ -84,10 +84,22 @@ class LcsIndexIntersectRel extends FennelMultipleRel
     }
     
     // implement RelNode
+    public double getRows()
+    {
+        // get the minimum number of rows across the children and then make
+        // the cost inversely proportional to the number of children
+        double minChildRows = 0;
+        for (int i = 0; i < inputs.length; i++) {
+            if (minChildRows == 0 || inputs[i].getRows() < minChildRows) {
+                minChildRows = RelMetadataQuery.getRowCount(inputs[i]);
+            }
+        }
+        return minChildRows / inputs.length;
+    }
+    
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
-        // TODO: getRows() returns only 1 row.
-        double dRows = RelMetadataQuery.getRowCount(this);
+        double dRows = getRows();
         
         // TODO:  compute page-based I/O cost
         // CPU cost is proportional to number of columns projected
@@ -105,13 +117,17 @@ class LcsIndexIntersectRel extends FennelMultipleRel
     // implement RelNode
     public void explain(RelOptPlanWriter pw)
     {
-        String[] names = new String[inputs.length];
+        String[] names = new String[inputs.length + 2];
         
         for(int i = 0; i < inputs.length; i++) {
             names[i] = "child#" + i;
         }
+        names[inputs.length] = "startRidParamId";
+        names[inputs.length + 1] = "rowLimitParamId";
         pw.explain(
-            this, names, new Object[] { });
+            this, names, new Object[] { 
+                (startRidParamId == null) ? 0 : startRidParamId,
+                (rowLimitParamId == null) ? 0 : rowLimitParamId });
     }
 
     // implement RelNode
@@ -125,8 +141,9 @@ class LcsIndexIntersectRel extends FennelMultipleRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         FemLbmIntersectStreamDef intersectStream = 
-            lcsTable.getIndexGuide().newBitmapIntersect(startRidParamId,
-                rowLimitParamId);
+            lcsTable.getIndexGuide().newBitmapIntersect(
+                implementor.translateParamId(startRidParamId),
+                implementor.translateParamId(rowLimitParamId));
         
         for (int i = 0; i < inputs.length; i++) {
             FemExecutionStreamDef inputStream =
@@ -138,6 +155,16 @@ class LcsIndexIntersectRel extends FennelMultipleRel
         
         return intersectStream;
         
+    }
+    
+    public FennelRelParamId getStartRidParamId()
+    {
+        return startRidParamId;
+    }
+    
+    public FennelRelParamId getRowLimitParamId()
+    {
+        return rowLimitParamId;
     }
 }
 

@@ -37,7 +37,7 @@ import org.eigenbase.reltype.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class LcsTable extends MedAbstractColumnSet
+public class LcsTable extends MedAbstractColumnSet
 {
     /** Helper class to manipulate the cluster indexes. */
     private LcsIndexGuide indexGuide;

@@ -17,7 +17,8 @@ LbmEntryTest \
 LbmLoadBitmapTest \
 LbmIndexScanTest \
 LbmIntersectExecStreamTest \
-LbmUnionExecStreamTest
+LbmUnionExecStreamTest \
+LhxHashTableTest
 
 TESTS = $(noinst_PROGRAMS)
 
@@ -31,6 +32,7 @@ LbmLoadBitmapTest_SOURCES=LbmLoadBitmapTest.cpp
 LbmIndexScanTest_SOURCES=LbmIndexScanTest.cpp
 LbmIntersectExecStreamTest_SOURCES=LbmExecStreamTestBase.cpp LbmIntersectExecStreamTest.cpp 
 LbmUnionExecStreamTest_SOURCES=LbmExecStreamTestBase.cpp LbmUnionExecStreamTest.cpp
+LhxHashTableTest_SOURCES=LhxHashTableTest.cpp
 
 # NOTE:  have to repeat $(EXTRA_LDFLAGS) on mingw due to stupid linker.
 
@@ -40,6 +42,7 @@ LDADD = \
 	-L$(top_builddir)/lucidera/libfennel_lu \
 	-L$(top_builddir)/disruptivetech/libfennel_dt \
 	-l$(TEST_LIB) \
+	-lfennel_lu_hashexe \
 	-lfennel_lu_colstore \
 	-lfennel_lu_flatfile \
 	-lfennel_lu_sorter \

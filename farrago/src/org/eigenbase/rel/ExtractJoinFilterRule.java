@@ -78,7 +78,8 @@ public final class ExtractJoinFilterRule extends RelOptRule
             joinRel.getCluster().getRexBuilder().makeLiteral(true),
             joinRel.getJoinType(),
             Collections.emptySet(),
-            joinRel.isSemiJoinDone());
+            joinRel.isSemiJoinDone(),
+            joinRel.isMultiJoinDone());
 
         RelNode filterRel = CalcRel.createFilter(
             cartesianJoinRel,
