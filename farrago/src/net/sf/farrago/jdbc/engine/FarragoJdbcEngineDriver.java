@@ -26,7 +26,6 @@ import java.sql.*;
 import java.util.*;
 import java.util.logging.*;
 
-import net.sf.farrago.db.*;
 import net.sf.farrago.jdbc.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
@@ -81,14 +80,21 @@ public class FarragoJdbcEngineDriver extends FarragoAbstractJdbcDriver
             return null;
         }
 
+        // don't modify user's properties: use only as our defaults
+        Properties driverProps = new Properties(info);
+
+        // move any params from the URI to the properties
+        String driverUrl = parseConnectionParams(url, driverProps);
+
         try {
-            if (url.equals(getBaseUrl()) || url.equals(getClientUrl())) {
+            if (driverUrl.equals(getBaseUrl())
+            || driverUrl.equals(getClientUrl())) {
                 return new FarragoJdbcEngineConnection(
-                    url,
-                    info,
+                    driverUrl,
+                    driverProps,
                     newSessionFactory());
             } else {
-                throw FarragoResource.instance().JdbcInvalidUrl.ex(url);
+                throw FarragoResource.instance().JdbcInvalidUrl.ex(driverUrl);
             }
         } catch (Throwable ex) {
             throw newSqlException(ex);

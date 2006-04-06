@@ -262,6 +262,23 @@ public:
         return mPDynamicParamManager;
     }
 
+    //! gets the register binding
+    //! @param resetFromNull: if the register is null, reset the address to the
+    //! target buffer so the value can be changed.
+    TupleDatum* getBinding(bool resetFromNull = false) const {
+        // validate indexes
+        assert(mRegisterSetP);
+        assert(mSetIndex < ELastSet);
+        assert(mRegisterSetP[mSetIndex]);
+        RegisterSetBinding* rsb = mRegisterSetP[mSetIndex];
+        TupleDatum& bind = (*rsb)[mIndex];
+        if (resetFromNull) {
+            if (!bind.pData)
+                bind.pData = mRegisterSetP[mSetIndex]->getTargetAddr(mIndex);
+        }
+        return &bind;
+    }
+
 protected:
     //! Register set index
     const ERegisterSet mSetIndex;       
@@ -313,23 +330,6 @@ protected:
 
     //! Defines default properties for registers based on register set.
     void setDefaultProperties();
-
-    //! gets the register binding
-    //! @param resetFromNull: if the register is null, reset the address to the
-    //! target buffer so the value can be changed.
-    TupleDatum* getBinding(bool resetFromNull = false) const {
-        // validate indexes
-        assert(mRegisterSetP);
-        assert(mSetIndex < ELastSet);
-        assert(mRegisterSetP[mSetIndex]);
-        RegisterSetBinding* rsb = mRegisterSetP[mSetIndex];
-        TupleDatum& bind = (*rsb)[mIndex];
-        if (resetFromNull) {
-            if (!bind.pData)
-                bind.pData = mRegisterSetP[mSetIndex]->getTargetAddr(mIndex);
-        }
-        return &bind;
-    }
 
 };
 

@@ -60,6 +60,8 @@ import java.util.List;
 public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     implements FarragoTypeFactory
 {
+    private static final int unknownCharPrecision = 1024;
+
     //~ Instance fields -------------------------------------------------------
 
     /** Repos for type object definitions. */
@@ -377,8 +379,6 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     {
         RelDataType type;
 
-        int unknownCharPrecision = 1024;
-        
         // TODO jvs 1-Mar-2006: Avoid using try/catch for substitution;
         // instead, get lower levels to participate.  Particularly bad is
         // catching Throwable, which could be an assertion error which has
@@ -532,7 +532,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         RelDataType type;
         if (typeName == null) {
             // TODO:  cleanup
-            type = createSqlType(SqlTypeName.Varchar, 128);
+            type = createSqlType(SqlTypeName.Varchar, unknownCharPrecision);
         } else {
             type = createSqlType(typeName);
         }

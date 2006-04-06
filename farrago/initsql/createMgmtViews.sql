@@ -45,6 +45,22 @@ external name 'class net.sf.farrago.syslib.FarragoManagementUDR.objectsInUse';
 create view objects_in_use_view as
   select * from table(objectsInUse());
 
--- todo:  grant this only to a privileged user
+-- TODO: grant this only to a privileged user
 grant select on objects_in_use_view to public;
+
+-- lets an administrator kill an executing statement
+-- TODO: grant this only to a privileged user
+create procedure kill_statement(in id bigint)
+  language java
+  parameter style java
+  no sql
+  external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatement';
+
+-- lets an administrator kill a running session
+-- TODO: grant this only to a privileged user
+create procedure kill_session(in id bigint)
+  language java
+  parameter style java
+  no sql
+  external name 'class net.sf.farrago.syslib.FarragoKillUDR.killSession';
 

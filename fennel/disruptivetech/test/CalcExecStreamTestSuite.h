@@ -64,7 +64,7 @@ protected:
     void testConstantOneForOneImpl(uint nRowsInput = 1000);
     
 public:
-    explicit CalcExecStreamTestSuite();
+    explicit CalcExecStreamTestSuite(bool addAllTests = true);
 
     /**
      * Tests with program that produces same amount of output as input.

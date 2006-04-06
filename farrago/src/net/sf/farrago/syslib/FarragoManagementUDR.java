@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -28,11 +28,13 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
 
-import net.sf.farrago.db.FarragoDbSingleton;
+import net.sf.farrago.db.FarragoDatabase;
+import net.sf.farrago.db.FarragoDbSession;
 import net.sf.farrago.session.FarragoSession;
 import net.sf.farrago.session.FarragoSessionExecutingStmtInfo;
 import net.sf.farrago.session.FarragoSessionInfo;
 import net.sf.farrago.session.FarragoSessionVariables;
+import net.sf.farrago.runtime.FarragoUdrRuntime;
 
 
 /**
@@ -55,8 +57,9 @@ public abstract class FarragoManagementUDR
     public static void statements(PreparedStatement resultInserter)
         throws SQLException
     {
-        List<FarragoSession> sessions = FarragoDbSingleton
-                .getSessions();
+        FarragoSession callerSession = FarragoUdrRuntime.getSession();
+        FarragoDatabase db = ((FarragoDbSession) callerSession).getDatabase();
+        List<FarragoSession> sessions = db.getSessions();
         for (FarragoSession s : sessions) {
             FarragoSessionInfo info = s.getSessionInfo();
             List<Long> ids = info.getExecutingStmtIds();
@@ -91,7 +94,9 @@ public abstract class FarragoManagementUDR
     public static void objectsInUse(PreparedStatement resultInserter)
         throws SQLException
     {
-        List<FarragoSession> sessions = FarragoDbSingleton.getSessions();
+        FarragoSession callerSession = FarragoUdrRuntime.getSession();
+        FarragoDatabase db = ((FarragoDbSession) callerSession).getDatabase();
+        List<FarragoSession> sessions = db.getSessions();
         for (FarragoSession s : sessions) {
             FarragoSessionInfo info = s.getSessionInfo();
             List<Long> ids = info.getExecutingStmtIds();
@@ -120,7 +125,9 @@ public abstract class FarragoManagementUDR
     public static void sessions(PreparedStatement resultInserter)
         throws SQLException
     {
-        List<FarragoSession> sessions = FarragoDbSingleton.getSessions();
+        FarragoSession callerSession = FarragoUdrRuntime.getSession();
+        FarragoDatabase db = ((FarragoDbSession) callerSession).getDatabase();
+        List<FarragoSession> sessions = db.getSessions();
         for (FarragoSession s : sessions) {
             int i = 0;
             FarragoSessionVariables v = s.getSessionVariables();

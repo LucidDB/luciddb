@@ -56,13 +56,15 @@ import java.util.List;
  */
 public class IterCalcRel extends SingleRel implements JavaRel
 {
+    private static boolean abortOnError = true;
+
     //~ Instance fields -------------------------------------------------------
 
     private final RexProgram program;
 
     /** Values defined in {@link ProjectRelBase.Flags}. */
     protected int flags;
-
+    
     //~ Constructors ----------------------------------------------------------
 
     public IterCalcRel(
@@ -144,6 +146,16 @@ public class IterCalcRel extends SingleRel implements JavaRel
             (JavaRel) this, program.getExprList().get(index));
     }
 
+    /**
+     * Disables throwing of exceptions on error.  Do not set this
+     * false without a very good reason!  Doing so will prevent type
+     * cast, overflow/underflow, etc. errors in Farrago.
+     */
+    public static void setAbortOnError(boolean abortOnError)
+    {
+        IterCalcRel.abortOnError = abortOnError;
+    }
+    
     public static Expression implementAbstract(
         JavaRelImplementor implementor,
         JavaRel rel,
@@ -208,7 +220,34 @@ public class IterCalcRel extends SingleRel implements JavaRel
         ifNoDataReasonBody.add(
             new ReturnStatement(varInputObj));
 
-        whileBody.add(
+        // The calculator (projection, filtering) statements are added to
+        // calcStmts.  In most cases it will just be the while loop's body.
+        StatementList calcStmts;
+        if (abortOnError) {
+            calcStmts = whileBody;
+        } else {
+            // This is not the usual case.  Here we wrap the calc statements
+            // (e.g., everything but the code that reads rows from the
+            // inputIterator) in a try/catch that ignores exceptions.
+            
+            calcStmts = new StatementList();
+            
+            // try { /* calcStmts */ }
+            // catch(RuntimeException ex) { }
+            CatchList catchList = 
+                new CatchList(
+                    new CatchBlock(
+                        new Parameter(
+                            OJUtil.typeNameForClass(RuntimeException.class),
+                            "ex"),
+                        new StatementList()));
+            
+            TryStatement tryStmt = new TryStatement(calcStmts, catchList);
+    
+            whileBody.add(tryStmt);
+        }
+        
+        calcStmts.add(
             new VariableDeclaration(
                 TypeName.forOJClass(inputRowClass),
                 varInputRow.toString(),
@@ -217,10 +256,10 @@ public class IterCalcRel extends SingleRel implements JavaRel
                     varInputObj)));
 
         MemberDeclarationList memberList = new MemberDeclarationList();
-
+        
         StatementList condBody;
         RexToOJTranslator translator =
-            implementor.newStmtTranslator(rel, whileBody, memberList);
+            implementor.newStmtTranslator(rel, calcStmts, memberList);
         try {
             translator.pushProgram(program);
             if (program.getCondition() != null) {
@@ -231,9 +270,9 @@ public class IterCalcRel extends SingleRel implements JavaRel
                         new RexNode [] { program.getCondition() });
                 Expression conditionExp =
                     translator.translateRexNode(rexIsTrue);
-                whileBody.add(new IfStatement(conditionExp, condBody));
+                calcStmts.add(new IfStatement(conditionExp, condBody));
             } else {
-                condBody = whileBody;
+                condBody = calcStmts;
             }
 
             RexToOJTranslator condTranslator = translator.push(condBody);
@@ -253,7 +292,7 @@ public class IterCalcRel extends SingleRel implements JavaRel
         }
 
         condBody.add(new ReturnStatement(varOutputRow));
-
+        
         WhileStatement whileStmt =
             new WhileStatement(
                 Literal.makeLiteral(true),

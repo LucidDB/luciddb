@@ -358,6 +358,9 @@
   <!-- classpath for running blackhawk based tests -->
   <property name="bh.home" location="${thirdparty.dir}/blackhawk"/>
 
+  <!-- classpath for running blackhawk based tests -->
+  <property name="bh.home" location="${thirdparty.dir}/blackhawk"/>
+
   <path id="blackhawk.run.classpath">
     <pathelement path="${ant.classpath}"/>
     <pathelement location="${bh.home}/bhx.jar"/>
@@ -451,7 +454,7 @@
   <!-- Customization for javac task for compiling client-side code -->
   <!-- NOTE jvs 2-Oct-2005:  We keep all client-side code 1.4-compatible -->
   <presetdef name="farrago.javaCompileClient">
-    <javac debug="on" deprecation="on" source="1.4"/>
+    <javac debug="on" deprecation="on" source="1.4" target="1.4"/>
   </presetdef>
 
   <!-- Customization for java task -->

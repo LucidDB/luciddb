@@ -1,9 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2005 Disruptive Tech
+// Copyright (C) 2004-2006 Disruptive Tech
 // Copyright (C) 2005-2005 The Eigenbase Project
-// Portions Copyright (C) 2004-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -20,24 +19,22 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#ifndef Fennel_DT_Test_CorrelationJoinExecStreamTestSuite_Included
-#define Fennel_DT_Test_CorrelationJoinExecStreamTestSuite_Included
+#ifndef Fennel_ExtMinMax_Included
+#define Fennel_ExtMinMax_Included
 
-#include "fennel/common/CommonPreamble.h"
-#include "fennel/test/ExecStreamUnitTestBase.h"
-#include <boost/test/test_tools.hpp>
-using namespace fennel;
+#include "fennel/disruptivetech/calc/ExtendedInstruction.h"
 
-class CorrelationJoinExecStreamTestSuite : public ExecStreamUnitTestBase
-{
-    TupleAttributeDescriptor descAttrInt64;
-    TupleDescriptor descInt64;
-    TupleAttributeDescriptor descAttrVarbinary16;
-    TupleDescriptor descVarbinary16;
-    
-public:
-    explicit CorrelationJoinExecStreamTestSuite(bool addAllTests = true); 
-    void testCorrelationJoin();
-};
+FENNEL_BEGIN_NAMESPACE
+
+/**
+ * Registers extended instructions for Windowed aggregation function support
+ * 
+ */
+void
+ExtWinAggFuncRegister(ExtendedInstructionTable* eit);
+
+FENNEL_END_NAMESPACE
 
 #endif
+
+// End ExtMinMax.h

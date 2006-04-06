@@ -1,10 +1,10 @@
 #!/bin/bash
 # $Id$
 # Farrago is an extensible data management system.
-# Copyright (C) 2005-2005 The Eigenbase Project
-# Copyright (C) 2005-2005 Disruptive Tech
-# Copyright (C) 2005-2005 LucidEra, Inc.
-# Portions Copyright (C) 2003-2005 John V. Sichi
+# Copyright (C) 2005-2006 The Eigenbase Project
+# Copyright (C) 2005-2006 Disruptive Tech
+# Copyright (C) 2005-2006 LucidEra, Inc.
+# Portions Copyright (C) 2003-2006 John V. Sichi
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -26,7 +26,7 @@
 # it has poor support for symlinks and file permissions.
 
 usage() {
-    echo "Usage:  distBuild.sh [--without-init-build]"
+    echo "Usage:  distBuild.sh [--without-init-build][--with[out]-debug]"
 }
 
 if [ ! -e dist/FarragoRelease.properties ]; then
@@ -52,18 +52,27 @@ fi
 #default
 init_build=true
 dist_fennel=true
+remove_debug=true
 
 while [ -n "$1" ]; do
     case $1 in
         --skip-init-build|--without-init-build) 
             init_build=false;;
+        --with-debug)
+        	remove_debug=false;;
+        --without-debug)
+        	;;
         *) usage; exit -1;;
     esac
     shift
 done
 
 if $init_build; then
-    ./initBuild.sh --with-fennel
+	debug_param=--with-debug
+	if $remove_debug; then
+		debug_param=--without-debug
+	fi
+    ./initBuild.sh --with-fennel ${debug_param}
 else
     echo "Skip init build"
 
@@ -141,7 +150,9 @@ if $dist_fennel; then
     cp -d boost/lib/$SO_3P_PATTERN $LIB_DIR/fennel
 fi
 
-rm -f $LIB_DIR/fennel/*gdp*
+if $remove_debug; then
+	rm -f $LIB_DIR/fennel/*gdp*
+fi
 cp boost/LICENSE_1_0.txt $LIB_DIR/fennel/boost.license.txt
 
 # TODO jvs 12-Mar-2005

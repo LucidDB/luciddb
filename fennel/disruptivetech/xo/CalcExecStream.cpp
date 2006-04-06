@@ -31,6 +31,7 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 void CalcExecStream::prepare(CalcExecStreamParams const &params)
 {
     ConduitExecStream::prepare(params);
+    stopOnCalcError = params.stopOnCalcError;
 
     try {
         // Force instantiation of the calculator's instruction tables.
@@ -125,47 +126,65 @@ ExecStreamResult CalcExecStream::execute(ExecStreamQuantum const &quantum)
     if (rc != EXECRC_YIELD) {
         return rc;
     }
-    
-    for (uint nTuples = 0; nTuples < quantum.nTuplesMax; ++nTuples) {
+
+#define TRACE_RETURN FENNEL_TRACE(TRACE_FINE, "read " << nRead << " rows, wrote " << nWritten)
+
+    FENNEL_TRACE(TRACE_FINER, "start execute loop");
+    uint nRead = 0;
+    uint nWritten = 0;
+    while (nRead < quantum.nTuplesMax) {
         while (!pInAccessor->isTupleConsumptionPending()) {
             if (!pInAccessor->demandData()) {
+                TRACE_RETURN;
                 return EXECRC_BUF_UNDERFLOW;
             }
-            
+
+            FENNEL_TRACE(TRACE_FINER, "input row " << nRead);
             pInAccessor->unmarshalTuple(inputData);
             try {
                 pCalc->exec();
-            } catch (FennelExcn e) {
+            }  catch (FennelExcn e) {
                 FENNEL_TRACE(TRACE_SEVERE, "error executing calculator: " << e.getMessage());
                 throw e;
             }
-
-            // REVIEW: JK 2004/7/16. Note that the calculator provides
-            // two interfaces to the list of warnings. One is a
-            // pre-parsed representation in the mWarnings deque --
-            // this list may be easier for an upper level to digest --
-            // instead of trying to pick apart the somewhat 'human
-            // readable' serialized version in the warnings() string.
-            if (pCalc->mWarnings.begin() != pCalc->mWarnings.end()) {
-                throw CalcExcn(pCalc->warnings(), inputDesc, inputData);
-            }
-            
-            if (pFilterDatum) {
-                bool filterDiscard = *reinterpret_cast<bool const *>(
-                    pFilterDatum->pData);
-                if (filterDiscard) {
-                    pInAccessor->consumeTuple();
+            bool skip = false;
+            if (! pCalc->mWarnings.empty()) {
+                // calculator failed to produce a row
+                // REVIEW: Do we need to distinguish errors from warnings here?
+                // TODO: notify scheduler (interface TBD)
+                //  which can warn user or produce other side effects.
+                FENNEL_TRACE(TRACE_WARNING, "calculator error " << pCalc->warnings());
+                if (stopOnCalcError) {
+                    throw CalcExcn(pCalc->warnings(), inputDesc, inputData);
                 }
+                skip = true;
+            } else if (pFilterDatum) {
+                bool filterDiscard =
+                    *reinterpret_cast<bool const *>(pFilterDatum->pData);
+                if (filterDiscard) {
+                    skip = true;
+                }
+            }
+            if (skip) {
+                FENNEL_TRACE(TRACE_FINER, "skip row " << nRead);
+                pInAccessor->consumeTuple();
+                ++nRead;
             }
         }
         
+        FENNEL_TRACE(TRACE_FINER, "output row " << nWritten);
         if (!pOutAccessor->produceTuple(outputData)) {
+            TRACE_RETURN;
             return EXECRC_BUF_OVERFLOW;
         }
-
+        ++nWritten;
         pInAccessor->consumeTuple();
+        ++nRead;
     }
+    TRACE_RETURN;
     return EXECRC_QUANTUM_EXPIRED;
+
+#undef TRACE_RETURN
 }
 
 FENNEL_END_CPPFILE("$Id$");

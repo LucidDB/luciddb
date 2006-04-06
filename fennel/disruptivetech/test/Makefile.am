@@ -21,6 +21,7 @@ CalcExtDateTimeTest \
 CalcExtMathTest \
 CalcExtCastTest \
 CalcExtDynamicVariableTest \
+CalcExtWinAggFuncTest \
 SqlDateTest \
 SqlRegExpTest \
 SqlStringTest \
@@ -56,6 +57,8 @@ CalcExtMathTest_SOURCES=CalcExtMathTest.cpp
 CalcExtCastTest_SOURCES=CalcExtCastTest.cpp
 
 CalcExtDynamicVariableTest_SOURCES=CalcExtDynamicVariableTest.cpp
+
+CalcExtWinAggFuncTest_SOURCES=CalcExtWinAggFuncTest.cpp
 
 SqlRegExpTest_SOURCES=SqlStringBuffer.cpp SqlRegExpTest.cpp 
 

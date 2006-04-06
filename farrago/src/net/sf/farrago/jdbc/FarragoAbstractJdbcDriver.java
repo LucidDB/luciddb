@@ -27,6 +27,8 @@ import net.sf.farrago.release.*;
 import java.sql.*;
 import java.util.*;
 
+import org.eigenbase.util14.ConnectStringParser;
+
 
 /**
  * FarragoAbstractJdbcDriver is an abstract base for the client and engine
@@ -129,6 +131,38 @@ public abstract class FarragoAbstractJdbcDriver implements Driver
             System.out.println("Error occurred while registering JDBC driver "
                 + this + ": " + e.toString());
         }
+    }
+
+    /**
+     * Parses params from connection string into {@link Properties} object,
+     * returning the stripped URI.
+     *
+     * @param connectionURI connection string with optional params
+     * @param info Properties object;
+     *      pass <code>null</code> to just get the stripped URI
+     * @return connection URI stripped of params;
+     *      parameters parsed into <code>info</code> if not <code>null</code>.
+     * @throws SQLException
+     */
+    public String parseConnectionParams(String connectionURI, Properties info)
+        throws SQLException
+    {
+        if (connectionURI == null) {
+            return null;
+        }
+
+        // separate the URI and connection params at the first semicolon
+        int i = connectionURI.indexOf(';');
+        if (i < 0) {
+            return connectionURI;
+        }
+
+        String uri = connectionURI.substring(0, i);
+        String params = connectionURI.substring(i+1);
+
+        ConnectStringParser.parse(params, info);
+
+        return uri;
     }
 }
 

@@ -694,6 +694,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
         FarragoUdrInvocationFrame frame = new FarragoUdrInvocationFrame();
         frame.context = this;
         frame.allowSql = allowSql;
+        udrContext.setSession(session);
         frame.udrContext = udrContext;
 
         List stack = getInvocationStack();

@@ -27,7 +27,8 @@ ExtCast.cpp \
 ExtRegExp.cpp \
 StringToHex.cpp \
 ExtMath.cpp \
-ExtDynamicVariable.cpp
+ExtDynamicVariable.cpp \
+ExtWinAggFuncs.cpp
 
 #noinst_PROGRAMS =    \
 #testCalc tuple
