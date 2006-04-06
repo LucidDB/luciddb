@@ -18,7 +18,11 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/funcString.sql"/>
       </test>
 
+      <!-- missing ref file -->
       <test name="funcMath" requiresSuccess="cretables">
+        <test-metadata>
+          <knownFailure value="true"/>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/funcMath.sql"/>
       </test>
 
@@ -114,15 +118,27 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/funcStringCover.sql"/>
       </test>
 
+      <!-- missing ref file -->
       <test name="funcMathCover" requiresSuccess="cretables">
+        <test-metadata>
+          <knownFailure value="true"/>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/funcMathCover.sql"/>
       </test>
 
+      <!-- missing sql file -->
       <test name="divisionScale" requiresSuccess="cretables">
+        <test-metadata>
+          <knownFailure value="true"/>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/divisionScale.sql"/>
       </test>
 
+      <!-- missing sql file -->
       <test name="inList" requiresSuccess="cretables">
+        <test-metadata>
+          <knownFailure value="true"/>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/inList.sql"/>
       </test>
 
