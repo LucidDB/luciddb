@@ -392,8 +392,7 @@
 0: jdbc:farrago:> create index typed_k on typed(k);
 0: jdbc:farrago:> create index typed_l on typed(l);
 0: jdbc:farrago:> create index typed_m on typed(m);
-0: jdbc:farrago:> create index typed_m on typed(n);
-Error: DDL validation error near line 1, column 14: Target schema "LOCALDB"."LBM" already contains index "TYPED_M" with same name (state=,code=0)
+0: jdbc:farrago:> create index typed_n on typed(n);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- surprisingly these don't cause any problems
 0: jdbc:farrago:> insert into typed values(

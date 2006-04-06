@@ -358,7 +358,7 @@ create index typed_j on typed(j);
 create index typed_k on typed(k);
 create index typed_l on typed(l);
 create index typed_m on typed(m);
-create index typed_m on typed(n);
+create index typed_n on typed(n);
 
 -- surprisingly these don't cause any problems
 insert into typed values(
