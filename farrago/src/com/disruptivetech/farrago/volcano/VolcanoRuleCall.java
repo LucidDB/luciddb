@@ -71,8 +71,12 @@ public class VolcanoRuleCall extends RelOptRuleCall
             new RelTraitPropagationVisitor(getPlanner(), rels0Traits).go(rel);
 
             if (tracer.isLoggable(Level.FINEST)) {
+                // Cannot call RelNode.toString() yet, because rel has not
+                // been registered. For now, let's make up something similar.
+                String relDesc =
+                    "rel#" + rel.getId() + ":" + rel.getRelTypeName();
                 tracer.finest("Rule " + getRule() + " arguments "
-                    + RelOptUtil.toString(rels) + " created " + rel);
+                    + RelOptUtil.toString(rels) + " created " + relDesc);
             }
 
             if (volcanoPlanner.listener != null) {

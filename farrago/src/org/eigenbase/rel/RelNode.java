@@ -24,6 +24,7 @@
 package org.eigenbase.rel;
 
 import java.util.Set;
+import java.util.List;
 
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
@@ -75,7 +76,7 @@ import org.eigenbase.rex.RexNode;
  * @author jhyde
  * @since May 24, 2004
  * @version $Id$
- **/
+ */
 public interface RelNode
 {
     //~ Instance fields -------------------------------------------------------
@@ -291,6 +292,36 @@ public interface RelNode
      *           and assertions are enabled
      */
     public boolean isValid(boolean fail);
+
+    /**
+     * Returns a description of the physical ordering (or orderings) of this
+     * relational expression.
+     *
+     * @post return != null
+     */
+    public List<RelCollation> getCollationList();
+
+    /**
+     * Returns a string which concisely describes the definition of this
+     * relational expression. Two relational expressions are equivalent if and
+     * only if their digests are the same.
+     *
+     * <p>The digest does not contain the relational expression's identity
+     * -- that would prevent similar relational expressions from ever comparing
+     * equal -- but does include the identity of children (on the assumption
+     * that children have already been normalized).
+     *
+     * <p>If you want a descriptive string which contains the identity, call
+     * {@link #toString()}, which always returns "rel#{id}:{digest}".
+     */
+    String getDigest();
+
+    /**
+     * Returns a string which describes the relational expression and,
+     * unlike {@link #getDigest()}, also includes the identity.
+     * Typically returns "rel#{id}:{digest}".
+     */
+    String getDescription();
 }
 
 

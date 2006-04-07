@@ -412,7 +412,11 @@ public class FarragoSqlOperatorsSuite
             Assert.assertEquals(count, 1);
             String columnType = md.getColumnTypeName(1);
             if (type.indexOf('(') > 0) {
-                columnType += "(" + md.getPrecision(1) + ")";
+                columnType += "(" + md.getPrecision(1);
+                if (type.indexOf(',') >= 0) {
+                    columnType += ", " + md.getScale(1);
+                }
+                columnType += ")";
             }
             if (md.isNullable(1) == ResultSetMetaData.columnNoNulls) {
                 columnType += " NOT NULL";

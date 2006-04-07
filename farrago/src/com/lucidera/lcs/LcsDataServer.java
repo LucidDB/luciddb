@@ -207,7 +207,7 @@ class LcsDataServer extends MedAbstractFennelDataServer
                 oneRowRel,
                 inputValues,
                 rowType,
-                ProjectRel.Flags.Boxed);
+                ProjectRel.Flags.Boxed, RelCollation.emptyList);
 
         return new FarragoIndexBuilderRel(
             cluster, table, generatorInputs, index);

@@ -400,7 +400,7 @@ public abstract class SqlTypeUtil
         if (typeName == null) {
             return false;
         }
-        return (typeName.getOrdinal() == SqlTypeName.Decimal_ordinal);   
+        return typeName.getOrdinal() == SqlTypeName.Decimal_ordinal;
     }
 
     /**
@@ -412,7 +412,7 @@ public abstract class SqlTypeUtil
         if (typeName == null) {
             return false;
         }
-        return (typeName.getOrdinal() == SqlTypeName.Bigint_ordinal);   
+        return typeName.getOrdinal() == SqlTypeName.Bigint_ordinal;
     }
 
     /**
@@ -478,7 +478,7 @@ public abstract class SqlTypeUtil
             if (!t1.isStruct() || !t2.isStruct()) {
                 return false;
             }
-            if (t1.getFieldList().size() != t2.getFieldList().size()) {
+            if (t1.getFieldCount() != t2.getFieldCount()) {
                 return false;
             }
             RelDataTypeField [] fields1 = t1.getFields();
@@ -528,8 +528,8 @@ public abstract class SqlTypeUtil
         case SqlTypeName.Char_ordinal:
         case SqlTypeName.Varchar_ordinal:
             return (int) Math.ceil(
-                (((double) type.getPrecision())
-                    * type.getCharset().newEncoder().maxBytesPerChar()));
+                ((double) type.getPrecision()) *
+                type.getCharset().newEncoder().maxBytesPerChar());
 
         case SqlTypeName.Binary_ordinal:
         case SqlTypeName.Varbinary_ordinal:
@@ -678,17 +678,17 @@ public abstract class SqlTypeUtil
                 if (fromType.getSqlTypeName() != SqlTypeName.Row) {
                     return false;
                 }
-                int n = toType.getFieldList().size();
-                if (fromType.getFieldList().size() != n) {
+                int n = toType.getFieldCount();
+                if (fromType.getFieldCount() != n) {
                     return false;
                 }
                 for (int i = 0; i < n; ++i) {
                     RelDataTypeField toField = toType.getFields()[i];
                     RelDataTypeField fromField = fromType.getFields()[i];
                     if (!canCastFrom(
-                            toField.getType(),
-                            fromField.getType(),
-                            coerce))
+                        toField.getType(),
+                        fromField.getType(),
+                        coerce))
                     {
                         return false;
                     }
@@ -935,6 +935,7 @@ public abstract class SqlTypeUtil
                 type.getPrecision(),
                 type.getScale(),
                 charSetName,
+                null,
                 SqlParserPos.ZERO);
         } else if (typeName.allowsPrec()) {
             return new SqlDataTypeSpec(
@@ -942,6 +943,7 @@ public abstract class SqlTypeUtil
                 type.getPrecision(),
                 -1,
                 charSetName,
+                null,
                 SqlParserPos.ZERO);
         } else {
             return new SqlDataTypeSpec(
@@ -949,6 +951,7 @@ public abstract class SqlTypeUtil
                 -1,
                 -1,
                 charSetName,
+                null,
                 SqlParserPos.ZERO);
         }
     }

@@ -31,6 +31,8 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.*;
 
+import java.util.List;
+
 /**
  * <code>ProjectRelBase</code> is an abstract base class for implementations
  * of {@link ProjectRel}.
@@ -43,6 +45,8 @@ public abstract class ProjectRelBase extends SingleRel
 
     /** Values defined in {@link Flags}. */
     protected int flags;
+
+    private final List<RelCollation> collationList;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -63,17 +67,27 @@ public abstract class ProjectRelBase extends SingleRel
         RelNode child,
         RexNode [] exps,
         RelDataType rowType,
-        int flags)
+        int flags,
+        final List<RelCollation> collationList)
     {
         super(cluster, traits, child);
         assert rowType != null;
+        assert collationList != null;
         this.exps = exps;
         this.rowType = rowType;
         this.flags = flags;
+        this.collationList =
+            collationList.isEmpty() ? RelCollation.emptyList :
+            collationList;
         assert isValid(true);
     }
 
     //~ Methods ---------------------------------------------------------------
+
+    public List<RelCollation> getCollationList()
+    {
+        return collationList;
+    }
 
     public boolean isBoxed()
     {
@@ -102,9 +116,11 @@ public abstract class ProjectRelBase extends SingleRel
     public boolean isValid(boolean fail)
     {
         if (!super.isValid(fail)) {
+            assert !fail;
             return false;
         }
         if (!RexUtil.compatibleTypes(exps, getRowType(), true)) {
+            assert !fail;
             return false;
         }
         Checker checker = new Checker(fail, getChild());
@@ -112,12 +128,18 @@ public abstract class ProjectRelBase extends SingleRel
             exp.accept(checker);
         }
         if (checker.failCount > 0) {
+            assert !fail;
             return false;
         }
         if (!isBoxed()) {
             if (exps.length != 1) {
+                assert !fail;
                 return false;
             }
+        }
+        if (collationList == null) {
+            assert !fail;
+            return false;
         }
         return true;
     }

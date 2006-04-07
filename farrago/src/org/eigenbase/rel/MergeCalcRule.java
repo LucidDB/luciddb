@@ -83,7 +83,8 @@ public class MergeCalcRule extends RelOptRule
                 RelOptUtil.clone(bottomCalc.traits),
                 bottomCalc.getChild(),
                 topCalc.getRowType(),
-                mergedProgram);
+                mergedProgram,
+                RelCollation.emptyList);
         call.transformTo(newCalc);
     }
 

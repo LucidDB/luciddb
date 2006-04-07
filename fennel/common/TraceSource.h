@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2005-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 1999-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -70,7 +70,8 @@ public:
      *
      * @param name the name of this source
      */
-    void initTraceSource(SharedTraceTarget pTraceTarget,std::string name);
+    virtual void initTraceSource(
+        SharedTraceTarget pTraceTarget, std::string name);
     
     /**
      * Records a trace message.  Normally only called via FENNEL_TRACE.

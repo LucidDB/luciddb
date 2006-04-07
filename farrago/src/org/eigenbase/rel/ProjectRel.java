@@ -31,6 +31,8 @@ import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexUtil;
 import org.eigenbase.reltype.RelDataType;
 
+import java.util.List;
+
 
 /**
  * <code>ProjectRel</code> is a relational expression which computes a set of
@@ -44,6 +46,7 @@ import org.eigenbase.reltype.RelDataType;
  */
 public final class ProjectRel extends ProjectRelBase
 {
+
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -66,7 +69,7 @@ public final class ProjectRel extends ProjectRelBase
         this(
             cluster, child, exps,
             RexUtil.createStructType(cluster.getTypeFactory(), exps, fieldNames),
-            flags);
+            flags, RelCollation.emptyList);
     }
 
     /**
@@ -78,18 +81,20 @@ public final class ProjectRel extends ProjectRelBase
      * @param exps set of expressions for the input columns
      * @param rowType output row type
      * @param flags values as in {@link ProjectRelBase.Flags}
+     * @param collationList
      */
     public ProjectRel(
         RelOptCluster cluster,
         RelNode child,
-        RexNode [] exps,
+        RexNode[] exps,
         RelDataType rowType,
-        int flags)
+        int flags,
+        final List<RelCollation> collationList)
     {
         super(
             cluster,
             new RelTraitSet(CallingConvention.NONE),
-            child, exps, rowType, flags);
+            child, exps, rowType, flags, collationList);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -101,7 +106,7 @@ public final class ProjectRel extends ProjectRelBase
             RelOptUtil.clone(getChild()),
             RexUtil.clone(exps),
             rowType,
-            getFlags());
+            getFlags(), RelCollation.emptyList);
         clone.inheritTraitsFrom(this);
         return clone;
     }

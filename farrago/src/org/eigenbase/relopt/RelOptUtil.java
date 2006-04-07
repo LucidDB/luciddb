@@ -328,6 +328,22 @@ public abstract class RelOptUtil
         return typeList;
     }
 
+    /**
+     * Collects the names and types of the fields in a given struct type.
+     */
+    public static void collectFields(
+        RelDataType type,
+        List<String> fieldNameList,
+        List<RelDataType> typeList)
+    {
+        final RelDataTypeField[] fields = type.getFields();
+        for (int i = 0; i < fields.length; i++) {
+            final RelDataTypeField field = fields[i];
+            typeList.add(field.getType());
+            fieldNameList.add(field.getName());
+        }
+    }
+
     public static RelDataType createTypeFromProjection(
         final RelDataType type,
         final RelDataTypeFactory typeFactory,
@@ -366,8 +382,8 @@ public abstract class RelOptUtil
             // the types must be different
             return false;
         }
-        int n = rowType1.getFieldList().size();
-        if (rowType2.getFieldList().size() != n) {
+        int n = rowType1.getFieldCount();
+        if (rowType2.getFieldCount() != n) {
             return false;
         }
         RelDataTypeField [] f1 = rowType1.getFields();
@@ -501,7 +517,7 @@ public abstract class RelOptUtil
         if (fieldOrdinals != null) {
             n = fieldOrdinals.length;
         } else {
-            n = rowType.getFieldList().size();
+            n = rowType.getFieldCount();
         }
         RelDataTypeField [] fields = rowType.getFields();
         for (int i = 0; i < n; ++i) {
@@ -591,7 +607,7 @@ public abstract class RelOptUtil
         return new AggregateRel(
             rel.getCluster(),
             rel,
-            rel.getRowType().getFieldList().size(),
+            rel.getRowType().getFieldCount(),
             new AggregateRel.Call[0]);
     }
 
@@ -614,7 +630,7 @@ public abstract class RelOptUtil
         }
 
         final int leftFieldCount =
-            joinRel.getLeft().getRowType().getFieldList().size();
+            joinRel.getLeft().getRowType().getFieldCount();
         RexInputRef leftFieldAccess = (RexInputRef) leftComparand;
         if (!(leftFieldAccess.getIndex() < leftFieldCount)) {
             // left field must access left side of join
@@ -665,7 +681,7 @@ public abstract class RelOptUtil
     {
         List<RexNode> restList = new ArrayList<RexNode>();
         splitJoinCondition(
-            left.getRowType().getFields().length,
+            left.getRowType().getFieldCount(),
             condition,
             leftKeys,
             rightKeys,

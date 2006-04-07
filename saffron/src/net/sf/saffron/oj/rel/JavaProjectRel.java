@@ -53,7 +53,7 @@ public class JavaProjectRel
     {
         super(
             cluster, new RelTraitSet(CallingConvention.JAVA), child, exps,
-            rowType, flags);
+            rowType, flags, RelCollationImpl.createSingleton(0));
         assert (child.getConvention() == CallingConvention.JAVA);
     }
 

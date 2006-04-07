@@ -58,7 +58,7 @@ public class SqlAsOperator extends SqlBinaryOperator
         final SqlNode [] operands = call.operands;
         assert operands.length == 2;
         assert operands[1] instanceof SqlIdentifier;
-        operands[0].validate(validator, scope);
+        operands[0].validateExpr(validator, scope);
         SqlIdentifier id = (SqlIdentifier) operands[1];
         if (!id.isSimple()) {
             throw validator.newValidationError(id,

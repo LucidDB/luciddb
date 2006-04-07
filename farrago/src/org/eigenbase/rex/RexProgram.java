@@ -22,7 +22,7 @@
 */
 package org.eigenbase.rex;
 
-import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.RelOptPlanWriter;
 import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.reltype.RelDataTypeField;
@@ -407,8 +407,7 @@ public class RexProgram
                 return false;
             }
             // None of the other fields should be inputRefs.
-            for (int i = inputRowType.getFields().length;
-                 i < exprs.length; i++) {
+            for (int i = inputRowType.getFieldCount(); i < exprs.length; i++) {
                 RexNode expr = exprs[i];
                 if (expr instanceof RexInputRef) {
                     assert !fail;
@@ -484,6 +483,63 @@ public class RexProgram
     }
 
     /**
+     * Given a list of collations which hold for the input to this program,
+     * returns a list of collations which hold for its output. The result is
+     * mutable.
+     */
+    public List<RelCollation> getCollations(List<RelCollation> inputCollations)
+    {
+        List<RelCollation> outputCollations = new ArrayList<RelCollation>(1);
+        deduceCollations(
+            outputCollations, inputRowType.getFieldCount(),
+            projectReadOnlyList, inputCollations);
+        return outputCollations;
+    }
+
+    /**
+     * Given a list of expressions and a description of which are ordered,
+     * computes a list of collations. The result is mutable.
+     */
+    public static void deduceCollations(
+        List<RelCollation> outputCollations,
+        final int sourceCount,
+        List<RexLocalRef> refs,
+        List<RelCollation> inputCollations)
+    {
+        int[] targets = new int[sourceCount];
+        Arrays.fill(targets, -1);
+        for (int i = 0; i < refs.size(); i++) {
+            final RexLocalRef ref = refs.get(i);
+            final int source = ref.getIndex();
+            if (source < sourceCount && targets[source] == -1) {
+                targets[source] = i;
+            }
+        }
+        loop:
+        for (RelCollation collation : inputCollations) {
+
+            final ArrayList<RelFieldCollation> fieldCollations =
+                new ArrayList<RelFieldCollation>(0);
+            for (RelFieldCollation fieldCollation :
+                collation.getFieldCollations())
+            {
+                final int source = fieldCollation.getFieldIndex();
+                final int target = targets[source];
+                if (target < 0) {
+                    continue loop;
+                }
+                fieldCollations.add(
+                    new RelFieldCollation(
+                        target, fieldCollation.getDirection()));
+            }
+            // Success -- all of the source fields of this key are mapped
+            // to the output.
+            outputCollations.add(
+                new RelCollationImpl(fieldCollations));
+        }
+    }
+
+    /**
      * Visitor which walks over a program and checks validity.
      */
     class Checker extends RexVisitorImpl
@@ -518,7 +574,7 @@ public class RexProgram
             assert refType.isStruct();
             final RelDataTypeField field = fieldAccess.getField();
             final int index = field.getIndex();
-            if (index < 0 || index > refType.getFields().length) {
+            if (index < 0 || index > refType.getFieldCount()) {
                 assert !fail;
                 ++failCount;
             }

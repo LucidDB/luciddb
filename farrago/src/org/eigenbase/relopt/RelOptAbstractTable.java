@@ -24,6 +24,9 @@
 package org.eigenbase.relopt;
 
 import org.eigenbase.reltype.*;
+import org.eigenbase.rel.RelCollation;
+
+import java.util.List;
 
 
 /**
@@ -77,13 +80,19 @@ public abstract class RelOptAbstractTable implements RelOptTable
         return rowType;
     }
 
-    public void setRowType(RelDataType rowType) {
+    public void setRowType(RelDataType rowType)
+    {
         this.rowType = rowType;
     }
 
     public RelOptSchema getRelOptSchema()
     {
         return schema;
+    }
+
+    public List<RelCollation> getCollationList()
+    {
+        return RelCollation.emptyList;
     }
 }
 

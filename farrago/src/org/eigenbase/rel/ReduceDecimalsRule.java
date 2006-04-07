@@ -170,7 +170,8 @@ public class ReduceDecimalsRule extends RelOptRule
                 calcRel.getTraits(),
                 calcRel.getChild(),
                 newProgram.getOutputRowType(),
-                newProgram);
+                newProgram,
+                RelCollation.emptyList);
             call.transformTo(newCalcRel);
         }
     }

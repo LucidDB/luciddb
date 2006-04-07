@@ -212,8 +212,7 @@ public abstract class OJPreparingStmt
             runtimeContextClass = connection.getClass();
         }
 
-        final Argument [] arguments =
-            new Argument [] {
+        final Argument [] arguments = {
                 new Argument(connectionVariable, runtimeContextClass,
                     connection)
             };
@@ -230,6 +229,7 @@ public abstract class OJPreparingStmt
             getSqlToRelConverter(validator, connection);
         RelNode rootRel =
             sqlToRelConverter.convertQuery(sqlQuery, needsValidation, true);
+        RelDataType resultType = validator.getValidatedNodeType(sqlQuery);
 
         if (sqlExplain != null) {
             SqlExplain.Depth explainDepth = sqlExplain.getDepth();
@@ -237,8 +237,6 @@ public abstract class OJPreparingStmt
             SqlExplainLevel detailLevel = sqlExplain.getDetailLevel();
             switch (explainDepth) {
             case Type:
-                RelDataType resultType =
-                    validator.getValidatedNodeType(sqlQuery);
                 return new PreparedExplanation(
                     resultType, null, explainAsXml, detailLevel);
             case Logical:
@@ -246,25 +244,31 @@ public abstract class OJPreparingStmt
                     null, rootRel, explainAsXml, detailLevel);
             case Physical:
             default:
-                rootRel = optimize(rootRel);
+                rootRel = optimize(rootRel.getRowType(), rootRel);
                 return new PreparedExplanation(
                     null, rootRel, explainAsXml, detailLevel);
             }
         }
 
-        rootRel = optimize(rootRel);
+        rootRel = optimize(resultType, rootRel);
         return implement(
+            resultType,
             rootRel,
             sqlQuery.getKind(),
             decl,
             arguments);
     }
 
-    /** Optimizes a query plan.
+    /**
+     * Optimizes a query plan.
+     *
+     * @param logicalRowType logical row type of relational expression
+     *   (before struct fields are flattened, or field names are renamed
+     *   for uniqueness)
      * @param rootRel root of a relational expression
      * @return an equivalent optimized relational expression
      */
-    protected RelNode optimize(RelNode rootRel)
+    protected RelNode optimize(RelDataType logicalRowType, RelNode rootRel)
     {
         RelOptPlanner planner = rootRel.getCluster().getPlanner();
         planner.setRoot(rootRel);
@@ -283,7 +287,9 @@ public abstract class OJPreparingStmt
         return rootRel;
     }
 
-    /** Implements a physical query plan.
+    /**
+     * Implements a physical query plan.
+     *
      * @param rootRel root of the relational expression.
      * @param sqlKind SqlKind of the original statement.
      * @param decl ClassDeclaration of the generated result.
@@ -291,6 +297,7 @@ public abstract class OJPreparingStmt
      * @return an executable plan, a {@link PreparedExecution}.
      */
     private PreparedExecution implement(
+        RelDataType rowType,
         RelNode rootRel,
         SqlKind sqlKind,
         ClassDeclaration decl,
@@ -303,14 +310,15 @@ public abstract class OJPreparingStmt
         ParseTree parseTree = expr;
         BoundMethod boundMethod = compileAndBind(decl, parseTree, args);
         final PreparedExecution plan =
-            new PreparedExecution(parseTree,
-                rootRel.getRowType(), isDml, boundMethod);
+            new PreparedExecution(
+                parseTree, rootRel.getRowType(), isDml, boundMethod);
         return plan;
     }
 
     /**
      * Prepares a statement for execution, starting from a relational expression
      * (ie a logical or a physical query plan).
+     * @param rowType
      * @param rootRel root of the relational expression.
      * @param sqlKind SqlKind for the relational expression: only
      *   SqlKind.Explain and SqlKind.Dml are special cases.
@@ -321,16 +329,17 @@ public abstract class OJPreparingStmt
      * @param args openjava argument list for the generated code.
      */
     public PreparedResult prepareSql(
+        RelDataType rowType,
         RelNode rootRel,
         SqlKind sqlKind,
         boolean needOpt,
         ClassDeclaration decl,
-        Argument [] args)
+        Argument[] args)
     {
         if (needOpt) {
-            rootRel = optimize(rootRel);
+            rootRel = optimize(rootRel.getRowType(), rootRel);
         }
-        return implement(rootRel, sqlKind, decl, args);
+        return implement(rowType, rootRel, sqlKind, decl, args);
     }
 
     /**

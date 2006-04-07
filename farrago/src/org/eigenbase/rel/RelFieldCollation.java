@@ -44,13 +44,30 @@ public class RelFieldCollation
     /**
      * 0-based index of field being sorted.
      */
-    private final int iField;
+    private final int fieldIndex;
+
+    /**
+     * Direction of sorting.
+     */
+    private final Direction direction;
 
     //~ Constructors ----------------------------------------------------------
 
-    public RelFieldCollation(int iField)
+    /**
+     * Creates an ascending field collation.
+     */
+    public RelFieldCollation(int fieldIndex)
     {
-        this.iField = iField;
+        this(fieldIndex, Direction.Ascending);
+    }
+
+    /**
+     * Creates a field collation.
+     */
+    public RelFieldCollation(int fieldIndex, Direction direction)
+    {
+        this.fieldIndex = fieldIndex;
+        this.direction = direction;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -62,24 +79,67 @@ public class RelFieldCollation
             return false;
         }
         RelFieldCollation other = (RelFieldCollation) obj;
-        return iField == other.iField;
+        return fieldIndex == other.fieldIndex &&
+            direction == other.direction;
     }
 
     // implement Object
     public int hashCode()
     {
-        return iField;
+        return this.direction.ordinal() << 4 | this.fieldIndex;
     }
 
     public int getFieldIndex()
     {
-        return iField;
+        return fieldIndex;
     }
 
-    // implement Object
+    public RelFieldCollation.Direction getDirection()
+    {
+        return direction;
+    }
+
     public String toString()
     {
-        return "RelFieldCollation:" + iField;
+        return fieldIndex + " " + direction;
+    }
+
+    /**
+     * Direction that a field is ordered in.
+     */
+    public static enum Direction
+    {
+        /**
+         * Ascending direction: A value is always followed by a greater
+         * or equal value.
+         */
+        Ascending,
+
+        /**
+         * Strictly ascending direction: A value is always followed by a
+         * greater value.
+         */
+        StrictlyAscending,
+
+        /**
+         * Descending direction: A value is always followed by a lesser
+         * or equal value.
+         */
+        Descending,
+
+        /**
+         * Strictly descending direction: A value is always followed by a
+         * lesser value.
+         */
+        StrictlyDescending,
+
+        /**
+         * Clustered direction: Values occur in no particular order, and
+         * the same value may occur in contiguous groups, but never occurs
+         * after that. This sort order tends to occur when values are
+         * ordered according to a hash-key.
+         */
+        Clustered,
     }
 }
 

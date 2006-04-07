@@ -20,6 +20,7 @@
 package net.sf.saffron.ext;
 
 import java.lang.reflect.Field;
+import java.util.List;
 
 import net.sf.saffron.oj.OJConnectionRegistry;
 import net.sf.saffron.oj.rel.ExpressionReaderRel;
@@ -28,6 +29,7 @@ import openjava.ptree.FieldAccess;
 
 import org.eigenbase.oj.util.JavaRexBuilder;
 import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.RelCollation;
 import org.eigenbase.relopt.*;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.reltype.*;
@@ -109,46 +111,51 @@ public class ReflectSchema implements RelOptSchema
 
                 // todo: make this a real class; ObjectTable looks similar
                 return new RelOptTable() {
-                        public RelOptSchema getRelOptSchema()
-                        {
-                            return ReflectSchema.this;
-                        }
+                    public RelOptSchema getRelOptSchema()
+                    {
+                        return ReflectSchema.this;
+                    }
 
-                        public RelDataType getRowType()
-                        {
-                            return fieldType;
-                        }
+                    public RelDataType getRowType()
+                    {
+                        return fieldType;
+                    }
 
-                        public double getRowCount()
-                        {
-                            return 10;
-                        }
+                    public double getRowCount()
+                    {
+                        return 10;
+                    }
 
-                        public String [] getQualifiedName()
-                        {
-                            return new String [] { name };
-                        }
+                    public String [] getQualifiedName()
+                    {
+                        return new String [] { name };
+                    }
 
-                        public RelNode toRel(
-                            RelOptCluster cluster,
-                            RelOptConnection connection)
-                        {
-                            OJConnectionRegistry.ConnectionInfo connectionInfo =
-                                OJConnectionRegistry.instance.get(connection);
-                            final FieldAccess expr =
-                                new FieldAccess(connectionInfo.expr, name);
-                            final JavaRexBuilder javaRexBuilder =
-                                (JavaRexBuilder) cluster.getRexBuilder();
-                            final RexNode rex =
-                                javaRexBuilder.makeJava(connectionInfo.env,
-                                    expr);
-                            return new ExpressionReaderRel(
-                                cluster,
-                                cluster.getRexBuilder().makeFieldAccess(
-                                    rex, name),
-                                getRowType());
-                        }
-                    };
+                    public List<RelCollation> getCollationList()
+                    {
+                        return RelCollation.emptyList;
+                    }
+
+                    public RelNode toRel(
+                        RelOptCluster cluster,
+                        RelOptConnection connection)
+                    {
+                        OJConnectionRegistry.ConnectionInfo connectionInfo =
+                            OJConnectionRegistry.instance.get(connection);
+                        final FieldAccess expr =
+                            new FieldAccess(connectionInfo.expr, name);
+                        final JavaRexBuilder javaRexBuilder =
+                            (JavaRexBuilder) cluster.getRexBuilder();
+                        final RexNode rex =
+                            javaRexBuilder.makeJava(connectionInfo.env,
+                                expr);
+                        return new ExpressionReaderRel(
+                            cluster,
+                            cluster.getRexBuilder().makeFieldAccess(
+                                rex, name),
+                            getRowType());
+                    }
+                };
             }
             throw new Error(name + " is not a Table");
         } catch (NoSuchFieldException e) {

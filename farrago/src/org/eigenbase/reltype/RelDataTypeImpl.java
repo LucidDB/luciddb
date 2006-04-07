@@ -99,6 +99,13 @@ public abstract class RelDataTypeImpl
     }
 
     // implement RelDataType
+    public int getFieldCount()
+    {
+        assert isStruct();
+        return fields.length;
+    }
+
+    // implement RelDataType
     public RelDataType getComponentType()
     {
         // this is not a collection type

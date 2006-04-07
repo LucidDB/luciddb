@@ -36,7 +36,9 @@ import org.eigenbase.sql.validate.*;
 import org.eigenbase.sql2rel.SqlToRelConverter;
 import org.eigenbase.util.*;
 
-import java.io.*;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * SqlToRelTestBase is an abstract base for tests which involve conversion
@@ -82,14 +84,30 @@ public class SqlToRelTestBase extends TestCase
         {
             final SqlValidatorTable table = catalogReader.getTable(names);
             final RelDataType rowType = table.getRowType();
-            return createColumnSet(names, rowType);
+            final List<RelCollation> collationList =
+                new ArrayList<RelCollation>();
+            // Deduce which fields the table is sorted on.
+            int i = -1;
+            for (RelDataTypeField field : rowType.getFields()) {
+                ++i;
+                if (table.isMonotonic(field.getName())) {
+                    collationList.add(
+                        new RelCollationImpl(
+                            Collections.singletonList(
+                                new RelFieldCollation(
+                                    i,
+                                    RelFieldCollation.Direction.Ascending))));
+                }
+            }
+            return createColumnSet(names, rowType, collationList);
         }
 
         protected MockColumnSet createColumnSet(
             String[] names,
-            final RelDataType rowType)
+            final RelDataType rowType,
+            final List<RelCollation> collationList)
         {
-            return new MockColumnSet(names, rowType);
+            return new MockColumnSet(names, rowType, collationList);
         }
 
         public RelDataTypeFactory getTypeFactory()
@@ -102,21 +120,29 @@ public class SqlToRelTestBase extends TestCase
         {
         }
 
-        protected class MockColumnSet implements RelOptTable {
+        protected class MockColumnSet implements RelOptTable
+        {
             private final String[] names;
             private final RelDataType rowType;
+            private final List<RelCollation> collationList;
 
-            protected MockColumnSet(String[] names, RelDataType rowType)
+            protected MockColumnSet(
+                String[] names,
+                RelDataType rowType,
+                final List<RelCollation> collationList)
             {
                 this.names = names;
                 this.rowType = rowType;
+                this.collationList = collationList;
             }
 
-            public String[] getQualifiedName() {
+            public String[] getQualifiedName() 
+            {
                 return names;
             }
 
-            public double getRowCount() {
+            public double getRowCount()
+            {
                 // use something other than 0 to give costing tests
                 // some room, and make emps bigger than depts for
                 // join asymmetry
@@ -127,16 +153,24 @@ public class SqlToRelTestBase extends TestCase
                 }
             }
 
-            public RelDataType getRowType() {
+            public RelDataType getRowType()
+            {
                 return rowType;
             }
 
-            public RelOptSchema getRelOptSchema() {
+            public RelOptSchema getRelOptSchema()
+            {
                 return MockRelOptSchema.this;
             }
 
-            public RelNode toRel(RelOptCluster cluster, RelOptConnection connection) {
+            public RelNode toRel(RelOptCluster cluster, RelOptConnection connection)
+            {
                 return new TableAccessRel(cluster, this, connection);
+            }
+
+            public List<RelCollation> getCollationList()
+            {
+                return collationList;
             }
         }
     }

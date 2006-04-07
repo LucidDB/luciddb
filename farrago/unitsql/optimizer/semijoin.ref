@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev_lcs/farrago/unitsql/optimizer/semijoin.sql#16 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/optimizer/semijoin.sql#1 $
 0: jdbc:farrago:> -- Tests semijoin transformations
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema sj;
@@ -321,7 +321,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelCalcRel(expr#0..11=[{inputs}], expr#12=[=($t1, $t8)], SID=[$t0], NAME=[$t9], COLOR=[$t10], SIZE=[$t11], NAME=[$t6], QUANTITY=[$t4], $condition=[$t12])'
+'    FennelCalcRel(expr#0..11=[{inputs}], expr#12=[=($t1, $t8)], SID=[$t0], NAME=[$t9], COLOR=[$t10], SIZE=[$t11], NAME0=[$t6], QUANTITY=[$t4], $condition=[$t12])'
 '      FennelCartesianProductRel(leftouterjoin=[false])'
 '        FennelCalcRel(expr#0..7=[{inputs}], expr#8=[=($t2, $t5)], proj#0..7=[{exprs}], $condition=[$t8])'
 '          FennelCartesianProductRel(leftouterjoin=[false])'
@@ -351,7 +351,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelCalcRel(expr#0..14=[{inputs}], expr#15=[=($t1, $t11)], SID=[$t0], NAME=[$t12], COLOR=[$t13], SIZE=[$t14], NAME=[$t9], COMPANY=[$t6], $condition=[$t15])'
+'    FennelCalcRel(expr#0..14=[{inputs}], expr#15=[=($t1, $t11)], SID=[$t0], NAME=[$t12], COLOR=[$t13], SIZE=[$t14], NAME0=[$t9], COMPANY=[$t6], $condition=[$t15])'
 '      FennelCartesianProductRel(leftouterjoin=[false])'
 '        FennelCalcRel(expr#0..10=[{inputs}], expr#11=[=($t2, $t8)], proj#0..10=[{exprs}], $condition=[$t11])'
 '          FennelCartesianProductRel(leftouterjoin=[false])'
@@ -390,7 +390,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelCalcRel(expr#0..11=[{inputs}], expr#12=[=($t1, $t8)], SID=[$t0], NAME=[$t9], COLOR=[$t10], SIZE=[$t11], NAME=[$t6], QUANTITY=[$t4], $condition=[$t12])'
+'    FennelCalcRel(expr#0..11=[{inputs}], expr#12=[=($t1, $t8)], SID=[$t0], NAME=[$t9], COLOR=[$t10], SIZE=[$t11], NAME0=[$t6], QUANTITY=[$t4], $condition=[$t12])'
 '      FennelCartesianProductRel(leftouterjoin=[false])'
 '        FennelCalcRel(expr#0..7=[{inputs}], expr#8=[=($t2, $t5)], proj#0..7=[{exprs}], $condition=[$t8])'
 '          FennelCartesianProductRel(leftouterjoin=[false])'

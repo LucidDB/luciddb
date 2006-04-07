@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2003-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2003-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 1999-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -141,6 +141,11 @@ CmdInterpreter::StreamGraphHandle::~StreamGraphHandle()
     JniUtil::decrementHandleCount(STREAMGRAPHHANDLE_TRACE_TYPE_STR, this);
 }
     
+JavaTraceTarget *CmdInterpreter::newTraceTarget()
+{
+    return new JavaTraceTarget();
+}
+
 void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
 {
     ConfigMap configMap;
@@ -165,7 +170,7 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
     std::auto_ptr<DbHandle> pDbHandle(newDbHandle());
     JniUtil::incrementHandleCount(DBHANDLE_TRACE_TYPE_STR, pDbHandle.get());
 
-    pDbHandle->pTraceTarget.reset(new JavaTraceTarget());
+    pDbHandle->pTraceTarget.reset(newTraceTarget());
     // on a fatal error, echo the backtrace to the log file:
     AutoBacktrace::setTraceTarget(pDbHandle->pTraceTarget);
 
@@ -489,6 +494,6 @@ void CmdInterpreter::readTupleProjection(
     }
 }
 
-FENNEL_END_CPPFILE("$Id$");
+FENNEL_END_CPPFILE("$Id: //open/lu/dev/fennel/farrago/CmdInterpreter.cpp#12 $");
 
 // End CmdInterpreter.cpp

@@ -311,7 +311,7 @@ public class StandardConvertletTable extends ReflectiveConvertletTable
             return cx.convertExpression(call.operands[0]);
         }
         RexNode arg = cx.convertExpression(call.operands[0]);
-        RelDataType type = dataType.getType();
+        RelDataType type = dataType.deriveType(typeFactory);
         if (arg.getType().isNullable()) {
             type = typeFactory.createTypeWithNullability(type, true);
         }
@@ -373,7 +373,7 @@ public class StandardConvertletTable extends ReflectiveConvertletTable
         RelDataType type = rexBuilder.deriveReturnType(
             constructor, typeFactory, exprs);
 
-        int n = type.getFieldList().size();
+        int n = type.getFieldCount();
         RexNode [] initializationExprs = new RexNode[n];
         for (int i = 0; i < n; ++i) {
             initializationExprs[i] =

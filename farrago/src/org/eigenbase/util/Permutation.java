@@ -430,6 +430,8 @@ public class Permutation
         return obj instanceof Permutation &&
             toString().equals(obj.toString());
     }
+
+
 }
 
 // End Permutation.java

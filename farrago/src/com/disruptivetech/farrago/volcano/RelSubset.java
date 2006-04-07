@@ -29,7 +29,6 @@ import java.util.logging.Logger;
 import org.eigenbase.rel.AbstractRelNode;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.RelVisitor;
-import org.eigenbase.rel.convert.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
@@ -88,7 +87,7 @@ public class RelSubset extends AbstractRelNode
         this.rels = new ArrayList();
         this.parents = new ArrayList();
         this.bestCost = VolcanoCost.INFINITY;
-        this.digest = computeDigest();
+        recomputeDigest();
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -227,10 +226,12 @@ public class RelSubset extends AbstractRelNode
         set.addInternal(rel);
         Set variablesSet = RelOptUtil.getVariablesSet(rel);
         Set variablesStopped = rel.getVariablesStopped();
-        Set variablesPropagated = Util.minus(variablesSet, variablesStopped);
-//        assert (set.variablesPropagated.containsAll(variablesPropagated));
-        Set variablesUsed = RelOptUtil.getVariablesUsed(rel);
-//        assert (set.variablesUsed.containsAll(variablesUsed));
+        if (false) {
+            Set variablesPropagated = Util.minus(variablesSet, variablesStopped);
+            assert set.variablesPropagated.containsAll(variablesPropagated);
+            Set variablesUsed = RelOptUtil.getVariablesUsed(rel);
+            assert set.variablesUsed.containsAll(variablesUsed);
+        }
         propagateCostImprovements(
             (VolcanoPlanner) (rel.getCluster().getPlanner()),
             rel);
@@ -319,21 +320,22 @@ public class RelSubset extends AbstractRelNode
                 RelSubset subset = (RelSubset) p;
                 RelNode cheapest = subset.best;
                 if (cheapest == null) {
-                    final String expr = subset.toString();
                     if (tracer.isLoggable(Level.WARNING)) {
                         // Dump the planner's expression pool so we can figure
                         // out why we reached impasse.
                         StringWriter sw = new StringWriter();
                         final PrintWriter pw = new PrintWriter(sw);
-                        pw.println("Node [" + expr
-                            + "] could not be implemented; planner state:");
+                        pw.println(
+                            "Node [" + subset.getDescription() +
+                            "] could not be implemented; planner state:");
                         planner.dump(pw);
                         pw.flush();
                         tracer.warning(sw.toString());
                     }
                     Error e =
-                        Util.newInternal("node could not be implemented: "
-                            + expr);
+                        Util.newInternal(
+                            "node could not be implemented: " +
+                            subset.getDigest());
                     tracer.throwing(
                         getClass().getName(),
                         "visit",

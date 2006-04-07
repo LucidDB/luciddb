@@ -46,7 +46,7 @@ import com.disruptivetech.farrago.calc.CalcRexImplementorTableImpl;
  * @author Wael Chatila
  * @since April 19, 2004
  * @version $Id$
- **/
+ */
 public class FarragoCalcSystemTest extends FarragoTestCase
 {
     //~ Static fields/initializers --------------------------------------------
@@ -94,63 +94,63 @@ public class FarragoCalcSystemTest extends FarragoTestCase
         // Do not add a function to this exclude list unless you first add a
         // null test for it elsewhere.
         // ------------
-        exclude.add(opTab.asOperator);
-        exclude.add(opTab.isTrueOperator);
-        exclude.add(opTab.isFalseOperator);
-        exclude.add(opTab.isNullOperator);
-        exclude.add(opTab.isUnknownOperator);
-        exclude.add(opTab.isNotTrueOperator);
-        exclude.add(opTab.isNotFalseOperator);
-        exclude.add(opTab.isNotNullOperator);
-        exclude.add(opTab.isNotUnknownOperator);
-        exclude.add(opTab.explainOperator);
-        exclude.add(opTab.unionAllOperator);
-        exclude.add(opTab.unionOperator);
-        exclude.add(opTab.valuesOperator);
-        exclude.add(opTab.deleteOperator);
-        exclude.add(opTab.betweenOperator);
-        exclude.add(opTab.notBetweenOperator);
-        exclude.add(opTab.updateOperator);
-        exclude.add(opTab.existsOperator);
-        exclude.add(opTab.exceptOperator);
-        exclude.add(opTab.exceptAllOperator);
-        exclude.add(opTab.inOperator);
-        exclude.add(opTab.insertOperator);
-        exclude.add(opTab.intersectOperator);
-        exclude.add(opTab.intersectAllOperator);
-        exclude.add(opTab.caseOperator);
-        exclude.add(opTab.explicitTableOperator);
-        exclude.add(opTab.orderByOperator);
-        exclude.add(opTab.selectOperator);
-        exclude.add(opTab.dotOperator);
-        exclude.add(opTab.joinOperator);
-        exclude.add(opTab.rowConstructor);
-        exclude.add(opTab.newOperator);
-        exclude.add(opTab.nullIfFunc);
-        exclude.add(opTab.castFunc);
-        exclude.add(opTab.coalesceFunc);
-        exclude.add(opTab.overlayFunc);
-        exclude.add(opTab.substringFunc);
-        exclude.add(opTab.trimFunc);
-        exclude.add(opTab.isDistinctFromOperator);
-        exclude.add(opTab.descendingOperator);
-        exclude.add(opTab.literalChainOperator);
-        exclude.add(opTab.escapeOperator);
-        exclude.add(opTab.localTimeFunc);
-        exclude.add(opTab.localTimestampFunc);
-        exclude.add(opTab.currentTimestampFunc);
-        exclude.add(opTab.currentTimeFunc);
-        exclude.add(opTab.minusDateOperator);
-        exclude.add(opTab.throwOperator);
-        exclude.add(opTab.reinterpretOperator);
-        exclude.add(opTab.sliceOp);
+        exclude.add(SqlStdOperatorTable.asOperator);
+        exclude.add(SqlStdOperatorTable.isTrueOperator);
+        exclude.add(SqlStdOperatorTable.isFalseOperator);
+        exclude.add(SqlStdOperatorTable.isNullOperator);
+        exclude.add(SqlStdOperatorTable.isUnknownOperator);
+        exclude.add(SqlStdOperatorTable.isNotTrueOperator);
+        exclude.add(SqlStdOperatorTable.isNotFalseOperator);
+        exclude.add(SqlStdOperatorTable.isNotNullOperator);
+        exclude.add(SqlStdOperatorTable.isNotUnknownOperator);
+        exclude.add(SqlStdOperatorTable.explainOperator);
+        exclude.add(SqlStdOperatorTable.unionAllOperator);
+        exclude.add(SqlStdOperatorTable.unionOperator);
+        exclude.add(SqlStdOperatorTable.valuesOperator);
+        exclude.add(SqlStdOperatorTable.deleteOperator);
+        exclude.add(SqlStdOperatorTable.betweenOperator);
+        exclude.add(SqlStdOperatorTable.notBetweenOperator);
+        exclude.add(SqlStdOperatorTable.updateOperator);
+        exclude.add(SqlStdOperatorTable.existsOperator);
+        exclude.add(SqlStdOperatorTable.exceptOperator);
+        exclude.add(SqlStdOperatorTable.exceptAllOperator);
+        exclude.add(SqlStdOperatorTable.inOperator);
+        exclude.add(SqlStdOperatorTable.insertOperator);
+        exclude.add(SqlStdOperatorTable.intersectOperator);
+        exclude.add(SqlStdOperatorTable.intersectAllOperator);
+        exclude.add(SqlStdOperatorTable.caseOperator);
+        exclude.add(SqlStdOperatorTable.explicitTableOperator);
+        exclude.add(SqlStdOperatorTable.orderByOperator);
+        exclude.add(SqlStdOperatorTable.selectOperator);
+        exclude.add(SqlStdOperatorTable.dotOperator);
+        exclude.add(SqlStdOperatorTable.joinOperator);
+        exclude.add(SqlStdOperatorTable.rowConstructor);
+        exclude.add(SqlStdOperatorTable.newOperator);
+        exclude.add(SqlStdOperatorTable.nullIfFunc);
+        exclude.add(SqlStdOperatorTable.castFunc);
+        exclude.add(SqlStdOperatorTable.coalesceFunc);
+        exclude.add(SqlStdOperatorTable.overlayFunc);
+        exclude.add(SqlStdOperatorTable.substringFunc);
+        exclude.add(SqlStdOperatorTable.trimFunc);
+        exclude.add(SqlStdOperatorTable.isDistinctFromOperator);
+        exclude.add(SqlStdOperatorTable.descendingOperator);
+        exclude.add(SqlStdOperatorTable.literalChainOperator);
+        exclude.add(SqlStdOperatorTable.escapeOperator);
+        exclude.add(SqlStdOperatorTable.localTimeFunc);
+        exclude.add(SqlStdOperatorTable.localTimestampFunc);
+        exclude.add(SqlStdOperatorTable.currentTimestampFunc);
+        exclude.add(SqlStdOperatorTable.currentTimeFunc);
+        exclude.add(SqlStdOperatorTable.minusDateOperator);
+        exclude.add(SqlStdOperatorTable.throwOperator);
+        exclude.add(SqlStdOperatorTable.reinterpretOperator);
+        exclude.add(SqlStdOperatorTable.sliceOp);
         
         // Eventually need to include these when cast is working
-        exclude.add(opTab.overlapsOperator);
-        exclude.add(opTab.initcapFunc);
-        exclude.add(opTab.currentDateFunc);
-        exclude.add(opTab.convertFunc);
-        exclude.add(opTab.translateFunc);
+        exclude.add(SqlStdOperatorTable.overlapsOperator);
+        exclude.add(SqlStdOperatorTable.initcapFunc);
+        exclude.add(SqlStdOperatorTable.currentDateFunc);
+        exclude.add(SqlStdOperatorTable.convertFunc);
+        exclude.add(SqlStdOperatorTable.translateFunc);
 
         // --- NOTE ---
         // Do not add a function to this exclude list unless you first add a
@@ -221,10 +221,11 @@ public class FarragoCalcSystemTest extends FarragoTestCase
                         precision,
                         0,
                         null,
+                        null,
                         SqlParserPos.ZERO);
 
                 operands[i] =
-                    opTab.castFunc.createCall(
+                    SqlStdOperatorTable.castFunc.createCall(
                         SqlLiteral.createNull(SqlParserPos.ZERO),
                         dt,
                         SqlParserPos.ZERO);
@@ -324,3 +325,5 @@ public class FarragoCalcSystemTest extends FarragoTestCase
         public static final VirtualMachine Auto = new VirtualMachine("AUTO");
     }
 }
+
+// End FarragoCalcSystemTest.java

@@ -77,7 +77,7 @@ public class ProjectToCalcRule extends RelOptRule
         final CalcRel calc =
             new CalcRel(
                 project.getCluster(), RelOptUtil.clone(project.traits), child,
-                rowType, program);
+                rowType, program, RelCollation.emptyList);
         call.transformTo(calc);
     }
 }

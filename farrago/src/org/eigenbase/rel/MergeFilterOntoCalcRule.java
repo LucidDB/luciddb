@@ -87,8 +87,10 @@ public class MergeFilterOntoCalcRule extends RelOptRule
         RexProgram mergedProgram = RexProgramBuilder.mergePrograms(
             topProgram, bottomProgram, rexBuilder);
         final CalcRel newCalc =
-            new CalcRel(calc.getCluster(), RelOptUtil.clone(calc.traits),
-                calc.getChild(), filter.getRowType(), mergedProgram);
+            new CalcRel(
+                calc.getCluster(), RelOptUtil.clone(calc.traits),
+                calc.getChild(), filter.getRowType(), mergedProgram,
+                RelCollation.emptyList);
         call.transformTo(newCalc);
     }
 }

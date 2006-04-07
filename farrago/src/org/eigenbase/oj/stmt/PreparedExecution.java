@@ -24,12 +24,9 @@
 package org.eigenbase.oj.stmt;
 
 import java.lang.reflect.*;
-import java.sql.*;
 
 import openjava.ptree.*;
 
-import org.eigenbase.rel.*;
-import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.*;
 
@@ -76,7 +73,12 @@ public class PreparedExecution implements PreparedResult
         return isDml;
     }
 
-    public RelDataType getRowType()
+    /**
+     * Returns the physical row type of this prepared statement. May not be
+     * identical to the row type returned by the validator; for example, the
+     * field names may have been made unique.
+     */
+    public RelDataType getPhysicalRowType()
     {
         return rowType;
     }

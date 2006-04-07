@@ -171,6 +171,7 @@ public abstract class TestUtil
             .replaceAll("\\{", "\\\\{")
             .replaceAll("\\}", "\\\\}")
             .replaceAll("\\|", "\\\\||")
+            .replaceAll("[$]", "\\\\\\$")
             .replaceAll("\\?", "\\\\?")
             .replaceAll("\\*", "\\\\*")
             .replaceAll("\\(", "\\\\(")

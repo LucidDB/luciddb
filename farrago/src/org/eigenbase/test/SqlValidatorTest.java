@@ -862,6 +862,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         // current_timestamp
         checkExp("CURRENT_TIMESTAMP(3)");
         checkExp("CURRENT_TIMESTAMP"); //    fix sqlcontext later.
+        check("SELECT CURRENT_TIMESTAMP AS X FROM (VALUES (1))");
         checkExpFails("CURRENT_TIMESTAMP(1+2)",
             "Argument to function 'CURRENT_TIMESTAMP' must be a literal");
         checkWholeExpFails("CURRENT_TIMESTAMP()",
@@ -1706,14 +1707,14 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     {
         // dtbug 282
         // "select r.* from sales.depts" gives NPE.
-        checkFails("select r.^* from dept",
+        checkFails("select ^r.*^ from dept",
             "Unknown identifier 'R'");
 
         check("select e.* from emp as e");
         check("select emp.* from emp");
 
         // Error message could be better (EMPNO does exist, but it's a column).
-        checkFails("select empno.^* from emp",
+        checkFails("select ^empno .  *^ from emp",
             "Unknown identifier 'EMPNO'");
     }
 
@@ -1823,6 +1824,9 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     public void testUnionTypeMismatchWithStarFails()
     {
         checkFails("select ^*^ from dept union select 1, 2 from emp",
+            "Type mismatch in column 2 of UNION");
+
+        checkFails("select ^dept.*^ from dept union select 1, 2 from emp",
             "Type mismatch in column 2 of UNION");
     }
 

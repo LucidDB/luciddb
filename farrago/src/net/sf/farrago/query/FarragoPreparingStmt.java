@@ -64,7 +64,6 @@ import org.eigenbase.sql2rel.*;
 import org.eigenbase.util.*;
 
 import java.util.List;
-import java.lang.reflect.Modifier;
 
 /**
  * FarragoPreparingStmt subclasses OJPreparingStmt to implement the
@@ -287,34 +286,6 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         // privilege checks.
         stmtValidator.getPrivilegeChecker().checkAccess();
     }
-    
-    /**
-     * Returns whether a class declaration has a member with a given name.
-     */
-    private static boolean hasMember(
-        ClassDeclaration classDecl,
-        String candidate)
-    {
-        final MemberDeclarationList declList = classDecl.getBody();
-        for (int j = 0; j < declList.size(); j++) {
-            MemberDeclaration memberDecl = (MemberDeclaration) declList.get(j);
-            if (memberDecl instanceof ClassDeclaration) {
-                String className = ((ClassDeclaration) memberDecl).getName();
-                if (className.equals(candidate)) {
-                    return true;
-                }
-            } else if (memberDecl instanceof FieldDeclaration) {
-                String fieldName = ((FieldDeclaration) memberDecl).getName();
-                if (fieldName.equals(candidate)) {
-                    return true;
-                }
-            } else {
-                // don't care about method names
-            }
-        }
-        return false;
-    }
-
 
     // implement FarragoSessionPreparingStmt
     public FarragoSessionExecutableStmt implement(
@@ -323,8 +294,9 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         boolean logical)
     {
         PreparedResult preparedResult =
-            prepareSql(rootRel, sqlKind, logical, implementingClassDecl,
-                implementingArgs);
+            prepareSql(
+                rootRel.getRowType(), rootRel, sqlKind, logical,
+                implementingClassDecl, implementingArgs);
         // When rootRel is a logical plan, optimize() sets the map, but for a
         // physical plan, set it here:
         if (!logical) {
@@ -438,7 +410,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         if (preparedResult instanceof PreparedExecution) {
             PreparedExecution preparedExecution =
                 (PreparedExecution) preparedResult;
-            RelDataType rowType = preparedExecution.getRowType();
+            RelDataType rowType = preparedExecution.getPhysicalRowType();
             OJClass ojRowClass =
                 OJUtil.typeToOJClass(rowType, getFarragoTypeFactory());
             Class rowClass;
@@ -543,7 +515,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             finalizeRelMetadata(rootRel);
 
             if (analyzedSql.optimized) {
-                rootRel = optimize(rootRel);
+                rootRel = optimize(rootRel.getRowType(), rootRel);
             
                 // From here on, use the planner's notion of root, because the
                 // rootRel it returned to us may have lost some metadata.
@@ -625,7 +597,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     }
 
     // override OJPreparingStmt
-    protected RelNode optimize(RelNode rootRel)
+    protected RelNode optimize(RelDataType rowType, RelNode rootRel)
     {
         boolean dumpPlan = planDumpTracer.isLoggable(Level.FINE);
         if (dumpPlan) {
@@ -636,7 +608,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                     false,
                     SqlExplainLevel.DIGEST_ATTRIBUTES));
         }
-        originalRowType = rootRel.getRowType();
+        originalRowType = rowType;
         rootRel = flattenTypes(rootRel, true);
         if (dumpPlan) {
             planDumpTracer.fine(
@@ -652,7 +624,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         // providers to use during optimization.
         finalizeRelMetadata(rootRel);
         
-        rootRel = super.optimize(rootRel);
+        rootRel = super.optimize(rowType, rootRel);
         if (dumpPlan) {
             planDumpTracer.fine(
                 RelOptUtil.dumpPlan(

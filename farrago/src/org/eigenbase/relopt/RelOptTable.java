@@ -24,8 +24,11 @@
 package org.eigenbase.relopt;
 
 import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.RelCollation;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.reltype.*;
+
+import java.util.List;
 
 
 /**
@@ -83,6 +86,15 @@ public interface RelOptTable
     RelNode toRel(
         RelOptCluster cluster,
         RelOptConnection connection);
+
+    /**
+     * Returns a description of the physical ordering (or orderings) of the
+     * rows returned from this table.
+     *
+     * @post return != null
+     * @see RelNode#getCollationList() 
+     */
+    public List<RelCollation> getCollationList();
 }
 
 
