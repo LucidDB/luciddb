@@ -1,5 +1,0 @@
-9.0
-3
-1       SQLCHAR         0       7       "t"     1       ID      ""
-2       SQLCHAR         0       100     "t"     2       NAME    SQL_Latin1_General_CP1_CI_AS
-3       SQLCHAR         0       24      "rn"    3       EXTRA_FIELD     ""

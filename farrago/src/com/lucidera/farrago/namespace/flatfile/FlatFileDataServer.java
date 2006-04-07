@@ -80,11 +80,22 @@ class FlatFileDataServer extends MedAbstractDataServer
         params = new FlatFileParams(getProperties());
         params.decode();
 
-        // TODO: validate, e.g. throw an error if directory doesn't exist
+        // throw an error if directory doesn't exist
         File dir = new File(params.getDirectory());
         if (!dir.exists() && !params.getDirectory().equals("")) {
             throw FarragoResource.instance().InvalidDirectory.ex(
                 params.getDirectory());
+        }
+        
+        // throw an error when using fixed position parsing mode 
+        // with incompatible parameters
+        if (params.getFieldDelimiter() == 0) {
+            if (params.getQuoteChar() != 0 
+                || params.getEscapeChar() != 0) 
+            {
+                throw FarragoResource.instance().
+                    FlatFileInvalidFixedPosParams.ex();
+            }
         }
     }
 
@@ -191,6 +202,16 @@ class FlatFileDataServer extends MedAbstractDataServer
                                 FlatFileParams.SchemaType.QUERY.getSchemaName(),
                                 filename};
 
+        // Cannot describe or sample a fixed position data file
+        if (params.getFieldDelimiter() == 0) {
+            switch (schemaType) {
+            case DESCRIBE:
+            case SAMPLE:
+                throw FarragoResource.instance().
+                    FlatFileNoFixedPosSample.ex(filename);
+            }
+        }
+
         switch(schemaType) {
         case DESCRIBE:
             fieldTypes.add(
@@ -202,9 +223,12 @@ class FlatFileDataServer extends MedAbstractDataServer
             List<Integer> fieldSizes = getFieldSizes(foreignName);
             int i = 1;
             for (Integer size : fieldSizes) {
-                fieldTypes.add(
+                RelDataType type = 
                     typeFactory.createSqlType(
-                        SqlTypeName.Varchar, size.intValue()));
+                        SqlTypeName.Varchar, size.intValue());
+                RelDataType nullableType =
+                    typeFactory.createTypeWithNullability(type, true);
+                fieldTypes.add(nullableType);
                 fieldNames.add("COL" + i++);
             }
             break;

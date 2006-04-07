@@ -1,0 +1,17 @@
+<project name="bh" default="datatypes-all">
+  <target name="datatypes-all">
+    <test-suite name="datatypes-all">
+
+      <test-suite-call testfile="test.xml">
+        <test-suite-modifier value="csvjdbc"/>
+        <property name="foreign.db" value="csvjdbc"/>
+      </test-suite-call>
+
+      <test-suite-call testfile="test.xml">
+        <test-suite-modifier value="flatfile"/>
+        <property name="foreign.db" value="flatfile"/>
+      </test-suite-call>
+      
+    </test-suite>
+  </target>
+</project>

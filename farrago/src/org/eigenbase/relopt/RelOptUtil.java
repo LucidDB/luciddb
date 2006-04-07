@@ -23,7 +23,7 @@
 
 package org.eigenbase.relopt;
 
-
+import java.util.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -596,7 +596,7 @@ public abstract class RelOptUtil
     }
 
     public static boolean analyzeSimpleEquiJoin(
-        JoinRelBase joinRel,
+        JoinRel joinRel,
         int [] joinFieldOrdinals)
     {
         RexNode joinExp = joinRel.getCondition();
@@ -1010,7 +1010,168 @@ public abstract class RelOptUtil
         pw.flush();
         return sw.toString();
     }
-
+    
+    /**
+     * Decompose a rex predicate into list of RexNodes that are AND'ed together
+     *
+     * @param rexPredicate predicate to be analyzed
+     * @param rexList list of decomposed RexNodes
+     */
+    public static void decompCF(RexNode rexPredicate, List<RexNode> rexList)
+    {
+        if (rexPredicate.isA(RexKind.And)) {
+            final RexNode[] operands = ((RexCall) rexPredicate).getOperands();
+            for (int i = 0; i < operands.length; i++) {
+                RexNode operand = operands[i];
+                decompCF(operand, rexList);
+            }
+        } else {
+            rexList.add(rexPredicate);            
+        }
+    }
+    
+    /**
+     * Ands two sets of join filters together, either of which can be null.
+     * 
+     * @param rexBuilder rexBuilder to create AND expression
+     * @param left filter on the left that the right will be AND'd to
+     * @param right filter on the right
+     * @return AND'd filter
+     */
+    public static RexNode andJoinFilters(
+        RexBuilder rexBuilder, RexNode left, RexNode right)
+    {
+        // don't bother AND'ing in expressions that always evaluate to
+        // true
+        if (left != null && !left.isAlwaysTrue()) {
+            if (right != null && !right.isAlwaysTrue()) {
+                left = rexBuilder.makeCall(
+                    SqlStdOperatorTable.andOperator, left, right);
+            }
+        } else {
+            left = right;
+        }
+        
+        // Joins must have some filter
+        if (left == null) {
+            left = rexBuilder.makeLiteral(true);
+        }
+        return left;
+    }
+    
+    /**
+     * Clones an expression tree and walks through it, adjusting each 
+     * RexInputRef index by some amount
+     * 
+     * @param rexBuilder builder for creating new RexInputRefs
+     * @param fields fields where the RexInputRefs originally originated from
+     * @param rex the expression
+     * @param adjustment the amount to adjust each field by
+     * @return modified expression tree
+     */
+    public static RexNode convertRexInputRefs(
+        RexBuilder rexBuilder,
+        RexNode rex,
+        RelDataTypeField[] fields,
+        int[] adjustments)
+    {
+        RexNode newFilter = RexUtil.clone(rex);
+        newFilter = adjustRexInputRefs(
+            rexBuilder, newFilter, fields, adjustments);
+        return newFilter;
+    }
+    
+    private static RexNode adjustRexInputRefs(
+        RexBuilder rexBuilder,
+        RexNode rex,
+        RelDataTypeField[] fields,
+        int[] adjustments)
+    {
+        if (rex instanceof RexCall) {
+            RexNode [] operands = ((RexCall) rex).operands;
+            for (int i = 0; i < operands.length; i++) {
+                RexNode operand = operands[i];
+                operands[i] = adjustRexInputRefs(
+                    rexBuilder, operand, fields, adjustments);
+            }
+            return rex;
+        } else if (rex instanceof RexInputRef) {
+            RexInputRef var = (RexInputRef) rex;
+            int index = var.getIndex();
+            if (adjustments[index] != 0) {
+                return rexBuilder.makeInputRef(
+                    fields[index].getType(), index + adjustments[index]);
+            }
+        }
+        return rex;
+    }
+    
+    /**
+     * Adjusts key values in a list by some fixed amount.
+     * 
+     * @param keys list of key values
+     * @param adjustment the amount to adjust the key values by
+     * @return modified list
+     */
+    public static List<Integer> adjustKeys(List<Integer> keys, int adjustment)
+    {
+        List<Integer> newKeys = new ArrayList<Integer>();
+        for (int i = 0; i < keys.size(); i++) {
+            newKeys.add(keys.get(i) + adjustment);
+        }
+        return newKeys;
+    }
+    
+    /**
+     * Sets a bit in a bitmap for each RexInputRef in a RelNode
+     * 
+     * @param bitmap bitmap to be set
+     * @param start starting bit to set, corresponding to first field
+     * in the RelNode
+     * @param end the bit one beyond the last to be set
+     */
+    public static void setRexInputBitmap(BitSet bitmap, int start, int end)
+    {
+        for (int i = start; i < end; i++) {
+            bitmap.set(i);
+        }
+    }
+    
+    /**
+     * Sets a bit in a bitmap for every RexInputRef encountered in an
+     * expression
+     * 
+     * @param rex expression from which to look for RexInputRefs
+     * @param rexRefs bitmap representing RexInputRefs contained in the rex
+     */
+    public static void findRexInputRefs(RexNode rex, BitSet rexRefs)
+    {
+        if (rex instanceof RexCall) {
+            RexNode [] operands = ((RexCall) rex).operands;
+            for (int i = 0; i < operands.length; i++) {
+                findRexInputRefs(operands[i], rexRefs);
+            }
+        } else if (rex instanceof RexInputRef) {
+            RexInputRef var = (RexInputRef) rex;
+            rexRefs.set(var.getIndex());
+        }
+    }
+    
+    /**
+     * Returns true if all bits set in the second parameter are also set
+     * in the first
+     * 
+     * @param x containing bitmap
+     * @param y bitmap to be checked
+     * @return true if all bits in the second parameter are set in the first
+     */
+    public static boolean contains(BitSet x, BitSet y)
+    {
+        BitSet tmp = new BitSet();
+        tmp.or(y);
+        tmp.andNot(x);
+        return tmp.isEmpty();
+    }
 
     //~ Inner Classes ---------------------------------------------------------
 

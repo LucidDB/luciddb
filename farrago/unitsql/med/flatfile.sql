@@ -16,12 +16,28 @@ language java;
 create server flatfile_server
 foreign data wrapper local_file_wrapper
 options (
-    directory 'unitsql/med',
+    directory 'unitsql/med/flatfiles',
     file_extension 'csv',
     with_header 'yes', 
     log_directory 'testlog');
 
--- test a table with explicit column definitions
+-- create a server without headers (for detecting other errors)
+create server flatfile_server_noheader
+foreign data wrapper local_file_wrapper
+options (
+    directory 'unitsql/med/flatfiles',
+    file_extension 'csv',
+    with_header 'no', 
+    log_directory 'testlog');
+
+
+---------------------------------------------------------------------------
+-- Part 1. Parser tests
+---------------------------------------------------------------------------
+
+--
+-- 1.1 Test a table with explicit column definitions
+-- 
 create foreign table flatfile_explicit_table(
     id int not null,
     name varchar(50) not null,
@@ -31,7 +47,11 @@ options (filename 'example');
 
 select * from flatfile_explicit_table order by 3;
 
--- test a table whose row type is too large
+--
+-- 1.2 Test a table whose row type is very large
+--     (this should not throw an error, because we want to allow a large 
+--         row type as long as the data is of manageable size)
+--
 create foreign table flatfile_rowTypeTooBig(
     a varchar(2000),
     b varchar(2000),
@@ -41,7 +61,9 @@ options (filename 'example');
 
 select * from flatfile_rowTypeTooBig;
 
--- test a table with a missing data file
+--
+-- 1.3 Test a table with a missing data file
+--
 create foreign table flatfile_missing(
     id int not null,
     name varchar(50) not null,
@@ -51,35 +73,39 @@ options (filename 'missing');
 
 select * from flatfile_missing;
 
--- test whether an attempt is made to log errors
--- note that this column description is invalid
+--
+-- 1.4 Test whether an attempt is made to log errors
+--     (the following column description is invalid)
+--
 create server flatfile_server_locked
 foreign data wrapper local_file_wrapper
 options (
-    directory 'unitsql/med',
+    directory 'unitsql/med/flatfiles',
     file_extension 'csv',
-    with_header 'yes', 
-    log_directory 'unitsql/med');
+    with_header 'no', 
+    log_directory 'unitsql/med/flatfiles');
 
 create foreign table flatfile_locked(
     id int not null,
     name varchar(50) not null)
 server flatfile_server_locked
 options (
-    filename 'example',
+    filename 'noheader',
     log_filename 'locked');
 
 select * from flatfile_locked;
 
--- test: bad line delimiter is given
--- note that the delimiter does not occur in the file
--- note that you can also choose an empty file extension
--- as a trick to pass the full path to foreign tables
+--
+-- 1.5 Test bad line delimiter
+--      (note that the delimiter does not occur in the file)
+--      (note that you can also choose an empty file extension
+--          as a trick to pass the full path to foreign tables)
+--
 create server flatfile_server_badLineDelim
 foreign data wrapper local_file_wrapper
 options (
     file_extension '',
-    with_header 'yes',
+    with_header 'no',
     line_delimiter '\t', 
     log_directory 'testlog/');
 
@@ -88,17 +114,19 @@ create foreign table flatfile_badLineDelim(
     name varchar(50) not null,
     extra_field char(1) not null)
 server flatfile_server_badLineDelim
-options (filename 'unitsql/med/example.csv');
+options (filename 'unitsql/med/flatfiles/noheader.csv');
 
 select * from flatfile_badLineDelim;
 
--- test: bad field delimiter is given
--- note that the delimiter does not occur in the file
+--
+-- 1.6 Test bad field delimiter
+--      (note that the delimiter does not occur in the file)
+--
 create server flatfile_server_badFieldDelim
 foreign data wrapper local_file_wrapper
 options (
     file_extension 'csv',
-    with_header 'yes',
+    with_header 'no',
     field_delimiter '\t', 
     log_directory 'testlog');
 
@@ -107,18 +135,22 @@ create foreign table flatfile_badFieldDelim(
     name varchar(50) not null,
     extra_field char(1) not null)
 server flatfile_server_badFieldDelim
-options (filename 'unitsql/med/example');
+options (filename 'unitsql/med/flatfiles/noheader');
 
 select * from flatfile_badFieldDelim;
 
--- test: bad line delimiter is specified
--- (but it does occur in the file)
--- note: data file is assumed to have at least one 'G'
+--
+-- 1.7 Test bad line delimiter
+--     (when it occurs in the file)
+--     (incomplete column is detected, because the file doesn't end 
+--         with a delimiter)
+--     (note data file is assumed to have at least one 'G')
+--
 create server flatfile_server_incompleteColumn
 foreign data wrapper local_file_wrapper
 options (
     file_extension 'csv',
-    with_header 'yes',
+    with_header 'no',
     line_delimiter 'G', 
     log_directory 'testlog');
 
@@ -127,51 +159,197 @@ create foreign table flatfile_incompleteColumn(
     name varchar(50) not null,
     extra_field char(1) not null)
 server flatfile_server_incompleteColumn
-options (filename 'unitsql/med/example');
+options (filename 'unitsql/med/flatfiles/noheader');
 
 select * from flatfile_incompleteColumn;
 
--- test: data file has too many columns
+--
+-- 1.8 Test data file with too many columns
+--
 create foreign table flatfile_tooManyColumns(
     id int not null,
     name varchar(50) not null)
-server flatfile_server
-options (filename 'example');
+server flatfile_server_noheader
+options (filename 'noheader');
 
 select * from flatfile_tooManyColumns;
 
--- test: data file has too few columns
+--
+-- 1.9 Test data file with too few columns
+--
 create foreign table flatfile_tooFewColumns(
     id int not null,
     name varchar(50) not null,
     extra_field char(1) not null,
     extra_field2 char(1) not null)
-server flatfile_server
+server flatfile_server_noheader
 options (filename 'example');
 
 select * from flatfile_tooFewColumns;
 
--- test: row text is too long in data file
--- the parser should give up when it's reached the max size
--- and should interpret this row as multiple rows
+--
+-- 1.10 Test row which is too long (the text is larger than one page)
+--      (parser recovers and returns another error, but expected error
+--          can be viewed in error log)
+--
+create server flatfile_server_rowTooLong
+foreign data wrapper local_file_wrapper
+options (
+    directory 'unitsql/med/flatfiles',
+    file_extension 'txt',
+    with_header 'yes', 
+    log_directory 'testlog');
 
--- test a describe query. this type of query returns the width of a 
--- table's fields. it is an internal query, and should not appear in
--- user level documentation.
+select * from flatfile_server_rowTooLong.BCP."longrow";
+
+-- long column quietly truncates
+select * from flatfile_server_rowTooLong.BCP."longcol";
+
+--
+-- 1.11 different escape and quote characters
+--
+create server flatfile_server_esc
+foreign data wrapper local_file_wrapper
+options (
+    directory 'unitsql/med/flatfiles',
+    file_extension 'esc',
+    control_file_extension 'ctl',
+    with_header 'yes', 
+    escape_char '\',
+    log_directory 'testlog');
+
+select * from flatfile_server_esc.BCP."example" order by 3;
+
+
+---------------------------------------------------------------------------
+-- Part 2. Test fixed position file parsing                              --
+---------------------------------------------------------------------------
+
+--
+-- 2.1 invalid parameters
+--
+create server flatfile_server_fixed
+foreign data wrapper local_file_wrapper
+options (
+    directory 'unitsql/med/flatfiles',
+    file_extension 'dat',
+    with_header 'no',
+    field_delimiter '',
+    line_delimiter '\r\n', 
+    log_directory 'testlog');
+
+--
+-- 2.2 valid definition
+--
+create server flatfile_server_fixed
+foreign data wrapper local_file_wrapper
+options (
+    directory 'unitsql/med/flatfiles',
+    file_extension 'dat',
+    with_header 'no',
+    field_delimiter '',
+    escape_char '',
+    quote_char '',
+    line_delimiter '\r\n', 
+    log_directory 'testlog');
+
+select * from flatfile_server_fixed.BCP."fixed" order by 3;
+
+
+---------------------------------------------------------------------------
+-- Part 3. Sampling queries                                              --
+---------------------------------------------------------------------------
+
+--
+-- 3.1 Test a describe query. 
+--     This type of query returns the width of a table's fields. it is an 
+--     internal query, and should not appear in user level documentation.
+--
 select * from flatfile_server.SAMPLE_DESC."example";
 
--- test a sampling queries (which become important in the absence of 
--- bcp control files). there is no need to order their results, because 
--- the results appear as they do in the source file. in this case, the 
--- first line is the "header line". this feature is also undocumented.
+--
+-- 3.2 Test a sampling queries 
+--     (which become important in the absence of bcp control files)
+--     (there is no need to order their results, because the results appear 
+--         as they do in the source file. in this case, the first line is 
+--         the "header line". this feature is also undocumented.)
+--
 select * from flatfile_server.SAMPLE."example";
 
--- test sampling errors
+--
+-- 3.3 Test sampling of missing file
+--
 select * from flatfile_server.SAMPLE."missing";
 
-select * from flatfile_server.SAMPLE."empty";
+--
+-- 3.4 Test sampling of an empty file (no header)
+--
+create server flatfile_server_empty
+foreign data wrapper local_file_wrapper
+options (
+    directory 'unitsql/med/flatfiles',
+    file_extension 'txt',
+    log_directory 'testlog');
 
--- test: read metadata from bcp files
+select * from flatfile_server_empty.SAMPLE."empty";
+
+-- Missing header error is returned when control file is supplied
+select * from flatfile_server_empty.BCP."empty";
+
+--
+-- 3.5 Describe a fixed format file (illegal)
+--
+select * from flatfile_server_fixed.SAMPLE_DESC."fixed";
+
+--
+-- 3.6 Test sampling of a file perhaps with header, but with no data
+--
+select * from flatfile_server_empty.BCP."emptydata";
+
+--
+-- 3.7 Test sampling of a file with nulls in header
+--
+select * from flatfile_server_empty.BCP."nullheader";
+
+--
+-- 3.8 Test sampling of a file with nulls in data
+--
+select * from flatfile_server_empty.BCP."nulldata";
+
+-- FIXME: throws null pointer exception
+--
+-- 3.9 Select when BCP file is empty
+--
+create server flatfile_server_badbcp
+foreign data wrapper local_file_wrapper
+options (
+    directory 'unitsql/med/flatfiles',
+    control_file_extension 'bcp2',
+    file_extension 'txt',
+    with_header 'no',
+    log_directory 'testlog');
+
+-- select * from flatfile_server_badbcp.BCP."nobcpheader";
+
+--
+-- 3.10 Select when BCP contains no columns
+--
+-- WARNING: this causes a crash
+-- select * from flatfile_server_badbcp.BCP."nobcpcolumns";
+
+--
+-- 3.11 Invalid BCP column definitions
+--
+-- select * from flatfile_server_badbcp.BCP."toofewbcpcolumns";
+
+select * from flatfile_server_badbcp.BCP."toomanybcpcolumns";
+
+select * from flatfile_server_badbcp.BCP."invalidbcpcolumns";
+
+
+---------------------------------------------------------------------------
+-- Part 4. Reading metadata from bcp files                               --
+---------------------------------------------------------------------------
 
 -- test import foreign schema using wrong schema name
 import foreign schema testdata
@@ -181,8 +359,16 @@ into flatfile_schema;
 -- test: import foreign schema
 -- the directory contains an empty data file with no control file
 -- fails all imports
+create server flatfile_server_fail
+foreign data wrapper local_file_wrapper
+options (
+    directory 'unitsql/med/flatfiles',
+    file_extension 'fail',
+    control_file_extension 'failbcp',
+    log_directory 'testlog');
+
 import foreign schema bcp
-from server flatfile_server
+from server flatfile_server_fail
 into flatfile_schema;
 
 -- test: should fail; entire import failed
@@ -227,7 +413,7 @@ drop table flatfiledir_schema."example2";
 drop table flatfiledir_schema."example";
 
 -- test files with null values
-select * from flatfiledir_schema."withnulls" order by 3;
+select * from flatfiledir_schema."withnulls" order by 3,1,2;
 drop table flatfiledir_schema."withnulls";
 
 -- test badly qualified import foreign schema

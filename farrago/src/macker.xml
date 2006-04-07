@@ -99,6 +99,7 @@
     <pattern name="lu.fennel" class="com.lucidera.farrago.fennel.*" />
     <pattern name="lu.namespace" class="com.lucidera.farrago.namespace.*" />
     <pattern name="lu.namespace.flatfile" class="com.lucidera.farrago.namespace.flatfile.*" />
+    <pattern name="lu.opt" class="com.lucidera.opt.*" />
 
     <pattern name="defimpl" class="net.sf.farrago.defimpl.*" />
 
@@ -161,6 +162,7 @@
       <include pattern="lu.fennel"/>
       <include pattern="lu.namespace"/>
       <include pattern="lu.namespace.flatfile"/>
+      <include pattern="lu.opt"/>
       <include pattern="defimpl"/>
       <include pattern="test"/>
       <include pattern="dt.test"/>
@@ -911,6 +913,22 @@
       </deny>
     </access-rule>
 
+    <pattern name="lu.opt.deps">
+      <include pattern="lu.lcs.deps" />
+      <include pattern="lu.opt" />
+    </pattern>
+
+    <access-rule>
+      <message>lu.opt dependency violation</message>
+      <deny>
+        <from pattern="lu.opt" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="lu.opt.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
     <pattern name="defimpl.deps">
       <include pattern="db.deps" />
       <include pattern="dt.calc.deps" />
@@ -935,6 +953,8 @@
 
     <pattern name="lu.farrago.deps">
       <include pattern="lu.farrago" />
+      <include pattern="lu.lcs" />
+      <include pattern="lu.opt" />
       <include pattern="defimpl.deps" />
     </pattern>
 

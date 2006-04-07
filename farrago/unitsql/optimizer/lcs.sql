@@ -360,7 +360,6 @@ select * from threeclusters;
 drop table threeclusters;
 drop table flatfile_table;
 
-
 -------------------------------------
 -- Part 3. Cluster Projection test --
 -------------------------------------
@@ -370,6 +369,7 @@ create clustered index i_c0 on tencols(c0)
 create clustered index i_c1_c2 on tencols(c1, c2)
 create clustered index i_c3_c4_c5 on tencols(c3, c4, c5)
 create clustered index i_c6_c7_c8_c9 on tencols(c6, c7, c8, c9);
+insert into tencols values(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
 
 !set outputformat csv
 -- should select all clusters
@@ -387,14 +387,33 @@ explain plan for select c2, c6, c1, c9 from tencols;
 -- should select three clusters
 explain plan for select c8, c7, c3, c6, c2 from tencols;
 explain plan for select c0, c1, c4, c5, c9 from tencols;
+
+-- projection with filtering
+explain plan for select c2, c4, c8, c0 from tencols
+    where c0 = 0 and c2 = 2 and c4 = 4 and c8 = 8;
+explain plan for select c7, c0, c5, c1 from tencols
+    where c1 + c5 = 6;
+-- can't push projection because filter references an additional column
+explain plan for select c0, c5, c7, c1 from tencols
+    where c0 + c2 = 2;
+-- can't push projection because projection contains an expression
+explain plan for select c0 + c1 from tencols where c0 = 0;
+
 !set outputformat table
+
+select c2, c8, c4, c0 from tencols
+    where c0 = 0 and c2 = 2 and c4 = 4 and c8 = 8;
+select c7, c0, c5, c1 from tencols
+    where c1 + c5 = c6;
+select c7, c0, c5, c1 from tencols
+    where c0 + c2 = 2;
+select c0 + c1 from tencols where c0 = 0;
 
 truncate table tencols;
 
 select * from tencols;
 
 drop table tencols;
-
 
 -------------------------------------
 -- Part 4. UDT test --

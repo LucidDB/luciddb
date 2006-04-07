@@ -4,10 +4,11 @@
 
       <init-hook>
         <ant target="restoreCatalog"/>
+        <ant dir="${open.dir}/luciddb/test/sql/pge" target="copy-csv"/>
       </init-hook>
 
       <test name="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/createOrcl.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/create.sql"/>
       </test>
 
       <test name="index" requiresSuccess="creschema">
@@ -17,7 +18,7 @@
       <test name="cubes" requiresSuccess="creschema">
         <test-metadata>
           <knownFailure value="true"/>
-        </test-metadat>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/cubes.sql"/>
       </test>
 

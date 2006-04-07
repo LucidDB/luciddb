@@ -24,9 +24,9 @@ create index B100_K250KK500K_IDX on bench100 (K250k,k500k)
 create index B100_K100KK10_IDX on bench100 (K100k,k10)
 ;
 
-set schema 'orcl_schema';
+set schema 'ff_schema';
 
-create foreign table orcl_schema.BENCH_SOURCE_100 (
+create foreign table ff_schema.BENCH_SOURCE_100 (
 C1 INTEGER,
 C2 INTEGER,
 C4 INTEGER,
@@ -40,17 +40,17 @@ C40K  INTEGER,
 C100K INTEGER, 
 C250K INTEGER,
 C500K INTEGER)
-server orcl_server
+server ff_server
 options (
-SCHEMA_NAME 'SCHOI',
-table_name 'bench100'
+SCHEMA_NAME 'BCP',
+filename 'bench100'
 );
 
 set schema 's';
 
 INSERT INTO BENCH100 (KSEQ,K2,K4,K5,K10,K25,K100,K1K,K10K,K40K,K100K,K250K,
 K500K) SELECT C1,C2,C4,C5,C10,C25,C100,C1K,C10K,C40K,C100K,C250K,C500K 
-FROM orcl_schema.BENCH_SOURCE_100
+FROM ff_schema.BENCH_SOURCE_100
 ;
 
 -- Deletes not working yet

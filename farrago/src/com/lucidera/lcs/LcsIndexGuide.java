@@ -32,6 +32,7 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.fennel.*;
 import net.sf.farrago.fennel.tuple.FennelStandardTypeDescriptor;
 import net.sf.farrago.fennel.tuple.FennelStoredTypeDescriptor;
 import net.sf.farrago.query.*;
@@ -39,6 +40,7 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.util.JmiUtil;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.rules.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.type.*;
@@ -51,13 +53,15 @@ import org.eigenbase.util.Util;
  * @author Zelaine Fong
  * @version $Id$
  */
-class LcsIndexGuide
+public class LcsIndexGuide
 {
     private static final int LbmBitmapSegMaxSize = 512;
     
     private FarragoTypeFactory typeFactory;
     
     private FarragoRepos repos;
+    
+    private CwmColumnSet table;
     
     private RelDataType unflattenedRowType;
     
@@ -89,6 +93,8 @@ class LcsIndexGuide
     {
         this.typeFactory = typeFactory;
         repos = typeFactory.getRepos();
+        
+        this.table = table;
         
         unflattenedRowType =
             typeFactory.createStructTypeFromClassifier(table);      
@@ -706,13 +712,17 @@ class LcsIndexGuide
         FemLocalIndex index,
         FennelRelImplementor implementor,
         boolean createIndex,
-        int dynParamId)
+        FennelRelParamId dynParamId)
     {
         // create the streams
         FemExecutionStreamDef generator = 
-            newGenerator(rel, index, createIndex, dynParamId);
+            newGenerator(rel, index, createIndex, 
+                implementor.translateParamId(dynParamId).intValue());
         FemExecutionStreamDef sorter = newSorter(index);
-        FemExecutionStreamDef splicer = newSplicer(rel, index, dynParamId);
+        FemExecutionStreamDef splicer = 
+            newSplicer(
+                rel, index, 
+                implementor.translateParamId(dynParamId).intValue());
         
         // link them up
         implementor.addDataFlowFromProducerToConsumer(generator, sorter);
@@ -831,17 +841,15 @@ class LcsIndexGuide
         Integer [] inputKeyProj,
         Integer [] inputJoinProj,
         Integer [] inputDirectiveProj,
-        int startRidParamId,
-        int rowLimitParamId,
-        boolean ignoreRowLimit)
+        FennelDynamicParamId startRidParamId,
+        FennelDynamicParamId rowLimitParamId)
     {
         FemLbmIndexScanStreamDef searchStream =
             repos.newFemLbmIndexScanStreamDef();
         defineIndexScan(searchStream, rel, index);
         
-        searchStream.setStartRidParamId(startRidParamId);
-        searchStream.setRowLimitParamId(rowLimitParamId);
-        searchStream.setIgnoreRowLimit(ignoreRowLimit);
+        searchStream.setStartRidParamId(startRidParamId.intValue());
+        searchStream.setRowLimitParamId(rowLimitParamId.intValue());
         
         searchStream.setUniqueKey(isUniqueKey);
         searchStream.setOuterJoin(isOuter);
@@ -1117,14 +1125,14 @@ class LcsIndexGuide
     }
     
     protected FemLbmIntersectStreamDef newBitmapIntersect(
-        int startRidParamId,
-        int rowLimitParamId)
+        FennelDynamicParamId startRidParamId,
+        FennelDynamicParamId rowLimitParamId)
     {
         FemLbmIntersectStreamDef intersectStream =
             repos.newFemLbmIntersectStreamDef();
         
-        intersectStream.setStartRidParamId(startRidParamId);
-        intersectStream.setRowLimitParamId(rowLimitParamId);
+        intersectStream.setStartRidParamId(startRidParamId.intValue());
+        intersectStream.setRowLimitParamId(rowLimitParamId.intValue());
         
         intersectStream.setOutputDesc(createUnclusteredBitmapTupleDesc());
         
@@ -1301,6 +1309,78 @@ class LcsIndexGuide
         }
         return true;
     }
+    
+    /**
+     * Determines the best index to be used to process a semijoin
+     * 
+     * @param semiJoinKeys keys of the semijoin that we are trying to find an
+     * index for.
+     * @return specific keys within the input paramter that match an index if
+     * an appropriate index is available; otherwise, an empty array is
+     * returned
+     */
+    public Integer[] findSemiJoinIndex(List<Integer> semiJoinKeys)
+    {
+        // loop through the indexes and either find the one that has the 
+        // longest matching keys, or the first one that matches all the
+        // semijoin keys
+        Iterator iter = getUnclusteredIndexes().iterator();
+        Integer[] bestKeyOrder = {};
+        int maxNkeys = 0;
+        while (iter.hasNext()) {
+            FemLocalIndex index = (FemLocalIndex) iter.next();
+            Integer[] keyOrder = new Integer[semiJoinKeys.size()];
+            int nKeys = matchIndexKeys(index, semiJoinKeys, keyOrder);
+            if (nKeys > maxNkeys) {
+                maxNkeys = nKeys;
+                bestKeyOrder = keyOrder;
+                if (maxNkeys == semiJoinKeys.size()) {
+                    break;
+                }
+            }
+        }
+        return bestKeyOrder;
+    }
+    
+    /**
+     * Determines if an index matches a set of keys representing RexInputRefs
+     *
+     * @param index index being matched against
+     * @param keys keys representing the inputRefs that need to be matched
+     * against the index
+     * @param keyOrder returns the positions of the matching RexInputRefs
+     * in the order in which they match the index
+     * @return number of matching keys
+     */
+    public int matchIndexKeys(
+        FemLocalIndex index, 
+        List<Integer> keys,
+        Integer[] keyOrder)
+    {
+        int nMatches = 0;
+        
+        for (int i = 0; i < index.getIndexedFeature().size(); i++) {
+            keyOrder[i] = -1;
+            FemAbstractColumn idxCol = 
+                (FemAbstractColumn) getIndexColumn(index, i);
+            for (int j = 0; j < keys.size(); j++) {
+                FemAbstractColumn keyCol = 
+                    (FemAbstractColumn) table.getFeature().get(keys.get(j));
+                if (idxCol == keyCol) {
+                    keyOrder[i] = j;
+                    nMatches++;
+                    break;
+                }
+            }
+            // if no match was found for the index key or we've matched 
+            // every RexInputRef, stop searching
+            if (keyOrder[i] == -1 || nMatches == keys.size()) {
+                break;
+            }
+        }
+        return nMatches;
+    }
+
     
     public List<FemLocalIndex> getUnclusteredIndexes()
     {

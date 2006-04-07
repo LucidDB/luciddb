@@ -38,6 +38,11 @@
   <!-- directory where blackhawk output should go -->
   <property name="bh.log.basedir" value="${sqbm.dir}/testlog" />
 
+  <!-- directory of csv files -->
+  <property name="csvsource.dir" value="/mnt/raksha/engineering/testdata/csv_BENCH"/>
+  <property name="csv.dir" value="${sqbm.dir}/csv" />
+  <property name="csv.copy.dir" value="${sqbm.dir}/csv-copy" />
+
   <!-- classpath for running tests via ant -->
   <path id="test.classpath">
     <pathelement path="${open.dir}/luciddb/classes"/>
@@ -47,15 +52,70 @@
   </path>
   <property name="test.classpath" refid="test.classpath"/>
 
-  <target name="test">
+  <target name="gen-all-sql">
+    <uptodate property="gensql.uptodate">
+      <srcfiles dir="${sqbm.dir}" includes="*.tmpl"/>
+      <mapper type="glob" from="*.tmpl" to="*"/>
+    </uptodate>
+    <if>
+      <isset property="gensql.uptodate"/>
+      <then/>
+      <else>
+        <copy todir="${sqbm.dir}" overwrite="true">
+          <fileset dir="${sqbm.dir}" includes="*.tmpl"/>
+          <filterset>
+            <filter token="DIR" value="${csv.copy.dir}"/>
+          </filterset>
+          <globmapper from="*.tmpl" to="*"/>
+        </copy>
+      </else>
+    </if>
+  </target>
+
+  <target name="test" depends="gen-all-sql">
     <blackhawk.fork
       basedir="${sqbm.dir}"
       testscript="${testfile}"
       classpathref="test.classpath"/>
   </target>
 
+  <target name="copy-csv">
+    <available file="${csvsource.dir}" type="dir"
+      property="raksha.available"/>
+    <if>
+      <isset property="raksha.available"/>
+      <then>
+        <!-- sync raksha <-> csv.dir -->
+        <sync todir="${csv.dir}" 
+          overwrite="false"
+          failonerror="false"
+          verbose="true">
+          <fileset dir="${csvsource.dir}" includes="bench1M.csv"/>
+        </sync>
+      </then>
+    </if>
+    <available file="${csv.dir}" type="dir"
+      property="csv.available"/>
+    <if>
+      <isset property="csv.available"/>
+      <then> 
+        <!-- sync csv.dir <-> csv-copy.dir -->
+        <sync todir="${csv.copy.dir}"
+          overwrite="true"
+          verbose="true"
+          failonerror="true">
+          <fileset dir="${csv.dir}"/>
+        </sync>
+      </then>
+      <else>
+        <echo message="!! NO CSV FILES !!"/>
+      </else>
+    </if>
+  </target>
+
   <target name="clean">
     <delete dir="${bh.log.basedir}"/>
+    <delete dir="${csv.copy.dir}"/>
     <delete>
       <fileset dir="${sqbm.dir}" includes="*.log"/>
     </delete>

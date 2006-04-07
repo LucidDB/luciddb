@@ -9,7 +9,7 @@ To run against all sources:
 ---------------------------
 (1) in run.properties*, set:
 
-testfile=test.xml
+testfile=test-all.xml
 
 (2) run "ant test"
 
@@ -18,7 +18,7 @@ To run against a specific source:
 --------------------------
 (1) in run.properties*, set: 
 
-testfile="datatypestest.xml"
+testfile=test.xml
 foreign.db=[flatfile | csvjdbc]
 
 (2) run "ant test"
@@ -41,4 +41,4 @@ Note *:
 If prefer not to modify run.properties, can set it all from the
 command line:
 
-"ant test -Dtestfile=datatypestest.xml -Dforeign.db=flatfile"
+"ant test -Dtestfile=test.xml -Dforeign.db=flatfile"

@@ -92,20 +92,6 @@ public interface FennelRelImplementor extends RelImplementor
      * Returns the repository.
      */
     public FarragoRepos getRepos();
-
-    /**
-     * Reserves a Fennel dynamic parameter. This method finds a 
-     * unique identifier which may be used to reference a Fennel 
-     * dynamic parameter. No subsequent calls, made to the same 
-     * implementor, will return the same identifier. The identifier
-     * returned will be greater than zero.
-     *
-     *<p>
-     *
-     * TODO jvs 22-Mar-2006: Eliminate this deprecated method once all calling
-     * code has been changed to use allocateRelParamId instead.
-     */
-    public int allocateDynamicParam();
     
     /**
      * Reserves a Fennel dynamic parameter.  The reserving rel can use {@link

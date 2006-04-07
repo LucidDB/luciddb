@@ -1,0 +1,17 @@
+0: jdbc:luciddb:> create server ff_server
+. . . . . . . . > foreign data wrapper sys_file_wrapper
+. . . . . . . . > options(
+. . . . . . . . >     directory '@DIR@',
+. . . . . . . . >     file_extension '.csv',
+. . . . . . . . >     ctrl_file_extension '.bcp',
+. . . . . . . . >     field_delimiter ',',
+. . . . . . . . >     line_delimiter '\n',
+. . . . . . . . >     quote_char '"',
+. . . . . . . . >     escape_char '',
+. . . . . . . . >     with_header 'yes',
+. . . . . . . . >     num_rows_scan '2'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema ff_schema;
+0: jdbc:luciddb:> create schema s;
+0: jdbc:luciddb:> !quit

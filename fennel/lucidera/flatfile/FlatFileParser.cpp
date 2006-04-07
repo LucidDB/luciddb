@@ -23,6 +23,26 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
+void FlatFileColumnParseResult::setResult(
+    FlatFileColumnParseResult::DelimiterType type, char *buffer, uint size)
+{
+    this->type = type;
+    this->size = size;
+
+    next = buffer + size;
+    switch (type) {
+    case NO_DELIM:
+    case MAX_LENGTH:
+        break;
+    case FlatFileColumnParseResult::FIELD_DELIM:
+    case FlatFileColumnParseResult::ROW_DELIM:
+        next++;
+        break;
+    default:
+        permAssert(false);
+    }
+}
+
 FlatFileRowDescriptor::FlatFileRowDescriptor() :
     std::vector<FlatFileColumnDescriptor>()
 {
@@ -58,6 +78,12 @@ FlatFileParser::FlatFileParser(
     this->rowDelim = rowDelim;
     this->quote = quote;
     this->escape = escape;
+
+    fixed = (fieldDelim == 0);
+    if (fixed) {
+        assert(quote == 0);
+        assert(escape == 0);
+    }
 }
 
 void FlatFileParser::scanRow(
@@ -98,8 +124,6 @@ void FlatFileParser::scanRow(
             columnResult);
         switch (columnResult.type) {
         case FlatFileColumnParseResult::NO_DELIM:
-            // NOTE: we stop scanning at maximum column length, which is
-            // smaller than a page, so we never hit the "large row" error
             result.status = FlatFileRowParseResult::INCOMPLETE_COLUMN;
             done = true;
             break;
@@ -196,93 +220,108 @@ void FlatFileParser::scanColumn(
     uint maxLength, 
     FlatFileColumnParseResult &result)
 {
-    assert (size >= 0);
-    assert (maxLength > 0);
+    if (fixed) {
+        return scanFixedColumn(buffer, size, maxLength, result);
+    }
+
+    assert(buffer != NULL);
     const char *read = buffer;
     const char *end = buffer + size;
     bool quoted = (size > 0 && *buffer == quote);
     bool quoteEscape = (quoted && quote == escape);
-    uint remaining = maxLength;
 
-    result.type = FlatFileColumnParseResult::NO_DELIM;
+    FlatFileColumnParseResult::DelimiterType type =
+        FlatFileColumnParseResult::NO_DELIM;
     if (quoted) {
         read++;
     }
     while (read < end) {
-        if (quoteEscape && *read == quote) {
+        if (*read == quote) {
             read++;
-            if (read == end) {
-                result.type = FlatFileColumnParseResult::NO_DELIM;
-                break;
-            } else if (*read == quote) {
-                // two consecutive quote/escape characters is an escaped quote
-                remaining--;
-                read++;
-            } else {
-                // previous character was close quote
-                quoted = quoteEscape = false;
+            if (quoteEscape) {
+                // read next character to determine whether purpose of
+                // this character is an escape character or an end quote
+                if (read == end) {
+                    break;
+                }
+                if (*read == quote) {
+                    // two consecutive quote/escape characters is an
+                    // escaped quote
+                    read++;
+                    continue;
+                }
             }
-        } else if (quoted && *read == quote) {
-            quoted = false;
+            if (quoted) {
+                // otherwise a quote may be a close quote
+                quoteEscape = quoted = false;
+            }
+        } else if (*read == escape) {
+            read++;
+            // an escape escapes the next character
+            if (read == end) {
+                break;
+            }
             read++;
         } else if (quoted) {
             read++;
         } else if (*read == fieldDelim) {
-            result.type = FlatFileColumnParseResult::FIELD_DELIM;
+            type = FlatFileColumnParseResult::FIELD_DELIM;
             break;
         } else if (isRowDelim(*read)) {
-            result.type = FlatFileColumnParseResult::ROW_DELIM;
+            type = FlatFileColumnParseResult::ROW_DELIM;
             break;
-        } else if (*read == escape) {
-            read++;
-            if (read == end) {
-                result.type = FlatFileColumnParseResult::NO_DELIM;
-                break;
-            } else {
-                remaining--;
-                read++;
-            }
         } else {
-            remaining--;
             read++;
         }
-        if (remaining == 0) {
-            // try to resolve delimiter for max length field
-            if (read < end) {
-                if (*read == fieldDelim) {
-                    result.type = FlatFileColumnParseResult::FIELD_DELIM;
-                } else if (isRowDelim(*read)) {
-                    result.type = FlatFileColumnParseResult::ROW_DELIM;
-                } else {
-                    result.type = FlatFileColumnParseResult::MAX_LENGTH;
-                }
-            } else {
-                result.type = FlatFileColumnParseResult::NO_DELIM;
-            }
+    }
+    
+    uint resultSize = read - buffer;
+    result.setResult(type, const_cast<char *>(buffer), resultSize);
+}
+
+void FlatFileParser::scanFixedColumn(
+    const char *buffer,
+    uint size,
+    uint maxLength, 
+    FlatFileColumnParseResult &result)
+{
+    assert(buffer != NULL);
+    const char *read = buffer;
+    const char *end = buffer + size;
+    uint remaining = maxLength;
+
+    FlatFileColumnParseResult::DelimiterType type =
+        FlatFileColumnParseResult::NO_DELIM;
+    while (read < end && remaining > 0) {
+        if (isRowDelim(*read)) {
+            type = FlatFileColumnParseResult::ROW_DELIM;
             break;
         }
+        read++;
+        remaining--;
     }
-        
-    switch (result.type) {
-    case FlatFileColumnParseResult::NO_DELIM:
-    case FlatFileColumnParseResult::MAX_LENGTH:
-        assert(read >= buffer);
-        result.size = read - buffer;
-        result.next = const_cast<char *>(read);
-        break;
-    case FlatFileColumnParseResult::FIELD_DELIM:
-    case FlatFileColumnParseResult::ROW_DELIM:
-        result.size = read - buffer;
-        result.next = const_cast<char *>(read + 1);
-        break;
-    default:
-        permAssert(false);
+
+    // Resolve delimiter type if another character can be read. This allows
+    // us to catch the case where a row delimiter follows a max length field.
+    if (type == FlatFileColumnParseResult::NO_DELIM && read < end) {
+        if (isRowDelim(*read)) {
+            type = FlatFileColumnParseResult::ROW_DELIM;
+        } else if (remaining == 0) {
+            type = FlatFileColumnParseResult::MAX_LENGTH;
+        }
     }
+
+    uint resultSize = read - buffer;
+    result.setResult(type, const_cast<char *>(buffer), resultSize);
 }
 
 uint FlatFileParser::stripQuoting(
     char *buffer, uint sizeIn, bool untrimmed) 
 {
+    assert(buffer != NULL);
+    if (sizeIn == 0) {
+        return 0;
+    }
     int size = untrimmed ? trim(buffer, sizeIn) : sizeIn;
     bool quoted = false;
     char *read = buffer;
@@ -320,6 +359,10 @@ uint FlatFileParser::stripQuoting(
 
 uint FlatFileParser::trim(char *buffer, uint size)
 {
+    assert(buffer != NULL);
+    if (size == 0) {
+        return 0;
+    }
     char *read = buffer;
     char *write = buffer;
     char *end = buffer + size;

@@ -25,6 +25,7 @@ usage() {
 
 without_farrago_build=false
 without_tests=true
+with_nightly_tests=false
 FARRAGO_FLAGS=""
 luciddb_dir=$(cd $(dirname $0); pwd)
 
@@ -38,6 +39,8 @@ while [ -n "$1" ]; do
         --with-tests)
             without_tests=false;
             FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
+        --with-nightly-tests)
+            with_nightly_tests=true;;
         --without-tests)
             without_tests=true;
             FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
@@ -75,4 +78,25 @@ if $without_tests ; then
 else
     cd ${luciddb_dir}
     ant test
+fi
+
+nightlylog_dir=${luciddb_dir}/nightlylog
+nightly_test_list="\
+test-nondb \
+test-flatfile \
+test-oracle \
+test-sqlserver \
+test-csvjdbc\
+"
+
+set +e
+
+cd ${luciddb_dir}
+if $with_nightly_tests ; then
+    /bin/mkdir -p ${nightlylog_dir}
+    ant -keep-going test-nightly-all-init
+
+    for test in ${nightly_test_list}; do
+        2>&1 ant -keep-going "${test}" | tee "${nightlylog_dir}/${test}.log"
+    done
 fi

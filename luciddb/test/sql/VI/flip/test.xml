@@ -1,9 +1,10 @@
-<project name="bh" default="vi-flip-test">
-  <target name="vi-flip-test">
-    <test-suite name="vi-flip-test">
+<project name="bh" default="vi_flip">
+  <target name="vi_flip">
+    <test-suite name="vi_flip">
 
       <init-hook>
         <ant target="restoreCatalog"/>
+        <ant dir="${open.dir}/luciddb/test/sql/VI/flip" target="copy-csv"/>
       </init-hook>
 
       <test name="creschema">

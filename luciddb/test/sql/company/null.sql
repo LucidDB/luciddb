@@ -22,26 +22,25 @@ select LNAME, COMMISSION from EMP where COMMISSION < 10 order by 1,2;
 select LNAME, COMMISSION from EMP where COMMISSION > 5 order by 1,2;
 
 -- join on nulls
--- bitmap indexes not supported yet for joins, extremely slow
---select L.LNAME, R.LNAME, L.COMMISSION
---from EMP L, EMP R
---where L.COMMISSION = R.COMMISSION
---order by 1,2,3;
+select L.LNAME, R.LNAME, L.COMMISSION
+from EMP L, EMP R
+where L.COMMISSION = R.COMMISSION
+order by 1,2,3;
 
---select L.LNAME, R.LNAME, L.COMMISSION
---from EMP L, EMP R
---where NOT L.COMMISSION = R.COMMISSION
---order by 1,2,3;
+select L.LNAME, R.LNAME, L.COMMISSION
+from EMP L, EMP R
+where NOT L.COMMISSION = R.COMMISSION
+order by 1,2,3;
 
---select L.LNAME, R.LNAME, L.COMMISSION
---from EMP L, EMP R
---where L.COMMISSION <> R.COMMISSION
---order by 1,2,3;
+select L.LNAME, R.LNAME, L.COMMISSION
+from EMP L, EMP R
+where L.COMMISSION <> R.COMMISSION
+order by 1,2,3;
 
---select L.LNAME, R.LNAME, L.COMMISSION
---from EMP L, EMP R
---where L.COMMISSION < R.COMMISSION
---order by 1,2,3;
+select L.LNAME, R.LNAME, L.COMMISSION
+from EMP L, EMP R
+where L.COMMISSION < R.COMMISSION
+order by 1,2,3;
 
 --select L.LNAME, R.LNAME, L.COMMISSION
 --from EMP L, EMP R

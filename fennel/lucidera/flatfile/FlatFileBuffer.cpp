@@ -19,12 +19,12 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include "fennel/lucidera/flatfile/FlatFileBuffer.h"
-
+#include "fennel/common/CommonPreamble.h"
 #include "fennel/common/FennelResource.h"
 #include "fennel/common/SysCallExcn.h"
 #include "fennel/device/RandomAccessFileDevice.h"
-#include "fennel/device/RandomAccessRequest.h"
+#include "fennel/lucidera/flatfile/FlatFileBinding.h"
+#include "fennel/lucidera/flatfile/FlatFileBuffer.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -76,43 +76,6 @@ void FlatFileBuffer::open()
     pCurrent = NULL;
 }
 
-/**
- * REVIEW zfong 13-Feb-2006: This class is also defined in 
- * FlatFileExecStreamImpl.cpp. Does it need to be duplicated?
- */
-/**
- * Specifies parameters for flat file read requests
- */
-class FlatFileBinding : public RandomAccessRequestBinding
-{
-    std::string path;
-    char *pBuffer;
-    uint bufferSize;
-    
-public:
-    FlatFileBinding(std::string &path, char *buf, uint size) 
-    {
-        this->path = path;
-        pBuffer = buf;
-        bufferSize = size;
-    }
-        
-    PBuffer getBuffer() const { return (PBuffer) pBuffer; }
-    uint getBufferSize() const { return bufferSize; }
-    void notifyTransferCompletion(bool bSuccess) {
-        if (!bSuccess) {
-            throw FennelExcn(
-                FennelResource::instance().dataTransferFailed(
-                    path, bufferSize));
-        }
-    }
-};
-
-inline uint min(uint a, uint b) 
-{
-    return (a < b) ? a : b;
-}
-
 uint FlatFileBuffer::read()
 {
     int residual = 0;
@@ -124,9 +87,10 @@ uint FlatFileBuffer::read()
     }
     pCurrent = pBuffer;
 
-    int free = bufferSize - residual;
+    uint free = bufferSize - residual;
     char *target = pBuffer + residual;
-    uint targetSize = min(free*sizeof(char), fileEnd-filePosition);
+    uint targetSize =
+        std::min( free * sizeof(char), (uint) (fileEnd - filePosition) );
     
     RandomAccessRequest readRequest;
     readRequest.pDevice = pRandomAccessDevice.get();
@@ -177,6 +141,6 @@ void FlatFileBuffer::setReadPtr(char *ptr)
     pCurrent = ptr;
 }
 
-FENNEL_END_CPPFILE("$Id$");
+FENNEL_END_CPPFILE("$Id: //open/dev/fennel/lucidera/flatfile/FlatFileBuffer.cpp#6 $");
 
 // End FlatFileBuffer.cpp

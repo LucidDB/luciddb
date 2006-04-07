@@ -717,6 +717,18 @@ column type family is {1} but default value type family is {2}</text>
 <text>Control file {0} is not valid</text>
 </exception>
 
+<exception id="469040" name="FlatFileInvalidFixedPosParams">
+<text>Fixed position parsing, enabled by setting an empty field delimiter, requires an empty quote character and an empty escape character</text>
+</exception>
+
+<exception id="469050" name="FlatFileNoFixedPosSample">
+<text>Cannot derive column sizes for fixed position data file ''{0}''</text>
+</exception>
+
+<exception id="469060" name="CannotDeriveColumnTypes">
+<text>Cannot derive column types for file {0}</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Database/Session resources 470,000 - 480,000 -->
 <!-- ====================================================================== -->

@@ -21,7 +21,7 @@ To run against all sources:
 ---------------------------
 (1) in run.properties*, set:
 
-testfile=test.xml
+testfile=test-all.xml
 
 (2) run "ant test"
 

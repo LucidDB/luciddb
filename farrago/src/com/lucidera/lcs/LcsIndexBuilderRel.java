@@ -23,17 +23,14 @@ package com.lucidera.lcs;
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.util.*;
 
 /**
  * LcsIndexBuilderRel is a relational expression that builds an unclustered
@@ -93,7 +90,7 @@ class LcsIndexBuilderRel extends FennelSingleRel
             typeFactory,
             FarragoCatalogUtil.getIndexTable(index),
             index);
-        int paramId = implementor.allocateDynamicParam();
+        FennelRelParamId paramId = implementor.allocateRelParamId();
         LcsCompositeStreamDef bitmapSet
             = indexGuide.newBitmapAppend(
                 this, index, implementor, true, paramId);

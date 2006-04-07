@@ -1,0 +1,45 @@
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- viload.sql - load and index 99 rows of a set query type table
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server ff_server
+. . . . . . . . > foreign data wrapper sys_file_wrapper
+. . . . . . . . > options(
+. . . . . . . . >     directory '@DIR@',
+. . . . . . . . >     file_extension '.csv',
+. . . . . . . . >     ctrl_file_extension '.bcp',
+. . . . . . . . >     field_delimiter ',',
+. . . . . . . . >     line_delimiter '\n',
+. . . . . . . . >     quote_char '"',
+. . . . . . . . >     escape_char '',
+. . . . . . . . >     with_header 'yes',
+. . . . . . . . >     num_rows_scan '2'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema ff_schema;
+0: jdbc:luciddb:> set schema 'ff_schema';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table BENCH_SOURCE
+. . . . . . . . > server ff_server
+. . . . . . . . > options (
+. . . . . . . . > SCHEMA_NAME 'BCP',
+. . . . . . . . > filename 'bench100'
+. . . . . . . . > )
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema s;
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table bench1M (kseq integer, k4 integer, k10 integer, k25 integer);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create index Kseq_idx on bench1M (kseq);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create index K4_idx on bench1M (k4);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create index K10_idx on bench1M (k10);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create index K25_idx on bench1M (k25);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into bench1m (kseq,k4,k10,k25) select "kseq","k4","k10","k25" from ff_schema.bench_source;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

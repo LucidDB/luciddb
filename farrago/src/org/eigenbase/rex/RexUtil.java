@@ -29,6 +29,7 @@ import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.sql.SqlAggFunction;
 import org.eigenbase.sql.SqlOperator;
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.type.SqlTypeUtil;
 import org.eigenbase.util.Util;
@@ -709,7 +710,24 @@ public class RexUtil
         }
         return true;
     }
-
+    /**
+     * Creates an AND expression from a list of RexNodes
+     * 
+     * @param rexList list of RexNodes
+     * @return AND'd expression
+     */
+    public static RexNode andRexNodeList(
+        RexBuilder rexBuilder, List<RexNode> rexList)
+    {
+        RexNode andExpr = rexList.get(0);
+        for (int i = 1; i < rexList.size(); i++) {
+            andExpr = rexBuilder.makeCall(
+                SqlStdOperatorTable.andOperator,
+                andExpr, rexList.get(i));
+        }
+        return andExpr;
+    }
+    
     /**
      * Walks over expressions and builds a bank of common sub-expressions.
      */

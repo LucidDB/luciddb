@@ -20,10 +20,16 @@
 */
 package com.lucidera.farrago;
 
+import com.lucidera.lcs.*;
+import com.lucidera.opt.*;
+
 import net.sf.farrago.session.*;
 import net.sf.farrago.db.*;
 import net.sf.farrago.defimpl.*;
 
+import org.eigenbase.rel.*;
+import org.eigenbase.rel.rules.*;
+import org.eigenbase.relopt.*;
 import org.eigenbase.resgen.*;
 import org.eigenbase.resource.*;
 
@@ -68,6 +74,106 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         }
         
         return super.supportsFeature(feature);
+    }
+    
+    public FarragoSessionPlanner newPlanner(
+        FarragoSessionPreparingStmt stmt,
+        boolean init)
+    {
+        FarragoSessionPlanner planner = super.newPlanner(stmt, init);
+        planner.addRule(new PushSemiJoinPastFilterRule());
+        planner.addRule(new OptimizeJoinRule());
+        
+        addConvertMultiJoinRules(planner);
+ 
+        planner.removeRule(SwapJoinRule.instance);
+        return planner;
+    }
+    
+    /**
+     * Adds the different permutations of patterns that trigger 
+     * ConvertMultiJoinRule.  We enumerate over the patterns rather than
+     * matching on arbitrary RelNodes to speed up Volcano pattern matching.
+     * 
+     * @param planner planner that rules will be added to
+     */
+    private void addConvertMultiJoinRules(FarragoSessionPlanner planner)
+    {
+        planner.addRule(new ConvertMultiJoinRule(
+            new RelOptRuleOperand(
+                JoinRel.class,
+                new RelOptRuleOperand [] {
+                    new RelOptRuleOperand(MultiJoinRel.class, null),
+                    new RelOptRuleOperand(MultiJoinRel.class, null)
+                    }), "MJ, MJ"));
+        planner.addRule(new ConvertMultiJoinRule(
+            new RelOptRuleOperand(
+                JoinRel.class,
+                new RelOptRuleOperand [] {
+                    new RelOptRuleOperand(MultiJoinRel.class, null),
+                    new RelOptRuleOperand(LcsRowScanRel.class, null)
+                    }), "MJ, RS"));
+        planner.addRule(new ConvertMultiJoinRule(
+            new RelOptRuleOperand(
+                JoinRel.class,
+                new RelOptRuleOperand [] {
+                    new RelOptRuleOperand(MultiJoinRel.class, null),
+                    new RelOptRuleOperand(FilterRel.class,
+                        new RelOptRuleOperand [] {
+                            new RelOptRuleOperand(LcsRowScanRel.class, null)
+                    })}), "MJ, FRS"));
+        planner.addRule(new ConvertMultiJoinRule(
+            new RelOptRuleOperand(
+                JoinRel.class,
+                new RelOptRuleOperand [] {
+                    new RelOptRuleOperand(LcsRowScanRel.class, null),
+                    new RelOptRuleOperand(MultiJoinRel.class, null)
+                    }), "RS, MJ"));
+        planner.addRule(new ConvertMultiJoinRule(
+            new RelOptRuleOperand(
+                JoinRel.class,
+                new RelOptRuleOperand [] {
+                    new RelOptRuleOperand(LcsRowScanRel.class, null),
+                    new RelOptRuleOperand(LcsRowScanRel.class, null)
+                    }), "RS, RS"));
+        planner.addRule(new ConvertMultiJoinRule(
+            new RelOptRuleOperand(
+                JoinRel.class,
+                new RelOptRuleOperand [] {
+                    new RelOptRuleOperand(LcsRowScanRel.class, null),
+                    new RelOptRuleOperand(FilterRel.class,
+                        new RelOptRuleOperand [] {
+                            new RelOptRuleOperand(LcsRowScanRel.class, null)
+                    })}), "RS, FRS"));
+        planner.addRule(new ConvertMultiJoinRule(
+            new RelOptRuleOperand(
+                JoinRel.class,
+                new RelOptRuleOperand [] {
+                    new RelOptRuleOperand(FilterRel.class,
+                        new RelOptRuleOperand [] {
+                            new RelOptRuleOperand(LcsRowScanRel.class, null)}),
+                    new RelOptRuleOperand(MultiJoinRel.class, null)
+                    }), "FRS, MJ"));
+        planner.addRule(new ConvertMultiJoinRule(
+            new RelOptRuleOperand(
+                JoinRel.class,
+                new RelOptRuleOperand [] {
+                    new RelOptRuleOperand(FilterRel.class,
+                        new RelOptRuleOperand [] {
+                            new RelOptRuleOperand(LcsRowScanRel.class, null)}),
+                    new RelOptRuleOperand(LcsRowScanRel.class, null)
+                    }), "FRS, RS"));
+        planner.addRule(new ConvertMultiJoinRule(
+            new RelOptRuleOperand(
+                JoinRel.class,
+                new RelOptRuleOperand [] {
+                    new RelOptRuleOperand(FilterRel.class,
+                        new RelOptRuleOperand [] {
+                            new RelOptRuleOperand(LcsRowScanRel.class, null)}),
+                    new RelOptRuleOperand(FilterRel.class,
+                        new RelOptRuleOperand [] {
+                            new RelOptRuleOperand(LcsRowScanRel.class, null)})
+                }), "FRS, FRS"));
     }
 }
 

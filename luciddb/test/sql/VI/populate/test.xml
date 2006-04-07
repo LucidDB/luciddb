@@ -2,25 +2,24 @@
   <target name="populate">
     <test-suite name="populate">
 
-      <test-suite-call testfile="populatetest.xml">
-        <test-unit-modifier value="oracle"/>
-        <property name="foreign.db" value="oracle"/>
-      </test-suite-call>
+      <init-hook>
+        <ant target="restoreCatalog"/>
+        <ant dir="${open.dir}/luciddb/test/sql/VI/populate" target="copy-csv"/>
+      </init-hook>
 
-      <test-suite-call testfile="populatetest.xml">
-        <test-unit-modifier value="sqlserver"/>
-        <property name="foreign.db" value="sqlserver"/>
-      </test-suite-call>
-
-      <test-suite-call testfile="populatetest.xml">
-        <test-unit-modifier value="flatfile"/>
-        <property name="foreign.db" value="flatfile"/>
-      </test-suite-call>
-
-      <test-suite-call testfile="populatetest.xml">
-        <test-unit-modifier value="csvjdbc"/>
-        <property name="foreign.db" value="csvjdbc"/>
-      </test-suite-call>
+      <test name="createIdx">
+        <test-metadata>
+          <withIndex value="true"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/populate/gen/${foreign.db}/createIdx.sql"/>
+      </test>
+      
+      <test name="createIdx2">
+        <test-metadata>
+          <withIndex value="true"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/VI/populate/gen/${foreign.db}/createidx2.sql"/>
+      </test>
 
     </test-suite>
   </target>

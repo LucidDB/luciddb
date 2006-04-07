@@ -266,6 +266,7 @@ disruptivetech/libfennel_dt/Makefile \
 disruptivetech/test/Makefile \
 disruptivetech/farrago/Makefile \
 lucidera/Makefile \
+lucidera/hashexe/Makefile \
 lucidera/bitmap/Makefile \
 lucidera/colstore/Makefile \
 lucidera/flatfile/Makefile \

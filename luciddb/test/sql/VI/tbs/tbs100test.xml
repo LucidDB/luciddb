@@ -1,10 +1,11 @@
 <!-- Run benchmark load and query tests for 100 rows -->
-<project name="bh" default="tbs-test">
-  <target name="tbs-test">
+<project name="bh" default="tbs100-test">
+  <target name="tbs100-test">
     <test-suite name="tbs100-test">
 
       <init-hook>
         <ant target="restoreCatalog"/>
+        <ant dir="${open.dir}/luciddb/test/sql/VI/tbs" target="copy-csv"/>
       </init-hook>
 
       <test name="creschema">

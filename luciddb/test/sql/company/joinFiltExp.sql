@@ -4,7 +4,8 @@
 
 set schema 's';
 
-alter session set optimizerjoinfilterthreshold=2;
+--alter session set optimizerjoinfilterthreshold=2;
+!outputformat csv
 
 -- Standard join filter case
 explain plan for select lname,dname from emp,dept
@@ -15,9 +16,9 @@ where emp.deptno=dept.deptno and dept.dname<'Development'
 order by 1;
 
 -- multiple dimension filter conditions
-explain plan for select emp.lname, emp.fname, dname from emp,dept
-where emp.deptno=dept.deptno and dept.dname='Accounting' and dept.locid in ('HQ','SF')
-order by 1,2;
+--explain plan for select emp.lname, emp.fname, dname from emp,dept
+--where emp.deptno=dept.deptno and dept.dname='Accounting' and dept.locid in ('HQ','SF')
+--order by 1,2;
 
 -- don't reference dept in the select list, should drop out
 -- of select list
@@ -63,7 +64,7 @@ and sales.prodid = products.prodid
 and customers.lname < 'C'
 and customers.fname > 'S'
 and sales.prodid < 10009
-and products.name IN ('Soap', 'Juice', 'Soup', 'Microwave', 'Soda')
+--and products.name IN ('Soap', 'Juice', 'Soup', 'Microwave', 'Soda')
 and products.price < 5.00
 order by 1,2,3;
 
@@ -76,11 +77,14 @@ and sales.prodid = products.prodid
 and customers.lname < 'C'
 and customers.fname > 'S'
 and sales.prodid < 10009
-and products.name IN ('Soap', 'Juice', 'Soup', 'Microwave', 'Soda')
+--and products.name IN ('Soap', 'Juice', 'Soup', 'Microwave', 'Soda')
 and products.price < 5.00;
 
-explain plan for select sum(sales.price)
-from sales
-where custid in (select custid from customers where lname<'F' and fname>'D')
-and prodid in (select prodid from products where name
-IN ('Soap', 'Juice', 'Soup', 'Microwave', 'Soda'));
+--explain plan for select sum(sales.price)
+--from sales
+--where custid in (select custid from customers where lname<'F' and fname>'D')
+--and prodid in (select prodid from products where name
+--IN ('Soap', 'Juice', 'Soup', 'Microwave', 'Soda'));
+
+
+!outputformat tables

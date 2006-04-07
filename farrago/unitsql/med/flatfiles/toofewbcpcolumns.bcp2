@@ -1,0 +1,4 @@
+6.0
+3
+1       SQLINT  0       3       ","     1       ID
+2       SQLVARCHAR      0       256     ","     2       NAME

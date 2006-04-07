@@ -319,12 +319,6 @@ select name from depts where deptno > ? and name='Hysteria';
 -- LucidDB column store bitmap indexes test --
 ----------------------------------------------
 
--- REVIEW jvs 18-Mar-2006:  should not be pre-dropping stuff like this;
--- it generates an error in the .ref file, which is confusing.
--- Test framework takes care of pre-drop (so you don't have to 
--- post-drop either).
-
-drop schema lbm cascade;
 create schema lbm;
 set schema 'lbm';
 set path 'lbm';
@@ -333,7 +327,6 @@ set path 'lbm';
 -- Some ftrs tests to compare behavior against --
 -------------------------------------------------
 
-drop table ftrsemps cascade;
 create table ftrsemps(
     empno integer not null constraint empno_pk primary key,
     ename varchar(40),
@@ -409,7 +402,6 @@ drop table ftrsemps cascade;
 -------------------------------------------------------
 -- Part 1. index created on empty column store table --
 -------------------------------------------------------
-drop table lbmemps cascade;
 create table lbmemps(
     empno integer not null,
     ename varchar(40),
@@ -648,9 +640,16 @@ select * from lbmdepts,
 
 !set outputformat table
 
------------------------------------------------------------
--- Part 2. index created on non-empty column store table --
------------------------------------------------------------
+------------
+-- Misc bugs
+------------
+-- FRG-83
+create table t(a int, b int, c int) server sys_column_store_data_server;
+create index ita on t(a);
+create index itb on t(b);
+insert into t values(1, 2, 3);
+create view v as select * from t where a = 1 and b = 2;
+select * from v v1, v v2; 
 
 --------------
 -- Clean up --
