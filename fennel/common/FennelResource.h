@@ -66,11 +66,6 @@ class FennelResource : ResourceBundle
     std::string rowTooLong(int p0, int p1, const std::string &p2) const;
 
     /**
-     * <code>rowTypeTooLong</code> is 'Maximum row size ({0,number,#} bytes) exceeds limit ({1,number,#} bytes)'
-     */
-    std::string rowTypeTooLong(int p0, int p1) const;
-
-    /**
      * <code>readDataFailed</code> is 'Could not read data file {0}'
      */
     std::string readDataFailed(const std::string &p0) const;
@@ -126,9 +121,14 @@ class FennelResource : ResourceBundle
     std::string rowTextTooLong() const;
 
     /**
-     * <code>sampleFailed</code> is 'Cound not sample data file {0}'
+     * <code>flatfileDescribeFailed</code> is 'Could not derive column sizes for data file {0}'
      */
-    std::string sampleFailed(const std::string &p0) const;
+    std::string flatfileDescribeFailed(const std::string &p0) const;
+
+    /**
+     * <code>flatfileNoHeader</code> is 'Could not read header from data file {0}'
+     */
+    std::string flatfileNoHeader(const std::string &p0) const;
 
     private:
     ResourceDefinition _sysCallFailed;
@@ -136,7 +136,6 @@ class FennelResource : ResourceBundle
     ResourceDefinition _internalError;
     ResourceDefinition _executionAborted;
     ResourceDefinition _rowTooLong;
-    ResourceDefinition _rowTypeTooLong;
     ResourceDefinition _readDataFailed;
     ResourceDefinition _dataTransferFailed;
     ResourceDefinition _writeLogFailed;
@@ -148,7 +147,8 @@ class FennelResource : ResourceBundle
     ResourceDefinition _tooFewColumns;
     ResourceDefinition _tooManyColumns;
     ResourceDefinition _rowTextTooLong;
-    ResourceDefinition _sampleFailed;
+    ResourceDefinition _flatfileDescribeFailed;
+    ResourceDefinition _flatfileNoHeader;
 
     template<class _GRB, class _BC, class _BC_ITER>
         friend _GRB *makeInstance(_BC &bundleCache, const Locale &locale);

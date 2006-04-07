@@ -4,9 +4,10 @@
 
       <init-hook>
         <ant target="restoreCatalog"/>
+        <ant dir="${open.dir}/luciddb/test/sql/sqbm" target="copy-csv"/>
       </init-hook>
 
-      <test name="benchins1mMssql">
+      <test name="benchins1m">
         <test-metadata>
           <withIndex value="true"/>
         </test-metadata>
@@ -14,49 +15,49 @@
       </test>
 
       <!--  Official Queries -->
-      <test name="sqbm1" requiresSuccess="benchins1mMssql">
+      <test name="sqbm1" requiresSuccess="benchins1m">
         <test-metadata>
           <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q1.sql"/>
       </test>
 
-      <test name="sqbm2a" requiresSuccess="benchins1mMssql">
+      <test name="sqbm2a" requiresSuccess="benchins1m">
         <test-metadata>
           <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q2a.sql"/>
       </test>
 
-      <test name="sqbm2b" requiresSuccess="benchins1mMssql">
+      <test name="sqbm2b" requiresSuccess="benchins1m">
         <test-metadata>
           <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q2b.sql"/>
       </test>
 
-      <test name="sqbm3a" requiresSuccess="benchins1mMssql">
+      <test name="sqbm3a" requiresSuccess="benchins1m">
         <test-metadata>
           <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q3a.sql"/>
       </test>
 
-      <test name="sqbm3b" requiresSuccess="benchins1mMssql">
+      <test name="sqbm3b" requiresSuccess="benchins1m">
         <test-metadata>
           <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q3b.sql"/>
       </test>
 
-      <test name="sqbm4" requiresSuccess="benchins1mMssql">
+      <test name="sqbm4" requiresSuccess="benchins1m">
         <test-metadata>
           <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q4.sql"/>
       </test>
 
-      <test name="sqbm5" requiresSuccess="benchins1mMssql">
+      <test name="sqbm5" requiresSuccess="benchins1m">
         <test-metadata>
           <withIndex value="true"/>
         </test-metadata>
@@ -64,7 +65,7 @@
       </test>
 
       <!-- doesn't use bitmap indexes yet -->
-      <test name="sqbm6a" requiresSuccess="benchins1mMssql">
+      <test name="sqbm6a" requiresSuccess="benchins1m">
         <test-metadata>
           <knownFailure value="true"/>
           <withIndex value="true"/>
@@ -73,7 +74,7 @@
       </test>
 
       <!-- doesn't use bitmap indexes yet, very slow -->
-      <test name="sqbm6b" requiresSuccess="benchins1mMssql">
+      <test name="sqbm6b" requiresSuccess="benchins1m">
         <test-metadata>
           <knownFailure value="true"/>
           <withIndex value="true"/>
@@ -81,7 +82,7 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q6b.sql"/>
       </test>
 
-      <test name="sqbm4nob" requiresSuccess="benchins1mMssql">
+      <test name="sqbm4nob" requiresSuccess="benchins1m">
         <test-metadata>
           <!-- Failing due to LDB-48 -->
           <knownFailure value="true"/>
@@ -90,7 +91,7 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q4nob.sql"/>
       </test>
 
-      <test name="sqbm5nob" requiresSuccess="benchins1mMssql">
+      <test name="sqbm5nob" requiresSuccess="benchins1m">
         <test-metadata>
           <withIndex value="true"/>
         </test-metadata>
@@ -98,7 +99,7 @@
       </test>
 
       <!-- doesn't use bitmap indexes yet, very slow -->
-      <test name="sqbm6bnob" requiresSuccess="benchins1mMssql">
+      <test name="sqbm6bnob" requiresSuccess="benchins1m">
         <test-metadata>
           <knownFailure value="true"/>
           <withIndex value="true"/>
@@ -107,7 +108,7 @@
       </test>
 
       <!-- stress tests -->
-      <test name="sqbmqfh1" requiresSuccess="benchins1mMssql">
+      <test name="sqbmqfh1" requiresSuccess="benchins1m">
         <test-metadata>
           <knownFailure value="true"/>
           <withIndex value="true"/>
@@ -115,7 +116,7 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_qfh1.sql"/>
       </test>
 
-      <test name="sqbmqfh2" requiresSuccess="benchins1mMssql">
+      <test name="sqbmqfh2" requiresSuccess="benchins1m">
         <test-metadata>
           <knownFailure value="true"/>
           <withIndex value="true"/>
@@ -123,7 +124,7 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_qfh2.sql"/>
       </test>
 
-      <test name="sqbmqfh3" requiresSuccess="benchins1mMssql">
+      <test name="sqbmqfh3" requiresSuccess="benchins1m">
         <test-metadata>
           <knownFailure value="true"/>
           <withIndex value="true"/>
@@ -131,7 +132,7 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_qfh3.sql"/>
       </test>
 
-      <test name="sqbmqfh4" requiresSuccess="benchins1mMssql">
+      <test name="sqbmqfh4" requiresSuccess="benchins1m">
         <test-metadata>
           <knownFailure value="true"/>
           <withIndex value="true"/>
@@ -140,7 +141,7 @@
       </test>
 
       <!--  HHJ testing for Aggregates -->
-      <test name="hhjswing1" requiresSuccess="benchins1mMssql">
+      <test name="hhjswing1" requiresSuccess="benchins1m">
         <test-metadata>
           <knownFailure value="true"/>
           <withIndex value="true"/>
@@ -148,7 +149,7 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/hhjswing_q1.sql"/>
       </test>
 
-      <test name="hhjswing2" requiresSuccess="benchins1mMssql">
+      <test name="hhjswing2" requiresSuccess="benchins1m">
         <test-metadata>
           <knownFailure value="true"/>
           <withIndex value="true"/>
@@ -156,7 +157,7 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/hhjswing_q2.sql"/>
       </test>
 
-      <test name="hhjswing3" requiresSuccess="benchins1mMssql">
+      <test name="hhjswing3" requiresSuccess="benchins1m">
         <test-metadata>
           <knownFailure value="true"/>
           <withIndex value="true"/>
@@ -168,7 +169,7 @@
       <!-- run concurrent users test -->
 
       <!-- drop table and indexes -->
-      <test name="dropidx" requiresSuccess="benchins1mMssql">
+      <test name="dropidx" requiresSuccess="benchins1m">
         <test-metadata>
           <withIndex value="true"/>
         </test-metadata>

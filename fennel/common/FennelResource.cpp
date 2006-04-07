@@ -49,7 +49,6 @@ FennelResource::FennelResource(Locale locale)
       _internalError(this, "internalError"),
       _executionAborted(this, "executionAborted"),
       _rowTooLong(this, "rowTooLong"),
-      _rowTypeTooLong(this, "rowTypeTooLong"),
       _readDataFailed(this, "readDataFailed"),
       _dataTransferFailed(this, "dataTransferFailed"),
       _writeLogFailed(this, "writeLogFailed"),
@@ -61,7 +60,8 @@ FennelResource::FennelResource(Locale locale)
       _tooFewColumns(this, "tooFewColumns"),
       _tooManyColumns(this, "tooManyColumns"),
       _rowTextTooLong(this, "rowTextTooLong"),
-      _sampleFailed(this, "sampleFailed")
+      _flatfileDescribeFailed(this, "flatfileDescribeFailed"),
+      _flatfileNoHeader(this, "flatfileNoHeader")
 { }
 
 string FennelResource::sysCallFailed(const std::string &p0) const
@@ -83,10 +83,6 @@ string FennelResource::executionAborted() const
 string FennelResource::rowTooLong(int p0, int p1, const std::string &p2) const
 {
     return _rowTooLong.format(p0, p1, p2);
-}
-string FennelResource::rowTypeTooLong(int p0, int p1) const
-{
-    return _rowTypeTooLong.format(p0, p1);
 }
 string FennelResource::readDataFailed(const std::string &p0) const
 {
@@ -132,9 +128,13 @@ string FennelResource::rowTextTooLong() const
 {
     return _rowTextTooLong.format();
 }
-string FennelResource::sampleFailed(const std::string &p0) const
+string FennelResource::flatfileDescribeFailed(const std::string &p0) const
 {
-    return _sampleFailed.format(p0);
+    return _flatfileDescribeFailed.format(p0);
+}
+string FennelResource::flatfileNoHeader(const std::string &p0) const
+{
+    return _flatfileNoHeader.format(p0);
 }
 
 } // end namespace fennel

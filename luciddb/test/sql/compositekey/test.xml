@@ -4,6 +4,7 @@
 
       <init-hook>
         <ant target="restoreCatalog"/>
+        <ant dir="${open.dir}/luciddb/test/sql/compositekey" target="copy-csv"/>
       </init-hook>
 
       <test name="compkeyins">

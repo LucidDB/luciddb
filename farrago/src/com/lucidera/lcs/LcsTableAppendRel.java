@@ -237,11 +237,10 @@ extends MedAbstractFennelTableModRel
         
         for (FemLocalIndex unclusteredIndex : unclusteredIndexes) {
             LcsIndexGuide ucxIndexGuide = getIndexGuide(unclusteredIndex);
-            int dynParamId = implementor.allocateDynamicParam();
+            FennelRelParamId dynParamId = implementor.allocateRelParamId();
             bitmapAppendDefs.add( 
                 ucxIndexGuide.newBitmapAppend(
                     this, unclusteredIndex, implementor, false, dynParamId));
-            dynParamId++;
         }
         
         //

@@ -81,6 +81,32 @@ public:
 
 class FlatFileExecStreamTest : public ExecStreamUnitTestBase
 {
+    void checkRead(
+        FlatFileBuffer &buffer,
+        char *string);
+
+    void checkTrim(
+        FlatFileParser &parser,
+        char *string,
+        char *result);
+
+    void checkStrip(
+        FlatFileParser &parser,
+        char *string,
+        char *result);
+
+    void checkColumnScan(
+        FlatFileParser &parser,
+        char *string,
+        FlatFileColumnParseResult::DelimiterType type,
+        uint size,
+        uint offset);
+
+    void verifyOutput(
+        ExecStream &stream,
+        uint nRowsExpected,
+        StringExecStreamGenerator &generator);
+        
 public:
     explicit FlatFileExecStreamTest()
     {
@@ -94,11 +120,6 @@ public:
     void testParser();
     void testStream();
     void testStreamCalc();
-
-    void verifyOutput(
-        ExecStream &stream,
-        uint nRowsExpected,
-        StringExecStreamGenerator &generator);
 };
 
 void FlatFileExecStreamTest::testBuffer()
@@ -109,100 +130,123 @@ void FlatFileExecStreamTest::testBuffer()
     FlatFileBuffer fileBuffer(path);
     fileBuffer.open();
     fileBuffer.setStorage((char *) fixedBuffer, (uint)8);
-    fileBuffer.read();
-    BOOST_REQUIRE(fileBuffer.getReadPtr()==(char *)fixedBuffer);
-    BOOST_REQUIRE(fileBuffer.getEndPtr() == fileBuffer.getReadPtr()+8);
-    BOOST_REQUIRE(strncmp(fileBuffer.getReadPtr(), "12345671", 8) == 0);
-    fileBuffer.setReadPtr(fileBuffer.getReadPtr()+7);
-    fileBuffer.read();
-    BOOST_REQUIRE(fileBuffer.getEndPtr()-fileBuffer.getReadPtr() == 8);
-    BOOST_REQUIRE(strncmp(fileBuffer.getReadPtr(), "12345676", 8) == 0);
-    fileBuffer.setReadPtr(fileBuffer.getReadPtr()+6);
-    fileBuffer.read();
-    BOOST_REQUIRE(fileBuffer.getEndPtr()-fileBuffer.getReadPtr() == 5);
-    BOOST_REQUIRE(strncmp(fileBuffer.getReadPtr(), "7654\n", 5) == 0);
-    BOOST_REQUIRE(fileBuffer.isComplete());
-    fileBuffer.close();
 
-    // TODO: test missing file, empty file
+    checkRead(fileBuffer, "12345671");
+    BOOST_CHECK_EQUAL(fileBuffer.getReadPtr(), (char *)fixedBuffer);
+
+    fileBuffer.setReadPtr(fileBuffer.getReadPtr()+7);
+    checkRead(fileBuffer, "12345676");
+
+    fileBuffer.setReadPtr(fileBuffer.getReadPtr()+6);
+    checkRead(fileBuffer, "7654\n");
+    BOOST_CHECK(fileBuffer.isComplete());
 }
 
 void FlatFileExecStreamTest::testParser()
 {
     FlatFileParser parser(',', '\n', '"', '"');
-    char buffer[128];
 
-    strcpy(buffer, "");
-    BOOST_CHECK_EQUAL(parser.trim(buffer, 0), 0);
-    BOOST_CHECK_EQUAL(strncmp(buffer, "", 0), 0);
-    strcpy(buffer, "aRobin");
-    BOOST_CHECK_EQUAL(parser.trim(buffer, 6), 6);
-    BOOST_CHECK_EQUAL(strncmp(buffer, "aRobin", 6), 0);
-    strcpy(buffer, "   red breast in cage  ");
-    BOOST_CHECK_EQUAL(parser.trim(buffer, 23), 18);
-    BOOST_CHECK_EQUAL(strncmp(buffer, "red breast in cage", 18), 0);
-    
-    strcpy(buffer, "");
-    BOOST_CHECK_EQUAL(parser.stripQuoting(buffer, 0, true), 0);
-    BOOST_CHECK_EQUAL(strncmp(buffer, "", 0), 0);
-    strcpy(buffer, "puts all");
-    BOOST_CHECK_EQUAL(parser.stripQuoting(buffer, 8, true), 8);
-    BOOST_CHECK_EQUAL(strncmp(buffer, "puts all", 8), 0);
-    strcpy(buffer, "\"heaven\"");
-    BOOST_CHECK_EQUAL(parser.stripQuoting(buffer, 8, true), 6);
-    BOOST_CHECK_EQUAL(strncmp(buffer, "heaven", 6), 0);
-    strcpy(buffer, "   \"in a\"  ");
-    BOOST_CHECK_EQUAL(parser.stripQuoting(buffer, 11, true), 4);
-    BOOST_CHECK_EQUAL(strncmp(buffer, "in a", 4), 0);
-    strcpy(buffer, "   \"\"\"rage\"\"\"  ");
-    BOOST_CHECK_EQUAL(parser.stripQuoting(buffer, 15, true), 6);
-    BOOST_CHECK_EQUAL(strncmp(buffer, "\"rage\"", 6), 0);
+    checkTrim(parser, "", "");
+    checkTrim(parser, "aRobin", "aRobin");
+    checkTrim(parser, "   red breast in cage  ", "red breast in cage");
 
-    FlatFileColumnParseResult result;
-    /* All columns can be quoted now
-    // quote/escapes are plain escapes if not column is not char type
-    strcpy(buffer, "\"all that\"\n is gold, ");
-    parser.scanColumn(buffer, 21, 128, false, result);
-    BOOST_CHECK_EQUAL(result.type, FlatFileColumnParseResult::FIELD_DELIM);
-    BOOST_CHECK_EQUAL(result.size, 19);
-    BOOST_CHECK(result.next == buffer + 20);
-    */
+    checkStrip(parser, "", "");
+    checkStrip(parser, "puts all", "puts all");
+    checkStrip(parser, "\"heaven\"", "heaven");
+    checkStrip(parser, "   \"in a\"  ", "in a");
+    checkStrip(parser, "   \"\"\"rage\"\"\"  ", "\"rage\"");
+
+    // quote a delimiter
+    checkColumnScan(
+        parser, "\"all that\n is \"gold, ", 
+        FlatFileColumnParseResult::FIELD_DELIM, 19, 20);
+
     // quotes are valid for char columns
-    strcpy(buffer, "\"does not glitter\"\n ");
-    parser.scanColumn(buffer, 20, 128, result);
-    BOOST_CHECK_EQUAL(result.type, FlatFileColumnParseResult::ROW_DELIM);
-    BOOST_CHECK_EQUAL(result.size, 18);
-    BOOST_CHECK(result.next == buffer + 19);
+    checkColumnScan(
+        parser, "\"does not, glitter\"\n ",
+        FlatFileColumnParseResult::ROW_DELIM, 19, 20);
+
     // embedded quotes
-    strcpy(buffer, "\"not all those who \"\"wander\"\"\", ");
-    parser.scanColumn(buffer, 32, 128, result);
-    BOOST_CHECK_EQUAL(result.type, FlatFileColumnParseResult::FIELD_DELIM);
-    BOOST_CHECK_EQUAL(result.size, 30);
-    BOOST_CHECK(result.next == buffer + 31);
-    // fixed column type
-    strcpy(buffer, " are lost  ");
-    parser.scanColumn(buffer, 11, 9, result);
-    BOOST_CHECK_EQUAL(result.type, FlatFileColumnParseResult::MAX_LENGTH);
-    BOOST_CHECK_EQUAL(result.size, 9);
-    BOOST_CHECK(result.next == buffer + 9);
+    checkColumnScan(
+        parser, "\"not all those who \"\"wander\"\"\", ",
+        FlatFileColumnParseResult::FIELD_DELIM, 30, 31);
+
+    // ends in escape
+    checkColumnScan(
+        parser, " are lost  \"",
+        FlatFileColumnParseResult::NO_DELIM, 12, 12);
+
     // imbalanced quote
-    strcpy(buffer, "\"JRR, ");
-    parser.scanColumn(buffer, 6, 128, result);
-    BOOST_CHECK_EQUAL(result.type, FlatFileColumnParseResult::NO_DELIM);
-    BOOST_CHECK_EQUAL(result.size, 6);
-    BOOST_CHECK(result.next == buffer + 6);
+    checkColumnScan(
+        parser, "\"JRR, ",
+        FlatFileColumnParseResult::NO_DELIM, 6, 6);
+
     // data after quote
-    strcpy(buffer, "\"Tolkien\"  , ");
-    parser.scanColumn(buffer, 13, 128, result);
-    BOOST_CHECK_EQUAL(result.type, FlatFileColumnParseResult::FIELD_DELIM);
-    BOOST_CHECK_EQUAL(result.size, 11);
-    BOOST_CHECK(result.next == buffer + 12);
+    checkColumnScan(
+        parser, "\"Tolkien\"  , ",
+        FlatFileColumnParseResult::FIELD_DELIM, 11, 12);
+
     // fixed length exactly equal to buffer size
-    strcpy(buffer, "some poems");
-    parser.scanColumn(buffer, 10, 10, result);
-    BOOST_CHECK_EQUAL(result.type, FlatFileColumnParseResult::NO_DELIM);
-    BOOST_CHECK_EQUAL(result.size, 10);
-    BOOST_CHECK(result.next == buffer + 10);
+    checkColumnScan(
+        parser, "some poems",
+        FlatFileColumnParseResult::NO_DELIM, 10, 10);
+}
+
+void FlatFileExecStreamTest::checkRead(
+    FlatFileBuffer &buffer,
+    char *string)
+{
+    uint size = strlen(string);
+    buffer.read();
+    BOOST_CHECK_EQUAL(buffer.getEndPtr()-buffer.getReadPtr(), size);
+    BOOST_CHECK_EQUAL(strncmp(buffer.getReadPtr(), string, size), 0);
+}
+
+void FlatFileExecStreamTest::checkTrim(
+    FlatFileParser &parser,
+    char *string,
+    char *result)
+{
+    char buffer[128];
+    assert (strlen(string) < sizeof(buffer));
+    strcpy(buffer, string);
+
+    uint size = strlen(result);
+    BOOST_CHECK_EQUAL(parser.trim(buffer, strlen(buffer)), size);
+    BOOST_CHECK_EQUAL(strncmp(buffer, result, size), 0);
+}
+
+void FlatFileExecStreamTest::checkStrip(
+    FlatFileParser &parser,
+    char *string,
+    char *result)
+{
+    char buffer[128];
+    assert (strlen(string) < sizeof(buffer));
+    strcpy(buffer, string);
+
+    uint size = strlen(result);
+    BOOST_CHECK_EQUAL(parser.stripQuoting(buffer, strlen(buffer), true), size);
+    BOOST_CHECK_EQUAL(strncmp(buffer, result, size), 0);
+}
+
+void FlatFileExecStreamTest::checkColumnScan(
+    FlatFileParser &parser,
+    char *string, 
+    FlatFileColumnParseResult::DelimiterType type,
+    uint size,
+    uint offset)
+{
+    char buffer[128];
+    assert(strlen(string) < sizeof(buffer));
+    strcpy(buffer, string);
+    
+    FlatFileColumnParseResult result;
+    parser.scanColumn(buffer, strlen(buffer), sizeof(buffer), result);
+
+    BOOST_CHECK_EQUAL(result.type, type);
+    BOOST_CHECK_EQUAL(result.size, size);
+    BOOST_CHECK_EQUAL(result.next, buffer + offset);
 }
 
 void FlatFileExecStreamTest::testStream()

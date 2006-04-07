@@ -1,17 +1,27 @@
-<project name="bh" default="datatypes-test">
-  <target name="datatypes-test">
-    <test-suite name="datatypes-test">
+<project name="bh" default="datatypes">
+  <target name="datatypes">
+    <test-suite name="datatypes">
 
-      <test-suite-call testfile="datatypestest.xml">
-        <test-suite-modifier value="csvjdbc"/>
-        <property name="foreign.db" value="csvjdbc"/>
-      </test-suite-call>
+      <init-hook>
+        <ant target="restoreCatalog"/>
+      </init-hook>
 
-      <test-suite-call testfile="datatypestest.xml">
-        <test-suite-modifier value="flatfile"/>
-        <property name="foreign.db" value="flatfile"/>
-      </test-suite-call>
-      
+      <test name="creschema">
+        <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${foreign.db}/creschema.sql"/>
+      </test>
+
+      <test name="importschema" requiresRun="creschema">
+        <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${foreign.db}/foreigntabl.sql"/>
+      </test>
+
+      <test name="tableload" requiresRun="importschema">
+        <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${foreign.db}/tblload.sql"/>
+      </test>
+
+      <test name="types">
+        <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${foreign.db}/metadatatypes.sql"/>
+      </test>
+
     </test-suite>
   </target>
 </project>

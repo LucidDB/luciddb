@@ -347,23 +347,30 @@
     <pathelement path="${farrago.run.classpath}"/>
   </path>
   <property name="farrago.sqlline.classpath" refid="farrago.sqlline.classpath"/>
-  <!-- classpath for running blackhawk (aka tch) based tests -->
-  <property name="tch.home" location="${open.dir}/blackhawk/build/dist"/>
+
+  <path id="emma.classpath">
+    <fileset dir="${emma.dir}" includes="lib/*.jar"/>
+  </path>
+  <property name="emma.classpath" refid="emma.classpath"/>
+
+  <taskdef resource="emma_ant.properties" classpathref="emma.classpath"/>
+
+  <!-- classpath for running blackhawk based tests -->
+  <property name="bh.home" location="${thirdparty.dir}/blackhawk"/>
 
   <!-- classpath for running blackhawk based tests -->
   <property name="bh.home" location="${thirdparty.dir}/blackhawk"/>
 
   <path id="blackhawk.run.classpath">
     <pathelement path="${ant.classpath}"/>
-    <pathelement location="${tch.home}/tchx.jar"/>
-    <pathelement location="${tch.home}/tchx.jar"/>
+    <pathelement location="${bh.home}/bhx.jar"/>
     <pathelement 
-      location="${tch.home}/thirdparty/jakarta/jakarta-regexp-1.2.jar"/>
+      location="${bh.home}/thirdparty/jakarta/jakarta-regexp-1.2.jar"/>
     <pathelement 
-      location="${tch.home}/thirdparty/xmlbeans/apache-xbean.jar"/>
+      location="${bh.home}/thirdparty/xmlbeans/apache-xbean.jar"/>
     <pathelement 
-      location="${tch.home}/thirdparty/jsr173/jsr173_1.0_api.jar"/>
-    <pathelement location="${tch.home}/schema.jar"/>
+      location="${bh.home}/thirdparty/jsr173/jsr173_1.0_api.jar"/>
+    <pathelement location="${bh.home}/schema.jar"/>
   </path>
   <property name="blackhawk.run.classpath" refid="blackhawk.run.classpath"/>    
   
@@ -375,27 +382,27 @@
   <macrodef name="blackhawk.fork">
     <attribute name="basedir" default="."/>
     <attribute name="testscript" default="test.xml"/>
-    <attribute name="tchhome" default="${tch.home}"/>
+    <attribute name="bhhome" default="${bh.home}"/>
     <attribute name="fail.on.error" default="true"/>
     <attribute name="verbose" default="false"/>
     <attribute name="classpathref" default="blackhawk.run.classpath"/>
     <attribute name="inheritAll" default="true"/>
     <sequential>
       <taskdef 
-        name="tch" 
-        classname="org.apache.beehive.test.tools.tch.TchVMTask"
+        name="bh" 
+        classname="org.eigenbase.blackhawk.BhVMTask"
         classpathref="blackhawk.run.classpath"
         onerror="fail"/>
-      <tch
+      <bh
         testfile="@{basedir}/@{testscript}"
-        tchHome="@{tchhome}"
+        bhHome="@{bhhome}"
         failOnError="@{fail.on.error}"
         verbose="@{verbose}"
         inheritAll="@{inheritAll}"
         fork="true"
         classpathref="@{classpathref}">
         <jvmarg line="&FarragoSqlLineProps;"/>
-      </tch>
+      </bh>
     </sequential>
   </macrodef>
 

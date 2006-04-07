@@ -126,8 +126,8 @@ class LcsIndexAccessRule extends RelOptRule
         
         // By default, these parameters are not used:
         // ParamId == 0 menas this param is in valid.
-        int startRidParamId = 0;
-        int rowLimitParamId = 0;
+        FennelRelParamId startRidParamId = null;
+        FennelRelParamId rowLimitParamId = null;
         
         LcsIndexGuide indexGuide = origRowScan.lcsTable.getIndexGuide();
         RexBuilder rexBuilder = origRowScan.getCluster().getRexBuilder();
@@ -194,8 +194,8 @@ class LcsIndexAccessRule extends RelOptRule
         
         if (requireIntersect) {
             // Allocate AND here
-            rowLimitParamId = relImplementor.allocateDynamicParam();
-            startRidParamId = relImplementor.allocateDynamicParam();
+            rowLimitParamId = relImplementor.allocateRelParamId();
+            startRidParamId = relImplementor.allocateRelParamId();
         }
         
         while (iter.hasNext()) {
@@ -205,7 +205,8 @@ class LcsIndexAccessRule extends RelOptRule
             List<SargIntervalSequence> sargSeqList =
                 getIndexSargSeq(indexGuide, index, matchedPos, col2SeqMap);
             
-            CandidateIndex candidate = new CandidateIndex(index, matchedPos, sargSeqList);
+            CandidateIndex candidate = new CandidateIndex(
+                index, matchedPos, sargSeqList);
             
             FennelRel indexRel = 
                 newIndexRel(call,
@@ -376,8 +377,8 @@ class LcsIndexAccessRule extends RelOptRule
         RelOptRuleCall call,
         LcsRowScanRel origRowScan,
         CandidateIndex candidate,
-        int startRidParamId,
-        int rowLimitParamId)
+        FennelRelParamId startRidParamId,
+        FennelRelParamId rowLimitParamId)
     {
         FemLocalIndex index = candidate.index;
         int matchedPos = candidate.matchedPos;
@@ -490,10 +491,10 @@ class LcsIndexAccessRule extends RelOptRule
                 null,
                 false);
         
-        int startRidParamIdForSearch =
-            requireUnion ? 0 : startRidParamId;
-        int rowLimitParamIdForSearch =
-            requireUnion ? 0 : rowLimitParamId;
+        FennelRelParamId startRidParamIdForSearch =
+            requireUnion ? null : startRidParamId;
+        FennelRelParamId rowLimitParamIdForSearch =
+            requireUnion ? null : rowLimitParamId;
         
         LcsIndexSearchRel indexSearch =
             new LcsIndexSearchRel(
@@ -510,8 +511,8 @@ class LcsIndexAccessRule extends RelOptRule
         FennelRel inputRel = indexSearch;
         
         if (requireUnion) {
-            int chopperRidLimitParamId = 
-                relImplementor.allocateDynamicParam();
+            FennelRelParamId chopperRidLimitParamId = 
+                relImplementor.allocateRelParamId();
             
             inputRel = new LcsIndexMergeRel(
                 origRowScan.lcsTable,

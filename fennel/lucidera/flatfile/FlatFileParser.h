@@ -23,7 +23,6 @@
 #define Fennel_FlatFileParser_Included
 
 #include "fennel/common/CommonPreamble.h"
-//#include "fennel/lucidera/flatfile/FlatFileBuffer.h"
 
 #include <vector>
 
@@ -40,7 +39,7 @@ class FlatFileColumnParseResult
 public:
     /** Delimiter type encountered during column parse */
     enum DelimiterType {
-        /** No delimiter was found */
+        /** No delimiter was found, or delimiter was uncertain */
         NO_DELIM = 0,
         /** Field delimiter was found */
         FIELD_DELIM,
@@ -64,6 +63,12 @@ public:
      * Reference to the next column to be parsed
      */
     char *next;
+
+    /**
+     * Sets the fields of a column parse result, based on the result
+     * type and the size of the column
+     */
+    void setResult(DelimiterType type, char *buffer, uint size);
 };
 
 /**
@@ -211,6 +216,11 @@ class FlatFileParser
     char escape;
 
     /**
+     * Whether to perform fixed mode parsing
+     */
+    bool fixed;
+
+    /**
      * Scans through buffer to recover from any row errors. Scans to row
      * delimiter if one was not found. Then scans past spurious row
      * delimiters. On success, increments row delimiter count.
@@ -251,7 +261,7 @@ class FlatFileParser
      * encoded as newline (/n) and it matches any other line character.
      */
     bool isRowDelim(char c);
-    
+
 public:
     /**
      * Constructs a FlatFileParser. See FlatFileExecStreamParams for more
@@ -290,8 +300,8 @@ public:
         FlatFileRowParseResult &result);
 
     /**
-     * Scans through buffer to find the length of a column value. Stops
-     * scanning the buffer if maxLength characters have been read. 
+     * Scans through buffer to find the length of a column value. Keeps
+     * going until it reads a delimiter or it completes a fixed column.
      * A column is considered to be quoted if and only if the first
      * character is a quote character.
      *
@@ -309,6 +319,19 @@ public:
         uint maxLength, 
         FlatFileColumnParseResult &result);
 
+
+    /**
+     * Scans a fixed format column. In this mode, the quote character and
+     * column delimiter are ignored. It is possible to stop parsing because
+     * (1) a row delimiter is read (2) the max length is reached or (3) the
+     * end of buffer is reached
+     */
+    void scanFixedColumn(
+        const char *buffer,
+        uint size,
+        uint maxLength, 
+        FlatFileColumnParseResult &result);
+    
     /**
      * Removes quoting and escape characters from a column value. If untrimmed
      * is set, then the value will be trimmed first. Otherwise, quoted values 

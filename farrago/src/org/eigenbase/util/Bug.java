@@ -70,17 +70,10 @@ public abstract class Bug
     public static final boolean Fnl3Fixed = false;
 
     /**
-     * Whether <a href="http://jirahost.eigenbase.org:8080/browse/FRG-27">issue
-     * Frg-27</a> is fixed.  (also filed as dtbug 153)
+     * Whether <a href="http://issues.eigenbase.org/browse/FNL-25">issue
+     * FNL-25</a> is fixed.  (also filed as dtbug 153)
      */
     public static final boolean Fn25Fixed = false;
-
-    /**
-     * Whether <a href="http://jirahost.eigenbase.org:8080/browse/FRG-72">issue
-     * Frg-72</a> is fixed.
-     */
-    public static final boolean Frg72Fixed = false;
-
 
     public static final boolean Dt269Fixed = false;
 

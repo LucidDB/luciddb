@@ -1,0 +1,20 @@
+<project name="bh" default="test-nightly-flatfile">
+  <target name="test-nightly-flatfile">
+    <test-suite name="test-nightly-flatfile">
+
+      <test-suite-call testfile="test/sql/bench/benchtest.xml"/>
+      <test-suite-call testfile="test/sql/compositekey/test.xml"/>
+      <test-suite-call testfile="test/sql/datatypes/test.xml"/>
+
+<!-- bug in flatfile on import schema for pge and pge2 
+      <test-suite-call testfile="test/sql/pge/test.xml"/>
+      <test-suite-call testfile="test/sql/pge2/test.xml"/>
+-->
+
+      <test-suite-call testfile="test/sql/shortreg/test.xml"/>
+      <test-suite-call testfile="test/sql/VI/insert/test.xml"/>
+      <test-suite-call testfile="test/sql/VI/populate/test.xml"/>
+
+    </test-suite>
+  </target>
+</project>

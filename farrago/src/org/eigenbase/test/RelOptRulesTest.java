@@ -22,6 +22,7 @@
 package org.eigenbase.test;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
 
 /**
@@ -106,6 +107,13 @@ public class RelOptRulesTest extends SqlToRelTestBase
         check(
             ExtractJoinFilterRule.instance,
             "select 1 from emp inner join dept on emp.deptno=dept.deptno");
+    }
+    
+    public void testAddRedundantSemiJoinRule()
+    {
+        check(
+            new AddRedundantSemiJoinRule(),
+            "select 1 from emp inner join dept on emp.deptno = dept.deptno");
     }
 }
 

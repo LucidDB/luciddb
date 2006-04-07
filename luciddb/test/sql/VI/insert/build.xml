@@ -161,7 +161,7 @@
   <target name="clean">
     <delete dir="${gensql.dir}"/>
     <delete dir="${bh.log.basedir}"/>
-    <delete dir="${csv.dir}"/>
+    <delete dir="${csv.copy.dir}"/>
   </target>
 
   <target name="clean-csv">

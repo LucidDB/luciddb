@@ -1,6 +1,6 @@
-<project name="bh" default="calc-cast-test">
-  <target name="calc-cast-test">
-    <test-suite name="calc-cast-test">
+<project name="bh" default="calc_cast">
+  <target name="calc_cast">
+    <test-suite name="calc_cast">
 
       <init-hook>
         <ant target="restoreCatalog"/>

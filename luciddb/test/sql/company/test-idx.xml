@@ -25,77 +25,88 @@
       <!-- Joins don't use bitmap indexes yet -->
       <test name="joinEq" requiresSuccess="download">
         <test-metadata>
-          <withIndex value="false"/>
+          <withIndex value="true"/>
+          <knownFailure value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/joinEq.sql"/>
       </test>
 
       <test name="joinRng" requiresSuccess="download">
         <test-metadata>
-          <withIndex value="false"/>
+          <withIndex value="true"/>
+          <knownFailure value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/joinRng.sql"/>
       </test>
 
       <test name="joinMisc" requiresSuccess="download">
         <test-metadata>
-          <withIndex value="false"/>
+          <withIndex value="true"/>
+          <knownFailure value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/joinMisc.sql"/>
       </test>
 
       <test name="joinSemi" requiresSuccess="download">
         <test-metadata>
-          <withIndex value="false"/>
+          <withIndex value="true"/>
+          <knownFailure value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/joinSemi.sql"/>
       </test>
 
       <test name="agg" requiresSuccess="download">
         <test-metadata>
-          <withIndex value="false"/>
+          <withIndex value="true"/>
+          <knownFailure value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/agg.sql"/>
       </test>
 
       <test name="aggJoinEq" requiresSuccess="download">
         <test-metadata>
-          <withIndex value="false"/>
+          <withIndex value="true"/>
+          <knownFailure value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/aggJoinEq.sql"/>
       </test>
 
       <test name="aggJoinRng" requiresSuccess="download">
         <test-metadata>
-          <withIndex value="false"/>
+          <withIndex value="true"/>
+          <knownFailure value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/aggJoinRng.sql"/>
       </test>
 
       <test name="agg_cust" requiresSuccess="download">
         <test-metadata>
-          <withIndex value="false"/>
+          <withIndex value="true"/>
+          <knownFailure value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/agg_cust.sql"/>
       </test>
 
       <test name="aggJoinEq_cust" requiresSuccess="download">
         <test-metadata>
-          <withIndex value="false"/>
+          <withIndex value="true"/>
+          <knownFailure value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/aggJoinEq_cust.sql"/>
       </test>
 
       <test name="aggJoinRng_cust" requiresSuccess="download">
         <test-metadata>
-          <withIndex value="false"/>
+          <withIndex value="true"/>
+          <knownFailure value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/aggJoinRng_cust.sql"/>
       </test>
 
       <test name="aggDistinct" requiresSuccess="download">
         <test-metadata>
-          <withIndex value="false"/>
+          <withIndex value="true"/>
+          <knownFailure value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/aggDistinct.sql"/>
       </test>
@@ -103,13 +114,15 @@
       <test name="null" requiresSuccess="download">
         <test-metadata>
           <withIndex value="true"/>
+          <knownFailure value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/null.sql"/>
       </test>
 
       <test name="order" requiresSuccess="download">
         <test-metadata>
-          <withIndex value="false"/>
+          <withIndex value="true"/>
+          <knownFailure value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/order.sql"/>
       </test>
@@ -173,21 +186,24 @@
 
       <test name="aggJoinFilter" requiresSuccess="download">
         <test-metadata>
-          <withIndex value="false"/>
+          <withIndex value="true"/>
+          <knownFailure value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/aggJoinFilter.sql"/>
       </test>
 
       <test name="joinFilt" requiresSuccess="download">
         <test-metadata>
-          <withIndex value="false"/>
+          <withIndex value="true"/>
+          <knownFailure value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/joinFilt.sql"/>
       </test>
 
       <test name="negJoinFilt" requiresSuccess="download">
         <test-metadata>
-          <withIndex value="false"/>
+          <withIndex value="true"/>
+          <knownFailure value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/negJoinFilt.sql"/>
       </test>

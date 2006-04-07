@@ -53,6 +53,12 @@ public final class JoinRel extends JoinRelBase
     // semijoin optimizations, it's pretty much required.
     private final boolean semiJoinDone;
     
+    // Likewise for multiJoinDone.  This boolean indicates that this JoinRel
+    // has already been converted to a MultiJoinRel and now is being 
+    // converted back to a JoinRel and therefore should not undergo another
+    // transformation back to a MultiJoinRel.
+    private final boolean multiJoinDone;
+    
     //~ Constructors ----------------------------------------------------------
 
     public JoinRel(
@@ -64,7 +70,8 @@ public final class JoinRel extends JoinRelBase
         Set variablesStopped)
     {
         this(
-            cluster, left, right, condition, joinType, variablesStopped, false);
+            cluster, left, right, condition, joinType, variablesStopped,
+            false, false);
     }
 
     public JoinRel(
@@ -74,12 +81,14 @@ public final class JoinRel extends JoinRelBase
         RexNode condition,
         JoinRelType joinType,
         Set variablesStopped,
-        boolean semiJoinDone)
+        boolean semiJoinDone,
+        boolean multiJoinDone)
     {
         super(
             cluster, new RelTraitSet(CallingConvention.NONE), left, right,
             condition, joinType, variablesStopped);
         this.semiJoinDone = semiJoinDone;
+        this.multiJoinDone = multiJoinDone;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -93,26 +102,29 @@ public final class JoinRel extends JoinRelBase
             RexUtil.clone(condition),
             joinType,
             new HashSet(variablesStopped),
-            isSemiJoinDone());
+            isSemiJoinDone(),
+            isMultiJoinDone());
         clone.inheritTraitsFrom(this);
         return clone;
     }
 
     public void explain(RelOptPlanWriter pw)
     {
-        // NOTE jvs 14-Mar-2006: Do it this way so that semijoin state doesn't
-        // clutter things up in optimizers that don't use semijoins.
-        if (!semiJoinDone) {
+        // NOTE jvs 14-Mar-2006: Do it this way so that semijoin/multijoin
+        // state don't clutter things up in optimizers that don't use semijoins
+        // or multijoins.
+        if (!semiJoinDone && !multiJoinDone) {
             super.explain(pw);
             return;
         }
         pw.explain(
             this,
             new String [] {
-                "left", "right", "condition", "joinType", "semiJoinDone"
+                "left", "right", "condition", "joinType", "semiJoinDone",
+                "multiJoinDone"
             },
             new Object [] {
-                joinType.name().toLowerCase(), semiJoinDone
+                joinType.name().toLowerCase(), semiJoinDone, multiJoinDone
             });
     }
     
@@ -123,6 +135,15 @@ public final class JoinRel extends JoinRelBase
     public boolean isSemiJoinDone()
     {
         return semiJoinDone;
+    }
+    
+    /**
+     * @return true if this JoinRel has already been converted to a
+     * MultiJoinRel
+     */
+    public boolean isMultiJoinDone()
+    {
+        return multiJoinDone;
     }
 }
 

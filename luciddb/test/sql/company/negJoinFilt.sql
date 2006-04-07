@@ -5,7 +5,7 @@
 
 set schema 's';
 
-alter session set optimizerjoinfilterthreshold=4;
+--alter session set optimizerjoinfilterthreshold=4;
 
 -- a case where it's not worth it to join filter
 select * from emp,dept

@@ -65,18 +65,18 @@ order by M.FNAME, M.LNAME;
 
 -- a few ranges
 -- a big ol' join
-select PRODUCTS.PRICE
-from SALES, PRODUCTS
-where SALES.PRICE between PRODUCTS.PRICE - 1 and PRODUCTS.PRICE + 1
-and SALES.PRODID = PRODUCTS.PRODID
-order by  PRODUCTS.PRICE;
+--select PRODUCTS.PRICE
+--from SALES, PRODUCTS
+--where SALES.PRICE between PRODUCTS.PRICE - 1 and PRODUCTS.PRICE + 1
+--and SALES.PRODID = PRODUCTS.PRODID
+--order by  PRODUCTS.PRICE;
 
 -- non join conditions
-select SALES.CUSTID
-from SALES, PRODUCTS
-where SALES.PRICE between PRODUCTS.PRICE - 1 and PRODUCTS.PRICE + 1
-and ( PRODUCTS.NAME LIKE 'C%' OR PRODUCTS.NAME LIKE 'P%')
-order by SALES.CUSTID;
+--select SALES.CUSTID
+--from SALES, PRODUCTS
+--where SALES.PRICE between PRODUCTS.PRICE - 1 and PRODUCTS.PRICE + 1
+--and ( PRODUCTS.NAME LIKE 'C%' OR PRODUCTS.NAME LIKE 'P%')
+--order by SALES.CUSTID;
 
 -- equality and non equality in one
 select SALES.PRICE

@@ -92,15 +92,11 @@ class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
         if (params.getWithLogging()) {
             streamDef.setErrorFilePath(columnSet.getLogFilePath());
         }
-        streamDef.setFieldDelimiter(
-            Character.toString(params.getFieldDelimiter()));
-        streamDef.setRowDelimiter(
-            Character.toString(params.getLineDelimiter()));
-        streamDef.setQuoteCharacter(
-            Character.toString(params.getQuoteChar()));
-        streamDef.setEscapeCharacter(
-            Character.toString(params.getEscapeChar()));
-
+        streamDef.setFieldDelimiter(encodeChar(params.getFieldDelimiter()));
+        streamDef.setRowDelimiter(encodeChar(params.getLineDelimiter()));
+        streamDef.setQuoteCharacter(encodeChar(params.getQuoteChar()));
+        streamDef.setEscapeCharacter(encodeChar(params.getEscapeChar()));
+        
         // The schema type is encoded into the number of rows to 
         // scan and program parameters
         int numRowsScan = 0;
@@ -139,6 +135,11 @@ class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
         streamDef.setTranslationRecovery(true);
         
         return streamDef;
+    }
+    
+    public String encodeChar(char c)
+    {
+        return (c == 0) ? "" : Character.toString(c);
     }
 
     // implement FennelRel

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/optimizer/agg.sql#5 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev_lcs/farrago/unitsql/optimizer/agg.sql#2 $
 0: jdbc:farrago:> -- Test aggregate queries
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'sales';
@@ -195,9 +195,8 @@
 '  FennelRenameRel(fieldNames=[[NAME, EXPR$1]])'
 '    FennelAggRel(groupCount=[1], agg#0=[COUNT()])'
 '      FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'        FennelCalcRel(expr#0..11=[{inputs}], expr#12=[=($t10, $t2)], $f0=[$t11], $condition=[$t12])'
-'          FennelCartesianProductRel(leftouterjoin=[false])'
-'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'        FennelCalcRel(expr#0..11=[{inputs}], $f0=[$t1])'
+'          FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[0]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
 '            FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
