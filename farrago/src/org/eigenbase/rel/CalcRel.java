@@ -29,6 +29,7 @@ import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.*;
 
 import java.util.Set;
+import java.util.List;
 
 /**
  * A relational expression which computes project expressions and also filters.
@@ -51,10 +52,12 @@ import java.util.Set;
  * @author jhyde
  * @since Mar 7, 2004
  * @version $Id$
- **/
+ */
 public final class CalcRel extends CalcRelBase
 {
     public static final boolean DeprecateProjectAndFilter = false;
+
+
     //~ Constructors ----------------------------------------------------------
 
     public CalcRel(
@@ -62,9 +65,10 @@ public final class CalcRel extends CalcRelBase
         RelTraitSet traits,
         RelNode child,
         RelDataType rowType,
-        RexProgram program)
+        RexProgram program,
+        List<RelCollation> collationList)
     {
-        super(cluster, traits, child, rowType, program);
+        super(cluster, traits, child, rowType, program, collationList);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -73,7 +77,26 @@ public final class CalcRel extends CalcRelBase
     {
         return new CalcRel(
             getCluster(), cloneTraits(), getChild(), rowType,
-            program.copy());
+            program.copy(), getCollationList());
+    }
+
+    /**
+     * Creates a relational expression which projects a set of expressions.
+     *
+     * @param child input relational expression
+     * @param exprList list of expressions for the input columns
+     * @param fieldNameList aliases of the expressions, or null to generate
+     */
+    public static RelNode createProject(
+        RelNode child,
+        List<RexNode> exprList,
+        List<String> fieldNameList)
+    {
+        return CalcRel.createProject(
+            child,
+            exprList.toArray(new RexNode[exprList.size()]),
+            fieldNameList == null ? null :
+            fieldNameList.toArray(new String[fieldNameList.size()]));
     }
 
     /**
@@ -88,29 +111,35 @@ public final class CalcRel extends CalcRelBase
         RexNode[] exprs,
         String[] fieldNames)
     {
+        assert fieldNames == null || fieldNames.length == exprs.length;
+        final RelOptCluster cluster = child.getCluster();
+        RexProgramBuilder builder = new RexProgramBuilder(
+            child.getRowType(), cluster.getRexBuilder());
+        int i = -1;
+        for (RexNode expr : exprs) {
+            ++i;
+            final String fieldName = fieldNames == null ? null : fieldNames[i];
+            builder.addProject(expr, fieldName);
+        }
+        final RexProgram program = builder.getProgram();
+        final List<RelCollation> collationList =
+            program.getCollations(child.getCollationList());
         if (DeprecateProjectAndFilter) {
-            assert fieldNames == null || fieldNames.length == exprs.length;
-            final RelOptCluster cluster = child.getCluster();
-            RexProgramBuilder builder = new RexProgramBuilder(
-                child.getRowType(), cluster.getRexBuilder());
-            int i = -1;
-            for (RexNode expr : exprs) {
-                ++i;
-                final String fieldName = fieldNames == null ? null : fieldNames[i];
-                builder.addProject(expr, fieldName);
-            }
-            final RexProgram program = builder.getProgram();
             return new CalcRel(
                 cluster,
                 RelOptUtil.clone(child.getTraits()),
                 child,
                 program.getOutputRowType(),
-                program);
+                program,
+                collationList);
         } else {
+            final RelDataType rowType =
+                RexUtil.createStructType(
+                    child.getCluster().getTypeFactory(), exprs, fieldNames);
             final ProjectRel project =
                 new ProjectRel(
-                    child.getCluster(), child, exprs, fieldNames,
-                    ProjectRelBase.Flags.Boxed);
+                    child.getCluster(), child, exprs, rowType,
+                    ProjectRelBase.Flags.Boxed, collationList);
 
             return project;
         }
@@ -140,7 +169,8 @@ public final class CalcRel extends CalcRelBase
                 RelOptUtil.clone(child.getTraits()),
                 child,
                 program.getOutputRowType(),
-                program);
+                program,
+                RelCollation.emptyList);
         } else {
             return new FilterRel(child.getCluster(), child, condition);
         }

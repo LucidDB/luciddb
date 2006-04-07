@@ -27,6 +27,8 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexProgram;
 
+import java.util.List;
+
 /**
  * <code>CalcRelBase</code> is an abstract base class for implementations
  * of {@link CalcRel}.
@@ -39,17 +41,22 @@ public abstract class CalcRelBase extends SingleRel
     //~ Instance fields -------------------------------------------------------
 
     protected final RexProgram program;
+    private final List<RelCollation> collationList;
 
     protected CalcRelBase(
         RelOptCluster cluster,
         RelTraitSet traits,
         RelNode child,
         RelDataType rowType,
-        RexProgram program)
+        RexProgram program,
+        List<RelCollation> collationList)
     {
         super(cluster, traits, child);
         this.rowType = rowType;
         this.program = program;
+        this.collationList =
+            collationList.isEmpty() ? RelCollation.emptyList :
+            collationList;
         assert isValid(true);
     }
 
@@ -69,6 +76,9 @@ public abstract class CalcRelBase extends SingleRel
         if (!program.isValid(fail)) {
             return false;
         }
+        if (!RelCollationImpl.isValid(getRowType(), collationList, fail)) {
+            return false;
+        }
         return true;
     }
 
@@ -81,6 +91,11 @@ public abstract class CalcRelBase extends SingleRel
     {
         return FilterRel.estimateFilteredRows(
             getChild(), program.getCondition());
+    }
+
+    public List<RelCollation> getCollationList()
+    {
+        return collationList;
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)

@@ -24,6 +24,7 @@ package com.disruptivetech.farrago.rel;
 import net.sf.farrago.trace.FarragoTrace;
 import org.eigenbase.rel.CalcRel;
 import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.RelCollation;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
@@ -33,9 +34,7 @@ import org.eigenbase.util.Util;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -123,8 +122,7 @@ public abstract class CalcRelSplitter
         // relTypes[levelTypeOrdinals[level]].
         int[] levelTypeOrdinals = new int[exprs.length];
 
-        final int inputFieldCount =
-            program.getInputRowType().getFields().length;
+        final int inputFieldCount = program.getInputRowType().getFieldCount();
 
         int levelCount = 0;
         final MaxInputFinder maxInputFinder = new MaxInputFinder(exprLevels);
@@ -536,7 +534,8 @@ public abstract class CalcRelSplitter
                 traits,
                 child,
                 rowType,
-                program);
+                program,
+                RelCollation.emptyList);
         }
     }
 

@@ -138,8 +138,8 @@ public class RexUtil
         RelDataType lhsRowType,
         RelDataType rhsRowType)
     {
-        int n = rhsRowType.getFieldList().size();
-        assert (n == lhsRowType.getFieldList().size());
+        int n = rhsRowType.getFieldCount();
+        assert (n == lhsRowType.getFieldCount());
         RexNode [] rhsExps = new RexNode[n];
         for (int i = 0; i < n; ++i) {
             rhsExps[i] =
@@ -593,6 +593,16 @@ public class RexUtil
     }
 
     /**
+     * Returns whether a {@link RexNode node} is a {@link RexCall call} to a
+     * given {@link SqlOperator operator}.
+     */
+    public static boolean isCallTo(RexNode expr, SqlOperator op)
+    {
+        return expr instanceof RexCall &&
+            ((RexCall) expr).getOperator() == op;
+    }
+
+    /**
      * Creates a record type with anonymous field names.
      */
     public static RelDataType createStructType(
@@ -667,7 +677,7 @@ public class RexUtil
      * @return Whether every expression has the same type as the corresponding
      *   member of the struct type
      *
-     * @see RelOptUtil#eq(RelDataType,RelDataType,boolean)
+     * @see RelOptUtil#eq(String, RelDataType, String, RelDataType, boolean)
      */
     public static boolean compatibleTypes(
         RexNode[] exprs,
@@ -853,7 +863,7 @@ public class RexUtil
         public void visitInputRef(RexInputRef inputRef)
         {
             super.visitInputRef(inputRef);
-            if (inputRef.getIndex() >= inputRowType.getFields().length) {
+            if (inputRef.getIndex() >= inputRowType.getFieldCount()) {
                 throw new IllegalForwardRefException();
             }
         }

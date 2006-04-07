@@ -217,13 +217,13 @@ public class RelStructuredTypeFlattener
         RelNode oldInput = null;
         for (int i = 0; i < oldInputs.length; ++i) {
             RelDataType oldInputType = oldInputs[i].getRowType();
-            int n = oldInputType.getFieldList().size();
+            int n = oldInputType.getFieldCount();
             if (oldOrdinal < n) {
                 oldInput = oldInputs[i];
                 break;
             }
             RelNode newInput = getNewForOldRel(oldInputs[i]);
-            newOrdinal += newInput.getRowType().getFieldList().size();
+            newOrdinal += newInput.getRowType().getFieldCount();
             oldOrdinal -= n;
         }
         assert (oldInput != null);
@@ -475,7 +475,8 @@ public class RelStructuredTypeFlattener
             rel.cloneTraits(),
             newChild,
             newProgram.getOutputRowType(),
-            newProgram);
+            newProgram,
+            RelCollation.emptyList);
         setNewForOldRel(rel, newRel);
     }
 

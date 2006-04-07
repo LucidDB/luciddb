@@ -131,7 +131,6 @@ public class FarragoMultisetSplitterRule extends RelOptRule
         // We have no mixing between multisets and non-multisets and we have
         // no nested multisets e.g. CARDINALITY(MS1 FUSION MS2)
         final List<RexNode> exprList = program.getExprList();
-        final List<RexLocalRef> projectRefList = program.getProjectList();
         int targetField = findMultiset(exprList);
         if (targetField < 0) {
             return;
@@ -142,7 +141,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             expr instanceof RexFieldAccess;
         final CorrelatorRel correlatorRel = insertRels(calc, targetField);
         final int inputFieldCount =
-            program.getInputRowType().getFields().length;
+            program.getInputRowType().getFieldCount();
 
         // Use a visitor to convert the old program. The "targetField"
         // field becomes a new input field, and the expressions before it
@@ -192,6 +191,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
         permutation.set(targetField, replacementField);
         final RexShuttle shuttle = new RexPermutationShuttle(permutation);
 
+        final List<RexLocalRef> projectRefList = program.getProjectList();
         RexProgramBuilder programBuilder = RexProgramBuilder.create(
             calc.getCluster().getRexBuilder(),
             correlatorRel.getRowType(),
@@ -206,7 +206,8 @@ public class FarragoMultisetSplitterRule extends RelOptRule
         RexProgram newProgram = programBuilder.getProgram();
         CalcRel newCalc = new CalcRel(
             calc.getCluster(), calc.cloneTraits(), correlatorRel,
-            calc.getRowType(), newProgram);
+            calc.getRowType(), newProgram,
+            newProgram.getCollations(correlatorRel.getCollationList()));
         call.transformTo(newCalc);
     }
 
@@ -679,7 +680,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             new AggregateRelBase.Call(
                 SqlStdOperatorTable.countOperator,
                 false, new int[0], countType);
-        final int groupCount = child.getRowType().getFields().length;
+        final int groupCount = child.getRowType().getFieldCount();
         AggregateRel aggregateRel =
             new AggregateRel(
                 cluster, child, groupCount,
@@ -910,7 +911,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
      * Visitor which replaces {@link RexLocalRef} objects after the expressions
      * in a {@link RexProgram} have been reordered.
      */
-    static class RexPermutationShuttle extends RexShuttle
+    public static class RexPermutationShuttle extends RexShuttle
     {
         private final Permutation permutation;
 

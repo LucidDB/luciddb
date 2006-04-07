@@ -98,11 +98,6 @@ public abstract class Bug
 
     public static final boolean Dt471Fixed = false;
 
-    /**
-     * DT bug 501: "insert fails..."
-     */
-    public static final boolean Dt501Fixed = false;
-
     // -----------------------------------------------------------------------
     // Developers should create new fields here, in their own section. This
     // will make merge conflicts much less likely than if everyone is
@@ -111,8 +106,6 @@ public abstract class Bug
     // angel
 
     // elin
-
-    // emberson
 
     // fliang
 
@@ -123,6 +116,15 @@ public abstract class Bug
     // jack
 
     // jhyde
+
+    public static final boolean Dt545Fixed = false;
+
+    /**
+     * Whether <a href="http://issues.eigenbase.org/browse/FRG-26">
+     * issue FRG-103: validator allows duplicate target columns in insert</a>
+     * is fixed.
+     */
+    public static final boolean Frg103Fixed = false;
 
     // johnk
 

@@ -27,6 +27,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Collections;
 import java.util.Set;
+import java.util.List;
 import java.util.logging.Logger;
 
 import org.eigenbase.relopt.*;
@@ -53,7 +54,14 @@ public abstract class AbstractRelNode implements RelNode
 
     //~ Instance fields -------------------------------------------------------
 
-    /** cached type of this relational expression */
+    /**
+     * Description, consists of id plus digest.
+     */
+    private String desc;
+
+    /**
+     * Cached type of this relational expression.
+     */
     protected RelDataType rowType;
 
     /**
@@ -61,9 +69,12 @@ public abstract class AbstractRelNode implements RelNode
      * other properties. The string uniquely identifies the node; another
      * node is equivalent if and only if it has the same value. Computed by
      * {@link #computeDigest}, assigned by {@link #onRegister}, returned by
-     * {@link #toString}.
+     * {@link #getDigest()}.
+     *
+     * @see #desc
      */
     protected String digest;
+
     private RelOptCluster cluster;
 
     /** unique id of this object -- for debugging */
@@ -237,6 +248,11 @@ public abstract class AbstractRelNode implements RelNode
         return true;
     }
 
+    public List<RelCollation> getCollationList()
+    {
+        return Collections.emptyList();
+    }
+
     public final RelDataType getRowType()
     {
         if (rowType == null) {
@@ -320,15 +336,19 @@ public abstract class AbstractRelNode implements RelNode
             }
         }
         assert isValid(true);
-        digest = computeDigest();
-        assert digest != null : "post: return != null";
+        recomputeDigest();
     }
 
     public String recomputeDigest()
     {
-        digest = computeDigest();
-        assert digest != null : "post: return != null";
-        return digest;
+        String tempDigest = computeDigest();
+        assert tempDigest != null : "post: return != null";
+        String prefix = "rel#" + id + ":";
+        // Substring uses the same underlying array of chars, so saves a bit
+        // of memory.
+        this.desc = prefix + tempDigest;
+        this.digest = this.desc.substring(prefix.length());
+        return this.digest;
     }
 
     public void registerCorrelVariable(String correlVariable)
@@ -346,6 +366,16 @@ public abstract class AbstractRelNode implements RelNode
     }
 
     public String toString()
+    {
+        return desc;
+    }
+
+    public final String getDescription()
+    {
+        return desc;
+    }
+
+    public final String getDigest()
     {
         return digest;
     }
@@ -391,7 +421,7 @@ public abstract class AbstractRelNode implements RelNode
                         if (j > 0) {
                             write(",");
                         }
-                        write(terms[j++] + "=" + inputs[i].toString());
+                        write(terms[j++] + "=" + inputs[i].getDigest());
                     }
                     for (int i = 0; i < childExps.length; i++) {
                         if (j > 0) {

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/multiset.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/optimizer/multiset.sql#7 $
 0: jdbc:farrago:> -- Test multiset related queries
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'sales';
@@ -41,8 +41,8 @@
 +-----------------------------------------------------------------------------------------------------------------------------------------------------+
 |                                                                       column0                                                                       |
 +-----------------------------------------------------------------------------------------------------------------------------------------------------+
-| IterCalcRel(expr#0..11=[{inputs}], proj#0..9=[{exprs}])                                                                                             |
-|   FennelToIteratorConverter                                                                                                                         |
+| FennelToIteratorConverter                                                                                                                           |
+|   FennelCalcRel(expr#0..11=[{inputs}], expr#12=[3], expr#13=[=($t11, $t12)], proj#0..9=[{exprs}], $condition=[$t13])                                |
 |     FennelPullCorrelatorRel                                                                                                                         |
 |       FennelCartesianProductRel(leftouterjoin=[false])                                                                                              |
 |         FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])  |

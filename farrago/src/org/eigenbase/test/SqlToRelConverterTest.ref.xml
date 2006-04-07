@@ -13,7 +13,8 @@ ProjectRel(EXPR$0=[$0])
             <![CDATA[values (case 'a' when 'a' then 1 end)]]>
         </Resource>
         <Resource name="plan">
-            <![CDATA[ProjectRel(EXPR$0=[$0])
+            <![CDATA[
+ProjectRel(EXPR$0=[$0])
   ProjectRel(EXPR$0=[CASE(=(_ISO-8859-1'a', _ISO-8859-1'a'), 1, CAST(null):INTEGER)])
     OneRowRel
 ]]>
@@ -32,7 +33,8 @@ ProjectRel(DEPTNO=[$0])
             <![CDATA[select deptno from emp group by deptno]]>
         </Resource>
         <Resource name="plan">
-            <![CDATA[ProjectRel(DEPTNO=[$0])
+            <![CDATA[
+ProjectRel(DEPTNO=[$0])
   AggregateRel(groupCount=[1])
     ProjectRel($f0=[$7])
       TableAccessRel(table=[[SALES, EMP]])
@@ -52,7 +54,8 @@ ProjectRel(DEPTNO=[$0], EXPR$1=[$1])
             <![CDATA[select deptno, sum(sal) from emp group by deptno]]>
         </Resource>
         <Resource name="plan">
-            <![CDATA[ProjectRel(DEPTNO=[$0], EXPR$1=[$1])
+            <![CDATA[
+ProjectRel(DEPTNO=[$0], EXPR$1=[$1])
   AggregateRel(groupCount=[1], agg#0=[SUM(1)])
     ProjectRel($f0=[$7], $f1=[$5])
       TableAccessRel(table=[[SALES, EMP]])
@@ -72,7 +75,8 @@ ProjectRel(EXPR$0=[+($0, 4)], EXPR$1=[$1], EXPR$2=[$2], EXPR$3=[*(2, $3)])
             <![CDATA[select deptno + 4, sum(sal), sum(3 + sal), 2 * count(sal) from emp group by deptno]]>
         </Resource>
         <Resource name="plan">
-            <![CDATA[ProjectRel(EXPR$0=[+($0, 4)], EXPR$1=[$1], EXPR$2=[$2], EXPR$3=[*(2, $3)])
+            <![CDATA[
+ProjectRel(EXPR$0=[+($0, 4)], EXPR$1=[$1], EXPR$2=[$2], EXPR$3=[*(2, $3)])
   AggregateRel(groupCount=[1], agg#0=[SUM(1)], agg#1=[SUM(2)], agg#2=[COUNT(1)])
     ProjectRel($f0=[$7], $f1=[$5], $f2=[+(3, $5)])
       TableAccessRel(table=[[SALES, EMP]])
@@ -93,7 +97,8 @@ ProjectRel(EXPR$0=[$0])
             <![CDATA[select sum(sal + sal) from emp having sum(sal) > 10]]>
         </Resource>
         <Resource name="plan">
-            <![CDATA[ProjectRel(EXPR$0=[$0])
+            <![CDATA[
+ProjectRel(EXPR$0=[$0])
   FilterRel(condition=[>($1, 10)])
     AggregateRel(groupCount=[0], agg#0=[SUM(0)], agg#1=[SUM(1)])
       ProjectRel($f0=[+($5, $5)], $f1=[$5])
@@ -115,7 +120,8 @@ ProjectRel(NAME=[$0])
             <![CDATA[select name from (select name from dept group by name)]]>
         </Resource>
         <Resource name="plan">
-            <![CDATA[ProjectRel(NAME=[$0])
+            <![CDATA[
+ProjectRel(NAME=[$0])
   ProjectRel(NAME=[$0])
     AggregateRel(groupCount=[1])
       ProjectRel($f0=[$1])
@@ -137,7 +143,8 @@ ProjectRel(NAME=[$1], FOO=[$2])
             <![CDATA[select name, foo from (select deptno, name, count(deptno) as foo from dept group by name, deptno, name)]]>
         </Resource>
         <Resource name="plan">
-            <![CDATA[ProjectRel(NAME=[$1], FOO=[$2])
+            <![CDATA[
+ProjectRel(NAME=[$1], FOO=[$2])
   ProjectRel(DEPTNO=[$1], NAME=[$0], FOO=[$3])
     AggregateRel(groupCount=[3], agg#0=[COUNT(1)])
       ProjectRel($f0=[$1], $f1=[$0], $f2=[$1])
@@ -158,7 +165,8 @@ ProjectRel(DEPTNO=[$0], EXPR$1=[$1], EXPR$2=[$2], EXPR$3=[$3])
             <![CDATA[select deptno, sum(sal), sum(distinct sal), count(*) from emp group by deptno]]>
         </Resource>
         <Resource name="plan">
-            <![CDATA[ProjectRel(DEPTNO=[$0], EXPR$1=[$1], EXPR$2=[$2], EXPR$3=[$3])
+            <![CDATA[
+ProjectRel(DEPTNO=[$0], EXPR$1=[$1], EXPR$2=[$2], EXPR$3=[$3])
   AggregateRel(groupCount=[1], agg#0=[SUM(1)], agg#1=[SUM(DISTINCT 1)], agg#2=[COUNT()])
     ProjectRel($f0=[$7], $f1=[$5])
       TableAccessRel(table=[[SALES, EMP]])
@@ -183,7 +191,8 @@ ProjectRel(EXPR$0=[$0])
             <![CDATA[select*from unnest(multiset[1,2])]]>
         </Resource>
         <Resource name="plan">
-            <![CDATA[ProjectRel(EXPR$0=[$0])
+            <![CDATA[
+ProjectRel(EXPR$0=[$0])
   UncollectRel
     ProjectRel(EXPR$0=[$SLICE($0)])
       CollectRel
@@ -210,7 +219,8 @@ ProjectRel(DEPTNO=[$0], NAME=[$1])
             <![CDATA[select*from unnest(multiset(select*from dept))]]>
         </Resource>
         <Resource name="plan">
-            <![CDATA[ProjectRel(DEPTNO=[$0], NAME=[$1])
+            <![CDATA[
+ProjectRel(DEPTNO=[$0], NAME=[$1])
   UncollectRel
     ProjectRel(EXPR$0=[$0])
       CollectRel
@@ -236,7 +246,8 @@ ProjectRel(EXPR$0=[$1])
             <![CDATA[select multiset(select deptno from dept) from (values(true))]]>
         </Resource>
         <Resource name="plan">
-            <![CDATA[ProjectRel(EXPR$0=[$1])
+            <![CDATA[
+ProjectRel(EXPR$0=[$1])
   JoinRel(condition=[true], joinType=[inner])
     ProjectRel(EXPR$0=[$0])
       ProjectRel(EXPR$0=[true])
@@ -263,7 +274,8 @@ ProjectRel(EXPR$0=[_ISO-8859-1'a'], EXPR$1=[$SLICE($2)])
             <![CDATA[select 'a',multiset[10] from dept]]>
         </Resource>
         <Resource name="plan">
-            <![CDATA[ProjectRel(EXPR$0=[_ISO-8859-1'a'], EXPR$1=[$SLICE($2)])
+            <![CDATA[
+ProjectRel(EXPR$0=[_ISO-8859-1'a'], EXPR$1=[$SLICE($2)])
   JoinRel(condition=[true], joinType=[inner])
     TableAccessRel(table=[[SALES, DEPT]])
     CollectRel
@@ -291,7 +303,8 @@ ProjectRel(EXPR$0=[_ISO-8859-1'abc'], EXPR$1=[$SLICE($8)])
             <![CDATA[select 'abc',multiset[deptno,sal] from emp]]>
         </Resource>
         <Resource name="plan">
-            <![CDATA[ProjectRel(EXPR$0=[_ISO-8859-1'abc'], EXPR$1=[$SLICE($8)])
+            <![CDATA[
+ProjectRel(EXPR$0=[_ISO-8859-1'abc'], EXPR$1=[$SLICE($8)])
   CorrelatorRel(condition=[true], joinType=[inner], correlations=[[var0=offset7, var1=offset5]])
     TableAccessRel(table=[[SALES, EMP]])
     CollectRel
@@ -319,7 +332,8 @@ ProjectRel(DEPTNO=[$0], NAME=[$1], EMPSET=[$2])
             <![CDATA[select *,         multiset(select * from emp where deptno=dept.deptno)                as empset      from dept]]>
         </Resource>
         <Resource name="plan">
-            <![CDATA[ProjectRel(DEPTNO=[$0], NAME=[$1], EMPSET=[$2])
+            <![CDATA[
+ProjectRel(DEPTNO=[$0], NAME=[$1], EMPSET=[$2])
   CorrelatorRel(condition=[true], joinType=[inner], correlations=[[var0=offset0]])
     TableAccessRel(table=[[SALES, DEPT]])
     CollectRel
@@ -346,7 +360,8 @@ ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], 
             <![CDATA[select*from emp where exists (select 1 from dept where deptno=55)]]>
         </Resource>
         <Resource name="plan">
-            <![CDATA[ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7])
+            <![CDATA[
+ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7])
   FilterRel(condition=[IS NULL($9)])
     JoinRel(condition=[true], joinType=[left])
       TableAccessRel(table=[[SALES, EMP]])
@@ -374,7 +389,8 @@ ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], 
             <![CDATA[select*from emp where exists (select 1 from dept where emp.deptno=dept.deptno)]]>
         </Resource>
         <Resource name="plan">
-            <![CDATA[ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7])
+            <![CDATA[
+ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7])
   FilterRel(condition=[IS NULL($9)])
     CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset7]])
       TableAccessRel(table=[[SALES, EMP]])
@@ -404,7 +420,8 @@ ProjectRel(EXPR$0=[$0])
             <![CDATA[select*from unnest(select multiset[deptno] from dept)]]>
         </Resource>
         <Resource name="plan">
-            <![CDATA[ProjectRel(EXPR$0=[$0])
+            <![CDATA[
+ProjectRel(EXPR$0=[$0])
   UncollectRel
     ProjectRel(EXPR$0=[$0])
       ProjectRel(EXPR$0=[$SLICE($2)])
@@ -432,7 +449,8 @@ ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], 
             <![CDATA[select * from emp, LATERAL (select * from dept where emp.deptno=dept.deptno)]]>
         </Resource>
         <Resource name="plan">
-            <![CDATA[ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], DEPTNO0=[$8], NAME=[$9])
+            <![CDATA[
+ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], DEPTNO0=[$8], NAME=[$9])
   CorrelatorRel(condition=[true], joinType=[inner], correlations=[[var0=offset7]])
     TableAccessRel(table=[[SALES, EMP]])
     ProjectRel(DEPTNO=[$0], NAME=[$1])
@@ -457,7 +475,8 @@ ProjectRel(EXPR$0=[ELEMENT($SLICE($8))])
             <![CDATA[select element(multiset[5]) from emp]]>
         </Resource>
         <Resource name="plan">
-            <![CDATA[ProjectRel(EXPR$0=[ELEMENT($SLICE($8))])
+            <![CDATA[
+ProjectRel(EXPR$0=[ELEMENT($SLICE($8))])
   JoinRel(condition=[true], joinType=[inner])
     TableAccessRel(table=[[SALES, EMP]])
     CollectRel
@@ -482,7 +501,8 @@ ProjectRel(EXPR$0=[$0])
             <![CDATA[values element(multiset[5])]]>
         </Resource>
         <Resource name="plan">
-            <![CDATA[ProjectRel(EXPR$0=[$0])
+            <![CDATA[
+ProjectRel(EXPR$0=[$0])
   ProjectRel(EXPR$0=[ELEMENT($SLICE($0))])
     CollectRel
       UnionRel(all=[true])
@@ -505,7 +525,8 @@ UnionRel(all=[true])
             <![CDATA[select empno from emp union all select deptno from dept]]>
         </Resource>
         <Resource name="plan">
-            <![CDATA[UnionRel(all=[true])
+            <![CDATA[
+UnionRel(all=[true])
   ProjectRel(EMPNO=[$0])
     TableAccessRel(table=[[SALES, EMP]])
   ProjectRel(DEPTNO=[$0])
@@ -527,7 +548,8 @@ UnionRel(all=[false])
             <![CDATA[select empno from emp union select deptno from dept]]>
         </Resource>
         <Resource name="plan">
-            <![CDATA[UnionRel(all=[false])
+            <![CDATA[
+UnionRel(all=[false])
   ProjectRel(EMPNO=[$0])
     TableAccessRel(table=[[SALES, EMP]])
   ProjectRel(DEPTNO=[$0])
@@ -563,7 +585,8 @@ select 34 from emp
 union all values (30), (45 + 10)]]>
         </Resource>
         <Resource name="plan">
-            <![CDATA[UnionRel(all=[true])
+            <![CDATA[
+UnionRel(all=[true])
   UnionRel(all=[true])
     ProjectRel(EXPR$0=[$0])
       UnionRel(all=[true])
@@ -610,7 +633,8 @@ ProjectRel(DEPTNO=[$7])
   values (45), (67))]]>
         </Resource>
         <Resource name="plan">
-            <![CDATA[ProjectRel(DEPTNO=[$7])
+            <![CDATA[
+ProjectRel(DEPTNO=[$7])
   JoinRel(condition=[true], joinType=[inner])
     TableAccessRel(table=[[SALES, EMP]])
     UnionRel(all=[true])
@@ -642,7 +666,8 @@ ProjectRel(EXPR$0=[CASE(IS NULL(1), IS NOT NULL(2), IS NULL(2), IS NOT NULL(1), 
             <![CDATA[select 1 is distinct from 2 from (values(true))]]>
         </Resource>
         <Resource name="plan">
-            <![CDATA[ProjectRel(EXPR$0=[CASE(IS NULL(1), IS NOT NULL(2), IS NULL(2), IS NOT NULL(1), <>(1, 2))])
+            <![CDATA[
+ProjectRel(EXPR$0=[CASE(IS NULL(1), IS NOT NULL(2), IS NULL(2), IS NOT NULL(1), <>(1, 2))])
   ProjectRel(EXPR$0=[$0])
     ProjectRel(EXPR$0=[true])
       OneRowRel
@@ -662,7 +687,8 @@ ProjectRel(EXPR$0=[CASE(IS NULL(1), IS NULL(2), IS NULL(2), IS NULL(1), =(1, 2))
             <![CDATA[select 1 is not distinct from 2 from (values(true))]]>
         </Resource>
         <Resource name="plan">
-            <![CDATA[ProjectRel(EXPR$0=[CASE(IS NULL(1), IS NULL(2), IS NULL(2), IS NULL(1), =(1, 2))])
+            <![CDATA[
+ProjectRel(EXPR$0=[CASE(IS NULL(1), IS NULL(2), IS NULL(2), IS NULL(1), =(1, 2))])
   ProjectRel(EXPR$0=[$0])
     ProjectRel(EXPR$0=[true])
       OneRowRel
@@ -681,7 +707,8 @@ ProjectRel(EXPR$0=[$0])
             <![CDATA[values ('a' not like 'b' escape 'c')]]>
         </Resource>
         <Resource name="plan">
-            <![CDATA[ProjectRel(EXPR$0=[$0])
+            <![CDATA[
+ProjectRel(EXPR$0=[$0])
   ProjectRel(EXPR$0=[NOT(LIKE(_ISO-8859-1'a', _ISO-8859-1'b', _ISO-8859-1'c'))])
     OneRowRel
 ]]>
@@ -706,7 +733,8 @@ window w1 as (partition by job order by hiredate rows 2 preceding),
   w3 as (partition by job order by hiredate range interval '1' second preceding)]]>
         </Resource>
         <Resource name="plan">
-            <![CDATA[ProjectRel(EXPR$0=[SUM($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING)], EXPR$1=[SUM($7) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING)], EXPR$2=[SUM($7) OVER (PARTITION BY $2 ORDER BY $4 ROWS 3 PRECEDING)])
+            <![CDATA[
+ProjectRel(EXPR$0=[SUM($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING)], EXPR$1=[SUM($7) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING)], EXPR$2=[SUM($7) OVER (PARTITION BY $2 ORDER BY $4 ROWS 3 PRECEDING)])
   FilterRel(condition=[>(SUM(-($7, $5)) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING), 999)])
     TableAccessRel(table=[[SALES, EMP]])
 ]]>
@@ -724,7 +752,8 @@ ProjectRel(EXPR$0=[$0])
             <![CDATA[values (character_length('foo'))]]>
         </Resource>
         <Resource name="plan">
-            <![CDATA[ProjectRel(EXPR$0=[$0])
+            <![CDATA[
+ProjectRel(EXPR$0=[$0])
   ProjectRel(EXPR$0=[CHAR_LENGTH(_ISO-8859-1'foo')])
     OneRowRel
 ]]>
@@ -744,7 +773,8 @@ from emp
 window w1 as (partition by job order by hiredate rows 2 preceding)]]>
         </Resource>
         <Resource name="plan">
-            <![CDATA[ProjectRel(EXPR$0=[SUM($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING)], EXPR$1=[CASE(=(COUNT($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING), 0), CAST(null):INTEGER, /(SUM($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING), COUNT($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING)))])
+            <![CDATA[
+ProjectRel(EXPR$0=[SUM($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING)], EXPR$1=[CASE(=(COUNT($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING), 0), CAST(null):INTEGER, /(SUM($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING), COUNT($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING)))])
   TableAccessRel(table=[[SALES, EMP]])
 ]]>
         </Resource>
@@ -763,7 +793,8 @@ from emp
 window w1 as (partition by job order by hiredate rows 2 preceding)]]>
         </Resource>
         <Resource name="plan">
-            <![CDATA[ProjectRel(EXPR$0=[COUNT($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING)], EXPR$1=[COUNT() OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING)])
+            <![CDATA[
+ProjectRel(EXPR$0=[COUNT($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING)], EXPR$1=[COUNT() OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING)])
   TableAccessRel(table=[[SALES, EMP]])
 ]]>
         </Resource>

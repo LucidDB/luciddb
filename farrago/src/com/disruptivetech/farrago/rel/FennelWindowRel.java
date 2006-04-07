@@ -25,20 +25,16 @@ import com.disruptivetech.farrago.calc.RexToCalcTranslator;
 import net.sf.farrago.FarragoMetadataFactory;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.query.*;
-import org.eigenbase.rel.CalcRel;
-import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.SqlParserUtil;
 import org.eigenbase.util.Util;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.HashMap;
+import java.util.*;
 import java.math.BigDecimal;
 
 
@@ -218,17 +214,16 @@ public class FennelWindowRel extends FennelSingleRel
         windowStreamDef.setOutputProgram(program);
 
         // Setup sort list.
-        Integer[] sortFields = {};
-        final RelDataTypeField[] fields = getChild().getRowType().getFields();
-        for (int i = 0; i < fields.length; i++) {
-            RelDataTypeField field = fields[i];
-            // FIXME (jhyde, 2004/12/6) programmatically determine which are
-            //   the sort keys of the underlying relexp.
-            if (!field.getName().toUpperCase().equals("ROWTIME")) {
-                continue;
+        final List<RelCollation> collationList = getChild().getCollationList();
+        List<Integer> sortFieldList = new ArrayList<Integer>();
+        if (!collationList.isEmpty()) {
+            final RelCollation collation = collationList.get(0);
+            for (RelFieldCollation fieldCollation : collation.getFieldCollations()) {
+                sortFieldList.add(fieldCollation.getFieldIndex());
             }
-            sortFields = new Integer[] {new Integer(i)};
         }
+        Integer[] sortFields =
+            sortFieldList.toArray(new Integer[sortFieldList.size()]);
         windowStreamDef.setInputOrderKeyList(
             FennelRelUtil.createTupleProjection(repos, sortFields));
 
@@ -266,10 +261,8 @@ public class FennelWindowRel extends FennelSingleRel
                 // Create a program for the window partition to init, add, drop
                 // rows. Does not include the expression to form the output
                 // record.
-                final RexCall[] overs =
-                    partition.overList.toArray(
-                        new RexCall[partition.overList.size()]);
-                RexProgram combinedProgram = makeProgram(inputProgram, overs);
+                RexProgram combinedProgram =
+                    makeProgram(inputProgram, partition.overList);
 
                 String[] programs = new String[3];
                 translator.getAggProgram(combinedProgram, programs);
@@ -277,7 +270,8 @@ public class FennelWindowRel extends FennelSingleRel
                 windowPartitionDef.setAddProgram(programs[1]);
                 windowPartitionDef.setDropProgram(programs[2]);
 
-                RexNode[] dups = removeDuplicates(translator, overs);
+                RexNode[] dups =
+                    removeDuplicates(translator, partition.overList);
                 final FemTupleDescriptor bucketDesc = FennelRelUtil.
                         createTupleDescriptorFromRexNode(repos, dups);
                 windowPartitionDef.setBucketDesc(bucketDesc);
@@ -296,14 +290,16 @@ public class FennelWindowRel extends FennelSingleRel
      * expression.
      *
      * @param bottomProgram Calculates the inputs to the program
-     * @param overs Aggregate expressions
+     * @param overList Aggregate expressions
      * @return Combined program
      *
      * @pre bottomPogram.getCondition() == null
-     * @post return.getProjectList().size() == overs.length
+     * @post return.getProjectList().size() == overList.size()
      * @see RexProgramBuilder#mergePrograms(RexProgram, RexProgram, RexBuilder) 
      */
-    private RexProgram makeProgram(RexProgram bottomProgram, RexCall[] overs)
+    private RexProgram makeProgram(
+        RexProgram bottomProgram,
+        List<RexWinAggCall> overList)
     {
         assert bottomProgram.getCondition() == null :
             "pre: bottomPogram.getCondition() == null";
@@ -311,8 +307,8 @@ public class FennelWindowRel extends FennelSingleRel
         final RexBuilder rexBuilder = getCluster().getRexBuilder();
         final RexProgramBuilder topProgramBuilder =
             new RexProgramBuilder(bottomProgram.getOutputRowType(), rexBuilder);
-        for (int i = 0; i < overs.length; i++) {
-            RexCall over = overs[i];
+        for (int i = 0; i < overList.size(); i++) {
+            RexCall over = overList.get(i);
             topProgramBuilder.addProject(over, "$" + i);
         }
         final RexProgram topProgram = topProgramBuilder.getProgram();
@@ -321,8 +317,8 @@ public class FennelWindowRel extends FennelSingleRel
         final RexProgram mergedProgram =
             RexProgramBuilder.mergePrograms(topProgram, bottomProgram, rexBuilder);
 
-        assert mergedProgram.getProjectList().size() == overs.length :
-            "post: return.getProjectList().size() == overs.length";
+        assert mergedProgram.getProjectList().size() == overList.size() :
+            "post: return.getProjectList().size() == overList.size()";
         return mergedProgram;
     }
 
@@ -330,27 +326,20 @@ public class FennelWindowRel extends FennelSingleRel
     //   obsolete this method
     private RexNode[] removeDuplicates(
         RexToCalcTranslator translator,
-        RexNode[] outputExps)
+        List<RexWinAggCall> outputExps)
     {
-        HashMap dups = new HashMap();
-        for (int i = 0; i < outputExps.length; i++) {
-            RexNode node = outputExps[i];
-            if (node instanceof RexWinAggCall) {
-                // This should be aggregate input.
-                Object key = translator.getKey(node);
-                if (dups.containsKey(key)) {
-                    continue;
-                }
-                dups.put(key, node);
+        Map<Object,RexWinAggCall> dups = new HashMap<Object, RexWinAggCall>();
+        for (RexWinAggCall node : outputExps) {
+            // This should be aggregate input.
+            Object key = translator.getKey(node);
+            if (dups.containsKey(key)) {
+                continue;
             }
+            dups.put(key, node);
         }
         RexNode[] nodes = new RexNode[dups.size()];
         int count = 0;
-        for (int i = 0; i < outputExps.length; i++) {
-            RexNode node = outputExps[i];
-            if (!(node instanceof RexWinAggCall)) {
-                continue;
-            }
+        for (RexWinAggCall node : outputExps) {
             Object key = translator.getKey(node);
             if (dups.containsKey(key)) {
                 nodes[count] = node;

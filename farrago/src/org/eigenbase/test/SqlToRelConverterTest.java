@@ -22,12 +22,17 @@
 */
 package org.eigenbase.test;
 
-import org.eigenbase.rel.*;
-import org.eigenbase.relopt.*;
-import org.eigenbase.sql.*;
-import org.eigenbase.util.*;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.relopt.RelOptXmlPlanWriter;
+import org.eigenbase.sql.SqlExplainLevel;
+import org.eigenbase.sql.fun.SqlCaseOperator;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.sql2rel.SqlToRelConverter;
+import org.eigenbase.util.TestUtil;
 
-import java.io.*;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 /**
  * Unit test for {@link SqlToRelConverter}.

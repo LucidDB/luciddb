@@ -90,7 +90,7 @@ class SubqueryFinder extends ScopeHandler
                         exprs,
                         RexUtil.createStructType(
                             typeFactory, exprs),
-                        ProjectRel.Flags.None);
+                        ProjectRel.Flags.None, RelCollation.emptyList);
             }
 
             boolean isNullable = false;
@@ -186,7 +186,7 @@ class SubqueryFinder extends ScopeHandler
                     exprs,
                     RexUtil.createStructType(
                         queryInfo.cluster.getTypeFactory(), exprs),
-                    ProjectRel.Flags.None);
+                    ProjectRel.Flags.None, RelCollation.emptyList);
             RelNode rightDistinct =
                 RelOptUtil.createDistinctRel(rightProject);
             queryInfo.leaves.add(rightDistinct);

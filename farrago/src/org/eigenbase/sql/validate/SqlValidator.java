@@ -151,18 +151,44 @@ public interface SqlValidator
      */
     void validateIntervalQualifier(SqlIntervalQualifier qualifier);
 
-    void validateInsert(SqlInsert call);
+    /**
+     * Validates an INSERT statement.
+     */
+    void validateInsert(SqlInsert insert);
 
-    void validateDelete(SqlDelete call);
+    /**
+     * Validates an UPDATE statement.
+     */
+    void validateUpdate(SqlUpdate update);
 
-    void validateUpdate(SqlUpdate call);
+    /**
+     * Validates a DELETE statement.
+     */
+    void validateDelete(SqlDelete delete);
 
+    /**
+     * Validates a data type expression.
+     */
     void validateDataType(SqlDataTypeSpec dataType);
 
+    /**
+     * Validates a dynamic parameter.
+     */
     void validateDynamicParam(SqlDynamicParam dynamicParam);
 
-    void validateWindow(SqlNode windowOrId, SqlValidatorScope scope, SqlCall call);
+    /**
+     * Validates the right-hand side of an OVER expression. It might be
+     * either an {@link SqlIdentifier identifier} referencing a window, or
+     * an {@link SqlWindow inline window specification}.
+     */
+    void validateWindow(
+        SqlNode windowOrId,
+        SqlValidatorScope scope,
+        SqlCall call);
 
+    /**
+     * Validates a call to an operator.
+     */
     void validateCall(SqlCall call, SqlValidatorScope scope);
 
     /**

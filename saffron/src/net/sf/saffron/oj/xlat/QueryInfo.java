@@ -45,7 +45,7 @@ import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexUtil;
+import org.eigenbase.rex.RexFieldAccess;
 import org.eigenbase.util.Util;
 
 /**
@@ -211,7 +211,7 @@ class QueryInfo
                 Iterator lookups =
                     cluster.getQuery().getMapDeferredToCorrel().keySet().iterator();
                 while (lookups.hasNext()) {
-                    DeferredLookup lookup = (DeferredLookup) lookups.next();
+                    DeferredLookupImpl lookup = (DeferredLookupImpl) lookups.next();
                     String correlName =
                         (String) cluster.getQuery().getMapDeferredToCorrel().get(lookup);
 
@@ -466,7 +466,7 @@ class QueryInfo
      */
     int countColumns(RelNode rel)
     {
-        return rel.getRowType().getFieldList().size();
+        return rel.getRowType().getFieldCount();
     }
 
     /**
@@ -486,7 +486,7 @@ class QueryInfo
         int fieldOffset = 0;
         for (int i = 0; i < offset; i++) {
             final RelNode rel = (RelNode) relList.get(i);
-            fieldOffset += rel.getRowType().getFieldList().size();
+            fieldOffset += rel.getRowType().getFieldCount();
         }
         RelNode rel = (RelNode) relList.get(offset);
         if (isParent) {
@@ -600,6 +600,11 @@ class QueryInfo
         }
     }
 
+    DeferredLookupImpl createDeferredLookup(int offset, boolean isParent)
+    {
+        return new DeferredLookupImpl(offset, isParent);
+    }
+
     static abstract class LookupResult
     {
     }
@@ -632,36 +637,36 @@ class QueryInfo
             this.varName = varName;
         }
     }
-}
 
-
-/**
- * Contains the information necessary to repeat a call to {@link
- * QueryInfo#lookup(int,RelNode[],boolean,String)}.
- */
-class DeferredLookup
-{
-    QueryInfo queryInfo;
-    boolean isParent;
-    int offset;
-
-    DeferredLookup(
-        QueryInfo queryInfo,
-        int offset,
-        boolean isParent)
+    /**
+     * Contains the information necessary to repeat a call to {@link
+     * QueryInfo#lookup(int,RelNode[],boolean,String)}.
+     */
+    class DeferredLookupImpl implements RelOptQuery.DeferredLookup
     {
-        this.queryInfo = queryInfo;
-        this.offset = offset;
-        this.isParent = isParent;
-    }
+        boolean isParent;
+        int offset;
 
-    QueryInfo.LookupResult lookup(
-        RelNode [] inputs,
-        String varName)
-    {
-        return queryInfo.lookup(offset, inputs, isParent, varName);
+        DeferredLookupImpl(
+            int offset,
+            boolean isParent)
+        {
+            this.offset = offset;
+            this.isParent = isParent;
+        }
+
+        QueryInfo.LookupResult lookup(
+            RelNode [] inputs,
+            String varName)
+        {
+            return QueryInfo.this.lookup(offset, inputs, isParent, varName);
+        }
+
+        public RexFieldAccess getFieldAccess(String name)
+        {
+            throw new UnsupportedOperationException();
+        }
     }
 }
-
 
 // End QueryInfo.java

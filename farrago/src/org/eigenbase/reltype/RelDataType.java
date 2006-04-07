@@ -89,6 +89,14 @@ public interface RelDataType
     public RelDataTypeField [] getFields();
 
     /**
+     * Returns the number of fields in a struct type.
+     *
+     * <p>This method is equivalent to
+     * <code>{@link #getFieldList}().size()</code>.
+     */
+    public int getFieldCount();
+
+    /**
      * Looks up the ordinal of a field by name.
      *
      * @param fieldName name of field to find

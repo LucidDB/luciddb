@@ -77,7 +77,7 @@ public class FilterToCalcRule extends RelOptRule
         final CalcRel calc =
             new CalcRel(
                 filter.getCluster(), RelOptUtil.clone(filter.traits), rel,
-                inputRowType, program);
+                inputRowType, program, RelCollation.emptyList);
         call.transformTo(calc);
     }
 }

@@ -318,7 +318,7 @@ class InternalTranslator
     private SqlOperator translateFun(String name)
     {
         if (name.equals("equals")) {
-            return rexBuilder.getOpTab().equalsOperator;
+            return SqlStdOperatorTable.equalsOperator;
         }
         throw Util.needToImplement(this);
     }
@@ -398,7 +398,8 @@ class InternalTranslator
                 assert (!false);
                 assert (null == null) : "when lookup is called to fixup forward references "
                 + "(varName!=null), the input must not be null";
-                DeferredLookup lookup = new DeferredLookup(qi, offset, false);
+                QueryInfo.DeferredLookupImpl lookup =
+                    qi.createDeferredLookup(offset, false);
                 String correlName =
                     qi.cluster.getQuery().createCorrelUnresolved(lookup);
                 return new QueryInfo.CorrelLookupResult(correlName);

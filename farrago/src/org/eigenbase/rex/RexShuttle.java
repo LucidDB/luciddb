@@ -23,6 +23,8 @@
 
 package org.eigenbase.rex;
 
+import java.util.List;
+
 
 /**
  * Passes over a row-expression, calling a handler method for each node,
@@ -154,6 +156,36 @@ public class RexShuttle
     public RexNode visitRangeRef(RexRangeRef rangeRef)
     {
         return rangeRef;
+    }
+
+    /**
+     * Applies this shuttle to each expression in a list.
+     *
+     * @return whether any of the expressions changed
+     */
+    public final <T extends RexNode> boolean apply(List<T> exprList)
+    {
+        int changeCount = 0;
+        for (int i = 0; i < exprList.size(); i++) {
+            T expr = exprList.get(i);
+            T expr2 = (T) expr.accept(this);
+            if (expr != expr2) {
+                ++changeCount;
+                exprList.set(i, expr2);
+            }
+        }
+        return changeCount > 0;
+    }
+
+    /**
+     * Applies this shuttle to an expression, or returns null if the expression
+     * is null.
+     */
+    public final RexNode apply(RexNode expr)
+    {
+        return expr == null ?
+            null :
+            expr.accept(this);
     }
 }
 

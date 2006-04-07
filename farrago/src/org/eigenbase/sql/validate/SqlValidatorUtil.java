@@ -32,6 +32,9 @@ import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.type.SqlTypeUtil;
 
 import java.nio.charset.Charset;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * Utility methods related to validation.
@@ -105,17 +108,18 @@ public class SqlValidatorUtil
         SqlNode expr,
         String alias)
     {
-        final SqlIdentifier id = new SqlIdentifier(alias, expr.getParserPosition());
-        return SqlStdOperatorTable.asOperator.createCall(
-            expr, id, SqlParserPos.ZERO);
+        final SqlParserPos pos = expr.getParserPosition();
+        final SqlIdentifier id = new SqlIdentifier(alias, pos);
+        return SqlStdOperatorTable.asOperator.createCall(expr, id, pos);
     }
 
     /**
      * Derives an alias for a node. If it cannot derive an alias, returns null.
      *
      * <p>This method doesn't try very hard. It doesn't invent mangled aliases,
-     * and doesn't even recognize an AS clause. There are other methods for
-     * that. It just takes the last part of an identifier.
+     * and doesn't even recognize an AS clause.
+     * (See {@link #getAlias(SqlNode, int)} for that.)
+     * It just takes the last part of an identifier.
      */
     public static String getAlias(SqlNode node) {
         if (node instanceof SqlIdentifier) {
@@ -124,6 +128,67 @@ public class SqlValidatorUtil
         } else {
             return null;
         }
+    }
+
+    /**
+     * Derives an alias for a node, and invents a mangled identifier if it
+     * cannot.
+     *
+     * <p>Examples:<ul>
+     * <li>Alias: "1 + 2 as foo" yields "foo"
+     * <li>Identifier: "foo.bar.baz" yields "baz"
+     * <li>Anything else yields "expr$<i>ordinal</i>"
+     * </ul>
+     *
+     * @return An alias, if one can be derived;
+     *   or a synthetic alias "expr$<i>ordinal</i>" if ordinal >= 0;
+     *   otherwise null
+     */
+    public static String getAlias(SqlNode node, int ordinal)
+    {
+        switch (node.getKind().getOrdinal()) {
+        case SqlKind.AsORDINAL:
+            // E.g. "1 + 2 as foo" --> "foo"
+            return ((SqlCall) node).getOperands()[1].toString();
+
+        case SqlKind.IdentifierORDINAL:
+            // E.g. "foo.bar" --> "bar"
+            final String [] names = ((SqlIdentifier) node).names;
+            return names[names.length - 1];
+
+        default:
+            if (ordinal < 0) {
+                return null;
+            } else {
+                return SqlUtil.deriveAliasFromOrdinal(ordinal);
+            }
+        }
+    }
+
+    /**
+     * Makes a name distinct from other names which have already been used,
+     * adds it to the list, and returns it.
+     *
+     * @param name Suggested name, may not be unique
+     * @param nameList Collection of names already used
+     * @return
+     */
+    public static String uniquify(String name, Collection nameList)
+    {
+        if (name == null) {
+            name = "EXPR$";
+        }
+        if (nameList.contains(name)) {
+            String aliasBase = name;
+            for (int j = 0;; j++) {
+                name = aliasBase + j;
+                if (!nameList.contains(name)) {
+                    break;
+                }
+            }
+        }
+        nameList.add(name);
+        return name;
     }
 
     static SqlNodeList deepCopy(SqlNodeList list) {
@@ -163,6 +228,21 @@ public class SqlValidatorUtil
             opTab,
             catalogReader,
             typeFactory);
+    }
+
+    /**
+     * Makes sure that the names in a list are unique.
+     */
+    public static void uniquify(List<String> nameList)
+    {
+        List<String> usedList = new ArrayList<String>();
+        for (int i = 0; i < nameList.size(); i++) {
+            String name = nameList.get(i);
+            String uniqueName = uniquify(name, usedList);
+            if (!uniqueName.equals(name)) {
+                nameList.set(i, uniqueName);
+            }
+        }
     }
 }
 

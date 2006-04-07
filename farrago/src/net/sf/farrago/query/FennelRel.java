@@ -72,8 +72,10 @@ public interface FennelRel extends RelNode
     Object implementFennelChild(FennelRelImplementor implementor);
 
     /**
+     * <p>TODO: jhyde, 2006/3/28: unify with {@link RelNode#getCollationList()}
+     *
      * @return the sort order produced by this FennelRel, or an empty array if
-     * the output is not guaranteed to be in any particular order
+     * the output is not guaranteed to be in any particular order.
      */
     public RelFieldCollation [] getCollations();
 }

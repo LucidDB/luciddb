@@ -918,7 +918,7 @@ SqlNode SelectItem() :
         [ <AS> ]
         id = SimpleIdentifier()
         {
-            pos = getPos();
+            pos = e.getParserPosition().plus(getPos());
             e = SqlStdOperatorTable.asOperator.createCall(e, id,  pos);
         }
     ]
@@ -938,10 +938,11 @@ SqlNode SelectExpression() :
 }
 {
     LOOKAHEAD(3)
-    id = Identifier() <DOT> <STAR>
+    id = Identifier() { pos = getPos(); } <DOT> <STAR>
     {
-        pos = getPos();
-        return new SqlIdentifier(new String[] {id, "*"}, pos); }
+        pos = pos.plus(getPos());
+        return new SqlIdentifier(new String[] {id, "*"}, pos);
+    }
     |
     <STAR>
     {
@@ -2598,6 +2599,7 @@ SqlDataTypeSpec DataType() :
             precision,
             scale,
             charSetName,
+            null,
             pos);
     }
 }

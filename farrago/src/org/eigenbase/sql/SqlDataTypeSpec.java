@@ -41,6 +41,9 @@ import java.util.TimeZone;
 /**
  * Represents a SQL data type specification in a parse tree.
  *
+ * <p>A <code>SqlDataTypeSpec</code> is immutable; once created, you cannot
+ * change any of the fields.
+ *
  * <p>todo: This should really be a subtype of {@link SqlCall}.
  *
  * <p>In its full glory, we will have to support complex type expressions like
@@ -54,13 +57,13 @@ import java.util.TimeZone;
  *     ) AS rec
  * )</code></blockquote>
  *
- * <p>Currently it only supports simple datatypes, like char, varchar, double,
- * with optional precision and scale.
+ * <p>Currently it only supports simple datatypes like CHAR, VARCHAR and
+ * DOUBLE, with optional precision and scale.
  *
  * @author Lee Schumacher
  * @since Jun 4, 2004
  * @version $Id$
- **/
+ */
 public class SqlDataTypeSpec extends SqlNode
 {
     //~ Instance fields -------------------------------------------------------
@@ -69,18 +72,20 @@ public class SqlDataTypeSpec extends SqlNode
     private final SqlIdentifier typeName;
     private final int scale;
     private final int precision;
-    private RelDataType type;
     private final String charSetName;
-    private final String format;
-    private final TimeZone timezone;
+    private final TimeZone timeZone;
 
     //~ Constructors ----------------------------------------------------------
 
+    /**
+     * Creates a type specification.
+     */
     public SqlDataTypeSpec(
         final SqlIdentifier typeName,
         int precision,
         int scale,
         String charSetName,
+        TimeZone timeZone,
         SqlParserPos pos)
     {
         super(pos);
@@ -89,31 +94,13 @@ public class SqlDataTypeSpec extends SqlNode
         this.scale = scale;
         this.precision = precision;
         this.charSetName = charSetName;
-        this.format = null;
-        this.timezone = null;
+        this.timeZone = timeZone;
     }
 
-    public SqlDataTypeSpec(
-        final SqlIdentifier typeName,
-        int precision,
-        int scale,
-        String charSetName,
-        String format,
-        TimeZone timezone,
-        SqlParserPos pos)
-    {
-        super(pos);
-        this.collectionsTypeName = null;
-        this.typeName = typeName;
-        this.scale = scale;
-        this.precision = precision;
-        this.charSetName = charSetName;
-        this.format = format;
-        this.timezone = timezone;
-    }
-
-    public SqlDataTypeSpec(
-        final SqlIdentifier collectionsTypeName,
+    /**
+     * Creates a type specification representing a collection type.
+     */
+    public SqlDataTypeSpec(final SqlIdentifier collectionsTypeName,
         final SqlIdentifier typeName,
         int precision,
         int scale,
@@ -126,16 +113,10 @@ public class SqlDataTypeSpec extends SqlNode
         this.scale = scale;
         this.precision = precision;
         this.charSetName = charSetName;
-        this.format = null;
-        this.timezone = null;
+        this.timeZone = null;
     }
 
     //~ Methods ---------------------------------------------------------------
-
-    public RelDataType getType()
-    {
-        return type;
-    }
 
     public SqlIdentifier getCollectionsTypeName()
     {
@@ -162,27 +143,25 @@ public class SqlDataTypeSpec extends SqlNode
         return charSetName;
     }
 
-    public String getFormat()
+    public TimeZone getTimeZone()
     {
-        return format;
-    }
-
-    public TimeZone getTimezone()
-    {
-        return timezone;
+        return timeZone;
     }
 
     /**
      * Returns a new SqlDataTypeSpec corresponding to the component type if
      * the type spec is a collections type spec.<br>
      * Collection types are <code>ARRAY</code> and <code>MULTISET</code>.
-     * @pre null != getCollectionsTypeName();
+     *
+     * @pre null != getCollectionsTypeName()
      */
-    public SqlDataTypeSpec getComponentTypeSpec() {
+    public SqlDataTypeSpec getComponentTypeSpec()
+    {
         Util.pre(
             null != getCollectionsTypeName(), "null != getCollectionsTypeName()");
         return new SqlDataTypeSpec(
-            typeName, precision, scale, charSetName, getParserPosition());
+            typeName, precision, scale, charSetName, timeZone,
+            getParserPosition());
     }
 
     public void unparse(
@@ -216,6 +195,7 @@ public class SqlDataTypeSpec extends SqlNode
             if (collectionsTypeName != null) {
                 writer.keyword(collectionsTypeName.getSimple());
             }
+
         } else {
             // else we have a user defined type
             typeName.unparse(writer, leftPrec, rightPrec);
@@ -242,8 +222,7 @@ public class SqlDataTypeSpec extends SqlNode
                 this.typeName.equalsDeep(that.typeName) &&
                 this.precision == that.precision &&
                 this.scale == that.scale &&
-                this.format == that.format &&
-                this.timezone == that.timezone &&
+                Util.equal(this.timeZone, that.timeZone) &&
                 Util.equal(this.charSetName, that.charSetName);
         }
         return false;
@@ -286,6 +265,7 @@ public class SqlDataTypeSpec extends SqlNode
 
         // TODO jvs 13-Dec-2004:  these assertions should be real
         // validation errors instead; need to share code with DDL
+        RelDataType type;
         if ((precision >= 0) && (scale >= 0)) {
             assert(sqlTypeName.allowsPrecScale(true, true));
             type = typeFactory.createSqlType(sqlTypeName, precision, scale);
@@ -329,13 +309,13 @@ public class SqlDataTypeSpec extends SqlNode
                 type = typeFactory.createMultisetType(type, -1);
                 break;
 
-            default: Util.permAssert(false, "should never come here");
+            default:
+                Util.permAssert(false, "should never come here");
             }
         }
 
         return type;
     }
 }
-
 
 // End SqlDataTypeSpec.java

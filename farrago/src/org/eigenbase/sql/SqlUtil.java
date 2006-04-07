@@ -697,6 +697,16 @@ public abstract class SqlUtil
         return contextExcn;
     }
 
+    /**
+     * Returns whether a {@link SqlNode node} is a {@link SqlCall call} to a
+     * given {@link SqlOperator operator}.
+     */
+    public static boolean isCallTo(SqlNode node, SqlOperator operator)
+    {
+        return node instanceof SqlCall &&
+            ((SqlCall) node).getOperator() == operator;
+    }
+
     //~ Inner Classes ---------------------------------------------------------
 
     /**

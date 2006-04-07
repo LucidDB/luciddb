@@ -31,6 +31,8 @@ import openjava.mop.Environment;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.rex.RexBuilder;
+import org.eigenbase.rex.RexFieldAccess;
+import org.eigenbase.sql2rel.SqlToRelConverter;
 
 
 /**
@@ -54,7 +56,8 @@ public class RelOptQuery
      * items have correlating variables. We will later resolve to a {@link
      * RelNode}.
      */
-    private final HashMap mapDeferredToCorrel = new HashMap();
+    private final Map<DeferredLookup, String> mapDeferredToCorrel =
+        new HashMap<DeferredLookup, String>();
 
     /**
      * Maps name of correlating variable (e.g. "$cor3") to the {@link
@@ -77,7 +80,7 @@ public class RelOptQuery
         return Integer.parseInt(correlName.substring(correlPrefix.length()));
     }
 
-    public Map getMapDeferredToCorrel()
+    public Map<DeferredLookup,String> getMapDeferredToCorrel()
     {
         return mapDeferredToCorrel;
     }
@@ -107,7 +110,7 @@ public class RelOptQuery
      * @param deferredLookup contains the information required to resolve the
      *        variable later
      */
-    public String createCorrelUnresolved(Object deferredLookup)
+    public String createCorrelUnresolved(DeferredLookup deferredLookup)
     {
         int n = nextCorrel++;
         String name = correlPrefix + n;
@@ -132,6 +135,15 @@ public class RelOptQuery
         RelNode rel)
     {
         mapCorrelToRel.put(name, rel);
+    }
+
+    /**
+     * Contains the information necessary to repeat a call to
+     * {@link SqlToRelConverter.Blackboard#lookup}.
+     */
+    public interface DeferredLookup
+    {
+        RexFieldAccess getFieldAccess(String name);
     }
 }
 

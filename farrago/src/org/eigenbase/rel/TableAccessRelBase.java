@@ -76,6 +76,11 @@ public abstract class TableAccessRelBase extends AbstractRelNode
         return table;
     }
 
+    public List<RelCollation> getCollationList()
+    {
+        return table.getCollationList();
+    }
+
     public Object clone()
     {
         return this;

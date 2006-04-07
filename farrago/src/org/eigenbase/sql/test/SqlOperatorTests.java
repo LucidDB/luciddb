@@ -858,6 +858,16 @@ public abstract class SqlOperatorTests extends TestCase
         // TODO: Check case with multisets
     }
 
+    public void testCaseType()
+    {
+        getTester().setFor(SqlStdOperatorTable.caseOperator);
+        getTester().checkType("case 1 when 1 then current_timestamp else null end", "TIMESTAMP(0)");
+        getTester().checkType("case 1 when 1 then current_timestamp else current_timestamp end", "TIMESTAMP(0) NOT NULL");
+        getTester().checkType("case when true then current_timestamp else null end", "TIMESTAMP(0)");
+        getTester().checkType("case when true then current_timestamp end", "TIMESTAMP(0)");
+        getTester().checkType("case 'x' when 'a' then 3 when 'b' then null else 4.5 end", "DECIMAL(11, 1)");
+    }
+
     public void testJdbcFn()
     {
         getTester().setFor(new SqlJdbcFunctionCall("dummy"));

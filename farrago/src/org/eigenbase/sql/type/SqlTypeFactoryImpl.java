@@ -141,6 +141,7 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
         for (int i = 1; i < types.length; i++) {
             RelDataType type = types[i];
             if (type.getSqlTypeName() == SqlTypeName.Null) {
+                anyNullable = true;
                 continue;
             }
 

@@ -80,7 +80,8 @@ public class MergeProjectOntoCalcRule extends RelOptRule
                 project.cloneTraits(),
                 calc,
                 project.getRowType(),
-                program);
+                program,
+                RelCollation.emptyList);
             call.transformTo(projectAsCalc);
             return;
         }
@@ -100,8 +101,10 @@ public class MergeProjectOntoCalcRule extends RelOptRule
         RexProgram mergedProgram = RexProgramBuilder.mergePrograms(
             topProgram, bottomProgram, rexBuilder);
         final CalcRel newCalc =
-            new CalcRel(calc.getCluster(), RelOptUtil.clone(calc.traits),
-                calc.getChild(), project.getRowType(), mergedProgram);
+            new CalcRel(
+                calc.getCluster(), RelOptUtil.clone(calc.traits),
+                calc.getChild(), project.getRowType(), mergedProgram,
+                RelCollation.emptyList);
         call.transformTo(newCalc);
     }
 
