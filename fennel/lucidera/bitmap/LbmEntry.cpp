@@ -1515,6 +1515,6 @@ uint LbmEntry::getMaxBitmapSize(uint bitmapColSize)
     return bitmapColSize - (bitmapColSize / LbmMaxSegSize);
 }
 
-FENNEL_END_CPPFILE("$Id$");
+FENNEL_END_CPPFILE("$Id: //open/lu/dev/fennel/lucidera/bitmap/LbmEntry.cpp#8 $");
 
 // End LbmEntry.cpp
