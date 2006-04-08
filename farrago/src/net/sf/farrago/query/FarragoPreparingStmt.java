@@ -161,9 +161,6 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         savedDeclarer = OJUtil.threadDeclarers.get();
         OJSystem.env.pushThreadTempFrame();
 
-        planner = getSession().getPersonality().newPlanner(this, true);
-        getSession().getPersonality().definePlannerListeners(planner);
-
         routineLookup = new FarragoUserDefinedRoutineLookup(
             stmtValidator, this, null);
 
@@ -187,7 +184,9 @@ public class FarragoPreparingStmt extends OJPreparingStmt
 
     public void setPlanner(FarragoSessionPlanner planner)
     {
+        assert(this.planner == null);
         this.planner = planner;
+        getSession().getPersonality().definePlannerListeners(planner);
     }
 
     public FarragoSessionPlanner getPlanner()

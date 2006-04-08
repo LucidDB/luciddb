@@ -397,6 +397,42 @@ public abstract class RelOptUtil
     }
 
     /**
+     * Verifies that a row type being added to an equivalence class
+     * matches the existing type, raising an assertion if this is not
+     * the case.
+     *
+     * @param originalRel canonical rel for equivalence class
+     *
+     * @param newRel rel being added to equivalence class
+     *
+     * @param equivalenceClass object representing equivalence class
+     */
+    public static void verifyTypeEquivalence(
+        RelNode originalRel,
+        RelNode newRel,
+        Object equivalenceClass)
+    {
+        RelDataType expectedRowType = originalRel.getRowType();
+        RelDataType actualRowType = newRel.getRowType();
+        
+        // Row types must be the same, except for field names.
+        if (areRowTypesEqual(expectedRowType, actualRowType, false)) {
+            return;
+        }
+            
+        String s =
+            "Cannot add expression of different type to set: "
+            + Util.lineSeparator + "set type is "
+            + expectedRowType.getFullTypeString()
+            + Util.lineSeparator + "expression type is "
+            + actualRowType.getFullTypeString()
+            + Util.lineSeparator + "set is " + equivalenceClass.toString()
+            + Util.lineSeparator
+            + "expression is " + newRel.toString();
+        throw Util.newInternal(s);
+    }
+    
+    /**
      * Creates a plan suitable for use in <code>EXITS</code> or <code>IN</code>
      * statements. See {@link org.eigenbase.sql2rel.SqlToRelConverter#convertExists}
      * <p>

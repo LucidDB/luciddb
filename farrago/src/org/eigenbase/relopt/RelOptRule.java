@@ -24,8 +24,9 @@
 package org.eigenbase.relopt;
 
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
+import java.util.*;
 
 /**
  * A <code>RelOptRule</code> transforms an expression into another. It has a
@@ -62,7 +63,7 @@ public abstract class RelOptRule
     /**
      * Creates a rule.
      *
-     * @param operand Root operand, must not be null
+     * @param operand root operand, must not be null
      * @pre operand != null
      */
     public RelOptRule(RelOptRuleOperand operand)
@@ -70,6 +71,20 @@ public abstract class RelOptRule
         Util.pre(operand != null, "operand != null");
         this.operand = operand;
         this.description = guessDescription(getClass().getName());
+
+        Walker operandWalker = new Walker(getOperand());
+        ArrayList operandsOfRule = new ArrayList();
+        while (operandWalker.hasMoreElements()) {
+            RelOptRuleOperand flattenedOperand =
+                (RelOptRuleOperand) operandWalker.nextElement();
+            flattenedOperand.setRule(this);
+            flattenedOperand.setParent(
+                (RelOptRuleOperand) operandWalker.getParent());
+            operandsOfRule.add(flattenedOperand);
+        }
+        operands =
+            (RelOptRuleOperand [])
+            operandsOfRule.toArray(RelOptRuleOperand.noOperands);
     }
 
     //~ Methods ---------------------------------------------------------------

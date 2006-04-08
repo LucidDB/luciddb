@@ -186,6 +186,9 @@ public interface RelOptPlanner
      */
     public void registerSchema(RelOptSchema schema);
 
+    // REVIEW jvs 3-Apr-2006:  Implementation is completely separate
+    // from planning, so this should probably be moved to somewhere
+    // in Farrago pluggability instead.
     /**
      * Retrieves an implementor appropriate for the context in which
      * this planner was created.

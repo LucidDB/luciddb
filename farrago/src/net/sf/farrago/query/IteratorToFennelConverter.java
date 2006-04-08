@@ -547,6 +547,11 @@ public class IteratorToFennelConverter extends ConverterRel
             return new IteratorToFennelConverter(rel.getCluster(),
                 rel);
         }
+
+        public boolean isGuaranteed()
+        {
+            return true;
+        }
     }
 }
 

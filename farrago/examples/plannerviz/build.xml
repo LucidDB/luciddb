@@ -47,12 +47,6 @@
   <property name="jgraph.classes.dir" 
     location="${plugin.dir}/jgraph"/>
 
-  <!-- TODO jvs 20-Apr-2005:  delete these after a while -->
-  <property name="jgraphaddons.classes.dir" 
-    location="${plugin.dir}/jgraphaddons"/>
-  <property name="jgrapht.classes.dir" 
-    location="${plugin.dir}/jgrapht"/>
-
   <target name="compile">
     <mkdir dir="${plugin.classes.dir}"/>
     <farrago.javaCompile
@@ -87,13 +81,6 @@
   <target name="clean" depends="plugin.clean">
     <delete includeEmptyDirs="true" quiet="true">
       <fileset dir="${jgraph.classes.dir}">
-        <include name="**/*"/>
-      </fileset>
-      <!-- TODO jvs 20-Apr-2005:  delete these after a while -->
-      <fileset dir="${jgraphaddons.classes.dir}">
-        <include name="**/*"/>
-      </fileset>
-      <fileset dir="${jgrapht.classes.dir}">
         <include name="**/*"/>
       </fileset>
     </delete>

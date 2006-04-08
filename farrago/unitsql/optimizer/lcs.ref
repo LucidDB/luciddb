@@ -792,27 +792,27 @@
 0: jdbc:farrago:> explain plan for select c2, c4, c8, c0 from tencols
 . . . . . . . . >     where c0 = 0 and c2 = 2 and c4 = 4 and c8 = 8;
 'column0'
-'FennelToIteratorConverter'
-'  FennelCalcRel(expr#0..3=[{inputs}], expr#4=[0], expr#5=[=($t3, $t4)], expr#6=[2], expr#7=[=($t0, $t6)], expr#8=[AND($t5, $t7)], expr#9=[4], expr#10=[=($t1, $t9)], expr#11=[AND($t8, $t10)], expr#12=[8], expr#13=[=($t2, $t12)], expr#14=[AND($t11, $t13)], proj#0..3=[{exprs}], $condition=[$t14])'
+'IterCalcRel(expr#0..3=[{inputs}], expr#4=[0], expr#5=[=($t3, $t4)], expr#6=[2], expr#7=[=($t0, $t6)], expr#8=[AND($t5, $t7)], expr#9=[4], expr#10=[=($t1, $t9)], expr#11=[AND($t8, $t10)], expr#12=[8], expr#13=[=($t2, $t12)], expr#14=[AND($t11, $t13)], proj#0..3=[{exprs}], $condition=[$t14])'
+'  FennelToIteratorConverter'
 '    LcsRowScanRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[[2, 4, 8, 0]], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]])'
 0: jdbc:farrago:> explain plan for select c7, c0, c5, c1 from tencols
 . . . . . . . . >     where c1 + c5 = 6;
 'column0'
-'FennelToIteratorConverter'
-'  FennelCalcRel(expr#0..3=[{inputs}], expr#4=[+($t3, $t2)], expr#5=[6], expr#6=[=($t4, $t5)], proj#0..3=[{exprs}], $condition=[$t6])'
+'IterCalcRel(expr#0..3=[{inputs}], expr#4=[+($t3, $t2)], expr#5=[6], expr#6=[=($t4, $t5)], proj#0..3=[{exprs}], $condition=[$t6])'
+'  FennelToIteratorConverter'
 '    LcsRowScanRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[[7, 0, 5, 1]], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]])'
 0: jdbc:farrago:> -- can't push projection because filter references an additional column
 0: jdbc:farrago:> explain plan for select c0, c5, c7, c1 from tencols
 . . . . . . . . >     where c0 + c2 = 2;
 'column0'
-'FennelToIteratorConverter'
-'  FennelCalcRel(expr#0..9=[{inputs}], expr#10=[+($t0, $t2)], expr#11=[2], expr#12=[=($t10, $t11)], C0=[$t0], C5=[$t5], C7=[$t7], C1=[$t1], $condition=[$t12])'
+'IterCalcRel(expr#0..9=[{inputs}], expr#10=[+($t0, $t2)], expr#11=[2], expr#12=[=($t10, $t11)], C0=[$t0], C5=[$t5], C7=[$t7], C1=[$t1], $condition=[$t12])'
+'  FennelToIteratorConverter'
 '    LcsRowScanRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[*], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]])'
 0: jdbc:farrago:> -- can't push projection because projection contains an expression
 0: jdbc:farrago:> explain plan for select c0 + c1 from tencols where c0 = 0;
 'column0'
-'FennelToIteratorConverter'
-'  FennelCalcRel(expr#0..9=[{inputs}], expr#10=[0], expr#11=[=($t0, $t10)], expr#12=[+($t0, $t1)], EXPR$0=[$t12], $condition=[$t11])'
+'IterCalcRel(expr#0..9=[{inputs}], expr#10=[0], expr#11=[=($t0, $t10)], expr#12=[+($t0, $t1)], EXPR$0=[$t12], $condition=[$t11])'
+'  FennelToIteratorConverter'
 '    LcsRowScanRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[*], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set outputformat table

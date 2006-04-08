@@ -69,4 +69,27 @@ ProjectRel(EXPR$0=[1])
 ]]>
         </Resource>
     </TestCase>
+    <TestCase name="testPushFilterThroughOuterJoin">
+        <Resource name="sql">
+            <![CDATA[select 1 from sales.dept d left outer join sales.emp e on d.deptno = e.deptno where d.name = 'Charlie']]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+ProjectRel(EXPR$0=[1])
+  FilterRel(condition=[=($1, _ISO-8859-1'Charlie')])
+    JoinRel(condition=[=($0, $9)], joinType=[left])
+      TableAccessRel(table=[[SALES, DEPT]])
+      TableAccessRel(table=[[SALES, EMP]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+ProjectRel(EXPR$0=[1])
+  JoinRel(condition=[=($0, $9)], joinType=[left])
+    FilterRel(condition=[=($1, _ISO-8859-1'Charlie')])
+      TableAccessRel(table=[[SALES, DEPT]])
+    TableAccessRel(table=[[SALES, EMP]])
+]]>
+        </Resource>
+    </TestCase>
 </Root>

@@ -22,7 +22,6 @@
 */
 package net.sf.farrago.test;
 
-
 import java.io.*;
 
 import junit.framework.*;
@@ -56,7 +55,7 @@ import org.eigenbase.sql2rel.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoRexToOJTranslatorTest extends FarragoTestCase
+public class FarragoRexToOJTranslatorTest extends FarragoSqlToRelTestBase
 {
     //~ Constructors ----------------------------------------------------------
 
@@ -99,7 +98,7 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
      * (don't use anything fancy here like a nested query because the
      * optimizer used for this test has its hands tied)
      */
-    private void testTranslation(
+    private void checkTranslation(
         String rowExpression,
         String tableExpression)
         throws Exception
@@ -108,102 +107,60 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
             "EXPLAIN PLAN FOR SELECT " + rowExpression + " FROM "
             + tableExpression;
 
-        // hijack necessary internals
-        FarragoJdbcEngineConnection farragoConnection =
-            (FarragoJdbcEngineConnection) connection;
-        FarragoDbSession session =
-            (FarragoDbSession) farragoConnection.getSession();
+        checkQuery(explainQuery);
+    }
+        
+    protected void checkAbstract(
+        FarragoPreparingStmt stmt,
+        RelNode topRel)
+        throws Exception
+    {
+        assert (topRel instanceof IterCalcRel) : topRel.getClass().getName();
+        IterCalcRel calcRel = (IterCalcRel) topRel;
 
-        // guarantee release of any resources we allocate on the way
-        FarragoCompoundAllocation allocations =
-            new FarragoCompoundAllocation();
-        FarragoReposTxnContext reposTxn = new FarragoReposTxnContext(repos);
+        // grab the RexNode corresponding to our select item
+        final RexProgram program = calcRel.getProgram();
+        final RexLocalRef ref =
+            program.getProjectList().get(0);
+        RexNode rexNode = program.getExprList().get(ref.getIndex());
+
+        // create objects needed for codegen
+        SqlToRelConverter sqlToRelConverter = stmt.getSqlToRelConverter();
+        FarragoRelImplementor relImplementor =
+            new FarragoRelImplementor(stmt,
+                sqlToRelConverter.getRexBuilder());
+
+        // perform the codegen
+        StatementList stmtList = new StatementList();
+        MemberDeclarationList memberList = new MemberDeclarationList();
+        final RexToOJTranslator translator =
+            relImplementor.newStmtTranslator(
+                calcRel, stmtList, memberList);
+        Expression translatedExp;
         try {
-            reposTxn.beginReadTxn();
-
-            // create a private code cache: don't pollute the real
-            // database code cache
-            FarragoObjectCache objCache =
-                new FarragoObjectCache(allocations, 0);
-
-            // FarragoPreparingStmt does most of the work for us
-            FarragoSessionStmtValidator stmtValidator =
-                new FarragoStmtValidator(repos,
-                    session.getDatabase().getFennelDbHandle(), session,
-                    objCache, objCache,
-                    session.getSessionIndexMap(),
-                    session.getDatabase().getDdlLockManager());
-            allocations.addAllocation(stmtValidator);
-            FarragoPreparingStmt stmt =
-                new FarragoPreparingStmt(stmtValidator);
-
-            initPlanner(stmt);
-
-            // parse the EXPLAIN PLAN statement
-            SqlParser sqlParser = new SqlParser(explainQuery);
-            SqlNode sqlNode = sqlParser.parseStmt();
-
-            // prepare it
-            PreparedExplanation explanation =
-                (PreparedExplanation) stmt.prepareSql(
-                    sqlNode,
-                    session.getPersonality().getRuntimeContextClass(stmt),
-                    stmt.getSqlValidator(),
-                    true);
-
-            // dig out the top-level relational expression, which
-            // we just KNOW will be an IterCalcRel
-            RelNode topRel = explanation.getRel();
-            assert (topRel instanceof IterCalcRel) : topRel.getClass().getName();
-            IterCalcRel calcRel = (IterCalcRel) topRel;
-
-            // grab the RexNode corresponding to our select item
-            final RexProgram program = calcRel.getProgram();
-            final RexLocalRef ref =
-                program.getProjectList().get(0);
-            RexNode rexNode = program.getExprList().get(ref.getIndex());
-
-            // create objects needed for codegen
-            SqlToRelConverter sqlToRelConverter = stmt.getSqlToRelConverter();
-            FarragoRelImplementor relImplementor =
-                new FarragoRelImplementor(stmt,
-                    sqlToRelConverter.getRexBuilder());
-
-            // perform the codegen
-            StatementList stmtList = new StatementList();
-            MemberDeclarationList memberList = new MemberDeclarationList();
-            final RexToOJTranslator translator =
-                relImplementor.newStmtTranslator(
-                    calcRel, stmtList, memberList);
-            Expression translatedExp;
-            try {
-                translator.pushProgram(program);
-                translatedExp = translator.translateRexNode(rexNode);
-            } finally {
-                translator.popProgram(program);
-            }
-
-            // dump the generated code
-            Writer writer = openTestLog();
-            PrintWriter printWriter = new PrintWriter(writer);
-            if (!memberList.isEmpty()) {
-                printWriter.println(memberList);
-            }
-            if (!stmtList.isEmpty()) {
-                printWriter.println(stmtList);
-            }
-            printWriter.println("return " + translatedExp + ";");
-            printWriter.close();
-
-            // and diff it against what we expect
-            diffTestLog();
+            translator.pushProgram(program);
+            translatedExp = translator.translateRexNode(rexNode);
         } finally {
-            allocations.closeAllocation();
-            reposTxn.commit();
+            translator.popProgram(program);
         }
+
+        // dump the generated code
+        Writer writer = openTestLog();
+        PrintWriter printWriter = new PrintWriter(writer);
+        if (!memberList.isEmpty()) {
+            printWriter.println(memberList);
+        }
+        if (!stmtList.isEmpty()) {
+            printWriter.println(stmtList);
+        }
+        printWriter.println("return " + translatedExp + ";");
+        printWriter.close();
+
+        // and diff it against what we expect
+        diffTestLog();
     }
 
-    private void initPlanner(FarragoPreparingStmt stmt)
+    protected void initPlanner(FarragoPreparingStmt stmt)
     {
         // NOTE jvs 22-June-2004:  We use a very stripped-down planner
         // so that the optimizer doesn't decide to rewrite our
@@ -225,196 +182,196 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
      * (this is used as the single select item in a constructed
      * EXPLAIN PLAN statement)
      */
-    private void testTranslation(String rowExpression)
+    private void checkTranslation(String rowExpression)
         throws Exception
     {
-        testTranslation(rowExpression, "SALES.EMPS");
+        checkTranslation(rowExpression, "SALES.EMPS");
     }
 
     public void testPrimitiveEquals()
         throws Exception
     {
         // NOTE:  choose one nullable and one not null
-        testTranslation("empno = age");
+        checkTranslation("empno = age");
     }
 
     public void testPrimitiveEqualsNotNull()
         throws Exception
     {
         // NOTE:  choose both not null
-        testTranslation("empno = empid");
+        checkTranslation("empno = empid");
     }
 
     public void testPrimitiveLess()
         throws Exception
     {
         // NOTE:  choose one nullable and one not null
-        testTranslation("empno < age");
+        checkTranslation("empno < age");
     }
 
     public void testPrimitiveGreater()
         throws Exception
     {
         // NOTE:  choose one nullable and one not null
-        testTranslation("empno > age");
+        checkTranslation("empno > age");
     }
 
     public void testPrimitivePlus()
         throws Exception
     {
         // NOTE:  choose one nullable and one not null
-        testTranslation("empno + age");
+        checkTranslation("empno + age");
     }
 
     public void testPrimitiveMinus()
         throws Exception
     {
         // NOTE:  choose one nullable and one not null
-        testTranslation("empno - age");
+        checkTranslation("empno - age");
     }
 
     public void testPrimitiveTimes()
         throws Exception
     {
         // NOTE:  choose one nullable and one not null
-        testTranslation("empno * age");
+        checkTranslation("empno * age");
     }
 
     public void testPrimitiveDivide()
         throws Exception
     {
         // NOTE:  choose one nullable and one not null
-        testTranslation("empno / age");
+        checkTranslation("empno / age");
     }
 
     public void testPrimitivePrefixMinus()
         throws Exception
     {
         // NOTE:  choose nullable
-        testTranslation("-age");
+        checkTranslation("-age");
     }
 
     public void testPrimitiveGreaterBoolean()
         throws Exception
     {
         // NOTE: choose one null, one not null
-        testTranslation("manager > slacker");
+        checkTranslation("manager > slacker");
     }
 
     public void testPrefixMinusCastNullTinyint()
         throws Exception
     {
-        testTranslation("-cast(null as tinyint)");
+        checkTranslation("-cast(null as tinyint)");
     }
 
     public void testPlusCastNullSmallint()
         throws Exception
     {
-        testTranslation("cast(null as tinyint) + cast (null as smallint)");
+        checkTranslation("cast(null as tinyint) + cast (null as smallint)");
     }
 
     public void testVarcharEquals()
         throws Exception
     {
         // NOTE:  choose one nullable and one not null
-        testTranslation("name = city");
+        checkTranslation("name = city");
     }
 
     public void testVarcharLess()
         throws Exception
     {
         // NOTE:  choose one nullable and one not null
-        testTranslation("name < city");
+        checkTranslation("name < city");
     }
 
     public void testBooleanNot()
         throws Exception
     {
         // NOTE: choose nullable
-        testTranslation("not slacker");
+        checkTranslation("not slacker");
     }
 
     public void testBooleanOr()
         throws Exception
     {
         // NOTE:  choose one nullable and one not null
-        testTranslation("slacker or manager");
+        checkTranslation("slacker or manager");
     }
 
     public void testBooleanOrNullable()
         throws Exception
     {
         // NOTE:  choose both nullable
-        testTranslation("(empno < age) or (name = city)");
+        checkTranslation("(empno < age) or (name = city)");
     }
 
     public void testBooleanAnd()
         throws Exception
     {
         // NOTE:  choose one nullable and one not null
-        testTranslation("slacker and manager");
+        checkTranslation("slacker and manager");
     }
 
     public void testBooleanConjunction()
         throws Exception
     {
         // NOTE:  choose both nullable
-        testTranslation("(empno < age) and (name = city)");
+        checkTranslation("(empno < age) and (name = city)");
     }
 
     public void testBooleanConjunctionNotNull()
         throws Exception
     {
         // NOTE:  choose all not null
-        testTranslation("(empno = empid) and (empno = deptno)");
+        checkTranslation("(empno = empid) and (empno = deptno)");
     }
 
     public void testNullableIsTrue()
         throws Exception
     {
-        testTranslation("slacker is true");
+        checkTranslation("slacker is true");
     }
 
     public void testNullableIsFalse()
         throws Exception
     {
-        testTranslation("slacker is false");
+        checkTranslation("slacker is false");
     }
 
     public void testNotNullIsTrue()
         throws Exception
     {
-        testTranslation("manager is true");
+        checkTranslation("manager is true");
     }
 
     public void testNotNullIsFalse()
         throws Exception
     {
-        testTranslation("manager is false");
+        checkTranslation("manager is false");
     }
 
     public void testNullableIsNull()
         throws Exception
     {
-        testTranslation("age is null");
+        checkTranslation("age is null");
     }
 
     public void testNullableIsNotNull()
         throws Exception
     {
-        testTranslation("age is not null");
+        checkTranslation("age is not null");
     }
 
     public void testNotNullIsNull()
         throws Exception
     {
-        testTranslation("empno is null");
+        checkTranslation("empno is null");
     }
 
     public void testNotNullIsNotNull()
         throws Exception
     {
-        testTranslation("empno is not null");
+        checkTranslation("empno is not null");
     }
 
     // FIXME
@@ -423,67 +380,67 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
     public void testDynamicParam()
         throws Exception
     {
-        testTranslation("empno + ?");
+        checkTranslation("empno + ?");
     }
     */
     public void testUser()
         throws Exception
     {
-        testTranslation("user");
+        checkTranslation("user");
     }
 
     public void testCurrentUser()
         throws Exception
     {
-        testTranslation("current_user");
+        checkTranslation("current_user");
     }
 
     public void testSessionUser()
         throws Exception
     {
-        testTranslation("session_user");
+        checkTranslation("session_user");
     }
 
     public void testSystemUser()
         throws Exception
     {
-        testTranslation("system_user");
+        checkTranslation("system_user");
     }
 
     public void testCurrentDate()
         throws Exception
     {
-        testTranslation("current_date");
+        checkTranslation("current_date");
     }
 
     public void testCurrentTime()
         throws Exception
     {
-        testTranslation("current_time");
+        checkTranslation("current_time");
     }
 
     public void testCurrentTimestamp()
         throws Exception
     {
-        testTranslation("current_timestamp");
+        checkTranslation("current_timestamp");
     }
 
     public void testCurrentPath()
         throws Exception
     {
-        testTranslation("current_path");
+        checkTranslation("current_path");
     }
 
     public void testJavaUdfInvocation()
         throws Exception
     {
-        testTranslation("sales.decrypt_public_key(public_key)");
+        checkTranslation("sales.decrypt_public_key(public_key)");
     }
 
     public void testSqlUdfInvocation()
         throws Exception
     {
-        testTranslation("sales.maybe_female(gender)");
+        checkTranslation("sales.maybe_female(gender)");
     }
 
     // FIXME
@@ -493,7 +450,7 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
         throws Exception
     {
         // FIXME:  should take cast(null as int)
-        testTranslation("cast(null as integer)");
+        checkTranslation("cast(null as integer)");
     }
     */
 
@@ -503,20 +460,20 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
     public void testCastNullToVarchar()
         throws Exception
     {
-        testTranslation("cast(null as varchar(10))");
+        checkTranslation("cast(null as varchar(10))");
     }
     */
     public void testCastToVarcharImplicitTruncate()
         throws Exception
     {
-        testTranslation(
+        checkTranslation(
             "cast('supercalifragilistiexpialodocious' as varchar(10))");
     }
 
     public void testCastToVarchar()
         throws Exception
     {
-        testTranslation("cast('boo' as varchar(10))");
+        checkTranslation("cast('boo' as varchar(10))");
     }
 
     // TODO (depends on dtbug 79)
@@ -525,7 +482,7 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
     public void testCastToCharImplicitPad()
         throws Exception
     {
-        testTranslation(
+        checkTranslation(
             "cast('boo' as char(10))");
     }
     */
@@ -536,7 +493,7 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
     public void testCastToCharExact()
         throws Exception
     {
-        testTranslation(
+        checkTranslation(
             "cast('0123456789' as char(10))");
     }
     */
@@ -547,14 +504,14 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
     public void testCastToBinaryImplicitPad()
         throws Exception
     {
-        testTranslation(
+        checkTranslation(
             "cast(x'58797A' as binary(10))");
     }
     */
     public void testCastToVarbinaryImplicitTruncate()
         throws Exception
     {
-        testTranslation("cast(x'00112233445566778899AABB' as varbinary(10))");
+        checkTranslation("cast(x'00112233445566778899AABB' as varbinary(10))");
     }
 
     // TODO jvs 22-June-2004:  figure out a way to test codegen for
@@ -567,251 +524,251 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
     public void testCaseNotNullableCondWithElse()
         throws Exception
     {
-        testTranslation("case manager when true then 'Yes' when false then 'No' else 'Other' end");
+        checkTranslation("case manager when true then 'Yes' when false then 'No' else 'Other' end");
     }
 
     public void testCaseNotNullableCondWithoutElse()
         throws Exception
     {
-        testTranslation("case deptno when 10 then 'Yes' end");
+        checkTranslation("case deptno when 10 then 'Yes' end");
     }
 
     public void testCaseNullableCondWithElse()
         throws Exception
     {
-        testTranslation("case age when 50 then 'fifty' when 25 then 'twenty-five' end");
+        checkTranslation("case age when 50 then 'fifty' when 25 then 'twenty-five' end");
     }
     public void testCaseNullableCondWithoutElse()
         throws Exception
     {
-        testTranslation("case gender when 'M' then 'Yes' end");
+        checkTranslation("case gender when 'M' then 'Yes' end");
     }
 
     public void testCaseNotNullableCondWithElsePrimitive()
         throws Exception
     {
-        testTranslation("case empno when 120 then 1 else 2 end");
+        checkTranslation("case empno when 120 then 1 else 2 end");
     }
 
     public void testCaseNotNullableCondWithoutElsePrimitive()
         throws Exception
     {
-        testTranslation("case name when 'Fred' then 1 when 'Eric' then 2  when 'Wilma' then 3 when 'John' then 4 end");
+        checkTranslation("case name when 'Fred' then 1 when 'Eric' then 2  when 'Wilma' then 3 when 'John' then 4 end");
     }
 
     public void testCaseNullableCondWithElsePrimitive()
         throws Exception
     {
-        testTranslation("case deptno when 10 then 1 when 20 then 2 when 40 then 3 else 4 end");
+        checkTranslation("case deptno when 10 then 1 when 20 then 2 when 40 then 3 else 4 end");
     }
     public void testCaseNullableCondWithoutElsePrimitive()
         throws Exception
     {
-        testTranslation("case slacker when true then 1 end");
+        checkTranslation("case slacker when true then 1 end");
     }
 
     public void testSubstringNullableLength()
         throws Exception
     {
-        testTranslation("substring(city,  2, age/10)");
+        checkTranslation("substring(city,  2, age/10)");
     }
 
     public void testSubstringNullablePosition()
         throws Exception
     {
-        testTranslation("substring(city,  age/20, empid)");
+        checkTranslation("substring(city,  age/20, empid)");
     }
 
     public void testSubstringNoLength()
         throws Exception
     {
-        testTranslation("substring(city, 3)");
+        checkTranslation("substring(city, 3)");
     }
 
     public void testSubstringPositionLessThanZero()
         throws Exception
     {
-        testTranslation("substring(city, -1, 4)");
+        checkTranslation("substring(city, -1, 4)");
     }
 
     public void testSubstringPositionZero()
         throws Exception
     {
-        testTranslation("substring(city, 0, 4)");
+        checkTranslation("substring(city, 0, 4)");
     }
 
     public void testSubstringNegativeLength()
         throws Exception
     {
-        testTranslation("substring(city, 1, empid - 2)");
+        checkTranslation("substring(city, 1, empid - 2)");
     }
 
     public void testSubstringNothingNullable()
         throws Exception
     {
-        testTranslation("substring(name, 2, empid)");
+        checkTranslation("substring(name, 2, empid)");
     }
 
     public void testConcatNoNullable()
         throws Exception
     {
-        testTranslation("name||name");
+        checkTranslation("name||name");
     }
 
     public void testConcatWithOneNullable()
         throws Exception
     {
-        testTranslation("city||name");
+        checkTranslation("city||name");
     }
 
     public void testConcatBothNullable()
         throws Exception
     {
-        testTranslation("city||city");
+        checkTranslation("city||city");
     }
 
     public void testOverlayNoLength()
         throws Exception
     {
-        testTranslation("overlay(city placing 'MIDDLE' from 2)");
+        checkTranslation("overlay(city placing 'MIDDLE' from 2)");
     }
 
     public void testOverlayNullable()
         throws Exception
     {
-        testTranslation("overlay(city placing 'MIDDLE' from 2 for 3)");
+        checkTranslation("overlay(city placing 'MIDDLE' from 2 for 3)");
     }
 
     public void testOverlayNoNullable()
         throws Exception
     {
-        testTranslation("overlay(name placing 'MIDDLE' from 2 for 3)");
+        checkTranslation("overlay(name placing 'MIDDLE' from 2 for 3)");
     }
 
     public void testOverlayThreeNullable()
         throws Exception
     {
-        testTranslation("overlay(city placing name from age for age)");
+        checkTranslation("overlay(city placing name from age for age)");
     }
 
     public void testOverlayAllNullable()
         throws Exception
     {
-        testTranslation("overlay(city placing gender from age for age)");
+        checkTranslation("overlay(city placing gender from age for age)");
     }
 
     public void testPower()
         throws Exception
     {
-        testTranslation("pow(2, empid)");
+        checkTranslation("pow(2, empid)");
     }
 
     public void testMod()
         throws Exception
     {
-        testTranslation("mod(age, 3)");
+        checkTranslation("mod(age, 3)");
     }
 
     public void testTrimBoth()
         throws Exception
     {
-        testTranslation("trim(both 'S' from city)");
+        checkTranslation("trim(both 'S' from city)");
     }
 
     public void testTrimLeading()
         throws Exception
     {
-        testTranslation("trim(leading 'W' from name)");
+        checkTranslation("trim(leading 'W' from name)");
     }
 
     public void testTrimTrailing()
         throws Exception
     {
-        testTranslation("trim(trailing 'c' from name)");
+        checkTranslation("trim(trailing 'c' from name)");
     }
 
     public void testUpper()
         throws Exception
     {
-        testTranslation("upper(city)");
+        checkTranslation("upper(city)");
     }
 
     public void testLower()
         throws Exception
     {
-        testTranslation("Lower(city)");
+        checkTranslation("Lower(city)");
     }
 
     public void testInitcap()
         throws Exception
     {
-        testTranslation("initcap(city)");
+        checkTranslation("initcap(city)");
     }
 
     public void testCharLength()
         throws Exception
     {
-        testTranslation("char_length(city)");
+        checkTranslation("char_length(city)");
     }
 
     public void testCharacterLength()
         throws Exception
     {
-        testTranslation("character_length(city)");
+        checkTranslation("character_length(city)");
     }
 
     public void testPosition()
         throws Exception
     {
-        testTranslation("position('Fran' in city)");
+        checkTranslation("position('Fran' in city)");
     }
 
     public void testLikeLiteral()
         throws Exception
     {
-        testTranslation("City like 'San%'");
+        checkTranslation("City like 'San%'");
     }
 
     public void testLikeRuntime()
         throws Exception
     {
-        testTranslation("City like Name");
+        checkTranslation("City like Name");
     }
 
     public void testLikeLiteralWithEscape()
         throws Exception
     {
-        testTranslation("City like 'San%' escape 'n'");
+        checkTranslation("City like 'San%' escape 'n'");
     }
 
     public void testLikeRuntimeWithEscape()
         throws Exception
     {
-        testTranslation("City like Name escape 'n'");
+        checkTranslation("City like Name escape 'n'");
     }
 
     public void testSimilarLiteral()
         throws Exception
     {
-        testTranslation("City similar to '[S][[:ALPHA:]]n%'");
+        checkTranslation("City similar to '[S][[:ALPHA:]]n%'");
     }
 
     public void testSimilarRuntime()
         throws Exception
     {
-        testTranslation("City similar to Name");
+        checkTranslation("City similar to Name");
     }
 
     public void testSimilarLiteralWithEscape()
         throws Exception
     {
-        testTranslation("City similar to 'San%' escape 'n'");
+        checkTranslation("City similar to 'San%' escape 'n'");
     }
 
     public void testSimilarRuntimeWithEscape()
         throws Exception
     {
-        testTranslation("City similar to Name escape 'n'");
+        checkTranslation("City similar to Name escape 'n'");
     }
 
 

@@ -27,6 +27,7 @@ import openjava.mop.*;
 import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
+import org.eigenbase.relopt.hep.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
