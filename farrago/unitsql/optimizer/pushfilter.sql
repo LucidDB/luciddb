@@ -48,10 +48,16 @@ explain plan for
 -- need to join on key columns as outer joins not supported otherwise
 
 -- can push to the left since it doesn't generate nulls
-explain plan for
-    select * from t1 left outer join t2
-        on k1 = k2
-        where t1a = 1;
+
+-- FIXME jvs 7-Apr-2006:  re-enable this once we switch to the
+-- heuristic planner; Volcano stopped applying the rule due to some
+-- other changes I made.  To maintain coverage, I added an
+-- equivalent rule unit test to RelOptRulesTest
+-- (pushFilterThroughOuterJoin).
+-- explain plan for
+--     select * from t1 left outer join t2
+--         on k1 = k2
+--         where t1a = 1;
 
 -- can't push to the right from where clause since right generates nulls
 explain plan for

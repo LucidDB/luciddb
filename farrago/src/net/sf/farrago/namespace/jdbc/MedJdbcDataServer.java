@@ -224,6 +224,11 @@ class MedJdbcDataServer extends MedAbstractDataServer
                         rel.getCluster(),
                         rel);
                 }
+
+                public boolean isGuaranteed()
+                {
+                    return true;
+                }
             });
 
         // optimizer sometimes can't figure out how to convert data
@@ -240,6 +245,11 @@ class MedJdbcDataServer extends MedAbstractDataServer
                         new ResultSetToFarragoIteratorConverter(
                             rel.getCluster(),
                             rel));
+                }
+
+                public boolean isGuaranteed()
+                {
+                    return true;
                 }
             });
     }

@@ -70,6 +70,14 @@ public interface RelOptListener extends EventListener
     public void ruleProductionSucceeded(RuleProductionEvent event);
 
     /**
+     * Notifies this listener that a relational expression is no
+     * longer of interest to the planner.
+     *
+     * @param event details about the event
+     */
+    public void relDiscarded(RelDiscardedEvent event);
+    
+    /**
      * Notifies this listener that a relational expression has been
      * chosen as part of the final implementation of the query plan.
      * After the plan is copmlete, this is called one more time
@@ -133,6 +141,14 @@ public interface RelOptListener extends EventListener
         }
     }
 
+    public static class RelDiscardedEvent extends RelEvent
+    {
+        public RelDiscardedEvent(Object eventSource, RelNode rel)
+        {
+            super(eventSource, rel);
+        }
+    }
+    
     public static abstract class RuleEvent extends RelEvent
     {
         private final RelOptRuleCall ruleCall;
