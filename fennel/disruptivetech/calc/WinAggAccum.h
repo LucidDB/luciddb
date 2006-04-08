@@ -178,7 +178,7 @@ public:
     void getSum(RegisterRef<STDTYPE>* node)
     {
         if (0 != currentWindow.size()) {
-            node->value( reinterpret_cast<STDTYPE>(currentSum));
+            node->value(currentSum);
         } else {
             node->toNull();
         }

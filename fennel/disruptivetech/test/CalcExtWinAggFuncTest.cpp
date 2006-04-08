@@ -230,8 +230,7 @@ WinAggAddTest(
         (*inTuple)[1] = (*winAggTuple)[0];
         
         TupleDatum* pTD = &((*inTuple)[0]);
-        reinterpret_cast<DTYPE*>(const_cast<PBuffer>(pTD->pData)) =
-            &testData[TEST_DATA_INDEX][i];
+        pTD->pData = reinterpret_cast<PConstBuffer>(&testData[TEST_DATA_INDEX][i]);
     
         calc.exec();
 
@@ -314,8 +313,7 @@ WinAggDropTest(
         // copy the Agg data block pointer into the input tuple
         (*inTuple)[1] = (*winAggTuple)[0];
     
-        reinterpret_cast<DTYPE*>(const_cast<PBuffer>(pTD->pData)) =
-            &testData[TEST_DATA_INDEX][i];
+        pTD->pData = reinterpret_cast<PConstBuffer>(&testData[TEST_DATA_INDEX][i]);
     
         calc.exec();
 
