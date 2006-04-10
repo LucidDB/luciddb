@@ -195,7 +195,7 @@ abstract public class AbstractResultSet implements ResultSet
      */
     public byte[] getBytes(int columnIndex) throws SQLException
     {
-        return (byte []) getRaw(columnIndex);
+        return toBytes(getRaw(columnIndex));
     }
 
     /**
@@ -1334,6 +1334,13 @@ abstract public class AbstractResultSet implements ResultSet
     }
 
     // Errors
+    protected SQLException newConversionError(
+        Object o,
+        String className)
+    {
+        return new SQLException("cannot convert " + o.getClass() + "(" + o
+            + ") to " + className);
+    }
 
     protected SQLException newConversionError(
         Object o,
@@ -1608,10 +1615,28 @@ abstract public class AbstractResultSet implements ResultSet
             return null;
         } else if (o instanceof byte []) {
             // convert to hex string
+            wasNull = false;
             return ConversionUtil.toStringFromByteArray((byte []) o, 16);
         } else {
             wasNull = false;
             return o.toString();
+        }
+    }
+
+    private byte[] toBytes(Object o)
+        throws SQLException
+    {
+        if (o == null) {
+            wasNull = true;
+            return null;
+        } else {
+            wasNull = false;
+        }
+
+        if (o instanceof byte []) {
+            return (byte[]) o;
+        } else {
+            throw newConversionError(o, "byte[]");
         }
     }
 

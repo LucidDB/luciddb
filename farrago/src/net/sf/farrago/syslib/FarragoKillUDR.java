@@ -22,26 +22,32 @@
 */
 package net.sf.farrago.syslib;
 
-import java.sql.SQLException;
 import net.sf.farrago.session.FarragoSession;
 import net.sf.farrago.db.FarragoDatabase;
 import net.sf.farrago.db.FarragoDbSession;
 import net.sf.farrago.runtime.FarragoUdrRuntime;
+import net.sf.farrago.trace.FarragoTrace;
+import net.sf.farrago.jdbc.FarragoJdbcUtil;
+
+import java.sql.SQLException;
+import java.util.logging.Logger;
 
 /**
  * FarragoKillUDR defines some system procedures for killing sessions and executing statements.
  * (Technically these are user-defined procedures.)
  * They are intended for use by a system administrator, and are installed by
- * initsdl/createSyslibSchema.sql.
+ * initsql/createMgmtViews.sql
  *
  * @author Marc Berkowitz
  * @version $Id$
  */
 public abstract class FarragoKillUDR
 {
+    static Logger tracer = FarragoTrace.getSyslibTracer();
+
     /** 
      * Kills a running session
-     * @param id unique session identifier: long or Long or int??
+     * @param id unique session identifier
      */
     public static void killSession(long id) throws SQLException
     {
@@ -50,7 +56,7 @@ public abstract class FarragoKillUDR
             FarragoDatabase db = ((FarragoDbSession) sess).getDatabase();
             db.killSession(id);
         } catch (Throwable e) {
-            throw new SQLException(e.getMessage());
+            throw FarragoJdbcUtil.newSqlException(e, tracer);
         }
     }
 
@@ -65,7 +71,23 @@ public abstract class FarragoKillUDR
             FarragoDatabase db = ((FarragoDbSession) sess).getDatabase();
             db.killExecutingStmt(id);
         } catch (Throwable e) {
-            throw new SQLException(e.getMessage());
+            throw FarragoJdbcUtil.newSqlException(e, tracer);
+        }
+    }
+
+    /**
+     * Kills all statements executing SQL that matches a given substring.
+     * @param s
+     */
+    public static void killStatementMatch(String s) throws SQLException
+    {
+        try {
+            FarragoSession sess = FarragoUdrRuntime.getSession();
+            FarragoDatabase db = ((FarragoDbSession) sess).getDatabase();
+            db.killExecutingStmtMatching(s, "call sys_boot.mgmt.kill_"); // exclude self
+
+        } catch (Throwable e) {
+            throw FarragoJdbcUtil.newSqlException(e, tracer);
         }
     }
 }

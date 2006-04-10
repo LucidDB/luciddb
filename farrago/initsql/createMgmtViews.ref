@@ -48,14 +48,6 @@
 0: jdbc:farrago:> -- TODO: grant this only to a privileged user
 0: jdbc:farrago:> grant select on objects_in_use_view to public;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- lets an administrator kill an executing statement
-0: jdbc:farrago:> -- TODO: grant this only to a privileged user
-0: jdbc:farrago:> create procedure kill_statement(in id bigint)
-. . . . . . . . >   language java
-. . . . . . . . >   parameter style java
-. . . . . . . . >   no sql
-. . . . . . . . >   external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatement';
-0: jdbc:farrago:> 
 0: jdbc:farrago:> -- lets an administrator kill a running session
 0: jdbc:farrago:> -- TODO: grant this only to a privileged user
 0: jdbc:farrago:> create procedure kill_session(in id bigint)
@@ -64,5 +56,25 @@
 . . . . . . . . >   no sql
 . . . . . . . . >   external name 'class net.sf.farrago.syslib.FarragoKillUDR.killSession';
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- lets an administrator kill an executing statement
+0: jdbc:farrago:> -- (like unix "kill -KILL")
+0: jdbc:farrago:> -- param ID: globally-unique statement id
+0: jdbc:farrago:> -- TODO: grant this only to a privileged user
+0: jdbc:farrago:> create procedure kill_statement(in id bigint)
+. . . . . . . . >   language java
+. . . . . . . . >   parameter style java
+. . . . . . . . >   no sql
+. . . . . . . . >   external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatement';
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- kills all statements with SQL matching a given string
+0: jdbc:farrago:> -- (like unix pkill)
+0: jdbc:farrago:> -- Works around lack of scalar subqueries, whuch makes kill_statement(id) hard to use
+0: jdbc:farrago:> -- param SQL: a string
+0: jdbc:farrago:> -- TODO: grant this only to a privileged user
+0: jdbc:farrago:> create procedure kill_statement_match(in s varchar(256))
+. . . . . . . . >   language java
+. . . . . . . . >   parameter style java
+. . . . . . . . >   no sql
+. . . . . . . . >   external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatementMatch';
+0: jdbc:farrago:>             
 0: jdbc:farrago:> !quit
