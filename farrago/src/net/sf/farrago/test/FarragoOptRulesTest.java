@@ -307,6 +307,18 @@ public class FarragoOptRulesTest extends FarragoSqlToRelTestBase
             return stmt;
         }
         
+        // implement FarragoSessionPlanner
+        public void beginMedPluginRegistration(String serverClassName)
+        {
+            // don't care
+        }
+
+        // implement FarragoSessionPlanner
+        public void endMedPluginRegistration()
+        {
+            // don't care
+        }
+    
         // implement RelOptPlanner
         public JavaRelImplementor getJavaRelImplementor(RelNode rel)
         {

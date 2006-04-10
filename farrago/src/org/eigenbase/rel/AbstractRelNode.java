@@ -107,6 +107,7 @@ public abstract class AbstractRelNode implements RelNode
         this.traits = traits;
         this.id = nextId++;
         this.digest = getRelTypeName() + "#" + id;
+        this.desc = digest;
         tracer.finest("new " + digest);
     }
 

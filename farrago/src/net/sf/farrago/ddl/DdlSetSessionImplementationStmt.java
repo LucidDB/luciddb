@@ -30,7 +30,7 @@ import net.sf.farrago.catalog.*;
 import org.eigenbase.sql.*;
 
 /**
- * DdlSetSessionImplementationStmt represents an ALTER SESSION SET
+ * DdlSetSessionImplementationStmt represents an ALTER SESSION {SET|ADD}
  * IMPLEMENTATION LIBRARY statement.
  *
  * @author John V. Sichi
@@ -39,12 +39,16 @@ import org.eigenbase.sql.*;
 public class DdlSetSessionImplementationStmt extends DdlStmt
 {
     private final SqlIdentifier jarName;
+    private final boolean add;
     private FemJar femJar;
 
-    public DdlSetSessionImplementationStmt(SqlIdentifier jarName)
+    public DdlSetSessionImplementationStmt(
+        SqlIdentifier jarName,
+        boolean add)
     {
         super(null);
         this.jarName = jarName;
+        this.add = add;
     }
     
     // implement DdlStmt
@@ -83,7 +87,7 @@ public class DdlSetSessionImplementationStmt extends DdlStmt
                     factoryClass);
             return factory.newSessionPersonality(
                 session,
-                defaultPersonality);
+                add ? session.getPersonality() : defaultPersonality);
         } catch (Throwable ex) {
             throw FarragoResource.instance().PluginInitFailed.ex(url, ex);
         }

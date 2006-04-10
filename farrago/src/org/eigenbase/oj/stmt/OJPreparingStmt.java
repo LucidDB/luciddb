@@ -273,10 +273,7 @@ public abstract class OJPreparingStmt
         RelOptPlanner planner = rootRel.getCluster().getPlanner();
         planner.setRoot(rootRel);
 
-        // Make sure non-CallingConvention traits, if any, are preserved
-        RelTraitSet desiredTraits = RelOptUtil.clone(rootRel.getTraits());
-        desiredTraits.setTrait(
-            CallingConventionTraitDef.instance, resultCallingConvention);
+        RelTraitSet desiredTraits = getDesiredRootTraitSet(rootRel);
 
         rootRel = planner.changeTraits(rootRel, desiredTraits);
         assert (rootRel != null);
@@ -285,6 +282,15 @@ public abstract class OJPreparingStmt
         rootRel = planner.findBestExp();
         assert (rootRel != null) : "could not implement exp";
         return rootRel;
+    }
+
+    protected RelTraitSet getDesiredRootTraitSet(RelNode rootRel)
+    {
+        // Make sure non-CallingConvention traits, if any, are preserved
+        RelTraitSet desiredTraits = RelOptUtil.clone(rootRel.getTraits());
+        desiredTraits.setTrait(
+            CallingConventionTraitDef.instance, resultCallingConvention);
+        return desiredTraits;
     }
 
     /**

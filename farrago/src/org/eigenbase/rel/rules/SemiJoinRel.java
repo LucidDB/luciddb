@@ -88,6 +88,13 @@ public final class SemiJoinRel extends JoinRelBase
     }
     
     // implement RelNode
+    public RelOptCost computeSelfCost(RelOptPlanner planner)
+    {
+        // REVIEW jvs 9-Apr-2006:  Just for now...
+        return planner.makeTinyCost();
+    }
+
+    // implement RelNode
     public double getRows()
     {
         // TODO:  correlation factor

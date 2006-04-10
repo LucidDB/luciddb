@@ -162,6 +162,9 @@ public class FarragoRexToOJTranslatorTest extends FarragoSqlToRelTestBase
 
     protected void initPlanner(FarragoPreparingStmt stmt)
     {
+        // TODO jvs 9-Apr-2006:  Eliminate the init parameter
+        // to newPlanner and construct a HepPlanner here.
+        
         // NOTE jvs 22-June-2004:  We use a very stripped-down planner
         // so that the optimizer doesn't decide to rewrite our
         // carefully constructed expressions.  This also guarantees

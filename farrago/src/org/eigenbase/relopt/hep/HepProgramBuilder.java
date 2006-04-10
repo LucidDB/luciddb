@@ -81,14 +81,40 @@ public class HepProgramBuilder
     }
 
     /**
+     * Adds an instruction to attempt to match any rules in a given collection.
+     * The order in which the rules within a collection will be attempted is
+     * arbitrary, so if more control is needed, use addRuleInstance instead.
+     * The collection can be "live" in the sense that not all rule instances
+     * need to have been added to it at the time this method is called.  The
+     * collection contents are reevaluated for each execution of the program.
+     *
+     *<p>
+     *
+     * Note that when this method is used, it is NOT necessary to add the rules
+     * to the planner via {@link RelOptPlanner#addRule}; the instances supplied
+     * here will be used.  However, adding the rules to the planner
+     * redundantly is good form since other planners may require it.
+     *
+     * @param rules collection of rules to fire
+     */
+    public void addRuleCollection(Collection<RelOptRule> rules)
+    {
+        HepInstruction.RuleCollection instruction =
+            new HepInstruction.RuleCollection();
+        instruction.rules = rules;
+        instructions.add(instruction);
+    }
+    
+    /**
      * Adds an instruction to attempt to match a specific rule
      * object.
      *
      *<p>
      *
      * Note that when this method is used, it is NOT necessary to add the rule
-     * to the planner via {@link RelOptPlanner#addRule}; the instance
-     * supplied here will be used.
+     * to the planner via {@link RelOptPlanner#addRule}; the instance supplied
+     * here will be used.  However, adding the rule to the planner redundantly
+     * is good form since other planners may require it.
      *
      * @param rule rule to fire
      */
