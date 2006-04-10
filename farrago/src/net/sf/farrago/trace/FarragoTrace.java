@@ -308,6 +308,15 @@ public abstract class FarragoTrace
     }
     
     /**
+     * The tracer "net.sf.farrago.syslib" traces use of the various system-management UDRs 
+     * defined in that package.
+     */
+    public static Logger getSyslibTracer()
+    {
+        return Logger.getLogger("net.sf.farrago.syslib");
+    }
+
+    /**
      * Gets the logger to be used for tracing a particular class.
      *
      * @param clazz the class to trace

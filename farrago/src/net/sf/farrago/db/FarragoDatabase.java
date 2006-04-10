@@ -580,6 +580,25 @@ public class FarragoDatabase extends FarragoDbSingleton
         target.closeAllocation();
     }
 
+    private void kill(FarragoSessionExecutingStmtInfo info) throws Throwable
+    {
+        FarragoSessionStmtContext stmt = info.getStmtContext();
+        if (stmt == null) {
+            Long id = info.getId();
+            tracer.info("killExecutingStmt "+ id +": statement not found");
+            throw new Throwable("executing statement not found: "+id); // i18n
+        }
+        if (tracer.isLoggable(Level.INFO)) {
+            tracer.info(
+                "killStatement "+ info.getId() + 
+                "(session "+ stmt.getSession().getSessionInfo().getId() + "), " +
+                stmt.getSql());
+        }
+        stmt.cancel();
+        stmt.unprepare();
+    }
+
+
     /**
      * Kill an executing statement: cancel it and deallocate it.
      * @param statement id
@@ -593,17 +612,40 @@ public class FarragoDatabase extends FarragoDbSingleton
             tracer.info("killExecutingStmt "+ id +": statement not found");
             throw new Throwable("executing statement not found: "+id); // i18n
         }
-        FarragoSessionStmtContext stmt = info.getStmtContext();
-        if (tracer.isLoggable(Level.INFO)) {
-            tracer.info(
-                "killStatement "+ id + 
-                "(session "+ stmt.getSession().getSessionInfo().getId() + "), " +
-                stmt.getSql());
-        }
-        stmt.cancel();
-        stmt.unprepare();
-     }
+        kill(info);
+    }
 
+    /**
+     * Kills all statements that are executing SQL that matches a given pattern,
+     * but does not match a second pattern.
+     * Not an error if none match.
+     * @param match pattern to match. Null string matches nothing, to be safe.
+     * @param nomatch pattern not to match
+     * @returns count of killed statements.
+     */
+    public int killExecutingStmtMatching(String match, String nomatch) throws Throwable
+    {
+        int ct = 0;
+        tracer.info("killExecutingStmtMatching " + match + " but not " + nomatch);
+
+        // scan all statements
+        if (match.length() > 0) {
+            for (FarragoSession sess : getSessions(this)) {
+                FarragoSessionInfo sessInfo = sess.getSessionInfo();
+                for (Long id : sessInfo.getExecutingStmtIds()) {
+                    FarragoSessionExecutingStmtInfo info = sessInfo.getExecutingStmtInfo(id);
+                    if (info.getSql().contains(nomatch))
+                        continue;
+                    if (info.getSql().contains(match)) {
+                        kill(info);
+                        ct++;
+                    }
+                }
+            }
+        }
+        tracer.info("killed " + ct + " statements");
+        return ct;
+    }
 
     /**
      * Prepares an SQL expression; uses a cached implementation if
