@@ -798,8 +798,13 @@ public abstract class RelOptUtil
         UncollectRel.register(planner);
         planner.addRule(FilterToCalcRule.instance);
         planner.addRule(ProjectToCalcRule.instance);
+
+        // REVIEW jvs 9-Apr-2006: Do we still need these two?  Doesn't the
+        // combination of MergeCalcRule, FilterToCalcRule, and
+        // ProjectToCalcRule have the same effect?
         planner.addRule(MergeFilterOntoCalcRule.instance);
         planner.addRule(MergeProjectOntoCalcRule.instance);
+        
         planner.addRule(MergeCalcRule.instance);
     }
 

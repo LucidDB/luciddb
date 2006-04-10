@@ -71,7 +71,7 @@ public abstract class NestedLoopCalcTupleIter extends CalcTupleIter
         for (;;) {
             if (leftObj == null) {
                 Object next = inputIterator.fetchNext();
-                if (next == NoDataReason.END_OF_DATA) {
+                if (next instanceof NoDataReason) {
                     return next;
                 }
 

@@ -101,6 +101,14 @@ public abstract class JoinRelBase extends AbstractRelNode
         return right;
     }
 
+    // implement RelNode
+    public RelOptCost computeSelfCost(RelOptPlanner planner)
+    {
+        // REVIEW jvs 9-Apr-2006:  Just for now...
+        double rowCount = RelMetadataQuery.getRowCount(this);
+        return planner.makeCost(rowCount, 0, 0);
+    }
+
     public static double estimateJoinedRows(
         RelNode left, RelNode right, RexNode condition)
     {

@@ -68,6 +68,19 @@ abstract class HepInstruction
         }
     }
 
+    static class RuleCollection extends HepInstruction
+    {
+        /**
+         * Collection of rules to apply.
+         */
+        Collection<RelOptRule> rules;
+
+        void execute(HepPlanner planner)
+        {
+            planner.executeInstruction(this);
+        }
+    }
+
     static class RuleInstance extends HepInstruction
     {
         /**

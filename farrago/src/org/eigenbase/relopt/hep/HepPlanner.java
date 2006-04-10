@@ -50,11 +50,11 @@ public class HepPlanner extends AbstractRelOptPlanner
     
     private HepRelVertex root;
 
+    private RelTraitSet requestedRootTraits;
+
     private Map<String, HepRelVertex> mapDigestToVertex;
 
     private Set<RelOptRule> allRules;
-
-    private List<RelOptRule> unknownRules;
 
     private int nTransformations;
 
@@ -116,7 +116,11 @@ public class HepPlanner extends AbstractRelOptPlanner
     // implement RelOptPlanner
     public RelNode changeTraits(RelNode rel, RelTraitSet toTraits)
     {
-        // Just ignore traits.
+        // Ignore traits, except for the root, where we remember
+        // what the final conversion should be.
+        if ((rel == root) || (rel == root.getCurrentRel())) {
+            requestedRootTraits = toTraits;
+        }
         return rel;
     }
     
@@ -200,6 +204,15 @@ public class HepPlanner extends AbstractRelOptPlanner
         applyRules(instruction.ruleSet);
     }
 
+    void executeInstruction(
+        HepInstruction.RuleCollection instruction)
+    {
+        if (skippingGroup()) {
+            return;
+        }
+        applyRules(instruction.rules);
+    }
+    
     private boolean skippingGroup()
     {
         if (currentProgram.group != null) {
@@ -311,9 +324,7 @@ public class HepPlanner extends AbstractRelOptPlanner
         }
 
         // TODO jvs 4-Apr-2006:  enhance TopologicalOrderIterator
-        // to support reverse walk.  Also, consider whether we
-        // care about the fact that this might cause us to fire
-        // rules on discarded portions of the plan.
+        // to support reverse walk.
         assert(currentProgram.matchOrder == HepMatchOrder.BOTTOM_UP);
         ArrayList<HepRelVertex> list = new ArrayList<HepRelVertex>();
         while (iter.hasNext()) {
@@ -385,6 +396,11 @@ public class HepPlanner extends AbstractRelOptPlanner
                 return true;
             }
         }
+        if ((vertex == root) && (requestedRootTraits != null)) {
+            if (requestedRootTraits.matches(outTraits)) {
+                return true;
+            }
+        }
         return false;
     }
 
@@ -403,7 +419,7 @@ public class HepPlanner extends AbstractRelOptPlanner
         }
         int n = childOperands.length;
         RelNode [] childRels = rel.getInputs();
-        if (n != childRels.length) {
+        if (childRels.length < n) {
             return false;
         }
         for (int i = 0; i < n; ++i) {
@@ -447,6 +463,7 @@ public class HepPlanner extends AbstractRelOptPlanner
         }
 
         ++nTransformations;
+        // compute digest so that trace shows up correctly
         notifyTransformation(
             call,
             bestRel,
@@ -669,14 +686,21 @@ public class HepPlanner extends AbstractRelOptPlanner
                 sweepSet.add(vertex);
                 RelNode rel = vertex.getCurrentRel();
                 notifyDiscard(rel);
-                String digest = rel.toString();
-                if (mapDigestToVertex.get(digest) == rel) {
-                    mapDigestToVertex.remove(digest);
-                }
             }
         }
+        assert(!sweepSet.isEmpty());
         graph.removeAllVertices(sweepSet);
         graphSizeLastGC = graph.vertexSet().size();
+
+        // Clean up digest map too.
+        Iterator<Map.Entry<String, HepRelVertex>> digestIter =
+            mapDigestToVertex.entrySet().iterator();
+        while (digestIter.hasNext()) {
+            HepRelVertex vertex = digestIter.next().getValue();
+            if (sweepSet.contains(vertex)) {
+                digestIter.remove();
+            }
+        }
     }
 
     private void assertNoCycles()

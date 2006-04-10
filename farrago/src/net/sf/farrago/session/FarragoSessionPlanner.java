@@ -37,4 +37,19 @@ public interface FarragoSessionPlanner
      * @return the FarragoSessionPreparingStmt associated with this planner.
      */
     public FarragoSessionPreparingStmt getPreparingStmt();
+
+    /**
+     * Notifies this planner that registration for a particular SQL/MED plugin
+     * is about to start, meaning the plugin might call the planner via methods
+     * such as {@link RelOptPlanner#addRule}.
+     *
+     * @param serverClassName name of class implementing FarragoMedDataServer
+     */
+    public void beginMedPluginRegistration(String serverClassName);
+
+    /**
+     * Notifies this planner that registration has ended for the SQL/MED plugin
+     * whose identity was last passed to beginMedPluginRegistration.
+     */
+    public void endMedPluginRegistration();
 }

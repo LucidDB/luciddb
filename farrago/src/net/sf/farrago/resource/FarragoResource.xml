@@ -777,6 +777,10 @@ column type family is {1} but default value type family is {2}</text>
 <text>Unknown user {0}</text>
 </exception>
 
+<exception id="470110" name="SessionOptimizerFailed">
+<text>Optimizer failed to find a valid physical implementation for relational expression {0}; see trace for partially optimized plan</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Server resources 480,000 - 490,000 -->
 <!-- ====================================================================== -->

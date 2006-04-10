@@ -1261,7 +1261,12 @@ DdlStmt SessionImplementation() :
         | <DEFAULT_KW>
     )
     {
-        return new DdlSetSessionImplementationStmt(jarName);
+        return new DdlSetSessionImplementationStmt(jarName, false);
+    }
+    |
+    <ADD> <JAR> jarName = CompoundIdentifier3()
+    {
+        return new DdlSetSessionImplementationStmt(jarName, true);
     }
 }
 
