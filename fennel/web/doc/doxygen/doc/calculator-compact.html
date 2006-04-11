@@ -1713,10 +1713,14 @@ aggregation instructions.&nbsp; Return values are CAST down to match original
 data type.&nbsp;&nbsp; </p>
 <p>The string data types are supported by MIN/MAX and COUNT.&nbsp; Calls to the 
 SUM or AVG functions generate an appropriate calculator exception.&nbsp; </p>
-<p>Of special note are the NUMERIC and DECIMAL data types.&nbsp; They are 
-supported through CASTing.&nbsp; Values defined with scale of zero are cast to 
+<p>Support for the NUMERIC and DECIMAL data types is also provided through CASTing.&nbsp; Values defined with scale of zero are cast to 
 INT64_T.&nbsp; Non-zero scaled values require a CAST to type DOUBLE before 
-submission for windowed aggregation processing. </p>
+submission for windowed aggregation processing.&nbsp; Return values are cast 
+back to match input data type. </p>
+<p>While the COUNT, SUM and AVG functions are provided if the MIN and MAX 
+functions are not being used then more efficient implementations of the 
+functions are available that do not incur the overhead of managing the priority 
+queue of window values.</p>
 <h2>Windowed Aggregation Functions</h2>
 <p>&nbsp;</p>
 <table border="1" width="100%" id="table1" height="656">
