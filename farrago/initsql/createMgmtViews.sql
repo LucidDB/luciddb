@@ -48,14 +48,6 @@ create view objects_in_use_view as
 -- TODO: grant this only to a privileged user
 grant select on objects_in_use_view to public;
 
--- lets an administrator kill an executing statement
--- TODO: grant this only to a privileged user
-create procedure kill_statement(in id bigint)
-  language java
-  parameter style java
-  no sql
-  external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatement';
-
 -- lets an administrator kill a running session
 -- TODO: grant this only to a privileged user
 create procedure kill_session(in id bigint)
@@ -64,3 +56,24 @@ create procedure kill_session(in id bigint)
   no sql
   external name 'class net.sf.farrago.syslib.FarragoKillUDR.killSession';
 
+-- lets an administrator kill an executing statement
+-- (like unix "kill -KILL")
+-- param ID: globally-unique statement id
+-- TODO: grant this only to a privileged user
+create procedure kill_statement(in id bigint)
+  language java
+  parameter style java
+  no sql
+  external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatement';
+
+-- kills all statements with SQL matching a given string
+-- (like unix pkill)
+-- Works around lack of scalar subqueries, whuch makes kill_statement(id) hard to use
+-- param SQL: a string
+-- TODO: grant this only to a privileged user
+create procedure kill_statement_match(in s varchar(256))
+  language java
+  parameter style java
+  no sql
+  external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatementMatch';
+            
