@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev_lcs/farrago/unitsql/optimizer/joinorder.sql#2 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/joinorder.sql#1 $
 0: jdbc:farrago:> -- Tests for ConvertMultiJoinRule and OptimizeJoinRule
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema jo;
@@ -199,7 +199,7 @@
 . . . . . . . . >     where f.f_d1 = j.d1_f and f.f + 0 = 0;
 'column0'
 'FennelToIteratorConverter'
-'  FennelCalcRel(expr#0..11=[{inputs}], expr#12=[=($t10, $t2)], F=[$t4], D1=[$t8], D2=[$t0], $condition=[$t12])'
+'  FennelCalcRel(expr#0..11=[{inputs}], expr#12=[=($t10, $t2)], expr#13=[=($t5, $t9)], expr#14=[AND($t12, $t13)], F=[$t4], D1=[$t8], D2=[$t0], $condition=[$t14])'
 '    FennelCartesianProductRel(leftouterjoin=[false])'
 '      FennelCartesianProductRel(leftouterjoin=[false])'
 '        LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D2$D2, SYS$CLUSTERED_INDEX$JO$D2$D2_D1, SYS$CLUSTERED_INDEX$JO$D2$D2_D3, SYS$CLUSTERED_INDEX$JO$D2$D2_F]])'
