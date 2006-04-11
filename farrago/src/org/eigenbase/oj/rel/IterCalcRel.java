@@ -36,10 +36,12 @@ import org.eigenbase.rex.*;
 import org.eigenbase.runtime.CalcTupleIter;
 import org.eigenbase.runtime.TupleIter;
 import org.eigenbase.sql.fun.*;
+import org.eigenbase.trace.EigenbaseTrace;
 import org.eigenbase.util.Util;
 
 import java.util.*;
 import java.util.List;
+import java.util.logging.Level;
 
 /**
  * <code>IterCalcRel</code> is an iterator implementation of a combination of
@@ -233,14 +235,34 @@ public class IterCalcRel extends SingleRel implements JavaRel
             calcStmts = new StatementList();
             
             // try { /* calcStmts */ }
-            // catch(RuntimeException ex) { }
+            // catch(RuntimeException ex) {
+            //     EigenbaseTrace.getStatementTracer().log(
+            //         Level.WARNING, "java calc exception", ex);
+            // }
+            StatementList catchStmts = new StatementList();
+            
+            catchStmts.add(
+                new ExpressionStatement(
+                    new MethodCall(
+                        new MethodCall(
+                            OJUtil.typeNameForClass(EigenbaseTrace.class),
+                            "getStatementTracer",
+                            null),
+                        "log",
+                        new ExpressionList(
+                            new FieldAccess(
+                                OJUtil.typeNameForClass(Level.class),
+                                "WARNING"),
+                            Literal.makeLiteral("java calc exception"),
+                            new FieldAccess("ex")))));
+                    
             CatchList catchList = 
                 new CatchList(
                     new CatchBlock(
                         new Parameter(
                             OJUtil.typeNameForClass(RuntimeException.class),
                             "ex"),
-                        new StatementList()));
+                        catchStmts));
             
             TryStatement tryStmt = new TryStatement(calcStmts, catchList);
     
