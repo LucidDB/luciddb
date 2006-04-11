@@ -365,11 +365,11 @@
     <pathelement path="${ant.classpath}"/>
     <pathelement location="${bh.home}/bhx.jar"/>
     <pathelement 
-      location="${bh.home}/thirdparty/jakarta/jakarta-regexp-1.2.jar"/>
+      location="${thirdparty.dir}/jakarta-regexp-1.4.jar"/>
     <pathelement 
-      location="${bh.home}/thirdparty/xmlbeans/apache-xbean.jar"/>
+      location="${thirdparty.dir}/xmlbeans/lib/xbean.jar"/>
     <pathelement 
-      location="${bh.home}/thirdparty/jsr173/jsr173_1.0_api.jar"/>
+      location="${thirdparty.dir}/xmlbeans/lib/jsr173_1.0_api.jar"/>
     <pathelement location="${bh.home}/schema.jar"/>
   </path>
   <property name="blackhawk.run.classpath" refid="blackhawk.run.classpath"/>    
