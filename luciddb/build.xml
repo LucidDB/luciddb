@@ -273,6 +273,7 @@
 <!-- End Experiment-->
 
   <target name="test" depends="cleanApplib,createCatalog,buildJdbcPlugin,gen-all-sql">
+    <property name="bh.filter.knownFailures" value="false"/>
     <property file="run.properties"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh"/>
     <blackhawk.fork
