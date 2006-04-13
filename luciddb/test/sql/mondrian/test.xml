@@ -1,0 +1,24 @@
+<project name="bh" default="mondrian">
+  <target name="mondrian">
+    <test-suite name="mondrian">
+
+      <init-hook>
+        <ant target="restoreCatalog"/>
+      </init-hook>
+
+      <test name="creschema" nameOverride="true">
+        <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/creschema.sql"/>
+      </test>
+
+      <test name="createTables" nameOverride="true">
+        <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/createTables.sql"/>
+      </test>
+
+      <test name="load" nameOverride="true" >
+        <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/load.sql"/>
+      </test>
+
+
+    </test-suite>
+  </target>
+</project>
