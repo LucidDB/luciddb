@@ -6,7 +6,8 @@
 -- BOOLEAN. However, when loading from MS SQL where a foodmart has already
 -- been created, there are still some errors during the load.
 -- note: for product table, SKU has been changed from BIGINT to FLOAT to
---  match mssql
+--  match mssql, on account table, the "NOT NULL" statements were removed
+-- since in source, some nulls exist (and are allowed in the mssql schema)
 set schema 'foodmart';
 DROP TABLE "sales_fact_1997";
 CREATE TABLE "sales_fact_1997"(
