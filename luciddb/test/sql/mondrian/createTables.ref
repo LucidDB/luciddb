@@ -6,7 +6,8 @@
 0: jdbc:luciddb:> -- BOOLEAN. However, when loading from MS SQL where a foodmart has already
 0: jdbc:luciddb:> -- been created, there are still some errors during the load.
 0: jdbc:luciddb:> -- note: for product table, SKU has been changed from BIGINT to FLOAT to
-0: jdbc:luciddb:> --  match mssql
+0: jdbc:luciddb:> --  match mssql, on account table, the "NOT NULL" statements were removed
+0: jdbc:luciddb:> -- since in source, some nulls exist (and are allowed in the mssql schema)
 0: jdbc:luciddb:> set schema 'foodmart';
 0: jdbc:luciddb:> DROP TABLE "sales_fact_1997";
 Error: DDL validation error near line 1, column 12: Reference to unknown table "sales_fact_1997" (state=,code=0)
@@ -195,8 +196,8 @@ Error: DDL validation error near line 1, column 12: Reference to unknown table "
 . . . . . . . . >     "account_id" INTEGER NOT NULL,
 . . . . . . . . >     "account_parent" INTEGER,
 . . . . . . . . >     "account_description" VARCHAR(30),
-. . . . . . . . >     "account_type" VARCHAR(30) NOT NULL,
-. . . . . . . . >     "account_rollup" VARCHAR(30) NOT NULL,
+. . . . . . . . >     "account_type" VARCHAR(30),
+. . . . . . . . >     "account_rollup" VARCHAR(30),
 . . . . . . . . >     "Custom_Members" VARCHAR(255));
 0: jdbc:luciddb:> DROP TABLE "category";
 Error: DDL validation error near line 1, column 12: Reference to unknown table "category" (state=,code=0)
