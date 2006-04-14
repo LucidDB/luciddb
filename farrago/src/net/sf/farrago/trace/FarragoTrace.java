@@ -22,19 +22,25 @@
 */
 package net.sf.farrago.trace;
 
-import com.disruptivetech.farrago.calc.*;
-
 import java.util.logging.Logger;
 
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.db.*;
-import net.sf.farrago.ddl.*;
-import net.sf.farrago.fennel.*;
-import net.sf.farrago.jdbc.engine.*;
-import net.sf.farrago.runtime.*;
-import net.sf.farrago.test.*;
-import net.sf.farrago.util.*;
+import net.sf.farrago.catalog.FarragoRepos;
+import net.sf.farrago.db.FarragoDatabase;
+import net.sf.farrago.db.FarragoDbSession;
+import net.sf.farrago.db.FarragoDbStmtContext;
+import net.sf.farrago.ddl.DdlValidator;
+import net.sf.farrago.fennel.FennelDbHandle;
+import net.sf.farrago.fennel.FennelStreamGraph;
+import net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver;
+import net.sf.farrago.runtime.FarragoRuntimeContext;
+import net.sf.farrago.runtime.FarragoTupleIterResultSet;
+import net.sf.farrago.runtime.FennelPipeIterator;
+import net.sf.farrago.test.FarragoTestCase;
+import net.sf.farrago.util.FarragoFileAllocation;
+import net.sf.farrago.util.FarragoFileLockAllocation;
+import net.sf.farrago.util.FarragoObjectCache;
+
+import com.disruptivetech.farrago.calc.CalcProgramBuilder;
 
 
 /**
@@ -132,16 +138,6 @@ public abstract class FarragoTrace
     {
         return getClassTracer(FennelPipeIterator.class);
     }
-
-    /**
-     * The tracer "net.sf.farrago.runtime.JavaPushTupleStream"
-     * traces {@link JavaPushTupleStream}.
-     */
-    public static Logger getJavaPushTupleStreamTracer()
-    {
-        return getClassTracer(JavaPushTupleStream.class);
-    }
-
 
     /**
      * The tracer "net.sf.farrago.runtime.FarragoTupleIterResultSet"

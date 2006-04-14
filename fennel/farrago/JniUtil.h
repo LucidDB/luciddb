@@ -231,16 +231,6 @@ public:
     static const jint jniVersion = JNI_VERSION_1_2;
 
     /**
-     * Java method JavaPullTupleStream.fillBuffer.
-     */
-    static jmethodID methFillBuffer;
-
-    /**
-     * Java method JavaTupleStream.restart.
-     */
-    static jmethodID methRestart;
-
-    /**
      * Java method FennelJavaStreamMap.getJavaStreamHandle.
      */
     static jmethodID methGetJavaStreamHandle;
