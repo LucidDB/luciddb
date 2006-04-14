@@ -280,11 +280,12 @@ public class FarragoRelImplementor extends JavaRelImplementor
         String streamName;
         if (rel != null) {
             // correlate stream name with rel which produced it
-            streamName = rel.getRelTypeName() + "#" + rel.getId();
+            streamName = rel.getRelTypeName() + ".#" + rel.getId();
         } else {
             // anonymous stream
             streamName =
-                ReflectUtil.getUnqualifiedClassName(streamDef.getClass());
+                ReflectUtil.getUnqualifiedClassName(streamDef.getClass())
+                + ".";
         }
 
         // make sure stream names are globally unique
