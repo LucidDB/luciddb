@@ -84,6 +84,9 @@ public class SqlTest extends TestCase {
         // following parameters are not required
         String driverName = System.getProperty("jdbc-driver", "");
         username = System.getProperty("username", "");
+        System.out.println("sql-file: " + sqlFile);
+        System.out.println("jdbc-driver: " + driverName);
+        System.out.println("username: " + username);
         if (username.equals("")) {
             username = FarragoCatalogInit.SA_USER_NAME;
         }
