@@ -178,8 +178,8 @@ CREATE TABLE "account"(
     "account_id" INTEGER NOT NULL,
     "account_parent" INTEGER,
     "account_description" VARCHAR(30),
-    "account_type" VARCHAR(30) NOT NULL,
-    "account_rollup" VARCHAR(30) NOT NULL,
+    "account_type" VARCHAR(30),
+    "account_rollup" VARCHAR(30),
     "Custom_Members" VARCHAR(255));
 DROP TABLE "category";
 CREATE TABLE "category"(

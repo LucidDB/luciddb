@@ -74,7 +74,6 @@ Error: At line 1, column 40: Cannot assign to target field 'date' of type DATE f
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into foodmart."account" select * from foodmart_foreign."account";
-Error: Target CAST($t4):VARCHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL cannot be assigned null value (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
