@@ -196,6 +196,7 @@
         <exclude name="VI/build.xml"/>
         <exclude name="hashjoin/**"/>
         <exclude name="distribution/**"/>
+        <exclude name="mondrian/**"/>
       </fileset>
     </foreach>
   </target>
