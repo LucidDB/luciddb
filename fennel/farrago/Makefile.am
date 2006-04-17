@@ -13,9 +13,6 @@ ExecStreamFactory.cpp \
 Fem.cpp \
 JavaExcn.cpp \
 JavaSinkExecStream.cpp \
-JavaSourceExecStream.cpp \
-JavaPullSourceExecStream.cpp \
-JavaPushSourceExecStream.cpp \
 JavaTraceTarget.cpp \
 JavaTransformExecStream.cpp \
 JniProxy.cpp \

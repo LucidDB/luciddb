@@ -24,12 +24,6 @@ package net.sf.farrago.runtime;
 
 import java.nio.ByteBuffer;
 
-import net.sf.farrago.session.FarragoSessionRuntimeParams;
-
-import org.eigenbase.relopt.CallingConvention;
-import org.eigenbase.runtime.RestartableIterator;
-import org.eigenbase.runtime.TupleIter;
-
 /**
  * Sandbox for experiments in code generation.
  *
@@ -51,17 +45,6 @@ import org.eigenbase.runtime.TupleIter;
  */
 public class FarragoGeneratedCodeExamples
 {
-    public void exampleJavaTupleStream()
-    {
-        FarragoSessionRuntimeParams params = null;
-        FarragoRuntimeContext cx = new FarragoRuntimeContext(params);
-
-        int streamId = 0;
-        FennelTupleWriter tupleWriter = null;
-        TupleIter tupleIter = null;
-        cx.newJavaTupleStream(streamId, tupleWriter, tupleIter);
-    }
-
     /**
      * ExampleGeneratedFarragoTransform an example of what a generated
      * FarragoTransform looks like.  

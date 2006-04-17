@@ -840,4 +840,39 @@
     </sequential>
   </macrodef>
 
+  <!--
+      Macro for generating a FarragoRelease.properties file.  Normally
+      it's empty, but the property "jdbc.url.port.default" (from
+      customBuild.properties or the command line) can be used to set a
+      JDBC URL port.
+  -->
+  <macrodef name="farrago.configureReleaseProperties">
+    <attribute name="file" default="unspecified"/>
+    <sequential>
+      <touch file="@{file}"/>
+      <!-- If the property jdbc.url.port.default is set, set the
+           FarragoRelease.properties value of jdbc.url.port.default to
+           be the same (unless already set in that file). -->
+      <property file="@{file}" prefix="RELEASE_PROPS"/>
+
+      <if>
+        <and>
+          <isset property="jdbc.url.port.default"/>
+          <not>
+            <equals 
+                arg1="${RELEASE_PROPS.jdbc.url.port.default}"
+                arg2="${jdbc.url.port.default}"/>
+          </not>
+        </and>
+        <then>
+          <propertyfile file="@{file}">
+            <entry 
+                key="jdbc.url.port.default" 
+                default="${jdbc.url.port.default}"/>
+          </propertyfile>
+        </then>
+      </if>
+    </sequential>
+  </macrodef>
+
 </project>
