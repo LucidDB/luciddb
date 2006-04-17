@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="properties">
+    <exec executable="bash" output="${build.init.properties}"> 
+        <arg value="${luciddb.dir}/init.sh"/>
+    </exec>
+
+    <property file="${build.init.properties}" />
+
+    <property name="bh.log.gtlf.env.Os" value="${build.os}"/>
+    <property name="bh.log.gtlf.env.OsVer" value="${build.osver}"/>
+    <property name="bh.log.gtlf.env.OsRawVer" value="${os.version}"/>
+    <!--
+    <property name="bh.log.gtlf.env.Jvm" value="${java.vm.name}"/>
+    -->
+    <property name="bh.log.gtlf.env.Jvm" value="${build.jvm}"/>
+    <property name="bh.log.gtlf.env.JvmVer" value="${java.vm.version}"/>
+    <property name="bh.log.gtlf.env.CpuArch" value="${os.arch}"/>
+    <property name="bh.log.gtlf.env.NumOfCpu" value="${build.cpus}"/>
+    <if>
+        <not>
+            <isset property="env.BUILD_OPT"/>
+        </not>
+    <then>
+        <property name="bh.log.gtlf.env.Opt" value="noopt"/>
+    </then>
+    <elseif>
+        <equals arg1="${env.BUILD_OPT}" arg2="" />
+    <then>
+        <property name="bh.log.gtlf.env.Opt" value="noopt"/>
+    </then>
+    </elseif>
+    <else>
+        <property name="bh.log.gtlf.env.Opt" value="${env.BUILD_OPT}"/>
+    </else>
+    </if>
+</project>

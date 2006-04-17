@@ -1023,10 +1023,16 @@ public class OptimizeJoinRule extends RelOptRule
         
         // adjust the join condition from the original join tree to reflect
         // pushdown of the new factor
-        RexNode condition = ((JoinRel) joinTree).getCondition();
-        condition = rightAdjustFilter(
-            left, right, condition, factorToAdd,
+        RexNode origCondition = ((JoinRel) joinTree).getCondition();
+        origCondition = rightAdjustFilter(
+            left, right, origCondition, factorToAdd,
             joinTree.getRowType().getFields());
+        
+        // determine if additional filters apply as a result of adding the
+        // new factor
+        RexNode condition = addFilters(left, right, filtersToAdd, true);
+        condition = RelOptUtil.andJoinFilters(
+            rexBuilder, origCondition, condition);
         
         // create the new join tree with the factor pushed down
         return createJoinSubtree(left, right, condition, false);
@@ -1045,7 +1051,7 @@ public class OptimizeJoinRule extends RelOptRule
         RelNode joinTree, int factorToAdd, List<RexNode> filtersToAdd)
     {
         RexNode condition = addFilters(
-            joinTree, chosenSemiJoins[factorToAdd], filtersToAdd);
+            joinTree, chosenSemiJoins[factorToAdd], filtersToAdd, false);
        
         return createJoinSubtree(
             joinTree, chosenSemiJoins[factorToAdd], condition, true);
@@ -1086,18 +1092,20 @@ public class OptimizeJoinRule extends RelOptRule
     /**
      * Determines which join filters can be added to the current join tree.
      * Note that the join filter still reflects the original join ordering.
-     * It will be adjusted to reflect the new join ordering when the JoinRel
-     * it is associated with is created.
+     * It will only be adjusted to reflect the new join ordering if the
+     * "adjust" parameter is set to true.
      * 
      * @param leftTree left subtree of the join tree
      * @param rightTree right subtree of the join tree
      * @param filtersToAdd remaining join filters that need to be added; those
      * that are added are removed from the list
+     * @param adjust if true, adjust filter to reflect new join ordering
      * @return AND'd expression of the join filters that can be added to the
      * current join tree
      */
     private RexNode addFilters(
-        RelNode leftTree, RelNode rightTree, List<RexNode> filtersToAdd)
+        RelNode leftTree, RelNode rightTree, List<RexNode> filtersToAdd,
+        boolean adjust)
     {
         // loop through the remaining filters to be added and pick out the
         // ones that reference only the factors in the new join tree
@@ -1122,6 +1130,15 @@ public class OptimizeJoinRule extends RelOptRule
                         condition, joinFilter);
                 }
                 filterIter.remove();
+            }
+        }
+         
+        if (adjust && condition != null) {
+            int[] adjustments = new int[nTotalFields];
+            if (needsAdjustment(adjustments, leftTree, rightTree)) {
+                condition = RelOptUtil.convertRexInputRefs(
+                    rexBuilder, condition,
+                    multiJoin.getRowType().getFields(), adjustments);
             }
         }
         

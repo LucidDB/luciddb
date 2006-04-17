@@ -1040,9 +1040,9 @@ public class SqlToRelConverter
                 // SQL ordinals are 1-based, but SortRel's are 0-based
                 iOrdinal = sqlLiteral.intValue() - 1;
             } else if (orderItem.isA(SqlKind.Identifier)) {
-                SqlIdentifier id = (SqlIdentifier) orderItem;
+                String alias = validator.deriveAlias(orderItem, -1);            	
                 iOrdinal =
-                    bb.root.getRowType().getFieldOrdinal(id.getSimple());
+                    bb.root.getRowType().getFieldOrdinal(alias);
                 assert (iOrdinal != -1);
             } else {
                 // TODO:  handle descending, collation sequence,

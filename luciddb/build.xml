@@ -43,12 +43,16 @@
 <taskdef resource="net/sf/antcontrib/antlib.xml" />
 
 <dirname property="luciddb.dir" file="${ant.file.luciddb}" />
+  <property environment="env" />
 
 <!-- assume common parent of fennel, farrago and luciddb  -->
   <property name="open.dir" location=".."/>
   <fail unless="open.dir" />
   <property name="farrago.dir" location="${open.dir}/farrago"/>
   <property name="farrago.dist.dir" location="${farrago.dir}/dist"/>
+
+  <property name="build.init.properties" location="${luciddb.dir}/build.init.properties" />
+  <import file="${luciddb.dir}/properties.xml" />
 
   <!-- farrago distribution file -->
   <condition property="farrago.dist.file" 
@@ -64,7 +68,6 @@
 
   <property name="fennel.dir" location="${open.dir}/fennel"/>
 
-  <property environment="env" />
   <property file="${farrago.dir}/initBuild.properties" />
   <property file="${farrago.dir}/customBuild.properties" />
 
@@ -196,6 +199,7 @@
         <exclude name="VI/build.xml"/>
         <exclude name="hashjoin/**"/>
         <exclude name="distribution/**"/>
+        <exclude name="mondrian/**"/>
       </fileset>
     </foreach>
   </target>
@@ -273,6 +277,7 @@
 <!-- End Experiment-->
 
   <target name="test" depends="cleanApplib,createCatalog,buildJdbcPlugin,gen-all-sql">
+    <property name="bh.filter.knownFailures" value="false"/>
     <property file="run.properties"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh"/>
     <blackhawk.fork
@@ -866,6 +871,9 @@
     <copy todir="${luciddb.dir}/.settings" overwrite="true">
       <fileset dir="${luciddb.dir}/eclipse/.settings"/>
     </copy>
+  </target>
+
+  <target name="dummy">
   </target>
 
 </project>

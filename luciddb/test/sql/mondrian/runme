@@ -1,0 +1,4 @@
+cat creschema.sql | ../../../sqllineEngine
+cat createTables.sql | ../../../sqllineEngine
+cat load.sql | ../../../sqllineEngine
+echo "ready for action"

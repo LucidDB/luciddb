@@ -162,6 +162,9 @@ typedef JniProxyIter<ProxyLcsClusterScanDef> SharedProxyLcsClusterScanDef;
 class ProxyLcsRowScanStreamDef;
 typedef JniProxyIter<ProxyLcsRowScanStreamDef> SharedProxyLcsRowScanStreamDef;
 
+class ProxyLhxJoinStreamDef;
+typedef JniProxyIter<ProxyLhxJoinStreamDef> SharedProxyLhxJoinStreamDef;
+
 class ProxyMergeStreamDef;
 typedef JniProxyIter<ProxyMergeStreamDef> SharedProxyMergeStreamDef;
 
@@ -258,10 +261,10 @@ class ProxyExecutionStreamDef
 public:
 SharedProxyTupleDescriptor getOutputDesc();
 static jmethodID meth_getOutputDesc;
-SharedProxyExecStreamDataFlow getInputFlow();
-static jmethodID meth_getInputFlow;
 SharedProxyExecStreamDataFlow getOutputFlow();
 static jmethodID meth_getOutputFlow;
+SharedProxyExecStreamDataFlow getInputFlow();
+static jmethodID meth_getInputFlow;
 std::string getName();
 static jmethodID meth_getName;
 };
@@ -728,8 +731,6 @@ int32_t getRowLimitParamId();
 static jmethodID meth_getRowLimitParamId;
 int32_t getStartRidParamId();
 static jmethodID meth_getStartRidParamId;
-bool isIgnoreRowLimit();
-static jmethodID meth_isIgnoreRowLimit;
 };
 
 class ProxyLbmIntersectStreamDef
@@ -780,6 +781,18 @@ SharedProxyTupleDescriptor getClusterTupleDesc();
 static jmethodID meth_getClusterTupleDesc;
 SharedProxyLcsRowScanStreamDef getRowScan();
 static jmethodID meth_getRowScan;
+};
+
+class ProxyLhxJoinStreamDef
+: virtual public JniProxy, virtual public ProxyTupleStreamDef
+{
+public:
+SharedProxyTupleProjection getInputKeyProj();
+static jmethodID meth_getInputKeyProj;
+int32_t getCndBuildKeys();
+static jmethodID meth_getCndBuildKeys;
+int32_t getNumBuildRows();
+static jmethodID meth_getNumBuildRows;
 };
 
 class ProxyMergeStreamDef
@@ -950,10 +963,10 @@ bool isPhysical();
 static jmethodID meth_isPhysical;
 std::string getRange();
 static jmethodID meth_getRange;
-SharedProxyWindowStreamDef getWindowStream();
-static jmethodID meth_getWindowStream;
 SharedProxyWindowPartitionDef getPartition();
 static jmethodID meth_getPartition;
+SharedProxyWindowStreamDef getWindowStream();
+static jmethodID meth_getWindowStream;
 int32_t getOffset();
 static jmethodID meth_getOffset;
 };
@@ -1101,6 +1114,8 @@ virtual void visit(ProxyLcsClusterAppendStreamDef &)
 virtual void visit(ProxyLcsClusterScanDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyLcsRowScanStreamDef &)
+{ unhandledVisit(); }
+virtual void visit(ProxyLhxJoinStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyMergeStreamDef &)
 { unhandledVisit(); }
