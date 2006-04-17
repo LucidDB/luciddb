@@ -46,9 +46,6 @@ import java.util.*;
  */
 public class SargIntervalExpr extends SargIntervalBase implements SargExpr
 {
-    /**
-     * Null semantics which apply for searches on this interval.
-     */
     private SqlNullSemantics nullSemantics;
     
     /**
@@ -61,6 +58,14 @@ public class SargIntervalExpr extends SargIntervalBase implements SargExpr
     {
         super(factory, dataType);
         this.nullSemantics = nullSemantics;
+    }
+
+    /**
+     * @return null semantics which apply for searches on this interval
+     */
+    public SqlNullSemantics getNullSemantics()
+    {
+        return nullSemantics;
     }
 
     // publicize SargIntervalBase
