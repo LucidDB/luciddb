@@ -23,7 +23,6 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/farrago/ExecStreamFactory.h"
-#include "fennel/farrago/JavaPullSourceExecStream.h"
 #include "fennel/farrago/JavaSinkExecStream.h"
 #include "fennel/farrago/JavaTransformExecStream.h"
 #include "fennel/farrago/CmdInterpreter.h"
@@ -143,15 +142,6 @@ void ExecStreamFactory::visit(ProxyIndexSearchDef &streamDef)
         streamDef.isUniqueKey()
         ? new BTreeSearchUniqueExecStream() : new BTreeSearchExecStream(),
         params);
-}
-
-void ExecStreamFactory::visit(ProxyJavaTupleStreamDef &streamDef)
-{
-    JavaPullSourceExecStreamParams params;
-    readTupleStreamParams(params, streamDef);
-    params.pStreamGraphHandle = pStreamGraphHandle;
-    params.javaTupleStreamId = streamDef.getStreamId();
-    embryo.init(new JavaPullSourceExecStream(), params);
 }
 
 void ExecStreamFactory::visit(ProxyJavaSinkStreamDef &streamDef)

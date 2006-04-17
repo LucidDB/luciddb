@@ -101,7 +101,6 @@ protected:
     // Per-stream overrides for FemVisitor; add new stream types here
     virtual void visit(ProxyIndexScanDef &);
     virtual void visit(ProxyIndexSearchDef &);
-    virtual void visit(ProxyJavaTupleStreamDef &);
     virtual void visit(ProxyJavaSinkStreamDef &);
     virtual void visit(ProxyJavaTransformStreamDef &);
     virtual void visit(ProxyTableInserterDef &);
