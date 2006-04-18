@@ -45,6 +45,9 @@ import net.sf.farrago.jdbc.engine.FarragoJdbcEngineConnection;
 import org.eigenbase.util14.ConnectStringParser;
 import net.sf.farrago.catalog.FarragoCatalogInit;
 
+// TODO jvs 17-Apr-2006:  break this monster up into a new package
+// net.sf.farrago.test.jdbc.
+
 /**
  * FarragoJdbcTest tests specifics of the Farrago implementation of the JDBC
  * API.  See also unitsql/jdbc/*.sql.
@@ -86,8 +89,13 @@ public class FarragoJdbcTest extends FarragoTestCase
     private static final float maxFloat = Float.MAX_VALUE;
     private static final float floatValue1 = -1.5f;
     private static final float floatValue2 = 1.5f;
-    private static final double minDouble = Double.MIN_VALUE;
-    private static final double maxDouble = Double.MAX_VALUE;
+    // NOTE jvs 17-Apr-2006: We can't use Double.MIN_VALUE here because the
+    // mingw32 build takes a larger number from MINDOUBLE in win32_values.h.
+    // And we can't use Double.MAX_VALUE because something causes that to tip
+    // over to POSITIVE_INFINITY when round-tripped via CHAR.  So we use
+    // hard-coded approximations here.
+    private static final double minDouble = 2.3e-308;
+    private static final double maxDouble = 1.7e+308;
     private static final double doubleValue1 = -2.3;
     private static final double doubleValue2 = 2.3;
     private static final boolean boolValue = true;
@@ -1788,14 +1796,12 @@ public class FarragoJdbcTest extends FarragoTestCase
                     0,
                     resultSet.getDouble(BOOLEAN),
                     0);
-                // TODO: Should be maxDouble, not INFINITY
                 assertEquals(
-                    Double.POSITIVE_INFINITY/*maxDouble*/,
+                    maxDouble,
                     resultSet.getDouble(CHAR),
                     0);
-                // TODO: Should be maxDouble, not INFINITY
                 assertEquals(
-                    Double.POSITIVE_INFINITY/*maxDouble*/,
+                    maxDouble,
                     resultSet.getDouble(VARCHAR),
                     0);
                 break;
@@ -2886,6 +2892,9 @@ public class FarragoJdbcTest extends FarragoTestCase
 
     //~ Inner Classes ---------------------------------------------------------
 
+    // TODO 17-Apr-2006: don't use typenames which class with those
+    // in java.lang; that's just confusing!
+    
     /**
      * Defines a SQL type, and a corresponding column in the datatypes table,
      * and some operations particular to each type.
@@ -2995,10 +3004,13 @@ public class FarragoJdbcTest extends FarragoTestCase
                 }
             };
 
+        // REVIEW jvs 17-Apr-2006:  shouldn't it be -maxFloat, maxFloat
+        // for the limits here?
+        
         /** Definition of the <code>FLOAT</code> SQL type. */
         private static final TestSqlType Float =
             new TestSqlApproxType(FLOAT, "float",
-                -java.lang.Double.MAX_VALUE, java.lang.Double.MAX_VALUE) {
+                -maxDouble, maxDouble) {
                 public Object getExpected(Object value)
                 {
                     if (value instanceof Number) {
@@ -3019,7 +3031,7 @@ public class FarragoJdbcTest extends FarragoTestCase
         /** Definition of the <code>DOUBLE</code> SQL type. */
         private static final TestSqlType Double =
             new TestSqlApproxType(DOUBLE, "double",
-                -java.lang.Double.MAX_VALUE, java.lang.Double.MAX_VALUE) {
+                -maxDouble, maxDouble) {
                 public Object getExpected(Object value)
                 {
                     if (value instanceof Number) {
