@@ -1010,6 +1010,12 @@ public class OptimizeJoinRule extends RelOptRule
             return null;
         }
 
+        // remember the original join order before the pushdown so we can
+        // appropriately adjust any filters already attached to the join
+        // node
+        List<Integer> origJoinOrder = new ArrayList<Integer>();
+        getJoinOrder(joinTree, origJoinOrder);
+        
         // recursively pushdown the factor
         RelNode subTree = joinTree.getInput(childNo);
         subTree = addFactorToTree(
@@ -1022,10 +1028,11 @@ public class OptimizeJoinRule extends RelOptRule
         }
         
         // adjust the join condition from the original join tree to reflect
-        // pushdown of the new factor
+        // pushdown of the new factor as well as any swapping that may have
+        // been done during the pushdown
         RexNode origCondition = ((JoinRel) joinTree).getCondition();
-        origCondition = rightAdjustFilter(
-            left, right, origCondition, factorToAdd,
+        origCondition = adjustFilter(
+            left, right, origCondition, factorToAdd, origJoinOrder,
             joinTree.getRowType().getFields());
         
         // determine if additional filters apply as a result of adding the
@@ -1157,39 +1164,60 @@ public class OptimizeJoinRule extends RelOptRule
      * @param right right subtree of the join
      * @param condition current join condition
      * @param factorAdded index corresponding to the newly added factor
+     * @param origJoinOrder original join order, before factor was pushed
+     * into the tree
      * @param origFields fields from the original join before the factor was
      * added
      * @return modified join condition to reflect addition of the new factor
      */
-    private RexNode rightAdjustFilter(
+    private RexNode adjustFilter(
         RelNode left, RelNode right, RexNode condition, int factorAdded,
-        RelDataTypeField[] origFields)
+        List<Integer> origJoinOrder, RelDataTypeField[] origFields)
     {
         List<Integer> newJoinOrder = new ArrayList<Integer>();
         getJoinOrder(left, newJoinOrder);
         getJoinOrder(right, newJoinOrder);
         
-        // figure out where the new factor was added
-        int nFieldsOnLeft = 0;
-        for (int factor : newJoinOrder) {
-            if (factor == factorAdded) {
-                break;
-            }
-            nFieldsOnLeft += nFieldsInJoinFactor[factor];
-        }
-        
-        // if the new factor was added at the end, no need to adjust the
-        // filter; otherwise, shift everything that appears after the new
-        // factor to the right by the number of fields in the new factor
         int totalFields =
             left.getRowType().getFields().length +
                 right.getRowType().getFields().length -
                 nFieldsInJoinFactor[factorAdded];
-        if (nFieldsOnLeft < totalFields) {
-            int[] adjustments = new int[totalFields];
-            for (int i = nFieldsOnLeft; i < totalFields; i++) {
-                adjustments[i] = nFieldsInJoinFactor[factorAdded];
+        int[] adjustments = new int[totalFields];
+        
+        // go through each factor and adjust relative to the original
+        // join order
+        boolean needAdjust = false;
+        int nFieldsNew = 0;
+        for (int newPos = 0; newPos < newJoinOrder.size(); newPos++) {
+            int nFieldsOld = 0;
+            // no need to make any adjustments on the newly added factor
+            if (newJoinOrder.get(newPos) != factorAdded) {
+                for (int oldPos = 0; oldPos < origJoinOrder.size(); oldPos++) {
+                    if (newJoinOrder.get(newPos) ==
+                        origJoinOrder.get(oldPos))
+                    {
+                        break;
+                    }
+                    nFieldsOld +=
+                        nFieldsInJoinFactor[origJoinOrder.get(oldPos)];
+                }
+                if (-nFieldsOld + nFieldsNew != 0) {
+                    needAdjust = true;
+                    for (int i = 0;
+                        i < nFieldsInJoinFactor[newJoinOrder.get(newPos)];
+                        i++)
+                    {
+                        // subtract off the number of fields to the left
+                        // in the original join order and then add on the
+                        // number of fields on the left in the new join order
+                        adjustments[i + nFieldsOld] = -nFieldsOld + nFieldsNew;
+                    }
+                }
             }
+            nFieldsNew += nFieldsInJoinFactor[newJoinOrder.get(newPos)];
+        }
+        
+        if (needAdjust) {
             condition = RelOptUtil.convertRexInputRefs(
                 rexBuilder, condition, origFields, adjustments);
         }
