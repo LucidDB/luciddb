@@ -2332,6 +2332,19 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         check("select FIRST_VALUE(ename) over (order by empno) from emp");
     }
 
+    public void testMinMaxFunctions()
+    {
+        checkFails("SELECT MIN(^true^) from emp",
+            "The MIN function does not support the BOOLEAN data type.");
+        checkFails("SELECT MAX(^false^) from emp",
+            "The MAX function does not support the BOOLEAN data type.");
+
+        check("SELECT MIN(sal+deptno) FROM emp");
+        check("SELECT MAX(ename) FROM emp");
+        check("SELECT MIN(5.5) FROM emp");
+        check("SELECT MAX(5) FROM emp");
+    }
+
     public void testFunctionalDistinct()
     {
         check("select count(distinct sal) from emp");
