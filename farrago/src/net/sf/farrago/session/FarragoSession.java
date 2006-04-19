@@ -123,6 +123,19 @@ public interface FarragoSession extends FarragoAllocation
     public boolean isClosed();
 
     /**
+     * @return whether this session was killed (which implies closed)
+     */
+    public boolean wasKilled();
+    
+    /**
+     * Kills this session.  A killed session is closed, so the implementation
+     * of this method should insure that {@link #closeAllocation} is
+     * called.  After this method is called, {@link #wasKilled()} and
+     * {@link #isClosed()} will return true. 
+     */
+    public void kill();
+    
+    /**
      * @return whether this session currently has a transaction in progress
      */
     public boolean isTxnInProgress();
