@@ -7,7 +7,8 @@
       <test-suite-call testfile="test/sql/datatypes/test.xml"/>
       <test-suite-call testfile="test/sql/pge/test.xml"/>
       <test-suite-call testfile="test/sql/pge2/test.xml"/>
-      <test-suite-call testfile="test/sql/shortreg/test.xml"/>
+      <test-suite-call testfile="test/sql/shortreg/sanity.xml"/>
+<!--       <test-suite-call testfile="test/sql/shortreg/test.xml"/> -->
       <test-suite-call testfile="test/sql/VI/insert/test.xml"/>
       <test-suite-call testfile="test/sql/VI/populate/test.xml"/>
 
