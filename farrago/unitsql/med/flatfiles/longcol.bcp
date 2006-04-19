@@ -1,0 +1,5 @@
+6.0
+3
+1	SQLVARCHAR	0	4	","	1	longcol
+2	SQLVARCHAR	0	4	","	2	col2
+3	SQLVARCHAR	0	4	"\n"	3	col3

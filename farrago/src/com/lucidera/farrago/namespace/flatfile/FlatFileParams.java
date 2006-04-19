@@ -89,7 +89,7 @@ class FlatFileParams extends MedAbstractBase
     public static final String PROP_DIRECTORY = "DIRECTORY";
     public static final String PROP_FILE_EXTENSION = "FILE_EXTENSION";
     public static final String PROP_CONTROL_FILE_EXTENSION =
-        "CTRL_FILE_EXTENSION";
+        "CONTROL_FILE_EXTENSION";
     public static final String PROP_FIELD_DELIMITER = "FIELD_DELIMITER";
     public static final String PROP_LINE_DELIMITER = "LINE_DELIMITER";
     public static final String PROP_QUOTE_CHAR = "QUOTE_CHAR";
@@ -221,7 +221,8 @@ class FlatFileParams extends MedAbstractBase
     }
 
     /**
-     * Decodes a quote or escape character
+     * Decodes a quote or escape character. While a null value is converted 
+     * to the default character, an empty value is interpreted as 0.
      * 
      * @param specialChar string containing special character, may be empty
      * @param defaultChar default string, must not be empty
@@ -230,10 +231,12 @@ class FlatFileParams extends MedAbstractBase
      */
     private char decodeSpecialChar(String specialChar, String defaultChar)
     {
-        if (specialChar == null || specialChar.length() == 0) {
+        if (specialChar == null) {
             Util.pre(defaultChar.length() > 0,
                 "defaultChar.length() > 0");
             return defaultChar.charAt(0);
+        } else if (specialChar.length() == 0) {
+            return 0;
         }
         return specialChar.charAt(0);
     }

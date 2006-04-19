@@ -5,6 +5,7 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> set schema 's';
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- workarounds put in for LER-92 and LER-93
 0: jdbc:luciddb:> -- standard emp/dept
 0: jdbc:luciddb:> select EMP.EMPNO, EMP.LNAME, EMP.DEPTNO, DEPT.DEPTNO, DEPT.DNAME
 . . . . . . . . > from EMP, DEPT
@@ -115,7 +116,7 @@
 | 3       | Terri     | Andrews       | Juice         | 9.49   |
 | 3       | Terri     | Andrews       | Plunger       | 5.92   |
 | 3       | Terri     | Andrews       | Soap          | 4.28   |
-| 3       | Terri     | Andrews       | Soap          | 5.5    |
+| 3       | Terri     | Andrews       | Soap          | 5.50   |
 | 3       | Terri     | Andrews       | Soap          | 9.35   |
 | 3       | Terri     | Andrews       | Soda          | 0.23   |
 | 3       | Terri     | Andrews       | Soup          | 3.92   |
@@ -125,23 +126,23 @@
 | 4       | Victor    | Peterson      | Heater        | 5.14   |
 | 4       | Victor    | Peterson      | Heater        | 7.99   |
 | 4       | Victor    | Peterson      | Plunger       | 4.12   |
-| 4       | Victor    | Peterson      | Refrigerator  | 6.9    |
+| 4       | Victor    | Peterson      | Refrigerator  | 6.90   |
 | 4       | Victor    | Peterson      | Soda          | 3.69   |
 | 4       | Victor    | Peterson      | Telephone     | 7.84   |
 | 4       | Victor    | Peterson      | Towel         | 0.14   |
 | 4       | Victor    | Peterson      | Towel         | 8.68   |
-| 5       | Veronica  | Bush          | Heater        | 6.3    |
+| 5       | Veronica  | Bush          | Heater        | 6.30   |
 | 5       | Veronica  | Bush          | Iron          | 7.22   |
 | 5       | Veronica  | Bush          | Juice         | 6.34   |
 | 5       | Veronica  | Bush          | Plunger       | 3.22   |
 | 5       | Veronica  | Bush          | Plunger       | 7.95   |
 | 5       | Veronica  | Bush          | Plunger       | 8.04   |
 | 5       | Veronica  | Bush          | Shampoo       | 5.41   |
-| 5       | Veronica  | Bush          | Soap          | 8.6    |
-| 5       | Veronica  | Bush          | Soda          | 0.0    |
+| 5       | Veronica  | Bush          | Soap          | 8.60   |
+| 5       | Veronica  | Bush          | Soda          | 0.00   |
 | 5       | Veronica  | Bush          | Soda          | 3.06   |
 | 5       | Veronica  | Bush          | Towel         | 8.04   |
-| 6       | Fritz     | Grant         | Chicken       | 8.6    |
+| 6       | Fritz     | Grant         | Chicken       | 8.60   |
 | 6       | Fritz     | Grant         | Cookies       | 8.21   |
 | 6       | Fritz     | Grant         | Heater        | 0.84   |
 | 6       | Fritz     | Grant         | Iron          | 0.22   |
@@ -164,20 +165,20 @@
 | 7       | Missy     | Bush          | Telephone     | 3.28   |
 | 8       | Ted       | Howard        | Juice         | 1.38   |
 | 8       | Ted       | Howard        | Milk          | 8.57   |
-| 8       | Ted       | Howard        | Plunger       | 6.4    |
+| 8       | Ted       | Howard        | Plunger       | 6.40   |
 | 8       | Ted       | Howard        | Soap          | 2.29   |
 | 8       | Ted       | Howard        | Soda          | 4.99   |
-| 8       | Ted       | Howard        | Soda          | 7.7    |
+| 8       | Ted       | Howard        | Soda          | 7.70   |
 | 8       | Ted       | Howard        | Soup          | 5.74   |
 | 9       | Wendy     | Kemp          | Chicken       | 3.27   |
 | 9       | Wendy     | Kemp          | Eggs          | 5.54   |
-| 9       | Wendy     | Kemp          | Iron          | 4.2    |
+| 9       | Wendy     | Kemp          | Iron          | 4.20   |
 | 9       | Wendy     | Kemp          | Refrigerator  | 4.21   |
 | 9       | Wendy     | Kemp          | Refrigerator  | 9.76   |
 | 9       | Wendy     | Kemp          | Shampoo       | 4.06   |
 | 9       | Wendy     | Kemp          | Soda          | 4.48   |
 | 9       | Wendy     | Kemp          | Soup          | 1.98   |
-| 9       | Wendy     | Kemp          | Soup          | 2.7    |
+| 9       | Wendy     | Kemp          | Soup          | 2.70   |
 | 10      | Earl      | Dole          | Cookies       | 9.95   |
 | 10      | Earl      | Dole          | Eggs          | 6.97   |
 | 10      | Earl      | Dole          | Iron          | 4.48   |
@@ -214,18 +215,18 @@
 | 13      | Maggie    | Everett       | Iron          | 2.99   |
 | 13      | Maggie    | Everett       | Iron          | 7.84   |
 | 13      | Maggie    | Everett       | Iron          | 9.47   |
-| 13      | Maggie    | Everett       | Juice         | 0.8    |
+| 13      | Maggie    | Everett       | Juice         | 0.80   |
 | 13      | Maggie    | Everett       | Milk          | 4.15   |
 | 13      | Maggie    | Everett       | Plunger       | 9.28   |
 | 13      | Maggie    | Everett       | Shampoo       | 6.22   |
-| 13      | Maggie    | Everett       | Soap          | 0.7    |
+| 13      | Maggie    | Everett       | Soap          | 0.70   |
 | 13      | Maggie    | Everett       | Towel         | 0.64   |
 | 13      | Maggie    | Everett       | Towel         | 5.37   |
 | 13      | Maggie    | Everett       | Towel         | 6.53   |
 | 14      | Barry     | Jones         | Cookies       | 0.31   |
 | 14      | Barry     | Jones         | Cookies       | 2.88   |
 | 14      | Barry     | Jones         | Cookies       | 6.39   |
-| 14      | Barry     | Jones         | Cookies       | 8.6    |
+| 14      | Barry     | Jones         | Cookies       | 8.60   |
 | 14      | Barry     | Jones         | Iron          | 0.21   |
 | 14      | Barry     | Jones         | Juice         | 8.59   |
 | 14      | Barry     | Jones         | Milk          | 1.71   |
@@ -250,8 +251,8 @@
 | 16      | Oliver    | Grant         | Juice         | 9.71   |
 | 16      | Oliver    | Grant         | Microwave     | 2.54   |
 | 16      | Oliver    | Grant         | Milk          | 3.71   |
-| 16      | Oliver    | Grant         | Refrigerator  | 5.2    |
-| 17      | Jeniffer  | Mantela       | Cookies       | 2.4    |
+| 16      | Oliver    | Grant         | Refrigerator  | 5.20   |
+| 17      | Jeniffer  | Mantela       | Cookies       | 2.40   |
 | 17      | Jeniffer  | Mantela       | Iron          | 9.79   |
 | 17      | Jeniffer  | Mantela       | Milk          | 1.73   |
 | 17      | Jeniffer  | Mantela       | Plunger       | 1.69   |
@@ -266,13 +267,13 @@
 | 18      | Theodore  | OLeary        | Iron          | 3.37   |
 | 18      | Theodore  | OLeary        | Juice         | 4.31   |
 | 18      | Theodore  | OLeary        | Juice         | 7.83   |
-| 18      | Theodore  | OLeary        | Microwave     | 4.3    |
-| 18      | Theodore  | OLeary        | Milk          | 2.9    |
+| 18      | Theodore  | OLeary        | Microwave     | 4.30   |
+| 18      | Theodore  | OLeary        | Milk          | 2.90   |
 | 18      | Theodore  | OLeary        | Milk          | 5.08   |
 | 18      | Theodore  | OLeary        | Plunger       | 2.21   |
 | 18      | Theodore  | OLeary        | Plunger       | 2.96   |
 | 18      | Theodore  | OLeary        | Soap          | 2.44   |
-| 18      | Theodore  | OLeary        | Soda          | 0.0    |
+| 18      | Theodore  | OLeary        | Soda          | 0.00   |
 | 18      | Theodore  | OLeary        | Soda          | 6.74   |
 | 18      | Theodore  | OLeary        | Soda          | 8.32   |
 | 18      | Theodore  | OLeary        | Soup          | 4.81   |
@@ -281,9 +282,9 @@
 | 19      | Patty     | Carlucchi     | Cookies       | 9.19   |
 | 19      | Patty     | Carlucchi     | Iron          | 9.86   |
 | 19      | Patty     | Carlucchi     | Juice         | 3.33   |
-| 19      | Patty     | Carlucchi     | Microwave     | 2.6    |
+| 19      | Patty     | Carlucchi     | Microwave     | 2.60   |
 | 19      | Patty     | Carlucchi     | Milk          | 8.45   |
-| 19      | Patty     | Carlucchi     | Plunger       | 9.3    |
+| 19      | Patty     | Carlucchi     | Plunger       | 9.30   |
 | 19      | Patty     | Carlucchi     | Refrigerator  | 4.51   |
 | 19      | Patty     | Carlucchi     | Refrigerator  | 4.96   |
 | 19      | Patty     | Carlucchi     | Towel         | 0.46   |
@@ -292,7 +293,7 @@
 +---------+-----------+---------------+---------------+--------+
 | CUSTID  |   FNAME   |     LNAME     |     NAME      | PRICE  |
 +---------+-----------+---------------+---------------+--------+
-| 20      | Frank     | Noose         | Juice         | 7.4    |
+| 20      | Frank     | Noose         | Juice         | 7.40   |
 | 20      | Frank     | Noose         | Soap          | 2.39   |
 | 20      | Frank     | Noose         | Soup          | 5.69   |
 | 20      | Frank     | Noose         | Soup          | 8.49   |
@@ -307,7 +308,7 @@
 | 21      | Anita     | Carlucchi     | Soup          | 8.96   |
 | 22      | Eric      | Locicero      | Chicken       | 4.86   |
 | 22      | Eric      | Locicero      | Chicken       | 7.57   |
-| 22      | Eric      | Locicero      | Eggs          | 6.5    |
+| 22      | Eric      | Locicero      | Eggs          | 6.50   |
 | 22      | Eric      | Locicero      | Microwave     | 2.02   |
 | 22      | Eric      | Locicero      | Plunger       | 2.07   |
 | 22      | Eric      | Locicero      | Refrigerator  | 3.85   |
@@ -323,7 +324,7 @@
 | 23      | Ophelia   | Everett       | Towel         | 6.86   |
 | 24      | David     | Peterson      | Cookies       | 2.59   |
 | 24      | David     | Peterson      | Heater        | 8.29   |
-| 24      | David     | Peterson      | Milk          | 0.5    |
+| 24      | David     | Peterson      | Milk          | 0.50   |
 | 24      | David     | Peterson      | Milk          | 5.09   |
 | 24      | David     | Peterson      | Milk          | 6.56   |
 | 24      | David     | Peterson      | Milk          | 7.25   |
@@ -347,8 +348,8 @@
 | 26      | Andy      | Peterson      | Cookies       | 0.52   |
 | 26      | Andy      | Peterson      | Heater        | 7.02   |
 | 26      | Andy      | Peterson      | Iron          | 6.59   |
-| 26      | Andy      | Peterson      | Juice         | 8.4    |
-| 26      | Andy      | Peterson      | Microwave     | 6.2    |
+| 26      | Andy      | Peterson      | Juice         | 8.40   |
+| 26      | Andy      | Peterson      | Microwave     | 6.20   |
 | 26      | Andy      | Peterson      | Microwave     | 6.42   |
 | 26      | Andy      | Peterson      | Microwave     | 9.01   |
 | 26      | Andy      | Peterson      | Plunger       | 3.17   |
@@ -360,10 +361,10 @@
 | 27      | Mary      | Noose         | Cookies       | 7.95   |
 | 27      | Mary      | Noose         | Eggs          | 1.63   |
 | 27      | Mary      | Noose         | Heater        | 1.16   |
-| 27      | Mary      | Noose         | Milk          | 1.9    |
+| 27      | Mary      | Noose         | Milk          | 1.90   |
 | 27      | Mary      | Noose         | Plunger       | 2.85   |
 | 28      | Ulysses   | Peterson      | Chicken       | 3.72   |
-| 28      | Ulysses   | Peterson      | Eggs          | 9.0    |
+| 28      | Ulysses   | Peterson      | Eggs          | 9.00   |
 | 28      | Ulysses   | Peterson      | Heater        | 5.74   |
 | 28      | Ulysses   | Peterson      | Iron          | 3.53   |
 | 28      | Ulysses   | Peterson      | Iron          | 4.99   |
@@ -384,12 +385,12 @@
 | 29      | Pauline   | Everett       | Microwave     | 9.23   |
 | 29      | Pauline   | Everett       | Milk          | 7.58   |
 | 29      | Pauline   | Everett       | Refrigerator  | 9.91   |
-| 29      | Pauline   | Everett       | Soda          | 9.3    |
+| 29      | Pauline   | Everett       | Soda          | 9.30   |
 | 29      | Pauline   | Everett       | Towel         | 0.63   |
 | 29      | Pauline   | Everett       | Towel         | 3.64   |
 | 30      | Gerry     | Bush          | Juice         | 1.07   |
 | 30      | Gerry     | Bush          | Refrigerator  | 0.64   |
-| 30      | Gerry     | Bush          | Soda          | 3.4    |
+| 30      | Gerry     | Bush          | Soda          | 3.40   |
 | 30      | Gerry     | Bush          | Soda          | 7.23   |
 | 30      | Gerry     | Bush          | Soup          | 4.61   |
 +---------+-----------+---------------+---------------+--------+
@@ -420,7 +421,7 @@
 | 32      | Larry     | Randolph      | Telephone     | 3.35   |
 | 33      | Patty     | Van Morrison  | Chicken       | 2.46   |
 | 33      | Patty     | Van Morrison  | Chicken       | 5.71   |
-| 33      | Patty     | Van Morrison  | Cookies       | 0.6    |
+| 33      | Patty     | Van Morrison  | Cookies       | 0.60   |
 | 33      | Patty     | Van Morrison  | Heater        | 3.48   |
 | 33      | Patty     | Van Morrison  | Heater        | 4.11   |
 | 33      | Patty     | Van Morrison  | Juice         | 1.61   |
@@ -458,7 +459,7 @@
 | 36      | Jake      | Bush          | Telephone     | 9.99   |
 | 37      | Terri     | Noose         | Chicken       | 4.47   |
 | 37      | Terri     | Noose         | Cookies       | 8.37   |
-| 37      | Terri     | Noose         | Eggs          | 7.3    |
+| 37      | Terri     | Noose         | Eggs          | 7.30   |
 | 37      | Terri     | Noose         | Iron          | 5.35   |
 | 37      | Terri     | Noose         | Juice         | 7.95   |
 | 37      | Terri     | Noose         | Refrigerator  | 7.41   |
@@ -483,12 +484,12 @@
 | 39      | Batilda   | Van Morrison  | Iron          | 8.12   |
 | 39      | Batilda   | Van Morrison  | Milk          | 5.11   |
 | 39      | Batilda   | Van Morrison  | Plunger       | 7.07   |
-| 39      | Batilda   | Van Morrison  | Shampoo       | 6.4    |
+| 39      | Batilda   | Van Morrison  | Shampoo       | 6.40   |
 | 39      | Batilda   | Van Morrison  | Telephone     | 7.55   |
 | 40      | Kevin     | Frank         | Heater        | 0.63   |
-| 40      | Kevin     | Frank         | Microwave     | 3.0    |
+| 40      | Kevin     | Frank         | Microwave     | 3.00   |
 | 40      | Kevin     | Frank         | Shampoo       | 3.89   |
-| 40      | Kevin     | Frank         | Shampoo       | 6.4    |
+| 40      | Kevin     | Frank         | Shampoo       | 6.40   |
 | 40      | Kevin     | Frank         | Shampoo       | 9.28   |
 | 40      | Kevin     | Frank         | Soap          | 5.12   |
 | 40      | Kevin     | Frank         | Soap          | 5.64   |
@@ -502,7 +503,7 @@
 | 40      | Kevin     | Frank         | Telephone     | 5.88   |
 | 41      | Pauline   | Smith         | Cookies       | 0.74   |
 | 41      | Pauline   | Smith         | Cookies       | 1.38   |
-| 41      | Pauline   | Smith         | Heater        | 4.5    |
+| 41      | Pauline   | Smith         | Heater        | 4.50   |
 | 41      | Pauline   | Smith         | Heater        | 5.55   |
 | 41      | Pauline   | Smith         | Iron          | 7.05   |
 | 41      | Pauline   | Smith         | Microwave     | 0.59   |
@@ -519,7 +520,7 @@
 | 42      | Eric      | Randolph      | Soup          | 2.68   |
 | 43      | Erica     | Grant         | Chicken       | 0.49   |
 | 43      | Erica     | Grant         | Chicken       | 4.77   |
-| 43      | Erica     | Grant         | Cookies       | 1.6    |
+| 43      | Erica     | Grant         | Cookies       | 1.60   |
 | 43      | Erica     | Grant         | Cookies       | 6.49   |
 | 43      | Erica     | Grant         | Eggs          | 9.02   |
 | 43      | Erica     | Grant         | Juice         | 1.77   |
@@ -562,11 +563,11 @@
 | 48      | Daniel    | Bush          | Plunger       | 7.31   |
 | 48      | Daniel    | Bush          | Shampoo       | 7.23   |
 | 48      | Daniel    | Bush          | Soda          | 3.38   |
-| 48      | Daniel    | Bush          | Soda          | 6.5    |
+| 48      | Daniel    | Bush          | Soda          | 6.50   |
 | 48      | Daniel    | Bush          | Soup          | 1.55   |
-| 48      | Daniel    | Bush          | Telephone     | 9.1    |
+| 48      | Daniel    | Bush          | Telephone     | 9.10   |
 | 48      | Daniel    | Bush          | Towel         | 8.72   |
-| 49      | Maggie    | OLeary        | Eggs          | 8.5    |
+| 49      | Maggie    | OLeary        | Eggs          | 8.50   |
 | 49      | Maggie    | OLeary        | Iron          | 4.08   |
 | 49      | Maggie    | OLeary        | Iron          | 8.59   |
 | 49      | Maggie    | OLeary        | Juice         | 4.36   |
@@ -590,14 +591,14 @@
 | 50      | Bill      | Mantela       | Iron          | 5.83   |
 | 50      | Bill      | Mantela       | Refrigerator  | 3.33   |
 | 50      | Bill      | Mantela       | Refrigerator  | 8.25   |
-| 50      | Bill      | Mantela       | Towel         | 0.5    |
-| 51      | Betty     | Andrews       | Iron          | 5.9    |
+| 50      | Bill      | Mantela       | Towel         | 0.50   |
+| 51      | Betty     | Andrews       | Iron          | 5.90   |
 | 51      | Betty     | Andrews       | Juice         | 0.75   |
 | 51      | Betty     | Andrews       | Plunger       | 4.37   |
 | 51      | Betty     | Andrews       | Plunger       | 6.99   |
 | 51      | Betty     | Andrews       | Soap          | 9.05   |
 | 51      | Betty     | Andrews       | Soda          | 3.76   |
-| 51      | Betty     | Andrews       | Towel         | 2.9    |
+| 51      | Betty     | Andrews       | Towel         | 2.90   |
 +---------+-----------+---------------+---------------+--------+
 | CUSTID  |   FNAME   |     LNAME     |     NAME      | PRICE  |
 +---------+-----------+---------------+---------------+--------+
@@ -613,7 +614,7 @@
 | 52      | Victor    | Peterson      | Plunger       | 7.25   |
 | 52      | Victor    | Peterson      | Refrigerator  | 1.38   |
 | 52      | Victor    | Peterson      | Shampoo       | 3.55   |
-| 52      | Victor    | Peterson      | Shampoo       | 4.6    |
+| 52      | Victor    | Peterson      | Shampoo       | 4.60   |
 | 52      | Victor    | Peterson      | Soap          | 6.89   |
 | 52      | Victor    | Peterson      | Soup          | 7.92   |
 | 52      | Victor    | Peterson      | Soup          | 9.53   |
@@ -621,7 +622,7 @@
 | 53      | Veronica  | Smith         | Chicken       | 5.81   |
 | 53      | Veronica  | Smith         | Microwave     | 6.79   |
 | 53      | Veronica  | Smith         | Milk          | 4.92   |
-| 53      | Veronica  | Smith         | Shampoo       | 2.5    |
+| 53      | Veronica  | Smith         | Shampoo       | 2.50   |
 | 53      | Veronica  | Smith         | Shampoo       | 7.42   |
 | 53      | Veronica  | Smith         | Telephone     | 0.03   |
 | 53      | Veronica  | Smith         | Telephone     | 3.98   |
@@ -653,11 +654,11 @@
 | 56      | Max       | Frank         | Juice         | 3.29   |
 | 56      | Max       | Frank         | Juice         | 4.15   |
 | 56      | Max       | Frank         | Milk          | 5.93   |
-| 56      | Max       | Frank         | Plunger       | 1.4    |
+| 56      | Max       | Frank         | Plunger       | 1.40   |
 | 56      | Max       | Frank         | Refrigerator  | 3.54   |
-| 56      | Max       | Frank         | Refrigerator  | 5.7    |
+| 56      | Max       | Frank         | Refrigerator  | 5.70   |
 | 56      | Max       | Frank         | Refrigerator  | 6.55   |
-| 56      | Max       | Frank         | Shampoo       | 1.8    |
+| 56      | Max       | Frank         | Shampoo       | 1.80   |
 | 56      | Max       | Frank         | Shampoo       | 6.23   |
 | 56      | Max       | Frank         | Soap          | 2.08   |
 | 56      | Max       | Frank         | Telephone     | 0.18   |
@@ -665,7 +666,7 @@
 | 56      | Max       | Frank         | Telephone     | 1.57   |
 | 57      | Terri     | Kemp          | Chicken       | 7.53   |
 | 57      | Terri     | Kemp          | Eggs          | 5.41   |
-| 57      | Terri     | Kemp          | Milk          | 4.0    |
+| 57      | Terri     | Kemp          | Milk          | 4.00   |
 | 57      | Terri     | Kemp          | Refrigerator  | 5.67   |
 | 57      | Terri     | Kemp          | Shampoo       | 5.67   |
 | 57      | Terri     | Kemp          | Soap          | 7.31   |
@@ -674,7 +675,7 @@
 | 58      | Monty     | Grant         | Chicken       | 6.86   |
 | 58      | Monty     | Grant         | Heater        | 4.99   |
 | 58      | Monty     | Grant         | Juice         | 9.82   |
-| 58      | Monty     | Grant         | Microwave     | 2.4    |
+| 58      | Monty     | Grant         | Microwave     | 2.40   |
 | 58      | Monty     | Grant         | Microwave     | 8.42   |
 | 58      | Monty     | Grant         | Milk          | 9.38   |
 | 58      | Monty     | Grant         | Plunger       | 1.06   |
@@ -689,7 +690,7 @@
 | 59      | Jeniffer  | Bush          | Cookies       | 5.55   |
 | 59      | Jeniffer  | Bush          | Juice         | 1.56   |
 | 59      | Jeniffer  | Bush          | Milk          | 8.47   |
-| 59      | Jeniffer  | Bush          | Refrigerator  | 4.4    |
+| 59      | Jeniffer  | Bush          | Refrigerator  | 4.40   |
 | 59      | Jeniffer  | Bush          | Soap          | 4.92   |
 | 59      | Jeniffer  | Bush          | Soda          | 1.47   |
 | 59      | Jeniffer  | Bush          | Soup          | 1.54   |
@@ -698,13 +699,13 @@
 | 60      | Ceasar    | Mantela       | Juice         | 7.56   |
 | 60      | Ceasar    | Mantela       | Microwave     | 5.35   |
 | 60      | Ceasar    | Mantela       | Milk          | 5.04   |
-| 60      | Ceasar    | Mantela       | Plunger       | 1.9    |
+| 60      | Ceasar    | Mantela       | Plunger       | 1.90   |
 | 60      | Ceasar    | Mantela       | Shampoo       | 1.28   |
 | 60      | Ceasar    | Mantela       | Shampoo       | 4.52   |
 +---------+-----------+---------------+---------------+--------+
 | CUSTID  |   FNAME   |     LNAME     |     NAME      | PRICE  |
 +---------+-----------+---------------+---------------+--------+
-| 61      | Anita     | Locicero      | Chicken       | 4.5    |
+| 61      | Anita     | Locicero      | Chicken       | 4.50   |
 | 61      | Anita     | Locicero      | Cookies       | 7.33   |
 | 61      | Anita     | Locicero      | Eggs          | 9.92   |
 | 61      | Anita     | Locicero      | Milk          | 3.74   |
@@ -719,21 +720,21 @@
 | 62      | Kevin     | Carlucchi     | Juice         | 1.24   |
 | 62      | Kevin     | Carlucchi     | Plunger       | 0.13   |
 | 62      | Kevin     | Carlucchi     | Plunger       | 3.56   |
-| 62      | Kevin     | Carlucchi     | Telephone     | 0.2    |
-| 62      | Kevin     | Carlucchi     | Telephone     | 5.7    |
+| 62      | Kevin     | Carlucchi     | Telephone     | 0.20   |
+| 62      | Kevin     | Carlucchi     | Telephone     | 5.70   |
 | 63      | Margaret  | Everett       | Cookies       | 1.01   |
 | 63      | Margaret  | Everett       | Cookies       | 1.45   |
 | 63      | Margaret  | Everett       | Eggs          | 6.01   |
 | 63      | Margaret  | Everett       | Iron          | 0.16   |
 | 63      | Margaret  | Everett       | Microwave     | 8.18   |
-| 63      | Margaret  | Everett       | Milk          | 4.2    |
-| 63      | Margaret  | Everett       | Milk          | 5.8    |
+| 63      | Margaret  | Everett       | Milk          | 4.20   |
+| 63      | Margaret  | Everett       | Milk          | 5.80   |
 | 63      | Margaret  | Everett       | Refrigerator  | 9.15   |
 | 63      | Margaret  | Everett       | Soap          | 1.32   |
 | 63      | Margaret  | Everett       | Soap          | 7.72   |
-| 63      | Margaret  | Everett       | Soap          | 9.6    |
-| 63      | Margaret  | Everett       | Soda          | 9.9    |
-| 63      | Margaret  | Everett       | Soup          | 1.4    |
+| 63      | Margaret  | Everett       | Soap          | 9.60   |
+| 63      | Margaret  | Everett       | Soda          | 9.90   |
+| 63      | Margaret  | Everett       | Soup          | 1.40   |
 | 63      | Margaret  | Everett       | Towel         | 2.34   |
 | 64      | Harry     | Andrews       | Chicken       | 7.08   |
 | 64      | Harry     | Andrews       | Juice         | 1.79   |
@@ -746,7 +747,7 @@
 | 64      | Harry     | Andrews       | Telephone     | 7.83   |
 | 65      | Kathy     | Stevens       | Chicken       | 5.02   |
 | 65      | Kathy     | Stevens       | Eggs          | 2.26   |
-| 65      | Kathy     | Stevens       | Milk          | 3.0    |
+| 65      | Kathy     | Stevens       | Milk          | 3.00   |
 | 65      | Kathy     | Stevens       | Plunger       | 3.59   |
 | 65      | Kathy     | Stevens       | Soap          | 0.29   |
 | 65      | Kathy     | Stevens       | Soap          | 1.11   |
@@ -757,11 +758,11 @@
 | 66      | Anthony   | Smith         | Milk          | 5.34   |
 | 66      | Anthony   | Smith         | Refrigerator  | 4.75   |
 | 66      | Anthony   | Smith         | Soap          | 6.67   |
-| 66      | Anthony   | Smith         | Soda          | 0.5    |
+| 66      | Anthony   | Smith         | Soda          | 0.50   |
 | 66      | Anthony   | Smith         | Soda          | 1.59   |
-| 67      | Denise    | Peterson      | Cookies       | 9.4    |
+| 67      | Denise    | Peterson      | Cookies       | 9.40   |
 | 67      | Denise    | Peterson      | Eggs          | 3.07   |
-| 67      | Denise    | Peterson      | Eggs          | 5.9    |
+| 67      | Denise    | Peterson      | Eggs          | 5.90   |
 | 67      | Denise    | Peterson      | Iron          | 6.49   |
 | 67      | Denise    | Peterson      | Juice         | 0.43   |
 | 67      | Denise    | Peterson      | Juice         | 2.13   |
@@ -786,7 +787,7 @@
 | 69      | Hope      | Smith         | Chicken       | 4.25   |
 | 69      | Hope      | Smith         | Eggs          | 2.04   |
 | 69      | Hope      | Smith         | Eggs          | 3.83   |
-| 69      | Hope      | Smith         | Heater        | 2.2    |
+| 69      | Hope      | Smith         | Heater        | 2.20   |
 | 69      | Hope      | Smith         | Juice         | 4.18   |
 | 69      | Hope      | Smith         | Juice         | 8.75   |
 | 69      | Hope      | Smith         | Milk          | 0.12   |
@@ -802,7 +803,7 @@
 | 70      | Peter     | Howard        | Plunger       | 2.29   |
 | 70      | Peter     | Howard        | Plunger       | 2.32   |
 | 70      | Peter     | Howard        | Plunger       | 3.65   |
-| 70      | Peter     | Howard        | Refrigerator  | 5.5    |
+| 70      | Peter     | Howard        | Refrigerator  | 5.50   |
 | 70      | Peter     | Howard        | Shampoo       | 5.46   |
 +---------+-----------+---------------+---------------+--------+
 | CUSTID  |   FNAME   |     LNAME     |     NAME      | PRICE  |
@@ -812,7 +813,7 @@
 | 71      | Holly     | Dole          | Iron          | 8.27   |
 | 71      | Holly     | Dole          | Juice         | 9.86   |
 | 71      | Holly     | Dole          | Plunger       | 9.78   |
-| 71      | Holly     | Dole          | Refrigerator  | 9.1    |
+| 71      | Holly     | Dole          | Refrigerator  | 9.10   |
 | 71      | Holly     | Dole          | Shampoo       | 3.62   |
 | 71      | Holly     | Dole          | Soap          | 3.26   |
 | 71      | Holly     | Dole          | Soup          | 5.21   |
@@ -826,7 +827,7 @@
 | 72      | Fred      | Noose         | Towel         | 0.99   |
 | 72      | Fred      | Noose         | Towel         | 1.71   |
 | 73      | Patty     | Randolph      | Chicken       | 9.15   |
-| 73      | Patty     | Randolph      | Cookies       | 2.3    |
+| 73      | Patty     | Randolph      | Cookies       | 2.30   |
 | 73      | Patty     | Randolph      | Iron          | 3.16   |
 | 73      | Patty     | Randolph      | Iron          | 9.34   |
 | 73      | Patty     | Randolph      | Refrigerator  | 1.03   |
@@ -843,7 +844,7 @@
 | 74      | Andy      | OLeary        | Telephone     | 9.41   |
 | 75      | Jeniffer  | Kemp          | Chicken       | 6.96   |
 | 75      | Jeniffer  | Kemp          | Cookies       | 6.21   |
-| 75      | Jeniffer  | Kemp          | Heater        | 8.7    |
+| 75      | Jeniffer  | Kemp          | Heater        | 8.70   |
 | 75      | Jeniffer  | Kemp          | Juice         | 6.57   |
 | 75      | Jeniffer  | Kemp          | Milk          | 5.49   |
 | 75      | Jeniffer  | Kemp          | Soap          | 3.17   |
@@ -852,14 +853,14 @@
 | 75      | Jeniffer  | Kemp          | Telephone     | 3.96   |
 | 76      | Randy     | Smith         | Microwave     | 2.41   |
 | 76      | Randy     | Smith         | Milk          | 3.48   |
-| 76      | Randy     | Smith         | Refrigerator  | 7.1    |
+| 76      | Randy     | Smith         | Refrigerator  | 7.10   |
 | 76      | Randy     | Smith         | Shampoo       | 1.19   |
 | 76      | Randy     | Smith         | Soap          | 9.44   |
 | 76      | Randy     | Smith         | Soup          | 0.51   |
 | 76      | Randy     | Smith         | Towel         | 0.74   |
 | 77      | Lisa      | Van Morrison  | Cookies       | 3.35   |
-| 77      | Lisa      | Van Morrison  | Eggs          | 7.6    |
-| 77      | Lisa      | Van Morrison  | Iron          | 7.7    |
+| 77      | Lisa      | Van Morrison  | Eggs          | 7.60   |
+| 77      | Lisa      | Van Morrison  | Iron          | 7.70   |
 | 77      | Lisa      | Van Morrison  | Microwave     | 4.28   |
 | 77      | Lisa      | Van Morrison  | Plunger       | 6.51   |
 | 77      | Lisa      | Van Morrison  | Refrigerator  | 1.88   |
@@ -871,18 +872,18 @@
 | 77      | Lisa      | Van Morrison  | Telephone     | 8.88   |
 | 77      | Lisa      | Van Morrison  | Telephone     | 9.22   |
 | 78      | Barry     | Stevens       | Milk          | 6.26   |
-| 78      | Barry     | Stevens       | Shampoo       | 7.4    |
+| 78      | Barry     | Stevens       | Shampoo       | 7.40   |
 | 78      | Barry     | Stevens       | Soap          | 4.74   |
 | 78      | Barry     | Stevens       | Soap          | 5.65   |
 | 78      | Barry     | Stevens       | Soda          | 3.59   |
-| 78      | Barry     | Stevens       | Soup          | 3.7    |
+| 78      | Barry     | Stevens       | Soup          | 3.70   |
 | 78      | Barry     | Stevens       | Telephone     | 9.68   |
 | 79      | Carla     | Stevens       | Microwave     | 2.41   |
 | 79      | Carla     | Stevens       | Milk          | 6.96   |
 | 79      | Carla     | Stevens       | Refrigerator  | 3.05   |
 | 79      | Carla     | Stevens       | Soda          | 1.04   |
 | 79      | Carla     | Stevens       | Soda          | 3.81   |
-| 79      | Carla     | Stevens       | Soda          | 3.9    |
+| 79      | Carla     | Stevens       | Soda          | 3.90   |
 | 79      | Carla     | Stevens       | Telephone     | 3.96   |
 | 80      | Ian       | Bush          | Microwave     | 2.03   |
 | 80      | Ian       | Bush          | Shampoo       | 7.36   |
@@ -893,12 +894,12 @@
 | 80      | Ian       | Bush          | Soup          | 5.57   |
 | 80      | Ian       | Bush          | Towel         | 1.29   |
 | 80      | Ian       | Bush          | Towel         | 9.28   |
-| 81      | Alice     | Kemp          | Iron          | 3.8    |
+| 81      | Alice     | Kemp          | Iron          | 3.80   |
 | 81      | Alice     | Kemp          | Juice         | 2.69   |
 | 81      | Alice     | Kemp          | Juice         | 3.24   |
 | 81      | Alice     | Kemp          | Juice         | 9.65   |
 | 81      | Alice     | Kemp          | Milk          | 0.77   |
-| 81      | Alice     | Kemp          | Milk          | 0.9    |
+| 81      | Alice     | Kemp          | Milk          | 0.90   |
 | 81      | Alice     | Kemp          | Milk          | 7.38   |
 | 81      | Alice     | Kemp          | Milk          | 8.21   |
 | 81      | Alice     | Kemp          | Plunger       | 1.29   |
@@ -918,7 +919,7 @@
 | 82      | Ceasar    | Locicero      | Shampoo       | 3.55   |
 | 82      | Ceasar    | Locicero      | Shampoo       | 6.35   |
 | 82      | Ceasar    | Locicero      | Soda          | 3.48   |
-| 82      | Ceasar    | Locicero      | Soda          | 9.1    |
+| 82      | Ceasar    | Locicero      | Soda          | 9.10   |
 | 83      | Pauline   | Bush          | Iron          | 3.81   |
 | 83      | Pauline   | Bush          | Juice         | 9.95   |
 | 83      | Pauline   | Bush          | Microwave     | 7.38   |
@@ -930,7 +931,7 @@
 | 83      | Pauline   | Bush          | Soap          | 4.07   |
 | 83      | Pauline   | Bush          | Telephone     | 3.37   |
 | 83      | Pauline   | Bush          | Towel         | 2.83   |
-| 83      | Pauline   | Bush          | Towel         | 7.4    |
+| 83      | Pauline   | Bush          | Towel         | 7.40   |
 | 84      | David     | Howard        | Eggs          | 8.21   |
 | 84      | David     | Howard        | Plunger       | 9.25   |
 | 84      | David     | Howard        | Soap          | 5.47   |
@@ -949,9 +950,9 @@
 | 85      | Patty     | Howard        | Milk          | 0.63   |
 | 85      | Patty     | Howard        | Milk          | 9.78   |
 | 85      | Patty     | Howard        | Plunger       | 0.11   |
-| 85      | Patty     | Howard        | Plunger       | 4.6    |
+| 85      | Patty     | Howard        | Plunger       | 4.60   |
 | 85      | Patty     | Howard        | Plunger       | 5.78   |
-| 85      | Patty     | Howard        | Refrigerator  | 8.0    |
+| 85      | Patty     | Howard        | Refrigerator  | 8.00   |
 | 85      | Patty     | Howard        | Soda          | 4.31   |
 | 85      | Patty     | Howard        | Towel         | 3.36   |
 | 86      | Ted       | Grant         | Cookies       | 5.13   |
@@ -960,10 +961,10 @@
 | 86      | Ted       | Grant         | Microwave     | 7.79   |
 | 86      | Ted       | Grant         | Milk          | 2.31   |
 | 86      | Ted       | Grant         | Plunger       | 6.76   |
-| 86      | Ted       | Grant         | Shampoo       | 7.3    |
+| 86      | Ted       | Grant         | Shampoo       | 7.30   |
 | 86      | Ted       | Grant         | Soap          | 8.33   |
 | 86      | Ted       | Grant         | Soda          | 6.72   |
-| 86      | Ted       | Grant         | Towel         | 6.7    |
+| 86      | Ted       | Grant         | Towel         | 6.70   |
 | 86      | Ted       | Grant         | Towel         | 7.31   |
 | 87      | Maggie    | Kemp          | Chicken       | 2.08   |
 | 87      | Maggie    | Kemp          | Chicken       | 7.81   |
@@ -1000,13 +1001,13 @@
 | 89      | Anita     | Randolph      | Juice         | 8.24   |
 | 89      | Anita     | Randolph      | Microwave     | 8.37   |
 | 89      | Anita     | Randolph      | Milk          | 6.24   |
-| 89      | Anita     | Randolph      | Plunger       | 3.3    |
+| 89      | Anita     | Randolph      | Plunger       | 3.30   |
 | 89      | Anita     | Randolph      | Refrigerator  | 5.27   |
 | 89      | Anita     | Randolph      | Refrigerator  | 8.77   |
 | 89      | Anita     | Randolph      | Refrigerator  | 9.32   |
 | 89      | Anita     | Randolph      | Shampoo       | 5.88   |
 | 89      | Anita     | Randolph      | Telephone     | 3.82   |
-| 90      | Paul      | Van Morrison  | Chicken       | 1.2    |
+| 90      | Paul      | Van Morrison  | Chicken       | 1.20   |
 | 90      | Paul      | Van Morrison  | Chicken       | 8.92   |
 | 90      | Paul      | Van Morrison  | Chicken       | 9.58   |
 | 90      | Paul      | Van Morrison  | Cookies       | 1.76   |
@@ -1015,7 +1016,7 @@
 +---------+-----------+---------------+---------------+--------+
 | 90      | Paul      | Van Morrison  | Cookies       | 1.99   |
 | 90      | Paul      | Van Morrison  | Eggs          | 2.33   |
-| 90      | Paul      | Van Morrison  | Heater        | 0.4    |
+| 90      | Paul      | Van Morrison  | Heater        | 0.40   |
 | 90      | Paul      | Van Morrison  | Juice         | 9.14   |
 | 90      | Paul      | Van Morrison  | Microwave     | 3.76   |
 | 90      | Paul      | Van Morrison  | Refrigerator  | 4.07   |
@@ -1026,7 +1027,7 @@
 | 90      | Paul      | Van Morrison  | Telephone     | 7.07   |
 | 90      | Paul      | Van Morrison  | Towel         | 6.75   |
 | 90      | Paul      | Van Morrison  | Towel         | 7.61   |
-| 91      | Ophelia   | OLeary        | Cookies       | 9.4    |
+| 91      | Ophelia   | OLeary        | Cookies       | 9.40   |
 | 91      | Ophelia   | OLeary        | Eggs          | 0.15   |
 | 91      | Ophelia   | OLeary        | Iron          | 1.18   |
 | 91      | Ophelia   | OLeary        | Microwave     | 9.17   |
@@ -1047,7 +1048,7 @@
 | 92      | Rex       | Mantela       | Refrigerator  | 6.56   |
 | 92      | Rex       | Mantela       | Soup          | 0.29   |
 | 92      | Rex       | Mantela       | Soup          | 5.03   |
-| 92      | Rex       | Mantela       | Telephone     | 2.5    |
+| 92      | Rex       | Mantela       | Telephone     | 2.50   |
 | 92      | Rex       | Mantela       | Telephone     | 9.82   |
 | 92      | Rex       | Mantela       | Towel         | 0.73   |
 | 92      | Rex       | Mantela       | Towel         | 1.04   |
@@ -1056,7 +1057,7 @@
 | 93      | Terri     | Randolph      | Heater        | 5.29   |
 | 93      | Terri     | Randolph      | Iron          | 7.57   |
 | 93      | Terri     | Randolph      | Juice         | 9.27   |
-| 93      | Terri     | Randolph      | Milk          | 0.1    |
+| 93      | Terri     | Randolph      | Milk          | 0.10   |
 | 93      | Terri     | Randolph      | Refrigerator  | 7.49   |
 | 93      | Terri     | Randolph      | Shampoo       | 1.02   |
 | 93      | Terri     | Randolph      | Soap          | 6.37   |
@@ -1067,20 +1068,20 @@
 | 94      | Hugh      | Kemp          | Eggs          | 4.62   |
 | 94      | Hugh      | Kemp          | Heater        | 7.12   |
 | 94      | Hugh      | Kemp          | Iron          | 2.28   |
-| 94      | Hugh      | Kemp          | Refrigerator  | 7.4    |
-| 94      | Hugh      | Kemp          | Shampoo       | 8.2    |
+| 94      | Hugh      | Kemp          | Refrigerator  | 7.40   |
+| 94      | Hugh      | Kemp          | Shampoo       | 8.20   |
 | 94      | Hugh      | Kemp          | Soup          | 0.81   |
 | 94      | Hugh      | Kemp          | Soup          | 6.36   |
-| 95      | Margaret  | Bush          | Cookies       | 5.5    |
+| 95      | Margaret  | Bush          | Cookies       | 5.50   |
 | 95      | Margaret  | Bush          | Iron          | 8.23   |
 | 95      | Margaret  | Bush          | Microwave     | 1.82   |
 | 95      | Margaret  | Bush          | Milk          | 8.28   |
 | 95      | Margaret  | Bush          | Shampoo       | 9.33   |
 | 95      | Margaret  | Bush          | Soup          | 1.65   |
-| 96      | Bruce     | Grant         | Cookies       | 8.0    |
+| 96      | Bruce     | Grant         | Cookies       | 8.00   |
 | 96      | Bruce     | Grant         | Milk          | 6.91   |
 | 96      | Bruce     | Grant         | Plunger       | 7.22   |
-| 96      | Bruce     | Grant         | Refrigerator  | 8.0    |
+| 96      | Bruce     | Grant         | Refrigerator  | 8.00   |
 | 96      | Bruce     | Grant         | Soda          | 1.37   |
 | 96      | Bruce     | Grant         | Towel         | 0.06   |
 | 97      | Samantha  | Frank         | Chicken       | 1.06   |
@@ -1096,7 +1097,7 @@
 | 98      | Victor    | Frank         | Cookies       | 0.78   |
 | 98      | Victor    | Frank         | Cookies       | 7.31   |
 | 98      | Victor    | Frank         | Eggs          | 9.75   |
-| 98      | Victor    | Frank         | Heater        | 8.4    |
+| 98      | Victor    | Frank         | Heater        | 8.40   |
 | 98      | Victor    | Frank         | Iron          | 2.36   |
 | 98      | Victor    | Frank         | Refrigerator  | 8.47   |
 | 98      | Victor    | Frank         | Shampoo       | 8.23   |
@@ -1116,7 +1117,7 @@
 +---------+-----------+---------------+---------------+--------+
 | CUSTID  |   FNAME   |     LNAME     |     NAME      | PRICE  |
 +---------+-----------+---------------+---------------+--------+
-| 99      | Veronica  | Dole          | Telephone     | 2.3    |
+| 99      | Veronica  | Dole          | Telephone     | 2.30   |
 +---------+-----------+---------------+---------------+--------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select CUSTOMERS.CUSTID, EMP.LNAME, CUSTOMERS.LNAME, PRODUCTS.NAME, SALES.PRICE
@@ -1153,7 +1154,7 @@
 | 3       | Jones     | Andrews       | Heater        | 3.68   |
 | 3       | Reynolds  | Andrews       | Soup          | 3.92   |
 | 3       | Guy       | Andrews       | Soap          | 4.28   |
-| 3       | Williams  | Andrews       | Soap          | 5.5    |
+| 3       | Williams  | Andrews       | Soap          | 5.50   |
 | 3       | Fratz     | Andrews       | Plunger       | 5.92   |
 | 3       | Guy       | Andrews       | Eggs          | 8.67   |
 | 3       | Guy       | Andrews       | Soap          | 9.35   |
@@ -1165,22 +1166,22 @@
 | 4       | Roy       | Peterson      | Plunger       | 4.12   |
 | 4       | Bush      | Peterson      | Heater        | 5.14   |
 | 4       | Andrews   | Peterson      | Eggs          | 5.33   |
-| 4       | Roy       | Peterson      | Refrigerator  | 6.9    |
+| 4       | Roy       | Peterson      | Refrigerator  | 6.90   |
 | 4       | Williams  | Peterson      | Telephone     | 7.84   |
 | 4       | Roy       | Peterson      | Heater        | 7.99   |
 | 4       | Reynolds  | Peterson      | Towel         | 8.68   |
 | 4       | Guy       | Peterson      | Chicken       | 9.14   |
-| 5       | Williams  | Bush          | Soda          | 0.0    |
+| 5       | Williams  | Bush          | Soda          | 0.00   |
 | 5       | Nife      | Bush          | Soda          | 3.06   |
 | 5       | Reynolds  | Bush          | Plunger       | 3.22   |
 | 5       | Jones     | Bush          | Shampoo       | 5.41   |
-| 5       | Nife      | Bush          | Heater        | 6.3    |
+| 5       | Nife      | Bush          | Heater        | 6.30   |
 | 5       | Andrews   | Bush          | Juice         | 6.34   |
 | 5       | Jones     | Bush          | Iron          | 7.22   |
 | 5       | Guy       | Bush          | Plunger       | 7.95   |
 | 5       | Andrews   | Bush          | Plunger       | 8.04   |
 | 5       | Andrews   | Bush          | Towel         | 8.04   |
-| 5       | Guy       | Bush          | Soap          | 8.6    |
+| 5       | Guy       | Bush          | Soap          | 8.60   |
 | 6       | Andrews   | Grant         | Iron          | 0.22   |
 | 6       | Webber    | Grant         | Heater        | 0.84   |
 | 6       | Andrews   | Grant         | Milk          | 1.18   |
@@ -1189,7 +1190,7 @@
 | 6       | Webber    | Grant         | Soup          | 3.04   |
 | 6       | Jones     | Grant         | Shampoo       | 4.29   |
 | 6       | Bush      | Grant         | Cookies       | 8.21   |
-| 6       | Reynolds  | Grant         | Chicken       | 8.6    |
+| 6       | Reynolds  | Grant         | Chicken       | 8.60   |
 | 6       | Guy       | Grant         | Milk          | 9.86   |
 | 7       | Nife      | Bush          | Juice         | 0.52   |
 | 7       | Jones     | Bush          | Eggs          | 1.69   |
@@ -1206,14 +1207,14 @@
 | 8       | Williams  | Howard        | Soap          | 2.29   |
 | 8       | Andrews   | Howard        | Soda          | 4.99   |
 | 8       | Reynolds  | Howard        | Soup          | 5.74   |
-| 8       | Guy       | Howard        | Plunger       | 6.4    |
-| 8       | Fratz     | Howard        | Soda          | 7.7    |
+| 8       | Guy       | Howard        | Plunger       | 6.40   |
+| 8       | Fratz     | Howard        | Soda          | 7.70   |
 | 8       | Brown     | Howard        | Milk          | 8.57   |
 | 9       | Reynolds  | Kemp          | Soup          | 1.98   |
-| 9       | Andrews   | Kemp          | Soup          | 2.7    |
+| 9       | Andrews   | Kemp          | Soup          | 2.70   |
 | 9       | Webber    | Kemp          | Chicken       | 3.27   |
 | 9       | Guy       | Kemp          | Shampoo       | 4.06   |
-| 9       | Fratz     | Kemp          | Iron          | 4.2    |
+| 9       | Fratz     | Kemp          | Iron          | 4.20   |
 | 9       | Guy       | Kemp          | Refrigerator  | 4.21   |
 | 9       | Bush      | Kemp          | Soda          | 4.48   |
 | 9       | Fratz     | Kemp          | Eggs          | 5.54   |
@@ -1251,8 +1252,8 @@
 | 12      | Reynolds  | Stevens       | Soup          | 8.47   |
 | 12      | Fratz     | Stevens       | Plunger       | 9.32   |
 | 13      | Bush      | Everett       | Towel         | 0.64   |
-| 13      | Fratz     | Everett       | Soap          | 0.7    |
-| 13      | Guy       | Everett       | Juice         | 0.8    |
+| 13      | Fratz     | Everett       | Soap          | 0.70   |
+| 13      | Guy       | Everett       | Juice         | 0.80   |
 | 13      | Webber    | Everett       | Iron          | 2.99   |
 | 13      | Brown     | Everett       | Milk          | 4.15   |
 | 13      | Webber    | Everett       | Towel         | 5.37   |
@@ -1269,7 +1270,7 @@
 | 14      | Andrews   | Jones         | Soda          | 4.93   |
 | 14      | Williams  | Jones         | Cookies       | 6.39   |
 | 14      | Webber    | Jones         | Juice         | 8.59   |
-| 14      | Nife      | Jones         | Cookies       | 8.6    |
+| 14      | Nife      | Jones         | Cookies       | 8.60   |
 | 15      | Webber    | Noose         | Cookies       | 1.08   |
 | 15      | Jones     | Noose         | Eggs          | 2.12   |
 | 15      | Guy       | Noose         | Microwave     | 2.13   |
@@ -1285,7 +1286,7 @@
 | 16      | Brown     | Grant         | Microwave     | 2.54   |
 | 16      | Andrews   | Grant         | Milk          | 3.71   |
 | 16      | Andrews   | Grant         | Cookies       | 5.11   |
-| 16      | Nife      | Grant         | Refrigerator  | 5.2    |
+| 16      | Nife      | Grant         | Refrigerator  | 5.20   |
 | 16      | Brown     | Grant         | Heater        | 5.74   |
 | 16      | Andrews   | Grant         | Juice         | 7.18   |
 | 16      | Nife      | Grant         | Heater        | 7.46   |
@@ -1294,22 +1295,22 @@
 | 17      | Bush      | Mantela       | Plunger       | 1.69   |
 | 17      | Andrews   | Mantela       | Milk          | 1.73   |
 | 17      | Andrews   | Mantela       | Soda          | 2.21   |
-| 17      | Bush      | Mantela       | Cookies       | 2.4    |
+| 17      | Bush      | Mantela       | Cookies       | 2.40   |
 | 17      | Guy       | Mantela       | Shampoo       | 7.13   |
 | 17      | Williams  | Mantela       | Soap          | 7.19   |
 | 17      | Andrews   | Mantela       | Telephone     | 7.32   |
 | 17      | Nife      | Mantela       | Refrigerator  | 7.45   |
 | 17      | Williams  | Mantela       | Iron          | 9.79   |
-| 18      | Bush      | OLeary        | Soda          | 0.0    |
+| 18      | Bush      | OLeary        | Soda          | 0.00   |
 | 18      | Nife      | OLeary        | Heater        | 1.92   |
 | 18      | Reynolds  | OLeary        | Plunger       | 2.21   |
 | 18      | Guy       | OLeary        | Soap          | 2.44   |
-| 18      | Nife      | OLeary        | Milk          | 2.9    |
+| 18      | Nife      | OLeary        | Milk          | 2.90   |
 | 18      | Webber    | OLeary        | Plunger       | 2.96   |
 | 18      | Webber    | OLeary        | Iron          | 3.37   |
 | 18      | Reynolds  | OLeary        | Eggs          | 3.48   |
 | 18      | Brown     | OLeary        | Chicken       | 4.13   |
-| 18      | Webber    | OLeary        | Microwave     | 4.3    |
+| 18      | Webber    | OLeary        | Microwave     | 4.30   |
 | 18      | Brown     | OLeary        | Juice         | 4.31   |
 | 18      | Reynolds  | OLeary        | Soup          | 4.81   |
 | 18      | Bush      | OLeary        | Milk          | 5.08   |
@@ -1318,7 +1319,7 @@
 | 18      | Andrews   | OLeary        | Juice         | 7.83   |
 | 18      | Reynolds  | OLeary        | Soda          | 8.32   |
 | 19      | Guy       | Carlucchi     | Towel         | 0.46   |
-| 19      | Jones     | Carlucchi     | Microwave     | 2.6    |
+| 19      | Jones     | Carlucchi     | Microwave     | 2.60   |
 | 19      | Guy       | Carlucchi     | Chicken       | 2.66   |
 | 19      | Fratz     | Carlucchi     | Juice         | 3.33   |
 | 19      | Andrews   | Carlucchi     | Towel         | 4.06   |
@@ -1327,14 +1328,14 @@
 | 19      | Bush      | Carlucchi     | Towel         | 6.75   |
 | 19      | Nife      | Carlucchi     | Milk          | 8.45   |
 | 19      | Brown     | Carlucchi     | Cookies       | 9.19   |
-| 19      | Roy       | Carlucchi     | Plunger       | 9.3    |
+| 19      | Roy       | Carlucchi     | Plunger       | 9.30   |
 | 19      | Brown     | Carlucchi     | Iron          | 9.86   |
 +---------+-----------+---------------+---------------+--------+
 | CUSTID  |   LNAME   |     LNAME     |     NAME      | PRICE  |
 +---------+-----------+---------------+---------------+--------+
 | 20      | Guy       | Noose         | Soap          | 2.39   |
 | 20      | Fratz     | Noose         | Soup          | 5.69   |
-| 20      | Guy       | Noose         | Juice         | 7.4    |
+| 20      | Guy       | Noose         | Juice         | 7.40   |
 | 20      | Guy       | Noose         | Soup          | 8.49   |
 | 21      | Nife      | Carlucchi     | Refrigerator  | 0.55   |
 | 21      | Jones     | Carlucchi     | Soup          | 0.65   |
@@ -1349,7 +1350,7 @@
 | 22      | Jones     | Locicero      | Plunger       | 2.07   |
 | 22      | Brown     | Locicero      | Refrigerator  | 3.85   |
 | 22      | Guy       | Locicero      | Chicken       | 4.86   |
-| 22      | Bush      | Locicero      | Eggs          | 6.5    |
+| 22      | Bush      | Locicero      | Eggs          | 6.50   |
 | 22      | Bush      | Locicero      | Chicken       | 7.57   |
 | 22      | Andrews   | Locicero      | Refrigerator  | 8.59   |
 | 23      | Andrews   | Everett       | Chicken       | 0.23   |
@@ -1361,7 +1362,7 @@
 | 23      | Nife      | Everett       | Milk          | 8.08   |
 | 23      | Guy       | Everett       | Soda          | 8.13   |
 | 23      | Jones     | Everett       | Soda          | 8.35   |
-| 24      | Bush      | Peterson      | Milk          | 0.5    |
+| 24      | Bush      | Peterson      | Milk          | 0.50   |
 | 24      | Williams  | Peterson      | Soup          | 2.28   |
 | 24      | Guy       | Peterson      | Cookies       | 2.59   |
 | 24      | Webber    | Peterson      | Soap          | 3.04   |
@@ -1388,17 +1389,17 @@
 | 26      | Webber    | Peterson      | Plunger       | 3.17   |
 | 26      | Williams  | Peterson      | Soup          | 5.39   |
 | 26      | Webber    | Peterson      | Plunger       | 6.05   |
-| 26      | Reynolds  | Peterson      | Microwave     | 6.2    |
+| 26      | Reynolds  | Peterson      | Microwave     | 6.20   |
 | 26      | Webber    | Peterson      | Microwave     | 6.42   |
 | 26      | Webber    | Peterson      | Soup          | 6.56   |
 | 26      | Williams  | Peterson      | Iron          | 6.59   |
 | 26      | Nife      | Peterson      | Heater        | 7.02   |
 | 26      | Fratz     | Peterson      | Refrigerator  | 7.05   |
-| 26      | Brown     | Peterson      | Juice         | 8.4    |
+| 26      | Brown     | Peterson      | Juice         | 8.40   |
 | 26      | Williams  | Peterson      | Microwave     | 9.01   |
 | 27      | Webber    | Noose         | Heater        | 1.16   |
 | 27      | Andrews   | Noose         | Eggs          | 1.63   |
-| 27      | Roy       | Noose         | Milk          | 1.9    |
+| 27      | Roy       | Noose         | Milk          | 1.90   |
 | 27      | Reynolds  | Noose         | Plunger       | 2.85   |
 | 27      | Nife      | Noose         | Cookies       | 6.91   |
 | 27      | Webber    | Noose         | Cookies       | 7.95   |
@@ -1415,7 +1416,7 @@
 | 28      | Reynolds  | Peterson      | Heater        | 5.74   |
 | 28      | Jones     | Peterson      | Soup          | 6.33   |
 | 28      | Andrews   | Peterson      | Milk          | 7.24   |
-| 28      | Jones     | Peterson      | Eggs          | 9.0    |
+| 28      | Jones     | Peterson      | Eggs          | 9.00   |
 | 28      | Williams  | Peterson      | Juice         | 9.69   |
 | 29      | Roy       | Everett       | Towel         | 0.63   |
 | 29      | Roy       | Everett       | Cookies       | 1.85   |
@@ -1424,13 +1425,13 @@
 | 29      | Nife      | Everett       | Towel         | 3.64   |
 | 29      | Fratz     | Everett       | Milk          | 7.58   |
 | 29      | Bush      | Everett       | Microwave     | 9.23   |
-| 29      | Nife      | Everett       | Soda          | 9.3    |
+| 29      | Nife      | Everett       | Soda          | 9.30   |
 | 29      | Brown     | Everett       | Cookies       | 9.89   |
 | 29      | Williams  | Everett       | Refrigerator  | 9.91   |
 | 30      | Jones     | Bush          | Towel         | 0.63   |
 | 30      | Nife      | Bush          | Refrigerator  | 0.64   |
 | 30      | Guy       | Bush          | Juice         | 1.07   |
-| 30      | Brown     | Bush          | Soda          | 3.4    |
+| 30      | Brown     | Bush          | Soda          | 3.40   |
 | 30      | Brown     | Bush          | Soup          | 4.61   |
 +---------+-----------+---------------+---------------+--------+
 | CUSTID  |   LNAME   |     LNAME     |     NAME      | PRICE  |
@@ -1458,7 +1459,7 @@
 | 32      | Roy       | Randolph      | Soap          | 6.65   |
 | 32      | Reynolds  | Randolph      | Iron          | 6.88   |
 | 32      | Guy       | Randolph      | Shampoo       | 8.72   |
-| 33      | Roy       | Van Morrison  | Cookies       | 0.6    |
+| 33      | Roy       | Van Morrison  | Cookies       | 0.60   |
 | 33      | Fratz     | Van Morrison  | Shampoo       | 0.74   |
 | 33      | Reynolds  | Van Morrison  | Juice         | 1.61   |
 | 33      | Andrews   | Van Morrison  | Telephone     | 2.16   |
@@ -1498,7 +1499,7 @@
 | 36      | Bush      | Bush          | Telephone     | 9.99   |
 | 37      | Jones     | Noose         | Chicken       | 4.47   |
 | 37      | Guy       | Noose         | Iron          | 5.35   |
-| 37      | Bush      | Noose         | Eggs          | 7.3    |
+| 37      | Bush      | Noose         | Eggs          | 7.30   |
 | 37      | Williams  | Noose         | Refrigerator  | 7.41   |
 | 37      | Roy       | Noose         | Telephone     | 7.43   |
 | 37      | Williams  | Noose         | Juice         | 7.95   |
@@ -1521,20 +1522,20 @@
 | 39      | Andrews   | Van Morrison  | Chicken       | 0.45   |
 | 39      | Guy       | Van Morrison  | Milk          | 5.11   |
 | 39      | Bush      | Van Morrison  | Cookies       | 5.21   |
-| 39      | Webber    | Van Morrison  | Shampoo       | 6.4    |
+| 39      | Webber    | Van Morrison  | Shampoo       | 6.40   |
 | 39      | Jones     | Van Morrison  | Plunger       | 7.07   |
 | 39      | Roy       | Van Morrison  | Telephone     | 7.55   |
 | 39      | Fratz     | Van Morrison  | Iron          | 8.12   |
 | 40      | Bush      | Frank         | Heater        | 0.63   |
 | 40      | Jones     | Frank         | Soda          | 1.86   |
 | 40      | Williams  | Frank         | Telephone     | 2.56   |
-| 40      | Webber    | Frank         | Microwave     | 3.0    |
+| 40      | Webber    | Frank         | Microwave     | 3.00   |
 | 40      | Brown     | Frank         | Shampoo       | 3.89   |
 | 40      | Guy       | Frank         | Soap          | 5.12   |
 | 40      | Jones     | Frank         | Soap          | 5.64   |
 | 40      | Fratz     | Frank         | Telephone     | 5.88   |
 | 40      | Fratz     | Frank         | Soda          | 6.24   |
-| 40      | Bush      | Frank         | Shampoo       | 6.4    |
+| 40      | Bush      | Frank         | Shampoo       | 6.40   |
 +---------+-----------+---------------+---------------+--------+
 | CUSTID  |   LNAME   |     LNAME     |     NAME      | PRICE  |
 +---------+-----------+---------------+---------------+--------+
@@ -1546,7 +1547,7 @@
 | 41      | Webber    | Smith         | Microwave     | 1.48   |
 | 41      | Jones     | Smith         | Milk          | 4.15   |
 | 41      | Andrews   | Smith         | Telephone     | 4.42   |
-| 41      | Reynolds  | Smith         | Heater        | 4.5    |
+| 41      | Reynolds  | Smith         | Heater        | 4.50   |
 | 41      | Webber    | Smith         | Heater        | 5.55   |
 | 41      | Reynolds  | Smith         | Telephone     | 6.54   |
 | 41      | Roy       | Smith         | Soap          | 6.68   |
@@ -1559,7 +1560,7 @@
 | 42      | Brown     | Randolph      | Refrigerator  | 5.48   |
 | 43      | Nife      | Grant         | Chicken       | 0.49   |
 | 43      | Webber    | Grant         | Telephone     | 1.13   |
-| 43      | Nife      | Grant         | Cookies       | 1.6    |
+| 43      | Nife      | Grant         | Cookies       | 1.60   |
 | 43      | Andrews   | Grant         | Juice         | 1.77   |
 | 43      | Webber    | Grant         | Chicken       | 4.77   |
 | 43      | Andrews   | Grant         | Soup          | 5.02   |
@@ -1601,11 +1602,11 @@
 | 48      | Brown     | Bush          | Soup          | 1.55   |
 | 48      | Fratz     | Bush          | Soda          | 3.38   |
 | 48      | Andrews   | Bush          | Chicken       | 3.58   |
-| 48      | Roy       | Bush          | Soda          | 6.5    |
+| 48      | Roy       | Bush          | Soda          | 6.50   |
 | 48      | Jones     | Bush          | Shampoo       | 7.23   |
 | 48      | Reynolds  | Bush          | Plunger       | 7.31   |
 | 48      | Jones     | Bush          | Towel         | 8.72   |
-| 48      | Bush      | Bush          | Telephone     | 9.1    |
+| 48      | Bush      | Bush          | Telephone     | 9.10   |
 | 49      | Roy       | OLeary        | Soap          | 0.06   |
 | 49      | Roy       | OLeary        | Soap          | 0.58   |
 | 49      | Brown     | OLeary        | Shampoo       | 1.25   |
@@ -1619,23 +1620,23 @@
 | 49      | Nife      | OLeary        | Soap          | 6.01   |
 | 49      | Roy       | OLeary        | Soda          | 6.38   |
 | 49      | Williams  | OLeary        | Plunger       | 6.93   |
-| 49      | Bush      | OLeary        | Eggs          | 8.5    |
+| 49      | Bush      | OLeary        | Eggs          | 8.50   |
 | 49      | Reynolds  | OLeary        | Shampoo       | 8.54   |
 | 49      | Guy       | OLeary        | Iron          | 8.59   |
 | 49      | Nife      | OLeary        | Plunger       | 9.54   |
 | 50      | Webber    | Mantela       | Cookies       | 0.45   |
 | 50      | Fratz     | Mantela       | Chicken       | 0.47   |
-| 50      | Webber    | Mantela       | Towel         | 0.5    |
+| 50      | Webber    | Mantela       | Towel         | 0.50   |
 | 50      | Brown     | Mantela       | Heater        | 1.45   |
 | 50      | Brown     | Mantela       | Cookies       | 3.08   |
 | 50      | Guy       | Mantela       | Refrigerator  | 3.33   |
 | 50      | Guy       | Mantela       | Iron          | 5.83   |
 | 50      | Brown     | Mantela       | Refrigerator  | 8.25   |
 | 51      | Andrews   | Andrews       | Juice         | 0.75   |
-| 51      | Nife      | Andrews       | Towel         | 2.9    |
+| 51      | Nife      | Andrews       | Towel         | 2.90   |
 | 51      | Williams  | Andrews       | Soda          | 3.76   |
 | 51      | Webber    | Andrews       | Plunger       | 4.37   |
-| 51      | Nife      | Andrews       | Iron          | 5.9    |
+| 51      | Nife      | Andrews       | Iron          | 5.90   |
 | 51      | Andrews   | Andrews       | Plunger       | 6.99   |
 | 51      | Williams  | Andrews       | Towel         | 9.03   |
 +---------+-----------+---------------+---------------+--------+
@@ -1647,7 +1648,7 @@
 | 52      | Roy       | Peterson      | Refrigerator  | 1.38   |
 | 52      | Jones     | Peterson      | Microwave     | 2.53   |
 | 52      | Roy       | Peterson      | Shampoo       | 3.55   |
-| 52      | Guy       | Peterson      | Shampoo       | 4.6    |
+| 52      | Guy       | Peterson      | Shampoo       | 4.60   |
 | 52      | Guy       | Peterson      | Chicken       | 5.67   |
 | 52      | Webber    | Peterson      | Plunger       | 5.81   |
 | 52      | Jones     | Peterson      | Milk          | 6.53   |
@@ -1659,7 +1660,7 @@
 | 52      | Fratz     | Peterson      | Iron          | 9.15   |
 | 52      | Williams  | Peterson      | Soup          | 9.53   |
 | 53      | Andrews   | Smith         | Telephone     | 0.03   |
-| 53      | Webber    | Smith         | Shampoo       | 2.5    |
+| 53      | Webber    | Smith         | Shampoo       | 2.50   |
 | 53      | Guy       | Smith         | Telephone     | 3.98   |
 | 53      | Roy       | Smith         | Milk          | 4.92   |
 | 53      | Webber    | Smith         | Chicken       | 5.81   |
@@ -1692,18 +1693,18 @@
 | 56      | Bush      | Frank         | Chicken       | 0.37   |
 | 56      | Reynolds  | Frank         | Telephone     | 0.61   |
 | 56      | Nife      | Frank         | Cookies       | 0.72   |
-| 56      | Nife      | Frank         | Plunger       | 1.4    |
+| 56      | Nife      | Frank         | Plunger       | 1.40   |
 | 56      | Brown     | Frank         | Telephone     | 1.57   |
-| 56      | Roy       | Frank         | Shampoo       | 1.8    |
+| 56      | Roy       | Frank         | Shampoo       | 1.80   |
 | 56      | Brown     | Frank         | Soap          | 2.08   |
 | 56      | Bush      | Frank         | Juice         | 3.29   |
 | 56      | Andrews   | Frank         | Refrigerator  | 3.54   |
 | 56      | Jones     | Frank         | Juice         | 4.15   |
-| 56      | Andrews   | Frank         | Refrigerator  | 5.7    |
+| 56      | Andrews   | Frank         | Refrigerator  | 5.70   |
 | 56      | Andrews   | Frank         | Milk          | 5.93   |
 | 56      | Webber    | Frank         | Shampoo       | 6.23   |
 | 56      | Roy       | Frank         | Refrigerator  | 6.55   |
-| 57      | Jones     | Kemp          | Milk          | 4.0    |
+| 57      | Jones     | Kemp          | Milk          | 4.00   |
 | 57      | Brown     | Kemp          | Telephone     | 4.43   |
 | 57      | Williams  | Kemp          | Eggs          | 5.41   |
 | 57      | Bush      | Kemp          | Refrigerator  | 5.67   |
@@ -1716,7 +1717,7 @@
 | 58      | Reynolds  | Grant         | Plunger       | 1.06   |
 | 58      | Jones     | Grant         | Telephone     | 1.17   |
 | 58      | Brown     | Grant         | Shampoo       | 1.21   |
-| 58      | Nife      | Grant         | Microwave     | 2.4    |
+| 58      | Nife      | Grant         | Microwave     | 2.40   |
 | 58      | Webber    | Grant         | Plunger       | 4.79   |
 | 58      | Bush      | Grant         | Heater        | 4.99   |
 | 58      | Andrews   | Grant         | Plunger       | 5.19   |
@@ -1729,13 +1730,13 @@
 | 59      | Reynolds  | Bush          | Soda          | 1.47   |
 | 59      | Brown     | Bush          | Soup          | 1.54   |
 | 59      | Nife      | Bush          | Juice         | 1.56   |
-| 59      | Guy       | Bush          | Refrigerator  | 4.4    |
+| 59      | Guy       | Bush          | Refrigerator  | 4.40   |
 | 59      | Roy       | Bush          | Soap          | 4.92   |
 | 59      | Webber    | Bush          | Cookies       | 5.55   |
 | 59      | Brown     | Bush          | Milk          | 8.47   |
 | 59      | Andrews   | Bush          | Soup          | 9.88   |
 | 60      | Reynolds  | Mantela       | Shampoo       | 1.28   |
-| 60      | Nife      | Mantela       | Plunger       | 1.9    |
+| 60      | Nife      | Mantela       | Plunger       | 1.90   |
 | 60      | Reynolds  | Mantela       | Shampoo       | 4.52   |
 | 60      | Jones     | Mantela       | Milk          | 5.04   |
 | 60      | Andrews   | Mantela       | Microwave     | 5.35   |
@@ -1746,7 +1747,7 @@
 +---------+-----------+---------------+---------------+--------+
 | 61      | Roy       | Locicero      | Milk          | 3.74   |
 | 61      | Reynolds  | Locicero      | Soda          | 3.76   |
-| 61      | Brown     | Locicero      | Chicken       | 4.5    |
+| 61      | Brown     | Locicero      | Chicken       | 4.50   |
 | 61      | Reynolds  | Locicero      | Soap          | 5.05   |
 | 61      | Williams  | Locicero      | Milk          | 5.33   |
 | 61      | Brown     | Locicero      | Milk          | 6.44   |
@@ -1755,26 +1756,26 @@
 | 61      | Nife      | Locicero      | Plunger       | 9.35   |
 | 61      | Guy       | Locicero      | Eggs          | 9.92   |
 | 62      | Jones     | Carlucchi     | Plunger       | 0.13   |
-| 62      | Bush      | Carlucchi     | Telephone     | 0.2    |
+| 62      | Bush      | Carlucchi     | Telephone     | 0.20   |
 | 62      | Reynolds  | Carlucchi     | Juice         | 1.24   |
 | 62      | Reynolds  | Carlucchi     | Eggs          | 1.36   |
 | 62      | Nife      | Carlucchi     | Plunger       | 3.56   |
-| 62      | Jones     | Carlucchi     | Telephone     | 5.7    |
+| 62      | Jones     | Carlucchi     | Telephone     | 5.70   |
 | 62      | Brown     | Carlucchi     | Iron          | 5.79   |
 | 63      | Webber    | Everett       | Iron          | 0.16   |
 | 63      | Jones     | Everett       | Cookies       | 1.01   |
 | 63      | Williams  | Everett       | Soap          | 1.32   |
-| 63      | Reynolds  | Everett       | Soup          | 1.4    |
+| 63      | Reynolds  | Everett       | Soup          | 1.40   |
 | 63      | Fratz     | Everett       | Cookies       | 1.45   |
 | 63      | Brown     | Everett       | Towel         | 2.34   |
-| 63      | Brown     | Everett       | Milk          | 4.2    |
-| 63      | Williams  | Everett       | Milk          | 5.8    |
+| 63      | Brown     | Everett       | Milk          | 4.20   |
+| 63      | Williams  | Everett       | Milk          | 5.80   |
 | 63      | Bush      | Everett       | Eggs          | 6.01   |
 | 63      | Fratz     | Everett       | Soap          | 7.72   |
 | 63      | Andrews   | Everett       | Microwave     | 8.18   |
 | 63      | Andrews   | Everett       | Refrigerator  | 9.15   |
-| 63      | Webber    | Everett       | Soap          | 9.6    |
-| 63      | Roy       | Everett       | Soda          | 9.9    |
+| 63      | Webber    | Everett       | Soap          | 9.60   |
+| 63      | Roy       | Everett       | Soda          | 9.90   |
 | 64      | Bush      | Andrews       | Juice         | 1.79   |
 | 64      | Webber    | Andrews       | Milk          | 1.86   |
 | 64      | Webber    | Andrews       | Soda          | 2.21   |
@@ -1787,11 +1788,11 @@
 | 65      | Jones     | Stevens       | Soap          | 0.29   |
 | 65      | Fratz     | Stevens       | Soap          | 1.11   |
 | 65      | Reynolds  | Stevens       | Eggs          | 2.26   |
-| 65      | Bush      | Stevens       | Milk          | 3.0    |
+| 65      | Bush      | Stevens       | Milk          | 3.00   |
 | 65      | Guy       | Stevens       | Plunger       | 3.59   |
 | 65      | Jones     | Stevens       | Soda          | 4.92   |
 | 65      | Roy       | Stevens       | Chicken       | 5.02   |
-| 66      | Jones     | Smith         | Soda          | 0.5    |
+| 66      | Jones     | Smith         | Soda          | 0.50   |
 | 66      | Roy       | Smith         | Soda          | 1.59   |
 | 66      | Jones     | Smith         | Milk          | 2.56   |
 | 66      | Webber    | Smith         | Juice         | 3.69   |
@@ -1806,12 +1807,12 @@
 | 67      | Webber    | Peterson      | Microwave     | 2.24   |
 | 67      | Reynolds  | Peterson      | Eggs          | 3.07   |
 | 67      | Williams  | Peterson      | Milk          | 4.35   |
-| 67      | Williams  | Peterson      | Eggs          | 5.9    |
+| 67      | Williams  | Peterson      | Eggs          | 5.90   |
 | 67      | Andrews   | Peterson      | Juice         | 5.93   |
 | 67      | Andrews   | Peterson      | Iron          | 6.49   |
 | 67      | Nife      | Peterson      | Soup          | 6.58   |
 | 67      | Jones     | Peterson      | Soda          | 7.93   |
-| 67      | Fratz     | Peterson      | Cookies       | 9.4    |
+| 67      | Fratz     | Peterson      | Cookies       | 9.40   |
 | 68      | Webber    | Frank         | Shampoo       | 1.59   |
 | 68      | Guy       | Frank         | Eggs          | 1.64   |
 | 68      | Williams  | Frank         | Juice         | 1.66   |
@@ -1825,7 +1826,7 @@
 | 68      | Reynolds  | Frank         | Eggs          | 8.69   |
 | 69      | Fratz     | Smith         | Milk          | 0.12   |
 | 69      | Reynolds  | Smith         | Eggs          | 2.04   |
-| 69      | Webber    | Smith         | Heater        | 2.2    |
+| 69      | Webber    | Smith         | Heater        | 2.20   |
 | 69      | Andrews   | Smith         | Eggs          | 3.83   |
 | 69      | Bush      | Smith         | Juice         | 4.18   |
 | 69      | Nife      | Smith         | Chicken       | 4.25   |
@@ -1839,7 +1840,7 @@
 | 70      | Reynolds  | Howard        | Plunger       | 3.65   |
 | 70      | Nife      | Howard        | Microwave     | 5.21   |
 | 70      | Reynolds  | Howard        | Shampoo       | 5.46   |
-| 70      | Andrews   | Howard        | Refrigerator  | 5.5    |
+| 70      | Andrews   | Howard        | Refrigerator  | 5.50   |
 | 70      | Brown     | Howard        | Microwave     | 6.25   |
 | 70      | Guy       | Howard        | Chicken       | 8.82   |
 | 70      | Reynolds  | Howard        | Shampoo       | 9.23   |
@@ -1853,7 +1854,7 @@
 | 71      | Williams  | Dole          | Shampoo       | 3.62   |
 | 71      | Andrews   | Dole          | Soup          | 5.21   |
 | 71      | Nife      | Dole          | Iron          | 8.27   |
-| 71      | Williams  | Dole          | Refrigerator  | 9.1    |
+| 71      | Williams  | Dole          | Refrigerator  | 9.10   |
 | 71      | Webber    | Dole          | Plunger       | 9.78   |
 | 71      | Reynolds  | Dole          | Juice         | 9.86   |
 | 72      | Guy       | Noose         | Eggs          | 0.47   |
@@ -1867,7 +1868,7 @@
 | 72      | Nife      | Noose         | Refrigerator  | 7.08   |
 | 73      | Reynolds  | Randolph      | Soda          | 0.64   |
 | 73      | Roy       | Randolph      | Refrigerator  | 1.03   |
-| 73      | Guy       | Randolph      | Cookies       | 2.3    |
+| 73      | Guy       | Randolph      | Cookies       | 2.30   |
 | 73      | Andrews   | Randolph      | Iron          | 3.16   |
 | 73      | Andrews   | Randolph      | Soda          | 3.96   |
 | 73      | Bush      | Randolph      | Soap          | 5.22   |
@@ -1888,14 +1889,14 @@
 | 75      | Guy       | Kemp          | Cookies       | 6.21   |
 | 75      | Andrews   | Kemp          | Juice         | 6.57   |
 | 75      | Guy       | Kemp          | Chicken       | 6.96   |
-| 75      | Webber    | Kemp          | Heater        | 8.7    |
+| 75      | Webber    | Kemp          | Heater        | 8.70   |
 | 75      | Guy       | Kemp          | Soda          | 9.94   |
 | 76      | Roy       | Smith         | Soup          | 0.51   |
 | 76      | Roy       | Smith         | Towel         | 0.74   |
 | 76      | Fratz     | Smith         | Shampoo       | 1.19   |
 | 76      | Nife      | Smith         | Microwave     | 2.41   |
 | 76      | Williams  | Smith         | Milk          | 3.48   |
-| 76      | Nife      | Smith         | Refrigerator  | 7.1    |
+| 76      | Nife      | Smith         | Refrigerator  | 7.10   |
 | 76      | Roy       | Smith         | Soap          | 9.44   |
 | 77      | Webber    | Van Morrison  | Soda          | 0.03   |
 | 77      | Williams  | Van Morrison  | Soup          | 0.72   |
@@ -1905,23 +1906,23 @@
 | 77      | Fratz     | Van Morrison  | Microwave     | 4.28   |
 | 77      | Brown     | Van Morrison  | Plunger       | 6.51   |
 | 77      | Bush      | Van Morrison  | Soda          | 6.82   |
-| 77      | Nife      | Van Morrison  | Eggs          | 7.6    |
-| 77      | Guy       | Van Morrison  | Iron          | 7.7    |
+| 77      | Nife      | Van Morrison  | Eggs          | 7.60   |
+| 77      | Guy       | Van Morrison  | Iron          | 7.70   |
 | 77      | Nife      | Van Morrison  | Telephone     | 8.88   |
 | 77      | Reynolds  | Van Morrison  | Telephone     | 9.22   |
 | 77      | Brown     | Van Morrison  | Refrigerator  | 9.79   |
 | 78      | Williams  | Stevens       | Soda          | 3.59   |
-| 78      | Reynolds  | Stevens       | Soup          | 3.7    |
+| 78      | Reynolds  | Stevens       | Soup          | 3.70   |
 | 78      | Reynolds  | Stevens       | Soap          | 4.74   |
 | 78      | Jones     | Stevens       | Soap          | 5.65   |
 | 78      | Fratz     | Stevens       | Milk          | 6.26   |
-| 78      | Fratz     | Stevens       | Shampoo       | 7.4    |
+| 78      | Fratz     | Stevens       | Shampoo       | 7.40   |
 | 78      | Jones     | Stevens       | Telephone     | 9.68   |
 | 79      | Jones     | Stevens       | Soda          | 1.04   |
 | 79      | Reynolds  | Stevens       | Microwave     | 2.41   |
 | 79      | Williams  | Stevens       | Refrigerator  | 3.05   |
 | 79      | Nife      | Stevens       | Soda          | 3.81   |
-| 79      | Fratz     | Stevens       | Soda          | 3.9    |
+| 79      | Fratz     | Stevens       | Soda          | 3.90   |
 | 79      | Jones     | Stevens       | Telephone     | 3.96   |
 | 79      | Webber    | Stevens       | Milk          | 6.96   |
 | 80      | Roy       | Bush          | Towel         | 1.29   |
@@ -1934,12 +1935,12 @@
 | 80      | Webber    | Bush          | Shampoo       | 7.36   |
 | 80      | Nife      | Bush          | Towel         | 9.28   |
 | 81      | Nife      | Kemp          | Milk          | 0.77   |
-| 81      | Webber    | Kemp          | Milk          | 0.9    |
+| 81      | Webber    | Kemp          | Milk          | 0.90   |
 | 81      | Brown     | Kemp          | Plunger       | 1.29   |
 | 81      | Reynolds  | Kemp          | Juice         | 2.69   |
 | 81      | Fratz     | Kemp          | Juice         | 3.24   |
 | 81      | Reynolds  | Kemp          | Towel         | 3.64   |
-| 81      | Guy       | Kemp          | Iron          | 3.8    |
+| 81      | Guy       | Kemp          | Iron          | 3.80   |
 | 81      | Webber    | Kemp          | Shampoo       | 5.08   |
 | 81      | Fratz     | Kemp          | Soda          | 5.95   |
 | 81      | Brown     | Kemp          | Milk          | 7.38   |
@@ -1958,7 +1959,7 @@
 | 82      | Webber    | Locicero      | Iron          | 4.25   |
 | 82      | Andrews   | Locicero      | Chicken       | 4.36   |
 | 82      | Bush      | Locicero      | Shampoo       | 6.35   |
-| 82      | Andrews   | Locicero      | Soda          | 9.1    |
+| 82      | Andrews   | Locicero      | Soda          | 9.10   |
 | 83      | Jones     | Bush          | Plunger       | 2.16   |
 | 83      | Bush      | Bush          | Towel         | 2.83   |
 | 83      | Reynolds  | Bush          | Telephone     | 3.37   |
@@ -1968,7 +1969,7 @@
 | 83      | Bush      | Bush          | Refrigerator  | 6.61   |
 | 83      | Williams  | Bush          | Shampoo       | 7.29   |
 | 83      | Bush      | Bush          | Microwave     | 7.38   |
-| 83      | Reynolds  | Bush          | Towel         | 7.4    |
+| 83      | Reynolds  | Bush          | Towel         | 7.40   |
 | 83      | Brown     | Bush          | Shampoo       | 9.51   |
 | 83      | Roy       | Bush          | Juice         | 9.95   |
 | 84      | Webber    | Howard        | Soup          | 1.55   |
@@ -1987,9 +1988,9 @@
 | 85      | Andrews   | Howard        | Iron          | 2.85   |
 | 85      | Williams  | Howard        | Towel         | 3.36   |
 | 85      | Brown     | Howard        | Soda          | 4.31   |
-| 85      | Fratz     | Howard        | Plunger       | 4.6    |
+| 85      | Fratz     | Howard        | Plunger       | 4.60   |
 | 85      | Reynolds  | Howard        | Plunger       | 5.78   |
-| 85      | Brown     | Howard        | Refrigerator  | 8.0    |
+| 85      | Brown     | Howard        | Refrigerator  | 8.00   |
 | 85      | Fratz     | Howard        | Iron          | 8.27   |
 | 85      | Reynolds  | Howard        | Chicken       | 8.97   |
 | 85      | Reynolds  | Howard        | Heater        | 9.51   |
@@ -1998,10 +1999,10 @@
 | 86      | Williams  | Grant         | Milk          | 2.31   |
 | 86      | Roy       | Grant         | Cookies       | 5.13   |
 | 86      | Williams  | Grant         | Heater        | 5.35   |
-| 86      | Reynolds  | Grant         | Towel         | 6.7    |
+| 86      | Reynolds  | Grant         | Towel         | 6.70   |
 | 86      | Fratz     | Grant         | Soda          | 6.72   |
 | 86      | Brown     | Grant         | Plunger       | 6.76   |
-| 86      | Fratz     | Grant         | Shampoo       | 7.3    |
+| 86      | Fratz     | Grant         | Shampoo       | 7.30   |
 | 86      | Andrews   | Grant         | Towel         | 7.31   |
 | 86      | Reynolds  | Grant         | Microwave     | 7.79   |
 | 86      | Jones     | Grant         | Soap          | 8.33   |
@@ -2032,7 +2033,7 @@
 | 88      | Jones     | Stevens       | Milk          | 9.09   |
 | 89      | Reynolds  | Randolph      | Juice         | 0.03   |
 | 89      | Webber    | Randolph      | Eggs          | 0.09   |
-| 89      | Williams  | Randolph      | Plunger       | 3.3    |
+| 89      | Williams  | Randolph      | Plunger       | 3.30   |
 | 89      | Brown     | Randolph      | Telephone     | 3.82   |
 | 89      | Brown     | Randolph      | Cookies       | 4.07   |
 | 89      | Guy       | Randolph      | Refrigerator  | 5.27   |
@@ -2046,8 +2047,8 @@
 | 89      | Bush      | Randolph      | Refrigerator  | 8.77   |
 | 89      | Webber    | Randolph      | Refrigerator  | 9.32   |
 | 89      | Andrews   | Randolph      | Eggs          | 9.76   |
-| 90      | Jones     | Van Morrison  | Heater        | 0.4    |
-| 90      | Reynolds  | Van Morrison  | Chicken       | 1.2    |
+| 90      | Jones     | Van Morrison  | Heater        | 0.40   |
+| 90      | Reynolds  | Van Morrison  | Chicken       | 1.20   |
 | 90      | Roy       | Van Morrison  | Soda          | 1.25   |
 | 90      | Andrews   | Van Morrison  | Cookies       | 1.76   |
 +---------+-----------+---------------+---------------+--------+
@@ -2075,13 +2076,13 @@
 | 91      | Guy       | OLeary        | Soup          | 3.06   |
 | 91      | Fratz     | OLeary        | Plunger       | 8.28   |
 | 91      | Bush      | OLeary        | Microwave     | 9.17   |
-| 91      | Jones     | OLeary        | Cookies       | 9.4    |
+| 91      | Jones     | OLeary        | Cookies       | 9.40   |
 | 91      | Guy       | OLeary        | Telephone     | 9.54   |
 | 91      | Williams  | OLeary        | Soap          | 9.77   |
 | 92      | Fratz     | Mantela       | Soup          | 0.29   |
 | 92      | Roy       | Mantela       | Towel         | 0.73   |
 | 92      | Jones     | Mantela       | Towel         | 1.04   |
-| 92      | Jones     | Mantela       | Telephone     | 2.5    |
+| 92      | Jones     | Mantela       | Telephone     | 2.50   |
 | 92      | Webber    | Mantela       | Chicken       | 2.57   |
 | 92      | Webber    | Mantela       | Microwave     | 4.17   |
 | 92      | Jones     | Mantela       | Milk          | 4.91   |
@@ -2092,7 +2093,7 @@
 | 92      | Roy       | Mantela       | Eggs          | 8.53   |
 | 92      | Williams  | Mantela       | Cookies       | 9.01   |
 | 92      | Webber    | Mantela       | Telephone     | 9.82   |
-| 93      | Jones     | Randolph      | Milk          | 0.1    |
+| 93      | Jones     | Randolph      | Milk          | 0.10   |
 | 93      | Webber    | Randolph      | Shampoo       | 1.02   |
 | 93      | Fratz     | Randolph      | Towel         | 3.05   |
 | 93      | Fratz     | Randolph      | Cookies       | 3.84   |
@@ -2109,11 +2110,11 @@
 | 94      | Webber    | Kemp          | Soup          | 6.36   |
 | 94      | Brown     | Kemp          | Cookies       | 6.93   |
 | 94      | Williams  | Kemp          | Heater        | 7.12   |
-| 94      | Jones     | Kemp          | Refrigerator  | 7.4    |
-| 94      | Guy       | Kemp          | Shampoo       | 8.2    |
+| 94      | Jones     | Kemp          | Refrigerator  | 7.40   |
+| 94      | Guy       | Kemp          | Shampoo       | 8.20   |
 | 95      | Nife      | Bush          | Soup          | 1.65   |
 | 95      | Roy       | Bush          | Microwave     | 1.82   |
-| 95      | Jones     | Bush          | Cookies       | 5.5    |
+| 95      | Jones     | Bush          | Cookies       | 5.50   |
 | 95      | Nife      | Bush          | Iron          | 8.23   |
 | 95      | Williams  | Bush          | Milk          | 8.28   |
 | 95      | Roy       | Bush          | Shampoo       | 9.33   |
@@ -2121,8 +2122,8 @@
 | 96      | Andrews   | Grant         | Soda          | 1.37   |
 | 96      | Nife      | Grant         | Milk          | 6.91   |
 | 96      | Brown     | Grant         | Plunger       | 7.22   |
-| 96      | Reynolds  | Grant         | Cookies       | 8.0    |
-| 96      | Jones     | Grant         | Refrigerator  | 8.0    |
+| 96      | Reynolds  | Grant         | Cookies       | 8.00   |
+| 96      | Jones     | Grant         | Refrigerator  | 8.00   |
 | 97      | Guy       | Frank         | Shampoo       | 0.84   |
 | 97      | Andrews   | Frank         | Milk          | 0.91   |
 | 97      | Reynolds  | Frank         | Chicken       | 1.06   |
@@ -2141,13 +2142,13 @@
 | 98      | Webber    | Frank         | Telephone     | 5.88   |
 | 98      | Roy       | Frank         | Cookies       | 7.31   |
 | 98      | Fratz     | Frank         | Shampoo       | 8.23   |
-| 98      | Roy       | Frank         | Heater        | 8.4    |
+| 98      | Roy       | Frank         | Heater        | 8.40   |
 | 98      | Williams  | Frank         | Refrigerator  | 8.47   |
 | 98      | Guy       | Frank         | Telephone     | 9.04   |
 | 98      | Webber    | Frank         | Soap          | 9.36   |
 | 98      | Fratz     | Frank         | Eggs          | 9.75   |
 | 99      | Williams  | Dole          | Chicken       | 1.08   |
-| 99      | Williams  | Dole          | Telephone     | 2.3    |
+| 99      | Williams  | Dole          | Telephone     | 2.30   |
 | 99      | Andrews   | Dole          | Soup          | 2.41   |
 | 99      | Bush      | Dole          | Heater        | 2.98   |
 | 99      | Williams  | Dole          | Shampoo       | 4.68   |

@@ -30,13 +30,10 @@ import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.fem.config.*;
 
-import org.eigenbase.oj.*;
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.convert.*;
+import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.util.*;
-
 
 /**
  * FarragoDefaultPlanner extends {@link VolcanoPlanner} to request
@@ -100,7 +97,7 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
      * @param calcVM Flavor of calculator being used.
      */ 
     public static void addStandardRules(
-        VolcanoPlanner planner,
+        FarragoSessionPlanner planner,
         boolean fennelEnabled,
         CalcVirtualMachine calcVM)
     {
@@ -132,10 +129,14 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
         planner.addRule(
             new ReduceDecimalsRule(CalcRel.class));
         
+        planner.addRule(new PushFilterRule());
+        
         if (fennelEnabled) {
             planner.addRule(new FennelSortRule());
             planner.addRule(new FennelCollectRule());
             planner.addRule(new FennelUncollectRule());
+            // TODO jvs 9-Apr-2006:  Eliminate FennelDistinctSortRule
+            // entirely; it has been generalized to FennelAggRule.
             planner.addRule(new FennelDistinctSortRule());
             planner.addRule(new FennelRenameRule());
             planner.addRule(new FennelCartesianJoinRule());
@@ -182,11 +183,24 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
         }
     }
 
+    // implement FarragoSessionPlanner
     public FarragoSessionPreparingStmt getPreparingStmt()
     {
         return stmt;
     }
+    
+    // implement FarragoSessionPlanner
+    public void beginMedPluginRegistration(String serverClassName)
+    {
+        // don't care
+    }
 
+    // implement FarragoSessionPlanner
+    public void endMedPluginRegistration()
+    {
+        // don't care
+    }
+    
     // override VolcanoPlanner
     public JavaRelImplementor getJavaRelImplementor(RelNode rel)
     {

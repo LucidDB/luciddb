@@ -1,0 +1,21 @@
+<project name="bh" default="vi_tbs-all">
+  <target name="vi_tbs-all">
+    <test-suite name="vi_tbs-all">
+
+      <!-- 100 row tests: -->
+      <!-- q0 qor q1 q2a q3a q3b qin qjoin001 qjoin002 -->
+      <test-suite-call testfile="tbs100test.xml"/>
+
+      <!-- 10K row tests: -->
+      <!-- q0 qor q1 q2a q3a q3b q7001 q7002 q7003 q7004 q7005 q7006 long -->
+      <test-suite-call testfile="tbs10Ktest.xml"/>
+      <test-suite-call testfile="tbs10K_idxtest.xml"/>
+
+      <!-- 100K row tests: -->
+      <!-- q0 qor q1 q2a q3a q3b -->      
+      <test-suite-call testfile="tbs100Ktest.xml"/>
+      <test-suite-call testfile="tbs100K_idxtest.xml"/>
+
+    </test-suite>
+  </target>
+</project>        

@@ -36,7 +36,7 @@ import java.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class MockRelOptPlanner implements RelOptPlanner
+public class MockRelOptPlanner extends AbstractRelOptPlanner
 {
     private RelNode root;
 
@@ -57,31 +57,12 @@ public class MockRelOptPlanner implements RelOptPlanner
     }
 
     // implement RelOptPlanner
-    public boolean addRelTraitDef(RelTraitDef relTraitDef)
-    {
-        return false;
-    }
-
-    // implement RelOptPlanner
     public boolean addRule(RelOptRule rule)
     {
         assert(this.rule == null)
             : "MockRelOptPlanner only supports a single rule";
         this.rule = rule;
 
-        // TODO jvs 28-Mar-2006:  share common utility with other planners
-        Walker operandWalker = new Walker(rule.getOperand());
-        ArrayList operandsOfRule = new ArrayList();
-        while (operandWalker.hasMoreElements()) {
-            RelOptRuleOperand operand =
-                (RelOptRuleOperand) operandWalker.nextElement();
-            operand.setRule(rule);
-            operand.setParent((RelOptRuleOperand) operandWalker.getParent());
-            operandsOfRule.add(operand);
-        }
-        rule.operands =
-            (RelOptRuleOperand [])
-            operandsOfRule.toArray(RelOptRuleOperand.noOperands);
         return false;
     }
 
@@ -95,12 +76,6 @@ public class MockRelOptPlanner implements RelOptPlanner
     public RelNode changeTraits(RelNode rel, RelTraitSet toTraits)
     {
         return rel;
-    }
-
-    // implement RelOptPlanner
-    public RelOptPlanner chooseDelegate()
-    {
-        return this;
     }
 
     // implement RelOptPlanner
@@ -173,45 +148,6 @@ public class MockRelOptPlanner implements RelOptPlanner
     }
 
     // implement RelOptPlanner
-    public RelOptCost makeCost(
-        double dRows,
-        double dCpu,
-        double dIo)
-    {
-        return new MockRelOptCost();
-    }
-
-    // implement RelOptPlanner
-    public RelOptCost makeHugeCost()
-    {
-        return new MockRelOptCost();
-    }
-
-    // implement RelOptPlanner
-    public RelOptCost makeInfiniteCost()
-    {
-        return new MockRelOptCost();
-    }
-
-    // implement RelOptPlanner
-    public RelOptCost makeTinyCost()
-    {
-        return new MockRelOptCost();
-    }
-
-    // implement RelOptPlanner
-    public RelOptCost makeZeroCost()
-    {
-        return new MockRelOptCost();
-    }
-
-    // implement RelOptPlanner
-    public RelOptCost getCost(RelNode rel)
-    {
-        return new MockRelOptCost();
-    }
-
-    // implement RelOptPlanner
     public RelNode register(
         RelNode rel,
         RelNode equivRel)
@@ -231,33 +167,6 @@ public class MockRelOptPlanner implements RelOptPlanner
         return true;
     }
 
-    // implement RelOptPlanner
-    public void registerSchema(RelOptSchema schema)
-    {
-    }
-
-    // implement RelOptPlanner
-    public JavaRelImplementor getJavaRelImplementor(RelNode rel)
-    {
-        return null;
-    }
-
-    // implement RelOptPlanner
-    public void addListener(RelOptListener newListener)
-    {
-    }
-
-    // implement RelOptPlanner
-    public void registerMetadataProviders(ChainedRelMetadataProvider chain)
-    {
-    }
-    
-    // implement RelOptPlanner
-    public long getRelMetadataTimestamp(RelNode rel)
-    {
-        return 0;
-    }
-    
     private class MockRuleCall extends RelOptRuleCall
     {
         MockRuleCall(

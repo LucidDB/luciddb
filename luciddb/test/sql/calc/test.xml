@@ -1,6 +1,6 @@
-<project name="bh" default="simple-test">
-  <target name="simple-test">
-    <test-suite name="simple-test">
+<project name="bh" default="calc">
+  <target name="calc">
+    <test-suite name="calc">
 
       <init-hook>
         <ant target="restoreCatalog"/>
@@ -18,23 +18,34 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/funcString.sql"/>
       </test>
 
+      <!-- missing ref file -->
       <test name="funcMath" requiresSuccess="cretables">
+        <test-metadata>
+          <knownFailure value="true"/>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/funcMath.sql"/>
       </test>
 
-<!--
       <test name="funcDate" requiresSuccess="cretables">
+        <test-metadata>
+          <knownFailure value="true"/>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/funcDate.sql"/>
       </test>
 
       <test name="funcConvert" requiresSuccess="cretables">
+        <test-metadata>
+          <knownFailure value="true"/>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/funcConvert.sql"/>
       </test>
 
       <test name="funcInterval" requiresSuccess="cretables">
+        <test-metadata>
+          <knownFailure value="true"/>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/funcInterval.sql"/>
       </test>
--->
 
       <test name="mathBinary" requiresSuccess="cretables">
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/mathBinary.sql"/>
@@ -68,11 +79,12 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/range.sql"/>
       </test>
 
-<!--
       <test name="mathDate" requiresSuccess="cretables">
+        <test-metadata>
+          <knownFailure value="true"/>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/mathDate.sql"/>
       </test>
--->
 
       <test name="inlineSetup" requiresSuccess="cretables">
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/inlineSetup.sql"/>
@@ -106,15 +118,27 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/funcStringCover.sql"/>
       </test>
 
+      <!-- missing ref file -->
       <test name="funcMathCover" requiresSuccess="cretables">
+        <test-metadata>
+          <knownFailure value="true"/>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/funcMathCover.sql"/>
       </test>
 
+      <!-- missing sql file -->
       <test name="divisionScale" requiresSuccess="cretables">
+        <test-metadata>
+          <knownFailure value="true"/>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/divisionScale.sql"/>
       </test>
 
+      <!-- missing sql file -->
       <test name="inList" requiresSuccess="cretables">
+        <test-metadata>
+          <knownFailure value="true"/>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/inList.sql"/>
       </test>
 
@@ -122,11 +146,12 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/likeNull.sql"/>
       </test>
 
-<!--
       <test name="bug1484" requiresSuccess="cretables">
+        <test-metadata>
+          <knownFailure value="true"/>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug1484.sql"/>
       </test>
--->
 
       <test name="bug1504" requiresSuccess="cretables">
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug1504.sql"/>
@@ -148,11 +173,12 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug6604.sql"/>
       </test>
 
-<!--
       <test name="bug8665" requiresSuccess="cretables">
+        <test-metadata>
+          <knownFailure value="true"/>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug8665.sql"/>
       </test>
--->
 
       <test name="bugs" requiresSuccess="cretables">
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bugs.sql"/>
@@ -162,41 +188,58 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug10248.sql"/>
       </test>
 
-<!--
       <test name="bug11665" requiresSuccess="cretables">
+        <test-metadata>
+          <knownFailure value="true"/>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug11665.sql"/>
       </test>
--->
 
       <test name="bug11810" requiresSuccess="cretables">
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug11810.sql"/>
       </test>
 
-<!--
       <test name="bug12473" requiresSuccess="cretables">
+        <test-metadata>
+          <knownFailure value="true"/>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug12473.sql"/>
       </test>
 
       <test name="bug8895" requiresSuccess="cretables">
+        <test-metadata>
+          <knownFailure value="true"/>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug8895.sql"/>
       </test>
 
       <test name="bug12903" requiresSuccess="cretables">
+        <test-metadata>
+          <knownFailure value="true"/>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug12903.sql"/>
       </test>
 
       <test name="bug12909" requiresSuccess="cretables">
+        <test-metadata>
+          <knownFailure value="true"/>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug12909.sql"/>
       </test>
 
       <test name="bug9125" requiresSuccess="cretables">
+        <test-metadata>
+          <knownFailure value="true"/>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug9125.sql"/>
       </test>
 
       <test name="bug55046" requiresSuccess="cretables">
+        <test-metadata>
+          <knownFailure value="true"/>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug55046.sql"/>
       </test>
--->
 
       <test-suite-call testfile="cast/test.xml"/>
 

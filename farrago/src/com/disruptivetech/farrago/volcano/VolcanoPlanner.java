@@ -23,7 +23,6 @@ package com.disruptivetech.farrago.volcano;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.*;
-import java.util.regex.Pattern;
 import java.util.logging.Level;
 
 import org.eigenbase.oj.rel.JavaRelImplementor;
@@ -33,22 +32,14 @@ import org.eigenbase.rel.metadata.*;
 import org.eigenbase.rel.convert.ConverterRel;
 import org.eigenbase.rel.convert.ConverterRule;
 import org.eigenbase.relopt.*;
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.relopt.RelOptSchema;
 import org.eigenbase.util.*;
 
 /**
  * VolcanoPlanner optimizes queries by transforming expressions selectively
  * according to a dynamic programming algorithm.
  */
-public class VolcanoPlanner implements RelOptPlanner
+public class VolcanoPlanner extends AbstractRelOptPlanner
 {
-    //~ Constants -------------------------------------------------------------
-    /**
-     * Regular expression for integer.
-     */
-    private static final Pattern IntegerPattern = Pattern.compile("[0-9]+");
-
     //~ Instance fields -------------------------------------------------------
 
     protected RelSubset root;
@@ -105,13 +96,6 @@ public class VolcanoPlanner implements RelOptPlanner
      * Set of all registered rules.
      */
     private final Set<RelOptRule> ruleSet = new HashSet<RelOptRule>();
-
-    /**
-     * Maps rule description to rule, just to ensure that rules' descriptions
-     * are unique.
-     */
-    private final Map<String, RelOptRule> mapDescToRule =
-        new HashMap<String, RelOptRule>();
 
     private int nextSetId = 0;
 
@@ -204,26 +188,11 @@ public class VolcanoPlanner implements RelOptPlanner
         final boolean added = ruleSet.add(rule);
         assert added;
 
-        // Check that there isn't a rule with the same description.
-        final String description = rule.toString();
-        assert description != null;
-        assert description.indexOf("$") < 0 :
-            "Rule's description must not contain '$': " + description;
-        assert !IntegerPattern.matcher(description).matches() :
-            "Rule's description must not be an integer: " +
-            rule.getClass().getName() + ", " + description;
-        RelOptRule existingRule = mapDescToRule.put(description, rule);
-        if (existingRule != null) {
-            if (existingRule == rule) {
-                throw new AssertionError("Rule not already registered");
-            } else {
-                // This rule has the same description as one previously
-                // registered, yet it is not equal. You may need to fix the
-                // rule's equals and hashCode methods.
-                throw new AssertionError("Rule's description is unique; "
-                    + "existing rule=" + existingRule + "; new rule=" + rule);
-            }
-        }
+        mapRuleDescription(rule);
+
+        // REVIEW jvs 3-Apr-2006:  This initialization is now in RelOptRule's
+        // constructor, so it can be deleted from here.  But solve-order
+        // remains Volcano-specific for now.
 
         // Each of this rule's operands is an 'entry point' for a rule call.
         Walker operandWalker = new Walker(rule.getOperand());
@@ -297,8 +266,7 @@ public class VolcanoPlanner implements RelOptPlanner
             return false;
         }
         // Remove description.
-        final String description = rule.toString();
-        mapDescToRule.remove(description);
+        unmapRuleDescription(rule);
         // Remove operands.
         for (Iterator<RelOptRuleOperand> operandIter = allOperands.iterator();
              operandIter.hasNext();) {
@@ -1270,9 +1238,9 @@ loop:
     // implement RelOptPlanner
     public void addListener(RelOptListener newListener)
     {
+        // TODO jvs 6-Apr-2006:  new superclass AbstractRelOptPlanner
+        // now defines a multicast listener; just need to hook it in
         if (listener != null) {
-            // TODO jvs 17-Feb-2005:  define a MulticastListener to handle
-            // this for us
             throw Util.needToImplement("multiple VolcanoPlanner listeners");
         }
         listener = newListener;

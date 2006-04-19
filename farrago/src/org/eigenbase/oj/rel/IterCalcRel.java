@@ -76,7 +76,6 @@ public class IterCalcRel extends SingleRel implements JavaRel
         int flags)
     {
         super(cluster, new RelTraitSet(CallingConvention.ITERATOR), child);
-        assert child.getConvention() == CallingConvention.ITERATOR;
         this.flags = flags;
         this.program = program;
         this.rowType = program.getOutputRowType();

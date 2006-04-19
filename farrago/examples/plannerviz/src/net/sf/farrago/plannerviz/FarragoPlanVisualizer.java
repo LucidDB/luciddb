@@ -48,8 +48,9 @@ import org.eigenbase.util.*;
 import java.util.*;
 import java.util.logging.*;
 
-// TODO jvs 18-Feb-2005:  avoid this dependency
+// TODO jvs 18-Feb-2005:  avoid these two dependencies
 import com.disruptivetech.farrago.volcano.*;
+import org.eigenbase.relopt.hep.*;
 
 import net.sf.farrago.trace.*;
 
@@ -270,6 +271,18 @@ public class FarragoPlanVisualizer
     }
     
     // implement RelOptListener
+    public void relDiscarded(RelDiscardedEvent event)
+    {
+        if (state == STATE_CRAWLING) {
+            setStatus("Discarding " + event.getRel());
+            updateGraph();
+            highlightVertex(makeVertex(event.getRel()), oldVertexAttributes);
+            waitForInput();
+        }
+        rels.remove(event.getRel());
+    }
+    
+    // implement RelOptListener
     public void relEquivalenceFound(RelEquivalenceEvent event)
     {
         if (state > STATE_RUNNING) {
@@ -300,10 +313,9 @@ public class FarragoPlanVisualizer
             equivMap = logicalEquivMap;
         }
 
-        // REVIEW jvs 19-Feb-2005:  we intentionally create the
-        // UnionFind sets in this order to make sure that the representation
-        // chosen is the equivalence class, not the original rel.  This
-        // is brittle.
+        // REVIEW jvs 19-Feb-2005: we intentionally create the UnionFind sets
+        // in this order for Volcano to make sure that the representation
+        // chosen is the equivalence class, not the original rel.
         Object equivSet = equivMap.find(event.getEquivalenceClass());
         Object relSet = equivMap.find(event.getRel());
         equivMap.union(equivSet, relSet);
@@ -318,6 +330,11 @@ public class FarragoPlanVisualizer
         }
 
         boolean newRel = rels.add(event.getRel());
+
+        if (event.getEquivalenceClass() instanceof HepRelVertex) {
+            // For Hep, we don't care about equivalences much.
+            newRel = true;
+        }
         
         if ((state == STATE_CRAWLING)
             || (!newRel && (state == STATE_STEPPING)))
@@ -357,12 +374,7 @@ public class FarragoPlanVisualizer
             return;
         }
 
-        if (state == STATE_STEPPING) {
-            if (event.isBefore()) {
-                // wait until after to update display
-                return;
-            }
-        } else if (state == STATE_CRAWLING) {
+        if (state == STATE_CRAWLING) {
             if (!event.isBefore()) {
                 // already previewed; skip post-display
                 return;
@@ -413,7 +425,12 @@ public class FarragoPlanVisualizer
     {
         if (!event.isBefore()) {
             highlightVertex(makeVertex(event.getRel()), newVertexAttributes);
+
+            if (event.getRuleCall() instanceof HepRuleCall) {
+                return;
+            }
         }
+
         RelNode [] rels = event.getRuleCall().rels;
         for (int i = 0; i < rels.length; ++i) {
             if (includeRel(rels[i])) {
@@ -428,7 +445,7 @@ public class FarragoPlanVisualizer
             return false;
         }
         if (detail == DETAIL_LOGICAL) {
-            if (rel instanceof ConverterRel) {
+            if (isConverterRel(rel)) {
                 return false;
             }
         }
@@ -436,6 +453,16 @@ public class FarragoPlanVisualizer
             return false;
         }
         return true;
+    }
+
+    private boolean isConverterRel(RelNode rel)
+    {
+        boolean volcano = false;
+        if (volcano) {
+            return (rel instanceof ConverterRel);
+        } else {
+            return false;
+        }
     }
 
     private void highlightVertex(VisualVertex vertex, AttributeMap attributes) 
@@ -486,16 +513,19 @@ public class FarragoPlanVisualizer
                 equivMap = physicalEquivMap;
             }
             Object set = equivMap.find(rel);
-            if (set != rel) {
+            if ((set != rel) && !(set instanceof HepRelVertex)) {
                 VisualVertex v2 = makeVertex(set);
                 makeEdge(v2, v1, "");
             }
             // converters can lead to cycles around subsets, so
             // omit the edges for their inputs
-            if (!(rel instanceof ConverterRel)) {
+            if (!isConverterRel(rel)) {
                 RelNode [] inputs = rel.getInputs();
                 for (int i = 0; i < inputs.length; ++i) {
                     Object inputSet = equivMap.find(inputs[i]);
+                    if (inputSet instanceof HepRelVertex) {
+                        inputSet = ((HepRelVertex) inputSet).getCurrentRel();
+                    }
                     VisualVertex v2 = makeVertex(inputSet);
                     if (inputSet != set) {
                         String label;
@@ -512,6 +542,24 @@ public class FarragoPlanVisualizer
 
         List recyclingList = new ArrayList();
 
+        // collect obsolete edges
+        Iterator edgeIter = graphModel.edgeSet().iterator();
+        while (edgeIter.hasNext()) {
+            VisualEdge edge = (VisualEdge) edgeIter.next();
+            if (edge.generationNumber != currentGenerationNumber) {
+                recyclingList.add(edge);
+            }
+        }
+
+        // dispose of obsolete edges
+        Iterator recyclingIter = recyclingList.iterator();
+        while (recyclingIter.hasNext()) {
+            Object obj = recyclingIter.next();
+            graphModel.removeEdge((VisualEdge) obj);
+        }
+
+        recyclingList.clear();
+
         // collect roots and obsolete vertices
         List roots = new ArrayList();
         Iterator vertexIter = graphModel.vertexSet().iterator();
@@ -526,24 +574,12 @@ public class FarragoPlanVisualizer
             }
         }
 
-        // collect obsolete edges
-        Iterator edgeIter = graphModel.edgeSet().iterator();
-        while (edgeIter.hasNext()) {
-            VisualEdge edge = (VisualEdge) edgeIter.next();
-            if (edge.generationNumber != currentGenerationNumber) {
-                recyclingList.add(edge);
-            }
-        }
-
-        // dispose of obsolete vertices and edges
-        Iterator recyclingIter = recyclingList.iterator();
+        // dispose of obsolete vertices
+        recyclingIter = recyclingList.iterator();
         while (recyclingIter.hasNext()) {
-            Object obj = recyclingIter.next();
-            if (obj instanceof VisualVertex) {
-                graphModel.removeVertex(obj);
-            } else {
-                graphModel.removeEdge((VisualEdge) obj);
-            }
+            VisualVertex visualVertex = (VisualVertex) recyclingIter.next();
+            graphModel.removeVertex(visualVertex);
+            objToVertexMap.remove(visualVertex.obj);
         }
 
         // compute graph layout
@@ -606,6 +642,11 @@ public class FarragoPlanVisualizer
         if (edge == null) {
             edge = new VisualEdge(v1, v2, label);
             graphModel.addEdge(edge);
+        } else {
+            // e.g. self-join
+            if (!edge.toString().contains(label)) {
+                edge.setLabel(edge.toString() + ", " + label);
+            }
         }
         edge.generationNumber = currentGenerationNumber;
         return edge;
@@ -658,9 +699,11 @@ public class FarragoPlanVisualizer
         int generationNumber;
         final RelNode rel;
         final String name;
+        final Object obj;
         
         VisualVertex(Object obj)
         {
+            this.obj = obj;
             if (obj instanceof RelNode) {
                 rel = (RelNode) obj;
                 name = rel.getId() + ":" + rel;
@@ -678,7 +721,7 @@ public class FarragoPlanVisualizer
     
     private static class VisualEdge extends DirectedEdge 
     {
-        private final String label;
+        private String label;
         int generationNumber;
         
         VisualEdge(
@@ -687,6 +730,11 @@ public class FarragoPlanVisualizer
             String label)
         {
             super(sourceVertex, targetVertex);
+            this.label = label;
+        }
+
+        public void setLabel(String label)
+        {
             this.label = label;
         }
         

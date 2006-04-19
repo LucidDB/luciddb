@@ -377,6 +377,13 @@ require version '${required.ant.version}'."/>
       <fileset dir="${farrago.parser.ddl.dir}/impl" includes="*.java,*.jj"/>
       <fileset dir="${farrago.parser.sql.dir}/impl" includes="*.java,*.jj"/>
       <fileset dir="${lurql.parser.dir}" includes="*.java"/>
+      <fileset dir="${unitsql.dir}/med/flatfiles">
+        <include name="example2.bcp"/>
+        <include name="example.ctl"/>
+        <include name="noheader.bcp"/>
+        <include name="nulldata.bcp"/>
+        <include name="withnulls.bcp"/>
+      </fileset>
     </delete>
   </target>
 
@@ -835,6 +842,7 @@ require version '${required.ant.version}'."/>
         <fileset dir="${farrago.classes.dir}">
           <exclude name="**/test/regression/*Test.class"/>
           <exclude name="**/test/concurrent/*Test.class"/>
+          <exclude name="**/test/FarragoServerTest.class"/>
           <include name="**/*Test.class"/>
         </fileset>
       </testfileset>

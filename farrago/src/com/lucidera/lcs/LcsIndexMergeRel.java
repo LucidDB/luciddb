@@ -20,18 +20,11 @@
 */
 package com.lucidera.lcs;
 
-import java.util.*;
-
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.query.*;
-import net.sf.farrago.type.*;
 
-import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
-import org.eigenbase.rex.RexNode;
 
 /**
  * LcsIndexMergeRel is a relation for merging the results of an index scan. 
@@ -47,9 +40,9 @@ class LcsIndexMergeRel extends FennelSingleRel
     //~ Instance fields -------------------------------------------------------
 
     final LcsTable lcsTable;
-    int ridLimitParamId;
-    int consumerSridParamId;
-    int segmentLimitParamId;
+    FennelRelParamId ridLimitParamId;
+    FennelRelParamId consumerSridParamId;
+    FennelRelParamId segmentLimitParamId;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -61,9 +54,9 @@ class LcsIndexMergeRel extends FennelSingleRel
     public LcsIndexMergeRel(
         LcsTable lcsTable,
         LcsIndexSearchRel indexSearchRel,
-        int consumerSridParamId,
-        int segmentLimitParamId,
-        int ridLimitParamId)
+        FennelRelParamId consumerSridParamId,
+        FennelRelParamId segmentLimitParamId,
+        FennelRelParamId ridLimitParamId)
     {
         super(indexSearchRel.getCluster(), indexSearchRel);
         this.lcsTable = lcsTable;
@@ -112,7 +105,8 @@ class LcsIndexMergeRel extends FennelSingleRel
         // Chop the tuples so they fit in memory when expanded
         //
         FemLbmChopperStreamDef chopper = repos.newFemLbmChopperStreamDef();
-        chopper.setRidLimitParamId(ridLimitParamId);
+        chopper.setRidLimitParamId(
+            implementor.translateParamId(ridLimitParamId).intValue());
         implementor.addDataFlowFromProducerToConsumer(search, chopper);
         
         //
@@ -127,10 +121,13 @@ class LcsIndexMergeRel extends FennelSingleRel
         //
         FemLbmUnionStreamDef merge = repos.newFemLbmUnionStreamDef();
 
-        merge.setConsumerSridParamId(consumerSridParamId);
-        merge.setSegmentLimitParamId(segmentLimitParamId);
+        merge.setConsumerSridParamId(
+            implementor.translateParamId(consumerSridParamId).intValue());
+        merge.setSegmentLimitParamId(
+            implementor.translateParamId(segmentLimitParamId).intValue());
         
-        merge.setRidLimitParamId(ridLimitParamId);
+        merge.setRidLimitParamId(
+            implementor.translateParamId(ridLimitParamId).intValue());
 
         implementor.addDataFlowFromProducerToConsumer(sorter, merge);
         

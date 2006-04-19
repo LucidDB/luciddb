@@ -107,7 +107,7 @@ public abstract class ConverterRel extends SingleRel
                 CallingConventionTraitDef.instance);
     }
 
-    protected RelTraitSet getInputTraits()
+    public RelTraitSet getInputTraits()
     {
         return inTraits;
     }

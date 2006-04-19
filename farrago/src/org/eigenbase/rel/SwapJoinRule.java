@@ -43,6 +43,11 @@ import org.eigenbase.util.Util;
  */
 public class SwapJoinRule extends RelOptRule
 {
+    /**
+     * The singleton
+     */
+    public static final SwapJoinRule instance = new SwapJoinRule();
+
     //~ Constructors ----------------------------------------------------------
 
     public SwapJoinRule()
@@ -89,7 +94,8 @@ public class SwapJoinRule extends RelOptRule
                 condition,
                 join.getJoinType(),
                 Collections.EMPTY_SET,
-                join.isSemiJoinDone());
+                join.isSemiJoinDone(),
+                join.isMultiJoinDone());
         if (!join.getVariablesStopped().isEmpty()) {
             newJoin.setVariablesStopped(
                 new HashSet(join.getVariablesStopped()));

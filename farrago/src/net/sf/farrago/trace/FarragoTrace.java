@@ -217,35 +217,13 @@ public abstract class FarragoTrace
 
     /**
      * The tracer "net.sf.farrago.plannerviz" controls JGraph visualization of
-     * planner activity.  Planner visualization is requested with a DDL command
-     * sequence like:
-     *
-     *<pre><code>
-     *
-     * create jar sys_boot.sys_boot.plannerviz_plugin
-     * library 'file:examples/plannerviz/plugin/FarragoPlannerviz.jar'
-     * options(0);
-     *
-     * alter session implementation set jar sys_boot.sys_boot.plannerviz_plugin;
-     *
-     *</code></pre>
-     *
-     * The CREATE command installs the plugin (change the jar library path as
-     * appropriate) into the SYS_BOOT schema.  The ALTER command puts the plugin
-     * into effect for the current session; this should not be done unless
-     * Farrago is running from a single-session interactive console, because a
-     * new GUI window will pop up on the display where the server is running
-     * each time a query is executed.  The plugin can be disabled with:
-     *
-     *<pre><code>
-     *
-     * alter session implementation set default;
-     *
-     *</code></pre>
+     * planner activity.  See <a
+     * href="http://wiki.eigenbase.org/FarragoPlannerVisualization">wiki</a>
+     * for details.
      *
      *<p>
      *
-     * The behavior of the plugin can be controlled via this trace
+     * Visualization behavior of the plugin can be controlled via this trace
      * setting:
      *
      * <ol>

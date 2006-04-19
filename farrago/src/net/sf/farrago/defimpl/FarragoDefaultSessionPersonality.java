@@ -132,7 +132,10 @@ public class FarragoDefaultSessionPersonality
     public FarragoSessionPreparingStmt newPreparingStmt(
         FarragoSessionStmtValidator stmtValidator)
     {
-        return new FarragoPreparingStmt(stmtValidator);
+        FarragoPreparingStmt stmt = new FarragoPreparingStmt(stmtValidator);
+        stmt.setPlanner(
+            stmtValidator.getSession().getPersonality().newPlanner(stmt, true));
+        return stmt;
     }
     
     // implement FarragoSessionPersonality

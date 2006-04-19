@@ -202,10 +202,10 @@ class RelSet
             }
 
             // Row types must be the same, except for field names.
-            if (!RelOptUtil.areRowTypesEqual(
-                this.rel.getRowType(), rel.getRowType(), false)) {
-                failType(rel);
-            }
+            RelOptUtil.verifyTypeEquivalence(
+                this.rel,
+                rel,
+                this);
         }
     }
 
@@ -279,21 +279,6 @@ class RelSet
             assert planner.getSet(rel) == this;
             planner.fireRules(rel, true);
         }
-    }
-
-    private void failType(RelNode rel)
-    {
-        final RelDataType rowType = this.rel.getRowType();
-        final RelDataType relRowType = rel.getRowType();
-        String s =
-            "Cannot add expression of different type to set: "
-            + Util.lineSeparator + "set type is "
-            + rowType.getFullTypeString()
-            + Util.lineSeparator + "expression type is "
-            + relRowType.getFullTypeString()
-            + Util.lineSeparator + "set is " + toString() + Util.lineSeparator
-            + "expression is " + rel.toString();
-        throw Util.newInternal(s);
     }
 }
 

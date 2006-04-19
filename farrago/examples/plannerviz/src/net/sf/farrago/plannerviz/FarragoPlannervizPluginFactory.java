@@ -75,6 +75,7 @@ public class FarragoPlannervizPluginFactory
         // implement FarragoSessionPersonality
         public void definePlannerListeners(FarragoSessionPlanner planner)
         {
+            defaultPersonality.definePlannerListeners(planner);
             planner.addListener(
                 new FarragoPlanVisualizer());
         }

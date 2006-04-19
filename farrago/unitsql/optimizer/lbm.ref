@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id$
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/lbm.sql#4 $
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -------------------------------------
 0: jdbc:farrago:> -- Sql level test for Bitmap Index --
@@ -392,11 +392,9 @@
 0: jdbc:farrago:> create index typed_k on typed(k);
 0: jdbc:farrago:> create index typed_l on typed(l);
 0: jdbc:farrago:> create index typed_m on typed(m);
-0: jdbc:farrago:> create index typed_m on typed(n);
-Error: DDL validation error near line 1, column 14: Target schema "LOCALDB"."LBM" already contains index "TYPED_M" with same name (state=,code=0)
+0: jdbc:farrago:> create index typed_n on typed(n);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- surprisingly these don't cause any problems
-0: jdbc:farrago:> -- not sure how to input a binary field
 0: jdbc:farrago:> insert into typed values(
 . . . . . . . . >     1,X'deadbeef',null,'first',
 . . . . . . . . >     0.16,1,1,1,
@@ -413,12 +411,28 @@ Error: DDL validation error near line 1, column 14: Target schema "LOCALDB"."LBM
 . . . . . . . . >     '3rd',false,DATE'2001-12-12',TIME'23:11:08',
 . . . . . . . . >     TIMESTAMP'2001-12-12 23:11:08',0.06);
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- NOTE: cannot input a binary field from a flat file yet
+0: jdbc:farrago:> create foreign table typed_src(
+. . . . . . . . >     a int,
+. . . . . . . . >     d char(10),
+. . . . . . . . >     e decimal(6,2),
+. . . . . . . . >     f smallint,
+. . . . . . . . >     g real,
+. . . . . . . . >     h double,
+. . . . . . . . >     i varchar(256),
+. . . . . . . . >     j boolean,
+. . . . . . . . >     k date,
+. . . . . . . . >     l time,
+. . . . . . . . >     m timestamp,
+. . . . . . . . >     n numeric(10,2)) 
+. . . . . . . . > server test_data
+. . . . . . . . > options (filename 'typed');
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- FIXME: this causes a crash
 0: jdbc:farrago:> -- insert into typed (a,d,e,f,g,h,i,j,k,l,m,n)
-0: jdbc:farrago:> -- select * from test_data.BCP."typed";
+0: jdbc:farrago:> -- select * from typed_src;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- cleanup
-0: jdbc:farrago:> 
 0: jdbc:farrago:> drop server test_data cascade;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

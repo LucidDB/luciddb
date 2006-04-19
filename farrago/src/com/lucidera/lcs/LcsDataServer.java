@@ -29,16 +29,14 @@ import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.fennel.tuple.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
 
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.convert.*;
+import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
@@ -89,10 +87,36 @@ class LcsDataServer extends MedAbstractFennelDataServer
         planner.addRule(new LcsTableProjectionRule());
         planner.addRule(new LcsIndexBuilderRule());
         planner.addRule(new LcsIndexAccessRule());
+        planner.addRule(new LcsPushProjectPastFilterRule());
         
-        // rules specific to LucidEra optimizer
-        // planner.addRule(new AddRedundantSemiJoinRule());
-        // planner.addRule(new LcsIndexSemiJoinRule());
+        // multiple sub-rules need to be specified for this rule
+        // because we need to distinguish the cases where there are
+        // children below the rowscan; note that the rule is very
+        // specific to speed up matching
+        planner.addRule(new LcsIndexSemiJoinRule(
+            new RelOptRuleOperand(
+                SemiJoinRel.class,
+                new RelOptRuleOperand [] {
+                    new RelOptRuleOperand(LcsRowScanRel.class, null)
+                }), "without child"));
+        planner.addRule(new LcsIndexSemiJoinRule(
+            new RelOptRuleOperand(
+                SemiJoinRel.class,
+                new RelOptRuleOperand [] {
+                    new RelOptRuleOperand(LcsRowScanRel.class,
+                    new RelOptRuleOperand [] {
+                        new RelOptRuleOperand(LcsIndexIntersectRel.class, null)
+                })}), "with intersect child"));
+        planner.addRule(new LcsIndexSemiJoinRule(
+            new RelOptRuleOperand(
+                SemiJoinRel.class,
+                new RelOptRuleOperand [] {
+                    new RelOptRuleOperand(LcsRowScanRel.class,
+                    new RelOptRuleOperand [] {
+                        new RelOptRuleOperand(LcsIndexMergeRel.class,
+                        new RelOptRuleOperand [] {
+                            new RelOptRuleOperand(LcsIndexSearchRel.class, null)
+                })})}), "with merge child"));
     }
 
     // implement FarragoMedLocalDataServer

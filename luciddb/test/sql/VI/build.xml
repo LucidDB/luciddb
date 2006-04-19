@@ -38,11 +38,11 @@
     <!-- ant dir="xomerge" target="test"/ -->
     <!-- ant dir="xominus" target="test"/ -->
     <!-- ant dir="xoor" target="test"/ -->
-<!--    <ant dir="populate" target="test"/> -->
+    <ant dir="populate" target="test"/> 
     <ant dir="tbs" target="test"/>
     <ant dir="flip" target="test"/>
-<!--    <ant dir="insert" target="test"/> -->
-<!--    <ant dir="recovery" target="test"/> -->
+    <ant dir="insert" target="test"/>
+    <ant dir="recovery" target="test"/>
   </target>  
 
   <target name="restoreCatalog">
@@ -50,13 +50,13 @@
   </target>  
   
   <target name="clean">
-<!--    <delete dir="${bh.log.basedir}"/> -->
+    <delete dir="${bh.log.basedir}"/> 
     <ant dir="basic" target="clean"/> 
-<!--    <ant dir="populate" target="clean"/> -->
+    <ant dir="populate" target="clean"/>
     <ant dir="tbs" target="clean"/>
     <ant dir="flip" target="clean"/>
-<!--    <ant dir="insert" target="clean"/> -->
-<!--    <ant dir="recovery" target="clean"/> -->
+    <ant dir="insert" target="clean"/> 
+    <ant dir="recovery" target="clean"/>
   </target>  
 
 

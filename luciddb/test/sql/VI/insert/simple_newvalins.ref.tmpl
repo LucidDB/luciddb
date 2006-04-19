@@ -104,4 +104,10 @@
 . . . . . . . . > FROM @name_prefix@_schema.BENCH_SOURCE_100 where C2 >= 2
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from BENCH100;
++---------+
+| EXPR$0  |
++---------+
+| 100     |
++---------+
 0: jdbc:luciddb:> !quit

@@ -243,7 +243,7 @@ public interface RelNode
     public void onRegister(RelOptPlanner planner);
 
     /**
-     * Computes the digest, assigns it, and returns it. For internal use only.
+     * Computes the digest, assigns it, and returns it. For planner use only.
      */
     public String recomputeDigest();
 

@@ -245,9 +245,9 @@ including parsing, validation, optimization, and execution.  Session
 manager plugins supply a default personality plugin for new sessions,
 but a new personality can be selected at any time with the <code>ALTER
 SESSION IMPLEMENTATION</code> statement (session personality is typically
-stateless for this reason).  There is currently no support for
-automatically combining multiple session personalities within a single
-session; however, each session can have its own personality.
+stateless for this reason).  There is currently limited support for
+layering multiple session personalities within a single
+session, and each session can have its own personality.
 
 <li>Foreign data wrappers: these plugins define standard <a
 href="design/sqlmed.html">SQL/MED access</a> to data whose definition

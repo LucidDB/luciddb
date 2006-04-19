@@ -100,12 +100,17 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
         RelNode.class,
         FennelRel.FENNEL_EXEC_CONVENTION,
         CallingConvention.ITERATOR, "FennelToIteratorRule") {
-        public RelNode convert(RelNode rel)
-        {
-            return new FennelToIteratorConverter(
-                rel.getCluster(),
-                rel);
-        }
+            public RelNode convert(RelNode rel)
+            {
+                return new FennelToIteratorConverter(
+                    rel.getCluster(),
+                    rel);
+            }
+
+            public boolean isGuaranteed()
+            {
+                return true;
+            }
     };
 
     //~ Constructors ----------------------------------------------------------

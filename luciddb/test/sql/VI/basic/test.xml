@@ -1,9 +1,10 @@
-<project name="bh" default="basic-test">
-  <target name="basic-test">
-    <test-suite name="basic-test">
+<project name="bh" default="vi_basic">
+  <target name="vi_basic">
+    <test-suite name="vi_basic">
 
       <init-hook>
         <ant target="restoreCatalog"/>
+        <ant dir="${open.dir}/luciddb/test/sql/VI/basic" target="copy-csv"/>
       </init-hook>
 
       <test name="viload">

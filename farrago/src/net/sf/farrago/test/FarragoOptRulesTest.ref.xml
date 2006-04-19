@@ -1,0 +1,183 @@
+<?xml version="1.0" ?>
+<Root>
+    <TestCase name="testFennelSortRule">
+        <Resource name="sql">
+            <![CDATA[select * from sales.depts order by deptno]]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+SortRel(sort0=[$0])
+  ProjectRel(DEPTNO=[$0], NAME=[$1])
+    TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+FennelSortRel(key=[[0]], discardDuplicates=[false])
+  ProjectRel(DEPTNO=[$0], NAME=[$1])
+    TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testFennelCartesianJoinRule">
+        <Resource name="sql">
+            <![CDATA[select 1 from sales.emps,sales.depts]]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+ProjectRel(EXPR$0=[1])
+  JoinRel(condition=[true], joinType=[inner])
+    TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+    TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+ProjectRel(EXPR$0=[1])
+  FennelCartesianProductRel(leftouterjoin=[false])
+    TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+    TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testFennelAggRule">
+        <Resource name="sql">
+            <![CDATA[select deptno from sales.depts group by deptno]]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+ProjectRel(DEPTNO=[$0])
+  AggregateRel(groupCount=[1])
+    ProjectRel($f0=[$0])
+      TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+ProjectRel(DEPTNO=[$0])
+  FennelAggRel(groupCount=[1])
+    FennelSortRel(key=[[0]], discardDuplicates=[false])
+      ProjectRel($f0=[$0])
+        TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testFtrsTableAccessRule">
+        <Resource name="sql">
+            <![CDATA[select deptno from sales.depts]]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+ProjectRel(DEPTNO=[$0])
+  TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+ProjectRel(DEPTNO=[$0])
+  FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testFtrsScanToSearchRule">
+        <Resource name="sql">
+            <![CDATA[select * from sales.depts where deptno=5]]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+ProjectRel(DEPTNO=[$0], NAME=[$1])
+  FilterRel(condition=[=($0, 5)])
+    TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+ProjectRel(DEPTNO=[$0], NAME=[$1])
+  FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])
+    FennelValuesRel(tuples=[[{ '[', 5, ']', 5 }]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testFtrsTableProjectionRule">
+        <Resource name="sql">
+            <![CDATA[select name from sales.emps]]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+ProjectRel(NAME=[$1])
+  TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testFennelToIteratorConverterRule">
+        <Resource name="sql">
+            <![CDATA[select upper(name) from sales.emps]]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+ProjectRel(EXPR$0=[UPPER($1)])
+  TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+IterCalcRel(expr#0..9=[{inputs}], expr#10=[UPPER($t1)], EXPR$0=[$t10])
+  FennelToIteratorConverter
+    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testHeterogeneousConversion">
+        <Resource name="sql">
+            <![CDATA[select upper(name) from sales.emps union all select lower(name) from sales.emps]]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+UnionRel(all=[true])
+  ProjectRel(EXPR$0=[UPPER($1)])
+    TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+  ProjectRel(EXPR$0=[LOWER($1)])
+    TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+UnionRel(all=[true])
+  IterCalcRel(expr#0..9=[{inputs}], expr#10=[UPPER($t1)], EXPR$0=[$t10])
+    FennelToIteratorConverter
+      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])
+  FennelCalcRel(expr#0..9=[{inputs}], expr#10=[LOWER($t1)], EXPR$0=[$t10])
+    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testMergeFilterWithJoinCondition">
+        <Resource name="sql">
+            <![CDATA[select d.name as dname,e.name as ename from sales.emps e inner join sales.depts d on e.deptno=d.deptno where d.name='Propane']]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+ProjectRel(DNAME=[$11], ENAME=[$1])
+  FilterRel(condition=[=($11, _ISO-8859-1'Propane')])
+    JoinRel(condition=[=($2, $10)], joinType=[inner])
+      TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+      TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+IterCalcRel(expr#0..11=[{inputs}], DNAME=[$t11], ENAME=[$t1])
+  FennelToIteratorConverter
+    FennelCalcRel(expr#0..11=[{inputs}], expr#12=[=($t2, $t10)], expr#13=[_ISO-8859-1'Propane'], expr#14=[=($t11, $t13)], expr#15=[AND($t12, $t14)], proj#0..11=[{exprs}], $condition=[$t15])
+      FennelCartesianProductRel(leftouterjoin=[false])
+        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])
+        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])
+]]>
+        </Resource>
+    </TestCase>
+</Root>

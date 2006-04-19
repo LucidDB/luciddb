@@ -17,6 +17,14 @@ for instructions on how to do this)
 
 Otherwise, if raksha is not available, a local copy of raksha's csv files will be used.
 
+To run against all sources:
+---------------------------
+(1) in run.properties*, set:
+
+testfile=test-all.xml
+
+(2) run "ant test"
+
 
 To run against a specific source:
 --------------------------
@@ -35,9 +43,6 @@ are required for flatfile and csvjdbc.)
 
 "gen-all-sql" will generate sql files for all sources.
 
-"copy-csv" will create or sync the local copies of raksha's csv files, if 
-raksha is mounted
-
 "clean" will clean all testlogs, csv-copy, and generated sql files
 
 "clean-csv" will "clean" plus delete snapshot of raksha's csv files
@@ -48,4 +53,4 @@ Note *:
 If prefer not to modify run.properties, can set it all from the
 command line:
 
-"ant test -Dforeign.db=oracle"
+"ant test -Dtestfile=test.xml -Dforeign.db=oracle"

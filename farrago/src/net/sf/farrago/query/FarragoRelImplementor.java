@@ -126,11 +126,6 @@ public class FarragoRelImplementor extends JavaRelImplementor
         return preparingStmt.getRepos();
     }
 
-    public int allocateDynamicParam()
-    {
-        return (int) allocateRelParamId().longValue();
-    }
-
     public FennelRelParamId allocateRelParamId()
     {
         return new FennelRelParamId(nextRelParamId++);
@@ -140,6 +135,11 @@ public class FarragoRelImplementor extends JavaRelImplementor
         FennelRelParamId relParamId)
     {
         assert(!scopeStack.isEmpty());
+        
+        // FennelDynamicParamid == 0 represents an unused parameter
+        if (relParamId == null) {
+            return new FennelDynamicParamId(0);
+        }
         
         // Check for an existing translation.
         for (RelScope scope : scopeStack) {

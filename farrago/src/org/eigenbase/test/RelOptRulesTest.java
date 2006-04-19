@@ -22,17 +22,18 @@
 package org.eigenbase.test;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
 
 /**
  * Unit test for rules in {@link org.eigenbase.rel} and subpackages.  As input,
  * the test supplies a SQL statement and a single rule; the SQL is translated
- * into relational algebra and then fed into a mock planner.  The mock planner
+ * into relational algebra and then fed into a {@link HepPlanner}.  The planner
  * fires the rule on every pattern match in a depth-first left-to-right
- * preorder traversal of the tree until the rule succeeds in applying its
- * transform.  (For rules which call transformTo more than once, only the last
- * result is used.)  The plan before and after "optimization" is diffed against
- * a .ref file using {@link DiffRepository}.
+ * preorder traversal of the tree for as long as the rule continues to succeed
+ * in applying its transform.  (For rules which call transformTo more than
+ * once, only the last result is used.)  The plan before and after
+ * "optimization" is diffed against a .ref file using {@link DiffRepository}.
  *
  *<p>
  *
@@ -63,49 +64,43 @@ import org.eigenbase.relopt.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class RelOptRulesTest extends SqlToRelTestBase
+public class RelOptRulesTest extends RelOptTestBase
 {
     protected DiffRepository getDiffRepos()
     {
         return DiffRepository.lookup(RelOptRulesTest.class);
     }
     
-    protected void check(
-        RelOptRule rule,
-        String sql)
-    {
-        final DiffRepository diffRepos = getDiffRepos();
-        String sql2 = diffRepos.expand("sql", sql);
-        RelNode relBefore = tester.convertSqlToRel(sql2);
-
-        assertTrue(relBefore != null);
-
-        String planBefore = NL + RelOptUtil.toString(relBefore);
-        diffRepos.assertEquals("planBefore", "${planBefore}", planBefore);
-        
-        RelOptPlanner planner = tester.createPlanner();
-        planner.setRoot(relBefore);
-        planner.addRule(rule);
-        RelNode relAfter = planner.findBestExp();
-        
-        String planAfter = NL + RelOptUtil.toString(relAfter);
-        diffRepos.assertEquals("planAfter", "${planAfter}", planAfter);
-    }
-
     //~ TESTS --------------------------------
     
     public void testUnionToDistinctRule()
     {
-        check(
+        checkPlanning(
             new UnionToDistinctRule(),
             "select * from dept union select * from dept");
     }
     
     public void testExtractJoinFilterRule()
     {
-        check(
+        checkPlanning(
             ExtractJoinFilterRule.instance,
             "select 1 from emp inner join dept on emp.deptno=dept.deptno");
+    }
+    
+    public void testAddRedundantSemiJoinRule()
+    {
+        checkPlanning(
+            new AddRedundantSemiJoinRule(),
+            "select 1 from emp inner join dept on emp.deptno = dept.deptno");
+    }
+
+    public void testPushFilterThroughOuterJoin()
+    {
+        checkPlanning(
+            new PushFilterRule(),
+            "select 1 from sales.dept d left outer join sales.emp e"
+            + " on d.deptno = e.deptno"
+            + " where d.name = 'Charlie'");
     }
 }
 

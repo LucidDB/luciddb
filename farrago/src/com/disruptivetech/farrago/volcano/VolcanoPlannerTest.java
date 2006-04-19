@@ -30,6 +30,7 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
 
 import java.util.*;
 
@@ -760,6 +761,13 @@ public class VolcanoPlannerTest extends TestCase
         public void relChosen(RelChosenEvent event)
         {
             recordEvent(event);
+        }
+        
+        // implement RelOptListener
+        public void relDiscarded(RelDiscardedEvent event)
+        {
+            // Volcano is quite a packrat--it never discards anything!
+            throw Util.newInternal(event.toString());
         }
         
         // implement RelOptListener

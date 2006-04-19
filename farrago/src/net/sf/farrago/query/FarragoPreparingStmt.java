@@ -52,6 +52,7 @@ import org.eigenbase.oj.rel.JavaRelImplementor;
 import org.eigenbase.oj.stmt.*;
 import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.convert.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
@@ -161,9 +162,6 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         savedDeclarer = OJUtil.threadDeclarers.get();
         OJSystem.env.pushThreadTempFrame();
 
-        planner = getSession().getPersonality().newPlanner(this, true);
-        getSession().getPersonality().definePlannerListeners(planner);
-
         routineLookup = new FarragoUserDefinedRoutineLookup(
             stmtValidator, this, null);
 
@@ -187,7 +185,9 @@ public class FarragoPreparingStmt extends OJPreparingStmt
 
     public void setPlanner(FarragoSessionPlanner planner)
     {
+        assert(this.planner == null);
         this.planner = planner;
+        getSession().getPersonality().definePlannerListeners(planner);
     }
 
     public FarragoSessionPlanner getPlanner()
@@ -624,6 +624,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         // providers to use during optimization.
         finalizeRelMetadata(rootRel);
         
+        RelTraitSet desiredTraits = getDesiredRootTraitSet(rootRel);
+        
         rootRel = super.optimize(rowType, rootRel);
         if (dumpPlan) {
             planDumpTracer.fine(
@@ -632,6 +634,24 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                     rootRel,
                     false,
                     SqlExplainLevel.ALL_ATTRIBUTES));
+        }
+
+        // Validate that plan satisfies all required trait conversions.  This
+        // implicitly validates that a physical implementation was found for
+        // every node.
+        RelNode problemRel = validatePlan(rootRel, desiredTraits);
+        if (problemRel != null) {
+            // Dump plan unless we already did above.
+            if (!dumpPlan) {
+                planDumpTracer.severe(
+                    RelOptUtil.dumpPlan(
+                        "Plan without full implementation",
+                        rootRel,
+                        false,
+                        SqlExplainLevel.ALL_ATTRIBUTES));
+            }
+            throw FarragoResource.instance().SessionOptimizerFailed.ex(
+                problemRel.toString());
         }
         
         // REVIEW jvs 9-Mar-2006: Perhaps we should compute two
@@ -644,6 +664,29 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         tableAccessMap = new TableAccessMap(rootRel);
         
         return rootRel;
+    }
+
+    private RelNode validatePlan(RelNode rel, RelTraitSet desiredTraits)
+    {
+        if (!rel.getTraits().matches(desiredTraits)) {
+            return rel;
+        }
+        if (rel instanceof ConverterRel) {
+            ConverterRel converterRel = (ConverterRel) rel;
+            return validatePlan(
+                converterRel.getChild(),
+                converterRel.getInputTraits());
+        } else {
+            for (RelNode child : rel.getInputs()) {
+                RelNode problemChild = validatePlan(
+                    child,
+                    rel.getTraits());
+                if (problemChild != null) {
+                    return problemChild;
+                }
+            }
+        }
+        return null;
     }
 
     private void finalizeRelMetadata(RelNode rootRel)
@@ -994,9 +1037,11 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             // conventions and rules.  REVIEW: the discrimination is based on
             // class name, on the assumption that it should be unique regardless
             // of classloader, JAR, etc.  Is that correct?
+            planner.beginMedPluginRegistration(server.getClass().getName());
             server.registerRules(planner);
             assert(relMetadataProvider != null);
             server.registerRelMetadataProviders(relMetadataProvider);
+            planner.endMedPluginRegistration();
         }
         return server;
     }

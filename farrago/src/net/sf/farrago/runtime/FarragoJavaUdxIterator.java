@@ -44,7 +44,7 @@ public abstract class FarragoJavaUdxIterator
     extends ThreadIterator
     implements RestartableIterator
 {
-    private static final int QUEUE_ARRAY_SIZE = 10000;
+    private static final int QUEUE_ARRAY_SIZE = 100;
     
     private final FarragoSyntheticObject [] rowObjs;
 
