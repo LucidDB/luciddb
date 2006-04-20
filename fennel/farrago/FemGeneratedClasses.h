@@ -129,6 +129,9 @@ typedef JniProxyIter<ProxyJavaSinkStreamDef> SharedProxyJavaSinkStreamDef;
 class ProxyJavaTransformStreamDef;
 typedef JniProxyIter<ProxyJavaTransformStreamDef> SharedProxyJavaTransformStreamDef;
 
+class ProxyJavaTupleStreamDef;
+typedef JniProxyIter<ProxyJavaTupleStreamDef> SharedProxyJavaTupleStreamDef;
+
 class ProxyKeyAccessorDef;
 typedef JniProxyIter<ProxyKeyAccessorDef> SharedProxyKeyAccessorDef;
 
@@ -158,6 +161,9 @@ typedef JniProxyIter<ProxyLcsClusterScanDef> SharedProxyLcsClusterScanDef;
 
 class ProxyLcsRowScanStreamDef;
 typedef JniProxyIter<ProxyLcsRowScanStreamDef> SharedProxyLcsRowScanStreamDef;
+
+class ProxyLhxJoinStreamDef;
+typedef JniProxyIter<ProxyLhxJoinStreamDef> SharedProxyLhxJoinStreamDef;
 
 class ProxyMergeStreamDef;
 typedef JniProxyIter<ProxyMergeStreamDef> SharedProxyMergeStreamDef;
@@ -253,14 +259,14 @@ class ProxyExecutionStreamDef
 : virtual public JniProxy
 {
 public:
-std::string getName();
-static jmethodID meth_getName;
 SharedProxyTupleDescriptor getOutputDesc();
 static jmethodID meth_getOutputDesc;
 SharedProxyExecStreamDataFlow getOutputFlow();
 static jmethodID meth_getOutputFlow;
 SharedProxyExecStreamDataFlow getInputFlow();
 static jmethodID meth_getInputFlow;
+std::string getName();
+static jmethodID meth_getName;
 };
 
 class ProxyTupleStreamDef
@@ -331,10 +337,10 @@ class ProxyCmdBeginTxn
 : virtual public JniProxy, virtual public ProxyDatabaseCmd
 {
 public:
-bool isReadOnly();
-static jmethodID meth_isReadOnly;
 SharedProxyTxnHandle getResultHandle();
 static jmethodID meth_getResultHandle;
+bool isReadOnly();
+static jmethodID meth_isReadOnly;
 };
 
 class ProxyCmdCheckpoint
@@ -537,10 +543,10 @@ class ProxyExecStreamDataFlow
 : virtual public JniProxy
 {
 public:
-SharedProxyExecutionStreamDef getConsumer();
-static jmethodID meth_getConsumer;
 SharedProxyExecutionStreamDef getProducer();
 static jmethodID meth_getProducer;
+SharedProxyExecutionStreamDef getConsumer();
+static jmethodID meth_getConsumer;
 };
 
 class ProxyFlatFileTupleStreamDef
@@ -669,10 +675,18 @@ class ProxyJavaTransformStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
+int32_t getStreamId();
+static jmethodID meth_getStreamId;
 std::string getJavaClassName();
 static jmethodID meth_getJavaClassName;
 std::string getReserved();
 static jmethodID meth_getReserved;
+};
+
+class ProxyJavaTupleStreamDef
+: virtual public JniProxy, virtual public ProxyTupleStreamDef
+{
+public:
 int32_t getStreamId();
 static jmethodID meth_getStreamId;
 };
@@ -717,8 +731,6 @@ int32_t getRowLimitParamId();
 static jmethodID meth_getRowLimitParamId;
 int32_t getStartRidParamId();
 static jmethodID meth_getStartRidParamId;
-bool isIgnoreRowLimit();
-static jmethodID meth_isIgnoreRowLimit;
 };
 
 class ProxyLbmIntersectStreamDef
@@ -769,6 +781,20 @@ SharedProxyTupleDescriptor getClusterTupleDesc();
 static jmethodID meth_getClusterTupleDesc;
 SharedProxyLcsRowScanStreamDef getRowScan();
 static jmethodID meth_getRowScan;
+};
+
+class ProxyLhxJoinStreamDef
+: virtual public JniProxy, virtual public ProxyTupleStreamDef
+{
+public:
+SharedProxyTupleProjection getLeftKeyProj();
+static jmethodID meth_getLeftKeyProj;
+SharedProxyTupleProjection getRightKeyProj();
+static jmethodID meth_getRightKeyProj;
+int32_t getNumBuildRows();
+static jmethodID meth_getNumBuildRows;
+int32_t getCndBuildKeys();
+static jmethodID meth_getCndBuildKeys;
 };
 
 class ProxyMergeStreamDef
@@ -933,8 +959,6 @@ class ProxyWindowDef
 : virtual public JniProxy
 {
 public:
-int32_t getOffset();
-static jmethodID meth_getOffset;
 SharedProxyTupleProjection getOrderKeyList();
 static jmethodID meth_getOrderKeyList;
 bool isPhysical();
@@ -945,14 +969,14 @@ SharedProxyWindowStreamDef getWindowStream();
 static jmethodID meth_getWindowStream;
 SharedProxyWindowPartitionDef getPartition();
 static jmethodID meth_getPartition;
+int32_t getOffset();
+static jmethodID meth_getOffset;
 };
 
 class ProxyWindowPartitionDef
 : virtual public JniProxy
 {
 public:
-SharedProxyWindowDef getWindow();
-static jmethodID meth_getWindow;
 SharedProxyTupleProjection getPartitionKeyList();
 static jmethodID meth_getPartitionKeyList;
 std::string getInitializeProgram();
@@ -963,6 +987,8 @@ std::string getDropProgram();
 static jmethodID meth_getDropProgram;
 SharedProxyTupleDescriptor getBucketDesc();
 static jmethodID meth_getBucketDesc;
+SharedProxyWindowDef getWindow();
+static jmethodID meth_getWindow;
 };
 
 class ProxyWindowStreamDef
@@ -1069,6 +1095,8 @@ virtual void visit(ProxyJavaSinkStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyJavaTransformStreamDef &)
 { unhandledVisit(); }
+virtual void visit(ProxyJavaTupleStreamDef &)
+{ unhandledVisit(); }
 virtual void visit(ProxyKeyAccessorDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyLbmChopperStreamDef &)
@@ -1088,6 +1116,8 @@ virtual void visit(ProxyLcsClusterAppendStreamDef &)
 virtual void visit(ProxyLcsClusterScanDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyLcsRowScanStreamDef &)
+{ unhandledVisit(); }
+virtual void visit(ProxyLhxJoinStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyMergeStreamDef &)
 { unhandledVisit(); }
