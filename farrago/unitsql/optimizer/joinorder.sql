@@ -173,3 +173,38 @@ select f, d1, d2, d3
         d1.d1_d2 = d2.d2_d1 and d1.d1_d3 = d3.d3_d1 and
         d2.d2_d3 = d3.d3_d2;
 
+------------
+-- Misc Bugs
+------------
+-- LDB-65 -- need to handle self-joins
+-- no need for any actual data, as the bug appears during optimization time
+create table EMP (
+  EMPNO numeric(5,0),
+  FNAME varchar(20),
+  LNAME varchar(20),
+  SEX char(1),
+  DEPTNO integer,
+  MANAGER numeric(5,0),
+  LOCID CHAR(2),
+  SAL integer,
+  COMMISSION integer,
+  HOBBY varchar(20)
+);
+
+create table DEPT (
+  DEPTNO integer,
+  DNAME varchar(20),
+  LOCID CHAR(2)
+);
+
+create table LOCATION(
+  LOCID char(2),
+  STREET varchar(50),
+  CITY varchar(20),
+  STATE char(2),
+  ZIP numeric(5,0)
+);
+
+select EMP.LNAME, DEPT.DNAME
+    from EMP, DEPT, LOCATION EL, LOCATION DL
+    where EL.LOCID = EMP.LOCID and DL.LOCID=DEPT.LOCID;
