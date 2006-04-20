@@ -126,8 +126,8 @@ class LcsIndexIntersectRel extends FennelMultipleRel
         names[inputs.length + 1] = "rowLimitParamId";
         pw.explain(
             this, names, new Object[] { 
-                (startRidParamId == null) ? 0 : startRidParamId,
-                (rowLimitParamId == null) ? 0 : rowLimitParamId });
+                (startRidParamId == null) ? (Integer)0 : startRidParamId,
+                (rowLimitParamId == null) ? (Integer)0 : rowLimitParamId });
     }
 
     // implement RelNode
