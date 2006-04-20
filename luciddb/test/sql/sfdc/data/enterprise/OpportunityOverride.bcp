@@ -1,0 +1,20 @@
+6.0
+18
+1	SQLVARCHAR	0	25	"\t"	1	Id
+2	SQLVARCHAR	0	25	"\t"	2	OpportunityId
+3	SQLVARCHAR	0	25	"\t"	3	OwnerId
+4	SQLVARCHAR	0	1024	"\t"	4	OverrideComment
+5	SQLVARCHAR	0	512	"\t"	5	OverrideForecastCategory
+6	SQLVARCHAR	0	5	"\t"	6	ForecastCategoryInherited
+7	SQLVARCHAR	0	25	"\t"	7	OverridePeriodId
+8	SQLVARCHAR	0	5	"\t"	8	PeriodInherited
+9	SQLFLT8	0	25	"\t"	9	OverrideAmount
+10	SQLVARCHAR	0	5	"\t"	10	AmountInherited
+11	SQLFLT8	0	8	"\t"	11	OverrideQuantity
+12	SQLVARCHAR	0	5	"\t"	12	QuantityInherited
+13	SQLVARCHAR	0	5	"\t"	13	OutOfDate
+14	SQLVARCHAR	0	24	"\t"	14	CreatedDate
+15	SQLVARCHAR	0	25	"\t"	15	CreatedById
+16	SQLVARCHAR	0	24	"\t"	16	LastModifiedDate
+17	SQLVARCHAR	0	25	"\t"	17	LastModifiedById
+18	SQLVARCHAR	0	24	"\r\n"	18	SystemModstamp

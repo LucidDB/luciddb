@@ -1,0 +1,35 @@
+6.0
+33
+1	SQLVARCHAR	0	25	"\t"	1	Id
+2	SQLVARCHAR	0	1024	"\t"	2	Name
+3	SQLVARCHAR	0	1024	"\t"	3	Division
+4	SQLVARCHAR	0	1024	"\t"	4	Street
+5	SQLVARCHAR	0	1024	"\t"	5	City
+6	SQLVARCHAR	0	1024	"\t"	6	State
+7	SQLVARCHAR	0	1024	"\t"	7	PostalCode
+8	SQLVARCHAR	0	1024	"\t"	8	Country
+9	SQLVARCHAR	0	25	"\t"	9	Phone
+10	SQLVARCHAR	0	25	"\t"	10	Fax
+11	SQLVARCHAR	0	1024	"\t"	11	PrimaryContact
+12	SQLVARCHAR	0	512	"\t"	12	DefaultLocaleSidKey
+13	SQLVARCHAR	0	512	"\t"	13	LanguageLocaleKey
+14	SQLVARCHAR	0	5	"\t"	14	ReceivesInfoEmails
+15	SQLVARCHAR	0	5	"\t"	15	ReceivesAdminInfoEmails
+16	SQLINT	0	8	"\t"	16	FiscalYearStartMonth
+17	SQLVARCHAR	0	5	"\t"	17	UsesStartDateAsFiscalYearName
+18	SQLVARCHAR	0	512	"\t"	18	DefaultAccountAndContactAccess
+19	SQLVARCHAR	0	512	"\t"	19	DefaultOpportunityAccess
+20	SQLVARCHAR	0	512	"\t"	20	DefaultLeadAccess
+21	SQLVARCHAR	0	512	"\t"	21	DefaultCaseAccess
+22	SQLVARCHAR	0	512	"\t"	22	DefaultCalendarAccess
+23	SQLVARCHAR	0	512	"\t"	23	DefaultPricebookAccess
+24	SQLINT	0	8	"\t"	24	MaxRulesPerEntity
+25	SQLINT	0	8	"\t"	25	MaxActionsPerRule
+26	SQLVARCHAR	0	24	"\t"	26	SystemModstamp
+27	SQLVARCHAR	0	50	"\t"	27	ComplianceBccEmail
+28	SQLVARCHAR	0	512	"\t"	28	UiSkin
+29	SQLVARCHAR	0	1024	"\t"	29	WebToCaseDefaultOrigin
+30	SQLVARCHAR	0	24	"\t"	30	CreatedDate
+31	SQLVARCHAR	0	25	"\t"	31	CreatedById
+32	SQLVARCHAR	0	24	"\t"	32	LastModifiedDate
+33	SQLVARCHAR	0	25	"\r\n"	33	LastModifiedById

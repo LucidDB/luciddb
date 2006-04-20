@@ -1,0 +1,7 @@
+"Id"	"ParentId"	"Title"	"IsPrivate"	"Body"	"OwnerId"	"CreatedDate"	"CreatedById"	"LastModifiedDate"	"LastModifiedById"	"SystemModstamp"
+"00230000008WAZRAA4"	"0013000000Buyo6AAB"	"Introduced to Ariba by Craig Schmitz"	"false"		"00530000000hPnYAAU"	"2006-02-19T06:30:06.000Z"	"00530000000hPnYAAU"	"2006-02-19T06:30:06.000Z"	"00530000000hPnYAAU"	"2006-02-19T06:30:06.000Z"
+"00230000008WAZqAAO"	"0013000000BuyrkAAB"	"Possible ways to work together"	"false"	"Three opptys: 
+1) Integrate sfdc and NetSuite, and provide pipeline velocity reports from sfdc.
+2) Embed LucidEra into SuccessFactors.
+3) Introduce us to SuccessFactors customers, and build an app that integrates sfdc data with SuccessFactors data."	"00530000000hPnYAAU"	"2006-02-19T08:13:08.000Z"	"00530000000hPnYAAU"	"2006-02-19T08:13:08.000Z"	"00530000000hPnYAAU"	"2006-02-19T08:13:08.000Z"
+"00230000008WAZrAAO"	"0013000000BuyrkAAB"	"BI / Reporting is run by Finance"	"false"	"Their controller and some other finance person are the NetSuite and sfdc gurus, respectively."	"00530000000hPnYAAU"	"2006-02-19T08:14:10.000Z"	"00530000000hPnYAAU"	"2006-02-19T08:14:10.000Z"	"00530000000hPnYAAU"	"2006-02-19T08:14:10.000Z"

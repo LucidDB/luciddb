@@ -1,0 +1,2 @@
+"Id"	"OpportunityId"	"OwnerId"	"OverrideComment"	"OverrideForecastCategory"	"ForecastCategoryInherited"	"OverridePeriodId"	"PeriodInherited"	"OverrideAmount"	"AmountInherited"	"OverrideQuantity"	"QuantityInherited"	"OutOfDate"	"CreatedDate"	"CreatedById"	"LastModifiedDate"	"LastModifiedById"	"SystemModstamp"
+"028300000005kYTAAY"	"00630000003YW5rAAG"	"00530000000hPnYAAU"		"Forecast"	"false"	"02630000000fKD6AAM"	"true"	"30000.0"	"true"	"0.0"	"true"	"false"	"2005-11-21T23:49:25.000Z"	"00530000000hPnYAAU"	"2005-11-21T23:50:11.000Z"	"00530000000hPnYAAU"	"2005-11-21T23:50:11.000Z"
