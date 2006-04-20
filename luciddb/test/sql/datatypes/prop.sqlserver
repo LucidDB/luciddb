@@ -1,6 +1,6 @@
-# csvjdbc properties
+# properties
 
-name_prefix=CSV
+name_prefix=MSSQL
 
 #############################
 # row store or column store #
@@ -20,14 +20,18 @@ DATA_LIBRARY=@open.dir@/luciddb/plugin/FarragoMedJdbc3p.jar
 # foreign server #
 ##################
 
+SERVER=akela.lucidera.com
+PORT=1433
+USERNAME=sa
+PASSWORD=ketajo
+CATALOG_NAME=BENCHMARK
+SCHEMA=dbo
+## Comma-separated list of table types wanted, without spaces
+TABLE_TYPES=TABLE
+
 SERVER_NAME=@name_prefix@_SERVER
-
-# csvjdbc options
-DRIVER_CLASS=org.relique.jdbc.csv.CsvDriver
-URL=jdbc:relique:csv:@open.dir@/luciddb/test/sql/datatypes
-SCHEMA_NAME=TESTDATA
-
-SCHEMA=TESTDATA
+DRIVER_CLASS=net.sourceforge.jtds.jdbc.Driver
+URL=jdbc:jtds:sqlserver://@SERVER@:@PORT@
 
 #########################
 # foreign table options #

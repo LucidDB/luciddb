@@ -1,0 +1,42 @@
+0: jdbc:luciddb:> -- local tables
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> INSERT INTO types
+. . . . . . . . > SELECT c_char,c_varchar,c_decimal,c_tinyint,c_smallint,c_integer,c_bigint,c_real,c_double,c_boolean,c_date,c_time,c_timestamp
+. . . . . . . . > FROM CSV_ft_schema.types_explicit;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> INSERT INTO types
+. . . . . . . . > SELECT * FROM CSV_ft_schema.types_nonexplicit;
+Error: At line 1, column 26: Cannot assign to target field 'C_DECIMAL' of type DECIMAL(10, 3) from source field 'c_decimal' of type VARCHAR(1024) (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> INSERT INTO types
+. . . . . . . . > SELECT * FROM CSV_is_schema."types";
+Error: From line 1, column 33 to line 1, column 45: Table 'CSV_IS_SCHEMA.types' not found (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- binary type table
+0: jdbc:luciddb:> INSERT INTO blobtypes
+. . . . . . . . > SELECT c_binary,c_varbinary
+. . . . . . . . > FROM CSV_ft_schema.blobtypes_explicit;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> INSERT INTO blobtypes
+. . . . . . . . > SELECT * FROM CSV_ft_schema.blobtypes_nonexplicit;
+Error: At line 1, column 30: Cannot assign to target field 'C_BINARY' of type BINARY(10) from source field 'c_binary' of type VARCHAR(1024) (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> INSERT INTO blobtypes
+. . . . . . . . > SELECT * FROM CSV_is_schema."blob";
+Error: From line 1, column 37 to line 1, column 49: Table 'CSV_IS_SCHEMA.blob' not found (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from types;
++---------+
+| EXPR$0  |
++---------+
+| 5       |
++---------+
+0: jdbc:luciddb:> select count(*) from blobtypes;
++---------+
+| EXPR$0  |
++---------+
+| 11      |
++---------+
+0: jdbc:luciddb:> !quit

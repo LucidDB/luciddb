@@ -1,0 +1,15 @@
+6.0
+13
+1	SQLCHAR	        0	10	","	1	c_char
+2	SQLVARCHAR	0	10	","	2	c_varchar
+3	SQLDECIMAL	0	10	","	3	c_decimal
+4	SQLTINYINT      0	5	","	4	c_tinyint
+5	SQLSMALLINT     0	7	","	5	c_smallint
+6	SQLINT	        0	12	","	6	c_integer
+7	SQLBIGINT	0	19	","	7	c_bigint
+8	SQLREAL	        0	30	","	8	c_real
+9	SQLFLT8	        0	30	","	9	c_double
+10	SQLBIT	        0	20	","	10	c_boolean
+11	SQLDATETIME	0	24	","	11	c_date
+12	SQLDATETIME     0	24	","	12	c_time
+13	SQLDATETIME	0	24	"\n"	13	c_timestamp

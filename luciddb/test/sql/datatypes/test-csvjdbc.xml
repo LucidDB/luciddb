@@ -1,6 +1,6 @@
-<project name="bh" default="datatypes">
-  <target name="datatypes">
-    <test-suite name="datatypes">
+<project name="bh" default="datatypes-csvjdbc">
+  <target name="datatypes-csvjdbc">
+    <test-suite name="datatypes-csvjdbc">
 
       <init-hook>
         <ant target="restoreCatalog"/>
@@ -8,10 +8,6 @@
 
       <test name="creschema">
         <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${foreign.db}/creschema.sql"/>
-      </test>
-
-      <test name="importschema" requiresRun="creschema">
-        <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${foreign.db}/importschema.sql"/>
       </test>
 
       <test name="foreigntable" requiresRun="creschema">

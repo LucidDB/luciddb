@@ -1,0 +1,122 @@
+0: jdbc:luciddb:> create foreign table ORCL_ft_schema.types_explicit(
+. . . . . . . . > c_char char(10),
+. . . . . . . . > c_varchar varchar(10),
+. . . . . . . . > c_decimal decimal(10,3),
+. . . . . . . . > c_tinyint tinyint,
+. . . . . . . . > c_smallint smallint,
+. . . . . . . . > c_integer integer,
+. . . . . . . . > c_bigint bigint,
+. . . . . . . . > c_real real,
+. . . . . . . . > c_double double,
+. . . . . . . . > c_boolean boolean,
+. . . . . . . . > c_date date,
+. . . . . . . . > c_time time,
+. . . . . . . . > c_timestamp timestamp
+. . . . . . . . > )
+. . . . . . . . > server ORCL_SERVER
+. . . . . . . . > options (
+. . . . . . . . > SCHEMA_NAME 'SCHOI'
+. . . . . . . . > , table_name 'types'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from ORCL_ft_schema.types_explicit;
+Error: Cannot assign 'oracle.sql.TIMESTAMP@749a47' to a TIME value: not in format 'HH:mm:ss' (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table ORCL_ft_schema.types_nonexplicit
+. . . . . . . . > server ORCL_SERVER
+. . . . . . . . > options (
+. . . . . . . . > SCHEMA_NAME 'SCHOI'
+. . . . . . . . > , table_name 'types'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from ORCL_ft_schema.types_nonexplicit;
+Error: Cannot assign 'oracle.sql.TIMESTAMP@12625b0' to a TIMESTAMP value: not in format 'yyyy-MM-dd HH:mm:ss' (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table ORCL_ft_schema.blobtypes_explicit(
+. . . . . . . . > c_binary binary(10),
+. . . . . . . . > c_varbinary varbinary(10)
+. . . . . . . . > )
+. . . . . . . . > server ORCL_SERVER
+. . . . . . . . > options (
+. . . . . . . . > SCHEMA_NAME 'SCHOI'
+. . . . . . . . > , table_name 'blob'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from ORCL_ft_schema.blobtypes_explicit;
++-----------------------+--------------+
+|       C_BINARY        | C_VARBINARY  |
++-----------------------+--------------+
+| 00000000000000000000  | 1111100000   |
+| 00000000010000000000  | 11111000     |
+| 00000000100000000000  | 11111000     |
+| 00000000110000000000  | 111110       |
+| 00000001000000000000  | 111110       |
+| 00000001010000000000  | 1111         |
+| 00000001100000000000  | 1111         |
+| 00000001110000000000  | 11           |
+| 00000010000000000000  | 11           |
+| 00000010010000000000  |              |
+| 00000010100000000000  |              |
++-----------------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table ORCL_ft_schema.blobtypes_nonexplicit
+. . . . . . . . > server ORCL_SERVER
+. . . . . . . . > options (
+. . . . . . . . > SCHEMA_NAME 'SCHOI'
+. . . . . . . . > , table_name 'blob'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from ORCL_ft_schema.blobtypes_nonexplicit;
++-----------+--------------+
+| C_BINARY  | C_VARBINARY  |
++-----------+--------------+
+|           |              |
+|           |              |
+|           |              |
+|           |              |
+|           |              |
+|           |              |
+|           |              |
+|           |              |
+|           |              |
+|           |              |
+|           |              |
++-----------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- get table name, column name, data type info for imported foreign tables
+0: jdbc:luciddb:> !metadata getColumns LOCALDB ORCL_FT_SCHEMA % null
++------------+-----------------+------------------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
+| TABLE_CAT  |   TABLE_SCHEM   |       TABLE_NAME       | COLUMN_NAME  | DATA_TYPE  | TYPE_NAME  | COLUMN_SIZE  | BUFFER_LEN  | DEC_DIGITS  | NUM_PREC_RADIX  | NULLABLE  | REMARKS  | COLUMN_DEF  | SQL_DATA_TYPE  | SQL_DATETIME_SUB  | CHAR_OCTET_LENGTH  | ORDINAL_POSITION  | IS_NULLABLE  | SCOPE_CATALOG  | SCOPE_SCHEMA  | SCOPE_TABLE  | SOURCE_DATA_TYPE  |
++------------+-----------------+------------------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
+| LOCALDB    | ORCL_FT_SCHEMA  | BLOBTYPES_EXPLICIT     | C_BINARY     | -2         | BINARY     | 10           | 0           |             |                 | 1         |          |             | 0              | 0                 | 10                 | 1                 | YES          |                |               |              |                   |
+| LOCALDB    | ORCL_FT_SCHEMA  | BLOBTYPES_EXPLICIT     | C_VARBINARY  | -3         | VARBINARY  | 10           | 0           |             |                 | 1         |          |             | 0              | 0                 | 10                 | 2                 | YES          |                |               |              |                   |
+| LOCALDB    | ORCL_FT_SCHEMA  | BLOBTYPES_NONEXPLICIT  | C_BINARY     | -3         | VARBINARY  | 0            | 0           |             |                 | 1         |          |             | 0              | 0                 | 0                  | 1                 | YES          |                |               |              |                   |
+| LOCALDB    | ORCL_FT_SCHEMA  | BLOBTYPES_NONEXPLICIT  | C_VARBINARY  | -3         | VARBINARY  | 0            | 0           |             |                 | 1         |          |             | 0              | 0                 | 0                  | 2                 | YES          |                |               |              |                   |
+| LOCALDB    | ORCL_FT_SCHEMA  | TYPES_EXPLICIT         | C_CHAR       | 1          | CHAR       | 10           | 0           |             |                 | 1         |          |             | 0              | 0                 | 10                 | 1                 | YES          |                |               |              |                   |
+| LOCALDB    | ORCL_FT_SCHEMA  | TYPES_EXPLICIT         | C_VARCHAR    | 12         | VARCHAR    | 10           | 0           |             |                 | 1         |          |             | 0              | 0                 | 10                 | 2                 | YES          |                |               |              |                   |
+| LOCALDB    | ORCL_FT_SCHEMA  | TYPES_EXPLICIT         | C_DECIMAL    | 3          | DECIMAL    | 10           | 0           | 3           |                 | 1         |          |             | 0              | 0                 |                    | 3                 | YES          |                |               |              |                   |
+| LOCALDB    | ORCL_FT_SCHEMA  | TYPES_EXPLICIT         | C_TINYINT    | -6         | TINYINT    |              | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 4                 | YES          |                |               |              |                   |
+| LOCALDB    | ORCL_FT_SCHEMA  | TYPES_EXPLICIT         | C_SMALLINT   | 5          | SMALLINT   |              | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 5                 | YES          |                |               |              |                   |
+| LOCALDB    | ORCL_FT_SCHEMA  | TYPES_EXPLICIT         | C_INTEGER    | 4          | INTEGER    |              | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 6                 | YES          |                |               |              |                   |
+| LOCALDB    | ORCL_FT_SCHEMA  | TYPES_EXPLICIT         | C_BIGINT     | -5         | BIGINT     |              | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 7                 | YES          |                |               |              |                   |
+| LOCALDB    | ORCL_FT_SCHEMA  | TYPES_EXPLICIT         | C_REAL       | 7          | REAL       |              | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 8                 | YES          |                |               |              |                   |
+| LOCALDB    | ORCL_FT_SCHEMA  | TYPES_EXPLICIT         | C_DOUBLE     | 8          | DOUBLE     |              | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 9                 | YES          |                |               |              |                   |
+| LOCALDB    | ORCL_FT_SCHEMA  | TYPES_EXPLICIT         | C_BOOLEAN    | 16         | BOOLEAN    |              | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 10                | YES          |                |               |              |                   |
+| LOCALDB    | ORCL_FT_SCHEMA  | TYPES_EXPLICIT         | C_DATE       | 91         | DATE       |              | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 11                | YES          |                |               |              |                   |
+| LOCALDB    | ORCL_FT_SCHEMA  | TYPES_EXPLICIT         | C_TIME       | 92         | TIME       |              | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 12                | YES          |                |               |              |                   |
+| LOCALDB    | ORCL_FT_SCHEMA  | TYPES_EXPLICIT         | C_TIMESTAMP  | 93         | TIMESTAMP  |              | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 13                | YES          |                |               |              |                   |
+| LOCALDB    | ORCL_FT_SCHEMA  | TYPES_NONEXPLICIT      | C_CHAR       | 1          | CHAR       | 10           | 0           |             |                 | 1         |          |             | 0              | 0                 | 10                 | 1                 | YES          |                |               |              |                   |
+| LOCALDB    | ORCL_FT_SCHEMA  | TYPES_NONEXPLICIT      | C_VARCHAR    | 12         | VARCHAR    | 10           | 0           |             |                 | 1         |          |             | 0              | 0                 | 10                 | 2                 | YES          |                |               |              |                   |
+| LOCALDB    | ORCL_FT_SCHEMA  | TYPES_NONEXPLICIT      | C_DECIMAL    | 3          | DECIMAL    | 10           | 0           | 3           |                 | 1         |          |             | 0              | 0                 |                    | 3                 | YES          |                |               |              |                   |
+| LOCALDB    | ORCL_FT_SCHEMA  | TYPES_NONEXPLICIT      | C_TINYINT    | 3          | DECIMAL    | 3            | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 4                 | YES          |                |               |              |                   |
+| LOCALDB    | ORCL_FT_SCHEMA  | TYPES_NONEXPLICIT      | C_SMALLINT   | 3          | DECIMAL    | 5            | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 5                 | YES          |                |               |              |                   |
+| LOCALDB    | ORCL_FT_SCHEMA  | TYPES_NONEXPLICIT      | C_INTEGER    | 3          | DECIMAL    | 10           | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 6                 | YES          |                |               |              |                   |
+| LOCALDB    | ORCL_FT_SCHEMA  | TYPES_NONEXPLICIT      | C_BIGINT     | 3          | DECIMAL    | 19           | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 7                 | YES          |                |               |              |                   |
+| LOCALDB    | ORCL_FT_SCHEMA  | TYPES_NONEXPLICIT      | C_REAL       | 12         | VARCHAR    | 1024         | 0           |             |                 | 1         |          |             | 0              | 0                 | 1024               | 8                 | YES          |                |               |              |                   |
+| LOCALDB    | ORCL_FT_SCHEMA  | TYPES_NONEXPLICIT      | C_DOUBLE     | 12         | VARCHAR    | 1024         | 0           |             |                 | 1         |          |             | 0              | 0                 | 1024               | 9                 | YES          |                |               |              |                   |
+| LOCALDB    | ORCL_FT_SCHEMA  | TYPES_NONEXPLICIT      | C_BOOLEAN    | 3          | DECIMAL    | 2            | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 10                | YES          |                |               |              |                   |
+| LOCALDB    | ORCL_FT_SCHEMA  | TYPES_NONEXPLICIT      | C_DATE       | 91         | DATE       |              | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 11                | YES          |                |               |              |                   |
+| LOCALDB    | ORCL_FT_SCHEMA  | TYPES_NONEXPLICIT      | C_TIME       | 93         | TIMESTAMP  | 0            | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 12                | YES          |                |               |              |                   |
+| LOCALDB    | ORCL_FT_SCHEMA  | TYPES_NONEXPLICIT      | C_TIMESTAMP  | 93         | TIMESTAMP  | 0            | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 13                | YES          |                |               |              |                   |
++------------+-----------------+------------------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
+0: jdbc:luciddb:> !quit

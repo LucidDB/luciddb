@@ -21,7 +21,43 @@ options(
     quote_char '@QUOTE_CHAR@',
     escape_char '@ESCAPE_CHAR@',
     with_header '@WITH_HEADER@',
-    num_rows_scan '@NUM_ROWS_SCAN@'
+    num_rows_scan '@NUM_ROWS_SCAN@',
+    log_directory '@LOG_DIRECTORY@'
 );
 
-create schema @name_prefix@_schema;
+create schema @name_prefix@_ft_schema;
+create schema @name_prefix@_is_schema;
+create schema s;
+set schema 's';
+
+select "name" from sys_fem.med."DataWrapper" where "name"='@DATA_WRAPPER_NAME@';
+
+select "name" from sys_fem.med."DataServer" where "name"='@SERVER_NAME@';
+
+-- Direct table access
+select * from @SERVER_NAME@.@SCHEMA@."types" order by 1;
+select * from @SERVER_NAME@.@SCHEMA@."blob" order by 1;
+
+create table types (
+c_char char(10),
+c_varchar varchar(10),
+c_decimal decimal(10,3),
+c_tinyint tinyint,
+c_smallint smallint,
+c_integer integer,
+c_bigint bigint,
+c_real real,
+c_double double,
+c_boolean boolean,
+c_date date,
+c_time time,
+c_timestamp timestamp
+)
+server @DATA_STORE@;
+
+create table blobtypes(
+c_binary binary(10),
+c_varbinary varbinary(10)
+)
+server @DATA_STORE@;
+

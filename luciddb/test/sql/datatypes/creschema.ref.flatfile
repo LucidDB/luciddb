@@ -1,0 +1,80 @@
+0: jdbc:luciddb:> create foreign data wrapper FF_JDBC
+. . . . . . . . > library 'class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper'
+. . . . . . . . > language java;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server FF_SERVER
+. . . . . . . . > foreign data wrapper FF_JDBC
+. . . . . . . . > options(
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . >     directory '/home/elin/open/luciddb/test/sql/datatypes',
+. . . . . . . . >     file_extension '.csv',
+. . . . . . . . >     ctrl_file_extension '.bcp',
+. . . . . . . . >     field_delimiter ',',
+. . . . . . . . >     line_delimiter '\n',
+. . . . . . . . >     quote_char '"',
+. . . . . . . . >     escape_char '',
+. . . . . . . . >     with_header 'yes',
+. . . . . . . . >     num_rows_scan '1',
+. . . . . . . . >     log_directory '/home/elin/open/luciddb/test/sql/datatypes'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema FF_ft_schema;
+0: jdbc:luciddb:> create schema FF_is_schema;
+0: jdbc:luciddb:> create schema s;
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select "name" from sys_fem.med."DataWrapper" where "name"='FF_JDBC';
++----------+
+|   name   |
++----------+
+| FF_JDBC  |
++----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select "name" from sys_fem.med."DataServer" where "name"='FF_SERVER';
++------------+
+|    name    |
++------------+
+| FF_SERVER  |
++------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Direct table access
+0: jdbc:luciddb:> select * from FF_SERVER.BCP."types" order by 1;
+Error: FennelResource.en_US.noRowsReturned(/home/elin/open/luciddb/test/sql/datatypes/types.csv, could not calculate results for the following row:
+[ 'thisChar05', 'varchar-05', '123.123', '127', '32767', '2147483647', '9223372036854775807', '2.78', '3.1415161718', 'TRUE', '2005-10-12', '12:00:00', '2005-10-12 12:00:00' ]
+Messages:
+[0]:PC=14 Code=22007 ) (state=,code=0)
+0: jdbc:luciddb:> select * from FF_SERVER.BCP."blob" order by 1;
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARCHAR(255)' to 'BINARY(21)' (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table types (
+. . . . . . . . > c_char char(10),
+. . . . . . . . > c_varchar varchar(10),
+. . . . . . . . > c_decimal decimal(10,3),
+. . . . . . . . > c_tinyint tinyint,
+. . . . . . . . > c_smallint smallint,
+. . . . . . . . > c_integer integer,
+. . . . . . . . > c_bigint bigint,
+. . . . . . . . > c_real real,
+. . . . . . . . > c_double double,
+. . . . . . . . > c_boolean boolean,
+. . . . . . . . > c_date date,
+. . . . . . . . > c_time time,
+. . . . . . . . > c_timestamp timestamp
+. . . . . . . . > )
+. . . . . . . . > server sys_column_store_data_server;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table blobtypes(
+. . . . . . . . > c_binary binary(10),
+. . . . . . . . > c_varbinary varbinary(10)
+. . . . . . . . > )
+. . . . . . . . > server sys_column_store_data_server;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

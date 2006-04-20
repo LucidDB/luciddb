@@ -1,6 +1,6 @@
-# csvjdbc properties
+# properties
 
-name_prefix=CSV
+name_prefix=ORCL
 
 #############################
 # row store or column store #
@@ -20,14 +20,16 @@ DATA_LIBRARY=@open.dir@/luciddb/plugin/FarragoMedJdbc3p.jar
 # foreign server #
 ##################
 
+SERVER=akela.lucidera.com
+PORT=1521
+USERNAME=schoi
+PASSWORD=schoi
+SID=XE
+SCHEMA=SCHOI
+
 SERVER_NAME=@name_prefix@_SERVER
-
-# csvjdbc options
-DRIVER_CLASS=org.relique.jdbc.csv.CsvDriver
-URL=jdbc:relique:csv:@open.dir@/luciddb/test/sql/datatypes
-SCHEMA_NAME=TESTDATA
-
-SCHEMA=TESTDATA
+DRIVER_CLASS=oracle.jdbc.driver.OracleDriver
+URL=jdbc:oracle:thin:@@SERVER@:@PORT@:@SID@
 
 #########################
 # foreign table options #

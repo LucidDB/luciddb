@@ -1,0 +1,91 @@
+0: jdbc:luciddb:> create foreign data wrapper ORCL_JDBC
+. . . . . . . . > library '/home/elin/open/luciddb/plugin/FarragoMedJdbc3p.jar'
+. . . . . . . . > language java;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server ORCL_SERVER
+. . . . . . . . > foreign data wrapper ORCL_JDBC
+. . . . . . . . > options(
+. . . . . . . . >     url 'jdbc:oracle:thin:@akela.lucidera.com:1521:XE',
+. . . . . . . . >     user_name 'schoi',
+. . . . . . . . >     password 'schoi',
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . >     driver_class 'oracle.jdbc.driver.OracleDriver'
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema ORCL_ft_schema;
+0: jdbc:luciddb:> create schema ORCL_is_schema;
+0: jdbc:luciddb:> create schema s;
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select "name" from sys_fem.med."DataWrapper" where "name"='ORCL_JDBC';
++------------+
+|    name    |
++------------+
+| ORCL_JDBC  |
++------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select "name" from sys_fem.med."DataServer" where "name"='ORCL_SERVER';
++--------------+
+|     name     |
++--------------+
+| ORCL_SERVER  |
++--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Direct table access
+0: jdbc:luciddb:> select * from ORCL_SERVER.SCHOI."types" order by 1;
+Error: Cannot assign 'oracle.sql.TIMESTAMP@f7f696' to a TIMESTAMP value: not in format 'yyyy-MM-dd HH:mm:ss' (state=,code=0)
+0: jdbc:luciddb:> select * from ORCL_SERVER.SCHOI."blob" order by 1;
++-----------+--------------+
+| C_BINARY  | C_VARBINARY  |
++-----------+--------------+
+|           |              |
+|           |              |
+|           |              |
+|           |              |
+|           |              |
+|           |              |
+|           |              |
+|           |              |
+|           |              |
+|           |              |
+|           |              |
++-----------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table types (
+. . . . . . . . > c_char char(10),
+. . . . . . . . > c_varchar varchar(10),
+. . . . . . . . > c_decimal decimal(10,3),
+. . . . . . . . > c_tinyint tinyint,
+. . . . . . . . > c_smallint smallint,
+. . . . . . . . > c_integer integer,
+. . . . . . . . > c_bigint bigint,
+. . . . . . . . > c_real real,
+. . . . . . . . > c_double double,
+. . . . . . . . > c_boolean boolean,
+. . . . . . . . > c_date date,
+. . . . . . . . > c_time time,
+. . . . . . . . > c_timestamp timestamp
+. . . . . . . . > )
+. . . . . . . . > server sys_column_store_data_server;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table blobtypes(
+. . . . . . . . > c_binary binary(10),
+. . . . . . . . > c_varbinary varbinary(10)
+. . . . . . . . > )
+. . . . . . . . > server sys_column_store_data_server;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit
