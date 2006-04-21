@@ -23,10 +23,10 @@
 package org.eigenbase.sql.fun;
 
 import openjava.mop.OJClass;
-import org.eigenbase.sql.SqlAggFunction;
-import org.eigenbase.sql.SqlFunction;
-import org.eigenbase.sql.SqlFunctionCategory;
-import org.eigenbase.sql.SqlKind;
+import org.eigenbase.sql.*;
+import org.eigenbase.resource.EigenbaseResource;
+import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.Util;
 import org.eigenbase.reltype.RelDataType;
@@ -140,6 +140,32 @@ public class SqlMinMaxAggFunction extends SqlAggFunction
         default:
             throw Util.newInternal("bad kind: " + kind);
         }
+    }
+
+    public void validateCall(
+        SqlCall call,
+        SqlValidator validator,
+        SqlValidatorScope scope,
+        SqlValidatorScope operandScope)
+    {
+        super.validateCall(call, validator, scope, operandScope);
+
+        assert(1 == call.operands.length);
+        SqlNode operand = call.getOperands()[0];
+        RelDataType opType = validator.getValidatedNodeType(operand);
+        assert(null != opType);
+        SqlTypeFamily typeFam =
+            SqlTypeFamily.getFamilyForSqlType(opType.getSqlTypeName());
+        if ((typeFam == SqlTypeFamily.Boolean) ||
+            (typeFam == SqlTypeFamily.Binary) ||
+            (typeFam == SqlTypeFamily.Multiset)) {
+            throw validator.newValidationError(operand,
+                EigenbaseResource.instance().MinMaxBadType.ex(
+                    call.getOperator().getName(),
+                    opType.getSqlTypeName().getName()));
+        }
+
+
     }
 }
 

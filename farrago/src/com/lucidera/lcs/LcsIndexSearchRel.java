@@ -225,8 +225,8 @@ class LcsIndexSearchRel extends FennelSingleRel
                 Boolean.valueOf(indexScanRel.isOrderPreserving),
                 Boolean.valueOf(isOuter), inputKeyProjObj, inputJoinProjObj,
                 inputDirectiveProjObj, 
-                (startRidParamId == null) ? 0 : startRidParamId,
-                (rowLimitParamId == null) ? 0 : rowLimitParamId
+                (startRidParamId == null) ? (Integer)0 : startRidParamId,
+                (rowLimitParamId == null) ? (Integer)0 : rowLimitParamId
             });
     }
     

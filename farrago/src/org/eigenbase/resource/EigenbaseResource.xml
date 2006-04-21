@@ -402,6 +402,10 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>Not allowed to perform {0} on {1}</text>
 </exception>
 
+<exception id="120640" name="MinMaxBadType" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>The {0} function does not support the {1} data type.</text>
+</exception>
+
 
 <!-- ====================================================================== -->
 <!-- Eigenbase Generic resources 130,000 - 140,000 -->
