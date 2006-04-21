@@ -30,7 +30,7 @@
 // NOTE: CommonPreamble.h should be included by all fennel *.cpp files before
 // any other.
 
-// Common standard heades
+// Common standard headers
 
 // NOTE: we include these first to make sure we get the desired limit
 // definitions
@@ -120,7 +120,7 @@ FENNEL_BEGIN_NAMESPACE
  * it to NULL.
  */
 template <class T>
-inline void deleteAndNullify(T *p)
+inline void deleteAndNullify(T *&p)
 {
     if (p) {
         delete p;
@@ -133,7 +133,7 @@ inline void deleteAndNullify(T *p)
  * it to NULL.
  */
 template <class T>
-inline void deleteAndNullifyArray(T *p)
+inline void deleteAndNullifyArray(T *&p)
 {
     if (p) {
         delete [] p;

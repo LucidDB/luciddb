@@ -278,7 +278,9 @@ public class FarragoDbStmtContext extends FarragoDbStmtContextBase
         if (contextToCancel != null) {
             contextToCancel.cancel();
         }
-        clearExecutingStmtInfo();
+        // NOTE jvs 10-Apr-2006:  Don't call clearExecutingStmtInfo here,
+        // because the cancel doesn't take effect immediately.  We
+        // could set a flag to indicate that cancel is pending.
     }
 
     // implement FarragoSessionStmtContext

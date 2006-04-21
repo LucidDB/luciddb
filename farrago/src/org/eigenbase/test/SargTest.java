@@ -355,7 +355,11 @@ public class SargTest extends TestCase
         assertEquals(
             "(null, +infinity)",
             unionExpr.evaluate().toString());
-        
+
+        // NOTE jvs 17-Apr-2006:  See
+        // http://issues.eigenbase.org/browse/LDB-60) for why the
+        // expected result is what it is.
+
         SargSetExpr complementExpr = sargFactory.newSetExpr(
             intType, SargSetOperator.COMPLEMENT);
         complementExpr.addChild(interval1);
@@ -363,7 +367,7 @@ public class SargTest extends TestCase
             "COMPLEMENT( (7, +infinity) )",
             complementExpr.toString());
         assertEquals(
-            "(-infinity, 7]",
+            "(null, 7]",
             complementExpr.evaluate().toString());
     }
 

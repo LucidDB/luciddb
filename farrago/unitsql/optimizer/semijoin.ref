@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/optimizer/semijoin.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/semijoin.sql#1 $
 0: jdbc:farrago:> -- Tests semijoin transformations
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema sj;
@@ -421,7 +421,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelCalcRel(expr#0..9=[{inputs}], expr#10=[=($t9, $t0)], SID=[$t2], COMPANY=[$t8], CITY=[$t9], STATE=[$t1], $condition=[$t10])'
+'    FennelCalcRel(expr#0..9=[{inputs}], expr#10=[=($t9, $t0)], expr#11=[=($t5, $t7)], expr#12=[AND($t10, $t11)], SID=[$t2], COMPANY=[$t8], CITY=[$t9], STATE=[$t1], $condition=[$t12])'
 '      FennelCartesianProductRel(leftouterjoin=[false])'
 '        FennelCartesianProductRel(leftouterjoin=[false])'
 '          FennelCalcRel(expr#0..1=[{inputs}], expr#2=[_ISO-8859-1'New York'], expr#3=[=($t1, $t2)], proj#0..1=[{exprs}], $condition=[$t3])'

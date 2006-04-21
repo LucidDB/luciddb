@@ -99,6 +99,9 @@ public class SqlTest extends TestCase {
                 (LucidDbLocalDriver) clazz.newInstance();
             urlPrefix = driver.getUrlPrefix();
         }
+        System.out.println("sql-file: " + sqlFile);
+        System.out.println("jdbc-driver: " + driverName);
+        System.out.println("username: " + username);
         assert (sqlFile.endsWith(".sql"));
         sqlFileSansExt =
             new File(sqlFile.substring(0, sqlFile.length() - 4));

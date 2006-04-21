@@ -220,7 +220,7 @@ public abstract class FarragoDbStmtContextBase
     }
 
     /**
-     * Acquire locks (or whatever transaction manager wants) on all
+     * Acquires locks (or whatever transaction manager wants) on all
      * tables accessed by this statement.
      * 
      * <p>Call during {@link FarragoSessionStmtContext#execute()} to lock
@@ -260,7 +260,7 @@ public abstract class FarragoDbStmtContextBase
     }
 
     /**
-     * Initialize the session's {@link FarragoSessionExecutingStmtInfo}.
+     * Initializes the session's {@link FarragoSessionExecutingStmtInfo}.
      * 
      * <p>Call before
      * {@link FarragoSessionExecutableStmt#execute(
@@ -285,7 +285,7 @@ public abstract class FarragoDbStmtContextBase
     }
 
     /**
-     * Clear session's {@link FarragoSessionExecutingStmtInfo}.
+     * Clears session's {@link FarragoSessionExecutingStmtInfo}.
      *
      * <p>Call on {@link FarragoSessionStmtContext#cancel()},
      * {@link FarragoSessionStmtContext#closeResultSet()}, or
@@ -293,15 +293,16 @@ public abstract class FarragoDbStmtContextBase
      */
     protected void clearExecutingStmtInfo()
     {
-        if (info == null)
+        if (info == null) {
             return;
+        }
         long key = info.getId();
         getSessionInfo().removeExecutingStmtInfo(key);
         info = null;
     }
     
     /**
-     * Trace execution.
+     * Traces execution.
      * 
      * <p>Optionally, call from {@link FarragoSessionStmtContext#execute()}.
      */
