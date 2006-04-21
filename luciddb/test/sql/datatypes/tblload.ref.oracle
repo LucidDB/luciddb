@@ -5,7 +5,6 @@
 0: jdbc:luciddb:> INSERT INTO types
 . . . . . . . . > SELECT c_char,c_varchar,c_decimal,c_tinyint,c_smallint,c_integer,c_bigint,c_real,c_double,c_boolean,c_date,c_time,c_timestamp
 . . . . . . . . > FROM ORCL_ft_schema.types_explicit;
-Error: Cannot assign 'oracle.sql.TIMESTAMP@b21aae' to a TIME value: not in format 'HH:mm:ss' (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> INSERT INTO types
 . . . . . . . . > SELECT * FROM ORCL_ft_schema.types_nonexplicit;
@@ -30,7 +29,7 @@ Error: At line 1, column 26: Cannot assign to target field 'C_REAL' of type REAL
 +---------+
 | EXPR$0  |
 +---------+
-| 0       |
+| 5       |
 +---------+
 0: jdbc:luciddb:> select count(*) from blobtypes;
 +---------+
