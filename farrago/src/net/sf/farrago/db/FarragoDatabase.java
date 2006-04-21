@@ -570,14 +570,14 @@ public class FarragoDatabase extends FarragoDbSingleton
         tracer.info("killSession "+ id);
         FarragoSessionInfo info = findSessionInfo(id);
         if (info == null) {
-            throw new Throwable("session not found: "+id); // i18n
+            throw FarragoResource.instance().SessionNotFound.ex(id);
         }
         FarragoDbSession target = (FarragoDbSession) info.getSession();
         if (target.isClosed()) {
             tracer.info("killSession "+ id +": already closed");
             return;
         }
-        target.closeAllocation();
+        target.kill();
     }
 
     private void kill(FarragoSessionExecutingStmtInfo info) throws Throwable

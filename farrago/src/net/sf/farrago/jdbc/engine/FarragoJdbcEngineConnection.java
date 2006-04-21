@@ -25,6 +25,7 @@ package net.sf.farrago.jdbc.engine;
 import java.sql.*;
 import java.util.*;
 
+import net.sf.farrago.resource.FarragoResource;
 import net.sf.farrago.session.*;
 import net.sf.farrago.jdbc.FarragoConnection;
 import net.sf.farrago.jdbc.FarragoMedDataWrapperInfo;
@@ -95,7 +96,7 @@ public class FarragoJdbcEngineConnection
     // implement FarragoConnection
     public long getFarragoSessionId()
     {
-        if (session == null)
+        if (session == null || session.isClosed())
             return 0;
         return session.getSessionInfo().getId();
     }
@@ -118,6 +119,8 @@ public class FarragoJdbcEngineConnection
     public void setAutoCommit(boolean autoCommit)
         throws SQLException
     {
+        validateSession();
+
         try {
             session.setAutoCommit(autoCommit);
         } catch (Throwable ex) {
@@ -129,6 +132,8 @@ public class FarragoJdbcEngineConnection
     public boolean getAutoCommit()
         throws SQLException
     {
+        validateSession();
+
         return session.isAutoCommit();
     }
 
@@ -143,6 +148,8 @@ public class FarragoJdbcEngineConnection
     public String getCatalog()
         throws SQLException
     {
+        validateSession();
+
         return session.getSessionVariables().catalogName;
     }
 
@@ -176,6 +183,8 @@ public class FarragoJdbcEngineConnection
     public void commit()
         throws SQLException
     {
+        validateSession();
+
         try {
             session.commit();
         } catch (Throwable ex) {
@@ -187,6 +196,8 @@ public class FarragoJdbcEngineConnection
     public Statement createStatement()
         throws SQLException
     {
+        validateSession();
+
         try {
             // FarragoSessionStmtContext created without a param def factory
             // because plain Statements cannot use dynamic parameters.
@@ -202,6 +213,8 @@ public class FarragoJdbcEngineConnection
     public void rollback()
         throws SQLException
     {
+        validateSession();
+
         try {
             session.rollback(null);
         } catch (Throwable ex) {
@@ -213,6 +226,8 @@ public class FarragoJdbcEngineConnection
     public void rollback(Savepoint savepoint)
         throws SQLException
     {
+        validateSession();
+
         FarragoSessionSavepoint farragoSavepoint =
             validateSavepoint(savepoint);
         try {
@@ -243,6 +258,8 @@ public class FarragoJdbcEngineConnection
     public Savepoint setSavepoint()
         throws SQLException
     {
+        validateSession();
+
         try {
             return new FarragoJdbcEngineSavepoint(session.newSavepoint(null));
         } catch (Throwable ex) {
@@ -254,6 +271,8 @@ public class FarragoJdbcEngineConnection
     public Savepoint setSavepoint(String name)
         throws SQLException
     {
+        validateSession();
+
         try {
             return new FarragoJdbcEngineSavepoint(session.newSavepoint(name));
         } catch (Throwable ex) {
@@ -274,6 +293,8 @@ public class FarragoJdbcEngineConnection
     public void releaseSavepoint(Savepoint savepoint)
         throws SQLException
     {
+        validateSession();
+
         FarragoSessionSavepoint farragoSavepoint =
             validateSavepoint(savepoint);
         try {
@@ -287,6 +308,8 @@ public class FarragoJdbcEngineConnection
     public DatabaseMetaData getMetaData()
         throws SQLException
     {
+        validateSession();
+
         return session.getDatabaseMetaData();
     }
 
@@ -294,6 +317,8 @@ public class FarragoJdbcEngineConnection
     public PreparedStatement prepareStatement(String sql)
         throws SQLException
     {
+        validateSession();
+
         FarragoSessionStmtContext stmtContext = null;
         try {
             stmtContext = 
@@ -470,9 +495,25 @@ public class FarragoJdbcEngineConnection
         throw new UnsupportedOperationException();
     }
 
+    protected void validateSession() throws SQLException
+    {
+        // REVIEW: SWZ: 4/19/2006: Some DDL can cause a shutdown.  In that
+        // event, the session is closed.  FarragoTestCase doesn't handle
+        // this and attempts to use methods that call this validation method.
+        // Therefore, we only check for killed, not closed, sessions.  This
+        // may need to be modified if there are reasons for a session to be
+        // closed out from under a connection other than killing.
+        if (session.wasKilled()) {
+            throw FarragoJdbcEngineDriver.newSqlException(
+                FarragoResource.instance().JdbcConnSessionKilled.ex());
+        }
+    }
+    
     public String findMofId(String wrapperName)
         throws SQLException
     {
+        validateSession();
+        
         FarragoDbSession session = (FarragoDbSession)getSession();
         SqlIdentifier wrapperSqlIdent =
             new SqlIdentifier(wrapperName, SqlParserPos.ZERO);
@@ -503,6 +544,8 @@ public class FarragoJdbcEngineConnection
         Properties options)
         throws SQLException
     {
+        validateSession();
+        
         return new FleetingMedDataWrapperInfo(mofId, libraryName, options);
     }
 

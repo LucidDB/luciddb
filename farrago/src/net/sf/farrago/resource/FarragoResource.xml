@@ -108,6 +108,10 @@
 <text>Invalid URL:  {0}</text>
 </exception>
 
+<exception id ="410020" name="JdbcConnSessionKilled">
+<text>Session killed</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Validator resources 420,000 - 430,000 -->
 <!-- ====================================================================== -->
@@ -779,6 +783,10 @@ column type family is {1} but default value type family is {2}</text>
 
 <exception id="470110" name="SessionOptimizerFailed">
 <text>Optimizer failed to find a valid physical implementation for relational expression {0}; see trace for partially optimized plan</text>
+</exception>
+
+<exception id="470120" name="SessionNotFound">
+<text>Session {0,number,#} not found</text>
 </exception>
 
 <!-- ====================================================================== -->

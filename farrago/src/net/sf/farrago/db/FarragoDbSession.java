@@ -103,6 +103,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     private boolean isAutoCommit;
     private boolean shutDownRequested;
     private boolean catalogDumpRequested;
+    private boolean wasKilled;
 
     /**
      * List of savepoints established within current transaction which have
@@ -384,6 +385,12 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     }
 
     // implement FarragoSession
+    public synchronized boolean wasKilled()
+    {
+        return isClosed() && wasKilled;
+    }
+    
+    // implement FarragoSession
     public boolean isTxnInProgress()
     {
         // TODO jvs 9-Mar-2006:  Unify txn state.
@@ -455,6 +462,12 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         return repos;
     }
 
+    public synchronized void kill()
+    {
+        closeAllocation();
+        wasKilled = true;
+    }
+    
     // implement FarragoAllocation
     public synchronized void closeAllocation()
     {
