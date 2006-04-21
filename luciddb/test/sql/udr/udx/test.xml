@@ -32,6 +32,10 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/timeDimension.sql"/>
       </test>
 
+      <test name="viewTest">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/viewTest.sql"/>
+      </test>
+
     </test-suite>
   </target>
 </project>
