@@ -43,17 +43,14 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into foodmart."agg_c_14_sales_fact_1997" select * from foodmart_foreign."agg_c_14_sales_fact_1997";
-Error: At line 1, column 56: Cannot assign to target field 'quarter' of type VARCHAR(30) from source field 'fact_count' of type INTEGER (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into foodmart."agg_lc_100_sales_fact_1997" select * from foodmart_foreign."agg_lc_100_sales_fact_1997";
-Error: At line 1, column 58: Cannot assign to target field 'quarter' of type VARCHAR(30) from source field 'store_sales' of type DECIMAL(19, 4) (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into foodmart."agg_c_special_sales_fact_1997" select * from foodmart_foreign."agg_c_special_sales_fact_1997";
-Error: At line 1, column 61: Cannot assign to target field 'time_quarter' of type VARCHAR(30) from source field 'fact_count' of type INTEGER (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
@@ -62,7 +59,6 @@ Error: At line 1, column 61: Cannot assign to target field 'time_quarter' of typ
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into foodmart."currency" select * from foodmart_foreign."currency";
-Error: At line 1, column 40: Cannot assign to target field 'date' of type DATE from source field 'date' of type TIMESTAMP(0) (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
@@ -75,7 +71,6 @@ Error: At line 1, column 40: Cannot assign to target field 'date' of type DATE f
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into foodmart."customer" select * from foodmart_foreign."customer";
-Error: At line 1, column 40: Cannot assign to target field 'birthdate' of type DATE from source field 'birthdate' of type TIMESTAMP(0) (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
@@ -88,7 +83,6 @@ Error: At line 1, column 40: Cannot assign to target field 'birthdate' of type D
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into foodmart."employee" select * from foodmart_foreign."employee";
-Error: At line 1, column 40: Cannot assign to target field 'birth_date' of type DATE from source field 'birth_date' of type TIMESTAMP (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
@@ -125,17 +119,14 @@ Error: At line 1, column 40: Cannot assign to target field 'birth_date' of type 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into foodmart."salary" select * from foodmart_foreign."salary";
-Error: Number of INSERT target columns (8) does not equal number of source items (9) (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into foodmart."store" select * from foodmart_foreign."store";
-Error: Number of INSERT target columns (24) does not equal number of source items (25) (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into foodmart."store_ragged" select * from foodmart_foreign."store_ragged";
-Error: Number of INSERT target columns (24) does not equal number of source items (25) (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
