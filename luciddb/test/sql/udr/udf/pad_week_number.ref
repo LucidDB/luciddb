@@ -1,0 +1,99 @@
+0: jdbc:luciddb:> -- $Id: $
+0: jdbc:luciddb:> set schema 'udftest';
+0: jdbc:luciddb:> set path 'udftest';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values applib.padweeknumber(2);
++---------+
+| EXPR$0  |
++---------+
+| 02      |
++---------+
+0: jdbc:luciddb:> values applib.padweeknumber(30);
++---------+
+| EXPR$0  |
++---------+
+| 30      |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- failures
+0: jdbc:luciddb:> values applib.padweeknumber(-3);
+Error: Overflow during calculation or cast. (state=,code=0)
+0: jdbc:luciddb:> values applib.padweeknumber(3423);
+Error: Overflow during calculation or cast. (state=,code=0)
+0: jdbc:luciddb:> values applib.padweeknumber(01234567890123456789);
+Error: From line 1, column 15 to line 1, column 49: No match found for function signature PADWEEKNUMBER(<NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> values applib.padweeknumber(-40);
+Error: Overflow during calculation or cast. (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- view test
+0: jdbc:luciddb:> select TIME_KEY_SEQ, WEEK_NUMBER_IN_YEAR, applib.padweeknumber("WEEK_NUMBER_IN_YEAR") 
+. . . . . . . . > from table(applib.time_dimension(2006, 1, 14, 2006, 2, 15));
++---------------+----------------------+---------+
+| TIME_KEY_SEQ  | WEEK_NUMBER_IN_YEAR  | EXPR$2  |
++---------------+----------------------+---------+
+| 1             | 2                    | 02      |
+| 2             | 3                    | 03      |
+| 3             | 3                    | 03      |
+| 4             | 3                    | 03      |
+| 5             | 3                    | 03      |
+| 6             | 3                    | 03      |
+| 7             | 3                    | 03      |
+| 8             | 3                    | 03      |
+| 9             | 4                    | 04      |
+| 10            | 4                    | 04      |
+| 11            | 4                    | 04      |
+| 12            | 4                    | 04      |
+| 13            | 4                    | 04      |
+| 14            | 4                    | 04      |
+| 15            | 4                    | 04      |
+| 16            | 5                    | 05      |
+| 17            | 5                    | 05      |
+| 18            | 5                    | 05      |
+| 19            | 5                    | 05      |
+| 20            | 5                    | 05      |
+| 21            | 5                    | 05      |
+| 22            | 5                    | 05      |
+| 23            | 6                    | 06      |
+| 24            | 6                    | 06      |
+| 25            | 6                    | 06      |
+| 26            | 6                    | 06      |
+| 27            | 6                    | 06      |
+| 28            | 6                    | 06      |
+| 29            | 6                    | 06      |
+| 30            | 7                    | 07      |
+| 31            | 7                    | 07      |
+| 32            | 7                    | 07      |
+| 33            | 7                    | 07      |
++---------------+----------------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select applib.padweeknumber( cast (applib.padweeknumber("DAY_NUMBER_IN_MONTH") as integer)) 
+. . . . . . . . > from table(applib.time_dimension(1690, 4, 29, 1690, 5, 13));
++---------+
+| EXPR$0  |
++---------+
+| 29      |
+| 30      |
+| 01      |
+| 02      |
+| 03      |
+| 04      |
+| 05      |
+| 06      |
+| 07      |
+| 08      |
+| 09      |
+| 10      |
+| 11      |
+| 12      |
+| 13      |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- in expressions
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values 'Padded value:' || applib.padweeknumber(2) || 'finish';
++------------------------+
+|         EXPR$0         |
++------------------------+
+| Padded value:02finish  |
++------------------------+
+0: jdbc:luciddb:> !quit

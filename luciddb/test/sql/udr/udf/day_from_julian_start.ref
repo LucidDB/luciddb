@@ -1,0 +1,99 @@
+0: jdbc:luciddb:> -- $Id: $
+0: jdbc:luciddb:> set schema 'udftest';
+0: jdbc:luciddb:> set path 'udftest';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values applib.day_from_julian_start(DATE'2005-10-30');
++----------+
+|  EXPR$0  |
++----------+
+| 2453674  |
++----------+
+0: jdbc:luciddb:> values applib.day_from_julian_start(DATE'1582-10-3');
++----------+
+|  EXPR$0  |
++----------+
+| 2299159  |
++----------+
+0: jdbc:luciddb:> values applib.day_from_julian_start(DATE'1582-10-4');
++----------+
+|  EXPR$0  |
++----------+
+| 2299160  |
++----------+
+0: jdbc:luciddb:> values applib.day_from_julian_start(DATE'1582-10-15');
++----------+
+|  EXPR$0  |
++----------+
+| 2299161  |
++----------+
+0: jdbc:luciddb:> values applib.day_from_julian_start(DATE'1582-10-16');
++----------+
+|  EXPR$0  |
++----------+
+| 2299162  |
++----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- failures (the missing 10 days from julian to gregorian)
+0: jdbc:luciddb:> values applib.day_from_julian_start(DATE'1582-10-5');
+Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1582-10-5' at line 1, column 41: not in format 'yyyy-MM-dd' (state=,code=0)
+0: jdbc:luciddb:> values applib.day_from_julian_start(DATE'1582-10-14');
+Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1582-10-14' at line 1, column 41: not in format 'yyyy-MM-dd' (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- view test
+0: jdbc:luciddb:> select TIME_KEY, applib.day_from_julian_start("TIME_KEY") 
+. . . . . . . . > from table(applib.time_dimension(1997, 9, 17, 1997, 10, 1));
++-------------+----------+
+|  TIME_KEY   |  EXPR$1  |
++-------------+----------+
+| 1997-09-17  | 2450709  |
+| 1997-09-18  | 2450710  |
+| 1997-09-19  | 2450711  |
+| 1997-09-20  | 2450712  |
+| 1997-09-21  | 2450713  |
+| 1997-09-22  | 2450714  |
+| 1997-09-23  | 2450715  |
+| 1997-09-24  | 2450716  |
+| 1997-09-25  | 2450717  |
+| 1997-09-26  | 2450718  |
+| 1997-09-27  | 2450719  |
+| 1997-09-28  | 2450720  |
+| 1997-09-29  | 2450721  |
+| 1997-09-30  | 2450722  |
+| 1997-10-01  | 2450723  |
++-------------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create view tempview as select applib.day_from_julian_start("TIME_KEY"), applib.day_from_julian_start("FIRST_DAY_OF_WEEK")
+. . . . . . . . > from table(applib.time_dimension(2001, 1, 30, 2001, 2, 5));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from tempview
+. . . . . . . . > order by 1;
++----------+----------+
+|  EXPR$0  |  EXPR$1  |
++----------+----------+
+| 2451940  | 2451938  |
+| 2451941  | 2451938  |
+| 2451942  | 2451938  |
+| 2451943  | 2451938  |
+| 2451944  | 2451938  |
+| 2451945  | 2451945  |
+| 2451946  | 2451945  |
++----------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- in expressions
+0: jdbc:luciddb:> select applib.day_from_julian_start("TIME_KEY")+ applib.day_from_julian_start("FIRST_DAY_OF_WEEK") / 2
+. . . . . . . . > from table(applib.time_dimension(2001, 1, 30, 2001, 2, 5));
++----------+
+|  EXPR$0  |
++----------+
+| 3677909  |
+| 3677910  |
+| 3677911  |
+| 3677912  |
+| 3677913  |
+| 3677917  |
+| 3677918  |
++----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- cleanup
+0: jdbc:luciddb:> drop view tempview;
+0: jdbc:luciddb:> !quit

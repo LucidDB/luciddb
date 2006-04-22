@@ -112,6 +112,14 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udf/to_date.sql"/>
       </test>
 
+      <test name="dayFromJulianStart" requiresRun="cr_source">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udf/day_from_julian_start.sql"/>
+      </test>
+
+      <test name="padWeekNumber" requiresRun="cr_source">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udf/pad_week_number.sql"/>
+      </test>
+
     </test-suite>
   </target>
 </project>
