@@ -1363,22 +1363,15 @@ Error: From line 1, column 12 to line 1, column 23: No match found for function 
 | 999999999999   | 4       |
 +----------------+---------+
 0: jdbc:luciddb:> -- FRG-52
-0: jdbc:luciddb:> SELECT n3, MOD(n3, 5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
-Error: java.lang.UnsupportedOperationException: class java.lang.String: MOD on fractional numbers (state=,code=0)
-0: jdbc:luciddb:> SELECT n4, MOD(n4, 5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
-Error: java.lang.UnsupportedOperationException: class java.lang.String: MOD on fractional numbers (state=,code=0)
-0: jdbc:luciddb:> SELECT n5, MOD(n5, 5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
-Error: java.lang.UnsupportedOperationException: class java.lang.String: MOD on fractional numbers (state=,code=0)
-0: jdbc:luciddb:> SELECT n1, MOD(n1, 5) FROM TEST_REAL_TABLE ORDER BY 1;
-Error: MOD(d,d,d) is not a registered instruction (at line:col 6:2 to 8:24, characters 0 to 128) (state=,code=0)
-0: jdbc:luciddb:> SELECT n2, MOD(n2, 5) FROM TEST_REAL_TABLE ORDER BY 1;
-Error: MOD(r,r,r) is not a registered instruction (at line:col 6:2 to 8:24, characters 0 to 126) (state=,code=0)
-0: jdbc:luciddb:> SELECT n3, MOD(n3, 5) FROM TEST_REAL_TABLE ORDER BY 1;
-Error: MOD(r,r,r) is not a registered instruction (at line:col 6:2 to 8:24, characters 0 to 126) (state=,code=0)
-0: jdbc:luciddb:> SELECT n4, MOD(n4, 5) FROM TEST_REAL_TABLE ORDER BY 1;
-Error: MOD(d,d,d) is not a registered instruction (at line:col 6:2 to 8:24, characters 0 to 128) (state=,code=0)
-0: jdbc:luciddb:> SELECT n5, MOD(n5, 5) FROM TEST_REAL_TABLE ORDER BY 1;
-Error: MOD(d,d,d) is not a registered instruction (at line:col 6:2 to 8:24, characters 0 to 128) (state=,code=0)
+0: jdbc:luciddb:> -- Error is non-deterministic
+0: jdbc:luciddb:> -- SELECT n3, MOD(n3, 5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+0: jdbc:luciddb:> -- SELECT n4, MOD(n4, 5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+0: jdbc:luciddb:> -- SELECT n5, MOD(n5, 5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+0: jdbc:luciddb:> -- SELECT n1, MOD(n1, 5) FROM TEST_REAL_TABLE ORDER BY 1;
+0: jdbc:luciddb:> -- SELECT n2, MOD(n2, 5) FROM TEST_REAL_TABLE ORDER BY 1;
+0: jdbc:luciddb:> -- SELECT n3, MOD(n3, 5) FROM TEST_REAL_TABLE ORDER BY 1;
+0: jdbc:luciddb:> -- SELECT n4, MOD(n4, 5) FROM TEST_REAL_TABLE ORDER BY 1;
+0: jdbc:luciddb:> -- SELECT n5, MOD(n5, 5) FROM TEST_REAL_TABLE ORDER BY 1;
 0: jdbc:luciddb:> SELECT n1, POW(n1, 5) FROM TEST_INTEGER_TABLE ORDER BY 1;
 +--------------+-------------------------+
 |      N1      |         EXPR$1          |

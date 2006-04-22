@@ -4,28 +4,28 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> INSERT INTO types
 . . . . . . . . > SELECT c_char,c_varchar,c_decimal,c_tinyint,c_smallint,c_integer,c_bigint,c_real,c_double,c_boolean,c_date,c_time,c_timestamp
-. . . . . . . . > FROM FF_ft_schema.types_explicit;
+. . . . . . . . > FROM @name_prefix@_ft_schema.types_explicit;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> INSERT INTO types
-. . . . . . . . > SELECT * FROM FF_ft_schema.types_nonexplicit;
+. . . . . . . . > SELECT * FROM @name_prefix@_ft_schema.types_nonexplicit;
 Error: At line 1, column 26: Cannot assign to target field 'C_DATE' of type DATE from source field 'c_date' of type TIMESTAMP (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> INSERT INTO types
-. . . . . . . . > SELECT * FROM FF_is_schema."types";
+. . . . . . . . > SELECT * FROM @name_prefix@_is_schema."types";
 Error: At line 1, column 26: Cannot assign to target field 'C_DATE' of type DATE from source field 'c_date' of type TIMESTAMP (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- binary type table
 0: jdbc:luciddb:> INSERT INTO blobtypes
 . . . . . . . . > SELECT c_binary,c_varbinary
-. . . . . . . . > FROM FF_ft_schema.blobtypes_explicit;
+. . . . . . . . > FROM @name_prefix@_ft_schema.blobtypes_explicit;
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARCHAR(255)' to 'BINARY(10)' (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> INSERT INTO blobtypes
-. . . . . . . . > SELECT * FROM FF_ft_schema.blobtypes_nonexplicit;
+. . . . . . . . > SELECT * FROM @name_prefix@_ft_schema.blobtypes_nonexplicit;
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARCHAR(255)' to 'BINARY(21)' (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> INSERT INTO blobtypes
-. . . . . . . . > SELECT * FROM FF_is_schema."blob";
+. . . . . . . . > SELECT * FROM @name_prefix@_is_schema."blob";
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARCHAR(255)' to 'BINARY(21)' (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select count(*) from types;

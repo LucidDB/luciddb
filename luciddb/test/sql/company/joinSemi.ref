@@ -1,0 +1,573 @@
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- semi joins
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- a bunch of equi-joins
+0: jdbc:luciddb:> -- Workarounds added for LER-92 & LER-93, and filters added so semijoins happen
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- two way
+0: jdbc:luciddb:> select EMP.LNAME 
+. . . . . . . . > , EMP.EMPNO
+. . . . . . . . > from EMP, DEPT
+. . . . . . . . > where EMP.DEPTNO = DEPT.DEPTNO 
+. . . . . . . . >   and DEPT.DEPTNO > 100
+. . . . . . . . > order by EMP.EMPNO;
++--------+--------+
+| LNAME  | EMPNO  |
++--------+--------+
++--------+--------+
+0: jdbc:luciddb:> --order by EMPNO;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select DEPT.DNAME 
+. . . . . . . . > from EMP, DEPT
+. . . . . . . . > where EMP.DEPTNO = DEPT.DEPTNO 
+. . . . . . . . >   and DEPT.DEPTNO > 100
+. . . . . . . . > order by DEPT.DNAME;
++--------+
+| DNAME  |
++--------+
++--------+
+0: jdbc:luciddb:> --order by DNAME;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- three way
+0: jdbc:luciddb:> SELECT EMP.LNAME
+. . . . . . . . > from EMP, LOCATION, DEPT
+. . . . . . . . > where EMP.DEPTNO=DEPT.DEPTNO and DEPT.LOCID=LOCATION.LOCID
+. . . . . . . . >  and LOCATION.ZIP > 94000
+. . . . . . . . > order by EMP.LNAME;
++-----------+
+|   LNAME   |
++-----------+
+| Andrews   |
+| Brown     |
+| Bush      |
+| Fratz     |
+| Guy       |
+| Jones     |
+| Nife      |
+| Reynolds  |
+| Roy       |
+| Webber    |
+| Williams  |
++-----------+
+0: jdbc:luciddb:> --order by LNAME;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT DEPT.DNAME
+. . . . . . . . > from EMP, DEPT, LOCATION
+. . . . . . . . > where EMP.DEPTNO=DEPT.DEPTNO and DEPT.LOCID=LOCATION.LOCID
+. . . . . . . . >   and LOCATION.ZIP > 94000
+. . . . . . . . > order by DEPT.DNAME;
++--------------+
+|    DNAME     |
++--------------+
+| Accounting   |
+| Development  |
+| Development  |
+| Development  |
+| Development  |
+| Marketing    |
+| Sales        |
+| Sales        |
+| Sales        |
+| Support      |
+| Support      |
++--------------+
+0: jdbc:luciddb:> --order by DNAME;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT LOCATION.CITY
+. . . . . . . . > , LOCATION.STREET
+. . . . . . . . > from EMP, DEPT, LOCATION
+. . . . . . . . > where EMP.DEPTNO=DEPT.DEPTNO and DEPT.LOCID=LOCATION.LOCID
+. . . . . . . . >   and LOCATION.ZIP > 94000
+. . . . . . . . > order by LOCATION.STREET;
++----------------+---------------------------+
+|      CITY      |          STREET           |
++----------------+---------------------------+
+| San Francisco  | 100 Market                |
+| San Francisco  | 100 Market                |
+| San Mateo      | 1730 South Amphlett Blvd  |
+| San Mateo      | 1730 South Amphlett Blvd  |
+| San Mateo      | 1730 South Amphlett Blvd  |
+| San Mateo      | 1730 South Amphlett Blvd  |
+| San Mateo      | 1730 South Amphlett Blvd  |
+| San Mateo      | 1730 South Amphlett Blvd  |
+| San Mateo      | 1730 South Amphlett Blvd  |
+| Menlo Park     | 770 Coleman               |
+| Menlo Park     | 770 Coleman               |
++----------------+---------------------------+
+0: jdbc:luciddb:> --order by STREET;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- semi joins of a self join
+0: jdbc:luciddb:> select M.LNAME 
+. . . . . . . . > , M.EMPNO
+. . . . . . . . > from EMP M, EMP R
+. . . . . . . . > where M.EMPNO = R.MANAGER
+. . . . . . . . >  and R.SEX='M'
+. . . . . . . . > order by M.EMPNO;
++----------+--------+
+|  LNAME   | EMPNO  |
++----------+--------+
+| Bush     | 100    |
+| Bush     | 100    |
+| Bush     | 100    |
+| Andrews  | 102    |
+| Andrews  | 102    |
+| Andrews  | 102    |
+| Webber   | 103    |
++----------+--------+
+0: jdbc:luciddb:> --order by EMPNO;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select R.LNAME 
+. . . . . . . . > , R.EMPNO
+. . . . . . . . > from EMP M, EMP R
+. . . . . . . . > where M.EMPNO = R.MANAGER 
+. . . . . . . . > and R.SEX='M'
+. . . . . . . . > order by R.EMPNO;
++-----------+--------+
+|   LNAME   | EMPNO  |
++-----------+--------+
+| Brown     | 101    |
+| Webber    | 103    |
+| Fratz     | 104    |
+| Guy       | 105    |
+| Roy       | 106    |
+| Williams  | 107    |
+| Nife      | 109    |
++-----------+--------+
+0: jdbc:luciddb:> --order by EMPNO;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- double reference of a table
+0: jdbc:luciddb:> select EMP.LNAME, DEPT.DNAME
+. . . . . . . . > from LOCATION EL, LOCATION DL, EMP, DEPT
+. . . . . . . . > where EL.LOCID = EMP.LOCID and DL.LOCID=DEPT.LOCID
+. . . . . . . . > order by EMP.LNAME, DEPT.DNAME;
++-----------+--------------+
+|   LNAME   |    DNAME     |
++-----------+--------------+
+| Andrews   | Accounting   |
+| Andrews   | Development  |
+| Andrews   | Marketing    |
+| Andrews   | Sales        |
+| Andrews   | Support      |
+| Brown     | Accounting   |
+| Brown     | Development  |
+| Brown     | Marketing    |
+| Brown     | Sales        |
+| Brown     | Support      |
+| Bush      | Accounting   |
+| Bush      | Development  |
+| Bush      | Marketing    |
+| Bush      | Sales        |
+| Bush      | Support      |
+| Fratz     | Accounting   |
+| Fratz     | Development  |
+| Fratz     | Marketing    |
+| Fratz     | Sales        |
+| Fratz     | Support      |
+| Guy       | Accounting   |
+| Guy       | Development  |
+| Guy       | Marketing    |
+| Guy       | Sales        |
+| Guy       | Support      |
+| Jones     | Accounting   |
+| Jones     | Development  |
+| Jones     | Marketing    |
+| Jones     | Sales        |
+| Jones     | Support      |
+| Nife      | Accounting   |
+| Nife      | Development  |
+| Nife      | Marketing    |
+| Nife      | Sales        |
+| Nife      | Support      |
+| Reynolds  | Accounting   |
+| Reynolds  | Development  |
+| Reynolds  | Marketing    |
+| Reynolds  | Sales        |
+| Reynolds  | Support      |
+| Roy       | Accounting   |
+| Roy       | Development  |
+| Roy       | Marketing    |
+| Roy       | Sales        |
+| Roy       | Support      |
+| Webber    | Accounting   |
+| Webber    | Development  |
+| Webber    | Marketing    |
+| Webber    | Sales        |
+| Webber    | Support      |
+| Williams  | Accounting   |
+| Williams  | Development  |
+| Williams  | Marketing    |
+| Williams  | Sales        |
+| Williams  | Support      |
++-----------+--------------+
+0: jdbc:luciddb:> --order by LNAME, DNAME;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select EL.CITY, DL.CITY
+. . . . . . . . > from LOCATION EL, LOCATION DL, EMP, DEPT
+. . . . . . . . > where EL.LOCID = EMP.LOCID and DL.LOCID=DEPT.LOCID
+. . . . . . . . > order by EL.CITY, DL.CITY;
++----------------+----------------+
+|      CITY      |      CITY      |
++----------------+----------------+
+| Los Angeles    | San Mateo      |
+| Los Angeles    | San Mateo      |
+| Los Angeles    | San Francisco  |
+| Los Angeles    | San Francisco  |
+| Los Angeles    | Menlo Park     |
+| Menlo Park     | San Francisco  |
+| Menlo Park     | San Mateo      |
+| Menlo Park     | San Mateo      |
+| Menlo Park     | San Mateo      |
+| Menlo Park     | San Mateo      |
+| Menlo Park     | San Mateo      |
+| Menlo Park     | San Mateo      |
+| Menlo Park     | Menlo Park     |
+| Menlo Park     | Menlo Park     |
+| Menlo Park     | Menlo Park     |
+| Menlo Park     | San Francisco  |
+| Menlo Park     | San Francisco  |
+| Menlo Park     | San Francisco  |
+| Menlo Park     | San Francisco  |
+| Menlo Park     | San Francisco  |
+| San Francisco  | San Francisco  |
+| San Francisco  | San Francisco  |
+| San Francisco  | San Francisco  |
+| San Francisco  | San Francisco  |
+| San Francisco  | Menlo Park     |
+| San Francisco  | Menlo Park     |
+| San Francisco  | Menlo Park     |
+| San Francisco  | San Mateo      |
+| San Francisco  | San Mateo      |
+| San Francisco  | San Mateo      |
+| San Francisco  | San Mateo      |
+| San Francisco  | San Mateo      |
+| San Francisco  | San Mateo      |
+| San Francisco  | San Francisco  |
+| San Francisco  | San Francisco  |
+| San Mateo      | San Mateo      |
+| San Mateo      | San Mateo      |
+| San Mateo      | San Mateo      |
+| San Mateo      | San Francisco  |
+| San Mateo      | San Francisco  |
+| San Mateo      | San Mateo      |
+| San Mateo      | San Mateo      |
+| San Mateo      | San Mateo      |
+| San Mateo      | San Mateo      |
+| San Mateo      | San Mateo      |
+| San Mateo      | Menlo Park     |
+| San Mateo      | Menlo Park     |
+| San Mateo      | Menlo Park     |
+| San Mateo      | Menlo Park     |
+| San Mateo      | San Francisco  |
+| San Mateo      | San Francisco  |
+| San Mateo      | San Francisco  |
+| San Mateo      | San Francisco  |
+| San Mateo      | San Francisco  |
+| San Mateo      | San Francisco  |
++----------------+----------------+
+0: jdbc:luciddb:> --order by CITY, CITY;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- many to many self join semi join variations
+0: jdbc:luciddb:> select F.FNAME
+. . . . . . . . > FROM CUSTOMERS M, CUSTOMERS F
+. . . . . . . . > WHERE M.LNAME = F.LNAME
+. . . . . . . . > AND M.SEX = 'M'
+. . . . . . . . > AND F.SEX = 'F'
+. . . . . . . . > order by F.FNAME;
++-----------+
+|   FNAME   |
++-----------+
+| Alice     |
+| Alice     |
+| Anita     |
+| Anita     |
+| Anita     |
+| Anita     |
+| Anita     |
+| Anita     |
+| Anita     |
+| Batilda   |
+| Betty     |
+| Betty     |
+| Bianca    |
+| Bianca    |
+| Bianca    |
+| Bianca    |
+| Bianca    |
+| Carla     |
+| Carla     |
+| Carla     |
+| Denise    |
+| Denise    |
+| Denise    |
+| Denise    |
+| Denise    |
+| Denise    |
+| Erica     |
+| Erica     |
+| Erica     |
+| Erica     |
+| Erica     |
+| Florence  |
+| Holly     |
+| Hope      |
+| Hope      |
+| Hope      |
+| Hope      |
+| Hope      |
+| Hope      |
+| Hope      |
+| Hope      |
+| Hope      |
+| Jeniffer  |
+| Jeniffer  |
+| Jeniffer  |
+| Jeniffer  |
+| Jeniffer  |
+| Jeniffer  |
+| Jeniffer  |
+| Jeniffer  |
+| Jeniffer  |
+| Kathy     |
+| Kathy     |
+| Kathy     |
+| Lisa      |
+| Maggie    |
+| Maggie    |
+| Maggie    |
+| Maggie    |
+| Maggie    |
+| Margaret  |
+| Margaret  |
+| Margaret  |
+| Margaret  |
+| Margaret  |
+| Margaret  |
+| Mary      |
+| Mary      |
+| Mary      |
+| Missy     |
+| Missy     |
+| Missy     |
+| Missy     |
+| Ophelia   |
+| Ophelia   |
+| Ophelia   |
+| Patty     |
+| Patty     |
+| Patty     |
+| Patty     |
+| Patty     |
+| Patty     |
+| Patty     |
+| Patty     |
+| Patty     |
+| Pauline   |
+| Pauline   |
+| Pauline   |
+| Pauline   |
+| Pauline   |
+| Pauline   |
+| Pauline   |
+| Samantha  |
+| Samantha  |
+| Samantha  |
+| Samantha  |
+| Samantha  |
+| Terri     |
+| Terri     |
++-----------+
+|   FNAME   |
++-----------+
+| Terri     |
+| Terri     |
+| Terri     |
+| Terri     |
+| Terri     |
+| Terri     |
+| Terri     |
+| Terri     |
+| Terri     |
+| Terri     |
+| Terri     |
+| Veronica  |
+| Veronica  |
+| Veronica  |
+| Veronica  |
+| Veronica  |
+| Veronica  |
+| Veronica  |
+| Wendy     |
+| Wendy     |
++-----------+
+0: jdbc:luciddb:> --order by FNAME;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select M.FNAME, M.LNAME
+. . . . . . . . > FROM CUSTOMERS M, CUSTOMERS F
+. . . . . . . . > WHERE M.LNAME = F.LNAME
+. . . . . . . . > AND M.SEX = 'M'
+. . . . . . . . > AND F.SEX = 'F'
+. . . . . . . . > order by M.FNAME, M.LNAME;
++-----------+---------------+
+|   FNAME   |     LNAME     |
++-----------+---------------+
+| Andy      | OLeary        |
+| Andy      | OLeary        |
+| Andy      | Peterson      |
+| Anthony   | Frank         |
+| Anthony   | Smith         |
+| Anthony   | Smith         |
+| Anthony   | Smith         |
+| Anthony   | Stevens       |
+| Anthony   | Stevens       |
+| Anthony   | Stevens       |
+| Barry     | Stevens       |
+| Barry     | Stevens       |
+| Barry     | Stevens       |
+| Bill      | Kemp          |
+| Bill      | Kemp          |
+| Bill      | Kemp          |
+| Bill      | Kemp          |
+| Bill      | Kemp          |
+| Bill      | Mantela       |
+| Bruce     | Grant         |
+| Bruce     | Grant         |
+| Bruce     | Grant         |
+| Ceasar    | Locicero      |
+| Ceasar    | Mantela       |
+| Daniel    | Bush          |
+| Daniel    | Bush          |
+| Daniel    | Bush          |
+| Daniel    | Bush          |
+| Daniel    | Bush          |
+| Daniel    | Bush          |
+| Dave      | Stevens       |
+| Dave      | Stevens       |
+| Dave      | Stevens       |
+| David     | Howard        |
+| David     | Peterson      |
+| Earl      | Dole          |
+| Earl      | Dole          |
+| Eric      | Locicero      |
+| Eric      | Locicero      |
+| Eric      | Randolph      |
+| Eric      | Randolph      |
+| Eric      | Randolph      |
+| Frank     | Noose         |
+| Frank     | Noose         |
+| Frank     | Noose         |
+| Fred      | Noose         |
+| Fred      | Noose         |
+| Fred      | Noose         |
+| Fritz     | Grant         |
+| Fritz     | Grant         |
+| Fritz     | Grant         |
+| Gary      | Everett       |
+| Gary      | Everett       |
+| Gary      | Everett       |
+| Gary      | Everett       |
+| Gerry     | Bush          |
+| Gerry     | Bush          |
+| Gerry     | Bush          |
+| Gerry     | Bush          |
+| Gerry     | Bush          |
+| Gerry     | Bush          |
+| Harry     | Andrews       |
+| Harry     | Andrews       |
+| Hugh      | Andrews       |
+| Hugh      | Andrews       |
+| Hugh      | Kemp          |
+| Hugh      | Kemp          |
+| Hugh      | Kemp          |
+| Hugh      | Kemp          |
+| Hugh      | Kemp          |
+| Ian       | Bush          |
+| Ian       | Bush          |
+| Ian       | Bush          |
+| Ian       | Bush          |
+| Ian       | Bush          |
+| Ian       | Bush          |
+| Jake      | Bush          |
+| Jake      | Bush          |
+| Jake      | Bush          |
+| Jake      | Bush          |
+| Jake      | Bush          |
+| Jake      | Bush          |
+| Kevin     | Carlucchi     |
+| Kevin     | Carlucchi     |
+| Kevin     | Carlucchi     |
+| Kevin     | Carlucchi     |
+| Kevin     | Frank         |
+| Larry     | Randolph      |
+| Larry     | Randolph      |
+| Larry     | Randolph      |
+| Max       | Frank         |
+| Max       | Peterson      |
+| Monty     | Grant         |
+| Monty     | Grant         |
+| Monty     | Grant         |
+| Oliver    | Grant         |
+| Oliver    | Grant         |
+| Oliver    | Grant         |
+| Paul      | Van Morrison  |
++-----------+---------------+
+|   FNAME   |     LNAME     |
++-----------+---------------+
+| Paul      | Van Morrison  |
+| Paul      | Van Morrison  |
+| Paul      | Van Morrison  |
+| Paul      | Van Morrison  |
+| Peter     | Howard        |
+| Randy     | Smith         |
+| Randy     | Smith         |
+| Randy     | Smith         |
+| Rex       | Mantela       |
+| Ted       | Grant         |
+| Ted       | Grant         |
+| Ted       | Grant         |
+| Ted       | Howard        |
+| Theodore  | OLeary        |
+| Theodore  | OLeary        |
+| Ulysses   | Peterson      |
+| Victor    | Frank         |
+| Victor    | Peterson      |
+| Victor    | Peterson      |
+| Walter    | Frank         |
++-----------+---------------+
+0: jdbc:luciddb:> --order by FNAME, LNAME;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- ** SLOW, add in a bit
+0: jdbc:luciddb:> -- a few ranges
+0: jdbc:luciddb:> -- a big ol' join
+0: jdbc:luciddb:> --select PRODUCTS.PRICE
+0: jdbc:luciddb:> --from SALES, PRODUCTS
+0: jdbc:luciddb:> --where SALES.PRICE between PRODUCTS.PRICE - 1 and PRODUCTS.PRICE + 1
+0: jdbc:luciddb:> --and SALES.PRODID = PRODUCTS.PRODID
+0: jdbc:luciddb:> --order by  PRODUCTS.PRICE;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- non join conditions
+0: jdbc:luciddb:> --select SALES.CUSTID
+0: jdbc:luciddb:> --from SALES, PRODUCTS
+0: jdbc:luciddb:> --where SALES.PRICE between PRODUCTS.PRICE - 1 and PRODUCTS.PRICE + 1
+0: jdbc:luciddb:> --and ( PRODUCTS.NAME LIKE 'C%' OR PRODUCTS.NAME LIKE 'P%')
+0: jdbc:luciddb:> --order by SALES.CUSTID;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- equality and non equality in one
+0: jdbc:luciddb:> -- select SALES.PRICE
+0: jdbc:luciddb:> -- from SALES, PRODUCTS, CUSTOMERS
+0: jdbc:luciddb:> -- where SALES.PRICE - PRODUCTS.PRICE < 0.5
+0: jdbc:luciddb:> -- and PRODUCTS.PRICE - SALES.PRICE < 0.25
+0: jdbc:luciddb:> -- and SALES.CUSTID = CUSTOMERS.CUSTID
+0: jdbc:luciddb:> -- order by SALES.PRICE;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- select PRODUCTS.NAME, CUSTOMERS.FNAME, CUSTOMERS.LNAME, PRODUCTS.PRICE
+0: jdbc:luciddb:> -- from SALES, PRODUCTS, CUSTOMERS
+0: jdbc:luciddb:> -- where SALES.PRICE - PRODUCTS.PRICE < 0.5
+0: jdbc:luciddb:> -- and PRODUCTS.PRICE - SALES.PRICE < 0.25
+0: jdbc:luciddb:> -- and SALES.CUSTID = CUSTOMERS.CUSTID
+0: jdbc:luciddb:> -- order by PRODUCTS.NAME, CUSTOMERS.CUSTID;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

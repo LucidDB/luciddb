@@ -33,7 +33,6 @@
       <test name="joinRng" requiresSuccess="download">
         <test-metadata>
           <withIndex value="false"/>
-          <notImplemented value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/joinRng.sql"/>
       </test>
@@ -41,7 +40,6 @@
       <test name="joinMisc" requiresSuccess="download">
         <test-metadata>
           <withIndex value="false"/>
-          <notImplemented value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/joinMisc.sql"/>
       </test>
@@ -49,7 +47,6 @@
       <test name="joinSemi" requiresSuccess="download">
         <test-metadata>
           <withIndex value="false"/>
-          <notImplemented value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/joinSemi.sql"/>
       </test>
@@ -142,40 +139,40 @@
 
       <test name="subFrom" requiresSuccess="download">
         <test-metadata>
-          <notImplemented value="true"/>
           <withIndex value="false"/>
+          <notImplemented value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/subFrom.sql"/>
       </test>
 
       <test name="subExists" requiresSuccess="download">
         <test-metadata>
-          <notImplemented value="true"/>
           <withIndex value="false"/>
+          <notImplemented value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/subExists.sql"/>
       </test>
 
       <test name="subIn" requiresSuccess="download">
         <test-metadata>
-          <notImplemented value="true"/>
           <withIndex value="false"/>
+          <notImplemented value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/subIn.sql"/>
       </test>
 
       <test name="subMisc" requiresSuccess="download">
         <test-metadata>
-          <notImplemented value="true"/>
           <withIndex value="false"/>
+          <notImplemented value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/subMisc.sql"/>
       </test>
 
       <test name="subMult" requiresSuccess="download">
         <test-metadata>
-          <notImplemented value="true"/>
           <withIndex value="false"/>
+          <notImplemented value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/subMult.sql"/>
       </test>

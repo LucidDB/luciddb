@@ -1,33 +1,33 @@
 0: jdbc:luciddb:> set schema 's';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Import with Limit to qualification
-0: jdbc:luciddb:> import foreign schema "SCHOI"
+0: jdbc:luciddb:> import foreign schema "@SCHEMA@"
 . . . . . . . . > LIMIT TO TABLE_NAME like 'typ%' 
-. . . . . . . . > from server ORCL_SERVER 
-. . . . . . . . > into ORCL_is_schema;
+. . . . . . . . > from server @SERVER_NAME@ 
+. . . . . . . . > into @name_prefix@_is_schema;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Check import of column names and datatypes
-0: jdbc:luciddb:> !metadata getColumns LOCALDB ORCL_IS_SCHEMA % null
+0: jdbc:luciddb:> !metadata getColumns LOCALDB @name_prefix@_IS_SCHEMA % null
 +------------+-----------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
 | TABLE_CAT  |   TABLE_SCHEM   | TABLE_NAME  | COLUMN_NAME  | DATA_TYPE  | TYPE_NAME  | COLUMN_SIZE  | BUFFER_LEN  | DEC_DIGITS  | NUM_PREC_RADIX  | NULLABLE  | REMARKS  | COLUMN_DEF  | SQL_DATA_TYPE  | SQL_DATETIME_SUB  | CHAR_OCTET_LENGTH  | ORDINAL_POSITION  | IS_NULLABLE  | SCOPE_CATALOG  | SCOPE_SCHEMA  | SCOPE_TABLE  | SOURCE_DATA_TYPE  |
 +------------+-----------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_CHAR       | 1          | CHAR       | 10           | 0           |             |                 | 1         |          |             | 0              | 0                 | 10                 | 1                 | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_VARCHAR    | 12         | VARCHAR    | 10           | 0           |             |                 | 1         |          |             | 0              | 0                 | 10                 | 2                 | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_DECIMAL    | 3          | DECIMAL    | 10           | 0           | 3           |                 | 1         |          |             | 0              | 0                 |                    | 3                 | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_TINYINT    | 3          | DECIMAL    | 3            | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 4                 | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_SMALLINT   | 3          | DECIMAL    | 5            | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 5                 | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_INTEGER    | 3          | DECIMAL    | 10           | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 6                 | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_BIGINT     | 3          | DECIMAL    | 19           | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 7                 | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_REAL       | 12         | VARCHAR    | 1024         | 0           |             |                 | 1         |          |             | 0              | 0                 | 1024               | 8                 | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_DOUBLE     | 12         | VARCHAR    | 1024         | 0           |             |                 | 1         |          |             | 0              | 0                 | 1024               | 9                 | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_BOOLEAN    | 3          | DECIMAL    | 2            | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 10                | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_DATE       | 91         | DATE       |              | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 11                | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_TIME       | 93         | TIMESTAMP  | 0            | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 12                | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_TIMESTAMP  | 93         | TIMESTAMP  | 0            | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 13                | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_CHAR       | 1          | CHAR       | 10           | 0           |             |                 | 1         |          |             | 0              | 0                 | 10                 | 1                 | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_VARCHAR    | 12         | VARCHAR    | 10           | 0           |             |                 | 1         |          |             | 0              | 0                 | 10                 | 2                 | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_DECIMAL    | 3          | DECIMAL    | 10           | 0           | 3           |                 | 1         |          |             | 0              | 0                 |                    | 3                 | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_TINYINT    | 3          | DECIMAL    | 3            | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 4                 | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_SMALLINT   | 3          | DECIMAL    | 5            | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 5                 | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_INTEGER    | 3          | DECIMAL    | 10           | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 6                 | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_BIGINT     | 3          | DECIMAL    | 19           | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 7                 | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_REAL       | 12         | VARCHAR    | 1024         | 0           |             |                 | 1         |          |             | 0              | 0                 | 1024               | 8                 | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_DOUBLE     | 12         | VARCHAR    | 1024         | 0           |             |                 | 1         |          |             | 0              | 0                 | 1024               | 9                 | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_BOOLEAN    | 3          | DECIMAL    | 2            | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 10                | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_DATE       | 91         | DATE       |              | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 11                | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_TIME       | 93         | TIMESTAMP  | 0            | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 12                | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_TIMESTAMP  | 93         | TIMESTAMP  | 0            | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 13                | YES          |                |               |              |                   |
 +------------+-----------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- 2nd select should fail
-0: jdbc:luciddb:> select * from ORCL_is_schema."types";
+0: jdbc:luciddb:> select * from @name_prefix@_is_schema."types";
 +-------------+-------------+------------+------------+-------------+-------------+----------------------+---------+---------------+------------+-------------+------------------------+------------------------+
 |   C_CHAR    |  C_VARCHAR  | C_DECIMAL  | C_TINYINT  | C_SMALLINT  |  C_INTEGER  |       C_BIGINT       | C_REAL  |   C_DOUBLE    | C_BOOLEAN  |   C_DATE    |         C_TIME         |      C_TIMESTAMP       |
 +-------------+-------------+------------+------------+-------------+-------------+----------------------+---------+---------------+------------+-------------+------------------------+------------------------+
@@ -37,257 +37,257 @@
 | thisChar04  | varchar-04  | 123.123    | 127        | 32767       | 2147483647  | 9223372036854775807  | 2.78    | 3.1415161718  | 0          | 2005-10-12  | 1899-12-30 20:00:00.0  | 2005-10-12 19:00:00.0  |
 | thisChar05  | varchar-05  | 123.123    | 127        | 32767       | 2147483647  | 9223372036854775807  | 2.78    | 3.1415161718  | -1         | 2005-10-12  | 1899-12-30 20:00:00.0  | 2005-10-12 19:00:00.0  |
 +-------------+-------------+------------+------------+-------------+-------------+----------------------+---------+---------------+------------+-------------+------------------------+------------------------+
-0: jdbc:luciddb:> select * from ORCL_is_schema."blob"; 
-Error: From line 1, column 15 to line 1, column 28: Table 'ORCL_IS_SCHEMA.blob' not found (state=,code=0)
+0: jdbc:luciddb:> select * from @name_prefix@_is_schema."blob"; 
+Error: From line 1, column 15 to line 1, column 28: Table '@name_prefix@_IS_SCHEMA.blob' not found (state=,code=0)
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> drop schema ORCL_is_schema cascade;
-0: jdbc:luciddb:> create schema ORCL_is_schema;
+0: jdbc:luciddb:> drop schema @name_prefix@_is_schema cascade;
+0: jdbc:luciddb:> create schema @name_prefix@_is_schema;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Import with Except qualification
-0: jdbc:luciddb:> import foreign schema "SCHOI"
+0: jdbc:luciddb:> import foreign schema "@SCHEMA@"
 . . . . . . . . > EXCEPT TABLE_NAME like 'blob'
-. . . . . . . . > from server ORCL_SERVER
-. . . . . . . . > into ORCL_is_schema;
+. . . . . . . . > from server @SERVER_NAME@
+. . . . . . . . > into @name_prefix@_is_schema;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Check import of tables
-0: jdbc:luciddb:> !metadata getTables LOCALDB ORCL_IS_SCHEMA % null
+0: jdbc:luciddb:> !metadata getTables LOCALDB @name_prefix@_IS_SCHEMA % null
 +------------+-----------------+--------------------------------+----------------+----------+-----------+-------------+------------+----------------------------+-----------------+
 | TABLE_CAT  |   TABLE_SCHEM   |           TABLE_NAME           |   TABLE_TYPE   | REMARKS  | TYPE_CAT  | TYPE_SCHEM  | TYPE_NAME  | SELF_REFERENCING_COL_NAME  | REF_GENERATION  |
 +------------+-----------------+--------------------------------+----------------+----------+-----------+-------------+------------+----------------------------+-----------------+
-| LOCALDB    | ORCL_IS_SCHEMA  | ANN                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | ATEST                          | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | BILL                           | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | BILL1                          | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | BILL2                          | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | BILL3                          | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | BILLTRUNC                      | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | BUG6863                        | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | CANTERBURY                     | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | CUSTOMERS                      | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | DEPT                           | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | EMP                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | EVT_CARRIER_CONFIGURATION      | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | EVT_DEST_PROFILE               | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | EVT_HISTORY                    | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | EVT_INSTANCE                   | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | EVT_MAIL_CONFIGURATION         | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | EVT_MONITOR_NODE               | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | EVT_NOTIFY_STATUS              | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | EVT_OPERATORS                  | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | EVT_OPERATORS_ADDITIONAL       | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | EVT_OPERATORS_SYSTEMS          | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | EVT_OUTSTANDING                | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | EVT_PROFILE                    | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | EVT_PROFILE_EVENTS             | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | EVT_REGISTRY                   | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | EVT_REGISTRY_BACKLOG           | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | FK                             | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | FOR_TABLE1                     | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | FOR_TABLE2                     | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | FOR_TABLE3                     | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | JUNKTABLE                      | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | LOB_TABLE                      | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | LOCATION                       | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | LONG_COLUMN_NAME               | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | ONEROW                         | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | ORCL_TYPES                     | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | PK                             | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | PRIM_TABLE                     | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | PRODUCTS                       | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | REMTAB1                        | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SALES                          | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SCHOITMP                       | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SCHOITMP2                      | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMACTUALPARAMETER_S            | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMAGENTJOB_S                   | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMARCHIVE_S                    | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMBREAKABLELINKS               | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMCLIENT_FOLDER_MAP_V          | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMCLIENT_INSTALLATION_V        | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMCLIENT_ONLY_FOLDER_V         | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMCLIENT_V                     | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMCLIQUE                       | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMCONFIGURATION                | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMCONSOLESOSETTING_S           | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMDATABASE_S                   | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMDBAUTH_S                     | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMDEFAUTH_S                    | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMDEPENDENTLINKS               | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMDISTRIBUTIONSET_S            | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMFOLDER_S                     | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMFOLDER_V                     | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMFORMALPARAMETER_S            | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMGLOBALCONFIGURATION_S        | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMHOSTAUTH_S                   | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMHOST_FOLDER_MAP_V            | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMHOST_ONLY_FOLDER_V           | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMHOST_S                       | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMHOST_V                       | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMINSTALLATION_S               | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMINSTALLATION_V               | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMINSTALLED_PRODUCT_V          | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMLOGMESSAGE_S                 | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMMONTHLYENTRY_S               | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMMONTHWEEKENTRY_S             | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMMOWNERLINKS                  | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMOMSTRING_S                   | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMOSNAMES_X                    | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMOWNERLINKS                   | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMPACKAGE_S                    | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMPARALLELJOB_S                | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMPARALLELOPERATION_S          | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMPARALLELSTATEMENT_S          | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMPRODUCT_S                    | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMPRODUCT_V                    | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_AD_ADDRESSES               | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_AD_ADDRESSES_              | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_AD_DISCOVERED_NODES        | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_AD_DISCOVERED_NODES_       | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_AD_NODES                   | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_AD_NODES_                  | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_AD_PARMS                   | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_AD_PARMS_                  | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_AUTO_DISCOVERY_ITEM        | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_AUTO_DISCOVERY_ITEM_       | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_AUTO_DISCOVERY_PARMS       | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_AUTO_DISCOVERY_PARMS_      | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_BLOB                       | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_BLOB_                      | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | ANN                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | ATEST                          | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | BILL                           | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | BILL1                          | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | BILL2                          | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | BILL3                          | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | BILLTRUNC                      | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | BUG6863                        | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | CANTERBURY                     | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | CUSTOMERS                      | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | DEPT                           | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | EMP                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | EVT_CARRIER_CONFIGURATION      | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | EVT_DEST_PROFILE               | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | EVT_HISTORY                    | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | EVT_INSTANCE                   | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | EVT_MAIL_CONFIGURATION         | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | EVT_MONITOR_NODE               | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | EVT_NOTIFY_STATUS              | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | EVT_OPERATORS                  | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | EVT_OPERATORS_ADDITIONAL       | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | EVT_OPERATORS_SYSTEMS          | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | EVT_OUTSTANDING                | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | EVT_PROFILE                    | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | EVT_PROFILE_EVENTS             | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | EVT_REGISTRY                   | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | EVT_REGISTRY_BACKLOG           | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | FK                             | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | FOR_TABLE1                     | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | FOR_TABLE2                     | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | FOR_TABLE3                     | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | JUNKTABLE                      | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | LOB_TABLE                      | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | LOCATION                       | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | LONG_COLUMN_NAME               | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | ONEROW                         | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | ORCL_TYPES                     | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | PK                             | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | PRIM_TABLE                     | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | PRODUCTS                       | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | REMTAB1                        | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SALES                          | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SCHOITMP                       | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SCHOITMP2                      | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMACTUALPARAMETER_S            | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMAGENTJOB_S                   | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMARCHIVE_S                    | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMBREAKABLELINKS               | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMCLIENT_FOLDER_MAP_V          | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMCLIENT_INSTALLATION_V        | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMCLIENT_ONLY_FOLDER_V         | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMCLIENT_V                     | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMCLIQUE                       | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMCONFIGURATION                | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMCONSOLESOSETTING_S           | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMDATABASE_S                   | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMDBAUTH_S                     | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMDEFAUTH_S                    | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMDEPENDENTLINKS               | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMDISTRIBUTIONSET_S            | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMFOLDER_S                     | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMFOLDER_V                     | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMFORMALPARAMETER_S            | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMGLOBALCONFIGURATION_S        | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMHOSTAUTH_S                   | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMHOST_FOLDER_MAP_V            | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMHOST_ONLY_FOLDER_V           | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMHOST_S                       | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMHOST_V                       | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMINSTALLATION_S               | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMINSTALLATION_V               | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMINSTALLED_PRODUCT_V          | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMLOGMESSAGE_S                 | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMMONTHLYENTRY_S               | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMMONTHWEEKENTRY_S             | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMMOWNERLINKS                  | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMOMSTRING_S                   | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMOSNAMES_X                    | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMOWNERLINKS                   | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMPACKAGE_S                    | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMPARALLELJOB_S                | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMPARALLELOPERATION_S          | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMPARALLELSTATEMENT_S          | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMPRODUCT_S                    | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMPRODUCT_V                    | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_AD_ADDRESSES               | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_AD_ADDRESSES_              | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_AD_DISCOVERED_NODES        | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_AD_DISCOVERED_NODES_       | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_AD_NODES                   | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_AD_NODES_                  | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_AD_PARMS                   | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_AD_PARMS_                  | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_AUTO_DISCOVERY_ITEM        | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_AUTO_DISCOVERY_ITEM_       | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_AUTO_DISCOVERY_PARMS       | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_AUTO_DISCOVERY_PARMS_      | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_BLOB                       | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_BLOB_                      | FOREIGN TABLE  |          |           |             |            |                            |                 |
 +------------+-----------------+--------------------------------+----------------+----------+-----------+-------------+------------+----------------------------+-----------------+
 | TABLE_CAT  |   TABLE_SCHEM   |           TABLE_NAME           |   TABLE_TYPE   | REMARKS  | TYPE_CAT  | TYPE_SCHEM  | TYPE_NAME  | SELF_REFERENCING_COL_NAME  | REF_GENERATION  |
 +------------+-----------------+--------------------------------+----------------+----------+-----------+-------------+------------+----------------------------+-----------------+
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_CREDENTIALS                | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_CREDENTIALS$               | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_JOB                        | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_JOB_                       | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_JOB_EVENTLIST_             | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_JOB_HISTORY                | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_JOB_HISTORY_               | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_JOB_INSTANCE               | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_JOB_INSTANCE_              | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_JOB_LIBRARY                | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_JOB_LIBRARY_               | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_JOB_TASK_INSTANCE          | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_JOB_TASK_INSTANCE_         | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_LONG_TEXT                  | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_LONG_TEXT_                 | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_REP_VERSION                | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_SERVICES                   | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_SERVICE_GROUP_DEFN         | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_SERVICE_GROUP_DEFN_        | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_SERVICE_GROUP_ITEM         | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_SERVICE_GROUP_ITEM_        | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_SERVICE_ITEM               | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_SERVICE_ITEM_              | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_UPDATESERVICES_CALLED      | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_UPDATESERVICES_CALLED_     | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMP_USER_DETAILS               | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMRELEASE_S                    | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMRUN_S                        | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMSCHEDULE_S                   | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMSHAREDORACLECLIENT_S         | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMSHAREDORACLECONFIGURATION_S  | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMTABLESPACE_S                 | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMVCENDPOINT_S                 | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | SMWEEKLYENTRY_S                | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | TAB1                           | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | TAI1                           | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | TBIT                           | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | TINNA                          | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | T_NULL                         | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | abc                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | alltypes                       | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | bar                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | bench100                       | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | bench100K                      | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | bench10K                       | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | bench1M                        | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | billtemp                       | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | bug2216a                       | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | bug2216b                       | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | csa                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | distinctstring                 | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | explainplanstring              | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | foo                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | fred                           | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | fromlist                       | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | fromstring                     | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | g                              | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | groupbylist                    | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | groupbystring                  | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | havinglist                     | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | havingstring                   | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | n1                             | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | n10                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | n11                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | n15                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | n16                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | n2                             | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | n3                             | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | nn                             | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | orderbylist                    | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | orderbystring                  | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | qrysrcdec                      | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | qrysrcnum                      | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | rdr                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | rp                             | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | s                              | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | selectlist                     | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | selectstring                   | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | sp                             | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | stmtterminator                 | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | strings                        | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | t                              | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | t1                             | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | tab200                         | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | tai                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | tes2                           | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | test                           | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | test1                          | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | test2                          | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | test9                          | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | testheader                     | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | tt                             | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | tt1                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | tt2                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | ttt                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | types                          | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | u1                             | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | u2                             | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | u3                             | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | uu1                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_CREDENTIALS                | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_CREDENTIALS$               | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_JOB                        | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_JOB_                       | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_JOB_EVENTLIST_             | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_JOB_HISTORY                | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_JOB_HISTORY_               | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_JOB_INSTANCE               | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_JOB_INSTANCE_              | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_JOB_LIBRARY                | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_JOB_LIBRARY_               | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_JOB_TASK_INSTANCE          | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_JOB_TASK_INSTANCE_         | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_LONG_TEXT                  | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_LONG_TEXT_                 | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_REP_VERSION                | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_SERVICES                   | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_SERVICE_GROUP_DEFN         | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_SERVICE_GROUP_DEFN_        | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_SERVICE_GROUP_ITEM         | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_SERVICE_GROUP_ITEM_        | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_SERVICE_ITEM               | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_SERVICE_ITEM_              | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_UPDATESERVICES_CALLED      | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_UPDATESERVICES_CALLED_     | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_USER_DETAILS               | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMRELEASE_S                    | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMRUN_S                        | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMSCHEDULE_S                   | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMSHAREDORACLECLIENT_S         | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMSHAREDORACLECONFIGURATION_S  | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMTABLESPACE_S                 | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMVCENDPOINT_S                 | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMWEEKLYENTRY_S                | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | TAB1                           | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | TAI1                           | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | TBIT                           | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | TINNA                          | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | T_NULL                         | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | abc                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | alltypes                       | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | bar                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | bench100                       | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | bench100K                      | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | bench10K                       | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | bench1M                        | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | billtemp                       | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | bug2216a                       | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | bug2216b                       | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | csa                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | distinctstring                 | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | explainplanstring              | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | foo                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | fred                           | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | fromlist                       | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | fromstring                     | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | g                              | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | groupbylist                    | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | groupbystring                  | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | havinglist                     | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | havingstring                   | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | n1                             | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | n10                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | n11                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | n15                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | n16                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | n2                             | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | n3                             | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | nn                             | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | orderbylist                    | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | orderbystring                  | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | qrysrcdec                      | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | qrysrcnum                      | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | rdr                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | rp                             | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | s                              | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | selectlist                     | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | selectstring                   | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | sp                             | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | stmtterminator                 | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | strings                        | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | t                              | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | t1                             | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | tab200                         | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | tai                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | tes2                           | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | test                           | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | test1                          | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | test2                          | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | test9                          | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | testheader                     | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | tt                             | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | tt1                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | tt2                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | ttt                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types                          | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | u1                             | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | u2                             | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | u3                             | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | uu1                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
 +------------+-----------------+--------------------------------+----------------+----------+-----------+-------------+------------+----------------------------+-----------------+
 | TABLE_CAT  |   TABLE_SCHEM   |           TABLE_NAME           |   TABLE_TYPE   | REMARKS  | TYPE_CAT  | TYPE_SCHEM  | TYPE_NAME  | SELF_REFERENCING_COL_NAME  | REF_GENERATION  |
 +------------+-----------------+--------------------------------+----------------+----------+-----------+-------------+------------+----------------------------+-----------------+
-| LOCALDB    | ORCL_IS_SCHEMA  | uu2                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | wherelist                      | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | wherestring                    | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | xyz                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | ORCL_IS_SCHEMA  | yyy                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | uu2                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | wherelist                      | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | wherestring                    | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | xyz                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | yyy                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
 +------------+-----------------+--------------------------------+----------------+----------+-----------+-------------+------------+----------------------------+-----------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Check import of column names and data types for types table
-0: jdbc:luciddb:> !metadata getColumns LOCALDB ORCL_IS_SCHEMA "types" null
+0: jdbc:luciddb:> !metadata getColumns LOCALDB @name_prefix@_IS_SCHEMA "types" null
 +------------+-----------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
 | TABLE_CAT  |   TABLE_SCHEM   | TABLE_NAME  | COLUMN_NAME  | DATA_TYPE  | TYPE_NAME  | COLUMN_SIZE  | BUFFER_LEN  | DEC_DIGITS  | NUM_PREC_RADIX  | NULLABLE  | REMARKS  | COLUMN_DEF  | SQL_DATA_TYPE  | SQL_DATETIME_SUB  | CHAR_OCTET_LENGTH  | ORDINAL_POSITION  | IS_NULLABLE  | SCOPE_CATALOG  | SCOPE_SCHEMA  | SCOPE_TABLE  | SOURCE_DATA_TYPE  |
 +------------+-----------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_CHAR       | 1          | CHAR       | 10           | 0           |             |                 | 1         |          |             | 0              | 0                 | 10                 | 1                 | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_VARCHAR    | 12         | VARCHAR    | 10           | 0           |             |                 | 1         |          |             | 0              | 0                 | 10                 | 2                 | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_DECIMAL    | 3          | DECIMAL    | 10           | 0           | 3           |                 | 1         |          |             | 0              | 0                 |                    | 3                 | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_TINYINT    | 3          | DECIMAL    | 3            | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 4                 | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_SMALLINT   | 3          | DECIMAL    | 5            | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 5                 | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_INTEGER    | 3          | DECIMAL    | 10           | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 6                 | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_BIGINT     | 3          | DECIMAL    | 19           | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 7                 | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_REAL       | 12         | VARCHAR    | 1024         | 0           |             |                 | 1         |          |             | 0              | 0                 | 1024               | 8                 | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_DOUBLE     | 12         | VARCHAR    | 1024         | 0           |             |                 | 1         |          |             | 0              | 0                 | 1024               | 9                 | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_BOOLEAN    | 3          | DECIMAL    | 2            | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 10                | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_DATE       | 91         | DATE       |              | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 11                | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_TIME       | 93         | TIMESTAMP  | 0            | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 12                | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_TIMESTAMP  | 93         | TIMESTAMP  | 0            | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 13                | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_CHAR       | 1          | CHAR       | 10           | 0           |             |                 | 1         |          |             | 0              | 0                 | 10                 | 1                 | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_VARCHAR    | 12         | VARCHAR    | 10           | 0           |             |                 | 1         |          |             | 0              | 0                 | 10                 | 2                 | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_DECIMAL    | 3          | DECIMAL    | 10           | 0           | 3           |                 | 1         |          |             | 0              | 0                 |                    | 3                 | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_TINYINT    | 3          | DECIMAL    | 3            | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 4                 | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_SMALLINT   | 3          | DECIMAL    | 5            | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 5                 | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_INTEGER    | 3          | DECIMAL    | 10           | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 6                 | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_BIGINT     | 3          | DECIMAL    | 19           | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 7                 | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_REAL       | 12         | VARCHAR    | 1024         | 0           |             |                 | 1         |          |             | 0              | 0                 | 1024               | 8                 | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_DOUBLE     | 12         | VARCHAR    | 1024         | 0           |             |                 | 1         |          |             | 0              | 0                 | 1024               | 9                 | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_BOOLEAN    | 3          | DECIMAL    | 2            | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 10                | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_DATE       | 91         | DATE       |              | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 11                | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_TIME       | 93         | TIMESTAMP  | 0            | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 12                | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_TIMESTAMP  | 93         | TIMESTAMP  | 0            | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 13                | YES          |                |               |              |                   |
 +------------+-----------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- 2nd select should fail
-0: jdbc:luciddb:> select * from ORCL_is_schema."types";
+0: jdbc:luciddb:> select * from @name_prefix@_is_schema."types";
 +-------------+-------------+------------+------------+-------------+-------------+----------------------+---------+---------------+------------+-------------+------------------------+------------------------+
 |   C_CHAR    |  C_VARCHAR  | C_DECIMAL  | C_TINYINT  | C_SMALLINT  |  C_INTEGER  |       C_BIGINT       | C_REAL  |   C_DOUBLE    | C_BOOLEAN  |   C_DATE    |         C_TIME         |      C_TIMESTAMP       |
 +-------------+-------------+------------+------------+-------------+-------------+----------------------+---------+---------------+------------+-------------+------------------------+------------------------+
@@ -297,41 +297,41 @@ Error: From line 1, column 15 to line 1, column 28: Table 'ORCL_IS_SCHEMA.blob' 
 | thisChar04  | varchar-04  | 123.123    | 127        | 32767       | 2147483647  | 9223372036854775807  | 2.78    | 3.1415161718  | 0          | 2005-10-12  | 1899-12-30 20:00:00.0  | 2005-10-12 19:00:00.0  |
 | thisChar05  | varchar-05  | 123.123    | 127        | 32767       | 2147483647  | 9223372036854775807  | 2.78    | 3.1415161718  | -1         | 2005-10-12  | 1899-12-30 20:00:00.0  | 2005-10-12 19:00:00.0  |
 +-------------+-------------+------------+------------+-------------+-------------+----------------------+---------+---------------+------------+-------------+------------------------+------------------------+
-0: jdbc:luciddb:> select * from ORCL_is_schema."blob";
-Error: From line 1, column 15 to line 1, column 28: Table 'ORCL_IS_SCHEMA.blob' not found (state=,code=0)
+0: jdbc:luciddb:> select * from @name_prefix@_is_schema."blob";
+Error: From line 1, column 15 to line 1, column 28: Table '@name_prefix@_IS_SCHEMA.blob' not found (state=,code=0)
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> drop schema ORCL_is_schema cascade;
-0: jdbc:luciddb:> create schema ORCL_is_schema;
+0: jdbc:luciddb:> drop schema @name_prefix@_is_schema cascade;
+0: jdbc:luciddb:> create schema @name_prefix@_is_schema;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Import with explicit list of tables
-0: jdbc:luciddb:> import foreign schema "SCHOI"
+0: jdbc:luciddb:> import foreign schema "@SCHEMA@"
 . . . . . . . . > LIMIT to ("blob", "types")
-. . . . . . . . > from server ORCL_SERVER
-. . . . . . . . > into ORCL_is_schema;
+. . . . . . . . > from server @SERVER_NAME@
+. . . . . . . . > into @name_prefix@_is_schema;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Check import of table names, column names and data types
-0: jdbc:luciddb:> !metadata getColumns LOCALDB ORCL_IS_SCHEMA % null
+0: jdbc:luciddb:> !metadata getColumns LOCALDB @name_prefix@_IS_SCHEMA % null
 +------------+-----------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
 | TABLE_CAT  |   TABLE_SCHEM   | TABLE_NAME  | COLUMN_NAME  | DATA_TYPE  | TYPE_NAME  | COLUMN_SIZE  | BUFFER_LEN  | DEC_DIGITS  | NUM_PREC_RADIX  | NULLABLE  | REMARKS  | COLUMN_DEF  | SQL_DATA_TYPE  | SQL_DATETIME_SUB  | CHAR_OCTET_LENGTH  | ORDINAL_POSITION  | IS_NULLABLE  | SCOPE_CATALOG  | SCOPE_SCHEMA  | SCOPE_TABLE  | SOURCE_DATA_TYPE  |
 +------------+-----------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
-| LOCALDB    | ORCL_IS_SCHEMA  | blob        | C_BINARY     | -3         | VARBINARY  | 10           | 0           |             |                 | 1         |          |             | 0              | 0                 | 10                 | 1                 | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | blob        | C_VARBINARY  | -3         | VARBINARY  | 10           | 0           |             |                 | 1         |          |             | 0              | 0                 | 10                 | 2                 | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_CHAR       | 1          | CHAR       | 10           | 0           |             |                 | 1         |          |             | 0              | 0                 | 10                 | 1                 | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_VARCHAR    | 12         | VARCHAR    | 10           | 0           |             |                 | 1         |          |             | 0              | 0                 | 10                 | 2                 | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_DECIMAL    | 3          | DECIMAL    | 10           | 0           | 3           |                 | 1         |          |             | 0              | 0                 |                    | 3                 | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_TINYINT    | 3          | DECIMAL    | 3            | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 4                 | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_SMALLINT   | 3          | DECIMAL    | 5            | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 5                 | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_INTEGER    | 3          | DECIMAL    | 10           | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 6                 | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_BIGINT     | 3          | DECIMAL    | 19           | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 7                 | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_REAL       | 12         | VARCHAR    | 1024         | 0           |             |                 | 1         |          |             | 0              | 0                 | 1024               | 8                 | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_DOUBLE     | 12         | VARCHAR    | 1024         | 0           |             |                 | 1         |          |             | 0              | 0                 | 1024               | 9                 | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_BOOLEAN    | 3          | DECIMAL    | 2            | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 10                | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_DATE       | 91         | DATE       |              | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 11                | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_TIME       | 93         | TIMESTAMP  | 0            | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 12                | YES          |                |               |              |                   |
-| LOCALDB    | ORCL_IS_SCHEMA  | types       | C_TIMESTAMP  | 93         | TIMESTAMP  | 0            | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 13                | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | blob        | C_BINARY     | -3         | VARBINARY  | 10           | 0           |             |                 | 1         |          |             | 0              | 0                 | 10                 | 1                 | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | blob        | C_VARBINARY  | -3         | VARBINARY  | 10           | 0           |             |                 | 1         |          |             | 0              | 0                 | 10                 | 2                 | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_CHAR       | 1          | CHAR       | 10           | 0           |             |                 | 1         |          |             | 0              | 0                 | 10                 | 1                 | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_VARCHAR    | 12         | VARCHAR    | 10           | 0           |             |                 | 1         |          |             | 0              | 0                 | 10                 | 2                 | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_DECIMAL    | 3          | DECIMAL    | 10           | 0           | 3           |                 | 1         |          |             | 0              | 0                 |                    | 3                 | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_TINYINT    | 3          | DECIMAL    | 3            | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 4                 | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_SMALLINT   | 3          | DECIMAL    | 5            | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 5                 | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_INTEGER    | 3          | DECIMAL    | 10           | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 6                 | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_BIGINT     | 3          | DECIMAL    | 19           | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 7                 | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_REAL       | 12         | VARCHAR    | 1024         | 0           |             |                 | 1         |          |             | 0              | 0                 | 1024               | 8                 | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_DOUBLE     | 12         | VARCHAR    | 1024         | 0           |             |                 | 1         |          |             | 0              | 0                 | 1024               | 9                 | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_BOOLEAN    | 3          | DECIMAL    | 2            | 0           | 0           |                 | 1         |          |             | 0              | 0                 |                    | 10                | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_DATE       | 91         | DATE       |              | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 11                | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_TIME       | 93         | TIMESTAMP  | 0            | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 12                | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | types       | C_TIMESTAMP  | 93         | TIMESTAMP  | 0            | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 13                | YES          |                |               |              |                   |
 +------------+-----------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> select * from ORCL_is_schema."types";
+0: jdbc:luciddb:> select * from @name_prefix@_is_schema."types";
 +-------------+-------------+------------+------------+-------------+-------------+----------------------+---------+---------------+------------+-------------+------------------------+------------------------+
 |   C_CHAR    |  C_VARCHAR  | C_DECIMAL  | C_TINYINT  | C_SMALLINT  |  C_INTEGER  |       C_BIGINT       | C_REAL  |   C_DOUBLE    | C_BOOLEAN  |   C_DATE    |         C_TIME         |      C_TIMESTAMP       |
 +-------------+-------------+------------+------------+-------------+-------------+----------------------+---------+---------------+------------+-------------+------------------------+------------------------+
@@ -341,7 +341,7 @@ Error: From line 1, column 15 to line 1, column 28: Table 'ORCL_IS_SCHEMA.blob' 
 | thisChar04  | varchar-04  | 123.123    | 127        | 32767       | 2147483647  | 9223372036854775807  | 2.78    | 3.1415161718  | 0          | 2005-10-12  | 1899-12-30 20:00:00.0  | 2005-10-12 19:00:00.0  |
 | thisChar05  | varchar-05  | 123.123    | 127        | 32767       | 2147483647  | 9223372036854775807  | 2.78    | 3.1415161718  | -1         | 2005-10-12  | 1899-12-30 20:00:00.0  | 2005-10-12 19:00:00.0  |
 +-------------+-------------+------------+------------+-------------+-------------+----------------------+---------+---------------+------------+-------------+------------------------+------------------------+
-0: jdbc:luciddb:> select * from ORCL_is_schema."blob";
+0: jdbc:luciddb:> select * from @name_prefix@_is_schema."blob";
 +-----------------------+--------------+
 |       C_BINARY        | C_VARBINARY  |
 +-----------------------+--------------+
@@ -359,9 +359,9 @@ Error: From line 1, column 15 to line 1, column 28: Table 'ORCL_IS_SCHEMA.blob' 
 +-----------------------+--------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- failure
-0: jdbc:luciddb:> import foreign schema "SCHOI"
+0: jdbc:luciddb:> import foreign schema "@SCHEMA@"
 . . . . . . . . > LIMIT to ("types", "nonexistanttable")
-. . . . . . . . > from server ORCL_SERVER
-. . . . . . . . > into ORCL_is_schema;
-Error: One or more tables not found while importing foreign schema "SCHOI":  [nonexistanttable] (state=,code=0)
+. . . . . . . . > from server @SERVER_NAME@
+. . . . . . . . > into @name_prefix@_is_schema;
+Error: One or more tables not found while importing foreign schema "@SCHEMA@":  [nonexistanttable] (state=,code=0)
 0: jdbc:luciddb:> !quit

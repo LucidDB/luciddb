@@ -9,7 +9,7 @@
 0: jdbc:luciddb:> -- standard emp/dept
 0: jdbc:luciddb:> select EMP.EMPNO, EMP.LNAME, EMP.DEPTNO, DEPT.DEPTNO, DEPT.DNAME
 . . . . . . . . > from EMP, DEPT
-. . . . . . . . > where EMP.DEPTNO = DEPT.DEPTNO order by EMPNO;
+. . . . . . . . > where EMP.DEPTNO = DEPT.DEPTNO order by EMP.EMPNO;
 +--------+-----------+---------+---------+--------------+
 | EMPNO  |   LNAME   | DEPTNO  | DEPTNO  |    DNAME     |
 +--------+-----------+---------+---------+--------------+
@@ -28,7 +28,7 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- this one used to fail in calculator due to column mapping stuff
 0: jdbc:luciddb:> select EMP.EMPNO, EMP.DEPTNO, DEPT.DNAME from EMP, DEPT
-. . . . . . . . > where EMP.DEPTNO = DEPT.DEPTNO order by EMPNO;
+. . . . . . . . > where EMP.DEPTNO = DEPT.DEPTNO order by EMP.EMPNO;
 +--------+---------+--------------+
 | EMPNO  | DEPTNO  |    DNAME     |
 +--------+---------+--------------+
@@ -48,7 +48,7 @@
 0: jdbc:luciddb:> -- dept, loc
 0: jdbc:luciddb:> select DEPTNO, DNAME, CITY, LOCATION.LOCID from DEPT, LOCATION
 . . . . . . . . > where DEPT.LOCID=LOCATION.LOCID
-. . . . . . . . > order by DEPTNO, LOCID;
+. . . . . . . . > order by DEPT.DEPTNO, LOCATION.LOCID;
 +---------+--------------+----------------+--------+
 | DEPTNO  |    DNAME     |      CITY      | LOCID  |
 +---------+--------------+----------------+--------+
@@ -63,7 +63,7 @@
 0: jdbc:luciddb:> SELECT EMP.LNAME, DEPT.DNAME, LOCATION.CITY
 . . . . . . . . > from EMP, DEPT, LOCATION
 . . . . . . . . > where EMP.DEPTNO=DEPT.DEPTNO and DEPT.LOCID=LOCATION.LOCID
-. . . . . . . . > order by LNAME;
+. . . . . . . . > order by EMP.LNAME;
 +-----------+--------------+----------------+
 |   LNAME   |    DNAME     |      CITY      |
 +-----------+--------------+----------------+
@@ -82,9 +82,10 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- three way shuffled a bit
 0: jdbc:luciddb:> select CUSTOMERS.CUSTID, CUSTOMERS.FNAME, CUSTOMERS.LNAME, PRODUCTS.NAME, SALES.PRICE
-. . . . . . . . > from CUSTOMERS, SALES, PRODUCTS
+. . . . . . . . > --from CUSTOMERS, SALES, PRODUCTS
+. . . . . . . . > from SALES, CUSTOMERS, PRODUCTS
 . . . . . . . . > where CUSTOMERS.CUSTID=SALES.CUSTID and PRODUCTS.PRODID = SALES.PRODID
-. . . . . . . . > order by CUSTID, NAME, PRICE;
+. . . . . . . . > order by CUSTOMERS.CUSTID, PRODUCTS.NAME, SALES.PRICE;
 +---------+-----------+---------------+---------------+--------+
 | CUSTID  |   FNAME   |     LNAME     |     NAME      | PRICE  |
 +---------+-----------+---------------+---------------+--------+
@@ -1121,10 +1122,11 @@
 +---------+-----------+---------------+---------------+--------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select CUSTOMERS.CUSTID, EMP.LNAME, CUSTOMERS.LNAME, PRODUCTS.NAME, SALES.PRICE
-. . . . . . . . > from CUSTOMERS, SALES, PRODUCTS, EMP
+. . . . . . . . > --from CUSTOMERS, SALES, PRODUCTS, EMP
+. . . . . . . . > from SALES, CUSTOMERS, PRODUCTS, EMP
 . . . . . . . . > where CUSTOMERS.CUSTID=SALES.CUSTID and PRODUCTS.PRODID = SALES.PRODID
 . . . . . . . . > and EMP.EMPNO = SALES.EMPNO
-. . . . . . . . > order by CUSTID, PRICE, NAME;
+. . . . . . . . > order by CUSTOMERS.CUSTID, SALES.PRICE, PRODUCTS.NAME;
 +---------+-----------+---------------+---------------+--------+
 | CUSTID  |   LNAME   |     LNAME     |     NAME      | PRICE  |
 +---------+-----------+---------------+---------------+--------+
@@ -2162,7 +2164,7 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- self join of emp
 0: jdbc:luciddb:> select M.LNAME, R.LNAME, R.EMPNO from EMP M, EMP R
-. . . . . . . . > where M.EMPNO = R.MANAGER order by EMPNO;
+. . . . . . . . > where M.EMPNO = R.MANAGER order by R.EMPNO;
 +----------+-----------+--------+
 |  LNAME   |   LNAME   | EMPNO  |
 +----------+-----------+--------+
@@ -2182,7 +2184,7 @@
 0: jdbc:luciddb:> select EL.CITY, DL.CITY, EMP.LNAME, DEPT.DNAME
 . . . . . . . . > from LOCATION EL, LOCATION DL, EMP, DEPT
 . . . . . . . . > where EL.LOCID = EMP.LOCID and DL.LOCID=DEPT.LOCID
-. . . . . . . . > order by LNAME, CITY, CITY, DNAME;
+. . . . . . . . > order by EMP.LNAME, EL.CITY, DL.CITY, DEPT.DNAME;
 +----------------+----------------+-----------+--------------+
 |      CITY      |      CITY      |   LNAME   |    DNAME     |
 +----------------+----------------+-----------+--------------+
@@ -2246,7 +2248,7 @@
 0: jdbc:luciddb:> -- many to many query
 0: jdbc:luciddb:> select PRODUCTS.NAME, PRODUCTS.PRICE, SALES.PRICE
 . . . . . . . . > from SALES, PRODUCTS where SALES.PRICE=PRODUCTS.PRICE
-. . . . . . . . > order by NAME, PRICE, PRICE;
+. . . . . . . . > order by PRODUCTS.NAME, PRODUCTS.PRICE, PRODUCTS.PRICE;
 +---------------+--------+--------+
 |     NAME      | PRICE  | PRICE  |
 +---------------+--------+--------+
@@ -2274,7 +2276,7 @@
 . . . . . . . . > WHERE M.LNAME = F.LNAME
 . . . . . . . . > AND M.SEX = 'M'
 . . . . . . . . > AND F.SEX = 'F'
-. . . . . . . . > order by FNAME, FNAME, LNAME;
+. . . . . . . . > order by M.FNAME, F.FNAME, M.LNAME;
 +-----------+-----------+---------------+
 |   FNAME   |   FNAME   |     LNAME     |
 +-----------+-----------+---------------+

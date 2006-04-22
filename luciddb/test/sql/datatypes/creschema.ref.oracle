@@ -1,51 +1,51 @@
-0: jdbc:luciddb:> create foreign data wrapper ORCL_JDBC
-. . . . . . . . > library '/home/elin/open/luciddb/plugin/FarragoMedJdbc3p.jar'
+0: jdbc:luciddb:> create foreign data wrapper @DATA_WRAPPER_NAME@
+. . . . . . . . > library '@DATA_LIBRARY@'
 . . . . . . . . > language java;
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create server ORCL_SERVER
-. . . . . . . . > foreign data wrapper ORCL_JDBC
+0: jdbc:luciddb:> create server @SERVER_NAME@
+. . . . . . . . > foreign data wrapper @DATA_WRAPPER_NAME@
 . . . . . . . . > options(
-. . . . . . . . >     url 'jdbc:oracle:thin:@akela.lucidera.com:1521:XE',
-. . . . . . . . >     user_name 'schoi',
-. . . . . . . . >     password 'schoi',
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     schema_name '@SCHEMA_NAME@',
+. . . . . . . . >     qualifying_catalog_name '@CATALOG_NAME@',
+. . . . . . . . >     table_types '@TABLE_TYPES@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@'
 . . . . . . . . > 
-. . . . . . . . > 
-. . . . . . . . > 
-. . . . . . . . >     driver_class 'oracle.jdbc.driver.OracleDriver'
-. . . . . . . . > 
-. . . . . . . . > 
-. . . . . . . . > 
-. . . . . . . . > 
-. . . . . . . . > 
-. . . . . . . . > 
-. . . . . . . . > 
-. . . . . . . . > 
-. . . . . . . . > 
-. . . . . . . . > 
-. . . . . . . . > 
+. . . . . . . . >     directory '@DIRECTORY@',
+. . . . . . . . >     file_extension '@FILE_EXTENSION@',
+. . . . . . . . >     ctrl_file_extension '@CTRL_FILE_EXT@',
+. . . . . . . . >     field_delimiter '@FIELD_DELIM@',
+. . . . . . . . >     line_delimiter '@LINE_DELIM@',
+. . . . . . . . >     quote_char '@QUOTE_CHAR@',
+. . . . . . . . >     escape_char '@ESCAPE_CHAR@',
+. . . . . . . . >     with_header '@WITH_HEADER@',
+. . . . . . . . >     num_rows_scan '@NUM_ROWS_SCAN@',
+. . . . . . . . >     log_directory '@LOG_DIRECTORY@'
 . . . . . . . . > );
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create schema ORCL_ft_schema;
-0: jdbc:luciddb:> create schema ORCL_is_schema;
+0: jdbc:luciddb:> create schema @name_prefix@_ft_schema;
+0: jdbc:luciddb:> create schema @name_prefix@_is_schema;
 0: jdbc:luciddb:> create schema s;
 0: jdbc:luciddb:> set schema 's';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> select "name" from sys_fem.med."DataWrapper" where "name"='ORCL_JDBC';
+0: jdbc:luciddb:> select "name" from sys_fem.med."DataWrapper" where "name"='@DATA_WRAPPER_NAME@';
 +------------+
 |    name    |
 +------------+
-| ORCL_JDBC  |
+| @DATA_WRAPPER_NAME@  |
 +------------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> select "name" from sys_fem.med."DataServer" where "name"='ORCL_SERVER';
+0: jdbc:luciddb:> select "name" from sys_fem.med."DataServer" where "name"='@SERVER_NAME@';
 +--------------+
 |     name     |
 +--------------+
-| ORCL_SERVER  |
+| @SERVER_NAME@  |
 +--------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Direct table access
-0: jdbc:luciddb:> select * from ORCL_SERVER.SCHOI."types" order by 1;
+0: jdbc:luciddb:> select * from @SERVER_NAME@.@SCHEMA@."types" order by 1;
 +-------------+-------------+------------+------------+-------------+-------------+----------------------+---------+---------------+------------+-------------+------------------------+------------------------+
 |   C_CHAR    |  C_VARCHAR  | C_DECIMAL  | C_TINYINT  | C_SMALLINT  |  C_INTEGER  |       C_BIGINT       | C_REAL  |   C_DOUBLE    | C_BOOLEAN  |   C_DATE    |         C_TIME         |      C_TIMESTAMP       |
 +-------------+-------------+------------+------------+-------------+-------------+----------------------+---------+---------------+------------+-------------+------------------------+------------------------+
@@ -55,7 +55,7 @@
 | thisChar04  | varchar-04  | 123.123    | 127        | 32767       | 2147483647  | 9223372036854775807  | 2.78    | 3.1415161718  | 0          | 2005-10-12  | 1899-12-30 20:00:00.0  | 2005-10-12 19:00:00.0  |
 | thisChar05  | varchar-05  | 123.123    | 127        | 32767       | 2147483647  | 9223372036854775807  | 2.78    | 3.1415161718  | -1         | 2005-10-12  | 1899-12-30 20:00:00.0  | 2005-10-12 19:00:00.0  |
 +-------------+-------------+------------+------------+-------------+-------------+----------------------+---------+---------------+------------+-------------+------------------------+------------------------+
-0: jdbc:luciddb:> select * from ORCL_SERVER.SCHOI."blob" order by 1;
+0: jdbc:luciddb:> select * from @SERVER_NAME@.@SCHEMA@."blob" order by 1;
 +-----------+--------------+
 | C_BINARY  | C_VARBINARY  |
 +-----------+--------------+
@@ -87,13 +87,13 @@
 . . . . . . . . > c_time time,
 . . . . . . . . > c_timestamp timestamp
 . . . . . . . . > )
-. . . . . . . . > server sys_column_store_data_server;
+. . . . . . . . > server @DATA_STORE@;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create table blobtypes(
 . . . . . . . . > c_binary binary(10),
 . . . . . . . . > c_varbinary varbinary(10)
 . . . . . . . . > )
-. . . . . . . . > server sys_column_store_data_server;
+. . . . . . . . > server @DATA_STORE@;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

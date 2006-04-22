@@ -1,0 +1,202 @@
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- functions, miscellaneous
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select EMP.LNAME, DEPT.DNAME
+. . . . . . . . > , EMP.EMPNO
+. . . . . . . . > from EMP, DEPT
+. . . . . . . . > where EMP.DEPTNO + 10 = DEPT.DEPTNO - 10
+. . . . . . . . > order by EMP.EMPNO;
++----------+--------------+--------+
+|  LNAME   |    DNAME     | EMPNO  |
++----------+--------------+--------+
+| Bush     | Support      | 100    |
+| Andrews  | Support      | 102    |
+| Webber   | Sales        | 103    |
+| Fratz    | Development  | 104    |
+| Guy      | Support      | 105    |
+| Jones    | Support      | 110    |
++----------+--------------+--------+
+0: jdbc:luciddb:> --order by EMPNO;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --select EMP.LNAME, DEPT.DNAME
+0: jdbc:luciddb:> --from EMP, DEPT
+0: jdbc:luciddb:> --where substring(EMP.LNAME,2,1)=substring(DEPT.DNAME,2,1)
+0: jdbc:luciddb:> --order by EMP.EMPNO, DEPT.DNAME;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- one side functions only
+0: jdbc:luciddb:> select EMP.LNAME, DEPT.DNAME
+. . . . . . . . > , EMP.EMPNO
+. . . . . . . . > from EMP, DEPT
+. . . . . . . . > where EMP.EMPNO * 2 / 5.0 > DEPT.DEPTNO
+. . . . . . . . > order by EMP.EMPNO, DEPT.DNAME;
++-----------+--------------+--------+
+|   LNAME   |    DNAME     | EMPNO  |
++-----------+--------------+--------+
+| Bush      | Accounting   | 100    |
+| Bush      | Development  | 100    |
+| Bush      | Marketing    | 100    |
+| Brown     | Accounting   | 101    |
+| Brown     | Development  | 101    |
+| Brown     | Marketing    | 101    |
+| Brown     | Sales        | 101    |
+| Andrews   | Accounting   | 102    |
+| Andrews   | Development  | 102    |
+| Andrews   | Marketing    | 102    |
+| Andrews   | Sales        | 102    |
+| Webber    | Accounting   | 103    |
+| Webber    | Development  | 103    |
+| Webber    | Marketing    | 103    |
+| Webber    | Sales        | 103    |
+| Fratz     | Accounting   | 104    |
+| Fratz     | Development  | 104    |
+| Fratz     | Marketing    | 104    |
+| Fratz     | Sales        | 104    |
+| Guy       | Accounting   | 105    |
+| Guy       | Development  | 105    |
+| Guy       | Marketing    | 105    |
+| Guy       | Sales        | 105    |
+| Roy       | Accounting   | 106    |
+| Roy       | Development  | 106    |
+| Roy       | Marketing    | 106    |
+| Roy       | Sales        | 106    |
+| Williams  | Accounting   | 107    |
+| Williams  | Development  | 107    |
+| Williams  | Marketing    | 107    |
+| Williams  | Sales        | 107    |
+| Reynolds  | Accounting   | 108    |
+| Reynolds  | Development  | 108    |
+| Reynolds  | Marketing    | 108    |
+| Reynolds  | Sales        | 108    |
+| Nife      | Accounting   | 109    |
+| Nife      | Development  | 109    |
+| Nife      | Marketing    | 109    |
+| Nife      | Sales        | 109    |
+| Jones     | Accounting   | 110    |
+| Jones     | Development  | 110    |
+| Jones     | Marketing    | 110    |
+| Jones     | Sales        | 110    |
++-----------+--------------+--------+
+0: jdbc:luciddb:> --order by EMPNO, DNAME;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- full cartesian product
+0: jdbc:luciddb:> select EMP.LNAME, DEPT.DNAME 
+. . . . . . . . > , EMP.EMPNO, DEPT.DEPTNO
+. . . . . . . . > from EMP,DEPT
+. . . . . . . . > order by EMP.EMPNO, DEPT.DEPTNO;
++-----------+--------------+--------+---------+
+|   LNAME   |    DNAME     | EMPNO  | DEPTNO  |
++-----------+--------------+--------+---------+
+| Bush      | Accounting   | 100    | 10      |
+| Bush      | Marketing    | 100    | 20      |
+| Bush      | Development  | 100    | 30      |
+| Bush      | Sales        | 100    | 40      |
+| Bush      | Support      | 100    | 50      |
+| Brown     | Accounting   | 101    | 10      |
+| Brown     | Marketing    | 101    | 20      |
+| Brown     | Development  | 101    | 30      |
+| Brown     | Sales        | 101    | 40      |
+| Brown     | Support      | 101    | 50      |
+| Andrews   | Accounting   | 102    | 10      |
+| Andrews   | Marketing    | 102    | 20      |
+| Andrews   | Development  | 102    | 30      |
+| Andrews   | Sales        | 102    | 40      |
+| Andrews   | Support      | 102    | 50      |
+| Webber    | Accounting   | 103    | 10      |
+| Webber    | Marketing    | 103    | 20      |
+| Webber    | Development  | 103    | 30      |
+| Webber    | Sales        | 103    | 40      |
+| Webber    | Support      | 103    | 50      |
+| Fratz     | Accounting   | 104    | 10      |
+| Fratz     | Marketing    | 104    | 20      |
+| Fratz     | Development  | 104    | 30      |
+| Fratz     | Sales        | 104    | 40      |
+| Fratz     | Support      | 104    | 50      |
+| Guy       | Accounting   | 105    | 10      |
+| Guy       | Marketing    | 105    | 20      |
+| Guy       | Development  | 105    | 30      |
+| Guy       | Sales        | 105    | 40      |
+| Guy       | Support      | 105    | 50      |
+| Roy       | Accounting   | 106    | 10      |
+| Roy       | Marketing    | 106    | 20      |
+| Roy       | Development  | 106    | 30      |
+| Roy       | Sales        | 106    | 40      |
+| Roy       | Support      | 106    | 50      |
+| Williams  | Accounting   | 107    | 10      |
+| Williams  | Marketing    | 107    | 20      |
+| Williams  | Development  | 107    | 30      |
+| Williams  | Sales        | 107    | 40      |
+| Williams  | Support      | 107    | 50      |
+| Reynolds  | Accounting   | 108    | 10      |
+| Reynolds  | Marketing    | 108    | 20      |
+| Reynolds  | Development  | 108    | 30      |
+| Reynolds  | Sales        | 108    | 40      |
+| Reynolds  | Support      | 108    | 50      |
+| Nife      | Accounting   | 109    | 10      |
+| Nife      | Marketing    | 109    | 20      |
+| Nife      | Development  | 109    | 30      |
+| Nife      | Sales        | 109    | 40      |
+| Nife      | Support      | 109    | 50      |
+| Jones     | Accounting   | 110    | 10      |
+| Jones     | Marketing    | 110    | 20      |
+| Jones     | Development  | 110    | 30      |
+| Jones     | Sales        | 110    | 40      |
+| Jones     | Support      | 110    | 50      |
++-----------+--------------+--------+---------+
+0: jdbc:luciddb:> --order by EMPNO, DEPTNO;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select DEPT.DNAME, LOCATION.CITY 
+. . . . . . . . > , DEPT.DEPTNO, LOCATION.LOCID
+. . . . . . . . > from DEPT, LOCATION
+. . . . . . . . > order by DEPT.DEPTNO, LOCATION.LOCID;
++--------------+----------------+---------+--------+
+|    DNAME     |      CITY      | DEPTNO  | LOCID  |
++--------------+----------------+---------+--------+
+| Accounting   | San Mateo      | 10      | HQ     |
+| Accounting   | Menlo Park     | 10      | MP     |
+| Accounting   | San Francisco  | 10      | SF     |
+| Accounting   | Los Angeles    | 10      | SJ     |
+| Marketing    | San Mateo      | 20      | HQ     |
+| Marketing    | Menlo Park     | 20      | MP     |
+| Marketing    | San Francisco  | 20      | SF     |
+| Marketing    | Los Angeles    | 20      | SJ     |
+| Development  | San Mateo      | 30      | HQ     |
+| Development  | Menlo Park     | 30      | MP     |
+| Development  | San Francisco  | 30      | SF     |
+| Development  | Los Angeles    | 30      | SJ     |
+| Sales        | San Mateo      | 40      | HQ     |
+| Sales        | Menlo Park     | 40      | MP     |
+| Sales        | San Francisco  | 40      | SF     |
+| Sales        | Los Angeles    | 40      | SJ     |
+| Support      | San Mateo      | 50      | HQ     |
+| Support      | Menlo Park     | 50      | MP     |
+| Support      | San Francisco  | 50      | SF     |
+| Support      | Los Angeles    | 50      | SJ     |
++--------------+----------------+---------+--------+
+0: jdbc:luciddb:> --order by DEPTNO, LOCID;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Equjoin Condition plus non-equjoin condition on the same tables with group by ( Bugid 2796 )
+0: jdbc:luciddb:> --select P.DEPTNO, COUNT(*) from 
+0: jdbc:luciddb:> --(select DEPTNO, AVG(EMPNO) AVGAMT from
+0: jdbc:luciddb:> --EMP group by DEPTNO) A,
+0: jdbc:luciddb:> --EMP P
+0: jdbc:luciddb:> --where P.DEPTNO = A.DEPTNO
+0: jdbc:luciddb:> --and EMPNO < AVGAMT
+0: jdbc:luciddb:> --group by P.DEPTNO 
+0: jdbc:luciddb:> --order by P.DEPTNO;
+0: jdbc:luciddb:>    
+0: jdbc:luciddb:> -- Equjoin Condition plus non-equjoin condition on the same tables with group by and non-staged Item in subquery
+0: jdbc:luciddb:> --select P.DEPTNO, COUNT(*) from
+0: jdbc:luciddb:> --(select DEPTNO, INC() , AVG(EMPNO) AVGAMT from
+0: jdbc:luciddb:> --EMP group by DEPTNO) A,
+0: jdbc:luciddb:> --EMP P
+0: jdbc:luciddb:> --where P.DEPTNO = A.DEPTNO
+0: jdbc:luciddb:> --and EMPNO < AVGAMT
+0: jdbc:luciddb:> --group by P.DEPTNO
+0: jdbc:luciddb:> --order by P.DEPTNO;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

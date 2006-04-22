@@ -29,7 +29,7 @@ order by 1,2,3;
 
 select L.LNAME, R.LNAME, L.COMMISSION
 from EMP L, EMP R
-where NOT L.COMMISSION = R.COMMISSION
+where NOT (L.COMMISSION = R.COMMISSION)
 order by 1,2,3;
 
 select L.LNAME, R.LNAME, L.COMMISSION
@@ -42,10 +42,10 @@ from EMP L, EMP R
 where L.COMMISSION < R.COMMISSION
 order by 1,2,3;
 
---select L.LNAME, R.LNAME, L.COMMISSION
---from EMP L, EMP R
---where L.COMMISSION >= R.COMMISSION
---order by 1,2,3;
+select L.LNAME, R.LNAME, L.COMMISSION
+from EMP L, EMP R
+where L.COMMISSION >= R.COMMISSION
+order by 1,2,3;
 
 -- count (should not count null rows, except for count(*))
 

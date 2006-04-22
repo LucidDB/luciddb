@@ -1,56 +1,56 @@
-0: jdbc:luciddb:> create foreign data wrapper FF_JDBC
-. . . . . . . . > library 'class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper'
+0: jdbc:luciddb:> create foreign data wrapper @DATA_WRAPPER_NAME@
+. . . . . . . . > library '@DATA_LIBRARY@'
 . . . . . . . . > language java;
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create server FF_SERVER
-. . . . . . . . > foreign data wrapper FF_JDBC
+0: jdbc:luciddb:> create server @SERVER_NAME@
+. . . . . . . . > foreign data wrapper @DATA_WRAPPER_NAME@
 . . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     schema_name '@SCHEMA_NAME@',
+. . . . . . . . >     qualifying_catalog_name '@CATALOG_NAME@',
+. . . . . . . . >     table_types '@TABLE_TYPES@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@'
 . . . . . . . . > 
-. . . . . . . . > 
-. . . . . . . . > 
-. . . . . . . . > 
-. . . . . . . . > 
-. . . . . . . . > 
-. . . . . . . . > 
-. . . . . . . . > 
-. . . . . . . . >     directory '/home/elin/open/luciddb/test/sql/datatypes',
-. . . . . . . . >     file_extension '.csv',
-. . . . . . . . >     ctrl_file_extension '.bcp',
-. . . . . . . . >     field_delimiter ',',
-. . . . . . . . >     line_delimiter '\n',
-. . . . . . . . >     quote_char '"',
-. . . . . . . . >     escape_char '',
-. . . . . . . . >     with_header 'yes',
-. . . . . . . . >     num_rows_scan '1',
-. . . . . . . . >     log_directory '/home/elin/open/luciddb/test/sql/datatypes'
+. . . . . . . . >     directory '@DIRECTORY@',
+. . . . . . . . >     file_extension '@FILE_EXTENSION@',
+. . . . . . . . >     ctrl_file_extension '@CTRL_FILE_EXT@',
+. . . . . . . . >     field_delimiter '@FIELD_DELIM@',
+. . . . . . . . >     line_delimiter '@LINE_DELIM@',
+. . . . . . . . >     quote_char '@QUOTE_CHAR@',
+. . . . . . . . >     escape_char '@ESCAPE_CHAR@',
+. . . . . . . . >     with_header '@WITH_HEADER@',
+. . . . . . . . >     num_rows_scan '@NUM_ROWS_SCAN@',
+. . . . . . . . >     log_directory '@LOG_DIRECTORY@'
 . . . . . . . . > );
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create schema FF_ft_schema;
-0: jdbc:luciddb:> create schema FF_is_schema;
+0: jdbc:luciddb:> create schema @name_prefix@_ft_schema;
+0: jdbc:luciddb:> create schema @name_prefix@_is_schema;
 0: jdbc:luciddb:> create schema s;
 0: jdbc:luciddb:> set schema 's';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> select "name" from sys_fem.med."DataWrapper" where "name"='FF_JDBC';
+0: jdbc:luciddb:> select "name" from sys_fem.med."DataWrapper" where "name"='@DATA_WRAPPER_NAME@';
 +----------+
 |   name   |
 +----------+
-| FF_JDBC  |
+| @DATA_WRAPPER_NAME@  |
 +----------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> select "name" from sys_fem.med."DataServer" where "name"='FF_SERVER';
+0: jdbc:luciddb:> select "name" from sys_fem.med."DataServer" where "name"='@SERVER_NAME@';
 +------------+
 |    name    |
 +------------+
-| FF_SERVER  |
+| @SERVER_NAME@  |
 +------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Direct table access
-0: jdbc:luciddb:> select * from FF_SERVER.BCP."types" order by 1;
+0: jdbc:luciddb:> select * from @SERVER_NAME@.@SCHEMA@."types" order by 1;
 Error: FennelResource.en_US.noRowsReturned(/home/elin/open/luciddb/test/sql/datatypes/types.csv, could not calculate results for the following row:
 [ 'thisChar05', 'varchar-05', '123.123', '127', '32767', '2147483647', '9223372036854775807', '2.78', '3.1415161718', 'TRUE', '2005-10-12', '12:00:00', '2005-10-12 12:00:00' ]
 Messages:
 [0]:PC=14 Code=22007 ) (state=,code=0)
-0: jdbc:luciddb:> select * from FF_SERVER.BCP."blob" order by 1;
+0: jdbc:luciddb:> select * from @SERVER_NAME@.@SCHEMA@."blob" order by 1;
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARCHAR(255)' to 'BINARY(21)' (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create table types (
@@ -68,13 +68,13 @@ Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast fro
 . . . . . . . . > c_time time,
 . . . . . . . . > c_timestamp timestamp
 . . . . . . . . > )
-. . . . . . . . > server sys_column_store_data_server;
+. . . . . . . . > server @DATA_STORE@;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create table blobtypes(
 . . . . . . . . > c_binary binary(10),
 . . . . . . . . > c_varbinary varbinary(10)
 . . . . . . . . > )
-. . . . . . . . > server sys_column_store_data_server;
+. . . . . . . . > server @DATA_STORE@;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

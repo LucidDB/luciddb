@@ -5,10 +5,11 @@
 set schema 's';
 
 --alter session set optimizerjoinfilterthreshold=2;
-!outputformat csv
+!set outputformat csv
 
 -- Standard join filter case
-explain plan for select lname,dname from emp,dept
+explain plan for select lname,dname
+from emp,dept
 where emp.deptno=dept.deptno and dept.dname='Marketing';
 
 explain plan for select lname,dname from emp,dept
@@ -19,6 +20,11 @@ order by 1;
 --explain plan for select emp.lname, emp.fname, dname from emp,dept
 --where emp.deptno=dept.deptno and dept.dname='Accounting' and dept.locid in ('HQ','SF')
 --order by 1,2;
+explain plan for select emp.lname, emp.fname, dname
+from emp, dept
+where emp.deptno=dept.deptno and dept.dname='Accounting'
+  and (dept.locid='HQ' or dept.locid='SF')
+order by 1,2;
 
 -- don't reference dept in the select list, should drop out
 -- of select list
@@ -32,7 +38,8 @@ order by 1;
 
 -- multiple dimension tables, filters on both
 explain plan for select customers.lname, products.name, sales.price
-from sales, products, customers
+--from sales, products, customers
+from sales, customers, products
 where customers.custid=sales.custid
 and sales.prodid = products.prodid
 and customers.lname < 'C'
@@ -41,7 +48,8 @@ order by 1,2,3;
 
 -- multiple dimension tables but filter on only one
 explain plan for select customers.lname, products.name, sales.price
-from sales, products, customers
+--from sales, products, customers
+from sales, customers, products
 where customers.custid=sales.custid
 and sales.prodid = products.prodid
 and customers.lname = 'Andrews'
@@ -50,7 +58,8 @@ order by 1,2,3;
 
 -- multiple dimension tables, multiple filters
 explain plan for select customers.lname, products.name, sales.price
-from sales, products, customers
+--from sales, products, customers
+from sales, customers, products
 where customers.custid=sales.custid
 and sales.prodid = products.prodid
 and customers.lname < 'C'
@@ -58,26 +67,30 @@ and customers.fname > 'S'
 order by 1,2,3;
 
 explain plan for select customers.lname, products.name, sales.price
-from sales, products, customers
+--from sales, products, customers
+from sales, customers, products
 where customers.custid=sales.custid
 and sales.prodid = products.prodid
 and customers.lname < 'C'
 and customers.fname > 'S'
 and sales.prodid < 10009
 --and products.name IN ('Soap', 'Juice', 'Soup', 'Microwave', 'Soda')
+and (products.name='Soap' or products.name='Juice' or products.name='Soup' or products.name='Microwave' or products.name='Soda')
 and products.price < 5.00
 order by 1,2,3;
 
 -- dimension tables not referenced in select list, should drop
 -- out of join
 explain plan for select sum(sales.price)
-from sales, products, customers
+--from sales, products, customers
+from sales, customers, products
 where customers.custid=sales.custid
 and sales.prodid = products.prodid
 and customers.lname < 'C'
 and customers.fname > 'S'
 and sales.prodid < 10009
 --and products.name IN ('Soap', 'Juice', 'Soup', 'Microwave', 'Soda')
+and (products.name='Soap' or products.name='Juice' or products.name='Soup' or products.name='Microwave' or products.name='Soda')
 and products.price < 5.00;
 
 --explain plan for select sum(sales.price)
@@ -86,5 +99,4 @@ and products.price < 5.00;
 --and prodid in (select prodid from products where name
 --IN ('Soap', 'Juice', 'Soup', 'Microwave', 'Soda'));
 
-
-!outputformat tables
+!set outputformat table
