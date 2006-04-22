@@ -1,6 +1,6 @@
 # csvjdbc properties
 
-name_prefix=csv
+name_prefix=CSV
 
 #############################
 # row store or column store #
@@ -13,19 +13,21 @@ DATA_STORE=sys_column_store_data_server
 # foreign data wrapper #
 ########################
 
-DATA_WRAPPER_NAME=@name_prefix@_jdbc
+DATA_WRAPPER_NAME=@name_prefix@_JDBC
 DATA_LIBRARY=@open.dir@/luciddb/plugin/FarragoMedJdbc3p.jar
 
 ##################
 # foreign server #
 ##################
 
-SERVER_NAME=@name_prefix@_server
+SERVER_NAME=@name_prefix@_SERVER
 
 # csvjdbc options
 DRIVER_CLASS=org.relique.jdbc.csv.CsvDriver
-URL=jdbc:relique:csv:@datatypes.dir@
+URL=jdbc:relique:csv:@open.dir@/luciddb/test/sql/datatypes
 SCHEMA_NAME=TESTDATA
+
+SCHEMA=TESTDATA
 
 #########################
 # foreign table options #

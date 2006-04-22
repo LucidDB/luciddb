@@ -1,4 +1,4 @@
-create foreign table @name_prefix@_schema.types(
+create foreign table @name_prefix@_ft_schema.types_explicit(
 c_char char(10),
 c_varchar varchar(10),
 c_decimal decimal(10,3),
@@ -15,17 +15,41 @@ c_timestamp timestamp
 )
 server @SERVER_NAME@
 options (
-SCHEMA_NAME '@SCHEMA@',
-@TABLE_NAME@ 'types'
+SCHEMA_NAME '@SCHEMA@'
+, @TABLE_NAME@ 'types'
 );
 
+select * from @name_prefix@_ft_schema.types_explicit;
 
-create foreign table @name_prefix@_schema.blobtypes(
+create foreign table @name_prefix@_ft_schema.types_nonexplicit
+server @SERVER_NAME@
+options (
+SCHEMA_NAME '@SCHEMA@'
+, @TABLE_NAME@ 'types'
+);
+
+select * from @name_prefix@_ft_schema.types_nonexplicit;
+
+create foreign table @name_prefix@_ft_schema.blobtypes_explicit(
 c_binary binary(10),
 c_varbinary varbinary(10)
 )
 server @SERVER_NAME@
 options (
-SCHEMA_NAME '@SCHEMA@',
-@TABLE_NAME@ 'blob'
+SCHEMA_NAME '@SCHEMA@'
+, @TABLE_NAME@ 'blob'
 );
+
+select * from @name_prefix@_ft_schema.blobtypes_explicit;
+
+create foreign table @name_prefix@_ft_schema.blobtypes_nonexplicit
+server @SERVER_NAME@
+options (
+SCHEMA_NAME '@SCHEMA@'
+, @TABLE_NAME@ 'blob'
+);
+
+select * from @name_prefix@_ft_schema.blobtypes_nonexplicit;
+
+-- get table name, column name, data type info for imported foreign tables
+!metadata getColumns LOCALDB @name_prefix@_FT_SCHEMA % null

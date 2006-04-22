@@ -524,5 +524,44 @@
 | 0  | 1   | 2   | 3   |
 +----+-----+-----+-----+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> ------------
+0: jdbc:farrago:> -- Misc Bugs
+0: jdbc:farrago:> ------------
+0: jdbc:farrago:> -- LDB-65 -- need to handle self-joins
+0: jdbc:farrago:> -- no need for any actual data, as the bug appears during optimization time
+0: jdbc:farrago:> create table EMP (
+. . . . . . . . >   EMPNO numeric(5,0),
+. . . . . . . . >   FNAME varchar(20),
+. . . . . . . . >   LNAME varchar(20),
+. . . . . . . . >   SEX char(1),
+. . . . . . . . >   DEPTNO integer,
+. . . . . . . . >   MANAGER numeric(5,0),
+. . . . . . . . >   LOCID CHAR(2),
+. . . . . . . . >   SAL integer,
+. . . . . . . . >   COMMISSION integer,
+. . . . . . . . >   HOBBY varchar(20)
+. . . . . . . . > );
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table DEPT (
+. . . . . . . . >   DEPTNO integer,
+. . . . . . . . >   DNAME varchar(20),
+. . . . . . . . >   LOCID CHAR(2)
+. . . . . . . . > );
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table LOCATION(
+. . . . . . . . >   LOCID char(2),
+. . . . . . . . >   STREET varchar(50),
+. . . . . . . . >   CITY varchar(20),
+. . . . . . . . >   STATE char(2),
+. . . . . . . . >   ZIP numeric(5,0)
+. . . . . . . . > );
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select EMP.LNAME, DEPT.DNAME
+. . . . . . . . >     from EMP, DEPT, LOCATION EL, LOCATION DL
+. . . . . . . . >     where EL.LOCID = EMP.LOCID and DL.LOCID=DEPT.LOCID;
++--------+--------+
+| LNAME  | DNAME  |
++--------+--------+
++--------+--------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

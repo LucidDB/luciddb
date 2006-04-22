@@ -11,14 +11,22 @@
       </test>
 
       <test name="importschema" requiresRun="creschema">
+        <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${foreign.db}/importschema.sql"/>
+      </test>
+
+      <test name="foreigntable" requiresRun="creschema">
         <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${foreign.db}/foreigntabl.sql"/>
       </test>
 
-      <test name="tableload" requiresRun="importschema">
+      <test name="tableload" requiresRun="creschema">
         <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${foreign.db}/tblload.sql"/>
       </test>
 
-      <test name="types">
+      <test name="views" requiresRun="creschema">
+        <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${foreign.db}/createviews.sql"/>
+      </test>
+
+      <test name="metadata">
         <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${foreign.db}/metadatatypes.sql"/>
       </test>
 

@@ -1,0 +1,31 @@
+<project name="bh" default="datatypes-csvjdbc">
+  <target name="datatypes-csvjdbc">
+    <test-suite name="datatypes-csvjdbc">
+
+      <init-hook>
+        <ant target="restoreCatalog"/>
+      </init-hook>
+
+      <test name="creschema">
+        <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${foreign.db}/creschema.sql"/>
+      </test>
+
+      <test name="foreigntable" requiresRun="creschema">
+        <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${foreign.db}/foreigntabl.sql"/>
+      </test>
+
+      <test name="tableload" requiresRun="creschema">
+        <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${foreign.db}/tblload.sql"/>
+      </test>
+
+      <test name="views" requiresRun="creschema">
+        <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${foreign.db}/createviews.sql"/>
+      </test>
+
+      <test name="metadata">
+        <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${foreign.db}/metadatatypes.sql"/>
+      </test>
+
+    </test-suite>
+  </target>
+</project>

@@ -1,0 +1,5 @@
+"Id"	"Name"	"ParentRoleId"	"RollupDescription"	"OpportunityAccessForAccountOwn"	"CaseAccessForAccountOwner"	"ForecastUserId"	"LastModifiedDate"	"LastModifiedById"	"SystemModstamp"
+"00E30000000i8gOEAQ"	"VP Engineering"	"00E30000000i4j4EAA"		"Read"	"Edit"		"2005-11-25T07:12:45.000Z"	"00530000000hPnYAAU"	"2005-11-25T07:12:45.000Z"
+"00E30000000iNgYEAU"	"VP Products"	"00E30000000i4j4EAA"	"VP Products & Services"	"Read"	"Edit"		"2005-12-20T23:50:06.000Z"	"00530000000hPnYAAU"	"2005-12-20T23:50:06.000Z"
+"00E30000000iNgTEAU"	"VP Marketing"	"00E30000000i4j4EAA"	"VP Marketing"	"Read"	"Edit"		"2005-12-20T23:49:05.000Z"	"00530000000hPnYAAU"	"2005-12-20T23:49:05.000Z"
+"00E30000000i4j4EAA"	"CEO"			"Read"	"Edit"		"2005-11-17T02:03:52.000Z"	"00530000000hPnYAAU"	"2005-11-21T22:29:25.000Z"

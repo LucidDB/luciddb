@@ -1,0 +1,34 @@
+6.0
+32
+1	SQLVARCHAR	0	25	"\t"	1	Id
+2	SQLVARCHAR	0	25	"\t"	2	AccountId
+3	SQLVARCHAR	0	5	"\t"	3	IsPrivate
+4	SQLVARCHAR	0	1024	"\t"	4	Name
+5	SQLVARCHAR	0	1024	"\t"	5	Description
+6	SQLVARCHAR	0	512	"\t"	6	StageName
+7	SQLFLT8	0	25	"\t"	7	Amount
+8	SQLFLT8	0	8	"\t"	8	Probability
+9	SQLFLT8	0	25	"\t"	9	ExpectedRevenue
+10	SQLFLT8	0	8	"\t"	10	TotalOpportunityQuantity
+11	SQLDATE	0	10	"\t"	11	CloseDate
+12	SQLVARCHAR	0	512	"\t"	12	Type
+13	SQLVARCHAR	0	1024	"\t"	13	NextStep
+14	SQLVARCHAR	0	512	"\t"	14	LeadSource
+15	SQLVARCHAR	0	5	"\t"	15	IsClosed
+16	SQLVARCHAR	0	5	"\t"	16	IsWon
+17	SQLVARCHAR	0	512	"\t"	17	ForecastCategory
+18	SQLVARCHAR	0	25	"\t"	18	CampaignId
+19	SQLVARCHAR	0	5	"\t"	19	HasOpportunityLineItem
+20	SQLVARCHAR	0	25	"\t"	20	PricebookId
+21	SQLVARCHAR	0	25	"\t"	21	Pricebook2Id
+22	SQLVARCHAR	0	25	"\t"	22	OwnerId
+23	SQLVARCHAR	0	24	"\t"	23	CreatedDate
+24	SQLVARCHAR	0	25	"\t"	24	CreatedById
+25	SQLVARCHAR	0	24	"\t"	25	LastModifiedDate
+26	SQLVARCHAR	0	25	"\t"	26	LastModifiedById
+27	SQLVARCHAR	0	24	"\t"	27	SystemModstamp
+28	SQLVARCHAR	0	1024	"\t"	28	OrderNumber__c
+29	SQLVARCHAR	0	512	"\t"	29	DeliveryInstallationStatus__c
+30	SQLVARCHAR	0	1024	"\t"	30	TrackingNumber__c
+31	SQLVARCHAR	0	1024	"\t"	31	MainCompetitors__c
+32	SQLVARCHAR	0	1024	"\r\n"	32	CurrentGenerators__c

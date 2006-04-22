@@ -46,20 +46,12 @@
 +--------+-------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select LNAME, COMMISSION from EMP where NOT (COMMISSION=10) order by 1,2;
-+-----------+-------------+
-|   LNAME   | COMMISSION  |
-+-----------+-------------+
-| Andrews   |             |
-| Brown     |             |
-| Bush      |             |
-| Fratz     |             |
-| Guy       |             |
-| Jones     |             |
-| Nife      | 5           |
-| Reynolds  |             |
-| Roy       | 7           |
-| Webber    |             |
-+-----------+-------------+
++--------+-------------+
+| LNAME  | COMMISSION  |
++--------+-------------+
+| Nife   | 5           |
+| Roy    | 7           |
++--------+-------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select LNAME, COMMISSION from EMP where COMMISSION < 10 order by 1,2;
 +--------+-------------+
@@ -78,31 +70,74 @@
 +-----------+-------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- join on nulls
-0: jdbc:luciddb:> -- bitmap indexes not supported yet for joins, extremely slow
-0: jdbc:luciddb:> --select L.LNAME, R.LNAME, L.COMMISSION
-0: jdbc:luciddb:> --from EMP L, EMP R
-0: jdbc:luciddb:> --where L.COMMISSION = R.COMMISSION
-0: jdbc:luciddb:> --order by 1,2,3;
+0: jdbc:luciddb:> select L.LNAME, R.LNAME, L.COMMISSION
+. . . . . . . . > from EMP L, EMP R
+. . . . . . . . > where L.COMMISSION = R.COMMISSION
+. . . . . . . . > order by 1,2,3;
++-----------+-----------+-------------+
+|   LNAME   |   LNAME   | COMMISSION  |
++-----------+-----------+-------------+
+| Nife      | Nife      | 5           |
+| Roy       | Roy       | 7           |
+| Williams  | Williams  | 10          |
++-----------+-----------+-------------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> --select L.LNAME, R.LNAME, L.COMMISSION
-0: jdbc:luciddb:> --from EMP L, EMP R
-0: jdbc:luciddb:> --where NOT L.COMMISSION = R.COMMISSION
-0: jdbc:luciddb:> --order by 1,2,3;
+0: jdbc:luciddb:> select L.LNAME, R.LNAME, L.COMMISSION
+. . . . . . . . > from EMP L, EMP R
+. . . . . . . . > where NOT (L.COMMISSION = R.COMMISSION)
+. . . . . . . . > order by 1,2,3;
++-----------+-----------+-------------+
+|   LNAME   |   LNAME   | COMMISSION  |
++-----------+-----------+-------------+
+| Nife      | Roy       | 5           |
+| Nife      | Williams  | 5           |
+| Roy       | Nife      | 7           |
+| Roy       | Williams  | 7           |
+| Williams  | Nife      | 10          |
+| Williams  | Roy       | 10          |
++-----------+-----------+-------------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> --select L.LNAME, R.LNAME, L.COMMISSION
-0: jdbc:luciddb:> --from EMP L, EMP R
-0: jdbc:luciddb:> --where L.COMMISSION <> R.COMMISSION
-0: jdbc:luciddb:> --order by 1,2,3;
+0: jdbc:luciddb:> select L.LNAME, R.LNAME, L.COMMISSION
+. . . . . . . . > from EMP L, EMP R
+. . . . . . . . > where L.COMMISSION <> R.COMMISSION
+. . . . . . . . > order by 1,2,3;
++-----------+-----------+-------------+
+|   LNAME   |   LNAME   | COMMISSION  |
++-----------+-----------+-------------+
+| Nife      | Roy       | 5           |
+| Nife      | Williams  | 5           |
+| Roy       | Nife      | 7           |
+| Roy       | Williams  | 7           |
+| Williams  | Nife      | 10          |
+| Williams  | Roy       | 10          |
++-----------+-----------+-------------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> --select L.LNAME, R.LNAME, L.COMMISSION
-0: jdbc:luciddb:> --from EMP L, EMP R
-0: jdbc:luciddb:> --where L.COMMISSION < R.COMMISSION
-0: jdbc:luciddb:> --order by 1,2,3;
+0: jdbc:luciddb:> select L.LNAME, R.LNAME, L.COMMISSION
+. . . . . . . . > from EMP L, EMP R
+. . . . . . . . > where L.COMMISSION < R.COMMISSION
+. . . . . . . . > order by 1,2,3;
++--------+-----------+-------------+
+| LNAME  |   LNAME   | COMMISSION  |
++--------+-----------+-------------+
+| Nife   | Roy       | 5           |
+| Nife   | Williams  | 5           |
+| Roy    | Williams  | 7           |
++--------+-----------+-------------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> --select L.LNAME, R.LNAME, L.COMMISSION
-0: jdbc:luciddb:> --from EMP L, EMP R
-0: jdbc:luciddb:> --where L.COMMISSION >= R.COMMISSION
-0: jdbc:luciddb:> --order by 1,2,3;
+0: jdbc:luciddb:> select L.LNAME, R.LNAME, L.COMMISSION
+. . . . . . . . > from EMP L, EMP R
+. . . . . . . . > where L.COMMISSION >= R.COMMISSION
+. . . . . . . . > order by 1,2,3;
++-----------+-----------+-------------+
+|   LNAME   |   LNAME   | COMMISSION  |
++-----------+-----------+-------------+
+| Nife      | Nife      | 5           |
+| Roy       | Nife      | 7           |
+| Roy       | Roy       | 7           |
+| Williams  | Nife      | 10          |
+| Williams  | Roy       | 10          |
+| Williams  | Williams  | 10          |
++-----------+-----------+-------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- count (should not count null rows, except for count(*))
 0: jdbc:luciddb:> 

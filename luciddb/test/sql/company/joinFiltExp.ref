@@ -1,0 +1,310 @@
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- joinFilt.sql - join Filter tests
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --alter session set optimizerjoinfilterthreshold=2;
+0: jdbc:luciddb:> !set outputformat csv
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Standard join filter case
+0: jdbc:luciddb:> explain plan for select lname,dname
+. . . . . . . . > from emp,dept
+. . . . . . . . > where emp.deptno=dept.deptno and dept.dname='Marketing';
+'column0'
+'FennelToIteratorConverter'
+'  FennelCalcRel(expr#0..12=[{inputs}], expr#13=[=($t4, $t10)], LNAME=[$t2], DNAME=[$t11], $condition=[$t13])'
+'    FennelCartesianProductRel(leftouterjoin=[false])'
+'      LcsRowScanRel(table=[[LOCALDB, S, EMP]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$EMP$COMMISSION, SYS$CLUSTERED_INDEX$S$EMP$DEPTNO, SYS$CLUSTERED_INDEX$S$EMP$EMPNO, SYS$CLUSTERED_INDEX$S$EMP$FNAME, SYS$CLUSTERED_INDEX$S$EMP$HOBBY, SYS$CLUSTERED_INDEX$S$EMP$LNAME, SYS$CLUSTERED_INDEX$S$EMP$LOCID, SYS$CLUSTERED_INDEX$S$EMP$MANAGER, SYS$CLUSTERED_INDEX$S$EMP$SAL, SYS$CLUSTERED_INDEX$S$EMP$SEX]])'
+'        LcsIndexMergeRel'
+'          LcsIndexSearchRel(table=[[LOCALDB, S, EMP]], projection=[*], index=[EMP_DEPTNO], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'            FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'              FennelCalcRel(expr#0..2=[{inputs}], expr#3=[CAST($t0):INTEGER], DEPTNO=[$t3])'
+'                LcsRowScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$DEPT$DEPTNO, SYS$CLUSTERED_INDEX$S$DEPT$DNAME, SYS$CLUSTERED_INDEX$S$DEPT$LOCID]])'
+'                  LcsIndexSearchRel(table=[[LOCALDB, S, DEPT]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPT$SYS$UNIQUE_KEY$DNAME], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                    FennelValuesRel(tuples=[[{ '[', _ISO-8859-1'Marketing', ']', _ISO-8859-1'Marketing' }]])'
+'      LcsRowScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$DEPT$DEPTNO, SYS$CLUSTERED_INDEX$S$DEPT$DNAME, SYS$CLUSTERED_INDEX$S$DEPT$LOCID]])'
+'        LcsIndexSearchRel(table=[[LOCALDB, S, DEPT]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPT$SYS$UNIQUE_KEY$DNAME], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'          FennelValuesRel(tuples=[[{ '[', _ISO-8859-1'Marketing', ']', _ISO-8859-1'Marketing' }]])'
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for select lname,dname from emp,dept
+. . . . . . . . > where emp.deptno=dept.deptno and dept.dname<'Development'
+. . . . . . . . > order by 1;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..12=[{inputs}], expr#13=[=($t4, $t10)], LNAME=[$t2], DNAME=[$t11], $condition=[$t13])'
+'      FennelCartesianProductRel(leftouterjoin=[false])'
+'        LcsRowScanRel(table=[[LOCALDB, S, EMP]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$EMP$COMMISSION, SYS$CLUSTERED_INDEX$S$EMP$DEPTNO, SYS$CLUSTERED_INDEX$S$EMP$EMPNO, SYS$CLUSTERED_INDEX$S$EMP$FNAME, SYS$CLUSTERED_INDEX$S$EMP$HOBBY, SYS$CLUSTERED_INDEX$S$EMP$LNAME, SYS$CLUSTERED_INDEX$S$EMP$LOCID, SYS$CLUSTERED_INDEX$S$EMP$MANAGER, SYS$CLUSTERED_INDEX$S$EMP$SAL, SYS$CLUSTERED_INDEX$S$EMP$SEX]])'
+'          LcsIndexMergeRel'
+'            LcsIndexSearchRel(table=[[LOCALDB, S, EMP]], projection=[*], index=[EMP_DEPTNO], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'              FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'                FennelCalcRel(expr#0..2=[{inputs}], expr#3=[CAST($t0):INTEGER], DEPTNO=[$t3])'
+'                  LcsRowScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$DEPT$DEPTNO, SYS$CLUSTERED_INDEX$S$DEPT$DNAME, SYS$CLUSTERED_INDEX$S$DEPT$LOCID]])'
+'                    LcsIndexMergeRel'
+'                      LcsIndexSearchRel(table=[[LOCALDB, S, DEPT]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPT$SYS$UNIQUE_KEY$DNAME], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                        FennelValuesRel(tuples=[[{ '(', null, ')', _ISO-8859-1'Development' }]])'
+'        LcsRowScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$DEPT$DEPTNO, SYS$CLUSTERED_INDEX$S$DEPT$DNAME, SYS$CLUSTERED_INDEX$S$DEPT$LOCID]])'
+'          LcsIndexMergeRel'
+'            LcsIndexSearchRel(table=[[LOCALDB, S, DEPT]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPT$SYS$UNIQUE_KEY$DNAME], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'              FennelValuesRel(tuples=[[{ '(', null, ')', _ISO-8859-1'Development' }]])'
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- multiple dimension filter conditions
+0: jdbc:luciddb:> --explain plan for select emp.lname, emp.fname, dname from emp,dept
+0: jdbc:luciddb:> --where emp.deptno=dept.deptno and dept.dname='Accounting' and dept.locid in ('HQ','SF')
+0: jdbc:luciddb:> --order by 1,2;
+0: jdbc:luciddb:> explain plan for select emp.lname, emp.fname, dname
+. . . . . . . . > from emp, dept
+. . . . . . . . > where emp.deptno=dept.deptno and dept.dname='Accounting'
+. . . . . . . . >   and (dept.locid='HQ' or dept.locid='SF')
+. . . . . . . . > order by 1,2;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..12=[{inputs}], expr#13=[=($t4, $t10)], LNAME=[$t2], FNAME=[$t1], DNAME=[$t11], $condition=[$t13])'
+'      FennelCartesianProductRel(leftouterjoin=[false])'
+'        LcsRowScanRel(table=[[LOCALDB, S, EMP]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$EMP$COMMISSION, SYS$CLUSTERED_INDEX$S$EMP$DEPTNO, SYS$CLUSTERED_INDEX$S$EMP$EMPNO, SYS$CLUSTERED_INDEX$S$EMP$FNAME, SYS$CLUSTERED_INDEX$S$EMP$HOBBY, SYS$CLUSTERED_INDEX$S$EMP$LNAME, SYS$CLUSTERED_INDEX$S$EMP$LOCID, SYS$CLUSTERED_INDEX$S$EMP$MANAGER, SYS$CLUSTERED_INDEX$S$EMP$SAL, SYS$CLUSTERED_INDEX$S$EMP$SEX]])'
+'          LcsIndexMergeRel'
+'            LcsIndexSearchRel(table=[[LOCALDB, S, EMP]], projection=[*], index=[EMP_DEPTNO], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'              FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'                FennelCalcRel(expr#0..2=[{inputs}], expr#3=[_ISO-8859-1'HQ'], expr#4=[=($t2, $t3)], expr#5=[_ISO-8859-1'SF'], expr#6=[=($t2, $t5)], expr#7=[OR($t4, $t6)], expr#8=[CAST($t0):INTEGER], DEPTNO=[$t8], $condition=[$t7])'
+'                  LcsRowScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$DEPT$DEPTNO, SYS$CLUSTERED_INDEX$S$DEPT$DNAME, SYS$CLUSTERED_INDEX$S$DEPT$LOCID]])'
+'                    LcsIndexSearchRel(table=[[LOCALDB, S, DEPT]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPT$SYS$UNIQUE_KEY$DNAME], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                      FennelValuesRel(tuples=[[{ '[', _ISO-8859-1'Accounting', ']', _ISO-8859-1'Accounting' }]])'
+'        FennelCalcRel(expr#0..2=[{inputs}], expr#3=[_ISO-8859-1'HQ'], expr#4=[=($t2, $t3)], expr#5=[_ISO-8859-1'SF'], expr#6=[=($t2, $t5)], expr#7=[OR($t4, $t6)], proj#0..2=[{exprs}], $condition=[$t7])'
+'          LcsRowScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$DEPT$DEPTNO, SYS$CLUSTERED_INDEX$S$DEPT$DNAME, SYS$CLUSTERED_INDEX$S$DEPT$LOCID]])'
+'            LcsIndexSearchRel(table=[[LOCALDB, S, DEPT]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPT$SYS$UNIQUE_KEY$DNAME], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'              FennelValuesRel(tuples=[[{ '[', _ISO-8859-1'Accounting', ']', _ISO-8859-1'Accounting' }]])'
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- don't reference dept in the select list, should drop out
+0: jdbc:luciddb:> -- of select list
+0: jdbc:luciddb:> explain plan for select 1 from emp,dept
+. . . . . . . . > where emp.deptno=dept.deptno and dept.deptno=20
+. . . . . . . . > order by 1;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..12=[{inputs}], expr#13=[=($t4, $t10)], expr#14=[1], EXPR$0=[$t14], $condition=[$t13])'
+'      FennelCartesianProductRel(leftouterjoin=[false])'
+'        LcsRowScanRel(table=[[LOCALDB, S, EMP]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$EMP$COMMISSION, SYS$CLUSTERED_INDEX$S$EMP$DEPTNO, SYS$CLUSTERED_INDEX$S$EMP$EMPNO, SYS$CLUSTERED_INDEX$S$EMP$FNAME, SYS$CLUSTERED_INDEX$S$EMP$HOBBY, SYS$CLUSTERED_INDEX$S$EMP$LNAME, SYS$CLUSTERED_INDEX$S$EMP$LOCID, SYS$CLUSTERED_INDEX$S$EMP$MANAGER, SYS$CLUSTERED_INDEX$S$EMP$SAL, SYS$CLUSTERED_INDEX$S$EMP$SEX]])'
+'          LcsIndexMergeRel'
+'            LcsIndexSearchRel(table=[[LOCALDB, S, EMP]], projection=[*], index=[EMP_DEPTNO], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'              FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'                FennelCalcRel(expr#0..2=[{inputs}], expr#3=[CAST($t0):INTEGER], DEPTNO=[$t3])'
+'                  LcsRowScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$DEPT$DEPTNO, SYS$CLUSTERED_INDEX$S$DEPT$DNAME, SYS$CLUSTERED_INDEX$S$DEPT$LOCID]])'
+'                    LcsIndexSearchRel(table=[[LOCALDB, S, DEPT]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPT$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                      FennelValuesRel(tuples=[[{ '[', 20, ']', 20 }]])'
+'        LcsRowScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$DEPT$DEPTNO, SYS$CLUSTERED_INDEX$S$DEPT$DNAME, SYS$CLUSTERED_INDEX$S$DEPT$LOCID]])'
+'          LcsIndexSearchRel(table=[[LOCALDB, S, DEPT]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPT$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'            FennelValuesRel(tuples=[[{ '[', 20, ']', 20 }]])'
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for select emp.fname from emp,dept
+. . . . . . . . > where emp.deptno=dept.deptno and dept.deptno<20
+. . . . . . . . > order by 1;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..12=[{inputs}], expr#13=[=($t4, $t10)], FNAME=[$t1], $condition=[$t13])'
+'      FennelCartesianProductRel(leftouterjoin=[false])'
+'        LcsRowScanRel(table=[[LOCALDB, S, EMP]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$EMP$COMMISSION, SYS$CLUSTERED_INDEX$S$EMP$DEPTNO, SYS$CLUSTERED_INDEX$S$EMP$EMPNO, SYS$CLUSTERED_INDEX$S$EMP$FNAME, SYS$CLUSTERED_INDEX$S$EMP$HOBBY, SYS$CLUSTERED_INDEX$S$EMP$LNAME, SYS$CLUSTERED_INDEX$S$EMP$LOCID, SYS$CLUSTERED_INDEX$S$EMP$MANAGER, SYS$CLUSTERED_INDEX$S$EMP$SAL, SYS$CLUSTERED_INDEX$S$EMP$SEX]])'
+'          LcsIndexMergeRel'
+'            LcsIndexSearchRel(table=[[LOCALDB, S, EMP]], projection=[*], index=[EMP_DEPTNO], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'              FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'                FennelCalcRel(expr#0..2=[{inputs}], expr#3=[CAST($t0):INTEGER], DEPTNO=[$t3])'
+'                  LcsRowScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$DEPT$DEPTNO, SYS$CLUSTERED_INDEX$S$DEPT$DNAME, SYS$CLUSTERED_INDEX$S$DEPT$LOCID]])'
+'                    LcsIndexMergeRel'
+'                      LcsIndexSearchRel(table=[[LOCALDB, S, DEPT]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPT$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                        FennelValuesRel(tuples=[[{ '-', null, ')', 20 }]])'
+'        LcsRowScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$DEPT$DEPTNO, SYS$CLUSTERED_INDEX$S$DEPT$DNAME, SYS$CLUSTERED_INDEX$S$DEPT$LOCID]])'
+'          LcsIndexMergeRel'
+'            LcsIndexSearchRel(table=[[LOCALDB, S, DEPT]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPT$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'              FennelValuesRel(tuples=[[{ '-', null, ')', 20 }]])'
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- multiple dimension tables, filters on both
+0: jdbc:luciddb:> explain plan for select customers.lname, products.name, sales.price
+. . . . . . . . > --from sales, products, customers
+. . . . . . . . > from sales, customers, products
+. . . . . . . . > where customers.custid=sales.custid
+. . . . . . . . > and sales.prodid = products.prodid
+. . . . . . . . > and customers.lname < 'C'
+. . . . . . . . > and products.name >= 'Soap'
+. . . . . . . . > order by 1,2,3;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..10=[{inputs}], expr#11=[=($t0, $t4)], LNAME=[$t2], NAME=[$t9], PRICE=[$t7], $condition=[$t11])'
+'      FennelCartesianProductRel(leftouterjoin=[false])'
+'        LcsRowScanRel(table=[[LOCALDB, S, CUSTOMERS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$CUSTOMERS$CUSTID, SYS$CLUSTERED_INDEX$S$CUSTOMERS$FNAME, SYS$CLUSTERED_INDEX$S$CUSTOMERS$LNAME, SYS$CLUSTERED_INDEX$S$CUSTOMERS$SEX]])'
+'          LcsIndexMergeRel'
+'            LcsIndexSearchRel(table=[[LOCALDB, S, CUSTOMERS]], projection=[*], index=[CUSTOMERS_NAME], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'              FennelValuesRel(tuples=[[{ '-', null, ')', _ISO-8859-1'C' }]])'
+'        FennelCalcRel(expr#0..6=[{inputs}], expr#7=[=($t2, $t4)], proj#0..6=[{exprs}], $condition=[$t7])'
+'          FennelCartesianProductRel(leftouterjoin=[false])'
+'            LcsRowScanRel(table=[[LOCALDB, S, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$SALES$CUSTID, SYS$CLUSTERED_INDEX$S$SALES$EMPNO, SYS$CLUSTERED_INDEX$S$SALES$PRICE, SYS$CLUSTERED_INDEX$S$SALES$PRODID]])'
+'              LcsIndexIntersectRel(startRidParamId=[4], rowLimitParamId=[5])'
+'                LcsIndexMergeRel'
+'                  LcsIndexSearchRel(table=[[LOCALDB, S, SALES]], projection=[*], index=[SALES_PRODID], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]], startRidParamId=[4], rowLimitParamId=[5])'
+'                    FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'                      FennelCalcRel(expr#0..2=[{inputs}], expr#3=[CAST($t0):INTEGER], PRODID=[$t3])'
+'                        LcsRowScanRel(table=[[LOCALDB, S, PRODUCTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$PRODUCTS$NAME, SYS$CLUSTERED_INDEX$S$PRODUCTS$PRICE, SYS$CLUSTERED_INDEX$S$PRODUCTS$PRODID]])'
+'                          LcsIndexMergeRel'
+'                            LcsIndexSearchRel(table=[[LOCALDB, S, PRODUCTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$PRODUCTS$SYS$UNIQUE_KEY$NAME], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                              FennelValuesRel(tuples=[[{ '[', _ISO-8859-1'Soap', '+', null }]])'
+'                LcsIndexMergeRel'
+'                  LcsIndexSearchRel(table=[[LOCALDB, S, SALES]], projection=[*], index=[SALES_CUSTID], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]], startRidParamId=[4], rowLimitParamId=[5])'
+'                    FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'                      FennelCalcRel(expr#0..3=[{inputs}], expr#4=[CAST($t0):INTEGER], CUSTID=[$t4])'
+'                        LcsRowScanRel(table=[[LOCALDB, S, CUSTOMERS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$CUSTOMERS$CUSTID, SYS$CLUSTERED_INDEX$S$CUSTOMERS$FNAME, SYS$CLUSTERED_INDEX$S$CUSTOMERS$LNAME, SYS$CLUSTERED_INDEX$S$CUSTOMERS$SEX]])'
+'                          LcsIndexMergeRel'
+'                            LcsIndexSearchRel(table=[[LOCALDB, S, CUSTOMERS]], projection=[*], index=[CUSTOMERS_NAME], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                              FennelValuesRel(tuples=[[{ '-', null, ')', _ISO-8859-1'C' }]])'
+'            LcsRowScanRel(table=[[LOCALDB, S, PRODUCTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$PRODUCTS$NAME, SYS$CLUSTERED_INDEX$S$PRODUCTS$PRICE, SYS$CLUSTERED_INDEX$S$PRODUCTS$PRODID]])'
+'              LcsIndexMergeRel'
+'                LcsIndexSearchRel(table=[[LOCALDB, S, PRODUCTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$PRODUCTS$SYS$UNIQUE_KEY$NAME], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                  FennelValuesRel(tuples=[[{ '[', _ISO-8859-1'Soap', '+', null }]])'
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- multiple dimension tables but filter on only one
+0: jdbc:luciddb:> explain plan for select customers.lname, products.name, sales.price
+. . . . . . . . > --from sales, products, customers
+. . . . . . . . > from sales, customers, products
+. . . . . . . . > where customers.custid=sales.custid
+. . . . . . . . > and sales.prodid = products.prodid
+. . . . . . . . > and customers.lname = 'Andrews'
+. . . . . . . . > order by 1,2,3;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..10=[{inputs}], expr#11=[=($t7, $t0)], LNAME=[$t9], NAME=[$t5], PRICE=[$t3], $condition=[$t11])'
+'      FennelCartesianProductRel(leftouterjoin=[false])'
+'        FennelCalcRel(expr#0..6=[{inputs}], expr#7=[=($t2, $t4)], proj#0..6=[{exprs}], $condition=[$t7])'
+'          FennelCartesianProductRel(leftouterjoin=[false])'
+'            LcsRowScanRel(table=[[LOCALDB, S, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$SALES$CUSTID, SYS$CLUSTERED_INDEX$S$SALES$EMPNO, SYS$CLUSTERED_INDEX$S$SALES$PRICE, SYS$CLUSTERED_INDEX$S$SALES$PRODID]])'
+'              LcsIndexIntersectRel(startRidParamId=[3], rowLimitParamId=[4])'
+'                LcsIndexMergeRel'
+'                  LcsIndexSearchRel(table=[[LOCALDB, S, SALES]], projection=[*], index=[SALES_PRODID], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]], startRidParamId=[3], rowLimitParamId=[4])'
+'                    FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'                      FennelCalcRel(expr#0..2=[{inputs}], expr#3=[CAST($t0):INTEGER], PRODID=[$t3])'
+'                        LcsRowScanRel(table=[[LOCALDB, S, PRODUCTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$PRODUCTS$NAME, SYS$CLUSTERED_INDEX$S$PRODUCTS$PRICE, SYS$CLUSTERED_INDEX$S$PRODUCTS$PRODID]])'
+'                LcsIndexMergeRel'
+'                  LcsIndexSearchRel(table=[[LOCALDB, S, SALES]], projection=[*], index=[SALES_CUSTID], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]], startRidParamId=[3], rowLimitParamId=[4])'
+'                    FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'                      FennelCalcRel(expr#0..3=[{inputs}], expr#4=[CAST($t0):INTEGER], CUSTID=[$t4])'
+'                        LcsRowScanRel(table=[[LOCALDB, S, CUSTOMERS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$CUSTOMERS$CUSTID, SYS$CLUSTERED_INDEX$S$CUSTOMERS$FNAME, SYS$CLUSTERED_INDEX$S$CUSTOMERS$LNAME, SYS$CLUSTERED_INDEX$S$CUSTOMERS$SEX]])'
+'                          LcsIndexMergeRel'
+'                            LcsIndexSearchRel(table=[[LOCALDB, S, CUSTOMERS]], projection=[*], index=[CUSTOMERS_NAME], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                              FennelValuesRel(tuples=[[{ '[', _ISO-8859-1'Andrews', ']', _ISO-8859-1'Andrews' }]])'
+'            LcsRowScanRel(table=[[LOCALDB, S, PRODUCTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$PRODUCTS$NAME, SYS$CLUSTERED_INDEX$S$PRODUCTS$PRICE, SYS$CLUSTERED_INDEX$S$PRODUCTS$PRODID]])'
+'        LcsRowScanRel(table=[[LOCALDB, S, CUSTOMERS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$CUSTOMERS$CUSTID, SYS$CLUSTERED_INDEX$S$CUSTOMERS$FNAME, SYS$CLUSTERED_INDEX$S$CUSTOMERS$LNAME, SYS$CLUSTERED_INDEX$S$CUSTOMERS$SEX]])'
+'          LcsIndexMergeRel'
+'            LcsIndexSearchRel(table=[[LOCALDB, S, CUSTOMERS]], projection=[*], index=[CUSTOMERS_NAME], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'              FennelValuesRel(tuples=[[{ '[', _ISO-8859-1'Andrews', ']', _ISO-8859-1'Andrews' }]])'
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- multiple dimension tables, multiple filters
+0: jdbc:luciddb:> explain plan for select customers.lname, products.name, sales.price
+. . . . . . . . > --from sales, products, customers
+. . . . . . . . > from sales, customers, products
+. . . . . . . . > where customers.custid=sales.custid
+. . . . . . . . > and sales.prodid = products.prodid
+. . . . . . . . > and customers.lname < 'C'
+. . . . . . . . > and customers.fname > 'S'
+. . . . . . . . > order by 1,2,3;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..10=[{inputs}], expr#11=[=($t2, $t8)], LNAME=[$t6], NAME=[$t9], PRICE=[$t3], $condition=[$t11])'
+'      FennelCartesianProductRel(leftouterjoin=[false])'
+'        FennelCalcRel(expr#0..7=[{inputs}], expr#8=[=($t4, $t0)], proj#0..7=[{exprs}], $condition=[$t8])'
+'          FennelCartesianProductRel(leftouterjoin=[false])'
+'            LcsRowScanRel(table=[[LOCALDB, S, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$SALES$CUSTID, SYS$CLUSTERED_INDEX$S$SALES$EMPNO, SYS$CLUSTERED_INDEX$S$SALES$PRICE, SYS$CLUSTERED_INDEX$S$SALES$PRODID]])'
+'            FennelCalcRel(expr#0..3=[{inputs}], expr#4=[_ISO-8859-1'S'], expr#5=[>($t1, $t4)], proj#0..3=[{exprs}], $condition=[$t5])'
+'              LcsRowScanRel(table=[[LOCALDB, S, CUSTOMERS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$CUSTOMERS$CUSTID, SYS$CLUSTERED_INDEX$S$CUSTOMERS$FNAME, SYS$CLUSTERED_INDEX$S$CUSTOMERS$LNAME, SYS$CLUSTERED_INDEX$S$CUSTOMERS$SEX]])'
+'                LcsIndexMergeRel'
+'                  LcsIndexSearchRel(table=[[LOCALDB, S, CUSTOMERS]], projection=[*], index=[CUSTOMERS_NAME], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                    FennelValuesRel(tuples=[[{ '-', null, ')', _ISO-8859-1'C' }]])'
+'        LcsRowScanRel(table=[[LOCALDB, S, PRODUCTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$PRODUCTS$NAME, SYS$CLUSTERED_INDEX$S$PRODUCTS$PRICE, SYS$CLUSTERED_INDEX$S$PRODUCTS$PRODID]])'
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for select customers.lname, products.name, sales.price
+. . . . . . . . > --from sales, products, customers
+. . . . . . . . > from sales, customers, products
+. . . . . . . . > where customers.custid=sales.custid
+. . . . . . . . > and sales.prodid = products.prodid
+. . . . . . . . > and customers.lname < 'C'
+. . . . . . . . > and customers.fname > 'S'
+. . . . . . . . > and sales.prodid < 10009
+. . . . . . . . > --and products.name IN ('Soap', 'Juice', 'Soup', 'Microwave', 'Soda')
+. . . . . . . . > and (products.name='Soap' or products.name='Juice' or products.name='Soup' or products.name='Microwave' or products.name='Soda')
+. . . . . . . . > and products.price < 5.00
+. . . . . . . . > order by 1,2,3;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..10=[{inputs}], expr#11=[=($t2, $t8)], LNAME=[$t6], NAME=[$t9], PRICE=[$t3], $condition=[$t11])'
+'      FennelCartesianProductRel(leftouterjoin=[false])'
+'        FennelCalcRel(expr#0..7=[{inputs}], expr#8=[=($t4, $t0)], proj#0..7=[{exprs}], $condition=[$t8])'
+'          FennelCartesianProductRel(leftouterjoin=[false])'
+'            LcsRowScanRel(table=[[LOCALDB, S, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$SALES$CUSTID, SYS$CLUSTERED_INDEX$S$SALES$EMPNO, SYS$CLUSTERED_INDEX$S$SALES$PRICE, SYS$CLUSTERED_INDEX$S$SALES$PRODID]])'
+'              LcsIndexMergeRel'
+'                LcsIndexSearchRel(table=[[LOCALDB, S, SALES]], projection=[*], index=[SALES_PRODID], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                  FennelValuesRel(tuples=[[{ '(', null, ')', 10009 }]])'
+'            FennelCalcRel(expr#0..3=[{inputs}], expr#4=[_ISO-8859-1'S'], expr#5=[>($t1, $t4)], proj#0..3=[{exprs}], $condition=[$t5])'
+'              LcsRowScanRel(table=[[LOCALDB, S, CUSTOMERS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$CUSTOMERS$CUSTID, SYS$CLUSTERED_INDEX$S$CUSTOMERS$FNAME, SYS$CLUSTERED_INDEX$S$CUSTOMERS$LNAME, SYS$CLUSTERED_INDEX$S$CUSTOMERS$SEX]])'
+'                LcsIndexMergeRel'
+'                  LcsIndexSearchRel(table=[[LOCALDB, S, CUSTOMERS]], projection=[*], index=[CUSTOMERS_NAME], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                    FennelValuesRel(tuples=[[{ '-', null, ')', _ISO-8859-1'C' }]])'
+'        LcsRowScanRel(table=[[LOCALDB, S, PRODUCTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$PRODUCTS$NAME, SYS$CLUSTERED_INDEX$S$PRODUCTS$PRICE, SYS$CLUSTERED_INDEX$S$PRODUCTS$PRODID]])'
+'          LcsIndexIntersectRel(startRidParamId=[2], rowLimitParamId=[1])'
+'            LcsIndexMergeRel'
+'              LcsIndexSearchRel(table=[[LOCALDB, S, PRODUCTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$PRODUCTS$SYS$UNIQUE_KEY$NAME], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                FennelValuesRel(tuples=[[{ '[', _ISO-8859-1'Juice', ']', _ISO-8859-1'Juice' }, { '[', _ISO-8859-1'Microwave', ']', _ISO-8859-1'Microwave' }, { '[', _ISO-8859-1'Soap', ']', _ISO-8859-1'Soap' }, { '[', _ISO-8859-1'Soda', ']', _ISO-8859-1'Soda' }, { '[', _ISO-8859-1'Soup', ']', _ISO-8859-1'Soup' }]])'
+'            LcsIndexMergeRel'
+'              LcsIndexSearchRel(table=[[LOCALDB, S, PRODUCTS]], projection=[*], index=[PRODUCTS_PRICE], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                FennelValuesRel(tuples=[[{ '(', null, ')', 5.00 }]])'
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- dimension tables not referenced in select list, should drop
+0: jdbc:luciddb:> -- out of join
+0: jdbc:luciddb:> explain plan for select sum(sales.price)
+. . . . . . . . > --from sales, products, customers
+. . . . . . . . > from sales, customers, products
+. . . . . . . . > where customers.custid=sales.custid
+. . . . . . . . > and sales.prodid = products.prodid
+. . . . . . . . > and customers.lname < 'C'
+. . . . . . . . > and customers.fname > 'S'
+. . . . . . . . > and sales.prodid < 10009
+. . . . . . . . > --and products.name IN ('Soap', 'Juice', 'Soup', 'Microwave', 'Soda')
+. . . . . . . . > and (products.name='Soap' or products.name='Juice' or products.name='Soup' or products.name='Microwave' or products.name='Soda')
+. . . . . . . . > and products.price < 5.00;
+'column0'
+'IterCalcRel(expr#0=[{inputs}], EXPR$0=[$t0])'
+'  FennelToIteratorConverter'
+'    FennelAggRel(groupCount=[0], agg#0=[SUM(0)])'
+'      FennelCalcRel(expr#0..10=[{inputs}], expr#11=[=($t2, $t8)], $f0=[$t3], $condition=[$t11])'
+'        FennelCartesianProductRel(leftouterjoin=[false])'
+'          FennelCalcRel(expr#0..7=[{inputs}], expr#8=[=($t4, $t0)], proj#0..7=[{exprs}], $condition=[$t8])'
+'            FennelCartesianProductRel(leftouterjoin=[false])'
+'              LcsRowScanRel(table=[[LOCALDB, S, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$SALES$CUSTID, SYS$CLUSTERED_INDEX$S$SALES$EMPNO, SYS$CLUSTERED_INDEX$S$SALES$PRICE, SYS$CLUSTERED_INDEX$S$SALES$PRODID]])'
+'                LcsIndexMergeRel'
+'                  LcsIndexSearchRel(table=[[LOCALDB, S, SALES]], projection=[*], index=[SALES_PRODID], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                    FennelValuesRel(tuples=[[{ '(', null, ')', 10009 }]])'
+'              FennelCalcRel(expr#0..3=[{inputs}], expr#4=[_ISO-8859-1'S'], expr#5=[>($t1, $t4)], proj#0..3=[{exprs}], $condition=[$t5])'
+'                LcsRowScanRel(table=[[LOCALDB, S, CUSTOMERS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$CUSTOMERS$CUSTID, SYS$CLUSTERED_INDEX$S$CUSTOMERS$FNAME, SYS$CLUSTERED_INDEX$S$CUSTOMERS$LNAME, SYS$CLUSTERED_INDEX$S$CUSTOMERS$SEX]])'
+'                  LcsIndexMergeRel'
+'                    LcsIndexSearchRel(table=[[LOCALDB, S, CUSTOMERS]], projection=[*], index=[CUSTOMERS_NAME], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                      FennelValuesRel(tuples=[[{ '-', null, ')', _ISO-8859-1'C' }]])'
+'          LcsRowScanRel(table=[[LOCALDB, S, PRODUCTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$PRODUCTS$NAME, SYS$CLUSTERED_INDEX$S$PRODUCTS$PRICE, SYS$CLUSTERED_INDEX$S$PRODUCTS$PRODID]])'
+'            LcsIndexIntersectRel(startRidParamId=[2], rowLimitParamId=[1])'
+'              LcsIndexMergeRel'
+'                LcsIndexSearchRel(table=[[LOCALDB, S, PRODUCTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$PRODUCTS$SYS$UNIQUE_KEY$NAME], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                  FennelValuesRel(tuples=[[{ '[', _ISO-8859-1'Juice', ']', _ISO-8859-1'Juice' }, { '[', _ISO-8859-1'Microwave', ']', _ISO-8859-1'Microwave' }, { '[', _ISO-8859-1'Soap', ']', _ISO-8859-1'Soap' }, { '[', _ISO-8859-1'Soda', ']', _ISO-8859-1'Soda' }, { '[', _ISO-8859-1'Soup', ']', _ISO-8859-1'Soup' }]])'
+'              LcsIndexMergeRel'
+'                LcsIndexSearchRel(table=[[LOCALDB, S, PRODUCTS]], projection=[*], index=[PRODUCTS_PRICE], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                  FennelValuesRel(tuples=[[{ '(', null, ')', 5.00 }]])'
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --explain plan for select sum(sales.price)
+0: jdbc:luciddb:> --from sales
+0: jdbc:luciddb:> --where custid in (select custid from customers where lname<'F' and fname>'D')
+0: jdbc:luciddb:> --and prodid in (select prodid from products where name
+0: jdbc:luciddb:> --IN ('Soap', 'Juice', 'Soup', 'Microwave', 'Soda'));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !set outputformat table
+0: jdbc:luciddb:> !quit

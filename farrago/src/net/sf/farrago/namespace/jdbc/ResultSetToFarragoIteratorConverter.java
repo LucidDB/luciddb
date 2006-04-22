@@ -138,12 +138,21 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
                 }
                 rhsExp =
                     new MethodCall(castResultSet, methodName, colPosExpList);
-            } else if (SqlTypeUtil.inCharFamily(type)) {
-                rhsExp =
-                    new MethodCall(castResultSet, "getString", colPosExpList);
             } else {
+                String methodName;
+                if (SqlTypeUtil.inCharFamily(type)) {
+                    methodName = "getString";
+                } else if (type.getSqlTypeName() == SqlTypeName.Timestamp) {
+                    methodName = "getTimestamp";
+                } else if (type.getSqlTypeName() == SqlTypeName.Date) {
+                    methodName = "getDate";
+                } else if (type.getSqlTypeName() == SqlTypeName.Time) {
+                    methodName = "getTime";
+                } else {
+                    methodName = "getObject";
+                }
                 rhsExp =
-                    new MethodCall(castResultSet, "getObject", colPosExpList);
+                    new MethodCall(castResultSet, methodName, colPosExpList);
             }
             RexNode rhs = javaRexBuilder.makeJava(
                 getCluster().getEnv(), rhsExp);

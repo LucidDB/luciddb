@@ -12,68 +12,68 @@
 0: jdbc:luciddb:> insert into target_date 
 . . . . . . . . >  select colbit from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: Cannot assign to target field 'COLDATE' of type DATE from source field 'COLBIT' of type BOOLEAN (state=,code=0)
+Error: From line 1, column 33 to line 1, column 38: Cannot assign to target field 'COLDATE' of type DATE from source field 'COLBIT' of type BOOLEAN (state=,code=0)
 0: jdbc:luciddb:> insert into target_date
 . . . . . . . . >  select coltiny from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: Cannot assign to target field 'COLDATE' of type DATE from source field 'COLTINY' of type TINYINT (state=,code=0)
+Error: From line 1, column 33 to line 1, column 39: Cannot assign to target field 'COLDATE' of type DATE from source field 'COLTINY' of type TINYINT (state=,code=0)
 0: jdbc:luciddb:> insert into target_date
 . . . . . . . . >  select colsmall from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: Cannot assign to target field 'COLDATE' of type DATE from source field 'COLSMALL' of type SMALLINT (state=,code=0)
+Error: From line 1, column 33 to line 1, column 40: Cannot assign to target field 'COLDATE' of type DATE from source field 'COLSMALL' of type SMALLINT (state=,code=0)
 0: jdbc:luciddb:> insert into target_date
 . . . . . . . . >  select colint from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: Cannot assign to target field 'COLDATE' of type DATE from source field 'COLINT' of type INTEGER (state=,code=0)
+Error: From line 1, column 33 to line 1, column 38: Cannot assign to target field 'COLDATE' of type DATE from source field 'COLINT' of type INTEGER (state=,code=0)
 0: jdbc:luciddb:> insert into target_date
 . . . . . . . . >  select colbig from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: Cannot assign to target field 'COLDATE' of type DATE from source field 'COLBIG' of type BIGINT (state=,code=0)
+Error: From line 1, column 33 to line 1, column 38: Cannot assign to target field 'COLDATE' of type DATE from source field 'COLBIG' of type BIGINT (state=,code=0)
 0: jdbc:luciddb:> insert into target_date
 . . . . . . . . >  select coldec from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: Cannot assign to target field 'COLDATE' of type DATE from source field 'COLDEC' of type DECIMAL(10, 4) (state=,code=0)
+Error: From line 1, column 33 to line 1, column 38: Cannot assign to target field 'COLDATE' of type DATE from source field 'COLDEC' of type DECIMAL(10, 4) (state=,code=0)
 0: jdbc:luciddb:> insert into target_date
 . . . . . . . . >  select colnum from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: Cannot assign to target field 'COLDATE' of type DATE from source field 'COLNUM' of type DECIMAL(16, 2) (state=,code=0)
+Error: From line 1, column 33 to line 1, column 38: Cannot assign to target field 'COLDATE' of type DATE from source field 'COLNUM' of type DECIMAL(16, 2) (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- all floating point should FAIL
 0: jdbc:luciddb:> insert into target_date
 . . . . . . . . >  select coldouble from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: Cannot assign to target field 'COLDATE' of type DATE from source field 'COLDOUBLE' of type DOUBLE (state=,code=0)
+Error: From line 1, column 33 to line 1, column 41: Cannot assign to target field 'COLDATE' of type DATE from source field 'COLDOUBLE' of type DOUBLE (state=,code=0)
 0: jdbc:luciddb:> insert into target_date
 . . . . . . . . >  select colfloat from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: Cannot assign to target field 'COLDATE' of type DATE from source field 'COLFLOAT' of type DOUBLE (state=,code=0)
+Error: From line 1, column 33 to line 1, column 40: Cannot assign to target field 'COLDATE' of type DATE from source field 'COLFLOAT' of type DOUBLE (state=,code=0)
 0: jdbc:luciddb:> insert into target_date
 . . . . . . . . >  select colreal from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: Cannot assign to target field 'COLDATE' of type DATE from source field 'COLREAL' of type REAL (state=,code=0)
+Error: From line 1, column 33 to line 1, column 39: Cannot assign to target field 'COLDATE' of type DATE from source field 'COLREAL' of type REAL (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- all char/binary should FAIL
 0: jdbc:luciddb:> insert into target_date
 . . . . . . . . >  select colchar from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: Cannot assign to target field 'COLDATE' of type DATE from source field 'COLCHAR' of type CHAR(17) (state=,code=0)
+Error: From line 1, column 33 to line 1, column 39: Cannot assign to target field 'COLDATE' of type DATE from source field 'COLCHAR' of type CHAR(17) (state=,code=0)
 0: jdbc:luciddb:> insert into target_date
 . . . . . . . . >  select colvchar from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: Cannot assign to target field 'COLDATE' of type DATE from source field 'COLVCHAR' of type VARCHAR(100) (state=,code=0)
+Error: From line 1, column 33 to line 1, column 40: Cannot assign to target field 'COLDATE' of type DATE from source field 'COLVCHAR' of type VARCHAR(100) (state=,code=0)
 0: jdbc:luciddb:> --insert into target_date
 0: jdbc:luciddb:> -- select colbin from datatype_source where colname = 'BAD'
 0: jdbc:luciddb:> --;
 0: jdbc:luciddb:> insert into target_date
 . . . . . . . . >  select colvbin from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: Cannot assign to target field 'COLDATE' of type DATE from source field 'COLVBIN' of type VARBINARY(256) (state=,code=0)
+Error: From line 1, column 33 to line 1, column 39: Cannot assign to target field 'COLDATE' of type DATE from source field 'COLVBIN' of type VARBINARY(256) (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- only the first should FAIL
 0: jdbc:luciddb:> insert into target_date
 . . . . . . . . >  select coltime from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: Cannot assign to target field 'COLDATE' of type DATE from source field 'COLTIME' of type TIME (state=,code=0)
+Error: From line 1, column 33 to line 1, column 39: Cannot assign to target field 'COLDATE' of type DATE from source field 'COLTIME' of type TIME (state=,code=0)
 0: jdbc:luciddb:> insert into target_date
 . . . . . . . . >  select coldate from datatype_source where colname = 'BAD'
 . . . . . . . . > ;

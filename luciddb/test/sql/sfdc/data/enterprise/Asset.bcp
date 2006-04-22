@@ -1,0 +1,21 @@
+6.0
+19
+1	SQLVARCHAR	0	25	"\t"	1	Id
+2	SQLVARCHAR	0	25	"\t"	2	ContactId
+3	SQLVARCHAR	0	25	"\t"	3	AccountId
+4	SQLVARCHAR	0	25	"\t"	4	Product2Id
+5	SQLVARCHAR	0	5	"\t"	5	IsCompetitorProduct
+6	SQLVARCHAR	0	24	"\t"	6	CreatedDate
+7	SQLVARCHAR	0	25	"\t"	7	CreatedById
+8	SQLVARCHAR	0	24	"\t"	8	LastModifiedDate
+9	SQLVARCHAR	0	25	"\t"	9	LastModifiedById
+10	SQLVARCHAR	0	24	"\t"	10	SystemModstamp
+11	SQLVARCHAR	0	1024	"\t"	11	Name
+12	SQLVARCHAR	0	1024	"\t"	12	SerialNumber
+13	SQLDATE	0	10	"\t"	13	InstallDate
+14	SQLDATE	0	10	"\t"	14	PurchaseDate
+15	SQLDATE	0	10	"\t"	15	UsageEndDate
+16	SQLVARCHAR	0	512	"\t"	16	Status
+17	SQLFLT8	0	25	"\t"	17	Price
+18	SQLFLT8	0	8	"\t"	18	Quantity
+19	SQLVARCHAR	0	1024	"\r\n"	19	Description

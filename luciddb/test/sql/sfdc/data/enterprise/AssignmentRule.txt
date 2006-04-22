@@ -1,0 +1,2 @@
+"Id"	"Name"	"RuleType"	"Active"	"CreatedById"	"CreatedDate"	"LastModifiedById"	"LastModifiedDate"	"SystemModstamp"
+"01Q300000001KgHEAU"	"Lead Assignment Rule"	"leadAssignment"	"true"	"00530000000hPnYAAU"	"2005-11-15T23:35:34.000Z"	"00530000000hPnYAAU"	"2005-11-15T23:36:24.000Z"	"2005-11-15T23:36:24.000Z"

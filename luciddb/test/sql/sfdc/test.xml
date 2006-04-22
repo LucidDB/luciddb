@@ -1,0 +1,15 @@
+<project name="bh" default="sfdc">
+  <target name="sfdc">
+    <test-suite name="sfdc">
+
+      <init-hook>
+        <ant target="restoreCatalog"/>
+      </init-hook>
+
+      <test name="sanity-flatfile" nameOverride="true">
+        <junit-sql file="${open.dir}/luciddb/test/sql/sfdc/gen/flatfile.sql"/>
+      </test>
+
+    </test-suite>
+  </target>
+</project>

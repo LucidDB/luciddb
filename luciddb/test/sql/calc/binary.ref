@@ -30,7 +30,7 @@ Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast fro
 +----+----+
 0: jdbc:luciddb:> insert into boo select y from foo
 . . . . . . . . > ;
-Error: Cannot assign to target field 'X' of type CHAR(10) from source field 'Y' of type BINARY(6) (state=,code=0)
+Error: At line 1, column 24: Cannot assign to target field 'X' of type CHAR(10) from source field 'Y' of type BINARY(6) (state=,code=0)
 0: jdbc:luciddb:> select * from boo
 . . . . . . . . > ;
 +----+

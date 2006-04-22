@@ -1,0 +1,32 @@
+6.0
+30
+1	SQLVARCHAR	0	25	"\t"	1	Id
+2	SQLVARCHAR	0	25	"\t"	2	AccountId
+3	SQLVARCHAR	0	512	"\t"	3	OwnerExpirationNotice
+4	SQLDATE	0	10	"\t"	4	StartDate
+5	SQLDATE	0	10	"\t"	5	EndDate
+6	SQLVARCHAR	0	1024	"\t"	6	BillingStreet
+7	SQLVARCHAR	0	1024	"\t"	7	BillingCity
+8	SQLVARCHAR	0	1024	"\t"	8	BillingState
+9	SQLVARCHAR	0	1024	"\t"	9	BillingPostalCode
+10	SQLVARCHAR	0	1024	"\t"	10	BillingCountry
+11	SQLINT	0	8	"\t"	11	ContractTerm
+12	SQLVARCHAR	0	25	"\t"	12	OwnerId
+13	SQLVARCHAR	0	512	"\t"	13	Status
+14	SQLVARCHAR	0	25	"\t"	14	CompanySignedId
+15	SQLDATE	0	10	"\t"	15	CompanySignedDate
+16	SQLVARCHAR	0	25	"\t"	16	CustomerSignedId
+17	SQLVARCHAR	0	1024	"\t"	17	CustomerSignedTitle
+18	SQLDATE	0	10	"\t"	18	CustomerSignedDate
+19	SQLVARCHAR	0	1024	"\t"	19	SpecialTerms
+20	SQLVARCHAR	0	1024	"\t"	20	Description
+21	SQLVARCHAR	0	512	"\t"	21	StatusCode
+22	SQLVARCHAR	0	1024	"\t"	22	ContractNumber
+23	SQLVARCHAR	0	24	"\t"	23	LastApprovedDate
+24	SQLVARCHAR	0	25	"\t"	24	ActivatedById
+25	SQLVARCHAR	0	24	"\t"	25	ActivatedDate
+26	SQLVARCHAR	0	24	"\t"	26	CreatedDate
+27	SQLVARCHAR	0	25	"\t"	27	CreatedById
+28	SQLVARCHAR	0	24	"\t"	28	LastModifiedDate
+29	SQLVARCHAR	0	25	"\t"	29	LastModifiedById
+30	SQLVARCHAR	0	24	"\r\n"	30	SystemModstamp
