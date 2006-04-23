@@ -22,7 +22,6 @@
 #ifndef Fennel_LbmSegmentWriter_Included
 #define Fennel_LbmSegmentWriter_Included
 
-#include "fennel/common/CommonPreamble.h"
 #include "fennel/lucidera/bitmap/LbmEntry.h"
 
 FENNEL_BEGIN_NAMESPACE

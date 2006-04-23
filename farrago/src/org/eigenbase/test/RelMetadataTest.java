@@ -24,6 +24,7 @@ package org.eigenbase.test;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
+import org.eigenbase.rex.*;
 
 import java.util.*;
 
@@ -41,11 +42,17 @@ public class RelMetadataTest extends SqlToRelTestBase
 {
     private static final double EPSILON = 1.0e-5;
     
-    private static final double DEFAULT_SELECTIVITY = 0.1;
-
-    private static final double DEFAULT_SELECTIVITY_SQUARED =
-        DEFAULT_SELECTIVITY * DEFAULT_SELECTIVITY;
-
+    private static final double DEFAULT_EQUAL_SELECTIVITY = 0.15;
+    
+    private static final double DEFAULT_EQUAL_SELECTIVITY_SQUARED =
+        DEFAULT_EQUAL_SELECTIVITY * DEFAULT_EQUAL_SELECTIVITY;
+    
+    private static final double DEFAULT_COMP_SELECTIVITY = 0.5;
+    
+    private static final double DEFAULT_NOTNULL_SELECTIVITY = 0.9;
+    
+    private static final double DEFAULT_SELECTIVITY = 0.25;
+    
     private static final double EMP_SIZE = 1000.0;
     
     private static final double DEPT_SIZE = 100.0;
@@ -94,7 +101,7 @@ public class RelMetadataTest extends SqlToRelTestBase
     {
         checkPercentageOriginalRows(
             "select * from dept where deptno = 20",
-            DEFAULT_SELECTIVITY);
+            DEFAULT_EQUAL_SELECTIVITY);
     }
     
     public void testPercentageOriginalRowsTwoFilters()
@@ -102,7 +109,7 @@ public class RelMetadataTest extends SqlToRelTestBase
         checkPercentageOriginalRows(
             "select * from (select * from dept where name='X')"
             + " where deptno = 20",
-            DEFAULT_SELECTIVITY_SQUARED);
+            DEFAULT_EQUAL_SELECTIVITY_SQUARED);
     }
 
     // TODO jvs 28-Mar-2006:  enable this one when Broadbase
@@ -112,7 +119,7 @@ public class RelMetadataTest extends SqlToRelTestBase
         checkPercentageOriginalRows(
             "select * from (select * from dept where deptno=20)"
             + " where deptno = 20",
-            DEFAULT_SELECTIVITY);
+            DEFAULT_EQUAL_SELECTIVITY);
     }
     
     public void testPercentageOriginalRowsJoin()
@@ -128,7 +135,7 @@ public class RelMetadataTest extends SqlToRelTestBase
             "select * from (select * from emp where deptno=10) e"
             + " inner join (select * from dept where deptno=10) d"
             + " on e.deptno=d.deptno",
-            DEFAULT_SELECTIVITY_SQUARED);
+            DEFAULT_EQUAL_SELECTIVITY_SQUARED);
     }
     
     public void testPercentageOriginalRowsUnionNoFilter()
@@ -143,7 +150,7 @@ public class RelMetadataTest extends SqlToRelTestBase
         checkPercentageOriginalRows(
             "select name from dept where deptno=20"
             + " union all select ename from emp",
-            (DEPT_SIZE*DEFAULT_SELECTIVITY + EMP_SIZE)
+            (DEPT_SIZE*DEFAULT_EQUAL_SELECTIVITY + EMP_SIZE)
             / (DEPT_SIZE + EMP_SIZE));
     }
     
@@ -152,7 +159,7 @@ public class RelMetadataTest extends SqlToRelTestBase
         checkPercentageOriginalRows(
             "select name from dept"
             + " union all select ename from emp where deptno=20",
-            (EMP_SIZE*DEFAULT_SELECTIVITY + DEPT_SIZE)
+            (EMP_SIZE*DEFAULT_EQUAL_SELECTIVITY + DEPT_SIZE)
             / (DEPT_SIZE + EMP_SIZE));
     }
 
@@ -410,7 +417,7 @@ public class RelMetadataTest extends SqlToRelTestBase
     {
         checkRowCount(
             "select * from emp inner join dept on emp.deptno = dept.deptno",
-            EMP_SIZE * DEPT_SIZE * DEFAULT_SELECTIVITY);
+            EMP_SIZE * DEPT_SIZE * DEFAULT_EQUAL_SELECTIVITY);
     }
 
     public void testRowCountUnion()
@@ -419,12 +426,114 @@ public class RelMetadataTest extends SqlToRelTestBase
             "select ename from emp union all select name from dept",
             EMP_SIZE + DEPT_SIZE);
     }
-
+    
     public void testRowCountFilter()
     {
         checkRowCount(
             "select * from emp where ename='Mathilda'",
-            EMP_SIZE * DEFAULT_SELECTIVITY);
+            EMP_SIZE * DEFAULT_EQUAL_SELECTIVITY);
+    }
+    
+    public void testRowCountSort()
+    {
+        checkRowCount(
+            "select * from emp order by ename",
+            EMP_SIZE);
+    }
+    
+    private void checkFilterSelectivity(
+        String sql, double expected)
+    {
+        RelNode rel = convertSql(sql);
+        ProjectRel projectRel = (ProjectRel) rel;
+        FilterRel filterRel = (FilterRel) projectRel.getChild();
+        RexNode predicate = filterRel.getCondition();
+        Double result = RelMetadataQuery.getSelectivity(
+            filterRel.getChild(), predicate);
+        assertTrue(result != null);
+        assertEquals(expected, result.doubleValue(), EPSILON);
+    }
+    
+    public void testSelectivityIsNotNullFilter()
+    {
+        checkFilterSelectivity(
+            "select * from emp where deptno is not null",
+            DEFAULT_NOTNULL_SELECTIVITY);
+    }
+    
+    public void testSelectivityComparisonFilter()
+    {
+        checkFilterSelectivity(
+            "select * from emp where deptno > 10",
+            DEFAULT_COMP_SELECTIVITY);
+    }
+    
+    public void testSelectivityAndFilter()
+    {
+        checkFilterSelectivity(
+            "select * from emp where ename = 'foo' and deptno = 10",
+            DEFAULT_EQUAL_SELECTIVITY_SQUARED);
+    }
+    
+    public void testSelectivityOrFilter()
+    {
+        checkFilterSelectivity(
+            "select * from emp where ename = 'foo' or deptno = 10",
+            DEFAULT_SELECTIVITY);
+    }
+    
+    private void checkRelSelectivity(
+        RelNode rel, RexNode predicate, double expected)
+    {
+        Double result = RelMetadataQuery.getSelectivity(rel, predicate);
+        assertTrue(result != null);
+        assertEquals(expected, result.doubleValue(), EPSILON);
+    }
+    
+    public void testSelectivityRedundantFilter()
+    {
+        RelNode rel = convertSql("select * from emp where deptno = 10");
+        ProjectRel projectRel = (ProjectRel) rel;
+        FilterRel filterRel = (FilterRel) projectRel.getChild();
+        checkRelSelectivity(
+            filterRel, filterRel.getCondition(), DEFAULT_EQUAL_SELECTIVITY);
+    }
+    
+    public void testSelectivitySort()
+    {
+        RelNode rel = convertSql(
+            "select * from emp where deptno = 10" +
+            "order by ename");
+        SortRel sortRel = (SortRel) rel;
+        ProjectRel projectRel = (ProjectRel) sortRel.getChild();
+        FilterRel filterRel = (FilterRel) projectRel.getChild();
+        checkRelSelectivity(
+            sortRel, filterRel.getCondition(), DEFAULT_EQUAL_SELECTIVITY);
+    }
+    
+    public void testSelectivityUnion()
+    {
+        RelNode rel = convertSql(
+            "select * from (select * from emp union all select * from emp) " +
+            "where deptno = 10");
+        ProjectRel projectRel = (ProjectRel) rel;
+        FilterRel filterRel = (FilterRel) projectRel.getChild();
+        // UnionRel is the child of the FilterRel
+        checkRelSelectivity(
+            filterRel.getChild(), filterRel.getCondition(),
+            DEFAULT_EQUAL_SELECTIVITY);
+    }
+    
+    public void testDistinctRowCountTable()
+    {
+        // no unique key information is available so return null
+        RelNode rel = convertSql("select * from emp where deptno = 10");
+        ProjectRel projectRel = (ProjectRel) rel;
+        FilterRel filterRel = (FilterRel) projectRel.getChild();
+        BitSet groupKey = new BitSet();
+        Double result = RelMetadataQuery.getDistinctRowCount(
+            filterRel.getChild(), groupKey, filterRel.getCondition());
+        assertTrue(result == null);
     }
 }
 

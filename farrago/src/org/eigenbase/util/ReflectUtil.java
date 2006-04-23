@@ -341,11 +341,22 @@ public abstract class ReflectUtil
             if (method != null) {
                 if (candidateMethod != null) {
                     if (!method.equals(candidateMethod)) {
-                        throw new IllegalArgumentException(
-                            "dispatch ambiguity between "
-                            + candidateMethod
-                            + " and "
-                            + method);
+                        Class c1 = method.getParameterTypes()[0];
+                        Class c2 = candidateMethod.getParameterTypes()[0];
+                        if (c1.isAssignableFrom(c2)) {
+                            // c2 inherits from c1, so keep candidateMethod
+                            continue;
+                        } else if (c2.isAssignableFrom(c1)) {
+                            // c1 inherits from c2, so fall through
+                            // to set candidateMethod = method
+                        } else {
+                            // c1 and c2 are not directly related
+                            throw new IllegalArgumentException(
+                                "dispatch ambiguity between "
+                                + candidateMethod
+                                + " and "
+                                + method);
+                        }
                     }
                 }
                 candidateMethod = method;

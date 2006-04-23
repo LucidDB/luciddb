@@ -115,6 +115,30 @@ public class NumberUtil {
             return (long) (d + 0.5);
         }
     }
+    
+    public static Double add(Double a, Double b)
+    {
+        if (a == null || b == null) {
+            return null;
+        }
+        return Double.valueOf(a.doubleValue()+b.doubleValue());
+    }
+    
+    public static Double divide(Double a, Double b)
+    {
+        if (a == null || b == null || b.doubleValue() == 0.0) {
+            return null;
+        }
+        return Double.valueOf(a.doubleValue()/b.doubleValue());
+    }
+
+    public static Double multiply(Double a, Double b)
+    {
+        if (a == null || b == null) {
+            return null;
+        }
+        return Double.valueOf(a.doubleValue()*b.doubleValue());
+    }
 }
 
 // End NumberUtil.java

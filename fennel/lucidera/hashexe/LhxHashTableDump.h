@@ -22,7 +22,6 @@
 #ifndef Fennel_LhxHashTableDump_Included
 #define Fennel_LhxHashTableDump_Included
 
-#include "fennel/common/CommonPreamble.h"
 #include "fennel/common/TraceSource.h"
 #include "fennel/lucidera/hashexe/LhxHashTable.h"
 #include <stdarg.h>
@@ -56,9 +55,14 @@ public:
         traceLevel = traceLevelInit;
     }
 
+    void dump(string traceStr)
+    {
+        FENNEL_TRACE(traceLevel, traceStr);
+    }
+
     void dump(LhxHashTable &hashTable)
     {
-        FENNEL_TRACE(traceLevel, hashTable.toString());
+        dump(hashTable.toString());
     }
 };
 

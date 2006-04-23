@@ -32,6 +32,7 @@
 #include "fennel/lucidera/bitmap/LbmChopperExecStream.h"
 #include "fennel/lucidera/bitmap/LbmUnionExecStream.h"
 #include "fennel/lucidera/bitmap/LbmIntersectExecStream.h"
+#include "fennel/lucidera/hashexe/LhxJoinExecStream.h"
 #include "fennel/db/Database.h"
 #include "fennel/segment/SegmentFactory.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
@@ -100,24 +101,8 @@ class ExecStreamSubFactory_lu
 
         pExecStreamFactory->readTupleStreamParams(params, streamDef);
         
-        // ExternalSortStream requires a private ScratchSegment.  It's very
-        // important to do this AFTER readTupleStreamParams, otherwise the
-        // private one gets reset to the ScratchSegment shared across the whole
-        // graph, and then quite bad things happen.
-        params.scratchAccessor =
-            pDatabase->getSegmentFactory()->newScratchSegment(
-                pDatabase->getCache());
-
-        // TODO jvs 9-Feb-2006:  call factory to get help with
-        // setting up quota for private scratch segment
-        SharedQuotaCacheAccessor pSuperQuotaAccessor =
-            boost::dynamic_pointer_cast<QuotaCacheAccessor>(
-                params.pCacheAccessor);
-        params.scratchAccessor.pCacheAccessor.reset(
-            new QuotaCacheAccessor(
-                pSuperQuotaAccessor,
-                params.scratchAccessor.pCacheAccessor,
-                UINT_MAX));
+        // ExternalSortStream requires a private ScratchSegment.
+        pExecStreamFactory->createPrivateScratchSegment(params);
         
         params.distinctness = streamDef.getDistinctness();
         params.pTempSegment = pDatabase->getTempSegment();
@@ -162,6 +147,9 @@ class ExecStreamSubFactory_lu
         pExecStreamFactory->readTupleStreamParams(params, streamDef);
         pExecStreamFactory->readBTreeStreamParams(params, streamDef);
         
+        // LcsClusterAppendExecStream requires a private ScratchSegment.
+        pExecStreamFactory->createPrivateScratchSegment(params);
+
         params.overwrite = streamDef.isOverwrite();
         
         CmdInterpreter::readTupleProjection(
@@ -194,6 +182,10 @@ class ExecStreamSubFactory_lu
 
         pExecStreamFactory->readTupleStreamParams(params, streamDef);
         pExecStreamFactory->readBTreeStreamParams(params, streamDef);
+
+        // LbmGeneratorExecStream requires a private ScratchSegment.
+        pExecStreamFactory->createPrivateScratchSegment(params);
+
         readClusterScan(streamDef, params);
         CmdInterpreter::readTupleProjection(
             params.outputProj, streamDef.getOutputProj());
@@ -247,6 +239,9 @@ class ExecStreamSubFactory_lu
         LbmUnionExecStreamParams params;
         pExecStreamFactory->readTupleStreamParams(params, streamDef);
 
+        // LbmUnionExecStream requires a private ScratchSegment.
+        pExecStreamFactory->createPrivateScratchSegment(params);
+
         params.startRidParamId = 
             readDynamicParamId(streamDef.getConsumerSridParamId());
 
@@ -273,6 +268,39 @@ class ExecStreamSubFactory_lu
             readDynamicParamId(streamDef.getStartRidParamId());
 
         pEmbryo->init(new LbmIntersectExecStream(), params);
+    }
+
+    // implement FemVisitor
+    virtual void visit(ProxyLhxJoinStreamDef &streamDef)
+    {
+        TupleProjection tmpProj;
+
+        LhxJoinExecStreamParams params;
+        pExecStreamFactory->readTupleStreamParams(params, streamDef);
+
+        /*
+         * These fields are currently not used by the optimizer. We know that
+         * optimizer only supports inner equi hash join.
+         */
+        params.leftInner = true;
+        params.leftOuter = false;
+        params.rightInner = true;
+        params.rightOuter = false;        
+        params.eliminateDuplicate = false;
+
+        CmdInterpreter::readTupleProjection(
+            params.leftKeyProj, streamDef.getLeftKeyProj());
+
+        CmdInterpreter::readTupleProjection(
+            params.rightKeyProj, streamDef.getRightKeyProj());
+
+        /*
+         * The optimizer currently estimates these two values.
+         */
+        params.cndKeys = streamDef.getCndBuildKeys();
+        params.numRows = streamDef.getNumBuildRows();
+
+        pEmbryo->init(new LhxJoinExecStream(), params);
     }
 
     // implement JniProxyVisitor

@@ -19,11 +19,13 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#include "fennel/common/CommonPreamble.h"
 #include "fennel/lucidera/bitmap/LbmEntry.h"
 #include <iomanip>
 #include <sstream>
 
 FENNEL_BEGIN_CPPFILE("$Id$");
+
 
 LbmEntry::LbmEntry()
 {
@@ -729,10 +731,16 @@ bool LbmEntry::adjustEntry(TupleData &inputTuple)
         setRIDCurrentSegByte(inputStartRID);
         return true;
     } else if (isSingleton()) {
-        // This can only happen if the inputTuple startRID == the singleton RID
-        // which means both RIDs are on byte boundary.
-        assert ((opaqueToInt(startRID) == opaqueToInt(inputStartRID)) &&
-                (opaqueToInt(startRID) % LbmOneByteSize == 0));
+        /*
+         * This can only happen if the singleton RID in in the same byte as the
+         * inputStartRID. e,g:
+         * current entry(singleton): startRID == endRID == 2
+         * input entry(non-singleton) inputStartRID == 0, and
+         *                            first byte is 0 0 1 1 1 0 0 0
+         * See test case LER-422 in lbm.sql.
+         */
+        assert ((opaqueToInt(startRID) - opaqueToInt(inputStartRID))
+            < LbmOneByteSize);
 
         // use the input as the current and set the bit at inputStartRID.
         setEntryTuple(inputTuple);
@@ -1022,21 +1030,28 @@ TupleData const &LbmEntry::produceEntryTuple()
     return entryTuple;
 }
 
-string LbmEntry::printDatum(TupleDatum const &tupleDatum)
+string LbmEntry::printDatum(
+    TupleDatum const &tupleDatum,
+    bool reverseByteOrder)
 {
     ostringstream byteStr;
     PConstBuffer ptr = tupleDatum.pData;
     uint size = tupleDatum.cbData;
 
     if (ptr) {        
-        /*
-         * pData stores bytes backwards.
-         */
-        PConstBuffer tmpPtr = ptr + size;
-        while (size > 0) {
-            tmpPtr --;
-            byteStr << hex << setw(2) << setfill('0')  << (uint)(*tmpPtr);
-            size --;
+        if (reverseByteOrder) {
+            PConstBuffer tmpPtr = ptr + size;
+            while (size > 0) {
+                tmpPtr --;
+                byteStr << hex << setw(2) << setfill('0')  << (uint)(*tmpPtr);
+                size --;
+            }
+        } else {
+            while (size > 0) {
+                byteStr << hex << setw(2) << setfill('0')  << (uint)(*ptr);
+                ptr ++;
+                size --;
+            }
         }
     }
 
@@ -1202,7 +1217,7 @@ string LbmEntry::toBitmapString(TupleData const&inputTuple)
     tupleTrace << "Key [";
     
     for (uint i = 0; i < tupleSize - 3 ; i ++) {
-        tupleTrace << printDatum(inputTuple[i]);
+        tupleTrace << printDatum(inputTuple[i], true);
         if (i < tupleSize - 4) {
             tupleTrace << "|";
         }
@@ -1261,7 +1276,7 @@ string LbmEntry::toRIDString(TupleData const &inputTuple)
 
     keyTrace << "Key [";
     for (uint i = 0; i < tupleSize - 3 ; i ++) {
-        keyTrace << printDatum(inputTuple[i]);
+        keyTrace << printDatum(inputTuple[i], true);
         if (i < tupleSize - 4) {
             keyTrace << "|";
         }
@@ -1318,7 +1333,7 @@ string LbmEntry::toString()
     tupleTrace << "Key [";
     
     for (uint i = 0; i < tupleSize - 3 ; i ++) {
-        tupleTrace << printDatum(entryTuple[i]);
+        tupleTrace << printDatum(entryTuple[i], true);
         if (i < tupleSize - 4) {
             tupleTrace << "|";
         }
@@ -1515,6 +1530,6 @@ uint LbmEntry::getMaxBitmapSize(uint bitmapColSize)
     return bitmapColSize - (bitmapColSize / LbmMaxSegSize);
 }
 
-FENNEL_END_CPPFILE("$Id: //open/lu/dev/fennel/lucidera/bitmap/LbmEntry.cpp#8 $");
+FENNEL_END_CPPFILE("$Id$");
 
 // End LbmEntry.cpp

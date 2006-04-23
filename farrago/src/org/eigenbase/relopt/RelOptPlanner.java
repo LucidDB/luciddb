@@ -137,7 +137,12 @@ public interface RelOptPlanner
     public RelOptCost makeZeroCost();
 
     /**
-     * Computes the cost of a RelNode.
+     * Computes the cost of a RelNode.  In most cases, this just
+     * dispatches to {@link RelMetadataQuery#getCumulativeCost}.
+     *
+     * @param rel expression of interest
+     *
+     * @return estimated cost
      */
     public RelOptCost getCost(RelNode rel);
 

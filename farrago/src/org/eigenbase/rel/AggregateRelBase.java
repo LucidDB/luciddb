@@ -92,6 +92,17 @@ public abstract class AggregateRelBase extends SingleRel
             values.toArray(new Object[values.size()]));
     }
 
+    // implement RelNode
+    public double getRows()
+    {
+        if (groupCount == 0) {
+            return 1.0;
+        }
+        // NOTE jvs 11-Apr-2006:  leaving the real thing for
+        // RelMetadataQuery implementation.
+        return super.getRows();
+    }
+    
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         return planner.makeTinyCost();

@@ -1,6 +1,9 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/udfInvocation.sql#7 $
+0: jdbc:luciddb:> -- $Id: //open/lu/dev_lcs/luciddb/test/sql/udr/udf/udfInvocation.sql#5 $
 0: jdbc:luciddb:> -- Tests ported from 
 0: jdbc:luciddb:> -- //open/lu/dev/farrago/unitsql/expressions/udfInvocation.sql
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- force usage of Java calculator for error message consistency
+0: jdbc:luciddb:> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create schema udftest4;
 0: jdbc:luciddb:> set schema 'udftest4';

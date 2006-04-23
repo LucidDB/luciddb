@@ -1,0 +1,541 @@
+0: jdbc:farrago:> -- $Id: $
+0: jdbc:farrago:> -- This script tests statistics generation procedures
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !set verbose true
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- Setup a link to an empty tpcd schema
+0: jdbc:farrago:> --
+0: jdbc:farrago:> create schema tpcd;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> set schema 'tpcd';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create foreign data wrapper local_file_wrapper
+. . . . . . . . > library 'class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper'
+. . . . . . . . > language java;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create server tpcd_server
+. . . . . . . . > foreign data wrapper local_file_wrapper
+. . . . . . . . > options (
+. . . . . . . . >     directory 'unitsql/optimizer/data/tpcd',
+. . . . . . . . >     file_extension 'tbl',
+. . . . . . . . >     with_header 'no', 
+. . . . . . . . >     log_directory 'testlog');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> import foreign schema bcp 
+. . . . . . . . > limit to (
+. . . . . . . . >     "CUSTOMER","LINEITEM","NATION","ORDERS",
+. . . . . . . . >     "PART","PARTSUPP","REGION","SUPPLIER")
+. . . . . . . . > from server tpcd_server
+. . . . . . . . > into tpcd;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> ---------------------------------------------------------------------------
+0: jdbc:farrago:> -- Fake statistics generation                                            --
+0: jdbc:farrago:> --                                                                       --
+0: jdbc:farrago:> -- Here we just generate a few data; would need some adjustment          --
+0: jdbc:farrago:> -- for usage with actual tpcd queries (column names, generated values)   --
+0: jdbc:farrago:> ---------------------------------------------------------------------------
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- 1.1 Row counts, fine for foreign tables
+0: jdbc:farrago:> --
+0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','CUSTOMER',15000);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','LINEITEM',600572);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','NATION',25);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','ORDERS',150000);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','PART',20000);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','PARTSUPP',80000);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','REGION',5);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','SUPPLIER',1000);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select "name", "rowCount" from sys_fem.med."BaseColumnSet" order by 1;
++-----------+-----------+
+|   name    | rowCount  |
++-----------+-----------+
+| CUSTOMER  | 15000     |
+| DEPTS     |           |
+| EMPS      |           |
+| LINEITEM  | 600572    |
+| NATION    | 25        |
+| ORDERS    | 150000    |
+| PART      | 20000     |
+| PARTSUPP  | 80000     |
+| REGION    | 5         |
+| SUPPLIER  | 1000      |
+| TEMPS     |           |
++-----------+-----------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- 1.2 Page counts. We can neither index foreign tables or retrieve the 
+0: jdbc:farrago:> --     page counts of foreign indexes, so make a dummy table
+0: jdbc:farrago:> --
+0: jdbc:farrago:> create table dummy_region (
+. . . . . . . . >     R_REGIONKEY  INTEGER PRIMARY KEY,
+. . . . . . . . >     R_NAME       VARCHAR(25) NOT NULL,
+. . . . . . . . >     R_COMMENT    VARCHAR(152));
+0: jdbc:farrago:> 
+0: jdbc:farrago:> call sys_boot.mgmt.stat_set_page_count(
+. . . . . . . . >     'LOCALDB','TPCD','SYS$CONSTRAINT_INDEX$DUMMY_REGION$SYS$PRIMARY_KEY',1);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select "name", "pageCount" from sys_fem.med."LocalIndex" order by 1;
++----------------------------------------------------+------------+
+|                        name                        | pageCount  |
++----------------------------------------------------+------------+
+| EMPS_UX                                            |            |
+| SYS$CONSTRAINT_INDEX$DEPTS$DEPTS_UNIQUE_NAME       |            |
+| SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY         |            |
+| SYS$CONSTRAINT_INDEX$DUMMY_REGION$SYS$PRIMARY_KEY  | 1          |
+| SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY          |            |
+| SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID     |            |
+| SYS$CONSTRAINT_INDEX$TEMPS$SYS$PRIMARY_KEY         |            |
+| TEMPS_CX                                           |            |
++----------------------------------------------------+------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- 1.3 Column histograms, also fine for foreign tables
+0: jdbc:farrago:> --
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- C_CUSTKEY
+0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
+. . . . . . . . >     'LOCALDB','TPCD','CUSTOMER','F1',15000,10,1500,0,'0123456789');
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- C_NATIONKEY
+0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
+. . . . . . . . >     'LOCALDB','TPCD','CUSTOMER','F4',25,10,25,0,'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select 
+. . . . . . . . >     c."name",
+. . . . . . . . >     "distinctValueCount" "values","percentageSampled" "percent",
+. . . . . . . . >     "barCount","rowsPerBar","rowsLastBar"
+. . . . . . . . > from 
+. . . . . . . . >     sys_fem.med."ColumnHistogram" h,
+. . . . . . . . >     sys_fem.sql2003."AbstractColumn" c
+. . . . . . . . > where c."Histogram" = h."mofId" order by 1;
++-------+---------+----------+-----------+-------------+--------------+
+| name  | values  | percent  | barCount  | rowsPerBar  | rowsLastBar  |
++-------+---------+----------+-----------+-------------+--------------+
+| F1    | 15000   | 10       | 100       | 15          | 15           |
+| F4    | 25      | 10       | 100       | 15          | 15           |
++-------+---------+----------+-----------+-------------+--------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- query the distinct column C_CUSTKEY
+0: jdbc:farrago:> select "ordinal","startingValue","valueCount"
+. . . . . . . . > from sys_fem.med."ColumnHistogramBar" where "startingValue" < 'A' order by 1;
++----------+----------------+-------------+
+| ordinal  | startingValue  | valueCount  |
++----------+----------------+-------------+
+| 0        | 00             | 15          |
+| 1        | 01             | 15          |
+| 2        | 02             | 15          |
+| 3        | 03             | 15          |
+| 4        | 04             | 15          |
+| 5        | 05             | 15          |
+| 6        | 06             | 15          |
+| 7        | 07             | 15          |
+| 8        | 08             | 15          |
+| 9        | 09             | 15          |
+| 10       | 10             | 15          |
+| 11       | 11             | 15          |
+| 12       | 12             | 15          |
+| 13       | 13             | 15          |
+| 14       | 14             | 15          |
+| 15       | 15             | 15          |
+| 16       | 16             | 15          |
+| 17       | 17             | 15          |
+| 18       | 18             | 15          |
+| 19       | 19             | 15          |
+| 20       | 20             | 15          |
+| 21       | 21             | 15          |
+| 22       | 22             | 15          |
+| 23       | 23             | 15          |
+| 24       | 24             | 15          |
+| 25       | 25             | 15          |
+| 26       | 26             | 15          |
+| 27       | 27             | 15          |
+| 28       | 28             | 15          |
+| 29       | 29             | 15          |
+| 30       | 30             | 15          |
+| 31       | 31             | 15          |
+| 32       | 32             | 15          |
+| 33       | 33             | 15          |
+| 34       | 34             | 15          |
+| 35       | 35             | 15          |
+| 36       | 36             | 15          |
+| 37       | 37             | 15          |
+| 38       | 38             | 15          |
+| 39       | 39             | 15          |
+| 40       | 40             | 15          |
+| 41       | 41             | 15          |
+| 42       | 42             | 15          |
+| 43       | 43             | 15          |
+| 44       | 44             | 15          |
+| 45       | 45             | 15          |
+| 46       | 46             | 15          |
+| 47       | 47             | 15          |
+| 48       | 48             | 15          |
+| 49       | 49             | 15          |
+| 50       | 50             | 15          |
+| 51       | 51             | 15          |
+| 52       | 52             | 15          |
+| 53       | 53             | 15          |
+| 54       | 54             | 15          |
+| 55       | 55             | 15          |
+| 56       | 56             | 15          |
+| 57       | 57             | 15          |
+| 58       | 58             | 15          |
+| 59       | 59             | 15          |
+| 60       | 60             | 15          |
+| 61       | 61             | 15          |
+| 62       | 62             | 15          |
+| 63       | 63             | 15          |
+| 64       | 64             | 15          |
+| 65       | 65             | 15          |
+| 66       | 66             | 15          |
+| 67       | 67             | 15          |
+| 68       | 68             | 15          |
+| 69       | 69             | 15          |
+| 70       | 70             | 15          |
+| 71       | 71             | 15          |
+| 72       | 72             | 15          |
+| 73       | 73             | 15          |
+| 74       | 74             | 15          |
+| 75       | 75             | 15          |
+| 76       | 76             | 15          |
+| 77       | 77             | 15          |
+| 78       | 78             | 15          |
+| 79       | 79             | 15          |
+| 80       | 80             | 15          |
+| 81       | 81             | 15          |
+| 82       | 82             | 15          |
+| 83       | 83             | 15          |
+| 84       | 84             | 15          |
+| 85       | 85             | 15          |
+| 86       | 86             | 15          |
+| 87       | 87             | 15          |
+| 88       | 88             | 15          |
+| 89       | 89             | 15          |
+| 90       | 90             | 15          |
+| 91       | 91             | 15          |
+| 92       | 92             | 15          |
+| 93       | 93             | 15          |
+| 94       | 94             | 15          |
+| 95       | 95             | 15          |
+| 96       | 96             | 15          |
+| 97       | 97             | 15          |
+| 98       | 98             | 15          |
++----------+----------------+-------------+
+| ordinal  | startingValue  | valueCount  |
++----------+----------------+-------------+
+| 99       | 99             | 15          |
++----------+----------------+-------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- query the low cardinality column C_NATIONKEY
+0: jdbc:farrago:> select "ordinal","startingValue","valueCount"
+. . . . . . . . > from sys_fem.med."ColumnHistogramBar" where "startingValue" > '99' order by 1;
++----------+----------------+-------------+
+| ordinal  | startingValue  | valueCount  |
++----------+----------------+-------------+
+| 0        | AA             | 1           |
+| 1        | AB             | 0           |
+| 2        | AC             | 0           |
+| 3        | AD             | 0           |
+| 4        | BA             | 1           |
+| 5        | BB             | 0           |
+| 6        | BC             | 0           |
+| 7        | BD             | 0           |
+| 8        | CA             | 1           |
+| 9        | CB             | 0           |
+| 10       | CC             | 0           |
+| 11       | CD             | 0           |
+| 12       | DA             | 1           |
+| 13       | DB             | 0           |
+| 14       | DC             | 0           |
+| 15       | DD             | 0           |
+| 16       | EA             | 1           |
+| 17       | EB             | 0           |
+| 18       | EC             | 0           |
+| 19       | ED             | 0           |
+| 20       | FA             | 1           |
+| 21       | FB             | 0           |
+| 22       | FC             | 0           |
+| 23       | FD             | 0           |
+| 24       | GA             | 1           |
+| 25       | GB             | 0           |
+| 26       | GC             | 0           |
+| 27       | GD             | 0           |
+| 28       | HA             | 1           |
+| 29       | HB             | 0           |
+| 30       | HC             | 0           |
+| 31       | HD             | 0           |
+| 32       | IA             | 1           |
+| 33       | IB             | 0           |
+| 34       | IC             | 0           |
+| 35       | ID             | 0           |
+| 36       | JA             | 1           |
+| 37       | JB             | 0           |
+| 38       | JC             | 0           |
+| 39       | JD             | 0           |
+| 40       | KA             | 1           |
+| 41       | KB             | 0           |
+| 42       | KC             | 0           |
+| 43       | KD             | 0           |
+| 44       | LA             | 1           |
+| 45       | LB             | 0           |
+| 46       | LC             | 0           |
+| 47       | LD             | 0           |
+| 48       | MA             | 1           |
+| 49       | MB             | 0           |
+| 50       | MC             | 0           |
+| 51       | MD             | 0           |
+| 52       | NA             | 1           |
+| 53       | NB             | 0           |
+| 54       | NC             | 0           |
+| 55       | ND             | 0           |
+| 56       | OA             | 1           |
+| 57       | OB             | 0           |
+| 58       | OC             | 0           |
+| 59       | OD             | 0           |
+| 60       | PA             | 1           |
+| 61       | PB             | 0           |
+| 62       | PC             | 0           |
+| 63       | PD             | 0           |
+| 64       | QA             | 1           |
+| 65       | QB             | 0           |
+| 66       | QC             | 0           |
+| 67       | QD             | 0           |
+| 68       | RA             | 1           |
+| 69       | RB             | 0           |
+| 70       | RC             | 0           |
+| 71       | RD             | 0           |
+| 72       | SA             | 1           |
+| 73       | SB             | 0           |
+| 74       | SC             | 0           |
+| 75       | SD             | 0           |
+| 76       | TA             | 1           |
+| 77       | TB             | 0           |
+| 78       | TC             | 0           |
+| 79       | TD             | 0           |
+| 80       | UA             | 1           |
+| 81       | UB             | 0           |
+| 82       | UC             | 0           |
+| 83       | UD             | 0           |
+| 84       | VA             | 1           |
+| 85       | VB             | 0           |
+| 86       | VC             | 0           |
+| 87       | VD             | 0           |
+| 88       | WA             | 1           |
+| 89       | WB             | 0           |
+| 90       | WC             | 0           |
+| 91       | XA             | 0           |
+| 92       | XB             | 1           |
+| 93       | XC             | 0           |
+| 94       | YA             | 0           |
+| 95       | YB             | 0           |
+| 96       | YC             | 1           |
+| 97       | ZA             | 0           |
+| 98       | ZB             | 0           |
++----------+----------------+-------------+
+| ordinal  | startingValue  | valueCount  |
++----------+----------------+-------------+
+| 99       | ZC             | 0           |
++----------+----------------+-------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- 1.4 Update a histogram with more data
+0: jdbc:farrago:> --
+0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
+. . . . . . . . >     'LOCALDB','TPCD','CUSTOMER','F1',15000,100,15000,0,'0123456789');
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select 
+. . . . . . . . >     c."name",
+. . . . . . . . >     "distinctValueCount" "values","percentageSampled" "percent",
+. . . . . . . . >     "barCount","rowsPerBar","rowsLastBar"
+. . . . . . . . > from 
+. . . . . . . . >     sys_fem.med."ColumnHistogram" h,
+. . . . . . . . >     sys_fem.sql2003."AbstractColumn" c
+. . . . . . . . > where c."Histogram" = h."mofId" order by 1;
++-------+---------+----------+-----------+-------------+--------------+
+| name  | values  | percent  | barCount  | rowsPerBar  | rowsLastBar  |
++-------+---------+----------+-----------+-------------+--------------+
+| F1    | 15000   | 100      | 100       | 150         | 150          |
+| F4    | 25      | 10       | 100       | 15          | 15           |
++-------+---------+----------+-----------+-------------+--------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select "ordinal","startingValue","valueCount"
+. . . . . . . . > from sys_fem.med."ColumnHistogramBar" where "startingValue" < 'A' order by 1;
++----------+----------------+-------------+
+| ordinal  | startingValue  | valueCount  |
++----------+----------------+-------------+
+| 0        | 00             | 150         |
+| 1        | 01             | 150         |
+| 2        | 02             | 150         |
+| 3        | 03             | 150         |
+| 4        | 04             | 150         |
+| 5        | 05             | 150         |
+| 6        | 06             | 150         |
+| 7        | 07             | 150         |
+| 8        | 08             | 150         |
+| 9        | 09             | 150         |
+| 10       | 10             | 150         |
+| 11       | 11             | 150         |
+| 12       | 12             | 150         |
+| 13       | 13             | 150         |
+| 14       | 14             | 150         |
+| 15       | 15             | 150         |
+| 16       | 16             | 150         |
+| 17       | 17             | 150         |
+| 18       | 18             | 150         |
+| 19       | 19             | 150         |
+| 20       | 20             | 150         |
+| 21       | 21             | 150         |
+| 22       | 22             | 150         |
+| 23       | 23             | 150         |
+| 24       | 24             | 150         |
+| 25       | 25             | 150         |
+| 26       | 26             | 150         |
+| 27       | 27             | 150         |
+| 28       | 28             | 150         |
+| 29       | 29             | 150         |
+| 30       | 30             | 150         |
+| 31       | 31             | 150         |
+| 32       | 32             | 150         |
+| 33       | 33             | 150         |
+| 34       | 34             | 150         |
+| 35       | 35             | 150         |
+| 36       | 36             | 150         |
+| 37       | 37             | 150         |
+| 38       | 38             | 150         |
+| 39       | 39             | 150         |
+| 40       | 40             | 150         |
+| 41       | 41             | 150         |
+| 42       | 42             | 150         |
+| 43       | 43             | 150         |
+| 44       | 44             | 150         |
+| 45       | 45             | 150         |
+| 46       | 46             | 150         |
+| 47       | 47             | 150         |
+| 48       | 48             | 150         |
+| 49       | 49             | 150         |
+| 50       | 50             | 150         |
+| 51       | 51             | 150         |
+| 52       | 52             | 150         |
+| 53       | 53             | 150         |
+| 54       | 54             | 150         |
+| 55       | 55             | 150         |
+| 56       | 56             | 150         |
+| 57       | 57             | 150         |
+| 58       | 58             | 150         |
+| 59       | 59             | 150         |
+| 60       | 60             | 150         |
+| 61       | 61             | 150         |
+| 62       | 62             | 150         |
+| 63       | 63             | 150         |
+| 64       | 64             | 150         |
+| 65       | 65             | 150         |
+| 66       | 66             | 150         |
+| 67       | 67             | 150         |
+| 68       | 68             | 150         |
+| 69       | 69             | 150         |
+| 70       | 70             | 150         |
+| 71       | 71             | 150         |
+| 72       | 72             | 150         |
+| 73       | 73             | 150         |
+| 74       | 74             | 150         |
+| 75       | 75             | 150         |
+| 76       | 76             | 150         |
+| 77       | 77             | 150         |
+| 78       | 78             | 150         |
+| 79       | 79             | 150         |
+| 80       | 80             | 150         |
+| 81       | 81             | 150         |
+| 82       | 82             | 150         |
+| 83       | 83             | 150         |
+| 84       | 84             | 150         |
+| 85       | 85             | 150         |
+| 86       | 86             | 150         |
+| 87       | 87             | 150         |
+| 88       | 88             | 150         |
+| 89       | 89             | 150         |
+| 90       | 90             | 150         |
+| 91       | 91             | 150         |
+| 92       | 92             | 150         |
+| 93       | 93             | 150         |
+| 94       | 94             | 150         |
+| 95       | 95             | 150         |
+| 96       | 96             | 150         |
+| 97       | 97             | 150         |
+| 98       | 98             | 150         |
++----------+----------------+-------------+
+| ordinal  | startingValue  | valueCount  |
++----------+----------------+-------------+
+| 99       | 99             | 150         |
++----------+----------------+-------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- FIXME: this query fails
+0: jdbc:farrago:> -- select * from 
+0: jdbc:farrago:> --     sys_fem.sql2003."AbstractColumn" c,
+0: jdbc:farrago:> --     sys_fem.med."ColumnHistogramBar" b
+0: jdbc:farrago:> -- where b."Histogram" = c."Histogram";
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

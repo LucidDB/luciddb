@@ -19,6 +19,7 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#include "fennel/common/CommonPreamble.h"
 #include "fennel/lucidera/hashexe/LhxHashGenerator.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
@@ -56,16 +57,16 @@ void LhxHashGenerator::init(uint levelInit)
      * Level 64 will have the same seed as level 0. So if recursive
      * partitioning goes to 64 level, no further partitioning is possible.
      */
-	assert(levelInit < 64);
-	level = levelInit;
+    assert(levelInit < 64);
+    level = levelInit;
     magicTable = LhxHashGeneratorMagicTable;;
 
-	uint base = level * 4;
-	hashValueSeed
-		= (uint8_t(base    ) << 24)
-		| (uint8_t(base + 1) << 16)
-		| (uint8_t(base + 2) << 8 )
-		| (uint8_t(base + 3)      );
+    uint base = level * 4;
+    hashValueSeed
+        = (uint8_t(base    ) << 24)
+        | (uint8_t(base + 1) << 16)
+        | (uint8_t(base + 2) << 8 )
+        | (uint8_t(base + 3)      );
 }
 
 void LhxHashGenerator::hashOneBuffer(uint &hashValue, PConstBuffer pBuf,
@@ -79,7 +80,7 @@ void LhxHashGenerator::hashOneBuffer(uint &hashValue, PConstBuffer pBuf,
         pBuf = &byteForNull;
     }
 
-	for (int count = 0; count < bufSize; count ++) {
+    for (int count = 0; count < bufSize; count ++) {
         PBuffer pByte = (PBuffer) &hashValue;
 
         for (int i = 0; i < numValueBytes; i++) {
@@ -123,15 +124,15 @@ uint LhxHashGenerator::hash(
     /*
      * get initial hash value of 4 bytes.
      */
-	uint hashValue = hashValueSeed;
+    uint hashValue = hashValueSeed;
 
-	for (int i = 0; i < keyProjection.size(); i ++)
-	{
-		TupleDatum col = inputTuple[keyProjection[i]];
+    for (int i = 0; i < keyProjection.size(); i ++)
+    {
+        TupleDatum col = inputTuple[keyProjection[i]];
         hashOneColumn(hashValue, col);
-	}
+    }
 
-	return hashValue;
+    return hashValue;
 }
 
 FENNEL_END_CPPFILE("$Id$");

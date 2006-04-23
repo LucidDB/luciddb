@@ -260,10 +260,10 @@ std::string getName();
 static jmethodID meth_getName;
 SharedProxyTupleDescriptor getOutputDesc();
 static jmethodID meth_getOutputDesc;
-SharedProxyExecStreamDataFlow getInputFlow();
-static jmethodID meth_getInputFlow;
 SharedProxyExecStreamDataFlow getOutputFlow();
 static jmethodID meth_getOutputFlow;
+SharedProxyExecStreamDataFlow getInputFlow();
+static jmethodID meth_getInputFlow;
 };
 
 class ProxyTupleStreamDef

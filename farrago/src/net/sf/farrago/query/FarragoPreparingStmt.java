@@ -109,6 +109,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     private PrivilegedAction dmlAction;
     private TableAccessMap tableAccessMap;
     private ChainedRelMetadataProvider relMetadataProvider;
+    private boolean allowPartialImplementation;
 
     /**
      * Name of Java package containing code generated for this statement.
@@ -168,6 +169,12 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         clearDmlValidation();
 
         relMetadataProvider = new DefaultRelMetadataProvider();
+
+        // Chain Farrago metadata just above the default. This allows it to 
+        // provide metadata for rels that are not handled by other providers, 
+        // but not to override the behavior of other providers.
+        relMetadataProvider.addProvider(
+            new FarragoRelMetadataProvider(getRepos()));
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -188,6 +195,16 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         assert(this.planner == null);
         this.planner = planner;
         getSession().getPersonality().definePlannerListeners(planner);
+    }
+
+    /**
+     * Tells this statement not to throw an exception if optimizer can't find a
+     * valid physical plan.  This is intended for use mainly by unit tests
+     * which need to peer into intermediate query optimization states.
+     */
+    public void enablePartialImplementation()
+    {
+        allowPartialImplementation = true;
     }
 
     public FarragoSessionPlanner getPlanner()
@@ -639,7 +656,10 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         // Validate that plan satisfies all required trait conversions.  This
         // implicitly validates that a physical implementation was found for
         // every node.
-        RelNode problemRel = validatePlan(rootRel, desiredTraits);
+        RelNode problemRel = null;
+        if (!allowPartialImplementation) {
+            problemRel = validatePlan(rootRel, desiredTraits);
+        }
         if (problemRel != null) {
             // Dump plan unless we already did above.
             if (!dumpPlan) {

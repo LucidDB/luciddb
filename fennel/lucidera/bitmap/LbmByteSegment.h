@@ -22,7 +22,6 @@
 #ifndef Fennel_LbmByteSegment_Included
 #define Fennel_LbmByteSegment_Included
 
-#include "fennel/common/CommonPreamble.h"
 #include "fennel/common/ByteBuffer.h"
 #include "fennel/lucidera/bitmap/LbmSegment.h"
 

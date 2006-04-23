@@ -310,11 +310,13 @@ public class OptimizeJoinRule extends RelOptRule
             
             // if there are potential dimension filters, determine if there
             // are appropriate indexes
-            for (int dimIdx = 0; dimIdx < nJoinFactors; dimIdx++) {
-                SemiJoinRel semiJoin = null;
+            Set<Integer> dimKeys = dimFilters.keySet();
+            Iterator it = dimKeys.iterator();
+            while (it.hasNext()) {
+                Integer dimIdx = (Integer) it.next();
                 List<RexNode> joinFilters = dimFilters.get(dimIdx);
                 if (joinFilters != null) {
-                    semiJoin = findSemiJoinIndex(
+                    SemiJoinRel semiJoin = findSemiJoinIndex(
                         indexGuide, joinFilters, factIdx, dimIdx);
             
                     // if an index is available, keep track of it as a
@@ -462,25 +464,29 @@ public class OptimizeJoinRule extends RelOptRule
         assert(leftKeys.size() > 0);
 
         // find the best index
-        Integer[] keyOrder = indexGuide.findSemiJoinIndex(leftKeys);
-        if (keyOrder.length == 0) {
+        List<Integer> keyOrder = new ArrayList<Integer>();
+        indexGuide.findSemiJoinIndex(leftKeys, keyOrder);
+        if (keyOrder.size() == 0) {
             return null;
         }
         // if necessary, truncate the keys to reflect the ones that match
-        // the index; note that we don't remove the extra semijoin filter
-        // conditions, as the keys reflect the actual filtering
+        // the index and remove the corresponding, unnecessary filters from
+        // the condition
         List<Integer> actualLeftKeys;
         List<Integer> actualRightKeys;
-        if (leftKeys.size() == keyOrder.length) {
+        if (leftKeys.size() == keyOrder.size()) {
             actualLeftKeys = leftKeys;
             actualRightKeys = rightKeys;
         } else {
             actualLeftKeys = new ArrayList<Integer>();
             actualRightKeys = new ArrayList<Integer>();
-            for (int i = 0; i < keyOrder.length; i++) {
-                actualLeftKeys.add(leftKeys.get(keyOrder[i]));
-                actualRightKeys.add(rightKeys.get(keyOrder[i]));
+            for (int key : keyOrder) {
+                actualLeftKeys.add(leftKeys.get(key));
+                actualRightKeys.add(rightKeys.get(key));
             }
+            semiJoinCondition = removeExtraFilters(
+                actualLeftKeys, nFieldsInJoinFactor[factIdx],
+                semiJoinCondition);
         }
         SemiJoinRel semiJoin = new SemiJoinRel(
             joinFactors[factIdx].getCluster(),
@@ -548,6 +554,64 @@ public class OptimizeJoinRule extends RelOptRule
     }
     
     /**
+     * Removes from an expression any sub-expressions that reference key
+     * values that aren't contained in a key list passed in.  The keys 
+     * represent join keys on one side of a join.  The subexpressions are all
+     * assumed to be of the form "tab1.col1 = tab2.col2".
+     * 
+     * @param keys join keys from one side of the join
+     * @param nFields number of fields in the side of the join for which the
+     * keys correspond
+     * @param condition original expression
+     * @return modified expression with filters that don't reference specified
+     * keys removed
+     */
+    private RexNode removeExtraFilters(
+        List<Integer> keys, int nFields, RexNode condition)
+    {
+        // recursively walk the expression; if all sub-expressions are
+        // removed from one side of the expression, just return what remains
+        // from the other side
+        assert(condition instanceof RexCall);
+        RexCall call = (RexCall) condition;
+        if (condition.isA(RexKind.And)) {
+            RexNode[] operands = call.getOperands();
+            RexNode left = removeExtraFilters(
+                keys, nFields, operands[0]);
+            RexNode right = removeExtraFilters(
+                keys, nFields, operands[1]);
+            if (left == null) {
+                return right;
+            }
+            if (right == null) {
+                return left;
+            }
+            return rexBuilder.makeCall(
+                SqlStdOperatorTable.andOperator, left, right);
+        }
+        
+        // determine which side of the equality filter references the join
+        // operand we're interested in; then, check if it is contained in
+        // our key list
+        assert(call.getOperator() == SqlStdOperatorTable.equalsOperator);
+        RexNode[] operands = call.getOperands();
+        assert(operands[0] instanceof RexInputRef);
+        assert(operands[1] instanceof RexInputRef);
+        int idx = ((RexInputRef) operands[0]).getIndex();
+        if (idx < nFields) {
+            if (!keys.contains(idx)) {
+                return null;
+            }
+        } else {
+            idx = ((RexInputRef) operands[1]).getIndex();
+            if (!keys.contains(idx)) {
+                return null;
+            }
+        }
+        return condition;
+    }
+    
+    /**
      * Finds the optimal semijoin for filtering the least costly fact
      * table from among the remaining possible semijoins to choose from.
      * The chosen semijoin is stored in the chosenSemiJoins array
@@ -582,7 +646,10 @@ public class OptimizeJoinRule extends RelOptRule
             // loop through each dimension table associated with the current
             // fact table and analyze the ones that have semijoins with this
             // fact table
-            for (int dimIdx = 0; dimIdx < nJoinFactors; dimIdx++) {
+            Set<Integer> dimKeys = possibleDimensions.keySet();
+            Iterator it = dimKeys.iterator();
+            while (it.hasNext()) {
+                Integer dimIdx = (Integer) it.next();
                 SemiJoinRel semiJoin = possibleDimensions.get(dimIdx);
                 if (semiJoin == null) {
                     continue;
@@ -701,8 +768,7 @@ public class OptimizeJoinRule extends RelOptRule
             if (!(joinFilter instanceof RexCall)) {
                 continue;
             }
-            SqlOperator joinOp = ((RexCall) joinFilter).getOperator();
-            if (!isComparisonOp(joinOp)) {
+            if (!joinFilter.isA(RexKind.Comparison)) {
                 continue;
             }
             
@@ -731,7 +797,9 @@ public class OptimizeJoinRule extends RelOptRule
                 if (leftBitmap.cardinality() == 1) {
                     
                     // give higher weight to equijoins
-                    if (joinOp == SqlStdOperatorTable.equalsOperator) {
+                    if (((RexCall) joinFilter).getOperator() ==
+                            SqlStdOperatorTable.equalsOperator)
+                    {
                         setFactorWeight(3, leftFactor, rightFactor);
                     } else {
                         setFactorWeight(2, leftFactor, rightFactor);
@@ -756,22 +824,6 @@ public class OptimizeJoinRule extends RelOptRule
                 }
             }
         }
-    }
-
-    /**
-     * Returns true if an operator corresponds to a comparison operator
-     * 
-     * @param op operator to be examined
-     * @return true if operator is a comparison operator
-     */
-    private boolean isComparisonOp(SqlOperator op)
-    {
-       return (op == SqlStdOperatorTable.equalsOperator ||
-           op == SqlStdOperatorTable.notEqualsOperator ||
-           op == SqlStdOperatorTable.lessThanOperator ||
-           op == SqlStdOperatorTable.lessThanOrEqualOperator ||
-           op == SqlStdOperatorTable.greaterThanOperator ||
-           op == SqlStdOperatorTable.greaterThanOrEqualOperator);
     }
     
     /**
@@ -803,6 +855,8 @@ public class OptimizeJoinRule extends RelOptRule
         for (int i = 0; i < projLength; i++) {
             fieldNames[i] = project.getRowType().getFields()[i].getName();
         }
+        
+        List<RelNode> plans = new ArrayList<RelNode>();
         
         int[] cardinalities = new int[nJoinFactors];
         // TODO - change to set actual factor cardinalities
@@ -837,7 +891,14 @@ public class OptimizeJoinRule extends RelOptRule
             ProjectRel newProject =
                 (ProjectRel) CalcRel.createProject(
                     joinTree.getJoinTree(), newProjExprs, fieldNames);
-            call.transformTo(newProject);
+            plans.add(newProject);
+        }
+        
+        // transform the selected plans; note that we wait till then the end
+        // to transform everything so any intermediate RelNodes we create
+        // are not converted to RelSubsets
+        for (RelNode plan : plans) {
+            call.transformTo(plan);
         }
     }
     
@@ -1170,7 +1231,7 @@ public class OptimizeJoinRule extends RelOptRule
      * into the tree
      * @param origFields fields from the original join before the factor was
      * added
-     * @return modified join condition to reflect addition of the new factor
+     * @return modified join condition reflecting addition of the new factor
      */
     private RexNode adjustFilter(
         LoptJoinTree left, LoptJoinTree right, RexNode condition,

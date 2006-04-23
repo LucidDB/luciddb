@@ -19,6 +19,7 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#include "fennel/common/CommonPreamble.h"
 #include "fennel/lucidera/colstore/LcsHash.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");

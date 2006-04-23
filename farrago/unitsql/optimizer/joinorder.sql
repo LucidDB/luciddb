@@ -205,6 +205,12 @@ create table LOCATION(
   ZIP numeric(5,0)
 );
 
+explain plan for
+select EMP.LNAME, DEPT.DNAME
+    from EMP, DEPT, LOCATION EL
+    where EL.LOCID = EMP.LOCID and EL.LOCID=DEPT.LOCID;
+
+explain plan for
 select EMP.LNAME, DEPT.DNAME
     from EMP, DEPT, LOCATION EL, LOCATION DL
     where EL.LOCID = EMP.LOCID and DL.LOCID=DEPT.LOCID;

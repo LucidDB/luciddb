@@ -343,6 +343,24 @@ void ExecStreamFactory::readTupleStreamParams(
     readTupleDescriptor(params.outputTupleDesc, streamDef.getOutputDesc());
 }
 
+void ExecStreamFactory::createPrivateScratchSegment(ExecStreamParams &params)
+{
+    // Make sure global scratch segment was already set up.
+    assert(params.pCacheAccessor);
+    
+    params.scratchAccessor =
+        pDatabase->getSegmentFactory()->newScratchSegment(
+            pDatabase->getCache());
+    SharedQuotaCacheAccessor pSuperQuotaAccessor =
+        boost::dynamic_pointer_cast<QuotaCacheAccessor>(
+            params.pCacheAccessor);
+    params.scratchAccessor.pCacheAccessor.reset(
+        new QuotaCacheAccessor(
+            pSuperQuotaAccessor,
+            params.scratchAccessor.pCacheAccessor,
+            UINT_MAX));
+}
+
 void ExecStreamFactory::createQuotaAccessors(
     ExecStreamParams &params)
 {

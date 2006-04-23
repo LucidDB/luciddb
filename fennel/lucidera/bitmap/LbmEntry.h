@@ -22,7 +22,6 @@
 #ifndef Fennel_LbmEntry_Included
 #define Fennel_LbmEntry_Included
 
-#include "fennel/common/CommonPreamble.h"
 #include "fennel/tuple/TupleData.h"
 #include "fennel/tuple/TupleDescriptor.h"
 #include "fennel/tuple/TupleAccessor.h"
@@ -57,7 +56,8 @@ class LbmEntry : public LbmSegment
     /**
      * LbmEntry tuple, same format as output tuple from
      * LbmConstructorExecStream.
-     * entryTuple always an associated buffer in the beginner of scratchBuffer;
+     * entryTuple always has an associated buffer at the beginning of
+     * scratchBuffer;
      * entryTuple is not of type TupleDataWithBuffer since it needs an external
      * buffer and the tupleAccessor needs to be visible.
      */
@@ -289,9 +289,11 @@ class LbmEntry : public LbmSegment
     static string dumpBitmap(PBuffer seg, uint segBytes);
 
     /**
-     * Print all "size" bytes starting form "ptr".
+     * Print a TupleDatum.
      */
-    static string printDatum(TupleDatum const &tupleDatum);
+    static string printDatum(
+        TupleDatum const &tupleDatum,
+        bool reverseByteOrder);
 
     /**
      * Print all bits in a byte.

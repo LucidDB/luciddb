@@ -748,6 +748,15 @@ public class HepPlanner extends AbstractRelOptPlanner
         chain.addProvider(
             new HepRelMetadataProvider());
     }
+    
+    // implement RelOptPlanner
+    public long getRelMetadataTimestamp(RelNode rel)
+    {
+        // TODO jvs 20-Apr-2006: This is overly conservative.  Better would be
+        // to keep a timestamp per HepRelVertex, and update only affected
+        // vertices and all ancestors on each transformation.
+        return nTransformations;
+    }
 }
 
 // End HepPlanner.java

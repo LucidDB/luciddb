@@ -22,7 +22,6 @@
 #ifndef Fennel_LbmEntryDump_Included
 #define Fennel_LbmEntryDump_Included
 
-#include "fennel/common/CommonPreamble.h"
 #include "fennel/common/TraceSource.h"
 #include "fennel/tuple/TupleData.h"
 #include "fennel/lucidera/bitmap/LbmEntry.h"

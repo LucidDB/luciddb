@@ -91,6 +91,37 @@ int TupleDescriptor::compareTuples(
     return keyComp;
 }
 
+int TupleDescriptor::compareTuples(
+    TupleData const &tuple1, TupleProjection const &proj1,
+    TupleData const &tuple2, TupleProjection const &proj2) const
+{
+    size_t keyCount = std::min(proj1.size(), proj2.size());
+
+    for (uint i = 0; i < keyCount; ++i) {
+        TupleDatum const &datum1 = tuple1[proj1[i]];
+        TupleDatum const &datum2 = tuple2[proj2[i]];
+        // TODO:  parameterize NULL-value collation
+        if (!datum1.pData) {
+            if (!datum2.pData) {
+                continue;
+            }
+            return -1;
+        } else if (!datum2.pData) {
+            return 1;
+        }
+        int c = (*this)[i].pTypeDescriptor->compareValues(
+            datum1.pData,
+            datum1.cbData,
+            datum2.pData,
+            datum2.cbData);
+        if (c) {
+            return c;
+        }
+    }
+    return 0;
+
+}
+
 int TupleDescriptor::compareTuplesKey(
     TupleData const &tuple1,
     TupleData const &tuple2,
