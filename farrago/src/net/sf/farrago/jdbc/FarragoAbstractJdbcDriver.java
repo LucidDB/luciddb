@@ -175,6 +175,9 @@ public abstract class FarragoAbstractJdbcDriver implements Driver
      * Properties object is created if the input argument is <code>null</code>.
      * Note: Properties object is treated like a Hashtable and all key-value
      * pairs are copied, regardless of whether the keys or values are Strings.
+     * Chained Properties objects are OK, but there is no API for accessing
+     * non-String values from chained Properties object. So only String values
+     * can be copied from chained Properties.
      * @param src source properties, must not be <code>null</code>
      * @param dest destination properties, may be <code>null</code>
      * @return merged properties
@@ -184,10 +187,24 @@ public abstract class FarragoAbstractJdbcDriver implements Driver
         if (dest == null) {
             dest = new Properties();
         }
+        // get all keys, including from chained Properties objects
         Enumeration enumer = src.propertyNames();
         while (enumer.hasMoreElements()) {
+            // use Hashtable API so can copy non-String keys and values
             Object key = enumer.nextElement();
             Object val = src.get(key);
+            // but Hashtable.get() does not search chained Properties,
+            // so keys that reference chained properties return null
+            if (val == null) {
+                if (key instanceof String) {
+                    val = src.getProperty((String)key);
+                }
+                if (val == null) {
+                    // item in chained Properties object with
+                    // non-String key or value is not accessible
+                    continue;
+                }
+            }
             dest.put(key, val);
         }
         return dest;
