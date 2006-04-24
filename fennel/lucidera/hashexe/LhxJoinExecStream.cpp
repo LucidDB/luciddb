@@ -148,9 +148,7 @@ void LhxJoinExecStream::open(bool restart)
 ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
 {
     SharedExecStreamBufAccessor leftBufAccessor = inAccessors[0];
-    SharedExecStreamBufAccessor rightBufAccessor = inAccessors[1];
-    uint numTuplesProduced;
-    
+    SharedExecStreamBufAccessor rightBufAccessor = inAccessors[1];    
 
 	while (true)
 	{

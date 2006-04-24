@@ -190,6 +190,11 @@ class LhxJoinExecStream : public ConfluenceExecStream
      */
     bool leftFilterNull;
     bool rightFilterNull;
+    
+    /*
+     * Number of tuples produced within the current quantum.
+     */
+    uint numTuplesProduced;
 
     /**
      * implement ExecStream

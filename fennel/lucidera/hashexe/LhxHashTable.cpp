@@ -356,14 +356,6 @@ PBuffer LhxHashTable::allocBlock()
         resultBlock = bufferLock.getPage().getWritableData();
         bufferLock.unlock();
 
-        if (!resultBlock) {
-            ostringstream errMsg;
-            errMsg << "Out of cache memory:"
-                   << " current # blocks:" << currentBlockCount
-                   << " maximum # blocks:" << maxBlockCount;
-            throw FennelExcn(errMsg.str());            
-        }
-
         /*
          * The new block is not linked in yet.
          */
