@@ -95,7 +95,7 @@ public class FarragoStatsUtil
             FemLocalIndex index = lookupIndex(repos, schema, indexName);
             
             index.setAnalyzeTime(createTimestamp());
-            index.setPageCount((int)pageCount);
+            index.setPageCount(pageCount);
 
             rollback = false;
         } finally {
