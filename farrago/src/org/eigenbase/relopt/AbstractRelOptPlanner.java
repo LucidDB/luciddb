@@ -150,12 +150,7 @@ public abstract class AbstractRelOptPlanner implements RelOptPlanner
     // implement RelOptPlanner
     public RelOptCost getCost(RelNode rel)
     {
-        RelOptCost cost = RelMetadataQuery.getNonCumulativeCost(rel);
-        RelNode [] inputs = rel.getInputs();
-        for (int i = 0, n = inputs.length; i < n; i++) {
-            cost = cost.plus(getCost(inputs[i]));
-        }
-        return cost;
+        return RelMetadataQuery.getCumulativeCost(rel);
     }
     
     // implement RelOptPlanner

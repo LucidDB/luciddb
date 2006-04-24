@@ -24,6 +24,7 @@ package org.eigenbase.rel.metadata;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.stat.*;
 
 import java.util.*;
 
@@ -80,6 +81,26 @@ import java.util.*;
 public abstract class RelMetadataQuery
 {
     /**
+     * Returns statistics for a relational expression. These statistics 
+     * include features such as row counts, or column distributions.
+     * Stats are typically collected by sampling a table. They might also be 
+     * inferred from a rel's history. Certain rels, such as filters, might 
+     * generate stats from their inputs.
+     * 
+     * @param rel the relational expression.
+     * 
+     * @return a statistics object, if statistics are available, 
+     * or null otherwise 
+     */
+    public static RelStatSource getStatistics(RelNode rel)
+    {
+        RelStatSource result =
+            (RelStatSource) rel.getCluster().getMetadataProvider()
+                .getRelMetadata(rel, "getStatistics", null);
+        return result;
+    }
+
+    /**
      * Estimates the number of rows which will be returned by a relational
      * expression.  The default implementation for this query asks the rel
      * itself via {@link RelNode#getRows}, but metadata providers can override
@@ -96,6 +117,26 @@ public abstract class RelMetadataQuery
             (Double) rel.getCluster().getMetadataProvider().getRelMetadata(
                 rel, "getRowCount", null);
         assert(assertNonNegative(result));
+        return result;
+    }
+
+    /**
+     * Estimates the cost of executing a relational expression, including the
+     * cost of its inputs.  The default implementation for this query adds
+     * {@link #getNonCumulativeCost} to the cumulative cost of each input, but
+     * metadata providers can override this with their own cost models,
+     * e.g. to take into account interactions between expressions.
+     *
+     * @param rel the relational expression
+     *
+     * @return estimated cost, or null if no reliable estimate can be
+     * determined
+     */
+    public static RelOptCost getCumulativeCost(RelNode rel)
+    {
+        RelOptCost result = 
+            (RelOptCost) rel.getCluster().getMetadataProvider().getRelMetadata(
+                rel, "getCumulativeCost", null);
         return result;
     }
 
@@ -163,9 +204,6 @@ public abstract class RelMetadataQuery
                 rel, "getColumnOrigins", new Object [] { iOutputColumn });
     }
 
-    // TODO jvs 29-Mar-2006:  I haven't yet added the providers
-    // for getSelectivity and some other specified in wiki.
-    
     /**
      * Estimates the percentage of an expression's output rows which satisfy
      * a given predicate. Returns null to indicate that no reliable estimate
@@ -188,6 +226,71 @@ public abstract class RelMetadataQuery
         return result;
     }
 
+    /**
+     * Determines the set of unique minimal keys for this expression. A key is
+     * represented as a BitSet, where each bit position represents a 0-based
+     * output column ordinal. (Note that RelNode.isDistinct should return true
+     * if and only if at least one key is known.)
+     * 
+     * @param rel the relational expression
+     *
+     * @return set of keys, or null if this information cannot be determined
+     * (whereas empty set indicates definitely no keys at all)
+     **/
+    public static Set<BitSet> getUniqueKeys(RelNode rel)
+    {
+        return (Set<BitSet>)
+            rel.getCluster().getMetadataProvider().getRelMetadata(
+                rel, "getUniqueKeys", null);
+    }
+
+    /**
+     * Estimates the distinct row count in the original source for the given
+     * groupKey, ignoring any filtering being applied by the expression.
+     * Typically, "original source" means base table, but for derived
+     * columns, the estimate may come from a non-leaf rel such as a
+     * ProjectRel.
+     * 
+     * @param rel the relational expression
+     * @param groupKey column mask representing the subset of columns for
+     * which the row count will be determined
+     * 
+     * @return distinct row count for the given groupKey, or null if no 
+     * reliable estimate can be determined
+     */
+    public static Double getPopulationSize(RelNode rel, BitSet groupKey)
+    {
+        Double result = 
+            (Double) rel.getCluster().getMetadataProvider().getRelMetadata(
+                rel, "getPopulationSize", new Object [] { groupKey });
+        assert(assertNonNegative(result));
+        return result;
+    }
+    
+    /**
+     * Estimates the number of rows which would be produced by a GROUP BY on
+     * the set of columns indicated by groupKey, where the input to the GROUP
+     * BY has been pre-filtered by predicate. This quantity (leaving out
+     * predicate) is often referred to as cardinality (as in gender being a
+     * "low-cardinality column").
+     * 
+     * @param rel the relational expression
+     * @param groupKey column mask representing group by columns
+     * @param predicate pre-filtered predicates
+     * @return distinct row count for groupKey, filtered by predicate, or null
+     * if no reliable estimate can be determined
+     */
+    public static Double getDistinctRowCount(
+        RelNode rel, BitSet groupKey, RexNode predicate)
+    {
+        Double result =
+            (Double) rel.getCluster().getMetadataProvider().getRelMetadata(
+                rel, "getDistinctRowCount",
+                new Object [] { groupKey, predicate });
+        assert(assertNonNegative(result));
+        return result;
+    }
+    
     private static boolean assertPercentage(Double result)
     {
         if (result == null) {

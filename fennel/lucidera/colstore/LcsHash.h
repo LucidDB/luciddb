@@ -22,7 +22,6 @@
 #ifndef Fennel_LcsHash_Included
 #define Fennel_LcsHash_Included
 
-#include "fennel/common/CommonPreamble.h"
 #include "fennel/tuple/TupleData.h"
 #include "fennel/tuple/TupleDataWithBuffer.h"
 #include "fennel/tuple/TupleDescriptor.h"

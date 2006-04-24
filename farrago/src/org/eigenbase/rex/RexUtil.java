@@ -729,6 +729,9 @@ public class RexUtil
     public static RexNode andRexNodeList(
         RexBuilder rexBuilder, List<RexNode> rexList)
     {
+        if (rexList.isEmpty()) {
+            return null;
+        }
         RexNode andExpr = rexList.get(0);
         for (int i = 1; i < rexList.size(); i++) {
             andExpr = rexBuilder.makeCall(

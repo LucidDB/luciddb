@@ -22,7 +22,6 @@
 #ifndef Fennel_LbmIndexScanExecStream_Included
 #define Fennel_LbmIndexScanExecStream_Included
 
-#include "fennel/common/CommonPreamble.h"
 #include "fennel/exec/DynamicParam.h"
 #include "fennel/ftrs/BTreeSearchExecStream.h"
 

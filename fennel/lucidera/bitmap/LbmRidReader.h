@@ -22,7 +22,6 @@
 #ifndef Fennel_LbmRidReader_Included
 #define Fennel_LbmRidReader_Included
 
-#include "fennel/common/CommonPreamble.h"
 #include "fennel/exec/ExecStreamDefs.h"
 #include "fennel/lucidera/bitmap/LbmSegmentReader.h"
 

@@ -166,6 +166,16 @@ bool TupleData::containsNull() const
     return false;
 }
 
+bool TupleData::containsNull(TupleProjection const & tupleProj) const
+{
+    for (uint i = 0; i < tupleProj.size(); ++i) {
+        if (!(*this)[tupleProj[i]].pData) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void TupleData::projectFrom(
     TupleData const& src,
     TupleProjection const& projection)

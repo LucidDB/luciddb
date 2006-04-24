@@ -121,13 +121,17 @@ public class RelMdPercentageOriginalRows extends ReflectiveRelMetadataProvider
         return relPercentage * childPercentage;
     }
 
-    // Catch-all for getRowCount, which is lonely so it doesn't want to live in
-    // a class all by itself.
-    public Double getRowCount(RelNode rel)
+    // Ditto for getNonCumulativeCost
+    public RelOptCost getCumulativeCost(RelNode rel)
     {
-        return rel.getRows();
+        RelOptCost cost = RelMetadataQuery.getNonCumulativeCost(rel);
+        RelNode [] inputs = rel.getInputs();
+        for (int i = 0, n = inputs.length; i < n; i++) {
+            cost = cost.plus(RelMetadataQuery.getCumulativeCost(inputs[i]));
+        }
+        return cost;
     }
-
+    
     // Ditto for getNonCumulativeCost
     public RelOptCost getNonCumulativeCost(RelNode rel)
     {

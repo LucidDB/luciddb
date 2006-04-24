@@ -111,6 +111,19 @@ public class ReflectVisitorTest extends TestCase
     }
 
     /**
+     * Tests that ambiguity detection in method lookup does not kick
+     * in when a better match is available.
+     */
+    public void testNonAmbiguity()
+    {
+        NumberNegater negater = new SomewhatIndecisiveNumberNegater();
+        Number result;
+
+        result = negater.negate(new SomewhatAmbiguousNumber());
+        assertEquals(0.0, result.doubleValue(), 0.001);
+    }
+
+    /**
      * NumberNegater defines the abstract base for a computation object
      * capable of negating an arbitrary number.  Subclasses implement
      * the computation by publishing methods with the signature
@@ -212,6 +225,23 @@ public class ReflectVisitorTest extends TestCase
     }
 
     /**
+     * SomewhatIndecisiveNumberNegater implements NumberNegater in such
+     * a way that it knows what to do when presented
+     * with a SomewhatAmbiguousNumber.
+     */
+    public class SomewhatIndecisiveNumberNegater extends NumberNegater
+    {
+        public void visit(FudgeableNumber n)
+        {
+        }
+        
+        public void visit(AmbiguousNumber n)
+        {
+            result = new Double(-n.doubleValue());
+        }
+    }
+
+    /**
      * An interface for introducing ambiguity into the class hierarchy.
      */
     public interface CrunchableNumber
@@ -235,6 +265,19 @@ public class ReflectVisitorTest extends TestCase
         {
             super("0");
         }
+    }
+
+    public interface DiceyNumber extends FudgeableNumber
+    {
+    }
+
+    /**
+     * A class inheriting a root interface (FudgeableNumber) two
+     * different ways, which should not lead to ambiguity in some cases.
+     */
+    public class SomewhatAmbiguousNumber
+        extends AmbiguousNumber implements DiceyNumber
+    {
     }
 }
 

@@ -66,6 +66,30 @@ public class ConversionUtil {
     }
 
     /**
+     * Converts a string into a byte array. The inverse of 
+     * {@link #toStringFromByteArray(byte[], int)}.
+     */
+    public static byte [] toByteArrayFromString(
+        String value,
+        int radix)
+    {
+        assert (16 == radix) 
+            : "Specified string to byte array conversion not supported yet";
+        assert (value.length() % 2 == 0)
+            : "Hex binary string must contain even number of characters";
+
+        byte [] ret = new byte[value.length() / 2];
+        for (int i = 0; i < ret.length; i++) {
+            int digit1 = Character.digit(value.charAt(i*2), radix);
+            int digit2 = Character.digit(value.charAt(i*2 + 1), radix);
+            assert(digit1 != -1 && digit2 != -1)
+                : "String could not be converted to byte array";
+            ret[i] = (byte) (digit1 * radix + digit2);
+        }
+        return ret;
+    }
+
+    /**
      * Converts an approximate value into a string, following the SQL 2003
      * standard.
      */

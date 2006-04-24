@@ -22,7 +22,6 @@
 #ifndef Fennel_LhxHashTable_Included
 #define Fennel_LhxHashTable_Included
 
-#include "fennel/common/CommonPreamble.h"
 #include "fennel/lucidera/hashexe/LhxHashGenerator.h"
 #include "fennel/tuple/TupleData.h"
 #include "fennel/tuple/TupleDescriptor.h"
@@ -84,6 +83,11 @@ public:
     void setCurrent(PBuffer nodePtrInit);
 
     /**
+     * Reset the node pointer to NULL.
+     */
+    void reset();
+
+    /**
      * @return buffer to the payload in this node
      */
     PBuffer getBuffer(); 
@@ -127,6 +131,10 @@ class LhxHashDataAccessor : public LhxHashNodeAccessor
      */
     TupleDescriptor dataDescriptor;
     /*
+     * Temporary tuple for holding the unmarshaled data.
+     */
+    TupleData       dataTuple;
+    /*
      * Accessor for the data tuple stored.
      */
     TupleAccessor   dataAccessor;
@@ -148,7 +156,7 @@ public:
      * accessor
      * @param[in] valid whether buffer content is valid.
      */
-    void setCurrent(PBuffer nodePtrInit, bool valid = false);
+    void setCurrent(PBuffer nodePtrInit, bool valid);
 
     /**
      * Get max buffer size required to store all the fields based in
@@ -177,11 +185,11 @@ public:
 
     /**
      * Retrieve the data stored in the buffer. Upon return, outputTuple will
-     * point into the bufer associated with this accessor.
+     * point into the buffer associated with this accessor.
      *
      * @pram[out] outputTuple
      */
-    void unpack(TupleData &outputTuple);
+    void unpack(TupleData &outputTuple, TupleProjection &destProj);
 
     /**
      * Print the content of the node associated with this accessor.
@@ -192,7 +200,7 @@ public:
 class LhxHashKeyAccessor : public LhxHashNodeAccessor
 {
     /*
-     * Offsets to the fields in the buffer
+     * Offsets to the fields in the node
      */
     uint firstDataOffset;
     uint touchedOffset;
@@ -201,9 +209,26 @@ class LhxHashKeyAccessor : public LhxHashNodeAccessor
      * Shape of the data tuple stored.
      */
     TupleDescriptor keyDescriptor;
-    TupleProjection keyColsProj;
-    TupleProjection aggsProj;
+    /*
+     * Temporary tuple for holding the unmarshaled data.
+     */
+    TupleData keyTuple;
+    /*
+     * Accessor for the data tuple stored.
+     */
     TupleAccessor keyAccessor;
+
+    /*
+     * Projection containing the key cols
+     */
+    TupleProjection keyColsProj;
+    TupleDescriptor keyColsDesc;
+
+    /*
+     * Projection containing the aggregate columns
+     */
+    TupleProjection aggsProj;
+
 
 public:
     LhxHashKeyAccessor();
@@ -227,19 +252,19 @@ public:
      * accessor
      * @param[in] valid whether buffer content is valid.
      */
-    void setCurrent(PBuffer nodePtrInit, bool valid = false);
+    void setCurrent(PBuffer nodePtrInit, bool valid);
 
     /**
      * @return pointer to the first data node.
      */
-	PBuffer getFirstData();
+    PBuffer getFirstData();
 
     /**
      * Set pointer to the first data node.
      *
      * @param[in] inputFirstData
      */
-	void setFirstData(PBuffer inputFirstData);
+    void setFirstData(PBuffer inputFirstData);
 
     /**
      * @return true if this key has been seen.
@@ -258,7 +283,7 @@ public:
      *
      * @param[in] inputData
      */
-	void addData(PBuffer inputData);
+    void addData(PBuffer inputData);
 
     /**
      * Get max buffer size required to store all the fields based in
@@ -292,7 +317,7 @@ public:
      *
      * @pram[out] outputTuple
      */
-    void unpack(TupleData &outputTuple);
+    void unpack(TupleData &outputTuple, TupleProjection &destProj);
 
     /*
      * Compare if inputTuple has the same key.
@@ -332,7 +357,7 @@ class LhxHashBlockAccessor : public LhxHashNodeAccessor
     PBuffer endPtr;
 
 public:
-    LhxHashBlockAccessor() : LhxHashNodeAccessor() {}
+    LhxHashBlockAccessor() : LhxHashNodeAccessor() {};
 
     /**
      * Set the size of the block.
@@ -348,7 +373,12 @@ public:
      * accessor
      * @param[in] valid whether buffer content is valid.
      */
-    void setCurrent(PBuffer blockPtrInit, bool valid = false);
+    void setCurrent(PBuffer blockPtrInit, bool valid);
+
+    /**
+     * Reset the node pointer to NULL.
+     */
+    void reset();
 
     /**
      * @return the size of the block that a client can use.
@@ -449,10 +479,10 @@ class LhxHashTable
      * one for the sub partition level(==partitionLevl+1).
      */
     uint partitionLevel;
-	LhxHashGenerator hashGen;
-	LhxHashGenerator hashGenSub;
+    LhxHashGenerator hashGen;
+    LhxHashGenerator hashGenSub;
 
-    /*
+    /**
      * Accessors for the content of this hash table.
      */
     LhxHashKeyAccessor  hashKeyAccessor;
@@ -473,15 +503,6 @@ class LhxHashTable
      * @return pointer to the buffer. NULL if no more space left.
      */
     PBuffer allocBuffer(uint bufSize);
-
-    /**
-     * Get the slot indexed by slotNum.
-     *
-     * @param[in] slotNum
-     *
-     * @return pointer to the slot.
-     */
-    PBuffer *getSlot(uint slotNum);
 
     /**
      * Print the content of a slot, i.e. the content of all the keys and
@@ -557,7 +578,7 @@ public:
      */
     void releaseResources();
 
-	/*
+    /*
      * Compute the number of slots required to hold "cndKeys" keys without
      * significant collisions.
      *
@@ -565,9 +586,9 @@ public:
      *
      * @return number of slots needed.
      */
-	uint slotsNeeded(double cndKeys);
+    uint slotsNeeded(double cndKeys);
 
-	/*
+    /*
      * Compute the number of bytes required by the hash table and its contents
      * for "nRows" rows with "cndKeys" distinct key values, for the specified
      * key(aggs included) and data descriptions.
@@ -579,13 +600,13 @@ public:
      *
      * @return bytes required
      */
-	uint bytesNeeded(
+    uint bytesNeeded(
         double numRows,
         double cndKeys,
         TupleDescriptor &keyDesc,
         TupleDescriptor &dataDesc);
     
-	/*
+    /*
      * Compute the number of blocks required by the hash table and its contents
      * for "nRows" rows with "cndKeys" distinct key values, for the specified
      * key(aggs included) and data descriptions.
@@ -597,11 +618,12 @@ public:
      *
      * @return blocks required
      */
-	uint blocksNeeded(
+    uint blocksNeeded(
         double numRows,
         double cndKeys,
         TupleDescriptor &keyDesc,
-        TupleDescriptor &dataDesc);
+        TupleDescriptor &dataDesc,
+        uint usablePageSize = 0);
 
     /*
      * Find key node based on key cols.
@@ -630,11 +652,114 @@ public:
         TupleProjection const &dataProj);
 
     /**
+     * Get the slot indexed by slotNum.
+     *
+     * @param[in] slotNum
+     *
+     * @return pointer to the slot.
+     */
+    PBuffer *getSlot(uint slotNum);
+
+    /**
+     * @return number of slots.
+     */
+    uint getNumSlots();
+
+    /**
      * Print the content of the node associated with this accessor.
      */
     string toString();
 };
 
+class LhxHashTableReader
+{
+    LhxHashTable *hashTable;
+    
+    uint curSlot;
+    PBuffer curKey;
+    PBuffer curData;
+
+    PBuffer boundKey;
+    bool    started;
+
+    /**
+     * Accessors for the content of this hash table.
+     */
+    LhxHashKeyAccessor  hashKeyAccessor;
+    LhxHashDataAccessor hashDataAccessor;
+
+    /**
+     * Fields in the outputTuple that will hold keyCols and Aggs,
+     * and data columns. output tuple should have the same shape as
+     * outputTupleDesc used in the init() method. 
+     */
+    TupleProjection keyColsAndAggsProj;
+    TupleProjection dataProj;
+
+    /**
+     * Locate the next slot to produce tuples from. Set up the curKey and
+     * curData pointers.
+     *
+     * @return false if there is no more slots with keys.
+     */
+    bool advanceSlot();
+
+    /**
+     * Locate the next key to produce tuples from. Set up the curKey and
+     * curData pointers.
+     *
+     * @return false if there is no more keys in the same slot.
+     */
+    bool advanceKey();
+
+    /**
+     * Locate the next data to produce tuples from. Set up the curData
+     * pointers.
+     *
+     * @return false if there is no more data with the same key.
+     */
+    bool advanceData();
+    
+    /**
+     * Produce the curKey + curData into outputTuple.
+     */
+    void produceTuple(TupleData &outputTuple);
+
+public:
+    /**
+     * Initialize the hash table reader.
+     *
+     * @param[in] hashTable the underlying hash table to read from
+     * @param[in] outputTupleDesc tuple to hold all key, agg and data cols
+     * @param[in] keyColsProj key fields
+     * @param[in] aggsProj agg fields
+     * @param[in] dataProj data fields
+     * @
+     */
+    void init(
+        LhxHashTable *hashTable,
+        TupleDescriptor const &outputTupleDesc,
+        TupleProjection keyColsProj,
+        TupleProjection aggsProj,
+        TupleProjection const &dataProj);
+    
+    /**
+     * Bind this reader to a certain key. Only tuples with the same key are
+     * returned.
+     *
+     * @param[in] key key node to bind this reader to.
+     */
+    void bindKey(PBuffer key);
+
+    /**
+     * Get the next outputTuple.
+     *
+     * @params[out] outputTuple.
+     *
+     * @return false if no more tuples to output.
+     */
+    bool getNext(TupleData &outputTuple);
+};
 
 inline LhxHashNodeAccessor::LhxHashNodeAccessor()
 {
@@ -661,6 +786,11 @@ inline PBuffer LhxHashNodeAccessor::getBuffer()
 inline void LhxHashNodeAccessor::setCurrent(PBuffer nodePtrInit)
 { 
     nodePtr = nodePtrInit;
+}
+
+inline void LhxHashNodeAccessor::reset()
+{ 
+    setCurrent(NULL);
 }
 
 inline PBuffer LhxHashNodeAccessor::getNext()
@@ -692,12 +822,6 @@ inline uint LhxHashNodeAccessor::getNextFieldSize()
 inline uint LhxHashNodeAccessor::getBufferOffset()
 {
     return nodeBufferOffset;
-}
-
-inline void LhxHashDataAccessor::init(TupleDescriptor const &inputDataDesc)
-{
-    dataDescriptor = inputDataDesc;
-    dataAccessor.compute(dataDescriptor);
 }
 
 inline void LhxHashDataAccessor::setCurrent(PBuffer nodePtrInit, bool valid)
@@ -748,6 +872,12 @@ inline void LhxHashKeyAccessor::setTouched(bool touched)
     *(getCurrent()+touchedOffset) = (touched ? 0x01 : 0);
 }
 
+inline void LhxHashBlockAccessor::reset()
+{
+    LhxHashNodeAccessor::reset();
+    freePtr = endPtr = NULL;
+}
+
 inline void LhxHashBlockAccessor::allocSlots(uint slotCount)
 {
     /*
@@ -762,6 +892,7 @@ inline uint LhxHashTable::slotsNeeded(double cndKeys)
     return uint(ceil(cndKeys * 1.2));
 }
 
+inline uint LhxHashTable::getNumSlots() { return numSlots; }
 
 FENNEL_END_NAMESPACE
 

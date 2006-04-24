@@ -302,15 +302,10 @@ void LbmGeneratorExecStream::closeImpl()
     bitmapTable.clear();
     scratchPages.clear();
 
-#if 0
-    // FIXME zfong 10-Feb-2006 - once generator has its own private
-    // scratch segment, deallocate its pages; otherwise, the call below
-    // deallocates all scratch pages associated with the stream graph
     if (scratchAccessor.pSegment) {
         scratchAccessor.pSegment->deallocatePageRange(
             NULL_PAGE_ID, NULL_PAGE_ID);
     }
-#endif
 }
 
 bool LbmGeneratorExecStream::generateBitmaps()

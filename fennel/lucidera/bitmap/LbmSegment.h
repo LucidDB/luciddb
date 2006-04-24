@@ -22,7 +22,6 @@
 #ifndef Fennel_LbmSegment_Included
 #define Fennel_LbmSegment_Included
 
-#include "fennel/common/CommonPreamble.h"
 #include "fennel/lucidera/colstore/LcsClusterNode.h"
 
 FENNEL_BEGIN_NAMESPACE

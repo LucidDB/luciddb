@@ -327,6 +327,22 @@ drop table multimulti;
 -------------------------------------------------------------
 -- Part 4. Data types, null values                         --
 -------------------------------------------------------------
+-- NOTE: cannot input a binary field from a flat file yet
+create foreign table typed_src(
+    a int,
+    d char(10),
+    e decimal(6,2),
+    f smallint,
+    g real,
+    h double,
+    i varchar(256),
+    j boolean,
+    k date,
+    l time,
+    m timestamp,
+    n numeric(10,2)) 
+server test_data
+options (filename 'typed');
 
 create table typed(
     a int,
@@ -360,12 +376,16 @@ create index typed_l on typed(l);
 create index typed_m on typed(m);
 create index typed_n on typed(n);
 
--- surprisingly these don't cause any problems
+-- LER-422: merging with singleton 
+-- http://jira.lucidera.com/browse/LER-422
 insert into typed values(
     1,X'deadbeef',null,'first',
     0.16,1,1,1,
     '1st',true,DATE'2001-11-11',TIME'23:11:08',
     TIMESTAMP'2001-11-11 23:11:08',0.02);
+
+-- the singleton bitmap entry on index(b)
+-- key(b) = null, RID == 1
 insert into typed values(
     2,null,null,null,
     null,null,null,null,
@@ -377,26 +397,11 @@ insert into typed values(
     '3rd',false,DATE'2001-12-12',TIME'23:11:08',
     TIMESTAMP'2001-12-12 23:11:08',0.06);
 
--- NOTE: cannot input a binary field from a flat file yet
-create foreign table typed_src(
-    a int,
-    d char(10),
-    e decimal(6,2),
-    f smallint,
-    g real,
-    h double,
-    i varchar(256),
-    j boolean,
-    k date,
-    l time,
-    m timestamp,
-    n numeric(10,2)) 
-server test_data
-options (filename 'typed');
-
--- FIXME: this causes a crash
--- insert into typed (a,d,e,f,g,h,i,j,k,l,m,n)
--- select * from typed_src;
+-- the new bitmap entry with three RIDs set
+-- key(b) = null RID == 2,3,4
+-- the new bitmap will be merged with the singleton inserted above.
+insert into typed (a,d,e,f,g,h,i,j,k,l,m,n)
+select * from typed_src;
 
 -- cleanup
 drop server test_data cascade;

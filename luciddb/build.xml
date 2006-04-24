@@ -213,6 +213,8 @@
 
   <target name="test-nondb">
     <property file="run.properties"/>
+    <property name="foreign.db" value="nondb"/>
+    <property name="bh.log.gtlf.env.ForeignDb" value="${foreign.db}"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh-nondb"/>
     <blackhawk.fork
       basedir="${luciddb.dir}"

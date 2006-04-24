@@ -1,0 +1,7 @@
+6.0
+5
+1	SQLINT		0	8	"|"	1	F1
+2	SQLINT		0	8	"|"	2	F2
+3	SQLINT		0	8	"|"	3	F3
+4	SQLVARCHAR	0	10	"|"	4	F4
+5	SQLVARCHAR	0	199	"|\r\n"	5	F5

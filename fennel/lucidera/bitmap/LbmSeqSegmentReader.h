@@ -22,7 +22,6 @@
 #ifndef Fennel_LbmSeqSegmentReader_Included
 #define Fennel_LbmSeqSegmentReader_Included
 
-#include "fennel/common/CommonPreamble.h"
 #include "fennel/tuple/TupleData.h"
 #include "fennel/exec/ExecStreamDefs.h"
 #include "fennel/lucidera/bitmap/LbmSegmentReaderBase.h"

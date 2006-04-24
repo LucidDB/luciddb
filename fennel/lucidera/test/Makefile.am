@@ -18,7 +18,8 @@ LbmLoadBitmapTest \
 LbmIndexScanTest \
 LbmIntersectExecStreamTest \
 LbmUnionExecStreamTest \
-LhxHashTableTest
+LhxHashTableTest \
+LhxJoinExecStreamTest
 
 TESTS = $(noinst_PROGRAMS)
 
@@ -33,6 +34,7 @@ LbmIndexScanTest_SOURCES=LbmIndexScanTest.cpp
 LbmIntersectExecStreamTest_SOURCES=LbmExecStreamTestBase.cpp LbmIntersectExecStreamTest.cpp 
 LbmUnionExecStreamTest_SOURCES=LbmExecStreamTestBase.cpp LbmUnionExecStreamTest.cpp
 LhxHashTableTest_SOURCES=LhxHashTableTest.cpp
+LhxJoinExecStreamTest_SOURCES=LhxJoinExecStreamTest.cpp
 
 # NOTE:  have to repeat $(EXTRA_LDFLAGS) on mingw due to stupid linker.
 

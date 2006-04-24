@@ -34,6 +34,7 @@ import net.sf.farrago.util.*;
 
 import openjava.ptree.*;
 
+import org.eigenbase.relopt.hep.*;
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.stmt.*;
 import org.eigenbase.rel.*;
@@ -101,6 +102,7 @@ public abstract class FarragoSqlToRelTestBase extends FarragoTestCase
             allocations.addAllocation(stmtValidator);
             FarragoPreparingStmt stmt =
                 new FarragoPreparingStmt(stmtValidator);
+            stmt.enablePartialImplementation();
 
             initPlanner(stmt);
 
@@ -116,8 +118,7 @@ public abstract class FarragoSqlToRelTestBase extends FarragoTestCase
                     stmt.getSqlValidator(),
                     true);
 
-            // dig out the top-level relational expression, which
-            // we just KNOW will be an IterCalcRel
+            // dig out the top-level relational expression
             RelNode topRel = explanation.getRel();
 
             checkAbstract(stmt, topRel);

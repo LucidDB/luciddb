@@ -43,6 +43,7 @@ import org.eigenbase.rel.*;
 import org.eigenbase.rel.rules.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.sarg.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.Util;
 
@@ -1140,6 +1141,29 @@ public class LcsIndexGuide
         
     }
     
+    public Map<CwmColumn, SargIntervalSequence> getCol2SeqMap(
+        LcsRowScanRel origRowScan,
+        List<SargBinding> sargBindingList)
+    {
+        Map<CwmColumn, SargIntervalSequence> colMap =
+            new HashMap<CwmColumn, SargIntervalSequence>();
+        
+        for (int i = 0; i < sargBindingList.size(); i ++) {
+            SargBinding sargBinding = sargBindingList.get(i);
+            RexInputRef fieldAccess = sargBinding.getInputRef();
+            FemAbstractColumn filterColumn =
+                origRowScan.getColumnForFieldAccess(fieldAccess.getIndex());
+            assert (filterColumn != null);
+            
+            SargIntervalSequence sargSeq = 
+                FennelRelUtil.evaluateSargExpr(sargBinding.getExpr());
+            
+            colMap.put(filterColumn, sargSeq);
+        }            
+        
+        return colMap;
+    }
+    
     /**
      * This is the algorithm that maps indexes to search key columns.
      * It does so by finding the shortest (in terms of key length) index to map to the
@@ -1315,17 +1339,19 @@ public class LcsIndexGuide
      * 
      * @param semiJoinKeys keys of the semijoin that we are trying to find an
      * index for.
-     * @return specific keys within the input paramter that match an index if
-     * an appropriate index is available; otherwise, an empty array is
-     * returned
+     * @param bestKeyList appends the list of specific keys within the input
+     * paramter that match an index if an appropriate index is available
+     * @return best index, if available; else null is returned
      */
-    public Integer[] findSemiJoinIndex(List<Integer> semiJoinKeys)
+    public FemLocalIndex findSemiJoinIndex(
+        List<Integer> semiJoinKeys, List<Integer> bestKeyList)
     {
         // loop through the indexes and either find the one that has the 
         // longest matching keys, or the first one that matches all the
         // semijoin keys
         Iterator iter = getUnclusteredIndexes().iterator();
         Integer[] bestKeyOrder = {};
+        FemLocalIndex bestIndex = null;
         int maxNkeys = 0;
         while (iter.hasNext()) {
             FemLocalIndex index = (FemLocalIndex) iter.next();
@@ -1334,12 +1360,17 @@ public class LcsIndexGuide
             if (nKeys > maxNkeys) {
                 maxNkeys = nKeys;
                 bestKeyOrder = keyOrder;
+                bestIndex = index;
                 if (maxNkeys == semiJoinKeys.size()) {
                     break;
                 }
             }
         }
-        return bestKeyOrder;
+        for (int i = 0; i < maxNkeys; i++) {
+            bestKeyList.add(bestKeyOrder[i]);
+        }
+        
+        return bestIndex;
     }
     
     /**
@@ -1352,7 +1383,7 @@ public class LcsIndexGuide
      * in the order in which they match the index
      * @return number of matching keys
      */
-    public int matchIndexKeys(
+    private int matchIndexKeys(
         FemLocalIndex index, 
         List<Integer> keys,
         Integer[] keyOrder)

@@ -25,6 +25,7 @@
 #include "fennel/lucidera/hashexe/LhxHashTableDump.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
 #include "fennel/tuple/TupleDescriptor.h"
+#include "fennel/tuple/TuplePrinter.h"
 #include "fennel/cache/Cache.h"
 
 #include <boost/scoped_array.hpp>
@@ -39,8 +40,6 @@ class LhxHashTableTest : virtual public SegStorageTestBase
 {
     StandardTypeDescriptorFactory stdTypeFactory;
     
-    SegmentAccessor scratchAccessor;
-
     void testInsert(
         uint numRows,
         uint maxBlockCount,
@@ -55,28 +54,24 @@ class LhxHashTableTest : virtual public SegStorageTestBase
 public:
     explicit LhxHashTableTest()
     {
-        FENNEL_UNIT_TEST_CASE(LhxHashTableTest, testInsert1K);
+        FENNEL_UNIT_TEST_CASE(LhxHashTableTest, testInsert1Ka);
+        FENNEL_UNIT_TEST_CASE(LhxHashTableTest, testInsert1Kb);
     }
 
     virtual void testCaseSetUp();
     virtual void testCaseTearDown();
 
-    void testInsert1K();
+    void testInsert1Ka();
+    void testInsert1Kb();
 };
 
 void LhxHashTableTest::testCaseSetUp()
 {
     openStorage(DeviceMode::createNew);
-
-    openRandomSegment();
-
-    scratchAccessor.pSegment = pRandomSegment;
-    scratchAccessor.pCacheAccessor = pCache;
 }
 
 void LhxHashTableTest::testCaseTearDown()
 {
-    scratchAccessor.reset();
     SegStorageTestBase::testCaseTearDown();
 }
 
@@ -92,6 +87,9 @@ void LhxHashTableTest::testInsert(
     string testName)
 {
     LhxHashTable hashTable;
+
+    SegmentAccessor scratchAccessor =
+        pSegmentFactory->newScratchSegment(pCache, 100);
 
     TupleAttributeDescriptor attrDesc_int32 =
         TupleAttributeDescriptor(
@@ -160,12 +158,35 @@ void LhxHashTableTest::testInsert(
         assert(status);
     }
         
+    /*
+     * verify that the hash table reader can see all the tuples.
+     */
+    LhxHashTableReader hashTableReader;
+    hashTableReader.init(&hashTable,
+        inputTupleDesc, keyColsProj, aggsProj, dataProj);
+    TupleData outputTuple;
+        
+    outputTuple.compute(inputTupleDesc);
+        
+    TuplePrinter tuplePrinter;
+    ostringstream dataTrace;
+    dataTrace << "All Tuples:\n";
+    uint numTuples = 0;
+
+    while (hashTableReader.getNext(outputTuple)) {
+        tuplePrinter.print(dataTrace, inputTupleDesc, outputTuple);
+        dataTrace << "\n";
+        numTuples ++;
+    }
+    assert (numTuples == numRows);
+    
     if (dumpHashTable) {
         LhxHashTableDump hashTableDump(
             TRACE_INFO,
             shared_from_this(), 
             "LhxHashTableTest");
-        hashTableDump.dump(hashTable);
+        hashTableDump.dump(hashTable);        
+        hashTableDump.dump(dataTrace.str());
     }
 
     /*
@@ -188,7 +209,41 @@ void LhxHashTableTest::testInsert(
     colValues.reset();
 }
 
-void LhxHashTableTest::testInsert1K()
+void LhxHashTableTest::testInsert1Ka()
+{
+    uint numRows = 100;
+    uint maxBlockCount = 10;
+    uint partitionLevel = 0;
+    vector<uint> values;
+    uint numKeyCols = 1;
+    uint numAggs = 0;
+    uint numDataCols = 0;
+    bool dump = true;
+    string testName = "testInsert1K";
+    uint i;
+
+    for (i = 0; i < numKeyCols; i ++) {
+        /*
+         * At least one value, hence + 1.
+         */
+        values.push_back(i+10);
+    }
+
+    for (i = 0; i < numAggs; i ++) {
+        values.push_back(10);
+    }
+
+    for (i = 0; i < numDataCols; i ++) {
+        values.push_back(i+1);
+    }
+
+    testInsert(
+        numRows, maxBlockCount, partitionLevel,
+        values, numKeyCols, numAggs, numDataCols,
+        dump, testName);
+}
+
+void LhxHashTableTest::testInsert1Kb()
 {
     uint numRows = 1000;
     uint maxBlockCount = 10;

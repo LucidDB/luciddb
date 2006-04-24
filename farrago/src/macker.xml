@@ -100,6 +100,7 @@
     <pattern name="lu.namespace" class="com.lucidera.farrago.namespace.*" />
     <pattern name="lu.namespace.flatfile" class="com.lucidera.farrago.namespace.flatfile.*" />
     <pattern name="lu.opt" class="com.lucidera.opt.*" />
+    <pattern name="lu.opt.test" class="com.lucidera.opt.test.*" />
 
     <pattern name="defimpl" class="net.sf.farrago.defimpl.*" />
 
@@ -163,6 +164,7 @@
       <include pattern="lu.namespace"/>
       <include pattern="lu.namespace.flatfile"/>
       <include pattern="lu.opt"/>
+      <include pattern="lu.opt.test"/>
       <include pattern="defimpl"/>
       <include pattern="test"/>
       <include pattern="dt.test"/>
@@ -481,6 +483,7 @@
       <include pattern="dynamic.deps" />
       <include pattern="ojrex.deps" />
       <include pattern="fennel.tuple" />
+      <include pattern="namespace.impl" />
       <include pattern="query" />
     </pattern>
 
@@ -925,6 +928,24 @@
         <to pattern="farrago" />
         <allow>
           <to pattern="lu.opt.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="lu.opt.test.deps">
+      <include pattern="lu.opt.deps" />
+      <include pattern="lu.opt.test" />
+      <include pattern="jdbc.engine" />
+      <include pattern="test" />
+    </pattern>
+
+    <access-rule>
+      <message>lu.opt.test dependency violation</message>
+      <deny>
+        <from pattern="lu.opt.test" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="lu.opt.test.deps" />
         </allow>
       </deny>
     </access-rule>

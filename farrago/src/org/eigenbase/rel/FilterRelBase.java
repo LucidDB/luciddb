@@ -89,7 +89,7 @@ public abstract class FilterRelBase extends SingleRel
     public static double estimateFilteredRows(RelNode child, RexNode condition)
     {
         return RelMetadataQuery.getRowCount(child)
-            * RexUtil.getSelectivity(condition);
+            * RelMetadataQuery.getSelectivity(child, condition);
     }
 
     public void explain(RelOptPlanWriter pw)

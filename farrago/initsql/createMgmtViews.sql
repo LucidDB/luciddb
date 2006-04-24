@@ -77,3 +77,50 @@ create procedure kill_statement_match(in s varchar(256))
   no sql
   external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatementMatch';
             
+---------------------------------------------------------------------------
+-- Statistics generation                                                 --
+---------------------------------------------------------------------------
+
+--
+-- Set the row count of a table
+--
+create procedure stat_set_row_count(
+    in catalog_name varchar(2000),
+    in schema_name varchar(2000),
+    in table_name varchar(2000),
+    in row_count bigint)
+language java
+contains sql
+external name 'class net.sf.farrago.syslib.FarragoStatsUDR.set_row_count';
+
+--
+-- Set the page count of an index
+--
+create procedure stat_set_page_count(
+    in catalog_name varchar(2000),
+    in schema_name varchar(2000),
+    in index_name varchar(2000),
+    in page_count bigint)
+language java
+contains sql
+external name 'class net.sf.farrago.syslib.FarragoStatsUDR.set_page_count';
+
+--
+-- Generate a histogram for a column
+--
+-- distribution_type must be 0 for now
+-- value_digits are characters to use for fake column values
+--
+create procedure stat_set_column_histogram(
+    in catalog_name varchar(2000),
+    in schema_name varchar(2000),
+    in table_name varchar(2000),
+    in column_name varchar(2000),
+    in distict_values bigint,
+    in sample_percent int,
+    in sample_distinct_values bigint,
+    in distribution_type int,
+    in value_digits varchar(2000))
+language java
+contains sql
+external name 'class net.sf.farrago.syslib.FarragoStatsUDR.set_column_histogram';

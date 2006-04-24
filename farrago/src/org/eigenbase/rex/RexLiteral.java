@@ -24,6 +24,7 @@
 package org.eigenbase.rex;
 
 import java.nio.*;
+import java.nio.charset.*;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -31,6 +32,8 @@ import java.math.BigDecimal;
 import java.util.Calendar;
 
 import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.BitString;
 import org.eigenbase.util.EnumeratedValues;
@@ -269,6 +272,8 @@ public class RexLiteral extends RexNode
         SqlTypeName typeName,
         boolean java)
     {
+        // NOTE: please keep this method consistent with fromJavaString
+        
         switch (typeName.getOrdinal()) {
         case SqlTypeName.Char_ordinal:
             NlsString nlsString = (NlsString) value;
@@ -324,6 +329,85 @@ public class RexLiteral extends RexNode
                 valueMatchesType(value, typeName),
                 "valueMatchesType(value, typeName)");
             throw Util.needToImplement(typeName);
+        }
+    }
+
+    /**
+     * Converts a Java string into a RexLiteral, the inverse of 
+     * {@link #toJavaString} and therefore {@link #printAsJava}. 
+     * This method restores a RexLiteral from its string representation. 
+     * It relies upon the string representation 
+     * to accurately encode a Memento of the literal. The method is 
+     * intended to be used as a programming facility, rather than as a
+     * way to interpret user input.
+     * 
+     * <p>Matching the convention of RexLiteral, null literals are required 
+     * to have the null data type. The string representation "null" will 
+     * not be recognized in any other context.
+     * 
+     * @param type data type of literal to be read
+     * @param typeName type family of literal
+     * @param literal the (non-SQL encoded) string representation
+     * 
+     * @return a typed RexLiteral
+     */
+    public static RexLiteral fromJavaString(
+        RelDataType type, 
+        SqlTypeName typeName,
+        String literal)
+    {
+        switch (typeName.getOrdinal()) {
+        case SqlTypeName.Char_ordinal:
+            Charset charset = type.getCharset();
+            SqlCollation collation = type.getCollation();
+            NlsString str = 
+                new NlsString(literal, charset.name(), collation);
+            return new RexLiteral(str, type, typeName);
+        case SqlTypeName.Boolean_ordinal:
+            boolean b = ConversionUtil.toBoolean(literal);
+            return new RexLiteral(b, type, typeName);
+        case SqlTypeName.Decimal_ordinal:
+        case SqlTypeName.Double_ordinal:
+            BigDecimal d = new BigDecimal(literal);
+            return new RexLiteral(d, type, typeName);
+       case SqlTypeName.Binary_ordinal:
+            byte [] bytes = ConversionUtil.toByteArrayFromString(literal, 16);
+            ByteBuffer buffer = ByteBuffer.wrap(bytes);
+            return new RexLiteral(buffer, type, typeName);
+        case SqlTypeName.Null_ordinal:
+            return new RexLiteral(null, type, typeName);
+        case SqlTypeName.Date_ordinal:
+        case SqlTypeName.Time_ordinal:
+        case SqlTypeName.Timestamp_ordinal:
+            // NOTE: we will need to read timestamp at some point
+            String format = getCalendarFormat(typeName);
+            Calendar cal = SqlParserUtil.parseDateFormat(
+                literal, format, null);
+            if (cal == null) {
+                throw Util.newInternal("fromJavaString: invalid date/time");
+            }
+            return new RexLiteral(cal, type, typeName);
+        case SqlTypeName.Symbol_ordinal:
+            // Symbols are for internal use
+        case SqlTypeName.IntervalDayTime_ordinal:
+        case SqlTypeName.IntervalYearMonth_ordinal:
+            // Intervals are not yet encoded as strings
+        default:
+            throw Util.newInternal("fromJavaString: unsupported type");
+        }
+    }
+
+    private static String getCalendarFormat(SqlTypeName typeName)
+    {
+        switch (typeName.getOrdinal()) {
+        case SqlTypeName.Date_ordinal:
+            return SqlParserUtil.DateFormatStr;
+        case SqlTypeName.Time_ordinal:
+            return SqlParserUtil.TimeFormatStr;
+        case SqlTypeName.Timestamp_ordinal:
+            return SqlParserUtil.TimestampFormatStr;
+        default:
+            throw Util.newInternal("getCalendarFormat: unknown type");
         }
     }
 

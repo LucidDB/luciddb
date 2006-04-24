@@ -1463,6 +1463,7 @@
 +----------+----+----+
 +----------+----+----+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> ---------------------
 0: jdbc:farrago:> -- Some join tests --
 0: jdbc:farrago:> ---------------------
 0: jdbc:farrago:> -- TODO: filter above join is not pushed down

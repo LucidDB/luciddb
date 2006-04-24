@@ -180,4 +180,64 @@ IterCalcRel(expr#0..11=[{inputs}], DNAME=[$t11], ENAME=[$t1])
 ]]>
         </Resource>
     </TestCase>
+    <TestCase name="testPushSemiJoinPastJoinRule_Left">
+        <Resource name="sql">
+            <![CDATA[select e1.name from sales.emps e1, sales.depts d, sales.emps e2 where e1.deptno = d.deptno and e1.empno = e2.empno]]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+ProjectRel(NAME=[$1])
+  FilterRel(condition=[AND(=($2, $10), =($0, $12))])
+    JoinRel(condition=[true], joinType=[inner])
+      JoinRel(condition=[true], joinType=[inner])
+        TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+        TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+      TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+ProjectRel(NAME=[$1])
+  JoinRel(condition=[=($0, $12)], joinType=[inner], semiJoinDone=[true], multiJoinDone=[false])
+    JoinRel(condition=[=($2, $10)], joinType=[inner], semiJoinDone=[true], multiJoinDone=[false])
+      SemiJoinRel(condition=[=($0, $10)], joinType=[inner])
+        SemiJoinRel(condition=[=($2, $10)], joinType=[inner])
+          TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+          TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+        TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+      TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+    TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testPushSemiJoinPastJoinRule_Right">
+        <Resource name="sql">
+            <![CDATA[select e1.name from sales.emps e1, sales.depts d, sales.emps e2 where e1.deptno = d.deptno and d.deptno = e2.deptno]]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+ProjectRel(NAME=[$1])
+  FilterRel(condition=[AND(=($2, $10), =($10, $14))])
+    JoinRel(condition=[true], joinType=[inner])
+      JoinRel(condition=[true], joinType=[inner])
+        TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+        TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+      TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+ProjectRel(NAME=[$1])
+  JoinRel(condition=[=($10, $14)], joinType=[inner], semiJoinDone=[true], multiJoinDone=[false])
+    JoinRel(condition=[=($2, $10)], joinType=[inner], semiJoinDone=[true], multiJoinDone=[false])
+      SemiJoinRel(condition=[=($2, $10)], joinType=[inner])
+        TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+        TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+      SemiJoinRel(condition=[=($0, $4)], joinType=[inner])
+        TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+        TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+    TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+]]>
+        </Resource>
+    </TestCase>
 </Root>
