@@ -173,6 +173,8 @@ public abstract class FarragoAbstractJdbcDriver implements Driver
      * into it. Any existing destination property with the same name as a
      * source property is replaced by the source property. A new destination
      * Properties object is created if the input argument is <code>null</code>.
+     * Note: Properties object is treated like a Hashtable and all key-value
+     * pairs are copied, regardless of whether the keys or values are Strings.
      * @param src source properties, must not be <code>null</code>
      * @param dest destination properties, may be <code>null</code>
      * @return merged properties
@@ -184,9 +186,9 @@ public abstract class FarragoAbstractJdbcDriver implements Driver
         }
         Enumeration enumer = src.propertyNames();
         while (enumer.hasMoreElements()) {
-            String key = (String)enumer.nextElement();
-            String val = src.getProperty(key);
-            dest.setProperty(key, val);
+            Object key = enumer.nextElement();
+            Object val = src.get(key);
+            dest.put(key, val);
         }
         return dest;
     }
