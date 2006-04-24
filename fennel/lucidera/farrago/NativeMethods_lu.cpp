@@ -278,6 +278,9 @@ class ExecStreamSubFactory_lu
         LhxJoinExecStreamParams params;
         pExecStreamFactory->readTupleStreamParams(params, streamDef);
 
+        // LhxJoinExecStream requires a private ScratchSegment.
+        pExecStreamFactory->createPrivateScratchSegment(params);
+        
         /*
          * These fields are currently not used by the optimizer. We know that
          * optimizer only supports inner equi hash join.
