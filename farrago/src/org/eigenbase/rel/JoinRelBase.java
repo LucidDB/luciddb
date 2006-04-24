@@ -110,18 +110,18 @@ public abstract class JoinRelBase extends AbstractRelNode
     }
 
     public static double estimateJoinedRows(
-        RelNode left, RelNode right, RexNode condition)
+        JoinRelBase joinRel, RexNode condition)
     {
-        double product = RelMetadataQuery.getRowCount(left)
-            * RelMetadataQuery.getRowCount(right);
+        double product = RelMetadataQuery.getRowCount(joinRel.getLeft())
+            * RelMetadataQuery.getRowCount(joinRel.getRight());
         // TODO:  correlation factor
-        return product * RexUtil.getSelectivity(condition);
+        return product * RelMetadataQuery.getSelectivity(joinRel, condition);
     }
 
     // implement RelNode
     public double getRows()
     {
-        return estimateJoinedRows(left, right, condition);
+        return estimateJoinedRows(this, condition);
     }
 
     public void setVariablesStopped(HashSet set)

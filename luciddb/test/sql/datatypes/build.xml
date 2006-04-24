@@ -70,8 +70,12 @@
       filtering="true">
       <fileset dir="${datatypes.dir}">
         <include name="**/*.tmpl"/>
+        <include name="**/*.${prop.source}"/>
       </fileset>
-      <mapper type="glob" from="*.tmpl" to="*"/>
+      <compositemapper>
+        <globmapper from="*.tmpl" to="*"/>
+        <globmapper from="*.${prop.source}" to="*"/>
+      </compositemapper>
       <filterset>
         <filtersfile file="config.properties"/>
       </filterset>
@@ -104,7 +108,7 @@
       <isset property="sql.generated"/>
       <then/>
       <else>
-        <foreach list="csvjdbc,flatfile"
+        <foreach list="csvjdbc,flatfile,oracle,sqlserver"
           param="prop.source"
           target="gen-sql"/>
       </else>

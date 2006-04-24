@@ -22,7 +22,6 @@
 #ifndef Fennel_LhxHashGenerator_Included
 #define Fennel_LhxHashGenerator_Included
 
-#include "fennel/common/CommonPreamble.h"
 #include "fennel/tuple/TupleData.h"
 #include "fennel/tuple/TupleDescriptor.h"
 
@@ -42,17 +41,17 @@ private:
     /*
      * Level at which the hash value seed is generated.
      */
-	uint level;
+    uint level;
 
     /*
      * The seed value.
      */
-	uint hashValueSeed;
+    uint hashValueSeed;
 
     /*
      * The maigc table(same as the one used in LcsHash.cpp).
      */
-	uint8_t *magicTable;
+    uint8_t *magicTable;
 
     /**
      * Compute hash value from value stored in a buffer.
@@ -61,7 +60,7 @@ private:
      * @param[in] pBuf buffer containing the value
      * @param[in] bufSize size of the buffer
      */
-	void hashOneBuffer(uint &hashValue, PConstBuffer pBuf, uint bufSize);
+    void hashOneBuffer(uint &hashValue, PConstBuffer pBuf, uint bufSize);
 
     /**
      * Compute hash value, from both value and length information, for a
@@ -70,18 +69,18 @@ private:
      * @param[out] hashValue
      * @param[in] inputCol input TupleDatum
      */
-	void hashOneColumn(uint &hashValue, TupleDatum const &inputCol);
+    void hashOneColumn(uint &hashValue, TupleDatum const &inputCol);
 
 public:
     /**
      * Initialize the generator. Different levels have different seed values.
      */
-	void init(uint levelInit);
+    void init(uint levelInit);
 
     /**
      * Get level information for this hash generator.
      */
-	uint getLevel();
+    uint getLevel();
 
     /**
      * Compute hash value for a TupleData, on both value and length
@@ -92,7 +91,7 @@ public:
      *
      * @return the hash value
      */
-	uint hash(TupleData const &inputTuple, 
+    uint hash(TupleData const &inputTuple, 
               TupleProjection const &keyProjection);
 
     /**
@@ -103,7 +102,7 @@ public:
      *
      * @return the hash value
      */
-	uint hash(TupleDatum const &inputCol);
+    uint hash(TupleDatum const &inputCol);
 
     /**
      * Compute hash value from value stored in a buffer.
@@ -113,7 +112,7 @@ public:
      *
      * @return the hash value
      */
-	uint hash(PConstBuffer pBuf, uint bufSize);
+    uint hash(PConstBuffer pBuf, uint bufSize);
 };
 
 inline uint LhxHashGenerator::getLevel()

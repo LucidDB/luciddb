@@ -22,7 +22,6 @@
 #ifndef Fennel_LbmIntersectExecStream_Included
 #define Fennel_LbmIntersectExecStream_Included
 
-#include "fennel/common/CommonPreamble.h"
 #include "fennel/tuple/TupleData.h"
 #include "fennel/exec/ConfluenceExecStream.h"
 #include "fennel/exec/DynamicParam.h"

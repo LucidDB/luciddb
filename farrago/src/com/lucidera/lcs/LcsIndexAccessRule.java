@@ -133,7 +133,7 @@ class LcsIndexAccessRule extends RelOptRule
         RexBuilder rexBuilder = origRowScan.getCluster().getRexBuilder();
         
         Map<CwmColumn, SargIntervalSequence> col2SeqMap =
-            getCol2SeqMap(origRowScan, sargBindingList);
+            indexGuide.getCol2SeqMap(origRowScan, sargBindingList);
         
         List<List<CwmColumn>> colLists = 
             getSargColLists(origRowScan, sargBindingList, col2SeqMap);

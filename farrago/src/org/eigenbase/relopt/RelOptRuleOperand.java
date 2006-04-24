@@ -158,6 +158,14 @@ public class RelOptRuleOperand implements Walkable
             && Arrays.equals(this.children, that.children);
     }
 
+    /**
+     * @return relational expression class matched by this operand
+     */
+    public Class getMatchedClass()
+    {
+        return clazz;
+    }
+
     // implement Walkable
     public Object [] getChildren()
     {

@@ -1,0 +1,50 @@
+"Id"	"Name"	"Type"	"ParentId"	"BillingStreet"	"BillingCity"	"BillingState"	"BillingPostalCode"	"BillingCountry"	"ShippingStreet"	"ShippingCity"	"ShippingState"	"ShippingPostalCode"	"ShippingCountry"	"Phone"	"Fax"	"AccountNumber"	"Website"	"Sic"	"Industry"	"AnnualRevenue"	"NumberOfEmployees"	"Ownership"	"TickerSymbol"	"Description"	"Rating"	"Site"	"OwnerId"	"CreatedDate"	"CreatedById"	"LastModifiedDate"	"LastModifiedById"	"SystemModstamp"	"SLAExpirationDate__c"	"SLASerialNumber__c"	"NumberofLocations__c"	"SLA__c"	"CustomerPriority__c"	"UpsellOpportunity__c"	"Active__c"
+"00130000009dw2QAAQ"	"Edge Communications"	"Customer - Direct"		"312 Constitution Place
+Austin, TX 78767
+USA"	"Austin"	"TX"			"312 Constitution Place
+Austin, TX 78767
+USA"					"(512) 757-6000"	"(512) 757-9000"	"CD451796"	"http://edgecomm.com"	"6576"	"Electronics"	1.39E8	1000	"Public"	"EDGE"	"Edge, founded in 1998, is a start-up based in Austin, TX. The company designs and manufactures a device to convert music from one digital format to another. Edge sells its product through retailers and its own website."	"Hot"		"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	2006-01-29	"2657"	2.0	"Silver"	"Medium"	"Maybe"	"Yes"
+"00130000009dw2RAAQ"	"Burlington Textiles Corp of America"	"Customer - Direct"		"525 S. Lexington Ave"	"Burlington"	"NC"	"27215"	"USA"						"(336) 222-7000"	"(336) 222-8000"	"CD656092"	"www.burlington.com"	"546732"	"Apparel"	3.5E8	9000	"Public"	"BTXT"		"Warm"		"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	2006-01-29	"5367"	6.0	"Silver"		"Maybe"	
+"00130000009dw2SAAQ"	"Pyramid Construction Inc."	"Customer - Channel"		"2 Place Jussieu"	"Paris"		"75251"	"France"	"2 Place Jussieu"	"Paris"		"75251"	"France"	"(014) 427-4427"	"(014) 427-4428"	"CC213425"	"www.pyramid.com"	"4253"	"Construction"	9.5E8	2680	"Public"	"PYR"				"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	2006-08-03	"9840"	17.0	"Silver"		"Maybe"	"Yes"
+"00130000009dw2TAAQ"	"Dickenson plc"	"Customer - Channel"		"1301 Hoch Drive"	"Lawrence"	"KS"	"66045"	"USA"	"1301 Hoch Drive"	"Lawrence"	"KS"	"66045"	"USA"	"(785) 241-6200"	"(785) 241-6201"	"CC634267"	"dickenson-consulting.com"	"6752"	"Consulting"	5.0E7	120	"Private"					"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	2006-08-03	"7425"	2.0	"Bronze"	"Low"	"No"	"Yes"
+"00130000009dw2UAAQ"	"Grand Hotels & Resorts Ltd"	"Customer - Direct"		"2334 N. Michigan Avenue, Suite 1500
+Chicago, IL 60601, USA"	"Chicago"	"IL"			"2334 N. Michigan Avenue, Suite 1500
+Chicago, IL 60601, USA"					"(312) 596-1000"	"(312) 596-1500"	"CD439877"	"www.grandhotels.com"	"2268"	"Hospitality"	5.0E8	5600	"Public"	"GHTL"	"Chain of hotels and resorts across the US, UK, Eastern Europe, Japan, and SE Asia."	"Warm"		"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	2006-08-03	"5572"	57.0	"Gold"	"High"	"Yes"	"Yes"
+"00130000009dw2VAAQ"	"Express Logistics and Transport"	"Customer - Channel"		"620 SW 5th Avenue Suite 400
+Portland, Oregon 97204
+United States"	"Portland"	"OR"			"620 SW 5th Avenue Suite 400
+Portland, Oregon 97204
+United States"					"(503) 421-7800"	"(503) 421-7801"	"CC947211"	"www.expressl&t.net"	"8742"	"Transportation"	9.5E8	12300	"Public"	"EXLT"	"Commerical logistics and transportation company."	"Cold"		"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	2006-08-03	"4724"	150.0	"Platinum"	"Medium"	"Maybe"	"Yes"
+"00130000009dw2WAAQ"	"University of Arizona"	"Customer - Direct"		"888 N Euclid 
+Hallis Center, Room 501
+Tucson, AZ 85721
+United States"	"Tucson"	"AZ"			"888 N Euclid 
+Hallis Center, Room 501
+Tucson, AZ 85721
+United States"					"(520) 773-9050"	"(520) 773-9060"	"CD736025"	"www.universityofarizona.com"	"7321"	"Education"		39000	"Other"		"Leading university in AZ offering undergraduate and graduate programs in arts and humanities, pure sciences, engineering, business, and medicine."	"Warm"		"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	2006-01-29	"8350"	3.0	"Gold"	"Medium"	"Yes"	"Yes"
+"00130000009dw2XAAQ"	"United Oil & Gas Corp."	"Customer - Direct"		"1301 Avenue of the Americas 
+New York, NY 10019
+USA"	"New York"	"NY"			"1301 Avenue of the Americas 
+New York, NY 10019
+USA"					"(212) 842-5500"	"(212) 842-5501"	"CD355118"	"http://www.uos.com"	"4437"	"Energy"	5.6E9	145000	"Public"	"UOS"	"World's third largest oil and gas company."	"Hot"		"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	2006-08-03	"6654"	955.0	"Platinum"	"High"	"Yes"	"Yes"
+"00130000009dw2YAAQ"	"United Oil & Gas, UK"	"Customer - Direct"		"Kings Park, 17th Avenue, Team Valley Trading Estate,
+Gateshead, Tyne and Wear NE26 3HS
+United Kingdom"		"UK"			"Kings Park, 17th Avenue, Team Valley Trading Estate,
+Gateshead, Tyne and Wear NE26 3HS
+United Kingdom"					"+44 191 4956203"	"+44 191 4956620"	"CD355119-A"	"http://www.uos.com"	"4437"	"Energy"		24000	"Public"	"UOS"				"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	2006-01-29	"3479"	34.0	"Platinum"	"High"	"No"	"Yes"
+"00130000009dw2ZAAQ"	"United Oil & Gas, Singapore"	"Customer - Direct"		"9 Tagore Lane
+Singapore, Singapore 787472
+Singapore"	"Singapore"	"Singapore"			"9 Tagore Lane
+Singapore, Singapore 787472
+Singapore"					"(650) 450-8810"	"(650) 450-8820"	"CD355120-B"	"http://www.uos.com"	"4437"	"Energy"		3000	"Public"	"UOS"				"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	2006-08-03	"2457"	6.0	"Platinum"	"High"	"Maybe"	"Yes"
+"00130000009dw2aAAA"	"GenePoint"	"Customer - Channel"		"345 Shoreline Park
+Mountain View, CA 94043
+USA"	"Mountain View"	"CA"			"345 Shoreline Park
+Mountain View, CA 94043
+USA"					"(650) 867-3450"	"(650) 867-9895"	"CC978213"	"www.genepoint.com"	"3712"	"Biotechnology"	3.0E7	265	"Private"		"Genomics company engaged in mapping and sequencing of the human genome and developing gene-based drugs"	"Cold"		"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	2006-08-03	"7324"	1.0	"Bronze"	"Low"	"Yes"	"Yes"
+"00130000009dw2bAAA"	"sForce"			"The Landmark @ One Market"	"San Francisco"	"CA"	"94087"	"US"						"(415) 901-7000"	"(415) 901-7002"		"www.sforce.com"										"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"	"00530000000jdMGAAY"	"2005-11-17T23:45:39.000Z"							
+"00130000009dwWKAAY"	"Golden Straw"			"4322 Haystack Boulevard"	"Wichita"	"KA"	"87901"	"US"						"666.666.6666"	"555.555.5555"	"0000000"	"www.oz.com"		"Farming"	9.99999999E8	40	"Privately Held"		"World class hay makers."			"00530000000jdMGAAY"	"2005-11-18T00:22:17.000Z"	"00530000000jdMGAAY"	"2006-03-13T09:24:25.000Z"	"00530000000jdMGAAY"	"2006-03-13T09:24:25.000Z"							
+"00130000009dwWLAAY"	"Golden Straw"			"4322 Haystack Boulevard"	"Wichita"	"KA"	"87901"	"US"						"666.666.6666"	"555.555.5555"	"0000000"	"www.oz.com"		"Farming"		40	"Privately Held"		"World class hay makers."			"00530000000jdMGAAY"	"2005-11-18T00:22:17.000Z"	"00530000000jdMGAAY"	"2005-11-18T00:22:17.000Z"	"00530000000jdMGAAY"	"2005-11-18T00:22:17.000Z"							
+"00130000009dwS7AAI"	"account1"	"Prospect"	"0013000000ABu1iAAD"	"123 A Street
+San Mateo, CA"										"(408) 123-4567"	"(510) 999-9999"		"http://www.google.com"		"Utilities"			"Other"					"00530000000jdMGAAY"	"2005-11-18T00:19:54.000Z"	"00530000000jdMGAAY"	"2006-03-13T09:26:57.000Z"	"00530000000jdMGAAY"	"2006-03-13T09:26:57.000Z"				"Platinum"	"High"		
+"0013000000ABu1iAAD"	"acct #2"	"Channel Partner / Reseller"																	"Not For Profit"			"Public"			"Hot"		"00530000000jdMGAAY"	"2005-12-19T20:19:37.000Z"	"00530000000jdMGAAY"	"2006-03-13T09:25:24.000Z"	"00530000000jdMGAAY"	"2006-03-13T09:25:24.000Z"	2006-03-01			"Gold"	"High"	"Maybe"	"No"

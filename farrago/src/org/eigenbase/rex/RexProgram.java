@@ -483,6 +483,24 @@ public class RexProgram
     }
 
     /**
+     * Fully expands a RexLocalRef back into a pure RexNode tree containing no
+     * RexLocalRefs (reversing the effect of common subexpression elimination).
+     * For example, <code>program.expandLocalRef(program.getCondition())</code>
+     * will return the expansion of a program's condition.
+     *
+     * @param ref a RexLocalRef from this program
+     *
+     * @return expanded form
+     */
+    public RexNode expandLocalRef(RexLocalRef ref)
+    {
+        // TODO jvs 19-Apr-2006:  assert that ref is part of
+        // this program
+        ExpansionShuttle shuttle = new ExpansionShuttle();
+        return ref.accept(shuttle);
+    }
+
+    /**
      * Given a list of collations which hold for the input to this program,
      * returns a list of collations which hold for its output. The result is
      * mutable.
@@ -585,6 +603,20 @@ public class RexProgram
             }
         }
     }
+    
+    /**
+     * A RexShuttle used in the implementation of {@link
+     * RexProgram#expandLocalRef}.
+     */
+    private class ExpansionShuttle extends RexShuttle
+    {
+        public RexNode visitLocalRef(RexLocalRef localRef)
+        {
+            RexNode tree = getExprList().get(localRef.getIndex());
+            return tree.accept(this);
+        }
+    }
+
 }
 
 // End RexProgram.java

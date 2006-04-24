@@ -49,6 +49,11 @@ void CacheParams::readConfig(ConfigMap const &configMap)
         paramPageSize,cbPage);
     nMemPagesInit = configMap.getIntParam(
         paramPagesInit,nMemPagesInit);
+    if (!isMAXU(nMemPagesInit)) {
+        if (nMemPagesMax < nMemPagesInit) {
+            nMemPagesMax = nMemPagesInit;
+        }
+    }
     idleFlushInterval = configMap.getIntParam(
         paramIdleFlushInterval,idleFlushInterval);
 }

@@ -194,7 +194,10 @@ void LbmUnionExecStream::closeImpl()
         pDynamicParamManager->deleteParam(ridLimitParamId);
     }
 
-    // FIXME: deallocate pages
+    if (scratchAccessor.pSegment) {
+        scratchAccessor.pSegment->deallocatePageRange(
+            NULL_PAGE_ID, NULL_PAGE_ID);
+    }
 }
 
 uint LbmUnionExecStream::computeOptWorkspacePages(LcsRid maxRid) 

@@ -54,6 +54,7 @@
       <test name="agg" requiresSuccess="download">
         <test-metadata>
           <withIndex value="false"/>
+          <notImplemented value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/agg.sql"/>
       </test>
@@ -61,6 +62,7 @@
       <test name="aggJoinEq" requiresSuccess="download">
         <test-metadata>
           <withIndex value="false"/>
+          <notImplemented value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/aggJoinEq.sql"/>
       </test>
@@ -68,6 +70,7 @@
       <test name="aggJoinRng" requiresSuccess="download">
         <test-metadata>
           <withIndex value="false"/>
+          <notImplemented value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/aggJoinRng.sql"/>
       </test>
@@ -75,6 +78,7 @@
       <test name="agg_cust" requiresSuccess="download">
         <test-metadata>
           <withIndex value="false"/>
+          <notImplemented value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/agg_cust.sql"/>
       </test>
@@ -82,6 +86,7 @@
       <test name="aggJoinEq_cust" requiresSuccess="download">
         <test-metadata>
           <withIndex value="false"/>
+          <notImplemented value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/aggJoinEq_cust.sql"/>
       </test>
@@ -89,6 +94,7 @@
       <test name="aggJoinRng_cust" requiresSuccess="download">
         <test-metadata>
           <withIndex value="false"/>
+          <notImplemented value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/aggJoinRng_cust.sql"/>
       </test>
@@ -96,6 +102,7 @@
       <test name="aggDistinct" requiresSuccess="download">
         <test-metadata>
           <withIndex value="false"/>
+          <notImplemented value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/aggDistinct.sql"/>
       </test>
@@ -110,6 +117,7 @@
       <test name="order" requiresSuccess="download">
         <test-metadata>
           <withIndex value="false"/>
+          <notImplemented value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/order.sql"/>
       </test>
@@ -117,6 +125,7 @@
       <test name="scalarSubquery" requiresSuccess="download">
         <test-metadata>
           <withIndex value="false"/>
+          <notImplemented value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/scalarSubquery.sql"/>
       </test>
@@ -130,40 +139,40 @@
 
       <test name="subFrom" requiresSuccess="download">
         <test-metadata>
-          <knownFailure value="true"/>
           <withIndex value="false"/>
+          <notImplemented value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/subFrom.sql"/>
       </test>
 
       <test name="subExists" requiresSuccess="download">
         <test-metadata>
-          <knownFailure value="true"/>
           <withIndex value="false"/>
+          <notImplemented value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/subExists.sql"/>
       </test>
 
       <test name="subIn" requiresSuccess="download">
         <test-metadata>
-          <knownFailure value="true"/>
           <withIndex value="false"/>
+          <notImplemented value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/subIn.sql"/>
       </test>
 
       <test name="subMisc" requiresSuccess="download">
         <test-metadata>
-          <knownFailure value="true"/>
           <withIndex value="false"/>
+          <notImplemented value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/subMisc.sql"/>
       </test>
 
       <test name="subMult" requiresSuccess="download">
         <test-metadata>
-          <knownFailure value="true"/>
           <withIndex value="false"/>
+          <notImplemented value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/subMult.sql"/>
       </test>

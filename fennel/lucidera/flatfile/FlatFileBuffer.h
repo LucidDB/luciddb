@@ -23,7 +23,6 @@
 #ifndef Fennel_FlatFileBuffer_Included
 #define Fennel_FlatFileBuffer_Included
 
-#include "fennel/common/CommonPreamble.h"
 #include "fennel/common/ClosableObject.h"
 #include "fennel/common/TraceSource.h"
 #include "fennel/device/RandomAccessDevice.h"

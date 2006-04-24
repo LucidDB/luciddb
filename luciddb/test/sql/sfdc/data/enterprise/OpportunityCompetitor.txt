@@ -1,0 +1,3 @@
+"Id"	"OpportunityId"	"CompetitorName"	"Strengths"	"Weaknesses"	"CreatedById"	"CreatedDate"	"LastModifiedById"	"LastModifiedDate"	"SystemModstamp"
+"00J30000000cl2DEAQ"	"00630000002qG3EAAU"	"slfkjflskdjlasdfkjklfsd kljdsafll"			"00530000000hPnYAAU"	"2005-12-19T21:34:11.000Z"	"00530000000hPnYAAU"	"2005-12-19T21:34:11.000Z"	"2005-12-19T21:34:11.000Z"
+"00J30000000cfsmEAA"	"00630000003UytnAAC"	"Blah Blah"			"00530000000hPnYAAU"	"2005-11-16T03:25:43.000Z"	"00530000000hPnYAAU"	"2005-11-16T03:25:43.000Z"	"2005-11-16T03:25:43.000Z"

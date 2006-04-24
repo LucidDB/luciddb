@@ -361,6 +361,22 @@
 0: jdbc:farrago:> -------------------------------------------------------------
 0: jdbc:farrago:> -- Part 4. Data types, null values                         --
 0: jdbc:farrago:> -------------------------------------------------------------
+0: jdbc:farrago:> -- NOTE: cannot input a binary field from a flat file yet
+0: jdbc:farrago:> create foreign table typed_src(
+. . . . . . . . >     a int,
+. . . . . . . . >     d char(10),
+. . . . . . . . >     e decimal(6,2),
+. . . . . . . . >     f smallint,
+. . . . . . . . >     g real,
+. . . . . . . . >     h double,
+. . . . . . . . >     i varchar(256),
+. . . . . . . . >     j boolean,
+. . . . . . . . >     k date,
+. . . . . . . . >     l time,
+. . . . . . . . >     m timestamp,
+. . . . . . . . >     n numeric(10,2)) 
+. . . . . . . . > server test_data
+. . . . . . . . > options (filename 'typed');
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create table typed(
 . . . . . . . . >     a int,
@@ -394,12 +410,16 @@
 0: jdbc:farrago:> create index typed_m on typed(m);
 0: jdbc:farrago:> create index typed_n on typed(n);
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- surprisingly these don't cause any problems
+0: jdbc:farrago:> -- LER-422: merging with singleton 
+0: jdbc:farrago:> -- http://jira.lucidera.com/browse/LER-422
 0: jdbc:farrago:> insert into typed values(
 . . . . . . . . >     1,X'deadbeef',null,'first',
 . . . . . . . . >     0.16,1,1,1,
 . . . . . . . . >     '1st',true,DATE'2001-11-11',TIME'23:11:08',
 . . . . . . . . >     TIMESTAMP'2001-11-11 23:11:08',0.02);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- the singleton bitmap entry on index(b)
+0: jdbc:farrago:> -- key(b) = null, RID == 1
 0: jdbc:farrago:> insert into typed values(
 . . . . . . . . >     2,null,null,null,
 . . . . . . . . >     null,null,null,null,
@@ -411,26 +431,11 @@
 . . . . . . . . >     '3rd',false,DATE'2001-12-12',TIME'23:11:08',
 . . . . . . . . >     TIMESTAMP'2001-12-12 23:11:08',0.06);
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- NOTE: cannot input a binary field from a flat file yet
-0: jdbc:farrago:> create foreign table typed_src(
-. . . . . . . . >     a int,
-. . . . . . . . >     d char(10),
-. . . . . . . . >     e decimal(6,2),
-. . . . . . . . >     f smallint,
-. . . . . . . . >     g real,
-. . . . . . . . >     h double,
-. . . . . . . . >     i varchar(256),
-. . . . . . . . >     j boolean,
-. . . . . . . . >     k date,
-. . . . . . . . >     l time,
-. . . . . . . . >     m timestamp,
-. . . . . . . . >     n numeric(10,2)) 
-. . . . . . . . > server test_data
-. . . . . . . . > options (filename 'typed');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- FIXME: this causes a crash
-0: jdbc:farrago:> -- insert into typed (a,d,e,f,g,h,i,j,k,l,m,n)
-0: jdbc:farrago:> -- select * from typed_src;
+0: jdbc:farrago:> -- the new bitmap entry with three RIDs set
+0: jdbc:farrago:> -- key(b) = null RID == 2,3,4
+0: jdbc:farrago:> -- the new bitmap will be merged with the singleton inserted above.
+0: jdbc:farrago:> insert into typed (a,d,e,f,g,h,i,j,k,l,m,n)
+. . . . . . . . > select * from typed_src;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- cleanup
 0: jdbc:farrago:> drop server test_data cascade;

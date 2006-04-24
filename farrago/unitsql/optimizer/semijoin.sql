@@ -91,6 +91,12 @@ explain plan for select *
     on s.s1 = t.d and s.s3 = t.b and t.c = s.s4 where s.s2 > 0
     order by a;
 
+-- same query but filters juggled around
+explain plan for select *
+    from t inner join smalltable s
+    on s.s4 = t.c and s.s1 = t.d and s.s3 = t.b where s.s2 > 0
+    order by a;
+
 ---------------------------------------
 -- run queries above that use semijoins
 ---------------------------------------
@@ -116,6 +122,11 @@ select *
 select *
     from t inner join smalltable s
     on s.s1 = t.d and s.s3 = t.b and t.c = s.s4 where s.s2 > 0
+    order by a;
+
+select *
+    from t inner join smalltable s
+    on s.s4 = t.c and s.s1 = t.d and s.s3 = t.b where s.s2 > 0
     order by a;
 
 ------------------

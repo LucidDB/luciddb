@@ -22,7 +22,6 @@
 #ifndef Fennel_LbmUnionWorkspace_Included
 #define Fennel_LbmUnionWorkspace_Included
 
-#include "fennel/common/CommonPreamble.h"
 #include "fennel/common/ByteBuffer.h"
 #include "fennel/lucidera/bitmap/LbmByteSegment.h"
 #include "fennel/lucidera/bitmap/LbmSegment.h"

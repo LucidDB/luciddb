@@ -620,6 +620,7 @@ select * from ridsearchtable where b = 0 and a = 3;
 -- no rows
 select * from ridsearchtable where b = 0 and a = 1;
 
+---------------------
 -- Some join tests --
 ---------------------
 -- TODO: filter above join is not pushed down

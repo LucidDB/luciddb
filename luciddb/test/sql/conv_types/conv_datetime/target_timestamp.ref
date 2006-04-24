@@ -12,72 +12,72 @@
 0: jdbc:luciddb:> insert into target_timestamp
 . . . . . . . . >  select colbit from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLBIT' of type BOOLEAN (state=,code=0)
+Error: From line 1, column 38 to line 1, column 43: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLBIT' of type BOOLEAN (state=,code=0)
 0: jdbc:luciddb:> insert into target_timestamp
 . . . . . . . . >  select coltiny from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLTINY' of type TINYINT (state=,code=0)
+Error: From line 1, column 38 to line 1, column 44: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLTINY' of type TINYINT (state=,code=0)
 0: jdbc:luciddb:> insert into target_timestamp
 . . . . . . . . >  select colsmall from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLSMALL' of type SMALLINT (state=,code=0)
+Error: From line 1, column 38 to line 1, column 45: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLSMALL' of type SMALLINT (state=,code=0)
 0: jdbc:luciddb:> insert into target_timestamp
 . . . . . . . . >  select colint from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLINT' of type INTEGER (state=,code=0)
+Error: From line 1, column 38 to line 1, column 43: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLINT' of type INTEGER (state=,code=0)
 0: jdbc:luciddb:> insert into target_timestamp
 . . . . . . . . >  select colbig from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLBIG' of type BIGINT (state=,code=0)
+Error: From line 1, column 38 to line 1, column 43: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLBIG' of type BIGINT (state=,code=0)
 0: jdbc:luciddb:> insert into target_timestamp
 . . . . . . . . >  select coldec from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLDEC' of type DECIMAL(10, 4) (state=,code=0)
+Error: From line 1, column 38 to line 1, column 43: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLDEC' of type DECIMAL(10, 4) (state=,code=0)
 0: jdbc:luciddb:> insert into target_timestamp
 . . . . . . . . >  select colnum from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLNUM' of type DECIMAL(16, 2) (state=,code=0)
+Error: From line 1, column 38 to line 1, column 43: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLNUM' of type DECIMAL(16, 2) (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- all floating point should FAIL
 0: jdbc:luciddb:> insert into target_timestamp
 . . . . . . . . >  select coldouble from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLDOUBLE' of type DOUBLE (state=,code=0)
+Error: From line 1, column 38 to line 1, column 46: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLDOUBLE' of type DOUBLE (state=,code=0)
 0: jdbc:luciddb:> insert into target_timestamp
 . . . . . . . . >  select colfloat from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLFLOAT' of type DOUBLE (state=,code=0)
+Error: From line 1, column 38 to line 1, column 45: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLFLOAT' of type DOUBLE (state=,code=0)
 0: jdbc:luciddb:> insert into target_timestamp
 . . . . . . . . >  select colreal from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLREAL' of type REAL (state=,code=0)
+Error: From line 1, column 38 to line 1, column 44: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLREAL' of type REAL (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- all char/binary should FAIL
 0: jdbc:luciddb:> insert into target_timestamp
 . . . . . . . . >  select colchar from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLCHAR' of type CHAR(17) (state=,code=0)
+Error: From line 1, column 38 to line 1, column 44: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLCHAR' of type CHAR(17) (state=,code=0)
 0: jdbc:luciddb:> insert into target_timestamp
 . . . . . . . . >  select colvchar from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLVCHAR' of type VARCHAR(100) (state=,code=0)
+Error: From line 1, column 38 to line 1, column 45: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLVCHAR' of type VARCHAR(100) (state=,code=0)
 0: jdbc:luciddb:> --insert into target_timestamp
 0: jdbc:luciddb:> -- select colbin from datatype_source where colname = 'BAD'
 0: jdbc:luciddb:> --;
 0: jdbc:luciddb:> insert into target_timestamp
 . . . . . . . . >  select colvbin from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLVBIN' of type VARBINARY(256) (state=,code=0)
+Error: From line 1, column 38 to line 1, column 44: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLVBIN' of type VARBINARY(256) (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- all should be OK
 0: jdbc:luciddb:> insert into target_timestamp
 . . . . . . . . >  select coltime from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLTIME' of type TIME (state=,code=0)
+Error: From line 1, column 38 to line 1, column 44: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLTIME' of type TIME (state=,code=0)
 0: jdbc:luciddb:> insert into target_timestamp
 . . . . . . . . >  select coldate from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
-Error: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLDATE' of type DATE (state=,code=0)
+Error: From line 1, column 38 to line 1, column 44: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLDATE' of type DATE (state=,code=0)
 0: jdbc:luciddb:> insert into target_timestamp
 . . . . . . . . >  select coltmstamp from datatype_source where colname = 'BAD'
 . . . . . . . . > ;
@@ -91,11 +91,11 @@ Error: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from sourc
 0: jdbc:luciddb:> insert into target_timestamp
 . . . . . . . . >  select colchar from datatype_source where colname = 'TIMESTAMP'
 . . . . . . . . > ;
-Error: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLCHAR' of type CHAR(17) (state=,code=0)
+Error: From line 1, column 38 to line 1, column 44: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLCHAR' of type CHAR(17) (state=,code=0)
 0: jdbc:luciddb:> insert into target_timestamp
 . . . . . . . . >  select colvchar from datatype_source where colname = 'TIMESTAMP'
 . . . . . . . . > ;
-Error: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLVCHAR' of type VARCHAR(100) (state=,code=0)
+Error: From line 1, column 38 to line 1, column 45: Cannot assign to target field 'COLTIMESTAMP' of type TIMESTAMP from source field 'COLVCHAR' of type VARCHAR(100) (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- should be OK

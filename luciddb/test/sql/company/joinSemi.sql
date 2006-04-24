@@ -6,47 +6,76 @@
 set schema 's';
 
 -- a bunch of equi-joins
+-- Workarounds added for LER-92 & LER-93, and filters added so semijoins happen
 
 -- two way
-select EMP.LNAME from EMP, DEPT
-where EMP.DEPTNO = DEPT.DEPTNO order by EMP.EMPNO;
+select EMP.LNAME 
+, EMP.EMPNO
+from EMP, DEPT
+where EMP.DEPTNO = DEPT.DEPTNO 
+  and DEPT.DEPTNO > 100
+order by EMP.EMPNO;
+--order by EMPNO;
 
-select DEPT.DNAME from EMP, DEPT
-where EMP.DEPTNO = DEPT.DEPTNO order by DEPT.DNAME;
+select DEPT.DNAME 
+from EMP, DEPT
+where EMP.DEPTNO = DEPT.DEPTNO 
+  and DEPT.DEPTNO > 100
+order by DEPT.DNAME;
+--order by DNAME;
 
 -- three way
 SELECT EMP.LNAME
-from EMP, DEPT, LOCATION
+from EMP, LOCATION, DEPT
 where EMP.DEPTNO=DEPT.DEPTNO and DEPT.LOCID=LOCATION.LOCID
+ and LOCATION.ZIP > 94000
 order by EMP.LNAME;
+--order by LNAME;
 
 SELECT DEPT.DNAME
 from EMP, DEPT, LOCATION
 where EMP.DEPTNO=DEPT.DEPTNO and DEPT.LOCID=LOCATION.LOCID
+  and LOCATION.ZIP > 94000
 order by DEPT.DNAME;
+--order by DNAME;
 
 SELECT LOCATION.CITY
+, LOCATION.STREET
 from EMP, DEPT, LOCATION
 where EMP.DEPTNO=DEPT.DEPTNO and DEPT.LOCID=LOCATION.LOCID
+  and LOCATION.ZIP > 94000
 order by LOCATION.STREET;
+--order by STREET;
 
 -- semi joins of a self join
-select M.LNAME from EMP M, EMP R
-where M.EMPNO = R.MANAGER order by M.EMPNO;
+select M.LNAME 
+, M.EMPNO
+from EMP M, EMP R
+where M.EMPNO = R.MANAGER
+ and R.SEX='M'
+order by M.EMPNO;
+--order by EMPNO;
 
-select R.LNAME from EMP M, EMP R
-where M.EMPNO = R.MANAGER order by R.EMPNO;
+select R.LNAME 
+, R.EMPNO
+from EMP M, EMP R
+where M.EMPNO = R.MANAGER 
+and R.SEX='M'
+order by R.EMPNO;
+--order by EMPNO;
 
 -- double reference of a table
 select EMP.LNAME, DEPT.DNAME
 from LOCATION EL, LOCATION DL, EMP, DEPT
 where EL.LOCID = EMP.LOCID and DL.LOCID=DEPT.LOCID
 order by EMP.LNAME, DEPT.DNAME;
+--order by LNAME, DNAME;
 
 select EL.CITY, DL.CITY
 from LOCATION EL, LOCATION DL, EMP, DEPT
 where EL.LOCID = EMP.LOCID and DL.LOCID=DEPT.LOCID
 order by EL.CITY, DL.CITY;
+--order by CITY, CITY;
 
 -- many to many self join semi join variations
 select F.FNAME
@@ -55,6 +84,7 @@ WHERE M.LNAME = F.LNAME
 AND M.SEX = 'M'
 AND F.SEX = 'F'
 order by F.FNAME;
+--order by FNAME;
 
 select M.FNAME, M.LNAME
 FROM CUSTOMERS M, CUSTOMERS F
@@ -62,7 +92,9 @@ WHERE M.LNAME = F.LNAME
 AND M.SEX = 'M'
 AND F.SEX = 'F'
 order by M.FNAME, M.LNAME;
+--order by FNAME, LNAME;
 
+-- ** SLOW, add in a bit
 -- a few ranges
 -- a big ol' join
 --select PRODUCTS.PRICE
@@ -79,16 +111,16 @@ order by M.FNAME, M.LNAME;
 --order by SALES.CUSTID;
 
 -- equality and non equality in one
-select SALES.PRICE
-from SALES, PRODUCTS, CUSTOMERS
-where SALES.PRICE - PRODUCTS.PRICE < 0.5
-and PRODUCTS.PRICE - SALES.PRICE < 0.25
-and SALES.CUSTID = CUSTOMERS.CUSTID
-order by SALES.PRICE;
+-- select SALES.PRICE
+-- from SALES, PRODUCTS, CUSTOMERS
+-- where SALES.PRICE - PRODUCTS.PRICE < 0.5
+-- and PRODUCTS.PRICE - SALES.PRICE < 0.25
+-- and SALES.CUSTID = CUSTOMERS.CUSTID
+-- order by SALES.PRICE;
 
-select PRODUCTS.NAME, CUSTOMERS.FNAME, CUSTOMERS.LNAME, PRODUCTS.PRICE
-from SALES, PRODUCTS, CUSTOMERS
-where SALES.PRICE - PRODUCTS.PRICE < 0.5
-and PRODUCTS.PRICE - SALES.PRICE < 0.25
-and SALES.CUSTID = CUSTOMERS.CUSTID
-order by PRODUCTS.NAME, CUSTOMERS.CUSTID;
+-- select PRODUCTS.NAME, CUSTOMERS.FNAME, CUSTOMERS.LNAME, PRODUCTS.PRICE
+-- from SALES, PRODUCTS, CUSTOMERS
+-- where SALES.PRICE - PRODUCTS.PRICE < 0.5
+-- and PRODUCTS.PRICE - SALES.PRICE < 0.25
+-- and SALES.CUSTID = CUSTOMERS.CUSTID
+-- order by PRODUCTS.NAME, CUSTOMERS.CUSTID;

@@ -11,10 +11,12 @@ create index idx1 on t(i)
 ;
 insert into t values(2)
 ;
+!set outputformat csv
 explain plan for select * from t where i=1
 ;
 explain plan for select * from t where i=2
 ;
+!set outputformat table
 select * from t where i = 2
 ;
 select * from t where i = 1

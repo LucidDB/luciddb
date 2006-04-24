@@ -188,6 +188,8 @@ public:
 
     bool containsNull() const;
 
+    bool containsNull(TupleProjection const &tupleProj) const;
+
     /** project unmarshalled data; like TupleDescriptor::projectFrom */
     void projectFrom(TupleData const& src, TupleProjection const&);
 };

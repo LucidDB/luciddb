@@ -1,0 +1,35 @@
+6.0
+33
+1	SQLVARCHAR	0	25	"\t"	1	Id
+2	SQLVARCHAR	0	25	"\t"	2	WhoId
+3	SQLVARCHAR	0	25	"\t"	3	WhatId
+4	SQLVARCHAR	0	512	"\t"	4	Subject
+5	SQLVARCHAR	0	1024	"\t"	5	Location
+6	SQLVARCHAR	0	5	"\t"	6	IsAllDayEvent
+7	SQLVARCHAR	0	24	"\t"	7	ActivityDateTime
+8	SQLDATE	0	10	"\t"	8	ActivityDate
+9	SQLINT	0	8	"\t"	9	DurationInMinutes
+10	SQLVARCHAR	0	1024	"\t"	10	Description
+11	SQLVARCHAR	0	25	"\t"	11	AccountId
+12	SQLVARCHAR	0	25	"\t"	12	OwnerId
+13	SQLVARCHAR	0	512	"\t"	13	Type
+14	SQLVARCHAR	0	5	"\t"	14	IsPrivate
+15	SQLVARCHAR	0	512	"\t"	15	ShowAs
+16	SQLVARCHAR	0	5	"\t"	16	IsChild
+17	SQLVARCHAR	0	5	"\t"	17	IsGroupEvent
+18	SQLVARCHAR	0	24	"\t"	18	CreatedDate
+19	SQLVARCHAR	0	25	"\t"	19	CreatedById
+20	SQLVARCHAR	0	24	"\t"	20	LastModifiedDate
+21	SQLVARCHAR	0	25	"\t"	21	LastModifiedById
+22	SQLVARCHAR	0	24	"\t"	22	SystemModstamp
+23	SQLVARCHAR	0	25	"\t"	23	RecurrenceActivityId
+24	SQLVARCHAR	0	5	"\t"	24	IsRecurrence
+25	SQLVARCHAR	0	24	"\t"	25	RecurrenceStartDateTime
+26	SQLDATE	0	10	"\t"	26	RecurrenceEndDateOnly
+27	SQLVARCHAR	0	512	"\t"	27	RecurrenceTimeZoneSidKey
+28	SQLVARCHAR	0	512	"\t"	28	RecurrenceType
+29	SQLINT	0	8	"\t"	29	RecurrenceInterval
+30	SQLINT	0	8	"\t"	30	RecurrenceDayOfWeekMask
+31	SQLINT	0	8	"\t"	31	RecurrenceDayOfMonth
+32	SQLVARCHAR	0	512	"\t"	32	RecurrenceInstance
+33	SQLVARCHAR	0	512	"\r\n"	33	RecurrenceMonthOfYear

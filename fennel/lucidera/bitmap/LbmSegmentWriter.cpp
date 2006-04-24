@@ -19,6 +19,7 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#include "fennel/common/CommonPreamble.h"
 #include "fennel/lucidera/bitmap/LbmSegmentWriter.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
@@ -128,6 +129,6 @@ TupleData const &LbmSegmentWriter::produceSegmentTuple()
     return segmentEntry.produceEntryTuple();
 }
 
-FENNEL_END_CPPFILE("$Id$");
+FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/lucidera/bitmap/LbmSegmentWriter.cpp#3 $");
 
 // End LbmSegmentWriter.cpp

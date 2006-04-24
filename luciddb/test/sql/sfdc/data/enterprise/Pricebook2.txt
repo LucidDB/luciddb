@@ -1,0 +1,3 @@
+"Id"	"Name"	"IsActive"	"LastModifiedDate"	"SystemModstamp"	"IsStandard"	"Description"	"LastModifiedById"	"CreatedDate"	"CreatedById"
+"01s300000001030AAA"	"Standard Price Book"	"false"	"2005-08-03T18:05:59.000Z"	"2005-08-03T18:05:59.000Z"	"true"		"00530000000hPnYAAU"	"2005-08-03T18:05:59.000Z"	"00530000000hPnYAAU"
+"01s300000001KGEAA2"	"Test Price Book"	"true"	"2005-11-12T03:47:34.000Z"	"2005-11-12T03:47:34.000Z"	"false"		"00530000000hPnYAAU"	"2005-11-12T03:47:34.000Z"	"00530000000hPnYAAU"

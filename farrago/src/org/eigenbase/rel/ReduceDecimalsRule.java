@@ -139,7 +139,6 @@ public class ReduceDecimalsRule extends RelOptRule
                 inputMap.add(newInput);
             }
             */
-            RexShuttle treeBuilder = new UnreduceShuttle(program.getExprList());
             final Iterator<String> fieldNameIter =
                 RelOptUtil.getFieldNameList(calcRel.getRowType()).iterator();
             for (RexLocalRef project: program.getProjectList()) {
@@ -148,7 +147,7 @@ public class ReduceDecimalsRule extends RelOptRule
                  * full expression tree. (Mostly removing redundant 
                  * reinterprets.) But this may not work once we 
                  * cleanup the code to use the visitor pattern. */
-                RexNode treeProject = project.accept(treeBuilder);
+                RexNode treeProject = program.expandLocalRef(project);
                 RexNode newProject =
                     translator.reduceDecimals(treeProject, rexBuilder);
                 RexLocalRef result = progBuilder.registerInput(newProject);
@@ -158,7 +157,8 @@ public class ReduceDecimalsRule extends RelOptRule
             RexLocalRef condition = program.getCondition();
             if (condition != null) {
                 //RexLocalRef newCondition = inputMap.get(condition.getIndex());
-                RexNode treeCondition = condition.accept(treeBuilder);
+                RexNode treeCondition =
+                    program.expandLocalRef(condition);
                 RexNode newCondition = translator.reduceDecimals(treeCondition, rexBuilder);
                 RexLocalRef result = progBuilder.registerInput(newCondition);
                 progBuilder.addCondition(result);
@@ -188,22 +188,6 @@ public class ReduceDecimalsRule extends RelOptRule
         public RexNode visitLocalRef(RexLocalRef localRef)
         {
             return inputMap.get(localRef.getIndex());
-        }
-    }
-    
-    /**
-     * A RexShuttle which builds up a Rex tree
-     */
-    private class UnreduceShuttle extends RexShuttle
-    {
-        List<RexNode> exprs;
-        UnreduceShuttle(List<RexNode> exprs) {
-            this.exprs = exprs;
-        }
-        public RexNode visitLocalRef(RexLocalRef localRef)
-        {
-            RexNode tree = exprs.get(localRef.getIndex());
-            return tree.accept(this);
         }
     }
 

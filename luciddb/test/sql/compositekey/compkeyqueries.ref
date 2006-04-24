@@ -11,7 +11,7 @@
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    LcsRowScanRel(table=[[LOCALDB, S, BENCH100]], projection=[[0, 1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$S$BENCH100$K2, SYS$CLUSTERED_INDEX$S$BENCH100$K4, SYS$CLUSTERED_INDEX$S$BENCH100$KSEQ]])'
 '      LcsIndexMergeRel'
-'        LcsIndexSearchRel(table=[[LOCALDB, S, BENCH100]], projection=[*], index=[B100_K2_K4_IDX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'        LcsIndexSearchRel(table=[[LOCALDB, S, BENCH100]], projection=[*], index=[B100_K2_K4_IDX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '          FennelValuesRel(tuples=[[{ '[', 1, ']', 1 }]])'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select KSEQ, K2, K4 from bench100 
@@ -79,7 +79,7 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    LcsRowScanRel(table=[[LOCALDB, S, BENCH100]], projection=[[0, 1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$S$BENCH100$K2, SYS$CLUSTERED_INDEX$S$BENCH100$K4, SYS$CLUSTERED_INDEX$S$BENCH100$KSEQ]])'
-'      LcsIndexSearchRel(table=[[LOCALDB, S, BENCH100]], projection=[*], index=[B100_K2_K4_IDX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 2, 4, 5]], inputJoinProj=[[]], inputDirectiveProj=[[0, 3]])'
+'      LcsIndexSearchRel(table=[[LOCALDB, S, BENCH100]], projection=[*], index=[B100_K2_K4_IDX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 2, 4, 5]], inputJoinProj=[[]], inputDirectiveProj=[[0, 3]], startRidParamId=[0], rowLimitParamId=[0])'
 '        FennelValuesRel(tuples=[[{ '[', 1, 3, ']', 1, 3 }]])'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select kseq, k2, k4 from bench100
@@ -107,7 +107,7 @@
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    LcsRowScanRel(table=[[LOCALDB, S, BENCH100]], projection=[[0, 12, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$S$BENCH100$K2, SYS$CLUSTERED_INDEX$S$BENCH100$K500K, SYS$CLUSTERED_INDEX$S$BENCH100$KSEQ]])'
 '      LcsIndexMergeRel'
-'        LcsIndexSearchRel(table=[[LOCALDB, S, BENCH100]], projection=[*], index=[B100_K500K_K4_K5_IDX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'        LcsIndexSearchRel(table=[[LOCALDB, S, BENCH100]], projection=[*], index=[B100_K500K_K4_K5_IDX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '          FennelValuesRel(tuples=[[{ '[', 626, ']', 626 }, { '[', 45323, ']', 45323 }]])'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select kseq, k500k, k2 from bench100

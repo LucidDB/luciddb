@@ -155,7 +155,20 @@ public:
     // helpers for subfactories
     
     /** makes a TupleDescriptor from its proxy definition */
-    void readTupleDescriptor(TupleDescriptor& desc, const SharedProxyTupleDescriptor def);
+    void readTupleDescriptor(
+        TupleDescriptor& desc, const SharedProxyTupleDescriptor def);
+
+    /**
+     * Creates a private scratch segment for an ExecStream.  This must be used
+     * if the ExecStream provides early release of its scratch buffers
+     * (otherwise it will release scratch buffers for the entire graph, leading
+     * to quite bad things).  This method must be called AFTER one of the
+     * standard readXyzStreamParams methods below, since those methods set up
+     * the default global scratch segment.
+     *
+     * @param params params in which to set the private scratch segment
+     */
+    void createPrivateScratchSegment(ExecStreamParams &params);
 
     void createQuotaAccessors(ExecStreamParams &params);
     

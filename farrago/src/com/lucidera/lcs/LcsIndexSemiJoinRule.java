@@ -107,29 +107,14 @@ public class LcsIndexSemiJoinRule extends RelOptRule
         // longest matching keys, or the first one that matches all the
         // join keys
         LcsIndexGuide indexGuide = origRowScan.getIndexGuide();
-        Iterator iter = indexGuide.getUnclusteredIndexes().iterator();
-        FemLocalIndex bestIndex = null;
-        int maxNkeys = 0;
-        List<Integer> leftKeys = semiJoin.getLeftKeys();
-        Integer[] bestKeyOrder = {};
-        while (iter.hasNext()) {
-            FemLocalIndex index = (FemLocalIndex) iter.next();
-            Integer[] keyOrder = new Integer[leftKeys.size()];
-            int nKeys = indexGuide.matchIndexKeys(
-                index, leftKeys, keyOrder);
-            if (nKeys > maxNkeys) {
-                maxNkeys = nKeys;
-                bestIndex = index;
-                bestKeyOrder = keyOrder;
-                if (maxNkeys == leftKeys.size()) {
-                    break;
-                }
-            }
-        }
+        List<Integer> bestKeyOrder = new ArrayList<Integer>();
+        FemLocalIndex bestIndex = 
+            indexGuide.findSemiJoinIndex(
+                semiJoin.getLeftKeys(), bestKeyOrder);
         
         if (bestIndex != null) {
             transformSemiJoin(
-                semiJoin, origRowScan, bestIndex, maxNkeys, bestKeyOrder,
+                semiJoin, origRowScan, bestIndex, bestKeyOrder,
                 rightRel, call);
         }
     }
@@ -144,7 +129,6 @@ public class LcsIndexSemiJoinRule extends RelOptRule
      * semijoin
      * @param keyOrder positions of the keys that match the index, in 
      * the order of match
-     * @param nKeys number of keys in the index to use in search
      * @param rightRel right hand side of the semijoin
      * @param call rule call
      */
@@ -152,8 +136,7 @@ public class LcsIndexSemiJoinRule extends RelOptRule
         SemiJoinRel semiJoin,
         LcsRowScanRel origRowScan,
         FemLocalIndex index,
-        int nKeys,
-        Integer[] keyOrder,
+        List<Integer> keyOrder,
         RelNode rightRel,
         RelOptRuleCall call)
     {   
@@ -165,13 +148,14 @@ public class LcsIndexSemiJoinRule extends RelOptRule
         RelDataTypeField[] leftFields = origRowScan.getRowType().getFields();
         RelDataTypeField[] rightFields = rightRel.getRowType().getFields();
         RexBuilder rexBuilder = rightRel.getCluster().getRexBuilder();
+        int nKeys = keyOrder.size();
         String[] fieldNames = new String[nKeys];
         RexNode[] projExps = new RexNode[nKeys];
         boolean castRequired = false;
         
         Integer[] rightOrdinals = new Integer[nKeys];
         for (int i = 0; i < nKeys; i++) {
-            rightOrdinals[i] = rightKeys.get(keyOrder[i]);
+            rightOrdinals[i] = rightKeys.get(keyOrder.get(i));
             RelDataTypeField rightField = rightFields[rightOrdinals[i]];
             projExps[i] = 
                 rexBuilder.makeInputRef(
@@ -179,7 +163,8 @@ public class LcsIndexSemiJoinRule extends RelOptRule
                     rightOrdinals[i]);
             fieldNames[i] = rightField.getName();
             
-            RelDataTypeField leftField = leftFields[leftKeys.get(keyOrder[i])];
+            RelDataTypeField leftField =
+                leftFields[leftKeys.get(keyOrder.get(i))];
             if (!leftField.getType().equals(rightField.getType())) {
                 castRequired = true;
             }
@@ -274,7 +259,7 @@ public class LcsIndexSemiJoinRule extends RelOptRule
         List<Integer> leftKeys,
         RelDataTypeField[] leftFields,
         int nKeys,
-        Integer[] keyOrder, 
+        List<Integer> keyOrder, 
         RexBuilder rexBuilder,
         RexNode rhsExps[],
         FarragoTypeFactory typeFactory)
@@ -282,8 +267,9 @@ public class LcsIndexSemiJoinRule extends RelOptRule
         RelDataType[] leftType = new RelDataType[nKeys];
         String[] leftFieldNames = new String[nKeys];
         for (int i = 0; i < nKeys; i++) {
-            leftType[i] = leftFields[leftKeys.get(keyOrder[i])].getType();
-            leftFieldNames[i] = leftFields[leftKeys.get(keyOrder[i])].getName();
+            leftType[i] = leftFields[leftKeys.get(keyOrder.get(i))].getType();
+            leftFieldNames[i] =
+                leftFields[leftKeys.get(keyOrder.get(i))].getName();
         }
         RelDataType leftStructType =
             typeFactory.createStructType(leftType, leftFieldNames);

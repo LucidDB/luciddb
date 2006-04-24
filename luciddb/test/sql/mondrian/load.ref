@@ -19,57 +19,46 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into foodmart."agg_pl_01_sales_fact_1997" select * from foodmart_foreign."agg_pl_01_sales_fact_1997";
-Error: From line 1, column 64 to line 1, column 79: Table 'FOODMART_FOREIGN.agg_pl_01_sales_fact_1997' not found (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into foodmart."agg_ll_01_sales_fact_1997" select * from foodmart_foreign."agg_ll_01_sales_fact_1997";
-Error: From line 1, column 64 to line 1, column 79: Table 'FOODMART_FOREIGN.agg_ll_01_sales_fact_1997' not found (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into foodmart."agg_l_03_sales_fact_1997" select * from foodmart_foreign."agg_l_03_sales_fact_1997";
-Error: From line 1, column 63 to line 1, column 78: Table 'FOODMART_FOREIGN.agg_l_03_sales_fact_1997' not found (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into foodmart."agg_l_04_sales_fact_1997" select * from foodmart_foreign."agg_l_04_sales_fact_1997";
-Error: From line 1, column 63 to line 1, column 78: Table 'FOODMART_FOREIGN.agg_l_04_sales_fact_1997' not found (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into foodmart."agg_l_05_sales_fact_1997" select * from foodmart_foreign."agg_l_05_sales_fact_1997";
-Error: From line 1, column 63 to line 1, column 78: Table 'FOODMART_FOREIGN.agg_l_05_sales_fact_1997' not found (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into foodmart."agg_c_10_sales_fact_1997" select * from foodmart_foreign."agg_c_10_sales_fact_1997";
-Error: From line 1, column 63 to line 1, column 78: Table 'FOODMART_FOREIGN.agg_c_10_sales_fact_1997' not found (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into foodmart."agg_c_14_sales_fact_1997" select * from foodmart_foreign."agg_c_14_sales_fact_1997";
-Error: From line 1, column 63 to line 1, column 78: Table 'FOODMART_FOREIGN.agg_c_14_sales_fact_1997' not found (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into foodmart."agg_lc_100_sales_fact_1997" select * from foodmart_foreign."agg_lc_100_sales_fact_1997";
-Error: From line 1, column 65 to line 1, column 80: Table 'FOODMART_FOREIGN.agg_lc_100_sales_fact_1997' not found (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into foodmart."agg_c_special_sales_fact_1997" select * from foodmart_foreign."agg_c_special_sales_fact_1997";
-Error: From line 1, column 68 to line 1, column 83: Table 'FOODMART_FOREIGN.agg_c_special_sales_fact_1997' not found (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into foodmart."agg_g_ms_pcat_sales_fact_1997" select * from foodmart_foreign."agg_g_ms_pcat_sales_fact_1997";
-Error: From line 1, column 68 to line 1, column 83: Table 'FOODMART_FOREIGN.agg_g_ms_pcat_sales_fact_1997' not found (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into foodmart."currency" select * from foodmart_foreign."currency";
-Error: At line 1, column 40: Cannot assign to target field 'date' of type DATE from source field 'date' of type TIMESTAMP(0) (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
@@ -78,17 +67,14 @@ Error: At line 1, column 40: Cannot assign to target field 'date' of type DATE f
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into foodmart."category" select * from foodmart_foreign."category";
-Error: Number of INSERT target columns (4) does not equal number of source items (5) (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into foodmart."customer" select * from foodmart_foreign."customer";
-Error: Number of INSERT target columns (29) does not equal number of source items (28) (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into foodmart."days" select * from foodmart_foreign."days";
-Error: From line 1, column 43 to line 1, column 58: Table 'FOODMART_FOREIGN.days' not found (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
@@ -97,12 +83,10 @@ Error: From line 1, column 43 to line 1, column 58: Table 'FOODMART_FOREIGN.days
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into foodmart."employee" select * from foodmart_foreign."employee";
-Error: At line 1, column 40: Cannot assign to target field 'birth_date' of type DATE from source field 'birth_date' of type TIMESTAMP (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into foodmart."employee_closure" select * from foodmart_foreign."employee_closure";
-Error: From line 1, column 55 to line 1, column 70: Table 'FOODMART_FOREIGN.employee_closure' not found (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
@@ -135,17 +119,14 @@ Error: From line 1, column 55 to line 1, column 70: Table 'FOODMART_FOREIGN.empl
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into foodmart."salary" select * from foodmart_foreign."salary";
-Error: Number of INSERT target columns (8) does not equal number of source items (9) (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into foodmart."store" select * from foodmart_foreign."store";
-Error: Number of INSERT target columns (24) does not equal number of source items (25) (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into foodmart."store_ragged" select * from foodmart_foreign."store_ragged";
-Error: From line 1, column 51 to line 1, column 66: Table 'FOODMART_FOREIGN.store_ragged' not found (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 

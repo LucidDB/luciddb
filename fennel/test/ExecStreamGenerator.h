@@ -390,32 +390,47 @@ class DupColumnGenerator : public ColumnGenerator<int64_t>
 {
     int numDups;
     int64_t curValue;
-    int dupCount;
 
 public:
-    explicit DupColumnGenerator(int numDupsInit) {
+    explicit DupColumnGenerator(int numDupsInit, int startValue = 0) {
         assert(numDupsInit > 0);
         numDups = numDupsInit;
-        curValue = 0;
-        dupCount = 0;
-    }
-    
-    explicit DupColumnGenerator(int numDupsInit, int initValue) {
-        assert(numDupsInit > 0);
-        numDups = numDupsInit;
-        curValue = initValue;
-        dupCount = 0;
+        curValue = startValue * numDups;
     }
 
     int64_t next() 
     {
-        int64_t retVal = curValue;
+        return (curValue++ / numDups);
+    }
+};
 
-        if (++dupCount == numDups) {
-            ++curValue;
-            dupCount = 0;
-        }
-        return retVal;
+/**
+ * A duplicating repeating column sequence generator.
+ *
+ * Generates column values in a repeating sequence.  Values are duplicated for
+ * each sequence value, and repeat after nSequence values.  E.g., 
+ * 0, 0, 0, ..., 1, 1, 1, ... 2, 2, 2, ..., n-1, n-1, n-1, ..., 0, 0, 0, ...
+ */
+class DupRepeatingSeqColumnGenerator : public ColumnGenerator<int64_t>
+{
+    int numDups;
+    int numSequence;
+    int64_t curValue;
+    
+public:
+    explicit DupRepeatingSeqColumnGenerator(int numSequenceInit,
+        int numDupsInit)
+    {
+        assert(numSequenceInit > 0);
+        assert(numDupsInit > 0);
+        numSequence = numSequenceInit;
+        numDups = numDupsInit;
+        curValue = 0;
+    }
+    
+    int64_t next() 
+    {
+        return (curValue++ % (numDups * numSequence)) / numDups;
     }
 };
 

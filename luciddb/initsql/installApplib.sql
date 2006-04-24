@@ -225,7 +225,31 @@ specific convert_date_not_rejectable
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.ConvertDateUdf.execute';
 
+-- define dayFromJulianStart
+create function applib.day_from_julian_start(dt Date)
+returns integer
+language sql
+contains sql
+return (
+  applib.day_number_overall(dt) + 2440588
+);
+
+-- define padweeknumber
+create function applib.padweeknumber(wk_num_as_yr integer)
+returns varchar(16)
+language sql
+contains sql
+return (
+  case 
+    WHEN (wk_num_as_yr < 10) THEN ('0' || cast (wk_num_as_yr as varchar(1)))
+    ELSE cast (wk_num_as_yr as varchar(2))  
+  end
+);
+
+----
 -- UDXs
+----
+
 -- define TIMEDIMENSION
 create function APPLIB.TIME_DIMENSION(startYr int, startMth int, startDay int, endYr int, endMth int, endDay int)
 returns table(

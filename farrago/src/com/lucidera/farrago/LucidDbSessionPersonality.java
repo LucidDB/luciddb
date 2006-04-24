@@ -37,6 +37,7 @@ import net.sf.farrago.fem.config.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
 import org.eigenbase.rel.rules.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.relopt.hep.*;
 import org.eigenbase.oj.rel.*;
@@ -102,11 +103,23 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         FarragoSessionPlanner planner = super.newPlanner(stmt, init);
         planner.addRule(new PushSemiJoinPastFilterRule());
         planner.addRule(new OptimizeJoinRule());
+        planner.addRule(new LhxJoinRule());
         
         addConvertMultiJoinRules(planner);
  
         planner.removeRule(SwapJoinRule.instance);
         return planner;
+    }
+
+    // implement FarragoSessionPersonality
+    public void registerRelMetadataProviders(ChainedRelMetadataProvider chain)
+    {
+        // NOTE jvs 10-Apr-2006:  Don't use custom metadata until
+        // we switch to Hep.
+        if (USE_HEP) {
+            chain.addProvider(
+                new LoptMetadataProvider());
+        }
     }
 
     // TODO jvs 9-Apr-2006:  replace newPlanner with this once
@@ -280,17 +293,23 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
             builder.addRuleInstance(new IterRules.UnionToIteratorRule());
         }
 
-        // Add the rule to introduce IterCalcRel's only if the Java
-        // calculator is chosen explicitly.
-        if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_JAVA)) {
-            // use Java code generation for calculating expressions
-            builder.addRuleInstance(IterRules.IterCalcRule.instance);
-            builder.addRuleInstance(new IterRules.OneRowToIteratorRule());
-        } else {
+        if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_FENNEL)) {
             // use Fennel for calculating expressions
             assert(fennelEnabled);
             builder.addRuleInstance(FennelCalcRule.instance);
             builder.addRuleInstance(new FennelOneRowRule());
+        } else if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_JAVA)) {
+            // use Java code generation for calculating expressions
+            builder.addRuleInstance(IterRules.IterCalcRule.instance);
+            builder.addRuleInstance(new IterRules.OneRowToIteratorRule());
+        } else {
+            // choose calculator based on input, giving preference
+            // to Fennel for leaves
+            builder.addRuleInstance(new FennelOneRowRule());
+            builder.addRuleInstance(
+                new TraitMatchingRule(FennelCalcRule.instance));
+            builder.addRuleInstance(
+                new TraitMatchingRule(IterRules.IterCalcRule.instance));
         }
 
         // Finish main physical implementation group.
@@ -301,9 +320,9 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_AUTO)) {
             // Split expressions into Fennel part and Java part
             builder.addRuleInstance(FarragoAutoCalcRule.instance);
-            // Convert expressions, giving preference to Fennel
-            builder.addRuleInstance(FennelCalcRule.instance);
+            // Convert expressions, giving preference to Java
             builder.addRuleInstance(IterRules.IterCalcRule.instance);
+            builder.addRuleInstance(FennelCalcRule.instance);
         }
         
         // Finally, add converters as necessary.  This will also try

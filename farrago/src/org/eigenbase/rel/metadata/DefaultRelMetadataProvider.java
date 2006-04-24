@@ -21,11 +21,6 @@
 */
 package org.eigenbase.rel.metadata;
 
-import org.eigenbase.util.*;
-import org.eigenbase.rel.*;
-
-import java.util.*;
-
 /**
  * DefaultRelMetadataProvider supplies a default implementation of the {@link
  * RelMetadataProvider} interface.  It provides generic formulas and derivation
@@ -49,6 +44,21 @@ public class DefaultRelMetadataProvider extends ChainedRelMetadataProvider
         
         addProvider(
             new RelMdColumnOrigins());
+
+        addProvider(
+            new RelMdRowCount());
+
+        addProvider(
+            new RelMdUniqueKeys());
+
+        addProvider(
+            new RelMdPopulationSize());
+        
+        addProvider(
+            new RelMdDistinctRowCount());
+        
+        addProvider(
+            new RelMdSelectivity());
     }
 }
 

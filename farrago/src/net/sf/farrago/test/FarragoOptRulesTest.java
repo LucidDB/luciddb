@@ -73,6 +73,7 @@ public class FarragoOptRulesTest extends FarragoSqlToRelTestBase
         return wrappedSuite(FarragoOptRulesTest.class);
     }
 
+    // implement TestCase
     protected void setUp()
         throws Exception
     {
@@ -152,7 +153,7 @@ public class FarragoOptRulesTest extends FarragoSqlToRelTestBase
     
     protected void initPlanner(FarragoPreparingStmt stmt)
     {
-        FarragoSessionPlanner planner = new TestPlanner(
+        FarragoSessionPlanner planner = new FarragoTestPlanner(
             program,
             stmt);
         stmt.setPlanner(planner);
@@ -287,44 +288,32 @@ public class FarragoOptRulesTest extends FarragoSqlToRelTestBase
             "select name from sales.emps");
     }
 
-    private static class TestPlanner
-        extends HepPlanner
-        implements FarragoSessionPlanner
+    public void testPushSemiJoinPastJoinRule_Left()
+        throws Exception
     {
-        private final FarragoPreparingStmt stmt;
-        
-        TestPlanner(
-            HepProgram program,
-            FarragoPreparingStmt stmt)
-        {
-            super(program);
-            this.stmt = stmt;
-        }
-        
-        // implement FarragoSessionPlanner
-        public FarragoSessionPreparingStmt getPreparingStmt()
-        {
-            return stmt;
-        }
-        
-        // implement FarragoSessionPlanner
-        public void beginMedPluginRegistration(String serverClassName)
-        {
-            // don't care
-        }
-
-        // implement FarragoSessionPlanner
-        public void endMedPluginRegistration()
-        {
-            // don't care
-        }
+        // tests the case where the semijoin is pushed to the left
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(new PushFilterRule());
+        programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
+        programBuilder.addRuleInstance(new PushSemiJoinPastJoinRule());
+        check(
+            programBuilder.createProgram(),
+            "select e1.name from sales.emps e1, sales.depts d, sales.emps e2 " +
+            "where e1.deptno = d.deptno and e1.empno = e2.empno");
+    }
     
-        // implement RelOptPlanner
-        public JavaRelImplementor getJavaRelImplementor(RelNode rel)
-        {
-            return stmt.getRelImplementor(
-                rel.getCluster().getRexBuilder());
-        }
+    public void testPushSemiJoinPastJoinRule_Right()
+        throws Exception
+    {
+        // tests the case where the semijoin is pushed to the right
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(new PushFilterRule());
+        programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
+        programBuilder.addRuleInstance(new PushSemiJoinPastJoinRule());
+        check(
+            programBuilder.createProgram(),
+            "select e1.name from sales.emps e1, sales.depts d, sales.emps e2 " +
+        "where e1.deptno = d.deptno and d.deptno = e2.deptno");
     }
 }
 

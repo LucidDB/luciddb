@@ -351,8 +351,9 @@ public class FarragoQueryTest extends FarragoTestCase
             true);
 
         // By default, tables without stats are assumed to have
-        // 100 rows, and default selectivity assumption is 10%.
-        assertEquals(10.0, analyzedSql.rowCount);
+        // 100 rows, and default selectivity assumption is 25% for a
+        // LIKE predicate.
+        assertEquals(25.0, analyzedSql.rowCount);
     }
 
     /**

@@ -49,6 +49,7 @@
     <pathelement path="${farrago.sqlline.classpath}"/>
     <pathelement path="${ant.classpath}"/>
     <pathelement path="${blackhawk.run.classpath}"/>
+    <pathelement path="${open.dir}/luciddb/plugin/FarragoMedJdbc3p.jar"/>
   </path>
   <property name="test.classpath" refid="test.classpath"/>
 
@@ -84,6 +85,7 @@
             <exclude name="aggJoinFilt.*"/>
             <exclude name="joinFilt.*"/>
             <exclude name="negJoinFilt.*"/>
+            <exclude name="negJoinFiltExp.*"/>
             <exclude name="compIdx.*"/>
           </fileset>
         </copy>
@@ -121,5 +123,28 @@
   <target name="restoreCatalog">
     <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>
   </target>  
+
+  <!-- Experimental -->
+  <target name="format-orcl-files">
+    <copy todir="${company.dir}/orcl" overwrite="true">
+      <fileset dir="${gensql.dir}/idx">
+        <include name="*.log"/>
+      </fileset>
+      <filterchain>
+        <tokenfilter>
+          <replacestring 
+            from="0: jdbc:oracle:thin:@akela.lucidera.com:1521:" 
+            to="0: jdbc:oracle:"/>
+          <replacestring
+            from="Error: READ_COMMITTED and SERIALIZABLE are the only valid transaction levels (state=,code=17030)"
+            to=""/>
+          <replacestring
+            from=". . . . . . . . . . . . . . . . . . . . . . ."
+            to=". . . . . . . . "/>
+        </tokenfilter>
+      </filterchain>
+      <globmapper from="*.log" to="*.orcl"/>
+    </copy>
+  </target>
 
 </project>

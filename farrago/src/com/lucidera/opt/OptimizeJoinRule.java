@@ -310,11 +310,13 @@ public class OptimizeJoinRule extends RelOptRule
             
             // if there are potential dimension filters, determine if there
             // are appropriate indexes
-            for (int dimIdx = 0; dimIdx < nJoinFactors; dimIdx++) {
-                SemiJoinRel semiJoin = null;
+            Set<Integer> dimKeys = dimFilters.keySet();
+            Iterator it = dimKeys.iterator();
+            while (it.hasNext()) {
+                Integer dimIdx = (Integer) it.next();
                 List<RexNode> joinFilters = dimFilters.get(dimIdx);
                 if (joinFilters != null) {
-                    semiJoin = findSemiJoinIndex(
+                    SemiJoinRel semiJoin = findSemiJoinIndex(
                         indexGuide, joinFilters, factIdx, dimIdx);
             
                     // if an index is available, keep track of it as a
@@ -462,25 +464,29 @@ public class OptimizeJoinRule extends RelOptRule
         assert(leftKeys.size() > 0);
 
         // find the best index
-        Integer[] keyOrder = indexGuide.findSemiJoinIndex(leftKeys);
-        if (keyOrder.length == 0) {
+        List<Integer> keyOrder = new ArrayList<Integer>();
+        indexGuide.findSemiJoinIndex(leftKeys, keyOrder);
+        if (keyOrder.size() == 0) {
             return null;
         }
         // if necessary, truncate the keys to reflect the ones that match
-        // the index; note that we don't remove the extra semijoin filter
-        // conditions, as the keys reflect the actual filtering
+        // the index and remove the corresponding, unnecessary filters from
+        // the condition
         List<Integer> actualLeftKeys;
         List<Integer> actualRightKeys;
-        if (leftKeys.size() == keyOrder.length) {
+        if (leftKeys.size() == keyOrder.size()) {
             actualLeftKeys = leftKeys;
             actualRightKeys = rightKeys;
         } else {
             actualLeftKeys = new ArrayList<Integer>();
             actualRightKeys = new ArrayList<Integer>();
-            for (int i = 0; i < keyOrder.length; i++) {
-                actualLeftKeys.add(leftKeys.get(keyOrder[i]));
-                actualRightKeys.add(rightKeys.get(keyOrder[i]));
+            for (int key : keyOrder) {
+                actualLeftKeys.add(leftKeys.get(key));
+                actualRightKeys.add(rightKeys.get(key));
             }
+            semiJoinCondition = removeExtraFilters(
+                actualLeftKeys, nFieldsInJoinFactor[factIdx],
+                semiJoinCondition);
         }
         SemiJoinRel semiJoin = new SemiJoinRel(
             joinFactors[factIdx].getCluster(),
@@ -548,6 +554,64 @@ public class OptimizeJoinRule extends RelOptRule
     }
     
     /**
+     * Removes from an expression any sub-expressions that reference key
+     * values that aren't contained in a key list passed in.  The keys 
+     * represent join keys on one side of a join.  The subexpressions are all
+     * assumed to be of the form "tab1.col1 = tab2.col2".
+     * 
+     * @param keys join keys from one side of the join
+     * @param nFields number of fields in the side of the join for which the
+     * keys correspond
+     * @param condition original expression
+     * @return modified expression with filters that don't reference specified
+     * keys removed
+     */
+    private RexNode removeExtraFilters(
+        List<Integer> keys, int nFields, RexNode condition)
+    {
+        // recursively walk the expression; if all sub-expressions are
+        // removed from one side of the expression, just return what remains
+        // from the other side
+        assert(condition instanceof RexCall);
+        RexCall call = (RexCall) condition;
+        if (condition.isA(RexKind.And)) {
+            RexNode[] operands = call.getOperands();
+            RexNode left = removeExtraFilters(
+                keys, nFields, operands[0]);
+            RexNode right = removeExtraFilters(
+                keys, nFields, operands[1]);
+            if (left == null) {
+                return right;
+            }
+            if (right == null) {
+                return left;
+            }
+            return rexBuilder.makeCall(
+                SqlStdOperatorTable.andOperator, left, right);
+        }
+        
+        // determine which side of the equality filter references the join
+        // operand we're interested in; then, check if it is contained in
+        // our key list
+        assert(call.getOperator() == SqlStdOperatorTable.equalsOperator);
+        RexNode[] operands = call.getOperands();
+        assert(operands[0] instanceof RexInputRef);
+        assert(operands[1] instanceof RexInputRef);
+        int idx = ((RexInputRef) operands[0]).getIndex();
+        if (idx < nFields) {
+            if (!keys.contains(idx)) {
+                return null;
+            }
+        } else {
+            idx = ((RexInputRef) operands[1]).getIndex();
+            if (!keys.contains(idx)) {
+                return null;
+            }
+        }
+        return condition;
+    }
+    
+    /**
      * Finds the optimal semijoin for filtering the least costly fact
      * table from among the remaining possible semijoins to choose from.
      * The chosen semijoin is stored in the chosenSemiJoins array
@@ -582,7 +646,10 @@ public class OptimizeJoinRule extends RelOptRule
             // loop through each dimension table associated with the current
             // fact table and analyze the ones that have semijoins with this
             // fact table
-            for (int dimIdx = 0; dimIdx < nJoinFactors; dimIdx++) {
+            Set<Integer> dimKeys = possibleDimensions.keySet();
+            Iterator it = dimKeys.iterator();
+            while (it.hasNext()) {
+                Integer dimIdx = (Integer) it.next();
                 SemiJoinRel semiJoin = possibleDimensions.get(dimIdx);
                 if (semiJoin == null) {
                     continue;
@@ -647,7 +714,8 @@ public class OptimizeJoinRule extends RelOptRule
         RelNode factRel, RelNode dimRel, SemiJoinRel semiJoin)
     {
         // TODO - replace with real costing; for now, score is based on the
-        // the order in which the factors appear in the original list
+        // the order in which the factors appear in the original list;
+        // then we can also get rid of chosenSemiJoinsMap
         double savings = 10 * (nJoinFactors - chosenSemiJoinsMap.get(factRel));
         double cost = nJoinFactors - chosenSemiJoinsMap.get(dimRel);
 
@@ -700,8 +768,7 @@ public class OptimizeJoinRule extends RelOptRule
             if (!(joinFilter instanceof RexCall)) {
                 continue;
             }
-            SqlOperator joinOp = ((RexCall) joinFilter).getOperator();
-            if (!isComparisonOp(joinOp)) {
+            if (!joinFilter.isA(RexKind.Comparison)) {
                 continue;
             }
             
@@ -730,7 +797,9 @@ public class OptimizeJoinRule extends RelOptRule
                 if (leftBitmap.cardinality() == 1) {
                     
                     // give higher weight to equijoins
-                    if (joinOp == SqlStdOperatorTable.equalsOperator) {
+                    if (((RexCall) joinFilter).getOperator() ==
+                            SqlStdOperatorTable.equalsOperator)
+                    {
                         setFactorWeight(3, leftFactor, rightFactor);
                     } else {
                         setFactorWeight(2, leftFactor, rightFactor);
@@ -755,22 +824,6 @@ public class OptimizeJoinRule extends RelOptRule
                 }
             }
         }
-    }
-
-    /**
-     * Returns true if an operator corresponds to a comparison operator
-     * 
-     * @param op operator to be examined
-     * @return true if operator is a comparison operator
-     */
-    private boolean isComparisonOp(SqlOperator op)
-    {
-       return (op == SqlStdOperatorTable.equalsOperator ||
-           op == SqlStdOperatorTable.notEqualsOperator ||
-           op == SqlStdOperatorTable.lessThanOperator ||
-           op == SqlStdOperatorTable.lessThanOrEqualOperator ||
-           op == SqlStdOperatorTable.greaterThanOperator ||
-           op == SqlStdOperatorTable.greaterThanOrEqualOperator);
     }
     
     /**
@@ -803,6 +856,8 @@ public class OptimizeJoinRule extends RelOptRule
             fieldNames[i] = project.getRowType().getFields()[i].getName();
         }
         
+        List<RelNode> plans = new ArrayList<RelNode>();
+        
         int[] cardinalities = new int[nJoinFactors];
         // TODO - change to set actual factor cardinalities
         for (int i = 0; i < nJoinFactors; i++) {
@@ -811,7 +866,7 @@ public class OptimizeJoinRule extends RelOptRule
         
         for (int i = 0; i < nJoinFactors; i++) {
             
-            RelNode joinTree = createOrdering(i, cardinalities);
+            LoptJoinTree joinTree = createOrdering(i, cardinalities);
             if (joinTree == null) {
                 continue;
             }
@@ -835,8 +890,15 @@ public class OptimizeJoinRule extends RelOptRule
             
             ProjectRel newProject =
                 (ProjectRel) CalcRel.createProject(
-                    joinTree, newProjExprs, fieldNames);
-            call.transformTo(newProject);
+                    joinTree.getJoinTree(), newProjExprs, fieldNames);
+            plans.add(newProject);
+        }
+        
+        // transform the selected plans; note that we wait till then the end
+        // to transform everything so any intermediate RelNodes we create
+        // are not converted to RelSubsets
+        for (RelNode plan : plans) {
+            call.transformTo(plan);
         }
     }
     
@@ -849,9 +911,9 @@ public class OptimizeJoinRule extends RelOptRule
      * @return constructed join tree or null if it is not possible for
      * firstFactor to appear as the first factor in the join
      */
-    private RelNode createOrdering(int firstFactor, int[] cardinalities)
+    private LoptJoinTree createOrdering(int firstFactor, int[] cardinalities)
     {
-        RelNode joinTree = null;
+        LoptJoinTree joinTree = null;
         BitSet factorsToAdd = new BitSet(nJoinFactors);
         BitSet factorsAdded = new BitSet(nJoinFactors);
         factorsToAdd.flip(0, nJoinFactors);
@@ -939,26 +1001,28 @@ public class OptimizeJoinRule extends RelOptRule
      * @return optimal join tree with the new factor added if it is possible
      * to add the factor; otherwise, null is returned
      */
-    private RelNode addFactorToTree(
-        RelNode joinTree, int factorToAdd, BitSet factorsNeeded,
+    private LoptJoinTree addFactorToTree(
+        LoptJoinTree joinTree, int factorToAdd, BitSet factorsNeeded,
         List<RexNode> filtersToAdd)
     {
         if (joinTree == null) {
-            return chosenSemiJoins[factorToAdd];
+            return new LoptJoinTree(chosenSemiJoins[factorToAdd], factorToAdd);
         }
         
         // create a temporary copy of the filter list as we need the original
         // list to pass into addToTop()
         List<RexNode> tmpFilters = new ArrayList<RexNode>(filtersToAdd);
-        RelNode pushDownTree = pushDownFactor(
+        LoptJoinTree pushDownTree = pushDownFactor(
             joinTree, factorToAdd, factorsNeeded, tmpFilters);
         
-        RelNode topTree = addToTop(joinTree, factorToAdd, filtersToAdd);
+        LoptJoinTree topTree = addToTop(joinTree, factorToAdd, filtersToAdd);
         
         // pick the lower cost option, and replace the join ordering with
         // the ordering associated with the best option
-        RelNode bestTree;
-        if (pushDownTree == null || getCost(pushDownTree) > getCost(topTree)) {
+        LoptJoinTree bestTree;
+        if (pushDownTree == null || 
+            getCost(pushDownTree.getJoinTree()) >
+                getCost(topTree.getJoinTree())) {
             bestTree = topTree;
         } else {
             bestTree = pushDownTree;
@@ -980,17 +1044,17 @@ public class OptimizeJoinRule extends RelOptRule
      * join tree if it is possible to do the pushdown; otherwise, null is
      * returned
      */
-    private RelNode pushDownFactor(
-        RelNode joinTree, int factorToAdd, BitSet factorsNeeded,
+    private LoptJoinTree pushDownFactor(
+        LoptJoinTree joinTree, int factorToAdd, BitSet factorsNeeded,
         List<RexNode> filtersToAdd)
     {
         // pushdown option only works if we already have a join tree
-        if (!isJoinTree(joinTree)) {
+        if (!isJoinTree(joinTree.getJoinTree())) {
             return null;
         }
         int childNo = -1;
-        RelNode left = joinTree.getInput(0);
-        RelNode right = joinTree.getInput(1);
+        LoptJoinTree left = joinTree.getLeft();
+        LoptJoinTree right = joinTree.getRight();
         // if there are no constraints as to which side the factor must
         // be pushed, arbitrarily push to the left
         if (factorsNeeded.cardinality() == 0) {
@@ -1014,10 +1078,10 @@ public class OptimizeJoinRule extends RelOptRule
         // appropriately adjust any filters already attached to the join
         // node
         List<Integer> origJoinOrder = new ArrayList<Integer>();
-        getJoinOrder(joinTree, origJoinOrder);
+        joinTree.getTreeOrder(origJoinOrder);
         
         // recursively pushdown the factor
-        RelNode subTree = joinTree.getInput(childNo);
+        LoptJoinTree subTree = (childNo == 0) ? left : right;
         subTree = addFactorToTree(
             subTree, factorToAdd, factorsNeeded, filtersToAdd);
   
@@ -1030,10 +1094,11 @@ public class OptimizeJoinRule extends RelOptRule
         // adjust the join condition from the original join tree to reflect
         // pushdown of the new factor as well as any swapping that may have
         // been done during the pushdown
-        RexNode origCondition = ((JoinRel) joinTree).getCondition();
+        RexNode origCondition =
+            ((JoinRel) joinTree.getJoinTree()).getCondition();
         origCondition = adjustFilter(
             left, right, origCondition, factorToAdd, origJoinOrder,
-            joinTree.getRowType().getFields());
+            joinTree.getJoinTree().getRowType().getFields());
         
         // determine if additional filters apply as a result of adding the
         // new factor
@@ -1054,14 +1119,15 @@ public class OptimizeJoinRule extends RelOptRule
      * to remove filters that can be added to the join tree
      * @return new join tree
      */
-    private RelNode addToTop(
-        RelNode joinTree, int factorToAdd, List<RexNode> filtersToAdd)
+    private LoptJoinTree addToTop(
+        LoptJoinTree joinTree, int factorToAdd, List<RexNode> filtersToAdd)
     {
+        LoptJoinTree rightTree = new LoptJoinTree(
+            chosenSemiJoins[factorToAdd], factorToAdd);
         RexNode condition = addFilters(
-            joinTree, chosenSemiJoins[factorToAdd], filtersToAdd, false);
+            joinTree, rightTree, filtersToAdd, false);
        
-        return createJoinSubtree(
-            joinTree, chosenSemiJoins[factorToAdd], condition, true);
+        return createJoinSubtree(joinTree, rightTree, condition, true);
     }
     
     /**
@@ -1071,7 +1137,7 @@ public class OptimizeJoinRule extends RelOptRule
      * @param factorsNeeded bitmap of factors required
      * @return true if join tree contains all required factors
      */
-    private boolean hasAllFactors(RelNode joinTree, BitSet factorsNeeded)
+    private boolean hasAllFactors(LoptJoinTree joinTree, BitSet factorsNeeded)
     {
         BitSet childFactors = new BitSet(nJoinFactors);
         getChildFactors(joinTree, childFactors);
@@ -1084,15 +1150,12 @@ public class OptimizeJoinRule extends RelOptRule
      * @param joinTree join tree to be examined
      * @param childFactors bitmap to be set
      */
-    private void getChildFactors(RelNode joinTree, BitSet childFactors)
+    private void getChildFactors(LoptJoinTree joinTree, BitSet childFactors)
     {
-        if (isJoinTree(joinTree)) {
-            getChildFactors(joinTree.getInput(0), childFactors);
-            getChildFactors(joinTree.getInput(1), childFactors);
-        } else {
-            Integer factor = chosenSemiJoinsMap.get(joinTree);
-            assert(factor != null);
-            childFactors.set(factor);
+        List<Integer> children = new ArrayList<Integer>();
+        joinTree.getTreeOrder(children);
+        for (int child : children) {
+            childFactors.set(child);
         }
     }
     
@@ -1111,8 +1174,8 @@ public class OptimizeJoinRule extends RelOptRule
      * current join tree
      */
     private RexNode addFilters(
-        RelNode leftTree, RelNode rightTree, List<RexNode> filtersToAdd,
-        boolean adjust)
+        LoptJoinTree leftTree, LoptJoinTree rightTree,
+        List<RexNode> filtersToAdd, boolean adjust)
     {
         // loop through the remaining filters to be added and pick out the
         // ones that reference only the factors in the new join tree
@@ -1168,19 +1231,20 @@ public class OptimizeJoinRule extends RelOptRule
      * into the tree
      * @param origFields fields from the original join before the factor was
      * added
-     * @return modified join condition to reflect addition of the new factor
+     * @return modified join condition reflecting addition of the new factor
      */
     private RexNode adjustFilter(
-        RelNode left, RelNode right, RexNode condition, int factorAdded,
+        LoptJoinTree left, LoptJoinTree right, RexNode condition,
+        int factorAdded,
         List<Integer> origJoinOrder, RelDataTypeField[] origFields)
     {
         List<Integer> newJoinOrder = new ArrayList<Integer>();
-        getJoinOrder(left, newJoinOrder);
-        getJoinOrder(right, newJoinOrder);
+        left.getTreeOrder(newJoinOrder);
+        right.getTreeOrder(newJoinOrder);
         
         int totalFields =
-            left.getRowType().getFields().length +
-                right.getRowType().getFields().length -
+            left.getJoinTree().getRowType().getFields().length +
+                right.getJoinTree().getRowType().getFields().length -
                 nFieldsInJoinFactor[factorAdded];
         int[] adjustments = new int[totalFields];
         
@@ -1238,12 +1302,13 @@ public class OptimizeJoinRule extends RelOptRule
      * adjusted and only needs to be further adjusted if swapping is done
      * @return created JoinRel
      */
-    private RelNode createJoinSubtree(
-        RelNode left, RelNode right, RexNode condition, boolean fullAdjust)
+    private LoptJoinTree createJoinSubtree(
+        LoptJoinTree left, LoptJoinTree right, RexNode condition,
+        boolean fullAdjust)
     {
         // swap the inputs if beneficial
         if (swapInputs(left, right, condition)) {
-            RelNode tmp = right;
+            LoptJoinTree tmp = right;
             right = left;
             left = tmp;
             if (!fullAdjust) {
@@ -1260,9 +1325,11 @@ public class OptimizeJoinRule extends RelOptRule
             }
         }
         
-        return new JoinRel(
-            multiJoin.getCluster(), left, right, condition,
-            JoinRelType.INNER, Collections.EMPTY_SET, true, true);
+        JoinRel joinTree = new JoinRel(
+            multiJoin.getCluster(), left.getJoinTree(), right.getJoinTree(),
+            condition, JoinRelType.INNER, Collections.EMPTY_SET, true, true);
+        return new LoptJoinTree(
+            joinTree, left.getFactorTree(), right.getFactorTree());
     }
      
     /**
@@ -1279,7 +1346,7 @@ public class OptimizeJoinRule extends RelOptRule
      * @return true if swapping should be done
      */
     private boolean swapInputs(
-        RelNode left, RelNode right, RexNode condition)
+        LoptJoinTree left, LoptJoinTree right, RexNode condition)
     {
         boolean swap = false;
         
@@ -1304,7 +1371,7 @@ public class OptimizeJoinRule extends RelOptRule
         if (rightFields.cardinality() > leftFields.cardinality()) {
             swap = true;
         } else if (rightFields.cardinality() == leftFields.cardinality()) {
-            if (getRowCount(left) < getRowCount(right)) {
+            if (getRowCount(left.getJoinTree()) < getRowCount(right.getJoinTree())) {
                 swap = true;
             }
         }
@@ -1321,10 +1388,12 @@ public class OptimizeJoinRule extends RelOptRule
      * @return join condition reflect swap of join inputs
      */
     private RexNode swapFilter(
-        RelNode origLeft, RelNode origRight, RexNode condition)
+        LoptJoinTree origLeft, LoptJoinTree origRight, RexNode condition)
     {
-        int nFieldsOnLeft = origLeft.getRowType().getFields().length;
-        int nFieldsOnRight = origRight.getRowType().getFields().length;
+        int nFieldsOnLeft =
+            origLeft.getJoinTree().getRowType().getFields().length;
+        int nFieldsOnRight =
+            origRight.getJoinTree().getRowType().getFields().length;
         int[] adjustments = new int[nFieldsOnLeft + nFieldsOnRight];
         
         for (int i = 0; i < nFieldsOnLeft; i++) {
@@ -1337,7 +1406,8 @@ public class OptimizeJoinRule extends RelOptRule
         RelDataType joinRowType =
             multiJoin.getCluster().getTypeFactory().createJoinType(
                 new RelDataType[]
-                    { origLeft.getRowType(), origRight.getRowType() });
+                    { origLeft.getJoinTree().getRowType(),
+                    origRight.getJoinTree().getRowType() });
         
         condition = RelOptUtil.convertRexInputRefs(
             rexBuilder, condition, joinRowType.getFields(), adjustments);
@@ -1351,7 +1421,7 @@ public class OptimizeJoinRule extends RelOptRule
      * @param rel relnode for which fields will be set
      * @param fields bitmap containing set bits for each field in a RelNode
      */
-    private void setFieldBitmap(RelNode rel, BitSet fields)
+    private void setFieldBitmap(LoptJoinTree rel, BitSet fields)
     {
         // iterate through all factors within the RelNode
         BitSet factors = new BitSet(nJoinFactors);
@@ -1367,25 +1437,6 @@ public class OptimizeJoinRule extends RelOptRule
     }
     
     /**
-     * Recursively walks a join tree and fills out a list representing the
-     * order of the factors as they appear in the tree
-     *
-     * @param joinTree join tree to be walked
-     * @param joinOrder join ordering to be filled out
-     */
-    private void getJoinOrder(RelNode joinTree, List<Integer> joinOrder)
-    {
-        if (isJoinTree(joinTree)) {
-            getJoinOrder(joinTree.getInput(0), joinOrder);
-            getJoinOrder(joinTree.getInput(1), joinOrder);
-        } else {
-            Integer factor = chosenSemiJoinsMap.get(joinTree);
-            assert(factor != null);
-            joinOrder.add(factor);
-        }
-    }
-    
-    /**
      * Sets an array indicating how much each factor in a join tree
      * needs to be adjusted to reflect the tree's join ordering
      * 
@@ -1396,14 +1447,14 @@ public class OptimizeJoinRule extends RelOptRule
      * @return true if some adjustment is required; false otherwise
      */
     private boolean needsAdjustment(
-        int[] adjustments, RelNode joinTree, RelNode otherTree)
+        int[] adjustments, LoptJoinTree joinTree, LoptJoinTree otherTree)
     {
         boolean needAdjustment = false;
         
         List<Integer> joinOrder = new ArrayList<Integer>();
-        getJoinOrder(joinTree, joinOrder);
+        joinTree.getTreeOrder(joinOrder);
         if (otherTree != null) {
-            getJoinOrder(otherTree, joinOrder);
+            otherTree.getTreeOrder(joinOrder);
         }
         
         int nFields = 0;
