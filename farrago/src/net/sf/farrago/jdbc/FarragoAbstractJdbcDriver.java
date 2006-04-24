@@ -134,6 +134,64 @@ public abstract class FarragoAbstractJdbcDriver implements Driver
     }
 
     /**
+     * Returns new Properties object with all input properties and
+     * default connection properties. Input properties take precedence
+     * over default properties.
+     * @param info input properties, copied but unchanged
+     * @return new Properties object, never <code>null</code>
+     * @see #getDefaultConnectionProps
+     */
+    public Properties applyDefaultConnectionProps(final Properties info)
+    {
+        // copy default properties to new properties
+        Properties props = copyProperties(getDefaultConnectionProps(), null);
+        // copy input properties to new properties
+        return copyProperties(info, props);
+    }
+
+    /**
+     * Returns default connection properties.
+     * @return new Properties object, never <code>null</code>
+     * @see #applyDefaultConnectionProps
+     */
+    public Properties getDefaultConnectionProps()
+    {
+        Properties props = new Properties();
+
+        // default user id is Java user name
+        String userName = System.getProperty("user.name");
+        if (userName != null) {
+            props.setProperty("clientUserName", userName);
+        }
+
+        //REVIEW: add default for sessionName?
+        return props;
+    }
+
+    /**
+     * Returns destination Properties object after copying source properties
+     * into it. Any existing destination property with the same name as a
+     * source property is replaced by the source property. A new destination
+     * Properties object is created if the input argument is <code>null</code>.
+     * @param src source properties, must not be <code>null</code>
+     * @param dest destination properties, may be <code>null</code>
+     * @return merged properties
+     */
+    private Properties copyProperties(final Properties src, Properties dest)
+    {
+        if (dest == null) {
+            dest = new Properties();
+        }
+        Enumeration enumer = src.propertyNames();
+        while (enumer.hasMoreElements()) {
+            String key = (String)enumer.nextElement();
+            String val = src.getProperty(key);
+            dest.setProperty(key, val);
+        }
+        return dest;
+    }
+
+    /**
      * Parses params from connection string into {@link Properties} object,
      * returning the stripped URI.
      *

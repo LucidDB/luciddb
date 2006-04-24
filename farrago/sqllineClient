@@ -5,7 +5,24 @@
 
 source ./defineFarragoRuntime.sh
 
+CLIENT_DRIVER_URL=jdbc:farrago:rmi://localhost
+# add optional port number
+if [ -n "$1" ]; then
+    PORT=`(expr $1 + 0 2>/dev/null)` || (unset PORT)
+    if [ -n "$PORT" ]; then
+        CLIENT_DRIVER_URL=${CLIENT_DRIVER_URL}:$PORT
+        shift
+    fi
+fi
+
+# add session name
+SELF=`basename $0`
+FARRAGO_SESSION="${SELF}:${USER}@${HOSTNAME}"
+CLIENT_DRIVER_URL="${CLIENT_DRIVER_URL};sessionName='${FARRAGO_SESSION}'"
+
+# note that sqlLine splits args at blanks, regardless of quoting,
+# so CLIENT_DRIVER_URL must not contain embedded blanks
 java ${CLIENT_JAVA_ARGS} ${SQLLINE_JAVA_ARGS} \
-    -u jdbc:farrago:rmi://localhost \
+    -u ${CLIENT_DRIVER_URL} \
     -d net.sf.farrago.jdbc.client.FarragoJdbcClientDriver \
     -n sa $*

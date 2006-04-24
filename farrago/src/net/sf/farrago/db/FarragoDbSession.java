@@ -177,15 +177,30 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         sessionVariables.sessionUserName = sessionUser;
         sessionVariables.currentUserName = sessionUser;
         sessionVariables.currentRoleName = "";
-        // TODO jvs 27-Aug-2005:  for remote connections, get this from client
-        sessionVariables.systemUserName = System.getProperty("user.name");
+        sessionVariables.systemUserName = info.getProperty(
+            "clientUserName",
+            System.getProperty("user.name"));
+        sessionVariables.systemUserFullName = info.getProperty(
+            "clientUserFullName");
         sessionVariables.schemaSearchPath = Collections.EMPTY_LIST;
+        sessionVariables.sessionName = info.getProperty("sessionName");
+        sessionVariables.programName = info.getProperty("clientProgramName");
+        String processStr = info.getProperty("clientProcessId");
+        try {
+            sessionVariables.processId = Long.parseLong(processStr);
+        } catch (NumberFormatException e) {
+            tracer.warning("processId error: " +e.getMessage());
+            sessionVariables.processId = 0L;
+        }
 
         FemUser femUser = null;
         
         if (MDR_USER_NAME.equals(sessionVariables.sessionUserName)) {
             // This is a reentrant session from MDR.
             repos = database.getSystemRepos();
+            if (sessionVariables.sessionName == null) {
+                sessionVariables.sessionName = MDR_USER_NAME;
+            }
         } else {
             // This is a normal session.
             repos = database.getUserRepos();
