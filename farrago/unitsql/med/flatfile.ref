@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/med/flatfile.sql#12 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/med/flatfile.sql#13 $
 0: jdbc:farrago:> -- Test flatfile namespace plugin
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema flatfile_schema;
@@ -404,7 +404,6 @@ Error: Cannot derive column types for file unitsql/med/flatfiles/nullheader.txt 
 |         | in  | data   |     |
 +---------+-----+--------+-----+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- FIXME: throws null pointer exception
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- 3.9 Select when BCP file is empty
 0: jdbc:farrago:> --
@@ -417,24 +416,26 @@ Error: Cannot derive column types for file unitsql/med/flatfiles/nullheader.txt 
 . . . . . . . . >     with_header 'no',
 . . . . . . . . >     log_directory 'testlog');
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- select * from flatfile_server_badbcp.BCP."nobcpheader";
+0: jdbc:farrago:> select * from flatfile_server_badbcp.BCP."nobcpheader";
+Error: Control file unitsql/med/flatfiles/nobcpheader.bcp2 is not valid (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- 3.10 Select when BCP contains no columns
 0: jdbc:farrago:> --
-0: jdbc:farrago:> -- WARNING: this causes a crash
-0: jdbc:farrago:> -- select * from flatfile_server_badbcp.BCP."nobcpcolumns";
+0: jdbc:farrago:> select * from flatfile_server_badbcp.BCP."nobcpcolumns";
+Error: Control file unitsql/med/flatfiles/nobcpcolumns.bcp2 is not valid (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- 3.11 Invalid BCP column definitions
 0: jdbc:farrago:> --
-0: jdbc:farrago:> -- select * from flatfile_server_badbcp.BCP."toofewbcpcolumns";
+0: jdbc:farrago:> select * from flatfile_server_badbcp.BCP."toofewbcpcolumns";
+Error: Too few columns in control file unitsql/med/flatfiles/toofewbcpcolumns.bcp2 (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from flatfile_server_badbcp.BCP."toomanybcpcolumns";
-Error: Control file unitsql/med/flatfiles/toomanybcpcolumns.bcp2 is not valid (state=,code=0)
+Error: Too many columns in control file unitsql/med/flatfiles/toomanybcpcolumns.bcp2 (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from flatfile_server_badbcp.BCP."invalidbcpcolumns";
-Error: Control file unitsql/med/flatfiles/invalidbcpcolumns.bcp2 is not valid (state=,code=0)
+Error: Invalid row 5 in control file unitsql/med/flatfiles/invalidbcpcolumns.bcp2 (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> ---------------------------------------------------------------------------

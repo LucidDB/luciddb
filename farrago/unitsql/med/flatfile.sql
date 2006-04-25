@@ -316,7 +316,6 @@ select * from flatfile_server_empty.BCP."nullheader";
 --
 select * from flatfile_server_empty.BCP."nulldata";
 
--- FIXME: throws null pointer exception
 --
 -- 3.9 Select when BCP file is empty
 --
@@ -329,18 +328,17 @@ options (
     with_header 'no',
     log_directory 'testlog');
 
--- select * from flatfile_server_badbcp.BCP."nobcpheader";
+select * from flatfile_server_badbcp.BCP."nobcpheader";
 
 --
 -- 3.10 Select when BCP contains no columns
 --
--- WARNING: this causes a crash
--- select * from flatfile_server_badbcp.BCP."nobcpcolumns";
+select * from flatfile_server_badbcp.BCP."nobcpcolumns";
 
 --
 -- 3.11 Invalid BCP column definitions
 --
--- select * from flatfile_server_badbcp.BCP."toofewbcpcolumns";
+select * from flatfile_server_badbcp.BCP."toofewbcpcolumns";
 
 select * from flatfile_server_badbcp.BCP."toomanybcpcolumns";
 

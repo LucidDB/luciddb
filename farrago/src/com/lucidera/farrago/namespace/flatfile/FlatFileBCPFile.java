@@ -20,12 +20,7 @@
 */
 package com.lucidera.farrago.namespace.flatfile;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.LineNumberReader;
+import java.io.*;
 import java.util.regex.Pattern;
 
 import net.sf.farrago.resource.FarragoResource;
@@ -320,6 +315,9 @@ class FlatFileBCPFile
     {
         FileReader ctrlReader;
         LineNumberReader reader;
+        int expectedNumCols = 0;
+        int numCols = 0;
+
         try {
             ctrlReader = new FileReader(fileName);
             reader = new LineNumberReader(ctrlReader);
@@ -331,17 +329,48 @@ class FlatFileBCPFile
         String line;
         try {
             while((line=reader.readLine()) != null) {
+                if (numCols != 0 && numCols == expectedNumCols) {
+                    throw FarragoResource.instance().
+                        InvalidControlFileTooManyCols.ex(this.fileName);
+                }
+
                 // skip line 1: version #
                 if (reader.getLineNumber() == 2) {
-                    int colNo = Integer.parseInt(line);
+                    int colNo = 0;
+                    try {
+                        colNo = Integer.parseInt(line);
+                    } catch (NumberFormatException nfe) {
+                        throw FarragoResource.instance().
+                            InvalidControlFileOnRow.ex(this.fileName,
+                                Integer.toString(reader.getLineNumber()));
+                    }
                     types = new RelDataType[colNo];
                     this.colNames = new String[colNo];
+                    expectedNumCols = colNo;
+                    continue;
                 }
 
                 if (reader.getLineNumber() > 2) {
                     String[] bcpLine = line.split("\\s+");
+                    if (!(bcpLine.length >= 7)) {
+                        throw FarragoResource.instance().
+                            InvalidControlFileOnRow.ex(this.fileName,
+                                Integer.toString(reader.getLineNumber()));
+                    }
                     String datatype = bcpLine[1];
+                    if (!(datatype.startsWith("SQL"))) {
+                        throw FarragoResource.instance().
+                            InvalidControlFileOnRow.ex(this.fileName,
+                                Integer.toString(reader.getLineNumber()));
+                    }
                     String typeLength = bcpLine[3];
+                    try {
+                        Integer.parseInt(typeLength);
+                    } catch (NumberFormatException nfe) {
+                        throw FarragoResource.instance().
+                            InvalidControlFileOnRow.ex(this.fileName,
+                                Integer.toString(reader.getLineNumber()));
+                    }
                     String colId = bcpLine[6];
 
                     SqlTypeName typeName =
@@ -380,10 +409,22 @@ class FlatFileBCPFile
                                 true);
                     }
                     colNames[reader.getLineNumber()-3] = colId;
+                    numCols++;
                 }
             }
-        } catch (Exception ie) {
-            throw FarragoResource.instance().InvalidControlFile.ex(
+
+            if (expectedNumCols == 0) {
+                throw FarragoResource.instance().InvalidControlFile.ex(
+                    this.fileName);
+            }
+
+            if (numCols < expectedNumCols) {
+                throw FarragoResource.instance().
+                    InvalidControlFileTooFewCols.ex(this.fileName);
+            }
+
+        } catch (IOException ie) {
+            throw FarragoResource.instance().FileNotFound.ex(
                 this.fileName);
         } finally {
             try {

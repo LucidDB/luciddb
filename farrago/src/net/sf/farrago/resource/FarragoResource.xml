@@ -733,6 +733,18 @@ column type family is {1} but default value type family is {2}</text>
 <text>Cannot derive column types for file {0}</text>
 </exception>
 
+<exception id="469070" name="InvalidControlFileTooManyCols">
+<text>Too many columns in control file {0}</text>
+</exception>
+
+<exception id="469080" name="InvalidControlFileTooFewCols">
+<text>Too few columns in control file {0}</text>
+</exception>
+
+<exception id="469090" name="InvalidControlFileOnRow">
+<text>Invalid row {1} in control file {0}</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Database/Session resources 470,000 - 480,000 -->
 <!-- ====================================================================== -->
