@@ -1,0 +1,280 @@
+0: jdbc:luciddb:> set schema 'foodmart';
+0: jdbc:luciddb:> select "time_by_day"."the_year" from "time_by_day" as "time_by_day" group by "time_by_day"."the_year" order by "time_by_day"."the_year" ;
++-----------+
+| the_year  |
++-----------+
+| 1997      |
+| 1998      |
++-----------+
+0: jdbc:luciddb:> select "time_by_day"."the_year" from "time_by_day" as "time_by_day" group by "time_by_day"."the_year" order by "time_by_day"."the_year" ;
++-----------+
+| the_year  |
++-----------+
+| 1997      |
+| 1998      |
++-----------+
+0: jdbc:luciddb:> select "product_class"."product_family", "product_class"."product_department" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" group by "product_class"."product_family", "product_class"."product_department" order by "product_class"."product_family" , "product_class"."product_department" ;
++-----------------+----------------------+
+| product_family  |  product_department  |
++-----------------+----------------------+
+| Drink           | Alcoholic Beverages  |
+| Drink           | Beverages            |
+| Drink           | Dairy                |
+| Food            | Baked Goods          |
+| Food            | Baking Goods         |
+| Food            | Breakfast Foods      |
+| Food            | Canned Foods         |
+| Food            | Canned Products      |
+| Food            | Dairy                |
+| Food            | Deli                 |
+| Food            | Eggs                 |
+| Food            | Frozen Foods         |
+| Food            | Meat                 |
+| Food            | Produce              |
+| Food            | Seafood              |
+| Food            | Snack Foods          |
+| Food            | Snacks               |
+| Food            | Starchy Foods        |
+| Non-Consumable  | Carousel             |
+| Non-Consumable  | Checkout             |
+| Non-Consumable  | Health and Hygiene   |
+| Non-Consumable  | Household            |
+| Non-Consumable  | Periodicals          |
++-----------------+----------------------+
+0: jdbc:luciddb:> select "customer"."education" from "customer" as "customer" group by "customer"."education" order by "customer"."education" ;
++----------------------+
+|      education       |
++----------------------+
+| Bachelors Degree     |
+| Graduate Degree      |
+| High School Degree   |
+| Partial College      |
+| Partial High School  |
++----------------------+
+0: jdbc:luciddb:> select "product_class"."product_family" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" and UPPER("product_class"."product_family") = '*SM_CTX_SEL' group by "product_class"."product_family" order by "product_class"."product_family" ;
++-----------------+
+| product_family  |
++-----------------+
++-----------------+
+0: jdbc:luciddb:> select "customer"."education" from "customer" as "customer" where UPPER("customer"."education") = '*SM_CTX_SEL' group by "customer"."education" order by "customer"."education" ;
++------------+
+| education  |
++------------+
++------------+
+0: jdbc:luciddb:> select "customer"."education" from "customer" as "customer" where UPPER("customer"."education") = '*SUBTOTAL_MEMBER_SEL~SUM' group by "customer"."education" order by "customer"."education" ;
++------------+
+| education  |
++------------+
++------------+
+0: jdbc:luciddb:> select "product_class"."product_family" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" and UPPER("product_class"."product_family") = 'DRINK' group by "product_class"."product_family" order by "product_class"."product_family" ;
++-----------------+
+| product_family  |
++-----------------+
+| Drink           |
++-----------------+
+0: jdbc:luciddb:> select "product_class"."product_department" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_family" = 'Drink' and UPPER("product_class"."product_department") = '*SUBTOTAL_MEMBER_SEL~SUM' group by "product_class"."product_department" order by "product_class"."product_department" ;
++---------------------+
+| product_department  |
++---------------------+
++---------------------+
+0: jdbc:luciddb:> select "product_class"."product_family" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" and UPPER("product_class"."product_family") = 'FOOD' group by "product_class"."product_family" order by "product_class"."product_family" ;
++-----------------+
+| product_family  |
++-----------------+
+| Food            |
++-----------------+
+0: jdbc:luciddb:> select "product_class"."product_department" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_family" = 'Food' and UPPER("product_class"."product_department") = '*SUBTOTAL_MEMBER_SEL~SUM' group by "product_class"."product_department" order by "product_class"."product_department" ;
++---------------------+
+| product_department  |
++---------------------+
++---------------------+
+0: jdbc:luciddb:> select "product_class"."product_family" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" and UPPER("product_class"."product_family") = 'NON-CONSUMABLE' group by "product_class"."product_family" order by "product_class"."product_family" ;
++-----------------+
+| product_family  |
++-----------------+
+| Non-Consumable  |
++-----------------+
+0: jdbc:luciddb:> select "product_class"."product_department" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_family" = 'Non-Consumable' and UPPER("product_class"."product_department") = '*SUBTOTAL_MEMBER_SEL~SUM' group by "product_class"."product_department" order by "product_class"."product_department" ;
++---------------------+
+| product_department  |
++---------------------+
++---------------------+
+0: jdbc:luciddb:> select "product_class"."product_family" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" and UPPER("product_class"."product_family") = '*SUBTOTAL_MEMBER_SEL~SUM' group by "product_class"."product_family" order by "product_class"."product_family" ;
++-----------------+
+| product_family  |
++-----------------+
++-----------------+
+0: jdbc:luciddb:> select "product_class"."product_family" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" and UPPER("product_class"."product_family") = '*SUBTOTAL_MEMBER_ALL~SUM' group by "product_class"."product_family" order by "product_class"."product_family" ;
++-----------------+
+| product_family  |
++-----------------+
++-----------------+
+0: jdbc:luciddb:> select "customer"."education" from "customer" as "customer" where UPPER("customer"."education") = '*SUBTOTAL_MEMBER_ALL~SUM' group by "customer"."education" order by "customer"."education" ;
++------------+
+| education  |
++------------+
++------------+
+0: jdbc:luciddb:> select "product_class"."product_department" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_family" = 'Drink' and UPPER("product_class"."product_department") = 'ALCOHOLIC BEVERAGES' group by "product_class"."product_department" order by "product_class"."product_department" ;
++----------------------+
+|  product_department  |
++----------------------+
+| Alcoholic Beverages  |
++----------------------+
+0: jdbc:luciddb:> select "product_class"."product_department" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_family" = 'Drink' and UPPER("product_class"."product_department") = 'BEVERAGES' group by "product_class"."product_department" order by "product_class"."product_department" ;
++---------------------+
+| product_department  |
++---------------------+
+| Beverages           |
++---------------------+
+0: jdbc:luciddb:> select "product_class"."product_department" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_family" = 'Drink' and UPPER("product_class"."product_department") = 'DAIRY' group by "product_class"."product_department" order by "product_class"."product_department" ;
++---------------------+
+| product_department  |
++---------------------+
+| Dairy               |
++---------------------+
+0: jdbc:luciddb:> select "product_class"."product_department" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_family" = 'Food' and UPPER("product_class"."product_department") = 'BAKED GOODS' group by "product_class"."product_department" order by "product_class"."product_department" ;
++---------------------+
+| product_department  |
++---------------------+
+| Baked Goods         |
++---------------------+
+0: jdbc:luciddb:> select "product_class"."product_department" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_family" = 'Food' and UPPER("product_class"."product_department") = 'BAKING GOODS' group by "product_class"."product_department" order by "product_class"."product_department" ;
++---------------------+
+| product_department  |
++---------------------+
+| Baking Goods        |
++---------------------+
+0: jdbc:luciddb:> select "product_class"."product_department" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_family" = 'Food' and UPPER("product_class"."product_department") = 'CANNED FOODS' group by "product_class"."product_department" order by "product_class"."product_department" ;
++---------------------+
+| product_department  |
++---------------------+
+| Canned Foods        |
++---------------------+
+0: jdbc:luciddb:> select "product_class"."product_department" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_family" = 'Food' and UPPER("product_class"."product_department") = 'CANNED PRODUCTS' group by "product_class"."product_department" order by "product_class"."product_department" ;
++---------------------+
+| product_department  |
++---------------------+
+| Canned Products     |
++---------------------+
+0: jdbc:luciddb:> select "product_class"."product_department" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_family" = 'Food' and UPPER("product_class"."product_department") = 'DAIRY' group by "product_class"."product_department" order by "product_class"."product_department" ;
++---------------------+
+| product_department  |
++---------------------+
+| Dairy               |
++---------------------+
+0: jdbc:luciddb:> select "product_class"."product_department" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_family" = 'Food' and UPPER("product_class"."product_department") = 'DELI' group by "product_class"."product_department" order by "product_class"."product_department" ;
++---------------------+
+| product_department  |
++---------------------+
+| Deli                |
++---------------------+
+0: jdbc:luciddb:> select "product_class"."product_department" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_family" = 'Food' and UPPER("product_class"."product_department") = 'EGGS' group by "product_class"."product_department" order by "product_class"."product_department" ;
++---------------------+
+| product_department  |
++---------------------+
+| Eggs                |
++---------------------+
+0: jdbc:luciddb:> select "product_class"."product_department" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_family" = 'Food' and UPPER("product_class"."product_department") = 'FROZEN FOODS' group by "product_class"."product_department" order by "product_class"."product_department" ;
++---------------------+
+| product_department  |
++---------------------+
+| Frozen Foods        |
++---------------------+
+0: jdbc:luciddb:> select "product_class"."product_department" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_family" = 'Food' and UPPER("product_class"."product_department") = 'MEAT' group by "product_class"."product_department" order by "product_class"."product_department" ;
++---------------------+
+| product_department  |
++---------------------+
+| Meat                |
++---------------------+
+0: jdbc:luciddb:> select "product_class"."product_department" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_family" = 'Food' and UPPER("product_class"."product_department") = 'PRODUCE' group by "product_class"."product_department" order by "product_class"."product_department" ;
++---------------------+
+| product_department  |
++---------------------+
+| Produce             |
++---------------------+
+0: jdbc:luciddb:> select "product_class"."product_department" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_family" = 'Food' and UPPER("product_class"."product_department") = 'SNACK FOODS' group by "product_class"."product_department" order by "product_class"."product_department" ;
++---------------------+
+| product_department  |
++---------------------+
+| Snack Foods         |
++---------------------+
+0: jdbc:luciddb:> select "product_class"."product_department" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_family" = 'Food' and UPPER("product_class"."product_department") = 'SNACKS' group by "product_class"."product_department" order by "product_class"."product_department" ;
++---------------------+
+| product_department  |
++---------------------+
+| Snacks              |
++---------------------+
+0: jdbc:luciddb:> select "product_class"."product_department" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_family" = 'Food' and UPPER("product_class"."product_department") = 'STARCHY FOODS' group by "product_class"."product_department" order by "product_class"."product_department" ;
++---------------------+
+| product_department  |
++---------------------+
+| Starchy Foods       |
++---------------------+
+0: jdbc:luciddb:> select "product_class"."product_department" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_family" = 'Non-Consumable' and UPPER("product_class"."product_department") = 'CAROUSEL' group by "product_class"."product_department" order by "product_class"."product_department" ;
++---------------------+
+| product_department  |
++---------------------+
+| Carousel            |
++---------------------+
+0: jdbc:luciddb:> select "product_class"."product_department" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_family" = 'Non-Consumable' and UPPER("product_class"."product_department") = 'CHECKOUT' group by "product_class"."product_department" order by "product_class"."product_department" ;
++---------------------+
+| product_department  |
++---------------------+
+| Checkout            |
++---------------------+
+0: jdbc:luciddb:> select "product_class"."product_department" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_family" = 'Non-Consumable' and UPPER("product_class"."product_department") = 'HEALTH AND HYGIENE' group by "product_class"."product_department" order by "product_class"."product_department" ;
++---------------------+
+| product_department  |
++---------------------+
+| Health and Hygiene  |
++---------------------+
+0: jdbc:luciddb:> select "product_class"."product_department" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_family" = 'Non-Consumable' and UPPER("product_class"."product_department") = 'HOUSEHOLD' group by "product_class"."product_department" order by "product_class"."product_department" ;
++---------------------+
+| product_department  |
++---------------------+
+| Household           |
++---------------------+
+0: jdbc:luciddb:> select "product_class"."product_department" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_family" = 'Non-Consumable' and UPPER("product_class"."product_department") = 'PERIODICALS' group by "product_class"."product_department" order by "product_class"."product_department" ;
++---------------------+
+| product_department  |
++---------------------+
+| Periodicals         |
++---------------------+
+0: jdbc:luciddb:> select "customer"."education" from "customer" as "customer" where UPPER("customer"."education") = 'BACHELORS DEGREE' group by "customer"."education" order by "customer"."education" ;
++-------------------+
+|     education     |
++-------------------+
+| Bachelors Degree  |
++-------------------+
+0: jdbc:luciddb:> select "customer"."education" from "customer" as "customer" where UPPER("customer"."education") = 'GRADUATE DEGREE' group by "customer"."education"  order by "customer"."education" ;
++------------------+
+|    education     |
++------------------+
+| Graduate Degree  |
++------------------+
+0: jdbc:luciddb:> select "customer"."education" from "customer" as "customer" where UPPER("customer"."education") = 'HIGH SCHOOL DEGREE' group by "customer"."education" order by "customer"."education" ;
++---------------------+
+|      education      |
++---------------------+
+| High School Degree  |
++---------------------+
+0: jdbc:luciddb:> select "customer"."education" from "customer" as "customer" where UPPER("customer"."education") = 'PARTIAL COLLEGE' group by "customer"."education" order by "customer"."education" ;
++------------------+
+|    education     |
++------------------+
+| Partial College  |
++------------------+
+0: jdbc:luciddb:> select "customer"."education" from "customer" as "customer" where UPPER("customer"."education") = 'PARTIAL HIGH SCHOOL' group by "customer"."education" order by "customer"."education" ;
++----------------------+
+|      education       |
++----------------------+
+| Partial High School  |
++----------------------+
+0: jdbc:luciddb:> select count(distinct "product_class"."product_family") from "product_class" as "product_class";
++---------+
+| EXPR$0  |
++---------+
+| 3       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

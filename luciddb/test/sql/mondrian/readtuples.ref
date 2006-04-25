@@ -1,0 +1,55 @@
+0: jdbc:luciddb:> set schema 'foodmart';
+0: jdbc:luciddb:> select "time_by_day"."the_year" from "time_by_day" as "time_by_day" group by "time_by_day"."the_year" order by "time_by_day"."the_year" ;
++-----------+
+| the_year  |
++-----------+
+| 1997      |
+| 1998      |
++-----------+
+0: jdbc:luciddb:> select "time_by_day"."the_year" from "time_by_day" as "time_by_day" group by "time_by_day"."the_year" order by "time_by_day"."the_year" ;
++-----------+
+| the_year  |
++-----------+
+| 1997      |
+| 1998      |
++-----------+
+0: jdbc:luciddb:> select "product_class"."product_family", "product_class"."product_department" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" group by "product_class"."product_family", "product_class"."product_department" order by "product_class"."product_family" , "product_class"."product_department" ;
++-----------------+----------------------+
+| product_family  |  product_department  |
++-----------------+----------------------+
+| Drink           | Alcoholic Beverages  |
+| Drink           | Beverages            |
+| Drink           | Dairy                |
+| Food            | Baked Goods          |
+| Food            | Baking Goods         |
+| Food            | Breakfast Foods      |
+| Food            | Canned Foods         |
+| Food            | Canned Products      |
+| Food            | Dairy                |
+| Food            | Deli                 |
+| Food            | Eggs                 |
+| Food            | Frozen Foods         |
+| Food            | Meat                 |
+| Food            | Produce              |
+| Food            | Seafood              |
+| Food            | Snack Foods          |
+| Food            | Snacks               |
+| Food            | Starchy Foods        |
+| Non-Consumable  | Carousel             |
+| Non-Consumable  | Checkout             |
+| Non-Consumable  | Health and Hygiene   |
+| Non-Consumable  | Household            |
+| Non-Consumable  | Periodicals          |
++-----------------+----------------------+
+0: jdbc:luciddb:> select "customer"."education" from "customer" as "customer" group by "customer"."education" order by "customer"."education" ;
++----------------------+
+|      education       |
++----------------------+
+| Bachelors Degree     |
+| Graduate Degree      |
+| High School Degree   |
+| Partial College      |
+| Partial High School  |
++----------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

@@ -10,14 +10,35 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/creschema.sql"/>
       </test>
 
-      <test name="createTables" nameOverride="true">
+      <test name="createTables" nameOverride="true"
+        requiresSuccess="creschema"> 
         <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/createTables.sql"/>
       </test>
 
-      <test name="load" nameOverride="true" >
+      <test name="loadfoodmart" nameOverride="true" 
+        requiresSuccess="createTables"> 
         <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/load.sql"/>
       </test>
 
+      <test name="query-getcardinality" nameOverride="true" 
+        requiresSuccess="load">
+        <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/getcardinality.sql"/>
+      </test>
+
+      <test name="query-segmentload" nameOverride="true" 
+        requiresSuccess="load">
+        <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/segmentload.sql"/>
+      </test>
+
+      <test name="query-readtuples" nameOverride="true" 
+        requiresSuccess="load">
+        <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/readtuples.sql"/>
+      </test>
+
+      <test name="query-getmemberchildren" nameOverride="true" 
+        requiresSuccess="load">
+        <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/getmemberchildren.sql"/>
+      </test>
 
     </test-suite>
   </target>
