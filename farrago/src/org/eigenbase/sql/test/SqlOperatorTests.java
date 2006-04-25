@@ -1967,7 +1967,7 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkInvalid("^avg(cast(null as varchar(2)))^",
             "(?s)Cannot apply 'AVG' to arguments of type 'AVG\\(<VARCHAR\\(2\\)>\\)'\\. Supported form\\(s\\): 'AVG\\(<NUMERIC>\\)'.*");
         getTester().checkType("AVG(CAST(NULL AS INTEGER))", "INTEGER");
-        getTester().checkType("AVG(DISTINCT 1.5)", "DECIMAL(2, 1) NOT NULL");
+        getTester().checkType("AVG(DISTINCT 1.5)", "DECIMAL(2, 1)");
         final String[] values = {"0", "CAST(null AS INTEGER)", "3", "3"};
         getTester().checkAgg("AVG(x)", values, new Double(1), 0);
         getTester().checkAgg("AVG(DISTINCT x)", values, new Double(1.5), 0);

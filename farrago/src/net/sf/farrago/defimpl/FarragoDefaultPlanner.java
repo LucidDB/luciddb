@@ -129,6 +129,8 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
         planner.addRule(
             new ReduceDecimalsRule(CalcRel.class));
         
+        planner.addRule(ReduceAggregatesRule.instance);
+        
         planner.addRule(new PushFilterRule());
         
         if (fennelEnabled) {

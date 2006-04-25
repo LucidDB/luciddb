@@ -58,7 +58,7 @@ public class SqlCountAggFunction extends SqlAggFunction
 
     public RelDataType getReturnType(RelDataTypeFactory typeFactory)
     {
-        return type;
+        return typeFactory.createSqlType(SqlTypeName.Bigint);
     }
 
     public OJClass [] getStartParameterTypes()

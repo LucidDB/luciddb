@@ -130,6 +130,17 @@ public class StandardConvertletTable extends ReflectiveConvertletTable
             }
         );
 
+        // REVIEW jvs 24-Apr-2006: This only seems to be working from within a
+        // windowed agg.  I have added an optimizer rule
+        // org.eigenbase.rel.rules.ReduceAggregatesRule which handles other cases
+        // post-translation.  The reason I did that was to defer the
+        // implementation decision; e.g. we may want to push it down to a
+        // foreign server directly rather than decomposed; decomposition is
+        // easier than recognition.  Also, I didn't put in the CASE because the
+        // SUM is already supposed to come out as NULL in cases where the COUNT
+        // is zero, so the null check should take place first and prevent
+        // division by zero.
+        
         // Convert "avg(<expr>)" to "case count(<expr>) when 0 then
         // null else sum(<expr>) / count(<expr>) end"
         registerOp(

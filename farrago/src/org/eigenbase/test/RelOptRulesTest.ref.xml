@@ -92,4 +92,26 @@ ProjectRel(EXPR$0=[1])
 ]]>
         </Resource>
     </TestCase>
+    <TestCase name="testReduceAverage">
+        <Resource name="sql">
+            <![CDATA[select name, max(name), avg(deptno), min(name) from sales.dept group by name]]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+ProjectRel(NAME=[$0], EXPR$1=[$1], EXPR$2=[$2], EXPR$3=[$3])
+  AggregateRel(groupCount=[1], agg#0=[MAX(0)], agg#1=[AVG(1)], agg#2=[MIN(0)])
+    ProjectRel($f0=[$1], $f1=[$0])
+      TableAccessRel(table=[[SALES, DEPT]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+ProjectRel(NAME=[$0], EXPR$1=[$1], EXPR$2=[$2], EXPR$3=[$3])
+  ProjectRel($f0=[$0], $f1=[$1], $f2=[CAST(/($2, $4)):INTEGER], $f3=[$3])
+    AggregateRel(groupCount=[1], agg#0=[MAX(0)], agg#1=[SUM(1)], agg#2=[MIN(0)], agg#3=[COUNT(1)])
+      ProjectRel($f0=[$1], $f1=[$0])
+        TableAccessRel(table=[[SALES, DEPT]])
+]]>
+        </Resource>
+    </TestCase>
 </Root>

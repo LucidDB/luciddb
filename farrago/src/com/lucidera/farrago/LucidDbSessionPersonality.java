@@ -264,6 +264,10 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         // because they rely on the join condition being part of the join.
         builder.addRuleInstance(ExtractJoinFilterRule.instance);
 
+        // Replace AVG with SUM/COUNT (need to do this BEFORE calc conversion
+        // and decimal reduction).
+        builder.addRuleInstance(ReduceAggregatesRule.instance);
+        
         // Convert remaining filters and projects to logical calculators,
         // merging adjacent ones.
         builder.addGroupBegin();
@@ -272,7 +276,7 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         builder.addRuleInstance(MergeCalcRule.instance);
         builder.addGroupEnd();
 
-        // And replace the DECIMAL datatype with primitive ints.
+        // Replace the DECIMAL datatype with primitive ints.
         builder.addRuleInstance(new ReduceDecimalsRule(CalcRel.class));
 
         // The rest of these are all physical implementation rules
