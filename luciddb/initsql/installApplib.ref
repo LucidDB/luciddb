@@ -1,4 +1,4 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/initsql/installApplib.sql#1 $
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/initsql/installApplib.sql#2 $
 0: jdbc:luciddb:> create schema applib;
 0: jdbc:luciddb:> set schema 'applib';
 0: jdbc:luciddb:> set path 'applib';
@@ -250,6 +250,21 @@
 . . . . . . . . >     ELSE cast (wk_num_as_yr as varchar(2))  
 . . . . . . . . >   end
 . . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- define INSTR
+0: jdbc:luciddb:> create function applib.instr(str varchar(65535), subStr varchar(65535), startPos int, nthAppearance int)
+. . . . . . . . > returns int
+. . . . . . . . > language java
+. . . . . . . . > specific instr_with_optional_vars
+. . . . . . . . > no sql
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.string.InStrUdf.execute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function applib.instr(str varchar(65535), subStr varchar(65535))
+. . . . . . . . > returns int
+. . . . . . . . > language java
+. . . . . . . . > specific instr_without_optional_vars
+. . . . . . . . > no sql
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.string.InStrUdf.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> ----
 0: jdbc:luciddb:> -- UDXs

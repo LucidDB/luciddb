@@ -120,6 +120,10 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udf/pad_week_number.sql"/>
       </test>
 
+      <test name="instr" requiresRun="cr_source">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udf/instr.sql"/>
+      </test>
+
     </test-suite>
   </target>
 </project>

@@ -246,6 +246,21 @@ return (
   end
 );
 
+-- define INSTR
+create function applib.instr(str varchar(65535), subStr varchar(65535), startPos int, nthAppearance int)
+returns int
+language java
+specific instr_with_optional_vars
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.string.InStrUdf.execute';
+
+create function applib.instr(str varchar(65535), subStr varchar(65535))
+returns int
+language java
+specific instr_without_optional_vars
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.string.InStrUdf.execute';
+
 ----
 -- UDXs
 ----
