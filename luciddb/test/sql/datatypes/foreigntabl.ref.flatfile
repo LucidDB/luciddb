@@ -38,7 +38,7 @@
 . . . . . . . . > );
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from @name_prefix@_ft_schema.types_nonexplicit;
-Error: FennelResource.en_US.noRowsReturned(/home/elin/open/luciddb/test/sql/datatypes/types.csv, could not calculate results for the following row:
+Error: FennelResource.en_US.noRowsReturned(@DIRECTORY@/types.csv, could not calculate results for the following row:
 [ 'thisChar05', 'varchar-05', '123.123', '127', '32767', '2147483647', '9223372036854775807', '2.78', '3.1415161718', 'TRUE', '2005-10-12', '12:00:00', '2005-10-12 12:00:00' ]
 Messages:
 [0]:PC=14 Code=22007 ) (state=,code=0)
