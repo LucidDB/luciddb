@@ -24,13 +24,14 @@
 # an existing one after syncing changes from source control.
 
 usage() {
-    echo "Usage:  initBuild.sh --with[out]-fennel [--with[out]-optimization] [--with[out]-debug] [--without-fennel[-thirdparty]-build] [--with[out]-tests]"
+    echo "Usage:  initBuild.sh --with[out]-fennel [--with[out]-optimization] [--with[out]-debug] [--without-fennel[-thirdparty]-build] [--with[out]-tests] [--with-nightly-tests]"
 }
 
 fennel_flag_missing=true
 fennel_disabled=missing
 fennel_skip_build=false
 skip_tests=true
+with_nightly_tests=false
 
 # extended globbing for case statement
 shopt -sq extglob
@@ -48,6 +49,8 @@ while [ -n "$1" ]; do
         --with-tests)
             skip_tests=false;
             TEST_FLAG="$1";;
+        --with-nightly-tests)
+            with_nightly_tests=true;;
         --without-tests)
             skip_tests=true;
             TEST_FLAG="$1";;
@@ -58,6 +61,12 @@ while [ -n "$1" ]; do
 done
 
 shopt -uq extglob
+
+if $with_nightly_tests ; then
+    run_ant="ant -keep-going"
+else
+    run_ant="ant"
+fi
 
 # Check required options
 if [ $fennel_disabled == "missing" ] ; then
@@ -107,10 +116,10 @@ fi
 # Build Farrago catalog and everything else, then run tests
 # (but don't run tests when Fennel is disabled, since most fail without it)
 cd ../farrago
-ant clean
+${run_ant} clean
 
 if $fennel_disabled || $skip_tests ; then
-    ant createCatalog
+    ${run_ant} createCatalog
 else
-    ant test
+    ${run_ant} test
 fi
