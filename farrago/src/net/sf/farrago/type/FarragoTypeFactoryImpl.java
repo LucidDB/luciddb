@@ -415,6 +415,10 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             if (typeName == SqlTypeName.Decimal) {
                 // Limit DECIMAL precision and scale.
                 int maxPrecision = SqlTypeName.Decimal.MAX_NUMERIC_PRECISION;
+                if (precision == 0) {
+                    // Deal with bogus precision 0, e.g. from Oracle
+                    precision = maxPrecision;
+                }
                 if ((precision > maxPrecision) || (scale > precision)) {
                     if (!substitute) {
                         throw new UnsupportedOperationException();
