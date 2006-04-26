@@ -18,6 +18,11 @@
       <test-suite-call testfile="test/sql/VI/flip/test.xml"/>
       <test-suite-call testfile="test/sql/VI/tbs/test-all.xml"/>
 
+      <!-- non-db dependent tests which rely on mssql  -->
+
+      <test-suite-call testfile="test/sql/mondrian/test-all.xml"/>
+
+
     </test-suite>
   </target>
 </project>

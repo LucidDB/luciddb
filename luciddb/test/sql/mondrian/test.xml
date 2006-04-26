@@ -39,7 +39,7 @@
         requiresSuccess="loadfoodmart">
         <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/getmemberchildren.sql"/>
       </test>
-
+<!-- These take too long
       <test name="query-shabang" nameOverride="true" 
         requiresSuccess="loadfoodmart">
         <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/shabang.sql"/>
@@ -52,7 +52,7 @@
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/frg108.sql"/>
       </test>
-
+-->
     </test-suite>
   </target>
 </project>
