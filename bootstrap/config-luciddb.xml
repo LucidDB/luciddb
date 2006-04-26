@@ -154,6 +154,15 @@
             </antpublisher>
         </onsuccess>
 
+        <antpublisher 
+                antscript="&ant;"
+                antworkingdir="&red.bootstrap.dir;"
+                buildfile="pub-logfile-luciddb.xml"
+                uselogger="true"
+                usedebug="true"
+                target="pub-logfile">
+        </antpublisher>
+
 		<email buildresultsurl="&buildresultsbase;/luciddb&configSuffix;"
 			       mailhost="&mailhost;"
 			       reportsuccess="&reportsuccess;"
