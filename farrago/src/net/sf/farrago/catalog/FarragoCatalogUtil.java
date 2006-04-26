@@ -940,7 +940,7 @@ public abstract class FarragoCatalogUtil
     {
         index.setAnalyzeTime(createTimestamp());
         // FIXME: once catalog is integrated, use long value
-        index.setPageCount(pageCount.intValue());
+        index.setPageCount(pageCount);
     }
     
     public static void updateHistogram(
