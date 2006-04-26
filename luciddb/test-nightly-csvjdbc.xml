@@ -2,15 +2,34 @@
   <target name="test-nightly-csvjdbc">
     <test-suite name="test-nightly-csvjdbc">
 
-      <test-suite-call testfile="test/sql/bench/benchtest-csvjdbc.xml"/>
-      <test-suite-call testfile="test/sql/compositekey/test.xml"/>
-      <test-suite-call testfile="test/sql/datatypes/test-csvjdbc.xml"/>
+      <test-suite-call testfile="test/sql/bench/benchtest-csvjdbc.xml">
+        <test-suite-modifier value="bench"/>
+      </test-suite-call>
+
+      <test-suite-call testfile="test/sql/compositekey/test.xml">
+        <test-suite-modifier value="compositykey"/>
+      </test-suite-call>
+
+      <test-suite-call testfile="test/sql/datatypes/test-csvjdbc.xml">
+        <test-suite-modifier value="datatypes"/>
+      </test-suite-call>
+
 <!-- put pge tests back in after changing to use foreign table, import  -->
 <!-- schema not supported for csvjdbc -->
-<!--       <test-suite-call testfile="test/sql/pge/test.xml"/> -->
-<!--       <test-suite-call testfile="test/sql/pge2/test.xml"/> -->
-      <test-suite-call testfile="test/sql/VI/insert/test.xml"/>
-      <test-suite-call testfile="test/sql/VI/populate/test.xml"/>
+<!--       <test-suite-call testfile="test/sql/pge/test.xml"> -->
+<!--        <test-suite-modifier value="pge"/> -->
+<!--      </test-suite-call> -->
+<!--       <test-suite-call testfile="test/sql/pge2/test.xml"> -->
+<!--        <test-suite-modifier value="pge2"/> -->
+<!--      </test-suite-call> -->
+
+      <test-suite-call testfile="test/sql/VI/insert/test.xml">
+        <test-suite-modifier value="VI_insert"/>
+      </test-suite-call>
+
+      <test-suite-call testfile="test/sql/VI/populate/test.xml">
+        <test-suite-modifier value="VI_populate"/>
+      </test-suite-call>
 
     </test-suite>
   </target>

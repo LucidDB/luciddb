@@ -2,15 +2,41 @@
   <target name="test-nightly-sqlserver">
     <test-suite name="test-nightly-sqlserver">
 
-      <test-suite-call testfile="test/sql/bench/benchtest.xml"/>
-      <test-suite-call testfile="test/sql/compositekey/test.xml"/>
-      <test-suite-call testfile="test/sql/datatypes/test.xml"/>
-      <test-suite-call testfile="test/sql/pge/test.xml"/>
-      <test-suite-call testfile="test/sql/pge2/test.xml"/>
-<!--       <test-suite-call testfile="test/sql/shortreg/test.xml"/> -->
-      <test-suite-call testfile="test/sql/shortreg/sanity.xml"/>
-      <test-suite-call testfile="test/sql/VI/insert/test.xml"/>
-      <test-suite-call testfile="test/sql/VI/populate/test.xml"/>
+      <test-suite-call testfile="test/sql/bench/benchtest.xml">
+        <test-suite-modifier value="bench"/>
+      </test-suite-call>
+
+      <test-suite-call testfile="test/sql/compositekey/test.xml">
+        <test-suite-modifier value="compositekey"/>
+      </test-suite-call>
+
+      <test-suite-call testfile="test/sql/datatypes/test.xml">
+        <test-suite-modifier value="datatypes"/>
+      </test-suite-call>
+
+      <test-suite-call testfile="test/sql/pge/test.xml">
+        <test-suite-modifier value="pge"/>
+      </test-suite-call>
+
+      <test-suite-call testfile="test/sql/pge2/test.xml">
+        <test-suite-modifier value="pge2"/>
+      </test-suite-call>
+
+<!--       <test-suite-call testfile="test/sql/shortreg/test.xml"> -->
+<!--        <test-suite-modifier value="shortreg-2"/> -->
+<!--      </test-suite-call> -->
+
+      <test-suite-call testfile="test/sql/shortreg/sanity.xml">
+        <test-suite-modifier value="shortreg"/>
+      </test-suite-call>
+
+      <test-suite-call testfile="test/sql/VI/insert/test.xml">
+        <test-suite-modifier value="VI_insert"/>
+      </test-suite-call>
+
+      <test-suite-call testfile="test/sql/VI/populate/test.xml">
+        <test-suite-modifier value="VI_populate"/>
+      </test-suite-call>
 
     </test-suite>
   </target>
