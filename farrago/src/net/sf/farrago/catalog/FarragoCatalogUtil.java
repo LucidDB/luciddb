@@ -913,6 +913,80 @@ public abstract class FarragoCatalogUtil
         }
         return allowedAccess;
     }
+    
+    /**
+     * Updates the row count statistic for an abstract column set
+     * 
+     * @param columnSet the column set whose row count will be updated
+     * @param rowCount number of rows returned by column set
+     */
+    public static void updateRowCount(
+        FemAbstractColumnSet columnSet,
+        Long rowCount)
+    {
+        columnSet.setAnalyzeTime(createTimestamp());
+        columnSet.setRowCount(rowCount);
+    }
+    
+    /**
+     * Updates the page count statistic for a local index
+     * 
+     * @param index the index whose page count will be updated
+     * @param pageCount number of pages on disk used by index
+     */
+    public static void updatePageCount(
+        FemLocalIndex index,
+        Long pageCount)
+    {
+        index.setAnalyzeTime(createTimestamp());
+        // FIXME: once catalog is integrated, use long value
+        index.setPageCount(pageCount);
+    }
+    
+    public static void updateHistogram(
+        FarragoRepos repos,
+        FemAbstractColumn column,
+        Long distinctValues,
+        int samplePercent,
+        int barCount,
+        long rowsPerBar,
+        long rowsLastBar,
+        List<FemColumnHistogramBar> bars)
+    {
+        FemColumnHistogram histogram = column.getHistogram();
+        if (histogram == null) {
+            histogram = repos.newFemColumnHistogram();
+            histogram.setColumn(column);
+        }
+
+        histogram.setAnalyzeTime(createTimestamp());
+        histogram.setDistinctValueCount(distinctValues);
+        histogram.setPercentageSampled(samplePercent);
+        histogram.setBarCount(barCount);
+        // TODO: make row count an attribute of bars
+        histogram.setRowsPerBar(rowsPerBar);
+        histogram.setRowsLastBar(rowsLastBar);
+        
+        List<FemColumnHistogramBar> oldBars = histogram.getBar();
+        for (FemColumnHistogramBar bar : oldBars) {
+            bar.refDelete();
+        }
+        int ordinal = 0;
+        for (FemColumnHistogramBar bar : bars) {
+            bar.setHistogram(histogram);
+            bar.setOrdinal(ordinal++);
+        }
+    }
+     
+    /**
+     * Creates a timestamp reflecting the current time
+     * 
+     * @return the timestamp encoded as a string
+     */
+    public static String createTimestamp()
+    {
+        return new Timestamp(System.currentTimeMillis()).toString();
+    }
 }
 
 // End FarragoCatalogUtil.java
