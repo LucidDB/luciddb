@@ -67,7 +67,7 @@
       <!-- doesn't use bitmap indexes yet -->
       <test name="sqbm6a" requiresSuccess="benchins1m">
         <test-metadata>
-          <notImplemented value="true"/>
+          <knownFailure value="true"/>
           <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q6a.sql"/>
@@ -76,7 +76,7 @@
       <!-- doesn't use bitmap indexes yet, very slow -->
       <test name="sqbm6b" requiresSuccess="benchins1m">
         <test-metadata>
-          <notImplemented value="true"/>
+          <knownFailure value="true"/>
           <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q6b.sql"/>
@@ -100,7 +100,7 @@
       <!-- doesn't use bitmap indexes yet, very slow -->
       <test name="sqbm6bnob" requiresSuccess="benchins1m">
         <test-metadata>
-          <notImplemented value="true"/>
+          <knownFailure value="true"/>
           <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q6bnob.sql"/>

@@ -98,6 +98,8 @@ public class SqlTest extends TestCase {
             LucidDbLocalDriver driver =
                 (LucidDbLocalDriver) clazz.newInstance();
             urlPrefix = driver.getUrlPrefix();
+        } else {
+            Class clazz = Class.forName(driverName);
         }
         System.out.println("sql-file: " + sqlFile);
         System.out.println("jdbc-driver: " + driverName);
@@ -150,8 +152,11 @@ public class SqlTest extends TestCase {
                     urlPrefix,
                     username,
                     passwd);
-            Statement stmt = conn.createStatement();
-            stmt.executeUpdate("alter system set \"codeCacheMaxBytes\" = min");
+            if (urlPrefix.contains("luciddb")) {
+                Statement stmt = conn.createStatement();
+                stmt.executeUpdate(
+                    "alter system set \"codeCacheMaxBytes\" = min");
+            }
             SqlLine.mainWithInputRedirection(args, sequenceStream);
             printStream.flush();
             diffTestLog();

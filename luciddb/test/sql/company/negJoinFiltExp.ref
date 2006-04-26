@@ -93,12 +93,11 @@
 . . . . . . . . > where emp.hobby=dept.dname and dept.dname='Marketing';
 'column0'
 'FennelToIteratorConverter'
-'  FennelCalcRel(expr#0..12=[{inputs}], expr#13=[=($t9, $t11)], proj#0..12=[{exprs}], $condition=[$t13])'
-'    FennelCartesianProductRel(leftouterjoin=[false])'
-'      LcsRowScanRel(table=[[LOCALDB, S, EMP]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$EMP$COMMISSION, SYS$CLUSTERED_INDEX$S$EMP$DEPTNO, SYS$CLUSTERED_INDEX$S$EMP$EMPNO, SYS$CLUSTERED_INDEX$S$EMP$FNAME, SYS$CLUSTERED_INDEX$S$EMP$HOBBY, SYS$CLUSTERED_INDEX$S$EMP$LNAME, SYS$CLUSTERED_INDEX$S$EMP$LOCID, SYS$CLUSTERED_INDEX$S$EMP$MANAGER, SYS$CLUSTERED_INDEX$S$EMP$SAL, SYS$CLUSTERED_INDEX$S$EMP$SEX]])'
-'      LcsRowScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$DEPT$DEPTNO, SYS$CLUSTERED_INDEX$S$DEPT$DNAME, SYS$CLUSTERED_INDEX$S$DEPT$LOCID]])'
-'        LcsIndexSearchRel(table=[[LOCALDB, S, DEPT]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPT$SYS$UNIQUE_KEY$DNAME], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
-'          FennelValuesRel(tuples=[[{ '[', _ISO-8859-1'Marketing', ']', _ISO-8859-1'Marketing' }]])'
+'  LhxJoinRel(leftKeys=[[9]], rightKeys=[[1]])'
+'    LcsRowScanRel(table=[[LOCALDB, S, EMP]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$EMP$COMMISSION, SYS$CLUSTERED_INDEX$S$EMP$DEPTNO, SYS$CLUSTERED_INDEX$S$EMP$EMPNO, SYS$CLUSTERED_INDEX$S$EMP$FNAME, SYS$CLUSTERED_INDEX$S$EMP$HOBBY, SYS$CLUSTERED_INDEX$S$EMP$LNAME, SYS$CLUSTERED_INDEX$S$EMP$LOCID, SYS$CLUSTERED_INDEX$S$EMP$MANAGER, SYS$CLUSTERED_INDEX$S$EMP$SAL, SYS$CLUSTERED_INDEX$S$EMP$SEX]])'
+'    LcsRowScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$DEPT$DEPTNO, SYS$CLUSTERED_INDEX$S$DEPT$DNAME, SYS$CLUSTERED_INDEX$S$DEPT$LOCID]])'
+'      LcsIndexSearchRel(table=[[LOCALDB, S, DEPT]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPT$SYS$UNIQUE_KEY$DNAME], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'        FennelValuesRel(tuples=[[{ '[', _ISO-8859-1'Marketing', ']', _ISO-8859-1'Marketing' }]])'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- pre filter should happen here, but we still need to join to location since
 0: jdbc:luciddb:> -- location.state is not unique

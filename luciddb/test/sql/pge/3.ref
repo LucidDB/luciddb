@@ -1,0 +1,48 @@
+0: jdbc:oracle:> -- Query 3
+0: jdbc:oracle:> 
+0: jdbc:oracle:> SELECT AL3.SRVPLN_ID, AL3.SRVPLN_NM,
+. . . . . . . . >  AL3.RC_CD, AL3.RC_DESC, AL4.REVN_YR_MO,
+. . . . . . . . > --  COUNT(AL5.USG_VAL), COUNT(AL5.USG_BILL_THERM),
+. . . . . . . . > --  COUNT(AL5.RSD_SVC_BILG_AMT)
+. . . . . . . . >  AVG(AL5.USG_VAL), AVG(AL5.USG_BILL_THERM),
+. . . . . . . . >  AVG(AL5.RSD_SVC_BILG_AMT)
+. . . . . . . . > FROM
+. . . . . . . . > PGE.REVN_DTL_RAND AL5,
+. . . . . . . . > PGE.CUST_SERV_ACCT AL1,
+. . . . . . . . > PGE.SERV_PLAN AL3,
+. . . . . . . . > PGE.GEOG AL2,
+. . . . . . . . > PGE.REVN_PRD AL4
+. . . . . . . . > -- PGE.CUST_SERV_ACCT AL1,
+. . . . . . . . > -- PGE.GEOG AL2,
+. . . . . . . . > -- PGE.SERV_PLAN AL3,
+. . . . . . . . > -- PGE.REVN_PRD AL4,
+. . . . . . . . > -- PGE.REVN_DTL_RAND AL5
+. . . . . . . . > WHERE (AL5.REVN_YR_MO=AL4.REVN_YR_MO
+. . . . . . . . >  AND AL2.GEOG_KEY=AL5.GEOG_KEY AND AL3.SRVPLN_KEY=AL5.SRVPLN_KEY
+. . . . . . . . >  AND AL1.CUST_SERV_ACCT_KEY=AL5.CUST_SERV_ACCT_KEY)
+. . . . . . . . >  AND (AL3.SRVPLN_NM='GAS - MULT FAMILY HOUSING'
+. . . . . . . . >  AND AL3.SPO_ID=1
+. . . . . . . . >  AND AL3.RC_DESC='MULTIPLE DWELLING - G''NRL SERV'
+. . . . . . . . >  AND AL4.REVN_YR=1995)
+. . . . . . . . > GROUP BY AL3.SRVPLN_ID,
+. . . . . . . . >  AL3.SRVPLN_NM, AL3.RC_CD, AL3.RC_DESC, AL4.REVN_YR_MO
+. . . . . . . . > ORDER BY 5,6,7,8
+. . . . . . . . > ;
++------------+----------------------------+--------+---------------------------------+-------------+-------------------+--------------------------+----------------------------+
+| SRVPLN_ID  |         SRVPLN_NM          | RC_CD  |             RC_DESC             | REVN_YR_MO  | AVG(AL5.USG_VAL)  | AVG(AL5.USG_BILL_THERM)  | AVG(AL5.RSD_SVC_BILG_AMT)  |
++------------+----------------------------+--------+---------------------------------+-------------+-------------------+--------------------------+----------------------------+
+| 315        | GAS - MULT FAMILY HOUSING  | 05     | MULTIPLE DWELLING - G'NRL SERV  | 199501      | 172.923471        | 177.36075252             | 105.748684146              |
+| 315        | GAS - MULT FAMILY HOUSING  | 05     | MULTIPLE DWELLING - G'NRL SERV  | 199502      | 170.664081        | 175.04338572             | 104.366989006              |
+| 315        | GAS - MULT FAMILY HOUSING  | 05     | MULTIPLE DWELLING - G'NRL SERV  | 199503      | 161.212167        | 165.34893204             | 98.586816642               |
+| 315        | GAS - MULT FAMILY HOUSING  | 05     | MULTIPLE DWELLING - G'NRL SERV  | 199504      | 163.124937        | 167.31078444             | 99.756541662               |
+| 315        | GAS - MULT FAMILY HOUSING  | 05     | MULTIPLE DWELLING - G'NRL SERV  | 199505      | 159.055014        | 163.13642568             | 97.267642964               |
+| 315        | GAS - MULT FAMILY HOUSING  | 05     | MULTIPLE DWELLING - G'NRL SERV  | 199506      | 154.32381         | 158.2838172              | 94.37434806                |
+| 315        | GAS - MULT FAMILY HOUSING  | 05     | MULTIPLE DWELLING - G'NRL SERV  | 199507      | 158.891403        | 162.96861636             | 97.167589178               |
+| 315        | GAS - MULT FAMILY HOUSING  | 05     | MULTIPLE DWELLING - G'NRL SERV  | 199508      | 160.016169        | 164.12224428             | 97.855422494               |
+| 315        | GAS - MULT FAMILY HOUSING  | 05     | MULTIPLE DWELLING - G'NRL SERV  | 199509      | 174.550677        | 179.02971324             | 106.743776902              |
+| 315        | GAS - MULT FAMILY HOUSING  | 05     | MULTIPLE DWELLING - G'NRL SERV  | 199510      | 164.916072        | 169.14788064             | 100.851882672              |
+| 315        | GAS - MULT FAMILY HOUSING  | 05     | MULTIPLE DWELLING - G'NRL SERV  | 199511      | 156.055956        | 160.06041072             | 95.433615256               |
+| 315        | GAS - MULT FAMILY HOUSING  | 05     | MULTIPLE DWELLING - G'NRL SERV  | 199512      | 170.749782        | 175.13128584             | 104.419398132              |
++------------+----------------------------+--------+---------------------------------+-------------+-------------------+--------------------------+----------------------------+
+0: jdbc:oracle:> 
+0: jdbc:oracle:> !quit

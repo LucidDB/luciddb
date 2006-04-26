@@ -1,0 +1,120 @@
+0: jdbc:oracle:> -- Query 9
+0: jdbc:oracle:> 
+0: jdbc:oracle:> SELECT AL2.ST_CD, AL2.GEOG_CNTY_DESC, AL2.RVTWN_DESC,
+. . . . . . . . >  AL3.SRVPLN_ID, AL3.SRVPLN_NM, AL3.SPO_ID, AL3.SPO_NM,
+. . . . . . . . >  COUNT(AL1.CU_ID)
+. . . . . . . . > FROM
+. . . . . . . . > PGE.REVN_DTL_RAND AL5,
+. . . . . . . . > PGE.CUST_SERV_ACCT AL1,
+. . . . . . . . > PGE.SERV_PLAN AL3,
+. . . . . . . . > PGE.GEOG AL2,
+. . . . . . . . > PGE.REVN_PRD AL4
+. . . . . . . . > -- PGE.CUST_SERV_ACCT AL1,
+. . . . . . . . > -- PGE.GEOG AL2,
+. . . . . . . . > -- PGE.SERV_PLAN AL3,
+. . . . . . . . > -- PGE.REVN_PRD AL4,
+. . . . . . . . > -- PGE.REVN_DTL_RAND AL5
+. . . . . . . . > WHERE (AL5.REVN_YR_MO=AL4.REVN_YR_MO
+. . . . . . . . >  AND AL2.GEOG_KEY=AL5.GEOG_KEY
+. . . . . . . . >  AND AL3.SRVPLN_KEY=AL5.SRVPLN_KEY
+. . . . . . . . >  AND AL1.CUST_SERV_ACCT_KEY=AL5.CUST_SERV_ACCT_KEY)
+. . . . . . . . > GROUP by  AL2.ST_CD, AL2.GEOG_CNTY_DESC, AL2.RVTWN_DESC,
+. . . . . . . . >  AL3.SRVPLN_ID, AL3.SRVPLN_NM, AL3.SPO_ID, AL3.SPO_NM
+. . . . . . . . > ORDER BY  2,3,4,5,7,8
+. . . . . . . . > ;
++--------+-----------------+--------------------------+------------+----------------------------+---------+----------------------------+-------------------+
+| ST_CD  | GEOG_CNTY_DESC  |        RVTWN_DESC        | SRVPLN_ID  |         SRVPLN_NM          | SPO_ID  |           SPO_NM           | COUNT(AL1.CU_ID)  |
++--------+-----------------+--------------------------+------------+----------------------------+---------+----------------------------+-------------------+
+| IN     | CLINTON         | ELKHART                  | 311        | GAS - RESIDENTIAL          | 1       | GENERAL SERVICE - RES      | 24                |
+| IN     | ELKHART         | ELKHART                  | 311        | GAS - RESIDENTIAL          | 1       | GENERAL SERVICE - RES      | 45192             |
+| IN     | ELKHART         | ELKHART                  | 315        | GAS - MULT FAMILY HOUSING  | 1       | GENERAL SERVICE            | 1512              |
+| IN     | FULTON          | ELKHART                  | 311        | GAS - RESIDENTIAL          | 1       | GENERAL SERVICE - RES      | 24                |
+| IN     | LAKE            | ELKHART                  | 311        | GAS - RESIDENTIAL          | 1       | GENERAL SERVICE - RES      | 192               |
+| IN     | LAKE            | GARY                     | 311        | GAS - RESIDENTIAL          | 1       | GENERAL SERVICE - RES      | 34248             |
+| IN     | LAKE            | GARY                     | 315        | GAS - MULT FAMILY HOUSING  | 1       | GENERAL SERVICE            | 1080              |
+| IN     | LAKE            | GARY                     | 811        | ELEC - RESIDENTIAL         | 2       | ELE SPACE HEAT - RES       | 1560              |
+| IN     | LAKE            | GARY                     | 811        | ELEC - RESIDENTIAL         | 1       | GENERAL SERVICE - RES      | 35808             |
+| IN     | LAKE            | GARY                     | 821        | ELEC - GEN SERV - SMALL    | 1       | GENERAL SERVICE            | 48                |
+| IN     | LAKE            | GARY                     | 878        | ELEC - DUSK TO DAWN LTG    | 4       | 100 WATT HIGH PRES SODIUM  | 6864              |
+| IN     | LAKE            | GARY                     | 878        | ELEC - DUSK TO DAWN LTG    | 7       | 150 WATT HPS FLOODLIGHT    | 192               |
+| IN     | LAKE            | GARY                     | 878        | ELEC - DUSK TO DAWN LTG    | 1       | 175 WATT MERCURY VAPOR     | 9840              |
+| IN     | LAKE            | GARY                     | 878        | ELEC - DUSK TO DAWN LTG    | 5       | 250 WATT HIGH PRES SODIUM  | 528               |
+| IN     | LAKE            | GARY                     | 878        | ELEC - DUSK TO DAWN LTG    | 8       | 250 WATT HPS FLOODLIGHT    | 384               |
+| IN     | LAKE            | GARY                     | 878        | ELEC - DUSK TO DAWN LTG    | 6       | 400 WATT HIGH PRES SODIUM  | 96                |
+| IN     | LAKE            | GARY                     | 878        | ELEC - DUSK TO DAWN LTG    | 9       | 400 WATT HPS FLOODLIGHT    | 144               |
+| IN     | LAKE            | GARY                     | 878        | ELEC - DUSK TO DAWN LTG    | 2       | 400 WATT MERCURY VAPOR     | 1536              |
+| IN     | LAKE            | GARY                     | 878        | ELEC - DUSK TO DAWN LTG    | 10      | HPS ADDITIONAL FACILITIES  | 1920              |
+| IN     | LAKE            | GARY                     | 878        | ELEC - DUSK TO DAWN LTG    | 3       | MV ADDITIONAL FACILITIES   | 3168              |
+| IN     | LAKE            | MERRILLVILLE             | 311        | GAS - RESIDENTIAL          | 1       | GENERAL SERVICE - RES      | 29160             |
+| IN     | LAKE            | MERRILLVILLE             | 315        | GAS - MULT FAMILY HOUSING  | 1       | GENERAL SERVICE            | 48                |
+| IN     | LAKE            | MERRILLVILLE             | 811        | ELEC - RESIDENTIAL         | 2       | ELE SPACE HEAT - RES       | 2232              |
+| IN     | LAKE            | MERRILLVILLE             | 811        | ELEC - RESIDENTIAL         | 1       | GENERAL SERVICE - RES      | 29568             |
+| IN     | LAKE            | MERRILLVILLE             | 812        | ELEC - GOOD CENTS RES      | 2       | ELECTRIC SPACE HEATING     | 192               |
+| IN     | LAKE            | MERRILLVILLE             | 813        | ELEC - GOOD CENTS MULT     | 2       | ELECTRIC SPACE HEATING     | 72                |
+| IN     | LAKE            | MERRILLVILLE             | 821        | ELEC - GEN SERV - SMALL    | 1       | GENERAL SERVICE            | 24                |
+| IN     | LAKE            | MERRILLVILLE             | 878        | ELEC - DUSK TO DAWN LTG    | 4       | 100 WATT HIGH PRES SODIUM  | 912               |
+| IN     | LAKE            | MERRILLVILLE             | 878        | ELEC - DUSK TO DAWN LTG    | 7       | 150 WATT HPS FLOODLIGHT    | 48                |
+| IN     | LAKE            | MERRILLVILLE             | 878        | ELEC - DUSK TO DAWN LTG    | 1       | 175 WATT MERCURY VAPOR     | 1680              |
+| IN     | LAKE            | MERRILLVILLE             | 878        | ELEC - DUSK TO DAWN LTG    | 5       | 250 WATT HIGH PRES SODIUM  | 48                |
+| IN     | LAKE            | MERRILLVILLE             | 878        | ELEC - DUSK TO DAWN LTG    | 6       | 400 WATT HIGH PRES SODIUM  | 72                |
+| IN     | LAKE            | MERRILLVILLE             | 878        | ELEC - DUSK TO DAWN LTG    | 2       | 400 WATT MERCURY VAPOR     | 240               |
+| IN     | LAKE            | MERRILLVILLE             | 878        | ELEC - DUSK TO DAWN LTG    | 10      | HPS ADDITIONAL FACILITIES  | 384               |
+| IN     | LAKE            | MERRILLVILLE             | 878        | ELEC - DUSK TO DAWN LTG    | 3       | MV ADDITIONAL FACILITIES   | 384               |
+| IN     | LAKE            | ROSS                     | 878        | ELEC - DUSK TO DAWN LTG    | 1       | 175 WATT MERCURY VAPOR     | 96                |
+| IN     | LAKE            | ROSS                     | 878        | ELEC - DUSK TO DAWN LTG    | 3       | MV ADDITIONAL FACILITIES   | 48                |
+| IN     | LAPORTE         | FISH LAKE                | 878        | ELEC - DUSK TO DAWN LTG    | 4       | 100 WATT HIGH PRES SODIUM  | 240               |
+| IN     | LAPORTE         | FISH LAKE                | 878        | ELEC - DUSK TO DAWN LTG    | 1       | 175 WATT MERCURY VAPOR     | 528               |
+| IN     | LAPORTE         | FISH LAKE                | 878        | ELEC - DUSK TO DAWN LTG    | 10      | HPS ADDITIONAL FACILITIES  | 144               |
+| IN     | LAPORTE         | FISH LAKE                | 878        | ELEC - DUSK TO DAWN LTG    | 3       | MV ADDITIONAL FACILITIES   | 48                |
+| IN     | LAPORTE         | GARY                     | 311        | GAS - RESIDENTIAL          | 1       | GENERAL SERVICE - RES      | 24                |
+| IN     | LAPORTE         | GARY                     | 811        | ELEC - RESIDENTIAL         | 2       | ELE SPACE HEAT - RES       | 24                |
+| IN     | LAPORTE         | KINGSBURY                | 878        | ELEC - DUSK TO DAWN LTG    | 4       | 100 WATT HIGH PRES SODIUM  | 96                |
+| IN     | LAPORTE         | KINGSBURY                | 878        | ELEC - DUSK TO DAWN LTG    | 1       | 175 WATT MERCURY VAPOR     | 144               |
+| IN     | LAPORTE         | KINGSFORD HEIGHTS        | 311        | GAS - RESIDENTIAL          | 1       | GENERAL SERVICE - RES      | 3624              |
+| IN     | LAPORTE         | LA PORTE                 | 311        | GAS - RESIDENTIAL          | 1       | GENERAL SERVICE - RES      | 18288             |
+| IN     | LAPORTE         | LA PORTE                 | 315        | GAS - MULT FAMILY HOUSING  | 1       | GENERAL SERVICE            | 24                |
+| IN     | LAPORTE         | LA PORTE                 | 811        | ELEC - RESIDENTIAL         | 2       | ELE SPACE HEAT - RES       | 552               |
+| IN     | LAPORTE         | LA PORTE                 | 811        | ELEC - RESIDENTIAL         | 1       | GENERAL SERVICE - RES      | 18504             |
+| IN     | LAPORTE         | LA PORTE                 | 878        | ELEC - DUSK TO DAWN LTG    | 4       | 100 WATT HIGH PRES SODIUM  | 1152              |
+| IN     | LAPORTE         | LA PORTE                 | 878        | ELEC - DUSK TO DAWN LTG    | 1       | 175 WATT MERCURY VAPOR     | 1296              |
+| IN     | LAPORTE         | LA PORTE                 | 878        | ELEC - DUSK TO DAWN LTG    | 5       | 250 WATT HIGH PRES SODIUM  | 24                |
+| IN     | LAPORTE         | LA PORTE                 | 878        | ELEC - DUSK TO DAWN LTG    | 10      | HPS ADDITIONAL FACILITIES  | 216               |
+| IN     | LAPORTE         | LA PORTE                 | 878        | ELEC - DUSK TO DAWN LTG    | 3       | MV ADDITIONAL FACILITIES   | 384               |
+| IN     | LAPORTE         | NEW CARLISLE             | 311        | GAS - RESIDENTIAL          | 1       | GENERAL SERVICE - RES      | 48                |
+| IN     | LAPORTE         | RURAL - FARM             | 311        | GAS - RESIDENTIAL          | 1       | GENERAL SERVICE - RES      | 480               |
+| IN     | LAPORTE         | RURAL - FARM             | 811        | ELEC - RESIDENTIAL         | 1       | GENERAL SERVICE - RES      | 480               |
+| IN     | LAPORTE         | RURAL - FARM             | 878        | ELEC - DUSK TO DAWN LTG    | 4       | 100 WATT HIGH PRES SODIUM  | 432               |
+| IN     | LAPORTE         | RURAL - FARM             | 878        | ELEC - DUSK TO DAWN LTG    | 1       | 175 WATT MERCURY VAPOR     | 720               |
+| IN     | LAPORTE         | RURAL - FARM             | 878        | ELEC - DUSK TO DAWN LTG    | 5       | 250 WATT HIGH PRES SODIUM  | 48                |
+| IN     | LAPORTE         | RURAL - FARM             | 878        | ELEC - DUSK TO DAWN LTG    | 10      | HPS ADDITIONAL FACILITIES  | 48                |
+| IN     | LAPORTE         | RURAL - FARM             | 878        | ELEC - DUSK TO DAWN LTG    | 3       | MV ADDITIONAL FACILITIES   | 384               |
+| IN     | LAPORTE         | RURAL - NON-FARM         | 311        | GAS - RESIDENTIAL          | 1       | GENERAL SERVICE - RES      | 14592             |
+| IN     | LAPORTE         | RURAL - NON-FARM         | 311        | GAS - RESIDENTIAL          | 2       | MEDIUM PRESSURE SERVICE    | 24                |
+| IN     | LAPORTE         | RURAL - NON-FARM         | 811        | ELEC - RESIDENTIAL         | 2       | ELE SPACE HEAT - RES       | 72                |
+| IN     | LAPORTE         | RURAL - NON-FARM         | 811        | ELEC - RESIDENTIAL         | 1       | GENERAL SERVICE - RES      | 3984              |
+| IN     | LAPORTE         | RURAL - NON-FARM         | 878        | ELEC - DUSK TO DAWN LTG    | 4       | 100 WATT HIGH PRES SODIUM  | 2112              |
+| IN     | LAPORTE         | RURAL - NON-FARM         | 878        | ELEC - DUSK TO DAWN LTG    | 1       | 175 WATT MERCURY VAPOR     | 3072              |
+| IN     | LAPORTE         | RURAL - NON-FARM         | 878        | ELEC - DUSK TO DAWN LTG    | 5       | 250 WATT HIGH PRES SODIUM  | 96                |
+| IN     | LAPORTE         | RURAL - NON-FARM         | 878        | ELEC - DUSK TO DAWN LTG    | 2       | 400 WATT MERCURY VAPOR     | 48                |
+| IN     | LAPORTE         | RURAL - NON-FARM         | 878        | ELEC - DUSK TO DAWN LTG    | 10      | HPS ADDITIONAL FACILITIES  | 240               |
+| IN     | LAPORTE         | RURAL - NON-FARM         | 878        | ELEC - DUSK TO DAWN LTG    | 3       | MV ADDITIONAL FACILITIES   | 1152              |
+| IN     | LAPORTE         | STILLWELL                | 878        | ELEC - DUSK TO DAWN LTG    | 4       | 100 WATT HIGH PRES SODIUM  | 48                |
+| IN     | LAPORTE         | STILLWELL                | 878        | ELEC - DUSK TO DAWN LTG    | 1       | 175 WATT MERCURY VAPOR     | 144               |
+| IN     | LAPORTE         | UNION MILLS - WELLSBORO  | 878        | ELEC - DUSK TO DAWN LTG    | 4       | 100 WATT HIGH PRES SODIUM  | 96                |
+| IN     | LAPORTE         | UNION MILLS - WELLSBORO  | 878        | ELEC - DUSK TO DAWN LTG    | 1       | 175 WATT MERCURY VAPOR     | 48                |
+| IN     | LAPORTE         | UNION MILLS - WELLSBORO  | 878        | ELEC - DUSK TO DAWN LTG    | 3       | MV ADDITIONAL FACILITIES   | 48                |
+| IN     | LAPORTE         | WESTVILLE                | 878        | ELEC - DUSK TO DAWN LTG    | 1       | 175 WATT MERCURY VAPOR     | 144               |
+| IN     | LAPORTE         | WESTVILLE                | 878        | ELEC - DUSK TO DAWN LTG    | 3       | MV ADDITIONAL FACILITIES   | 48                |
+| IN     | PORTER          | ELKHART                  | 311        | GAS - RESIDENTIAL          | 1       | GENERAL SERVICE - RES      | 24                |
+| IN     | PORTER          | LA PORTE                 | 311        | GAS - RESIDENTIAL          | 1       | GENERAL SERVICE - RES      | 72                |
+| IN     | PORTER          | LA PORTE                 | 811        | ELEC - RESIDENTIAL         | 1       | GENERAL SERVICE - RES      | 72                |
+| IN     | PORTER          | RURAL - FARM             | 311        | GAS - RESIDENTIAL          | 1       | GENERAL SERVICE - RES      | 24                |
+| IN     | PORTER          | RURAL - FARM             | 811        | ELEC - RESIDENTIAL         | 1       | GENERAL SERVICE - RES      | 24                |
+| IN     | PORTER          | RURAL - FARM             | 878        | ELEC - DUSK TO DAWN LTG    | 4       | 100 WATT HIGH PRES SODIUM  | 48                |
+| IN     | PORTER          | RURAL - NON-FARM         | 311        | GAS - RESIDENTIAL          | 1       | GENERAL SERVICE - RES      | 24                |
+| IN     | PORTER          | RURAL - NON-FARM         | 811        | ELEC - RESIDENTIAL         | 1       | GENERAL SERVICE - RES      | 24                |
+| IN     | PORTER          | WESTVILLE                | 878        | ELEC - DUSK TO DAWN LTG    | 4       | 100 WATT HIGH PRES SODIUM  | 48                |
+| IN     | ST JOSEPH       | ELKHART                  | 311        | GAS - RESIDENTIAL          | 1       | GENERAL SERVICE - RES      | 13344             |
++--------+-----------------+--------------------------+------------+----------------------------+---------+----------------------------+-------------------+
+0: jdbc:oracle:> 
+0: jdbc:oracle:> !quit

@@ -2184,71 +2184,73 @@
 0: jdbc:luciddb:> select EL.CITY, DL.CITY, EMP.LNAME, DEPT.DNAME
 . . . . . . . . > from LOCATION EL, LOCATION DL, EMP, DEPT
 . . . . . . . . > where EL.LOCID = EMP.LOCID and DL.LOCID=DEPT.LOCID
-. . . . . . . . > order by EMP.LNAME, EL.CITY, DL.CITY, DEPT.DNAME;
+. . . . . . . . > --order by EMP.LNAME, EL.CITY, DL.CITY, DEPT.DNAME;
+. . . . . . . . > order by 3,1,2,4;
 +----------------+----------------+-----------+--------------+
 |      CITY      |      CITY      |   LNAME   |    DNAME     |
 +----------------+----------------+-----------+--------------+
-| Menlo Park     | San Francisco  | Andrews   | Accounting   |
-| Menlo Park     | San Mateo      | Andrews   | Development  |
-| Menlo Park     | San Francisco  | Andrews   | Marketing    |
-| Menlo Park     | San Mateo      | Andrews   | Sales        |
 | Menlo Park     | Menlo Park     | Andrews   | Support      |
-| Los Angeles    | San Francisco  | Brown     | Accounting   |
-| Los Angeles    | San Mateo      | Brown     | Development  |
-| Los Angeles    | San Francisco  | Brown     | Marketing    |
-| Los Angeles    | San Mateo      | Brown     | Sales        |
+| Menlo Park     | San Francisco  | Andrews   | Accounting   |
+| Menlo Park     | San Francisco  | Andrews   | Marketing    |
+| Menlo Park     | San Mateo      | Andrews   | Development  |
+| Menlo Park     | San Mateo      | Andrews   | Sales        |
 | Los Angeles    | Menlo Park     | Brown     | Support      |
-| San Mateo      | San Francisco  | Bush      | Accounting   |
-| San Mateo      | San Mateo      | Bush      | Development  |
-| San Mateo      | San Francisco  | Bush      | Marketing    |
-| San Mateo      | San Mateo      | Bush      | Sales        |
+| Los Angeles    | San Francisco  | Brown     | Accounting   |
+| Los Angeles    | San Francisco  | Brown     | Marketing    |
+| Los Angeles    | San Mateo      | Brown     | Development  |
+| Los Angeles    | San Mateo      | Brown     | Sales        |
 | San Mateo      | Menlo Park     | Bush      | Support      |
-| San Mateo      | San Francisco  | Fratz     | Accounting   |
-| San Mateo      | San Mateo      | Fratz     | Development  |
-| San Mateo      | San Francisco  | Fratz     | Marketing    |
-| San Mateo      | San Mateo      | Fratz     | Sales        |
+| San Mateo      | San Francisco  | Bush      | Accounting   |
+| San Mateo      | San Francisco  | Bush      | Marketing    |
+| San Mateo      | San Mateo      | Bush      | Development  |
+| San Mateo      | San Mateo      | Bush      | Sales        |
 | San Mateo      | Menlo Park     | Fratz     | Support      |
-| San Mateo      | San Francisco  | Guy       | Accounting   |
-| San Mateo      | San Mateo      | Guy       | Development  |
-| San Mateo      | San Francisco  | Guy       | Marketing    |
-| San Mateo      | San Mateo      | Guy       | Sales        |
+| San Mateo      | San Francisco  | Fratz     | Accounting   |
+| San Mateo      | San Francisco  | Fratz     | Marketing    |
+| San Mateo      | San Mateo      | Fratz     | Development  |
+| San Mateo      | San Mateo      | Fratz     | Sales        |
 | San Mateo      | Menlo Park     | Guy       | Support      |
-| Menlo Park     | San Francisco  | Jones     | Accounting   |
-| Menlo Park     | San Mateo      | Jones     | Development  |
-| Menlo Park     | San Francisco  | Jones     | Marketing    |
-| Menlo Park     | San Mateo      | Jones     | Sales        |
+| San Mateo      | San Francisco  | Guy       | Accounting   |
+| San Mateo      | San Francisco  | Guy       | Marketing    |
+| San Mateo      | San Mateo      | Guy       | Development  |
+| San Mateo      | San Mateo      | Guy       | Sales        |
 | Menlo Park     | Menlo Park     | Jones     | Support      |
-| San Francisco  | San Francisco  | Nife      | Accounting   |
-| San Francisco  | San Mateo      | Nife      | Development  |
-| San Francisco  | San Francisco  | Nife      | Marketing    |
-| San Francisco  | San Mateo      | Nife      | Sales        |
+| Menlo Park     | San Francisco  | Jones     | Accounting   |
+| Menlo Park     | San Francisco  | Jones     | Marketing    |
+| Menlo Park     | San Mateo      | Jones     | Development  |
+| Menlo Park     | San Mateo      | Jones     | Sales        |
 | San Francisco  | Menlo Park     | Nife      | Support      |
-| San Francisco  | San Francisco  | Reynolds  | Accounting   |
-| San Francisco  | San Mateo      | Reynolds  | Development  |
-| San Francisco  | San Francisco  | Reynolds  | Marketing    |
-| San Francisco  | San Mateo      | Reynolds  | Sales        |
+| San Francisco  | San Francisco  | Nife      | Accounting   |
+| San Francisco  | San Francisco  | Nife      | Marketing    |
+| San Francisco  | San Mateo      | Nife      | Development  |
+| San Francisco  | San Mateo      | Nife      | Sales        |
 | San Francisco  | Menlo Park     | Reynolds  | Support      |
-| San Francisco  | San Francisco  | Roy       | Accounting   |
-| San Francisco  | San Mateo      | Roy       | Development  |
-| San Francisco  | San Francisco  | Roy       | Marketing    |
-| San Francisco  | San Mateo      | Roy       | Sales        |
+| San Francisco  | San Francisco  | Reynolds  | Accounting   |
+| San Francisco  | San Francisco  | Reynolds  | Marketing    |
+| San Francisco  | San Mateo      | Reynolds  | Development  |
+| San Francisco  | San Mateo      | Reynolds  | Sales        |
 | San Francisco  | Menlo Park     | Roy       | Support      |
-| Menlo Park     | San Francisco  | Webber    | Accounting   |
-| Menlo Park     | San Mateo      | Webber    | Development  |
-| Menlo Park     | San Francisco  | Webber    | Marketing    |
-| Menlo Park     | San Mateo      | Webber    | Sales        |
+| San Francisco  | San Francisco  | Roy       | Accounting   |
+| San Francisco  | San Francisco  | Roy       | Marketing    |
+| San Francisco  | San Mateo      | Roy       | Development  |
+| San Francisco  | San Mateo      | Roy       | Sales        |
 | Menlo Park     | Menlo Park     | Webber    | Support      |
-| San Mateo      | San Francisco  | Williams  | Accounting   |
-| San Mateo      | San Mateo      | Williams  | Development  |
-| San Mateo      | San Francisco  | Williams  | Marketing    |
-| San Mateo      | San Mateo      | Williams  | Sales        |
+| Menlo Park     | San Francisco  | Webber    | Accounting   |
+| Menlo Park     | San Francisco  | Webber    | Marketing    |
+| Menlo Park     | San Mateo      | Webber    | Development  |
+| Menlo Park     | San Mateo      | Webber    | Sales        |
 | San Mateo      | Menlo Park     | Williams  | Support      |
+| San Mateo      | San Francisco  | Williams  | Accounting   |
+| San Mateo      | San Francisco  | Williams  | Marketing    |
+| San Mateo      | San Mateo      | Williams  | Development  |
+| San Mateo      | San Mateo      | Williams  | Sales        |
 +----------------+----------------+-----------+--------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- many to many query
 0: jdbc:luciddb:> select PRODUCTS.NAME, PRODUCTS.PRICE, SALES.PRICE
 . . . . . . . . > from SALES, PRODUCTS where SALES.PRICE=PRODUCTS.PRICE
-. . . . . . . . > order by PRODUCTS.NAME, PRODUCTS.PRICE, PRODUCTS.PRICE;
+. . . . . . . . > --order by PRODUCTS.NAME, PRODUCTS.PRICE, SALES.PRICE;
+. . . . . . . . > order by 1,2,3;
 +---------------+--------+--------+
 |     NAME      | PRICE  | PRICE  |
 +---------------+--------+--------+
@@ -2276,131 +2278,132 @@
 . . . . . . . . > WHERE M.LNAME = F.LNAME
 . . . . . . . . > AND M.SEX = 'M'
 . . . . . . . . > AND F.SEX = 'F'
-. . . . . . . . > order by M.FNAME, F.FNAME, M.LNAME;
+. . . . . . . . > --order by M.FNAME, F.FNAME, M.LNAME;
+. . . . . . . . > order by 1,2,3;
 +-----------+-----------+---------------+
 |   FNAME   |   FNAME   |     LNAME     |
 +-----------+-----------+---------------+
+| Andy      | Denise    | Peterson      |
 | Andy      | Maggie    | OLeary        |
 | Andy      | Ophelia   | OLeary        |
-| Andy      | Denise    | Peterson      |
-| Anthony   | Samantha  | Frank         |
-| Anthony   | Hope      | Smith         |
-| Anthony   | Veronica  | Smith         |
-| Anthony   | Pauline   | Smith         |
-| Anthony   | Kathy     | Stevens       |
-| Anthony   | Hope      | Stevens       |
 | Anthony   | Carla     | Stevens       |
+| Anthony   | Hope      | Smith         |
+| Anthony   | Hope      | Stevens       |
+| Anthony   | Kathy     | Stevens       |
+| Anthony   | Pauline   | Smith         |
+| Anthony   | Samantha  | Frank         |
+| Anthony   | Veronica  | Smith         |
+| Barry     | Carla     | Stevens       |
 | Barry     | Hope      | Stevens       |
 | Barry     | Kathy     | Stevens       |
-| Barry     | Carla     | Stevens       |
-| Bill      | Wendy     | Kemp          |
-| Bill      | Terri     | Kemp          |
-| Bill      | Jeniffer  | Kemp          |
 | Bill      | Alice     | Kemp          |
-| Bill      | Maggie    | Kemp          |
+| Bill      | Jeniffer  | Kemp          |
 | Bill      | Jeniffer  | Mantela       |
-| Bruce     | Terri     | Grant         |
+| Bill      | Maggie    | Kemp          |
+| Bill      | Terri     | Kemp          |
+| Bill      | Wendy     | Kemp          |
 | Bruce     | Bianca    | Grant         |
 | Bruce     | Erica     | Grant         |
+| Bruce     | Terri     | Grant         |
 | Ceasar    | Anita     | Locicero      |
 | Ceasar    | Jeniffer  | Mantela       |
-| Daniel    | Veronica  | Bush          |
-| Daniel    | Missy     | Bush          |
 | Daniel    | Hope      | Bush          |
 | Daniel    | Jeniffer  | Bush          |
-| Daniel    | Pauline   | Bush          |
 | Daniel    | Margaret  | Bush          |
-| Dave      | Kathy     | Stevens       |
-| Dave      | Hope      | Stevens       |
+| Daniel    | Missy     | Bush          |
+| Daniel    | Pauline   | Bush          |
+| Daniel    | Veronica  | Bush          |
 | Dave      | Carla     | Stevens       |
-| David     | Patty     | Howard        |
+| Dave      | Hope      | Stevens       |
+| Dave      | Kathy     | Stevens       |
 | David     | Denise    | Peterson      |
+| David     | Patty     | Howard        |
 | Earl      | Holly     | Dole          |
 | Earl      | Veronica  | Dole          |
 | Eric      | Anita     | Locicero      |
 | Eric      | Anita     | Locicero      |
-| Eric      | Terri     | Randolph      |
 | Eric      | Anita     | Randolph      |
 | Eric      | Patty     | Randolph      |
-| Frank     | Terri     | Noose         |
-| Frank     | Patty     | Noose         |
+| Eric      | Terri     | Randolph      |
 | Frank     | Mary      | Noose         |
-| Fred      | Terri     | Noose         |
-| Fred      | Patty     | Noose         |
+| Frank     | Patty     | Noose         |
+| Frank     | Terri     | Noose         |
 | Fred      | Mary      | Noose         |
-| Fritz     | Erica     | Grant         |
+| Fred      | Patty     | Noose         |
+| Fred      | Terri     | Noose         |
 | Fritz     | Bianca    | Grant         |
+| Fritz     | Erica     | Grant         |
 | Fritz     | Terri     | Grant         |
-| Gary      | Margaret  | Everett       |
-| Gary      | Pauline   | Everett       |
-| Gary      | Ophelia   | Everett       |
 | Gary      | Maggie    | Everett       |
-| Gerry     | Jeniffer  | Bush          |
-| Gerry     | Pauline   | Bush          |
-| Gerry     | Margaret  | Bush          |
+| Gary      | Margaret  | Everett       |
+| Gary      | Ophelia   | Everett       |
+| Gary      | Pauline   | Everett       |
 | Gerry     | Hope      | Bush          |
-| Gerry     | Veronica  | Bush          |
+| Gerry     | Jeniffer  | Bush          |
+| Gerry     | Margaret  | Bush          |
 | Gerry     | Missy     | Bush          |
-| Harry     | Terri     | Andrews       |
+| Gerry     | Pauline   | Bush          |
+| Gerry     | Veronica  | Bush          |
 | Harry     | Betty     | Andrews       |
-| Hugh      | Terri     | Andrews       |
+| Harry     | Terri     | Andrews       |
+| Hugh      | Alice     | Kemp          |
 | Hugh      | Betty     | Andrews       |
 | Hugh      | Jeniffer  | Kemp          |
-| Hugh      | Alice     | Kemp          |
 | Hugh      | Maggie    | Kemp          |
+| Hugh      | Terri     | Andrews       |
 | Hugh      | Terri     | Kemp          |
 | Hugh      | Wendy     | Kemp          |
-| Ian       | Veronica  | Bush          |
-| Ian       | Margaret  | Bush          |
-| Ian       | Missy     | Bush          |
 | Ian       | Hope      | Bush          |
 | Ian       | Jeniffer  | Bush          |
+| Ian       | Margaret  | Bush          |
+| Ian       | Missy     | Bush          |
 | Ian       | Pauline   | Bush          |
+| Ian       | Veronica  | Bush          |
 | Jake      | Hope      | Bush          |
-| Jake      | Missy     | Bush          |
-| Jake      | Veronica  | Bush          |
 | Jake      | Jeniffer  | Bush          |
-| Jake      | Pauline   | Bush          |
 | Jake      | Margaret  | Bush          |
-| Kevin     | Patty     | Carlucchi     |
+| Jake      | Missy     | Bush          |
+| Jake      | Pauline   | Bush          |
+| Jake      | Veronica  | Bush          |
+| Kevin     | Anita     | Carlucchi     |
 | Kevin     | Anita     | Carlucchi     |
 | Kevin     | Florence  | Carlucchi     |
-| Kevin     | Anita     | Carlucchi     |
+| Kevin     | Patty     | Carlucchi     |
 | Kevin     | Samantha  | Frank         |
-| Larry     | Terri     | Randolph      |
 | Larry     | Anita     | Randolph      |
 | Larry     | Patty     | Randolph      |
-| Max       | Samantha  | Frank         |
+| Larry     | Terri     | Randolph      |
 | Max       | Denise    | Peterson      |
-| Monty     | Terri     | Grant         |
+| Max       | Samantha  | Frank         |
 | Monty     | Bianca    | Grant         |
 | Monty     | Erica     | Grant         |
-| Oliver    | Erica     | Grant         |
+| Monty     | Terri     | Grant         |
 | Oliver    | Bianca    | Grant         |
+| Oliver    | Erica     | Grant         |
 | Oliver    | Terri     | Grant         |
-| Paul      | Mary      | Van Morrison  |
+| Paul      | Batilda   | Van Morrison  |
 +-----------+-----------+---------------+
 |   FNAME   |   FNAME   |     LNAME     |
 +-----------+-----------+---------------+
-| Paul      | Patty     | Van Morrison  |
-| Paul      | Batilda   | Van Morrison  |
-| Paul      | Margaret  | Van Morrison  |
 | Paul      | Lisa      | Van Morrison  |
+| Paul      | Margaret  | Van Morrison  |
+| Paul      | Mary      | Van Morrison  |
+| Paul      | Patty     | Van Morrison  |
 | Peter     | Patty     | Howard        |
+| Randy     | Hope      | Smith         |
 | Randy     | Pauline   | Smith         |
 | Randy     | Veronica  | Smith         |
-| Randy     | Hope      | Smith         |
 | Rex       | Jeniffer  | Mantela       |
-| Ted       | Terri     | Grant         |
 | Ted       | Bianca    | Grant         |
 | Ted       | Erica     | Grant         |
 | Ted       | Patty     | Howard        |
+| Ted       | Terri     | Grant         |
 | Theodore  | Maggie    | OLeary        |
 | Theodore  | Ophelia   | OLeary        |
 | Ulysses   | Denise    | Peterson      |
+| Victor    | Denise    | Peterson      |
+| Victor    | Denise    | Peterson      |
 | Victor    | Samantha  | Frank         |
-| Victor    | Denise    | Peterson      |
-| Victor    | Denise    | Peterson      |
 | Walter    | Samantha  | Frank         |
 +-----------+-----------+---------------+
 0: jdbc:luciddb:> 

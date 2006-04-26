@@ -1,0 +1,36 @@
+0: jdbc:oracle:> -- Query 14
+0: jdbc:oracle:> 
+0: jdbc:oracle:> SELECT AL2.ST_CD, AL2.GEOG_CNTY_CD, AL2.GEOG_CNTY_DESC,
+. . . . . . . . >  SUM(AL5.RSD_SVC_BILG_AMT), SUM(AL5.RSD_ST_SLSTX_AMT),
+. . . . . . . . >  SUM(AL5.RSD_TRSPT_CHRG_AMT), SUM(AL5.RSD_BALG_CHRG_AMT),
+. . . . . . . . >  SUM(AL5.RSD_TOP_SRCHRG_AMT), SUM(AL5.RSD_CCOGA_AMT),
+. . . . . . . . >  SUM(AL5.RSD_CCOGC_AMT), SUM(AL5.RSD_CUST_CHRG_AMT),
+. . . . . . . . >  SUM(AL5.RSD_DMND_CHRG_AMT)
+. . . . . . . . > FROM
+. . . . . . . . > PGE.REVN_DTL_RAND AL5,
+. . . . . . . . > PGE.CUST_SERV_ACCT AL1,
+. . . . . . . . > PGE.SERV_PLAN AL3,
+. . . . . . . . > PGE.GEOG AL2,
+. . . . . . . . > PGE.REVN_PRD AL4
+. . . . . . . . > -- PGE.CUST_SERV_ACCT AL1,
+. . . . . . . . > -- PGE.GEOG AL2,
+. . . . . . . . > -- PGE.SERV_PLAN AL3,
+. . . . . . . . > -- PGE.REVN_PRD AL4,
+. . . . . . . . > -- PGE.REVN_DTL_RAND AL5
+. . . . . . . . > WHERE (AL5.REVN_YR_MO=AL4.REVN_YR_MO
+. . . . . . . . >  AND AL2.GEOG_KEY=AL5.GEOG_KEY AND AL3.SRVPLN_KEY=AL5.SRVPLN_KEY
+. . . . . . . . >  AND AL1.CUST_SERV_ACCT_KEY=AL5.CUST_SERV_ACCT_KEY)
+. . . . . . . . >  AND (AL3.SRVPLN_ID=811 AND AL4.REVN_YR=1995)
+. . . . . . . . > GROUP BY AL2.ST_CD, AL2.GEOG_CNTY_CD,
+. . . . . . . . >  AL2.GEOG_CNTY_DESC
+. . . . . . . . > ORDER BY  2
+. . . . . . . . > ;
++--------+---------------+-----------------+----------------------------+----------------------------+------------------------------+-----------------------------+------------------------------+-------------------------+-------------------------+-----------------------------+-----------------------------+
+| ST_CD  | GEOG_CNTY_CD  | GEOG_CNTY_DESC  | SUM(AL5.RSD_SVC_BILG_AMT)  | SUM(AL5.RSD_ST_SLSTX_AMT)  | SUM(AL5.RSD_TRSPT_CHRG_AMT)  | SUM(AL5.RSD_BALG_CHRG_AMT)  | SUM(AL5.RSD_TOP_SRCHRG_AMT)  | SUM(AL5.RSD_CCOGA_AMT)  | SUM(AL5.RSD_CCOGC_AMT)  | SUM(AL5.RSD_CUST_CHRG_AMT)  | SUM(AL5.RSD_DMND_CHRG_AMT)  |
++--------+---------------+-----------------+----------------------------+----------------------------+------------------------------+-----------------------------+------------------------------+-------------------------+-------------------------+-----------------------------+-----------------------------+
+| IN     | M             | LAKE            | 3886538.26577933           | 194257.2929362             | 0                            | 0                           | 0                            | 0                       | 0                       | 373522.74263131             | 0                           |
+| IN     | N             | LAPORTE         | 1901418.1701015            | 94829.2611867              | 0                            | 0                           | 0                            | 0                       | 0                       | 147352.43496255             | 0                           |
+| IN     | T             | PORTER          | 4958.06557235              | 247.8496057                | 0                            | 0                           | 0                            | 0                       | 0                       | 638.70771825                | 0                           |
++--------+---------------+-----------------+----------------------------+----------------------------+------------------------------+-----------------------------+------------------------------+-------------------------+-------------------------+-----------------------------+-----------------------------+
+0: jdbc:oracle:> 
+0: jdbc:oracle:> !quit
