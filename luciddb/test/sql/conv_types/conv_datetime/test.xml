@@ -3,7 +3,9 @@
     <test-suite name="conv_datetime">
       
       <init-hook>
-        <ant target="restoreCatalog"/>
+        <test-suite name="init">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml"/>
+        </test-suite>
       </init-hook>
 
       <test name="createsource">
@@ -21,6 +23,12 @@
       <test name="converttimestamp" requiresRun="createsource">
         <junit-sql file="${open.dir}/luciddb/test/sql/conv_types/conv_datetime/target_timestamp.sql"/>
       </test>
+
+      <cleanup-hook>
+        <test-suite name="cleanup">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tdone.xml"/>
+        </test-suite>
+      </cleanup-hook>
 
     </test-suite>
   </target>

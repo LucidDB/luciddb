@@ -1,0 +1,9 @@
+<project name="bh" default="cleanup">
+  <target name="cleanup">
+    <test-suite name="cleanup">
+
+      <!-- cleanup -->
+
+    </test-suite>
+  </target>
+</project>

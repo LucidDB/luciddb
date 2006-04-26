@@ -3,7 +3,9 @@
     <test-suite name="txn">
 
       <init-hook>
-        <ant target="restoreCatalog"/>
+        <test-suite name="init">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml"/>
+        </test-suite>
       </init-hook>
 
       <test name="negative">
@@ -13,6 +15,12 @@
       <test name="rollback">
         <junit-sql file="${open.dir}/luciddb/test/sql/txn/rollback.sql"/>
       </test>
+
+      <cleanup-hook>
+        <test-suite name="cleanup">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tdone.xml"/>
+        </test-suite>
+      </cleanup-hook>
 
     </test-suite>
   </target>

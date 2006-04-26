@@ -194,10 +194,6 @@
     <delete dir="${csv.dir}"/>
   </target>
 
-  <target name="restoreCatalog">
-    <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>
-  </target>
-
   <!-- Experimental -->
   <target name="test-orcl" depends="gen-orcl-sql">
     <blackhawk.fork

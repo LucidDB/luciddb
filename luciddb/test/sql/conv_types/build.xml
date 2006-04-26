@@ -54,10 +54,6 @@
       classpathref="test.classpath"/>
   </target>  
 
-  <target name="restoreCatalog">
-    <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>
-  </target>  
-  
   <target name="clean">
     <delete dir="${bh.log.basedir}"/>
     <ant dir="conv_character" target="clean"/>

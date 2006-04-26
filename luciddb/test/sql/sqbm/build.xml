@@ -121,8 +121,4 @@
     </delete>
   </target>
 
-  <target name="restoreCatalog">
-    <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>
-  </target>
-
 </project>

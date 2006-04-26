@@ -1,0 +1,18 @@
+<project name="bh" default="init">
+  <target name="init">
+    <test-suite name="init">
+
+      <init-hook>
+        <test-suite name="init">
+          <test name="shutdownEngine">
+            <junit testclass="org.eigenbase.blackhawk.test.junit.HelloWorld" methodnames="testHelloWorld"/>
+          </test>
+        </test-suite>
+        <ant antfile="${open.dir}/luciddb/build.xml" target="restoreCatalog"/>
+      </init-hook>
+      
+      <!-- anything else -->
+      
+    </test-suite>
+  </target>
+</project>
