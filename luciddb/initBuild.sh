@@ -55,6 +55,8 @@ done
 shopt -uq extglob
 
 if $with_nightly_tests ; then
+    # make the build/test processes go further
+    set +e
     run_ant="ant -keep-going"
 else
     run_ant="ant"
@@ -94,8 +96,6 @@ test-oracle \
 test-sqlserver \
 test-csvjdbc\
 "
-
-set +e
 
 cd ${luciddb_dir}
 if $with_nightly_tests ; then

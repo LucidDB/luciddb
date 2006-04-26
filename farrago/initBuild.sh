@@ -62,12 +62,6 @@ done
 
 shopt -uq extglob
 
-if $with_nightly_tests ; then
-    run_ant="ant -keep-going"
-else
-    run_ant="ant"
-fi
-
 # Check required options
 if [ $fennel_disabled == "missing" ] ; then
     usage
@@ -87,11 +81,18 @@ EOF
 set -e
 set -v
 
+if $with_nightly_tests ; then
+    # make the build/test processes go further
+    set +e
+    run_ant="ant -keep-going"
+else
+    run_ant="ant"
+fi
+
 # Blow away obsolete Farrago build properties file
 rm -f farrago_build.properties
 
 . farragoenv.sh `pwd`/../thirdparty
-
 
 # Unpack thirdparty components
 cd ../thirdparty
