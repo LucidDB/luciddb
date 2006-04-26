@@ -22,6 +22,7 @@
 package org.eigenbase.relopt.hep;
 
 import org.eigenbase.relopt.*;
+import org.eigenbase.rel.convert.*;
 
 import java.util.*;
 
@@ -179,6 +180,23 @@ public class HepProgramBuilder
         instructions.add(instruction);
         group.endGroup = instruction;
         group = null;
+    }
+
+    /**
+     * Adds an instruction to attempt to match instances of
+     * {@link ConverterRule}, but only where a conversion is actually
+     * required.
+     *
+     * @param guaranteed if true, use only guaranteed converters;
+     * if false, use only non-guaranteed converters
+     */
+    public void addConverters(boolean guaranteed)
+    {
+        assert(group == null);
+        HepInstruction.ConverterRules instruction =
+            new HepInstruction.ConverterRules();
+        instruction.guaranteed = guaranteed;
+        instructions.add(instruction);
     }
 
     /**

@@ -256,7 +256,8 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         // LcsTableAppendRule relies on CoerceInputsRule above.)
         builder.addRuleCollection(medPluginRules);
 
-        // TODO:  add hash join implementation here.
+        // Use hash join wherever possible.
+        builder.addRuleInstance(new LhxJoinRule());
 
         // Extract join conditions again so that FennelCartesianJoinRule can do
         // its job.  Need to do this before converting filters to calcs, but
@@ -306,35 +307,27 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
             // use Java code generation for calculating expressions
             builder.addRuleInstance(IterRules.IterCalcRule.instance);
             builder.addRuleInstance(new IterRules.OneRowToIteratorRule());
-        } else {
-            // choose calculator based on input, giving preference
-            // to Fennel for leaves
-            builder.addRuleInstance(new FennelOneRowRule());
-            builder.addRuleInstance(
-                new TraitMatchingRule(FennelCalcRule.instance));
-            builder.addRuleInstance(
-                new TraitMatchingRule(IterRules.IterCalcRule.instance));
         }
 
         // Finish main physical implementation group.
         builder.addGroupEnd();
 
         // If automatic calculator selection is enabled (the default),
-        // take care of expressions which couldn't be handled so far.
+        // figure out what to do with CalcRels.
         if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_AUTO)) {
-            // Split expressions into Fennel part and Java part
+            // First, attempt to choose calculators such that converters are
+            // minimized
+            builder.addConverters(false);
+            // Split remaining expressions into Fennel part and Java part
             builder.addRuleInstance(FarragoAutoCalcRule.instance);
             // Convert expressions, giving preference to Java
+            builder.addRuleInstance(new IterRules.OneRowToIteratorRule());
             builder.addRuleInstance(IterRules.IterCalcRule.instance);
             builder.addRuleInstance(FennelCalcRule.instance);
         }
         
-        // Finally, add converters as necessary.  This will also try
-        // to match some implementation rules such as IterCalcRule,
-        // but we've already taken care of all of that above,
-        // so there should be no matches left.  REVIEW:  might still
-        // want to tighten this up for efficiency.
-        builder.addRuleClass(ConverterRule.class);
+        // Finally, add generic converters as necessary.
+        builder.addConverters(true);
         
         return builder.createProgram();
     }

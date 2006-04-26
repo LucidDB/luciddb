@@ -46,20 +46,10 @@ class HepRelMetadataProvider implements RelMetadataProvider
 
         HepRelVertex vertex = (HepRelVertex) rel;
 
-        // Try current implementation.
+        // Use current implementation.
         Object result =
             rel.getCluster().getMetadataProvider().getRelMetadata(
                 vertex.getCurrentRel(),
-                metadataQueryName,
-                args);
-        if (result != null) {
-            return result;
-        }
-
-        // Otherwise, rely on original expression.
-        result =
-            rel.getCluster().getMetadataProvider().getRelMetadata(
-                vertex.getOriginalRel(),
                 metadataQueryName,
                 args);
         return result;

@@ -21,7 +21,6 @@
 */
 package net.sf.farrago.test;
 
-import java.sql.*;
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
@@ -32,7 +31,6 @@ import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 
 import org.eigenbase.sql.validate.*;
-import org.eigenbase.util.*;
 
 /**
  * Utility class for manipulating statistics stored in the catalog
@@ -64,9 +62,7 @@ public class FarragoStatsUtil
                 lookupSchema(session, repos, catalog, schemaName);
             FemAbstractColumnSet columnSet = 
                 lookupColumnSet(repos, schema, tableName);
-            
-            columnSet.setAnalyzeTime(createTimestamp());
-            columnSet.setRowCount(rowCount);
+            FarragoCatalogUtil.updateRowCount(columnSet, rowCount);
 
             rollback = false;
         } finally {
@@ -93,9 +89,7 @@ public class FarragoStatsUtil
             FemLocalSchema schema = 
                 lookupSchema(session, repos, catalog, schemaName);
             FemLocalIndex index = lookupIndex(repos, schema, indexName);
-            
-            index.setAnalyzeTime(createTimestamp());
-            index.setPageCount((int)pageCount);
+            FarragoCatalogUtil.updatePageCount(index, pageCount);
 
             rollback = false;
         } finally {
@@ -133,19 +127,6 @@ public class FarragoStatsUtil
                 lookupColumnSet(repos, schema, tableName);
             FemAbstractColumn column = lookupColumn(repos, columnSet, columnName);
             
-            FemColumnHistogram histogram = column.getHistogram();
-            if (histogram != null) {
-                histogram.refDelete();
-                column.setHistogram(null);
-            }
-            histogram = repos.newFemColumnHistogram();
-            histogram.setColumn(column);
-            column.setHistogram(histogram);
-
-            histogram.setAnalyzeTime(createTimestamp());
-            histogram.setDistinctValueCount(distinctValues);
-            histogram.setPercentageSampled(samplePercent);
-
             long rowCount = columnSet.getRowCount();
             long sampleRows = (rowCount * samplePercent) / 100;
             assert(distinctValues <= rowCount);
@@ -165,15 +146,15 @@ public class FarragoStatsUtil
                 }
                 rowsLastBar = sampleRows - ((barCount-1) * rowsPerBar);
             }
+            List<FemColumnHistogramBar> bars = 
+                createColumnHistogramBars(
+                    repos, sampleDistinctValues, 
+                    barCount, rowsPerBar, rowsLastBar, 
+                    distributionType, valueDigits);
 
-            histogram.setBarCount(barCount);
-            histogram.setRowsPerBar(rowsPerBar);
-            // TODO: obsolete this attribute
-            histogram.setRowsLastBar(rowsLastBar);
-            
-            createColumnHistogramBars(
-                repos, histogram, sampleDistinctValues, 
-                barCount, rowsPerBar, rowsLastBar, distributionType, valueDigits);
+            FarragoCatalogUtil.updateHistogram(
+                repos, column, distinctValues, samplePercent, 
+                barCount, rowsPerBar, rowsLastBar, bars);
 
             rollback = false;
         } finally {
@@ -181,9 +162,8 @@ public class FarragoStatsUtil
         }
     }
     
-    private static void createColumnHistogramBars(
+    private static List<FemColumnHistogramBar> createColumnHistogramBars(
         FarragoRepos repos,
-        FemColumnHistogram histogram,
         long distinctValues,
         int barCount,
         long rowsPerBar,
@@ -191,23 +171,20 @@ public class FarragoStatsUtil
         int distributionType, 
         String valueDigits)
     {
-        List<FemColumnHistogramBar> bars = histogram.getBar();
-        for (FemColumnHistogramBar bar : bars) {
-            bar.refDelete();
-        }
-        bars.clear();
-        
+        List<FemColumnHistogramBar> bars = 
+            new LinkedList<FemColumnHistogramBar>();
         List<Long> valueCounts = 
             createValueCounts(barCount, distinctValues, distributionType);
         List<String> values = 
             createValues(barCount, valueDigits, distributionType, valueCounts);
         for (int i = 0; i < barCount; i++) {
             FemColumnHistogramBar bar = repos.newFemColumnHistogramBar();
-            bar.setHistogram(histogram);
             bar.setOrdinal(i);
             bar.setStartingValue(values.get(i));
             bar.setValueCount(valueCounts.get(i));
+            bars.add(bar);
         }
+        return bars;
     }
     
     private static List<String> createValues(
@@ -354,11 +331,6 @@ public class FarragoStatsUtil
             throw FarragoResource.instance().ValidatorUnknownObject.ex(columnName);
         }        
         return column;
-    }
-
-    private static String createTimestamp()
-    {
-        return new Timestamp(System.currentTimeMillis()).toString();
     }
 }
 

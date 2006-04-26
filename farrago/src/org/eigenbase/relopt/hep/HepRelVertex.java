@@ -37,13 +37,6 @@ import org.eigenbase.util.*;
 public class HepRelVertex extends AbstractRelNode
 {
     /**
-     * Original expression from which this expression originated.
-     * This is used for answering logical metadata queries, since
-     * physical rels may have lost information during transformation.
-     */
-    private final RelNode originalRel;
-
-    /**
      * Wrapped rel currently chosen for implementation of expression.
      */
     private RelNode currentRel;
@@ -51,7 +44,6 @@ public class HepRelVertex extends AbstractRelNode
     HepRelVertex(RelNode rel)
     {
         super(rel.getCluster(), rel.getTraits());
-        originalRel = rel;
         currentRel = rel;
     }
 
@@ -78,13 +70,13 @@ public class HepRelVertex extends AbstractRelNode
     // implement RelNode
     protected RelDataType deriveRowType()
     {
-        return originalRel.getRowType();
+        return currentRel.getRowType();
     }
 
     // implement RelNode
     public boolean isDistinct()
     {
-        return originalRel.isDistinct();
+        return currentRel.isDistinct();
     }
     
     // implement RelNode
@@ -101,14 +93,6 @@ public class HepRelVertex extends AbstractRelNode
     void replaceRel(RelNode newRel)
     {
         currentRel = newRel;
-    }
-
-    /**
-     * @return original rel which first caused this vertex to be created
-     */
-    public RelNode getOriginalRel()
-    {
-        return originalRel;
     }
 
     /**

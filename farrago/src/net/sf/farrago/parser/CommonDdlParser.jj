@@ -289,6 +289,8 @@ DdlStmt DdlStmtEof() :
         <RELEASE> <SAVEPOINT> ddlStmt = ReleaseSavepoint()
         |
         <IMPORT> ddlStmt = ImportForeignSchemaStmt()
+        |
+        <ANALYZE> ddlStmt = AnalyzeStmt()
     )
     <EOF>
     {
@@ -2480,19 +2482,82 @@ DdlStmt GrantRoleStmt() :
         return stmt;            
     }
 }
-    
+
+
+/**
+ * Parses an analyze statement. Currently analyze table is supported.
+ */
+DdlStmt AnalyzeStmt() :
+{
+    DdlAnalyzeStmt stmt = new DdlAnalyzeStmt();
+    CwmTable table;
+    List columnNameList;
+    int percent;
+}
+{
+    <TABLE> table = TableIdentifier()
+    {
+        stmt.setTable(table);
+    }
+    (
+        <COMPUTE>
+        |
+        <ESTIMATE>
+        {
+            stmt.setEstimateOption(true);
+        }
+    )
+    <STATISTICS> <FOR>
+    (
+        ( <ALL> <COLUMNS> )
+        {
+            stmt.setColumns(table.getFeature());
+        }
+        |
+        ( <COLUMNS>
+            <LPAREN> columnNameList = SimpleIdentifierCommaList() <RPAREN> )
+        {
+            List columnList = new LinkedList();
+            for (Object columnName : columnNameList) {
+                String simpleName = ((SqlIdentifier) columnName).getSimple();
+                CwmColumn column =
+                    farragoParser.getStmtValidator().findColumn(
+                        table, simpleName);
+                columnList.add(column);
+            }
+            stmt.setColumns(columnList);
+        }
+    )
+    [
+        <SAMPLE> percent = UnsignedIntLiteral() <PERCENT>
+        {
+            stmt.setSamplePercent(percent);
+        }
+    ]
+    {
+        return stmt;            
+    }
+}
+
 
 /* KEYWORDS:  anything in this list is a reserved word unless it appears
    in the NonReservedKeyWord() production. */
 
 TOKEN :
 {
-    < CHECKPOINT: "CHECKPOINT" >
+    < ANALYZE: "ANALYZE">
+    | < CHECKPOINT: "CHECKPOINT" >
     | < CLUSTERED: "CLUSTERED" >
+    | < COLUMNS: "COLUMNS" >
+    | < COMPUTE: "COMPUTE" >
+    | < ESTIMATE: "ESTIMATE" >
     | < INDEX: "INDEX" >
     | < JAR: "JAR" >
+    | < PERCENT: "PERCENT" >
     | < RENAME: "RENAME" >
     | < REPLACE: "REPLACE" >
+    | < SAMPLE: "SAMPLE" >
+    | < STATISTICS: "STATISTICS">
     | < TRUNCATE: "TRUNCATE" >
 }
 
@@ -2515,10 +2580,17 @@ String DdlNonReservedKeyWord() :
 }
 {
     (
-        <INDEX>
+        // <ANALYZE> is required to be a reserved word for LL(1) parsing
+        <COLUMNS>
+        | <COMPUTE>
+        | <ESTIMATE>
+        | <INDEX>
         | <JAR>
+        | <PERCENT>
         | <RENAME>
         | <REPLACE>
+        | <SAMPLE>
+        | <STATISTICS>
     )
     {
         return getToken(0).image.toUpperCase();

@@ -119,7 +119,7 @@ public class RelOptPlanWriter extends java.io.PrintWriter
         if (detailLevel == SqlExplainLevel.ALL_ATTRIBUTES) {
             print(": rowcount = " + RelMetadataQuery.getRowCount(rel));
             print(", cumulative cost = ");
-            print(RelMetadataQuery.getNonCumulativeCost(rel));
+            print(RelMetadataQuery.getCumulativeCost(rel));
         }
         println("");
         level++;

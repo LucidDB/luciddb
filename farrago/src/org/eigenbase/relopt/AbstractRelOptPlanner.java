@@ -232,7 +232,7 @@ public abstract class AbstractRelOptPlanner implements RelOptPlanner
     {
         if (before && tracer.isLoggable(Level.FINE)) {
             tracer.fine("Rule " + ruleCall.getRule() + " arguments "
-                + RelOptUtil.toString(ruleCall.getRels()) + " created "
+                + RelOptUtil.toString(ruleCall.getRels()) + " produced "
                 + newRel);
         }
         
