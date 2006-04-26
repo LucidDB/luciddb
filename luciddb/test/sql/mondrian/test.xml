@@ -9,42 +9,42 @@
       </init-hook>
 
       <test name="creschema" nameOverride="true">
-        <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/creschema.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/gen/sqlserver/creschema.sql"/>
       </test>
 
       <test name="createTables" nameOverride="true"
         requiresSuccess="creschema"> 
-        <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/createTables.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/gen/sqlserver/createTables.sql"/>
       </test>
 
       <test name="loadfoodmart" nameOverride="true" 
         requiresSuccess="createTables"> 
-        <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/load.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/gen/sqlserver/load.sql"/>
       </test>
 
       <test name="query-getcardinality" nameOverride="true" 
         requiresSuccess="loadfoodmart">
-        <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/getcardinality.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/gen/sqlserver/getcardinality.sql"/>
       </test>
 
       <test name="query-segmentload" nameOverride="true" 
         requiresSuccess="loadfoodmart">
-        <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/segmentload.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/gen/sqlserver/segmentload.sql"/>
       </test>
 
       <test name="query-readtuples" nameOverride="true" 
         requiresSuccess="loadfoodmart">
-        <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/readtuples.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/gen/sqlserver/readtuples.sql"/>
       </test>
 
       <test name="query-getmemberchildren" nameOverride="true" 
         requiresSuccess="loadfoodmart">
-        <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/getmemberchildren.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/gen/sqlserver/getmemberchildren.sql"/>
       </test>
 <!-- These take too long
       <test name="query-shabang" nameOverride="true" 
         requiresSuccess="loadfoodmart">
-        <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/shabang.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/gen/sqlserver/shabang.sql"/>
       </test>
 
       <test name="query-frg108" nameOverride="true" 
@@ -52,7 +52,7 @@
         <test-metadata>
           <knownFailure value="true"/>
         </test-metadata>
-        <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/frg108.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/gen/sqlserver/frg108.sql"/>
       </test>
 -->
 

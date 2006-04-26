@@ -34,6 +34,9 @@
   <property name="project.catalog.dir" location="${open.dir}/luciddb/catalog" />
   <property name="project.trace.propfile" location="${open.dir}/luciddb/trace/LucidDbTrace.properties" />
   <property name="project.testlog.dir" location="${open.dir}/luciddb/testlog" />
+  <!-- directory where sql is generated -->
+  <property name="gensql.dir" value="${mondrian.test.dir}/gen" />
+
   <import file="${open.dir}/farrago/buildMacros.xml" />
 
   <taskdef name="foreach" classname="net.sf.antcontrib.logic.ForEach" classpath="${ant.classpath}"/>
@@ -66,7 +69,7 @@
     <!-- generate all sql files -->
     <copy todir="${gensql.dir}tmp" overwrite="true"
       filtering="true">
-      <fileset dir="${pge.dir}">
+      <fileset dir="${mondrian.test.dir}">
         <include name="**/*.tmpl"/>
       </fileset>
       <mapper type="glob" from="*.tmpl" to="*"/>
@@ -88,7 +91,7 @@
 
     <!-- copy over all other .sql and .ref files -->
     <copy todir="${gensql.dir}/${prop.source}">
-      <fileset dir="${pge.dir}">
+      <fileset dir="${mondrian.test.dir}">
         <include name="**/*.sql"/>
         <include name="**/*.ref"/>
         <exclude name="gen/**"/>
@@ -96,6 +99,7 @@
     </copy>
   </target>
   
+
   <target name="gen-all-sql">
     <available file="${gensql.dir}" type="dir"
       property="sql.generated"/>
@@ -103,63 +107,24 @@
       <isset property="sql.generated"/>
       <then/>
       <else>
-        <foreach list="oracle,sqlserver,flatfile,csvjdbc" 
+<!--        <foreach list="oracle,sqlserver,flatfile,csvjdbc" -->
+        <foreach list="sqlserver" 
           param="prop.source"
           target="gen-sql"/>
       </else>
     </if>
   </target>
 
-  <target name="test">
+  <target name="test" depends="gen-all-sql">
     <blackhawk.fork
       basedir="${mondrian.test.dir}"
       testscript="${testfile}"
       classpathref="test.classpath"/>
   </target>
 
-  <target name="copy-csv">
-    <available file="${csvsource.dir}" type="dir"
-      property="raksha.available"/>
-    <if>
-      <isset property="raksha.available"/>
-      <then>
-        <!-- sync raksha <-> csv.dir -->
-        <sync todir="${csv.dir}" 
-          overwrite="false"
-          failonerror="false"
-          verbose="true">
-          <fileset dir="${csvsource.dir}"/>
-        </sync>
-      </then>
-    </if>
-    <available file="${csv.dir}" type="dir"
-      property="csv.available"/>
-    <if>
-      <isset property="csv.available"/>
-      <then> 
-        <!-- sync csv.dir <-> csv-copy.dir -->
-        <sync todir="${csv.copy.dir}"
-          overwrite="true"
-          verbose="true"
-          failonerror="true">
-          <fileset dir="${csv.dir}"/>
-        </sync>
-      </then>
-      <else>
-        <echo message="!! NO CSV FILES !!"/>
-      </else>
-    </if>
-  </target>
-
   <target name="clean">
     <delete dir="${gensql.dir}"/>
     <delete dir="${bh.log.basedir}"/>
-    <delete dir="${csv.copy.dir}"/>
-  </target>
-
-  <target name="clean-csv">
-    <antcall target="clean"/>
-    <delete dir="${csv.dir}"/>
   </target>
 
 </project>
