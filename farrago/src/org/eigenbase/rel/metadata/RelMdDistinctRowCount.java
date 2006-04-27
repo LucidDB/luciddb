@@ -134,31 +134,13 @@ public class RelMdDistinctRowCount extends ReflectiveRelMetadataProvider
     public Double getDistinctRowCount(
         SemiJoinRel rel, BitSet groupKey, RexNode predicate)
     {
-        // map groupKey column ordinals from left to right via join conditions
-        // and use the result as the key for determining right-hand-side
-        // selectivity; ignore unmappable columns
-        BitSet rightGroupKey = new BitSet();
-        for (int i = 0; i < rel.getLeftKeys().size(); ++i) {
-            int leftCol = rel.getLeftKeys().get(i);
-            if (groupKey.get(leftCol)) {
-                rightGroupKey.set(rel.getRightKeys().get(i));
-            }
-        }
-
         // create a RexNode representing the selectivity of the
-        // semijoin filter and pass it to getDistinctRowCount, if
-        // after masking with groupKey, there are still keys left
-        RexNode newPred;
-        if (rightGroupKey.cardinality() == 0) {
-            newPred = predicate;
-        } else {
+        // semijoin filter and pass it to getDistinctRowCount          
+        RexNode newPred = RelMdUtil.makeSemiJoinSelectivityRexNode(rel);
+        if (predicate != null) {
             RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
-            newPred = RelMdUtil.makeSemiJoinSelectivityRexNode(
-                rel, rightGroupKey);
-            if (predicate != null) {
-                newPred = rexBuilder.makeCall(
-                    SqlStdOperatorTable.andOperator, newPred, predicate);
-            }
+            newPred = rexBuilder.makeCall(
+                SqlStdOperatorTable.andOperator, newPred, predicate);
         }
         
         return RelMetadataQuery.getDistinctRowCount(

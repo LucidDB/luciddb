@@ -10,18 +10,10 @@
 0: jdbc:luciddb:> explain plan for select * from emp,dept
 . . . . . . . . > where emp.deptno=dept.deptno and dept.dname<'Marketing';
 'column0'
-'FennelToIteratorConverter'
-'  FennelCalcRel(expr#0..12=[{inputs}], expr#13=[=($t4, $t10)], proj#0..12=[{exprs}], $condition=[$t13])'
+'IterCalcRel(expr#0..12=[{inputs}], expr#13=[=($t4, $t10)], proj#0..12=[{exprs}], $condition=[$t13])'
+'  FennelToIteratorConverter'
 '    FennelCartesianProductRel(leftouterjoin=[false])'
 '      LcsRowScanRel(table=[[LOCALDB, S, EMP]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$EMP$COMMISSION, SYS$CLUSTERED_INDEX$S$EMP$DEPTNO, SYS$CLUSTERED_INDEX$S$EMP$EMPNO, SYS$CLUSTERED_INDEX$S$EMP$FNAME, SYS$CLUSTERED_INDEX$S$EMP$HOBBY, SYS$CLUSTERED_INDEX$S$EMP$LNAME, SYS$CLUSTERED_INDEX$S$EMP$LOCID, SYS$CLUSTERED_INDEX$S$EMP$MANAGER, SYS$CLUSTERED_INDEX$S$EMP$SAL, SYS$CLUSTERED_INDEX$S$EMP$SEX]])'
-'        LcsIndexMergeRel'
-'          LcsIndexSearchRel(table=[[LOCALDB, S, EMP]], projection=[*], index=[EMP_DEPTNO], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
-'            FennelSortRel(key=[[0]], discardDuplicates=[true])'
-'              FennelCalcRel(expr#0..2=[{inputs}], expr#3=[CAST($t0):INTEGER], DEPTNO=[$t3])'
-'                LcsRowScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$DEPT$DEPTNO, SYS$CLUSTERED_INDEX$S$DEPT$DNAME, SYS$CLUSTERED_INDEX$S$DEPT$LOCID]])'
-'                  LcsIndexMergeRel'
-'                    LcsIndexSearchRel(table=[[LOCALDB, S, DEPT]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPT$SYS$UNIQUE_KEY$DNAME], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
-'                      FennelValuesRel(tuples=[[{ '(', null, ')', _ISO-8859-1'Marketing' }]])'
 '      LcsRowScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$DEPT$DEPTNO, SYS$CLUSTERED_INDEX$S$DEPT$DNAME, SYS$CLUSTERED_INDEX$S$DEPT$LOCID]])'
 '        LcsIndexMergeRel'
 '          LcsIndexSearchRel(table=[[LOCALDB, S, DEPT]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPT$SYS$UNIQUE_KEY$DNAME], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
@@ -33,8 +25,8 @@
 . . . . . . . . > and dept.dname='Marketing'
 . . . . . . . . > and emp.empno=100;
 'column0'
-'FennelToIteratorConverter'
-'  FennelCalcRel(expr#0..12=[{inputs}], expr#13=[=($t4, $t10)], proj#0..12=[{exprs}], $condition=[$t13])'
+'IterCalcRel(expr#0..12=[{inputs}], expr#13=[=($t4, $t10)], proj#0..12=[{exprs}], $condition=[$t13])'
+'  FennelToIteratorConverter'
 '    FennelCartesianProductRel(leftouterjoin=[false])'
 '      LcsRowScanRel(table=[[LOCALDB, S, EMP]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$EMP$COMMISSION, SYS$CLUSTERED_INDEX$S$EMP$DEPTNO, SYS$CLUSTERED_INDEX$S$EMP$EMPNO, SYS$CLUSTERED_INDEX$S$EMP$FNAME, SYS$CLUSTERED_INDEX$S$EMP$HOBBY, SYS$CLUSTERED_INDEX$S$EMP$LNAME, SYS$CLUSTERED_INDEX$S$EMP$LOCID, SYS$CLUSTERED_INDEX$S$EMP$MANAGER, SYS$CLUSTERED_INDEX$S$EMP$SAL, SYS$CLUSTERED_INDEX$S$EMP$SEX]])'
 '        LcsIndexSearchRel(table=[[LOCALDB, S, EMP]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMP$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
@@ -47,19 +39,19 @@
 0: jdbc:luciddb:> explain plan for select * from emp,dept
 . . . . . . . . > where emp.deptno=dept.deptno and emp.fname='Bill';
 'column0'
-'FennelToIteratorConverter'
-'  FennelCalcRel(expr#0..12=[{inputs}], expr#13=[=($t4, $t10)], proj#0..12=[{exprs}], $condition=[$t13])'
+'IterCalcRel(expr#0..12=[{inputs}], expr#13=[=($t7, $t0)], EMPNO=[$t3], FNAME=[$t4], LNAME=[$t5], SEX=[$t6], DEPTNO=[$t7], MANAGER=[$t8], LOCID=[$t9], SAL=[$t10], COMMISSION=[$t11], HOBBY=[$t12], DEPTNO=[$t0], DNAME=[$t1], LOCID=[$t2], $condition=[$t13])'
+'  FennelToIteratorConverter'
 '    FennelCartesianProductRel(leftouterjoin=[false])'
+'      LcsRowScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$DEPT$DEPTNO, SYS$CLUSTERED_INDEX$S$DEPT$DNAME, SYS$CLUSTERED_INDEX$S$DEPT$LOCID]])'
 '      FennelCalcRel(expr#0..9=[{inputs}], expr#10=[_ISO-8859-1'Bill'], expr#11=[=($t1, $t10)], proj#0..9=[{exprs}], $condition=[$t11])'
 '        LcsRowScanRel(table=[[LOCALDB, S, EMP]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$EMP$COMMISSION, SYS$CLUSTERED_INDEX$S$EMP$DEPTNO, SYS$CLUSTERED_INDEX$S$EMP$EMPNO, SYS$CLUSTERED_INDEX$S$EMP$FNAME, SYS$CLUSTERED_INDEX$S$EMP$HOBBY, SYS$CLUSTERED_INDEX$S$EMP$LNAME, SYS$CLUSTERED_INDEX$S$EMP$LOCID, SYS$CLUSTERED_INDEX$S$EMP$MANAGER, SYS$CLUSTERED_INDEX$S$EMP$SAL, SYS$CLUSTERED_INDEX$S$EMP$SEX]])'
-'      LcsRowScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$DEPT$DEPTNO, SYS$CLUSTERED_INDEX$S$DEPT$DNAME, SYS$CLUSTERED_INDEX$S$DEPT$LOCID]])'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- this shouldn't do it because it's not an equi-join
 0: jdbc:luciddb:> explain plan for select * from emp,dept
 . . . . . . . . > where emp.deptno>dept.deptno and dept.dname='Marketing';
 'column0'
-'FennelToIteratorConverter'
-'  FennelCalcRel(expr#0..12=[{inputs}], expr#13=[>($t4, $t10)], proj#0..12=[{exprs}], $condition=[$t13])'
+'IterCalcRel(expr#0..12=[{inputs}], expr#13=[>($t4, $t10)], proj#0..12=[{exprs}], $condition=[$t13])'
+'  FennelToIteratorConverter'
 '    FennelCartesianProductRel(leftouterjoin=[false])'
 '      LcsRowScanRel(table=[[LOCALDB, S, EMP]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$EMP$COMMISSION, SYS$CLUSTERED_INDEX$S$EMP$DEPTNO, SYS$CLUSTERED_INDEX$S$EMP$EMPNO, SYS$CLUSTERED_INDEX$S$EMP$FNAME, SYS$CLUSTERED_INDEX$S$EMP$HOBBY, SYS$CLUSTERED_INDEX$S$EMP$LNAME, SYS$CLUSTERED_INDEX$S$EMP$LOCID, SYS$CLUSTERED_INDEX$S$EMP$MANAGER, SYS$CLUSTERED_INDEX$S$EMP$SAL, SYS$CLUSTERED_INDEX$S$EMP$SEX]])'
 '      LcsRowScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$DEPT$DEPTNO, SYS$CLUSTERED_INDEX$S$DEPT$DNAME, SYS$CLUSTERED_INDEX$S$DEPT$LOCID]])'
@@ -70,8 +62,8 @@
 0: jdbc:luciddb:> explain plan for select * from emp,dept
 . . . . . . . . > where (emp.deptno=dept.deptno or dept.deptno > 5) and dept.dname='Marketing';
 'column0'
-'FennelToIteratorConverter'
-'  FennelCalcRel(expr#0..12=[{inputs}], expr#13=[=($t4, $t10)], expr#14=[5], expr#15=[>($t10, $t14)], expr#16=[OR($t13, $t15)], proj#0..12=[{exprs}], $condition=[$t16])'
+'IterCalcRel(expr#0..12=[{inputs}], expr#13=[=($t4, $t10)], expr#14=[5], expr#15=[>($t10, $t14)], expr#16=[OR($t13, $t15)], proj#0..12=[{exprs}], $condition=[$t16])'
+'  FennelToIteratorConverter'
 '    FennelCartesianProductRel(leftouterjoin=[false])'
 '      LcsRowScanRel(table=[[LOCALDB, S, EMP]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$EMP$COMMISSION, SYS$CLUSTERED_INDEX$S$EMP$DEPTNO, SYS$CLUSTERED_INDEX$S$EMP$EMPNO, SYS$CLUSTERED_INDEX$S$EMP$FNAME, SYS$CLUSTERED_INDEX$S$EMP$HOBBY, SYS$CLUSTERED_INDEX$S$EMP$LNAME, SYS$CLUSTERED_INDEX$S$EMP$LOCID, SYS$CLUSTERED_INDEX$S$EMP$MANAGER, SYS$CLUSTERED_INDEX$S$EMP$SAL, SYS$CLUSTERED_INDEX$S$EMP$SEX]])'
 '      LcsRowScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$DEPT$DEPTNO, SYS$CLUSTERED_INDEX$S$DEPT$DNAME, SYS$CLUSTERED_INDEX$S$DEPT$LOCID]])'
@@ -82,8 +74,8 @@
 0: jdbc:luciddb:> explain plan for select * from emp,dept
 . . . . . . . . > where emp.deptno=dept.deptno and (emp.fname='Bill' or dept.dname='Marketing');
 'column0'
-'FennelToIteratorConverter'
-'  FennelCalcRel(expr#0..12=[{inputs}], expr#13=[=($t4, $t10)], expr#14=[_ISO-8859-1'Bill'], expr#15=[=($t1, $t14)], expr#16=[_ISO-8859-1'Marketing'], expr#17=[=($t11, $t16)], expr#18=[OR($t15, $t17)], expr#19=[AND($t13, $t18)], proj#0..12=[{exprs}], $condition=[$t19])'
+'IterCalcRel(expr#0..12=[{inputs}], expr#13=[=($t4, $t10)], expr#14=[_ISO-8859-1'Bill'], expr#15=[=($t1, $t14)], expr#16=[_ISO-8859-1'Marketing'], expr#17=[=($t11, $t16)], expr#18=[OR($t15, $t17)], expr#19=[AND($t13, $t18)], proj#0..12=[{exprs}], $condition=[$t19])'
+'  FennelToIteratorConverter'
 '    FennelCartesianProductRel(leftouterjoin=[false])'
 '      LcsRowScanRel(table=[[LOCALDB, S, EMP]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$EMP$COMMISSION, SYS$CLUSTERED_INDEX$S$EMP$DEPTNO, SYS$CLUSTERED_INDEX$S$EMP$EMPNO, SYS$CLUSTERED_INDEX$S$EMP$FNAME, SYS$CLUSTERED_INDEX$S$EMP$HOBBY, SYS$CLUSTERED_INDEX$S$EMP$LNAME, SYS$CLUSTERED_INDEX$S$EMP$LOCID, SYS$CLUSTERED_INDEX$S$EMP$MANAGER, SYS$CLUSTERED_INDEX$S$EMP$SAL, SYS$CLUSTERED_INDEX$S$EMP$SEX]])'
 '      LcsRowScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$DEPT$DEPTNO, SYS$CLUSTERED_INDEX$S$DEPT$DNAME, SYS$CLUSTERED_INDEX$S$DEPT$LOCID]])'
@@ -92,20 +84,21 @@
 0: jdbc:luciddb:> explain plan for select * from emp,dept
 . . . . . . . . > where emp.hobby=dept.dname and dept.dname='Marketing';
 'column0'
-'FennelToIteratorConverter'
-'  LhxJoinRel(leftKeys=[[9]], rightKeys=[[1]])'
-'    LcsRowScanRel(table=[[LOCALDB, S, EMP]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$EMP$COMMISSION, SYS$CLUSTERED_INDEX$S$EMP$DEPTNO, SYS$CLUSTERED_INDEX$S$EMP$EMPNO, SYS$CLUSTERED_INDEX$S$EMP$FNAME, SYS$CLUSTERED_INDEX$S$EMP$HOBBY, SYS$CLUSTERED_INDEX$S$EMP$LNAME, SYS$CLUSTERED_INDEX$S$EMP$LOCID, SYS$CLUSTERED_INDEX$S$EMP$MANAGER, SYS$CLUSTERED_INDEX$S$EMP$SAL, SYS$CLUSTERED_INDEX$S$EMP$SEX]])'
-'    LcsRowScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$DEPT$DEPTNO, SYS$CLUSTERED_INDEX$S$DEPT$DNAME, SYS$CLUSTERED_INDEX$S$DEPT$LOCID]])'
-'      LcsIndexSearchRel(table=[[LOCALDB, S, DEPT]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPT$SYS$UNIQUE_KEY$DNAME], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
-'        FennelValuesRel(tuples=[[{ '[', _ISO-8859-1'Marketing', ']', _ISO-8859-1'Marketing' }]])'
+'IterCalcRel(expr#0..12=[{inputs}], proj#0..12=[{exprs}])'
+'  FennelToIteratorConverter'
+'    LhxJoinRel(leftKeys=[[9]], rightKeys=[[1]])'
+'      LcsRowScanRel(table=[[LOCALDB, S, EMP]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$EMP$COMMISSION, SYS$CLUSTERED_INDEX$S$EMP$DEPTNO, SYS$CLUSTERED_INDEX$S$EMP$EMPNO, SYS$CLUSTERED_INDEX$S$EMP$FNAME, SYS$CLUSTERED_INDEX$S$EMP$HOBBY, SYS$CLUSTERED_INDEX$S$EMP$LNAME, SYS$CLUSTERED_INDEX$S$EMP$LOCID, SYS$CLUSTERED_INDEX$S$EMP$MANAGER, SYS$CLUSTERED_INDEX$S$EMP$SAL, SYS$CLUSTERED_INDEX$S$EMP$SEX]])'
+'      LcsRowScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$DEPT$DEPTNO, SYS$CLUSTERED_INDEX$S$DEPT$DNAME, SYS$CLUSTERED_INDEX$S$DEPT$LOCID]])'
+'        LcsIndexSearchRel(table=[[LOCALDB, S, DEPT]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPT$SYS$UNIQUE_KEY$DNAME], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'          FennelValuesRel(tuples=[[{ '[', _ISO-8859-1'Marketing', ']', _ISO-8859-1'Marketing' }]])'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- pre filter should happen here, but we still need to join to location since
 0: jdbc:luciddb:> -- location.state is not unique
 0: jdbc:luciddb:> explain plan for select emp.* from emp,location
 . . . . . . . . > where emp.fname=location.state and location.locid='00';
 'column0'
-'FennelToIteratorConverter'
-'  FennelCalcRel(expr#0..14=[{inputs}], expr#15=[=($t1, $t13)], proj#0..9=[{exprs}], $condition=[$t15])'
+'IterCalcRel(expr#0..14=[{inputs}], expr#15=[=($t1, $t13)], proj#0..9=[{exprs}], $condition=[$t15])'
+'  FennelToIteratorConverter'
 '    FennelCartesianProductRel(leftouterjoin=[false])'
 '      LcsRowScanRel(table=[[LOCALDB, S, EMP]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$EMP$COMMISSION, SYS$CLUSTERED_INDEX$S$EMP$DEPTNO, SYS$CLUSTERED_INDEX$S$EMP$EMPNO, SYS$CLUSTERED_INDEX$S$EMP$FNAME, SYS$CLUSTERED_INDEX$S$EMP$HOBBY, SYS$CLUSTERED_INDEX$S$EMP$LNAME, SYS$CLUSTERED_INDEX$S$EMP$LOCID, SYS$CLUSTERED_INDEX$S$EMP$MANAGER, SYS$CLUSTERED_INDEX$S$EMP$SAL, SYS$CLUSTERED_INDEX$S$EMP$SEX]])'
 '      LcsRowScanRel(table=[[LOCALDB, S, LOCATION]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$LOCATION$CITY, SYS$CLUSTERED_INDEX$S$LOCATION$LOCID, SYS$CLUSTERED_INDEX$S$LOCATION$STATE, SYS$CLUSTERED_INDEX$S$LOCATION$STREET, SYS$CLUSTERED_INDEX$S$LOCATION$ZIP]])'
@@ -116,8 +109,8 @@
 0: jdbc:luciddb:> explain plan for select * from emp,dept
 . . . . . . . . > where emp.deptno+1=dept.deptno+1 and dept.dname='Marketing';
 'column0'
-'FennelToIteratorConverter'
-'  FennelCalcRel(expr#0..12=[{inputs}], expr#13=[1], expr#14=[+($t4, $t13)], expr#15=[+($t10, $t13)], expr#16=[=($t14, $t15)], proj#0..12=[{exprs}], $condition=[$t16])'
+'IterCalcRel(expr#0..12=[{inputs}], expr#13=[1], expr#14=[+($t4, $t13)], expr#15=[+($t10, $t13)], expr#16=[=($t14, $t15)], proj#0..12=[{exprs}], $condition=[$t16])'
+'  FennelToIteratorConverter'
 '    FennelCartesianProductRel(leftouterjoin=[false])'
 '      LcsRowScanRel(table=[[LOCALDB, S, EMP]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$EMP$COMMISSION, SYS$CLUSTERED_INDEX$S$EMP$DEPTNO, SYS$CLUSTERED_INDEX$S$EMP$EMPNO, SYS$CLUSTERED_INDEX$S$EMP$FNAME, SYS$CLUSTERED_INDEX$S$EMP$HOBBY, SYS$CLUSTERED_INDEX$S$EMP$LNAME, SYS$CLUSTERED_INDEX$S$EMP$LOCID, SYS$CLUSTERED_INDEX$S$EMP$MANAGER, SYS$CLUSTERED_INDEX$S$EMP$SAL, SYS$CLUSTERED_INDEX$S$EMP$SEX]])'
 '      LcsRowScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$DEPT$DEPTNO, SYS$CLUSTERED_INDEX$S$DEPT$DNAME, SYS$CLUSTERED_INDEX$S$DEPT$LOCID]])'

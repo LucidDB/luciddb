@@ -128,7 +128,8 @@ struct LhxJoinInfo
 };
 
 enum JoinState {
-    Building, Probing, Producing, ProducePending, Done
+    Building, Probing, ProducingInner, ProducingLeftOuter, ProducingRightOuter,
+    ProducePending, Done
 };
 
 
@@ -183,6 +184,26 @@ class LhxJoinExecStream : public ConfluenceExecStream
      * State of the JoinExecStream
      */
     JoinState joinState;
+
+    /**
+     * Return matching rows from the left.
+     */
+    bool leftInner;
+
+    /**
+     * Return non-matching rows from the left.
+     */
+    bool leftOuter;
+
+    /**
+     * Return matching rows from the right.
+     */
+    bool rightInner;
+
+    /**
+     * Return non-matching rows from the right.
+     */
+    bool rightOuter;
 
     /*
      * Should this join filter null key values(when they are not already

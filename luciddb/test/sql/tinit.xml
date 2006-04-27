@@ -3,9 +3,11 @@
     <test-suite name="init">
 
       <init-hook>
+        <!-- Make sure engine is stopped before restoreCatalog. -->
         <test-suite name="init">
           <test name="shutdownEngine">
-            <junit testclass="org.eigenbase.blackhawk.test.junit.HelloWorld" methodnames="testHelloWorld"/>
+            <junit testclass="com.lucidera.luciddb.test.LucidDbTestHarness" 
+              methodnames="shutdownEngine"/>
           </test>
         </test-suite>
         <ant antfile="${open.dir}/luciddb/build.xml" target="restoreCatalog"/>

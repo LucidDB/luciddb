@@ -278,9 +278,8 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, LCSEMPS]])'
-'    FennelCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], $f0=[$t1])'
-'      FennelCalcRel(expr#0..9=[{inputs}], expr#10=[100], expr#11=[=($t0, $t10)], $f0=[$t4], $condition=[$t11])'
-'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FennelCalcRel(expr#0..9=[{inputs}], expr#10=[100], expr#11=[=($t0, $t10)], expr#12=[CAST($t4):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], $f0=[$t12], $condition=[$t11])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> !set outputformat table
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Locate a NULL value from the source table.
@@ -918,7 +917,8 @@
 'column0'
 'IterCalcRel(expr#0..4=[{inputs}], expr#5=[IS NULL($t1)], expr#6=[null], expr#7=[CAST($t6):ObjectSqlType(LOCALDB.LCS.RECTANGLE)], expr#8=[NEW($t2, $t3):ObjectSqlType(LOCALDB.LCS.RECTANGLE)], expr#9=[CASE($t5, $t7, $t8)], NAME=[$t0], R=[$t9], ID=[$t4])'
 '  FennelToIteratorConverter'
-'    LcsRowScanRel(table=[[LOCALDB, LCS, RECTANGLES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LCS$RECTANGLES$ID, SYS$CLUSTERED_INDEX$LCS$RECTANGLES$NAME, SYS$CLUSTERED_INDEX$LCS$RECTANGLES$R]])'
+'    FennelRenameRel(fieldNames=[[NAME, R, R, R, ID]])'
+'      LcsRowScanRel(table=[[LOCALDB, LCS, RECTANGLES]], projection=[[0, 1, 2, 3, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCS$RECTANGLES$ID, SYS$CLUSTERED_INDEX$LCS$RECTANGLES$NAME, SYS$CLUSTERED_INDEX$LCS$RECTANGLES$R]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select id from rectangles t;

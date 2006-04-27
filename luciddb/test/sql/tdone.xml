@@ -1,9 +1,11 @@
 <project name="bh" default="cleanup">
   <target name="cleanup">
+    <!-- Last one out, turn off the lights. -->
     <test-suite name="cleanup">
-
-      <!-- cleanup -->
-
+      <test name="shutdownEngine">
+        <junit testclass="com.lucidera.luciddb.test.LucidDbTestHarness" 
+          methodnames="shutdownEngine"/>
+      </test>
     </test-suite>
   </target>
 </project>

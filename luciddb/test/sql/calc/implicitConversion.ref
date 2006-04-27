@@ -77,7 +77,11 @@ Error: DDL validation error near line 1, column 12: Reference to unknown table "
 0: jdbc:luciddb:> -- FRG-49
 0: jdbc:luciddb:> select avg(b.x), sum(b.x) from foo a, foo b where a.y = b.y
 . . . . . . . . > ;
-Error: java.lang.AssertionError: Internal error: node could not be implemented: Subset#5.ITERATOR (state=,code=0)
++-----------+-----------+
+|  EXPR$0   |  EXPR$1   |
++-----------+-----------+
+| 354.1234  | 354.1234  |
++-----------+-----------+
 0: jdbc:luciddb:> drop table foo
 . . . . . . . . > ;
 0: jdbc:luciddb:> 

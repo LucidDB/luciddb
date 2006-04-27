@@ -33,10 +33,12 @@ using namespace fennel;
 
 class LhxJoinExecStreamTest : public ExecStreamUnitTestBase
 {
+    void testSequentialImpl(bool leftOuter);
+
     void testImpl(
         uint numInputRows, uint keyCount, uint cndKeys, uint numResultRows,
         TupleDescriptor &inputDesc, TupleDescriptor &outputDesc,
-        TupleProjection &outputProj,
+        TupleProjection &outputProj, bool leftOuter,
         SharedMockProducerExecStreamGenerator pLeftGenerator,
         SharedMockProducerExecStreamGenerator pRightGenerator,
         CompositeExecStreamGenerator &verifier);
@@ -45,6 +47,7 @@ public:
     explicit LhxJoinExecStreamTest()
     {
         FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testSequential);
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testSequentialLeftOuter);
         FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testRepeatSequential);
     }
     
@@ -54,16 +57,31 @@ public:
     void testSequential();
 
     /*
+     * Match two identical sets.
+     */
+    void testSequentialLeftOuter();
+
+    /*
      * Match these two sets:
      *  left:  0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, ...
      * right:  0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, ...
      *
-     * result: 0, 0, 0, 0, ......., 1, 1, 1, 1, ......
+     * result: 0, 0, 0, 0,    ...,  1, 1, 1, 1,    ...
      */
     void testRepeatSequential();
 };
 
 void LhxJoinExecStreamTest::testSequential()
+{
+    testSequentialImpl(false);
+}
+
+void LhxJoinExecStreamTest::testSequentialLeftOuter()
+{
+    testSequentialImpl(true);
+}
+
+void LhxJoinExecStreamTest::testSequentialImpl(bool leftOuter)
 {
     uint numRows = 100;
     uint numColsLeft;
@@ -127,7 +145,7 @@ void LhxJoinExecStreamTest::testSequential()
     CompositeExecStreamGenerator verifier(outColumnGenerators);
 
     testImpl(numRows, keyCount, cndKeys, numRows,
-        inputDesc, outputDesc, outputProj,
+        inputDesc, outputDesc, outputProj, leftOuter,
         pLeftGenerator, pRightGenerator, verifier);
 }
 
@@ -160,9 +178,6 @@ void LhxJoinExecStreamTest::testRepeatSequential()
     uint cndKeyRight = 16;
 
     for (i = 0; i < numColsLeft; i++) {
-        /*
-         *
-         */
         leftColumnGenerators.push_back(
             SharedInt64ColumnGenerator(new RepeatingSeqColumnGenerator(cndKeyLeft)));
         outColumnGenerators.push_back(
@@ -196,14 +211,14 @@ void LhxJoinExecStreamTest::testRepeatSequential()
     CompositeExecStreamGenerator verifier(outColumnGenerators);
 
     testImpl(numRows, keyCount, cndKeys, (numRows * numRows/cndKeyRight),
-        inputDesc, outputDesc, outputProj,
+        inputDesc, outputDesc, outputProj, false,
         pLeftGenerator, pRightGenerator, verifier);
 }
 
 void LhxJoinExecStreamTest::testImpl(
     uint numInputRows, uint keyCount, uint cndKeys, uint numResultRows,
     TupleDescriptor &inputDesc, TupleDescriptor &outputDesc,
-    TupleProjection &outputProj,
+    TupleProjection &outputProj, bool leftOuter,
     SharedMockProducerExecStreamGenerator pLeftGenerator,
     SharedMockProducerExecStreamGenerator pRightGenerator,
     CompositeExecStreamGenerator &verifier)
@@ -238,9 +253,9 @@ void LhxJoinExecStreamTest::testImpl(
     /*
      * Fields in LhxJoinExecStreamParams
      */
-    joinParams.leftInner = false;
-    joinParams.leftOuter = false;
-    joinParams.rightInner = false;
+    joinParams.leftInner = true;
+    joinParams.leftOuter = leftOuter;
+    joinParams.rightInner = true;
     joinParams.rightOuter = false;
     joinParams.eliminateDuplicate = false;
     joinParams.outputProj = outputProj;

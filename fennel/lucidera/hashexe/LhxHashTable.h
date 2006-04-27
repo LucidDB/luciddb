@@ -203,7 +203,7 @@ class LhxHashKeyAccessor : public LhxHashNodeAccessor
      * Offsets to the fields in the node
      */
     uint firstDataOffset;
-    uint touchedOffset;
+    uint isMatchedOffset;
 
     /*
      * Shape of the data tuple stored.
@@ -269,14 +269,14 @@ public:
     /**
      * @return true if this key has been seen.
      */
-    bool isTouched();
+    bool isMatched();
 
     /**
      * Set if this key has been seen.
      *
      * @param[in] touched
      */
-    void setTouched(bool touched);
+    void setMatched(bool matched);
 
     /**
      * Add data node to this key.
@@ -635,7 +635,8 @@ public:
      */
     PBuffer findKey(
         TupleData const &inputTuple,
-        TupleProjection const &keyColsProj);
+        TupleProjection const &keyColsProj,
+        bool isProbing);
 
     /**
      * Insert a new tuple.
@@ -681,6 +682,7 @@ class LhxHashTableReader
 
     PBuffer boundKey;
     bool    started;
+    bool    returnUnMatched;
 
     /**
      * Accessors for the content of this hash table.
@@ -725,6 +727,10 @@ class LhxHashTableReader
      */
     void produceTuple(TupleData &outputTuple);
 
+    /**
+     * Helper fundtion for bindKey() and bindUnMatched().
+     */
+    void bind(PBuffer key);
 public:
     /**
      * Initialize the hash table reader.
@@ -750,6 +756,12 @@ public:
      * @param[in] key key node to bind this reader to.
      */
     void bindKey(PBuffer key);
+
+    /**
+     * Bind this reader to unmatched keys.  Only rows with unmatched keys will
+     * be returned.
+     */
+    void bindUnMatched();
 
     /**
      * Get the next outputTuple.
@@ -862,14 +874,14 @@ inline void LhxHashKeyAccessor::setFirstData(PBuffer inputFirstData)
             sizeof(PBuffer));
 }
 
-inline bool LhxHashKeyAccessor::isTouched()
+inline bool LhxHashKeyAccessor::isMatched()
 {
-    return (*(uint8_t *)(getCurrent() + touchedOffset) == 1);
+    return (*(uint8_t *)(getCurrent() + isMatchedOffset) == 1);
 }
 
-inline void LhxHashKeyAccessor::setTouched(bool touched)
+inline void LhxHashKeyAccessor::setMatched(bool matched)
 {
-    *(getCurrent()+touchedOffset) = (touched ? 0x01 : 0);
+    *(getCurrent() + isMatchedOffset) = (matched ? 0x01 : 0);
 }
 
 inline void LhxHashBlockAccessor::reset()

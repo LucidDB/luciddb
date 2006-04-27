@@ -38,6 +38,40 @@ insert into d1 values(1, 0, 1, 1);
 insert into d2 values(2, 0, 1, 2);
 insert into d3 values(3, 0, 1, 2);
 
+-- fake stats
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'F', 10000000);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'D1', 100000);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'D2', 1000);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'D3', 10);
+
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'JO', 'F', 'F_D1', 100000, 100, 100000, 0, '0123456789');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'JO', 'F', 'F_D2', 1000, 100, 1000, 0, '0123456789');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'JO', 'F', 'F_D3', 10, 100, 10, 0, '0123456789');
+
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'JO', 'D1', 'D1_F', 100000, 100, 100000, 0, '0123456789');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'JO', 'D1', 'D1_D2', 1000, 100, 1000, 0, '0123456789');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'JO', 'D1', 'D1_D3', 10, 100, 10, 0, '0123456789');
+
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'JO', 'D2', 'D2_F', 1000, 100, 1000, 0, '0123456789');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'JO', 'D2', 'D2_D1', 1000, 100, 1000, 0, '0123456789');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'JO', 'D2', 'D2_D3', 10, 100, 10, 0, '0123456789');
+
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'JO', 'D3', 'D3_F', 10, 100, 10, 0, '0123456789');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'JO', 'D3', 'D3_D1', 10, 100, 10, 0, '0123456789');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'JO', 'D3', 'D3_D2', 10, 100, 10, 0, '0123456789');
+
 !set outputformat csv
 
 --------------------------------------------------------------------
@@ -46,44 +80,44 @@ insert into d3 values(3, 0, 1, 2);
 
 -- MJ/MJ
 explain plan for select f, d1, d2, d3
-    from (select * from f, d1 where f.f_d1 = d1.d1_f) j1,
-        (select * from d2, d3 where d2.d2_d3 = d3.d3_d2) j2
-    where j1.f_d2 = j2.d2_f;
+    from (select * from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0) j1,
+        (select * from d2, d3 where d2.d2_d3 = d3.d3_d2 and d3.d3 >= 0) j2
+    where j1.f_d2 = j2.d2_f and j2.d2 >= 0;
 
 -- MJ/RS
 explain plan for select f, d1, d2
-    from (select * from f, d1 where f.f_d1 = d1.d1_f) j, d2
-    where j.f_d2 = d2.d2_f;
+    from (select * from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0) j, d2
+    where j.f_d2 = d2.d2_f and d2.d2 >= 0;
 
 -- MJ/FRS
 explain plan for select f, d1, d2
-    from (select * from f, d1 where f.f_d1 = d1.d1_f) j, d2
+    from (select * from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0) j, d2
     where j.f_d2 = d2.d2_f and d2.d2 + 0 = 2;
 
 -- RS/MJ
 explain plan for select f, d1, d2
-    from f, (select * from d1, d2 where d1.d1_d2 = d2.d2_d1) j
-    where f.f_d1 = j.d1_f;
+    from f, (select * from d1, d2 where d1.d1_d2 = d2.d2_d1 and d2.d2 >= 0) j
+    where f.f_d1 = j.d1_f and j.d1 >= 0;
 
 -- RS/RS
-explain plan for select f, d1 from f, d1 where f.f_d1 = d1.d1_f;
+explain plan for select f, d1 from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0;
 
 -- RS/FRS
-explain plan for select f, d1 from f, d1
-    where f.f_d1 = d1.d1_f and d1.d1 + 0 = 1;
+explain plan for select f, d2 from f, d2
+    where f.f_d2 = d2.d2_f and d2.d2 + 0 = 2;
 
 -- FRS/MJ
-explain plan for select f, d1, d2
-    from f, (select * from d1, d2 where d1.d1_d2 = d2.d2_d1) j
-    where f.f_d1 = j.d1_f and f.f + 0 = 0;
+explain plan for select f, d1, d3
+    from f, (select * from d1, d3 where d1.d1_d3 = d3.d3_d1 and d3.d3 >= 0) j
+    where f.f_d1 = j.d1_f and j.d1 + 0 = 1;
 
 -- FRS/RS
 explain plan for select f, d1 from f, d1
-    where f.f_d1 = d1.d1_f and f.f + 0 = 0;
+    where f.f_d1 = d1.d1_f and f.f + 0 = 0 and d1.d1 >= 0;
 
 -- FRS/FRS
-explain plan for select f, d1 from f, d1
-    where f.f_d1 = d1.d1_f and f.f + 0 = 0 and d1.d1 + 0 = 1;
+explain plan for select f, d2 from f, d2
+    where f.f_d2 = d2.d2_f and f.f + 0 = 0 and d2.d2 + 0 = 2;
 
 ------------------------------------------------------
 -- different join combinations, including corner cases
@@ -110,8 +144,9 @@ explain plan for select f, d1 from f, d1
 
 -- all possible join combinations
 explain plan for select f, d1, d2, d3
-    from f, d1, d2, d3
+    from d3, d1, d2, f
     where
+        d1.d1_f = 1 and d2.d2_f = 2 and d3.d3_f = 3 and
         f.f_d1 = d1.d1_f and f.f_d2 = d2.d2_f and f.f_d3 = d3.d3_f and
         d1.d1_d2 = d2.d2_d1 and d1.d1_d3 = d3.d3_d1 and
         d2.d2_d3 = d3.d3_d2;
@@ -122,34 +157,36 @@ explain plan for select f, d1, d2, d3
 !set outputformat table
 
 select f, d1, d2, d3
-    from (select * from f, d1 where f.f_d1 = d1.d1_f) j1,
-        (select * from d2, d3 where d2.d2_d3 = d3.d3_d2) j2
-    where j1.f_d2 = j2.d2_f;
+    from (select * from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0) j1,
+        (select * from d2, d3 where d2.d2_d3 = d3.d3_d2 and d3.d3 >= 0) j2
+    where j1.f_d2 = j2.d2_f and j2.d2 >= 0;
 
 select f, d1, d2
-    from (select * from f, d1 where f.f_d1 = d1.d1_f) j, d2
-    where j.f_d2 = d2.d2_f;
+    from (select * from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0) j, d2
+    where j.f_d2 = d2.d2_f and d2.d2 >= 0;
 
 select f, d1, d2
-    from (select * from f, d1 where f.f_d1 = d1.d1_f) j, d2
+    from (select * from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0) j, d2
     where j.f_d2 = d2.d2_f and d2.d2 + 0 = 2;
 
 select f, d1, d2
-    from f, (select * from d1, d2 where d1.d1_d2 = d2.d2_d1) j
-    where f.f_d1 = j.d1_f;
+    from f, (select * from d1, d2 where d1.d1_d2 = d2.d2_d1 and d2.d2 >= 0) j
+    where f.f_d1 = j.d1_f and j.d1 >= 0;
 
-select f, d1 from f, d1 where f.f_d1 = d1.d1_f;
+select f, d1 from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0;
 
-select f, d1 from f, d1 where f.f_d1 = d1.d1_f and d1.d1 + 0 = 1;
+select f, d2 from f, d2
+    where f.f_d2 = d2.d2_f and d2.d2 + 0 = 2;
 
-select f, d1, d2
-    from f, (select * from d1, d2 where d1.d1_d2 = d2.d2_d1) j
-    where f.f_d1 = j.d1_f and f.f + 0 = 0;
-
-select f, d1 from f, d1 where f.f_d1 = d1.d1_f and f.f + 0 = 0;
+select f, d1, d3
+    from f, (select * from d1, d3 where d1.d1_d3 = d3.d3_d1 and d3.d3 >= 0) j
+    where f.f_d1 = j.d1_f and j.d1 + 0 = 1;
 
 select f, d1 from f, d1
-    where f.f_d1 = d1.d1_f and f.f + 0 = 0 and d1.d1 + 0 = 1;
+    where f.f_d1 = d1.d1_f and f.f + 0 = 0 and d1.d1 >= 0;
+
+select f, d2 from f, d2
+    where f.f_d2 = d2.d2_f and f.f + 0 = 0 and d2.d2 + 0 = 2;
 
 select f, d1, d2, d3 
     from f, d1, d2, d3;
@@ -204,6 +241,8 @@ create table LOCATION(
   STATE char(2),
   ZIP numeric(5,0)
 );
+
+!set outputformat csv
 
 explain plan for
 select EMP.LNAME, DEPT.DNAME

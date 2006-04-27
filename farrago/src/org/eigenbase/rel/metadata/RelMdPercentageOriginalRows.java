@@ -109,15 +109,27 @@ public class RelMdPercentageOriginalRows extends ReflectiveRelMetadataProvider
 
         RelNode child = rel.getInputs()[0];
 
-        double childPercentage =
+        Double childPercentage =
             RelMetadataQuery.getPercentageOriginalRows(child);
+        if (childPercentage == null) {
+            return null;
+        }
 
         // Compute product of percentage filtering from this rel (assuming any
         // filtering is the effect of single-table filters) with the percentage
         // filtering performed by the child.
-        double relPercentage = quotientForPercentage(
+        Double relPercentage = quotientForPercentage(
             RelMetadataQuery.getRowCount(rel),
             RelMetadataQuery.getRowCount(child));
+        if (relPercentage == null) {
+            return null;
+        }
+        double percent = relPercentage * childPercentage;
+        // this check is needed in cases where this method is called on a
+        // physical rel
+        if (percent < 0.0 || percent > 1.0) {
+            return null;
+        }
         return relPercentage * childPercentage;
     }
 
@@ -138,10 +150,13 @@ public class RelMdPercentageOriginalRows extends ReflectiveRelMetadataProvider
         return rel.computeSelfCost(rel.getCluster().getPlanner());
     }
 
-    private static double quotientForPercentage(
-        double numerator,
-        double denominator)
+    private static Double quotientForPercentage(
+        Double numerator,
+        Double denominator)
     {
+        if (numerator == null || denominator == null) {
+            return null;
+        }
         // may need epsilon instead
         if (denominator == 0.0) {
             // cap at 100%

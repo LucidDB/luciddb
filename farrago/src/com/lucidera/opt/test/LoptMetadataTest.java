@@ -864,9 +864,8 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
        Double expected =
            RelMdUtil.numDistinctVals(90000*150.0, COLSTORE_EMPS_ROWCOUNT*1.0);
        
-       // NOTE: FarragoRelMetadataProvider never gets called for LcsRowScanRel
-       // assertTrue(result != null);
-       // assertEquals(expected.doubleValue(), result.doubleValue(), EPSILON);
+       assertTrue(result != null);
+       assertEquals(expected.doubleValue(), result.doubleValue(), EPSILON);
     }
 }
 

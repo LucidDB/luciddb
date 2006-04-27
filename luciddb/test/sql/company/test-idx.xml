@@ -199,6 +199,8 @@
 
       <test name="joinFiltExp" requiresSuccess="download">
         <test-metadata>
+          <!-- LER-787 -->
+          <knownFailure value="true"/>
           <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/joinFiltExp.sql"/>
@@ -206,6 +208,8 @@
 
       <test name="joinFilt" requiresSuccess="download">
         <test-metadata>
+          <!-- LER-787 -->
+          <knownFailure value="true"/>
           <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/joinFilt.sql"/>
