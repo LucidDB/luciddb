@@ -4,7 +4,9 @@
 
       <init-hook>
         <test-suite name="init">
-          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml"/>
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">
+            <test-suite-modifier value="test-insert10k-2"/>
+          </test-suite-call>
         </test-suite>
       </init-hook>
 

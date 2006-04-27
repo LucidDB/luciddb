@@ -4,7 +4,9 @@
 
       <init-hook>
         <test-suite name="init">
-          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml"/>
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">
+            <test-suite-modifier value="calc"/>
+          </test-suite-call>
         </test-suite>
       </init-hook>
 
@@ -252,9 +254,7 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug55046.sql"/>
       </test>
 
-      <test-suite-call testfile="cast/test.xml">
-        <test-suite-modifier value="calc.cast"/>
-      </test-suite-call>
+      <test-suite-call testfile="cast/test.xml"/>
 
       <cleanup-hook>
         <test-suite name="cleanup">

@@ -171,6 +171,7 @@
   <target name="gen-all-sql">
     <ant dir="test/sql/shortreg" target="gen-all-sql"/>
     <ant dir="test/sql/VI/tbs" target="gen-all-sql"/>
+    <ant dir="test/sql/mondrian" target="gen-all-sql"/>
   </target>
 
   <target name="gen-bh-report">
@@ -199,7 +200,6 @@
         <exclude name="VI/build.xml"/>
         <exclude name="hashjoin/**"/>
         <exclude name="distribution/**"/>
-        <exclude name="mondrian/**"/>
       </fileset>
     </foreach>
   </target>

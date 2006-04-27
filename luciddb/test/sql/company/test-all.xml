@@ -3,15 +3,11 @@
     <test-suite name="company-all">
       
       <!-- without indexes -->
-      <test-suite-call testfile="test-noidx.xml">
-        <test-suite-modifier value="company-noidx"/>
-      </test-suite-call>
+      <test-suite-call testfile="test-noidx.xml"/>
       
       <!-- with indexes -->
-      <test-suite-call testfile="test-idx.xml">
-        <test-suite-modifier value="company-idx"/>
-      </test-suite-call>
-  
+      <test-suite-call testfile="test-idx.xml"/>
+
     </test-suite>
   </target>
 </project>

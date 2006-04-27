@@ -4,7 +4,9 @@
 
       <init-hook>
         <test-suite name="init">
-          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml"/>
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">
+            <test-suite-modifier value="test-simple"/>
+          </test-suite-call>
         </test-suite>
         <ant dir="${open.dir}/luciddb/test/sql/VI/insert" target="copy-csv"/>
       </init-hook>
