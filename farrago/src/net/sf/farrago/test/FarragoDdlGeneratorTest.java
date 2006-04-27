@@ -28,7 +28,7 @@ import net.sf.farrago.ddl.gen.GeneratedDdlStmt;
 
 
 /**
- * Test cases for FarragoDdlGenerator.  This is TODO.
+ * Test cases for FarragoDdlGenerator.  This is a placeholder for now.
  *
  * @author Jason Ouellette
  * @version $Id$
@@ -45,13 +45,8 @@ public class FarragoDdlGeneratorTest extends FarragoTestCase
 
     //~ Methods ---------------------------------------------------------------
 
-    public void testFoo()
+    public void testCreateTable()
         throws Exception
     {
-        CwmView view = repos.newFemLocalView();
-        view.setName("foo");
-        FarragoDdlGenerator dg = new FarragoDdlGenerator();
-        GeneratedDdlStmt stmt = new GeneratedDdlStmt();
-        dg.generateCreate(view, stmt);
     }
 }
