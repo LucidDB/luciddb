@@ -23,10 +23,11 @@
         <test-suite-modifier value="tbs100"/>
       </test-suite-call>
 
+<!--
       <test-suite-call testfile="test/sql/mondrian/test.xml">
         <test-suite-modifier value="mondrian"/>
       </test-suite-call>
-
+-->
     </test-suite>
   </target>
 </project>
