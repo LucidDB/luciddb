@@ -24,7 +24,9 @@
 
       <cleanup-hook>
         <test-suite name="cleanup">
-          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tdone.xml"/>
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tdone.xml">
+            <test-suite-modifier value="conv_char"/>
+          </test-suite-call>
         </test-suite>
       </cleanup-hook>
 

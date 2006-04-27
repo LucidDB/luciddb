@@ -183,7 +183,9 @@
 
       <cleanup-hook>
         <test-suite name="cleanup">
-          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tdone.xml"/>
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tdone.xml">
+            <test-suite-modifier value="company-noidx-test"/>
+          </test-suite-call>
         </test-suite>
       </cleanup-hook>
 
