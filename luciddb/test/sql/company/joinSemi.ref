@@ -208,22 +208,15 @@
 0: jdbc:luciddb:> select EL.CITY, DL.CITY
 . . . . . . . . > from LOCATION EL, LOCATION DL, EMP, DEPT
 . . . . . . . . > where EL.LOCID = EMP.LOCID and DL.LOCID=DEPT.LOCID
-. . . . . . . . > order by EL.CITY, DL.CITY;
+. . . . . . . . > order by 1, 2;
 +----------------+----------------+
 |      CITY      |      CITY      |
 +----------------+----------------+
-| Los Angeles    | San Mateo      |
-| Los Angeles    | San Mateo      |
-| Los Angeles    | San Francisco  |
-| Los Angeles    | San Francisco  |
 | Los Angeles    | Menlo Park     |
-| Menlo Park     | San Francisco  |
-| Menlo Park     | San Mateo      |
-| Menlo Park     | San Mateo      |
-| Menlo Park     | San Mateo      |
-| Menlo Park     | San Mateo      |
-| Menlo Park     | San Mateo      |
-| Menlo Park     | San Mateo      |
+| Los Angeles    | San Francisco  |
+| Los Angeles    | San Francisco  |
+| Los Angeles    | San Mateo      |
+| Los Angeles    | San Mateo      |
 | Menlo Park     | Menlo Park     |
 | Menlo Park     | Menlo Park     |
 | Menlo Park     | Menlo Park     |
@@ -232,31 +225,28 @@
 | Menlo Park     | San Francisco  |
 | Menlo Park     | San Francisco  |
 | Menlo Park     | San Francisco  |
-| San Francisco  | San Francisco  |
-| San Francisco  | San Francisco  |
-| San Francisco  | San Francisco  |
-| San Francisco  | San Francisco  |
+| Menlo Park     | San Francisco  |
+| Menlo Park     | San Mateo      |
+| Menlo Park     | San Mateo      |
+| Menlo Park     | San Mateo      |
+| Menlo Park     | San Mateo      |
+| Menlo Park     | San Mateo      |
+| Menlo Park     | San Mateo      |
 | San Francisco  | Menlo Park     |
 | San Francisco  | Menlo Park     |
 | San Francisco  | Menlo Park     |
-| San Francisco  | San Mateo      |
-| San Francisco  | San Mateo      |
-| San Francisco  | San Mateo      |
-| San Francisco  | San Mateo      |
-| San Francisco  | San Mateo      |
-| San Francisco  | San Mateo      |
 | San Francisco  | San Francisco  |
 | San Francisco  | San Francisco  |
-| San Mateo      | San Mateo      |
-| San Mateo      | San Mateo      |
-| San Mateo      | San Mateo      |
-| San Mateo      | San Francisco  |
-| San Mateo      | San Francisco  |
-| San Mateo      | San Mateo      |
-| San Mateo      | San Mateo      |
-| San Mateo      | San Mateo      |
-| San Mateo      | San Mateo      |
-| San Mateo      | San Mateo      |
+| San Francisco  | San Francisco  |
+| San Francisco  | San Francisco  |
+| San Francisco  | San Francisco  |
+| San Francisco  | San Francisco  |
+| San Francisco  | San Mateo      |
+| San Francisco  | San Mateo      |
+| San Francisco  | San Mateo      |
+| San Francisco  | San Mateo      |
+| San Francisco  | San Mateo      |
+| San Francisco  | San Mateo      |
 | San Mateo      | Menlo Park     |
 | San Mateo      | Menlo Park     |
 | San Mateo      | Menlo Park     |
@@ -267,6 +257,16 @@
 | San Mateo      | San Francisco  |
 | San Mateo      | San Francisco  |
 | San Mateo      | San Francisco  |
+| San Mateo      | San Francisco  |
+| San Mateo      | San Francisco  |
+| San Mateo      | San Mateo      |
+| San Mateo      | San Mateo      |
+| San Mateo      | San Mateo      |
+| San Mateo      | San Mateo      |
+| San Mateo      | San Mateo      |
+| San Mateo      | San Mateo      |
+| San Mateo      | San Mateo      |
+| San Mateo      | San Mateo      |
 +----------------+----------------+
 0: jdbc:luciddb:> --order by CITY, CITY;
 0: jdbc:luciddb:> 

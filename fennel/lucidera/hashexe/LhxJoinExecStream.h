@@ -128,7 +128,8 @@ struct LhxJoinInfo
 };
 
 enum JoinState {
-    Building, Probing, Producing, ProducePending, Done
+    Building, Probing, ProducingInner, ProducingLeftOuter, ProducingRightOuter,
+    ProducePending, Done
 };
 
 
@@ -184,12 +185,37 @@ class LhxJoinExecStream : public ConfluenceExecStream
      */
     JoinState joinState;
 
+    /**
+     * Return matching rows from the left.
+     */
+    bool leftInner;
+
+    /**
+     * Return non-matching rows from the left.
+     */
+    bool leftOuter;
+
+    /**
+     * Return matching rows from the right.
+     */
+    bool rightInner;
+
+    /**
+     * Return non-matching rows from the right.
+     */
+    bool rightOuter;
+
     /*
      * Should this join filter null key values(when they are not already
      * filtered at the input)
      */
     bool leftFilterNull;
     bool rightFilterNull;
+    
+    /*
+     * Number of tuples produced within the current quantum.
+     */
+    uint numTuplesProduced;
 
     /**
      * implement ExecStream

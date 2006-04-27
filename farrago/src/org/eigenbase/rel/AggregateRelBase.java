@@ -182,6 +182,8 @@ public abstract class AggregateRelBase extends SingleRel
     public static class Call
     {
         private final Aggregation aggregation;
+        // TODO jvs 24-Apr-2006:  make this array and its contents
+        // immutable
         public final int [] args;
         private final boolean distinct;
         private final RelDataType type;

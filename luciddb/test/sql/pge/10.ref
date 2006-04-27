@@ -1,0 +1,150 @@
+0: jdbc:oracle:> -- Query 10
+0: jdbc:oracle:> 
+0: jdbc:oracle:> SELECT AL1.CU_ID, AL1.CUOR_CUST_NM, AL1.CUIN_LST_NM, AL1.ST_CD,
+. . . . . . . . >  AL1.ZIP_CD_NUM, AL1.CO_CD, AL1.IS_DWLGS_VAL, AL3.SRVPLN_ID,
+. . . . . . . . >  AL3.SRVPLN_NM, AVG(AL5.USG_VAL), AVG(AL5.USG_BILL_THERM),
+. . . . . . . . >  AVG(AL5.RSD_SVC_BILG_AMT)
+. . . . . . . . > FROM
+. . . . . . . . > PGE.REVN_DTL_RAND AL5,
+. . . . . . . . > PGE.CUST_SERV_ACCT AL1,
+. . . . . . . . > PGE.SERV_PLAN AL3,
+. . . . . . . . > PGE.GEOG AL2,
+. . . . . . . . > PGE.REVN_PRD AL4
+. . . . . . . . > -- PGE.CUST_SERV_ACCT AL1,
+. . . . . . . . > -- PGE.GEOG AL2,
+. . . . . . . . > -- PGE.SERV_PLAN AL3,
+. . . . . . . . > -- PGE.REVN_PRD AL4,
+. . . . . . . . > -- PGE.REVN_DTL_RAND AL5
+. . . . . . . . > WHERE (AL5.REVN_YR_MO=AL4.REVN_YR_MO
+. . . . . . . . >  AND AL2.GEOG_KEY=AL5.GEOG_KEY AND AL3.SRVPLN_KEY=AL5.SRVPLN_KEY
+. . . . . . . . >  AND AL1.CUST_SERV_ACCT_KEY=AL5.CUST_SERV_ACCT_KEY)
+. . . . . . . . >  AND (AL4.REVN_YR_MO=
+. . . . . . . . >   (SELECT max(AL4.REVN_YR_MO) FROMPGE.REVN_PRD AL4)
+. . . . . . . . >  AND AL1.IS_DWLGS_VAL>1 AND AL3.SRVPLN_NM LIKE '%MULT%')
+. . . . . . . . > GROUP BY AL1.CU_ID, AL1.CUOR_CUST_NM, AL1.CUIN_LST_NM, AL1.ST_CD,
+. . . . . . . . >  AL1.ZIP_CD_NUM, AL1.CO_CD, AL1.IS_DWLGS_VAL, AL3.SRVPLN_ID,
+. . . . . . . . >  AL3.SRVPLN_NM
+. . . . . . . . > --ORDER BY  7 DESC, 1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12
+. . . . . . . . > ORDER BY  7, 1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12
+. . . . . . . . > ;
++------------+---------------+--------------+--------+-------------+--------+---------------+------------+----------------------------+-------------------+--------------------------+----------------------------+
+|   CU_ID    | CUOR_CUST_NM  | CUIN_LST_NM  | ST_CD  | ZIP_CD_NUM  | CO_CD  | IS_DWLGS_VAL  | SRVPLN_ID  |         SRVPLN_NM          | AVG(AL5.USG_VAL)  | AVG(AL5.USG_BILL_THERM)  | AVG(AL5.RSD_SVC_BILG_AMT)  |
++------------+---------------+--------------+--------+-------------+--------+---------------+------------+----------------------------+-------------------+--------------------------+----------------------------+
+| 7310004    | N/A           | CARPENTER    | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 35.516547         | 36.3775542               | 24.29116563                |
+| 9800005    | N/A           | ZIMMERMAN    | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 112.75929         | 115.6588146              | 68.57912628                |
+| 33800002   | N/A           | HEADD        | IN     | 67616       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 77.320656         | 79.2536724               | 55.34870292                |
+| 34100005   | N/A           | FOSTER       | IN     | 67619       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 49.507914         | 50.6917989               | 32.67522324                |
+| 43800009   | N/A           | EDWARDS      | IN     | 67616       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 101.168346        | 103.7513676              | 69.65548248                |
+| 48000009   | N/A           | ANDERSON     | IN     | 67612       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 90.405756         | 92.6658999               | 63.23021625                |
+| 63310001   | N/A           | MAX          | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 195.879138        | 200.9375553              | 125.93306559               |
+| 69400002   | N/A           | WATSON       | IN     | 67439       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 216.328059        | 221.9246058              | 137.40598653               |
+| 79610002   | N/A           | FUSARO       | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 8.610072          | 8.8253238                | 8.14728063                 |
+| 93510002   | N/A           | HUNTER       | IN     | 67612       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 135.608634        | 139.0526628              | 90.27660492                |
+| 125200008  | N/A           | REAVES       | IN     | 67616       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 119.464749        | 122.4782742              | 80.63332428                |
+| 132610005  | N/A           | NAVARRO      | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 132.379857        | 135.7162599              | 88.39315167                |
+| 140400008  | N/A           | WEISS        | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 76.414389         | 78.3516552               | 48.20564061                |
+| 145500004  | N/A           | GROLIMUND    | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 57.041727         | 58.4408637               | 37.21703622                |
+| 153610008  | N/A           | FLORES       | IN     | 67612       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 102.244605        | 104.8276266              | 70.23666234                |
+| 166100009  | N/A           | EDMERSON     | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 93.634533         | 96.0023028               | 57.84892125                |
+| 174200003  | N/A           | COWART       | IN     | 67616       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 22.601439         | 23.1395685               | 16.53133824                |
+| 185110005  | N/A           | CARPENTER    | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 181.887771        | 186.5156847              | 118.01179935               |
+| 193100006  | N/A           | WASHINGTON   | IN     | 67619       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 44.126619         | 45.202878                | 35.4089211                 |
+| 207200004  | N/A           | BLANKENSHIP  | IN     | 67619       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 166.820145        | 171.125181               | 109.18647555               |
+| 214610009  | N/A           | SKINNER      | IN     | 67436       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 173.277699        | 177.6903609              | 112.98566982               |
+| 233900002  | N/A           | DANFORTH     | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 36.592806         | 37.4538132               | 24.91539585                |
+| 241710001  | N/A           | WALLERS      | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 63.499281         | 65.1136695               | 40.97318013                |
+| 251100008  | N/A           | ANDERSON     | IN     | 67612       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 38.745324         | 39.7139571               | 26.24995701                |
+| 268000005  | N/A           | COUTRNEY     | IN     | 67612       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 83.948202         | 86.10072                 | 59.25882054                |
+| 270610005  | N/A           | SHROCK       | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 359.470506        | 368.7263334              | 217.65185757               |
+| 290210004  | N/A           | ROBBINS      | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 21.52518          | 22.0633095               | 15.89634543                |
+| 308300007  | N/A           | BEHNKE       | IN     | 67616       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 18.296403         | 18.7269066               | 13.94831664                |
+| 314500006  | N/A           | GALBREATH    | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 151.752519        | 155.6270514              | 100.11361218               |
+| 336200005  | N/A           | ALLEN        | IN     | 67616       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 23.677698         | 24.2158275               | 17.16633105                |
+| 343810002  | N/A           | TUCKER       | IN     | 67612       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 171.125181        | 175.5378429              | 111.65110866               |
+| 347310004  | N/A           | KING         | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 215.2518          | 220.8483468              | 136.87861962               |
+| 363210006  | N/A           | BATISTA      | IN     | 67612       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 38.745324         | 39.7139571               | 26.24995701                |
+| 368000003  | N/A           | STOUT        | IN     | 67612       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 41.974101         | 43.05036                 | 28.1979858                 |
+| 382200004  | N/A           | DEMETRAKIS   | IN     | 67631       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 44.029818         | 45.103716                | 29.39258826                |
+| 387400005  | N/A           | JENKINS      | IN     | 67616       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 178.658994        | 183.2869077              | 116.20368423               |
+| 393110006  | N/A           | BOWERS       | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 19.372662         | 19.8031656               | 14.58330945                |
+| 393110007  | N/A           | PALMER       | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 43.05036          | 44.126619                | 28.83297861                |
+| 395310001  | N/A           | PARKER       | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 50.584173         | 51.8756838               | 33.364029                  |
+| 404100002  | N/A           | ROBINSON     | IN     | 67436       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 38.745324         | 39.7139571               | 26.24995701                |
+| 404100005  | N/A           | MILLER       | IN     | 67619       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 121.617267        | 124.7384181              | 81.94636026                |
+| 404200008  | N/A           | WILLIAMS     | IN     | 67616       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 24.753957         | 25.2920865               | 17.80132386                |
+| 408300008  | N/A           | YOUNG        | IN     | 67616       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 65.651799         | 67.2661875               | 48.28097874                |
+| 416900009  | N/A           | STATLER      | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 170.048922        | 174.4615839              | 111.08069139               |
+| 417500000  | N/A           | PLETCHER     | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 136.684893        | 140.2365477              | 91.04074881                |
+| 426310001  | N/A           | RODINO       | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 172.20144         | 176.6141019              | 112.41525255               |
+| 430200005  | N/A           | WARD         | IN     | 67616       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 451.03716         | 462.7426482              | 268.92553716               |
+| 436000008  | N/A           | TAYLOR       | IN     | 67616       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 37.669065         | 38.6376981               | 25.60420161                |
+| 436200001  | N/A           | COVINGTON    | IN     | 67619       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 97.939569         | 100.4149647              | 67.77202923                |
+| 445500002  | N/A           | FLOYD        | IN     | 67436       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 226.01439         | 231.8261886              | 142.86261966               |
+| 448000001  | N/A           | WATERS       | IN     | 67616       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 30.135252         | 30.8886333               | 21.07315122                |
+| 458710008  | N/A           | SURIS        | IN     | 67631       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 17.220144         | 17.6506476               | 13.31332383                |
+| 464310002  | N/A           | LECOUNT      | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 265.835973        | 272.7240306              | 165.0981306                |
+| 464310003  | N/A           | CARPENTER    | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 133.456116        | 136.9001448              | 89.14653297                |
+| 464710007  | N/A           | HURLEY       | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 224.938131        | 230.7499296              | 142.16305131               |
+| 508310000  | N/A           | WETZEL       | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 68.880576         | 70.6025904               | 43.98670533                |
+| 516100006  | N/A           | LONG         | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 58.117986         | 59.6247486               | 37.90584198                |
+| 526310007  | N/A           | COMBS        | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 140.989929        | 144.6492096              | 84.42175596                |
+| 532300000  | N/A           | MOODY        | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 174.353958        | 178.8742458              | 113.73905112               |
+| 549510005  | N/A           | WALKER       | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 66.728058         | 68.4500724               | 42.80282043                |
+| 554200005  | N/A           | WILLIAMS     | IN     | 67619       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 83.948202         | 86.10072                 | 59.25882054                |
+| 556000006  | N/A           | GARY         | IN     | 67612       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 32.28777          | 33.0411513               | 22.34313684                |
+| 571100002  | N/A           | SIMPSON      | IN     | 67615       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 552.120867        | 566.4351117              | 325.60063527               |
+| 583300005  | N/A           | EVINS        | IN     | 67619       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 69.956835         | 71.6788494               | 50.92857588                |
+| 592200002  | N/A           | BALL         | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 47.355396         | 48.5392809               | 37.31389953                |
+| 601900000  | N/A           | MCKENZIE     | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 371.309355        | 380.8880601              | 224.1847497                |
+| 604300005  | N/A           | TILMANN      | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 128.074821        | 131.303598               | 85.73479194                |
+| 609300007  | N/A           | THOMPSON     | IN     | 67541       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 269.06475         | 276.0604335              | 167.02463421               |
+| 610200003  | N/A           | KIDDER       | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 73.185612         | 75.0152523               | 46.37600031                |
+| 610300002  | N/A           | HOCHSTETLER  | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 111.930936        | 114.8368353              | 68.13795729                |
+| 620100008  | N/A           | WATSON       | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 163.591368        | 167.7887781              | 107.10929568               |
+| 622110005  | N/A           | HINES        | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 114.083454        | 116.9893533              | 77.41530987                |
+| 623100006  | N/A           | SHAW         | IN     | 67619       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 50.584173         | 51.8756838               | 33.364029                  |
+| 623200006  | N/A           | GORDON       | IN     | 67616       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 333.64029         | 342.250362               | 203.1976992                |
+| 638110006  | N/A           | WHITENER     | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 175.430217        | 179.9505048              | 114.30946839               |
+| 651710003  | N/A           | STAMPS       | IN     | 67612       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 270.141009        | 277.1366925              | 167.5735263                |
+| 670200001  | N/A           | LEWIS        | IN     | 67616       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 199.107915        | 204.2739582              | 127.69813035               |
+| 671110004  | N/A           | ROBERT       | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 20.448921         | 20.8794246               | 15.20753967                |
+| 678810007  | N/A           | CRAMER       | IN     | 67436       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 36.592806         | 37.4538132               | 24.91539585                |
+| 691900000  | N/A           | YODER        | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 20.448921         | 20.8794246               | 15.20753967                |
+| 694310003  | N/A           | CASEY        | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 32.28777          | 33.0411513               | 22.34313684                |
+| 696400009  | N/A           | JACKSON      | IN     | 67616       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 54.889209         | 56.2883457               | 35.95781319                |
+| 697000003  | N/A           | JOSHUA       | IN     | 67612       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 214.175541        | 219.6644619              | 136.17905127               |
+| 718110001  | N/A           | FIERCE       | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 153.905037        | 157.8871953              | 101.43741075               |
+| 723100008  | N/A           | CRAIG        | IN     | 67612       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 86.10072          | 88.253238                | 60.57185652                |
+| 743110002  | N/A           | KHAN         | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 204.48921         | 209.7628791              | 130.70089296               |
+| 744610004  | N/A           | ROCHA        | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 121.617267        | 124.7384181              | 81.94636026                |
+| 785900007  | N/A           | MCKENZIE     | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 106.549641        | 109.2402885              | 65.08138173                |
+| 791710009  | N/A           | ULERY        | IN     | 67436       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 175.430217        | 179.9505048              | 114.30946839               |
+| 809200001  | N/A           | HURLEY       | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 78.566907         | 80.5041732               | 49.37876292                |
+| 810900004  | N/A           | STALEY       | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 44.126619         | 45.202878                | 29.45720883                |
+| 823310005  | N/A           | RUSSELL      | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 105.473382        | 108.1640295              | 72.30307962                |
+| 824300007  | N/A           | HURLEY       | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 53.81295          | 55.2120867               | 35.32282038                |
+| 829310006  | N/A           | MCCLINTON    | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 178.658994        | 183.2869077              | 116.20368423               |
+| 834100007  | N/A           | HAZELETT     | IN     | 67619       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 119.464749        | 122.4782742              | 80.63332428                |
+| 867200009  | N/A           | HURLEY       | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 19.372662         | 19.8031656               | 14.58330945                |
+| 886100006  | N/A           | BRANNON      | IN     | 67619       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 156.057555        | 160.0397133              | 102.57824529               |
+| 892310003  | N/A           | METZ         | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 193.72662         | 198.6774114              | 124.70613033               |
+| 892310007  | N/A           | LOVELETT     | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 49.507914         | 50.6917989               | 32.67522324                |
++------------+---------------+--------------+--------+-------------+--------+---------------+------------+----------------------------+-------------------+--------------------------+----------------------------+
+|   CU_ID    | CUOR_CUST_NM  | CUIN_LST_NM  | ST_CD  | ZIP_CD_NUM  | CO_CD  | IS_DWLGS_VAL  | SRVPLN_ID  |         SRVPLN_NM          | AVG(AL5.USG_VAL)  | AVG(AL5.USG_BILL_THERM)  | AVG(AL5.RSD_SVC_BILG_AMT)  |
++------------+---------------+--------------+--------+-------------+--------+---------------+------------+----------------------------+-------------------+--------------------------+----------------------------+
+| 897300001  | N/A           | JACKSON      | IN     | 67616       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 85.024461         | 87.176979                | 60.01220184                |
+| 899310004  | N/A           | GONZALES     | IN     | 67612       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 43.05036          | 44.126619                | 28.83297861                |
+| 902800001  | N/A           | UPSHAW       | IN     | 67616       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 106.549641        | 109.2402885              | 72.87349689                |
+| 907900006  | N/A           | SILVER       | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 158.210073        | 162.2998572              | 103.90204386               |
+| 910610004  | N/A           | STICKLER     | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 351.936693        | 361.0848945              | 213.4221597                |
+| 917000005  | N/A           | DEGGANS      | IN     | 67612       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 59.194245         | 60.7010076               | 38.54083479                |
+| 917200009  | N/A           | TOLIVER      | IN     | 67619       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 30.135252         | 30.8886333               | 21.07315122                |
+| 922610000  | N/A           | MASSING      | IN     | 67436       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 126.998562        | 130.227339               | 85.17513726                |
+| 933900006  | N/A           | HOCHSTETLER  | IN     | 67437       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 72.109353         | 73.9389933               | 45.80558304                |
+| 941810003  | N/A           | WENNER       | IN     | 67436       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 100.092087        | 102.6751086              | 69.08506521                |
+| 954100001  | N/A           | RICHARDSON   | IN     | 67616       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 168.601986        | 172.897578               | 99.85103604                |
+| 975200001  | N/A           | LOVE         | IN     | 67619       | USA    | 2             | 315        | GAS - MULT FAMILY HOUSING  | 85.024461         | 87.176979                | 60.01220184                |
++------------+---------------+--------------+--------+-------------+--------+---------------+------------+----------------------------+-------------------+--------------------------+----------------------------+
+0: jdbc:oracle:> 
+0: jdbc:oracle:> 
+0: jdbc:oracle:> !quit

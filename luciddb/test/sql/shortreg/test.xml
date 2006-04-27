@@ -60,6 +60,14 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/gen/${foreign.db}/subMisc.sql"/>
       </test>
 
+      <cleanup-hook>
+        <test-suite name="cleanup">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tdone.xml">
+            <test-suite-modifier value="shortreg"/>
+          </test-suite-call>
+        </test-suite>
+      </cleanup-hook>
+
     </test-suite>
   </target>
 </project>

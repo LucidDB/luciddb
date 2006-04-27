@@ -73,5 +73,5 @@ FROM ff_schema.BENCH_SOURCE_10K
 ;
 
 -- Delete not working yet
-delete from BENCH10K where K2=1
-;
+-- delete from BENCH10K where K2=1
+-- ;

@@ -60,6 +60,10 @@ public class FarragoRelMetadataProvider extends ReflectiveRelMetadataProvider
     public FarragoRelMetadataProvider(FarragoRepos repos)
     {
         this.repos = repos;
+        
+        mapParameterTypes(
+            "getPopulationSize",
+            Collections.singletonList((Class) BitSet.class));
     }
     
     /**
@@ -129,6 +133,9 @@ public class FarragoRelMetadataProvider extends ReflectiveRelMetadataProvider
         }
         
         MedAbstractColumnSet table = (MedAbstractColumnSet) rel.getTable();
+        if (table.getCwmColumnSet() == null) {
+        	return null;
+        }
         Set<BitSet> retSet = new HashSet<BitSet>();
         
         // first retrieve the columns from the primary key
@@ -179,8 +186,13 @@ public class FarragoRelMetadataProvider extends ReflectiveRelMetadataProvider
         }
     }
     
-    public Double getPopulationSize(TableAccessRel rel, BitSet groupKey)
+    public Double getPopulationSize(RelNode rel, BitSet groupKey)
     {
+        // this method only handles table level relnodes
+        if (rel.getTable() == null) {
+            return null;
+        }
+        
         double population = 1.0;
         
         // if columns are part of a unique key, then just return the rowcount

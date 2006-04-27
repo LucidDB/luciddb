@@ -71,8 +71,8 @@ public class RelMdRowCount extends ReflectiveRelMetadataProvider
     {
         // create a RexNode representing the selectivity of the
         // semijoin filter and pass it to getSelectivity
-        RexNode semiJoinSelectivity = RelMdUtil.makeSemiJoinSelectivityRexNode(
-            rel, null);
+        RexNode semiJoinSelectivity =
+            RelMdUtil.makeSemiJoinSelectivityRexNode(rel);
 
         return NumberUtil.multiply( 
             RelMetadataQuery.getSelectivity(

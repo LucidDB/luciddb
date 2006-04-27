@@ -25,6 +25,7 @@ import java.util.*;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
@@ -160,6 +161,14 @@ public abstract class TableModificationRelBase extends SingleRel
                 : updateColumnList,
                 Boolean.valueOf(flattened)
             });
+    }
+
+    // implement RelNode
+    public RelOptCost computeSelfCost(RelOptPlanner planner)
+    {
+        // REVIEW jvs 21-Apr-2006:  Just for now...
+        double rowCount = RelMetadataQuery.getRowCount(this);
+        return planner.makeCost(rowCount, 0, 0);
     }
 
     //~ Inner Classes ---------------------------------------------------------

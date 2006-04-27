@@ -166,6 +166,31 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
             session, "", "", "DEPTS", "DNAME", 150, 100, 150, 0, 
             "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
        
+        // a table for testing typed values
+        stmt.executeUpdate(
+            "create table WINES ("
+            + "  name varchar(256) primary key,"
+            + "  imported boolean,"
+            + "  price decimal(5,2),"
+            + "  price2 double,"
+            + "  code varbinary(256),"
+            + "  bottle_date date,"
+            + "  bottle_time time,"
+            + "  purchase_timestamp timestamp)");
+        stmt.executeUpdate(
+            "insert into WINES values "
+            + "  ('zinfadel', false, 15.00, 15e0, x'45e6ab', " 
+            + "   DATE'2001-01-01', TIME'23:01:01', TIMESTAMP'2002-01-01 12:01:01'),"
+            + "  ('zinfadel2', false, 15.00, 15e0, x'45e6ab', " 
+            + "   DATE'2001-01-01', TIME'23:01:01', TIMESTAMP'2002-01-01 12:01:01'),"
+            + "  ('merlot', true, 22.00, 22e0, x'00', " 
+            + "   DATE'2002-01-01', TIME'12:01:01', TIMESTAMP'2004-01-01 12:01:01'),"
+            + "  ('mystery', null, null, null, null, " 
+            + "   null, null, null),"
+            + "  ('mystery', null, null, null, null, " 
+            + "   null, null, null)");
+        stmt.executeUpdate(
+            "analyze table WINES compute statistics for all columns");
     }
     
     protected void checkAbstract(
@@ -330,6 +355,31 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
         RexNode rexPredicate = rexBuilder.makeCall(
             SqlStdOperatorTable.andOperator, a, b);
         return rexPredicate;
+    }
+
+    private RexNode makeSearchNode(
+        int ordinal, 
+        RexLiteral value)
+    {
+        assert(value != null);
+
+        RelDataTypeField[] fields = rootRel.getRowType().getFields();
+        RelDataType type = fields[ordinal].getType();
+        RexNode rexPredicate = rexBuilder.makeCall(
+            SqlStdOperatorTable.equalsOperator,
+            rexBuilder.makeInputRef(type, ordinal+1),
+            value);
+        return rexPredicate;
+    }
+
+    private void searchColumn(
+        int ordinal,
+        RexLiteral value, 
+        Double selectivity,
+        Double cardinality)
+    {
+        RexNode rexPredicate = makeSearchNode(ordinal, value);
+        checkColumn(ordinal, rexPredicate, selectivity, cardinality);
     }
 
     public void testCumulativeCostTable()
@@ -571,6 +621,52 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
         checkColumn(1, rexPredicate, 0.015017, 1365.136363);
     }
     
+    public void testTypedStatistics()
+    throws Exception
+    {
+        checkRowCount("WINES", 5.0);
+
+        RexLiteral value = rexBuilder.makeLiteral(true);
+        searchColumn(1, value, 0.2, 1.0);
+        BigDecimal price = new BigDecimal("15.00");
+        value = rexBuilder.makeExactLiteral(price);
+        searchColumn(2, value, 0.4, 1.0);
+        value = rexBuilder.makeApproxLiteral(price);
+        searchColumn(3, value, 0.4, 1.0);
+        byte [] code = { 0 };
+        value = rexBuilder.makeBinaryLiteral(code);
+        searchColumn(4, value, 0.2, 1.0);
+
+        Calendar cal = Calendar.getInstance();
+        // note: this matches a value of each column
+        // be careful of 0-indexed month, and timezone
+        cal.clear();
+        cal.setTimeZone(new SimpleTimeZone(0, "GMT+00:00"));
+        cal.set(2002, 0, 1);
+        value = rexBuilder.makeDateLiteral(cal);
+        searchColumn(5, value, 0.2, 1.0);
+
+        cal.clear();
+        cal.setTimeZone(new SimpleTimeZone(0, "GMT+00:00"));
+        cal.set(Calendar.HOUR_OF_DAY, 12);
+        cal.set(Calendar.MINUTE, 1);
+        cal.set(Calendar.SECOND, 1);
+        value = rexBuilder.makeTimeLiteral(cal, 3);
+        searchColumn(6, value, 0.2, 1.0);
+
+        cal.clear();
+        cal.setTimeZone(new SimpleTimeZone(0, "GMT+00:00"));
+        cal.set(2002, 0, 1, 12, 1, 1);
+        value = rexBuilder.makeTimestampLiteral(cal, 3);
+        searchColumn(7, value, 0.4, 1.0);
+
+        // all of first bar + 1/2 of second bar
+        value = rexBuilder.constantNull();
+        searchColumn(7, value, 0.3, 1.0);
+
+        // TODO: in and not in operators, but does IN work?
+    }
+    
     private void checkRowCountJoin(String sql, Double expected)
         throws Exception
     {
@@ -751,6 +847,26 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
         assertEquals(DEFAULT_SARGABLE_SELECTIVITY, result.doubleValue());
     }
     
+    public void testPopulationLcsTable()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        transformQuery(
+            programBuilder.createProgram(), "select * from emps");
+     
+        // get the population of (deptno, name)
+        BitSet groupKey = new BitSet();
+        groupKey.set(0);
+        groupKey.set(1);
+        Double result = RelMetadataQuery.getPopulationSize(
+            ((ProjectRel) rootRel).getChild(), groupKey);
+      
+       Double expected =
+           RelMdUtil.numDistinctVals(90000*150.0, COLSTORE_EMPS_ROWCOUNT*1.0);
+       
+       assertTrue(result != null);
+       assertEquals(expected.doubleValue(), result.doubleValue(), EPSILON);
+    }
 }
 
 // End LoptMetadataTest.java

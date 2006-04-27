@@ -4,7 +4,11 @@
     <test-suite name="tbs100K-idxtest">
 
       <init-hook>
-        <ant target="restoreCatalog"/>
+        <test-suite name="init">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">
+            <test-suite-modifier value="tbs100K-idxtest"/>
+          </test-suite-call>
+        </test-suite>
         <ant dir="${open.dir}/luciddb/test/sql/VI/tbs" target="copy-csv"/>
       </init-hook>
 
@@ -65,6 +69,15 @@
       </test>
 
       <!-- tests for multiple insert -->
+
+      <cleanup-hook>
+        <test-suite name="cleanup">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tdone.xml">
+            <test-suite-modifier value="tbs100K-idxtest"/>
+          </test-suite-call>
+        </test-suite>
+      </cleanup-hook>
+
     </test-suite>
   </target>
 </project>        

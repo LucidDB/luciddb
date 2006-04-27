@@ -208,6 +208,7 @@
 | Bush     | Towel    | 8.04   |
 +----------+----------+--------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- LER-787
 0: jdbc:luciddb:> select customers.lname, products.name, sales.price
 . . . . . . . . > --from sales, products, customers
 . . . . . . . . > from sales, customers, products
@@ -231,6 +232,7 @@
 | Bush     | Soap   | 8.60   |
 +----------+--------+--------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- LER-787
 0: jdbc:luciddb:> -- dimension tables not referenced in select list, should drop
 0: jdbc:luciddb:> -- out of join
 0: jdbc:luciddb:> select sum(sales.price)

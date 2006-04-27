@@ -1,0 +1,51 @@
+0: jdbc:oracle:> -- Query 1
+0: jdbc:oracle:> 
+0: jdbc:oracle:> SELECT AL1.CU_ID, AL1.CUIN_LST_NM, AL1.CUIN_FST_NM,
+. . . . . . . . >  AL3.SRVPLN_ID, AL3.SRVPLN_NM, AL3.SPO_ID, AL3.BU_CD,
+. . . . . . . . >  AL3.RC_CD, AVG(AL5.USG_VAL), AVG(AL5.USG_BILL_THERM),
+. . . . . . . . >  AVG(AL5.USG_BILL_KWH), AVG(AL5.RSD_SVC_BILG_AMT)
+. . . . . . . . > FROM
+. . . . . . . . > PGE.CUST_SERV_ACCT AL1,
+. . . . . . . . > PGE.GEOG AL2,
+. . . . . . . . > PGE.SERV_PLAN AL3,
+. . . . . . . . > PGE.REVN_PRD AL4,
+. . . . . . . . > PGE.REVN_DTL_RAND AL5
+. . . . . . . . > WHERE AL5.REVN_YR_MO=AL4.REVN_YR_MO
+. . . . . . . . >  AND AL2.GEOG_KEY=AL5.GEOG_KEY
+. . . . . . . . >  AND AL3.SRVPLN_KEY=AL5.SRVPLN_KEY
+. . . . . . . . >  AND AL1.CUST_SERV_ACCT_KEY=AL5.CUST_SERV_ACCT_KEY
+. . . . . . . . >  AND AL1.CUST_SERV_ACCT_KEY IN
+. . . . . . . . >   (SELECT DISTINCT AL1.CUST_SERV_ACCT_KEY
+. . . . . . . . >    FROM
+. . . . . . . . >    PGE.CUST_SERV_ACCT AL1,
+. . . . . . . . >    PGE.GEOG AL2, 
+. . . . . . . . >    PGE.SERV_PLAN AL3,
+. . . . . . . . >    PGE.REVN_PRD AL4,
+. . . . . . . . >    PGE.REVN_DTL_RAND AL5
+. . . . . . . . >    WHERE AL5.REVN_YR_MO=AL4.REVN_YR_MO
+. . . . . . . . >     AND AL2.GEOG_KEY=AL5.GEOG_KEY
+. . . . . . . . >     AND AL3.SRVPLN_KEY=AL5.SRVPLN_KEY
+. . . . . . . . >     AND AL1.CUST_SERV_ACCT_KEY=AL5.CUST_SERV_ACCT_KEY
+. . . . . . . . >     AND AL5.SAS_FNL_BIL_INDCR='Y' AND AL4.REVN_YR=1995)
+. . . . . . . . > GROUP BY AL1.CU_ID, AL1.CUIN_LST_NM, AL1.CUIN_FST_NM,
+. . . . . . . . >  AL3.SRVPLN_ID, AL3.SRVPLN_NM, AL3.SPO_ID, AL3.BU_CD, AL3.RC_CD
+. . . . . . . . > ORDER BY 1, 2, 3, 4, 5
+. . . . . . . . > ;
++------------+--------------+--------------+------------+--------------------------+---------+--------+--------+----------------------------------------------+----------------------------------------------+----------------------------------------------+----------------------------------------------+
+|   CU_ID    | CUIN_LST_NM  | CUIN_FST_NM  | SRVPLN_ID  |        SRVPLN_NM         | SPO_ID  | BU_CD  | RC_CD  |               AVG(AL5.USG_VAL)               |           AVG(AL5.USG_BILL_THERM)            |            AVG(AL5.USG_BILL_KWH)             |          AVG(AL5.RSD_SVC_BILG_AMT)           |
++------------+--------------+--------------+------------+--------------------------+---------+--------+--------+----------------------------------------------+----------------------------------------------+----------------------------------------------+----------------------------------------------+
+| 113100009  | RITTER       | RICHARD      | 311        | GAS - RESIDENTIAL        | 1       | GAS    | 02     | 5.11998666666666666666666666666666666667E01  | 52.5310632                                   | 0                                            | 3.43653505066666666666666666666666666667E01  |
+| 186300004  | FORT         | ROBERT       | 311        | GAS - RESIDENTIAL        | 1       | GAS    | 02     | 29.183924                                    | 2.99007221333333333333333333333333333333E01  | 0                                            | 2.45042561866666666666666666666666666667E01  |
+| 186300004  | FORT         | ROBERT       | 811        | ELEC - RESIDENTIAL       | 1       | ELE    | 01     | 0                                            | 0                                            | 6.56996267916666666666666666666666666667E02  | 73.27844153125                               |
+| 250110002  | VOEGTLIN     | KENNETH      | 878        | ELEC - DUSK TO DAWN LTG  | 4       | ELE    | 01     | 0                                            | 0                                            | 53.9012188                                   | 9.63688457333333333333333333333333333333E00  |
+| 277600002  | YODER        | DAVID        | 311        | GAS - RESIDENTIAL        | 1       | GAS    | 02     | 4.09598933333333333333333333333333333333E02  | 420.2485056                                  | 0                                            | 2.48903031813333333333333333333333333333E02  |
+| 380300006  | MARTIN       | KATHERIN     | 311        | GAS - RESIDENTIAL        | 1       | GAS    | 02     | 371.711032                                   | 3.81336606933333333333333333333333333333E02  | 0                                            | 225.3306132                                  |
+| 380300006  | MARTIN       | KATHERIN     | 811        | ELEC - RESIDENTIAL       | 1       | ELE    | 01     | 0                                            | 0                                            | 1789.09725                                   | 183.7104692875                               |
+| 448710009  | MCSHANE      | COREY        | 878        | ELEC - DUSK TO DAWN LTG  | 7       | ELE    | 01     | 0                                            | 0                                            | 26.0961545                                   | 6.53909409875                                |
+| 487800009  | VANSICKLE    | NORM         | 311        | GAS - RESIDENTIAL        | 1       | GAS    | 02     | 1.17759693333333333333333333333333333333E02  | 120.7292856                                  | 0                                            | 68.8126208                                   |
+| 487800009  | VANSICKLE    | NORM         | 811        | ELEC - RESIDENTIAL       | 1       | ELE    | 01     | 0                                            | 0                                            | 3.97577166666666666666666666666666666667E02  | 39.658322375                                 |
+| 803900007  | MAITLAND     | HAROLD       | 311        | GAS - RESIDENTIAL        | 1       | GAS    | 02     | 29.183924                                    | 2.99007221333333333333333333333333333333E01  | 0                                            | 1.89900305466666666666666666666666666667E01  |
+| 993610002  | WILLIAMS     | O            | 811        | ELEC - RESIDENTIAL       | 1       | ELE    | 01     | 0                                            | 0                                            | 9.93942916666666666666666666666666666667E02  | 109.2840236875                               |
++------------+--------------+--------------+------------+--------------------------+---------+--------+--------+----------------------------------------------+----------------------------------------------+----------------------------------------------+----------------------------------------------+
+0: jdbc:oracle:> 
+0: jdbc:oracle:> !quit

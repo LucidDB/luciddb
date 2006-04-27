@@ -35,7 +35,6 @@ import net.sf.farrago.query.*;
 import net.sf.farrago.fem.config.*;
 
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.convert.*;
 import org.eigenbase.rel.rules.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
@@ -54,7 +53,7 @@ import java.util.*;
  */
 public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
 {
-    private static final boolean USE_HEP = false;
+    private static final boolean USE_HEP = true;
     
     protected LucidDbSessionPersonality(FarragoDbSession session)
     {
@@ -102,10 +101,9 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         
         FarragoSessionPlanner planner = super.newPlanner(stmt, init);
         planner.addRule(new PushSemiJoinPastFilterRule());
-        planner.addRule(new OptimizeJoinRule());
+        planner.addRule(new ConvertMultiJoinRule());
+        planner.addRule(new LoptOptimizeJoinRule());
         planner.addRule(new LhxJoinRule());
-        
-        addConvertMultiJoinRules(planner);
  
         planner.removeRule(SwapJoinRule.instance);
         return planner;
@@ -157,9 +155,8 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         
         planner.addRule(new PushSemiJoinPastFilterRule());
         planner.addRule(new PushSemiJoinPastJoinRule());
-        planner.addRule(new OptimizeJoinRule());
-
-        addConvertMultiJoinRules(planner);
+        planner.addRule(new ConvertMultiJoinRule());
+        planner.addRule(new LoptOptimizeJoinRule());
 
         planner.removeRule(SwapJoinRule.instance);
         return planner;
@@ -189,26 +186,30 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         // into and possibly through the join.
         builder.addRuleInstance(ExtractJoinFilterRule.instance);
 
+        // Remove trivial projects so tables referenced in selects in the
+        // from clause can be optimized with the rest of the query
+        builder.addRuleInstance(new RemoveTrivialProjectRule());
+
         // Push filters down.
         builder.addRuleInstance(new PushFilterRule());
 
-        // Convert 2-way joins to n-way joins.
-        builder.addRuleClass(ConvertMultiJoinRule.class);
+        // Convert 2-way joins to n-way joins.  Do the conversion bottom-up
+        // so once a join is converted to a MultiJoinRel, you're ensured that
+        // all of its children have been converted to MultiJoinRels
+        builder.addMatchOrder(HepMatchOrder.BOTTOM_UP);
+        builder.addRuleInstance(new ConvertMultiJoinRule());
         
         // Optimize join order; this will spit back out all 2-way joins and
-        // semijoins.  Do lower-level joins before their ancestors so that
-        // ancestors have better cost info to work with (well, eventually).
-        builder.addMatchOrder(HepMatchOrder.BOTTOM_UP);
-        builder.addRuleInstance(new OptimizeJoinRule());
+        // semijoins.  Note that the match order is still bottom-up, so we
+        // can optimize lower-level joins before their ancestors.  That allows
+        // ancestors to have better cost info to work with (well, eventually).       
+        builder.addRuleInstance(new LoptOptimizeJoinRule());
         builder.addMatchOrder(HepMatchOrder.ARBITRARY);
-
-        // Convert filters to bitmap index searches and boolean operators.  We
-        // didn't do this earlier to make join costing easier, but it's
-        // important to do this now before implementing semijoins, because
-        // LcsIndexAccessRule can't handle the case where a row scan already
-        // has a filtering input.  (Fortunately, LcsIndexSemiJoinRule can.)
-        builder.addRuleByDescription("LcsIndexAccessRule");
-
+        
+        // Use hash join wherever possible. Make sure this rule is called
+        // before any physical conversions have been done
+        builder.addRuleInstance(new LhxJoinRule());
+        
         // Push semijoins down to tables.  (The join part is a NOP for now,
         // but once we start taking more kinds of join factors, it won't be.)
         builder.addGroupBegin();
@@ -218,7 +219,19 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
 
         // Convert semijoins to physical index access.
         builder.addRuleClass(LcsIndexSemiJoinRule.class);
-
+        
+        // Convert filters to bitmap index searches and boolean operators.  We
+        // didn't do this earlier to make join costing easier.
+        //
+        // TODO zfong 4/24/06 - Currently LcsIndexSemiJoinRule does not handle
+        // all cases where you can take the intersection of table level filters
+        // and semijoin filters, and use that to filter a fact table.  The case
+        // that is handled is when the table level filters result in a merge.
+        // Once we can handle the non-merge case, move this rule to fire before
+        // the semijoin rules so we can handle using the index for both cases,
+        // as LcsIndexAccessRule does not handle that case.
+        builder.addRuleByDescription("LcsIndexAccessRule");
+        
         // TODO jvs 9-Apr-2006:  push project through join goes here.
         
         // Push project past filter so that we can reduce the number
@@ -256,14 +269,16 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         // LcsTableAppendRule relies on CoerceInputsRule above.)
         builder.addRuleCollection(medPluginRules);
 
-        // TODO:  add hash join implementation here.
-
         // Extract join conditions again so that FennelCartesianJoinRule can do
         // its job.  Need to do this before converting filters to calcs, but
         // after other join strategies such as hash join have been attempted,
         // because they rely on the join condition being part of the join.
         builder.addRuleInstance(ExtractJoinFilterRule.instance);
 
+        // Replace AVG with SUM/COUNT (need to do this BEFORE calc conversion
+        // and decimal reduction).
+        builder.addRuleInstance(ReduceAggregatesRule.instance);
+        
         // Convert remaining filters and projects to logical calculators,
         // merging adjacent ones.
         builder.addGroupBegin();
@@ -272,7 +287,7 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         builder.addRuleInstance(MergeCalcRule.instance);
         builder.addGroupEnd();
 
-        // And replace the DECIMAL datatype with primitive ints.
+        // Replace the DECIMAL datatype with primitive ints.
         builder.addRuleInstance(new ReduceDecimalsRule(CalcRel.class));
 
         // The rest of these are all physical implementation rules
@@ -302,123 +317,29 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
             // use Java code generation for calculating expressions
             builder.addRuleInstance(IterRules.IterCalcRule.instance);
             builder.addRuleInstance(new IterRules.OneRowToIteratorRule());
-        } else {
-            // choose calculator based on input, giving preference
-            // to Fennel for leaves
-            builder.addRuleInstance(new FennelOneRowRule());
-            builder.addRuleInstance(
-                new TraitMatchingRule(FennelCalcRule.instance));
-            builder.addRuleInstance(
-                new TraitMatchingRule(IterRules.IterCalcRule.instance));
         }
 
         // Finish main physical implementation group.
         builder.addGroupEnd();
 
         // If automatic calculator selection is enabled (the default),
-        // take care of expressions which couldn't be handled so far.
+        // figure out what to do with CalcRels.
         if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_AUTO)) {
-            // Split expressions into Fennel part and Java part
+            // First, attempt to choose calculators such that converters are
+            // minimized
+            builder.addConverters(false);
+            // Split remaining expressions into Fennel part and Java part
             builder.addRuleInstance(FarragoAutoCalcRule.instance);
             // Convert expressions, giving preference to Java
+            builder.addRuleInstance(new IterRules.OneRowToIteratorRule());
             builder.addRuleInstance(IterRules.IterCalcRule.instance);
             builder.addRuleInstance(FennelCalcRule.instance);
         }
         
-        // Finally, add converters as necessary.  This will also try
-        // to match some implementation rules such as IterCalcRule,
-        // but we've already taken care of all of that above,
-        // so there should be no matches left.  REVIEW:  might still
-        // want to tighten this up for efficiency.
-        builder.addRuleClass(ConverterRule.class);
+        // Finally, add generic converters as necessary.
+        builder.addConverters(true);
         
         return builder.createProgram();
-    }
-
-    /**
-     * Adds the different permutations of patterns that trigger 
-     * ConvertMultiJoinRule.  We enumerate over the patterns rather than
-     * matching on arbitrary RelNodes to speed up Volcano pattern matching.
-     * 
-     * @param planner planner that rules will be added to
-     */
-    private void addConvertMultiJoinRules(FarragoSessionPlanner planner)
-    {
-        planner.addRule(new ConvertMultiJoinRule(
-            new RelOptRuleOperand(
-                JoinRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(MultiJoinRel.class, null),
-                    new RelOptRuleOperand(MultiJoinRel.class, null)
-                    }), "MJ, MJ"));
-        planner.addRule(new ConvertMultiJoinRule(
-            new RelOptRuleOperand(
-                JoinRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(MultiJoinRel.class, null),
-                    new RelOptRuleOperand(LcsRowScanRel.class, null)
-                    }), "MJ, RS"));
-        planner.addRule(new ConvertMultiJoinRule(
-            new RelOptRuleOperand(
-                JoinRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(MultiJoinRel.class, null),
-                    new RelOptRuleOperand(FilterRel.class,
-                        new RelOptRuleOperand [] {
-                            new RelOptRuleOperand(LcsRowScanRel.class, null)
-                    })}), "MJ, FRS"));
-        planner.addRule(new ConvertMultiJoinRule(
-            new RelOptRuleOperand(
-                JoinRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(LcsRowScanRel.class, null),
-                    new RelOptRuleOperand(MultiJoinRel.class, null)
-                    }), "RS, MJ"));
-        planner.addRule(new ConvertMultiJoinRule(
-            new RelOptRuleOperand(
-                JoinRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(LcsRowScanRel.class, null),
-                    new RelOptRuleOperand(LcsRowScanRel.class, null)
-                    }), "RS, RS"));
-        planner.addRule(new ConvertMultiJoinRule(
-            new RelOptRuleOperand(
-                JoinRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(LcsRowScanRel.class, null),
-                    new RelOptRuleOperand(FilterRel.class,
-                        new RelOptRuleOperand [] {
-                            new RelOptRuleOperand(LcsRowScanRel.class, null)
-                    })}), "RS, FRS"));
-        planner.addRule(new ConvertMultiJoinRule(
-            new RelOptRuleOperand(
-                JoinRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(FilterRel.class,
-                        new RelOptRuleOperand [] {
-                            new RelOptRuleOperand(LcsRowScanRel.class, null)}),
-                    new RelOptRuleOperand(MultiJoinRel.class, null)
-                    }), "FRS, MJ"));
-        planner.addRule(new ConvertMultiJoinRule(
-            new RelOptRuleOperand(
-                JoinRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(FilterRel.class,
-                        new RelOptRuleOperand [] {
-                            new RelOptRuleOperand(LcsRowScanRel.class, null)}),
-                    new RelOptRuleOperand(LcsRowScanRel.class, null)
-                    }), "FRS, RS"));
-        planner.addRule(new ConvertMultiJoinRule(
-            new RelOptRuleOperand(
-                JoinRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(FilterRel.class,
-                        new RelOptRuleOperand [] {
-                            new RelOptRuleOperand(LcsRowScanRel.class, null)}),
-                    new RelOptRuleOperand(FilterRel.class,
-                        new RelOptRuleOperand [] {
-                            new RelOptRuleOperand(LcsRowScanRel.class, null)})
-                }), "FRS, FRS"));
     }
 
     // TODO jvs 9-Apr-2006:  Move this to com.lucidera.opt once

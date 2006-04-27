@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: $
+0: jdbc:farrago:> -- $Id: //open/lu/dev_lcs/farrago/unitsql/optimizer/stat.sql#2 $
 0: jdbc:farrago:> -- This script tests statistics generation procedures
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set verbose true
@@ -31,7 +31,7 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> ---------------------------------------------------------------------------
-0: jdbc:farrago:> -- Fake statistics generation                                            --
+0: jdbc:farrago:> -- 1. Fake statistics generation                                         --
 0: jdbc:farrago:> --                                                                       --
 0: jdbc:farrago:> -- Here we just generate a few data; would need some adjustment          --
 0: jdbc:farrago:> -- for usage with actual tpcd queries (column names, generated values)   --
@@ -89,22 +89,19 @@
 |         |
 +---------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select "name", "rowCount" from sys_fem.med."BaseColumnSet" order by 1;
-+-----------+-----------+
-|   name    | rowCount  |
-+-----------+-----------+
-| CUSTOMER  | 15000     |
-| DEPTS     |           |
-| EMPS      |           |
-| LINEITEM  | 600572    |
-| NATION    | 25        |
-| ORDERS    | 150000    |
-| PART      | 20000     |
-| PARTSUPP  | 80000     |
-| REGION    | 5         |
-| SUPPLIER  | 1000      |
-| TEMPS     |           |
-+-----------+-----------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2;
++---------+-----------+-----------+
+| schema  |   table   | rowCount  |
++---------+-----------+-----------+
+| TPCD    | CUSTOMER  | 15000     |
+| TPCD    | LINEITEM  | 600572    |
+| TPCD    | NATION    | 25        |
+| TPCD    | ORDERS    | 150000    |
+| TPCD    | PART      | 20000     |
+| TPCD    | PARTSUPP  | 80000     |
+| TPCD    | REGION    | 5         |
+| TPCD    | SUPPLIER  | 1000      |
++---------+-----------+-----------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- 1.2 Page counts. We can neither index foreign tables or retrieve the 
@@ -123,19 +120,12 @@
 |         |
 +---------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select "name", "pageCount" from sys_fem.med."LocalIndex" order by 1;
-+----------------------------------------------------+------------+
-|                        name                        | pageCount  |
-+----------------------------------------------------+------------+
-| EMPS_UX                                            |            |
-| SYS$CONSTRAINT_INDEX$DEPTS$DEPTS_UNIQUE_NAME       |            |
-| SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY         |            |
-| SYS$CONSTRAINT_INDEX$DUMMY_REGION$SYS$PRIMARY_KEY  | 1          |
-| SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY          |            |
-| SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID     |            |
-| SYS$CONSTRAINT_INDEX$TEMPS$SYS$PRIMARY_KEY         |            |
-| TEMPS_CX                                           |            |
-+----------------------------------------------------+------------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3;
++---------+---------------+----------------------------------------------------+------------+
+| schema  |     table     |                       index                        | pageCount  |
++---------+---------------+----------------------------------------------------+------------+
+| TPCD    | DUMMY_REGION  | SYS$CONSTRAINT_INDEX$DUMMY_REGION$SYS$PRIMARY_KEY  | 1          |
++---------+---------------+----------------------------------------------------+------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- 1.3 Column histograms, also fine for foreign tables
@@ -159,24 +149,17 @@
 |         |
 +---------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select 
-. . . . . . . . >     c."name",
-. . . . . . . . >     "distinctValueCount" "values","percentageSampled" "percent",
-. . . . . . . . >     "barCount","rowsPerBar","rowsLastBar"
-. . . . . . . . > from 
-. . . . . . . . >     sys_fem.med."ColumnHistogram" h,
-. . . . . . . . >     sys_fem.sql2003."AbstractColumn" c
-. . . . . . . . > where c."Histogram" = h."mofId" order by 1;
-+-------+---------+----------+-----------+-------------+--------------+
-| name  | values  | percent  | barCount  | rowsPerBar  | rowsLastBar  |
-+-------+---------+----------+-----------+-------------+--------------+
-| F1    | 15000   | 10       | 100       | 15          | 15           |
-| F4    | 25      | 10       | 100       | 15          | 15           |
-+-------+---------+----------+-----------+-------------+--------------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.histograms_view order by 1, 2;
++-----------+---------+---------+----------+-----------+-------------+--------------+
+|   table   | column  | values  | percent  | barCount  | rowsPerBar  | rowsLastBar  |
++-----------+---------+---------+----------+-----------+-------------+--------------+
+| CUSTOMER  | F1      | 15000   | 10       | 100       | 15          | 15           |
+| CUSTOMER  | F4      | 25      | 10       | 100       | 15          | 15           |
++-----------+---------+---------+----------+-----------+-------------+--------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- query the distinct column C_CUSTKEY
-0: jdbc:farrago:> select "ordinal","startingValue","valueCount"
-. . . . . . . . > from sys_fem.med."ColumnHistogramBar" where "startingValue" < 'A' order by 1;
+0: jdbc:farrago:> select * from sys_boot.mgmt.diffable_histogram_bars 
+. . . . . . . . > where "startingValue" < 'A' order by 1, 2;
 +----------+----------------+-------------+
 | ordinal  | startingValue  | valueCount  |
 +----------+----------------+-------------+
@@ -286,8 +269,8 @@
 +----------+----------------+-------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- query the low cardinality column C_NATIONKEY
-0: jdbc:farrago:> select "ordinal","startingValue","valueCount"
-. . . . . . . . > from sys_fem.med."ColumnHistogramBar" where "startingValue" > '99' order by 1;
+0: jdbc:farrago:> select * from sys_boot.mgmt.diffable_histogram_bars 
+. . . . . . . . > where "startingValue" > '99' order by 1, 2;
 +----------+----------------+-------------+
 | ordinal  | startingValue  | valueCount  |
 +----------+----------------+-------------+
@@ -407,23 +390,16 @@
 |         |
 +---------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select 
-. . . . . . . . >     c."name",
-. . . . . . . . >     "distinctValueCount" "values","percentageSampled" "percent",
-. . . . . . . . >     "barCount","rowsPerBar","rowsLastBar"
-. . . . . . . . > from 
-. . . . . . . . >     sys_fem.med."ColumnHistogram" h,
-. . . . . . . . >     sys_fem.sql2003."AbstractColumn" c
-. . . . . . . . > where c."Histogram" = h."mofId" order by 1;
-+-------+---------+----------+-----------+-------------+--------------+
-| name  | values  | percent  | barCount  | rowsPerBar  | rowsLastBar  |
-+-------+---------+----------+-----------+-------------+--------------+
-| F1    | 15000   | 100      | 100       | 150         | 150          |
-| F4    | 25      | 10       | 100       | 15          | 15           |
-+-------+---------+----------+-----------+-------------+--------------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.histograms_view order by 1, 2;
++-----------+---------+---------+----------+-----------+-------------+--------------+
+|   table   | column  | values  | percent  | barCount  | rowsPerBar  | rowsLastBar  |
++-----------+---------+---------+----------+-----------+-------------+--------------+
+| CUSTOMER  | F1      | 15000   | 100      | 100       | 150         | 150          |
+| CUSTOMER  | F4      | 25      | 10       | 100       | 15          | 15           |
++-----------+---------+---------+----------+-----------+-------------+--------------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select "ordinal","startingValue","valueCount"
-. . . . . . . . > from sys_fem.med."ColumnHistogramBar" where "startingValue" < 'A' order by 1;
+0: jdbc:farrago:> select * from sys_boot.mgmt.diffable_histogram_bars 
+. . . . . . . . > where "startingValue" < 'A' order by 1, 2;
 +----------+----------------+-------------+
 | ordinal  | startingValue  | valueCount  |
 +----------+----------------+-------------+
@@ -532,10 +508,320 @@
 | 99       | 99             | 150         |
 +----------+----------------+-------------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- FIXME: this query fails
-0: jdbc:farrago:> -- select * from 
-0: jdbc:farrago:> --     sys_fem.sql2003."AbstractColumn" c,
-0: jdbc:farrago:> --     sys_fem.med."ColumnHistogramBar" b
-0: jdbc:farrago:> -- where b."Histogram" = c."Histogram";
+0: jdbc:farrago:> drop schema tpcd cascade;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> ---------------------------------------------------------------------------
+0: jdbc:farrago:> -- 2. Compute statistics                                                 --
+0: jdbc:farrago:> ---------------------------------------------------------------------------
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create schema stat;
+0: jdbc:farrago:> set schema 'stat';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- create a few tables
+0: jdbc:farrago:> create table depts(
+. . . . . . . . >     deptno integer not null primary key,
+. . . . . . . . >     name varchar(128) not null constraint depts_unique_name unique);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table emps(
+. . . . . . . . >     empno integer not null,
+. . . . . . . . >     name varchar(128) not null,
+. . . . . . . . >     deptno integer not null,
+. . . . . . . . >     gender char(1) default 'M',
+. . . . . . . . >     city varchar(128),
+. . . . . . . . >     empid integer not null unique,
+. . . . . . . . >     age integer,
+. . . . . . . . >     public_key varbinary(50),
+. . . . . . . . >     slacker boolean,
+. . . . . . . . >     manager boolean not null,
+. . . . . . . . >     primary key(deptno,empno))
+. . . . . . . . >     create index emps_ux on emps(name);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- 2.1 bad catalog name
+0: jdbc:farrago:> -- 
+0: jdbc:farrago:> -- NOTE: this throws a Java exception, with line numbers apt to change
+0: jdbc:farrago:> -- analyze table silly.sales.emps compute statistics for all columns;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- 2.2 empty tables
+0: jdbc:farrago:> --
+0: jdbc:farrago:> analyze table depts compute statistics for all columns;
+0: jdbc:farrago:> analyze table emps compute statistics for columns (empno, name);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2;
++---------+--------+-----------+
+| schema  | table  | rowCount  |
++---------+--------+-----------+
+| STAT    | DEPTS  | 0         |
+| STAT    | EMPS   | 0         |
++---------+--------+-----------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.histograms_view order by 1, 2;
++--------+---------+---------+----------+-----------+-------------+--------------+
+| table  | column  | values  | percent  | barCount  | rowsPerBar  | rowsLastBar  |
++--------+---------+---------+----------+-----------+-------------+--------------+
+| DEPTS  | DEPTNO  | 0       | 100      | 0         | 1           | 1            |
+| DEPTS  | NAME    | 0       | 100      | 0         | 1           | 1            |
+| EMPS   | EMPNO   | 0       | 100      | 0         | 1           | 1            |
+| EMPS   | NAME    | 0       | 100      | 0         | 1           | 1            |
++--------+---------+---------+----------+-----------+-------------+--------------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.diffable_histogram_bars order by 1, 2;
++----------+----------------+-------------+
+| ordinal  | startingValue  | valueCount  |
++----------+----------------+-------------+
++----------+----------------+-------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- 2.3 loaded tables
+0: jdbc:farrago:> --
+0: jdbc:farrago:> insert into depts select * from sales.depts;
+0: jdbc:farrago:> insert into emps select * from sales.emps;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> analyze table depts compute statistics for all columns;
+0: jdbc:farrago:> analyze table emps compute statistics for columns (empno, name);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2;
++---------+--------+-----------+
+| schema  | table  | rowCount  |
++---------+--------+-----------+
+| STAT    | DEPTS  | 3         |
+| STAT    | EMPS   | 4         |
++---------+--------+-----------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.histograms_view order by 1, 2;
++--------+---------+---------+----------+-----------+-------------+--------------+
+| table  | column  | values  | percent  | barCount  | rowsPerBar  | rowsLastBar  |
++--------+---------+---------+----------+-----------+-------------+--------------+
+| DEPTS  | DEPTNO  | 3       | 100      | 3         | 1           | 1            |
+| DEPTS  | NAME    | 3       | 100      | 3         | 1           | 1            |
+| EMPS   | EMPNO   | 3       | 100      | 4         | 1           | 1            |
+| EMPS   | NAME    | 4       | 100      | 4         | 1           | 1            |
++--------+---------+---------+----------+-----------+-------------+--------------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.diffable_histogram_bars order by 1, 2;
++----------+----------------+-------------+
+| ordinal  | startingValue  | valueCount  |
++----------+----------------+-------------+
+| 0        | 10             | 1           |
+| 0        | 100            | 1           |
+| 0        | Accounts       | 1           |
+| 0        | Eric           | 1           |
+| 1        | 110            | 1           |
+| 1        | 20             | 1           |
+| 1        | Fred           | 1           |
+| 1        | Marketing      | 1           |
+| 2        | 110            | 0           |
+| 2        | 30             | 1           |
+| 2        | John           | 1           |
+| 2        | Sales          | 1           |
+| 3        | 120            | 1           |
+| 3        | Wilma          | 1           |
++----------+----------------+-------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- 2.4 reanalyze
+0: jdbc:farrago:> --
+0: jdbc:farrago:> insert into emps values
+. . . . . . . . >     (130,'Barney',10,'M',null,11,55,null,true,true);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> analyze table emps compute statistics for columns (empno, name);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2;
++---------+--------+-----------+
+| schema  | table  | rowCount  |
++---------+--------+-----------+
+| STAT    | DEPTS  | 3         |
+| STAT    | EMPS   | 5         |
++---------+--------+-----------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.histograms_view order by 1, 2;
++--------+---------+---------+----------+-----------+-------------+--------------+
+| table  | column  | values  | percent  | barCount  | rowsPerBar  | rowsLastBar  |
++--------+---------+---------+----------+-----------+-------------+--------------+
+| DEPTS  | DEPTNO  | 3       | 100      | 3         | 1           | 1            |
+| DEPTS  | NAME    | 3       | 100      | 3         | 1           | 1            |
+| EMPS   | EMPNO   | 4       | 100      | 5         | 1           | 1            |
+| EMPS   | NAME    | 5       | 100      | 5         | 1           | 1            |
++--------+---------+---------+----------+-----------+-------------+--------------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.diffable_histogram_bars order by 1, 2;
++----------+----------------+-------------+
+| ordinal  | startingValue  | valueCount  |
++----------+----------------+-------------+
+| 0        | 10             | 1           |
+| 0        | 100            | 1           |
+| 0        | Accounts       | 1           |
+| 0        | Barney         | 1           |
+| 1        | 110            | 1           |
+| 1        | 20             | 1           |
+| 1        | Eric           | 1           |
+| 1        | Marketing      | 1           |
+| 2        | 110            | 0           |
+| 2        | 30             | 1           |
+| 2        | Fred           | 1           |
+| 2        | Sales          | 1           |
+| 3        | 120            | 1           |
+| 3        | John           | 1           |
+| 4        | 130            | 1           |
+| 4        | Wilma          | 1           |
++----------+----------------+-------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- 2.5 more types
+0: jdbc:farrago:> --
+0: jdbc:farrago:> analyze table emps compute statistics for all columns;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2;
++---------+--------+-----------+
+| schema  | table  | rowCount  |
++---------+--------+-----------+
+| STAT    | DEPTS  | 3         |
+| STAT    | EMPS   | 5         |
++---------+--------+-----------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.histograms_view order by 1, 2;
++--------+-------------+---------+----------+-----------+-------------+--------------+
+| table  |   column    | values  | percent  | barCount  | rowsPerBar  | rowsLastBar  |
++--------+-------------+---------+----------+-----------+-------------+--------------+
+| DEPTS  | DEPTNO      | 3       | 100      | 3         | 1           | 1            |
+| DEPTS  | NAME        | 3       | 100      | 3         | 1           | 1            |
+| EMPS   | AGE         | 5       | 100      | 5         | 1           | 1            |
+| EMPS   | CITY        | 3       | 100      | 5         | 1           | 1            |
+| EMPS   | DEPTNO      | 3       | 100      | 5         | 1           | 1            |
+| EMPS   | EMPID       | 5       | 100      | 5         | 1           | 1            |
+| EMPS   | EMPNO       | 4       | 100      | 5         | 1           | 1            |
+| EMPS   | GENDER      | 3       | 100      | 5         | 1           | 1            |
+| EMPS   | MANAGER     | 2       | 100      | 5         | 1           | 1            |
+| EMPS   | NAME        | 5       | 100      | 5         | 1           | 1            |
+| EMPS   | PUBLIC_KEY  | 4       | 100      | 5         | 1           | 1            |
+| EMPS   | SLACKER     | 3       | 100      | 5         | 1           | 1            |
++--------+-------------+---------+----------+-----------+-------------+--------------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.diffable_histogram_bars order by 1, 2;
++----------+----------------+-------------+
+| ordinal  | startingValue  | valueCount  |
++----------+----------------+-------------+
+| 0        |                | 1           |
+| 0        |                | 1           |
+| 0        |                | 1           |
+| 0        |                | 1           |
+| 0        |                | 1           |
+| 0        | 1              | 1           |
+| 0        | 10             | 1           |
+| 0        | 10             | 1           |
+| 0        | 100            | 1           |
+| 0        | Accounts       | 1           |
+| 0        | Barney         | 1           |
+| 0        | false          | 1           |
+| 1        |                | 0           |
+| 1        |                | 0           |
+| 1        |                | 0           |
+| 1        | 10             | 0           |
+| 1        | 110            | 1           |
+| 1        | 2              | 1           |
+| 1        | 20             | 1           |
+| 1        | 25             | 1           |
+| 1        | Eric           | 1           |
+| 1        | F              | 1           |
+| 1        | Marketing      | 1           |
+| 1        | false          | 0           |
+| 2        |                | 0           |
+| 2        | 110            | 0           |
+| 2        | 20             | 1           |
+| 2        | 3              | 1           |
+| 2        | 30             | 1           |
+| 2        | 416263         | 1           |
+| 2        | 50             | 1           |
+| 2        | Fred           | 1           |
+| 2        | M              | 1           |
+| 2        | Sales          | 1           |
+| 2        | false          | 1           |
+| 2        | true           | 1           |
+| 3        | 11             | 1           |
+| 3        | 120            | 1           |
+| 3        | 20             | 0           |
+| 3        | 41626320       | 1           |
+| 3        | 55             | 1           |
+| 3        | John           | 1           |
+| 3        | M              | 0           |
+| 3        | San Francisco  | 1           |
+| 3        | true           | 0           |
+| 3        | true           | 1           |
+| 4        | 130            | 1           |
+| 4        | 30             | 1           |
+| 4        | 40             | 1           |
+| 4        | 58797A         | 1           |
+| 4        | 80             | 1           |
+| 4        | M              | 0           |
+| 4        | Vancouver      | 1           |
+| 4        | Wilma          | 1           |
+| 4        | true           | 0           |
+| 4        | true           | 0           |
++----------+----------------+-------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- 2.6 note: sampling has not been implemented, only test syntax
+0: jdbc:farrago:> --
+0: jdbc:farrago:> analyze table depts estimate statistics for all columns sample 10 percent;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- 2.7 analyze a foreign table
+0: jdbc:farrago:> --
+0: jdbc:farrago:> drop schema stat cascade;
+0: jdbc:farrago:> create schema stat;
+0: jdbc:farrago:> set schema 'stat';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create foreign data wrapper stat_file_wrapper
+. . . . . . . . > library 'class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper'
+. . . . . . . . > language java;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create server stat_server
+. . . . . . . . > foreign data wrapper stat_file_wrapper
+. . . . . . . . > options (
+. . . . . . . . >     directory 'unitsql/med/flatfiles',
+. . . . . . . . >     file_extension 'csv',
+. . . . . . . . >     with_header 'yes', 
+. . . . . . . . >     log_directory 'testlog');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create foreign table stat_file(
+. . . . . . . . >     id int not null,
+. . . . . . . . >     name varchar(50) not null,
+. . . . . . . . >     extra_field char(1) not null)
+. . . . . . . . > server stat_server
+. . . . . . . . > options (filename 'example');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> analyze table stat_file compute statistics for all columns;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2;
++---------+------------+-----------+
+| schema  |   table    | rowCount  |
++---------+------------+-----------+
+| STAT    | STAT_FILE  | 6         |
++---------+------------+-----------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.histograms_view order by 1, 2;
++------------+--------------+---------+----------+-----------+-------------+--------------+
+|   table    |    column    | values  | percent  | barCount  | rowsPerBar  | rowsLastBar  |
++------------+--------------+---------+----------+-----------+-------------+--------------+
+| STAT_FILE  | EXTRA_FIELD  | 6       | 100      | 6         | 1           | 1            |
+| STAT_FILE  | ID           | 4       | 100      | 6         | 1           | 1            |
+| STAT_FILE  | NAME         | 6       | 100      | 6         | 1           | 1            |
++------------+--------------+---------+----------+-----------+-------------+--------------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.diffable_histogram_bars order by 1, 2;
++----------+------------------------------------------+-------------+
+| ordinal  |              startingValue               | valueCount  |
++----------+------------------------------------------+-------------+
+| 0        | "S,"                                     | 1           |
+| 0        | 123                                      | 1           |
+| 0        | A                                        | 1           |
+| 1        | 123                                      | 0           |
+| 1        | Amelia "meals" Maurice                   | 1           |
+| 1        | B                                        | 1           |
+| 2        | 234                                      | 1           |
+| 2        | C                                        | 1           |
+| 2        | Grady O'Neil                             | 1           |
+| 3        | 234                                      | 0           |
+| 3        | E                                        | 1           |
+| 3        | Jonathan Ackerman                        | 1           |
+| 4        | 456                                      | 1           |
+| 4        | F                                        | 1           |
+| 4        | Peter "peg leg", Jimmy & Samantha "Sam"  | 1           |
+| 5        | 789                                      | 1           |
+| 5        | G                                        | 1           |
+| 5        | Susan, Peter and Dave                    | 1           |
++----------+------------------------------------------+-------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

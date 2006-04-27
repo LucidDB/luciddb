@@ -120,10 +120,6 @@
     </delete>
   </target>  
 
-  <target name="restoreCatalog">
-    <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>
-  </target>  
-
   <!-- Experimental -->
   <target name="format-orcl-files">
     <copy todir="${company.dir}/orcl" overwrite="true">

@@ -122,6 +122,11 @@ public class DdlVisitor
     public void visit(DdlImportForeignSchemaStmt stmt)
     {
     }
+
+    // visitor dispatch
+    public void visit(DdlAnalyzeStmt stmt)
+    {
+    }
 }
 
 

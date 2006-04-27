@@ -20,6 +20,8 @@ select max(deptno) from depts;
 
 select min(deptno) from depts;
 
+select avg(deptno) from depts;
+
 ------------
 -- group bys
 ------------
@@ -60,6 +62,9 @@ select max(deptno) from depts;
 
 explain plan for
 select min(deptno) from depts;
+
+explain plan for
+select avg(deptno) from depts;
 
 explain plan without implementation for
 select deptno,max(name) from sales.emps group by deptno;

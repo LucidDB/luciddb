@@ -74,7 +74,7 @@ order by EMP.LNAME, DEPT.DNAME;
 select EL.CITY, DL.CITY
 from LOCATION EL, LOCATION DL, EMP, DEPT
 where EL.LOCID = EMP.LOCID and DL.LOCID=DEPT.LOCID
-order by EL.CITY, DL.CITY;
+order by 1, 2;
 --order by CITY, CITY;
 
 -- many to many self join semi join variations

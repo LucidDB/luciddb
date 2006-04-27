@@ -3,7 +3,11 @@
     <test-suite name="test-insert2m">
 
       <init-hook>
-        <ant target="restoreCatalog"/>
+        <test-suite name="init">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">
+            <test-suite-modifier value="test-insert2m"/>
+          </test-suite-call>
+        </test-suite>
       </init-hook>
 
       <test name="altersys">
@@ -18,6 +22,14 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/q2a_2m.sql"/>
       </test>
       
+      <cleanup-hook>
+        <test-suite name="cleanup">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tdone.xml">
+            <test-suite-modifier value="test-insert2m"/>
+          </test-suite-call>
+        </test-suite>
+      </cleanup-hook>
+
     </test-suite>
   </target>
 </project>

@@ -1,0 +1,20 @@
+<project name="bh" default="init">
+  <target name="init">
+    <test-suite name="init">
+
+      <init-hook>
+        <!-- Make sure engine is stopped before restoreCatalog. -->
+        <test-suite name="init">
+          <test name="shutdownEngine">
+            <junit testclass="com.lucidera.luciddb.test.LucidDbTestHarness" 
+              methodnames="shutdownEngine"/>
+          </test>
+        </test-suite>
+        <ant antfile="${open.dir}/luciddb/build.xml" target="restoreCatalog"/>
+      </init-hook>
+      
+      <!-- anything else -->
+      
+    </test-suite>
+  </target>
+</project>

@@ -1,35 +1,21 @@
 0: jdbc:luciddb:> -- create tablespace TBB_BENCH_TS datafile 'bench_ts.dat' size 128000K;
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create foreign data wrapper @DATA_WRAPPER_NAME@
-. . . . . . . . > library '@DATA_LIBRARY@'
-. . . . . . . . > language java;
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create server @SERVER_NAME@
-. . . . . . . . > foreign data wrapper @DATA_WRAPPER_NAME@
+0: jdbc:luciddb:> create server ff_server
+. . . . . . . . > foreign data wrapper sys_file_wrapper
 . . . . . . . . > options(
-. . . . . . . . >     url '@URL@',
-. . . . . . . . >     user_name '@USERNAME@',
-. . . . . . . . >     password '@PASSWORD@',
-. . . . . . . . >     schema_name '@SCHEMA_NAME@',
-. . . . . . . . >     qualifying_catalog_name '@CATALOG_NAME@',
-. . . . . . . . >     table_types '@TABLE_TYPES@',
-. . . . . . . . >     driver_class '@DRIVER_CLASS@'
-. . . . . . . . > 
-. . . . . . . . >     directory '@DIRECTORY@',
-. . . . . . . . >     file_extension '@FILE_EXTENSION@',
-. . . . . . . . >     ctrl_file_extension '@CTRL_FILE_EXT@',
-. . . . . . . . >     field_delimiter '@FIELD_DELIM@',
-. . . . . . . . >     line_delimiter '@LINE_DELIM@',
-. . . . . . . . >     quote_char '@QUOTE_CHAR@',
-. . . . . . . . >     escape_char '@ESCAPE_CHAR@',
-. . . . . . . . >     with_header '@WITH_HEADER@',
-. . . . . . . . >     num_rows_scan '@NUM_ROWS_SCAN@'
+. . . . . . . . >     directory '@DIR@',
+. . . . . . . . >     file_extension '.csv',
+. . . . . . . . >     ctrl_file_extension '.bcp',
+. . . . . . . . >     field_delimiter ',',
+. . . . . . . . >     line_delimiter '\n',
+. . . . . . . . >     quote_char '"',
+. . . . . . . . >     escape_char '',
+. . . . . . . . >     with_header 'yes',
+. . . . . . . . >     num_rows_scan '3'
 . . . . . . . . > );
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create schema @name_prefix@_schema;
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> set schema '@name_prefix@_schema';
-0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema s;
+0: jdbc:luciddb:> set schema 's';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> CREATE TABLE BENCH1M (
 . . . . . . . . >   KSEQ  INTEGER  primary key
@@ -121,10 +107,10 @@
 . . . . . . . . > -- LINK ODBC_SQLSERVER DEFINED BY
 . . . . . . . . > -- 'select kseq,k2,K4,K5,K10,K25,K100,K1K,K10K,K40K,K100K,k250k,k500k, ''12345678'', ''12345678900987654321'', ''12345678900987654321'', ''12345678900987654321'', ''12345678900987654321'', ''12345678900987654321'', ''12345678900987654321'', ''12345678900987654321'' from BENCHMARK.dbo.bench1M'
 . . . . . . . . > -- ;
-. . . . . . . . > server @SERVER_NAME@
+. . . . . . . . > server ff_server
 . . . . . . . . > options (
-. . . . . . . . > SCHEMA_NAME '@SCHEMA@',
-. . . . . . . . > @TABLE_NAME@ 'bench1M'
+. . . . . . . . > SCHEMA_NAME 'BCP',
+. . . . . . . . > filename 'bench1M'
 . . . . . . . . > )
 . . . . . . . . > ;
 0: jdbc:luciddb:> 

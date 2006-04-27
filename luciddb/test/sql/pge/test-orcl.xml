@@ -1,0 +1,214 @@
+<project name="orcl" default="orcl-pge">
+  <target name="orcl-pge">
+    <test-suite name="orcl-pge">
+
+      <test name="1">
+        <test-parameter name="jdbc-driver"
+          value="oracle.jdbc.driver.OracleDriver"/>
+        <test-parameter name="username" value="SCHOI"/>
+        <test-parameter name="passwd" value="schoi"/>
+        <test-parameter name="url" value="jdbc:oracle:thin:@akela.lucidera.com:1521:XE"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/directorcl/1.sql"/>
+      </test>
+
+      <test name="2">
+        <test-parameter name="jdbc-driver"
+          value="oracle.jdbc.driver.OracleDriver"/>
+        <test-parameter name="username" value="SCHOI"/>
+        <test-parameter name="passwd" value="schoi"/>
+        <test-parameter name="url" value="jdbc:oracle:thin:@akela.lucidera.com:1521:XE"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/directorcl/2.sql"/>
+      </test>
+
+      <test name="3">
+        <test-parameter name="jdbc-driver"
+          value="oracle.jdbc.driver.OracleDriver"/>
+        <test-parameter name="username" value="SCHOI"/>
+        <test-parameter name="passwd" value="schoi"/>
+        <test-parameter name="url" value="jdbc:oracle:thin:@akela.lucidera.com:1521:XE"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/directorcl/3.sql"/>
+      </test>
+
+      <test name="4">
+        <test-parameter name="jdbc-driver"
+          value="oracle.jdbc.driver.OracleDriver"/>
+        <test-parameter name="username" value="SCHOI"/>
+        <test-parameter name="passwd" value="schoi"/>
+        <test-parameter name="url" value="jdbc:oracle:thin:@akela.lucidera.com:1521:XE"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/directorcl/4.sql"/>
+      </test>
+
+      <test name="5">
+        <test-parameter name="jdbc-driver"
+          value="oracle.jdbc.driver.OracleDriver"/>
+        <test-parameter name="username" value="SCHOI"/>
+        <test-parameter name="passwd" value="schoi"/>
+        <test-parameter name="url" value="jdbc:oracle:thin:@akela.lucidera.com:1521:XE"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/directorcl/5.sql"/>
+      </test>
+
+      <test name="6">
+        <test-parameter name="jdbc-driver"
+          value="oracle.jdbc.driver.OracleDriver"/>
+        <test-parameter name="username" value="SCHOI"/>
+        <test-parameter name="passwd" value="schoi"/>
+        <test-parameter name="url" value="jdbc:oracle:thin:@akela.lucidera.com:1521:XE"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/directorcl/6.sql"/>
+      </test>
+
+      <test name="7">
+        <test-parameter name="jdbc-driver"
+          value="oracle.jdbc.driver.OracleDriver"/>
+        <test-parameter name="username" value="SCHOI"/>
+        <test-parameter name="passwd" value="schoi"/>
+        <test-parameter name="url" value="jdbc:oracle:thin:@akela.lucidera.com:1521:XE"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/directorcl/7.sql"/>
+      </test>
+
+      <test name="8">
+        <test-parameter name="jdbc-driver"
+          value="oracle.jdbc.driver.OracleDriver"/>
+        <test-parameter name="username" value="SCHOI"/>
+        <test-parameter name="passwd" value="schoi"/>
+        <test-parameter name="url" value="jdbc:oracle:thin:@akela.lucidera.com:1521:XE"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/directorcl/8.sql"/>
+      </test>
+
+      <test name="9">
+        <test-parameter name="jdbc-driver"
+          value="oracle.jdbc.driver.OracleDriver"/>
+        <test-parameter name="username" value="SCHOI"/>
+        <test-parameter name="passwd" value="schoi"/>
+        <test-parameter name="url" value="jdbc:oracle:thin:@akela.lucidera.com:1521:XE"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/directorcl/9.sql"/>
+      </test>
+
+      <test name="10">
+        <test-parameter name="jdbc-driver"
+          value="oracle.jdbc.driver.OracleDriver"/>
+        <test-parameter name="username" value="SCHOI"/>
+        <test-parameter name="passwd" value="schoi"/>
+        <test-parameter name="url" value="jdbc:oracle:thin:@akela.lucidera.com:1521:XE"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/directorcl/10.sql"/>
+      </test>
+
+      <test name="11">
+        <test-parameter name="jdbc-driver"
+          value="oracle.jdbc.driver.OracleDriver"/>
+        <test-parameter name="username" value="SCHOI"/>
+        <test-parameter name="passwd" value="schoi"/>
+        <test-parameter name="url" value="jdbc:oracle:thin:@akela.lucidera.com:1521:XE"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/directorcl/11.sql"/>
+      </test>
+
+      <test name="12">
+        <test-parameter name="jdbc-driver"
+          value="oracle.jdbc.driver.OracleDriver"/>
+        <test-parameter name="username" value="SCHOI"/>
+        <test-parameter name="passwd" value="schoi"/>
+        <test-parameter name="url" value="jdbc:oracle:thin:@akela.lucidera.com:1521:XE"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/directorcl/12.sql"/>
+      </test>
+
+      <test name="13">
+        <test-parameter name="jdbc-driver"
+          value="oracle.jdbc.driver.OracleDriver"/>
+        <test-parameter name="username" value="SCHOI"/>
+        <test-parameter name="passwd" value="schoi"/>
+        <test-parameter name="url" value="jdbc:oracle:thin:@akela.lucidera.com:1521:XE"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/directorcl/13.sql"/>
+      </test>
+
+      <test name="14">
+        <test-parameter name="jdbc-driver"
+          value="oracle.jdbc.driver.OracleDriver"/>
+        <test-parameter name="username" value="SCHOI"/>
+        <test-parameter name="passwd" value="schoi"/>
+        <test-parameter name="url" value="jdbc:oracle:thin:@akela.lucidera.com:1521:XE"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/directorcl/14.sql"/>
+      </test>
+
+      <test name="15">
+        <test-parameter name="jdbc-driver"
+          value="oracle.jdbc.driver.OracleDriver"/>
+        <test-parameter name="username" value="SCHOI"/>
+        <test-parameter name="passwd" value="schoi"/>
+        <test-parameter name="url" value="jdbc:oracle:thin:@akela.lucidera.com:1521:XE"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/directorcl/15.sql"/>
+      </test>
+
+      <test name="16">
+        <test-parameter name="jdbc-driver"
+          value="oracle.jdbc.driver.OracleDriver"/>
+        <test-parameter name="username" value="SCHOI"/>
+        <test-parameter name="passwd" value="schoi"/>
+        <test-parameter name="url" value="jdbc:oracle:thin:@akela.lucidera.com:1521:XE"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/directorcl/16.sql"/>
+      </test>
+
+      <test name="17">
+        <test-parameter name="jdbc-driver"
+          value="oracle.jdbc.driver.OracleDriver"/>
+        <test-parameter name="username" value="SCHOI"/>
+        <test-parameter name="passwd" value="schoi"/>
+        <test-parameter name="url" value="jdbc:oracle:thin:@akela.lucidera.com:1521:XE"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/directorcl/17.sql"/>
+      </test>
+
+      <test name="18">
+        <test-parameter name="jdbc-driver"
+          value="oracle.jdbc.driver.OracleDriver"/>
+        <test-parameter name="username" value="SCHOI"/>
+        <test-parameter name="passwd" value="schoi"/>
+        <test-parameter name="url" value="jdbc:oracle:thin:@akela.lucidera.com:1521:XE"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/directorcl/18.sql"/>
+      </test>
+
+      <test name="19">
+        <test-parameter name="jdbc-driver"
+          value="oracle.jdbc.driver.OracleDriver"/>
+        <test-parameter name="username" value="SCHOI"/>
+        <test-parameter name="passwd" value="schoi"/>
+        <test-parameter name="url" value="jdbc:oracle:thin:@akela.lucidera.com:1521:XE"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/directorcl/19.sql"/>
+      </test>
+
+      <test name="20">
+        <test-parameter name="jdbc-driver"
+          value="oracle.jdbc.driver.OracleDriver"/>
+        <test-parameter name="username" value="SCHOI"/>
+        <test-parameter name="passwd" value="schoi"/>
+        <test-parameter name="url" value="jdbc:oracle:thin:@akela.lucidera.com:1521:XE"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/directorcl/20.sql"/>
+      </test>
+
+      <test name="20b">
+        <test-parameter name="jdbc-driver"
+          value="oracle.jdbc.driver.OracleDriver"/>
+        <test-parameter name="username" value="SCHOI"/>
+        <test-parameter name="passwd" value="schoi"/>
+        <test-parameter name="url" value="jdbc:oracle:thin:@akela.lucidera.com:1521:XE"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/directorcl/20b.sql"/>
+      </test>
+
+      <test name="21">
+        <test-parameter name="jdbc-driver"
+          value="oracle.jdbc.driver.OracleDriver"/>
+        <test-parameter name="username" value="SCHOI"/>
+        <test-parameter name="passwd" value="schoi"/>
+        <test-parameter name="url" value="jdbc:oracle:thin:@akela.lucidera.com:1521:XE"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/directorcl/21.sql"/>
+      </test>
+
+      <test name="22">
+        <test-parameter name="jdbc-driver"
+          value="oracle.jdbc.driver.OracleDriver"/>
+        <test-parameter name="username" value="SCHOI"/>
+        <test-parameter name="passwd" value="schoi"/>
+        <test-parameter name="url" value="jdbc:oracle:thin:@akela.lucidera.com:1521:XE"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/directorcl/22.sql"/>
+      </test>
+
+    </test-suite>
+  </target>
+</project>

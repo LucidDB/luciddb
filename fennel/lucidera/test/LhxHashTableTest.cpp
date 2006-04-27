@@ -158,9 +158,6 @@ void LhxHashTableTest::testInsert(
         assert(status);
     }
         
-    /*
-     * verify that the hash table reader can see all the tuples.
-     */
     LhxHashTableReader hashTableReader;
     hashTableReader.init(&hashTable,
         inputTupleDesc, keyColsProj, aggsProj, dataProj);
@@ -170,9 +167,12 @@ void LhxHashTableTest::testInsert(
         
     TuplePrinter tuplePrinter;
     ostringstream dataTrace;
-    dataTrace << "All Tuples:\n";
+    dataTrace << "All Inserted Tuples:\n";
     uint numTuples = 0;
 
+    /*
+     * verify that the hash table reader can see all the tuples.
+     */
     while (hashTableReader.getNext(outputTuple)) {
         tuplePrinter.print(dataTrace, inputTupleDesc, outputTuple);
         dataTrace << "\n";
@@ -180,15 +180,6 @@ void LhxHashTableTest::testInsert(
     }
     assert (numTuples == numRows);
     
-    if (dumpHashTable) {
-        LhxHashTableDump hashTableDump(
-            TRACE_INFO,
-            shared_from_this(), 
-            "LhxHashTableTest");
-        hashTableDump.dump(hashTable);        
-        hashTableDump.dump(dataTrace.str());
-    }
-
     /*
      * Verify that the keys are inserted.
      */
@@ -200,9 +191,34 @@ void LhxHashTableTest::testInsert(
         }
         
         PBuffer matchingKey =
-            hashTable.findKey(inputTuple, keyColsProj);
+            hashTable.findKey(inputTuple, keyColsProj, false);
 
         assert(matchingKey != NULL);
+    }
+
+    /*
+     * verify that the hash table reader can see all the unmatched tuples.
+     * Teh above search is done in non-probing mode, so matched keys are not
+     * marked as such. The whole table should be returned when reading
+     * unmatched rows.
+     */
+    dataTrace << "All Unmatched Tuples:\n";
+    numTuples = 0;
+    hashTableReader.bindUnMatched();
+    while (hashTableReader.getNext(outputTuple)) {
+        tuplePrinter.print(dataTrace, inputTupleDesc, outputTuple);
+        dataTrace << "\n";
+        numTuples ++;
+    }
+    assert (numTuples == numRows);
+
+    if (dumpHashTable) {
+        LhxHashTableDump hashTableDump(
+            TRACE_INFO,
+            shared_from_this(), 
+            "LhxHashTableTest");
+        hashTableDump.dump(hashTable);
+        hashTableDump.dump(dataTrace.str());
     }
 
     hashTable.releaseResources();

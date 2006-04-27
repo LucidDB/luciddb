@@ -24,6 +24,7 @@ package net.sf.farrago.query;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.convert.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 
@@ -38,22 +39,18 @@ import java.math.*;
  * @since Feb 4, 2005
  * @version $Id$
  */
-public class FennelOneRowRule extends RelOptRule {
-
+public class FennelOneRowRule extends ConverterRule
+{
     public FennelOneRowRule()
     {
-        super(new RelOptRuleOperand(OneRowRel.class, null));
+        super(
+            OneRowRel.class, CallingConvention.NONE,
+            FennelRel.FENNEL_EXEC_CONVENTION, "FennelOneRowRule");
     }
 
-    // implement RelOptRule
-    public CallingConvention getOutConvention()
+    public RelNode convert(RelNode rel)
     {
-        return FennelRel.FENNEL_EXEC_CONVENTION;
-    }
-
-    public void onMatch(RelOptRuleCall call)
-    {
-        OneRowRel oneRowRel = (OneRowRel) call.rels[0];
+        OneRowRel oneRowRel = (OneRowRel) rel;
 
         RexBuilder rexBuilder = oneRowRel.getCluster().getRexBuilder();
         RexLiteral literalZero = rexBuilder.makeExactLiteral(
@@ -69,6 +66,6 @@ public class FennelOneRowRule extends RelOptRule {
 
         FennelValuesRel valuesRel =
             new FennelValuesRel(oneRowRel.getCluster(), rowType, tuples);
-        call.transformTo(valuesRel);
+        return valuesRel;
     }
 }

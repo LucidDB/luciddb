@@ -4,7 +4,11 @@
     <test-suite name="tbs100-test">
 
       <init-hook>
-        <ant target="restoreCatalog"/>
+        <test-suite name="init">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">
+            <test-suite-modifier value="tbs100-test"/>
+          </test-suite-call>
+        </test-suite>
         <ant dir="${open.dir}/luciddb/test/sql/VI/tbs" target="copy-csv"/>
       </init-hook>
 
@@ -66,7 +70,7 @@
 
       <test name="qin" requiresSuccess="creschema,benchIns">
         <test-metadata>
-          <knownFailure value="true"/>
+          <notImplemented value="true"/>
           <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/idx/qin.sql"/>
@@ -81,11 +85,19 @@
 
       <test name="qjoin002" requiresSuccess="creschema,benchIns">
         <test-metadata>
-          <knownFailure value="true"/>
+          <notImplemented value="true"/>
           <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/idx/qjoin002.sql"/>
       </test>
+
+      <cleanup-hook>
+        <test-suite name="cleanup">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tdone.xml">
+            <test-suite-modifier value="tbs100-test"/>
+          </test-suite-call>
+        </test-suite>
+      </cleanup-hook>
 
     </test-suite>
   </target>

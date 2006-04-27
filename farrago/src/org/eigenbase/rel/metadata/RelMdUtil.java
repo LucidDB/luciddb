@@ -57,21 +57,13 @@ public class RelMdUtil
      *
      * @param rel the semijoin of interest
      *
-     * @param rightKey if non-null, specifies the key of the right-hand
-     * input to the semijoin (bit positions correspond to output columns of
-     * rel's right-hand input); if null, the entire join key
-     *
      * @return constructed rexnode
      */
-    public static RexNode makeSemiJoinSelectivityRexNode(
-        SemiJoinRel rel,
-        BitSet rightKey)
+    public static RexNode makeSemiJoinSelectivityRexNode(SemiJoinRel rel)
     {
-        if (rightKey == null) {
-            rightKey = new BitSet();
-            for (int dimCol : rel.getRightKeys()) {
-                rightKey.set(dimCol);
-            }
+        BitSet rightKey = new BitSet();
+        for (int dimCol : rel.getRightKeys()) {
+            rightKey.set(dimCol);
         }
         RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
         double selectivity = computeSemiJoinSelectivity(
@@ -127,8 +119,8 @@ public class RelMdUtil
         }
         
         if (selectivity == null) {
-            // set a default selectivity
-            selectivity = 0.1;
+            // set a default selectivity based on the number of semijoin keys
+            selectivity = Math.pow(0.1, dimCols.cardinality());
         } else if (selectivity > 1.0) {
             selectivity = 1.0;
         }

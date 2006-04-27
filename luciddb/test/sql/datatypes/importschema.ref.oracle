@@ -85,6 +85,7 @@ Error: From line 1, column 15 to line 1, column 28: Table '@name_prefix@_IS_SCHE
 | LOCALDB    | @name_prefix@_IS_SCHEMA  | FOR_TABLE1                     | FOREIGN TABLE  |          |           |             |            |                            |                 |
 | LOCALDB    | @name_prefix@_IS_SCHEMA  | FOR_TABLE2                     | FOREIGN TABLE  |          |           |             |            |                            |                 |
 | LOCALDB    | @name_prefix@_IS_SCHEMA  | FOR_TABLE3                     | FOREIGN TABLE  |          |           |             |            |                            |                 |
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | HTMLDB_PLAN_TABLE              | FOREIGN TABLE  |          |           |             |            |                            |                 |
 | LOCALDB    | @name_prefix@_IS_SCHEMA  | JUNKTABLE                      | FOREIGN TABLE  |          |           |             |            |                            |                 |
 | LOCALDB    | @name_prefix@_IS_SCHEMA  | LOB_TABLE                      | FOREIGN TABLE  |          |           |             |            |                            |                 |
 | LOCALDB    | @name_prefix@_IS_SCHEMA  | LOCATION                       | FOREIGN TABLE  |          |           |             |            |                            |                 |
@@ -152,10 +153,10 @@ Error: From line 1, column 15 to line 1, column 28: Table '@name_prefix@_IS_SCHE
 | LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_AUTO_DISCOVERY_PARMS       | FOREIGN TABLE  |          |           |             |            |                            |                 |
 | LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_AUTO_DISCOVERY_PARMS_      | FOREIGN TABLE  |          |           |             |            |                            |                 |
 | LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_BLOB                       | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_BLOB_                      | FOREIGN TABLE  |          |           |             |            |                            |                 |
 +------------+-----------------+--------------------------------+----------------+----------+-----------+-------------+------------+----------------------------+-----------------+
 | TABLE_CAT  |   TABLE_SCHEM   |           TABLE_NAME           |   TABLE_TYPE   | REMARKS  | TYPE_CAT  | TYPE_SCHEM  | TYPE_NAME  | SELF_REFERENCING_COL_NAME  | REF_GENERATION  |
 +------------+-----------------+--------------------------------+----------------+----------+-----------+-------------+------------+----------------------------+-----------------+
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_BLOB_                      | FOREIGN TABLE  |          |           |             |            |                            |                 |
 | LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_CREDENTIALS                | FOREIGN TABLE  |          |           |             |            |                            |                 |
 | LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_CREDENTIALS$               | FOREIGN TABLE  |          |           |             |            |                            |                 |
 | LOCALDB    | @name_prefix@_IS_SCHEMA  | SMP_JOB                        | FOREIGN TABLE  |          |           |             |            |                            |                 |
@@ -255,10 +256,10 @@ Error: From line 1, column 15 to line 1, column 28: Table '@name_prefix@_IS_SCHE
 | LOCALDB    | @name_prefix@_IS_SCHEMA  | u1                             | FOREIGN TABLE  |          |           |             |            |                            |                 |
 | LOCALDB    | @name_prefix@_IS_SCHEMA  | u2                             | FOREIGN TABLE  |          |           |             |            |                            |                 |
 | LOCALDB    | @name_prefix@_IS_SCHEMA  | u3                             | FOREIGN TABLE  |          |           |             |            |                            |                 |
-| LOCALDB    | @name_prefix@_IS_SCHEMA  | uu1                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
 +------------+-----------------+--------------------------------+----------------+----------+-----------+-------------+------------+----------------------------+-----------------+
 | TABLE_CAT  |   TABLE_SCHEM   |           TABLE_NAME           |   TABLE_TYPE   | REMARKS  | TYPE_CAT  | TYPE_SCHEM  | TYPE_NAME  | SELF_REFERENCING_COL_NAME  | REF_GENERATION  |
 +------------+-----------------+--------------------------------+----------------+----------+-----------+-------------+------------+----------------------------+-----------------+
+| LOCALDB    | @name_prefix@_IS_SCHEMA  | uu1                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
 | LOCALDB    | @name_prefix@_IS_SCHEMA  | uu2                            | FOREIGN TABLE  |          |           |             |            |                            |                 |
 | LOCALDB    | @name_prefix@_IS_SCHEMA  | wherelist                      | FOREIGN TABLE  |          |           |             |            |                            |                 |
 | LOCALDB    | @name_prefix@_IS_SCHEMA  | wherestring                    | FOREIGN TABLE  |          |           |             |            |                            |                 |

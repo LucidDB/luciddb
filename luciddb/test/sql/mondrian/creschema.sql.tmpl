@@ -1,0 +1,29 @@
+create foreign data wrapper @DATA_WRAPPER_NAME@_foodmart
+library '@DATA_LIBRARY@'
+language java;
+
+create server @SERVER_NAME@_foodmart
+foreign data wrapper @DATA_WRAPPER_NAME@_foodmart
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    schema_name '@SCHEMA_NAME@',
+    qualifying_catalog_name '@CATALOG_NAME@',
+    table_types '@TABLE_TYPES@',
+    driver_class '@DRIVER_CLASS@'
+
+    directory '@DIRECTORY@',
+    file_extension '@FILE_EXTENSION@',
+    ctrl_file_extension '@CTRL_FILE_EXT@',
+    field_delimiter '@FIELD_DELIM@',
+    line_delimiter '@LINE_DELIM@',
+    quote_char '@QUOTE_CHAR@',
+    escape_char '@ESCAPE_CHAR@',
+    with_header '@WITH_HEADER@',
+    num_rows_scan '@NUM_ROWS_SCAN@'
+);
+
+create schema foodmart;
+-- create user that has default schema to foodmart
+create user MONDRIAN authorization 'Unknown' DEFAULT SCHEMA foodmart;

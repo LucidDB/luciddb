@@ -571,6 +571,10 @@ column type family is {1} but default value type family is {2}</text>
 <text>Cannot drop {0} because it is currently in use by a statement</text>
 </exception>
 
+<exception id="420980" name="ValidatorAnalyzeSupport">
+<text>Cannot analyze {0} because analysis is not supported for objects of that type</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Fennel resources 440,000 - 450,000 -->
 <!-- Actual resources are defined separately in Fennel -->
@@ -731,6 +735,18 @@ column type family is {1} but default value type family is {2}</text>
 
 <exception id="469060" name="CannotDeriveColumnTypes">
 <text>Cannot derive column types for file {0}</text>
+</exception>
+
+<exception id="469070" name="InvalidControlFileTooManyCols">
+<text>Too many columns in control file {0}</text>
+</exception>
+
+<exception id="469080" name="InvalidControlFileTooFewCols">
+<text>Too few columns in control file {0}</text>
+</exception>
+
+<exception id="469090" name="InvalidControlFileOnRow">
+<text>Invalid row {1} in control file {0}</text>
 </exception>
 
 <!-- ====================================================================== -->

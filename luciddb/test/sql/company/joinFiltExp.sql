@@ -66,6 +66,7 @@ and customers.lname < 'C'
 and customers.fname > 'S'
 order by 1,2,3;
 
+-- LER-787
 explain plan for select customers.lname, products.name, sales.price
 --from sales, products, customers
 from sales, customers, products
@@ -79,6 +80,7 @@ and (products.name='Soap' or products.name='Juice' or products.name='Soup' or pr
 and products.price < 5.00
 order by 1,2,3;
 
+-- LER-787
 -- dimension tables not referenced in select list, should drop
 -- out of join
 explain plan for select sum(sales.price)

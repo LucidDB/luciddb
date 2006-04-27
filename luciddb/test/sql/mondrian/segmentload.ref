@@ -1,0 +1,126 @@
+0: jdbc:luciddb:> set schema 'foodmart';
+0: jdbc:luciddb:> select "time_by_day"."the_year" as "c0", "product_class"."product_department" as "c1", "product_class"."product_family" as "c2", "customer"."education" as "c3", sum("sales_fact_1997"."unit_sales") as "m0" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "product_class" as "product_class", "product" as "product", "customer" as "customer" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "time_by_day"."the_year", "product_class"."product_department", "product_class"."product_family", "customer"."education";
++-------+----------------------+-----------------+----------------------+-------------+
+|  c0   |          c1          |       c2        |          c3          |     m0      |
++-------+----------------------+-----------------+----------------------+-------------+
+| 1997  | Alcoholic Beverages  | Drink           | Bachelors Degree     | 1763.0000   |
+| 1997  | Alcoholic Beverages  | Drink           | Graduate Degree      | 352.0000    |
+| 1997  | Alcoholic Beverages  | Drink           | High School Degree   | 2079.0000   |
+| 1997  | Alcoholic Beverages  | Drink           | Partial College      | 574.0000    |
+| 1997  | Alcoholic Beverages  | Drink           | Partial High School  | 2070.0000   |
+| 1997  | Baked Goods          | Food            | Bachelors Degree     | 1933.0000   |
+| 1997  | Baked Goods          | Food            | Graduate Degree      | 500.0000    |
+| 1997  | Baked Goods          | Food            | High School Degree   | 2348.0000   |
+| 1997  | Baked Goods          | Food            | Partial College      | 809.0000    |
+| 1997  | Baked Goods          | Food            | Partial High School  | 2280.0000   |
+| 1997  | Baking Goods         | Food            | Bachelors Degree     | 5456.0000   |
+| 1997  | Baking Goods         | Food            | Graduate Degree      | 1278.0000   |
+| 1997  | Baking Goods         | Food            | High School Degree   | 5839.0000   |
+| 1997  | Baking Goods         | Food            | Partial College      | 2009.0000   |
+| 1997  | Baking Goods         | Food            | Partial High School  | 5663.0000   |
+| 1997  | Beverages            | Drink           | Bachelors Degree     | 3591.0000   |
+| 1997  | Beverages            | Drink           | Graduate Degree      | 730.0000    |
+| 1997  | Beverages            | Drink           | High School Degree   | 3925.0000   |
+| 1997  | Beverages            | Drink           | Partial College      | 1212.0000   |
+| 1997  | Beverages            | Drink           | Partial High School  | 4115.0000   |
+| 1997  | Breakfast Foods      | Food            | Bachelors Degree     | 885.0000    |
+| 1997  | Breakfast Foods      | Food            | Graduate Degree      | 144.0000    |
+| 1997  | Breakfast Foods      | Food            | High School Degree   | 1060.0000   |
+| 1997  | Breakfast Foods      | Food            | Partial College      | 279.0000    |
+| 1997  | Breakfast Foods      | Food            | Partial High School  | 949.0000    |
+| 1997  | Canned Foods         | Food            | Bachelors Degree     | 4914.0000   |
+| 1997  | Canned Foods         | Food            | Graduate Degree      | 1202.0000   |
+| 1997  | Canned Foods         | Food            | High School Degree   | 5460.0000   |
+| 1997  | Canned Foods         | Food            | Partial College      | 1745.0000   |
+| 1997  | Canned Foods         | Food            | Partial High School  | 5705.0000   |
+| 1997  | Canned Products      | Food            | Bachelors Degree     | 502.0000    |
+| 1997  | Canned Products      | Food            | Graduate Degree      | 114.0000    |
+| 1997  | Canned Products      | Food            | High School Degree   | 582.0000    |
+| 1997  | Canned Products      | Food            | Partial College      | 128.0000    |
+| 1997  | Canned Products      | Food            | Partial High School  | 486.0000    |
+| 1997  | Carousel             | Non-Consumable  | Bachelors Degree     | 215.0000    |
+| 1997  | Carousel             | Non-Consumable  | Graduate Degree      | 53.0000     |
+| 1997  | Carousel             | Non-Consumable  | High School Degree   | 283.0000    |
+| 1997  | Carousel             | Non-Consumable  | Partial College      | 68.0000     |
+| 1997  | Carousel             | Non-Consumable  | Partial High School  | 222.0000    |
+| 1997  | Checkout             | Non-Consumable  | Bachelors Degree     | 505.0000    |
+| 1997  | Checkout             | Non-Consumable  | Graduate Degree      | 80.0000     |
+| 1997  | Checkout             | Non-Consumable  | High School Degree   | 473.0000    |
+| 1997  | Checkout             | Non-Consumable  | Partial College      | 141.0000    |
+| 1997  | Checkout             | Non-Consumable  | Partial High School  | 580.0000    |
+| 1997  | Dairy                | Drink           | Bachelors Degree     | 1069.0000   |
+| 1997  | Dairy                | Drink           | Graduate Degree      | 243.0000    |
+| 1997  | Dairy                | Drink           | High School Degree   | 1222.0000   |
+| 1997  | Dairy                | Drink           | Partial College      | 378.0000    |
+| 1997  | Dairy                | Drink           | Partial High School  | 1274.0000   |
+| 1997  | Dairy                | Food            | Bachelors Degree     | 3195.0000   |
+| 1997  | Dairy                | Food            | Graduate Degree      | 822.0000    |
+| 1997  | Dairy                | Food            | High School Degree   | 3811.0000   |
+| 1997  | Dairy                | Food            | Partial College      | 1223.0000   |
+| 1997  | Dairy                | Food            | Partial High School  | 3834.0000   |
+| 1997  | Deli                 | Food            | Bachelors Degree     | 2861.0000   |
+| 1997  | Deli                 | Food            | Graduate Degree      | 685.0000    |
+| 1997  | Deli                 | Food            | High School Degree   | 3609.0000   |
+| 1997  | Deli                 | Food            | Partial College      | 1174.0000   |
+| 1997  | Deli                 | Food            | Partial High School  | 3708.0000   |
+| 1997  | Eggs                 | Food            | Bachelors Degree     | 1068.0000   |
+| 1997  | Eggs                 | Food            | Graduate Degree      | 247.0000    |
+| 1997  | Eggs                 | Food            | High School Degree   | 1232.0000   |
+| 1997  | Eggs                 | Food            | Partial College      | 358.0000    |
+| 1997  | Eggs                 | Food            | Partial High School  | 1227.0000   |
+| 1997  | Frozen Foods         | Food            | Bachelors Degree     | 6937.0000   |
+| 1997  | Frozen Foods         | Food            | Graduate Degree      | 1540.0000   |
+| 1997  | Frozen Foods         | Food            | High School Degree   | 7965.0000   |
+| 1997  | Frozen Foods         | Food            | Partial College      | 2372.0000   |
+| 1997  | Frozen Foods         | Food            | Partial High School  | 7841.0000   |
+| 1997  | Health and Hygiene   | Non-Consumable  | Bachelors Degree     | 4176.0000   |
+| 1997  | Health and Hygiene   | Non-Consumable  | Graduate Degree      | 995.0000    |
+| 1997  | Health and Hygiene   | Non-Consumable  | High School Degree   | 4609.0000   |
+| 1997  | Health and Hygiene   | Non-Consumable  | Partial College      | 1580.0000   |
+| 1997  | Health and Hygiene   | Non-Consumable  | Partial High School  | 4924.0000   |
+| 1997  | Household            | Non-Consumable  | Bachelors Degree     | 7060.0000   |
+| 1997  | Household            | Non-Consumable  | Graduate Degree      | 1607.0000   |
+| 1997  | Household            | Non-Consumable  | High School Degree   | 8178.0000   |
+| 1997  | Household            | Non-Consumable  | Partial College      | 2417.0000   |
+| 1997  | Household            | Non-Consumable  | Partial High School  | 7776.0000   |
+| 1997  | Meat                 | Food            | Bachelors Degree     | 456.0000    |
+| 1997  | Meat                 | Food            | Graduate Degree      | 101.0000    |
+| 1997  | Meat                 | Food            | High School Degree   | 501.0000    |
+| 1997  | Meat                 | Food            | Partial College      | 140.0000    |
+| 1997  | Meat                 | Food            | Partial High School  | 516.0000    |
+| 1997  | Periodicals          | Non-Consumable  | Bachelors Degree     | 1095.0000   |
+| 1997  | Periodicals          | Non-Consumable  | Graduate Degree      | 255.0000    |
+| 1997  | Periodicals          | Non-Consumable  | High School Degree   | 1386.0000   |
+| 1997  | Periodicals          | Non-Consumable  | Partial College      | 316.0000    |
+| 1997  | Periodicals          | Non-Consumable  | Partial High School  | 1242.0000   |
+| 1997  | Produce              | Food            | Bachelors Degree     | 9640.0000   |
+| 1997  | Produce              | Food            | Graduate Degree      | 2158.0000   |
+| 1997  | Produce              | Food            | High School Degree   | 10916.0000  |
+| 1997  | Produce              | Food            | Partial College      | 3518.0000   |
+| 1997  | Produce              | Food            | Partial High School  | 11560.0000  |
+| 1997  | Seafood              | Food            | Bachelors Degree     | 430.0000    |
+| 1997  | Seafood              | Food            | Graduate Degree      | 101.0000    |
+| 1997  | Seafood              | Food            | High School Degree   | 549.0000    |
+| 1997  | Seafood              | Food            | Partial College      | 174.0000    |
++-------+----------------------+-----------------+----------------------+-------------+
+|  c0   |          c1          |       c2        |          c3          |     m0      |
++-------+----------------------+-----------------+----------------------+-------------+
+| 1997  | Seafood              | Food            | Partial High School  | 510.0000    |
+| 1997  | Snack Foods          | Food            | Bachelors Degree     | 7898.0000   |
+| 1997  | Snack Foods          | Food            | Graduate Degree      | 1700.0000   |
+| 1997  | Snack Foods          | Food            | High School Degree   | 9135.0000   |
+| 1997  | Snack Foods          | Food            | Partial College      | 2863.0000   |
+| 1997  | Snack Foods          | Food            | Partial High School  | 8949.0000   |
+| 1997  | Snacks               | Food            | Bachelors Degree     | 1799.0000   |
+| 1997  | Snacks               | Food            | Graduate Degree      | 378.0000    |
+| 1997  | Snacks               | Food            | High School Degree   | 2007.0000   |
+| 1997  | Snacks               | Food            | Partial College      | 607.0000    |
+| 1997  | Snacks               | Food            | Partial High School  | 2093.0000   |
+| 1997  | Starchy Foods        | Food            | Bachelors Degree     | 1391.0000   |
+| 1997  | Starchy Foods        | Food            | Graduate Degree      | 285.0000    |
+| 1997  | Starchy Foods        | Food            | High School Degree   | 1495.0000   |
+| 1997  | Starchy Foods        | Food            | Partial College      | 460.0000    |
+| 1997  | Starchy Foods        | Food            | Partial High School  | 1631.0000   |
++-------+----------------------+-----------------+----------------------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

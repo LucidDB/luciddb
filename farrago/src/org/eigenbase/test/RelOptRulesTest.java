@@ -102,6 +102,14 @@ public class RelOptRulesTest extends RelOptTestBase
             + " on d.deptno = e.deptno"
             + " where d.name = 'Charlie'");
     }
+
+    public void testReduceAverage()
+    {
+        checkPlanning(
+            ReduceAggregatesRule.instance,
+            "select name, max(name), avg(deptno), min(name)"
+            + " from sales.dept group by name");
+    }
 }
 
 // End RelOptRulesTest.java

@@ -139,12 +139,15 @@ public class FarragoColumnHistogram implements RelStatColumnStatistics
         }
 
         int minBar = 0;
-        String minVal = bars.get(0).getStartingValue();
         for (SargInterval interval : sequence.getList()) {
             HistogramRange range = 
                 new HistogramRange(bars, interval, minBar);
             range.evaluate();
+            if (range.isEmpty()) {
+                continue;
+            }
 
+            String minVal = bars.get(range.firstBar).getStartingValue();
             HistogramBarCoverage.addRange(coverages, range, minVal);
             minBar = range.getLastBar();
         }
@@ -202,22 +205,19 @@ public class FarragoColumnHistogram implements RelStatColumnStatistics
     /**
      * Compares a value in a histogram with a Sarg coordinate
      * 
-     * @param histValue histogram value
-     * @param coordinate sarg coordinate, a null pointer if infinite, or 
-     * SqlNull if the value null
+     * @param histValue a histogram value
+     * @param coordinate a sarg coordinate, or a null pointer to 
+     * represent the null value. An infinite coordinate is not 
+     * recognized by this function.
      * 
      * @return -1 if value is less than point, 0 if value equals point, 
      * or 1 if value is greater than point
      */
     protected static int compare(String histValue, RexLiteral coordinate)
     {
-        // all values are greater than infinity
-        if (coordinate == null) {
-            return 1;
-        }
-        
         // treat null values as the least value
-        Comparable sargValue = coordinate.getValue();
+        Comparable sargValue = 
+            (coordinate == null) ? null : coordinate.getValue();
         if (histValue == null && sargValue == null) {
             return 0;
         } else if (histValue == null) {
@@ -227,12 +227,11 @@ public class FarragoColumnHistogram implements RelStatColumnStatistics
         }
         
         RexLiteral rexValue = 
-            RexLiteral.fromJavaString(
+            RexLiteral.fromJdbcString(
                 coordinate.getType(),
                 coordinate.getTypeName(),
                 histValue);
         
-        // skip past bars that do not contain value
         int comparison = rexValue.getValue().compareTo(sargValue);
         return comparison;
     }
@@ -325,14 +324,15 @@ public class FarragoColumnHistogram implements RelStatColumnStatistics
          */
         private int findStartBar(int min, SargEndpoint point) 
         {
-            RexLiteral coordinate = (RexLiteral) point.getCoordinate();
-            boolean open = (point.getStrictness() == SargStrictness.OPEN);
-
-            // these values represent "null" and "-infinity" respectively
-            if (coordinate == null || coordinate.getValue() == null) {
+            // if the start is "-infinity" then the range starts at the
+            // first bar
+            if (!point.isFinite()) {
                 return 0;
             }
-            
+            RexLiteral coordinate = 
+                point.isNull() ? null : (RexLiteral) point.getCoordinate();
+            boolean open = (point.getStrictness() == SargStrictness.OPEN);
+
             int start;
             for (start = min; start + 1 < bars.size(); start++) {
                 // The end of the current bar can be anything up to the start 
@@ -364,13 +364,13 @@ public class FarragoColumnHistogram implements RelStatColumnStatistics
          */
         private int findEndBar(int min, SargEndpoint point) 
         {
-            RexLiteral coordinate = (RexLiteral) point.getCoordinate();
-            boolean open = (point.getStrictness() == SargStrictness.OPEN);
-            
             // return end for "+infinity"
-            if (coordinate == null) {
+            if (! point.isFinite()) {
                 return bars.size();
             }
+            RexLiteral coordinate = 
+                point.isNull() ? null : (RexLiteral) point.getCoordinate();
+            boolean open = (point.getStrictness() == SargStrictness.OPEN);
 
             int end;
             for (end = min; end < bars.size(); end++) {
@@ -441,9 +441,10 @@ public class FarragoColumnHistogram implements RelStatColumnStatistics
                 coverages.get(i).selectivityRanges++;
             }
             
-            // look for entire bars. the first bar is fully covered if the 
-            // lower bound is infinite or less than the first bar of the 
-            // histogram (note that the range has at least two bars)
+            // look for entire bars. the first bar of the range is fully 
+            // covered if the lower bound is infinite or less than the 
+            // first bar of the histogram range (note that the range 
+            // has at least two bars)
             assert (range.firstBar != range.lastBar);
             SargEndpoint lower = range.interval.getLowerBound();
             if (!lower.isFinite()) 

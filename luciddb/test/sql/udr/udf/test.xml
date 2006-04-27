@@ -25,7 +25,11 @@
     <test-suite name="udf">
       
       <init-hook>
-        <ant target="restoreCatalog"/>
+        <test-suite name="init">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">
+            <test-suite-modifier value="udf"/>
+          </test-suite-call>
+        </test-suite>
       </init-hook>
 
       <test name="udfInvocation">
@@ -119,6 +123,18 @@
       <test name="padWeekNumber" requiresRun="cr_source">
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udf/pad_week_number.sql"/>
       </test>
+
+      <test name="instr" requiresRun="cr_source">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udf/instr.sql"/>
+      </test>
+
+      <cleanup-hook>
+        <test-suite name="cleanup">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tdone.xml">
+            <test-suite-modifier value="udf"/>
+          </test-suite-call>
+        </test-suite>
+      </cleanup-hook>
 
     </test-suite>
   </target>

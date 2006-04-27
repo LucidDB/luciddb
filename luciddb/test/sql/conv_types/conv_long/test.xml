@@ -7,20 +7,41 @@
       </test-metadata>
 
       <init-hook>
-        <ant target="restoreCatalog"/>
+        <test-suite name="init">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">
+            <test-suite-modifier value="conv_long"/>
+          </test-suite-call>
+        </test-suite>
       </init-hook>
 
       <test name="createsource">
+        <test-metadata>
+          <notImplemented value="true"/>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/conv_types/conv_long/cr_source.sql"/>
       </test>
 
       <test name="longvarchar" requiresRun="createsource">
+        <test-metadata>
+          <notImplemented value="true"/>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/conv_types/conv_long/target_longchar.sql"/>
       </test>
 
       <test name="longvarbin" requiresRun="createsource">
+        <test-metadata>
+          <notImplemented value="true"/>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/conv_types/conv_long/target_longbin.sql"/>
       </test>
+
+      <cleanup-hook>
+        <test-suite name="cleanup">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tdone.xml">
+            <test-suite-modifier value="conv_long"/>
+          </test-suite-call>
+        </test-suite>
+      </cleanup-hook>
 
     </test-suite>
   </target>

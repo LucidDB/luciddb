@@ -54,14 +54,11 @@
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Deletes not working yet
-0: jdbc:luciddb:> delete from bench100 where k25=2
-. . . . . . . . > ;
-Error: java.lang.AssertionError: Internal error: node could not be implemented: Subset#3.ITERATOR (state=,code=0)
-0: jdbc:luciddb:> delete from bench100 where k25=12
-. . . . . . . . > ;
-Error: java.lang.AssertionError: Internal error: node could not be implemented: Subset#3.ITERATOR (state=,code=0)
-0: jdbc:luciddb:> delete from bench100 where k25=22
-. . . . . . . . > ;
-Error: java.lang.AssertionError: Internal error: node could not be implemented: Subset#3.ITERATOR (state=,code=0)
+0: jdbc:luciddb:> -- delete from bench100 where k25=2
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> -- delete from bench100 where k25=12
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> -- delete from bench100 where k25=22
+0: jdbc:luciddb:> -- ;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

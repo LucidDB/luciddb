@@ -1,0 +1,47 @@
+0: jdbc:oracle:> -- Query 12
+0: jdbc:oracle:> 
+0: jdbc:oracle:> SELECT AL4.REVN_YR_MO, AL1.CU_ID, AL3.SRVPLN_ID,
+. . . . . . . . >  AL3.SRVPLN_NM, AL3.SPO_ID, AL3.SPO_NM, AL3.BU_CD,
+. . . . . . . . >  AL3.RC_CD, AL1.CUOR_CUST_NM, AL1.CUIN_LST_NM,
+. . . . . . . . >  AL1.CUIN_FST_NM, AL1.MAIL_ADDR_ID
+. . . . . . . . > FROM
+. . . . . . . . > PGE.REVN_DTL_RAND AL5,
+. . . . . . . . > PGE.CUST_SERV_ACCT AL1,
+. . . . . . . . > PGE.SERV_PLAN AL3,
+. . . . . . . . > PGE.GEOG AL2,
+. . . . . . . . > PGE.REVN_PRD AL4
+. . . . . . . . > -- PGE.CUST_SERV_ACCT AL1,
+. . . . . . . . > -- PGE.GEOG AL2,
+. . . . . . . . > -- PGE.SERV_PLAN AL3,
+. . . . . . . . > -- PGE.REVN_PRD AL4,
+. . . . . . . . > -- PGE.REVN_DTL_RAND AL5
+. . . . . . . . > WHERE (AL5.REVN_YR_MO=AL4.REVN_YR_MO
+. . . . . . . . >  AND AL2.GEOG_KEY=AL5.GEOG_KEY AND AL3.SRVPLN_KEY=AL5.SRVPLN_KEY
+. . . . . . . . >  AND AL1.CUST_SERV_ACCT_KEY=AL5.CUST_SERV_ACCT_KEY)
+. . . . . . . . >  AND (AL5.SAS_FNL_BIL_INDCR='Y')
+. . . . . . . . >  AND (AL4.REVN_YR_MO=
+. . . . . . . . >   (select max(AL4.REVN_YR_MO) FROMPGE.REVN_PRD AL4))
+. . . . . . . . > GROUP BY AL4.REVN_YR_MO, AL1.CU_ID, AL3.SRVPLN_ID,
+. . . . . . . . >  AL3.SRVPLN_NM, AL3.SPO_ID, AL3.SPO_NM, AL3.BU_CD,
+. . . . . . . . >  AL3.RC_CD, AL1.CUOR_CUST_NM, AL1.CUIN_LST_NM, AL1.CUIN_FST_NM,
+. . . . . . . . >  AL1.MAIL_ADDR_ID
+. . . . . . . . > ORDER BY 2, 3
+. . . . . . . . > ;
++-------------+------------+------------+--------------------------+---------+----------------------------+--------+--------+---------------+--------------+--------------+---------------+
+| REVN_YR_MO  |   CU_ID    | SRVPLN_ID  |        SRVPLN_NM         | SPO_ID  |           SPO_NM           | BU_CD  | RC_CD  | CUOR_CUST_NM  | CUIN_LST_NM  | CUIN_FST_NM  | MAIL_ADDR_ID  |
++-------------+------------+------------+--------------------------+---------+----------------------------+--------+--------+---------------+--------------+--------------+---------------+
+| 199512      | 113100009  | 311        | GAS - RESIDENTIAL        | 1       | GENERAL SERVICE - RES      | GAS    | 02     | N/A           | RITTER       | RICHARD      | 498810000     |
+| 199512      | 186300004  | 311        | GAS - RESIDENTIAL        | 1       | GENERAL SERVICE - RES      | GAS    | 02     | N/A           | FORT         | ROBERT       | 998810000     |
+| 199512      | 186300004  | 811        | ELEC - RESIDENTIAL       | 1       | GENERAL SERVICE - RES      | ELE    | 01     | N/A           | FORT         | ROBERT       | 998810000     |
+| 199512      | 250110002  | 878        | ELEC - DUSK TO DAWN LTG  | 4       | 100 WATT HIGH PRES SODIUM  | ELE    | 01     | N/A           | VOEGTLIN     | KENNETH      | 788810004     |
+| 199512      | 277600002  | 311        | GAS - RESIDENTIAL        | 1       | GENERAL SERVICE - RES      | GAS    | 02     | N/A           | YODER        | DAVID        | 137600004     |
+| 199512      | 380300006  | 311        | GAS - RESIDENTIAL        | 1       | GENERAL SERVICE - RES      | GAS    | 02     | N/A           | MARTIN       | KATHERIN     | 688810007     |
+| 199512      | 380300006  | 811        | ELEC - RESIDENTIAL       | 1       | GENERAL SERVICE - RES      | ELE    | 01     | N/A           | MARTIN       | KATHERIN     | 688810007     |
+| 199512      | 448710009  | 878        | ELEC - DUSK TO DAWN LTG  | 7       | 150 WATT HPS FLOODLIGHT    | ELE    | 01     | N/A           | MCSHANE      | COREY        | 698810002     |
+| 199512      | 487800009  | 311        | GAS - RESIDENTIAL        | 1       | GENERAL SERVICE - RES      | GAS    | 02     | N/A           | VANSICKLE    | NORM         | 888810008     |
+| 199512      | 487800009  | 811        | ELEC - RESIDENTIAL       | 1       | GENERAL SERVICE - RES      | ELE    | 01     | N/A           | VANSICKLE    | NORM         | 888810008     |
+| 199512      | 803900007  | 311        | GAS - RESIDENTIAL        | 1       | GENERAL SERVICE - RES      | GAS    | 02     | N/A           | MAITLAND     | HAROLD       | 331900008     |
+| 199512      | 993610002  | 811        | ELEC - RESIDENTIAL       | 1       | GENERAL SERVICE - RES      | ELE    | 01     | N/A           | WILLIAMS     | O            | 398810005     |
++-------------+------------+------------+--------------------------+---------+----------------------------+--------+--------+---------------+--------------+--------------+---------------+
+0: jdbc:oracle:> 
+0: jdbc:oracle:> !quit

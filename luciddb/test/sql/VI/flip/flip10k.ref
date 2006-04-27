@@ -73,8 +73,7 @@
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Delete not working yet
-0: jdbc:luciddb:> delete from BENCH10K where K2=1
-. . . . . . . . > ;
-Error: java.lang.AssertionError: Internal error: node could not be implemented: Subset#3.ITERATOR (state=,code=0)
+0: jdbc:luciddb:> -- delete from BENCH10K where K2=1
+0: jdbc:luciddb:> -- ;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

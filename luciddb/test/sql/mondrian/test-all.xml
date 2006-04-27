@@ -1,0 +1,20 @@
+<project name="bh" default="mondrian">
+  <target name="mondrian">
+    <test-suite name="mondrian-all">
+
+      <test-suite-call testfile="test.xml"/>
+
+      <test name="query-shabang" nameOverride="true"> 
+        <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/gen/sqlserver/shabang.sql"/>
+      </test>
+
+      <test name="query-frg108" nameOverride="true">
+        <test-metadata>
+          <knownFailure value="true"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/gen/sqlserver/frg108.sql"/>
+      </test>
+
+    </test-suite>
+  </target>
+</project>

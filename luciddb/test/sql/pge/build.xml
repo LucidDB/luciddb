@@ -59,6 +59,13 @@
   </path>
   <property name="test.classpath" refid="test.classpath"/>
 
+  <!-- classpath for running tests on oracle db via ant -->
+  <path id="test.orcl.classpath">
+    <pathelement path="${test.classpath}"/>
+    <pathelement path="${open.dir}/luciddb/plugin/FarragoMedJdbc3p.jar"/>
+  </path>
+  <property name="test.orcl.classpath" refid="test.orcl.classpath"/>
+
   <target name="gen-sql">
     <filter token="open.dir" value="${open.dir}"/>
     <filter token="csv.dir" value="${csv.copy.dir}"/>
@@ -94,6 +101,19 @@
     </copy>
     <delete dir="${gensql.dir}tmp" quiet="true"/>
 
+    <!-- copy over explain plan test files -->
+    <copy todir="${gensql.dir}/${prop.source}">
+      <fileset dir="${pge.dir}">
+        <include name="**/*.sql"/>
+        <include name="**/*.ref"/>
+        <exclude name="gen/**"/>
+      </fileset>
+      <filterset>
+        <filter token="PLAN" value="explain plan for"/>
+      </filterset>
+      <regexpmapper from="^(\d.*)\.(.*)$$" to="\1Exp.\2"/>
+    </copy>
+
     <!-- copy over all other .sql and .ref files -->
     <copy todir="${gensql.dir}/${prop.source}">
       <fileset dir="${pge.dir}">
@@ -101,7 +121,11 @@
         <include name="**/*.ref"/>
         <exclude name="gen/**"/>
       </fileset>
+      <filterset>
+        <filter token="PLAN" value=""/>
+      </filterset>
     </copy>
+
   </target>
   
   <target name="gen-all-sql">
@@ -170,8 +194,63 @@
     <delete dir="${csv.dir}"/>
   </target>
 
-  <target name="restoreCatalog">
-    <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>
+  <!-- Experimental -->
+  <target name="test-orcl" depends="gen-orcl-sql">
+    <blackhawk.fork
+      basedir="${pge.dir}"
+      testscript="test-orcl.xml"
+      classpathref="test.orcl.classpath"/>
+  </target>
+
+  <target name="gen-orcl-sql">
+    <filter token="open.dir" value="${open.dir}"/>
+
+    <!-- copy over orcl .sql and .ref files -->
+    <copy todir="${gensql.dir}/directorcl">
+      <fileset dir="${pge.dir}">
+        <include name="**/*.sql"/>
+        <include name="**/*.ref"/>
+        <exclude name="gen/**"/>
+      </fileset>
+      <filterset>
+        <filter token="PLAN" value=""/>
+      </filterset>
+      <filterset begintoken=" " endtoken=" "> 
+        <filter token="PGE.CUST_SERV_ACCT" value="&quot;csa&quot; "/>
+        <filter token="PGE.GEOG" value="&quot;g&quot; "/>
+        <filter token="PGE.SERV_PLAN" value="&quot;sp&quot; "/>
+        <filter token="PGE.REVN_PRD" value="&quot;rp&quot; "/>
+        <filter token="PGE.REVN_DTL_RAND" value="&quot;rdr&quot; "/>
+      </filterset>
+    </copy>
+
+  </target>
+
+  <target name="format-orcl-files">
+    <copy todir="${gensql.dir}/directorcl" overwrite="true">
+      <fileset dir="${gensql.dir}/directorcl">
+        <include name="*.log"/>
+      </fileset>
+      <filterchain>
+        <tokenfilter>
+          <replacestring from="&quot;csa&quot;" to="PGE.CUST_SERV_ACCT"/>
+          <replacestring from="&quot;g&quot;" to="PGE.GEOG"/>
+          <replacestring from="&quot;sp&quot;" to="PGE.SERV_PLAN"/>
+          <replacestring from="&quot;rp&quot;" to="PGE.REVN_PRD"/>
+          <replacestring from="&quot;rdr&quot;" to="PGE.REVN_DTL_RAND"/>
+          <replacestring 
+            from="0: jdbc:oracle:thin:@akela.lucidera.com:1521:" 
+            to="0: jdbc:oracle:"/>
+          <replacestring
+            from="Error: READ_COMMITTED and SERIALIZABLE are the only valid transaction levels (state=,code=17030)"
+            to=""/>
+          <replacestring
+            from=". . . . . . . . . . . . . . . . . . . . . . ."
+            to=". . . . . . . . "/>
+        </tokenfilter>
+      </filterchain>
+      <globmapper from="*.log" to="*.orcl"/>
+    </copy>
   </target>
 
 </project>

@@ -147,6 +147,9 @@
 <text>CleanPhoneUdf: Character not mappable to a digit</text>
 </exception>
 
+<exception id="900210" name="InStrInvalidArgument">
+<text>InStrUdf: invalid argument: inStr={0} subStr={1} startPos={2} nthAppearance={3}</text>
+</exception>
 
 <!-- ====================================================================== -->
  Messages

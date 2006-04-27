@@ -28,7 +28,7 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- 2nd select should fail
 0: jdbc:luciddb:> select * from @name_prefix@_is_schema."types";
-Error: FennelResource.en_US.noRowsReturned(/home/elin/open/luciddb/test/sql/datatypes/types.csv, could not calculate results for the following row:
+Error: FennelResource.en_US.noRowsReturned(@DIRECTORY@/types.csv, could not calculate results for the following row:
 [ 'thisChar05', 'varchar-05', '123.123', '127', '32767', '2147483647', '9223372036854775807', '2.78', '3.1415161718', 'TRUE', '2005-10-12', '12:00:00', '2005-10-12 12:00:00' ]
 Messages:
 [0]:PC=14 Code=22007 ) (state=,code=0)
@@ -74,7 +74,7 @@ Error: From line 1, column 15 to line 1, column 26: Table '@name_prefix@_IS_SCHE
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- 2nd select should fail
 0: jdbc:luciddb:> select * from @name_prefix@_is_schema."types";
-Error: FennelResource.en_US.noRowsReturned(/home/elin/open/luciddb/test/sql/datatypes/types.csv, could not calculate results for the following row:
+Error: FennelResource.en_US.noRowsReturned(@DIRECTORY@/types.csv, could not calculate results for the following row:
 [ 'thisChar05', 'varchar-05', '123.123', '127', '32767', '2147483647', '9223372036854775807', '2.78', '3.1415161718', 'TRUE', '2005-10-12', '12:00:00', '2005-10-12 12:00:00' ]
 Messages:
 [0]:PC=14 Code=22007 ) (state=,code=0)
@@ -113,7 +113,7 @@ Error: From line 1, column 15 to line 1, column 26: Table '@name_prefix@_IS_SCHE
 +------------+---------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from @name_prefix@_is_schema."types";
-Error: FennelResource.en_US.noRowsReturned(/home/elin/open/luciddb/test/sql/datatypes/types.csv, could not calculate results for the following row:
+Error: FennelResource.en_US.noRowsReturned(@DIRECTORY@/types.csv, could not calculate results for the following row:
 [ 'thisChar05', 'varchar-05', '123.123', '127', '32767', '2147483647', '9223372036854775807', '2.78', '3.1415161718', 'TRUE', '2005-10-12', '12:00:00', '2005-10-12 12:00:00' ]
 Messages:
 [0]:PC=14 Code=22007 ) (state=,code=0)

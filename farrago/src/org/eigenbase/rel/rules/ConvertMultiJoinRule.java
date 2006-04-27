@@ -37,16 +37,14 @@ public class ConvertMultiJoinRule extends RelOptRule
 {
     //~ Constructors ----------------------------------------------------------
     
-    public ConvertMultiJoinRule(RelOptRuleOperand rule, String id)
+    public ConvertMultiJoinRule()
     {
-        // Currently matches against the following patterns:
-        //  - JoinRel(X, Y)
-        // where X and Y can be either:
-        //  - MultiJoinRel
-        //  - LcsRowScanRel
-        //  - FilterRel(LcsRowScanRel)
-        super(rule);
-        description = "ConvertMultiJoinRule: " + id;
+        super(new RelOptRuleOperand(
+            JoinRel.class,
+            new RelOptRuleOperand [] {
+                new RelOptRuleOperand(RelNode.class, null),
+                new RelOptRuleOperand(RelNode.class, null)
+            }));
     }
 
     public void onMatch(RelOptRuleCall call)
@@ -58,15 +56,14 @@ public class ConvertMultiJoinRule extends RelOptRule
             return;
         }
        
-        // the rel corresponding to the right input varies depending on the
-        // pattern matched
-        RelNode left = call.rels[1];
-        RelNode right;
-        if (call.rels[1] instanceof FilterRel) {
-            right = call.rels[3];
-        } else {
-            right = call.rels[2];
+        // don't attempt to optimize the join order of an outer join
+        // TODO - in the future, try to
+        if (origJoinRel.getJoinType() != JoinRelType.INNER) {
+            return;
         }
+
+        RelNode left = call.rels[1];
+        RelNode right = call.rels[2];
         
         // combine the children MultiJoinRel inputs into an array of inputs
         // for the new MultiJoinRel

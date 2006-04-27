@@ -18,7 +18,11 @@
 +--------+
 0: jdbc:luciddb:> -- FRG-49
 0: jdbc:luciddb:> select min(cola), max(cola), avg(cola), sum(cola) from sample1504 order by 1;
-Error: java.lang.AssertionError: Internal error: node could not be implemented: Subset#4.ITERATOR (state=,code=0)
++---------+---------+---------------------+---------+
+| EXPR$0  | EXPR$1  |       EXPR$2        | EXPR$3  |
++---------+---------+---------------------+---------+
+| 5.25    | 55.75   | 26.833333333333332  | 80.5    |
++---------+---------+---------------------+---------+
 0: jdbc:luciddb:> select min(cola), max(cola), sum(cola) from sample1504 order by 1;
 +---------+---------+---------+
 | EXPR$0  | EXPR$1  | EXPR$2  |
@@ -41,7 +45,11 @@ Error: java.lang.AssertionError: Internal error: node could not be implemented: 
 +--------+
 0: jdbc:luciddb:> -- FRG-49
 0: jdbc:luciddb:> select min(cola), max(cola), avg(cola), sum(cola) from sample1504 order by 1;
-Error: java.lang.AssertionError: Internal error: node could not be implemented: Subset#4.ITERATOR (state=,code=0)
++---------+---------+---------------------+---------+
+| EXPR$0  | EXPR$1  |       EXPR$2        | EXPR$3  |
++---------+---------+---------------------+---------+
+| 5.25    | 55.75   | 26.833333333333332  | 80.5    |
++---------+---------+---------------------+---------+
 0: jdbc:luciddb:> select min(cola), max(cola), sum(cola) from sample1504 order by 1;
 +---------+---------+---------+
 | EXPR$0  | EXPR$1  | EXPR$2  |
@@ -64,7 +72,11 @@ Error: java.lang.AssertionError: Internal error: node could not be implemented: 
 +--------+
 0: jdbc:luciddb:> -- FRG-49
 0: jdbc:luciddb:> select min(cola), max(cola), avg(cola), sum(cola) from sample1504 order by 1;
-Error: java.lang.AssertionError: Internal error: node could not be implemented: Subset#4.ITERATOR (state=,code=0)
++---------+---------+------------+---------+
+| EXPR$0  | EXPR$1  |   EXPR$2   | EXPR$3  |
++---------+---------+------------+---------+
+| 5.25    | 55.75   | 26.833334  | 80.5    |
++---------+---------+------------+---------+
 0: jdbc:luciddb:> select min(cola), max(cola), sum(cola) from sample1504 order by 1;
 +---------+---------+---------+
 | EXPR$0  | EXPR$1  | EXPR$2  |

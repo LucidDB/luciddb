@@ -528,9 +528,9 @@ Error: From line 1, column 9 to line 1, column 42: Cannot apply '<' to arguments
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create table strT (s char(4));
 0: jdbc:luciddb:> insert into strT values (cast(1 as integer));
-Error: Cannot assign to target field 'S' of type CHAR(4) from source field 'EXPR$0' of type INTEGER (state=,code=0)
+Error: At line 0, column 0: Cannot assign to target field 'S' of type CHAR(4) from source field 'EXPR$0' of type INTEGER (state=,code=0)
 0: jdbc:luciddb:> insert into strT values (cast(-1.9 as decimal(2,1)));
-Error: Cannot assign to target field 'S' of type CHAR(4) from source field 'EXPR$0' of type DECIMAL(2, 1) (state=,code=0)
+Error: At line 0, column 0: Cannot assign to target field 'S' of type CHAR(4) from source field 'EXPR$0' of type DECIMAL(2, 1) (state=,code=0)
 0: jdbc:luciddb:> select * from strT;
 +----+
 | S  |

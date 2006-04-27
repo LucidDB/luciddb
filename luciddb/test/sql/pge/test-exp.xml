@@ -1,0 +1,144 @@
+<project name="bh" default="pge-exp">
+  <target name="pge-exp">
+    <test-suite name="pge-exp">
+
+      <init-hook>
+        <test-suite name="init">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">
+            <test-suite-modifier value="pge-exp"/>
+          </test-suite-call>
+        </test-suite>
+        <ant dir="${open.dir}/luciddb/test/sql/pge" target="copy-csv"/>
+      </init-hook>
+
+      <test name="creschema">
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/create.sql"/>
+      </test>
+
+      <test name="index" requiresSuccess="creschema">
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/index.sql"/>
+      </test>
+
+      <test name="setFormat">
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/setFormat.sql"/>
+      </test>
+
+      <test name="1" requiresSuccess="creschema">
+        <!-- Distinct and In not supported yet -->
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/1Exp.sql"/>
+      </test>
+
+      <test name="2" requiresSuccess="creschema">
+        <!-- AVG not supported, changed to MAX -->
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/2Exp.sql"/>
+      </test>
+
+      <test name="3" requiresSuccess="creschema">
+        <!-- AVG not supported, changed to COUNT -->
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/3Exp.sql"/>
+      </test>
+
+      <test name="4" requiresSuccess="creschema">
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/4Exp.sql"/>
+      </test>
+
+      <test name="5" requiresSuccess="creschema">
+        <!-- IN not supported yet, changed to massive OR list -->
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/5Exp.sql"/>
+      </test>
+
+      <test name="6" requiresSuccess="creschema">
+        <!-- IN not supported yet, changed to massive OR list -->
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/6Exp.sql"/>
+      </test>
+
+      <test name="7" requiresSuccess="creschema">
+        <!-- IN not supported yet -->
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/7Exp.sql"/>
+      </test>
+
+      <test name="8" requiresSuccess="creschema">
+        <!-- doesn't use semijoins LDB-61 -->
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/8Exp.sql"/>
+      </test>
+
+      <test name="9" requiresSuccess="creschema">
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/9Exp.sql"/>
+      </test>
+
+      <test name="10" requiresSuccess="creschema">
+        <!-- AVG and subqueries -->
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/10Exp.sql"/>
+      </test>
+
+      <test name="11" requiresSuccess="creschema">
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/11Exp.sql"/>
+      </test>
+
+      <test name="12" requiresSuccess="creschema">
+        <!-- Subquery in where clause -->
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/12Exp.sql"/>
+      </test>
+
+      <test name="13" requiresSuccess="creschema">
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/13Exp.sql"/>
+      </test>
+
+      <test name="14" requiresSuccess="creschema">
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/14Exp.sql"/>
+      </test>
+
+      <test name="15" requiresSuccess="creschema">
+        <!-- IN not supported -->
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/15Exp.sql"/>
+      </test>
+
+      <test name="16" requiresSuccess="creschema">
+        <!-- DESC not supported -->
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/16Exp.sql"/>
+      </test>
+
+      <test name="17" requiresSuccess="creschema">
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/17Exp.sql"/>
+      </test>
+
+      <test name="18" requiresSuccess="creschema">
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/18Exp.sql"/>
+      </test>
+
+      <test name="19" requiresSuccess="creschema">
+        <!-- DISTINCT and OUTER JOIN not supported -->
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/19Exp.sql"/>
+      </test>
+
+      <test name="20" requiresSuccess="creschema">
+        <!-- OUTER JOIN and DISTINCT not supported yet -->
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/20Exp.sql"/>
+      </test>
+
+      <test name="20b" requiresSuccess="creschema">
+        <!-- OUTER JOIN and DISTINCT not supported yet -->
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/20bExp.sql"/>
+      </test>
+
+      <test name="21" requiresSuccess="creschema">
+        <!-- subquery in from clause and having -->
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/21Exp.sql"/>
+      </test>
+
+      <test name="22" requiresSuccess="creschema">
+        <!-- Having not supported yet, and uses rank function -->
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/${foreign.db}/22Exp.sql"/>
+      </test>
+
+      <cleanup-hook>
+        <test-suite name="cleanup">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tdone.xml">
+            <test-suite-modifier value="pge-exp"/>
+          </test-suite-call>
+        </test-suite>
+      </cleanup-hook>
+
+    </test-suite>
+  </target>
+</project>

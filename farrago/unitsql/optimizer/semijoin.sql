@@ -39,6 +39,23 @@ insert into smalltable values('this is row 3', 3, 'abcdef', 'ghijkl');
 insert into smalltable values('this is row 4', 4, 'abcdef', 'ghijkl');
 insert into smalltable values('this is row 5', 5, 'abcdef', 'ghijkl');
 
+-- Create fake statistics.  The stats do not match the actual data in the
+-- tables and are meant to force the optimizer to choose semijoins
+
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'T', 10000);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'SMALLTABLE', 10);
+
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'SJ', 'T', 'B', 10, 100, 10, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'SJ', 'T', 'D', 10, 100, 10, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'SJ', 'SMALLTABLE', 'S1', 10, 100, 10, 1,
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'SJ', 'SMALLTABLE', 'S3', 10, 100, 10, 1,
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+
 -- explain plan tests
 
 !set outputformat csv
@@ -68,6 +85,11 @@ explain plan for select *
 explain plan for select *
     from t inner join smalltable s
     on t.d = upper(s.s1) where s.s2 > 0;
+
+-- no filter on dimension table, so not worthwhile to do a semijoin
+explain plan for select *
+    from t inner join smalltable s
+    on t.d = s.s1;
 
 -- outer join
 -- TODO - add a testcase for outer joins once we support these on lcs tables
@@ -163,6 +185,33 @@ insert into sales values(6, 2, 1, 2, 60);
 insert into sales values(7, 2, 2, 1, 70);
 insert into sales values(8, 2, 2, 2, 80);
 
+-- more faking of stats; note also that the predicates chosen in the
+-- actual queries aren't necessarily selective in reality but the stats
+-- make the optimizer think they are
+
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'SALES', 100000);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'PRODUCT', 20);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'SALESPERSON', 10);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'CUSTOMER', 100);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'STATE', 5);
+
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'SJ', 'SALES', 'PRODUCT_ID', 20, 100, 20, 0, '0123456789');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'SJ', 'SALES', 'SALESPERSON', 10, 100, 10, 0, '0123456789');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'SJ', 'SALES', 'CUSTOMER', 100, 100, 100, 0, '0123456789');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'SJ', 'PRODUCT', 'ID', 20, 100, 20, 0, '0123456789');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'SJ', 'SALESPERSON', 'ID', 10, 100, 10, 0, '0123456789');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'SJ', 'CUSTOMER', 'ID', 100, 100, 100, 0, '0123456789');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'SJ', 'CUSTOMER', 'CITY', 5, 100, 5, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'SJ', 'STATE', 'CITY', 5, 100, 5, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+
 !set outputformat csv
 
 explain plan for
@@ -175,7 +224,7 @@ explain plan for
 -- push semijoin past filter
 explain plan for
     select sid, p.name, p.color, p.size, s.quantity
-        from sales s, product p
+        from product p, sales s
         where
             s.product_id = p.id and p.size = 'S' and sid > 2
         order by sid;
@@ -186,32 +235,35 @@ explain plan for
         from sales s, product p, salesperson sp
         where
             s.product_id = p.id and
-            s.salesperson = sp.id
+            s.salesperson = sp.id and
+            p.size >= 'M' and sp.age >= 30
         order by sid;
 
 explain plan for
     select sid, p.name, p.color, p.size, sp.name, c.company
-        from sales s, product p, salesperson sp, customer c
+        from customer c, salesperson sp, product p, sales s
         where
             s.product_id = p.id and
             s.salesperson = sp.id and 
-            s.customer = c.id
+            s.customer = c.id and
+            p.size >= 'M' and sp.age >= 30 and c.city >= 'N'
         order by sid;
 
 -- push semijoin past filter and join
 explain plan for
     select sid, p.name, p.color, p.size, sp.name, s.quantity
-        from sales s, product p, salesperson sp
+        from product p, sales s, salesperson sp
         where
             s.sid < 3 and
             s.product_id = p.id and
-            s.salesperson = sp.id
+            s.salesperson = sp.id and
+            p.size >= 'M' and sp.age >= 30
         order by sid;
 
 -- chained join
 explain plan for
     select sid, c.company, c.city, st.state
-        from sales s, customer c, state st
+        from sales s, state st, customer c
         where
             s.customer = c.id and
             c.city = st.city and st.state = 'New York'
@@ -229,7 +281,7 @@ select sid, p.name, p.color, p.size, s.quantity
     order by sid;
 
 select sid, p.name, p.color, p.size, s.quantity
-    from sales s, product p
+    from product p, sales s
     where
         s.product_id = p.id and p.size = 'S' and sid > 2
     order by sid;
@@ -238,27 +290,30 @@ select sid, p.name, p.color, p.size, sp.name, s.quantity
     from sales s, product p, salesperson sp
     where
         s.product_id = p.id and
-        s.salesperson = sp.id
+        s.salesperson = sp.id and
+        p.size >= 'M' and sp.age >= 30
     order by sid;
 
 select sid, p.name, p.color, p.size, sp.name, c.company
-    from sales s, product p, salesperson sp, customer c
+    from customer c, salesperson sp, product p, sales s
     where
         s.product_id = p.id and
         s.salesperson = sp.id and 
-        s.customer = c.id
+        s.customer = c.id and
+        p.size >= 'M' and sp.age >= 30 and c.city >= 'N'
     order by sid;
 
 select sid, p.name, p.color, p.size, sp.name, s.quantity
-    from sales s, product p, salesperson sp
+    from product p, sales s, salesperson sp
     where
         s.sid < 3 and
         s.product_id = p.id and
-        s.salesperson = sp.id
+        s.salesperson = sp.id and
+        p.size >= 'M' and sp.age >= 30
     order by sid;
 
 select sid, c.company, c.city, st.state
-    from sales s, customer c, state st
+    from sales s, state st, customer c
     where
         s.customer = c.id and
         c.city = st.city and st.state = 'New York'

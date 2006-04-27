@@ -202,8 +202,7 @@ public:
     /**
      * Allocates a free page buffer for scratch usage.  The returned page is
      * considered to be locked in exclusive mode but not mapped to any device.
-     * To release the page, use unlock(LOCKMODE_X).  If no free pages are
-     * available, blocks until one becomes free.
+     * To release the page, use unlock(LOCKMODE_X).
      *
      *<p>
      *
@@ -214,7 +213,7 @@ public:
      * @param blockNum the block number to use when making up the Page's
      * BlockId; the device ID will be NULL_DEVICE_ID
      *
-     * @return the locked page
+     * @return the locked page, or NULL if none are available
      */
     virtual CachePage *lockScratchPage(BlockNum blockNum = 0) = 0;
 

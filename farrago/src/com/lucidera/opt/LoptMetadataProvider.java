@@ -179,9 +179,7 @@ public class LoptMetadataProvider extends ReflectiveRelMetadataProvider
     public Double getCostWithFilters(SemiJoinRel rel, RexNode filter)
     {
         RexNode selectivityNode =
-            RelMdUtil.makeSemiJoinSelectivityRexNode(
-                rel,
-                null);
+            RelMdUtil.makeSemiJoinSelectivityRexNode(rel);
         RexNode combinedFilter = RelOptUtil.andJoinFilters(
             rel.getCluster().getRexBuilder(),
             filter,
@@ -587,10 +585,14 @@ public class LoptMetadataProvider extends ReflectiveRelMetadataProvider
     private Boolean dimOnLeft(
         JoinRelBase rel, BitSet leftJoinCols, BitSet rightJoinCols)
     {
-        boolean leftUnique = RelMdUtil.areColumnsUnique(
+        Boolean leftUnique = RelMdUtil.areColumnsUnique(
             rel.getLeft(), leftJoinCols);
-        boolean rightUnique = RelMdUtil.areColumnsUnique(
+        Boolean rightUnique = RelMdUtil.areColumnsUnique(
             rel.getRight(), rightJoinCols);
+        
+        if (leftUnique == null || rightUnique == null) {
+            return null;
+        }
         
         // if one side has unique columns, then that's the dimension table
         if (leftUnique) {

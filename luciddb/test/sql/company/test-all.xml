@@ -4,10 +4,10 @@
       
       <!-- without indexes -->
       <test-suite-call testfile="test-noidx.xml"/>
-
+      
       <!-- with indexes -->
       <test-suite-call testfile="test-idx.xml"/>
-  
+
     </test-suite>
   </target>
 </project>

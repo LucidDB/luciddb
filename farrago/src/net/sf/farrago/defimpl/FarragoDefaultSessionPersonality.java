@@ -351,8 +351,8 @@ public class FarragoDefaultSessionPersonality
     // implement FarragoSessionPersonality
     public void registerRelMetadataProviders(ChainedRelMetadataProvider chain)
     {
-        // TODO jvs 29-Mar-2006:  add providers for
-        // Farrago-specific rels
+        chain.addProvider(
+            new FarragoRelMetadataProvider(database.getSystemRepos()));
     }
 }
 

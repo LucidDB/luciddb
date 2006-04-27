@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/jdbc/metadata.sql#10 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/jdbc/metadata.sql#3 $
 0: jdbc:farrago:> -- Test JDBC metadata calls
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test getCatalogs
@@ -91,7 +91,14 @@
 | SYS_BOOT   | JDBC_METADATA  | TYPE_INFO_VIEW                   | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | JDBC_METADATA  | UDTS_VIEW                        | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | JDBC_METADATA  | UDTS_VIEW_INTERNAL               | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | DIFFABLE_HISTOGRAM_BARS          | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | HISTOGRAMS_VIEW                  | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | HISTOGRAM_BARS_QUICKER_VIEW      | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | HISTOGRAM_BARS_QUICK_VIEW        | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | HISTOGRAM_BARS_VIEW              | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | MGMT           | OBJECTS_IN_USE_VIEW              | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | PAGE_COUNTS_VIEW                 | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | ROW_COUNTS_VIEW                  | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | MGMT           | SESSIONS_VIEW                    | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | MGMT           | STATEMENTS_VIEW                  | VIEW        |          |           |             |            |                            |                 |
 +------------+----------------+----------------------------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
@@ -309,7 +316,7 @@ getNumericFunctions                               ABS,EXP,LOG,LOG10,MOD,POWER
 getProcedureTerm                                  routine
 getSchemaTerm                                     schema
 getSearchStringEscape                             \
-getSQLKeywords                                    ABS,ARRAY,ASENSITIVE,ASYMMETRIC,ATOMIC,BIGINT,BINARY,BLOB,BOOLEAN,CALL,CALLED,CARDINALITY,CEIL,CEILING,CHECKPOINT,CLOB,CLUSTERED,COLLECT,CONDITION,CORR,COVAR_POP,COVAR_SAMP,CUBE,CUME_DIST,CURRENT_DEFAULT_TRANSFORM_GROUP,CURRENT_PATH,CURRENT_ROLE,CURRENT_TRANSFORM_GROUP_FOR_TYPE,CYCLE,DENSE_RANK,DEREF,DETERMINISTIC,DYNAMIC,EACH,ELEMENT,EVERY,EXP,EXPLAIN,FILTER,FIRST_VALUE,FLOOR,FREE,FUNCTION,FUSION,GROUPING,HOLD,IMPORT,INOUT,INTERSECTION,LARGE,LAST_VALUE,LATERAL,LIMIT,LN,LOCALTIME,LOCALTIMESTAMP,MEMBER,MERGE,METHOD,MOD,MODIFIES,MULTISET,NCLOB,NEW,NONE,NORMALIZE,OLD,OUT,OVER,OVERLAY,PARAMETER,PARTITION,PERCENTILE_CONT,PERCENTILE_DISC,PERCENT_RANK,POWER,RANGE,RANK,READS,RECURSIVE,REF,REFERENCING,REGR_AVGX,REGR_AVGY,REGR_COUNT,REGR_INTERCEPT,REGR_R2,REGR_SLOPE,REGR_SXX,REGR_SXY,RELEASE,RESULT,RETURN,RETURNS,ROLLUP,ROW,ROW_NUMBER,SAVEPOINT,SCOPE,SEARCH,SENSITIVE,SIMILAR,SPECIFIC,SPECIFICTYPE,SQLEXCEPTION,SQLWARNING,SQRT,START,STATIC,STDDEV_POP,STDDEV_SAMP,SUBMULTISET,SYMMETRIC,SYSTEM,TABLESAMPLE,TINYINT,TREAT,TRIGGER,TRUNCATE,UESCAPE,UNNEST,VARBINARY,VAR_POP,VAR_SAMP,WIDTH_BUCKET,WINDOW,WITHIN,WITHOUT
+getSQLKeywords                                    ABS,ANALYZE,ARRAY,ASENSITIVE,ASYMMETRIC,ATOMIC,BIGINT,BINARY,BLOB,BOOLEAN,CALL,CALLED,CARDINALITY,CEIL,CEILING,CHECKPOINT,CLOB,CLUSTERED,COLLECT,CONDITION,CORR,COVAR_POP,COVAR_SAMP,CUBE,CUME_DIST,CURRENT_DEFAULT_TRANSFORM_GROUP,CURRENT_PATH,CURRENT_ROLE,CURRENT_TRANSFORM_GROUP_FOR_TYPE,CYCLE,DENSE_RANK,DEREF,DETERMINISTIC,DYNAMIC,EACH,ELEMENT,EVERY,EXP,EXPLAIN,FILTER,FIRST_VALUE,FLOOR,FREE,FUNCTION,FUSION,GROUPING,HOLD,IMPORT,INOUT,INTERSECTION,LARGE,LAST_VALUE,LATERAL,LIMIT,LN,LOCALTIME,LOCALTIMESTAMP,MEMBER,MERGE,METHOD,MOD,MODIFIES,MULTISET,NCLOB,NEW,NONE,NORMALIZE,OLD,OUT,OVER,OVERLAY,PARAMETER,PARTITION,PERCENTILE_CONT,PERCENTILE_DISC,PERCENT_RANK,POWER,RANGE,RANK,READS,RECURSIVE,REF,REFERENCING,REGR_AVGX,REGR_AVGY,REGR_COUNT,REGR_INTERCEPT,REGR_R2,REGR_SLOPE,REGR_SXX,REGR_SXY,RELEASE,RESULT,RETURN,RETURNS,ROLLUP,ROW,ROW_NUMBER,SAVEPOINT,SCOPE,SEARCH,SENSITIVE,SIMILAR,SPECIFIC,SPECIFICTYPE,SQLEXCEPTION,SQLWARNING,SQRT,START,STATIC,STDDEV_POP,STDDEV_SAMP,SUBMULTISET,SYMMETRIC,SYSTEM,TABLESAMPLE,TINYINT,TREAT,TRIGGER,TRUNCATE,UESCAPE,UNNEST,VARBINARY,VAR_POP,VAR_SAMP,WIDTH_BUCKET,WINDOW,WITHIN,WITHOUT
 getStringFunctions                                CONCAT,INSERT,LCASE,LENGTH,LOCATE,LTRIM,RTRIM,SUBSTRING,UCASE
 getSystemFunctions                                
 getTimeDateFunctions                              CURDATE,CURTIME,NOW

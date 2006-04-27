@@ -81,6 +81,23 @@ abstract class HepInstruction
         }
     }
 
+    static class ConverterRules extends HepInstruction
+    {
+        boolean guaranteed;
+
+        /**
+         * Actual rule set instantiated during planning by filtering
+         * all of the planner's rules, looking for the desired
+         * converters.
+         */
+        Set<RelOptRule> ruleSet;
+        
+        void execute(HepPlanner planner)
+        {
+            planner.executeInstruction(this);
+        }
+    }
+
     static class RuleInstance extends HepInstruction
     {
         /**

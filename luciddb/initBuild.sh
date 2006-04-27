@@ -20,7 +20,7 @@
 set -e
 
 usage() {
-    echo "Usage:  initBuild.sh [--with[out]-fennel] [--with[out]-optimization] [--with[out]-debug] [--without-farrago-build] [--without-fennel[-thirdparty]-build] [--with[out]-tests]"
+    echo "Usage:  initBuild.sh [--with[out]-fennel] [--with[out]-optimization] [--with[out]-debug] [--without-farrago-build] [--without-fennel[-thirdparty]-build] [--with[out]-tests] [--with-nightly-tests]"
 }
 
 without_farrago_build=false
@@ -54,6 +54,14 @@ done
 
 shopt -uq extglob
 
+if $with_nightly_tests ; then
+    # make the build/test processes go further
+    set +e
+    run_ant="ant -keep-going"
+else
+    run_ant="ant"
+fi
+
 if $without_farrago_build ; then
     echo Skipping Farrago build.
 else
@@ -72,12 +80,12 @@ export LD_LIBRARY_PATH=
 . ${luciddb_dir}/../fennel/fennelenv.sh ${luciddb_dir}/../fennel
 
 cd ${luciddb_dir}
-ant clean
+${run_ant} clean
 if $without_tests ; then
-    ant createCatalog
+    ${run_ant} createCatalog
 else
     cd ${luciddb_dir}
-    ant test
+    ${run_ant} test
 fi
 
 nightlylog_dir=${luciddb_dir}/nightlylog
@@ -89,14 +97,12 @@ test-sqlserver \
 test-csvjdbc\
 "
 
-set +e
-
 cd ${luciddb_dir}
 if $with_nightly_tests ; then
     /bin/mkdir -p ${nightlylog_dir}
-    ant -keep-going test-nightly-all-init
+    ${run_ant} -keep-going test-nightly-all-init
 
     for test in ${nightly_test_list}; do
-        2>&1 ant -keep-going "${test}" | tee "${nightlylog_dir}/${test}.log"
+        2>&1 ${run_ant} -keep-going "${test}" | tee "${nightlylog_dir}/${test}.log"
     done
 fi

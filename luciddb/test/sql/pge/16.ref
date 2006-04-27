@@ -1,0 +1,24 @@
+0: jdbc:oracle:> -- Query 16
+0: jdbc:oracle:> 
+0: jdbc:oracle:> SELECT AL1.SRVPLN_ID, AL1.SRVPLN_NM,
+. . . . . . . . >  SUM(AL2.RSD_SVC_BILG_AMT)
+. . . . . . . . > FROM
+. . . . . . . . > PGE.SERV_PLAN AL1,
+. . . . . . . . > PGE.REVN_DTL_RAND AL2
+. . . . . . . . > WHERE (AL1.SRVPLN_KEY=AL2.SRVPLN_KEY)
+. . . . . . . . > GROUP BY AL1.SRVPLN_ID, AL1.SRVPLN_NM
+. . . . . . . . > ORDER BY  3 DESC
+. . . . . . . . > ;
++------------+----------------------------+----------------------------+
+| SRVPLN_ID  |         SRVPLN_NM          | SUM(AL2.RSD_SVC_BILG_AMT)  |
++------------+----------------------------+----------------------------+
+| 811        | ELEC - RESIDENTIAL         | 11585829.00290636          |
+| 311        | GAS - RESIDENTIAL          | 6820073.79290406           |
+| 878        | ELEC - DUSK TO DAWN LTG    | 438044.61501346            |
+| 315        | GAS - MULT FAMILY HOUSING  | 195609.37656078            |
+| 821        | ELEC - GEN SERV - SMALL    | 22280.712988               |
+| 812        | ELEC - GOOD CENTS RES      | 18676.55002332             |
+| 813        | ELEC - GOOD CENTS MULT     | 1651.3002253               |
++------------+----------------------------+----------------------------+
+0: jdbc:oracle:> 
+0: jdbc:oracle:> !quit

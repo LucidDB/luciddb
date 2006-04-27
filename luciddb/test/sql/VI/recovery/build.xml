@@ -50,7 +50,7 @@
 
   <target name="test">
     <blackhawk.fork
-      basedir="${numerics.dir}"
+      basedir="${vi_recovery.dir}"
       testscript="${testfile}"
       classpathref="test.classpath"/>
   </target>
@@ -60,10 +60,6 @@
     <delete>
       <fileset dir="${vi_recovery.dir}" includes="*.log"/>
     </delete>
-  </target>
-
-  <target name="restoreCatalog">
-    <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>
   </target>
 
 </project>

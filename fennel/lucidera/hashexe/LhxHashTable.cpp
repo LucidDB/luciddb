@@ -112,7 +112,7 @@ LhxHashKeyAccessor::LhxHashKeyAccessor()
     : LhxHashNodeAccessor(sizeof(PBuffer) + sizeof(uint8_t))
 {
     firstDataOffset = 0;
-    touchedOffset = firstDataOffset + sizeof(PBuffer);
+    isMatchedOffset = firstDataOffset + sizeof(PBuffer);
 }
 
 void LhxHashKeyAccessor::init(
@@ -225,7 +225,7 @@ string LhxHashKeyAccessor::toString()
     keyTuple.compute(keyDescriptor);
     unpack(keyTuple, allFields);
     keyTrace << "[Key Node] ["
-             << (isTouched() ? "touched" : "untouched") << "] ";
+             << (isMatched() ? "matched" : "unmatched") << "] ";
     tuplePrinter.print(keyTrace, keyDescriptor, keyTuple);
     return keyTrace.str();
 }
@@ -355,14 +355,6 @@ PBuffer LhxHashTable::allocBlock()
         bufferLock.allocatePage();
         resultBlock = bufferLock.getPage().getWritableData();
         bufferLock.unlock();
-
-        if (!resultBlock) {
-            ostringstream errMsg;
-            errMsg << "Out of cache memory:"
-                   << " current # blocks:" << currentBlockCount
-                   << " maximum # blocks:" << maxBlockCount;
-            throw FennelExcn(errMsg.str());            
-        }
 
         /*
          * The new block is not linked in yet.
@@ -535,7 +527,8 @@ PBuffer *LhxHashTable::getSlot(uint slotNum)
 
 PBuffer LhxHashTable::findKey(
     TupleData const &inputTuple,
-    TupleProjection const &keyColsProj)
+    TupleProjection const &keyColsProj,
+    bool isProbing)
 {
     uint slotNum = (hashGen.hash(inputTuple, keyColsProj)) % numSlots;
     
@@ -562,6 +555,14 @@ PBuffer LhxHashTable::findKey(
     } else {
         return NULL;
     }
+
+    /*
+     * Found a matching key
+     */
+    if (isProbing) {
+        hashKeyAccessor.setMatched(true);
+    }
+
     return (hashKeyAccessor.getCurrent());
 }
 
@@ -598,6 +599,7 @@ PBuffer LhxHashTable::addKey(
 
     *slot = newKey;
     hashKeyAccessor.setCurrent(newKey, false);
+    hashKeyAccessor.setMatched(false);
     hashKeyAccessor.pack(tmpKeyTuple);
     hashKeyAccessor.setNext(newNextKey);
     return newKey;
@@ -642,7 +644,9 @@ bool LhxHashTable::addTuple(
     TupleProjection const &aggsProj,
     TupleProjection const &dataProj)
 {
-    PBuffer destKey = findKey(inputTuple, keyColsProj);
+    // We are building the hash table now.
+    bool isProbing = false;
+    PBuffer destKey = findKey(inputTuple, keyColsProj, isProbing);
 
     if (!destKey) {
         destKey = addKey(inputTuple, keyColsProj, aggsProj);
@@ -708,17 +712,32 @@ string LhxHashTable::toString()
 bool LhxHashTableReader::advanceSlot()
 {
     if (!boundKey) {
-        PBuffer *slot = NULL;
-        while ((!slot || !((PBuffer)*slot)) &&
-            (curSlot < hashTable->getNumSlots())) {
+        curKey = NULL;
+
+        PBuffer *slot;        
+        while (curSlot < hashTable->getNumSlots()) {
             slot = hashTable->getSlot(curSlot);
             curSlot ++;
+            
+            if (slot && (PBuffer)*slot) {
+                if (!returnUnMatched) {
+                    curKey = *slot;
+                    break;
+                }
+                else {
+                    hashKeyAccessor.setCurrent(*slot, true);
+                    // only return unmatched keys
+                    if (!hashKeyAccessor.isMatched()) {
+                        curKey = *slot;
+                        break;
+                    }
+                }
+            }
         }
 
-        if (!slot || !((PBuffer)*slot)) {
+        if (!curKey) {
+            // cound not find any fitting slot.
             return false;
-        } else {
-            curKey = *slot;
         }
     }
     
@@ -731,7 +750,17 @@ bool LhxHashTableReader::advanceSlot()
 
 bool LhxHashTableReader::advanceKey()
 {
-    curKey = hashKeyAccessor.getNext();
+    while ((curKey = hashKeyAccessor.getNext())) {
+        if (!returnUnMatched) {
+            break;
+        } else {
+            hashKeyAccessor.setCurrent(curKey, true);
+            if (!hashKeyAccessor.isMatched()) {
+                break;
+            }
+        }
+    }
+    
     if (curKey) {
         hashKeyAccessor.setCurrent(curKey, true);
         curData = hashKeyAccessor.getFirstData();
@@ -802,7 +831,7 @@ void LhxHashTableReader::init(
     bindKey(NULL);
 }
 
-void LhxHashTableReader::bindKey(PBuffer key)
+void LhxHashTableReader::bind(PBuffer key)
 {
     boundKey = curKey = key;
     curSlot = 0;
@@ -810,11 +839,25 @@ void LhxHashTableReader::bindKey(PBuffer key)
     started = false;
 }
 
+void LhxHashTableReader::bindKey(PBuffer key)
+{
+    returnUnMatched = false;
+    bind(key);
+}
+
+void LhxHashTableReader::bindUnMatched()
+{
+    returnUnMatched = true;
+    bind(NULL);
+}
+
 bool LhxHashTableReader::getNext(TupleData &outputTuple)
 {
     if (!started) {
+        assert (!(boundKey && returnUnMatched));
+
         /*
-         * Position at th first key of the first slot.
+         * Position at the first key of the first slot.
          */
         if (!advanceSlot()) {
             /*

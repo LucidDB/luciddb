@@ -31,6 +31,17 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 void LhxJoinExecStream::prepare(
     LhxJoinExecStreamParams const &params)
 {
+    leftInner  = params.leftInner;
+    leftOuter  = params.leftOuter;
+    rightInner = params.rightInner;
+    rightOuter = params.rightOuter;
+
+    /*
+     * Returning matching rwos from both inputs.
+     * Does not support semi or anti join currently.
+     */
+    assert (leftInner && rightInner);
+
     ConfluenceExecStream::prepare(params);    
     TupleDescriptor leftDesc = inAccessors[0]->getTupleDesc();
     TupleDescriptor rightDesc = inAccessors[1]->getTupleDesc();
@@ -44,8 +55,8 @@ void LhxJoinExecStream::prepare(
      * Since null values do not match, filter null values if non-matching
      * tuples are not needed.
      */
-    leftFilterNull  = !params.leftOuter;
-    rightFilterNull = !params.rightOuter;
+    leftFilterNull  = !leftOuter;
+    rightFilterNull = !rightOuter;
 
     int i, j;
 
@@ -148,9 +159,7 @@ void LhxJoinExecStream::open(bool restart)
 ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
 {
     SharedExecStreamBufAccessor leftBufAccessor = inAccessors[0];
-    SharedExecStreamBufAccessor rightBufAccessor = inAccessors[1];
-    uint numTuplesProduced;
-    
+    SharedExecStreamBufAccessor rightBufAccessor = inAccessors[1];    
 
 	while (true)
 	{
@@ -214,7 +223,8 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                     }
 
                     PBuffer keyBuf = NULL;
-                    
+                    bool isProbing = true;
+
                     /*
                      * Try to locate matching key in the hash table.
                      * When null values are filtered, and this tuple does
@@ -223,12 +233,13 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                      */
                     if (!(leftFilterNull &&
                           leftTuple.containsNull(leftKeyProj))) {
-                        keyBuf = hashTable.findKey(leftTuple, leftKeyProj);
+                        keyBuf = hashTable.findKey(leftTuple, leftKeyProj,
+                            isProbing);
                     }
         
                     if (keyBuf) {
                         /**
-                         * Half of output tuple.
+                         * Left half of output tuple.
                          */
                         outputTuple = leftTuple;
             
@@ -236,42 +247,53 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                          * Output the joined tuple.
                          */
                         hashTableReader.bindKey(keyBuf);
-                        joinState = Producing;
+                        joinState = ProducingInner;
                         break;
                     } else {
-                        leftBufAccessor->consumeTuple();
+                        /*
+                         * No match. Need to return the leftTuple if leftOuter
+                         * join.
+                         */
+                        if (!leftOuter) {
+                            leftBufAccessor->consumeTuple();
+                        } else {
+                            outputTuple = leftTuple;
+                            for (int i = leftTuple.size(); i < outputTuple.size(); i ++) {
+                                outputTuple[i].pData = NULL;
+                            }
+                            joinState = ProducingLeftOuter;
+                        }
                     }
                 }
                 break;
             }
-        case Producing:
+        case ProducingInner:
             {
                 /*
-                 * Producing the results.
-                 * Handle output overflow and quantum expiration in this state.
+                 * Set the output tuple to include only the left input,
+                 * and get the next matching tuple from the right.
                  */
-                for(;;) {
-                    if (hashTableReader.getNext(rightTuple)) {
-                        outputTuple.insert(outputTuple.end(),
-                            rightTuple.begin(),rightTuple.end());
-                        joinState = ProducePending;
-                        break;
-                    } else {
-                        leftBufAccessor->consumeTuple();
-                        joinState = Probing;
-                        break;
-                    }
+                outputTuple = leftTuple;
+
+                /*
+                 * Producing the results.
+                 * Handle output overflow and quantum expiration in ProducePending.
+                 */
+                if (hashTableReader.getNext(rightTuple)) {
+                    outputTuple.insert(outputTuple.end(),
+                        rightTuple.begin(),rightTuple.end());
+                    joinState = ProducePending;
+                } else {
+                    leftBufAccessor->consumeTuple();
+                    joinState = Probing;
                 }
                 break;
             }
-        case ProducePending:
+        case ProducingLeftOuter:
             {
                 if (pOutAccessor->produceTuple(outputTuple)) {
-                    /*
-                     * Reset the left side.
-                     */
-                    outputTuple = leftTuple;
-                    joinState = Producing;
+                    leftBufAccessor->consumeTuple();
+                    joinState = Probing;
                     numTuplesProduced++;
                 } else {
                     return EXECRC_BUF_OVERFLOW;                    
@@ -290,6 +312,29 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                 }
                 break;
             }
+        case ProducePending:
+            {
+                if (pOutAccessor->produceTuple(outputTuple)) {
+                    joinState = ProducingInner;
+                    numTuplesProduced++;
+                } else {
+                    return EXECRC_BUF_OVERFLOW;                    
+                }
+
+                /*
+                 * Successfully produced an output row. Now check if quantum
+                 * has expired.
+                 */
+                if (numTuplesProduced >= quantum.nTuplesMax) {
+                    /*
+                     * Reset count.
+                     */
+                    numTuplesProduced = 0;
+                    return EXECRC_QUANTUM_EXPIRED;
+                }
+                break;
+            }
+        case ProducingRightOuter:
         case Done:
             {
                 return EXECRC_EOS;

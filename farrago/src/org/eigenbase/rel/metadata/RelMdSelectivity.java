@@ -99,8 +99,8 @@ public class RelMdSelectivity extends ReflectiveRelMetadataProvider
         // create a RexNode representing the selectivity of the
         // semijoin filter and pass it to getSelectivity
         RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
-        RexNode newPred = RelMdUtil.makeSemiJoinSelectivityRexNode(
-            rel, null);
+        RexNode newPred =
+            RelMdUtil.makeSemiJoinSelectivityRexNode(rel);
         if (predicate != null) {
             newPred = rexBuilder.makeCall(
                 SqlStdOperatorTable.andOperator, newPred, predicate);

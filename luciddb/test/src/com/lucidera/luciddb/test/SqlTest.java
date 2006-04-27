@@ -24,6 +24,7 @@ import com.lucidera.jdbc.*;
 import java.io.*;
 import java.sql.*;
 import java.util.regex.*;
+import java.util.logging.*;
 import junit.framework.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.jdbc.engine.*;
@@ -78,7 +79,7 @@ public class SqlTest extends TestCase {
             eigenhome + File.separator +
             "luciddb" + File.separator +
             "catalog");
-
+        
         // obtain sql-file parameter - required
         sqlFile = System.getProperty("sql-file");
         // following parameters are not required
@@ -98,6 +99,8 @@ public class SqlTest extends TestCase {
             LucidDbLocalDriver driver =
                 (LucidDbLocalDriver) clazz.newInstance();
             urlPrefix = driver.getUrlPrefix();
+        } else {
+            Class clazz = Class.forName(driverName);
         }
         System.out.println("sql-file: " + sqlFile);
         System.out.println("jdbc-driver: " + driverName);
@@ -121,14 +124,24 @@ public class SqlTest extends TestCase {
         diffMasks = "";
         addDiffMask("\\$Id.*\\$");
 
+        Logger tracer = LucidDbTestHarness.tracer;
+        tracer.info("Entering test case " + sqlFile);
+        Runtime rt = Runtime.getRuntime();
+        rt.gc();
+        rt.gc();
+        long heapSize = rt.totalMemory() - rt.freeMemory();
+        tracer.info("JVM heap size = " + heapSize);
+        
         PrintStream savedOut = System.out;
         PrintStream savedErr = System.err;
         FileInputStream inputStream = null;
-        Connection conn = null;
+        // NOTE jvs 26-Apr-2006:  We no longer close connection;
+        // that's what keeps the engine running for the duration
+        // of a suite.
         try {
             // read from the specified file
             inputStream = new FileInputStream(sqlFile.toString());
-            // to make sure the connection is closed properly, append the
+            // to make sure the session is closed properly, append the
             // !quit command
             String quitCommand = "\n!quit\n";
             ByteArrayInputStream quitStream =
@@ -145,13 +158,13 @@ public class SqlTest extends TestCase {
             // tell SqlLine not to exit (this boolean is active-low)
             System.setProperty("sqlline.system.exit", "true");
             // set limit to min on plan cache
-            conn =
-                DriverManager.getConnection(
-                    urlPrefix,
-                    username,
-                    passwd);
-            Statement stmt = conn.createStatement();
-            stmt.executeUpdate("alter system set \"codeCacheMaxBytes\" = min");
+            if (urlPrefix.contains("luciddb")) {
+                Connection conn = LucidDbTestHarness.startupEngine(
+                    urlPrefix, username, passwd);
+                Statement stmt = conn.createStatement();
+                stmt.executeUpdate(
+                    "alter system set \"codeCacheMaxBytes\" = min");
+            }
             SqlLine.mainWithInputRedirection(args, sequenceStream);
             printStream.flush();
             diffTestLog();
@@ -163,11 +176,11 @@ public class SqlTest extends TestCase {
             System.setErr(savedErr);
             try {
                 inputStream.close();
-                conn.close();
             } catch (Throwable t) {
                 System.out.println("ERROR INPUT STREAM CLOSE THREW EXCEPTION!"
                     + t.toString());
             }
+            tracer.info("Leaving test case " + sqlFile);
         }
     }
 

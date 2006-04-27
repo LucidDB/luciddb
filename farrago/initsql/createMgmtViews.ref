@@ -125,4 +125,89 @@
 . . . . . . . . > contains sql
 . . . . . . . . > external name 'class net.sf.farrago.syslib.FarragoStatsUDR.set_column_histogram';
 0: jdbc:farrago:> 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- Page counts, qualified by 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> create view page_counts_view as
+. . . . . . . . > select 
+. . . . . . . . >   n."name" as "schema", t."name" as "table", 
+. . . . . . . . >   i."name" as "index", "pageCount" 
+. . . . . . . . > from 
+. . . . . . . . >   sys_cwm."Core"."Namespace" n,
+. . . . . . . . >   sys_fem.sql2003."AbstractColumnSet" t,
+. . . . . . . . >   sys_fem.med."LocalIndex" i
+. . . . . . . . > where 
+. . . . . . . . >   t."namespace" = n."mofId"
+. . . . . . . . >   and i."spannedClass" = t."mofId"
+. . . . . . . . >   and "pageCount" is not null;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- Select row counts, qualified by schema and table
+0: jdbc:farrago:> --
+0: jdbc:farrago:> create view row_counts_view as
+. . . . . . . . > select n."name" as "schema", t."name" as "table", "rowCount" 
+. . . . . . . . > from 
+. . . . . . . . >   sys_cwm."Core"."Namespace" n,
+. . . . . . . . >   sys_fem.sql2003."AbstractColumnSet" t
+. . . . . . . . > where 
+. . . . . . . . >   t."namespace" = n."mofId"
+. . . . . . . . >   and "rowCount" is not null;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- Selects histograms, qualified by table name (missing schema name)
+0: jdbc:farrago:> --
+0: jdbc:farrago:> create view histograms_view as
+. . . . . . . . > select 
+. . . . . . . . >     t."name" as "table", c."name" as "column",
+. . . . . . . . >     "distinctValueCount" "values","percentageSampled" "percent",
+. . . . . . . . >     "barCount","rowsPerBar","rowsLastBar"
+. . . . . . . . > from 
+. . . . . . . . >     sys_fem.med."ColumnHistogram" h,
+. . . . . . . . >     sys_fem.sql2003."AbstractColumn" c,
+. . . . . . . . >     sys_fem.sql2003."AbstractColumnSet" t
+. . . . . . . . > where 
+. . . . . . . . >     c."Histogram" = h."mofId"
+. . . . . . . . >     and c."owner" = t."mofId";
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- Selects histogram bars, qualified by table and column
+0: jdbc:farrago:> -- NOTE: this performs a four way join and may be rather expensive
+0: jdbc:farrago:> --
+0: jdbc:farrago:> create view histogram_bars_view as
+. . . . . . . . > select 
+. . . . . . . . >   t."name" as "table", c."name" as "column", 
+. . . . . . . . >   b."ordinal","startingValue","valueCount"
+. . . . . . . . > from 
+. . . . . . . . >   sys_fem.med."ColumnHistogramBar" b,
+. . . . . . . . >   sys_fem.med."ColumnHistogram" h,
+. . . . . . . . >   sys_fem.sql2003."AbstractColumn" c,
+. . . . . . . . >   sys_fem.sql2003."AbstractColumnSet" t
+. . . . . . . . > where 
+. . . . . . . . >   c."Histogram" = h."mofId"
+. . . . . . . . >   and c."owner" = t."mofId"
+. . . . . . . . >   and b."Histogram" = c."Histogram";
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- This query is a bit faster, but still too slow
+0: jdbc:farrago:> create view histogram_bars_quicker_view as
+. . . . . . . . > select 
+. . . . . . . . >   c."owner" as "table", c."name" as "column", 
+. . . . . . . . >   b."ordinal","startingValue","valueCount"
+. . . . . . . . > from 
+. . . . . . . . >   sys_fem.med."ColumnHistogramBar" b,
+. . . . . . . . >   sys_fem.med."ColumnHistogram" h,
+. . . . . . . . >   sys_fem.sql2003."AbstractColumn" c
+. . . . . . . . > where 
+. . . . . . . . >   c."Histogram" = h."mofId"
+. . . . . . . . >   and b."Histogram" = c."Histogram";
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- A bit faster, at the cost of table and column names
+0: jdbc:farrago:> create view histogram_bars_quick_view as
+. . . . . . . . > select "Histogram", "ordinal","startingValue","valueCount"
+. . . . . . . . > from sys_fem.med."ColumnHistogramBar";
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- not pretty but, diffable
+0: jdbc:farrago:> create view diffable_histogram_bars as
+. . . . . . . . > select "ordinal","startingValue","valueCount" 
+. . . . . . . . > from sys_boot.mgmt.histogram_bars_quick_view;
+0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit
