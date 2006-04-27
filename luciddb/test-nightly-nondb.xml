@@ -53,11 +53,10 @@
       </test-suite-call>
 
       <!-- non-db dependent tests which rely on mssql  -->
-<!--
+
       <test-suite-call testfile="test/sql/mondrian/test-all.xml">
         <test-suite-modifier value="mondrian"/>
       </test-suite-call>
--->
 
     </test-suite>
   </target>
