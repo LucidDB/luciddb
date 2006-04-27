@@ -272,8 +272,6 @@ public class RexLiteral extends RexNode
         SqlTypeName typeName,
         boolean java)
     {
-        // NOTE: please keep this method consistent with fromJavaString
-        
         switch (typeName.getOrdinal()) {
         case SqlTypeName.Char_ordinal:
             NlsString nlsString = (NlsString) value;
@@ -333,29 +331,30 @@ public class RexLiteral extends RexNode
     }
 
     /**
-     * Converts a Java string into a RexLiteral, the inverse of 
-     * {@link #toJavaString} and therefore {@link #printAsJava}. 
-     * This method restores a RexLiteral from its string representation. 
-     * It relies upon the string representation 
-     * to accurately encode a Memento of the literal. The method is 
-     * intended to be used as a programming facility, rather than as a
-     * way to interpret user input.
+     * Converts a Jdbc string into a RexLiteral. This method accepts a 
+     * string, as returned by the Jdbc method ResultSet.getString(), and 
+     * restores the string into an equivalent RexLiteral. It allows one 
+     * to use Jdbc strings as a common format for data.
      * 
-     * <p>Matching the convention of RexLiteral, null literals are required 
-     * to have the null data type. The string representation "null" will 
-     * not be recognized in any other context.
+     * <p>If a null literal is provided, then a null pointer will be 
+     * returned.
      * 
      * @param type data type of literal to be read
      * @param typeName type family of literal
-     * @param literal the (non-SQL encoded) string representation
+     * @param literal the (non-SQL encoded) string representation, as 
+     * returned by the Jdbc call to return a column as a string
      * 
-     * @return a typed RexLiteral
+     * @return a typed RexLiteral, or null
      */
-    public static RexLiteral fromJavaString(
+    public static RexLiteral fromJdbcString(
         RelDataType type, 
         SqlTypeName typeName,
         String literal)
     {
+        if (literal == null) {
+            return null;
+        }
+        
         switch (typeName.getOrdinal()) {
         case SqlTypeName.Char_ordinal:
             Charset charset = type.getCharset();
@@ -381,10 +380,22 @@ public class RexLiteral extends RexNode
         case SqlTypeName.Timestamp_ordinal:
             // NOTE: we will need to read timestamp at some point
             String format = getCalendarFormat(typeName);
-            Calendar cal = SqlParserUtil.parseDateFormat(
-                literal, format, null);
+            Calendar cal = null;
+            if (typeName.getOrdinal() == SqlTypeName.Timestamp_ordinal
+                && type.getPrecision() > 0) 
+            {
+                SqlParserUtil.PrecisionTime ts = 
+                    SqlParserUtil.parsePrecisionDateTimeLiteral(
+                        literal, format, null);
+                if (ts != null) {
+                    cal = ts.getCalendar();
+                }
+            } else {
+                cal = SqlParserUtil.parseDateFormat(
+                    literal, format, null);
+            }
             if (cal == null) {
-                throw Util.newInternal("fromJavaString: invalid date/time");
+                throw Util.newInternal("fromJdbcString: invalid date/time");
             }
             return new RexLiteral(cal, type, typeName);
         case SqlTypeName.Symbol_ordinal:
@@ -393,7 +404,7 @@ public class RexLiteral extends RexNode
         case SqlTypeName.IntervalYearMonth_ordinal:
             // Intervals are not yet encoded as strings
         default:
-            throw Util.newInternal("fromJavaString: unsupported type");
+            throw Util.newInternal("fromJdbcString: unsupported type");
         }
     }
 

@@ -49,8 +49,7 @@ call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','PARTSUPP',80000);
 call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','REGION',5);
 call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','SUPPLIER',1000);
 
-select "name", "rowCount" from sys_fem.sql2003."AbstractColumnSet"
-where "rowCount" is not null order by 1;
+select * from sys_boot.mgmt.row_counts_view order by 1, 2;
 
 --
 -- 1.2 Page counts. We can neither index foreign tables or retrieve the 
@@ -64,7 +63,7 @@ create table dummy_region (
 call sys_boot.mgmt.stat_set_page_count(
     'LOCALDB','TPCD','SYS$CONSTRAINT_INDEX$DUMMY_REGION$SYS$PRIMARY_KEY',1);
 
-select "name", "pageCount" from sys_fem.med."LocalIndex" order by 1;
+select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3;
 
 --
 -- 1.3 Column histograms, also fine for foreign tables
@@ -78,22 +77,15 @@ call sys_boot.mgmt.stat_set_column_histogram(
 call sys_boot.mgmt.stat_set_column_histogram(
     'LOCALDB','TPCD','CUSTOMER','F4',25,10,25,0,'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
 
-select 
-    c."name",
-    "distinctValueCount" "values","percentageSampled" "percent",
-    "barCount","rowsPerBar","rowsLastBar"
-from 
-    sys_fem.med."ColumnHistogram" h,
-    sys_fem.sql2003."AbstractColumn" c
-where c."Histogram" = h."mofId" order by 1;
+select * from sys_boot.mgmt.histograms_view order by 1, 2;
 
 -- query the distinct column C_CUSTKEY
-select "ordinal","startingValue","valueCount"
-from sys_fem.med."ColumnHistogramBar" where "startingValue" < 'A' order by 1;
+select * from sys_boot.mgmt.diffable_histogram_bars 
+where "startingValue" < 'A' order by 1, 2;
 
 -- query the low cardinality column C_NATIONKEY
-select "ordinal","startingValue","valueCount"
-from sys_fem.med."ColumnHistogramBar" where "startingValue" > '99' order by 1;
+select * from sys_boot.mgmt.diffable_histogram_bars 
+where "startingValue" > '99' order by 1, 2;
 
 --
 -- 1.4 Update a histogram with more data
@@ -101,23 +93,10 @@ from sys_fem.med."ColumnHistogramBar" where "startingValue" > '99' order by 1;
 call sys_boot.mgmt.stat_set_column_histogram(
     'LOCALDB','TPCD','CUSTOMER','F1',15000,100,15000,0,'0123456789');
 
-select 
-    c."name",
-    "distinctValueCount" "values","percentageSampled" "percent",
-    "barCount","rowsPerBar","rowsLastBar"
-from 
-    sys_fem.med."ColumnHistogram" h,
-    sys_fem.sql2003."AbstractColumn" c
-where c."Histogram" = h."mofId" order by 1;
+select * from sys_boot.mgmt.histograms_view order by 1, 2;
 
-select "ordinal","startingValue","valueCount"
-from sys_fem.med."ColumnHistogramBar" where "startingValue" < 'A' order by 1;
-
--- FIXME: this query fails
--- select * from 
---     sys_fem.sql2003."AbstractColumn" c,
---     sys_fem.med."ColumnHistogramBar" b
--- where b."Histogram" = c."Histogram";
+select * from sys_boot.mgmt.diffable_histogram_bars 
+where "startingValue" < 'A' order by 1, 2;
 
 drop schema tpcd cascade;
 
@@ -148,24 +127,6 @@ create table emps(
     primary key(deptno,empno))
     create index emps_ux on emps(name);
 
--- create a few views; these are limited by sql/med query limitations
-create view row_counts as
-select "name", "rowCount" from sys_fem.sql2003."AbstractColumnSet";
-
-create view histograms as
-select 
-    c."name",
-    "distinctValueCount" "values","percentageSampled" "percent",
-    "barCount","rowsPerBar","rowsLastBar"
-from 
-    sys_fem.med."ColumnHistogram" h,
-    sys_fem.sql2003."AbstractColumn" c
-where c."Histogram" = h."mofId";
-
-create view bars as
-select "ordinal","startingValue","valueCount"
-from sys_fem.med."ColumnHistogramBar";
-
 --
 -- 2.1 bad catalog name
 -- 
@@ -178,9 +139,9 @@ from sys_fem.med."ColumnHistogramBar";
 analyze table depts compute statistics for all columns;
 analyze table emps compute statistics for columns (empno, name);
 
-select * from row_counts where "rowCount" is not null;
-select * from histograms;
-select * from bars;
+select * from sys_boot.mgmt.row_counts_view order by 1, 2;
+select * from sys_boot.mgmt.histograms_view order by 1, 2;
+select * from sys_boot.mgmt.diffable_histogram_bars order by 1, 2;
 
 --
 -- 2.3 loaded tables
@@ -191,9 +152,9 @@ insert into emps select * from sales.emps;
 analyze table depts compute statistics for all columns;
 analyze table emps compute statistics for columns (empno, name);
 
-select * from row_counts where "rowCount" is not null;
-select * from histograms;
-select * from bars;
+select * from sys_boot.mgmt.row_counts_view order by 1, 2;
+select * from sys_boot.mgmt.histograms_view order by 1, 2;
+select * from sys_boot.mgmt.diffable_histogram_bars order by 1, 2;
 
 --
 -- 2.4 reanalyze
@@ -203,20 +164,52 @@ insert into emps values
 
 analyze table emps compute statistics for columns (empno, name);
 
-select * from row_counts where "rowCount" is not null;
-select * from histograms;
-select * from bars;
+select * from sys_boot.mgmt.row_counts_view order by 1, 2;
+select * from sys_boot.mgmt.histograms_view order by 1, 2;
+select * from sys_boot.mgmt.diffable_histogram_bars order by 1, 2;
 
 --
 -- 2.5 more types
 --
 analyze table emps compute statistics for all columns;
 
-select * from row_counts where "rowCount" is not null;
-select * from histograms;
-select * from bars;
+select * from sys_boot.mgmt.row_counts_view order by 1, 2;
+select * from sys_boot.mgmt.histograms_view order by 1, 2;
+select * from sys_boot.mgmt.diffable_histogram_bars order by 1, 2;
 
 --
 -- 2.6 note: sampling has not been implemented, only test syntax
 --
 analyze table depts estimate statistics for all columns sample 10 percent;
+
+--
+-- 2.7 analyze a foreign table
+--
+drop schema stat cascade;
+create schema stat;
+set schema 'stat';
+
+create foreign data wrapper stat_file_wrapper
+library 'class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper'
+language java;
+
+create server stat_server
+foreign data wrapper stat_file_wrapper
+options (
+    directory 'unitsql/med/flatfiles',
+    file_extension 'csv',
+    with_header 'yes', 
+    log_directory 'testlog');
+
+create foreign table stat_file(
+    id int not null,
+    name varchar(50) not null,
+    extra_field char(1) not null)
+server stat_server
+options (filename 'example');
+
+analyze table stat_file compute statistics for all columns;
+
+select * from sys_boot.mgmt.row_counts_view order by 1, 2;
+select * from sys_boot.mgmt.histograms_view order by 1, 2;
+select * from sys_boot.mgmt.diffable_histogram_bars order by 1, 2;

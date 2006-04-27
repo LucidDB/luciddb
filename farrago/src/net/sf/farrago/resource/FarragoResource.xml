@@ -571,6 +571,10 @@ column type family is {1} but default value type family is {2}</text>
 <text>Cannot drop {0} because it is currently in use by a statement</text>
 </exception>
 
+<exception id="420980" name="ValidatorAnalyzeSupport">
+<text>Cannot analyze {0} because analysis is not supported for objects of that type</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Fennel resources 440,000 - 450,000 -->
 <!-- Actual resources are defined separately in Fennel -->

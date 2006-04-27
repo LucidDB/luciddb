@@ -157,8 +157,8 @@ public class DdlAnalyzeStmt extends DdlStmt
                 femColumnList.add((FemAbstractColumn) column);
             }
         } catch (ClassCastException e) {
-            // FIXME: make this a user exception
-            throw Util.newInternal("table of inappropriate type for analysis");
+            throw FarragoResource.instance().ValidatorAnalyzeSupport.ex(
+                femTable.getName());
         }
 
         // Update statistics
@@ -294,14 +294,19 @@ public class DdlAnalyzeStmt extends DdlStmt
         long barValueCount = 0;
         long barRowCount = 0;
         
+        RelDataType rowType = stmtContext.getPreparedRowType();
+        List fieldList = rowType.getFieldList();
+        RelDataType type =
+            ((RelDataTypeField) fieldList.get(0)).getType();
         while (resultSet.next()) {
             Object o = resultSet.getObject(1);
-            // FIXME: convert to RexLiteral data type, then printAsJava
-            // FIXME: had to kludge null until catalog changes propagate
-            //        note that " " (space) < numbers and letters
-            String nextValue = (o == null) ? " " : o.toString();
-            if (o instanceof byte[]) {
+            String nextValue;
+            if (o == null) {
+                nextValue = null;
+            } else if (o instanceof byte[]) {
                 nextValue = ConversionUtil.toStringFromByteArray((byte []) o, 16);
+            } else {
+                nextValue = resultSet.getString(1);
             }
             long nextRows = resultSet.getLong(2);
 
