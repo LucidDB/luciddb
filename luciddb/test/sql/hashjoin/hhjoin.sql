@@ -2,13 +2,14 @@
 
 create schema s;
 set schema 's';
+set path 's';
 
 --loadjava testhash1.java
 --loadjava testhash2.java
 
-create function testhash1(int1 integer)
+create function testhash1(int1 int)
 returns table(
-table1_id integer,
+table1_id int,
 sex varchar(1)
 )
 language java
@@ -16,9 +17,9 @@ parameter style system defined java
 no sql
 external name 'class com.lucidera.luciddb.test.udr.HashJoinTestUdx.testhash1';
 
-create function testhash2(int1 integer)
+create function testhash2(int1 int)
 returns table(
-table2_id integer,
+table2_id int,
 sex varchar(1)
 )
 language java
@@ -31,14 +32,16 @@ external name 'class com.lucidera.luciddb.test.udr.HashJoinTestUdx.testhash2';
 -- create instance h2(4) of class testhash2;
 
 explain plan for 
-select * from table(testhash1(4)) h1, table((testhash2(4)) h2 
+select * from table(testhash1(4)) h1, table(testhash2(4)) h2 
 where h1.sex = h2.sex
-order by *;
+--order by *;
+order by 1,2;
 
 -- select * from h1, h2 where h1.sex = h2.sex order by *;
-select * from table(testhash1(4)) h1, table((testhash2(4)) h2 
+select * from table(testhash1(4)) h1, table(testhash2(4)) h2 
 where h1.sex = h2.sex
-order by *;
+--order by *;
+order by 1,2,3,4;
 
 -- select * from h1, h2 where h1.sex <> h2.sex order by *;
 
@@ -139,7 +142,7 @@ insert into y values (1, 'abc');
 insert into y values (2, 'ijkl');
 
 select * from x, y where x.xchar = y.ychar 
-order by 1;
+order by 1,2,3,4;
 --order by *;
 
 drop table x;
@@ -156,7 +159,7 @@ insert into y values (1, 1.2);
 insert into y values (2, 1.200);
 
 select * from x, y where x.xnum = y.ynum 
-order by 1;
+order by 1,2,3,4;
 --order by *;
 
 drop table x;
@@ -194,7 +197,7 @@ insert into y values (1, 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 insert into y values (2, 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb');
 
 select * from x, y where x.xvchar = y.yvchar 
-order by 1;
+order by 1,2,3,4;
 --order by *;
 
 drop table x;
@@ -209,7 +212,7 @@ drop table y;
 create function hashdistrib1()
 returns table(
 id integer,
-value integer,
+val integer,
 name varchar(10)
 )
 language java
@@ -220,7 +223,7 @@ external name 'class com.lucidera.luciddb.test.udr.HashJoinTestUdx.hashdistrib1'
 create function hashdistrib2()
 returns table(
 id integer,
-value integer,
+val integer,
 name varchar(10)
 )
 language java
@@ -228,24 +231,31 @@ parameter style system defined java
 no sql
 external name 'class com.lucidera.luciddb.test.udr.HashJoinTestUdx.hashdistrib2';
 
-select * from x, y where x.value = y.value and x.id = y.id --order by *;
-order by 1;
-
-select * from x, y where x.id = y.value -- order by *;
-order by 1;
-
-select * from x, y where x.value = y.id and x.id = y.value --order by *;
-order by 1;
-
--- select * from x, y where x.id = y.value and x.id <> 50 and x.id <> 1 order by *;
-select * from x, y where x.id = y.id and x.value = y.value and x.name = y.name 
+select * from table(hashdistrib1()) x, table(hashdistrib2()) y 
+where x.val = y.val and x.id = y.id 
 --order by *;
-order by 1;
+order by 1,2,3,4,5,6;
 
--- select count(*) from x, y where x.value <> y.value and x.id <> y.id and x.name = y.name order by *;
+select * from table(hashdistrib1()) x, table(hashdistrib2()) y 
+where x.id = y.val 
+-- order by *;
+order by 1,2,3,4,5,6;
 
-drop instance x;
-drop instance y;
+select * from table(hashdistrib1()) x, table(hashdistrib2()) y  
+where x.val = y.id and x.id = y.val 
+--order by *;
+order by 1,2,3,4,5,6;
+
+-- select * from x, y where x.id = y.val and x.id <> 50 and x.id <> 1 order by *;
+select * from table(hashdistrib1()) x, table(hashdistrib2()) y  
+where x.id = y.id and x.val = y.val and x.name = y.name 
+--order by *;
+order by 1,2,3,4,5,6;
+
+-- select count(*) from x, y where x.val <> y.val and x.id <> y.id and x.name = y.name order by *;
+
+--drop instance x;
+--drop instance y;
 
 -- Remove below tests. Company data related queries exist in company test suite
 

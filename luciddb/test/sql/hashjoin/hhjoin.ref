@@ -1,0 +1,480 @@
+0: jdbc:luciddb:> --set echo=on
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema s;
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> set path 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --loadjava testhash1.java
+0: jdbc:luciddb:> --loadjava testhash2.java
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function testhash1(int1 int)
+. . . . . . . . > returns table(
+. . . . . . . . > table1_id int,
+. . . . . . . . > sex varchar(1)
+. . . . . . . . > )
+. . . . . . . . > language java
+. . . . . . . . > parameter style system defined java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.HashJoinTestUdx.testhash1';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function testhash2(int1 int)
+. . . . . . . . > returns table(
+. . . . . . . . > table2_id int,
+. . . . . . . . > sex varchar(1)
+. . . . . . . . > )
+. . . . . . . . > language java
+. . . . . . . . > parameter style system defined java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.HashJoinTestUdx.testhash2';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create instance h1(4) of class testhash1;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create instance h2(4) of class testhash2;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for 
+. . . . . . . . > select * from table(testhash1(4)) h1, table(testhash2(4)) h2 
+. . . . . . . . > where h1.sex = h2.sex
+. . . . . . . . > --order by *;
+. . . . . . . . > order by 1,2;
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                             column0                                                                                              |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                        |
+|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])                                                                                                                                         |
+|     FennelCalcRel(expr#0..3=[{inputs}], proj#0..3=[{exprs}])                                                                                                                                     |
+|       LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]])                                                                                                                                                |
+|         IteratorToFennelConverter                                                                                                                                                                |
+|           FarragoJavaUdxRel(invocation=[CAST(TESTHASH1(CAST(4):INTEGER)):RecordType(INTEGER TABLE1_ID, VARCHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" SEX) NOT NULL])  |
+|         IteratorToFennelConverter                                                                                                                                                                |
+|           FarragoJavaUdxRel(invocation=[CAST(TESTHASH2(CAST(4):INTEGER)):RecordType(INTEGER TABLE2_ID, VARCHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" SEX) NOT NULL])  |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- select * from h1, h2 where h1.sex = h2.sex order by *;
+0: jdbc:luciddb:> select * from table(testhash1(4)) h1, table(testhash2(4)) h2 
+. . . . . . . . > where h1.sex = h2.sex
+. . . . . . . . > --order by *;
+. . . . . . . . > order by 1,2,3,4;
++------------+------+------------+-------+
+| TABLE1_ID  | SEX  | TABLE2_ID  | SEX0  |
++------------+------+------------+-------+
+| 0          | M    | 0          | M     |
+| 0          | M    | 3          | M     |
+| 1          | F    | 1          | F     |
+| 1          | F    | 2          | F     |
+| 2          | M    | 0          | M     |
+| 2          | M    | 3          | M     |
+| 3          | F    | 1          | F     |
+| 3          | F    | 2          | F     |
++------------+------+------------+-------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- select * from h1, h2 where h1.sex <> h2.sex order by *;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- drop instance h1;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- drop instance h2;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create instance h1(50000) of class testhash1;
+0: jdbc:luciddb:> -- create instance h2(50000) of class testhash2;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for 
+. . . . . . . . > select count(*) from table(testhash1(50000)) h1, table(testhash2(50000))h2
+. . . . . . . . > where h1.sex = h2.sex;
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                column0                                                                                                 |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(expr#0=[{inputs}], EXPR$0=[$t0])                                                                                                                                                           |
+|   FennelToIteratorConverter                                                                                                                                                                            |
+|     FennelAggRel(groupCount=[0], agg#0=[COUNT()])                                                                                                                                                      |
+|       FennelCalcRel(expr#0..3=[{inputs}], expr#4=[true], $f0=[$t4])                                                                                                                                    |
+|         LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]])                                                                                                                                                    |
+|           IteratorToFennelConverter                                                                                                                                                                    |
+|             FarragoJavaUdxRel(invocation=[CAST(TESTHASH1(CAST(50000):INTEGER)):RecordType(INTEGER TABLE1_ID, VARCHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" SEX) NOT NULL])  |
+|           IteratorToFennelConverter                                                                                                                                                                    |
+|             FarragoJavaUdxRel(invocation=[CAST(TESTHASH2(CAST(50000):INTEGER)):RecordType(INTEGER TABLE2_ID, VARCHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" SEX) NOT NULL])  |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- select count(*) from h1, h2 where h1.sex = h2.sex;
+0: jdbc:luciddb:> select count(*) from table(testhash1(50000)) h1, table(testhash2(50000))h2
+. . . . . . . . > where h1.sex = h2.sex;
++-------------+
+|   EXPR$0    |
++-------------+
+| 1250000000  |
++-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- drop instance h1;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- drop instance h2;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --create table x (c1 integer, L1 long varchar, L2 long varchar, L3 long varchar);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- insert into x values (1,
+0: jdbc:luciddb:> -- 'L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1',
+0: jdbc:luciddb:> -- 'L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2',
+0: jdbc:luciddb:> -- 'L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L1')
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> -- insert into x values (2,
+0: jdbc:luciddb:> -- 'L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1',
+0: jdbc:luciddb:> -- 'L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2',
+0: jdbc:luciddb:> -- 'L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L2')
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> -- insert into x values (3,
+0: jdbc:luciddb:> -- 'L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1',
+0: jdbc:luciddb:> -- 'L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2',
+0: jdbc:luciddb:> -- 'L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3')
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> -- insert into x values (4,
+0: jdbc:luciddb:> -- 'L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1',
+0: jdbc:luciddb:> -- 'L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2',
+0: jdbc:luciddb:> -- 'L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L4')
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> -- insert into x values (5,
+0: jdbc:luciddb:> -- 'L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1',
+0: jdbc:luciddb:> -- 'L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2',
+0: jdbc:luciddb:> -- 'L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L5')
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> -- insert into x values (6,
+0: jdbc:luciddb:> -- 'L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1',
+0: jdbc:luciddb:> -- 'L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2',
+0: jdbc:luciddb:> -- 'L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L6')
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> -- insert into x values (7,
+0: jdbc:luciddb:> -- 'L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1',
+0: jdbc:luciddb:> -- 'L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2',
+0: jdbc:luciddb:> -- 'L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L7')
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> -- insert into x values (8,
+0: jdbc:luciddb:> -- 'L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1',
+0: jdbc:luciddb:> -- 'L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2',
+0: jdbc:luciddb:> -- 'L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L8')
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> -- insert into x values (9,
+0: jdbc:luciddb:> -- 'L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1',
+0: jdbc:luciddb:> -- 'L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2',
+0: jdbc:luciddb:> -- 'L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L9')
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --create table y (c1 integer, L1 long varchar, L2 long varchar, L3 long varchar);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- insert into y values (13,
+0: jdbc:luciddb:> -- 'L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1',
+0: jdbc:luciddb:> -- 'L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2',
+0: jdbc:luciddb:> -- 'L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L1')
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> -- insert into y values (14,
+0: jdbc:luciddb:> -- 'L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1L1',
+0: jdbc:luciddb:> -- 'L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2L2',
+0: jdbc:luciddb:> -- 'L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L3L2')
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- select * from x, y where x.l3 = y.l3
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- drop table x;
+0: jdbc:luciddb:> -- drop table y;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table x (xid integer, xchar char(10));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into x values (1, 'abc');
+0: jdbc:luciddb:> insert into x values (2, 'defgh');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table y (yid integer, ychar varchar(10));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into y values (1, 'abc');
+0: jdbc:luciddb:> insert into y values (2, 'ijkl');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from x, y where x.xchar = y.ychar 
+. . . . . . . . > order by 1,2,3,4;
++------+-------------+------+--------+
+| XID  |    XCHAR    | YID  | YCHAR  |
++------+-------------+------+--------+
+| 1    | abc         | 1    | abc    |
++------+-------------+------+--------+
+0: jdbc:luciddb:> --order by *;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table x;
+0: jdbc:luciddb:> drop table y;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table x (xid integer, xnum numeric (3, 2));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into x values (1, 1.20);
+0: jdbc:luciddb:> insert into x values (2, 1.25);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table y (yid integer, ynum numeric(4, 3));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into y values (1, 1.2);
+0: jdbc:luciddb:> insert into y values (2, 1.200);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from x, y where x.xnum = y.ynum 
+. . . . . . . . > order by 1,2,3,4;
++------+-------+------+--------+
+| XID  | XNUM  | YID  |  YNUM  |
++------+-------+------+--------+
+| 1    | 1.20  | 1    | 1.200  |
+| 1    | 1.20  | 2    | 1.200  |
++------+-------+------+--------+
+0: jdbc:luciddb:> --order by *;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table x;
+0: jdbc:luciddb:> drop table y;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create table x (xid integer, xdate date);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- insert into x values (1, applib.convert_date('1997-09-20', 'YYYY-MM-DD'));
+0: jdbc:luciddb:> -- insert into x values (2, applib.convert_date('1997-09-22', 'YYYY-MM-DD'));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create table y (yid integer, yts timestamp);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- insert into y values (1, '1997-09-20 12:34:34');
+0: jdbc:luciddb:> -- insert into y values (2, '1999-09-20 2:34:34');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- select * from x, y where year(x.xdate) = year(y.yts) order by *;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- select * from x, y where x.xdate = to_date(to_char(y.yts)) order by *;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- select * from x, y where day(x.xdate) = day(to_date(to_char(y.yts))) order by *;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- drop table x;
+0: jdbc:luciddb:> -- drop table y;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table x (xid integer, xvchar varchar(255));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into x values (1, 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into x values (2, 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table y (yid integer, yvchar varchar(255));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into y values (1, 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into y values (2, 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from x, y where x.xvchar = y.yvchar 
+. . . . . . . . > order by 1,2,3,4;
++------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| XID  |                                                                                                                             XVCHAR                                                                                                                              | YID  |                                                                                                                             YVCHAR                                                                                                                              |
++------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| 1    | aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  | 1    | aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  |
++------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> --order by *;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table x;
+0: jdbc:luciddb:> drop table y;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- loadjava hashdistrib1.java;
+0: jdbc:luciddb:> -- loadjava hashdistrib2.java;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create instance x of class hashdistrib1;
+0: jdbc:luciddb:> -- create instance y of class hashdistrib2;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function hashdistrib1()
+. . . . . . . . > returns table(
+. . . . . . . . > id integer,
+. . . . . . . . > val integer,
+. . . . . . . . > name varchar(10)
+. . . . . . . . > )
+. . . . . . . . > language java
+. . . . . . . . > parameter style system defined java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.HashJoinTestUdx.hashdistrib1';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function hashdistrib2()
+. . . . . . . . > returns table(
+. . . . . . . . > id integer,
+. . . . . . . . > val integer,
+. . . . . . . . > name varchar(10)
+. . . . . . . . > )
+. . . . . . . . > language java
+. . . . . . . . > parameter style system defined java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.HashJoinTestUdx.hashdistrib2';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(hashdistrib1()) x, table(hashdistrib2()) y 
+. . . . . . . . > where x.val = y.val and x.id = y.id 
+. . . . . . . . > --order by *;
+. . . . . . . . > order by 1,2,3,4,5,6;
++-----+------+-------+------+-------+--------+
+| ID  | VAL  | NAME  | ID0  | VAL0  | NAME0  |
++-----+------+-------+------+-------+--------+
+| 50  | 50   | ann   | 50   | 50    | tai    |
+| 51  | 50   | ann   | 51   | 50    | tai    |
+| 52  | 50   | ann   | 52   | 50    | tai    |
+| 53  | 50   | ann   | 53   | 50    | tai    |
+| 54  | 50   | ann   | 54   | 50    | tai    |
+| 55  | 50   | ann   | 55   | 50    | tai    |
+| 56  | 50   | ann   | 56   | 50    | tai    |
+| 57  | 50   | ann   | 57   | 50    | tai    |
+| 58  | 50   | ann   | 58   | 50    | tai    |
+| 59  | 50   | ann   | 59   | 50    | tai    |
+| 60  | 50   | ann   | 60   | 50    | tai    |
+| 61  | 50   | ann   | 61   | 50    | tai    |
+| 62  | 50   | ann   | 62   | 50    | tai    |
+| 63  | 50   | ann   | 63   | 50    | tai    |
+| 64  | 50   | ann   | 64   | 50    | tai    |
+| 65  | 50   | ann   | 65   | 50    | tai    |
+| 66  | 50   | ann   | 66   | 50    | tai    |
+| 67  | 50   | ann   | 67   | 50    | tai    |
+| 68  | 50   | ann   | 68   | 50    | tai    |
+| 69  | 50   | ann   | 69   | 50    | tai    |
+| 70  | 50   | ann   | 70   | 50    | ann    |
+| 71  | 50   | ann   | 71   | 50    | ann    |
+| 72  | 50   | ann   | 72   | 50    | ann    |
+| 73  | 50   | ann   | 73   | 50    | ann    |
+| 74  | 50   | ann   | 74   | 50    | ann    |
+| 75  | 50   | tai   | 75   | 50    | ann    |
+| 76  | 50   | tai   | 76   | 50    | ann    |
+| 77  | 50   | tai   | 77   | 50    | ann    |
+| 78  | 50   | tai   | 78   | 50    | ann    |
+| 79  | 50   | tai   | 79   | 50    | ann    |
++-----+------+-------+------+-------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(hashdistrib1()) x, table(hashdistrib2()) y 
+. . . . . . . . > where x.id = y.val 
+. . . . . . . . > -- order by *;
+. . . . . . . . > order by 1,2,3,4,5,6;
++-----+------+-------+------+-------+--------+
+| ID  | VAL  | NAME  | ID0  | VAL0  | NAME0  |
++-----+------+-------+------+-------+--------+
+| 1   | 1    | ann   | 80   | 1     | ann    |
+| 1   | 1    | ann   | 81   | 1     | ann    |
+| 1   | 1    | ann   | 82   | 1     | ann    |
+| 1   | 1    | ann   | 83   | 1     | ann    |
+| 1   | 1    | ann   | 84   | 1     | ann    |
+| 1   | 1    | ann   | 85   | 1     | ann    |
+| 1   | 1    | ann   | 86   | 1     | ann    |
+| 1   | 1    | ann   | 87   | 1     | ann    |
+| 1   | 1    | ann   | 88   | 1     | ann    |
+| 1   | 1    | ann   | 89   | 1     | ann    |
+| 1   | 1    | ann   | 90   | 1     | ann    |
+| 1   | 1    | ann   | 91   | 1     | ann    |
+| 1   | 1    | ann   | 92   | 1     | ann    |
+| 1   | 1    | ann   | 93   | 1     | ann    |
+| 1   | 1    | ann   | 94   | 1     | ann    |
+| 1   | 1    | ann   | 95   | 1     | ann    |
+| 1   | 1    | ann   | 96   | 1     | ann    |
+| 1   | 1    | ann   | 97   | 1     | ann    |
+| 1   | 1    | ann   | 98   | 1     | ann    |
+| 1   | 1    | ann   | 99   | 1     | ann    |
+| 50  | 50   | ann   | 50   | 50    | tai    |
+| 50  | 50   | ann   | 51   | 50    | tai    |
+| 50  | 50   | ann   | 52   | 50    | tai    |
+| 50  | 50   | ann   | 53   | 50    | tai    |
+| 50  | 50   | ann   | 54   | 50    | tai    |
+| 50  | 50   | ann   | 55   | 50    | tai    |
+| 50  | 50   | ann   | 56   | 50    | tai    |
+| 50  | 50   | ann   | 57   | 50    | tai    |
+| 50  | 50   | ann   | 58   | 50    | tai    |
+| 50  | 50   | ann   | 59   | 50    | tai    |
+| 50  | 50   | ann   | 60   | 50    | tai    |
+| 50  | 50   | ann   | 61   | 50    | tai    |
+| 50  | 50   | ann   | 62   | 50    | tai    |
+| 50  | 50   | ann   | 63   | 50    | tai    |
+| 50  | 50   | ann   | 64   | 50    | tai    |
+| 50  | 50   | ann   | 65   | 50    | tai    |
+| 50  | 50   | ann   | 66   | 50    | tai    |
+| 50  | 50   | ann   | 67   | 50    | tai    |
+| 50  | 50   | ann   | 68   | 50    | tai    |
+| 50  | 50   | ann   | 69   | 50    | tai    |
+| 50  | 50   | ann   | 70   | 50    | ann    |
+| 50  | 50   | ann   | 71   | 50    | ann    |
+| 50  | 50   | ann   | 72   | 50    | ann    |
+| 50  | 50   | ann   | 73   | 50    | ann    |
+| 50  | 50   | ann   | 74   | 50    | ann    |
+| 50  | 50   | ann   | 75   | 50    | ann    |
+| 50  | 50   | ann   | 76   | 50    | ann    |
+| 50  | 50   | ann   | 77   | 50    | ann    |
+| 50  | 50   | ann   | 78   | 50    | ann    |
+| 50  | 50   | ann   | 79   | 50    | ann    |
++-----+------+-------+------+-------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(hashdistrib1()) x, table(hashdistrib2()) y  
+. . . . . . . . > where x.val = y.id and x.id = y.val 
+. . . . . . . . > --order by *;
+. . . . . . . . > order by 1,2,3,4,5,6;
++-----+------+-------+------+-------+--------+
+| ID  | VAL  | NAME  | ID0  | VAL0  | NAME0  |
++-----+------+-------+------+-------+--------+
+| 50  | 50   | ann   | 50   | 50    | tai    |
++-----+------+-------+------+-------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- select * from x, y where x.id = y.val and x.id <> 50 and x.id <> 1 order by *;
+0: jdbc:luciddb:> select * from table(hashdistrib1()) x, table(hashdistrib2()) y  
+. . . . . . . . > where x.id = y.id and x.val = y.val and x.name = y.name 
+. . . . . . . . > --order by *;
+. . . . . . . . > order by 1,2,3,4,5,6;
++-----+------+-------+------+-------+--------+
+| ID  | VAL  | NAME  | ID0  | VAL0  | NAME0  |
++-----+------+-------+------+-------+--------+
+| 70  | 50   | ann   | 70   | 50    | ann    |
+| 71  | 50   | ann   | 71   | 50    | ann    |
+| 72  | 50   | ann   | 72   | 50    | ann    |
+| 73  | 50   | ann   | 73   | 50    | ann    |
+| 74  | 50   | ann   | 74   | 50    | ann    |
++-----+------+-------+------+-------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- select count(*) from x, y where x.val <> y.val and x.id <> y.id and x.name = y.name order by *;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --drop instance x;
+0: jdbc:luciddb:> --drop instance y;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Remove below tests. Company data related queries exist in company test suite
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create source products_source 
+0: jdbc:luciddb:> -- using link odbc_sqlserver defined by
+0: jdbc:luciddb:> -- 'select prodid, name, price from BENCHMARK.dbo.products'
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create source sales_source
+0: jdbc:luciddb:> -- using link odbc_sqlserver defined by
+0: jdbc:luciddb:> -- 'select custid, empno, prodid, price from BENCHMARK.dbo.sales'
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create source dept_source
+0: jdbc:luciddb:> -- using link odbc_sqlserver defined by
+0: jdbc:luciddb:> -- 'select deptno, dname, locid from BENCHMARK.dbo.dept'
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create source emp_source
+0: jdbc:luciddb:> -- using link odbc_sqlserver defined by
+0: jdbc:luciddb:> -- 'select empno, fname, lname, sex, deptno, manager, locid, sal, commission, hobby from BENCHMARK.dbo.emp'
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- select * from dept_source, emp_source where dept_source.deptno = emp_source.deptno
+0: jdbc:luciddb:> -- ORDER BY *
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- select * from dept_source, emp_source where dept_source.locid = emp_source.locid
+0: jdbc:luciddb:> -- ORDER BY *
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- select * from dept_source right outer join emp_source on dept_source.locid = emp_source.locid
+0: jdbc:luciddb:> -- ORDER BY *
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> -- select * from emp_source left outer join dept_source on dept_source.locid = emp_source.locid
+0: jdbc:luciddb:> -- ORDER BY *
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- select * from dept_source, emp_source where dept_source.locid = emp_source.locid and dept_source.deptno = emp_source.deptno
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- select sum(sal) from dept_source, emp_source where dept_source.deptno = emp_source.deptno
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- select sum(sal) from dept_source, emp_source where dept_source.deptno = emp_source.deptno and dept_source.locid = emp_source.locid
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- select sum(sal) from dept_source full outer join emp_source on dept_source.locid = emp_source.locid and dept_source.deptno = emp_source.deptno
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- select avg(p1.price) from products_source p1, sales_source s1 where p1.price = s1.price
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> -- select avg(p1.price) from products_source p1 full outer join sales_source s1 on p1.price = s1.price
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> -- select avg(p1.price) from products_source p1 left outer join sales_source s1 on p1.price = s1.price
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> -- select avg(p1.price) from products_source p1 right outer join sales_source s1 on p1.price = s1.price
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> -- select avg(p1.price) from products_source p1 where p1.price = ANY (select price from sales_source where price > 4)
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

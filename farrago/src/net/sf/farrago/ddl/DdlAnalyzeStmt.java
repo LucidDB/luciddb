@@ -260,13 +260,17 @@ public class DdlAnalyzeStmt extends DdlStmt
             barCount = (int) tableRowCount;
             rowsPerBar = rowsLastBar = 1;
         } else {
-            barCount = defaultBarCount;
             rowsPerBar = tableRowCount / defaultBarCount;
             if (tableRowCount % defaultBarCount != 0) {
                 rowsPerBar++;
             }
-            rowsLastBar = 
-                tableRowCount - (rowsPerBar * (defaultBarCount - 1));
+            barCount = (int) (tableRowCount / rowsPerBar);
+            if (tableRowCount % rowsPerBar != 0) {
+                barCount++;
+                rowsLastBar = (tableRowCount - (barCount-1) * rowsPerBar);
+            } else {
+                rowsLastBar = rowsPerBar;
+            }
         }
 
         List<FemColumnHistogramBar> bars = 
@@ -279,7 +283,7 @@ public class DdlAnalyzeStmt extends DdlStmt
 
         FarragoCatalogUtil.updateHistogram(
             repos, column, distinctValues, 100, 
-            barCount, rowsPerBar, rowsLastBar, bars);
+            bars.size(), rowsPerBar, rowsLastBar, bars);
     }
 
     private List<FemColumnHistogramBar> buildBars(
@@ -314,6 +318,7 @@ public class DdlAnalyzeStmt extends DdlStmt
                 barStartValue = nextValue;
                 barValueCount = 0;
                 barRowCount = 0;
+                newBar = false;
             }
             barValueCount++;
             barRowCount += nextRows;

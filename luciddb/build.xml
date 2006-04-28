@@ -199,7 +199,6 @@
         <exclude name="VI/recovery/build.xml"/>
         <exclude name="VI/build.xml"/>
         <exclude name="hashjoin/**"/>
-        <exclude name="distribution/**"/>
       </fileset>
     </foreach>
   </target>

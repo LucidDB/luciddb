@@ -91,10 +91,9 @@
 | SYS_BOOT   | JDBC_METADATA  | TYPE_INFO_VIEW                   | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | JDBC_METADATA  | UDTS_VIEW                        | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | JDBC_METADATA  | UDTS_VIEW_INTERNAL               | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | MGMT           | DIFFABLE_HISTOGRAM_BARS          | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | MGMT           | HISTOGRAMS_VIEW                  | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | MGMT           | HISTOGRAM_BARS_QUICKER_VIEW      | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | MGMT           | HISTOGRAM_BARS_QUICK_VIEW        | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | HISTOGRAM_BARS_A_VIEW            | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | HISTOGRAM_BARS_B_VIEW            | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | MGMT           | HISTOGRAM_BARS_VIEW              | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | MGMT           | OBJECTS_IN_USE_VIEW              | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | MGMT           | PAGE_COUNTS_VIEW                 | VIEW        |          |           |             |            |                            |                 |
