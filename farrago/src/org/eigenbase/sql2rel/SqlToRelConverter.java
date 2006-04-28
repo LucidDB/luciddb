@@ -74,11 +74,6 @@ public class SqlToRelConverter
     private boolean shouldConvertTableAccess;
     protected final RelDataTypeFactory typeFactory;
     private final SqlNodeToRexConverter exprConverter;
-    /**
-     * Used to pass the result of a {@link SqlVisitor} call.
-     */
-    private RexNode result;
-
 
     //~ Constructors ----------------------------------------------------------
 
@@ -549,17 +544,6 @@ public class SqlToRelConverter
                 }
             }
         }
-    }
-
-    /**
-     * For use by {@link Blackboard#visit} methods.
-     */
-    void setResult(RexNode node)
-    {
-        Util.permAssert(
-            node != null,
-            "result of conversion must not be null");
-        result = node;
     }
 
     /**
@@ -1568,7 +1552,7 @@ public class SqlToRelConverter
      * Workspace for translating an individual SELECT statement (or
      * sub-SELECT).
      */
-    protected class Blackboard implements SqlRexContext, SqlVisitor
+    protected class Blackboard implements SqlRexContext, SqlVisitor<RexNode>
     {
         /**
          * Collection of {@link RelNode} objects which correspond to a
@@ -1825,11 +1809,8 @@ public class SqlToRelConverter
             }
 
             // Apply standard conversions.
-            result = null;
-            expr.accept(this);
-            Util.permAssert(result != null, "conversion result not null");
-            rex = result;
-            result = null;
+            rex = expr.accept(this);
+            Util.permAssert(rex != null, "conversion result not null");
             return rex;
         }
 
@@ -1875,13 +1856,13 @@ public class SqlToRelConverter
         }
 
         // implement SqlVisitor
-        public void visit(SqlLiteral literal)
+        public RexNode visit(SqlLiteral literal)
         {
-            setResult(exprConverter.convertLiteral(this, literal));
+            return exprConverter.convertLiteral(this, literal);
         }
 
         // implement SqlVisitor
-        public void visit(SqlCall call)
+        public RexNode visit(SqlCall call)
         {
             if (agg != null) {
                 final SqlOperator op = call.getOperator();
@@ -1889,45 +1870,44 @@ public class SqlToRelConverter
                     Util.permAssert(
                         agg != null,
                         "aggregate fun must occur in aggregation mode");
-                    setResult(agg.convertCall(call));
-                    return;
+                    return agg.convertCall(call);
                 }
             }
-            setResult(exprConverter.convertCall(this, call));
+            return exprConverter.convertCall(this, call);
         }
 
         // implement SqlVisitor
-        public void visit(SqlNodeList nodeList)
+        public RexNode visit(SqlNodeList nodeList)
         {
             throw new UnsupportedOperationException();
         }
 
         // implement SqlVisitor
-        public void visit(SqlIdentifier id)
+        public RexNode visit(SqlIdentifier id)
         {
-            setResult(convertIdentifier(this, id));
+            return convertIdentifier(this, id);
         }
 
         // implement SqlVisitor
-        public void visit(SqlDataTypeSpec type)
+        public RexNode visit(SqlDataTypeSpec type)
         {
             throw new UnsupportedOperationException();
         }
 
         // implement SqlVisitor
-        public void visit(SqlDynamicParam param)
+        public RexNode visit(SqlDynamicParam param)
         {
-            setResult(convertDynamicParam(param));
+            return convertDynamicParam(param);
         }
 
         // implement SqlVisitor
-        public void visit(SqlIntervalQualifier intervalQualifier)
+        public RexNode visit(SqlIntervalQualifier intervalQualifier)
         {
-            setResult(convertInterval(intervalQualifier));
+            return convertInterval(intervalQualifier);
         }
 
         // implement SqlVisitor
-        public void visitChild(SqlNode parent, int ordinal, SqlNode child)
+        public RexNode visitChild(SqlNode parent, int ordinal, SqlNode child)
         {
             throw new UnsupportedOperationException();
         }

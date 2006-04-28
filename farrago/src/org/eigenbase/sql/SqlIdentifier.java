@@ -264,9 +264,9 @@ public class SqlIdentifier extends SqlNode
         return true;
     }
 
-    public void accept(SqlVisitor visitor)
+    public <R> R accept(SqlVisitor<R> visitor)
     {
-        visitor.visit(this);
+        return visitor.visit(this);
     }
 
     public SqlCollation getCollation()

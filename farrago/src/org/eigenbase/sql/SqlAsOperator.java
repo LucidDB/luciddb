@@ -67,9 +67,9 @@ public class SqlAsOperator extends SqlBinaryOperator
         }
     }
 
-    public void acceptCall(SqlVisitor visitor, SqlCall call) {
+    public <R> R acceptCall(SqlVisitor<R> visitor, SqlCall call) {
         // Do not visit operands[1] -- it is not an expression.
-        visitor.visitChild(call, 0, call.operands[0]);
+        return visitor.visitChild(call, 0, call.operands[0]);
     }
 }
 
