@@ -171,41 +171,35 @@ where
 
 --
 -- Selects histogram bars, qualified by table and column
--- NOTE: this performs a four way join and may be rather expensive
 --
-create view histogram_bars_view as
+create view histogram_bars_a_view as
 select 
-  t."name" as "table", c."name" as "column", 
-  b."ordinal","startingValue","valueCount"
+  h."mofId",b."ordinal","startingValue","valueCount"
 from 
-  sys_fem.med."ColumnHistogramBar" b,
-  sys_fem.med."ColumnHistogram" h,
-  sys_fem.sql2003."AbstractColumn" c,
-  sys_fem.sql2003."AbstractColumnSet" t
-where 
-  c."Histogram" = h."mofId"
-  and c."owner" = t."mofId"
-  and b."Histogram" = c."Histogram";
+  sys_fem.med."ColumnHistogramBar" b
+inner join
+  sys_fem.med."ColumnHistogram" h
+on
+  b."Histogram" = h."mofId";
 
--- This query is a bit faster, but still too slow
-create view histogram_bars_quicker_view as
+create view histogram_bars_b_view as
 select 
   c."owner" as "table", c."name" as "column", 
+  a."ordinal","startingValue","valueCount"
+from 
+  sys_fem.sql2003."AbstractColumn" c
+inner join
+  histogram_bars_a_view a
+on
+  c."Histogram" = a."mofId";
+
+create view histogram_bars_view as
+select 
+  t."name" as "table", b."column", 
   b."ordinal","startingValue","valueCount"
 from 
-  sys_fem.med."ColumnHistogramBar" b,
-  sys_fem.med."ColumnHistogram" h,
-  sys_fem.sql2003."AbstractColumn" c
-where 
-  c."Histogram" = h."mofId"
-  and b."Histogram" = c."Histogram";
-
--- A bit faster, at the cost of table and column names
-create view histogram_bars_quick_view as
-select "Histogram", "ordinal","startingValue","valueCount"
-from sys_fem.med."ColumnHistogramBar";
-
--- not pretty but, diffable
-create view diffable_histogram_bars as
-select "ordinal","startingValue","valueCount" 
-from sys_boot.mgmt.histogram_bars_quick_view;
+  sys_fem.sql2003."AbstractColumnSet" t
+inner join
+  histogram_bars_b_view b
+on
+  b."table" = t."mofId";

@@ -78,14 +78,7 @@ call sys_boot.mgmt.stat_set_column_histogram(
     'LOCALDB','TPCD','CUSTOMER','F4',25,10,25,0,'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
 
 select * from sys_boot.mgmt.histograms_view order by 1, 2;
-
--- query the distinct column C_CUSTKEY
-select * from sys_boot.mgmt.diffable_histogram_bars 
-where "startingValue" < 'A' order by 1, 2;
-
--- query the low cardinality column C_NATIONKEY
-select * from sys_boot.mgmt.diffable_histogram_bars 
-where "startingValue" > '99' order by 1, 2;
+select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3;
 
 --
 -- 1.4 Update a histogram with more data
@@ -94,9 +87,7 @@ call sys_boot.mgmt.stat_set_column_histogram(
     'LOCALDB','TPCD','CUSTOMER','F1',15000,100,15000,0,'0123456789');
 
 select * from sys_boot.mgmt.histograms_view order by 1, 2;
-
-select * from sys_boot.mgmt.diffable_histogram_bars 
-where "startingValue" < 'A' order by 1, 2;
+select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3;
 
 drop schema tpcd cascade;
 
@@ -141,7 +132,7 @@ analyze table emps compute statistics for columns (empno, name);
 
 select * from sys_boot.mgmt.row_counts_view order by 1, 2;
 select * from sys_boot.mgmt.histograms_view order by 1, 2;
-select * from sys_boot.mgmt.diffable_histogram_bars order by 1, 2;
+select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3;
 
 --
 -- 2.3 loaded tables
@@ -154,7 +145,7 @@ analyze table emps compute statistics for columns (empno, name);
 
 select * from sys_boot.mgmt.row_counts_view order by 1, 2;
 select * from sys_boot.mgmt.histograms_view order by 1, 2;
-select * from sys_boot.mgmt.diffable_histogram_bars order by 1, 2;
+select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3;
 
 --
 -- 2.4 reanalyze
@@ -166,7 +157,7 @@ analyze table emps compute statistics for columns (empno, name);
 
 select * from sys_boot.mgmt.row_counts_view order by 1, 2;
 select * from sys_boot.mgmt.histograms_view order by 1, 2;
-select * from sys_boot.mgmt.diffable_histogram_bars order by 1, 2;
+select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3;
 
 --
 -- 2.5 more types
@@ -175,7 +166,7 @@ analyze table emps compute statistics for all columns;
 
 select * from sys_boot.mgmt.row_counts_view order by 1, 2;
 select * from sys_boot.mgmt.histograms_view order by 1, 2;
-select * from sys_boot.mgmt.diffable_histogram_bars order by 1, 2;
+select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3;
 
 --
 -- 2.6 note: sampling has not been implemented, only test syntax
@@ -212,4 +203,20 @@ analyze table stat_file compute statistics for all columns;
 
 select * from sys_boot.mgmt.row_counts_view order by 1, 2;
 select * from sys_boot.mgmt.histograms_view order by 1, 2;
-select * from sys_boot.mgmt.diffable_histogram_bars order by 1, 2;
+select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3;
+
+--
+-- 2.8 A few more rows than histogram bars
+--
+create table ten(i int primary key);
+insert into ten values (0),(1),(2),(3),(4),(5),(6),(7),(8),(9);
+
+create table hundred (i int primary key);
+insert into hundred (select a.i*10 + b.i from ten a, ten b);
+insert into hundred values (100), (101);
+
+analyze table hundred compute statistics for all columns;
+
+select * from sys_boot.mgmt.row_counts_view order by 1, 2;
+select * from sys_boot.mgmt.histograms_view order by 1, 2;
+select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3;
