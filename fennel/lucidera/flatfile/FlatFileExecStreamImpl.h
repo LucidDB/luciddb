@@ -140,7 +140,7 @@ class FlatFileExecStreamImpl : public FlatFileExecStream
     /**
      * Logs a single error to file
      */
-    void FlatFileExecStreamImpl::logError(
+    void logError(
         const std::string reason,
         const FlatFileRowParseResult &result);
 

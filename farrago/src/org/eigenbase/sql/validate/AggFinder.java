@@ -30,8 +30,12 @@ import org.eigenbase.util.Util;
 /**
  * Visitor which looks for an aggregate function inside a tree of
  * {@link SqlNode} objects.
+ *
+ * @author jhyde
+ * @since Oct 28, 2004
+ * @version $Id$
  */
-class AggFinder extends SqlBasicVisitor
+class AggFinder extends SqlBasicVisitor<Void>
 {
     AggFinder()
     {
@@ -48,19 +52,21 @@ class AggFinder extends SqlBasicVisitor
         }
     }
 
-    public void visit(SqlCall call)
+    public Void visit(SqlCall call)
     {
         if (call.getOperator().isAggregator()) {
             throw new Util.FoundOne(call);
         }
         if (call.isA(SqlKind.Query)) {
             // don't traverse into queries
-            return;
+            return null;
         }
         if (call.isA(SqlKind.Over)) {
             // an aggregate function over a window is not an aggregate!
-            return;
+            return null;
         }
-        super.visit(call);
+        return super.visit(call);
     }
 }
+
+// End AggFinder.java

@@ -575,7 +575,7 @@ public abstract class SqlOperator
      *
      * @param visitor Visitor.
      */
-    public void acceptCall(SqlVisitor visitor, SqlCall call)
+    public <R> R acceptCall(SqlVisitor<R> visitor, SqlCall call)
     {
         for (int i = 0; i < call.operands.length; i++) {
             SqlNode operand = call.operands[i];
@@ -584,6 +584,7 @@ public abstract class SqlOperator
             }
             visitor.visitChild(call, i, operand);
         }
+        return null;
     }
 
     /**

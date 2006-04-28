@@ -142,6 +142,10 @@ public abstract class FarragoManagementUDR
             resultInserter.setString(++i, v.currentRoleName);
             resultInserter.setString(++i, v.sessionUserName);
             resultInserter.setString(++i, v.systemUserName);
+            resultInserter.setString(++i, v.systemUserFullName);
+            resultInserter.setString(++i, v.sessionName);
+            resultInserter.setString(++i, v.programName);
+            resultInserter.setLong(++i, v.processId);
             resultInserter.setString(++i, v.catalogName);
             resultInserter.setString(++i, v.schemaName);
             resultInserter.setBoolean(

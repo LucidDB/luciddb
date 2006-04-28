@@ -1013,8 +1013,8 @@ public class Util extends Toolbox
      * @return null if no Identifier was found.
      */
     public static SqlNodeDescriptor findIdentifier(SqlNode node) {
-        SqlBasicVisitor visitor = new SqlBasicVisitor() {
-            public void visit(SqlIdentifier id)
+        SqlBasicVisitor visitor = new SqlBasicVisitor<Void>() {
+            public Void visit(SqlIdentifier id)
             {
                 throw new FoundOne(id);
             }

@@ -94,7 +94,7 @@ class CalcLexer : public CalcYYFlexLexer
 
       //! The lexical analzyer function.  It scans the input stream, 
       //! consuming tokens, until a rule's action returns a value
-      int CalcLexer::yylex();
+      int yylex();
 
       //! Returns the character position of the next token
       int getPosition() const       { return yypos;   }

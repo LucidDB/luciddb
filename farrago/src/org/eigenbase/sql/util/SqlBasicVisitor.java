@@ -27,14 +27,14 @@ import org.eigenbase.sql.*;
  * Basic implementation of {@link SqlVisitor} which does nothing at each
  * node.
  *
- * This class is useful as a base class for classes which implement the
+ * <p>This class is useful as a base class for classes which implement the
  * {@link SqlVisitor} interface. The derived class can override whichever
  * methods it chooses.
  *
  * @author jhyde
  * @version $Id$
  */
-public class SqlBasicVisitor implements SqlVisitor
+public class SqlBasicVisitor<R> implements SqlVisitor<R>
  {
      /**
       * Used to keep track of the current SqlNode parent of a visiting node.
@@ -61,48 +61,56 @@ public class SqlBasicVisitor implements SqlVisitor
          return currentOffset;
      }
      
-     public void visit(SqlLiteral literal)
+     public R visit(SqlLiteral literal)
      {
+         return null;
      }
 
-     public void visit(SqlCall call)
+     public R visit(SqlCall call)
      {
-         call.getOperator().acceptCall(this, call);
+         return call.getOperator().acceptCall(this, call);
      }
 
-     public void visit(SqlNodeList nodeList)
+     public R visit(SqlNodeList nodeList)
      {
+         R result = null;
          for (int i = 0; i < nodeList.size(); i++) {
              currentParent = nodeList;
              currentOffset = new Integer(i);
              SqlNode node = nodeList.get(i);
-             node.accept(this);
+             result = node.accept(this);
          }
          currentParent = null;
+         return result;
      }
 
-     public void visit(SqlIdentifier id)
+     public R visit(SqlIdentifier id)
      {
+         return null;
      }
 
-     public void visit(SqlDataTypeSpec type)
+     public R visit(SqlDataTypeSpec type)
      {
+         return null;
      }
 
-     public void visit(SqlDynamicParam param)
+     public R visit(SqlDynamicParam param)
      {
+         return null;
      }
 
-     public void visit(SqlIntervalQualifier intervalQualifier)
+     public R visit(SqlIntervalQualifier intervalQualifier)
      {
+         return null;
      }
 
-     public void visitChild(SqlNode parent, int ordinal, SqlNode child)
+     public R visitChild(SqlNode parent, int ordinal, SqlNode child)
      {
          currentParent = parent;
          currentOffset = new Integer(ordinal);
-         child.accept(this);
+         R result = child.accept(this);
          currentParent = null;
+         return result;
      }
 }
 

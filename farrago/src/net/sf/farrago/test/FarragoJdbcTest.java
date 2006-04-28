@@ -39,10 +39,8 @@ import java.sql.Date;
 
 import org.eigenbase.util14.NumberUtil;
 import org.eigenbase.util14.ConversionUtil;
-import org.eigenbase.util14.ConnectStringParser;
 import net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver;
 import net.sf.farrago.jdbc.engine.FarragoJdbcEngineConnection;
-import org.eigenbase.util14.ConnectStringParser;
 import net.sf.farrago.catalog.FarragoCatalogInit;
 
 // TODO jvs 17-Apr-2006:  break this monster up into a new package
@@ -2858,6 +2856,63 @@ public class FarragoJdbcTest extends FarragoTestCase
         assertTrue("FarragoJdbcEngineConnection",
             conn instanceof FarragoJdbcEngineConnection);
         assertEquals("empty props changed", 0, empty.size());
+        conn.close();
+
+        // test that parameter precedence works
+        Properties unauth = new Properties();
+        unauth.setProperty("user", "unauthorized user");
+        unauth.setProperty("password", "invalid password");
+        // connect will fail unless loginUri attributes take precedence
+        try {
+            conn = driver.connect(uri, unauth);
+            fail("Farrago connect with bad user credentials");
+        } catch (SQLException e) {
+            assertExceptionMatches(e, ".*Unknown user.*");
+        }
+        conn = driver.connect(loginUri, unauth);
+        assertNotNull("null connection", conn);
+        conn.close();
+    }
+
+    /** tests that session parameter values make it to sessions_view. */
+    public void testSessionParams() throws Exception
+    {
+        final String driverURI = "jdbc:farrago:";
+        final String sessionName = "FarragoJdbcTest.testSessionParams session";
+        final String sessQuery =
+            "SELECT * FROM sys_boot.mgmt.sessions_view "
+            +" WHERE session_name = '" +sessionName +"'";
+        FarragoJdbcEngineDriver driver = newJdbcEngineDriver();
+
+        Properties sessionProps = new Properties(newProperties());
+        sessionProps.setProperty("sessionName", sessionName);
+        sessionProps.setProperty("clientUserName", "fjfarrago");
+        sessionProps.setProperty("clientUserFullName", "Franklin J. Farrago");
+        sessionProps.setProperty("clientProgramName", "Sample Client App");
+        sessionProps.setProperty("clientProcessId", "12345");
+
+        Connection conn = driver.connect(driverURI, sessionProps);
+        assertNotNull("null connection", conn);
+        ResultSet rset = conn.createStatement().executeQuery(sessQuery);
+        boolean bool = rset.next();
+        assertTrue("no matching session for \"" +sessionName +"\"", bool);
+
+        String exp = sessionProps.getProperty("clientUserName");
+        String str = rset.getString("SYSTEM_USER_NAME");
+        assertEquals("client user name", exp, str);
+
+        exp = sessionProps.getProperty("clientUserFullName");
+        str = rset.getString("SYSTEM_USER_FULLNAME");
+        assertEquals("client user fullname", exp, str);
+
+        exp = sessionProps.getProperty("clientProgramName");
+        str = rset.getString("PROGRAM_NAME");
+        assertEquals("program name", exp, str);
+
+        exp = sessionProps.getProperty("clientProcessId");
+        str = rset.getString("PROCESS_ID");
+        assertEquals("process id", exp, str);
+
         conn.close();
     }
 
