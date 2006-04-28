@@ -1,0 +1,199 @@
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- This set of tests will test equijoins, HashAgg and VI splicing on
+0: jdbc:luciddb:> -- the table with data in parabolic distribution
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> --SET semicolon=OFF
+0: jdbc:luciddb:> --create tablespace DIST_TS datafile 'dist_ts.dat' size 192000K
+0: jdbc:luciddb:> create schema dist;
+0: jdbc:luciddb:> set schema 'dist';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function dist.eq1(int1 integer, int2 integer)
+. . . . . . . . > returns integer
+. . . . . . . . > language sql
+. . . . . . . . > contains sql
+. . . . . . . . > return (18-(int1-int2)*(int1-int2));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function dist.eq2(int1 integer, int2 integer)
+. . . . . . . . > returns integer
+. . . . . . . . > language sql
+. . . . . . . . > contains sql
+. . . . . . . . > return (int1-int2)*(int1-int2);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function dist.eq3(int1 integer, int2 integer)
+. . . . . . . . > returns integer
+. . . . . . . . > language sql
+. . . . . . . . > contains sql
+. . . . . . . . > return (18-(((int1-int2)/10)*((int1-int2)/10)));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function dist.eq4(int1 integer)
+. . . . . . . . > returns integer
+. . . . . . . . > language sql
+. . . . . . . . > contains sql
+. . . . . . . . > return (
+. . . . . . . . > case 
+. . . . . . . . >   when (((int1 - 250000)/10) > 46340) then 2147395600
+. . . . . . . . >   else (((int1 - 250000)/10)*((int1 - 250000)/10))
+. . . . . . . . > end);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 'ff_schema';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE foreign table BENCH100_SOURCE (
+. . . . . . . . > C1 INTEGER,
+. . . . . . . . > C2 INTEGER,
+. . . . . . . . > C4 INTEGER,
+. . . . . . . . > C5 INTEGER,
+. . . . . . . . > C10 INTEGER,
+. . . . . . . . > C25 INTEGER,
+. . . . . . . . > C100 INTEGER,
+. . . . . . . . > C1K INTEGER,
+. . . . . . . . > C10K INTEGER,
+. . . . . . . . > C40K  INTEGER,
+. . . . . . . . > C100K INTEGER, 
+. . . . . . . . > C250K INTEGER,
+. . . . . . . . > C500K INTEGER)
+. . . . . . . . > --USING LINK ODBC_SQLSERVER DEFINED BY 
+. . . . . . . . > --'select kseq,k2,K4,K5,K10,K25,K100,K1K,K10K,K40K,K100K,k250k,k500k from BENCHMARK.dbo.bench100'
+. . . . . . . . > server ff_server
+. . . . . . . . > options (
+. . . . . . . . > SCHEMA_NAME 'BCP',
+. . . . . . . . > filename 'bench100'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE TABLE DISTRIBUTION_100 (
+. . . . . . . . >   K100 INTEGER,
+. . . . . . . . >   K100SQUARE INTEGER,
+. . . . . . . . >   KSEQ INTEGER,
+. . . . . . . . >   KSEQSQUARE INTEGER );
+0: jdbc:luciddb:> --TABLESPACE DIST_TS
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE INDEX DIST_100_K100SQUARE ON DISTRIBUTION_100(K100SQUARE);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE INDEX DIST_100_KSEQSQUARE ON DISTRIBUTION_100(KSEQSQUARE);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> INSERT INTO DISTRIBUTION_100 (K100, K100SQUARE, KSEQ, KSEQSQUARE)
+. . . . . . . . >        SELECT C100, dist.eq1(C100, 50),
+. . . . . . . . >               C1, dist.eq2(C1, 50)
+. . . . . . . . >        FROM ff_schema.BENCH100_SOURCE;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE FOREIGN TABLE BENCH10K_SOURCE (
+. . . . . . . . > C1 INTEGER,
+. . . . . . . . > C2 INTEGER,
+. . . . . . . . > C4 INTEGER,
+. . . . . . . . > C5 INTEGER,
+. . . . . . . . > C10 INTEGER,
+. . . . . . . . > C25 INTEGER,
+. . . . . . . . > C100 INTEGER,
+. . . . . . . . > C1K INTEGER,
+. . . . . . . . > C10K INTEGER,
+. . . . . . . . > C40K  INTEGER,
+. . . . . . . . > C100K INTEGER, 
+. . . . . . . . > C250K INTEGER,
+. . . . . . . . > C500K INTEGER) 
+. . . . . . . . > --USING LINK ODBC_SQLSERVER DEFINED BY 
+. . . . . . . . > --'select kseq,k2,K4,K5,K10,K25,K100,K1K,K10K,K40K,K100K,k250k,k500k from BENCHMARK.dbo.bench10K'
+. . . . . . . . > server ff_server
+. . . . . . . . > options (
+. . . . . . . . > SCHEMA_NAME 'BCP',
+. . . . . . . . > filename 'bench10K'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE TABLE DISTRIBUTION_10K (
+. . . . . . . . >  K10K           INTEGER,
+. . . . . . . . >  K10KSQUARE     INTEGER,
+. . . . . . . . >  KSEQ           INTEGER,
+. . . . . . . . >  KSEQSQUARE     INTEGER );
+0: jdbc:luciddb:> --TABLESPACE DIST_TS
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE INDEX DIST_10K_K10KSQUARE ON DISTRIBUTION_10K(K10KSQUARE);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE INDEX DIST_10K_KSEQSQUARE ON DISTRIBUTION_10K(KSEQSQUARE);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> INSERT INTO DISTRIBUTION_10K (K10K, K10KSQUARE, KSEQ, KSEQSQUARE)
+. . . . . . . . >       SELECT C10K, dist.eq1(C10K, 5000),
+. . . . . . . . >              C1, dist.eq2(C1, 5000)
+. . . . . . . . >       FROM BENCH10K_SOURCE;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE FOREIGN TABLE BENCH100K_SOURCE (
+. . . . . . . . > C1 INTEGER,
+. . . . . . . . > C2 INTEGER,
+. . . . . . . . > C4 INTEGER,
+. . . . . . . . > C5 INTEGER,
+. . . . . . . . > C10 INTEGER,
+. . . . . . . . > C25 INTEGER,
+. . . . . . . . > C100 INTEGER,
+. . . . . . . . > C1K INTEGER,
+. . . . . . . . > C10K INTEGER,
+. . . . . . . . > C40K  INTEGER,
+. . . . . . . . > C100K INTEGER, 
+. . . . . . . . > C250K INTEGER,
+. . . . . . . . > C500K INTEGER) 
+. . . . . . . . > --USING LINK ODBC_SQLSERVER DEFINED BY 
+. . . . . . . . > --'select kseq,k2,K4,K5,K10,K25,K100,K1K,K10K,K40K,K100K,k250k,k500k from BENCHMARK.dbo.bench100K'
+. . . . . . . . > server ff_server
+. . . . . . . . > options (
+. . . . . . . . > SCHEMA_NAME 'BCP',
+. . . . . . . . > filename 'bench100K'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE TABLE DISTRIBUTION_100K (
+. . . . . . . . >  K100K          INTEGER,
+. . . . . . . . >  K100KSQUARE    INTEGER,
+. . . . . . . . >  KSEQ           INTEGER,
+. . . . . . . . >  KSEQSQUARE     INTEGER );
+0: jdbc:luciddb:> -- TABLESPACE DIST_TS
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE INDEX DIST_100K_K100KSQUARE ON DISTRIBUTION_100K(K100KSQUARE);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE INDEX DIST_100K_KSEQSQUARE ON DISTRIBUTION_100K(KSEQSQUARE);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> INSERT INTO DISTRIBUTION_100K (K100K, K100KSQUARE, KSEQ, KSEQSQUARE)
+. . . . . . . . >       SELECT C100K, dist.eq1(C100K, 50000),
+. . . . . . . . >              C1, dist.eq2(C1, 50000)
+. . . . . . . . >       FROM BENCH100K_SOURCE;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE FOREIGN TABLE BENCH1M_SOURCE (
+. . . . . . . . > C1 INTEGER,
+. . . . . . . . > C2 INTEGER,
+. . . . . . . . > C4 INTEGER,
+. . . . . . . . > C5 INTEGER,
+. . . . . . . . > C10 INTEGER,
+. . . . . . . . > C25 INTEGER,
+. . . . . . . . > C100 INTEGER,
+. . . . . . . . > C1K INTEGER,
+. . . . . . . . > C10K INTEGER,
+. . . . . . . . > C40K  INTEGER,
+. . . . . . . . > C100K INTEGER, 
+. . . . . . . . > C250K INTEGER,
+. . . . . . . . > C500K INTEGER) 
+. . . . . . . . > --USING LINK ODBC_SQLSERVER DEFINED BY 
+. . . . . . . . > --'select kseq,k2,K4,K5,K10,K25,K100,K1K,K10K,K40K,K100K,k250k,k500k from BENCHMARK.dbo.bench1M'
+. . . . . . . . > server ff_server
+. . . . . . . . > options (
+. . . . . . . . > SCHEMA_NAME 'BCP',
+. . . . . . . . > filename 'bench1M'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE TABLE DISTRIBUTION_1M (
+. . . . . . . . >  K500K          INTEGER,
+. . . . . . . . >  K500KSQUARE    INTEGER,
+. . . . . . . . >  KSEQ           INTEGER,
+. . . . . . . . >  KSEQSQUARE     INTEGER );
+0: jdbc:luciddb:> -- TABLESPACE DIST_TS
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE INDEX DIST_1M_K500KSQUARE ON DISTRIBUTION_1M(K500KSQUARE);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE INDEX DIST_1M_KSEQSQUARE ON DISTRIBUTION_1M(KSEQSQUARE);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> INSERT INTO DISTRIBUTION_1M (K500K, K500KSQUARE, KSEQ, KSEQSQUARE)
+. . . . . . . . >       SELECT C500K, dist.eq3(C500K, 250000),
+. . . . . . . . >              C1, dist.eq4(C1)
+. . . . . . . . >       FROM BENCH1M_SOURCE;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- drop eq functions here
+0: jdbc:luciddb:> drop routine dist.eq1;
+0: jdbc:luciddb:> drop routine dist.eq2;
+0: jdbc:luciddb:> drop routine dist.eq3;
+0: jdbc:luciddb:> drop routine dist.eq4;
+0: jdbc:luciddb:> !quit

@@ -1,0 +1,16 @@
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- equijoins with aggregation
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select min(b2.kseq), max(b2.kseq), sum(b2.kseq),
+. . . . . . . . >        min(b2.k500k), max(b2.k500k), count(b2.k500k)
+. . . . . . . . > from distribution_1m b1, distribution_1m b2
+. . . . . . . . > where b1.k500ksquare = b2.kseqsquare;
++---------+---------+------------+---------+---------+---------+
+| EXPR$0  | EXPR$1  |   EXPR$2   | EXPR$3  | EXPR$4  | EXPR$5  |
++---------+---------+------------+---------+---------+---------+
+| 249961  | 250039  | 195000000  | 14148   | 465667  | 780     |
++---------+---------+------------+---------+---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

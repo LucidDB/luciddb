@@ -91,7 +91,7 @@
           overwrite="false"
           failonerror="false"
           verbose="true">
-          <fileset dir="${csvsource.dir}" includes="bench100.csv"/>
+          <fileset dir="${csvsource.dir}"/>
         </sync>
       </then>
     </if>

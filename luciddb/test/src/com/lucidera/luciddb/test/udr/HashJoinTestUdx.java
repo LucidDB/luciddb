@@ -29,7 +29,7 @@ import java.sql.*;
  * @author Elizabeth Lin
  * @version $Id$
  */
-class HashJoinTestUdx
+public abstract class HashJoinTestUdx
 {
     /**
      * Ported from //bb/bb713/Test/hashjoin/testhash1.java

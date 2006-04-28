@@ -15,45 +15,41 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/distribution/creschema.sql"/>
       </test>
 
-      <test name="distins" requiresSuccess="creschema">
+      <test name="distins" requiresRun="creschema">
         <junit-sql file="${open.dir}/luciddb/test/sql/distribution/distins.sql"/>
       </test>
 
-      <test name="hashagg" requiresSuccess="distins">
-        <test-metadata>
-          <knownFailure value="true"/>
-        </test-metadata>
+      <test name="hashagg" requiresRun="distins">
         <junit-sql file="${open.dir}/luciddb/test/sql/distribution/hashagg.sql"/>
       </test>
 
-      <test name="join1empty" requiresSuccess="distins">
+      <test name="join1empty" requiresRun="distins">
         <junit-sql file="${open.dir}/luciddb/test/sql/distribution/join1empty.sql"/>
       </test>
 
-      <test name="join1match" requiresSuccess="distins">
+      <test name="join1match" requiresRun="distins">
+        <!-- Doesn't use hashjoins yet, larger tests commented out -->
         <junit-sql file="${open.dir}/luciddb/test/sql/distribution/join1match.sql"/>
       </test>
 
-      <test name="join2empty" requiresSuccess="distins">
+      <test name="join2empty" requiresRun="distins">
         <junit-sql file="${open.dir}/luciddb/test/sql/distribution/join2empty.sql"/>
       </test>
 
-      <test name="joinNoMatch" requiresSuccess="distins">
+      <test name="joinNoMatch" requiresRun="distins">
+        <!-- Doesn't use hashjoins yet, larger tests commented out -->
         <junit-sql file="${open.dir}/luciddb/test/sql/distribution/joinNoMatch.sql"/>
       </test>
 
-      <test name="joins" requiresSuccess="distins">
+      <test name="joins" requiresRun="distins">
         <junit-sql file="${open.dir}/luciddb/test/sql/distribution/joins.sql"/>
       </test>
 
-      <test name="joins2" requiresSuccess="distins">
-        <test-metadata>
-          <knownFailure value="true"/>
-        </test-metadata>
+      <test name="joins2" requiresRun="distins">
         <junit-sql file="${open.dir}/luciddb/test/sql/distribution/joins2.sql"/>
       </test>
 
-      <test name="largeselect" requiresSuccess="distins">
+      <test name="largeselect" requiresRun="distins">
         <junit-sql file="${open.dir}/luciddb/test/sql/distribution/largeselect.sql"/>
       </test>
 
