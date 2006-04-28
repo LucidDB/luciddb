@@ -29,6 +29,7 @@
 -Djava.util.logging.config.file=${project.trace.propfile}
 -Dnet.sf.farrago.defaultSessionFactoryLibraryName=class:com.lucidera.farrago.LucidDbSessionFactory
 -Dnet.sf.farrago.test.jdbcDriverClass=com.lucidera.jdbc.LucidDbLocalDriver
+${farrago.test.jvmargs}
 ">
 
 <!ENTITY FarragoSqlLineProps
@@ -292,7 +293,6 @@
     <antcall target="gen-bh-report"/>
   </target>
 
-  
   <target name="bhShortregSanity">
     <blackhawk.fork basedir="test/sql/shortreg" 
       testscript="test.xml"
