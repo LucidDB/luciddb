@@ -254,7 +254,12 @@ class FlatFileParams extends MedAbstractBase
         if (directory == null) {
             return "";
         }
-        if (directory.endsWith(File.separator)) {
+        // REVIEW jvs 27-Apr-2006:  I put in the explicit slash check
+        // to allow unit tests to specify a trailing slash; this
+        // works on Windows, which is forgiving about slash direction,
+        // but on other platforms we'll need to do something
+        // about the error messages in the unit tests.
+        if (directory.endsWith(File.separator) || directory.endsWith("/")) {
             return directory;
         }
         return directory + File.separator;

@@ -431,7 +431,18 @@ public class DiffRepository
                 "'");
         } else {
             try {
-                Assert.assertEquals(expected2, actual);
+                // TODO jvs 25-Apr-2006:  reuse bulk of
+                // DiffTestCase.diffTestLog here; besides newline
+                // insensitivity, it can report on the line
+                // at which the first diff occurs, which is useful
+                // for largish snippets
+                String expected2Canonical =
+                    expected2.replace(Util.lineSeparator, "\n");
+                String actualCanonical =
+                    actual.replace(Util.lineSeparator, "\n");
+                Assert.assertEquals(
+                    expected2Canonical,
+                    actualCanonical);
             } catch (ComparisonFailure e) {
                 amend(expected, actual);
                 throw e;

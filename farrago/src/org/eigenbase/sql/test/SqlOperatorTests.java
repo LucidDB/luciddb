@@ -142,6 +142,8 @@ public abstract class SqlOperatorTests extends TestCase
             "DECIMAL(5, 2)", "REAL", "FLOAT", "DOUBLE"
         };
 
+    // REVIEW jvs 27-Apr-2006:  for Float and Double, MIN_VALUE
+    // is the smallest positive value, not the smallest negative value
     public static final String[] minNumericStrings =
         new String[] {
             Long.toString(Byte.MIN_VALUE),   
@@ -149,9 +151,11 @@ public abstract class SqlOperatorTests extends TestCase
             Long.toString(Integer.MIN_VALUE),
             Long.toString(Long.MIN_VALUE),
             "-999.99",
-            Float.toString(Float.MIN_VALUE),
-            Double.toString(Double.MIN_VALUE),
-            Double.toString(Double.MIN_VALUE),
+            // NOTE jvs 26-Apr-2006:  Win32 takes smaller
+            // values from win32_values.h
+            "1E-37", /*Float.toString(Float.MIN_VALUE)*/
+            "2E-307", /*Double.toString(Double.MIN_VALUE)*/
+            "2E-307" /*Double.toString(Double.MIN_VALUE)*/,
         };
 
     public static final String[] minOverflowNumericStrings =
@@ -173,9 +177,12 @@ public abstract class SqlOperatorTests extends TestCase
             Long.toString(Integer.MAX_VALUE),
             Long.toString(Long.MAX_VALUE),
             "999.99",
+            // NOTE jvs 26-Apr-2006:  use something slightly
+            // less than MAX_VALUE because roundtripping string
+            // to approx to string doesn't preserve MAX_VALUE on win32
             "3.4028234E38", /*Float.toString(Float.MAX_VALUE)*/
-            Double.toString(Double.MAX_VALUE),
-            Double.toString(Double.MAX_VALUE),
+            "1.79769313486231E308", /*Double.toString(Double.MAX_VALUE)*/
+            "1.79769313486231E308" /*Double.toString(Double.MAX_VALUE)*/
         };
 
     public static final String[] maxOverflowNumericStrings =
@@ -406,7 +413,7 @@ public abstract class SqlOperatorTests extends TestCase
 
             // Treated as DOUBLE
             checkCastToString(maxNumericStrings[i], null,
-                isFloat? null: "1.797693134862316E308");
+                isFloat? null: "1.79769313486231E308");
 
             /*
             // TODO: The following tests are slightly different depending on
