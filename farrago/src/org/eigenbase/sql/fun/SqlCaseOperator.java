@@ -150,6 +150,14 @@ public class SqlCaseOperator extends SqlOperator
         }
     }
 
+    public RelDataType deriveType(
+        SqlValidator validator, SqlValidatorScope scope, SqlCall call)
+    {
+        // Do not try to derive the types of the operands. We will do that
+        // later, top down.
+        return validateOperands(validator, scope, call);
+    }
+
     public boolean checkOperandTypes(
         SqlCallBinding callBinding,
         boolean throwOnFailure)
@@ -316,10 +324,11 @@ public class SqlCaseOperator extends SqlOperator
         int leftPrec,
         int rightPrec)
     {
-        final SqlWriter.Frame frame = writer.startList(CaseFrameType, "CASE", "END");
+        final SqlWriter.Frame frame =
+            writer.startList(CaseFrameType, "CASE", "END");
         SqlNodeList whenList = (SqlNodeList) operands[SqlCase.WHEN_OPERANDS];
         SqlNodeList thenList = (SqlNodeList) operands[SqlCase.THEN_OPERANDS];
-        assert (whenList.size() == thenList.size());
+        assert whenList.size() == thenList.size();
         for (int i = 0; i < whenList.size(); i++) {
             writer.sep("WHEN");
             SqlNode e = whenList.get(i);

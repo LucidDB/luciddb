@@ -25,6 +25,13 @@ package org.eigenbase.sql;
 
 import org.eigenbase.util.Util;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.SqlValidatorImpl;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.resource.EigenbaseResource;
+
+import java.nio.charset.Charset;
 
 /**
  * <code>SqlBinaryOperator</code> is a binary operator.
@@ -65,6 +72,98 @@ public class SqlBinaryOperator extends SqlOperator
     boolean needsSpace()
     {
         return !getName().equals(".");
+    }
+
+    protected RelDataType adjustType(
+        SqlValidator validator,
+        final SqlCall call,
+        RelDataType type)
+    {
+        RelDataType operandType1 =
+            validator.getValidatedNodeType(call.operands[0]);
+        RelDataType operandType2 =
+            validator.getValidatedNodeType(call.operands[1]);
+        if (SqlTypeUtil.inCharFamily(operandType1)
+            && SqlTypeUtil.inCharFamily(operandType2))
+        {
+            Charset cs1 = operandType1.getCharset();
+            Charset cs2 = operandType2.getCharset();
+            assert ((null != cs1) && (null != cs2)) :
+                "An implicit or explicit charset should have been set";
+            if (!cs1.equals(cs2)) {
+                throw EigenbaseResource.instance()
+                    .IncompatibleCharset.ex(
+                        getName(),
+                        cs1.name(),
+                        cs2.name());
+            }
+
+            SqlCollation col1 = operandType1.getCollation();
+            SqlCollation col2 = operandType2.getCollation();
+            assert ((null != col1) && (null != col2)) :
+                "An implicit or explicit collation should have been set";
+
+            //validation will occur inside getCoercibilityDyadicOperator...
+            SqlCollation resultCol =
+                SqlCollation.getCoercibilityDyadicOperator(col1,
+                    col2);
+
+            if (SqlTypeUtil.inCharFamily(type)) {
+                type = validator.getTypeFactory().
+                    createTypeWithCharsetAndCollation(
+                        type,
+                        type.getCharset(),
+                        resultCol);
+            }
+        }
+        return type;
+    }
+
+    public RelDataType deriveType(
+        SqlValidator validator,
+        SqlValidatorScope scope, SqlCall call)
+    {
+        RelDataType type = super.deriveType(validator, scope, call);
+
+        RelDataType operandType1 =
+            validator.getValidatedNodeType(call.operands[0]);
+        RelDataType operandType2 =
+            validator.getValidatedNodeType(call.operands[1]);
+        if (SqlTypeUtil.inCharFamily(operandType1)
+            && SqlTypeUtil.inCharFamily(operandType2))
+        {
+            Charset cs1 = operandType1.getCharset();
+            Charset cs2 = operandType2.getCharset();
+            assert ((null != cs1) && (null != cs2)) :
+                "An implicit or explicit charset should have been set";
+            if (!cs1.equals(cs2)) {
+                throw EigenbaseResource.instance()
+                    .IncompatibleCharset.ex(
+                        getName(),
+                        cs1.name(),
+                        cs2.name());
+            }
+
+            SqlCollation col1 = operandType1.getCollation();
+            SqlCollation col2 = operandType2.getCollation();
+            assert ((null != col1) && (null != col2)) :
+                "An implicit or explicit collation should have been set";
+
+            //validation will occur inside getCoercibilityDyadicOperator...
+            SqlCollation resultCol =
+                SqlCollation.getCoercibilityDyadicOperator(col1,
+                    col2);
+
+            if (SqlTypeUtil.inCharFamily(type)) {
+                type =
+                    validator.getTypeFactory().createTypeWithCharsetAndCollation(
+                        type,
+                        type.getCharset(),
+                        resultCol);
+            }
+        }
+        return type;    //To change body of overridden methods use File | Settings | File Templates.
+
     }
 }
 

@@ -26,14 +26,12 @@ import org.eigenbase.sql.SqlNodeList;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.util.Util;
 
-// REVIEW jvs 12-May-2005:  I suggest you follow Intellij's recommendation
-// and edit your template to match all of the other classes in this package.
 /**
- * Created by IntelliJ IDEA.
- * User: jhyde
- * Date: Mar 3, 2005
- * Time: 1:22:43 PM
- * To change this template use File | Settings | File Templates.
+ * Abstract implementation of {@link SqlValidatorNamespace}.
+ *
+ * @author jhyde
+ * @version $Id$
+ * @since Mar 3, 2005
  */
 abstract class AbstractNamespace implements SqlValidatorNamespace
 {
@@ -131,8 +129,8 @@ abstract class AbstractNamespace implements SqlValidatorNamespace
         SqlValidatorScope[] ancestorOut,
         int[] offsetOut)
     {
-        return validator.lookupFieldNamespace(getRowType(), name, ancestorOut,
-            offsetOut);
+        return validator.lookupFieldNamespace(
+            getRowType(), name, ancestorOut, offsetOut);
     }
 
     public boolean fieldExists(String name)
@@ -168,3 +166,5 @@ abstract class AbstractNamespace implements SqlValidatorNamespace
         forceNullable = true;
     }
 }
+
+// End AbstractNamespace.java

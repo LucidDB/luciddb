@@ -122,6 +122,103 @@ public abstract class CalcRelSplitter
         // relTypes[levelTypeOrdinals[level]].
         int[] levelTypeOrdinals = new int[exprs.length];
 
+        int levelCount = chooseLevels(exprs, -1, exprLevels, levelTypeOrdinals);
+
+        // For each expression, figure out which is the highest level where it
+        // is used.
+        int[] exprMaxUsingLevelOrdinals =
+            new HighestUsageFinder(exprs, exprLevels).
+            getMaxUsingLevelOrdinals();
+
+        // If expressions are used as outputs, mark them as higher than that.
+        final List<RexLocalRef> projectRefList = program.getProjectList();
+        final RexLocalRef conditionRef = program.getCondition();
+        for (RexLocalRef projectRef : projectRefList) {
+            exprMaxUsingLevelOrdinals[projectRef.getIndex()] = levelCount;
+        }
+        if (conditionRef != null) {
+            exprMaxUsingLevelOrdinals[conditionRef.getIndex()] = levelCount;
+        }
+
+        // Print out what we've got.
+        if (ruleTracer.isLoggable(Level.FINER)) {
+            traceLevelExpressions(
+                exprs, exprLevels, levelTypeOrdinals, levelCount);
+        }
+
+        // Now build the calcs.
+        RelNode rel = child;
+        final int inputFieldCount = program.getInputRowType().getFieldCount();
+        int[] inputExprOrdinals = identityArray(inputFieldCount);
+        boolean doneCondition  = false;
+        for (int level = 0; level < levelCount; level++) {
+            final int[] projectExprOrdinals;
+            final RelDataType outputRowType;
+            if (level == levelCount - 1) {
+                outputRowType = program.getOutputRowType();
+                projectExprOrdinals = new int[projectRefList.size()];
+                for (int i = 0; i < projectExprOrdinals.length; i++) {
+                    projectExprOrdinals[i] = projectRefList.get(i).getIndex();
+                }
+            } else {
+                outputRowType = null;
+                // Project the expressions which are computed at this level or
+                // before, and will be used at later levels.
+                IntList projectExprOrdinalList = new IntList();
+                for (int i = 0; i < exprs.length; i++) {
+                    if (exprLevels[i] <= level &&
+                        exprMaxUsingLevelOrdinals[i] > level) {
+                        projectExprOrdinalList.add(i);
+                    }
+                }
+                projectExprOrdinals = projectExprOrdinalList.toIntArray();
+            }
+
+            final RelType relType = relTypes[levelTypeOrdinals[level]];
+
+            // Can we do the condition this level?
+            int conditionExprOrdinal = - 1;
+            if (conditionRef != null && !doneCondition) {
+                conditionExprOrdinal = conditionRef.getIndex();
+                if (exprLevels[conditionExprOrdinal] > level ||
+                    !relType.supportsCondition()) {
+                    // stand down -- we're not ready to do the condition yet
+                    conditionExprOrdinal = - 1;
+                } else {
+                    doneCondition = true;
+                }
+            }
+
+            RexProgram program1 = createProgramForLevel(
+                level, rel.getRowType(), exprs, exprLevels, inputExprOrdinals,
+                projectExprOrdinals, conditionExprOrdinal, outputRowType);
+            rel = relType.makeRel(
+                cluster, traits, program1.getOutputRowType(), rel, program1);
+            // The outputs of this level will be the inputs to the next level.
+            inputExprOrdinals = projectExprOrdinals;
+        }
+
+        Util.permAssert(
+            doneCondition || conditionRef == null, "unhandled condition");
+        return rel;
+    }
+
+    /**
+     * Figures out which expressions to calculate at which level.
+     *
+     * @param exprs Array of expressions
+     * @param conditionOrdinal Ordinal of the condition expression, or -1
+     *   if no condition
+     * @param exprLevels Level ordinal for each expression (output)
+     * @param levelTypeOrdinals The type of each level (output)
+     * @return
+     */
+    private int chooseLevels(
+        final RexNode[] exprs,
+        int conditionOrdinal,
+        int[] exprLevels,
+        int[] levelTypeOrdinals)
+    {
         final int inputFieldCount = program.getInputRowType().getFieldCount();
 
         int levelCount = 0;
@@ -130,6 +227,7 @@ public abstract class CalcRelSplitter
         Arrays.fill(relTypesPossibleForTopLevel, true);
         for (int i = 0; i < exprs.length; i++) {
             RexNode expr = exprs[i];
+            final boolean condition = i == conditionOrdinal;
 
             if (i < inputFieldCount) {
                 assert expr instanceof RexInputRef;
@@ -152,7 +250,9 @@ public abstract class CalcRelSplitter
                         if (!relTypesPossibleForTopLevel[relTypeOrdinal]) {
                             continue;
                         }
-                        if (testers[relTypeOrdinal].canImplement(expr)) {
+                        if (testers[relTypeOrdinal].canImplement(
+                            expr, condition))
+                        {
                             // Success. We have found a reltype where we can
                             // implement this expression.
                             exprLevels[i] = level;
@@ -173,7 +273,8 @@ public abstract class CalcRelSplitter
                                  j < relTypes.length; ++j) {
                                 if (relTypesPossibleForTopLevel[j]) {
                                     relTypesPossibleForTopLevel[j] =
-                                        testers[j].canImplement(expr);
+                                        testers[j].canImplement(
+                                            expr, condition);
                                 }
                             }
                             // Move to next level.
@@ -200,83 +301,18 @@ public abstract class CalcRelSplitter
                     }
                 } else {
                     final int levelTypeOrdinal = levelTypeOrdinals[level];
-                    if (testers[levelTypeOrdinal].canImplement(expr)) {
-                        // Success. This expression can be implemented in this
-                        // level's reltype.
-                        exprLevels[i] = level;
-                        break;
+                    final ImplementTester tester = testers[levelTypeOrdinal];
+                    if (!tester.canImplement(expr, condition)) {
+                        // Cannot implement this expression in this reltype;
+                        // continue to next level.
+                        continue;
                     }
-                    // Cannot implement this expression in this reltype;
-                    // continue to next level.
+                    exprLevels[i] = level;
+                    break;
                 }
             }
         }
-
-        // For each expression, figure out which is the highest level where it
-        // is used.
-        int[] exprMaxUsingLevelOrdinals =
-            new HighestUsageFinder(exprs, exprLevels).
-            getMaxUsingLevelOrdinals();
-
-        // If expressions are used as outputs, mark them as higher than that.
-        final List<RexLocalRef> projectRefList = program.getProjectList();
-        final RexLocalRef conditionRef = program.getCondition();
-        for (RexLocalRef projectRef : projectRefList) {
-            exprMaxUsingLevelOrdinals[projectRef.getIndex()] = levelCount;
-        }
-        if (conditionRef != null) {
-            exprMaxUsingLevelOrdinals[conditionRef.getIndex()] = levelCount;
-        }
-
-        // Print out what we've got.
-        if (ruleTracer.isLoggable(Level.FINER)) {
-            traceLevelExpressions(
-                exprs, exprLevels, levelTypeOrdinals, levelCount);
-        }
-
-        // Now build the calcs.
-        RelNode rel = child;
-        int[] inputExprOrdinals = identityArray(inputFieldCount);
-        for (int level = 0; level < levelCount; level++) {
-            final int[] projectExprOrdinals;
-            final int conditionExprOrdinal;
-            final RelDataType outputRowType;
-            if (level == levelCount - 1) {
-                outputRowType = program.getOutputRowType();
-                if (conditionRef != null) {
-                    conditionExprOrdinal = conditionRef.getIndex();
-                } else {
-                    conditionExprOrdinal = -1;
-                }
-                projectExprOrdinals = new int[projectRefList.size()];
-                for (int i = 0; i < projectExprOrdinals.length; i++) {
-                    projectExprOrdinals[i] = projectRefList.get(i).getIndex();
-                }
-            } else {
-                outputRowType = null;
-                conditionExprOrdinal = -1;
-                // Project the expressions which are computed at this level or
-                // before, and will be used at later levels.
-                IntList projectExprOrdinalList = new IntList();
-                for (int i = 0; i < exprs.length; i++) {
-                    if (exprLevels[i] <= level &&
-                        exprMaxUsingLevelOrdinals[i] > level) {
-                        projectExprOrdinalList.add(i);
-                    }
-                }
-                projectExprOrdinals = projectExprOrdinalList.toIntArray();
-            }
-
-            RexProgram program1 = createProgramForLevel(
-                level, rel.getRowType(), exprs, exprLevels, inputExprOrdinals,
-                projectExprOrdinals, conditionExprOrdinal, outputRowType);
-            final RelType relType = relTypes[levelTypeOrdinals[level]];
-            rel = relType.makeRel(
-                cluster, traits, program1.getOutputRowType(), rel, program1);
-            // The outputs of this level will be the inputs to the next level.
-            inputExprOrdinals = projectExprOrdinals;
-        }
-        return rel;
+        return levelCount;
     }
 
     private int[] identityArray(int length)
@@ -522,6 +558,11 @@ public abstract class CalcRelSplitter
 
         protected abstract boolean canImplement(RexCall call);
 
+        protected boolean supportsCondition()
+        {
+            return true;
+        }
+
         protected RelNode makeRel(
             RelOptCluster cluster,
             RelTraitSet traits,
@@ -582,8 +623,11 @@ public abstract class CalcRelSplitter
             }
         }
 
-        public boolean canImplement(RexNode expr)
+        public boolean canImplement(RexNode expr, boolean condition)
         {
+            if (condition && !relType.supportsCondition()) {
+                return false;
+            }
             try {
                 expr.accept(this);
                 return true;

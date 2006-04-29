@@ -61,7 +61,56 @@ import java.math.BigDecimal;
  */
 public class FennelWindowRel extends FennelSingleRel
 {
+    /**
+     * Program which is applied on an incoming row event.
+     *
+     * <p>It provides the necessary expressions for the windows to work on.
+     * The program always outputs the input fields first, then any necessary
+     * expressions.
+     *
+     * <p>For example, for the query
+     *
+     * <blockquote><code>select ticker,<br/>
+     * sum(amount * price) over last3<br/>
+     * from Bids<br/>
+     * window last3 as (order by orderid rows 3 preceding),<br/>
+     *   lastHour (order by orderdate range interval '1' hour preceding),<br/>
+     * </code></blockquote>
+     *
+     * the program will output the expressions
+     *
+     * <blockquote><code>{orderid, ticker, amount, price,
+     * amount * price}</code></blockquote>
+     */
     private final RexProgram inputProgram;
+
+    /**
+     * Program which is applied on an 'row output' event.
+     *
+     * <p>Its input is the columns of the current input row,
+     * and all accumulators of all windows of all partitions.
+     * Its output is the output row.
+     *
+     * <p>For example, consider the query
+     *
+     * <blockquote><code>select ticker,<br/>
+     * sum(amount * price) over last3,<br/>
+     * 2 * sum(amount  + 1) over lastHour,<br/>
+     * from Bids<br/>
+     * window last3 as (order by orderid rows 3 preceding),<br/>
+     *   lastHour (order by orderdate range interval '1' hour preceding),<br/>
+     * </code></blockquote>
+     *
+     * The program has inputs
+     *
+     * <blockquote><code>{orderid, ticker, amount, price,
+     * sum(amount * price) over last3,
+     * sum(amount + 1) over lastHour}</code></blockquote>
+     *
+     * and outputs
+     *
+     * <blockquote><code>{$1, $4, 2 * $5}</code></blockquote>
+     */
     private final RexProgram outputProgram;
     private final Window[] windows;
 
@@ -95,6 +144,7 @@ public class FennelWindowRel extends FennelSingleRel
         assert rowType != null : "precondition: rowType != null";
         assert outputProgram != null : "precondition: outputExprs != null";
         assert inputProgram != null : "precondition: inputProgram != null";
+        assert inputProgram.projectsIdentity(true);
         assert inputProgram.getCondition() == null :
             "precondition: inputProgram.getCondition() == null";
         assert windows != null : "precondition: windows != null";

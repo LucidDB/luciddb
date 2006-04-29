@@ -21,11 +21,8 @@
 */
 package org.eigenbase.sql.type;
 
-import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.util.*;
 
 import java.util.*;
 
@@ -54,10 +51,7 @@ public class ComparableOperandTypeChecker
     {
         boolean b = true;
         for (int i = 0; i < nOperands; ++i) {
-            RelDataType type =
-                callBinding.getValidator().deriveType(
-                    callBinding.getScope(),
-                    callBinding.getCall().operands[i]);
+            RelDataType type = callBinding.getOperandType(i);
             if (!checkType(callBinding, throwOnFailure, type)) {
                 b = false;
             }
@@ -88,6 +82,37 @@ public class ComparableOperandTypeChecker
             return true;
         }
     }
+
+    /**
+     * Similar functionality to
+     * {@link #checkOperandTypes(SqlCallBinding, boolean)},
+     * but not part of the interface, and cannot throw an error.
+     */
+    public boolean checkOperandTypes(
+        SqlOperatorBinding callBinding)
+    {
+        boolean b = true;
+        for (int i = 0; i < nOperands; ++i) {
+            RelDataType type = callBinding.getOperandType(i);
+            boolean result;
+            if (type.getComparability().getOrdinal() <
+                requiredComparability.getOrdinal())
+            {
+                result = false;
+            } else {
+                result = true;
+            }
+            if (!result) {
+                b = false;
+            }
+        }
+        if (b) {
+            b = super.checkOperandTypes(callBinding);
+        }
+        return b;
+
+    }
+
 
     // implement SqlOperandTypeChecker
     public String getAllowedSignatures(SqlOperator op, String opName)

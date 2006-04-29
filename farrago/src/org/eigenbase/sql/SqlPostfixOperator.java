@@ -25,6 +25,9 @@ package org.eigenbase.sql;
 
 import org.eigenbase.util.Util;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.SqlValidatorImpl;
+import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.reltype.RelDataType;
 
 
 /**
@@ -57,6 +60,33 @@ public class SqlPostfixOperator extends SqlOperator
     {
         Util.discard(operandsCount);
         return "{1} {0}";
+    }
+
+    protected RelDataType adjustType(SqlValidator validator, SqlCall call, RelDataType type)
+    {
+        if (SqlTypeUtil.inCharFamily(type)) {
+            // Determine coercibility and resulting collation name of
+            // unary operator if needed.
+            RelDataType operandType =
+                validator.getValidatedNodeType(call.operands[0]);
+            if (null == operandType) {
+                throw Util.newInternal(
+                    "operand's type should have been derived");
+            }
+            if (SqlTypeUtil.inCharFamily(operandType)) {
+                SqlCollation collation = operandType.getCollation();
+                assert null != collation :
+                    "An implicit or explicit collation should have been set";
+                type = validator.getTypeFactory().
+                    createTypeWithCharsetAndCollation(
+                        type,
+                        type.getCharset(),
+                        new SqlCollation(
+                            collation.getCollationName(),
+                            collation.getCoercibility()));
+            }
+        }
+        return type;
     }
 }
 

@@ -1299,71 +1299,85 @@ public class SqlToRelConverter
         // terms of planning since it generates XOs that can be reduced.
         List joinList = new ArrayList();
         List lastList = new ArrayList();
-        for (int iRowOperand = 0; iRowOperand < operands.length; iRowOperand++){
-            SqlNode operand = operands[iRowOperand];
-            if (operand.isA(SqlKind.MultisetValueConstructor) ||
-                operand.isA(SqlKind.MultisetQueryConstructor)) {
-                final SqlCall call = (SqlCall) operand;
-                final RelNode input;
-                if (call.getKind().equals(SqlKind.MultisetValueConstructor)) {
-                    final SqlNodeList list = (SqlNodeList)
-                        SqlUtil.toNodeList(call.operands).clone();
-                    assert bb.scope instanceof SelectScope : bb.scope;
-                    CollectNamespace nss =
-                        (CollectNamespace) validator.getNamespace(call);
-                    Blackboard usedBb;
-                    if (null != nss) {
-                        usedBb = createBlackboard(nss.getScope());
-                    } else {
-                        usedBb = bb;
-                    }
-                    input = convertQueryOrInList(usedBb,list);
-                } else {
-                    input = convertQuery(call.operands[0], false, true);
-                }
-
-                if (lastList.size() > 0) {
-                    joinList.add(lastList);
-                }
-                lastList = new ArrayList();
-                CollectRel collectRel =
-                    new CollectRel(
-                        cluster,
-                        input,
-                        validator.deriveAlias(call,iRowOperand));
-                joinList.add(collectRel);
-            } else {
+        for (int i = 0; i < operands.length; i++) {
+            SqlNode operand = operands[i];
+            if (!(operand instanceof SqlCall)) {
                 lastList.add(operand);
+                continue;
             }
+
+            final SqlCall call = (SqlCall) operand;
+            final SqlOperator op = call.getOperator();
+            if (op != SqlStdOperatorTable.multisetValueConstructor &&
+                op != SqlStdOperatorTable.multisetQueryConstructor) {
+                lastList.add(operand);
+                continue;
+            }
+            final RelNode input;
+            if (op == SqlStdOperatorTable.multisetValueConstructor) {
+                final SqlNodeList list = (SqlNodeList)
+                    SqlUtil.toNodeList(call.operands).clone();
+                assert bb.scope instanceof SelectScope : bb.scope;
+                CollectNamespace nss =
+                    (CollectNamespace) validator.getNamespace(call);
+                Blackboard usedBb;
+                if (null != nss) {
+                    usedBb = createBlackboard(nss.getScope());
+                } else {
+                    usedBb = createBlackboard(
+                        new ListScope(bb.scope) {
+                            public SqlNode getNode()
+                            {
+                                return call;
+                            }
+                        }
+                    );
+                }
+                input = convertQueryOrInList(usedBb, list);
+            } else {
+                input = convertQuery(call.operands[0], false, true);
+            }
+
+            if (lastList.size() > 0) {
+                joinList.add(lastList);
+            }
+            lastList = new ArrayList();
+            CollectRel collectRel =
+                new CollectRel(
+                    cluster,
+                    input,
+                    validator.deriveAlias(call,i));
+            joinList.add(collectRel);
         }
 
         if (joinList.size() == 0) {
             joinList.add(lastList);
         }
 
-        for (int iRel = 0; iRel < joinList.size(); iRel++) {
-            Object o = joinList.get(iRel);
+        for (int i = 0; i < joinList.size(); i++) {
+            Object o = joinList.get(i);
             if (o instanceof List) {
                 List projectList = (List) o;
-                final RexNode [] selectList = new RexNode[projectList.size()];
-                final String [] fieldNames = new String[projectList.size()];
-                for (int jOperand = 0; jOperand < projectList.size(); jOperand++) {
-                    SqlNode operand = (SqlNode) projectList.get(jOperand);
-                    selectList[jOperand] = bb.convertExpression(operand);
+                final List<RexNode> selectList = new ArrayList<RexNode>();
+                final List<String> fieldNameList = new ArrayList<String>();
+                for (int j = 0; j < projectList.size(); j++) {
+                    SqlNode operand = (SqlNode) projectList.get(j);
+                    selectList.add(bb.convertExpression(operand));
 
-                    // REVIEW angel 5-June-2005: Use deriveAliasFromOrdinal instead
-                    // of deriveAlias to match field names from SqlRowOperator.
-                    // Otherwise,  get error
-                    // Type 'RecordType(INTEGER EMPNO)' has no field 'EXPR$0'
+                    // REVIEW angel 5-June-2005: Use deriveAliasFromOrdinal
+                    // instead of deriveAlias to match field names from
+                    // SqlRowOperator. Otherwise, get error
+                    //   Type 'RecordType(INTEGER EMPNO)' has no field 'EXPR$0'
                     // when doing
-                    // select*from unnest(select multiset[empno] from sales.emps);
+                    //   select * from unnest(
+                    //     select multiset[empno] from sales.emps);
 
-                    fieldNames[jOperand] = SqlUtil.deriveAliasFromOrdinal(jOperand);
+                    fieldNameList.add(SqlUtil.deriveAliasFromOrdinal(j));
                 }
                 joinList.set(
-                    iRel,
+                    i,
                     CalcRel.createProject(
-                        new OneRowRel(cluster), selectList, fieldNames));
+                        new OneRowRel(cluster), selectList, fieldNameList));
             }
         }
 

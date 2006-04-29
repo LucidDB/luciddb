@@ -64,6 +64,13 @@ public class ExplicitOperatorBinding extends SqlOperatorBinding
     {
         return types[ordinal];
     }
+
+    public boolean isOperandNull(int ordinal)
+    {
+        // Is the operand DEFINITELY null? We don't know the value of the
+        // operand, so the answer is false.
+        return false;
+    }
 }
 
 // End ExplicitOperatorBinding.java

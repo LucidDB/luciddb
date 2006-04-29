@@ -25,8 +25,10 @@ package org.eigenbase.sql;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.SqlValidatorImpl;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.util.SqlVisitor;
+import org.eigenbase.reltype.RelDataType;
 
 /**
  * An operator describing a window function specification.
@@ -69,7 +71,15 @@ public class SqlOverOperator extends SqlBinaryOperator
         validator.validateWindow(operands[1], scope, aggCall);
     }
 
-    /* 
+    public RelDataType deriveType(
+        SqlValidator validator, SqlValidatorScope scope, SqlCall call)
+    {
+        // Do not try to derive the types of the operands. We will do that
+        // later, top down.
+        return validateOperands(validator, scope, call);
+    }
+
+    /*
      * Accepts a {@link SqlVisitor}, and tells it to visit each child.
      *
      * @param visitor Visitor.

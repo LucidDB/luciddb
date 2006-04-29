@@ -36,7 +36,7 @@ import org.eigenbase.sql.util.ReflectiveSqlOperatorTable;
  * @author jhyde
  * @since May 28, 2004
  * @version $Id$
- **/
+ */
 public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
 {
     //~ Instance fields -------------------------------------------
@@ -210,10 +210,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * <code>IN</code> operator tests for a value's membership in a subquery
      * or a list of values.
      */
-    public static final SqlBinaryOperator inOperator =
-        new SqlBinaryOperator("IN", SqlKind.In, 15, true,
-            SqlTypeStrategies.rtiNullableBoolean,
-            SqlTypeStrategies.otiFirstKnown, null);
+    public static final SqlBinaryOperator inOperator = new SqlInOperator();
 
     /**
      * Logical less-than operator, '<code>&lt;</code>'.
@@ -518,16 +515,16 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * The MULTISET Value Constructor.
      * e.g. "<code>MULTISET[1,2,3]</code>".
      */
-    public static final SqlMultisetOperator multisetValueConstructor =
-        new SqlMultisetOperator(SqlKind.MultisetValueConstructor);
+    public static final SqlMultisetValueConstructor multisetValueConstructor =
+        new SqlMultisetValueConstructor();
 
     /**
      * The MULTISET Query Constructor.
      * e.g. "<code>SELECT dname, MULTISET(SELECT * FROM
      * emp WHERE deptno = dept.deptno) FROM dept</code>".
      */
-    public static final SqlMultisetOperator multisetQueryConstructor =
-        new SqlMultisetOperator(SqlKind.MultisetQueryConstructor);
+    public static final SqlMultisetQueryConstructor multisetQueryConstructor =
+        new SqlMultisetQueryConstructor();
 
     /**
      * The <code>UNNEST<code> operator.
@@ -966,6 +963,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
             SqlTypeStrategies.rtiFirstArgType, null,
             SqlTypeStrategies.otcMultiset,
             SqlFunctionCategory.System);
+
 }
 
 // End SqlStdOperatorTable.java
