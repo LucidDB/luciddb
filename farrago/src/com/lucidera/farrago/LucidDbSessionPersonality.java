@@ -288,7 +288,7 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         builder.addGroupEnd();
 
         // Replace the DECIMAL datatype with primitive ints.
-        builder.addRuleInstance(new ReduceDecimalsRule(CalcRel.class));
+        builder.addRuleInstance(new ReduceDecimalsRule());
 
         // The rest of these are all physical implementation rules
         // which are safe to apply simultaneously.

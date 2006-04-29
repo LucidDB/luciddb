@@ -338,6 +338,7 @@ public class RexUtil
      * 
      * <p>Exceptions to this rule are:
      * <ul>
+     *   <li>isNull doesn't require expansion
      *   <li>It's okay to cast decimals to and from char types
      *   <li>It's okay to cast nulls as decimals
      *   <li>Casts require expansion if their return type is decimal
@@ -356,28 +357,34 @@ public class RexUtil
             return false;
         }
         RexCall call = (RexCall) expr;
-        boolean required = call.getOperator().requiresDecimalExpansion();
-        if (call.isA(RexKind.Reinterpret)) {
-            required = false;
-        } else if (call.isA(RexKind.Cast)) {
+        
+        boolean localCheck = true;
+        switch (call.getKind().getOrdinal()) {
+        case RexKind.ReinterpretOrdinal:
+        case RexKind.IsNullORDINAL:
+            localCheck = false;
+            break;
+        case RexKind.CastOrdinal:
             RelDataType lhsType = call.getType();
             RelDataType rhsType = call.operands[0].getType();
-            // TODO: clean up isNull and use it instead
             if (rhsType.getSqlTypeName() == SqlTypeName.Null) {
                 return false;
             }
             if (SqlTypeUtil.inCharFamily(lhsType)
                 || SqlTypeUtil.inCharFamily(rhsType)) 
             {
-                required = false;
+                localCheck = false;
             } else if (SqlTypeUtil.isDecimal(lhsType)
                 && lhsType != rhsType) 
             {
                 return true;
             }
+            break;
+        default:
+            localCheck = call.getOperator().requiresDecimalExpansion();
         }
 
-        if (required) {
+        if (localCheck) {
             for (int i=0; i < call.operands.length; i++) {
                 if (SqlTypeUtil.isDecimal(call.operands[i].getType())) {
                     return true;

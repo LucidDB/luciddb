@@ -463,6 +463,8 @@ public class RexProgramBuilder
      * @param outputRowType Output row type
      * @param shuttle Shuttle to apply to each expression before adding it to
      *   the program builder
+     * @param updateRefs Whether to update references that changes as a result 
+     *   of rewrites made by the shuttle
      * @return A program builder
      */
     public static RexProgramBuilder create(
@@ -472,11 +474,14 @@ public class RexProgramBuilder
         final List<RexLocalRef> projectRefList,
         final RexLocalRef conditionRef,
         final RelDataType outputRowType,
-        final RexShuttle shuttle)
+        final RexShuttle shuttle,
+        final boolean updateRefs)
     {
         final RexProgramBuilder progBuilder =
             new RexProgramBuilder(inputRowType, rexBuilder);
-        progBuilder.add(exprList, projectRefList, conditionRef, outputRowType, shuttle);
+        progBuilder.add(
+            exprList, projectRefList, conditionRef, 
+            outputRowType, shuttle, updateRefs);
         return progBuilder;
     }
 
@@ -490,34 +495,54 @@ public class RexProgramBuilder
      * @param outputRowType Output row type
      * @param shuttle Shuttle to apply to each expression before adding it to
      *   the program builder
+     * @param updateRefs Whether to update references that changes as a result 
+     *   of rewrites made by the shuttle
      */
     private void add(
         List<RexNode> exprList,
         List<RexLocalRef> projectRefList,
         RexLocalRef conditionRef,
         final RelDataType outputRowType,
-        RexShuttle shuttle)
+        RexShuttle shuttle,
+        boolean updateRefs)
     {
         final RelDataTypeField[] outFields = outputRowType.getFields();
         final RexShuttle registerInputShuttle = new RegisterInputShuttle(false);
 
         // For each common expression, first apply the user's shuttle, then
         // register the result.
+        // REVIEW jpham 28-Apr-2006: if the user shuttle rewrites an input 
+        // expression, then input references may change
+        List<RexLocalRef> newRefs = 
+            new ArrayList<RexLocalRef>(exprList.size());
+        RexShuttle refShuttle = new UpdateRefShuttle(newRefs);
+        int i = 0;
         for (RexNode expr : exprList) {
-            RexNode newExpr = expr = expr.accept(shuttle);
-            RexNode ref = newExpr.accept(registerInputShuttle);
-            Util.discard(ref);
+            RexNode newExpr = expr;
+            if (updateRefs) {
+                newExpr = expr.accept(refShuttle);
+            }
+            newExpr = newExpr.accept(shuttle);
+            newRefs.add(
+                i++, (RexLocalRef) newExpr.accept(registerInputShuttle));
         }
-        int i = -1;
-        for (RexLocalRef projectRef : projectRefList) {
+        i = -1;
+        for (RexLocalRef oldRef : projectRefList) {
             ++i;
-            final RexLocalRef ref = (RexLocalRef) projectRef.accept(shuttle);
+            RexLocalRef ref = oldRef;
+            if (updateRefs) {
+                ref = (RexLocalRef) oldRef.accept(refShuttle);
+            }
+            ref = (RexLocalRef) ref.accept(shuttle);
             this.projectRefList.add(ref);
             final String name = outFields[i].getName();
             assert name != null;
             projectNameList.add(name);
         }
         if (conditionRef != null) {
+            if (updateRefs) {
+                conditionRef = (RexLocalRef) conditionRef.accept(refShuttle);
+            }
             conditionRef = (RexLocalRef) conditionRef.accept(shuttle);
             addCondition(conditionRef);
         }
@@ -911,6 +936,24 @@ public class RexProgramBuilder
             // Convert a local ref into the common-subexpression it references.
             final int index = local.getIndex();
             return localExprList.get(index).accept(this);
+        }
+    }
+
+    /**
+     * Shuttle which rewires {@link RexLocalRef} using a 
+     * list of updated references
+     */
+    private class UpdateRefShuttle extends RexShuttle
+    {
+        private List<RexLocalRef> newRefs;
+        
+        private UpdateRefShuttle(List<RexLocalRef> newRefs) {
+            this.newRefs = newRefs;
+        }
+        
+        public RexNode visitLocalRef(RexLocalRef localRef)
+        {
+            return newRefs.get(localRef.getIndex());
         }
     }
 
