@@ -407,6 +407,7 @@ ${farrago.test.jvmargs}
         fork="true"
         classpathref="@{classpathref}">
         <jvmarg line="&FarragoSqlLineProps;"/>
+        <jvmarg line="${assertions.jvmarg}"/>
       </bh>
     </sequential>
   </macrodef>
