@@ -516,12 +516,12 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             Collections.unmodifiableSet(directDependencies);
 
         // walk the expression looking for dynamic parameters
-        SqlVisitor dynamicParamFinder = new SqlBasicVisitor()
+        SqlVisitor dynamicParamFinder = new SqlBasicVisitor<Void>()
             {
-                public void visit(SqlDynamicParam param)
+                public Void visit(SqlDynamicParam param)
                 {
                     analyzedSql.hasDynamicParams = true;
-                    super.visit(param);
+                    return super.visit(param);
                 }
             };
         sqlNode.accept(dynamicParamFinder);
@@ -571,9 +571,9 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         // function lookup because overloads need to be resolved first.  And we
         // can't do this during SqlToRelConverter because then we stop
         // collecting direct dependencies.
-        SqlVisitor udfInvocationFinder = new SqlBasicVisitor()
+        SqlVisitor udfInvocationFinder = new SqlBasicVisitor<Void>()
             {
-                public void visit(SqlCall call)
+                public Void visit(SqlCall call)
                 {
                     if (call.getOperator()
                         instanceof FarragoUserDefinedRoutine)
@@ -584,7 +584,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                             function.getFemRoutine(),
                             PrivilegedActionEnum.EXECUTE);
                     }
-                    super.visit(call);
+                    return super.visit(call);
                 }
             };
         sqlNode.accept(udfInvocationFinder);

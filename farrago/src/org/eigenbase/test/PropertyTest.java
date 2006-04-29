@@ -80,6 +80,80 @@ public class PropertyTest extends TestCase
         }
     }
 
+    public void testIntLimit()
+    {
+        final MyProperties props = new MyProperties();
+
+        // Default value.
+        assertEquals(10, props.intPropLimit.get());
+        
+        // Specified default value w/limit
+        assertEquals(11, props.intPropLimit.get(11));
+        assertEquals(50, props.intPropLimit.get(51));
+        assertEquals(5, props.intPropLimit.get(4));
+        assertEquals(50, props.intPropLimit.get(Integer.MAX_VALUE));
+        assertEquals(5, props.intPropLimit.get(Integer.MIN_VALUE));
+
+        int prev = props.intPropLimit.set(8);
+        assertEquals(8, props.intPropLimit.get());
+        assertEquals(10, prev);
+        
+        prev = props.intPropLimit.set(100);
+        assertEquals(50, props.intPropLimit.get());
+        assertEquals(8, prev);
+    
+        prev = props.intPropLimit.set(-100);
+        assertEquals(5, props.intPropLimit.get());
+        assertEquals(50, prev);
+
+        // set string isn't limited until read
+        props.intPropLimit.setString("99");
+        assertEquals(50, props.intPropLimit.get());
+
+        props.intPropLimit.setString("-2");
+        assertEquals(5, props.intPropLimit.get());
+
+        // Setting null is not OK.
+        try {
+            props.intPropLimit.setString(null);
+            fail("expected NPE");
+        } catch (NullPointerException e) {
+            // expected
+        }
+    }
+    
+    public void testIntLimitNoDefault()
+    {
+        final MyProperties props = new MyProperties();
+
+        assertEquals(0, props.intPropLimitNoDefault.get());
+        assertEquals(1, props.intPropLimitNoDefault2.get());
+
+        // prev is "no value" == 0; set value is limited
+        int prev = props.intPropLimitNoDefault.set(-100);
+        assertEquals(0, prev);
+        assertEquals(-5, props.intPropLimitNoDefault.get());
+        assertEquals(-5, props.intPropLimitNoDefault.get(0));
+        
+        // prev is "no value" == 1; set value is limited
+        prev = props.intPropLimitNoDefault2.set(100);
+        assertEquals(1, prev);
+        assertEquals(2, props.intPropLimitNoDefault2.get());
+        assertEquals(2, props.intPropLimitNoDefault2.get(1));
+
+        prev = props.intPropLimitNoDefault.set(2);
+        assertEquals(-5, prev);
+
+        // Setting null is not OK.
+        try {
+            props.intPropLimitNoDefault.setString(null);
+            fail("expected NPE");
+        } catch (NullPointerException e) {
+            // expected
+        }
+
+    }
+    
     public void testDouble()
     {
         final MyProperties props = new MyProperties();
@@ -122,6 +196,79 @@ public class PropertyTest extends TestCase
         }
     }
 
+    public void testDoubleLimit()
+    {
+        final MyProperties props = new MyProperties();
+
+        // Default value.
+        assertEquals(Math.E, props.doublePropLimit.get());
+        
+        // Specified default value w/limit
+        assertEquals(1.1, props.doublePropLimit.get(1.1));
+        assertEquals(Math.PI, props.doublePropLimit.get(5.1));
+        assertEquals(-Math.PI, props.doublePropLimit.get(-4.0));
+        assertEquals(Math.PI, props.doublePropLimit.get(Double.MAX_VALUE));
+        assertEquals(-Math.PI, props.doublePropLimit.get(-Double.MAX_VALUE));
+
+        double prev = props.doublePropLimit.set(2.5);
+        assertEquals(2.5, props.doublePropLimit.get());
+        assertEquals(Math.E, prev);
+        
+        prev = props.doublePropLimit.set(10.0);
+        assertEquals(Math.PI, props.doublePropLimit.get());
+        assertEquals(2.5, prev);
+    
+        prev = props.doublePropLimit.set(-10.0);
+        assertEquals(-Math.PI, props.doublePropLimit.get());
+        assertEquals(Math.PI, prev);
+
+        // set string isn't limited until read
+        props.doublePropLimit.setString("99.0");
+        assertEquals(Math.PI, props.doublePropLimit.get());
+
+        props.doublePropLimit.setString("-20.2");
+        assertEquals(-Math.PI, props.doublePropLimit.get());
+
+        // Setting null is not OK.
+        try {
+            props.doublePropLimit.setString(null);
+            fail("expected NPE");
+        } catch (NullPointerException e) {
+            // expected
+        }
+    }
+    
+    public void testDoubleLimitNoDefault()
+    {
+        final MyProperties props = new MyProperties();
+
+        assertEquals(0.0, props.doublePropLimitNoDefault.get());
+        assertEquals(1.0, props.doublePropLimitNoDefault2.get());
+
+        // prev is "no value" == 0.0; set value is limited
+        double prev = props.doublePropLimitNoDefault.set(-100.0);
+        assertEquals(0.0, prev);
+        assertEquals(-1.0, props.doublePropLimitNoDefault.get());
+        assertEquals(-1.0, props.doublePropLimitNoDefault.get(0));
+        
+        // prev is "no value" == 1.0; set value is limited
+        prev = props.doublePropLimitNoDefault2.set(100);
+        assertEquals(1.0, prev);
+        assertEquals(10.0, props.doublePropLimitNoDefault2.get());
+        assertEquals(10.0, props.doublePropLimitNoDefault2.get(1.1));
+
+        prev = props.doublePropLimitNoDefault.set(-0.5);
+        assertEquals(-1.0, prev);
+
+        // Setting null is not OK.
+        try {
+            props.doublePropLimitNoDefault.setString(null);
+            fail("expected NPE");
+        } catch (NullPointerException e) {
+            // expected
+        }
+    }
+    
     public void testString()
     {
         final MyProperties props = new MyProperties();
@@ -700,6 +847,15 @@ public class PropertyTest extends TestCase
         public final IntegerProperty intPropNoDefault =
             new IntegerProperty(this, "props.int.nodefault");
 
+        public final IntegerProperty intPropLimit=
+            new IntegerProperty(this, "props.int.limit", 10, 5, 50);
+
+        public final IntegerProperty intPropLimitNoDefault =
+            new IntegerProperty(this, "props.int.limit.nodefault", -5, 5);
+        
+        public final IntegerProperty intPropLimitNoDefault2 =
+            new IntegerProperty(this, "props.int.limit.nodefault2", 1, 2);
+
         public final StringProperty stringProp =
             new StringProperty(this, "props.string", "foo");
 
@@ -711,6 +867,18 @@ public class PropertyTest extends TestCase
 
         public final DoubleProperty doublePropNoDefault =
             new DoubleProperty(this, "props.double.nodefault");
+        
+        public final DoubleProperty doublePropLimit =
+            new DoubleProperty(
+                this, "props.double.limit", Math.E, -Math.PI, Math.PI);
+
+        public final DoubleProperty doublePropLimitNoDefault =
+            new DoubleProperty(
+                this, "props.double.limit.nodefault", -1.0, 1.0);
+        
+        public final DoubleProperty doublePropLimitNoDefault2 =
+            new DoubleProperty(
+                this, "props.double.limit.nodefault2", 1.0, 10.0);
 
         public final BooleanProperty booleanProp =
             new BooleanProperty(this, "props.boolean", true);

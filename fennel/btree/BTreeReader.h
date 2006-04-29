@@ -175,7 +175,7 @@ protected:
      * the push_back method)
      */
     template <bool leafLockCoupling,class PageStack>
-    inline bool BTreeReader::searchForKeyTemplate(
+    inline bool searchForKeyTemplate(
         TupleData const &key, DuplicateSeek dupSeek, bool leastUpper,
         PageStack &pageStack);
     

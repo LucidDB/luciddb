@@ -244,11 +244,16 @@ public abstract class SqlNode implements Cloneable
     }
 
     /**
-     * Accepts a generic visitor. Implementations of this method in subtypes
+     * Accepts a generic visitor.
+     *
+     * <p>Implementations of this method in subtypes
      * simply call the appropriate <code>visit</code> method on the
      * {@link org.eigenbase.sql.util.SqlVisitor visitor object}.
+     *
+     * <p>The type parameter <code>R</code> must be consistent with the type
+     * parameter of the visitor.
      */
-    public abstract void accept(SqlVisitor visitor);
+    public abstract <R> R accept(SqlVisitor<R> visitor);
 
     /**
      * Returns whether this node is structurally equivalent to another node.

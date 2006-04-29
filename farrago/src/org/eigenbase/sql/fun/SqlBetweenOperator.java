@@ -285,15 +285,15 @@ public class SqlBetweenOperator extends SqlInfixOperator
     /**
      * Finds an AND operator in an expression.
      */
-    private static class AndFinder extends SqlBasicVisitor
+    private static class AndFinder extends SqlBasicVisitor<Void>
     {
-        public void visit(SqlCall call)
+        public Void visit(SqlCall call)
         {
             final SqlOperator operator = call.getOperator();
             if (operator == SqlStdOperatorTable.andOperator) {
                 throw new Found();
             }
-            super.visit(call);
+            return super.visit(call);
         }
 
         boolean containsAnd(SqlNode node)
