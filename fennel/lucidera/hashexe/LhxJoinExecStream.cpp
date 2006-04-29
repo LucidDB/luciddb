@@ -50,6 +50,8 @@ void LhxJoinExecStream::prepare(
 
     leftTuple.compute(leftDesc);
     rightTuple.compute(rightDesc);
+    leftTupleSize = leftTuple.size();
+    rightTupleSize = rightTuple.size();
 
     /*
      * Since null values do not match, filter null values if non-matching
@@ -65,7 +67,7 @@ void LhxJoinExecStream::prepare(
     leftKeyProj = params.leftKeyProj;
     rightKeyProj = params.rightKeyProj;
     
-    for (i = 0, j = 0; i < rightDesc.size(); i ++) {
+    for (i = 0, j = 0; i < rightTupleSize; i ++) {
         if ((j < rightKeyProj.size()) && (rightKeyProj[j] == i)) {
             keyDesc.push_back(rightDesc[i]);
             j ++;
@@ -99,15 +101,13 @@ void LhxJoinExecStream::prepare(
         max(hashTable.slotsNeeded(params.cndKeys), (uint32_t)10000);
     
     TupleDescriptor outputDesc;
-    TupleDescriptor tmpDesc;
-    tmpDesc=leftDesc;
-    tmpDesc.insert(tmpDesc.end(),rightDesc.begin(),rightDesc.end());
-    
+
     if (params.outputProj.size() != 0) {
-        outputDesc.projectFrom(tmpDesc, params.outputProj);
+        outputDesc.projectFrom(params.outputTupleDesc, params.outputProj);
+    } else {
+        outputDesc = params.outputTupleDesc;
     }
 
-    outputDesc = tmpDesc;
     outputTuple.compute(outputDesc);    
     pOutAccessor->setTupleShape(outputDesc);
 
@@ -210,11 +210,27 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                 for (;;) {
                     if (!leftBufAccessor->isTupleConsumptionPending()) {
                         if (leftBufAccessor->getState() == EXECBUF_EOS) {
-                            /*
-                             * Probing is done
-                             */
-                            joinState = Done;
-                            pOutAccessor->markEOS();
+                            if (!rightOuter) {
+                                /*
+                                 * Probing is done
+                                 */
+                                pOutAccessor->markEOS();
+                                joinState = Done;
+                            } else {
+                                /*
+                                 * Set the output tuple to have NULL values on
+                                 * the left, and get return all the
+                                 * non-matching tuples in the hash table on the
+                                 * right.
+                                 */
+                                for (int i = 0; i <leftTupleSize; i ++) {
+                                    outputTuple[i].pData = NULL;
+                                }
+
+                                hashTableReader.bindUnMatched();
+                                joinState = ProducingRightOuter;
+                            }
+                            break;
                         }
                         if (!leftBufAccessor->demandData()) {
                             return EXECRC_BUF_UNDERFLOW;
@@ -227,22 +243,22 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
 
                     /*
                      * Try to locate matching key in the hash table.
-                     * When null values are filtered, and this tuple does
-                     * contain null in its key columns, it will not join so
-                     * hash table lookup is not needed.
+                     * If this tuple does contain null in its key columns, it
+                     * will not join so hash table lookup is not needed.
                      */
-                    if (!(leftFilterNull &&
-                          leftTuple.containsNull(leftKeyProj))) {
+                    if (!leftTuple.containsNull(leftKeyProj)) {
                         keyBuf = hashTable.findKey(leftTuple, leftKeyProj,
                             isProbing);
                     }
         
                     if (keyBuf) {
-                        /**
-                         * Left half of output tuple.
+                        /*
+                         * Set the output tuple to include only the left input,
+                         * and get the next matching tuple from the right.
                          */
-                        outputTuple = leftTuple;
-            
+                        for (int i = 0; i <leftTupleSize; i ++) {
+                            outputTuple[i].copyFrom(leftTuple[i]);
+                        }
                         /**
                          * Output the joined tuple.
                          */
@@ -257,11 +273,18 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                         if (!leftOuter) {
                             leftBufAccessor->consumeTuple();
                         } else {
-                            outputTuple = leftTuple;
-                            for (int i = leftTuple.size(); i < outputTuple.size(); i ++) {
+                            /*
+                             * Set the output tuple to include only the left
+                             * input, and set NULL values on the right.
+                             */
+                            for (int i = 0; i <leftTupleSize; i ++) {
+                                outputTuple[i].copyFrom(leftTuple[i]);
+                            }
+                            for (int i = leftTupleSize; i < outputTuple.size(); i ++) {
                                 outputTuple[i].pData = NULL;
                             }
                             joinState = ProducingLeftOuter;
+                            break;
                         }
                     }
                 }
@@ -270,19 +293,19 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
         case ProducingInner:
             {
                 /*
-                 * Set the output tuple to include only the left input,
-                 * and get the next matching tuple from the right.
-                 */
-                outputTuple = leftTuple;
-
-                /*
                  * Producing the results.
                  * Handle output overflow and quantum expiration in ProducePending.
                  */
                 if (hashTableReader.getNext(rightTuple)) {
-                    outputTuple.insert(outputTuple.end(),
-                        rightTuple.begin(),rightTuple.end());
+                    for (int i = 0; i <rightTupleSize; i ++) {
+                        outputTuple[i + leftTupleSize].copyFrom(rightTuple[i]);
+                    }
                     joinState = ProducePending;
+                    /*
+                     * Come back to this state after producing the output tuple
+                     * successfully.
+                     */
+                    nextState = ProducingInner;
                 } else {
                     leftBufAccessor->consumeTuple();
                     joinState = Probing;
@@ -293,30 +316,8 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
             {
                 if (pOutAccessor->produceTuple(outputTuple)) {
                     leftBufAccessor->consumeTuple();
+                    numTuplesProduced++;
                     joinState = Probing;
-                    numTuplesProduced++;
-                } else {
-                    return EXECRC_BUF_OVERFLOW;                    
-                }
-
-                /*
-                 * Successfully produced an output row. Now check if quantum
-                 * has expired.
-                 */
-                if (numTuplesProduced >= quantum.nTuplesMax) {
-                    /*
-                     * Reset count.
-                     */
-                    numTuplesProduced = 0;
-                    return EXECRC_QUANTUM_EXPIRED;
-                }
-                break;
-            }
-        case ProducePending:
-            {
-                if (pOutAccessor->produceTuple(outputTuple)) {
-                    joinState = ProducingInner;
-                    numTuplesProduced++;
                 } else {
                     return EXECRC_BUF_OVERFLOW;                    
                 }
@@ -335,6 +336,49 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                 break;
             }
         case ProducingRightOuter:
+            {
+                /*
+                 * Producing the results.
+                 * Handle output overflow and quantum expiration in ProducePending.
+                 */
+                if (hashTableReader.getNext(rightTuple)) {
+                    for (int i = 0; i <rightTupleSize; i ++) {
+                        outputTuple[i + leftTupleSize].copyFrom(rightTuple[i]);
+                    }
+                    joinState = ProducePending;
+                    /*
+                     * Come back to this state after producing the output tuple
+                     * successfully.
+                     */
+                    nextState = ProducingRightOuter;
+                } else {
+                    pOutAccessor->markEOS();
+                    joinState = Done;
+                }
+                break;
+            }
+        case ProducePending:
+            {
+                if (pOutAccessor->produceTuple(outputTuple)) {
+                    numTuplesProduced++;
+                    joinState = nextState;
+                } else {
+                    return EXECRC_BUF_OVERFLOW;                    
+                }
+
+                /*
+                 * Successfully produced an output row. Now check if quantum
+                 * has expired.
+                 */
+                if (numTuplesProduced >= quantum.nTuplesMax) {
+                    /*
+                     * Reset count.
+                     */
+                    numTuplesProduced = 0;
+                    return EXECRC_QUANTUM_EXPIRED;
+                }
+                break;
+            }
         case Done:
             {
                 return EXECRC_EOS;

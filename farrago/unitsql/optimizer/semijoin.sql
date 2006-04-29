@@ -92,7 +92,25 @@ explain plan for select *
     on t.d = s.s1;
 
 -- outer join
--- TODO - add a testcase for outer joins once we support these on lcs tables
+-- FIXME: Cartesian product is picked because join types do not match; however
+-- cartesian product + outer join is not feasible.
+-- explain plan for
+-- select *
+-- from t left outer join smalltable s
+-- on t.b = s.s3 and s.s1 = 'this is row 1' 
+-- order by a;
+
+-- this outer join uses HashJoin since join types match
+explain plan for
+select *
+from t full outer join smalltable s
+on t.d = s.s1 where s.s2 > 0
+order by a;
+
+select *
+from t full outer join smalltable s
+on t.d = s.s1 where s.s2 > 0
+order by a;
 
 ---------------------
 -- multi-column joins

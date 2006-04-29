@@ -124,8 +124,8 @@ class LhxJoinRel extends FennelDoubleRel
     {
         pw.explain(
             this,
-            new String [] { "left", "right", "leftKeys", "rightKeys"},
-            new Object [] {leftKeys, rightKeys});
+            new String [] { "left", "right", "leftKeys", "rightKeys", "joinType"},
+            new Object [] {leftKeys, rightKeys, joinType});
     }
 
     // implement RelNode
@@ -149,6 +149,12 @@ class LhxJoinRel extends FennelDoubleRel
             implementor.visitFennelChild((FennelRel) right);
         implementor.addDataFlowFromProducerToConsumer(
             rightInput, streamDef);
+
+        streamDef.setOutputDesc(
+            FennelRelUtil.createTupleDescriptorFromRowType(
+                repos,
+                getCluster().getTypeFactory(),
+                this.getRowType()));
 
         Double numRightRows = RelMetadataQuery.getRowCount(right);
         if (numRightRows == null) {
@@ -191,6 +197,14 @@ class LhxJoinRel extends FennelDoubleRel
                 cndKeys = numRightRows;
                 break;
             }
+        }
+
+        if (joinType == JoinRelType.LEFT || joinType == JoinRelType.FULL) {
+            streamDef.setLeftOuter(true);
+        }
+
+        if (joinType == JoinRelType.RIGHT || joinType == JoinRelType.FULL) {
+            streamDef.setRightOuter(true);
         }
 
         streamDef.setCndBuildKeys(cndKeys.intValue());

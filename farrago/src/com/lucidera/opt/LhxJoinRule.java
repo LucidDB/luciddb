@@ -64,12 +64,6 @@ public class LhxJoinRule extends RelOptRule
         RelNode rightRel = joinRel.getRight();
         RexNode joinCondition = joinRel.getCondition();
         RexNode nonJoinCondition;
-        
-        // only inner and left outer is supported right now.
-        if (!((joinRel.getJoinType() == JoinRelType.INNER) ||
-              (joinRel.getJoinType() == JoinRelType.LEFT))) {
-            return;
-        }
 
         // determine if we have a valid join condition
         List<Integer> leftKeys = new ArrayList<Integer>();
