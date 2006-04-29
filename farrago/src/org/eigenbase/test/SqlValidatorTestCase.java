@@ -211,20 +211,6 @@ public class SqlValidatorTestCase extends TestCase
     }
 
     /**
-     * Asserts that a query throws an exception matching a given pattern.
-     *
-     * @deprecated Switch to {@link #checkFails(String, String)}
-     */
-    public void checkFails(
-        String sql,
-        String expected,
-        int line,
-        int column)
-    {
-        tester.assertExceptionIsThrown(sql, expected);
-    }
-
-    /**
      * Checks that a SQL expression gives a particular error.
      */
     public final void checkExpFails(
@@ -461,8 +447,9 @@ public class SqlValidatorTestCase extends TestCase
                 } else {
                     sqlWithCarets =
                         SqlParserUtil.addCarets(
-                            sap.sql, actualLine, actualColumn,
-                            actualEndLine, actualEndColumn);
+                            sap.sql,
+                            actualLine, actualColumn,
+                            actualEndLine, actualEndColumn + 1);
                 }
                 if (FailIfNoPosition && sap.pos == null) {
                     throw new AssertionFailedError(

@@ -30,6 +30,7 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.type.SqlTypeUtil;
+import org.eigenbase.util.Util;
 
 import java.nio.charset.Charset;
 import java.util.List;
@@ -243,6 +244,32 @@ public class SqlValidatorUtil
                 nameList.set(i, uniqueName);
             }
         }
+    }
+
+    /**
+     * Resolves a multi-part identifier such as "SCHEMA.EMP.EMPNO" to a
+     * namespace. The returned namespace may represent a schema, table, column,
+     * etc.
+     *
+     * @pre names.size() > 0
+     * @post return != null
+     */
+    public static SqlValidatorNamespace lookup(
+        SqlValidatorScope scope,
+        List<String> names)
+    {
+        Util.pre(names.size() > 0, "names.size() > 0");
+        SqlValidatorNamespace namespace = null;
+        for (int i = 0; i < names.size(); i++) {
+            String name = names.get(i);
+            if (i == 0) {
+                namespace = scope.resolve(name, null, null);
+            } else {
+                namespace = namespace.lookupChild(name, null, null);
+            }
+        }
+        Util.permAssert(namespace != null, "post: namespace != null");
+        return namespace;
     }
 }
 

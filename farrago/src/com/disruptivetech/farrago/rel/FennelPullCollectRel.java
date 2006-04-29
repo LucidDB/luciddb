@@ -36,8 +36,7 @@ import org.eigenbase.sql.type.SqlTypeName;
  * implemented inside of Fennel.
  *
  * <p>Rules:<ul>
- * <li>{@link FennelCollectRule} creates this from a rex call which has the
- * operator {@link org.eigenbase.sql.fun.SqlMultisetOperator}</li>
+ * <li>{@link FennelCollectRule} creates this from a {@link CollectRel}.</li>
  * </ul></p>
  *
  * @author Wael Chatila

@@ -79,6 +79,30 @@ public class FarragoSessionVariables implements Cloneable
      */
     public List schemaSearchPath;
 
+    /**
+     * Full user name, e.g. "Joe Smith". Can be null.
+     * TODO: Value of SQL expression SYSTEM_USER_FULLNAME?.
+     */
+    public String systemUserFullName;
+
+    /**
+     * Session name. Can be null if session has no name.
+     * TODO: Value of SQL expression SESSION_NAME?
+     */
+    public String sessionName;
+
+    /**
+     * Client program name. Can be null.
+     * TODO: Value of SQL expression PROGRAM_NAME?
+     */
+    public String programName;
+
+    /**
+     * Client process Id.
+     * TODO: Value of SQL expression PROCESS_ID?
+     */
+    public long processId;
+
     //~ Methods ---------------------------------------------------------------
 
     public FarragoSessionVariables cloneVariables()
@@ -135,6 +159,7 @@ public class FarragoSessionVariables implements Cloneable
         this.systemUserName = baseVariables.systemUserName;
         this.sessionUserName = baseVariables.sessionUserName;
         this.currentUserName = baseVariables.currentUserName;
+        this.sessionName = baseVariables.sessionName;
 
         // Since schemaSearchPath is meant to be an unmodifiable list,
         // it should be okay to just copy the reference.

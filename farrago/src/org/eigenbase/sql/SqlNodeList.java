@@ -137,9 +137,9 @@ public class SqlNodeList extends SqlNode
         }
     }
 
-    public void accept(SqlVisitor visitor)
+    public <R> R accept(SqlVisitor<R> visitor)
     {
-        visitor.visit(this);
+        return visitor.visit(this);
     }
 
     public boolean equalsDeep(SqlNode node)
@@ -174,7 +174,27 @@ public class SqlNodeList extends SqlNode
         }
         return false;
     }
-}
 
+    public void validateExpr(SqlValidator validator, SqlValidatorScope scope)
+    {
+        // While a SqlNodeList is not always a valid expression, this
+        // implementation makes that assumption. It just validates the members
+        // of the list.
+        //
+        // One example where this is valid is the IN operator. The expression
+        //
+        //    empno IN (10, 20)
+        //
+        // results in a call with operands
+        //
+        //    {  SqlIdentifier({"empno"}),
+        //       SqlNodeList(SqlLiteral(10), SqlLiteral(20))  }
+
+        for (int i = 0; i < list.size(); i++) {
+            SqlNode node = (SqlNode) list.get(i);
+            node.validateExpr(validator, scope);
+        }
+    }
+}
 
 // End SqlNodeList.java

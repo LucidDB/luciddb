@@ -30,7 +30,7 @@ import net.sf.farrago.query.FennelRel;
 
 /**
  * FennelCollectRule is a rule to implement a call made with the
- * {@link org.eigenbase.sql.fun.SqlMultisetOperator}
+ * {@link org.eigenbase.sql.fun.SqlMultisetValueConstructor}
  *
  * @author Wael Chatila 
  * @since Dec 11, 2004

@@ -53,6 +53,7 @@ public class SameOperandTypeChecker implements SqlOperandTypeChecker
         RelDataType [] types = new RelDataType[nOperands];
         for (int i = 0; i < nOperands; ++i) {
             SqlNode operand = callBinding.getCall().operands[i];
+            // REVIEW: Use SqlOperatorBinding.isOperandNull here?
             if (SqlUtil.isNullLiteral(operand, false)) {
                 if (throwOnFailure) {
                     throw callBinding.getValidator().newValidationError(
@@ -97,7 +98,49 @@ public class SameOperandTypeChecker implements SqlOperandTypeChecker
         }
         return true;
     }
-    
+
+    /**
+     * Similar functionality to
+     * {@link #checkOperandTypes(SqlCallBinding, boolean)},
+     * but not part of the interface, and cannot throw an error.
+     *
+     * <p>TODO: Add this method to the interface.
+     */
+    public boolean checkOperandTypes(
+        SqlOperatorBinding callBinding)
+    {
+        RelDataType [] types = new RelDataType[nOperands];
+        for (int i = 0; i < nOperands; ++i) {
+            if (callBinding.isOperandNull(i)) {
+                return false;
+            }
+            types[i] = callBinding.getOperandType(i);
+        }
+        int prev = -1;
+        for (int i = 0; i < nOperands; ++i) {
+            if (prev == -1) {
+                prev = i;
+            } else {
+                RelDataTypeFamily family1 = types[i].getFamily();
+                RelDataTypeFamily family2 = types[prev].getFamily();
+                // REVIEW jvs 2-June-2005:  This is needed to keep
+                // the Saffron type system happy.
+                if (types[i].getSqlTypeName() != null) {
+                    family1 = types[i].getSqlTypeName().getFamily();
+                }
+                if (types[prev].getSqlTypeName() != null) {
+                    family2 = types[prev].getSqlTypeName().getFamily();
+                }
+                if (family1 == family2) {
+                    continue;
+                }
+                return false;
+            }
+        }
+        return true;
+    }
+
+
     // implement SqlOperandTypeChecker
     public SqlOperandCountRange getOperandCountRange()
     {

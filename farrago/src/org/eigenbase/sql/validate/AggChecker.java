@@ -33,7 +33,7 @@ import org.eigenbase.resource.EigenbaseResource;
  * @since Oct 28, 2004
  * @version $Id$
  */
-class AggChecker extends SqlBasicVisitor
+class AggChecker extends SqlBasicVisitor<Void>
 {
     private final AggregatingScope scope;
     private final SqlNodeList groupExprs;
@@ -62,15 +62,14 @@ class AggChecker extends SqlBasicVisitor
         return false;
     }
 
-    public void visit(SqlIdentifier id) {
+    public Void visit(SqlIdentifier id) {
         if (isGroupExpr(id)) {
-            return;
+            return null;
         }
         // Is it a call to a parentheses-free function?
         SqlCall call = SqlUtil.makeCall(validator.getOperatorTable(), id);
         if (call != null) {
-            call.accept(this);
-            return;
+            return call.accept(this);
         }
         // Didn't find the identifer in the group-by list as is, now find
         // it fully-qualified.
@@ -78,30 +77,30 @@ class AggChecker extends SqlBasicVisitor
         // to fully-qualified.
         final SqlIdentifier fqId = scope.fullyQualify(id);
         if (isGroupExpr(fqId)) {
-            return;
+            return null;
         }
         final String exprString = id.toString();
         throw scope.getValidator().newValidationError(id,
             EigenbaseResource.instance().NotGroupExpr.ex(exprString));
     }
 
-    public void visit(SqlCall call) {
+    public Void visit(SqlCall call) {
         if (call.getOperator().isAggregator()) {
             // For example, 'sum(sal)' in 'SELECT sum(sal) FROM emp GROUP
             // BY deptno'
-            return;
+            return null;
         }
         if (isGroupExpr(call)) {
             // This call matches an expression in the GROUP BY clause.
-            return;
+            return null;
         }
         if (call.isA(SqlKind.Query)) {
             // Allow queries for now, even though they may contain
             // references to forbidden columns.
-            return;
+            return null;
         }
         // Visit the operands.
-        super.visit(call);
+        return super.visit(call);
     }
 }
 

@@ -30,6 +30,7 @@ import junit.framework.*;
 import net.sf.farrago.jdbc.client.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.server.*;
+import org.eigenbase.util14.ConnectStringParser;
 
 
 /**
@@ -80,10 +81,8 @@ public class FarragoServerTest extends TestCase
         // N.B. it is better practice to put the login credentials in the
         // Properties object rather than on the URL, but this is a convenient
         // test of the client driver's connect string processing.
-        Connection connection =
-            clientDriver.connect(
-                clientDriver.getUrlPrefix() + "localhost;user=sa",
-                new Properties());
+        String uri = clientDriver.getUrlPrefix() + "localhost;user=sa";
+        Connection connection = clientDriver.connect(uri, new Properties());
         boolean stopped;
         try {
             connection.createStatement().execute("set schema 'sales'");
@@ -107,12 +106,64 @@ public class FarragoServerTest extends TestCase
         // N.B. it is better practice to put the login credentials in the
         // Properties object rather than on the URL, but this is a convenient
         // test of the client driver's connect string processing.
-        Connection connection =
-            clientDriver.connect(
-                clientDriver.getUrlPrefix() + "localhost;user=sa",
-                new Properties());
+        String uri = clientDriver.getUrlPrefix() + "localhost;user=sa";
+        Connection connection = clientDriver.connect(uri, new Properties());
         connection.createStatement().execute("set schema 'sales'");
         killServer();
+    }
+
+    /**
+     * Tests client driver connection URI parameters.
+     * The underlying connect-string processing is tested by
+     * {@link FarragoJdbcTest#testConnectStrings} using the engine driver.
+     * This method adds tests of client connections and
+     * parameter precedence with the client driver.
+     */
+    public void testConnectionParams() throws Throwable
+    {
+        server = new FarragoServer();
+        FarragoJdbcEngineDriver serverDriver = new FarragoJdbcEngineDriver();
+        server.start(serverDriver);
+
+        FarragoJdbcClientDriver clientDriver = new FarragoJdbcClientDriver();
+        String uri = clientDriver.getUrlPrefix() + "localhost";
+
+        // test a connection that fails without the params
+        Properties empty = new Properties();
+        Connection conn = null;
+        try {
+            conn = clientDriver.connect(uri, empty);
+            fail("Farrago connect without user credentials");
+        } catch (SQLException e) {
+            FarragoJdbcTest.assertExceptionMatches(e, ".*Unknown user.*");
+        }
+        Properties auth = new Properties();
+        auth.setProperty("user", "sa");
+        auth.setProperty("password", "");
+        String loginUri = uri +";" +ConnectStringParser.getParamString(auth);
+        conn = clientDriver.connect(loginUri, empty);
+        assertNotNull("null connection", conn);
+        assertEquals("empty props changed", 0, empty.size());
+        conn.close();
+
+        // test that parameter precedence works
+        Properties unauth = new Properties();
+        unauth.setProperty("user", "unauthorized user");
+        unauth.setProperty("password", "invalid password");
+        // connect will fail unless loginUri attributes take precedence
+        try {
+            conn = clientDriver.connect(uri, unauth);
+            fail("Farrago connect with bad user credentials");
+        } catch (SQLException e) {
+            FarragoJdbcTest.assertExceptionMatches(e, ".*Unknown user.*");
+        }
+        conn = clientDriver.connect(loginUri, unauth);
+        assertNotNull("null connection", conn);
+        conn.close();
+
+        boolean stopped = server.stopSoft();
+        server = null;
+        assertTrue(stopped);
     }
 
     // implement TestCase

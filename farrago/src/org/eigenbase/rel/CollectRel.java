@@ -28,11 +28,20 @@ import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.type.SqlTypeUtil;
+import org.eigenbase.sql.fun.SqlMultisetQueryConstructor;
+import org.eigenbase.sql.fun.SqlMultisetValueConstructor;
 
 /**
  * A relational expression which collapses multiple rows into one.
  *
- * @author Wael Chatila 
+ * <p>Rules:<ul>
+ * <li>{@link com.disruptivetech.farrago.rel.FarragoMultisetSplitterRule}
+ *     creates a CollectRel from a call
+ *     to {@link SqlMultisetValueConstructor}
+ *     or to {@link SqlMultisetQueryConstructor}.</li>
+ * </ul></p>
+ *
+ * @author Wael Chatila
  * @since Dec 12, 2004
  * @version $Id$
  */

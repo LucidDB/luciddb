@@ -26,6 +26,7 @@ import org.eigenbase.sql.type.SqlTypeStrategies;
 import org.eigenbase.sql.util.SqlVisitor;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.reltype.RelDataType;
 
 /**
  * The <code>AS</code> operator associates an expression with an alias.
@@ -67,9 +68,19 @@ public class SqlAsOperator extends SqlBinaryOperator
         }
     }
 
-    public void acceptCall(SqlVisitor visitor, SqlCall call) {
+    public <R> R acceptCall(SqlVisitor<R> visitor, SqlCall call) {
         // Do not visit operands[1] -- it is not an expression.
-        visitor.visitChild(call, 0, call.operands[0]);
+        return visitor.visitChild(call, 0, call.operands[0]);
+    }
+
+    public RelDataType deriveType(
+        SqlValidator validator, SqlValidatorScope scope, SqlCall call)
+    {
+        // special case for AS:  never try to derive type for alias
+        RelDataType nodeType = validator.deriveType(scope, call.operands[0]);
+        assert nodeType != null;
+        RelDataType type = validateOperands(validator, scope, call);
+        return type;
     }
 }
 

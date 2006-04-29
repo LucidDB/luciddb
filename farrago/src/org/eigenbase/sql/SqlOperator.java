@@ -31,8 +31,7 @@ import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.util.SqlVisitor;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.Util;
 
 /**
@@ -235,11 +234,15 @@ public abstract class SqlOperator
 
     /**
      * Creates a call to this operand with an array of operands.
+     *
+     * <p>The position of the resulting call is the union of the
+     * <code>pos</code> and the positions of all of the operands.
      */
     public SqlCall createCall(
         SqlNode [] operands,
         SqlParserPos pos)
     {
+        pos = pos.plusAll(operands);
         return new SqlCall(this, operands, pos);
     }
 
@@ -349,6 +352,11 @@ public abstract class SqlOperator
     /**
      * Validates a call to this operator.
      *
+     * <p>This method should not perform type-derivation or perform validation
+     * related related to types. That is done later, by
+     * {@link #deriveType(SqlValidator, SqlValidatorScope, SqlCall)}.
+     * This method should focus on structural validation.
+     *
      * <p>A typical implementation of this method first validates the
      * operands, then performs some operator-specific logic.
      * The default implementation just validates the operands.
@@ -363,6 +371,9 @@ public abstract class SqlOperator
      * @param operandScope validator scope in which to validate operands to
      * this call; usually equal to scope, but not always because some
      * operators introduce new scopes
+     *
+     * @see SqlNode#validateExpr(SqlValidator, SqlValidatorScope)
+     * @see #deriveType(SqlValidator, SqlValidatorScope, SqlCall)
      */
     public void validateCall(
         SqlCall call,
@@ -453,6 +464,50 @@ public abstract class SqlOperator
         // Derived type should have overridden this method, since it didn't
         // supply a type inference rule.
         throw Util.needToImplement(this);
+    }
+
+    /**
+     * Derives the type of a call to this operator.
+     *
+     * <p>This method is an intrinsic part of the validation process so, unlike
+     * {@link #inferReturnType}, specific operators would not typically
+     * override this method.
+     *
+     * @param validator Validator
+     * @param scope Scope of validation
+     * @param call Call to this operator
+     * @return Type of call
+     */
+    public RelDataType deriveType(
+        SqlValidator validator,
+        SqlValidatorScope scope,
+        SqlCall call)
+    {
+        final SqlNode[] operands = call.operands;
+        for (int i = 0; i < operands.length; ++i) {
+            RelDataType nodeType = validator.deriveType(scope, operands[i]);
+            assert nodeType != null;
+        }
+
+        RelDataType type = validateOperands(validator, scope, call);
+
+        // Validate and determine coercibility and resulting collation
+        // name of binary operator if needed.
+        type = adjustType(validator, call, type);
+        SqlValidatorUtil.checkCharsetAndCollateConsistentIfCharType(type);
+        return type;
+    }
+
+    /**
+     * Validates and determines coercibility and resulting collation
+     * name of binary operator if needed.
+     */
+    protected RelDataType adjustType(
+        SqlValidator validator,
+        final SqlCall call,
+        RelDataType type)
+    {
+        return type;
     }
 
     /**
@@ -575,7 +630,7 @@ public abstract class SqlOperator
      *
      * @param visitor Visitor.
      */
-    public void acceptCall(SqlVisitor visitor, SqlCall call)
+    public <R> R acceptCall(SqlVisitor<R> visitor, SqlCall call)
     {
         for (int i = 0; i < call.operands.length; i++) {
             SqlNode operand = call.operands[i];
@@ -584,6 +639,7 @@ public abstract class SqlOperator
             }
             visitor.visitChild(call, i, operand);
         }
+        return null;
     }
 
     /**

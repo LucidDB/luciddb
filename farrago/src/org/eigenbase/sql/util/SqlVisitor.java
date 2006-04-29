@@ -27,6 +27,10 @@ import org.eigenbase.sql.*;
  * Visitor class, follows the
  * {@link org.eigenbase.util.Glossary#VisitorPattern visitor pattern}.
  *
+ * <p>The type parameter <code>R</code> is the return type of each
+ * <code>visit()</code> method. If the methods do not need to return a value,
+ * use {@link Void}.
+ *
  * @see SqlBasicVisitor
  * @see SqlNode#accept(SqlVisitor)
  * @see SqlOperator#acceptCall(SqlVisitor, org.eigenbase.sql.SqlCall)
@@ -34,14 +38,64 @@ import org.eigenbase.sql.*;
  * @author jhyde
  * @version $Id$
  */
-public interface SqlVisitor {
-    void visit(SqlLiteral literal);
-    void visit(SqlCall call);
-    void visit(SqlNodeList nodeList);
-    void visit(SqlIdentifier id);
-    void visit(SqlDataTypeSpec type);
-    void visit(SqlDynamicParam param);
-    void visit(SqlIntervalQualifier intervalQualifier);
+public interface SqlVisitor <R>
+{
+    /**
+     * Visits a literal.
+     *
+     * @see SqlLiteral#accept(SqlVisitor)
+     * @param literal Literal
+     */
+    R visit(SqlLiteral literal);
+
+    /**
+     * Visits a call to a {@link SqlOperator}.
+     *
+     * @see SqlCall#accept(SqlVisitor)
+     * @param call
+     */
+    R visit(SqlCall call);
+
+    /**
+     * Visits a list of {@link SqlNode} objects.
+     *
+     * @see SqlNodeList#accept(SqlVisitor)
+     * @param nodeList list of nodes
+     */
+    R visit(SqlNodeList nodeList);
+
+    /**
+     * Visits an identifier.
+     *
+     * @see SqlIdentifier#accept(SqlVisitor)
+     * @param id identifier
+     */
+    R visit(SqlIdentifier id);
+
+    /**
+     * Visits a datatype specification.
+     *
+     * @see SqlDataTypeSpec#accept(SqlVisitor)
+     * @param type datatype specification
+     */
+    R visit(SqlDataTypeSpec type);
+
+    /**
+     * Visits a dynamic parameter.
+     *
+     * @see SqlDynamicParam#accept(SqlVisitor)
+     * @param param Dynamic parameter
+     */
+    R visit(SqlDynamicParam param);
+
+    /**
+     * Visits an interval qualifier
+     *
+     * @see SqlIntervalQualifier#accept(SqlVisitor)
+     * @param intervalQualifier
+     */
+    R visit(SqlIntervalQualifier intervalQualifier);
+
     /**
      * Recurses to a particular child of a node.
      *
@@ -54,7 +108,7 @@ public interface SqlVisitor {
      * @param ordinal Ordinal of child in parent
      * @param child Child node
      */
-    void visitChild(SqlNode parent, int ordinal, SqlNode child);
+    R visitChild(SqlNode parent, int ordinal, SqlNode child);
 }
 
 // End SqlVisitor.java

@@ -53,7 +53,7 @@ public class FarragoJdbcUtil {
     {
         final String message = ex.getMessage();
         tracer.severe(message);
-        tracer.throwing("FarragoUtil", "newSqlException", ex);
+        tracer.throwing("FarragoJdbcUtil", "newSqlException", ex);
 
         Throwable cause = ex.getCause();
         SQLException sqlExcn;

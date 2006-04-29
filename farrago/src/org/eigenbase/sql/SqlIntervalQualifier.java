@@ -97,9 +97,9 @@ public class SqlIntervalQualifier extends SqlNode
         validator.validateIntervalQualifier(this);
     }
 
-    public void accept(SqlVisitor visitor)
+    public <R> R accept(SqlVisitor<R> visitor)
     {
-        visitor.visit(this);
+        return visitor.visit(this);
     }
 
     public boolean equalsDeep(SqlNode node)

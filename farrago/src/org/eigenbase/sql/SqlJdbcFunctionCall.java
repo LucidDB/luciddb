@@ -29,6 +29,8 @@ import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.fun.SqlTrimFunction;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.type.SqlTypeStrategies;
+import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.util.Util;
 
 import java.sql.DatabaseMetaData;
@@ -372,6 +374,23 @@ public class SqlJdbcFunctionCall extends SqlFunction
     public String getAllowedSignatures()
     {
         return lookupMakeCallObj.operator.getAllowedSignatures(getName());
+    }
+
+    public RelDataType deriveType(
+        SqlValidator validator, SqlValidatorScope scope, SqlCall call)
+    {
+        // Override SqlFunction.deriveType, because function-resolution is
+        // not relevant to a JDBC function call.
+        // REVIEW: jhyde, 2006/4/18: Should SqlJdbcFunctionCall even be a
+        // subclass of SqlFunction?
+        final SqlNode[] operands = call.operands;
+
+        for (int i = 0; i < operands.length; ++i) {
+            RelDataType nodeType = validator.deriveType(scope, operands[i]);
+            validator.setValidatedNodeType(operands[i], nodeType);
+        }
+        RelDataType type = validateOperands(validator, scope, call);
+        return type;
     }
 
     public RelDataType inferReturnType(

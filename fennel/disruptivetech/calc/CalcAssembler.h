@@ -39,6 +39,8 @@ class RegisterReference;
 class TupleDescriptor;
 class StoredTypeDescriptorFactory;
 
+extern int CalcYYparse (void *);
+
 /**
  * The CalcAssembler is responsible for taking a textual representation
  * of a calculator program and forming a calculator. The CalcAssembler
@@ -217,26 +219,26 @@ public:
         return inst;
     }
 
-    static void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
-                                             TupleDatum& tupleDatum,  
-                                             TupleAttributeDescriptor& desc,
-                                             double value);
-    static void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
-                                             TupleDatum& tupleDatum,  
-                                             TupleAttributeDescriptor& desc,
-                                             uint64_t value);
-    static void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
-                                             TupleDatum& tupleDatum,  
-                                             TupleAttributeDescriptor& desc,
-                                             int64_t value);
-    static void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
-                                             TupleDatum& tupleDatum,  
-                                             TupleAttributeDescriptor& desc,
-                                             string value);
-    static void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
-                                             TupleDatum& tupleDatum,  
-                                             TupleAttributeDescriptor& desc,
-                                             PConstBuffer buffer);
+    static void setTupleDatum(StandardTypeDescriptorOrdinal type,
+			      TupleDatum& tupleDatum,  
+			      TupleAttributeDescriptor& desc,
+			      double value);
+    static void setTupleDatum(StandardTypeDescriptorOrdinal type,
+			      TupleDatum& tupleDatum,  
+			      TupleAttributeDescriptor& desc,
+			      uint64_t value);
+    static void setTupleDatum(StandardTypeDescriptorOrdinal type,
+			      TupleDatum& tupleDatum,  
+			      TupleAttributeDescriptor& desc,
+			      int64_t value);
+    static void setTupleDatum(StandardTypeDescriptorOrdinal type,
+			      TupleDatum& tupleDatum,  
+			      TupleAttributeDescriptor& desc,
+			      string value);
+    static void setTupleDatum(StandardTypeDescriptorOrdinal type,
+			      TupleDatum& tupleDatum,  
+			      TupleAttributeDescriptor& desc,
+			      PConstBuffer buffer);
 
 protected:
     friend int CalcYYparse (void *);

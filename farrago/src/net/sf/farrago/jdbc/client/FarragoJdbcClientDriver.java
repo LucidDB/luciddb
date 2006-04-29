@@ -75,10 +75,13 @@ public class FarragoJdbcClientDriver extends FarragoAbstractJdbcDriver
             return null;
         }
 
-        // don't modify user's properties: use only as our defaults
-        Properties driverProps = new Properties(info);
+        // connection property precedence:
+        // connect string (URI), info props, connection defaults
 
-        // move any params from the URI to the properties
+        // don't modify user's properties:
+        //  copy input props backed by connection defaults,
+        //  move any params from the URI to the properties
+        Properties driverProps = applyDefaultConnectionProps(info);
         String driverUrl = parseConnectionParams(url, driverProps);
 
         Driver rmiDriver;

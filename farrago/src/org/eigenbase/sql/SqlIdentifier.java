@@ -25,18 +25,10 @@ package org.eigenbase.sql;
 
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.util.SqlVisitor;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.validate.SqlValidatorNamespace;
-import org.eigenbase.sql.validate.SqlMoniker;
-import org.eigenbase.sql.validate.SqlMonikerImpl;
-import org.eigenbase.sql.validate.SqlMonikerType;
-import org.eigenbase.sql.validate.SqlMonikerComparator;
+import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.Util;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
+
+import java.util.*;
 
 
 /**
@@ -264,9 +256,9 @@ public class SqlIdentifier extends SqlNode
         return true;
     }
 
-    public void accept(SqlVisitor visitor)
+    public <R> R accept(SqlVisitor<R> visitor)
     {
-        visitor.visit(this);
+        return visitor.visit(this);
     }
 
     public SqlCollation getCollation()
@@ -306,18 +298,16 @@ public class SqlIdentifier extends SqlNode
     {
         // First check for builtin functions which don't have parentheses,
         // like "LOCALTIME".
-        SqlCall call = SqlUtil.makeCall(scope.getValidator().getOperatorTable(), this);
+        final SqlValidator validator = scope.getValidator();
+        SqlCall call = SqlUtil.makeCall(validator.getOperatorTable(), this);
         if (call != null) {
             return call.isMonotonic(scope);
         }
         final SqlIdentifier fqId = scope.fullyQualify(this);
-        SqlValidatorNamespace ns = null;
-        for (int i = 0; i < fqId.names.length - 1; i++) {
-            String name = fqId.names[i];
-            ns = (i == 0) ?
-                    scope.resolve(name, null, null) :
-                    ns.lookupChild(name, null, null);
-        }
+        final SqlValidatorNamespace ns =
+            SqlValidatorUtil.lookup(
+                scope,
+                Arrays.asList(fqId.names).subList(0, fqId.names.length - 1));
         return ns.isMonotonic(fqId.names[fqId.names.length - 1]);
     }
 

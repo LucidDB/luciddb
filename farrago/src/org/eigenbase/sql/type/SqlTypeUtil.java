@@ -198,13 +198,23 @@ public abstract class SqlTypeUtil
         final RelDataType [] argTypes,
         RelDataType type)
     {
-        for (int i = 0; i < argTypes.length; ++i) {
-            if (containsNullable(argTypes[i])) {
-                type = typeFactory.createTypeWithNullability(type, true);
-                break;
-            }
+        if (containsNullable(argTypes)) {
+            type = typeFactory.createTypeWithNullability(type, true);
         }
         return type;
+    }
+
+    /**
+     * Returns whether one or more of an array of types is nullable.
+     */
+    public static boolean containsNullable(RelDataType[] types)
+    {
+        for (int i = 0; i < types.length; i++) {
+            if (containsNullable(types[i])) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

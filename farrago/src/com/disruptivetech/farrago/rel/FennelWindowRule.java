@@ -27,6 +27,7 @@ import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.WindowedAggregateRel;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.util.Util;
@@ -235,11 +236,25 @@ public abstract class FennelWindowRule extends RelOptRule
 
         // Build the input program, and a permutation to map its outputs to
         // the output program.
+        final RexProgram inProgram;
         final RexProgram inputProgram;
         if (inCalc == null) {
-            inputProgram = RexProgram.createIdentity(child.getRowType());
+            inProgram =
+                inputProgram =
+                RexProgram.createIdentity(child.getRowType());
         } else {
-            inputProgram = inCalc.getProgram();
+            inProgram = inCalc.getProgram();
+            final RexProgramBuilder programBuilder =
+                RexProgramBuilder.forProgram(
+                    inProgram, cluster.getRexBuilder());
+            // Add the input fields first to the front of the project list.
+            final RelDataTypeField[] fields =
+                inProgram.getInputRowType().getFields();
+            for (int i = 0; i < fields.length; i++) {
+                RelDataTypeField field = fields[i];
+                programBuilder.addProject(i, i, field.getName());
+            }
+            inputProgram = programBuilder.getProgram();
         }
 
         // Build a list of distinct windows, partitions and aggregate
@@ -249,7 +264,7 @@ public abstract class FennelWindowRule extends RelOptRule
         final Map<RexNode, FennelWindowRel.RexWinAggCall> aggMap =
             new HashMap<RexNode, FennelWindowRel.RexWinAggCall>();
         final RexProgram aggProgram = RexProgramBuilder.mergePrograms(
-            winAggRel.getProgram(), inputProgram, cluster.getRexBuilder());
+            winAggRel.getProgram(), inProgram, cluster.getRexBuilder());
         for (RexNode agg : aggProgram.getExprList()) {
             if (agg instanceof RexOver) {
                 FennelWindowRel.RexWinAggCall aggCall =
@@ -350,7 +365,9 @@ public abstract class FennelWindowRule extends RelOptRule
         final RexProgram outputProgram;
         if (outCalc == null) {
             outputProgram = builder.getProgram();
-            assert RelOptUtil.eq("type1", outputProgram.getOutputRowType(), "type2", winAggRel.getRowType(), true);
+            assert RelOptUtil.eq(
+                "type1", outputProgram.getOutputRowType(),
+                "type2", winAggRel.getRowType(), true);
         } else {
             // Merge intermediate program (from winAggRel) with output program
             // (from outCalc).
@@ -358,8 +375,12 @@ public abstract class FennelWindowRule extends RelOptRule
             outputProgram = RexProgramBuilder.mergePrograms(
                 outCalc.getProgram(), intermediateProgram,
                 cluster.getRexBuilder());
-            assert RelOptUtil.eq("type1", outputProgram.getInputRowType(), "type2", intermediateRowType, true);
-            assert RelOptUtil.eq("type1", outputProgram.getOutputRowType(), "type2", outCalc.getRowType(), true);
+            assert RelOptUtil.eq(
+                "type1", outputProgram.getInputRowType(),
+                "type2", intermediateRowType, true);
+            assert RelOptUtil.eq(
+                "type1", outputProgram.getOutputRowType(),
+                "type2", outCalc.getRowType(), true);
         }
 
         // Put all these programs together in the final relational expression.

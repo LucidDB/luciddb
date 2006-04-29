@@ -35,6 +35,12 @@ import java.rmi.RemoteException;
  */
 public class FarragoRJJdbcServer extends RJJdbcServer
 {
+    /**
+     * reference prevents NoSuchObjectException during
+     * FarragoServer JUnit tests.
+     */
+    private static FarragoRJDriverServer driverServer;
+
     public static void main(String[] args)
     {
         try {
@@ -56,7 +62,13 @@ public class FarragoRJJdbcServer extends RJJdbcServer
 
     protected RJDriverServer buildDriverServer() throws RemoteException
     {
-        return new FarragoRJDriverServer(admpasswd_);
+        // Keeping this reference to our FarragoRJDriverServer remote object
+        // prevents NoSuchObjectException ("no such object in table")
+        // during FarragoServer JUnit tests. Without this, it seems as if RMI's
+        // distributed garbage collection would release this object's
+        // stub out from under the remote client.
+        driverServer = new FarragoRJDriverServer(admpasswd_);
+        return driverServer;
     }
 }
 
