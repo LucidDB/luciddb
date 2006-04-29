@@ -286,9 +286,9 @@ class ExecStreamSubFactory_lu
          * optimizer only supports inner equi hash join.
          */
         params.leftInner = true;
-        params.leftOuter = false;
+        params.leftOuter = streamDef.isLeftOuter();
         params.rightInner = true;
-        params.rightOuter = false;        
+        params.rightOuter = streamDef.isRightOuter();        
         params.eliminateDuplicate = false;
 
         CmdInterpreter::readTupleProjection(

@@ -629,7 +629,8 @@ public:
      * Find key node based on key cols.
      *
      * @param[in] inputTuple
-     * @param[in] keyColsProj
+     * @param[in] keyColsProj key columns from the inputTuple.
+     & @param[in] isProbing whether the hash table is being probed.
      *
      * @return status. true if this key is found in the hash table.
      */
@@ -758,7 +759,7 @@ public:
     void bindKey(PBuffer key);
 
     /**
-     * Bind this reader to unmatched keys.  Only rows with unmatched keys will
+     * Bind this reader to unmatched keys. Only rows with unmatched keys will
      * be returned.
      */
     void bindUnMatched();

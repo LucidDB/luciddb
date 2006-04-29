@@ -34,6 +34,7 @@
 -Dnet.sf.farrago.home=${farrago.dir}
 -Dnet.sf.farrago.catalog=${project.catalog.dir}
 -Djava.util.logging.config.file=${FarragoTrace.properties}
+${farrago.test.jvmargs}
 ">
 
 <!ENTITY FarragoSqlLineProps

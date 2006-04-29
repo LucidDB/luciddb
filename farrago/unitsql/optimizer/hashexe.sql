@@ -209,6 +209,71 @@ select * from lhxemps3, lhxemps4
 where lhxemps3.enameB = lhxemps4.enameC
 order by 1;
 
+insert into lhxemps3 values('Leo');
+
+insert into lhxemps4 values('Adel');
+
+-- outer join types
+explain plan for
+select * from lhxemps3 left outer join lhxemps4
+on lhxemps3.enameB = lhxemps4.enameC
+order by 1;
+
+select * from lhxemps3 left outer join lhxemps4
+on lhxemps3.enameB = lhxemps4.enameC
+order by 1;
+
+explain plan for
+select * from lhxemps3 right outer join lhxemps4
+on lhxemps3.enameB = lhxemps4.enameC
+order by 1;
+
+select * from lhxemps3 right outer join lhxemps4
+on lhxemps3.enameB = lhxemps4.enameC
+order by 1;
+
+explain plan for
+select * from lhxemps3 full outer join lhxemps4
+on lhxemps3.enameB = lhxemps4.enameC
+order by 1;
+
+select * from lhxemps3 full outer join lhxemps4
+on lhxemps3.enameB = lhxemps4.enameC
+order by 1;
+
+-- FIXME: currently only join conditions referencing input fields are
+-- recognized by hash join; cast() is produced by the input so the join
+-- condition is not recognized.
+-- In future, using an explicit cast operator will make the joinkeys
+-- have same data types. HashJoin can be used.
+
+explain plan for
+select * from lhxemps3 inner join lhxemps4
+on lhxemps3.enameB = cast(lhxemps4.enameC as char(20))
+order by 1;
+
+-- not null types are compatible with hash outer joins
+create table lhxemps5(
+    enameB char(20) not null)
+server sys_column_store_data_server;
+
+create table lhxemps6(
+    enameC char(20) not null)
+server sys_column_store_data_server;
+
+insert into lhxemps5 values('Leo');
+
+insert into lhxemps6 values('Adel');
+
+explain plan for
+select * from lhxemps5 full outer join lhxemps6
+on lhxemps5.enameB = lhxemps6.enameC
+order by 1;
+
+select * from lhxemps5 full outer join lhxemps6
+on lhxemps5.enameB = lhxemps6.enameC
+order by 1;
+
 --------------
 -- Clean up --
 --------------

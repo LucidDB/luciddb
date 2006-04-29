@@ -38,6 +38,7 @@
 -Dnet.sf.farrago.home=${farrago.dir}
 -Dnet.sf.farrago.catalog=${project.catalog.dir}
 -Djava.util.logging.config.file=${project.trace.propfile}
+${farrago.test.jvmargs}
 ">
 
 <!ENTITY FarragoSqlLineProps
@@ -70,6 +71,10 @@
 
   <!-- runtime assertion control -->
   <property name="assertions.jvmarg" value="-ea -esa"/>
+
+  <!-- Set a default for test jvmargs in case it's not set in
+       customBuild.properties. -->
+  <property name="farrago.test.jvmargs" value=""/>
 
 
   <!-- forked ant verbosity control -->

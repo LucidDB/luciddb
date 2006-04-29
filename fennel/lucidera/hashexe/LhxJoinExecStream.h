@@ -205,18 +205,34 @@ class LhxJoinExecStream : public ConfluenceExecStream
      */
     bool rightOuter;
 
-    /*
-     * Should this join filter null key values(when they are not already
+    /**
+     * Whether this join filters null key values(when they are not already
      * filtered at the input)
      */
     bool leftFilterNull;
     bool rightFilterNull;
-    
+
+    /*
+     * Some temporary variables.
+     */
+
     /*
      * Number of tuples produced within the current quantum.
      */
     uint numTuplesProduced;
 
+    /*
+     * The next state of the JoinExecStream
+     */
+    JoinState nextState;
+
+    /*
+     * tuple size
+     */
+    uint leftTupleSize;
+    uint rightTupleSize;
+
+    
     /**
      * implement ExecStream
      */

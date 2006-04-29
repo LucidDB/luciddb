@@ -715,24 +715,13 @@ public class SqlToRelConverter
             }
             JoinRelType convertedJoinType = convertJoinType(joinType);
             final JoinRelBase joinRel;
-            if (convertedJoinType == JoinRelType.RIGHT) {
-                // "class Join" does not support RIGHT, so swap...
-                joinRel = createJoin(
-                    bb,
-                    rightRel,
-                    leftRel,
-                    join.getCondition(),
-                    join.getConditionType(),
-                    JoinRelType.LEFT);
-            } else {
-                joinRel = createJoin(
-                    bb,
-                    leftRel,
-                    rightRel,
-                    join.getCondition(),
-                    join.getConditionType(),
-                    convertedJoinType);
-            }
+            joinRel = createJoin(
+                bb,
+                leftRel,
+                rightRel,
+                join.getCondition(),
+                join.getConditionType(),
+                convertedJoinType);
             bb.setRoot(joinRel, false);
             return;
 
