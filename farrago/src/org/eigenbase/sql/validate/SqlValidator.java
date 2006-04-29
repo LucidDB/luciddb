@@ -391,6 +391,18 @@ public interface SqlValidator
      * see if it's a constant
      */
     boolean isConstant(SqlNode expr);
+
+    RelDataType deriveConstructorType(
+        SqlValidatorScope scope,
+        SqlCall call,
+        SqlFunction unresolvedConstructor,
+        SqlFunction resolvedConstructor,
+        RelDataType [] argTypes);
+
+    void handleUnresolvedFunction(
+        SqlCall call,
+        SqlFunction unresolvedFunction,
+        RelDataType [] argTypes);
 }
 
 // End SqlValidator.java

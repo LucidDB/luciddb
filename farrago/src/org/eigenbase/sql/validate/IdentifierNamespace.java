@@ -106,14 +106,6 @@ public class IdentifierNamespace extends AbstractNamespace
         return null;
     }
 
-    public SqlValidatorNamespace lookupChild(
-        String name,
-        SqlValidatorScope[] ancestorOut,
-        int[] offsetOut)
-    {
-        return null;
-    }
-
     public SqlNodeList getMonotonicExprs()
     {
         return monotonicExprs;

@@ -140,6 +140,11 @@ public class WindowedAggSplitterRule extends RelOptRule
                         return call instanceof RexOver;
                     }
 
+                    protected boolean supportsCondition()
+                    {
+                        return false;
+                    }
+
                     protected RelNode makeRel(
                         RelOptCluster cluster,
                         RelTraitSet traits,

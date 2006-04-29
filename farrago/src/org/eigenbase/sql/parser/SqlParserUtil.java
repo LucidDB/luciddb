@@ -766,8 +766,12 @@ public final class SqlParserUtil
             line != endLine) {
             cut = lineColToIndex(sqlWithCarets, endLine, endCol);
             ++cut; // for caret
-            sqlWithCarets = sqlWithCarets.substring(0, cut) +
-                "^" + sqlWithCarets.substring(cut);
+            if (cut < sqlWithCarets.length()) {
+                sqlWithCarets = sqlWithCarets.substring(0, cut) +
+                    "^" + sqlWithCarets.substring(cut);
+            } else {
+                sqlWithCarets += "^";
+            }
         }
         return sqlWithCarets;
     }

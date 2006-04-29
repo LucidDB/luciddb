@@ -278,7 +278,31 @@ public class StandardConvertletTable extends ReflectiveConvertletTable
 
     public RexNode convertMultiset(
         SqlRexContext cx,
-        SqlMultisetOperator op,
+        SqlMultisetValueConstructor op,
+        SqlCall call)
+    {
+        final RelDataType originalType =
+            cx.getValidator().getValidatedNodeType(call);
+        RexRangeRef rr = cx.getSubqueryExpr(call);
+        assert rr != null;
+        RelDataType msType = rr.getType().getFields()[0].getType();
+        RexNode expr = cx.getRexBuilder().makeInputRef(msType, rr.getOffset());
+        assert msType.getComponentType().isStruct();
+        if (!originalType.getComponentType().isStruct()) {
+            // If the type is not a struct, the multiset operator will have
+            // wrapped the type as a record. Add a call to the $SLICE operator
+            // to compensate. For example,
+            // if '<ms>' has type 'RECORD (INTEGER x) MULTISET',
+            // then '$SLICE(<ms>) has type 'INTEGER MULTISET'.
+            // This will be removed as the expression is translated.
+            expr = cx.getRexBuilder().makeCall(SqlStdOperatorTable.sliceOp, expr);
+        }
+        return expr;
+    }
+
+    public RexNode convertMultisetQuery(
+        SqlRexContext cx,
+        SqlMultisetQueryConstructor op,
         SqlCall call)
     {
         final RelDataType originalType =

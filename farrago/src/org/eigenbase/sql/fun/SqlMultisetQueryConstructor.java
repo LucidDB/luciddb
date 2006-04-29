@@ -31,22 +31,22 @@ import org.eigenbase.sql.type.SqlTypeStrategies;
 import org.eigenbase.sql.type.SqlTypeUtil;
 
 /**
- * Definition of the SQL:2003 standard MULTISET constructor,
- * <code>MULTISET [&lt;expr&gt;, ...]</code>.
+ * Definition of the SQL:2003 standard MULTISET query constructor,
+ * <code>MULTISET (&lt;query&gt;)</code>.
  *
- * @see SqlMultisetQueryConstructor
+ * @see SqlMultisetValueConstructor
  * @author Wael Chatila
  * @since Oct 17, 2004
  * @version $Id$
  */
-public class SqlMultisetValueConstructor extends SqlSpecialOperator
+public class SqlMultisetQueryConstructor extends SqlSpecialOperator
 {
     //~ Constructors ----------------------------------------------------------
 
-    public SqlMultisetValueConstructor()
+    public SqlMultisetQueryConstructor()
     {
         // Precedence of 100 because nothing can pull parentheses apart.
-        super("MULTISET", SqlKind.MultisetValueConstructor, 100, false,
+        super("MULTISET", SqlKind.MultisetQueryConstructor, 100, false,
             SqlTypeStrategies.rtiFirstArgType,
             null,
             SqlTypeStrategies.otcVariadic);
@@ -58,7 +58,7 @@ public class SqlMultisetValueConstructor extends SqlSpecialOperator
         SqlOperatorBinding opBinding)
     {
         RelDataType type = getComponentType(
-            opBinding.getTypeFactory(),  opBinding.collectOperandTypes());
+            opBinding.getTypeFactory(), opBinding.collectOperandTypes());
         if (null == type) {
             return null;
         }
@@ -94,6 +94,17 @@ public class SqlMultisetValueConstructor extends SqlSpecialOperator
         return true;
     }
 
+    public RelDataType deriveType(
+        SqlValidator validator, SqlValidatorScope scope, SqlCall call)
+    {
+        SqlSelect subSelect = (SqlSelect) call.operands[0];
+        subSelect.validateExpr(validator, scope);
+        SqlValidatorNamespace ns = validator.getNamespace(subSelect);
+        assert null != ns.getRowType();
+        return SqlTypeUtil.createMultisetType(
+            validator.getTypeFactory(), ns.getRowType(), false);
+    }
+
     public void unparse(
         SqlWriter writer,
         SqlNode[] operands,
@@ -101,15 +112,13 @@ public class SqlMultisetValueConstructor extends SqlSpecialOperator
         int rightPrec) {
 
         writer.keyword("MULTISET");
-        final SqlWriter.Frame frame = writer.startList("[", "]");
-        for (int i = 0; i < operands.length; i++) {
-            writer.sep(",");
-            operands[i].unparse(writer, leftPrec, rightPrec);
-        }
+        final SqlWriter.Frame frame = writer.startList("(", ")");
+        assert operands.length == 1;
+        operands[0].unparse(writer, leftPrec, rightPrec);
         writer.endList(frame);
     }
 }
 
 
-// End SqlMultisetValueConstructor.java
+// End SqlMultisetQueryConstructor.java
 

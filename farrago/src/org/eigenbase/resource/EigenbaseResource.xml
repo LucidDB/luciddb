@@ -125,7 +125,11 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
 </exception>
 
 <exception id="120020" name="IncompatibleValueType" className="org.eigenbase.sql.validate.SqlValidatorException">
-    <text>Values passed to VALUES operator must have compatible types</text>
+    <text>Values passed to {0} operator must have compatible types</text>
+</exception>
+
+<exception id="120025" name="IncompatibleTypesInList" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Values in expression list must have compatible types</text>
 </exception>
 
 <exception id="120030" name="IncompatibleCharset">

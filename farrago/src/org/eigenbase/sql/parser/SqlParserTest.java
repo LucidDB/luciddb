@@ -776,14 +776,10 @@ public class SqlParserTest extends TestCase
             + "WHERE ((`DEPTNO` IN (10, 20)) AND (`GENDER` = 'F'))");
     }
 
-    // NOTE jvs 15-Nov-2003:  I disabled this because SQL standard requires
-    // lists to be non-empty.  Anything else would be an extension.  Is there a
-    // good reason to support it?
-    public void _testInListEmpty()
+    public void testInListEmptyFails()
     {
-        check("select * from emp where deptno in () and gender = 'F'",
-            "SELECT *" + NL + "FROM `EMP`" + NL
-            + "WHERE ((`DEPTNO` IN ()) AND (`GENDER` = 'F'))");
+        checkFails("select * from emp where deptno in (^)^ and gender = 'F'",
+            "(?s).*Encountered \"\\)\" at line 1, column 36\\..*");
     }
 
     public void testInQuery()

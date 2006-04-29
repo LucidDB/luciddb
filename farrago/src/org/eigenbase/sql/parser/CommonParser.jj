@@ -1221,7 +1221,7 @@ SqlNode TableConstructor() :
     rowConstructorList = RowConstructorList(pos)
     {
         return SqlStdOperatorTable.valuesOperator.createCall(
-            rowConstructorList.toArray(), pos);
+            rowConstructorList.toArray(), pos.plus(getPos()));
     }
 }
 
@@ -1699,7 +1699,7 @@ List Expression2(ExprContext exprContext) :
                 }
                 list2 = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_ALL)
                 {
-                    pos = getPos();
+                    pos = pos.plus(getPos());
                     // special case for stuff like IN (s1 UNION s2)
                     if (list2.size() == 1) {
                         SqlNode item = (SqlNode) list2.get(0);
@@ -2258,20 +2258,21 @@ SqlNode MultisetConstructor() :
 {
     List args;
     SqlNode e;
+    SqlParserPos pos;
 }
 {
     LOOKAHEAD(2)
-    <MULTISET>
+    <MULTISET> { pos = getPos(); }
     <LPAREN>
     //by sub query "MULTISET(SELECT * FROM T)"
     e = LeafQueryOrExpr(EXPR_ACCEPT_QUERY)
     <RPAREN>
     {
         return SqlStdOperatorTable.multisetQueryConstructor.createCall(
-            e, getPos());
+            e, pos.plus(getPos()));
     }
     |
-    <MULTISET>
+    <MULTISET> { pos = getPos(); }
     //by enumeration "MULTISET[e0, e1, ..., eN]"
     <LBRACKET> //todo do trigraph aswell ??( ??)
     e = Expression(EXPR_ACCEPT_NONQUERY) { args = startList(e); }
@@ -2281,7 +2282,7 @@ SqlNode MultisetConstructor() :
     <RBRACKET>
     {
         return SqlStdOperatorTable.multisetValueConstructor.createCall(
-            SqlParserUtil.toNodeArray(args), getPos());
+            SqlParserUtil.toNodeArray(args), pos.plus(getPos()));
     }
 }
 

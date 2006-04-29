@@ -947,7 +947,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     {
         check("values (1),(2),(1)");
         check("values (1,'1'),(2,'2')");
-        checkFails("^values^ ('1'),(2)",
+        checkFails("^values ('1'),(2)^",
             "Values passed to VALUES operator must have compatible types");
         if (todo) {
             checkColumnType("values (1),(2.0),(3)", "ROWTYPE(DOUBLE)");
@@ -963,7 +963,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType(
             "multiset['1','22', '333','22']",
             "CHAR(3) NOT NULL MULTISET NOT NULL");
-        checkExpFails("multiset[1, '2'^]", "Parameters must be of the same type"); // todo: fix pos
+        checkExpFails("^multiset[1, '2']^", "Parameters must be of the same type");
         checkExpType(
             "multiset[ROW(1,2)]",
             "RecordType(INTEGER NOT NULL EXPR$0, INTEGER NOT NULL EXPR$1) NOT NULL MULTISET NOT NULL");
@@ -998,7 +998,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExp("multiset[1] multiset intersect multiset[1,2.3]");
         checkExp("multiset[1] multiset intersect all multiset[1,2.3]");
 
-        checkExpFails("multiset[1, '2'^] multiset union multiset[1]", "Parameters must be of the same type");
+        checkExpFails("^multiset[1, '2']^ multiset union multiset[1]", "Parameters must be of the same type");
         checkExp("multiset[ROW(1,2)] multiset intersect multiset[row(3,4)]");
         if (todo) {
             checkWholeExpFails("multiset[ROW(1,'2')] multiset union multiset[ROW(1,2)]",
@@ -1011,7 +1011,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("multiset[1] submultiset of multiset[1,2.3]", "BOOLEAN NOT NULL");
         checkExpType("multiset[1] submultiset of multiset[1]", "BOOLEAN NOT NULL");
 
-        checkExpFails("multiset[1, '2'^] submultiset of multiset[1]", "Parameters must be of the same type"); // todo: fix pos
+        checkExpFails("^multiset[1, '2']^ submultiset of multiset[1]", "Parameters must be of the same type");
         checkExp("multiset[ROW(1,2)] submultiset of multiset[row(3,4)]");
     }
 
@@ -1427,7 +1427,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "UNBOUNDED PRECEDING cannot be specified for the upper frame boundary");
         checkWinFuncExp("sum(sal) over ("+
             "order by deptno "+
-            "rows between CURRENT ROW and 2 ^preceding^)",
+            "rows between CURRENT ROW and ^2 preceding^)",
             "Upper frame boundary cannot be PRECEDING when lower boundary is CURRENT ROW");
         checkWinFuncExp("sum(sal) over ("+
             "order by deptno "+
@@ -1435,7 +1435,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "Upper frame boundary cannot be CURRENT ROW when lower boundary is FOLLOWING");
         checkWinFuncExp("sum(sal) over ("+
             "order by deptno "+
-            "rows between 2 following and 2 ^preceding^)",
+            "rows between 2 following and ^2 preceding^)",
             "Upper frame boundary cannot be PRECEDING when lower boundary is FOLLOWING");
         checkWinFuncExp("sum(sal) over ("+
             "order by deptno "+
@@ -1550,11 +1550,11 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "UNBOUNDED PRECEDING cannot be specified for the upper frame boundary");
         checkWinClauseExp("window w as ("+
             "order by deptno "+
-            "rows between 2 following and 2 ^preceding^)",
+            "rows between 2 following and ^2 preceding^)",
             "Upper frame boundary cannot be PRECEDING when lower boundary is FOLLOWING");
         checkWinClauseExp("window w as ("+
             "order by deptno "+
-            "rows between CURRENT ROW and 2 ^preceding^)",
+            "rows between CURRENT ROW and ^2 preceding^)",
             "Upper frame boundary cannot be PRECEDING when lower boundary is CURRENT ROW");
         checkWinClauseExp("window w as ("+
             "order by deptno "+
@@ -1729,6 +1729,37 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         check("select * from emp as e" + NL +
             "where e.deptno in (" + NL +
             "  select e.deptno from (values(true)))");
+    }
+
+    public void testInList()
+    {
+        check("select * from emp where empno in (10,20)");
+        // "select * from emp where empno in ()" is invalid -- see parser test
+        check("select * from emp where empno in (10 + deptno, cast(null as integer))");
+        checkFails("select * from emp where empno ^in (10, '20')^",
+            "Values in expression list must have compatible types");
+
+
+        checkExpType("1 in (2, 3, 4)", "BOOLEAN NOT NULL");
+        checkExpType("cast(null as integer) in (2, 3, 4)", "BOOLEAN");
+        checkExpType("1 in (2, cast(null as integer) , 4)", "BOOLEAN");
+        checkExpType("1 in (2.5, 3.14)", "BOOLEAN NOT NULL");
+        checkExpType("true in (false, unknown)", "BOOLEAN");
+        checkExpType("true in (false, false or unknown)", "BOOLEAN");
+        checkExpType("true in (false, true)", "BOOLEAN NOT NULL");
+
+        // nullability depends on nullability of both sides
+        checkColumnType("select empno in (1, 2) from emp", "BOOLEAN NOT NULL");
+        checkColumnType("select nullif(empno,empno) in (1, 2) from emp", "BOOLEAN");
+        checkColumnType("select empno in (1, nullif(empno,empno), 2) from emp", "BOOLEAN");
+
+        checkExpFails("1 in (2, 'c')",
+            "Values in expression list must have compatible types");
+        checkExpFails("false and ^1 in ('b', 'c')^",
+            "Values passed to IN operator must have compatible types");
+        checkExpFails("1 > 5 ^or (1, 2) in (3, 4)^",
+            "Values passed to IN operator must have compatible types");
+        checkExpType("'medium' in (cast(null as varchar(10)), 'bc')", "BOOLEAN");
     }
 
     public void testDoubleNoAlias()
@@ -1933,6 +1964,15 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         check("select sum(sal + sal) from emp having sum(sal) > 10");
         checkFails("SELECT deptno FROM emp GROUP BY deptno HAVING ^sal^ > 10",
             "Expression 'SAL' is not being grouped");
+    }
+
+    public void testHavingBetween()
+    {
+        // FRG-115: having clause with between not working
+        if (Bug.Frg115Fixed)
+        check("select deptno from emp group by deptno having deptno between 10 and 12");
+        // this worked even before FRG-115 was fixed
+        check("select deptno from emp group by deptno having deptno + 5 > 10");
     }
 
     public void testOrder()
@@ -2254,7 +2294,6 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkColumnType("select*from unnest(multiset['1','22','333'])","CHAR(3) NOT NULL");
         checkColumnType("select*from unnest(multiset['1','22','333','22'])","CHAR(3) NOT NULL");
         checkFails("select*from unnest(1)","(?s).*Cannot apply 'UNNEST' to arguments of type 'UNNEST.<INTEGER>.'.*");
-
         check("select*from unnest(multiset(select*from dept))");
     }
 
@@ -2264,7 +2303,6 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "         multiset(select * from emp where deptno=dept.deptno) " +
             "               as empset" +
             "      from dept");
-
         check("select*from unnest(select multiset[8] from dept)");
         check("select*from unnest(select multiset[deptno] from dept)");
     }

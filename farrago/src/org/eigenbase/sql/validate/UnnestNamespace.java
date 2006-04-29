@@ -22,6 +22,10 @@
 package org.eigenbase.sql.validate;
 
 import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.SqlCall;
+import org.eigenbase.sql.SqlSelect;
+import org.eigenbase.sql.type.MultisetSqlType;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.reltype.RelDataType;
 
 /**
@@ -33,33 +37,56 @@ import org.eigenbase.reltype.RelDataType;
  */
 class UnnestNamespace extends AbstractNamespace
 {
-    private final SqlNode child;
+    private final SqlCall unnest;
     private final SqlValidatorScope scope;
 
     UnnestNamespace(
         SqlValidatorImpl validator,
-        SqlNode child,
+        SqlCall unnest,
         SqlValidatorScope scope)
     {
         super(validator);
-        this.child = child;
+        assert scope != null;
+        assert unnest.getOperator() == SqlStdOperatorTable.unnestOperator;
+        this.unnest = unnest;
         this.scope = scope;
     }
 
     protected RelDataType validateImpl()
     {
-        RelDataType type = validator.deriveType(scope, child);
+        // Validate the call and its arguments, and infer the return type.
+        validator.validateCall(unnest, scope);
+        RelDataType type =
+            unnest.getOperator().validateOperands(validator, scope, unnest);
+
         if (type.isStruct()) {
             return type;
         }
         return validator.getTypeFactory().createStructType(
             new RelDataType[]{type},
-            new String[]{ validator.deriveAlias(child, 0) });
+            new String[]{ validator.deriveAlias(unnest, 0) });
+    }
+
+    /**
+     * Returns the type of the argument to UNNEST.
+     */
+    private RelDataType inferReturnType()
+    {
+        final SqlNode operand = unnest.getOperands()[0];
+        RelDataType type = validator.getValidatedNodeType(operand);
+
+        // If sub-query, pick out first column.
+        // TODO: Handle this using usual sub-select validation.
+        if (type.isStruct()) {
+            type = type.getFields()[0].getType();
+        }
+        MultisetSqlType t = (MultisetSqlType) type;
+        return t.getComponentType();
     }
 
     public SqlNode getNode()
     {
-        return child;
+        return unnest;
     }
 }
 

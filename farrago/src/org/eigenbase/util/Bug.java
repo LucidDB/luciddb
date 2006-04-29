@@ -117,7 +117,15 @@ public abstract class Bug
 
     // jhyde
 
-    public static final boolean Dt545Fixed = false;
+    public static final boolean Dt213Fixed = false;
+
+    public static final boolean Dt536Fixed = false;
+
+    public static final boolean Dt561Fixed = false;
+
+    public static final boolean Dt562Fixed = false;
+
+    public static final boolean Dt563Fixed = false;
 
     /**
      * Whether <a href="http://issues.eigenbase.org/browse/FRG-26">
@@ -125,6 +133,13 @@ public abstract class Bug
      * is fixed.
      */
     public static final boolean Frg103Fixed = false;
+
+    /**
+     * Whether <a href="http://issues.eigenbase.org/browse/FRG-115">
+     * issue FRG-115: having clause with between not working</a>
+     * is fixed.
+     */
+    public static final boolean Frg115Fixed = false;
 
     // johnk
 

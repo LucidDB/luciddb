@@ -21,19 +21,16 @@
 */
 package org.eigenbase.sql.fun;
 
-import org.eigenbase.reltype.*;
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.*;
-import org.eigenbase.sql.util.*;
-import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.test.*;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.util.*;
+import org.eigenbase.sql.SqlBinaryOperator;
+import org.eigenbase.sql.SqlKind;
+import org.eigenbase.sql.type.SqlTypeStrategies;
 
-import java.util.*;
 /**
  * An operator which performs set operations on multisets, such as
- * "MULTISET UNION ALL". Not to be confused with {@link SqlMultisetOperator}.
+ * "MULTISET UNION ALL".
+ *
+ * <p>Not to be confused with {@link SqlMultisetValueConstructor} or
+ * {@link SqlMultisetQueryConstructor}.
  *
  * <p>todo: Represent the ALL keyword to MULTISET UNION ALL etc. as a
  * hidden operand. Then we can obsolete this class.

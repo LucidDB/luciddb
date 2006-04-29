@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/regressionsql/selectAdvanced.sql#4 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/selectAdvanced.sql#11 $
 0: jdbc:farrago:> -- Full vertical system testing of advanced select statements
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
@@ -141,11 +141,11 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- fails
 0: jdbc:farrago:> values cast(null as boolean) + cast(null as integer);
-Error: From line 1, column 28 to line 1, column 52: Cannot apply '+' to arguments of type '<BOOLEAN> + <INTEGER>'. Supported form(s): '<NUMERIC> + <NUMERIC>'
+Error: From line 1, column 13 to line 1, column 52: Cannot apply '+' to arguments of type '<BOOLEAN> + <INTEGER>'. Supported form(s): '<NUMERIC> + <NUMERIC>'
 '<DATETIME_INTERVAL> + <DATETIME_INTERVAL>' (state=,code=0)
 0: jdbc:farrago:> -- fails
 0: jdbc:farrago:> values cast(null as boolean) and 1;
-Error: From line 1, column 28 to line 1, column 34: Cannot apply 'AND' to arguments of type '<BOOLEAN> AND <INTEGER>'. Supported form(s): '<BOOLEAN> AND <BOOLEAN>' (state=,code=0)
+Error: From line 1, column 13 to line 1, column 34: Cannot apply 'AND' to arguments of type '<BOOLEAN> AND <INTEGER>'. Supported form(s): '<BOOLEAN> AND <BOOLEAN>' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- OK - some of these test fail due to cast issues but shouldnt
 0: jdbc:farrago:> --values cast(null as tinyint)+1;

@@ -218,6 +218,28 @@ public class RexProgram
         return (RexNode []) list.toArray(new RexNode[list.size()]);
     }
 
+    // description of this calc, chiefly intended for debugging
+    public String toString()
+    {
+        // Intended to produce similar output to explainCalc,
+        // but without requiring a RelNode or RelOptPlanWriter.
+        List termList = new ArrayList();
+        List valueList = new ArrayList();
+        collectExplainTerms("", termList, valueList);
+        final StringBuffer buf = new StringBuffer("(");
+        for (int i = 0; i < valueList.size(); i++) {
+            if (i > 0) {
+                buf.append(", ");
+            }
+            buf.append(termList.get(i))
+                .append("=[")
+                .append(valueList.get(i))
+                .append("]");
+        }
+        buf.append(")");
+        return buf.toString();
+    }
+
     /**
      * Writes an explanation of the expressions in this program to a plan
      * writer.
@@ -555,6 +577,34 @@ public class RexProgram
             outputCollations.add(
                 new RelCollationImpl(fieldCollations));
         }
+    }
+
+    /**
+     * Returns whether the fields on the leading edge of the project list
+     * are the input fields.
+     * @param fail
+     */
+    public boolean projectsIdentity(final boolean fail)
+    {
+        final int fieldCount = inputRowType.getFieldCount();
+        if (projects.length < fieldCount) {
+            assert !fail :
+                "program '" + toString() +
+                "' does not project identity for input row type '" +
+                inputRowType + "'";
+            return false;
+        }
+        for (int i = 0; i < fieldCount; i++) {
+            RexLocalRef project = projects[i];
+            if (project.index != i) {
+                assert !fail :
+                    "program " + toString() +
+                    "' does not project identity for input row type '" +
+                    inputRowType + "', field #" + i;
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

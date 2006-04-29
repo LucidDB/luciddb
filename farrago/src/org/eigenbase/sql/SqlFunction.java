@@ -221,6 +221,58 @@ public class SqlFunction extends SqlOperator
                 .FunctionQuantifierNotAllowed.ex(call.getOperator().getName()));
         }
     }
+
+    public RelDataType deriveType(
+        SqlValidator validator, SqlValidatorScope scope, SqlCall call)
+    {
+        final SqlNode[] operands = call.operands;
+        RelDataType[] argTypes = new RelDataType[operands.length];
+
+        for (int i = 0; i < operands.length; ++i) {
+            RelDataType nodeType = validator.deriveType(scope, operands[i]);
+            validator.setValidatedNodeType(operands[i], nodeType);
+            argTypes[i] = nodeType;
+        }
+
+        SqlFunction function;
+        if (operands.length == 0 &&
+            getSyntax() == SqlSyntax.FunctionId) {
+            // For example, "LOCALTIME()" is illegal. (It should be
+            // "LOCALTIME", which would have been handled as a
+            // SqlIdentifier.)
+            function = null;
+        } else {
+            function = SqlUtil.lookupRoutine(
+                validator.getOperatorTable(),
+                getNameAsId(),
+                argTypes,
+                getFunctionType());
+            if (getFunctionType() ==
+                SqlFunctionCategory.UserDefinedConstructor)
+            {
+                return validator.deriveConstructorType(
+                    scope,
+                    call,
+                    this,
+                    function,
+                    argTypes);
+            }
+        }
+        if (function == null) {
+            validator.handleUnresolvedFunction(
+                call,
+                this,
+                argTypes);
+        }
+
+        // REVIEW jvs 25-Mar-2005:  This is, in a sense, expanding
+        // identifiers, but we ignore shouldExpandIdentifiers()
+        // because otherwise later validation code will
+        // choke on the unresolved function.
+        call.setOperator(function);
+        return function.validateOperands(
+            validator, scope, call);
+    }
 }
 
 

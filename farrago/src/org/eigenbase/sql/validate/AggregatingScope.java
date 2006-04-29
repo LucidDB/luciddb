@@ -36,7 +36,7 @@ import org.eigenbase.sql.SqlNode;
  * @version $Id$
  * @since Mar 25, 2003
  */
-interface AggregatingScope extends SqlValidatorScope 
+public interface AggregatingScope extends SqlValidatorScope 
 {
     /**
      * If this scope is aggregating, return the non-aggregating parent
