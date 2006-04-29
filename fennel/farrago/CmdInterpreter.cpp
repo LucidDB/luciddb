@@ -494,6 +494,6 @@ void CmdInterpreter::readTupleProjection(
     }
 }
 
-FENNEL_END_CPPFILE("$Id$");
+FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/farrago/CmdInterpreter.cpp#29 $");
 
 // End CmdInterpreter.cpp
