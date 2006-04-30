@@ -53,16 +53,29 @@ public interface FarragoSessionPersonality extends FarragoStreamFactoryProvider
         FarragoSessionPreparingStmt preparingStmt);
 
     /**
-     * Gets the implementation table to use for compiling a statement.
+     * Gets the implementation table to use for compiling a statement that
+     * uses a Java calculator.
      *
      * @param preparingStmt statement being prepared
      *
      * @return table of implementations corresponding to result
-     * of {@link #getSqlOperatorTable}
+     * of {@link #getSqlOperatorTable(FarragoSessionPreparingStmt)}
      */
     public OJRexImplementorTable getOJRexImplementorTable(
         FarragoSessionPreparingStmt preparingStmt);
-    
+
+    /**
+     * Gets the component associated with the given Class object from
+     * the personality.  If the personality does not support (or
+     * recognize) the component type, it returns null.  The returned
+     * instance is guaranteed to be of type <code>C</code> or a
+     * subclass.
+     *
+     * @param componentInterface the interface desired
+     * @return an implementation of <code>componentInterface</code> or null
+     */
+    public <C> C newComponentImpl(Class<C> componentInterface);
+
     /**
      * Gets the name of the local data server to use for tables when none
      * is specified by CREATE TABLE.

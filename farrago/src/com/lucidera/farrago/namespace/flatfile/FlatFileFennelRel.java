@@ -226,7 +226,7 @@ class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
 
             // translate to a fennel calc program
             RexToCalcTranslator translator =
-                new RexToCalcTranslator(rexBuilder);
+                new RexToCalcTranslator(rexBuilder, FlatFileFennelRel.this);
             return translator.generateProgram(inputRowType, program);
         }
 

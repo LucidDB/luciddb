@@ -161,7 +161,7 @@ public class FarragoAutoCalcRule extends RelOptRule
                 calc.getTraits(), FennelRel.FENNEL_EXEC_CONVENTION, relInput);
 
         final RexToCalcTranslator translator =
-            new RexToCalcTranslator(calc.getCluster().getRexBuilder());
+            new RexToCalcTranslator(calc.getCluster().getRexBuilder(), calc);
 
         // If can translate, do nothing, and let FennelCalcRule handle this
         // CalcRel.

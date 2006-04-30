@@ -21,6 +21,8 @@
 */
 package net.sf.farrago.defimpl;
 
+import com.disruptivetech.farrago.calc.CalcRexImplementorTable;
+import com.disruptivetech.farrago.calc.CalcRexImplementorTableImpl;
 import com.disruptivetech.farrago.fennel.*;
 import com.lucidera.farrago.fennel.*;
 import com.lucidera.lurql.*;
@@ -120,6 +122,16 @@ public class FarragoDefaultSessionPersonality
         FarragoSessionPreparingStmt preparingStmt)
     {
         return database.getOJRexImplementorTable();
+    }
+    
+    // implement FarragoSessionPersonality
+    public <C> C newComponentImpl(Class<C> componentInterface)
+    {
+        if (componentInterface == CalcRexImplementorTable.class) {
+            return componentInterface.cast(CalcRexImplementorTableImpl.std());
+        }
+
+        return null;
     }
     
     // implement FarragoSessionPersonality
