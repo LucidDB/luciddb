@@ -909,7 +909,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, RECTANGLES]])'
-'    FennelCalcRel(expr#0=[{inputs}], expr#1=[_ISO-8859-1'Default'], expr#2=[false], expr#3=[2.0], expr#4=[Reinterpret($t3)], expr#5=[CAST($t4):DOUBLE NOT NULL], expr#6=[10], expr#7=[/($t5, $t6)], expr#8=[CAST($t7):DOUBLE], expr#9=[4.0], expr#10=[Reinterpret($t9)], expr#11=[CAST($t10):DOUBLE NOT NULL], expr#12=[/($t11, $t6)], expr#13=[CAST($t12):DOUBLE], expr#14=[1], expr#15=[CAST($t1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#16=[CAST($t2):BOOLEAN], $f0=[$t15], $f1=[$t16], $f1=[$t8], $f1=[$t13], $f2=[$t14])'
+'    FennelCalcRel(expr#0=[{inputs}], expr#1=[_ISO-8859-1'Default'], expr#2=[false], expr#3=[2.0], expr#4=[Reinterpret($t3)], expr#5=[CAST($t4):DOUBLE NOT NULL], expr#6=[1E1], expr#7=[/($t5, $t6)], expr#8=[CAST($t7):DOUBLE], expr#9=[4.0], expr#10=[Reinterpret($t9)], expr#11=[CAST($t10):DOUBLE NOT NULL], expr#12=[/($t11, $t6)], expr#13=[CAST($t12):DOUBLE], expr#14=[1], expr#15=[CAST($t1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#16=[CAST($t2):BOOLEAN], $f0=[$t15], $f1=[$t16], $f1=[$t8], $f1=[$t13], $f2=[$t14])'
 '      FennelValuesRel(tuples=[[{ 0 }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for

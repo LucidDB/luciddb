@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/negative.sql#6 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/regressionsql/negative.sql#2 $
 0: jdbc:farrago:> -- Full vertical negative system testing
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
@@ -73,17 +73,17 @@ Messages:
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
-[0]:PC=5 Code=22023 (state=,code=0)
+[0]:PC=4 Code=22023 (state=,code=0)
 0: jdbc:farrago:> values ln(0.0);
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
-[0]:PC=3 Code=22023 (state=,code=0)
+[0]:PC=2 Code=22023 (state=,code=0)
 0: jdbc:farrago:> values log10(0.0);
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
-[0]:PC=3 Code=22023 (state=,code=0)
+[0]:PC=2 Code=22023 (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values 1='';
 Error: From line 1, column 8 to line 1, column 11: Cannot apply '=' to arguments of type '<INTEGER> = <CHAR(0)>'. Supported form(s): '<COMPARABLE_TYPE> = <COMPARABLE_TYPE>' (state=,code=0)
@@ -147,11 +147,11 @@ Error: From line 1, column 8 to line 1, column 26: Cannot apply '+' to arguments
 '+<DATETIME_INTERVAL>' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values x'' between x'' and 1;
-Error: From line 1, column 12 to line 1, column 18: Cannot apply 'BETWEEN' to arguments of type '<BINARY(0)> BETWEEN <BINARY(0)> AND <INTEGER>'. Supported form(s): '<COMPARABLE_TYPE> BETWEEN <COMPARABLE_TYPE> AND <COMPARABLE_TYPE>' (state=,code=0)
+Error: From line 0, column 0 to line 1, column 28: Cannot apply 'BETWEEN' to arguments of type '<BINARY(0)> BETWEEN <BINARY(0)> AND <INTEGER>'. Supported form(s): '<COMPARABLE_TYPE> BETWEEN <COMPARABLE_TYPE> AND <COMPARABLE_TYPE>' (state=,code=0)
 0: jdbc:farrago:> values x'' not between '' and 3;
-Error: From line 1, column 16 to line 1, column 22: Cannot apply 'NOT BETWEEN' to arguments of type '<BINARY(0)> NOT BETWEEN <CHAR(0)> AND <INTEGER>'. Supported form(s): '<COMPARABLE_TYPE> NOT BETWEEN <COMPARABLE_TYPE> AND <COMPARABLE_TYPE>' (state=,code=0)
+Error: From line 0, column 0 to line 1, column 31: Cannot apply 'NOT BETWEEN' to arguments of type '<BINARY(0)> NOT BETWEEN <CHAR(0)> AND <INTEGER>'. Supported form(s): '<COMPARABLE_TYPE> NOT BETWEEN <COMPARABLE_TYPE> AND <COMPARABLE_TYPE>' (state=,code=0)
 0: jdbc:farrago:> values '' between '' and 1.0;
-Error: From line 1, column 11 to line 1, column 17: Cannot apply 'BETWEEN' to arguments of type '<CHAR(0)> BETWEEN <CHAR(0)> AND <DECIMAL(2, 1)>'. Supported form(s): '<COMPARABLE_TYPE> BETWEEN <COMPARABLE_TYPE> AND <COMPARABLE_TYPE>' (state=,code=0)
+Error: From line 0, column 0 to line 1, column 28: Cannot apply 'BETWEEN' to arguments of type '<CHAR(0)> BETWEEN <CHAR(0)> AND <DECIMAL(2, 1)>'. Supported form(s): '<COMPARABLE_TYPE> BETWEEN <COMPARABLE_TYPE> AND <COMPARABLE_TYPE>' (state=,code=0)
 0: jdbc:farrago:> --all then's and else return null forbidden in SQL99
 0: jdbc:farrago:> values CASE 1 WHEN 1 THEN NULL WHEN 2 THEN NULL END;
 Error: ELSE clause or at least one THEN clause must be non-NULL (state=,code=0)
@@ -169,7 +169,7 @@ Messages:
 [0]:PC=0 Code=22027 (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values position(1 in 'superman');
-Error: From line 1, column 8 to line 1, column 15: Cannot apply 'POSITION' to arguments of type 'POSITION(<INTEGER> IN <CHAR(8)>)'. Supported form(s): 'POSITION(<STRING> IN <STRING>)' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 31: Cannot apply 'POSITION' to arguments of type 'POSITION(<INTEGER> IN <CHAR(8)>)'. Supported form(s): 'POSITION(<STRING> IN <STRING>)' (state=,code=0)
 0: jdbc:farrago:> values character_length(1);
 Error: From line 1, column 8 to line 1, column 26: Cannot apply 'CHARACTER_LENGTH' to arguments of type 'CHARACTER_LENGTH(<INTEGER>)'. Supported form(s): 'CHARACTER_LENGTH(<CHARACTER>)' (state=,code=0)
 0: jdbc:farrago:> values char_length(x'');
@@ -217,11 +217,11 @@ Error: From line 1, column 8 to line 1, column 22: No match found for function s
 Error: From line 1, column 8 to line 1, column 19: Invalid number of arguments to function 'LOG10'. Was expecting 1 arguments (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values (1),(2,3);
-Error: From line 1, column 1 to line 1, column 6: Values passed to VALUES operator must have compatible types (state=,code=0)
+Error: From line 1, column 1 to line 1, column 16: Values passed to VALUES operator must have compatible types (state=,code=0)
 0: jdbc:farrago:> values (1),('1');
-Error: From line 1, column 1 to line 1, column 6: Values passed to VALUES operator must have compatible types (state=,code=0)
+Error: From line 1, column 1 to line 1, column 16: Values passed to VALUES operator must have compatible types (state=,code=0)
 0: jdbc:farrago:> values (1,'1'),(2,3);
-Error: From line 1, column 1 to line 1, column 6: Values passed to VALUES operator must have compatible types (state=,code=0)
+Error: From line 1, column 1 to line 1, column 20: Values passed to VALUES operator must have compatible types (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
