@@ -364,12 +364,14 @@ drop table flatfile_table;
 -- Part 3. Cluster Projection test --
 -------------------------------------
 create table tencols(c0 int, c1 int, c2 int, c3 int, c4 int, c5 int, c6 int,
-                     c7 int, c8 int, c9 int)
+                        c7 int, c8 int, c9 int)
 create clustered index i_c0 on tencols(c0)
 create clustered index i_c1_c2 on tencols(c1, c2)
 create clustered index i_c3_c4_c5 on tencols(c3, c4, c5)
 create clustered index i_c6_c7_c8_c9 on tencols(c6, c7, c8, c9);
+create index i_c9 on tencols(c9);
 insert into tencols values(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+insert into tencols values(-1, -1, -1, -1, -1, -1, -1, -1, -1, -1);
 
 !set outputformat csv
 -- should select all clusters
@@ -393,11 +395,12 @@ explain plan for select c2, c4, c8, c0 from tencols
     where c0 = 0 and c2 = 2 and c4 = 4 and c8 = 8;
 explain plan for select c7, c0, c5, c1 from tencols
     where c1 + c5 = 6;
--- can't push projection because filter references an additional column
 explain plan for select c0, c5, c7, c1 from tencols
     where c0 + c2 = 2;
--- can't push projection because projection contains an expression
 explain plan for select c0 + c1 from tencols where c0 = 0;
+-- column referenced in filter is processed by the index scan so it should
+-- not be projected
+explain plan for select c0 from tencols where c9 = 9;
 
 !set outputformat table
 
@@ -408,6 +411,7 @@ select c7, c0, c5, c1 from tencols
 select c7, c0, c5, c1 from tencols
     where c0 + c2 = 2;
 select c0 + c1 from tencols where c0 = 0;
+select c0 from tencols where c9 = 9;
 
 truncate table tencols;
 

@@ -285,6 +285,31 @@ class LcsIndexSearchRel extends FennelSingleRel
     {
         return indexScanRel;
     }
+    
+    public boolean getIsUniqueKey()
+    {
+        return isUniqueKey;
+    }
+    
+    public boolean getIsOuter()
+    {
+        return isOuter;
+    }
+    
+    public Integer[] getInputKeyProj()
+    {
+        return inputKeyProj;
+    }
+    
+    public Integer[] getInputJoinProj()
+    {
+        return inputJoinProj;
+    }
+    
+    public Integer[] getInputDirectiveProj()
+    {
+        return inputDirectiveProj;
+    }
 }
 
 //End LcsIndexSearchRel.java

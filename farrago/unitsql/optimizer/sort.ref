@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/sort.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev_lcs/farrago/unitsql/optimizer/sort.sql#2 $
 0: jdbc:farrago:> -- Test queries which execute row-by-row filters
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'sales';
@@ -68,10 +68,9 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
-'    FennelCalcRel(expr#0..11=[{inputs}], A=[$t2], B=[$t10])'
-'      FennelCartesianProductRel(leftouterjoin=[false])'
-'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-'        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FennelCartesianProductRel(leftouterjoin=[false])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select emps.deptno a, depts.deptno b from emps, depts order by a, b;
 'A','B'
@@ -97,10 +96,9 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 0]], discardDuplicates=[false])'
-'    FennelCalcRel(expr#0..11=[{inputs}], DEPTNO=[$t2], DEPTNO0=[$t10])'
-'      FennelCartesianProductRel(leftouterjoin=[false])'
-'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-'        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FennelCartesianProductRel(leftouterjoin=[false])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- select emps.deptno, depts.deptno from emps, depts
 0: jdbc:farrago:> -- order by emps.deptno, depts.deptno;

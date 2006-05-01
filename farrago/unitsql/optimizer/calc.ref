@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/calc.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev_lcs/farrago/unitsql/optimizer/calc.sql#1 $
 0: jdbc:farrago:> -- Test queries which instantiate the calculator (filter and/or project)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'sales';
@@ -9,13 +9,13 @@
 0: jdbc:farrago:> -- filter which returns one row
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from emps where lower(name) = 'wilma';
-+----------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                      column0                                                                       |
-+----------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                          |
-|   FennelCalcRel(expr#0..9=[{inputs}], expr#10=[LOWER($t1)], expr#11=[_ISO-8859-1'wilma'], expr#12=[=($t10, $t11)], NAME=[$t1], $condition=[$t12])  |
-|     FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])     |
-+----------------------------------------------------------------------------------------------------------------------------------------------------+
++-------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                  column0                                                                  |
++-------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                 |
+|   FennelCalcRel(expr#0=[{inputs}], expr#1=[LOWER($t0)], expr#2=[_ISO-8859-1'wilma'], expr#3=[=($t1, $t2)], NAME=[$t0], $condition=[$t3])  |
+|     FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])                            |
++-------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- project
 0: jdbc:farrago:> explain plan for

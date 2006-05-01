@@ -87,7 +87,6 @@ class LcsDataServer extends MedAbstractFennelDataServer
         planner.addRule(new LcsTableProjectionRule());
         planner.addRule(new LcsIndexBuilderRule());
         planner.addRule(new LcsIndexAccessRule());
-        planner.addRule(new LcsPushProjectPastFilterRule());
         
         // multiple sub-rules need to be specified for this rule
         // because we need to distinguish the cases where there are
@@ -113,8 +112,16 @@ class LcsDataServer extends MedAbstractFennelDataServer
                 new RelOptRuleOperand [] {
                     new RelOptRuleOperand(LcsRowScanRel.class,
                     new RelOptRuleOperand [] {
+                        new RelOptRuleOperand(LcsIndexSearchRel.class, null)
+                })}), "with index search child"));
+        planner.addRule(new LcsIndexSemiJoinRule(
+            new RelOptRuleOperand(
+                SemiJoinRel.class,
+                new RelOptRuleOperand [] {
+                    new RelOptRuleOperand(LcsRowScanRel.class,
+                    new RelOptRuleOperand [] {
                         new RelOptRuleOperand(LcsIndexMergeRel.class,
-                        new RelOptRuleOperand [] {
+                            new RelOptRuleOperand [] {
                             new RelOptRuleOperand(LcsIndexSearchRel.class, null)
                 })})}), "with merge child"));
     }

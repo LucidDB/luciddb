@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/view.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev_lcs/farrago/unitsql/optimizer/view.sql#1 $
 0: jdbc:farrago:> -- Test queries against views
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !autocommit off
@@ -56,9 +56,9 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
-'    FennelCalcRel(expr#0..11=[{inputs}], DNAME=[$t11], ENAME=[$t1])'
-'      FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[2]], inputJoinProj=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]], inputDirectiveProj=[[]])'
-'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FennelCalcRel(expr#0..3=[{inputs}], DNAME=[$t3], ENAME=[$t0])'
+'      FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[1]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2]], index=[EMPS_UX], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> rollback;
 0: jdbc:farrago:> 

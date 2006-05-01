@@ -78,7 +78,16 @@ public class LcsIndexSemiJoinRule extends RelOptRule
         //     new RelOptRuleOperand [] {
         //         new RelOptRuleOperand(LcsRowScanRel.class,
         //         new RelOptRuleOperand [] {
-        //             new RelOptRuleOperand(LcsIndexMergeRel.class, 
+        //             new RelOptRuleOperand(LcsIndexSearchRel.class, null) 
+        //     })})
+        // or
+        //
+        // RelOptRuleOperand(
+        //     SemiJoinRel.class,
+        //     new RelOptRuleOperand [] {
+        //         new RelOptRuleOperand(LcsRowScanRel.class,
+        //         new RelOptRuleOperand [] {
+        //             new RelOptRuleOperand(LcsIndexMergeRel.class,
         //             new RelOptRuleOperand [] {
         //                 new RelOptRuleOperand(LcsIndexSearchRel.class, null)
         //     })})})
@@ -217,10 +226,7 @@ public class LcsIndexSemiJoinRule extends RelOptRule
                 false);
         
         // create a merge and index search on top of the index scan
-        boolean needIntersect =
-            (call.rels.length > 2 &&
-                (call.rels[2] instanceof LcsIndexIntersectRel ||
-                    call.rels[2] instanceof LcsIndexMergeRel));
+        boolean needIntersect = (call.rels.length > 2);
         FennelRelImplementor relImplementor = 
             FennelRelUtil.getRelImplementor(origRowScan);
         RelNode[] inputRels = createMergeIdxSearches(
@@ -323,11 +329,11 @@ public class LcsIndexSemiJoinRule extends RelOptRule
         
         // directives don't need to be passed into the index search
         // because we are doing an equijoin where the sort feeds in
-        // the search values
+        // the search values; also no need to set the dynamic parameters
+        // since those are set in the parent index merge rel
         LcsIndexSearchRel indexSearch =
             new LcsIndexSearchRel(
-                sort, indexScan, true, false, null, null, null,
-                startRidParamId, rowLimitParamId);
+                sort, indexScan, true, false, null, null, null, null, null);
     
         // create a merge on top of the index search
         LcsIndexMergeRel merge = 
@@ -385,24 +391,32 @@ public class LcsIndexSemiJoinRule extends RelOptRule
                 mergeRels[i] = existingMerges.getInputs()[i];
             }
         } else {
-            assert(existingMerges instanceof LcsIndexMergeRel);
             nMergeRels = 1;
             mergeRels = new RelNode[2];
-            // need to "redo" this chain of merge/index search/sort RelNodes
-            // since the index search doesn't have the dynamic parameters
-            // set
-            LcsIndexSearchRel indexSearch = (LcsIndexSearchRel) call.rels[3];
-            LcsIndexScanRel indexScan = indexSearch.getIndexScan();
-            LcsIndexSearchRel newIndexSearch =
-                new LcsIndexSearchRel(
-                    indexSearch.getChild(), indexScan, true, false, null,
-                    null, null,
-                    startRidParamId, rowLimitParamId);
-            mergeRels[0] =
-                new LcsIndexMergeRel(
-                    rowScan.lcsTable, newIndexSearch,
-                    startRidParamId, rowLimitParamId,
-                    relImplementor.allocateRelParamId());
+            
+            if (existingMerges instanceof LcsIndexMergeRel) {
+                // recreate the index merge rel with the appropriate dynamic
+                // params
+                mergeRels[0] =
+                    new LcsIndexMergeRel(
+                        rowScan.lcsTable, (LcsIndexSearchRel) call.rels[3],
+                        startRidParamId, rowLimitParamId,
+                        relImplementor.allocateRelParamId());
+            } else {
+                // recreate the index search with the appropriate dynamic
+                // params
+                assert(existingMerges instanceof LcsIndexSearchRel);
+                LcsIndexSearchRel indexSearch =
+                    (LcsIndexSearchRel) call.rels[2];
+                mergeRels[0] =
+                    new LcsIndexSearchRel(
+                        indexSearch.getChild(), indexSearch.getIndexScan(),
+                        indexSearch.getIsUniqueKey(), indexSearch.getIsOuter(),
+                        indexSearch.getInputKeyProj(),
+                        indexSearch.getInputJoinProj(),
+                        indexSearch.getInputDirectiveProj(),
+                        startRidParamId, rowLimitParamId);
+            }
         }
         mergeRels[nMergeRels] = newMerge;
         

@@ -131,6 +131,8 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
         planner.addRule(ReduceAggregatesRule.instance);
         
         planner.addRule(new PushFilterRule());
+        planner.addRule(new PushProjectPastFilterRule());
+        planner.addRule(new PushProjectPastJoinRule());
         
         if (fennelEnabled) {
             planner.addRule(new FennelSortRule());

@@ -41,9 +41,19 @@ public class LoptOptimizeJoinRule extends RelOptRule
 {
     //~ Constructors -----------------------------------------------------------
 
-    public LoptOptimizeJoinRule()
+    public LoptOptimizeJoinRule(RelOptRuleOperand rule, String id)
     {
-        super(new RelOptRuleOperand(MultiJoinRel.class, null));
+        // This rule is fired for either of the following two patterns:
+        //
+        // RelOptRuleOperand(
+        //     ProjectRel.class,
+        //     new RelOptRuleOperand [] {
+        //         new RelOptRuleOperand(MultiJoinRel.class, null)})
+        //
+        // RelOptRuleOperand(MultiJoinRel.class, null)
+        //
+        super(rule);
+        description = "LoptOptimizeJoinRule: " + id;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -51,7 +61,12 @@ public class LoptOptimizeJoinRule extends RelOptRule
     // implement RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
-        MultiJoinRel multiJoinRel = (MultiJoinRel) call.rels[0];
+        MultiJoinRel multiJoinRel;
+        if (call.rels.length == 1) {
+            multiJoinRel = (MultiJoinRel) call.rels[0];
+        } else {
+            multiJoinRel = (MultiJoinRel) call.rels[1];
+        }
         LoptMultiJoin multiJoin = new LoptMultiJoin(multiJoinRel);
         
         RexBuilder rexBuilder = multiJoinRel.getCluster().getRexBuilder();
@@ -65,7 +80,7 @@ public class LoptOptimizeJoinRule extends RelOptRule
         // iteratively calling chooseBestSemiJoin; chooseBestSemiJoin will
         // apply semijoins in sort order, based on the cost of scanning each
         // factor; as it selects semijoins to apply and iterates through the
-        // loop, the cost of scanning an factor will decrease in accordance
+        // loop, the cost of scanning a factor will decrease in accordance
         // with the semijoins selected
         int iterations = 0;
         do {
@@ -94,25 +109,41 @@ public class LoptOptimizeJoinRule extends RelOptRule
         LoptMultiJoin multiJoin, LoptSemiJoinOptimizer semiJoinOpt,
         RelOptRuleCall call)
     {
-    	int nTotalFields = multiJoin.getNumTotalFields();
-        String fieldNames[] = new String[nTotalFields];
-        int currField = 0;
+        // Setup the fieldnames for the projection.  The type of projection
+        // we create depends on whether this rule was matched with or
+        // without a projection.  In the case of the former, the projection
+        // will consist of all the join fields, reordered to match the 
+        // original join ordering  
         int nJoinFactors = multiJoin.getNumJoinFactors();
-        for (int i = 0; i < nJoinFactors; i++) {
-            RelDataTypeField[] fields =
-                multiJoin.getJoinFactor(i).getRowType().getFields();
-            for (int j = 0; j < multiJoin.getNumFieldsInJoinFactor(i); j++) {
-                fieldNames[currField] = fields[j].getName();
-                currField++;
+        String[] fieldNames;
+        if (call.rels.length == 1) {
+            int nTotalFields = multiJoin.getNumTotalFields();
+            fieldNames = new String[nTotalFields];
+            int currField = 0;
+            
+            for (int i = 0; i < nJoinFactors; i++) {
+                RelDataTypeField[] fields =
+                    multiJoin.getJoinFactor(i).getRowType().getFields();
+                for (int j = 0; j < multiJoin.getNumFieldsInJoinFactor(i); j++) {
+                    fieldNames[currField] = fields[j].getName();
+                    currField++;
+                }
+            }
+        } else {
+            ProjectRel project = (ProjectRel) call.rels[0];
+            int projLength = project.getProjectExps().length;
+            fieldNames = new String[projLength];
+            for (int i = 0; i < projLength; i++) {
+                fieldNames[i] = project.getRowType().getFields()[i].getName();
             }
         }
         
         List<RelNode> plans = new ArrayList<RelNode>();
-        RexBuilder rexBuilder =
-            multiJoin.getMultiJoinRel().getCluster().getRexBuilder();
+       
         Double[] cardJoinCols = computeJoinCardinalities(
             multiJoin, semiJoinOpt); 
         
+        // generate the N join orderings
         for (int i = 0; i < nJoinFactors; i++) {
             
             LoptJoinTree joinTree = createOrdering(
@@ -121,12 +152,49 @@ public class LoptOptimizeJoinRule extends RelOptRule
                 continue;
             }
             
+            ProjectRel newProject = createTopProject(
+                multiJoin, joinTree, fieldNames, call);
+           
+            plans.add(newProject);
+        }
+        
+        // transform the selected plans; note that we wait till then the end
+        // to transform everything so any intermediate RelNodes we create
+        // are not converted to RelSubsets
+        for (RelNode plan : plans) {
+            call.transformTo(plan);
+        }
+    }
+    
+    /**
+     * Creates the topmost projection that will sit on top of the selected
+     * join ordering.  Depending on whether this rule was matched with or
+     * without a projection, the projection expressions are created
+     * accordingly.
+     * 
+     * @param multiJoin join factors being optimized
+     * @param joinTree selected join ordering
+     * @param fieldNames fieldnames corresponding to the proejction expressions
+     * @param call relopt call
+     * @return created projection
+     */
+    private ProjectRel createTopProject(
+        LoptMultiJoin multiJoin, LoptJoinTree joinTree, String[] fieldNames,
+        RelOptRuleCall call)
+    {
+        int nTotalFields = multiJoin.getNumTotalFields();
+        RexNode[] newProjExprs;
+        RexBuilder rexBuilder =
+            multiJoin.getMultiJoinRel().getCluster().getRexBuilder();
+        
+        if (call.rels.length == 1) {
             // create a projection on top of the joins, matching the original
-            // join order
-            RexNode[] projExprs = new RexNode[nTotalFields];
+            // join order         
+            newProjExprs = new RexNode[nTotalFields];
             List<Integer> newJoinOrder = new ArrayList<Integer>();
             joinTree.getTreeOrder(newJoinOrder);
-            currField = 0;
+            int currField = 0;
+            int nJoinFactors = multiJoin.getNumJoinFactors();
             for (int currFactor = 0; currFactor < nJoinFactors; currFactor++) {
                 // locate the join factor in the new join ordering
                 int fieldStart = 0;
@@ -143,24 +211,37 @@ public class LoptOptimizeJoinRule extends RelOptRule
                     fieldPos < multiJoin.getNumFieldsInJoinFactor(currFactor);
                     fieldPos++)
                 {
-                    projExprs[currField] = rexBuilder.makeInputRef(
+                    newProjExprs[currField] = rexBuilder.makeInputRef(
                         fields[fieldPos].getType(), fieldStart + fieldPos);
                     currField++;
                 }
             }
-            
-            ProjectRel newProject =
-                (ProjectRel) CalcRel.createProject(
-                    joinTree.getJoinTree(), projExprs, fieldNames);
-            plans.add(newProject);
+        } else {
+            // maintain the original projection, but we need to adjust
+            // the references based on the selected join ordering
+            ProjectRel project = (ProjectRel) call.rels[0];
+            int[] adjustments = new int[nTotalFields];
+            RexNode[] origProjExprs = project.getProjectExps();
+            if (needsAdjustment(multiJoin, adjustments, joinTree, null)) {
+
+                // adjust projection expressions              
+                int projLength = project.getProjectExps().length;
+                newProjExprs = new RexNode[projLength];
+                for (int j = 0; j < projLength; j++) {
+                    newProjExprs[j] = RelOptUtil.convertRexInputRefs(
+                        rexBuilder, origProjExprs[j],
+                        multiJoin.getMultiJoinFields(), adjustments);
+                }
+            } else {
+                newProjExprs = origProjExprs;
+            }
         }
         
-        // transform the selected plans; note that we wait till then the end
-        // to transform everything so any intermediate RelNodes we create
-        // are not converted to RelSubsets
-        for (RelNode plan : plans) {
-            call.transformTo(plan);
-        }
+        ProjectRel newProject =
+            (ProjectRel) CalcRel.createProject(
+                joinTree.getJoinTree(), newProjExprs, fieldNames);
+        
+        return newProject;
     }
     
     /**
