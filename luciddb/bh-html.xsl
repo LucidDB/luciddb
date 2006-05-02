@@ -56,7 +56,7 @@
 <th>exectime</th>
 <th>testpath</th>
 <th>isdone</th>
-<th>execution-output</th>
+<th>execution-output<br></br>(500 char max)</th>
 </tr>
 <xsl:apply-templates select="test-result"/>
 </table>
@@ -77,7 +77,7 @@
 <td><xsl:value-of select="@exectime"/></td>
 <td><xsl:value-of select="test-case/@testpath"/></td>
 <td><xsl:value-of select="@isdone"/></td>
-<td><xsl:value-of select="execution-output/output-details/."/></td>
+<td><xsl:value-of select="substring(execution-output/output-details/.,0,500)"/></td>
 </tr>
 </xsl:template>
 
