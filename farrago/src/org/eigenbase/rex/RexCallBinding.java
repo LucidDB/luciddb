@@ -73,7 +73,10 @@ public class RexCallBinding extends SqlOperatorBinding
     // implement SqlOperatorBinding
     public boolean isOperandNull(int ordinal)
     {
-        return RexUtil.isNull(operands[ordinal]);
+        // NOTE jvs 1-May-2006:  This call is only relevant
+        // for SQL validation, so anywhere else, just say
+        // everything's OK.
+        return false;
     }
 
     // implement SqlOperatorBinding

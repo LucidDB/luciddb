@@ -26,6 +26,7 @@ package org.eigenbase.sql.type;
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.Util;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
@@ -164,6 +165,32 @@ public abstract class SqlTypeUtil
             types[i] = rels[i].getRowType();
         }
         return types;
+    }
+
+    /**
+     * Promotes a type to a row type (does nothing if it already is one).
+     *
+     * @param type type to be promoted
+     *
+     * @param fieldName name to give field in row type;
+     * null for default of "ROW_VALUE"
+     *
+     * @return row type
+     */
+    public static RelDataType promoteToRowType(
+        RelDataTypeFactory typeFactory,
+        RelDataType type,
+        String fieldName)
+    {
+        if (!type.isStruct()) {
+            if (fieldName == null) {
+                fieldName = "ROW_VALUE";
+            }
+            type = typeFactory.createStructType(
+                new RelDataType [] { type },
+                new String [] { fieldName });
+        }
+        return type;
     }
 
     /**

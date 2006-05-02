@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/med/csv.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/med/csv.sql#2 $
 0: jdbc:farrago:> -- Test SQL/MED data access to CSV files
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- create a private wrapper for jdbc (don't use the standard jdbc wrapper)
@@ -60,5 +60,40 @@
 . . . . . . . . > from server csv_server
 . . . . . . . . > into csv_schema;
 Error: Support for foreign schema import not available in data server "SYS_BOOT"."CSV_SERVER" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- verify that missing/conflicting properties yield a meaningful 
+0: jdbc:farrago:> -- user-level excn (http://issues.eigenbase.org/browse/LDB-28)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail due to missing url
+0: jdbc:farrago:> create server csv_server_missing_url
+. . . . . . . . > foreign data wrapper test_jdbc
+. . . . . . . . > options(
+. . . . . . . . >     driver_class 'org.relique.jdbc.csv.CsvDriver');
+Error: Value required for property URL (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create server csv_server_missing_schema
+. . . . . . . . > foreign data wrapper test_jdbc
+. . . . . . . . > options(
+. . . . . . . . >     driver_class 'org.relique.jdbc.csv.CsvDriver',
+. . . . . . . . >     url 'jdbc:relique:csv:unitsql/med');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail due to missing schema name
+0: jdbc:farrago:> create foreign table csv_schema.missing_schema
+. . . . . . . . > server csv_server_missing_schema;
+Error: Value required for property SCHEMA_NAME (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail due to missing table name
+0: jdbc:farrago:> create foreign table csv_schema.missing_table
+. . . . . . . . > server csv_server;
+Error: Value required for property TABLE_NAME (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail due to conflicting schema name
+0: jdbc:farrago:> create foreign table csv_schema.explicit_example(
+. . . . . . . . >     id int not null,
+. . . . . . . . >     name varchar(50) not null,
+. . . . . . . . >     extra_field char(1) not null)
+. . . . . . . . > server csv_server
+. . . . . . . . > options (table_name 'example', schema_name 'grub');
+Error: Values ('TESTDATA', 'grub') for property SCHEMA_NAME do not match (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

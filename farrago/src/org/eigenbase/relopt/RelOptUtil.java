@@ -433,9 +433,10 @@ public abstract class RelOptUtil
     }
     
     /**
-     * Creates a plan suitable for use in <code>EXITS</code> or <code>IN</code>
-     * statements. See {@link org.eigenbase.sql2rel.SqlToRelConverter#convertExists}
-     * <p>
+     * Creates a plan suitable for use in <code>EXISTS</code> or
+     * <code>IN</code> statements. See {@link
+     * org.eigenbase.sql2rel.SqlToRelConverter#convertExists} <p>
+     *
      * @param cluster
      * @param seekRel A query rel, for example the resulting rel from
      * 'select * from emp' or 'values (1,2,3)' or '('Foo', 34)'.
@@ -455,24 +456,16 @@ public abstract class RelOptUtil
 
         RelNode ret = seekRel;
 
-        RexNode conditionExp = null;
-        for (int i = 0; i < conditions.length; i++) {
-            if (i == 0) {
-                conditionExp = conditions[i];
-            } else {
-                conditionExp =
-                    cluster.getRexBuilder().makeCall(
-                        SqlStdOperatorTable.andOperator,
-                        conditionExp,
-                        conditions[i]);
-            }
+        if ((conditions != null) && (conditions.length > 0)) {
+            RexNode conditionExp =
+                RexUtil.andRexNodeList(
+                    cluster.getRexBuilder(),
+                    Arrays.asList(conditions));
+
+            ret = CalcRel.createFilter(ret, conditionExp);
         }
 
-        if (null != conditionExp) {
-            ret  = CalcRel.createFilter(seekRel, conditionExp);
-        }
-
-        if (null != extraExpr) {
+        if (extraExpr != null) {
             final RelDataType rowType = seekRel.getRowType();
             final RelDataTypeField [] fields = rowType.getFields();
             final RexNode [] expressions = new RexNode[fields.length + 1];

@@ -50,6 +50,25 @@ public class FarragoAbstractPluginBase
     //~ Methods ---------------------------------------------------------------
 
     /**
+     * Verifies that a property has been set, throwing an exception
+     * if has not.
+     *
+     * @param props properties to check
+     *
+     * @param propName name of required property
+     *
+     * @exception EigenbaseException if property is not set
+     */
+    public static void requireProperty(
+        Properties props,
+        String propName)
+    {
+        if (props.getProperty(propName) == null) {
+            throw FarragoResource.instance().PluginPropRequired.ex(propName);
+        }
+    }
+    
+    /**
      * Gets the value of a long integer property.
      *
      * @param props property set
@@ -60,13 +79,12 @@ public class FarragoAbstractPluginBase
      *
      * @return property value
      *
-     * @exception SQLException if property is set with non-integer value
+     * @exception EigenbaseException if property is set with non-integer value
      */
     public static long getLongProperty(
         Properties props,
         String propName,
         long defaultValue)
-        throws SQLException
     {
         String s = props.getProperty(propName);
         if (s == null) {
@@ -92,13 +110,12 @@ public class FarragoAbstractPluginBase
      *
      * @return property value
      *
-     * @exception SQLException if property is set with non-integer value
+     * @exception EigenbaseException if property is set with non-integer value
      */
     public static int getIntProperty(
         Properties props,
         String propName,
         int defaultValue)
-        throws SQLException
     {
         String s = props.getProperty(propName);
         if (s == null) {
@@ -115,9 +132,10 @@ public class FarragoAbstractPluginBase
 
     /**
      * Gets the value of a boolean property, or a default value if the property
-     * does not exist. Returns <code>true</code> if the property exists, and its
-     * value is <code>1</code>, <code>t</code>, <code>true</code> or <code>yes</code>; the
-     * default value if it does not exist; <code>false</code> otherwise.
+     * does not exist. Returns <code>true</code> if the property exists, and
+     * its value is <code>1</code>, <code>t</code>, <code>true</code> or
+     * <code>yes</code>; the default value if it does not exist;
+     * <code>false</code> otherwise.
 
      * @param props property set
      * @param propName name of property

@@ -229,7 +229,7 @@ public class RexUtil
     }
 
     /**
-     * Returns wheter a given node contains a RexCall with a specified operator
+     * Returns whether a given node contains a RexCall with a specified operator
      * @param operator to look for
      * @param node a RexNode tree
      */
@@ -727,6 +727,7 @@ public class RexUtil
         }
         return true;
     }
+    
     /**
      * Creates an AND expression from a list of RexNodes
      * 
@@ -739,6 +740,10 @@ public class RexUtil
         if (rexList.isEmpty()) {
             return null;
         }
+        // REVIEW jvs 1-May-2006: This builds a left-deep tree, probably
+        // for the sake of order-preservation.  But right-deep would
+        // be better for calculator short-circuiting.  It's possible
+        // to achieve both by walking the list backwards.
         RexNode andExpr = rexList.get(0);
         for (int i = 1; i < rexList.size(); i++) {
             andExpr = rexBuilder.makeCall(

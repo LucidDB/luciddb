@@ -43,19 +43,17 @@ import java.math.*;
 import java.util.List;
 
 /**
- * FennelValuesRel represents the Fennel implementation of VALUES where all
- * values are literals.  It corresponds to fennel::ValuesExecStream via {@link
- * ValuesStreamDef}.  It guarantees the order of the tuples it produces, making
- * it usable for such purposes as the search input to an index scan, where
- * order may matter for both performance and correctness.
+ * FennelValuesRel is Fennel implementation of {@link ValuesRel}.  It
+ * corresponds to fennel::ValuesExecStream via {@link ValuesStreamDef}, and
+ * guarantees the order of the tuples it produces, making it usable for such
+ * purposes as the search input to an index scan, where order may matter for
+ * both performance and correctness.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FennelValuesRel extends AbstractRelNode implements FennelRel
+public class FennelValuesRel extends ValuesRelBase implements FennelRel
 {
-    private final List<List<RexLiteral>> tuples;
-
     /**
      * Creates a new FennelValuesRel.  Note that tuples passed in become owned
      * by this rel (without a deep copy), so caller must not modify them after
@@ -74,85 +72,9 @@ public class FennelValuesRel extends AbstractRelNode implements FennelRel
         RelDataType rowType,
         List<List<RexLiteral>> tuples)
     {
-        super(cluster, new RelTraitSet(FENNEL_EXEC_CONVENTION));
-        this.rowType = rowType;
-        this.tuples = tuples;
-        assert(assertRowType());
-    }
-
-    /**
-     * @return true if all tuples match rowType; otherwise, assert
-     * on mismatch
-     */
-    private boolean assertRowType()
-    {
-        for (List<RexLiteral> tuple : tuples) {
-            RelDataTypeField [] fields = rowType.getFields();
-            assert(tuple.size() == fields.length);
-            int i = 0;
-            for (RexLiteral literal : tuple) {
-                RelDataType fieldType = fields[i++].getType();
-                // TODO jvs 19-Feb-2006: strengthen this a bit.  For example,
-                // overflow, rounding, and truncation must already have been
-                // dealt with.
-                if (!RexLiteral.isNullLiteral(literal)) {
-                    assert(
-                        SqlTypeUtil.canAssignFrom(
-                            fieldType,
-                            literal.getType()));
-                }
-            }
-        }
-        return true;
-    }
-
-    // override Object
-    public Object clone()
-    {
-        // immutable with no children
-        return this;
-    }
-
-    // implement RelNode
-    protected RelDataType deriveRowType()
-    {
-        return rowType;
-    }
-
-    // implement RelNode
-    public RelOptCost computeSelfCost(RelOptPlanner planner)
-    {
-        double dRows = RelMetadataQuery.getRowCount(this);
-        // CPU is negligible since ValuesExecStream just hands off
-        // the entire buffer to its consumer.
-        double dCpu = 1;
-        double dIo = 0;
-        return planner.makeCost(dRows, dCpu, dIo);
-    }
-    
-    // implement RelNode
-    public double getRows()
-    {
-        return tuples.size();
-    }
-
-    // implement RelNode
-    public void explain(RelOptPlanWriter pw)
-    {
-        // A little adapter just to get the tuples to come out
-        // with curly brackets instead of square brackets.  Plus
-        // more whitespace for readability.
-        List renderList = new ArrayList();
-        for (List<RexLiteral> tuple : tuples) {
-            String s = tuple.toString();
-            assert(s.startsWith("["));
-            assert(s.endsWith("]"));
-            renderList.add("{ " + s.substring(1, s.length() - 1) + " }");
-        }
-        pw.explain(
-            this,
-            new String [] { "tuples" },
-            new Object [] { renderList });
+        super(
+            cluster, rowType, tuples,
+            new RelTraitSet(FENNEL_EXEC_CONVENTION));
     }
 
     // implement FennelRel

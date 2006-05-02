@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev_lcs/farrago/unitsql/optimizer/index.sql#23 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/index.sql#14 $
 0: jdbc:farrago:> -- Test queries which make use of indexes
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema oj;
@@ -80,6 +80,14 @@
 | Accounts  |
 | Sales     |
 +-----------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select name from depts where deptno in (20,30) order by name;
++------------+
+|    NAME    |
++------------+
+| Accounts   |
+| Marketing  |
++------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- scaling
 0: jdbc:farrago:> select name from depts where deptno=20.00;
@@ -425,6 +433,17 @@
 '  FennelToIteratorConverter'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '      FennelValuesRel(tuples=[[{ '-', null, ')', 20 }, { '[', 30, ']', 40 }]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select name from depts where deptno in (20,30) order by name;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0..1=[{inputs}], NAME=[$t1])'
+'        FennelToIteratorConverter'
+'          FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'            FennelValuesRel(tuples=[[{ '[', 20, ']', 20 }, { '[', 30, ']', 30 }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from depts where deptno=20.00;
@@ -1083,6 +1102,26 @@
 0: jdbc:farrago:> select * from lbmemps where empno = 10 and empno = 20 order by empno;
 'EMPNO','ENAME','DEPTNO'
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- IN on small values list
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select ename from lbmemps where deptno in (20, 30)
+. . . . . . . . > order by ename;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
+'      LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
+'        LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[DEPTNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'          FennelValuesRel(tuples=[[{ '[', 20, ']', 20 }, { '[', 30, ']', 30 }]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select ename from lbmemps where deptno in (20, 30)
+. . . . . . . . > order by ename;
+'ENAME'
+'Eric'
+'Eric'
+'Wilma'
+'Wilma'
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- OR on same column is supported
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select *
@@ -1462,7 +1501,7 @@
 0: jdbc:farrago:> ---------------------
 0: jdbc:farrago:> -- Some join tests --
 0: jdbc:farrago:> ---------------------
-0: jdbc:farrago:> -- TODO: filter above join is not pushed down
+0: jdbc:farrago:> -- Filter above join gets pushed down so index can be used.
 0: jdbc:farrago:> !set outputformat csv
 0: jdbc:farrago:> explain plan for 
 . . . . . . . . > select * from lbmdepts, lbmemps where lbmemps.deptno = 2;
@@ -1477,8 +1516,7 @@
 0: jdbc:farrago:> select * from lbmdepts, lbmemps where lbmemps.deptno = 2;
 'DEPTNO','EMPNO','ENAME','DEPTNO0'
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- However, if filter is in an inline view, the index path is used
-0: jdbc:farrago:> -- because the view is not merged.
+0: jdbc:farrago:> -- Filter in an inline view is already in the right place for indexing.
 0: jdbc:farrago:> explain plan for 
 . . . . . . . . > select * from lbmdepts, 
 . . . . . . . . >               (select * from lbmemps where lbmemps.deptno = 2) view;

@@ -31,6 +31,7 @@ import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.query.*;
+import net.sf.farrago.resource.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
@@ -40,7 +41,6 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 
 
-// TODO:  change most asserts into proper exceptions
 // TODO:  throw exception on unknown option?
 
 /**
@@ -95,8 +95,8 @@ class MedJdbcDataServer extends MedAbstractDataServer
     {
         Properties props = getProperties();
         Properties connectProps = null;
+        requireProperty(props, PROP_URL);
         url = props.getProperty(PROP_URL);
-        assert (url != null);
         String userName = props.getProperty(PROP_USER_NAME);
         String password = props.getProperty(PROP_PASSWORD);
         schemaName = props.getProperty(PROP_SCHEMA_NAME);
@@ -156,16 +156,6 @@ class MedJdbcDataServer extends MedAbstractDataServer
         return new MedJdbcNameDirectory(this);
     }
 
-    private MedJdbcNameDirectory getTableNameDirectory(String tableSchemaName)
-    {
-        if (schemaName != null) {
-            // TODO jvs 11-June-2004: this should be a real error, not an
-            // assert
-            assert(schemaName.equals(tableSchemaName));
-        }
-        return new MedJdbcNameDirectory(this, tableSchemaName);
-    }
-
     // implement FarragoMedDataServer
     public FarragoMedColumnSet newColumnSet(
         String [] localName,
@@ -176,13 +166,24 @@ class MedJdbcDataServer extends MedAbstractDataServer
         throws SQLException
     {
         assert (connection != null);
+        if (schemaName == null) {
+            requireProperty(tableProps, PROP_SCHEMA_NAME);
+        }
         String tableSchemaName = tableProps.getProperty(PROP_SCHEMA_NAME);
         if (tableSchemaName == null) {
             tableSchemaName = schemaName;
+        } else if (schemaName != null) {
+            if (!tableSchemaName.equals(schemaName)) {
+                throw FarragoResource.instance().MedPropertyMismatch.ex(
+                    schemaName,
+                    tableSchemaName,
+                    PROP_SCHEMA_NAME);
+            }
         }
-        assert (tableSchemaName != null);
+        requireProperty(tableProps, PROP_TABLE_NAME);
         String tableName = tableProps.getProperty(PROP_TABLE_NAME);
-        MedJdbcNameDirectory directory = getTableNameDirectory(tableSchemaName);
+        MedJdbcNameDirectory directory =
+            new MedJdbcNameDirectory(this, tableSchemaName);
         return directory.lookupColumnSetAndImposeType(
             typeFactory, tableName, localName, rowType);
     }

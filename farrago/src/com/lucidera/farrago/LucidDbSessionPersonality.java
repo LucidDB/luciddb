@@ -328,6 +328,7 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
             builder.addRuleInstance(new FennelRenameRule());
             builder.addRuleInstance(new FennelCartesianJoinRule());
             builder.addRuleInstance(new FennelAggRule());
+            builder.addRuleInstance(new FennelValuesRule());
             // Requires CoerceInputsRule.
             builder.addRuleInstance(FennelUnionRule.instance);
         } else {

@@ -108,7 +108,7 @@ public class SqlCallBinding extends SqlOperatorBinding
     // implement SqlOperatorBinding
     public boolean isOperandNull(int ordinal)
     {
-        return SqlUtil.isNull(call.operands[ordinal]);
+        return SqlUtil.isNullLiteral(call.operands[ordinal], false);
     }
 
     // implement SqlOperatorBinding

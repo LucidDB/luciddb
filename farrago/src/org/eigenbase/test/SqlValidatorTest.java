@@ -1731,14 +1731,19 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "  select e.deptno from (values(true)))");
     }
 
+    private final String ERR_IN_VALUES_INCOMPATIBLE =
+        "Values in expression list must have compatible types";
+        
+    private final String ERR_IN_OPERANDS_INCOMPATIBLE =
+            "Values passed to IN operator must have compatible types";
+        
     public void testInList()
     {
         check("select * from emp where empno in (10,20)");
         // "select * from emp where empno in ()" is invalid -- see parser test
         check("select * from emp where empno in (10 + deptno, cast(null as integer))");
         checkFails("select * from emp where empno ^in (10, '20')^",
-            "Values in expression list must have compatible types");
-
+            ERR_IN_VALUES_INCOMPATIBLE);
 
         checkExpType("1 in (2, 3, 4)", "BOOLEAN NOT NULL");
         checkExpType("cast(null as integer) in (2, 3, 4)", "BOOLEAN");
@@ -1747,6 +1752,8 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("true in (false, unknown)", "BOOLEAN");
         checkExpType("true in (false, false or unknown)", "BOOLEAN");
         checkExpType("true in (false, true)", "BOOLEAN NOT NULL");
+        checkExpType("(1,2) in ((1,2), (3,4))", "BOOLEAN NOT NULL");
+        checkExpType("'medium' in (cast(null as varchar(10)), 'bc')", "BOOLEAN");
 
         // nullability depends on nullability of both sides
         checkColumnType("select empno in (1, 2) from emp", "BOOLEAN NOT NULL");
@@ -1754,14 +1761,28 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkColumnType("select empno in (1, nullif(empno,empno), 2) from emp", "BOOLEAN");
 
         checkExpFails("1 in (2, 'c')",
-            "Values in expression list must have compatible types");
+            ERR_IN_VALUES_INCOMPATIBLE);
+        checkExpFails("1 in ((2), (3,4))",
+            ERR_IN_VALUES_INCOMPATIBLE);
         checkExpFails("false and ^1 in ('b', 'c')^",
-            "Values passed to IN operator must have compatible types");
+            ERR_IN_OPERANDS_INCOMPATIBLE);
         checkExpFails("1 > 5 ^or (1, 2) in (3, 4)^",
-            "Values passed to IN operator must have compatible types");
-        checkExpType("'medium' in (cast(null as varchar(10)), 'bc')", "BOOLEAN");
+            ERR_IN_OPERANDS_INCOMPATIBLE);
     }
 
+    public void testInSubquery()
+    {
+        check("select * from emp where deptno in (select deptno from dept)");
+        check(
+            "select * from emp where (empno,deptno)"
+            + " in (select deptno,deptno from dept)");
+        
+        checkFails(
+            "select * from emp where deptno in "
+            + "(select deptno,deptno from dept)",
+            "Values passed to IN operator must have compatible types");
+    }
+    
     public void testDoubleNoAlias()
     {
         check("select * from emp join dept on true");
@@ -1775,16 +1796,9 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkFails("select 1 as a, 2 as b, 3 as a from emp", "xyz");
     }
 
-    // NOTE jvs 20-May-2003 -- this is just here as a reminder that GROUP BY
-    // validation isn't implemented yet
     public void testInvalidGroupBy(TestCase test)
     {
-        try {
-            check("select empno, deptno from emp group by deptno");
-        } catch (RuntimeException ex) {
-            return;
-        }
-        test.fail("Expected validation error");
+        checkFails("select empno, deptno from emp group by deptno", "xyz");
     }
 
     public void testSingleNoAlias()
@@ -1866,12 +1880,6 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkFails("values (1, ^2^, 3), (3, 4, 5), (6, 7, 8) union " + NL +
             "select deptno, name, deptno from dept",
             "Type mismatch in column 2 of UNION");
-    }
-
-    public void _testInTooManyColumnsFails()
-    {
-        checkFails("select * from emp where deptno in (select deptno,deptno from dept)",
-            "xyz");
     }
 
     public void testNaturalCrossJoinFails()
