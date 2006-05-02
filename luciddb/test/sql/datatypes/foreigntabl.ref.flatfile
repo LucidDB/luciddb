@@ -54,7 +54,7 @@ Messages:
 . . . . . . . . > );
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from @name_prefix@_ft_schema.blobtypes_explicit;
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARCHAR(255)' to 'BINARY(10)' (state=,code=0)
+Error: java.lang.AssertionError: Type is unsupported for flat files: BINARY (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create foreign table @name_prefix@_ft_schema.blobtypes_nonexplicit
 . . . . . . . . > server @SERVER_NAME@
@@ -64,7 +64,7 @@ Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast fro
 . . . . . . . . > );
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from @name_prefix@_ft_schema.blobtypes_nonexplicit;
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARCHAR(255)' to 'BINARY(21)' (state=,code=0)
+Error: java.lang.AssertionError: Type is unsupported for flat files: BINARY (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- get table name, column name, data type info for imported foreign tables
 0: jdbc:luciddb:> !metadata getColumns LOCALDB @name_prefix@_FT_SCHEMA % null

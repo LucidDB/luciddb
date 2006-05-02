@@ -121,10 +121,10 @@ Was expecting one of:
     "=" "(" ...
     "(" ... (state=,code=0)
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> select count(*) from BUG2108.TEST
-. . . . . . . . > where a in (select a from BUG2108.TEST2)
-. . . . . . . . > ;
-Error: java.lang.UnsupportedOperationException: class org.eigenbase.sql.SqlBinaryOperator: IN (state=,code=0)
+0: jdbc:luciddb:> -- TODO: "IN" not supported
+0: jdbc:luciddb:> -- select count(*) from BUG2108.TEST
+0: jdbc:luciddb:> -- where a in (select a from BUG2108.TEST2)
+0: jdbc:luciddb:> -- ;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> --}}}
 0: jdbc:luciddb:> 

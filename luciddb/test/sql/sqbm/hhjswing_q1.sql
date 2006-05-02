@@ -1,5 +1,7 @@
 -- general HHJ swing tests for coverage
 
+set schema 's';
+
 -- AGG on one side, join big on small table
 select max(b.k500k) 
 from bench1m a, bench1m b 

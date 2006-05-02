@@ -78,7 +78,8 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/implicitConversion.sql"/>
       </test>
 
-      <test name="explicitConversion" requiresSuccess="cretables">
+      <test name="explicitConversion" requiresSuccess="cretables"
+        requiresRun="implicitConversion">
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/explicitConversion.sql"/>
       </test>
 
@@ -186,11 +187,13 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug8665.sql"/>
       </test>
 
-      <test name="bugs" requiresSuccess="cretables">
+      <test name="bugs" requiresSuccess="cretables"
+        requiresRun="explicitConversion">
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bugs.sql"/>
       </test>
 
       <test name="bug10248" requiresSuccess="cretables">
+        <!-- IN not supported yet, commented out -->
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug10248.sql"/>
       </test>
 

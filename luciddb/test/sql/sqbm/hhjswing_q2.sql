@@ -1,5 +1,7 @@
 -- HHJ Swing testing GROUP BY conditions
 
+set schema 's';
+
 -- group by without agg
 select a.k10
 from bench1m b, bench1m a

@@ -18,15 +18,15 @@ Error: At line 1, column 26: Cannot assign to target field 'C_DATE' of type DATE
 0: jdbc:luciddb:> INSERT INTO blobtypes
 . . . . . . . . > SELECT c_binary,c_varbinary
 . . . . . . . . > FROM @name_prefix@_ft_schema.blobtypes_explicit;
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARCHAR(255)' to 'BINARY(10)' (state=,code=0)
+Error: java.lang.AssertionError: Type is unsupported for flat files: BINARY (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> INSERT INTO blobtypes
 . . . . . . . . > SELECT * FROM @name_prefix@_ft_schema.blobtypes_nonexplicit;
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARCHAR(255)' to 'BINARY(21)' (state=,code=0)
+Error: java.lang.AssertionError: Type is unsupported for flat files: BINARY (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> INSERT INTO blobtypes
 . . . . . . . . > SELECT * FROM @name_prefix@_is_schema."blob";
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARCHAR(255)' to 'BINARY(21)' (state=,code=0)
+Error: java.lang.AssertionError: Type is unsupported for flat files: BINARY (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select count(*) from types;
 +---------+
