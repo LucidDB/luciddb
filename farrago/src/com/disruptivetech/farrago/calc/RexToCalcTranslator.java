@@ -20,7 +20,11 @@
 */
 package com.disruptivetech.farrago.calc;
 
+import net.sf.farrago.query.FarragoRexBuilder;
 import net.sf.farrago.resource.FarragoResource;
+import net.sf.farrago.session.FarragoSessionPlanner;
+import net.sf.farrago.session.FarragoSessionPreparingStmt;
+import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelOptQuery;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
@@ -56,8 +60,7 @@ public class RexToCalcTranslator implements RexVisitor
     CalcProgramBuilder.Register falseReg = builder.newBoolLiteral(false);
     private int nullRegOrdinal = -1;
 
-    protected final CalcRexImplementorTable implementorTable =
-        CalcRexImplementorTableImpl.threadInstance();
+    protected final CalcRexImplementorTable implementorTable;
 
     /**
      * Eliminates common-subexpressions, by mapping every expression (the key
@@ -95,16 +98,32 @@ public class RexToCalcTranslator implements RexVisitor
     //~ Constructors ----------------------------------------------------------
 
     public RexToCalcTranslator(
-        RexBuilder rexBuilder)
-    {
-        this(rexBuilder, null);
-    }
-
-    public RexToCalcTranslator(RexBuilder rexBuilder, RelNode rel)
+        RexBuilder rexBuilder, RelNode rel)
     {
         this.rexBuilder = rexBuilder;
         this.rel = rel;
 
+        RelOptPlanner planner = rel.getCluster().getPlanner();
+        if (planner instanceof FarragoSessionPlanner) {
+            FarragoSessionPreparingStmt preparingStmt = 
+                ((FarragoSessionPlanner)planner).getPreparingStmt();
+
+            CalcRexImplementorTable comp =
+                preparingStmt.getSession().getPersonality().
+                    newComponentImpl(
+                        CalcRexImplementorTable.class);
+            if (comp != null) {
+                implementorTable = comp;
+            } else {
+                assert(false);
+                implementorTable = CalcRexImplementorTableImpl.std();
+            }
+        } else {
+            // Not a FarragoSessionPlanner?  There's going to be
+            // trouble eventually.
+            implementorTable = CalcRexImplementorTableImpl.std();
+        }
+        
         setGenerateComments(
             SaffronProperties.instance().generateCalcProgramComments.get());
         RelDataTypeFactory fac = this.rexBuilder.getTypeFactory();

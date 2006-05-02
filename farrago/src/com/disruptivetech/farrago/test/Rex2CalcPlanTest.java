@@ -20,6 +20,7 @@
 */
 package com.disruptivetech.farrago.test;
 
+import com.disruptivetech.farrago.calc.CalcRexImplementorTableImpl;
 import com.disruptivetech.farrago.calc.RexToCalcTranslator;
 import junit.framework.AssertionFailedError;
 import junit.framework.Test;
@@ -185,8 +186,8 @@ public class Rex2CalcPlanTest extends FarragoTestCase
 
         final RexProgram program = programBuilder.getProgram();
 
-        RexToCalcTranslator translator =
-            new RexToCalcTranslator(rexBuilder);
+        RexToCalcTranslator translator = 
+            new RexToCalcTranslator(rexBuilder, rootRel);
         translator.setGenerateShortCircuit(shortCircuit);
         translator.setGenerateComments(doComments);
         String actual = translator.generateProgram(null, program).trim();

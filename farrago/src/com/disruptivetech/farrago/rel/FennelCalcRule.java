@@ -86,7 +86,8 @@ public class FennelCalcRule extends ConverterRule
         }
 
         final RexToCalcTranslator translator =
-            new RexToCalcTranslator(calc.getCluster().getRexBuilder());
+            new RexToCalcTranslator(
+                calc.getCluster().getRexBuilder(), calc);
         if (!translator.canTranslate(calc.getProgram())) {
             return null;
         }

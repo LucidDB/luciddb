@@ -306,7 +306,7 @@ public class FennelWindowRel extends FennelSingleRel
                     repos.newFemWindowPartitionDef();
                 windowDef.getPartition().add(windowPartitionDef);
                 translator = new RexToCalcTranslator(
-                    getCluster().getRexBuilder());
+                    getCluster().getRexBuilder(), this);
 
                 // Create a program for the window partition to init, add, drop
                 // rows. Does not include the expression to form the output

@@ -20,6 +20,7 @@
 */
 package com.disruptivetech.farrago.test;
 
+import com.disruptivetech.farrago.calc.CalcRexImplementorTable;
 import com.disruptivetech.farrago.calc.CalcRexImplementorTableImpl;
 
 import java.sql.PreparedStatement;
@@ -280,7 +281,9 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
         implementorTable.registerOperator(jrowFunc, jrowFuncImpl);
     }
 
-    public static void registerTestCppOps(final SqlStdOperatorTable opTab)
+    public static void registerTestCppOps(
+        CalcRexImplementorTableImpl implementor,
+        final SqlStdOperatorTable opTab)
     {
         SqlFunction cppFunc =
             new SqlFunction(
@@ -291,13 +294,9 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
                 SqlFunctionCategory.Numeric);
         opTab.register(cppFunc);
 
-        CalcRexImplementorTableImpl cImplTab =
-            new CalcRexImplementorTableImpl(
-                CalcRexImplementorTableImpl.std());
-        CalcRexImplementorTableImpl.setThreadInstance(cImplTab);
-        cImplTab.register(
+        implementor.register(
             cppFunc,
-            cImplTab.get(SqlStdOperatorTable.plusOperator));
+            implementor.get(SqlStdOperatorTable.plusOperator));
     }
 
     //~ Inner Classes ---------------------------------------------------------
@@ -310,10 +309,14 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
         extends FarragoDbSessionFactory
     {
         private final OJRexImplementorTable ojRexImplementor;
+        private final CalcRexImplementorTable calcRexImplementor;
 
-        TestDbSessionFactory(OJRexImplementorTable ojRexImplementor)
+        TestDbSessionFactory(
+            OJRexImplementorTable ojRexImplementor, 
+            CalcRexImplementorTable calcRexImplementor)
         {
             this.ojRexImplementor = ojRexImplementor;
+            this.calcRexImplementor = calcRexImplementor;
         }
 
         public FarragoSession newSession(
@@ -329,7 +332,8 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
         {
             return new TestDbSessionPersonality(
                 (FarragoDbSession) session,
-                ojRexImplementor);
+                ojRexImplementor,
+                calcRexImplementor);
         }
     }
 
@@ -342,13 +346,16 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
         extends FarragoDefaultSessionPersonality
     {
         private OJRexImplementorTable ojRexImplementor;
-
+        private CalcRexImplementorTable calcRexImplementor;
+        
         public TestDbSessionPersonality(
             FarragoDbSession session,
-            OJRexImplementorTable ojRexImplementor)
+            OJRexImplementorTable ojRexImplementor, 
+            CalcRexImplementorTable calcRexImplementorTable)
         {
             super(session);
             this.ojRexImplementor = ojRexImplementor;
+            this.calcRexImplementor = calcRexImplementorTable;
         }
 
         public SqlOperatorTable getSqlOperatorTable(
@@ -361,6 +368,15 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
             FarragoSessionPreparingStmt preparingStmt)
         {
             return ojRexImplementor;
+        }
+        
+        public <C> C newComponentImpl(Class<C> componentInterface)
+        {
+            if (componentInterface == CalcRexImplementorTable.class) {
+                return componentInterface.cast(calcRexImplementor);
+            }
+
+            return super.newComponentImpl(componentInterface);
         }
     }
 
@@ -375,28 +391,18 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
 
         static SqlStdOperatorTable opTab;
         static FarragoOJRexImplementorTable testOjRexImplementor;
-
+        static CalcRexImplementorTableImpl testCalcRexImplementor;
+        
         static {
             opTab = new SqlStdOperatorTable();
             opTab.init();
             testOjRexImplementor = new FarragoOJRexImplementorTable(opTab);
             registerTestJavaOps(testOjRexImplementor, opTab);
 
-            SqlFunction cppFunc =
-                new SqlFunction("CPLUS", SqlKind.Function,
-                                SqlTypeStrategies.rtiLeastRestrictive,
-                                SqlTypeStrategies.otiFirstKnown,
-                                SqlTypeStrategies.otcNumericX2,
-                                SqlFunctionCategory.Numeric);
-            opTab.register(cppFunc);
-
-            CalcRexImplementorTableImpl cImplTab =
+            testCalcRexImplementor =
                 new CalcRexImplementorTableImpl(
                     CalcRexImplementorTableImpl.std());
-            CalcRexImplementorTableImpl.setThreadInstance(cImplTab);
-            cImplTab.register(
-                cppFunc,
-                cImplTab.get(SqlStdOperatorTable.plusOperator));
+            registerTestCppOps(testCalcRexImplementor, opTab);
 
             new TestJdbcEngineDriver().register();
         }
@@ -407,7 +413,8 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
 
         public FarragoSessionFactory newSessionFactory()
         {
-            return new TestDbSessionFactory(testOjRexImplementor);
+            return new TestDbSessionFactory(
+                testOjRexImplementor, testCalcRexImplementor);
         }
 
         public String getBaseUrl()
