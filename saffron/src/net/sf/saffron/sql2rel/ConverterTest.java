@@ -40,6 +40,7 @@ import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql2rel.SqlToRelConverter;
 import org.eigenbase.util.*;
+import org.eigenbase.test.*;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -84,9 +85,13 @@ public class ConverterTest extends TestCase
         }
     }
 
+    protected DiffRepository getDiffRepos()
+    {
+        return DiffRepository.lookup(ConverterTest.class);
+    }
+    
     private void check(
-        String sql,
-        String plan)
+        String sql)
     {
         TestContext testContext = getTestContext();
         final SqlNode sqlQuery;
@@ -118,7 +123,9 @@ public class ConverterTest extends TestCase
         String actual = sw.toString();
         String actual2 = pattern.matcher(actual).replaceAll("{con}");
         String actual3 = pattern2.matcher(actual2).replaceAll("{sales}");
-        TestUtil.assertEqualsVerbose(plan, actual3);
+        final DiffRepository diffRepos = getDiffRepos();
+        String sql2 = diffRepos.expand("sql", sql);
+        diffRepos.assertEquals("plan", "${plan}", NL + actual3);
     }
 
     static TestContext getTestContext()
@@ -221,245 +228,124 @@ public class ConverterTest extends TestCase
 
     public void testIntegerLiteral()
     {
-        check("select 1 from \"emps\"",
-            "ProjectRel(EXPR$0=[1])" + NL
-            + "  ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])"
-            + NL);
+        check("select 1 from \"emps\"");
     }
 
     public void testStringLiteral()
     {
-        check("select 'foo' from \"emps\"",
-            "ProjectRel(EXPR$0=[_ISO-8859-1'foo'])"
-            + NL
-            + "  ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])"
-            + NL);
+        check("select 'foo' from \"emps\"");
     }
 
     public void testSelectListAlias()
     {
-        check("select 1 as one, 'foo' foo, 1 bar from \"emps\"",
-            "ProjectRel(ONE=[1], FOO=[_ISO-8859-1'foo'], BAR=[1])"
-            + NL
-            + "  ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])"
-            + NL);
+        check("select 1 as one, 'foo' foo, 1 bar from \"emps\"");
     }
 
     public void testSelectListColumns()
     {
-        check("select \"emps\".\"gender\", \"empno\", \"deptno\" as \"d\" from \"emps\"",
-            "ProjectRel(gender=[$3], empno=[$0], d=[$2])" + NL
-            + "  ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])"
-            + NL);
+        check("select \"emps\".\"gender\", \"empno\", \"deptno\" as \"d\" from \"emps\"");
     }
 
     public void testFromList()
     {
         // "FROM x, y" == "x INNER JOIN y ON true"
-        check("select 1 from \"emps\", \"depts\"",
-            "ProjectRel(EXPR$0=[1])" + NL
-            + "  JoinRel(condition=[true], joinType=[inner])" + NL
-            + "    ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])"
-            + NL
-            + "    ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])"
-            + NL);
+        check("select 1 from \"emps\", \"depts\"");
     }
 
     public void testFromAlias()
     {
-        check("select 1 from \"emps\" as \"e\"",
-            "ProjectRel(EXPR$0=[1])" + NL
-            + "  ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])"
-            + NL);
+        check("select 1 from \"emps\" as \"e\"");
     }
 
     public void testFromJoin()
     {
-        check("select 1 from \"emps\" join \"depts\" on \"emps\".\"deptno\" = \"depts\".\"deptno\"",
-            "ProjectRel(EXPR$0=[1])" + NL
-            + "  JoinRel(condition=[=($2, $6)], joinType=[inner])" + NL
-            + "    ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])"
-            + NL
-            + "    ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])"
-            + NL);
+        check("select 1 from \"emps\" join \"depts\" on \"emps\".\"deptno\" = \"depts\".\"deptno\"");
     }
 
     // todo: Enable when validator can handle USING
     public void _testFromLeftJoinUsing()
     {
-        check("select 1 from \"emps\" left join \"depts\" using (\"deptno\")",
-            "?");
+        check("select 1 from \"emps\" left join \"depts\" using (\"deptno\")");
     }
 
     public void testFromFullJoin()
     {
-        check("select 1 from \"emps\" full join \"depts\" on \"emps\".\"deptno\" = \"depts\".\"deptno\"",
-            "ProjectRel(EXPR$0=[1])" + NL
-            + "  JoinRel(condition=[=($2, $6)], joinType=[full])" + NL
-            + "    ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])" + NL
-            + "    ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])" + NL);
+        check("select 1 from \"emps\" full join \"depts\" on \"emps\".\"deptno\" = \"depts\".\"deptno\"");
     }
 
     public void testFromJoin3()
     {
         check("select 1 from \"emps\" "
             + "join \"depts\" on \"emps\".\"deptno\" = \"depts\".\"deptno\" "
-            + "join (select * from \"emps\" where \"gender\" = 'F') as \"femaleEmps\" on \"femaleEmps\".\"empno\" = \"emps\".\"empno\"",
-            "ProjectRel(EXPR$0=[1])" + NL
-            + "  JoinRel(condition=[=($8, $0)], joinType=[inner])" + NL
-            + "    JoinRel(condition=[=($2, $6)], joinType=[inner])" + NL
-            + "      ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])" + NL
-            + "      ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])" + NL
-            + "    ProjectRel(empno=[$0], name=[$1], deptno=[$2], gender=[$3], city=[$4], slacker=[$5])" + NL
-            + "      FilterRel(condition=[=($3, _ISO-8859-1'F')])" + NL
-            + "        ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])" + NL);
+            + "join (select * from \"emps\" where \"gender\" = 'F') as \"femaleEmps\" on \"femaleEmps\".\"empno\" = \"emps\".\"empno\"");
     }
 
     // todo: Enable when validator can handle NATURAL JOIN
     public void _testFromNaturalRightJoin()
     {
-        check("select 1 from \"emps\" natural right join \"depts\"", "?");
+        check("select 1 from \"emps\" natural right join \"depts\"");
     }
 
     public void testWhereSimple()
     {
-        check("select 1 from \"emps\" where \"gender\" = 'F'",
-            "ProjectRel(EXPR$0=[1])" + NL
-            + "  FilterRel(condition=[=($3, _ISO-8859-1'F')])"
-            + NL
-            + "    ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])"
-            + NL);
+        check("select 1 from \"emps\" where \"gender\" = 'F'");
     }
 
     public void testWhereAnd()
     {
-        check("select 1 from \"emps\" where \"gender\" = 'F' and \"deptno\" = 10",
-            "ProjectRel(EXPR$0=[1])" + NL
-            + "  FilterRel(condition=[AND(=($3, _ISO-8859-1'F'), =($2, 10))])"
-            + NL
-            + "    ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])"
-            + NL);
+        check("select 1 from \"emps\" where \"gender\" = 'F' and \"deptno\" = 10");
     }
 
     public void _testOrder()
     {
-        check("select * from \"emps\" order by empno asc, salary, deptno desc",
-            "?");
+        check("select * from \"emps\" order by empno asc, salary, deptno desc");
     }
 
     public void _testOrderOrdinal()
     {
-        check("select * from \"emps\" order by 3 asc, salary, 1 desc", "?");
+        check("select * from \"emps\" order by 3 asc, salary, 1 desc");
     }
 
     public void _testOrderLiteral()
     {
-        check("select * from \"emps\" order by 'A string', salary, true, null desc",
-            "?");
+        check("select * from \"emps\" order by 'A string', salary, true, null desc");
     }
 
     public void _testFromQuery()
     {
-        check("select 1 from (select * from \"emps\")",
-            "ProjectRel(EXPR$0=[1])" + NL
-            + "  ProjectRel(city=[emps.city], gender=[emps.gender], name=[emps.name], deptno=[emps.deptno], empno=[emps.empno])"
-            + NL
-            + "    ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])"
-            + NL);
+        check("select 1 from (select * from \"emps\")");
     }
 
-    public void _testQueryInSelect()
+    public void testQueryInSelect()
     {
-        check("select \"gender\", (select \"name\" from \"depts\" where \"deptno\" = \"e\".\"deptno\") from \"emps\" as \"e\"",
-            TestUtil.fold(new String[]{
-                "ProjectRel(gender=[$3], EXPR$1=[IS NULL($6)])",
-                "  CorrelatorRel(condition=[true], joinType=[inner], correlations=[[var0=offset2]])",
-                "    ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])",
-                "    ProjectRel(name=[$1])",
-                "      FilterRel(condition=[=($0, $cor0.deptno)])",
-                "        ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])",
-                ""}));
+        check("select \"gender\", (select \"name\" from \"depts\" where \"deptno\" = \"e\".\"deptno\") from \"emps\" as \"e\"");
     }
 
-    public void _testExistsUncorrelated()
+    public void testExistsUncorrelated()
     {
-        check("select * from \"emps\" where exists (select 1 from \"depts\")",
-            TestUtil.fold(new String[]{
-                "ProjectRel(empno=[$0], name=[$1], deptno=[$2], gender=[$3], city=[$4], slacker=[$5])",
-                "  FilterRel(condition=[IS NULL($7)])",
-                "    JoinRel(condition=[true], joinType=[left])",
-                "      ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])",
-                "      ProjectRel(EXPR$0=[$0], $indicator=[true])",
-                "        ProjectRel(EXPR$0=[1])",
-                "          ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])",
-                ""}));
+        check("select * from \"emps\" where exists (select 1 from \"depts\")");
     }
 
-    // todo: implement IN
-    public void _testQueryInWhereUncorrelated()
-    {
-        check("select * from \"depts\" where \"deptno\" in (select \"deptno\" from \"depts\")",
-            "");
-    }
-
-    public void _testExistsCorrelated()
+    public void testExistsCorrelated()
     {
         check("select * from \"emps\" "
             + "where exists (select 1 + 2 from \"depts\" where \"deptno\" > 10) "
-            + "or exists (select 'foo' from \"emps\" where \"gender\" = 'Pig')",
-            TestUtil.fold(new String[]{
-                "ProjectRel(empno=[$0], name=[$1], deptno=[$2], gender=[$3], city=[$4], slacker=[$5])",
-                "  FilterRel(condition=[OR(IS NULL($7), IS NULL($9))])",
-                "    JoinRel(condition=[true], joinType=[left])",
-                "      JoinRel(condition=[true], joinType=[left])",
-                "        ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])",
-                "        ProjectRel(EXPR$0=[$0], $indicator=[true])",
-                "          ProjectRel(EXPR$0=[+(1, 2)])",
-                "            FilterRel(condition=[>($0, 10)])",
-                "              ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])",
-                "      ProjectRel(EXPR$0=[$0], $indicator=[true])",
-                "        ProjectRel(EXPR$0=[_ISO-8859-1'foo'])",
-                "          FilterRel(condition=[=($3, _ISO-8859-1'Pig')])",
-                "            ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])",
-                ""}));
+            + "or exists (select 'foo' from \"emps\" where \"gender\" = 'Pig')");
     }
 
     public void testUnion()
     {
-        check("select 1 from \"emps\" union select 2 from \"depts\"",
-            TestUtil.fold(new String[] {
-                "UnionRel(all=[false])",
-                "  ProjectRel(EXPR$0=[1])",
-                "    ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])",
-                "  ProjectRel(EXPR$0=[2])",
-                "    ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])",
-                ""}));
+        check("select 1 from \"emps\" union select 2 from \"depts\"");
     }
 
     public void testUnionAll()
     {
-        check("select 1 from \"emps\" union all select 2 from \"depts\"",
-            TestUtil.fold(new String[] {
-                "UnionRel(all=[true])",
-                "  ProjectRel(EXPR$0=[1])",
-                "    ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])",
-                "  ProjectRel(EXPR$0=[2])",
-                "    ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])",
-                ""}));
+        check("select 1 from \"emps\" union all select 2 from \"depts\"");
     }
 
     public void testUnionInFrom()
     {
-        check("select * from (select 1 as \"i\", 3 as \"j\" from \"emps\" union select 2, 5 from \"depts\") where \"j\" > 4",
-            TestUtil.fold(new String[] {
-                "ProjectRel(i=[$0], j=[$1])",
-                "  FilterRel(condition=[>($1, 4)])",
-                "    UnionRel(all=[false])",
-                "      ProjectRel(i=[1], j=[3])",
-                "        ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])",
-                "      ProjectRel(EXPR$0=[2], EXPR$1=[5])",
-                "        ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])",
-                ""}));
+        check("select * from (select 1 as \"i\", 3 as \"j\" from \"emps\" union select 2, 5 from \"depts\") where \"j\" > 4");
     }
 
     public void testJoinOfValues()
@@ -468,15 +354,7 @@ public class ConverterTest extends TestCase
         // converter bug; the individual rows were getting registered as
         // leaves, rather than the entire VALUES expression (as required to
         // get the join references correct).
-        check("select * from (values (1), (2)), (values (3))",
-            "ProjectRel(EXPR$0=[$0], EXPR$00=[$1])" + NL
-            + "  JoinRel(condition=[true], joinType=[inner])" + NL
-            + "    ProjectRel(EXPR$0=[$0])" + NL
-            + "      UnionRel(all=[true])" + NL
-            + "        ProjectRel(EXPR$0=[1])" + NL + "          OneRowRel"
-            + NL + "        ProjectRel(EXPR$0=[2])" + NL
-            + "          OneRowRel" + NL + "    ProjectRel(EXPR$0=[$0])" + NL
-            + "      ProjectRel(EXPR$0=[3])" + NL + "        OneRowRel" + NL);
+        check("select * from (values (1), (2)), (values (3))");
     }
 
     // todo: implement EXISTS
@@ -488,47 +366,7 @@ public class ConverterTest extends TestCase
             + "where not exists (" + "  select * from \"depts\" as \"d\" "
             + "  where not exists (" + "    select * from \"emps\" as \"e2\" "
             + "    where \"e1\".\"gender\" = \"e2\".\"gender\" "
-            + "    and \"e2\".\"deptno\" = \"d\".\"deptno\"))", "");
-    }
-
-    // FIXME jvs 15-Nov-2003:  I disabled this because it was failing and the
-    // expected output looks very wrong.
-    public void _testInList()
-    {
-        check("select * from \"emps\" where \"deptno\" in (10,20,30)",
-            "ProjectRel(city=[$input0.$f0.city], gender=[$input0.$f0.gender], name=[$input0.$f0.name], deptno=[$input0.$f0.deptno], empno=[$input0.$f0.empno])"
-            + NL + "  FilterRel(condition=[$input1.$f0])" + NL
-            + "    JoinRel(condition=[true], joinType=[left])" + NL
-            + "      ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])"
-            + NL + "      ProjectRel($indicator=[true])" + NL
-            + "        FilterRel(condition=[$input0.deptno == $input0.$f0])"
-            + NL + "          UnionRel(all=[true])" + NL
-            + "            ProjectRel(EXPR$0=[10])" + NL
-            + "              OneRowRel" + NL
-            + "            ProjectRel(EXPR$0=[20])" + NL
-            + "              OneRowRel" + NL
-            + "            ProjectRel(EXPR$0=[30])" + NL
-            + "              OneRowRel" + NL);
-    }
-
-    // todo: make parser handle IN VALUES
-    // REVIEW jvs 15-Nov-2003:  I'm not sure what you're after here.  You
-    // should be able to put VALUES inside parentheses, and in that case it's
-    // producing a row, not a table of scalars (same as everywhere else).  If
-    // you want to construct a table, you do it like this:
-    // ROW(X,Y,Z) IN (VALUES (1,2,3), (4,5,6)); in this case the
-    // VALUES evaluates to a table of two rows with three columns.  I think.
-    public void _testInValues()
-    {
-        check("select * from \"emps\" where \"deptno\" in values (10,20,30)",
-            "");
-    }
-
-    // todo: make parser handle (1,deptno)
-    public void _testInCompound()
-    {
-        check("select * from \"emps\" where (1,deptno) in (select 1,deptno from \"depts\")",
-            "");
+            + "    and \"e2\".\"deptno\" = \"d\".\"deptno\"))");
     }
 
     // TODO jvs 15-Nov-2003: Parser handles this monstrosity OK, but converter
@@ -538,7 +376,7 @@ public class ConverterTest extends TestCase
     // boolean values.
     public void _testInSquared()
     {
-        check("select * from \"depts\" where deptno in (10) in (true)", "");
+        check("select * from \"depts\" where deptno in (10) in (true)");
     }
 }
 
