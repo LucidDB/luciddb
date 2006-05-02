@@ -368,7 +368,7 @@ public class ConverterTest extends TestCase
             + NL);
     }
 
-    public void testQueryInSelect()
+    public void _testQueryInSelect()
     {
         check("select \"gender\", (select \"name\" from \"depts\" where \"deptno\" = \"e\".\"deptno\") from \"emps\" as \"e\"",
             TestUtil.fold(new String[]{
@@ -381,7 +381,7 @@ public class ConverterTest extends TestCase
                 ""}));
     }
 
-    public void testExistsUncorrelated()
+    public void _testExistsUncorrelated()
     {
         check("select * from \"emps\" where exists (select 1 from \"depts\")",
             TestUtil.fold(new String[]{
@@ -402,7 +402,7 @@ public class ConverterTest extends TestCase
             "");
     }
 
-    public void testExistsCorrelated()
+    public void _testExistsCorrelated()
     {
         check("select * from \"emps\" "
             + "where exists (select 1 + 2 from \"depts\" where \"deptno\" > 10) "
