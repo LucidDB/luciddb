@@ -486,6 +486,10 @@ class ProxyCmdVerifyIndex
 : virtual public JniProxy, virtual public ProxyIndexAccessCmd
 {
 public:
+bool isEstimate();
+static jmethodID meth_isEstimate;
+bool isIncludeTuples();
+static jmethodID meth_isIncludeTuples;
 };
 
 class ProxyCollectTupleStreamDef
