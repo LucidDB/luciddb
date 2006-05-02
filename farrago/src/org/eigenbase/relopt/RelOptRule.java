@@ -72,19 +72,17 @@ public abstract class RelOptRule
         this.operand = operand;
         this.description = guessDescription(getClass().getName());
 
-        Walker operandWalker = new Walker(getOperand());
-        ArrayList operandsOfRule = new ArrayList();
-        while (operandWalker.hasMoreElements()) {
-            RelOptRuleOperand flattenedOperand =
-                (RelOptRuleOperand) operandWalker.nextElement();
+        Walker<RelOptRuleOperand> operandWalker =
+            new Walker<RelOptRuleOperand>(getOperand());
+        List<RelOptRuleOperand> operandsOfRule =
+            new ArrayList<RelOptRuleOperand>();
+        while (operandWalker.hasNext()) {
+            RelOptRuleOperand flattenedOperand = operandWalker.next();
             flattenedOperand.setRule(this);
-            flattenedOperand.setParent(
-                (RelOptRuleOperand) operandWalker.getParent());
+            flattenedOperand.setParent(operandWalker.getParent());
             operandsOfRule.add(flattenedOperand);
         }
-        operands =
-            (RelOptRuleOperand [])
-            operandsOfRule.toArray(RelOptRuleOperand.noOperands);
+        operands = operandsOfRule.toArray(RelOptRuleOperand.noOperands);
     }
 
     //~ Methods ---------------------------------------------------------------

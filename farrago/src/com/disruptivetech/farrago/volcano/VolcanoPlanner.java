@@ -195,14 +195,15 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
         // remains Volcano-specific for now.
 
         // Each of this rule's operands is an 'entry point' for a rule call.
-        Walker operandWalker = new Walker(rule.getOperand());
+        Walker<RelOptRuleOperand> operandWalker =
+            new Walker<RelOptRuleOperand>(rule.getOperand());
         int ordinalInRule = 0;
-        ArrayList operandsOfRule = new ArrayList();
-        while (operandWalker.hasMoreElements()) {
-            RelOptRuleOperand operand =
-                (RelOptRuleOperand) operandWalker.nextElement();
+        List<RelOptRuleOperand> operandsOfRule =
+            new ArrayList<RelOptRuleOperand>();
+        while (operandWalker.hasNext()) {
+            RelOptRuleOperand operand = operandWalker.next();
             operand.setRule(rule);
-            operand.setParent((RelOptRuleOperand) operandWalker.getParent());
+            operand.setParent(operandWalker.getParent());
             operand.ordinalInParent = operandWalker.getOrdinal();
             operand.ordinalInRule = ordinalInRule++;
             operandsOfRule.add(operand);
@@ -477,15 +478,13 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
                     "set [" + set +
                     "] has been merged: it should not be in the list");
             }
-            for (Iterator subsets = set.subsets.iterator(); subsets.hasNext();) {
-                RelSubset subset = (RelSubset) subsets.next();
+            for (RelSubset subset : set.subsets) {
                 if (subset.set != set) {
                     throw new AssertionError(
                         "subset [" + subset.getDescription()
                         + "] is in wrong set [" + set + "]");
                 }
-                for (Iterator rels = subset.rels.iterator(); rels.hasNext();) {
-                    RelNode rel = (RelNode) rels.next();
+                for (RelNode rel : subset.rels) {
                     final RelSubset subset2 = getSubset(rel);
                     if ((subset2 != subset) && false) {
                         throw new AssertionError(
@@ -669,8 +668,7 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
         if (!set.abstractConverters.isEmpty()) {
             int i = 0;
             while (i < set.abstractConverters.size()) {
-                AbstractConverter converter =
-                    (AbstractConverter) set.abstractConverters.get(i);
+                AbstractConverter converter = set.abstractConverters.get(i);
                 RelNode converted =
                     changeTraitsUsingConverters(rel,
                         converter.getTraits());
@@ -705,20 +703,19 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
         for (int i = 0; i < sets.length; i++) {
             RelSet set = sets[i];
             pw.println("Set#" + set.id);
-            for (int j = 0; j < set.subsets.size(); j++) {
-                RelSubset subset = (RelSubset) set.subsets.get(j);
+            int j = -1;
+            for (RelSubset subset : set.subsets) {
+                ++j;
                 pw.println("\t" + subset.getDescription() + ", best="
                     + ((subset.best == null) ? "null"
                     : ("Rel#" + subset.best.getId())) + ", importance="
                     + ruleQueue.getImportance(subset));
                 assert (subset.set == set);
                 for (int k = 0; k < j; k++) {
-                    assert (!((RelSubset) set.subsets.get(k)).getTraits()
-                                .equals(subset.getTraits()));
+                    assert !set.subsets.get(k).getTraits().equals(
+                        subset.getTraits());
                 }
-                for (int k = 0; k < subset.rels.size(); k++) {
-                    RelNode rel = (RelNode) subset.rels.get(k);
-
+                for (RelNode rel : subset.rels) {
                     // "\t\trel#34:JavaProject(Rel#32:JavaFilter(...), ...)"
                     pw.print("\t\t" + rel.getDescription());
                     RelNode [] inputs = rel.getInputs();
@@ -730,12 +727,12 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
                                 input.getTraits());
                         RelSet inputSet = inputSubset.set;
                         if (input instanceof RelSubset) {
-                            assert (inputSubset.rels.size() > 0);
-                            input = (RelNode) inputSubset.rels.get(0);
-                            assert (inputSubset.getTraits().equals(input
-                                .getTraits()));
-                            assert (inputSet.rels.contains(input));
-                            assert (inputSet.subsets.contains(inputSubset));
+                            assert inputSubset.rels.size() > 0;
+                            input = inputSubset.rels.get(0);
+                            assert inputSubset.getTraits().equals(
+                                input.getTraits());
+                            assert inputSet.rels.contains(input);
+                            assert inputSet.subsets.contains(inputSubset);
                         }
                     }
                     pw.print(", rowcount=" + RelMetadataQuery.getRowCount(rel));
@@ -847,9 +844,8 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
             return subset; // don't even bother
         }
         subset.active = true;
-        for (int i = 0; i < subset.rels.size(); i++) {
-            RelNode rel = (RelNode) subset.rels.get(i);
-            assert (rel.getTraits().equals(subset.getTraits()));
+        for (RelNode rel : subset.rels) {
+            assert rel.getTraits().equals(subset.getTraits());
             RelOptCost minCost = targetCost;
             if (subset.bestCost.isLt(minCost)) {
                 // not enough to do better than our target -- we have to do better than
@@ -1186,7 +1182,7 @@ loop:
         if (rel == this.root) {
             ruleQueue.subsetImportances.put(
                 subset,
-                new Double(1.0)); // todo: remove
+                1.0); // todo: remove
         }
         RelNode [] inputs = rel.getInputs();
         for (int i = 0; i < inputs.length; i++) {
@@ -1202,7 +1198,7 @@ loop:
 
         // Remember abstract converters until they're satisfied
         if (rel instanceof AbstractConverter) {
-            set.abstractConverters.add(rel);
+            set.abstractConverters.add((AbstractConverter) rel);
         }
 
         // If this set has any unsatisfied converters, try to satisfy them.

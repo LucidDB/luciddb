@@ -26,7 +26,6 @@ package org.eigenbase.relopt;
 import java.util.*;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.io.*;
@@ -88,7 +87,7 @@ public abstract class RelOptUtil
      * Returns a list of variables set by a relational expression or its
      * descendants.
      */
-    public static Set getVariablesSet(RelNode rel)
+    public static Set<String> getVariablesSet(RelNode rel)
     {
         VariableSetVisitor visitor = new VariableSetVisitor();
         go(visitor, rel);
@@ -103,17 +102,16 @@ public abstract class RelOptUtil
         RelNode rel0,
         RelNode rel1)
     {
-        Set set = getVariablesSet(rel0);
+        Set<String> set = getVariablesSet(rel0);
         if (set.size() == 0) {
             return Util.emptyStringArray;
         }
-        Set used = getVariablesUsed(rel1);
+        Set<String> used = getVariablesUsed(rel1);
         if (used.size() == 0) {
             return Util.emptyStringArray;
         }
-        ArrayList result = new ArrayList();
-        for (Iterator vars = set.iterator(); vars.hasNext();) {
-            String s = (String) vars.next();
+        List<String> result = new ArrayList<String>();
+        for (String s : set) {
             if (used.contains(s) && !result.contains(s)) {
                 result.add(s);
             }
@@ -121,9 +119,7 @@ public abstract class RelOptUtil
         if (result.size() == 0) {
             return Util.emptyStringArray;
         }
-        String [] resultArray = new String[result.size()];
-        result.toArray(resultArray);
-        return resultArray;
+        return result.toArray(new String[result.size()]);
     }
 
     /**
@@ -132,7 +128,7 @@ public abstract class RelOptUtil
      * The set may contain duplicates.
      * The item type is the same as {@link org.eigenbase.rex.RexVariable#getName}
      */
-    public static Set getVariablesUsed(RelNode rel)
+    public static Set<String> getVariablesUsed(RelNode rel)
     {
         final VariableUsedVisitor vuv = new VariableUsedVisitor();
         final VisitorRelVisitor visitor = new VisitorRelVisitor(vuv) {
@@ -1143,7 +1139,7 @@ public abstract class RelOptUtil
      * @param rexBuilder builder for creating new RexInputRefs
      * @param fields fields where the RexInputRefs originally originated from
      * @param rex the expression
-     * @param adjustment the amount to adjust each field by
+     * @param adjustments the amount to adjust each field by
      * @return modified expression tree
      */
     public static RexNode convertRexInputRefs(
@@ -1256,7 +1252,7 @@ public abstract class RelOptUtil
      * originated from above the join), or are pushed to one of the children.
      * Filters that are pushed are added to list passed in as input parameters.
      * 
-     * @param join node
+     * @param joinRel node
      * @param filters filters to be classified
      * @param pushJoin true if filters originated from above the join node
      * and the join is an inner join
@@ -1351,7 +1347,7 @@ public abstract class RelOptUtil
 
     private static class VariableSetVisitor extends RelVisitor
     {
-        HashSet variables = new HashSet();
+        final Set<String> variables = new HashSet<String>();
 
         // implement RelVisitor
         public void visit(
@@ -1370,7 +1366,7 @@ public abstract class RelOptUtil
 
     public static class VariableUsedVisitor extends RexShuttle
     {
-        public final Set variables = new HashSet();
+        public final Set<String> variables = new HashSet<String>();
 
         public RexNode visitCorrelVariable(RexCorrelVariable p)
         {

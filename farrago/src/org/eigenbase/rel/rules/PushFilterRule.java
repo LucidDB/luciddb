@@ -120,9 +120,13 @@ public class PushFilterRule extends RelOptRule
             joinFilter = RexUtil.andRexNodeList(rexBuilder, joinFilters);
         }
         RelNode newJoinRel = new JoinRel(
-            joinRel.getCluster(), leftRel, rightRel, joinFilter,
-            joinRel.getJoinType(), Collections.emptySet(),
-            joinRel.isSemiJoinDone(), joinRel.isMultiJoinDone());
+            joinRel.getCluster(),
+            leftRel, rightRel,
+            joinFilter,
+            joinRel.getJoinType(),
+            (Set<String>) Collections.EMPTY_SET,
+            joinRel.isSemiJoinDone(),
+            joinRel.isMultiJoinDone());
         
         // create a FilterRel on top of the join if needed
         RelNode newRel = createFilterOnRel(rexBuilder, newJoinRel, aboveFilters);

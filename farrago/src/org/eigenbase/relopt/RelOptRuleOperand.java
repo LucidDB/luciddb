@@ -45,7 +45,7 @@ import org.eigenbase.util.Walkable;
  * that, to match the rule, <code>Filter</code> must have no operands.
  * </p>
  */
-public class RelOptRuleOperand implements Walkable
+public class RelOptRuleOperand implements Walkable<RelOptRuleOperand>
 {
     //~ Static fields/initializers --------------------------------------------
 
@@ -167,7 +167,7 @@ public class RelOptRuleOperand implements Walkable
     }
 
     // implement Walkable
-    public Object [] getChildren()
+    public RelOptRuleOperand [] getChildren()
     {
         return children;
     }

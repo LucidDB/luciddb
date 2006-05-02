@@ -43,7 +43,7 @@ public abstract class JoinRelBase extends AbstractRelNode
     protected RexNode condition;
     protected RelNode left;
     protected RelNode right;
-    protected Set variablesStopped = Collections.EMPTY_SET;
+    protected Set<String> variablesStopped = Collections.emptySet();
 
     /**
      * Values must be of enumeration {@link JoinRelType}, except that {@link
@@ -58,7 +58,7 @@ public abstract class JoinRelBase extends AbstractRelNode
         RelNode right,
         RexNode condition,
         JoinRelType joinType,
-        Set variablesStopped)
+        Set<String> variablesStopped)
     {
         super(cluster, traits);
         this.left = left;
@@ -123,12 +123,12 @@ public abstract class JoinRelBase extends AbstractRelNode
         return estimateJoinedRows(this, condition);
     }
 
-    public void setVariablesStopped(HashSet set)
+    public void setVariablesStopped(Set<String> set)
     {
         variablesStopped = set;
     }
 
-    public Set getVariablesStopped()
+    public Set<String> getVariablesStopped()
     {
         return variablesStopped;
     }
@@ -150,7 +150,7 @@ public abstract class JoinRelBase extends AbstractRelNode
     public void registerStoppedVariable(String name)
     {
         if (variablesStopped.isEmpty()) {
-            variablesStopped = new HashSet();
+            variablesStopped = new HashSet<String>();
         }
         variablesStopped.add(name);
     }
