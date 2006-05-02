@@ -336,7 +336,7 @@ ${farrago.test.jvmargs}
   <target name="clean" depends="clean-dist">
     <antcall target="cleanTestLogs"/>
     <delete quiet="true">
-      <fileset dir="${classes.dir}" includes="**/*.java"/>
+      <fileset dir="${classes.dir}" includes="**/*.class"/>
     </delete>
     <ant dir="test/sql/shortreg" target="clean"/>
     <ant dir="test/sql/txn" target="clean"/>
