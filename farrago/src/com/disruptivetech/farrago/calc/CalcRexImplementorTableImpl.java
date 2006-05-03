@@ -128,7 +128,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
      * @pre op != null
      * @pre instrDef != null
      */
-    private void registerInstr(
+    protected void registerInstr(
         SqlOperator op,
         CalcProgramBuilder.InstructionDef instrDef)
     {

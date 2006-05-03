@@ -137,11 +137,12 @@ public class FarragoJdbcEngineConnection
         return session.isAutoCommit();
     }
 
+    // implement Connection
     public void setCatalog(String catalog)
         throws SQLException
     {
         // TODO
-        throw new UnsupportedOperationException();
+        return;     // until implemented, JDBC API doc says to silently ignore
     }
 
     // implement Connection
