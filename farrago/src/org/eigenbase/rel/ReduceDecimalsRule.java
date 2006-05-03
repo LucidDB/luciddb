@@ -116,7 +116,7 @@ public class ReduceDecimalsRule extends RelOptRule
      * A shuttle which converts decimal expressions to expressions
      * based on longs. 
      */
-    private class DecimalShuttle extends RexShuttle
+    public class DecimalShuttle extends RexShuttle
     {
         private final Map<String, RexNode> irreducible;
         private final Map<String, RexNode> results;
