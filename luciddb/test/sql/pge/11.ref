@@ -1,198 +1,198 @@
-0: jdbc:oracle:> -- Query 11
-0: jdbc:oracle:> 
-0: jdbc:oracle:> SELECT AL4.REVN_YR_MO, AL3.SRVPLN_ID, AL3.SRVPLN_NM,
+0: jdbc:luciddb:> -- Query 11
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT AL4.REVN_YR_MO, AL3.SRVPLN_ID, AL3.SRVPLN_NM,
 . . . . . . . . >  SUM(AL5.RSD_SVC_BILG_AMT)
 . . . . . . . . > FROM
-. . . . . . . . > -- PGE.CUST_SERV_ACCT AL1,
-. . . . . . . . > -- PGE.GEOG AL2,
-. . . . . . . . > -- PGE.SERV_PLAN AL3,
-. . . . . . . . > -- PGE.REVN_PRD AL4,
-. . . . . . . . > -- PGE.REVN_DTL_RAND AL5
-. . . . . . . . > PGE.REVN_DTL_RAND AL5,
-. . . . . . . . > PGE.CUST_SERV_ACCT AL1,
-. . . . . . . . > PGE.SERV_PLAN AL3,
-. . . . . . . . > PGE.GEOG AL2,
-. . . . . . . . > PGE.REVN_PRD AL4
+. . . . . . . . > --  PGE.CUST_SERV_ACCT AL1,
+. . . . . . . . > --  PGE.GEOG AL2,
+. . . . . . . . > --  PGE.SERV_PLAN AL3,
+. . . . . . . . > --  PGE.REVN_PRD AL4,
+. . . . . . . . > --  PGE.REVN_DTL_RAND AL5
+. . . . . . . . >  PGE.REVN_DTL_RAND AL5,
+. . . . . . . . >  PGE.CUST_SERV_ACCT AL1,
+. . . . . . . . >  PGE.SERV_PLAN AL3,
+. . . . . . . . >  PGE.GEOG AL2,
+. . . . . . . . >  PGE.REVN_PRD AL4
 . . . . . . . . > WHERE (AL5.REVN_YR_MO=AL4.REVN_YR_MO
 . . . . . . . . >  AND AL2.GEOG_KEY=AL5.GEOG_KEY AND AL3.SRVPLN_KEY=AL5.SRVPLN_KEY
 . . . . . . . . >  AND AL1.CUST_SERV_ACCT_KEY=AL5.CUST_SERV_ACCT_KEY)
 . . . . . . . . > GROUP BY AL4.REVN_YR_MO, AL3.SRVPLN_ID, AL3.SRVPLN_NM
 . . . . . . . . > ORDER BY 1,2,3
 . . . . . . . . > ;
-+-------------+------------+----------------------------+----------------------------+
-| REVN_YR_MO  | SRVPLN_ID  |         SRVPLN_NM          | SUM(AL5.RSD_SVC_BILG_AMT)  |
-+-------------+------------+----------------------------+----------------------------+
-| 199401      | 311        | GAS - RESIDENTIAL          | 276974.15823003            |
-| 199401      | 315        | GAS - MULT FAMILY HOUSING  | 8502.31955531              |
-| 199401      | 811        | ELEC - RESIDENTIAL         | 476611.55535572            |
-| 199401      | 812        | ELEC - GOOD CENTS RES      | 785.56833618               |
-| 199401      | 813        | ELEC - GOOD CENTS MULT     | 71.7136145                 |
-| 199401      | 821        | ELEC - GEN SERV - SMALL    | 909.184534                 |
-| 199401      | 878        | ELEC - DUSK TO DAWN LTG    | 18479.5182139              |
-| 199402      | 311        | GAS - RESIDENTIAL          | 300553.20463571            |
-| 199402      | 315        | GAS - MULT FAMILY HOUSING  | 8053.80933509              |
-| 199402      | 811        | ELEC - RESIDENTIAL         | 471233.83098793            |
-| 199402      | 812        | ELEC - GOOD CENTS RES      | 763.00943082               |
-| 199402      | 813        | ELEC - GOOD CENTS MULT     | 64.7590064                 |
-| 199402      | 821        | ELEC - GEN SERV - SMALL    | 871.399741                 |
-| 199402      | 878        | ELEC - DUSK TO DAWN LTG    | 18219.61449456             |
-| 199403      | 311        | GAS - RESIDENTIAL          | 297920.26276271            |
-| 199403      | 315        | GAS - MULT FAMILY HOUSING  | 8114.27477187              |
-| 199403      | 811        | ELEC - RESIDENTIAL         | 490917.54581562            |
-| 199403      | 812        | ELEC - GOOD CENTS RES      | 754.69997022               |
-| 199403      | 813        | ELEC - GOOD CENTS MULT     | 65.123168                  |
-| 199403      | 821        | ELEC - GEN SERV - SMALL    | 923.5706875                |
-| 199403      | 878        | ELEC - DUSK TO DAWN LTG    | 17665.93647551             |
-| 199404      | 311        | GAS - RESIDENTIAL          | 281980.42201829            |
-| 199404      | 315        | GAS - MULT FAMILY HOUSING  | 7929.97301083              |
-| 199404      | 811        | ELEC - RESIDENTIAL         | 478226.25742557            |
-| 199404      | 812        | ELEC - GOOD CENTS RES      | 775.80413808               |
-| 199404      | 813        | ELEC - GOOD CENTS MULT     | 72.35828435                |
-| 199404      | 821        | ELEC - GEN SERV - SMALL    | 936.712987                 |
-| 199404      | 878        | ELEC - DUSK TO DAWN LTG    | 17842.31014859             |
-| 199405      | 311        | GAS - RESIDENTIAL          | 284447.45333703            |
-| 199405      | 315        | GAS - MULT FAMILY HOUSING  | 7696.48250062              |
-| 199405      | 811        | ELEC - RESIDENTIAL         | 472668.46933734            |
-| 199405      | 812        | ELEC - GOOD CENTS RES      | 743.56249992               |
-| 199405      | 813        | ELEC - GOOD CENTS MULT     | 64.05976555                |
-| 199405      | 821        | ELEC - GEN SERV - SMALL    | 912.84244675               |
-| 199405      | 878        | ELEC - DUSK TO DAWN LTG    | 18578.57632905             |
-| 199406      | 311        | GAS - RESIDENTIAL          | 277805.71751281            |
-| 199406      | 315        | GAS - MULT FAMILY HOUSING  | 7895.41799284              |
-| 199406      | 811        | ELEC - RESIDENTIAL         | 485110.97575935            |
-| 199406      | 812        | ELEC - GOOD CENTS RES      | 788.079795                 |
-| 199406      | 813        | ELEC - GOOD CENTS MULT     | 72.8663936                 |
-| 199406      | 821        | ELEC - GEN SERV - SMALL    | 903.60446675               |
-| 199406      | 878        | ELEC - DUSK TO DAWN LTG    | 18714.65101458             |
-| 199407      | 311        | GAS - RESIDENTIAL          | 269600.9502013             |
-| 199407      | 315        | GAS - MULT FAMILY HOUSING  | 7961.93425631              |
-| 199407      | 811        | ELEC - RESIDENTIAL         | 466315.94668446            |
-| 199407      | 812        | ELEC - GOOD CENTS RES      | 799.29407544               |
-| 199407      | 813        | ELEC - GOOD CENTS MULT     | 65.2530736                 |
-| 199407      | 821        | ELEC - GEN SERV - SMALL    | 915.03283                  |
-| 199407      | 878        | ELEC - DUSK TO DAWN LTG    | 18473.61051897             |
-| 199408      | 311        | GAS - RESIDENTIAL          | 276858.45864526            |
-| 199408      | 315        | GAS - MULT FAMILY HOUSING  | 8644.43843433              |
-| 199408      | 811        | ELEC - RESIDENTIAL         | 492209.28221034            |
-| 199408      | 812        | ELEC - GOOD CENTS RES      | 778.92542286               |
-| 199408      | 813        | ELEC - GOOD CENTS MULT     | 71.76771965                |
-| 199408      | 821        | ELEC - GEN SERV - SMALL    | 891.75875775               |
-| 199408      | 878        | ELEC - DUSK TO DAWN LTG    | 18503.53145854             |
-| 199409      | 311        | GAS - RESIDENTIAL          | 279086.07346499            |
-| 199409      | 315        | GAS - MULT FAMILY HOUSING  | 8238.74297747              |
-| 199409      | 811        | ELEC - RESIDENTIAL         | 500072.62379619            |
-| 199409      | 812        | ELEC - GOOD CENTS RES      | 771.04268526               |
-| 199409      | 813        | ELEC - GOOD CENTS MULT     | 71.98187755                |
-| 199409      | 821        | ELEC - GEN SERV - SMALL    | 980.38517375               |
-| 199409      | 878        | ELEC - DUSK TO DAWN LTG    | 17781.34471546             |
-| 199410      | 311        | GAS - RESIDENTIAL          | 303414.37841973            |
-| 199410      | 315        | GAS - MULT FAMILY HOUSING  | 7795.33108544              |
-| 199410      | 811        | ELEC - RESIDENTIAL         | 488133.88042826            |
-| 199410      | 812        | ELEC - GOOD CENTS RES      | 780.7944696                |
-| 199410      | 813        | ELEC - GOOD CENTS MULT     | 70.360653                  |
-| 199410      | 821        | ELEC - GEN SERV - SMALL    | 982.11638575               |
-| 199410      | 878        | ELEC - DUSK TO DAWN LTG    | 17777.94969201             |
-| 199411      | 311        | GAS - RESIDENTIAL          | 288454.92520013            |
-| 199411      | 315        | GAS - MULT FAMILY HOUSING  | 8454.74823704              |
-| 199411      | 811        | ELEC - RESIDENTIAL         | 482884.8503884             |
-| 199411      | 812        | ELEC - GOOD CENTS RES      | 760.93478118               |
-| 199411      | 813        | ELEC - GOOD CENTS MULT     | 66.33737275                |
-| 199411      | 821        | ELEC - GEN SERV - SMALL    | 938.39964575               |
-| 199411      | 878        | ELEC - DUSK TO DAWN LTG    | 18108.19734502             |
-| 199412      | 311        | GAS - RESIDENTIAL          | 272940.89202404            |
-| 199412      | 315        | GAS - MULT FAMILY HOUSING  | 8517.21612324              |
-| 199412      | 811        | ELEC - RESIDENTIAL         | 488529.283264              |
-| 199412      | 812        | ELEC - GOOD CENTS RES      | 836.5594071                |
-| 199412      | 813        | ELEC - GOOD CENTS MULT     | 69.0691837                 |
-| 199412      | 821        | ELEC - GEN SERV - SMALL    | 975.348838                 |
-| 199412      | 878        | ELEC - DUSK TO DAWN LTG    | 18877.06710054             |
-| 199501      | 311        | GAS - RESIDENTIAL          | 276974.15823003            |
-| 199501      | 315        | GAS - MULT FAMILY HOUSING  | 8502.31955531              |
-| 199501      | 811        | ELEC - RESIDENTIAL         | 476611.55535572            |
-| 199501      | 812        | ELEC - GOOD CENTS RES      | 785.56833618               |
-| 199501      | 813        | ELEC - GOOD CENTS MULT     | 71.7136145                 |
-| 199501      | 821        | ELEC - GEN SERV - SMALL    | 909.184534                 |
-| 199501      | 878        | ELEC - DUSK TO DAWN LTG    | 18479.5182139              |
-| 199502      | 311        | GAS - RESIDENTIAL          | 300553.20463571            |
-| 199502      | 315        | GAS - MULT FAMILY HOUSING  | 8053.80933509              |
-| 199502      | 811        | ELEC - RESIDENTIAL         | 471233.83098793            |
-| 199502      | 812        | ELEC - GOOD CENTS RES      | 763.00943082               |
-| 199502      | 813        | ELEC - GOOD CENTS MULT     | 64.7590064                 |
-| 199502      | 821        | ELEC - GEN SERV - SMALL    | 871.399741                 |
-| 199502      | 878        | ELEC - DUSK TO DAWN LTG    | 18219.61449456             |
-| 199503      | 311        | GAS - RESIDENTIAL          | 297920.26276271            |
-+-------------+------------+----------------------------+----------------------------+
-| REVN_YR_MO  | SRVPLN_ID  |         SRVPLN_NM          | SUM(AL5.RSD_SVC_BILG_AMT)  |
-+-------------+------------+----------------------------+----------------------------+
-| 199503      | 315        | GAS - MULT FAMILY HOUSING  | 8114.27477187              |
-| 199503      | 811        | ELEC - RESIDENTIAL         | 490917.54581562            |
-| 199503      | 812        | ELEC - GOOD CENTS RES      | 754.69997022               |
-| 199503      | 813        | ELEC - GOOD CENTS MULT     | 65.123168                  |
-| 199503      | 821        | ELEC - GEN SERV - SMALL    | 923.5706875                |
-| 199503      | 878        | ELEC - DUSK TO DAWN LTG    | 17665.93647551             |
-| 199504      | 311        | GAS - RESIDENTIAL          | 281980.42201829            |
-| 199504      | 315        | GAS - MULT FAMILY HOUSING  | 7929.97301083              |
-| 199504      | 811        | ELEC - RESIDENTIAL         | 478226.25742557            |
-| 199504      | 812        | ELEC - GOOD CENTS RES      | 775.80413808               |
-| 199504      | 813        | ELEC - GOOD CENTS MULT     | 72.35828435                |
-| 199504      | 821        | ELEC - GEN SERV - SMALL    | 936.712987                 |
-| 199504      | 878        | ELEC - DUSK TO DAWN LTG    | 17842.31014859             |
-| 199505      | 311        | GAS - RESIDENTIAL          | 284447.45333703            |
-| 199505      | 315        | GAS - MULT FAMILY HOUSING  | 7696.48250062              |
-| 199505      | 811        | ELEC - RESIDENTIAL         | 472668.46933734            |
-| 199505      | 812        | ELEC - GOOD CENTS RES      | 743.56249992               |
-| 199505      | 813        | ELEC - GOOD CENTS MULT     | 64.05976555                |
-| 199505      | 821        | ELEC - GEN SERV - SMALL    | 912.84244675               |
-| 199505      | 878        | ELEC - DUSK TO DAWN LTG    | 18578.57632905             |
-| 199506      | 311        | GAS - RESIDENTIAL          | 277805.71751281            |
-| 199506      | 315        | GAS - MULT FAMILY HOUSING  | 7895.41799284              |
-| 199506      | 811        | ELEC - RESIDENTIAL         | 485110.97575935            |
-| 199506      | 812        | ELEC - GOOD CENTS RES      | 788.079795                 |
-| 199506      | 813        | ELEC - GOOD CENTS MULT     | 72.8663936                 |
-| 199506      | 821        | ELEC - GEN SERV - SMALL    | 903.60446675               |
-| 199506      | 878        | ELEC - DUSK TO DAWN LTG    | 18714.65101458             |
-| 199507      | 311        | GAS - RESIDENTIAL          | 269600.9502013             |
-| 199507      | 315        | GAS - MULT FAMILY HOUSING  | 7961.93425631              |
-| 199507      | 811        | ELEC - RESIDENTIAL         | 466315.94668446            |
-| 199507      | 812        | ELEC - GOOD CENTS RES      | 799.29407544               |
-| 199507      | 813        | ELEC - GOOD CENTS MULT     | 65.2530736                 |
-| 199507      | 821        | ELEC - GEN SERV - SMALL    | 915.03283                  |
-| 199507      | 878        | ELEC - DUSK TO DAWN LTG    | 18473.61051897             |
-| 199508      | 311        | GAS - RESIDENTIAL          | 276858.45864526            |
-| 199508      | 315        | GAS - MULT FAMILY HOUSING  | 8644.43843433              |
-| 199508      | 811        | ELEC - RESIDENTIAL         | 492209.28221034            |
-| 199508      | 812        | ELEC - GOOD CENTS RES      | 778.92542286               |
-| 199508      | 813        | ELEC - GOOD CENTS MULT     | 71.76771965                |
-| 199508      | 821        | ELEC - GEN SERV - SMALL    | 891.75875775               |
-| 199508      | 878        | ELEC - DUSK TO DAWN LTG    | 18503.53145854             |
-| 199509      | 311        | GAS - RESIDENTIAL          | 279086.07346499            |
-| 199509      | 315        | GAS - MULT FAMILY HOUSING  | 8238.74297747              |
-| 199509      | 811        | ELEC - RESIDENTIAL         | 500072.62379619            |
-| 199509      | 812        | ELEC - GOOD CENTS RES      | 771.04268526               |
-| 199509      | 813        | ELEC - GOOD CENTS MULT     | 71.98187755                |
-| 199509      | 821        | ELEC - GEN SERV - SMALL    | 980.38517375               |
-| 199509      | 878        | ELEC - DUSK TO DAWN LTG    | 17781.34471546             |
-| 199510      | 311        | GAS - RESIDENTIAL          | 303414.37841973            |
-| 199510      | 315        | GAS - MULT FAMILY HOUSING  | 7795.33108544              |
-| 199510      | 811        | ELEC - RESIDENTIAL         | 488133.88042826            |
-| 199510      | 812        | ELEC - GOOD CENTS RES      | 780.7944696                |
-| 199510      | 813        | ELEC - GOOD CENTS MULT     | 70.360653                  |
-| 199510      | 821        | ELEC - GEN SERV - SMALL    | 982.11638575               |
-| 199510      | 878        | ELEC - DUSK TO DAWN LTG    | 17777.94969201             |
-| 199511      | 311        | GAS - RESIDENTIAL          | 288454.92520013            |
-| 199511      | 315        | GAS - MULT FAMILY HOUSING  | 8454.74823704              |
-| 199511      | 811        | ELEC - RESIDENTIAL         | 482884.8503884             |
-| 199511      | 812        | ELEC - GOOD CENTS RES      | 760.93478118               |
-| 199511      | 813        | ELEC - GOOD CENTS MULT     | 66.33737275                |
-| 199511      | 821        | ELEC - GEN SERV - SMALL    | 938.39964575               |
-| 199511      | 878        | ELEC - DUSK TO DAWN LTG    | 18108.19734502             |
-| 199512      | 311        | GAS - RESIDENTIAL          | 272940.89202404            |
-| 199512      | 315        | GAS - MULT FAMILY HOUSING  | 8517.21612324              |
-| 199512      | 811        | ELEC - RESIDENTIAL         | 488529.283264              |
-| 199512      | 812        | ELEC - GOOD CENTS RES      | 836.5594071                |
-| 199512      | 813        | ELEC - GOOD CENTS MULT     | 69.0691837                 |
-| 199512      | 821        | ELEC - GEN SERV - SMALL    | 975.348838                 |
-| 199512      | 878        | ELEC - DUSK TO DAWN LTG    | 18877.06710054             |
-+-------------+------------+----------------------------+----------------------------+
-0: jdbc:oracle:> 
-0: jdbc:oracle:> !quit
++-------------+------------+----------------------------+---------------------+
+| REVN_YR_MO  | SRVPLN_ID  |         SRVPLN_NM          |       EXPR$3        |
++-------------+------------+----------------------------+---------------------+
+| 199401      | 311        | GAS - RESIDENTIAL          | 276974.15823002916  |
+| 199401      | 315        | GAS - MULT FAMILY HOUSING  | 8502.319555309998   |
+| 199401      | 811        | ELEC - RESIDENTIAL         | 476611.55535572005  |
+| 199401      | 812        | ELEC - GOOD CENTS RES      | 785.56833618        |
+| 199401      | 813        | ELEC - GOOD CENTS MULT     | 71.7136145          |
+| 199401      | 821        | ELEC - GEN SERV - SMALL    | 909.184534          |
+| 199401      | 878        | ELEC - DUSK TO DAWN LTG    | 18479.518213900184  |
+| 199402      | 311        | GAS - RESIDENTIAL          | 300553.2046357106   |
+| 199402      | 315        | GAS - MULT FAMILY HOUSING  | 8053.80933509       |
+| 199402      | 811        | ELEC - RESIDENTIAL         | 471233.8309879283   |
+| 199402      | 812        | ELEC - GOOD CENTS RES      | 763.0094308199999   |
+| 199402      | 813        | ELEC - GOOD CENTS MULT     | 64.7590064          |
+| 199402      | 821        | ELEC - GEN SERV - SMALL    | 871.3997410000001   |
+| 199402      | 878        | ELEC - DUSK TO DAWN LTG    | 18219.614494559635  |
+| 199403      | 311        | GAS - RESIDENTIAL          | 297920.26276271226  |
+| 199403      | 315        | GAS - MULT FAMILY HOUSING  | 8114.27477187       |
+| 199403      | 811        | ELEC - RESIDENTIAL         | 490917.5458156198   |
+| 199403      | 812        | ELEC - GOOD CENTS RES      | 754.6999702200001   |
+| 199403      | 813        | ELEC - GOOD CENTS MULT     | 65.123168           |
+| 199403      | 821        | ELEC - GEN SERV - SMALL    | 923.5706875         |
+| 199403      | 878        | ELEC - DUSK TO DAWN LTG    | 17665.936475509996  |
+| 199404      | 311        | GAS - RESIDENTIAL          | 281980.4220182915   |
+| 199404      | 315        | GAS - MULT FAMILY HOUSING  | 7929.9730108300055  |
+| 199404      | 811        | ELEC - RESIDENTIAL         | 478226.25742557074  |
+| 199404      | 812        | ELEC - GOOD CENTS RES      | 775.80413808        |
+| 199404      | 813        | ELEC - GOOD CENTS MULT     | 72.35828434999999   |
+| 199404      | 821        | ELEC - GEN SERV - SMALL    | 936.7129870000001   |
+| 199404      | 878        | ELEC - DUSK TO DAWN LTG    | 17842.310148590426  |
+| 199405      | 311        | GAS - RESIDENTIAL          | 284447.4533370311   |
+| 199405      | 315        | GAS - MULT FAMILY HOUSING  | 7696.482500620002   |
+| 199405      | 811        | ELEC - RESIDENTIAL         | 472668.46933734044  |
+| 199405      | 812        | ELEC - GOOD CENTS RES      | 743.56249992        |
+| 199405      | 813        | ELEC - GOOD CENTS MULT     | 64.05976555         |
+| 199405      | 821        | ELEC - GEN SERV - SMALL    | 912.84244675        |
+| 199405      | 878        | ELEC - DUSK TO DAWN LTG    | 18578.576329049858  |
+| 199406      | 311        | GAS - RESIDENTIAL          | 277805.71751281497  |
+| 199406      | 315        | GAS - MULT FAMILY HOUSING  | 7895.417992839998   |
+| 199406      | 811        | ELEC - RESIDENTIAL         | 485110.9757593519   |
+| 199406      | 812        | ELEC - GOOD CENTS RES      | 788.079795          |
+| 199406      | 813        | ELEC - GOOD CENTS MULT     | 72.86639360000001   |
+| 199406      | 821        | ELEC - GEN SERV - SMALL    | 903.60446675        |
+| 199406      | 878        | ELEC - DUSK TO DAWN LTG    | 18714.65101457981   |
+| 199407      | 311        | GAS - RESIDENTIAL          | 269600.9502013005   |
+| 199407      | 315        | GAS - MULT FAMILY HOUSING  | 7961.934256310004   |
+| 199407      | 811        | ELEC - RESIDENTIAL         | 466315.9466844599   |
+| 199407      | 812        | ELEC - GOOD CENTS RES      | 799.2940754399999   |
+| 199407      | 813        | ELEC - GOOD CENTS MULT     | 65.25307360000001   |
+| 199407      | 821        | ELEC - GEN SERV - SMALL    | 915.03283           |
+| 199407      | 878        | ELEC - DUSK TO DAWN LTG    | 18473.610518970563  |
+| 199408      | 311        | GAS - RESIDENTIAL          | 276858.4586452604   |
+| 199408      | 315        | GAS - MULT FAMILY HOUSING  | 8644.438434329999   |
+| 199408      | 811        | ELEC - RESIDENTIAL         | 492209.2822103388   |
+| 199408      | 812        | ELEC - GOOD CENTS RES      | 778.92542286        |
+| 199408      | 813        | ELEC - GOOD CENTS MULT     | 71.76771965         |
+| 199408      | 821        | ELEC - GEN SERV - SMALL    | 891.75875775        |
+| 199408      | 878        | ELEC - DUSK TO DAWN LTG    | 18503.531458539564  |
+| 199409      | 311        | GAS - RESIDENTIAL          | 279086.0734649869   |
+| 199409      | 315        | GAS - MULT FAMILY HOUSING  | 8238.74297747       |
+| 199409      | 811        | ELEC - RESIDENTIAL         | 500072.62379618984  |
+| 199409      | 812        | ELEC - GOOD CENTS RES      | 771.0426852600001   |
+| 199409      | 813        | ELEC - GOOD CENTS MULT     | 71.98187755000001   |
+| 199409      | 821        | ELEC - GEN SERV - SMALL    | 980.3851737499999   |
+| 199409      | 878        | ELEC - DUSK TO DAWN LTG    | 17781.344715460164  |
+| 199410      | 311        | GAS - RESIDENTIAL          | 303414.3784197322   |
+| 199410      | 315        | GAS - MULT FAMILY HOUSING  | 7795.331085439999   |
+| 199410      | 811        | ELEC - RESIDENTIAL         | 488133.88042825914  |
+| 199410      | 812        | ELEC - GOOD CENTS RES      | 780.7944696         |
+| 199410      | 813        | ELEC - GOOD CENTS MULT     | 70.360653           |
+| 199410      | 821        | ELEC - GEN SERV - SMALL    | 982.1163857500001   |
+| 199410      | 878        | ELEC - DUSK TO DAWN LTG    | 17777.94969201002   |
+| 199411      | 311        | GAS - RESIDENTIAL          | 288454.9252001304   |
+| 199411      | 315        | GAS - MULT FAMILY HOUSING  | 8454.748237040001   |
+| 199411      | 811        | ELEC - RESIDENTIAL         | 482884.850388401    |
+| 199411      | 812        | ELEC - GOOD CENTS RES      | 760.9347811800001   |
+| 199411      | 813        | ELEC - GOOD CENTS MULT     | 66.33737275         |
+| 199411      | 821        | ELEC - GEN SERV - SMALL    | 938.39964575        |
+| 199411      | 878        | ELEC - DUSK TO DAWN LTG    | 18108.197345020413  |
+| 199412      | 311        | GAS - RESIDENTIAL          | 272940.892024039    |
+| 199412      | 315        | GAS - MULT FAMILY HOUSING  | 8517.216123240001   |
+| 199412      | 811        | ELEC - RESIDENTIAL         | 488529.28326400166  |
+| 199412      | 812        | ELEC - GOOD CENTS RES      | 836.5594070999999   |
+| 199412      | 813        | ELEC - GOOD CENTS MULT     | 69.0691837          |
+| 199412      | 821        | ELEC - GEN SERV - SMALL    | 975.3488380000001   |
+| 199412      | 878        | ELEC - DUSK TO DAWN LTG    | 18877.06710053983   |
+| 199501      | 311        | GAS - RESIDENTIAL          | 276974.1582300297   |
+| 199501      | 315        | GAS - MULT FAMILY HOUSING  | 8502.319555310003   |
+| 199501      | 811        | ELEC - RESIDENTIAL         | 476611.5553557201   |
+| 199501      | 812        | ELEC - GOOD CENTS RES      | 785.56833618        |
+| 199501      | 813        | ELEC - GOOD CENTS MULT     | 71.7136145          |
+| 199501      | 821        | ELEC - GEN SERV - SMALL    | 909.184534          |
+| 199501      | 878        | ELEC - DUSK TO DAWN LTG    | 18479.518213900312  |
+| 199502      | 311        | GAS - RESIDENTIAL          | 300553.2046357113   |
+| 199502      | 315        | GAS - MULT FAMILY HOUSING  | 8053.809335089998   |
+| 199502      | 811        | ELEC - RESIDENTIAL         | 471233.83098792925  |
+| 199502      | 812        | ELEC - GOOD CENTS RES      | 763.00943082        |
+| 199502      | 813        | ELEC - GOOD CENTS MULT     | 64.7590064          |
+| 199502      | 821        | ELEC - GEN SERV - SMALL    | 871.3997410000001   |
+| 199502      | 878        | ELEC - DUSK TO DAWN LTG    | 18219.614494559566  |
+| 199503      | 311        | GAS - RESIDENTIAL          | 297920.2627627119   |
++-------------+------------+----------------------------+---------------------+
+| REVN_YR_MO  | SRVPLN_ID  |         SRVPLN_NM          |       EXPR$3        |
++-------------+------------+----------------------------+---------------------+
+| 199503      | 315        | GAS - MULT FAMILY HOUSING  | 8114.274771869998   |
+| 199503      | 811        | ELEC - RESIDENTIAL         | 490917.54581562005  |
+| 199503      | 812        | ELEC - GOOD CENTS RES      | 754.69997022        |
+| 199503      | 813        | ELEC - GOOD CENTS MULT     | 65.12316799999999   |
+| 199503      | 821        | ELEC - GEN SERV - SMALL    | 923.5706875         |
+| 199503      | 878        | ELEC - DUSK TO DAWN LTG    | 17665.936475509974  |
+| 199504      | 311        | GAS - RESIDENTIAL          | 281980.422018292    |
+| 199504      | 315        | GAS - MULT FAMILY HOUSING  | 7929.9730108300055  |
+| 199504      | 811        | ELEC - RESIDENTIAL         | 478226.25742557016  |
+| 199504      | 812        | ELEC - GOOD CENTS RES      | 775.80413808        |
+| 199504      | 813        | ELEC - GOOD CENTS MULT     | 72.35828434999999   |
+| 199504      | 821        | ELEC - GEN SERV - SMALL    | 936.7129870000001   |
+| 199504      | 878        | ELEC - DUSK TO DAWN LTG    | 17842.310148590404  |
+| 199505      | 311        | GAS - RESIDENTIAL          | 284447.45333703025  |
+| 199505      | 315        | GAS - MULT FAMILY HOUSING  | 7696.482500620002   |
+| 199505      | 811        | ELEC - RESIDENTIAL         | 472668.46933733916  |
+| 199505      | 812        | ELEC - GOOD CENTS RES      | 743.56249992        |
+| 199505      | 813        | ELEC - GOOD CENTS MULT     | 64.05976555         |
+| 199505      | 821        | ELEC - GEN SERV - SMALL    | 912.84244675        |
+| 199505      | 878        | ELEC - DUSK TO DAWN LTG    | 18578.576329049883  |
+| 199506      | 311        | GAS - RESIDENTIAL          | 277805.71751281404  |
+| 199506      | 315        | GAS - MULT FAMILY HOUSING  | 7895.417992840001   |
+| 199506      | 811        | ELEC - RESIDENTIAL         | 485110.97575934965  |
+| 199506      | 812        | ELEC - GOOD CENTS RES      | 788.0797949999999   |
+| 199506      | 813        | ELEC - GOOD CENTS MULT     | 72.86639360000001   |
+| 199506      | 821        | ELEC - GEN SERV - SMALL    | 903.60446675        |
+| 199506      | 878        | ELEC - DUSK TO DAWN LTG    | 18714.651014579846  |
+| 199507      | 311        | GAS - RESIDENTIAL          | 269600.9502013006   |
+| 199507      | 315        | GAS - MULT FAMILY HOUSING  | 7961.934256310006   |
+| 199507      | 811        | ELEC - RESIDENTIAL         | 466315.94668446097  |
+| 199507      | 812        | ELEC - GOOD CENTS RES      | 799.2940754399999   |
+| 199507      | 813        | ELEC - GOOD CENTS MULT     | 65.25307360000001   |
+| 199507      | 821        | ELEC - GEN SERV - SMALL    | 915.03283           |
+| 199507      | 878        | ELEC - DUSK TO DAWN LTG    | 18473.61051897054   |
+| 199508      | 311        | GAS - RESIDENTIAL          | 276858.4586452597   |
+| 199508      | 315        | GAS - MULT FAMILY HOUSING  | 8644.438434329999   |
+| 199508      | 811        | ELEC - RESIDENTIAL         | 492209.2822103392   |
+| 199508      | 812        | ELEC - GOOD CENTS RES      | 778.92542286        |
+| 199508      | 813        | ELEC - GOOD CENTS MULT     | 71.76771965         |
+| 199508      | 821        | ELEC - GEN SERV - SMALL    | 891.75875775        |
+| 199508      | 878        | ELEC - DUSK TO DAWN LTG    | 18503.531458539535  |
+| 199509      | 311        | GAS - RESIDENTIAL          | 279086.07346498716  |
+| 199509      | 315        | GAS - MULT FAMILY HOUSING  | 8238.742977470001   |
+| 199509      | 811        | ELEC - RESIDENTIAL         | 500072.6237961893   |
+| 199509      | 812        | ELEC - GOOD CENTS RES      | 771.04268526        |
+| 199509      | 813        | ELEC - GOOD CENTS MULT     | 71.98187755000001   |
+| 199509      | 821        | ELEC - GEN SERV - SMALL    | 980.3851737499999   |
+| 199509      | 878        | ELEC - DUSK TO DAWN LTG    | 17781.344715460084  |
+| 199510      | 311        | GAS - RESIDENTIAL          | 303414.37841973203  |
+| 199510      | 315        | GAS - MULT FAMILY HOUSING  | 7795.331085439998   |
+| 199510      | 811        | ELEC - RESIDENTIAL         | 488133.88042826107  |
+| 199510      | 812        | ELEC - GOOD CENTS RES      | 780.7944696         |
+| 199510      | 813        | ELEC - GOOD CENTS MULT     | 70.360653           |
+| 199510      | 821        | ELEC - GEN SERV - SMALL    | 982.1163857500001   |
+| 199510      | 878        | ELEC - DUSK TO DAWN LTG    | 17777.949692010276  |
+| 199511      | 311        | GAS - RESIDENTIAL          | 288454.9252001308   |
+| 199511      | 315        | GAS - MULT FAMILY HOUSING  | 8454.748237039998   |
+| 199511      | 811        | ELEC - RESIDENTIAL         | 482884.8503884014   |
+| 199511      | 812        | ELEC - GOOD CENTS RES      | 760.93478118        |
+| 199511      | 813        | ELEC - GOOD CENTS MULT     | 66.33737275         |
+| 199511      | 821        | ELEC - GEN SERV - SMALL    | 938.39964575        |
+| 199511      | 878        | ELEC - DUSK TO DAWN LTG    | 18108.197345020148  |
+| 199512      | 311        | GAS - RESIDENTIAL          | 272940.8920240405   |
+| 199512      | 315        | GAS - MULT FAMILY HOUSING  | 8517.216123240003   |
+| 199512      | 811        | ELEC - RESIDENTIAL         | 488529.28326400154  |
+| 199512      | 812        | ELEC - GOOD CENTS RES      | 836.5594070999999   |
+| 199512      | 813        | ELEC - GOOD CENTS MULT     | 69.0691837          |
+| 199512      | 821        | ELEC - GEN SERV - SMALL    | 975.3488380000001   |
+| 199512      | 878        | ELEC - DUSK TO DAWN LTG    | 18877.067100539793  |
++-------------+------------+----------------------------+---------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

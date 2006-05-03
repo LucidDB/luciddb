@@ -23,3 +23,9 @@ SCHEMA=SCHOI
 SERVER_NAME=@name_prefix@_server
 DRIVER_CLASS=oracle.jdbc.driver.OracleDriver
 URL=jdbc:oracle:thin:@@SERVER@:@PORT@:@SID@
+
+#########################
+# foreign table options #
+#########################
+
+TABLE_NAME=table_name

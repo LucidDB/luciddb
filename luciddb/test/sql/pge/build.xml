@@ -44,12 +44,6 @@
   <!-- directory where blackhawk output should go -->
   <property name="bh.log.basedir" value="${pge.dir}/testlog" />
 
-  <!-- directory of csv files -->
-  <property name="csvsource.dir" value="/mnt/raksha/engineering/testdata/From_dif_delphi/eng/testdata/pge"/>
-
-  <property name="csv.dir" value="${pge.dir}/csv" />
-  <property name="csv.copy.dir" value="${pge.dir}/csv-copy" />
-
   <!-- classpath for running tests via ant -->
   <path id="test.classpath">
     <pathelement path="${open.dir}/luciddb/classes"/>
@@ -59,85 +53,78 @@
   </path>
   <property name="test.classpath" refid="test.classpath"/>
 
-  <!-- classpath for running tests on oracle db via ant -->
-  <path id="test.orcl.classpath">
+  <!-- classpath for running tests on third party db via ant -->
+  <path id="test.3p.classpath">
     <pathelement path="${test.classpath}"/>
     <pathelement path="${open.dir}/luciddb/plugin/FarragoMedJdbc3p.jar"/>
   </path>
-  <property name="test.orcl.classpath" refid="test.orcl.classpath"/>
+  <property name="test.3p.classpath" refid="test.3p.classpath"/>
 
-  <target name="gen-sql">
-    <filter token="open.dir" value="${open.dir}"/>
-    <filter token="csv.dir" value="${csv.copy.dir}"/>
-
-    <!-- generate config.properties file -->
-    <copy file="prop.${prop.source}" tofile="config.properties"
-      overwrite="true" filtering="true">
-      <filterset>
-        <filtersfile file="prop.${prop.source}"/>
-      </filterset>
-    </copy>
-
-    <!-- generate all sql files -->
-    <copy todir="${gensql.dir}tmp" overwrite="true"
-      filtering="true">
-      <fileset dir="${pge.dir}">
-        <include name="**/*.tmpl"/>
-      </fileset>
-      <mapper type="glob" from="*.tmpl" to="*"/>
-      <filterset>
-        <filtersfile file="config.properties"/>
-      </filterset>
-    </copy>
-    <copy todir="${gensql.dir}/${prop.source}" overwrite="true"
-      filtering="true">
-      <fileset dir="${gensql.dir}tmp"/>
-      <filterchain>
-        <tokenfilter>
-          <replaceregex pattern="^.*. . >.*@.*@.*" replace=". . . . . . . . > " flags="s"/>
-          <replaceregex pattern="^.*@.*@.*" replace="" flags="s"/>
-        </tokenfilter>
-      </filterchain>
-    </copy>
-    <delete dir="${gensql.dir}tmp" quiet="true"/>
-
-    <!-- copy over explain plan test files -->
-    <copy todir="${gensql.dir}/${prop.source}">
-      <fileset dir="${pge.dir}">
-        <include name="**/*.sql"/>
-        <include name="**/*.ref"/>
-        <exclude name="gen/**"/>
-      </fileset>
-      <filterset>
-        <filter token="PLAN" value="explain plan for"/>
-      </filterset>
-      <regexpmapper from="^(\d.*)\.(.*)$$" to="\1Exp.\2"/>
-    </copy>
-
-    <!-- copy over all other .sql and .ref files -->
-    <copy todir="${gensql.dir}/${prop.source}">
-      <fileset dir="${pge.dir}">
-        <include name="**/*.sql"/>
-        <include name="**/*.ref"/>
-        <exclude name="gen/**"/>
-      </fileset>
-      <filterset>
-        <filter token="PLAN" value=""/>
-      </filterset>
-    </copy>
-
-  </target>
-  
   <target name="gen-all-sql">
-    <available file="${gensql.dir}" type="dir"
-      property="sql.generated"/>
+    <available file="${gensql.dir}" type="dir" property="sql.generated"/>
     <if>
       <isset property="sql.generated"/>
       <then/>
       <else>
-        <foreach list="oracle,sqlserver,flatfile,csvjdbc" 
-          param="prop.source"
-          target="gen-sql"/>
+        <filter token="open.dir" value="${open.dir}"/>
+
+        <!-- generate config.properties file -->
+        <copy file="prop.oracle" tofile="config.properties"
+          overwrite="true" filtering="true">
+          <filterset>
+            <filtersfile file="prop.oracle"/>
+          </filterset>
+        </copy>
+
+        <copy todir="${gensql.dir}tmp" overwrite="true" filtering="true">
+          <fileset dir="${pge.dir}" includes="*.tmpl"/>
+          <globmapper from="*.tmpl" to="*"/>
+          <filterset>
+            <filtersfile file="config.properties"/>
+          </filterset>
+        </copy>
+        <copy todir="${gensql.dir}/oracle" overwrite="true" filtering="true">
+          <fileset dir="${gensql.dir}tmp"/>
+          <filterchain>
+            <tokenfilter>
+              <replaceregex pattern="^.*. . >.*@.*@.*" replace=". . . . . . . . > " flags="s"/>
+              <replaceregex pattern="^.*@.*@.*" replace="" flags="s"/>
+            </tokenfilter>
+          </filterchain>
+        </copy>
+        <delete dir="${gensql.dir}tmp" quiet="true"/>
+
+        <!-- copy over other .sql and .ref files -->
+        <copy todir="${gensql.dir}/oracle">
+          <fileset dir="${pge.dir}">
+            <include name="**/*.sql"/>
+            <include name="**/*.ref"/>
+            <exclude name="gen/**"/>
+          </fileset>
+          <filterset>
+            <filter token="PLAN" value=""/>
+          </filterset>
+        </copy>
+
+        <!-- generate explain plan files -->
+        <copy todir="${gensql.dir}/exp">
+          <fileset dir="${pge.dir}">
+            <include name="**/*.sql"/>
+            <exclude name="gen/**"/>
+          </fileset>
+          <filterset>
+            <filter token="PLAN" 
+              value="!set outputformat csv &#10;explain plan for"/>
+          </filterset>
+          <regexpmapper from="^(\d.*)\.(.*)$$" to="\1Exp.\2"/>
+        </copy>
+        <copy todir="${gensql.dir}/exp">
+          <fileset dir="${gensql.dir}">
+            <include name="create.*"/>
+            <include name="index.*"/>
+          </fileset>
+        </copy>
+
       </else>
     </if>
   </target>
@@ -149,49 +136,14 @@
       classpathref="test.classpath"/>
   </target>
 
-  <target name="copy-csv">
-    <available file="${csvsource.dir}" type="dir"
-      property="raksha.available"/>
-    <if>
-      <isset property="raksha.available"/>
-      <then>
-        <!-- sync raksha <-> csv.dir -->
-        <sync todir="${csv.dir}" 
-          overwrite="false"
-          failonerror="false"
-          verbose="true">
-          <fileset dir="${csvsource.dir}"/>
-        </sync>
-      </then>
-    </if>
-    <available file="${csv.dir}" type="dir"
-      property="csv.available"/>
-    <if>
-      <isset property="csv.available"/>
-      <then> 
-        <!-- sync csv.dir <-> csv-copy.dir -->
-        <sync todir="${csv.copy.dir}"
-          overwrite="true"
-          verbose="true"
-          failonerror="true">
-          <fileset dir="${csv.dir}"/>
-        </sync>
-      </then>
-      <else>
-        <echo message="!! NO CSV FILES !!"/>
-      </else>
-    </if>
-  </target>
-
   <target name="clean">
     <delete dir="${gensql.dir}"/>
     <delete dir="${bh.log.basedir}"/>
-    <delete dir="${csv.copy.dir}"/>
-  </target>
-
-  <target name="clean-csv">
-    <antcall target="clean"/>
-    <delete dir="${csv.dir}"/>
+    <delete>
+      <fileset dir="${pge.dir}">
+        <include name="**/*.err"/>
+      </fileset>
+    </delete>
   </target>
 
   <!-- Experimental -->
@@ -199,7 +151,7 @@
     <blackhawk.fork
       basedir="${pge.dir}"
       testscript="test-orcl.xml"
-      classpathref="test.orcl.classpath"/>
+      classpathref="test.3p.classpath"/>
   </target>
 
   <target name="gen-orcl-sql">
