@@ -188,6 +188,10 @@ public class DiffRepository
             if (file2.exists()) {
                 return file2;
             }
+            file2 = new File(file, "saffron/src");
+            if (file2.exists()) {
+                return file2;
+            }
 
             file = file.getParentFile();
             if (file == null) {
