@@ -302,16 +302,16 @@ public class Util extends Toolbox
      * Returns a set of the elements which are in <code>set1</code> but not in
      * <code>set2</code>, without modifying either.
      */
-    public static Set minus(
-        Set set1,
-        Set set2)
+    public static <T> Set<T> minus(
+        Set<T> set1,
+        Set<T> set2)
     {
         if (set1.isEmpty()) {
             return set1;
         } else if (set2.isEmpty()) {
             return set1;
         } else {
-            Set set = new HashSet(set1);
+            Set<T> set = new HashSet<T>(set1);
             set.removeAll(set2);
             return set;
         }

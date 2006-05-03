@@ -28,6 +28,7 @@ import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelOptRuleOperand;
 
 import java.util.Collections;
+import java.util.Set;
 
 /**
  * Rule to convert an {@link JoinRel inner join} to a {@link FilterRel filter}
@@ -77,7 +78,7 @@ public final class ExtractJoinFilterRule extends RelOptRule
             joinRel.getRight(),
             joinRel.getCluster().getRexBuilder().makeLiteral(true),
             joinRel.getJoinType(),
-            Collections.emptySet(),
+            (Set<String>) Collections.EMPTY_SET,
             joinRel.isSemiJoinDone(),
             joinRel.isMultiJoinDone());
 

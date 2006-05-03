@@ -192,7 +192,7 @@ public interface RelNode
      * method.
      * </p>
      */
-    public Set getVariablesStopped();
+    public Set<String> getVariablesStopped();
 
     /**
      * Collects variables known to be used by this expression or its
@@ -203,15 +203,14 @@ public interface RelNode
      *
      * @param variableSet receives variables used
      */
-    public void collectVariablesUsed(Set variableSet);
+    public void collectVariablesUsed(Set<String> variableSet);
 
     /**
      * Collects variables set by this expression.
      *
      * @param variableSet receives variables known to be set by
-     * this expression or its descendants.
      */
-    public void collectVariablesSet(Set variableSet);
+    public void collectVariablesSet(Set<String> variableSet);
 
     /**
      * Interacts with the {@link RelVisitor} in a

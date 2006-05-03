@@ -149,8 +149,7 @@ public class AbstractConverter extends ConverterRel
             // all sibling subsets. This will cause them to be important, and
             // hence rules will fire which may generate the conversion we need.
             final RelSet set = planner.getSet(child);
-            for (int i = 0; i < set.subsets.size(); i++) {
-                RelSubset subset = (RelSubset) set.subsets.get(i);
+            for (RelSubset subset : set.subsets) {
                 if (subset.getTraits().equals(child.getTraits())
                         || subset.getTraits().equals(converter.traits)) {
                     continue;

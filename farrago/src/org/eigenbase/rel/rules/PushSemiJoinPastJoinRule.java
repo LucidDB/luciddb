@@ -153,9 +153,13 @@ public class PushSemiJoinPastJoinRule extends RelOptRule
         }
   
         RelNode newJoinRel = new JoinRel(
-            joinRel.getCluster(), leftJoinRel, rightJoinRel,
-            joinRel.getCondition(), joinRel.getJoinType(),
-            Collections.emptySet(), joinRel.isSemiJoinDone(),
+            joinRel.getCluster(),
+            leftJoinRel,
+            rightJoinRel,
+            joinRel.getCondition(),
+            joinRel.getJoinType(),
+            (Set<String>) Collections.EMPTY_SET,
+            joinRel.isSemiJoinDone(),
             joinRel.isMultiJoinDone());
         
         call.transformTo(newJoinRel);

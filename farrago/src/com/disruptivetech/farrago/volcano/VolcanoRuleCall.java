@@ -176,7 +176,7 @@ public class VolcanoRuleCall extends RelOptRuleCall
                 getRule().operands[previousOperandOrdinal];
             RelOptRuleOperand operand = getRule().operands[operandOrdinal];
 
-            List successors;
+            List<RelNode> successors;
             if (ascending) {
                 assert (previousOperand.getParent() == operand);
                 final RelNode childRel = rels[previousOperandOrdinal];
@@ -193,7 +193,7 @@ public class VolcanoRuleCall extends RelOptRuleCall
                 } else {
                     // The operand expects parentRel to have a certain number
                     // of inputs and it does not.
-                    successors = Collections.EMPTY_LIST;
+                    successors = Collections.emptyList();
                 }
             }
 
@@ -208,7 +208,8 @@ public class VolcanoRuleCall extends RelOptRuleCall
                     // child
                     final RelSubset input = (RelSubset)
                         rel.getInput(previousOperand.ordinalInParent);
-                    List inputRels = input.set.getRelsFromAllSubsets();
+                    List<RelNode> inputRels =
+                        input.set.getRelsFromAllSubsets();
                     if (!inputRels.contains(rels[previousOperandOrdinal])) {
                         continue;
                     }

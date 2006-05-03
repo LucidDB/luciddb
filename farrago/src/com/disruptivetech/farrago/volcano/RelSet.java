@@ -20,16 +20,12 @@
 */
 package com.disruptivetech.farrago.volcano;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Logger;
 
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.trace.EigenbaseTrace;
-import org.eigenbase.util.Util;
 
 
 /**
@@ -55,14 +51,15 @@ class RelSet
 
     //~ Instance fields -------------------------------------------------------
 
-    final ArrayList rels = new ArrayList();
-    final ArrayList subsets = new ArrayList();
+    final List<RelNode> rels = new ArrayList<RelNode>();
+    final List<RelSubset> subsets = new ArrayList<RelSubset>();
 
     /**
      * List of {@link AbstractConverter} objects which have not yet been
      * satisfied.
      */
-    ArrayList abstractConverters = new ArrayList();
+    List<AbstractConverter> abstractConverters =
+        new ArrayList<AbstractConverter>();
 
     /**
      * Set to the superseding set when this is found to be equivalent to
@@ -75,13 +72,13 @@ class RelSet
      * Names of variables which are set by relational expressions in this set
      * and available for use by parent and child expressions.
      */
-    Set variablesPropagated;
+    Set<String> variablesPropagated;
 
     /**
      * Names of variables which are used by relational expressions in this
      * set.
      */
-    Set variablesUsed;
+    Set<String> variablesUsed;
     int id;
 
     /**
@@ -101,11 +98,10 @@ class RelSet
      * Returns all of the {@link RelNode}s which reference {@link
      * RelNode}s in this set.
      */
-    public ArrayList getParentRels()
+    public List<RelNode> getParentRels()
     {
-        ArrayList parents = new ArrayList();
-        for (int i = 0; i < subsets.size(); i++) {
-            RelSubset subset = (RelSubset) subsets.get(i);
+        List<RelNode> parents = new ArrayList<RelNode>();
+        for (RelSubset subset : subsets) {
             parents.addAll(subset.parents);
         }
         return parents;
@@ -115,15 +111,14 @@ class RelSet
      * @return all of the {@link RelNode}s contained by any subset
      * of this set (does not include the subset objects themselves)
      */
-    public ArrayList getRelsFromAllSubsets()
+    public List<RelNode> getRelsFromAllSubsets()
     {
         return rels;
     }
 
     public RelSubset getSubset(RelTraitSet traits)
     {
-        for (int i = 0; i < subsets.size(); i++) {
-            RelSubset subset = (RelSubset) subsets.get(i);
+        for (RelSubset subset : subsets) {
             if (subset.getTraits().equals(traits)) {
                 return subset;
             }
@@ -139,7 +134,7 @@ class RelSet
      */
     public RelSubset add(RelNode rel)
     {
-        assert (equivalentSet == null) : "adding to a dead set";
+        assert equivalentSet == null : "adding to a dead set";
         RelSubset subset =
             getOrCreateSubset(
                 rel.getCluster(),
@@ -231,8 +226,7 @@ class RelSet
         assert (existed) : "merging with a dead otherSet";
 
         // merge subsets
-        for (int i = 0; i < otherSet.subsets.size(); i++) {
-            RelSubset otherSubset = (RelSubset) otherSet.subsets.get(i);
+        for (RelSubset otherSubset : otherSet.subsets) {
             RelSubset subset =
                 getOrCreateSubset(
                     otherSubset.getCluster(),
@@ -241,31 +235,23 @@ class RelSet
                 subset.bestCost = otherSubset.bestCost;
                 subset.best = otherSubset.best;
             }
-            for (int j = 0; j < otherSubset.rels.size(); j++) {
-                planner.reregister(this, (RelNode) otherSubset.rels.get(j));
+            for (RelNode otherRel : otherSubset.rels) {
+                planner.reregister(this, otherRel);
             }
         }
 
         // Update all rels which have a child in the other set, to reflect the
         // fact that the child has been renamed.
-        for (Iterator parentRels = otherSet.getParentRels().iterator();
-                parentRels.hasNext();) {
-            planner.rename((RelNode) parentRels.next());
+        for (RelNode parentRel : otherSet.getParentRels()) {
+            planner.rename(parentRel);
         }
 
         // Make sure the cost changes as a result of merging are propagated.
-        for (Iterator relSubsets = subsets.iterator();
-                relSubsets.hasNext(); ) {
-            RelSubset relSubset = (RelSubset)relSubsets.next();
-            for (Iterator parentSubsets =
-                        relSubset.getParentSubsets().iterator();
-                    parentSubsets.hasNext(); ) {
-                RelSubset parentSubset = (RelSubset)parentSubsets.next();
-
-                for (Iterator parentRels = parentSubset.rels.iterator();
-                        parentRels.hasNext(); ) {
+        for (RelSubset relSubset : subsets) {
+            for (RelSubset parentSubset : relSubset.getParentSubsets()) {
+                for (RelNode parentRel : parentSubset.rels) {
                     parentSubset.propagateCostImprovements(
-                        planner, (RelNode) parentRels.next());
+                        planner, parentRel);
                 }
             }
         }
@@ -274,8 +260,7 @@ class RelSet
         // potentially new rules can fire. Check for rule matches, just as if
         // it were newly registered.  (This may cause rules which have fired
         // once to fire again.)
-        for (int i = 0; i < rels.size(); i++) {
-            RelNode rel = (RelNode) rels.get(i);
+        for (RelNode rel : rels) {
             assert planner.getSet(rel) == this;
             planner.fireRules(rel, true);
         }

@@ -783,13 +783,11 @@ public class SqlToRelConverter
         // variables. Probably this code abuses the intended api, but there
         // seem to be saffron code depending on it and didnt want to break any
         // intended plan, sent Julian an email.
-        Set correlatedVariables = RelOptUtil.getVariablesUsed(rightRel);
+        Set<String> correlatedVariables = RelOptUtil.getVariablesUsed(rightRel);
         if (correlatedVariables.size() > 0) {
-            ArrayList correlations = new ArrayList();
-            Iterator it = correlatedVariables.iterator();
-            while (it.hasNext()) {
-                String name = (String) it.next();
-
+            List<CorrelatorRel.Correlation> correlations =
+                new ArrayList<CorrelatorRel.Correlation>();
+            for (String name : correlatedVariables) {
                 Map<RelOptQuery.DeferredLookup,String> mapDeferredToCorrel =
                     cluster.getQuery().getMapDeferredToCorrel();
                 for (RelOptQuery.DeferredLookup lookup :
