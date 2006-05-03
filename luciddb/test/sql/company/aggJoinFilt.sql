@@ -4,7 +4,7 @@
 
 set schema 's';
 
-alter session set optimizerjoinfilterthreshold=2;
+--alter session set optimizerjoinfilterthreshold=2;
  
 -- original, as per bug 22419
 select *
@@ -25,26 +25,26 @@ and dept.dname = 'Development'
 group by emp.deptno, emp.sex;
 
 -- as above, after join filter
-select emp.deptno, emp.sex, sum(emp.sal) sum_sal
-from (
-  select emp.deptno, emp.sex, emp.sal from emp where emp.deptno in (
-    select deptno from dept where dname = 'Development')) emp,
-  dept
-where dept.deptno = emp.deptno
-and dept.dname = 'Development'
-group by emp.deptno, emp.sex;
+-- select emp.deptno, emp.sex, sum(emp.sal) sum_sal
+-- from (
+--   select emp.deptno, emp.sex, emp.sal from emp where emp.deptno in (
+--     select deptno from dept where dname = 'Development')) emp,
+--   dept
+-- where dept.deptno = emp.deptno
+-- and dept.dname = 'Development'
+-- group by emp.deptno, emp.sex;
 
--- as above, after push down
-select emp.deptno, emp.sex, emp.sum_sal
-from (
-  select emp.deptno, emp.sex, sum(emp.sal) sum_sal from emp 
-  where emp.deptno in (
-    select deptno from dept where dname = 'Development')
-  group by emp.deptno, emp.sex)
-  emp,
-  dept
-where dept.deptno = emp.deptno
-and dept.dname = 'Development';
+-- -- as above, after push down
+-- select emp.deptno, emp.sex, emp.sum_sal
+-- from (
+--   select emp.deptno, emp.sex, sum(emp.sal) sum_sal from emp 
+--   where emp.deptno in (
+--     select deptno from dept where dname = 'Development')
+--   group by emp.deptno, emp.sex)
+--   emp,
+--   dept
+-- where dept.deptno = emp.deptno
+-- and dept.dname = 'Development';
 
 -- Bug 22419, inputs to join reversed
 select *

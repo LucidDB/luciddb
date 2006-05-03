@@ -92,7 +92,7 @@ Error: From line 1, column 33 to line 1, column 39: Cannot assign to target fiel
 . . . . . . . . >  select cast (cast (colchar as timestamp) as date) from datatype_source where colname = 'DATE'
 . . . . . . . . > ;
 Error: could not calculate results for the following row:
-[ 'DATE', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '1400-3-11 4:5:11.', '1775-3-11 11:11:11', NULL, NULL, -210902400000, -210893366000 ]
+[ 'DATE', '1400-3-11 4:5:11.' ]
 Messages:
 [0]:PC=7 Code=22007 (state=,code=0)
 0: jdbc:luciddb:> insert into target_date

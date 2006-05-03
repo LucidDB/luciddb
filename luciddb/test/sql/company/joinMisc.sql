@@ -39,22 +39,22 @@ order by DEPT.DEPTNO, LOCATION.LOCID;
 --order by DEPTNO, LOCID;
 
 -- Equjoin Condition plus non-equjoin condition on the same tables with group by ( Bugid 2796 )
---select P.DEPTNO, COUNT(*) from 
---(select DEPTNO, AVG(EMPNO) AVGAMT from
---EMP group by DEPTNO) A,
---EMP P
---where P.DEPTNO = A.DEPTNO
---and EMPNO < AVGAMT
---group by P.DEPTNO 
---order by P.DEPTNO;
+select P.DEPTNO, COUNT(*) from 
+(select DEPTNO, AVG(EMPNO) AVGAMT from
+EMP group by DEPTNO) A,
+EMP P
+where P.DEPTNO = A.DEPTNO
+and EMPNO < AVGAMT
+group by P.DEPTNO 
+order by P.DEPTNO;
    
 -- Equjoin Condition plus non-equjoin condition on the same tables with group by and non-staged Item in subquery
---select P.DEPTNO, COUNT(*) from
---(select DEPTNO, INC() , AVG(EMPNO) AVGAMT from
---EMP group by DEPTNO) A,
---EMP P
---where P.DEPTNO = A.DEPTNO
---and EMPNO < AVGAMT
---group by P.DEPTNO
---order by P.DEPTNO;
+-- select P.DEPTNO, COUNT(*) from
+-- (select DEPTNO, INC() , AVG(EMPNO) AVGAMT from
+-- EMP group by DEPTNO) A,
+-- EMP P
+-- where P.DEPTNO = A.DEPTNO
+-- and EMPNO < AVGAMT
+-- group by P.DEPTNO
+-- order by P.DEPTNO;
 

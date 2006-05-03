@@ -43,9 +43,8 @@
 +-------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- IN not supported yet, P2
-0: jdbc:luciddb:> SELECT KSEQ FROM BENCH10K WHERE K4 IN (1,2)               
-. . . . . . . . > order by 1;
-Error: java.lang.UnsupportedOperationException: class org.eigenbase.sql.SqlNodeList: 1, 2 (state=,code=0)
+0: jdbc:luciddb:> -- SELECT KSEQ FROM BENCH10K WHERE K4 IN (1,2)               
+0: jdbc:luciddb:> -- order by 1;
 0: jdbc:luciddb:>    
 0: jdbc:luciddb:> SELECT KSEQ FROM BENCH10K WHERE K100 BETWEEN 10 AND 20 AND K25 = 5
 . . . . . . . . > order by 1;

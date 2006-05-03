@@ -1,0 +1,395 @@
+0: jdbc:luciddb:>  
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- range joins with aggregation
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- a big ol' join
+0: jdbc:luciddb:> select SALES.CUSTID, SALES.PRODID, sum(SALES.PRICE), floor(avg(PRODUCTS.PRICE))
+. . . . . . . . > from SALES, PRODUCTS
+. . . . . . . . > where SALES.PRICE between PRODUCTS.PRICE - 1 and PRODUCTS.PRICE + 1
+. . . . . . . . > and SALES.PRODID = PRODUCTS.PRODID
+. . . . . . . . > group by SALES.CUSTID, SALES.PRODID
+. . . . . . . . > order by  SALES.PRODID, SALES.CUSTID;
++---------+---------+---------+---------+
+| CUSTID  | PRODID  | EXPR$2  | EXPR$3  |
++---------+---------+---------+---------+
+| 5       | 10000   | 15.99   | 7       |
+| 25      | 10000   | 7.66    | 7       |
+| 39      | 10000   | 7.07    | 7       |
+| 41      | 10000   | 7.67    | 7       |
+| 45      | 10000   | 6.93    | 7       |
+| 48      | 10000   | 7.31    | 7       |
+| 49      | 10000   | 6.93    | 7       |
+| 51      | 10000   | 6.99    | 7       |
+| 52      | 10000   | 7.25    | 7       |
+| 77      | 10000   | 6.51    | 7       |
+| 86      | 10000   | 6.76    | 7       |
+| 88      | 10000   | 6.95    | 7       |
+| 91      | 10000   | 8.28    | 7       |
+| 96      | 10000   | 7.22    | 7       |
+| 0       | 10001   | 0.66    | 0       |
+| 13      | 10001   | 0.70    | 0       |
+| 49      | 10001   | 0.64    | 0       |
+| 58      | 10001   | 0.93    | 0       |
+| 63      | 10001   | 1.32    | 0       |
+| 65      | 10001   | 1.40    | 0       |
+| 87      | 10001   | 0.74    | 0       |
+| 91      | 10001   | 0.77    | 0       |
+| 5       | 10002   | 5.41    | 4       |
+| 6       | 10002   | 4.29    | 4       |
+| 9       | 10002   | 4.06    | 4       |
+| 24      | 10002   | 4.17    | 4       |
+| 31      | 10002   | 5.41    | 4       |
+| 40      | 10002   | 3.89    | 4       |
+| 43      | 10002   | 5.53    | 4       |
+| 52      | 10002   | 4.60    | 4       |
+| 54      | 10002   | 4.38    | 4       |
+| 57      | 10002   | 5.67    | 4       |
+| 60      | 10002   | 4.52    | 4       |
+| 64      | 10002   | 4.64    | 4       |
+| 68      | 10002   | 4.23    | 4       |
+| 70      | 10002   | 5.46    | 4       |
+| 81      | 10002   | 5.08    | 4       |
+| 99      | 10002   | 4.68    | 4       |
+| 4       | 10003   | 8.68    | 8       |
+| 5       | 10003   | 8.04    | 8       |
+| 31      | 10003   | 8.08    | 8       |
+| 48      | 10003   | 8.72    | 8       |
+| 51      | 10003   | 9.03    | 8       |
+| 80      | 10003   | 9.28    | 8       |
+| 18      | 10004   | 4.31    | 4       |
+| 33      | 10004   | 4.34    | 4       |
+| 46      | 10004   | 3.67    | 4       |
+| 49      | 10004   | 4.36    | 4       |
+| 56      | 10004   | 4.15    | 4       |
+| 66      | 10004   | 3.69    | 4       |
+| 69      | 10004   | 4.18    | 4       |
+| 8       | 10005   | 5.74    | 5       |
+| 12      | 10005   | 4.55    | 5       |
+| 18      | 10005   | 4.81    | 5       |
+| 20      | 10005   | 5.69    | 5       |
+| 26      | 10005   | 5.39    | 5       |
+| 30      | 10005   | 4.61    | 5       |
+| 36      | 10005   | 4.93    | 5       |
+| 38      | 10005   | 4.24    | 5       |
+| 43      | 10005   | 5.02    | 5       |
+| 54      | 10005   | 9.88    | 5       |
+| 71      | 10005   | 5.21    | 5       |
+| 80      | 10005   | 15.16   | 5       |
+| 84      | 10005   | 4.82    | 5       |
+| 87      | 10005   | 6.05    | 5       |
+| 92      | 10005   | 5.03    | 5       |
+| 6       | 10006   | 8.60    | 7       |
+| 7       | 10006   | 8.06    | 7       |
+| 22      | 10006   | 7.57    | 7       |
+| 25      | 10006   | 8.55    | 7       |
+| 35      | 10006   | 8.02    | 7       |
+| 57      | 10006   | 7.53    | 7       |
+| 58      | 10006   | 6.86    | 7       |
+| 64      | 10006   | 7.08    | 7       |
+| 72      | 10006   | 6.83    | 7       |
+| 75      | 10006   | 6.96    | 7       |
+| 87      | 10006   | 7.81    | 7       |
+| 89      | 10006   | 8.51    | 7       |
+| 97      | 10006   | 7.71    | 7       |
+| 12      | 10007   | 1.42    | 1       |
+| 15      | 10007   | 1.08    | 1       |
+| 17      | 10007   | 2.40    | 1       |
+| 21      | 10007   | 0.88    | 1       |
+| 23      | 10007   | 2.11    | 1       |
+| 24      | 10007   | 2.59    | 1       |
+| 29      | 10007   | 3.97    | 1       |
+| 41      | 10007   | 2.12    | 1       |
+| 43      | 10007   | 1.60    | 1       |
+| 56      | 10007   | 0.72    | 1       |
+| 63      | 10007   | 2.46    | 1       |
+| 73      | 10007   | 2.30    | 1       |
+| 82      | 10007   | 2.97    | 1       |
+| 87      | 10007   | 1.27    | 1       |
+| 90      | 10007   | 3.75    | 1       |
+| 98      | 10007   | 0.78    | 1       |
+| 7       | 10008   | 3.28    | 2       |
+| 11      | 10008   | 2.06    | 2       |
+| 15      | 10008   | 2.65    | 2       |
+| 28      | 10008   | 2.81    | 2       |
++---------+---------+---------+---------+
+| CUSTID  | PRODID  | EXPR$2  | EXPR$3  |
++---------+---------+---------+---------+
+| 32      | 10008   | 3.35    | 2       |
+| 33      | 10008   | 2.16    | 2       |
+| 40      | 10008   | 2.56    | 2       |
+| 55      | 10008   | 2.35    | 2       |
+| 75      | 10008   | 2.93    | 2       |
+| 77      | 10008   | 2.97    | 2       |
+| 83      | 10008   | 3.37    | 2       |
+| 88      | 10008   | 3.61    | 2       |
+| 89      | 10008   | 3.82    | 2       |
+| 92      | 10008   | 2.50    | 2       |
+| 99      | 10008   | 2.30    | 2       |
+| 1       | 10009   | 5.33    | 6       |
+| 5       | 10009   | 7.22    | 6       |
+| 23      | 10009   | 6.28    | 6       |
+| 26      | 10009   | 6.59    | 6       |
+| 32      | 10009   | 6.88    | 6       |
+| 37      | 10009   | 5.35    | 6       |
+| 41      | 10009   | 7.05    | 6       |
+| 50      | 10009   | 5.83    | 6       |
+| 51      | 10009   | 5.90    | 6       |
+| 62      | 10009   | 5.79    | 6       |
+| 67      | 10009   | 6.49    | 6       |
+| 2       | 10010   | 4.95    | 4       |
+| 9       | 10010   | 4.21    | 4       |
+| 16      | 10010   | 5.20    | 4       |
+| 19      | 10010   | 9.47    | 4       |
+| 31      | 10010   | 5.58    | 4       |
+| 42      | 10010   | 10.84   | 4       |
+| 56      | 10010   | 5.70    | 4       |
+| 57      | 10010   | 5.67    | 4       |
+| 59      | 10010   | 4.40    | 4       |
+| 66      | 10010   | 4.75    | 4       |
+| 70      | 10010   | 5.50    | 4       |
+| 89      | 10010   | 5.27    | 4       |
+| 90      | 10010   | 4.07    | 4       |
+| 3       | 10011   | 3.68    | 3       |
+| 23      | 10011   | 2.37    | 3       |
+| 33      | 10011   | 3.48    | 3       |
+| 69      | 10011   | 2.20    | 3       |
+| 85      | 10011   | 2.84    | 3       |
+| 99      | 10011   | 2.98    | 3       |
+| 15      | 10012   | 2.13    | 2       |
+| 16      | 10012   | 2.54    | 2       |
+| 19      | 10012   | 2.60    | 2       |
+| 22      | 10012   | 2.02    | 2       |
+| 28      | 10012   | 2.93    | 2       |
+| 40      | 10012   | 3.00    | 2       |
+| 49      | 10012   | 2.16    | 2       |
+| 52      | 10012   | 2.53    | 2       |
+| 54      | 10012   | 2.16    | 2       |
+| 58      | 10012   | 2.40    | 2       |
+| 67      | 10012   | 2.24    | 2       |
+| 76      | 10012   | 2.41    | 2       |
+| 79      | 10012   | 2.41    | 2       |
+| 80      | 10012   | 2.03    | 2       |
+| 90      | 10012   | 3.76    | 2       |
+| 10      | 10013   | 5.93    | 6       |
+| 18      | 10013   | 6.74    | 6       |
+| 40      | 10013   | 6.24    | 6       |
+| 48      | 10013   | 6.50    | 6       |
+| 49      | 10013   | 6.38    | 6       |
+| 57      | 10013   | 6.16    | 6       |
+| 77      | 10013   | 6.82    | 6       |
+| 81      | 10013   | 5.95    | 6       |
+| 84      | 10013   | 5.69    | 6       |
+| 86      | 10013   | 6.72    | 6       |
+| 18      | 10014   | 5.08    | 5       |
+| 24      | 10014   | 5.09    | 5       |
+| 39      | 10014   | 5.11    | 5       |
+| 49      | 10014   | 4.86    | 5       |
+| 53      | 10014   | 4.92    | 5       |
+| 54      | 10014   | 4.95    | 5       |
+| 56      | 10014   | 5.93    | 5       |
+| 60      | 10014   | 5.04    | 5       |
+| 61      | 10014   | 5.33    | 5       |
+| 63      | 10014   | 10.00   | 5       |
+| 66      | 10014   | 5.34    | 5       |
+| 67      | 10014   | 4.35    | 5       |
+| 75      | 10014   | 5.49    | 5       |
+| 83      | 10014   | 5.57    | 5       |
+| 88      | 10014   | 5.16    | 5       |
+| 92      | 10014   | 4.91    | 5       |
+| 9       | 10015   | 5.54    | 6       |
+| 10      | 10015   | 6.97    | 6       |
+| 22      | 10015   | 6.50    | 6       |
+| 37      | 10015   | 7.30    | 6       |
+| 63      | 10015   | 6.01    | 6       |
+| 67      | 10015   | 5.90    | 6       |
+| 72      | 10015   | 6.74    | 6       |
++---------+---------+---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- non join conditions
+0: jdbc:luciddb:> select PRODUCTS.NAME, floor(avg(SALES.CUSTID))
+. . . . . . . . > from SALES, PRODUCTS
+. . . . . . . . > where SALES.PRICE between PRODUCTS.PRICE - 1 and PRODUCTS.PRICE + 1
+. . . . . . . . > and ( PRODUCTS.NAME LIKE 'C%' OR PRODUCTS.NAME LIKE 'P%')
+. . . . . . . . > group by PRODUCTS.NAME
+. . . . . . . . > order by PRODUCTS.NAME;
++----------+---------+
+|   NAME   | EXPR$1  |
++----------+---------+
+| Chicken  | 48      |
+| Cookies  | 53      |
+| Plunger  | 51      |
++----------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- semi join cases (as above, but not selecting certain columns)
+0: jdbc:luciddb:> select PRODUCTS.NAME
+. . . . . . . . > from SALES, PRODUCTS
+. . . . . . . . > where SALES.PRICE between PRODUCTS.PRICE - 1 and PRODUCTS.PRICE + 1
+. . . . . . . . > and ( PRODUCTS.NAME LIKE 'C%' OR PRODUCTS.NAME LIKE 'P%')
+. . . . . . . . > group by PRODUCTS.NAME
+. . . . . . . . > order by PRODUCTS.NAME;
++----------+
+|   NAME   |
++----------+
+| Chicken  |
+| Cookies  |
+| Plunger  |
++----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select floor(avg(SALES.CUSTID))
+. . . . . . . . > , PRODUCTS.NAME
+. . . . . . . . > from SALES, PRODUCTS
+. . . . . . . . > where SALES.PRICE between PRODUCTS.PRICE - 1 and PRODUCTS.PRICE + 1
+. . . . . . . . > and ( PRODUCTS.NAME LIKE 'C%' OR PRODUCTS.NAME LIKE 'P%')
+. . . . . . . . > group by PRODUCTS.NAME
+. . . . . . . . > order by PRODUCTS.NAME;
++---------+----------+
+| EXPR$0  |   NAME   |
++---------+----------+
+| 48      | Chicken  |
+| 53      | Cookies  |
+| 51      | Plunger  |
++---------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select 'HELLO'
+. . . . . . . . > , PRODUCTS.NAME
+. . . . . . . . > from SALES, PRODUCTS
+. . . . . . . . > where SALES.PRICE between PRODUCTS.PRICE - 1 and PRODUCTS.PRICE + 1
+. . . . . . . . > and ( PRODUCTS.NAME LIKE 'C%' OR PRODUCTS.NAME LIKE 'P%')
+. . . . . . . . > group by PRODUCTS.NAME
+. . . . . . . . > order by PRODUCTS.NAME;
++---------+----------+
+| EXPR$0  |   NAME   |
++---------+----------+
+| HELLO   | Chicken  |
+| HELLO   | Cookies  |
+| HELLO   | Plunger  |
++---------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- equality and non equality in one
+0: jdbc:luciddb:> select customers.custid, count(customers.custid), max(PRODUCTS.NAME),
+. . . . . . . . > min(CUSTOMERS.FNAME), max(CUSTOMERS.LNAME), sum(PRODUCTS.PRICE-SALES.PRICE)
+. . . . . . . . > from SALES, PRODUCTS, CUSTOMERS
+. . . . . . . . > where SALES.PRICE - PRODUCTS.PRICE < 0.5
+. . . . . . . . > and PRODUCTS.PRICE - SALES.PRICE < 0.5
+. . . . . . . . > and SALES.CUSTID = CUSTOMERS.CUSTID
+. . . . . . . . > group by CUSTOMERS.CUSTID
+. . . . . . . . > order by CUSTOMERS.CUSTID;
++---------+---------+------------+-----------+---------------+---------+
+| CUSTID  | EXPR$1  |   EXPR$2   |  EXPR$3   |    EXPR$4     | EXPR$5  |
++---------+---------+------------+-----------+---------------+---------+
+| 0       | 9       | Towel      | Eric      | Locicero      | 0.45    |
+| 1       | 12      | Soup       | Terri     | Grant         | -2.87   |
+| 2       | 11      | Soup       | Gary      | Everett       | 0.06    |
+| 3       | 9       | Towel      | Terri     | Andrews       | 1.19    |
+| 4       | 17      | Towel      | Victor    | Peterson      | -3.06   |
+| 5       | 20      | Towel      | Veronica  | Bush          | -1.56   |
+| 6       | 13      | Towel      | Fritz     | Grant         | 1.83    |
+| 7       | 19      | Towel      | Missy     | Bush          | -2.10   |
+| 8       | 13      | Towel      | Ted       | Howard        | -0.02   |
+| 9       | 16      | Telephone  | Wendy     | Kemp          | 1.23    |
+| 10      | 11      | Towel      | Earl      | Dole          | 2.01    |
+| 11      | 12      | Towel      | Bianca    | Grant         | -0.67   |
+| 12      | 18      | Towel      | Dave      | Stevens       | 1.32    |
+| 13      | 19      | Telephone  | Maggie    | Everett       | -2.11   |
+| 14      | 16      | Towel      | Barry     | Jones         | 0.26    |
+| 15      | 16      | Towel      | Patty     | Noose         | 0.24    |
+| 16      | 17      | Telephone  | Oliver    | Grant         | 0.55    |
+| 17      | 8       | Plunger    | Jeniffer  | Mantela       | 1.20    |
+| 18      | 35      | Towel      | Theodore  | OLeary        | -0.37   |
+| 19      | 22      | Towel      | Patty     | Carlucchi     | 0.28    |
+| 20      | 3       | Towel      | Frank     | Noose         | 0.71    |
+| 21      | 9       | Towel      | Anita     | Carlucchi     | -0.48   |
+| 22      | 13      | Towel      | Eric      | Locicero      | -1.00   |
+| 23      | 9       | Towel      | Ophelia   | Everett       | -0.64   |
+| 24      | 26      | Towel      | David     | Peterson      | 0.48    |
+| 25      | 9       | Towel      | Florence  | Carlucchi     | -0.42   |
+| 26      | 26      | Towel      | Andy      | Peterson      | -1.64   |
+| 27      | 8       | Telephone  | Mary      | Noose         | -0.10   |
+| 28      | 24      | Towel      | Ulysses   | Peterson      | 2.67    |
+| 29      | 6       | Towel      | Pauline   | Everett       | -1.27   |
+| 30      | 10      | Telephone  | Gerry     | Bush          | -0.89   |
+| 31      | 23      | Towel      | Mary      | Van Morrison  | 2.19    |
+| 32      | 15      | Towel      | Larry     | Randolph      | -2.09   |
+| 33      | 8       | Telephone  | Patty     | Van Morrison  | 0.46    |
+| 34      | 19      | Telephone  | Bill      | Kemp          | -0.79   |
+| 35      | 10      | Telephone  | Anita     | Carlucchi     | 1.07    |
+| 36      | 19      | Telephone  | Jake      | Bush          | 0.28    |
+| 37      | 15      | Towel      | Terri     | Noose         | 0.15    |
+| 38      | 26      | Telephone  | Andy      | Jones         | 0.59    |
+| 39      | 16      | Soup       | Batilda   | Van Morrison  | -1.80   |
+| 40      | 23      | Telephone  | Kevin     | Frank         | 0.05    |
+| 41      | 23      | Towel      | Pauline   | Smith         | 0.27    |
+| 42      | 8       | Telephone  | Eric      | Randolph      | -0.82   |
+| 43      | 20      | Towel      | Erica     | Grant         | -1.46   |
+| 44      | 10      | Towel      | Walter    | Frank         | -0.20   |
+| 45      | 10      | Towel      | Margaret  | Van Morrison  | -0.27   |
+| 46      | 15      | Telephone  | Hugh      | Andrews       | -1.94   |
+| 47      | 8       | Towel      | Hope      | Stevens       | 0.00    |
+| 48      | 12      | Towel      | Daniel    | Bush          | -1.44   |
+| 49      | 23      | Towel      | Maggie    | OLeary        | 1.91    |
+| 50      | 13      | Telephone  | Bill      | Mantela       | -1.31   |
+| 51      | 11      | Towel      | Betty     | Andrews       | 0.93    |
+| 52      | 24      | Towel      | Victor    | Peterson      | 1.05    |
+| 53      | 13      | Telephone  | Veronica  | Smith         | 1.95    |
+| 54      | 21      | Towel      | Max       | Peterson      | 2.78    |
+| 55      | 21      | Towel      | Hope      | Bush          | 0.82    |
+| 56      | 20      | Telephone  | Max       | Frank         | -1.26   |
+| 57      | 13      | Soup       | Terri     | Kemp          | 0.09    |
+| 58      | 22      | Towel      | Monty     | Grant         | 0.39    |
+| 59      | 12      | Towel      | Jeniffer  | Bush          | 0.56    |
+| 60      | 15      | Soup       | Ceasar    | Mantela       | -0.86   |
+| 61      | 18      | Soup       | Anita     | Locicero      | -0.24   |
+| 62      | 6       | Soda       | Kevin     | Carlucchi     | 1.87    |
+| 63      | 15      | Towel      | Margaret  | Everett       | 2.59    |
+| 64      | 14      | Soup       | Harry     | Andrews       | 0.98    |
+| 65      | 14      | Telephone  | Kathy     | Stevens       | -0.86   |
+| 66      | 17      | Telephone  | Anthony   | Smith         | -0.66   |
+| 67      | 19      | Telephone  | Denise    | Peterson      | -0.01   |
+| 68      | 16      | Towel      | Anthony   | Frank         | 2.90    |
+| 69      | 12      | Towel      | Hope      | Smith         | 1.01    |
+| 70      | 13      | Towel      | Peter     | Howard        | -2.33   |
+| 71      | 9       | Towel      | Holly     | Dole          | -1.79   |
+| 72      | 11      | Telephone  | Fred      | Noose         | 0.30    |
+| 73      | 11      | Towel      | Patty     | Randolph      | -1.87   |
+| 74      | 5       | Towel      | Andy      | OLeary        | -1.63   |
+| 75      | 17      | Towel      | Jeniffer  | Kemp          | -1.67   |
+| 76      | 5       | Soap       | Randy     | Smith         | -0.30   |
+| 77      | 21      | Towel      | Lisa      | Van Morrison  | -2.40   |
+| 78      | 11      | Soup       | Barry     | Stevens       | 0.87    |
+| 79      | 5       | Telephone  | Carla     | Stevens       | -0.30   |
+| 80      | 17      | Telephone  | Ian       | Bush          | 1.35    |
+| 81      | 18      | Telephone  | Alice     | Kemp          | -0.43   |
+| 82      | 14      | Towel      | Ceasar    | Locicero      | 0.89    |
+| 83      | 15      | Telephone  | Pauline   | Bush          | -1.09   |
+| 84      | 13      | Towel      | David     | Howard        | -0.67   |
+| 85      | 24      | Towel      | Patty     | Howard        | 1.31    |
+| 86      | 20      | Towel      | Ted       | Grant         | -4.13   |
+| 87      | 20      | Towel      | Maggie    | Kemp          | -0.39   |
+| 88      | 23      | Towel      | Anthony   | Stevens       | -0.84   |
+| 89      | 22      | Towel      | Anita     | Randolph      | -1.39   |
+| 90      | 16      | Towel      | Paul      | Van Morrison  | -0.13   |
+| 91      | 15      | Towel      | Ophelia   | OLeary        | 0.38    |
+| 92      | 29      | Towel      | Rex       | Mantela       | 2.04    |
+| 93      | 20      | Towel      | Terri     | Randolph      | -2.15   |
+| 94      | 14      | Soup       | Hugh      | Kemp          | 0.53    |
+| 95      | 6       | Soup       | Margaret  | Bush          | -1.91   |
+| 96      | 6       | Soap       | Bruce     | Grant         | -0.11   |
+| 97      | 12      | Towel      | Samantha  | Frank         | -0.84   |
+| 98      | 10      | Towel      | Victor    | Frank         | 0.51    |
++---------+---------+------------+-----------+---------------+---------+
+| CUSTID  | EXPR$1  |   EXPR$2   |  EXPR$3   |    EXPR$4     | EXPR$5  |
++---------+---------+------------+-----------+---------------+---------+
+| 99      | 13      | Telephone  | Veronica  | Dole          | 1.17    |
++---------+---------+------------+-----------+---------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- TODO: date ranges
+0: jdbc:luciddb:> -- select S1.CUSTID, S1.EMPNO, S1.TS, S2.CUSTID, S2.EMPNO, S2.TS,
+0: jdbc:luciddb:> -- from SALES S1, SALES S2
+0: jdbc:luciddb:> -- where S1.TS between S2.TS -1 and S2.TS +1
+0: jdbc:luciddb:> -- order by S1.CUSTID, S1.EMPNO, S1.TS, S2.CUSTID, S2.EMPNO, S2.TS;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

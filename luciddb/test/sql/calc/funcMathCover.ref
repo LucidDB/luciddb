@@ -1114,17 +1114,17 @@ Messages:
 Error: could not calculate results for the following row:
 [ 0, 0, 0, 0, 0 ]
 Messages:
-[0]:PC=4 Code=22023 (state=,code=0)
+[0]:PC=3 Code=22023 (state=,code=0)
 0: jdbc:luciddb:> SELECT n4, LN(ABS(n4)) FROM TEST_NUMERIC_TABLE ORDER BY 1;
 Error: could not calculate results for the following row:
 [ 0, 0, 0, 0, 0 ]
 Messages:
-[0]:PC=4 Code=22023 (state=,code=0)
+[0]:PC=3 Code=22023 (state=,code=0)
 0: jdbc:luciddb:> SELECT n5, LN(ABS(n5)) FROM TEST_NUMERIC_TABLE ORDER BY 1;
 Error: could not calculate results for the following row:
 [ 0, 0, 0, 0, 0 ]
 Messages:
-[0]:PC=4 Code=22023 (state=,code=0)
+[0]:PC=3 Code=22023 (state=,code=0)
 0: jdbc:luciddb:> SELECT n1, LN(ABS(n1)) FROM TEST_REAL_TABLE ORDER BY 1;
 +-------------+-----------------------+
 |     N1      |        EXPR$1         |

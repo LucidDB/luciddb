@@ -1,0 +1,179 @@
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- aggregation and joins, together
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- joins, group by non indexed columns
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(EMP.LNAME) from EMP, DEPT
+. . . . . . . . > where EMP.DEPTNO = DEPT.DEPTNO;
++---------+
+| EXPR$0  |
++---------+
+| 11      |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select DEPT.DNAME, min(EMP.LNAME), max(EMP.FNAME) from EMP, DEPT
+. . . . . . . . > where EMP.DEPTNO = DEPT.DEPTNO group by DEPT.DNAME order by DNAME;
++--------------+----------+---------+
+|    DNAME     |  EXPR$1  | EXPR$2  |
++--------------+----------+---------+
+| Accounting   | Fratz    | Fritz   |
+| Development  | Andrews  | Rich    |
+| Marketing    | Webber   | Frank   |
+| Sales        | Nife     | Robin   |
+| Support      | Brown    | Mary    |
++--------------+----------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT min(EMP.LNAME), min(DEPT.DNAME), LOCATION.CITY, floor(avg(EMP.EMPNO))
+. . . . . . . . > from EMP, DEPT, LOCATION
+. . . . . . . . > where EMP.DEPTNO=DEPT.DEPTNO and DEPT.LOCID=LOCATION.LOCID
+. . . . . . . . > group by LOCATION.CITY order by LOCATION.CITY;
++----------+--------------+----------------+---------+
+|  EXPR$0  |    EXPR$1    |      CITY      | EXPR$3  |
++----------+--------------+----------------+---------+
+| Brown    | Support      | Menlo Park     | 104     |
+| Fratz    | Accounting   | San Francisco  | 103     |
+| Andrews  | Development  | San Mateo      | 105     |
++----------+--------------+----------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT min(EMP.LNAME), DEPT.DNAME, LOCATION.CITY
+. . . . . . . . > from EMP, DEPT, LOCATION
+. . . . . . . . > where EMP.DEPTNO=DEPT.DEPTNO and DEPT.LOCID=LOCATION.LOCID
+. . . . . . . . > group by LOCATION.CITY, DEPT.DNAME
+. . . . . . . . > order by LOCATION.CITY, DEPT.DNAME;
++----------+--------------+----------------+
+|  EXPR$0  |    DNAME     |      CITY      |
++----------+--------------+----------------+
+| Brown    | Support      | Menlo Park     |
+| Fratz    | Accounting   | San Francisco  |
+| Webber   | Marketing    | San Francisco  |
+| Andrews  | Development  | San Mateo      |
+| Nife     | Sales        | San Mateo      |
++----------+--------------+----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(EMP.LNAME), count(CUSTOMERS.LNAME), max(PRODUCTS.NAME), sum(SALES.PRICE)
+. . . . . . . . > from CUSTOMERS, SALES, PRODUCTS, EMP
+. . . . . . . . > where CUSTOMERS.CUSTID=SALES.CUSTID and PRODUCTS.PRODID = SALES.PRODID
+. . . . . . . . > and EMP.EMPNO = SALES.EMPNO
+. . . . . . . . > group by PRODUCTS.NAME
+. . . . . . . . > order by 2, 3, 1, 4;
++---------+---------+---------------+---------+
+| EXPR$0  | EXPR$1  |    EXPR$2     | EXPR$3  |
++---------+---------+---------------+---------+
+| 36      | 36      | Heater        | 174.09  |
+| 47      | 47      | Microwave     | 222.65  |
+| 51      | 51      | Towel         | 225.22  |
+| 56      | 56      | Eggs          | 271.25  |
+| 57      | 57      | Juice         | 296.48  |
+| 58      | 58      | Chicken       | 301.03  |
+| 61      | 61      | Iron          | 307.79  |
+| 62      | 62      | Telephone     | 329.23  |
+| 67      | 67      | Soap          | 348.61  |
+| 67      | 67      | Soup          | 287.55  |
+| 68      | 68      | Refrigerator  | 394.59  |
+| 68      | 68      | Soda          | 320.88  |
+| 72      | 72      | Cookies       | 342.51  |
+| 76      | 76      | Plunger       | 379.32  |
+| 77      | 77      | Milk          | 379.93  |
+| 77      | 77      | Shampoo       | 416.65  |
++---------+---------+---------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select M.LNAME, count(R.LNAME) from EMP M, EMP R
+. . . . . . . . > where M.EMPNO = R.MANAGER group by M.LNAME order by 2, 1;
++----------+---------+
+|  LNAME   | EXPR$1  |
++----------+---------+
+| Brown    | 1       |
+| Webber   | 1       |
+| Fratz    | 2       |
+| Andrews  | 3       |
+| Bush     | 3       |
++----------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- joins, group by indexed columns
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select DEPT.DEPTNO, min(EMP.LNAME), max(EMP.FNAME) from EMP, DEPT
+. . . . . . . . > where EMP.DEPTNO = DEPT.DEPTNO group by DEPT.DEPTNO order by DEPT.DEPTNO;
++---------+----------+---------+
+| DEPTNO  |  EXPR$1  | EXPR$2  |
++---------+----------+---------+
+| 10      | Fratz    | Fritz   |
+| 20      | Webber   | Frank   |
+| 30      | Andrews  | Rich    |
+| 40      | Nife     | Robin   |
+| 50      | Brown    | Mary    |
++---------+----------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT min(EMP.LNAME), min(DEPT.DNAME), min(LOCATION.CITY)
+. . . . . . . . > , LOCATION.LOCID
+. . . . . . . . > from EMP, DEPT, LOCATION
+. . . . . . . . > where EMP.DEPTNO=DEPT.DEPTNO and DEPT.LOCID=LOCATION.LOCID
+. . . . . . . . > group by LOCATION.LOCID order by LOCATION.LOCID;
++----------+--------------+----------------+--------+
+|  EXPR$0  |    EXPR$1    |     EXPR$2     | LOCID  |
++----------+--------------+----------------+--------+
+| Andrews  | Development  | San Mateo      | HQ     |
+| Brown    | Support      | Menlo Park     | MP     |
+| Fratz    | Accounting   | San Francisco  | SF     |
++----------+--------------+----------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT min(EMP.LNAME), min(DEPT.DNAME), min(LOCATION.CITY), min(LOCATION.LOCID)
+. . . . . . . . > , LOCATION.LOCID, DEPT.DEPTNO
+. . . . . . . . > from EMP, DEPT, LOCATION
+. . . . . . . . > where EMP.DEPTNO=DEPT.DEPTNO and DEPT.LOCID=LOCATION.LOCID
+. . . . . . . . > group by LOCATION.LOCID, DEPT.DEPTNO
+. . . . . . . . > order by LOCATION.LOCID, DEPT.DEPTNO;
++----------+--------------+----------------+---------+--------+---------+
+|  EXPR$0  |    EXPR$1    |     EXPR$2     | EXPR$3  | LOCID  | DEPTNO  |
++----------+--------------+----------------+---------+--------+---------+
+| Andrews  | Development  | San Mateo      | HQ      | HQ     | 30      |
+| Nife     | Sales        | San Mateo      | HQ      | HQ     | 40      |
+| Brown    | Support      | Menlo Park     | MP      | MP     | 50      |
+| Fratz    | Accounting   | San Francisco  | SF      | SF     | 10      |
+| Webber   | Marketing    | San Francisco  | SF      | SF     | 20      |
++----------+--------------+----------------+---------+--------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(EMP.LNAME), count(CUSTOMERS.LNAME), max(PRODUCTS.NAME), sum(SALES.PRICE)
+. . . . . . . . > , PRODUCTS.PRODID
+. . . . . . . . > from CUSTOMERS, SALES, PRODUCTS, EMP
+. . . . . . . . > where CUSTOMERS.CUSTID=SALES.CUSTID and PRODUCTS.PRODID = SALES.PRODID
+. . . . . . . . > and EMP.EMPNO = SALES.EMPNO
+. . . . . . . . > group by PRODUCTS.PRODID
+. . . . . . . . > order by PRODUCTS.PRODID;
++---------+---------+---------------+---------+---------+
+| EXPR$0  | EXPR$1  |    EXPR$2     | EXPR$3  | PRODID  |
++---------+---------+---------------+---------+---------+
+| 76      | 76      | Plunger       | 379.32  | 10000   |
+| 67      | 67      | Soap          | 348.61  | 10001   |
+| 77      | 77      | Shampoo       | 416.65  | 10002   |
+| 51      | 51      | Towel         | 225.22  | 10003   |
+| 57      | 57      | Juice         | 296.48  | 10004   |
+| 67      | 67      | Soup          | 287.55  | 10005   |
+| 58      | 58      | Chicken       | 301.03  | 10006   |
+| 72      | 72      | Cookies       | 342.51  | 10007   |
+| 62      | 62      | Telephone     | 329.23  | 10008   |
+| 61      | 61      | Iron          | 307.79  | 10009   |
+| 68      | 68      | Refrigerator  | 394.59  | 10010   |
+| 36      | 36      | Heater        | 174.09  | 10011   |
+| 47      | 47      | Microwave     | 222.65  | 10012   |
+| 68      | 68      | Soda          | 320.88  | 10013   |
+| 77      | 77      | Milk          | 379.93  | 10014   |
+| 56      | 56      | Eggs          | 271.25  | 10015   |
++---------+---------+---------------+---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select M.LNAME, count(R.LNAME) from EMP M, EMP R
+. . . . . . . . > where M.EMPNO = R.MANAGER group by M.LNAME order by 2, 1;
++----------+---------+
+|  LNAME   | EXPR$1  |
++----------+---------+
+| Brown    | 1       |
+| Webber   | 1       |
+| Fratz    | 2       |
+| Andrews  | 3       |
+| Bush     | 3       |
++----------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

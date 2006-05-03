@@ -55,7 +55,7 @@ select count(COMMISSION) from EMP;
 
 -- order by (puts nulls first)
 select lname, commission from emp order by 2,1;
-select lname, commission from emp order by 2 DESC,1 DESC;
+--select lname, commission from emp order by 2 DESC,1 DESC;
 
 -- Aggregates on empty tables should return 0 or NULL depending on the aggregate and group by ( Bugid 1578 )
 
