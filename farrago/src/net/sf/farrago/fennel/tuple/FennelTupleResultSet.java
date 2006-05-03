@@ -29,6 +29,7 @@ import java.nio.ByteBuffer;
 import java.sql.*;
 import java.math.BigDecimal;
 
+
 /**
  * FennelTupleResultSet provides an abstract java.sql.ResultSet based on tuples.
  *
@@ -36,7 +37,7 @@ import java.math.BigDecimal;
  * as presented in fennel tuple format and presents java objects
  * and/or primitives as requested by the application.
  *
- * TODO: FennelTupleesultSet minimizes object creation while remapping
+ * TODO: FennelTupleResultSet minimizes object creation while remapping
  * tuple data to java objects in order to provide higher performance.
  *
  * @author angel
@@ -44,7 +45,10 @@ import java.math.BigDecimal;
  * @since Jan 8, 2006
  */
 abstract public class FennelTupleResultSet extends AbstractResultSet {
-    // instance variables
+    //~ Static fields/initializers --------------------------------------------
+    public static final String ERRMSG_NO_TUPLE = "tuple not yet read";
+
+    //~ Instance fields -------------------------------------------------------
     protected ResultSetMetaData metaData = null;
     protected FennelTupleDescriptor desc = null;
     protected FennelTupleAccessor accessor = null;
@@ -98,6 +102,11 @@ abstract public class FennelTupleResultSet extends AbstractResultSet {
      */
     protected Object getRaw(int columnIndex) throws SQLException
     {
+        // prevent NPE if called before tuple read and accessor computed
+        if (!tupleComputed || data == null) {
+            throw new SQLException(ERRMSG_NO_TUPLE);
+        }
+
         int columnType = metaData.getColumnType(columnIndex);
         FennelTupleDatum d = data.getDatum(columnIndex-1);
         if (!d.isPresent()) {

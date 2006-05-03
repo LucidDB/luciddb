@@ -41,10 +41,8 @@ public class FarragoJdbcUtil {
      * Converts any Throwable to a SQLException.
      *
      * @param ex Throwable to be converted
-     *
      * @param tracer Logger on which to trace exceptions as they are
-     * converted
-     *
+     *              converted; must not be <code>null</code>
      * @return ex as a SQLException
      */
     public static SQLException newSqlException(
@@ -53,7 +51,7 @@ public class FarragoJdbcUtil {
     {
         final String message = ex.getMessage();
         tracer.severe(message);
-        tracer.throwing("FarragoJdbcUtil", "newSqlException", ex);
+        tracer.throwing("FarragoJdbcUtil", "newSqlException(ex)", ex);
 
         Throwable cause = ex.getCause();
         SQLException sqlExcn;
@@ -105,6 +103,28 @@ public class FarragoJdbcUtil {
             sqlCause.setNextException(sqlExcn);
             return sqlCause;
         }
+    }
+    
+    /**
+     * Creates a new SQLException.
+     *
+     * @param message detail message, the reason for this exception
+     * @param tracer Logger on which to trace new exceptions;
+     *              must not be <code>null</code>
+     * @return new SQLException
+     */
+    public static SQLException newSqlException(
+        final String message,
+        Logger tracer)
+    {
+        SQLException ex = new SQLException(message);
+
+        // REVIEW: not sure tracing everything is desirable. Consider
+        // allowing/testing for null tracer, or creating an alternative
+        // newSqlException(message) method.
+        tracer.severe(message);
+        tracer.throwing("FarragoJdbcUtil", "newSqlException(msg)", ex);
+        return ex;
     }
 
      //~ Inner Classes ---------------------------------------------------------

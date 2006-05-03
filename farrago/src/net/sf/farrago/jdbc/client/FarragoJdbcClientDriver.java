@@ -88,6 +88,7 @@ public class FarragoJdbcClientDriver extends FarragoAbstractJdbcDriver
         try {
             rmiDriver = new CustomRJDriver();
         } catch (Exception ex) {
+            // TODO: use FarragoJdbcUtil.newSqlException, see Jira FRG-122
             throw new SQLException(ex.getMessage());
         }
 
