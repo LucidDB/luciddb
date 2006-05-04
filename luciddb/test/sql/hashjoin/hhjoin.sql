@@ -31,7 +31,7 @@ external name 'class com.lucidera.luciddb.test.udr.HashJoinTestUdx.testhash2';
 
 -- create instance h2(4) of class testhash2;
 
-explain plan for 
+explain plan excluding attributes for 
 select * from table(testhash1(4)) h1, table(testhash2(4)) h2 
 where h1.sex = h2.sex
 --order by *;
@@ -52,7 +52,7 @@ order by 1,2,3,4;
 -- create instance h1(50000) of class testhash1;
 -- create instance h2(50000) of class testhash2;
 
-explain plan for 
+explain plan excluding attributes for 
 select count(*) from table(testhash1(50000)) h1, table(testhash2(50000))h2
 where h1.sex = h2.sex;
 

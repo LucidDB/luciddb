@@ -31,23 +31,23 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create instance h2(4) of class testhash2;
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> explain plan for 
+0: jdbc:luciddb:> explain plan excluding attributes for 
 . . . . . . . . > select * from table(testhash1(4)) h1, table(testhash2(4)) h2 
 . . . . . . . . > where h1.sex = h2.sex
 . . . . . . . . > --order by *;
 . . . . . . . . > order by 1,2;
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                                             column0                                                                                              |
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                                                                        |
-|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])                                                                                                                                         |
-|     FennelCalcRel(expr#0..3=[{inputs}], proj#0..3=[{exprs}])                                                                                                                                     |
-|       LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]])                                                                                                                                                |
-|         IteratorToFennelConverter                                                                                                                                                                |
-|           FarragoJavaUdxRel(invocation=[CAST(TESTHASH1(CAST(4):INTEGER)):RecordType(INTEGER TABLE1_ID, VARCHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" SEX) NOT NULL])  |
-|         IteratorToFennelConverter                                                                                                                                                                |
-|           FarragoJavaUdxRel(invocation=[CAST(TESTHASH2(CAST(4):INTEGER)):RecordType(INTEGER TABLE2_ID, VARCHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" SEX) NOT NULL])  |
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++------------------------------------+
+|              column0               |
++------------------------------------+
+| FennelToIteratorConverter          |
+|   FennelSortRel                    |
+|     FennelCalcRel                  |
+|       LhxJoinRel                   |
+|         IteratorToFennelConverter  |
+|           FarragoJavaUdxRel        |
+|         IteratorToFennelConverter  |
+|           FarragoJavaUdxRel        |
++------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- select * from h1, h2 where h1.sex = h2.sex order by *;
 0: jdbc:luciddb:> select * from table(testhash1(4)) h1, table(testhash2(4)) h2 
@@ -76,22 +76,24 @@
 0: jdbc:luciddb:> -- create instance h1(50000) of class testhash1;
 0: jdbc:luciddb:> -- create instance h2(50000) of class testhash2;
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> explain plan for 
+0: jdbc:luciddb:> explain plan excluding attributes for 
 . . . . . . . . > select count(*) from table(testhash1(50000)) h1, table(testhash2(50000))h2
 . . . . . . . . > where h1.sex = h2.sex;
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                                                column0                                                                                                 |
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| IterCalcRel(expr#0=[{inputs}], EXPR$0=[$t0])                                                                                                                                                           |
-|   FennelToIteratorConverter                                                                                                                                                                            |
-|     FennelAggRel(groupCount=[0], agg#0=[COUNT()])                                                                                                                                                      |
-|       FennelCalcRel(expr#0..3=[{inputs}], expr#4=[true], $f0=[$t4])                                                                                                                                    |
-|         LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]])                                                                                                                                                    |
-|           IteratorToFennelConverter                                                                                                                                                                    |
-|             FarragoJavaUdxRel(invocation=[CAST(TESTHASH1(CAST(50000):INTEGER)):RecordType(INTEGER TABLE1_ID, VARCHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" SEX) NOT NULL])  |
-|           IteratorToFennelConverter                                                                                                                                                                    |
-|             FarragoJavaUdxRel(invocation=[CAST(TESTHASH2(CAST(50000):INTEGER)):RecordType(INTEGER TABLE2_ID, VARCHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" SEX) NOT NULL])  |
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++--------------------------------------+
+|               column0                |
++--------------------------------------+
+| IterCalcRel                          |
+|   FennelToIteratorConverter          |
+|     FennelAggRel                     |
+|       FennelCalcRel                  |
+|         LhxJoinRel                   |
+|           IteratorToFennelConverter  |
+|             IterCalcRel              |
+|               FarragoJavaUdxRel      |
+|           IteratorToFennelConverter  |
+|             IterCalcRel              |
+|               FarragoJavaUdxRel      |
++--------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- select count(*) from h1, h2 where h1.sex = h2.sex;
 0: jdbc:luciddb:> select count(*) from table(testhash1(50000)) h1, table(testhash2(50000))h2

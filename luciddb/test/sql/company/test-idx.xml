@@ -26,11 +26,6 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/download.sql"/>
       </test>
 
-      <test name="junk" requiresSuccess="download">
-        <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/LDB-92.sql"/>
-      </test>
-
-
       <test name="joinEq" requiresSuccess="download">
         <test-metadata>
           <withIndex value="true"/>

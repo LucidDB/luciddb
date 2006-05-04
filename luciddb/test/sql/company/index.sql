@@ -31,13 +31,13 @@ create table DEPT (
 
 -- EMP: employees in the company
 create table EMP (
-  EMPNO integer primary key,
+  EMPNO numeric(5,0) primary key,
   FNAME varchar(20) not null,
   LNAME varchar(20) not null,
   SEX char(1),
   DEPTNO integer,
 -- references dept,
-  MANAGER integer,
+  MANAGER numeric(5,0),
   LOCID CHAR(2),
 -- references location,
   SAL integer,
