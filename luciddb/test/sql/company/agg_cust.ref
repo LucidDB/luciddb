@@ -1,0 +1,555 @@
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- agg.sql -- test aggregation
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- plain aggregates
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select floor(sum(PRICE)) from SALES;
++---------+
+| EXPR$0  |
++---------+
+| 4997    |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(PRICE) from SALES;
++---------+
+| EXPR$0  |
++---------+
+| 1000    |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select floor(avg(PRICE)) from SALES;
++---------+
+| EXPR$0  |
++---------+
+| 5       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --select floor(to_number(min(PRICE))), floor(to_number(max(PRICE))) from SALES;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- with group by
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select PRODID, floor(sum(PRICE)) from SALES group by PRODID order by PRODID;
++---------+---------+
+| PRODID  | EXPR$1  |
++---------+---------+
+| 10000   | 379     |
+| 10001   | 348     |
+| 10002   | 416     |
+| 10003   | 225     |
+| 10004   | 296     |
+| 10005   | 287     |
+| 10006   | 301     |
+| 10007   | 342     |
+| 10008   | 329     |
+| 10009   | 307     |
+| 10010   | 394     |
+| 10011   | 174     |
+| 10012   | 222     |
+| 10013   | 320     |
+| 10014   | 379     |
+| 10015   | 271     |
++---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(PRICE)
+. . . . . . . . > , PRODID
+. . . . . . . . > from SALES group by PRODID order by PRODID;
++---------+---------+
+| EXPR$0  | PRODID  |
++---------+---------+
+| 76      | 10000   |
+| 67      | 10001   |
+| 77      | 10002   |
+| 51      | 10003   |
+| 57      | 10004   |
+| 67      | 10005   |
+| 58      | 10006   |
+| 72      | 10007   |
+| 62      | 10008   |
+| 61      | 10009   |
+| 68      | 10010   |
+| 36      | 10011   |
+| 47      | 10012   |
+| 68      | 10013   |
+| 77      | 10014   |
+| 56      | 10015   |
++---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select floor(avg(PRICE)), PRODID, floor(avg(PRICE)) from SALES group by PRODID order by PRODID;
++---------+---------+---------+
+| EXPR$0  | PRODID  | EXPR$2  |
++---------+---------+---------+
+| 4       | 10000   | 4       |
+| 5       | 10001   | 5       |
+| 5       | 10002   | 5       |
+| 4       | 10003   | 4       |
+| 5       | 10004   | 5       |
+| 4       | 10005   | 4       |
+| 5       | 10006   | 5       |
+| 4       | 10007   | 4       |
+| 5       | 10008   | 5       |
+| 5       | 10009   | 5       |
+| 5       | 10010   | 5       |
+| 4       | 10011   | 4       |
+| 4       | 10012   | 4       |
+| 4       | 10013   | 4       |
+| 4       | 10014   | 4       |
+| 4       | 10015   | 4       |
++---------+---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --select PRODID, to_number(min(PRICE)), to_number(max(PRICE)) from SALES group by PRODID order by PRODID;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- having
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select sum(PRICE)
+. . . . . . . . > , PRODID
+. . . . . . . . > from SALES group by PRODID having PRODID < 10010 order by PRODID;
++---------+---------+
+| EXPR$0  | PRODID  |
++---------+---------+
+| 379.32  | 10000   |
+| 348.61  | 10001   |
+| 416.65  | 10002   |
+| 225.22  | 10003   |
+| 296.48  | 10004   |
+| 287.55  | 10005   |
+| 301.03  | 10006   |
+| 342.51  | 10007   |
+| 329.23  | 10008   |
+| 307.79  | 10009   |
++---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(PRICE)
+. . . . . . . . > , PRODID
+. . . . . . . . > from SALES group by PRODID having PRODID > 10010 and PRODID/2<5007 order by PRODID;
++---------+---------+
+| EXPR$0  | PRODID  |
++---------+---------+
+| 36      | 10011   |
+| 47      | 10012   |
+| 68      | 10013   |
++---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- TODO: IN not supported yet
+0: jdbc:luciddb:> --select floor(avg(PRICE))
+0: jdbc:luciddb:> --, PRODID
+0: jdbc:luciddb:> --from SALES group by PRODID having PRODID in (10005, 10007, 10009) order by PRODID;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --select to_number(min(PRICE)), to_number(max(PRICE)), PRODID from SALES group by PRODID having PRODID between 10005 and 10010 order by PRODID;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- where clauses restricting the rows aggregated
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- TODO: IN not supported
+0: jdbc:luciddb:> -- select sum(PRICE)
+0: jdbc:luciddb:> -- , PRODID 
+0: jdbc:luciddb:> -- from SALES  where PRODID in (10005, 10010) group by PRODID order by PRODID;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(PRICE)
+. . . . . . . . > , PRODID
+. . . . . . . . > from SALES where PRICE+0 < 5.00 group by PRODID order by PRODID;
++---------+---------+
+| EXPR$0  | PRODID  |
++---------+---------+
+| 41      | 10000   |
+| 29      | 10001   |
+| 33      | 10002   |
+| 27      | 10003   |
+| 30      | 10004   |
+| 40      | 10005   |
+| 26      | 10006   |
+| 34      | 10007   |
+| 28      | 10008   |
+| 31      | 10009   |
+| 24      | 10010   |
+| 17      | 10011   |
+| 26      | 10012   |
+| 40      | 10013   |
+| 37      | 10014   |
+| 30      | 10015   |
++---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select floor(avg(PRICE))
+. . . . . . . . > , PRODID
+. . . . . . . . > from SALES where EMPNO < 100 or EMPNO > 107 group by PRODID order by PRODID;
++---------+---------+
+| EXPR$0  | PRODID  |
++---------+---------+
+| 4       | 10000   |
+| 5       | 10001   |
+| 6       | 10002   |
+| 4       | 10003   |
+| 4       | 10004   |
+| 3       | 10005   |
+| 5       | 10006   |
+| 5       | 10007   |
+| 5       | 10008   |
+| 6       | 10009   |
+| 5       | 10010   |
+| 4       | 10011   |
+| 4       | 10012   |
+| 4       | 10013   |
+| 4       | 10014   |
+| 4       | 10015   |
++---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --select to_number(min(PRICE)), to_number(max(PRICE)) from SALES where EMPNO*2 between 204 and 212 group by PRODID order by PRODID;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- having and where clauses
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select sum(PRICE)
+. . . . . . . . > , PRODID
+. . . . . . . . > from SALES
+. . . . . . . . > where custid>50
+. . . . . . . . > group by PRODID having PRODID < 10010
+. . . . . . . . > order by PRODID;
++---------+---------+
+| EXPR$0  | PRODID  |
++---------+---------+
+| 165.64  | 10000   |
+| 185.29  | 10001   |
+| 220.96  | 10002   |
+| 101.15  | 10003   |
+| 157.65  | 10004   |
+| 128.83  | 10005   |
+| 157.71  | 10006   |
+| 128.35  | 10007   |
+| 169.41  | 10008   |
+| 138.16  | 10009   |
++---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(PRICE)
+. . . . . . . . > , PRODID
+. . . . . . . . > from SALES
+. . . . . . . . > where custid>50
+. . . . . . . . > group by PRODID having PRODID > 10010 and PRODID/2<5007
+. . . . . . . . > order by PRODID;
++---------+---------+
+| EXPR$0  | PRODID  |
++---------+---------+
+| 12      | 10011   |
+| 29      | 10012   |
+| 33      | 10013   |
++---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- TODO: IN not supported
+0: jdbc:luciddb:> -- select floor(avg(PRICE))
+0: jdbc:luciddb:> -- , PRODID
+0: jdbc:luciddb:> -- from SALES
+0: jdbc:luciddb:> -- where custid>50
+0: jdbc:luciddb:> -- group by PRODID
+0: jdbc:luciddb:> -- having PRODID in (10005, 10007, 10009)
+0: jdbc:luciddb:> -- order by PRODID;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- select to_number(min(PRICE)), to_number(max(PRICE)), PRODID from SALES
+0: jdbc:luciddb:> -- where custid>50
+0: jdbc:luciddb:> -- group by PRODID
+0: jdbc:luciddb:> -- having PRODID between 10005 and 10010
+0: jdbc:luciddb:> -- order by PRODID;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- multiple group by's
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select min(FNAME), LNAME, SEX from CUSTOMERS group by LNAME, SEX order by LNAME, SEX;
++-----------+---------------+------+
+|  EXPR$0   |     LNAME     | SEX  |
++-----------+---------------+------+
+| Betty     | Andrews       | F    |
+| Harry     | Andrews       | M    |
+| Hope      | Bush          | F    |
+| Daniel    | Bush          | M    |
+| Anita     | Carlucchi     | F    |
+| Kevin     | Carlucchi     | M    |
+| Holly     | Dole          | F    |
+| Earl      | Dole          | M    |
+| Maggie    | Everett       | F    |
+| Gary      | Everett       | M    |
+| Samantha  | Frank         | F    |
+| Anthony   | Frank         | M    |
+| Bianca    | Grant         | F    |
+| Bruce     | Grant         | M    |
+| Patty     | Howard        | F    |
+| David     | Howard        | M    |
+| Andy      | Jones         | M    |
+| Alice     | Kemp          | F    |
+| Bill      | Kemp          | M    |
+| Anita     | Locicero      | F    |
+| Ceasar    | Locicero      | M    |
+| Jeniffer  | Mantela       | F    |
+| Bill      | Mantela       | M    |
+| Mary      | Noose         | F    |
+| Frank     | Noose         | M    |
+| Maggie    | OLeary        | F    |
+| Andy      | OLeary        | M    |
+| Denise    | Peterson      | F    |
+| Andy      | Peterson      | M    |
+| Anita     | Randolph      | F    |
+| Eric      | Randolph      | M    |
+| Hope      | Smith         | F    |
+| Anthony   | Smith         | M    |
+| Carla     | Stevens       | F    |
+| Anthony   | Stevens       | M    |
+| Batilda   | Van Morrison  | F    |
+| Paul      | Van Morrison  | M    |
++-----------+---------------+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select FNAME, LNAME, count(SEX) from CUSTOMERS group by FNAME, LNAME order by LNAME, FNAME;
++-----------+---------------+---------+
+|   FNAME   |     LNAME     | EXPR$2  |
++-----------+---------------+---------+
+| Betty     | Andrews       | 1       |
+| Harry     | Andrews       | 1       |
+| Hugh      | Andrews       | 1       |
+| Terri     | Andrews       | 1       |
+| Daniel    | Bush          | 1       |
+| Gerry     | Bush          | 1       |
+| Hope      | Bush          | 1       |
+| Ian       | Bush          | 1       |
+| Jake      | Bush          | 1       |
+| Jeniffer  | Bush          | 1       |
+| Margaret  | Bush          | 1       |
+| Missy     | Bush          | 1       |
+| Pauline   | Bush          | 1       |
+| Veronica  | Bush          | 1       |
+| Anita     | Carlucchi     | 2       |
+| Florence  | Carlucchi     | 1       |
+| Kevin     | Carlucchi     | 1       |
+| Patty     | Carlucchi     | 1       |
+| Earl      | Dole          | 1       |
+| Holly     | Dole          | 1       |
+| Veronica  | Dole          | 1       |
+| Gary      | Everett       | 1       |
+| Maggie    | Everett       | 1       |
+| Margaret  | Everett       | 1       |
+| Ophelia   | Everett       | 1       |
+| Pauline   | Everett       | 1       |
+| Anthony   | Frank         | 1       |
+| Kevin     | Frank         | 1       |
+| Max       | Frank         | 1       |
+| Samantha  | Frank         | 1       |
+| Victor    | Frank         | 1       |
+| Walter    | Frank         | 1       |
+| Bianca    | Grant         | 1       |
+| Bruce     | Grant         | 1       |
+| Erica     | Grant         | 1       |
+| Fritz     | Grant         | 1       |
+| Monty     | Grant         | 1       |
+| Oliver    | Grant         | 1       |
+| Ted       | Grant         | 1       |
+| Terri     | Grant         | 1       |
+| David     | Howard        | 1       |
+| Patty     | Howard        | 1       |
+| Peter     | Howard        | 1       |
+| Ted       | Howard        | 1       |
+| Andy      | Jones         | 1       |
+| Barry     | Jones         | 1       |
+| Alice     | Kemp          | 1       |
+| Bill      | Kemp          | 1       |
+| Hugh      | Kemp          | 1       |
+| Jeniffer  | Kemp          | 1       |
+| Maggie    | Kemp          | 1       |
+| Terri     | Kemp          | 1       |
+| Wendy     | Kemp          | 1       |
+| Anita     | Locicero      | 1       |
+| Ceasar    | Locicero      | 1       |
+| Eric      | Locicero      | 2       |
+| Bill      | Mantela       | 1       |
+| Ceasar    | Mantela       | 1       |
+| Jeniffer  | Mantela       | 1       |
+| Rex       | Mantela       | 1       |
+| Frank     | Noose         | 1       |
+| Fred      | Noose         | 1       |
+| Mary      | Noose         | 1       |
+| Patty     | Noose         | 1       |
+| Terri     | Noose         | 1       |
+| Andy      | OLeary        | 1       |
+| Maggie    | OLeary        | 1       |
+| Ophelia   | OLeary        | 1       |
+| Theodore  | OLeary        | 1       |
+| Andy      | Peterson      | 1       |
+| David     | Peterson      | 1       |
+| Denise    | Peterson      | 1       |
+| Max       | Peterson      | 1       |
+| Ulysses   | Peterson      | 1       |
+| Victor    | Peterson      | 2       |
+| Anita     | Randolph      | 1       |
+| Eric      | Randolph      | 1       |
+| Larry     | Randolph      | 1       |
+| Patty     | Randolph      | 1       |
+| Terri     | Randolph      | 1       |
+| Anthony   | Smith         | 1       |
+| Hope      | Smith         | 1       |
+| Pauline   | Smith         | 1       |
+| Randy     | Smith         | 1       |
+| Veronica  | Smith         | 1       |
+| Anthony   | Stevens       | 1       |
+| Barry     | Stevens       | 1       |
+| Carla     | Stevens       | 1       |
+| Dave      | Stevens       | 1       |
+| Hope      | Stevens       | 1       |
+| Kathy     | Stevens       | 1       |
+| Batilda   | Van Morrison  | 1       |
+| Lisa      | Van Morrison  | 1       |
+| Margaret  | Van Morrison  | 1       |
+| Mary      | Van Morrison  | 1       |
+| Patty     | Van Morrison  | 1       |
+| Paul      | Van Morrison  | 1       |
++-----------+---------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select FNAME, LNAME, SEX from CUSTOMERS group by FNAME, LNAME, SEX order by LNAME, SEX, FNAME;
++-----------+---------------+------+
+|   FNAME   |     LNAME     | SEX  |
++-----------+---------------+------+
+| Betty     | Andrews       | F    |
+| Terri     | Andrews       | F    |
+| Harry     | Andrews       | M    |
+| Hugh      | Andrews       | M    |
+| Hope      | Bush          | F    |
+| Jeniffer  | Bush          | F    |
+| Margaret  | Bush          | F    |
+| Missy     | Bush          | F    |
+| Pauline   | Bush          | F    |
+| Veronica  | Bush          | F    |
+| Daniel    | Bush          | M    |
+| Gerry     | Bush          | M    |
+| Ian       | Bush          | M    |
+| Jake      | Bush          | M    |
+| Anita     | Carlucchi     | F    |
+| Florence  | Carlucchi     | F    |
+| Patty     | Carlucchi     | F    |
+| Kevin     | Carlucchi     | M    |
+| Holly     | Dole          | F    |
+| Veronica  | Dole          | F    |
+| Earl      | Dole          | M    |
+| Maggie    | Everett       | F    |
+| Margaret  | Everett       | F    |
+| Ophelia   | Everett       | F    |
+| Pauline   | Everett       | F    |
+| Gary      | Everett       | M    |
+| Samantha  | Frank         | F    |
+| Anthony   | Frank         | M    |
+| Kevin     | Frank         | M    |
+| Max       | Frank         | M    |
+| Victor    | Frank         | M    |
+| Walter    | Frank         | M    |
+| Bianca    | Grant         | F    |
+| Erica     | Grant         | F    |
+| Terri     | Grant         | F    |
+| Bruce     | Grant         | M    |
+| Fritz     | Grant         | M    |
+| Monty     | Grant         | M    |
+| Oliver    | Grant         | M    |
+| Ted       | Grant         | M    |
+| Patty     | Howard        | F    |
+| David     | Howard        | M    |
+| Peter     | Howard        | M    |
+| Ted       | Howard        | M    |
+| Andy      | Jones         | M    |
+| Barry     | Jones         | M    |
+| Alice     | Kemp          | F    |
+| Jeniffer  | Kemp          | F    |
+| Maggie    | Kemp          | F    |
+| Terri     | Kemp          | F    |
+| Wendy     | Kemp          | F    |
+| Bill      | Kemp          | M    |
+| Hugh      | Kemp          | M    |
+| Anita     | Locicero      | F    |
+| Ceasar    | Locicero      | M    |
+| Eric      | Locicero      | M    |
+| Jeniffer  | Mantela       | F    |
+| Bill      | Mantela       | M    |
+| Ceasar    | Mantela       | M    |
+| Rex       | Mantela       | M    |
+| Mary      | Noose         | F    |
+| Patty     | Noose         | F    |
+| Terri     | Noose         | F    |
+| Frank     | Noose         | M    |
+| Fred      | Noose         | M    |
+| Maggie    | OLeary        | F    |
+| Ophelia   | OLeary        | F    |
+| Andy      | OLeary        | M    |
+| Theodore  | OLeary        | M    |
+| Denise    | Peterson      | F    |
+| Andy      | Peterson      | M    |
+| David     | Peterson      | M    |
+| Max       | Peterson      | M    |
+| Ulysses   | Peterson      | M    |
+| Victor    | Peterson      | M    |
+| Anita     | Randolph      | F    |
+| Patty     | Randolph      | F    |
+| Terri     | Randolph      | F    |
+| Eric      | Randolph      | M    |
+| Larry     | Randolph      | M    |
+| Hope      | Smith         | F    |
+| Pauline   | Smith         | F    |
+| Veronica  | Smith         | F    |
+| Anthony   | Smith         | M    |
+| Randy     | Smith         | M    |
+| Carla     | Stevens       | F    |
+| Hope      | Stevens       | F    |
+| Kathy     | Stevens       | F    |
+| Anthony   | Stevens       | M    |
+| Barry     | Stevens       | M    |
+| Dave      | Stevens       | M    |
+| Batilda   | Van Morrison  | F    |
+| Lisa      | Van Morrison  | F    |
+| Margaret  | Van Morrison  | F    |
+| Mary      | Van Morrison  | F    |
+| Patty     | Van Morrison  | F    |
+| Paul      | Van Morrison  | M    |
++-----------+---------------+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- expressions
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select sum(PRICE), PRODID * 2 from PRODUCTS group by PRODID order by 2;
++---------+---------+
+| EXPR$0  | EXPR$1  |
++---------+---------+
+| 7.41    | 20000   |
+| 0.34    | 20002   |
+| 4.69    | 20004   |
+| 8.78    | 20006   |
+| 4.62    | 20008   |
+| 5.05    | 20010   |
+| 7.81    | 20012   |
+| 1.61    | 20014   |
+| 2.95    | 20016   |
+| 6.27    | 20018   |
+| 4.91    | 20020   |
+| 3.02    | 20022   |
+| 2.92    | 20024   |
+| 6.21    | 20026   |
+| 5.18    | 20028   |
+| 6.47    | 20030   |
++---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select sum(PRICE+3), count(PRODID/2) from PRODUCTS;
++---------+---------+
+| EXPR$0  | EXPR$1  |
++---------+---------+
+| 126.24  | 16      |
++---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- text columns
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select min(LNAME), max(LNAME) from EMP;
++----------+-----------+
+|  EXPR$0  |  EXPR$1   |
++----------+-----------+
+| Andrews  | Williams  |
++----------+-----------+
+0: jdbc:luciddb:> select DEPTNO, min(LNAME), max(LNAME) from EMP group by DEPTNO order by DEPTNO;
++---------+----------+-----------+
+| DEPTNO  |  EXPR$1  |  EXPR$2   |
++---------+----------+-----------+
+| 10      | Fratz    | Fratz     |
+| 20      | Webber   | Webber    |
+| 30      | Andrews  | Jones     |
+| 40      | Nife     | Williams  |
+| 50      | Brown    | Reynolds  |
++---------+----------+-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

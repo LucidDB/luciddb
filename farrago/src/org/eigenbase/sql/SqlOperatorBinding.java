@@ -92,11 +92,13 @@ public abstract class SqlOperatorBinding
     }
 
     /**
-     * Determines whether a bound operand is null.
+     * Determines whether a bound operand is a bare null without cast.
+     * This is only relevant for SQL validation.
      *
      * @param ordinal zero-based ordinal of operand of interest
      *
-     * @return whether operand is null
+     * @return whether operand is null; false for everything
+     * except SQL validation
      */
     public boolean isOperandNull(int ordinal)
     {

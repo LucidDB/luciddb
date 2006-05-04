@@ -97,6 +97,18 @@ select * from lhxemps, lhxdepts
 where lhxemps.deptno = lhxdepts.deptnoA
 order by empno, ename;
 
+-- test hash join implementation for big IN
+explain plan for 
+select ename from lhxemps
+where empno in 
+(110, 110, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+order by ename;
+
+select ename from lhxemps
+where empno in 
+(110, 110, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+order by ename;
+
 -- this query still uses cartesian product
 explain plan for 
 select * from lhxemps, lhxdepts

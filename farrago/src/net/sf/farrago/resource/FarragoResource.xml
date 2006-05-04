@@ -705,6 +705,10 @@ column type family is {1} but default value type family is {2}</text>
 <text>Unknown specific name {0} for SQL/MED UDX</text>
 </exception>
 
+<exception id="460140" name="MedPropertyMismatch">
+<text>Values (''{0}'', ''{1}'') for property {2} do not match</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Flat File Data wrapper resources 469,000 - 470,000 -->
 <!-- ====================================================================== -->
@@ -867,6 +871,10 @@ column type family is {1} but default value type family is {2}</text>
 
 <exception id="490050" name="PluginJarClassLoadFailed">
 <text>Failed to load class {0} from plugin jar ''{1}''</text>
+</exception>
+
+<exception id="490060" name="PluginPropRequired">
+<text>Value required for property {0}</text>
 </exception>
 
 <!-- ====================================================================== -->

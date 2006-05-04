@@ -159,39 +159,54 @@ public class DiffRepository
     }
 
     /**
-     * Returns the base directory relative to which test logs are stored.
-     *
-     * <p>Deduces the directory based upon the current directory.
-     * If the current directory is "/home/jhyde/open/farrago/intellij",
-     * returns "/home/jhyde/open/farrago/java".
+     * Returns the base directory relative to which test logs are stored.  If
+     * environment variable EIGEN_HOME is set, attempts to use that; otherwise,
+     * attempts to use working directory and then its ancestors.
      */
     private static File getFileBase(Class clazz)
     {
-        // REVIEW jvs 12-Mar-2006: should probably change this to use
-        // EIGEN_HOME if it is set.
-        
+        File file = getFileBaseGivenRoot(
+            clazz, System.getenv("EIGEN_HOME"), false);
+        if (file == null) {
+            file = getFileBaseGivenRoot(
+                clazz, System.getProperty("user.dir"), true);
+        }
+        if (file == null) {
+            throw new RuntimeException("cannot find base dir");
+        }
+        return file;
+    }
+    
+    private static File getFileBaseGivenRoot(
+        Class clazz, String root, boolean searchParent)
+    {
+        if (root == null) {
+            return null;
+        }
         String javaFileName =
             clazz.getName().replace('.', File.separatorChar) + ".java";
-        File file = new File(System.getProperty("user.dir"));
+        File file = new File(root);
         while (true) {
             File file2 = new File(file, "src");
-            if (file2.isDirectory() &&
-                new File(file2, javaFileName).exists()) {
+            if (new File(file2, javaFileName).exists()) {
                 return file2;
             }
             file2 = new File(file, "java");
-            if (file2.exists() &&
-                new File(file2, javaFileName).exists()) {
+            if (new File(file2, javaFileName).exists()) {
                 return file2;
             }
             file2 = new File(file, "farrago/src");
-            if (file2.exists()) {
+            if (new File(file2, javaFileName).exists()) {
+                return file2;
+            }
+            file2 = new File(file, "saffron/src");
+            if (new File(file2, javaFileName).exists()) {
                 return file2;
             }
 
             file = file.getParentFile();
-            if (file == null) {
-                throw new RuntimeException("cannot find base dir");
+            if ((file == null) || !searchParent) {
+                return null;
             }
         }
     }

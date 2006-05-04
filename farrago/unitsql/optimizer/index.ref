@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id$
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/index.sql#14 $
 0: jdbc:farrago:> -- Test queries which make use of indexes
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema oj;
@@ -80,6 +80,14 @@
 | Accounts  |
 | Sales     |
 +-----------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select name from depts where deptno in (20,30) order by name;
++------------+
+|    NAME    |
++------------+
+| Accounts   |
+| Marketing  |
++------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- scaling
 0: jdbc:farrago:> select name from depts where deptno=20.00;
@@ -427,6 +435,17 @@
 '      FennelValuesRel(tuples=[[{ '-', null, ')', 20 }, { '[', 30, ']', 40 }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
+. . . . . . . . > select name from depts where deptno in (20,30) order by name;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0..1=[{inputs}], NAME=[$t1])'
+'        FennelToIteratorConverter'
+'          FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'            FennelValuesRel(tuples=[[{ '[', 20, ']', 20 }, { '[', 30, ']', 30 }]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from depts where deptno=20.00;
 'column0'
 'IterCalcRel(expr#0..1=[{inputs}], NAME=[$t1])'
@@ -522,25 +541,25 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..9=[{inputs}], NAME=[$t1])'
+'      IterCalcRel(expr#0..1=[{inputs}], NAME=[$t0])'
 '        FennelToIteratorConverter'
-'          FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'          FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '            FennelValuesRel(tuples=[[{ '[', 20, ']', 20 }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from emps where deptno=20 and gender='M';
 'column0'
-'IterCalcRel(expr#0..9=[{inputs}], expr#10=[_ISO-8859-1'M'], expr#11=[=($t3, $t10)], NAME=[$t1], $condition=[$t11])'
+'IterCalcRel(expr#0..2=[{inputs}], expr#3=[_ISO-8859-1'M'], expr#4=[=($t2, $t3)], NAME=[$t0], $condition=[$t4])'
 '  FennelToIteratorConverter'
-'    FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'    FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2, 3]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '      FennelValuesRel(tuples=[[{ '[', 20, ']', 20 }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from emps where empid=3;
 'column0'
-'IterCalcRel(expr#0..9=[{inputs}], NAME=[$t1])'
+'IterCalcRel(expr#0..1=[{inputs}], NAME=[$t0])'
 '  FennelToIteratorConverter'
-'    FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]])'
+'    FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 5]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]])'
 '      FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '        FennelValuesRel(tuples=[[{ '[', 3, ']', 3 }]])'
 0: jdbc:farrago:> 
@@ -584,10 +603,10 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..11=[{inputs}], DNAME=[$t11], ENAME=[$t1])'
+'      IterCalcRel(expr#0..3=[{inputs}], DNAME=[$t3], ENAME=[$t0])'
 '        FennelToIteratorConverter'
-'          FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[2]], inputJoinProj=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]], inputDirectiveProj=[[]])'
-'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'          FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[1]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
+'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2]], index=[EMPS_UX], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select depts.name as dname,emps.name as ename
@@ -598,10 +617,10 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..11=[{inputs}], DNAME=[$t11], ENAME=[$t1])'
+'      IterCalcRel(expr#0..3=[{inputs}], DNAME=[$t3], ENAME=[$t0])'
 '        FennelToIteratorConverter'
-'          FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[true], inputKeyProj=[[2]], inputJoinProj=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]], inputDirectiveProj=[[]])'
-'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'          FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[true], inputKeyProj=[[1]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
+'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2]], index=[EMPS_UX], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select emps.name as ename,depts.name as dname
@@ -612,9 +631,9 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[1, 0]], discardDuplicates=[false])'
 '    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..11=[{inputs}], ENAME=[$t3], DNAME=[$t1])'
+'      IterCalcRel(expr#0..3=[{inputs}], ENAME=[$t2], DNAME=[$t1])'
 '        FennelToIteratorConverter'
-'          FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[true], inputKeyProj=[[0]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
+'          FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[true], inputKeyProj=[[0]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
 '            FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
@@ -626,9 +645,9 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[1, 0]], discardDuplicates=[false])'
 '    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..11=[{inputs}], ENAME=[$t3], DNAME=[$t1])'
+'      IterCalcRel(expr#0..3=[{inputs}], ENAME=[$t2], DNAME=[$t1])'
 '        FennelToIteratorConverter'
-'          FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[2, 3]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
+'          FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 5]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[2, 3]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
 '            FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[0]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
 '              FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
@@ -641,9 +660,9 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[1, 0]], discardDuplicates=[false])'
 '    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..11=[{inputs}], ENAME=[$t3], DNAME=[$t1])'
+'      IterCalcRel(expr#0..3=[{inputs}], ENAME=[$t2], DNAME=[$t1])'
 '        FennelToIteratorConverter'
-'          FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[true], inputKeyProj=[[2, 3]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
+'          FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 5]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[true], inputKeyProj=[[2, 3]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
 '            FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID], uniqueKey=[true], preserveOrder=[false], outer=[true], inputKeyProj=[[0]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
 '              FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
@@ -848,31 +867,27 @@
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select deptno from ftrsemps where deptno = 2;
 'column0'
-'IterCalcRel(expr#0..2=[{inputs}], DEPTNO=[$t2])'
-'  FennelToIteratorConverter'
-'    FtrsIndexSearchRel(table=[[LOCALDB, LBM, FTRSEMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$FTRSEMPS$EMPNO_PK], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]])'
-'      FtrsIndexSearchRel(table=[[LOCALDB, LBM, FTRSEMPS]], projection=[[0]], index=[DEPTNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
-'        FennelValuesRel(tuples=[[{ '[', 2, ']', 2 }]])'
+'FennelToIteratorConverter'
+'  FtrsIndexSearchRel(table=[[LOCALDB, LBM, FTRSEMPS]], projection=[[2]], index=[DEPTNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'    FennelValuesRel(tuples=[[{ '[', 2, ']', 2 }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- index on char types:
 0: jdbc:farrago:> -- simple comparison predicate
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select ename from ftrsemps where ename = 'ADAM';
 'column0'
-'IterCalcRel(expr#0..2=[{inputs}], ENAME=[$t1])'
-'  FennelToIteratorConverter'
-'    FtrsIndexSearchRel(table=[[LOCALDB, LBM, FTRSEMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$FTRSEMPS$EMPNO_PK], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]])'
-'      FtrsIndexSearchRel(table=[[LOCALDB, LBM, FTRSEMPS]], projection=[[0]], index=[ENAME_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
-'        FennelValuesRel(tuples=[[{ '[', _ISO-8859-1'ADAM', ']', _ISO-8859-1'ADAM' }]])'
+'FennelToIteratorConverter'
+'  FtrsIndexSearchRel(table=[[LOCALDB, LBM, FTRSEMPS]], projection=[[1]], index=[ENAME_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'    FennelValuesRel(tuples=[[{ '[', _ISO-8859-1'ADAM', ']', _ISO-8859-1'ADAM' }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- index on char types:
 0: jdbc:farrago:> -- predicate specific to character types
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select ename from ftrsemps where ename like 'ADAM%';
 'column0'
-'IterCalcRel(expr#0..2=[{inputs}], expr#3=[_ISO-8859-1'ADAM%'], expr#4=[LIKE($t1, $t3)], ENAME=[$t1], $condition=[$t4])'
+'IterCalcRel(expr#0=[{inputs}], expr#1=[_ISO-8859-1'ADAM%'], expr#2=[LIKE($t0, $t1)], ENAME=[$t0], $condition=[$t2])'
 '  FennelToIteratorConverter'
-'    FtrsIndexScanRel(table=[[LOCALDB, LBM, FTRSEMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$FTRSEMPS$EMPNO_PK], preserveOrder=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, LBM, FTRSEMPS]], projection=[[1]], index=[ENAME_IX], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- AND: does recognize one index, but not two
 0: jdbc:farrago:> explain plan for
@@ -980,7 +995,7 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
-'      LcsIndexMergeRel'
+'      LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
 '        LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[DEPTNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '          FennelValuesRel(tuples=[[{ '(', 20, '+', null }]])'
 0: jdbc:farrago:> 
@@ -996,7 +1011,7 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
-'      LcsIndexMergeRel'
+'      LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
 '        LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[DEPTNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '          FennelValuesRel(tuples=[[{ '[', 10, ']', 10 }, { '[', 20, ']', 20 }]])'
 0: jdbc:farrago:> 
@@ -1016,7 +1031,7 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
-'      LcsIndexMergeRel'
+'      LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
 '        LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[DEPTNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '          FennelValuesRel(tuples=[[{ '(', 10, '+', null }]])'
 0: jdbc:farrago:> 
@@ -1036,7 +1051,7 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
-'      LcsIndexMergeRel'
+'      LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
 '        LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[DEPTNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '          FennelValuesRel(tuples=[[{ '(', 10, ']', 20 }]])'
 0: jdbc:farrago:> 
@@ -1068,7 +1083,7 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
-'      LcsIndexMergeRel'
+'      LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
 '        LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[EMPNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '          FennelValuesRel(tuples=[[{ '[', 10, ']', 10 }]])'
 0: jdbc:farrago:> 
@@ -1087,6 +1102,26 @@
 0: jdbc:farrago:> select * from lbmemps where empno = 10 and empno = 20 order by empno;
 'EMPNO','ENAME','DEPTNO'
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- IN on small values list
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select ename from lbmemps where deptno in (20, 30)
+. . . . . . . . > order by ename;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
+'      LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
+'        LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[DEPTNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'          FennelValuesRel(tuples=[[{ '[', 20, ']', 20 }, { '[', 30, ']', 30 }]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select ename from lbmemps where deptno in (20, 30)
+. . . . . . . . > order by ename;
+'ENAME'
+'Eric'
+'Eric'
+'Wilma'
+'Wilma'
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- OR on same column is supported
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select *
@@ -1098,10 +1133,10 @@
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
 '      LcsIndexIntersectRel(startRidParamId=[2], rowLimitParamId=[1])'
-'        LcsIndexMergeRel'
+'        LcsIndexMergeRel(consumerSridParamId=[2], segmentLimitParamId=[1], ridLimitParamId=[3])'
 '          LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[DEPTNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '            FennelValuesRel(tuples=[[{ '[', 10, ']', 10 }, { '[', 20, ']', 20 }]])'
-'        LcsIndexMergeRel'
+'        LcsIndexMergeRel(consumerSridParamId=[2], segmentLimitParamId=[1], ridLimitParamId=[4])'
 '          LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[EMPNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '            FennelValuesRel(tuples=[[{ '[', 110, ']', 110 }, { '[', 120, ']', 120 }]])'
 0: jdbc:farrago:> 
@@ -1214,10 +1249,10 @@
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
 '      LcsIndexIntersectRel(startRidParamId=[2], rowLimitParamId=[1])'
-'        LcsIndexMergeRel'
+'        LcsIndexMergeRel(consumerSridParamId=[2], segmentLimitParamId=[1], ridLimitParamId=[3])'
 '          LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[DEPTNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '            FennelValuesRel(tuples=[[{ '[', 10, '+', null }]])'
-'        LcsIndexMergeRel'
+'        LcsIndexMergeRel(consumerSridParamId=[2], segmentLimitParamId=[1], ridLimitParamId=[4])'
 '          LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[EMPNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '            FennelValuesRel(tuples=[[{ '[', 100, ']', 100 }]])'
 0: jdbc:farrago:> 
@@ -1236,7 +1271,7 @@
 '      LcsIndexIntersectRel(startRidParamId=[2], rowLimitParamId=[1])'
 '        LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[DEPTNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[2], rowLimitParamId=[1])'
 '          FennelValuesRel(tuples=[[{ '[', 20, ']', 20 }]])'
-'        LcsIndexMergeRel'
+'        LcsIndexMergeRel(consumerSridParamId=[2], segmentLimitParamId=[1], ridLimitParamId=[3])'
 '          LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[EMPNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '            FennelValuesRel(tuples=[[{ '[', 100, ']', 200 }]])'
 0: jdbc:farrago:> 
@@ -1262,7 +1297,7 @@
 '          FennelValuesRel(tuples=[[{ '[', _ISO-8859-1'Eric', ']', _ISO-8859-1'Eric' }]])'
 '        LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[DEPTNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[2], rowLimitParamId=[1])'
 '          FennelValuesRel(tuples=[[{ '[', 20, ']', 20 }]])'
-'        LcsIndexMergeRel'
+'        LcsIndexMergeRel(consumerSridParamId=[2], segmentLimitParamId=[1], ridLimitParamId=[3])'
 '          LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], index=[EMPNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '            FennelValuesRel(tuples=[[{ '[', 100, ']', 200 }]])'
 0: jdbc:farrago:> 
@@ -1466,7 +1501,7 @@
 0: jdbc:farrago:> ---------------------
 0: jdbc:farrago:> -- Some join tests --
 0: jdbc:farrago:> ---------------------
-0: jdbc:farrago:> -- TODO: filter above join is not pushed down
+0: jdbc:farrago:> -- Filter above join gets pushed down so index can be used.
 0: jdbc:farrago:> !set outputformat csv
 0: jdbc:farrago:> explain plan for 
 . . . . . . . . > select * from lbmdepts, lbmemps where lbmemps.deptno = 2;
@@ -1481,8 +1516,7 @@
 0: jdbc:farrago:> select * from lbmdepts, lbmemps where lbmemps.deptno = 2;
 'DEPTNO','EMPNO','ENAME','DEPTNO0'
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- However, if filter is in an inline view, the index path is used
-0: jdbc:farrago:> -- because the view is not merged.
+0: jdbc:farrago:> -- Filter in an inline view is already in the right place for indexing.
 0: jdbc:farrago:> explain plan for 
 . . . . . . . . > select * from lbmdepts, 
 . . . . . . . . >               (select * from lbmemps where lbmemps.deptno = 2) view;

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/selectSimple.sql#7 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/regressionsql/selectSimple.sql#2 $
 0: jdbc:farrago:> -- Full vertical system testing of non advanced select statements
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
@@ -653,6 +653,82 @@ Was expecting one of:
 | EXPR$0  |
 +---------+
 | false   |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- a few boundary cases for decimal precision 19
+0: jdbc:farrago:> values cast (0.1234567890123456789 as decimal(10,0));
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:farrago:> values cast (0.8876543210987654321 as decimal(10,0));
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:farrago:> values cast (-0.8876543210987654321 as decimal(10,0));
++---------+
+| EXPR$0  |
++---------+
+| -1      |
++---------+
+0: jdbc:farrago:> values cast (1e-5 as decimal(19,19));
++------------------------+
+|         EXPR$0         |
++------------------------+
+| 0.0000100000000000000  |
++------------------------+
+0: jdbc:farrago:> values 1 + 0.1234567890123456789;
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Source type with scale 0 cannot be converted to target type with scale 19 because the smallest value of the source type is too large to be encoded by the target type (state=,code=0)
+0: jdbc:farrago:> values floor(0.8876543210987654321);
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:farrago:> values floor(0.0000000000000000001);
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:farrago:> values floor(-0.0000000000000000001);
++---------+
+| EXPR$0  |
++---------+
+| -1      |
++---------+
+0: jdbc:farrago:> values floor(-0.8876543210987654321);
++---------+
+| EXPR$0  |
++---------+
+| -1      |
++---------+
+0: jdbc:farrago:> values ceil(0.8876543210987654321);
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:farrago:> values ceil(0.0000000000000000001);
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:farrago:> values ceil(-0.0000000000000000001);
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:farrago:> values ceil(-0.8876543210987654321);
++---------+
+| EXPR$0  |
++---------+
+| 0       |
 +---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- end selectSimple.sql

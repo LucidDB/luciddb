@@ -38,6 +38,8 @@ select name from depts where deptno > 20 and deptno < 30 order by name;
 select name from depts where deptno < 20 or deptno between 30 and 40 
 order by name;
 
+select name from depts where deptno in (20,30) order by name;
+
 -- scaling
 select name from depts where deptno=20.00;
 
@@ -183,6 +185,9 @@ select name from depts where deptno > 20 and deptno < 30;
 
 explain plan for
 select name from depts where deptno < 20 or deptno between 30 and 40;
+
+explain plan for
+select name from depts where deptno in (20,30) order by name;
 
 explain plan for
 select name from depts where deptno=20.00;
@@ -488,6 +493,14 @@ select * from lbmemps where empno = 10 and empno = 20 order by empno;
 
 select * from lbmemps where empno = 10 and empno = 20 order by empno;
 
+-- IN on small values list
+explain plan for
+select ename from lbmemps where deptno in (20, 30)
+order by ename;
+
+select ename from lbmemps where deptno in (20, 30)
+order by ename;
+
 -- OR on same column is supported
 explain plan for
 select *
@@ -623,15 +636,14 @@ select * from ridsearchtable where b = 0 and a = 1;
 ---------------------
 -- Some join tests --
 ---------------------
--- TODO: filter above join is not pushed down
+-- Filter above join gets pushed down so index can be used.
 !set outputformat csv
 explain plan for 
 select * from lbmdepts, lbmemps where lbmemps.deptno = 2;
 
 select * from lbmdepts, lbmemps where lbmemps.deptno = 2;
 
--- However, if filter is in an inline view, the index path is used
--- because the view is not merged.
+-- Filter in an inline view is already in the right place for indexing.
 explain plan for 
 select * from lbmdepts, 
               (select * from lbmemps where lbmemps.deptno = 2) view;

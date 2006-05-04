@@ -126,12 +126,13 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
         planner.addRule(new IterRules.HomogeneousUnionToIteratorRule());
         planner.addRule(new IterRules.OneRowToIteratorRule());
 
-        planner.addRule(
-            new ReduceDecimalsRule(CalcRel.class));
+        planner.addRule(new ReduceDecimalsRule());
         
         planner.addRule(ReduceAggregatesRule.instance);
         
         planner.addRule(new PushFilterRule());
+        planner.addRule(new PushProjectPastFilterRule());
+        planner.addRule(new PushProjectPastJoinRule());
         
         if (fennelEnabled) {
             planner.addRule(new FennelSortRule());
@@ -144,6 +145,7 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
             planner.addRule(new FennelCartesianJoinRule());
             planner.addRule(new FennelCorrelatorRule());
             planner.addRule(new FennelOneRowRule());
+            planner.addRule(new FennelValuesRule());
             planner.addRule(new FennelAggRule());
         }
 

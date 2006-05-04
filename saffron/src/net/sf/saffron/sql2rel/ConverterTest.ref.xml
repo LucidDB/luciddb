@@ -1,0 +1,255 @@
+<?xml version="1.0" ?>
+<Root>
+    <TestCase name="testIntegerLiteral">
+        <Resource name="sql">
+            <![CDATA[select 1 from "emps"]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EXPR$0=[1])
+  ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testStringLiteral">
+        <Resource name="sql">
+            <![CDATA[select 'foo' from "emps"]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EXPR$0=[_ISO-8859-1'foo'])
+  ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testSelectListAlias">
+        <Resource name="sql">
+            <![CDATA[select 1 as one, 'foo' foo, 1 bar from "emps"]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(ONE=[1], FOO=[_ISO-8859-1'foo'], BAR=[1])
+  ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testSelectListColumns">
+        <Resource name="sql">
+            <![CDATA[select "emps"."gender", "empno", "deptno" as "d" from "emps"]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(gender=[$3], empno=[$0], d=[$2])
+  ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testFromList">
+        <Resource name="sql">
+            <![CDATA[select 1 from "emps", "depts"]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EXPR$0=[1])
+  JoinRel(condition=[true], joinType=[inner])
+    ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])
+    ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testFromAlias">
+        <Resource name="sql">
+            <![CDATA[select 1 from "emps" as "e"]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EXPR$0=[1])
+  ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testFromJoin">
+        <Resource name="sql">
+            <![CDATA[select 1 from "emps" join "depts" on "emps"."deptno" = "depts"."deptno"]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EXPR$0=[1])
+  JoinRel(condition=[=($2, $6)], joinType=[inner])
+    ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])
+    ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testFromFullJoin">
+        <Resource name="sql">
+            <![CDATA[select 1 from "emps" full join "depts" on "emps"."deptno" = "depts"."deptno"]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EXPR$0=[1])
+  JoinRel(condition=[=($2, $6)], joinType=[full])
+    ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])
+    ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testFromJoin3">
+        <Resource name="sql">
+            <![CDATA[select 1 from "emps" join "depts" on "emps"."deptno" = "depts"."deptno" join (select * from "emps" where "gender" = 'F') as "femaleEmps" on "femaleEmps"."empno" = "emps"."empno"]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EXPR$0=[1])
+  JoinRel(condition=[=($8, $0)], joinType=[inner])
+    JoinRel(condition=[=($2, $6)], joinType=[inner])
+      ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])
+      ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])
+    ProjectRel(empno=[$0], name=[$1], deptno=[$2], gender=[$3], city=[$4], slacker=[$5])
+      FilterRel(condition=[=($3, _ISO-8859-1'F')])
+        ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testWhereSimple">
+        <Resource name="sql">
+            <![CDATA[select 1 from "emps" where "gender" = 'F']]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EXPR$0=[1])
+  FilterRel(condition=[=($3, _ISO-8859-1'F')])
+    ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testWhereAnd">
+        <Resource name="sql">
+            <![CDATA[select 1 from "emps" where "gender" = 'F' and "deptno" = 10]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EXPR$0=[1])
+  FilterRel(condition=[AND(=($3, _ISO-8859-1'F'), =($2, 10))])
+    ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testQueryInSelect">
+        <Resource name="sql">
+            <![CDATA[select "gender", (select "name" from "depts" where "deptno" = "e"."deptno") from "emps" as "e"]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(gender=[$3], EXPR$1=[$6])
+  CorrelatorRel(condition=[true], joinType=[inner], correlations=[[var0=offset2]])
+    ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])
+    ProjectRel(name=[$1])
+      FilterRel(condition=[=($0, $cor0.deptno)])
+        ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testExistsUncorrelated">
+        <Resource name="sql">
+            <![CDATA[select * from "emps" where exists (select 1 from "depts")]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(empno=[$0], name=[$1], deptno=[$2], gender=[$3], city=[$4], slacker=[$5])
+  FilterRel(condition=[IS TRUE($7)])
+    JoinRel(condition=[true], joinType=[left])
+      ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])
+      ProjectRel(EXPR$0=[$0], $indicator=[true])
+        ProjectRel(EXPR$0=[1])
+          ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testExistsCorrelated">
+        <Resource name="sql">
+            <![CDATA[select * from "emps" where exists (select 1 + 2 from "depts" where "deptno" > 10) or exists (select 'foo' from "emps" where "gender" = 'Pig')]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(empno=[$0], name=[$1], deptno=[$2], gender=[$3], city=[$4], slacker=[$5])
+  FilterRel(condition=[OR(IS TRUE($7), IS TRUE($9))])
+    JoinRel(condition=[true], joinType=[left])
+      JoinRel(condition=[true], joinType=[left])
+        ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])
+        ProjectRel(EXPR$0=[$0], $indicator=[true])
+          ProjectRel(EXPR$0=[+(1, 2)])
+            FilterRel(condition=[>($0, 10)])
+              ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])
+      ProjectRel(EXPR$0=[$0], $indicator=[true])
+        ProjectRel(EXPR$0=[_ISO-8859-1'foo'])
+          FilterRel(condition=[=($3, _ISO-8859-1'Pig')])
+            ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testUnion">
+        <Resource name="sql">
+            <![CDATA[select 1 from "emps" union select 2 from "depts"]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+UnionRel(all=[false])
+  ProjectRel(EXPR$0=[1])
+    ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])
+  ProjectRel(EXPR$0=[2])
+    ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testUnionAll">
+        <Resource name="sql">
+            <![CDATA[select 1 from "emps" union all select 2 from "depts"]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+UnionRel(all=[true])
+  ProjectRel(EXPR$0=[1])
+    ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])
+  ProjectRel(EXPR$0=[2])
+    ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testUnionInFrom">
+        <Resource name="sql">
+            <![CDATA[select * from (select 1 as "i", 3 as "j" from "emps" union select 2, 5 from "depts") where "j" > 4]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(i=[$0], j=[$1])
+  FilterRel(condition=[>($1, 4)])
+    UnionRel(all=[false])
+      ProjectRel(i=[1], j=[3])
+        ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])
+      ProjectRel(EXPR$0=[2], EXPR$1=[5])
+        ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testJoinOfValues">
+        <Resource name="sql">
+            <![CDATA[select * from (values (1), (2)), (values (3))]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EXPR$0=[$0], EXPR$00=[$1])
+  JoinRel(condition=[true], joinType=[inner])
+    ProjectRel(EXPR$0=[$0])
+      UnionRel(all=[true])
+        ProjectRel(EXPR$0=[1])
+          OneRowRel
+        ProjectRel(EXPR$0=[2])
+          OneRowRel
+    ProjectRel(EXPR$0=[$0])
+      ProjectRel(EXPR$0=[3])
+        OneRowRel
+]]>
+        </Resource>
+    </TestCase>
+</Root>

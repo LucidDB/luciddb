@@ -47,6 +47,7 @@
   </target>
 
   <target name="jar">
+    <delete file="${dist.jar.file}" quiet="true"/>
     <jar destfile="${dist.jar.file}" update="true" compress="true">
       <fileset dir="${farrago.dir}">
         <include name="README"/>

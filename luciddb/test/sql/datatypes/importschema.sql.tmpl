@@ -18,19 +18,12 @@ create schema @name_prefix@_is_schema;
 
 -- Import with Except qualification
 import foreign schema "@SCHEMA@"
-EXCEPT TABLE_NAME like 'blob'
+EXCEPT TABLE_NAME like '%'
 from server @SERVER_NAME@
 into @name_prefix@_is_schema;
 
 -- Check import of tables
 !metadata getTables LOCALDB @name_prefix@_IS_SCHEMA % null
-
--- Check import of column names and data types for types table
-!metadata getColumns LOCALDB @name_prefix@_IS_SCHEMA "types" null
-
--- 2nd select should fail
-select * from @name_prefix@_is_schema."types";
-select * from @name_prefix@_is_schema."blob";
 
 drop schema @name_prefix@_is_schema cascade;
 create schema @name_prefix@_is_schema;

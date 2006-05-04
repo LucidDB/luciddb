@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/optimizer/filter.sql#2 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/filter.sql#1 $
 0: jdbc:farrago:> -- Test queries which execute row-by-row filters
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'sales';
@@ -15,7 +15,30 @@
 +--------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- filter which returns two rows
-0: jdbc:farrago:> select name from emps where empno = 110;
+0: jdbc:farrago:> select name from emps where empno = 110 order by name;
++-------+
+| NAME  |
++-------+
+| Eric  |
+| John  |
++-------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- IN filter implemented as OR
+0: jdbc:farrago:> select name from emps where empno in (110, 120) order by name;
++--------+
+|  NAME  |
++--------+
+| Eric   |
+| John   |
+| Wilma  |
++--------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- IN filter implemented as join; have to go over
+0: jdbc:farrago:> -- the default threshold of 20 list items for this to kick in;
+0: jdbc:farrago:> -- throw in some duplicates just for fun
+0: jdbc:farrago:> select name from emps where empno in 
+. . . . . . . . > (110, 110, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+. . . . . . . . > order by name;
 +-------+
 | NAME  |
 +-------+
@@ -30,7 +53,26 @@
 . . . . . . . . > select name from emps where empno = 120;
 'column0'
 'FennelToIteratorConverter'
-'  FennelCalcRel(expr#0..9=[{inputs}], expr#10=[120], expr#11=[=($t0, $t10)], NAME=[$t1], $condition=[$t11])'
-'    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'  FennelCalcRel(expr#0..1=[{inputs}], expr#2=[120], expr#3=[=($t0, $t2)], NAME=[$t1], $condition=[$t3])'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1]], index=[EMPS_UX], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select name from emps where empno in (110, 120);
+'column0'
+'FennelToIteratorConverter'
+'  FennelCalcRel(expr#0..1=[{inputs}], expr#2=[110], expr#3=[=($t0, $t2)], expr#4=[120], expr#5=[=($t0, $t4)], expr#6=[OR($t3, $t5)], NAME=[$t1], $condition=[$t6])'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1]], index=[EMPS_UX], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select name from emps where empno
+. . . . . . . . > in (110, 110, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+'column0'
+'FennelToIteratorConverter'
+'  FennelCalcRel(expr#0..2=[{inputs}], expr#3=[=($t0, $t2)], NAME=[$t1], $condition=[$t3])'
+'    FennelCartesianProductRel(leftouterjoin=[false])'
+'      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[true], expr#3=[IS TRUE($t2)], proj#0..1=[{exprs}], $condition=[$t3])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1]], index=[EMPS_UX], preserveOrder=[false])'
+'      FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'        FennelValuesRel(tuples=[[{ 110 }, { 110 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

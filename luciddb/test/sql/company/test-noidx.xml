@@ -26,6 +26,10 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/download.sql"/>
       </test>
 
+      <test name="junk" requiresSuccess="download">
+        <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/LDB-92.sql"/>
+      </test>
+
       <!-- These are duplicated in shortreg & shortreg2 -->
       <test name="joinEq" requiresSuccess="download">
         <test-metadata>
@@ -42,6 +46,7 @@
       </test>
 
       <test name="joinMisc" requiresSuccess="download">
+        <!-- substring and INC() functions not supported, commented out -->
         <test-metadata>
           <withIndex value="false"/>
         </test-metadata>
@@ -56,17 +61,18 @@
       </test>
 
       <test name="agg" requiresSuccess="download">
+        <!-- FRG-52 and FRG-115, queries commented out -->
         <test-metadata>
           <withIndex value="false"/>
-          <notImplemented value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/agg.sql"/>
       </test>
 
       <test name="aggJoinEq" requiresSuccess="download">
+        <!-- LDB-92 -->
         <test-metadata>
           <withIndex value="false"/>
-          <notImplemented value="true"/>
+          <knownFailure value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/aggJoinEq.sql"/>
       </test>
@@ -74,23 +80,23 @@
       <test name="aggJoinRng" requiresSuccess="download">
         <test-metadata>
           <withIndex value="false"/>
-          <notImplemented value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/aggJoinRng.sql"/>
       </test>
 
       <test name="agg_cust" requiresSuccess="download">
+        <!-- IN and to_number not supported yet -->
         <test-metadata>
           <withIndex value="false"/>
-          <notImplemented value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/agg_cust.sql"/>
       </test>
 
       <test name="aggJoinEq_cust" requiresSuccess="download">
+        <!-- LDB-92 -->
         <test-metadata>
           <withIndex value="false"/>
-          <notImplemented value="true"/>
+          <knownFailure value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/aggJoinEq_cust.sql"/>
       </test>
@@ -98,7 +104,6 @@
       <test name="aggJoinRng_cust" requiresSuccess="download">
         <test-metadata>
           <withIndex value="false"/>
-          <notImplemented value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/aggJoinRng_cust.sql"/>
       </test>
@@ -112,6 +117,7 @@
       </test>
 
       <test name="null" requiresSuccess="download">
+        <!-- DESC commented out, not supported yet -->
         <test-metadata>
           <withIndex value="false"/>
         </test-metadata>
@@ -119,14 +125,15 @@
       </test>
 
       <test name="order" requiresSuccess="download">
+        <!-- ASC and DESC not supported yet -->
         <test-metadata>
           <withIndex value="false"/>
-          <notImplemented value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/order.sql"/>
       </test>
 
       <test name="scalarSubquery" requiresSuccess="download">
+        <!-- ONEROW and lower not supported yet, FRG-114 -->
         <test-metadata>
           <withIndex value="false"/>
           <notImplemented value="true"/>
@@ -144,7 +151,6 @@
       <test name="subFrom" requiresSuccess="download">
         <test-metadata>
           <withIndex value="false"/>
-          <notImplemented value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/subFrom.sql"/>
       </test>
@@ -158,6 +164,7 @@
       </test>
 
       <test name="subIn" requiresSuccess="download">
+        <!-- IN not supported yet -->
         <test-metadata>
           <withIndex value="false"/>
           <notImplemented value="true"/>
@@ -174,6 +181,7 @@
       </test>
 
       <test name="subMult" requiresSuccess="download">
+        <!-- IN not supported yet -->
         <test-metadata>
           <withIndex value="false"/>
           <notImplemented value="true"/>

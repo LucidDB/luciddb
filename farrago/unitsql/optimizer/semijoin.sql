@@ -287,6 +287,32 @@ explain plan for
             c.city = st.city and st.state = 'New York'
         order by sid;
 
+-- index can be used for both semijoins and table filtering
+
+explain plan for
+    select sid, p.name, p.color, p.size, s.quantity
+        from sales s, product p
+        where
+            s.product_id = p.id and p.size = 'S' and
+            s.salesperson > 0
+        order by sid;
+
+explain plan for
+    select sid, p.name, p.color, p.size, s.quantity
+        from sales s, product p
+        where
+            s.product_id = p.id and p.size = 'S' and
+            s.salesperson = 1
+        order by sid;
+
+explain plan for
+    select sid, p.name, p.color, p.size, s.quantity
+        from sales s, product p
+        where
+            s.product_id = p.id and p.size = 'S' and
+            s.salesperson > 0 and s.customer > 0
+        order by sid;
+
 ------------------
 -- run the queries
 ------------------
@@ -337,3 +363,23 @@ select sid, c.company, c.city, st.state
         c.city = st.city and st.state = 'New York'
         order by sid;
 
+select sid, p.name, p.color, p.size, s.quantity
+    from sales s, product p
+    where
+        s.product_id = p.id and p.size = 'S' and
+        s.salesperson > 0
+    order by sid;
+
+select sid, p.name, p.color, p.size, s.quantity
+    from sales s, product p
+    where
+        s.product_id = p.id and p.size = 'S' and
+        s.salesperson = 1
+    order by sid;
+
+select sid, p.name, p.color, p.size, s.quantity
+    from sales s, product p
+    where
+        s.product_id = p.id and p.size = 'S' and
+        s.salesperson > 0 and s.customer > 0
+    order by sid;

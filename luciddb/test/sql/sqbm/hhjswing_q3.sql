@@ -1,5 +1,7 @@
 -- HHJ Swing testing special conditions
 
+set schema 's';
+
 -- order by 
 select a.kseq, max(a.kseq) from bench1m a, bench1m b where a.kseq =
 b.k10 and a.kseq < 10001 group by a.kseq order by a.kseq;

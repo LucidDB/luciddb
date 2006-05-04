@@ -392,6 +392,15 @@ public class RelStructuredTypeFlattener
         rewriteGeneric(rel);
     }
 
+    public void rewriteRel(ValuesRel rel)
+    {
+        // NOTE jvs 30-Apr-2006:  UDT instances require invocation
+        // of a constructor method, which can't be represented
+        // by the tuples stored in a ValuesRel, so we don't have
+        // to worry about them here.
+        rewriteGeneric(rel);
+    }
+
     public void rewriteRel(TableFunctionRel rel)
     {
         rewriteGeneric(rel);

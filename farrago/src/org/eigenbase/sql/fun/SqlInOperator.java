@@ -54,60 +54,81 @@ class SqlInOperator extends SqlBinaryOperator
         SqlValidator validator, SqlValidatorScope scope, SqlCall call)
     {
         final SqlNode[] operands = call.getOperands();
-        if (operands.length == 2 &&
-            call.operands[1] instanceof SqlNodeList) {
-            // Validate the 'IN (expr, ...)' form.
-            RelDataType leftType = validator.deriveType(scope, operands[0]);
+        assert(operands.length == 2);
+        
+        final RelDataTypeFactory typeFactory = validator.getTypeFactory();
+        RelDataType leftType = validator.deriveType(scope, operands[0]);
+        RelDataType rightType;
+
+        // Derive type for RHS.
+        if (call.operands[1] instanceof SqlNodeList) {
+            // Handle the 'IN (expr, ...)' form.
             List<RelDataType> rightTypeList = new ArrayList<RelDataType>();
             SqlNodeList nodeList = (SqlNodeList) call.operands[1];
             for (int i = 0; i < nodeList.size(); i++) {
                 SqlNode node = nodeList.get(i);
-                RelDataType rightType = validator.deriveType(scope, node);
-                rightTypeList.add(rightType);
+                RelDataType nodeType = validator.deriveType(scope, node);
+                rightTypeList.add(nodeType);
             }
             RelDataType[] rightTypes =
                 (RelDataType[])
                 rightTypeList.toArray(new RelDataType[rightTypeList.size()]);
-            final RelDataTypeFactory typeFactory = validator.getTypeFactory();
-            final RelDataType rightType =
+            rightType =
                 typeFactory.leastRestrictive(rightTypes);
 
             // First check that the expressions in the IN list are compatible
             // with each other. Same rules as the VALUES operator (per
-            // "SQL:2003 section 8.4, <in predicate>").
+            // SQL:2003 Part 2 Section 8.4, <in predicate>).
             if (null == rightType) {
                 throw validator.newValidationError(
                     call.operands[1],
                     EigenbaseResource.instance().IncompatibleTypesInList.ex());
             }
 
-            // Now check that the left expression is compatible with the
-            // type of the list. Same strategy as the '=' operator.
-            final ComparableOperandTypeChecker checker =
-                (ComparableOperandTypeChecker)
-                SqlTypeStrategies.otcComparableUnorderedX2;
-            if (!checker.checkOperandTypes(
+            // Record the RHS type for use by SqlToRelConverter.
+            validator.setValidatedNodeType(
+                nodeList,
+                rightType);
+        } else {
+            // Handle the 'IN (query)' form.
+            rightType = validator.deriveType(scope, operands[1]);
+        }
+
+        // Now check that the left expression is compatible with the
+        // type of the list. Same strategy as the '=' operator.
+        // Normalize the types on both sides to be row types
+        // for the purposes of compatibility-checking.
+        RelDataType leftRowType = SqlTypeUtil.promoteToRowType(
+            typeFactory,
+            leftType,
+            null);
+        RelDataType rightRowType = SqlTypeUtil.promoteToRowType(
+            typeFactory,
+            rightType,
+            null);
+        
+        final ComparableOperandTypeChecker checker =
+            (ComparableOperandTypeChecker)
+            SqlTypeStrategies.otcComparableUnorderedX2;
+        if (!checker.checkOperandTypes(
                 new ExplicitOperatorBinding(
                     typeFactory,
                     this,
-                    new RelDataType[] {leftType, rightType}))) {
-                throw validator.newValidationError(
-                    call,
-                    EigenbaseResource.instance().IncompatibleValueType.ex(
-                        SqlStdOperatorTable.inOperator.getName()));
-            }
-
-            // Result is a boolean, nullable if there are any nullable types
-            // on either side.
-            RelDataType type = typeFactory.createSqlType(SqlTypeName.Boolean);
-            if (leftType.isNullable() ||
-                SqlTypeUtil.containsNullable(rightTypes)) {
-                type = typeFactory.createTypeWithNullability(type, true);
-            }
-            return type;
+                    new RelDataType[] {leftRowType, rightRowType}))) {
+            throw validator.newValidationError(
+                call,
+                EigenbaseResource.instance().IncompatibleValueType.ex(
+                    SqlStdOperatorTable.inOperator.getName()));
+        }
+        
+        // Result is a boolean, nullable if there are any nullable types
+        // on either side.
+        RelDataType type = typeFactory.createSqlType(SqlTypeName.Boolean);
+        if (leftType.isNullable() || rightType.isNullable()) {
+            type = typeFactory.createTypeWithNullability(type, true);
         }
 
-        return super.deriveType(validator, scope, call);
+        return type;
     }
 }
 

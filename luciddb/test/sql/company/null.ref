@@ -172,8 +172,7 @@
 | Roy       | 7           |
 | Williams  | 10          |
 +-----------+-------------+
-0: jdbc:luciddb:> select lname, commission from emp order by 2 DESC,1 DESC;
-Error: java.lang.UnsupportedOperationException: class org.eigenbase.sql.SqlCall: 2 DESC (state=,code=0)
+0: jdbc:luciddb:> --select lname, commission from emp order by 2 DESC,1 DESC;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Aggregates on empty tables should return 0 or NULL depending on the aggregate and group by ( Bugid 1578 )
 0: jdbc:luciddb:> 

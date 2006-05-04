@@ -29,47 +29,42 @@ import java.util.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
 
-import net.sf.farrago.resource.*;
-
 /**
- * ReduceDecimalsRule reduces decimal operations (such as casts or 
- * arithmetic) into operations involving primitive types (such as 
- * longs and floats).
+ * ReduceDecimalsRule is a rule which reduces decimal operations 
+ * (such as casts or arithmetic) into operations involving 
+ * more primitive types (such as longs and doubles). The rule 
+ * allows eigenbase implementations to deal with decimals in a 
+ * consistent manner, while saving the effort of implementing them.
  * 
- * <p>The rule works by finding the {@link RexNode} expressions of a 
- * {@link RelNode} relation. If the expressions contains decimal 
- * operations, they are replaced with reduced expressions and a 
- * new relation is returned. 
- *
- * <P>TODO: it would be nice to simplify null values in all expansions
- *
+ * <p>The rule can be applied to a {@link CalcRel} with a program for 
+ * which {@link RexUtil#requiresDecimalExpansion} returns true. The 
+ * rule relies on a {@link RexShuttle} to walk over relational 
+ * expressions and replace them.
+ * 
+ * <p>While decimals are generally not implemented by the eigenbase 
+ * runtime, the rule is optionally applied, in order to support the 
+ * situation in which we would like to push down decimal operations 
+ * to an external database.
+ * 
  * @author jpham
  * @version $Id$
  */
 public class ReduceDecimalsRule extends RelOptRule
 {
-    //~ Instance fields -------------------------------------------------------
-
-    private final Class relClass;
-    
     //~ Constructors ----------------------------------------------------------
 
     /**
      * Constructs the rule.
-     *
-     * @param relClass the RelNode class which has expressions to be reduced
      */
-    public ReduceDecimalsRule(
-        Class relClass)
+    public ReduceDecimalsRule()
     {
-        super(new RelOptRuleOperand(relClass, null));
-        this.relClass = relClass;
-        description = "ReduceDecimalsRule:" + relClass.getName();
+        super(new RelOptRuleOperand(CalcRel.class, null));
+        description = "ReduceDecimalsRule";
     }
     
     //~ Methods ---------------------------------------------------------------
@@ -83,155 +78,86 @@ public class ReduceDecimalsRule extends RelOptRule
     // implement RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
-        RelNode rel = call.rels[0];
-        if (rel.getClass() != relClass) {
-            // require exact match on type
+        CalcRel calcRel = (CalcRel) call.rels[0];
+
+        // Expand decimals in every expression in this program. If no
+        // expression changes, don't apply the rule.
+        final RexProgram program = calcRel.getProgram();
+        if (!RexUtil.requiresDecimalExpansion(program, true)) {
             return;
         }
+        
+        final RexBuilder rexBuilder = calcRel.getCluster().getRexBuilder();
+        final RexShuttle shuttle = new DecimalShuttle(rexBuilder);
+        RexProgramBuilder programBuilder = RexProgramBuilder.create(
+            rexBuilder,
+            calcRel.getChild().getRowType(),
+            program.getExprList(),
+            program.getProjectList(),
+            program.getCondition(),
+            program.getOutputRowType(),
+            shuttle,
+            true);
 
-        if (rel instanceof CalcRel) {
-            CalcRel calcRel = (CalcRel) rel;
-            final RexProgram program = calcRel.getProgram();
-            if (!RexUtil.requiresDecimalExpansion(program, true)) {
-                return;
-            }
-            // Expand decimals in every expression in this program. If no
-            // expression changes, don't apply the rule.
-
-            // TODO: Move this logic into RexProgramBuilder, as a method
-            // which applies a visitor to every expression in a program. That
-            // method will eliminate common sub-expressions, and be able to
-            // handle more complex expressions.
-            RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
-            List<RexNode> newExprList = new ArrayList<RexNode>();
-            boolean reduced = false;
-            Translator translator = new Translator();
-            /* INTEGRATION ATTEMPT 1 
-             * If we decide to expand individual sub expressions, 
-             * then they will require some rewiring
-
-            for (RexNode expr : program.getExprList()) {
-
-                RexNode newExpr = translator.reduceDecimals(expr, rexBuilder);
-                if (expr != newExpr) {
-                    reduced = true;
-                }
-                newExprList.add(newExpr);
-            }
-            
-            if (! reduced) {
-                assert false : "requiresDecimalExpansion lied";
-                return;
-            }
-            */
-            
-            // start from old program
-            final RexProgramBuilder progBuilder = new RexProgramBuilder( 
-                program.getInputRowType(),
-                rexBuilder);
-            /* HERE IS THE REWIRING
-            // add new "inputs" to replace old ones
-            List<RexLocalRef> inputMap = new ArrayList<RexLocalRef>();
-                for (RexNode expr: newExprList) {
-                RexShuttle inputReplacer = new InputMapShuttle(inputMap);
-                RexNode mappedExpr = expr.accept(inputReplacer);
-                RexLocalRef newInput = progBuilder.registerInput(mappedExpr);
-                inputMap.add(newInput);
-            }
-            */
-            final Iterator<String> fieldNameIter =
-                RelOptUtil.getFieldNameList(calcRel.getRowType()).iterator();
-            for (RexLocalRef project: program.getProjectList()) {
-                /* INTEGRATION ATTEMPT 2
-                 * We can produce simplified code if we start from a 
-                 * full expression tree. (Mostly removing redundant 
-                 * reinterprets.) But this may not work once we 
-                 * cleanup the code to use the visitor pattern. */
-                RexNode treeProject = program.expandLocalRef(project);
-                RexNode newProject =
-                    translator.reduceDecimals(treeProject, rexBuilder);
-                RexLocalRef result = progBuilder.registerInput(newProject);
-                progBuilder.addProject(
-                    result.getIndex(), fieldNameIter.next());
-            }
-            RexLocalRef condition = program.getCondition();
-            if (condition != null) {
-                //RexLocalRef newCondition = inputMap.get(condition.getIndex());
-                RexNode treeCondition =
-                    program.expandLocalRef(condition);
-                RexNode newCondition = translator.reduceDecimals(treeCondition, rexBuilder);
-                RexLocalRef result = progBuilder.registerInput(newCondition);
-                progBuilder.addCondition(result);
-            }
-            
-            final RexProgram newProgram = progBuilder.getProgram();
-            CalcRel newCalcRel = new CalcRel(
-                calcRel.getCluster(),
-                calcRel.getTraits(),
-                calcRel.getChild(),
-                newProgram.getOutputRowType(),
-                newProgram,
-                RelCollation.emptyList);
-            call.transformTo(newCalcRel);
-        }
+        final RexProgram newProgram = programBuilder.getProgram();
+        CalcRel newCalcRel = new CalcRel(
+            calcRel.getCluster(),
+            calcRel.getTraits(),
+            calcRel.getChild(),
+            newProgram.getOutputRowType(),
+            newProgram,
+            RelCollation.emptyList);
+        call.transformTo(newCalcRel);
     }
+
+    //~ Inner classes ---------------------------------------------------------
 
     /**
-     * A RexShuttle which maps input references to a list
+     * A shuttle which converts decimal expressions to expressions
+     * based on longs. 
      */
-    private class InputMapShuttle extends RexShuttle
-    {
-        List<RexLocalRef> inputMap;
-        InputMapShuttle(List<RexLocalRef> inputMap) {
-            this.inputMap = inputMap;
-        }
-        public RexNode visitLocalRef(RexLocalRef localRef)
-        {
-            return inputMap.get(localRef.getIndex());
-        }
-    }
-
-    public class Translator
+    public class DecimalShuttle extends RexShuttle
     {
         private final Map<String, RexNode> irreducible;
         private final Map<String, RexNode> results;
-
-        public Translator() 
+        private final ExpanderMap expanderMap;
+        public DecimalShuttle(RexBuilder rexBuilder)
         {
             irreducible = new HashMap<String, RexNode>();
             results = new HashMap<String, RexNode>();
+            expanderMap = new ExpanderMap(rexBuilder);
         }
 
         /**
-         * Completeley reduces an expression tree. This method performs 
-         * multiple passes so the result of one pass can be further reduced.
-         * 
-         * @param expr expression to be reduced
-         * @param builder builds reduced expression tree
-         * @return the reduced expression, or the orignal if it was not reduced
+         * Rewrites a call in place, from bottom up, as follows:
+         * <ol>
+         *   <li> visit operands
+         *   <li> visit call node
+         *     <ol>
+         *       <li> rewrite call
+         *       <li> visit the rewritten call
+         * </ol></ol>
          */
-        public RexNode reduceDecimals(RexNode expr, RexBuilder builder) 
+        public RexNode visitCall(RexCall call) 
         {
-            if (!(expr instanceof RexCall)) {
-                return expr;
-            }
-            RexNode savedResult = lookup(expr);
+            RexNode savedResult = lookup(call);
             if (savedResult != null) {
                 return savedResult;
             }
-            
-            RexNode oldExpr;
-            RexNode newExpr = expr;
-            do {
-                oldExpr = newExpr;
-                newExpr = reduceTree(oldExpr, builder); 
-            } 
-            while (oldExpr != newExpr);
 
-            register(expr, newExpr);
-            return newExpr;
+            // permanently updates a call in place
+            apply(Arrays.asList(call.operands));
+
+            RexNode newCall = call;
+            RexNode rewrite = rewriteCall(call);
+            if (rewrite != call) {
+                newCall = rewrite.accept(this);
+            }
+            
+            register(call, newCall);
+            return newCall;
         }
-     
+
         /**
          * Registers node so it will not be computed again
          */
@@ -240,8 +166,9 @@ public class ReduceDecimalsRule extends RelOptRule
             String key = RexUtil.makeKey(node);
             if (node == reducedNode) {
                 irreducible.put(key, reducedNode);
+            } else {
+                results.put(key, reducedNode);
             }
-            results.put(key, reducedNode);
         }
 
         /**
@@ -257,101 +184,129 @@ public class ReduceDecimalsRule extends RelOptRule
         }
         
         /**
-         * Reduces a tree of expressions. First, operands are completely 
-         * reduced, then the root is reduced.
+         * Rewrites a call, if required, or returns the original call
          */
-        private RexNode reduceTree(RexNode node, RexBuilder builder) 
+        private RexNode rewriteCall(RexCall call)
         {
-            if (! (node instanceof RexCall)) {
-                return node;
+            SqlOperator operator = call.getOperator();
+            if (! operator.requiresDecimalExpansion()) {
+                return call;
             }
-            RexCall call = (RexCall) node;
-            RexNode[] newOperands = new RexNode[call.operands.length];
-            boolean operandsReduced = false;
-            for (int i = 0; i < call.operands.length; i++) {
-                newOperands[i] = reduceDecimals(call.operands[i], builder);
-                if (newOperands[i] != call.operands[i]) {
-                    operandsReduced = true;
-                }
+            
+            RexExpander expander = getExpander(call);
+            if (expander.canExpand(call)) {
+                return expander.expand(call);
             }
-            if (operandsReduced) {
-                return reduceNode(call, newOperands, builder);
-            }
-            return reduceNode(call, call.operands, builder);
-        }
-
-        /**
-         * Reduces a single RexCall. A new call is always returned if 
-         * any operands were reduced. This method returns the original 
-         * call if no change was made. 
-         *
-         * @param call expression node to be reduced
-         * @param reducedOperands operands, in reduced form
-         * @param builder
-         * @return the reduced expressed
-         */
-        private RexNode reduceNode(
-            RexCall call, RexNode[] reducedOperands, RexBuilder builder)
-        {
-            // test if call can be expanded with new operands
-            RexCall newCall = RexUtil.replaceOperands(call, reducedOperands);
-            RexExpander expander = getExpander(newCall, builder);
-            if (expander.canExpand(newCall)) {
-                return expander.expand(call, reducedOperands);
-            }
-            return newCall;
+            return call;
         }
 
         /**
          * Returns a {@link RexExpander} for a call
          */ 
-        protected RexExpander getExpander(RexCall call, RexBuilder builder)
+        private RexExpander getExpander(RexCall call)
         {
-            if (call.isA(RexKind.Cast)) {
-                return new CastExpander(builder);
-            } else if (call.isA(RexKind.MinusPrefix)) {
-                return new PassThroughExpander(builder);
-            } else if (call.isA(RexKind.Arithmetic)) {
-                // NOTE: MinusPrefix is also Arithmetic
-                return new BinaryArithmeticExpander(builder);
-            } else if (call.isA(RexKind.Comparison)) {
-                return new BinaryArithmeticExpander(builder);
-            } else if (call.getOperator() == SqlStdOperatorTable.modFunc) {
-                return new BinaryArithmeticExpander(builder);
-            } else if (call.isA(RexKind.Reinterpret)) {
-                return new ReinterpretExpander(builder);
-            } else if (call.getOperator() == SqlStdOperatorTable.absFunc) {
-                return new PassThroughExpander(builder);
-            } else if (call.getOperator() == SqlStdOperatorTable.caseOperator) {
-                RexExpander castExpander =  new CastAsCallExpander(builder);
-                if (castExpander.canExpand(call)) {
-                    return castExpander;
-                } else {
-                    return new PassThroughExpander(builder);
-                }
-            } else {
-                return new CastAsDoubleExpander(builder);
-            }
+            return expanderMap.getExpander(call);
         }
     }
     
     /**
-     * Expands a decimal expression
+     * Maps a RexCall to a RexExpander
+     */
+    private class ExpanderMap
+    {
+        private final Map<SqlOperator, RexExpander> map;
+        private RexExpander defaultExpander;
+        
+        private ExpanderMap(RexBuilder rexBuilder) 
+        {
+            map = new HashMap<SqlOperator, RexExpander>();
+            registerExpanders(rexBuilder);
+        }
+        
+        private void registerExpanders(RexBuilder rexBuilder)
+        {
+            RexExpander cast = new CastExpander(rexBuilder);
+            map.put(SqlStdOperatorTable.castFunc, cast);
+
+            RexExpander passThrough = 
+                new PassThroughExpander(rexBuilder);
+            map.put(SqlStdOperatorTable.prefixMinusOperator, passThrough);
+            map.put(SqlStdOperatorTable.absFunc, passThrough);
+
+            map.put(SqlStdOperatorTable.isNullOperator, passThrough);
+            map.put(SqlStdOperatorTable.isNotNullOperator, passThrough);
+
+            RexExpander arithmetic = 
+                new BinaryArithmeticExpander(rexBuilder);
+            map.put(SqlStdOperatorTable.divideOperator, arithmetic);
+            map.put(SqlStdOperatorTable.multiplyOperator, arithmetic);
+            map.put(SqlStdOperatorTable.plusOperator, arithmetic);
+            map.put(SqlStdOperatorTable.minusOperator, arithmetic);
+            map.put(SqlStdOperatorTable.modFunc, arithmetic);
+
+            map.put(SqlStdOperatorTable.equalsOperator, arithmetic);
+            map.put(SqlStdOperatorTable.greaterThanOperator, arithmetic);
+            map.put(
+                SqlStdOperatorTable.greaterThanOrEqualOperator, arithmetic);
+            map.put(SqlStdOperatorTable.lessThanOperator, arithmetic);
+            map.put(SqlStdOperatorTable.lessThanOrEqualOperator, arithmetic);
+            
+            RexExpander floor = new FloorExpander(rexBuilder);
+            map.put(SqlStdOperatorTable.floorFunc, floor);
+            RexExpander ceil = new CeilExpander(rexBuilder);
+            map.put(SqlStdOperatorTable.ceilFunc, ceil);
+            
+            RexExpander reinterpret = 
+                new ReinterpretExpander(rexBuilder);
+            map.put(SqlStdOperatorTable.reinterpretOperator, reinterpret);
+
+            RexExpander caseExpander = new CaseExpander(rexBuilder);
+            map.put(SqlStdOperatorTable.caseOperator, caseExpander);
+
+            defaultExpander = new CastArgAsDoubleExpander(rexBuilder);
+        }
+        
+        public RexExpander getExpander(RexCall call) 
+        {
+            RexExpander expander = map.get(call.getOperator());
+            return (expander != null) ? expander : defaultExpander;
+        }
+    }
+
+    /**
+     * Rewrites a decimal expression for a specific set of SqlOperator's.
+     * In general, most expressions are rewritten in such a way that 
+     * SqlOperator's do not have to deal with decimals. Decimals are 
+     * represented by their unscaled integer representations, similar 
+     * to {@link BigDecimal#unscaledValue()} (i.e. 10^scale). Once decimals 
+     * are decoded, SqlOperators can then operate on the integer 
+     * representations. The value can later be recoded as a decimal.
+     * 
+     * <p>For example, suppose one casts 2.0 as a decima(10,4). The value 
+     * is decoded (20), multiplied by a scale factor (1000), for a result 
+     * of (20000) which is encoded as a decimal(10,4), in this case 2.0000
+     * 
+     * <p>To avoid the lengthy coding of RexNode expressions, this base class 
+     * provides succinct methods for building expressions used in rewrites.
      */
     public abstract class RexExpander
     {
         //~ Instance fields -------------------------------------------------
 
-        /** Factory for constructing RexNode */
+        /**
+         * Factory for constructing new relational expressions 
+         */
         RexBuilder builder;
+
         /** 
-         * Type for the internal representation of decimals. When using 
-         * this type, be careful to set its nullability.
+         * Type for the internal representation of decimals. This type is 
+         * a non-nullable type and requires extra work to make it nullable.
          */
         RelDataType int8;
+
         /** 
-         * Type for doubles. When using this type, be careful to set 
-         * its nullability 
+         * Type for doubles. This type is a non-nullable type and requires 
+         * extra work to make it nullable.
          */
         RelDataType real8;
 
@@ -365,63 +320,109 @@ public class ReduceDecimalsRule extends RelOptRule
             real8=builder.getTypeFactory().createSqlType(SqlTypeName.Double);
         }
 
-        /** Whether or not the expression can be expanded */
-        public abstract boolean canExpand(RexCall call);
+        /**
+         * This defaults to the utility method, 
+         * {@link RexUtil#requiresDecimalExpansion(RexNode, boolean)}
+         * which checks general guidelines on whether a rewrite should be 
+         * considered at all. In general, it is helpful to update the 
+         * utility method since that method is often used to filter the 
+         * somewhat expensive rewrite process.
+         * 
+         * <p>However, this method provides another place for 
+         * implementations of RexExpander to make a more detailed analysis 
+         * before deciding on whether to perform a rewrite.
+         */
+        public boolean canExpand(RexCall call)
+        {
+            return RexUtil.requiresDecimalExpansion(call, false);
+        }
         
-        /** Returns expanded expression */
-        public abstract RexNode expand(RexCall call, RexNode[] operands);
+        /**
+         * Rewrites an expression containing decimals. Normally, this method 
+         * always performs a rewrite, but implementations may choose to 
+         * return the original expression if no change was required. 
+         */
+        public abstract RexNode expand(RexCall call);
 
         //~ Protected methods -----------------------------------------------
         
         /** 
-         * Makes a RexLiteral representing 10^scale. Scale must be less than 
-         * the maximum precision.
+         * Makes an exact numeric literal to be used for scaling
          * 
-         * If <code>scale</code>
-         * is non-negative, then the literal returned will be of Bigint type.
-         * If <code>scale</code> is negative. The literal returned will be of 
-         * an approximate type.
+         * @param scale a scale from one to max precision - 1
+         * 
+         * @return 10^scale as an exact numeric value
          */
         protected RexNode makeScaleFactor(int scale)
         {
-            if (scale >= SqlTypeName.MAX_NUMERIC_PRECISION) {
-                Util.needToImplement("Could not rescale decimal to required scale");
-            }
-            if (scale >= 0) {
-                BigDecimal bd = new BigDecimal(BigInteger.TEN.pow(scale));
-                return builder.makeExactLiteral(bd, int8);
-            } else {
-                BigDecimal bd = new BigDecimal(BigInteger.ONE, scale);
-                return builder.makeApproxLiteral(bd);
-            }
+            assert scale > 0 && scale < SqlTypeName.MAX_NUMERIC_PRECISION;
+            return makeExactLiteral(powerOfTen(scale));
         }
 
         /**
-         * Makes an exact numeric RexLiteral representing 10^scale/2. 
-         * Scale must be less than the maximum precision.
+         * Makes an approximate literal to be used for scaling
          * 
-         * @param scale scale of round factor; must be positive
+         * @param scale a scale from 0 to 99
+         * 
+         * @return 10^scale as an approximate value
+         */
+        protected RexNode makeApproxScaleFactor(int scale) 
+        {
+            assert scale >= 0 && scale < 100;
+            return makeApproxLiteral(BigDecimal.TEN.pow(scale));
+        }
+
+        /**
+         * Makes an exact numeric value to be used for rounding.
+         * 
+         * @param scale a scale from 1 to max precision - 1
+         * 
+         * @return 10^scale / 2 as an exact numeric value
          */
         protected RexNode makeRoundFactor(int scale)
         {
-            Util.pre(scale > 0, "scale > 0");
-            if (scale >= SqlTypeName.MAX_NUMERIC_PRECISION) {
-                Util.needToImplement("Could not rescale decimal to required scale");
-            }
-            BigDecimal bd = new BigDecimal(
-                BigInteger.TEN.pow(scale).longValue() / 2);
+            assert scale > 0 && scale < SqlTypeName.MAX_NUMERIC_PRECISION;
+            return makeExactLiteral(powerOfTen(scale) / 2);
+        }
+
+        /**
+         * Calculates a power of ten, as a long value
+         */
+        protected long powerOfTen(int scale)
+        {
+            assert scale >= 0 && scale < SqlTypeName.MAX_NUMERIC_PRECISION;
+            return BigInteger.TEN.pow(scale).longValue();
+        }
+
+        /**
+         * Makes an exact, non-nullable literal of Bigint type
+         */
+        protected RexNode makeExactLiteral(long l)
+        {
+            BigDecimal bd = BigDecimal.valueOf(l);
             return builder.makeExactLiteral(bd, int8);
+        }
+
+        /**
+         * Makes an approximate literal of double precision
+         */
+        protected RexNode makeApproxLiteral(BigDecimal bd)
+        {
+            return builder.makeApproxLiteral(bd);
         }
         
         /** 
-         * Scales up a decimal value. The <code>scale</code> parameter 
-         * must be non-negative. If <code>scale</code> is positive, this 
-         * method multiplies <code>value</code> by a scale factor. If 
-         * scale is zero, the original value is returned.
+         * Scales up a decimal value and returns the scaled value as an 
+         * exact number.
+         * 
+         * @param value the integer representation of a decimal
+         * @param scale a value from zero to max precision - 1
+         * 
+         * @return value * 10^scale as an exact numeric value
          */
         protected RexNode scaleUp(RexNode value, int scale)
         {
-            Util.pre(scale >= 0, "scale >= 0");
+            assert scale >= 0 && scale < SqlTypeName.MAX_NUMERIC_PRECISION;
             if (scale == 0) {
                 return value;
             }
@@ -432,87 +433,123 @@ public class ReduceDecimalsRule extends RelOptRule
         }
         
         /** 
-         * Scales down a decimal value. The <code>scale</code> parameter 
-         * must be non-negative. If <code>scale</code> is positive, this 
-         * method divides <code>value</code> by a scale factor. If 
-         * scale is zero, the original value will be returned. A round 
-         * factor is added to round away from zero. The division 
-         * will be implemented as an integer division and the type of 
-         * value returned will be an integer type.
+         * Scales down a decimal value, and returns the scaled value as 
+         * an exact numeric. with the rounding convention 
+         * {@link BigDecimal#ROUND_HALF_UP BigDecimal.ROUND_HALF_UP}. 
+         * (Values midway between two points are rounded away from zero.)
+         * 
+         * @param value the integer representation of a decimal
+         * @param scale a value from zero to max precision
+         * 
+         * @return value/10^scale, rounded away from zero and returned 
+         *   as an exact numeric value
          */
         protected RexNode scaleDown(RexNode value, int scale)
         {
-            Util.pre(scale>=0, "ReduceDecimalsRule:scale>=0");
+            int maxPrecision = SqlTypeName.MAX_NUMERIC_PRECISION;
+            assert scale >= 0 && scale <= maxPrecision;
             if (scale == 0) {
                 return value;
             }
-            
-            RexNode[] caseOperands = new RexNode[3];
-            caseOperands[0] = builder.makeCall(
-                SqlStdOperatorTable.greaterThanOperator,
-                value,
-                builder.makeExactLiteral(BigDecimal.ZERO, int8));
+            if (scale == maxPrecision) {
+                long half = BigInteger.TEN.pow(scale-1).longValue() * 5;
+                return makeCase(
+                    builder.makeCall(
+                        SqlStdOperatorTable.greaterThanOrEqualOperator,
+                        value,
+                        makeExactLiteral(half)),
+                    makeExactLiteral(1),
+                    builder.makeCall(
+                        SqlStdOperatorTable.lessThanOrEqualOperator,
+                        value,
+                        makeExactLiteral(-half)),
+                    makeExactLiteral(-1),
+                    makeExactLiteral(0));
+            }
             RexNode roundFactor = makeRoundFactor(scale);
-            caseOperands[1] = builder.makeCall(
-                SqlStdOperatorTable.plusOperator,
-                value,
-                roundFactor);
-            caseOperands[2] = builder.makeCall(
-                SqlStdOperatorTable.minusOperator,
-                value,
-                roundFactor);
-            RexNode roundValue = builder.makeCall(
-                SqlStdOperatorTable.caseOperator,
-                caseOperands);
-            
-            return builder.makeCall(
-                SqlStdOperatorTable.divideOperator,
-                roundValue,
-                makeScaleFactor(scale));
+            RexNode roundValue = makeCase(
+                builder.makeCall(
+                    SqlStdOperatorTable.greaterThanOperator,
+                    value,
+                    makeExactLiteral(0)),
+                makePlus(value, roundFactor),
+                makeMinus(value, roundFactor));
+            return makeDivide(roundValue, makeScaleFactor(scale));
         }
         
         /** 
-         * Scales down a decimal value. The <code>scale</code> parameter 
-         * must be non-negative. If <code>scale</code> is positive, this 
-         * method divides <code>value</code> by a scale factor. If 
-         * scale is zero, the original value will be returned. The division 
-         * will be implemented as a floating point division and the type of 
-         * value returned will be a floating point value.
+         * Scales down a decimal value and returns the scaled value as a 
+         * an double precision approximate value. Scaling is implemented 
+         * with double precision arithmetic.
+         * 
+         * @param value the integer representation of a decimal
+         * @param scale a value from zero to 
+         *   {@link SqlTypeName#MAX_NUMERIC_PRECISION MAX_NUMERIC_PRECISION }
+         * 
+         * @return value/10^scale as a double precision value 
          */
         protected RexNode scaleDownDouble(RexNode value, int scale)
         {
-            Util.pre(scale>=0, "ReduceDecimalsRule:scale>=0");
+            assert scale >= 0 && scale <= SqlTypeName.MAX_NUMERIC_PRECISION;
             RexNode cast = ensureType(real8, value);
             if (scale == 0) {
                 return cast;
             }
-            return builder.makeCall(
-                SqlStdOperatorTable.divideOperator,
+            return makeDivide(
                 cast,
-                makeScaleFactor(scale));
+                makeApproxScaleFactor(scale));
         }
 
         /**
-         * Ensures decimal represented by <code>node</code> is of sufficient 
-         * scale. If the decimal is not, then it is scaled up. Otherwise the 
-         * original node is returned.
+         * Ensures a value is of a required scale. If it is not, then the 
+         * value is multiplied by a scale factor. Scaling up an exact value 
+         * is limited to max precision - 1, because we cannot represent the 
+         * result of larger scales internally. Scaling up a floating point 
+         * value is more flexible since the value may be very small despite 
+         * having a scale of zero and the scaling may still produce a 
+         * reasonable result
          * 
-         * @param value integer representation of decimal
-         * @param scale current scale
-         * @param required scale required; required >= scale
-         * @return node or scaled up version of the node
+         * @param value integer representation of decimal, or a floating 
+         *   point number
+         * @param scale current scale, 0 for floating point numbers
+         * @param required required scale, must be at least the current 
+         *   scale; the scale difference may not be greater than 
+         *   max precision - 1 for exact numerics
+         * 
+         * @return value * 10^scale, returned as an exact or approximate 
+         *   value corresponding to the input value
          */
         protected RexNode ensureScale(RexNode value, int scale, int required)
         {
-            Util.pre(required>=scale, "ReduceDecimalsRule:required>=scale");
+            int maxPrecision = SqlTypeName.MAX_NUMERIC_PRECISION;
+            assert scale <= maxPrecision && required <= maxPrecision;
+            assert required >= scale;
             if (scale == required) {
                 return value;
-            } else {
-                return scaleUp(value, required-scale);
             }
+            int scaleDiff = required - scale;
+            if (SqlTypeUtil.isApproximateNumeric(value.getType())) {
+                return makeMultiply(value, makeApproxScaleFactor(scaleDiff));
+            }
+            // TODO: make a validator exception for this
+            if (scaleDiff >= SqlTypeName.MAX_NUMERIC_PRECISION) {
+                throw Util.needToImplement(
+                    "Source type with scale " + scale 
+                    + " cannot be converted to target type with scale " 
+                    + required + " because the smallest value of the "
+                    + "source type is too large to be encoded by the "
+                    + "target type");
+            }
+            return scaleUp(value, scaleDiff);
         }
         
-        /** Retrieves a decimal node's integer representation */
+        /**
+         * Retrieves a decimal node's integer representation 
+         * 
+         * @param decimalNode the decimal value as an opaque type
+         * 
+         * @return an integer representation of the decimal value
+         */
         protected RexNode decodeValue(RexNode decimalNode) 
         {
             assert(SqlTypeUtil.isDecimal(decimalNode.getType()));
@@ -522,12 +559,29 @@ public class ReduceDecimalsRule extends RelOptRule
                 builder.makeLiteral(false));
         }
         
+        /**
+         * Retrieves the primitive value of a numeric node. If the node 
+         * is a decimal, then it must first be decoded. Otherwise the 
+         * original node may be returned.
+         * 
+         * @param node a numeric node, possibly a decimal
+         * @return the primitive value of the numeric node
+         */
+        protected RexNode accessValue(RexNode node)
+        {
+            assert SqlTypeUtil.isNumeric(node.getType());
+            if (SqlTypeUtil.isDecimal(node.getType())) {
+                return decodeValue(node);
+            }
+            return node;
+        }
+        
         /** 
          * Casts a decimal's integer representation to a decimal node. 
          * If the expression is not the expected integer type, then 
          * it is casted first.
          * 
-         * <p>By default, this method does not request an overflow check.
+         * <p>This method does not request an overflow check.
          * 
          * @param value integer representation of decimal
          * @param decimalType type integer will be reinterpreted as
@@ -544,21 +598,17 @@ public class ReduceDecimalsRule extends RelOptRule
          * If the expression is not the expected integer type, then 
          * it is casted first.
          * 
-         * <p>The more versatile version of <code>encodeValue</code>
-         * is useful for explicit casts which need strict handling 
-         * of cast types and overflow checks.
-         * 
-         * The <code>checkOverflow</code> flag 
+         * <p>An overflow check may be requested to ensure the internal 
+         * value does not exceed the maximum value of the decimal type.
          * 
          * @param value integer representation of decimal
          * @param decimalType type integer will be reinterpreted as
          * @param checkOverflow indicates whether an overflow check is 
-         *            required when reinterpreting this particular value  
-         *            as the decimal type. This is usually not required 
-         *            for arithmetic, but often required for explicit 
-         *            casts.
+         *   required when reinterpreting this particular value as the 
+         *   decimal type. A check usually not required for arithmetic, 
+         *   but is often required for rounding and explicit casts.
          * 
-         * @return the integer representation reinterpreted as a decimal type
+         * @return the integer reinterpreted as an opaque decimal type
          */
         protected RexNode encodeValue(
             RexNode value,
@@ -571,31 +621,11 @@ public class ReduceDecimalsRule extends RelOptRule
         }
         
         /**
-         * Retrieves the primitive value of a numeric node. If the node 
-         * is a decimal, then it must first be decoded. Otherwise the 
-         * original node may be returned.
-         * 
-         * @param node a numeric node, possibly a decimal
-         * @return the primitive value of the numeric node
-         */
-        protected RexNode accessValue(RexNode node)
-        {
-            if (SqlTypeUtil.isIntType(node.getType())
-                || SqlTypeUtil.isApproximateNumeric(node.getType())) 
-            {
-                return node;
-            } else {
-                assert(SqlTypeUtil.isDecimal(node.getType()));
-                return decodeValue(node);
-            }
-        }
-        
-        /**
          * Ensures expression is interpreted as a specified type. 
          * The returned expression may be wrapped with a cast. 
          * 
-         * <p>By default, this method corrects the nullability of the 
-         * specified type to match the nullability of the expression.
+         * <p>This method corrects the nullability of the specified 
+         * type to match the nullability of the expression.
          * 
          * @param type desired type
          * @param node expression
@@ -614,9 +644,9 @@ public class ReduceDecimalsRule extends RelOptRule
          * @param type desired type
          * @param node expression
          * @param matchNullability whether to correct nullability of 
-         *            specified type to match the expression; this 
-         *            usually should be true, except for explicit  
-         *            casts which may override default nullability
+         *   specified type to match the expression; this usually 
+         *   should be true, except for explicit casts which can 
+         *   override default nullability
          * 
          * @return a casted expression or the original expression
          */
@@ -635,7 +665,9 @@ public class ReduceDecimalsRule extends RelOptRule
             return node;
         }
 
-        /** Ensure's type's nullability matches value's nullability */
+        /** 
+         * Ensure's type's nullability matches a value's nullability 
+         */
         protected RelDataType matchNullability(
             RelDataType type, RexNode value)
         {
@@ -647,6 +679,74 @@ public class ReduceDecimalsRule extends RelOptRule
             }
             return type;
         }
+        
+        protected RexNode makeCase(
+            RexNode condition,
+            RexNode thenClause,
+            RexNode elseClause)
+        {
+            RexNode[] operands = { condition, thenClause, elseClause };
+            return builder.makeCall(
+                SqlStdOperatorTable.caseOperator,
+                operands);
+        }
+        
+        protected RexNode makeCase(
+            RexNode whenA,
+            RexNode thenA,
+            RexNode whenB,
+            RexNode thenB,
+            RexNode elseClause)
+        {
+            RexNode[] operands = { whenA, thenA, whenB, thenB, elseClause };
+            return builder.makeCall(
+                SqlStdOperatorTable.caseOperator,
+                operands);
+        }
+        
+        protected RexNode makePlus(
+            RexNode a, RexNode b)
+        {
+            return builder.makeCall(
+                SqlStdOperatorTable.plusOperator, a, b);
+        }
+
+        protected RexNode makeMinus(
+            RexNode a, RexNode b)
+        {
+            return builder.makeCall(
+                SqlStdOperatorTable.minusOperator, a, b);
+        }
+
+        protected RexNode makeDivide(
+            RexNode a, RexNode b)
+        {
+            return builder.makeCall(
+                SqlStdOperatorTable.divideOperator, a, b);
+        }
+
+        protected RexNode makeMultiply(
+            RexNode a, RexNode b)
+        {
+            return builder.makeCall(
+                SqlStdOperatorTable.multiplyOperator, a, b);
+        }
+
+        protected RexNode makeIsPositive(
+            RexNode a)
+        {
+            return builder.makeCall(
+                SqlStdOperatorTable.greaterThanOperator,
+                a, makeExactLiteral(0));
+        }
+
+        protected RexNode makeIsNegative(
+            RexNode a)
+        {
+            return builder.makeCall(
+                SqlStdOperatorTable.lessThanOperator,
+                a, makeExactLiteral(0));
+        }
     }
     
     /**
@@ -654,22 +754,15 @@ public class ReduceDecimalsRule extends RelOptRule
      */
     private class CastExpander extends RexExpander
     {
-        /** Constructs a CastExpander */
-        public CastExpander(RexBuilder builder)
+        private CastExpander(RexBuilder builder)
         {
             super(builder);
         }
         
-        // implement RexExpander 
-        public boolean canExpand(RexCall call)
-        {
-            return call.isA(RexKind.Cast)
-                && RexUtil.requiresDecimalExpansion(call, false);
-        }
-        
         // implement RexExpander
-        public RexNode expand(RexCall call, RexNode[] operands)
+        public RexNode expand(RexCall call)
         {
+            RexNode[] operands = call.operands;
             Util.pre(call.isA(RexKind.Cast), "call.isA(RexKind.Cast)");
             Util.pre(operands.length == 1, "operands.length == 1");
             assert(!RexLiteral.isNullLiteral(operands[0]));
@@ -696,7 +789,7 @@ public class ReduceDecimalsRule extends RelOptRule
             } else if (SqlTypeUtil.isApproximateNumeric(fromType)) {
                 // real to decimal
                 return encodeValue(
-                    scaleUp(operand, toType.getScale()),
+                    ensureScale(operand, 0, toType.getScale()),
                     toType, 
                     true);
             }
@@ -719,7 +812,7 @@ public class ReduceDecimalsRule extends RelOptRule
             if (SqlTypeUtil.isIntType(fromType)) {
                 // int to decimal
                 return encodeValue(
-                    scaleUp(operand, toType.getScale()),
+                    ensureScale(operand, 0, toType.getScale()),
                     toType,
                     checkOverflow);
             } else if (SqlTypeUtil.isDecimal(fromType) 
@@ -729,7 +822,7 @@ public class ReduceDecimalsRule extends RelOptRule
                 RexNode value = decodeValue(operand);
                 RexNode scaled = null;
                 if (fromScale <= toScale) {
-                    scaled = scaleUp(value, toScale-fromScale);
+                    scaled = ensureScale(value, fromScale, toScale);
                 } else {
                     if (toDigits == fromDigits
                         && toScale < fromScale) 
@@ -757,28 +850,15 @@ public class ReduceDecimalsRule extends RelOptRule
         RelDataType typeA, typeB;
         int scaleA, scaleB;
         
-        /** Constructs an ArithmeticExpander */
-        public BinaryArithmeticExpander(RexBuilder builder)
+        private BinaryArithmeticExpander(RexBuilder builder)
         {
             super(builder);
         }
         
         // implement RexExpander
-        public boolean canExpand(RexCall call)
+        public RexNode expand(RexCall call)
         {
-            if ((call.isA(RexKind.Arithmetic) 
-                    && !call.isA(RexKind.MinusPrefix))
-                || call.isA(RexKind.Comparison)
-                || call.getOperator() == SqlStdOperatorTable.modFunc)
-            {
-                return RexUtil.requiresDecimalExpansion(call, false);
-            }
-            return false;
-        }
-        
-        // implement RexExpander
-        public RexNode expand(RexCall call, RexNode[] operands)
-        {
+            RexNode[] operands = call.operands;
             Util.pre(operands.length == 2, "operands.length == 2");
             RelDataType typeA = operands[0].getType();
             RelDataType typeB = operands[1].getType();
@@ -864,11 +944,12 @@ public class ReduceDecimalsRule extends RelOptRule
                 builder.makeCall(call.getOperator(),
                     ensureType(real8, accessValue(operands[0])),
                     ensureType(real8, accessValue(operands[1])));
+            int scaleDifference = outType.getScale() - scaleA + scaleB;
             RexNode rescale = 
                 builder.makeCall(
                     SqlStdOperatorTable.multiplyOperator,
                     dividend, 
-                    makeScaleFactor(outType.getScale() - scaleA + scaleB));
+                    makeApproxScaleFactor(scaleDifference));
             return encodeValue(rescale, outType);
         }
 
@@ -893,13 +974,12 @@ public class ReduceDecimalsRule extends RelOptRule
 
         private RexNode expandMod(RexCall call, RexNode[] operands)
         {
-            if (!SqlTypeUtil.isExactNumeric(typeA)
-                || !SqlTypeUtil.isExactNumeric(typeB)
-                || scaleA != 0 || scaleB != 0) 
-            {
-                // TODO: localized message would be better
-                // or validator message?
-                throw Util.needToImplement("MOD on fractional numbers");
+            assert SqlTypeUtil.isExactNumeric(typeA);
+            assert SqlTypeUtil.isExactNumeric(typeB);
+            // TODO: throw a validator message
+            if (scaleA != 0 && scaleB != 0) {
+                throw Util.needToImplement(
+                    "Arguments to mod must have a scale of 0");
             }
             RexNode result = builder.makeCall(
                 call.getOperator(),
@@ -912,7 +992,140 @@ public class ReduceDecimalsRule extends RelOptRule
             return ensureType(call.getType(), result);
         }
     }
-    
+
+    /**
+     * Expander that rewrites floor(decimal) expressions:
+     * <pre>
+     * if (value < 0)
+     *     (value-0.99...)/(10^scale)
+     * else 
+     *     value/(10^scale)
+     * </pre>
+     */
+    private class FloorExpander extends RexExpander
+    {
+        private FloorExpander(RexBuilder rexBuilder)
+        {
+            super(rexBuilder);
+        }
+        
+        public RexNode expand(RexCall call) 
+        {
+            assert call.getOperator() == SqlStdOperatorTable.floorFunc;
+            RexNode decValue = call.operands[0];
+            int scale = decValue.getType().getScale();
+            RexNode value = decodeValue(decValue);
+
+            RexNode rewrite;
+            if (scale == 0) {
+                rewrite = decValue;
+            }
+            else if (scale == SqlTypeName.MAX_NUMERIC_PRECISION) {
+                rewrite = makeCase(
+                    makeIsNegative(value),
+                    makeExactLiteral(-1),
+                    makeExactLiteral(0));
+            } else {
+                RexNode round = makeExactLiteral(1 - powerOfTen(scale));
+                RexNode scaleFactor = makeScaleFactor(scale);
+                rewrite = makeCase(
+                    makeIsNegative(value),
+                    makeDivide(makePlus(value, round), scaleFactor),
+                    makeDivide(value, scaleFactor));
+            }
+            return encodeValue(rewrite, call.getType());
+        }
+    }
+
+    /**
+     * Expander that rewrites ceiling(decimal) expressions:
+     * <pre>
+     * if (value > 0)
+     *     (value+0.99...)/(10^scale)
+     * else 
+     *     value/(10^scale)
+     * </pre>
+     */
+    private class CeilExpander extends RexExpander
+    {
+        private CeilExpander(RexBuilder rexBuilder)
+        {
+            super(rexBuilder);
+        }
+        
+        public RexNode expand(RexCall call) 
+        {
+            assert call.getOperator() == SqlStdOperatorTable.ceilFunc;
+            RexNode decValue = call.operands[0];
+            int scale = decValue.getType().getScale();
+            RexNode value = decodeValue(decValue);
+
+            RexNode rewrite;
+            if (scale == 0) {
+                rewrite = decValue;
+            }
+            else if (scale == SqlTypeName.MAX_NUMERIC_PRECISION) {
+                rewrite = makeCase(
+                    makeIsPositive(value),
+                    makeExactLiteral(1),
+                    makeExactLiteral(0));
+            } else {
+                RexNode round = makeExactLiteral(powerOfTen(scale) - 1);
+                RexNode scaleFactor = makeScaleFactor(scale);
+                rewrite = makeCase(
+                    makeIsPositive(value),
+                    makeDivide(makePlus(value, round), scaleFactor),
+                    makeDivide(value, scaleFactor));
+            }
+            return encodeValue(rewrite, call.getType());
+        }
+    }
+
+    /**
+     * Expander that rewrites case expressions, in place. Starting from:
+     * <pre>(when $cond then $val)+ else $default</pre>
+     * this expander casts all values to the return type. If the target 
+     * type is a decimal, then the values are then decoded. The result 
+     * of expansion is that the case operator no longer deals with 
+     * decimals args. (The return value is encoded if necessary.)
+     * 
+     * <p>Note: a decimal type is returned iff arguments have decimals
+     */
+    private class CaseExpander extends RexExpander
+    {
+        private CaseExpander(RexBuilder rexBuilder)
+        {
+            super(rexBuilder);
+        }
+        
+        public RexNode expand(RexCall call)
+        {
+            RelDataType retType = call.getType();
+            int argCount = call.operands.length;
+            RexNode[] newOperands = new RexNode[argCount];
+            
+            for (int i = 0; i < argCount; i++) {
+                // skip case conditions
+                if (i % 2 == 0 && i != argCount - 1) {
+                    newOperands[i] = call.operands[i];
+                    continue;
+                }
+                RexNode expr = ensureType(retType, call.operands[i], false);
+                if (SqlTypeUtil.isDecimal(retType)) {
+                    expr = decodeValue(expr);
+                }
+                newOperands[i] = expr;
+            }
+            
+            RexNode newCall = 
+                builder.makeCall(call.getOperator(), newOperands);
+            if (SqlTypeUtil.isDecimal(retType)) {
+                newCall = encodeValue(newCall, retType);
+            }
+            return newCall;
+        }
+    }
+
     /**
      * An expander that substitutes decimals with their integer 
      * representations. If the output is decimal, the output is
@@ -920,7 +1133,7 @@ public class ReduceDecimalsRule extends RelOptRule
      */
     private class PassThroughExpander extends RexExpander
     {
-        public PassThroughExpander(RexBuilder builder)
+        private PassThroughExpander(RexBuilder builder)
         {
             super(builder);
         }
@@ -930,8 +1143,9 @@ public class ReduceDecimalsRule extends RelOptRule
             return RexUtil.requiresDecimalExpansion(call, false);
         }
         
-        public RexNode expand(RexCall call, RexNode[] operands)
+        public RexNode expand(RexCall call)
         {
+            RexNode[] operands = call.operands;
             RexNode[] newOperands = new RexNode[operands.length];
             for (int i=0; i < operands.length; i++) {
                 if (SqlTypeUtil.isNumeric(operands[i].getType())) {
@@ -953,30 +1167,35 @@ public class ReduceDecimalsRule extends RelOptRule
     /**
      * An expander which casts decimal arguments as doubles
      */
-    private class CastAsDoubleExpander extends CastAsTypeExpander
+    private class CastArgAsDoubleExpander extends CastArgAsTypeExpander
     {
-        public CastAsDoubleExpander(RexBuilder builder)
+        private CastArgAsDoubleExpander(RexBuilder builder)
         {
             super(builder);
         }
-
-        public RelDataType getTargetType(RexCall call)
+        
+        public RelDataType getArgType(RexCall call, int ordinal)
         {
-            return real8;
+            RelDataType type = real8;
+            if (call.operands[ordinal].getType().isNullable()) {
+                type = builder.getTypeFactory()
+                    .createTypeWithNullability(type, true);
+            }
+            return type;
         }
     }
 
     /**
      * An expander which casts decimal arguments as call return type
      */
-    private class CastAsCallExpander extends CastAsTypeExpander
+    private class CastArgAsReturnExpander extends CastArgAsTypeExpander
     {
-        public CastAsCallExpander(RexBuilder builder)
+        private CastArgAsReturnExpander(RexBuilder builder)
         {
             super(builder);
         }
-
-        public RelDataType getTargetType(RexCall call)
+        
+        public RelDataType getArgType(RexCall call, int ordinal)
         {
             return call.getType();
         }
@@ -985,62 +1204,31 @@ public class ReduceDecimalsRule extends RelOptRule
     /**
      * An expander which casts decimal arguments as another type
      */
-    private abstract class CastAsTypeExpander extends RexExpander
+    private abstract class CastArgAsTypeExpander extends RexExpander
     {
-        public CastAsTypeExpander(RexBuilder builder)
+        private CastArgAsTypeExpander(RexBuilder builder)
         {
             super(builder);
         }
+        
+        public abstract RelDataType getArgType(RexCall call, int ordinal);
 
-        public abstract RelDataType getTargetType(RexCall call);
-
-        public boolean canExpand(RexCall call)
+        public RexNode expand(RexCall call)
         {
-            RelDataType targetType = getTargetType(call);
-            if (SqlTypeUtil.isDecimal(targetType)) {
-                // Make sure decimal operand types has different precision
-                // or scale from targetType
-                boolean needExpansion = false;
-                for (int i = 0; i < call.operands.length; i++) {
-                    RelDataType operandType = call.operands[i].getType();
-                    if (SqlTypeUtil.isDecimal(operandType)) {
-                        if ((operandType.getPrecision() != targetType.getPrecision()) ||
-                            (operandType.getScale() != targetType.getScale())) {
-                            needExpansion = true;
-                            break;
-                        }
-                    }
-                }
-                if (needExpansion) {
-                    return RexUtil.requiresDecimalExpansion(call, false);
-                } else {
-                    return false;
-                }
-            } else {
-                return RexUtil.requiresDecimalExpansion(call, false);
-            }
-        }
-
-        public RexNode expand(RexCall call, RexNode[] operands)
-        {
-            RelDataType targetType = getTargetType(call);
-
+            RexNode[] operands = call.operands;
             RexNode[] newOperands = new RexNode[operands.length];
+
             for (int i=0; i < operands.length; i++) {
+                RelDataType targetType = getArgType(call, i);
                 if (SqlTypeUtil.isDecimal(operands[i].getType())) {
-                    newOperands[i] = ensureType(targetType, operands[i]);
+                    newOperands[i] = ensureType(targetType, operands[i], true);
                 } else {
                     newOperands[i] = operands[i];
                 }
             }
 
-            RelDataType retType = builder.deriveReturnType(
-                call.getOperator(),
-                builder.getTypeFactory(),
-                operands);
-
             RexNode ret = builder.makeCall(call.getOperator(), newOperands);
-            ret = ensureType(retType, ret);
+            ret = ensureType(call.getType(), ret, true);
             return ret;
         }
     }
@@ -1054,7 +1242,7 @@ public class ReduceDecimalsRule extends RelOptRule
      */
     private class ReinterpretExpander extends RexExpander
     {
-        public ReinterpretExpander(RexBuilder builder)
+        private ReinterpretExpander(RexBuilder builder)
         {
             super(builder);
         }
@@ -1065,14 +1253,15 @@ public class ReduceDecimalsRule extends RelOptRule
                 && call.operands[0].isA(RexKind.Reinterpret);
         }
         
-        public RexNode expand(RexCall call, RexNode[] operands)
+        public RexNode expand(RexCall call)
         {
+            RexNode[] operands = call.operands;
             RexCall subCall = (RexCall) operands[0];
             RexNode innerValue = subCall.operands[0];
             if (canSimplify(call, subCall, innerValue)) {
                 return RexUtil.clone(innerValue);
             }
-            return RexUtil.replaceOperands(call, operands);
+            return call;
         }
         
         /**
@@ -1132,7 +1321,6 @@ public class ReduceDecimalsRule extends RelOptRule
         }
     }
 }
-
 
 // End ReduceDecimalsRule.java
 

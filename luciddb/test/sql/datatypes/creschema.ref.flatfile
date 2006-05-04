@@ -51,7 +51,7 @@ Error: FennelResource.en_US.noRowsReturned(@DIRECTORY@/types.csv, could not calc
 Messages:
 [0]:PC=14 Code=22007 ) (state=,code=0)
 0: jdbc:luciddb:> select * from @SERVER_NAME@.@SCHEMA@."blob" order by 1;
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARCHAR(255)' to 'BINARY(21)' (state=,code=0)
+Error: java.lang.AssertionError: Type is unsupported for flat files: BINARY (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create table types (
 . . . . . . . . > c_char char(10),

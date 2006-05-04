@@ -39,3 +39,34 @@ order by 3;
 import foreign schema testdata
 from server csv_server
 into csv_schema;
+
+-- verify that missing/conflicting properties yield a meaningful 
+-- user-level excn (http://issues.eigenbase.org/browse/LDB-28)
+
+-- should fail due to missing url
+create server csv_server_missing_url
+foreign data wrapper test_jdbc
+options(
+    driver_class 'org.relique.jdbc.csv.CsvDriver');
+
+create server csv_server_missing_schema
+foreign data wrapper test_jdbc
+options(
+    driver_class 'org.relique.jdbc.csv.CsvDriver',
+    url 'jdbc:relique:csv:unitsql/med');
+
+-- should fail due to missing schema name
+create foreign table csv_schema.missing_schema
+server csv_server_missing_schema;
+
+-- should fail due to missing table name
+create foreign table csv_schema.missing_table
+server csv_server;
+
+-- should fail due to conflicting schema name
+create foreign table csv_schema.explicit_example(
+    id int not null,
+    name varchar(50) not null,
+    extra_field char(1) not null)
+server csv_server
+options (table_name 'example', schema_name 'grub');

@@ -710,7 +710,7 @@ public abstract class SqlTypeStrategies
                             ret = opBinding.getTypeFactory().createSqlType(
                                 SqlTypeName.Decimal, p, 0);
                             if (type1.isNullable()) {
-                                opBinding.getTypeFactory().
+                                ret = opBinding.getTypeFactory().
                                     createTypeWithNullability(ret, true);
                             }
                             return ret;

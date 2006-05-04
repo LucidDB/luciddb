@@ -49,9 +49,15 @@
     <pathelement path="${farrago.sqlline.classpath}"/>
     <pathelement path="${ant.classpath}"/>
     <pathelement path="${blackhawk.run.classpath}"/>
-    <pathelement path="${open.dir}/luciddb/plugin/FarragoMedJdbc3p.jar"/>
   </path>
   <property name="test.classpath" refid="test.classpath"/>
+
+  <!-- classpath for running tests on oracle db via ant -->
+  <path id="test.orcl.classpath">
+    <pathelement path="${test.classpath}"/>
+    <pathelement path="${open.dir}/luciddb/plugin/FarragoMedJdbc3p.jar"/>
+  </path>
+  <property name="test.orcl.classpath" refid="test.orcl.classpath"/>
 
   <target name="gen-all-sql">
     <available file="${gensql.dir}" type="dir" property="sql.generated"/>
@@ -121,6 +127,13 @@
   </target>  
 
   <!-- Experimental -->
+    <target name="test-orcl" depends="gen-all-sql">
+    <blackhawk.fork
+      basedir="${company.dir}"
+      testscript="test-orcl.xml"
+      classpathref="test.orcl.classpath"/>
+  </target>
+
   <target name="format-orcl-files">
     <copy todir="${company.dir}/orcl" overwrite="true">
       <fileset dir="${gensql.dir}/idx">

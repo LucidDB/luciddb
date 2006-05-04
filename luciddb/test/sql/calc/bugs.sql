@@ -28,9 +28,10 @@ select count(*) from BUG2108.TEST
 where a = all (select a from BUG2108.TEST2)
 ;
 
-select count(*) from BUG2108.TEST
-where a in (select a from BUG2108.TEST2)
-;
+-- TODO: "IN" not supported
+-- select count(*) from BUG2108.TEST
+-- where a in (select a from BUG2108.TEST2)
+-- ;
 
 --}}}
 

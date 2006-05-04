@@ -33,13 +33,13 @@ import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.util.SqlVisitor;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.Util;
 
 import java.util.*;
-
+import java.math.*;
 
 /**
  * Converts a SQL parse tree (consisting of {@link org.eigenbase.sql.SqlNode}
@@ -322,96 +322,220 @@ public class SqlToRelConverter
         final SqlNode expr)
     {
         findSubqueries(bb, expr);
-        substituteSubqueries(bb);
-    }
-
-    private void substituteSubqueries(Blackboard bb)
-    {
-        for (int i = 0; i < bb.subqueryList.size(); i++) {
-            SqlNode node = bb.subqueryList.get(i);
-            JoinRelType joinType = JoinRelType.INNER;
-            final RexNode expr = bb.mapSubqueryToExpr.get(node);
-            if (expr == null) {
-                RelNode converted;
-                switch (node.getKind().getOrdinal()) {
-                case SqlKind.MultisetQueryConstructorORDINAL:
-                case SqlKind.MultisetValueConstructorORDINAL: {
-                    converted = convertMultisets(new SqlNode[]{node}, bb);
-                    break;
-                }
-                case SqlKind.InORDINAL: {
-                    // "select from emp where emp.deptno in (Q)"
-                    //
-                    // is equivalent to
-                    //
-                    // "select from emp where exists (
-                    //   select from (Q) where emp.deptno = {row})"
-                    // becomes
-                    // "select from emp join (select *, TRUE from (Q)) q
-                    //   on emp.deptno = q.col1
-                    //   where q.t is not null
-                    SqlCall call = (SqlCall) node;
-                    final SqlNode [] operands = call.getOperands();
-                    SqlNode condition = operands[0];
-                    final SqlNode seek = operands[1];
-                    converted =
-                        convertExists(
-                            bb,
-                            seek,
-                            condition,
-                            rexBuilder.makeLiteral(true),
-                            "$indicator");
-                    break;
-                }
-                case SqlKind.ExistsORDINAL: {
-                    // "select from emp where exists (Q)"
-                    // becomes
-                    // "select from emp left join (select *, TRUE from (Q)) q
-                    //   on emp.deptno = q.col1
-                    //   where q.t is not null
-                    SqlCall call = (SqlCall) node;
-                    SqlSelect select = (SqlSelect) call.getOperands()[0];
-                    converted =
-                        convertExists(
-                            bb,
-                            select,
-                            null,
-                            rexBuilder.makeLiteral(true),
-                            "$indicator");
-                    joinType = JoinRelType.LEFT;
-                    break;
-                }
-                case SqlKind.SelectORDINAL:
-
-                    // "select empno, (Q) from emp"
-                    //   becomes
-                    // "select empno, q.c1 from emp left join (Q) as q"
-                    converted = convertExists(bb, node, null, null, "foo");
-                    break;
-                default:
-                    throw Util.newInternal("unexpected kind of subquery :"
-                        + node);
-                }
-                final RexNode expression = bb.register(converted, joinType);
-                bb.mapSubqueryToExpr.put(node, expression);
-            }
+        for (SqlNode node : bb.subqueryList) {
+            substituteSubquery(bb, node);
         }
     }
 
+    private void substituteSubquery(Blackboard bb, SqlNode node)
+    {
+        JoinRelType joinType = JoinRelType.INNER;
+        SqlNode leftJoinKeysForIn = null;
+        final RexNode expr = bb.mapSubqueryToExpr.get(node);
+        if (expr != null) {
+            // Already done.
+            return;
+        }
+        RelNode converted;
+        switch (node.getKind().getOrdinal()) {
+        case SqlKind.MultisetQueryConstructorORDINAL:
+        case SqlKind.MultisetValueConstructorORDINAL: {
+            converted = convertMultisets(new SqlNode[]{node}, bb);
+            break;
+        }
+        case SqlKind.InORDINAL: {
+            SqlCall call = (SqlCall) node;
+            final SqlNode [] operands = call.getOperands();
+            leftJoinKeysForIn = operands[0];
+            final SqlNode seek = operands[1];
+            if (seek instanceof SqlNodeList) {
+                SqlNodeList valuesList = (SqlNodeList) seek;
+                if (valuesList.size() < getInSubqueryThreshold()) {
+                    // We're under the threshold, so convert to OR.
+                    RexNode expression = convertInToOr(
+                        bb,
+                        leftJoinKeysForIn,
+                        valuesList);
+                    bb.mapSubqueryToExpr.put(node, expression);
+                    return;
+                } else {
+                    // Otherwise, let convertExists translate
+                    // values list into an inline table for the
+                    // reference to Q below.
+                }
+            }
+                    
+            // FIXME jvs 30-Apr-2006:  Null semantics are incorrect here.
+                    
+            // "select from emp where emp.deptno in (Q)"
+            //
+            // becomes
+            // 
+            // "select from
+            //   emp join (select distinct * from (Q)) q
+            //   on emp.deptno = q.col1"
+            converted =
+                convertExists(
+                    bb,
+                    seek,
+                    null,
+                    null,
+                    null);
+            converted = RelOptUtil.createDistinctRel(converted);
+            break;
+        }
+        case SqlKind.ExistsORDINAL: {
+            // FIXME jvs 30-Apr-2006: This is wrong; have to deal with
+            // duplicates from Q returning more than one row.
+                    
+            // "select from emp where exists (Q)"
+            // becomes
+            // "select from emp left join (select *, TRUE from (Q)) q
+            //   where q.t is true"
+            SqlCall call = (SqlCall) node;
+            SqlSelect select = (SqlSelect) call.getOperands()[0];
+            converted =
+                convertExists(
+                    bb,
+                    select,
+                    null,
+                    rexBuilder.makeLiteral(true),
+                    "$indicator");
+            joinType = JoinRelType.LEFT;
+            break;
+        }
+        case SqlKind.SelectORDINAL:
+            // "select empno, (Q) from emp"
+            //   becomes
+            // "select empno, q.c1 from emp left join (Q) as q"
+            converted = convertExists(bb, node, null, null, "foo");
+            break;
+        default:
+            throw Util.newInternal("unexpected kind of subquery :"
+                + node);
+        }
+        final RexNode expression = bb.register(
+            converted, joinType, leftJoinKeysForIn);
+        bb.mapSubqueryToExpr.put(node, expression);
+    }
+
     /**
-     * Converts a query into a join with an indicator variable. The result is
-     * a relational expression which outer joins a boolean condition column
-     * to the original query. After performing the outer join, the condition
-     * will be TRUE if the EXISTS condition holds, NULL otherwise.
+     * Converts "x IN (1, 2, ...)" to "x=1 OR x=2 OR ...".
+     *
+     * @param leftKeys LHS
+     *
+     * @param valuesList RHS
+     *
+     * @return converted expression
+     */
+    private RexNode convertInToOr(
+        Blackboard bb,
+        SqlNode leftKeys,
+        SqlNodeList valuesList)
+    {
+        RexNode result = null;
+        for (Object nodeObj : valuesList.getList()) {
+            SqlNode rightVals = (SqlNode) nodeObj;
+            // REVIEW jvs 1-May-2006:  Normalize row types here?  Also,
+            // do we need to convert leftKeys over and over, or can
+            // we just do it once and alias?
+            RexNode rexComparison = rexBuilder.makeCall(
+                SqlStdOperatorTable.equalsOperator,
+                    bb.convertExpression(leftKeys),
+                    bb.convertExpression(rightVals));
+            if (result == null) {
+                result = rexComparison;
+            } else {
+                // TODO jvs 1-May-2006: Generalize
+                // RexUtil.andRexNodeList and use that.
+                result = rexBuilder.makeCall(
+                    SqlStdOperatorTable.orOperator,
+                    result,
+                    rexComparison);
+            }
+        }
+        assert(result != null);
+        return result;
+    }
+    
+    /**
+     * Gets the list size threshold under which {@link #convertInToOr} is used.
+     * Lists of this size or greater will instead be converted to use a join
+     * against an inline table ({@link ValuesRel}) rather than a predicate.  A
+     * threshold of 0 forces usage of an inline table in all cases; a threshold
+     * of Integer.MAX_VALUE forces usage of OR in all cases
+     *
+     * @return threshold, default 20
+     */
+    protected int getInSubqueryThreshold()
+    {
+        return 20;
+    }
+
+    /**
+     * Creates the condition for a join implementing an IN clause.
+     *
+     * @param bb blackboard to use 
+     *
+     * @param keys LHS of IN
+     *
+     * @param rightOffset offset for references to fields on RHS
+     *
+     * @return join condition
+     */
+    private RexNode createJoinConditionForIn(
+        Blackboard bb,
+        SqlNode keys,
+        int rightOffset)
+    {
+        List<RexNode> conditions = new ArrayList<RexNode>();
+        final RexNode ref =
+            rexBuilder.makeRangeReference(
+                bb.root.getRowType(),
+                0, false);
+        
+        if (keys instanceof SqlNodeList) {
+            // If "seek" is "(emp,dept)", generate the condition "emp = Q.c1
+            // and dept = Q.c2".
+            SqlNodeList keyList = (SqlNodeList) keys;
+            for (int i = 0; i < keyList.size(); i++) {
+                SqlNode conditionNode = keyList.get(i);
+                conditions.add(
+                    rexBuilder.makeCall(
+                        SqlStdOperatorTable.equalsOperator,
+                        bb.convertExpression(conditionNode),
+                        rexBuilder.makeFieldAccess(ref, rightOffset + i)));
+            }
+        } else {
+            // If "seek" is "emp", generate the condition "emp = Q.c1".
+            conditions.add(
+                rexBuilder.makeCall(
+                    SqlStdOperatorTable.equalsOperator,
+                    bb.convertExpression(keys),
+                    rexBuilder.makeFieldAccess(ref, rightOffset + 0)));
+        }
+        return RexUtil.andRexNodeList(rexBuilder, conditions);
+    }
+
+    /**
+     * Converts an EXISTS or IN predicate into a join.  For EXISTS, the
+     * subquery produces an indicator variable, and the result is a relational
+     * expression which outer joins that indicator to the original query. After
+     * performing the outer join, the condition will be TRUE if the EXISTS
+     * condition holds, NULL otherwise.
+     *
+     *<p>
+     *
+     * FIXME jvs 1-May-2006:  null semantics for IN are currently broken
      *
      * @param bb
      * @param seek A query, for example 'select * from emp' or 'values (1,2,3)'
      *   or '('Foo', 34)'.
      * @param condition May be null, or a node, or a node list
-     * @param extraExpr Column expression to add. "TRUE" for EXISTS and IN
-     * @param extraName Name of expression to add.
-     * @return relational expression which outer joins a boolean condition
-     *   column
+     * @param extraExpr Column expression to add, or null for none.
+     * "TRUE" for EXISTS, null for IN
+     * @param extraName Name of expression to add, or null for none
+     * @return join expression
      * @pre extraExpr == null || extraName != null
      */
     private RelNode convertExists(
@@ -462,7 +586,7 @@ public class SqlToRelConverter
         return RelOptUtil.createExistsPlan(
             cluster,
             seekRel,
-            (RexNode[]) conditions.toArray(RexUtil.emptyExpressionArray),
+            RexUtil.emptyExpressionArray,
             extraExpr,
             extraName);
     }
@@ -478,28 +602,108 @@ public class SqlToRelConverter
         // expression, not a row expression.  The semantic difference is that a
         // table expression can return multiple rows.
         if (seek instanceof SqlNodeList) {
-            SqlNodeList list = (SqlNodeList) seek;
-            RelNode [] inputs = new RelNode[list.size()];
-            for (int i = 0; i < list.size(); i++) {
-                SqlNode node = list.get(i);
+
+            // NOTE jvs 30-Apr-2006: We combine all rows consisting entirely of
+            // literals into a single ValuesRel; this gives the optimizer a
+            // smaller input tree.  For everything else (computed expressions,
+            // row subqueries), we union each row in as a projection on top of
+            // a OneRowRel.
+
+            List<List<RexLiteral>> tupleList =
+                new ArrayList<List<RexLiteral>>();
+            RelDataType rowType = validator.getValidatedNodeType(seek);
+            rowType = SqlTypeUtil.promoteToRowType(
+                typeFactory, rowType, null);
+
+            SqlNodeList nodeList = (SqlNodeList) seek;
+            List<RelNode> unionInputs = new ArrayList<RelNode>();
+            for (Object nodeObj : nodeList.getList()) {
+                SqlNode node = (SqlNode) nodeObj;
                 SqlCall call;
                 if (isRowConstructor(node)) {
                     call = (SqlCall) node;
+                    boolean allLiteral = true;
+                    List<RexLiteral> tuple = new ArrayList<RexLiteral>();
+                    int i = 0;
+                    for (SqlNode operand : call.operands) {
+                        if (!(operand instanceof SqlLiteral)) {
+                            tuple = null;
+                            break;
+                        }
+                        RexLiteral rexLiteral = (RexLiteral)
+                            exprConverter.convertLiteral(
+                                bb, (SqlLiteral) operand);
+                        rexLiteral = coerceLiteral(
+                            rexLiteral,
+                            rowType,
+                            i++);
+                        tuple.add(rexLiteral);
+                    }
+                    if (tuple != null) {
+                        tupleList.add(tuple);
+                        continue;
+                    }
                 } else {
+                    if (node instanceof SqlLiteral) {
+                        RexLiteral rexLiteral = (RexLiteral)
+                            exprConverter.convertLiteral(
+                                bb, (SqlLiteral) node);
+                        rexLiteral = coerceLiteral(
+                            rexLiteral,
+                            rowType,
+                            0);
+                        tupleList.add(
+                            Collections.singletonList(rexLiteral));
+                        continue;
+                    }
                     // convert "1" to "row(1)"
                     call =
                         SqlStdOperatorTable.rowConstructor.createCall(
                             new SqlNode [] { node },
                             SqlParserPos.ZERO);
                 }
-                inputs[i] = convertRowConstructor(bb, call);
+                unionInputs.add(convertRowConstructor(bb, call));
             }
-            UnionRel unionRel = new UnionRel(cluster, inputs, true);
-            leaves.add(unionRel);
-            return unionRel;
+            ValuesRel valuesRel = new ValuesRel(
+                cluster,
+                rowType,
+                tupleList);
+            RelNode resultRel;
+            if (unionInputs.isEmpty()) {
+                resultRel = valuesRel;
+            } else {
+                if (!tupleList.isEmpty()) {
+                    unionInputs.add(valuesRel);
+                }
+                UnionRel unionRel = new UnionRel(
+                    cluster,
+                    unionInputs.toArray(RelNode.emptyArray),
+                    true);
+                resultRel = unionRel;
+            }
+            leaves.add(resultRel);
+            return resultRel;
         } else {
             return convertQueryRecursive(seek, false);
         }
+    }
+
+    private RexLiteral coerceLiteral(
+        RexLiteral literal,
+        RelDataType rowType,
+        int iField)
+    {
+        RelDataTypeField field = (RelDataTypeField)
+            rowType.getFieldList().get(iField);
+        RelDataType type = field.getType();
+        if (!SqlTypeUtil.isExactNumeric(type)) {
+            return literal;
+        }
+        BigDecimal value = (BigDecimal) literal.getValue();
+        BigDecimal roundedValue = value.setScale(type.getScale());
+        return rexBuilder.makeExactLiteral(
+            roundedValue,
+            type);
     }
 
     private boolean isRowConstructor(SqlNode node)
@@ -1320,6 +1524,10 @@ public class SqlToRelConverter
                         }
                     );
                 }
+                RelDataType multisetType =
+                    validator.getValidatedNodeType(call);
+                validator.setValidatedNodeType(
+                    list, multisetType.getComponentType());
                 input = convertQueryOrInList(usedBb, list);
             } else {
                 input = convertQuery(call.operands[0], false, true);
@@ -1595,23 +1803,35 @@ public class SqlToRelConverter
             this.scope = scope;
         }
 
+        public RexNode register(
+            RelNode rel, JoinRelType joinType)
+        {
+            return register(rel, joinType, null);
+        }
+        
         /**
          * Registers a relational expression.
          *
          * @param rel Relational expression
          * @param joinType Join type
+         * @param leftJoinKeysForIn LHS of IN clause, or null
+         * for expressions other than IN
          * @return Expression with which to refer to the row (or partial row)
          *   coming from this relational expression's side of the join.
          */
-        public RexNode register(RelNode rel, JoinRelType joinType)
+        public RexNode register(
+            RelNode rel, JoinRelType joinType, SqlNode leftJoinKeysForIn)
         {
             assert joinType != null;
             if (root == null) {
+                assert(leftJoinKeysForIn == null);
                 setRoot(rel, false);
                 return rexBuilder.makeRangeReference(
                     root.getRowType(),
                     0, false);
             } else {
+                int rightOffset = root.getRowType().getFieldList().size();
+                
                 final JoinRelBase join = createJoin(
                     this,
                     root,
@@ -1621,6 +1841,17 @@ public class SqlToRelConverter
                     joinType);
 
                 setRoot(join, false);
+
+                if (leftJoinKeysForIn != null) {
+                    RexNode postJoinFilter = createJoinConditionForIn(
+                        this,
+                        leftJoinKeysForIn,
+                        rightOffset);
+                    setRoot(
+                        CalcRel.createFilter(join, postJoinFilter),
+                        false);
+                }
+                
                 return rexBuilder.makeRangeReference(
                     rel.getRowType(),
                     join.getLeft().getRowType().getFieldCount(),
@@ -1787,17 +2018,40 @@ public class SqlToRelConverter
                 rex = mapSubqueryToExpr.get(expr);
                 assert rex != null : "rex != null";
 
-                // The indicator column is the last field of the subquery.
-                final int fieldCount = rex.getType().getFieldCount();
-                RexNode fieldAccess =
-                    rexBuilder.makeFieldAccess(rex, fieldCount - 1);
+                RexNode fieldAccess;
+                boolean needTruthTest = false;
+                if (expr.getKind() == SqlKind.In) {
+                    if (rex instanceof RexRangeRef) {
+                        // IN was converted to subquery.
+                        
+                        // FIXME jvs 30-Apr-2006: For now, adding TRUE IS TRUE
+                        // (instead of just TRUE) for IN due to FNL-33.  This
+                        // is all wrong in the case where nulls are possible.
+                        fieldAccess = rexBuilder.makeLiteral(true);
+                        needTruthTest = true;
+                    } else {
+                        // IN was converted to OR; nothing more needed.
+                        return rex;
+                    }
+                } else {
+                    // The indicator column is the last field of the subquery.
+                    final int fieldCount = rex.getType().getFieldCount();
+                    fieldAccess =
+                        rexBuilder.makeFieldAccess(rex, fieldCount - 1);
 
-                // The indicator column will be nullable if it comes from the
-                // outer side of the join. Add an "IS NULL" check so that the
-                // result is "BOOLEAN NOT NULL".
-                if (fieldAccess.getType().isNullable()) {
+                    // The indicator column will be nullable if it comes from
+                    // the null-generating side of the join. For EXISTS, add an
+                    // "IS TRUE" check so that the result is "BOOLEAN NOT
+                    // NULL".
+                    if (fieldAccess.getType().isNullable()) {
+                        if (expr.getKind() == SqlKind.Exists) {
+                            needTruthTest = true;
+                        }
+                    }
+                }
+                if (needTruthTest) {
                     fieldAccess = rexBuilder.makeCall(
-                        SqlStdOperatorTable.isNullOperator,
+                        SqlStdOperatorTable.isTrueOperator,
                         fieldAccess);
                 }
                 return fieldAccess;

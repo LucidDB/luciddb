@@ -199,7 +199,8 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             projectRefList,
             program.getCondition(),
             program.getOutputRowType(),
-            shuttle);
+            shuttle,
+            false);
 
         // Eliminate unused expressions, and create a program.
         programBuilder.eliminateUnused();

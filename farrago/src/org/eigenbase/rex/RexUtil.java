@@ -229,7 +229,7 @@ public class RexUtil
     }
 
     /**
-     * Returns wheter a given node contains a RexCall with a specified operator
+     * Returns whether a given node contains a RexCall with a specified operator
      * @param operator to look for
      * @param node a RexNode tree
      */
@@ -338,6 +338,7 @@ public class RexUtil
      * 
      * <p>Exceptions to this rule are:
      * <ul>
+     *   <li>isNull doesn't require expansion
      *   <li>It's okay to cast decimals to and from char types
      *   <li>It's okay to cast nulls as decimals
      *   <li>Casts require expansion if their return type is decimal
@@ -356,28 +357,34 @@ public class RexUtil
             return false;
         }
         RexCall call = (RexCall) expr;
-        boolean required = call.getOperator().requiresDecimalExpansion();
-        if (call.isA(RexKind.Reinterpret)) {
-            required = false;
-        } else if (call.isA(RexKind.Cast)) {
+        
+        boolean localCheck = true;
+        switch (call.getKind().getOrdinal()) {
+        case RexKind.ReinterpretOrdinal:
+        case RexKind.IsNullORDINAL:
+            localCheck = false;
+            break;
+        case RexKind.CastOrdinal:
             RelDataType lhsType = call.getType();
             RelDataType rhsType = call.operands[0].getType();
-            // TODO: clean up isNull and use it instead
             if (rhsType.getSqlTypeName() == SqlTypeName.Null) {
                 return false;
             }
             if (SqlTypeUtil.inCharFamily(lhsType)
                 || SqlTypeUtil.inCharFamily(rhsType)) 
             {
-                required = false;
+                localCheck = false;
             } else if (SqlTypeUtil.isDecimal(lhsType)
                 && lhsType != rhsType) 
             {
                 return true;
             }
+            break;
+        default:
+            localCheck = call.getOperator().requiresDecimalExpansion();
         }
 
-        if (required) {
+        if (localCheck) {
             for (int i=0; i < call.operands.length; i++) {
                 if (SqlTypeUtil.isDecimal(call.operands[i].getType())) {
                     return true;
@@ -720,6 +727,7 @@ public class RexUtil
         }
         return true;
     }
+    
     /**
      * Creates an AND expression from a list of RexNodes
      * 
@@ -732,6 +740,10 @@ public class RexUtil
         if (rexList.isEmpty()) {
             return null;
         }
+        // REVIEW jvs 1-May-2006: This builds a left-deep tree, probably
+        // for the sake of order-preservation.  But right-deep would
+        // be better for calculator short-circuiting.  It's possible
+        // to achieve both by walking the list backwards.
         RexNode andExpr = rexList.get(0);
         for (int i = 1; i < rexList.size(); i++) {
             andExpr = rexBuilder.makeCall(

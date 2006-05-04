@@ -180,11 +180,7 @@ ProjectRel(EXPR$0=[$0])
   UncollectRel
     ProjectRel(EXPR$0=[$SLICE($0)])
       CollectRel
-        UnionRel(all=[true])
-          ProjectRel(EXPR$0=[1])
-            OneRowRel
-          ProjectRel(EXPR$0=[2])
-            OneRowRel
+        ValuesRel(tuples=[[{ 1 }, { 2 }]])
 ]]>
         </Resource>
         <Resource name="sql">
@@ -265,9 +261,7 @@ ProjectRel(EXPR$0=[_ISO-8859-1'a'], EXPR$1=[$SLICE($2)])
   JoinRel(condition=[true], joinType=[inner])
     TableAccessRel(table=[[SALES, DEPT]])
     CollectRel
-      UnionRel(all=[true])
-        ProjectRel(EXPR$0=[10])
-          OneRowRel
+      ValuesRel(tuples=[[{ 10 }]])
 ]]>
         </Resource>
         <Resource name="sql">
@@ -347,7 +341,7 @@ ProjectRel(DEPTNO=[$0], NAME=[$1], EMPSET=[$2])
         <Resource name="plan">
             <![CDATA[
 ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7])
-  FilterRel(condition=[IS NULL($9)])
+  FilterRel(condition=[IS TRUE($9)])
     JoinRel(condition=[true], joinType=[left])
       TableAccessRel(table=[[SALES, EMP]])
       ProjectRel(EXPR$0=[$0], $indicator=[true])
@@ -376,7 +370,7 @@ ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], 
         <Resource name="plan">
             <![CDATA[
 ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7])
-  FilterRel(condition=[IS NULL($9)])
+  FilterRel(condition=[IS TRUE($9)])
     CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset7]])
       TableAccessRel(table=[[SALES, EMP]])
       ProjectRel(EXPR$0=[$0], $indicator=[true])
@@ -466,9 +460,7 @@ ProjectRel(EXPR$0=[ELEMENT($SLICE($8))])
   JoinRel(condition=[true], joinType=[inner])
     TableAccessRel(table=[[SALES, EMP]])
     CollectRel
-      UnionRel(all=[true])
-        ProjectRel(EXPR$0=[5])
-          OneRowRel
+      ValuesRel(tuples=[[{ 5 }]])
 ]]>
         </Resource>
         <Resource name="sql">
@@ -492,9 +484,7 @@ ProjectRel(EXPR$0=[ELEMENT($SLICE($8))])
 ProjectRel(EXPR$0=[$0])
   ProjectRel(EXPR$0=[ELEMENT($SLICE($0))])
     CollectRel
-      UnionRel(all=[true])
-        ProjectRel(EXPR$0=[5])
-          OneRowRel
+      ValuesRel(tuples=[[{ 5 }]])
 ]]>
         </Resource>
         <Resource name="sql">
@@ -855,6 +845,51 @@ ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], 
             <![CDATA[
 ProjectRel(I=[$0])
   TableFunctionRel(invocation=[RAMP(3)])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testInValueListShort">
+        <Resource name="sql">
+            <![CDATA[select empno from emp where deptno in (10, 20)]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EMPNO=[$0])
+  FilterRel(condition=[OR(=($7, 10), =($7, 20))])
+    TableAccessRel(table=[[SALES, EMP]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testInValueListLong">
+        <Resource name="sql">
+            <![CDATA[select empno from emp where deptno in (10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230)]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EMPNO=[$0])
+  FilterRel(condition=[IS TRUE(true)])
+    FilterRel(condition=[=($7, $8)])
+      JoinRel(condition=[true], joinType=[inner])
+        TableAccessRel(table=[[SALES, EMP]])
+        AggregateRel(groupCount=[1])
+          ValuesRel(tuples=[[{ 10 }, { 20 }, { 30 }, { 40 }, { 50 }, { 60 }, { 70 }, { 80 }, { 90 }, { 100 }, { 110 }, { 120 }, { 130 }, { 140 }, { 150 }, { 160 }, { 170 }, { 180 }, { 190 }, { 200 }, { 210 }, { 220 }, { 230 }]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testInUncorrelatedSubquery">
+        <Resource name="sql">
+            <![CDATA[select empno from emp where deptno in (select deptno from dept)]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EMPNO=[$0])
+  FilterRel(condition=[IS TRUE(true)])
+    FilterRel(condition=[=($7, $8)])
+      JoinRel(condition=[true], joinType=[inner])
+        TableAccessRel(table=[[SALES, EMP]])
+        AggregateRel(groupCount=[1])
+          ProjectRel(DEPTNO=[$0])
+            TableAccessRel(table=[[SALES, DEPT]])
 ]]>
         </Resource>
     </TestCase>

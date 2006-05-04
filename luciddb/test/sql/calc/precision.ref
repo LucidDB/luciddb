@@ -99,31 +99,35 @@ Error: From line 1, column 25 to line 1, column 45: Numeric literal '12345678901
 0: jdbc:luciddb:> -- FRG-44
 0: jdbc:luciddb:> CREATE TABLE FOO (x DECIMAL);
 0: jdbc:luciddb:> INSERT INTO FOO VALUES (0.1234567890123456789);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Could not rescale decimal to required scale (state=,code=0)
 0: jdbc:luciddb:> SELECT * FROM FOO order by 1;
 +----+
 | X  |
 +----+
+| 0  |
 +----+
 0: jdbc:luciddb:> SELECT x * 10 FROM FOO order by 1;
 +---------+
 | EXPR$0  |
 +---------+
+| 0       |
 +---------+
 0: jdbc:luciddb:> SELECT x * 100 FROM FOO order by 1;
 +---------+
 | EXPR$0  |
 +---------+
+| 0       |
 +---------+
 0: jdbc:luciddb:> SELECT x / 10 FROM FOO order by 1;
 +---------+
 | EXPR$0  |
 +---------+
+| 0       |
 +---------+
 0: jdbc:luciddb:> SELECT X / 100 FROM FOO order by 1;
 +---------+
 | EXPR$0  |
 +---------+
+| 0       |
 +---------+
 0: jdbc:luciddb:> DROP TABLE FOO;
 0: jdbc:luciddb:> 

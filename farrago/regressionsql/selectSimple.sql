@@ -125,4 +125,19 @@ values 'a' is distinct from 'b';
 values 1 is distinct from cast(null as integer);
 values cast(null as integer) is distinct from cast(null as integer);
 
+-- a few boundary cases for decimal precision 19
+values cast (0.1234567890123456789 as decimal(10,0));
+values cast (0.8876543210987654321 as decimal(10,0));
+values cast (-0.8876543210987654321 as decimal(10,0));
+values cast (1e-5 as decimal(19,19));
+values 1 + 0.1234567890123456789;
+values floor(0.8876543210987654321);
+values floor(0.0000000000000000001);
+values floor(-0.0000000000000000001);
+values floor(-0.8876543210987654321);
+values ceil(0.8876543210987654321);
+values ceil(0.0000000000000000001);
+values ceil(-0.0000000000000000001);
+values ceil(-0.8876543210987654321);
+
 -- end selectSimple.sql

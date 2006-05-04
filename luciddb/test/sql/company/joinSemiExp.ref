@@ -8,7 +8,7 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- a bunch of equi-joins
 0: jdbc:luciddb:> -- Workarounds added for LER-92 & LER-93, and filters added so semijoins happen
-0: jdbc:luciddb:> explain plan for
+0: jdbc:luciddb:> explain plan excluding attributes for
 . . . . . . . . > -- two way
 . . . . . . . . > select EMP.LNAME 
 . . . . . . . . > , EMP.EMPNO
@@ -19,16 +19,16 @@
 . . . . . . . . > order by EMPNO;
 'column0'
 'FennelToIteratorConverter'
-'  FennelSortRel(key=[[1]], discardDuplicates=[false])'
-'    FennelCalcRel(expr#0..12=[{inputs}], expr#13=[=($t4, $t10)], LNAME=[$t2], EMPNO=[$t0], $condition=[$t13])'
-'      FennelCartesianProductRel(leftouterjoin=[false])'
-'        LcsRowScanRel(table=[[LOCALDB, S, EMP]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$EMP$COMMISSION, SYS$CLUSTERED_INDEX$S$EMP$DEPTNO, SYS$CLUSTERED_INDEX$S$EMP$EMPNO, SYS$CLUSTERED_INDEX$S$EMP$FNAME, SYS$CLUSTERED_INDEX$S$EMP$HOBBY, SYS$CLUSTERED_INDEX$S$EMP$LNAME, SYS$CLUSTERED_INDEX$S$EMP$LOCID, SYS$CLUSTERED_INDEX$S$EMP$MANAGER, SYS$CLUSTERED_INDEX$S$EMP$SAL, SYS$CLUSTERED_INDEX$S$EMP$SEX]])'
-'        LcsRowScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$DEPT$DEPTNO, SYS$CLUSTERED_INDEX$S$DEPT$DNAME, SYS$CLUSTERED_INDEX$S$DEPT$LOCID]])'
+'  FennelSortRel'
+'    FennelCalcRel'
+'      FennelCartesianProductRel'
+'        LcsRowScanRel'
+'        LcsRowScanRel'
 '          LcsIndexMergeRel'
-'            LcsIndexSearchRel(table=[[LOCALDB, S, DEPT]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPT$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
-'              FennelValuesRel(tuples=[[{ '(', 100, '+', null }]])'
+'            LcsIndexSearchRel'
+'              FennelValuesRel'
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> explain plan for
+0: jdbc:luciddb:> explain plan excluding attributes for
 . . . . . . . . > select DEPT.DNAME 
 . . . . . . . . > from EMP, DEPT
 . . . . . . . . > where EMP.DEPTNO = DEPT.DEPTNO 
@@ -37,17 +37,17 @@
 . . . . . . . . > order by DNAME;
 'column0'
 'FennelToIteratorConverter'
-'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelCalcRel(expr#0..12=[{inputs}], expr#13=[=($t4, $t10)], DNAME=[$t11], $condition=[$t13])'
-'      FennelCartesianProductRel(leftouterjoin=[false])'
-'        LcsRowScanRel(table=[[LOCALDB, S, EMP]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$EMP$COMMISSION, SYS$CLUSTERED_INDEX$S$EMP$DEPTNO, SYS$CLUSTERED_INDEX$S$EMP$EMPNO, SYS$CLUSTERED_INDEX$S$EMP$FNAME, SYS$CLUSTERED_INDEX$S$EMP$HOBBY, SYS$CLUSTERED_INDEX$S$EMP$LNAME, SYS$CLUSTERED_INDEX$S$EMP$LOCID, SYS$CLUSTERED_INDEX$S$EMP$MANAGER, SYS$CLUSTERED_INDEX$S$EMP$SAL, SYS$CLUSTERED_INDEX$S$EMP$SEX]])'
-'        LcsRowScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$DEPT$DEPTNO, SYS$CLUSTERED_INDEX$S$DEPT$DNAME, SYS$CLUSTERED_INDEX$S$DEPT$LOCID]])'
+'  FennelSortRel'
+'    FennelCalcRel'
+'      FennelCartesianProductRel'
+'        LcsRowScanRel'
+'        LcsRowScanRel'
 '          LcsIndexMergeRel'
-'            LcsIndexSearchRel(table=[[LOCALDB, S, DEPT]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPT$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
-'              FennelValuesRel(tuples=[[{ '(', 100, '+', null }]])'
+'            LcsIndexSearchRel'
+'              FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- three way
-0: jdbc:luciddb:> EXPLAIN PLAN FOR
+0: jdbc:luciddb:> EXPLAIN PLAN EXCLUDING ATTRIBUTES FOR
 . . . . . . . . > SELECT EMP.LNAME
 . . . . . . . . > from EMP, LOCATION, DEPT
 . . . . . . . . > where EMP.DEPTNO=DEPT.DEPTNO and DEPT.LOCID=LOCATION.LOCID
@@ -56,17 +56,17 @@
 . . . . . . . . > order by LNAME;
 'column0'
 'FennelToIteratorConverter'
-'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelCalcRel(expr#0..17=[{inputs}], expr#18=[=($t12, $t13)], LNAME=[$t2], $condition=[$t18])'
-'      FennelCartesianProductRel(leftouterjoin=[false])'
-'        FennelCalcRel(expr#0..12=[{inputs}], expr#13=[=($t4, $t10)], proj#0..12=[{exprs}], $condition=[$t13])'
-'          FennelCartesianProductRel(leftouterjoin=[false])'
-'            LcsRowScanRel(table=[[LOCALDB, S, EMP]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$EMP$COMMISSION, SYS$CLUSTERED_INDEX$S$EMP$DEPTNO, SYS$CLUSTERED_INDEX$S$EMP$EMPNO, SYS$CLUSTERED_INDEX$S$EMP$FNAME, SYS$CLUSTERED_INDEX$S$EMP$HOBBY, SYS$CLUSTERED_INDEX$S$EMP$LNAME, SYS$CLUSTERED_INDEX$S$EMP$LOCID, SYS$CLUSTERED_INDEX$S$EMP$MANAGER, SYS$CLUSTERED_INDEX$S$EMP$SAL, SYS$CLUSTERED_INDEX$S$EMP$SEX]])'
-'            LcsRowScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$DEPT$DEPTNO, SYS$CLUSTERED_INDEX$S$DEPT$DNAME, SYS$CLUSTERED_INDEX$S$DEPT$LOCID]])'
-'        FennelCalcRel(expr#0..4=[{inputs}], expr#5=[Reinterpret($t4)], expr#6=[94000], expr#7=[>($t5, $t6)], proj#0..4=[{exprs}], $condition=[$t7])'
-'          LcsRowScanRel(table=[[LOCALDB, S, LOCATION]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$LOCATION$CITY, SYS$CLUSTERED_INDEX$S$LOCATION$LOCID, SYS$CLUSTERED_INDEX$S$LOCATION$STATE, SYS$CLUSTERED_INDEX$S$LOCATION$STREET, SYS$CLUSTERED_INDEX$S$LOCATION$ZIP]])'
+'  FennelSortRel'
+'    FennelCalcRel'
+'      FennelCartesianProductRel'
+'        FennelCalcRel'
+'          FennelCartesianProductRel'
+'            LcsRowScanRel'
+'            LcsRowScanRel'
+'        FennelCalcRel'
+'          LcsRowScanRel'
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> EXPLAIN PLAN FOR
+0: jdbc:luciddb:> EXPLAIN PLAN EXCLUDING ATTRIBUTES FOR
 . . . . . . . . > SELECT DEPT.DNAME
 . . . . . . . . > from EMP, DEPT, LOCATION
 . . . . . . . . > where EMP.DEPTNO=DEPT.DEPTNO and DEPT.LOCID=LOCATION.LOCID
@@ -75,17 +75,17 @@
 . . . . . . . . > order by DNAME;
 'column0'
 'FennelToIteratorConverter'
-'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelCalcRel(expr#0..17=[{inputs}], expr#18=[=($t12, $t13)], DNAME=[$t11], $condition=[$t18])'
-'      FennelCartesianProductRel(leftouterjoin=[false])'
-'        FennelCalcRel(expr#0..12=[{inputs}], expr#13=[=($t4, $t10)], proj#0..12=[{exprs}], $condition=[$t13])'
-'          FennelCartesianProductRel(leftouterjoin=[false])'
-'            LcsRowScanRel(table=[[LOCALDB, S, EMP]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$EMP$COMMISSION, SYS$CLUSTERED_INDEX$S$EMP$DEPTNO, SYS$CLUSTERED_INDEX$S$EMP$EMPNO, SYS$CLUSTERED_INDEX$S$EMP$FNAME, SYS$CLUSTERED_INDEX$S$EMP$HOBBY, SYS$CLUSTERED_INDEX$S$EMP$LNAME, SYS$CLUSTERED_INDEX$S$EMP$LOCID, SYS$CLUSTERED_INDEX$S$EMP$MANAGER, SYS$CLUSTERED_INDEX$S$EMP$SAL, SYS$CLUSTERED_INDEX$S$EMP$SEX]])'
-'            LcsRowScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$DEPT$DEPTNO, SYS$CLUSTERED_INDEX$S$DEPT$DNAME, SYS$CLUSTERED_INDEX$S$DEPT$LOCID]])'
-'        FennelCalcRel(expr#0..4=[{inputs}], expr#5=[Reinterpret($t4)], expr#6=[94000], expr#7=[>($t5, $t6)], proj#0..4=[{exprs}], $condition=[$t7])'
-'          LcsRowScanRel(table=[[LOCALDB, S, LOCATION]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$LOCATION$CITY, SYS$CLUSTERED_INDEX$S$LOCATION$LOCID, SYS$CLUSTERED_INDEX$S$LOCATION$STATE, SYS$CLUSTERED_INDEX$S$LOCATION$STREET, SYS$CLUSTERED_INDEX$S$LOCATION$ZIP]])'
+'  FennelSortRel'
+'    FennelCalcRel'
+'      FennelCartesianProductRel'
+'        FennelCalcRel'
+'          FennelCartesianProductRel'
+'            LcsRowScanRel'
+'            LcsRowScanRel'
+'        FennelCalcRel'
+'          LcsRowScanRel'
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> EXPLAIN PLAN FOR
+0: jdbc:luciddb:> EXPLAIN PLAN EXCLUDING ATTRIBUTES FOR
 . . . . . . . . > SELECT LOCATION.CITY
 . . . . . . . . > , LOCATION.STREET
 . . . . . . . . > from EMP, DEPT, LOCATION
@@ -95,18 +95,18 @@
 . . . . . . . . > order by STREET;
 'column0'
 'FennelToIteratorConverter'
-'  FennelSortRel(key=[[1]], discardDuplicates=[false])'
-'    FennelCalcRel(expr#0..17=[{inputs}], expr#18=[=($t12, $t13)], CITY=[$t15], STREET=[$t14], $condition=[$t18])'
-'      FennelCartesianProductRel(leftouterjoin=[false])'
-'        FennelCalcRel(expr#0..12=[{inputs}], expr#13=[=($t4, $t10)], proj#0..12=[{exprs}], $condition=[$t13])'
-'          FennelCartesianProductRel(leftouterjoin=[false])'
-'            LcsRowScanRel(table=[[LOCALDB, S, EMP]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$EMP$COMMISSION, SYS$CLUSTERED_INDEX$S$EMP$DEPTNO, SYS$CLUSTERED_INDEX$S$EMP$EMPNO, SYS$CLUSTERED_INDEX$S$EMP$FNAME, SYS$CLUSTERED_INDEX$S$EMP$HOBBY, SYS$CLUSTERED_INDEX$S$EMP$LNAME, SYS$CLUSTERED_INDEX$S$EMP$LOCID, SYS$CLUSTERED_INDEX$S$EMP$MANAGER, SYS$CLUSTERED_INDEX$S$EMP$SAL, SYS$CLUSTERED_INDEX$S$EMP$SEX]])'
-'            LcsRowScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$DEPT$DEPTNO, SYS$CLUSTERED_INDEX$S$DEPT$DNAME, SYS$CLUSTERED_INDEX$S$DEPT$LOCID]])'
-'        FennelCalcRel(expr#0..4=[{inputs}], expr#5=[Reinterpret($t4)], expr#6=[94000], expr#7=[>($t5, $t6)], proj#0..4=[{exprs}], $condition=[$t7])'
-'          LcsRowScanRel(table=[[LOCALDB, S, LOCATION]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$LOCATION$CITY, SYS$CLUSTERED_INDEX$S$LOCATION$LOCID, SYS$CLUSTERED_INDEX$S$LOCATION$STATE, SYS$CLUSTERED_INDEX$S$LOCATION$STREET, SYS$CLUSTERED_INDEX$S$LOCATION$ZIP]])'
+'  FennelSortRel'
+'    FennelCalcRel'
+'      FennelCartesianProductRel'
+'        FennelCalcRel'
+'          FennelCartesianProductRel'
+'            LcsRowScanRel'
+'            LcsRowScanRel'
+'        FennelCalcRel'
+'          LcsRowScanRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- semi joins of a self join
-0: jdbc:luciddb:> explain plan for
+0: jdbc:luciddb:> explain plan excluding attributes for
 . . . . . . . . > select M.LNAME 
 . . . . . . . . > , M.EMPNO
 . . . . . . . . > from EMP M, EMP R
@@ -116,15 +116,15 @@
 . . . . . . . . > order by EMPNO;
 'column0'
 'FennelToIteratorConverter'
-'  FennelSortRel(key=[[1]], discardDuplicates=[false])'
-'    FennelCalcRel(expr#0..19=[{inputs}], expr#20=[=($t0, $t15)], LNAME=[$t2], EMPNO=[$t0], $condition=[$t20])'
-'      FennelCartesianProductRel(leftouterjoin=[false])'
-'        LcsRowScanRel(table=[[LOCALDB, S, EMP]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$EMP$COMMISSION, SYS$CLUSTERED_INDEX$S$EMP$DEPTNO, SYS$CLUSTERED_INDEX$S$EMP$EMPNO, SYS$CLUSTERED_INDEX$S$EMP$FNAME, SYS$CLUSTERED_INDEX$S$EMP$HOBBY, SYS$CLUSTERED_INDEX$S$EMP$LNAME, SYS$CLUSTERED_INDEX$S$EMP$LOCID, SYS$CLUSTERED_INDEX$S$EMP$MANAGER, SYS$CLUSTERED_INDEX$S$EMP$SAL, SYS$CLUSTERED_INDEX$S$EMP$SEX]])'
-'        LcsRowScanRel(table=[[LOCALDB, S, EMP]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$EMP$COMMISSION, SYS$CLUSTERED_INDEX$S$EMP$DEPTNO, SYS$CLUSTERED_INDEX$S$EMP$EMPNO, SYS$CLUSTERED_INDEX$S$EMP$FNAME, SYS$CLUSTERED_INDEX$S$EMP$HOBBY, SYS$CLUSTERED_INDEX$S$EMP$LNAME, SYS$CLUSTERED_INDEX$S$EMP$LOCID, SYS$CLUSTERED_INDEX$S$EMP$MANAGER, SYS$CLUSTERED_INDEX$S$EMP$SAL, SYS$CLUSTERED_INDEX$S$EMP$SEX]])'
-'          LcsIndexSearchRel(table=[[LOCALDB, S, EMP]], projection=[*], index=[EMP_SEX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
-'            FennelValuesRel(tuples=[[{ '[', _ISO-8859-1'M', ']', _ISO-8859-1'M' }]])'
+'  FennelSortRel'
+'    FennelCalcRel'
+'      FennelCartesianProductRel'
+'        LcsRowScanRel'
+'        LcsRowScanRel'
+'          LcsIndexSearchRel'
+'            FennelValuesRel'
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> explain plan for
+0: jdbc:luciddb:> explain plan excluding attributes for
 . . . . . . . . > select R.LNAME 
 . . . . . . . . > , R.EMPNO
 . . . . . . . . > from EMP M, EMP R
@@ -134,16 +134,16 @@
 . . . . . . . . > order by EMPNO;
 'column0'
 'FennelToIteratorConverter'
-'  FennelSortRel(key=[[1]], discardDuplicates=[false])'
-'    FennelCalcRel(expr#0..19=[{inputs}], expr#20=[=($t0, $t15)], LNAME=[$t12], EMPNO=[$t10], $condition=[$t20])'
-'      FennelCartesianProductRel(leftouterjoin=[false])'
-'        LcsRowScanRel(table=[[LOCALDB, S, EMP]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$EMP$COMMISSION, SYS$CLUSTERED_INDEX$S$EMP$DEPTNO, SYS$CLUSTERED_INDEX$S$EMP$EMPNO, SYS$CLUSTERED_INDEX$S$EMP$FNAME, SYS$CLUSTERED_INDEX$S$EMP$HOBBY, SYS$CLUSTERED_INDEX$S$EMP$LNAME, SYS$CLUSTERED_INDEX$S$EMP$LOCID, SYS$CLUSTERED_INDEX$S$EMP$MANAGER, SYS$CLUSTERED_INDEX$S$EMP$SAL, SYS$CLUSTERED_INDEX$S$EMP$SEX]])'
-'        LcsRowScanRel(table=[[LOCALDB, S, EMP]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$EMP$COMMISSION, SYS$CLUSTERED_INDEX$S$EMP$DEPTNO, SYS$CLUSTERED_INDEX$S$EMP$EMPNO, SYS$CLUSTERED_INDEX$S$EMP$FNAME, SYS$CLUSTERED_INDEX$S$EMP$HOBBY, SYS$CLUSTERED_INDEX$S$EMP$LNAME, SYS$CLUSTERED_INDEX$S$EMP$LOCID, SYS$CLUSTERED_INDEX$S$EMP$MANAGER, SYS$CLUSTERED_INDEX$S$EMP$SAL, SYS$CLUSTERED_INDEX$S$EMP$SEX]])'
-'          LcsIndexSearchRel(table=[[LOCALDB, S, EMP]], projection=[*], index=[EMP_SEX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
-'            FennelValuesRel(tuples=[[{ '[', _ISO-8859-1'M', ']', _ISO-8859-1'M' }]])'
+'  FennelSortRel'
+'    FennelCalcRel'
+'      FennelCartesianProductRel'
+'        LcsRowScanRel'
+'        LcsRowScanRel'
+'          LcsIndexSearchRel'
+'            FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- double reference of a table
-0: jdbc:luciddb:> explain plan for
+0: jdbc:luciddb:> explain plan excluding attributes for
 . . . . . . . . > select EMP.LNAME, DEPT.DNAME
 . . . . . . . . > from LOCATION EL, LOCATION DL, EMP, DEPT
 . . . . . . . . > where EL.LOCID = EMP.LOCID and DL.LOCID=DEPT.LOCID
@@ -151,18 +151,19 @@
 . . . . . . . . > order by LNAME, DNAME;
 'column0'
 'FennelToIteratorConverter'
-'  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
-'    FennelCalcRel(expr#0..22=[{inputs}], expr#23=[=($t15, $t22)], LNAME=[$t2], DNAME=[$t21], $condition=[$t23])'
-'      FennelCartesianProductRel(leftouterjoin=[false])'
-'        FennelCartesianProductRel(leftouterjoin=[false])'
-'          FennelCalcRel(expr#0..14=[{inputs}], expr#15=[=($t10, $t6)], proj#0..14=[{exprs}], $condition=[$t15])'
-'            FennelCartesianProductRel(leftouterjoin=[false])'
-'              LcsRowScanRel(table=[[LOCALDB, S, EMP]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$EMP$COMMISSION, SYS$CLUSTERED_INDEX$S$EMP$DEPTNO, SYS$CLUSTERED_INDEX$S$EMP$EMPNO, SYS$CLUSTERED_INDEX$S$EMP$FNAME, SYS$CLUSTERED_INDEX$S$EMP$HOBBY, SYS$CLUSTERED_INDEX$S$EMP$LNAME, SYS$CLUSTERED_INDEX$S$EMP$LOCID, SYS$CLUSTERED_INDEX$S$EMP$MANAGER, SYS$CLUSTERED_INDEX$S$EMP$SAL, SYS$CLUSTERED_INDEX$S$EMP$SEX]])'
-'              LcsRowScanRel(table=[[LOCALDB, S, LOCATION]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$LOCATION$CITY, SYS$CLUSTERED_INDEX$S$LOCATION$LOCID, SYS$CLUSTERED_INDEX$S$LOCATION$STATE, SYS$CLUSTERED_INDEX$S$LOCATION$STREET, SYS$CLUSTERED_INDEX$S$LOCATION$ZIP]])'
-'          LcsRowScanRel(table=[[LOCALDB, S, LOCATION]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$LOCATION$CITY, SYS$CLUSTERED_INDEX$S$LOCATION$LOCID, SYS$CLUSTERED_INDEX$S$LOCATION$STATE, SYS$CLUSTERED_INDEX$S$LOCATION$STREET, SYS$CLUSTERED_INDEX$S$LOCATION$ZIP]])'
-'        LcsRowScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$DEPT$DEPTNO, SYS$CLUSTERED_INDEX$S$DEPT$DNAME, SYS$CLUSTERED_INDEX$S$DEPT$LOCID]])'
+'  FennelSortRel'
+'    FennelCalcRel'
+'      FennelCartesianProductRel'
+'        FennelCalcRel'
+'          FennelCartesianProductRel'
+'            FennelCalcRel'
+'              FennelCartesianProductRel'
+'                LcsRowScanRel'
+'                LcsRowScanRel'
+'            LcsRowScanRel'
+'        LcsRowScanRel'
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> explain plan for
+0: jdbc:luciddb:> explain plan excluding attributes for
 . . . . . . . . > select EL.CITY, DL.CITY
 . . . . . . . . > from LOCATION EL, LOCATION DL, EMP, DEPT
 . . . . . . . . > where EL.LOCID = EMP.LOCID and DL.LOCID=DEPT.LOCID
@@ -170,19 +171,20 @@
 . . . . . . . . > order by CITY, CITY;
 'column0'
 'FennelToIteratorConverter'
-'  FennelSortRel(key=[[0, 0]], discardDuplicates=[false])'
-'    FennelCalcRel(expr#0..22=[{inputs}], expr#23=[=($t15, $t22)], CITY=[$t12], CITY0=[$t17], $condition=[$t23])'
-'      FennelCartesianProductRel(leftouterjoin=[false])'
-'        FennelCartesianProductRel(leftouterjoin=[false])'
-'          FennelCalcRel(expr#0..14=[{inputs}], expr#15=[=($t10, $t6)], proj#0..14=[{exprs}], $condition=[$t15])'
-'            FennelCartesianProductRel(leftouterjoin=[false])'
-'              LcsRowScanRel(table=[[LOCALDB, S, EMP]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$EMP$COMMISSION, SYS$CLUSTERED_INDEX$S$EMP$DEPTNO, SYS$CLUSTERED_INDEX$S$EMP$EMPNO, SYS$CLUSTERED_INDEX$S$EMP$FNAME, SYS$CLUSTERED_INDEX$S$EMP$HOBBY, SYS$CLUSTERED_INDEX$S$EMP$LNAME, SYS$CLUSTERED_INDEX$S$EMP$LOCID, SYS$CLUSTERED_INDEX$S$EMP$MANAGER, SYS$CLUSTERED_INDEX$S$EMP$SAL, SYS$CLUSTERED_INDEX$S$EMP$SEX]])'
-'              LcsRowScanRel(table=[[LOCALDB, S, LOCATION]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$LOCATION$CITY, SYS$CLUSTERED_INDEX$S$LOCATION$LOCID, SYS$CLUSTERED_INDEX$S$LOCATION$STATE, SYS$CLUSTERED_INDEX$S$LOCATION$STREET, SYS$CLUSTERED_INDEX$S$LOCATION$ZIP]])'
-'          LcsRowScanRel(table=[[LOCALDB, S, LOCATION]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$LOCATION$CITY, SYS$CLUSTERED_INDEX$S$LOCATION$LOCID, SYS$CLUSTERED_INDEX$S$LOCATION$STATE, SYS$CLUSTERED_INDEX$S$LOCATION$STREET, SYS$CLUSTERED_INDEX$S$LOCATION$ZIP]])'
-'        LcsRowScanRel(table=[[LOCALDB, S, DEPT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$DEPT$DEPTNO, SYS$CLUSTERED_INDEX$S$DEPT$DNAME, SYS$CLUSTERED_INDEX$S$DEPT$LOCID]])'
+'  FennelSortRel'
+'    FennelCalcRel'
+'      FennelCartesianProductRel'
+'        FennelCalcRel'
+'          FennelCartesianProductRel'
+'            FennelCalcRel'
+'              FennelCartesianProductRel'
+'                LcsRowScanRel'
+'                LcsRowScanRel'
+'            LcsRowScanRel'
+'        LcsRowScanRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- many to many self join semi join variations
-0: jdbc:luciddb:> explain plan for
+0: jdbc:luciddb:> explain plan excluding attributes for
 . . . . . . . . > select F.FNAME
 . . . . . . . . > FROM CUSTOMERS M, CUSTOMERS F
 . . . . . . . . > WHERE M.LNAME = F.LNAME
@@ -192,15 +194,15 @@
 . . . . . . . . > order by FNAME;
 'column0'
 'FennelToIteratorConverter'
-'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelCalcRel(expr#0..7=[{inputs}], FNAME=[$t5])'
-'      LhxJoinRel(leftKeys=[[2]], rightKeys=[[2]])'
-'        FennelCalcRel(expr#0..3=[{inputs}], expr#4=[_ISO-8859-1'M'], expr#5=[=($t3, $t4)], proj#0..3=[{exprs}], $condition=[$t5])'
-'          LcsRowScanRel(table=[[LOCALDB, S, CUSTOMERS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$CUSTOMERS$CUSTID, SYS$CLUSTERED_INDEX$S$CUSTOMERS$FNAME, SYS$CLUSTERED_INDEX$S$CUSTOMERS$LNAME, SYS$CLUSTERED_INDEX$S$CUSTOMERS$SEX]])'
-'        FennelCalcRel(expr#0..3=[{inputs}], expr#4=[_ISO-8859-1'F'], expr#5=[=($t3, $t4)], proj#0..3=[{exprs}], $condition=[$t5])'
-'          LcsRowScanRel(table=[[LOCALDB, S, CUSTOMERS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$CUSTOMERS$CUSTID, SYS$CLUSTERED_INDEX$S$CUSTOMERS$FNAME, SYS$CLUSTERED_INDEX$S$CUSTOMERS$LNAME, SYS$CLUSTERED_INDEX$S$CUSTOMERS$SEX]])'
+'  FennelSortRel'
+'    FennelCalcRel'
+'      LhxJoinRel'
+'        FennelCalcRel'
+'          LcsRowScanRel'
+'        FennelCalcRel'
+'          LcsRowScanRel'
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> explain plan for
+0: jdbc:luciddb:> explain plan excluding attributes for
 . . . . . . . . > select M.FNAME, M.LNAME
 . . . . . . . . > FROM CUSTOMERS M, CUSTOMERS F
 . . . . . . . . > WHERE M.LNAME = F.LNAME
@@ -210,48 +212,83 @@
 . . . . . . . . > order by FNAME, LNAME;
 'column0'
 'FennelToIteratorConverter'
-'  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
-'    FennelCalcRel(expr#0..7=[{inputs}], FNAME=[$t1], LNAME=[$t2])'
-'      LhxJoinRel(leftKeys=[[2]], rightKeys=[[2]])'
-'        FennelCalcRel(expr#0..3=[{inputs}], expr#4=[_ISO-8859-1'M'], expr#5=[=($t3, $t4)], proj#0..3=[{exprs}], $condition=[$t5])'
-'          LcsRowScanRel(table=[[LOCALDB, S, CUSTOMERS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$CUSTOMERS$CUSTID, SYS$CLUSTERED_INDEX$S$CUSTOMERS$FNAME, SYS$CLUSTERED_INDEX$S$CUSTOMERS$LNAME, SYS$CLUSTERED_INDEX$S$CUSTOMERS$SEX]])'
-'        FennelCalcRel(expr#0..3=[{inputs}], expr#4=[_ISO-8859-1'F'], expr#5=[=($t3, $t4)], proj#0..3=[{exprs}], $condition=[$t5])'
-'          LcsRowScanRel(table=[[LOCALDB, S, CUSTOMERS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$CUSTOMERS$CUSTID, SYS$CLUSTERED_INDEX$S$CUSTOMERS$FNAME, SYS$CLUSTERED_INDEX$S$CUSTOMERS$LNAME, SYS$CLUSTERED_INDEX$S$CUSTOMERS$SEX]])'
+'  FennelSortRel'
+'    FennelCalcRel'
+'      LhxJoinRel'
+'        FennelCalcRel'
+'          LcsRowScanRel'
+'        FennelCalcRel'
+'          LcsRowScanRel'
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- ** SLOW, add in a bit
 0: jdbc:luciddb:> -- a few ranges
 0: jdbc:luciddb:> -- a big ol' join
-0: jdbc:luciddb:> --explain plan for
-0: jdbc:luciddb:> --select PRODUCTS.PRICE
-0: jdbc:luciddb:> --from SALES, PRODUCTS
-0: jdbc:luciddb:> --where SALES.PRICE between PRODUCTS.PRICE - 1 and PRODUCTS.PRICE + 1
-0: jdbc:luciddb:> --and SALES.PRODID = PRODUCTS.PRODID
-0: jdbc:luciddb:> --order by  PRODUCTS.PRICE;
+0: jdbc:luciddb:> explain plan excluding attributes for
+. . . . . . . . > select PRODUCTS.PRICE
+. . . . . . . . > from SALES, PRODUCTS
+. . . . . . . . > where SALES.PRICE between PRODUCTS.PRICE - 1 and PRODUCTS.PRICE + 1
+. . . . . . . . > and SALES.PRODID = PRODUCTS.PRODID
+. . . . . . . . > order by  PRODUCTS.PRICE;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel'
+'    FennelCalcRel'
+'      FennelCartesianProductRel'
+'        LcsRowScanRel'
+'        LcsRowScanRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- non join conditions
-0: jdbc:luciddb:> --explain plan for
-0: jdbc:luciddb:> --select SALES.CUSTID
-0: jdbc:luciddb:> --from SALES, PRODUCTS
-0: jdbc:luciddb:> --where SALES.PRICE between PRODUCTS.PRICE - 1 and PRODUCTS.PRICE + 1
-0: jdbc:luciddb:> --and ( PRODUCTS.NAME LIKE 'C%' OR PRODUCTS.NAME LIKE 'P%')
-0: jdbc:luciddb:> --order by SALES.CUSTID;
+0: jdbc:luciddb:> explain plan excluding attributes for
+. . . . . . . . > select SALES.CUSTID
+. . . . . . . . > from SALES, PRODUCTS
+. . . . . . . . > where SALES.PRICE between PRODUCTS.PRICE - 1 and PRODUCTS.PRICE + 1
+. . . . . . . . > and ( PRODUCTS.NAME LIKE 'C%' OR PRODUCTS.NAME LIKE 'P%')
+. . . . . . . . > order by SALES.CUSTID;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel'
+'    FennelCalcRel'
+'      FennelCartesianProductRel'
+'        LcsRowScanRel'
+'        FennelCalcRel'
+'          LcsRowScanRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- equality and non equality in one
-0: jdbc:luciddb:> -- explain plan for
-0: jdbc:luciddb:> -- select SALES.PRICE
-0: jdbc:luciddb:> -- from SALES, PRODUCTS, CUSTOMERS
-0: jdbc:luciddb:> -- where SALES.PRICE - PRODUCTS.PRICE < 0.5
-0: jdbc:luciddb:> -- and PRODUCTS.PRICE - SALES.PRICE < 0.25
-0: jdbc:luciddb:> -- and SALES.CUSTID = CUSTOMERS.CUSTID
-0: jdbc:luciddb:> -- order by SALES.PRICE;
+0: jdbc:luciddb:> explain plan excluding attributes for
+. . . . . . . . > select SALES.PRICE
+. . . . . . . . > from SALES, PRODUCTS, CUSTOMERS
+. . . . . . . . > where SALES.PRICE - PRODUCTS.PRICE < 0.5
+. . . . . . . . > and PRODUCTS.PRICE - SALES.PRICE < 0.25
+. . . . . . . . > and SALES.CUSTID = CUSTOMERS.CUSTID
+. . . . . . . . > order by SALES.PRICE;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel'
+'    FennelCalcRel'
+'      FennelCartesianProductRel'
+'        FennelCalcRel'
+'          FennelCartesianProductRel'
+'            LcsRowScanRel'
+'            LcsRowScanRel'
+'        LcsRowScanRel'
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- explain plan for
-0: jdbc:luciddb:> -- select PRODUCTS.NAME, CUSTOMERS.FNAME, CUSTOMERS.LNAME, PRODUCTS.PRICE
-0: jdbc:luciddb:> -- from SALES, PRODUCTS, CUSTOMERS
-0: jdbc:luciddb:> -- where SALES.PRICE - PRODUCTS.PRICE < 0.5
-0: jdbc:luciddb:> -- and PRODUCTS.PRICE - SALES.PRICE < 0.25
-0: jdbc:luciddb:> -- and SALES.CUSTID = CUSTOMERS.CUSTID
-0: jdbc:luciddb:> -- order by PRODUCTS.NAME, CUSTOMERS.CUSTID;
+0: jdbc:luciddb:> explain plan excluding attributes for
+. . . . . . . . > select PRODUCTS.NAME, CUSTOMERS.FNAME, CUSTOMERS.LNAME, PRODUCTS.PRICE
+. . . . . . . . > , CUSTOMERS.CUSTID
+. . . . . . . . > from SALES, PRODUCTS, CUSTOMERS
+. . . . . . . . > where SALES.PRICE - PRODUCTS.PRICE < 0.5
+. . . . . . . . > and PRODUCTS.PRICE - SALES.PRICE < 0.25
+. . . . . . . . > and SALES.CUSTID = CUSTOMERS.CUSTID
+. . . . . . . . > order by PRODUCTS.NAME, CUSTOMERS.CUSTID;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel'
+'    FennelCalcRel'
+'      FennelCartesianProductRel'
+'        FennelCalcRel'
+'          FennelCartesianProductRel'
+'            LcsRowScanRel'
+'            LcsRowScanRel'
+'        LcsRowScanRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !set outputformat table
 0: jdbc:luciddb:> !quit

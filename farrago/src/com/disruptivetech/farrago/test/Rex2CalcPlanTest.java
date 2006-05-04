@@ -34,9 +34,7 @@ import openjava.ptree.MemberDeclarationList;
 import openjava.ptree.ModifierList;
 import org.eigenbase.oj.util.JavaRexBuilder;
 import org.eigenbase.oj.util.OJUtil;
-import org.eigenbase.rel.FilterRel;
-import org.eigenbase.rel.ProjectRel;
-import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.*;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.SqlNode;
@@ -64,13 +62,6 @@ public class Rex2CalcPlanTest extends FarragoTestCase
     //~ Static fields/initializers --------------------------------------------
 
     private static TestContext testContext;
-
-    /**
-     * Remove this content when decimal type is supported
-     * for the test case. This would require decimal 
-     * expansion following Sql to Rel translation.
-     */
-    public static final boolean decimalSupported = false;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -184,7 +175,21 @@ public class Rex2CalcPlanTest extends FarragoTestCase
             programBuilder.addCondition(condition);
         }
 
-        final RexProgram program = programBuilder.getProgram();
+        RexProgram program = programBuilder.getProgram();
+
+        // rewrite decimals
+        ReduceDecimalsRule rule = new ReduceDecimalsRule();
+        RexShuttle shuttle = rule.new DecimalShuttle(rexBuilder);
+        RexProgramBuilder updater = RexProgramBuilder.create(
+            rexBuilder,
+            program.getInputRowType(),
+            program.getExprList(),
+            program.getProjectList(),
+            program.getCondition(),
+            program.getOutputRowType(),
+            shuttle,
+            true);
+        program = updater.getProgram();
 
         RexToCalcTranslator translator = 
             new RexToCalcTranslator(rexBuilder, rootRel);
@@ -322,9 +327,7 @@ public class Rex2CalcPlanTest extends FarragoTestCase
             "-(1+-2.*-3.e-1/-.4)>=+5, " +
             " 1e200 / 0.4" +
             "FROM emps WHERE empno > 10";
-        if (decimalSupported) {
-            check(sql, false,false);
-        }
+        check(sql, false,false);
     }
 
     public void testHexBitBinaryString() {
@@ -352,16 +355,12 @@ public class Rex2CalcPlanTest extends FarragoTestCase
     public void testArithmeticOperators() {
         String sql = "SELECT POW(1.0,1.0), MOD(1,1), ABS(5000000000), ABS(1), " +
             "ABS(1.1), LN(1), LOG10(1) FROM emps WHERE empno > 10";
-        if (decimalSupported) {
-            check(sql, false,false);
-        }
+        check(sql, false,false);
     }
 
     public void testFunctionInFunction() {
         String sql = "SELECT POW(3.0, ABS(2)+1) FROM emps WHERE empno > 10";
-        if (decimalSupported) {
-            check(sql, false,false);
-        }
+        check(sql, false,false);
     }
 
     public void testCaseExpressions() {
@@ -523,9 +522,7 @@ public class Rex2CalcPlanTest extends FarragoTestCase
             "SELECT " +
             "{fn log(1.0)}" +
             " FROM emps WHERE empno > 10";
-        if (decimalSupported) {
-            check(sql, false,false);
-        }
+        check(sql, false,false);
     }
 
     public void testMixingTypes() {
@@ -533,9 +530,7 @@ public class Rex2CalcPlanTest extends FarragoTestCase
             "SELECT " +
             "1+1.0" +
             " FROM emps WHERE empno > 10";
-        if (decimalSupported) {
-            check(sql, false,false);
-        }
+        check(sql, false,false);
     }
 
     public void testCastCharTypesToNumbersAndBack() {
@@ -549,9 +544,7 @@ public class Rex2CalcPlanTest extends FarragoTestCase
             ",cast('123' as tinyint)" +
             ",cast('123' as double)" +
             " FROM emps WHERE empno > 10";
-        if (decimalSupported) {
-            check(sql, false,false);
-        }
+        check(sql, false,false);
     }
 
 }

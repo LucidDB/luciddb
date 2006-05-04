@@ -179,24 +179,31 @@
 0: jdbc:luciddb:> --order by DEPTNO, LOCID;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Equjoin Condition plus non-equjoin condition on the same tables with group by ( Bugid 2796 )
-0: jdbc:luciddb:> --select P.DEPTNO, COUNT(*) from 
-0: jdbc:luciddb:> --(select DEPTNO, AVG(EMPNO) AVGAMT from
-0: jdbc:luciddb:> --EMP group by DEPTNO) A,
-0: jdbc:luciddb:> --EMP P
-0: jdbc:luciddb:> --where P.DEPTNO = A.DEPTNO
-0: jdbc:luciddb:> --and EMPNO < AVGAMT
-0: jdbc:luciddb:> --group by P.DEPTNO 
-0: jdbc:luciddb:> --order by P.DEPTNO;
+0: jdbc:luciddb:> select P.DEPTNO, COUNT(*) from 
+. . . . . . . . > (select DEPTNO, AVG(EMPNO) AVGAMT from
+. . . . . . . . > EMP group by DEPTNO) A,
+. . . . . . . . > EMP P
+. . . . . . . . > where P.DEPTNO = A.DEPTNO
+. . . . . . . . > and EMPNO < AVGAMT
+. . . . . . . . > group by P.DEPTNO 
+. . . . . . . . > order by P.DEPTNO;
++---------+---------+
+| DEPTNO  | EXPR$1  |
++---------+---------+
+| 30      | 2       |
+| 40      | 1       |
+| 50      | 1       |
++---------+---------+
 0: jdbc:luciddb:>    
 0: jdbc:luciddb:> -- Equjoin Condition plus non-equjoin condition on the same tables with group by and non-staged Item in subquery
-0: jdbc:luciddb:> --select P.DEPTNO, COUNT(*) from
-0: jdbc:luciddb:> --(select DEPTNO, INC() , AVG(EMPNO) AVGAMT from
-0: jdbc:luciddb:> --EMP group by DEPTNO) A,
-0: jdbc:luciddb:> --EMP P
-0: jdbc:luciddb:> --where P.DEPTNO = A.DEPTNO
-0: jdbc:luciddb:> --and EMPNO < AVGAMT
-0: jdbc:luciddb:> --group by P.DEPTNO
-0: jdbc:luciddb:> --order by P.DEPTNO;
+0: jdbc:luciddb:> -- select P.DEPTNO, COUNT(*) from
+0: jdbc:luciddb:> -- (select DEPTNO, INC() , AVG(EMPNO) AVGAMT from
+0: jdbc:luciddb:> -- EMP group by DEPTNO) A,
+0: jdbc:luciddb:> -- EMP P
+0: jdbc:luciddb:> -- where P.DEPTNO = A.DEPTNO
+0: jdbc:luciddb:> -- and EMPNO < AVGAMT
+0: jdbc:luciddb:> -- group by P.DEPTNO
+0: jdbc:luciddb:> -- order by P.DEPTNO;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

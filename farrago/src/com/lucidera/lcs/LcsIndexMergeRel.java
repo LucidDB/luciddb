@@ -133,6 +133,26 @@ class LcsIndexMergeRel extends FennelSingleRel
         
         return merge;
     }
+    
+    //  implement RelNode
+    public void explain(RelOptPlanWriter pw)
+    {   
+        String[] names = new String[4];
+        
+        names[0] = "child#0";
+        names[1] = "consumerSridParamId";
+        names[2] = "segmentLimitParamId";
+        names[3] = "ridLimitParamId";
+        pw.explain(
+            this, names, new Object[] {
+                print(consumerSridParamId), print(segmentLimitParamId),
+                print(ridLimitParamId) });
+    }
+
+    private Object print(FennelRelParamId paramId)
+    {
+        return (paramId == null) ? (Integer) 0 : paramId;
+    }
 }
 
 // End LcsIndexMergeRel.java

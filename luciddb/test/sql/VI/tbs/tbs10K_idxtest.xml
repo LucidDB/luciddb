@@ -111,6 +111,7 @@
       </test>
 
       <test name="q7006_10k_idx" requiresSuccess="creschema,benchIns10k_idx">
+        <!-- IN not supported yet, commented out -->
         <test-metadata>
           <withIndex value="true"/>
         </test-metadata>

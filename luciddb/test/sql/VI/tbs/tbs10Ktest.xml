@@ -111,6 +111,7 @@
       </test>
 
       <test name="q7006_10k" requiresSuccess="creschema,benchIns10k">
+        <!-- IN not supported yet, commented out -->
         <test-metadata>
           <withIndex value="false"/>
         </test-metadata>

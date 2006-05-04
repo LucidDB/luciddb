@@ -278,8 +278,8 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, LCSEMPS]])'
-'    FennelCalcRel(expr#0..9=[{inputs}], expr#10=[100], expr#11=[=($t0, $t10)], expr#12=[CAST($t4):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], $f0=[$t12], $condition=[$t11])'
-'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FennelCalcRel(expr#0..1=[{inputs}], expr#2=[100], expr#3=[=($t0, $t2)], expr#4=[CAST($t1):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], $f0=[$t4], $condition=[$t3])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 4]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> !set outputformat table
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Locate a NULL value from the source table.
@@ -739,12 +739,14 @@
 0: jdbc:farrago:> -- Part 3. Cluster Projection test --
 0: jdbc:farrago:> -------------------------------------
 0: jdbc:farrago:> create table tencols(c0 int, c1 int, c2 int, c3 int, c4 int, c5 int, c6 int,
-. . . . . . . . >                      c7 int, c8 int, c9 int)
+. . . . . . . . >                         c7 int, c8 int, c9 int)
 . . . . . . . . > create clustered index i_c0 on tencols(c0)
 . . . . . . . . > create clustered index i_c1_c2 on tencols(c1, c2)
 . . . . . . . . > create clustered index i_c3_c4_c5 on tencols(c3, c4, c5)
 . . . . . . . . > create clustered index i_c6_c7_c8_c9 on tencols(c6, c7, c8, c9);
+0: jdbc:farrago:> create index i_c9 on tencols(c9);
 0: jdbc:farrago:> insert into tencols values(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+0: jdbc:farrago:> insert into tencols values(-1, -1, -1, -1, -1, -1, -1, -1, -1, -1);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set outputformat csv
 0: jdbc:farrago:> -- should select all clusters
@@ -791,28 +793,34 @@
 0: jdbc:farrago:> explain plan for select c2, c4, c8, c0 from tencols
 . . . . . . . . >     where c0 = 0 and c2 = 2 and c4 = 4 and c8 = 8;
 'column0'
-'IterCalcRel(expr#0..3=[{inputs}], expr#4=[0], expr#5=[=($t3, $t4)], expr#6=[2], expr#7=[=($t0, $t6)], expr#8=[AND($t5, $t7)], expr#9=[4], expr#10=[=($t1, $t9)], expr#11=[AND($t8, $t10)], expr#12=[8], expr#13=[=($t2, $t12)], expr#14=[AND($t11, $t13)], proj#0..3=[{exprs}], $condition=[$t14])'
+'IterCalcRel(expr#0..3=[{inputs}], expr#4=[0], expr#5=[=($t0, $t4)], expr#6=[2], expr#7=[=($t1, $t6)], expr#8=[AND($t5, $t7)], expr#9=[4], expr#10=[=($t2, $t9)], expr#11=[AND($t8, $t10)], expr#12=[8], expr#13=[=($t3, $t12)], expr#14=[AND($t11, $t13)], C2=[$t1], C4=[$t2], C8=[$t3], C0=[$t0], $condition=[$t14])'
 '  FennelToIteratorConverter'
-'    LcsRowScanRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[[2, 4, 8, 0]], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]])'
+'    LcsRowScanRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[[0, 2, 4, 8]], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]])'
 0: jdbc:farrago:> explain plan for select c7, c0, c5, c1 from tencols
 . . . . . . . . >     where c1 + c5 = 6;
 'column0'
-'IterCalcRel(expr#0..3=[{inputs}], expr#4=[+($t3, $t2)], expr#5=[6], expr#6=[=($t4, $t5)], proj#0..3=[{exprs}], $condition=[$t6])'
+'IterCalcRel(expr#0..3=[{inputs}], expr#4=[+($t1, $t2)], expr#5=[6], expr#6=[=($t4, $t5)], C7=[$t3], C0=[$t0], C5=[$t2], C1=[$t1], $condition=[$t6])'
 '  FennelToIteratorConverter'
-'    LcsRowScanRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[[7, 0, 5, 1]], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]])'
-0: jdbc:farrago:> -- can't push projection because filter references an additional column
+'    LcsRowScanRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[[0, 1, 5, 7]], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]])'
 0: jdbc:farrago:> explain plan for select c0, c5, c7, c1 from tencols
 . . . . . . . . >     where c0 + c2 = 2;
 'column0'
-'IterCalcRel(expr#0..9=[{inputs}], expr#10=[+($t0, $t2)], expr#11=[2], expr#12=[=($t10, $t11)], C0=[$t0], C5=[$t5], C7=[$t7], C1=[$t1], $condition=[$t12])'
+'IterCalcRel(expr#0..4=[{inputs}], expr#5=[+($t0, $t2)], expr#6=[2], expr#7=[=($t5, $t6)], C0=[$t0], C5=[$t3], C7=[$t4], C1=[$t1], $condition=[$t7])'
 '  FennelToIteratorConverter'
-'    LcsRowScanRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[*], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]])'
-0: jdbc:farrago:> -- can't push projection because projection contains an expression
+'    LcsRowScanRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[[0, 1, 2, 5, 7]], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]])'
 0: jdbc:farrago:> explain plan for select c0 + c1 from tencols where c0 = 0;
 'column0'
-'IterCalcRel(expr#0..9=[{inputs}], expr#10=[0], expr#11=[=($t0, $t10)], expr#12=[+($t0, $t1)], EXPR$0=[$t12], $condition=[$t11])'
+'IterCalcRel(expr#0..1=[{inputs}], expr#2=[0], expr#3=[=($t0, $t2)], expr#4=[+($t0, $t1)], EXPR$0=[$t4], $condition=[$t3])'
 '  FennelToIteratorConverter'
-'    LcsRowScanRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[*], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]])'
+'    LcsRowScanRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[[0, 1]], clustered indexes=[[I_C0, I_C1_C2]])'
+0: jdbc:farrago:> -- column referenced in filter is processed by the index scan so it should
+0: jdbc:farrago:> -- not be projected
+0: jdbc:farrago:> explain plan for select c0 from tencols where c9 = 9;
+'column0'
+'FennelToIteratorConverter'
+'  LcsRowScanRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[[0]], clustered indexes=[[I_C0]])'
+'    LcsIndexSearchRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[*], index=[I_C9], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'      FennelValuesRel(tuples=[[{ '[', 9, ']', 9 }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set outputformat table
 0: jdbc:farrago:> 
@@ -843,6 +851,12 @@
 +---------+
 | 1       |
 +---------+
+0: jdbc:farrago:> select c0 from tencols where c9 = 9;
++-----+
+| C0  |
++-----+
+| 0   |
++-----+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> truncate table tencols;
 0: jdbc:farrago:> 
@@ -909,7 +923,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, RECTANGLES]])'
-'    FennelCalcRel(expr#0=[{inputs}], expr#1=[_ISO-8859-1'Default'], expr#2=[CAST($t1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#3=[false], expr#4=[CAST($t3):BOOLEAN], expr#5=[2.0], expr#6=[Reinterpret($t5)], expr#7=[CAST($t6):DOUBLE NOT NULL], expr#8=[10], expr#9=[/($t7, $t8)], expr#10=[CAST($t9):DOUBLE], expr#11=[4.0], expr#12=[Reinterpret($t11)], expr#13=[CAST($t12):DOUBLE NOT NULL], expr#14=[/($t13, $t8)], expr#15=[CAST($t14):DOUBLE], expr#16=[1], $f0=[$t2], $f1=[$t4], $f1=[$t10], $f1=[$t15], $f2=[$t16])'
+'    FennelCalcRel(expr#0=[{inputs}], expr#1=[_ISO-8859-1'Default'], expr#2=[false], expr#3=[2.0], expr#4=[Reinterpret($t3)], expr#5=[CAST($t4):DOUBLE NOT NULL], expr#6=[1E1], expr#7=[/($t5, $t6)], expr#8=[CAST($t7):DOUBLE], expr#9=[4.0], expr#10=[Reinterpret($t9)], expr#11=[CAST($t10):DOUBLE NOT NULL], expr#12=[/($t11, $t6)], expr#13=[CAST($t12):DOUBLE], expr#14=[1], expr#15=[CAST($t1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#16=[CAST($t2):BOOLEAN], $f0=[$t15], $f1=[$t16], $f1=[$t8], $f1=[$t13], $f2=[$t14])'
 '      FennelValuesRel(tuples=[[{ 0 }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
