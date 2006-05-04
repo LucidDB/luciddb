@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/selectAdvanced.sql#11 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/regressionsql/selectAdvanced.sql#8 $
 0: jdbc:farrago:> -- Full vertical system testing of advanced select statements
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
@@ -293,7 +293,7 @@ Error: Cast function cannot convert value of type INTEGER to type VARBINARY(1) (
 0: jdbc:farrago:> -- should fail
 0: jdbc:farrago:> insert into s.nulldecimal values (null, 20);
 Error: could not calculate results for the following row:
-[ 0 ]
+[ NULL, 20 ]
 Messages:
 [0]:PC=8 Code=22004 (state=,code=0)
 0: jdbc:farrago:> 

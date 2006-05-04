@@ -80,11 +80,7 @@ public class FarragoDefaultSessionPersonality
         FarragoSessionPreparingStmt stmt,
         boolean init)
     {
-        FarragoDefaultPlanner planner = new FarragoDefaultPlanner(stmt);
-        if (init) {
-            planner.init();
-        }
-        return planner;
+        return FarragoDefaultHeuristicPlanner.newInstance(stmt);
     }
 
     // implement FarragoSessionPersonality

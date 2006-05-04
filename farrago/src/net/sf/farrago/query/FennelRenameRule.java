@@ -117,7 +117,9 @@ public class FennelRenameRule extends RelOptRule
                 project.getCluster(),
                 fennelInput,
                 fieldNames,
-                RelOptUtil.clone(fennelInput.getTraits()));
+                RelOptUtil.mergeTraits(
+                    fennelInput.getTraits(),
+                    new RelTraitSet(FennelRel.FENNEL_EXEC_CONVENTION)));
         call.transformTo(rename);
     }
 }

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev_lcs/farrago/unitsql/optimizer/joinorder.sql#6 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/optimizer/joinorder.sql#4 $
 0: jdbc:farrago:> -- Tests for ConvertMultiJoinRule and OptimizeJoinRule
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema jo;
@@ -7,13 +7,7 @@
 0: jdbc:farrago:> -- set session personality to LucidDB so all tables
 0: jdbc:farrago:> -- will be column-store by default and LucidDB-specific optimization rules
 0: jdbc:farrago:> -- are picked up
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- fake jar since we don't actually build a separate jar for LucidDB yet
-0: jdbc:farrago:> create jar luciddb_plugin 
-. . . . . . . . > library 'class com.lucidera.farrago.LucidDbSessionFactory' 
-. . . . . . . . > options(0);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> alter session implementation set jar luciddb_plugin;
+0: jdbc:farrago:> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create table f(f int, f_d1 int, f_d2 int, f_d3 int);
 0: jdbc:farrago:> create table d1(d1 int, d1_f int, d1_d2 int, d1_d3 int);

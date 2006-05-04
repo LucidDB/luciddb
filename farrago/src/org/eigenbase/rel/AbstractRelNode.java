@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.eigenbase.relopt.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexUtil;
@@ -312,8 +313,13 @@ public abstract class AbstractRelNode implements RelNode
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
-        throw Util.newInternal("todo: implement " + getClass()
-            + ".computeSelfCost");
+        // by default, assume cost is proportional to number of rows
+        double rowCount = RelMetadataQuery.getRowCount(this);
+        double bytesPerRow = 1;
+        return planner.makeCost(
+            rowCount,
+            rowCount,
+            0);
     }
 
     public void explain(RelOptPlanWriter pw)

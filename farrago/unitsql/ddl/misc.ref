@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/ddl/misc.sql#6 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/ddl/misc.sql#5 $
 0: jdbc:farrago:> -- Miscellaneous DDL
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema misc;
@@ -122,17 +122,20 @@ Error: PRIMARY KEY constraint required for table "MISC"."MISSING_PK" (state=,cod
 0: jdbc:farrago:> explain plan for select k from t order by 1;
 'column0'
 'FennelToIteratorConverter'
-'  FtrsIndexScanRel(table=[[LOCALDB, MISC, T]], projection=[[3]], index=[SYS$CONSTRAINT_INDEX$T$SYS$UNIQUE_KEY$K], preserveOrder=[true])'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, MISC, T]], projection=[[3]], index=[SYS$CONSTRAINT_INDEX$T$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for select h from t order by 1;
 'column0'
 'FennelToIteratorConverter'
-'  FtrsIndexScanRel(table=[[LOCALDB, MISC, T]], projection=[[0]], index=[T_H], preserveOrder=[true])'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, MISC, T]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$T$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for select j from t order by 1;
 'column0'
 'FennelToIteratorConverter'
-'  FtrsIndexScanRel(table=[[LOCALDB, MISC, T]], projection=[[2]], index=[T_J], preserveOrder=[true])'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, MISC, T]], projection=[[2]], index=[SYS$CONSTRAINT_INDEX$T$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set outputformat table
 0: jdbc:farrago:> 

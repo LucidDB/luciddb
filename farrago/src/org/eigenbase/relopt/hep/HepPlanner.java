@@ -547,7 +547,18 @@ public class HepPlanner extends AbstractRelOptPlanner
         }
 
         HepRelVertex newVertex = addRelToGraph(bestRel);
-        contractVertices(newVertex, vertex, parents);
+
+        // There's a chance that newVertex is the same as one
+        // of the parents due to common subexpression recognition
+        // (e.g. the ProjectRel added by SwapJoinRule).  In that
+        // case, treat the transformation as a nop to avoid
+        // creating a loop.
+        int iParentMatch = parents.indexOf(newVertex);
+        if (iParentMatch != -1) {
+            newVertex = parents.get(iParentMatch);
+        } else {
+            contractVertices(newVertex, vertex, parents);
+        }
 
         if (getListener() != null) {
             // Assume listener doesn't want to see garbage.
@@ -783,6 +794,8 @@ public class HepPlanner extends AbstractRelOptPlanner
         if (!tracer.isLoggable(Level.FINER)) {
             return;
         }
+        
+        assertNoCycles();
 
         Iterator<HepRelVertex> bfsIter = new BreadthFirstIterator<
             HepRelVertex, Edge<HepRelVertex>, Object>(
@@ -805,8 +818,6 @@ public class HepPlanner extends AbstractRelOptPlanner
         }
         sb.append("}");
         tracer.finer(sb.toString());
-        
-        assertNoCycles();
     }
     
     // implement RelOptPlanner

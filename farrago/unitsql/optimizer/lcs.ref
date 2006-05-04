@@ -8,13 +8,7 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- set session personality to LucidDB so all tables
 0: jdbc:farrago:> -- will be column-store by default
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- fake jar since we don't actually build a separate jar for LucidDB yet
-0: jdbc:farrago:> create jar luciddb_plugin 
-. . . . . . . . > library 'class com.lucidera.farrago.LucidDbSessionFactory' 
-. . . . . . . . > options(0);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> alter session implementation set jar luciddb_plugin;
+0: jdbc:farrago:> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> ---------------------------------
@@ -1043,8 +1037,6 @@
 0: jdbc:farrago:> -- Clean up
 0: jdbc:farrago:> 
 0: jdbc:farrago:> alter session implementation set default;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> drop jar luciddb_plugin options(0);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- drop schema
 0: jdbc:farrago:> drop schema lcs;

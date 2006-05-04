@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev_lcs/farrago/unitsql/optimizer/agg.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/optimizer/agg.sql#6 $
 0: jdbc:farrago:> -- Test aggregate queries
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'sales';
@@ -176,10 +176,11 @@
 . . . . . . . . > select avg(deptno) from depts;
 'column0'
 'FennelToIteratorConverter'
-'  FennelCalcRel(expr#0..1=[{inputs}], expr#2=[/($t0, $t1)], expr#3=[CAST($t2):INTEGER], EXPR$0=[$t3])'
-'    FennelAggRel(groupCount=[0], agg#0=[SUM(0)], agg#1=[COUNT(0)])'
-'      FennelRenameRel(fieldNames=[[$f0]])'
-'        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'  FennelRenameRel(fieldNames=[[EXPR$0]])'
+'    FennelCalcRel(expr#0..1=[{inputs}], expr#2=[/($t0, $t1)], expr#3=[CAST($t2):INTEGER], $f0=[$t3])'
+'      FennelAggRel(groupCount=[0], agg#0=[SUM(0)], agg#1=[COUNT(0)])'
+'        FennelRenameRel(fieldNames=[[$f0]])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan without implementation for
 . . . . . . . . > select deptno,max(name) from sales.emps group by deptno;
@@ -211,8 +212,9 @@
 '  FennelRenameRel(fieldNames=[[NAME, EXPR$1]])'
 '    FennelAggRel(groupCount=[1], agg#0=[COUNT()])'
 '      FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'        FennelCalcRel(expr#0..2=[{inputs}], $f0=[$t1])'
-'          FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[0]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
+'        FennelCalcRel(expr#0..2=[{inputs}], expr#3=[=($t1, $t0)], $f0=[$t2], $condition=[$t3])'
+'          FennelCartesianProductRel(leftouterjoin=[false])'
+'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
 '            FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for

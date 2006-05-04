@@ -1,6 +1,10 @@
 -- $Id$
 -- Test queries which make use of indexes
 
+-- use Volcano for these because Hep can't do a very good job
+-- with many of the patterns, and it's a good workout for Volcano
+alter session implementation add jar sys_boot.sys_boot.volcano_plugin;
+
 create schema oj;
 
 create table oj.t1(i int not null primary key, j int unique);

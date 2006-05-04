@@ -6,13 +6,7 @@ set schema 'sj';
 
 -- set session personality to LucidDB so all tables
 -- will be column-store by default
-
--- fake jar since we don't actually build a separate jar for LucidDB yet
-create jar luciddb_plugin 
-library 'class com.lucidera.farrago.LucidDbSessionFactory' 
-options(0);
-
-alter session implementation set jar luciddb_plugin;
+alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
 
 create table t(
     a int, b char(20), c varchar(20) not null,

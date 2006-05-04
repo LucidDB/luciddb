@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/decimal.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/ddl/decimal.sql#6 $
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema decimal_ddl_test;
 0: jdbc:farrago:> set schema 'decimal_ddl_test';
@@ -84,42 +84,42 @@ Error: From line 1, column 28 to line 1, column 52: Numeric literal '-9223372036
 0: jdbc:farrago:> -- should give error
 0: jdbc:farrago:> insert into td5 values(20, 100000);
 Error: could not calculate results for the following row:
-[ 0 ]
+[ 20, 100000 ]
 Messages:
 [0]:PC=5 Code=22003 (state=,code=0)
 0: jdbc:farrago:> insert into td5 values(21, 99999.5); 
 Error: could not calculate results for the following row:
-[ 0 ]
+[ 21, 999995 ]
 Messages:
 [0]:PC=13 Code=22003 (state=,code=0)
 0: jdbc:farrago:> insert into td5 values(22, -100000);
 Error: could not calculate results for the following row:
-[ 0 ]
+[ 22, -100000 ]
 Messages:
 [0]:PC=5 Code=22003 (state=,code=0)
 0: jdbc:farrago:> insert into td5 values(23, -99999.5); 
 Error: could not calculate results for the following row:
-[ 0 ]
+[ 23, -999995 ]
 Messages:
 [0]:PC=13 Code=22003 (state=,code=0)
 0: jdbc:farrago:> insert into td52 values(20, 1000.00);
 Error: could not calculate results for the following row:
-[ 0 ]
+[ 20, 100000 ]
 Messages:
 [0]:PC=4 Code=22003 (state=,code=0)
 0: jdbc:farrago:> insert into td52 values(21, 999.995);
 Error: could not calculate results for the following row:
-[ 0 ]
+[ 21, 999995 ]
 Messages:
 [0]:PC=13 Code=22003 (state=,code=0)
 0: jdbc:farrago:> insert into td52 values(22, -1000.00);
 Error: could not calculate results for the following row:
-[ 0 ]
+[ 22, -100000 ]
 Messages:
 [0]:PC=4 Code=22003 (state=,code=0)
 0: jdbc:farrago:> insert into td52 values(23, -999.995); 
 Error: could not calculate results for the following row:
-[ 0 ]
+[ 23, -999995 ]
 Messages:
 [0]:PC=13 Code=22003 (state=,code=0)
 0: jdbc:farrago:> 
@@ -131,7 +131,7 @@ Messages:
 0: jdbc:farrago:> -- should give error
 0: jdbc:farrago:> insert into td52notnull values(30, null);
 Error: could not calculate results for the following row:
-[ 0 ]
+[ 30, NULL ]
 Messages:
 [0]:PC=7 Code=22004 (state=,code=0)
 0: jdbc:farrago:> 

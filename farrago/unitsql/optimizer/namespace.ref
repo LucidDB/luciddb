@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/namespace.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/optimizer/namespace.sql#6 $
 0: jdbc:farrago:> -- Test queries which make use of foreign namespaces
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- force usage of Java calculator
@@ -338,11 +338,12 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
-'    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..14=[{inputs}], expr#15=[_ISO-8859-1'name'], expr#16=[=($t0, $t15)], PARAM_NAME=[$t0], EXCEPTION_NAME=[$t8], $condition=[$t16])'
-'        MedMdrJoinRel(condition=[=($2, $13)], joinType=[left])'
-'          MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Parameter]])'
-'          MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Exception]])'
+'    FennelRenameRel(fieldNames=[[PARAM_NAME, EXCEPTION_NAME]])'
+'      IteratorToFennelConverter'
+'        IterCalcRel(expr#0..14=[{inputs}], expr#15=[_ISO-8859-1'name'], expr#16=[=($t0, $t15)], name=[$t0], name0=[$t8], $condition=[$t16])'
+'          MedMdrJoinRel(condition=[=($2, $13)], joinType=[left])'
+'            MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Parameter]])'
+'            MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Exception]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for 
 . . . . . . . . > select dname 
@@ -368,12 +369,14 @@
 . . . . . . . . >     e."mofId" = p."mofClassName"
 . . . . . . . . > ;
 'column0'
-'IterCalcRel(expr#0..14=[{inputs}], expr#15=[=($t5, $t14)], EXCEPTION_NAME=[$t0], PARAM_NAME=[$t7], $condition=[$t15])'
+'IterCalcRel(expr#0..3=[{inputs}], expr#4=[=($t1, $t3)], EXCEPTION_NAME=[$t0], PARAM_NAME=[$t2], $condition=[$t4])'
 '  FennelToIteratorConverter'
 '    FennelCartesianProductRel(leftouterjoin=[false])'
 '      IteratorToFennelConverter'
-'        MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Exception]])'
+'        IterCalcRel(expr#0..6=[{inputs}], name=[$t0], mofId=[$t5])'
+'          MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Exception]])'
 '      IteratorToFennelConverter'
-'        MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Parameter]])'
+'        IterCalcRel(expr#0..7=[{inputs}], name=[$t0], mofClassName=[$t7])'
+'          MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Parameter]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

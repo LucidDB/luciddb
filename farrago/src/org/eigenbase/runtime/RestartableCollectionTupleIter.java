@@ -37,6 +37,18 @@ public class RestartableCollectionTupleIter implements TupleIter
 {
     private final Collection collection;
     private Iterator iterator;
+
+    // this handles the case where we thought a join was one-to-many
+    // but it's actually one-to-one
+    public RestartableCollectionTupleIter(Object obj)
+    {
+        if (obj instanceof Collection) {
+            collection = (Collection) obj;
+        } else {
+            collection = Collections.singleton(obj);
+        }
+        iterator = collection.iterator();
+    }
     
     public RestartableCollectionTupleIter(Collection collection)
     {

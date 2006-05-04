@@ -32,7 +32,7 @@ import junit.extensions.TestSetup;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-import net.sf.farrago.defimpl.FarragoDefaultSessionPersonality;
+import net.sf.farrago.defimpl.*;
 import net.sf.farrago.db.*;
 import net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver;
 import net.sf.farrago.ojrex.FarragoOJRexImplementor;
@@ -358,6 +358,18 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
             this.calcRexImplementor = calcRexImplementorTable;
         }
 
+        public FarragoSessionPlanner newPlanner(
+            FarragoSessionPreparingStmt stmt,
+            boolean init)
+        {
+            // This test needs Volcano.
+            FarragoDefaultPlanner planner = new FarragoDefaultPlanner(stmt);
+            if (init) {
+                planner.init();
+            }
+            return planner;
+        }
+        
         public SqlOperatorTable getSqlOperatorTable(
             FarragoSessionPreparingStmt preparingStmt)
         {

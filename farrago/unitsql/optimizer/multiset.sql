@@ -20,23 +20,23 @@ explain plan for values multiset[1] multiset union all multiset[2];
 explain plan for values multiset[1] multiset union distinct multiset[2];
 
 -- shouldnt fail but does due to current non-intersect support
-explain plan for values multiset[1] multiset intersect multiset[2];
-explain plan for values multiset[1] multiset intersect all multiset[2];
-explain plan for values multiset[1] multiset intersect distinct multiset[2];
+-- explain plan for values multiset[1] multiset intersect multiset[2];
+-- explain plan for values multiset[1] multiset intersect all multiset[2];
+-- explain plan for values multiset[1] multiset intersect distinct multiset[2];
 
 -- shouldnt fail but does due to current non-except support
-explain plan for values multiset[1] multiset except multiset[2];
-explain plan for values multiset[1] multiset except all multiset[2];
-explain plan for values multiset[1] multiset except distinct multiset[2];
+-- explain plan for values multiset[1] multiset except multiset[2];
+-- explain plan for values multiset[1] multiset except all multiset[2];
+-- explain plan for values multiset[1] multiset except distinct multiset[2];
 
 -- test cast from multiset to multiset
-explain plan for select * from unnest(cast(multiset['1'] as double multiset));
+-- explain plan for select * from unnest(cast(multiset['1'] as double multiset));
 
 -- test IS A SET
-explain plan for values multiset[1] is a set;
+-- explain plan for values multiset[1] is a set;
 
 -- test MEMBER OF
-explain plan for values 632 MEMBER OF multiset[2];
+-- explain plan for values 632 MEMBER OF multiset[2];
 
 
 -- explain plan for select fusion(multiset[3]) from emps;

@@ -80,3 +80,13 @@ options(
     url 'jdbc:hsqldb:testcases/hsqldb/scott',
     user_name 'SA',
     table_types 'TABLE,VIEW');
+
+-- create Volcano personality "jar" for use by tests that need it
+create jar sys_boot.sys_boot.volcano_plugin 
+library 'class net.sf.farrago.defimpl.FarragoVolcanoPersonalityFactory' 
+options(0);
+
+-- likewise for LucidDB session personality
+create jar sys_boot.sys_boot.luciddb_plugin 
+library 'class com.lucidera.farrago.LucidDbSessionFactory' 
+options(0);
