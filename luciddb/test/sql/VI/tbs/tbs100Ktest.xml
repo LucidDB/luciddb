@@ -28,6 +28,7 @@
 
       <test name="q0_100k" requiresSuccess="creschema,benchIns100k">
         <test-metadata>
+          <runDuration>short medium</runDuration>
           <withIndex value="false"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/noidx/q0_100K.sql"/>
@@ -35,6 +36,7 @@
 
       <test name="qor_100k" requiresSuccess="creschema,benchIns100k">
         <test-metadata>
+          <runDuration>long</runDuration>
           <withIndex value="false"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/noidx/qor_100k.sql"/>
@@ -42,6 +44,7 @@
 
       <test name="q1_100k" requiresSuccess="creschema,benchIns100k">
         <test-metadata>
+          <runDuration>short medium</runDuration>
           <withIndex value="false"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/noidx/q1_100k.sql"/>
@@ -49,6 +52,7 @@
 
       <test name="q2a_100k" requiresSuccess="creschema,benchIns100k">
         <test-metadata>
+          <runDuration>short medium</runDuration>
           <withIndex value="false"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/noidx/q2a_100k.sql"/>
@@ -56,6 +60,7 @@
 
       <test name="q3a_100k" requiresSuccess="creschema,benchIns100k">
         <test-metadata>
+          <runDuration>short medium</runDuration>
           <withIndex value="false"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/noidx/q3a_100k.sql"/>
@@ -63,6 +68,7 @@
 
       <test name="q3b_100k" requiresSuccess="creschema,benchIns100k">
         <test-metadata>
+          <runDuration>short medium</runDuration>
           <withIndex value="false"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/noidx/q3b_100k.sql"/>
