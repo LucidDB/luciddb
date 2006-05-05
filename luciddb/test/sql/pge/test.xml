@@ -25,6 +25,10 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/oracle/cubes.sql"/>
       </test>
 
+      <test name="analyze" requiresSuccess="creschema">
+        <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/oracle/analyze.sql"/>
+      </test>
+
       <test name="1" requiresSuccess="creschema">
         <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/oracle/1.sql"/>
       </test>
@@ -110,31 +114,18 @@
       </test>
 
       <test name="19" requiresSuccess="creschema">
-        <!-- DISTINCT and OUTER JOIN not supported/slow -->
-        <test-metadata>
-          <knownFailure value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/oracle/19.sql"/>
       </test>
 
       <test name="20" requiresSuccess="creschema">
-        <!-- OUTER JOIN and DISTINCT not supported/slow -->
-        <test-metadata>
-          <knownFailure value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/oracle/20.sql"/>
       </test>
 
       <test name="20b" requiresSuccess="creschema">
-        <!-- OUTER JOIN and DISTINCT not supported/slow-->
-        <test-metadata>
-          <knownFailure value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/oracle/20b.sql"/>
       </test>
 
       <test name="21" requiresSuccess="creschema">
-        <!-- subquery in from clause -->
         <junit-sql file="${open.dir}/luciddb/test/sql/pge/gen/oracle/21.sql"/>
       </test>
       

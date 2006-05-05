@@ -1,0 +1,36 @@
+0: jdbc:luciddb:> -- Query 20b
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- SELECT DISTINCT AL1.IS_DWLGS_VAL, AL1.CU_ID, AL1.CUOR_CUST_NM,
+0: jdbc:luciddb:> -- AL1.CUIN_LST_NM, AL2.SRVPLN_ID
+0: jdbc:luciddb:> --  FROM (PGE.CUST_SERV_ACCT AL1 LEFT OUTER JOIN pge.revn_dtl_rand AL3
+0: jdbc:luciddb:> --         ON AL1.CUST_SERV_ACCT_KEY = AL3.CUST_SERV_ACCT_KEY),
+0: jdbc:luciddb:> --   PGE.SERV_PLAN AL2
+0: jdbc:luciddb:> --  WHERE
+0: jdbc:luciddb:> --         AL3.SRVPLN_KEY = AL2.SRVPLN_KEY 
+0: jdbc:luciddb:> --   AND   AL1.IS_DWLGS_VAL = 1
+0: jdbc:luciddb:> --   AND   AND AL3.rsd_svc_bilg_amt > 1000
+0: jdbc:luciddb:> --  ORDER BY 1,2,3,4,5
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> SELECT DISTINCT AL1.IS_DWLGS_VAL, AL1.CU_ID, AL1.CUOR_CUST_NM,
+. . . . . . . . > AL1.CUIN_LST_NM, AL2.SRVPLN_ID
+. . . . . . . . >  FROM PGE.CUST_SERV_ACCT AL1 LEFT OUTER JOIN pge.revn_dtl_rand AL3
+. . . . . . . . >         ON AL1.CUST_SERV_ACCT_KEY = AL3.CUST_SERV_ACCT_KEY,
+. . . . . . . . >   PGE.SERV_PLAN AL2
+. . . . . . . . >  WHERE
+. . . . . . . . >         AL3.SRVPLN_KEY = AL2.SRVPLN_KEY 
+. . . . . . . . >   AND   AL1.IS_DWLGS_VAL = 1
+. . . . . . . . >   AND   AL3.rsd_svc_bilg_amt > 1000
+. . . . . . . . >  ORDER BY 1,2,3,4,5
+. . . . . . . . > ;
++---------------+------------+---------------+--------------+------------+
+| IS_DWLGS_VAL  |   CU_ID    | CUOR_CUST_NM  | CUIN_LST_NM  | SRVPLN_ID  |
++---------------+------------+---------------+--------------+------------+
+| 1             | 218400009  | N/A           | STEELMAN     | 311        |
+| 1             | 595110000  | N/A           | CRAYTON      | 811        |
+| 1             | 606000004  | N/A           | THORTON      | 811        |
+| 1             | 674300001  | N/A           | KESLING      | 811        |
+| 1             | 705200006  | N/A           | PATTERSON    | 811        |
+| 1             | 978700006  | N/A           | HOLMEN       | 811        |
++---------------+------------+---------------+--------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

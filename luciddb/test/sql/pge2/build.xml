@@ -58,61 +58,72 @@
   </path>
   <property name="test.classpath" refid="test.classpath"/>
 
-  <target name="gen-sql">
-    <filter token="open.dir" value="${open.dir}"/>
-    <filter token="csv.dir" value="${csv.copy.dir}"/>
-
-    <!-- generate config.properties file -->
-    <copy file="prop.${prop.source}" tofile="config.properties"
-      overwrite="true" filtering="true">
-      <filterset>
-        <filtersfile file="prop.${prop.source}"/>
-      </filterset>
-    </copy>
-
-    <!-- generate all sql files -->
-    <copy todir="${gensql.dir}tmp" overwrite="true"
-      filtering="true">
-      <fileset dir="${pge2.dir}">
-        <include name="**/*.tmpl"/>
-      </fileset>
-      <mapper type="glob" from="*.tmpl" to="*"/>
-      <filterset>
-        <filtersfile file="config.properties"/>
-      </filterset>
-    </copy>
-    <copy todir="${gensql.dir}/${prop.source}" overwrite="true"
-      filtering="true">
-      <fileset dir="${gensql.dir}tmp"/>
-      <filterchain>
-        <tokenfilter>
-          <replaceregex pattern="^.*. . >.*@.*@.*" replace=". . . . . . . . > " flags="s"/>
-          <replaceregex pattern="^.*@.*@.*" replace="" flags="s"/>
-        </tokenfilter>
-      </filterchain>
-    </copy>
-    <delete dir="${gensql.dir}tmp" quiet="true"/>
-
-    <!-- copy over all other .sql and .ref files -->
-    <copy todir="${gensql.dir}/${prop.source}">
-      <fileset dir="${pge2.dir}">
-        <include name="**/*.sql"/>
-        <include name="**/*.ref"/>
-        <exclude name="gen/**"/>
-      </fileset>
-    </copy>
-  </target>
-  
   <target name="gen-all-sql">
-    <available file="${gensql.dir}" type="dir"
-      property="sql.generated"/>
+    <available file="${gensql.dir}" type="dir" property="sql.generated"/>
     <if>
       <isset property="sql.generated"/>
       <then/>
       <else>
-        <foreach list="oracle,sqlserver,flatfile,csvjdbc" 
-          param="prop.source"
-          target="gen-sql"/>
+        <filter token="open.dir" value="${open.dir}"/>
+        <filter token="csv.dir" value="${csv.copy.dir}"/>
+
+        <!-- generate config.properties file -->
+        <copy file="prop.flatfile" tofile="config.properties"
+          overwrite="true" filtering="true">
+          <filterset>
+            <filtersfile file="prop.flatfile"/>
+          </filterset>
+        </copy>
+
+        <copy todir="${gensql.dir}tmp" overwrite="true" filtering="true">
+          <fileset dir="${pge2.dir}" includes="*.tmpl"/>
+          <globmapper from="*.tmpl" to="*"/>
+          <filterset>
+            <filtersfile file="config.properties"/>
+          </filterset>
+        </copy>
+        <copy todir="${gensql.dir}/flatfile" overwrite="true" filtering="true">
+          <fileset dir="${gensql.dir}tmp"/>
+          <filterchain>
+            <tokenfilter>
+              <replaceregex pattern="^.*. . >.*@.*@.*" replace=". . . . . . . . > " flags="s"/>
+              <replaceregex pattern="^.*@.*@.*" replace="" flags="s"/>
+            </tokenfilter>
+          </filterchain>
+        </copy>
+        <delete dir="${gensql.dir}tmp" quiet="true"/>
+
+        <!-- copy over other .sql and .ref files -->
+        <copy todir="${gensql.dir}/flatfile">
+          <fileset dir="${pge2.dir}">
+            <include name="**/*.sql"/>
+            <include name="**/*.ref"/>
+            <exclude name="gen/**"/>
+          </fileset>
+          <filterset>
+            <filter token="PLAN" value=""/>
+          </filterset>
+        </copy>
+
+        <!-- generate explain plan files -->
+        <copy todir="${gensql.dir}/exp">
+          <fileset dir="${pge2.dir}">
+            <include name="**/*.sql"/>
+            <exclude name="gen/**"/>
+          </fileset>
+          <filterset>
+            <filter token="PLAN" 
+              value="!set outputformat csv &#10;explain plan for"/>
+          </filterset>
+          <regexpmapper from="^(\d.*)\.(.*)$$" to="\1Exp.\2"/>
+        </copy>
+        <copy todir="${gensql.dir}/exp">
+          <fileset dir="${gensql.dir}/flatfile">
+            <include name="create.*"/>
+            <include name="createi.*"/>
+          </fileset>
+        </copy>
+
       </else>
     </if>
   </target>
@@ -161,7 +172,10 @@
   <target name="clean">
     <delete dir="${gensql.dir}"/>
     <delete dir="${bh.log.basedir}"/>
-    <delete dir="${csv.dir}"/>
+    <delete dir="${csv.copy.dir}"/>
+    <delete>
+      <fileset dir="${pge2.dir}" includes="**/*.err"/>
+    </delete>
   </target>
 
   <target name="clean-csv">

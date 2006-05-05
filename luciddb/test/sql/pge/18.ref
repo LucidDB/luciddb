@@ -27,46 +27,46 @@
 +--------------------+-----------+------------+---------------------+---------------------+---------------------+---------------------+
 |     RVTWN_DESC     | REVN_QTR  | SRVPLN_ID  |      SRVPLN_NM      |       EXPR$4        |       EXPR$5        |       EXPR$6        |
 +--------------------+-----------+------------+---------------------+---------------------+---------------------+---------------------+
-| GARY               | 1         | 311        | GAS - RESIDENTIAL   | 41.014649           | 41.961140900000004  | 35.840493280000004  |
+| GARY               | 1         | 311        | GAS - RESIDENTIAL   | 41.014649           | 41.961140900000004  | 35.84049328         |
 | GARY               | 1         | 811        | ELEC - RESIDENTIAL  | 0.0                 | 0.0                 | 155.462892          |
-| KINGSFORD HEIGHTS  | 1         | 311        | GAS - RESIDENTIAL   | 55274.39733699998   | 56685.675754899974  | 38167.27317862996   |
-| LA PORTE           | 1         | 311        | GAS - RESIDENTIAL   | 143068.42262799997  | 146670.38499519994  | 103936.92636341971  |
-| LA PORTE           | 1         | 811        | ELEC - RESIDENTIAL  | 0.0                 | 0.0                 | 402162.24208629975  |
-| NEW CARLISLE       | 1         | 311        | GAS - RESIDENTIAL   | 72.564379           | 74.1418655          | 54.70723182         |
-| RURAL - FARM       | 1         | 311        | GAS - RESIDENTIAL   | 3727.115612999999   | 3820.846716099999   | 2609.0863234799995  |
-| RURAL - FARM       | 1         | 811        | ELEC - RESIDENTIAL  | 0.0                 | 0.0                 | 7809.038781500002   |
-| RURAL - NON-FARM   | 1         | 311        | GAS - RESIDENTIAL   | 68569.68689900018   | 70262.549935        | 50516.292827169986  |
-| RURAL - NON-FARM   | 1         | 811        | ELEC - RESIDENTIAL  | 0.0                 | 0.0                 | 61524.24341675006   |
-| GARY               | 2         | 311        | GAS - RESIDENTIAL   | 39.522625999999995  | 40.4346866          | 34.53669472         |
+| KINGSFORD HEIGHTS  | 1         | 311        | GAS - RESIDENTIAL   | 55274.39733699996   | 56685.6757549       | 38167.27317863      |
+| LA PORTE           | 1         | 311        | GAS - RESIDENTIAL   | 143068.42262800012  | 146670.3849952      | 103936.92636341983  |
+| LA PORTE           | 1         | 811        | ELEC - RESIDENTIAL  | 0.0                 | 0.0                 | 402162.2420863      |
+| NEW CARLISLE       | 1         | 311        | GAS - RESIDENTIAL   | 72.564379           | 74.14186550000001   | 54.707231820000004  |
+| RURAL - FARM       | 1         | 311        | GAS - RESIDENTIAL   | 3727.115612999999   | 3820.8467160999994  | 2609.08632348       |
+| RURAL - FARM       | 1         | 811        | ELEC - RESIDENTIAL  | 0.0                 | 0.0                 | 7809.038781500003   |
+| RURAL - NON-FARM   | 1         | 311        | GAS - RESIDENTIAL   | 68569.68689900008   | 70262.549935        | 50516.29282716981   |
+| RURAL - NON-FARM   | 1         | 811        | ELEC - RESIDENTIAL  | 0.0                 | 0.0                 | 61524.24341675      |
+| GARY               | 2         | 311        | GAS - RESIDENTIAL   | 39.522626           | 40.4346866          | 34.53669472         |
 | GARY               | 2         | 811        | ELEC - RESIDENTIAL  | 0.0                 | 0.0                 | 156.4492779         |
-| KINGSFORD HEIGHTS  | 2         | 311        | GAS - RESIDENTIAL   | 53269.40328100004   | 54629.4827707       | 36783.97789326994   |
-| LA PORTE           | 2         | 311        | GAS - RESIDENTIAL   | 137946.10443799992  | 141419.11882209982  | 100214.44849185     |
-| LA PORTE           | 2         | 811        | ELEC - RESIDENTIAL  | 0.0                 | 0.0                 | 401338.95580284     |
-| NEW CARLISLE       | 2         | 311        | GAS - RESIDENTIAL   | 69.924646           | 71.444747           | 52.717102679999996  |
-| RURAL - FARM       | 2         | 311        | GAS - RESIDENTIAL   | 3594.1292120000003  | 3684.5181283000006  | 2515.7924905999994  |
-| RURAL - FARM       | 2         | 811        | ELEC - RESIDENTIAL  | 0.0                 | 0.0                 | 7791.371684400002   |
-| RURAL - NON-FARM   | 2         | 311        | GAS - RESIDENTIAL   | 66098.79796099989   | 67730.65152770003   | 48697.67399015018   |
-| RURAL - NON-FARM   | 2         | 811        | ELEC - RESIDENTIAL  | 0.0                 | 0.0                 | 61391.56152639      |
-| GARY               | 3         | 311        | GAS - RESIDENTIAL   | 38.691874           | 39.5847634          | 33.810745280000006  |
+| KINGSFORD HEIGHTS  | 2         | 311        | GAS - RESIDENTIAL   | 53269.40328100001   | 54629.482770700015  | 36783.97789326996   |
+| LA PORTE           | 2         | 311        | GAS - RESIDENTIAL   | 137946.10443800013  | 141419.1188221      | 100214.44849184995  |
+| LA PORTE           | 2         | 811        | ELEC - RESIDENTIAL  | 0.0                 | 0.0                 | 401338.9558028403   |
+| NEW CARLISLE       | 2         | 311        | GAS - RESIDENTIAL   | 69.924646           | 71.44474699999999   | 52.717102679999996  |
+| RURAL - FARM       | 2         | 311        | GAS - RESIDENTIAL   | 3594.1292119999994  | 3684.5181283000006  | 2515.7924906        |
+| RURAL - FARM       | 2         | 811        | ELEC - RESIDENTIAL  | 0.0                 | 0.0                 | 7791.371684399998   |
+| RURAL - NON-FARM   | 2         | 311        | GAS - RESIDENTIAL   | 66098.79796099989   | 67730.65152769994   | 48697.673990150135  |
+| RURAL - NON-FARM   | 2         | 811        | ELEC - RESIDENTIAL  | 0.0                 | 0.0                 | 61391.561526389996  |
+| GARY               | 3         | 311        | GAS - RESIDENTIAL   | 38.691874           | 39.5847634          | 33.81074528         |
 | GARY               | 3         | 811        | ELEC - RESIDENTIAL  | 0.0                 | 0.0                 | 156.732435          |
-| KINGSFORD HEIGHTS  | 3         | 311        | GAS - RESIDENTIAL   | 52141.09366700001   | 53472.375440899974  | 36003.112652129996  |
-| LA PORTE           | 3         | 311        | GAS - RESIDENTIAL   | 134923.8829379998   | 138320.78707070023  | 98020.66155686961   |
-| LA PORTE           | 3         | 811        | ELEC - RESIDENTIAL  | 0.0                 | 0.0                 | 407740.7083755598   |
+| KINGSFORD HEIGHTS  | 3         | 311        | GAS - RESIDENTIAL   | 52141.093667000016  | 53472.37544089996   | 36003.112652129974  |
+| LA PORTE           | 3         | 311        | GAS - RESIDENTIAL   | 134923.88293799982  | 138320.7870707003   | 98020.66155686982   |
+| LA PORTE           | 3         | 811        | ELEC - RESIDENTIAL  | 0.0                 | 0.0                 | 407740.7083755592   |
 | NEW CARLISLE       | 3         | 311        | GAS - RESIDENTIAL   | 68.454854           | 69.943003           | 51.60900732         |
-| RURAL - FARM       | 3         | 311        | GAS - RESIDENTIAL   | 3514.7056880000005  | 3603.0938801000007  | 2460.49577228       |
-| RURAL - FARM       | 3         | 811        | ELEC - RESIDENTIAL  | 0.0                 | 0.0                 | 7918.5020382        |
-| RURAL - NON-FARM   | 3         | 311        | GAS - RESIDENTIAL   | 64675.59322899996   | 66272.31947700043   | 47647.23892616996   |
-| RURAL - NON-FARM   | 3         | 811        | ELEC - RESIDENTIAL  | 0.0                 | 0.0                 | 62382.234367080026  |
+| RURAL - FARM       | 3         | 311        | GAS - RESIDENTIAL   | 3514.7056880000005  | 3603.0938801        | 2460.495772280001   |
+| RURAL - FARM       | 3         | 811        | ELEC - RESIDENTIAL  | 0.0                 | 0.0                 | 7918.502038200001   |
+| RURAL - NON-FARM   | 3         | 311        | GAS - RESIDENTIAL   | 64675.593228999925  | 66272.31947700035   | 47647.23892617007   |
+| RURAL - NON-FARM   | 3         | 811        | ELEC - RESIDENTIAL  | 0.0                 | 0.0                 | 62382.23436707999   |
 | GARY               | 4         | 311        | GAS - RESIDENTIAL   | 40.514435           | 41.449383499999996  | 35.4033832          |
 | GARY               | 4         | 811        | ELEC - RESIDENTIAL  | 0.0                 | 0.0                 | 159.57275420000002  |
-| KINGSFORD HEIGHTS  | 4         | 311        | GAS - RESIDENTIAL   | 54600.64058199997   | 55994.71604440002   | 37702.11491930001   |
-| LA PORTE           | 4         | 311        | GAS - RESIDENTIAL   | 141328.82019400017  | 144886.98635770057  | 102673.05648483001  |
-| LA PORTE           | 4         | 811        | ELEC - RESIDENTIAL  | 0.0                 | 0.0                 | 407894.80361747957  |
+| KINGSFORD HEIGHTS  | 4         | 311        | GAS - RESIDENTIAL   | 54600.64058200001   | 55994.7160444       | 37702.11491929997   |
+| LA PORTE           | 4         | 311        | GAS - RESIDENTIAL   | 141328.82019400003  | 144886.98635770034  | 102673.05648482994  |
+| LA PORTE           | 4         | 811        | ELEC - RESIDENTIAL  | 0.0                 | 0.0                 | 407894.8036174808   |
 | NEW CARLISLE       | 4         | 311        | GAS - RESIDENTIAL   | 71.679385           | 73.2376325          | 54.0400233          |
-| RURAL - FARM       | 4         | 311        | GAS - RESIDENTIAL   | 3681.8259450000005  | 3774.4182255999986  | 2577.3695083200005  |
-| RURAL - FARM       | 4         | 811        | ELEC - RESIDENTIAL  | 0.0                 | 0.0                 | 7917.911641399998   |
-| RURAL - NON-FARM   | 4         | 311        | GAS - RESIDENTIAL   | 67734.1519280001    | 69406.38811030012   | 49900.45175655992   |
-| RURAL - NON-FARM   | 4         | 811        | ELEC - RESIDENTIAL  | 0.0                 | 0.0                 | 62391.45844860001   |
+| RURAL - FARM       | 4         | 311        | GAS - RESIDENTIAL   | 3681.8259450000014  | 3774.4182256        | 2577.3695083200005  |
+| RURAL - FARM       | 4         | 811        | ELEC - RESIDENTIAL  | 0.0                 | 0.0                 | 7917.9116414        |
+| RURAL - NON-FARM   | 4         | 311        | GAS - RESIDENTIAL   | 67734.15192800008   | 69406.38811030028   | 49900.45175655985   |
+| RURAL - NON-FARM   | 4         | 811        | ELEC - RESIDENTIAL  | 0.0                 | 0.0                 | 62391.45844859999   |
 +--------------------+-----------+------------+---------------------+---------------------+---------------------+---------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

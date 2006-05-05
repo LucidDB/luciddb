@@ -11,7 +11,8 @@
       <test-suite-call testfile="test/sql/udr/udf/test.xml"/>
       <test-suite-call testfile="test/sql/udr/udx/test.xml"/>
       <test-suite-call testfile="test/sql/VI/recovery/test.xml"/>
-      <test-suite-call testfile="test/sql/hashjoin/test.xml"/>
+
+<!--      <test-suite-call testfile="test/sql/hashjoin/test.xml"/> -->
 
       <!-- non-db dependent tests which rely on cvs files on raksha -->
       <test-suite-call testfile="test/sql/sqbm/test.xml"/>
@@ -19,13 +20,13 @@
       <test-suite-call testfile="test/sql/VI/flip/test.xml"/>
       <test-suite-call testfile="test/sql/VI/tbs/test-all.xml"/>
       <test-suite-call testfile="test/sql/distribution/test.xml"/>
+      <test-suite-call testfile="test/sql/pge2/test.xml"/>
 
       <!-- non-db dependent tests which rely on mssql  -->
       <test-suite-call testfile="test/sql/mondrian/test-all.xml"/>
 
       <!-- non-db dependent tests which rely on oracle -->
       <test-suite-call testfile="test/sql/pge/test.xml"/>
-      <test-suite-call testfile="test/sql/pge2/test.xml"/>
 
     </test-suite>
   </target>

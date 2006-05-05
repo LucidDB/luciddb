@@ -68,27 +68,23 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q5.sql"/>
       </test>
 
-      <!-- doesn't use bitmap indexes yet -->
       <test name="sqbm6a" requiresSuccess="benchins1m">
         <test-metadata>
-          <knownFailure value="true"/>
           <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q6a.sql"/>
       </test>
 
-      <!-- doesn't use bitmap indexes yet, very slow -->
       <test name="sqbm6b" requiresSuccess="benchins1m">
         <test-metadata>
-          <knownFailure value="true"/>
           <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q6b.sql"/>
       </test>
 
       <test name="sqbm4nob" requiresSuccess="benchins1m">
+        <!-- LDB-48 -->
         <test-metadata>
-          <!-- was failing due to LDB-48 -->
           <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q4nob.sql"/>
@@ -101,10 +97,8 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q5nob.sql"/>
       </test>
 
-      <!-- doesn't use bitmap indexes yet, very slow -->
       <test name="sqbm6bnob" requiresSuccess="benchins1m">
         <test-metadata>
-          <knownFailure value="true"/>
           <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q6bnob.sql"/>
@@ -113,7 +107,6 @@
       <!-- stress tests -->
       <test name="sqbmqfh1" requiresSuccess="benchins1m">
         <test-metadata>
-          <notImplemented value="true"/>
           <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_qfh1.sql"/>
@@ -121,7 +114,6 @@
 
       <test name="sqbmqfh2" requiresSuccess="benchins1m">
         <test-metadata>
-          <notImplemented value="true"/>
           <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_qfh2.sql"/>
@@ -129,15 +121,15 @@
 
       <test name="sqbmqfh3" requiresSuccess="benchins1m">
         <test-metadata>
-          <notImplemented value="true"/>
+          <!-- huge ref file -->
           <withIndex value="true"/>
+          <notImplemented value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_qfh3.sql"/>
       </test>
 
       <test name="sqbmqfh4" requiresSuccess="benchins1m">
         <test-metadata>
-          <notImplemented value="true"/>
           <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_qfh4.sql"/>

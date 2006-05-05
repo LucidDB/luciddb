@@ -29,18 +29,18 @@
 +------------+----------------------------+--------+---------------------------------+-------------+---------------------+---------------------+---------------------+
 | SRVPLN_ID  |         SRVPLN_NM          | RC_CD  |             RC_DESC             | REVN_YR_MO  |       EXPR$5        |       EXPR$6        |       EXPR$7        |
 +------------+----------------------------+--------+---------------------------------+-------------+---------------------+---------------------+---------------------+
-| 315        | GAS - MULT FAMILY HOUSING  | 05     | MULTIPLE DWELLING - G'NRL SERV  | 199501      | 172.923471          | 177.36075251999998  | 105.748684146       |
-| 315        | GAS - MULT FAMILY HOUSING  | 05     | MULTIPLE DWELLING - G'NRL SERV  | 199502      | 170.66408099999998  | 175.04338572        | 104.36698900600001  |
+| 315        | GAS - MULT FAMILY HOUSING  | 05     | MULTIPLE DWELLING - G'NRL SERV  | 199501      | 172.923471          | 177.36075252        | 105.748684146       |
+| 315        | GAS - MULT FAMILY HOUSING  | 05     | MULTIPLE DWELLING - G'NRL SERV  | 199502      | 170.664081          | 175.04338572        | 104.36698900600001  |
 | 315        | GAS - MULT FAMILY HOUSING  | 05     | MULTIPLE DWELLING - G'NRL SERV  | 199503      | 161.212167          | 165.34893203999997  | 98.586816642        |
 | 315        | GAS - MULT FAMILY HOUSING  | 05     | MULTIPLE DWELLING - G'NRL SERV  | 199504      | 163.124937          | 167.31078444        | 99.75654166199999   |
 | 315        | GAS - MULT FAMILY HOUSING  | 05     | MULTIPLE DWELLING - G'NRL SERV  | 199505      | 159.055014          | 163.13642568000003  | 97.26764296399999   |
-| 315        | GAS - MULT FAMILY HOUSING  | 05     | MULTIPLE DWELLING - G'NRL SERV  | 199506      | 154.32381           | 158.28381720000002  | 94.37434805999999   |
-| 315        | GAS - MULT FAMILY HOUSING  | 05     | MULTIPLE DWELLING - G'NRL SERV  | 199507      | 158.891403          | 162.96861636        | 97.167589178        |
-| 315        | GAS - MULT FAMILY HOUSING  | 05     | MULTIPLE DWELLING - G'NRL SERV  | 199508      | 160.016169          | 164.12224428        | 97.85542249400001   |
-| 315        | GAS - MULT FAMILY HOUSING  | 05     | MULTIPLE DWELLING - G'NRL SERV  | 199509      | 174.550677          | 179.02971323999998  | 106.743776902       |
-| 315        | GAS - MULT FAMILY HOUSING  | 05     | MULTIPLE DWELLING - G'NRL SERV  | 199510      | 164.916072          | 169.14788063999998  | 100.85188267199999  |
-| 315        | GAS - MULT FAMILY HOUSING  | 05     | MULTIPLE DWELLING - G'NRL SERV  | 199511      | 156.055956          | 160.06041072        | 95.43361525600001   |
-| 315        | GAS - MULT FAMILY HOUSING  | 05     | MULTIPLE DWELLING - G'NRL SERV  | 199512      | 170.749782          | 175.13128583999998  | 104.419398132       |
+| 315        | GAS - MULT FAMILY HOUSING  | 05     | MULTIPLE DWELLING - G'NRL SERV  | 199506      | 154.32381           | 158.2838172         | 94.37434806         |
+| 315        | GAS - MULT FAMILY HOUSING  | 05     | MULTIPLE DWELLING - G'NRL SERV  | 199507      | 158.891403          | 162.96861636        | 97.16758917800001   |
+| 315        | GAS - MULT FAMILY HOUSING  | 05     | MULTIPLE DWELLING - G'NRL SERV  | 199508      | 160.016169          | 164.12224428        | 97.855422494        |
+| 315        | GAS - MULT FAMILY HOUSING  | 05     | MULTIPLE DWELLING - G'NRL SERV  | 199509      | 174.550677          | 179.02971323999998  | 106.74377690200001  |
+| 315        | GAS - MULT FAMILY HOUSING  | 05     | MULTIPLE DWELLING - G'NRL SERV  | 199510      | 164.91607200000004  | 169.14788063999998  | 100.85188267200002  |
+| 315        | GAS - MULT FAMILY HOUSING  | 05     | MULTIPLE DWELLING - G'NRL SERV  | 199511      | 156.05595599999998  | 160.06041072        | 95.43361525599998   |
+| 315        | GAS - MULT FAMILY HOUSING  | 05     | MULTIPLE DWELLING - G'NRL SERV  | 199512      | 170.74978199999998  | 175.13128584        | 104.419398132       |
 +------------+----------------------------+--------+---------------------------------+-------------+---------------------+---------------------+---------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit
