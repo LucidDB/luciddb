@@ -438,6 +438,8 @@ require version '${required.ant.version}'."/>
     <mkdir dir="${farrago.catalog.dir}"/>
     <mkdir dir="${farrago.catalog.src.dir}"/>
     <farrago.synthesizeMetamodel
+      extMofBasename="ExtModel"
+      extPresent=""
       xmiDir="${farrago.xmi.dir}"/>
     <farrago.mdrFork target="forked_importMetamodel"/>
     <farrago.javaCompile
