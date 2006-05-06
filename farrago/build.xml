@@ -434,13 +434,10 @@ require version '${required.ant.version}'."/>
 
   <!-- initialize catalog repository -->
   <target name="createRepository" 
-    depends="configureTrace, convertExtMetamodel, convertExtModel">
+    depends="configureTrace, convertExtMetamodel">
     <mkdir dir="${farrago.catalog.dir}"/>
     <mkdir dir="${farrago.catalog.src.dir}"/>
-    <property name="ext.model.file" value=""/>
     <farrago.synthesizeMetamodel
-      extMofBasename="ExtModel"
-      extPresent=""
       xmiDir="${farrago.xmi.dir}"/>
     <farrago.mdrFork target="forked_importMetamodel"/>
     <farrago.javaCompile
@@ -637,18 +634,6 @@ require version '${required.ant.version}'."/>
       token="org.omg.xmi.namespace.Model" value="omg.org/mof.Model/1.3" />
   </target>
 
-  <target name="convertExtModel" if="ext.model.file">
-    <farrago.extractPoseidonModel 
-      zumlFile="${ext.model.file}"
-      umlBasename="${ExtModelFileName}"
-      mofBasename="ExtModel"
-      xmiDir="${farrago.xmi.dir}"/>
-    <farrago.transformExtensionModel
-      mofBasename="ExtModel"
-      xmiDir="${farrago.xmi.dir}"
-      modelPrefix="${ext.model.prefix}"/>
-  </target>
-
   <target name="checkResourceUptodate">
     <!-- 
          Set jdbc.url.port.default in customBuild.properties to
@@ -780,7 +765,6 @@ require version '${required.ant.version}'."/>
       targetfile="${farrago.dir}/catalog/java/net/sf/farrago/FarragoPackage.java">
       <srcfiles dir="${farrago.dir}/catalog/xmi">
         <include name="FarragoExtMetamodelUML.zuml"/>
-        <include name="${ext.model.file}"/>
         <include name="*.xsl"/>
       </srcfiles>
     </uptodate>

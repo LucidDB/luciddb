@@ -14,12 +14,6 @@
   <!-- location of FEM XMI passed in from ant -->
   <xsl:param name="femXmiFilename"/>
 
-  <!-- location of Farrago extension model XMI from ant -->
-  <xsl:param name="extXmiFilename"/>
-
-  <!-- empty string if no extension model is present -->
-  <xsl:param name="extPresent"/>
-
   <!-- Introduce some top-level packages, and insert FEM as a peer to CWM. -->
   <xsl:template match="XMI/XMI.content">
     <xsl:copy>
@@ -41,9 +35,6 @@
             </Model:Namespace.contents>
           </Model:Package>
           <xsl:copy-of select="document($femXmiFilename)/XMI/XMI.content/*"/>
-          <xsl:if test="$extPresent">
-            <xsl:copy-of select="document($extXmiFilename)/XMI/XMI.content/*"/>
-          </xsl:if>
         </Model:Namespace.contents>
       </Model:Package>
     </xsl:copy>
