@@ -41,11 +41,11 @@
             </Model:Namespace.contents>
           </Model:Package>
           <xsl:copy-of select="document($femXmiFilename)/XMI/XMI.content/*"/>
+          <xsl:if test="$extPresent">
+            <xsl:copy-of select="document($extXmiFilename)/XMI/XMI.content/*"/>
+          </xsl:if>
         </Model:Namespace.contents>
       </Model:Package>
-      <xsl:if test="$extPresent">
-        <xsl:copy-of select="document($extXmiFilename)/XMI/XMI.content/*"/>
-      </xsl:if>
     </xsl:copy>
   </xsl:template>
 
