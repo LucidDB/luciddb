@@ -140,13 +140,15 @@ public class FarragoDbSessionPrivilegeChecker
         boolean sawCreationGrant = false;
         while (grants.hasNext()) {
             FemGrant grant = (FemGrant) grants.next();
-            if (grant instanceof FemCreationGrant) {
+            boolean isCreation =
+                grant.getAction().equals(
+                    PrivilegedActionEnum.CREATION.toString());
+            
+            if (isCreation) {
                 sawCreationGrant = true;
             }
             if (authSet.contains(grant.getGrantee())
-                &&
-                (grant.getAction().equals(action)
-                    || (grant instanceof FemCreationGrant)))
+                && (grant.getAction().equals(action) || isCreation))
             {
                 return true;
             }

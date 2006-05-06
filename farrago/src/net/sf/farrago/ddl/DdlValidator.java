@@ -634,40 +634,37 @@ public class DdlValidator extends FarragoCompoundAllocation
 
     private void updateObjectTimestamp(CwmModelElement element)
     {
-        FemCreationGrant creationGrant = null;
-        if (isNewObject(element)) {
+        boolean isNew = isNewObject(element);
+        if (isNew) {
             // Define a pseudo-grant representing the element's relationship to
-            // its creator.  As a bonus, this will initialize element creation
-            // time.
-            creationGrant =
-                FarragoCatalogUtil.newCreationGrant(
-                    getRepos(),
-                    FarragoCatalogInit.SYSTEM_USER_NAME,
-                    getInvokingSession().getSessionVariables().currentUserName,
-                    element);
-        } else {
-            // Find the original creation grant for this existing element.
-            PrivilegeIsGrantedOnElement privAssoc =
-                getRepos().getSecurityPackage().getPrivilegeIsGrantedOnElement();
-            Iterator iter = privAssoc.getPrivilege(element).iterator();
-            while (iter.hasNext()) {
-                Object obj = iter.next();
-                if (obj instanceof FemCreationGrant) {
-                    creationGrant = (FemCreationGrant) obj;
-                    break;
-                }
-            }
+            // its creator.
+            FarragoCatalogUtil.newCreationGrant(
+                getRepos(),
+                FarragoCatalogInit.SYSTEM_USER_NAME,
+                getInvokingSession().getSessionVariables().currentUserName,
+                element);
         }
-        assert (creationGrant != null);
-
-        // Update element modification time.
-        Timestamp ts = new Timestamp(System.currentTimeMillis());
-        creationGrant.setModificationTimestamp(ts.toString());
 
         // We use the visibility attribute to distinguish new objects
         // from existing objects.  From here on, no longer treat
         // this element as new.
         element.setVisibility(VisibilityKindEnum.VK_PUBLIC);
+
+        if (!(element instanceof FemAnnotatedElement)) {
+            return;
+        }
+
+        // Update attributes maintained for annotated elements.
+        FemAnnotatedElement annotatedElement =
+            (FemAnnotatedElement) element;
+
+        // Update element modification time.
+        Timestamp ts = new Timestamp(System.currentTimeMillis());
+        annotatedElement.setModificationTimestamp(ts.toString());
+        if (isNew) {
+            annotatedElement.setCreationTimestamp(ts.toString());
+            annotatedElement.setLineageId(UUID.randomUUID().toString());
+        }
     }
 
     // implement MDRPreChangeListener

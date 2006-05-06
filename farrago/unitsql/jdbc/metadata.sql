@@ -84,6 +84,8 @@ select "databaseInitSize", "databaseIncrementSize", "databaseMaxSize",
        "cachePagesMax", "cachePagesInit", "cachePageSize"
     from sys_fem."Config"."FennelConfig";
 
+-- verify unique lineage ID assignment
+select count(distinct "lineageId") from sys_fem."SQL2003"."LocalSchema";
 
 -- TODO jvs 7-Aug-2004:  find out why the attribute order on this
 -- changes with every model edit

@@ -446,6 +446,13 @@ usesLocalFiles                                    false
 | 1000              | 1000                   | 0                | 1000          | 1000               | 0            | 2000                       | 2000                    | 1000           | 1000            | 4096           |
 +-------------------+------------------------+------------------+---------------+--------------------+--------------+----------------------------+-------------------------+----------------+-----------------+----------------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- verify unique lineage ID assignment
+0: jdbc:farrago:> select count(distinct "lineageId") from sys_fem."SQL2003"."LocalSchema";
++---------+
+| EXPR$0  |
++---------+
+| 6       |
++---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- TODO jvs 7-Aug-2004:  find out why the attribute order on this
 0: jdbc:farrago:> -- changes with every model edit

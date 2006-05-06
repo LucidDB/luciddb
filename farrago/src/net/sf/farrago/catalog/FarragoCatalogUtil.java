@@ -847,7 +847,8 @@ public abstract class FarragoCatalogUtil
     }
 
     /**
-     * Creates a new creation grant.
+     * Creates a new grant representing ownership of an object
+     * by its creator.
      *
      * @param repos repository storing the objects
      *
@@ -859,7 +860,7 @@ public abstract class FarragoCatalogUtil
      *
      * @return new grant object
      */
-    public static FemCreationGrant newCreationGrant(
+    public static FemGrant newCreationGrant(
         FarragoRepos repos, String grantorName, String granteeName,
         CwmModelElement grantedObject)
     {
@@ -867,7 +868,7 @@ public abstract class FarragoCatalogUtil
         FemAuthId granteeAuthId;
         
         // create a creation grant and set its properties
-        FemCreationGrant grant = repos.newFemCreationGrant();
+        FemGrant grant = repos.newFemGrant();
 
         // Find the authId by name for grantor and grantee
         grantorAuthId = FarragoCatalogUtil.getAuthIdByName(repos, grantorName);
@@ -877,10 +878,6 @@ public abstract class FarragoCatalogUtil
         grant.setAction(PrivilegedActionEnum.CREATION.toString());
         grant.setWithGrantOption(false);
 
-        Timestamp ts = new Timestamp(System.currentTimeMillis());
-        grant.setCreationTimestamp(ts.toString());
-        grant.setModificationTimestamp(grant.getCreationTimestamp());
-        
         // associate the grant with the grantor and grantee respectively
         grant.setGrantor(grantorAuthId);
         grant.setGrantee(granteeAuthId);
