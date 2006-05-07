@@ -617,6 +617,10 @@ column type family is {1} but default value type family is {2}</text>
 <text>Cannot assign NULL to non-nullable parameter of type {0}</text>
 </exception>
 
+<exception id="450025" name="ParameterNotSet">
+<text>Value is missing for parameter {0}</text>
+</exception>
+
 <exception id="450030" name="NoDefaultConnection">
 <text>Default connection not available</text>
 </exception>

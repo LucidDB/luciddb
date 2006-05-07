@@ -25,13 +25,9 @@ package net.sf.farrago.jdbc.engine;
 import java.math.*;
 import java.sql.*;
 import java.sql.Date;
-import java.util.*;
-import java.util.logging.*;
 
-import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
 
 
 /**
@@ -69,8 +65,12 @@ public class FarragoJdbcEnginePreparedNonDdl
     public boolean execute()
         throws SQLException
     {
-        stmtContext.execute();
-        return (stmtContext.getResultSet() != null);
+        try {
+            stmtContext.execute();
+            return (stmtContext.getResultSet() != null);
+        } catch (Throwable ex) {
+            throw FarragoJdbcEngineDriver.newSqlException(ex);
+        }
     }
 
     // implement PreparedStatement
@@ -80,9 +80,13 @@ public class FarragoJdbcEnginePreparedNonDdl
         if (stmtContext.isPreparedDml()) {
             throw new SQLException(ERRMSG_NOT_A_QUERY + sql);
         }
-        stmtContext.execute();
-        assert (stmtContext.getResultSet() != null);
-        return stmtContext.getResultSet();
+        try {
+            stmtContext.execute();
+            assert (stmtContext.getResultSet() != null);
+            return stmtContext.getResultSet();
+        } catch (Throwable ex) {
+            throw FarragoJdbcEngineDriver.newSqlException(ex);
+        }
     }
 
     // implement PreparedStatement
@@ -92,13 +96,17 @@ public class FarragoJdbcEnginePreparedNonDdl
         if (!stmtContext.isPreparedDml()) {
             throw new SQLException(ERRMSG_IS_A_QUERY + sql);
         }
-        stmtContext.execute();
-        assert (stmtContext.getResultSet() == null);
-        int count = getUpdateCount();
-        if (count == -1) {
-            count = 0;
+        try {
+            stmtContext.execute();
+            assert (stmtContext.getResultSet() == null);
+            int count = getUpdateCount();
+            if (count == -1) {
+                count = 0;
+            }
+            return count;
+        } catch (Throwable ex) {
+            throw FarragoJdbcEngineDriver.newSqlException(ex);
         }
-        return count;
     }
 
     // implement PreparedStatement
