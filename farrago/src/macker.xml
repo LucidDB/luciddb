@@ -779,6 +779,7 @@
       <include pattern="resource.deps" />
       <include pattern="dt.calc" />
       <include pattern="fennel.tuple" />
+      <include pattern="session" />
     </pattern>
 
     <access-rule>

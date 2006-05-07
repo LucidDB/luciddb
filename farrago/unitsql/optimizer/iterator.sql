@@ -25,7 +25,8 @@ select * from
     (select deptno + 1 as dnoplus, name from depts) as d,
     (select deptno as id, name from depts union select empno as id, name from emps) as n
 where
-    d.name = n.name;
+    d.name = n.name
+order by dnoplus;
 
 -- Planner will use a single IteratorToFennelConverter instance for both
 -- references to depts.  Make sure we keep them straight as well.
@@ -37,7 +38,8 @@ from (select deptno + 1 as deptno, name from sales.depts) as t1,
 -- Execute to verify output.
 select t1.deptno, t1.name, t2.deptno as deptno2, t2.name as name2
 from (select deptno + 1 as deptno, name from sales.depts) as t1,
-     (select deptno + 1 as deptno, name from sales.depts) as t2;
+     (select deptno + 1 as deptno, name from sales.depts) as t2
+order by deptno,deptno2;
 
 -- Similar to previous, but without any underlying Fennel rels.
 -- Simplified from the query given in FRG-82.

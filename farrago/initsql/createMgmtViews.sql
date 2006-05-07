@@ -128,18 +128,28 @@ external name 'class net.sf.farrago.syslib.FarragoStatsUDR.set_column_histogram'
 --
 -- Page counts, qualified by 
 --
-create view page_counts_view as
+create view page_counts_a_view as
 select 
-  n."name" as "schema", t."name" as "table", 
+  t."namespace", t."name" as "table", 
   i."name" as "index", "pageCount" 
 from 
-  sys_cwm."Core"."Namespace" n,
-  sys_fem.sql2003."AbstractColumnSet" t,
   sys_fem.med."LocalIndex" i
-where 
-  t."namespace" = n."mofId"
-  and i."spannedClass" = t."mofId"
-  and "pageCount" is not null;
+inner join
+  sys_fem.sql2003."AbstractColumnSet" t
+on
+  i."spannedClass" = t."mofId"
+where "pageCount" is not null;
+
+create view page_counts_view as
+select 
+  n."name" as "schema", i."table", 
+  i."index", "pageCount" 
+from 
+  page_counts_a_view i
+inner join
+  sys_cwm."Core"."Namespace" n
+on
+  i."namespace" = n."mofId";
 
 --
 -- Select row counts, qualified by schema and table
@@ -147,27 +157,39 @@ where
 create view row_counts_view as
 select n."name" as "schema", t."name" as "table", "rowCount" 
 from 
-  sys_cwm."Core"."Namespace" n,
+  sys_cwm."Core"."Namespace" n
+inner join
   sys_fem.sql2003."AbstractColumnSet" t
-where 
-  t."namespace" = n."mofId"
-  and "rowCount" is not null;
+on
+  n."mofId" = t."namespace"
+where "rowCount" is not null;
 
 --
 -- Selects histograms, qualified by table name (missing schema name)
 --
-create view histograms_view as
+create view histograms_a_view as
 select 
-    t."name" as "table", c."name" as "column",
+    c."owner", c."name" as "column",
     "distinctValueCount" "values","percentageSampled" "percent",
     "barCount","rowsPerBar","rowsLastBar"
 from 
-    sys_fem.med."ColumnHistogram" h,
-    sys_fem.sql2003."AbstractColumn" c,
+    sys_fem.med."ColumnHistogram" h
+inner join
+    sys_fem.sql2003."AbstractColumn" c
+on
+    h."mofId" = c."Histogram";
+
+create view histograms_view as
+select 
+    t."name" as "table", c."column",
+    "values","percent",
+    "barCount","rowsPerBar","rowsLastBar"
+from 
+    histograms_a_view c
+inner join
     sys_fem.sql2003."AbstractColumnSet" t
-where 
-    c."Histogram" = h."mofId"
-    and c."owner" = t."mofId";
+on 
+    c."owner" = t."mofId";
 
 --
 -- Selects histogram bars, qualified by table and column
@@ -187,19 +209,19 @@ select
   c."owner" as "table", c."name" as "column", 
   a."ordinal","startingValue","valueCount"
 from 
-  sys_fem.sql2003."AbstractColumn" c
-inner join
   histogram_bars_a_view a
+inner join
+  sys_fem.sql2003."AbstractColumn" c
 on
-  c."Histogram" = a."mofId";
+  a."mofId" = c."Histogram";
 
 create view histogram_bars_view as
 select 
   t."name" as "table", b."column", 
   b."ordinal","startingValue","valueCount"
 from 
-  sys_fem.sql2003."AbstractColumnSet" t
-inner join
   histogram_bars_b_view b
+inner join
+  sys_fem.sql2003."AbstractColumnSet" t
 on
   b."table" = t."mofId";

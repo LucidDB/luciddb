@@ -23,9 +23,7 @@
 
 package org.eigenbase.rel;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
 
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptUtil;
@@ -52,7 +50,7 @@ public final class CorrelatorRel extends JoinRelBase
 {
     //~ Instance fields -------------------------------------------------------
 
-    protected final List correlations;
+    protected final List<Correlation> correlations;
 
     //~ Inner Classes ---------------------------------------------------------
 
@@ -103,12 +101,12 @@ public final class CorrelatorRel extends JoinRelBase
         RelOptCluster cluster,
         RelNode left,
         RelNode right,
-        List correlations,
+        List<Correlation> correlations,
         JoinRelType joinType)
     {
         super(cluster, new RelTraitSet(CallingConvention.NONE), left, right,
             cluster.getRexBuilder().makeLiteral(true), joinType,
-            Collections.EMPTY_SET);
+            (Set<String>) Collections.EMPTY_SET);
         this.correlations = correlations;
         assert joinType == JoinRelType.LEFT || joinType == JoinRelType.INNER;
     }
@@ -150,9 +148,9 @@ public final class CorrelatorRel extends JoinRelBase
         return correlations;
     }
 
-    public List cloneCorrelations()
+    public List<Correlation> cloneCorrelations()
     {
-        return new ArrayList(correlations);
+        return new ArrayList<Correlation>(correlations);
     }
 }
 

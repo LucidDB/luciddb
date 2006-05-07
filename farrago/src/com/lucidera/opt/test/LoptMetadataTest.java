@@ -129,11 +129,8 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
         stmt.executeUpdate(
             "set schema 'lopt_metadata'");
         stmt.executeUpdate(
-            "create jar luciddb_plugin"
-            + " library 'class com.lucidera.farrago.LucidDbSessionFactory'"
-            + " options(0)");
-        stmt.executeUpdate(
-            "alter session implementation set jar luciddb_plugin");
+            "alter session implementation set jar"
+            + " sys_boot.sys_boot.luciddb_plugin");
 
         // Tables with statistics
         FarragoJdbcEngineConnection farragoConnection = 
@@ -232,23 +229,7 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
     {
         FarragoSessionPlanner planner = new FarragoTestPlanner(
             program,
-            stmt)
-            {
-                // TODO jvs 11-Apr-2006: eliminate this once we switch to Hep
-                // permanently for LucidDB; this is to make sure that
-                // LoptMetadataProvider gets used for the duration of this test
-                // regardless of the LucidDbSessionFactory.USE_HEP flag
-                // setting.
-                
-                // implement RelOptPlanner
-                public void registerMetadataProviders(
-                    ChainedRelMetadataProvider chain)
-                {
-                    chain.addProvider(
-                        new LoptMetadataProvider());
-                    super.registerMetadataProviders(chain);
-                }
-            };
+            stmt);
         stmt.setPlanner(planner);
     }
 

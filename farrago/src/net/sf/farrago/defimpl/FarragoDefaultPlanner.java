@@ -35,6 +35,8 @@ import org.eigenbase.rel.*;
 import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
 
+// TODO jvs 3-May-2006:  Rename this to FarragoDefaultVolcanoPlanner
+
 /**
  * FarragoDefaultPlanner extends {@link VolcanoPlanner} to request
  * Farrago-specific optimizations.
@@ -56,7 +58,7 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
      *
      * @param stmt statement on whose behalf this planner operates
      */
-    protected FarragoDefaultPlanner(FarragoSessionPreparingStmt stmt)
+    public FarragoDefaultPlanner(FarragoSessionPreparingStmt stmt)
     {
         this.stmt = (FarragoPreparingStmt) stmt;
 
@@ -138,8 +140,6 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
             planner.addRule(new FennelSortRule());
             planner.addRule(new FennelCollectRule());
             planner.addRule(new FennelUncollectRule());
-            // TODO jvs 9-Apr-2006:  Eliminate FennelDistinctSortRule
-            // entirely; it has been generalized to FennelAggRule.
             planner.addRule(new FennelDistinctSortRule());
             planner.addRule(new FennelRenameRule());
             planner.addRule(new FennelCartesianJoinRule());
@@ -166,12 +166,15 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
         }
 
         if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_JAVA)
-                || calcVM.equals(CalcVirtualMachineEnum.CALCVM_AUTO)) {
+            || calcVM.equals(CalcVirtualMachineEnum.CALCVM_AUTO))
+        {
             // use Java code generation for calculating expressions
             planner.addRule(IterRules.IterCalcRule.instance);
         }
 
-        if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_AUTO) && fennelEnabled) {
+        if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_AUTO)
+            && fennelEnabled)
+        {
             // add rule for pure calculator usage plus rule for
             // decomposing rels into mixed Java/Fennel impl
             planner.addRule(FennelCalcRule.instance);

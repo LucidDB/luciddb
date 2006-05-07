@@ -28,8 +28,9 @@ package org.eigenbase.util;
  * Objects which can be tree-walked by Walker.
  *
  * @see Walker
+ * @version $Id$
  */
-public interface Walkable
+public interface Walkable<T>
 {
     //~ Methods ---------------------------------------------------------------
 
@@ -37,7 +38,7 @@ public interface Walkable
      * Returns an array of the object's children.  Those which are not
      * Walkable are ignored.
      */
-    public abstract Object [] getChildren();
+    public abstract T [] getChildren();
 }
 
 

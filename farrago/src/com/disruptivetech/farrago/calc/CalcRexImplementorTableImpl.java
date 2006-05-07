@@ -59,23 +59,6 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
     private static final Integer integer0 = new Integer(0);
     private static final Integer integer1 = new Integer(1);
 
-    /**
-     * Collection of per-thread instances of {@link CalcRexImplementorTable}.
-     * If a thread does not call {@link #setThreadInstance}, the default is
-     * {@link #std}.
-     */
-
-    // REVIEW jhyde, 2004/4/12 The implementor table, like the operator table,
-    //   should be a property of the session
-    private static final ThreadLocal threadLocal =
-        new ThreadLocal() {
-            protected Object initialValue()
-            {
-                return std;
-            }
-        };
-
-
     //~ Instance fields -------------------------------------------------------
 
     /**
@@ -137,7 +120,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             "!operatorImplementationMap.containsKey(op)");
         operatorImplementationMap.put(op, impl);
     }
-
+    
     /**
      * Registers an operator which is implemented in a trivial way by a
      * single calculator instruction.
@@ -145,7 +128,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
      * @pre op != null
      * @pre instrDef != null
      */
-    private void registerInstr(
+    protected void registerInstr(
         SqlOperator op,
         CalcProgramBuilder.InstructionDef instrDef)
     {
@@ -432,16 +415,6 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             return (RexCall) newCall;
         }
         return call;
-    }
-
-    public static CalcRexImplementorTable threadInstance()
-    {
-        return (CalcRexImplementorTable) threadLocal.get();
-    }
-
-    public static void setThreadInstance(CalcRexImplementorTable table)
-    {
-        threadLocal.set(table);
     }
 
     /**

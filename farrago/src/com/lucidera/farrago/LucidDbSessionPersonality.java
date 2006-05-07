@@ -53,8 +53,6 @@ import java.util.*;
  */
 public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
 {
-    private static final boolean USE_HEP = true;
-    
     protected LucidDbSessionPersonality(FarragoDbSession session)
     {
         super(session);
@@ -95,44 +93,16 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         FarragoSessionPreparingStmt stmt,
         boolean init)
     {
-        if (USE_HEP) {
-            return newHepPlanner(stmt);
-        }
-        
-        FarragoSessionPlanner planner = super.newPlanner(stmt, init);
-        planner.addRule(new PushSemiJoinPastFilterRule());
-        planner.addRule(new ConvertMultiJoinRule());
-        planner.addRule(
-            new LoptOptimizeJoinRule(
-                new RelOptRuleOperand(
-                    ProjectRel.class,
-                    new RelOptRuleOperand [] {
-                        new RelOptRuleOperand(MultiJoinRel.class, null)
-                }),
-                "with project"));
-        planner.addRule(
-            new LoptOptimizeJoinRule(
-                new RelOptRuleOperand(MultiJoinRel.class, null),
-                "without project"));
-        planner.addRule(new LhxJoinRule());
- 
-        planner.removeRule(SwapJoinRule.instance);
-        return planner;
+        return newHepPlanner(stmt);
     }
 
     // implement FarragoSessionPersonality
     public void registerRelMetadataProviders(ChainedRelMetadataProvider chain)
     {
-        // NOTE jvs 10-Apr-2006:  Don't use custom metadata until
-        // we switch to Hep.
-        if (USE_HEP) {
-            chain.addProvider(
-                new LoptMetadataProvider());
-        }
+        chain.addProvider(
+            new LoptMetadataProvider());
     }
 
-    // TODO jvs 9-Apr-2006:  replace newPlanner with this once
-    // we're ready to make USE_HEP the default.
     private FarragoSessionPlanner newHepPlanner(
         final FarragoSessionPreparingStmt stmt)
     {
@@ -140,7 +110,7 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         final CalcVirtualMachine calcVM =
             stmt.getRepos().getCurrentConfig().getCalcVirtualMachine();
 
-        Collection<RelOptRule> medPluginRules = new HashSet<RelOptRule>();
+        Collection<RelOptRule> medPluginRules = new LinkedHashSet<RelOptRule>();
         
         HepProgram program = createHepProgram(
             fennelEnabled,
@@ -332,7 +302,8 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
             // Requires CoerceInputsRule.
             builder.addRuleInstance(FennelUnionRule.instance);
         } else {
-            builder.addRuleInstance(new IterRules.UnionToIteratorRule());
+            builder.addRuleInstance(
+                new IterRules.HomogeneousUnionToIteratorRule());
         }
 
         if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_FENNEL)) {

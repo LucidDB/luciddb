@@ -24,8 +24,8 @@
 package org.eigenbase.util;
 
 import java.io.PrintWriter;
-import java.util.Enumeration;
 import java.util.Stack;
+import java.util.Iterator;
 
 
 /**
@@ -36,7 +36,7 @@ import java.util.Stack;
  * Walker w = new Walker(t); while (w.hasMoreElements()) { Tree node = (Tree)
  * w.nextNode(); System.out.println(node.toString()); }</code>
  */
-public class Walker implements Enumeration
+public class Walker<T extends Walkable<T> > implements Iterator<T>
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -51,7 +51,7 @@ public class Walker implements Enumeration
 
     //~ Constructors ----------------------------------------------------------
 
-    public Walker(Walkable root)
+    public Walker(T root)
     {
         stack = new Stack();
         currentFrame = null;
@@ -60,13 +60,18 @@ public class Walker implements Enumeration
 
     //~ Methods ---------------------------------------------------------------
 
-    public final Object getAncestor(int iDepth)
+    public void remove()
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public final T getAncestor(int iDepth)
     {
         Frame f = getAncestorFrame(iDepth);
         return (f == null) ? null : f.node;
     }
 
-    public final Object getParent()
+    public final T getParent()
     {
         return getAncestor(1);
     }
@@ -86,10 +91,10 @@ public class Walker implements Enumeration
      * Override this function to prune the tree, or to allow objects which are
      * not Walkable to have children.
      */
-    public Object [] getChildren(Object node)
+    public T [] getChildren(T node)
     {
         if (node instanceof Walkable) {
-            return ((Walkable) node).getChildren();
+            return node.getChildren();
         } else {
             return null;
         }
@@ -116,7 +121,7 @@ public class Walker implements Enumeration
         return currentFrame.node;
     }
 
-    public boolean hasMoreElements()
+    public boolean hasNext()
     {
         return nextNode != null;
     }
@@ -161,10 +166,10 @@ public class Walker implements Enumeration
                         })
                 });
 
-        Walker walker = new Walker(usa);
+        Walker<Region> walker = new Walker<Region>(usa);
         if (false) {
-            while (walker.hasMoreElements()) {
-                Region region = (Region) walker.nextElement();
+            while (walker.hasNext()) {
+                Region region = walker.next();
                 pw.println(region.name);
                 pw.flush();
             }
@@ -172,60 +177,60 @@ public class Walker implements Enumeration
 
         Region.walkUntil(walker, "CA");
         walker.prune();
-        Region region = (Region) walker.nextElement(); // should be WA
+        Region region = walker.next(); // should be WA
         pw.println(region.name);
         pw.flush();
 
-        walker = new Walker(usa);
+        walker = new Walker<Region>(usa);
         Region.walkUntil(walker, "USA");
         walker.prune();
-        region = (Region) walker.nextElement(); // should be null
+        region = walker.next(); // should be null
         if (region == null) {
             pw.println("null");
         }
         pw.flush();
 
-        walker = new Walker(usa);
+        walker = new Walker<Region>(usa);
         Region.walkUntil(walker, "Los Angeles");
         walker.prune();
-        region = (Region) walker.nextElement(); // should be WA
+        region = walker.next(); // should be WA
         pw.println(region.name);
         pw.flush();
 
-        walker = new Walker(usa);
+        walker = new Walker<Region>(usa);
         Region.walkUntil(walker, "Haight");
         walker.prune();
-        region = (Region) walker.nextElement(); // should be Soma
+        region = walker.next(); // should be Soma
         pw.println(region.name);
         pw.flush();
 
-        walker = new Walker(usa);
+        walker = new Walker<Region>(usa);
         Region.walkUntil(walker, "Soma");
         walker.prune();
-        region = (Region) walker.nextElement(); // should be Los Angeles
+        region = walker.next(); // should be Los Angeles
         pw.println(region.name);
         pw.flush();
 
-        walker = new Walker(usa);
+        walker = new Walker<Region>(usa);
         Region.walkUntil(walker, "CA");
         walker.pruneSiblings();
-        region = (Region) walker.nextElement(); // should be Los Angeles
+        region = walker.next(); // should be Los Angeles
         if (region == null) {
             pw.println("null");
             pw.flush();
         }
 
-        walker = new Walker(usa);
+        walker = new Walker<Region>(usa);
         Region.walkUntil(walker, "Soma");
         walker.pruneSiblings();
-        region = (Region) walker.nextElement(); // should be Los Angeles
+        region = walker.next(); // should be Los Angeles
         if (region == null) {
             pw.println("null");
             pw.flush();
         }
     }
 
-    public Object nextElement()
+    public T next()
     {
         moveToNext();
         return currentFrame.node;
@@ -244,7 +249,7 @@ public class Walker implements Enumeration
 
         //we need to make that next frame on the stack is not a child
         //of frame we just pruned. if it is, we need to prune it too
-        if (this.hasMoreElements()) {
+        if (this.hasNext()) {
             Object nextFrameParentNode = ((Frame) stack.peek()).parent.node;
             if (nextFrameParentNode != currentFrame.node) {
                 return;
@@ -255,7 +260,7 @@ public class Walker implements Enumeration
             if (currentFrame.parent != null) {
                 currentFrame = currentFrame.parent;
             }
-            nextElement();
+            next();
         }
     }
 
@@ -317,7 +322,7 @@ public class Walker implements Enumeration
 
     private void visit(
         Frame parent,
-        Object node)
+        T node)
     {
         nextNode = node;
         stack.addElement(new Frame(parent, node));
@@ -328,13 +333,13 @@ public class Walker implements Enumeration
     class Frame
     {
         Frame parent;
-        Object node;
-        Object [] children;
+        T node;
+        T[] children;
         int iChild;
 
         Frame(
             Frame parent,
-            Object node)
+            T node)
         {
             this.parent = parent;
             this.node = node;
@@ -343,7 +348,7 @@ public class Walker implements Enumeration
         }
     }
 
-    private static class Region implements Walkable
+    private static class Region implements Walkable<Region>
     {
         String name;
         Region [] children;
@@ -356,17 +361,17 @@ public class Walker implements Enumeration
             this.children = children;
         }
 
-        public Object [] getChildren()
+        public Region [] getChildren()
         {
             return children;
         }
 
         public static void walkUntil(
-            Walker walker,
+            Walker<Region> walker,
             String name)
         {
-            while (walker.hasMoreElements()) {
-                Region region = (Region) walker.nextElement();
+            while (walker.hasNext()) {
+                Region region = walker.next();
                 if (region.name.equals(name)) {
                     break;
                 }

@@ -257,7 +257,8 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             //       Uncollect
             //          ProjectRel=[output=$cor0]
             //            OneRowRel
-            List correlationList = new ArrayList();
+            List<CorrelatorRel.Correlation> correlationList =
+                new ArrayList<CorrelatorRel.Correlation>();
             UncollectRel uncollect =
                 createUncollect(
                     calc, (RexLocalRef) rexCall.operands[0], correlationList);
@@ -300,9 +301,11 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             //         Uncollect
             //           ProjectRel=[output=$cor0]
             //             OneRowRel
-            List correlationList = new ArrayList();
+            List<CorrelatorRel.Correlation> correlationList =
+                new ArrayList<CorrelatorRel.Correlation>();
             UncollectRel uncollect =
-                createUncollect(calc, (RexLocalRef) rexCall.operands[0], correlationList);
+                createUncollect(
+                    calc, (RexLocalRef) rexCall.operands[0], correlationList);
             assert null != componentType;
             assert componentType.isStruct();
             RelDataType type = componentType.getFields()[0].getType();
@@ -340,7 +343,8 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             //             Uncollect
             //               ProjectRel=[output=$cor0]
             //                 OneRowRel
-            List correlationList = new ArrayList();
+            List<CorrelatorRel.Correlation> correlationList =
+                new ArrayList<CorrelatorRel.Correlation>();
             UncollectRel uncollect =
                 createUncollect(
                     calc, (RexLocalRef) rexCall.operands[0], correlationList);
@@ -391,7 +395,8 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             //
             // (LimitRel is actually a collection of simpler rels.)
             //
-            List correlationList = new ArrayList();
+            List<CorrelatorRel.Correlation> correlationList =
+                new ArrayList<CorrelatorRel.Correlation>();
             RelNode uncollect =
                 createUncollect(
                     calc, (RexLocalRef) rexCall.operands[0], correlationList);
@@ -419,7 +424,8 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             //         Uncollect
             //           ProjectRel=[output=$cor1]
             //            OneRowRel
-            List correlationList = new ArrayList();
+            List<CorrelatorRel.Correlation> correlationList =
+                new ArrayList<CorrelatorRel.Correlation>();
             final UncollectRel uncollectRel0 =
                 createUncollect(
                     calc, (RexLocalRef) rexCall.operands[0], correlationList);
@@ -472,10 +478,11 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             //             ProjectRel=[output=$cor1]
             //                 OneRowRel
 
-            List correlations = new ArrayList();
+            List<CorrelatorRel.Correlation> correlationList =
+                new ArrayList<CorrelatorRel.Correlation>();
             final RexLocalRef localRef = (RexLocalRef) rexCall.operands[1];
             final UncollectRel uncollectRel =
-                createUncollect(calc, localRef, correlations);
+                createUncollect(calc, localRef, correlationList);
 
             RexNode operand0 = rexCall.operands[0];
             final RexNode corRef;
@@ -483,7 +490,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                 final RexLocalRef local = (RexLocalRef) operand0;
                 final String dyn_inIdStr = cluster.getQuery().createCorrel();
                 final int dyn_inId = RelOptQuery.getCorrelOrdinal(dyn_inIdStr);
-                correlations.add(
+                correlationList.add(
                     new CorrelatorRel.Correlation(dyn_inId, local.getIndex()));
                 corRef  =
                     rexBuilder.makeCorrel(
@@ -509,7 +516,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                     null);
             RelNode existsRel = createExistsPlanSingleRow(filterRel, false);
             return new CorrelatorRel(
-                cluster, input, existsRel, correlations,
+                cluster, input, existsRel, correlationList,
                 JoinRelType.LEFT);
 
         } else if (SqlStdOperatorTable.submultisetOfOperator == op) {
@@ -550,7 +557,8 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             final int dyn_inId = RelOptQuery.getCorrelOrdinal(dyn_inIdStr);
             assert rexCall.operands[1] instanceof RexLocalRef;
             final RexLocalRef rexInput2 = (RexLocalRef) rexCall.operands[1];
-            List correlationList = new ArrayList();
+            List<CorrelatorRel.Correlation> correlationList =
+                new ArrayList<CorrelatorRel.Correlation>();
             correlationList.add(
                 new CorrelatorRel.Correlation(dyn_inId,rexInput2.getIndex()));
             final RexNode corRef2 =
@@ -562,7 +570,8 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                 new String[]{"output"+corRef2.toString()});
 
             final UncollectRel u1 =
-                createUncollect(calc, (RexLocalRef) rexCall.operands[0], correlationList);
+                createUncollect(
+                    calc, (RexLocalRef) rexCall.operands[0], correlationList);
             final UncollectRel u2 =
                 new UncollectRel(cluster, projectRel2);
             // TODO wael 4/26/05: need to create proper count & group by agg call def.
@@ -610,7 +619,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
     private static UncollectRel createUncollect(
         CalcRel calc,
         RexLocalRef local,
-        List correlationList)
+        List<CorrelatorRel.Correlation> correlationList)
     {
         RelNode corProjectRel = createProject(calc, local, correlationList);
         return new UncollectRel(calc.getCluster(), corProjectRel);
@@ -619,7 +628,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
     private static RelNode createProject(
         CalcRel calc,
         RexLocalRef local,
-        List correlationList)
+        List<CorrelatorRel.Correlation> correlationList)
     {
         // If the operand is a call to the 'slice' operator, ignore the slice
         // operator. The slice expression, if unused, will be garbage-collected

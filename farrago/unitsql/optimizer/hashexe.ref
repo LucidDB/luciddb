@@ -83,9 +83,7 @@
 0: jdbc:farrago:> set schema 'lhx';
 0: jdbc:farrago:> set path 'lhx';
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create jar luciddb_plugin library 'class com.lucidera.farrago.LucidDbSessionFactory' options(0);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> alter session implementation set jar luciddb_plugin;
+0: jdbc:farrago:> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create table lhxemps(
 . . . . . . . . >     empno integer not null,
@@ -642,7 +640,6 @@
 0: jdbc:farrago:> --------------
 0: jdbc:farrago:> !set outputformat table
 0: jdbc:farrago:> alter session implementation set default;
-0: jdbc:farrago:> drop jar luciddb_plugin options(0);
 0: jdbc:farrago:> drop schema lhx cascade;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

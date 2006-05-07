@@ -24,9 +24,9 @@
 package org.eigenbase.relopt;
 
 import java.util.HashSet;
+import java.util.Set;
 
 import org.eigenbase.sql.*;
-import org.eigenbase.rel.AbstractRelNode;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.rex.RexNode;
@@ -43,7 +43,7 @@ public class RelOptPlanWriter extends java.io.PrintWriter
     private boolean withIdPrefix = true;
 
     /** Recursion detection. */
-    HashSet active = new HashSet();
+    Set<RelNode> active = new HashSet<RelNode>();
     private final SqlExplainLevel detailLevel;
     int level;
 

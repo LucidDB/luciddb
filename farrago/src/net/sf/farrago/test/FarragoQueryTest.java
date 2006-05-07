@@ -320,7 +320,13 @@ public class FarragoQueryTest extends FarragoTestCase
      * FarragoSession.analyzeSql.
      */
     public void testRelMetadata()
+        throws Exception
     {
+        // This test currently requires Volcano in order to succeed.
+        stmt.executeUpdate(
+            "alter session implementation add jar"
+            + " sys_boot.sys_boot.volcano_plugin");
+        
         String sql =
             "select deptno, max(name) from sales.depts"
             + " where name like '%E%G' group by deptno";
@@ -354,6 +360,9 @@ public class FarragoQueryTest extends FarragoTestCase
         // 100 rows, and default selectivity assumption is 25% for a
         // LIKE predicate.
         assertEquals(25.0, analyzedSql.rowCount);
+        
+        stmt.executeUpdate(
+            "alter session implementation set default");
     }
 
     /**

@@ -32,8 +32,6 @@ import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.util.Util;
 
 import java.util.*;
-import java.lang.reflect.TypeVariable;
-import java.lang.reflect.Array;
 
 /**
  * Rule to remove distinct aggregates from a {@link AggregateRel}.
@@ -333,7 +331,7 @@ public final class RemoveDistinctAggregateRule extends RelOptRule
                 distinctAgg,
                 condition,
                 JoinRelType.INNER,
-                Collections.emptySet());
+                (Set<String>) Collections.EMPTY_SET);
 
         return join;
     }

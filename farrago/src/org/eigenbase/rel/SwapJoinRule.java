@@ -98,7 +98,7 @@ public class SwapJoinRule extends RelOptRule
                 join.isMultiJoinDone());
         if (!join.getVariablesStopped().isEmpty()) {
             newJoin.setVariablesStopped(
-                new HashSet(join.getVariablesStopped()));
+                new HashSet<String>(join.getVariablesStopped()));
         }
         final RelDataTypeField [] newJoinFields =
             newJoin.getRowType().getFields();

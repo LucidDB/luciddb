@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/ddl/udt.sql#4 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/ddl/udt.sql#5 $
 0: jdbc:farrago:> -- Test DDL for user-defined types
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema udttest;
@@ -512,7 +512,7 @@ Error: DDL validation error near line 1, column 35: Reference to unknown datatyp
 0: jdbc:farrago:> insert into stored_coord_list 
 . . . . . . . . > values(null, null, 4);
 Error: could not calculate results for the following row:
-[ 0 ]
+[ NULL, NULL, NULL, NULL, NULL, NULL, 4 ]
 Messages:
 [0]:PC=2 Code=22004 (state=,code=0)
 0: jdbc:farrago:> 
@@ -1079,8 +1079,9 @@ Error: DDL validation error near line 1, column 34: Must define distinct datatyp
 . . . . . . . . > select v.pair_id, v.coord1.x, v.coord1.y, v.y as y2 
 . . . . . . . . > from viewed_coord_list v;
 'column0'
-'IterCalcRel(expr#0..6=[{inputs}], PAIR_ID=[$t6], X=[$t1], Y=[$t2], Y2=[$t5])'
+'IterCalcRel(expr#0..4=[{inputs}], PAIR_ID=[$t0], X=[$t2], Y=[$t3], Y2=[$t4])'
 '  FennelToIteratorConverter'
-'    FtrsIndexScanRel(table=[[LOCALDB, UDTTEST, STORED_COORD_LIST]], projection=[*], index=[SYS$CONSTRAINT_INDEX$STORED_COORD_LIST$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FennelRenameRel(fieldNames=[[PAIR_ID, COORD1, COORD1, COORD1, Y]])'
+'      FtrsIndexScanRel(table=[[LOCALDB, UDTTEST, STORED_COORD_LIST]], projection=[[6, 0, 1, 2, 5]], index=[SYS$CONSTRAINT_INDEX$STORED_COORD_LIST$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

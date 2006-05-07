@@ -583,10 +583,10 @@ ${farrago.test.jvmargs}
     </sequential>
   </macrodef>
 
-  <!-- Macro for combining CWM, FEM, and a single ExtModel -->
+  <!-- Macro for combining CWM and FEM -->
   <macrodef name="farrago.synthesizeMetamodel">
-    <attribute name="extMofBasename" default="unspecified" />
     <attribute name="xmiDir" default="unspecified" />
+    <attribute name="extMofBasename" default="unspecified" />
     <attribute name="extPresent" default="true" />
     <sequential>
       <xslt style="${farrago.xmi.dir}/transformCWM.xsl"

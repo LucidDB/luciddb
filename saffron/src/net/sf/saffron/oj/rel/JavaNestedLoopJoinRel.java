@@ -56,7 +56,7 @@ public class JavaNestedLoopJoinRel
         RelNode right,
         RexNode condition,
         JoinRelType joinType,
-        Set variablesStopped)
+        Set<String> variablesStopped)
     {
         super(
             cluster, new RelTraitSet(CallingConvention.JAVA), left, right,

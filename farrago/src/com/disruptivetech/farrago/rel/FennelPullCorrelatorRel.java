@@ -42,7 +42,7 @@ public class FennelPullCorrelatorRel extends FennelDoubleRel
 {
     //~ Instance fields -------------------------------------------------------
 
-    protected List correlations;
+    protected final List<CorrelatorRel.Correlation> correlations;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -60,7 +60,7 @@ public class FennelPullCorrelatorRel extends FennelDoubleRel
         RelOptCluster cluster,
         RelNode left,
         RelNode right,
-        List correlations)
+        List<CorrelatorRel.Correlation> correlations)
     {
         super(cluster, left, right);
         this.correlations = correlations;
@@ -80,9 +80,9 @@ public class FennelPullCorrelatorRel extends FennelDoubleRel
         return clone;
     }
 
-    public List cloneCorrelations()
+    public List<CorrelatorRel.Correlation> cloneCorrelations()
     {
-        return new ArrayList(correlations);
+        return new ArrayList<CorrelatorRel.Correlation>(correlations);
     }
     
     // override RelNode
@@ -122,9 +122,7 @@ public class FennelPullCorrelatorRel extends FennelDoubleRel
         FemCorrelationJoinStreamDef streamDef =
             repos.newFemCorrelationJoinStreamDef();
 
-        for (int i = 0; i < correlations.size(); i++) {
-            CorrelatorRel.Correlation correlation =
-                (CorrelatorRel.Correlation) correlations.get(i);
+        for (CorrelatorRel.Correlation correlation : correlations) {
             FemCorrelation newFemCorrelation = repos.newFemCorrelation();
             newFemCorrelation.setId(correlation.getId());
             newFemCorrelation.setOffset(correlation.getOffset());

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/jdbc/metadata.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/jdbc/metadata.sql#11 $
 0: jdbc:farrago:> -- Test JDBC metadata calls
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test getCatalogs
@@ -91,11 +91,13 @@
 | SYS_BOOT   | JDBC_METADATA  | TYPE_INFO_VIEW                   | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | JDBC_METADATA  | UDTS_VIEW                        | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | JDBC_METADATA  | UDTS_VIEW_INTERNAL               | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | HISTOGRAMS_A_VIEW                | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | MGMT           | HISTOGRAMS_VIEW                  | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | MGMT           | HISTOGRAM_BARS_A_VIEW            | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | MGMT           | HISTOGRAM_BARS_B_VIEW            | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | MGMT           | HISTOGRAM_BARS_VIEW              | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | MGMT           | OBJECTS_IN_USE_VIEW              | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | PAGE_COUNTS_A_VIEW               | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | MGMT           | PAGE_COUNTS_VIEW                 | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | MGMT           | ROW_COUNTS_VIEW                  | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | MGMT           | SESSIONS_VIEW                    | VIEW        |          |           |             |            |                            |                 |
@@ -444,6 +446,13 @@ usesLocalFiles                                    false
 | 1000              | 1000                   | 0                | 1000          | 1000               | 0            | 2000                       | 2000                    | 1000           | 1000            | 4096           |
 +-------------------+------------------------+------------------+---------------+--------------------+--------------+----------------------------+-------------------------+----------------+-----------------+----------------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- verify unique lineage ID assignment
+0: jdbc:farrago:> select count(distinct "lineageId") from sys_fem."SQL2003"."LocalSchema";
++---------+
+| EXPR$0  |
++---------+
+| 6       |
++---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- TODO jvs 7-Aug-2004:  find out why the attribute order on this
 0: jdbc:farrago:> -- changes with every model edit

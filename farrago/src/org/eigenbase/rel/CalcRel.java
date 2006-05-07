@@ -197,7 +197,7 @@ public final class CalcRel extends CalcRelBase
         return createProject(rel, refs, fieldNames);
     }
 
-    public void collectVariablesUsed(Set variableSet)
+    public void collectVariablesUsed(Set<String> variableSet)
     {
         final RelOptUtil.VariableUsedVisitor vuv =
             new RelOptUtil.VariableUsedVisitor();

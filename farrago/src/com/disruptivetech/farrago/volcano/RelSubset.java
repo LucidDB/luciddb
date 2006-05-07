@@ -55,10 +55,10 @@ public class RelSubset extends AbstractRelNode
     //~ Instance fields -------------------------------------------------------
 
     /** List of the relational expressions for which this subset is an input. */
-    final List parents;
+    final List<RelNode> parents;
 
     /** The relational expressions in this subset. */
-    final List rels;
+    final List<RelNode> rels;
 
     /** cost of best known plan (it may have improved since) */
     RelOptCost bestCost;
@@ -84,8 +84,8 @@ public class RelSubset extends AbstractRelNode
     {
         super(cluster, traits);
         this.set = set;
-        this.rels = new ArrayList();
-        this.parents = new ArrayList();
+        this.rels = new ArrayList<RelNode>();
+        this.parents = new ArrayList<RelNode>();
         this.bestCost = VolcanoCost.INFINITY;
         recomputeDigest();
     }
@@ -108,12 +108,12 @@ public class RelSubset extends AbstractRelNode
     }
     */
 
-    public Set getVariablesSet()
+    public Set<String> getVariablesSet()
     {
         return set.variablesPropagated;
     }
 
-    public Set getVariablesUsed()
+    public Set<String> getVariablesUsed()
     {
         return set.variablesUsed;
     }
@@ -153,8 +153,7 @@ public class RelSubset extends AbstractRelNode
         }
         s.append(')');
 
-        pw.explainSubset(s.toString(),
-            (RelNode) rels.get(0));
+        pw.explainSubset(s.toString(), rels.get(0));
     }
 
     protected String computeDigest()
@@ -179,11 +178,10 @@ public class RelSubset extends AbstractRelNode
         return set.rel.isDistinct();
     }
 
-    Set getParentSubsets()
+    Set<RelSubset> getParentSubsets()
     {
-        HashSet set = new HashSet();
-        for (Iterator iterator = parents.iterator(); iterator.hasNext();) {
-            RelNode rel = (RelNode) iterator.next();
+        Set<RelSubset> set = new HashSet<RelSubset>();
+        for (RelNode rel : parents) {
             final RelSubset subset =
                 ((VolcanoPlanner) getCluster().getPlanner()).getSubset(rel);
             set.add(subset);
@@ -224,12 +222,13 @@ public class RelSubset extends AbstractRelNode
                 "rowtype of set", getRowType(), true);
         rels.add(rel);
         set.addInternal(rel);
-        Set variablesSet = RelOptUtil.getVariablesSet(rel);
-        Set variablesStopped = rel.getVariablesStopped();
+        Set<String> variablesSet = RelOptUtil.getVariablesSet(rel);
+        Set<String> variablesStopped = rel.getVariablesStopped();
         if (false) {
-            Set variablesPropagated = Util.minus(variablesSet, variablesStopped);
+            Set<String> variablesPropagated =
+                Util.minus(variablesSet, variablesStopped);
             assert set.variablesPropagated.containsAll(variablesPropagated);
-            Set variablesUsed = RelOptUtil.getVariablesUsed(rel);
+            Set<String> variablesUsed = RelOptUtil.getVariablesUsed(rel);
             assert set.variablesUsed.containsAll(variablesUsed);
         }
         propagateCostImprovements(
@@ -276,8 +275,7 @@ public class RelSubset extends AbstractRelNode
             // Lower cost means lower importance. Other nodes will change
             // too, but we'll get to them later.
             planner.ruleQueue.recompute(this);
-            for (int i = 0; i < parents.size(); i++) {
-                RelNode parent = (RelNode) parents.get(i);
+            for (RelNode parent : parents) {
                 final RelSubset parentSubset = planner.getSubset(parent);
                 parentSubset.propagateCostImprovements(planner, parent);
             }
@@ -285,12 +283,12 @@ public class RelSubset extends AbstractRelNode
         }
     }
 
-    public void collectVariablesUsed(Set variableSet)
+    public void collectVariablesUsed(Set<String> variableSet)
     {
         variableSet.addAll(getVariablesUsed());
     }
 
-    public void collectVariablesSet(Set variableSet)
+    public void collectVariablesSet(Set<String> variableSet)
     {
         variableSet.addAll(getVariablesSet());
     }

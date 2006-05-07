@@ -67,6 +67,11 @@ public class FarragoRexBuilder extends JavaRexBuilder
         return makePreciseStringLiteral(s);
     }
 
+    public FarragoPreparingStmt getPreparingStmt()
+    {
+        return preparingStmt;
+    }
+    
     // override RexBuilder
     public RexNode makeCall(
         SqlOperator op,

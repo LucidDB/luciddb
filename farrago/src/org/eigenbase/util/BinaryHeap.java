@@ -39,35 +39,35 @@ import junit.framework.TestCase;
  *
  * @since Dec 8, 2002
  */
-public class BinaryHeap
+public class BinaryHeap <T>
 {
     //~ Instance fields -------------------------------------------------------
 
-    private Comparator comparator;
-    private Object [] elements;
+    private final Comparator<T> comparator;
+    private T [] elements;
     private int count;
 
     //~ Constructors ----------------------------------------------------------
 
     public BinaryHeap(
         boolean isMin,
-        Comparator comparator)
+        Comparator<T> comparator)
     {
         if (isMin) {
             this.comparator = comparator;
         } else {
             final Comparator comparator1 = comparator;
             this.comparator =
-                new Comparator() {
+                new Comparator<T>() {
                         public int compare(
-                            Object o1,
-                            Object o2)
+                            T o1,
+                            T o2)
                         {
                             return comparator1.compare(o2, o1);
                         }
                     };
         }
-        this.elements = new Object[7];
+        this.elements = (T[]) new Object[7];
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -82,7 +82,7 @@ public class BinaryHeap
         count = 0;
     }
 
-    public void insert(Object o)
+    public void insert(T o)
     {
         if (++count >= elements.length) {
             expand();
@@ -91,7 +91,7 @@ public class BinaryHeap
         percolateUp(count);
     }
 
-    public Object peek()
+    public T peek()
         throws NoSuchElementException
     {
         if (count < 1) {
@@ -101,24 +101,24 @@ public class BinaryHeap
         }
     }
 
-    public Object pop()
+    public T pop()
         throws NoSuchElementException
     {
-        Object o = peek();
+        T o = peek();
         elements[1] = elements[count--];
         percolateDown(1);
         return o;
     }
 
     /**
-     * Removes an object from the queue. If it exists several times, removes
+     * Removes an element from the queue. If it exists several times, removes
      * only one occurrence.
      *
      * @param o the object to remove
      *
      * @return whether the object was on the queue
      */
-    public boolean remove(Object o)
+    public boolean remove(T o)
     {
         int j = find(o);
         if (j > 0) {
@@ -133,18 +133,18 @@ public class BinaryHeap
     private void expand()
     {
         int newSize = (elements.length * 2) + 3;
-        Object [] oldElements = elements;
-        elements = new Object[newSize];
+        T [] oldElements = elements;
+        elements = (T[]) new Object[newSize];
         System.arraycopy(oldElements, 1, elements, 1, oldElements.length - 1);
     }
 
     /**
-     * Returns the first position of an object on the heap, or 0 if not found.
+     * Returns the first position of an element on the heap, or 0 if not found.
      */
-    private int find(Object o)
+    private int find(T o)
     {
         for (int i = 1; i <= count; i++) {
-            Object element = elements[i];
+            T element = elements[i];
             if (element.equals(o)) {
                 return i;
             }
@@ -158,20 +158,20 @@ public class BinaryHeap
     private void percolateDown(int i)
     {
         while (true) {
-            Object o = elements[i];
+            T o = elements[i];
             int i2 = i * 2;
             if (i2 > count) {
                 return;
             } else if ((i2 + 1) > count) {
-                final Object o2 = elements[i2];
+                final T o2 = elements[i2];
                 if (comparator.compare(o, o2) > 0) {
                     elements[i] = o2;
                     elements[i2] = o;
                 }
                 return;
             } else {
-                Object o2 = elements[i2];
-                final Object o3 = elements[i2 + 1];
+                T o2 = elements[i2];
+                final T o3 = elements[i2 + 1];
 
                 // compare with the smaller of [i2], [i2+1]
                 if (comparator.compare(o2, o3) > 0) {
@@ -195,8 +195,8 @@ public class BinaryHeap
     {
         int i2;
         while ((i2 = i / 2) > 0) {
-            Object o = elements[i];
-            Object o2 = elements[i2];
+            T o = elements[i];
+            T o2 = elements[i2];
             if (comparator.compare(o, o2) >= 0) {
                 // 'o' is greater than or equal to its parent, so the heap
                 // property is satisfied, and we can stop
@@ -224,12 +224,13 @@ public class BinaryHeap
         {
             final String [] a =
             { "3", "1", "4", "1", "5", "9", "2", "6", "5", "3", "5" };
-            final BinaryHeap heap =
-                new BinaryHeap(true,
-                    new Comparator() {
+            final BinaryHeap<String> heap =
+                new BinaryHeap<String>(
+                    true,
+                    new Comparator<String>() {
                         public int compare(
-                            Object o1,
-                            Object o2)
+                            String o1,
+                            String o2)
                         {
                             return ((Comparable) o1).compareTo(o2);
                         }
@@ -248,7 +249,7 @@ public class BinaryHeap
             StringBuffer buf = new StringBuffer();
             while (!heap.isEmpty()) {
                 validate(heap);
-                final String s = (String) heap.pop();
+                final String s = heap.pop();
                 validate(heap);
                 buf.append(s);
             }
@@ -259,14 +260,15 @@ public class BinaryHeap
 
         public void testMax()
         {
-            BinaryHeap heap =
-                new BinaryHeap(false,
-                    new Comparator() {
+            BinaryHeap<String> heap =
+                new BinaryHeap<String>(
+                    false,
+                    new Comparator<String>() {
                         public int compare(
-                            Object o1,
-                            Object o2)
+                            String o1,
+                            String o2)
                         {
-                            return ((Comparable) o1).compareTo(o2);
+                            return o1.compareTo(o2);
                         }
                     });
             heap.insert("parsley");

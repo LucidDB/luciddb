@@ -44,19 +44,28 @@ class RuleQueue
 
     //~ Instance fields -------------------------------------------------------
 
-    /** Maps {@link RelSubset} to {@link Double}. */
-    HashMap subsetImportances = new HashMap();
-    private final ArrayList matchList = new ArrayList();
-    private final Comparator ruleMatchImportanceComparator =
+    /** The importance of each subset. */
+    final Map<RelSubset, Double> subsetImportances =
+        new HashMap<RelSubset, Double>();
+
+    private final List<VolcanoRuleMatch> matchList =
+        new ArrayList<VolcanoRuleMatch>();
+
+    private final Comparator<VolcanoRuleMatch> ruleMatchImportanceComparator =
         new RuleMatchImportanceComparator();
-    private final HashSet matchNames = new HashSet();
+
+    private final Set<String> matchNames = new HashSet<String>();
+
     private final VolcanoPlanner planner;
 
     /** Compares relexps according to their cached 'importance'. */
-    private Comparator relImportanceComparator = new RelImportanceComparator();
-    private BinaryHeap relQueue =
-        new BinaryHeap(true, relImportanceComparator);
-    private HashSet rels = new HashSet();
+    private final Comparator<RelSubset> relImportanceComparator =
+        new RelImportanceComparator();
+
+    private final BinaryHeap<RelSubset> relQueue =
+        new BinaryHeap<RelSubset>(true, relImportanceComparator);
+
+    private final Set<RelNode> rels = new HashSet<RelNode>();
 
     //~ Constructors ----------------------------------------------------------
 
@@ -74,8 +83,7 @@ class RuleQueue
     public double getImportance(RelSet set)
     {
         double importance = 0;
-        for (int i = 0; i < set.subsets.size(); i++) {
-            RelSubset subset = (RelSubset) set.subsets.get(i);
+        for (RelSubset subset : set.subsets) {
             importance = Math.max(
                     importance,
                     getImportance(subset));
@@ -98,8 +106,7 @@ class RuleQueue
 
     public void recompute(RelSubset subset)
     {
-        final Double previousImportance =
-            (Double) subsetImportances.get(subset);
+        final Double previousImportance = subsetImportances.get(subset);
         if (previousImportance == null) {
             // Subset has not been registered yet. Don't worry about it.
             return;
@@ -109,15 +116,12 @@ class RuleQueue
             return;
         }
         relQueue.remove(subset);
-        subsetImportances.put(
-            subset,
-            new Double(importance));
+        subsetImportances.put(subset, importance);
         relQueue.insert(subset);
     }
 
     boolean isEmpty()
     {
-        //          return rels.isEmpty();
         return relQueue.isEmpty();
     }
 
@@ -140,9 +144,8 @@ class RuleQueue
         final RelSet set = planner.getSet(rel);
         assert set != null;
         assert set.subsets != null;
-        for (int i = 0; i < set.subsets.size(); i++) {
-            RelSubset subset2 = (RelSubset) set.subsets.get(i);
-            final Double d = (Double) subsetImportances.get(subset2);
+        for (RelSubset subset2 : set.subsets) {
+            final Double d = subsetImportances.get(subset2);
             if (d == null) {
                 continue;
             }
@@ -181,10 +184,10 @@ class RuleQueue
         if (subsetImportances.get(subset) == null) {
             final double importance = computeImportance(subset);
             final Double previousImportance =
-                (Double) subsetImportances.put(
+                subsetImportances.put(
                     subset,
-                    new Double(importance));
-            assert (previousImportance == null);
+                    importance);
+            assert previousImportance == null;
             relQueue.insert(subset);
         }
     }
@@ -195,7 +198,7 @@ class RuleQueue
     void addMatch(VolcanoRuleMatch match)
     {
         final String matchName = match.toString();
-        if (!matchNames.add(match)) {
+        if (!matchNames.add(matchName)) {
             // Identical match has already been added.
             return;
         }
@@ -246,10 +249,7 @@ class RuleQueue
             // The importance of a subset is the max of its importance to its
             // parents
             importance = 0.0;
-            final Set parentSubsets = subset.getParentSubsets();
-            for (Iterator parents = parentSubsets.iterator();
-                    parents.hasNext();) {
-                RelSubset parent = (RelSubset) parents.next();
+            for (RelSubset parent : subset.getParentSubsets()) {
                 final double childImportance =
                     computeImportanceOfChild(subset, parent);
                 importance = Math.max(importance, childImportance);
@@ -275,8 +275,8 @@ class RuleQueue
         planner.dump(pw);
         pw.print("Importances: {");
         final RelSubset [] subsets =
-            (RelSubset []) subsetImportances.keySet().toArray(
-                new RelSubset[0]);
+            subsetImportances.keySet().toArray(
+                new RelSubset[subsetImportances.keySet().size()]);
         Arrays.sort(subsets, relImportanceComparator);
         for (int i = 0; i < subsets.length; i++) {
             RelSubset subset = subsets[i];
@@ -290,8 +290,7 @@ class RuleQueue
     {
         RelOptCost cheapestCost = null;
         RelNode cheapestRel = null;
-        for (Iterator rels = childSubset.rels.iterator(); rels.hasNext();) {
-            RelNode rel = (RelNode) rels.next();
+        for (RelNode rel : childSubset.rels) {
             RelOptCost cost = planner.getCost(rel);
             if ((cheapestCost == null) || cost.isLt(cheapestCost)) {
                 if (this.rels.contains(rel)) {
@@ -313,19 +312,19 @@ class RuleQueue
     {
         while (true) {
             dump();
-            RelSubset subset = (RelSubset) relQueue.pop();
+            RelSubset subset = relQueue.pop();
             if (!relQueue.isEmpty()) {
-                RelSubset nextSubset = (RelSubset) relQueue.peek();
+                RelSubset nextSubset = relQueue.peek();
                 double importance = computeImportance(subset);
                 double nextImportance = computeImportance(nextSubset);
                 if (nextImportance > importance) {
                     // The queue was out of order. Try it again.
                     subsetImportances.put(
                         subset,
-                        new Double(importance));
+                        importance);
                     subsetImportances.put(
                         nextSubset,
-                        new Double(nextImportance));
+                        nextImportance);
                     relQueue.pop();
                     relQueue.insert(nextSubset);
                     relQueue.insert(subset);
@@ -335,7 +334,8 @@ class RuleQueue
             final RelNode cheapestMember = findCheapestMember(subset);
             if (cheapestMember != null) {
                 relQueue.insert(subset); // put it back.. there may be more
-                assert (rels.remove(cheapestMember)) : "candidate rel must be on rule queue";
+                assert rels.remove(cheapestMember) :
+                    "candidate rel must be on rule queue";
                 return cheapestMember;
             }
 
@@ -355,7 +355,9 @@ class RuleQueue
     {
         dump();
         assert (hasNextMatch());
-        final Object [] matches = matchList.toArray();
+        final VolcanoRuleMatch [] matches =
+            (VolcanoRuleMatch[])
+            matchList.toArray(new VolcanoRuleMatch[matchList.size()]);
         for (int i = 0; i < matches.length; i++) {
             assert matches[i] != null : i;
         }
@@ -368,7 +370,7 @@ class RuleQueue
                 tracer.finest(match + " importance " + importance);
             }
         }
-        final VolcanoRuleMatch match = (VolcanoRuleMatch) matches[0];
+        final VolcanoRuleMatch match = matches[0];
         matchList.remove(match);
         return match;
     }
@@ -379,7 +381,7 @@ class RuleQueue
         if (existed) {
             // Remove any matches which involve the obsolete relational expr.
             for (int i = 0; i < matchList.size(); i++) {
-                VolcanoRuleMatch match = (VolcanoRuleMatch) matchList.get(i);
+                VolcanoRuleMatch match = matchList.get(i);
                 if (matchContains(match, rel)) {
                     matchList.remove(i);
                     --i;
@@ -448,14 +450,12 @@ class RuleQueue
      * Compares {@link RelNode} objects according to their cached
      * 'importance'.
      */
-    private class RelImportanceComparator implements Comparator
+    private class RelImportanceComparator implements Comparator<RelSubset>
     {
         public int compare(
-            Object o1,
-            Object o2)
+            RelSubset rel1,
+            RelSubset rel2)
         {
-            RelSubset rel1 = (RelSubset) o1;
-            RelSubset rel2 = (RelSubset) o2;
             double imp1 = getImportance(rel1);
             double imp2 = getImportance(rel2);
             return (imp1 < imp2) ? 1 : ((imp1 > imp2) ? (-1) : 0);
@@ -466,14 +466,13 @@ class RuleQueue
      * Compares {@link VolcanoRuleMatch} objects according to their
      * importance.
      */
-    private class RuleMatchImportanceComparator implements Comparator
+    private class RuleMatchImportanceComparator
+        implements Comparator<VolcanoRuleMatch>
     {
         public int compare(
-            Object o1,
-            Object o2)
+            VolcanoRuleMatch match1,
+            VolcanoRuleMatch match2)
         {
-            VolcanoRuleMatch match1 = (VolcanoRuleMatch) o1;
-            VolcanoRuleMatch match2 = (VolcanoRuleMatch) o2;
             double imp1 = match1.computeImportance();
             double imp2 = match2.computeImportance();
             return (imp1 < imp2) ? 1 : ((imp1 > imp2) ? (-1) : 0);

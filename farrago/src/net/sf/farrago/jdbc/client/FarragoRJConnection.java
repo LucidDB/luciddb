@@ -42,10 +42,10 @@ import java.util.Properties;
  * @author Tim Leung
  * @version $Id$
  */
-class FarragoRJConnection extends RJConnection
+public class FarragoRJConnection extends RJConnection
     implements java.io.Serializable, FarragoConnection
 {
-    FarragoRJConnection(RJConnectionInterface rmiconn)
+    protected FarragoRJConnection(RJConnectionInterface rmiconn)
     {
         super(rmiconn);
     }

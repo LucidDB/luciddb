@@ -83,8 +83,7 @@ public class VolcanoRelMetadataProvider implements RelMetadataProvider
 
         subset.set.inMetadataQuery = true;
         try {
-            for (Object candidate : subset.set.rels) {
-                RelNode relCandidate = (RelNode) candidate;
+            for (RelNode relCandidate : subset.set.rels) {
                 Object result =
                     rel.getCluster().getMetadataProvider().getRelMetadata(
                         relCandidate,

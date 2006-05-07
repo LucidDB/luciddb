@@ -27,6 +27,8 @@ import java.util.*;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.rel.rules.SemiJoinRel;
+import org.eigenbase.rel.rules.AddRedundantSemiJoinRule;
 
 /**
  * A JoinRel represents two relational expressions joined according to some
@@ -67,7 +69,7 @@ public final class JoinRel extends JoinRelBase
         RelNode right,
         RexNode condition,
         JoinRelType joinType,
-        Set variablesStopped)
+        Set<String> variablesStopped)
     {
         this(
             cluster, left, right, condition, joinType, variablesStopped,
@@ -80,7 +82,7 @@ public final class JoinRel extends JoinRelBase
         RelNode right,
         RexNode condition,
         JoinRelType joinType,
-        Set variablesStopped,
+        Set<String> variablesStopped,
         boolean semiJoinDone,
         boolean multiJoinDone)
     {
@@ -101,7 +103,7 @@ public final class JoinRel extends JoinRelBase
             RelOptUtil.clone(right),
             RexUtil.clone(condition),
             joinType,
-            new HashSet(variablesStopped),
+            new HashSet<String>(variablesStopped),
             isSemiJoinDone(),
             isMultiJoinDone());
         clone.inheritTraitsFrom(this);

@@ -146,7 +146,7 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
                         dynamicParam.getIndex()))));
     }
 
-    Expression convertVariable(
+    public Expression convertVariable(
         RelDataType type,
         String accessorName,
         ExpressionList accessorArgList)
@@ -163,6 +163,26 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
                 accessorArgList));
     }
 
+    public Expression convertVariableWithCast(
+        RelDataType type,
+        Class accessorClassCast,
+        String accessorName,
+        ExpressionList accessorArgList)
+    {
+        return castImplementor.convertCastToAssignableValue(
+            this,
+            null,
+            type,
+            null,
+            null,
+            new MethodCall(
+                new CastExpression(
+                    OJUtil.typeNameForClass(accessorClassCast), 
+                    getRelImplementor().getConnectionVariable()),
+                accessorName,
+                accessorArgList));        
+    }
+    
     // override RexToOJTranslator
     public void visitLiteral(RexLiteral literal)
     {
