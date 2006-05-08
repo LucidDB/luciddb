@@ -61,16 +61,30 @@ public class FarragoJavaUdxRel extends TableFunctionRelBase
      */
     public FarragoJavaUdxRel(
         RelOptCluster cluster, RexNode rexCall, RelDataType rowType,
-        String serverMofId)
+        String serverMofId, RelNode [] inputs)
     {
         super(
             cluster,
             new RelTraitSet(CallingConvention.ITERATOR),
             rexCall,
-            rowType);
+            rowType,
+            inputs);
         this.serverMofId = serverMofId;
     }
 
+    // implement RelNode
+    public Object clone()
+    {
+        FarragoJavaUdxRel clone = new FarragoJavaUdxRel(
+            getCluster(),
+            getCall(),
+            getRowType(),
+            serverMofId,
+            RelOptUtil.clone(inputs));
+        clone.inheritTraitsFrom(this);
+        return clone;
+    }
+    
     // implement RelNode
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {

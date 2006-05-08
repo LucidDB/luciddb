@@ -49,6 +49,13 @@ public abstract class SqlAbstractParserImpl
     protected static final ExprContext EXPR_ACCEPT_ALL = new ExprContext();
 
     /**
+     * Accept any kin of expression in this context, with the exception of
+     * CURSOR constructors.
+     */
+    protected static final ExprContext EXPR_ACCEPT_NONCURSOR =
+        new ExprContext();
+
+    /**
      * Accept only query expressions in this context.
      */
     protected static final ExprContext EXPR_ACCEPT_QUERY = new ExprContext();
@@ -64,6 +71,13 @@ public abstract class SqlAbstractParserImpl
      * in this context.
      */
     protected static final ExprContext EXPR_ACCEPT_SUBQUERY =
+        new ExprContext();
+
+    /**
+     * Accept only CURSOR constructors, parenthesized queries, or non-query
+     * expressions in this context.
+     */
+    protected static final ExprContext EXPR_ACCEPT_CURSOR =
         new ExprContext();
 
     private static final Set sql92ReservedWordSet;

@@ -73,6 +73,23 @@ public class MockSqlOperatorTable extends ChainedSqlOperatorTable
                     return typeFactory.createStructType(types, fieldNames);
                 }
             });
+        
+        opTab.addOperator(
+            new SqlFunction(
+                "DEDUP", SqlKind.Function, null, null,
+                SqlTypeStrategies.otcVariadic,
+                SqlFunctionCategory.UserDefinedFunction) {
+                public RelDataType inferReturnType(SqlOperatorBinding opBinding)
+                {
+                    final RelDataTypeFactory typeFactory =
+                        opBinding.getTypeFactory();
+                    final RelDataType[] types = {
+                        typeFactory.createSqlType(SqlTypeName.Varchar, 1024)
+                    };
+                    final String[] fieldNames = new String[] { "NAME"};
+                    return typeFactory.createStructType(types, fieldNames);
+                }
+            });
     }
 }
 

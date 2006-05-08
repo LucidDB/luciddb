@@ -73,7 +73,8 @@ public class FarragoJavaUdxRule extends RelOptRule
                 callRel.getCluster(),
                 callRel.getCall(),
                 callRel.getRowType(),
-                null);
+                null,
+                RelOptUtil.clone(callRel.getInputs()));
         call.transformTo(javaTableFunctionRel);
     }
 }

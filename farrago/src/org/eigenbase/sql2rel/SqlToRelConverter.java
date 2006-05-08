@@ -338,6 +338,9 @@ public class SqlToRelConverter
         }
         RelNode converted;
         switch (node.getKind().getOrdinal()) {
+        case SqlKind.CursorConstructorORDINAL:
+            convertCursor(bb, (SqlCall) node);
+            return;
         case SqlKind.MultisetQueryConstructorORDINAL:
         case SqlKind.MultisetValueConstructorORDINAL: {
             converted = convertMultisets(new SqlNode[]{node}, bb);
@@ -729,6 +732,7 @@ public class SqlToRelConverter
         case SqlKind.SelectORDINAL:
         case SqlKind.MultisetQueryConstructorORDINAL:
         case SqlKind.MultisetValueConstructorORDINAL:
+        case SqlKind.CursorConstructorORDINAL:
             bb.registerSubquery(node);
             return;
         default:
@@ -963,10 +967,12 @@ public class SqlToRelConverter
             call = (SqlCall) call.getOperands()[0];
             replaceSubqueries(bb, call);
             RexNode rexCall = bb.convertExpression(call);
+            RelNode [] inputs = bb.retrieveCursors();
             TableFunctionRel callRel = new TableFunctionRel(
                 cluster,
                 rexCall,
-                validator.getValidatedNodeType(call));
+                validator.getValidatedNodeType(call),
+                inputs);
             bb.setRoot(callRel, true);
             return;
             
@@ -1484,6 +1490,18 @@ public class SqlToRelConverter
 
     }
 
+    private RelNode convertCursor(Blackboard bb, SqlCall cursorCall)
+    {
+        assert(cursorCall.operands.length == 1);
+        SqlNode query = cursorCall.operands[0];
+        RelNode converted = convertQuery(query, false, false);
+        int iCursor = bb.cursors.size();
+        bb.cursors.add(converted);
+        RexNode expr = new RexInputRef(iCursor, converted.getRowType());
+        bb.mapSubqueryToExpr.put(cursorCall, expr);
+        return converted;
+    }
+    
     private RelNode convertMultisets(final SqlNode[] operands, Blackboard bb)
     {
         // TODO Wael 2/04/05: this implementation is not the most efficent in
@@ -1773,6 +1791,8 @@ public class SqlToRelConverter
         private final Map<String,RexNode> mapCorrelateVariableToRexNode =
             new HashMap<String, RexNode>();
 
+        List<RelNode> cursors;
+
         /**
          * List of <code>IN</code> and <code>EXISTS</code> nodes inside this
          * <code>SELECT</code> statement (but not inside sub-queries).
@@ -1801,6 +1821,7 @@ public class SqlToRelConverter
         protected Blackboard(SqlValidatorScope scope)
         {
             this.scope = scope;
+            cursors = new ArrayList<RelNode>();
         }
 
         public RexNode register(
@@ -1990,6 +2011,14 @@ public class SqlToRelConverter
             subqueryList.add(node);
         }
 
+        RelNode [] retrieveCursors()
+        {
+            RelNode [] cursorArray = (RelNode [])
+                cursors.toArray(RelNode.emptyArray);
+            cursors.clear();
+            return cursorArray;
+        }
+
         // implement ConvertletContext
         public RexNode convertExpression(SqlNode expr)
         {
@@ -2012,11 +2041,17 @@ public class SqlToRelConverter
             // Sub-queries and OVER expressions are not like ordinary
             // expressions.
             switch (expr.getKind().getOrdinal()) {
+            case SqlKind.CursorConstructorORDINAL:
             case SqlKind.SelectORDINAL:
             case SqlKind.InORDINAL:
             case SqlKind.ExistsORDINAL:
                 rex = mapSubqueryToExpr.get(expr);
                 assert rex != null : "rex != null";
+
+                if (expr.getKind() == SqlKind.CursorConstructor) {
+                    // cursor reference is pre-baked
+                    return rex;
+                }
 
                 RexNode fieldAccess;
                 boolean needTruthTest = false;

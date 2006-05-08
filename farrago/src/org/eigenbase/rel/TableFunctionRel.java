@@ -48,17 +48,32 @@ public class TableFunctionRel extends TableFunctionRelBase
      * @param rexCall function invocation expression
      *
      * @param rowType row type produced by function
+     *
+     * @param inputs 0 or more relational inputs
      */
     public TableFunctionRel(
-        RelOptCluster cluster, RexNode rexCall, RelDataType rowType)
+        RelOptCluster cluster, RexNode rexCall, RelDataType rowType,
+        RelNode [] inputs)
     {
         super(
             cluster,
             new RelTraitSet(CallingConvention.NONE),
             rexCall,
-            rowType);
+            rowType,
+            inputs);
     }
 
+    public Object clone()
+    {
+        TableFunctionRel clone = new TableFunctionRel(
+            getCluster(),
+            getCall(),
+            getRowType(),
+            RelOptUtil.clone(inputs));
+        clone.inheritTraitsFrom(this);
+        return clone;
+    }
+    
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         // REVIEW jvs 8-Jan-2006:  what is supposed to be here

@@ -39,6 +39,8 @@ public abstract class TableFunctionRelBase extends AbstractRelNode
 
     private final RelDataType rowType;
     
+    protected final RelNode [] inputs;
+    
     //~ Constructors ----------------------------------------------------------
     
     /**
@@ -50,18 +52,35 @@ public abstract class TableFunctionRelBase extends AbstractRelNode
      * @param rexCall function invocation expression
      *
      * @param rowType row type produced by function
+     *
+     * @param inputs 0 or more relational inputs
      */
     protected TableFunctionRelBase(
         RelOptCluster cluster,
         RelTraitSet traits,
-        RexNode rexCall, RelDataType rowType)
+        RexNode rexCall,
+        RelDataType rowType,
+        RelNode [] inputs)
     {
         super(cluster, traits);
         this.rexCall = rexCall;
         this.rowType = rowType;
+        this.inputs = inputs;
     }
     
     //~ Methods ---------------------------------------------------------------
+
+    public RelNode [] getInputs()
+    {
+        return inputs;
+    }
+
+    public void replaceInput(
+        int ordinalInParent,
+        RelNode p)
+    {
+        inputs[ordinalInParent] = p;
+    }
 
     public RexNode [] getChildExps()
     {
@@ -73,17 +92,21 @@ public abstract class TableFunctionRelBase extends AbstractRelNode
 
     public RexNode getCall()
     {
+        // NOTE jvs 7-May-2006:  Within this rexCall, instances
+        // of RexInputRef refer to entire input RelNodes rather
+        // than their fields.
         return rexCall;
     }
 
     public void explain(RelOptPlanWriter pw)
     {
-        pw.explain(this, new String [] { "invocation" });
-    }
-    
-    public Object clone()
-    {
-        return this;
+        String [] terms = new String[inputs.length + 1];
+        for (int i = 0; i < inputs.length; i++) {
+            terms[i] = "input#" + i;
+        }
+        terms[inputs.length] = "invocation";
+        
+        pw.explain(this, terms);
     }
 
     protected RelDataType deriveRowType()

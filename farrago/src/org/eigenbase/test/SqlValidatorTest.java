@@ -130,7 +130,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         }
     }
 
-    public void testNotIlleagalTypeFails()
+    public void testNotIllegalTypeFails()
     {
         //TODO need col+line number
         assertExceptionIsThrown("select NOT 3.141 from (values(true))",
@@ -2448,6 +2448,16 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "No match found for function signature NONEXISTENTRAMP\\(<CHARACTER>\\)");
     }
 
+    public void testCollectionTableWithCursorParam()
+    {
+        checkResultType(
+            "select * from table(dedup(cursor(select * from emp),'ename'))",
+            "RecordType(VARCHAR(1024) NOT NULL NAME) NOT NULL");
+        checkFails(
+            "select * from table(dedup(cursor(select * from ^bloop^),'ename'))",
+            "Table 'BLOOP' not found");
+    }
+    
     public void testNew()
     {
         // (To debug invidual statements, paste them into this method.)
