@@ -11,6 +11,9 @@
       </init-hook>
 
       <test name="hhjoin">
+        <test-metadata>
+          <runDuration>long</runDuration>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/hashjoin/hhjoin.sql"/>
       </test>
 

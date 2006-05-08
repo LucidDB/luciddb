@@ -1,13 +1,74 @@
 0: jdbc:luciddb:> set schema 'foodmart';
 0: jdbc:luciddb:> select "time_by_day"."the_year" as "c0", "product_class"."product_department" as "c1", "product_class"."product_family" as "c2", sum("sales_fact_1997"."unit_sales") as "m0" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "product_class" as "product_class", "product" as "product" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_department" in ('Dairy', 'Household', 'Checkout', 'Periodicals', 'Health and Hygiene', 'Beverages', 'Carousel', 'Alcoholic Beverages') group by "time_by_day"."the_year", "product_class"."product_department", "product_class"."product_family";
-Error: java.lang.UnsupportedOperationException: class org.eigenbase.sql.SqlNodeList: 'Dairy', 'Household', 'Checkout', 'Periodicals', 'Health and Hygiene', 'Beverages', 'Carousel', 'Alcoholic Beverages' (state=,code=0)
++-------+----------------------+-----------------+-------------+
+|  c0   |          c1          |       c2        |     m0      |
++-------+----------------------+-----------------+-------------+
+| 1997  | Alcoholic Beverages  | Drink           | 6838.0000   |
+| 1997  | Beverages            | Drink           | 13573.0000  |
+| 1997  | Carousel             | Non-Consumable  | 841.0000    |
+| 1997  | Checkout             | Non-Consumable  | 1779.0000   |
+| 1997  | Dairy                | Drink           | 4186.0000   |
+| 1997  | Dairy                | Food            | 12885.0000  |
+| 1997  | Health and Hygiene   | Non-Consumable  | 16284.0000  |
+| 1997  | Household            | Non-Consumable  | 27038.0000  |
+| 1997  | Periodicals          | Non-Consumable  | 4294.0000   |
++-------+----------------------+-----------------+-------------+
 0: jdbc:luciddb:> select "time_by_day"."quarter" as "c0", "time_by_day"."the_year" as "c1", "customer"."education" as "c2", sum("sales_fact_1997"."unit_sales") as "m0" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "customer" as "customer" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."quarter" in ('Q1', 'Q4') and "sales_fact_1997"."customer_id" = "cusvtomer"."customer_id" group by "time_by_day"."quarter", "time_by_day"."the_year", "customer"."education";
-Error: java.lang.UnsupportedOperationException: class org.eigenbase.sql.SqlNodeList: 'Q1', 'Q4' (state=,code=0)
+Error: From line 1, column 395 to line 1, column 405: Table 'cusvtomer' not found (state=,code=0)
 0: jdbc:luciddb:> select "time_by_day"."quarter" as "c0", "time_by_day"."the_year" as "c1", "customer"."education" as "c2", sum("sales_fact_1997"."unit_sales") as "m0" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "customer" as "customer" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."quarter" in ('Q3', 'Q3', 'Q2') and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "time_by_day"."quarter", "time_by_day"."the_year", "customer"."education";
-Error: java.lang.UnsupportedOperationException: class org.eigenbase.sql.SqlNodeList: 'Q3', 'Q3', 'Q2' (state=,code=0)
++-----+-------+----------------------+-------------+
+| c0  |  c1   |          c2          |     m0      |
++-----+-------+----------------------+-------------+
+| Q2  | 1997  | Bachelors Degree     | 16175.0000  |
+| Q2  | 1997  | Graduate Degree      | 3880.0000   |
+| Q2  | 1997  | High School Degree   | 17907.0000  |
+| Q2  | 1997  | Partial College      | 5852.0000   |
+| Q2  | 1997  | Partial High School  | 18796.0000  |
+| Q3  | 1997  | Bachelors Degree     | 16969.0000  |
+| Q3  | 1997  | Graduate Degree      | 3799.0000   |
+| Q3  | 1997  | High School Degree   | 19182.0000  |
+| Q3  | 1997  | Partial College      | 6269.0000   |
+| Q3  | 1997  | Partial High School  | 19629.0000  |
++-----+-------+----------------------+-------------+
 0: jdbc:luciddb:> select "time_by_day"."the_year" as "c0", "product_class"."product_category" as "c1", "product_class"."product_department" as "c2", "product_class"."product_family" as "c3", "customer"."education" as "c4", sum("sales_fact_1997"."unit_sales") as "m0" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "product_class" as "product_class", "product" as "product", "customer" as "customer" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_category" in ('Beer and Wine', 'Drinks', 'Carbonated Beverages') and "product_class"."product_family" = 'Drink' and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "time_by_day"."the_year", "product_class"."product_category", "product_class"."product_department", "product_class"."product_family", "customer"."education";
-Error: java.lang.UnsupportedOperationException: class org.eigenbase.sql.SqlNodeList: 'Beer and Wine', 'Drinks', 'Carbonated Beverages' (state=,code=0)
++-------+-----------------------+----------------------+--------+----------------------+------------+
+|  c0   |          c1           |          c2          |   c3   |          c4          |     m0     |
++-------+-----------------------+----------------------+--------+----------------------+------------+
+| 1997  | Beer and Wine         | Alcoholic Beverages  | Drink  | Bachelors Degree     | 1763.0000  |
+| 1997  | Beer and Wine         | Alcoholic Beverages  | Drink  | Graduate Degree      | 352.0000   |
+| 1997  | Beer and Wine         | Alcoholic Beverages  | Drink  | High School Degree   | 2079.0000  |
+| 1997  | Beer and Wine         | Alcoholic Beverages  | Drink  | Partial College      | 574.0000   |
+| 1997  | Beer and Wine         | Alcoholic Beverages  | Drink  | Partial High School  | 2070.0000  |
+| 1997  | Carbonated Beverages  | Beverages            | Drink  | Bachelors Degree     | 917.0000   |
+| 1997  | Carbonated Beverages  | Beverages            | Drink  | Graduate Degree      | 188.0000   |
+| 1997  | Carbonated Beverages  | Beverages            | Drink  | High School Degree   | 976.0000   |
+| 1997  | Carbonated Beverages  | Beverages            | Drink  | Partial College      | 271.0000   |
+| 1997  | Carbonated Beverages  | Beverages            | Drink  | Partial High School  | 1055.0000  |
+| 1997  | Drinks                | Beverages            | Drink  | Bachelors Degree     | 631.0000   |
+| 1997  | Drinks                | Beverages            | Drink  | Graduate Degree      | 141.0000   |
+| 1997  | Drinks                | Beverages            | Drink  | High School Degree   | 737.0000   |
+| 1997  | Drinks                | Beverages            | Drink  | Partial College      | 186.0000   |
+| 1997  | Drinks                | Beverages            | Drink  | Partial High School  | 774.0000   |
++-------+-----------------------+----------------------+--------+----------------------+------------+
 0: jdbc:luciddb:> select "time_by_day"."the_year" as "c0", "product_class"."product_category" as "c1", "product_class"."product_department" as "c2", "product_class"."product_family" as "c3", "customer"."education" as "c4", sum("sales_fact_1997"."unit_sales") as "m0" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "product_class" as "product_class", "product" as "product", "customer" as "customer" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_category" in ('Hot Beverages', 'Pure Juice Beverages', 'Dairy') and "product_class"."product_family" = 'Drink' and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "time_by_day"."the_year", "product_class"."product_category", "product_class"."product_department", "product_class"."product_family", "customer"."education";
-Error: java.lang.UnsupportedOperationException: class org.eigenbase.sql.SqlNodeList: 'Hot Beverages', 'Pure Juice Beverages', 'Dairy' (state=,code=0)
++-------+-----------------------+------------+--------+----------------------+------------+
+|  c0   |          c1           |     c2     |   c3   |          c4          |     m0     |
++-------+-----------------------+------------+--------+----------------------+------------+
+| 1997  | Dairy                 | Dairy      | Drink  | Bachelors Degree     | 1069.0000  |
+| 1997  | Dairy                 | Dairy      | Drink  | Graduate Degree      | 243.0000   |
+| 1997  | Dairy                 | Dairy      | Drink  | High School Degree   | 1222.0000  |
+| 1997  | Dairy                 | Dairy      | Drink  | Partial College      | 378.0000   |
+| 1997  | Dairy                 | Dairy      | Drink  | Partial High School  | 1274.0000  |
+| 1997  | Hot Beverages         | Beverages  | Drink  | Bachelors Degree     | 1090.0000  |
+| 1997  | Hot Beverages         | Beverages  | Drink  | Graduate Degree      | 256.0000   |
+| 1997  | Hot Beverages         | Beverages  | Drink  | High School Degree   | 1202.0000  |
+| 1997  | Hot Beverages         | Beverages  | Drink  | Partial College      | 452.0000   |
+| 1997  | Hot Beverages         | Beverages  | Drink  | Partial High School  | 1301.0000  |
+| 1997  | Pure Juice Beverages  | Beverages  | Drink  | Bachelors Degree     | 953.0000   |
+| 1997  | Pure Juice Beverages  | Beverages  | Drink  | Graduate Degree      | 145.0000   |
+| 1997  | Pure Juice Beverages  | Beverages  | Drink  | High School Degree   | 1010.0000  |
+| 1997  | Pure Juice Beverages  | Beverages  | Drink  | Partial College      | 303.0000   |
+| 1997  | Pure Juice Beverages  | Beverages  | Drink  | Partial High School  | 985.0000   |
++-------+-----------------------+------------+--------+----------------------+------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

@@ -1,0 +1,14 @@
+0: jdbc:luciddb:> -- 
+0: jdbc:luciddb:> -- test from hell: ultra joins
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*), sum(b1.k10), sum(b2.k25)
+. . . . . . . . > from bench1m b1, bench1m b2
+. . . . . . . . > where b1.k500k = b2.k100k;
++----------+-----------+-----------+
+|  EXPR$0  |  EXPR$1   |  EXPR$2   |
++----------+-----------+-----------+
+| 1996197  | 10991925  | 25949573  |
++----------+-----------+-----------+
+0: jdbc:luciddb:> !quit

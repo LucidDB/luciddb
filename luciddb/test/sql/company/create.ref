@@ -43,12 +43,18 @@
 . . . . . . . . > -- tablespace bspace
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create table CUSTOMERS(CUSTID integer, FNAME varchar(30), LNAME varchar(30),
+0: jdbc:luciddb:> create table CUSTOMERS(
+. . . . . . . . >   CUSTID integer, 
+. . . . . . . . >   FNAME varchar(30), 
+. . . . . . . . >   LNAME varchar(30),
 . . . . . . . . >   SEX char(1)) 
 . . . . . . . . > -- tablespace bspace
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create table PRODUCTS(PRODID integer, NAME varchar(30), PRICE numeric(3,2))
+0: jdbc:luciddb:> create table PRODUCTS(
+. . . . . . . . >   PRODID integer, 
+. . . . . . . . >   NAME varchar(30), 
+. . . . . . . . >   PRICE numeric(3,2))
 . . . . . . . . > -- tablespace bspace
 . . . . . . . . > ;
 0: jdbc:luciddb:> 

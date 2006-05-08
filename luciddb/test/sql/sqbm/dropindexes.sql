@@ -14,14 +14,16 @@ drop index B1M_K500K_IDX
 drop index B1M_K10_IDX
 ;
 
-explain plan for select count(*) from bench1M where K10 = 2;
+explain plan excluding attributes for
+select count(*) from bench1M where K10 = 2;
 
 select count(*) from bench1M where K10 = 2
 ;
 create index B1M_K10_IDX on bench1M(K10)
 ;
 
-explain plan for select count(*) from bench1M where K10 = 2;
+explain plan excluding attributes for
+select count(*) from bench1M where K10 = 2;
 
 select count(*) from bench1M where K10 = 2
 ;
@@ -29,14 +31,16 @@ select count(*) from bench1M where K10 = 2
 drop index B1M_K5_IDX
 ;
 
-explain plan for select count(*) from bench1M where K5 = 2;
+explain plan excluding attributes for
+select count(*) from bench1M where K5 = 2;
 
 select count(*) from bench1M where K5 = 2
 ;
 create index B1M_K5_IDX on bench1M(K5)
 ;
 
-explain plan for select count(*) from bench1M where K5 = 2;
+explain plan excluding attributes for
+select count(*) from bench1M where K5 = 2;
 
 select count(*) from bench1M where K5 = 2
 ;
@@ -44,14 +48,16 @@ select count(*) from bench1M where K5 = 2
 drop index B1M_K25_IDX
 ;
 
-explain plan for select count(*) from bench1M where K25 = 2;
+explain plan excluding attributes for
+select count(*) from bench1M where K25 = 2;
 
 select count(*) from bench1M where K25 = 2
 ;
 create index B1M_K25_IDX on bench1M(K25)
 ;
 
-explain plan for select count(*) from bench1M where K25 = 2;
+explain plan excluding attributes for
+select count(*) from bench1M where K25 = 2;
 
 select count(*) from bench1M where K25 = 2
 ;

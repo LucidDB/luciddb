@@ -34,9 +34,9 @@
 +----------+--------------+----------------+---------+
 |  EXPR$0  |    EXPR$1    |      CITY      | EXPR$3  |
 +----------+--------------+----------------+---------+
-| Brown    | Support      | Menlo Park     | 104     |
-| Fratz    | Accounting   | San Francisco  | 103     |
-| Andrews  | Development  | San Mateo      | 105     |
+| Brown    | Support      | Menlo Park     | 105     |
+| Fratz    | Accounting   | San Francisco  | 104     |
+| Andrews  | Development  | San Mateo      | 106     |
 +----------+--------------+----------------+---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> SELECT min(EMP.LNAME), DEPT.DNAME, LOCATION.CITY

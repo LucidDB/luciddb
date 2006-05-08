@@ -43,12 +43,18 @@ create table LOCATION(
 -- tablespace bspace
 ;
 
-create table CUSTOMERS(CUSTID integer, FNAME varchar(30), LNAME varchar(30),
+create table CUSTOMERS(
+  CUSTID integer, 
+  FNAME varchar(30), 
+  LNAME varchar(30),
   SEX char(1)) 
 -- tablespace bspace
 ;
 
-create table PRODUCTS(PRODID integer, NAME varchar(30), PRICE numeric(3,2))
+create table PRODUCTS(
+  PRODID integer, 
+  NAME varchar(30), 
+  PRICE numeric(3,2))
 -- tablespace bspace
 ;
 

@@ -169,12 +169,6 @@ ${farrago.test.jvmargs}
   </path>
   <property name="applib.run.classpath" refid="applib.run.classpath"/>
 
-  <target name="gen-all-sql">
-    <ant dir="test/sql/shortreg" target="gen-all-sql"/>
-    <ant dir="test/sql/VI/tbs" target="gen-all-sql"/>
-    <ant dir="test/sql/mondrian" target="gen-all-sql"/>
-  </target>
-
   <target name="gen-bh-report">
     <xslt basedir="testlog" destdir="testlog" style="bh-html.xsl" includes="**/bh.xml" extension=".html"/>
   </target>
@@ -183,27 +177,28 @@ ${farrago.test.jvmargs}
     <xslt basedir="." destdir="testlog/bh" style="bh-html.xsl" includes="**/bh.xml" extension=".html"/>
   </target>
 
-<!-- Begin Experiment -->
   <taskdef name="foreach" classname="net.sf.antcontrib.logic.ForEach" classpath="${ant.classpath}"/>
   <taskdef name="if" classname="net.sf.antcontrib.logic.IfTask" classpath="${ant.classpath}"/>
 
-  <target name="gen-all-sql-x">
+  <target name="gen-all-sql">
     <property name="target.name" value="gen-all-sql"/>
     <foreach param="target.file" target="call-subdir-target" inheritAll="true">
-      <fileset dir="${basedir}/test/sql">
-        <include name="**/build.xml"/>
-        <exclude name="calc/**"/>
-        <exclude name="conv_types/**"/>
-        <exclude name="numerics/build.xml"/>
-        <exclude name="txn/build.xml"/>
-        <exclude name="udr/**"/>
-        <exclude name="VI/recovery/build.xml"/>
-        <exclude name="VI/build.xml"/>
-        <exclude name="hashjoin/**"/>
-      </fileset>
+      <path>
+        <fileset dir="${basedir}/test/sql">
+          <include name="**/build.xml"/>
+          <exclude name="calc/**"/>
+          <exclude name="conv_types/**"/>
+          <exclude name="numerics/build.xml"/>
+          <exclude name="txn/build.xml"/>
+          <exclude name="udr/**"/>
+          <exclude name="VI/recovery/build.xml"/>
+          <exclude name="VI/build.xml"/>
+          <exclude name="hashjoin/**"/>
+        </fileset>
+      </path>
     </foreach>
   </target>
-
+          
   <target name="call-subdir-target">
     <echo>
       This is the target.file: ${target.file}
@@ -211,11 +206,18 @@ ${farrago.test.jvmargs}
     <ant antfile="${target.file}" target="${target.name}" inheritAll="false"/>
   </target>
 
+  <!-- Nightly tests -->
+  <target name="test-nightly-all-init" depends="cleanApplib,createCatalog,buildJdbcPlugin">
+    <antcall target="clean-subdirs"/>
+    <antcall target="gen-all-sql"/>
+  </target>
+
   <target name="test-nondb">
-    <property file="run.properties"/>
+    <property name="bh.filter.runDuration" value="short,medium"/>
     <property name="foreign.db" value="nondb"/>
     <property name="bh.log.gtlf.env.ForeignDb" value="${foreign.db}"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh-nondb"/>
+    <property file="run.properties"/>
     <blackhawk.fork
       basedir="${luciddb.dir}"
       testscript="test-nightly-nondb.xml"
@@ -223,10 +225,11 @@ ${farrago.test.jvmargs}
   </target>
 
   <target name="test-flatfile">
-    <property file="run.properties"/>
+    <property name="bh.filter.runDuration" value="short,medium"/>
     <property name="foreign.db" value="flatfile"/>
     <property name="bh.log.gtlf.env.ForeignDb" value="${foreign.db}"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh-flatfile"/>
+    <property file="run.properties"/>
     <blackhawk.fork
       basedir="${luciddb.dir}"
       testscript="test-nightly-flatfile.xml"
@@ -234,10 +237,11 @@ ${farrago.test.jvmargs}
   </target>
 
   <target name="test-oracle">
-    <property file="run.properties"/>
+    <property name="bh.filter.runDuration" value="short,medium"/>
     <property name="foreign.db" value="oracle"/>
     <property name="bh.log.gtlf.env.ForeignDb" value="${foreign.db}"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh-oracle"/>
+    <property file="run.properties"/>
     <blackhawk.fork
       basedir="${luciddb.dir}"
       testscript="test-nightly-oracle.xml"
@@ -245,10 +249,11 @@ ${farrago.test.jvmargs}
   </target>
 
   <target name="test-sqlserver">
-    <property file="run.properties"/>
+    <property name="bh.filter.runDuration" value="short,medium"/>
     <property name="foreign.db" value="sqlserver"/>
     <property name="bh.log.gtlf.env.ForeignDb" value="${foreign.db}"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh-sqlserver"/>
+    <property file="run.properties"/>
     <blackhawk.fork
       basedir="${luciddb.dir}"
       testscript="test-nightly-sqlserver.xml"
@@ -256,10 +261,11 @@ ${farrago.test.jvmargs}
   </target>
 
   <target name="test-csvjdbc">
-    <property file="run.properties"/>
+    <property name="bh.filter.runDuration" value="short,medium"/>
     <property name="foreign.db" value="csvjdbc"/>
     <property name="bh.log.gtlf.env.ForeignDb" value="${foreign.db}"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh-csvjdbc"/>
+    <property file="run.properties"/>
     <blackhawk.fork
       basedir="${luciddb.dir}"
       testscript="test-nightly-csvjdbc.xml"
@@ -275,9 +281,26 @@ ${farrago.test.jvmargs}
     </foreach>
   </target>
 
-  <target name="test-nightly-all-init" depends="cleanApplib,createCatalog,buildJdbcPlugin">
-    <antcall target="clean-subdirs"/>
-    <antcall target="gen-all-sql-x"/>
+<!-- Begin Experiment -->
+
+  <target name="test-long">
+    <property name="bh.filter.runDuration" value="long"/>
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-long"/>
+    <property file="run.properties"/>
+    <blackhawk.fork
+      basedir="${luciddb.dir}"
+      testscript="test-long.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="test-all" depends="cleanApplib,createCatalog,buildJdbcPlugin,gen-all-sql">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh"/>
+    <property file="run.properties"/>
+    <blackhawk.fork
+      basedir="${luciddb.dir}"
+      testscript="test-all.xml"
+      classpathref="test.classpath"/>
+    <antcall target="gen-bh-report"/>
   </target>
 
 <!-- End Experiment-->

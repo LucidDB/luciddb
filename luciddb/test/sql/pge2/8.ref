@@ -1,0 +1,492 @@
+0: jdbc:luciddb:> -- Query 8
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT AL4.REVN_YR, AL4.REVN_MO, AL3.SRVPLN_ID,
+. . . . . . . . >  AL3.SRVPLN_NM, AL2.GEOG_CNTY_CD, SUM(AL5.RSD_SVC_BILG_AMT)
+. . . . . . . . > FROM
+. . . . . . . . >  PGE.CUST_SERV_ACCT AL1,
+. . . . . . . . >  PGE.GEOG AL2,
+. . . . . . . . >  PGE.SERV_PLAN AL3,
+. . . . . . . . >  PGE.REVN_PRD AL4,
+. . . . . . . . >  PGE.REVN_DTL_RAND AL5
+. . . . . . . . >  WHERE (AL5.REVN_YR_MO=AL4.REVN_YR_MO
+. . . . . . . . >  AND AL2.GEOG_KEY=AL5.GEOG_KEY
+. . . . . . . . >  AND AL3.SRVPLN_KEY=AL5.SRVPLN_KEY
+. . . . . . . . >  AND AL1.CUST_SERV_ACCT_KEY=AL5.CUST_SERV_ACCT_KEY)
+. . . . . . . . > GROUP BY AL4.REVN_YR, AL4.REVN_MO, AL3.SRVPLN_ID,
+. . . . . . . . >  AL3.SRVPLN_NM, AL2.GEOG_CNTY_CD
+. . . . . . . . > ORDER BY  5, 1, 2, 3, 4, 6
+. . . . . . . . > ;
++----------+----------+------------+----------------------------+---------------+---------------------+
+| REVN_YR  | REVN_MO  | SRVPLN_ID  |         SRVPLN_NM          | GEOG_CNTY_CD  |       EXPR$5        |
++----------+----------+------------+----------------------------+---------------+---------------------+
+| 1994     | 1        | 311        | GAS - RESIDENTIAL          | 5             | 6.441412            |
+| 1994     | 2        | 311        | GAS - RESIDENTIAL          | 5             | 7.047447            |
+| 1994     | 3        | 311        | GAS - RESIDENTIAL          | 5             | 6.955366            |
+| 1994     | 4        | 311        | GAS - RESIDENTIAL          | 5             | 6.570156            |
+| 1994     | 5        | 311        | GAS - RESIDENTIAL          | 5             | 6.648111            |
+| 1994     | 6        | 311        | GAS - RESIDENTIAL          | 5             | 6.482242            |
+| 1994     | 7        | 311        | GAS - RESIDENTIAL          | 5             | 6.289423            |
+| 1994     | 8        | 311        | GAS - RESIDENTIAL          | 5             | 6.475574            |
+| 1994     | 9        | 311        | GAS - RESIDENTIAL          | 5             | 6.521414            |
+| 1994     | 10       | 311        | GAS - RESIDENTIAL          | 5             | 7.113763            |
+| 1994     | 11       | 311        | GAS - RESIDENTIAL          | 5             | 6.721108            |
+| 1994     | 12       | 311        | GAS - RESIDENTIAL          | 5             | 6.360016            |
+| 1995     | 1        | 311        | GAS - RESIDENTIAL          | 5             | 6.441412            |
+| 1995     | 2        | 311        | GAS - RESIDENTIAL          | 5             | 7.047447            |
+| 1995     | 3        | 311        | GAS - RESIDENTIAL          | 5             | 6.955366            |
+| 1995     | 4        | 311        | GAS - RESIDENTIAL          | 5             | 6.570156            |
+| 1995     | 5        | 311        | GAS - RESIDENTIAL          | 5             | 6.648111            |
+| 1995     | 6        | 311        | GAS - RESIDENTIAL          | 5             | 6.482242            |
+| 1995     | 7        | 311        | GAS - RESIDENTIAL          | 5             | 6.289423            |
+| 1995     | 8        | 311        | GAS - RESIDENTIAL          | 5             | 6.475574            |
+| 1995     | 9        | 311        | GAS - RESIDENTIAL          | 5             | 6.521414            |
+| 1995     | 10       | 311        | GAS - RESIDENTIAL          | 5             | 7.113763            |
+| 1995     | 11       | 311        | GAS - RESIDENTIAL          | 5             | 6.721108            |
+| 1995     | 12       | 311        | GAS - RESIDENTIAL          | 5             | 6.360016            |
+| 1994     | 1        | 311        | GAS - RESIDENTIAL          | G             | 91994.01182699985   |
+| 1994     | 1        | 315        | GAS - MULT FAMILY HOUSING  | G             | 4954.566572999999   |
+| 1994     | 2        | 311        | GAS - RESIDENTIAL          | G             | 100454.81165800015  |
+| 1994     | 2        | 315        | GAS - MULT FAMILY HOUSING  | G             | 4683.10611          |
+| 1994     | 3        | 311        | GAS - RESIDENTIAL          | G             | 99243.6773629999    |
+| 1994     | 3        | 315        | GAS - MULT FAMILY HOUSING  | G             | 4734.061302999999   |
+| 1994     | 4        | 311        | GAS - RESIDENTIAL          | G             | 93791.06076500019   |
+| 1994     | 4        | 315        | GAS - MULT FAMILY HOUSING  | G             | 4618.3314470000005  |
+| 1994     | 5        | 311        | GAS - RESIDENTIAL          | G             | 94835.17292900007   |
+| 1994     | 5        | 315        | GAS - MULT FAMILY HOUSING  | G             | 4481.270127000001   |
+| 1994     | 6        | 311        | GAS - RESIDENTIAL          | G             | 92504.5936550002    |
+| 1994     | 6        | 315        | GAS - MULT FAMILY HOUSING  | G             | 4610.113380000001   |
+| 1994     | 7        | 311        | GAS - RESIDENTIAL          | G             | 89757.66280899988   |
+| 1994     | 7        | 315        | GAS - MULT FAMILY HOUSING  | G             | 4644.143357999999   |
+| 1994     | 8        | 311        | GAS - RESIDENTIAL          | G             | 92357.75178300026   |
+| 1994     | 8        | 315        | GAS - MULT FAMILY HOUSING  | G             | 5060.633053999999   |
+| 1994     | 9        | 311        | GAS - RESIDENTIAL          | G             | 93032.34281000006   |
+| 1994     | 9        | 315        | GAS - MULT FAMILY HOUSING  | G             | 4790.688236999999   |
+| 1994     | 10       | 311        | GAS - RESIDENTIAL          | G             | 101402.93736900028  |
+| 1994     | 10       | 315        | GAS - MULT FAMILY HOUSING  | G             | 4533.205345         |
+| 1994     | 11       | 311        | GAS - RESIDENTIAL          | G             | 95945.73636699999   |
+| 1994     | 11       | 315        | GAS - MULT FAMILY HOUSING  | G             | 4950.245104999999   |
+| 1994     | 12       | 311        | GAS - RESIDENTIAL          | G             | 90789.51373200006   |
+| 1994     | 12       | 315        | GAS - MULT FAMILY HOUSING  | G             | 4966.892139000001   |
+| 1995     | 1        | 311        | GAS - RESIDENTIAL          | G             | 91994.0118269999    |
+| 1995     | 1        | 315        | GAS - MULT FAMILY HOUSING  | G             | 4954.566573000001   |
+| 1995     | 2        | 311        | GAS - RESIDENTIAL          | G             | 100454.81165799988  |
+| 1995     | 2        | 315        | GAS - MULT FAMILY HOUSING  | G             | 4683.1061100000015  |
+| 1995     | 3        | 311        | GAS - RESIDENTIAL          | G             | 99243.67736299998   |
+| 1995     | 3        | 315        | GAS - MULT FAMILY HOUSING  | G             | 4734.061302999999   |
+| 1995     | 4        | 311        | GAS - RESIDENTIAL          | G             | 93791.06076500025   |
+| 1995     | 4        | 315        | GAS - MULT FAMILY HOUSING  | G             | 4618.3314470000005  |
+| 1995     | 5        | 311        | GAS - RESIDENTIAL          | G             | 94835.17292900002   |
+| 1995     | 5        | 315        | GAS - MULT FAMILY HOUSING  | G             | 4481.270127         |
+| 1995     | 6        | 311        | GAS - RESIDENTIAL          | G             | 92504.59365499998   |
+| 1995     | 6        | 315        | GAS - MULT FAMILY HOUSING  | G             | 4610.113380000001   |
+| 1995     | 7        | 311        | GAS - RESIDENTIAL          | G             | 89757.66280900015   |
+| 1995     | 7        | 315        | GAS - MULT FAMILY HOUSING  | G             | 4644.143358000002   |
+| 1995     | 8        | 311        | GAS - RESIDENTIAL          | G             | 92357.7517830001    |
+| 1995     | 8        | 315        | GAS - MULT FAMILY HOUSING  | G             | 5060.633054000001   |
+| 1995     | 9        | 311        | GAS - RESIDENTIAL          | G             | 93032.34281000023   |
+| 1995     | 9        | 315        | GAS - MULT FAMILY HOUSING  | G             | 4790.688236999998   |
+| 1995     | 10       | 311        | GAS - RESIDENTIAL          | G             | 101402.93736900031  |
+| 1995     | 10       | 315        | GAS - MULT FAMILY HOUSING  | G             | 4533.205345         |
+| 1995     | 11       | 311        | GAS - RESIDENTIAL          | G             | 95945.73636699987   |
+| 1995     | 11       | 315        | GAS - MULT FAMILY HOUSING  | G             | 4950.245105000001   |
+| 1995     | 12       | 311        | GAS - RESIDENTIAL          | G             | 90789.51373199993   |
+| 1995     | 12       | 315        | GAS - MULT FAMILY HOUSING  | G             | 4966.892139         |
+| 1994     | 1        | 311        | GAS - RESIDENTIAL          | H             | 19.155247           |
+| 1994     | 2        | 311        | GAS - RESIDENTIAL          | H             | 20.957455           |
+| 1994     | 3        | 311        | GAS - RESIDENTIAL          | H             | 20.683628           |
+| 1994     | 4        | 311        | GAS - RESIDENTIAL          | H             | 19.538104           |
+| 1994     | 5        | 311        | GAS - RESIDENTIAL          | H             | 19.769922           |
+| 1994     | 6        | 311        | GAS - RESIDENTIAL          | H             | 19.276667           |
+| 1994     | 7        | 311        | GAS - RESIDENTIAL          | H             | 18.703269           |
+| 1994     | 8        | 311        | GAS - RESIDENTIAL          | H             | 19.256839           |
+| 1994     | 9        | 311        | GAS - RESIDENTIAL          | H             | 19.393155           |
+| 1994     | 10       | 311        | GAS - RESIDENTIAL          | H             | 21.154664           |
+| 1994     | 11       | 311        | GAS - RESIDENTIAL          | H             | 19.986998           |
+| 1994     | 12       | 311        | GAS - RESIDENTIAL          | H             | 18.913197           |
+| 1995     | 1        | 311        | GAS - RESIDENTIAL          | H             | 19.155247           |
+| 1995     | 2        | 311        | GAS - RESIDENTIAL          | H             | 20.957455           |
+| 1995     | 3        | 311        | GAS - RESIDENTIAL          | H             | 20.683628           |
+| 1995     | 4        | 311        | GAS - RESIDENTIAL          | H             | 19.538104           |
+| 1995     | 5        | 311        | GAS - RESIDENTIAL          | H             | 19.769922           |
+| 1995     | 6        | 311        | GAS - RESIDENTIAL          | H             | 19.276667           |
+| 1995     | 7        | 311        | GAS - RESIDENTIAL          | H             | 18.703269           |
+| 1995     | 8        | 311        | GAS - RESIDENTIAL          | H             | 19.256839           |
+| 1995     | 9        | 311        | GAS - RESIDENTIAL          | H             | 19.393155           |
+| 1995     | 10       | 311        | GAS - RESIDENTIAL          | H             | 21.154664           |
+| 1995     | 11       | 311        | GAS - RESIDENTIAL          | H             | 19.986998           |
+| 1995     | 12       | 311        | GAS - RESIDENTIAL          | H             | 18.913197           |
+| 1994     | 1        | 311        | GAS - RESIDENTIAL          | M             | 112052.37793799993  |
+| 1994     | 1        | 315        | GAS - MULT FAMILY HOUSING  | M             | 3381.178400999999   |
+| 1994     | 1        | 811        | ELEC - RESIDENTIAL         | M             | 319819.3270490004   |
++----------+----------+------------+----------------------------+---------------+---------------------+
+| REVN_YR  | REVN_MO  | SRVPLN_ID  |         SRVPLN_NM          | GEOG_CNTY_CD  |       EXPR$5        |
++----------+----------+------------+----------------------------+---------------+---------------------+
+| 1994     | 1        | 812        | ELEC - GOOD CENTS RES      | M             | 785.568336          |
+| 1994     | 1        | 813        | ELEC - GOOD CENTS MULT     | M             | 71.713614           |
+| 1994     | 1        | 821        | ELEC - GEN SERV - SMALL    | M             | 909.184535          |
+| 1994     | 1        | 878        | ELEC - DUSK TO DAWN LTG    | M             | 13079.254622999752  |
+| 1994     | 2        | 311        | GAS - RESIDENTIAL          | M             | 120646.8584790001   |
+| 1994     | 2        | 315        | GAS - MULT FAMILY HOUSING  | M             | 3213.354071000001   |
+| 1994     | 2        | 811        | ELEC - RESIDENTIAL         | M             | 316191.7226479999   |
+| 1994     | 2        | 812        | ELEC - GOOD CENTS RES      | M             | 763.0094320000001   |
+| 1994     | 2        | 813        | ELEC - GOOD CENTS MULT     | M             | 64.759007           |
+| 1994     | 2        | 821        | ELEC - GEN SERV - SMALL    | M             | 871.3997400000001   |
+| 1994     | 2        | 878        | ELEC - DUSK TO DAWN LTG    | M             | 12951.325948000072  |
+| 1994     | 3        | 311        | GAS - RESIDENTIAL          | M             | 120086.50629100001  |
+| 1994     | 3        | 315        | GAS - MULT FAMILY HOUSING  | M             | 3220.9973779999996  |
+| 1994     | 3        | 811        | ELEC - RESIDENTIAL         | M             | 329241.593281       |
+| 1994     | 3        | 812        | ELEC - GOOD CENTS RES      | M             | 754.699969          |
+| 1994     | 3        | 813        | ELEC - GOOD CENTS MULT     | M             | 65.12316799999999   |
+| 1994     | 3        | 821        | ELEC - GEN SERV - SMALL    | M             | 923.570688          |
+| 1994     | 3        | 878        | ELEC - DUSK TO DAWN LTG    | M             | 12588.926067999993  |
+| 1994     | 4        | 311        | GAS - RESIDENTIAL          | M             | 113874.74301700004  |
+| 1994     | 4        | 315        | GAS - MULT FAMILY HOUSING  | M             | 3156.3978670000006  |
+| 1994     | 4        | 811        | ELEC - RESIDENTIAL         | M             | 320930.6010389992   |
+| 1994     | 4        | 812        | ELEC - GOOD CENTS RES      | M             | 775.8041380000001   |
+| 1994     | 4        | 813        | ELEC - GOOD CENTS MULT     | M             | 72.358284           |
+| 1994     | 4        | 821        | ELEC - GEN SERV - SMALL    | M             | 936.712988          |
+| 1994     | 4        | 878        | ELEC - DUSK TO DAWN LTG    | M             | 12682.28659899998   |
+| 1994     | 5        | 311        | GAS - RESIDENTIAL          | M             | 114537.33280799986  |
+| 1994     | 5        | 315        | GAS - MULT FAMILY HOUSING  | M             | 3064.58651          |
+| 1994     | 5        | 811        | ELEC - RESIDENTIAL         | M             | 317152.93380699924  |
+| 1994     | 5        | 812        | ELEC - GOOD CENTS RES      | M             | 743.5625            |
+| 1994     | 5        | 813        | ELEC - GOOD CENTS MULT     | M             | 64.059766           |
+| 1994     | 5        | 821        | ELEC - GEN SERV - SMALL    | M             | 912.842447          |
+| 1994     | 5        | 878        | ELEC - DUSK TO DAWN LTG    | M             | 13143.885275999946  |
+| 1994     | 6        | 311        | GAS - RESIDENTIAL          | M             | 112035.71185700028  |
+| 1994     | 6        | 315        | GAS - MULT FAMILY HOUSING  | M             | 3130.220605999999   |
+| 1994     | 6        | 811        | ELEC - RESIDENTIAL         | M             | 325388.73399700015  |
+| 1994     | 6        | 812        | ELEC - GOOD CENTS RES      | M             | 788.079796          |
+| 1994     | 6        | 813        | ELEC - GOOD CENTS MULT     | M             | 72.866393           |
+| 1994     | 6        | 821        | ELEC - GEN SERV - SMALL    | M             | 903.6044670000001   |
+| 1994     | 6        | 878        | ELEC - DUSK TO DAWN LTG    | M             | 13224.467888000154  |
+| 1994     | 7        | 311        | GAS - RESIDENTIAL          | M             | 108750.06504099982  |
+| 1994     | 7        | 315        | GAS - MULT FAMILY HOUSING  | M             | 3161.609075999999   |
+| 1994     | 7        | 811        | ELEC - RESIDENTIAL         | M             | 312980.1478870002   |
+| 1994     | 7        | 812        | ELEC - GOOD CENTS RES      | M             | 799.2940749999999   |
+| 1994     | 7        | 813        | ELEC - GOOD CENTS MULT     | M             | 65.253073           |
+| 1994     | 7        | 821        | ELEC - GEN SERV - SMALL    | M             | 915.0328299999999   |
+| 1994     | 7        | 878        | ELEC - DUSK TO DAWN LTG    | M             | 13131.30739500006   |
+| 1994     | 8        | 311        | GAS - RESIDENTIAL          | M             | 111402.53084400007  |
+| 1994     | 8        | 315        | GAS - MULT FAMILY HOUSING  | M             | 3413.437331000001   |
+| 1994     | 8        | 811        | ELEC - RESIDENTIAL         | M             | 330070.33859199955  |
+| 1994     | 8        | 812        | ELEC - GOOD CENTS RES      | M             | 778.9254229999999   |
+| 1994     | 8        | 813        | ELEC - GOOD CENTS MULT     | M             | 71.76772            |
+| 1994     | 8        | 821        | ELEC - GEN SERV - SMALL    | M             | 891.7587570000001   |
+| 1994     | 8        | 878        | ELEC - DUSK TO DAWN LTG    | M             | 13137.600336000249  |
+| 1994     | 9        | 311        | GAS - RESIDENTIAL          | M             | 112399.61506900046  |
+| 1994     | 9        | 315        | GAS - MULT FAMILY HOUSING  | M             | 3287.0904290000003  |
+| 1994     | 9        | 811        | ELEC - RESIDENTIAL         | M             | 335463.82441800035  |
+| 1994     | 9        | 812        | ELEC - GOOD CENTS RES      | M             | 771.042685          |
+| 1994     | 9        | 813        | ELEC - GOOD CENTS MULT     | M             | 71.981878           |
+| 1994     | 9        | 821        | ELEC - GEN SERV - SMALL    | M             | 980.3851730000001   |
+| 1994     | 9        | 878        | ELEC - DUSK TO DAWN LTG    | M             | 12639.703086999885  |
+| 1994     | 10       | 311        | GAS - RESIDENTIAL          | M             | 121810.68332700079  |
+| 1994     | 10       | 315        | GAS - MULT FAMILY HOUSING  | M             | 3109.8092409999995  |
+| 1994     | 10       | 811        | ELEC - RESIDENTIAL         | M             | 327569.8676630002   |
+| 1994     | 10       | 812        | ELEC - GOOD CENTS RES      | M             | 780.7944699999999   |
+| 1994     | 10       | 813        | ELEC - GOOD CENTS MULT     | M             | 70.360653           |
+| 1994     | 10       | 821        | ELEC - GEN SERV - SMALL    | M             | 982.116385          |
+| 1994     | 10       | 878        | ELEC - DUSK TO DAWN LTG    | M             | 12634.404531999993  |
+| 1994     | 11       | 311        | GAS - RESIDENTIAL          | M             | 116488.986623       |
+| 1994     | 11       | 315        | GAS - MULT FAMILY HOUSING  | M             | 3337.8448989999997  |
+| 1994     | 11       | 811        | ELEC - RESIDENTIAL         | M             | 324004.5978360003   |
+| 1994     | 11       | 812        | ELEC - GOOD CENTS RES      | M             | 760.9347800000002   |
+| 1994     | 11       | 813        | ELEC - GOOD CENTS MULT     | M             | 66.337373           |
+| 1994     | 11       | 821        | ELEC - GEN SERV - SMALL    | M             | 938.3996460000001   |
+| 1994     | 11       | 878        | ELEC - DUSK TO DAWN LTG    | M             | 12819.637102999912  |
+| 1994     | 12       | 311        | GAS - RESIDENTIAL          | M             | 110215.2054609998   |
+| 1994     | 12       | 315        | GAS - MULT FAMILY HOUSING  | M             | 3383.299350999999   |
+| 1994     | 12       | 811        | ELEC - RESIDENTIAL         | M             | 327724.5782010004   |
+| 1994     | 12       | 812        | ELEC - GOOD CENTS RES      | M             | 836.5594060000001   |
+| 1994     | 12       | 813        | ELEC - GOOD CENTS MULT     | M             | 69.06918300000001   |
+| 1994     | 12       | 821        | ELEC - GEN SERV - SMALL    | M             | 975.348837          |
+| 1994     | 12       | 878        | ELEC - DUSK TO DAWN LTG    | M             | 13350.867596000351  |
+| 1995     | 1        | 311        | GAS - RESIDENTIAL          | M             | 112052.37793799957  |
+| 1995     | 1        | 315        | GAS - MULT FAMILY HOUSING  | M             | 3381.178400999999   |
+| 1995     | 1        | 811        | ELEC - RESIDENTIAL         | M             | 319819.32704899955  |
+| 1995     | 1        | 812        | ELEC - GOOD CENTS RES      | M             | 785.568336          |
+| 1995     | 1        | 813        | ELEC - GOOD CENTS MULT     | M             | 71.713614           |
+| 1995     | 1        | 821        | ELEC - GEN SERV - SMALL    | M             | 909.184535          |
+| 1995     | 1        | 878        | ELEC - DUSK TO DAWN LTG    | M             | 13079.254622999906  |
+| 1995     | 2        | 311        | GAS - RESIDENTIAL          | M             | 120646.85847899999  |
+| 1995     | 2        | 315        | GAS - MULT FAMILY HOUSING  | M             | 3213.3540709999997  |
+| 1995     | 2        | 811        | ELEC - RESIDENTIAL         | M             | 316191.722648       |
+| 1995     | 2        | 812        | ELEC - GOOD CENTS RES      | M             | 763.0094320000001   |
+| 1995     | 2        | 813        | ELEC - GOOD CENTS MULT     | M             | 64.759007           |
+| 1995     | 2        | 821        | ELEC - GEN SERV - SMALL    | M             | 871.3997400000001   |
+| 1995     | 2        | 878        | ELEC - DUSK TO DAWN LTG    | M             | 12951.325947999794  |
+| 1995     | 3        | 311        | GAS - RESIDENTIAL          | M             | 120086.50629100004  |
+| 1995     | 3        | 315        | GAS - MULT FAMILY HOUSING  | M             | 3220.997378         |
+| 1995     | 3        | 811        | ELEC - RESIDENTIAL         | M             | 329241.5932809994   |
+| 1995     | 3        | 812        | ELEC - GOOD CENTS RES      | M             | 754.699969          |
+| 1995     | 3        | 813        | ELEC - GOOD CENTS MULT     | M             | 65.12316799999999   |
++----------+----------+------------+----------------------------+---------------+---------------------+
+| REVN_YR  | REVN_MO  | SRVPLN_ID  |         SRVPLN_NM          | GEOG_CNTY_CD  |       EXPR$5        |
++----------+----------+------------+----------------------------+---------------+---------------------+
+| 1995     | 3        | 821        | ELEC - GEN SERV - SMALL    | M             | 923.570688          |
+| 1995     | 3        | 878        | ELEC - DUSK TO DAWN LTG    | M             | 12588.926068        |
+| 1995     | 4        | 311        | GAS - RESIDENTIAL          | M             | 113874.74301700012  |
+| 1995     | 4        | 315        | GAS - MULT FAMILY HOUSING  | M             | 3156.397867000001   |
+| 1995     | 4        | 811        | ELEC - RESIDENTIAL         | M             | 320930.60103899986  |
+| 1995     | 4        | 812        | ELEC - GOOD CENTS RES      | M             | 775.804138          |
+| 1995     | 4        | 813        | ELEC - GOOD CENTS MULT     | M             | 72.358284           |
+| 1995     | 4        | 821        | ELEC - GEN SERV - SMALL    | M             | 936.7129879999999   |
+| 1995     | 4        | 878        | ELEC - DUSK TO DAWN LTG    | M             | 12682.286599000241  |
+| 1995     | 5        | 311        | GAS - RESIDENTIAL          | M             | 114537.33280799976  |
+| 1995     | 5        | 315        | GAS - MULT FAMILY HOUSING  | M             | 3064.5865099999996  |
+| 1995     | 5        | 811        | ELEC - RESIDENTIAL         | M             | 317152.93380700017  |
+| 1995     | 5        | 812        | ELEC - GOOD CENTS RES      | M             | 743.5625            |
+| 1995     | 5        | 813        | ELEC - GOOD CENTS MULT     | M             | 64.059766           |
+| 1995     | 5        | 821        | ELEC - GEN SERV - SMALL    | M             | 912.842447          |
+| 1995     | 5        | 878        | ELEC - DUSK TO DAWN LTG    | M             | 13143.885275999968  |
+| 1995     | 6        | 311        | GAS - RESIDENTIAL          | M             | 112035.71185700005  |
+| 1995     | 6        | 315        | GAS - MULT FAMILY HOUSING  | M             | 3130.2206059999994  |
+| 1995     | 6        | 811        | ELEC - RESIDENTIAL         | M             | 325388.73399699916  |
+| 1995     | 6        | 812        | ELEC - GOOD CENTS RES      | M             | 788.079796          |
+| 1995     | 6        | 813        | ELEC - GOOD CENTS MULT     | M             | 72.86639299999999   |
+| 1995     | 6        | 821        | ELEC - GEN SERV - SMALL    | M             | 903.604467          |
+| 1995     | 6        | 878        | ELEC - DUSK TO DAWN LTG    | M             | 13224.467888000145  |
+| 1995     | 7        | 311        | GAS - RESIDENTIAL          | M             | 108750.06504099954  |
+| 1995     | 7        | 315        | GAS - MULT FAMILY HOUSING  | M             | 3161.6090759999997  |
+| 1995     | 7        | 811        | ELEC - RESIDENTIAL         | M             | 312980.1478870012   |
+| 1995     | 7        | 812        | ELEC - GOOD CENTS RES      | M             | 799.294075          |
+| 1995     | 7        | 813        | ELEC - GOOD CENTS MULT     | M             | 65.253073           |
+| 1995     | 7        | 821        | ELEC - GEN SERV - SMALL    | M             | 915.03283           |
+| 1995     | 7        | 878        | ELEC - DUSK TO DAWN LTG    | M             | 13131.307395000005  |
+| 1995     | 8        | 311        | GAS - RESIDENTIAL          | M             | 111402.5308440004   |
+| 1995     | 8        | 315        | GAS - MULT FAMILY HOUSING  | M             | 3413.4373310000005  |
+| 1995     | 8        | 811        | ELEC - RESIDENTIAL         | M             | 330070.3385920005   |
+| 1995     | 8        | 812        | ELEC - GOOD CENTS RES      | M             | 778.925423          |
+| 1995     | 8        | 813        | ELEC - GOOD CENTS MULT     | M             | 71.76772            |
+| 1995     | 8        | 821        | ELEC - GEN SERV - SMALL    | M             | 891.758757          |
+| 1995     | 8        | 878        | ELEC - DUSK TO DAWN LTG    | M             | 13137.600336000254  |
+| 1995     | 9        | 311        | GAS - RESIDENTIAL          | M             | 112399.61506900066  |
+| 1995     | 9        | 315        | GAS - MULT FAMILY HOUSING  | M             | 3287.0904289999985  |
+| 1995     | 9        | 811        | ELEC - RESIDENTIAL         | M             | 335463.82441800105  |
+| 1995     | 9        | 812        | ELEC - GOOD CENTS RES      | M             | 771.0426849999999   |
+| 1995     | 9        | 813        | ELEC - GOOD CENTS MULT     | M             | 71.981878           |
+| 1995     | 9        | 821        | ELEC - GEN SERV - SMALL    | M             | 980.3851730000001   |
+| 1995     | 9        | 878        | ELEC - DUSK TO DAWN LTG    | M             | 12639.70308699986   |
+| 1995     | 10       | 311        | GAS - RESIDENTIAL          | M             | 121810.68332700086  |
+| 1995     | 10       | 315        | GAS - MULT FAMILY HOUSING  | M             | 3109.8092409999995  |
+| 1995     | 10       | 811        | ELEC - RESIDENTIAL         | M             | 327569.86766299926  |
+| 1995     | 10       | 812        | ELEC - GOOD CENTS RES      | M             | 780.7944699999999   |
+| 1995     | 10       | 813        | ELEC - GOOD CENTS MULT     | M             | 70.360653           |
+| 1995     | 10       | 821        | ELEC - GEN SERV - SMALL    | M             | 982.116385          |
+| 1995     | 10       | 878        | ELEC - DUSK TO DAWN LTG    | M             | 12634.404531999993  |
+| 1995     | 11       | 311        | GAS - RESIDENTIAL          | M             | 116488.98662300005  |
+| 1995     | 11       | 315        | GAS - MULT FAMILY HOUSING  | M             | 3337.8448989999997  |
+| 1995     | 11       | 811        | ELEC - RESIDENTIAL         | M             | 324004.5978360003   |
+| 1995     | 11       | 812        | ELEC - GOOD CENTS RES      | M             | 760.93478           |
+| 1995     | 11       | 813        | ELEC - GOOD CENTS MULT     | M             | 66.337373           |
+| 1995     | 11       | 821        | ELEC - GEN SERV - SMALL    | M             | 938.3996460000001   |
+| 1995     | 11       | 878        | ELEC - DUSK TO DAWN LTG    | M             | 12819.637103000205  |
+| 1995     | 12       | 311        | GAS - RESIDENTIAL          | M             | 110215.20546100006  |
+| 1995     | 12       | 315        | GAS - MULT FAMILY HOUSING  | M             | 3383.2993509999997  |
+| 1995     | 12       | 811        | ELEC - RESIDENTIAL         | M             | 327724.578201001    |
+| 1995     | 12       | 812        | ELEC - GOOD CENTS RES      | M             | 836.5594060000001   |
+| 1995     | 12       | 813        | ELEC - GOOD CENTS MULT     | M             | 69.06918300000001   |
+| 1995     | 12       | 821        | ELEC - GEN SERV - SMALL    | M             | 975.348837          |
+| 1995     | 12       | 878        | ELEC - DUSK TO DAWN LTG    | M             | 13350.86759600029   |
+| 1994     | 1        | 311        | GAS - RESIDENTIAL          | N             | 61680.097454999835  |
+| 1994     | 1        | 315        | GAS - MULT FAMILY HOUSING  | N             | 166.574583          |
+| 1994     | 1        | 811        | ELEC - RESIDENTIAL         | N             | 156384.63683700006  |
+| 1994     | 1        | 878        | ELEC - DUSK TO DAWN LTG    | N             | 5367.6736639999945  |
+| 1994     | 2        | 311        | GAS - RESIDENTIAL          | N             | 67159.06298199974   |
+| 1994     | 2        | 315        | GAS - MULT FAMILY HOUSING  | N             | 157.349158          |
+| 1994     | 2        | 811        | ELEC - RESIDENTIAL         | N             | 154638.98712199996  |
+| 1994     | 2        | 878        | ELEC - DUSK TO DAWN LTG    | N             | 5238.19762099998    |
+| 1994     | 3        | 311        | GAS - RESIDENTIAL          | N             | 66451.2146749999    |
+| 1994     | 3        | 315        | GAS - MULT FAMILY HOUSING  | N             | 159.216094          |
+| 1994     | 3        | 811        | ELEC - RESIDENTIAL         | N             | 161255.06097799996  |
+| 1994     | 3        | 878        | ELEC - DUSK TO DAWN LTG    | N             | 5046.779706999999   |
+| 1994     | 4        | 311        | GAS - RESIDENTIAL          | N             | 62845.015714000045  |
+| 1994     | 4        | 315        | GAS - MULT FAMILY HOUSING  | N             | 155.243696          |
+| 1994     | 4        | 811        | ELEC - RESIDENTIAL         | N             | 156886.85165899963  |
+| 1994     | 4        | 878        | ELEC - DUSK TO DAWN LTG    | N             | 5126.779480000001   |
+| 1994     | 5        | 311        | GAS - RESIDENTIAL          | N             | 63474.00581399967   |
+| 1994     | 5        | 315        | GAS - MULT FAMILY HOUSING  | N             | 150.625862          |
+| 1994     | 5        | 811        | ELEC - RESIDENTIAL         | N             | 155111.18262499975  |
+| 1994     | 5        | 878        | ELEC - DUSK TO DAWN LTG    | N             | 5403.940416999985   |
+| 1994     | 6        | 311        | GAS - RESIDENTIAL          | N             | 61951.455960999665  |
+| 1994     | 6        | 315        | GAS - MULT FAMILY HOUSING  | N             | 155.084005          |
+| 1994     | 6        | 811        | ELEC - RESIDENTIAL         | N             | 159306.58171000006  |
+| 1994     | 6        | 878        | ELEC - DUSK TO DAWN LTG    | N             | 5456.759351000018   |
+| 1994     | 7        | 311        | GAS - RESIDENTIAL          | N             | 60115.484118000226  |
+| 1994     | 7        | 315        | GAS - MULT FAMILY HOUSING  | N             | 156.181819          |
+| 1994     | 7        | 811        | ELEC - RESIDENTIAL         | N             | 152937.41312700018  |
+| 1994     | 7        | 878        | ELEC - DUSK TO DAWN LTG    | N             | 5309.103552000003   |
+| 1994     | 8        | 311        | GAS - RESIDENTIAL          | N             | 61799.42875799989   |
+| 1994     | 8        | 315        | GAS - MULT FAMILY HOUSING  | N             | 170.368048          |
+| 1994     | 8        | 811        | ELEC - RESIDENTIAL         | N             | 161716.70670600008  |
+| 1994     | 8        | 878        | ELEC - DUSK TO DAWN LTG    | N             | 5333.110681999994   |
+| 1994     | 9        | 311        | GAS - RESIDENTIAL          | N             | 62273.949275999745  |
+| 1994     | 9        | 315        | GAS - MULT FAMILY HOUSING  | N             | 160.96431           |
+| 1994     | 9        | 811        | ELEC - RESIDENTIAL         | N             | 164180.55394600006  |
++----------+----------+------------+----------------------------+---------------+---------------------+
+| REVN_YR  | REVN_MO  | SRVPLN_ID  |         SRVPLN_NM          | GEOG_CNTY_CD  |       EXPR$5        |
++----------+----------+------------+----------------------------+---------------+---------------------+
+| 1994     | 9        | 878        | ELEC - DUSK TO DAWN LTG    | N             | 5110.63447600001    |
+| 1994     | 10       | 311        | GAS - RESIDENTIAL          | N             | 67792.41732300009   |
+| 1994     | 10       | 315        | GAS - MULT FAMILY HOUSING  | N             | 152.316502          |
+| 1994     | 10       | 811        | ELEC - RESIDENTIAL         | N             | 160146.68051299994  |
+| 1994     | 10       | 878        | ELEC - DUSK TO DAWN LTG    | N             | 5113.181405000006   |
+| 1994     | 11       | 311        | GAS - RESIDENTIAL          | N             | 64287.09620399968   |
+| 1994     | 11       | 315        | GAS - MULT FAMILY HOUSING  | N             | 166.658231          |
+| 1994     | 11       | 811        | ELEC - RESIDENTIAL         | N             | 158467.1436230001   |
+| 1994     | 11       | 878        | ELEC - DUSK TO DAWN LTG    | N             | 5254.2146790000015  |
+| 1994     | 12       | 311        | GAS - RESIDENTIAL          | N             | 60833.53403200001   |
+| 1994     | 12       | 315        | GAS - MULT FAMILY HOUSING  | N             | 167.024634          |
+| 1994     | 12       | 811        | ELEC - RESIDENTIAL         | N             | 160386.3714659998   |
+| 1994     | 12       | 878        | ELEC - DUSK TO DAWN LTG    | N             | 5492.627682000017   |
+| 1995     | 1        | 311        | GAS - RESIDENTIAL          | N             | 61680.097454999915  |
+| 1995     | 1        | 315        | GAS - MULT FAMILY HOUSING  | N             | 166.574583          |
+| 1995     | 1        | 811        | ELEC - RESIDENTIAL         | N             | 156384.6368370001   |
+| 1995     | 1        | 878        | ELEC - DUSK TO DAWN LTG    | N             | 5367.673664000012   |
+| 1995     | 2        | 311        | GAS - RESIDENTIAL          | N             | 67159.06298199981   |
+| 1995     | 2        | 315        | GAS - MULT FAMILY HOUSING  | N             | 157.349158          |
+| 1995     | 2        | 811        | ELEC - RESIDENTIAL         | N             | 154638.98712199993  |
+| 1995     | 2        | 878        | ELEC - DUSK TO DAWN LTG    | N             | 5238.197620999986   |
+| 1995     | 3        | 311        | GAS - RESIDENTIAL          | N             | 66451.21467499997   |
+| 1995     | 3        | 315        | GAS - MULT FAMILY HOUSING  | N             | 159.216094          |
+| 1995     | 3        | 811        | ELEC - RESIDENTIAL         | N             | 161255.060978       |
+| 1995     | 3        | 878        | ELEC - DUSK TO DAWN LTG    | N             | 5046.779707000008   |
+| 1995     | 4        | 311        | GAS - RESIDENTIAL          | N             | 62845.01571400003   |
+| 1995     | 4        | 315        | GAS - MULT FAMILY HOUSING  | N             | 155.243696          |
+| 1995     | 4        | 811        | ELEC - RESIDENTIAL         | N             | 156886.85165899998  |
+| 1995     | 4        | 878        | ELEC - DUSK TO DAWN LTG    | N             | 5126.779479999989   |
+| 1995     | 5        | 311        | GAS - RESIDENTIAL          | N             | 63474.00581399988   |
+| 1995     | 5        | 315        | GAS - MULT FAMILY HOUSING  | N             | 150.625862          |
+| 1995     | 5        | 811        | ELEC - RESIDENTIAL         | N             | 155111.18262499972  |
+| 1995     | 5        | 878        | ELEC - DUSK TO DAWN LTG    | N             | 5403.940416999986   |
+| 1995     | 6        | 311        | GAS - RESIDENTIAL          | N             | 61951.45596099975   |
+| 1995     | 6        | 315        | GAS - MULT FAMILY HOUSING  | N             | 155.084005          |
+| 1995     | 6        | 811        | ELEC - RESIDENTIAL         | N             | 159306.5817100002   |
+| 1995     | 6        | 878        | ELEC - DUSK TO DAWN LTG    | N             | 5456.7593510000215  |
+| 1995     | 7        | 311        | GAS - RESIDENTIAL          | N             | 60115.48411800011   |
+| 1995     | 7        | 315        | GAS - MULT FAMILY HOUSING  | N             | 156.181819          |
+| 1995     | 7        | 811        | ELEC - RESIDENTIAL         | N             | 152937.41312700015  |
+| 1995     | 7        | 878        | ELEC - DUSK TO DAWN LTG    | N             | 5309.10355200001    |
+| 1995     | 8        | 311        | GAS - RESIDENTIAL          | N             | 61799.42875799992   |
+| 1995     | 8        | 315        | GAS - MULT FAMILY HOUSING  | N             | 170.368048          |
+| 1995     | 8        | 811        | ELEC - RESIDENTIAL         | N             | 161716.70670600014  |
+| 1995     | 8        | 878        | ELEC - DUSK TO DAWN LTG    | N             | 5333.110681999993   |
+| 1995     | 9        | 311        | GAS - RESIDENTIAL          | N             | 62273.94927599965   |
+| 1995     | 9        | 315        | GAS - MULT FAMILY HOUSING  | N             | 160.96431           |
+| 1995     | 9        | 811        | ELEC - RESIDENTIAL         | N             | 164180.55394600003  |
+| 1995     | 9        | 878        | ELEC - DUSK TO DAWN LTG    | N             | 5110.6344760000175  |
+| 1995     | 10       | 311        | GAS - RESIDENTIAL          | N             | 67792.41732300006   |
+| 1995     | 10       | 315        | GAS - MULT FAMILY HOUSING  | N             | 152.316502          |
+| 1995     | 10       | 811        | ELEC - RESIDENTIAL         | N             | 160146.68051299985  |
+| 1995     | 10       | 878        | ELEC - DUSK TO DAWN LTG    | N             | 5113.181405000026   |
+| 1995     | 11       | 311        | GAS - RESIDENTIAL          | N             | 64287.09620399963   |
+| 1995     | 11       | 315        | GAS - MULT FAMILY HOUSING  | N             | 166.658231          |
+| 1995     | 11       | 811        | ELEC - RESIDENTIAL         | N             | 158467.14362300007  |
+| 1995     | 11       | 878        | ELEC - DUSK TO DAWN LTG    | N             | 5254.214678999999   |
+| 1995     | 12       | 311        | GAS - RESIDENTIAL          | N             | 60833.534031999996  |
+| 1995     | 12       | 315        | GAS - MULT FAMILY HOUSING  | N             | 167.024634          |
+| 1995     | 12       | 811        | ELEC - RESIDENTIAL         | N             | 160386.371466       |
+| 1995     | 12       | 878        | ELEC - DUSK TO DAWN LTG    | N             | 5492.627681999983   |
+| 1994     | 1        | 311        | GAS - RESIDENTIAL          | T             | 258.590867          |
+| 1994     | 1        | 811        | ELEC - RESIDENTIAL         | T             | 407.591529          |
+| 1994     | 1        | 878        | ELEC - DUSK TO DAWN LTG    | T             | 32.589828           |
+| 1994     | 2        | 311        | GAS - RESIDENTIAL          | T             | 282.920199          |
+| 1994     | 2        | 811        | ELEC - RESIDENTIAL         | T             | 403.12119800000005  |
+| 1994     | 2        | 878        | ELEC - DUSK TO DAWN LTG    | T             | 30.091292           |
+| 1994     | 3        | 311        | GAS - RESIDENTIAL          | T             | 279.22361           |
+| 1994     | 3        | 811        | ELEC - RESIDENTIAL         | T             | 420.891528          |
+| 1994     | 3        | 878        | ELEC - DUSK TO DAWN LTG    | T             | 30.230936           |
+| 1994     | 4        | 311        | GAS - RESIDENTIAL          | T             | 263.759328          |
+| 1994     | 4        | 811        | ELEC - RESIDENTIAL         | T             | 408.804928          |
+| 1994     | 4        | 878        | ELEC - DUSK TO DAWN LTG    | T             | 33.244172           |
+| 1994     | 5        | 311        | GAS - RESIDENTIAL          | T             | 266.88881200000003  |
+| 1994     | 5        | 811        | ELEC - RESIDENTIAL         | T             | 404.35288599999996  |
+| 1994     | 5        | 878        | ELEC - DUSK TO DAWN LTG    | T             | 30.75004            |
+| 1994     | 6        | 311        | GAS - RESIDENTIAL          | T             | 260.230009          |
+| 1994     | 6        | 811        | ELEC - RESIDENTIAL         | T             | 415.66007           |
+| 1994     | 6        | 878        | ELEC - DUSK TO DAWN LTG    | T             | 33.423576           |
+| 1994     | 7        | 311        | GAS - RESIDENTIAL          | T             | 252.489282          |
+| 1994     | 7        | 811        | ELEC - RESIDENTIAL         | T             | 398.38565700000004  |
+| 1994     | 7        | 878        | ELEC - DUSK TO DAWN LTG    | T             | 33.199784           |
+| 1994     | 8        | 311        | GAS - RESIDENTIAL          | T             | 259.962325          |
+| 1994     | 8        | 811        | ELEC - RESIDENTIAL         | T             | 422.237118          |
+| 1994     | 8        | 878        | ELEC - DUSK TO DAWN LTG    | T             | 32.820388           |
+| 1994     | 9        | 311        | GAS - RESIDENTIAL          | T             | 261.802555          |
+| 1994     | 9        | 811        | ELEC - RESIDENTIAL         | T             | 428.245502          |
+| 1994     | 9        | 878        | ELEC - DUSK TO DAWN LTG    | T             | 31.00676            |
+| 1994     | 10       | 311        | GAS - RESIDENTIAL          | T             | 285.582472          |
+| 1994     | 10       | 811        | ELEC - RESIDENTIAL         | T             | 417.33239100000003  |
+| 1994     | 10       | 878        | ELEC - DUSK TO DAWN LTG    | T             | 30.364224           |
+| 1994     | 11       | 311        | GAS - RESIDENTIAL          | T             | 269.819289          |
+| 1994     | 11       | 811        | ELEC - RESIDENTIAL         | T             | 413.10898099999997  |
+| 1994     | 11       | 878        | ELEC - DUSK TO DAWN LTG    | T             | 34.34572            |
+| 1994     | 12       | 311        | GAS - RESIDENTIAL          | T             | 255.32324899999998  |
+| 1994     | 12       | 811        | ELEC - RESIDENTIAL         | T             | 418.333789          |
+| 1994     | 12       | 878        | ELEC - DUSK TO DAWN LTG    | T             | 33.572004           |
+| 1995     | 1        | 311        | GAS - RESIDENTIAL          | T             | 258.590867          |
+| 1995     | 1        | 811        | ELEC - RESIDENTIAL         | T             | 407.59152900000004  |
+| 1995     | 1        | 878        | ELEC - DUSK TO DAWN LTG    | T             | 32.589828           |
++----------+----------+------------+----------------------------+---------------+---------------------+
+| REVN_YR  | REVN_MO  | SRVPLN_ID  |         SRVPLN_NM          | GEOG_CNTY_CD  |       EXPR$5        |
++----------+----------+------------+----------------------------+---------------+---------------------+
+| 1995     | 2        | 311        | GAS - RESIDENTIAL          | T             | 282.920199          |
+| 1995     | 2        | 811        | ELEC - RESIDENTIAL         | T             | 403.12119799999994  |
+| 1995     | 2        | 878        | ELEC - DUSK TO DAWN LTG    | T             | 30.091292           |
+| 1995     | 3        | 311        | GAS - RESIDENTIAL          | T             | 279.22361           |
+| 1995     | 3        | 811        | ELEC - RESIDENTIAL         | T             | 420.89152799999994  |
+| 1995     | 3        | 878        | ELEC - DUSK TO DAWN LTG    | T             | 30.230936           |
+| 1995     | 4        | 311        | GAS - RESIDENTIAL          | T             | 263.759328          |
+| 1995     | 4        | 811        | ELEC - RESIDENTIAL         | T             | 408.80492799999996  |
+| 1995     | 4        | 878        | ELEC - DUSK TO DAWN LTG    | T             | 33.244172           |
+| 1995     | 5        | 311        | GAS - RESIDENTIAL          | T             | 266.88881200000003  |
+| 1995     | 5        | 811        | ELEC - RESIDENTIAL         | T             | 404.35288599999996  |
+| 1995     | 5        | 878        | ELEC - DUSK TO DAWN LTG    | T             | 30.75004            |
+| 1995     | 6        | 311        | GAS - RESIDENTIAL          | T             | 260.230009          |
+| 1995     | 6        | 811        | ELEC - RESIDENTIAL         | T             | 415.66007           |
+| 1995     | 6        | 878        | ELEC - DUSK TO DAWN LTG    | T             | 33.423576           |
+| 1995     | 7        | 311        | GAS - RESIDENTIAL          | T             | 252.489282          |
+| 1995     | 7        | 811        | ELEC - RESIDENTIAL         | T             | 398.385657          |
+| 1995     | 7        | 878        | ELEC - DUSK TO DAWN LTG    | T             | 33.199784           |
+| 1995     | 8        | 311        | GAS - RESIDENTIAL          | T             | 259.96232499999996  |
+| 1995     | 8        | 811        | ELEC - RESIDENTIAL         | T             | 422.237118          |
+| 1995     | 8        | 878        | ELEC - DUSK TO DAWN LTG    | T             | 32.820388           |
+| 1995     | 9        | 311        | GAS - RESIDENTIAL          | T             | 261.802555          |
+| 1995     | 9        | 811        | ELEC - RESIDENTIAL         | T             | 428.245502          |
+| 1995     | 9        | 878        | ELEC - DUSK TO DAWN LTG    | T             | 31.00676            |
+| 1995     | 10       | 311        | GAS - RESIDENTIAL          | T             | 285.582472          |
+| 1995     | 10       | 811        | ELEC - RESIDENTIAL         | T             | 417.33239100000003  |
+| 1995     | 10       | 878        | ELEC - DUSK TO DAWN LTG    | T             | 30.364224           |
+| 1995     | 11       | 311        | GAS - RESIDENTIAL          | T             | 269.819289          |
+| 1995     | 11       | 811        | ELEC - RESIDENTIAL         | T             | 413.10898099999997  |
+| 1995     | 11       | 878        | ELEC - DUSK TO DAWN LTG    | T             | 34.34572            |
+| 1995     | 12       | 311        | GAS - RESIDENTIAL          | T             | 255.32324899999998  |
+| 1995     | 12       | 811        | ELEC - RESIDENTIAL         | T             | 418.333789          |
+| 1995     | 12       | 878        | ELEC - DUSK TO DAWN LTG    | T             | 33.572004           |
+| 1994     | 1        | 311        | GAS - RESIDENTIAL          | V             | 10963.483773000004  |
+| 1994     | 2        | 311        | GAS - RESIDENTIAL          | V             | 11981.54656000001   |
+| 1994     | 3        | 311        | GAS - RESIDENTIAL          | V             | 11832.001821000009  |
+| 1994     | 4        | 311        | GAS - RESIDENTIAL          | V             | 11179.734783999998  |
+| 1994     | 5        | 311        | GAS - RESIDENTIAL          | V             | 11307.63483799998   |
+| 1994     | 6        | 311        | GAS - RESIDENTIAL          | V             | 11027.967011999994  |
+| 1994     | 7        | 311        | GAS - RESIDENTIAL          | V             | 10700.255857999984  |
+| 1994     | 8        | 311        | GAS - RESIDENTIAL          | V             | 11013.052568000005  |
+| 1994     | 9        | 311        | GAS - RESIDENTIAL          | V             | 11092.449459000007  |
+| 1994     | 10       | 311        | GAS - RESIDENTIAL          | V             | 12094.489380999994  |
+| 1994     | 11       | 311        | GAS - RESIDENTIAL          | V             | 11436.578829000013  |
+| 1994     | 12       | 311        | GAS - RESIDENTIAL          | V             | 10822.042360999998  |
+| 1995     | 1        | 311        | GAS - RESIDENTIAL          | V             | 10963.483773000002  |
+| 1995     | 2        | 311        | GAS - RESIDENTIAL          | V             | 11981.546560000017  |
+| 1995     | 3        | 311        | GAS - RESIDENTIAL          | V             | 11832.001820999993  |
+| 1995     | 4        | 311        | GAS - RESIDENTIAL          | V             | 11179.73478399999   |
+| 1995     | 5        | 311        | GAS - RESIDENTIAL          | V             | 11307.634838000002  |
+| 1995     | 6        | 311        | GAS - RESIDENTIAL          | V             | 11027.96701199999   |
+| 1995     | 7        | 311        | GAS - RESIDENTIAL          | V             | 10700.255857999991  |
+| 1995     | 8        | 311        | GAS - RESIDENTIAL          | V             | 11013.052568000006  |
+| 1995     | 9        | 311        | GAS - RESIDENTIAL          | V             | 11092.449459000005  |
+| 1995     | 10       | 311        | GAS - RESIDENTIAL          | V             | 12094.489380999996  |
+| 1995     | 11       | 311        | GAS - RESIDENTIAL          | V             | 11436.578829000007  |
+| 1995     | 12       | 311        | GAS - RESIDENTIAL          | V             | 10822.042360999998  |
++----------+----------+------------+----------------------------+---------------+---------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

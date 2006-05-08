@@ -26,10 +26,6 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/download.sql"/>
       </test>
 
-      <test name="junk" requiresSuccess="download">
-        <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/LDB-92.sql"/>
-      </test>
-
       <!-- These are duplicated in shortreg & shortreg2 -->
       <test name="joinEq" requiresSuccess="download">
         <test-metadata>

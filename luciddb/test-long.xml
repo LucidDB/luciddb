@@ -1,0 +1,13 @@
+<project name="bh" default="test-long">
+  <target name="test-long">
+    <test-suite name="test-long">
+
+      <test-suite-call testfile="test/sql/VI/tbs/tbs100K_idxtest.xml"/>
+
+      <test-suite-call testfile="test/sql/VI/tbs/tbs100Ktest.xml"/>
+
+      <test-suite-call testfile="test/sql/hashjoin/test.xml"/>
+
+    </test-suite>
+  </target>
+</project>

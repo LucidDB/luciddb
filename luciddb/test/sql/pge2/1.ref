@@ -1,0 +1,52 @@
+0: jdbc:luciddb:> -- Query 1
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT AL1.CU_ID, AL1.CUIN_LST_NM, AL1.CUIN_FST_NM,
+. . . . . . . . >  AL3.SRVPLN_ID, AL3.SRVPLN_NM, AL3.SPO_ID, AL3.BU_CD,
+. . . . . . . . >  AL3.RC_CD, AVG(AL5.USG_VAL), AVG(AL5.USG_BILL_THERM),
+. . . . . . . . >  AVG(AL5.USG_BILL_KWH), AVG(AL5.RSD_SVC_BILG_AMT)
+. . . . . . . . > FROM
+. . . . . . . . >  PGE.CUST_SERV_ACCT AL1,
+. . . . . . . . >  PGE.GEOG AL2,
+. . . . . . . . >  PGE.SERV_PLAN AL3,
+. . . . . . . . >  PGE.REVN_PRD AL4,
+. . . . . . . . >  PGE.REVN_DTL_RAND AL5
+. . . . . . . . > WHERE AL5.REVN_YR_MO=AL4.REVN_YR_MO
+. . . . . . . . >  AND AL2.GEOG_KEY=AL5.GEOG_KEY
+. . . . . . . . >  AND AL3.SRVPLN_KEY=AL5.SRVPLN_KEY
+. . . . . . . . >  AND AL1.CUST_SERV_ACCT_KEY=AL5.CUST_SERV_ACCT_KEY
+. . . . . . . . >  AND AL1.CUST_SERV_ACCT_KEY IN
+. . . . . . . . >   (SELECT DISTINCT AL1.CUST_SERV_ACCT_KEY
+. . . . . . . . >    FROM
+. . . . . . . . >     PGE.CUST_SERV_ACCT AL1,
+. . . . . . . . >     PGE.GEOG AL2, 
+. . . . . . . . >     PGE.SERV_PLAN AL3,
+. . . . . . . . >     PGE.REVN_PRD AL4,
+. . . . . . . . >     PGE.REVN_DTL_RAND AL5
+. . . . . . . . >    WHERE AL5.REVN_YR_MO=AL4.REVN_YR_MO
+. . . . . . . . >     AND AL2.GEOG_KEY=AL5.GEOG_KEY
+. . . . . . . . >     AND AL3.SRVPLN_KEY=AL5.SRVPLN_KEY
+. . . . . . . . >     AND AL1.CUST_SERV_ACCT_KEY=AL5.CUST_SERV_ACCT_KEY
+. . . . . . . . >     AND AL5.SAS_FNL_BIL_INDCR='Y' AND AL4.REVN_YR=1995)
+. . . . . . . . > GROUP BY AL1.CU_ID, AL1.CUIN_LST_NM, AL1.CUIN_FST_NM,
+. . . . . . . . >  AL3.SRVPLN_ID, AL3.SRVPLN_NM, AL3.SPO_ID, AL3.BU_CD, AL3.RC_CD
+. . . . . . . . > --ORDER BY *
+. . . . . . . . > ORDER BY 1,2,3,4,5,6,7,8,9,10,11,12 
+. . . . . . . . > ;
++------------+--------------+--------------+------------+--------------------------+---------+--------+--------+---------------------+---------------------+---------------------+---------------------+
+|   CU_ID    | CUIN_LST_NM  | CUIN_FST_NM  | SRVPLN_ID  |        SRVPLN_NM         | SPO_ID  | BU_CD  | RC_CD  |       EXPR$8        |       EXPR$9        |       EXPR$10       |       EXPR$11       |
++------------+--------------+--------------+------------+--------------------------+---------+--------+--------+---------------------+---------------------+---------------------+---------------------+
+| 113100009  | RITTER       | RICHARD      | 311        | GAS - RESIDENTIAL        | 1       | GAS    | 02     | 51.199866666666686  | 52.531063249999995  | 0.0                 | 34.3653505          |
+| 186300004  | FORT         | ROBERT       | 311        | GAS - RESIDENTIAL        | 1       | GAS    | 02     | 29.183924000000005  | 29.900722166666654  | 0.0                 | 24.504256125        |
+| 186300004  | FORT         | ROBERT       | 811        | ELEC - RESIDENTIAL       | 1       | ELE    | 01     | 0.0                 | 0.0                 | 656.9962679166667   | 73.27844154166668   |
+| 250110002  | VOEGTLIN     | KENNETH      | 878        | ELEC - DUSK TO DAWN LTG  | 4       | ELE    | 01     | 0.0                 | 0.0                 | 53.90121891666664   | 9.636884666666667   |
+| 277600002  | YODER        | DAVID        | 311        | GAS - RESIDENTIAL        | 1       | GAS    | 02     | 409.5989333333334   | 420.2485055833333   | 0.0                 | 248.90303175        |
+| 380300006  | MARTIN       | KATHERIN     | 311        | GAS - RESIDENTIAL        | 1       | GAS    | 02     | 371.711032          | 381.3366069166666   | 0.0                 | 225.3306131666667   |
+| 380300006  | MARTIN       | KATHERIN     | 811        | ELEC - RESIDENTIAL       | 1       | ELE    | 01     | 0.0                 | 0.0                 | 1789.0972500000005  | 183.7104693333334   |
+| 448710009  | MCSHANE      | COREY        | 878        | ELEC - DUSK TO DAWN LTG  | 7       | ELE    | 01     | 0.0                 | 0.0                 | 26.096154499999997  | 6.539094083333335   |
+| 487800009  | VANSICKLE    | NORM         | 311        | GAS - RESIDENTIAL        | 1       | GAS    | 02     | 117.7596933333333   | 120.72928566666671  | 0.0                 | 68.81262091666666   |
+| 487800009  | VANSICKLE    | NORM         | 811        | ELEC - RESIDENTIAL       | 1       | ELE    | 01     | 0.0                 | 0.0                 | 397.5771666666665   | 39.65832241666667   |
+| 803900007  | MAITLAND     | HAROLD       | 311        | GAS - RESIDENTIAL        | 1       | GAS    | 02     | 29.183924000000005  | 29.90072212499999   | 0.0                 | 18.990030541666673  |
+| 993610002  | WILLIAMS     | O            | 811        | ELEC - RESIDENTIAL       | 1       | ELE    | 01     | 0.0                 | 0.0                 | 993.9429166666667   | 109.28402366666666  |
++------------+--------------+--------------+------------+--------------------------+---------+--------+--------+---------------------+---------------------+---------------------+---------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit
