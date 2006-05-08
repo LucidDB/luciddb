@@ -43,6 +43,7 @@ import net.sf.farrago.session.FarragoSessionTxnId;
 import net.sf.farrago.session.FarragoSessionTxnMgr;
 import net.sf.farrago.trace.FarragoTrace;
 import net.sf.farrago.util.FarragoDdlLockManager;
+import net.sf.farrago.resource.FarragoResource;
 
 /**
  * FarragoDbStmtContextBase provides a partial implementation of
@@ -78,6 +79,12 @@ public abstract class FarragoDbStmtContextBase
      * Current dynamic parameter bindings.
      */
     protected Object [] dynamicParamValues;
+
+    /**
+     * Indicates if dynamic parameter is set
+     * Used to validate that all dynamic parameters have been set
+     */
+    protected boolean[] dynamicParamValuesSet;
 
     protected boolean daemon;
 
@@ -139,6 +146,7 @@ public abstract class FarragoDbStmtContextBase
     {
         sql = null;
         dynamicParamValues = null;
+        dynamicParamValuesSet = null;
 
         ddlLockManager.removeObjectsInUse(this);
     }
@@ -149,12 +157,14 @@ public abstract class FarragoDbStmtContextBase
         assert (isPrepared());
         Object y = dynamicParamDefs[parameterIndex].scrubValue(x);
         dynamicParamValues[parameterIndex] = y;
+        dynamicParamValuesSet[parameterIndex] = true;
     }
 
     // implement FarragoSessionStmtContext
     public void clearParameters()
     {
         assert (isPrepared());
+        Arrays.fill(dynamicParamValuesSet, false);
         Arrays.fill(dynamicParamValues, null);
     }
 
@@ -208,6 +218,8 @@ public abstract class FarragoDbStmtContextBase
         // Allocate an array to hold parameter values.
         dynamicParamValues = new Object[fields.length];
 
+        dynamicParamValuesSet = new boolean[fields.length];
+
         // Allocate an array of validators, one for each parameter.
         dynamicParamDefs = new FarragoSessionStmtParamDef[fields.length];
         for (int i = 0; i < fields.length; i++) {
@@ -216,6 +228,21 @@ public abstract class FarragoDbStmtContextBase
                 paramDefFactory.newParamDef(
                     field.getName(), 
                     field.getType());
+        }
+    }
+
+    /**
+     * Checks that all dynamic parameters have been set
+     */
+    protected void checkDynamicParamsSet()
+    {
+        if (dynamicParamValuesSet != null) {
+            for (int i = 0; i < dynamicParamValuesSet.length; i++) {
+                if (!dynamicParamValuesSet[i]) {
+                    throw FarragoResource.instance().ParameterNotSet.ex(
+                        Integer.toString(i+1));
+                }
+            }
         }
     }
 

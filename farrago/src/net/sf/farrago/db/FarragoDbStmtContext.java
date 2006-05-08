@@ -180,8 +180,9 @@ public class FarragoDbStmtContext extends FarragoDbStmtContextBase
         if (session.isAutoCommit()) {
             startAutocommitTxn(!isDml);
         }
-        
+
         try {
+            checkDynamicParamsSet();
             FarragoSessionRuntimeParams params =
                 session.newRuntimeContextParams();
             if (!isDml) {

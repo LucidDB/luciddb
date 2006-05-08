@@ -45,6 +45,9 @@ import java.util.Properties;
 public class FarragoRJConnection extends RJConnection
     implements java.io.Serializable, FarragoConnection
 {
+    /** SerialVersionUID created with JDK 1.5 serialver tool. */
+    private static final long serialVersionUID = -3256212096290593733L;
+
     protected FarragoRJConnection(RJConnectionInterface rmiconn)
     {
         super(rmiconn);

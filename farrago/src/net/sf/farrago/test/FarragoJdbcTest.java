@@ -374,6 +374,39 @@ public class FarragoJdbcTest extends FarragoTestCase
         Assert.fail("Expected failure due to cancel request");
     }
 
+    public void testCheckParametersSet()
+        throws Exception
+    {
+        Throwable throwable = null;
+        String query =
+            "insert into datatypes_schema.dataTypes_table values " + paramStr;
+        preparedStmt = connection.prepareStatement(query);
+        preparedStmt.setInt(1, 100);
+        try {
+            preparedStmt.executeUpdate();
+        } catch (SQLException ex) {
+            throwable = ex;
+        }
+
+        checkThrowable("parameter not set",
+            ".*Value is missing.*",
+            throwable);
+
+        values = new Object[2 + TestSqlType.all.length];
+        checkSetNull();
+        preparedStmt.clearParameters();
+        try {
+            preparedStmt.executeUpdate();
+        } catch (SQLException ex) {
+            throwable = ex;
+        }
+
+        checkThrowable("parameter not set",
+            ".*Value is missing.*",
+            throwable);
+
+    }
+
     // NOTE jvs 26-July-2004:  some of the tests in this class modify fixture
     // tables such as SALES.EMPS, but that's OK, because transactions are
     // implicitly rolled back by FarragoTestCase.tearDown.
@@ -504,14 +537,14 @@ public class FarragoJdbcTest extends FarragoTestCase
     private void checkSetBytes()
         throws Exception
     {
-        checkSet(TestJavaType.Bytes, TestSqlType.typesBinary, bytes);
+        checkSet(TestJavaType.Bytes, TestSqlType.all, bytes);
         checkResults(TestJavaType.Bytes);
     }
 
     private void checkSetBigDecimal()
         throws Exception
     {
-        checkSet(TestJavaType.BigDecimal, TestSqlType.typesNumericAndChars,
+        checkSet(TestJavaType.BigDecimal, TestSqlType.all,
             bigDecimalValue);
         checkResults(TestJavaType.BigDecimal);
     }
@@ -520,7 +553,7 @@ public class FarragoJdbcTest extends FarragoTestCase
         throws Exception
     {
         checkSet(
-            TestJavaType.Boolean, TestSqlType.typesNumericAndChars, boolObj);
+            TestJavaType.Boolean, TestSqlType.all, boolObj);
         checkResults(TestJavaType.Boolean);
     }
 
@@ -632,6 +665,7 @@ public class FarragoJdbcTest extends FarragoTestCase
             TestSqlType.typesNumericAndChars,
             new Byte(maxByte));
         checkResults(TestJavaType.Byte);
+        checkResults(TestJavaType.Bytes);
     }
 
     private void checkSetByteMin()
@@ -754,6 +788,25 @@ public class FarragoJdbcTest extends FarragoTestCase
         }
     }
 
+    private boolean checkThrowable(String error, String expectedPattern, Throwable throwable)
+    {
+        Pattern expectedException =
+            Pattern.compile(expectedPattern);
+
+        boolean okay = false;
+        if (throwable instanceof SQLException) {
+            String errorString = throwable.toString();
+            if (expectedException.matcher(errorString).matches()) {
+                  okay = true;
+            }
+        }
+
+        if (!okay) {
+            fail("Was expecting " + error + " error, throwable=" + throwable);
+        }
+        return okay;
+    }
+
     private void checkSet(
         TestJavaType javaType,
         TestSqlType sqlType,
@@ -764,7 +817,7 @@ public class FarragoJdbcTest extends FarragoTestCase
         int validity = sqlType.checkIsValid(value);
         Throwable throwable;
         tracer.fine("Call PreparedStmt.set" + javaType.name + "(" + column
-            + ", " + value + "), value is " + TestSqlType.validityName[validity]);
+            + ", " + value + "), validity is " + TestSqlType.validityName[validity]);
         try {
             javaType.setMethod.invoke(
                 preparedStmt,
@@ -816,20 +869,9 @@ public class FarragoJdbcTest extends FarragoTestCase
             throwable = e;
         }
 
-        Pattern expectedException =
-            Pattern.compile(".*parameter index .* is out of bounds.*");
-
-        boolean okay = false;
-        if (throwable instanceof SQLException) {
-            String errorString = throwable.toString();
-            if (expectedException.matcher(errorString).matches()) {
-                  okay = true;
-            }
-        }
-
-        if (!okay) {
-            fail("Was expecting invalid column error, throwable=" + throwable);
-        }
+        checkThrowable("invalid column",
+            ".*parameter index .* is out of bounds.*",
+            throwable);
     }
 
     public void insertDataTypes()
