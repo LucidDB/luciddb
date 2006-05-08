@@ -88,7 +88,7 @@ public class SqlDelete extends SqlCall
     }
 
     /**
-     * Gets the source SELECT expression for the data to be inserted.  This
+     * Gets the source SELECT expression for the data to be deleted.  This
      * returns null before the condition has been expanded
      * by SqlValidator.performUnconditionRewrites.
      *

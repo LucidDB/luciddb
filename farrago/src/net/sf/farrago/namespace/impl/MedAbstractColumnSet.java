@@ -247,7 +247,9 @@ public abstract class MedAbstractColumnSet extends RelOptAbstractTable
         // Create a relational algebra expression for invoking the UDX.
         RexNode rexCall = rexBuilder.makeCall(udx, args);
         RelNode udxRel =
-            new FarragoJavaUdxRel(cluster, rexCall, resultType, serverMofId);
+            new FarragoJavaUdxRel(
+                cluster, rexCall, resultType, serverMofId,
+                RelNode.emptyArray);
 
         // Optimizer wants us to preserve original types,
         // so cast back for the final result.

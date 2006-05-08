@@ -893,4 +893,19 @@ ProjectRel(EMPNO=[$0])
 ]]>
         </Resource>
     </TestCase>
+    <TestCase name="testCollectionTableWithCursorParam">
+        <Resource name="sql">
+            <![CDATA[select * from table(dedup(cursor(select ename from emp), cursor(select name from dept), 'NAME'))]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(NAME=[$0])
+  TableFunctionRel(invocation=[DEDUP($0, $1, _ISO-8859-1'NAME')])
+    ProjectRel(ENAME=[$1])
+      TableAccessRel(table=[[SALES, EMP]])
+    ProjectRel(NAME=[$1])
+      TableAccessRel(table=[[SALES, DEPT]])
+]]>
+        </Resource>
+    </TestCase>
 </Root>

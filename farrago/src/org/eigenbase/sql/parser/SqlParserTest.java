@@ -1458,6 +1458,28 @@ public class SqlParserTest extends TestCase
                 "FROM TABLE(`RAMP`(3, 4))"}));
     }
 
+    public void testCollectionTableWithCursorParam()
+    {
+        check("select * from table(dedup(cursor(select * from emps),'name'))",
+            TestUtil.fold(new String[]{
+                "SELECT *",
+                "FROM TABLE(`DEDUP`((CURSOR ((SELECT *",
+                "FROM `EMPS`))), 'name'))"}));
+    }
+
+    public void testIllegalCursors()
+    {
+        checkFails(
+            "select ^cursor^(select * from emps) from emps",
+            "CURSOR expression encountered in illegal context");
+        checkFails(
+            "call p(^cursor^(select * from emps))",
+            "CURSOR expression encountered in illegal context");
+        checkFails(
+            "select f(^cursor^(select * from emps)) from emps",
+            "CURSOR expression encountered in illegal context");
+    }
+
     public void testExplain()
     {
         check("explain plan for select * from emps",

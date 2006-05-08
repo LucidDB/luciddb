@@ -94,8 +94,10 @@ JAVACODE String getPositionString()
 
 JAVACODE void checkQueryExpression(ExprContext exprContext)
 {
-    if (exprContext == EXPR_ACCEPT_NONQUERY || 
-        exprContext == EXPR_ACCEPT_SUBQUERY) {
+    if ((exprContext == EXPR_ACCEPT_NONQUERY)
+        || (exprContext == EXPR_ACCEPT_SUBQUERY)
+        || (exprContext == EXPR_ACCEPT_CURSOR))
+    {
         throw SqlUtil.newContextException(
             getPos(),
             EigenbaseResource.instance().IllegalQueryExpression.ex());
@@ -382,9 +384,11 @@ SqlNode ParenthesizedExpression(ExprContext exprContext) :
 {
     <LPAREN>
     {
+        // we've now seen left paren, so queries inside should
+        // be allowed as subqueries
         if (exprContext == EXPR_ACCEPT_SUBQUERY) {
-            // we've now seen left paren, so queries inside should
-            // be allowed as subqueries
+            exprContext = EXPR_ACCEPT_NONCURSOR;
+        } else if (exprContext == EXPR_ACCEPT_CURSOR) {
             exprContext = EXPR_ACCEPT_ALL;
         }
     }
@@ -422,17 +426,20 @@ List ParenthesizedQueryOrCommaList(
 {
     SqlNode e;
     List list;
+    ExprContext firstExprContext = exprContext;
 }
 {
     <LPAREN>
     {
+        // we've now seen left paren, so a query by itself should
+        // be interpreted as a subquery
         if (exprContext == EXPR_ACCEPT_SUBQUERY) {
-            // we've now seen left paren, so queries inside should
-            // be allowed as subqueries
-            exprContext = EXPR_ACCEPT_ALL;
+            firstExprContext = EXPR_ACCEPT_NONCURSOR;
+        } else if (exprContext == EXPR_ACCEPT_CURSOR) {
+            firstExprContext = EXPR_ACCEPT_ALL;
         }
     }
-    e = OrderedQueryOrExpr(exprContext)
+    e = OrderedQueryOrExpr(firstExprContext)
     {
         list = startList(e);
     }
@@ -466,15 +473,17 @@ List FunctionParameterList(
 {
     SqlNode e = null;
     List list = new ArrayList();
+    ExprContext firstExprContext = exprContext;
 }
 {
     <LPAREN>
     {
-
+        // we've now seen left paren, so queries inside should
+        // be allowed as subqueries
         if (exprContext == EXPR_ACCEPT_SUBQUERY) {
-            // we've now seen left paren, so queries inside should
-            // be allowed as subqueries
-            exprContext = EXPR_ACCEPT_ALL;
+            firstExprContext = EXPR_ACCEPT_NONCURSOR;
+        } else if (exprContext == EXPR_ACCEPT_CURSOR) {
+            firstExprContext = EXPR_ACCEPT_ALL;
         }
     }
     [ <DISTINCT>
@@ -490,7 +499,7 @@ List FunctionParameterList(
     {
        list.add(e);
     }
-    e = OrderedQueryOrExpr(exprContext)
+    e = OrderedQueryOrExpr(firstExprContext)
     {
         if (e != null) {
             list.add(e);
@@ -720,14 +729,18 @@ SqlNode SqlProcedureCall() :
     {
         callPos = getPos();
     }
-    routineCall = NamedRoutineCall(SqlFunctionCategory.UserDefinedProcedure)
+    routineCall = NamedRoutineCall(
+        SqlFunctionCategory.UserDefinedProcedure,
+        EXPR_ACCEPT_SUBQUERY)
     {
         return SqlStdOperatorTable.procedureCallOperator.createCall(
             routineCall, callPos);
     }
 }
 
-SqlNode NamedRoutineCall(SqlFunctionCategory routineType) :
+SqlNode NamedRoutineCall(
+    SqlFunctionCategory routineType,
+    ExprContext exprContext) :
 {
     SqlIdentifier name;
     List args;
@@ -741,7 +754,7 @@ SqlNode NamedRoutineCall(SqlFunctionCategory routineType) :
     (
         LOOKAHEAD(2) <LPAREN> <RPAREN>
         { args = SqlParserUtil.emptyList; pos = pos.plus(getPos()); }
-        | args = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_SUBQUERY)
+        | args = ParenthesizedQueryOrCommaList(exprContext)
         { pos = pos.plus(getPos()); }
     )
     {
@@ -1170,7 +1183,7 @@ SqlNode TableFunctionCall() :
     ]
     {
     }
-    call = NamedRoutineCall(funcType)
+    call = NamedRoutineCall(funcType, EXPR_ACCEPT_CURSOR)
     {
         return SqlStdOperatorTable.collectionTableOperator.createCall(
             call, pos);
@@ -1261,16 +1274,16 @@ SqlNode RowConstructor() :
         // fix unparse
         LOOKAHEAD(3)
         <LPAREN> { pos = getPos(); } <ROW>
-        valueList = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_ALL)
+        valueList = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_NONCURSOR)
         <RPAREN> { pos = pos.plus(getPos()); }
         |
         LOOKAHEAD(3)
         { pos = getPos(); }
         [
             <ROW>
-        ] valueList = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_ALL)
+        ] valueList = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_NONCURSOR)
         |
-        value = Expression(EXPR_ACCEPT_ALL)
+        value = Expression(EXPR_ACCEPT_NONCURSOR)
         {
             // NOTE: A bare value here is standard SQL syntax, believe it or
             // not.  Taken together with multi-row table constructors, it leads
@@ -1697,7 +1710,7 @@ List Expression2(ExprContext exprContext) :
                         new SqlParserUtil.ToTreeListItem(
                             SqlStdOperatorTable.inOperator, pos));
                 }
-                list2 = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_ALL)
+                list2 = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_NONCURSOR)
                 {
                     pos = pos.plus(getPos());
                     // special case for stuff like IN (s1 UNION s2)
@@ -1829,6 +1842,8 @@ SqlNode Expression3(ExprContext exprContext) :
         checkNonQueryExpression(exprContext);
         return e;
     }
+    |
+    e = CursorExpression(exprContext) { return e; }
     |
     op = PrefixRowOperator()
     {
@@ -2505,7 +2520,9 @@ SqlNode NewSpecification() :
         callPos = getPos();
     }
     routineCall =
-    NamedRoutineCall(SqlFunctionCategory.UserDefinedConstructor)
+    NamedRoutineCall(
+        SqlFunctionCategory.UserDefinedConstructor,
+        EXPR_ACCEPT_SUBQUERY)
     {
         return SqlStdOperatorTable.newOperator.createCall(
             routineCall, callPos);
@@ -2736,6 +2753,36 @@ SqlIdentifier CollectionsTypeName() :
         typeName = new SqlIdentifier(
             SqlTypeName.Multiset.getName(),pos);
         return typeName;
+    }
+}
+
+/**
+ * Parses a CURSOR(query) expression.  The parser allows these
+ * anywhere, but the validator restricts them to appear only as
+ * arguments to table functions.
+ */
+SqlNode CursorExpression(ExprContext exprContext) :
+{
+    SqlNode e;
+    SqlParserPos pos;
+}
+{
+    <CURSOR>
+    {
+        pos = getPos();
+        if (exprContext != EXPR_ACCEPT_ALL &&
+            exprContext != EXPR_ACCEPT_CURSOR)
+        {
+            throw SqlUtil.newContextException(
+                pos,
+                EigenbaseResource.instance().IllegalCursorExpression.ex());
+        }
+    }
+    e = Expression(EXPR_ACCEPT_QUERY)
+    {
+        return SqlStdOperatorTable.cursorConstructor.createCall(
+            e, pos);
+        return e;
     }
 }
 

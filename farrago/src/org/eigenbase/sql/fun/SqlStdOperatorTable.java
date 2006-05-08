@@ -527,6 +527,13 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlMultisetQueryConstructor();
 
     /**
+     * The CURSOR constructor.  e.g. "<code>SELECT * FROM
+     * TABLE(DEDUP(CURSOR(SELECT * FROM EMPS), 'name'))</code>".
+     */
+    public static final SqlCursorConstructor cursorConstructor =
+        new SqlCursorConstructor();
+
+    /**
      * The <code>UNNEST<code> operator.
      */
     public static final SqlSpecialOperator unnestOperator =

@@ -151,6 +151,15 @@ public class SqlToRelConverterTest extends SqlToRelTestBase
             "${plan}");
     }
 
+    public void testCollectionTableWithCursorParam()
+    {
+        check(
+            "select * from table(dedup("
+            + "cursor(select ename from emp),"
+            + " cursor(select name from dept), 'NAME'))",
+            "${plan}");
+    }
+
     public void testUnnest()
     {
         check("select*from unnest(multiset[1,2])",

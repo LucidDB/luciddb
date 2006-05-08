@@ -342,6 +342,12 @@ public class SqlKind extends EnumeratedValues.BasicValue
     public static final SqlKind CollectionTable =
         new SqlKind("TABLE", CollectionTableORDINAL);
 
+    /** CURSOR constructor, for example,
+     * <code>select * from TABLE(udx(CURSOR(select ...), x, y, z))</code>*/
+    public static final int CursorConstructorORDINAL = 169;
+    public static final SqlKind CursorConstructor =
+        new SqlKind("CURSOR", CursorConstructorORDINAL);
+    
     // internal operators (evaluated in validator) 200-299
 
     /** LiteralChain operator (for composite string literals) */
