@@ -100,6 +100,16 @@ class BTreeVerifier : public BTreeAccessBase
     bool strict;
 
     /**
+     * Whether to perform key verification
+     */
+    bool keys;
+
+    /**
+     * Whether to traverse the leaf level
+     */
+    bool leaf;
+
+    /**
      * Key data used for comparing successive keys.
      */
     TupleData keyData;
@@ -140,8 +150,12 @@ public:
      * @param strict if true, the tree is assumed to be in a quiescent state
      * with all update operations completed; if false, violations which are
      * possible with incomplete update operations are ignored
+     *
+     * @param keys whether to verify key ordering
+     *
+     * @param leaf whether to traverse the leaf level
      */
-    void verify(bool strict = true);
+    void verify(bool strict = true, bool keys = true, bool leaf = true);
 
     /**
      * Gets statistics collected during the previous verification.

@@ -132,6 +132,7 @@ protected:
     virtual void visit(ProxyCmdCreateIndex &);
     virtual void visit(ProxyCmdTruncateIndex &);
     virtual void visit(ProxyCmdDropIndex &);
+    virtual void visit(ProxyCmdVerifyIndex &);
     virtual void visit(ProxyCmdOpenDatabase &);
     virtual void visit(ProxyCmdCloseDatabase &);
     virtual void visit(ProxyCmdCheckpoint &);

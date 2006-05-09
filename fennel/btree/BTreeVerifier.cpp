@@ -41,9 +41,11 @@ BTreeVerifier::~BTreeVerifier()
 {
 }
 
-void BTreeVerifier::verify(bool strictInit)
+void BTreeVerifier::verify(bool strictInit, bool keysInit, bool leafInit)
 {
     strict = strictInit;
+    keys = keysInit;
+    leaf = leafInit;
     lowerBoundKey.clear();
     upperBoundKey.clear();
     stats.nLevels = MAXU;
@@ -94,22 +96,24 @@ PageId BTreeVerifier::verifyNode(
     // TODO:  delegate to nodeAccessor for checking node integrity
 
     // verify key ordering, including lower bound
-    keyData = lowerBoundKey;
-    uint nKeys = nodeAccessor.getKeyCount(node);
-    for (uint i = 0; i < nKeys; ++i) {
-        nodeAccessor.accessTuple(node,i);
-        nodeAccessor.unmarshalKey(keyData2);
-        if (keyData.size()) {
-            int c = keyDescriptor.compareTuples(keyData,keyData2);
+    if (keys) {
+        keyData = lowerBoundKey;
+        uint nKeys = nodeAccessor.getKeyCount(node);
+        for (uint i = 0; i < nKeys; ++i) {
+            nodeAccessor.accessTuple(node,i);
+            nodeAccessor.unmarshalKey(keyData2);
+            if (keyData.size()) {
+                int c = keyDescriptor.compareTuples(keyData,keyData2);
 
-            // TODO:  move this somewhere else
-            if (c > 0) {
-                nodeAccessor.dumpNode(std::cerr,node,pageId);
+                // TODO:  move this somewhere else
+                if (c > 0) {
+                    nodeAccessor.dumpNode(std::cerr,node,pageId);
+                }
+                assert(c <= 0);
+                // TODO:  for unique, assert(c == 0)
             }
-            assert(c <= 0);
-            // TODO:  for unique, assert(c == 0)
+            keyData = keyData2;
         }
-        keyData = keyData2;
     }
 
     // verify upper bound (using last key left over from previous loop)
@@ -130,6 +134,12 @@ PageId BTreeVerifier::verifyNode(
 
 void BTreeVerifier::verifyChildren(BTreeNode const &node)
 {
+    // skip over leaf nodes if we are not traversing them
+    if (node.height == 1 && !leaf) {
+        stats.nLeafNodes += node.nEntries;
+        return;
+    }
+
     BTreeNodeAccessor &nodeAccessor = getNodeAccessor(node);
     for (uint i = 0; i < node.nEntries; ++i) {
         PageId nextChildPageId;
