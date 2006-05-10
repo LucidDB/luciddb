@@ -88,6 +88,16 @@ class MedMockLocalDataServer
     {
         // ignore
     }
+
+    // implement FarragoMedLocalDataServer
+    public void computeIndexStats(
+        FemLocalIndex index,
+        long rootPageId,
+        boolean estimate)
+        throws SQLException
+    {
+        // ignore
+    }
     
     // implement FarragoMedDataServer
     public void registerRules(RelOptPlanner planner)

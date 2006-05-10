@@ -41,6 +41,7 @@
 #include "fennel/exec/ExecStreamGraph.h"
 #include "fennel/farrago/ExecStreamFactory.h"
 #include "fennel/ftrs/FtrsTableWriterFactory.h"
+#include "fennel/btree/BTreeVerifier.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -256,6 +257,34 @@ void CmdInterpreter::visit(ProxyCmdTruncateIndex &cmd)
 void CmdInterpreter::visit(ProxyCmdDropIndex &cmd)
 {
     dropOrTruncateIndex(cmd, true);
+}
+
+void CmdInterpreter::visit(ProxyCmdVerifyIndex &cmd)
+{
+    // block checkpoints during this method
+    SharedDatabase pDb = getDbHandle(cmd.getDbHandle())->pDb;
+    SXMutexSharedGuard actionMutexGuard(
+        pDb->getCheckpointThread()->getActionMutex());
+    
+    BTreeDescriptor treeDescriptor;
+    getBTreeForIndexCmd(cmd,PageId(cmd.getRootPageId()),treeDescriptor);
+    TupleProjection leafPageIdProj;
+    if (cmd.getLeafPageIdProj()) {
+        CmdInterpreter::readTupleProjection(
+            leafPageIdProj, cmd.getLeafPageIdProj());
+    }
+    bool estimate = cmd.isEstimate();
+    bool includeTuples = cmd.isIncludeTuples();
+    bool keys = (!estimate);
+    bool leaf = ((!estimate) || includeTuples);
+    BTreeVerifier verifier(treeDescriptor);
+    verifier.verify(true, keys, leaf);
+    BTreeStatistics statistics = verifier.getStatistics();
+    long pageCount = statistics.nNonLeafNodes + statistics.nLeafNodes;
+    if (includeTuples) {
+        pageCount += statistics.nTuples;
+    }
+    resultHandle = pageCount;    
 }
 
 void CmdInterpreter::dropOrTruncateIndex(

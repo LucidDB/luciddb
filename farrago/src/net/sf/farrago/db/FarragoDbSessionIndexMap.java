@@ -247,6 +247,26 @@ class FarragoDbSessionIndexMap extends FarragoCompoundAllocation
     }
 
     // implement FarragoSessionIndexMap
+    public void computeIndexStats(
+        FarragoDataWrapperCache wrapperCache,
+        FemLocalIndex index,
+        boolean estimate)
+    {
+        FarragoMedLocalDataServer server =
+            getIndexDataServer(wrapperCache,index);
+        try {
+            server.computeIndexStats(
+                index,
+                getIndexRoot(index),
+                estimate);
+        } catch (SQLException ex) {
+            throw FarragoResource.instance().DataServerIndexVerifyFailed.ex(
+                repos.getLocalizedObjectName(index),
+                ex);
+        }
+    }
+
+    // implement FarragoSessionIndexMap
     public FemLocalIndex getIndexById(long id)
     {
         return (FemLocalIndex) indexIdMap.get(new Long(id));

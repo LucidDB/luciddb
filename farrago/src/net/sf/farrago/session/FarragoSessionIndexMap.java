@@ -93,6 +93,18 @@ public interface FarragoSessionIndexMap
         FarragoDataWrapperCache wrapperCache,
         FemLocalIndex index,
         boolean truncate);
+
+    /**
+     * Verifies an index and records its page count to the catalog
+     * 
+     * @param wrapperCache cache for looking up data wrappers
+     * 
+     * @param index the index to verify
+     */
+    public void computeIndexStats(
+        FarragoDataWrapperCache wrapperCache,
+        FemLocalIndex index,
+        boolean estimate);
 }
 
 

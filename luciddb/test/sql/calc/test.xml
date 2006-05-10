@@ -116,6 +116,7 @@
       </test>
 
       <test name="like" requiresSuccess="cretables">
+        <!-- French symbols not supported yet -->
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/like.sql"/>
       </test>
 
@@ -128,6 +129,10 @@
       </test>
 
       <test name="funcMathCover" requiresSuccess="cretables">
+        <!-- decimal precision different on different VMs -->
+        <test-metadata>
+          <knownFailure value="true"/>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/funcMathCover.sql"/>
       </test>
 
@@ -189,6 +194,7 @@
 
       <test name="bugs" requiresSuccess="cretables"
         requiresRun="explicitConversion">
+        <!-- ALL not supported -->
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bugs.sql"/>
       </test>
 

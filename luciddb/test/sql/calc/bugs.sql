@@ -24,14 +24,13 @@ insert into BUG2108.TEST2 values ('1')
 ;
 
 -- this used to fail with internal error in calcconvert.cpp
-select count(*) from BUG2108.TEST
-where a = all (select a from BUG2108.TEST2)
-;
-
--- TODO: "IN" not supported
 -- select count(*) from BUG2108.TEST
--- where a in (select a from BUG2108.TEST2)
+-- where a = all (select a from BUG2108.TEST2)
 -- ;
+
+select count(*) from BUG2108.TEST
+where a in (select a from BUG2108.TEST2)
+;
 
 --}}}
 

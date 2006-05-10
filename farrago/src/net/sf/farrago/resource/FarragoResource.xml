@@ -693,6 +693,10 @@ column type family is {1} but default value type family is {2}</text>
 <text>Failed to drop storage for {0}</text>
 </exception>
 
+<exception id="460095" name="DataServerIndexVerifyFailed">
+<text>Failed to compute statistics for {0}</text>
+</exception>
+
 <exception id="460100" name="MockForeignObjectNotFound">
 <text>Mock foreign object {0} not found</text>
 </exception>

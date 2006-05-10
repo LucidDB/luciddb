@@ -58,6 +58,8 @@ public class FarragoJavaUdxRel extends TableFunctionRelBase
      *
      * @param serverMofId MOFID of data server to associate with this UDX
      * invocation, or null for none
+     *
+     * @param inputs 0 or more relational inputs
      */
     public FarragoJavaUdxRel(
         RelOptCluster cluster, RexNode rexCall, RelDataType rowType,
@@ -70,6 +72,27 @@ public class FarragoJavaUdxRel extends TableFunctionRelBase
             rowType,
             inputs);
         this.serverMofId = serverMofId;
+    }
+
+    /**
+     * Creates a <code>FarragoJavaUdxRel</code> with no relational
+     * inputs.
+     *
+     * @param cluster {@link RelOptCluster} this relational expression
+     *        belongs to
+     *
+     * @param rexCall function invocation expression
+     *
+     * @param rowType row type produced by function
+     *
+     * @param serverMofId MOFID of data server to associate with this UDX
+     * invocation, or null for none
+     */
+    public FarragoJavaUdxRel(
+        RelOptCluster cluster, RexNode rexCall, RelDataType rowType,
+        String serverMofId)
+    {
+        this(cluster, rexCall, rowType, serverMofId, RelNode.emptyArray);
     }
 
     // implement RelNode

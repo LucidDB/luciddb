@@ -268,6 +268,12 @@ class LcsDataServer extends MedAbstractFennelDataServer
         cmd.setKeyProj(
             indexGuide.createUnclusteredBTreeKeyProj(index));
     }
+
+    // implement MedAbstractFennelDataServer
+    protected boolean getIncludeTuples()
+    {
+        return true;
+    }
 }
 
 
