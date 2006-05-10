@@ -2,12 +2,17 @@
   <target name="test-long">
     <test-suite name="test-long">
 
+      <!-- tbs100K-idxtest.qor_100k_idx -->
       <test-suite-call testfile="test/sql/VI/tbs/tbs100K_idxtest.xml"/>
 
+      <!-- tbs100K-test.qor_100k -->
       <test-suite-call testfile="test/sql/VI/tbs/tbs100Ktest.xml"/>
 
+      <!-- hashjoin.hhjoin -->
       <test-suite-call testfile="test/sql/hashjoin/test.xml"/>
 
+      <!-- sqbm.sqbmqfh2, sqbm.sqbmqfh4 -->
+      <test-suite-call testfile="test/sql/sqbm/test.xml"/>
     </test-suite>
   </target>
 </project>

@@ -1,0 +1,38 @@
+0: jdbc:luciddb:> -- Query 20 - One Outer
+0: jdbc:luciddb:> -- In Oracle outer-join syntax:
+0: jdbc:luciddb:> -- SELECT DISTINCT AL1.IS_DWLGS_VAL, AL1.CU_ID, AL1.CUOR_CUST_NM,
+0: jdbc:luciddb:> --  AL1.CUIN_LST_NM, AL2.SRVPLN_ID
+0: jdbc:luciddb:> -- FROM PGE.CUST_SERV_ACCT AL1, PGE.SERV_PLAN AL2, PGE.REVN_DTL_RAND AL3
+0: jdbc:luciddb:> -- WHERE (AL1.CUST_SERV_ACCT_KEY=AL3.CUST_SERV_ACCT_KEY(+)
+0: jdbc:luciddb:> --  AND AL3.SRVPLN_KEY=AL2.SRVPLN_KEY)
+0: jdbc:luciddb:> --  AND (AL1.IS_DWLGS_VAL>2)
+0: jdbc:luciddb:> -- ORDER BY  5
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- SELECT DISTINCT AL1.IS_DWLGS_VAL, AL1.CU_ID, AL1.CUOR_CUST_NM,
+0: jdbc:luciddb:> -- AL1.CUIN_LST_NM, AL2.SRVPLN_ID
+0: jdbc:luciddb:> --  FROM (PGE.CUST_SERV_ACCT AL1 LEFT OUTER JOIN PGE.REVN_DTL_RAND AL3
+0: jdbc:luciddb:> --        ON AL1.CUST_SERV_ACCT_KEY = AL3.CUST_SERV_ACCT_KEY),
+0: jdbc:luciddb:> --   PGE.SERV_PLAN AL2
+0: jdbc:luciddb:> --  WHERE
+0: jdbc:luciddb:> --         AL3.SRVPLN_KEY = AL2.SRVPLN_KEY AND
+0: jdbc:luciddb:> --         AL1.IS_DWLGS_VAL > 2
+0: jdbc:luciddb:> --  ORDER BY 5
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> SELECT DISTINCT AL1.IS_DWLGS_VAL, AL1.CU_ID, AL1.CUOR_CUST_NM,
+. . . . . . . . > AL1.CUIN_LST_NM, AL2.SRVPLN_ID
+. . . . . . . . >  FROM PGE.CUST_SERV_ACCT AL1 LEFT OUTER JOIN PGE.REVN_DTL_RAND AL3
+. . . . . . . . >        ON AL1.CUST_SERV_ACCT_KEY = AL3.CUST_SERV_ACCT_KEY,
+. . . . . . . . >   PGE.SERV_PLAN AL2
+. . . . . . . . >  WHERE
+. . . . . . . . >         AL3.SRVPLN_KEY = AL2.SRVPLN_KEY AND
+. . . . . . . . >         AL1.IS_DWLGS_VAL > 2
+. . . . . . . . >  ORDER BY 5
+. . . . . . . . > ;
++---------------+------------+---------------+--------------+------------+
+| IS_DWLGS_VAL  |   CU_ID    | CUOR_CUST_NM  | CUIN_LST_NM  | SRVPLN_ID  |
++---------------+------------+---------------+--------------+------------+
+| 3             | 571100002  | N/A           | SIMPSON      | 811        |
++---------------+------------+---------------+--------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

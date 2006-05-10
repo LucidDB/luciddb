@@ -14,7 +14,7 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/cast/setup.sql"/>
       </test>
 
-      <test name="basic">
+      <test name="basic" requiresSuccess="setup">
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/cast/basic.sql"/>
       </test>
 
