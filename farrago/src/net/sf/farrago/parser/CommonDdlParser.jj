@@ -1870,7 +1870,16 @@ FemRoutineParameter RoutineParam(FemRoutine routine) :
     {
         param.setName(name.getSimple());
     }
-    TypedElement(param)
+    (
+        TypedElement(param)
+        |
+        <CURSOR>
+        {
+            farragoParser.getDdlValidator().setSqlDefinition(
+                param,
+                new SqlIdentifier("CURSOR", getPos()));
+        }
+    )
     {
         return param;
     }

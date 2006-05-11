@@ -174,6 +174,25 @@ public abstract class FarragoTestUDR
         }
     }
 
+    public static void stringify(
+        ResultSet inputSet,
+        String delimiter,
+        PreparedStatement resultInserter)
+        throws SQLException
+    {
+        int n = inputSet.getMetaData().getColumnCount();
+        StringBuilder sb = new StringBuilder();
+        while (inputSet.next()) {
+            sb.setLength(0);
+            for (int i = 1; i <= n; ++i) {
+                sb.append(inputSet.getString(i));
+                sb.append(delimiter);
+            }
+            resultInserter.setString(1, sb.toString());
+            resultInserter.executeUpdate();
+        }
+    }
+
     public static void longerRamp(int n, PreparedStatement resultInserter)
         throws SQLException
     {
