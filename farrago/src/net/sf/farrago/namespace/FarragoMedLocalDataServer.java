@@ -91,6 +91,19 @@ public interface FarragoMedLocalDataServer extends FarragoMedDataServer
         throws SQLException;
 
     /**
+     * Verifies an index and records its page count.
+     *
+     * @param index definition of the index to verify
+     * @param rootPageid root PageId of index
+     * @param estimate whether to estimate statistics for a quicker result
+     */
+    public void computeIndexStats(
+        FemLocalIndex index,
+        long rootPageId,
+        boolean estimate)
+        throws SQLException;
+
+    /**
      * Creates a plan for loading existing rows of a table into an index.
      * Typically, the topmost node of this plan will be a {@link
      * net.sf.farrago.query.FarragoIndexBuilderRel}, and this plugin will

@@ -68,7 +68,6 @@
         <!-- LDB-92 -->
         <test-metadata>
           <withIndex value="false"/>
-          <knownFailure value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/aggJoinEq.sql"/>
       </test>
@@ -92,7 +91,6 @@
         <!-- LDB-92 -->
         <test-metadata>
           <withIndex value="false"/>
-          <knownFailure value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/aggJoinEq_cust.sql"/>
       </test>

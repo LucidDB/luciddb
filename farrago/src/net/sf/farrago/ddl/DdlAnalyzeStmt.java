@@ -111,7 +111,7 @@ public class DdlAnalyzeStmt extends DdlStmt
         // Use a reentrant session to simplify cleanup.
         FarragoSession session = ddlValidator.newReentrantSession();
         try {
-            analyzeTable(session);
+            analyzeTable(ddlValidator, session);
         } catch (Throwable ex) {
             throw FarragoResource.instance().ValidatorSetStmtInvalid.ex(ex);
         } finally {
@@ -136,7 +136,9 @@ public class DdlAnalyzeStmt extends DdlStmt
      * @param session reentrant session
      * @throws Exception
      */
-    private void analyzeTable(FarragoSession session)
+    private void analyzeTable(
+        FarragoSessionDdlValidator ddlValidator,
+        FarragoSession session)
     throws Exception
     {
         // null param def factory okay because the SQL does not use dynamic
@@ -165,6 +167,17 @@ public class DdlAnalyzeStmt extends DdlStmt
         updateRowCount();
         for (FemAbstractColumn column : femColumnList) {
             updateColumnStats(column);
+        }
+        
+        // Update index page counts
+        Collection indexes = 
+            FarragoCatalogUtil.getTableIndexes(repos, table);
+        for (Object o : indexes) {
+            FemLocalIndex index = (FemLocalIndex) o;
+            ddlValidator.getIndexMap().computeIndexStats(
+                ddlValidator.getDataWrapperCache(),
+                index,
+                estimate);
         }
     }
     

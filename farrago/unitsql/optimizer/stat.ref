@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/stat.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/stat.sql#4 $
 0: jdbc:farrago:> -- This script tests statistics generation procedures
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set verbose true
@@ -89,19 +89,19 @@
 |         |
 +---------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2;
-+---------+-----------+-----------+
-| schema  |   table   | rowCount  |
-+---------+-----------+-----------+
-| TPCD    | CUSTOMER  | 15000     |
-| TPCD    | LINEITEM  | 600572    |
-| TPCD    | NATION    | 25        |
-| TPCD    | ORDERS    | 150000    |
-| TPCD    | PART      | 20000     |
-| TPCD    | PARTSUPP  | 80000     |
-| TPCD    | REGION    | 5         |
-| TPCD    | SUPPLIER  | 1000      |
-+---------+-----------+-----------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
++------------+--------------+-------------+------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | ROW_COUNT  |
++------------+--------------+-------------+------------+
+| LOCALDB    | TPCD         | CUSTOMER    | 15000      |
+| LOCALDB    | TPCD         | LINEITEM    | 600572     |
+| LOCALDB    | TPCD         | NATION      | 25         |
+| LOCALDB    | TPCD         | ORDERS      | 150000     |
+| LOCALDB    | TPCD         | PART        | 20000      |
+| LOCALDB    | TPCD         | PARTSUPP    | 80000      |
+| LOCALDB    | TPCD         | REGION      | 5          |
+| LOCALDB    | TPCD         | SUPPLIER    | 1000       |
++------------+--------------+-------------+------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- 1.2 Page counts. We can neither index foreign tables or retrieve the 
@@ -120,12 +120,12 @@
 |         |
 +---------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3;
-+---------+---------------+----------------------------------------------------+------------+
-| schema  |     table     |                       index                        | pageCount  |
-+---------+---------------+----------------------------------------------------+------------+
-| TPCD    | DUMMY_REGION  | SYS$CONSTRAINT_INDEX$DUMMY_REGION$SYS$PRIMARY_KEY  | 1          |
-+---------+---------------+----------------------------------------------------+------------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
++------------+--------------+---------------+----------------------------------------------------+--------+
+| TABLE_CAT  | TABLE_SCHEM  |  TABLE_NAME   |                     INDEX_NAME                     | PAGES  |
++------------+--------------+---------------+----------------------------------------------------+--------+
+| LOCALDB    | TPCD         | DUMMY_REGION  | SYS$CONSTRAINT_INDEX$DUMMY_REGION$SYS$PRIMARY_KEY  | 1      |
++------------+--------------+---------------+----------------------------------------------------+--------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- 1.3 Column histograms, also fine for foreign tables
@@ -149,224 +149,224 @@
 |         |
 +---------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from sys_boot.mgmt.histograms_view order by 1, 2;
-+-----------+---------+---------+----------+-----------+-------------+--------------+
-|   table   | column  | values  | percent  | barCount  | rowsPerBar  | rowsLastBar  |
-+-----------+---------+---------+----------+-----------+-------------+--------------+
-| CUSTOMER  | F1      | 15000   | 10       | 100       | 15          | 15           |
-| CUSTOMER  | F4      | 25      | 10       | 100       | 15          | 15           |
-+-----------+---------+---------+----------+-----------+-------------+--------------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3;
-+-----------+---------+----------+----------------+-------------+
-|   table   | column  | ordinal  | startingValue  | valueCount  |
-+-----------+---------+----------+----------------+-------------+
-| CUSTOMER  | F1      | 0        | 00             | 15          |
-| CUSTOMER  | F1      | 1        | 01             | 15          |
-| CUSTOMER  | F1      | 2        | 02             | 15          |
-| CUSTOMER  | F1      | 3        | 03             | 15          |
-| CUSTOMER  | F1      | 4        | 04             | 15          |
-| CUSTOMER  | F1      | 5        | 05             | 15          |
-| CUSTOMER  | F1      | 6        | 06             | 15          |
-| CUSTOMER  | F1      | 7        | 07             | 15          |
-| CUSTOMER  | F1      | 8        | 08             | 15          |
-| CUSTOMER  | F1      | 9        | 09             | 15          |
-| CUSTOMER  | F1      | 10       | 10             | 15          |
-| CUSTOMER  | F1      | 11       | 11             | 15          |
-| CUSTOMER  | F1      | 12       | 12             | 15          |
-| CUSTOMER  | F1      | 13       | 13             | 15          |
-| CUSTOMER  | F1      | 14       | 14             | 15          |
-| CUSTOMER  | F1      | 15       | 15             | 15          |
-| CUSTOMER  | F1      | 16       | 16             | 15          |
-| CUSTOMER  | F1      | 17       | 17             | 15          |
-| CUSTOMER  | F1      | 18       | 18             | 15          |
-| CUSTOMER  | F1      | 19       | 19             | 15          |
-| CUSTOMER  | F1      | 20       | 20             | 15          |
-| CUSTOMER  | F1      | 21       | 21             | 15          |
-| CUSTOMER  | F1      | 22       | 22             | 15          |
-| CUSTOMER  | F1      | 23       | 23             | 15          |
-| CUSTOMER  | F1      | 24       | 24             | 15          |
-| CUSTOMER  | F1      | 25       | 25             | 15          |
-| CUSTOMER  | F1      | 26       | 26             | 15          |
-| CUSTOMER  | F1      | 27       | 27             | 15          |
-| CUSTOMER  | F1      | 28       | 28             | 15          |
-| CUSTOMER  | F1      | 29       | 29             | 15          |
-| CUSTOMER  | F1      | 30       | 30             | 15          |
-| CUSTOMER  | F1      | 31       | 31             | 15          |
-| CUSTOMER  | F1      | 32       | 32             | 15          |
-| CUSTOMER  | F1      | 33       | 33             | 15          |
-| CUSTOMER  | F1      | 34       | 34             | 15          |
-| CUSTOMER  | F1      | 35       | 35             | 15          |
-| CUSTOMER  | F1      | 36       | 36             | 15          |
-| CUSTOMER  | F1      | 37       | 37             | 15          |
-| CUSTOMER  | F1      | 38       | 38             | 15          |
-| CUSTOMER  | F1      | 39       | 39             | 15          |
-| CUSTOMER  | F1      | 40       | 40             | 15          |
-| CUSTOMER  | F1      | 41       | 41             | 15          |
-| CUSTOMER  | F1      | 42       | 42             | 15          |
-| CUSTOMER  | F1      | 43       | 43             | 15          |
-| CUSTOMER  | F1      | 44       | 44             | 15          |
-| CUSTOMER  | F1      | 45       | 45             | 15          |
-| CUSTOMER  | F1      | 46       | 46             | 15          |
-| CUSTOMER  | F1      | 47       | 47             | 15          |
-| CUSTOMER  | F1      | 48       | 48             | 15          |
-| CUSTOMER  | F1      | 49       | 49             | 15          |
-| CUSTOMER  | F1      | 50       | 50             | 15          |
-| CUSTOMER  | F1      | 51       | 51             | 15          |
-| CUSTOMER  | F1      | 52       | 52             | 15          |
-| CUSTOMER  | F1      | 53       | 53             | 15          |
-| CUSTOMER  | F1      | 54       | 54             | 15          |
-| CUSTOMER  | F1      | 55       | 55             | 15          |
-| CUSTOMER  | F1      | 56       | 56             | 15          |
-| CUSTOMER  | F1      | 57       | 57             | 15          |
-| CUSTOMER  | F1      | 58       | 58             | 15          |
-| CUSTOMER  | F1      | 59       | 59             | 15          |
-| CUSTOMER  | F1      | 60       | 60             | 15          |
-| CUSTOMER  | F1      | 61       | 61             | 15          |
-| CUSTOMER  | F1      | 62       | 62             | 15          |
-| CUSTOMER  | F1      | 63       | 63             | 15          |
-| CUSTOMER  | F1      | 64       | 64             | 15          |
-| CUSTOMER  | F1      | 65       | 65             | 15          |
-| CUSTOMER  | F1      | 66       | 66             | 15          |
-| CUSTOMER  | F1      | 67       | 67             | 15          |
-| CUSTOMER  | F1      | 68       | 68             | 15          |
-| CUSTOMER  | F1      | 69       | 69             | 15          |
-| CUSTOMER  | F1      | 70       | 70             | 15          |
-| CUSTOMER  | F1      | 71       | 71             | 15          |
-| CUSTOMER  | F1      | 72       | 72             | 15          |
-| CUSTOMER  | F1      | 73       | 73             | 15          |
-| CUSTOMER  | F1      | 74       | 74             | 15          |
-| CUSTOMER  | F1      | 75       | 75             | 15          |
-| CUSTOMER  | F1      | 76       | 76             | 15          |
-| CUSTOMER  | F1      | 77       | 77             | 15          |
-| CUSTOMER  | F1      | 78       | 78             | 15          |
-| CUSTOMER  | F1      | 79       | 79             | 15          |
-| CUSTOMER  | F1      | 80       | 80             | 15          |
-| CUSTOMER  | F1      | 81       | 81             | 15          |
-| CUSTOMER  | F1      | 82       | 82             | 15          |
-| CUSTOMER  | F1      | 83       | 83             | 15          |
-| CUSTOMER  | F1      | 84       | 84             | 15          |
-| CUSTOMER  | F1      | 85       | 85             | 15          |
-| CUSTOMER  | F1      | 86       | 86             | 15          |
-| CUSTOMER  | F1      | 87       | 87             | 15          |
-| CUSTOMER  | F1      | 88       | 88             | 15          |
-| CUSTOMER  | F1      | 89       | 89             | 15          |
-| CUSTOMER  | F1      | 90       | 90             | 15          |
-| CUSTOMER  | F1      | 91       | 91             | 15          |
-| CUSTOMER  | F1      | 92       | 92             | 15          |
-| CUSTOMER  | F1      | 93       | 93             | 15          |
-| CUSTOMER  | F1      | 94       | 94             | 15          |
-| CUSTOMER  | F1      | 95       | 95             | 15          |
-| CUSTOMER  | F1      | 96       | 96             | 15          |
-| CUSTOMER  | F1      | 97       | 97             | 15          |
-| CUSTOMER  | F1      | 98       | 98             | 15          |
-+-----------+---------+----------+----------------+-------------+
-|   table   | column  | ordinal  | startingValue  | valueCount  |
-+-----------+---------+----------+----------------+-------------+
-| CUSTOMER  | F1      | 99       | 99             | 15          |
-| CUSTOMER  | F4      | 0        | AA             | 1           |
-| CUSTOMER  | F4      | 1        | AB             | 0           |
-| CUSTOMER  | F4      | 2        | AC             | 0           |
-| CUSTOMER  | F4      | 3        | AD             | 0           |
-| CUSTOMER  | F4      | 4        | BA             | 1           |
-| CUSTOMER  | F4      | 5        | BB             | 0           |
-| CUSTOMER  | F4      | 6        | BC             | 0           |
-| CUSTOMER  | F4      | 7        | BD             | 0           |
-| CUSTOMER  | F4      | 8        | CA             | 1           |
-| CUSTOMER  | F4      | 9        | CB             | 0           |
-| CUSTOMER  | F4      | 10       | CC             | 0           |
-| CUSTOMER  | F4      | 11       | CD             | 0           |
-| CUSTOMER  | F4      | 12       | DA             | 1           |
-| CUSTOMER  | F4      | 13       | DB             | 0           |
-| CUSTOMER  | F4      | 14       | DC             | 0           |
-| CUSTOMER  | F4      | 15       | DD             | 0           |
-| CUSTOMER  | F4      | 16       | EA             | 1           |
-| CUSTOMER  | F4      | 17       | EB             | 0           |
-| CUSTOMER  | F4      | 18       | EC             | 0           |
-| CUSTOMER  | F4      | 19       | ED             | 0           |
-| CUSTOMER  | F4      | 20       | FA             | 1           |
-| CUSTOMER  | F4      | 21       | FB             | 0           |
-| CUSTOMER  | F4      | 22       | FC             | 0           |
-| CUSTOMER  | F4      | 23       | FD             | 0           |
-| CUSTOMER  | F4      | 24       | GA             | 1           |
-| CUSTOMER  | F4      | 25       | GB             | 0           |
-| CUSTOMER  | F4      | 26       | GC             | 0           |
-| CUSTOMER  | F4      | 27       | GD             | 0           |
-| CUSTOMER  | F4      | 28       | HA             | 1           |
-| CUSTOMER  | F4      | 29       | HB             | 0           |
-| CUSTOMER  | F4      | 30       | HC             | 0           |
-| CUSTOMER  | F4      | 31       | HD             | 0           |
-| CUSTOMER  | F4      | 32       | IA             | 1           |
-| CUSTOMER  | F4      | 33       | IB             | 0           |
-| CUSTOMER  | F4      | 34       | IC             | 0           |
-| CUSTOMER  | F4      | 35       | ID             | 0           |
-| CUSTOMER  | F4      | 36       | JA             | 1           |
-| CUSTOMER  | F4      | 37       | JB             | 0           |
-| CUSTOMER  | F4      | 38       | JC             | 0           |
-| CUSTOMER  | F4      | 39       | JD             | 0           |
-| CUSTOMER  | F4      | 40       | KA             | 1           |
-| CUSTOMER  | F4      | 41       | KB             | 0           |
-| CUSTOMER  | F4      | 42       | KC             | 0           |
-| CUSTOMER  | F4      | 43       | KD             | 0           |
-| CUSTOMER  | F4      | 44       | LA             | 1           |
-| CUSTOMER  | F4      | 45       | LB             | 0           |
-| CUSTOMER  | F4      | 46       | LC             | 0           |
-| CUSTOMER  | F4      | 47       | LD             | 0           |
-| CUSTOMER  | F4      | 48       | MA             | 1           |
-| CUSTOMER  | F4      | 49       | MB             | 0           |
-| CUSTOMER  | F4      | 50       | MC             | 0           |
-| CUSTOMER  | F4      | 51       | MD             | 0           |
-| CUSTOMER  | F4      | 52       | NA             | 1           |
-| CUSTOMER  | F4      | 53       | NB             | 0           |
-| CUSTOMER  | F4      | 54       | NC             | 0           |
-| CUSTOMER  | F4      | 55       | ND             | 0           |
-| CUSTOMER  | F4      | 56       | OA             | 1           |
-| CUSTOMER  | F4      | 57       | OB             | 0           |
-| CUSTOMER  | F4      | 58       | OC             | 0           |
-| CUSTOMER  | F4      | 59       | OD             | 0           |
-| CUSTOMER  | F4      | 60       | PA             | 1           |
-| CUSTOMER  | F4      | 61       | PB             | 0           |
-| CUSTOMER  | F4      | 62       | PC             | 0           |
-| CUSTOMER  | F4      | 63       | PD             | 0           |
-| CUSTOMER  | F4      | 64       | QA             | 1           |
-| CUSTOMER  | F4      | 65       | QB             | 0           |
-| CUSTOMER  | F4      | 66       | QC             | 0           |
-| CUSTOMER  | F4      | 67       | QD             | 0           |
-| CUSTOMER  | F4      | 68       | RA             | 1           |
-| CUSTOMER  | F4      | 69       | RB             | 0           |
-| CUSTOMER  | F4      | 70       | RC             | 0           |
-| CUSTOMER  | F4      | 71       | RD             | 0           |
-| CUSTOMER  | F4      | 72       | SA             | 1           |
-| CUSTOMER  | F4      | 73       | SB             | 0           |
-| CUSTOMER  | F4      | 74       | SC             | 0           |
-| CUSTOMER  | F4      | 75       | SD             | 0           |
-| CUSTOMER  | F4      | 76       | TA             | 1           |
-| CUSTOMER  | F4      | 77       | TB             | 0           |
-| CUSTOMER  | F4      | 78       | TC             | 0           |
-| CUSTOMER  | F4      | 79       | TD             | 0           |
-| CUSTOMER  | F4      | 80       | UA             | 1           |
-| CUSTOMER  | F4      | 81       | UB             | 0           |
-| CUSTOMER  | F4      | 82       | UC             | 0           |
-| CUSTOMER  | F4      | 83       | UD             | 0           |
-| CUSTOMER  | F4      | 84       | VA             | 1           |
-| CUSTOMER  | F4      | 85       | VB             | 0           |
-| CUSTOMER  | F4      | 86       | VC             | 0           |
-| CUSTOMER  | F4      | 87       | VD             | 0           |
-| CUSTOMER  | F4      | 88       | WA             | 1           |
-| CUSTOMER  | F4      | 89       | WB             | 0           |
-| CUSTOMER  | F4      | 90       | WC             | 0           |
-| CUSTOMER  | F4      | 91       | XA             | 0           |
-| CUSTOMER  | F4      | 92       | XB             | 1           |
-| CUSTOMER  | F4      | 93       | XC             | 0           |
-| CUSTOMER  | F4      | 94       | YA             | 0           |
-| CUSTOMER  | F4      | 95       | YB             | 0           |
-| CUSTOMER  | F4      | 96       | YC             | 1           |
-| CUSTOMER  | F4      | 97       | ZA             | 0           |
-| CUSTOMER  | F4      | 98       | ZB             | 0           |
-+-----------+---------+----------+----------------+-------------+
-|   table   | column  | ordinal  | startingValue  | valueCount  |
-+-----------+---------+----------+----------------+-------------+
-| CUSTOMER  | F4      | 99       | ZC             | 0           |
-+-----------+---------+----------+----------------+-------------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
++------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | PERCENT_SAMPLED  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
++------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 15000        | 10               | 100        | 15            | 15             |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 25           | 10               | 100        | 15            | 15             |
++------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
++------------+--------------+-------------+--------------+----------+--------------+--------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | ORDINAL  | START_VALUE  | VALUE_COUNT  |
++------------+--------------+-------------+--------------+----------+--------------+--------------+
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 0        | 00           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 1        | 01           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 2        | 02           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 3        | 03           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 4        | 04           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 5        | 05           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 6        | 06           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 7        | 07           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 8        | 08           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 9        | 09           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 10       | 10           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 11       | 11           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 12       | 12           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 13       | 13           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 14       | 14           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 15       | 15           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 16       | 16           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 17       | 17           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 18       | 18           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 19       | 19           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 20       | 20           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 21       | 21           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 22       | 22           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 23       | 23           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 24       | 24           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 25       | 25           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 26       | 26           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 27       | 27           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 28       | 28           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 29       | 29           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 30       | 30           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 31       | 31           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 32       | 32           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 33       | 33           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 34       | 34           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 35       | 35           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 36       | 36           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 37       | 37           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 38       | 38           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 39       | 39           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 40       | 40           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 41       | 41           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 42       | 42           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 43       | 43           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 44       | 44           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 45       | 45           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 46       | 46           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 47       | 47           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 48       | 48           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 49       | 49           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 50       | 50           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 51       | 51           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 52       | 52           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 53       | 53           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 54       | 54           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 55       | 55           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 56       | 56           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 57       | 57           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 58       | 58           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 59       | 59           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 60       | 60           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 61       | 61           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 62       | 62           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 63       | 63           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 64       | 64           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 65       | 65           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 66       | 66           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 67       | 67           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 68       | 68           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 69       | 69           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 70       | 70           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 71       | 71           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 72       | 72           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 73       | 73           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 74       | 74           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 75       | 75           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 76       | 76           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 77       | 77           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 78       | 78           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 79       | 79           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 80       | 80           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 81       | 81           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 82       | 82           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 83       | 83           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 84       | 84           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 85       | 85           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 86       | 86           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 87       | 87           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 88       | 88           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 89       | 89           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 90       | 90           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 91       | 91           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 92       | 92           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 93       | 93           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 94       | 94           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 95       | 95           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 96       | 96           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 97       | 97           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 98       | 98           | 15           |
++------------+--------------+-------------+--------------+----------+--------------+--------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | ORDINAL  | START_VALUE  | VALUE_COUNT  |
++------------+--------------+-------------+--------------+----------+--------------+--------------+
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 99       | 99           | 15           |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 0        | AA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 1        | AB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 2        | AC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 3        | AD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 4        | BA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 5        | BB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 6        | BC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 7        | BD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 8        | CA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 9        | CB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 10       | CC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 11       | CD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 12       | DA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 13       | DB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 14       | DC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 15       | DD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 16       | EA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 17       | EB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 18       | EC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 19       | ED           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 20       | FA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 21       | FB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 22       | FC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 23       | FD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 24       | GA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 25       | GB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 26       | GC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 27       | GD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 28       | HA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 29       | HB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 30       | HC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 31       | HD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 32       | IA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 33       | IB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 34       | IC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 35       | ID           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 36       | JA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 37       | JB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 38       | JC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 39       | JD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 40       | KA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 41       | KB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 42       | KC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 43       | KD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 44       | LA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 45       | LB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 46       | LC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 47       | LD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 48       | MA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 49       | MB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 50       | MC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 51       | MD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 52       | NA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 53       | NB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 54       | NC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 55       | ND           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 56       | OA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 57       | OB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 58       | OC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 59       | OD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 60       | PA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 61       | PB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 62       | PC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 63       | PD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 64       | QA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 65       | QB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 66       | QC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 67       | QD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 68       | RA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 69       | RB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 70       | RC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 71       | RD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 72       | SA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 73       | SB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 74       | SC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 75       | SD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 76       | TA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 77       | TB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 78       | TC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 79       | TD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 80       | UA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 81       | UB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 82       | UC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 83       | UD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 84       | VA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 85       | VB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 86       | VC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 87       | VD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 88       | WA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 89       | WB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 90       | WC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 91       | XA           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 92       | XB           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 93       | XC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 94       | YA           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 95       | YB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 96       | YC           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 97       | ZA           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 98       | ZB           | 0            |
++------------+--------------+-------------+--------------+----------+--------------+--------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | ORDINAL  | START_VALUE  | VALUE_COUNT  |
++------------+--------------+-------------+--------------+----------+--------------+--------------+
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 99       | ZC           | 0            |
++------------+--------------+-------------+--------------+----------+--------------+--------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- 1.4 Update a histogram with more data
@@ -379,224 +379,224 @@
 |         |
 +---------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from sys_boot.mgmt.histograms_view order by 1, 2;
-+-----------+---------+---------+----------+-----------+-------------+--------------+
-|   table   | column  | values  | percent  | barCount  | rowsPerBar  | rowsLastBar  |
-+-----------+---------+---------+----------+-----------+-------------+--------------+
-| CUSTOMER  | F1      | 15000   | 100      | 100       | 150         | 150          |
-| CUSTOMER  | F4      | 25      | 10       | 100       | 15          | 15           |
-+-----------+---------+---------+----------+-----------+-------------+--------------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3;
-+-----------+---------+----------+----------------+-------------+
-|   table   | column  | ordinal  | startingValue  | valueCount  |
-+-----------+---------+----------+----------------+-------------+
-| CUSTOMER  | F1      | 0        | 00             | 150         |
-| CUSTOMER  | F1      | 1        | 01             | 150         |
-| CUSTOMER  | F1      | 2        | 02             | 150         |
-| CUSTOMER  | F1      | 3        | 03             | 150         |
-| CUSTOMER  | F1      | 4        | 04             | 150         |
-| CUSTOMER  | F1      | 5        | 05             | 150         |
-| CUSTOMER  | F1      | 6        | 06             | 150         |
-| CUSTOMER  | F1      | 7        | 07             | 150         |
-| CUSTOMER  | F1      | 8        | 08             | 150         |
-| CUSTOMER  | F1      | 9        | 09             | 150         |
-| CUSTOMER  | F1      | 10       | 10             | 150         |
-| CUSTOMER  | F1      | 11       | 11             | 150         |
-| CUSTOMER  | F1      | 12       | 12             | 150         |
-| CUSTOMER  | F1      | 13       | 13             | 150         |
-| CUSTOMER  | F1      | 14       | 14             | 150         |
-| CUSTOMER  | F1      | 15       | 15             | 150         |
-| CUSTOMER  | F1      | 16       | 16             | 150         |
-| CUSTOMER  | F1      | 17       | 17             | 150         |
-| CUSTOMER  | F1      | 18       | 18             | 150         |
-| CUSTOMER  | F1      | 19       | 19             | 150         |
-| CUSTOMER  | F1      | 20       | 20             | 150         |
-| CUSTOMER  | F1      | 21       | 21             | 150         |
-| CUSTOMER  | F1      | 22       | 22             | 150         |
-| CUSTOMER  | F1      | 23       | 23             | 150         |
-| CUSTOMER  | F1      | 24       | 24             | 150         |
-| CUSTOMER  | F1      | 25       | 25             | 150         |
-| CUSTOMER  | F1      | 26       | 26             | 150         |
-| CUSTOMER  | F1      | 27       | 27             | 150         |
-| CUSTOMER  | F1      | 28       | 28             | 150         |
-| CUSTOMER  | F1      | 29       | 29             | 150         |
-| CUSTOMER  | F1      | 30       | 30             | 150         |
-| CUSTOMER  | F1      | 31       | 31             | 150         |
-| CUSTOMER  | F1      | 32       | 32             | 150         |
-| CUSTOMER  | F1      | 33       | 33             | 150         |
-| CUSTOMER  | F1      | 34       | 34             | 150         |
-| CUSTOMER  | F1      | 35       | 35             | 150         |
-| CUSTOMER  | F1      | 36       | 36             | 150         |
-| CUSTOMER  | F1      | 37       | 37             | 150         |
-| CUSTOMER  | F1      | 38       | 38             | 150         |
-| CUSTOMER  | F1      | 39       | 39             | 150         |
-| CUSTOMER  | F1      | 40       | 40             | 150         |
-| CUSTOMER  | F1      | 41       | 41             | 150         |
-| CUSTOMER  | F1      | 42       | 42             | 150         |
-| CUSTOMER  | F1      | 43       | 43             | 150         |
-| CUSTOMER  | F1      | 44       | 44             | 150         |
-| CUSTOMER  | F1      | 45       | 45             | 150         |
-| CUSTOMER  | F1      | 46       | 46             | 150         |
-| CUSTOMER  | F1      | 47       | 47             | 150         |
-| CUSTOMER  | F1      | 48       | 48             | 150         |
-| CUSTOMER  | F1      | 49       | 49             | 150         |
-| CUSTOMER  | F1      | 50       | 50             | 150         |
-| CUSTOMER  | F1      | 51       | 51             | 150         |
-| CUSTOMER  | F1      | 52       | 52             | 150         |
-| CUSTOMER  | F1      | 53       | 53             | 150         |
-| CUSTOMER  | F1      | 54       | 54             | 150         |
-| CUSTOMER  | F1      | 55       | 55             | 150         |
-| CUSTOMER  | F1      | 56       | 56             | 150         |
-| CUSTOMER  | F1      | 57       | 57             | 150         |
-| CUSTOMER  | F1      | 58       | 58             | 150         |
-| CUSTOMER  | F1      | 59       | 59             | 150         |
-| CUSTOMER  | F1      | 60       | 60             | 150         |
-| CUSTOMER  | F1      | 61       | 61             | 150         |
-| CUSTOMER  | F1      | 62       | 62             | 150         |
-| CUSTOMER  | F1      | 63       | 63             | 150         |
-| CUSTOMER  | F1      | 64       | 64             | 150         |
-| CUSTOMER  | F1      | 65       | 65             | 150         |
-| CUSTOMER  | F1      | 66       | 66             | 150         |
-| CUSTOMER  | F1      | 67       | 67             | 150         |
-| CUSTOMER  | F1      | 68       | 68             | 150         |
-| CUSTOMER  | F1      | 69       | 69             | 150         |
-| CUSTOMER  | F1      | 70       | 70             | 150         |
-| CUSTOMER  | F1      | 71       | 71             | 150         |
-| CUSTOMER  | F1      | 72       | 72             | 150         |
-| CUSTOMER  | F1      | 73       | 73             | 150         |
-| CUSTOMER  | F1      | 74       | 74             | 150         |
-| CUSTOMER  | F1      | 75       | 75             | 150         |
-| CUSTOMER  | F1      | 76       | 76             | 150         |
-| CUSTOMER  | F1      | 77       | 77             | 150         |
-| CUSTOMER  | F1      | 78       | 78             | 150         |
-| CUSTOMER  | F1      | 79       | 79             | 150         |
-| CUSTOMER  | F1      | 80       | 80             | 150         |
-| CUSTOMER  | F1      | 81       | 81             | 150         |
-| CUSTOMER  | F1      | 82       | 82             | 150         |
-| CUSTOMER  | F1      | 83       | 83             | 150         |
-| CUSTOMER  | F1      | 84       | 84             | 150         |
-| CUSTOMER  | F1      | 85       | 85             | 150         |
-| CUSTOMER  | F1      | 86       | 86             | 150         |
-| CUSTOMER  | F1      | 87       | 87             | 150         |
-| CUSTOMER  | F1      | 88       | 88             | 150         |
-| CUSTOMER  | F1      | 89       | 89             | 150         |
-| CUSTOMER  | F1      | 90       | 90             | 150         |
-| CUSTOMER  | F1      | 91       | 91             | 150         |
-| CUSTOMER  | F1      | 92       | 92             | 150         |
-| CUSTOMER  | F1      | 93       | 93             | 150         |
-| CUSTOMER  | F1      | 94       | 94             | 150         |
-| CUSTOMER  | F1      | 95       | 95             | 150         |
-| CUSTOMER  | F1      | 96       | 96             | 150         |
-| CUSTOMER  | F1      | 97       | 97             | 150         |
-| CUSTOMER  | F1      | 98       | 98             | 150         |
-+-----------+---------+----------+----------------+-------------+
-|   table   | column  | ordinal  | startingValue  | valueCount  |
-+-----------+---------+----------+----------------+-------------+
-| CUSTOMER  | F1      | 99       | 99             | 150         |
-| CUSTOMER  | F4      | 0        | AA             | 1           |
-| CUSTOMER  | F4      | 1        | AB             | 0           |
-| CUSTOMER  | F4      | 2        | AC             | 0           |
-| CUSTOMER  | F4      | 3        | AD             | 0           |
-| CUSTOMER  | F4      | 4        | BA             | 1           |
-| CUSTOMER  | F4      | 5        | BB             | 0           |
-| CUSTOMER  | F4      | 6        | BC             | 0           |
-| CUSTOMER  | F4      | 7        | BD             | 0           |
-| CUSTOMER  | F4      | 8        | CA             | 1           |
-| CUSTOMER  | F4      | 9        | CB             | 0           |
-| CUSTOMER  | F4      | 10       | CC             | 0           |
-| CUSTOMER  | F4      | 11       | CD             | 0           |
-| CUSTOMER  | F4      | 12       | DA             | 1           |
-| CUSTOMER  | F4      | 13       | DB             | 0           |
-| CUSTOMER  | F4      | 14       | DC             | 0           |
-| CUSTOMER  | F4      | 15       | DD             | 0           |
-| CUSTOMER  | F4      | 16       | EA             | 1           |
-| CUSTOMER  | F4      | 17       | EB             | 0           |
-| CUSTOMER  | F4      | 18       | EC             | 0           |
-| CUSTOMER  | F4      | 19       | ED             | 0           |
-| CUSTOMER  | F4      | 20       | FA             | 1           |
-| CUSTOMER  | F4      | 21       | FB             | 0           |
-| CUSTOMER  | F4      | 22       | FC             | 0           |
-| CUSTOMER  | F4      | 23       | FD             | 0           |
-| CUSTOMER  | F4      | 24       | GA             | 1           |
-| CUSTOMER  | F4      | 25       | GB             | 0           |
-| CUSTOMER  | F4      | 26       | GC             | 0           |
-| CUSTOMER  | F4      | 27       | GD             | 0           |
-| CUSTOMER  | F4      | 28       | HA             | 1           |
-| CUSTOMER  | F4      | 29       | HB             | 0           |
-| CUSTOMER  | F4      | 30       | HC             | 0           |
-| CUSTOMER  | F4      | 31       | HD             | 0           |
-| CUSTOMER  | F4      | 32       | IA             | 1           |
-| CUSTOMER  | F4      | 33       | IB             | 0           |
-| CUSTOMER  | F4      | 34       | IC             | 0           |
-| CUSTOMER  | F4      | 35       | ID             | 0           |
-| CUSTOMER  | F4      | 36       | JA             | 1           |
-| CUSTOMER  | F4      | 37       | JB             | 0           |
-| CUSTOMER  | F4      | 38       | JC             | 0           |
-| CUSTOMER  | F4      | 39       | JD             | 0           |
-| CUSTOMER  | F4      | 40       | KA             | 1           |
-| CUSTOMER  | F4      | 41       | KB             | 0           |
-| CUSTOMER  | F4      | 42       | KC             | 0           |
-| CUSTOMER  | F4      | 43       | KD             | 0           |
-| CUSTOMER  | F4      | 44       | LA             | 1           |
-| CUSTOMER  | F4      | 45       | LB             | 0           |
-| CUSTOMER  | F4      | 46       | LC             | 0           |
-| CUSTOMER  | F4      | 47       | LD             | 0           |
-| CUSTOMER  | F4      | 48       | MA             | 1           |
-| CUSTOMER  | F4      | 49       | MB             | 0           |
-| CUSTOMER  | F4      | 50       | MC             | 0           |
-| CUSTOMER  | F4      | 51       | MD             | 0           |
-| CUSTOMER  | F4      | 52       | NA             | 1           |
-| CUSTOMER  | F4      | 53       | NB             | 0           |
-| CUSTOMER  | F4      | 54       | NC             | 0           |
-| CUSTOMER  | F4      | 55       | ND             | 0           |
-| CUSTOMER  | F4      | 56       | OA             | 1           |
-| CUSTOMER  | F4      | 57       | OB             | 0           |
-| CUSTOMER  | F4      | 58       | OC             | 0           |
-| CUSTOMER  | F4      | 59       | OD             | 0           |
-| CUSTOMER  | F4      | 60       | PA             | 1           |
-| CUSTOMER  | F4      | 61       | PB             | 0           |
-| CUSTOMER  | F4      | 62       | PC             | 0           |
-| CUSTOMER  | F4      | 63       | PD             | 0           |
-| CUSTOMER  | F4      | 64       | QA             | 1           |
-| CUSTOMER  | F4      | 65       | QB             | 0           |
-| CUSTOMER  | F4      | 66       | QC             | 0           |
-| CUSTOMER  | F4      | 67       | QD             | 0           |
-| CUSTOMER  | F4      | 68       | RA             | 1           |
-| CUSTOMER  | F4      | 69       | RB             | 0           |
-| CUSTOMER  | F4      | 70       | RC             | 0           |
-| CUSTOMER  | F4      | 71       | RD             | 0           |
-| CUSTOMER  | F4      | 72       | SA             | 1           |
-| CUSTOMER  | F4      | 73       | SB             | 0           |
-| CUSTOMER  | F4      | 74       | SC             | 0           |
-| CUSTOMER  | F4      | 75       | SD             | 0           |
-| CUSTOMER  | F4      | 76       | TA             | 1           |
-| CUSTOMER  | F4      | 77       | TB             | 0           |
-| CUSTOMER  | F4      | 78       | TC             | 0           |
-| CUSTOMER  | F4      | 79       | TD             | 0           |
-| CUSTOMER  | F4      | 80       | UA             | 1           |
-| CUSTOMER  | F4      | 81       | UB             | 0           |
-| CUSTOMER  | F4      | 82       | UC             | 0           |
-| CUSTOMER  | F4      | 83       | UD             | 0           |
-| CUSTOMER  | F4      | 84       | VA             | 1           |
-| CUSTOMER  | F4      | 85       | VB             | 0           |
-| CUSTOMER  | F4      | 86       | VC             | 0           |
-| CUSTOMER  | F4      | 87       | VD             | 0           |
-| CUSTOMER  | F4      | 88       | WA             | 1           |
-| CUSTOMER  | F4      | 89       | WB             | 0           |
-| CUSTOMER  | F4      | 90       | WC             | 0           |
-| CUSTOMER  | F4      | 91       | XA             | 0           |
-| CUSTOMER  | F4      | 92       | XB             | 1           |
-| CUSTOMER  | F4      | 93       | XC             | 0           |
-| CUSTOMER  | F4      | 94       | YA             | 0           |
-| CUSTOMER  | F4      | 95       | YB             | 0           |
-| CUSTOMER  | F4      | 96       | YC             | 1           |
-| CUSTOMER  | F4      | 97       | ZA             | 0           |
-| CUSTOMER  | F4      | 98       | ZB             | 0           |
-+-----------+---------+----------+----------------+-------------+
-|   table   | column  | ordinal  | startingValue  | valueCount  |
-+-----------+---------+----------+----------------+-------------+
-| CUSTOMER  | F4      | 99       | ZC             | 0           |
-+-----------+---------+----------+----------------+-------------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
++------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | PERCENT_SAMPLED  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
++------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 15000        | 100              | 100        | 150           | 150            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 25           | 10               | 100        | 15            | 15             |
++------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
++------------+--------------+-------------+--------------+----------+--------------+--------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | ORDINAL  | START_VALUE  | VALUE_COUNT  |
++------------+--------------+-------------+--------------+----------+--------------+--------------+
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 0        | 00           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 1        | 01           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 2        | 02           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 3        | 03           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 4        | 04           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 5        | 05           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 6        | 06           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 7        | 07           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 8        | 08           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 9        | 09           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 10       | 10           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 11       | 11           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 12       | 12           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 13       | 13           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 14       | 14           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 15       | 15           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 16       | 16           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 17       | 17           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 18       | 18           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 19       | 19           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 20       | 20           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 21       | 21           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 22       | 22           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 23       | 23           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 24       | 24           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 25       | 25           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 26       | 26           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 27       | 27           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 28       | 28           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 29       | 29           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 30       | 30           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 31       | 31           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 32       | 32           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 33       | 33           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 34       | 34           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 35       | 35           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 36       | 36           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 37       | 37           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 38       | 38           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 39       | 39           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 40       | 40           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 41       | 41           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 42       | 42           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 43       | 43           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 44       | 44           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 45       | 45           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 46       | 46           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 47       | 47           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 48       | 48           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 49       | 49           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 50       | 50           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 51       | 51           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 52       | 52           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 53       | 53           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 54       | 54           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 55       | 55           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 56       | 56           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 57       | 57           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 58       | 58           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 59       | 59           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 60       | 60           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 61       | 61           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 62       | 62           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 63       | 63           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 64       | 64           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 65       | 65           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 66       | 66           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 67       | 67           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 68       | 68           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 69       | 69           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 70       | 70           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 71       | 71           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 72       | 72           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 73       | 73           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 74       | 74           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 75       | 75           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 76       | 76           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 77       | 77           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 78       | 78           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 79       | 79           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 80       | 80           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 81       | 81           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 82       | 82           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 83       | 83           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 84       | 84           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 85       | 85           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 86       | 86           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 87       | 87           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 88       | 88           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 89       | 89           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 90       | 90           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 91       | 91           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 92       | 92           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 93       | 93           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 94       | 94           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 95       | 95           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 96       | 96           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 97       | 97           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 98       | 98           | 150          |
++------------+--------------+-------------+--------------+----------+--------------+--------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | ORDINAL  | START_VALUE  | VALUE_COUNT  |
++------------+--------------+-------------+--------------+----------+--------------+--------------+
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 99       | 99           | 150          |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 0        | AA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 1        | AB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 2        | AC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 3        | AD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 4        | BA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 5        | BB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 6        | BC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 7        | BD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 8        | CA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 9        | CB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 10       | CC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 11       | CD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 12       | DA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 13       | DB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 14       | DC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 15       | DD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 16       | EA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 17       | EB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 18       | EC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 19       | ED           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 20       | FA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 21       | FB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 22       | FC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 23       | FD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 24       | GA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 25       | GB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 26       | GC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 27       | GD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 28       | HA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 29       | HB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 30       | HC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 31       | HD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 32       | IA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 33       | IB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 34       | IC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 35       | ID           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 36       | JA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 37       | JB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 38       | JC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 39       | JD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 40       | KA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 41       | KB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 42       | KC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 43       | KD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 44       | LA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 45       | LB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 46       | LC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 47       | LD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 48       | MA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 49       | MB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 50       | MC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 51       | MD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 52       | NA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 53       | NB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 54       | NC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 55       | ND           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 56       | OA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 57       | OB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 58       | OC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 59       | OD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 60       | PA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 61       | PB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 62       | PC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 63       | PD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 64       | QA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 65       | QB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 66       | QC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 67       | QD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 68       | RA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 69       | RB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 70       | RC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 71       | RD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 72       | SA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 73       | SB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 74       | SC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 75       | SD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 76       | TA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 77       | TB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 78       | TC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 79       | TD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 80       | UA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 81       | UB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 82       | UC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 83       | UD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 84       | VA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 85       | VB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 86       | VC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 87       | VD           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 88       | WA           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 89       | WB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 90       | WC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 91       | XA           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 92       | XB           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 93       | XC           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 94       | YA           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 95       | YB           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 96       | YC           | 1            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 97       | ZA           | 0            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 98       | ZB           | 0            |
++------------+--------------+-------------+--------------+----------+--------------+--------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | ORDINAL  | START_VALUE  | VALUE_COUNT  |
++------------+--------------+-------------+--------------+----------+--------------+--------------+
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 99       | ZC           | 0            |
++------------+--------------+-------------+--------------+----------+--------------+--------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop schema tpcd cascade;
 0: jdbc:farrago:> 
@@ -639,27 +639,37 @@
 0: jdbc:farrago:> analyze table depts compute statistics for all columns;
 0: jdbc:farrago:> analyze table emps compute statistics for columns (empno, name);
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2;
-+---------+--------+-----------+
-| schema  | table  | rowCount  |
-+---------+--------+-----------+
-| STAT    | DEPTS  | 0         |
-| STAT    | EMPS   | 0         |
-+---------+--------+-----------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.histograms_view order by 1, 2;
-+--------+---------+---------+----------+-----------+-------------+--------------+
-| table  | column  | values  | percent  | barCount  | rowsPerBar  | rowsLastBar  |
-+--------+---------+---------+----------+-----------+-------------+--------------+
-| DEPTS  | DEPTNO  | 0       | 100      | 0         | 1           | 1            |
-| DEPTS  | NAME    | 0       | 100      | 0         | 1           | 1            |
-| EMPS   | EMPNO   | 0       | 100      | 0         | 1           | 1            |
-| EMPS   | NAME    | 0       | 100      | 0         | 1           | 1            |
-+--------+---------+---------+----------+-----------+-------------+--------------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3;
-+--------+---------+----------+----------------+-------------+
-| table  | column  | ordinal  | startingValue  | valueCount  |
-+--------+---------+----------+----------------+-------------+
-+--------+---------+----------+----------------+-------------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
++------------+--------------+-------------+-------------------------------------------------+--------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  |                   INDEX_NAME                    | PAGES  |
++------------+--------------+-------------+-------------------------------------------------+--------+
+| LOCALDB    | STAT         | DEPTS       | SYS$CONSTRAINT_INDEX$DEPTS$DEPTS_UNIQUE_NAME    | 1      |
+| LOCALDB    | STAT         | DEPTS       | SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY      | 1      |
+| LOCALDB    | STAT         | EMPS        | EMPS_UX                                         | 1      |
+| LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY       | 1      |
+| LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID  | 1      |
++------------+--------------+-------------+-------------------------------------------------+--------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
++------------+--------------+-------------+------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | ROW_COUNT  |
++------------+--------------+-------------+------------+
+| LOCALDB    | STAT         | DEPTS       | 0          |
+| LOCALDB    | STAT         | EMPS        | 0          |
++------------+--------------+-------------+------------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
++------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | PERCENT_SAMPLED  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
++------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+| LOCALDB    | STAT         | DEPTS       | DEPTNO       | 0            | 100              | 0          | 1             | 1              |
+| LOCALDB    | STAT         | DEPTS       | NAME         | 0            | 100              | 0          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | EMPNO        | 0            | 100              | 0          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | NAME         | 0            | 100              | 0          | 1             | 1              |
++------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
++------------+--------------+-------------+--------------+----------+--------------+--------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | ORDINAL  | START_VALUE  | VALUE_COUNT  |
++------------+--------------+-------------+--------------+----------+--------------+--------------+
++------------+--------------+-------------+--------------+----------+--------------+--------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- 2.3 loaded tables
@@ -670,41 +680,51 @@
 0: jdbc:farrago:> analyze table depts compute statistics for all columns;
 0: jdbc:farrago:> analyze table emps compute statistics for columns (empno, name);
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2;
-+---------+--------+-----------+
-| schema  | table  | rowCount  |
-+---------+--------+-----------+
-| STAT    | DEPTS  | 3         |
-| STAT    | EMPS   | 4         |
-+---------+--------+-----------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.histograms_view order by 1, 2;
-+--------+---------+---------+----------+-----------+-------------+--------------+
-| table  | column  | values  | percent  | barCount  | rowsPerBar  | rowsLastBar  |
-+--------+---------+---------+----------+-----------+-------------+--------------+
-| DEPTS  | DEPTNO  | 3       | 100      | 3         | 1           | 1            |
-| DEPTS  | NAME    | 3       | 100      | 3         | 1           | 1            |
-| EMPS   | EMPNO   | 3       | 100      | 4         | 1           | 1            |
-| EMPS   | NAME    | 4       | 100      | 4         | 1           | 1            |
-+--------+---------+---------+----------+-----------+-------------+--------------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3;
-+--------+---------+----------+----------------+-------------+
-| table  | column  | ordinal  | startingValue  | valueCount  |
-+--------+---------+----------+----------------+-------------+
-| DEPTS  | DEPTNO  | 0        | 10             | 1           |
-| DEPTS  | DEPTNO  | 1        | 20             | 1           |
-| DEPTS  | DEPTNO  | 2        | 30             | 1           |
-| DEPTS  | NAME    | 0        | Accounts       | 1           |
-| DEPTS  | NAME    | 1        | Marketing      | 1           |
-| DEPTS  | NAME    | 2        | Sales          | 1           |
-| EMPS   | EMPNO   | 0        | 100            | 1           |
-| EMPS   | EMPNO   | 1        | 110            | 1           |
-| EMPS   | EMPNO   | 2        | 110            | 0           |
-| EMPS   | EMPNO   | 3        | 120            | 1           |
-| EMPS   | NAME    | 0        | Eric           | 1           |
-| EMPS   | NAME    | 1        | Fred           | 1           |
-| EMPS   | NAME    | 2        | John           | 1           |
-| EMPS   | NAME    | 3        | Wilma          | 1           |
-+--------+---------+----------+----------------+-------------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
++------------+--------------+-------------+-------------------------------------------------+--------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  |                   INDEX_NAME                    | PAGES  |
++------------+--------------+-------------+-------------------------------------------------+--------+
+| LOCALDB    | STAT         | DEPTS       | SYS$CONSTRAINT_INDEX$DEPTS$DEPTS_UNIQUE_NAME    | 1      |
+| LOCALDB    | STAT         | DEPTS       | SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY      | 1      |
+| LOCALDB    | STAT         | EMPS        | EMPS_UX                                         | 1      |
+| LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY       | 1      |
+| LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID  | 1      |
++------------+--------------+-------------+-------------------------------------------------+--------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
++------------+--------------+-------------+------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | ROW_COUNT  |
++------------+--------------+-------------+------------+
+| LOCALDB    | STAT         | DEPTS       | 3          |
+| LOCALDB    | STAT         | EMPS        | 4          |
++------------+--------------+-------------+------------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
++------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | PERCENT_SAMPLED  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
++------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+| LOCALDB    | STAT         | DEPTS       | DEPTNO       | 3            | 100              | 3          | 1             | 1              |
+| LOCALDB    | STAT         | DEPTS       | NAME         | 3            | 100              | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | EMPNO        | 3            | 100              | 4          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | NAME         | 4            | 100              | 4          | 1             | 1              |
++------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
++------------+--------------+-------------+--------------+----------+--------------+--------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | ORDINAL  | START_VALUE  | VALUE_COUNT  |
++------------+--------------+-------------+--------------+----------+--------------+--------------+
+| LOCALDB    | STAT         | DEPTS       | DEPTNO       | 0        | 10           | 1            |
+| LOCALDB    | STAT         | DEPTS       | DEPTNO       | 1        | 20           | 1            |
+| LOCALDB    | STAT         | DEPTS       | DEPTNO       | 2        | 30           | 1            |
+| LOCALDB    | STAT         | DEPTS       | NAME         | 0        | Accounts     | 1            |
+| LOCALDB    | STAT         | DEPTS       | NAME         | 1        | Marketing    | 1            |
+| LOCALDB    | STAT         | DEPTS       | NAME         | 2        | Sales        | 1            |
+| LOCALDB    | STAT         | EMPS        | EMPNO        | 0        | 100          | 1            |
+| LOCALDB    | STAT         | EMPS        | EMPNO        | 1        | 110          | 1            |
+| LOCALDB    | STAT         | EMPS        | EMPNO        | 2        | 110          | 0            |
+| LOCALDB    | STAT         | EMPS        | EMPNO        | 3        | 120          | 1            |
+| LOCALDB    | STAT         | EMPS        | NAME         | 0        | Eric         | 1            |
+| LOCALDB    | STAT         | EMPS        | NAME         | 1        | Fred         | 1            |
+| LOCALDB    | STAT         | EMPS        | NAME         | 2        | John         | 1            |
+| LOCALDB    | STAT         | EMPS        | NAME         | 3        | Wilma        | 1            |
++------------+--------------+-------------+--------------+----------+--------------+--------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- 2.4 reanalyze
@@ -714,134 +734,154 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> analyze table emps compute statistics for columns (empno, name);
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2;
-+---------+--------+-----------+
-| schema  | table  | rowCount  |
-+---------+--------+-----------+
-| STAT    | DEPTS  | 3         |
-| STAT    | EMPS   | 5         |
-+---------+--------+-----------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.histograms_view order by 1, 2;
-+--------+---------+---------+----------+-----------+-------------+--------------+
-| table  | column  | values  | percent  | barCount  | rowsPerBar  | rowsLastBar  |
-+--------+---------+---------+----------+-----------+-------------+--------------+
-| DEPTS  | DEPTNO  | 3       | 100      | 3         | 1           | 1            |
-| DEPTS  | NAME    | 3       | 100      | 3         | 1           | 1            |
-| EMPS   | EMPNO   | 4       | 100      | 5         | 1           | 1            |
-| EMPS   | NAME    | 5       | 100      | 5         | 1           | 1            |
-+--------+---------+---------+----------+-----------+-------------+--------------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3;
-+--------+---------+----------+----------------+-------------+
-| table  | column  | ordinal  | startingValue  | valueCount  |
-+--------+---------+----------+----------------+-------------+
-| DEPTS  | DEPTNO  | 0        | 10             | 1           |
-| DEPTS  | DEPTNO  | 1        | 20             | 1           |
-| DEPTS  | DEPTNO  | 2        | 30             | 1           |
-| DEPTS  | NAME    | 0        | Accounts       | 1           |
-| DEPTS  | NAME    | 1        | Marketing      | 1           |
-| DEPTS  | NAME    | 2        | Sales          | 1           |
-| EMPS   | EMPNO   | 0        | 100            | 1           |
-| EMPS   | EMPNO   | 1        | 110            | 1           |
-| EMPS   | EMPNO   | 2        | 110            | 0           |
-| EMPS   | EMPNO   | 3        | 120            | 1           |
-| EMPS   | EMPNO   | 4        | 130            | 1           |
-| EMPS   | NAME    | 0        | Barney         | 1           |
-| EMPS   | NAME    | 1        | Eric           | 1           |
-| EMPS   | NAME    | 2        | Fred           | 1           |
-| EMPS   | NAME    | 3        | John           | 1           |
-| EMPS   | NAME    | 4        | Wilma          | 1           |
-+--------+---------+----------+----------------+-------------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
++------------+--------------+-------------+-------------------------------------------------+--------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  |                   INDEX_NAME                    | PAGES  |
++------------+--------------+-------------+-------------------------------------------------+--------+
+| LOCALDB    | STAT         | DEPTS       | SYS$CONSTRAINT_INDEX$DEPTS$DEPTS_UNIQUE_NAME    | 1      |
+| LOCALDB    | STAT         | DEPTS       | SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY      | 1      |
+| LOCALDB    | STAT         | EMPS        | EMPS_UX                                         | 1      |
+| LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY       | 1      |
+| LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID  | 1      |
++------------+--------------+-------------+-------------------------------------------------+--------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
++------------+--------------+-------------+------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | ROW_COUNT  |
++------------+--------------+-------------+------------+
+| LOCALDB    | STAT         | DEPTS       | 3          |
+| LOCALDB    | STAT         | EMPS        | 5          |
++------------+--------------+-------------+------------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
++------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | PERCENT_SAMPLED  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
++------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+| LOCALDB    | STAT         | DEPTS       | DEPTNO       | 3            | 100              | 3          | 1             | 1              |
+| LOCALDB    | STAT         | DEPTS       | NAME         | 3            | 100              | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | EMPNO        | 4            | 100              | 5          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | NAME         | 5            | 100              | 5          | 1             | 1              |
++------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
++------------+--------------+-------------+--------------+----------+--------------+--------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | ORDINAL  | START_VALUE  | VALUE_COUNT  |
++------------+--------------+-------------+--------------+----------+--------------+--------------+
+| LOCALDB    | STAT         | DEPTS       | DEPTNO       | 0        | 10           | 1            |
+| LOCALDB    | STAT         | DEPTS       | DEPTNO       | 1        | 20           | 1            |
+| LOCALDB    | STAT         | DEPTS       | DEPTNO       | 2        | 30           | 1            |
+| LOCALDB    | STAT         | DEPTS       | NAME         | 0        | Accounts     | 1            |
+| LOCALDB    | STAT         | DEPTS       | NAME         | 1        | Marketing    | 1            |
+| LOCALDB    | STAT         | DEPTS       | NAME         | 2        | Sales        | 1            |
+| LOCALDB    | STAT         | EMPS        | EMPNO        | 0        | 100          | 1            |
+| LOCALDB    | STAT         | EMPS        | EMPNO        | 1        | 110          | 1            |
+| LOCALDB    | STAT         | EMPS        | EMPNO        | 2        | 110          | 0            |
+| LOCALDB    | STAT         | EMPS        | EMPNO        | 3        | 120          | 1            |
+| LOCALDB    | STAT         | EMPS        | EMPNO        | 4        | 130          | 1            |
+| LOCALDB    | STAT         | EMPS        | NAME         | 0        | Barney       | 1            |
+| LOCALDB    | STAT         | EMPS        | NAME         | 1        | Eric         | 1            |
+| LOCALDB    | STAT         | EMPS        | NAME         | 2        | Fred         | 1            |
+| LOCALDB    | STAT         | EMPS        | NAME         | 3        | John         | 1            |
+| LOCALDB    | STAT         | EMPS        | NAME         | 4        | Wilma        | 1            |
++------------+--------------+-------------+--------------+----------+--------------+--------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- 2.5 more types
 0: jdbc:farrago:> --
 0: jdbc:farrago:> analyze table emps compute statistics for all columns;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2;
-+---------+--------+-----------+
-| schema  | table  | rowCount  |
-+---------+--------+-----------+
-| STAT    | DEPTS  | 3         |
-| STAT    | EMPS   | 5         |
-+---------+--------+-----------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.histograms_view order by 1, 2;
-+--------+-------------+---------+----------+-----------+-------------+--------------+
-| table  |   column    | values  | percent  | barCount  | rowsPerBar  | rowsLastBar  |
-+--------+-------------+---------+----------+-----------+-------------+--------------+
-| DEPTS  | DEPTNO      | 3       | 100      | 3         | 1           | 1            |
-| DEPTS  | NAME        | 3       | 100      | 3         | 1           | 1            |
-| EMPS   | AGE         | 5       | 100      | 5         | 1           | 1            |
-| EMPS   | CITY        | 3       | 100      | 5         | 1           | 1            |
-| EMPS   | DEPTNO      | 3       | 100      | 5         | 1           | 1            |
-| EMPS   | EMPID       | 5       | 100      | 5         | 1           | 1            |
-| EMPS   | EMPNO       | 4       | 100      | 5         | 1           | 1            |
-| EMPS   | GENDER      | 3       | 100      | 5         | 1           | 1            |
-| EMPS   | MANAGER     | 2       | 100      | 5         | 1           | 1            |
-| EMPS   | NAME        | 5       | 100      | 5         | 1           | 1            |
-| EMPS   | PUBLIC_KEY  | 4       | 100      | 5         | 1           | 1            |
-| EMPS   | SLACKER     | 3       | 100      | 5         | 1           | 1            |
-+--------+-------------+---------+----------+-----------+-------------+--------------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3;
-+--------+-------------+----------+----------------+-------------+
-| table  |   column    | ordinal  | startingValue  | valueCount  |
-+--------+-------------+----------+----------------+-------------+
-| DEPTS  | DEPTNO      | 0        | 10             | 1           |
-| DEPTS  | DEPTNO      | 1        | 20             | 1           |
-| DEPTS  | DEPTNO      | 2        | 30             | 1           |
-| DEPTS  | NAME        | 0        | Accounts       | 1           |
-| DEPTS  | NAME        | 1        | Marketing      | 1           |
-| DEPTS  | NAME        | 2        | Sales          | 1           |
-| EMPS   | AGE         | 0        |                | 1           |
-| EMPS   | AGE         | 1        | 25             | 1           |
-| EMPS   | AGE         | 2        | 50             | 1           |
-| EMPS   | AGE         | 3        | 55             | 1           |
-| EMPS   | AGE         | 4        | 80             | 1           |
-| EMPS   | CITY        | 0        |                | 1           |
-| EMPS   | CITY        | 1        |                | 0           |
-| EMPS   | CITY        | 2        |                | 0           |
-| EMPS   | CITY        | 3        | San Francisco  | 1           |
-| EMPS   | CITY        | 4        | Vancouver      | 1           |
-| EMPS   | DEPTNO      | 0        | 10             | 1           |
-| EMPS   | DEPTNO      | 1        | 10             | 0           |
-| EMPS   | DEPTNO      | 2        | 20             | 1           |
-| EMPS   | DEPTNO      | 3        | 20             | 0           |
-| EMPS   | DEPTNO      | 4        | 40             | 1           |
-| EMPS   | EMPID       | 0        | 1              | 1           |
-| EMPS   | EMPID       | 1        | 2              | 1           |
-| EMPS   | EMPID       | 2        | 3              | 1           |
-| EMPS   | EMPID       | 3        | 11             | 1           |
-| EMPS   | EMPID       | 4        | 30             | 1           |
-| EMPS   | EMPNO       | 0        | 100            | 1           |
-| EMPS   | EMPNO       | 1        | 110            | 1           |
-| EMPS   | EMPNO       | 2        | 110            | 0           |
-| EMPS   | EMPNO       | 3        | 120            | 1           |
-| EMPS   | EMPNO       | 4        | 130            | 1           |
-| EMPS   | GENDER      | 0        |                | 1           |
-| EMPS   | GENDER      | 1        | F              | 1           |
-| EMPS   | GENDER      | 2        | M              | 1           |
-| EMPS   | GENDER      | 3        | M              | 0           |
-| EMPS   | GENDER      | 4        | M              | 0           |
-| EMPS   | MANAGER     | 0        | false          | 1           |
-| EMPS   | MANAGER     | 1        | false          | 0           |
-| EMPS   | MANAGER     | 2        | true           | 1           |
-| EMPS   | MANAGER     | 3        | true           | 0           |
-| EMPS   | MANAGER     | 4        | true           | 0           |
-| EMPS   | NAME        | 0        | Barney         | 1           |
-| EMPS   | NAME        | 1        | Eric           | 1           |
-| EMPS   | NAME        | 2        | Fred           | 1           |
-| EMPS   | NAME        | 3        | John           | 1           |
-| EMPS   | NAME        | 4        | Wilma          | 1           |
-| EMPS   | PUBLIC_KEY  | 0        |                | 1           |
-| EMPS   | PUBLIC_KEY  | 1        |                | 0           |
-| EMPS   | PUBLIC_KEY  | 2        | 416263         | 1           |
-| EMPS   | PUBLIC_KEY  | 3        | 41626320       | 1           |
-| EMPS   | PUBLIC_KEY  | 4        | 58797A         | 1           |
-| EMPS   | SLACKER     | 0        |                | 1           |
-| EMPS   | SLACKER     | 1        |                | 0           |
-| EMPS   | SLACKER     | 2        | false          | 1           |
-| EMPS   | SLACKER     | 3        | true           | 1           |
-| EMPS   | SLACKER     | 4        | true           | 0           |
-+--------+-------------+----------+----------------+-------------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
++------------+--------------+-------------+-------------------------------------------------+--------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  |                   INDEX_NAME                    | PAGES  |
++------------+--------------+-------------+-------------------------------------------------+--------+
+| LOCALDB    | STAT         | DEPTS       | SYS$CONSTRAINT_INDEX$DEPTS$DEPTS_UNIQUE_NAME    | 1      |
+| LOCALDB    | STAT         | DEPTS       | SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY      | 1      |
+| LOCALDB    | STAT         | EMPS        | EMPS_UX                                         | 1      |
+| LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY       | 1      |
+| LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID  | 1      |
++------------+--------------+-------------+-------------------------------------------------+--------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
++------------+--------------+-------------+------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | ROW_COUNT  |
++------------+--------------+-------------+------------+
+| LOCALDB    | STAT         | DEPTS       | 3          |
+| LOCALDB    | STAT         | EMPS        | 5          |
++------------+--------------+-------------+------------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
++------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | PERCENT_SAMPLED  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
++------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+| LOCALDB    | STAT         | DEPTS       | DEPTNO       | 3            | 100              | 3          | 1             | 1              |
+| LOCALDB    | STAT         | DEPTS       | NAME         | 3            | 100              | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | AGE          | 5            | 100              | 5          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | CITY         | 3            | 100              | 5          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | DEPTNO       | 3            | 100              | 5          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | EMPID        | 5            | 100              | 5          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | EMPNO        | 4            | 100              | 5          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | GENDER       | 3            | 100              | 5          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | MANAGER      | 2            | 100              | 5          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | NAME         | 5            | 100              | 5          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | PUBLIC_KEY   | 4            | 100              | 5          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | SLACKER      | 3            | 100              | 5          | 1             | 1              |
++------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
++------------+--------------+-------------+--------------+----------+----------------+--------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | ORDINAL  |  START_VALUE   | VALUE_COUNT  |
++------------+--------------+-------------+--------------+----------+----------------+--------------+
+| LOCALDB    | STAT         | DEPTS       | DEPTNO       | 0        | 10             | 1            |
+| LOCALDB    | STAT         | DEPTS       | DEPTNO       | 1        | 20             | 1            |
+| LOCALDB    | STAT         | DEPTS       | DEPTNO       | 2        | 30             | 1            |
+| LOCALDB    | STAT         | DEPTS       | NAME         | 0        | Accounts       | 1            |
+| LOCALDB    | STAT         | DEPTS       | NAME         | 1        | Marketing      | 1            |
+| LOCALDB    | STAT         | DEPTS       | NAME         | 2        | Sales          | 1            |
+| LOCALDB    | STAT         | EMPS        | AGE          | 0        |                | 1            |
+| LOCALDB    | STAT         | EMPS        | AGE          | 1        | 25             | 1            |
+| LOCALDB    | STAT         | EMPS        | AGE          | 2        | 50             | 1            |
+| LOCALDB    | STAT         | EMPS        | AGE          | 3        | 55             | 1            |
+| LOCALDB    | STAT         | EMPS        | AGE          | 4        | 80             | 1            |
+| LOCALDB    | STAT         | EMPS        | CITY         | 0        |                | 1            |
+| LOCALDB    | STAT         | EMPS        | CITY         | 1        |                | 0            |
+| LOCALDB    | STAT         | EMPS        | CITY         | 2        |                | 0            |
+| LOCALDB    | STAT         | EMPS        | CITY         | 3        | San Francisco  | 1            |
+| LOCALDB    | STAT         | EMPS        | CITY         | 4        | Vancouver      | 1            |
+| LOCALDB    | STAT         | EMPS        | DEPTNO       | 0        | 10             | 1            |
+| LOCALDB    | STAT         | EMPS        | DEPTNO       | 1        | 10             | 0            |
+| LOCALDB    | STAT         | EMPS        | DEPTNO       | 2        | 20             | 1            |
+| LOCALDB    | STAT         | EMPS        | DEPTNO       | 3        | 20             | 0            |
+| LOCALDB    | STAT         | EMPS        | DEPTNO       | 4        | 40             | 1            |
+| LOCALDB    | STAT         | EMPS        | EMPID        | 0        | 1              | 1            |
+| LOCALDB    | STAT         | EMPS        | EMPID        | 1        | 2              | 1            |
+| LOCALDB    | STAT         | EMPS        | EMPID        | 2        | 3              | 1            |
+| LOCALDB    | STAT         | EMPS        | EMPID        | 3        | 11             | 1            |
+| LOCALDB    | STAT         | EMPS        | EMPID        | 4        | 30             | 1            |
+| LOCALDB    | STAT         | EMPS        | EMPNO        | 0        | 100            | 1            |
+| LOCALDB    | STAT         | EMPS        | EMPNO        | 1        | 110            | 1            |
+| LOCALDB    | STAT         | EMPS        | EMPNO        | 2        | 110            | 0            |
+| LOCALDB    | STAT         | EMPS        | EMPNO        | 3        | 120            | 1            |
+| LOCALDB    | STAT         | EMPS        | EMPNO        | 4        | 130            | 1            |
+| LOCALDB    | STAT         | EMPS        | GENDER       | 0        |                | 1            |
+| LOCALDB    | STAT         | EMPS        | GENDER       | 1        | F              | 1            |
+| LOCALDB    | STAT         | EMPS        | GENDER       | 2        | M              | 1            |
+| LOCALDB    | STAT         | EMPS        | GENDER       | 3        | M              | 0            |
+| LOCALDB    | STAT         | EMPS        | GENDER       | 4        | M              | 0            |
+| LOCALDB    | STAT         | EMPS        | MANAGER      | 0        | false          | 1            |
+| LOCALDB    | STAT         | EMPS        | MANAGER      | 1        | false          | 0            |
+| LOCALDB    | STAT         | EMPS        | MANAGER      | 2        | true           | 1            |
+| LOCALDB    | STAT         | EMPS        | MANAGER      | 3        | true           | 0            |
+| LOCALDB    | STAT         | EMPS        | MANAGER      | 4        | true           | 0            |
+| LOCALDB    | STAT         | EMPS        | NAME         | 0        | Barney         | 1            |
+| LOCALDB    | STAT         | EMPS        | NAME         | 1        | Eric           | 1            |
+| LOCALDB    | STAT         | EMPS        | NAME         | 2        | Fred           | 1            |
+| LOCALDB    | STAT         | EMPS        | NAME         | 3        | John           | 1            |
+| LOCALDB    | STAT         | EMPS        | NAME         | 4        | Wilma          | 1            |
+| LOCALDB    | STAT         | EMPS        | PUBLIC_KEY   | 0        |                | 1            |
+| LOCALDB    | STAT         | EMPS        | PUBLIC_KEY   | 1        |                | 0            |
+| LOCALDB    | STAT         | EMPS        | PUBLIC_KEY   | 2        | 416263         | 1            |
+| LOCALDB    | STAT         | EMPS        | PUBLIC_KEY   | 3        | 41626320       | 1            |
+| LOCALDB    | STAT         | EMPS        | PUBLIC_KEY   | 4        | 58797A         | 1            |
+| LOCALDB    | STAT         | EMPS        | SLACKER      | 0        |                | 1            |
+| LOCALDB    | STAT         | EMPS        | SLACKER      | 1        |                | 0            |
+| LOCALDB    | STAT         | EMPS        | SLACKER      | 2        | false          | 1            |
+| LOCALDB    | STAT         | EMPS        | SLACKER      | 3        | true           | 1            |
+| LOCALDB    | STAT         | EMPS        | SLACKER      | 4        | true           | 0            |
++------------+--------------+-------------+--------------+----------+----------------+--------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- 2.6 note: sampling has not been implemented, only test syntax
@@ -876,43 +916,48 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> analyze table stat_file compute statistics for all columns;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2;
-+---------+------------+-----------+
-| schema  |   table    | rowCount  |
-+---------+------------+-----------+
-| STAT    | STAT_FILE  | 6         |
-+---------+------------+-----------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.histograms_view order by 1, 2;
-+------------+--------------+---------+----------+-----------+-------------+--------------+
-|   table    |    column    | values  | percent  | barCount  | rowsPerBar  | rowsLastBar  |
-+------------+--------------+---------+----------+-----------+-------------+--------------+
-| STAT_FILE  | EXTRA_FIELD  | 6       | 100      | 6         | 1           | 1            |
-| STAT_FILE  | ID           | 4       | 100      | 6         | 1           | 1            |
-| STAT_FILE  | NAME         | 6       | 100      | 6         | 1           | 1            |
-+------------+--------------+---------+----------+-----------+-------------+--------------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3;
-+------------+--------------+----------+------------------------------------------+-------------+
-|   table    |    column    | ordinal  |              startingValue               | valueCount  |
-+------------+--------------+----------+------------------------------------------+-------------+
-| STAT_FILE  | EXTRA_FIELD  | 0        | A                                        | 1           |
-| STAT_FILE  | EXTRA_FIELD  | 1        | B                                        | 1           |
-| STAT_FILE  | EXTRA_FIELD  | 2        | C                                        | 1           |
-| STAT_FILE  | EXTRA_FIELD  | 3        | E                                        | 1           |
-| STAT_FILE  | EXTRA_FIELD  | 4        | F                                        | 1           |
-| STAT_FILE  | EXTRA_FIELD  | 5        | G                                        | 1           |
-| STAT_FILE  | ID           | 0        | 123                                      | 1           |
-| STAT_FILE  | ID           | 1        | 123                                      | 0           |
-| STAT_FILE  | ID           | 2        | 234                                      | 1           |
-| STAT_FILE  | ID           | 3        | 234                                      | 0           |
-| STAT_FILE  | ID           | 4        | 456                                      | 1           |
-| STAT_FILE  | ID           | 5        | 789                                      | 1           |
-| STAT_FILE  | NAME         | 0        | "S,"                                     | 1           |
-| STAT_FILE  | NAME         | 1        | Amelia "meals" Maurice                   | 1           |
-| STAT_FILE  | NAME         | 2        | Grady O'Neil                             | 1           |
-| STAT_FILE  | NAME         | 3        | Jonathan Ackerman                        | 1           |
-| STAT_FILE  | NAME         | 4        | Peter "peg leg", Jimmy & Samantha "Sam"  | 1           |
-| STAT_FILE  | NAME         | 5        | Susan, Peter and Dave                    | 1           |
-+------------+--------------+----------+------------------------------------------+-------------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
++------------+--------------+-------------+-------------+--------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | INDEX_NAME  | PAGES  |
++------------+--------------+-------------+-------------+--------+
++------------+--------------+-------------+-------------+--------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
++------------+--------------+-------------+------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | ROW_COUNT  |
++------------+--------------+-------------+------------+
+| LOCALDB    | STAT         | STAT_FILE   | 6          |
++------------+--------------+-------------+------------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
++------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | PERCENT_SAMPLED  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
++------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+| LOCALDB    | STAT         | STAT_FILE   | EXTRA_FIELD  | 6            | 100              | 6          | 1             | 1              |
+| LOCALDB    | STAT         | STAT_FILE   | ID           | 4            | 100              | 6          | 1             | 1              |
+| LOCALDB    | STAT         | STAT_FILE   | NAME         | 6            | 100              | 6          | 1             | 1              |
++------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
++------------+--------------+-------------+--------------+----------+------------------------------------------+--------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | ORDINAL  |               START_VALUE                | VALUE_COUNT  |
++------------+--------------+-------------+--------------+----------+------------------------------------------+--------------+
+| LOCALDB    | STAT         | STAT_FILE   | EXTRA_FIELD  | 0        | A                                        | 1            |
+| LOCALDB    | STAT         | STAT_FILE   | EXTRA_FIELD  | 1        | B                                        | 1            |
+| LOCALDB    | STAT         | STAT_FILE   | EXTRA_FIELD  | 2        | C                                        | 1            |
+| LOCALDB    | STAT         | STAT_FILE   | EXTRA_FIELD  | 3        | E                                        | 1            |
+| LOCALDB    | STAT         | STAT_FILE   | EXTRA_FIELD  | 4        | F                                        | 1            |
+| LOCALDB    | STAT         | STAT_FILE   | EXTRA_FIELD  | 5        | G                                        | 1            |
+| LOCALDB    | STAT         | STAT_FILE   | ID           | 0        | 123                                      | 1            |
+| LOCALDB    | STAT         | STAT_FILE   | ID           | 1        | 123                                      | 0            |
+| LOCALDB    | STAT         | STAT_FILE   | ID           | 2        | 234                                      | 1            |
+| LOCALDB    | STAT         | STAT_FILE   | ID           | 3        | 234                                      | 0            |
+| LOCALDB    | STAT         | STAT_FILE   | ID           | 4        | 456                                      | 1            |
+| LOCALDB    | STAT         | STAT_FILE   | ID           | 5        | 789                                      | 1            |
+| LOCALDB    | STAT         | STAT_FILE   | NAME         | 0        | "S,"                                     | 1            |
+| LOCALDB    | STAT         | STAT_FILE   | NAME         | 1        | Amelia "meals" Maurice                   | 1            |
+| LOCALDB    | STAT         | STAT_FILE   | NAME         | 2        | Grady O'Neil                             | 1            |
+| LOCALDB    | STAT         | STAT_FILE   | NAME         | 3        | Jonathan Ackerman                        | 1            |
+| LOCALDB    | STAT         | STAT_FILE   | NAME         | 4        | Peter "peg leg", Jimmy & Samantha "Sam"  | 1            |
+| LOCALDB    | STAT         | STAT_FILE   | NAME         | 5        | Susan, Peter and Dave                    | 1            |
++------------+--------------+-------------+--------------+----------+------------------------------------------+--------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- 2.8 A few more rows than histogram bars
@@ -926,95 +971,101 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> analyze table hundred compute statistics for all columns;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2;
-+---------+------------+-----------+
-| schema  |   table    | rowCount  |
-+---------+------------+-----------+
-| STAT    | HUNDRED    | 102       |
-| STAT    | STAT_FILE  | 6         |
-+---------+------------+-----------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.histograms_view order by 1, 2;
-+------------+--------------+---------+----------+-----------+-------------+--------------+
-|   table    |    column    | values  | percent  | barCount  | rowsPerBar  | rowsLastBar  |
-+------------+--------------+---------+----------+-----------+-------------+--------------+
-| HUNDRED    | I            | 102     | 100      | 51        | 2           | 2            |
-| STAT_FILE  | EXTRA_FIELD  | 6       | 100      | 6         | 1           | 1            |
-| STAT_FILE  | ID           | 4       | 100      | 6         | 1           | 1            |
-| STAT_FILE  | NAME         | 6       | 100      | 6         | 1           | 1            |
-+------------+--------------+---------+----------+-----------+-------------+--------------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3;
-+------------+--------------+----------+------------------------------------------+-------------+
-|   table    |    column    | ordinal  |              startingValue               | valueCount  |
-+------------+--------------+----------+------------------------------------------+-------------+
-| HUNDRED    | I            | 0        | 0                                        | 2           |
-| HUNDRED    | I            | 1        | 2                                        | 2           |
-| HUNDRED    | I            | 2        | 4                                        | 2           |
-| HUNDRED    | I            | 3        | 6                                        | 2           |
-| HUNDRED    | I            | 4        | 8                                        | 2           |
-| HUNDRED    | I            | 5        | 10                                       | 2           |
-| HUNDRED    | I            | 6        | 12                                       | 2           |
-| HUNDRED    | I            | 7        | 14                                       | 2           |
-| HUNDRED    | I            | 8        | 16                                       | 2           |
-| HUNDRED    | I            | 9        | 18                                       | 2           |
-| HUNDRED    | I            | 10       | 20                                       | 2           |
-| HUNDRED    | I            | 11       | 22                                       | 2           |
-| HUNDRED    | I            | 12       | 24                                       | 2           |
-| HUNDRED    | I            | 13       | 26                                       | 2           |
-| HUNDRED    | I            | 14       | 28                                       | 2           |
-| HUNDRED    | I            | 15       | 30                                       | 2           |
-| HUNDRED    | I            | 16       | 32                                       | 2           |
-| HUNDRED    | I            | 17       | 34                                       | 2           |
-| HUNDRED    | I            | 18       | 36                                       | 2           |
-| HUNDRED    | I            | 19       | 38                                       | 2           |
-| HUNDRED    | I            | 20       | 40                                       | 2           |
-| HUNDRED    | I            | 21       | 42                                       | 2           |
-| HUNDRED    | I            | 22       | 44                                       | 2           |
-| HUNDRED    | I            | 23       | 46                                       | 2           |
-| HUNDRED    | I            | 24       | 48                                       | 2           |
-| HUNDRED    | I            | 25       | 50                                       | 2           |
-| HUNDRED    | I            | 26       | 52                                       | 2           |
-| HUNDRED    | I            | 27       | 54                                       | 2           |
-| HUNDRED    | I            | 28       | 56                                       | 2           |
-| HUNDRED    | I            | 29       | 58                                       | 2           |
-| HUNDRED    | I            | 30       | 60                                       | 2           |
-| HUNDRED    | I            | 31       | 62                                       | 2           |
-| HUNDRED    | I            | 32       | 64                                       | 2           |
-| HUNDRED    | I            | 33       | 66                                       | 2           |
-| HUNDRED    | I            | 34       | 68                                       | 2           |
-| HUNDRED    | I            | 35       | 70                                       | 2           |
-| HUNDRED    | I            | 36       | 72                                       | 2           |
-| HUNDRED    | I            | 37       | 74                                       | 2           |
-| HUNDRED    | I            | 38       | 76                                       | 2           |
-| HUNDRED    | I            | 39       | 78                                       | 2           |
-| HUNDRED    | I            | 40       | 80                                       | 2           |
-| HUNDRED    | I            | 41       | 82                                       | 2           |
-| HUNDRED    | I            | 42       | 84                                       | 2           |
-| HUNDRED    | I            | 43       | 86                                       | 2           |
-| HUNDRED    | I            | 44       | 88                                       | 2           |
-| HUNDRED    | I            | 45       | 90                                       | 2           |
-| HUNDRED    | I            | 46       | 92                                       | 2           |
-| HUNDRED    | I            | 47       | 94                                       | 2           |
-| HUNDRED    | I            | 48       | 96                                       | 2           |
-| HUNDRED    | I            | 49       | 98                                       | 2           |
-| HUNDRED    | I            | 50       | 100                                      | 2           |
-| STAT_FILE  | EXTRA_FIELD  | 0        | A                                        | 1           |
-| STAT_FILE  | EXTRA_FIELD  | 1        | B                                        | 1           |
-| STAT_FILE  | EXTRA_FIELD  | 2        | C                                        | 1           |
-| STAT_FILE  | EXTRA_FIELD  | 3        | E                                        | 1           |
-| STAT_FILE  | EXTRA_FIELD  | 4        | F                                        | 1           |
-| STAT_FILE  | EXTRA_FIELD  | 5        | G                                        | 1           |
-| STAT_FILE  | ID           | 0        | 123                                      | 1           |
-| STAT_FILE  | ID           | 1        | 123                                      | 0           |
-| STAT_FILE  | ID           | 2        | 234                                      | 1           |
-| STAT_FILE  | ID           | 3        | 234                                      | 0           |
-| STAT_FILE  | ID           | 4        | 456                                      | 1           |
-| STAT_FILE  | ID           | 5        | 789                                      | 1           |
-| STAT_FILE  | NAME         | 0        | "S,"                                     | 1           |
-| STAT_FILE  | NAME         | 1        | Amelia "meals" Maurice                   | 1           |
-| STAT_FILE  | NAME         | 2        | Grady O'Neil                             | 1           |
-| STAT_FILE  | NAME         | 3        | Jonathan Ackerman                        | 1           |
-| STAT_FILE  | NAME         | 4        | Peter "peg leg", Jimmy & Samantha "Sam"  | 1           |
-| STAT_FILE  | NAME         | 5        | Susan, Peter and Dave                    | 1           |
-+------------+--------------+----------+------------------------------------------+-------------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
++------------+--------------+-------------+-----------------------------------------------+--------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  |                  INDEX_NAME                   | PAGES  |
++------------+--------------+-------------+-----------------------------------------------+--------+
+| LOCALDB    | STAT         | HUNDRED     | SYS$CONSTRAINT_INDEX$HUNDRED$SYS$PRIMARY_KEY  | 1      |
++------------+--------------+-------------+-----------------------------------------------+--------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
++------------+--------------+-------------+------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | ROW_COUNT  |
++------------+--------------+-------------+------------+
+| LOCALDB    | STAT         | HUNDRED     | 102        |
+| LOCALDB    | STAT         | STAT_FILE   | 6          |
++------------+--------------+-------------+------------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
++------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | PERCENT_SAMPLED  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
++------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+| LOCALDB    | STAT         | HUNDRED     | I            | 102          | 100              | 51         | 2             | 2              |
+| LOCALDB    | STAT         | STAT_FILE   | EXTRA_FIELD  | 6            | 100              | 6          | 1             | 1              |
+| LOCALDB    | STAT         | STAT_FILE   | ID           | 4            | 100              | 6          | 1             | 1              |
+| LOCALDB    | STAT         | STAT_FILE   | NAME         | 6            | 100              | 6          | 1             | 1              |
++------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+0: jdbc:farrago:> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
++------------+--------------+-------------+--------------+----------+------------------------------------------+--------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | ORDINAL  |               START_VALUE                | VALUE_COUNT  |
++------------+--------------+-------------+--------------+----------+------------------------------------------+--------------+
+| LOCALDB    | STAT         | HUNDRED     | I            | 0        | 0                                        | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 1        | 2                                        | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 2        | 4                                        | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 3        | 6                                        | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 4        | 8                                        | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 5        | 10                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 6        | 12                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 7        | 14                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 8        | 16                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 9        | 18                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 10       | 20                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 11       | 22                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 12       | 24                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 13       | 26                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 14       | 28                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 15       | 30                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 16       | 32                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 17       | 34                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 18       | 36                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 19       | 38                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 20       | 40                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 21       | 42                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 22       | 44                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 23       | 46                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 24       | 48                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 25       | 50                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 26       | 52                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 27       | 54                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 28       | 56                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 29       | 58                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 30       | 60                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 31       | 62                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 32       | 64                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 33       | 66                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 34       | 68                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 35       | 70                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 36       | 72                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 37       | 74                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 38       | 76                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 39       | 78                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 40       | 80                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 41       | 82                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 42       | 84                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 43       | 86                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 44       | 88                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 45       | 90                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 46       | 92                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 47       | 94                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 48       | 96                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 49       | 98                                       | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 50       | 100                                      | 2            |
+| LOCALDB    | STAT         | STAT_FILE   | EXTRA_FIELD  | 0        | A                                        | 1            |
+| LOCALDB    | STAT         | STAT_FILE   | EXTRA_FIELD  | 1        | B                                        | 1            |
+| LOCALDB    | STAT         | STAT_FILE   | EXTRA_FIELD  | 2        | C                                        | 1            |
+| LOCALDB    | STAT         | STAT_FILE   | EXTRA_FIELD  | 3        | E                                        | 1            |
+| LOCALDB    | STAT         | STAT_FILE   | EXTRA_FIELD  | 4        | F                                        | 1            |
+| LOCALDB    | STAT         | STAT_FILE   | EXTRA_FIELD  | 5        | G                                        | 1            |
+| LOCALDB    | STAT         | STAT_FILE   | ID           | 0        | 123                                      | 1            |
+| LOCALDB    | STAT         | STAT_FILE   | ID           | 1        | 123                                      | 0            |
+| LOCALDB    | STAT         | STAT_FILE   | ID           | 2        | 234                                      | 1            |
+| LOCALDB    | STAT         | STAT_FILE   | ID           | 3        | 234                                      | 0            |
+| LOCALDB    | STAT         | STAT_FILE   | ID           | 4        | 456                                      | 1            |
+| LOCALDB    | STAT         | STAT_FILE   | ID           | 5        | 789                                      | 1            |
+| LOCALDB    | STAT         | STAT_FILE   | NAME         | 0        | "S,"                                     | 1            |
+| LOCALDB    | STAT         | STAT_FILE   | NAME         | 1        | Amelia "meals" Maurice                   | 1            |
+| LOCALDB    | STAT         | STAT_FILE   | NAME         | 2        | Grady O'Neil                             | 1            |
+| LOCALDB    | STAT         | STAT_FILE   | NAME         | 3        | Jonathan Ackerman                        | 1            |
+| LOCALDB    | STAT         | STAT_FILE   | NAME         | 4        | Peter "peg leg", Jimmy & Samantha "Sam"  | 1            |
+| LOCALDB    | STAT         | STAT_FILE   | NAME         | 5        | Susan, Peter and Dave                    | 1            |
++------------+--------------+-------------+--------------+----------+------------------------------------------+--------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

@@ -185,6 +185,12 @@ class FtrsDataServer extends MedAbstractFennelDataServer
             indexGuide.getCoverageTupleDescriptor(index));
         cmd.setKeyProj(indexGuide.getDistinctKeyProjection(index));
     }
+
+    // implement MedAbstractFennelDataServer
+    protected boolean getIncludeTuples()
+    {
+        return false;
+    }
 }
 
 

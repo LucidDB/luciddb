@@ -49,7 +49,7 @@ call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','PARTSUPP',80000);
 call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','REGION',5);
 call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','SUPPLIER',1000);
 
-select * from sys_boot.mgmt.row_counts_view order by 1, 2;
+select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
 
 --
 -- 1.2 Page counts. We can neither index foreign tables or retrieve the 
@@ -63,7 +63,7 @@ create table dummy_region (
 call sys_boot.mgmt.stat_set_page_count(
     'LOCALDB','TPCD','SYS$CONSTRAINT_INDEX$DUMMY_REGION$SYS$PRIMARY_KEY',1);
 
-select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3;
+select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
 
 --
 -- 1.3 Column histograms, also fine for foreign tables
@@ -77,8 +77,8 @@ call sys_boot.mgmt.stat_set_column_histogram(
 call sys_boot.mgmt.stat_set_column_histogram(
     'LOCALDB','TPCD','CUSTOMER','F4',25,10,25,0,'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
 
-select * from sys_boot.mgmt.histograms_view order by 1, 2;
-select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3;
+select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
+select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 
 --
 -- 1.4 Update a histogram with more data
@@ -86,8 +86,8 @@ select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3;
 call sys_boot.mgmt.stat_set_column_histogram(
     'LOCALDB','TPCD','CUSTOMER','F1',15000,100,15000,0,'0123456789');
 
-select * from sys_boot.mgmt.histograms_view order by 1, 2;
-select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3;
+select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
+select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 
 drop schema tpcd cascade;
 
@@ -130,9 +130,10 @@ create table emps(
 analyze table depts compute statistics for all columns;
 analyze table emps compute statistics for columns (empno, name);
 
-select * from sys_boot.mgmt.row_counts_view order by 1, 2;
-select * from sys_boot.mgmt.histograms_view order by 1, 2;
-select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3;
+select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
+select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
+select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
+select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 
 --
 -- 2.3 loaded tables
@@ -143,9 +144,10 @@ insert into emps select * from sales.emps;
 analyze table depts compute statistics for all columns;
 analyze table emps compute statistics for columns (empno, name);
 
-select * from sys_boot.mgmt.row_counts_view order by 1, 2;
-select * from sys_boot.mgmt.histograms_view order by 1, 2;
-select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3;
+select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
+select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
+select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
+select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 
 --
 -- 2.4 reanalyze
@@ -155,18 +157,20 @@ insert into emps values
 
 analyze table emps compute statistics for columns (empno, name);
 
-select * from sys_boot.mgmt.row_counts_view order by 1, 2;
-select * from sys_boot.mgmt.histograms_view order by 1, 2;
-select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3;
+select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
+select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
+select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
+select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 
 --
 -- 2.5 more types
 --
 analyze table emps compute statistics for all columns;
 
-select * from sys_boot.mgmt.row_counts_view order by 1, 2;
-select * from sys_boot.mgmt.histograms_view order by 1, 2;
-select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3;
+select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
+select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
+select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
+select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 
 --
 -- 2.6 note: sampling has not been implemented, only test syntax
@@ -201,9 +205,10 @@ options (filename 'example');
 
 analyze table stat_file compute statistics for all columns;
 
-select * from sys_boot.mgmt.row_counts_view order by 1, 2;
-select * from sys_boot.mgmt.histograms_view order by 1, 2;
-select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3;
+select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
+select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
+select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
+select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 
 --
 -- 2.8 A few more rows than histogram bars
@@ -217,6 +222,7 @@ insert into hundred values (100), (101);
 
 analyze table hundred compute statistics for all columns;
 
-select * from sys_boot.mgmt.row_counts_view order by 1, 2;
-select * from sys_boot.mgmt.histograms_view order by 1, 2;
-select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3;
+select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
+select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
+select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
+select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;

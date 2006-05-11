@@ -126,102 +126,85 @@ contains sql
 external name 'class net.sf.farrago.syslib.FarragoStatsUDR.set_column_histogram';
 
 --
--- Page counts, qualified by 
+-- Histogram views
 --
-create view page_counts_a_view as
-select 
-  t."namespace", t."name" as "table", 
-  i."name" as "index", "pageCount" 
-from 
-  sys_fem.med."LocalIndex" i
-inner join
-  sys_fem.sql2003."AbstractColumnSet" t
-on
-  i."spannedClass" = t."mofId"
-where "pageCount" is not null;
-
 create view page_counts_view as
-select 
-  n."name" as "schema", i."table", 
-  i."index", "pageCount" 
-from 
-  page_counts_a_view i
-inner join
-  sys_cwm."Core"."Namespace" n
-on
-  i."namespace" = n."mofId";
+    select 
+        i.table_cat,
+        i.table_schem,
+        i.table_name,
+        i.index_name,
+        i.pages
+    from
+        sys_boot.jdbc_metadata.index_info_internal i
+    where
+        i.pages is not null
+;
 
---
--- Select row counts, qualified by schema and table
---
 create view row_counts_view as
-select n."name" as "schema", t."name" as "table", "rowCount" 
-from 
-  sys_cwm."Core"."Namespace" n
-inner join
-  sys_fem.sql2003."AbstractColumnSet" t
-on
-  n."mofId" = t."namespace"
-where "rowCount" is not null;
+    select
+        t.table_cat,
+        t.table_schem,
+        t.table_name,
+        acs."rowCount" as row_count
+    from 
+        sys_boot.jdbc_metadata.tables_view_internal t
+    inner join
+        sys_fem."SQL2003"."AbstractColumnSet" acs
+    on
+        t."mofId" = acs."mofId"
+    where 
+        acs."rowCount" is not null
+;
 
---
--- Selects histograms, qualified by table name (missing schema name)
---
-create view histograms_a_view as
-select 
-    c."owner", c."name" as "column",
-    "distinctValueCount" "values","percentageSampled" "percent",
-    "barCount","rowsPerBar","rowsLastBar"
-from 
-    sys_fem.med."ColumnHistogram" h
-inner join
-    sys_fem.sql2003."AbstractColumn" c
-on
-    h."mofId" = c."Histogram";
+create view histograms_view_internal as
+    select 
+        c.table_cat,
+        c.table_schem,
+        c.table_name,
+        c.column_name,
+        h."distinctValueCount" as "CARDINALITY",
+        h."percentageSampled" as percent_sampled,
+        h."barCount" as bar_count,
+        h."rowsPerBar" as rows_per_bar,
+        h."rowsLastBar" as rows_last_bar,
+        h."mofId"
+    from 
+        sys_boot.jdbc_metadata.columns_view_internal c
+    inner join
+        sys_fem.med."ColumnHistogram" h
+    on
+        c."mofId" = h."Column"
+;
 
 create view histograms_view as
-select 
-    t."name" as "table", c."column",
-    "values","percent",
-    "barCount","rowsPerBar","rowsLastBar"
-from 
-    histograms_a_view c
-inner join
-    sys_fem.sql2003."AbstractColumnSet" t
-on 
-    c."owner" = t."mofId";
-
---
--- Selects histogram bars, qualified by table and column
---
-create view histogram_bars_a_view as
-select 
-  h."mofId",b."ordinal","startingValue","valueCount"
-from 
-  sys_fem.med."ColumnHistogramBar" b
-inner join
-  sys_fem.med."ColumnHistogram" h
-on
-  b."Histogram" = h."mofId";
-
-create view histogram_bars_b_view as
-select 
-  c."owner" as "table", c."name" as "column", 
-  a."ordinal","startingValue","valueCount"
-from 
-  histogram_bars_a_view a
-inner join
-  sys_fem.sql2003."AbstractColumn" c
-on
-  a."mofId" = c."Histogram";
+    select
+        h.table_cat,
+        h.table_schem,
+        h.table_name,
+        h.column_name,
+        h."CARDINALITY",
+        h.percent_sampled,
+        h.bar_count,
+        h.rows_per_bar,
+        h.rows_last_bar
+    from
+        histograms_view_internal h
+;
 
 create view histogram_bars_view as
-select 
-  t."name" as "table", b."column", 
-  b."ordinal","startingValue","valueCount"
-from 
-  histogram_bars_b_view b
-inner join
-  sys_fem.sql2003."AbstractColumnSet" t
-on
-  b."table" = t."mofId";
+    select 
+        h.table_cat,
+        h.table_schem,
+        h.table_name,
+        h.column_name,
+        b."ordinal" as ordinal,
+        b."startingValue" as start_value,
+        b."valueCount" as value_count
+    from
+        histograms_view_internal h
+    inner join
+        sys_fem.med."ColumnHistogramBar" b
+    on
+        h."mofId" = b."Histogram"
+;

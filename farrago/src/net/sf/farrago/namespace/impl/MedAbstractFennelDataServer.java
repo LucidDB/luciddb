@@ -92,6 +92,26 @@ public abstract class MedAbstractFennelDataServer
         }
     }
 
+    // implement FarragoMedLocalDataServer
+    public void computeIndexStats(
+        FemLocalIndex index, 
+        long rootPageId,
+        boolean estimate)
+    {
+        repos.beginTransientTxn();
+        try {
+            FemCmdVerifyIndex cmd = repos.newFemCmdVerifyIndex();
+            initIndexCmd(cmd, index);
+            cmd.setRootPageId(rootPageId);
+            cmd.setEstimate(estimate);
+            cmd.setIncludeTuples(getIncludeTuples());
+            long pageCount = getFennelDbHandle().executeCmd(cmd);
+            FarragoCatalogUtil.updatePageCount(index, pageCount);
+        } finally {
+            repos.endTransientTxn();
+        }
+    }
+
     private void initIndexCmd(
         FemIndexCmd cmd,
         FemLocalIndex index)
@@ -114,6 +134,11 @@ public abstract class MedAbstractFennelDataServer
     protected abstract void prepareIndexCmd(
         FemIndexCmd cmd,
         FemLocalIndex index);
+
+    /**
+     * Whether or not to include tuples in page count statistics
+     */
+    protected abstract boolean getIncludeTuples();
 
     /**
      * Gets the SegmentId of the segment storing an index.

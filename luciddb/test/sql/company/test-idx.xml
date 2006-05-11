@@ -73,7 +73,6 @@
       <test name="aggJoinEq" requiresSuccess="download">
         <test-metadata>
           <withIndex value="true"/>
-          <knownFailure value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/aggJoinEq.sql"/>
       </test>
@@ -97,7 +96,6 @@
         <!-- LDB-92 -->
         <test-metadata>
           <withIndex value="true"/>
-          <knownFailure value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/aggJoinEq_cust.sql"/>
       </test>

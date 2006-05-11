@@ -92,6 +92,15 @@ when is_clustered then 1
 else 3
 end;
 
+create function convert_cwm_statistic_to_int(val numeric)
+returns int
+contains sql
+deterministic
+return case
+when val is null then 0
+else cast (val as int)
+end;
+
 -- NOTE:  don't include ORDER BY in the view definitions
 
 create view schemas_view_internal as
@@ -201,7 +210,8 @@ create view columns_view_internal as
         c."length" as char_octet_length,
         c."ordinal" + 1 as ordinal_position,
         convert_cwm_nullable_to_string(c."isNullable") as is_nullable,
-        c."mofId"
+        c."mofId",
+        c."Histogram"
     from 
         tables_view_internal t 
     inner join 
@@ -474,7 +484,8 @@ create view primary_keys_view as
 ;
 grant select on primary_keys_view to public;
 
--- TODO:  index/table statistics
+-- TODO: use an outer join with histograms for index cardinality
+--   or store that statistic in the catalog
 
 create view index_info_internal as
     select
@@ -486,7 +497,7 @@ create view index_info_internal as
         i."name" as index_name,
         convert_cwm_index_attributes_to_type(i."isClustered") as type,
         0 as "CARDINALITY",
-        0 as pages,
+        i."pageCount" as pages,
         cast(null as varchar(128)) as filter_condition,
         i."mofId"
     from 
@@ -495,6 +506,45 @@ create view index_info_internal as
         sys_fem."MED"."LocalIndex" i
     on
         t."mofId" = i."spannedClass"
+;
+
+create view table_row_counts_internal as
+    select
+        t.table_cat,
+        t.table_schem,
+        t.table_name,
+        acs."rowCount" as "CARDINALITY",
+        t."mofId"
+    from 
+        tables_view_internal t
+    inner join
+        sys_fem.sql2003."AbstractColumnSet" acs
+    on
+        t."mofId" = acs."mofId"
+;
+
+-- NOTE: would be cleaner to have a separate view for page counts 
+--   but MedMdr joins work best when joining simple tables
+create view table_stats_internal as
+    select
+        t.table_cat,
+        t.table_schem,
+        t.table_name,
+        t."CARDINALITY",
+        sum(i."pageCount") as pages,
+        t."mofId"
+    from 
+        table_row_counts_internal t
+    inner join
+        sys_fem.med."LocalIndex" i
+    on
+        t."mofId" = i."spannedClass"
+    group by 
+        t."mofId",
+        t.table_cat,
+        t.table_schem,
+        t.table_name,
+        t."CARDINALITY"
 ;
 
 create view index_info_view as
@@ -510,7 +560,7 @@ create view index_info_view as
         c."name" as column_name,
         'A' as asc_ord_desc,
         i."CARDINALITY",
-        i.pages,
+        convert_cwm_statistic_to_int(i.pages) as pages,
         i.filter_condition
     from 
         index_info_internal i
@@ -518,6 +568,23 @@ create view index_info_view as
         sys_fem."MED"."LocalIndexColumn" c
     on
         i."mofId" = c."index"
+union
+    select 
+        t.table_cat,
+        t.table_schem,
+        t.table_name,
+        false as non_unique,
+        null_identifier() as index_qualifier,
+        null_identifier() as index_name,
+        0 as type,
+        0 as ordinal_position,
+        null_identifier() as column_name,
+        cast(null as varchar(128)) as asc_or_desc,
+        convert_cwm_statistic_to_int(t."CARDINALITY") as "CARDINALITY",
+        convert_cwm_statistic_to_int(t.pages) as pages,
+        cast(null as varchar(128)) as filter_condition
+    from
+        table_stats_internal t
 ;
 grant select on index_info_view to public;
     
