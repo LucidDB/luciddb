@@ -523,7 +523,7 @@ bool LbmGeneratorExecStream::addRidToBitmap(
         }
         // now that we have a buffer, initialize the entry
         bitmapTable[keycode].bitmap.init(
-            bitmapTable[keycode].bufferPtr,entrySize, bitmapTupleDesc);
+            bitmapTable[keycode].bufferPtr, NULL, entrySize, bitmapTupleDesc);
         bitmapTable[keycode].bitmap.setEntryTuple(initBitmap);
         bitmapTable[keycode].inuse = true;
     }

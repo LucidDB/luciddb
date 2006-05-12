@@ -120,6 +120,17 @@ protected:
     static uint value2ByteArray(uint value, PBuffer array, uint arraySize);
 
     /**
+     * Computes the number of bytes required to store a specified number of
+     * zero bytes
+     *
+     * @param nZeroBytes the number of zero bytes to be stored
+     *
+     * @return number of bytes required to store the zero bytes; if the length
+     * can be encoded in the segment descriptor, 0 is returned.
+     */
+    uint computeSpaceForZeroBytes(uint nZeroBytes);
+
+    /**
      * Decodes the lengths stored in the descriptor for a segment, based
      * on where the segment descriptor is currently pointing, and advances
      * the segment descriptor to the next descriptor
@@ -134,6 +145,36 @@ protected:
      */
     static void readSegDescAndAdvance(
         PBuffer &pSegDesc, uint &bmSegLen, uint &zeroBytes);
+
+    /** 
+     * Computes the length of the remaining segments in the current bitmap
+     * segment, starting at the one specified by the input segment descriptor
+     *
+     * @param segDesc segment descriptor of the first segment that we want
+     * to start computing the length from
+     *
+     * @return number of bytes occupied by the remaining segments in the 
+     * current entry
+     */
+    uint computeSegLength(PBuffer segDesc);
+
+    /**
+     * Computes the length of the remaining segment descriptors in the current
+     * bitmap segment, starting at the one specified by the input segment
+     * descriptor
+     *
+     * @param segDesc segment descriptor of the first segment that we want
+     * to start computing the length from
+     *
+     * @return number of bytes occupied by the remaining segment descriptors
+     * in the current entry
+     */
+    uint computeSegDescLength(PBuffer segDesc);
+
+    /**
+     * Returns the number of segments in an entry
+     */
+    uint countSegments();
 
 public:
     /**
@@ -157,18 +198,30 @@ public:
     static inline bool setSegLength(uint8_t &segDescByte, uint segLen);
 
     /**
+     * Replace the current segment length in a descriptor with the new
+     * segment length.  Also, leaves the current zero trailing bytes count
+     * untouched
+     *
+     * @param segDescByte segment descriptor byte to be modified
+     * @param segLen new segment length
+     *
+     * @return true if length can be encoded in the segment descriptor
+     */
+    inline bool adjustSegLength(uint8_t &segDescByte, uint segLen);
+
+    /**
      * Get the segment length encoded in SegmentDescriptor.
      *
      * @param segDescByte the seg desc byte with segment length encoded.
      */
-    static inline uint getSegLength(uint8_t segDescByte);
+    inline uint getSegLength(uint8_t segDescByte);
 
     /**
      * Get the number of bytes to store the length of zero bytes.
      *
      * @param segDescByte the seg desc byte with length of zero bytes encoded.
      */
-    static inline uint getZeroLengthByteCount(uint8_t segDescByte);
+    inline uint getZeroLengthByteCount(uint8_t segDescByte);
 
     /**
      * One byte in the bitmap encodes 8 RIDs.
@@ -190,6 +243,16 @@ inline bool LbmSegment::setSegLength(uint8_t &segDescByte, uint segLen)
         return false;
     }
     segDescByte = (uint8_t) ((segLen - 1) << LbmHalfByteSize);
+    return true;
+}
+
+inline bool LbmSegment::adjustSegLength(uint8_t &segDescByte, uint segLen)
+{
+    if (segLen > LbmMaxSegSize) {
+        return false;
+    }
+    segDescByte &= ~LbmSegLengthMask;
+    segDescByte |= (uint8_t) ((segLen -1) << LbmHalfByteSize);
     return true;
 }
 

@@ -23,10 +23,7 @@
 #include "fennel/common/FennelExcn.h"
 #include "fennel/lucidera/hashexe/LhxHashTable.h"
 #include "fennel/tuple/TuplePrinter.h"
-#include <algorithm>
 #include <sstream>
-#include <set>
-#include <map>
 
 using namespace std;
 
@@ -278,17 +275,13 @@ PBuffer *LhxHashBlockAccessor::getSlot(uint slotNum)
 }
 
 void LhxHashTable::init(
-    SegmentAccessor const& scratchAccessorInit,
-    uint maxBlockCountInit,
     uint partitionLevelInit,
-    TupleDescriptor const &inputTupleDesc,
-    TupleProjection keyColsProj,
-    TupleProjection aggsProj,
-    TupleProjection const &dataProj)
+    LhxJoinInfo const &joinInfo)
 {
-    scratchAccessor = scratchAccessorInit;
-    assert (maxBlockCountInit >= 1);
-    maxBlockCount = maxBlockCountInit;
+    maxBlockCount = joinInfo.numCachePages;
+    assert (maxBlockCount > 1);
+    scratchAccessor = joinInfo.memSegmentAccessor;
+
     partitionLevel = partitionLevelInit;
 
     bufferLock.accessSegment(scratchAccessor);
@@ -302,30 +295,43 @@ void LhxHashTable::init(
     hashGenSub.init(partitionLevel+1);
 
     /*
-     * These steps change the keyColsProj and aggsProj which are based on
-     * original build row into indexes of the the new keyColsAndAggs tuple.
+     * These steps initializes the keyColsProjInKey and aggsProjInKey which are
+     * based on original build row into indexes of the the new keyColsAndAggs
+     * tuple.
      * REVIEW: This might not be how agg layout in hash table looks like. The
      * aggs will have agg computers, stored within the hash table will be the
      * data buffers for these agg computers.
      */
+    TupleDescriptor const &inputTupleDesc = joinInfo.inputDesc[1];
+    keyColsProj = joinInfo.keyProj[1];
+    aggsProj = joinInfo.aggsProj;
+    dataProj = joinInfo.dataProj;
+
     TupleDescriptor keyDesc;
     TupleDescriptor dataDesc;
+    TupleProjection keyColsProjInKey;
+    TupleProjection aggsProjInKey;
     uint keyCount = keyColsProj.size();
     uint i;
-
+    
     for (i = 0; i < keyCount; i++) {
         keyDesc.push_back(inputTupleDesc[keyColsProj[i]]);
-        keyColsProj[i] = i;
+        keyColsProjInKey.push_back(i);
     }
 
+    /*
+     * FIXME: this needs to be adjusted for aggs.
+     */
+    keyColsAndAggsProj = keyColsProj;
     for (i = 0; i < aggsProj.size(); i++) {
+        keyColsAndAggsProj.push_back(aggsProj[i]);
         keyDesc.push_back(inputTupleDesc[aggsProj[i]]);
-        aggsProj[i] = i + keyCount;
+        aggsProjInKey.push_back(i + keyCount);
     }
 
-    hashKeyAccessor.init(keyDesc, keyColsProj, aggsProj);
+    hashKeyAccessor.init(keyDesc, keyColsProjInKey, aggsProjInKey);
 
-    for (int i = 0; i < dataProj.size(); i++) {
+    for (i = 0; i < dataProj.size(); i++) {
         dataDesc.push_back(inputTupleDesc[dataProj[i]]);
     }
 
@@ -334,33 +340,27 @@ void LhxHashTable::init(
 
 PBuffer LhxHashTable::allocBlock()
 {
-    PBuffer resultBlock = NULL;
-    currentBlockCount ++;
+    PBuffer resultBlock;
     
-    if (currentBlockCount > maxBlockCount) {
-        /*
-         * Return NULL. Keep blockCount as max.
-         */
-        currentBlockCount = maxBlockCount;
-
-        ostringstream errMsg;
-        errMsg << "Hash Table can not fit in memory:"
-               << " current # blocks:" << currentBlockCount
-               << " maximum # blocks:" << maxBlockCount;
-        throw FennelExcn(errMsg.str());            
-    } else {
+    if (currentBlockCount < maxBlockCount) {
+        currentBlockCount ++;
         /*
          * Allocate a new block.
          */
         bufferLock.allocatePage();
         resultBlock = bufferLock.getPage().getWritableData();
         bufferLock.unlock();
-
+        
         /*
          * The new block is not linked in yet.
          */
         blockAccessor.setCurrent(resultBlock, false);
         blockAccessor.setNext(NULL);
+    } else {
+        /*
+         * Hash Table reached its maximum size.
+         */
+        resultBlock = NULL;
     }
     return resultBlock;
 }
@@ -423,7 +423,7 @@ bool LhxHashTable::allocateResources(uint numSlotsInit)
     }
 
     /*
-     * Need to allocate mroe than one blocks.
+     * Need to allocate more than one blocks.
      */
     int numSlotsToAlloc = numSlots - numSlotsPerBlock;
 
@@ -471,6 +471,7 @@ void LhxHashTable::releaseResources()
     blockAccessor.reset();
     nodeBlockAccessor.reset();
     currentBlock = firstBlock = NULL;
+    currentBlockCount = 0;
 }
 
 uint LhxHashTable::blocksNeeded(
@@ -566,21 +567,12 @@ PBuffer LhxHashTable::findKey(
     return (hashKeyAccessor.getCurrent());
 }
 
-PBuffer LhxHashTable::addKey(
-    TupleData const &inputTuple,
-    TupleProjection const &keyColsProj,
-    TupleProjection const &aggsProj)
+bool LhxHashTable::addKeyData(TupleData const &inputTuple)
 {
     uint slotNum = (hashGen.hash(inputTuple, keyColsProj)) % numSlots;
     
     PBuffer *slot = getSlot(slotNum);
     assert (slot);
-
-    TupleProjection keyColsAndAggsProj = keyColsProj;
-    
-    for (int i = 0; i < aggsProj.size(); i ++) {
-        keyColsAndAggsProj.push_back(aggsProj[i]);
-    }
 
     TupleData tmpKeyTuple;
     
@@ -590,25 +582,34 @@ PBuffer LhxHashTable::addKey(
     uint newKeyLen = hashKeyAccessor.getStorageSize(&tmpKeyTuple);
     PBuffer newKey = allocBuffer(newKeyLen);
 
-    if (!newKey) {
+    TupleData tmpDataTuple;    
+    tmpDataTuple.projectFrom(inputTuple, dataProj);
+    uint newDataLen = hashDataAccessor.getStorageSize(&tmpDataTuple);
+    PBuffer newData = allocBuffer(newDataLen);
+
+    if (!newKey || !newData) {
         /*
          * Ran out of memory.
          */
-        return NULL;
+        return false;
     }
+
 
     *slot = newKey;
     hashKeyAccessor.setCurrent(newKey, false);
     hashKeyAccessor.setMatched(false);
     hashKeyAccessor.pack(tmpKeyTuple);
     hashKeyAccessor.setNext(newNextKey);
-    return newKey;
+
+    hashKeyAccessor.setCurrent(newKey, true);
+    hashDataAccessor.setCurrent(newData, false);
+    hashDataAccessor.pack(tmpDataTuple);
+    hashKeyAccessor.addData(newData);
+
+    return true;
 }
 
-bool LhxHashTable::addData(
-    PBuffer keyNode,
-    TupleData const &inputTuple,
-    TupleProjection const &dataProj)
+bool LhxHashTable::addData(PBuffer keyNode, TupleData const &inputTuple)
 {
     /*
      * REVIEW: optimizatin possible here if dataProj is empty; i.e. key
@@ -638,21 +639,19 @@ bool LhxHashTable::addData(
     return true;
 }
 
-bool LhxHashTable::addTuple(
-    TupleData const &inputTuple,
-    TupleProjection const &keyColsProj,
-    TupleProjection const &aggsProj,
-    TupleProjection const &dataProj)
+bool LhxHashTable::addTuple(TupleData const &inputTuple)
 {
-    // We are building the hash table now.
+    /*
+     * We are building the hash table.
+     */
     bool isProbing = false;
     PBuffer destKey = findKey(inputTuple, keyColsProj, isProbing);
 
     if (!destKey) {
-        destKey = addKey(inputTuple, keyColsProj, aggsProj);
+        return addKeyData(inputTuple);
+    } else {
+        return addData(destKey, inputTuple);
     }
-    
-    return ((destKey != NULL) && addData(destKey, inputTuple, dataProj));
 }
 
 string LhxHashTable::printSlot(uint slotNum)
@@ -720,23 +719,30 @@ bool LhxHashTableReader::advanceSlot()
             curSlot ++;
             
             if (slot && (PBuffer)*slot) {
-                if (!returnUnMatched) {
-                    curKey = *slot;
-                    break;
-                }
-                else {
+                if (returnUnMatched) {
                     hashKeyAccessor.setCurrent(*slot, true);
-                    // only return unmatched keys
+                    /*
+                     * Only return unmatched keys
+                     */
                     if (!hashKeyAccessor.isMatched()) {
                         curKey = *slot;
                         break;
                     }
                 }
+                else {
+                    /*
+                     * Return everything.
+                     */
+                    curKey = *slot;
+                    break;
+                }
             }
         }
 
         if (!curKey) {
-            // cound not find any fitting slot.
+            /*
+             * cound not find any fitting slot.
+             */
             return false;
         }
     }
@@ -791,32 +797,39 @@ void LhxHashTableReader::produceTuple(TupleData &outputTuple)
 
 void LhxHashTableReader::init(
     LhxHashTable *hashTableInit,
-    TupleDescriptor const &outputTupleDesc,
-    TupleProjection keyColsProj,
-    TupleProjection aggsProj,
-    TupleProjection const &dataProjInit)
+    LhxJoinInfo const &joinInfo)
 {
+    TupleDescriptor const &outputTupleDesc = joinInfo.inputDesc[1];
+    TupleProjection const &keyColsProj = joinInfo.keyProj[1];
+    TupleProjection const &aggsProj = joinInfo.aggsProj;
+
+    dataProj = joinInfo.dataProj;
+
     TupleDescriptor keyDesc;
     TupleDescriptor dataDesc;
+    TupleProjection keyColsProjInKey;
+    TupleProjection aggsProjInKey;
     uint keyCount = keyColsProj.size();
     uint i;
 
-    keyColsAndAggsProj = keyColsProj;
-    for (int i = 0; i < keyCount; i++) {
+    for (i = 0; i < keyCount; i++) {
         keyDesc.push_back(outputTupleDesc[keyColsProj[i]]);
-        keyColsProj[i] = i;
+        keyColsProjInKey.push_back(i);
     }
     
+    /*
+     * FIXME: this needs to be adjusted for aggs.
+     */
+    keyColsAndAggsProj = keyColsProj;
     for (i = 0; i < aggsProj.size(); i ++) {
         keyColsAndAggsProj.push_back(aggsProj[i]);
         keyDesc.push_back(outputTupleDesc[aggsProj[i]]);
-        aggsProj[i] = i + keyCount;
+        aggsProjInKey.push_back(i + keyCount);
     }
 
-    hashKeyAccessor.init(keyDesc, keyColsProj, aggsProj);
+    hashKeyAccessor.init(keyDesc, keyColsProjInKey, aggsProjInKey);
 
-    dataProj = dataProjInit;
-    for (int i = 0; i < dataProj.size(); i++) {
+    for (i = 0; i < dataProj.size(); i++) {
         dataDesc.push_back(outputTupleDesc[dataProj[i]]);
     }
 
@@ -836,7 +849,7 @@ void LhxHashTableReader::bind(PBuffer key)
     boundKey = curKey = key;
     curSlot = 0;
     curData = NULL;
-    started = false;
+    isPositioned = false;
 }
 
 void LhxHashTableReader::bindKey(PBuffer key)
@@ -853,7 +866,7 @@ void LhxHashTableReader::bindUnMatched()
 
 bool LhxHashTableReader::getNext(TupleData &outputTuple)
 {
-    if (!started) {
+    if (!isPositioned) {
         assert (!(boundKey && returnUnMatched));
 
         /*
@@ -866,7 +879,7 @@ bool LhxHashTableReader::getNext(TupleData &outputTuple)
             return false;
         }
         produceTuple(outputTuple);
-        started = true;
+        isPositioned = true;
         return true;
     }
 

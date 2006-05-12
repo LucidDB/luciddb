@@ -457,12 +457,9 @@ class LcsIndexAccessRule extends RelOptRule
             origRowScan.getCluster(),
             sargSeqList);
         
-        // NOTE: For now the multi-column search key only supports equality
-        // search on each column. requireUnion==false for this case.
-        boolean requireUnion = 
-            (sargSeqList.size() == 1) &&
-            (sargSeqList.get(0).isRange() ||
-             (sargSeqList.get(0).isPoint() && partialMatch));
+        boolean requireUnion =
+            (sargSeqList.get(sargSeqList.size() - 1).isRange() ||
+            (sargSeqList.get(sargSeqList.size() - 1).isPoint() && partialMatch));
         
         RelNode keyInput =
             mergeTraitsAndConvert(

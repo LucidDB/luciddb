@@ -58,7 +58,7 @@ void LbmExecStreamTestBase::generateBitmaps(
     // setup an LbmEntry with the initial rid value
     uint scratchBufSize = LbmEntry::getScratchBufferSize(bitmapColSize);
     entryBuf.reset(new FixedBuffer[scratchBufSize]);
-    lbmEntry.init(entryBuf.get(), scratchBufSize, bitmapTupleDesc);
+    lbmEntry.init(entryBuf.get(), NULL, scratchBufSize, bitmapTupleDesc);
     bitmapTupleData[0].pData = (PConstBuffer) &rid;
     lbmEntry.setEntryTuple(bitmapTupleData);
     TraceLevel level = getSourceTraceLevel(getTraceName());

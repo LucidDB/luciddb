@@ -240,4 +240,54 @@ ProjectRel(NAME=[$1])
 ]]>
         </Resource>
     </TestCase>
+    <TestCase name="testPushSemiJoinPastFilter">
+        <Resource name="sql">
+            <![CDATA[select e.name from sales.emps e, sales.depts d where e.deptno = d.deptno and e.name = 'foo']]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+ProjectRel(NAME=[$1])
+  FilterRel(condition=[AND(=($2, $10), =($1, _ISO-8859-1'foo'))])
+    JoinRel(condition=[true], joinType=[inner])
+      TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+      TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+ProjectRel(NAME=[$1])
+  JoinRel(condition=[=($2, $10)], joinType=[inner], semiJoinDone=[true], multiJoinDone=[false])
+    FilterRel(condition=[=($1, _ISO-8859-1'foo')])
+      SemiJoinRel(condition=[=($2, $10)], joinType=[inner])
+        TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+        TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+    TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testConvertMultiJoinRule">
+        <Resource name="sql">
+            <![CDATA[select e1.name from sales.emps e1, sales.depts d, sales.emps e2 where e1.deptno = d.deptno and d.deptno = e2.deptno]]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+ProjectRel(NAME=[$1])
+  FilterRel(condition=[AND(=($2, $10), =($10, $14))])
+    JoinRel(condition=[true], joinType=[inner])
+      JoinRel(condition=[true], joinType=[inner])
+        TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+        TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+      TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+ProjectRel(NAME=[$1])
+  MultiJoinRel(joinFilter=[AND(=($10, $14), =($2, $10))])
+    TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+    TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+    TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+]]>
+        </Resource>
+    </TestCase>
 </Root>

@@ -200,13 +200,18 @@ bool BTreeSearchExecStream::innerSearchLoop()
 
         switch(lowerBoundDirective) {
         case SEARCH_UNBOUNDED_LOWER:
-            pReader->searchFirst();
+            if ((*pSearchKey).size() <= 1) {
+                pReader->searchFirst();
+                break;
+            } 
+            // otherwise, this is the case where we have > 1 key and a
+            // non-equality search on the last key; in this case, we need
+            // to position to the equality portion of the key
+        case SEARCH_CLOSED_LOWER:
+            pReader->searchForKey(*pSearchKey,DUP_SEEK_BEGIN,leastUpper);
             break;
         case SEARCH_OPEN_LOWER:
             pReader->searchForKey(*pSearchKey,DUP_SEEK_END,leastUpper);
-            break;
-        case SEARCH_CLOSED_LOWER:
-            pReader->searchForKey(*pSearchKey,DUP_SEEK_BEGIN,leastUpper);
             break;
         default:
             permFail(
@@ -284,6 +289,17 @@ void BTreeSearchExecStream::readDirectives()
 bool BTreeSearchExecStream::testInterval()
 {
     if (upperBoundDirective == SEARCH_UNBOUNDED_UPPER) {
+        // if more than one search key in an unbounded search, the first part
+        // of the key must be equality, so make sure that part of the key
+        // matches
+        if ((*pSearchKey).size() > 1) {
+            readerKeyAccessor.unmarshal(readerKeyData);
+            int c = inputKeyDesc.compareTuplesKey(
+                readerKeyData, *pSearchKey, (*pSearchKey).size() - 1);
+            if (c != 0) {
+                return false;
+            }
+        }
         return true;
     } else {
         readerKeyAccessor.unmarshal(readerKeyData);
@@ -339,6 +355,6 @@ void BTreeSearchExecStream::setAdditionalKeys()
     pSearchKey = &inputKeyData;
 }
 
-FENNEL_END_CPPFILE("$Id$");
+FENNEL_END_CPPFILE("$Id: //open/lu/dev/fennel/ftrs/BTreeSearchExecStream.cpp#7 $");
 
 // End BTreeSearchExecStream.cpp

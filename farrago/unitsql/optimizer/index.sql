@@ -582,6 +582,28 @@ select * from lbmemps where deptno = 2 or ename = 'Fred' order by empno;
 
 select * from lbmemps where deptno = 2 or ename = 'Fred' order by empno;
 
+----------------------------------------------------------------------
+-- Tests using multiple index keys with range searches on the last key
+----------------------------------------------------------------------
+create table multikey(a int, b int) server sys_column_store_data_server;
+insert into multikey values (0, 0);
+insert into multikey values (1, 1);
+insert into multikey values (1, 2);
+insert into multikey values (1, 3);
+insert into multikey values (1, 4);
+insert into multikey values (2, 2);
+create index imultikey on multikey(a, b);
+
+!set outputformat csv
+explain plan for select * from multikey where a = 1 and b > 1;
+explain plan for select * from multikey where a = 1 and b <= 3;
+explain plan for select * from multikey where a = 1 and b >= 2 and b < 4;
+
+!set outputformat table
+select * from multikey where a = 1 and b > 1;
+select * from multikey where a = 1 and b <= 3;
+select * from multikey where a = 1 and b >= 2 and b < 4;
+
 ----------------------------------------------------------
 -- Tests to exercise using startrid in bitmap index search
 ----------------------------------------------------------

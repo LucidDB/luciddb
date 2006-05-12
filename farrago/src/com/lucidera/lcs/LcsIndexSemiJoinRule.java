@@ -411,7 +411,7 @@ public class LcsIndexSemiJoinRule extends RelOptRule
                 mergeRels[0] =
                     new LcsIndexSearchRel(
                         indexSearch.getChild(), indexSearch.getIndexScan(),
-                        indexSearch.getIsUniqueKey(), indexSearch.getIsOuter(),
+                        indexSearch.isUniqueKey(), indexSearch.isOuter(),
                         indexSearch.getInputKeyProj(),
                         indexSearch.getInputJoinProj(),
                         indexSearch.getInputDirectiveProj(),

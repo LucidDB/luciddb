@@ -313,7 +313,33 @@ public class FarragoOptRulesTest extends FarragoSqlToRelTestBase
         check(
             programBuilder.createProgram(),
             "select e1.name from sales.emps e1, sales.depts d, sales.emps e2 " +
-        "where e1.deptno = d.deptno and d.deptno = e2.deptno");
+            "where e1.deptno = d.deptno and d.deptno = e2.deptno");
+    }
+    
+    public void testPushSemiJoinPastFilter()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(new PushFilterRule());
+        programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
+        programBuilder.addRuleInstance(new PushSemiJoinPastFilterRule());
+        check(
+            programBuilder.createProgram(),
+            "select e.name from sales.emps e, sales.depts d " +
+            "where e.deptno = d.deptno and e.name = 'foo'");
+    }
+    
+    public void testConvertMultiJoinRule()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(new PushFilterRule());
+        programBuilder.addMatchOrder(HepMatchOrder.BOTTOM_UP);
+        programBuilder.addRuleInstance(new ConvertMultiJoinRule());
+        check(
+            programBuilder.createProgram(),
+            "select e1.name from sales.emps e1, sales.depts d, sales.emps e2 " +
+            "where e1.deptno = d.deptno and d.deptno = e2.deptno");
     }
 }
 

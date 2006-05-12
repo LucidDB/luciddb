@@ -280,7 +280,13 @@ class ExecStreamSubFactory_lu
 
         // LhxJoinExecStream requires a private ScratchSegment.
         pExecStreamFactory->createPrivateScratchSegment(params);
-        
+
+        /*
+         * External segment to store partitions.
+         */
+        SharedDatabase pDatabase = pExecStreamFactory->getDatabase();
+        params.pTempSegment = pDatabase->getTempSegment();
+
         /*
          * These fields are currently not used by the optimizer. We know that
          * optimizer only supports inner equi hash join.

@@ -187,6 +187,15 @@ typedef boost::shared_ptr<LbmEntry> SharedLbmEntry;
 class ByteBuffer;
 typedef boost::shared_ptr<ByteBuffer> SharedByteBuffer;
 
+class LhxPartition;
+typedef boost::shared_ptr<LhxPartition> SharedLhxPartition;
+
+class LhxPartitionWriter;
+typedef boost::shared_ptr<LhxPartitionWriter> SharedLhxPartitionWriter;
+
+class LhxPlan;
+typedef boost::shared_ptr<LhxPlan> SharedLhxPlan;
+
 FENNEL_END_NAMESPACE
 
 #endif

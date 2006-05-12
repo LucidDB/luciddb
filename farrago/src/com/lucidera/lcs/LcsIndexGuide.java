@@ -1219,13 +1219,7 @@ public class LcsIndexGuide
                     }
                     
                     // try to match one more column from the interval column list
-                    // TODO (March 08, 2006 rchen)
-                    // This is to be enabled once BTreeSearch handles unbounded
-                    // ranges for mutli-column keys. Note depending on the directive
-                    // convention, FennelUtil.convertIntervalListToTuple might need
-                    // to be changed to use the correct directives in search keys.
-                    if (false && 
-                        rangeColumnList.contains(getIndexColumn(index, matchedPos))) {
+                    if (rangeColumnList.contains(getIndexColumn(index, matchedPos))) {
                         matchedPos ++;
                     }
                     
@@ -1248,7 +1242,8 @@ public class LcsIndexGuide
                     // remove matched columns from the set.
                     if (!pointColumnList.remove(matchedCol)) {
                         // last column might come from the interval list.
-                        assert(rangeColumnList.remove(matchedCol));
+                        boolean removed = rangeColumnList.remove(matchedCol);
+                        assert(removed);
                     }
                 }
                 

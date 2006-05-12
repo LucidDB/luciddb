@@ -23,6 +23,7 @@
 #include "fennel/lucidera/bitmap/LbmEntry.h"
 #include <iomanip>
 #include <sstream>
+#include <boost/scoped_array.hpp>
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -43,10 +44,13 @@ LbmEntry::LbmEntry()
 
 void LbmEntry::init(
     PBuffer scratchBufferInit,
+    PBuffer mergeScratchBufferInit,
     uint scratchBufferSizeInit,
     TupleDescriptor const &tupleDesc)
 {
     scratchBuffer = scratchBufferInit;
+    mergeScratchBuffer = mergeScratchBufferInit;
+
     /*
      * Leave room to write the last segment descriptor which has an optional
      * length field of 3 bytes.
@@ -339,50 +343,61 @@ bool LbmEntry::closeCurrentSegment(LcsRid rid)
          * no rid gap between the two segments.
          */
     } else {
-        if (ridDistance <= LbmZeroLengthCompact) {
+        uint lengthBytes;
+        assert(currSegDescByte + 1 == pSegDescEnd);
+        if (!setZeroLength(ridDistance, currSegDescByte, lengthBytes)) {
             /*
-             * Can encode the zero bits directly in the segment descriptor.
+             * The ridDistance can not be encoded in LbmZeroLengthExtended
+             * bytes.
+             *
+             * In this special case, this segment descriptor will be the
+             * last one on the current LbmEntry. The descriptor will encode
+             * that 0 bits follows the current segment. The caller will
+             * construct a new LbmEntry with rid, and very likely there's a
+             * gap between the last RID encoded by the current LbmEntry and
+             * the startRID of this new LbmEntry. This means that RIDs
+             * might not be densely encoded in an ordered sequence of 
+             * LbmEntries.
              */
-            *(currSegDescByte) |= (uint8_t) (ridDistance & LbmZeroLengthMask);
-        } else {
-            uint lengthBytes = value2ByteArray(ridDistance, 
-                                               pSegDescEnd,
-                                               LbmZeroLengthExtended);
-            
-            if (lengthBytes) {
-                /*
-                 * No check of remaining buffer size here since we always
-                 * leaves LbmZeroLengthExtended bytes in the buffer to encode
-                 * the zero bits. 
-                 */
-                *(currSegDescByte) |= 
-                    (uint8_t) ((lengthBytes + LbmZeroLengthCompact) 
-                               & LbmZeroLengthMask);
-                pSegDescEnd += lengthBytes;
-                currentEntrySize += lengthBytes;
-            } else {
-                /*
-                 * The ridDistance can not be encoded in LbmZeroLengthExtended
-                 * bytes.
-                 *
-                 * In this special case, this segment descriptor will be the
-                 * last one on the current LbmEntry. The descriptor will encode
-                 * that 0 bits follows the current segment. The caller will
-                 * construct a new LbmEntry with rid, and very likely there's a
-                 * gap between the last RID encoded by the current LbmEntry and
-                 * the startRID of this new LbmEntry. This means that RIDs
-                 * might not be densely encoded in an ordered sequence of 
-                 * LbmEntries.
-                 */
-                resetSegment();
-                return false;
-            }
+            resetSegment();
+            return false;
         }
+        currentEntrySize += lengthBytes;
+        pSegDescEnd += lengthBytes;
     }
     resetSegment();
     return true;
 }
 
+bool LbmEntry::setZeroLength(
+    uint nZeroBytes, PBuffer pLenDesc, uint &lengthBytes)
+{
+    *(pLenDesc) &= ~LbmZeroLengthMask;
+    if (nZeroBytes <= LbmZeroLengthCompact) {
+        /*
+         * Can encode the zero bits directly in the segment descriptor.
+         */
+        *(pLenDesc) |= (uint8_t) (nZeroBytes & LbmZeroLengthMask);
+        lengthBytes = 0;
+    } else {
+        lengthBytes = value2ByteArray(
+            nZeroBytes, pLenDesc + 1, LbmZeroLengthExtended);
+        
+        if (lengthBytes) {
+            /*
+             * Caller needs to ensure that the buffer has enough space to
+             * encode the zero bytes.
+             */
+            *(pLenDesc) |= 
+                (uint8_t) ((lengthBytes + LbmZeroLengthCompact) &
+                    LbmZeroLengthMask);
+        } else {
+            return false;
+        }
+    }
+
+    return true;
+}
 
 uint LbmEntry::getRowCount()
 {
@@ -743,10 +758,11 @@ bool LbmEntry::adjustEntry(TupleData &inputTuple)
             < LbmOneByteSize);
 
         // use the input as the current and set the bit at inputStartRID.
+        LcsRid oldStartRid = startRID;
         setEntryTuple(inputTuple);
 
-        // remember to set the bit corresponding startRID
-        setRIDSegByte(pSegStart - 1, startRID);
+        // remember to set the bit corresponding original startRID
+        setRIDSegByte(pSegStart - 1, oldStartRid);
 
         // the two entries are already merged
         return true;
@@ -847,14 +863,15 @@ bool LbmEntry::mergeEntry(TupleData &inputTuple)
     assert (!isSingleBitmap());
 
     /*
-     * MergeEntry needs to make sure that no entries of the same index
-     * key have overlapping rid ranges. Overlap could happen when the last byte
-     * encoded by the first entry is also encoded by the first byte in the next
-     * entry.
+     * MergeEntry needs to first handle the case where there are overlapping
+     * rid ranges. Overlap could happen when the last byte encoded by the
+     * first entry is also encoded by the first byte in the next entry.
      * So the first thing mergeEntry does is to adjust the current entry to
-     * include the first byte of the input entry. After that, the rid ranges of
-     * the current entry and the input entry would not overlap, and the merging
-     * logic takes place.
+     * include the first byte of the input entry. After that, if there is still
+     * overlap, then we are trying to merge a singleton within the current
+     * rid range, so we need to handle that case.
+     * Otherwise, the current entry and the input entry do not overlap, and
+     * the regular merging logic takes place.
      */
 
     /*
@@ -871,26 +888,27 @@ bool LbmEntry::mergeEntry(TupleData &inputTuple)
     LcsRid &inputStartRID = *((LcsRid*)inputTuple[inputTuple.size() - 3].pData);
 
     /*
-     * Only the last segment byte in the current entry and the first segment
-     * byte in the input entry can overlap.
+     * First, if there is overlap in the last byte, move the first byte of the
+     * input entry to the last byte of this entry. Modify inputTuple,
+     * inputStartRID.
      */
-    assert(inputStartRID >= roundToByteBoundary(endRID));
-
-    /*
-     * First, if there is overlap, move the first byte of the input entry to
-     * the last byte of this entry. Modify inputTuple, inputStartRID.
-     */
-    if (inputStartRID <= endRID) {
+    if (inputStartRID <= endRID &&
+        inputStartRID >= roundToByteBoundary(endRID))
+    {
         if (adjustEntry(inputTuple)) {
             return true;
         }
     }
 
     /*
-     * After adjustEntry(), there should be no overlap between the current
-     * entry and the (newly modified) input entry tuple.
+     * After adjustEntry(), if there is still overlap between the current
+     * entry and the (newly modified) input entry tuple, then we are trying
+     * to merge in a singleton.
      */
-    assert(inputStartRID > endRID);
+    if (inputStartRID <= endRID) {
+        assert(isSingleton(inputTuple));
+        return spliceSingleton(inputTuple);
+    }
 
     uint mergeSpaceRequired = getMergeSpaceRequired(inputTuple);
 
@@ -950,6 +968,424 @@ bool LbmEntry::mergeEntry(TupleData &inputTuple)
     return true;
 }
 
+bool LbmEntry::spliceSingleton(TupleData &inputTuple)
+{
+    assert(!isSingleBitmap());
+
+    int ridField = inputTuple.size() - 3;
+    LcsRid &inputStartRID = *((LcsRid*) inputTuple[ridField].pData);
+
+    // special case where the current entry is the minimum entry and we are
+    // trying to splice a rid in front of it
+    if (inputStartRID < startRID) {
+
+        // reverse the roles of current and input and merge the original
+        // current into the original input; first copy the current to the
+        // temporary merge buffer
+        if (isSegmentOpen()) {
+            closeCurrentSegment();
+        }
+        TupleData origCurrEntry;
+        copyToMergeBuffer(origCurrEntry, startRID, pSegStart, pSegDescStart);
+
+        setEntryTuple(inputTuple);
+        return mergeEntry(origCurrEntry);
+
+    } else {
+        // loop through each segment and determine if there already is a
+        // rid range containing the input singleton
+        PBuffer segDesc = pSegDescStart;
+        PBuffer seg = pSegStart;
+        LcsRid srid = startRID;
+        while (segDesc < pSegDescEnd) {
+            uint segBytes;
+            uint zeroBytes;
+            PBuffer prevSegDesc = segDesc;
+            readSegDescAndAdvance(segDesc, segBytes, zeroBytes);
+
+            // input rid is within the range of an existing set of rids
+            if (inputStartRID >= srid &&
+                inputStartRID < srid + (segBytes * LbmOneByteSize))
+            {
+                setRIDSegByte(
+                    seg - 1 -
+                        opaqueToInt(inputStartRID - srid) / LbmOneByteSize,
+                    inputStartRID);
+                return true;
+            }
+            LcsRid nextSrid = srid + (zeroBytes + segBytes) * LbmOneByteSize;
+            // input rid is within the range of trailing zeros
+            if (inputStartRID < nextSrid) {
+                return addNewSegment(
+                    inputTuple, srid, prevSegDesc, segDesc, seg, segBytes,
+                    zeroBytes);
+            }
+            seg -= segBytes;
+            srid = nextSrid;
+        }
+        // should never go past the end of the entry, as we would not have
+        // entered this method otherwise
+        assert(false);
+        return true;
+    }
+}
+
+void LbmEntry::copyToMergeBuffer(
+    TupleData &newEntry, LcsRid newStartRID, PBuffer segStart,
+    PBuffer segDescStart)
+{
+    assert(mergeScratchBuffer != NULL);
+    PBuffer pTempBuff = mergeScratchBuffer;
+    memcpy(pTempBuff, scratchBuffer, keySize);
+
+    newEntry.resize(entryTuple.size());
+    for (int i = 0; i < entryTuple.size() - 3; i++) {
+        newEntry[i] = entryTuple[i];
+        newEntry[i].pData = pTempBuff;
+        newEntry[i].cbData = entryTuple[i].cbData;
+        pTempBuff += entryTuple[i].cbData;
+    }
+    memcpy(pTempBuff, &newStartRID, sizeof(LcsRid));
+    uint ridField = entryTuple.size() - 3;
+    newEntry[ridField].pData = pTempBuff;
+    newEntry[ridField].cbData = sizeof(LcsRid);
+
+    newEntry[ridField + 1].cbData = pSegDescEnd - segDescStart;
+    if (newEntry[ridField + 1].cbData == 0) {
+        newEntry[ridField + 1].pData = NULL;
+    } else {
+        newEntry[ridField + 1].pData = mergeScratchBuffer + keySize;
+        memcpy(
+            (void *) newEntry[ridField + 1].pData, segDescStart,
+            pSegDescEnd - segDescStart);
+    }
+
+    uint segLen = segStart - pSegEnd;
+    newEntry[ridField + 2].cbData = segLen;
+    if (segLen == 0) {
+        newEntry[ridField + 2].pData = NULL;
+    } else {
+        newEntry[ridField + 2].pData =
+            mergeScratchBuffer + scratchBufferSize - segLen;
+        memcpy(
+            (void *) newEntry[ridField + 2].pData, segStart - segLen, segLen);
+    }
+}
+
+bool LbmEntry::addNewSegment(
+    TupleData &inputTuple, LcsRid prevSrid, PBuffer prevSegDesc,
+    PBuffer nextSegDesc, PBuffer prevSeg, uint prevSegBytes, uint prevZeroBytes)
+{
+    assert(isSingleton(inputTuple));
+    
+    // close the current segment before we create the new segment so we start
+    // off from a clean state
+    if (isSegmentOpen()) {
+        closeCurrentSegment();
+    }
+
+    LcsRid inputStartRID =
+        *((LcsRid*) inputTuple[inputTuple.size() - 3].pData);
+    LcsRid prevEridPlus1 = prevSrid + (prevSegBytes * LbmOneByteSize);
+    LcsRid nextSrid =
+        prevSrid + (prevSegBytes + prevZeroBytes) * LbmOneByteSize;
+
+    // new byte is either at the very end of the previous segment or the
+    // very start of the next segment
+    if ((inputStartRID >= prevEridPlus1 &&
+            inputStartRID < prevEridPlus1 + LbmOneByteSize) ||
+        (inputStartRID >= nextSrid - LbmOneByteSize &&
+            inputStartRID < nextSrid))
+    {
+        return addNewAdjacentSegment(
+            inputTuple, prevSrid, prevSegDesc, nextSegDesc, prevSeg,
+            prevSegBytes, prevZeroBytes);
+    }
+
+    // new byte is in the middle of the zero bytes in between two segments;
+    // compute the space required to add the new segment (both byte and
+    // descriptor) and to split the zero length bytes into 2 segments
+    uint leftZeroBytes = opaqueToInt(inputStartRID - prevEridPlus1) /
+        LbmOneByteSize;
+    assert(leftZeroBytes > 0);
+    uint rightZeroBytes = prevZeroBytes - leftZeroBytes - 1;
+    assert(rightZeroBytes > 0);
+    uint spaceRequired = 2;
+    int spaceNeededBefore = computeSpaceForZeroBytes(prevZeroBytes); 
+    int spaceNeededAfter = computeSpaceForZeroBytes(leftZeroBytes) +
+        computeSpaceForZeroBytes(rightZeroBytes);
+    spaceRequired += (spaceNeededAfter - spaceNeededBefore);
+    assert(spaceRequired >= 1);
+    if (spaceRequired + currentEntrySize > scratchBufferUsableSize) {
+        splitEntry(inputTuple);
+        return false;
+    }
+
+    // compute the length of the remaining segments before we modify
+    // the descriptors
+    uint remainingSegLen = computeSegLength(nextSegDesc);
+
+    // set the zero byte length for the previous segment
+    uint leftZeroLength;
+    setZeroLength(leftZeroBytes, prevSegDesc, leftZeroLength);
+
+    // compute the length of the remaining segment desciptors
+    // so we can shift them to the right to make room for the new descriptor
+    uint shiftAmount = spaceNeededAfter + 1 - spaceNeededBefore;
+    if (shiftAmount > 0) {
+        uint remainingSegDescLen = computeSegDescLength(nextSegDesc);
+        PBuffer segDesc = prevSegDesc + spaceNeededBefore + 1;
+        for (int i = remainingSegDescLen - 1; i >= 0; i--) {
+            segDesc[i + shiftAmount] = segDesc[i];
+        }
+    }
+
+    // add the new segment descriptor
+    setSegLength(*(prevSegDesc + 1 + leftZeroLength), 1);
+    uint size;
+    setZeroLength(rightZeroBytes, prevSegDesc + 1 + leftZeroLength, size);
+    pSegDescEnd += shiftAmount;
+
+    addNewRid(
+        nextSegDesc, prevSeg - prevSegBytes - 1, inputStartRID,
+        remainingSegLen);
+
+    currentEntrySize += spaceRequired;
+    return true;
+}
+
+bool LbmEntry::addNewAdjacentSegment(
+    TupleData &inputTuple, LcsRid prevSrid, PBuffer prevSegDesc,
+    PBuffer nextSegDesc, PBuffer prevSeg, uint prevSegBytes, uint prevZeroBytes)
+{
+    assert(isSingleton(inputTuple));
+
+    LcsRid inputStartRID =
+        *((LcsRid*) inputTuple[inputTuple.size() - 3].pData);
+    LcsRid prevEridPlus1 = prevSrid + (prevSegBytes * LbmOneByteSize);
+    LcsRid nextSrid =
+        prevSrid + (prevSegBytes + prevZeroBytes) * LbmOneByteSize;
+
+    // see if we can fit the new byte within the current entry; we'll
+    // need 1 byte for the new segment, but the zero bytes in the
+    // previous segment decreases by 1 and we may be able to combine
+    // segments if only a single zero byte separates the two segments we
+    // are inserting the new segment in between
+    uint spaceRequired = 1;
+    int spaceNeededBefore = computeSpaceForZeroBytes(prevZeroBytes); 
+    int spaceNeededAfter = computeSpaceForZeroBytes(prevZeroBytes - 1);
+    assert(spaceNeededAfter <= spaceNeededBefore);
+    spaceRequired += (spaceNeededAfter - spaceNeededBefore);
+    assert(spaceRequired >= 0);
+
+    bool combine = false;
+    if (nextSrid == prevEridPlus1 + LbmOneByteSize) {
+        combine = true;
+        spaceRequired -= 1;
+    }
+
+    if (spaceRequired + currentEntrySize > scratchBufferUsableSize) {
+        splitEntry(inputTuple);
+        return false;
+    }
+
+    // compute the length of the remaining segments before we modify
+    // the descriptors
+    uint remainingSegLen = computeSegLength(nextSegDesc);
+
+    // adjust the segment length of either the previous segment or the
+    // next segment, depending on where the new segment is placed
+    if (inputStartRID >= prevEridPlus1 &&
+        inputStartRID < prevEridPlus1 + LbmOneByteSize)
+    {
+        uint segLen = prevSegBytes + 1;
+        if (combine) {
+            segLen += getSegLength(*nextSegDesc);
+        }
+        adjustSegLength(*prevSegDesc, segLen);
+    } else {
+        adjustSegLength(*nextSegDesc, getSegLength(*nextSegDesc) + 1);
+    }
+
+    // if the segments are being combined, set the zero length to that of
+    // the next segment and remove the first byte of the next segment
+    // descriptor, shifting the rest of the descriptors to the left by 1
+    if (combine) {
+        uint remainingSegDescLen = computeSegDescLength(nextSegDesc);
+        uint zeroLen = *nextSegDesc & LbmZeroLengthMask;
+        *prevSegDesc &= ~LbmZeroLengthMask;
+        *prevSegDesc |= zeroLen;
+        PBuffer segDesc = nextSegDesc;
+        for (int i = 0; i < remainingSegDescLen - 1; i++) {
+            segDesc[i] = segDesc[i + 1];
+        }
+        pSegDescEnd--;
+
+    // otherwise, decrease the zerobyte count by 1
+    } else {
+        uint size;
+        setZeroLength(prevZeroBytes - 1, prevSegDesc, size);
+
+        if (spaceNeededBefore > spaceNeededAfter) {
+            // compute the length of the remaining segment desciptors
+            // so we can shift them to the left
+            uint shiftAmount = spaceNeededBefore - spaceNeededAfter;
+            uint remainingSegDescLen = computeSegDescLength(nextSegDesc);
+            PBuffer segDesc = prevSegDesc + spaceNeededAfter + 1;
+            for (int i = 0; i < remainingSegDescLen; i++) {
+                segDesc[i] = segDesc[i + shiftAmount];
+            }
+            pSegDescEnd -= shiftAmount;
+        }
+    }
+
+    // add the new byte segment; do this after fixing up the segment
+    // descriptor, in the event that we are able to free up some space
+    // from there
+    addNewRid(
+        nextSegDesc, prevSeg - prevSegBytes - 1, inputStartRID,
+        remainingSegLen);
+
+    currentEntrySize += spaceRequired;
+    return true;
+}
+
+void LbmEntry::addNewRid(
+    PBuffer nextSegDesc, PBuffer newSeg, LcsRid newRid, uint remainingSegLen)
+{
+    // shift the byte segments to the left by 1
+    PBuffer seg = pSegEnd;
+    for (int i = 0; i < remainingSegLen; i++) {
+        seg[i - 1] = seg[i];
+    }
+    *newSeg = (uint8_t) (1 << (opaqueToInt(newRid) % LbmOneByteSize));
+    pSegEnd--;
+}
+
+void LbmEntry::splitEntry(TupleData &inputTuple)
+{
+    assert(isSingleton(inputTuple));
+
+    // we should never try to split a single segment because the only
+    // reason we would need to split would be if there are trailing zeros in
+    // between segments that we are trying to replace; trailing zeros at the
+    // very end of an entry are handled by the regular mergeEntry()
+    assert(countSegments() > 1);
+
+    // split the current entry in half based on the rid range the current
+    // entry covers
+    uint rowCount = getRowCount();
+    LcsRid endRID = startRID + rowCount - 1;
+    LcsRid midRID = endRID / 2;
+
+    // determine which segment and descriptor contain the midpoint rid
+    PBuffer segDesc = pSegDescStart;
+    PBuffer prevprevSegDesc;
+    PBuffer prevSegDesc = NULL;
+    PBuffer seg = pSegStart;
+    LcsRid srid = startRID;
+    uint segBytes;
+    uint zeroBytes;
+    while (segDesc < pSegDescEnd) {
+        prevprevSegDesc = prevSegDesc;
+        prevSegDesc = segDesc;
+        readSegDescAndAdvance(segDesc, segBytes, zeroBytes);
+        seg -= segBytes;
+        srid += (segBytes + zeroBytes) * LbmOneByteSize;
+        if (midRID < srid) {
+            break;
+        }
+    }
+    // if the midpoint rid is in the last segment, then bump the cutoff point
+    // back by one
+    if (segDesc >= pSegDescEnd) {
+        segDesc = prevSegDesc;
+        assert(prevprevSegDesc != NULL);
+        prevSegDesc = prevprevSegDesc;
+        seg += segBytes;
+        srid -= (segBytes + zeroBytes) * LbmOneByteSize;
+    }
+
+    // copy the segments and descriptors (starting at the one that follows
+    // the one containing the midpoint) into the secondary scratch buffer
+    TupleData newEntry;
+    copyToMergeBuffer(newEntry, srid, seg, segDesc);
+
+    // clear out the zeroBytes in the last segment descriptor for the current
+    // entry, since it's no longer needed
+    segDesc -= getZeroLengthByteCount(*prevSegDesc);
+    *(prevSegDesc) &= ~LbmZeroLengthMask;
+
+    // adjust the current entry to reflect the segments that have been
+    // removed
+    pSegDescEnd = segDesc;
+    pSegEnd = seg;
+    currentEntrySize =
+        keySize + (pSegDescEnd - pSegDescStart) + (pSegStart - pSegEnd);
+
+    // if the input rid is in the new current entry, merge it in and then
+    // move the newly split off entry into inputTuple
+    LcsRid &inputStartRID = *((LcsRid*)inputTuple[inputTuple.size() - 3].pData);
+    if (inputStartRID < srid) {
+        bool rc = mergeEntry(inputTuple);
+        // there has to be enough space to merge in the input singleton since
+        // we've done a split to free up space
+        assert(rc);
+        for (int i = 0; i < newEntry.size(); i++) {
+            inputTuple[i] = newEntry[i];
+        }
+        return;
+    }
+
+    // the input is in the split off entry
+    mergeIntoSplitEntry(inputTuple, newEntry);
+}
+
+void LbmEntry::mergeIntoSplitEntry(TupleData &inputTuple, TupleData splitEntry)
+{
+    assert(isSingleton(inputTuple));
+
+    // temporarily save away the current entry
+    boost::scoped_array<FixedBuffer> tempBuffer;
+    tempBuffer.reset(new FixedBuffer[scratchBufferSize]);
+    memcpy(tempBuffer.get(), scratchBuffer, scratchBufferSize);
+    LcsRid savStartRID = startRID;
+    PBuffer savSegStart = pSegStart;
+    PBuffer savSegEnd = pSegEnd;
+    PBuffer savSegDescStart = pSegDescStart;
+    PBuffer savSegDescEnd = pSegDescEnd;
+    uint savCurrentEntrySize = currentEntrySize;
+
+    // move the split entry into the current entry
+    uint ridField = splitEntry.size() - 3;
+    memcpy(scratchBuffer, mergeScratchBuffer, scratchBufferSize);
+    startRID = *((LcsRid*) splitEntry[ridField].pData);
+    LcsRid splitStartRid = startRID;
+    pSegStart = scratchBuffer + scratchBufferSize;
+    pSegEnd = pSegStart - splitEntry[ridField + 1].cbData;
+    pSegDescStart = scratchBuffer + keySize;
+    pSegDescEnd = pSegDescStart + splitEntry[ridField + 2].cbData;
+    currentEntrySize =
+        keySize + splitEntry[ridField + 1].cbData +
+            splitEntry[ridField + 2].cbData;
+
+    // splice the input into the split entry that now occupies the current
+    // entry
+    bool rc = mergeEntry(inputTuple);
+    assert(rc);
+
+    // copy the split entry into inputTuple
+    copyToMergeBuffer(inputTuple, splitStartRid, pSegStart, pSegDescStart);
+
+    // copy the saved away current entry back into its place
+    memcpy(scratchBuffer, tempBuffer.get(), scratchBufferSize);
+    startRID = savStartRID;
+    pSegStart = savSegStart;
+    pSegEnd = savSegEnd;
+    pSegDescStart = savSegDescStart;
+    pSegDescEnd = savSegDescEnd;
+    currentEntrySize = savCurrentEntrySize;
+}
 
 TupleData const &LbmEntry::produceEntryTuple()
 {
