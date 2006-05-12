@@ -1,4 +1,4 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/initsql/installApplib.sql#2 $
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/initsql/installApplib.sql#3 $
 0: jdbc:luciddb:> create schema applib;
 0: jdbc:luciddb:> set schema 'applib';
 0: jdbc:luciddb:> set path 'applib';
@@ -294,5 +294,66 @@
 . . . . . . . . > parameter style system defined java
 . . . . . . . . > no sql
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.TimeDimensionUdx.execute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> ----
+0: jdbc:luciddb:> -- Application variables (a.k.a. "appvars")
+0: jdbc:luciddb:> -- 
+0: jdbc:luciddb:> -- Appvars are defined within a named context, allowing sets of
+0: jdbc:luciddb:> -- variables to be manipulated as a unit.
+0: jdbc:luciddb:> ----
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Creates a variable (or a context if var_id is null).  When var_id
+0: jdbc:luciddb:> -- is not null, the context is implicitly created if it does not exist.
+0: jdbc:luciddb:> -- The initial value for the new variable is null.  If the variable
+0: jdbc:luciddb:> -- already exists, this call has no effect.
+0: jdbc:luciddb:> create procedure applib.create_var(
+. . . . . . . . >     context_id varchar(128), 
+. . . . . . . . >     var_id varchar(128),
+. . . . . . . . >     description varchar(65535))
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.CreateAppVarUdp.execute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Deletes a variable (or a context if var_id is null).
+0: jdbc:luciddb:> create procedure applib.delete_var(
+. . . . . . . . >     context_id varchar(128), 
+. . . . . . . . >     var_id varchar(128))
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.DeleteAppVarUdp.execute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Sets the value for a variable.  var_id must not be null, and must
+0: jdbc:luciddb:> -- reference a previously created variable.
+0: jdbc:luciddb:> create procedure applib.set_var(
+. . . . . . . . >     context_id varchar(128), 
+. . . . . . . . >     var_id varchar(128), 
+. . . . . . . . >     new_value varchar(65535))
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.SetAppVarUdp.execute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Flushes modifications to a variable (or a context if var_id is null).
+0: jdbc:luciddb:> -- Before flush, there is no guarantee that modifications have
+0: jdbc:luciddb:> -- been made permanent.
+0: jdbc:luciddb:> create procedure applib.flush_var(
+. . . . . . . . >     context_id varchar(128), 
+. . . . . . . . >     var_id varchar(128))
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.FlushAppVarUdp.execute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Retrieves the current value of a variable.  var_id must not be null,
+0: jdbc:luciddb:> -- and must reference a previously created variable.
+0: jdbc:luciddb:> -- Declared as deterministic to let the optimizer know that it should
+0: jdbc:luciddb:> -- be evaluated once per statement (rather than once per row) when
+0: jdbc:luciddb:> -- the arguments are constant literals.
+0: jdbc:luciddb:> create function applib.get_var(
+. . . . . . . . >     context_id varchar(128), 
+. . . . . . . . >     var_id varchar(128)) 
+. . . . . . . . > returns varchar(65535)
+. . . . . . . . > language java
+. . . . . . . . > deterministic
+. . . . . . . . > no sql
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.GetAppVarUdf.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

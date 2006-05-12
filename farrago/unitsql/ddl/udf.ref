@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/ddl/udf.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/ddl/udf.sql#2 $
 0: jdbc:farrago:> -- Test DDL for user-defined functions
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema udftest;
@@ -513,5 +513,22 @@ Error: DDL validation error near line 1, column 8: RETURNS TABLE is illegal for 
 . . . . . . . . > contains sql
 . . . . . . . . > return n;
 Error: DDL validation error near line 1, column 8: RETURNS TABLE is illegal for routine "UDFTEST"."RAMP_BAD_LANGUAGE"; can only be used with language JAVA and parameter style SYSTEM DEFINED JAVA (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should succeed
+0: jdbc:farrago:> create function stringify(c cursor, delimiter varchar(128))
+. . . . . . . . > returns table(v varchar(65535))
+. . . . . . . . > language java
+. . . . . . . . > parameter style system defined java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.stringify';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  can't accept cursor for normal function
+0: jdbc:farrago:> create function scalar_stringify(c cursor, delimiter varchar(128))
+. . . . . . . . > returns varchar(65535)
+. . . . . . . . > language java
+. . . . . . . . > parameter style java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.stringify';
+Error: DDL validation error near line 1, column 8: Non-table routine "UDFTEST"."SCALAR_STRINGIFY" cannot take routine parameter "C" of type CURSOR (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

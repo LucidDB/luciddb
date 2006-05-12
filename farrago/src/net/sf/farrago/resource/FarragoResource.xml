@@ -321,6 +321,11 @@ column type family is {1} but default value type family is {2}</text>
 <text>Dynamic parameters are illegal in routine bodies</text>
 </exception>
 
+<exception id="420465" name="ValidatorRoutineIllegalCursorParam"
+    className="org.eigenbase.sql.validate.SqlValidatorException">
+<text>Non-table {0} cannot take {1} of type CURSOR</text>
+</exception>
+
 <exception id="420470" name="ValidatorFunctionOutputParam"
     className="org.eigenbase.sql.validate.SqlValidatorException">
 <text>Parameter mode to {0} may not be declared because it is a function</text>

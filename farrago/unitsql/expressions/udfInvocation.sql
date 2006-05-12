@@ -279,6 +279,15 @@ call set_java_property('net.sf.farrago.test.grue', 'lurker');
 
 values get_java_property('net.sf.farrago.test.grue');
 
+-- verify that we can pass null to procedures without cast
+-- FRG-128:  find out why we can't do the same for functions
+-- (maybe because of different overloading rules)
+-- should fail with NullPointerException
+call set_java_property('net.sf.farrago.test.grue', null);
+
+-- here's the inconsistent function behavior
+values get_java_property(null);
+
 values access_sql_illegal();
 
 values access_sql_legal();

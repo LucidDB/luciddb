@@ -225,6 +225,10 @@ public class SqlTypeFamily
         sqlTypeToFamily[SqlTypeName.Timestamp_ordinal] = Timestamp;
         sqlTypeToFamily[SqlTypeName.IntervalYearMonth_ordinal] =
             IntervalYearMonth;
+        sqlTypeToFamily[SqlTypeName.Null_ordinal] =
+            Any;
+        sqlTypeToFamily[SqlTypeName.Any_ordinal] =
+            Any;
         sqlTypeToFamily[SqlTypeName.IntervalDayTime_ordinal] =
             IntervalDayTime;
     }
