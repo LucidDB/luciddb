@@ -128,6 +128,10 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udf/instr.sql"/>
       </test>
 
+      <test name="appvar" requiresRun="cr_source">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udf/appvar.sql"/>
+      </test>
+
       <cleanup-hook>
         <test-suite name="cleanup">
           <test-suite-call testfile="${open.dir}/luciddb/test/sql/tdone.xml">

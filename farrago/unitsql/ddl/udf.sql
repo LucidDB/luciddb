@@ -450,3 +450,19 @@ create function ramp_bad_language(n int)
 returns table(i int)
 contains sql
 return n;
+
+-- should succeed
+create function stringify(c cursor, delimiter varchar(128))
+returns table(v varchar(65535))
+language java
+parameter style system defined java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.stringify';
+
+-- should fail:  can't accept cursor for normal function
+create function scalar_stringify(c cursor, delimiter varchar(128))
+returns varchar(65535)
+language java
+parameter style java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.stringify';

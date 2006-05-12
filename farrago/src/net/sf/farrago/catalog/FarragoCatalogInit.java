@@ -201,7 +201,7 @@ public class FarragoCatalogInit implements MDRPreChangeListener
 
     private void defineTypeAlias(
         String aliasName,
-        CwmSqlsimpleType type)
+        CwmSqldataType type)
     {
         CwmTypeAlias typeAlias = repos.newCwmTypeAlias();
         typeAlias.setName(aliasName);
@@ -223,81 +223,81 @@ public class FarragoCatalogInit implements MDRPreChangeListener
         // need lots of extra fancy semantics elsewhere
         simpleType = repos.newCwmSqlsimpleType();
         simpleType.setName("BOOLEAN");
-        simpleType.setTypeNumber(new Integer(Types.BOOLEAN));
+        simpleType.setTypeNumber(Types.BOOLEAN);
 
         simpleType = repos.newCwmSqlsimpleType();
         simpleType.setName("TINYINT");
-        simpleType.setTypeNumber(new Integer(Types.TINYINT));
-        simpleType.setNumericPrecision(new Integer(8));
-        simpleType.setNumericPrecisionRadix(new Integer(2));
-        simpleType.setNumericScale(new Integer(0));
+        simpleType.setTypeNumber(Types.TINYINT);
+        simpleType.setNumericPrecision(8);
+        simpleType.setNumericPrecisionRadix(2);
+        simpleType.setNumericScale(0);
 
         simpleType = repos.newCwmSqlsimpleType();
         simpleType.setName("SMALLINT");
-        simpleType.setTypeNumber(new Integer(Types.SMALLINT));
-        simpleType.setNumericPrecision(new Integer(16));
-        simpleType.setNumericPrecisionRadix(new Integer(2));
-        simpleType.setNumericScale(new Integer(0));
+        simpleType.setTypeNumber(Types.SMALLINT);
+        simpleType.setNumericPrecision(16);
+        simpleType.setNumericPrecisionRadix(2);
+        simpleType.setNumericScale(0);
 
         simpleType = repos.newCwmSqlsimpleType();
         simpleType.setName("INTEGER");
-        simpleType.setTypeNumber(new Integer(Types.INTEGER));
-        simpleType.setNumericPrecision(new Integer(32));
-        simpleType.setNumericPrecisionRadix(new Integer(2));
-        simpleType.setNumericScale(new Integer(0));
+        simpleType.setTypeNumber(Types.INTEGER);
+        simpleType.setNumericPrecision(32);
+        simpleType.setNumericPrecisionRadix(2);
+        simpleType.setNumericScale(0);
         defineTypeAlias("INT", simpleType);
 
         simpleType = repos.newCwmSqlsimpleType();
         simpleType.setName("BIGINT");
-        simpleType.setTypeNumber(new Integer(Types.BIGINT));
-        simpleType.setNumericPrecision(new Integer(64));
-        simpleType.setNumericPrecisionRadix(new Integer(2));
-        simpleType.setNumericScale(new Integer(0));
+        simpleType.setTypeNumber(Types.BIGINT);
+        simpleType.setNumericPrecision(64);
+        simpleType.setNumericPrecisionRadix(2);
+        simpleType.setNumericScale(0);
 
         simpleType = repos.newCwmSqlsimpleType();
         simpleType.setName("REAL");
-        simpleType.setTypeNumber(new Integer(Types.REAL));
-        simpleType.setNumericPrecision(new Integer(23));
-        simpleType.setNumericPrecisionRadix(new Integer(2));
+        simpleType.setTypeNumber(Types.REAL);
+        simpleType.setNumericPrecision(23);
+        simpleType.setNumericPrecisionRadix(2);
 
         simpleType = repos.newCwmSqlsimpleType();
         simpleType.setName("DOUBLE");
-        simpleType.setTypeNumber(new Integer(Types.DOUBLE));
-        simpleType.setNumericPrecision(new Integer(52));
-        simpleType.setNumericPrecisionRadix(new Integer(2));
+        simpleType.setTypeNumber(Types.DOUBLE);
+        simpleType.setNumericPrecision(52);
+        simpleType.setNumericPrecisionRadix(2);
         defineTypeAlias("DOUBLE PRECISION", simpleType);
         defineTypeAlias("FLOAT", simpleType);
 
         simpleType = repos.newCwmSqlsimpleType();
         simpleType.setName("VARCHAR");
-        simpleType.setTypeNumber(new Integer(Types.VARCHAR));
+        simpleType.setTypeNumber(Types.VARCHAR);
 
         // NOTE: this is an upper bound based on usage of 2-byte length
         // indicators in stored tuples; there are further limits based on page
         // size (imposed during table creation)
-        simpleType.setCharacterMaximumLength(new Integer(65535));
+        simpleType.setCharacterMaximumLength(65535);
         defineTypeAlias("CHARACTER VARYING", simpleType);
 
         simpleType = repos.newCwmSqlsimpleType();
         simpleType.setName("VARBINARY");
-        simpleType.setTypeNumber(new Integer(Types.VARBINARY));
-        simpleType.setCharacterMaximumLength(new Integer(65535));
+        simpleType.setTypeNumber(Types.VARBINARY);
+        simpleType.setCharacterMaximumLength(65535);
 
         simpleType = repos.newCwmSqlsimpleType();
         simpleType.setName("CHAR");
-        simpleType.setTypeNumber(new Integer(Types.CHAR));
-        simpleType.setCharacterMaximumLength(new Integer(65535));
+        simpleType.setTypeNumber(Types.CHAR);
+        simpleType.setCharacterMaximumLength(65535);
         defineTypeAlias("CHARACTER", simpleType);
 
         simpleType = repos.newCwmSqlsimpleType();
         simpleType.setName("BINARY");
-        simpleType.setTypeNumber(new Integer(Types.BINARY));
-        simpleType.setCharacterMaximumLength(new Integer(65535));
+        simpleType.setTypeNumber(Types.BINARY);
+        simpleType.setCharacterMaximumLength(65535);
 
         simpleType = repos.newCwmSqlsimpleType();
         simpleType.setName("DATE");
-        simpleType.setTypeNumber(new Integer(Types.DATE));
-        simpleType.setDateTimePrecision(new Integer(0));
+        simpleType.setTypeNumber(Types.DATE);
+        simpleType.setDateTimePrecision(0);
 
         // TODO jvs 26-July-2004: Support fractional precision for TIME and
         // TIMESTAMP.  Currently, most of the support is there for up to
@@ -308,21 +308,30 @@ public class FarragoCatalogInit implements MDRPreChangeListener
         // which is already the case.
         simpleType = repos.newCwmSqlsimpleType();
         simpleType.setName("TIME");
-        simpleType.setTypeNumber(new Integer(Types.TIME));
-        simpleType.setDateTimePrecision(new Integer(0));
+        simpleType.setTypeNumber(Types.TIME);
+        simpleType.setDateTimePrecision(0);
 
         simpleType = repos.newCwmSqlsimpleType();
         simpleType.setName("TIMESTAMP");
-        simpleType.setTypeNumber(new Integer(Types.TIMESTAMP));
-        simpleType.setDateTimePrecision(new Integer(0));
+        simpleType.setTypeNumber(Types.TIMESTAMP);
+        simpleType.setDateTimePrecision(0);
 
         simpleType = repos.newCwmSqlsimpleType();
         simpleType.setName("DECIMAL");
-        simpleType.setTypeNumber(new Integer(Types.DECIMAL));
-        simpleType.setNumericPrecision(new Integer(SqlTypeName.MAX_NUMERIC_PRECISION));
-        simpleType.setNumericPrecisionRadix(new Integer(10));
-        simpleType.setNumericScale(new Integer(SqlTypeName.MAX_NUMERIC_SCALE));
+        simpleType.setTypeNumber(Types.DECIMAL);
+        simpleType.setNumericPrecision(SqlTypeName.MAX_NUMERIC_PRECISION);
+        simpleType.setNumericPrecisionRadix(10);
+        simpleType.setNumericScale(SqlTypeName.MAX_NUMERIC_SCALE);
         defineTypeAlias("DEC", simpleType);
+
+        // placeholder for CURSOR parameters to UDX's; by adding
+        // an "eponymous alias", we'll make it visible from type lookup;
+        // we don't use a simple type here because we don't want it to
+        // show up as part of standard type info
+        CwmSqlstructuredType cursorType = repos.newCwmSqlstructuredType();
+        cursorType.setName("CURSOR");
+        cursorType.setTypeNumber(Types.STRUCT);
+        defineTypeAlias("CURSOR", cursorType);
 
         // REVIEW jvs 11-Aug-2005:  This isn't a real type descriptor, since
         // collection types are constructed anonymously rather than
@@ -331,7 +340,7 @@ public class FarragoCatalogInit implements MDRPreChangeListener
         collectType = repos.newFemSqlmultisetType();
         collectType.setName("MULTISET");
         // a multiset has the same type# as an array for now
-        collectType.setTypeNumber(new Integer(Types.ARRAY));
+        collectType.setTypeNumber(Types.ARRAY);
     }
 }
 

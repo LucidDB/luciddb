@@ -97,6 +97,16 @@ public class DdlRoutineHandler extends DdlHandler
                 ++iOrdinal;
             }
             validateRoutineParam(param);
+            if (param.getType().getName().equals("CURSOR")) {
+                if (!(FarragoCatalogUtil.isTableFunction(routine))) {
+                    throw validator.newPositionalError(
+                        routine,
+                        res.ValidatorRoutineIllegalCursorParam.ex(
+                            repos.getLocalizedObjectName(routine),
+                            repos.getLocalizedObjectName(param)));
+                    
+                }
+            }
         }
         if (FarragoCatalogUtil.isTableFunction(routine)) {
             validateAttributeSet(routine);
@@ -471,6 +481,15 @@ public class DdlRoutineHandler extends DdlHandler
 
     public void validateRoutineParam(FemRoutineParameter param)
     {
+        Object obj = validator.getSqlDefinition(param);
+        if (obj instanceof SqlIdentifier) {
+            SqlIdentifier id = (SqlIdentifier) obj;
+            assert(id.getSimple().equals("CURSOR"));
+            param.setType(validator.getStmtValidator().findSqldataType(id));
+            param.setCollationName("");
+            param.setCharacterSetName("");
+            return;
+        }
         validateTypedElement(param, (FemRoutine) param.getBehavioralFeature());
     }
 

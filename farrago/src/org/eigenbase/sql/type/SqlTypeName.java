@@ -146,6 +146,9 @@ public class SqlTypeName extends EnumeratedValues.SerializableValue
     public static final int Row_ordinal = 24;
     public static final SqlTypeName Row =
         new SqlTypeName("ROW", Row_ordinal, PrecNoScaleNo);
+    public static final int Cursor_ordinal = 25;
+    public static final SqlTypeName Cursor =
+        new SqlTypeName("CURSOR", Cursor_ordinal, PrecNoScaleNo);
 
     /**
      * Array of all allowable {@link SqlTypeName} values.
@@ -155,7 +158,7 @@ public class SqlTypeName extends EnumeratedValues.SerializableValue
             Boolean, Integer, Varchar, Date, Time, Timestamp, Null, Decimal,
             Any, Char, Binary, Varbinary, Tinyint, Smallint, Bigint, Real,
             Double, Symbol, IntervalYearMonth, IntervalDayTime,
-            Float, Multiset, Distinct, Structured, Row
+            Float, Multiset, Distinct, Structured, Row, Cursor
         };
 
     // categorizations used by SqlTypeFamily definitions
@@ -417,6 +420,7 @@ public class SqlTypeName extends EnumeratedValues.SerializableValue
             return Types.DISTINCT;
         case Row_ordinal:
         case Structured_ordinal:
+        case Cursor_ordinal:
             return Types.STRUCT;
         default:
             return Types.OTHER;

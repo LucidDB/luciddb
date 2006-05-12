@@ -68,6 +68,8 @@ public class JavaToSqlTypeConversionRules
         rules.put(Timestamp.class, SqlTypeName.Timestamp);
         rules.put(Time.class, SqlTypeName.Time);
         rules.put(BigDecimal.class, SqlTypeName.Decimal);
+        
+        rules.put(ResultSet.class, SqlTypeName.Cursor);
     }
 
     /**

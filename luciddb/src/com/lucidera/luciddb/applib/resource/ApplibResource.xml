@@ -151,6 +151,26 @@
 <text>InStrUdf: invalid argument: inStr={0} subStr={1} startPos={2} nthAppearance={3}</text>
 </exception>
 
+<exception id="900220" name="AppVarWriteFailed">
+<text>Application variable persistence error while writing context ''{0}'', variable ''{1}''</text>
+</exception>
+
+<exception id="900225" name="AppVarReadFailed">
+<text>Application variable persistence error while reading context ''{0}'', variable ''{1}''</text>
+</exception>
+
+<exception id="900230" name="AppVarIdRequired">
+<text>Application variable id required for get/set request</text>
+</exception>
+
+<exception id="900240" name="AppVarContextUndefined">
+<text>Application variable context ''{0}'' has not been created</text>
+</exception>
+
+<exception id="900250" name="AppVarUndefined">
+<text>Application variable ''{1}'' has not been created in context ''{0}''</text>
+</exception>
+
 <!-- ====================================================================== -->
  Messages
 <!-- ====================================================================== -->

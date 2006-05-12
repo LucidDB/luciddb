@@ -128,12 +128,18 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         CwmClassifier classifier,
         FemSqltypedElement element)
     {
+        SqlTypeName typeName = null;
         if (classifier instanceof CwmSqlsimpleType) {
-            CwmSqlsimpleType simpleType = (CwmSqlsimpleType) classifier;
-
-            SqlTypeName typeName = SqlTypeName.get(simpleType.getName());
+            typeName = SqlTypeName.get(classifier.getName());
             assert(typeName != null);
-
+        } else {
+            // special case for system-defined pseudotypes like CURSOR
+            if (classifier.getNamespace() == null) {
+                typeName = SqlTypeName.get(classifier.getName());
+            }
+        }
+        
+        if (typeName != null) {
             Integer pPrecision = null;
             Integer pScale = null;
 
@@ -828,6 +834,8 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             return java.sql.Time.class;
         case SqlTypeName.Timestamp_ordinal:
             return java.sql.Timestamp.class;
+        case SqlTypeName.Cursor_ordinal:
+            return java.sql.ResultSet.class;
         default:
             return getClassForPrimitive(type);
         }

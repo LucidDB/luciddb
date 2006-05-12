@@ -289,3 +289,64 @@ language java
 parameter style system defined java
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.TimeDimensionUdx.execute';
+
+----
+-- Application variables (a.k.a. "appvars")
+-- 
+-- Appvars are defined within a named context, allowing sets of
+-- variables to be manipulated as a unit.
+----
+
+-- Creates a variable (or a context if var_id is null).  When var_id
+-- is not null, the context is implicitly created if it does not exist.
+-- The initial value for the new variable is null.  If the variable
+-- already exists, this call has no effect.
+create procedure applib.create_var(
+    context_id varchar(128), 
+    var_id varchar(128),
+    description varchar(65535))
+language java
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.CreateAppVarUdp.execute';
+
+-- Deletes a variable (or a context if var_id is null).
+create procedure applib.delete_var(
+    context_id varchar(128), 
+    var_id varchar(128))
+language java
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.DeleteAppVarUdp.execute';
+
+-- Sets the value for a variable.  var_id must not be null, and must
+-- reference a previously created variable.
+create procedure applib.set_var(
+    context_id varchar(128), 
+    var_id varchar(128), 
+    new_value varchar(65535))
+language java
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.SetAppVarUdp.execute';
+
+-- Flushes modifications to a variable (or a context if var_id is null).
+-- Before flush, there is no guarantee that modifications have
+-- been made permanent.
+create procedure applib.flush_var(
+    context_id varchar(128), 
+    var_id varchar(128))
+language java
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.FlushAppVarUdp.execute';
+
+-- Retrieves the current value of a variable.  var_id must not be null,
+-- and must reference a previously created variable.
+-- Declared as deterministic to let the optimizer know that it should
+-- be evaluated once per statement (rather than once per row) when
+-- the arguments are constant literals.
+create function applib.get_var(
+    context_id varchar(128), 
+    var_id varchar(128)) 
+returns varchar(65535)
+language java
+deterministic
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.GetAppVarUdf.execute';
