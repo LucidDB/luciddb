@@ -110,6 +110,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     private TableAccessMap tableAccessMap;
     private ChainedRelMetadataProvider relMetadataProvider;
     private boolean allowPartialImplementation;
+    private final Map<String, RelDataType> resultSetTypeMap;
 
     /**
      * Name of Java package containing code generated for this statement.
@@ -165,6 +166,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
 
         routineLookup = new FarragoUserDefinedRoutineLookup(
             stmtValidator, this, null);
+
+        resultSetTypeMap = new HashMap<String, RelDataType>();
 
         clearDmlValidation();
 
@@ -473,7 +476,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                     xmiFennelPlan,
                     preparedResult.isDml(),
                     getReferencedObjectIds(),
-                    tableAccessMap);
+                    tableAccessMap,
+                    resultSetTypeMap);
         } else {
             assert (preparedResult instanceof PreparedExplanation);
             executableStmt =
@@ -1192,6 +1196,13 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             }
         }
         allDependencies.add(supplier);
+    }
+
+    void mapResultSetType(
+        String resultSetName,
+        RelDataType rowType)
+    {
+        resultSetTypeMap.put(resultSetName, rowType);
     }
 
     public Variable getConnectionVariable()

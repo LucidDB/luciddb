@@ -93,6 +93,11 @@ public interface FarragoSessionExecutableStmt extends FarragoAllocationOwner
      * @return map of access modes for all tables referenced
      */
     public TableAccessMap getTableAccessMap();
+
+    /**
+     * Map from result set name to row type.
+     */
+    public Map<String, RelDataType> getResultSetTypeMap();
 }
 
 

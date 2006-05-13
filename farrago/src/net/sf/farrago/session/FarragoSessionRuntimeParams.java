@@ -28,6 +28,7 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.reltype.*;
 
 /**
  * FarragoSessionRuntimeParams bundles together the large number
@@ -96,6 +97,11 @@ public class FarragoSessionRuntimeParams
      * Whether the context is for a DML statement.
      */
     public boolean isDml;
+
+    /**
+     * Map from result set name to row type.
+     */
+    public Map<String, RelDataType> resultSetTypeMap;
 }
 
 

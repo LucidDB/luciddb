@@ -207,6 +207,10 @@ public class SqlTypeName extends EnumeratedValues.SerializableValue
         Multiset
     };
     
+    public static final SqlTypeName [] cursorTypes = {
+        Cursor
+    };
+    
     /**
      * Enumeration of all allowable {@link SqlTypeName} values.
      */
@@ -420,8 +424,9 @@ public class SqlTypeName extends EnumeratedValues.SerializableValue
             return Types.DISTINCT;
         case Row_ordinal:
         case Structured_ordinal:
-        case Cursor_ordinal:
             return Types.STRUCT;
+        case Cursor_ordinal:
+            return Types.OTHER + 1;
         default:
             return Types.OTHER;
         }

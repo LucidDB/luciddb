@@ -43,7 +43,7 @@ public class SqlCursorConstructor extends SqlSpecialOperator
         // REVIEW jvs 7-May-2006: Precedence copied from
         // SqlMultisetQueryConstructor
         super("CURSOR", SqlKind.CursorConstructor, 100, false,
-            SqlTypeStrategies.rtiFirstArgType,
+            SqlTypeStrategies.rtiCursor,
             null,
             SqlTypeStrategies.otcAny);
     }
@@ -55,8 +55,8 @@ public class SqlCursorConstructor extends SqlSpecialOperator
     {
         SqlSelect subSelect = (SqlSelect) call.operands[0];
         subSelect.validateExpr(validator, scope);
-        SqlValidatorNamespace ns = validator.getNamespace(subSelect);
-        return ns.getRowType();
+        RelDataType type = super.deriveType(validator, scope, call);
+        return type;
     }
 
     public void unparse(

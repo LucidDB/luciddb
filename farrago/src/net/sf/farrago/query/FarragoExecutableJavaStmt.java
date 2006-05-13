@@ -69,7 +69,8 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
     private final Method method;
     private final String xmiFennelPlan;
     private final Set referencedObjectIds;
-
+    private final Map<String, RelDataType> resultSetTypeMap;
+    
     //~ Constructors ----------------------------------------------------------
 
     FarragoExecutableJavaStmt(
@@ -82,7 +83,8 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
         String xmiFennelPlan,
         boolean isDml,
         Set referencedObjectIds,
-        TableAccessMap tableAccessMap)
+        TableAccessMap tableAccessMap,
+        Map<String, RelDataType> resultSetTypeMap)
     {
         super(dynamicParamRowType, isDml, tableAccessMap);
 
@@ -92,6 +94,7 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
         this.method = method;
         this.xmiFennelPlan = xmiFennelPlan;
         this.referencedObjectIds = referencedObjectIds;
+        this.resultSetTypeMap = resultSetTypeMap;
 
         rowType = preparedRowType;
     }
@@ -177,6 +180,12 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
         }
 
         return nBytes;
+    }
+
+    // implement FarragoSessionExecutableStmt
+    public Map<String, RelDataType> getResultSetTypeMap()
+    {
+        return resultSetTypeMap;
     }
 }
 

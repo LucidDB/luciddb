@@ -25,6 +25,7 @@ package net.sf.farrago.session;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.reltype.*;
 
 /**
  * FarragoSessionRuntimeContext defines runtime support routines needed by
@@ -104,6 +105,15 @@ public interface FarragoSessionRuntimeContext extends FarragoAllocationOwner
      * Fennel to load implementations of FarragoTransform. 
      */
     public void setStatementClassLoader(ClassLoader classLoader);
+
+    /**
+     * Gets the row type for instantiating a result set.
+     *
+     * @param resultSetName name of result set stored by optimizer
+     *
+     * @return corresponding row type
+     */
+    public RelDataType getRowTypeForResultSet(String resultSetName);
 }
 
 
