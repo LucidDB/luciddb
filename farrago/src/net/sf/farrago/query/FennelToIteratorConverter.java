@@ -510,7 +510,8 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
     /**
      * Determines whether this FennelToIteratorConverter is an input to
      * a FarragoTransform.  In other words, is one of the ancestors to
-     * this rel an IteratorToFennelConverter.
+     * this rel an IteratorToFennelConverter (without an intervening
+     * FarragoJavaUdxRel).
      * 
      * @param implementor implementor in use
      * @return true if this rel is an input to a FarragoTransform, false 
@@ -521,6 +522,14 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
         List ancestors = implementor.getAncestorRels(this);
         for(Object o: ancestors) {
             RelNode ancestor = (RelNode)o;
+
+            if (ancestor instanceof FarragoJavaUdxRel) {
+                // NOTE jvs 13-May-2006:  A UDX invocation pulls from
+                // a different thread; it does not participate
+                // in Fennel scheduling.  So to Fennel, it looks
+                // like a top-level cursor.
+                return false;
+            }
             
             if (ancestor.getConvention() == FennelRel.FENNEL_EXEC_CONVENTION) {
                 assert(ancestor instanceof IteratorToFennelConverter);

@@ -190,7 +190,7 @@ create view ramp_view as select * from table(ramp(3));
 create view stringified_view as 
 select * 
 from table(udftest.stringify(
-    cursor(select * from sales.depts where deptno=20),
+    cursor(select * from sales.depts where deptno=20 order by 1),
     '|'));
 
 -- should fail:  we don't allow mutual recursion either
@@ -340,10 +340,11 @@ select * from ramp_view order by 1;
 select count(*) from sales.depts, table(ramp(5));
 
 -- udx invocation with input
-select * 
+select upper(v)
 from table(udftest.stringify(
-    cursor(select * from sales.depts where deptno=20),
-    '|'));
+    cursor(select * from sales.depts order by 1),
+    '|'))
+order by 1;
 
 -- udx invocation with input via view
 select * from stringified_view;

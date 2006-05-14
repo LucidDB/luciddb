@@ -54,6 +54,7 @@ public class SqlCursorConstructor extends SqlSpecialOperator
         SqlValidator validator, SqlValidatorScope scope, SqlCall call)
     {
         SqlSelect subSelect = (SqlSelect) call.operands[0];
+        validator.declareCursor(subSelect);
         subSelect.validateExpr(validator, scope);
         RelDataType type = super.deriveType(validator, scope, call);
         return type;
