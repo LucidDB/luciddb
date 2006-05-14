@@ -157,8 +157,7 @@ public class FarragoJavaUdxRel extends TableFunctionRelBase
             resultSetParams.add(childExprs[i]);
             resultSetParams.add(new ClassLiteral(rowClass));
             resultSetParams.add(typeLookupCall);
-            resultSetParams.add(
-                implementor.getConnectionVariable());
+            resultSetParams.add(Literal.constantNull());
 
             childExprs[i] = new AllocationExpression(
                 OJUtil.typeNameForClass(FarragoTupleIterResultSet.class),
