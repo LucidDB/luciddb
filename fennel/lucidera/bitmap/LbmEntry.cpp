@@ -1280,7 +1280,7 @@ void LbmEntry::splitEntry(TupleData &inputTuple)
 
     // determine which segment and descriptor contain the midpoint rid
     PBuffer segDesc = pSegDescStart;
-    PBuffer prevprevSegDesc;
+    PBuffer prevprevSegDesc = NULL;
     PBuffer prevSegDesc = NULL;
     PBuffer seg = pSegStart;
     LcsRid srid = startRID;
