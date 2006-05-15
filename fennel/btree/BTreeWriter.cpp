@@ -462,6 +462,11 @@ void BTreeWriter::grow(
     memcpy(newLeftNode.getDataForWrite(), node.getDataForRead(), 
         getSegment()->getUsablePageSize() - sizeof(BTreeNode));
 
+    // 1a. fix the prefetch links to match the games we're playing
+    // with the root
+    getSegment()->setPageSuccessor(newLeftPageId, rightPageId);
+    getSegment()->setPageSuccessor(pageId, NULL_PAGE_ID);
+    
     // 2. clear the root page and set the right height.
     // we use the old nodeAccessor to clear the node.
 
