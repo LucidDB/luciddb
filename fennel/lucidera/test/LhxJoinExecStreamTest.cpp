@@ -22,6 +22,7 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/test/ExecStreamUnitTestBase.h"
 #include "fennel/lucidera/hashexe/LhxJoinExecStream.h"
+#include "fennel/lucidera/sorter/ExternalSortExecStream.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
 #include "fennel/exec/MockProducerExecStream.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
@@ -33,7 +34,8 @@ using namespace fennel;
 
 class LhxJoinExecStreamTest : public ExecStreamUnitTestBase
 {
-    void testSequentialImpl(bool leftOuter);
+    void testSequentialImpl(uint numRows);
+    void testDupImpl(uint numRows, uint cndKeyLeft, uint cndKeyRight);
 
     void testImpl(
         uint numInputRows, uint keyCount, uint cndKeys, uint numResultRows,
@@ -47,8 +49,8 @@ public:
     explicit LhxJoinExecStreamTest()
     {
         FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testSequential);
-        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testSequentialLeftOuter);
-        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testRepeatSequential);
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testDup1);
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testDup2);
     }
     
     /*
@@ -57,33 +59,41 @@ public:
     void testSequential();
 
     /*
-     * Match two identical sets.
+     * Match these two sets:
+     *  left:  0, 0, .. 1, 1, .. 2, 2, .. 3, 3, ..
+     * right:  0, 0  0, .. 1, 1, 1, .. 2, 2, 2, ..
+     *
+     * result: 0, 0, .. 1, 1, .. 2, 2, .. 3, 3, ..
      */
-    void testSequentialLeftOuter();
+    void testDup1();
 
     /*
      * Match these two sets:
-     *  left:  0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, ...
-     * right:  0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, ...
+     *  left:  0, 0  0, .. 1, 1, 1, .. 2, 2, 2, ..
+     * right:  0, 0, .. 1, 1, .. 2, 2, .. 3, 3, ..
      *
-     * result: 0, 0, 0, 0,    ...,  1, 1, 1, 1,    ...
+     * result: 0, 0, 0, .. 1, 1, 1, .. 2, 2, 2, ..
      */
-    void testRepeatSequential();
+    void testDup2();
 };
 
 void LhxJoinExecStreamTest::testSequential()
 {
-    testSequentialImpl(false);
+    testSequentialImpl(100);
 }
 
-void LhxJoinExecStreamTest::testSequentialLeftOuter()
+void  LhxJoinExecStreamTest::testDup1()
 {
-    testSequentialImpl(true);
+    testDupImpl(960, 16, 60);
 }
 
-void LhxJoinExecStreamTest::testSequentialImpl(bool leftOuter)
+void  LhxJoinExecStreamTest::testDup2()
 {
-    uint numRows = 100;
+    testDupImpl(960, 60, 16);
+}
+
+void LhxJoinExecStreamTest::testSequentialImpl(uint numRows)
+{
     uint numColsLeft;
     uint numColsRight;
     numColsRight = numColsLeft = 1;
@@ -144,14 +154,15 @@ void LhxJoinExecStreamTest::testSequentialImpl(bool leftOuter)
 
     CompositeExecStreamGenerator verifier(outColumnGenerators);
 
+    bool leftOuter = false;
+
     testImpl(numRows, keyCount, cndKeys, numRows,
         inputDesc, outputDesc, outputProj, leftOuter,
         pLeftGenerator, pRightGenerator, verifier);
 }
 
-void LhxJoinExecStreamTest::testRepeatSequential()
+void LhxJoinExecStreamTest::testDupImpl(uint numRows, uint cndKeyLeft, uint cndKeyRight)
 {
-    uint numRows = 128;
     uint numColsLeft;
     uint numColsRight;
     numColsRight = numColsLeft = 2;
@@ -174,15 +185,13 @@ void LhxJoinExecStreamTest::testRepeatSequential()
     
     uint i;
 
-    uint cndKeyLeft = 8;
-    uint cndKeyRight = 16;
+    assert (cndKeyLeft * cndKeyRight == numRows);
 
     for (i = 0; i < numColsLeft; i++) {
         leftColumnGenerators.push_back(
-            SharedInt64ColumnGenerator(new RepeatingSeqColumnGenerator(cndKeyLeft)));
+            SharedInt64ColumnGenerator(new DupColumnGenerator(numRows/cndKeyLeft)));
         outColumnGenerators.push_back(
-            SharedInt64ColumnGenerator(
-                new DupRepeatingSeqColumnGenerator(cndKeyLeft, numRows/cndKeyRight)));
+            SharedInt64ColumnGenerator(new DupColumnGenerator(numRows)));
 
         inputDesc.push_back(attrDesc);
         outputDesc.push_back(attrDesc);        
@@ -191,10 +200,9 @@ void LhxJoinExecStreamTest::testRepeatSequential()
 
     for (; i < numColsLeft + numColsRight; i++) {
         rightColumnGenerators.push_back(
-            SharedInt64ColumnGenerator(new RepeatingSeqColumnGenerator(cndKeyRight)));
+            SharedInt64ColumnGenerator(new DupColumnGenerator(numRows/cndKeyRight)));
         outColumnGenerators.push_back(
-            SharedInt64ColumnGenerator(
-                new DupRepeatingSeqColumnGenerator(cndKeyLeft, numRows/cndKeyRight)));
+            SharedInt64ColumnGenerator(new DupColumnGenerator(numRows)));
 
         outputDesc.push_back(attrDesc);        
         outputProj.push_back(i);
@@ -210,8 +218,13 @@ void LhxJoinExecStreamTest::testRepeatSequential()
 
     CompositeExecStreamGenerator verifier(outColumnGenerators);
 
-    testImpl(numRows, keyCount, cndKeys, (numRows * numRows/cndKeyRight),
-        inputDesc, outputDesc, outputProj, false,
+    bool leftOuter = false;
+    uint numResRows = (cndKeyLeft > cndKeyRight) ? 
+        (numRows * numRows/cndKeyLeft) :
+        (numRows * numRows/cndKeyRight);
+
+    testImpl(numRows, keyCount, cndKeys, numResRows,
+        inputDesc, outputDesc, outputProj, leftOuter,
         pLeftGenerator, pRightGenerator, verifier);
 }
 
@@ -278,14 +291,33 @@ void LhxJoinExecStreamTest::testImpl(
     joinParams.pCacheAccessor = pCache;
     joinParams.scratchAccessor =
         pSegmentFactory->newScratchSegment(pCache, 100);
- 
+    joinParams.pTempSegment = pRandomSegment;
+
     ExecStreamEmbryo joinStreamEmbryo;
     joinStreamEmbryo.init(new LhxJoinExecStream(),joinParams);
     joinStreamEmbryo.getStream()->setName("LhxJoinExecStream");
     
    
-    SharedExecStream pOutputStream = prepareConfluenceGraph(
-        leftInputStreamEmbryo, rightInputStreamEmbryo, joinStreamEmbryo);
+    ExternalSortExecStreamParams sortParams;
+    sortParams.outputTupleDesc = outputDesc;
+    sortParams.distinctness = DUP_ALLOW;
+    sortParams.pTempSegment = pRandomSegment;
+    sortParams.pCacheAccessor = pCache;
+    sortParams.scratchAccessor =
+        pSegmentFactory->newScratchSegment(pCache, 10);
+    sortParams.keyProj.push_back(0);
+    ExecStreamEmbryo sortStreamEmbryo;
+    sortStreamEmbryo.init(
+        ExternalSortExecStream::newExternalSortExecStream(),sortParams);
+    sortStreamEmbryo.getStream()->setName("ExternalSortExecStream");
+
+    SharedExecStream pOutputStream = prepareConfluenceTransformGraph(
+        leftInputStreamEmbryo, rightInputStreamEmbryo, joinStreamEmbryo,
+        sortStreamEmbryo);
+
+    // after partitioning the order might not be the same as the input, so add
+    // a sort before verify the output
+    
 
     verifyOutput(*pOutputStream, numResultRows, verifier);
 }

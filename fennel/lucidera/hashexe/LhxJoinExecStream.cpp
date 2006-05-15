@@ -42,11 +42,16 @@ void LhxJoinExecStream::prepare(
      */
     assert (leftInner && rightInner);
 
-    ConfluenceExecStream::prepare(params);    
-    TupleDescriptor leftDesc = inAccessors[0]->getTupleDesc();
-    TupleDescriptor rightDesc = inAccessors[1]->getTupleDesc();
-    TupleDescriptor keyDesc;
-    TupleDescriptor dataDesc;
+    ConfluenceExecStream::prepare(params);
+
+    joinInfo.streamBufAccessor[0] = inAccessors[0];
+    joinInfo.streamBufAccessor[1] = inAccessors[1];
+    
+    joinInfo.inputDesc[0] = inAccessors[0]->getTupleDesc();
+    joinInfo.inputDesc[1] = inAccessors[1]->getTupleDesc();
+
+    TupleDescriptor &leftDesc  = (TupleDescriptor &)joinInfo.inputDesc[0];
+    TupleDescriptor &rightDesc = (TupleDescriptor &)joinInfo.inputDesc[1];
 
     leftTuple.compute(leftDesc);
     rightTuple.compute(rightDesc);
@@ -62,19 +67,45 @@ void LhxJoinExecStream::prepare(
 
     int i, j;
 
+    /*
+     * Use up to 10000 slots, or 10 blocks, to store slots.
+     */
+    numSlotsHashTable = min(hashTable.slotsNeeded(params.cndKeys), (uint)10000);
+
     assert (params.leftKeyProj.size() == params.rightKeyProj.size());
 
-    leftKeyProj = params.leftKeyProj;
-    rightKeyProj = params.rightKeyProj;
+    joinInfo.keyProj[0] = params.leftKeyProj;
+    joinInfo.keyProj[1] = params.rightKeyProj;
     
-    for (i = 0, j = 0; i < rightTupleSize; i ++) {
-        if ((j < rightKeyProj.size()) && (rightKeyProj[j] == i)) {
-            keyDesc.push_back(rightDesc[i]);
-            j ++;
-        } else {
+    TupleProjection &leftKeyProj  = (TupleProjection &)joinInfo.keyProj[0];
+    TupleProjection &rightKeyProj  = (TupleProjection &)joinInfo.keyProj[1];
+    TupleDescriptor keyDesc;
+    TupleDescriptor dataDesc;
+
+    for (j = 0; j < leftKeyProj.size(); j ++) {
+        keyDesc.push_back(leftDesc[leftKeyProj[j]]);
+    }
+
+    /*
+     * Need to construct a covering set of keys; for example:
+     * keyProj (3,4,2,3) should have a covering set of (3,4,2);
+     */
+    
+    for (i = 0; i < rightTupleSize; i ++) {
+        /*
+         * Okay a dumb for loop to search for key columns.
+         */
+        bool colIsKey = false;
+        for (j = 0; j < rightKeyProj.size(); j ++) {
+            if (i == rightKeyProj[j]) {
+                colIsKey = true;
+                break;
+            }
+        }
+        if (!colIsKey) {
             dataDesc.push_back(rightDesc[i]);
-            dataProj.push_back(i);
-        }            
+            joinInfo.dataProj.push_back(i);
+        }
     }
 
     /* 
@@ -87,19 +118,14 @@ void LhxJoinExecStream::prepare(
     /*
      * Cache pages requirement: put at 100000 blocks (or 400M for blocksize of 4K)
      */
-    numBlocksHashTable = 
-        max((uint32_t)10000,
-            hashTable.blocksNeeded(
-                params.numRows, params.cndKeys, 
-                keyDesc, dataDesc, usablePageSize)
-            + 10);
+    uint hashTableBlocks = 
+        hashTable.blocksNeeded(
+            params.numRows, params.cndKeys, 
+            keyDesc, dataDesc, usablePageSize);
 
-    /*
-     * Default number of slots is 10000(using up to 10 blocks to store slots).
-     */
-    numSlotsHashTable =
-        max(hashTable.slotsNeeded(params.cndKeys), (uint32_t)10000);
-    
+    numBlocksHashTable = 
+        max((uint32_t)10000, hashTableBlocks + 10);
+   
     TupleDescriptor outputDesc;
 
     if (params.outputProj.size() != 0) {
@@ -112,6 +138,8 @@ void LhxJoinExecStream::prepare(
     pOutAccessor->setTupleShape(outputDesc);
 
     joinInfo.memSegmentAccessor = params.scratchAccessor;
+    joinInfo.externalSegmentAccessor.pCacheAccessor = params.pCacheAccessor;
+    joinInfo.externalSegmentAccessor.pSegment = params.pTempSegment;
 }
 
 void LhxJoinExecStream::getResourceRequirements(
@@ -120,14 +148,14 @@ void LhxJoinExecStream::getResourceRequirements(
 {
     ConfluenceExecStream::getResourceRequirements(minQuantity,optQuantity);
     SharedCache pCache = (joinInfo.memSegmentAccessor.pCacheAccessor)->getCache();
-
+    
     /*
      * Let hash table use at most 50% os the total cache size.
      */
     uint cacheLimit = pCache->getAllocatedPageCount() / 2;
-
-    minQuantity.nCachePages += min(numBlocksHashTable, cacheLimit);
     
+    minQuantity.nCachePages += min(numBlocksHashTable, cacheLimit);
+
     optQuantity = minQuantity;
 }
 
@@ -136,10 +164,6 @@ void LhxJoinExecStream::setResourceAllocation(
 {
     ConfluenceExecStream::setResourceAllocation(quantity);
     joinInfo.numCachePages = quantity.nCachePages;
-    hashTable.init(joinInfo.memSegmentAccessor, joinInfo.numCachePages,
-        0, inAccessors[1]->getTupleDesc(), rightKeyProj, aggsProj, dataProj);
-    hashTableReader.init(&hashTable, inAccessors[1]->getTupleDesc(),
-        rightKeyProj, aggsProj, dataProj);
 }
 
 void LhxJoinExecStream::open(bool restart)
@@ -148,42 +172,85 @@ void LhxJoinExecStream::open(bool restart)
 
     if (restart) {
         hashTable.releaseResources();
+    } else {
+        uint partitionLevel = 0;
+        hashTable.init(partitionLevel, joinInfo);
+        hashTableReader.init(&hashTable, joinInfo);
     }
-    
+
     bool status = hashTable.allocateResources(numSlotsHashTable);
 
     assert(status);
-    joinState = Building;
+
+    /*
+     * Create the root plan.
+     *
+     * The execute state machine operates at the plan level.
+     */
+    leftPart = SharedLhxPartition(new LhxPartition());
+    rightPart = SharedLhxPartition(new LhxPartition());
+
+    leftPart->firstPageId = NULL_PAGE_ID;
+    leftPart->inputIndex = LeftInputIndex;
+
+    rightPart->firstPageId = NULL_PAGE_ID;
+    rightPart->inputIndex = RightInputIndex;
+
+    rootPlan =  SharedLhxPlan(new LhxPlan());
+    uint partitionLevel = 0;
+    uint numChild       = 2;
+    LhxPlan *parentPlan = NULL;
+    rootPlan->init(partitionLevel, numChild, leftPart, rightPart, parentPlan);
+
+    curPlan = rootPlan.get();
+    isTopPartition = true;
+
+    rightReader.open(curPlan->getPartition(RightInputIndex), joinInfo, true);
+    joinState = Build;
 }
 
 ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
 {
-    SharedExecStreamBufAccessor leftBufAccessor = inAccessors[0];
-    SharedExecStreamBufAccessor rightBufAccessor = inAccessors[1];    
+    TupleProjection &leftKeyProj  = (TupleProjection &)joinInfo.keyProj[0];
+    TupleProjection &rightKeyProj = (TupleProjection &)joinInfo.keyProj[1];
 
 	while (true)
 	{
 		switch (joinState)
         {
-        case Building:
+        case Build:
             {
                 /*
                  * Build
                  */
                 for (;;) {
-                    if (!rightBufAccessor->isTupleConsumptionPending()) {
-                        if (rightBufAccessor->getState() == EXECBUF_EOS) {
+                    if (!rightReader.isTupleConsumptionPending()) {
+                        if (rightReader.getState() == EXECBUF_EOS) {
                             /*
                              * break out of this loop, and start probing.
                              */
-                            joinState = Probing;
+                            leftReader.open(curPlan->getPartition(0), joinInfo, true);                            
+                            joinState = Probe;
                             numTuplesProduced = 0;
                             break;
                         }
-                        if (!rightBufAccessor->demandData()) {
-                            return EXECRC_BUF_UNDERFLOW;
+
+                        if (!rightReader.demandData()) {
+                            if (isTopPartition) {
+                                /*
+                                 * Top level: request more data from producer.
+                                 */
+                                return EXECRC_BUF_UNDERFLOW;
+                            } else {
+                                /*
+                                 * Recursive level: no more data in partition.
+                                 * Come back to the top of the same state to
+                                 * detect EOS.
+                                 */
+                                break;
+                            }
                         }
-                        rightBufAccessor->unmarshalTuple(rightTuple);
+                        rightReader.unmarshalTuple(rightTuple);
                     }
 
                     /*
@@ -194,28 +261,115 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                      */
                     if (!(rightFilterNull &&
                           rightTuple.containsNull(rightKeyProj))) {
-                        hashTable.addTuple(rightTuple, rightKeyProj, aggsProj,
-                            dataProj);
+                        if (!hashTable.addTuple(rightTuple)) {
+                            /*
+                             * If hash table is full, partition input data.
+                             *
+                             * First, partition the left.
+                             */
+                            partInfo.reset(true);
+                            partInfo.init(LeftInputIndex,
+                                curPlan->getPartition(LeftInputIndex),
+                                curPlan->numChildPart, joinInfo);
+                            joinState = Partition;
+                            break;
+                        };
                     }
-
-                    rightBufAccessor->consumeTuple();
+                    rightReader.consumeTuple();
                 }
                 break;
             }
-        case Probing:
+        case Partition:
+            {
+                for (;;) {
+                    if (curPlan->generatePartitions(joinInfo, partInfo, false)
+                        == PartitionUnderflow) {
+                        /*
+                         * Request more data from producer.
+                         */
+                        return EXECRC_BUF_UNDERFLOW;
+                    } else {
+                        if (partInfo.curInputIndex == LeftInputIndex) {
+                            /*
+                             * Now partition the right input.
+                             * The in-memory hash table is also part of the
+                             * partition.
+                             */
+                            partInfo.reset(false);
+                            partInfo.init(RightInputIndex,
+                                curPlan->getPartition(RightInputIndex),
+                                curPlan->numChildPart, joinInfo,
+                                &hashTableReader, &rightReader, rightTuple);
+                        } else {
+                            /*
+                             * Finished building the partitions for both
+                             * inputs.
+                             */
+                            break;
+                        }
+                    }
+                }
+                partInfo.reset(false);
+                joinState = CreateChildPlan;
+                break;
+            }
+        case CreateChildPlan:
+            {
+                FENNEL_TRACE(TRACE_FINE, (curPlan->dataTrace).str());
+
+                /*
+                 * Link the newly created partitioned in the plan tree.
+                 */
+                curPlan->createChildren(partInfo);
+
+                /*
+                 * now recursice down the plan tree to get the first leaf plan.
+                 */
+                curPlan = curPlan->getFirstChild().get();
+
+                isTopPartition = false;
+                hashTable.releaseResources();
+
+                hashTable.init(curPlan->partitionLevel, joinInfo);
+                hashTableReader.init(&hashTable, joinInfo);
+
+                bool status = hashTable.allocateResources(numSlotsHashTable);
+                assert(status);
+                rightReader.open(curPlan->getPartition(1), joinInfo, true);
+                joinState = Build;
+                break;                
+            }
+        case GetNextPlan:
+            {
+                curPlan = curPlan->getNextLeaf();
+                if (curPlan) {
+                    hashTable.releaseResources();
+
+                    hashTable.init(curPlan->partitionLevel, joinInfo);
+                    hashTableReader.init(&hashTable, joinInfo);
+
+                    bool status = hashTable.allocateResources(numSlotsHashTable);
+                    assert(status);
+                    rightReader.open(curPlan->getPartition(1), joinInfo, true);
+                    joinState = Build;
+                } else {
+                    joinState = Done;
+                }
+                break;
+            }
+        case Probe:
             {
                 /*
                  * Probe
                  */
                 for (;;) {
-                    if (!leftBufAccessor->isTupleConsumptionPending()) {
-                        if (leftBufAccessor->getState() == EXECBUF_EOS) {
+                    if (!leftReader.isTupleConsumptionPending()) {
+                        if (leftReader.getState() == EXECBUF_EOS) {
                             if (!rightOuter) {
                                 /*
-                                 * Probing is done
+                                 * Probing for this plan is done.
                                  */
-                                pOutAccessor->markEOS();
-                                joinState = Done;
+                                joinState = GetNextPlan;
                             } else {
                                 /*
                                  * Set the output tuple to have NULL values on
@@ -228,14 +382,26 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                                 }
 
                                 hashTableReader.bindUnMatched();
-                                joinState = ProducingRightOuter;
+                                joinState = ProduceRightOuter;
                             }
                             break;
                         }
-                        if (!leftBufAccessor->demandData()) {
-                            return EXECRC_BUF_UNDERFLOW;
+                        if (!leftReader.demandData()) {
+                            if (isTopPartition) {
+                                /*
+                                 * Top level: request more data from producer.
+                                 */
+                                return EXECRC_BUF_UNDERFLOW;
+                            } else {
+                                /*
+                                 * Recursive level: no more data in partition.
+                                 * Come back to the top of the same state to
+                                 * detect EOS.
+                                 */
+                                break;
+                            }
                         }
-                        leftBufAccessor->unmarshalTuple(leftTuple);
+                        leftReader.unmarshalTuple(leftTuple);
                     }
 
                     PBuffer keyBuf = NULL;
@@ -263,7 +429,7 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                          * Output the joined tuple.
                          */
                         hashTableReader.bindKey(keyBuf);
-                        joinState = ProducingInner;
+                        joinState = ProduceInner;
                         break;
                     } else {
                         /*
@@ -271,7 +437,7 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                          * join.
                          */
                         if (!leftOuter) {
-                            leftBufAccessor->consumeTuple();
+                            leftReader.consumeTuple();
                         } else {
                             /*
                              * Set the output tuple to include only the left
@@ -283,14 +449,14 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                             for (int i = leftTupleSize; i < outputTuple.size(); i ++) {
                                 outputTuple[i].pData = NULL;
                             }
-                            joinState = ProducingLeftOuter;
+                            joinState = ProduceLeftOuter;
                             break;
                         }
                     }
                 }
                 break;
             }
-        case ProducingInner:
+        case ProduceInner:
             {
                 /*
                  * Producing the results.
@@ -305,20 +471,21 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                      * Come back to this state after producing the output tuple
                      * successfully.
                      */
-                    nextState = ProducingInner;
+                    nextState = ProduceInner;
                 } else {
-                    leftBufAccessor->consumeTuple();
-                    joinState = Probing;
+                    leftReader.consumeTuple();
+                    joinState = Probe;
                 }
                 break;
             }
-        case ProducingLeftOuter:
+        case ProduceLeftOuter:
             {
                 if (pOutAccessor->produceTuple(outputTuple)) {
-                    leftBufAccessor->consumeTuple();
+                    leftReader.consumeTuple();
                     numTuplesProduced++;
-                    joinState = Probing;
+                    joinState = Probe;
                 } else {
+                    numTuplesProduced = 0;
                     return EXECRC_BUF_OVERFLOW;                    
                 }
 
@@ -335,7 +502,7 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                 }
                 break;
             }
-        case ProducingRightOuter:
+        case ProduceRightOuter:
             {
                 /*
                  * Producing the results.
@@ -350,10 +517,12 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                      * Come back to this state after producing the output tuple
                      * successfully.
                      */
-                    nextState = ProducingRightOuter;
+                    nextState = ProduceRightOuter;
                 } else {
-                    pOutAccessor->markEOS();
-                    joinState = Done;
+                    /*
+                     * Probing for this plan is done.
+                     */
+                    joinState = GetNextPlan;
                 }
                 break;
             }
@@ -363,6 +532,7 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                     numTuplesProduced++;
                     joinState = nextState;
                 } else {
+                    numTuplesProduced = 0;
                     return EXECRC_BUF_OVERFLOW;                    
                 }
 
@@ -381,6 +551,8 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
             }
         case Done:
             {
+                pOutAccessor->markEOS();
+                hashTable.releaseResources();
                 return EXECRC_EOS;
             }
         }
@@ -397,7 +569,6 @@ void LhxJoinExecStream::closeImpl()
     hashTable.releaseResources();
     ConfluenceExecStream::closeImpl();
 }
-
 
 FENNEL_END_CPPFILE("$Id$");
 

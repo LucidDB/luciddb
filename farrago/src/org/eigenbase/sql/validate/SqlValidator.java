@@ -392,6 +392,11 @@ public interface SqlValidator
      */
     boolean isConstant(SqlNode expr);
 
+    /**
+     * Declares a SELECT expression as a cursor.
+     */
+    public void declareCursor(SqlSelect select);
+    
     RelDataType deriveConstructorType(
         SqlValidatorScope scope,
         SqlCall call,

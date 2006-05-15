@@ -20,7 +20,11 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
+#include "fennel/common/FennelExcn.h"
 #include "fennel/lucidera/hashexe/LhxHashGenerator.h"
+#include <sstream>
+
+using namespace std;
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -57,7 +61,12 @@ void LhxHashGenerator::init(uint levelInit)
      * Level 64 will have the same seed as level 0. So if recursive
      * partitioning goes to 64 level, no further partitioning is possible.
      */
-    assert(levelInit < 64);
+    if (levelInit > 63) {
+        ostringstream errMsg;
+        errMsg << " Hash recursion level can not be deeper than 63";
+        throw FennelExcn(errMsg.str());      
+    }
+
     level = levelInit;
     magicTable = LhxHashGeneratorMagicTable;;
 

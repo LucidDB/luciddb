@@ -207,7 +207,7 @@ public abstract class DdlHandler
         SqlTypeName typeName = SqlTypeName.get(type.getName());
 
         // Check that every type is supported. For example, we don't support
-        // columns of type DECIMAL(p, s) or LONG VARCHAR right now.
+        // columns of type LONG VARCHAR right now.
         final FarragoSessionPersonality personality =
             validator.getStmtValidator().getSession().getPersonality();
         if (!personality.isSupportedType(typeName)) {

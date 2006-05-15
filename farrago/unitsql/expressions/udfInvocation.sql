@@ -177,7 +177,21 @@ parameter style system defined java
 no sql
 external name 'class net.sf.farrago.test.FarragoTestUDR.ramp';
 
+-- UDX with input
+create function stringify(c cursor, delimiter varchar(128))
+returns table(v varchar(65535))
+language java
+parameter style system defined java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.stringify';
+
 create view ramp_view as select * from table(ramp(3));
+
+create view stringified_view as 
+select * 
+from table(udftest.stringify(
+    cursor(select * from sales.depts where deptno=20 order by 1),
+    '|'));
 
 -- should fail:  we don't allow mutual recursion either
 create schema crypto
@@ -324,6 +338,16 @@ select * from ramp_view order by 1;
 
 -- udx invocation with restart on RHS of Cartesian product
 select count(*) from sales.depts, table(ramp(5));
+
+-- udx invocation with input
+select upper(v)
+from table(udftest.stringify(
+    cursor(select * from sales.depts order by 1),
+    '|'))
+order by 1;
+
+-- udx invocation with input via view
+select * from stringified_view;
 
 set path 'crypto2';
 

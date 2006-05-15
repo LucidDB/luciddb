@@ -62,9 +62,11 @@ void LbmSplicerExecStream::open(bool restart)
     if (!restart) {
 
         bitmapBuffer.reset(new FixedBuffer[maxEntrySize]);
+        mergeBuffer.reset(new FixedBuffer[maxEntrySize]);
         pCurrentEntry = SharedLbmEntry(new LbmEntry());
         pCurrentEntry->init(
-            bitmapBuffer.get(), maxEntrySize, bitmapTupleDesc);
+            bitmapBuffer.get(), mergeBuffer.get(), maxEntrySize,
+            bitmapTupleDesc);
 
         bTreeWriter = SharedBTreeWriter(
             new BTreeWriter(treeDescriptor, scratchAccessor, false));
@@ -171,6 +173,7 @@ void LbmSplicerExecStream::closeImpl()
     BTreeExecStream::closeImpl();
     ConduitExecStream::closeImpl();
     bitmapBuffer.reset();
+    mergeBuffer.reset();
     pCurrentEntry.reset();
     bTreeWriter.reset();
     outputTupleBuffer.reset();

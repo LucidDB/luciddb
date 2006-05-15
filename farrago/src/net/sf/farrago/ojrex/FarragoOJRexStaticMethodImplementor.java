@@ -68,6 +68,7 @@ public class FarragoOJRexStaticMethodImplementor
         for (int i = 0; i < operands.length; ++i) {
             Expression expr;
             if (javaParams[i].isPrimitive()
+                || javaParams[i] == ResultSet.class
                 || javaParams[i] == PreparedStatement.class)
             {
                 expr = operands[i];

@@ -339,7 +339,7 @@ int LcsRowScanExecStreamTest::generateBitmaps(
     // setup an LbmEntry with the initial rid value
     uint scratchBufSize = LbmEntry::getScratchBufferSize(bitmapColSize);
     entryBuf.reset(new uint8_t[scratchBufSize]);
-    lbmEntry.init(entryBuf.get(), scratchBufSize, bitmapTupleDesc);
+    lbmEntry.init(entryBuf.get(), NULL, scratchBufSize, bitmapTupleDesc);
     lbmEntry.setEntryTuple(bitmapTupleData);
 
     // add on the remaining rids

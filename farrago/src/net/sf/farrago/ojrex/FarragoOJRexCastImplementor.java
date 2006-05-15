@@ -64,6 +64,12 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
         RelDataType lhsType = call.getType();
         RelDataType rhsType = call.operands[0].getType();
         Expression rhsExp = operands[0];
+
+        if (lhsType.getSqlTypeName() == SqlTypeName.Cursor) {
+            // Conversion should already have been taken care of outside.
+            return rhsExp;
+        }
+        
         // Normally the validator will report the error.
         // but when do insert into t values (...)
         // somehow, it slipped in.

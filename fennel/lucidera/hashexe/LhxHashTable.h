@@ -28,6 +28,8 @@
 #include "fennel/tuple/TupleAccessor.h"
 #include "fennel/tuple/TupleProjectionAccessor.h"
 #include "fennel/segment/SegPageLock.h"
+#include "fennel/lucidera/hashexe/LhxJoinBase.h"
+
 #include "math.h"
 
 using namespace std;
@@ -255,6 +257,8 @@ public:
     void setCurrent(PBuffer nodePtrInit, bool valid);
 
     /**
+     * Get the first data node off this key node.
+     *
      * @return pointer to the first data node.
      */
     PBuffer getFirstData();
@@ -267,6 +271,8 @@ public:
     void setFirstData(PBuffer inputFirstData);
 
     /**
+     * Check if this key has been matched before.
+     *
      * @return true if this key has been seen.
      */
     bool isMatched();
@@ -483,6 +489,16 @@ class LhxHashTable
     LhxHashGenerator hashGenSub;
 
     /**
+     * Fields in the inputTuple parameter to addTuple() method that will hold
+     * keyCols, Aggs, and data columns. inputTuple should have the same shape
+     * as joinInfo.inputDesc[1] used in the init() method.
+     */
+    TupleProjection keyColsAndAggsProj;
+    TupleProjection keyColsProj;
+    TupleProjection aggsProj;
+    TupleProjection dataProj;
+
+    /**
      * Accessors for the content of this hash table.
      */
     LhxHashKeyAccessor  hashKeyAccessor;
@@ -513,56 +529,36 @@ class LhxHashTable
     string printSlot(uint slotNum);
 
     /**
-     * Add a key node.
+     * Add a key node, with data.
      *
      * @param[in] inputTuple
-     * @param[in] keyColsProj the key fields
-     * @param[in] aggsProj the aggregate fields
      *
-     * @return the key buffer. NULL if hash table is out of memory.
+     * @return false if hash table is out of memory.
      */
-    PBuffer addKey(
-        TupleData const &inputTuple,
-        TupleProjection const &keyColsProj,
-        TupleProjection const &aggsProj);
+    bool addKeyData(TupleData const &inputTuple);
 
     /**
-     * Add a data node.
+     * Add a data node, following an existing keyNode.
      *
      * @param[in] keyNode the key node for this data node
      * @param[in] inputTuple
      * @param[in] keyColsProj the key fields
      * @param[in] aggsProj the aggregate fields
      *
-     * @return status. false if hash table is out of memory.
+     * @return false if hash table is out of memory.
      */
-    bool addData(
-        PBuffer keyNode,
-        TupleData const &inputTuple,
-        TupleProjection const &dataProj);
+    bool addData(PBuffer keyNode, TupleData const &inputTuple);
 
 public:
     /**
      * Initialize the hash table.
      *
-     * @param[in] scratchAccessorInit scratchAccessor to allocate cache pages
-     * from.
-     * @param[in] maxBlockCountInit maximum number of blocks to use by this
-     * hash table.
      * @param[in] partitionLevelInit recursive partitioning level
-     * @param[in] inputTupleDesc tuple containing all key, agg and data cols
-     * @param[in] keyColsProj key fields
-     * @param[in] aggsProj agg fields
-     * @param[in] dataProj data fields
+     * @param[in] joinInfo
      */
     void init(
-        SegmentAccessor const &scratchAccessorInit,
-        uint maxBlockCountInit,
         uint partitionLevelInit,
-        TupleDescriptor const &inputTupleDesc,
-        TupleProjection keyColsProj,
-        TupleProjection aggsProj,
-        TupleProjection const &dataProj);
+        LhxJoinInfo const &joinInfo);
 
     /**
      * Allocate blocks to hold the number of slots needed for this hash table.
@@ -578,7 +574,7 @@ public:
      */
     void releaseResources();
 
-    /*
+    /**
      * Compute the number of slots required to hold "cndKeys" keys without
      * significant collisions.
      *
@@ -588,7 +584,7 @@ public:
      */
     uint slotsNeeded(double cndKeys);
 
-    /*
+    /**
      * Compute the number of bytes required by the hash table and its contents
      * for "nRows" rows with "cndKeys" distinct key values, for the specified
      * key(aggs included) and data descriptions.
@@ -606,7 +602,7 @@ public:
         TupleDescriptor &keyDesc,
         TupleDescriptor &dataDesc);
     
-    /*
+    /**
      * Compute the number of blocks required by the hash table and its contents
      * for "nRows" rows with "cndKeys" distinct key values, for the specified
      * key(aggs included) and data descriptions.
@@ -615,6 +611,7 @@ public:
      * @param[in] cndKeys
      * @param[in] keyDesc shape of key and agg cols
      * @param[in] dataDesc shape of data cols
+     * @params[in] is specified indicate the usable page size.
      *
      * @return blocks required
      */
@@ -625,7 +622,7 @@ public:
         TupleDescriptor &dataDesc,
         uint usablePageSize = 0);
 
-    /*
+    /**
      * Find key node based on key cols.
      *
      * @param[in] inputTuple
@@ -647,11 +644,7 @@ public:
      * @param[in] aggsProj agg fields
      * @param[in] dataProj data fields
      */
-    bool addTuple(
-        TupleData const &inputTuple,
-        TupleProjection const &keyColsProj, 
-        TupleProjection const &aggsProj,
-        TupleProjection const &dataProj);
+    bool addTuple(TupleData const &inputTuple);
 
     /**
      * Get the slot indexed by slotNum.
@@ -665,7 +658,7 @@ public:
     /**
      * @return number of slots.
      */
-    uint getNumSlots();
+    uint getNumSlots() const;
 
     /**
      * Print the content of the node associated with this accessor.
@@ -675,15 +668,34 @@ public:
 
 class LhxHashTableReader
 {
+    /**
+     * Underlying hash table to read from.
+     */
     LhxHashTable *hashTable;
     
-    uint curSlot;
+    /**
+     * Current read location.
+     */
+    uint    curSlot;
     PBuffer curKey;
     PBuffer curData;
 
+    /**
+     * If not NULL, only read tuple with matching keys.
+     * Not compatible with returnUnMatched
+     */
     PBuffer boundKey;
-    bool    started;
+
+    /**
+     * If true, only return tuples with unmatch keys.
+     * This is not compatible with boundKey.
+     */
     bool    returnUnMatched;
+
+    /**
+     * Whether reader is positioned.
+     */
+    bool    isPositioned;
 
     /**
      * Accessors for the content of this hash table.
@@ -736,20 +748,13 @@ public:
     /**
      * Initialize the hash table reader.
      *
-     * @param[in] hashTable the underlying hash table to read from
-     * @param[in] outputTupleDesc tuple to hold all key, agg and data cols
-     * @param[in] keyColsProj key fields
-     * @param[in] aggsProj agg fields
-     * @param[in] dataProj data fields
-     * @
+     * @param[in] hashTableInit the underlying hash table to read from
+     * @param[in] joinInfo
      */
     void init(
-        LhxHashTable *hashTable,
-        TupleDescriptor const &outputTupleDesc,
-        TupleProjection keyColsProj,
-        TupleProjection aggsProj,
-        TupleProjection const &dataProj);
-    
+        LhxHashTable *hashTableInit,
+        LhxJoinInfo const &joinInfo);
+
     /**
      * Bind this reader to a certain key. Only tuples with the same key are
      * returned.
@@ -905,7 +910,7 @@ inline uint LhxHashTable::slotsNeeded(double cndKeys)
     return uint(ceil(cndKeys * 1.2));
 }
 
-inline uint LhxHashTable::getNumSlots() { return numSlots; }
+inline uint LhxHashTable::getNumSlots() const { return numSlots; }
 
 FENNEL_END_NAMESPACE
 

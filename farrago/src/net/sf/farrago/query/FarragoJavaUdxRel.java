@@ -141,6 +141,43 @@ public class FarragoJavaUdxRel extends TableFunctionRelBase
             outputRowType,
             implementor.getTypeFactory());
 
+        // Translate relational inputs to ResultSet expressions.
+        final Expression [] childExprs = new Expression[inputs.length];
+        for (int i = 0; i < inputs.length; ++i) {
+            childExprs[i] =
+                implementor.visitJavaChild(this, i, (JavaRel) inputs[i]);
+            OJClass rowClass = OJUtil.typeToOJClass(
+                inputs[i].getRowType(), getCluster().getTypeFactory());
+
+            Expression typeLookupCall = generateTypeLookupCall(
+                implementor,
+                inputs[i]);
+        
+            ExpressionList resultSetParams = new ExpressionList();
+            resultSetParams.add(childExprs[i]);
+            resultSetParams.add(new ClassLiteral(rowClass));
+            resultSetParams.add(typeLookupCall);
+            resultSetParams.add(Literal.constantNull());
+
+            childExprs[i] = new AllocationExpression(
+                OJUtil.typeNameForClass(FarragoTupleIterResultSet.class),
+                resultSetParams);
+        }
+
+        // Rebind RexInputRefs accordingly.
+        final JavaRexBuilder rexBuilder =
+            (JavaRexBuilder) implementor.getRexBuilder();
+        RexShuttle shuttle = new RexShuttle()
+            {
+                public RexNode visitInputRef(RexInputRef inputRef)
+                {
+                    return rexBuilder.makeJava(
+                        getCluster().getEnv(),
+                        childExprs[inputRef.getIndex()]);
+                }
+            };
+        RexNode rewrittenCall = getCall().accept(shuttle);
+        
         MemberDeclarationList memberList = new MemberDeclarationList();
         
         StatementList executeMethodBody = new StatementList();
@@ -153,7 +190,7 @@ public class FarragoJavaUdxRel extends TableFunctionRelBase
         farragoImplementor.setServerMofId(serverMofId);
         implementor.translateViaStatements(
             this,
-            getCall(),
+            rewrittenCall,
             executeMethodBody,
             memberList);
         farragoImplementor.setServerMofId(null);
@@ -164,12 +201,17 @@ public class FarragoJavaUdxRel extends TableFunctionRelBase
                 new ParameterList(), null, executeMethodBody);
         memberList.add(executeMethodDecl);
 
+        Expression typeLookupCall = generateTypeLookupCall(
+            implementor,
+            this);
+        
         Expression iteratorExp =
             new AllocationExpression(
                 OJUtil.typeNameForClass(FarragoJavaUdxIterator.class),
                 new ExpressionList(
                     implementor.getConnectionVariable(),
-                    new ClassLiteral(TypeName.forOJClass(outputRowClass))),
+                    new ClassLiteral(TypeName.forOJClass(outputRowClass)),
+                    typeLookupCall),
                 memberList);
 
         // TODO jvs 23-Feb-2006:  get rid of adapter and write
@@ -180,6 +222,33 @@ public class FarragoJavaUdxRel extends TableFunctionRelBase
             new ExpressionList(
                 iteratorExp));
         return tupleIterExp;
+    }
+
+    /**
+     * Stores the row type for a relational expression in the PreparingStmt,
+     * and generates a call which will retrieve it from the executable context
+     * at runtime.  The literal string key used is based on the relational
+     * expression id.
+     */
+    private Expression generateTypeLookupCall(
+        JavaRelImplementor implementor,
+        RelNode relNode)
+    {
+        String resultSetName = "ResultSet:" + relNode.getId();
+        FarragoPreparingStmt preparingStmt =
+            ((FarragoRelImplementor) implementor).getPreparingStmt();
+        preparingStmt.mapResultSetType(
+            resultSetName,
+            relNode.getRowType());
+
+        MethodCall typeLookupCall =
+            new MethodCall(
+                implementor.getConnectionVariable(),
+                "getRowTypeForResultSet",
+                new ExpressionList(
+                    Literal.makeLiteral(resultSetName)));
+
+        return typeLookupCall;
     }
 }
 

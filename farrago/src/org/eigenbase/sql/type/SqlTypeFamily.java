@@ -74,6 +74,7 @@ public class SqlTypeFamily
     public static final int DatetimeInterval_ordinal = 14;
     public static final int Multiset_ordinal = 15;
     public static final int Any_ordinal = 16;
+    public static final int Cursor_ordinal = 17;
 
     // Primary families.
     
@@ -156,6 +157,11 @@ public class SqlTypeFamily
             "ANY", Any_ordinal,
             SqlTypeName.allTypes);
 
+    public static final SqlTypeFamily Cursor =
+        new SqlTypeFamily(
+            "CURSOR", Cursor_ordinal,
+            SqlTypeName.cursorTypes);
+
     
     // array of all families
     private static final SqlTypeFamily [] values =
@@ -165,7 +171,8 @@ public class SqlTypeFamily
             String, ApproximateNumeric, ExactNumeric,
             Integer, Datetime, DatetimeInterval,
             Multiset,
-            Any
+            Any,
+            Cursor
         };
     
     private static SqlTypeFamily [] jdbcTypeToFamily;
@@ -205,6 +212,8 @@ public class SqlTypeFamily
         setFamilyForJdbcType(Types.TIMESTAMP, Timestamp);
         setFamilyForJdbcType(Types.BOOLEAN, Boolean);
         
+        setFamilyForJdbcType(SqlTypeName.Cursor.getJdbcOrdinal(), Cursor);
+        
         sqlTypeToFamily =
             new SqlTypeFamily[SqlTypeName.enumeration.getMax() + 1];
         sqlTypeToFamily[SqlTypeName.Boolean_ordinal] = Boolean;
@@ -231,6 +240,7 @@ public class SqlTypeFamily
             Any;
         sqlTypeToFamily[SqlTypeName.IntervalDayTime_ordinal] =
             IntervalDayTime;
+        sqlTypeToFamily[SqlTypeName.Cursor_ordinal] = Cursor;
     }
 
     /**

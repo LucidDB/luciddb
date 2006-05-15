@@ -93,6 +93,58 @@ SharedExecStream ExecStreamUnitTestBase::prepareConfluenceGraph(
     return prepareConfluenceGraph(sourceStreamEmbryos, confluenceStreamEmbryo);
 }
 
+SharedExecStream ExecStreamUnitTestBase::prepareConfluenceTransformGraph(
+    ExecStreamEmbryo &sourceStreamEmbryo1,
+    ExecStreamEmbryo &sourceStreamEmbryo2,
+    ExecStreamEmbryo &confluenceStreamEmbryo,
+    ExecStreamEmbryo &transformStreamEmbryo)
+{
+    std::vector<ExecStreamEmbryo> sourceStreamEmbryos;
+    sourceStreamEmbryos.push_back(sourceStreamEmbryo1);
+    sourceStreamEmbryos.push_back(sourceStreamEmbryo2);
+
+    std::vector<ExecStreamEmbryo>::iterator it;
+
+    for (it = sourceStreamEmbryos.begin(); it != sourceStreamEmbryos.end();
+        ++it)
+    {
+        pGraphEmbryo->saveStreamEmbryo(*it);
+    }
+    pGraphEmbryo->saveStreamEmbryo(confluenceStreamEmbryo);
+    
+    for (it = sourceStreamEmbryos.begin(); it != sourceStreamEmbryos.end();
+        ++it)
+    {
+        pGraphEmbryo->addDataflow(
+            (*it).getStream()->getName(),
+            confluenceStreamEmbryo.getStream()->getName());
+    }
+
+    std::vector<ExecStreamEmbryo> transforms;
+    transforms.push_back(transformStreamEmbryo);
+    ExecStreamEmbryo& previousStream = confluenceStreamEmbryo;
+
+    // save all transforms
+    for (it = transforms.begin(); it != transforms.end(); ++it) {
+        pGraphEmbryo->saveStreamEmbryo(*it);
+    }
+
+    for (it = transforms.begin(); it != transforms.end(); ++it) {
+        pGraphEmbryo->addDataflow(previousStream.getStream()->getName(),
+                                  (*it).getStream()->getName());
+        previousStream = *it;
+    }
+
+    
+    SharedExecStream pAdaptedStream =
+        pGraphEmbryo->addAdapterFor(previousStream.getStream()->getName(), 0,
+                                    BUFPROV_PRODUCER);
+    pGraph->addOutputDataflow(pAdaptedStream->getStreamId());
+
+    pGraphEmbryo->prepareGraph(shared_from_this(), "");
+    return pAdaptedStream;
+}
+
 SharedExecStream ExecStreamUnitTestBase::prepareConfluenceGraph(
     std::vector<ExecStreamEmbryo> &sourceStreamEmbryos,
     ExecStreamEmbryo &confluenceStreamEmbryo)

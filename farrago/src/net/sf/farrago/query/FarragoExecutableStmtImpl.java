@@ -85,6 +85,12 @@ abstract class FarragoExecutableStmtImpl extends FarragoCompoundAllocation
     {
         return tableAccessMap;
     }
+
+    // implement FarragoSessionExecutableStmt
+    public Map<String, RelDataType> getResultSetTypeMap()
+    {
+        return Collections.EMPTY_MAP;
+    }
 }
 
 

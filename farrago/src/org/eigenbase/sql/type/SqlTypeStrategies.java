@@ -669,6 +669,13 @@ public abstract class SqlTypeStrategies
         new ExplicitReturnTypeInference(SqlTypeName.Varchar, 2000);
 
     /**
+     * Type-inference strategy which always returns "CURSOR".
+     */
+    public static final SqlReturnTypeInference
+        rtiCursor =
+        new ExplicitReturnTypeInference(SqlTypeName.Cursor);
+
+    /**
      * Type-inference strategy whereby the result type of a call is using its
      * operands biggest type, using the SQL:1999 rules described in
      * "Data types of results of aggregations".

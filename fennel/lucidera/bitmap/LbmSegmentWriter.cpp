@@ -30,7 +30,7 @@ void LbmSegmentWriter::init(
     bool removeZerosInit)
 {
     segmentEntry.init(
-        scratchBufferInit, scratchBufferSizeInit, bitmapTupleDesc);
+        scratchBufferInit, NULL, scratchBufferSizeInit, bitmapTupleDesc);
     bitmapTuple.compute(bitmapTupleDesc);
     removeZeros = removeZerosInit;
     reset();
@@ -129,6 +129,6 @@ TupleData const &LbmSegmentWriter::produceSegmentTuple()
     return segmentEntry.produceEntryTuple();
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dev/fennel/lucidera/bitmap/LbmSegmentWriter.cpp#3 $");
+FENNEL_END_CPPFILE("$Id: //open/dev/fennel/lucidera/bitmap/LbmSegmentWriter.cpp#4 $");
 
 // End LbmSegmentWriter.cpp

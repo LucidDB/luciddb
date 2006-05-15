@@ -110,6 +110,22 @@ public class RelOptRulesTest extends RelOptTestBase
             "select name, max(name), avg(deptno), min(name)"
             + " from sales.dept group by name");
     }
+    
+    public void testPushProjectPastFilter()
+    {
+        checkPlanning(
+            new PushProjectPastFilterRule(),
+            "select empno + deptno from emp where sal = 10 * comm " +
+            "and upper(ename) = 'FOO'");
+    }
+    
+    public void testPushProjectPastJoin()
+    {
+        checkPlanning(
+            new PushProjectPastJoinRule(),
+            "select e.sal + b.comm from emp e inner join bonus b " +
+            "on e.ename = b.ename and e.deptno = 10");
+    }
 }
 
 // End RelOptRulesTest.java

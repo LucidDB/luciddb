@@ -94,7 +94,12 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
      * namespace} which describes what columns they contain.
      */
     protected final HashMap namespaces = new HashMap();
-    private SqlNode outermostNode;
+    /**
+     * Set of select expressions used as cursor definitions.  In standard
+     * SQL, only the top-level SELECT is a cursor; Eigenbase extends
+     * this with cursors as inputs to table functions.
+     */
+    private Set<SqlNode> cursorSet = new HashSet<SqlNode>();
     private int nextGeneratedId;
     protected final RelDataTypeFactory typeFactory;
     protected final RelDataType unknownType;
@@ -173,6 +178,12 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                 includeSystemVars);
         }
         return new SqlNodeList(list, SqlParserPos.ZERO);
+    }
+
+    // implement SqlValidator
+    public void declareCursor(SqlSelect select)
+    {
+        cursorSet.add(select);
     }
 
     /**
@@ -299,20 +310,16 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
     public SqlMoniker[] lookupHints(SqlNode topNode, SqlParserPos pos)
     {
         SqlValidatorScope scope = new EmptyScope(this);
-        try {
-            outermostNode = performUnconditionalRewrites(topNode);
-            if (outermostNode.getKind().isA(SqlKind.TopLevel)) {
-                registerQuery(scope, null, outermostNode, null, false);
-            }
-            final SqlValidatorNamespace ns = getNamespace(outermostNode);
-            if (ns == null) {
-                throw Util.newInternal("Not a query: " + outermostNode);
-            }
-            return ns.lookupHints(pos);
+        SqlNode outermostNode = performUnconditionalRewrites(topNode);
+        cursorSet.add(outermostNode);
+        if (outermostNode.getKind().isA(SqlKind.TopLevel)) {
+            registerQuery(scope, null, outermostNode, null, false);
         }
-        finally {
-            outermostNode = null;
+        final SqlValidatorNamespace ns = getNamespace(outermostNode);
+        if (ns == null) {
+            throw Util.newInternal("Not a query: " + outermostNode);
         }
+        return ns.lookupHints(pos);
     }
 
     /**
@@ -440,30 +447,25 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
     private SqlNode validateScopedExpression(
         SqlNode topNode, SqlValidatorScope scope)
     {
-        Util.pre(outermostNode == null, "outermostNode == null");
-        try {
-            outermostNode = performUnconditionalRewrites(topNode);
-            if (tracer.isLoggable(Level.FINER)) {
-                tracer.finer("After unconditional rewrite: " +
-                    outermostNode.toString());
-            }
-            if (outermostNode.getKind().isA(SqlKind.TopLevel)) {
-                registerQuery(scope, null, outermostNode, null, false);
-            }
-            outermostNode.validate(this, scope);
-            if (!outermostNode.getKind().isA(SqlKind.TopLevel)) {
-                // force type derivation so that we can provide it to the
-                // caller later without needing the scope
-                deriveType(scope, outermostNode);
-            }
-            if (tracer.isLoggable(Level.FINER)) {
-                tracer.finer("After validation: " + outermostNode.toString());
-            }
-            SqlNode returnNode = outermostNode;
-            return returnNode;
-        } finally {
-            outermostNode = null;
+        SqlNode outermostNode = performUnconditionalRewrites(topNode);
+        cursorSet.add(outermostNode);
+        if (tracer.isLoggable(Level.FINER)) {
+            tracer.finer("After unconditional rewrite: " +
+                outermostNode.toString());
         }
+        if (outermostNode.getKind().isA(SqlKind.TopLevel)) {
+            registerQuery(scope, null, outermostNode, null, false);
+        }
+        outermostNode.validate(this, scope);
+        if (!outermostNode.getKind().isA(SqlKind.TopLevel)) {
+            // force type derivation so that we can provide it to the
+            // caller later without needing the scope
+            deriveType(scope, outermostNode);
+        }
+        if (tracer.isLoggable(Level.FINER)) {
+            tracer.finer("After validation: " + outermostNode.toString());
+        }
+        return outermostNode;
     }
 
     public void validateQuery(SqlNode node)
@@ -1797,7 +1799,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             return;
         }
         if (!shouldAllowIntermediateOrderBy()) {
-            if (select != outermostNode) {
+            if (!cursorSet.contains(select)) {
                 throw newValidationError(select,
                     EigenbaseResource.instance().InvalidOrderByPos.ex());
             }

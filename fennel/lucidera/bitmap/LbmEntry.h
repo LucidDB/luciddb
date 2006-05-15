@@ -46,6 +46,11 @@ class LbmEntry : public LbmSegment
     PBuffer scratchBuffer;
 
     /**
+     * Secondary scratch buffer; only need if mergeEntry() will be called
+     */
+    PBuffer mergeScratchBuffer;
+
+    /**
      * Scratch buffer size. Needs to be at least the sizeof(index key columns) +
      * sizeof(LcsRid).
      */
@@ -248,6 +253,132 @@ class LbmEntry : public LbmSegment
     bool singleton2Bitmap();
 
     /**
+     * Splices a singleton input into the current entry.
+     *
+     * @param[in|out] inputTuple the input entry singleton
+     *
+     * @return true if there is enough space in the current entry to splice
+     * in the singleton input entry; false otherwise
+     */
+    bool spliceSingleton(TupleData &inputTuple);
+
+    /**
+     * Copies the current entry into a secondary merge scratch buffer.
+     *
+     * @param newEntry new entry tuple corresponding to the copied entry
+     * @param startRid startrid in the new entry tuple
+     * @param segStart start of byte segment that should be copied
+     * @param segDescStart start of the segment descriptor that should be
+     * copied
+     */
+    void copyToMergeBuffer(
+        TupleData &newEntry, LcsRid startRid, PBuffer segStart,
+        PBuffer segDescStart);
+
+    /**
+     * Creates a new segment in the middle of two existing segments, the new
+     * segment corresponding to a singleton input.  I.e., replaces a byte
+     * that's currently a "zero byte" with a byte containing a singleton rid.
+     *
+     * @param[in|out] inputTuple the input entry singleton
+     * @param prevSrid starting rid of the segment that the new segment will be
+     * inserted after
+     * @param prevSegDesc pointer to the segment descriptor corresponding to the
+     * segment that the new segment will be inserted after
+     * @param nextSegDesc pointer to the segment descriptor corresponding to the
+     * segment that will follow the new segment
+     * @param prevSeg pointer to the segment that the new segment will be
+     * inserted after
+     * @param prevSegBytes number of bytes in the segment that the new segment
+     * will be inserted after
+     * @param prevZeroBytes number of trailing zeros in the segment that the new
+     * segment will be inserted after
+     *
+     * @return true if there is enough space in the current entry to
+     * accomodate the new byte; false otherwise
+     */
+    bool addNewSegment(
+        TupleData &inputTuple, LcsRid prevSrid, PBuffer prevSegDesc,
+        PBuffer nextSegDesc, PBuffer prevSeg, uint prevSegBytes,
+        uint prevZeroBytes);
+
+    /**
+     * Creates a new segment adjacent to an existing segment, the new
+     * segment corresponding to a singleton input.  I.e., replaces a byte
+     * that's currently a "zero byte" with a byte containing a singleton rid.
+     * If possible, combines adjacents segments into larger segments.
+     *
+     * @param[in|out] inputTuple the input entry singleton
+     * @param prevSrid starting rid of the segment that the new segment will be
+     * inserted after
+     * @param prevSegDesc pointer to the segment descriptor corresponding to the
+     * segment that the new segment will be inserted after
+     * @param nextSegDesc pointer to the segment descriptor corresponding to the
+     * segment that will follow the new segment
+     * @param prevSeg pointer to the segment that the new segment will be
+     * inserted after
+     * @param prevSegBytes number of bytes in the segment that the new segment
+     * will be inserted after
+     * @param prevZeroBytes number of trailing zeros in the segment that the new
+     * segment will be inserted after
+     *
+     * @return true if there is enough space in the current entry to
+     * accomodate the new byte; false otherwise
+     */
+    bool addNewAdjacentSegment(
+        TupleData &inputTuple, LcsRid prevSrid, PBuffer prevSegDesc,
+        PBuffer nextSegDesc, PBuffer prevSeg, uint prevSegBytes,
+        uint prevZeroBytes);
+
+    /**
+     * Sets the zero length information in segment descriptor
+     *
+     * @param nZeroBytes number of zero bytes
+     * @param pLenDesc pointer to the length descriptor byte
+     * @param lengthBytes returns the number of length bytes if the length
+     * cannot solely be encoded in the descriptor
+     *
+     * @return true if length descriptor can be encoded; false otherwise
+     */
+    bool setZeroLength(
+        uint nZeroBytes, PBuffer pLenDesc, uint &lengthBytes);
+
+    /**
+     * Adds a new byte segment corresponding to a single rid, in the middle of
+     * the current segment bytes.  In doing so, shifts over the current
+     * segments that will follow the new one, in order to make room for the new
+     * segment.
+     *
+     * @param nextSegDesc segment descriptor of the segment that will follow
+     * the new one to be added
+     * @param newSeg pointer to the byte corresponding to the new segment
+     * @param newRid the single rid value that will be set in the new segment
+     * @param remainingSegLen length of the segments that follow the new one
+     * we're adding
+     */
+    void addNewRid(
+        PBuffer nextSegDesc, PBuffer newSeg, LcsRid newRid,
+        uint remainingSegLen);
+
+    /**
+     * Splits the current entry in half to free up space for the input
+     * singleton, and merges the input singleton into the appropriate half.
+     * The second half is copied into the input tuple.
+     *
+     * @param[in|out] inputTuple input singleton to be merged in
+     */
+    void splitEntry(TupleData &inputTuple);
+
+    /**
+     * Merges a singleton input into an entry that has just been split off from
+     * the current entry
+     *
+     * @param inputTuple[in|out] input singleton
+     * @param splitEntry the split off entry
+     */
+    void mergeIntoSplitEntry(TupleData &inputTuple, TupleData splitEntry);
+
+    /**
      ** STATIC MEMBERS AND METHODS
      **/
 
@@ -354,12 +485,16 @@ public:
      * Initialize the LbmEntry: associate buffer with this LbmEntry and setup
      * the entryTuple.
      *
-     * @param scratchBufferSizeInit
-     * @param scratchBufferSizeInitSize
-     * @param tupleDesc 
+     * @param scratchBufferInit scratch buffer used to construct entry
+     * @param mergeScratchBufferInit secondary scratch buffer; only needs to
+     * be passed in if mergeEntry() will be called to splice rids in the middle
+     * of existing entries
+     * @param scratchBufferSizeInit size of the scratch buffers
+     * @param tupleDesc descriptor of the entry
      */
-    void init(PBuffer scratchBufferInit, uint scratchBufferSizeInit,
-        TupleDescriptor const &tupleDesc);
+    void init(
+        PBuffer scratchBufferInit, PBuffer mergeScratchBufferInit,
+        uint scratchBufferSizeInit, TupleDescriptor const &tupleDesc);
 
     /**
      * Initialize an existing LbmEntry from a new entryTuple.
@@ -400,7 +535,8 @@ public:
 
     /**
      * Merge the current entry with input. The merged entry becomes the
-     * current. Also needs to handle the singleton case.
+     * current. The rids represented by the input must be larger than the
+     * rids in the current entry, unless the input is a singleton.
      *
      * @param[in|out] inputTuple
      * @return false if merged entry can not fit into the maximum entry size.  

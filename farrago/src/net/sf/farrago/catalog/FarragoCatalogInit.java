@@ -330,7 +330,7 @@ public class FarragoCatalogInit implements MDRPreChangeListener
         // show up as part of standard type info
         CwmSqlstructuredType cursorType = repos.newCwmSqlstructuredType();
         cursorType.setName("CURSOR");
-        cursorType.setTypeNumber(Types.STRUCT);
+        cursorType.setTypeNumber(SqlTypeName.Cursor.getJdbcOrdinal());
         defineTypeAlias("CURSOR", cursorType);
 
         // REVIEW jvs 11-Aug-2005:  This isn't a real type descriptor, since

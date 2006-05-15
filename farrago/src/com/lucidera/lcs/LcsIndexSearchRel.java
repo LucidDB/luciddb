@@ -260,38 +260,17 @@ class LcsIndexSearchRel extends FennelSingleRel
     
     // TODO: implement getCollations()
     
-    /**
-     * Sets the search's startRid parameter id. If set to a non-zero 
-     * value, the search will initiate a search starting at the startRid
-     * parameter value.
-     * 
-     * @param paramId parameter id to be set
-     */
-    public void setStartRidParamId(FennelRelParamId paramId) {
-        startRidParamId = paramId;
-    }
-    
-    /**
-     * Sets the search's row limit parameter id. If set to a non-zero 
-     * value, the search will limit the size of the tuples it produces.
-     * 
-     * @param paramId parameter id to be set
-     */
-    public void setRowLimitParamId(FennelRelParamId paramId) {
-        rowLimitParamId = paramId;
-    }
-    
     public LcsIndexScanRel getIndexScan()
     {
         return indexScanRel;
     }
     
-    public boolean getIsUniqueKey()
+    public boolean isUniqueKey()
     {
         return isUniqueKey;
     }
     
-    public boolean getIsOuter()
+    public boolean isOuter()
     {
         return isOuter;
     }

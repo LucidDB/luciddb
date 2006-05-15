@@ -21,11 +21,13 @@
 */
 package net.sf.farrago.runtime;
 
+import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.session.*;
 
 import org.eigenbase.util.*;
 import org.eigenbase.runtime.*;
+import org.eigenbase.reltype.*;
 
 import java.math.*;
 import java.util.*;
@@ -58,12 +60,17 @@ public abstract class FarragoJavaUdxIterator
 
     private CountDownLatch latch;
 
+    private final ParameterMetaData parameterMetaData;
+
     protected FarragoJavaUdxIterator(
         FarragoSessionRuntimeContext runtimeContext,
-        Class rowClass)
+        Class rowClass,
+        RelDataType rowType)
     {
         super(new ArrayBlockingQueue(QUEUE_ARRAY_SIZE));
         this.runtimeContext = runtimeContext;
+
+        parameterMetaData = new FarragoParameterMetaData(rowType);
         
         // NOTE jvs 16-Jan-2006: We construct a circular array with two extra
         // slots:  one for the producer thread to write into, and one for the
@@ -189,6 +196,12 @@ public abstract class FarragoJavaUdxIterator
             return 1;
         }
 
+        // implement PreparedStatement
+        public ParameterMetaData getParameterMetaData()
+        {
+            return parameterMetaData;
+        }
+        
         // implement PreparedStatement
         public void clearParameters()
             throws SQLException

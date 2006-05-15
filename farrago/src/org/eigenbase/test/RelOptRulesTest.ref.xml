@@ -114,4 +114,47 @@ ProjectRel(NAME=[$0], EXPR$1=[$1], EXPR$2=[$2], EXPR$3=[$3])
 ]]>
         </Resource>
     </TestCase>
+    <TestCase name="testPushProjectPastFilter">
+        <Resource name="sql">
+            <![CDATA[select empno + deptno from emp where sal = 10 * comm and upper(ename) = 'FOO']]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+ProjectRel(EXPR$0=[+($0, $7)])
+  FilterRel(condition=[AND(=($5, *(10, $6)), =(UPPER($1), _ISO-8859-1'FOO'))])
+    TableAccessRel(table=[[SALES, EMP]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+ProjectRel(EXPR$0=[+($0, $4)])
+  FilterRel(condition=[AND(=($2, *(10, $3)), =(UPPER($1), _ISO-8859-1'FOO'))])
+    ProjectRel(EMPNO=[$0], ENAME=[$1], SAL=[$5], COMM=[$6], DEPTNO=[$7])
+      TableAccessRel(table=[[SALES, EMP]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testPushProjectPastJoin">
+        <Resource name="sql">
+            <![CDATA[select e.sal + b.comm from emp e inner join bonus b on e.ename = b.ename and e.deptno = 10]]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+ProjectRel(EXPR$0=[+($5, $11)])
+  JoinRel(condition=[AND(=($1, $8), =($7, 10))], joinType=[inner])
+    TableAccessRel(table=[[SALES, EMP]])
+    TableAccessRel(table=[[SALES, BONUS]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+ProjectRel(EXPR$0=[+($1, $4)])
+  JoinRel(condition=[AND(=($0, $3), =($2, 10))], joinType=[inner])
+    ProjectRel(ENAME=[$1], SAL=[$5], DEPTNO=[$7])
+      TableAccessRel(table=[[SALES, EMP]])
+    ProjectRel(ENAME=[$0], COMM=[$3])
+      TableAccessRel(table=[[SALES, BONUS]])
+]]>
+        </Resource>
+    </TestCase>
 </Root>

@@ -44,6 +44,7 @@ import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
 import org.eigenbase.util.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.pretty.SqlPrettyWriter;
@@ -93,6 +94,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
     private long currentTime;
     private boolean isCanceled;
     private ClassLoader statementClassLoader;
+    private Map<String, RelDataType> resultSetTypeMap;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -113,6 +115,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
         this.sessionVariables = params.sessionVariables;
         this.streamFactoryProvider = params.streamFactoryProvider;
         this.isDml = params.isDml;
+        this.resultSetTypeMap = params.resultSetTypeMap;
 
         dataWrapperCache =
             new FarragoDataWrapperCache(
@@ -802,6 +805,12 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
         }
     }
 
+    // implement FarragoSessionRuntimeContext
+    public RelDataType getRowTypeForResultSet(String resultSetName)
+    {
+        return resultSetTypeMap.get(resultSetName);
+    }
+    
     //~ Inner Classes ---------------------------------------------------------
 
     /**

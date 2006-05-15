@@ -278,8 +278,7 @@ void CmdInterpreter::visit(ProxyCmdVerifyIndex &cmd)
     bool keys = (!estimate);
     bool leaf = ((!estimate) || includeTuples);
     BTreeVerifier verifier(treeDescriptor);
-    // TODO jvs 10-May-2006:  pass strict=true once FNL-37 is fixed
-    verifier.verify(false, keys, leaf);
+    verifier.verify(true, keys, leaf);
     BTreeStatistics statistics = verifier.getStatistics();
     long pageCount = statistics.nNonLeafNodes + statistics.nLeafNodes;
     if (includeTuples) {

@@ -28,7 +28,7 @@ uint LbmSegment::byteArray2Value(PBuffer array, uint arraySize)
 {
     uint value = 0;
     while (arraySize > 0) {
-        value = value * (uint)(1<<8) + array[arraySize-1];
+        value = value * (uint)(1 << LbmOneByteSize) + array[arraySize - 1];
         arraySize --;
     }
     return value;
@@ -37,7 +37,7 @@ uint LbmSegment::byteArray2Value(PBuffer array, uint arraySize)
 
 uint LbmSegment::value2ByteArray(uint value, PBuffer array, uint arraySize)
 {
-    assert(value!=0);
+    assert(value != 0);
 
     uint size = 0;
 
@@ -47,15 +47,29 @@ uint LbmSegment::value2ByteArray(uint value, PBuffer array, uint arraySize)
         size ++;
     }
     /*
-     * If size reaches the maximum, it means that the value can not be encoded
+     * If size exceeds the maximum, it means that the value can not be encoded
      * within an array of arraySize. Return 0 in that case.
      */
-    if (size == arraySize) 
+    if (size > arraySize) 
         size = 0;
 
     return size;
 }
 
+uint LbmSegment::computeSpaceForZeroBytes(uint nZeroBytes)
+{
+    if (nZeroBytes <= LbmZeroLengthCompact) {
+        return 0;
+    }
+
+    uint size = 0;
+    while (nZeroBytes > 0) {
+        nZeroBytes = nZeroBytes >> LbmOneByteSize;
+        size++;
+    }
+
+    return size;
+}
 
 void LbmSegment::readSegDescAndAdvance(
     PBuffer &pSegDesc, uint &bmSegLen, uint &zeroBytes)
@@ -76,6 +90,49 @@ void LbmSegment::readSegDescAndAdvance(
             byteArray2Value(pSegDesc, zeroLen - LbmZeroLengthCompact);
         pSegDesc += zeroLen - LbmZeroLengthCompact;
     }
+}
+
+uint LbmSegment::computeSegDescLength(PBuffer segDesc)
+{
+    uint segDescLength = 0;
+
+    while (segDesc < pSegDescEnd) {
+        uint segBytes;
+        uint zeroBytes;
+        readSegDescAndAdvance(segDesc, segBytes, zeroBytes);
+        segDescLength += computeSpaceForZeroBytes(zeroBytes) + 1;
+    }
+
+    return segDescLength;
+}
+
+uint LbmSegment::computeSegLength(PBuffer segDesc)
+{
+    uint segLength = 0;
+
+    while (segDesc < pSegDescEnd) {
+        uint segBytes;
+        uint zeroBytes;
+        readSegDescAndAdvance(segDesc, segBytes, zeroBytes);
+        segLength += segBytes;
+    }
+
+    return segLength;
+}
+
+uint LbmSegment::countSegments()
+{
+    uint count = 0;
+
+    PBuffer segDesc = pSegDescStart;
+    while (segDesc < pSegDescEnd) {
+        uint segBytes;
+        uint zeroBytes;
+        readSegDescAndAdvance(segDesc, segBytes, zeroBytes);
+        count++;
+    }
+
+    return count;
 }
 
 FENNEL_END_CPPFILE("$Id$");

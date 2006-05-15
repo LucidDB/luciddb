@@ -57,6 +57,11 @@ class LbmSplicerExecStream : public BTreeExecStream, ConduitExecStream
     boost::scoped_array<FixedBuffer> bitmapBuffer;
 
     /**
+     * Buffer for merges on LbmEntry
+     */
+    boost::scoped_array<FixedBuffer> mergeBuffer;
+
+    /**
      * Current bitmap entry under construction
      */
     SharedLbmEntry pCurrentEntry;

@@ -189,6 +189,7 @@ public class FarragoDbStmtContext extends FarragoDbStmtContextBase
                 params.txnCodeCache = null;
             }
             params.isDml = isDml;
+            params.resultSetTypeMap = executableStmt.getResultSetTypeMap();
             params.dynamicParamValues = dynamicParamValues;
             assert(runningContext == null);
             FarragoSessionRuntimeContext newContext = 

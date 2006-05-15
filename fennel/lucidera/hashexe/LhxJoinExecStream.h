@@ -28,6 +28,8 @@
 #include "fennel/tuple/TupleDataWithBuffer.h"
 #include "fennel/tuple/TupleDescriptor.h"
 #include "fennel/lucidera/hashexe/LhxHashTable.h"
+#include "fennel/lucidera/hashexe/LhxJoinBase.h"
+#include "fennel/lucidera/hashexe/LhxPartition.h"
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -40,6 +42,11 @@ FENNEL_BEGIN_NAMESPACE
  */
 struct LhxJoinExecStreamParams : public ConfluenceExecStreamParams
 {
+    /**
+     * Segment to use for storing partition pages.
+     */
+    SharedSegment pTempSegment;
+
     /**
      * Return matching rows from the left.
      */
@@ -100,38 +107,10 @@ struct LhxJoinExecStreamParams : public ConfluenceExecStreamParams
     uint aggsCount;
 };
 
-struct LhxJoinInfo
-{
-    /**
-     * Note: need two accessors: one for writing to memory, the other one for
-     * writing to the disk. Probably need a list of the second kind, each using
-     * one cache page for I/O. See ExternalSorExecStream for models of
-     * initializing and using these two accessors.
-     */
-    /**
-     * Accessor for segment used to store runs externally.
-     */
-    SegmentAccessor externalSegmentAccessor;
-
-    /**
-     * Accessor for scratch segment used for building runs in-memory.
-     */
-    SegmentAccessor memSegmentAccessor;
-
-    /**
-     * Cache pages to use by this join. These pages are used for 
-     * (1) building hash table
-     * (2) buffering I/O for writing out to partitions on disk.
-     */
-    uint numCachePages;
-
+enum LhxJoinState {
+    Build, GetNextPlan, Partition, Probe, ProduceInner, ProduceLeftOuter,
+    ProduceRightOuter, ProducePending, CreateChildPlan, Done
 };
-
-enum JoinState {
-    Building, Probing, ProducingInner, ProducingLeftOuter, ProducingRightOuter,
-    ProducePending, Done
-};
-
 
 class LhxJoinExecStream : public ConfluenceExecStream
 {
@@ -140,18 +119,6 @@ class LhxJoinExecStream : public ConfluenceExecStream
      * Hash join info.
      */
     LhxJoinInfo joinInfo;
-
-    /**
-     * Join keys, aggs and data
-     */
-    TupleProjection leftKeyProj;
-    TupleProjection rightKeyProj;
-
-    /**
-     * Projections of aggs and data fields out of the RHS.
-     */
-    TupleProjection aggsProj;
-    TupleProjection dataProj;
 
     /**
      * Input tuple.
@@ -183,7 +150,7 @@ class LhxJoinExecStream : public ConfluenceExecStream
     /*
      * State of the JoinExecStream
      */
-    JoinState joinState;
+    LhxJoinState joinState;
 
     /**
      * Return matching rows from the left.
@@ -216,23 +183,42 @@ class LhxJoinExecStream : public ConfluenceExecStream
      * Some temporary variables.
      */
 
-    /*
+    /**
      * Number of tuples produced within the current quantum.
      */
     uint numTuplesProduced;
 
-    /*
+    /**
      * The next state of the JoinExecStream
      */
-    JoinState nextState;
+    LhxJoinState nextState;
 
-    /*
+    /**
      * tuple size
      */
     uint leftTupleSize;
     uint rightTupleSize;
 
-    
+    /*
+     * Temporary variables used.
+     *
+     */
+    SharedLhxPartition leftPart;
+    SharedLhxPartition rightPart;
+
+    LhxPartitionReader leftReader;
+    LhxPartitionReader rightReader;
+
+    bool isTopPartition;
+    SharedLhxPlan rootPlan;
+    LhxPlan *curPlan;
+
+    /**
+     * Temporary variable used in recursive partitioning.
+     *
+     */
+    LhxPartitionInfo partInfo;
+
     /**
      * implement ExecStream
      */
