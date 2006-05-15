@@ -96,13 +96,11 @@
             dest="artifacts/luciddb&configSuffix;" 
             subdirectory="fennel"/>
 
-                        <!--
-                        <onfailure>
-                            <artifactspublisher dir="&open_integration.build.home;/luciddb" dest="artifacts/luciddb&configSuffix;" subdirectory="luciddb"/>
-                            <artifactspublisher dir="&open_integration.build.home;/fennel" dest="artifacts/luciddb&configSuffix;" subdirectory="fennel"/>
-                        </onfailure>
-                        -->
-        
+        <artifactspublisher
+            file="&open_integration.build.home;/luciddb/dist/luciddb.tar.bz2"
+            dest="artifacts/luciddb&configSuffix;" 
+            subdirectory="release"/>
+
 		<!-- sync up artifacts on jsp machine: CC's scp would copy everything -->
 
         <scp sourcedir="logs/luciddb"
