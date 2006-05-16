@@ -278,6 +278,10 @@ class ProxyAggStreamDef
 public:
 int32_t getGroupingPrefixSize();
 static jmethodID meth_getGroupingPrefixSize;
+int32_t getNumRows();
+static jmethodID meth_getNumRows;
+int32_t getCndGroupByKeys();
+static jmethodID meth_getCndGroupByKeys;
 SharedProxyAggInvocation getAggInvocation();
 static jmethodID meth_getAggInvocation;
 };

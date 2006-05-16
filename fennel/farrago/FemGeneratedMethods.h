@@ -6,6 +6,8 @@ jmethodID ProxyAggInvocation::meth_getFunction = 0;
 jmethodID ProxyAggInvocation::meth_getInputAttributeIndex = 0;
 jmethodID ProxyAggInvocation::meth_getAggStreamDef = 0;
 jmethodID ProxyAggStreamDef::meth_getGroupingPrefixSize = 0;
+jmethodID ProxyAggStreamDef::meth_getNumRows = 0;
+jmethodID ProxyAggStreamDef::meth_getCndGroupByKeys = 0;
 jmethodID ProxyAggStreamDef::meth_getAggInvocation = 0;
 jmethodID ProxyBufferingTupleStreamDef::meth_isInMemory = 0;
 jmethodID ProxyBufferingTupleStreamDef::meth_isMultipass = 0;
@@ -155,6 +157,8 @@ ProxyAggInvocation::meth_getAggStreamDef = pEnv->GetMethodID(jClass,"getAggStrea
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemAggStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyAggStreamDef>));
 ProxyAggStreamDef::meth_getGroupingPrefixSize = pEnv->GetMethodID(jClass,"getGroupingPrefixSize","()I");
+ProxyAggStreamDef::meth_getNumRows = pEnv->GetMethodID(jClass,"getNumRows","()I");
+ProxyAggStreamDef::meth_getCndGroupByKeys = pEnv->GetMethodID(jClass,"getCndGroupByKeys","()I");
 ProxyAggStreamDef::meth_getAggInvocation = pEnv->GetMethodID(jClass,"getAggInvocation","()Ljava/util/Collection;");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemBarrierStreamDef");
@@ -552,6 +556,16 @@ return p;
 int32_t ProxyAggStreamDef::getGroupingPrefixSize()
 {
 return pEnv->CallIntMethod(jObject,meth_getGroupingPrefixSize);
+}
+
+int32_t ProxyAggStreamDef::getNumRows()
+{
+return pEnv->CallIntMethod(jObject,meth_getNumRows);
+}
+
+int32_t ProxyAggStreamDef::getCndGroupByKeys()
+{
+return pEnv->CallIntMethod(jObject,meth_getCndGroupByKeys);
 }
 
 SharedProxyAggInvocation ProxyAggStreamDef::getAggInvocation()
