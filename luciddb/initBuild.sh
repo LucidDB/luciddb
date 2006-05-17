@@ -90,6 +90,7 @@ fi
 
 cd ${luciddb_dir}/../farrago
 cp -f ./dist/ExampleRelease.properties ./dist/FarragoRelease.properties
+cd ${luciddb_dir}
 ./distBuild.sh --without-init-build
 
 nightlylog_dir=${luciddb_dir}/nightlylog
