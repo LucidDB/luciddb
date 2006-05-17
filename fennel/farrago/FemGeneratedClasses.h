@@ -159,6 +159,9 @@ typedef JniProxyIter<ProxyLcsClusterScanDef> SharedProxyLcsClusterScanDef;
 class ProxyLcsRowScanStreamDef;
 typedef JniProxyIter<ProxyLcsRowScanStreamDef> SharedProxyLcsRowScanStreamDef;
 
+class ProxyLhxAggStreamDef;
+typedef JniProxyIter<ProxyLhxAggStreamDef> SharedProxyLhxAggStreamDef;
+
 class ProxyLhxJoinStreamDef;
 typedef JniProxyIter<ProxyLhxJoinStreamDef> SharedProxyLhxJoinStreamDef;
 
@@ -167,6 +170,9 @@ typedef JniProxyIter<ProxyMergeStreamDef> SharedProxyMergeStreamDef;
 
 class ProxyMockTupleStreamDef;
 typedef JniProxyIter<ProxyMockTupleStreamDef> SharedProxyMockTupleStreamDef;
+
+class ProxySortedAggStreamDef;
+typedef JniProxyIter<ProxySortedAggStreamDef> SharedProxySortedAggStreamDef;
 
 class ProxySortingStreamDef;
 typedef JniProxyIter<ProxySortingStreamDef> SharedProxySortingStreamDef;
@@ -278,10 +284,6 @@ class ProxyAggStreamDef
 public:
 int32_t getGroupingPrefixSize();
 static jmethodID meth_getGroupingPrefixSize;
-int32_t getNumRows();
-static jmethodID meth_getNumRows;
-int32_t getCndGroupByKeys();
-static jmethodID meth_getCndGroupByKeys;
 SharedProxyAggInvocation getAggInvocation();
 static jmethodID meth_getAggInvocation;
 };
@@ -780,6 +782,16 @@ SharedProxyLcsRowScanStreamDef getRowScan();
 static jmethodID meth_getRowScan;
 };
 
+class ProxyLhxAggStreamDef
+: virtual public JniProxy, virtual public ProxyAggStreamDef
+{
+public:
+int32_t getNumRows();
+static jmethodID meth_getNumRows;
+int32_t getCndGroupByKeys();
+static jmethodID meth_getCndGroupByKeys;
+};
+
 class ProxyLhxJoinStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
@@ -812,6 +824,12 @@ class ProxyMockTupleStreamDef
 public:
 int64_t getRowCount();
 static jmethodID meth_getRowCount;
+};
+
+class ProxySortedAggStreamDef
+: virtual public JniProxy, virtual public ProxyAggStreamDef
+{
+public:
 };
 
 class ProxySortingStreamDef
@@ -1116,11 +1134,15 @@ virtual void visit(ProxyLcsClusterScanDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyLcsRowScanStreamDef &)
 { unhandledVisit(); }
+virtual void visit(ProxyLhxAggStreamDef &)
+{ unhandledVisit(); }
 virtual void visit(ProxyLhxJoinStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyMergeStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyMockTupleStreamDef &)
+{ unhandledVisit(); }
+virtual void visit(ProxySortedAggStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxySortingStreamDef &)
 { unhandledVisit(); }
