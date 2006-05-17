@@ -149,6 +149,7 @@
                 <property name="cc.project" value="&luciddb.project;"/>
 		        <property name="eigen_home" value="&open_integration.build.home;"/>
                 <property name="open.bootstrap.dir" value="&open.bootstrap.dir;"/>
+                <property name="red.bootstrap.dir" value="&red.bootstrap.dir;"/>
             </antpublisher>
         </onsuccess>
 
