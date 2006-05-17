@@ -1336,6 +1336,55 @@ public abstract class RelOptUtil
         return filterPushed;
     }
 
+    /**
+     * Splits a join condition.
+     *
+     * @param left Left input to the join
+     * @param right Right input to the join
+     * @param condition Join condition
+     * @return Array holding the output.
+     *      equiNonEqui[0] is the equi-join condition (or TRUE if empty);
+     *      nonEqui[0] is rest of the condition.
+     */
+    public static RexNode[] splitJoinCondition(
+        RelNode left,
+        RelNode right,
+        RexNode condition)
+    {
+        final RexBuilder rexBuilder = left.getCluster().getRexBuilder();
+        final List<Integer> leftKeys = new ArrayList<Integer>();
+        final List<Integer> rightKeys = new ArrayList<Integer>();
+        final RexNode nonEquiCondition =
+            splitJoinCondition(
+                left, right, condition, leftKeys, rightKeys);
+        RexNode equiCondition = rexBuilder.makeLiteral(true);
+        assert leftKeys.size() == rightKeys.size();
+        final int keyCount = leftKeys.size();
+        int offset = left.getRowType().getFieldCount();
+        for (int i = 0; i < keyCount; i++) {
+            int leftKey = leftKeys.get(i);
+            int rightKey = rightKeys.get(i);
+            RexNode equi = rexBuilder.makeCall(
+                SqlStdOperatorTable.equalsOperator,
+                rexBuilder.makeInputRef(
+                    left.getRowType().getFields()[leftKey].getType(),
+                    leftKey),
+                rexBuilder.makeInputRef(
+                    right.getRowType().getFields()[rightKey].getType(),
+                    rightKey + offset));
+            createInputRef(right, leftKey);
+            if (i == 0) {
+                equiCondition = equi;
+            } else {
+                equiCondition = rexBuilder.makeCall(
+                SqlStdOperatorTable.andOperator,
+                    equiCondition,
+                    equi);
+            }
+        }
+        return new RexNode[] {equiCondition, nonEquiCondition};
+    }
+
     //~ Inner Classes ---------------------------------------------------------
 
     private static class VariableSetVisitor extends RelVisitor
