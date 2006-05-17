@@ -296,6 +296,11 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     {
         return tableAccessMap;
     }
+    
+    protected Map<String, RelDataType> getResultSetTypeMap()
+    {
+        return resultSetTypeMap;
+    }
 
     // implement FarragoSessionPreparingStmt
     public void postValidate(SqlNode sqlNode)
