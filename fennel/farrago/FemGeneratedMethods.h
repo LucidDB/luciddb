@@ -100,6 +100,8 @@ jmethodID ProxyLcsRowScanStreamDef::meth_getOutputProj = 0;
 jmethodID ProxyLcsRowScanStreamDef::meth_isFullScan = 0;
 jmethodID ProxyLcsRowScanStreamDef::meth_isHasExtraFilter = 0;
 jmethodID ProxyLcsRowScanStreamDef::meth_getClusterScan = 0;
+jmethodID ProxyLhxAggStreamDef::meth_getNumRows = 0;
+jmethodID ProxyLhxAggStreamDef::meth_getCndGroupByKeys = 0;
 jmethodID ProxyLhxJoinStreamDef::meth_isLeftOuter = 0;
 jmethodID ProxyLhxJoinStreamDef::meth_getLeftKeyProj = 0;
 jmethodID ProxyLhxJoinStreamDef::meth_getRightKeyProj = 0;
@@ -403,6 +405,11 @@ ProxyLcsRowScanStreamDef::meth_isFullScan = pEnv->GetMethodID(jClass,"isFullScan
 ProxyLcsRowScanStreamDef::meth_isHasExtraFilter = pEnv->GetMethodID(jClass,"isHasExtraFilter","()Z");
 ProxyLcsRowScanStreamDef::meth_getClusterScan = pEnv->GetMethodID(jClass,"getClusterScan","()Ljava/util/List;");
 
+jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemLhxAggStreamDef");
+visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyLhxAggStreamDef>));
+ProxyLhxAggStreamDef::meth_getNumRows = pEnv->GetMethodID(jClass,"getNumRows","()I");
+ProxyLhxAggStreamDef::meth_getCndGroupByKeys = pEnv->GetMethodID(jClass,"getCndGroupByKeys","()I");
+
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemLhxJoinStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyLhxJoinStreamDef>));
 ProxyLhxJoinStreamDef::meth_isLeftOuter = pEnv->GetMethodID(jClass,"isLeftOuter","()Z");
@@ -419,6 +426,9 @@ ProxyMergeStreamDef::meth_isSequential = pEnv->GetMethodID(jClass,"isSequential"
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemMockTupleStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyMockTupleStreamDef>));
 ProxyMockTupleStreamDef::meth_getRowCount = pEnv->GetMethodID(jClass,"getRowCount","()J");
+
+jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemSortedAggStreamDef");
+visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxySortedAggStreamDef>));
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemSortingStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxySortingStreamDef>));
@@ -1159,6 +1169,16 @@ p->jObject = pEnv->CallObjectMethod(jObject,meth_getClusterScan);
 p.jIter = JniUtil::getIter(p->pEnv,p->jObject);
 ++p;
 return p;
+}
+
+int32_t ProxyLhxAggStreamDef::getNumRows()
+{
+return pEnv->CallIntMethod(jObject,meth_getNumRows);
+}
+
+int32_t ProxyLhxAggStreamDef::getCndGroupByKeys()
+{
+return pEnv->CallIntMethod(jObject,meth_getCndGroupByKeys);
 }
 
 bool ProxyLhxJoinStreamDef::isLeftOuter()

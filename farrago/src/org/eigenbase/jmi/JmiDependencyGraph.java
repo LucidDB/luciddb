@@ -91,7 +91,10 @@ public class JmiDependencyGraph
         super(mutableGraph);
         this.mutableGraph = mutableGraph;
         this.transform = transform;
-        vertexMap = new HashMap<RefObject, JmiDependencyVertex>();
+        vertexMap = transform.shouldSortByMofId()
+            ? new TreeMap<RefObject, JmiDependencyVertex>(
+                JmiMofIdComparator.instance)
+            : new HashMap<RefObject, JmiDependencyVertex>();
         addElements(elements);
         vertexMap = Collections.unmodifiableMap(vertexMap);
         for (JmiDependencyVertex vertex : vertexMap.values()) {
@@ -110,6 +113,12 @@ public class JmiDependencyGraph
 
     private void addElements(Collection<RefObject> elements)
     {
+        if (transform.shouldSortByMofId()) {
+            List<RefObject> list = new ArrayList<RefObject>(elements);
+            Collections.sort(list, JmiMofIdComparator.instance);
+            elements = list;
+        }
+        
         // Build up disconnected vertices representing elements
         // grouped by contraction.
         for (RefObject target : elements) {
