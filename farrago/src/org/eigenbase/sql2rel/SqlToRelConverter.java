@@ -2403,7 +2403,7 @@ public class SqlToRelConverter
         {
             for (int i = 0; i < groupExprs.size(); i++) {
                 SqlNode groupExpr = groupExprs.get(i);
-                if (expr.equalsDeep(groupExpr)) {
+                if (expr.equalsDeep(groupExpr, false)) {
                     return inputRefs.get(i);
                 }
             }

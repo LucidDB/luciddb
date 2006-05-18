@@ -164,22 +164,25 @@ public class SqlCall extends SqlNode
         return visitor.visit(this);
     }
 
-    public boolean equalsDeep(SqlNode node)
+    public boolean equalsDeep(SqlNode node, boolean fail)
     {
         if (!(node instanceof SqlCall)) {
+            assert !fail : this + "!=" + node;
             return false;
         }
         SqlCall that = (SqlCall) node;
         // Compare operators by name, not identity, because they may not
         // have been resolved yet.
         if (!this.operator.getName().equals(that.operator.getName())) {
+            assert !fail : this + "!=" + node;
             return false;
         }
         if (this.operands.length != that.operands.length) {
+            assert !fail : this + "!=" + node;
             return false;
         }
         for (int i = 0; i < this.operands.length; i++) {
-            if (!SqlNode.equalDeep(this.operands[i], that.operands[i])) {
+            if (!SqlNode.equalDeep(this.operands[i], that.operands[i], fail)) {
                 return false;
             }
         }

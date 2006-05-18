@@ -1776,7 +1776,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
 
             for (int i=0; i < windowList.size() - 1; i++) {
                 for (int j=i+1; j < windowList.size(); j++) {
-                    if (winArr[i].equalsDeep(winArr[j])) {
+                    if (winArr[i].equalsDeep(winArr[j], false)) {
                         throw this.newValidationError(winArr[j],
                             EigenbaseResource.instance()
                             .DupWindowSpec.ex());

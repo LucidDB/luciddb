@@ -163,7 +163,7 @@ public class MockCatalogReader implements SqlValidatorCatalogReader
 
     public RelDataType getNamedType(SqlIdentifier typeName)
     {
-        if (typeName.equalsDeep(addressType.getSqlIdentifier())) {
+        if (typeName.equalsDeep(addressType.getSqlIdentifier(), false)) {
             return addressType;
         } else {
             return null;

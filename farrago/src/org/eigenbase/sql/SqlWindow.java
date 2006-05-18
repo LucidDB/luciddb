@@ -244,33 +244,36 @@ public class SqlWindow extends SqlCall
      * subtree of a window definition
      *
      * @param node The SqlWindow to compare to "this" window
+     * @param fail
      * @return boolean true if all nodes in the subtree are equal
      */
-    public boolean equalsDeep(SqlNode node)
+    public boolean equalsDeep(SqlNode node, boolean fail)
     {
         if (!(node instanceof SqlWindow)) {
+            assert !fail : this + "!=" + node;
             return false;
         }
         SqlCall that = (SqlCall) node;
         // Compare operators by name, not identity, because they may not
         // have been resolved yet.
         if (!this.getOperator().getName().equals(that.getOperator().getName())) {
+            assert !fail : this + "!=" + node;
             return false;
         }
         if (this.operands.length != that.operands.length) {
+            assert !fail : this + "!=" + node;
             return false;
         }
         // This is the difference over super.equalsDeep.  It skips
         // operands[0] the declared name fo this window.  We only want
         // to check the window components.
         for (int i = 1; i < this.operands.length; i++) {
-            if (!SqlNode.equalDeep(this.operands[i], that.operands[i])) {
+            if (!SqlNode.equalDeep(this.operands[i], that.operands[i], fail)) {
                 return false;
             }
         }
         return true;
     }
-
 }
 
 // End SqlWindow.java

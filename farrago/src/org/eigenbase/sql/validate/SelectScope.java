@@ -137,7 +137,7 @@ public class SelectScope extends ListScope
         // TODO: compare fully qualified names
         final SqlNodeList orderList = getOrderList();
         if (orderList.size() == 1 &&
-            expr.equalsDeep((SqlNode) orderList.get(0))) {
+            expr.equalsDeep((SqlNode) orderList.get(0), false)) {
             return true;
         }
 

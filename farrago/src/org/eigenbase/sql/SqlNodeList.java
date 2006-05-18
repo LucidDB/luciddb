@@ -142,19 +142,21 @@ public class SqlNodeList extends SqlNode
         return visitor.visit(this);
     }
 
-    public boolean equalsDeep(SqlNode node)
+    public boolean equalsDeep(SqlNode node, boolean fail)
     {
         if (!(node instanceof SqlNodeList)) {
+            assert !fail : this + "!=" + node;
             return false;
         }
         SqlNodeList that = (SqlNodeList) node;
         if (this.size() != that.size()) {
+            assert !fail : this + "!=" + node;
             return false;
         }
         for (int i = 0; i < list.size(); i++) {
             SqlNode thisChild = (SqlNode) list.get(i);
             final SqlNode thatChild = that.get(i);
-            if (!thisChild.equalsDeep(thatChild)) {
+            if (!thisChild.equalsDeep(thatChild, fail)) {
                 return false;
             }
         }

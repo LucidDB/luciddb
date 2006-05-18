@@ -264,20 +264,26 @@ public abstract class SqlNode implements Cloneable
      *     1 + (2 + 3), because the '+' operator is left-associative</li>
      * </ul>
      */
-    public abstract boolean equalsDeep(SqlNode node);
+    public abstract boolean equalsDeep(SqlNode node, boolean fail);
 
     /**
-     * Returns whether two nodes are equal (using {@link #equalsDeep(SqlNode)})
+     * Returns whether two nodes are equal (using {@link #equalsDeep(SqlNode,boolean)})
      * or are both null.
+     *
+     * @param node1 First expression
+     * @param node2 Second expression
+     * @param fail Whether to throw {@link AssertionError} if expressions are
+     *             not equal
      */
-    public static boolean equalDeep(SqlNode node1, SqlNode node2)
+    public static boolean equalDeep(
+        SqlNode node1, SqlNode node2, boolean fail)
     {
         if (node1 == null) {
             return node2 == null;
         } else if (node2 == null) {
             return false;
         } else {
-            return node1.equalsDeep(node2);
+            return node1.equalsDeep(node2, fail);
         }
     }
 
