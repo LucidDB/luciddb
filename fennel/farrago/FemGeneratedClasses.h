@@ -132,6 +132,9 @@ typedef JniProxyIter<ProxyJavaTransformStreamDef> SharedProxyJavaTransformStream
 class ProxyKeyAccessorDef;
 typedef JniProxyIter<ProxyKeyAccessorDef> SharedProxyKeyAccessorDef;
 
+class ProxyLbmBitOpStreamDef;
+typedef JniProxyIter<ProxyLbmBitOpStreamDef> SharedProxyLbmBitOpStreamDef;
+
 class ProxyLbmChopperStreamDef;
 typedef JniProxyIter<ProxyLbmChopperStreamDef> SharedProxyLbmChopperStreamDef;
 
@@ -143,6 +146,9 @@ typedef JniProxyIter<ProxyLbmIndexScanStreamDef> SharedProxyLbmIndexScanStreamDe
 
 class ProxyLbmIntersectStreamDef;
 typedef JniProxyIter<ProxyLbmIntersectStreamDef> SharedProxyLbmIntersectStreamDef;
+
+class ProxyLbmMinusStreamDef;
+typedef JniProxyIter<ProxyLbmMinusStreamDef> SharedProxyLbmMinusStreamDef;
 
 class ProxyLbmSplicerStreamDef;
 typedef JniProxyIter<ProxyLbmSplicerStreamDef> SharedProxyLbmSplicerStreamDef;
@@ -262,14 +268,14 @@ class ProxyExecutionStreamDef
 : virtual public JniProxy
 {
 public:
+std::string getName();
+static jmethodID meth_getName;
 SharedProxyTupleDescriptor getOutputDesc();
 static jmethodID meth_getOutputDesc;
 SharedProxyExecStreamDataFlow getInputFlow();
 static jmethodID meth_getInputFlow;
 SharedProxyExecStreamDataFlow getOutputFlow();
 static jmethodID meth_getOutputFlow;
-std::string getName();
-static jmethodID meth_getName;
 };
 
 class ProxyTupleStreamDef
@@ -340,10 +346,10 @@ class ProxyCmdBeginTxn
 : virtual public JniProxy, virtual public ProxyDatabaseCmd
 {
 public:
-SharedProxyTxnHandle getResultHandle();
-static jmethodID meth_getResultHandle;
 bool isReadOnly();
 static jmethodID meth_isReadOnly;
+SharedProxyTxnHandle getResultHandle();
+static jmethodID meth_getResultHandle;
 };
 
 class ProxyCmdCheckpoint
@@ -690,6 +696,16 @@ int32_t getStreamId();
 static jmethodID meth_getStreamId;
 };
 
+class ProxyLbmBitOpStreamDef
+: virtual public JniProxy, virtual public ProxyTupleStreamDef
+{
+public:
+int32_t getRowLimitParamId();
+static jmethodID meth_getRowLimitParamId;
+int32_t getStartRidParamId();
+static jmethodID meth_getStartRidParamId;
+};
+
 class ProxyLbmChopperStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
@@ -733,13 +749,15 @@ static jmethodID meth_getStartRidParamId;
 };
 
 class ProxyLbmIntersectStreamDef
-: virtual public JniProxy, virtual public ProxyTupleStreamDef
+: virtual public JniProxy, virtual public ProxyLbmBitOpStreamDef
 {
 public:
-int32_t getRowLimitParamId();
-static jmethodID meth_getRowLimitParamId;
-int32_t getStartRidParamId();
-static jmethodID meth_getStartRidParamId;
+};
+
+class ProxyLbmMinusStreamDef
+: virtual public JniProxy, virtual public ProxyLbmBitOpStreamDef
+{
+public:
 };
 
 class ProxyLbmSplicerStreamDef
@@ -978,24 +996,26 @@ class ProxyWindowDef
 : virtual public JniProxy
 {
 public:
+int32_t getOffset();
+static jmethodID meth_getOffset;
 SharedProxyTupleProjection getOrderKeyList();
 static jmethodID meth_getOrderKeyList;
 bool isPhysical();
 static jmethodID meth_isPhysical;
 std::string getRange();
 static jmethodID meth_getRange;
-SharedProxyWindowPartitionDef getPartition();
-static jmethodID meth_getPartition;
 SharedProxyWindowStreamDef getWindowStream();
 static jmethodID meth_getWindowStream;
-int32_t getOffset();
-static jmethodID meth_getOffset;
+SharedProxyWindowPartitionDef getPartition();
+static jmethodID meth_getPartition;
 };
 
 class ProxyWindowPartitionDef
 : virtual public JniProxy
 {
 public:
+SharedProxyWindowDef getWindow();
+static jmethodID meth_getWindow;
 SharedProxyTupleProjection getPartitionKeyList();
 static jmethodID meth_getPartitionKeyList;
 std::string getInitializeProgram();
@@ -1006,8 +1026,6 @@ std::string getDropProgram();
 static jmethodID meth_getDropProgram;
 SharedProxyTupleDescriptor getBucketDesc();
 static jmethodID meth_getBucketDesc;
-SharedProxyWindowDef getWindow();
-static jmethodID meth_getWindow;
 };
 
 class ProxyWindowStreamDef
@@ -1116,6 +1134,8 @@ virtual void visit(ProxyJavaTransformStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyKeyAccessorDef &)
 { unhandledVisit(); }
+virtual void visit(ProxyLbmBitOpStreamDef &)
+{ unhandledVisit(); }
 virtual void visit(ProxyLbmChopperStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyLbmGeneratorStreamDef &)
@@ -1123,6 +1143,8 @@ virtual void visit(ProxyLbmGeneratorStreamDef &)
 virtual void visit(ProxyLbmIndexScanStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyLbmIntersectStreamDef &)
+{ unhandledVisit(); }
+virtual void visit(ProxyLbmMinusStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyLbmSplicerStreamDef &)
 { unhandledVisit(); }
