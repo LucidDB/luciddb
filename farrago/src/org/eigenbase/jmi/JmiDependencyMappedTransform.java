@@ -35,11 +35,13 @@ import javax.jmi.model.*;
  */
 public class JmiDependencyMappedTransform implements JmiDependencyTransform
 {
-    private final Map<JmiAssocEdge, JmiAssocMapping> map;
+    private final Map<JmiAssocEdge, List<AssocRule>> map;
 
     private final JmiModelView modelView;
 
     private final boolean produceSelfLoops;
+
+    private boolean sortByMofId;
 
     /**
      * Creates a new mapped transform.  Initially, all associations are mapped
@@ -58,7 +60,23 @@ public class JmiDependencyMappedTransform implements JmiDependencyTransform
     {
         this.modelView = modelView;
         this.produceSelfLoops = produceSelfLoops;
-        map = new HashMap<JmiAssocEdge, JmiAssocMapping>();
+        map = new HashMap<JmiAssocEdge, List<AssocRule>>();
+        sortByMofId = true;
+    }
+
+    /**
+     * Disables sorting by MofId (which is enabled by default),
+     * causing {@link #shouldSortByMofId} to return false.
+     */
+    public void disableSortByMofId()
+    {
+        sortByMofId = false;
+    }
+    
+    // implement JmiDependencyTransform
+    public boolean shouldSortByMofId()
+    {
+        return sortByMofId;
     }
     
     // implement JmiDependencyTransform
@@ -67,7 +85,7 @@ public class JmiDependencyMappedTransform implements JmiDependencyTransform
         Collection<RefObject> candidates,
         JmiAssocMapping mapping)
     {
-        Collection<RefObject> collection = new ArrayList<RefObject>();
+        List<RefObject> collection = new ArrayList<RefObject>();
         RefClass refClass = target.refClass();
         JmiClassVertex targetClassVertex =
             modelView.getModelGraph().getVertexForRefClass(refClass);
@@ -75,21 +93,69 @@ public class JmiDependencyMappedTransform implements JmiDependencyTransform
                  : modelView.getAllIncomingAssocEdges(targetClassVertex))
         {
             JmiAssocEdge assocEdge = (JmiAssocEdge) assocEdgeObj;
-            JmiAssocMapping edgeMapping = map.get(assocEdge);
-            if (edgeMapping != mapping) {
+            List<AssocRule> rules = map.get(assocEdge);
+            if (rules == null) {
                 continue;
+            }
+            // optimize common case:  no refinements
+            if (rules.size() == 1) {
+                if (rules.get(0).mapping != mapping) {
+                    continue;
+                }
             }
             if (!(target.refIsInstanceOf(
                       assocEdge.getTargetEnd().getType(), true)))
             {
                 continue;
             }
-            collection.addAll(
-                assocEdge.getRefAssoc().refQuery(
-                    assocEdge.getTargetEnd(), target));
+            Collection sources = assocEdge.getRefAssoc().refQuery(
+                assocEdge.getTargetEnd(), target);
+
+            if (rules.size() == 1) {
+                AssocRule rule = rules.get(0);
+                if (rule.sourceClass == null && rule.targetClass == null) {
+                    // optimize common case:  no refinements
+                    collection.addAll(sources);
+                    continue;
+                }
+            }
+            // deal with refinements
+            for (Object obj : sources) {
+                RefObject source = (RefObject) obj;
+                applyRefinedRules(
+                    rules, source, target, collection, mapping);
+            }
         }
         collection.retainAll(candidates);
+        if (sortByMofId) {
+            Collections.sort(collection, JmiMofIdComparator.instance);
+        }
         return collection;
+    }
+
+    private void applyRefinedRules(
+        List<AssocRule> rules,
+        RefObject source,
+        RefObject target,
+        Collection result,
+        JmiAssocMapping mapping)
+    {
+        for (AssocRule rule : rules) {
+            if (rule.sourceClass != null) {
+                if (!(source.refIsInstanceOf(rule.sourceClass, true))) {
+                    continue;
+                }
+            }
+            if (rule.targetClass != null) {
+                if (!(target.refIsInstanceOf(rule.targetClass, true))) {
+                    continue;
+                }
+            }
+            if (rule.mapping == mapping) {
+                result.add(source);
+            }
+            break;
+        }
     }
     
     // implement JmiDependencyTransform
@@ -99,7 +165,8 @@ public class JmiDependencyMappedTransform implements JmiDependencyTransform
     }
 
     /**
-     * Sets mappings for all associations with a given aggregation kind.
+     * Sets mappings for all associations with a given aggregation kind,
+     * discarding any existing mappings for those associations.
      *
      * @param requestedKind association filter
      *
@@ -120,13 +187,17 @@ public class JmiDependencyMappedTransform implements JmiDependencyTransform
                 }
             }
             if (requestedKind == actualKind) {
-                map.put(assocEdge, mapping);
+                map.put(
+                    assocEdge,
+                    new ArrayList<AssocRule>(
+                        Collections.singleton(new AssocRule(mapping))));
             }
         }
     }
 
     /**
-     * Sets mapping for a specific association.
+     * Sets mapping for a specific association, discarding any
+     * existing mappings for that association.
      *
      * @param assoc association to map
      *
@@ -138,7 +209,88 @@ public class JmiDependencyMappedTransform implements JmiDependencyTransform
         JmiAssocEdge assocEdge =
             modelView.getModelGraph().getEdgeForRefAssoc(assoc);
         assert(assocEdge != null);
-        map.put(assocEdge, mapping);
+        map.put(
+            assocEdge,
+            new ArrayList<AssocRule>(
+                Collections.singleton(new AssocRule(mapping))));
+    }
+
+    /**
+     * Sets mapping for a specific association, refining the rule to only apply
+     * in the context of specific end classes.  Does not discard any existing
+     * mappings.  Refined mappings are used in the reverse of the order in
+     * which they are defined (later definition overrides earlier).
+     *
+     * @param assoc association to map
+     *
+     * @param mapping mapping to use
+     *
+     * @param sourceClass source class required for match, or null for wildcard
+     *
+     * @param targetClass target class required for match, or null for wildcard
+     */
+    public void setByRefAssocRefined(
+        RefAssociation assoc,
+        JmiAssocMapping mapping,
+        RefClass sourceClass,
+        RefClass targetClass)
+    {
+        JmiAssocEdge assocEdge =
+            modelView.getModelGraph().getEdgeForRefAssoc(assoc);
+        assert(assocEdge != null);
+        List<AssocRule> list = map.get(assocEdge);
+        if (list == null) {
+            list = new ArrayList<AssocRule>();
+            map.put(assocEdge, list);
+        }
+        // add in reverse order
+        list.add(
+            0,
+            new AssocRule(
+                mapping,
+                convertRefClassToMof(sourceClass),
+                convertRefClassToMof(targetClass)));
+    }
+
+    private MofClass convertRefClassToMof(RefClass c)
+    {
+        if (c == null) {
+            return null;
+        }
+        return modelView.getModelGraph().getVertexForRefClass(c).getMofClass();
+    }
+
+    private static class AssocRule
+    {
+        /**
+         * Mapping to use when this rule applies.
+         */
+        final JmiAssocMapping mapping;
+        
+        /**
+         * Source class required for match, or null for wildcard.
+         */
+        final MofClass sourceClass;
+        
+        /**
+         * Target class required for match, or null for wildcard.
+         */
+        final MofClass targetClass;
+
+        AssocRule(JmiAssocMapping mapping)
+        {
+            this(mapping, null, null);
+        }
+        
+        AssocRule(
+            JmiAssocMapping mapping,
+            MofClass sourceClass,
+            MofClass targetClass)
+        {
+            this.mapping = mapping;
+            this.sourceClass = sourceClass;
+            this.targetClass = targetClass;
+        }
     }
 }
 

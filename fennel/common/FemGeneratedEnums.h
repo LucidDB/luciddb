@@ -2,18 +2,18 @@
 
 enum AggFunction {
     AGG_FUNC_SUM,
-    AGG_FUNC_COUNT,
+    AGG_FUNC_MAX,
     AGG_FUNC_MIN,
-    AGG_FUNC_MAX
+    AGG_FUNC_COUNT
 };
 
-static std::string AggFunction_names[] = {"AGG_FUNC_SUM","AGG_FUNC_COUNT","AGG_FUNC_MIN","AGG_FUNC_MAX",""};
+static std::string AggFunction_names[] = {"AGG_FUNC_SUM","AGG_FUNC_MAX","AGG_FUNC_MIN","AGG_FUNC_COUNT",""};
 
 enum Distinctness {
     DUP_ALLOW,
-    DUP_DISCARD,
-    DUP_FAIL
+    DUP_FAIL,
+    DUP_DISCARD
 };
 
-static std::string Distinctness_names[] = {"DUP_ALLOW","DUP_DISCARD","DUP_FAIL",""};
+static std::string Distinctness_names[] = {"DUP_ALLOW","DUP_FAIL","DUP_DISCARD",""};
 

@@ -57,6 +57,13 @@ public interface JmiDependencyTransform
      * false to automatically filter them out
      */
     public boolean shouldProduceSelfLoops();
+
+    /**
+     * @return true if MOFID should be used to break ties in ordering;
+     * this provides stability during diff-based testing, but
+     * adds processing overhead
+     */
+    public boolean shouldSortByMofId();
 }
 
 // End JmiDependencyTransform.java
