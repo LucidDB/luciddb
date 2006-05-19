@@ -29,6 +29,7 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.fun.*;
+import org.eigenbase.util.Util;
 
 /**
  * LoptOptimizeJoinRule implements the heuristic planner for determining optimal
@@ -775,8 +776,8 @@ public class LoptOptimizeJoinRule extends RelOptRule
 
         // all fields referenced in the join condition
         BitSet filterRefs = new BitSet(nTotalFields);
-        RelOptUtil.findRexInputRefs(condition, filterRefs);
-        
+        condition.accept(new RelOptUtil.InputFinder(filterRefs));
+
         // count how many fields each side of the join references by AND'ing
         // the bits referenced in the filter with the bits corresponding to
         // all fields on each side of the join

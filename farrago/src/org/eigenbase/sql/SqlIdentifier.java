@@ -239,17 +239,20 @@ public class SqlIdentifier extends SqlNode
         validator.validateIdentifier(this, scope);
     }
 
-    public boolean equalsDeep(SqlNode node)
+    public boolean equalsDeep(SqlNode node, boolean fail)
     {
         if (!(node instanceof SqlIdentifier)) {
+            assert !fail : this + "!=" + node;
             return false;
         }
         SqlIdentifier that = (SqlIdentifier) node;
         if (this.names.length != that.names.length) {
+            assert !fail : this + "!=" + node;
             return false;
         }
         for (int i = 0; i < names.length; i++) {
             if (!this.names[i].equals(that.names[i])) {
+                assert !fail : this + "!=" + node;
                 return false;
             }
         }

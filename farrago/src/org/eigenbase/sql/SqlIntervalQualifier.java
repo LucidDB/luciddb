@@ -102,9 +102,15 @@ public class SqlIntervalQualifier extends SqlNode
         return visitor.visit(this);
     }
 
-    public boolean equalsDeep(SqlNode node)
+    public boolean equalsDeep(SqlNode node, boolean fail)
     {
-        return this.toString().equals(node.toString());
+        final String thisString = this.toString();
+        final String thatString = node.toString();
+        if (!thisString.equals(thatString)) {
+            assert !fail : this + "!=" + node;
+            return false;
+        }
+        return true;
     }
 
     public int getStartPrecision()

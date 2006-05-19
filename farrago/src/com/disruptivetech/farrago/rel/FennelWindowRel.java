@@ -353,6 +353,7 @@ public class FennelWindowRel extends FennelSingleRel
     {
         assert bottomProgram.getCondition() == null :
             "pre: bottomPogram.getCondition() == null";
+        assert bottomProgram.isValid(true);
 
         final RexBuilder rexBuilder = getCluster().getRexBuilder();
         final RexProgramBuilder topProgramBuilder =

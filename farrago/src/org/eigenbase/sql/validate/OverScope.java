@@ -93,7 +93,7 @@ public class OverScope extends ListScope
                 ((SqlValidatorNamespace) children.get(0)).getMonotonicExprs();
             for (int i = 0; i < monotonicExprs.size(); i++) {
                 SqlNode monotonicExpr = monotonicExprs.get(i);
-                if (expr.equalsDeep(monotonicExpr)) {
+                if (expr.equalsDeep(monotonicExpr, false)) {
                     return true;
                 }
             }

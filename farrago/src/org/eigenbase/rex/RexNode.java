@@ -89,13 +89,16 @@ public abstract class RexNode
 
     /**
      * Accepts a visitor, dispatching to the right overloaded
-     * {@link RexVisitor#visitInputRef} method.
+     * {@link RexVisitor#visitInputRef visitXxx} method.
+     *
+     * <p>Also see {@link RexProgram#apply(RexVisitor, RexNode[], RexNode)},
+     * which applies a visitor to several expressions simultaneously.
      */
     public abstract void accept(RexVisitor visitor);
 
     /**
      * Accepts a shuttle, dispatching to the right overloaded
-     * {@link RexShuttle#visitOver(RexOver)} method, and returning the
+     * {@link RexShuttle#visitOver(RexOver) visitXxx} method, and returning the
      * resulting node.
      */
     public abstract RexNode accept(RexShuttle shuttle);

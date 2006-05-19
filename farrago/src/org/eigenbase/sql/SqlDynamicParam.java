@@ -85,13 +85,18 @@ public class SqlDynamicParam extends SqlNode
         return visitor.visit(this);
     }
 
-    public boolean equalsDeep(SqlNode node)
+    public boolean equalsDeep(SqlNode node, boolean fail)
     {
-        if (node instanceof SqlDynamicParam) {
-            SqlDynamicParam that = (SqlDynamicParam) node;
-            return this.index == that.index;
+        if (!(node instanceof SqlDynamicParam)) {
+            assert !fail : this + "!=" + node;
+            return false;
         }
-        return false;
+        SqlDynamicParam that = (SqlDynamicParam) node;
+        if (this.index != that.index) {
+            assert !fail : this + "!=" + node;
+            return false;
+        }
+        return true;
     }
 }
 

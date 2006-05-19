@@ -55,7 +55,7 @@ import sqlline.SqlLine;
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class FarragoTestCase extends DiffTestCase
+public abstract class FarragoTestCase extends ResultSetTestCase
 {
     //~ Static fields/initializers --------------------------------------------
 
@@ -87,9 +87,6 @@ public abstract class FarragoTestCase extends DiffTestCase
     private static Thread shutdownHook;
 
     //~ Instance fields -------------------------------------------------------
-
-    /** ResultSet for processing queries. */
-    protected ResultSet resultSet;
 
     /** PreparedStatement for processing queries. */
     protected PreparedStatement preparedStmt;
@@ -376,21 +373,6 @@ public abstract class FarragoTestCase extends DiffTestCase
         return wrapper;
     }
 
-    /**
-     * @return the number of rows in resultSet (which is consumed as a side
-     * effect)
-     */
-    protected int getResultSetCount()
-        throws Exception
-    {
-        int n = 0;
-        while (resultSet.next()) {
-            ++n;
-        }
-        resultSet.close();
-        return n;
-    }
-
     // implement TestCase
     protected void setUp()
         throws Exception
@@ -456,93 +438,6 @@ public abstract class FarragoTestCase extends DiffTestCase
             }
             super.tearDown();
         }
-    }
-
-    /**
-     * Compares the first column of a result set against a String-valued
-     * reference set, disregarding order entirely.
-     *
-     * @param refSet expected results
-     *
-     * @throws Exception .
-     */
-    protected void compareResultSet(Set refSet)
-        throws Exception
-    {
-        Set actualSet = new HashSet();
-        while (resultSet.next()) {
-            String s = resultSet.getString(1);
-            actualSet.add(s);
-        }
-        resultSet.close();
-        assertEquals(refSet, actualSet);
-    }
-
-    /**
-     * Compares the first column of a result set against a pattern. The result
-     * set must return exactly one row.
-     *
-     * @param pattern Expected pattern
-     */
-    protected void compareResultSetWithPattern(Pattern pattern)
-        throws Exception
-    {
-        if (!resultSet.next()) {
-            fail("Query returned 0 rows, expected 1");
-        }
-        String actual = resultSet.getString(1);
-        if (resultSet.next()) {
-            fail("Query returned 2 or more rows, expected 1");
-        }
-        if (!pattern.matcher(actual).matches()) {
-            fail("Query returned '" + actual + "', expected '"
-                + pattern.pattern() + "'");
-        }
-    }
-
-    /**
-     * Compares the first column of a result set against a numeric result,
-     * within a given tolerance. The result set must return exactly one row.
-     *
-     * @param expected Expected result
-     * @param delta Tolerance
-     */
-    protected void compareResultSetWithDelta(
-        double expected,
-        double delta) throws Exception
-    {
-        if (!resultSet.next()) {
-            fail("Query returned 0 rows, expected 1");
-        }
-        double actual = resultSet.getDouble(1);
-        if (resultSet.next()) {
-            fail("Query returned 2 or more rows, expected 1");
-        }
-        if (actual < expected - delta || actual > expected + delta) {
-            fail("Query returned " + actual +
-                ", expected " + expected +
-                (delta == 0 ? "" : ("+/-" + delta)));
-        }
-    }
-
-    /**
-     * Compares the first column of a result set against a String-valued
-     * reference set, taking order into account.
-     *
-     * @param refList expected results
-     *
-     * @throws Exception .
-     */
-    protected void compareResultList(List refList)
-        throws Exception
-    {
-        List actualSet = new ArrayList();
-        while (resultSet.next()) {
-            String s = resultSet.getString(1);
-            actualSet.add(s);
-        }
-        resultSet.close();
-        assertEquals(refList, actualSet);
     }
 
     /**

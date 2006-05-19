@@ -608,6 +608,25 @@ public class RexProgram
     }
 
     /**
+     * Applies a visitor to an array of expressions and, if specified, a
+     * single expression.
+     *
+     * @param visitor Visitor
+     * @param exprs Array of expressions
+     * @param expr Single expression, may be null
+     */
+    public static void apply(
+        RexVisitor visitor, RexNode[] exprs, RexNode expr)
+    {
+        for (int i = 0; i < exprs.length; i++) {
+            exprs[i].accept(visitor);
+        }
+        if (expr != null) {
+            expr.accept(visitor);
+        }
+    }
+
+    /**
      * Visitor which walks over a program and checks validity.
      */
     class Checker extends RexVisitorImpl

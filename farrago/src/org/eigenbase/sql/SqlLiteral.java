@@ -342,13 +342,18 @@ public class SqlLiteral extends SqlNode
         return visitor.visit(this);
     }
 
-    public boolean equalsDeep(SqlNode node)
+    public boolean equalsDeep(SqlNode node, boolean fail)
     {
-        if (node instanceof SqlLiteral) {
-            SqlLiteral that = (SqlLiteral) node;
-            return this.equals(that);
+        if (!(node instanceof SqlLiteral)) {
+            assert !fail : this + "!=" + node;
+            return false;
         }
-        return false;
+        SqlLiteral that = (SqlLiteral) node;
+        if (!this.equals(that)) {
+            assert !fail : this + "!=" + node;
+            return false;
+        }
+        return true;
     }
 
     /**

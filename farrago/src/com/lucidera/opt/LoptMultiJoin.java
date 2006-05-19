@@ -28,6 +28,7 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.fun.*;
+import org.eigenbase.util.Util;
 
 /**
  * LoptMultiJoin is a utility class used to keep track of the join factors
@@ -251,7 +252,7 @@ public class LoptMultiJoin
                 filterIter.remove();
             }
             BitSet fieldRefBitmap = new BitSet(nTotalFields);
-            RelOptUtil.findRexInputRefs(joinFilter, fieldRefBitmap);
+            joinFilter.accept(new RelOptUtil.InputFinder(fieldRefBitmap));
             fieldsRefByJoinFilter.put(joinFilter, fieldRefBitmap);
             
             BitSet factorRefBitmap = new BitSet(nJoinFactors);
@@ -337,7 +338,7 @@ public class LoptMultiJoin
 
                 BitSet leftFields = new BitSet(nTotalFields);
                 RexNode[] operands = ((RexCall) joinFilter).getOperands();
-                RelOptUtil.findRexInputRefs(operands[0], leftFields);
+                operands[0].accept(new RelOptUtil.InputFinder(leftFields));
                 BitSet leftBitmap = new BitSet(nJoinFactors);
                 setFactorBitmap(leftBitmap, leftFields);
                 
