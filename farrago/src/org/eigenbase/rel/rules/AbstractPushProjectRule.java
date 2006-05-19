@@ -29,6 +29,7 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.util.Util;
 
 /**
  * AbstractPushProjectRule is a base class for implementing projection pushing
@@ -58,14 +59,7 @@ public abstract class AbstractPushProjectRule extends RelOptRule
     public void locateAllRefs(
         RexNode[] projExprs, RexNode filter, BitSet projRefs)
     {
-        for (int i = 0; i < projExprs.length; i++) {
-            RelOptUtil.findRexInputRefs(projExprs[i], projRefs);
-        }
-
-        // locate any additional fields referenced in the filter
-        if (filter != null) {
-            RelOptUtil.findRexInputRefs(filter, projRefs);
-        }
+        new RelOptUtil.InputFinder(projRefs).apply(projExprs, filter);
     }
     
     /**

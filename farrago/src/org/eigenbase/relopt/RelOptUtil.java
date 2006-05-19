@@ -1212,17 +1212,11 @@ public abstract class RelOptUtil
      */
     public static void findRexInputRefs(RexNode rex, BitSet rexRefs)
     {
-        if (rex instanceof RexCall) {
-            RexNode [] operands = ((RexCall) rex).operands;
-            for (int i = 0; i < operands.length; i++) {
-                findRexInputRefs(operands[i], rexRefs);
-            }
-        } else if (rex instanceof RexInputRef) {
-            RexInputRef var = (RexInputRef) rex;
-            rexRefs.set(var.getIndex());
-        }
+        Util.deprecated("remove, use shuttle", false);
+        rex.accept(new InputFinder(rexRefs));
     }
     
+
     /**
      * Returns true if all bits set in the second parameter are also set
      * in the first
@@ -1284,8 +1278,8 @@ public abstract class RelOptUtil
             RexNode filter = (RexNode) filterIter.next();
             
             BitSet filterBitmap = new BitSet(nTotalFields);
-            RelOptUtil.findRexInputRefs(filter, filterBitmap);
-            
+            filter.accept(new InputFinder(filterBitmap));
+
             // REVIEW - are there any expressions that need special handling
             // and therefore cannot be pushed?
             
@@ -1471,6 +1465,34 @@ public abstract class RelOptUtil
                 pw.print(" ");
                 accept(field.getType());
             }
+        }
+    }
+
+    /**
+     * Visitor which builds a bitmap of the inputs used by an expression.
+     */
+    public static class InputFinder extends RexVisitorImpl
+    {
+        private final BitSet rexRefSet;
+
+        public InputFinder(BitSet rexRefSet)
+        {
+            super(true);
+            this.rexRefSet = rexRefSet;
+        }
+
+        public void visitInputRef(RexInputRef inputRef)
+        {
+            rexRefSet.set(inputRef.getIndex());
+        }
+
+        /**
+         * Applies this visitor to an array of expressions and an optional
+         * single expression.
+         */
+        public void apply(RexNode[] exprs, RexNode expr)
+        {
+            RexProgram.apply(this, exprs, expr);
         }
     }
 }
