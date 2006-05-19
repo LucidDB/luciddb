@@ -24,24 +24,29 @@ package net.sf.farrago.test;
 
 import java.io.InputStream;
 import java.io.Reader;
+import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.*;
 import java.util.*;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 import junit.framework.Assert;
 import junit.framework.Test;
+import junit.framework.TestSuite;
 
 import java.sql.Date;
 
 import org.eigenbase.util14.NumberUtil;
 import org.eigenbase.util14.ConversionUtil;
+import org.eigenbase.util.Util;
 import net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver;
 import net.sf.farrago.jdbc.engine.FarragoJdbcEngineConnection;
 import net.sf.farrago.catalog.FarragoCatalogInit;
+import net.sf.farrago.trace.FarragoTrace;
 
 // TODO jvs 17-Apr-2006:  break this monster up into a new package
 // net.sf.farrago.test.jdbc.
@@ -70,9 +75,12 @@ import net.sf.farrago.catalog.FarragoCatalogInit;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoJdbcTest extends FarragoTestCase
+public class FarragoJdbcTest extends ResultSetTestCase
 {
     //~ Static fields/initializers --------------------------------------------
+
+    /** Logger to use for test tracing. */
+    protected static final Logger tracer = FarragoTrace.getTestTracer();
 
     // Constants used by testDataTypes
     private static final byte minByte = Byte.MIN_VALUE;
@@ -206,6 +214,67 @@ public class FarragoJdbcTest extends FarragoTestCase
 
     private Object [] values;
 
+    /** Tester to use */
+    private JdbcTester tester;
+
+    /** JDBC connection to Farrago database. */
+    protected Connection connection;
+
+    /** PreparedStatement for processing queries. */
+    protected PreparedStatement preparedStmt;
+
+    /** Statement for processing queries. */
+    protected Statement stmt;
+
+    //~ Inner Classes -------------------------------------------------------
+
+    public static interface JdbcTester
+    {
+        public void setUp() throws Exception;
+
+        public void tearDown() throws Exception;
+
+        public Connection getConnection();
+
+        public Statement getStatement();
+    }
+
+    public static class FarragoJdbcTester implements JdbcTester
+    {
+        FarragoTestCase testCase;
+
+        protected FarragoJdbcTester(String name)
+            throws Exception
+        {
+            testCase = new FarragoTestCase(name) {};
+        }
+
+        public void setUp()
+            throws Exception
+        {
+            testCase.setUp();
+        }
+
+        public void tearDown()
+            throws Exception
+        {
+            testCase.tearDown();
+        }
+
+        public Connection getConnection()
+        {
+            return testCase.connection;
+        }
+
+        public Statement getStatement()
+        {
+            return testCase.stmt;
+        }
+
+    }
+
+    //~ Methods ---------------------------------------------------------------
+
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -215,14 +284,29 @@ public class FarragoJdbcTest extends FarragoTestCase
         throws Exception
     {
         super(testName);
+        tester = getTester(testName);
     }
 
     //~ Methods ---------------------------------------------------------------
 
+    // Returns tester to use
+    protected JdbcTester getTester(String name)
+        throws Exception
+    {
+        return new FarragoJdbcTester(name);
+    }
+
+    // override DiffTestCase
+    protected File getTestlogRoot()
+        throws Exception
+    {
+        return FarragoTestCase.getTestlogRootStatic();
+    }
+
     // implement TestCase
     public static Test suite()
     {
-        return wrappedSuite(FarragoJdbcTest.class);
+        return FarragoTestCase.wrappedSuite(FarragoJdbcTest.class);
     }
 
     /**
@@ -293,6 +377,8 @@ public class FarragoJdbcTest extends FarragoTestCase
             stmt.execute(sql);
         } catch (SQLException ex) {
             // ignore
+            ex.printStackTrace();
+            Util.swallow(ex, tracer);
         }
         
         sql = "create schema cancel_test";
@@ -336,6 +422,11 @@ public class FarragoJdbcTest extends FarragoTestCase
         executeAndCancel(sql, synchronous);
     }
 
+    protected boolean checkCancelException(SQLException ex)
+    {
+        return (ex.getMessage().indexOf("abort") > -1);
+    }
+
     private void executeAndCancel(String sql, boolean synchronous)
         throws SQLException
     {
@@ -346,10 +437,12 @@ public class FarragoJdbcTest extends FarragoTestCase
         } else {
             Timer timer = new Timer(true);
             // cancel after 2 seconds
-            TimerTask task = new TimerTask() 
+            TimerTask task = new TimerTask()
                 {
                     public void run()
                     {
+                        Thread thread = Thread.currentThread();
+                        thread.setName("FarragoJdbcCancelThread");
                         try {
                             stmt.cancel();
                         } catch (SQLException ex) {
@@ -367,8 +460,9 @@ public class FarragoJdbcTest extends FarragoTestCase
         } catch (SQLException ex) {
             // expected
             Assert.assertTrue(
-                "Expected abort message but got '" + ex.getMessage() + "'", 
-                ex.getMessage().indexOf("abort") > -1);
+                "Expected statement cancelled message but got '" +
+                ex.getMessage() + "'",
+                checkCancelException(ex));
             return;
         }
         Assert.fail("Expected failure due to cancel request");
@@ -434,6 +528,7 @@ public class FarragoJdbcTest extends FarragoTestCase
         checkSetLongMax();
         checkSetFloatMin();
         checkSetFloatMax();
+        checkSetFloat();
         checkSetDoubleMin();
         checkSetDoubleMax();
         checkSetBooleanFalse();
@@ -445,10 +540,20 @@ public class FarragoJdbcTest extends FarragoTestCase
         checkSetObject();
     }
 
+    protected void tearDown()
+        throws Exception
+    {
+        tester.tearDown();
+        super.tearDown();
+    }
+
     protected void setUp()
         throws Exception
     {
         super.setUp();
+        tester.setUp();
+        connection = tester.getConnection();
+        stmt = tester.getStatement();
 
         synchronized (getClass()) {
             if (!schemaExists) {
@@ -584,6 +689,16 @@ public class FarragoJdbcTest extends FarragoTestCase
             TestJavaType.Float,
             TestSqlType.typesNumericAndChars,
             new Float(maxFloat));
+        checkResults(TestJavaType.Float);
+    }
+
+    private void checkSetFloat()
+        throws Exception
+    {
+        checkSet(
+            TestJavaType.Float,
+            TestSqlType.typesNumericAndChars,
+            new Float(floatValue1));
         checkResults(TestJavaType.Float);
     }
 
@@ -2783,7 +2898,7 @@ public class FarragoJdbcTest extends FarragoTestCase
     /** Tests engine driver URIs. */
     public void testURIs() throws Exception
     {
-        FarragoJdbcEngineDriver driver = newJdbcEngineDriver();
+        FarragoJdbcEngineDriver driver = FarragoTestCase.newJdbcEngineDriver();
 
         String uri = null;
         assertFalse("driver accepts " +uri, driver.acceptsURL(uri));
@@ -2857,7 +2972,7 @@ public class FarragoJdbcTest extends FarragoTestCase
         tracer.info("loaded: " +uri);
 
         // test the driver's use of the connect string parser
-        FarragoJdbcEngineDriver driver = newJdbcEngineDriver();
+        FarragoJdbcEngineDriver driver = FarragoTestCase.newJdbcEngineDriver();
         Properties parsedProps = new Properties();
         String strippedUri = driver.parseConnectionParams(uri, parsedProps);
 //        tracer.info("stripped: " +strippedUri);
@@ -2924,7 +3039,7 @@ public class FarragoJdbcTest extends FarragoTestCase
         final String sessQuery =
             "SELECT * FROM sys_boot.mgmt.sessions_view "
             +" WHERE session_name = '" +sessionName +"'";
-        FarragoJdbcEngineDriver driver = newJdbcEngineDriver();
+        FarragoJdbcEngineDriver driver = FarragoTestCase.newJdbcEngineDriver();
 
         Properties sessionProps = new Properties(newProperties());
         sessionProps.setProperty("sessionName", sessionName);

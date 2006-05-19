@@ -23,16 +23,15 @@
 package org.eigenbase.sql.test;
 
 import junit.framework.AssertionFailedError;
+import junit.framework.TestCase;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.SqlParseException;
 import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.sql.pretty.SqlPrettyWriter;
-import org.eigenbase.test.DiffTestCase;
-import org.eigenbase.util.TestUtil;
+import org.eigenbase.test.DiffRepository;
 
-import java.io.File;
 import java.io.PrintWriter;
-import java.io.Writer;
+import java.io.StringWriter;
 
 /**
  * Unit test for {@link SqlPrettyWriter}.
@@ -43,7 +42,7 @@ import java.io.Writer;
  * @since 2005/8/24
  * @version $Id$
  */
-public class SqlPrettyWriterTest extends DiffTestCase
+public class SqlPrettyWriterTest extends TestCase
 {
     public static final String NL = System.getProperty("line.separator");
 
@@ -54,60 +53,80 @@ public class SqlPrettyWriterTest extends DiffTestCase
 
     // ~ Helper methods -------------------------------------------------------
 
-    protected File getTestlogRoot() throws Exception
+    protected DiffRepository getDiffRepos()
     {
-        return new File(System.getProperty("net.sf.farrago.home"), "testlog");
+        return DiffRepository.lookup(SqlPrettyWriterTest.class);
+    }
+    
+    /**
+     * Parses a SQL query.
+     * To use a different parser, override this method.
+     */
+    protected SqlNode parseQuery(String sql)
+    {
+        SqlNode node;
+        try {
+            node = new SqlParser(sql).parseQuery();
+        } catch (SqlParseException e) {
+            String message = "Received error while parsing SQL '" + sql +
+                    "'; error is:" + NL + e.toString();
+            throw new AssertionFailedError(message);
+        }
+        return node;
     }
 
-    protected static String fold(String[] strings)
+    protected void assertPrintsTo(
+        boolean newlines, final String sql, String expected)
     {
-        return TestUtil.fold(strings);
-    }
-
-    private void assertPrintsTo(boolean newlines, final String sql, String expected)
-    {
-        final SqlNode node = parse(sql);
-        final SqlPrettyWriter prettyWriter = new SqlPrettyWriter(SqlUtil.dummyDialect);
+        final SqlNode node = parseQuery(sql);
+        final SqlPrettyWriter prettyWriter =
+            new SqlPrettyWriter(SqlUtil.dummyDialect);
         prettyWriter.setAlwaysUseParentheses(false);
         if (newlines) {
             prettyWriter.setCaseClausesOnNewLines(true);
         }
         String actual = prettyWriter.format(node);
-        TestUtil.assertEqualsVerbose(expected, actual);
+        getDiffRepos().assertEquals("formatted", expected, actual);
 
         // Now parse the result, and make sure it is structurally equivalent
         // to the original.
         final String actual2 = actual.replaceAll("`", "\"");
-        final SqlNode node2 = parse(actual2);
-        assertTrue(node.equalsDeep(node2));
+        final SqlNode node2 = parseQuery(actual2);
+        assertTrue(node.equalsDeep(node2, true));
     }
 
-    private void assertExprPrintsTo(boolean newlines, final String sql, String expected)
+    protected void assertExprPrintsTo(
+        boolean newlines, final String sql, String expected)
     {
-        final SqlCall valuesCall = (SqlCall)parse("VALUES (" + sql + ")");
+        final SqlCall valuesCall =
+            (SqlCall) parseQuery("VALUES (" + sql + ")");
         final SqlCall rowCall = (SqlCall) valuesCall.getOperands()[0];
         final SqlNode node = rowCall.getOperands()[0];
-        final SqlPrettyWriter prettyWriter = new SqlPrettyWriter(SqlUtil.dummyDialect);
+        final SqlPrettyWriter prettyWriter =
+            new SqlPrettyWriter(SqlUtil.dummyDialect);
         prettyWriter.setAlwaysUseParentheses(false);
         if (newlines) {
             prettyWriter.setCaseClausesOnNewLines(true);
         }
         String actual = prettyWriter.format(node);
-        TestUtil.assertEqualsVerbose(expected, actual);
+        getDiffRepos().assertEquals("formatted", expected, actual);
 
         // Now parse the result, and make sure it is structurally equivalent
         // to the original.
         final String actual2 = actual.replaceAll("`", "\"");
-        final SqlNode valuesCall2 = parse("VALUES (" + actual2 + ")");
-        assertTrue(valuesCall.equalsDeep(valuesCall2));
+        final SqlNode valuesCall2 = parseQuery("VALUES (" + actual2 + ")");
+        assertTrue(valuesCall.equalsDeep(valuesCall2, true));
     }
 
     // ~ Tests ----------------------------------------------------------------
 
-    public void testDefault() throws Exception
+    protected void checkSimple(
+        SqlPrettyWriter prettyWriter,
+        String expectedDesc,
+        String expected) throws Exception
     {
-        final Writer writer = openTestLog();
-        final SqlNode node = parse("select x as a, b," +
+        final SqlNode node = parseQuery(
+            "select x as a, b," +
             " 'mixed-Case string'," +
             " unquotedCamelCaseId," +
             " \"quoted id\" " +
@@ -121,98 +140,86 @@ public class SqlPrettyWriterTest extends DiffTestCase
             "   range between interval '2:2' hour to minute preceding" +
             "    and interval '1' day following)) " +
             "order by gg");
-        final PrintWriter pw = new PrintWriter(writer);
+
+        // Describe settings
+        final StringWriter sw = new StringWriter();
+        final PrintWriter pw = new PrintWriter(sw);
+        prettyWriter.describe(pw, true);
+        pw.flush();
+        String desc = sw.toString();
+        getDiffRepos().assertEquals("desc", expectedDesc, desc);
+
+        // Format
+        String actual = prettyWriter.format(node);
+        getDiffRepos().assertEquals("formatted", expected, actual);
+    }
+    
+    public void testDefault() throws Exception
+    {
         final SqlPrettyWriter prettyWriter =
             new SqlPrettyWriter(SqlUtil.dummyDialect);
-        String s;
-
-        // Default
-        pw.println(":: Default");
-        prettyWriter.describe(pw, true);
-        s = prettyWriter.format(node);
-        pw.println(s);
-        pw.println();
-
-        // Indent 8
-        pw.println(":: Indent 8");
-        prettyWriter.resetSettings();
-        prettyWriter.setIndentation(8);
-        prettyWriter.describe(pw, true);
-        s = prettyWriter.format(node);
-        pw.println(s);
-        pw.println();
-
-        // Clauses do not start newline
-        pw.println(":: Clauses not on new line");
-        prettyWriter.resetSettings();
-        prettyWriter.setClauseStartsLine(false);
-        prettyWriter.describe(pw, true);
-        s = prettyWriter.format(node);
-        pw.println(s);
-        pw.println();
-
-        // Select-list items on separate lines
-        pw.println(":: Select list items on separate lines");
-        prettyWriter.resetSettings();
-        prettyWriter.setSelectListItemsOnSeparateLines(true);
-        prettyWriter.describe(pw, true);
-        s = prettyWriter.format(node);
-        pw.println(s);
-        pw.println();
-
-        // Keywords lower-case
-        pw.println(":: Keywords in lower-case");
-        prettyWriter.resetSettings();
-        prettyWriter.setKeywordsLowerCase(true);
-        prettyWriter.describe(pw, true);
-        s = prettyWriter.format(node);
-        pw.println(s);
-        pw.println();
-
-        // Parenthesize all exprs
-        pw.println(":: Parenthesize all exprs");
-        prettyWriter.resetSettings();
-        prettyWriter.setAlwaysUseParentheses(true);
-        prettyWriter.describe(pw, true);
-        s = prettyWriter.format(node);
-        pw.println(s);
-        pw.println();
-
-        // Only quote identifiers which need it
-        pw.println(":: Only quote identifiers which need it");
-        prettyWriter.resetSettings();
-        prettyWriter.setQuoteAllIdentifiers(false);
-        prettyWriter.describe(pw, true);
-        s = prettyWriter.format(node);
-        pw.println(s);
-        pw.println();
-
-        // Damian's subquery style
-        pw.println(":: Damian's subquery style. Note that ( is at the indent, SELECT is on the same line, and ) is below it");
-        prettyWriter.resetSettings();
-        prettyWriter.setSubqueryStyle(SqlWriter.SubqueryStyle.Black);
-        prettyWriter.describe(pw, true);
-        s = prettyWriter.format(node);
-        pw.println(s);
-        pw.println();
-
-        // Last of all...
-        pw.flush();
-        // ...and put the seat down.
+        checkSimple(prettyWriter, "${desc}", "${formatted}");
     }
 
-    private SqlNode parse(final String sql)
+    public void testIndent8() throws Exception
     {
-        SqlNode node;
-        try {
-            node = new SqlParser(sql).parseQuery();
-        } catch (SqlParseException e) {
-            String message = "Received error while parsing SQL '" + sql +
-                    "'; error is:" + NL + e.toString();
-            throw new AssertionFailedError(message);
-        }
-        return node;
+        final SqlPrettyWriter prettyWriter =
+            new SqlPrettyWriter(SqlUtil.dummyDialect);
+        prettyWriter.setIndentation(8);
+        checkSimple(prettyWriter, "${desc}", "${formatted}");
     }
+
+    public void testClausesNotOnNewLine() throws Exception
+    {
+        final SqlPrettyWriter prettyWriter =
+            new SqlPrettyWriter(SqlUtil.dummyDialect);
+        prettyWriter.setClauseStartsLine(false);
+        checkSimple(prettyWriter, "${desc}", "${formatted}");
+    }
+
+    public void testSelectListItemsOnSeparateLines() throws Exception
+    {
+        final SqlPrettyWriter prettyWriter =
+            new SqlPrettyWriter(SqlUtil.dummyDialect);
+        prettyWriter.setSelectListItemsOnSeparateLines(true);
+        checkSimple(prettyWriter, "${desc}", "${formatted}");
+    }
+
+    public void testKeywordsLowerCase() throws Exception
+    {
+        final SqlPrettyWriter prettyWriter =
+            new SqlPrettyWriter(SqlUtil.dummyDialect);
+        prettyWriter.setKeywordsLowerCase(true);
+        checkSimple(prettyWriter, "${desc}", "${formatted}");
+    }
+
+    public void testParenthesizeAllExprs() throws Exception
+    {
+        final SqlPrettyWriter prettyWriter =
+            new SqlPrettyWriter(SqlUtil.dummyDialect);
+        prettyWriter.setAlwaysUseParentheses(true);
+        checkSimple(prettyWriter, "${desc}", "${formatted}");
+    }
+
+    public void testOnlyQuoteIdentifiersWhichNeedIt() throws Exception
+    {
+        final SqlPrettyWriter prettyWriter =
+            new SqlPrettyWriter(SqlUtil.dummyDialect);
+        prettyWriter.setQuoteAllIdentifiers(false);
+        checkSimple(prettyWriter, "${desc}", "${formatted}");
+    }
+
+    public void testDamiansSubqueryStyle() throws Exception
+    {
+        // Note that ( is at the indent, SELECT is on the same line, and ) is
+        // below it.
+        final SqlPrettyWriter prettyWriter =
+            new SqlPrettyWriter(SqlUtil.dummyDialect);
+        prettyWriter.setSubqueryStyle(SqlWriter.SubqueryStyle.Black);
+        checkSimple(prettyWriter, "${desc}", "${formatted}");
+    }
+
+
 
     // test disabled because default SQL parser cannot parse DDL
     public void _testExplain()
@@ -237,7 +244,10 @@ public class SqlPrettyWriterTest extends DiffTestCase
             "THEN 6" + NL +
             "ELSE 7" + NL +
             "END");
+    }
 
+    public void testCase2()
+    {
         assertExprPrintsTo(false,
             "case 1 when 2 + 3 then 4 when case a when b then c else d end then 6 else 7 end",
             "CASE WHEN 1 = 2 + 3 THEN 4 WHEN 1 = CASE WHEN `A` = `B` THEN `C` ELSE `D` END THEN 6 ELSE 7 END");
@@ -274,7 +284,8 @@ public class SqlPrettyWriterTest extends DiffTestCase
 
     public void testUnion()
     {
-        assertPrintsTo(true,
+        assertPrintsTo(
+            true,
             "select * from t " +
             "union select * from (" +
             "  select * from u " +
@@ -282,28 +293,20 @@ public class SqlPrettyWriterTest extends DiffTestCase
             "union select * from w " +
             "order by a, b",
 
-            fold(new String[] {
-                "SELECT *",
-                "        FROM `T`",
-                "    UNION",
-                "        SELECT *",
-                "        FROM (SELECT *",
-                "                        FROM `U`",
-                "                    UNION",
-                "                        SELECT *",
-                "                        FROM `V`)",
-                "UNION",
-                "    SELECT *", // todo: should not be indented
-                "    FROM `W`",
-                "ORDER BY `A`, `B`"}));
+            // todo: SELECT should not be indended from UNION, like this:
+            // UNION
+            //     SELECT *
+            //     FROM `W`
+
+            "${formatted}");
     }
 
     public void testMultiset()
     {
-        assertPrintsTo(false, "values (multiset (select * from t))",
-            fold(new String[] {
-                "VALUES ROW(MULTISET ((SELECT *",
-                "            FROM `T`)))"}));
+        assertPrintsTo(
+            false,
+            "values (multiset (select * from t))",
+            "${formatted}");
     }
 }
 

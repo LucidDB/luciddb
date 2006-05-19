@@ -32,8 +32,17 @@ import org.eigenbase.rex.*;
 
 /**
  * PushProjectPastFilterRule implements the rule for pushing a projection past
- * a filter. 
- * 
+ * a filter.
+ *
+ * <p>REVIEW (jhyde, 2006/5/18): Rules of this kind, dealing in
+ * {@link ProjectRel}s and {@link FilterRel}s, are deprecated. We should write
+ * rules which deal with calcs, which are effectively projects and filters
+ * fused together. It is still possible to ask a calc whether it is a pure
+ * project or a pure filter, or to split a calc into its pure project and
+ * filter parts, if desired. An added advantage is the corpus of code in
+ * {@link RexProgram} for performing typical operations on {@link RexNode}
+ * expressions, in particular common sub-expression elimination.
+ *
  * @author Zelaine Fong
  * @version $Id$
  */
@@ -60,6 +69,15 @@ public class PushProjectPastFilterRule extends AbstractPushProjectRule
         RexNode origFilter = filterRel.getCondition();
         RelNode rel = filterRel.getChild();
 
+        if (RexOver.containsOver(origProj.getProjectExps(), null)) {
+            // Cannot push project through filter if project contains a
+            // windowed aggregate -- it will affect row counts. Abort this rule
+            // invocation; pushdown will be considered after the windowed
+            // aggregate has been implemented. It's OK if the filter contains a
+            // windowed aggregate.
+            return;
+        }
+
         RelDataTypeField[] scanFields = rel.getRowType().getFields();
         int nScanFields = scanFields.length;
 
@@ -67,8 +85,8 @@ public class PushProjectPastFilterRule extends AbstractPushProjectRule
         
         // locate all fields referenced in the projection and filter
         BitSet projRefs = new BitSet(nScanFields);
-        locateAllRefs(origProjExprs, origFilter, projRefs);
-        
+        new RelOptUtil.InputFinder(projRefs).apply(origProjExprs, origFilter);
+
         // if all fields are being projected, no point in proceeding
         // any further
         if (projRefs.cardinality() == nScanFields) {

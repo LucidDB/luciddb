@@ -23,6 +23,7 @@ package org.eigenbase.sql;
 
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.util.Util;
 
 /**
  * A SQL literal representing a time interval.
@@ -36,13 +37,23 @@ import org.eigenbase.sql.parser.SqlParserPos;
  * <p>YEAR/MONTH intervals are not implemented yet.</p>
  *
  * <p>The interval string, such as '1:00:05.345', is not parsed yet.</p>
+ *
+ * @version $Id$
+ * @author jhyde
  */
 public class SqlIntervalLiteral extends SqlLiteral
 {
     protected SqlIntervalLiteral(
-            int sign, String intervalStr, SqlIntervalQualifier intervalQualifier,
-            SqlTypeName sqlTypeName, SqlParserPos pos) {
-        super(new IntervalValue(intervalQualifier, sign, intervalStr), sqlTypeName, pos);
+        int sign,
+        String intervalStr,
+        SqlIntervalQualifier intervalQualifier,
+        SqlTypeName sqlTypeName,
+        SqlParserPos pos)
+    {
+        super(
+            new IntervalValue(intervalQualifier, sign, intervalStr),
+            sqlTypeName,
+            pos);
     }
 
     public void unparse(
@@ -66,21 +77,57 @@ public class SqlIntervalLiteral extends SqlLiteral
         private final String intervalStr;
         private final int sign;
 
-        IntervalValue(SqlIntervalQualifier intervalQualifier, int sign, String intervalStr) {
+        /**
+         * Creates an interval value.
+         *
+         * @param intervalQualifier Interval qualifier
+         * @param sign Sign (+1 or -1)
+         * @param intervalStr
+         */
+        IntervalValue(
+            SqlIntervalQualifier intervalQualifier,
+            int sign,
+            String intervalStr)
+        {
+            assert sign == -1 || sign == 1;
+            assert intervalQualifier != null;
+            assert intervalStr != null;
             this.intervalQualifier = intervalQualifier;
             this.sign = sign;
             this.intervalStr = intervalStr;
         }
 
-        public SqlIntervalQualifier getIntervalQualifier() {
+        public boolean equals(Object obj)
+        {
+            if (!(obj instanceof IntervalValue)) {
+                return false;
+            }
+            IntervalValue that = (IntervalValue) obj;
+            return this.intervalStr.equals(that.intervalStr) &&
+                this.sign == that.sign &&
+                this.intervalQualifier.equalsDeep(
+                    that.intervalQualifier, false);
+        }
+
+        public int hashCode()
+        {
+            int h = Util.hash(sign, intervalStr);
+            int i = Util.hash(h, intervalQualifier);
+            return i;
+        }
+
+        public SqlIntervalQualifier getIntervalQualifier()
+        {
             return intervalQualifier;
         }
 
-        public String getIntervalLiteral() {
+        public String getIntervalLiteral()
+        {
             return intervalStr;
         }
 
-        public int getSign() {
+        public int getSign()
+        {
             return sign;
         }
 

@@ -55,7 +55,7 @@ class AggChecker extends SqlBasicVisitor<Void>
     boolean isGroupExpr(SqlNode expr) {
         for (int i = 0; i < groupExprs.size(); i++) {
             SqlNode groupExpr = groupExprs.get(i);
-            if (groupExpr.equalsDeep(expr)) {
+            if (groupExpr.equalsDeep(expr, false)) {
                 return true;
             }
         }

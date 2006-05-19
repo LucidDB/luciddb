@@ -496,7 +496,9 @@ public class DiffRepository
         } else {
             removeAllChildren(resourceElement);
         }
-        resourceElement.appendChild(doc.createCDATASection(value));
+        if (!value.equals("")) {
+            resourceElement.appendChild(doc.createCDATASection(value));
+        }
 
         // Write out the document.
         flushDoc();
@@ -567,6 +569,7 @@ public class DiffRepository
     private static void write(Document doc, Writer w)
     {
         final XMLOutput out = new XMLOutput(w);
+        out.setGlob(true);
         out.setIndentString("    ");
         writeNode(doc, out);
     }

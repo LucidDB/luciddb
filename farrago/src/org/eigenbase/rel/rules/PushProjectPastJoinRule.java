@@ -71,8 +71,9 @@ public class PushProjectPastJoinRule extends AbstractPushProjectRule
         
         // locate all fields referenced in the projection and join condition
         BitSet projRefs = new BitSet(nTotalFields);
-        locateAllRefs(origProjFields, joinRel.getCondition(), projRefs);
-        
+        new RelOptUtil.InputFinder(projRefs).apply(
+            origProjFields, joinRel.getCondition());
+
         // if all fields are being projected, no point in proceeding
         // any further
         if (projRefs.cardinality() == nTotalFields) {

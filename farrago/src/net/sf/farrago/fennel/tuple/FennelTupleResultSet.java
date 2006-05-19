@@ -28,6 +28,8 @@ import org.eigenbase.util14.AbstractResultSet;
 import java.nio.ByteBuffer;
 import java.sql.*;
 import java.math.BigDecimal;
+import java.util.TimeZone;
+import java.util.Calendar;
 
 
 /**
@@ -56,6 +58,10 @@ abstract public class FennelTupleResultSet extends AbstractResultSet {
     protected boolean  tupleComputed = false;
     protected final int tupleAlignment = FennelTupleAccessor.TUPLE_ALIGN4;
     protected final int tupleAlignmentMask = tupleAlignment -1;
+
+        /** The default timezone for this Java VM. */
+    private static final TimeZone defaultZone =
+        Calendar.getInstance().getTimeZone();
 
     public FennelTupleResultSet(FennelTupleDescriptor desc,
                                 ResultSetMetaData metaData)
@@ -92,6 +98,14 @@ abstract public class FennelTupleResultSet extends AbstractResultSet {
         if (pad > 0) {
             buf.position(pos +pad);
         }
+    }
+
+    protected long getMillis(FennelTupleDatum d)
+    {
+        long millis = d.getLong();
+        long timeZoneOffset = defaultZone.getOffset(millis);
+        // Shift time from GMT into local timezone
+        return millis - timeZoneOffset;
     }
 
     /**
@@ -137,11 +151,11 @@ abstract public class FennelTupleResultSet extends AbstractResultSet {
             case Types.BIT:
                 return new Boolean(d.getBoolean());
             case Types.DATE:
-                return new Date(d.getLong());
+                return new Date(getMillis(d));
             case Types.TIME:
-                return new Time(d.getLong());
+                return new Time(getMillis(d));
             case Types.TIMESTAMP:
-                return new Timestamp(d.getLong());
+                return new Timestamp(getMillis(d));
             case Types.CHAR:
             case Types.VARCHAR:
             case Types.LONGVARCHAR:

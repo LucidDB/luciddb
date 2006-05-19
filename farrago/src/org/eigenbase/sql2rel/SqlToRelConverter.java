@@ -1330,18 +1330,19 @@ public class SqlToRelConverter
         RelOptTable targetTable,
         RelNode sourceRel)
     {
-        List<String> targetColumnNames;
         SqlNodeList targetColumnList = call.getTargetColumnList();
+        RelDataType sourceRowType = sourceRel.getRowType();
+        final RelDataType targetRowType = targetTable.getRowType();
+        final List<String> targetColumnNames;
         if (targetColumnList == null) {
             // No explicit list of target columns. The target fields must be
             // the same as the source fields.
             if (RelOptUtil.equal(
-                "source rowtype", sourceRel.getRowType(),
-                "target rowtype", targetTable.getRowType(), false)) {
+                "source rowtype", sourceRowType,
+                "target rowtype", targetRowType, false)) {
                 return sourceRel;
             }
-            targetColumnNames =
-                RelOptUtil.getFieldNameList(targetTable.getRowType());
+            targetColumnNames = RelOptUtil.getFieldNameList(targetRowType);
         } else {
             targetColumnNames = new ArrayList<String>();
             for (int i = 0; i < targetColumnList.size(); i++) {
@@ -1350,12 +1351,10 @@ public class SqlToRelConverter
             }
         }
 
-        RelDataType sourceRowType = sourceRel.getRowType();
         final RexNode sourceRef =
             rexBuilder.makeRangeReference(sourceRowType, 0, false);
-        RelDataType lhsRowType = targetTable.getRowType();
-        int expCount = lhsRowType.getFieldCount();
-        RexNode [] rhsExps = new RexNode[expCount];
+        int expCount = targetRowType.getFieldCount();
+        RexNode [] sourceExps = new RexNode[expCount];
 
         // Walk the name list and place the associated value in the
         // expression list according to the ordinal value returned from
@@ -1363,23 +1362,40 @@ public class SqlToRelConverter
         // that are not referenced.
         for (int i = 0; i < targetColumnNames.size(); i++) {
             String targetColumnName = targetColumnNames.get(i);
-            int iTarget = lhsRowType.getFieldOrdinal(targetColumnName);
+            int iTarget = targetRowType.getFieldOrdinal(targetColumnName);
             assert (iTarget != -1);
-            rhsExps[iTarget] = rexBuilder.makeFieldAccess(sourceRef, i);
+            int j = getPhysicalColumn(call, i);
+            final RexNode expr = rexBuilder.makeFieldAccess(sourceRef, j);
+            sourceExps[iTarget] = expr;
         }
 
         // Walk the expresion list and get default values for any columns
         // that were not supplied in the statement
         for (int i = 0; i < expCount; ++i) {
-            if (rhsExps[i] != null) {
+            if (sourceExps[i] != null) {
                 continue;
             }
 
-            rhsExps[i] =
+            sourceExps[i] =
                 defaultValueFactory.newColumnDefaultValue(targetTable, i);
         }
 
-        return CalcRel.createProject(sourceRel, rhsExps, null);
+        return CalcRel.createProject(sourceRel, sourceExps, null);
+    }
+
+    /**
+     * Returns the ordinal of the physical column in source which
+     * returns the <code>i</code>th logical column. The default implementation
+     * returns <code>i</code>, but a derived class may override to handle
+     * system fields.
+     *
+     * @param call Source SQL query
+     * @param i Logical column ordinal
+     * @return Physical column ordinal
+     */
+    protected int getPhysicalColumn(SqlInsert call, int i)
+    {
+        return i;
     }
 
     private RelNode convertDelete(SqlDelete call)
@@ -2387,7 +2403,7 @@ public class SqlToRelConverter
         {
             for (int i = 0; i < groupExprs.size(); i++) {
                 SqlNode groupExpr = groupExprs.get(i);
-                if (expr.equalsDeep(groupExpr)) {
+                if (expr.equalsDeep(groupExpr, false)) {
                     return inputRefs.get(i);
                 }
             }

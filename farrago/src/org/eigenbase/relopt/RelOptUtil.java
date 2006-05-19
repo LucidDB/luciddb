@@ -1212,17 +1212,11 @@ public abstract class RelOptUtil
      */
     public static void findRexInputRefs(RexNode rex, BitSet rexRefs)
     {
-        if (rex instanceof RexCall) {
-            RexNode [] operands = ((RexCall) rex).operands;
-            for (int i = 0; i < operands.length; i++) {
-                findRexInputRefs(operands[i], rexRefs);
-            }
-        } else if (rex instanceof RexInputRef) {
-            RexInputRef var = (RexInputRef) rex;
-            rexRefs.set(var.getIndex());
-        }
+        Util.deprecated("remove, use shuttle", false);
+        rex.accept(new InputFinder(rexRefs));
     }
     
+
     /**
      * Returns true if all bits set in the second parameter are also set
      * in the first
@@ -1284,8 +1278,8 @@ public abstract class RelOptUtil
             RexNode filter = (RexNode) filterIter.next();
             
             BitSet filterBitmap = new BitSet(nTotalFields);
-            RelOptUtil.findRexInputRefs(filter, filterBitmap);
-            
+            filter.accept(new InputFinder(filterBitmap));
+
             // REVIEW - are there any expressions that need special handling
             // and therefore cannot be pushed?
             
@@ -1334,6 +1328,55 @@ public abstract class RelOptUtil
         }
         
         return filterPushed;
+    }
+
+    /**
+     * Splits a join condition.
+     *
+     * @param left Left input to the join
+     * @param right Right input to the join
+     * @param condition Join condition
+     * @return Array holding the output.
+     *      equiNonEqui[0] is the equi-join condition (or TRUE if empty);
+     *      nonEqui[0] is rest of the condition.
+     */
+    public static RexNode[] splitJoinCondition(
+        RelNode left,
+        RelNode right,
+        RexNode condition)
+    {
+        final RexBuilder rexBuilder = left.getCluster().getRexBuilder();
+        final List<Integer> leftKeys = new ArrayList<Integer>();
+        final List<Integer> rightKeys = new ArrayList<Integer>();
+        final RexNode nonEquiCondition =
+            splitJoinCondition(
+                left, right, condition, leftKeys, rightKeys);
+        RexNode equiCondition = rexBuilder.makeLiteral(true);
+        assert leftKeys.size() == rightKeys.size();
+        final int keyCount = leftKeys.size();
+        int offset = left.getRowType().getFieldCount();
+        for (int i = 0; i < keyCount; i++) {
+            int leftKey = leftKeys.get(i);
+            int rightKey = rightKeys.get(i);
+            RexNode equi = rexBuilder.makeCall(
+                SqlStdOperatorTable.equalsOperator,
+                rexBuilder.makeInputRef(
+                    left.getRowType().getFields()[leftKey].getType(),
+                    leftKey),
+                rexBuilder.makeInputRef(
+                    right.getRowType().getFields()[rightKey].getType(),
+                    rightKey + offset));
+            createInputRef(right, leftKey);
+            if (i == 0) {
+                equiCondition = equi;
+            } else {
+                equiCondition = rexBuilder.makeCall(
+                SqlStdOperatorTable.andOperator,
+                    equiCondition,
+                    equi);
+            }
+        }
+        return new RexNode[] {equiCondition, nonEquiCondition};
     }
 
     //~ Inner Classes ---------------------------------------------------------
@@ -1422,6 +1465,34 @@ public abstract class RelOptUtil
                 pw.print(" ");
                 accept(field.getType());
             }
+        }
+    }
+
+    /**
+     * Visitor which builds a bitmap of the inputs used by an expression.
+     */
+    public static class InputFinder extends RexVisitorImpl
+    {
+        private final BitSet rexRefSet;
+
+        public InputFinder(BitSet rexRefSet)
+        {
+            super(true);
+            this.rexRefSet = rexRefSet;
+        }
+
+        public void visitInputRef(RexInputRef inputRef)
+        {
+            rexRefSet.set(inputRef.getIndex());
+        }
+
+        /**
+         * Applies this visitor to an array of expressions and an optional
+         * single expression.
+         */
+        public void apply(RexNode[] exprs, RexNode expr)
+        {
+            RexProgram.apply(this, exprs, expr);
         }
     }
 }

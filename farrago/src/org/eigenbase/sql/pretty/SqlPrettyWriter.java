@@ -285,6 +285,7 @@ public class SqlPrettyWriter implements SqlWriter
     {
         final Bean properties = getBean();
         final String[] propertyNames = properties.getPropertyNames();
+        int count = 0;
         for (int i = 0; i < propertyNames.length; i++) {
             String key = propertyNames[i];
             final Object value = bean.get(key);
@@ -292,7 +293,10 @@ public class SqlPrettyWriter implements SqlWriter
             if (Util.equal(value, defaultValue)) {
                 continue;
             }
-            pw.println(key + "=" + value);
+            if (count++ > 0) {
+                pw.print(",");
+            }
+            pw.print(key + "=" + value);
         }
     }
 

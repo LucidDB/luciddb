@@ -212,20 +212,38 @@ public class SqlDataTypeSpec extends SqlNode
         return visitor.visit(this);
     }
 
-    public boolean equalsDeep(SqlNode node)
+    public boolean equalsDeep(SqlNode node, boolean fail)
     {
-        if (node instanceof SqlDataTypeSpec) {
-            SqlDataTypeSpec that = (SqlDataTypeSpec) node;
-            return SqlNode.equalDeep(
-                this.collectionsTypeName,
-                that.collectionsTypeName) &&
-                this.typeName.equalsDeep(that.typeName) &&
-                this.precision == that.precision &&
-                this.scale == that.scale &&
-                Util.equal(this.timeZone, that.timeZone) &&
-                Util.equal(this.charSetName, that.charSetName);
+        if (!(node instanceof SqlDataTypeSpec)) {
+            assert !fail : this + "!=" + node;
+            return false;
         }
-        return false;
+        SqlDataTypeSpec that = (SqlDataTypeSpec) node;
+        if (!SqlNode.equalDeep(
+            this.collectionsTypeName,
+            that.collectionsTypeName, fail)) {
+            return false;
+        }
+        if (!this.typeName.equalsDeep(that.typeName, fail)) {
+            return false;
+        }
+        if (this.precision != that.precision) {
+            assert !fail : this + "!=" + node;
+            return false;
+        }
+        if (this.scale != that.scale) {
+            assert !fail : this + "!=" + node;
+            return false;
+        }
+        if (!Util.equal(this.timeZone, that.timeZone)) {
+            assert !fail : this + "!=" + node;
+            return false;
+        }
+        if (!Util.equal(this.charSetName, that.charSetName)) {
+            assert !fail : this + "!=" + node;
+            return false;
+        }
+        return true;
     }
 
     /**
