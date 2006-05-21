@@ -109,6 +109,8 @@
 
     <pattern name="dt.test" class="com.disruptivetech.farrago.test.*" />
 
+    <pattern name="lu.test" class="com.lucidera.farrago.test.*" />
+
     <pattern name="plannerviz" class="net.sf.farrago.plannerviz.**" />
     
     <pattern name="syslib" class="net.sf.farrago.syslib.**" />
@@ -170,6 +172,7 @@
       <include pattern="defimpl"/>
       <include pattern="test"/>
       <include pattern="dt.test"/>
+      <include pattern="lu.test"/>
       <include pattern="plannerviz"/>
       <include pattern="syslib"/>
     </pattern>
@@ -1048,6 +1051,23 @@
         <to pattern="farrago" />
         <allow>
           <to pattern="dt.test.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="lu.test.deps">
+      <include pattern="test.deps" />
+      <include pattern="lu.farrago.deps" />
+      <include pattern="lu.test" />
+    </pattern>
+
+    <access-rule>
+      <message>lu.test dependency violation</message>
+      <deny>
+        <from pattern="lu.test" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="lu.test.deps" />
         </allow>
       </deny>
     </access-rule>

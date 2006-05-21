@@ -556,7 +556,7 @@ ${farrago.test.jvmargs}
 
   <target name="runLuciddbInitSql">
     <filelist dir="${initSql.dir}" id="filelist.InitSql"
-      files="installApplib.sql"/>
+      files="installApplib.sql, createTestHarness.sql"/>
     <pathconvert property="filelist.InitSql" 
       refid="filelist.InitSql" pathsep="${line.separator}"
       dirsep="${file.separator}" />

@@ -288,6 +288,19 @@ public abstract class FarragoTestCase extends ResultSetTestCase
      */
     protected static void saveParameters()
     {
+        saveParameters(repos);
+    }
+    
+    /**
+     * Restores system parameters to state saved by saveParameters().
+     */
+    protected static void restoreParameters()
+    {
+        restoreParameters(repos);
+    }
+    
+    protected static void saveParameters(FarragoRepos repos)
+    {
         FarragoReposTxnContext reposTxn = new FarragoReposTxnContext(repos);
         reposTxn.beginReadTxn();
         savedFarragoConfig =
@@ -298,10 +311,7 @@ public abstract class FarragoTestCase extends ResultSetTestCase
         reposTxn.commit();
     }
 
-    /**
-     * Restores system parameters to state saved by saveParameters().
-     */
-    protected static void restoreParameters()
+    protected static void restoreParameters(FarragoRepos repos)
     {
         FarragoReposTxnContext reposTxn = new FarragoReposTxnContext(repos);
         reposTxn.beginWriteTxn();
@@ -602,15 +612,39 @@ public abstract class FarragoTestCase extends ResultSetTestCase
             super(name);
         }
 
+        protected FarragoRepos getRepos()
+        {
+            return repos;
+        }
+        
+        protected Statement getStmt()
+        {
+            return stmt;
+        }
+
         public void execute()
             throws Exception
         {
-            restoreParameters();
+            restoreCleanupParameters();
             dropSchemas();
             dropDataWrappers();
             dropAuthIds();
         }
 
+        public void saveCleanupParameters()
+        {
+            if (getRepos() != null) {
+                saveParameters(getRepos());
+            }
+        }
+    
+        public void restoreCleanupParameters()
+        {
+            if (getRepos() != null) {
+                restoreParameters(getRepos());
+            }
+        }
+        
         /**
          * Indicate whether schema should be preserved as a global fixture.
          * Extension project test case can override this method to bless
@@ -637,7 +671,7 @@ public abstract class FarragoTestCase extends ResultSetTestCase
             // NOTE:  don't use DatabaseMetaData.getSchemas since it doesn't
             // work when Fennel is disabled
             Iterator schemaIter =
-                repos.getSelfAsCatalog().getOwnedElement().iterator();
+                getRepos().getSelfAsCatalog().getOwnedElement().iterator();
             while (schemaIter.hasNext()) {
                 Object obj = schemaIter.next();
                 if (!(obj instanceof CwmSchema)) {
@@ -652,7 +686,7 @@ public abstract class FarragoTestCase extends ResultSetTestCase
             Iterator iter = list.iterator();
             while (iter.hasNext()) {
                 String name = (String) iter.next();
-                stmt.execute("drop schema \"" + name + "\" cascade");
+                getStmt().execute("drop schema \"" + name + "\" cascade");
             }
         }
 
@@ -661,7 +695,7 @@ public abstract class FarragoTestCase extends ResultSetTestCase
         {
             List list = new ArrayList();
             Iterator iter =
-                repos.getMedPackage().getFemDataWrapper().refAllOfClass().iterator();
+                getRepos().getMedPackage().getFemDataWrapper().refAllOfClass().iterator();
             while (iter.hasNext()) {
                 FemDataWrapper wrapper = (FemDataWrapper) iter.next();
                 if (wrapper.getName().startsWith("SYS_")) {
@@ -674,7 +708,8 @@ public abstract class FarragoTestCase extends ResultSetTestCase
             while (iter.hasNext()) {
                 String wrapperType = (String) iter.next();
                 String name = (String) iter.next();
-                stmt.execute("drop " + wrapperType + " data wrapper \"" + name
+                getStmt().execute(
+                    "drop " + wrapperType + " data wrapper \"" + name
                     + "\" cascade");
             }
         }
@@ -684,7 +719,7 @@ public abstract class FarragoTestCase extends ResultSetTestCase
         {
             List list = new ArrayList();
             Iterator iter =
-                repos.getSecurityPackage().getFemAuthId().refAllOfType()
+                getRepos().getSecurityPackage().getFemAuthId().refAllOfType()
                 .iterator();
             while (iter.hasNext()) {
                 FemAuthId authId =
@@ -706,7 +741,7 @@ public abstract class FarragoTestCase extends ResultSetTestCase
             iter = list.iterator();
             while (iter.hasNext()) {
                 String obj = iter.next().toString();
-                stmt.execute("drop " + obj);
+                getStmt().execute("drop " + obj);
             }
         }
     }

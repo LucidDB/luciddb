@@ -1,10 +1,10 @@
 <project name="bh" default="cleanup">
   <target name="cleanup">
-    <!-- Last one out, turn off the lights. -->
+    <!-- Notify LucidDbTestHarness of end of test suite. -->
     <test-suite name="cleanup">
-      <test name="shutdownEngine">
+      <test name="testSuiteDone">
         <junit testclass="com.lucidera.luciddb.test.LucidDbTestHarness" 
-          methodnames="shutdownEngine"/>
+          methodnames="testSuiteDone"/>
       </test>
     </test-suite>
   </target>

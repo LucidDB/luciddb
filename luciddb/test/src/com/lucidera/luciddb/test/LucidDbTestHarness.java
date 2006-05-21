@@ -24,6 +24,7 @@ import junit.framework.*;
 
 import net.sf.farrago.db.*;
 import net.sf.farrago.trace.*;
+import net.sf.farrago.test.*;
 
 import org.eigenbase.util.*;
 
@@ -46,6 +47,14 @@ public class LucidDbTestHarness extends TestCase
         FarragoTrace.getClassTracer(LucidDbTestHarness.class);
 
     private static Connection connection;
+
+    private static Statement stmt;
+
+    private static int testDepth;
+
+    private static boolean needCleanup;
+    
+    private static boolean haveSavedParameters;
     
     public LucidDbTestHarness(String testName) throws Exception
     {
@@ -62,11 +71,12 @@ public class LucidDbTestHarness extends TestCase
      */
     static Connection startupEngine(
         String urlPrefix, String username, String passwd)
-        throws SQLException
+        throws Exception
     {
         if (connection != null) {
             // Already started.  TODO:  if parameters don't match,
             // force restart.
+            cleanupIfNeeded();
             return connection;
         }
         tracer.info("Starting LucidDB engine...");
@@ -74,8 +84,58 @@ public class LucidDbTestHarness extends TestCase
             urlPrefix,
             username,
             passwd);
+        stmt = connection.createStatement();
+        if (!haveSavedParameters) {
+            callProcedure("call sys_boot.sys_boot.save_test_parameters()");
+            haveSavedParameters = true;
+        }
         tracer.info("LucidDB engine started successfully");
+        cleanupIfNeeded();
         return connection;
+    }
+
+    private static void cleanupIfNeeded()
+        throws Exception
+    {
+        if (needCleanup) {
+            tracer.info("Running cleanup...");
+            callProcedure("call sys_boot.sys_boot.clean_test()");
+            needCleanup = false;
+        }
+    }
+
+    private static void callProcedure(String call)
+        throws Exception
+    {
+        ResultSet resultSet = stmt.executeQuery(call);
+        try {
+            while (resultSet.next()) {
+            }
+        } finally {
+            resultSet.close();
+        }
+    }
+
+    /**
+     * Called from tinit.xml.
+     */
+    public void testSuiteInit()
+    {
+        tracer.info("testSuiteInit");
+        ++testDepth;
+        needCleanup = true;
+    }
+
+    /**
+     * Called from tdone.xml.
+     */
+    public void testSuiteDone()
+    {
+        tracer.info("testSuiteDone");
+        --testDepth;
+        if (testDepth == 0) {
+            shutdownEngine();
+        }
     }
 
     /**
@@ -90,6 +150,7 @@ public class LucidDbTestHarness extends TestCase
         tracer.info("Shutting down LucidDB engine...");
         Util.squelchConnection(connection);
         connection = null;
+        stmt = null;
 
         if (FarragoDbSingleton.isReferenced()) {
             // TODO jvs 26-Apr-2006:  FarragoTestCase is a lot less
