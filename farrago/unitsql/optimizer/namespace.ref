@@ -1,16 +1,11 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/optimizer/namespace.sql#6 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/namespace.sql#2 $
 0: jdbc:farrago:> -- Test queries which make use of foreign namespaces
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- force usage of Java calculator
 0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- create a private wrapper for mdr (don't use the standard mdr wrapper)
-0: jdbc:farrago:> create foreign data wrapper test_mdr
-. . . . . . . . > library 'class net.sf.farrago.namespace.mdr.MedMdrForeignDataWrapper'
-. . . . . . . . > language java;
-0: jdbc:farrago:> 
 0: jdbc:farrago:> create server mof_repository
-. . . . . . . . > foreign data wrapper test_mdr
+. . . . . . . . > foreign data wrapper sys_mdr
 . . . . . . . . > options(
 . . . . . . . . >     "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr',
 . . . . . . . . >     extent_name 'MOF', 

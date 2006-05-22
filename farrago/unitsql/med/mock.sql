@@ -1,22 +1,14 @@
 -- $Id$
 -- Test mock namespace plugin
 
-create foreign data wrapper mock_foreign_wrapper
-library 'class net.sf.farrago.namespace.mock.MedMockForeignDataWrapper'
-language java;
-
-create local data wrapper mock_local_wrapper
-library 'class net.sf.farrago.namespace.mock.MedMockLocalDataWrapper'
-language java;
-
 create server mock_foreign_server
-foreign data wrapper mock_foreign_wrapper;
+foreign data wrapper sys_mock_foreign;
 
 create server mock_local_server
-local data wrapper mock_local_wrapper;
+local data wrapper sys_mock;
 
 create server mock_foreign_metadata_server
-foreign data wrapper mock_foreign_wrapper
+foreign data wrapper sys_mock_foreign
 options (
 foreign_schema_name 'MOCK_SCHEMA', 
 foreign_table_name 'MOCK_TABLE',
@@ -24,7 +16,7 @@ executor_impl 'JAVA',
 row_count '3');
 
 create server mock_foreign_dynamic_server
-foreign data wrapper mock_foreign_wrapper
+foreign data wrapper sys_mock_foreign
 options (
 foreign_schema_name 'MOCK_SCHEMA', 
 foreign_table_name 'MOCK_TABLE',

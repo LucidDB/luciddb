@@ -1,7 +1,8 @@
 -- $Id$
 -- Test SQL/MED DDL
 
--- create a private wrapper for mdr (don't use the standard mdr wrapper)
+-- create a private wrapper for mdr (don't use the standard mdr wrapper
+-- because we're going to drop it)
 create foreign data wrapper test_mdr
 library 'class net.sf.farrago.namespace.mdr.MedMdrForeignDataWrapper'
 language java
@@ -227,12 +228,8 @@ select deptno from demo_import_schema.dept order by deptno;
 -- negative test for type_substitution option; hsqldb VARCHAR comes
 -- back as precision 0, which we don't accept
 
-create foreign data wrapper test_jdbc
-library '${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'
-language java;
-
 create server hsqldb_nosub
-foreign data wrapper test_jdbc
+foreign data wrapper sys_jdbc
 options(
     driver_class 'org.hsqldb.jdbcDriver',
     url 'jdbc:hsqldb:testcases/hsqldb/scott',

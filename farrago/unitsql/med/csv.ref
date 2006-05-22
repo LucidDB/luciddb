@@ -1,13 +1,8 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/med/csv.sql#2 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/med/csv.sql#3 $
 0: jdbc:farrago:> -- Test SQL/MED data access to CSV files
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- create a private wrapper for jdbc (don't use the standard jdbc wrapper)
-0: jdbc:farrago:> create foreign data wrapper test_jdbc
-. . . . . . . . > library 'plugin/FarragoMedJdbc.jar'
-. . . . . . . . > language java;
-0: jdbc:farrago:> 
 0: jdbc:farrago:> create server csv_server
-. . . . . . . . > foreign data wrapper test_jdbc
+. . . . . . . . > foreign data wrapper sys_jdbc
 . . . . . . . . > options(
 . . . . . . . . >     driver_class 'org.relique.jdbc.csv.CsvDriver',
 . . . . . . . . >     url 'jdbc:relique:csv:unitsql/med',
@@ -66,13 +61,13 @@ Error: Support for foreign schema import not available in data server "SYS_BOOT"
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail due to missing url
 0: jdbc:farrago:> create server csv_server_missing_url
-. . . . . . . . > foreign data wrapper test_jdbc
+. . . . . . . . > foreign data wrapper sys_jdbc
 . . . . . . . . > options(
 . . . . . . . . >     driver_class 'org.relique.jdbc.csv.CsvDriver');
 Error: Value required for property URL (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create server csv_server_missing_schema
-. . . . . . . . > foreign data wrapper test_jdbc
+. . . . . . . . > foreign data wrapper sys_jdbc
 . . . . . . . . > options(
 . . . . . . . . >     driver_class 'org.relique.jdbc.csv.CsvDriver',
 . . . . . . . . >     url 'jdbc:relique:csv:unitsql/med');

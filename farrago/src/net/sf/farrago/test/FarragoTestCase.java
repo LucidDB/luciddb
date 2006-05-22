@@ -628,6 +628,7 @@ public abstract class FarragoTestCase extends ResultSetTestCase
             restoreCleanupParameters();
             dropSchemas();
             dropDataWrappers();
+            dropDataServers();
             dropAuthIds();
         }
 
@@ -646,13 +647,13 @@ public abstract class FarragoTestCase extends ResultSetTestCase
         }
         
         /**
-         * Indicate whether schema should be preserved as a global fixture.
+         * Decides whether schema should be preserved as a global fixture.
          * Extension project test case can override this method to bless
-         * additional schema or use attributes other than the name to make
+         * additional schemas or use attributes other than the name to make
          * the determination.
          *
          * @param schema schema to check
-         * @return true => if schema should be preserved as fixture
+         * @return true iff schema should be preserved as fixture
          */
         protected boolean isBlessedSchema(CwmSchema schema)
         {
@@ -660,6 +661,22 @@ public abstract class FarragoTestCase extends ResultSetTestCase
             return name.equals("SALES")
                 || name.equals("SQLJ")
                 || name.equals("INFORMATION_SCHEMA")
+                || name.startsWith("SYS_");
+        }
+
+        /**
+         * Decides whether server should be preserved as a global fixture.
+         * Extension project test case can override this method to bless
+         * additional servers or use attributes other than the name to make
+         * the determination.
+         *
+         * @param server server to check
+         * @return true iff schema should be preserved as fixture
+         */
+        protected boolean isBlessedServer(FemDataServer server)
+        {
+            String name = server.getName();
+            return name.equals("HSQLDB_DEMO")
                 || name.startsWith("SYS_");
         }
 
@@ -714,6 +731,32 @@ public abstract class FarragoTestCase extends ResultSetTestCase
             }
         }
 
+        // NOTE jvs 21-May-2006: Dropping data wrappers cascades to server, so
+        // this isn't strictly necessary.  But it's convenient for test authors
+        // so that they can use the prefab wrapper definitions and still have
+        // servers dropped.
+        private void dropDataServers()
+            throws Exception
+        {
+            List list = new ArrayList();
+            Iterator iter =
+                getRepos().getMedPackage().getFemDataServer().refAllOfClass().iterator();
+            while (iter.hasNext()) {
+                FemDataServer server = (FemDataServer) iter.next();
+                if (isBlessedServer(server)) {
+                    continue;
+                }
+                list.add(server.getName());
+            }
+            iter = list.iterator();
+            while (iter.hasNext()) {
+                String name = (String) iter.next();
+                getStmt().execute(
+                    "drop server \"" + name
+                    + "\" cascade");
+            }
+        }
+        
         private void dropAuthIds()
             throws Exception
         {

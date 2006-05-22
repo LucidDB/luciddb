@@ -10,12 +10,8 @@ create schema tpcd;
 
 set schema 'tpcd';
 
-create foreign data wrapper local_file_wrapper
-library 'class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper'
-language java;
-
 create server tpcd_server
-foreign data wrapper local_file_wrapper
+foreign data wrapper sys_file_wrapper
 options (
     directory 'unitsql/optimizer/data/tpcd',
     file_extension 'tbl',
@@ -184,12 +180,8 @@ drop schema stat cascade;
 create schema stat;
 set schema 'stat';
 
-create foreign data wrapper stat_file_wrapper
-library 'class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper'
-language java;
-
 create server stat_server
-foreign data wrapper stat_file_wrapper
+foreign data wrapper sys_file_wrapper
 options (
     directory 'unitsql/med/flatfiles',
     file_extension 'csv',
