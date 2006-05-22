@@ -343,6 +343,15 @@ public class FarragoJdbcTest extends ResultSetTestCase
         testQueryCancel(false, "JAVA");
     }
 
+    public void testJavaQueryAsynchronousCancelRepeated()
+        throws Exception
+    {
+        for (int i = 0; i < 10; i++) {
+            int millis = (int) (Math.random() * 5);
+            testQueryCancel(millis, "JAVA");
+        }
+    }
+
     public void testFennelQuerySynchronousCancel()
         throws Exception
     {
@@ -371,13 +380,19 @@ public class FarragoJdbcTest extends ResultSetTestCase
     private void testQueryCancel(boolean synchronous, String executorType)
         throws Exception
     {
+        // Wait 2 seconds before cancel for asynchronous case
+        testQueryCancel(synchronous? 0: 2000, executorType);
+    }
+
+    private void testQueryCancel(int waitMillis, String executorType)
+        throws Exception
+    {
         // cleanup
         String sql = "drop schema cancel_test cascade";
         try {
             stmt.execute(sql);
         } catch (SQLException ex) {
             // ignore
-            ex.printStackTrace();
             Util.swallow(ex, tracer);
         }
         
@@ -397,10 +412,17 @@ public class FarragoJdbcTest extends ResultSetTestCase
             // in FarragoTupleIterResultSet, so don't count
             sql = "select * from cancel_test.m";
         }
-        executeAndCancel(sql, synchronous);
+        executeAndCancel(sql, waitMillis);
     }
 
     private void testUdxCancel(boolean synchronous)
+        throws Exception
+    {
+        // Wait 2 seconds before cancel for asynchronous case
+        testUdxCancel(synchronous? 0: 2000);
+    }
+
+    private void testUdxCancel(int waitMillis)
         throws Exception
     {
         // cleanup
@@ -419,7 +441,7 @@ public class FarragoJdbcTest extends ResultSetTestCase
             + "'class net.sf.farrago.test.FarragoTestUDR.ramp'";
         stmt.execute(sql);
         sql = "select * from table (cancel_test.ramp(1000000000))";
-        executeAndCancel(sql, synchronous);
+        executeAndCancel(sql, waitMillis);
     }
 
     protected boolean checkCancelException(SQLException ex)
@@ -427,16 +449,16 @@ public class FarragoJdbcTest extends ResultSetTestCase
         return (ex.getMessage().indexOf("abort") > -1);
     }
 
-    private void executeAndCancel(String sql, boolean synchronous)
+    private void executeAndCancel(String sql, int waitMillis)
         throws SQLException
     {
         resultSet = stmt.executeQuery(sql);
-        if (synchronous) {
+        if (waitMillis == 0) {
             // cancel immediately
             stmt.cancel();
         } else {
+            // Schedule timer to cancel after waitMillis
             Timer timer = new Timer(true);
-            // cancel after 2 seconds
             TimerTask task = new TimerTask()
                 {
                     public void run()
@@ -452,7 +474,7 @@ public class FarragoJdbcTest extends ResultSetTestCase
                         }
                     }
                 };
-            timer.schedule(task, 2000);
+            timer.schedule(task, waitMillis);
         }
         try {
             while (resultSet.next()) {
@@ -557,6 +579,14 @@ public class FarragoJdbcTest extends ResultSetTestCase
 
         synchronized (getClass()) {
             if (!schemaExists) {
+                // cleanup
+                String sql = "drop schema datatypes_schema cascade";
+                try {
+                    stmt.execute(sql);
+                } catch (SQLException ex) {
+                    // ignore
+                    Util.swallow(ex, tracer);
+                }
                 stmt.executeUpdate("create schema datatypes_schema");
                 stmt.executeUpdate(
                     "create table datatypes_schema.dataTypes_table ("
@@ -1440,8 +1470,9 @@ public class FarragoJdbcTest extends ResultSetTestCase
                 if (todo) {
                 assertEquals(stringValue, resultSet.getString(BINARY));
                 assertEquals(stringValue, resultSet.getString(VARBINARY));
+                }
 
-                assertEquals(
+                /*assertEquals(
                     stringValue,
                     resultSet.getString(DATE));
                 assertEquals(
@@ -1450,7 +1481,7 @@ public class FarragoJdbcTest extends ResultSetTestCase
                 assertEquals(
                     stringValue,
                     resultSet.getString(TIMESTAMP));
-                }
+                  */
                 break;
             case 101:
                 assertEquals(

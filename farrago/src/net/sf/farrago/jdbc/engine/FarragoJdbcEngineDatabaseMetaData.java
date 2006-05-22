@@ -26,7 +26,6 @@ import java.sql.*;
 import java.util.*;
 
 import net.sf.farrago.release.*;
-import net.sf.farrago.util.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.session.*;
 
@@ -958,7 +957,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         throws SQLException
     {
         QueryBuilder queryBuilder =
-            new QueryBuilder(
+            createQueryBuilder(
                 "select * from sys_boot.jdbc_metadata.procedures_view");
         queryBuilder.addExact("procedure_cat", catalog);
         queryBuilder.addPattern("procedure_schem", schemaPattern);
@@ -976,7 +975,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         throws SQLException
     {
         QueryBuilder queryBuilder =
-            new QueryBuilder(
+            createQueryBuilder(
                 "select * from sys_boot.jdbc_metadata.procedure_columns_view");
         queryBuilder.addExact("procedure_cat", catalog);
         queryBuilder.addPattern("procedure_schem", schemaPattern);
@@ -996,7 +995,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         throws SQLException
     {
         QueryBuilder queryBuilder =
-            new QueryBuilder(
+            createQueryBuilder(
                 "select * from sys_boot.jdbc_metadata.tables_view");
         queryBuilder.addExact("table_cat", catalog);
         queryBuilder.addPattern("table_schem", schemaPattern);
@@ -1013,12 +1012,23 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         return queryBuilder.execute();
     }
 
-    private Statement newDaemonStatement()
+    /** Creates a new QueryBuilder. */
+    protected QueryBuilder createQueryBuilder(String base)
+    {
+        return new QueryBuilder(base);
+    }
+
+    /**
+     * Executes a daemon query.
+     * Extensions should override this method to provide
+     * alternate daemon implementations.
+     */
+    protected ResultSet executeDaemonQuery(String query)
         throws SQLException
     {
         Statement stmt = connection.createStatement();
         daemonize(stmt);
-        return stmt;
+        return stmt.executeQuery(query);
     }
 
     private void daemonize(Statement stmt)
@@ -1032,7 +1042,8 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
     public ResultSet getSchemas()
         throws SQLException
     {
-        return newDaemonStatement().executeQuery("select * from sys_boot.jdbc_metadata.schemas_view "
+        return executeDaemonQuery(
+            "select * from sys_boot.jdbc_metadata.schemas_view "
             + "order by table_schem,table_catalog");
     }
 
@@ -1040,7 +1051,8 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
     public ResultSet getCatalogs()
         throws SQLException
     {
-        return newDaemonStatement().executeQuery("select * from sys_boot.jdbc_metadata.catalogs_view "
+        return executeDaemonQuery(
+            "select * from sys_boot.jdbc_metadata.catalogs_view "
             + "order by table_cat");
     }
 
@@ -1048,7 +1060,8 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
     public ResultSet getTableTypes()
         throws SQLException
     {
-        return newDaemonStatement().executeQuery("select * from sys_boot.jdbc_metadata.table_types_view "
+        return executeDaemonQuery(
+            "select * from sys_boot.jdbc_metadata.table_types_view "
             + "order by table_type");
     }
 
@@ -1061,7 +1074,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         throws SQLException
     {
         QueryBuilder queryBuilder =
-            new QueryBuilder(
+            createQueryBuilder(
                 "select * from sys_boot.jdbc_metadata.columns_view");
         queryBuilder.addExact("table_cat", catalog);
         queryBuilder.addPattern("table_schem", schemaPattern);
@@ -1123,7 +1136,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         throws SQLException
     {
         QueryBuilder queryBuilder =
-            new QueryBuilder(
+            createQueryBuilder(
                 "select * from sys_boot.jdbc_metadata.primary_keys_view");
         queryBuilder.addExact("table_cat", catalog);
         queryBuilder.addExact("table_schem", schema);
@@ -1170,7 +1183,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
     public ResultSet getTypeInfo()
         throws SQLException
     {
-        return newDaemonStatement().executeQuery(
+        return executeDaemonQuery(
             "select * from sys_boot.jdbc_metadata.type_info_view "
             + "order by data_type");
     }
@@ -1185,7 +1198,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         throws SQLException
     {
         QueryBuilder queryBuilder =
-            new QueryBuilder(
+            createQueryBuilder(
                 "select * from sys_boot.jdbc_metadata.index_info_view");
         queryBuilder.addExact("table_cat", catalog);
         queryBuilder.addExact("table_schem", schema);
@@ -1296,7 +1309,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         throws SQLException
     {
         QueryBuilder queryBuilder =
-            new QueryBuilder(
+            createQueryBuilder(
                 "select * from sys_boot.jdbc_metadata.udts_view");
         queryBuilder.addExact("type_cat", catalog);
         queryBuilder.addPattern("type_schem", schemaPattern);
@@ -1378,7 +1391,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         throws SQLException
     {
         QueryBuilder queryBuilder =
-            new QueryBuilder(
+            createQueryBuilder(
                 "select * from sys_boot.jdbc_metadata.attributes_view");
         queryBuilder.addExact("type_cat", catalog);
         queryBuilder.addPattern("type_schem", schemaPattern);
@@ -1430,12 +1443,12 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
     /**
      * Helper class for building up queries used by metadata calls.
      */
-    private class QueryBuilder
+    protected class QueryBuilder
     {
-        StringBuffer sql;
-        List values;
+        protected StringBuffer sql;
+        protected List values;
 
-        QueryBuilder(String base)
+        protected QueryBuilder(String base)
         {
             sql = new StringBuffer(base);
             values = new ArrayList();
@@ -1523,7 +1536,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
             sql.append(colList);
         }
 
-        ResultSet execute()
+        protected ResultSet execute()
             throws SQLException
         {
             PreparedStatement stmt =

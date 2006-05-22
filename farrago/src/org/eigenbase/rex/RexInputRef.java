@@ -51,6 +51,9 @@ import org.eigenbase.reltype.RelDataType;
  */
 public class RexInputRef extends RexSlot
 {
+    // array of common names, to reduce memory allocations
+    private static final String[] names = makeArray(32, "$");
+
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -66,7 +69,7 @@ public class RexInputRef extends RexSlot
         int index,
         RelDataType type)
     {
-        super("$" + index, index, type);
+        super(createName(index), index, type);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -84,6 +87,12 @@ public class RexInputRef extends RexSlot
     public RexNode accept(RexShuttle shuttle)
     {
         return shuttle.visitInputRef(this);
+    }
+
+    private static String createName(int index)
+    {
+        return index < names.length ? names[index] :
+            "$" + index;
     }
 }
 

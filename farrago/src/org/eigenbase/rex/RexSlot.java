@@ -68,6 +68,15 @@ public abstract class RexSlot extends RexVariable
     {
         return index;
     }
+
+    protected static String[] makeArray(int length, String prefix)
+    {
+        final String[] a = new String[length];
+        for (int i = 0; i < a.length; i++) {
+            a[i] = prefix + i;
+        }
+        return a;
+    }
 }
 
 // End RexSlot.java

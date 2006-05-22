@@ -163,10 +163,32 @@ public class FarragoRelImplementor extends JavaRelImplementor
     public FemExecutionStreamDef visitFennelChild(FennelRel rel)
     {
         scopeStack.add(0, new RelScope());
-        FemExecutionStreamDef streamDef = rel.toStreamDef(this);
+        FemExecutionStreamDef streamDef = toStreamDefImpl(rel);
         scopeStack.remove(0);
         registerRelStreamDef(streamDef, rel, null);
         return streamDef;
+    }
+
+    /**
+     * Converts a {@link FennelRel} to a {@link FemExecutionStreamDef},
+     * and prints context if anything goes wrong.
+     *
+     * <p>This method is final: derived classes should not add extra
+     * functionality.
+     *
+     * @param rel Relational expression
+     * @return Plan
+     */
+    protected final FemExecutionStreamDef toStreamDefImpl(FennelRel rel)
+    {
+        try {
+            return rel.toStreamDef(this);
+        } catch (Throwable e) {
+            throw Util.newInternal(
+                e,
+                "Error occurred while translating relational expression " +
+                rel + " to a plan");
+        }
     }
 
     /**

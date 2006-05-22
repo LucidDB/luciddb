@@ -817,6 +817,10 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("LOCALTIME", "TIME(0) NOT NULL"); //  with TZ ?
         checkExpFails("LOCALTIME(-1)",
             "Argument to function 'LOCALTIME' must be a positive integer literal");
+        checkExpFails("LOCALTIME(100000000000000)",
+            "(?s).*Numeric literal '100000000000000' out of range.*");
+        checkExpFails("LOCALTIME(4)",
+            "Argument to function 'LOCALTIME' must be a valid precision between '0' and '3'");
         checkExpFails("LOCALTIME('foo')",
             "(?s).*Cannot apply.*");
 
@@ -830,6 +834,10 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("LOCALTIMESTAMP", "TIMESTAMP(0) NOT NULL"); //  with TZ ?
         checkExpFails("LOCALTIMESTAMP(-1)",
             "Argument to function 'LOCALTIMESTAMP' must be a positive integer literal");
+        checkExpFails("LOCALTIMESTAMP(100000000000000)",
+            "(?s).*Numeric literal '100000000000000' out of range.*");
+        checkExpFails("LOCALTIMESTAMP(4)",
+            "Argument to function 'LOCALTIMESTAMP' must be a valid precision between '0' and '3'");
         checkExpFails("LOCALTIMESTAMP('foo')",
             "(?s).*Cannot apply.*");
 
@@ -856,6 +864,10 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("current_time", "TIME(0) NOT NULL"); //  with TZ ?
         checkExpFails("current_time(-1)",
             "Argument to function 'CURRENT_TIME' must be a positive integer literal");
+        checkExpFails("CURRENT_TIME(100000000000000)",
+            "(?s).*Numeric literal '100000000000000' out of range.*");
+        checkExpFails("CURRENT_TIME(4)",
+            "Argument to function 'CURRENT_TIME' must be a valid precision between '0' and '3'");
         checkExpFails("current_time('foo')",
             "(?s).*Cannot apply.*");
 
@@ -871,6 +883,10 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("CURRENT_TIMESTAMP(2)", "TIMESTAMP(2) NOT NULL"); //  with TZ ?
         checkExpFails("CURRENT_TIMESTAMP(-1)",
             "Argument to function 'CURRENT_TIMESTAMP' must be a positive integer literal");
+        checkExpFails("CURRENT_TIMESTAMP(100000000000000)",
+            "(?s).*Numeric literal '100000000000000' out of range.*");
+        checkExpFails("CURRENT_TIMESTAMP(4)",
+            "Argument to function 'CURRENT_TIMESTAMP' must be a valid precision between '0' and '3'");
         checkExpFails("CURRENT_TIMESTAMP('foo')",
             "(?s).*Cannot apply.*");
 

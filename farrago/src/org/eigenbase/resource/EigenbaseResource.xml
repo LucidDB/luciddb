@@ -458,6 +458,11 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>''{0}'' is not a valid boolean value</text>
 </exception>
 
+<exception id="130100" name="ArgumentMustBeValidPrecision">
+    <text>Argument to function ''{0}'' must be a valid precision between ''{1}'' and ''{2}''</text>
+</exception>
+
+
 <!--
 ======================================================================
 The exceptions below define Eigenbase features which can be
