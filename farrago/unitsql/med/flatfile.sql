@@ -5,16 +5,9 @@ create schema flatfile_schema;
 
 set schema 'flatfile_schema';
 
--- create wrapper for access to flatfile data
--- sys_file_wrapper has alread been allocated, but depending on a 
--- local data wrapper helps the test cleanup scripts
-create foreign data wrapper local_file_wrapper
-library 'class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper'
-language java;
-
 -- create a server for general use
 create server flatfile_server
-foreign data wrapper local_file_wrapper
+foreign data wrapper sys_file_wrapper
 options (
     directory 'unitsql/med/flatfiles/',
     file_extension 'csv',
@@ -23,7 +16,7 @@ options (
 
 -- create a server without headers (for detecting other errors)
 create server flatfile_server_noheader
-foreign data wrapper local_file_wrapper
+foreign data wrapper sys_file_wrapper
 options (
     directory 'unitsql/med/flatfiles/',
     file_extension 'csv',
@@ -78,7 +71,7 @@ select * from flatfile_missing;
 --     (the following column description is invalid)
 --
 create server flatfile_server_locked
-foreign data wrapper local_file_wrapper
+foreign data wrapper sys_file_wrapper
 options (
     directory 'unitsql/med/flatfiles/',
     file_extension 'csv',
@@ -102,7 +95,7 @@ select * from flatfile_locked;
 --          as a trick to pass the full path to foreign tables)
 --
 create server flatfile_server_badLineDelim
-foreign data wrapper local_file_wrapper
+foreign data wrapper sys_file_wrapper
 options (
     file_extension '',
     with_header 'no',
@@ -123,7 +116,7 @@ select * from flatfile_badLineDelim;
 --      (note that the delimiter does not occur in the file)
 --
 create server flatfile_server_badFieldDelim
-foreign data wrapper local_file_wrapper
+foreign data wrapper sys_file_wrapper
 options (
     file_extension 'csv',
     with_header 'no',
@@ -147,7 +140,7 @@ select * from flatfile_badFieldDelim;
 --     (note data file is assumed to have at least one 'G')
 --
 create server flatfile_server_incompleteColumn
-foreign data wrapper local_file_wrapper
+foreign data wrapper sys_file_wrapper
 options (
     file_extension 'csv',
     with_header 'no',
@@ -193,7 +186,7 @@ select * from flatfile_tooFewColumns;
 --          can be viewed in error log)
 --
 create server flatfile_server_rowTooLong
-foreign data wrapper local_file_wrapper
+foreign data wrapper sys_file_wrapper
 options (
     directory 'unitsql/med/flatfiles/',
     file_extension 'txt',
@@ -209,7 +202,7 @@ select * from flatfile_server_rowTooLong.BCP."longcol";
 -- 1.11 different escape and quote characters
 --
 create server flatfile_server_esc
-foreign data wrapper local_file_wrapper
+foreign data wrapper sys_file_wrapper
 options (
     directory 'unitsql/med/flatfiles/',
     file_extension 'esc',
@@ -229,7 +222,7 @@ select * from flatfile_server_esc.BCP."example" order by 3;
 -- 2.1 invalid parameters
 --
 create server flatfile_server_fixed
-foreign data wrapper local_file_wrapper
+foreign data wrapper sys_file_wrapper
 options (
     directory 'unitsql/med/flatfiles/',
     file_extension 'dat',
@@ -242,7 +235,7 @@ options (
 -- 2.2 valid definition
 --
 create server flatfile_server_fixed
-foreign data wrapper local_file_wrapper
+foreign data wrapper sys_file_wrapper
 options (
     directory 'unitsql/med/flatfiles/',
     file_extension 'dat',
@@ -285,7 +278,7 @@ select * from flatfile_server.SAMPLE."missing";
 -- 3.4 Test sampling of an empty file (no header)
 --
 create server flatfile_server_empty
-foreign data wrapper local_file_wrapper
+foreign data wrapper sys_file_wrapper
 options (
     directory 'unitsql/med/flatfiles/',
     file_extension 'txt',
@@ -320,7 +313,7 @@ select * from flatfile_server_empty.BCP."nulldata";
 -- 3.9 Select when BCP file is empty
 --
 create server flatfile_server_badbcp
-foreign data wrapper local_file_wrapper
+foreign data wrapper sys_file_wrapper
 options (
     directory 'unitsql/med/flatfiles/',
     control_file_extension 'bcp2',
@@ -358,7 +351,7 @@ into flatfile_schema;
 -- the directory contains an empty data file with no control file
 -- fails all imports
 create server flatfile_server_fail
-foreign data wrapper local_file_wrapper
+foreign data wrapper sys_file_wrapper
 options (
     directory 'unitsql/med/flatfiles/',
     file_extension 'fail',
@@ -385,7 +378,7 @@ create schema flatfiledir_schema;
 set schema 'flatfiledir_schema';
 
 create server flatfiledir_server
-foreign data wrapper local_file_wrapper
+foreign data wrapper sys_file_wrapper
 options (
     directory 'unitsql/med/flatfiles/',
     file_extension 'csv',

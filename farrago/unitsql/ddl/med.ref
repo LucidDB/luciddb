@@ -1,7 +1,8 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/ddl/med.sql#5 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/ddl/med.sql#6 $
 0: jdbc:farrago:> -- Test SQL/MED DDL
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- create a private wrapper for mdr (don't use the standard mdr wrapper)
+0: jdbc:farrago:> -- create a private wrapper for mdr (don't use the standard mdr wrapper
+0: jdbc:farrago:> -- because we're going to drop it)
 0: jdbc:farrago:> create foreign data wrapper test_mdr
 . . . . . . . . > library 'class net.sf.farrago.namespace.mdr.MedMdrForeignDataWrapper'
 . . . . . . . . > language java
@@ -407,12 +408,8 @@ Error: From line 1, column 20 to line 1, column 37: Table 'DEMO_IMPORT_SCHEMA.DE
 0: jdbc:farrago:> -- negative test for type_substitution option; hsqldb VARCHAR comes
 0: jdbc:farrago:> -- back as precision 0, which we don't accept
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create foreign data wrapper test_jdbc
-. . . . . . . . > library '${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'
-. . . . . . . . > language java;
-0: jdbc:farrago:> 
 0: jdbc:farrago:> create server hsqldb_nosub
-. . . . . . . . > foreign data wrapper test_jdbc
+. . . . . . . . > foreign data wrapper sys_jdbc
 . . . . . . . . > options(
 . . . . . . . . >     driver_class 'org.hsqldb.jdbcDriver',
 . . . . . . . . >     url 'jdbc:hsqldb:testcases/hsqldb/scott',

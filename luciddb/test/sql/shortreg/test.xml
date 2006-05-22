@@ -2,6 +2,14 @@
   <target name="shortreg">
     <test-suite name="shortreg">
 
+      <init-hook>
+        <test-suite name="init">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">
+            <test-suite-modifier value="shortreg"/>
+          </test-suite-call>
+        </test-suite>
+      </init-hook>
+
       <test-suite-call testfile="sanity.xml"/>
 
       <test name="compIdx">

@@ -318,12 +318,8 @@ drop table multicluster;
 --
 create table threeclusters(c0 int, c1 varchar(128), c2 char(2));
 
-create foreign data wrapper flatfile_foreign_wrapper
-library 'class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper'
-language java;
-
 create server flatfile_server
-foreign data wrapper flatfile_foreign_wrapper
+foreign data wrapper sys_file_wrapper
 options (
     with_header 'yes', 
     file_extension '',

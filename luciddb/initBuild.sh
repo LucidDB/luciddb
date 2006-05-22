@@ -20,10 +20,11 @@
 set -e
 
 usage() {
-    echo "Usage:  initBuild.sh [--with[out]-fennel] [--with[out]-optimization] [--with[out]-debug] [--without-farrago-build] [--without-fennel[-thirdparty]-build] [--with[out]-tests] [--with-nightly-tests]"
+    echo "Usage:  initBuild.sh [--with[out]-fennel] [--with[out]-optimization] [--with[out]-debug] [--without-farrago-build] [--without-fennel[-thirdparty]-build] [--with[out]-tests] [--with-nightly-tests] --without-dist-build"
 }
 
 without_farrago_build=false
+without_dist_build=false
 without_tests=true
 with_nightly_tests=false
 FARRAGO_FLAGS=""
@@ -36,6 +37,8 @@ while [ -n "$1" ]; do
     case $1 in
         --without-farrago-build|--skip-farrago-build) 
             without_farrago_build=true;;
+        --without-dist-build|--skip-dist-build) 
+            without_dist_build=true;;
         --with-tests)
             without_tests=false;
             FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
@@ -88,10 +91,14 @@ else
     ${run_ant} test
 fi
 
-cd ${luciddb_dir}/../farrago
-cp -f ./dist/ExampleRelease.properties ./dist/FarragoRelease.properties
-cd ${luciddb_dir}
-./distBuild.sh --without-init-build
+if $without_dist_build ; then
+    echo Skipping distribution build.
+else
+    cd ${luciddb_dir}/../farrago
+    cp -f ./dist/ExampleRelease.properties ./dist/FarragoRelease.properties
+    cd ${luciddb_dir}
+    ./distBuild.sh --without-init-build
+fi
 
 nightlylog_dir=${luciddb_dir}/nightlylog
 nightly_test_list="\

@@ -4,13 +4,8 @@
 -- force usage of Java calculator
 alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
 
--- create a private wrapper for mdr (don't use the standard mdr wrapper)
-create foreign data wrapper test_mdr
-library 'class net.sf.farrago.namespace.mdr.MedMdrForeignDataWrapper'
-language java;
-
 create server mof_repository
-foreign data wrapper test_mdr
+foreign data wrapper sys_mdr
 options(
     "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr',
     extent_name 'MOF', 

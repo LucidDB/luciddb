@@ -3,14 +3,13 @@
     <test-suite name="init">
 
       <init-hook>
-        <!-- Make sure engine is stopped before restoreCatalog. -->
+        <!-- Notify LucidDbTestHarness of start of test suite. -->
         <test-suite name="init">
-          <test name="shutdownEngine">
+          <test name="testSuiteInit">
             <junit testclass="com.lucidera.luciddb.test.LucidDbTestHarness" 
-              methodnames="shutdownEngine"/>
+              methodnames="testSuiteInit"/>
           </test>
         </test-suite>
-        <ant antfile="${open.dir}/luciddb/build.xml" target="restoreCatalog"/>
       </init-hook>
       
       <!-- anything else -->

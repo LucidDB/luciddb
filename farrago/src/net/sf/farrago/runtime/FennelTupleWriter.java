@@ -93,6 +93,10 @@ public abstract class FennelTupleWriter
             byteBuffer.position(newPosition);
         } catch (BufferOverflowException ex) {
             return false;
+        } catch (BufferUnderflowException ex) {
+            // NOTE jvs 19-May-2006:  We shouldn't need this case,
+            // but JRockit mistakenly throws underflow instead of overflow.
+            return false;
         } catch (IndexOutOfBoundsException ex) {
             return false;
         } catch (IllegalArgumentException ex) {

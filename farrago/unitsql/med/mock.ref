@@ -1,22 +1,14 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/med/mock.sql#5 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/med/mock.sql#6 $
 0: jdbc:farrago:> -- Test mock namespace plugin
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create foreign data wrapper mock_foreign_wrapper
-. . . . . . . . > library 'class net.sf.farrago.namespace.mock.MedMockForeignDataWrapper'
-. . . . . . . . > language java;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create local data wrapper mock_local_wrapper
-. . . . . . . . > library 'class net.sf.farrago.namespace.mock.MedMockLocalDataWrapper'
-. . . . . . . . > language java;
-0: jdbc:farrago:> 
 0: jdbc:farrago:> create server mock_foreign_server
-. . . . . . . . > foreign data wrapper mock_foreign_wrapper;
+. . . . . . . . > foreign data wrapper sys_mock_foreign;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create server mock_local_server
-. . . . . . . . > local data wrapper mock_local_wrapper;
+. . . . . . . . > local data wrapper sys_mock;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create server mock_foreign_metadata_server
-. . . . . . . . > foreign data wrapper mock_foreign_wrapper
+. . . . . . . . > foreign data wrapper sys_mock_foreign
 . . . . . . . . > options (
 . . . . . . . . > foreign_schema_name 'MOCK_SCHEMA', 
 . . . . . . . . > foreign_table_name 'MOCK_TABLE',
@@ -24,7 +16,7 @@
 . . . . . . . . > row_count '3');
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create server mock_foreign_dynamic_server
-. . . . . . . . > foreign data wrapper mock_foreign_wrapper
+. . . . . . . . > foreign data wrapper sys_mock_foreign
 . . . . . . . . > options (
 . . . . . . . . > foreign_schema_name 'MOCK_SCHEMA', 
 . . . . . . . . > foreign_table_name 'MOCK_TABLE',

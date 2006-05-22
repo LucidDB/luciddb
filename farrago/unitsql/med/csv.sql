@@ -1,13 +1,8 @@
 -- $Id$
 -- Test SQL/MED data access to CSV files
 
--- create a private wrapper for jdbc (don't use the standard jdbc wrapper)
-create foreign data wrapper test_jdbc
-library 'plugin/FarragoMedJdbc.jar'
-language java;
-
 create server csv_server
-foreign data wrapper test_jdbc
+foreign data wrapper sys_jdbc
 options(
     driver_class 'org.relique.jdbc.csv.CsvDriver',
     url 'jdbc:relique:csv:unitsql/med',
@@ -45,12 +40,12 @@ into csv_schema;
 
 -- should fail due to missing url
 create server csv_server_missing_url
-foreign data wrapper test_jdbc
+foreign data wrapper sys_jdbc
 options(
     driver_class 'org.relique.jdbc.csv.CsvDriver');
 
 create server csv_server_missing_schema
-foreign data wrapper test_jdbc
+foreign data wrapper sys_jdbc
 options(
     driver_class 'org.relique.jdbc.csv.CsvDriver',
     url 'jdbc:relique:csv:unitsql/med');

@@ -1,20 +1,13 @@
-0: jdbc:farrago:> -- $Id$
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/med/flatfile.sql#15 $
 0: jdbc:farrago:> -- Test flatfile namespace plugin
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema flatfile_schema;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'flatfile_schema';
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- create wrapper for access to flatfile data
-0: jdbc:farrago:> -- sys_file_wrapper has alread been allocated, but depending on a 
-0: jdbc:farrago:> -- local data wrapper helps the test cleanup scripts
-0: jdbc:farrago:> create foreign data wrapper local_file_wrapper
-. . . . . . . . > library 'class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper'
-. . . . . . . . > language java;
-0: jdbc:farrago:> 
 0: jdbc:farrago:> -- create a server for general use
 0: jdbc:farrago:> create server flatfile_server
-. . . . . . . . > foreign data wrapper local_file_wrapper
+. . . . . . . . > foreign data wrapper sys_file_wrapper
 . . . . . . . . > options (
 . . . . . . . . >     directory 'unitsql/med/flatfiles/',
 . . . . . . . . >     file_extension 'csv',
@@ -23,7 +16,7 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- create a server without headers (for detecting other errors)
 0: jdbc:farrago:> create server flatfile_server_noheader
-. . . . . . . . > foreign data wrapper local_file_wrapper
+. . . . . . . . > foreign data wrapper sys_file_wrapper
 . . . . . . . . > options (
 . . . . . . . . >     directory 'unitsql/med/flatfiles/',
 . . . . . . . . >     file_extension 'csv',
@@ -99,7 +92,7 @@ Error: Could not read data file unitsql/med/flatfiles/missing.csv (state=,code=0
 0: jdbc:farrago:> --     (the following column description is invalid)
 0: jdbc:farrago:> --
 0: jdbc:farrago:> create server flatfile_server_locked
-. . . . . . . . > foreign data wrapper local_file_wrapper
+. . . . . . . . > foreign data wrapper sys_file_wrapper
 . . . . . . . . > options (
 . . . . . . . . >     directory 'unitsql/med/flatfiles/',
 . . . . . . . . >     file_extension 'csv',
@@ -124,7 +117,7 @@ Error: Could not write log file unitsql/med/flatfiles/locked (state=,code=0)
 0: jdbc:farrago:> --          as a trick to pass the full path to foreign tables)
 0: jdbc:farrago:> --
 0: jdbc:farrago:> create server flatfile_server_badLineDelim
-. . . . . . . . > foreign data wrapper local_file_wrapper
+. . . . . . . . > foreign data wrapper sys_file_wrapper
 . . . . . . . . > options (
 . . . . . . . . >     file_extension '',
 . . . . . . . . >     with_header 'no',
@@ -146,7 +139,7 @@ Error: Data file unitsql/med/flatfiles/noheader.csv has no row delimiter (state=
 0: jdbc:farrago:> --      (note that the delimiter does not occur in the file)
 0: jdbc:farrago:> --
 0: jdbc:farrago:> create server flatfile_server_badFieldDelim
-. . . . . . . . > foreign data wrapper local_file_wrapper
+. . . . . . . . > foreign data wrapper sys_file_wrapper
 . . . . . . . . > options (
 . . . . . . . . >     file_extension 'csv',
 . . . . . . . . >     with_header 'no',
@@ -171,7 +164,7 @@ Error: Read no rows from file unitsql/med/flatfiles/noheader.csv; last error was
 0: jdbc:farrago:> --     (note data file is assumed to have at least one 'G')
 0: jdbc:farrago:> --
 0: jdbc:farrago:> create server flatfile_server_incompleteColumn
-. . . . . . . . > foreign data wrapper local_file_wrapper
+. . . . . . . . > foreign data wrapper sys_file_wrapper
 . . . . . . . . > options (
 . . . . . . . . >     file_extension 'csv',
 . . . . . . . . >     with_header 'no',
@@ -220,7 +213,7 @@ Error: Read no rows from file unitsql/med/flatfiles/example.csv; last error was:
 0: jdbc:farrago:> --          can be viewed in error log)
 0: jdbc:farrago:> --
 0: jdbc:farrago:> create server flatfile_server_rowTooLong
-. . . . . . . . > foreign data wrapper local_file_wrapper
+. . . . . . . . > foreign data wrapper sys_file_wrapper
 . . . . . . . . > options (
 . . . . . . . . >     directory 'unitsql/med/flatfiles/',
 . . . . . . . . >     file_extension 'txt',
@@ -249,7 +242,7 @@ Error: Read no rows from file unitsql/med/flatfiles/example.csv; last error was:
 0: jdbc:farrago:> -- 1.11 different escape and quote characters
 0: jdbc:farrago:> --
 0: jdbc:farrago:> create server flatfile_server_esc
-. . . . . . . . > foreign data wrapper local_file_wrapper
+. . . . . . . . > foreign data wrapper sys_file_wrapper
 . . . . . . . . > options (
 . . . . . . . . >     directory 'unitsql/med/flatfiles/',
 . . . . . . . . >     file_extension 'esc',
@@ -279,7 +272,7 @@ Error: Read no rows from file unitsql/med/flatfiles/example.csv; last error was:
 0: jdbc:farrago:> -- 2.1 invalid parameters
 0: jdbc:farrago:> --
 0: jdbc:farrago:> create server flatfile_server_fixed
-. . . . . . . . > foreign data wrapper local_file_wrapper
+. . . . . . . . > foreign data wrapper sys_file_wrapper
 . . . . . . . . > options (
 . . . . . . . . >     directory 'unitsql/med/flatfiles/',
 . . . . . . . . >     file_extension 'dat',
@@ -293,7 +286,7 @@ Error: Fixed position parsing, enabled by setting an empty field delimiter, requ
 0: jdbc:farrago:> -- 2.2 valid definition
 0: jdbc:farrago:> --
 0: jdbc:farrago:> create server flatfile_server_fixed
-. . . . . . . . > foreign data wrapper local_file_wrapper
+. . . . . . . . > foreign data wrapper sys_file_wrapper
 . . . . . . . . > options (
 . . . . . . . . >     directory 'unitsql/med/flatfiles/',
 . . . . . . . . >     file_extension 'dat',
@@ -362,7 +355,7 @@ Error: From line 1, column 15 to line 1, column 29: Table 'FLATFILE_SERVER.SAMPL
 0: jdbc:farrago:> -- 3.4 Test sampling of an empty file (no header)
 0: jdbc:farrago:> --
 0: jdbc:farrago:> create server flatfile_server_empty
-. . . . . . . . > foreign data wrapper local_file_wrapper
+. . . . . . . . > foreign data wrapper sys_file_wrapper
 . . . . . . . . > options (
 . . . . . . . . >     directory 'unitsql/med/flatfiles/',
 . . . . . . . . >     file_extension 'txt',
@@ -408,7 +401,7 @@ Error: Cannot derive column types for file unitsql/med/flatfiles/nullheader.txt 
 0: jdbc:farrago:> -- 3.9 Select when BCP file is empty
 0: jdbc:farrago:> --
 0: jdbc:farrago:> create server flatfile_server_badbcp
-. . . . . . . . > foreign data wrapper local_file_wrapper
+. . . . . . . . > foreign data wrapper sys_file_wrapper
 . . . . . . . . > options (
 . . . . . . . . >     directory 'unitsql/med/flatfiles/',
 . . . . . . . . >     control_file_extension 'bcp2',
@@ -452,7 +445,7 @@ Error: Unknown foreign schema "TESTDATA" (state=,code=0)
 0: jdbc:farrago:> -- the directory contains an empty data file with no control file
 0: jdbc:farrago:> -- fails all imports
 0: jdbc:farrago:> create server flatfile_server_fail
-. . . . . . . . > foreign data wrapper local_file_wrapper
+. . . . . . . . > foreign data wrapper sys_file_wrapper
 . . . . . . . . > options (
 . . . . . . . . >     directory 'unitsql/med/flatfiles/',
 . . . . . . . . >     file_extension 'fail',
@@ -491,7 +484,7 @@ Error: From line 1, column 15 to line 1, column 29: Table 'FLATFILE_SCHEMA.examp
 0: jdbc:farrago:> set schema 'flatfiledir_schema';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create server flatfiledir_server
-. . . . . . . . > foreign data wrapper local_file_wrapper
+. . . . . . . . > foreign data wrapper sys_file_wrapper
 . . . . . . . . > options (
 . . . . . . . . >     directory 'unitsql/med/flatfiles/',
 . . . . . . . . >     file_extension 'csv',
