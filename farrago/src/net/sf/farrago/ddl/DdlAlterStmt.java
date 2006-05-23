@@ -22,8 +22,10 @@
 */
 package net.sf.farrago.ddl;
 
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 
 
@@ -35,8 +37,28 @@ import net.sf.farrago.session.*;
  * @author Stephan Zuercher
  * @version $Id$
  */
-public class DdlAlterStmt extends DdlStmt
+public abstract class DdlAlterStmt extends DdlStmt
 {
+    private enum ActionType {
+        ALTER_IDENTITY
+    }
+
+    private ActionType action;
+    private CwmColumn column;
+    private FarragoSequenceOptions identityOptions;
+
+
+    public void setColumn(CwmColumn column)
+    {
+        this.column = column;
+    }
+
+    public void alterIdentityColumn(FarragoSequenceOptions options)
+    {
+        action = ActionType.ALTER_IDENTITY;
+        identityOptions = options;
+    }
+
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -60,7 +82,20 @@ public class DdlAlterStmt extends DdlStmt
     // implement DdlStmt
     public void preValidate(FarragoSessionDdlValidator ddlValidator)
     {
+        // Use a reentrant session to simplify cleanup.
+        FarragoSession session = ddlValidator.newReentrantSession();
+        try {
+            execute(ddlValidator, session);
+        } catch (Throwable ex) {
+            throw FarragoResource.instance().ValidatorAlterFailed.ex(ex);
+        } finally {
+            ddlValidator.releaseReentrantSession(session);
+        }
     }
+
+    protected abstract void execute(
+        FarragoSessionDdlValidator ddlValidator,
+        FarragoSession session);
 }
 
 

@@ -971,6 +971,15 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
             SqlTypeStrategies.otcMultiset,
             SqlFunctionCategory.System);
 
+     /**
+      * The sequence next value function:
+      * <code>NEXT VALUE FOR sequence</code>
+      */
+     public static final SqlFunction nextValueFunc =
+         new SqlFunction("NEXT_VALUE", SqlKind.Function,
+             SqlTypeStrategies.rtiBigint, null,
+             SqlTypeStrategies.otcCharString,
+             SqlFunctionCategory.System);
 }
 
 // End SqlStdOperatorTable.java

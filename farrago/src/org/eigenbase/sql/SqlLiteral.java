@@ -444,6 +444,25 @@ public class SqlLiteral extends SqlNode
         }
     }
 
+    public long longValue()
+    {
+        switch (typeName.getOrdinal()) {
+        case SqlTypeName.Decimal_ordinal:
+        case SqlTypeName.Double_ordinal:
+            BigDecimal bd = (BigDecimal) value;
+            try {
+                return bd.longValueExact();
+            } catch (ArithmeticException e) {
+                throw SqlUtil.newContextException(
+                    getParserPosition(),
+                    EigenbaseResource.instance().NumberLiteralOutOfRange.ex(
+                        bd.toString()));
+            }
+        default:
+            throw typeName.unexpected();
+        }
+    }
+
     public String getStringValue()
     {
         return ((NlsString) value).getValue();

@@ -70,6 +70,8 @@ public abstract class FarragoReposImpl extends FarragoMetadataFactoryImpl
 
     private JmiModelView modelView;
 
+    private Map<String, FarragoSequenceAccessor> sequenceMap;
+
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -79,6 +81,7 @@ public abstract class FarragoReposImpl extends FarragoMetadataFactoryImpl
         FarragoAllocationOwner owner)
     {
         owner.addAllocation(this);
+        sequenceMap = new HashMap<String, FarragoSequenceAccessor>();
     }
 
     // TODO jvs 30-Nov-2005:  rename these methods; initGraph initializes
@@ -396,6 +399,21 @@ public abstract class FarragoReposImpl extends FarragoMetadataFactoryImpl
             return (FarragoMetadataFactory) this;
         }
         throw Util.newInternal("Unknown metadata factory '" + prefix + "'");
+    }
+    
+    public FarragoSequenceAccessor getSequenceAccessor(
+        String mofId)
+    {
+        synchronized(sequenceMap) {
+            FarragoSequenceAccessor sequence = sequenceMap.get(mofId);
+            if (sequence != null) {
+                return sequence;
+            }
+            sequence = new FarragoSequenceAccessor(this, mofId);
+            allocations.addAllocation(sequence);
+            sequenceMap.put(mofId, sequence);
+            return sequence;
+        }
     }
 }
 

@@ -113,7 +113,7 @@ public class DdlAnalyzeStmt extends DdlStmt
         try {
             analyzeTable(ddlValidator, session);
         } catch (Throwable ex) {
-            throw FarragoResource.instance().ValidatorSetStmtInvalid.ex(ex);
+            throw FarragoResource.instance().ValidatorAnalyzeFailed.ex(ex);
         } finally {
             ddlValidator.releaseReentrantSession(session);
         }
@@ -159,7 +159,7 @@ public class DdlAnalyzeStmt extends DdlStmt
                 femColumnList.add((FemAbstractColumn) column);
             }
         } catch (ClassCastException e) {
-            throw FarragoResource.instance().ValidatorAnalyzeSupport.ex(
+            throw FarragoResource.instance().ValidatorAnalyzeNotSupported.ex(
                 femTable.getName());
         }
 
