@@ -63,6 +63,7 @@ public class SqlTypeName extends EnumeratedValues.SerializableValue
     public static final int MIN_JDBC_TYPE = Types.BIT;
     public static final int MAX_JDBC_TYPE = Types.REF;
 
+    public static final int MAX_DATETIME_PRECISION = 3;    
     public static final int MAX_NUMERIC_PRECISION = 19;
     public static final int MAX_NUMERIC_SCALE = 19;
 

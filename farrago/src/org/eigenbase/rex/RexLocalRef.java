@@ -34,6 +34,9 @@ import org.eigenbase.reltype.RelDataType;
  */
 public class RexLocalRef extends RexSlot
 {
+    // array of common names, to reduce memory allocations
+    private static final String[] names = makeArray(32, "$t");
+
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -49,7 +52,7 @@ public class RexLocalRef extends RexSlot
         int index,
         RelDataType type)
     {
-        super("$t" + index, index, type);
+        super(createName(index), index, type);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -67,6 +70,13 @@ public class RexLocalRef extends RexSlot
     public RexNode accept(RexShuttle shuttle)
     {
         return shuttle.visitLocalRef(this);
+    }
+
+    private static String createName(int index)
+    {
+        return index < names.length ?
+            names[index] :
+            "$t" + index;
     }
 }
 

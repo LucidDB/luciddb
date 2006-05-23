@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/ddl/datetime.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/datetime.sql#3 $
 0: jdbc:farrago:> -- test datetime ddl.
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema tempo;
@@ -38,6 +38,38 @@
 | COL1  | DATECOL  | TIMECOL  | TIMESTAMPCOL  |
 +-------+----------+----------+---------------+
 +-------+----------+----------+---------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- Test precision
+0: jdbc:farrago:> -- TODO: Add tests we precision supported
+0: jdbc:farrago:> --create table time3(
+0: jdbc:farrago:> --    timecol time(3) not null primary key);
+0: jdbc:farrago:> --create table timestamp3(
+0: jdbc:farrago:> --    timestampcol timestamp(3) not null primary key);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- Error cases
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- Should give error, negative precision not allowed
+0: jdbc:farrago:> create table timeneg(
+. . . . . . . . >     timecol time(-1) not null primary key);
+Error: org.eigenbase.sql.parser.SqlParseException: Encountered "-" at line 1, column 40.
+Was expecting:
+    <UNSIGNED_INTEGER_LITERAL> ... (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table timestampneg(
+. . . . . . . . >     timestampcol timestamp(-1) not null primary key);
+Error: org.eigenbase.sql.parser.SqlParseException: Encountered "-" at line 1, column 55.
+Was expecting:
+    <UNSIGNED_INTEGER_LITERAL> ... (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- Should give error, precision exceeds maximum
+0: jdbc:farrago:> create table time100(
+. . . . . . . . >     timecol time(100) not null primary key);
+Error: DDL validation error near line 1, column 27: Precision 100 exceeds maximum of 0 in definition of column "TIMECOL" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table timestamp100(
+. . . . . . . . >     timestampcol timestamp(100) not null primary key);
+Error: DDL validation error near line 1, column 32: Precision 100 exceeds maximum of 0 in definition of column "TIMESTAMPCOL" (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

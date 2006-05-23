@@ -29,3 +29,27 @@ delete from datetime1;
 
 select * from datetime1;
 
+
+-- Test precision
+-- TODO: Add tests we precision supported
+--create table time3(
+--    timecol time(3) not null primary key);
+--create table timestamp3(
+--    timestampcol timestamp(3) not null primary key);
+
+-- Error cases
+
+-- Should give error, negative precision not allowed
+create table timeneg(
+    timecol time(-1) not null primary key);
+
+create table timestampneg(
+    timestampcol timestamp(-1) not null primary key);
+
+-- Should give error, precision exceeds maximum
+create table time100(
+    timecol time(100) not null primary key);
+
+create table timestamp100(
+    timestampcol timestamp(100) not null primary key);
+
