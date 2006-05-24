@@ -629,6 +629,14 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
     }
 
     /**
+     * @return FarragoRepos for use by extension projects
+     */
+    protected FarragoRepos getRepos()
+    {
+        return repos;
+    }
+    
+    /**
      * Called when a nullable value is cast to a NOT NULL type.
      *
      * @param targetName target expression
