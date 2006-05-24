@@ -19,7 +19,7 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/bench/gen/${foreign.db}/importschema.sql"/>
       </test>
 
-      <test name="benchload" requiresSuccess="creschema">
+      <test name="benchload" requiresSuccess="importschema">
         <junit-sql file="${open.dir}/luciddb/test/sql/bench/gen/${foreign.db}/benchload.sql"/>
       </test>
 

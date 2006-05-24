@@ -1,0 +1,41 @@
+0: jdbc:luciddb:> -- analyze tables
+0: jdbc:luciddb:> set schema 'foodmart';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> analyze table "sales_fact_1997" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "sales_fact_1998" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "sales_fact_dec_1998" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "inventory_fact_1997" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "inventory_fact_1998" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "agg_pl_01_sales_fact_1997" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "agg_ll_01_sales_fact_1997" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "agg_l_03_sales_fact_1997" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "agg_l_04_sales_fact_1997" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "agg_l_05_sales_fact_1997" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "agg_c_10_sales_fact_1997" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "agg_c_14_sales_fact_1997" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "agg_lc_100_sales_fact_1997" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "agg_c_special_sales_fact_1997" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "agg_g_ms_pcal_sales_fact_1997" compute statistics for all columns;
+Error: DDL validation error near line 1, column 15: Reference to unknown table "agg_g_ms_pcal_sales_fact_1997" (state=,code=0)
+0: jdbc:luciddb:> analyze table "currency" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "account" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "category" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "customer" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "days" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "department" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "employee" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "employee_closure" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "expense_fact" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "position" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "product" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "product_class" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "promotion" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "region" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "reserve_employee" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "salary" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "store" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "store_ragged" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "time_by_day" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "warehouse" compute statistics for all columns;
+0: jdbc:luciddb:> analyze table "warehouse_class" compute statistics for all columns;
+0: jdbc:luciddb:> !quit

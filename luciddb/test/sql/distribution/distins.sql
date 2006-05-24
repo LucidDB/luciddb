@@ -77,6 +77,8 @@ INSERT INTO DISTRIBUTION_100 (K100, K100SQUARE, KSEQ, KSEQSQUARE)
               C1, dist.eq2(C1, 50)
        FROM ff_schema.BENCH100_SOURCE;
 
+analyze table distribution_100 compute statistics for all columns;
+
 CREATE FOREIGN TABLE BENCH10K_SOURCE (
 C1 INTEGER,
 C2 INTEGER,
@@ -114,6 +116,8 @@ INSERT INTO DISTRIBUTION_10K (K10K, K10KSQUARE, KSEQ, KSEQSQUARE)
       SELECT C10K, dist.eq1(C10K, 5000),
              C1, dist.eq2(C1, 5000)
       FROM BENCH10K_SOURCE;
+
+analyze table distribution_10k compute statistics for all columns;
 
 CREATE FOREIGN TABLE BENCH100K_SOURCE (
 C1 INTEGER,
@@ -153,6 +157,8 @@ INSERT INTO DISTRIBUTION_100K (K100K, K100KSQUARE, KSEQ, KSEQSQUARE)
              C1, dist.eq2(C1, 50000)
       FROM BENCH100K_SOURCE;
 
+analyze table distribution_100k compute statistics for all columns;
+
 CREATE FOREIGN TABLE BENCH1M_SOURCE (
 C1 INTEGER,
 C2 INTEGER,
@@ -190,6 +196,8 @@ INSERT INTO DISTRIBUTION_1M (K500K, K500KSQUARE, KSEQ, KSEQSQUARE)
       SELECT C500K, dist.eq3(C500K, 250000),
              C1, dist.eq4(C1)
       FROM BENCH1M_SOURCE;
+
+analyze table distribution_1m compute statistics for all columns;
 
 -- drop eq functions here
 drop routine dist.eq1;

@@ -1,0 +1,10 @@
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> analyze table EMP estimate statistics for all columns SAMPLE 100 PERCENT;
+0: jdbc:luciddb:> analyze table PRODUCTS estimate statistics for all columns SAMPLE 100 PERCENT;
+0: jdbc:luciddb:> analyze table SALES estimate statistics for all columns SAMPLE 100 PERCENT;
+0: jdbc:luciddb:> analyze table CUSTOMERS estimate statistics for all columns SAMPLE 100 PERCENT;
+0: jdbc:luciddb:> analyze table LOCATION estimate statistics for all columns  SAMPLE 100 PERCENT;
+0: jdbc:luciddb:> analyze table DEPT estimate statistics for all columns   SAMPLE 100 PERCENT;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

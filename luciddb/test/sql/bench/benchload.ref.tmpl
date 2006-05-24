@@ -71,4 +71,8 @@
 . . . . . . . . > SELECT "kseq","k2","k4","k5","k10","k25","k100","k1k","k10k","k40k","k100k","k250k","k500k"
 . . . . . . . . > FROM @name_prefix@_schema."bench1M";
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> analyze table bench10k compute statistics for all columns;
+0: jdbc:luciddb:> analyze table bench100k compute statistics for all columns;
+0: jdbc:luciddb:> analyze table bench1m compute statistics for all columns;
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

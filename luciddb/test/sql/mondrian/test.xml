@@ -24,23 +24,28 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/gen/sqlserver/load.sql"/>
       </test>
 
-      <test name="query-getcardinality" nameOverride="true" 
+      <test name="analyzeTables" nameOverride="true" 
         requiresSuccess="loadfoodmart">
+        <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/gen/sqlserver/analyze.sql"/>
+      </test>
+
+      <test name="query-getcardinality" nameOverride="true" 
+        requiresSuccess="analyzeTables">
         <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/gen/sqlserver/getcardinality.sql"/>
       </test>
 
       <test name="query-segmentload" nameOverride="true" 
-        requiresSuccess="loadfoodmart">
+        requiresSuccess="analyzeTables">
         <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/gen/sqlserver/segmentload.sql"/>
       </test>
 
       <test name="query-readtuples" nameOverride="true" 
-        requiresSuccess="loadfoodmart">
+        requiresSuccess="analyzeTables">
         <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/gen/sqlserver/readtuples.sql"/>
       </test>
 
       <test name="query-getmemberchildren" nameOverride="true" 
-        requiresSuccess="loadfoodmart">
+        requiresSuccess="analyzeTables">
         <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/gen/sqlserver/getmemberchildren.sql"/>
       </test>
 

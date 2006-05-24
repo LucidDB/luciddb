@@ -14,31 +14,37 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/gen/${foreign.db}/creschema.sql"/>
       </test>
 
-      <test name="locationload">
+      <test name="locationload" requiresSuccess="creschema">
         <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/gen/${foreign.db}/locationload.sql"/>
       </test>
 
-      <test name="deptload">
+      <test name="deptload" requiresSuccess="creschema">
         <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/gen/${foreign.db}/deptload.sql"/>
       </test>
 
-      <test name="empload">
+      <test name="empload" requiresSuccess="creschema">
         <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/gen/${foreign.db}/empload.sql"/>
       </test>
 
-      <test name="customersload">
+      <test name="customersload" requiresSuccess="creschema">
         <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/gen/${foreign.db}/customersload.sql"/>
       </test>
 
-      <test name="productsload">
+      <test name="productsload" requiresSuccess="creschema">
         <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/gen/${foreign.db}/productsload.sql"/>
       </test>
 
-      <test name="salesload">
+      <test name="salesload" requiresSuccess="creschema">
         <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/gen/${foreign.db}/salesload.sql"/>
       </test>
 
-      <test name="joinEqSanity" requiresRun="salesload">
+      <test name="analyzeTables" 
+        requiresRun="locationload,deptload,empload,customersload,productsload,
+        salesload">
+        <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/gen/${foreign.db}/analyze.sql"/>
+      </test>
+
+      <test name="joinEqSanity" requiresRun="locationload,deptload,empload">
         <junit-sql file="${open.dir}/luciddb/test/sql/shortreg/gen/${foreign.db}/joinEqSanity.sql"/>
       </test>
 

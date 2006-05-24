@@ -55,4 +55,6 @@
 . . . . . . . . > FROM ff_schema.BENCH_SOURCE_100
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> analyze table bench100 compute statistics for all columns;
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

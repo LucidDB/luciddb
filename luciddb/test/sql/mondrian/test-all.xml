@@ -2,6 +2,14 @@
   <target name="mondrian">
     <test-suite name="mondrian-all">
 
+      <init-hook>
+        <test-suite name="init">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">
+            <test-suite-modifier value="mondrian-all"/>
+          </test-suite-call>
+        </test-suite>
+      </init-hook>
+
       <test-suite-call testfile="test.xml"/>
 
       <test name="query-shabang" nameOverride="true"> 
@@ -11,6 +19,14 @@
       <test name="query-frg108" nameOverride="true">
         <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/gen/sqlserver/frg108.sql"/>
       </test>
+
+      <cleanup-hook>
+        <test-suite name="cleanup">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tdone.xml">
+            <test-suite-modifier value="mondrian-all"/>
+          </test-suite-call>
+        </test-suite>
+      </cleanup-hook>
 
     </test-suite>
   </target>

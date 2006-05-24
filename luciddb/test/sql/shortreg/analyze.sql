@@ -1,3 +1,5 @@
+set schema 's';
+
 analyze table EMP estimate statistics for all columns SAMPLE 100 PERCENT;
 analyze table PRODUCTS estimate statistics for all columns SAMPLE 100 PERCENT;
 analyze table SALES estimate statistics for all columns SAMPLE 100 PERCENT;
