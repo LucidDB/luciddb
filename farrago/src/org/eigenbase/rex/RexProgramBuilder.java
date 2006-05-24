@@ -771,6 +771,14 @@ public class RexProgramBuilder
         return inputRowType;
     }
 
+    /**
+     * Returns the list of project expressions.
+     */
+    public List<RexLocalRef> getProjectList()
+    {
+        return projectRefList;
+    }
+
     private abstract class RegisterShuttle extends RexShuttle
     {
         public RexNode visitCall(RexCall call)
@@ -830,8 +838,11 @@ public class RexProgramBuilder
             if (valid) {
                 // The expression should already be valid. Check that its
                 // index is within bounds.
-                assert index >= 0;
-                assert index < inputRowType.getFieldCount();
+                if (index < 0 || index >= inputRowType.getFieldCount()) {
+                    assert false :
+                        "RexInputRef index " + index + " out of range 0.." +
+                        (inputRowType.getFieldCount() - 1);
+                }
                 // Check that the type is consistent with the referenced
                 // field. If it is an object type, the rules are different, so
                 // skip the check.
