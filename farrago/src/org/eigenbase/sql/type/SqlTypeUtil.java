@@ -25,6 +25,7 @@ package org.eigenbase.sql.type;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.Util;
+import org.eigenbase.util14.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.parser.SqlParserPos;
@@ -581,6 +582,52 @@ public abstract class SqlTypeUtil
 
         default:
             return 0;
+        }
+    }
+
+    /**
+     * Determines the minimum unscaled value of a numeric type
+     * 
+     * @param type a numeric type
+     */
+    public static long getMinValue(RelDataType type)
+    {
+        SqlTypeName typeName = type.getSqlTypeName();
+        switch(typeName.getOrdinal()) {
+        case SqlTypeName.Tinyint_ordinal:
+            return Byte.MIN_VALUE;
+        case SqlTypeName.Smallint_ordinal:
+            return Short.MIN_VALUE;
+        case SqlTypeName.Integer_ordinal:
+            return Integer.MIN_VALUE;
+        case SqlTypeName.Bigint_ordinal:
+        case SqlTypeName.Decimal_ordinal:
+            return NumberUtil.getMinUnscaled(type.getPrecision()).longValue();
+        default:
+            throw Util.newInternal("getMinValue(" + typeName + ")");
+        }
+    }
+
+    /**
+     * Determines the maximum unscaled value of a numeric type
+     * 
+     * @param type a numeric type
+     */
+    public static long getMaxValue(RelDataType type)
+    {
+        SqlTypeName typeName = type.getSqlTypeName();
+        switch(typeName.getOrdinal()) {
+        case SqlTypeName.Tinyint_ordinal:
+            return Byte.MAX_VALUE;
+        case SqlTypeName.Smallint_ordinal:
+            return Short.MAX_VALUE;
+        case SqlTypeName.Integer_ordinal:
+            return Integer.MAX_VALUE;
+        case SqlTypeName.Bigint_ordinal:
+        case SqlTypeName.Decimal_ordinal:
+            return NumberUtil.getMaxUnscaled(type.getPrecision()).longValue();
+        default:
+            throw Util.newInternal("getMaxValue(" + typeName + ")");
         }
     }
 

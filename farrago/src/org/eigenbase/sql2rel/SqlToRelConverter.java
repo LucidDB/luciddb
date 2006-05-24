@@ -1373,6 +1373,11 @@ public class SqlToRelConverter
         // that were not supplied in the statement
         for (int i = 0; i < expCount; ++i) {
             if (sourceExps[i] != null) {
+                if (defaultValueFactory.isGeneratedAlways(targetTable,i)) {
+                    // TODO: throw a proper exception
+                    throw Util.needToImplement(
+                        "insert value into field which is always generated");
+                }
                 continue;
             }
 
@@ -2258,6 +2263,13 @@ public class SqlToRelConverter
      */
     class NullDefaultValueFactory implements DefaultValueFactory
     {
+        public boolean isGeneratedAlways(
+            RelOptTable table,
+            int iColumn)
+        {
+            return false;
+        }
+
         public RexNode newColumnDefaultValue(
             RelOptTable table,
             int iColumn)

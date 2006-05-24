@@ -179,6 +179,10 @@
 <text>Scale {0,number,#} exceeds maximum of {1,number,#} in definition of {2}</text>
 </exception>
 
+<exception id="420111" name="ValidatorScaleMustBeZero">
+<text>Scale must be zero in definition of {0}</text>
+</exception>
+
 <exception id="420120" name="ValidatorUnknownObject"
     className="org.eigenbase.sql.validate.SqlValidatorException">
 <text>Reference to unknown {0}</text>
@@ -576,9 +580,46 @@ column type family is {1} but default value type family is {2}</text>
 <text>Cannot drop {0} because it is currently in use by a statement</text>
 </exception>
 
-<exception id="420980" name="ValidatorAnalyzeSupport">
+<exception id="420990" name="ValidatorAnalyzeFailed">
+<text>Unable to execute ANALZYE statement</text>
+</exception>
+
+<exception id="420991" name="ValidatorAnalyzeNotSupported">
 <text>Cannot analyze {0} because analysis is not supported for objects of that type</text>
 </exception>
+
+<exception id="421000" name="ValidatorDuplicateSequenceOption">
+<text>Sequence option {0} cannot be assigned multiple times in definition of {1}</text>
+</exception>
+
+<exception id="421010" name="ValidatorInexactSequenceType">
+<text>Exact numeric type required for sequence in definition of {0}</text>
+</exception>
+
+<exception id="421020" name="ValidatorZeroSequenceIncrement">
+<text>Increment is required to be nonzero in definition of {0}</text>
+</exception>
+
+<exception id="421030" name="ValidatorMultipleTableSequences">
+<text>Multiple identity columns are specified in definition of {0}</text>
+</exception>
+
+<exception id="421040" name="ValidatorInvalidSequenceStart">
+<text>Sequence start {0,number,#} is required to be between min value {1,number,#} and max value {2,number,#}</text>
+</exception>
+
+<exception id="421050" name="ValidatorInvalidSequenceMin">
+<text>Sequence min value {0,number,#} cannot be greater than max value {1,number,#}</text>
+</exception>
+
+<exception id="421060" name="ValidatorAlterFailed">
+<text>Unable to execute ALTER statement</text>
+</exception>
+
+<exception id="421070" name="ValidatorAlterIdentityFailed">
+<text>Cannot alter sequence for {0} because it was not defined as an identity column</text>
+</exception>
+
 
 <!-- ====================================================================== -->
 <!-- Fennel resources 440,000 - 450,000 -->
@@ -664,6 +705,10 @@ column type family is {1} but default value type family is {2}</text>
 
 <exception id="450120" name="ExecutionAborted">
 <text>Execution aborted</text>
+</exception>
+
+<exception id="450130" name="SequenceLimitExceeded">
+<text>Sequence generator limit exceeded for {0}</text>
 </exception>
 
 <!-- ====================================================================== -->

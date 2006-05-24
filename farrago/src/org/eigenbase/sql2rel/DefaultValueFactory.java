@@ -46,6 +46,14 @@ public interface DefaultValueFactory
     //~ Methods ---------------------------------------------------------------
 
     /**
+     * Whether a column is always generated. If a column is always generated, 
+     * then non-generated values cannot be inserted into the column.
+     */
+    public boolean isGeneratedAlways(
+        RelOptTable table,
+        int iColumn);
+
+    /**
      * Creates an expression which evaluates to the default value for a
      * particular column.
      *
