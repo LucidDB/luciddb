@@ -26,7 +26,7 @@ import net.sf.farrago.FarragoMetadataFactory;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.query.*;
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.metadata.*;
+import org.eigenbase.rel.metadata.RelMetadataQuery;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.rex.*;
@@ -34,8 +34,8 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.SqlParserUtil;
 import org.eigenbase.util.Util;
 
-import java.util.*;
 import java.math.BigDecimal;
+import java.util.*;
 
 
 /**
@@ -185,6 +185,37 @@ public class FennelWindowRel extends FennelSingleRel
             outputProgram);
         clone.inheritTraitsFrom(this);
         return clone;
+    }
+
+    public boolean isValid(boolean fail)
+    {
+        if (!inputProgram.isValid(fail)) {
+            return false;
+        }
+        if (!outputProgram.isValid(fail)) {
+            return false;
+        }
+        // In the window specifications, an aggregate call such as
+        // 'SUM(RexInputRef #10)' refers to expression #10 of inputProgram.
+        // (Not its projections.)
+        final RexChecker checker =
+            new RexChecker(inputProgram.getOutputRowType(), fail);
+        int count = 0;
+        for (Window window : windows) {
+            for (Partition partition : window.partitionList) {
+                for (RexWinAggCall over : partition.overList) {
+                    ++count;
+                    if (!checker.isValid(over)) {
+                        return false;
+                    }
+                }
+            }
+        }
+        if (count == 0) {
+            assert !fail : "FennelWindowRel is empty";
+            return false;
+        }
+        return true;
     }
 
     public RexNode [] getChildExps()
@@ -360,13 +391,14 @@ public class FennelWindowRel extends FennelSingleRel
             new RexProgramBuilder(bottomProgram.getOutputRowType(), rexBuilder);
         for (int i = 0; i < overList.size(); i++) {
             RexCall over = overList.get(i);
-            topProgramBuilder.addProject(over, "$" + i);
+            topProgramBuilder.addProject(over, RexInputRef.createName(i));
         }
         final RexProgram topProgram = topProgramBuilder.getProgram();
 
         // Merge the programs.
         final RexProgram mergedProgram =
-            RexProgramBuilder.mergePrograms(topProgram, bottomProgram, rexBuilder);
+            RexProgramBuilder.mergePrograms(
+                topProgram, bottomProgram, rexBuilder);
 
         assert mergedProgram.getProjectList().size() == overList.size() :
             "post: return.getProjectList().size() == overList.size()";
@@ -614,17 +646,21 @@ public class FennelWindowRel extends FennelSingleRel
         public RexWinAggCall addOver(
             RelDataType type,
             SqlAggFunction operator,
-            RexNode[] operands)
+            RexNode[] operands,
+            RexProgramBuilder programBuilder)
         {
             // Convert operands to inputRefs -- they will refer to the output
             // fields of a lower program.
             RexNode[] clonedOperands = operands.clone();
             for (int i = 0; i < operands.length; i++) {
-                RexLocalRef localRef = (RexLocalRef) operands[i];
-                clonedOperands[i] =
-                    new RexInputRef(
-                        localRef.getIndex(),
-                        localRef.getType());
+                RexLocalRef operand = (RexLocalRef) operands[i];
+                List<RexLocalRef> projectList = programBuilder.getProjectList();
+                int index = projectList.indexOf(operand);
+                if (index < 0) {
+                    index = projectList.size();
+                    programBuilder.addProject(operand, null);
+                }
+                clonedOperands[i] = new RexInputRef(index, operand.getType());
             }
             final RexWinAggCall aggCall =
                 new RexWinAggCall(
@@ -659,6 +695,7 @@ public class FennelWindowRel extends FennelSingleRel
             this.ordinal = ordinal;
         }
     }
+
 }
 
 // End FennelWindowRel.java

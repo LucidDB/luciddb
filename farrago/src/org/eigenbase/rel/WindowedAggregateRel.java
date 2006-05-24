@@ -22,12 +22,9 @@
 */
 package org.eigenbase.rel;
 
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.relopt.RelOptPlanWriter;
+import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.util.Util;
 
 /**
  * A relational expression representing a set of window aggregates.
@@ -63,30 +60,41 @@ public final class WindowedAggregateRel extends SingleRel
         super(cluster, traits, child);
         this.rowType = rowType;
         this.program = program;
-        checkProgram(program);
+        assert isValid(true);
     }
 
-    private void checkProgram(RexProgram program)
+    public boolean isValid(boolean fail)
     {
+        if (!program.isValid(fail)) {
+            return false;
+        }
+        if (program.getCondition() != null) {
+            assert !fail : "Agg program must not have condition";
+            return false;
+        }
+        int i = -1;
         for (RexNode agg : program.getExprList()) {
+            ++i;
             if (agg instanceof RexOver) {
                 RexOver over = (RexOver) agg;
                 for (int j = 0; j < over.operands.length; j++) {
                     RexNode operand = over.operands[j];
-                    Util.pre(operand instanceof RexLocalRef,
-                        "aggs[i].operand[j] instanceof RexLocalRef");
+                    if (!(operand instanceof RexLocalRef)) {
+                        assert !fail :
+                            "aggs[" + i + "].operand[" + j +
+                            "] is not a RexLocalRef";
+                        return false;
+                    }
                 }
             } else if (agg instanceof RexInputRef) {
                 ;
             } else {
-                Util.pre(false,
-                    "aggs[i] instanceof RexInputRef || " +
-                    "aggs[i] instanceof RexOver");
+                assert !fail :
+                    "aggs[" + i + "] is a " + agg.getClass() +
+                    ", expecting RexInputRef or RexOver";
             }
         }
-        if (program.getCondition() != null) {
-            Util.pre(false, "Agg program must not have condition");
-        }
+        return true;
     }
 
     public RexProgram getProgram()

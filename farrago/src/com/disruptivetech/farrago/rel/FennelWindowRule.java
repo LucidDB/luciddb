@@ -234,27 +234,13 @@ public abstract class FennelWindowRule extends RelOptRule
             return;
         }
 
-        // Build the input program, and a permutation to map its outputs to
-        // the output program.
+        // Build the input program.
         final RexProgram inProgram;
-        final RexProgram inputProgram;
         if (inCalc == null) {
             inProgram =
-                inputProgram =
                 RexProgram.createIdentity(child.getRowType());
         } else {
             inProgram = inCalc.getProgram();
-            final RexProgramBuilder programBuilder =
-                RexProgramBuilder.forProgram(
-                    inProgram, cluster.getRexBuilder());
-            // Add the input fields first to the front of the project list.
-            final RelDataTypeField[] fields =
-                inProgram.getInputRowType().getFields();
-            for (int i = 0; i < fields.length; i++) {
-                RelDataTypeField field = fields[i];
-                programBuilder.addProject(i, i, field.getName());
-            }
-            inputProgram = programBuilder.getProgram();
         }
 
         // Build a list of distinct windows, partitions and aggregate
@@ -265,10 +251,28 @@ public abstract class FennelWindowRule extends RelOptRule
             new HashMap<RexNode, FennelWindowRel.RexWinAggCall>();
         final RexProgram aggProgram = RexProgramBuilder.mergePrograms(
             winAggRel.getProgram(), inProgram, cluster.getRexBuilder());
+
+        final RexProgramBuilder programBuilder =
+            RexProgramBuilder.forProgram(
+                inProgram, cluster.getRexBuilder());
+
+        // Add the input fields first to the front of the project list.
+        if (!inProgram.projectsIdentity(false)) {
+            final RelDataTypeField[] fields =
+                inProgram.getInputRowType().getFields();
+            for (int i = 0; i < fields.length; i++) {
+                RelDataTypeField field = fields[i];
+                programBuilder.addProject(i, i, field.getName());
+            }
+        }
+
+        // Build a list of windows, partitions, and aggregate functions. Each
+        // aggregate function will add its arguments as outputs of the input
+        // program.
         for (RexNode agg : aggProgram.getExprList()) {
             if (agg instanceof RexOver) {
                 FennelWindowRel.RexWinAggCall aggCall =
-                    addWindows(windowList, (RexOver) agg);
+                    addWindows(windowList, (RexOver) agg, programBuilder);
                 aggMap.put(agg, aggCall);
             }
         }
@@ -319,7 +323,9 @@ public abstract class FennelWindowRule extends RelOptRule
                 // Look up the aggCall which this expr was translated to.
                 final FennelWindowRel.RexWinAggCall aggCall = aggMap.get(over);
                 assert aggCall != null;
-                assert RelOptUtil.eq("type1", over.getType(), "type2", aggCall.getType(), true);
+                assert RelOptUtil.eq(
+                    "over", over.getType(),
+                    "aggCall", aggCall.getType(), true);
 
                 // Find the index of the aggCall among all partitions of all
                 // windows.
@@ -328,7 +334,9 @@ public abstract class FennelWindowRule extends RelOptRule
 
                 // Replace expression with a reference to the window slot.
                 final int index = inputFieldCount + aggCallIndex;
-                assert RelOptUtil.eq("type1", over.getType(), "type2", intermediateTypeList.get(index), true);
+                assert RelOptUtil.eq(
+                    "over", over.getType(),
+                    "intermed", intermediateTypeList.get(index), true);
                 return new RexInputRef(index, over.getType());
             }
 
@@ -384,6 +392,7 @@ public abstract class FennelWindowRule extends RelOptRule
         }
 
         // Put all these programs together in the final relational expression.
+        final RexProgram inputProgram = programBuilder.getProgram();
         FennelWindowRel fennelCalcRel =
             new FennelWindowRel(
                 cluster,
@@ -398,7 +407,8 @@ public abstract class FennelWindowRule extends RelOptRule
 
     private FennelWindowRel.RexWinAggCall addWindows(
         List<FennelWindowRel.Window> windowList,
-        RexOver over)
+        RexOver over,
+        RexProgramBuilder programBuilder)
     {
         final RexWindow aggWindow = over.getWindow();
         // Look up or create a window.
@@ -417,7 +427,8 @@ public abstract class FennelWindowRule extends RelOptRule
         // already part of the partition spec), and add the clone to the
         // partition.
         return fennelPartition.addOver(
-            over.getType(), over.getAggOperator(), over.getOperands());
+            over.getType(), over.getAggOperator(), over.getOperands(),
+            programBuilder);
     }
 
     private FennelWindowRel.Window lookupWindow(
