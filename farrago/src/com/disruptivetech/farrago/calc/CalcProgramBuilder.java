@@ -2469,9 +2469,9 @@ public class CalcProgramBuilder
      * Defines an extended instruction with name depending on the number or
      * operands.
      */
-    static class ExtInstrSizeDef extends ExtInstrDef
+    public static class ExtInstrSizeDef extends ExtInstrDef
     {
-        ExtInstrSizeDef(String name)
+        public ExtInstrSizeDef(String name)
         {
             super(name, -1);
         }
