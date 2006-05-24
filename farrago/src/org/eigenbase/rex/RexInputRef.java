@@ -89,7 +89,11 @@ public class RexInputRef extends RexSlot
         return shuttle.visitInputRef(this);
     }
 
-    private static String createName(int index)
+    /**
+     * Creates a name for an input reference, of the form "$index".
+     * If the index is low, uses a cache of common names, to reduce gc.
+     */
+    public static String createName(int index)
     {
         return index < names.length ? names[index] :
             "$" + index;
