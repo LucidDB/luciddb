@@ -94,7 +94,7 @@ ProjectRel(DEPTNO=[$0], NAME=[$1])
             <![CDATA[
 ProjectRel(DEPTNO=[$0], NAME=[$1])
   FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])
-    FennelValuesRel(tuples=[[{ '[', 5, ']', 5 }]])
+    FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 5, _ISO-8859-1']', 5 }]])
 ]]>
         </Resource>
     </TestCase>

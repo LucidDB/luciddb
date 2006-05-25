@@ -814,7 +814,7 @@
 'FennelToIteratorConverter'
 '  LcsRowScanRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[[0]], clustered indexes=[[I_C0]])'
 '    LcsIndexSearchRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[*], index=[I_C9], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
-'      FennelValuesRel(tuples=[[{ '[', 9, ']', 9 }]])'
+'      FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 9, _ISO-8859-1']', 9 }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set outputformat table
 0: jdbc:farrago:> 

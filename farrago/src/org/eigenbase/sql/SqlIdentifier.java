@@ -43,7 +43,9 @@ public class SqlIdentifier extends SqlNode
     // contents weren't, so I've further degraded an imperfect situation.
     public String [] names;
 
-    /** This identifiers collation (if any) */
+    /**
+     * This identifier's collation (if any).
+     */
     SqlCollation collation;
 
     //~ Constructors ----------------------------------------------------------
@@ -267,11 +269,6 @@ public class SqlIdentifier extends SqlNode
     public SqlCollation getCollation()
     {
         return collation;
-    }
-
-    public void setCollation(SqlCollation collation)
-    {
-        this.collation = collation;
     }
 
     public String getSimple()

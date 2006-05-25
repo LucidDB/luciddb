@@ -2201,20 +2201,22 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "Expression 'EMPNO' is not being grouped");
         check("select case empno when 10 then timestamp '1969-04-29 12:34:56.0' else null end from emp " +
             "group by case empno when 10 then timestamp '1969-04-29 12:34:56' else null end");
-        if (Bug.Dt269Fixed) {
-            check("select case empno when 10 then 'foo bar' else null end from emp " +
-                "group by case empno when 10 then 'foo bar' else null end");
-        }
+    }
 
-        if (!todo) {
-            return;
-        }
+    public void testGroupExpressionEquivalenceStringLiteral()
+    {
+        check("select case empno when 10 then 'foo bar' else null end from emp " +
+            "group by case empno when 10 then 'foo bar' else null end");
 
+        if (Bug.Frg78Fixed)
         check("select case empno when 10 then _iso-8859-1'foo bar' collate latin1$en$1 else null end from emp " +
             "group by case empno when 10 then _iso-8859-1'foo bar' collate latin1$en$1 else null end");
-        checkFails("select case empno when 10 then _iso-8859-1'foo bar' else null end from emp " +
-            "group by case ^empno^ when 10 then _iso-8859-2'foo bar' else null end",
+
+        checkFails("select case ^empno^ when 10 then _iso-8859-1'foo bar' else null end from emp " +
+            "group by case empno when 10 then _iso-8859-2'foo bar' else null end",
             "Expression 'EMPNO' is not being grouped");
+
+        if (Bug.Frg78Fixed)
         checkFails("select case ^empno^ when 10 then 'foo bar' collate latin1$en$1 else null end from emp " +
             "group by case empno when 10 then 'foo bar' collate latin1$fr$1 else null end",
             "Expression 'EMPNO' is not being grouped");

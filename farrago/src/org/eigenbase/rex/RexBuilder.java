@@ -23,20 +23,21 @@
 
 package org.eigenbase.rex;
 
-import java.math.BigDecimal;
-import java.util.Calendar;
-
-import java.nio.*;
-
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.type.IntervalSqlType;
+import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.SqlTypeUtil;
+import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.NlsString;
 import org.eigenbase.util.Util;
-import org.eigenbase.util.EnumeratedValues;
+
+import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+import java.util.Calendar;
 
 
 /**
@@ -375,6 +376,21 @@ public class RexBuilder
     {
         // All literals except NULL have NOT NULL types.
         type = typeFactory.createTypeWithNullability(type, o == null);
+        if (typeName == SqlTypeName.Char) {
+            // Character literals must have a charset and collation. Populate
+            // from the type if necessary.
+            NlsString nlsString = (NlsString) o;
+            if (nlsString.getCollation() == null ||
+                nlsString.getCharset() == null) {
+                assert type.getSqlTypeName() == SqlTypeName.Char;
+                assert type.getCharset().name() != null;
+                assert type.getCollation() != null;
+                o = new NlsString(
+                    nlsString.getValue(),
+                    type.getCharset().name(),
+                    type.getCollation());
+            }
+        }
         return new RexLiteral(o, type, typeName);
     }
 
@@ -476,28 +492,17 @@ public class RexBuilder
     }
 
     /**
-     * Creates a character string literal from an NlsString
+     * Creates a character string literal from an {@link NlsString}.
+     *
+     * <p>If the string's charset and collation are not set, uses the system
+     * defaults.
+     *
      * @pre str != null
      */
     public RexLiteral makeCharLiteral(NlsString str)
     {
         Util.pre(str != null, "str != null");
-        if (null == str.getCharset()) {
-            str.setCharset(Util.getDefaultCharset());
-        }
-        if (null == str.getCollation()) {
-            str.setCollation(
-                new SqlCollation(SqlCollation.Coercibility.Coercible));
-        }
-        RelDataType type =
-            typeFactory.createSqlType(
-                SqlTypeName.Char,
-                str.getValue().length());
-        type =
-            typeFactory.createTypeWithCharsetAndCollation(
-                type,
-                str.getCharset(),
-                str.getCollation());
+        RelDataType type = SqlUtil.createNlsStringType(typeFactory, str);
         return makeLiteral(str, type, SqlTypeName.Char);
     }
 

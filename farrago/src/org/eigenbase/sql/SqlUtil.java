@@ -25,6 +25,7 @@ package org.eigenbase.sql;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypePrecedenceList;
+import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.SqlParserPos;
@@ -36,6 +37,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.util.*;
+import java.nio.charset.Charset;
 
 /**
  * Contains utility functions related to SQL parsing, all static.
@@ -705,6 +707,37 @@ public abstract class SqlUtil
     {
         return node instanceof SqlCall &&
             ((SqlCall) node).getOperator() == operator;
+    }
+
+    /**
+     * Creates the type of an {@link NlsString}.
+     *
+     * <p>The type inherits the The NlsString's {@link Charset} and
+     * {@link SqlCollation}, if they are set, otherwise it gets the system
+     * defaults.
+     * @param typeFactory Type factory
+     * @param str String
+     * @return Type, including collation and charset
+     */
+    public static RelDataType createNlsStringType(
+        RelDataTypeFactory typeFactory, NlsString str)
+    {
+        Charset charset = str.getCharset();
+        if (null == charset) {
+            charset = Util.getDefaultCharset();
+        }
+        SqlCollation collation = str.getCollation();
+        if (null == collation) {
+            collation = new SqlCollation(SqlCollation.Coercibility.Coercible);
+        }
+        RelDataType type =
+            typeFactory.createSqlType(
+                SqlTypeName.Char,
+                str.getValue().length());
+        type =
+            typeFactory.createTypeWithCharsetAndCollation(
+                type, charset, collation);
+        return type;
     }
 
     //~ Inner Classes ---------------------------------------------------------
