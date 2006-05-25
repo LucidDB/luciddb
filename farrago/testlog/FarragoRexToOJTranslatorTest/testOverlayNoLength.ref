@@ -8,10 +8,10 @@ static {
 
 ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
 
-if (ID$4$CITY.isNull()) {
+if (ID$0$CITY.isNull()) {
     oj_var1.setNull( true );
 } else {
-    oj_var1.overlay( ID$4$CITY, oj_var0, 2, 0, false );
+    oj_var1.overlay( ID$0$CITY, oj_var0, 2, 0, false );
 }
 
 return oj_var1;

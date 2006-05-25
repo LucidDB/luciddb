@@ -134,6 +134,12 @@ class LbmSplicerExecStream : public BTreeExecStream, ConduitExecStream
     uint nIdxKeys;
 
     /**
+     * True if splicer needs to compute the row count result rather than
+     * reading it from a dynamic parameter
+     */
+    bool computeRowCount;
+
+    /**
      * Determines whether a bitmap entry already exists in the bitmap index,
      * based on the index key values.  If multiple entries have the same key
      * value, locates the last entry with that key value, i.e., the one with

@@ -20,6 +20,7 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
+#include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/lucidera/colstore/LcsRowScanBaseExecStream.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
@@ -47,6 +48,19 @@ void LcsRowScanBaseExecStream::prepare(
     TupleProjection newProj;
 
     newProj.resize(params.outputProj.size());
+
+    // if we're projecting non-cluster columns, keep track of them separately;
+    TupleDescriptor outputTupleDesc = pOutAccessor->getTupleDesc();
+    for (uint i = 0; i < params.outputProj.size(); i++) {
+        if (params.outputProj[i] == LCS_RID_COLUMN_ID) {
+            newProj[i] = projCount++;
+            allClusterTupleDesc.push_back(outputTupleDesc[i]);
+            nonClusterCols.push_back(params.outputProj[i]);
+        }
+    }
+
+    allSpecial = (nonClusterCols.size() == newProj.size());
+
     for (uint i = 0; i < nClusters; i++) {
 
         SharedLcsClusterReader &pClu = pClusters[i];
@@ -84,14 +98,23 @@ void LcsRowScanBaseExecStream::prepare(
         }
         clusterStart = clusterEnd + 1;
 
-        // need to select at least one column from cluster;
-        // otherwise, there's a bug in the optimizer
-        assert(clusterProj.size() > 0);
+        // need to select at least one column from cluster, except in the
+        // case where we're only selecting special columns; in that case,
+        // we'll just arbitrarily read the first column, but not actually
+        // project it
+        if (allSpecial) {
+           clusterProj.push_back(0); 
+        } else {
+            assert(clusterProj.size() > 0);
+        }
         pClu->initColumnReaders(
             params.lcsClusterScanDefs[i].clusterTupleDesc.size(), clusterProj);
-        for (uint j = 0; j < pClu->nColsToRead; j++) {
-            allClusterTupleDesc.push_back(
-                params.lcsClusterScanDefs[i].clusterTupleDesc[clusterProj[j]]);
+        if (!allSpecial) {
+            for (uint j = 0; j < pClu->nColsToRead; j++) {
+                allClusterTupleDesc.push_back(
+                    params.lcsClusterScanDefs[i].
+                        clusterTupleDesc[clusterProj[j]]);
+            }
         }
     }
 
@@ -155,12 +178,14 @@ void LcsRowScanBaseExecStream::readColVals(
     SharedLcsClusterReader &pScan, TupleDataWithBuffer &tupleData,
     uint colStart)
 {
-    for (uint iCluCol = 0; iCluCol < pScan->nColsToRead; iCluCol++) {
+    if (!allSpecial) {
+        for (uint iCluCol = 0; iCluCol < pScan->nColsToRead; iCluCol++) {
 
-        // Get value of each column and load it to the appropriate
-        // tuple datum entry 
-        PBuffer curValue = pScan->clusterCols[iCluCol].getCurrentValue();
-        tupleData[projMap[colStart + iCluCol]].loadLcsDatum(curValue);
+            // Get value of each column and load it to the appropriate
+            // tuple datum entry 
+            PBuffer curValue = pScan->clusterCols[iCluCol].getCurrentValue();
+            tupleData[projMap[colStart + iCluCol]].loadLcsDatum(curValue);
+        }
     }
 }
 

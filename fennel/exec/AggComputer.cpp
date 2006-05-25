@@ -100,6 +100,12 @@ inline void CountAggComputer::clearAccumulatorImpl(TupleDatum &accumulatorDatum)
     count = 0;
 }
 
+inline void CountAggComputer::initAccumulatorImpl(TupleDatum &accumulatorDatum)
+{
+    uint64_t &count = interpretDatum(accumulatorDatum);
+    count = 1;
+}
+
 void CountAggComputer::updateAccumulatorImpl(
     TupleDatum &accumulatorDatum)
 {
@@ -128,6 +134,34 @@ void CountStarAggComputer::updateAccumulator(
     updateAccumulatorImpl(accumulatorDatum);
 }
 
+void CountStarAggComputer::initAccumulator(
+    TupleDatum &accumulatorDatum,
+    TupleData const &)
+{
+    assert(iInputAttr == -1);
+    initAccumulatorImpl(accumulatorDatum);
+}
+
+void CountStarAggComputer::initAccumulator(
+    TupleDatum &accumulatorDatumSrc,
+    TupleDatum &accumulatorDatumDest)
+{
+    accumulatorDatumDest.memCopyFrom(accumulatorDatumSrc);
+}
+
+void CountStarAggComputer::updateAccumulator(
+    TupleDatum &accumulatorDatumSrc,
+    TupleDatum &accumulatorDatumDest,
+    TupleData const &)
+{
+    updateAccumulatorImpl(accumulatorDatumSrc);
+    /*
+     * For count, accumulatorDatumSrc can accomodate the updated value so
+     * there is no need to use memCopyFrom.
+     */
+    accumulatorDatumDest.copyFrom(accumulatorDatumSrc);
+}
+
 void CountNullableAggComputer::clearAccumulator(TupleDatum &accumulatorDatum)
 {
     clearAccumulatorImpl(accumulatorDatum);
@@ -142,6 +176,37 @@ void CountNullableAggComputer::updateAccumulator(
     if (inputDatum.pData) {
         updateAccumulatorImpl(accumulatorDatum);
     }
+}
+
+void CountNullableAggComputer::initAccumulator(
+    TupleDatum &accumulatorDatum,
+    TupleData const &)
+{
+    initAccumulatorImpl(accumulatorDatum);
+}
+
+void CountNullableAggComputer::initAccumulator(
+    TupleDatum &accumulatorDatumSrc,
+    TupleDatum &accumulatorDatumDest)
+{
+    accumulatorDatumDest.memCopyFrom(accumulatorDatumSrc);
+}
+
+void CountNullableAggComputer::updateAccumulator(
+    TupleDatum &accumulatorDatumSrc,
+    TupleDatum &accumulatorDatumDest,
+    TupleData const &inputTuple)
+{
+    assert(iInputAttr != -1);
+    TupleDatum const &inputDatum = inputTuple[iInputAttr];
+    if (inputDatum.pData) {
+        updateAccumulatorImpl(accumulatorDatumSrc);
+    }
+    /*
+     * For count, accumulatorDatumSrc can accomodate the updated value so
+     * there is no need to use memCopyFrom.
+     */
+    accumulatorDatumDest.copyFrom(accumulatorDatumSrc);
 }
 
 ExtremeAggComputer::ExtremeAggComputer(
@@ -210,6 +275,54 @@ void ExtremeAggComputer::computeOutput(
     outputDatum = accumulatorDatum;
     if (isResultNull) {
         outputDatum.pData = NULL;
+    }
+}
+
+void ExtremeAggComputer::initAccumulator(
+    TupleDatum &accumulatorDatumDest,
+    TupleData const &inputTuple)
+{
+    accumulatorDatumDest.memCopyFrom(inputTuple[iInputAttr]);
+    isResultNull = false;
+}
+
+void ExtremeAggComputer::initAccumulator(
+    TupleDatum &accumulatorDatumSrc,
+    TupleDatum &accumulatorDatumDest)
+{
+    accumulatorDatumDest.memCopyFrom(accumulatorDatumSrc);
+    isResultNull = false;
+}
+
+void ExtremeAggComputer::updateAccumulator(
+    TupleDatum &accumulatorDatumSrc,
+    TupleDatum &accumulatorDatumDest,
+    TupleData const &inputTuple)
+{
+    TupleDatum const &inputDatum = inputTuple[iInputAttr];
+    
+    if (!accumulatorDatumSrc.pData) {
+        accumulatorDatumDest.memCopyFrom(inputDatum);
+    } else if (inputDatum.pData) {
+        // c = (input - accumulator)
+        int c = pTypeDescriptor->compareValues(
+            inputDatum.pData,
+            inputDatum.cbData,
+            accumulatorDatumSrc.pData,
+            accumulatorDatumSrc.cbData);
+        if (isMin) {
+            // invert comparison for MIN
+            c = -c;
+        }
+        if (c <= 0) {
+            // for MAX, input has to be greater than accumulator for accumulator
+            // to be updated
+            accumulatorDatumDest.memCopyFrom(accumulatorDatumSrc); 
+        } else {
+            accumulatorDatumDest.memCopyFrom(inputDatum);            
+        }
+    } else {
+        accumulatorDatumDest.memCopyFrom(accumulatorDatumSrc); 
     }
 }
 

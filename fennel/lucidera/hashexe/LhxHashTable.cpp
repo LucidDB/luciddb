@@ -23,6 +23,7 @@
 #include "fennel/common/FennelExcn.h"
 #include "fennel/lucidera/hashexe/LhxHashTable.h"
 #include "fennel/tuple/TuplePrinter.h"
+#include "fennel/tuple/TupleOverflowExcn.h"
 #include <sstream>
 
 using namespace std;
@@ -36,14 +37,22 @@ void LhxHashDataAccessor::init(TupleDescriptor const &inputDataDesc)
     dataAccessor.compute(dataDescriptor);
 }
 
-uint LhxHashDataAccessor::getStorageSize(TupleData const *inputTuple)
+uint LhxHashDataAccessor::getStorageSize(TupleData const &inputTuple)
 {
-    if (!inputTuple) {
-        return (dataAccessor.getBufferByteCount(getBuffer())
-            + getBufferOffset());
-    } else {
-        return (dataAccessor.getByteCount(*inputTuple)
-            + getBufferOffset());
+    return dataAccessor.getByteCount(inputTuple) + getBufferOffset();
+}
+
+void LhxHashDataAccessor::checkStorageSize(TupleData const &inputTuple,
+    uint maxBufferSize)
+{
+    uint storageSize = getStorageSize(inputTuple);
+
+    if (storageSize > maxBufferSize) {
+        throw TupleOverflowExcn(
+            dataDescriptor,
+            inputTuple,
+            storageSize,
+            maxBufferSize);
     }
 }
 
@@ -140,13 +149,22 @@ void LhxHashKeyAccessor::addData(PBuffer inputData)
     setFirstData(inputData);
 }
 
-uint LhxHashKeyAccessor::getStorageSize(TupleData const *inputTuple)
+uint LhxHashKeyAccessor::getStorageSize(TupleData const &inputTuple)
 {
-    if (!inputTuple) {
-        return (keyAccessor.getBufferByteCount(getBuffer())
-            + getBufferOffset());
-    } else {
-        return (keyAccessor.getByteCount(*inputTuple) + getBufferOffset());
+    return keyAccessor.getByteCount(inputTuple) + getBufferOffset();
+}
+
+void LhxHashKeyAccessor::checkStorageSize(TupleData const &inputTuple,
+    uint maxBufferSize)
+{
+    uint storageSize = getStorageSize(inputTuple);
+
+    if (storageSize > maxBufferSize) {
+        throw TupleOverflowExcn(
+            keyDescriptor,
+            inputTuple,
+            storageSize,
+            maxBufferSize);
     }
 }
 
@@ -276,11 +294,29 @@ PBuffer *LhxHashBlockAccessor::getSlot(uint slotNum)
 
 void LhxHashTable::init(
     uint partitionLevelInit,
-    LhxJoinInfo const &joinInfo)
+    LhxHashInfo const &hashInfo,
+    AggComputerList *aggList)
 {
-    maxBlockCount = joinInfo.numCachePages;
+    LhxHashTable::init(partitionLevelInit, hashInfo);
+
+    aggComputers = aggList;
+    /*
+     * The last input is the build side. In the group by case, there is only
+     * one input.
+     */
+    aggWorkingTuple.compute(hashInfo.inputDesc.back());
+    aggResultTuple.computeAndAllocate(hashInfo.inputDesc.back());
+
+    isAggregate = true;
+}
+
+void LhxHashTable::init(
+    uint partitionLevelInit,
+    LhxHashInfo const &hashInfo)
+{
+    maxBlockCount = hashInfo.numCachePages;
     assert (maxBlockCount > 1);
-    scratchAccessor = joinInfo.memSegmentAccessor;
+    scratchAccessor = hashInfo.memSegmentAccessor;
 
     partitionLevel = partitionLevelInit;
 
@@ -290,49 +326,57 @@ void LhxHashTable::init(
     uint usablePageSize = scratchAccessor.pSegment->getUsablePageSize();
     blockAccessor.init(usablePageSize);
     nodeBlockAccessor.init(usablePageSize);
+    maxBufferSize = nodeBlockAccessor.getUsableSize();
 
     hashGen.init(partitionLevel);
     hashGenSub.init(partitionLevel+1);
 
-    /*
-     * These steps initializes the keyColsProjInKey and aggsProjInKey which are
-     * based on original build row into indexes of the the new keyColsAndAggs
-     * tuple.
-     * REVIEW: This might not be how agg layout in hash table looks like. The
-     * aggs will have agg computers, stored within the hash table will be the
-     * data buffers for these agg computers.
-     */
-    TupleDescriptor const &inputTupleDesc = joinInfo.inputDesc[1];
-    keyColsProj = joinInfo.keyProj[1];
-    aggsProj = joinInfo.aggsProj;
-    dataProj = joinInfo.dataProj;
+    uint i;
 
+    /*
+     * The last input is the build side.
+     */
+    TupleDescriptor const &buildTupleDesc =
+        hashInfo.inputDesc.back();
+    keyColsProj = hashInfo.keyProj.back();
+
+    /*
+     * Initialize varchar type indicator for the build side. (Assumed to be the
+     * last input.)
+     */
+    isKeyColVarChar = hashInfo.isKeyColVarChar.back();
+
+    aggsProj = hashInfo.aggsProj;
+    dataProj = hashInfo.dataProj;
+
+    isAggregate = false;
+
+    /*
+     * These steps initialize the keyColsProjInKey and aggsProjInKey which are
+     * based on the new keyColsAndAggs tuple.
+     */
     TupleDescriptor keyDesc;
     TupleDescriptor dataDesc;
     TupleProjection keyColsProjInKey;
     TupleProjection aggsProjInKey;
-    uint keyCount = keyColsProj.size();
-    uint i;
     
+    uint keyCount = keyColsProj.size();
     for (i = 0; i < keyCount; i++) {
-        keyDesc.push_back(inputTupleDesc[keyColsProj[i]]);
+        keyDesc.push_back(buildTupleDesc[keyColsProj[i]]);
         keyColsProjInKey.push_back(i);
     }
 
-    /*
-     * FIXME: this needs to be adjusted for aggs.
-     */
     keyColsAndAggsProj = keyColsProj;
     for (i = 0; i < aggsProj.size(); i++) {
         keyColsAndAggsProj.push_back(aggsProj[i]);
-        keyDesc.push_back(inputTupleDesc[aggsProj[i]]);
+        keyDesc.push_back(buildTupleDesc[aggsProj[i]]);
         aggsProjInKey.push_back(i + keyCount);
     }
 
     hashKeyAccessor.init(keyDesc, keyColsProjInKey, aggsProjInKey);
 
     for (i = 0; i < dataProj.size(); i++) {
-        dataDesc.push_back(inputTupleDesc[dataProj[i]]);
+        dataDesc.push_back(buildTupleDesc[dataProj[i]]);
     }
 
     hashDataAccessor.init(dataDesc);
@@ -384,6 +428,7 @@ PBuffer LhxHashTable::allocBuffer(uint bufSize)
             nodeBlockAccessor.setCurrent(currentBlock, false);
 
             resultBuf = nodeBlockAccessor.allocBuffer(bufSize);
+
             assert (resultBuf);
         }
     }
@@ -481,19 +526,32 @@ uint LhxHashTable::blocksNeeded(
     TupleDescriptor &dataDesc,
     uint usablePageSize)
 {
-    LhxHashKeyAccessor tmpKey;
-    LhxHashDataAccessor tmpData;
-
     if (usablePageSize == 0) {
         usablePageSize = blockAccessor.getUsableSize();
     } else {
         usablePageSize -= sizeof(PBuffer);
     }
 
+    LhxHashKeyAccessor tmpKey;
+    LhxHashDataAccessor tmpData;
+
+    TupleProjection keyColsProj;
+    TupleProjection aggsProj;
+
+    /*
+     * Pretend there is no aggregate fields.
+     */
+    for (int i = 0; i < keyDesc.size(); i ++) {
+        keyColsProj.push_back(i);
+    }
+
+    tmpKey.init(keyDesc, keyColsProj, aggsProj);
+    tmpData.init(dataDesc);
+
     double totalBytes = 
         slotsNeeded(cndKeys) * sizeof(PBuffer)
-        + cndKeys * tmpKey.getMaxStorageSize(keyDesc)
-        + numRows * tmpData.getMaxStorageSize(dataDesc);
+        + cndKeys * tmpKey.getMaxStorageSize()
+        + numRows * tmpData.getMaxStorageSize();
     return (uint)ceil(totalBytes / usablePageSize);
 }
 
@@ -526,16 +584,18 @@ PBuffer *LhxHashTable::getSlot(uint slotNum)
     return slot;
 }
 
-PBuffer LhxHashTable::findKey(
+PBuffer LhxHashTable::findKeyLocation(
     TupleData const &inputTuple,
     TupleProjection const &keyColsProj,
     bool isProbing)
 {
-    uint slotNum = (hashGen.hash(inputTuple, keyColsProj)) % numSlots;
+    uint slotNum =
+        (hashGen.hash(inputTuple, keyColsProj, isKeyColVarChar)) % numSlots;
     
     PBuffer *slot = getSlot(slotNum);
     assert (slot);
 
+    PBuffer keyLocation = (PBuffer)slot;
     PBuffer firstKey = *slot;
     PBuffer nextKey;
     
@@ -547,7 +607,8 @@ PBuffer LhxHashTable::findKey(
         hashKeyAccessor.setCurrent(firstKey, true);
         while (!hashKeyAccessor.matches(inputTuple, keyColsProj)) {
             nextKey = hashKeyAccessor.getNext();
-            
+            keyLocation = hashKeyAccessor.getNextLocation();
+
             if (!nextKey) {
                 return NULL;
             }
@@ -564,47 +625,86 @@ PBuffer LhxHashTable::findKey(
         hashKeyAccessor.setMatched(true);
     }
 
-    return (hashKeyAccessor.getCurrent());
+    return keyLocation;
 }
 
 bool LhxHashTable::addKeyData(TupleData const &inputTuple)
 {
-    uint slotNum = (hashGen.hash(inputTuple, keyColsProj)) % numSlots;
+    uint slotNum =
+        (hashGen.hash(inputTuple, keyColsProj, isKeyColVarChar)) % numSlots;
     
     PBuffer *slot = getSlot(slotNum);
     assert (slot);
+    PBuffer newNextKey = *slot;
 
     TupleData tmpKeyTuple;
-    
-    tmpKeyTuple.projectFrom(inputTuple, keyColsAndAggsProj);
+    PBuffer newKey = NULL;
 
-    PBuffer newNextKey = *slot;
-    uint newKeyLen = hashKeyAccessor.getStorageSize(&tmpKeyTuple);
-    PBuffer newKey = allocBuffer(newKeyLen);
+    if (!isAggregate) {
+        tmpKeyTuple.projectFrom(inputTuple, keyColsProj);
+        hashKeyAccessor.checkStorageSize(tmpKeyTuple, maxBufferSize);
+        uint newKeyLen =
+            hashKeyAccessor.getStorageSize(tmpKeyTuple);
+        newKey = allocBuffer(newKeyLen);
+    } else {
+        aggResultTuple.resetBuffer();
+        for (int i = 0; i < keyColsProj.size() ; i ++) {
+            aggResultTuple[i].copyFrom(inputTuple[keyColsProj[i]]);
+        }
 
-    TupleData tmpDataTuple;    
-    tmpDataTuple.projectFrom(inputTuple, dataProj);
-    uint newDataLen = hashDataAccessor.getStorageSize(&tmpDataTuple);
-    PBuffer newData = allocBuffer(newDataLen);
+        for (int i = 0; i < aggComputers->size(); i ++) {
+            (*aggComputers)[i].initAccumulator(
+                aggResultTuple[aggsProj[i]], inputTuple);
+        }
+        hashKeyAccessor.checkStorageSize(aggResultTuple, maxBufferSize);
+        newKey =
+            allocBuffer(hashKeyAccessor.getStorageSize(aggResultTuple));
+    }
 
-    if (!newKey || !newData) {
+    TupleData tmpDataTuple;
+    PBuffer newData = NULL;
+
+    if (!isAggregate) {
+        /*
+         * Tuple contains data portion. i.e. this is not a group by case.
+         */
+        tmpDataTuple.projectFrom(inputTuple, dataProj);
+        hashDataAccessor.checkStorageSize(tmpDataTuple, maxBufferSize);
+        uint newDataLen = hashDataAccessor.getStorageSize(tmpDataTuple);
+        newData = allocBuffer(newDataLen);
+    }
+
+    if (!newKey || (!isAggregate && !newData)) {
         /*
          * Ran out of memory.
          */
         return false;
     }
 
-
     *slot = newKey;
     hashKeyAccessor.setCurrent(newKey, false);
     hashKeyAccessor.setMatched(false);
-    hashKeyAccessor.pack(tmpKeyTuple);
     hashKeyAccessor.setNext(newNextKey);
 
-    hashKeyAccessor.setCurrent(newKey, true);
-    hashDataAccessor.setCurrent(newData, false);
-    hashDataAccessor.pack(tmpDataTuple);
-    hashKeyAccessor.addData(newData);
+    if (!isAggregate) {
+        /*
+         * Store the key.
+         */
+        hashKeyAccessor.pack(tmpKeyTuple);
+
+        /*
+         * Add data portion to this key.
+         */
+        hashKeyAccessor.setCurrent(newKey, true);
+        hashDataAccessor.setCurrent(newData, false);
+        hashDataAccessor.pack(tmpDataTuple);
+        hashKeyAccessor.addData(newData);
+    } else {
+        /*
+         * Store the key and the aggs.
+         */
+        hashKeyAccessor.pack(aggResultTuple);
+    }
 
     return true;
 }
@@ -623,12 +723,15 @@ bool LhxHashTable::addData(PBuffer keyNode, TupleData const &inputTuple)
     
     tmpDataTuple.projectFrom(inputTuple, dataProj);
 
-    uint newDataLen = hashDataAccessor.getStorageSize(&tmpDataTuple);
+    hashDataAccessor.checkStorageSize(tmpDataTuple, maxBufferSize);
+
+    uint newDataLen =
+        hashDataAccessor.getStorageSize(tmpDataTuple);
     PBuffer newData = allocBuffer(newDataLen);
 
     if (!newData) {
         /*
-         * Ran out of memory.
+         * Hash table out of memory.
          */
         return false;
     }
@@ -639,18 +742,105 @@ bool LhxHashTable::addData(PBuffer keyNode, TupleData const &inputTuple)
     return true;
 }
 
+bool LhxHashTable::aggData(PBuffer destKeyLoc, TupleData const &inputTuple)
+{
+    PBuffer destKey;
+    /*
+     * Need to copy destKey out as destKeyLoc might not be aligned.
+     */
+    memcpy((PBuffer)&destKey, destKeyLoc, sizeof(PBuffer));
+
+    hashKeyAccessor.setCurrent(destKey, true);
+
+    aggResultTuple.resetBuffer();
+
+    hashKeyAccessor.unpack(aggWorkingTuple, keyColsAndAggsProj);
+
+    for (int i = 0; i < keyColsProj.size() ; i ++) {
+        aggResultTuple[i].copyFrom(inputTuple[keyColsProj[i]]);
+    }
+
+    for (int i = 0; i < aggComputers->size(); i ++) {
+        (*aggComputers)[i].updateAccumulator(
+            aggWorkingTuple[aggsProj[i]],
+            aggResultTuple[aggsProj[i]],
+            inputTuple);
+    }
+    
+    hashKeyAccessor.checkStorageSize(aggResultTuple, maxBufferSize);
+
+    uint newResultSize =
+        hashKeyAccessor.getStorageSize(aggResultTuple);
+
+    uint oldResultSize =
+        hashKeyAccessor.getStorageSize(aggWorkingTuple);
+
+    if (newResultSize > oldResultSize) {
+        PBuffer newKey = NULL;
+        PBuffer newNextKey = hashKeyAccessor.getNext();
+
+        /*
+         * The key buffer will not hold the new result. Need to allocate buffer
+         * again.
+         */
+        newKey = allocBuffer(newResultSize);
+    
+        if (newKey) {
+            /*
+             * The old key buffer is not used any more. Write in the key
+             * location the new key buffer.
+             */
+            memcpy(destKeyLoc, (PBuffer)&newKey, sizeof(PBuffer));
+
+            hashKeyAccessor.setCurrent(newKey, false);
+            hashKeyAccessor.setMatched(false);
+            hashKeyAccessor.setNext(newNextKey);
+            hashKeyAccessor.pack(aggResultTuple);
+            return true;
+        } else {
+            return false;
+        }
+    } else {
+        /*
+         * The key buffer can hold aggResultTuple.
+         */
+        hashKeyAccessor.pack(aggResultTuple);
+        return true;
+    }
+}
+
 bool LhxHashTable::addTuple(TupleData const &inputTuple)
 {
     /*
      * We are building the hash table.
      */
     bool isProbing = false;
-    PBuffer destKey = findKey(inputTuple, keyColsProj, isProbing);
+    PBuffer destKeyLoc = findKeyLocation(inputTuple, keyColsProj, isProbing);
 
-    if (!destKey) {
+    if (!destKeyLoc) {
+        /*
+         * Key is not presetn in the hash table. Add both the key and the data.
+         */
         return addKeyData(inputTuple);
     } else {
-        return addData(destKey, inputTuple);
+        /*
+         * Key is present in the hash table.
+         * If hash join, add to the data list corresponding this key.
+         * If hash aggregate, aggregate the new data.
+         */
+        if (!isAggregate) {
+            PBuffer destKey;
+            /*
+             * Need to copy destKey out as destKeyLoc might not be aligned.
+             */
+            memcpy((PBuffer*)&destKey, destKeyLoc, sizeof(PBuffer));
+            
+            assert (destKey);
+
+            return addData(destKey, inputTuple);
+        } else {
+            return aggData(destKeyLoc, inputTuple);
+        }
     }
 }
 
@@ -748,9 +938,13 @@ bool LhxHashTableReader::advanceSlot()
     }
     
     hashKeyAccessor.setCurrent(curKey, true);
-    curData = hashKeyAccessor.getFirstData();
-    assert(curData);
-    hashDataAccessor.setCurrent(curData, true);
+
+    if (!isAggregate) {
+        curData = hashKeyAccessor.getFirstData();
+        assert(curData);
+        hashDataAccessor.setCurrent(curData, true);
+    }
+
     return true;
 }
 
@@ -769,9 +963,11 @@ bool LhxHashTableReader::advanceKey()
     
     if (curKey) {
         hashKeyAccessor.setCurrent(curKey, true);
-        curData = hashKeyAccessor.getFirstData();
-        assert(curData);
-        hashDataAccessor.setCurrent(curData, true);        
+        if (!isAggregate) {
+            curData = hashKeyAccessor.getFirstData();
+            assert(curData);
+            hashDataAccessor.setCurrent(curData, true);
+        }
         return true;
     } else {
         return false;
@@ -780,6 +976,10 @@ bool LhxHashTableReader::advanceKey()
 
 bool LhxHashTableReader::advanceData()
 {
+    if (isAggregate) {
+        return false;
+    }
+
     curData = hashDataAccessor.getNext();
     if (curData) {
         hashDataAccessor.setCurrent(curData, true);
@@ -792,19 +992,29 @@ bool LhxHashTableReader::advanceData()
 void LhxHashTableReader::produceTuple(TupleData &outputTuple)
 {
     hashKeyAccessor.unpack(outputTuple, keyColsAndAggsProj);
-    hashDataAccessor.unpack(outputTuple, dataProj);
+    if (!isAggregate) {
+        hashDataAccessor.unpack(outputTuple, dataProj);
+    }
 }
 
 void LhxHashTableReader::init(
     LhxHashTable *hashTableInit,
-    LhxJoinInfo const &joinInfo)
+    LhxHashInfo const &hashInfo)
 {
-    TupleDescriptor const &outputTupleDesc = joinInfo.inputDesc[1];
-    TupleProjection const &keyColsProj = joinInfo.keyProj[1];
-    TupleProjection const &aggsProj = joinInfo.aggsProj;
+    /*
+     * The last input is the build side.
+     */
+    TupleDescriptor const &outputTupleDesc =
+        hashInfo.inputDesc.back();
+    TupleProjection const &keyColsProj = hashInfo.keyProj.back();
+    TupleProjection const &aggsProj = hashInfo.aggsProj;
 
-    dataProj = joinInfo.dataProj;
+    dataProj = hashInfo.dataProj;
 
+    /*
+     * These steps initialize the keyColsProjInKey and aggsProjInKey which are
+     * based on the new keyColsAndAggs tuple.
+     */
     TupleDescriptor keyDesc;
     TupleDescriptor dataDesc;
     TupleProjection keyColsProjInKey;
@@ -817,11 +1027,10 @@ void LhxHashTableReader::init(
         keyColsProjInKey.push_back(i);
     }
     
-    /*
-     * FIXME: this needs to be adjusted for aggs.
-     */
     keyColsAndAggsProj = keyColsProj;
-    for (i = 0; i < aggsProj.size(); i ++) {
+    uint aggsProjSize = aggsProj.size();
+
+    for (i = 0; i < aggsProjSize; i ++) {
         keyColsAndAggsProj.push_back(aggsProj[i]);
         keyDesc.push_back(outputTupleDesc[aggsProj[i]]);
         aggsProjInKey.push_back(i + keyCount);
@@ -836,6 +1045,7 @@ void LhxHashTableReader::init(
     hashDataAccessor.init(dataDesc);
 
     hashTable = hashTableInit;
+    isAggregate = hashTable->isHashAggregate();
  
     /*
      * By default, this reader is not associated with any key, i.e. it covers

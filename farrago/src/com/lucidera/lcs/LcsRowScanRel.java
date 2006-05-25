@@ -23,15 +23,15 @@ package com.lucidera.lcs;
 import java.util.*;
 import java.util.List;
 
+import com.lucidera.farrago.*;
+import com.lucidera.query.*;
+
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.*;
-import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fem.med.*;
-import net.sf.farrago.fennel.tuple.*;
 import net.sf.farrago.query.*;
-import net.sf.farrago.util.*;
+import net.sf.farrago.type.*;
 
 import openjava.ptree.Literal;
 
@@ -39,6 +39,9 @@ import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.sarg.*;
+import org.eigenbase.sql.type.*;
 
 /*
  * LcsRowScanRel is the relational expression corresponding to a scan on a
@@ -163,13 +166,28 @@ public class LcsRowScanRel extends FennelMultipleRel
                     public String getFieldName(int index)
                     {
                         final int i = projectedColumns[index].intValue();
-                        return fields[i].getName();
+                        if (LucidDbOperatorTable.ldbInstance().
+                            isSpecialColumnId(i))
+                        {
+                            return LucidDbOperatorTable.ldbInstance().
+                                getSpecialOpName(i);
+                        } else {
+                            return fields[i].getName();
+                        }
                     }
 
                     public RelDataType getFieldType(int index)
                     {
                         final int i = projectedColumns[index].intValue();
-                        return fields[i].getType();
+                        if (LucidDbOperatorTable.ldbInstance().
+                            isSpecialColumnId(i))
+                        {
+                            return getCluster().getTypeFactory().createSqlType(
+                                LucidDbOperatorTable.ldbInstance().
+                                    getSpecialOpRetTypeName(i));
+                        } else {
+                            return fields[i].getType();
+                        }
                     }
                 });
         }
@@ -183,7 +201,22 @@ public class LcsRowScanRel extends FennelMultipleRel
         if (projectedColumns == null) {
             projection = "*";
         } else {
-            projection = Arrays.asList(projectedColumns);
+            Object[] modifiedProj = new Object[projectedColumns.length];
+            System.arraycopy(
+                projectedColumns, 0, modifiedProj, 0, projectedColumns.length);
+            projection = Arrays.asList(modifiedProj);
+            // replace the numbers for the special columns so they're more
+            // readable
+            List projList = (List) projection;
+            for (int i = 0; i < projList.size(); i++) {
+                Integer colId = (Integer) projList.get(i);
+                if (LucidDbOperatorTable.ldbInstance().isSpecialColumnId(colId))
+                {
+                    projList.set(
+                        i, LucidDbOperatorTable.ldbInstance().getSpecialOpName(
+                            colId));
+                }
+            }
         }
         
         // REVIEW jvs 27-Dec-2005:  Since LcsRowScanRel is given
@@ -192,7 +225,7 @@ public class LcsRowScanRel extends FennelMultipleRel
         // list into a deterministic order rather than doing
         // it here.
         
-        TreeSet indexNames = new TreeSet();
+        TreeSet<String> indexNames = new TreeSet<String>();
         for (FemLocalIndex index : clusteredIndexes) {
             indexNames.add(index.getName());
         }
@@ -234,8 +267,29 @@ public class LcsRowScanRel extends FennelMultipleRel
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
-        FarragoRepos repos = FennelRelUtil.getRepos(this);
-
+        // modify the input to the scan to either scan the deletion index
+        // (in the case of a full table scan) or to minus off the deletion
+        // index (in the case of an index scan)      
+        if (isFullScan) {
+            RelNode[] oldInputs = new RelNode[inputs.length + 1];
+            System.arraycopy(inputs, 0, oldInputs, 0, inputs.length);
+            LcsIndexSearchRel delIndexScan =
+                createDeletionIndexScan(null, null, true);
+            oldInputs[inputs.length] = delIndexScan;
+            inputs = oldInputs;
+        } else {  
+            FennelRelParamId startRidParamId = implementor.allocateRelParamId();
+            FennelRelParamId rowLimitParamId = implementor.allocateRelParamId();
+            LcsIndexSearchRel delIndexScan = createDeletionIndexScan(
+                startRidParamId, rowLimitParamId, false);
+            RelNode[] minusInputs = new RelNode[2];
+            minusInputs[0] = inputs[0];
+            minusInputs[1] = delIndexScan;
+            inputs[0] = new LcsIndexMinusRel(
+                getCluster(), minusInputs, lcsTable, startRidParamId,
+                rowLimitParamId);           
+        }
+        
         FemLcsRowScanStreamDef scanStream = 
             indexGuide.newRowScan(this, projectedColumns);
         
@@ -250,6 +304,116 @@ public class LcsRowScanRel extends FennelMultipleRel
         return scanStream;
     }
 
+    /**
+     * Creates an index search on the deletion index corresponding to this
+     * lcs table.
+     * 
+     * @param startRidParamId start rid parameter for the index search
+     * @param rowLimitParamId row limit parameter for the index search
+     * @param fullScan true if deletion index will be used with a full table
+     * scan
+     * 
+     * @return the created index search
+     */
+    private LcsIndexSearchRel createDeletionIndexScan(
+        FennelRelParamId startRidParamId, FennelRelParamId rowLimitParamId,
+        boolean fullScan)
+    {
+        FemLocalIndex delIndex = FarragoCatalogUtil.getDeletionIndex(
+            repos, lcsTable.getCwmColumnSet());
+        LcsIndexScanRel indexScan = new LcsIndexScanRel(
+            getCluster(), lcsTable, delIndex, connection, null, true);       
+        
+        RelNode keyInput = createDelIndexScanInput(fullScan);
+        
+        Integer [] inputDirectiveProj = { 0, 2 };
+        Integer [] inputKeyProj = { 1, 3 };
+        
+        LcsIndexSearchRel indexSearch = new LcsIndexSearchRel(
+            keyInput, indexScan, true, false, inputKeyProj, null,
+            inputDirectiveProj, startRidParamId, rowLimitParamId);
+        
+        return indexSearch;
+    }
+    
+    /**
+     * Creates the RelNode that corresponds to the key input into the deletion
+     * index scan.  The type of input depends on whether or not a full scan
+     * is being done on the deletion index.
+     * 
+     * @param fullScan true if a full scan will be done on the deletion index
+     * 
+     * @return the created RelNode
+     */
+    private RelNode createDelIndexScanInput(boolean fullScan)
+    {
+        // Search on the index using the rid as the key
+        FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(this);
+        FarragoTypeFactory typeFactory = stmt.getFarragoTypeFactory();
+        RelDataType directiveType = typeFactory.createSqlType(
+            SqlTypeName.Char, 1);
+        RelDataType keyType = typeFactory.createTypeWithNullability(
+            typeFactory.createSqlType(SqlTypeName.Bigint), true);
+
+        // Setup the directives.  In the case of a full scan, setup an
+        // unbounded lower and upper search.  In the index scan case, setup
+        // a >= search on the rid key.
+        RelDataType keyRowType =
+            typeFactory.createStructType(
+                new RelDataType [] {
+                    directiveType,
+                    keyType,
+                    directiveType,
+                    keyType
+                },
+                new String [] {
+                    "lowerBoundDirective",
+                    "lowerBoundKey",
+                    "upperBoundDirective",
+                    "upperBoundKey"
+                });
+        
+        List<List<RexNode>> inputTuples = new ArrayList<List<RexNode>>();
+        List<RexNode> tuple = new ArrayList<RexNode>();
+        RexBuilder rexBuilder = getCluster().getRexBuilder();
+        SargFactory sargFactory = new SargFactory(rexBuilder);
+        
+        SargMutableEndpoint lowerEndpoint = sargFactory.newEndpoint(keyType);
+        if (fullScan) {
+            lowerEndpoint.setInfinity(-1);
+        } else {
+            // for now, just set the actual search key value to null; this
+            // will get filled in at runtime with the value of the startRid
+            // dynamic parameter
+            lowerEndpoint.setFinite(
+                SargBoundType.LOWER, SargStrictness.CLOSED,
+                rexBuilder.constantNull());
+        }
+        RexLiteral lowerBoundDirective =
+            FennelRelUtil.convertEndpoint(rexBuilder, lowerEndpoint);
+        
+        SargMutableEndpoint upperEndpoint = sargFactory.newEndpoint(keyType);
+        upperEndpoint.setInfinity(1);
+        
+        RexLiteral upperBoundDirective =
+            FennelRelUtil.convertEndpoint(rexBuilder, upperEndpoint);
+        
+        tuple.add(lowerBoundDirective);
+        tuple.add(rexBuilder.constantNull());
+        tuple.add(upperBoundDirective);
+        tuple.add(rexBuilder.constantNull());
+        inputTuples.add(tuple);
+        
+        RelNode keyRel = new FennelValuesRel(
+            getCluster(), keyRowType, (List) inputTuples);
+        
+        RelNode keyInput = RelOptRule.mergeTraitsAndConvert(
+            getTraits(), FennelRel.FENNEL_EXEC_CONVENTION, keyRel);
+        assert (keyInput != null);    
+        
+        return keyInput;
+    }
+    
     public LcsIndexGuide getIndexGuide()
     {
         if (indexGuide == null) {
@@ -295,7 +459,8 @@ public class LcsRowScanRel extends FennelMultipleRel
      *
      * @param columnOrdinal 0-based ordinal of an output field of the scan
      *
-     * @return underlying column
+     * @return underlying column if the the column is a real one; otherwise,
+     * null is returned (e.g., if the column corresponds to the rid column)
      */
     public FemAbstractColumn getColumnForFieldAccess(int columnOrdinal)
     {
@@ -303,7 +468,13 @@ public class LcsRowScanRel extends FennelMultipleRel
         if (projectedColumns != null) {
             columnOrdinal = projectedColumns[columnOrdinal].intValue();
         }
-        return (FemAbstractColumn) lcsTable.getCwmColumnSet().getFeature().get(columnOrdinal);
+        if (LucidDbOperatorTable.ldbInstance().isSpecialColumnId(columnOrdinal))
+        {
+            return null;
+        } else {
+            return (FemAbstractColumn) lcsTable.getCwmColumnSet().getFeature().
+                get(columnOrdinal);
+        }
     }
 
     public RelOptTable getTable()
@@ -316,18 +487,31 @@ public class LcsRowScanRel extends FennelMultipleRel
         return connection;
     }
 
-    // REVIEW jvs 13-Mar-2006:  naming convention is to leave off the "get"
-    // when the attribute is already boolean, so just "isFullScan()"
-    // and "hasExtraFilter()"
-
-    public boolean getIsFullScan() 
+    public boolean isFullScan() 
     {
         return isFullScan;
     }
         
-    public boolean getHasExtraFilter() 
+    public boolean hasExtraFilter() 
     {
         return hasExtraFilter;
+    }
+    
+    public RelFieldCollation[] getCollations()
+    {
+        // if the rid column is projected, then the scan result is sorted
+        // on that column
+        if (projectedColumns != null) {
+            for (int i = 0; i < projectedColumns.length; i++) {
+                if (LucidDbSpecialOperators.isLcsRidColumnId(
+                    projectedColumns[i]))
+                {
+                    return new RelFieldCollation [] 
+                        { new RelFieldCollation(i) };
+                }
+            }
+        }
+        return RelFieldCollation.emptyCollationArray;    
     }
 }
 

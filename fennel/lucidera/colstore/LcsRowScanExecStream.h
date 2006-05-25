@@ -84,6 +84,21 @@ class LcsRowScanExecStream : public LcsRowScanBaseExecStream
     LcsRid rid;
 
     /**
+     * True if need to read a new deleted rid from the input stream
+     */
+    bool readDeletedRid;
+
+    /**
+     * True if reached EOS on deleted rid input stream
+     */
+    bool deletedRidEos;
+
+    /**
+     * Current deleted rid
+     */
+    LcsRid deletedRid;
+
+    /**
      * true if tuple has been read and not yet produced
      */
     bool tupleFound;

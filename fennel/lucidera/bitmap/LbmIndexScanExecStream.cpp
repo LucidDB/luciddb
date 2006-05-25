@@ -42,19 +42,27 @@ void LbmIndexScanExecStream::prepare(LbmIndexScanExecStreamParams const &params)
     startRidParamId = params.startRidParamId;
     ridInKey = (startRidParamId > DynamicParamId(0));
     if (ridInKey) {
-        // make sure full key minus rid is specified as search key
-        assert(inputKeyDesc.size() == treeDescriptor.keyProjection.size() -1);
 
         startRidDatum.pData = (PConstBuffer) &startRid;
         startRidDatum.cbData = sizeof(startRid);
 
-        // add on the rid to the btree search key
+        // add on the rid to the btree search key if the key hasn't already
+        // been setup
         TupleDescriptor ridKeyDesc = inputKeyDesc;
+        if (inputKeyDesc.size() == treeDescriptor.keyProjection.size() - 1) {
 
-        StandardTypeDescriptorFactory stdTypeFactory;
-        TupleAttributeDescriptor attrDesc(
-            stdTypeFactory.newDataType(STANDARD_TYPE_RECORDNUM));
-        ridKeyDesc.push_back(attrDesc);
+            StandardTypeDescriptorFactory stdTypeFactory;
+            TupleAttributeDescriptor attrDesc(
+                stdTypeFactory.newDataType(STANDARD_TYPE_RECORDNUM));
+            ridKeyDesc.push_back(attrDesc);
+            ridKeySetup = false;
+        } else {
+            assert(
+                inputKeyDesc.size() == 1 &&
+                inputKeyDesc.size() == treeDescriptor.keyProjection.size());
+            ridKeySetup = true;
+        }
+
         ridSearchKeyData.compute(ridKeyDesc);
         // rid is last key
         ridSearchKeyData[ridSearchKeyData.size() - 1].pData =
@@ -75,20 +83,29 @@ bool LbmIndexScanExecStream::reachedTupleLimit(uint nTuples)
     if (nTuples == 0) {
         pDynamicParamManager->readParam(rowLimitParamId, rowLimitDatum);
     }
+    // a row limit of 0 indicates that the scan should read till EOS
+    if (rowLimit == 0) {
+        return false;
+    }
     return (nTuples >= rowLimit);
 }
 
 void LbmIndexScanExecStream::setAdditionalKeys()
 {
     if (ridInKey) {
-        // make sure we really are doing an equality search
+        // If the rid key was not setup in farrago, need to copy the keys
+        // that precede the rid.  Also make sure that in this case, the search
+        // is an equality one.  Otherwise, in the case where the key was setup,
+        // the search is a greater than equal search.
         assert(lowerBoundDirective == SEARCH_CLOSED_LOWER);
-        assert(upperBoundDirective == SEARCH_CLOSED_UPPER);
+        if (ridKeySetup) {
+            assert(upperBoundDirective == SEARCH_UNBOUNDED_UPPER);
+        } else {
+            assert(upperBoundDirective == SEARCH_CLOSED_UPPER);
 
-        // Copy the inputKeyData into the tupledata that contains the 
-        // rid key.
-        for (uint i = 0; i < inputKeyData.size(); i++) {
-            ridSearchKeyData[i] = inputKeyData[i];
+            for (uint i = 0; i < inputKeyData.size(); i++) {
+                ridSearchKeyData[i] = inputKeyData[i];
+            }
         }
         pDynamicParamManager->readParam(startRidParamId, startRidDatum);
         pSearchKey = &ridSearchKeyData;

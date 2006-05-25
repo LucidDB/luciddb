@@ -1,4 +1,4 @@
-0: jdbc:farragotest:> -- $Id: //open/lu/dev_lcs/farrago/testcases/autoCalcRule.sql#2 $
+0: jdbc:farragotest:> -- $Id: //open/lu/dev_lcs/farrago/testcases/autoCalcRule.sql#3 $
 0: jdbc:farragotest:> 
 0: jdbc:farragotest:> explain plan for select jplus(1, 1) from (values(true));
 +----------------------------------------------------------------------------------------------------+
@@ -65,17 +65,17 @@
 +----------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farragotest:> 
 0: jdbc:farragotest:> explain plan for select empno, cplus(jplus(deptno, empid), age), jplus(cplus(deptno, empid), age), age from sales.emps;
-+---------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                         column0                                                                         |
-+---------------------------------------------------------------------------------------------------------------------------------------------------------+
-| IterCalcRel(expr#0..3=[{inputs}], expr#4=[JPLUS($t3, $t1)], EMPNO=[$t0], EXPR$1=[$t2], EXPR$2=[$t4], AGE=[$t1])                                         |
-|   FennelToIteratorConverter                                                                                                                             |
-|     FennelCalcRel(expr#0..4=[{inputs}], expr#5=[CPLUS($t4, $t3)], expr#6=[CPLUS($t1, $t2)], $0=[$t0], $1=[$t3], $2=[$t5], $3=[$t6])                     |
-|       IteratorToFennelConverter                                                                                                                         |
-|         IterCalcRel(expr#0..9=[{inputs}], expr#10=[JPLUS($t2, $t5)], $0=[$t0], $1=[$t2], $2=[$t5], $3=[$t6], $4=[$t10])                                 |
-|           FennelToIteratorConverter                                                                                                                     |
-|             FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])  |
-+---------------------------------------------------------------------------------------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                              column0                                                                               |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(expr#0..3=[{inputs}], expr#4=[JPLUS($t3, $t1)], EMPNO=[$t0], EXPR$1=[$t2], EXPR$2=[$t4], AGE=[$t1])                                                    |
+|   FennelToIteratorConverter                                                                                                                                        |
+|     FennelCalcRel(expr#0..4=[{inputs}], expr#5=[CPLUS($t4, $t3)], expr#6=[CPLUS($t1, $t2)], $0=[$t0], $1=[$t3], $2=[$t5], $3=[$t6])                                |
+|       IteratorToFennelConverter                                                                                                                                    |
+|         IterCalcRel(expr#0..3=[{inputs}], expr#4=[JPLUS($t1, $t2)], proj#0..4=[{exprs}])                                                                           |
+|           FennelToIteratorConverter                                                                                                                                |
+|             FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2, 5, 6]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])  |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farragotest:> 
 0: jdbc:farragotest:> explain plan for select * from sales.emps where jplus(deptno, 1) = 100;
 +-------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -136,39 +136,39 @@
 0: jdbc:farragotest:> -- expression isn't a RexCall.  dtbug 210
 0: jdbc:farragotest:> -- Dtbug 446: Plan should not have back-to-back FennelCalcRel's.
 0: jdbc:farragotest:> explain plan for select deptno + jplus(cplus(deptno, 1), 2), empno from sales.emps;
-+---------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                      column0                                                                      |
-+---------------------------------------------------------------------------------------------------------------------------------------------------+
-| IterCalcRel(expr#0..3=[{inputs}], expr#4=[JPLUS($t2, $t3)], expr#5=[+($t1, $t4)], EXPR$0=[$t5], EMPNO=[$t0])                                      |
-|   FennelToIteratorConverter                                                                                                                       |
-|     FennelCalcRel(expr#0..9=[{inputs}], expr#10=[1], expr#11=[2], expr#12=[CPLUS($t2, $t10)], $0=[$t0], $1=[$t2], $2=[$t12], $3=[$t11])           |
-|       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])  |
-+---------------------------------------------------------------------------------------------------------------------------------------------------+
++-------------------------------------------------------------------------------------------------------------------------------------+
+|                                                               column0                                                               |
++-------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(expr#0..3=[{inputs}], expr#4=[JPLUS($t2, $t3)], expr#5=[+($t1, $t4)], EXPR$0=[$t5], EMPNO=[$t0])                        |
+|   FennelToIteratorConverter                                                                                                         |
+|     FennelCalcRel(expr#0..1=[{inputs}], expr#2=[1], expr#3=[2], expr#4=[CPLUS($t1, $t2)], proj#0..1=[{exprs}], $2=[$t4], $3=[$t3])  |
+|       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])                 |
++-------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farragotest:> 
 0: jdbc:farragotest:> -- Equivalent to dtbug 210
 0: jdbc:farragotest:> explain plan for select cplus(t.r."second", 1) from (select jrow(deptno, empno) as r from sales.emps) as t;
-+-------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                        column0                                                                        |
-+-------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                             |
-|   FennelCalcRel(expr#0..1=[{inputs}], expr#2=[CPLUS($t0, $t1)], EXPR$0=[$t2])                                                                         |
-|     IteratorToFennelConverter                                                                                                                         |
-|       IterCalcRel(expr#0..9=[{inputs}], expr#10=[JROW($t2, $t0)], expr#11=[$t10.first], expr#12=[$t10.second], expr#13=[1], $0=[$t12], $1=[$t13])     |
-|         FennelToIteratorConverter                                                                                                                     |
-|           FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])  |
-+-------------------------------------------------------------------------------------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                  column0                                                                   |
++--------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                  |
+|   FennelCalcRel(expr#0..1=[{inputs}], expr#2=[CPLUS($t0, $t1)], EXPR$0=[$t2])                                                              |
+|     IteratorToFennelConverter                                                                                                              |
+|       IterCalcRel(expr#0..1=[{inputs}], expr#2=[JROW($t1, $t0)], expr#3=[$t2.first], expr#4=[$t2.second], expr#5=[1], $0=[$t4], $1=[$t5])  |
+|         FennelToIteratorConverter                                                                                                          |
+|           FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])                    |
++--------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farragotest:> 
 0: jdbc:farragotest:> -- Found a bug related to this expression while debugging dtbug 210.
 0: jdbc:farragotest:> -- Dtbug 446: Plan should not have back-to-back FennelCalcRel's.
 0: jdbc:farragotest:> explain plan for select t.r."second" from (select jrow(deptno, cplus(empno, 1)) as r from sales.emps) as t;
-+---------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                      column0                                                                      |
-+---------------------------------------------------------------------------------------------------------------------------------------------------+
-| IterCalcRel(expr#0..1=[{inputs}], expr#2=[JROW($t0, $t1)], expr#3=[$t2.second], second=[$t3])                                                     |
-|   FennelToIteratorConverter                                                                                                                       |
-|     FennelCalcRel(expr#0..9=[{inputs}], expr#10=[1], expr#11=[CPLUS($t0, $t10)], $0=[$t2], $1=[$t11])                                             |
-|       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])  |
-+---------------------------------------------------------------------------------------------------------------------------------------------------+
++----------------------------------------------------------------------------------------------------------------------+
+|                                                       column0                                                        |
++----------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(expr#0..1=[{inputs}], expr#2=[JROW($t0, $t1)], expr#3=[$t2.second], second=[$t3])                        |
+|   FennelToIteratorConverter                                                                                          |
+|     FennelCalcRel(expr#0..1=[{inputs}], expr#2=[1], expr#3=[CPLUS($t0, $t2)], $0=[$t1], $1=[$t3])                    |
+|       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])  |
++----------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farragotest:> 
 0: jdbc:farragotest:> # End autoCalcRule.sql
 0: jdbc:farragotest:> 

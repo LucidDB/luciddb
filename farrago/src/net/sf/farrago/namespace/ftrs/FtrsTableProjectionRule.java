@@ -25,19 +25,13 @@ package net.sf.farrago.namespace.ftrs;
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.query.*;
-import net.sf.farrago.util.*;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
-import org.eigenbase.rex.RexInputRef;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.util.*;
-
 
 /**
  * FtrsTableProjectionRule implements the rule for pushing a Projection into
@@ -86,7 +80,15 @@ class FtrsTableProjectionRule extends MedAbstractFennelProjectionRule
 
         boolean needRename = createProjectionList(origScan);
         if (numProjectedCols == 0) {
-            // projection rule cannot be applied
+            // there are expressions in the projection; we need to split
+            // the projection to first project the input references
+            PushProjector pushProject = new PushProjector();
+            ProjectRel newProject = pushProject.convertProject(
+                origProject, null, origScan, Collections.EMPTY_SET,
+                null);
+            if (newProject != null) {
+                call.transformTo(newProject);
+            }
             return;
         }
 

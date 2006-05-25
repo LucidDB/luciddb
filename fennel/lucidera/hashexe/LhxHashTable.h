@@ -24,11 +24,13 @@
 
 #include "fennel/lucidera/hashexe/LhxHashGenerator.h"
 #include "fennel/tuple/TupleData.h"
+#include "fennel/tuple/TupleDataWithBuffer.h"
 #include "fennel/tuple/TupleDescriptor.h"
 #include "fennel/tuple/TupleAccessor.h"
 #include "fennel/tuple/TupleProjectionAccessor.h"
 #include "fennel/segment/SegPageLock.h"
-#include "fennel/lucidera/hashexe/LhxJoinBase.h"
+#include "fennel/lucidera/hashexe/LhxHashBase.h"
+#include "fennel/exec/AggComputer.h"
 
 #include "math.h"
 
@@ -100,6 +102,11 @@ public:
     PBuffer getNext();
 
     /**
+     * @return the locatin which stored the next node pointer
+     */    
+    PBuffer getNextLocation();
+
+    /**
      * Set the next node pointer for node associated with this accessor.
      *
      * @param[in] nextNode pointer to the next node
@@ -161,13 +168,11 @@ public:
     void setCurrent(PBuffer nodePtrInit, bool valid);
 
     /**
-     * Get max buffer size required to store all the fields based in
-     * TupleDescriptor information. This function can
-     * be called without calling init() or setCurrent() for this accessor.
-     *
-     * @param[in] inputDesc tuple shape to store.
+     * Get max buffer size required to store all the fields based on
+     * TupleDescriptor information previously passed in init().
+     * This function needs to be called after calling init().
      */
-    uint getMaxStorageSize(TupleDescriptor &inputDesc);
+    uint getMaxStorageSize();
 
     /**
      * Get actual buffer size required to store all the fields.
@@ -176,7 +181,17 @@ public:
      * associated with this accessor; else get the storage size for the
      * inputTuple.
      */
-    uint getStorageSize(TupleData const *inputTuple=NULL);
+    uint getStorageSize(TupleData const &inputTuple);
+
+    /**
+     * Check that buffer size required to store all the fields does not exceed
+     * scratch buffer size.
+     *
+     * @param[in] inputTuple if NULL get the tuple storage size for the buffer
+     * associated with this accessor; else get the storage size for the
+     * inputTuple.
+     */
+    void checkStorageSize(TupleData const &inputTuple, uint maxBufferSize);
 
     /**
      * Store a tuple in the buffer associated with this accessor.
@@ -189,7 +204,8 @@ public:
      * Retrieve the data stored in the buffer. Upon return, outputTuple will
      * point into the buffer associated with this accessor.
      *
-     * @pram[out] outputTuple
+     * @param[out] outputTuple
+     * @param[out] destProj fields to copy to in the outputTuple
      */
     void unpack(TupleData &outputTuple, TupleProjection &destProj);
 
@@ -292,13 +308,11 @@ public:
     void addData(PBuffer inputData);
 
     /**
-     * Get max buffer size required to store all the fields based in
-     * TupleDescriptor information. This function can
-     * be called without calling init() or setCurrent() for this accessor.
-     *
-     * @param[in] inputDesc tuple shape to store.
+     * Get max buffer size required to store all the fields based on
+     * TupleDescriptor information previously passed in init().
+     * This function needs to be called after calling init().
      */
-    uint getMaxStorageSize(TupleDescriptor &inputDesc);
+    uint getMaxStorageSize();
 
     /**
      * Get actual buffer size required to store all the fields.
@@ -307,7 +321,17 @@ public:
      * associated with this accessor; else get the storage size for the
      * inputTuple.
      */
-    uint getStorageSize(TupleData const *inputTuple=NULL);
+    uint getStorageSize(TupleData const &inputTuple);
+
+    /**
+     * Check that buffer size required to store all the fields does not exceed
+     * scratch buffer size.
+     *
+     * @param[in] inputTuple if NULL get the tuple storage size for the buffer
+     * associated with this accessor; else get the storage size for the
+     * inputTuple.
+     */
+    void checkStorageSize(TupleData const &inputTuple, uint maxBufferSize);
 
     /**
      * Store a tuple in the buffer associated with this accessor.
@@ -319,9 +343,10 @@ public:
 
     /**
      * Retrieve the data stored in the buffer. Upon return, outputTuple will
-     * point into the bufer associated with this accessor.
+     * point into the buffer associated with this accessor.
      *
-     * @pram[out] outputTuple
+     * @param[out] outputTuple
+     * @param[out] destProj fields to copy to in the outputTuple
      */
     void unpack(TupleData &outputTuple, TupleProjection &destProj);
 
@@ -491,18 +516,35 @@ class LhxHashTable
     /**
      * Fields in the inputTuple parameter to addTuple() method that will hold
      * keyCols, Aggs, and data columns. inputTuple should have the same shape
-     * as joinInfo.inputDesc[1] used in the init() method.
+     * as hashInfo.inputDesc[1] used in the init() method.
      */
     TupleProjection keyColsAndAggsProj;
     TupleProjection keyColsProj;
     TupleProjection aggsProj;
     TupleProjection dataProj;
+    vector<bool>    isKeyColVarChar;
 
     /**
      * Accessors for the content of this hash table.
      */
     LhxHashKeyAccessor  hashKeyAccessor;
     LhxHashDataAccessor hashDataAccessor;
+    
+    uint maxBufferSize;
+
+    /**
+     * Marks if this hash table is built for aggregation. Aggregating hash
+     * table only contains keys(group by keys plus aggregates) and does not
+     * contain data portion.
+     */
+    bool isAggregate;
+
+    /**
+     * aggregate computers passed in from the agg exec stream.
+     */
+    AggComputerList *aggComputers;
+    TupleData        aggWorkingTuple;
+    TupleDataWithBuffer aggResultTuple;
 
     /**
      * Allocate a block.
@@ -549,16 +591,36 @@ class LhxHashTable
      */
     bool addData(PBuffer keyNode, TupleData const &inputTuple);
 
+    /**
+     * Aggregate a new tuple.
+     *
+     * @param[in] keyNode the matching key node
+     * @param[in] inputTuple
+     */
+    bool aggData(PBuffer destKeyLoc, TupleData const &inputTuple);
+
 public:
     /**
      * Initialize the hash table.
      *
      * @param[in] partitionLevelInit recursive partitioning level
-     * @param[in] joinInfo
+     * @param[in] hashInfo
+     & @param[in] aggList pointer to list of agg computers.
      */
     void init(
         uint partitionLevelInit,
-        LhxJoinInfo const &joinInfo);
+        LhxHashInfo const &hashInfo,
+        AggComputerList *aggList);
+
+    /**
+     * Initialize the hash table.
+     *
+     * @param[in] partitionLevelInit recursive partitioning level
+     * @param[in] hashInfo
+     */
+    void init(
+        uint partitionLevelInit,
+        LhxHashInfo const &hashInfo);
 
     /**
      * Allocate blocks to hold the number of slots needed for this hash table.
@@ -623,15 +685,29 @@ public:
         uint usablePageSize = 0);
 
     /**
+     * Find location that stores the key node based on key cols.
+     *
+     * @param[in] inputTuple
+     * @param[in] keyColsProj key columns from the inputTuple.
+     & @param[in] isProbing whether the hash table is being probed.
+     *
+     * @return the buffer which stored the address of the key
+     */
+    PBuffer findKeyLocation(
+        TupleData const &inputTuple,
+        TupleProjection const &keyColsProj,
+        bool isProbing);
+
+    /**
      * Find key node based on key cols.
      *
      * @param[in] inputTuple
      * @param[in] keyColsProj key columns from the inputTuple.
      & @param[in] isProbing whether the hash table is being probed.
      *
-     * @return status. true if this key is found in the hash table.
+     * @return the buffer which stored the address of the key
      */
-    PBuffer findKey(
+    inline PBuffer findKey(
         TupleData const &inputTuple,
         TupleProjection const &keyColsProj,
         bool isProbing);
@@ -640,9 +716,6 @@ public:
      * Insert a new tuple.
      *
      * @param[in] inputTuple
-     * @param[in] keyColsProj key fields
-     * @param[in] aggsProj agg fields
-     * @param[in] dataProj data fields
      */
     bool addTuple(TupleData const &inputTuple);
 
@@ -660,6 +733,8 @@ public:
      */
     uint getNumSlots() const;
 
+    inline bool isHashAggregate() const;
+
     /**
      * Print the content of the node associated with this accessor.
      */
@@ -673,6 +748,14 @@ class LhxHashTableReader
      */
     LhxHashTable *hashTable;
     
+    /**
+     * Marks if this hash table is built for aggregation. Aggregating hash
+     * table only contains keys(group by keys plus aggregates) and does not
+     * contain data portion. The reader behavior will thus be different from
+     * reading a hash table built for joins.
+     */
+    bool isAggregate;
+
     /**
      * Current read location.
      */
@@ -749,11 +832,11 @@ public:
      * Initialize the hash table reader.
      *
      * @param[in] hashTableInit the underlying hash table to read from
-     * @param[in] joinInfo
+     * @param[in] hashInfo
      */
     void init(
         LhxHashTable *hashTableInit,
-        LhxJoinInfo const &joinInfo);
+        LhxHashInfo const &hashInfo);
 
     /**
      * Bind this reader to a certain key. Only tuples with the same key are
@@ -822,6 +905,11 @@ inline PBuffer LhxHashNodeAccessor::getNext()
     return returnPtr;
 }
 
+inline PBuffer LhxHashNodeAccessor::getNextLocation()
+{
+    return nodePtr+nextNodeOffset;
+}
+
 inline void LhxHashNodeAccessor::setNext(PBuffer nextNode)
 {
     memcpy(nodePtr+nextNodeOffset, (PBuffer)&nextNode, getNextFieldSize());
@@ -848,9 +936,9 @@ inline void LhxHashDataAccessor::setCurrent(PBuffer nodePtrInit, bool valid)
     dataAccessor.setCurrentTupleBuf(getBuffer(), valid);
 }
 
-inline uint LhxHashDataAccessor::getMaxStorageSize(TupleDescriptor &inputDesc)
+inline uint LhxHashDataAccessor::getMaxStorageSize()
 {   
-    return (inputDesc.getMaxByteCount() + getBufferOffset());
+    return (dataAccessor.getMaxByteCount() + getBufferOffset());
 }
 
 inline void LhxHashKeyAccessor::setCurrent(PBuffer nodePtrInit, bool valid)
@@ -859,9 +947,9 @@ inline void LhxHashKeyAccessor::setCurrent(PBuffer nodePtrInit, bool valid)
     keyAccessor.setCurrentTupleBuf(getBuffer(), valid);
 }
 
-inline uint LhxHashKeyAccessor::getMaxStorageSize(TupleDescriptor &inputDesc)
+inline uint LhxHashKeyAccessor::getMaxStorageSize()
 {   
-    return (inputDesc.getMaxByteCount() + getBufferOffset());
+    return (keyAccessor.getMaxByteCount() + getBufferOffset());
 }
 
 inline PBuffer LhxHashKeyAccessor::getFirstData()
@@ -910,7 +998,29 @@ inline uint LhxHashTable::slotsNeeded(double cndKeys)
     return uint(ceil(cndKeys * 1.2));
 }
 
+inline PBuffer LhxHashTable::findKey(
+    TupleData const &inputTuple,
+    TupleProjection const &keyColsProj,
+    bool isProbing)
+{
+    PBuffer destKey;
+    PBuffer destKeyLoc;
+    destKeyLoc = findKeyLocation(inputTuple, keyColsProj, isProbing);
+    
+    if (destKeyLoc) {
+        /*
+         * Need to copy destKey out as destKeyLoc might not be aligned.
+         */    
+        memcpy((PBuffer)&destKey, destKeyLoc, sizeof(PBuffer));
+        return destKey;
+    } else {
+        return NULL;
+    }
+}
+
 inline uint LhxHashTable::getNumSlots() const { return numSlots; }
+
+inline bool LhxHashTable::isHashAggregate() const { return isAggregate; }
 
 FENNEL_END_NAMESPACE
 

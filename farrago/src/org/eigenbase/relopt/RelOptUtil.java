@@ -1126,53 +1126,6 @@ public abstract class RelOptUtil
     }
     
     /**
-     * Clones an expression tree and walks through it, adjusting each 
-     * RexInputRef index by some amount
-     * 
-     * @param rexBuilder builder for creating new RexInputRefs
-     * @param fields fields where the RexInputRefs originally originated from
-     * @param rex the expression
-     * @param adjustments the amount to adjust each field by
-     * @return modified expression tree
-     */
-    public static RexNode convertRexInputRefs(
-        RexBuilder rexBuilder,
-        RexNode rex,
-        RelDataTypeField[] fields,
-        int[] adjustments)
-    {
-        RexNode newFilter = RexUtil.clone(rex);
-        newFilter = adjustRexInputRefs(
-            rexBuilder, newFilter, fields, adjustments);
-        return newFilter;
-    }
-    
-    private static RexNode adjustRexInputRefs(
-        RexBuilder rexBuilder,
-        RexNode rex,
-        RelDataTypeField[] fields,
-        int[] adjustments)
-    {
-        if (rex instanceof RexCall) {
-            RexNode [] operands = ((RexCall) rex).operands;
-            for (int i = 0; i < operands.length; i++) {
-                RexNode operand = operands[i];
-                operands[i] = adjustRexInputRefs(
-                    rexBuilder, operand, fields, adjustments);
-            }
-            return rex;
-        } else if (rex instanceof RexInputRef) {
-            RexInputRef var = (RexInputRef) rex;
-            int index = var.getIndex();
-            if (adjustments[index] != 0) {
-                return rexBuilder.makeInputRef(
-                    fields[index].getType(), index + adjustments[index]);
-            }
-        }
-        return rex;
-    }
-    
-    /**
      * Adjusts key values in a list by some fixed amount.
      * 
      * @param keys list of key values
@@ -1202,20 +1155,6 @@ public abstract class RelOptUtil
             bitmap.set(i);
         }
     }
-    
-    /**
-     * Sets a bit in a bitmap for every RexInputRef encountered in an
-     * expression
-     * 
-     * @param rex expression from which to look for RexInputRefs
-     * @param rexRefs bitmap representing RexInputRefs contained in the rex
-     */
-    public static void findRexInputRefs(RexNode rex, BitSet rexRefs)
-    {
-        Util.deprecated("remove, use shuttle", false);
-        rex.accept(new InputFinder(rexRefs));
-    }
-    
 
     /**
      * Returns true if all bits set in the second parameter are also set
@@ -1309,9 +1248,9 @@ public abstract class RelOptUtil
                     for (int i = nFieldsLeft; i < nTotalFields; i++) {
                         adjustments[i] = -nFieldsLeft;
                     }
-                    rightFilters.add(
-                        RelOptUtil.convertRexInputRefs(
-                            rexBuilder, filter, joinFields, adjustments));
+                    rightFilters.add(filter.accept(
+                        new RelOptUtil.RexInputConverter(
+                            rexBuilder, joinFields, adjustments)));
                 }
                 filterIter.remove();
             
@@ -1493,6 +1432,43 @@ public abstract class RelOptUtil
         public void apply(RexNode[] exprs, RexNode expr)
         {
             RexProgram.apply(this, exprs, expr);
+        }
+    }
+    
+    /**
+     * Walks an expression tree, converting the index of RexInputRefs based
+     * on some adjustment factor.
+     */
+    public static class RexInputConverter extends RexShuttle
+    {
+        private final RexBuilder rexBuilder;
+        private final RelDataTypeField[] fields;
+        private final int[] adjustments;
+        
+        /**
+         * @param rexBuilder builder for creating new RexInputRefs
+         * @param fields fields where the RexInputRefs originally originated
+         * from
+         * @param adjustments the amount to adjust each field by
+         */
+        public RexInputConverter(
+            RexBuilder rexBuilder, RelDataTypeField[] fields, 
+            int[] adjustments)
+        {
+            this.rexBuilder = rexBuilder;
+            this.fields = fields;
+            this.adjustments = adjustments;
+        }
+        
+        public RexNode visitInputRef(RexInputRef var)
+        {
+            int index = var.getIndex();
+            if (adjustments[index] != 0) {
+                return rexBuilder.makeInputRef(
+                    fields[index].getType(), index + adjustments[index]);
+            } else {
+                return var;
+            }
         }
     }
 }

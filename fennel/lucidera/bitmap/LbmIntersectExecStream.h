@@ -22,11 +22,7 @@
 #ifndef Fennel_LbmIntersectExecStream_Included
 #define Fennel_LbmIntersectExecStream_Included
 
-#include "fennel/tuple/TupleData.h"
-#include "fennel/exec/ConfluenceExecStream.h"
-#include "fennel/exec/DynamicParam.h"
-#include "fennel/lucidera/bitmap/LbmSegmentReader.h"
-#include "fennel/lucidera/bitmap/LbmSegmentWriter.h"
+#include "fennel/lucidera/bitmap/LbmBitOpExecStream.h"
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -34,21 +30,9 @@ FENNEL_BEGIN_NAMESPACE
  * LbmIntersectExecStreamParams defines parameters for instantiating a
  * LbmIntersectExecStream
  */
-struct LbmIntersectExecStreamParams : public ConfluenceExecStreamParams
+struct LbmIntersectExecStreamParams : public LbmBitOpExecStreamParams
 {
-    /**
-     * Parameter id representing the dynamic parameter used to limit the
-     * number of rows producers for this stream should produce on a single
-     * execute
-     */
-    DynamicParamId rowLimitParamId;
 
-    /**
-     * Parameter id representing the dynamic parameter used to set the
-     * starting rid value for bitmap entries to be produced by this stream's
-     * producers
-     */
-    DynamicParamId startRidParamId;
 };
 
 /**
@@ -58,92 +42,8 @@ struct LbmIntersectExecStreamParams : public ConfluenceExecStreamParams
  * @author Zelaine Fong
  * @version $Id$
  */
-class LbmIntersectExecStream : public ConfluenceExecStream
+class LbmIntersectExecStream : public LbmBitOpExecStream
 {
-    /**
-     * Parameter id representing the dynamic parameter used to limit the
-     * number of rows producers for this stream should produce on a single
-     * execute
-     */
-    DynamicParamId rowLimitParamId;
-
-    /**
-     * Parameter id representing the dynamic parameter used to set the
-     * starting rid value for bitmap entries to be produced by this stream's
-     * producers
-     */
-    DynamicParamId startRidParamId;
-
-    /**
-     * True if dynamic parameters have been created
-     */
-    bool dynParamsCreated;
-
-    /**
-     * Tuple datum used to store dynamic paramter for rowLimit
-     */
-    TupleDatum rowLimitDatum;
-
-    /**
-     * Tuple datum used to store dynamic parameter for startRid
-     */
-    TupleDatum startRidDatum;
-
-    /**
-     * Number of rows that can be produced
-     */
-    RecordNum rowLimit;
-
-    /**
-     * Desired starting rid value for bitmap entries
-     */
-    LcsRid startRid;
-
-    /**
-     * One segment reader for each input stream
-     */
-    boost::scoped_array<LbmSegmentReader> segmentReaders;
-
-    /**
-     * Number of input streams
-     */
-    uint nInputs;
-
-    /**
-     * Tuple data for each input stream
-     */
-    boost::scoped_array<TupleData> bitmapSegTuples;
-
-    /**
-     * Segment writer
-     */
-    LbmSegmentWriter segmentWriter;
-
-    /**
-     * Buffer for writing output bitmap segment
-     */
-    boost::scoped_array<FixedBuffer> outputBuf;
-
-    /**
-     * Amount of space available in buffer for bitmaps
-     */
-    uint bitmapBufSize;
-
-    /**
-     * Temporary buffer for AND'ing together byte segments
-     */
-    boost::scoped_array<FixedBuffer> byteSegBuf;
-
-    /**
-     * Pointer to byteSegBuf
-     */
-    PBuffer pByteSegBuf;
-
-    /**
-     * Current input stream being processed
-     */
-    uint iInput;
-
     /**
      * Number of inputs with overlapping rid values.  Must be equal to
      * nInputs for an intersection to take place.
@@ -156,48 +56,13 @@ class LbmIntersectExecStream : public ConfluenceExecStream
     uint minLen;
 
     /**
-     * Output tuple data containing AND'd bitmap segments
-     */
-    TupleData outputTuple;
-
-    /**
-     * True if a tuple needs to be written to the output stream
-     */
-    bool producePending;
-
-    /**
-     * Current rid value to be added to the bitmap segment
-     */
-    LcsRid addRid;
-
-    /**
-     * Current byte segment to be added
-     */
-    PBuffer addByteSeg;
-
-    /**
-     * Current length of byte segment to be added
-     */
-    uint addLen;
-
-    /**
-     * Perform intersect operation on all segments
+     * Performs intersect operation on all segments
      *
      * @param len length of intersecting segments
      *
      * @return false if buffer overflow occurred writing out a segment
      */
     bool intersectSegments(uint len);
-
-    /**
-     * Add the intersected segments to the segment under construction.  If
-     * the segment fills up, write it to the output buffer and continue
-     * constructing the rest of the segment.  Leading, trailing, and
-     * intermediate zeros in the segment are removed.
-     *
-     * @return false if buffer overflow occurred writing out a segment
-     */
-    bool addSegments();
 
 public:
     explicit LbmIntersectExecStream();

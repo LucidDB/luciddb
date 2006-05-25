@@ -26,7 +26,6 @@ import java.util.List;
 
 import net.sf.farrago.catalog.FarragoRepos;
 import net.sf.farrago.fem.fennel.FemBufferingTupleStreamDef;
-import net.sf.farrago.namespace.FarragoMedDataServer;
 import net.sf.farrago.query.*;
 import net.sf.farrago.type.FarragoTypeFactory;
 

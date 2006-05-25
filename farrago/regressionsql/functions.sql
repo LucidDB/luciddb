@@ -14,8 +14,8 @@ select ln(2.71828) as res from sales.emps where empno=100;
 select log10(10.0) from sales.emps;
 select log10(10) from sales.emps;
 values log10(10*10.0);
-select (-empno) as res from sales.emps;
-select (-empno)*2 as res from sales.emps;
+select (-empno) as res from sales.emps order by 1;
+select (-empno)*2 as res from sales.emps order by 1;
 select slacker and true from sales.emps order by 1;
 select slacker and false from sales.emps order by 1;
 select slacker and unknown from sales.emps order by 1;
@@ -38,10 +38,10 @@ select nullif(50,age) from sales.emps order by 1;
 select nullif(age,50) from sales.emps order by 1;
 select nullif(age,cast(null as integer)) from sales.emps order by 1;
 
-select abs((-empno)*2) as res from sales.emps;
+select abs((-empno)*2) as res from sales.emps order by 1;
 select abs(2) as res from sales.emps;
 select abs(-2) as res from sales.emps;
-select abs((-empno)*2.0) as res from sales.emps;
+select abs((-empno)*2.0) as res from sales.emps order by 1;
 
 values 1+1.0;
 values 1.0-1;

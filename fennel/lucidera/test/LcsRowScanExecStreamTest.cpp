@@ -241,27 +241,32 @@ void LcsRowScanExecStreamTest::testScanCols(uint nRows, uint nCols,
 
     scanParams.hasExtraFilter = false;
 
+    // setup a values stream either to provide an empty input to simulate
+    // the scan of the deletion index (in the case of a full scan) or a stream
+    // of rid values when we're doing reads based on specific rids
+    valuesParams.outputTupleDesc.push_back(attrDesc_int64);
+    valuesParams.outputTupleDesc.push_back(attrDesc_bitmap);
+    valuesParams.outputTupleDesc.push_back(attrDesc_bitmap);
+
+    // set buffer size to max number of bytes required to represent each
+    // bit (nRows/8) plus max number of segments (nRows/bitmapColSize)
+    // times 8 bytes for each starting rid in the segment
+    uint bufferSize = std::max(
+        16, (int) (nRows/8 + nRows/bitmapColSize * 8));
+    pBuffer.reset(new uint8_t[bufferSize]);
+    valuesParams.pTupleBuffer = pBuffer;
+
     if (nRows > 0) {
-        valuesParams.outputTupleDesc.push_back(attrDesc_int64);
-        valuesParams.outputTupleDesc.push_back(attrDesc_bitmap);
-        valuesParams.outputTupleDesc.push_back(attrDesc_bitmap);
-        // set buffer size to max number of bytes required to represent each
-        // bit (nRows/8) plus max number of segments (nRows/bitmapColSize)
-        // times 8 bytes for each starting rid in the segment
-        uint bufferSize = std::max(
-            16, (int) (nRows/8 + nRows/bitmapColSize * 8));
-        pBuffer.reset(new uint8_t[bufferSize]);
-        valuesParams.pTupleBuffer = pBuffer;
         valuesParams.bufSize = generateBitmaps(
             nRows, skipRows, valuesParams.outputTupleDesc, pBuffer.get());
         assert(valuesParams.bufSize <= bufferSize);
-        valuesStreamEmbryo.init(new ValuesExecStream(), valuesParams);
-        valuesStreamEmbryo.getStream()->setName("ValuesExecStream");
         scanParams.isFullScan = false;
     } else {
         scanParams.isFullScan = true;
+        valuesParams.bufSize = 0;
     }
-
+    valuesStreamEmbryo.init(new ValuesExecStream(), valuesParams);
+    valuesStreamEmbryo.getStream()->setName("ValuesExecStream");
 
     // setup parameters into scan
     //  nClusters cluster with nCols columns each
@@ -295,13 +300,8 @@ void LcsRowScanExecStreamTest::testScanCols(uint nRows, uint nCols,
     scanStreamEmbryo.getStream()->setName("RowScanExecStream");
     SharedExecStream pOutputStream;
 
-    if (nRows > 0) {
-        pOutputStream = 
-            prepareTransformGraph(valuesStreamEmbryo, scanStreamEmbryo);
-    } else {
-        // full scan
-        pOutputStream = prepareSourceGraph(scanStreamEmbryo);
-    }
+    pOutputStream = 
+        prepareTransformGraph(valuesStreamEmbryo, scanStreamEmbryo);
     
     // setup generators for result stream
 

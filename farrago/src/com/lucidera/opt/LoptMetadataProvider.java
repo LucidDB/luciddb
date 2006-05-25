@@ -360,6 +360,12 @@ public class LoptMetadataProvider extends ReflectiveRelMetadataProvider
             // the full cardinality of the column
             RelStatColumnStatistics colStats = null;
             FemAbstractColumn col = rel.getColumnForFieldAccess(colno);
+            // TODO zfong 5/17/06 - for special columns like LCS_RID, we can
+            // construct column stats for it, since the column values are
+            // guaranteed to be unique
+            if (col == null) {
+                return null;
+            }
             if (col2SeqMap != null) {   
                 SargIntervalSequence sargSeq = col2SeqMap.get(col);
                 colStats = tabStats.getColumnStatistics(colno, sargSeq);

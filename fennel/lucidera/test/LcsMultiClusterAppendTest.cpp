@@ -252,13 +252,32 @@ void LcsMultiClusterAppendTest::scanCols(uint nRows, uint nCols,
         scanParams.outputTupleDesc.push_back(attrDesc_int64);
     }
 
+    // setup a values stream to provide an empty input to simulate
+    // the scan of the deletion index
+
+    ValuesExecStreamParams valuesParams;
+    ExecStreamEmbryo valuesStreamEmbryo;
+    boost::shared_array<FixedBuffer> pBuffer;
+
+    valuesParams.outputTupleDesc.push_back(attrDesc_int64);
+    valuesParams.outputTupleDesc.push_back(attrDesc_bitmap);
+    valuesParams.outputTupleDesc.push_back(attrDesc_bitmap);
+
+    uint bufferSize = 16;
+    pBuffer.reset(new uint8_t[bufferSize]);
+    valuesParams.pTupleBuffer = pBuffer;
+    valuesParams.bufSize = 0;
+    valuesStreamEmbryo.init(new ValuesExecStream(), valuesParams);
+    valuesStreamEmbryo.getStream()->setName("ValuesExecStream");
+
     ExecStreamEmbryo scanStreamEmbryo;
 
     scanStreamEmbryo.init(new LcsRowScanExecStream(), scanParams);
     scanStreamEmbryo.getStream()->setName("RowScanExecStream");
 
-    SharedExecStream pOutputStream = prepareSourceGraph(scanStreamEmbryo);
-    
+    SharedExecStream pOutputStream =
+        prepareTransformGraph(valuesStreamEmbryo, scanStreamEmbryo);
+
     // setup generators for result stream
 
     vector<boost::shared_ptr<ColumnGenerator<int64_t> > > columnGenerators;

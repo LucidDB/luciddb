@@ -68,8 +68,10 @@ private:
      *
      * @param[out] hashValue
      * @param[in] inputCol input TupleDatum
+     * @param[in] isVarChar if col is varchar type
      */
-    void hashOneColumn(uint &hashValue, TupleDatum const &inputCol);
+    void hashOneColumn(uint &hashValue, TupleDatum const &inputCol,
+        bool isVarChar);
 
 public:
     /**
@@ -86,23 +88,28 @@ public:
      * Compute hash value for a TupleData, on both value and length
      * information.
      *
-     * @param[input] inputTuple
-     * @param[input] keyProjection which fields in the input tuple are used
+     * @param[in] inputTuple
+     * @param[in] keyProjection which fields in the input tuple are used
+     * @param[in] isKeyColVarChar a vector indicating if the corresponding hash
+     * key is of varchar type. The trailing blanks in varchar types are
+     * insignificant in both comparison and hash value computation.
      *
      * @return the hash value
      */
     uint hash(TupleData const &inputTuple, 
-              TupleProjection const &keyProjection);
+        TupleProjection const &keyProjection,
+        std::vector<bool> const &isKeyColVarChar);
 
     /**
      * Compute hash value for a TupleDatum, on both value and length
      * information.
      *
      * @param[input] inputCol
+     * @param[in] isVarChar if col is varchar type
      *
      * @return the hash value
      */
-    uint hash(TupleDatum const &inputCol);
+    uint hash(TupleDatum const &inputCol, bool isVarChar);
 
     /**
      * Compute hash value from value stored in a buffer.
@@ -120,10 +127,10 @@ inline uint LhxHashGenerator::getLevel()
     return level;
 }
 
-inline uint LhxHashGenerator::hash(TupleDatum const &inputCol)
+inline uint LhxHashGenerator::hash(TupleDatum const &inputCol, bool isVarChar)
 {
     uint hashValue = hashValueSeed;
-    hashOneColumn(hashValue, inputCol);
+    hashOneColumn(hashValue, inputCol, isVarChar);
     return hashValue;
 }
 

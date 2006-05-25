@@ -229,9 +229,10 @@ public class LoptOptimizeJoinRule extends RelOptRule
                 int projLength = project.getProjectExps().length;
                 newProjExprs = new RexNode[projLength];
                 for (int j = 0; j < projLength; j++) {
-                    newProjExprs[j] = RelOptUtil.convertRexInputRefs(
-                        rexBuilder, origProjExprs[j],
-                        multiJoin.getMultiJoinFields(), adjustments);
+                    newProjExprs[j] = origProjExprs[j].accept(
+                        new RelOptUtil.RexInputConverter(
+                            rexBuilder, multiJoin.getMultiJoinFields(),
+                            adjustments));
                 }
             } else {
                 newProjExprs = origProjExprs;
@@ -609,9 +610,10 @@ public class LoptOptimizeJoinRule extends RelOptRule
         if (adjust && condition != null) {
             int[] adjustments = new int[multiJoin.getNumTotalFields()];
             if (needsAdjustment(multiJoin, adjustments, leftTree, rightTree)) {
-                condition = RelOptUtil.convertRexInputRefs(
-                    rexBuilder, condition,
-                    multiJoin.getMultiJoinFields(), adjustments);
+                condition = condition.accept(
+                    new RelOptUtil.RexInputConverter(
+                        rexBuilder, multiJoin.getMultiJoinFields(),
+                        adjustments));
             }
         }
         
@@ -690,8 +692,9 @@ public class LoptOptimizeJoinRule extends RelOptRule
         if (needAdjust) {
             RexBuilder rexBuilder =
                 multiJoin.getMultiJoinRel().getCluster().getRexBuilder();
-            condition = RelOptUtil.convertRexInputRefs(
-                rexBuilder, condition, origFields, adjustments);
+            condition = condition.accept(
+                new RelOptUtil.RexInputConverter(
+                    rexBuilder, origFields, adjustments));
         }
         
         return condition;
@@ -731,9 +734,10 @@ public class LoptOptimizeJoinRule extends RelOptRule
         if (fullAdjust) {
             int[] adjustments = new int[multiJoin.getNumTotalFields()];
             if (needsAdjustment(multiJoin, adjustments, left, right)) {
-                condition = RelOptUtil.convertRexInputRefs(
-                    rexBuilder, condition,
-                    multiJoin.getMultiJoinFields(), adjustments);
+                condition = condition.accept(
+                    new RelOptUtil.RexInputConverter(
+                        rexBuilder, multiJoin.getMultiJoinFields(),
+                        adjustments));
             }
         }
         
@@ -833,8 +837,9 @@ public class LoptOptimizeJoinRule extends RelOptRule
                     { origLeft.getJoinTree().getRowType(),
                     origRight.getJoinTree().getRowType() });
         
-        condition = RelOptUtil.convertRexInputRefs(
-            rexBuilder, condition, joinRowType.getFields(), adjustments);
+        condition = condition.accept(
+            new RelOptUtil.RexInputConverter(
+                rexBuilder, joinRowType.getFields(), adjustments));
         
         return condition;
     }

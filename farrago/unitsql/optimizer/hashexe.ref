@@ -635,6 +635,377 @@
 '','Adel                '
 'Leo                 ',''
 0: jdbc:farrago:> 
+0: jdbc:farrago:> --------------------
+0: jdbc:farrago:> -- hash aggregate --
+0: jdbc:farrago:> --------------------
+0: jdbc:farrago:> 
+0: jdbc:farrago:> truncate table lhxemps;
+0: jdbc:farrago:> insert into lhxemps select empno, name, deptno from sales.emps;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select deptno from lhxemps group by deptno order by 1;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0=[{inputs}], DEPTNO=[$t0])'
+'      FennelAggRel(groupCount=[1])'
+'        FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'          FennelRenameRel(fieldNames=[[$f0]])'
+'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select deptno from lhxemps group by deptno order by 1;
+'DEPTNO'
+'10'
+'20'
+'40'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select distinct deptno from lhxemps order by 1;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelAggRel(groupCount=[1])'
+'      FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select distinct deptno from lhxemps order by 1;
+'DEPTNO'
+'10'
+'20'
+'40'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select count(deptno) from lhxemps;
+'column0'
+'IterCalcRel(expr#0=[{inputs}], EXPR$0=[$t0])'
+'  FennelToIteratorConverter'
+'    FennelAggRel(groupCount=[0], agg#0=[COUNT(0)])'
+'      FennelRenameRel(fieldNames=[[$f0]])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select count(deptno) from lhxemps;
+'EXPR$0'
+'4'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select count(empno) from lhxemps group by deptno order by 1;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..1=[{inputs}], EXPR$0=[$t1])'
+'      FennelAggRel(groupCount=[1], agg#0=[COUNT(1)])'
+'        FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'          FennelRenameRel(fieldNames=[[$f0, $f1]])'
+'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2, 0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$EMPNO]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select count(empno) from lhxemps group by deptno order by 1;
+'EXPR$0'
+'1'
+'1'
+'2'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select count(*) from lhxemps;
+'column0'
+'IterCalcRel(expr#0=[{inputs}], EXPR$0=[$t0])'
+'  FennelToIteratorConverter'
+'    FennelAggRel(groupCount=[0], agg#0=[COUNT()])'
+'      FennelCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select count(*) from lhxemps;
+'EXPR$0'
+'4'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select count(*) from lhxemps group by deptno order by 1;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..1=[{inputs}], EXPR$0=[$t1])'
+'      FennelAggRel(groupCount=[1], agg#0=[COUNT()])'
+'        FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'          FennelRenameRel(fieldNames=[[$f0]])'
+'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select count(*) from lhxemps group by deptno order by 1;
+'EXPR$0'
+'1'
+'1'
+'2'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- make sure empty single group produces correct result
+0: jdbc:farrago:> truncate table lhxemps;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select count(*) from lhxemps;
+'column0'
+'IterCalcRel(expr#0=[{inputs}], EXPR$0=[$t0])'
+'  FennelToIteratorConverter'
+'    FennelAggRel(groupCount=[0], agg#0=[COUNT()])'
+'      FennelCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select count(*) from lhxemps;
+'EXPR$0'
+'0'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select count(*) from lhxemps group by deptno order by 1;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..1=[{inputs}], EXPR$0=[$t1])'
+'      FennelAggRel(groupCount=[1], agg#0=[COUNT()])'
+'        FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'          FennelRenameRel(fieldNames=[[$f0]])'
+'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select count(*) from lhxemps group by deptno order by 1;
+'EXPR$0'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- make sure the hash table handles partial aggregate of increasing size
+0: jdbc:farrago:> truncate table lhxemps;
+0: jdbc:farrago:> insert into lhxemps values(100, 'a', 20);
+0: jdbc:farrago:> insert into lhxemps values(100, 'ab', 20);
+0: jdbc:farrago:> insert into lhxemps values(100, 'abc', 20);
+0: jdbc:farrago:> insert into lhxemps values(100, 'abcd', 20);
+0: jdbc:farrago:> insert into lhxemps values(100, 'abcde', 20);
+0: jdbc:farrago:> insert into lhxemps values(100, 'abcdef', 20);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for select max(ename) from lhxemps group by deptno order by 1;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..1=[{inputs}], EXPR$0=[$t1])'
+'      FennelAggRel(groupCount=[1], agg#0=[MAX(1)])'
+'        FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'          FennelRenameRel(fieldNames=[[$f0, $f1]])'
+'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$ENAME]])'
+0: jdbc:farrago:> select max(ename) from lhxemps group by deptno order by 1;
+'EXPR$0'
+'abcdef'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- testing run time error message for row length
+0: jdbc:farrago:> drop table lhxemps;
+0: jdbc:farrago:> create table lhxemps(empno char(2000), ename char(2000));
+0: jdbc:farrago:> 
+0: jdbc:farrago:> insert into lhxemps values('abc', 'abc');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select empno, min(ename), max(ename) from lhxemps group by empno;
+'column0'
+'IterCalcRel(expr#0..2=[{inputs}], proj#0..2=[{exprs}])'
+'  FennelToIteratorConverter'
+'    FennelAggRel(groupCount=[1], agg#0=[MIN(1)], agg#1=[MAX(1)])'
+'      FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'        FennelRenameRel(fieldNames=[[$f0, $f1]])'
+'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$ENAME]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select empno, min(ename), max(ename) from lhxemps group by empno;
+Error: Row size (6004 bytes) exceeds maximum (4096 bytes); row data:  [ 'abc                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ', 'abc                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ', 'abc                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ' ] (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> ------------------------------------
+0: jdbc:farrago:> -- the following are from agg.sql --
+0: jdbc:farrago:> ------------------------------------
+0: jdbc:farrago:> set schema 'sales';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select count(*) from depts;
+'EXPR$0'
+'3'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select count(city) from emps;
+'EXPR$0'
+'2'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select count(city) from emps where empno > 100000;
+'EXPR$0'
+'0'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select sum(deptno) from depts;
+'EXPR$0'
+'60'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select sum(deptno) from depts where deptno > 100000;
+'EXPR$0'
+''
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select max(deptno) from depts;
+'EXPR$0'
+'30'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select min(deptno) from depts;
+'EXPR$0'
+'10'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select avg(deptno) from depts;
+'EXPR$0'
+'20'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> ------------
+0: jdbc:farrago:> -- group bys
+0: jdbc:farrago:> ------------
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select deptno, count(*) from emps group by deptno order by 1;
+'DEPTNO','EXPR$1'
+'10','1'
+'20','2'
+'40','1'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- Issue the same statement again to make sure SortedAggStream
+0: jdbc:farrago:> -- is in good state when reopened
+0: jdbc:farrago:> select deptno, count(*) from emps group by deptno order by 1;
+'DEPTNO','EXPR$1'
+'10','1'
+'20','2'
+'40','1'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select d.name, count(*) from emps e, depts d
+. . . . . . . . >     where d.deptno = e.deptno group by d.name order by 1;
+'NAME','EXPR$1'
+'Marketing','2'
+'Sales','1'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- Test group by key where key value could be NULL
+0: jdbc:farrago:> select deptno, gender, min(age), max(age) from emps
+. . . . . . . . >     group by deptno, gender order by 1, 2;
+'DEPTNO','GENDER','EXPR$2','EXPR$3'
+'10','','25','25'
+'20','F','50','50'
+'20','M','80','80'
+'40','M','',''
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select sum(age) from emps group by deptno order by 1;
+'EXPR$0'
+''
+'25'
+'130'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- Test where input stream is empty
+0: jdbc:farrago:> select deptno, count(*) from emps where deptno < 0 group by deptno order by 1;
+'DEPTNO','EXPR$1'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- verify plans
+0: jdbc:farrago:> !set outputformat csv
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select count(*) from depts;
+'column0'
+'IterCalcRel(expr#0=[{inputs}], EXPR$0=[$t0])'
+'  FennelToIteratorConverter'
+'    FennelAggRel(groupCount=[0], agg#0=[COUNT()])'
+'      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[true], $f0=[$t2])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select count(city) from emps;
+'column0'
+'IterCalcRel(expr#0=[{inputs}], EXPR$0=[$t0])'
+'  FennelToIteratorConverter'
+'    FennelAggRel(groupCount=[0], agg#0=[COUNT(0)])'
+'      FennelRenameRel(fieldNames=[[$f0]])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[4]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select sum(deptno) from depts;
+'column0'
+'IterCalcRel(expr#0=[{inputs}], EXPR$0=[$t0])'
+'  FennelToIteratorConverter'
+'    FennelAggRel(groupCount=[0], agg#0=[SUM(0)])'
+'      FennelRenameRel(fieldNames=[[$f0]])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select max(deptno) from depts;
+'column0'
+'IterCalcRel(expr#0=[{inputs}], EXPR$0=[$t0])'
+'  FennelToIteratorConverter'
+'    FennelAggRel(groupCount=[0], agg#0=[MAX(0)])'
+'      FennelRenameRel(fieldNames=[[$f0]])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select min(deptno) from depts;
+'column0'
+'IterCalcRel(expr#0=[{inputs}], EXPR$0=[$t0])'
+'  FennelToIteratorConverter'
+'    FennelAggRel(groupCount=[0], agg#0=[MIN(0)])'
+'      FennelRenameRel(fieldNames=[[$f0]])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select avg(deptno) from depts;
+'column0'
+'IterCalcRel(expr#0..1=[{inputs}], expr#2=[/($t0, $t1)], expr#3=[CAST($t2):INTEGER], EXPR$0=[$t3])'
+'  FennelToIteratorConverter'
+'    FennelAggRel(groupCount=[0], agg#0=[SUM(0)], agg#1=[COUNT(0)])'
+'      FennelRenameRel(fieldNames=[[$f0]])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > select deptno,max(name) from sales.emps group by deptno order by 1;
+'column0'
+'SortRel(sort0=[$0])'
+'  ProjectRel(DEPTNO=[$0], EXPR$1=[$1])'
+'    AggregateRel(groupCount=[1], agg#0=[MAX(1)])'
+'      ProjectRel($f0=[$2], $f1=[$1])'
+'        TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -----------------------------
+0: jdbc:farrago:> -- verify plans for group bys
+0: jdbc:farrago:> -----------------------------
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for 
+. . . . . . . . > select deptno, count(*) from emps group by deptno order by 1;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..1=[{inputs}], proj#0..1=[{exprs}])'
+'      FennelAggRel(groupCount=[1], agg#0=[COUNT()])'
+'        FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'          FennelRenameRel(fieldNames=[[$f0]])'
+'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select d.name, count(*) from emps e, depts d
+. . . . . . . . >     where d.deptno = e.deptno group by d.name order by 1;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..1=[{inputs}], proj#0..1=[{exprs}])'
+'      FennelAggRel(groupCount=[1], agg#0=[COUNT()])'
+'        FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'          FennelCalcRel(expr#0..2=[{inputs}], $f0=[$t2])'
+'            LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
+'              FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select deptno, gender, min(age), max(age) from emps
+. . . . . . . . >     group by deptno, gender order by 1, 2;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..3=[{inputs}], proj#0..3=[{exprs}])'
+'      FennelAggRel(groupCount=[2], agg#0=[MIN(2)], agg#1=[MAX(2)])'
+'        FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
+'          FennelRenameRel(fieldNames=[[$f0, $f1, $f2]])'
+'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 3, 6]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select sum(age) from emps group by deptno order by 1;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..1=[{inputs}], EXPR$0=[$t1])'
+'      FennelAggRel(groupCount=[1], agg#0=[SUM(1)])'
+'        FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'          FennelRenameRel(fieldNames=[[$f0, $f1]])'
+'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 6]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> 
 0: jdbc:farrago:> --------------
 0: jdbc:farrago:> -- Clean up --
 0: jdbc:farrago:> --------------

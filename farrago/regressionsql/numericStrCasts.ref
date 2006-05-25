@@ -206,37 +206,37 @@
 0: jdbc:farrago:> --
 0: jdbc:farrago:> select cast(si as char(3)) from ints;
 Error: could not calculate results for the following row:
-[ 4, 32767, 2147483647, 9223372036854775807 ]
+[ 32767 ]
 Messages:
 [0]:PC=1 Code=22001 (state=,code=0)
 0: jdbc:farrago:> select cast(i as char(5)) from ints;
 Error: could not calculate results for the following row:
-[ 4, 32767, 2147483647, 9223372036854775807 ]
+[ 2147483647 ]
 Messages:
 [0]:PC=1 Code=22001 (state=,code=0)
 0: jdbc:farrago:> select cast(bi as char(10)) from ints;
 Error: could not calculate results for the following row:
-[ 4, 32767, 2147483647, 9223372036854775807 ]
+[ 9223372036854775807 ]
 Messages:
 [0]:PC=0 Code=22001 (state=,code=0)
 0: jdbc:farrago:> select cast(i as char(3)) from exacts;
 Error: could not calculate results for the following row:
-[ 4, 99999, 9999 ]
+[ 99999 ]
 Messages:
 [0]:PC=0 Code=22001 (state=,code=0)
 0: jdbc:farrago:> select cast(r as char(3)) from exacts;
 Error: could not calculate results for the following row:
-[ 1, 1, 100 ]
+[ 100 ]
 Messages:
 [0]:PC=0 Code=22001 (state=,code=0)
 0: jdbc:farrago:> select cast(r as char(3)) from approx;
 Error: could not calculate results for the following row:
-[ 2, -1, -1 ]
+[ -1 ]
 Messages:
 [0]:PC=0 Code=22001 (state=,code=0)
 0: jdbc:farrago:> select cast(d as char(3)) from approx;
 Error: could not calculate results for the following row:
-[ 2, -1, -1 ]
+[ -1 ]
 Messages:
 [0]:PC=0 Code=22001 (state=,code=0)
 0: jdbc:farrago:> 
@@ -246,37 +246,37 @@ Messages:
 0: jdbc:farrago:> --
 0: jdbc:farrago:> select cast(si as varchar(3)) from ints;
 Error: could not calculate results for the following row:
-[ 4, 32767, 2147483647, 9223372036854775807 ]
+[ 32767 ]
 Messages:
 [0]:PC=1 Code=22001 (state=,code=0)
 0: jdbc:farrago:> select cast(i as varchar(5)) from ints;
 Error: could not calculate results for the following row:
-[ 4, 32767, 2147483647, 9223372036854775807 ]
+[ 2147483647 ]
 Messages:
 [0]:PC=1 Code=22001 (state=,code=0)
 0: jdbc:farrago:> select cast(bi as varchar(10)) from ints;
 Error: could not calculate results for the following row:
-[ 4, 32767, 2147483647, 9223372036854775807 ]
+[ 9223372036854775807 ]
 Messages:
 [0]:PC=0 Code=22001 (state=,code=0)
 0: jdbc:farrago:> select cast(i as varchar(3)) from exacts;
 Error: could not calculate results for the following row:
-[ 4, 99999, 9999 ]
+[ 99999 ]
 Messages:
 [0]:PC=0 Code=22001 (state=,code=0)
 0: jdbc:farrago:> select cast(r as varchar(3)) from exacts;
 Error: could not calculate results for the following row:
-[ 1, 1, 100 ]
+[ 100 ]
 Messages:
 [0]:PC=0 Code=22001 (state=,code=0)
 0: jdbc:farrago:> select cast(r as varchar(3)) from approx;
 Error: could not calculate results for the following row:
-[ 2, -1, -1 ]
+[ -1 ]
 Messages:
 [0]:PC=0 Code=22001 (state=,code=0)
 0: jdbc:farrago:> select cast(d as varchar(3)) from approx;
 Error: could not calculate results for the following row:
-[ 2, -1, -1 ]
+[ -1 ]
 Messages:
 [0]:PC=0 Code=22001 (state=,code=0)
 0: jdbc:farrago:> 

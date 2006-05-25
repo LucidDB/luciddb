@@ -23,6 +23,7 @@
 #include "fennel/lucidera/hashexe/LhxJoinExecStream.h"
 #include "fennel/segment/Segment.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
+#include "fennel/tuple/StandardTypeDescriptor.h"
 
 using namespace std;
 
@@ -31,6 +32,8 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 void LhxJoinExecStream::prepare(
     LhxJoinExecStreamParams const &params)
 {
+    int i, j;
+
     leftInner  = params.leftInner;
     leftOuter  = params.leftOuter;
     rightInner = params.rightInner;
@@ -44,14 +47,15 @@ void LhxJoinExecStream::prepare(
 
     ConfluenceExecStream::prepare(params);
 
-    joinInfo.streamBufAccessor[0] = inAccessors[0];
-    joinInfo.streamBufAccessor[1] = inAccessors[1];
-    
-    joinInfo.inputDesc[0] = inAccessors[0]->getTupleDesc();
-    joinInfo.inputDesc[1] = inAccessors[1]->getTupleDesc();
+    for (i = 0; i < 2 ; i ++) {
+        hashInfo.streamBufAccessor.push_back(inAccessors[i]);
+        hashInfo.inputDesc.push_back(inAccessors[i]->getTupleDesc());
+    }
 
-    TupleDescriptor &leftDesc  = (TupleDescriptor &)joinInfo.inputDesc[0];
-    TupleDescriptor &rightDesc = (TupleDescriptor &)joinInfo.inputDesc[1];
+    TupleDescriptor &leftDesc  =
+        (TupleDescriptor &)hashInfo.inputDesc[LeftInputIndex];
+    TupleDescriptor &rightDesc =
+        (TupleDescriptor &)hashInfo.inputDesc[RightInputIndex];
 
     leftTuple.compute(leftDesc);
     rightTuple.compute(rightDesc);
@@ -65,32 +69,38 @@ void LhxJoinExecStream::prepare(
     leftFilterNull  = !leftOuter;
     rightFilterNull = !rightOuter;
 
-    int i, j;
-
-    /*
-     * Use up to 10000 slots, or 10 blocks, to store slots.
-     */
-    numSlotsHashTable = min(hashTable.slotsNeeded(params.cndKeys), (uint)10000);
-
     assert (params.leftKeyProj.size() == params.rightKeyProj.size());
 
-    joinInfo.keyProj[0] = params.leftKeyProj;
-    joinInfo.keyProj[1] = params.rightKeyProj;
+    hashInfo.keyProj.push_back(params.leftKeyProj);
+    hashInfo.keyProj.push_back(params.rightKeyProj);
     
-    TupleProjection &leftKeyProj  = (TupleProjection &)joinInfo.keyProj[0];
-    TupleProjection &rightKeyProj  = (TupleProjection &)joinInfo.keyProj[1];
+    TupleProjection &leftKeyProj  =
+        (TupleProjection &)hashInfo.keyProj[LeftInputIndex];
+    TupleProjection &rightKeyProj  =
+        (TupleProjection &)hashInfo.keyProj[RightInputIndex];
     TupleDescriptor keyDesc;
     TupleDescriptor dataDesc;
+    vector<bool> isLeftKeyVarChar;
+    vector<bool> isRightKeyVarChar;
 
     for (j = 0; j < leftKeyProj.size(); j ++) {
         keyDesc.push_back(leftDesc[leftKeyProj[j]]);
+        /*
+         * Hashing is special for varchar types(the trailing blanks are
+         * insignificant).
+         */
+        if (leftDesc[leftKeyProj[j]].pTypeDescriptor->getOrdinal()
+            == STANDARD_TYPE_VARCHAR) {
+            isLeftKeyVarChar.push_back(true);
+        } else {
+            isLeftKeyVarChar.push_back(false);
+        }
     }
 
     /*
      * Need to construct a covering set of keys; for example:
      * keyProj (3,4,2,3) should have a covering set of (3,4,2);
-     */
-    
+     */    
     for (i = 0; i < rightTupleSize; i ++) {
         /*
          * Okay a dumb for loop to search for key columns.
@@ -104,9 +114,25 @@ void LhxJoinExecStream::prepare(
         }
         if (!colIsKey) {
             dataDesc.push_back(rightDesc[i]);
-            joinInfo.dataProj.push_back(i);
+            hashInfo.dataProj.push_back(i);
         }
     }
+
+    for (j = 0; j < rightKeyProj.size(); j++) {
+        /*
+         * Hashing is special for varchar types(the trailing blanks are
+         * insignificant).
+         */
+        if (rightDesc[rightKeyProj[j]].pTypeDescriptor->getOrdinal()
+            == STANDARD_TYPE_VARCHAR) {
+            isRightKeyVarChar.push_back(true);
+        } else {
+            isRightKeyVarChar.push_back(false);
+        }
+    }
+
+    hashInfo.isKeyColVarChar.push_back(isLeftKeyVarChar);
+    hashInfo.isKeyColVarChar.push_back(isRightKeyVarChar);
 
     /* 
      * number of block required to perform the join, as given by the optimizer,
@@ -126,6 +152,14 @@ void LhxJoinExecStream::prepare(
     numBlocksHashTable = 
         max((uint32_t)10000, hashTableBlocks + 10);
    
+    /*
+     * Use between 0.1% and 1% of cache pages to store slots.
+     */
+    numSlotsHashTable =
+        max(hashTable.slotsNeeded(params.cndKeys), (uint)10000);
+
+    numSlotsHashTable = min(numSlotsHashTable, (uint)100000);
+
     TupleDescriptor outputDesc;
 
     if (params.outputProj.size() != 0) {
@@ -137,9 +171,9 @@ void LhxJoinExecStream::prepare(
     outputTuple.compute(outputDesc);    
     pOutAccessor->setTupleShape(outputDesc);
 
-    joinInfo.memSegmentAccessor = params.scratchAccessor;
-    joinInfo.externalSegmentAccessor.pCacheAccessor = params.pCacheAccessor;
-    joinInfo.externalSegmentAccessor.pSegment = params.pTempSegment;
+    hashInfo.memSegmentAccessor = params.scratchAccessor;
+    hashInfo.externalSegmentAccessor.pCacheAccessor = params.pCacheAccessor;
+    hashInfo.externalSegmentAccessor.pSegment = params.pTempSegment;
 }
 
 void LhxJoinExecStream::getResourceRequirements(
@@ -147,7 +181,7 @@ void LhxJoinExecStream::getResourceRequirements(
     ExecStreamResourceQuantity &optQuantity)
 {
     ConfluenceExecStream::getResourceRequirements(minQuantity,optQuantity);
-    SharedCache pCache = (joinInfo.memSegmentAccessor.pCacheAccessor)->getCache();
+    SharedCache pCache = (hashInfo.memSegmentAccessor.pCacheAccessor)->getCache();
     
     /*
      * Let hash table use at most 50% os the total cache size.
@@ -163,7 +197,7 @@ void LhxJoinExecStream::setResourceAllocation(
     ExecStreamResourceQuantity &quantity)
 {
     ConfluenceExecStream::setResourceAllocation(quantity);
-    joinInfo.numCachePages = quantity.nCachePages;
+    hashInfo.numCachePages = quantity.nCachePages;
 }
 
 void LhxJoinExecStream::open(bool restart)
@@ -172,12 +206,13 @@ void LhxJoinExecStream::open(bool restart)
 
     if (restart) {
         hashTable.releaseResources();
-    } else {
-        uint partitionLevel = 0;
-        hashTable.init(partitionLevel, joinInfo);
-        hashTableReader.init(&hashTable, joinInfo);
-    }
+    };
 
+    uint partitionLevel = 0;
+
+    hashTable.init(partitionLevel, hashInfo);
+    hashTableReader.init(&hashTable, hashInfo);
+    
     bool status = hashTable.allocateResources(numSlotsHashTable);
 
     assert(status);
@@ -197,26 +232,40 @@ void LhxJoinExecStream::open(bool restart)
     rightPart->inputIndex = RightInputIndex;
 
     rootPlan =  SharedLhxPlan(new LhxPlan());
-    uint partitionLevel = 0;
+
+    uint numInput       = 2;
     uint numChild       = 2;
     LhxPlan *parentPlan = NULL;
-    rootPlan->init(partitionLevel, numChild, leftPart, rightPart, parentPlan);
+
+    vector<SharedLhxPartition> partitionList;
+    partitionList.push_back(leftPart);
+    partitionList.push_back(rightPart);
+
+    rootPlan->init(partitionLevel, numChild, partitionList, parentPlan);
 
     curPlan = rootPlan.get();
     isTopPartition = true;
 
-    rightReader.open(curPlan->getPartition(RightInputIndex), joinInfo, true);
+    rightReader.open(curPlan->getPartition(RightInputIndex), hashInfo, true);
+
+    /*
+     * Initialize recursive partitioning context.
+     */
+    partInfo.init(numInput, numChild, &hashInfo);
+
     joinState = Build;
 }
 
 ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
 {
-    TupleProjection &leftKeyProj  = (TupleProjection &)joinInfo.keyProj[0];
-    TupleProjection &rightKeyProj = (TupleProjection &)joinInfo.keyProj[1];
+    TupleProjection &leftKeyProj  =
+        (TupleProjection &)hashInfo.keyProj[LeftInputIndex];
+    TupleProjection &rightKeyProj =
+        (TupleProjection &)hashInfo.keyProj[RightInputIndex];
 
-	while (true)
-	{
-		switch (joinState)
+    while (true)
+    {
+        switch (joinState)
         {
         case Build:
             {
@@ -229,7 +278,9 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                             /*
                              * break out of this loop, and start probing.
                              */
-                            leftReader.open(curPlan->getPartition(0), joinInfo, true);                            
+                            leftReader.open(
+                                curPlan->getPartition(LeftInputIndex),
+                                hashInfo, true);
                             joinState = Probe;
                             numTuplesProduced = 0;
                             break;
@@ -267,10 +318,8 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                              *
                              * First, partition the left.
                              */
-                            partInfo.reset(true);
-                            partInfo.init(LeftInputIndex,
-                                curPlan->getPartition(LeftInputIndex),
-                                curPlan->numChildPart, joinInfo);
+                            partInfo.open(LeftInputIndex,
+                                curPlan->getPartition(LeftInputIndex));
                             joinState = Partition;
                             break;
                         };
@@ -282,7 +331,7 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
         case Partition:
             {
                 for (;;) {
-                    if (curPlan->generatePartitions(joinInfo, partInfo, false)
+                    if (curPlan->generatePartitions(hashInfo, partInfo, false)
                         == PartitionUnderflow) {
                         /*
                          * Request more data from producer.
@@ -295,10 +344,9 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                              * The in-memory hash table is also part of the
                              * partition.
                              */
-                            partInfo.reset(false);
-                            partInfo.init(RightInputIndex,
+                            partInfo.close(LeftInputIndex);
+                            partInfo.open(RightInputIndex,
                                 curPlan->getPartition(RightInputIndex),
-                                curPlan->numChildPart, joinInfo,
                                 &hashTableReader, &rightReader, rightTuple);
                         } else {
                             /*
@@ -309,7 +357,7 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                         }
                     }
                 }
-                partInfo.reset(false);
+                partInfo.close(RightInputIndex);
                 joinState = CreateChildPlan;
                 break;
             }
@@ -321,7 +369,7 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                  * Link the newly created partitioned in the plan tree.
                  */
                 curPlan->createChildren(partInfo);
-
+                
                 /*
                  * now recursice down the plan tree to get the first leaf plan.
                  */
@@ -330,12 +378,18 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                 isTopPartition = false;
                 hashTable.releaseResources();
 
-                hashTable.init(curPlan->partitionLevel, joinInfo);
-                hashTableReader.init(&hashTable, joinInfo);
+                hashTable.init(curPlan->partitionLevel, hashInfo);
+                hashTableReader.init(&hashTable, hashInfo);
 
                 bool status = hashTable.allocateResources(numSlotsHashTable);
                 assert(status);
-                rightReader.open(curPlan->getPartition(1), joinInfo, true);
+                rightReader.open(curPlan->getPartition(RightInputIndex),
+                    hashInfo, true);
+                /*
+                 * Reset the list of partitions to prepare for the next level
+                 * of recursive partitioning.
+                 */
+                partInfo.reset();
                 joinState = Build;
                 break;                
             }
@@ -345,12 +399,13 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                 if (curPlan) {
                     hashTable.releaseResources();
 
-                    hashTable.init(curPlan->partitionLevel, joinInfo);
-                    hashTableReader.init(&hashTable, joinInfo);
+                    hashTable.init(curPlan->partitionLevel, hashInfo);
+                    hashTableReader.init(&hashTable, hashInfo);
 
                     bool status = hashTable.allocateResources(numSlotsHashTable);
                     assert(status);
-                    rightReader.open(curPlan->getPartition(1), joinInfo, true);
+                    rightReader.open(curPlan->getPartition(RightInputIndex),
+                        hashInfo, true);
                     joinState = Build;
                 } else {
                     joinState = Done;

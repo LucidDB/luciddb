@@ -38,7 +38,7 @@ void LbmSplicerExecStream::prepare(LbmSplicerExecStreamParams const &params)
     nIdxKeys = treeDescriptor.keyProjection.size() - 1;
 
     dynParamId = params.dynParamId;
-    assert(opaqueToInt(dynParamId) > 0);
+    computeRowCount = (opaqueToInt(dynParamId) == 0);
 
     uint minEntrySize;
 
@@ -77,6 +77,7 @@ void LbmSplicerExecStream::open(bool restart)
     isDone = false;
     currEntry = false;
     currExistingEntry = false;
+    numRowsLoaded = 0;
     if (bTreeWriter->searchFirst() == false) {
         bTreeWriter->endSearch();
         emptyTable = true;
@@ -109,15 +110,18 @@ ExecStreamResult LbmSplicerExecStream::execute(ExecStreamQuantum const &quantum)
         return EXECRC_EOS;
     }
 
-    // no more input; write out last bitmap entry and produce final row count,
-    // which is stored in a dynamic parameter set upstream
+    // no more input; write out last bitmap entry and produce final row count
+    // which is either stored in a dynamic parameter set upstream or is 
+    // computed by splicer
     
     if (pInAccessor->getState() == EXECBUF_EOS) {
         if (currEntry) {
             insertBitmapEntry();
         }
-        numRowsLoaded = *reinterpret_cast<RecordNum const *>(
-            pDynamicParamManager->getParam(dynParamId).getDatum().pData);
+        if (!computeRowCount) {
+            numRowsLoaded = *reinterpret_cast<RecordNum const *>(
+                pDynamicParamManager->getParam(dynParamId).getDatum().pData);
+        }
         outputTupleAccessor->marshal(outputTuple, outputTupleBuffer.get());
         pOutAccessor->provideBufferForConsumption(
             outputTupleBuffer.get(),
@@ -133,6 +137,12 @@ ExecStreamResult LbmSplicerExecStream::execute(ExecStreamQuantum const &quantum)
         }
 
         pInAccessor->unmarshalTuple(inputTuple);
+        if (computeRowCount) {
+            // if the rowcount needs to be computed, then the input tuples
+            // must all be singletons
+            assert(LbmEntry::isSingleton(inputTuple));
+            numRowsLoaded++;
+        }
 
         FENNEL_TRACE(TRACE_FINE, "input Tuple from sorter");
         FENNEL_TRACE(TRACE_FINE, LbmEntry::toString(inputTuple));

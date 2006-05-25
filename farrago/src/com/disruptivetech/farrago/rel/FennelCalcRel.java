@@ -33,6 +33,7 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.rex.*;
 import org.eigenbase.util.Util;
 
+import java.util.*;
 
 /**
  * FennelCalcRel is the relational expression corresponding to a Calc
@@ -144,7 +145,7 @@ public class FennelCalcRel extends FennelSingleRel
     // implement FennelRel
     public RelFieldCollation [] getCollations()
     {
-        // todo: If child is sorted, and the project list is not too
+        // If child is sorted, and the project list is not too
         // destructive, then this output will be too. Some examples:
         //
         //   select x from (select x, y from t order by x, y)
@@ -155,7 +156,25 @@ public class FennelCalcRel extends FennelSingleRel
         //
         //   select y from (select x, y from t order by x, y)
         // is not ordered
-        return super.getCollations();
+        RelFieldCollation[] childCollation =
+            ((FennelRel) getChild()).getCollations();
+        int nChildFields = getChild().getRowType().getFieldCount();
+        List<RelFieldCollation> retList = new ArrayList<RelFieldCollation>();
+        List<RexLocalRef> projList = program.getProjectList();
+        for (int i = 0; i < projList.size(); i++) {
+            if (i >= childCollation.length) {
+                break;
+            }
+            int projIdx = projList.get(i).getIndex();
+            if (projIdx >= nChildFields ||
+                projIdx != childCollation[i].getFieldIndex())
+            {
+                break;
+            }
+            retList.add(new RelFieldCollation(i));
+        }
+        return (RelFieldCollation[]) retList.toArray(
+            new RelFieldCollation[retList.size()]);
     }
 
     // implement FennelRel

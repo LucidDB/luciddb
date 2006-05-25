@@ -11,7 +11,7 @@ ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
 
 ExecutableStmt.Oj_inner_1 oj_var2 = new ExecutableStmt.Oj_inner_1();
 
-if (ID$2$DEPTNO == 10) {
+if (ID$0$DEPTNO == 10) {
     oj_var2.assignFrom( oj_var0 );
 } else {
     oj_var1.setNull( true );

@@ -72,6 +72,8 @@ protected:
         SharedMockProducerExecStreamGenerator pGeneratorInit,
         SharedMockProducerExecStreamGenerator pResultGenerator);
 
+    void setUpDelIndexScan(ExecStreamEmbryo &valuesStreamEmbryo);
+
     void testScanMultiCol(
         uint nrows,
         uint nCols,
@@ -369,15 +371,39 @@ void LcsClusterAppendExecStreamTest::testScanSingleCol(
     scanParams.outputTupleDesc.push_back(attrDesc_int64);
     scanParams.outputProj.push_back(0);
 
+    ExecStreamEmbryo valuesStreamEmbryo;
+    setUpDelIndexScan(valuesStreamEmbryo);
+
     ExecStreamEmbryo scanStreamEmbryo;
 
     scanStreamEmbryo.init(new LcsRowScanExecStream(), scanParams);
     scanStreamEmbryo.getStream()->setName("RowScanExecStream");
 
-    SharedExecStream pOutputStream = prepareSourceGraph(scanStreamEmbryo);
+    SharedExecStream pOutputStream =
+        prepareTransformGraph(valuesStreamEmbryo, scanStreamEmbryo);
     
     // result should be sequence of rows
     verifyOutput(*pOutputStream, nrows, *pResultGenerator);
+}
+
+void LcsClusterAppendExecStreamTest::setUpDelIndexScan(
+    ExecStreamEmbryo &valuesStreamEmbryo)
+{
+    ValuesExecStreamParams valuesParams;
+    boost::shared_array<FixedBuffer> pBuffer;
+
+    // setup a values stream to provide an empty input to simulate
+    // the scan of the deletion index
+    valuesParams.outputTupleDesc.push_back(attrDesc_int64);
+    valuesParams.outputTupleDesc.push_back(attrDesc_bitmap);
+    valuesParams.outputTupleDesc.push_back(attrDesc_bitmap);
+
+    uint bufferSize = 16;
+    pBuffer.reset(new uint8_t[bufferSize]);
+    valuesParams.pTupleBuffer = pBuffer;
+    valuesParams.bufSize = 0;
+    valuesStreamEmbryo.init(new ValuesExecStream(), valuesParams);
+    valuesStreamEmbryo.getStream()->setName("ValuesExecStream");
 }
 
 void LcsClusterAppendExecStreamTest::testScanMultiCol(
@@ -415,12 +441,16 @@ void LcsClusterAppendExecStreamTest::testScanMultiCol(
         scanParams.outputProj.push_back(i);
     }
 
+    ExecStreamEmbryo valuesStreamEmbryo;
+    setUpDelIndexScan(valuesStreamEmbryo);
+
     ExecStreamEmbryo scanStreamEmbryo;
 
     scanStreamEmbryo.init(new LcsRowScanExecStream(), scanParams);
     scanStreamEmbryo.getStream()->setName("RowScanExecStream");
 
-    SharedExecStream pOutputStream = prepareSourceGraph(scanStreamEmbryo);
+    SharedExecStream pOutputStream =
+        prepareTransformGraph(valuesStreamEmbryo, scanStreamEmbryo);
     
     // result should be sequence of rows
     verifyOutput(*pOutputStream, nrows, *pResultGenerator);

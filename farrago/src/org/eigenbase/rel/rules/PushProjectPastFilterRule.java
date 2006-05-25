@@ -27,8 +27,8 @@ import java.util.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.sql.*;
 
 /**
  * PushProjectPastFilterRule implements the rule for pushing a projection past
@@ -46,17 +46,32 @@ import org.eigenbase.rex.*;
  * @author Zelaine Fong
  * @version $Id$
  */
-public class PushProjectPastFilterRule extends AbstractPushProjectRule
+public class PushProjectPastFilterRule extends RelOptRule
 {
+    /**
+     * Expressions that should be preserved in the projection
+     */
+    private Set<SqlOperator> preserveExprs;
+    
     //  ~ Constructors ---------------------------------------------------------
-
+    
     public PushProjectPastFilterRule()
     {
         super(new RelOptRuleOperand(
-                ProjectRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(FilterRel.class, null)
-                }));
+            ProjectRel.class,
+            new RelOptRuleOperand [] {
+                new RelOptRuleOperand(FilterRel.class, null)
+            }));
+        this.preserveExprs = Collections.EMPTY_SET;
+    }
+
+    public PushProjectPastFilterRule(
+        RelOptRuleOperand rule, Set<SqlOperator> preserveExprs,
+        String id)
+    {
+        super(rule);
+        this.preserveExprs = preserveExprs;
+        description = "PushProjectPastFilterRule: " + id;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -64,12 +79,22 @@ public class PushProjectPastFilterRule extends AbstractPushProjectRule
     // implement RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
-        ProjectRel origProj = (ProjectRel) call.rels[0];
-        FilterRel filterRel = (FilterRel) call.rels[1];
-        RexNode origFilter = filterRel.getCondition();
-        RelNode rel = filterRel.getChild();
+        ProjectRel origProj;
+        FilterRel filterRel;
 
-        if (RexOver.containsOver(origProj.getProjectExps(), null)) {
+        if (call.rels.length == 2) {
+            origProj = (ProjectRel) call.rels[0];
+            filterRel = (FilterRel) call.rels[1];
+        } else {
+            origProj = null;
+            filterRel = (FilterRel) call.rels[0];
+        }
+        RelNode rel = filterRel.getChild();
+        RexNode origFilter = filterRel.getCondition();
+
+        if (origProj != null &&
+            RexOver.containsOver(origProj.getProjectExps(), null))
+        {
             // Cannot push project through filter if project contains a
             // windowed aggregate -- it will affect row counts. Abort this rule
             // invocation; pushdown will be considered after the windowed
@@ -78,42 +103,13 @@ public class PushProjectPastFilterRule extends AbstractPushProjectRule
             return;
         }
 
-        RelDataTypeField[] scanFields = rel.getRowType().getFields();
-        int nScanFields = scanFields.length;
-
-        RexNode[] origProjExprs = origProj.getChildExps();
+        PushProjector pushProjector = new PushProjector();
+        ProjectRel topProject = pushProjector.convertProject(
+            origProj, origFilter, rel, preserveExprs, null);
         
-        // locate all fields referenced in the projection and filter
-        BitSet projRefs = new BitSet(nScanFields);
-        new RelOptUtil.InputFinder(projRefs).apply(origProjExprs, origFilter);
-
-        // if all fields are being projected, no point in proceeding
-        // any further
-        if (projRefs.cardinality() == nScanFields) {
-            return;
+        if (topProject != null) {
+            call.transformTo(topProject);
         }
-
-        // create a new projection referencing all fields referenced in 
-        // either the project or the filter
-        RexBuilder rexBuilder = origProj.getCluster().getRexBuilder();
-        int newProjLength = projRefs.cardinality();
-        RelNode newProject = createProjectInputRefs(
-            rexBuilder, projRefs, scanFields, 0, newProjLength, rel);
-       
-        // convert the filter to reference the projected columns and create
-        // a filter on top of the project just created
-        int[] adjustments = getAdjustments(scanFields, projRefs);
-        RexNode newFilter =
-            RelOptUtil.convertRexInputRefs(
-                rexBuilder, origFilter, scanFields, adjustments);
-        RelNode newFilterRel = CalcRel.createFilter(newProject, newFilter);
-
-        // put the original project on top of the filter, converting it to
-        // reference the modified projection list
-        ProjectRel topProject = createNewProject(
-            origProj, scanFields, adjustments, rexBuilder, newFilterRel);
-        
-        call.transformTo(topProject);
     }
 }
 

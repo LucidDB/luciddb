@@ -358,10 +358,9 @@ public class LoptSemiJoinOptimizer
                     adjustments[i] = rightAdjustment;
                 }   
             }
-            return RelOptUtil.convertRexInputRefs(
-                rexBuilder, semiJoinCondition,
-                multiJoin.getMultiJoinFields(),
-                adjustments);
+            return semiJoinCondition.accept(
+                new RelOptUtil.RexInputConverter(
+                    rexBuilder, multiJoin.getMultiJoinFields(), adjustments));
         }
         
         return semiJoinCondition;

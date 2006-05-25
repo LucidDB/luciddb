@@ -96,6 +96,7 @@ select gender from emps order by 1;
 
 -- project columns covered by an unclustered index
 select name from emps order by 1;
+select upper(name) from emps order by 1;
 
 -- sort multiple columns covered by an unclustered index
 select name,gender,deptno,empno from emps order by 3,4;
@@ -242,6 +243,9 @@ select gender from emps order by 1;
 
 explain plan for
 select name from emps;
+
+explain plan for
+select upper(name) from emps;
 
 explain plan for
 select name from emps order by 1;

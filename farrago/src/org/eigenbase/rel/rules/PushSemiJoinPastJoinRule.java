@@ -113,10 +113,10 @@ public class PushSemiJoinPastJoinRule extends RelOptRule
             setJoinAdjustments(
                 adjustments, nFieldsX, nFieldsY, nFieldsZ,
                 0, -nFieldsY);
-            newSemiJoinFilter = RelOptUtil.convertRexInputRefs(
-                semiJoin.getCluster().getRexBuilder(),
-                semiJoin.getCondition(), fields,
-                adjustments);
+            newSemiJoinFilter = semiJoin.getCondition().accept(
+                new RelOptUtil.RexInputConverter(
+                    semiJoin.getCluster().getRexBuilder(), fields,
+                    adjustments));
             newLeftKeys = leftKeys;
         } else {
             // (X, Y, Z) --> (X, Y, Z)
@@ -124,10 +124,10 @@ public class PushSemiJoinPastJoinRule extends RelOptRule
             setJoinAdjustments(
                 adjustments, nFieldsX, nFieldsY, nFieldsZ,
                 -nFieldsX, -nFieldsX);
-            newSemiJoinFilter = RelOptUtil.convertRexInputRefs(
-                semiJoin.getCluster().getRexBuilder(),
-                semiJoin.getCondition(), fields,
-                adjustments);
+            newSemiJoinFilter = semiJoin.getCondition().accept(
+                new RelOptUtil.RexInputConverter(
+                    semiJoin.getCluster().getRexBuilder(), fields,
+                    adjustments));
             newLeftKeys = RelOptUtil.adjustKeys(leftKeys, -nFieldsX);
         }
         

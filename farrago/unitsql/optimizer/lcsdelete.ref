@@ -1,0 +1,215 @@
+0: jdbc:farrago:> -- $Id:$
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -----------------------------
+0: jdbc:farrago:> -- Delete tests on lcs tables
+0: jdbc:farrago:> -----------------------------
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create schema lcsdel;
+0: jdbc:farrago:> set schema 'lcsdel';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create server test_data
+. . . . . . . . > foreign data wrapper sys_file_wrapper
+. . . . . . . . > options (
+. . . . . . . . >     directory 'unitsql/optimizer/data',
+. . . . . . . . >     file_extension 'csv',
+. . . . . . . . >     with_header 'yes', 
+. . . . . . . . >     log_directory 'testlog');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create foreign table matrix9x9(
+. . . . . . . . >     a1 tinyint,
+. . . . . . . . >     b1 integer,
+. . . . . . . . >     c1 bigint,
+. . . . . . . . >     a2 tinyint,
+. . . . . . . . >     b2 integer,
+. . . . . . . . >     c2 bigint, 
+. . . . . . . . >     a3 tinyint,
+. . . . . . . . >     b3 integer,
+. . . . . . . . >     c3 bigint) 
+. . . . . . . . > server test_data
+. . . . . . . . > options (filename 'matrix9x9');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table deltab(
+. . . . . . . . >     a1 tinyint,
+. . . . . . . . >     b1 integer,
+. . . . . . . . >     c1 bigint,
+. . . . . . . . >     a2 tinyint,
+. . . . . . . . >     b2 integer,
+. . . . . . . . >     c2 bigint, 
+. . . . . . . . >     a3 tinyint,
+. . . . . . . . >     b3 integer,
+. . . . . . . . >     c3 bigint);
+0: jdbc:farrago:> create index i on deltab(b1);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- delete on a real empty table
+0: jdbc:farrago:> delete from deltab;
+0: jdbc:farrago:> select * from deltab;
++-----+-----+-----+-----+-----+-----+-----+-----+-----+
+| A1  | B1  | C1  | A2  | B2  | C2  | A3  | B3  | C3  |
++-----+-----+-----+-----+-----+-----+-----+-----+-----+
++-----+-----+-----+-----+-----+-----+-----+-----+-----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> insert into deltab select * from matrix9x9;
+0: jdbc:farrago:> insert into deltab select * from matrix9x9;
+0: jdbc:farrago:> select lcs_rid(a1), * from deltab order by 1;
++---------+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+| EXPR$0  | A1  | B1  | C1  | A2  | B2  | C2  | A3  | B3  | C3  |
++---------+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+| 0       | 11  | 12  | 13  | 14  | 15  | 16  | 17  | 18  | 19  |
+| 1       | 21  | 22  | 23  | 24  | 25  | 26  | 27  | 28  | 29  |
+| 2       | 31  | 32  | 33  | 34  | 35  | 36  | 37  | 38  | 39  |
+| 3       | 41  | 42  | 43  | 44  | 45  | 46  | 47  | 48  | 49  |
+| 4       | 51  | 52  | 53  | 54  | 55  | 56  | 57  | 58  | 59  |
+| 5       | 61  | 62  | 63  | 64  | 65  | 66  | 67  | 68  | 69  |
+| 6       | 71  | 72  | 73  | 74  | 75  | 76  | 77  | 78  | 79  |
+| 7       | 81  | 82  | 83  | 84  | 85  | 86  | 87  | 88  | 89  |
+| 8       | 91  | 92  | 93  | 94  | 95  | 96  | 97  | 98  | 99  |
+| 9       | 11  | 12  | 13  | 14  | 15  | 16  | 17  | 18  | 19  |
+| 10      | 21  | 22  | 23  | 24  | 25  | 26  | 27  | 28  | 29  |
+| 11      | 31  | 32  | 33  | 34  | 35  | 36  | 37  | 38  | 39  |
+| 12      | 41  | 42  | 43  | 44  | 45  | 46  | 47  | 48  | 49  |
+| 13      | 51  | 52  | 53  | 54  | 55  | 56  | 57  | 58  | 59  |
+| 14      | 61  | 62  | 63  | 64  | 65  | 66  | 67  | 68  | 69  |
+| 15      | 71  | 72  | 73  | 74  | 75  | 76  | 77  | 78  | 79  |
+| 16      | 81  | 82  | 83  | 84  | 85  | 86  | 87  | 88  | 89  |
+| 17      | 91  | 92  | 93  | 94  | 95  | 96  | 97  | 98  | 99  |
++---------+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> delete from deltab where a1 < 30 and lcs_rid(a1) >= 9;
+0: jdbc:farrago:> select lcs_rid(a1), * from deltab order by 1;
++---------+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+| EXPR$0  | A1  | B1  | C1  | A2  | B2  | C2  | A3  | B3  | C3  |
++---------+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+| 0       | 11  | 12  | 13  | 14  | 15  | 16  | 17  | 18  | 19  |
+| 1       | 21  | 22  | 23  | 24  | 25  | 26  | 27  | 28  | 29  |
+| 2       | 31  | 32  | 33  | 34  | 35  | 36  | 37  | 38  | 39  |
+| 3       | 41  | 42  | 43  | 44  | 45  | 46  | 47  | 48  | 49  |
+| 4       | 51  | 52  | 53  | 54  | 55  | 56  | 57  | 58  | 59  |
+| 5       | 61  | 62  | 63  | 64  | 65  | 66  | 67  | 68  | 69  |
+| 6       | 71  | 72  | 73  | 74  | 75  | 76  | 77  | 78  | 79  |
+| 7       | 81  | 82  | 83  | 84  | 85  | 86  | 87  | 88  | 89  |
+| 8       | 91  | 92  | 93  | 94  | 95  | 96  | 97  | 98  | 99  |
+| 11      | 31  | 32  | 33  | 34  | 35  | 36  | 37  | 38  | 39  |
+| 12      | 41  | 42  | 43  | 44  | 45  | 46  | 47  | 48  | 49  |
+| 13      | 51  | 52  | 53  | 54  | 55  | 56  | 57  | 58  | 59  |
+| 14      | 61  | 62  | 63  | 64  | 65  | 66  | 67  | 68  | 69  |
+| 15      | 71  | 72  | 73  | 74  | 75  | 76  | 77  | 78  | 79  |
+| 16      | 81  | 82  | 83  | 84  | 85  | 86  | 87  | 88  | 89  |
+| 17      | 91  | 92  | 93  | 94  | 95  | 96  | 97  | 98  | 99  |
++---------+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- delete and select via index
+0: jdbc:farrago:> delete from deltab where b1 in (12, 42);
+0: jdbc:farrago:> select lcs_rid(a1), * from deltab where b1 > 0 order by 1;
++---------+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+| EXPR$0  | A1  | B1  | C1  | A2  | B2  | C2  | A3  | B3  | C3  |
++---------+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+| 1       | 21  | 22  | 23  | 24  | 25  | 26  | 27  | 28  | 29  |
+| 2       | 31  | 32  | 33  | 34  | 35  | 36  | 37  | 38  | 39  |
+| 4       | 51  | 52  | 53  | 54  | 55  | 56  | 57  | 58  | 59  |
+| 5       | 61  | 62  | 63  | 64  | 65  | 66  | 67  | 68  | 69  |
+| 6       | 71  | 72  | 73  | 74  | 75  | 76  | 77  | 78  | 79  |
+| 7       | 81  | 82  | 83  | 84  | 85  | 86  | 87  | 88  | 89  |
+| 8       | 91  | 92  | 93  | 94  | 95  | 96  | 97  | 98  | 99  |
+| 11      | 31  | 32  | 33  | 34  | 35  | 36  | 37  | 38  | 39  |
+| 13      | 51  | 52  | 53  | 54  | 55  | 56  | 57  | 58  | 59  |
+| 14      | 61  | 62  | 63  | 64  | 65  | 66  | 67  | 68  | 69  |
+| 15      | 71  | 72  | 73  | 74  | 75  | 76  | 77  | 78  | 79  |
+| 16      | 81  | 82  | 83  | 84  | 85  | 86  | 87  | 88  | 89  |
+| 17      | 91  | 92  | 93  | 94  | 95  | 96  | 97  | 98  | 99  |
++---------+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> delete from deltab where b1 > 50 and b1 < 70 and lcs_rid(a1) < 9;
+0: jdbc:farrago:> select lcs_rid(a1), * from deltab where b1 > 0 order by 1;
++---------+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+| EXPR$0  | A1  | B1  | C1  | A2  | B2  | C2  | A3  | B3  | C3  |
++---------+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+| 1       | 21  | 22  | 23  | 24  | 25  | 26  | 27  | 28  | 29  |
+| 2       | 31  | 32  | 33  | 34  | 35  | 36  | 37  | 38  | 39  |
+| 6       | 71  | 72  | 73  | 74  | 75  | 76  | 77  | 78  | 79  |
+| 7       | 81  | 82  | 83  | 84  | 85  | 86  | 87  | 88  | 89  |
+| 8       | 91  | 92  | 93  | 94  | 95  | 96  | 97  | 98  | 99  |
+| 11      | 31  | 32  | 33  | 34  | 35  | 36  | 37  | 38  | 39  |
+| 13      | 51  | 52  | 53  | 54  | 55  | 56  | 57  | 58  | 59  |
+| 14      | 61  | 62  | 63  | 64  | 65  | 66  | 67  | 68  | 69  |
+| 15      | 71  | 72  | 73  | 74  | 75  | 76  | 77  | 78  | 79  |
+| 16      | 81  | 82  | 83  | 84  | 85  | 86  | 87  | 88  | 89  |
+| 17      | 91  | 92  | 93  | 94  | 95  | 96  | 97  | 98  | 99  |
++---------+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- input into the delete is a join
+0: jdbc:farrago:> delete from deltab where c1 in
+. . . . . . . . >     (select max(c1) from deltab union select min(c1) from deltab);
+0: jdbc:farrago:> select lcs_rid(a1), * from deltab order by 1;
++---------+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+| EXPR$0  | A1  | B1  | C1  | A2  | B2  | C2  | A3  | B3  | C3  |
++---------+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+| 2       | 31  | 32  | 33  | 34  | 35  | 36  | 37  | 38  | 39  |
+| 6       | 71  | 72  | 73  | 74  | 75  | 76  | 77  | 78  | 79  |
+| 7       | 81  | 82  | 83  | 84  | 85  | 86  | 87  | 88  | 89  |
+| 11      | 31  | 32  | 33  | 34  | 35  | 36  | 37  | 38  | 39  |
+| 13      | 51  | 52  | 53  | 54  | 55  | 56  | 57  | 58  | 59  |
+| 14      | 61  | 62  | 63  | 64  | 65  | 66  | 67  | 68  | 69  |
+| 15      | 71  | 72  | 73  | 74  | 75  | 76  | 77  | 78  | 79  |
+| 16      | 81  | 82  | 83  | 84  | 85  | 86  | 87  | 88  | 89  |
++---------+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- empty delete
+0: jdbc:farrago:> delete from deltab where a2 > 100;
+0: jdbc:farrago:> select lcs_rid(a1), * from deltab order by 1;
++---------+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+| EXPR$0  | A1  | B1  | C1  | A2  | B2  | C2  | A3  | B3  | C3  |
++---------+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+| 2       | 31  | 32  | 33  | 34  | 35  | 36  | 37  | 38  | 39  |
+| 6       | 71  | 72  | 73  | 74  | 75  | 76  | 77  | 78  | 79  |
+| 7       | 81  | 82  | 83  | 84  | 85  | 86  | 87  | 88  | 89  |
+| 11      | 31  | 32  | 33  | 34  | 35  | 36  | 37  | 38  | 39  |
+| 13      | 51  | 52  | 53  | 54  | 55  | 56  | 57  | 58  | 59  |
+| 14      | 61  | 62  | 63  | 64  | 65  | 66  | 67  | 68  | 69  |
+| 15      | 71  | 72  | 73  | 74  | 75  | 76  | 77  | 78  | 79  |
+| 16      | 81  | 82  | 83  | 84  | 85  | 86  | 87  | 88  | 89  |
++---------+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- delete what's left in the table
+0: jdbc:farrago:> delete from deltab;
+0: jdbc:farrago:> select * from deltab;
++-----+-----+-----+-----+-----+-----+-----+-----+-----+
+| A1  | B1  | C1  | A2  | B2  | C2  | A3  | B3  | C3  |
++-----+-----+-----+-----+-----+-----+-----+-----+-----+
++-----+-----+-----+-----+-----+-----+-----+-----+-----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- empty delete on an empty table
+0: jdbc:farrago:> delete from deltab;
+0: jdbc:farrago:> select * from deltab;
++-----+-----+-----+-----+-----+-----+-----+-----+-----+
+| A1  | B1  | C1  | A2  | B2  | C2  | A3  | B3  | C3  |
++-----+-----+-----+-----+-----+-----+-----+-----+-----+
++-----+-----+-----+-----+-----+-----+-----+-----+-----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !set outputformat csv
+0: jdbc:farrago:> explain plan for
+. . . . . . . . >     delete from deltab where c1 in 
+. . . . . . . . >         (select max(c1) from deltab union select min(c1) from deltab);
+'column0'
+'FennelToIteratorConverter'
+'  LcsTableDeleteRel(table=[[LOCALDB, LCSDEL, DELTAB]])'
+'    FennelCalcRel(expr#0..2=[{inputs}], expr#3=[null], expr#4=[CAST($t3):VARBINARY(512)], rid=[$t1], descriptor=[$t4], segment=[$t4])'
+'      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'        FennelCalcRel(expr#0..1=[{inputs}], expr#2=[true], expr#3=[IS TRUE($t2)], proj#0..1=[{exprs}], $condition=[$t3])'
+'          LcsRowScanRel(table=[[LOCALDB, LCSDEL, DELTAB]], projection=[[2, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSDEL$DELTAB$C1]])'
+'        FennelAggRel(groupCount=[1])'
+'          FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'            FennelMergeRel'
+'              FennelCalcRel(expr#0=[{inputs}], EXPR$0=[$t0])'
+'                FennelAggRel(groupCount=[0], agg#0=[MAX(0)])'
+'                  FennelRenameRel(fieldNames=[[$f0]])'
+'                    LcsRowScanRel(table=[[LOCALDB, LCSDEL, DELTAB]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSDEL$DELTAB$C1]])'
+'              FennelCalcRel(expr#0=[{inputs}], EXPR$0=[$t0])'
+'                FennelAggRel(groupCount=[0], agg#0=[MIN(0)])'
+'                  FennelRenameRel(fieldNames=[[$f0]])'
+'                    LcsRowScanRel(table=[[LOCALDB, LCSDEL, DELTAB]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSDEL$DELTAB$C1]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop server test_data cascade;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

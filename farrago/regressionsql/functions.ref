@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/functions.sql#5 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev_lcs/farrago/regressionsql/functions.sql#2 $
 0: jdbc:farrago:> -- Full vertical system testing of non function statements
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
@@ -63,23 +63,23 @@
 +---------+
 | 2.0     |
 +---------+
-0: jdbc:farrago:> select (-empno) as res from sales.emps;
+0: jdbc:farrago:> select (-empno) as res from sales.emps order by 1;
 +-------+
 |  RES  |
 +-------+
-| -100  |
-| -110  |
 | -120  |
 | -110  |
+| -110  |
+| -100  |
 +-------+
-0: jdbc:farrago:> select (-empno)*2 as res from sales.emps;
+0: jdbc:farrago:> select (-empno)*2 as res from sales.emps order by 1;
 +-------+
 |  RES  |
 +-------+
-| -200  |
-| -220  |
 | -240  |
 | -220  |
+| -220  |
+| -200  |
 +-------+
 0: jdbc:farrago:> select slacker and true from sales.emps order by 1;
 +---------+
@@ -243,14 +243,14 @@
 | 80      |
 +---------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select abs((-empno)*2) as res from sales.emps;
+0: jdbc:farrago:> select abs((-empno)*2) as res from sales.emps order by 1;
 +------+
 | RES  |
 +------+
 | 200  |
 | 220  |
-| 240  |
 | 220  |
+| 240  |
 +------+
 0: jdbc:farrago:> select abs(2) as res from sales.emps;
 +------+
@@ -270,14 +270,14 @@
 | 2    |
 | 2    |
 +------+
-0: jdbc:farrago:> select abs((-empno)*2.0) as res from sales.emps;
+0: jdbc:farrago:> select abs((-empno)*2.0) as res from sales.emps order by 1;
 +--------+
 |  RES   |
 +--------+
 | 200.0  |
 | 220.0  |
-| 240.0  |
 | 220.0  |
+| 240.0  |
 +--------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values 1+1.0;

@@ -76,14 +76,14 @@ public class FennelAggRel extends AggregateRelBase implements FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         final FarragoRepos repos = FennelRelUtil.getRepos(this);
-        FemAggStreamDef aggStream = repos.newFemAggStreamDef();
+        FemSortedAggStreamDef aggStream = repos.newFemSortedAggStreamDef();
         aggStream.setGroupingPrefixSize(groupCount);
         for (int i = 0; i < aggCalls.length; ++i) {
             Call call = aggCalls[i];
             assert(!call.isDistinct());
             // allow 0 for COUNT(*)
             assert(call.args.length <= 1);
-            AggFunction func = lookupFennelAggFunction(call);
+            AggFunction func = lookupAggFunction(call);
             FemAggInvocation aggInvocation = repos.newFemAggInvocation();
             aggInvocation.setFunction(func);
             if (call.args.length == 1) {
@@ -101,7 +101,7 @@ public class FennelAggRel extends AggregateRelBase implements FennelRel
         return aggStream;
     }
 
-    public static AggFunction lookupFennelAggFunction(
+    public static AggFunction lookupAggFunction(
         AggregateRel.Call call)
     {
         return AggFunctionEnum.forName(

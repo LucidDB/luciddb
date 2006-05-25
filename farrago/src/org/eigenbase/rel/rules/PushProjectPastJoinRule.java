@@ -29,6 +29,7 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.sql.*;
 
 /**
  * PushProjectPastJoinRule implements the rule for pushing a projection past
@@ -38,8 +39,13 @@ import org.eigenbase.rex.*;
  * @author Zelaine Fong
  * @version $Id$
  */
-public class PushProjectPastJoinRule extends AbstractPushProjectRule
+public class PushProjectPastJoinRule extends RelOptRule
 {
+    /**
+     * Expressions that should be preserved in the projection
+     */
+    private Set<SqlOperator> preserveExprs;
+    
     //  ~ Constructors ---------------------------------------------------------
 
     public PushProjectPastJoinRule()
@@ -49,6 +55,17 @@ public class PushProjectPastJoinRule extends AbstractPushProjectRule
                 new RelOptRuleOperand [] {
                     new RelOptRuleOperand(JoinRel.class, null)
                 }));
+        this.preserveExprs = Collections.EMPTY_SET;
+    }
+    
+    public PushProjectPastJoinRule(Set<SqlOperator> preserveExprs)
+    {
+        super(new RelOptRuleOperand(
+                ProjectRel.class,
+                new RelOptRuleOperand [] {
+                    new RelOptRuleOperand(JoinRel.class, null)
+                }));
+        this.preserveExprs = preserveExprs;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -59,6 +76,7 @@ public class PushProjectPastJoinRule extends AbstractPushProjectRule
         ProjectRel origProj = (ProjectRel) call.rels[0];
         JoinRel joinRel = (JoinRel) call.rels[1];
        
+        RelDataTypeField[] joinFields = joinRel.getRowType().getFields();
         RelDataTypeField[] leftFields =
             joinRel.getLeft().getRowType().getFields();
         RelDataTypeField[] rightFields =
@@ -71,9 +89,19 @@ public class PushProjectPastJoinRule extends AbstractPushProjectRule
         
         // locate all fields referenced in the projection and join condition
         BitSet projRefs = new BitSet(nTotalFields);
-        new RelOptUtil.InputFinder(projRefs).apply(
-            origProjFields, joinRel.getCondition());
-
+        BitSet leftBitmap = new BitSet(nFieldsLeft);
+        BitSet rightBitmap = new BitSet(nFieldsRight);
+        RelOptUtil.setRexInputBitmap(leftBitmap, 0, nFieldsLeft);
+        RelOptUtil.setRexInputBitmap(rightBitmap, nFieldsLeft, nTotalFields);
+        List<RexNode> preserveLeft = new ArrayList<RexNode>();
+        List<RexNode> preserveRight = new ArrayList<RexNode>();
+        
+        PushProjector pushProject = new PushProjector();
+        pushProject.locateAllRefs(
+            origProjFields, joinRel.getCondition(), projRefs,
+            leftBitmap, rightBitmap, preserveExprs, preserveLeft,
+            preserveRight);
+        
         // if all fields are being projected, no point in proceeding
         // any further
         if (projRefs.cardinality() == nTotalFields) {
@@ -97,20 +125,23 @@ public class PushProjectPastJoinRule extends AbstractPushProjectRule
         // create left and right projections, projecting only those
         // fields referenced on each side
         RexBuilder rexBuilder = origProj.getCluster().getRexBuilder();
-        RelNode leftProjRel = createProjectInputRefs(
-            rexBuilder, projRefs, leftFields, 0, nLeftProject, 
-            joinRel.getLeft());
-        RelNode rightProjRel = createProjectInputRefs(
-            rexBuilder, projRefs, rightFields, nFieldsLeft, nRightProject,
-            joinRel.getRight());
+        RelNode leftProjRel = pushProject.createProjectRefsAndExprs(
+            rexBuilder, projRefs, leftFields, null, 0, nLeftProject,
+            preserveLeft, joinRel.getLeft());
+        RelNode rightProjRel = pushProject.createProjectRefsAndExprs(
+            rexBuilder, projRefs, rightFields, joinFields, nFieldsLeft,
+            nRightProject, preserveRight, joinRel.getRight());
         
         // convert the join condition to reference the projected columns
         RexNode newJoinFilter = null;
-        RelDataTypeField[] joinFields = joinRel.getRowType().getFields();
-        int[] adjustments = getAdjustments(joinFields, projRefs);
-        if (joinRel.getCondition() != null) {          
-            newJoinFilter = RelOptUtil.convertRexInputRefs(
-                rexBuilder, joinRel.getCondition(), joinFields, adjustments);
+
+        int[] adjustments = pushProject.getAdjustments(
+            joinFields, projRefs, nFieldsLeft, preserveLeft.size());
+        if (joinRel.getCondition() != null) {   
+            newJoinFilter = pushProject.convertRefsAndExprs(
+                rexBuilder, joinRel.getCondition(), joinFields, adjustments,
+                preserveLeft, nLeftProject, preserveRight,
+                nLeftProject + preserveLeft.size() + nRightProject);
         }
         
         // create a new joinrel with the projected children
@@ -121,8 +152,10 @@ public class PushProjectPastJoinRule extends AbstractPushProjectRule
         
         // put the original project on top of the join, converting it to
         // reference the modified projection list
-        ProjectRel topProject = createNewProject(
-            origProj, joinFields, adjustments, rexBuilder, newJoinRel);
+        ProjectRel topProject = pushProject.createNewProject(
+            origProj, joinFields, adjustments, preserveLeft, nLeftProject,
+            preserveRight, nLeftProject + preserveLeft.size() + nRightProject, 
+            rexBuilder, newJoinRel);
         
         call.transformTo(topProject);
     }

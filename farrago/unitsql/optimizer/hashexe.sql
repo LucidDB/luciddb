@@ -284,6 +284,167 @@ select * from lhxemps5 full outer join lhxemps6
 on lhxemps5.enameB = lhxemps6.enameC
 order by 1;
 
+--------------------
+-- hash aggregate --
+--------------------
+
+truncate table lhxemps;
+insert into lhxemps select empno, name, deptno from sales.emps;
+
+explain plan for
+select deptno from lhxemps group by deptno order by 1;
+
+select deptno from lhxemps group by deptno order by 1;
+
+explain plan for
+select distinct deptno from lhxemps order by 1;
+
+select distinct deptno from lhxemps order by 1;
+
+explain plan for
+select count(deptno) from lhxemps;
+
+select count(deptno) from lhxemps;
+
+explain plan for
+select count(empno) from lhxemps group by deptno order by 1;
+
+select count(empno) from lhxemps group by deptno order by 1;
+
+explain plan for
+select count(*) from lhxemps;
+
+select count(*) from lhxemps;
+
+explain plan for
+select count(*) from lhxemps group by deptno order by 1;
+
+select count(*) from lhxemps group by deptno order by 1;
+
+-- make sure empty single group produces correct result
+truncate table lhxemps;
+
+explain plan for
+select count(*) from lhxemps;
+
+select count(*) from lhxemps;
+
+explain plan for
+select count(*) from lhxemps group by deptno order by 1;
+
+select count(*) from lhxemps group by deptno order by 1;
+
+-- make sure the hash table handles partial aggregate of increasing size
+truncate table lhxemps;
+insert into lhxemps values(100, 'a', 20);
+insert into lhxemps values(100, 'ab', 20);
+insert into lhxemps values(100, 'abc', 20);
+insert into lhxemps values(100, 'abcd', 20);
+insert into lhxemps values(100, 'abcde', 20);
+insert into lhxemps values(100, 'abcdef', 20);
+
+explain plan for select max(ename) from lhxemps group by deptno order by 1;
+select max(ename) from lhxemps group by deptno order by 1;
+
+-- testing run time error message for row length
+drop table lhxemps;
+create table lhxemps(empno char(2000), ename char(2000));
+
+insert into lhxemps values('abc', 'abc');
+
+explain plan for
+select empno, min(ename), max(ename) from lhxemps group by empno;
+
+select empno, min(ename), max(ename) from lhxemps group by empno;
+
+------------------------------------
+-- the following are from agg.sql --
+------------------------------------
+set schema 'sales';
+
+alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+
+select count(*) from depts;
+
+select count(city) from emps;
+
+select count(city) from emps where empno > 100000;
+
+select sum(deptno) from depts;
+
+select sum(deptno) from depts where deptno > 100000;
+
+select max(deptno) from depts;
+
+select min(deptno) from depts;
+
+select avg(deptno) from depts;
+
+------------
+-- group bys
+------------
+
+select deptno, count(*) from emps group by deptno order by 1;
+
+-- Issue the same statement again to make sure SortedAggStream
+-- is in good state when reopened
+select deptno, count(*) from emps group by deptno order by 1;
+
+select d.name, count(*) from emps e, depts d
+    where d.deptno = e.deptno group by d.name order by 1;
+
+-- Test group by key where key value could be NULL
+select deptno, gender, min(age), max(age) from emps
+    group by deptno, gender order by 1, 2;
+
+select sum(age) from emps group by deptno order by 1;
+
+-- Test where input stream is empty
+select deptno, count(*) from emps where deptno < 0 group by deptno order by 1;
+
+
+-- verify plans
+!set outputformat csv
+
+explain plan for
+select count(*) from depts;
+
+explain plan for
+select count(city) from emps;
+
+explain plan for
+select sum(deptno) from depts;
+
+explain plan for
+select max(deptno) from depts;
+
+explain plan for
+select min(deptno) from depts;
+
+explain plan for
+select avg(deptno) from depts;
+
+explain plan without implementation for
+select deptno,max(name) from sales.emps group by deptno order by 1;
+
+-----------------------------
+-- verify plans for group bys
+-----------------------------
+
+explain plan for 
+select deptno, count(*) from emps group by deptno order by 1;
+
+explain plan for
+select d.name, count(*) from emps e, depts d
+    where d.deptno = e.deptno group by d.name order by 1;
+
+explain plan for
+select deptno, gender, min(age), max(age) from emps
+    group by deptno, gender order by 1, 2;
+
+explain plan for
+select sum(age) from emps group by deptno order by 1;
+
 --------------
 -- Clean up --
 --------------

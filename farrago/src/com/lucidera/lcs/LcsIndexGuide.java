@@ -24,6 +24,8 @@ import java.math.*;
 import java.util.*;
 import java.lang.Integer;
 
+import com.lucidera.farrago.*;
+
 import net.sf.farrago.catalog.FarragoCatalogUtil;
 import net.sf.farrago.catalog.FarragoRepos;
 import net.sf.farrago.cwm.core.VisibilityKindEnum;
@@ -40,7 +42,6 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.util.JmiUtil;
 
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.rules.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sarg.*;
@@ -56,7 +57,7 @@ import org.eigenbase.util.Util;
  */
 public class LcsIndexGuide
 {
-    private static final int LbmBitmapSegMaxSize = 512;
+    protected static final int LbmBitmapSegMaxSize = 512;
     
     private FarragoTypeFactory typeFactory;
     
@@ -382,9 +383,13 @@ public class LcsIndexGuide
     
     private Integer computeProjectedColumn(int i)
     {
-        int j = clusterMap.indexOf(i);
-        assert(j != -1);
-        return new Integer(j);
+        if (LucidDbOperatorTable.ldbInstance().isSpecialColumnId(i)) {
+            return new Integer(i);
+        } else {
+            int j = clusterMap.indexOf(i);
+            assert(j != -1);
+            return new Integer(j);
+        }
     }
     
     /**
@@ -699,8 +704,8 @@ public class LcsIndexGuide
             computeProjectedColumns(projectedColumns);
         scanStream.setOutputProj(
             FennelRelUtil.createTupleProjection(repos, clusterProjection));
-        scanStream.setFullScan(rel.getIsFullScan());
-        scanStream.setHasExtraFilter(rel.getHasExtraFilter());
+        scanStream.setFullScan(rel.isFullScan());
+        scanStream.setHasExtraFilter(rel.hasExtraFilter());
         
         return scanStream;
     }
@@ -788,7 +793,7 @@ public class LcsIndexGuide
         return generator;
     }
     
-    private FemSortingStreamDef newSorter(
+    protected FemSortingStreamDef newSorter(
         FemLocalIndex index)
     {
         FemSortingStreamDef sortingStream =
@@ -804,7 +809,7 @@ public class LcsIndexGuide
         return sortingStream;
     }
     
-    private FemLbmSplicerStreamDef newSplicer(
+    protected FemLbmSplicerStreamDef newSplicer(
         FennelRel rel,
         FemLocalIndex index,
         int dynParamId)
@@ -1125,6 +1130,16 @@ public class LcsIndexGuide
         return sortingStream;
     }
     
+    private void setBitmapStreamParams(
+        FemLbmBitOpStreamDef bitOpStream, FennelDynamicParamId startRidParamId,
+        FennelDynamicParamId rowLimitParamId)
+    {
+        bitOpStream.setStartRidParamId(startRidParamId.intValue());
+        bitOpStream.setRowLimitParamId(rowLimitParamId.intValue());
+        
+        bitOpStream.setOutputDesc(createUnclusteredBitmapTupleDesc());
+    }
+    
     protected FemLbmIntersectStreamDef newBitmapIntersect(
         FennelDynamicParamId startRidParamId,
         FennelDynamicParamId rowLimitParamId)
@@ -1132,13 +1147,23 @@ public class LcsIndexGuide
         FemLbmIntersectStreamDef intersectStream =
             repos.newFemLbmIntersectStreamDef();
         
-        intersectStream.setStartRidParamId(startRidParamId.intValue());
-        intersectStream.setRowLimitParamId(rowLimitParamId.intValue());
+        setBitmapStreamParams(
+            intersectStream, startRidParamId, rowLimitParamId);
         
-        intersectStream.setOutputDesc(createUnclusteredBitmapTupleDesc());
+        return intersectStream;  
+    }
+    
+    protected FemLbmMinusStreamDef newBitmapMinus(
+        FennelDynamicParamId startRidParamId,
+        FennelDynamicParamId rowLimitParamId)
+    {
+        FemLbmMinusStreamDef minusStream =
+            repos.newFemLbmMinusStreamDef();
         
-        return intersectStream;
+        setBitmapStreamParams(
+            minusStream, startRidParamId, rowLimitParamId);
         
+        return minusStream;  
     }
     
     public Map<CwmColumn, SargIntervalSequence> getCol2SeqMap(
@@ -1153,12 +1178,13 @@ public class LcsIndexGuide
             RexInputRef fieldAccess = sargBinding.getInputRef();
             FemAbstractColumn filterColumn =
                 origRowScan.getColumnForFieldAccess(fieldAccess.getIndex());
-            assert (filterColumn != null);
+            if (filterColumn != null) {
             
-            SargIntervalSequence sargSeq = 
-                FennelRelUtil.evaluateSargExpr(sargBinding.getExpr());
+                SargIntervalSequence sargSeq = 
+                    FennelRelUtil.evaluateSargExpr(sargBinding.getExpr());
             
-            colMap.put(filterColumn, sargSeq);
+                colMap.put(filterColumn, sargSeq);
+            }
         }            
         
         return colMap;
@@ -1411,6 +1437,48 @@ public class LcsIndexGuide
     public List<FemLocalIndex> getUnclusteredIndexes()
     {
         return unclusteredIndexes;
+    }
+    
+    /**
+     * Selects from a list of indexes the one with the fewest number of pages.
+     * If more than one has the fewest pages, pick based on the one that sorts
+     * alphabetically earliest, based on the index names.
+     * 
+     * @param indexList list of indexes to choose from
+     * 
+     * @return the best index
+     */
+    public FemLocalIndex pickBestIndex(List<FemLocalIndex> indexList)
+    {
+        FemLocalIndex bestIndex = indexList.get(0);
+        Long minPageCount = bestIndex.getPageCount();
+        String bestName = bestIndex.getName();
+        for (int i = 1; i < indexList.size(); i++) {
+            FemLocalIndex index = indexList.get(i);
+            Long count = index.getPageCount();
+            String name = index.getName();
+            boolean found = false;
+            if (minPageCount == null && count == null) {
+                if (name.compareTo(bestName) < 0) {
+                    found = true;                
+                }
+            } else if (minPageCount == null && count != null) {
+                found = true;
+            } else if (minPageCount != null && count != null) {
+                int countCompare = count.compareTo(minPageCount);
+                if (countCompare < 0) {
+                    found = true;
+                } else if (countCompare == 0 && name.compareTo(bestName) < 0) {
+                    found = true;
+                }
+            }
+            if (found) {
+                bestIndex = index;
+                minPageCount = count;
+                bestName = name;
+            }
+        }
+        return bestIndex;
     }
 }
 

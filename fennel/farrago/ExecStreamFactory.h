@@ -45,6 +45,7 @@ class TupleDescriptor;
 class TupleProjection;
 class StoredTypeDescriptorFactory;
 class SingleOutputExecStreamParams;
+class SortedAggExecStreamParams;
 
 /**
  * ExecStreamFactory builds an ExecStreamEmbryo from the  
@@ -99,22 +100,22 @@ protected:
         ProxyExecutionStreamDef &);
     
     // Per-stream overrides for FemVisitor; add new stream types here
+    virtual void visit(ProxyBarrierStreamDef &);
+    virtual void visit(ProxyBufferingTupleStreamDef &);
+    virtual void visit(ProxyCartesianProductStreamDef &);
+    virtual void visit(ProxyIndexLoaderDef &);
     virtual void visit(ProxyIndexScanDef &);
     virtual void visit(ProxyIndexSearchDef &);
     virtual void visit(ProxyJavaSinkStreamDef &);
     virtual void visit(ProxyJavaTransformStreamDef &);
-    virtual void visit(ProxyTableInserterDef &);
-    virtual void visit(ProxyTableDeleterDef &);
-    virtual void visit(ProxyTableUpdaterDef &);
-    virtual void visit(ProxySortingStreamDef &);
-    virtual void visit(ProxyBufferingTupleStreamDef &);
-    virtual void visit(ProxyIndexLoaderDef &);
-    virtual void visit(ProxyCartesianProductStreamDef &);
     virtual void visit(ProxyMergeStreamDef &);
     virtual void visit(ProxyMockTupleStreamDef &);
-    virtual void visit(ProxyAggStreamDef &);
+    virtual void visit(ProxyTableDeleterDef &);
+    virtual void visit(ProxyTableInserterDef &);
+    virtual void visit(ProxyTableUpdaterDef &);
+    virtual void visit(ProxySortedAggStreamDef &);
+    virtual void visit(ProxySortingStreamDef &);
     virtual void visit(ProxySplitterStreamDef &);
-    virtual void visit(ProxyBarrierStreamDef &);
     virtual void visit(ProxyValuesStreamDef &);
 
     // helpers for above visitors
@@ -188,6 +189,9 @@ public:
         BTreeSearchExecStreamParams &,
         ProxyIndexSearchDef &);
 
+    void readAggStreamParams(
+        SortedAggExecStreamParams &,
+        ProxyAggStreamDef &);
 };
 
 class ExecStreamSubFactory : public boost::noncopyable

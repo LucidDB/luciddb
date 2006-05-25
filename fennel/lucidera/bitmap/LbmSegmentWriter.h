@@ -90,7 +90,8 @@ public:
      *
      * @param startRid starting rid of segment
      *
-     * @param pByteSeg pointer to the byte segment
+     * @param pByteSeg pointer to the last byte segment in a segment that is
+     * stored backwards
      *
      * @param len length of the byte segment
      *

@@ -40,12 +40,12 @@ using namespace fennel;
 class LhxHashTableTest : virtual public SegStorageTestBase
 {
     StandardTypeDescriptorFactory stdTypeFactory;
-    LhxJoinInfo joinInfo;
+    LhxHashInfo hashInfo;
 
-    uint writeHashTable(LhxJoinInfo const &joinInfo, LhxHashTable &hashTable, 
+    uint writeHashTable(LhxHashInfo const &hashInfo, LhxHashTable &hashTable, 
         SharedLhxPartition destPartition);
 
-    uint readPartition(LhxJoinInfo &joinInfo,
+    uint readPartition(LhxHashInfo &hashInfo,
         SharedLhxPartition srcPartition, bool setDeallocate,
         ostringstream &dataTrace);
 
@@ -80,44 +80,42 @@ void LhxHashTableTest::testCaseSetUp()
 {
     openStorage(DeviceMode::createNew);
     openRandomSegment();
-    joinInfo.externalSegmentAccessor.pSegment = pRandomSegment;
-    joinInfo.externalSegmentAccessor.pCacheAccessor = pCache;
-    joinInfo.memSegmentAccessor = 
+    hashInfo.externalSegmentAccessor.pSegment = pRandomSegment;
+    hashInfo.externalSegmentAccessor.pCacheAccessor = pCache;
+    hashInfo.memSegmentAccessor = 
         pSegmentFactory->newScratchSegment(pCache, 100);
 }
 
 void LhxHashTableTest::testCaseTearDown()
 {
-    joinInfo.inputDesc[0].clear();
-    joinInfo.inputDesc[1].clear();
+    hashInfo.inputDesc.clear();
+    hashInfo.keyProj.clear();
+    hashInfo.isKeyColVarChar.clear();
 
-    joinInfo.keyProj[0].clear();
-    joinInfo.keyProj[1].clear();
+    hashInfo.aggsProj.clear();
+    hashInfo.dataProj.clear();
 
-    joinInfo.aggsProj.clear();
-    joinInfo.dataProj.clear();
-
-    joinInfo.memSegmentAccessor.pSegment->deallocatePageRange(NULL_PAGE_ID, NULL_PAGE_ID);
-    joinInfo.externalSegmentAccessor.reset();
-    joinInfo.memSegmentAccessor.reset(); 
+    hashInfo.memSegmentAccessor.pSegment->deallocatePageRange(NULL_PAGE_ID, NULL_PAGE_ID);
+    hashInfo.externalSegmentAccessor.reset();
+    hashInfo.memSegmentAccessor.reset(); 
     SegStorageTestBase::testCaseTearDown();
 }
 
-uint LhxHashTableTest::writeHashTable(LhxJoinInfo const &joinInfo,
+uint LhxHashTableTest::writeHashTable(LhxHashInfo const &hashInfo,
     LhxHashTable &hashTable, SharedLhxPartition destPartition)
 {
     uint tuplesWritten = 0;
     LhxPartitionWriter writer;
 
     LhxHashTableReader hashTableReader;
-    hashTableReader.init(&hashTable, joinInfo);
+    hashTableReader.init(&hashTable, hashInfo);
     hashTableReader.bindKey(NULL);
     TupleData outputTuple;
         
-    outputTuple.compute(joinInfo.inputDesc[destPartition->inputIndex]);
+    outputTuple.compute(hashInfo.inputDesc[destPartition->inputIndex]);
 
     //write to a paritition
-    writer.open(destPartition, (LhxJoinInfo const &)joinInfo);
+    writer.open(destPartition, (LhxHashInfo const &)hashInfo);
     while (hashTableReader.getNext(outputTuple)) {
         writer.marshalTuple(outputTuple);
         tuplesWritten ++;
@@ -127,18 +125,18 @@ uint LhxHashTableTest::writeHashTable(LhxJoinInfo const &joinInfo,
     return tuplesWritten;
 }
 
-uint LhxHashTableTest::readPartition(LhxJoinInfo &joinInfo,
+uint LhxHashTableTest::readPartition(LhxHashInfo &hashInfo,
     SharedLhxPartition srcPartition, bool setDeallocate, ostringstream &dataTrace)
 {
     LhxPartitionReader reader;
     uint tuplesRead = 0;
     TupleData outputTuple;
     TuplePrinter tuplePrinter;
-    TupleDescriptor &inputTupleDesc = joinInfo.inputDesc[1];
+    TupleDescriptor &inputTupleDesc = hashInfo.inputDesc[1];
         
-    outputTuple.compute(joinInfo.inputDesc[srcPartition->inputIndex]);
+    outputTuple.compute(hashInfo.inputDesc[srcPartition->inputIndex]);
 
-    reader.open(srcPartition, (LhxJoinInfo const &)joinInfo, setDeallocate);
+    reader.open(srcPartition, (LhxHashInfo const &)hashInfo, setDeallocate);
 
     for (;;) {
         if (!reader.isTupleConsumptionPending()) {
@@ -179,7 +177,7 @@ void LhxHashTableTest::testInsert(
 {
     LhxHashTable hashTable;
 
-    joinInfo.numCachePages = maxBlockCount; 
+    hashInfo.numCachePages = maxBlockCount; 
 
     TupleAttributeDescriptor attrDesc_int32 =
         TupleAttributeDescriptor(
@@ -195,24 +193,33 @@ void LhxHashTableTest::testInsert(
 
     boost::scoped_array<uint> colValues(new uint[numCols]);
 
+    TupleDescriptor inputDesc;
+    TupleProjection keyProj;
+    std::vector<bool> isKeyVarChar;
+
     for (i = 0; i < numCols; i ++) {
-            joinInfo.inputDesc[0].push_back(attrDesc_int32);
-            joinInfo.inputDesc[1].push_back(attrDesc_int32);
+        inputDesc.push_back(attrDesc_int32);
 
         if ( i < numKeyCols) {
-            joinInfo.keyProj[0].push_back(i);
-            joinInfo.keyProj[1].push_back(i);
+            keyProj.push_back(i);
+            isKeyVarChar.push_back(false);
         } else if (i < numKeyCols + numAggs) {
-            joinInfo.aggsProj.push_back(i);
+            hashInfo.aggsProj.push_back(i);
         } else {
-            joinInfo.dataProj.push_back(i);
+            hashInfo.dataProj.push_back(i);
         }
     }
 
-    TupleDescriptor &inputTupleDesc = joinInfo.inputDesc[1];
-    TupleProjection &keyColsProj = joinInfo.keyProj[1];
+    for (i = 0; i < 2; i ++) {
+        hashInfo.inputDesc.push_back(inputDesc);
+        hashInfo.keyProj.push_back(keyProj);
+        hashInfo.isKeyColVarChar.push_back(isKeyVarChar);
+    }
 
-    hashTable.init(partitionLevel, joinInfo);
+    TupleDescriptor &inputTupleDesc = hashInfo.inputDesc.back();
+    TupleProjection &keyColsProj = hashInfo.keyProj.back();
+
+    hashTable.init(partitionLevel, hashInfo);
 
     /*
      * Calculate key cardinality, assuming there's no correlation between key
@@ -247,7 +254,7 @@ void LhxHashTableTest::testInsert(
     }
         
     LhxHashTableReader hashTableReader;
-    hashTableReader.init(&hashTable, joinInfo);
+    hashTableReader.init(&hashTable, hashInfo);
     TupleData outputTuple;
     
     outputTuple.compute(inputTupleDesc);
@@ -314,7 +321,7 @@ void LhxHashTableTest::testInsert(
 
         //write to a paritition
         uint tuplesWritten =
-            writeHashTable((LhxJoinInfo const &)joinInfo, 
+            writeHashTable((LhxHashInfo const &)hashInfo, 
                 hashTable, partition);
         
         //read from the same paritition
@@ -323,7 +330,7 @@ void LhxHashTableTest::testInsert(
         dataTrace << "[Tuples read from partitions-1]\n";
 
         uint tuplesRead =
-            readPartition(joinInfo, partition, true, dataTrace);
+            readPartition(hashInfo, partition, true, dataTrace);
 
         if (dumpHashTable) {
             LhxHashTableDump hashTableDump(
@@ -346,16 +353,16 @@ void LhxHashTableTest::testInsert(
 
         // first set up the plan at level 0 which conprises of a single
         // partition, one from each side.
-        SharedLhxPartition partition[2];
+        std::vector<SharedLhxPartition> partitions;
         uint tuplesWritten[2];
 
         // for both input sides.
         for (int j = 0; j < 2; j ++) {
-          partition[j]  = SharedLhxPartition(new LhxPartition());
-          partition[j]->inputIndex = 1;
-          tuplesWritten[j] =
-              writeHashTable((LhxJoinInfo const &)joinInfo,
-                  hashTable, partition[j]);
+            partitions.push_back(SharedLhxPartition(new LhxPartition()));
+            partitions[j]->inputIndex = 1;
+            tuplesWritten[j] =
+                writeHashTable((LhxHashInfo const &)hashInfo,
+                    hashTable, partitions[j]);
         }
 
         assert (tuplesWritten[0] == tuplesWritten[1]);
@@ -364,7 +371,7 @@ void LhxHashTableTest::testInsert(
         SharedLhxPlan plan = SharedLhxPlan(new LhxPlan());
 
         uint numChildPart = 3;
-        plan->init(0, numChildPart, partition[0], partition[1], NULL);
+        plan->init(0, numChildPart, partitions, NULL);
         
         LhxPlan *leafPlan;
         uint numLeafPlanCreated = 1;
@@ -377,7 +384,7 @@ void LhxHashTableTest::testInsert(
 
             //create leaf plans for the next level
             while (leafPlan) {
-                leafPlan->createChildren(joinInfo);
+                leafPlan->createChildren(hashInfo);
                 //skip the next numChildPart leaves as they are newly
                 //created children
                 leafPlan = leafPlan->getFirstLeaf();
@@ -400,7 +407,7 @@ void LhxHashTableTest::testInsert(
                               << "partition level " << i << "inputindex " << j
                               << "\n";
                     tuplesRead[j] +=
-                        readPartition(joinInfo,
+                        readPartition(hashInfo,
                             leafPlan->getPartition(j), false, dataTrace);
                     if (dumpHashTable) {
                         LhxHashTableDump hashTableDump(
@@ -467,7 +474,7 @@ void LhxHashTableTest::testInsert1Kb()
     uint partitionLevel = 0;
     vector<uint> values;
     uint numKeyCols = 2;
-    uint numAggs = 1;
+    uint numAggs = 0;
     uint numDataCols = 4;
     bool dumpHashTable = true;
     bool writeToPartition = true;

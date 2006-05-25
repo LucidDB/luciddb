@@ -27,7 +27,6 @@ import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.security.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.behavioral.*;
-import net.sf.farrago.cwm.datatypes.*;
 import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
@@ -169,7 +168,17 @@ public abstract class FarragoCatalogUtil
         return index.getName().startsWith("SYS$PRIMARY_KEY");
     }
     
-    
+    /**
+     * Determines whether an index implements an internal deletion index.
+     * 
+     * @param index the index in question
+     * 
+     * @return true if index is the deletion index
+     */
+    public static boolean isDeletionIndex(FemLocalIndex index)
+    {
+        return index.getName().startsWith("SYS$DEL");
+    }   
     
     /**
      * Finds the unique key constraints for a table.
@@ -273,11 +282,34 @@ public abstract class FarragoCatalogUtil
 
         while (iter.hasNext()) {
             FemLocalIndex index = (FemLocalIndex) iter.next();
-            if (! index.isClustered()) {
+            if (!index.isClustered() && !isDeletionIndex(index)) {
                 listOfIndexes.add(index);
             }
         }
         return listOfIndexes;
+    }
+    
+    /**
+     * Returns the index corresponding to the internal deletion index
+     * 
+     * @param repos repository storing the table definition
+     * @param table the table to access
+     * 
+     * @return the deletion index if it exists, otherwise NULL
+     */
+    public static FemLocalIndex getDeletionIndex(
+        FarragoRepos repos, CwmClass table)
+    {
+        Iterator iter =
+            FarragoCatalogUtil.getTableIndexes(repos, table).iterator();
+
+        while (iter.hasNext()) {
+            FemLocalIndex index = (FemLocalIndex) iter.next();
+            if (isDeletionIndex(index)) {
+                return index;
+            }
+        }
+        return null;
     }
 
     /**

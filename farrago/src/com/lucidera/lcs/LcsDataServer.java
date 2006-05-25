@@ -84,6 +84,7 @@ class LcsDataServer extends MedAbstractFennelDataServer
         // NOTE jvs 26-Oct-2005:  planner rules specific to
         // column-store go here
         planner.addRule(new LcsTableAppendRule());
+        planner.addRule(new LcsTableDeleteRule());
         planner.addRule(new LcsTableProjectionRule());
         planner.addRule(new LcsIndexBuilderRule());
         planner.addRule(new LcsIndexAccessRule());
@@ -166,15 +167,46 @@ class LcsDataServer extends MedAbstractFennelDataServer
         // Create system-defined clustered indexes for any columns which aren't
         // covered by user-defined clustered indexes.
         for (CwmColumn col : uncoveredColumns) {
-            FemLocalIndex index = repos.newFemLocalIndex();
-            String name =
-                "SYS$CLUSTERED_INDEX$" + table.getNamespace().getName()
-                + "$" + table.getName() + "$" + col.getName();
-            index.setName(
-                FarragoCatalogUtil.uniquifyGeneratedName(repos, col, name));
-            index.setSpannedClass(table);
-            index.setClustered(true);
-            index.setSorted(false);
+            createSystemIndex(
+                "SYS$CLUSTERED_INDEX", table, col, true, false, false);
+        }
+        
+        // create the deletion bitmap index if not already created
+        if (FarragoCatalogUtil.getDeletionIndex(repos, table) == null) {
+            createSystemIndex(
+                "SYS$DELETION_INDEX", table, null, false, true, true);
+        }
+    }
+    
+    /**
+     * Creates an index with an internally generated name
+     * 
+     * @param namePrefix the initial prefix of the internal name
+     * @param table table that the index will be created on
+     * @param col column associated with the index; null if the index is not
+     * associated with any column
+     * @param clustered whether the index is clustered
+     * @param sorted whether the index maintains its data in sort order
+     * @param unique whether the data in the index is unique
+     */
+    private void createSystemIndex(
+        String namePrefix, CwmTable table, CwmColumn col, boolean clustered,
+        boolean sorted, boolean unique)
+    {
+        FemLocalIndex index = repos.newFemLocalIndex();
+        String name =
+            namePrefix + "$" + table.getNamespace().getName()
+            + "$" + table.getName();
+        if (col != null) {
+            name = name + "$" + col.getName();
+        }
+        index.setName(
+            FarragoCatalogUtil.uniquifyGeneratedName(repos, col, name));
+        index.setSpannedClass(table);
+        index.setClustered(clustered);
+        index.setSorted(sorted);
+        index.setUnique(unique);
+        if (col != null) {
             FemLocalIndexColumn indexColumn = repos.newFemLocalIndexColumn();
             indexColumn.setName(col.getName());
             indexColumn.setFeature(col);
@@ -275,6 +307,5 @@ class LcsDataServer extends MedAbstractFennelDataServer
         return true;
     }
 }
-
 
 // End LcsDataServer.java

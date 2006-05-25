@@ -89,25 +89,51 @@ public abstract class MedAbstractFennelProjectionRule extends RelOptRule
         boolean needRename = false;
         for (int i = 0; i < n; ++i) {
             RexNode exp = origProject.getChildExps()[i];
-            if (!(exp instanceof RexInputRef)) {
+            List<String> origFieldName = new ArrayList<String>();
+            Integer projIndex = mapProjCol(exp, origFieldName, rowType);
+            if (projIndex == null) {
                 // rule does not apply
                 numProjectedCols = 0;
                 return false;
             }
-            RexInputRef fieldAccess = (RexInputRef) exp;
             String projFieldName = projFields[i].getName();
             fieldNames[i] = projFieldName;
-            String origFieldName =
-                rowType.getFields()[fieldAccess.getIndex()].getName();
-            if (!projFieldName.equals(origFieldName)) {
+            if (!projFieldName.equals(origFieldName.get(0))) {
                 needRename = true;
             }
-            projectedColumns[i] = new Integer(fieldAccess.getIndex());
+            projectedColumns[i] = projIndex;
         }
         numProjectedCols = n;
         return needRename;
     }
 
+    /**
+     * Maps a projection expression to its underlying field reference
+     * 
+     * @param exp expression to be mapped
+     * @param origFieldName returns field name corresponding to the field
+     * reference
+     * @param rowType row from which the field reference originated
+     * @return ordinal representing the projection element
+     */
+    protected Integer mapProjCol(
+        RexNode exp, List<String> origFieldName, RelDataType rowType)
+    {
+        if (!(exp instanceof RexInputRef)) {
+            return null;
+        }
+        return mapFieldRef(exp, origFieldName, rowType);
+    }
+    
+    protected Integer mapFieldRef(
+        RexNode exp, List<String> origFieldName, RelDataType rowType)
+    {
+        RexInputRef fieldAccess = (RexInputRef) exp;
+        origFieldName.add(
+            rowType.getFields()[fieldAccess.getIndex()].getName());
+        return new Integer(fieldAccess.getIndex());
+    }
+    
     /**
      * Creates a new FennelRenameRel relnode on top of a scan, reflecting
      * renamed columns

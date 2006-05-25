@@ -28,7 +28,7 @@
 #include "fennel/tuple/TupleDataWithBuffer.h"
 #include "fennel/tuple/TupleDescriptor.h"
 #include "fennel/lucidera/hashexe/LhxHashTable.h"
-#include "fennel/lucidera/hashexe/LhxJoinBase.h"
+#include "fennel/lucidera/hashexe/LhxHashBase.h"
 #include "fennel/lucidera/hashexe/LhxPartition.h"
 
 FENNEL_BEGIN_NAMESPACE
@@ -84,7 +84,7 @@ struct LhxJoinExecStreamParams : public ConfluenceExecStreamParams
     TupleProjection rightKeyProj;
   
     /**
-     * Projection from the cartesian product. If empty then produce all input
+     * Projection from the join. If empty then produce all input
      * columns from both join sides.
      */
     TupleProjection outputProj;
@@ -100,25 +100,23 @@ struct LhxJoinExecStreamParams : public ConfluenceExecStreamParams
      * numRows: number of rows of the initial built input.
      */
     uint numRows;
-
-    /*
-     * TODO: information about aggregates here.
-     */
-    uint aggsCount;
-};
-
-enum LhxJoinState {
-    Build, GetNextPlan, Partition, Probe, ProduceInner, ProduceLeftOuter,
-    ProduceRightOuter, ProducePending, CreateChildPlan, Done
 };
 
 class LhxJoinExecStream : public ConfluenceExecStream
 {
+    enum LhxJoinInputIndex {
+        LeftInputIndex=0, RightInputIndex=1
+    };
+
+    enum LhxJoinState {
+        Build, GetNextPlan, Partition, Probe, ProduceInner, ProduceLeftOuter,
+        ProduceRightOuter, ProducePending, CreateChildPlan, Done
+    };
   
     /**
      * Hash join info.
      */
-    LhxJoinInfo joinInfo;
+    LhxHashInfo hashInfo;
 
     /**
      * Input tuple.

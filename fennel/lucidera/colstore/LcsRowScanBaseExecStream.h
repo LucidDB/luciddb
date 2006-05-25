@@ -88,6 +88,17 @@ protected:
     TupleDescriptor projDescriptor;
 
     /**
+     * List of the non-cluster columns that need to be projected
+     */
+    std::vector<int> nonClusterCols;
+
+    /**
+     * True in the special case where we are only reading special columns.
+     * I.e., we don't actually have to read the underlying cluster data.
+     */
+    bool allSpecial;
+
+    /**
      * Positions column readers based on new cluster reader position
      *
      * @param pScan cluster reader
@@ -116,6 +127,13 @@ public:
         ExecStreamResourceQuantity &minQuantity,
         ExecStreamResourceQuantity &optQuantity);
     virtual void closeImpl();
+};
+
+/**
+ * Column ordinals used to represent "special" columns, like rid
+ */
+enum LcsSpecialColumnId {
+    LCS_RID_COLUMN_ID = 0x7FFFFF00
 };
 
 FENNEL_END_NAMESPACE

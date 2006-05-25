@@ -103,14 +103,36 @@ void LhxHashGenerator::hashOneBuffer(uint &hashValue, PConstBuffer pBuf,
 
 void LhxHashGenerator::hashOneColumn(
     uint &hashValue,
-    TupleDatum const &inputCol)
+    TupleDatum const &inputCol,
+    bool isVarChar)
 {
+
+    uint trimmedLength = inputCol.cbData;
+
+    if (isVarChar) {
+        /*
+         * Only hash to the trimmed value.
+         */
+        PConstBuffer charBegin = static_cast<PConstBuffer>(inputCol.pData);
+        PConstBuffer charByte = charBegin + trimmedLength - 1;
+        
+        if (charBegin) {
+            /*
+             * Trim the char type value when it is not NULL.
+             */
+            while (*charByte == ' ' && charByte >= charBegin) {
+                charByte --;
+            }
+            trimmedLength = charByte - charBegin + 1;
+        }
+    }
+
     /*
      * first hash the length
      */
     hashOneBuffer(
         hashValue,
-        (PConstBuffer) &(inputCol.cbData),
+        (PConstBuffer) &(trimmedLength),
         sizeof(TupleStorageByteLength));
 
     /*
@@ -119,28 +141,33 @@ void LhxHashGenerator::hashOneColumn(
     hashOneBuffer(
         hashValue,
         inputCol.pData,
-        inputCol.cbData);
+        trimmedLength);
 }
 
 uint LhxHashGenerator::hash(
     TupleData const &inputTuple,
-    TupleProjection const &keyProjection)
+    TupleProjection const &keyProjection,
+    vector<bool> const &isKeyColVarChar)
 {
     uint keyLength = keyProjection.size();
 
-    assert(keyLength > 0 && keyLength <= inputTuple.size());
+    assert(keyLength <= inputTuple.size());
 
     /*
      * get initial hash value of 4 bytes.
      */
     uint hashValue = hashValueSeed;
 
-    for (int i = 0; i < keyProjection.size(); i ++)
+    for (int i = 0; i < keyLength; i ++)
     {
         TupleDatum col = inputTuple[keyProjection[i]];
-        hashOneColumn(hashValue, col);
+        hashOneColumn(hashValue, col, isKeyColVarChar[i]);
     }
 
+    /*
+     * Note: if key size == 0 then the hash value is the same as the seed value.
+     * This is the case for single group aggregate.
+     */
     return hashValue;
 }
 

@@ -125,6 +125,49 @@ void ExecStreamFactory::invokeVisit(
 // (2) assign values to params
 // (3) call embryo.init(new YourVerySpecialExecStream(), params)
 
+void ExecStreamFactory::visit(ProxyBarrierStreamDef &streamDef)
+{
+    BarrierExecStreamParams params;
+    readTupleStreamParams(params, streamDef);
+    embryo.init(new BarrierExecStream(), params);
+}
+
+void ExecStreamFactory::visit(ProxyBufferingTupleStreamDef &streamDef)
+{
+    SegBufferExecStreamParams params;
+    readTupleStreamParams(params, streamDef);
+    params.multipass = streamDef.isMultipass();
+    if (!streamDef.isInMemory()) {
+        params.scratchAccessor.pSegment = pDatabase->getTempSegment();
+        params.scratchAccessor.pCacheAccessor = params.pCacheAccessor;
+    }
+    embryo.init(new SegBufferExecStream(), params);
+}
+
+void ExecStreamFactory::visit(ProxyCartesianProductStreamDef &streamDef)
+{
+    CartesianJoinExecStreamParams params;
+    readTupleStreamParams(params, streamDef);
+    params.leftOuter = streamDef.isLeftOuter();
+    embryo.init(new CartesianJoinExecStream(), params);
+}
+
+void ExecStreamFactory::visit(ProxyIndexLoaderDef &streamDef)
+{
+    // TODO
+#if 0    
+    BTreeLoader *pStream = new BTreeLoader();
+
+    BTreeLoaderParams *pParams = new BTreeLoaderParams();
+    readBTreeStreamParams(*pParams,streamDef);
+    pParams->distinctness = streamDef.getDistinctness();
+    pParams->pTempSegment = pDatabase->getTempSegment();
+
+    parts.setParts(pStream,pParams);
+#endif
+    permAssert(false);
+}
+
 void ExecStreamFactory::visit(ProxyIndexScanDef &streamDef)
 {
     BTreeScanExecStreamParams params;
@@ -166,18 +209,35 @@ void ExecStreamFactory::visit(ProxyJavaTransformStreamDef &streamDef)
     embryo.init(new JavaTransformExecStream(), params);
 }
 
-void ExecStreamFactory::visit(ProxyTableInserterDef &streamDef)
+void ExecStreamFactory::visit(ProxyMergeStreamDef &streamDef)
 {
-    FtrsTableWriterExecStreamParams params;
-    params.actionType = FtrsTableWriter::ACTION_INSERT;
-    readTableWriterStreamParams(params, streamDef);
-    embryo.init(new FtrsTableWriterExecStream(), params);
+    MergeExecStreamParams params;
+    readTupleStreamParams(params, streamDef);
+    // MergeExecStream doesn't support anything but sequential yet
+    assert(streamDef.isSequential());
+    embryo.init(new MergeExecStream(), params);
+}
+
+void ExecStreamFactory::visit(ProxyMockTupleStreamDef &streamDef)
+{
+    MockProducerExecStreamParams params;
+    readTupleStreamParams(params, streamDef);
+    params.nRows = streamDef.getRowCount();
+    embryo.init(new MockProducerExecStream(), params);
 }
 
 void ExecStreamFactory::visit(ProxyTableDeleterDef &streamDef)
 {
     FtrsTableWriterExecStreamParams params;
     params.actionType = FtrsTableWriter::ACTION_DELETE;
+    readTableWriterStreamParams(params, streamDef);
+    embryo.init(new FtrsTableWriterExecStream(), params);
+}
+
+void ExecStreamFactory::visit(ProxyTableInserterDef &streamDef)
+{
+    FtrsTableWriterExecStreamParams params;
+    params.actionType = FtrsTableWriter::ACTION_INSERT;
     readTableWriterStreamParams(params, streamDef);
     embryo.init(new FtrsTableWriterExecStream(), params);
 }
@@ -192,6 +252,13 @@ void ExecStreamFactory::visit(ProxyTableUpdaterDef &streamDef)
         pUpdateProj);
     readTableWriterStreamParams(params, streamDef);
     embryo.init(new FtrsTableWriterExecStream(), params);
+}
+
+void ExecStreamFactory::visit(ProxySortedAggStreamDef &streamDef)
+{
+    SortedAggExecStreamParams params;
+    readAggStreamParams(params, streamDef);
+    embryo.init(new SortedAggExecStream(), params);
 }
 
 void ExecStreamFactory::visit(ProxySortingStreamDef &streamDef)
@@ -211,75 +278,6 @@ void ExecStreamFactory::visit(ProxySortingStreamDef &streamDef)
     embryo.init(new BTreeSortExecStream(), params);
 }
 
-void ExecStreamFactory::visit(ProxyAggStreamDef &streamDef)
-{
-    SortedAggExecStreamParams params;
-    readTupleStreamParams(params,streamDef);
-    SharedProxyAggInvocation pAggInvocation = streamDef.getAggInvocation();
-    for (; pAggInvocation; ++pAggInvocation) {
-        AggInvocation aggInvocation;
-        aggInvocation.aggFunction = pAggInvocation->getFunction();
-        aggInvocation.iInputAttr =
-            pAggInvocation->getInputAttributeIndex();
-        params.aggInvocations.push_back(aggInvocation);
-    }
-    params.groupByKeyCount = streamDef.getGroupingPrefixSize(); 
-    embryo.init(new SortedAggExecStream(), params);
-}
-
-void ExecStreamFactory::visit(ProxyIndexLoaderDef &streamDef)
-{
-    // TODO
-#if 0    
-    BTreeLoader *pStream = new BTreeLoader();
-
-    BTreeLoaderParams *pParams = new BTreeLoaderParams();
-    readBTreeStreamParams(*pParams,streamDef);
-    pParams->distinctness = streamDef.getDistinctness();
-    pParams->pTempSegment = pDatabase->getTempSegment();
-
-    parts.setParts(pStream,pParams);
-#endif
-    permAssert(false);
-}
-
-void ExecStreamFactory::visit(ProxyCartesianProductStreamDef &streamDef)
-{
-    CartesianJoinExecStreamParams params;
-    readTupleStreamParams(params, streamDef);
-    params.leftOuter = streamDef.isLeftOuter();
-    embryo.init(new CartesianJoinExecStream(), params);
-}
-
-void ExecStreamFactory::visit(ProxyMergeStreamDef &streamDef)
-{
-    MergeExecStreamParams params;
-    readTupleStreamParams(params, streamDef);
-    // MergeExecStream doesn't support anything but sequential yet
-    assert(streamDef.isSequential());
-    embryo.init(new MergeExecStream(), params);
-}
-
-void ExecStreamFactory::visit(ProxyMockTupleStreamDef &streamDef)
-{
-    MockProducerExecStreamParams params;
-    readTupleStreamParams(params, streamDef);
-    params.nRows = streamDef.getRowCount();
-    embryo.init(new MockProducerExecStream(), params);
-}
-
-void ExecStreamFactory::visit(ProxyBufferingTupleStreamDef &streamDef)
-{
-    SegBufferExecStreamParams params;
-    readTupleStreamParams(params, streamDef);
-    params.multipass = streamDef.isMultipass();
-    if (!streamDef.isInMemory()) {
-        params.scratchAccessor.pSegment = pDatabase->getTempSegment();
-        params.scratchAccessor.pCacheAccessor = params.pCacheAccessor;
-    }
-    embryo.init(new SegBufferExecStream(), params);
-}
-
 void ExecStreamFactory::visit(ProxySplitterStreamDef &streamDef)
 {
     SplitterExecStreamParams params;
@@ -287,12 +285,6 @@ void ExecStreamFactory::visit(ProxySplitterStreamDef &streamDef)
     embryo.init(new SplitterExecStream(), params);
 }
 
-void ExecStreamFactory::visit(ProxyBarrierStreamDef &streamDef)
-{
-    BarrierExecStreamParams params;
-    readTupleStreamParams(params, streamDef);
-    embryo.init(new BarrierExecStream(), params);
-}
 
 void ExecStreamFactory::visit(ProxyValuesStreamDef &streamDef)
 {
@@ -463,6 +455,22 @@ void ExecStreamFactory::readBTreeSearchStreamParams(
             params.inputDirectiveProj,
             streamDef.getInputDirectiveProj());
     }
+}
+
+void ExecStreamFactory::readAggStreamParams(
+    SortedAggExecStreamParams &params,
+    ProxyAggStreamDef &streamDef)
+{
+    readTupleStreamParams(params,streamDef);
+    SharedProxyAggInvocation pAggInvocation = streamDef.getAggInvocation();
+    for (; pAggInvocation; ++pAggInvocation) {
+        AggInvocation aggInvocation;
+        aggInvocation.aggFunction = pAggInvocation->getFunction();
+        aggInvocation.iInputAttr =
+            pAggInvocation->getInputAttributeIndex();
+        params.aggInvocations.push_back(aggInvocation);
+    }
+    params.groupByKeyCount = streamDef.getGroupingPrefixSize();
 }
 
 ExecStreamSubFactory::~ExecStreamSubFactory()

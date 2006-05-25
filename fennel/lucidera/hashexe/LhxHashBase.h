@@ -19,20 +19,18 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#ifndef Fennel_LhxJoinBase_Included
-#define Fennel_LhxJoinBase_Included
-
-// TODO:  add includes here
+#ifndef Fennel_LhxHashBase_Included
+#define Fennel_LhxHashBase_Included
 
 FENNEL_BEGIN_NAMESPACE
 
 /**
- * Classes common to all hash join components.
+ * Information common to all hash execution components: join, aggregate.
  *
  * @author Rushan Chen
  * @version $Id$
  */
-struct LhxJoinInfo
+struct LhxHashInfo
 {
     /**
      * Note: need two accessors: one for writing to memory, the other one for
@@ -62,9 +60,14 @@ struct LhxJoinInfo
      * index 0 refers to the orginal(optimizer chosen) probe side
      * index 1 refers to the orginal(optimizer chosen) build side
      */
-    TupleDescriptor inputDesc[2];
+    std::vector<TupleDescriptor> inputDesc;
 
-    TupleProjection keyProj[2];
+    std::vector<TupleProjection> keyProj;
+    /*
+     * If a key column is varchar type.
+     */
+    std::vector< std::vector<bool> > isKeyColVarChar;
+
     /**
      * Projections of aggs and data fields out of the RHS.
      */
@@ -74,11 +77,11 @@ struct LhxJoinInfo
     /**
      * ExecStream buf accessors.
      */
-    SharedExecStreamBufAccessor streamBufAccessor[2];
+    std::vector<SharedExecStreamBufAccessor> streamBufAccessor;
 };
 
 FENNEL_END_NAMESPACE
 
 #endif
 
-// End LhxJoinBase.h
+// End LhxHashBase.h

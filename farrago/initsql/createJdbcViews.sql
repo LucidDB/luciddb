@@ -547,6 +547,8 @@ create view table_stats_internal as
         t."CARDINALITY"
 ;
 
+-- left outer join needed to handle cases where indexes are not associated
+-- with any specific column
 create view index_info_view as
     select
         i.table_cat,
@@ -564,7 +566,7 @@ create view index_info_view as
         i.filter_condition
     from 
         index_info_internal i
-    inner join
+    left outer join
         sys_fem."MED"."LocalIndexColumn" c
     on
         i."mofId" = c."index"

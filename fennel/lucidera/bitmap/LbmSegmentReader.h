@@ -92,7 +92,9 @@ public:
      * @param startRid returns rid value corresponding to the start
      * of the current byte segment
      *
-     * @param byteSeg returns current byte segment
+     * @param byteSeg returns current byte segment; note that the segment read
+     * is stored backwards, so the caller needs to read from right to left
+     * starting at byteSeg
      *
      * @param len returns length of current byte segment
      */

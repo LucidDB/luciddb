@@ -1,0 +1,185 @@
+/*
+// $Id$
+// Farrago is an extensible data management system.
+// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005-2005 The Eigenbase Project
+//
+// This program is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation; either version 2 of the License, or (at your option)
+// any later version approved by The Eigenbase Project.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+package com.lucidera.query;
+
+import com.lucidera.farrago.*;
+
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.rex.*;
+
+import java.util.*;
+
+/**
+ * LucidDbSpecialOperators maintains information about builtin operators that
+ * require special handling, e.g., LCS_RID
+ *
+ * @author Zelaine Fong
+ * @version $Id$
+ */
+public class LucidDbSpecialOperators
+{
+    /**
+     * List of the special operators
+     */
+    private Set<SqlOperator> specialOperators;
+    
+    /**
+     * Maps the special operator to an object containing information about
+     * the operator
+     */
+    private Map<SqlOperator, SpecialOperatorInfo> sqlOpMap;
+    
+    /**
+     * Maps the special column id representing a special operator to the
+     * object containing information about the operator
+     */
+    private Map<Integer, SpecialOperatorInfo> colIdMap;
+    
+    /**
+     * Special column id values.  Additional values should be appended here
+     * with sequential id values.
+     */
+    private static final int LcsRidColumnId = 0x7FFFFF00;  
+    
+    public LucidDbSpecialOperators()
+    {
+        specialOperators = new HashSet<SqlOperator>();       
+        specialOperators.add(LucidDbOperatorTable.lcsRidFunc);
+        
+        final SpecialOperatorInfo lcsRidFuncInfo =
+            new SpecialOperatorInfo(
+                LucidDbOperatorTable.lcsRidFunc, SqlTypeName.Bigint,
+                LcsRidColumnId);
+        
+        sqlOpMap = new HashMap<SqlOperator, SpecialOperatorInfo>();
+        sqlOpMap.put(LucidDbOperatorTable.lcsRidFunc, lcsRidFuncInfo);
+        
+        colIdMap = new HashMap<Integer, SpecialOperatorInfo>();
+        colIdMap.put(LcsRidColumnId, lcsRidFuncInfo);
+    }
+    
+    public Set<SqlOperator> getSpecialOperators()
+    {
+        return specialOperators;
+    }
+    
+    public boolean isSpecialOperator(SqlOperator op)
+    {
+        return specialOperators.contains(op);
+    }
+    
+    public boolean isSpecialColumnId(int colId)
+    {
+        return (colIdMap.get(colId) != null);
+    }
+    
+    public String getSpecialOpName(SqlOperator op)
+    {
+        return op.getName();
+    }
+    
+    public String getSpecialOpName(int colId)
+    {
+        SpecialOperatorInfo opInfo = colIdMap.get(colId);
+        if (opInfo == null) {
+            return null;
+        } else {
+            return opInfo.getFuncName();
+        }
+    }
+    
+    public SqlTypeName getSpecialOpRetTypeName(int colId)
+    {
+        SpecialOperatorInfo opInfo = colIdMap.get(colId);
+        if (opInfo == null) {
+            return null;
+        } else {
+            return opInfo.getRetType();
+        }
+    }
+    
+    public Integer getSpecialOpColumnId(SqlOperator op)
+    {
+        SpecialOperatorInfo opInfo = sqlOpMap.get(op);
+        if (opInfo == null) {
+            return null;
+        } else {
+            return opInfo.getColId();
+        }
+    }   
+    
+    public static boolean isLcsRidColumnId(int colId)
+    {
+        return colId == LcsRidColumnId;
+    }
+    
+    /**
+     * Creates an expression corresponding to an lcs rid
+     * 
+     * @param rexBuilder rex builder used to create the expression
+     * @param rel the relnode that the rid expression corresponds to
+     * 
+     * @return the rid expression
+     */
+    public static RexNode makeRidExpr(
+        RexBuilder rexBuilder, RelNode rel)
+    {
+        // arbitrarily use the first column from the table as the argument
+        // to the function
+        RexNode ridArg = rexBuilder.makeInputRef(
+            rel.getRowType().getFields()[0].getType(), 0);
+        return rexBuilder.makeCall(LucidDbOperatorTable.lcsRidFunc, ridArg);
+    }
+    
+    private class SpecialOperatorInfo
+    { 
+        private SqlOperator op;
+        private SqlTypeName typeName;
+        private int colId;
+        
+        public SpecialOperatorInfo(
+            SqlOperator op, SqlTypeName typeName, int colId)
+        {
+            this.op = op;
+            this.typeName = typeName;
+            this.colId = colId;
+        }
+        
+        public SqlTypeName getRetType()
+        {
+            return typeName;
+        }
+        
+        public String getFuncName()
+        {
+            return op.getName();
+        }
+        
+        public int getColId()
+        {
+            return colId;
+        }
+    }
+}
+
+// End LucidDbSpecialOperators.java

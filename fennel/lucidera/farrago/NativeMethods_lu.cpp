@@ -32,7 +32,10 @@
 #include "fennel/lucidera/bitmap/LbmChopperExecStream.h"
 #include "fennel/lucidera/bitmap/LbmUnionExecStream.h"
 #include "fennel/lucidera/bitmap/LbmIntersectExecStream.h"
+#include "fennel/lucidera/bitmap/LbmMinusExecStream.h"
+#include "fennel/lucidera/bitmap/LbmBitOpExecStream.h"
 #include "fennel/lucidera/hashexe/LhxJoinExecStream.h"
+#include "fennel/lucidera/hashexe/LhxAggExecStream.h"
 #include "fennel/db/Database.h"
 #include "fennel/segment/SegmentFactory.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
@@ -261,15 +264,29 @@ class ExecStreamSubFactory_lu
     {
         LbmIntersectExecStreamParams params;
         pExecStreamFactory->readTupleStreamParams(params, streamDef);
-
-        params.rowLimitParamId =
-            readDynamicParamId(streamDef.getRowLimitParamId());
-        params.startRidParamId =
-            readDynamicParamId(streamDef.getStartRidParamId());
+        readBitOpDynamicParams(streamDef, params);
 
         pEmbryo->init(new LbmIntersectExecStream(), params);
     }
 
+    virtual void visit(ProxyLbmMinusStreamDef &streamDef)
+    {
+        LbmMinusExecStreamParams params;
+        pExecStreamFactory->readTupleStreamParams(params, streamDef);
+        readBitOpDynamicParams(streamDef, params);
+
+        pEmbryo->init(new LbmMinusExecStream(), params);
+    }
+
+    void readBitOpDynamicParams(
+        ProxyLbmBitOpStreamDef &streamDef, LbmBitOpExecStreamParams &params)
+    {
+        params.rowLimitParamId =
+            readDynamicParamId(streamDef.getRowLimitParamId());
+        params.startRidParamId =
+            readDynamicParamId(streamDef.getStartRidParamId());
+    }
+    
     // implement FemVisitor
     virtual void visit(ProxyLhxJoinStreamDef &streamDef)
     {
@@ -278,7 +295,9 @@ class ExecStreamSubFactory_lu
         LhxJoinExecStreamParams params;
         pExecStreamFactory->readTupleStreamParams(params, streamDef);
 
-        // LhxJoinExecStream requires a private ScratchSegment.
+        /*
+         * LhxJoinExecStream requires a private ScratchSegment.
+         */
         pExecStreamFactory->createPrivateScratchSegment(params);
 
         /*
@@ -310,6 +329,31 @@ class ExecStreamSubFactory_lu
         params.numRows = streamDef.getNumBuildRows();
 
         pEmbryo->init(new LhxJoinExecStream(), params);
+    }
+
+    virtual void visit(ProxyLhxAggStreamDef &streamDef)
+    {
+        LhxAggExecStreamParams params;
+        pExecStreamFactory->readAggStreamParams(params, streamDef);
+
+        /*
+         * LhxAggExecStream requires a private ScratchSegment.
+         */
+        pExecStreamFactory->createPrivateScratchSegment(params);
+
+        /*
+         * External segment to store partitions.
+         */
+        SharedDatabase pDatabase = pExecStreamFactory->getDatabase();
+        params.pTempSegment = pDatabase->getTempSegment();
+
+        /*
+         * The optimizer currently estimates these two values.
+         */
+        params.cndGroupByKeys = streamDef.getCndGroupByKeys();
+        params.numRows = streamDef.getNumRows();
+
+        pEmbryo->init(new LhxAggExecStream(), params);
     }
 
     // implement JniProxyVisitor

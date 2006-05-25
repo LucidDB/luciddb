@@ -26,7 +26,6 @@ import net.sf.farrago.query.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.RelDataType;
 
 /**
  * LcsIndexIntersectRel is a relation for intersecting the results of two index
@@ -36,13 +35,9 @@ import org.eigenbase.reltype.RelDataType;
  * @author John Pham
  * @version $Id$
  */
-class LcsIndexIntersectRel extends FennelMultipleRel
+class LcsIndexIntersectRel extends LcsIndexBitOpRel
 {
     //~ Instance fields -------------------------------------------------------
-    
-    final LcsTable lcsTable;
-    FennelRelParamId startRidParamId;
-    FennelRelParamId rowLimitParamId;
     
     //~ Constructors ----------------------------------------------------------
     
@@ -58,16 +53,7 @@ class LcsIndexIntersectRel extends FennelMultipleRel
         FennelRelParamId startRidParamId,
         FennelRelParamId rowLimitParamId)
     {
-        super (cluster, inputs);
-        assert (inputs.length > 1);
-        
-        this.lcsTable = lcsTable;
-        
-        // These two parameters are used to communicate with upstream producers
-        // to optimize the number of rows to be fetched, and from which point
-        // in the RID sequence.
-        this.startRidParamId = startRidParamId;
-        this.rowLimitParamId = rowLimitParamId;
+        super (cluster, inputs, lcsTable, startRidParamId, rowLimitParamId);
     }
     
     //~ Methods ---------------------------------------------------------------
@@ -97,47 +83,6 @@ class LcsIndexIntersectRel extends FennelMultipleRel
         return minChildRows / inputs.length;
     }
     
-    public RelOptCost computeSelfCost(RelOptPlanner planner)
-    {
-        double dRows = getRows();
-        
-        // TODO:  compute page-based I/O cost
-        // CPU cost is proportional to number of columns projected
-        // I/O cost is proportional to pages of index scanned
-        double dCpu = dRows * getRowType().getFieldList().size();
-        
-        // [RID, bitmapfield1, bitmapfield2]
-        int nIndexCols = 3;
-        
-        double dIo = dRows * nIndexCols;
-        
-        return planner.makeCost(dRows, dCpu, dIo);
-    }
-    
-    // implement RelNode
-    public void explain(RelOptPlanWriter pw)
-    {
-        String[] names = new String[inputs.length + 2];
-        
-        for(int i = 0; i < inputs.length; i++) {
-            names[i] = "child#" + i;
-        }
-        names[inputs.length] = "startRidParamId";
-        names[inputs.length + 1] = "rowLimitParamId";
-        pw.explain(
-            this, names, new Object[] { 
-                (startRidParamId == null) ? (Integer)0 : startRidParamId,
-                (rowLimitParamId == null) ? (Integer)0 : rowLimitParamId });
-    }
-
-    // implement RelNode
-    protected RelDataType deriveRowType()
-    {
-        assert (getInputs().length >= 1);
-        return getInput(0).getRowType();
-    }
-    
-    // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         FemLbmIntersectStreamDef intersectStream = 
@@ -145,26 +90,9 @@ class LcsIndexIntersectRel extends FennelMultipleRel
                 implementor.translateParamId(startRidParamId),
                 implementor.translateParamId(rowLimitParamId));
         
-        for (int i = 0; i < inputs.length; i++) {
-            FemExecutionStreamDef inputStream =
-                implementor.visitFennelChild((FennelRel) inputs[i]);
-            implementor.addDataFlowFromProducerToConsumer(
-                inputStream,
-                intersectStream);
-        }
+        setBitOpChildStreams(implementor, intersectStream);
         
-        return intersectStream;
-        
-    }
-    
-    public FennelRelParamId getStartRidParamId()
-    {
-        return startRidParamId;
-    }
-    
-    public FennelRelParamId getRowLimitParamId()
-    {
-        return rowLimitParamId;
+        return intersectStream;     
     }
 }
 

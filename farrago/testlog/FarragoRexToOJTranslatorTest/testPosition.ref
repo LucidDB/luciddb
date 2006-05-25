@@ -8,11 +8,11 @@ static {
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var1 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
 
-if (ID$4$CITY.isNull()) {
+if (ID$0$CITY.isNull()) {
     oj_var1.setNull( true );
 } else {
     oj_var1.setNull( false );
-    oj_var1.value = ID$4$CITY.position( oj_var0 );
+    oj_var1.value = ID$0$CITY.position( oj_var0 );
 }
 
 return oj_var1;

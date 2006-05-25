@@ -281,12 +281,12 @@ class LcsIndexAccessRule extends RelOptRule
             RexInputRef fieldAccess = sargBinding.getInputRef();
             FemAbstractColumn filterColumn =
                 origRowScan.getColumnForFieldAccess(fieldAccess.getIndex());
-            assert (filterColumn != null);
+            if (filterColumn != null) {        
+                SargIntervalSequence sargSeq = 
+                    FennelRelUtil.evaluateSargExpr(sargBinding.getExpr());
             
-            SargIntervalSequence sargSeq = 
-                FennelRelUtil.evaluateSargExpr(sargBinding.getExpr());
-            
-            colMap.put(filterColumn, sargSeq);
+                colMap.put(filterColumn, sargSeq);
+            }
         }            
         
         return colMap;
@@ -324,15 +324,15 @@ class LcsIndexAccessRule extends RelOptRule
             RexInputRef fieldAccess = sargBinding.getInputRef();
             FemAbstractColumn filterColumn =
                 origRowScan.getColumnForFieldAccess(fieldAccess.getIndex());
-            assert (filterColumn != null);
+            if (filterColumn != null) {
+                SargIntervalSequence sargSeq = col2SeqMap.get(filterColumn);
             
-            SargIntervalSequence sargSeq = col2SeqMap.get(filterColumn);
-            
-            if (sargSeq.isPoint()) {
-                pointColumnList.add(filterColumn);
-            } else {
-                rangeColumnList.add(filterColumn);
-            }            
+                if (sargSeq.isPoint()) {
+                    pointColumnList.add(filterColumn);
+                } else {
+                    rangeColumnList.add(filterColumn);
+                }  
+            }
         }
         
         retLists.add(0, pointColumnList);
@@ -353,9 +353,9 @@ class LcsIndexAccessRule extends RelOptRule
             RexInputRef fieldAccess = sargBinding.getInputRef();
             FemAbstractColumn filterColumn =
                 origRowScan.getColumnForFieldAccess(fieldAccess.getIndex());
-            assert (filterColumn != null);
-            
-            sargColList.add(i, filterColumn);
+            if (filterColumn != null) {
+                sargColList.add(i, filterColumn);
+            }
         }
         
         Iterator iter = index2PosMap.keySet().iterator();

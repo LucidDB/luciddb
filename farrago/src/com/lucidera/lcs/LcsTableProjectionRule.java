@@ -22,13 +22,18 @@ package com.lucidera.lcs;
 
 import java.util.*;
 
-import net.sf.farrago.catalog.*;
+import com.lucidera.farrago.*;
+import com.lucidera.query.*;
+
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.namespace.impl.*;
-import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.sql.*;
 
 /**
  * LcsTableProjectionRule implements the rule for pushing a Projection into
@@ -39,7 +44,7 @@ import org.eigenbase.relopt.*;
  */
 public class LcsTableProjectionRule extends MedAbstractFennelProjectionRule
 {
-//  ~ Constructors ----------------------------------------------------------
+    //  ~ Constructors ----------------------------------------------------------
 
     /**
      * Creates a new FtrsTableProjectionRule object.
@@ -71,7 +76,22 @@ public class LcsTableProjectionRule extends MedAbstractFennelProjectionRule
 
         boolean needRename = createProjectionList(origScan);
         if (numProjectedCols == 0) {
-            // projection rule cannot be applied
+            // create a rid expression to be used in the case where no fields
+            // are being projected
+            RexNode defaultExpr = LucidDbSpecialOperators.makeRidExpr(
+                origScan.getCluster().getRexBuilder(), origScan);
+                
+            // there are expressions in the projection; we need to split
+            // the projection to first project the input references and any
+            // special columns
+            PushProjector pushProject = new PushProjector();
+            ProjectRel newProject = pushProject.convertProject(
+                origProject, null, origScan, 
+                LucidDbOperatorTable.ldbInstance().getSpecialOperators(),
+                defaultExpr);
+            if (newProject != null) {
+                call.transformTo(newProject);
+            }
             return;
         }
 
@@ -81,15 +101,14 @@ public class LcsTableProjectionRule extends MedAbstractFennelProjectionRule
         // but the right thing to do is to union those with the
         // real projection list in order to come up with the
         // set of clustered indexes needed.
-        if (origScan.getHasExtraFilter()) {
+        if (origScan.hasExtraFilter()) {
             return;
         }
 
         // Find all the clustered indexes that reference columns in
         // the projection list.  If the index references any column
         // in the projection, then it needs to be used in the scan.
-        final FarragoRepos repos = FennelRelUtil.getRepos(origScan);
-        ArrayList indexList = new ArrayList();
+        ArrayList<FemLocalIndex> indexList = new ArrayList<FemLocalIndex>();
 
         // Test which clustered indexes are needed to cover the
         // projectedColumns.
@@ -104,6 +123,14 @@ public class LcsTableProjectionRule extends MedAbstractFennelProjectionRule
             }
             indexList.add(index);
         }
+        
+        // if no clusters need to be read, read from the cluster with the
+        // fewest pages; if more than one has the fewest pages, then
+        // pick based on alphabetical order of the cluster name
+        if (indexList.size() == 0) {
+            indexList.add(origScan.getIndexGuide().pickBestIndex(
+                origScan.clusteredIndexes));
+        }
 
         // REVIEW:  should cluster be from origProject or origScan?
         RelNode projectedScan =
@@ -114,14 +141,53 @@ public class LcsTableProjectionRule extends MedAbstractFennelProjectionRule
                 indexList,
                 origScan.getConnection(),
                 projectedColumns,
-                origScan.getIsFullScan(),
-                origScan.getHasExtraFilter());
+                origScan.isFullScan(),
+                origScan.hasExtraFilter());
 
         if (needRename) {
             projectedScan = renameProjectedScan(projectedScan);
         }
 
         call.transformTo(projectedScan);
+    }
+    
+    /**
+     * Maps a projection expression to its underlying field reference.  Also
+     * handles special columns, mapping them to their special column ids.
+     * 
+     * @param exp expression to be mapped
+     * @param origFieldName returns field name corresponding to the field
+     * reference
+     * @param rowType row from which the field reference originated
+     * @return ordinal representing the projection element
+     */
+    protected Integer mapProjCol(
+        RexNode exp, List<String> origFieldName, RelDataType rowType)
+    {
+        Integer projIndex = null;
+        
+        if (exp instanceof RexCall) {
+            RexCall call = (RexCall) exp;
+            SqlOperator op = call.getOperator();
+            if (LucidDbOperatorTable.ldbInstance().isSpecialOperator(op)) {
+                // make sure the special operator's argument references
+                // at least one column from the row
+                BitSet exprArgs = new BitSet(rowType.getFieldCount());
+                exp.accept(new RelOptUtil.InputFinder(exprArgs));
+                if (exprArgs.cardinality() > 0) {
+                    projIndex = new Integer(
+                        LucidDbOperatorTable.ldbInstance().getSpecialOpColumnId(
+                            op));
+                    origFieldName.add(
+                        LucidDbOperatorTable.ldbInstance().getSpecialOpName(op));
+                }
+            }
+        }
+        if (exp instanceof RexInputRef) {
+            projIndex = mapFieldRef(exp, origFieldName, rowType);
+        }
+        
+        return projIndex;
     }
 }
 

@@ -25,100 +25,32 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-LbmIntersectExecStream::LbmIntersectExecStream()
+LbmIntersectExecStream::LbmIntersectExecStream() : LbmBitOpExecStream()
 {
-    dynParamsCreated = false;
 }
 
 void LbmIntersectExecStream::prepare(LbmIntersectExecStreamParams const &params)
 {
-    ConfluenceExecStream::prepare(params);
-
-    // set dynanmic parameter ids
-    rowLimitParamId = params.rowLimitParamId;
-    startRidParamId = params.startRidParamId;
-    assert(opaqueToInt(rowLimitParamId) > 0);
-    assert(opaqueToInt(startRidParamId) > 0);
-
-    // setup tupledatums for writing dynamic parameter values
-    rowLimitDatum.pData = (PConstBuffer) &rowLimit;
-    rowLimitDatum.cbData = sizeof(rowLimit);
-    startRidDatum.pData = (PConstBuffer) &startRid;
-    startRidDatum.cbData = sizeof(startRid);
-
-    // initialize segment readers for reading bitmaps from input stream
-    nInputs = inAccessors.size();
-    segmentReaders.reset(new LbmSegmentReader[nInputs]);
-    bitmapSegTuples.reset(new TupleData[nInputs]);
-    for (uint i = 0; i < nInputs; i++) {
-        assert(
-            inAccessors[i]->getTupleDesc() == inAccessors[0]->getTupleDesc());
-        bitmapSegTuples[i].compute(inAccessors[i]->getTupleDesc());
-    }
-
-    assert(inAccessors[0]->getTupleDesc() == pOutAccessor->getTupleDesc());
+    LbmBitOpExecStream::prepare(params);
 }
 
 void LbmIntersectExecStream::open(bool restart)
 {
-    ConfluenceExecStream::open(restart);
-    if (!restart) {
-        // allocate output buffer and a temporary buffer for "AND'ing"
-        // together segments; the output buffer size is based on the size
-        // required for building an LbmEntry, while the temporary buffer
-        // should not be larger than an LbmEntry supports
-        uint bitmapColSize = pOutAccessor->getTupleDesc()[1].cbStorage;
-        uint outputBufSize = LbmEntry::getScratchBufferSize(bitmapColSize);
-        outputBuf.reset(new FixedBuffer[outputBufSize]);
-        segmentWriter.init(
-            outputBuf.get(), outputBufSize, pOutAccessor->getTupleDesc(), true);
-        bitmapBufSize = LbmEntry::getMaxBitmapSize(bitmapColSize);
-        byteSegBuf.reset(new FixedBuffer[bitmapBufSize]); 
-        pByteSegBuf = byteSegBuf.get();
-
-        // create dynamic parameters
-        pDynamicParamManager->createParam(
-            rowLimitParamId, pOutAccessor->getTupleDesc()[0]);
-        pDynamicParamManager->createParam(
-            startRidParamId, pOutAccessor->getTupleDesc()[0]);
-        dynParamsCreated = true;
-    } else {
-        segmentWriter.reset();
-    }
+    LbmBitOpExecStream::open(restart);
     iInput = 0;
     nMatches = 0;
-    startRid = LcsRid(0);
     minLen = 0;
-    rowLimit = 1;
-    producePending = false;
-    pDynamicParamManager->writeParam(rowLimitParamId, rowLimitDatum);
-    pDynamicParamManager->writeParam(startRidParamId, startRidDatum);
-    for (uint i = 0; i < nInputs; i++) {
-        segmentReaders[i].init(inAccessors[i], bitmapSegTuples[i]);
-    }
 }
 
 ExecStreamResult LbmIntersectExecStream::execute(
     ExecStreamQuantum const &quantum)
 {
     if (producePending) {
-        if (!pOutAccessor->produceTuple(outputTuple)) {
-            return EXECRC_BUF_OVERFLOW;
+        ExecStreamResult rc = producePendingOutput(iInput);
+        if (rc != EXECRC_YIELD) {
+            return rc;
         }
-        // in the middle of adding segments when buffer overflow occurred;
-        // go back and add the remaining segments
-        if (!segmentWriter.isEmpty()) {
-            segmentWriter.reset();
-            if (!addSegments()) {
-                return EXECRC_BUF_OVERFLOW;
-            }
-        }
-        producePending = false;
         nMatches = 0;
-        if (inAccessors[iInput]->getState() == EXECBUF_EOS) {
-            pOutAccessor->markEOS();
-            return EXECRC_EOS;
-        }
     }
 
     for (uint i = 0; i < quantum.nTuplesMax; i++) {
@@ -127,33 +59,15 @@ ExecStreamResult LbmIntersectExecStream::execute(
 
             // get the first segment from the input with at least a starting
             // rid of startRid
-            ExecStreamResult rc = segmentReaders[iInput].advanceToRid(startRid);
-
-            if (rc == EXECRC_EOS) {
-                // write out the last pending segment
-                if (!segmentWriter.isEmpty()) {
-                    outputTuple = segmentWriter.produceSegmentTuple();
-                    segmentWriter.reset();
-                    if (!pOutAccessor->produceTuple(outputTuple)) {
-                        producePending = true;
-                        return EXECRC_BUF_OVERFLOW;
-                    }
-                }
-                pOutAccessor->markEOS();
-                return EXECRC_EOS;
-            } else if (rc != EXECRC_YIELD) {
-                return rc;
-            }
-
             LcsRid currRid;
             PBuffer currByteSeg;
             uint currLen;
 
-            segmentReaders[iInput].readCurrentByteSegment(
-                currRid, currByteSeg, currLen);
-            // segment read should never be larger than space available
-            // for segments
-            assert(currLen <= bitmapBufSize);
+            ExecStreamResult rc = readInput(
+                iInput, currRid, currByteSeg, currLen);
+            if (rc != EXECRC_YIELD) {
+                return rc;
+            }
 
             // if the starting rid of this current segment that has just
             // been read matches the desired starting rid, indicate that
@@ -236,37 +150,9 @@ bool LbmIntersectExecStream::intersectSegments(uint len)
     return true;
 }
 
-bool LbmIntersectExecStream::addSegments()
-{
-    while (addLen > 0) {
-
-        if (segmentWriter.addSegment(addRid, addByteSeg, addLen)) {
-            break;
-        }
-
-        outputTuple = segmentWriter.produceSegmentTuple();
-        if (!pOutAccessor->produceTuple(outputTuple)) {
-            producePending = true;
-            return false;
-        }
-
-        // loop back and start creating a new segment for the remainder of
-        // the segments that wouldn't fit
-        segmentWriter.reset();
-    }
-
-    return true;
-}
-
 void LbmIntersectExecStream::closeImpl()
 {
-    ConfluenceExecStream::closeImpl();
-    if (dynParamsCreated) {
-        pDynamicParamManager->deleteParam(rowLimitParamId);
-        pDynamicParamManager->deleteParam(startRidParamId);
-    }
-    outputBuf.reset();
-    byteSegBuf.reset();
+    LbmBitOpExecStream::closeImpl();
 }
 
 FENNEL_END_CPPFILE("$Id$");

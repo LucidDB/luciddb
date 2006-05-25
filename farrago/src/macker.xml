@@ -102,6 +102,7 @@
     <pattern name="lu.namespace.flatfile" class="com.lucidera.farrago.namespace.flatfile.*" />
     <pattern name="lu.opt" class="com.lucidera.opt.*" />
     <pattern name="lu.opt.test" class="com.lucidera.opt.test.*" />
+    <pattern name="lu.query" class="com.lucidera.query.*" />
 
     <pattern name="defimpl" class="net.sf.farrago.defimpl.*" />
 
@@ -169,6 +170,7 @@
       <include pattern="lu.namespace.flatfile"/>
       <include pattern="lu.opt"/>
       <include pattern="lu.opt.test"/>
+      <include pattern="lu.query"/>
       <include pattern="defimpl"/>
       <include pattern="test"/>
       <include pattern="dt.test"/>
@@ -894,6 +896,8 @@
 
     <pattern name="lu.lcs.deps">
       <include pattern="namespace.impl.deps" />
+      <include pattern="lu.farrago" />
+      <include pattern="lu.query" />
       <include pattern="lu.lcs" />
     </pattern>
 
@@ -1000,6 +1004,7 @@
       <include pattern="lu.farrago" />
       <include pattern="lu.lcs" />
       <include pattern="lu.opt" />
+      <include pattern="lu.query" />
       <include pattern="defimpl.deps" />
     </pattern>
 
@@ -1010,6 +1015,22 @@
         <to pattern="farrago" />
         <allow>
           <to pattern="lu.farrago.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="lu.query.deps">
+      <include pattern="lu.farrago.deps" />
+      <include pattern="lu.query" />
+    </pattern>
+
+    <access-rule>
+      <message>lu.opt dependency violation</message>
+      <deny>
+        <from pattern="lu.query" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="lu.query.deps" />
         </allow>
       </deny>
     </access-rule>

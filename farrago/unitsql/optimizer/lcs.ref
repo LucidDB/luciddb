@@ -28,6 +28,7 @@
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |               INDEX_NAME               | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
 +------------+--------------+-------------+-------------+------------------+----------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
 | LOCALDB    | LCS          | LCSEMPS     | false       |                  |                                        | 0     | 0                 |              |               | 0            | 0      |                   |
+| LOCALDB    | LCS          | LCSEMPS     | false       | LOCALDB          | SYS$DELETION_INDEX$LCS$LCSEMPS         | 3     |                   |              | A             | 0            | 0      |                   |
 | LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | SYS$CLUSTERED_INDEX$LCS$LCSEMPS$EMPNO  | 1     | 1                 | EMPNO        | A             | 0            | 0      |                   |
 +------------+--------------+-------------+-------------+------------------+----------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
 0: jdbc:farrago:> 
@@ -103,14 +104,15 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify creation of system-defined clustered indices
 0: jdbc:farrago:> !indexes LCSEMPS
-+------------+--------------+-------------+-------------+------------------+-----------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |      INDEX_NAME       | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
-+------------+--------------+-------------+-------------+------------------+-----------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-| LOCALDB    | LCS          | LCSEMPS     | false       |                  |                       | 0     | 0                 |              |               | 0            | 0      |                   |
-| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | EXPLICIT_LCSEMPS_ALL  | 1     | 1                 | EMPNO        | A             | 0            | 0      |                   |
-| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | EXPLICIT_LCSEMPS_ALL  | 1     | 2                 | NAME         | A             | 0            | 0      |                   |
-| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | EXPLICIT_LCSEMPS_ALL  | 1     | 3                 | EMPID        | A             | 0            | 0      |                   |
-+------------+--------------+-------------+-------------+------------------+-----------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
++------------+--------------+-------------+-------------+------------------+---------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |           INDEX_NAME            | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
++------------+--------------+-------------+-------------+------------------+---------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
+| LOCALDB    | LCS          | LCSEMPS     | false       |                  |                                 | 0     | 0                 |              |               | 0            | 0      |                   |
+| LOCALDB    | LCS          | LCSEMPS     | false       | LOCALDB          | SYS$DELETION_INDEX$LCS$LCSEMPS  | 3     |                   |              | A             | 0            | 0      |                   |
+| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | EXPLICIT_LCSEMPS_ALL            | 1     | 1                 | EMPNO        | A             | 0            | 0      |                   |
+| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | EXPLICIT_LCSEMPS_ALL            | 1     | 2                 | NAME         | A             | 0            | 0      |                   |
+| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | EXPLICIT_LCSEMPS_ALL            | 1     | 3                 | EMPID        | A             | 0            | 0      |                   |
++------------+--------------+-------------+-------------+------------------+---------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify that explain plan works
 0: jdbc:farrago:> !set outputformat csv
@@ -237,6 +239,7 @@
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |              INDEX_NAME               | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
 +------------+--------------+-------------+-------------+------------------+---------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
 | LOCALDB    | LCS          | LCSEMPS     | false       |                  |                                       | 0     | 0                 |              |               | 0            | 0      |                   |
+| LOCALDB    | LCS          | LCSEMPS     | false       | LOCALDB          | SYS$DELETION_INDEX$LCS$LCSEMPS        | 3     |                   |              | A             | 0            | 0      |                   |
 | LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | SYS$CLUSTERED_INDEX$LCS$LCSEMPS$CITY  | 1     | 1                 | CITY         | A             | 0            | 0      |                   |
 +------------+--------------+-------------+-------------+------------------+---------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
 0: jdbc:farrago:> 
@@ -455,6 +458,7 @@
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |               INDEX_NAME               | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
 +------------+--------------+-------------+-------------+------------------+----------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
 | LOCALDB    | LCS          | LCSEMPS     | false       |                  |                                        | 0     | 0                 |              |               | 0            | 0      |                   |
+| LOCALDB    | LCS          | LCSEMPS     | false       | LOCALDB          | SYS$DELETION_INDEX$LCS$LCSEMPS         | 3     |                   |              | A             | 0            | 0      |                   |
 | LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | SYS$CLUSTERED_INDEX$LCS$LCSEMPS$EMPNO  | 1     | 1                 | EMPNO        | A             | 0            | 0      |                   |
 | LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | SYS$CLUSTERED_INDEX$LCS$LCSEMPS$NAME   | 1     | 1                 | NAME         | A             | 0            | 0      |                   |
 +------------+--------------+-------------+-------------+------------------+----------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
@@ -589,8 +593,8 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, MULTICLUSTER]])'
-'    FennelCalcRel(expr#0..9=[{inputs}], expr#10=[0], expr#11=[10], expr#12=[100], expr#13=[1000], expr#14=[CAST($t0):INTEGER], expr#15=[CAST($t1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#16=[CAST($t10):INTEGER], expr#17=[CAST($t11):INTEGER], expr#18=[CAST($t12):INTEGER], expr#19=[CAST($t13):INTEGER], expr#20=[CAST($t2):INTEGER], $f0=[$t14], $f1=[$t15], $f2=[$t16], $f3=[$t17], $f4=[$t18], $f5=[$t19], $f6=[$t4], $f7=[$t20])'
-'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FennelCalcRel(expr#0..3=[{inputs}], expr#4=[0], expr#5=[10], expr#6=[100], expr#7=[1000], expr#8=[CAST($t0):INTEGER], expr#9=[CAST($t1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#10=[CAST($t4):INTEGER], expr#11=[CAST($t5):INTEGER], expr#12=[CAST($t6):INTEGER], expr#13=[CAST($t7):INTEGER], expr#14=[CAST($t2):INTEGER], $f0=[$t8], $f1=[$t9], $f2=[$t10], $f3=[$t11], $f4=[$t12], $f5=[$t13], $f6=[$t3], $f7=[$t14])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1, 2, 4]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from multicluster order by c0, c1;
@@ -879,6 +883,7 @@
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |                INDEX_NAME                | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
 +------------+--------------+-------------+-------------+------------------+------------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
 | LOCALDB    | LCS          | RECTANGLES  | false       |                  |                                          | 0     | 0                 |              |               | 0            | 0      |                   |
+| LOCALDB    | LCS          | RECTANGLES  | false       | LOCALDB          | SYS$DELETION_INDEX$LCS$RECTANGLES        | 3     |                   |              | A             | 0            | 0      |                   |
 | LOCALDB    | LCS          | RECTANGLES  | true        | LOCALDB          | SYS$CLUSTERED_INDEX$LCS$RECTANGLES$ID    | 1     | 1                 | ID           | A             | 0            | 0      |                   |
 | LOCALDB    | LCS          | RECTANGLES  | true        | LOCALDB          | SYS$CLUSTERED_INDEX$LCS$RECTANGLES$NAME  | 1     | 1                 | NAME         | A             | 0            | 0      |                   |
 | LOCALDB    | LCS          | RECTANGLES  | true        | LOCALDB          | SYS$CLUSTERED_INDEX$LCS$RECTANGLES$R     | 1     | 1                 | R            | A             | 0            | 0      |                   |

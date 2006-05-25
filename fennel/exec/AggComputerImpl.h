@@ -38,6 +38,8 @@ protected:
     
     inline void clearAccumulatorImpl(
         TupleDatum &accumulatorDatum);
+    inline void initAccumulatorImpl(
+        TupleDatum &accumulatorDatum);
     inline void updateAccumulatorImpl(
         TupleDatum &accumulatorDatum);
     
@@ -63,6 +65,19 @@ public:
     virtual void updateAccumulator(
         TupleDatum &accumulatorDatum,
         TupleData const &inputTuple);
+
+    virtual void initAccumulator(
+        TupleDatum &accumulatorDatum,
+        TupleData const &inputTuple);
+
+    virtual void initAccumulator(
+        TupleDatum &accumulatorDatumSrc,
+        TupleDatum &accumulatorDatumDest);
+
+    virtual void updateAccumulator(
+        TupleDatum &accumulatorDatumSrc,
+        TupleDatum &accumulatorDatumDest,
+        TupleData const &inputTuple);
 };
 
 /**
@@ -79,6 +94,19 @@ public:
     // implement AggComputer
     virtual void updateAccumulator(
         TupleDatum &accumulatorDatum,
+        TupleData const &inputTuple);
+
+    virtual void initAccumulator(
+        TupleDatum &accumulatorDatum,
+        TupleData const &inputTuple);
+
+    virtual void initAccumulator(
+        TupleDatum &accumulatorDatumSrc,
+        TupleDatum &accumulatorDatumDest);
+
+    virtual void updateAccumulator(
+        TupleDatum &accumulatorDatumSrc,
+        TupleDatum &accumulatorDatumDest,
         TupleData const &inputTuple);
 };
 
@@ -124,6 +152,19 @@ public:
     virtual void computeOutput(
         TupleDatum &outputDatum,
         TupleDatum const &accumulatorDatum);
+
+    virtual void initAccumulator(
+        TupleDatum &accumulatorDatum,
+        TupleData const &inputTuple);
+
+    virtual void initAccumulator(
+        TupleDatum &accumulatorDatumSrc,
+        TupleDatum &accumulatorDatumDest);
+
+    virtual void updateAccumulator(
+        TupleDatum &accumulatorDatumSrc,
+        TupleDatum &accumulatorDatumDest,
+        TupleData const &inputTuple);
 };
 
 /**
@@ -193,6 +234,44 @@ public:
         outputDatum = accumulatorDatum;
         if (isResultNull) {
             outputDatum.pData = NULL;
+        }
+    }
+
+    virtual void initAccumulator(
+        TupleDatum &accumulatorDatumDest,
+        TupleData const &inputTuple)
+    {
+        accumulatorDatumDest.memCopyFrom(inputTuple[iInputAttr]);
+        isResultNull = false;
+    }
+
+    virtual void initAccumulator(
+        TupleDatum &accumulatorDatumSrc,
+        TupleDatum &accumulatorDatumDest)
+    {
+        accumulatorDatumDest.memCopyFrom(accumulatorDatumSrc);
+        isResultNull = false;
+    }
+
+    virtual void updateAccumulator(
+        TupleDatum &accumulatorDatumSrc,
+        TupleDatum &accumulatorDatumDest,
+        TupleData const &inputTuple)
+    {
+        TupleDatum const &inputDatum = inputTuple[iInputAttr];
+        
+        if (!accumulatorDatumSrc.pData) {
+            accumulatorDatumDest.memCopyFrom(inputDatum);
+        } else {
+            T sumSrc = interpretDatum(accumulatorDatumSrc);
+            T &sumDest = interpretDatum(accumulatorDatumDest);
+            
+            if (inputDatum.pData) {
+                T sumInput = interpretDatum(inputDatum);
+                sumDest = sumSrc + sumInput;
+            } else {
+                sumDest = sumSrc;                
+            }
         }
     }
 };

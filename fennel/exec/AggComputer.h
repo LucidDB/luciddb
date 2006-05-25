@@ -115,6 +115,45 @@ public:
     virtual void computeOutput(
         TupleDatum &outputDatum,
         TupleDatum const &accumulatorDatum) = 0;
+
+    /**
+     * Initializes a new accumulator datum from an input tuple.
+     *
+     * @param accumulatorDatum in-memory value to be updated. Memory needs to
+     * be associated with this datum by the caller.
+     *
+     * @param inputTuple source for update; no references to this
+     * data should be retained after this method returns
+     */
+    virtual void initAccumulator(
+        TupleDatum &accumulatorDatumDest,
+        TupleData const &inputTuple) = 0;
+
+    /**
+     * Initializes a new accumulator datum from an existing accumulator datum.
+     *
+     * @param accumulatorDatumSrc the existing accumulator datum
+     * @param accumulatorDatumDest the new accumulator datum. Memory needs to
+     * be associated with this datum by the caller.
+     */
+    virtual void initAccumulator(
+        TupleDatum &accumulatorDatumSrc,
+        TupleDatum &accumulatorDatumDest) = 0;
+    
+    /**
+     * Computes a new accumulator from an existing accumulator dataum and a new
+     * input tuple.
+     *
+     * @param accumulatorDatumSrc the existing accumulator datum
+     * @param accumulatorDatumDest the new accumulator datum. memory needs to
+     * be associated with this datum by the caller.
+     * @param inputTuple source for update; no references to this
+     * data should be retained after this method returns
+     */
+    virtual void updateAccumulator(
+        TupleDatum &accumulatorDatumSrc,
+        TupleDatum &accumulatorDatumDest,
+        TupleData const &inputTuple) = 0;
 };
 
 typedef boost::ptr_vector<AggComputer> AggComputerList;

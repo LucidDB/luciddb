@@ -16,4 +16,6 @@ LbmEntryDump.cpp \
 LbmIntersectExecStream.cpp \
 LbmUnionWorkspace.cpp \
 LbmUnionExecStream.cpp \
-LbmChopperExecStream.cpp
+LbmChopperExecStream.cpp \
+LbmBitOpExecStream.cpp \
+LbmMinusExecStream.cpp

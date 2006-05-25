@@ -33,19 +33,16 @@ void LcsRowScanExecStream::prepare(LcsRowScanExecStreamParams const &params)
     isFullScan = params.isFullScan;
     hasExtraFilter = params.hasExtraFilter;
 
-    // Set up input if not full scan(which has no input)
-    if (!isFullScan) {
-        // setup tuple data for input stream
-        ridTupleData.compute(inAccessors[0]->getTupleDesc());
+    // Set up rid bitmap input stream
+    ridTupleData.compute(inAccessors[0]->getTupleDesc());
     
-        // validate input stream parameters
-        TupleDescriptor inputDesc = inAccessors[0]->getTupleDesc();
-        assert(inputDesc.size() == 3);
-        StandardTypeDescriptorFactory stdTypeFactory;
-        TupleAttributeDescriptor expectedRidDesc(
-            stdTypeFactory.newDataType(STANDARD_TYPE_RECORDNUM));
-        assert(inputDesc[0] == expectedRidDesc);
-    }
+    // validate input stream parameters
+    TupleDescriptor inputDesc = inAccessors[0]->getTupleDesc();
+    assert(inputDesc.size() == 3);
+    StandardTypeDescriptorFactory stdTypeFactory;
+    TupleAttributeDescriptor expectedRidDesc(
+        stdTypeFactory.newDataType(STANDARD_TYPE_RECORDNUM));
+    assert(inputDesc[0] == expectedRidDesc);
 
     assert(projDescriptor == pOutAccessor->getTupleDesc());
     pOutAccessor->setTupleShape(projDescriptor);
@@ -60,10 +57,10 @@ void LcsRowScanExecStream::open(bool restart)
     nRidsRead = 0;
     if (isFullScan) {
         rid = LcsRid(0);
-    } else {
-        // only initialize LBmRidReader if not full scan.
-        ridReader.init(inAccessors[0], ridTupleData);
+        readDeletedRid = true;
+        deletedRidEos = false;
     }
+    ridReader.init(inAccessors[0], ridTupleData);
 }
 
 void LcsRowScanExecStream::getResourceRequirements(
@@ -87,19 +84,50 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
         uint iClu;
 
         while (!producePending) {
+            ExecStreamResult rc;
             if (!isFullScan) {
-                ExecStreamResult rc = ridReader.readRidAndAdvance(rid);
+                rc = ridReader.readRidAndAdvance(rid);
                 if (rc == EXECRC_EOS) {
                     pOutAccessor->markEOS();
                     return rc;
-                } else if (rc != EXECRC_YIELD) {
+                }
+                if (rc != EXECRC_YIELD) {
                     return rc;
+                }
+            } else {
+                if (!deletedRidEos && readDeletedRid) {
+                    rc = ridReader.readRidAndAdvance(deletedRid);
+                    if (rc == EXECRC_EOS) {
+                        deletedRidEos = true;
+                    } else if (rc != EXECRC_YIELD) {
+                        return rc;
+                    } else {
+                        readDeletedRid = false;
+                    }
+                }
+                // skip over deleted rids
+                if (!deletedRidEos && rid == deletedRid) {
+                    rid++;
+                    readDeletedRid = true;
+                    continue;
                 }
             }
 
-            // Go through each cluster, forming rows and checking ranges
-
             uint prevClusterEnd = 0;
+
+            // Read the non-cluster columns first
+            for (uint j = 0; j < nonClusterCols.size(); j++) {
+                if (nonClusterCols[j] == LCS_RID_COLUMN_ID) {
+                    memcpy(
+                        const_cast<PBuffer>(outputTupleData[projMap[j]].pData),
+                        (PBuffer) &rid, sizeof(LcsRid));
+                    prevClusterEnd++;
+                } else {
+                    permAssert(false);
+                }
+            }
+
+            // Then go through each cluster, forming rows and checking ranges
             for (iClu = 0; iClu <  nClusters; iClu++) {
 
                 SharedLcsClusterReader &pScan = pClusters[iClu];

@@ -28,7 +28,7 @@
 #include "fennel/tuple/TuplePrinter.h"
 #include "fennel/segment/SegInputStream.h"
 #include "fennel/segment/SegOutputStream.h"
-#include "fennel/lucidera/hashexe/LhxJoinBase.h"
+#include "fennel/lucidera/hashexe/LhxHashBase.h"
 #include "fennel/lucidera/hashexe/LhxHashTable.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include <boost/scoped_array.hpp>
@@ -83,7 +83,7 @@ class LhxPartitionWriter
     TupleAccessor tupleAccessor;
 public:
     void open(SharedLhxPartition destPartition,
-              LhxJoinInfo const &joinInfo);
+              LhxHashInfo const &hashInfo);
     void marshalTuple(TupleData const &inputTuple);
     void close();
 };
@@ -127,7 +127,7 @@ class LhxPartitionReader
 
 public:
     void open(SharedLhxPartition srcPartition,
-        LhxJoinInfo const &joinInfo,
+        LhxHashInfo const &hashInfo,
         bool setDeallocate);
     void unmarshalTuple(TupleData &outputTuple);
     void consumeTuple();
@@ -139,10 +139,6 @@ public:
 
 enum LhxPartitionState {
     PartitionUnderflow, PartitionEndOfData
-};
-
-enum LhxInputIndex {
-    LeftInputIndex=0, RightInputIndex=1
 };
 
 struct LhxPartitionInfo
@@ -167,7 +163,7 @@ struct LhxPartitionInfo
     /**
      * holding the tuple which is not yet inserted into hash table
      */
-    TupleData rightTuple;
+    TupleData buildTuple;
 
     /**
      * writerList.size() == numChildPart
@@ -178,44 +174,58 @@ struct LhxPartitionInfo
     std::vector<SharedLhxPartitionWriter> writerList;
     std::vector<SharedLhxPartition> destPartitionList;
 
+    uint numInput;
     uint curInputIndex;
     uint numChildPart;
 
+    LhxHashInfo *hashInfo;
+
     LhxPartitionInfo() {reader = NULL; hashTableReader = NULL;}
+
+    /**
+     * Set up the recursive partitioning context.
+     */
+    void init(
+        uint numInputInit,
+        uint numChildPartInit,
+        LhxHashInfo *hashInfoInit);
 
     /**
      * Prepare to partition the probe input which reads from a partition(which
      * could be either disk partition or execution buffer stream).
      */
-    void init(uint curInputIndex,
-        SharedLhxPartition partition,
-        uint numChildPart,
-        LhxJoinInfo const &joinInfo);
-    
+    void open(uint curInputIndex,
+        SharedLhxPartition partition);
+
     /**
      * Prepare to partition the build input which reads from both hash table
      * and an existing reader. There is also a inflight tuple that is part of
      * this partition.
      */
-    void init(uint curInputIndex,
+    void open(uint curInputIndex,
         SharedLhxPartition partition,
-        uint numChildPart,
-        LhxJoinInfo const &joinInfo,
         LhxHashTableReader *hashTableReaderInit,
-        LhxPartitionReader *rightReader,
-        TupleData &rightTuple);
-    
+        LhxPartitionReader *buildReader,
+        TupleData &buildTuple);
+
     /**
      * Close the reader stream and the writer streams.
      */
-    void reset(bool resetPartition);
+    void close(uint curInputIndex);
+
+    /**
+     * Reset the list of partitions to prepare for the next level
+     * of recursive partitioning.
+     */
+    void reset();
+
 };
 
 class LhxPlan
 {
 public:
     uint partitionLevel;
-    SharedLhxPartition partition[2];
+    std::vector<SharedLhxPartition> partitions;
 
     /*
      * Plan linkage.
@@ -239,21 +249,20 @@ public:
     void init(
         uint partitionLevelInit,
         uint numChildPartInit,
-        SharedLhxPartition partitionInit0,
-        SharedLhxPartition partitionInit1,
+        std::vector<SharedLhxPartition> &partitionsInit,
         LhxPlan *parentPlanInit);
 
     /**
      * Generate partitions for the child plans.
      */
-    LhxPartitionState generatePartitions(LhxJoinInfo const &joinInfo,
+    LhxPartitionState generatePartitions(LhxHashInfo const &hashInfo,
         LhxPartitionInfo &partInfo, bool traceOn);
 
     /**
      * Partition this plan and create child plan.
      * This is used in testing only.
      */
-    void createChildren(LhxJoinInfo const &joinInfo);
+    void createChildren(LhxHashInfo const &hashInfo);
 
     /**
      * Create child plan from partitions provided via partInfo.
@@ -303,7 +312,7 @@ inline void LhxPlan::addSibling(SharedLhxPlan siblingPlanInit)
 
 inline SharedLhxPartition LhxPlan::getPartition(uint inputIndex)
 {
-    return partition[inputIndex];
+    return partitions[inputIndex];
 }
 
 inline SharedLhxPlan LhxPlan::getFirstChild()

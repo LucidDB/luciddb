@@ -105,6 +105,13 @@ class LbmIndexScanExecStream : public BTreeSearchExecStream
     TupleData ridSearchKeyData;
 
     /**
+     * True if the search key for this stream already has the rid key setup
+     * in the descriptor, in the case where the startrid dynamic parameter is
+     * used to skip ahead in the btree search
+     */
+    bool ridKeySetup;
+
+    /**
      * Checks if number of tuples produced has reached limit.  Always returns
      * false if "ignoreRowLimit" parameter is true.
      *

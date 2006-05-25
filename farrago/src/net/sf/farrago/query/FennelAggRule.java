@@ -21,14 +21,8 @@
 */
 package net.sf.farrago.query;
 
-import java.util.*;
-
-import net.sf.farrago.util.*;
-import net.sf.farrago.fem.fennel.*;
-
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.util.*;
 
 /**
  * FennelAggRule is a rule for transforming {@link AggregateRel} to
@@ -76,7 +70,7 @@ public class FennelAggRule extends RelOptRule
             // whether the aggregate function is one of the builtins supported
             // by Fennel; also test whether we can handle input datatype
             try {
-                FennelAggRel.lookupFennelAggFunction(calls[i]);
+                FennelAggRel.lookupAggFunction(calls[i]);
             } catch (IllegalArgumentException ex) {
                 return;
             }

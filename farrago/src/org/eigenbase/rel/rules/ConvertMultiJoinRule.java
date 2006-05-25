@@ -157,11 +157,10 @@ public class ConvertMultiJoinRule extends RelOptRule
                 for (int i = 0; i < nFieldsOnRight; i++) {
                     adjustments[i] = nFieldsOnLeft;
                 }
-                rightFilter = RelOptUtil.convertRexInputRefs(
-                    rexBuilder,
-                    rightFilter,
-                    multiJoin.getRowType().getFields(),
-                    adjustments);
+                rightFilter = rightFilter.accept(
+                    new RelOptUtil.RexInputConverter(
+                        rexBuilder, multiJoin.getRowType().getFields(),
+                        adjustments));
             }
         }
         

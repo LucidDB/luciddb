@@ -22,11 +22,11 @@ static {
 
 ExecutableStmt.Oj_inner_2 oj_var3 = new ExecutableStmt.Oj_inner_2();
 
-if (ID$9$MANAGER == true) {
+if (ID$0$MANAGER == true) {
     oj_var3.assignFrom( oj_var0 );
     oj_var3.enforceBytePrecision( 5, true, (byte) ' ' );
 } else {
-    if (ID$9$MANAGER == false) {
+    if (ID$0$MANAGER == false) {
         oj_var3.assignFrom( oj_var1 );
         oj_var3.enforceBytePrecision( 5, true, (byte) ' ' );
     } else {

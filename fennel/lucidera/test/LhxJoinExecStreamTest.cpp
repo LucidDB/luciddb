@@ -274,7 +274,6 @@ void LhxJoinExecStreamTest::testImpl(
     joinParams.outputProj = outputProj;
     joinParams.cndKeys = cndKeys;
     joinParams.numRows = numInputRows;
-    joinParams.aggsCount = 0;
 
     for (int i = 0; i < keyCount; i ++) {
         joinParams.leftKeyProj.push_back(i);

@@ -110,6 +110,11 @@ public abstract class TableModificationRelBase extends SingleRel
         return operation.equals(Operation.UPDATE);
     }    
 
+    public boolean isDelete()
+    {
+        return operation.equals(Operation.DELETE);
+    }    
+    
     // implement RelNode
     public RelDataType deriveRowType()
     {

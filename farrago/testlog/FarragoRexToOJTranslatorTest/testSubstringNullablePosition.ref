@@ -4,17 +4,17 @@ net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var0 = new net.
 
 ExecutableStmt.Oj_inner_0 oj_var1 = new ExecutableStmt.Oj_inner_0();
 
-if (ID$6$AGE.isNull()) {
+if (ID$2$AGE.isNull()) {
     oj_var0.setNull( true );
 } else {
     oj_var0.setNull( false );
-    oj_var0.value = (int) (ID$6$AGE.value / 20);
+    oj_var0.value = (int) (ID$2$AGE.value / 20);
 }
-if (ID$4$CITY.isNull() || oj_var0.isNull()) {
+if (ID$0$CITY.isNull() || oj_var0.isNull()) {
     oj_var1.setNull( true );
 } else {
-    oj_var1.assignFrom( ID$4$CITY );
-    oj_var1.substring( oj_var0.value, ID$5$EMPID, true );
+    oj_var1.assignFrom( ID$0$CITY );
+    oj_var1.substring( oj_var0.value, ID$1$EMPID, true );
 }
 
 return oj_var1;

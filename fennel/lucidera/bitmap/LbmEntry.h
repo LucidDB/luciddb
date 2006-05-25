@@ -387,15 +387,6 @@ class LbmEntry : public LbmSegment
     static const uint LbmSmallSingleBitmap = 256;
 
     /**
-     * Test if a tuple is singleton.
-     *
-     * @param inputTuple tuple in which a LbmEntry is stored.
-     *
-     * @return true if the tuple is a singleton. 
-     */
-    inline static bool isSingleton(TupleData const &inputTuple);
-
-    /**
      * Test if a tuple contains a single bitmap.
      *
      * @param inputTuple tuple in which a LbmEntry is stored.
@@ -595,7 +586,6 @@ public:
      */
     static void generateRIDs(
         TupleData const &inputTuple, vector<LcsRid> &ridValues);
-
     
     /**
      * Returns the ideal scratch buffer size to provide when initializing
@@ -615,6 +605,15 @@ public:
      * @param bitmapColSize size of a bitmap column in the generated tuple
      */
     static uint getMaxBitmapSize(uint bitmapColSize);
+
+    /**
+     * Test if a tuple is singleton.
+     *
+     * @param inputTuple tuple in which a LbmEntry is stored.
+     *
+     * @return true if the tuple is a singleton. 
+     */
+    inline static bool isSingleton(TupleData const &inputTuple);
 };
 
 

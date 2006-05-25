@@ -94,7 +94,8 @@ from
 select period.time_key, count(period.time_key_seq)
 from period
 group by period.time_key
-having count(period.time_key_seq) > 1;
+having count(period.time_key_seq) > 1
+order by 1;
 
 
 -- check no multiple records for certain dates
@@ -102,4 +103,5 @@ select periods.time_key, count(periods.time_key_seq)
 from 
 (select * from table(applib.time_dimension(1900, 1, 1, 2010, 12, 31)))periods
 group by periods.time_key
-having count(periods.time_key_seq) > 1;
+having count(periods.time_key_seq) > 1
+order by 1;
