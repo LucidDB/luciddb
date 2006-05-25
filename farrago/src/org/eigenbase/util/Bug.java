@@ -98,6 +98,8 @@ public abstract class Bug
 
     public static final boolean Dt471Fixed = false;
 
+    public static final boolean Dt591Fixed = false;
+
     // -----------------------------------------------------------------------
     // Developers should create new fields here, in their own section. This
     // will make merge conflicts much less likely than if everyone is
