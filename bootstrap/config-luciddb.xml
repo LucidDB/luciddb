@@ -151,6 +151,16 @@
                 <property name="open.bootstrap.dir" value="&open.bootstrap.dir;"/>
                 <property name="red.bootstrap.dir" value="&red.bootstrap.dir;"/>
             </antpublisher>
+
+            <artifactspublisher
+                file="&luciddb.pass.dir;/unpackopen.tz"
+                dest="artifacts/luciddb&configSuffix;" 
+                subdirectory="release"/>
+            <artifactspublisher
+                file="&luciddb.pass.dir;/unpackopen.sh"
+                dest="artifacts/luciddb&configSuffix;" 
+                subdirectory="release"/>
+
         </onsuccess>
 
         <antpublisher 
