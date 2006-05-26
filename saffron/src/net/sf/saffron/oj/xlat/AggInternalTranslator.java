@@ -302,12 +302,7 @@ outer:
             return new RexGroupVariable(group);
         }
 
-        public void accept(RexVisitor visitor)
-        {
-            throw new UnsupportedOperationException();
-        }
-
-        public RexNode accept(RexShuttle shuttle)
+        public <R> R accept(RexVisitor<R> visitor)
         {
             throw new UnsupportedOperationException();
         }
@@ -333,12 +328,7 @@ outer:
             return new RexAggVariable(agg);
         }
 
-        public void accept(RexVisitor visitor)
-        {
-            throw new UnsupportedOperationException();
-        }
-
-        public RexNode accept(RexShuttle shuttle)
+        public <R> R accept(RexVisitor<R> visitor)
         {
             throw new UnsupportedOperationException();
         }

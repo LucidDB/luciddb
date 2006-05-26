@@ -210,7 +210,7 @@ public abstract class ProjectRelBase extends SingleRel
     /**
      * Visitor which walks over a program and checks validity.
      */
-    private static class Checker extends RexVisitorImpl
+    private static class Checker extends RexVisitorImpl<Boolean>
     {
         private final boolean fail;
         private final RelNode child;
@@ -223,29 +223,33 @@ public abstract class ProjectRelBase extends SingleRel
             this.child = child;
         }
 
-        public void visitInputRef(RexInputRef inputRef)
+        public Boolean visitInputRef(RexInputRef inputRef)
         {
             final int index = inputRef.getIndex();
             final RelDataTypeField[] fields = child.getRowType().getFields();
             if (index < 0 || index >= fields.length) {
                 assert !fail;
                 ++failCount;
+                return false;
             }
             if (!RelOptUtil.eq(
                 "inputRef", inputRef.getType(),
                 "underlying field", fields[index].getType(), fail)) {
                 assert !fail;
                 ++failCount;
+                return false;
             }
+            return true;
         }
 
-        public void visitLocalRef(RexLocalRef localRef)
+        public Boolean visitLocalRef(RexLocalRef localRef)
         {
             assert !fail : "localRef invalid in project";
             ++failCount;
+            return false;
         }
 
-        public void visitFieldAccess(RexFieldAccess fieldAccess)
+        public Boolean visitFieldAccess(RexFieldAccess fieldAccess)
         {
             super.visitFieldAccess(fieldAccess);
             final RelDataType refType =
@@ -256,12 +260,17 @@ public abstract class ProjectRelBase extends SingleRel
             if (index < 0 || index > refType.getFields().length) {
                 assert !fail;
                 ++failCount;
+                return false;
             }
             final RelDataTypeField typeField = refType.getFields()[index];
-            if (!RelOptUtil.eq("type1", typeField.getType(), "type2", fieldAccess.getType(), fail)) {
+            if (!RelOptUtil.eq(
+                "type1", typeField.getType(),
+                "type2", fieldAccess.getType(), fail)) {
                 assert !fail;
                 ++failCount;
+                return false;
             }
+            return true;
         }
     }
 }

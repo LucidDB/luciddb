@@ -58,11 +58,10 @@ import org.eigenbase.reltype.RelDataTypeField;
  * @since May 21, 2006
  * @version $Id$
  */
-public class RexChecker extends RexVisitorImpl
+public class RexChecker extends RexVisitorImpl<Boolean>
 {
     private final boolean fail;
     private final RelDataType inputRowType;
-    private boolean valid;
 
     /**
      * Creates a RexChecker.
@@ -70,6 +69,9 @@ public class RexChecker extends RexVisitorImpl
      * <p>If <code>fail</code> is true, the checker will throw an
      * {@link AssertionError} if an invalid node is found and assertions are
      * enabled.
+     *
+     * <p>Otherwise, each method returns whether its part of the tree is
+     * valid.
      *
      * @param inputRowType Input row type
      * @param fail Whether to throw an {@link AssertionError} if an invalid
@@ -82,36 +84,47 @@ public class RexChecker extends RexVisitorImpl
         this.inputRowType = inputRowType;
     }
 
-    public void visitInputRef(RexInputRef ref)
+    public Boolean visitInputRef(RexInputRef ref)
     {
         final RelDataTypeField[] fields = inputRowType.getFields();
         final int index = ref.getIndex();
         if (index < 0 || index >= fields.length) {
             assert !fail : "RexInputRef index " + index +
                 " out of range 0.." + (fields.length - 1);
-            valid = false;
-            return;
+            return false;
         }
         if (!ref.getType().isStruct() &&
             !RelOptUtil.eq(
             "ref", ref.getType(),
             "input", fields[index].getType(), fail)) {
-            valid = false;
-            return;
+            return false;
         }
+        return true;
     }
 
-    public void visitInputRef(RexLocalRef ref)
+    public Boolean visitLocalRef(RexLocalRef ref)
     {
         assert !fail : "RexLocalRef illegal outside program";
-        valid = false;
+        return false;
     }
 
+    public Boolean visitCall(RexCall call)
+    {
+        for (RexNode operand : call.getOperands()) {
+            boolean valid = operand.accept(this);
+            if (!valid) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Returns whether an expression is valid.
+     */
     public boolean isValid(RexNode expr)
     {
-        valid = true;
-        expr.accept(this);
-        return valid;
+        return expr.accept(this);
     }
 }
 

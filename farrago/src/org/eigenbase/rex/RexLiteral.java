@@ -524,14 +524,9 @@ public class RexLiteral extends RexNode
         return (o1 == null) ? (o2 == null) : o1.equals(o2);
     }
 
-    public void accept(RexVisitor visitor)
+    public <R> R accept(RexVisitor<R> visitor)
     {
-        visitor.visitLiteral(this);
-    }
-
-    public RexNode accept(RexShuttle shuttle)
-    {
-        return shuttle.visitLiteral(this);
+        return visitor.visitLiteral(this);
     }
 }
 

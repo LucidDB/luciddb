@@ -88,7 +88,7 @@ public class RexProgramBuilder
     private void validate(final RexNode expr, final int fieldOrdinal)
     {
         final RexVisitor validator = new RexVisitorImpl(true) {
-            public void visitInputRef(RexInputRef input)
+            public Void visitInputRef(RexInputRef input)
             {
                 final int index = input.getIndex();
                 final RelDataTypeField[] fields = inputRowType.getFields();
@@ -112,6 +112,7 @@ public class RexProgramBuilder
                             " has inconsistent type");
                     }
                 }
+                return null;
             }
         };
         expr.accept(validator);
@@ -971,7 +972,7 @@ public class RexProgramBuilder
     /**
      * Visitor which marks which expressions are used.
      */
-    private class UsageVisitor extends RexVisitorImpl
+    private class UsageVisitor extends RexVisitorImpl<Void>
     {
         final boolean[] usedExprs;
         int unusedCount;
@@ -987,7 +988,7 @@ public class RexProgramBuilder
             unusedCount = exprList.size() - inputFieldCount;
         }
 
-        public void visitLocalRef(RexLocalRef localRef)
+        public Void visitLocalRef(RexLocalRef localRef)
         {
             final int index = localRef.getIndex();
             if (!usedExprs[index]) {
@@ -998,6 +999,7 @@ public class RexProgramBuilder
                 // uses.
                 exprList.get(index).accept(this);
             }
+            return null;
         }
     }
 

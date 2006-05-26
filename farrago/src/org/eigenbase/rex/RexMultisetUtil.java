@@ -173,7 +173,9 @@ public class RexMultisetUtil
      * traversed and number of multiset calls traversed.<p>
      * totalCount >= multisetCount always holds true.
      */
-    private static class RexCallMultisetOperatorCounter extends RexVisitorImpl {
+    private static class RexCallMultisetOperatorCounter
+        extends RexVisitorImpl<Void>
+    {
         int totalCount = 0;
         int multisetCount = 0;
 
@@ -188,7 +190,7 @@ public class RexMultisetUtil
             multisetCount = 0;
         }
 
-        public void visitCall(RexCall call)
+        public Void visitCall(RexCall call)
         {
             ++totalCount;
             if (multisetOperators.contains(call.getOperator())) {
@@ -197,7 +199,7 @@ public class RexMultisetUtil
                     ++multisetCount;
                 }
             }
-            super.visitCall(call);
+            return super.visitCall(call);
         }
     }
 }

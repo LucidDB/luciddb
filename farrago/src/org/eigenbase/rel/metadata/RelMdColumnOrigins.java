@@ -144,9 +144,9 @@ public class RelMdColumnOrigins extends ReflectiveRelMetadataProvider
         // Anything else is a derivation, possibly from multiple
         // columns.
         final Set<RelColumnOrigin> set = new HashSet<RelColumnOrigin>();
-        RexVisitor visitor = new RexVisitorImpl(true) 
+        RexVisitor visitor = new RexVisitorImpl<Void>(true)
             {
-                public void visitInputRef(RexInputRef inputRef)
+                public Void visitInputRef(RexInputRef inputRef)
                 {
                     Set<RelColumnOrigin> inputSet =
                         RelMetadataQuery.getColumnOrigins(
@@ -155,6 +155,7 @@ public class RelMdColumnOrigins extends ReflectiveRelMetadataProvider
                     if (inputSet != null) {
                         set.addAll(inputSet);
                     }
+                    return null;
                 }
             };
         rexNode.accept(visitor);

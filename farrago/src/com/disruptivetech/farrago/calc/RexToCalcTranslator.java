@@ -20,7 +20,6 @@
 */
 package com.disruptivetech.farrago.calc;
 
-import net.sf.farrago.query.FarragoRexBuilder;
 import net.sf.farrago.resource.FarragoResource;
 import net.sf.farrago.session.FarragoSessionPlanner;
 import net.sf.farrago.session.FarragoSessionPreparingStmt;
@@ -49,7 +48,8 @@ import java.util.*;
  * @since Feb 5, 2004
  * @version $Id$
  */
-public class RexToCalcTranslator implements RexVisitor
+public class RexToCalcTranslator
+    implements RexVisitor<CalcProgramBuilder.Register>
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -356,12 +356,13 @@ public class RexToCalcTranslator implements RexVisitor
         return node.toString() + node.getType().toString();
     }
 
-    public void setResult(
+    public CalcProgramBuilder.Register setResult(
         RexNode node,
         CalcProgramBuilder.Register register)
     {
         final String key = getKey(node);
         scope.set(key, register);
+        return register;
     }
 
     /**
@@ -720,73 +721,76 @@ public class RexToCalcTranslator implements RexVisitor
         return result;
     }
 
-    public void visitInputRef(RexInputRef inputRef)
+    public CalcProgramBuilder.Register visitInputRef(RexInputRef inputRef)
     {
-        implement(inputRef);
+        return implement(inputRef);
     }
 
-    public void visitLocalRef(RexLocalRef localRef)
+    public CalcProgramBuilder.Register visitLocalRef(RexLocalRef localRef)
     {
-        implement(localRef);
+        return implement(localRef);
     }
 
-    public void visitLiteral(RexLiteral literal)
+    public CalcProgramBuilder.Register visitLiteral(RexLiteral literal)
     {
-        if (containsResult(literal)) {
-            return;
+        final CalcProgramBuilder.Register register = scope.get(getKey(literal));
+        if (register != null) {
+            return register;
         }
-        implement(literal);
+        return implement(literal);
     }
 
-    public void visitCall(RexCall call)
+    public CalcProgramBuilder.Register visitCall(RexCall call)
     {
-        if (containsResult(call)) {
-            return;
+        CalcProgramBuilder.Register register = scope.get(getKey(call));
+        if (register != null) {
+            return register;
         }
         int before = builder.getCurrentLineNumber();
-        implement(call);
+        register = implement(call);
         int after = builder.getCurrentLineNumber();
         assert (after >= before);
         if (0 != (after - before)) {
             builder.addComment(call.toString());
         }
+        return register;
     }
 
-    public void visitOver(RexOver over)
+    public CalcProgramBuilder.Register visitOver(RexOver over)
     {
         throw FarragoResource.instance().ProgramImplementationError.ex(
             "Don't know how to implement rex node=" + over);
     }
 
-    public void visitCorrelVariable(RexCorrelVariable correlVariable)
+    public CalcProgramBuilder.Register visitCorrelVariable(
+        RexCorrelVariable correlVariable)
     {
-        implement(correlVariable);
+        return implement(correlVariable);
     }
 
-    public void visitDynamicParam(RexDynamicParam dynamicParam)
+    public CalcProgramBuilder.Register visitDynamicParam(RexDynamicParam dynamicParam)
     {
         throw FarragoResource.instance().ProgramImplementationError.ex(
             "Don't know how to implement rex node=" + dynamicParam);
     }
 
-    public void visitRangeRef(RexRangeRef rangeRef)
+    public CalcProgramBuilder.Register visitRangeRef(RexRangeRef rangeRef)
     {
         throw FarragoResource.instance().ProgramImplementationError.ex(
             "Don't know how to implement rex node=" + rangeRef);
     }
 
-    public void visitFieldAccess(RexFieldAccess fieldAccess)
+    public CalcProgramBuilder.Register visitFieldAccess(RexFieldAccess fieldAccess)
     {
         final RexNode expr = fieldAccess.getReferenceExpr();
         if (expr instanceof RexCorrelVariable) {
-            implement(fieldAccess);
-            return;
+            return implement(fieldAccess);
         }
         throw FarragoResource.instance().ProgramImplementationError.ex(
             "Don't know how to implement rex node=" + fieldAccess);
     }
 
-    private void implementShortCircuit(RexCall call)
+    private CalcProgramBuilder.Register implementShortCircuit(RexCall call)
     {
         assert (call.operands.length == 2) : "not a binary operator";
         if (containsResult(call)) {
@@ -830,13 +834,14 @@ public class RexToCalcTranslator implements RexVisitor
             //WARNING this assumes that more instructions will follow.
             //Return is currently always at the end.
             builder.addLabel(restOfInstructions);
+            return result;
         } else {
             throw FarragoResource.instance().ProgramImplementationError.ex(
                 op.toString());
         }
     }
 
-    private void implement(RexCall call)
+    private CalcProgramBuilder.Register implement(RexCall call)
     {
         if (containsResult(call)) {
             throw new AssertionError("Shouldn't call this function directly;"
@@ -845,13 +850,12 @@ public class RexToCalcTranslator implements RexVisitor
 
         SqlOperator op = call.getOperator();
 
-        //check if and/or/xor should short circuit
+        // Check if and/or/xor should short circuit.
         if (generateShortCircuit
             && (op.getKind().isA(SqlKind.And)
                 || op.getKind().isA(SqlKind.Or)))
         {
-            implementShortCircuit(call);
-            return;
+            return implementShortCircuit(call);
         }
 
         // Do table-driven implementation if possible.
@@ -921,7 +925,7 @@ public class RexToCalcTranslator implements RexVisitor
                 throw Util.newInternal("Unknown op " + op);
             }
             setResult(call, resultOfCall);
-            return;
+            return resultOfCall;
         }
 
         // Ask implementor table for if op exists.
@@ -931,7 +935,7 @@ public class RexToCalcTranslator implements RexVisitor
             CalcProgramBuilder.Register reg =
                 implementor.implement(call, this);
             setResult(call, reg);
-            return;
+            return reg;
         }
 
         // Maybe it's an aggregate function.
@@ -952,16 +956,13 @@ public class RexToCalcTranslator implements RexVisitor
                         call + " found in non-aggregating context");
                 case AggOp.Init_ordinal:
                     aggImplementor.implementInitialize(call, register, this);
-                    setResult(call, register);
-                    return;
+                    return setResult(call, register);
                 case AggOp.Add_ordinal:
                     aggImplementor.implementAdd(call, register, this);
-                    setResult(call, register);
-                    return;
+                    return setResult(call, register);
                 case AggOp.Drop_ordinal:
                     aggImplementor.implementDrop(call, register, this);
-                    setResult(call, register);
-                    return;
+                    return setResult(call, register);
                 default:
                     throw aggOp.unexpected();
                 }
@@ -1060,7 +1061,7 @@ public class RexToCalcTranslator implements RexVisitor
         // probably needs to be done for BINARY vs. VARBINARY.
     }
 
-    private void implement(RexLiteral node)
+    private CalcProgramBuilder.Register implement(RexLiteral node)
     {
         if (containsResult(node)) {
             throw new AssertionError("Shouldn't call this function directly;"
@@ -1070,24 +1071,26 @@ public class RexToCalcTranslator implements RexVisitor
         Object value = node.getValue2();
         CalcProgramBuilder.RegisterDescriptor desc =
             getCalcRegisterDescriptor(node);
-        setResult(
-            node,
-            builder.newLiteral(desc, value));
+        final CalcProgramBuilder.Register register =
+            builder.newLiteral(desc, value);
+        setResult(node, register);
+        return register;
     }
 
-    private void implement(RexInputRef node)
+    private CalcProgramBuilder.Register implement(RexInputRef node)
     {
-        if (containsResult(node)) {
-            return; // this method is idempotent
+        CalcProgramBuilder.Register register = scope.get(getKey(node));
+        if (register != null) {
+            return register; // this method is idempotent
         }
         final int index = node.getIndex();
         assert index < program.getInputRowType().getFields().length;
-        setResult(
-            node,
-            builder.newInput(getCalcRegisterDescriptor(node)));
+        register = builder.newInput(getCalcRegisterDescriptor(node));
+        setResult(node, register);
+        return register;
     }
 
-    private void implement(RexLocalRef node)
+    private CalcProgramBuilder.Register implement(RexLocalRef node)
     {
         assert !containsResult(node) :
             "Shouldn't call this function directly;" +
@@ -1098,21 +1101,22 @@ public class RexToCalcTranslator implements RexVisitor
         expr.accept(this);
         final CalcProgramBuilder.Register result = getResult(expr, true);
         setResult(node, result);
+        return result;
     }
 
-    private void implement(RexFieldAccess node)
+    private CalcProgramBuilder.Register implement(RexFieldAccess node)
     {
         if (containsResult(node)) {
             throw new AssertionError("Shouldn't call this function directly;"
                 + " use implementNode(RexNode) instead");
         }
 
-        final RexNode accessedNode = node.getReferenceExpr();
-        assert(accessedNode instanceof RexCorrelVariable);
-        implement((RexCorrelVariable) accessedNode);
+        final RexCorrelVariable accessedNode =
+            (RexCorrelVariable) node.getReferenceExpr();
+        return implement(accessedNode);
     }
 
-    private void implement(RexCorrelVariable node)
+    private CalcProgramBuilder.Register implement(RexCorrelVariable node)
     {
         final int id = RelOptQuery.getCorrelOrdinal(node.getName());
         CalcProgramBuilder.Register idReg = builder.newInt4Literal(id);
@@ -1122,6 +1126,7 @@ public class RexToCalcTranslator implements RexVisitor
             builder,
             new CalcProgramBuilder.Register [] { result, idReg});
         setResult(node, result);
+        return result;
     }
 
 
@@ -1322,7 +1327,7 @@ public class RexToCalcTranslator implements RexVisitor
      * {@link TranslationException} if it finds a node which cannot be
      * implemented.
      */
-    private class TranslationTester extends RexVisitorImpl
+    private class TranslationTester extends RexVisitorImpl<Void>
     {
         private final RexToCalcTranslator translator;
 
@@ -1342,7 +1347,7 @@ public class RexToCalcTranslator implements RexVisitor
             this.translator = translator;
         }
 
-        public void visitCall(RexCall call)
+        public Void visitCall(RexCall call)
         {
             final SqlOperator op = call.getOperator();
             CalcRexImplementor implementor =
@@ -1351,22 +1356,22 @@ public class RexToCalcTranslator implements RexVisitor
                 throw new TranslationException();
             }
 
-            super.visitCall(call);
+            return super.visitCall(call);
         }
 
-        public void visitOver(RexOver over)
+        public Void visitOver(RexOver over)
         {
             // Matches RexToCalcTranslator.visitOver()
             throw new RexToCalcTranslator.TranslationException();
         }
 
-        public void visitDynamicParam(RexDynamicParam dynamicParam)
+        public Void visitDynamicParam(RexDynamicParam dynamicParam)
         {
             // Matches RexToCalcTranslator.visitDynamicParam()
             throw new RexToCalcTranslator.TranslationException();
         }
 
-        public void visitRangeRef(RexRangeRef rangeRef)
+        public Void visitRangeRef(RexRangeRef rangeRef)
         {
             // Matches RexToCalcTranslator.visitRangeRef()
             throw new RexToCalcTranslator.TranslationException();

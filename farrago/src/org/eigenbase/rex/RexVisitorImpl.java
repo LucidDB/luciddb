@@ -25,7 +25,7 @@ package org.eigenbase.rex;
  * Default implementation of {@link RexVisitor}, which visits each node
  * but does nothing while it's there.
  */
-public class RexVisitorImpl implements RexVisitor
+public class RexVisitorImpl<R> implements RexVisitor<R>
 {
     protected final boolean deep;
 
@@ -34,23 +34,26 @@ public class RexVisitorImpl implements RexVisitor
         this.deep = deep;
     }
 
-    public void visitInputRef(RexInputRef inputRef)
+    public R visitInputRef(RexInputRef inputRef)
     {
+        return null;
     }
 
-    public void visitLocalRef(RexLocalRef localRef)
+    public R visitLocalRef(RexLocalRef localRef)
     {
+        return null;
     }
 
-    public void visitLiteral(RexLiteral literal)
+    public R visitLiteral(RexLiteral literal)
     {
+        return null;
     }
 
-    public void visitOver(RexOver over)
+    public R visitOver(RexOver over)
     {
-        visitCall(over);
+        R r = visitCall(over);
         if (!deep) {
-            return;
+            return null;
         }
         final RexWindow window = over.getWindow();
         for (int i = 0; i < window.orderKeys.length; i++) {
@@ -59,40 +62,46 @@ public class RexVisitorImpl implements RexVisitor
         for (int i = 0; i < window.partitionKeys.length; i++) {
             window.partitionKeys[i].accept(this);
         }
+        return r;
     }
 
-    public void visitCorrelVariable(RexCorrelVariable correlVariable)
+    public R visitCorrelVariable(RexCorrelVariable correlVariable)
     {
+        return null;
     }
 
-    public void visitCall(RexCall call)
+    public R visitCall(RexCall call)
     {
         if (!deep) {
-            return;
+            return null;
         }
 
         final RexNode [] operands = call.getOperands();
+        R r = null;
         for (int i = 0; i < operands.length; i++) {
             RexNode operand = operands[i];
-            operand.accept(this);
+            r = operand.accept(this);
         }
+        return r;
     }
 
-    public void visitDynamicParam(RexDynamicParam dynamicParam)
+    public R visitDynamicParam(RexDynamicParam dynamicParam)
     {
+        return null;
     }
 
-    public void visitRangeRef(RexRangeRef rangeRef)
+    public R visitRangeRef(RexRangeRef rangeRef)
     {
+        return null;
     }
 
-    public void visitFieldAccess(RexFieldAccess fieldAccess)
+    public R visitFieldAccess(RexFieldAccess fieldAccess)
     {
         if (!deep) {
-            return;
+            return null;
         }
         final RexNode expr = fieldAccess.getReferenceExpr();
-        expr.accept(this);
+        return expr.accept(this);
     }
 }
 

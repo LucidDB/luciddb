@@ -79,14 +79,9 @@ public class RexInputRef extends RexSlot
         return new RexInputRef(index, type);
     }
 
-    public void accept(RexVisitor visitor)
+    public <R> R accept(RexVisitor<R> visitor)
     {
-        visitor.visitInputRef(this);
-    }
-
-    public RexNode accept(RexShuttle shuttle)
-    {
-        return shuttle.visitInputRef(this);
+        return visitor.visitInputRef(this);
     }
 
     /**

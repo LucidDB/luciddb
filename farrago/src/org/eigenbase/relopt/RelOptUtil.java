@@ -1471,7 +1471,7 @@ public abstract class RelOptUtil
     /**
      * Visitor which builds a bitmap of the inputs used by an expression.
      */
-    public static class InputFinder extends RexVisitorImpl
+    public static class InputFinder extends RexVisitorImpl<Void>
     {
         private final BitSet rexRefSet;
 
@@ -1481,9 +1481,10 @@ public abstract class RelOptUtil
             this.rexRefSet = rexRefSet;
         }
 
-        public void visitInputRef(RexInputRef inputRef)
+        public Void visitInputRef(RexInputRef inputRef)
         {
             rexRefSet.set(inputRef.getIndex());
+            return null;
         }
 
         /**

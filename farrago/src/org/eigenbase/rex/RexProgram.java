@@ -629,7 +629,7 @@ public class RexProgram
     /**
      * Visitor which walks over a program and checks validity.
      */
-    class Checker extends RexVisitorImpl
+    class Checker extends RexVisitorImpl<Boolean>
     {
         private final boolean fail;
         int failCount = 0;
@@ -640,20 +640,25 @@ public class RexProgram
             this.fail = fail;
         }
 
-        public void visitLocalRef(RexLocalRef localRef)
+        public Boolean visitLocalRef(RexLocalRef localRef)
         {
             final int index = localRef.getIndex();
             if (index < 0 || index >= exprs.length) {
                 assert !fail;
                 ++failCount;
+                return false;
             }
-            if (!RelOptUtil.eq("type1", localRef.getType(), "type2", exprs[index].getType(), fail)) {
+            if (!RelOptUtil.eq(
+                "type1", localRef.getType(),
+                "type2", exprs[index].getType(), fail)) {
                 assert !fail;
                 ++failCount;
+                return false;
             }
+            return true;
         }
 
-        public void visitFieldAccess(RexFieldAccess fieldAccess)
+        public Boolean visitFieldAccess(RexFieldAccess fieldAccess)
         {
             super.visitFieldAccess(fieldAccess);
             final RelDataType refType =
@@ -664,12 +669,17 @@ public class RexProgram
             if (index < 0 || index > refType.getFieldCount()) {
                 assert !fail;
                 ++failCount;
+                return false;
             }
             final RelDataTypeField typeField = refType.getFields()[index];
-            if (!RelOptUtil.eq("type1", typeField.getType(), "type2", fieldAccess.getType(), fail)) {
+            if (!RelOptUtil.eq(
+                "type1", typeField.getType(),
+                "type2", fieldAccess.getType(), fail)) {
                 assert !fail;
                 ++failCount;
+                return false;
             }
+            return true;
         }
     }
     

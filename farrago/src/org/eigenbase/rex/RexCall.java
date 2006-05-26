@@ -196,14 +196,9 @@ public class RexCall extends RexNode
             isA(RexKind.Cast) || isA(RexKind.NewSpecification));
     }
 
-    public void accept(RexVisitor visitor)
+    public <R> R accept(RexVisitor<R> visitor)
     {
-        visitor.visitCall(this);
-    }
-
-    public RexNode accept(RexShuttle shuttle)
-    {
-        return shuttle.visitCall(this);
+        return visitor.visitCall(this);
     }
 
     public RelDataType getType()

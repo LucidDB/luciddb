@@ -95,14 +95,9 @@ public class RexOver extends RexCall
             getType(), getAggOperator(), operands, window);
     }
 
-    public void accept(RexVisitor visitor)
+    public <R> R accept(RexVisitor<R> visitor)
     {
-        visitor.visitOver(this);
-    }
-
-    public RexNode accept(RexShuttle shuttle)
-    {
-        return shuttle.visitOver(this);
+        return visitor.visitOver(this);
     }
 
     /**
@@ -157,7 +152,7 @@ public class RexOver extends RexCall
      * <p>It is re-entrant (two threads can use an instance at the same time)
      * and it can be re-used for multiple visits.
      */
-    private static class Finder extends RexVisitorImpl
+    private static class Finder extends RexVisitorImpl<Void>
     {
         static final RexOver.Finder instance = new RexOver.Finder();
 
@@ -166,7 +161,7 @@ public class RexOver extends RexCall
             super(true);
         }
 
-        public void visitOver(RexOver over)
+        public Void visitOver(RexOver over)
         {
             throw OverFound.instance;
         }
