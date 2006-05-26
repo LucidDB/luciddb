@@ -20,7 +20,17 @@
 set -e
 
 usage() {
-    echo "Usage:  initBuild.sh [--with[out]-fennel] [--with[out]-optimization] [--with[out]-debug] [--without-farrago-build] [--without-fennel[-thirdparty]-build] [--with[out]-tests] [--with-nightly-tests] --without-dist-build"
+    echo "Usage:  initBuild.sh "
+    echo "            --with[out]-fennel "
+    echo "            [--with[out]-optimization] "
+    echo "            [--with[out]-debug] "
+    echo "            [--without-fennel[-thirdparty]-build] "
+    echo ""
+    echo "            [--with[out]-tests] "
+    echo "            [--with-nightly-tests] "
+    echo ""
+    echo "            [--without-farrago-build] "
+    echo "            [--without-dist-build]"
 }
 
 without_farrago_build=false
@@ -39,16 +49,24 @@ while [ -n "$1" ]; do
             without_farrago_build=true;;
         --without-dist-build|--skip-dist-build) 
             without_dist_build=true;;
+
         --with-tests)
             without_tests=false;
             FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
-        --with-nightly-tests)
-            with_nightly_tests=true;;
         --without-tests)
             without_tests=true;
             FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
-        --?*) FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
-        
+        --with-nightly-tests)
+            with_nightly_tests=true;
+            FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
+
+        --with-fennel) FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
+        --without-fennel) FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
+        --with?(out)-optimization) FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
+        --with?(out)-debug) FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
+        --skip-fennel-thirdparty-build|--without-fennel-thirdparty-build) 
+            FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
+
         *) usage; exit -1;;
     esac
 
