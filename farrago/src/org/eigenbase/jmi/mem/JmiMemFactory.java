@@ -477,11 +477,18 @@ public abstract class JmiMemFactory
                     clazz, attrName);
                 if (relationship != null) {
                     // Add the object at the other end.
-                    final ElementImpl elementImpl = ((Element) value).impl();
-                    OneWayList inverseCollection =
-                        (OneWayList)
-                        elementImpl.get(relationship.inverse.name);
-                    inverseCollection.add(proxy);
+                    final ElementImpl elementImpl =
+                        ((Element) value).impl();
+                    if (relationship.inverse.many) {
+                        OneWayList inverseCollection =
+                            (OneWayList)
+                            elementImpl.get(relationship.inverse.name);
+                        inverseCollection.add(proxy);
+                    } else {
+                        elementImpl.put(
+                            relationship.inverse.name,
+                            proxy);
+                    }
                 }
             }
             return put(attrName, value);
