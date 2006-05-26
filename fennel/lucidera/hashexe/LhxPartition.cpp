@@ -430,7 +430,7 @@ void LhxPlan::createChildren(LhxPartitionInfo &partInfo)
     for (i = 0; i < numChildPart; i ++) {
         SharedLhxPlan newChildPlan = SharedLhxPlan(new LhxPlan());
         vector<SharedLhxPartition> partitionList;
-        for (i = 0; j < partInfo.numInput; j ++) {
+        for (j = 0; j < partInfo.numInput; j ++) {
             partitionList.push_back(partInfo.destPartitionList[i + numChildPart * j]);
         }
         newChildPlan->init(
