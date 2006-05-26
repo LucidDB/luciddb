@@ -819,6 +819,11 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
         return resultSetTypeMap.get(resultSetName);
     }
     
+    public FarragoSequenceAccessor getSequenceAccessor(String mofId)
+    {
+        return repos.getSequenceAccessor(mofId);
+    }
+    
     //~ Inner Classes ---------------------------------------------------------
 
     /**

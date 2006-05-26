@@ -262,6 +262,8 @@ DdlStmt DdlStmtEof() :
                 <IMPLEMENTATION> ddlStmt = SessionImplementation()
             )
             |
+            <TABLE> ddlStmt = AlterTableStmt()
+            |
             ddlStmt = ExtensionModelAlter()
         )
         |
@@ -487,6 +489,17 @@ FemLocalTable UnscopedTableDefinition() :
     <LPAREN> TableElementList(table) <RPAREN>
     OptionalDescription(table)
     {
+        List features = table.getFeature();
+        int sequences = 0;
+        for (Object o : features) {
+            if (((FemStoredColumn) o).getSequence() != null) {
+                sequences++;
+            }
+        }
+        if (sequences > 1) {
+            throw FarragoResource.instance()
+            .ValidatorMultipleTableSequences.ex(table.getName());
+        }
         return table;
     }
 }
@@ -738,6 +751,22 @@ CwmTable TableIdentifier() :
     }
 }
 
+CwmColumn ColumnIdentifier(CwmNamedColumnSet columnSet) :
+{
+    SqlIdentifier columnName;
+    CwmColumn column;
+}
+{
+    columnName = SimpleIdentifier()
+    {
+        column = (CwmColumn)
+        farragoParser.getStmtValidator().findColumn(
+            columnSet,
+            columnName.toString());
+        return column;
+    }
+}
+
 CwmNamedColumnSet ColumnSetIdentifier() :
 {
     SqlIdentifier qualifiedTableName;
@@ -923,6 +952,8 @@ CwmColumn ColumnDefinition(CwmTable table) :
 {
     FemStoredColumn column;
     SqlNode defaultClause;
+    FarragoSequenceOptions opts;
+    FemSequenceGenerator sequence;
     SqlCollation sqlCollation;
 }
 {
@@ -934,6 +965,20 @@ CwmColumn ColumnDefinition(CwmTable table) :
         defaultClause = DefaultClause()
         {
             setDefaultExpression(column, defaultClause);
+        }
+        |
+        opts = SequenceOptions(column.getName())
+        {
+            SqlDataTypeSpec dataType = (SqlDataTypeSpec)
+                farragoParser.getDdlValidator().getSqlDefinition(column);
+            RelDataType relType = dataType.deriveType(
+                farragoParser.getDdlValidator().getTypeFactory());
+            
+            sequence = getRepos().newFemSequenceGenerator();
+            sequence.setName("");
+            opts.init(sequence, relType);
+            column.setGeneratedAlways(opts.getGeneratedAlways());
+            column.setSequence(sequence);
         }
     ]
     ( ColumnConstraint(table,column) ) *
@@ -962,6 +1007,90 @@ SqlNode DefaultClause() :
     )
     {
         return expression;
+    }
+}
+
+FarragoSequenceOptions SequenceOptions(String name) :
+{
+    FarragoSequenceOptions opts;
+}
+{
+    <GENERATED>
+    {
+        opts = new FarragoSequenceOptions(name);
+    }
+    (
+        <ALWAYS>
+        {
+            opts.setGeneratedAlways(true);
+        }
+        |
+        <BY> <DEFAULT_KW>
+        {
+            opts.setGeneratedAlways(false);
+        }
+    )
+    <AS> <IDENTITY>
+    [ <LPAREN> ( CommonSequenceOption(opts) )* <RPAREN> ]
+    {
+        return opts;
+    }
+}
+
+void CommonSequenceOption(FarragoSequenceOptions opts) :
+{
+    SqlLiteral value;
+}
+{
+    <START> <WITH> value = NumericLiteral()
+    {
+        opts.setStart(value.longValue());
+    }
+    |
+    BasicSequenceOption(opts)
+}
+
+void BasicSequenceOption(FarragoSequenceOptions opts) :
+{
+    SqlLiteral value;
+}
+{
+    <INCREMENT> <BY> value = NumericLiteral()
+    {
+        opts.setIncrement(value.longValue());
+    }
+    |
+    <MINVALUE> value = NumericLiteral()
+    {
+        opts.setMin(value.longValue());
+    }
+    |
+    LOOKAHEAD(2)
+    <NO> <MINVALUE>
+    {
+        opts.setMin(null);
+    }
+    |
+    <MAXVALUE> value = NumericLiteral()
+    {
+        opts.setMax(value.longValue());
+    }
+    |
+    LOOKAHEAD(2)
+    <NO> <MAXVALUE>
+    {
+        opts.setMax(null);
+    }
+    |
+    <CYCLE>
+    {
+        opts.setCycle(true);
+    }
+    |
+    LOOKAHEAD(2)
+    <NO> <CYCLE>
+    {
+        opts.setCycle(false);
     }
 }
 
@@ -1269,6 +1398,56 @@ DdlStmt SessionImplementation() :
     <ADD> <JAR> jarName = CompoundIdentifier3()
     {
         return new DdlSetSessionImplementationStmt(jarName, true);
+    }
+}
+
+DdlStmt AlterTableStmt() :
+{
+    DdlStmt ddlStmt;
+    CwmTable table;
+}
+{
+    table = TableIdentifier()
+    <ALTER> <COLUMN> ddlStmt = AlterColumnStmt(table)
+    {
+        return ddlStmt;
+    }
+}
+
+DdlStmt AlterColumnStmt(CwmTable table) :
+{
+    DdlStmt ddlStmt;
+    CwmColumn column;
+}
+{
+    column = ColumnIdentifier(table)
+    ddlStmt = AlterIdentityColumnStmt(column)
+    {
+        return ddlStmt;
+    }
+}
+
+DdlStmt AlterIdentityColumnStmt(CwmColumn column) :
+{
+    DdlStmt ddlStmt;
+    FarragoSequenceOptions opts;
+    SqlLiteral value;
+}
+{
+    {
+        opts = new FarragoSequenceOptions(column.getName());
+    }
+    (
+        <RESTART> <WITH> value = NumericLiteral()
+        {
+            opts.setStart(value.longValue());
+        }
+        |
+        <SET> BasicSequenceOption(opts)
+    )+
+    {
+        ddlStmt = new DdlAlterIdentityColumnStmt(column, opts);
+        return ddlStmt;
     }
 }
 
@@ -2589,7 +2768,7 @@ String DdlNonReservedKeyWord() :
 }
 {
     (
-        // <ANALYZE> is required to be a reserved word for LL(1) parsing
+        // NOTE: ANALYZE a reserved word to facilitate LL(1) parsing
         <COLUMNS>
         | <COMPUTE>
         | <ESTIMATE>

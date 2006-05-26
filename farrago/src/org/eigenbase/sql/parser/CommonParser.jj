@@ -2550,7 +2550,7 @@ int IntLiteral() :
     Token t;
 }
 {
-    ( t = <UNSIGNED_INTEGER_LITERAL> | t = <PLUS> <UNSIGNED_INTEGER_LITERAL> ) 
+    ( t = <UNSIGNED_INTEGER_LITERAL> | <PLUS> t = <UNSIGNED_INTEGER_LITERAL> ) 
     {
         try {
             return Integer.parseInt(t.image);
@@ -2559,7 +2559,7 @@ int IntLiteral() :
         }
     }
     |
-    t = <MINUS> <UNSIGNED_INTEGER_LITERAL> 
+    <MINUS> t = <UNSIGNED_INTEGER_LITERAL> 
     {
         try {
             return -Integer.parseInt(t.image);

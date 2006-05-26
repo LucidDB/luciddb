@@ -87,10 +87,12 @@ public abstract class FarragoUtil
             Throwable t = ex;
             StringBuffer sb = new StringBuffer();
             while (t != null) {
+                sb.append(t.getClass().getName());
+                sb.append(":  ");
                 sb.append(t.getLocalizedMessage());
                 t = t.getCause();
                 if (t != null) {
-                    sb.append(": ");
+                    sb.append("; ");
                 }
             }
             result = sb.toString();

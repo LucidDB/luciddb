@@ -44,7 +44,7 @@ import java.util.List;
  * @author jhyde
  * @since Nov 23, 2003
  * @version $Id$
- */
+ **/
 public class RexUtil
 {
     //~ Static fields/initializers --------------------------------------------
@@ -88,36 +88,6 @@ public class RexUtil
         RexNode [] exps2 = new RexNode[exps.length];
         for (int i = 0; i < exps.length; i++) {
             exps2[i] = clone(exps[i]);
-        }
-        return exps2;
-    }
-
-    /**
-     * Returns a copy of a {@link RexInputRef} array.
-     */
-    public static RexInputRef [] clone(RexInputRef [] exps)
-    {
-        if (null == exps) {
-            return null;
-        }
-        RexInputRef [] exps2 = new RexInputRef[exps.length];
-        for (int i = 0; i < exps.length; i++) {
-            exps2[i] = (RexInputRef) clone(exps[i]);
-        }
-        return exps2;
-    }
-
-    /**
-     * Returns a copy of a {@link RexLocalRef} array.
-     */
-    public static RexLocalRef[] clone(RexLocalRef [] exps)
-    {
-        if (null == exps) {
-            return null;
-        }
-        RexLocalRef[] exps2 = new RexLocalRef[exps.length];
-        for (int i = 0; i < exps.length; i++) {
-            exps2[i] = (RexLocalRef) clone(exps[i]);
         }
         return exps2;
     }
@@ -172,12 +142,18 @@ public class RexUtil
         RexNode [] castExps = new RexNode[fieldCount];
         assert fieldCount == rhsExps.length;
         for (int i = 0; i < fieldCount; ++i) {
-            castExps[i] =
-                maybeCast(rexBuilder, lhsFields[i].getType(), rhsExps[i]);
+            RelDataTypeField lhsField = lhsFields[i];
+            RelDataType lhsType = lhsField.getType();
+            RelDataType rhsType = rhsExps[i].getType();
+            if (lhsType.equals(rhsType)) {
+                castExps[i] = rhsExps[i];
+            } else {
+                castExps[i] = rexBuilder.makeCast(lhsType, rhsExps[i]);
+            }
         }
         return castExps;
     }
-    
+
     /**
      * Casts an expression to desired type, or returns the expression unchanged
      * if it is already the correct type.
@@ -253,15 +229,12 @@ public class RexUtil
     }
 
     /**
-     * Returns whether a given node contains a RexCall with a specified
-     * operator.
-     *
+     * Returns whether a given node contains a RexCall with a specified operator
      * @param operator to look for
      * @param node a RexNode tree
      */
-    public static RexCall findOperatorCall(
-        final SqlOperator operator,
-        RexNode node)
+    public static RexCall findOperatorCall(final SqlOperator operator,
+                                           RexNode node)
     {
         try {
             RexVisitor visitor = new RexVisitorImpl<Void>(true) {
@@ -282,19 +255,19 @@ public class RexUtil
     }
 
     /**
-     * Creates an array of {@link RexInputRef} objects, one for each field of a
-     * given rowtype.
+     * Creates an array of {@link RexInputRef}, one for each field of a given
+     * rowtype.
      */
     public static RexInputRef[] toInputRefs(RelDataType rowType)
     {
         final RelDataTypeField[] fields = rowType.getFields();
-        final RexInputRef[] refs = new RexInputRef[fields.length];
-        for (int i = 0; i < refs.length; i++) {
-            refs[i] = new RexInputRef(i, fields[i].getType());
+        final RexInputRef[] rexNodes = new RexInputRef[fields.length];
+        for (int i = 0; i < rexNodes.length; i++) {
+            rexNodes[i] = new RexInputRef(i, fields[i].getType());
         }
-        return refs;
+        return rexNodes;
     }
-
+    
     /**
      * Creates an array of {@link RexLocalRef} objects, one for each field of a
      * given rowtype.
@@ -365,6 +338,7 @@ public class RexUtil
      * 
      * <p>Exceptions to this rule are:
      * <ul>
+     *   <li>isNull doesn't require expansion
      *   <li>It's okay to cast decimals to and from char types
      *   <li>It's okay to cast nulls as decimals
      *   <li>Casts require expansion if their return type is decimal
@@ -383,28 +357,34 @@ public class RexUtil
             return false;
         }
         RexCall call = (RexCall) expr;
-        boolean required = call.getOperator().requiresDecimalExpansion();
-        if (call.isA(RexKind.Reinterpret)) {
-            required = false;
-        } else if (call.isA(RexKind.Cast)) {
+        
+        boolean localCheck = true;
+        switch (call.getKind().getOrdinal()) {
+        case RexKind.ReinterpretOrdinal:
+        case RexKind.IsNullORDINAL:
+            localCheck = false;
+            break;
+        case RexKind.CastOrdinal:
             RelDataType lhsType = call.getType();
             RelDataType rhsType = call.operands[0].getType();
-            // TODO: clean up isNull and use it instead
             if (rhsType.getSqlTypeName() == SqlTypeName.Null) {
                 return false;
             }
             if (SqlTypeUtil.inCharFamily(lhsType)
                 || SqlTypeUtil.inCharFamily(rhsType)) 
             {
-                required = false;
+                localCheck = false;
             } else if (SqlTypeUtil.isDecimal(lhsType)
                 && lhsType != rhsType) 
             {
                 return true;
             }
+            break;
+        default:
+            localCheck = call.getOperator().requiresDecimalExpansion();
         }
 
-        if (required) {
+        if (localCheck) {
             for (int i=0; i < call.operands.length; i++) {
                 if (SqlTypeUtil.isDecimal(call.operands[i].getType())) {
                     return true;
@@ -747,6 +727,7 @@ public class RexUtil
         }
         return true;
     }
+    
     /**
      * Creates an AND expression from a list of RexNodes
      * 
@@ -759,6 +740,10 @@ public class RexUtil
         if (rexList.isEmpty()) {
             return null;
         }
+        // REVIEW jvs 1-May-2006: This builds a left-deep tree, probably
+        // for the sake of order-preservation.  But right-deep would
+        // be better for calculator short-circuiting.  It's possible
+        // to achieve both by walking the list backwards.
         RexNode andExpr = rexList.get(0);
         for (int i = 1; i < rexList.size(); i++) {
             andExpr = rexBuilder.makeCall(

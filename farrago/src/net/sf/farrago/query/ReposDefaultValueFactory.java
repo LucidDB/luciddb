@@ -24,10 +24,11 @@
 package net.sf.farrago.query;
 
 import org.eigenbase.sql2rel.DefaultValueFactory;
-import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.*;
 import org.eigenbase.relopt.RelOptTable;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.sql.parser.SqlParseException;
 import org.eigenbase.util.Util;
@@ -36,8 +37,8 @@ import net.sf.farrago.util.FarragoUtil;
 import net.sf.farrago.cwm.relational.CwmColumn;
 import net.sf.farrago.cwm.relational.CwmSqldataType;
 import net.sf.farrago.cwm.core.CwmExpression;
-import net.sf.farrago.fem.sql2003.FemSqlobjectType;
-import net.sf.farrago.fem.sql2003.FemSqltypeAttribute;
+import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.session.FarragoSessionParser;
 
 import java.util.Map;
@@ -62,6 +63,24 @@ public class ReposDefaultValueFactory implements DefaultValueFactory,
     }
 
     // implement DefaultValueFactory
+    public boolean isGeneratedAlways(
+        RelOptTable table,
+        int iColumn)
+    {
+        if (table instanceof FarragoQueryColumnSet) {
+            FarragoQueryColumnSet queryColumnSet =
+                (FarragoQueryColumnSet) table;
+            CwmColumn column = 
+                (CwmColumn) queryColumnSet.getCwmColumnSet()
+                .getFeature().get(iColumn);
+            if (column instanceof FemStoredColumn) {
+                return ((FemStoredColumn) column).isGeneratedAlways(); 
+            }
+        }
+        return false;
+    }
+
+    // implement DefaultValueFactory
     public RexNode newColumnDefaultValue(
         RelOptTable table,
         int iColumn)
@@ -73,6 +92,13 @@ public class ReposDefaultValueFactory implements DefaultValueFactory,
             (FarragoQueryColumnSet) table;
         CwmColumn column =
             (CwmColumn) queryColumnSet.getCwmColumnSet().getFeature().get(iColumn);
+        if (column instanceof FemStoredColumn) {
+            FemStoredColumn storedColumn = (FemStoredColumn) column;
+            FemSequenceGenerator sequence = storedColumn.getSequence();
+            if (sequence != null) {
+                return sequenceValue(sequence);
+            }
+        }
         return convertExpression(column.getInitialValue());
     }
 
@@ -153,6 +179,15 @@ public class ReposDefaultValueFactory implements DefaultValueFactory,
         RexNode parsedExp = (RexNode) cacheEntry.getValue();
         farragoPreparingStmt.getStmtValidator().getCodeCache().unpin(cacheEntry);
         return parsedExp;
+    }
+
+    private RexNode sequenceValue(FemSequenceGenerator sequence)
+    {
+        RexBuilder rexBuilder =
+            farragoPreparingStmt.sqlToRelConverter.getRexBuilder();
+        return rexBuilder.makeCall(
+            SqlStdOperatorTable.nextValueFunc,
+            rexBuilder.makeLiteral(sequence.refMofId()));
     }
 
     // implement CachedObjectFactory

@@ -241,6 +241,13 @@ public interface FarragoRepos extends FarragoAllocation,
      *   factory
      */
     Object getMetadataFactory(String prefix);
+    
+    /**
+     * Returns the an accessor for a sequence stored in the repository
+     * 
+     * @param mofId the identifier for the sequence
+     */
+    public FarragoSequenceAccessor getSequenceAccessor(String mofId);
 }
 
 

@@ -61,6 +61,8 @@ import org.eigenbase.util.*;
  */
 public class FarragoRexToOJTranslator extends RexToOJTranslator
 {
+    private static String TO_STRING_METHOD_NAME = "toString";
+
     //~ Instance fields -------------------------------------------------------
 
     private final FarragoRepos repos;
@@ -270,7 +272,142 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
     {
         OJClass ojClass = OJUtil.typeToOJClass(
             type, getFarragoTypeFactory());
+        if (SqlTypeUtil.isJavaPrimitive(type) && (!type.isNullable())) {
+            return createPrimitiveScratchVariable(ojClass);
+        }
         return createScratchVariable(ojClass, null, null);
+    }
+
+    /**
+     * Creates a primitive scratch variable without initialization.
+     * @param ojClass
+     * 
+     * @return
+     */
+    public Variable createPrimitiveScratchVariable(
+        OJClass ojClass)
+    {
+        Variable variable = getRelImplementor().newVariable();
+        memberList.add(
+            newMember(ModifierList.EMPTY, ojClass, variable, null));
+        return variable;
+    }
+
+    /**
+     * Generates a variable with a unique name
+     */
+    public Variable newVariable() 
+    {
+        return getRelImplementor().newVariable();
+    }
+
+    /**
+     * Generates a declaration for a field in a class. This should be 
+     * followed by {@link #addMember}.
+     * 
+     * @param modifiers bitmap of modifiers such as private, or static
+     * @param ojClass type of the member
+     * @param var uniquely named variable
+     * @param init the initial value of the member, may be null
+     */
+    public FieldDeclaration newMember(
+        int modifiers, 
+        OJClass ojClass, 
+        Variable var, 
+        VariableInitializer init)
+    {
+        return new FieldDeclaration(
+            new ModifierList(modifiers),
+            TypeName.forOJClass(ojClass),
+            var.toString(),
+            init);
+    }
+
+    /**
+     * Retrieves the OpenJava type corresponding to a Sql type
+     * 
+     * @param type the Sql type
+     */
+    public OJClass typeToOJClass(RelDataType type)
+    {
+        return OJUtil.typeToOJClass(type, getFarragoTypeFactory());
+    }
+
+    /**
+     * Generates a local variable declaration
+     * 
+     * @param ojClass type of the variable
+     * @param var the uniquely named variable
+     * @param init the initial value of the variable, may be null
+     */
+    public Statement declareLocalVariable(
+        OJClass ojClass,
+        Variable var,
+        Expression init)
+    {
+        return new VariableDeclaration(
+            TypeName.forOJClass(ojClass),
+            new VariableDeclarator(var.toString(), init));
+    }
+
+    /**
+     * Generates a boolean expression describing whether an input 
+     * expression is null
+     * 
+     * @param exp the input expression
+     */
+    public Expression isNull(Expression exp)
+    {
+        return new BinaryExpression(
+            exp,
+            BinaryExpression.EQUAL,
+            Literal.constantNull());
+    }
+
+    /**
+     * Generates the string expression <code>exp.toString()</code>
+     * 
+     * @param exp expression to be converted into a string
+     */
+    public Expression toString(
+        Expression exp)
+    {
+        return new MethodCall(
+            exp,
+            TO_STRING_METHOD_NAME,
+            new ExpressionList());
+    }
+
+    /**
+     * Generates a simple assignment statement
+     * 
+     * @param lhs the expression on left side of the assignment
+     * @param rhs the expression on the right side of the assignment
+     */
+    public Statement assign(
+        Expression lhs, Expression rhs)
+    {
+        return new ExpressionStatement(
+            new AssignmentExpression(
+                lhs,
+                AssignmentExpression.EQUALS, 
+                rhs));
+    }
+
+    /**
+     * Generates a statement to initializes a variable if 
+     * the variable is null
+     * 
+     * @param var the variable to be initialed
+     * @param init the initial value for the variable
+     */
+    public Statement setIfNull(
+        Variable var,
+        Expression init)
+    {
+        return new IfStatement(
+            isNull(var),
+            new StatementList(assign(var, init)));
     }
 
     public Statement createSetNullStatement(

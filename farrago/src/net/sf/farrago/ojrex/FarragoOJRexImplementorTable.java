@@ -216,6 +216,10 @@ public class FarragoOJRexImplementorTable extends OJRexImplementorTableImpl
             opTab.reinterpretOperator,
             new FarragoOJRexReinterpretImplementor());
 
+        registerOperator(
+            SqlStdOperatorTable.nextValueFunc,
+            new FarragoOJRexNextValueImplementor());
+
         registerContextOp(opTab.userFunc);
         registerContextOp(opTab.systemUserFunc);
         registerContextOp(opTab.sessionUserFunc);
