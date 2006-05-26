@@ -355,10 +355,15 @@ public class LoptMetadataProvider extends ReflectiveRelMetadataProvider
         for (int colno = groupKey.nextSetBit(0); colno >= 0;
             colno = groupKey.nextSetBit(colno + 1))
         {
+            // calculate the original ordinal (before projection)
+            int origcolno = rel.getOriginalColumnOrdinal(colno);
+            
             // if the column has sargable predicates, compute the
             // cardinality based on the predicates; otherwise, just compute
             // the full cardinality of the column
             RelStatColumnStatistics colStats = null;
+            
+            // getColumnForFieldAccess uses projected position.
             FemAbstractColumn col = rel.getColumnForFieldAccess(colno);
             // TODO zfong 5/17/06 - for special columns like LCS_RID, we can
             // construct column stats for it, since the column values are
@@ -366,11 +371,14 @@ public class LoptMetadataProvider extends ReflectiveRelMetadataProvider
             if (col == null) {
                 return null;
             }
+            
             if (col2SeqMap != null) {   
                 SargIntervalSequence sargSeq = col2SeqMap.get(col);
-                colStats = tabStats.getColumnStatistics(colno, sargSeq);
+                // getColumnStatistics uses original field position
+                colStats = tabStats.getColumnStatistics(origcolno, sargSeq);
             } else {
-                colStats = tabStats.getColumnStatistics(colno, null);
+                // getColumnStatistics uses original field position
+                colStats = tabStats.getColumnStatistics(origcolno, null);
             }
             if (colStats == null) {
                 return null;

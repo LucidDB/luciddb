@@ -21,9 +21,11 @@
 package com.lucidera.opt;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.List;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.RelMetadataQuery;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
 
@@ -99,6 +101,25 @@ public class LhxJoinRule extends RelOptRule
             return;
         }
 
+        Double numBuildRows = RelMetadataQuery.getRowCount(fennelRight);
+        if (numBuildRows == null) {
+            numBuildRows = 10000.0;
+        }
+
+        // Derive cardinality of RHS join keys.
+        Double cndBuildKey;
+        BitSet joinKeyMap = new BitSet();
+        
+        for (int i = 0; i < rightKeys.size(); i ++) {
+        	joinKeyMap.set(rightKeys.get(i));
+        }
+        
+        cndBuildKey = RelMetadataQuery.getDistinctRowCount(fennelRight, joinKeyMap, null);
+        
+        if ((cndBuildKey == null) || (cndBuildKey > numBuildRows)) {
+        	cndBuildKey = numBuildRows;
+        }
+        
         LhxJoinRel rel =
             new LhxJoinRel(
                 joinRel.getCluster(),
@@ -107,7 +128,9 @@ public class LhxJoinRule extends RelOptRule
                 joinRel.getJoinType(),
                 leftKeys,
                 rightKeys,
-                RelOptUtil.getFieldNameList(joinRel.getRowType()));
+                RelOptUtil.getFieldNameList(joinRel.getRowType()),
+                numBuildRows.intValue(),
+                cndBuildKey.intValue());
         
         transformCall(call, rel, nonJoinCondition);
     }

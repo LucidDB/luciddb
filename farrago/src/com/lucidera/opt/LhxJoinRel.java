@@ -31,6 +31,7 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.util.Util;
 import org.eigenbase.stat.*;
 
+import java.util.BitSet;
 import java.util.List;
 
 /**
@@ -54,6 +55,16 @@ class LhxJoinRel extends FennelDoubleRel
      */
     List<Integer> rightKeys;
     
+    /**
+     * row count on the build side 
+     */
+    int numBuildRows;
+    
+    /**
+     * cardinality of the build key
+     */
+    int cndBuildKey;
+    
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -72,7 +83,9 @@ class LhxJoinRel extends FennelDoubleRel
         JoinRelType joinType,
         List<Integer> leftKeys,
         List<Integer> rightKeys,
-        List<String> fieldNameList)
+        List<String> fieldNameList,
+        int numBuildRows,
+        int cndBuildKey)
     {
         super(cluster, left, right);
         assert joinType != null;
@@ -82,6 +95,8 @@ class LhxJoinRel extends FennelDoubleRel
         this.rowType = JoinRel.deriveJoinRowType(
             left.getRowType(), right.getRowType(), joinType,
             cluster.getTypeFactory(), fieldNameList);
+        this.numBuildRows = numBuildRows;
+        this.cndBuildKey = cndBuildKey;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -97,7 +112,9 @@ class LhxJoinRel extends FennelDoubleRel
                 joinType,
                 leftKeys,
                 rightKeys,
-                RelOptUtil.getFieldNameList(rowType));
+                RelOptUtil.getFieldNameList(rowType),
+                numBuildRows,
+                cndBuildKey);
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -156,49 +173,9 @@ class LhxJoinRel extends FennelDoubleRel
                 getCluster().getTypeFactory(),
                 this.getRowType()));
 
-        Double numRightRows = RelMetadataQuery.getRowCount(right);
-        if (numRightRows == null) {
-            numRightRows = 10000.0;
-        }
-        streamDef.setNumBuildRows(numRightRows.intValue());
+        streamDef.setNumBuildRows(numBuildRows);
+        streamDef.setCndBuildKeys(cndBuildKey);
         
-        RelStatSource statSource = RelMetadataQuery.getStatistics(right);
-
-        // Derive cardinality of RHS join keys.
-        Double cndKeys = 1.0;
-        double correlationFactor = 0.7;
-        RelStatColumnStatistics colStat;
-        Double cndCol;
-        
-        for (int i = 0; i < rightKeys.size(); i ++) {
-            cndCol = null;
-            if (statSource != null) {
-                colStat = statSource.getColumnStatistics(rightKeys.get(i), null);
-                if (colStat != null) {
-                    cndCol = colStat.getCardinality();
-                }
-            }
-
-            if (cndCol == null) {
-                // default to 100 distinct values for a column
-                cndCol = 100.0;
-            }
-            
-            cndKeys *= cndCol;
-            
-            // for each additional key, apply the correlationFactor.
-            if (i > 0) {
-                cndKeys *= correlationFactor;
-            }
-            
-            // cndKeys can be at most equal to number of rows from the build
-            // side.
-            if (cndKeys > numRightRows) {
-                cndKeys = numRightRows;
-                break;
-            }
-        }
-
         if (joinType == JoinRelType.LEFT || joinType == JoinRelType.FULL) {
             streamDef.setLeftOuter(true);
         }
@@ -206,8 +183,6 @@ class LhxJoinRel extends FennelDoubleRel
         if (joinType == JoinRelType.RIGHT || joinType == JoinRelType.FULL) {
             streamDef.setRightOuter(true);
         }
-
-        streamDef.setCndBuildKeys(cndKeys.intValue());
 
         streamDef.setLeftKeyProj(
             FennelRelUtil.createTupleProjection(

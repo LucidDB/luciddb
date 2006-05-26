@@ -477,6 +477,24 @@ public class LcsRowScanRel extends FennelMultipleRel
         }
     }
 
+    /**
+     * Gets the column referenced by a FieldAccess relative to this scan.
+     *
+     * @param columnOrdinal 0-based ordinal of an output field of the scan
+     *
+     * @return ordinal of the underlying column
+     */
+    public int getOriginalColumnOrdinal(int columnOrdinal)
+    {
+        assert columnOrdinal >= 0;
+        if (projectedColumns != null) {
+            // If called after projectin has been pushed inside, 
+            // map to the original column ordinal
+            return projectedColumns[columnOrdinal].intValue();
+        }
+        return columnOrdinal;
+    }
+
     public RelOptTable getTable()
     {
         return lcsTable;
