@@ -66,42 +66,58 @@
 0: jdbc:farrago:> -- test getTables (system catalog)
 0: jdbc:farrago:> set catalog 'sys_boot';
 0: jdbc:farrago:> !tables
-+------------+----------------+----------------------------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
-| TABLE_CAT  |  TABLE_SCHEM   |            TABLE_NAME            | TABLE_TYPE  | REMARKS  | TYPE_CAT  | TYPE_SCHEM  | TYPE_NAME  | SELF_REFERENCING_COL_NAME  | REF_GENERATION  |
-+------------+----------------+----------------------------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
-| SYS_BOOT   | JDBC_METADATA  | ATTRIBUTES_VIEW                  | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | JDBC_METADATA  | ATTRIBUTES_VIEW_INTERNAL         | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | JDBC_METADATA  | CATALOGS_VIEW                    | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | JDBC_METADATA  | COLUMNS_VIEW                     | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | JDBC_METADATA  | COLUMNS_VIEW_INTERNAL            | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | JDBC_METADATA  | INDEX_INFO_INTERNAL              | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | JDBC_METADATA  | INDEX_INFO_VIEW                  | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | JDBC_METADATA  | PRIMARY_KEYS_VIEW                | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | JDBC_METADATA  | PRIMARY_KEYS_VIEW_INTERNAL       | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | JDBC_METADATA  | PROCEDURES_VIEW                  | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | JDBC_METADATA  | PROCEDURES_VIEW_INTERNAL         | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | JDBC_METADATA  | PROCEDURE_COLUMNS_VIEW           | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | JDBC_METADATA  | PROCEDURE_COLUMNS_VIEW_INTERNAL  | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | JDBC_METADATA  | SCHEMAS_VIEW                     | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | JDBC_METADATA  | SCHEMAS_VIEW_INTERNAL            | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | JDBC_METADATA  | TABLES_VIEW                      | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | JDBC_METADATA  | TABLES_VIEW_INTERNAL             | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | JDBC_METADATA  | TABLE_ROW_COUNTS_INTERNAL        | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | JDBC_METADATA  | TABLE_STATS_INTERNAL             | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | JDBC_METADATA  | TABLE_TYPES_VIEW                 | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | JDBC_METADATA  | TABLE_TYPES_VIEW_INTERNAL        | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | JDBC_METADATA  | TYPE_INFO_VIEW                   | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | JDBC_METADATA  | UDTS_VIEW                        | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | JDBC_METADATA  | UDTS_VIEW_INTERNAL               | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | MGMT           | HISTOGRAMS_VIEW                  | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | MGMT           | HISTOGRAMS_VIEW_INTERNAL         | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | MGMT           | HISTOGRAM_BARS_VIEW              | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | MGMT           | OBJECTS_IN_USE_VIEW              | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | MGMT           | PAGE_COUNTS_VIEW                 | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | MGMT           | ROW_COUNTS_VIEW                  | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | MGMT           | SESSIONS_VIEW                    | VIEW        |          |           |             |            |                            |                 |
-| SYS_BOOT   | MGMT           | STATEMENTS_VIEW                  | VIEW        |          |           |             |            |                            |                 |
-+------------+----------------+----------------------------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
++------------+----------------+-----------------------------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
+| TABLE_CAT  |  TABLE_SCHEM   |            TABLE_NAME             | TABLE_TYPE  | REMARKS  | TYPE_CAT  | TYPE_SCHEM  | TYPE_NAME  | SELF_REFERENCING_COL_NAME  | REF_GENERATION  |
++------------+----------------+-----------------------------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
+| SYS_BOOT   | JDBC_METADATA  | ATTRIBUTES_VIEW                   | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | ATTRIBUTES_VIEW_INTERNAL          | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | CATALOGS_VIEW                     | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | COLUMNS_VIEW                      | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | COLUMNS_VIEW_INTERNAL             | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | INDEX_INFO_INTERNAL               | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | INDEX_INFO_VIEW                   | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | PRIMARY_KEYS_VIEW                 | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | PRIMARY_KEYS_VIEW_INTERNAL        | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | PROCEDURES_VIEW                   | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | PROCEDURES_VIEW_INTERNAL          | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | PROCEDURE_COLUMNS_VIEW            | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | PROCEDURE_COLUMNS_VIEW_INTERNAL   | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | SCHEMAS_VIEW                      | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | SCHEMAS_VIEW_INTERNAL             | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | TABLES_VIEW                       | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | TABLES_VIEW_INTERNAL              | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | TABLE_ROW_COUNTS_INTERNAL         | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | TABLE_STATS_INTERNAL              | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | TABLE_TYPES_VIEW                  | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | TABLE_TYPES_VIEW_INTERNAL         | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | TYPE_INFO_VIEW                    | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | UDTS_VIEW                         | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | UDTS_VIEW_INTERNAL                | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | DBA_FOREIGN_SERVERS_INTERNAL1     | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | DBA_FOREIGN_SERVERS_INTERNAL2     | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | DBA_FOREIGN_TABLES_INTERNAL1      | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | DBA_FOREIGN_TABLES_INTERNAL2      | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | DBA_FOREIGN_WRAPPERS_INTERNAL     | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | DBA_ROUTINES_INTERNAL1            | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | DBA_ROUTINES_INTERNAL2            | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | DBA_ROUTINE_PARAMETERS_INTERNAL1  | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | DBA_SCHEMAS_INTERNAL1             | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | DBA_SCHEMAS_INTERNAL2             | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | DBA_STORED_TABLES_INTERNAL1       | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | DBA_STORED_TABLES_INTERNAL2       | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | DBA_TABLES_INTERNAL1              | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | DBA_TABLES_INTERNAL2              | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | DBA_VIEWS_INTERNAL1               | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | DBA_VIEWS_INTERNAL2               | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | HISTOGRAMS_VIEW                   | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | HISTOGRAMS_VIEW_INTERNAL          | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | HISTOGRAM_BARS_VIEW               | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | OBJECTS_IN_USE_VIEW               | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | PAGE_COUNTS_VIEW                  | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | ROW_COUNTS_VIEW                   | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | SESSIONS_VIEW                     | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | STATEMENTS_VIEW                   | VIEW        |          |           |             |            |                            |                 |
++------------+----------------+-----------------------------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test getColumns
 0: jdbc:farrago:> set catalog 'localdb';

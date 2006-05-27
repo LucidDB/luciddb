@@ -209,4 +209,361 @@
 . . . . . . . . >         h."mofId" = b."Histogram"
 . . . . . . . . > ;
 0: jdbc:farrago:> 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- Database admin internal views
+0: jdbc:farrago:> --
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view dba_schemas_internal1 as
+. . . . . . . . >   select
+. . . . . . . . >     c."name" as catalog_name,
+. . . . . . . . >     s."name" as schema_name,
+. . . . . . . . >     cast(s."creationTimestamp" as timestamp) as creation_timestamp,
+. . . . . . . . >     cast(s."modificationTimestamp" as timestamp) as last_modified_timestamp,
+. . . . . . . . >     s."description" as remarks,
+. . . . . . . . >     s."mofId",
+. . . . . . . . >     s."lineageId"
+. . . . . . . . >   from
+. . . . . . . . >     sys_fem."SQL2003"."LocalCatalog" c
+. . . . . . . . >   inner join
+. . . . . . . . >     sys_fem."SQL2003"."LocalSchema" s
+. . . . . . . . >   on
+. . . . . . . . >     c."mofId" = s."namespace"
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view dba_schemas_internal2 as
+. . . . . . . . >   select
+. . . . . . . . >     catalog_name,
+. . . . . . . . >     schema_name,
+. . . . . . . . >     creation_timestamp,
+. . . . . . . . >     last_modified_timestamp,
+. . . . . . . . >     remarks,
+. . . . . . . . >     si."mofId",
+. . . . . . . . >     si."lineageId",
+. . . . . . . . >     g."Grantee"
+. . . . . . . . >   from
+. . . . . . . . >     dba_schemas_internal1 si
+. . . . . . . . >   inner join
+. . . . . . . . >     sys_fem."Security"."Grant" g
+. . . . . . . . >   on
+. . . . . . . . >    si."mofId" = g."Element"
+. . . . . . . . >   where
+. . . . . . . . >    g."action" = 'CREATION'
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view dba_tables_internal1 as
+. . . . . . . . >   select 
+. . . . . . . . >     table_cat as catalog_name,
+. . . . . . . . >     table_schem as schema_name,
+. . . . . . . . >     table_name as table_name,
+. . . . . . . . >     t."mofClassName" as table_type,
+. . . . . . . . >     cast(ae."creationTimestamp" as timestamp) as creation_timestamp,
+. . . . . . . . >     cast(ae."modificationTimestamp" as timestamp) as last_modification_timestamp,
+. . . . . . . . >     "description" as remarks,
+. . . . . . . . >     t."mofId"
+. . . . . . . . >   from
+. . . . . . . . >     sys_boot.jdbc_metadata.tables_view_internal t
+. . . . . . . . >   inner join 
+. . . . . . . . >     sys_fem."SQL2003"."AnnotatedElement" ae
+. . . . . . . . >   on
+. . . . . . . . >     t."mofId" = ae."mofId"
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view dba_tables_internal2 as
+. . . . . . . . >   select
+. . . . . . . . >     catalog_name,
+. . . . . . . . >     schema_name,
+. . . . . . . . >     table_name,
+. . . . . . . . >     table_type,
+. . . . . . . . >     creation_timestamp,
+. . . . . . . . >     last_modification_timestamp,
+. . . . . . . . >     remarks,
+. . . . . . . . >     g."Grantee"
+. . . . . . . . >   from
+. . . . . . . . >     dba_tables_internal1 dti
+. . . . . . . . >   inner join
+. . . . . . . . >     sys_fem."Security"."Grant" g    
+. . . . . . . . >   on
+. . . . . . . . >     dti."mofId" = g."Element"
+. . . . . . . . >   where
+. . . . . . . . >     g."action" = 'CREATION'
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view dba_views_internal1 as
+. . . . . . . . >   select
+. . . . . . . . >     object_catalog as catalog_name,
+. . . . . . . . >     object_schema as schema_name,
+. . . . . . . . >     v."name" as view_name,
+. . . . . . . . >     cast("creationTimestamp" as timestamp) as creation_timestamp,
+. . . . . . . . >     cast("modificationTimestamp" as timestamp) as last_modification_timestamp,
+. . . . . . . . >     "rowCount" as last_analyze_row_count,
+. . . . . . . . >     cast("analyzeTime" as timestamp) as last_analyze_timestamp,
+. . . . . . . . >     "originalDefinition" as original_text,
+. . . . . . . . >     "description" as remarks,
+. . . . . . . . >     v."mofId",
+. . . . . . . . >     v."lineageId"
+. . . . . . . . >   from
+. . . . . . . . >     sys_boot.jdbc_metadata.schemas_view_internal s
+. . . . . . . . >   inner join
+. . . . . . . . >     sys_fem."SQL2003"."LocalView" v
+. . . . . . . . >   on
+. . . . . . . . >     s."mofId" = v."namespace"
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view dba_views_internal2 as
+. . . . . . . . >   select
+. . . . . . . . >     catalog_name,
+. . . . . . . . >     schema_name,
+. . . . . . . . >     view_name,
+. . . . . . . . >     creation_timestamp,
+. . . . . . . . >     last_modification_timestamp,
+. . . . . . . . >     last_analyze_row_count,
+. . . . . . . . >     last_analyze_timestamp,
+. . . . . . . . >     original_text,
+. . . . . . . . >     remarks,
+. . . . . . . . >     vi."mofId",
+. . . . . . . . >     vi."lineageId",
+. . . . . . . . >     g."Grantee"
+. . . . . . . . >   from
+. . . . . . . . >     dba_views_internal1 vi
+. . . . . . . . >   inner join
+. . . . . . . . >     sys_fem."Security"."Grant" g
+. . . . . . . . >   on
+. . . . . . . . >     vi."mofId" = g."Element"
+. . . . . . . . >   where
+. . . . . . . . >     g."action" = 'CREATION'
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view dba_stored_tables_internal1 as
+. . . . . . . . >   select
+. . . . . . . . >     object_catalog as catalog_name,
+. . . . . . . . >     object_schema as schema_name,
+. . . . . . . . >     t."name" as table_name,
+. . . . . . . . >     cast(t."creationTimestamp" as timestamp) as creation_timestamp,
+. . . . . . . . >     cast(t."modificationTimestamp" as timestamp) 
+. . . . . . . . >       as last_modification_timestamp,
+. . . . . . . . >     t."rowCount" as last_analyze_row_count,
+. . . . . . . . >     cast(t."analyzeTime" as timestamp) as last_analyze_timestamp,
+. . . . . . . . >     t."description" as remarks,
+. . . . . . . . >     t."lineageId",
+. . . . . . . . >     t."mofId"
+. . . . . . . . >   from
+. . . . . . . . >     sys_boot.jdbc_metadata.schemas_view_internal s
+. . . . . . . . >   inner join
+. . . . . . . . >     sys_fem.med."StoredTable" t
+. . . . . . . . >   on
+. . . . . . . . >     s."mofId" = t."namespace"
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view dba_stored_tables_internal2 as
+. . . . . . . . >   select
+. . . . . . . . >     catalog_name,
+. . . . . . . . >     schema_name,
+. . . . . . . . >     table_name,
+. . . . . . . . >     creation_timestamp,
+. . . . . . . . >     last_modification_timestamp,
+. . . . . . . . >     last_analyze_row_count,
+. . . . . . . . >     last_analyze_timestamp,
+. . . . . . . . >     remarks,
+. . . . . . . . >     sti."lineageId",
+. . . . . . . . >     sti."mofId",
+. . . . . . . . >     g."Grantee"
+. . . . . . . . >   from
+. . . . . . . . >     dba_stored_tables_internal1 sti
+. . . . . . . . >   inner join
+. . . . . . . . >     sys_fem."Security"."Grant" g
+. . . . . . . . >   on
+. . . . . . . . >     sti."mofId" = g."Element"
+. . . . . . . . >   where
+. . . . . . . . >     g."action" = 'CREATION'
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- TODO: temporarily using parameter style to check if routine is a udx
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function is_udx(param_style varchar(1024))
+. . . . . . . . > returns boolean
+. . . . . . . . > contains sql
+. . . . . . . . > deterministic
+. . . . . . . . > return case
+. . . . . . . . > when param_style='RPS_JAVA_FARRAGO' then true
+. . . . . . . . > else false
+. . . . . . . . > end;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view dba_routines_internal1 as
+. . . . . . . . >   select
+. . . . . . . . >     s.object_catalog as catalog_name,
+. . . . . . . . >     s.object_schema as schema_name,
+. . . . . . . . >     r."invocationName" as invocation_name,
+. . . . . . . . >     r."name" as specific_name,
+. . . . . . . . >     r."externalName" as external_name,
+. . . . . . . . >     r."type" as routine_type,
+. . . . . . . . >     cast(r."creationTimestamp" as timestamp) as creation_timestamp,
+. . . . . . . . >     cast(r."modificationTimestamp" as timestamp) as last_modified_timestamp,
+. . . . . . . . >     is_udx(r."parameterStyle") as is_table_function,
+. . . . . . . . >     r."parameterStyle" as parameter_style,
+. . . . . . . . >     r."deterministic" as is_deterministic,
+. . . . . . . . >     r."dataAccess" as data_access,
+. . . . . . . . >     r."description" as remarks,
+. . . . . . . . >     r."mofId",
+. . . . . . . . >     r."lineageId"
+. . . . . . . . >   from
+. . . . . . . . >     sys_boot.jdbc_metadata.schemas_view_internal s
+. . . . . . . . >   inner join
+. . . . . . . . >     sys_fem."SQL2003"."Routine" r
+. . . . . . . . >   on
+. . . . . . . . >     s."mofId" = r."namespace"
+. . . . . . . . > ;
+0: jdbc:farrago:>     
+0: jdbc:farrago:> create view dba_routines_internal2 as
+. . . . . . . . >   select 
+. . . . . . . . >     catalog_name,
+. . . . . . . . >     schema_name,
+. . . . . . . . >     invocation_name,
+. . . . . . . . >     specific_name,
+. . . . . . . . >     external_name,
+. . . . . . . . >     routine_type,
+. . . . . . . . >     creation_timestamp,
+. . . . . . . . >     last_modified_timestamp,
+. . . . . . . . >     is_table_function,
+. . . . . . . . >     parameter_style,
+. . . . . . . . >     is_deterministic,
+. . . . . . . . >     data_access,
+. . . . . . . . >     remarks,
+. . . . . . . . >     ri."mofId",
+. . . . . . . . >     ri."lineageId",
+. . . . . . . . >     g."Grantee"
+. . . . . . . . >   from
+. . . . . . . . >     dba_routines_internal1 ri
+. . . . . . . . >   inner join
+. . . . . . . . >     sys_fem."Security"."Grant" g
+. . . . . . . . >   on
+. . . . . . . . >     ri."mofId" = g."Element"
+. . . . . . . . >   where
+. . . . . . . . >     g."action" = 'CREATION'
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view dba_routine_parameters_internal1 as
+. . . . . . . . >   select
+. . . . . . . . >     catalog_name,
+. . . . . . . . >     schema_name,
+. . . . . . . . >     specific_name as routine_specific_name,
+. . . . . . . . >     rp."name" as parameter_name,
+. . . . . . . . >     rp."ordinal" as ordinal,
+. . . . . . . . >     coalesce(rp."length", rp."precision") as "PRECISION",
+. . . . . . . . >     rp."scale" as dec_digits,
+. . . . . . . . >     rp."description" as remarks,
+. . . . . . . . >     rp."mofId",
+. . . . . . . . >     rp."lineageId",
+. . . . . . . . >     rp."type",
+. . . . . . . . >     ri.is_table_function
+. . . . . . . . >   from
+. . . . . . . . >     dba_routines_internal1 ri
+. . . . . . . . >   inner join
+. . . . . . . . >     sys_fem."SQL2003"."RoutineParameter" rp
+. . . . . . . . >   on
+. . . . . . . . >     ri."mofId" = rp."behavioralFeature"
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view dba_foreign_wrappers_internal as
+. . . . . . . . >   select 
+. . . . . . . . >     dw."name" as foreign_wrapper_name,
+. . . . . . . . >     dw."libraryFile" as library,
+. . . . . . . . >     dw."language" as "LANGUAGE",
+. . . . . . . . >     cast(dw."creationTimestamp" as timestamp) as creation_timestamp,
+. . . . . . . . >     cast(dw."modificationTimestamp" as timestamp) last_modified_timestamp,
+. . . . . . . . >     dw."description" as remarks,
+. . . . . . . . >     g."Grantee",
+. . . . . . . . >     dw."mofId",
+. . . . . . . . >     dw."lineageId"
+. . . . . . . . >   from
+. . . . . . . . >     sys_fem.med."DataWrapper" dw
+. . . . . . . . >   inner join
+. . . . . . . . >     sys_fem."Security"."Grant" g
+. . . . . . . . >   on 
+. . . . . . . . >     dw."mofId" = g."Element"
+. . . . . . . . >   where
+. . . . . . . . >     dw."foreign" = true and g."action" = 'CREATION'
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view dba_foreign_servers_internal1 as
+. . . . . . . . >   select
+. . . . . . . . >     foreign_wrapper_name,
+. . . . . . . . >     ds."name" as foreign_server_name,
+. . . . . . . . >     cast(ds."creationTimestamp" as timestamp) as creation_timestamp,
+. . . . . . . . >     cast(ds."modificationTimestamp" as timestamp) as last_modified_timestamp,
+. . . . . . . . >     ds."description" as remarks,
+. . . . . . . . >     ds."mofId",
+. . . . . . . . >     ds."lineageId"
+. . . . . . . . >   from
+. . . . . . . . >     dba_foreign_wrappers_internal fwi
+. . . . . . . . >   inner join
+. . . . . . . . >     sys_fem.med."DataServer" ds
+. . . . . . . . >   on
+. . . . . . . . >     fwi."mofId" = ds."Wrapper"
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view dba_foreign_servers_internal2 as
+. . . . . . . . >   select
+. . . . . . . . >     foreign_wrapper_name,
+. . . . . . . . >     foreign_server_name,
+. . . . . . . . >     creation_timestamp,
+. . . . . . . . >     last_modified_timestamp,
+. . . . . . . . >     remarks,
+. . . . . . . . >     g."Grantee",
+. . . . . . . . >     fsi."mofId",
+. . . . . . . . >     fsi."lineageId"
+. . . . . . . . >   from
+. . . . . . . . >     dba_foreign_servers_internal1 fsi
+. . . . . . . . >   inner join
+. . . . . . . . >     sys_fem."Security"."Grant" g
+. . . . . . . . >   on
+. . . . . . . . >     fsi."mofId" = g."Element"
+. . . . . . . . >   where
+. . . . . . . . >     g."action" = 'CREATION'
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view dba_foreign_tables_internal1 as
+. . . . . . . . >   select
+. . . . . . . . >     fs.foreign_wrapper_name,
+. . . . . . . . >     fs.foreign_server_name,
+. . . . . . . . >     ft."name" as foreign_table_name,
+. . . . . . . . >     cast(ft."creationTimestamp" as timestamp) as creation_timestamp,
+. . . . . . . . >     cast(ft."modificationTimestamp" as timestamp) as last_modified_timestamp,
+. . . . . . . . >     ft."rowCount" as last_analyze_row_count,
+. . . . . . . . >     cast(ft."analyzeTime" as timestamp) as last_analyze_timestamp,
+. . . . . . . . >     ft."description" as remarks,
+. . . . . . . . >     ft."mofId",
+. . . . . . . . >     ft."lineageId"
+. . . . . . . . >   from
+. . . . . . . . >     dba_foreign_servers_internal1 fs
+. . . . . . . . >   inner join
+. . . . . . . . >     sys_fem.med."ForeignTable" ft
+. . . . . . . . >   on
+. . . . . . . . >     fs."mofId" = ft."Server"
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view dba_foreign_tables_internal2 as
+. . . . . . . . >   select
+. . . . . . . . >     fti.foreign_wrapper_name,
+. . . . . . . . >     fti.foreign_server_name,
+. . . . . . . . >     fti.foreign_table_name,
+. . . . . . . . >     fti.creation_timestamp,
+. . . . . . . . >     fti.last_modified_timestamp,
+. . . . . . . . >     fti.last_analyze_row_count,
+. . . . . . . . >     fti.last_analyze_timestamp,
+. . . . . . . . >     fti.remarks,
+. . . . . . . . >     g."Grantee",
+. . . . . . . . >     fti."mofId",
+. . . . . . . . >     fti."lineageId"
+. . . . . . . . >   from
+. . . . . . . . >     dba_foreign_tables_internal1 fti
+. . . . . . . . >   inner join
+. . . . . . . . >     sys_fem."Security"."Grant" g
+. . . . . . . . >   on
+. . . . . . . . >     fti."mofId" = g."Element"
+. . . . . . . . >   where
+. . . . . . . . >     g."action" = 'CREATION'
+. . . . . . . . > ;
+0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit
