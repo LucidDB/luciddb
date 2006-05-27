@@ -2475,7 +2475,15 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "select * from table(dedup(cursor(select * from ^bloop^),'ename'))",
             "Table 'BLOOP' not found");
     }
-    
+
+    public void testScalarSubQuery()
+    {
+        check("SELECT  ename,(select name from dept where deptno=1) FROM emp");
+        checkFails("SELECT ename,(select losal,^hisal^ from salgrade where grade=1) FROM emp",
+            "Only scalar subqueries allowed in select list.");
+
+    }
+
     public void testNew()
     {
         // (To debug invidual statements, paste them into this method.)
