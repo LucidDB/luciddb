@@ -28,6 +28,7 @@ import net.sf.farrago.type.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
 
 /**
  * FlatFileBCPFile provides a way to read/write from/to control (bcp) files
@@ -55,6 +56,7 @@ class FlatFileBCPFile
         Pattern.compile("^[0-9]+$");
     private static final Pattern DoublePattern =
         Pattern.compile("^[0-9]*(\\.)[0-9]+$");
+    private static final String EmptyLinePattern = "^\\s*$";
 
     FlatFileBCPFile(String filePath, FarragoTypeFactory typeFactory)
     {
@@ -315,8 +317,8 @@ class FlatFileBCPFile
     {
         FileReader ctrlReader;
         LineNumberReader reader;
-        int expectedNumCols = 0;
-        int numCols = 0;
+        int columnCount = 0;
+        int index = 0;
 
         try {
             ctrlReader = new FileReader(fileName);
@@ -326,99 +328,108 @@ class FlatFileBCPFile
                 this.fileName);
         }
 
-        String line;
         try {
-            while((line=reader.readLine()) != null) {
-                if (numCols != 0 && numCols == expectedNumCols) {
-                    throw FarragoResource.instance().
-                        InvalidControlFileTooManyCols.ex(this.fileName);
+            while(true) {
+                String line = reader.readLine();
+                if (line == null) {
+                    break;
                 }
+                // convention is 1-indexed line numbers
+                int lineNumber = reader.getLineNumber();
 
-                // skip line 1: version #
-                if (reader.getLineNumber() == 2) {
-                    int colNo = 0;
-                    try {
-                        colNo = Integer.parseInt(line);
-                    } catch (NumberFormatException nfe) {
-                        throw FarragoResource.instance().
-                            InvalidControlFileOnRow.ex(this.fileName,
-                                Integer.toString(reader.getLineNumber()));
-                    }
-                    types = new RelDataType[colNo];
-                    this.colNames = new String[colNo];
-                    expectedNumCols = colNo;
+                // ignore empty lines
+                if (line.matches(EmptyLinePattern)) {
                     continue;
                 }
 
-                if (reader.getLineNumber() > 2) {
-                    String[] bcpLine = line.split("\\s+");
-                    if (!(bcpLine.length >= 7)) {
-                        throw FarragoResource.instance().
-                            InvalidControlFileOnRow.ex(this.fileName,
-                                Integer.toString(reader.getLineNumber()));
-                    }
-                    String datatype = bcpLine[1];
-                    if (!(datatype.startsWith("SQL"))) {
-                        throw FarragoResource.instance().
-                            InvalidControlFileOnRow.ex(this.fileName,
-                                Integer.toString(reader.getLineNumber()));
-                    }
-                    String typeLength = bcpLine[3];
+                // skip line 1: version #
+                if (lineNumber == 1) {
+                    continue;
+                } else if (lineNumber == 2) {
                     try {
-                        Integer.parseInt(typeLength);
+                        columnCount = Integer.parseInt(line);
                     } catch (NumberFormatException nfe) {
-                        throw FarragoResource.instance().
-                            InvalidControlFileOnRow.ex(this.fileName,
-                                Integer.toString(reader.getLineNumber()));
+                        throw newParseError(lineNumber);
                     }
-                    String colId = bcpLine[6];
+                    types = new RelDataType[columnCount];
+                    colNames = new String[columnCount];
+                    continue;
+                }
 
-                    SqlTypeName typeName =
-                        convertBCPSqlToSqlType(datatype);
+                if (index >= columnCount) {
+                    throw FarragoResource.instance().
+                        InvalidControlFileTooManyCols.ex(fileName);
+                }
 
-                    if (typeName.allowsPrec()) {
-                        if (typeName.allowsScale()) {
-                            // TODO: how to get scale from bcp?
-                            int typeLen =
-                                SqlTypeName.Decimal.MAX_NUMERIC_PRECISION;
-                            if (Integer.parseInt(typeLength) < typeLen) {
-                                typeLen = Integer.parseInt(typeLength);
+                String[] bcpLine = line.split("\\s+");
+                if (bcpLine.length < 7) {
+                    throw newParseError(lineNumber);
+                }
+                String datatype = bcpLine[1];
+                if (!(datatype.startsWith("SQL"))) {
+                    throw newParseError(lineNumber);
+                }
+                String typeLength = bcpLine[3];
+                try {
+                    Integer.parseInt(typeLength);
+                } catch (NumberFormatException nfe) {
+                    throw newParseError(lineNumber);
+                }
+                String colId = bcpLine[6];
+
+                SqlTypeName typeName =
+                    convertBCPSqlToSqlType(datatype);
+
+                if (typeName.allowsPrec()) {
+                    int typeLen = Integer.parseInt(typeLength);
+                    if (typeName.allowsScale()) {
+                        typeLen = Math.min(
+                            typeLen,
+                            SqlTypeName.MAX_NUMERIC_PRECISION);
+                        int typeScale = 0;
+                        if (bcpLine.length > 8) {
+                            try {
+                                typeScale = Integer.parseInt(bcpLine[8]);
+                                typeScale = Math.max(0, typeScale);
+                                typeScale = Math.min(
+                                    typeScale, 
+                                    SqlTypeName.MAX_NUMERIC_SCALE);
+                            } catch (NumberFormatException ex) {
+                                typeScale = 0;
                             }
-                            types[reader.getLineNumber()-3] =
-                                typeFactory.createTypeWithNullability(
-                                    typeFactory.createSqlType(typeName,
-                                        typeLen,
-                                        0),
-                                    true);
-                        } else {
-                            int typeLen = Integer.parseInt(typeLength);
-                            if ((typeName.equals(SqlTypeName.Timestamp)) ||
-                                (typeName.equals(SqlTypeName.Time))) {
-                                typeLen = typeName.getDefaultPrecision();
-                            }
-                            types[reader.getLineNumber()-3] =
-                                typeFactory.createTypeWithNullability(
-                                    typeFactory.createSqlType(typeName,
-                                        typeLen),
-                                    true);
                         }
-                    } else {
-                        types[reader.getLineNumber()-3] =
+                        types[index] =
                             typeFactory.createTypeWithNullability(
-                                typeFactory.createSqlType(typeName),
+                                typeFactory.createSqlType(typeName,
+                                    typeLen,
+                                    typeScale),
+                                true);
+                    } else {
+                        if ((typeName.equals(SqlTypeName.Timestamp)) ||
+                            (typeName.equals(SqlTypeName.Time))) {
+                            typeLen = typeName.getDefaultPrecision();
+                        }
+                        types[index] =
+                            typeFactory.createTypeWithNullability(
+                                typeFactory.createSqlType(typeName,
+                                    typeLen),
                                 true);
                     }
-                    colNames[reader.getLineNumber()-3] = colId;
-                    numCols++;
+                } else {
+                    types[index] =
+                        typeFactory.createTypeWithNullability(
+                            typeFactory.createSqlType(typeName),
+                            true);
                 }
+                colNames[index] = colId;
+                index++;
             }
 
-            if (expectedNumCols == 0) {
+            if (columnCount <= 0) {
                 throw FarragoResource.instance().InvalidControlFile.ex(
                     this.fileName);
             }
-
-            if (numCols < expectedNumCols) {
+            if (index < columnCount) {
                 throw FarragoResource.instance().
                     InvalidControlFileTooFewCols.ex(this.fileName);
             }
@@ -437,52 +448,81 @@ class FlatFileBCPFile
         return true;
     }
 
+    private EigenbaseException newParseError(int line)
+    {
+        return FarragoResource.instance().
+            InvalidControlFileOnRow.ex(fileName,
+                Integer.toString(line));
+    }
+
+    public enum BcpType 
+    { 
+        SQLCHAR, SQLNCHAR, SQLVARCHAR, SQLNVARCHAR,
+        SQLBINARY, SQLVARBINARY, SQLDATE, SQLTIME, 
+        SQLDATETIME, SQLDATETIM4, SQLTIMESTAMP,
+        SQLDECIMAL, SQLNUMERIC, SQLMONEY, SQLMONEY4,
+        SQLTINYINT, SQLSMALLINT, SQLINT, SQLBIGINT,
+        SQLREAL, SQLFLT4, SQLFLT8,
+        SQLBIT, SQLVARIANT, SQLUDT, SQLUNIQUEID
+    }
+        
     /**
      * Converts a BCP SQL type to one of {@link SqlTypeName}
      */
     public static SqlTypeName convertBCPSqlToSqlType(String datatype)
     {
-        if (datatype.equals("SQLCHAR") || datatype.equals("SQLNCHAR")) {
+        BcpType bcpType;
+        try {
+            bcpType = BcpType.valueOf(datatype);
+        } catch (IllegalArgumentException ex) {
+            bcpType = BcpType.SQLVARCHAR;
+        }
+
+        switch (bcpType) {
+        case SQLCHAR:
+        case SQLNCHAR:
             return SqlTypeName.Char;
-        } else if (datatype.equals("SQLVARCHAR") ||
-            datatype.equals("SQLNVARCHAR")) {
+        case SQLVARCHAR:
+        case SQLNVARCHAR:
             return SqlTypeName.Varchar;
-        } else if (datatype.equals("SQLBINARY")) {
+        case SQLBINARY:
             return SqlTypeName.Binary;
-        } else if (datatype.equals("SQLVARBINARY")) {
+        case SQLVARBINARY:
             return SqlTypeName.Varbinary;
-        } else if (datatype.equals("SQLDATETIME") ||
-            datatype.equals("SQLDATETIM4")) {
+        case SQLDATE:
+            return SqlTypeName.Date;
+        case SQLTIME:
+            return SqlTypeName.Time;
+        case SQLDATETIME:
+        case SQLDATETIM4:
+        case SQLTIMESTAMP:
             return SqlTypeName.Timestamp;
-        } else if (datatype.equals("SQLDECIMAL") ||
-            datatype.equals("SQLNUMERIC")) {
+        case SQLDECIMAL:
+        case SQLNUMERIC:
+        case SQLMONEY:
+        case SQLMONEY4:
             return SqlTypeName.Decimal;
-        } else if (datatype.equals("SQLINT")) {
+        case SQLINT:
             return SqlTypeName.Integer;
-        } else if (datatype.equals("SQLBIGINT")) {
-            return SqlTypeName.Bigint;
-        } else if (datatype.equals("SQLSMALLINT")) {
+        case SQLBIGINT:
+                return SqlTypeName.Bigint;
+        case SQLSMALLINT:
             return SqlTypeName.Smallint;
-        } else if (datatype.equals("SQLTINYINT")) {
+        case SQLTINYINT:
             return SqlTypeName.Tinyint;
-        } else if (datatype.equals("SQLMONEY") ||
-            datatype.equals("SQLMONEY4")) {
-            return SqlTypeName.Decimal;
-        } else if (datatype.equals("SQLREAL")) {
+        case SQLREAL:
             return SqlTypeName.Real;
-        } else if (datatype.equals("SQLFLT4")) {
+        case SQLFLT4:
             return SqlTypeName.Float;
-        } else if (datatype.equals("SQLFLT8")) {
+        case SQLFLT8:
             return SqlTypeName.Double;
-        } else if (datatype.equals("SQLBIT")) {
+        case SQLBIT:
             return SqlTypeName.Boolean;
-        } else if (datatype.equals("SQLUNIQUEID")) {
-            return SqlTypeName.Varchar;
-        } else if (datatype.equals("SQLVARIANT")) {
+        case SQLVARIANT:
             return SqlTypeName.Binary;
-        } else if (datatype.equals("SQLUDT")) {
-            return SqlTypeName.Varchar;
-        } else { // unknown datatype
+        case SQLUNIQUEID:
+        case SQLUDT:
+        default:
             return SqlTypeName.Varchar;
         }
     }
