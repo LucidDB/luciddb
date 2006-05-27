@@ -39,7 +39,7 @@ import java.util.List;
  * @since Nov 26, 2003
  * @version $Id$
  **/
-public class RexShuttle
+public class RexShuttle implements RexVisitor<RexNode>
 {
     //~ Methods ---------------------------------------------------------------
 

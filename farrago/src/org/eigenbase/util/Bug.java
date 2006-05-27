@@ -75,11 +75,7 @@ public abstract class Bug
      */
     public static final boolean Fn25Fixed = false;
 
-    public static final boolean Dt269Fixed = false;
-
     public static final boolean Dt315Fixed = false;
-
-    public static final boolean Dt317Fixed = false;
 
     public static final boolean Dt464Fixed = false;
 
@@ -90,6 +86,8 @@ public abstract class Bug
     public static final boolean Dt466Fixed = false;
 
     public static final boolean Dt471Fixed = false;
+
+    public static final boolean Dt591Fixed = false;
 
     // -----------------------------------------------------------------------
     // Developers should create new fields here, in their own section. This
@@ -121,7 +119,21 @@ public abstract class Bug
     public static final boolean Dt563Fixed = false;
 
     /**
-     * Whether <a href="http://issues.eigenbase.org/browse/FRG-26">
+     * Whether <a href="http://issues.eigenbase.org/browse/FRG-73">
+     * issue FRG-73: miscellaneous bugs with nested comments</a>
+     * is fixed.
+     */
+    public static final boolean Frg73Fixed = false;
+
+    /**
+     * Whether <a href="http://issues.eigenbase.org/browse/FRG-78">
+     * issue FRG-78: collation clause should be on expression instead of identifier</a>
+     * is fixed.
+     */
+    public static final boolean Frg78Fixed = false;
+
+    /**
+     * Whether <a href="http://issues.eigenbase.org/browse/FRG-103">
      * issue FRG-103: validator allows duplicate target columns in insert</a>
      * is fixed.
      */
@@ -158,7 +170,7 @@ public abstract class Bug
 
     // xluo
 
-    // zfong    
+    // zfong
 }
 
 // End Bug.java

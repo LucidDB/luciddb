@@ -585,7 +585,7 @@ public abstract class CalcRelSplitter
      * Visitor which returns whether an expression can be implemented in a
      * given type of relational expression.
      */
-    private class ImplementTester extends RexVisitorImpl
+    private class ImplementTester extends RexVisitorImpl<Void>
     {
         private final RelType relType;
 
@@ -595,32 +595,36 @@ public abstract class CalcRelSplitter
             this.relType = relType;
         }
 
-        public void visitCall(RexCall call)
+        public Void visitCall(RexCall call)
         {
             if (!relType.canImplement(call)) {
                 throw CannotImplement.instance;
             }
+            return null;
         }
 
-        public void visitDynamicParam(RexDynamicParam dynamicParam)
+        public Void visitDynamicParam(RexDynamicParam dynamicParam)
         {
             if (!relType.canImplement(dynamicParam)) {
                 throw CannotImplement.instance;
             }
+            return null;
         }
 
-        public void visitFieldAccess(RexFieldAccess fieldAccess)
+        public Void visitFieldAccess(RexFieldAccess fieldAccess)
         {
             if (!relType.canImplement(fieldAccess)) {
                 throw CannotImplement.instance;
             }
+            return null;
         }
 
-        public void visitLiteral(RexLiteral literal)
+        public Void visitLiteral(RexLiteral literal)
         {
             if (!relType.canImplement(literal)) {
                 throw CannotImplement.instance;
             }
+            return null;
         }
 
         public boolean canImplement(RexNode expr, boolean condition)
@@ -717,7 +721,7 @@ public abstract class CalcRelSplitter
     /**
      * Finds the highest level used by any of the inputs of a given expression.
      */
-    private static class MaxInputFinder extends RexVisitorImpl
+    private static class MaxInputFinder extends RexVisitorImpl<Void>
     {
         int level;
         private final int[] exprLevels;
@@ -728,10 +732,11 @@ public abstract class CalcRelSplitter
             this.exprLevels = exprLevels;
         }
 
-        public void visitLocalRef(RexLocalRef localRef)
+        public Void visitLocalRef(RexLocalRef localRef)
         {
             int inputLevel = exprLevels[localRef.getIndex()];
             level = Math.max(level, inputLevel);
+            return null;
         }
 
         /**
@@ -749,7 +754,7 @@ public abstract class CalcRelSplitter
      * Builds an array of the highest level which contains an expression
      * which uses each expression as an input.
      */
-    private static class HighestUsageFinder extends RexVisitorImpl
+    private static class HighestUsageFinder extends RexVisitorImpl<Void>
     {
         private final int[] maxUsingLevelOrdinals;
         private int currentLevel;
@@ -770,11 +775,12 @@ public abstract class CalcRelSplitter
             return maxUsingLevelOrdinals;
         }
 
-        public void visitLocalRef(RexLocalRef ref)
+        public Void visitLocalRef(RexLocalRef ref)
         {
             final int index = ref.getIndex();
             maxUsingLevelOrdinals[index] =
                 Math.max(maxUsingLevelOrdinals[index], currentLevel);
+            return null;
         }
     }
 }

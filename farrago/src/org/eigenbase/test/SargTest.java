@@ -417,47 +417,47 @@ public class SargTest extends TestCase
 
         checkUnion(
             0, 2, 5,
-            "[null, 'CAPRICORN']");
+            "[null, _ISO-8859-1'CAPRICORN']");
         
         checkUnion(
             2, 5, 0,
-            "[null, 'CAPRICORN']");
+            "[null, _ISO-8859-1'CAPRICORN']");
         
         checkUnion(
             5, 6, 7,
-            "UNION( [null] ['GEMINI', 'SCORPIO'] )");
+            "UNION( [null] [_ISO-8859-1'GEMINI', _ISO-8859-1'SCORPIO'] )");
         
         checkUnion(
             8, 4, 5,
-            "UNION( [null] ['ARIES', +infinity) )");
+            "UNION( [null] [_ISO-8859-1'ARIES', +infinity) )");
 
         checkUnion(
             9, 4, 5,
-            "UNION( [null] ['ARIES', +infinity) )");
+            "UNION( [null] [_ISO-8859-1'ARIES', +infinity) )");
         
         checkUnion(
             7, 8, 9,
-            "['ARIES', 'SCORPIO']");
+            "[_ISO-8859-1'ARIES', _ISO-8859-1'SCORPIO']");
         
         checkUnion(
             6, 7, 10,
-            "['GEMINI', 'SCORPIO']");
+            "[_ISO-8859-1'GEMINI', _ISO-8859-1'SCORPIO']");
         
         checkUnion(
             5, 6, 0,
-            "UNION( [null] ['AQUARIUS'] ['GEMINI', 'PISCES'] )");
+            "UNION( [null] [_ISO-8859-1'AQUARIUS'] [_ISO-8859-1'GEMINI', _ISO-8859-1'PISCES'] )");
         
         checkUnion(
             10, 9, 5,
-            "UNION( [null] ['ARIES', 'GEMINI') )");
+            "UNION( [null] [_ISO-8859-1'ARIES', _ISO-8859-1'GEMINI') )");
         
         checkUnion(
             9, 8, 7,
-            "['ARIES', 'SCORPIO']");
+            "[_ISO-8859-1'ARIES', _ISO-8859-1'SCORPIO']");
         
         checkUnion(
             3, 9, 1,
-            "UNION( ['ARIES', 'GEMINI') ('GEMINI', +infinity) )");
+            "UNION( [_ISO-8859-1'ARIES', _ISO-8859-1'GEMINI') (_ISO-8859-1'GEMINI', +infinity) )");
     }
 
     public void testIntersection()
@@ -506,23 +506,23 @@ public class SargTest extends TestCase
 
         checkIntersection(
             2, 3, 0,
-            "('CANCER', 'CAPRICORN']");
+            "(_ISO-8859-1'CANCER', _ISO-8859-1'CAPRICORN']");
 
         checkIntersection(
             0, 3, 2,
-            "('CANCER', 'CAPRICORN']");
+            "(_ISO-8859-1'CANCER', _ISO-8859-1'CAPRICORN']");
 
         checkIntersection(
             6, 7, 0,
-            "['GEMINI', 'PISCES']");
+            "[_ISO-8859-1'GEMINI', _ISO-8859-1'PISCES']");
 
         checkIntersection(
             6, 7, 8,
-            "['GEMINI']");
+            "[_ISO-8859-1'GEMINI']");
 
         checkIntersection(
             8, 7, 6,
-            "['GEMINI']");
+            "[_ISO-8859-1'GEMINI']");
 
         checkIntersection(
             9, 7, 6,

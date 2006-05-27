@@ -295,13 +295,13 @@ Error: From line 1, column 40 to line 1, column 42: Unknown identifier 'SAL' (st
 '          FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '            FennelCalcRel(expr#0..9=[{inputs}], $f0=[$t2], $f1=[$t0])'
 '              FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
-'                FennelValuesRel(tuples=[[{ '-', null, ')', 0 }]])'
+'                FennelValuesRel(tuples=[[{ _ISO-8859-1'-', null, _ISO-8859-1')', 0 }]])'
 '        FennelAggRel(groupCount=[1], agg#0=[COUNT(1)])'
 '          FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '            FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
 '              FennelCalcRel(expr#0..9=[{inputs}], $f0=[$t2], $f1=[$t0])'
 '                FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
-'                  FennelValuesRel(tuples=[[{ '-', null, ')', 0 }]])'
+'                  FennelValuesRel(tuples=[[{ _ISO-8859-1'-', null, _ISO-8859-1')', 0 }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select count(distinct e.slacker and e.manager) from emps as e group by deptno;

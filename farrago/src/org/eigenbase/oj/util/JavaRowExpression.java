@@ -73,13 +73,12 @@ public class JavaRowExpression extends RexNode
         return expression == Literal.constantTrue();
     }
 
-    public void accept(RexVisitor visitor)
+    public <R> R accept(RexVisitor<R> visitor)
     {
-    }
-
-    public RexNode accept(RexShuttle shuttle)
-    {
-        return this;
+        if (visitor instanceof RexShuttle) {
+            return (R) this;
+        }
+        return null;
     }
 
     public RelDataType getType()

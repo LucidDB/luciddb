@@ -89,14 +89,9 @@ public class RexRangeRef extends RexNode
         return new RexRangeRef(type, offset);
     }
 
-    public void accept(RexVisitor visitor)
+    public <R> R accept(RexVisitor<R> visitor)
     {
-        visitor.visitRangeRef(this);
-    }
-
-    public RexNode accept(RexShuttle shuttle)
-    {
-        return shuttle.visitRangeRef(this);
+        return visitor.visitRangeRef(this);
     }
 }
 

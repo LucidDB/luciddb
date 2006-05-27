@@ -36,7 +36,6 @@ import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.SqlCaseOperator;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
@@ -49,7 +48,7 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class RexToOJTranslator implements RexVisitor
+public class RexToOJTranslator implements RexVisitor<Expression>
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -134,9 +133,9 @@ public class RexToOJTranslator implements RexVisitor
         return null;
     }
 
-    protected void setTranslation(Expression expr)
+    protected Expression setTranslation(Expression expr)
     {
-        translatedExpr = expr;
+        return translatedExpr = expr;
     }
 
     protected Expression getTranslation()
@@ -176,25 +175,25 @@ public class RexToOJTranslator implements RexVisitor
     }
 
     // implement RexVisitor
-    public void visitLocalRef(RexLocalRef localRef)
+    public Expression visitLocalRef(RexLocalRef localRef)
     {
         final int index = localRef.getIndex();
         assert program != null;
         if (program.getInputRowType().isStruct() &&
             index < program.getInputRowType().getFields().length) {
             // It's a reference to an input field.
-            translateInput(localRef.getIndex());
+            return translateInput(localRef.getIndex());
         } else {
             // It's a reference to a common sub-expression. Recursively
             // translate that expression.
             final RexNode expr = program.getExprList().get(index);
             assert expr.getType() == localRef.getType();
-            expr.accept(this);
+            return expr.accept(this);
         }
     }
 
     // implement RexVisitor
-    public void visitInputRef(RexInputRef inputRef)
+    public Expression visitInputRef(RexInputRef inputRef)
     {
         final int index = inputRef.getIndex();
         if (program != null) {
@@ -205,20 +204,19 @@ public class RexToOJTranslator implements RexVisitor
             if (v != null) {
                 // Expression is has already been calculated and assigned to a
                 // variable.
-                setTranslation(v);
-                return;
+                return setTranslation(v);
             }
             // Unset program because the new expression is in terms of the
             // program's inputs. This also prevents infinite expansion.
             pushProgram(null);
             expanded.accept(this);
             popProgram(null);
-            return;
+            return null;
         }
-        translateInput(index);
+        return translateInput(index);
     }
 
-    private void translateInput(final int index)
+    private Expression translateInput(final int index)
     {
         WhichInputResult inputAndCol = whichInput(index, contextRel);
         if (inputAndCol == null) {
@@ -232,11 +230,11 @@ public class RexToOJTranslator implements RexVisitor
             Util.toJavaId(
                 field.getName(),
                 inputAndCol.fieldIndex);
-        setTranslation(new FieldAccess(v, javaFieldName));
+        return setTranslation(new FieldAccess(v, javaFieldName));
     }
 
     // implement RexVisitor
-    public void visitLiteral(RexLiteral literal)
+    public Expression visitLiteral(RexLiteral literal)
     {
         // Refer to RexLiteral.valueMatchesType for the type/value combinations
         // we need to handle here.
@@ -296,10 +294,11 @@ public class RexToOJTranslator implements RexVisitor
                 + value.getClass() + "); breaches "
                 + "post-condition on RexLiteral.getValue()");
         }
+        return null;
     }
 
     // implement RexVisitor
-    public void visitCall(RexCall call)
+    public Expression visitCall(RexCall call)
     {
         boolean bInsideCase;
         RexNode [] operands = call.getOperands();
@@ -325,7 +324,7 @@ public class RexToOJTranslator implements RexVisitor
         if (bInsideCase) {
             stmtLists = bkupStmtLists;
         }
-        setTranslation(callExpr);
+        return setTranslation(callExpr);
     }
 
     /**
@@ -349,25 +348,25 @@ public class RexToOJTranslator implements RexVisitor
     }
 
     // implement RexVisitor
-    public void visitOver(RexOver over)
+    public Expression visitOver(RexOver over)
     {
         throw Util.needToImplement("Row-expression RexOver");
     }
 
     // implement RexVisitor
-    public void visitCorrelVariable(RexCorrelVariable correlVariable)
+    public Expression visitCorrelVariable(RexCorrelVariable correlVariable)
     {
         throw Util.needToImplement("Row-expression RexCorrelVariable");
     }
 
     // implement RexVisitor
-    public void visitDynamicParam(RexDynamicParam dynamicParam)
+    public Expression visitDynamicParam(RexDynamicParam dynamicParam)
     {
         throw Util.needToImplement("Row-expression RexDynamicParam");
     }
 
     // implement RexVisitor
-    public void visitRangeRef(RexRangeRef rangeRef)
+    public Expression visitRangeRef(RexRangeRef rangeRef)
     {
         final WhichInputResult inputAndCol =
             whichInput(rangeRef.getOffset(), contextRel);
@@ -382,8 +381,7 @@ public class RexToOJTranslator implements RexVisitor
             implementor.findInputVariable(inputAndCol.input);
         final RelDataType rangeType = rangeRef.getType();
         if ((inputAndCol.fieldIndex == 0) && (rangeType == inputRowType)) {
-            setTranslation(inputExpr);
-            return;
+            return setTranslation(inputExpr);
         }
 
         // More complex case is if the range refers to a subset of
@@ -397,20 +395,20 @@ public class RexToOJTranslator implements RexVisitor
             final String javaFieldName = Util.toJavaId(fieldName, i);
             args.add(new FieldAccess(inputExpr, javaFieldName));
         }
-        setTranslation(
+        return setTranslation(
             new AllocationExpression(
                 OJUtil.typeToOJClass(rangeType, getTypeFactory()),
                 args));
     }
 
     // implement RexVisitor
-    public void visitFieldAccess(RexFieldAccess fieldAccess)
+    public Expression visitFieldAccess(RexFieldAccess fieldAccess)
     {
         final String javaFieldName =
             Util.toJavaId(
                 fieldAccess.getName(),
                 fieldAccess.getField().getIndex());
-        setTranslation(
+        return setTranslation(
             new FieldAccess(
                 translateRexNode(fieldAccess.getReferenceExpr()),
                 javaFieldName));

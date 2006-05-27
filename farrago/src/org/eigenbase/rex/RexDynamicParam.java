@@ -72,14 +72,9 @@ public class RexDynamicParam extends RexVariable
         return index;
     }
 
-    public void accept(RexVisitor visitor)
+    public <R> R accept(RexVisitor<R> visitor)
     {
-        visitor.visitDynamicParam(this);
-    }
-
-    public RexNode accept(RexShuttle shuttle)
-    {
-        return shuttle.visitDynamicParam(this);
+        return visitor.visitDynamicParam(this);
     }
 }
 

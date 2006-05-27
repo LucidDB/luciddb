@@ -438,14 +438,11 @@ class InternalTranslator
             throw new UnsupportedOperationException();
         }
 
-        public void accept(RexVisitor visitor)
-        {
-            throw new UnsupportedOperationException();
-        }
-
-        public RexNode accept(RexShuttle shuttle)
+        public <R> R accept(RexVisitor<R> visitor)
         {
             throw new UnsupportedOperationException();
         }
     }
 }
+
+// End InternalTranslator.java

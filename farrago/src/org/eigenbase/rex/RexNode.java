@@ -94,14 +94,8 @@ public abstract class RexNode
      * <p>Also see {@link RexProgram#apply(RexVisitor, RexNode[], RexNode)},
      * which applies a visitor to several expressions simultaneously.
      */
-    public abstract void accept(RexVisitor visitor);
+    public abstract <R> R accept(RexVisitor<R> visitor);
 
-    /**
-     * Accepts a shuttle, dispatching to the right overloaded
-     * {@link RexShuttle#visitOver(RexOver) visitXxx} method, and returning the
-     * resulting node.
-     */
-    public abstract RexNode accept(RexShuttle shuttle);
 }
 
 

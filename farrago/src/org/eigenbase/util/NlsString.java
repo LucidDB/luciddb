@@ -32,7 +32,7 @@ import org.eigenbase.sql.SqlCollation;
 
 /**
  * A string, optionally with {@link Charset character set} and
- * {@link SqlCollation}.
+ * {@link SqlCollation}. It is immutable.
  *
  * @author jhyde
  * @since May 28, 2004
@@ -42,18 +42,18 @@ public class NlsString implements Comparable<NlsString>
 {
     //~ Instance fields -------------------------------------------------------
 
-    private String charSetName;
-    private String value;
-    private Charset charset;
-    private SqlCollation collation;
+    private final String charsetName;
+    private final String value;
+    private final Charset charset;
+    private final SqlCollation collation;
 
     //~ Constructors ----------------------------------------------------------
 
     /**
      * Creates a string in a specfied character set.
      *
-     * @param theString String constant, must not be null
-     * @param charSetName Name of the character set, may be null
+     * @param value String constant, must not be null
+     * @param charsetName Name of the character set, may be null
      * @param collation Collation, may be null
      *
      * @pre theString != null
@@ -66,35 +66,35 @@ public class NlsString implements Comparable<NlsString>
      *          in this instance of the Java virtual machine
      */
     public NlsString(
-        String theString,
-        String charSetName,
+        String value,
+        String charsetName,
         SqlCollation collation)
         throws IllegalCharsetNameException, UnsupportedCharsetException
     {
-        Util.pre(theString != null, "theString != null");
-        this.charSetName = charSetName;
-        if (null != this.charSetName) {
-            this.charSetName = charSetName.toUpperCase();
-            charset = Charset.forName(this.charSetName);
+        Util.pre(value != null, "theString != null");
+        if (null != charsetName) {
+            this.charsetName = charsetName.toUpperCase();
+            this.charset = Charset.forName(this.charsetName);
         } else {
-            charset = null;
+            this.charsetName = null;
+            this.charset = null;
         }
         this.collation = collation;
-        value = theString;
+        this.value = value;
     }
 
     //~ Methods ---------------------------------------------------------------
 
     public Object clone() 
     {
-        return new NlsString(value, charSetName, collation);
+        return new NlsString(value, charsetName, collation);
     }
 
     public int hashCode()
     {
         int h = value.hashCode();
-        h = Util.hash(h, charSetName);
-        h = Util.hash(h, this.collation);
+        h = Util.hash(h, charsetName);
+        h = Util.hash(h, collation);
         return h;
     }
 
@@ -105,7 +105,7 @@ public class NlsString implements Comparable<NlsString>
         }
         NlsString that = (NlsString) obj;
         return Util.equal(value, that.value) &&
-            Util.equal(charSetName, that.charSetName) &&
+            Util.equal(charsetName, that.charsetName) &&
             Util.equal(collation, that.collation);
     }
 
@@ -120,7 +120,7 @@ public class NlsString implements Comparable<NlsString>
 
     public String getCharsetName()
     {
-        return charSetName;
+        return charsetName;
     }
 
     public Charset getCharset()
@@ -141,23 +141,24 @@ public class NlsString implements Comparable<NlsString>
     /**
      * Returns the string quoted for SQL, for example
      * <code>_ISO-8859-1'is it a plane? no it''s superman!'</code>.
-     *  @param prefix if true, prefix the character set name
-     *  @param suffix if true, suffix the collation clause
-     *  @return the quoted string
+     *
+     * @param prefix if true, prefix the character set name
+     * @param suffix if true, suffix the collation clause
+     * @return the quoted string
      */
     public String asSql(
         boolean prefix,
         boolean suffix)
     {
         StringBuffer ret = new StringBuffer();
-        if (prefix && (null != charSetName)) {
+        if (prefix && (null != charsetName)) {
             ret.append("_");
-            ret.append(charSetName);
+            ret.append(charsetName);
         }
         ret.append("'");
         ret.append(Util.replace(value, "'", "''"));
         ret.append("'");
-        // NOTE jvs 3-Feb-2005:  see dtbug 280 for why this should go away
+        // NOTE jvs 3-Feb-2005:  see FRG-78 for why this should go away
         if (false) {
             if (suffix && (null != collation)) {
                 ret.append(" ");
@@ -176,21 +177,6 @@ public class NlsString implements Comparable<NlsString>
         return asSql(true, true);
     }
 
-    public void setCollation(SqlCollation collation)
-    {
-        //            assert(null!=collation);
-        //            assert(null==this.collation);
-        this.collation = collation;
-    }
-
-    public void setCharset(Charset charset)
-    {
-        //            assert(null!=charset);
-        //            assert(null==this.charset);
-        this.charset = charset;
-        charSetName = this.charset.name();
-    }
-
     /**
      * Concatenates some {@link NlsString} objects.
      * The result has the charset and collation of the first element.
@@ -204,15 +190,15 @@ public class NlsString implements Comparable<NlsString>
         if (args.length < 2) {
             return args[0];
         }
-        String charSetName = args[0].charSetName;
+        String charSetName = args[0].charsetName;
         SqlCollation collation = args[0].collation;
         int length = args[0].value.length();
 
         // sum string lengths and validate
         for (int i = 1; i < args.length; i++) {
             length += args[i].value.length();
-            if (!((args[i].charSetName == null)
-                    || args[i].charSetName.equals(charSetName))) {
+            if (!((args[i].charsetName == null)
+                    || args[i].charsetName.equals(charSetName))) {
                 throw new IllegalArgumentException("mismatched charsets");
             }
             if (!((args[i].collation == null)

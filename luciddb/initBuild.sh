@@ -66,6 +66,8 @@ while [ -n "$1" ]; do
         --with?(out)-debug) FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
         --skip-fennel-thirdparty-build|--without-fennel-thirdparty-build) 
             FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
+        --skip-fennel-build|--without-fennel-build) 
+            FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
 
         *) usage; exit -1;;
     esac
