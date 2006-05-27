@@ -1296,16 +1296,22 @@ public class SqlToRelConverter
 
     protected RelNode convertInsert(SqlInsert call)
     {
-        SqlValidatorNamespace targetNs = validator.getNamespace(call);
-        RelOptTable targetTable =
-            SqlValidatorUtil.getRelOptTable(targetNs, schema);
+        RelOptTable targetTable = getTargetTable(call);
 
         RelNode sourceRel = convertQueryRecursive(call.getSource(), false);
-        RelNode massagedRel = convertColumnList(call, targetTable, sourceRel);
+        RelNode massagedRel = convertColumnList(call, sourceRel);
 
         return new TableModificationRel(
             cluster, targetTable, connection,
             massagedRel, TableModificationRel.Operation.INSERT, null, false);
+    }
+
+    protected RelOptTable getTargetTable(SqlInsert call)
+    {
+        SqlValidatorNamespace targetNs = validator.getNamespace(call);
+        RelOptTable targetTable =
+            SqlValidatorUtil.getRelOptTable(targetNs, schema);
+        return targetTable;
     }
 
     /**
@@ -1321,38 +1327,21 @@ public class SqlToRelConverter
      * values and the source expressions provided.
      *
      * @param call Insert expression
-     * @param targetTable Target of insert
      * @param sourceRel Source relational expression
      * @return
      */
-    protected RelNode convertColumnList(
-        SqlInsert call,
-        RelOptTable targetTable,
+    protected RelNode convertColumnList(SqlInsert call,
         RelNode sourceRel)
     {
-        SqlNodeList targetColumnList = call.getTargetColumnList();
         RelDataType sourceRowType = sourceRel.getRowType();
-        final RelDataType targetRowType = targetTable.getRowType();
-        final List<String> targetColumnNames;
-        if (targetColumnList == null) {
-            // No explicit list of target columns. The target fields must be
-            // the same as the source fields.
-            if (RelOptUtil.equal(
-                "source rowtype", sourceRowType,
-                "target rowtype", targetRowType, false)) {
-                return sourceRel;
-            }
-            targetColumnNames = RelOptUtil.getFieldNameList(targetRowType);
-        } else {
-            targetColumnNames = new ArrayList<String>();
-            for (int i = 0; i < targetColumnList.size(); i++) {
-                SqlIdentifier id = (SqlIdentifier) targetColumnList.get(i);
-                targetColumnNames.add(id.getSimple());
-            }
-        }
-
         final RexNode sourceRef =
             rexBuilder.makeRangeReference(sourceRowType, 0, false);
+        final List<String> targetColumnNames = new ArrayList<String>();
+        List<RexNode> columnExprs = new ArrayList<RexNode>();
+        collectInsertTargets(call, sourceRef, targetColumnNames, columnExprs);
+
+        final RelOptTable targetTable = getTargetTable(call);
+        final RelDataType targetRowType = targetTable.getRowType();
         int expCount = targetRowType.getFieldCount();
         RexNode [] sourceExps = new RexNode[expCount];
 
@@ -1363,10 +1352,8 @@ public class SqlToRelConverter
         for (int i = 0; i < targetColumnNames.size(); i++) {
             String targetColumnName = targetColumnNames.get(i);
             int iTarget = targetRowType.getFieldOrdinal(targetColumnName);
-            assert (iTarget != -1);
-            int j = getPhysicalColumn(call, i);
-            final RexNode expr = rexBuilder.makeFieldAccess(sourceRef, j);
-            sourceExps[iTarget] = expr;
+            assert iTarget != -1;
+            sourceExps[iTarget] = columnExprs.get(i);
         }
 
         // Walk the expresion list and get default values for any columns
@@ -1389,18 +1376,37 @@ public class SqlToRelConverter
     }
 
     /**
-     * Returns the ordinal of the physical column in source which
-     * returns the <code>i</code>th logical column. The default implementation
-     * returns <code>i</code>, but a derived class may override to handle
-     * system fields.
+     * Given an INSERT statement, collects the list of names to be populated
+     * and the expressions to put in them.
      *
-     * @param call Source SQL query
-     * @param i Logical column ordinal
-     * @return Physical column ordinal
+     * @param call Insert statement
+     * @param sourceRef Expression representing a row from the source
+     *                  relational expression
+     * @param targetColumnNames List of target column names, to be populated
+     * @param columnExprs List of expressions, to be populated
      */
-    protected int getPhysicalColumn(SqlInsert call, int i)
+    protected void collectInsertTargets(
+        SqlInsert call,
+        final RexNode sourceRef,
+        final List<String> targetColumnNames,
+        List<RexNode> columnExprs)
     {
-        return i;
+        final RelOptTable targetTable = getTargetTable(call);
+        final RelDataType targetRowType = targetTable.getRowType();
+        SqlNodeList targetColumnList = call.getTargetColumnList();
+        if (targetColumnList == null) {
+            targetColumnNames.addAll(RelOptUtil.getFieldNameList(targetRowType));
+        } else {
+            for (int i = 0; i < targetColumnList.size(); i++) {
+                SqlIdentifier id = (SqlIdentifier) targetColumnList.get(i);
+                targetColumnNames.add(id.getSimple());
+            }
+        }
+
+        for (int i = 0; i < targetColumnNames.size(); i++) {
+            final RexNode expr = rexBuilder.makeFieldAccess(sourceRef, i);
+            columnExprs.add(expr);
+        }
     }
 
     private RelNode convertDelete(SqlDelete call)

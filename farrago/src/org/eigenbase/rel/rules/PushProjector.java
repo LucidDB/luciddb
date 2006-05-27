@@ -376,7 +376,7 @@ public class PushProjector
      * Visitor which builds a bitmap of the inputs used by an expressions,
      * as well as locating expressions corresponding to special operators.
      */
-    private class InputSpecialOpFinder extends RexVisitorImpl
+    private class InputSpecialOpFinder extends RexVisitorImpl<Void>
     {
         private final BitSet rexRefs;
         private final BitSet leftFields;
@@ -399,7 +399,7 @@ public class PushProjector
             this.preserveRight = preserveRight;
         }
 
-        public void visitCall(RexCall call)
+        public Void visitCall(RexCall call)
         {
             if (preserveExprs.contains(call.getOperator())) {
                 // if the arguments of the expression only reference the
@@ -414,11 +414,11 @@ public class PushProjector
                 if (exprArgs.cardinality() > 0) {
                     if (RelOptUtil.contains(leftFields, exprArgs)) {
                         preserveLeft.add(call);
-                        return;
+                        return null;
                     } else if (RelOptUtil.contains(rightFields, exprArgs)) {
                         assert(preserveRight != null);
                         preserveRight.add(call);
-                        return;
+                        return null;
                     }
                 }
                 // if the expression arguments reference both the left and
@@ -427,11 +427,13 @@ public class PushProjector
                 // ops in the call operands
             }
             super.visitCall(call);
+            return null;
         }
 
-        public void visitInputRef(RexInputRef inputRef)
+        public Void visitInputRef(RexInputRef inputRef)
         {
             rexRefs.set(inputRef.getIndex());
+            return null;
         }
 
         /**

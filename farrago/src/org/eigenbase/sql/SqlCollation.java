@@ -34,7 +34,8 @@ import org.eigenbase.util.Util;
 
 
 /**
- * A <code>SqlCollation</code> is an object representing a Collate statement
+ * A <code>SqlCollation</code> is an object representing a <code>Collate</code>
+ * statement. It is immutable.
  *
  * @author wael
  * @since Mar 23, 2004
@@ -122,7 +123,7 @@ public class SqlCollation
      * @param col1 first operand for the dyadic operation
      * @param col2 second operand for the dyadic operation
      * @return the resulting collation sequence. If no collating sequence could
-     * be deduced a {@link EigenbaseResource#newInvalidCompare} is thrown
+     * be deduced a {@link EigenbaseResource#InvalidCompare} is thrown
      */
     public static SqlCollation getCoercibilityDyadicOperatorThrows(
         SqlCollation col1,
@@ -146,7 +147,7 @@ public class SqlCollation
      * @param col1 first operand for the dyadic operation
      * @param col2 second operand for the dyadic operation
      * @return the resulting collation sequence. If no collating sequence could
-     * be deduced a {@link EigenbaseResource#newInvalidCompare} is thrown
+     * be deduced a {@link EigenbaseResource#InvalidCompare} is thrown
      */
     public static String getCoercibilityDyadicComparison(
         SqlCollation col1,
@@ -156,7 +157,8 @@ public class SqlCollation
     }
 
     /**
-     * Returns the result for {@link #getCoercibilityDyadicComparison} and {@link #getCoercibilityDyadicOperator}
+     * Returns the result for {@link #getCoercibilityDyadicComparison} and
+     * {@link #getCoercibilityDyadicOperator}.
      */
     protected static SqlCollation getCoercibilityDyadic(
         SqlCollation col1,
@@ -304,5 +306,4 @@ public class SqlCollation
     }
 }
 
-
-// End SqlCase.java
+// End SqlCollation.java

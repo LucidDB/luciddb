@@ -31,6 +31,7 @@ import org.eigenbase.sql.parser.impl.SqlParserImpl;
 import org.eigenbase.test.SqlValidatorTestCase;
 import org.eigenbase.util.TestUtil;
 import org.eigenbase.util.Util;
+import org.eigenbase.util.Bug;
 
 /**
  * A <code>SqlParserTest</code> is a unit-test for {@link SqlParser the SQL
@@ -46,8 +47,6 @@ public class SqlParserTest extends TestCase
     //~ Static fields/initializers --------------------------------------------
 
     protected static final String NL = System.getProperty("line.separator");
-
-    public static final boolean bug317Fixed = false;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -1142,7 +1141,7 @@ public class SqlParserTest extends TestCase
             "(VALUES (ROW(2)))");
 
         // end of multiline commment without start
-        if (bug317Fixed)
+        if (Bug.Frg73Fixed)
         checkFails("values (1 */ 2)", "xx");
 
         // SQL:2003, 5.2, syntax rule #10 "Within a <bracket comment context>,
@@ -1154,7 +1153,7 @@ public class SqlParserTest extends TestCase
         // comment inside a comment
         // Spec is unclear what should happen, but currently it crashes the
         // parser, and that's bad
-        if (bug317Fixed)
+        if (Bug.Frg73Fixed)
         check("values (1 + /* comment /* inner comment */ */ 2)", "xx");
 
         // single-line comment inside multiline comment is illegal
@@ -1164,12 +1163,12 @@ public class SqlParserTest extends TestCase
         // <simple comment> contains the sequence of characeters "*/" without
         // a preceding "/*" in the same <simple comment>, it will prematurely
         // terminate the containing <bracketed comment>.
-        if (bug317Fixed)
+        if (Bug.Frg73Fixed)
         checkFails("values /* multiline contains -- singline */ " + NL +
             " (1)", "xxx");
 
         // non-terminated multiline comment inside singleline comment
-        if (bug317Fixed)
+        if (Bug.Frg73Fixed)
         // Test should fail, and it does, but it should give "*/" as the
         // erroneous token.
         checkFails("values ( -- rest of line /* a comment  " + NL +
@@ -1699,9 +1698,10 @@ public class SqlParserTest extends TestCase
             "COALESCE(`V1`, `V2`, `V3`)");
     }
 
-    // FIXME jvs 2-Feb-2005:  disabled due to dtbug 280
-    public void _testLiteralCollate()
+    public void testLiteralCollate()
     {
+        if (!Bug.Frg78Fixed) return;
+
         checkExp("'string' collate latin1$sv_SE$mega_strength",
             "'string' COLLATE ISO-8859-1$sv_SE$mega_strength");
         checkExp("'a long '\n'string' collate latin1$sv_SE$mega_strength",

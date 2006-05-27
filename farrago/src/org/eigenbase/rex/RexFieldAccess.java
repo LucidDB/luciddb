@@ -94,14 +94,9 @@ public class RexFieldAccess extends RexNode
         return RexKind.FieldAccess;
     }
 
-    public void accept(RexVisitor visitor)
+    public <R> R accept(RexVisitor<R> visitor)
     {
-        visitor.visitFieldAccess(this);
-    }
-
-    public RexNode accept(RexShuttle shuttle)
-    {
-        return shuttle.visitFieldAccess(this);
+        return visitor.visitFieldAccess(this);
     }
 
     /**

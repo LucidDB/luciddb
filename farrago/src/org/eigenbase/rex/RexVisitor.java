@@ -28,32 +28,34 @@ package org.eigenbase.rex;
  * Visitor pattern for traversing a tree of {@link RexNode} objects.
  *
  * @see org.eigenbase.util.Glossary#VisitorPattern
+ * @see RexShuttle
+ * @see RexVisitorImpl
  *
  * @author jhyde
  * @since May 30, 2004
  * @version $Id$
  **/
-public interface RexVisitor
+public interface RexVisitor <R>
 {
     //~ Methods ---------------------------------------------------------------
 
-    void visitInputRef(RexInputRef inputRef);
+    R visitInputRef(RexInputRef inputRef);
 
-    void visitLocalRef(RexLocalRef localRef);
+    R visitLocalRef(RexLocalRef localRef);
 
-    void visitLiteral(RexLiteral literal);
+    R visitLiteral(RexLiteral literal);
 
-    void visitCall(RexCall call);
+    R visitCall(RexCall call);
 
-    void visitOver(RexOver over);
+    R visitOver(RexOver over);
 
-    void visitCorrelVariable(RexCorrelVariable correlVariable);
+    R visitCorrelVariable(RexCorrelVariable correlVariable);
 
-    void visitDynamicParam(RexDynamicParam dynamicParam);
+    R visitDynamicParam(RexDynamicParam dynamicParam);
 
-    void visitRangeRef(RexRangeRef rangeRef);
+    R visitRangeRef(RexRangeRef rangeRef);
 
-    void visitFieldAccess(RexFieldAccess fieldAccess);
+    R visitFieldAccess(RexFieldAccess fieldAccess);
 }
 
 

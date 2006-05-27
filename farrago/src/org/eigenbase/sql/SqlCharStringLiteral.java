@@ -22,6 +22,8 @@
 package org.eigenbase.sql;
 
 import org.eigenbase.util.NlsString;
+import org.eigenbase.util.Util;
+import org.eigenbase.util.Bug;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.parser.SqlParserPos;
 
@@ -43,13 +45,6 @@ public class SqlCharStringLiteral extends SqlAbstractStringLiteral
         super(val, SqlTypeName.Char, pos);
     }
 
-    // override clone because NlsString is mutable (yuck!)
-    public Object clone() {
-        return new SqlCharStringLiteral(
-            (NlsString) ((NlsString) value).clone(),
-            getParserPosition());
-    }
-
     /** @return the underlying NlsString */
     public NlsString getNlsString()
     {
@@ -62,20 +57,13 @@ public class SqlCharStringLiteral extends SqlAbstractStringLiteral
         return getNlsString().getCollation();
     }
 
-    /** Sets the collation.
-     * (Convenient for the sql parser to do this after construction)
-     */
-    public void setCollation(SqlCollation collation)
-    {
-        getNlsString().setCollation(collation);
-    }
-
     public void unparse(
         SqlWriter writer,
         int leftPrec,
         int rightPrec)
     {
         if (false) {
+            Util.discard(Bug.Frg78Fixed);
             String stringValue = ((NlsString) value).getValue();
             writer.literal(
                 writer.getDialect().quoteStringLiteral(stringValue));

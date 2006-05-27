@@ -137,9 +137,9 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
     }
 
     // implement RexVisitor
-    public void visitDynamicParam(RexDynamicParam dynamicParam)
+    public Expression visitDynamicParam(RexDynamicParam dynamicParam)
     {
-        setTranslation(
+        return setTranslation(
             convertVariable(
                 dynamicParam.getType(),
                 "getDynamicParamValue",
@@ -186,15 +186,15 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
     }
     
     // override RexToOJTranslator
-    public void visitLiteral(RexLiteral literal)
+    public Expression visitLiteral(RexLiteral literal)
     {
         super.visitLiteral(literal);
         RelDataType type = literal.getType();
         if (SqlTypeUtil.isJavaPrimitive(type)) {
-            return;
+            return null;
         }
         if (type.getSqlTypeName() == SqlTypeName.Null) {
-            return;
+            return null;
         }
 
         // Create a constant member.
@@ -225,7 +225,7 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
         assert !statementList.isEmpty();
         memberList.add(
             new MemberInitializer(statementList, true));
-        setTranslation(variable);
+        return setTranslation(variable);
     }
 
     public Variable createScratchVariable(

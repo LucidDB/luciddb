@@ -40,6 +40,7 @@ import org.eigenbase.resource.EigenbaseResource;
 
 import java.math.BigDecimal;
 import java.util.Calendar;
+import java.nio.charset.Charset;
 
 /**
  * A <code>SqlLiteral</code> is a constant. It is, appropriately, immutable.
@@ -522,12 +523,14 @@ public class SqlLiteral extends SqlNode
                     bitCount / 8);
         case SqlTypeName.Char_ordinal:
             NlsString string = (NlsString) value;
-            if (null == string.getCharset()) {
-                string.setCharset(Util.getDefaultCharset());
+            Charset charset = string.getCharset();
+            if (null == charset) {
+                charset = Util.getDefaultCharset();
             }
-            if (null == string.getCollation()) {
-                string.setCollation(
-                    new SqlCollation(SqlCollation.Coercibility.Coercible));
+            SqlCollation collation = string.getCollation();
+            if (null == collation) {
+                collation =
+                    new SqlCollation(SqlCollation.Coercibility.Coercible);
             }
             RelDataType type =
                 typeFactory.createSqlType(
@@ -536,8 +539,8 @@ public class SqlLiteral extends SqlNode
             type =
                 typeFactory.createTypeWithCharsetAndCollation(
                     type,
-                    string.getCharset(),
-                    string.getCollation());
+                    charset,
+                    collation);
             return type;
 
         case SqlTypeName.IntervalYearMonth_ordinal:

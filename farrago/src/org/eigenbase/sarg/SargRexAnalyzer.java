@@ -342,7 +342,7 @@ public class SargRexAnalyzer
      */
     public SargBinding analyze(RexNode rexPredicate)
     {
-        RexVisitor visitor = new NodeVisitor();
+        NodeVisitor visitor = new NodeVisitor();
         
         // Initialize analysis state.
         exprStack = new ArrayList<SargExpr>();
@@ -487,7 +487,7 @@ public class SargRexAnalyzer
         }
     }
 
-    private class NodeVisitor extends RexVisitorImpl
+    private class NodeVisitor extends RexVisitorImpl<Void>
     {
         NodeVisitor()
         {
@@ -495,52 +495,58 @@ public class SargRexAnalyzer
             super(true);
         }
 
-        public void visitInputRef(RexInputRef inputRef)
+        public Void visitInputRef(RexInputRef inputRef)
         {
             variableSeen = true;
             if (boundInputRef == null) {
                 boundInputRef = inputRef;
-                return;
+                return null;
             }
             if (inputRef.getIndex() != boundInputRef.getIndex()) {
                 // sargs can only be over a single variable
                 failed = true;
-                return;
+                return null;
             }
+            return null;
         }
 
-        public void visitLiteral(RexLiteral literal)
+        public Void visitLiteral(RexLiteral literal)
         {
             visitCoordinate(literal);
+            return null;
         }
 
-        public void visitOver(RexOver over)
+        public Void visitOver(RexOver over)
         {
             failed = true;
+            return null;
         }
 
-        public void visitCorrelVariable(RexCorrelVariable correlVariable)
+        public Void visitCorrelVariable(RexCorrelVariable correlVariable)
         {
             failed = true;
+            return null;
         }
 
-        public void visitCall(RexCall call)
+        public Void visitCall(RexCall call)
         {
             CallConvertlet convertlet = convertletMap.get(call.getOperator());
             if (convertlet == null) {
                 failed = true;
-                return;
+                return null;
             }
-            
+
             // visit operands first
             super.visitCall(call);
 
             convertlet.convert(call);
+            return null;
         }
 
-        public void visitDynamicParam(RexDynamicParam dynamicParam)
+        public Void visitDynamicParam(RexDynamicParam dynamicParam)
         {
             visitCoordinate(dynamicParam);
+            return null;
         }
 
         private void visitCoordinate(RexNode node)
@@ -557,14 +563,16 @@ public class SargRexAnalyzer
             coordinate = node;
         }
 
-        public void visitRangeRef(RexRangeRef rangeRef)
+        public Void visitRangeRef(RexRangeRef rangeRef)
         {
             failed = true;
+            return null;
         }
 
-        public void visitFieldAccess(RexFieldAccess fieldAccess)
+        public Void visitFieldAccess(RexFieldAccess fieldAccess)
         {
             failed = true;
+            return null;
         }
     }
 }

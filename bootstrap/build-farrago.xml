@@ -4,6 +4,11 @@
 <project name="build-farrago" default="build">
 	<property environment="env"/>
 
+	<!-- perforce properties -->
+	<property file="${open_propfile}"/>
+	<property name="p4.client" value="${env.USER}.${env.HOSTNAME}"/>
+
+
 	<!-- regular vs. integration build locations -->
 	<property name="default.build.home" location="."/>
 	<property name="integration.build.home" location="./build"/>

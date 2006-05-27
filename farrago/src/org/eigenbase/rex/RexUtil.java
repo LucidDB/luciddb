@@ -237,8 +237,8 @@ public class RexUtil
                                            RexNode node)
     {
         try {
-            RexShuttle shuttle = new RexShuttle() {
-                public RexNode visitCall(RexCall call)
+            RexVisitor visitor = new RexVisitorImpl<Void>(true) {
+                public Void visitCall(RexCall call)
                 {
                     if (call.getOperator().equals(operator)) {
                         throw new Util.FoundOne(call);
@@ -246,7 +246,7 @@ public class RexUtil
                     return super.visitCall(call);
                 }
             };
-            node.accept(shuttle);
+            node.accept(visitor);
             return null;
         } catch (Util.FoundOne e) {
             Util.swallow(e, null);
@@ -756,7 +756,7 @@ public class RexUtil
     /**
      * Walks over expressions and builds a bank of common sub-expressions.
      */
-    private static class ExpressionNormalizer extends RexVisitorImpl
+    private static class ExpressionNormalizer extends RexVisitorImpl<RexNode>
     {
         final Map mapDigestToExpr = new HashMap();
         final boolean allowDups;
@@ -767,12 +767,14 @@ public class RexUtil
             this.allowDups = allowDups;
         }
 
-        protected void register(RexNode expr)
+        protected RexNode register(RexNode expr)
         {
-            final Object previous = mapDigestToExpr.put(expr.toString(), expr);
+            final String key = expr.toString();
+            final Object previous = mapDigestToExpr.put(key, expr);
             if (!allowDups && previous != null) {
                 throw new SubExprExistsException(expr);
             }
+            return expr;
         }
 
         protected RexNode lookup(RexNode expr)
@@ -780,22 +782,22 @@ public class RexUtil
             return (RexNode) mapDigestToExpr.get(expr.toString());
         }
 
-        public void visitInputRef(RexInputRef inputRef)
+        public RexNode visitInputRef(RexInputRef inputRef)
         {
-            register(inputRef);
+            return register(inputRef);
         }
 
-        public void visitLiteral(RexLiteral literal)
+        public RexNode visitLiteral(RexLiteral literal)
         {
-            register(literal);
+            return register(literal);
         }
 
-        public void visitCorrelVariable(RexCorrelVariable correlVariable)
+        public RexNode visitCorrelVariable(RexCorrelVariable correlVariable)
         {
-            register(correlVariable);
+            return register(correlVariable);
         }
 
-        public void visitCall(RexCall call)
+        public RexNode visitCall(RexCall call)
         {
             final RexNode[] operands = call.getOperands();
             RexNode[] normalizedOperands = new RexNode[operands.length];
@@ -812,20 +814,20 @@ public class RexUtil
             if (diffCount > 0) {
                 call = call.clone(call.getType(), normalizedOperands);
             }
-            register(call);
+            return register(call);
         }
 
-        public void visitDynamicParam(RexDynamicParam dynamicParam)
+        public RexNode visitDynamicParam(RexDynamicParam dynamicParam)
         {
-            register(dynamicParam);
+            return register(dynamicParam);
         }
 
-        public void visitRangeRef(RexRangeRef rangeRef)
+        public RexNode visitRangeRef(RexRangeRef rangeRef)
         {
-            register(rangeRef);
+            return register(rangeRef);
         }
 
-        public void visitFieldAccess(RexFieldAccess fieldAccess)
+        public RexNode visitFieldAccess(RexFieldAccess fieldAccess)
         {
             final RexNode expr = fieldAccess.getReferenceExpr();
             expr.accept(this);
@@ -834,7 +836,7 @@ public class RexUtil
                 fieldAccess = new RexFieldAccess(
                     normalizedExpr, fieldAccess.getField());
             }
-            register(fieldAccess);
+            return register(fieldAccess);
         }
 
         /**
@@ -855,7 +857,7 @@ public class RexUtil
      * or a {@link RexLocalRef} with ordinal greater than that set using
      * {@link #setLimit(int)}.
      */
-    private static class ForwardRefFinder extends RexVisitorImpl
+    private static class ForwardRefFinder extends RexVisitorImpl<Void>
     {
         private int limit = -1;
         private final RelDataType inputRowType;
@@ -866,20 +868,22 @@ public class RexUtil
             this.inputRowType = inputRowType;
         }
 
-        public void visitInputRef(RexInputRef inputRef)
+        public Void visitInputRef(RexInputRef inputRef)
         {
             super.visitInputRef(inputRef);
             if (inputRef.getIndex() >= inputRowType.getFieldCount()) {
                 throw new IllegalForwardRefException();
             }
+            return null;
         }
 
-        public void visitLocalRef(RexLocalRef inputRef)
+        public Void visitLocalRef(RexLocalRef inputRef)
         {
             super.visitLocalRef(inputRef);
             if (inputRef.getIndex() >= limit) {
                 throw new IllegalForwardRefException();
             }
+            return null;
         }
 
         public void setLimit(int limit)

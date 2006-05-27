@@ -88,14 +88,9 @@ public class RexLocalRef extends RexSlot
         return Util.hash(type.hashCode(), index);
     }
 
-    public void accept(RexVisitor visitor)
+    public <R> R accept(RexVisitor<R> visitor)
     {
-        visitor.visitLocalRef(this);
-    }
-
-    public RexNode accept(RexShuttle shuttle)
-    {
-        return shuttle.visitLocalRef(this);
+        return visitor.visitLocalRef(this);
     }
 
     private static String createName(int index)

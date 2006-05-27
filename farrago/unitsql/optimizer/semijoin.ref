@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/optimizer/semijoin.sql#5 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/optimizer/semijoin.sql#5 $
 0: jdbc:farrago:> -- Tests semijoin transformations
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema sj;
@@ -567,7 +567,7 @@
 '                LcsRowScanRel(table=[[LOCALDB, SJ, CUSTOMER]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$CUSTOMER$COMPANY, SYS$CLUSTERED_INDEX$SJ$CUSTOMER$ID]])'
 '                  LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
 '                    LcsIndexSearchRel(table=[[LOCALDB, SJ, CUSTOMER]], projection=[*], index=[I_CUSTOMER_CITY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
-'                      FennelValuesRel(tuples=[[{ '[', _ISO-8859-1'N', '+', null }]])'
+'                      FennelValuesRel(tuples=[[{ _ISO-8859-1'[', _ISO-8859-1'N', _ISO-8859-1'+', null }]])'
 '                LcsRowScanRel(table=[[LOCALDB, SJ, SALES]], projection=[[0, 1, 2, 3]], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SJ$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SJ$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SJ$SALES$SID]])'
 '                  LcsIndexIntersectRel(startRidParamId=[3], rowLimitParamId=[4])'
 '                    LcsIndexMergeRel(consumerSridParamId=[3], segmentLimitParamId=[4], ridLimitParamId=[6])'
@@ -587,7 +587,7 @@
 '                            LcsRowScanRel(table=[[LOCALDB, SJ, CUSTOMER]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$CUSTOMER$ID]])'
 '                              LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
 '                                LcsIndexSearchRel(table=[[LOCALDB, SJ, CUSTOMER]], projection=[*], index=[I_CUSTOMER_CITY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
-'                                  FennelValuesRel(tuples=[[{ '[', _ISO-8859-1'N', '+', null }]])'
+'                                  FennelValuesRel(tuples=[[{ _ISO-8859-1'[', _ISO-8859-1'N', _ISO-8859-1'+', null }]])'
 '            FennelCalcRel(expr#0..2=[{inputs}], expr#3=[30], expr#4=[>=($t2, $t3)], proj#0..1=[{exprs}], $condition=[$t4])'
 '              LcsRowScanRel(table=[[LOCALDB, SJ, SALESPERSON]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SALESPERSON$AGE, SYS$CLUSTERED_INDEX$SJ$SALESPERSON$ID, SYS$CLUSTERED_INDEX$SJ$SALESPERSON$NAME]])'
 '        FennelCalcRel(expr#0..3=[{inputs}], expr#4=[_ISO-8859-1'M'], expr#5=[>=($t3, $t4)], proj#0..3=[{exprs}], $condition=[$t5])'
@@ -681,7 +681,7 @@
 '          LcsIndexIntersectRel(startRidParamId=[2], rowLimitParamId=[3])'
 '            LcsIndexMergeRel(consumerSridParamId=[2], segmentLimitParamId=[3], ridLimitParamId=[5])'
 '              LcsIndexSearchRel(table=[[LOCALDB, SJ, SALES]], projection=[*], index=[I_SALES_SP], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
-'                FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
+'                FennelValuesRel(tuples=[[{ _ISO-8859-1'(', 0, _ISO-8859-1'+', null }]])'
 '            LcsIndexMergeRel(consumerSridParamId=[2], segmentLimitParamId=[3], ridLimitParamId=[4])'
 '              LcsIndexSearchRel(table=[[LOCALDB, SJ, SALES]], projection=[*], index=[I_SALES_PID], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
 '                FennelSortRel(key=[[0]], discardDuplicates=[true])'
@@ -707,7 +707,7 @@
 '        LcsRowScanRel(table=[[LOCALDB, SJ, SALES]], projection=[[0, 1, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SJ$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SJ$SALES$SID]])'
 '          LcsIndexIntersectRel(startRidParamId=[1], rowLimitParamId=[2])'
 '            LcsIndexSearchRel(table=[[LOCALDB, SJ, SALES]], projection=[*], index=[I_SALES_SP], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[1], rowLimitParamId=[2])'
-'              FennelValuesRel(tuples=[[{ '[', 1, ']', 1 }]])'
+'              FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 1, _ISO-8859-1']', 1 }]])'
 '            LcsIndexMergeRel(consumerSridParamId=[1], segmentLimitParamId=[2], ridLimitParamId=[3])'
 '              LcsIndexSearchRel(table=[[LOCALDB, SJ, SALES]], projection=[*], index=[I_SALES_PID], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
 '                FennelSortRel(key=[[0]], discardDuplicates=[true])'
@@ -730,10 +730,10 @@
 '          LcsIndexIntersectRel(startRidParamId=[2], rowLimitParamId=[1])'
 '            LcsIndexMergeRel(consumerSridParamId=[2], segmentLimitParamId=[1], ridLimitParamId=[3])'
 '              LcsIndexSearchRel(table=[[LOCALDB, SJ, SALES]], projection=[*], index=[I_SALES_SP], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
-'                FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
+'                FennelValuesRel(tuples=[[{ _ISO-8859-1'(', 0, _ISO-8859-1'+', null }]])'
 '            LcsIndexMergeRel(consumerSridParamId=[2], segmentLimitParamId=[1], ridLimitParamId=[4])'
 '              LcsIndexSearchRel(table=[[LOCALDB, SJ, SALES]], projection=[*], index=[I_SALES_CUST], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
-'                FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
+'                FennelValuesRel(tuples=[[{ _ISO-8859-1'(', 0, _ISO-8859-1'+', null }]])'
 '            LcsIndexMergeRel(consumerSridParamId=[2], segmentLimitParamId=[1], ridLimitParamId=[5])'
 '              LcsIndexSearchRel(table=[[LOCALDB, SJ, SALES]], projection=[*], index=[I_SALES_PID], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
 '                FennelSortRel(key=[[0]], discardDuplicates=[true])'

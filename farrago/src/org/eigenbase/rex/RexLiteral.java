@@ -35,7 +35,6 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.util.BitString;
 import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.NlsString;
 import org.eigenbase.util.Util;
@@ -220,7 +219,11 @@ public class RexLiteral extends RexNode
         case SqlTypeName.Binary_ordinal:
             return value instanceof ByteBuffer;
         case SqlTypeName.Char_ordinal:
-            return value instanceof NlsString;
+            // A SqlLiteral's charset and collation are optional; not so a
+            // RexLiteral.
+            return value instanceof NlsString &&
+                ((NlsString) value).getCharset() != null &&
+                ((NlsString) value).getCollation() != null;
         case SqlTypeName.Symbol_ordinal:
             return value instanceof EnumeratedValues.Value;
         case SqlTypeName.Integer_ordinal: // not allowed -- use Decimal
@@ -521,14 +524,9 @@ public class RexLiteral extends RexNode
         return (o1 == null) ? (o2 == null) : o1.equals(o2);
     }
 
-    public void accept(RexVisitor visitor)
+    public <R> R accept(RexVisitor<R> visitor)
     {
-        visitor.visitLiteral(this);
-    }
-
-    public RexNode accept(RexShuttle shuttle)
-    {
-        return shuttle.visitLiteral(this);
+        return visitor.visitLiteral(this);
     }
 }
 

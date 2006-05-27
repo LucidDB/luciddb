@@ -54,14 +54,9 @@ public class RexCorrelVariable extends RexVariable
         return new RexCorrelVariable(name, type);
     }
 
-    public void accept(RexVisitor visitor)
+    public <R> R accept(RexVisitor<R> visitor)
     {
-        visitor.visitCorrelVariable(this);
-    }
-
-    public RexNode accept(RexShuttle shuttle)
-    {
-        return shuttle.visitCorrelVariable(this);
+        return visitor.visitCorrelVariable(this);
     }
 }
 
