@@ -113,6 +113,13 @@ public class VolcanoRuleCall extends RelOptRuleCall
     protected void onMatch()
     {
         try {
+            if (volcanoPlanner.isRuleExcluded(getRule())) {
+                if (tracer.isLoggable(Level.FINE)) {
+                    tracer.fine("Rule [" + getRule() + "] not fired"
+                        + " due to exclusion filter");
+                }
+                return;
+            }
             if (tracer.isLoggable(Level.FINE)) {
                 tracer.fine("Apply rule [" + getRule() + "] to ["
                     + RelOptUtil.toString(rels) + "]");

@@ -270,8 +270,13 @@ public class RexToOJTranslator implements RexVisitor<Expression>
             setTranslation(Literal.makeLiteral(unscaled));
             break;
         case SqlTypeName.Double_ordinal:
-            setTranslation(
-                Literal.makeLiteral(((BigDecimal) value).doubleValue()));
+            if (literal.getType().getSqlTypeName() == SqlTypeName.Real) {
+                setTranslation(
+                    Literal.makeLiteral(((BigDecimal) value).floatValue()));
+            } else {
+                setTranslation(
+                    Literal.makeLiteral(((BigDecimal) value).doubleValue()));
+            }
             break;
         case SqlTypeName.Binary_ordinal:
             setTranslation(

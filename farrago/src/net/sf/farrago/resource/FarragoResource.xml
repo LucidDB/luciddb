@@ -867,6 +867,10 @@ column type family is {1} but default value type family is {2}</text>
 <text>Session {0,number,#} not found</text>
 </exception>
 
+<exception id="470130" name="SessionReentrantStmtFailed">
+<text>Failed while executing internal statement</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Server resources 480,000 - 490,000 -->
 <!-- ====================================================================== -->

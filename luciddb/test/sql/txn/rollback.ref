@@ -1,4 +1,4 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/txn/rollback.sql#1 $
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/txn/rollback.sql#2 $
 0: jdbc:luciddb:> -- Tests LucidDB support for implicit rollback on error
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create schema s;
@@ -9,12 +9,12 @@
 . . . . . . . . > server sys_mock_foreign_data_server
 . . . . . . . . > options (executor_impl 'FENNEL', row_count '3000');
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- run a load which will fail on the last row
+0: jdbc:luciddb:> -- run a load which will fail after a while
 0: jdbc:luciddb:> -- due to division by zero
 0: jdbc:luciddb:> insert into s.t
 . . . . . . . . > select * from s.mock_fennel_table
 . . . . . . . . > union all
-. . . . . . . . > values (1/0);
+. . . . . . . . > select 1/id from s.mock_fennel_table;
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
@@ -40,12 +40,12 @@ Messages:
 | 3000    |
 +---------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- run an incremental load which will fail on the last row
+0: jdbc:luciddb:> -- run an incremental load which will fail after a while
 0: jdbc:luciddb:> -- due to division by zero
 0: jdbc:luciddb:> insert into s.t
 . . . . . . . . > select * from s.mock_fennel_table
 . . . . . . . . > union all
-. . . . . . . . > values (1/0);
+. . . . . . . . > select 1/id from s.mock_fennel_table;
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:

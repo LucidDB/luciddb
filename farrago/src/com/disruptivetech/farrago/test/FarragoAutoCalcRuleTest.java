@@ -27,6 +27,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
+import java.util.regex.*;
 
 import junit.extensions.TestSetup;
 import junit.framework.Test;
@@ -39,6 +40,7 @@ import net.sf.farrago.ojrex.FarragoOJRexImplementor;
 import net.sf.farrago.ojrex.FarragoOJRexImplementorTable;
 import net.sf.farrago.ojrex.FarragoRexToOJTranslator;
 import net.sf.farrago.session.*;
+import net.sf.farrago.query.*;
 import net.sf.farrago.test.FarragoTestCase;
 import net.sf.farrago.util.FarragoProperties;
 
@@ -48,6 +50,7 @@ import org.eigenbase.oj.rex.OJRexImplementor;
 import org.eigenbase.oj.rex.OJRexImplementorTable;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.rex.RexCall;
+import org.eigenbase.rel.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
@@ -323,7 +326,11 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
             String url,
             Properties info)
         {
-            return new FarragoDbSession(url, info, this);
+            FarragoSession session = new FarragoDbSession(url, info, this);
+            // Constant reduction hides what we're trying to test for.
+            session.setOptRuleDescExclusionFilter(
+                FarragoReduceExpressionsRule.EXCLUSION_PATTERN);
+            return session;
         }
 
         public FarragoSessionPersonality newSessionPersonality(

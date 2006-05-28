@@ -15,7 +15,4 @@ explain plan for
 select lower(name), empid + 1, empid / 1, empid - 1, empid from sales.emps;
 
 -- dtbug#32
-explain plan for
-select 1 + 2 from (values (3));
-
 select 1 + 2 from (values (3));

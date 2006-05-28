@@ -277,7 +277,7 @@
 . . . . . . . . > (N3 * (N2 - N1)) AS DIFF3
 . . . . . . . . > FROM TEST_REAL_TABLE ORDER BY N1, N2, N3;
 Error: could not calculate results for the following row:
-[ 1.233e+31, 1.255e+31, 1.277e+32, 1.28763e+206, 3.33244e+307 ]
+[ 1.233e+31, 1.255e+31, 1.277e+32 ]
 Messages:
 [0]:PC=1 Code=22003 (state=,code=0)
 0: jdbc:luciddb:> SELECT N1, N2, N3,

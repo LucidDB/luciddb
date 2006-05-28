@@ -24,6 +24,7 @@ package net.sf.farrago.db;
 
 import java.sql.*;
 import java.util.*;
+import java.util.regex.*;
 import java.util.logging.*;
 
 import net.sf.farrago.catalog.*;
@@ -136,6 +137,8 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     private FarragoSessionPrivilegeMap privilegeMap;
 
     private FarragoDbSessionInfo sessionInfo;
+
+    private Pattern optRuleDescExclusionFilter;
     
     //~ Constructors ----------------------------------------------------------
 
@@ -665,6 +668,18 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         } finally {
             Util.squelchConnection(connection);
         }
+    }
+    
+    // implement FarragoSession
+    public void setOptRuleDescExclusionFilter(Pattern exclusionFilter)
+    {
+        optRuleDescExclusionFilter = exclusionFilter;
+    }
+
+    // implement FarragoSession
+    public Pattern getOptRuleDescExclusionFilter()
+    {
+        return optRuleDescExclusionFilter;
     }
 
     protected FarragoSessionRuntimeParams newRuntimeContextParams()

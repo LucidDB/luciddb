@@ -1,4 +1,4 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/char_replace.sql#4 $
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/appvar.sql#1 $
 0: jdbc:luciddb:> -- Test script for application variables UDF/UDP
 0: jdbc:luciddb:> set schema 'udftest';
 0: jdbc:luciddb:> set path 'udftest';
@@ -43,6 +43,14 @@
 <resultset>
   <result EXPR$0="bar"/>
 </resultset>
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- verify that constant reduction works for appvar references
+0: jdbc:luciddb:> !set outputformat csv
+0: jdbc:luciddb:> explain plan for values (applib.get_var('context1', 'var1'));
+'column0'
+'IterCalcRel(expr#0=[{inputs}], expr#1=[_ISO-8859-1'bar'], expr#2=[CAST($t1):VARCHAR(65535) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], EXPR$0=[$t2])'
+'  IterOneRowRel'
+0: jdbc:luciddb:> !set outputformat xmlattr
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- delete variable
 0: jdbc:luciddb:> call applib.delete_var('context1', 'var1');

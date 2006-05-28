@@ -52,6 +52,8 @@ public abstract class AbstractRelOptPlanner implements RelOptPlanner
     
     private MulticastRelOptListener listener;
 
+    private Pattern ruleDescExclusionFilter;
+
     protected AbstractRelOptPlanner()
     {
         mapDescToRule = new HashMap<String, RelOptRule>();
@@ -95,6 +97,27 @@ public abstract class AbstractRelOptPlanner implements RelOptPlanner
     protected RelOptRule getRuleByDescription(String description)
     {
         return mapDescToRule.get(description);
+    }
+
+    // implement RelOptPlanner
+    public void setRuleDescExclusionFilter(Pattern exclusionFilter)
+    {
+        ruleDescExclusionFilter = exclusionFilter;
+    }
+
+    /**
+     * Determines whether a given rule is excluded by ruleDescExclusionFilter.
+     *
+     * @param rule rule to test
+     *
+     * @return true iff rule should be excluded
+     */
+    public boolean isRuleExcluded(RelOptRule rule)
+    {
+        if (ruleDescExclusionFilter == null) {
+            return false;
+        }
+        return ruleDescExclusionFilter.matcher(rule.toString()).matches();
     }
     
     // implement RelOptPlanner
@@ -187,11 +210,19 @@ public abstract class AbstractRelOptPlanner implements RelOptPlanner
     protected void fireRule(
         RelOptRuleCall ruleCall)
     {
+        if (isRuleExcluded(ruleCall.getRule())) {
+            if (tracer.isLoggable(Level.FINE)) {
+                tracer.fine("Rule [" + ruleCall.getRule() + "] not fired"
+                    + " due to exclusion filter");
+            }
+            return;
+        }
+            
         if (tracer.isLoggable(Level.FINE)) {
             tracer.fine("Apply rule [" + ruleCall.getRule() + "] to ["
                 + RelOptUtil.toString(ruleCall.getRels()) + "]");
         }
-            
+
         if (listener != null) {
             RelOptListener.RuleAttemptedEvent event =
                 new RelOptListener.RuleAttemptedEvent(

@@ -153,6 +153,9 @@ public class RexLiteral extends RexNode
      */
     private final RelDataType type;
 
+    // TODO jvs 26-May-2006:  Use SqlTypeFamily instead; it exists
+    // for exactly this purpose (to avoid the confusion which results
+    // from overloading SqlTypeName).
     /**
      * An indication of the broad type of this literal -- even if its type
      * isn't a SQL type. Sometimes this will be different than the SQL type;
@@ -381,12 +384,9 @@ public class RexLiteral extends RexNode
         case SqlTypeName.Date_ordinal:
         case SqlTypeName.Time_ordinal:
         case SqlTypeName.Timestamp_ordinal:
-            // NOTE: we will need to read timestamp at some point
             String format = getCalendarFormat(typeName);
             Calendar cal = null;
-            if (typeName.getOrdinal() == SqlTypeName.Timestamp_ordinal
-                && type.getPrecision() > 0) 
-            {
+            if (typeName.getOrdinal() == SqlTypeName.Timestamp_ordinal) {
                 SqlParserUtil.PrecisionTime ts = 
                     SqlParserUtil.parsePrecisionDateTimeLiteral(
                         literal, format, null);
@@ -398,7 +398,9 @@ public class RexLiteral extends RexNode
                     literal, format, null);
             }
             if (cal == null) {
-                throw Util.newInternal("fromJdbcString: invalid date/time");
+                throw Util.newInternal(
+                    "fromJdbcString: invalid date/time value '"
+                    + literal + "'");
             }
             return new RexLiteral(cal, type, typeName);
         case SqlTypeName.Symbol_ordinal:

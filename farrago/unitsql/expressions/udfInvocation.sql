@@ -97,6 +97,7 @@ create function atoi(s varchar(128))
 returns int
 language java
 no sql
+deterministic
 external name 'class net.sf.farrago.test.FarragoTestUDR.atoi';
 
 create function atoi_with_null_for_err(s varchar(128))
@@ -155,6 +156,7 @@ create function gargle()
 returns integer
 language java
 no sql
+deterministic
 external name 'class net.sf.farrago.test.FarragoTestUDR.gargle';
 
 -- test a function that uses another function
@@ -329,6 +331,21 @@ from sales.depts order by 1;
 values get_java_property('feeble');
 values gargle();
 values get_java_property('feeble');
+
+!set outputformat csv
+
+-- verify that constant reduction is NOT used for non-deterministic functions
+explain plan for values generate_random_number(42);
+
+-- verify that constant reduction IS used for deterministic functions
+-- with constant input
+explain plan for select atoi('99') from sales.depts;
+
+-- verify that constant reduction is NOT used for deterministic functions
+-- with non-constant input
+explain plan for select atoi(name) from sales.depts;
+
+!set outputformat table
 
 -- udx invocation
 select * from table(ramp(5)) order by 1;

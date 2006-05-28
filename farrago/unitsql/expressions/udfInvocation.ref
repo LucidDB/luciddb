@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/expressions/udfInvocation.sql#9 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/expressions/udfInvocation.sql#10 $
 0: jdbc:farrago:> -- Test queries with UDF invocations
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema udftest;
@@ -98,6 +98,7 @@ Error: Result expression type VARCHAR(128) from routine "UDFTEST"."BAD_ATOI" doe
 . . . . . . . . > returns int
 . . . . . . . . > language java
 . . . . . . . . > no sql
+. . . . . . . . > deterministic
 . . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.atoi';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create function atoi_with_null_for_err(s varchar(128))
@@ -156,6 +157,7 @@ Error: Result expression type VARCHAR(128) from routine "UDFTEST"."BAD_ATOI" doe
 . . . . . . . . > returns integer
 . . . . . . . . > language java
 . . . . . . . . > no sql
+. . . . . . . . > deterministic
 . . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.gargle';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test a function that uses another function
@@ -528,6 +530,32 @@ Error: java.lang.NullPointerException: null (state=,code=0)
 +---------+
 | minded  |
 +---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !set outputformat csv
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- verify that constant reduction is NOT used for non-deterministic functions
+0: jdbc:farrago:> explain plan for values generate_random_number(42);
+'column0'
+'IterCalcRel(expr#0=[{inputs}], expr#1=[42], expr#2=[CAST($t1):BIGINT], expr#3=[GENERATE_RANDOM_NUMBER($t2)], expr#4=[CAST($t3):BIGINT], EXPR$0=[$t4])'
+'  IterOneRowRel'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- verify that constant reduction IS used for deterministic functions
+0: jdbc:farrago:> -- with constant input
+0: jdbc:farrago:> explain plan for select atoi('99') from sales.depts;
+'column0'
+'IterCalcRel(expr#0..1=[{inputs}], expr#2=[99], expr#3=[CAST($t2):INTEGER], EXPR$0=[$t3])'
+'  FennelToIteratorConverter'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- verify that constant reduction is NOT used for deterministic functions
+0: jdbc:farrago:> -- with non-constant input
+0: jdbc:farrago:> explain plan for select atoi(name) from sales.depts;
+'column0'
+'IterCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#2=[ATOI($t1)], expr#3=[CAST($t2):INTEGER], EXPR$0=[$t3])'
+'  FennelToIteratorConverter'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !set outputformat table
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- udx invocation
 0: jdbc:farrago:> select * from table(ramp(5)) order by 1;

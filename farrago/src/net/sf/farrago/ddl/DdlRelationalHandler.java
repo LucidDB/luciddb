@@ -449,26 +449,43 @@ public class DdlRelationalHandler extends DdlHandler
         // see it and try to use it to satisfy source table scans!
         
         FarragoSession session = validator.newReentrantSession();
-        FarragoSessionStmtContext stmtContext = session.newStmtContext(null);
-        FarragoSessionStmtValidator stmtValidator =
-            session.newStmtValidator();
         try {
-            FarragoSessionPreparingStmt stmt = 
-                session.getPersonality().newPreparingStmt(stmtValidator);
-            stmt.preImplement();
-            RelOptTable relOptTable = stmt.loadColumnSet(
+            ReentrantIndexBuilderStmt reentrantStmt =
+                new ReentrantIndexBuilderStmt(table, index, medDataServer);
+            reentrantStmt.execute(session);
+        } finally {
+            validator.releaseReentrantSession(session);
+        }
+    }
+
+    private static class ReentrantIndexBuilderStmt extends FarragoReentrantStmt
+    {
+        private final FemLocalTable table;
+        private final FemLocalIndex index;
+        private final FarragoMedLocalDataServer medDataServer;
+
+        ReentrantIndexBuilderStmt(
+            FemLocalTable table,
+            FemLocalIndex index,
+            FarragoMedLocalDataServer medDataServer)
+        {
+            this.table = table;
+            this.index = index;
+            this.medDataServer = medDataServer;
+        }
+        
+        protected void executeImpl()
+        {
+            RelOptTable relOptTable = getPreparingStmt().loadColumnSet(
                 FarragoCatalogUtil.getQualifiedName(table));
             assert(relOptTable != null);
             RelNode indexBuildPlan = medDataServer.constructIndexBuildPlan(
                 relOptTable,
                 index,
-                stmt.getRelOptCluster());
-            stmtContext.prepare(indexBuildPlan, SqlKind.Insert, true, stmt);
-            stmtContext.execute();
-        } finally {
-            stmtContext.closeAllocation();
-            stmtValidator.closeAllocation();
-            validator.releaseReentrantSession(session);
+                getPreparingStmt().getRelOptCluster());
+            getStmtContext().prepare(
+                indexBuildPlan, SqlKind.Insert, true, getPreparingStmt());
+            getStmtContext().execute();
         }
     }
 
