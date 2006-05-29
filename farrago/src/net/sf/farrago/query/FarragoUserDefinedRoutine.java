@@ -500,6 +500,12 @@ public class FarragoUserDefinedRoutine
     {
         return body.startsWith(RETURN_PREFIX);
     }
+
+    // override SqlOperator
+    public boolean isDeterministic()
+    {
+        return getFemRoutine().isDeterministic();
+    }
 }
 
 // End FarragoUserDefinedRoutine.java

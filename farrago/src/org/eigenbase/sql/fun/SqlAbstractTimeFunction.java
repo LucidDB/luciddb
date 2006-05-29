@@ -82,6 +82,12 @@ public class SqlAbstractTimeFunction extends SqlFunction
     {
         return true;
     }
+    
+    // Context variables are never deterministic
+    public boolean isDeterministic()
+    {
+        return false;
+    }
 }
 
 // End SqlAbstractTimeFunction.java

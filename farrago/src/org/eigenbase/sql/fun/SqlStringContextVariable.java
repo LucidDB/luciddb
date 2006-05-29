@@ -52,6 +52,12 @@ public class SqlStringContextVariable extends SqlFunction
     {
         return true;
     }
+
+    // Context variables are never deterministic
+    public boolean isDeterministic()
+    {
+        return false;
+    }
 }
 
 // End SqlStringContextVariable.java

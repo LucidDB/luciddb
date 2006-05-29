@@ -133,6 +133,10 @@ public class FarragoDefaultHeuristicPlanner
         // may introduce new joins which need to be optimized further on.
         builder.addRuleInstance(RemoveDistinctAggregateRule.instance);
         
+        // Eliminate reducible constant expression.  TODO jvs 26-May-2006: do
+        // this again later wherever more such expressions may be reintroduced.
+        builder.addRuleClass(FarragoReduceExpressionsRule.class);
+        
         // Now, pull join conditions out of joins, leaving behind Cartesian
         // products.  Why?  Because PushFilterRule doesn't start from
         // join conditions, only filters.  It will push them right back

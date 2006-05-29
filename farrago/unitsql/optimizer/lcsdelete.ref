@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id:$
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/lcsdelete.sql#1 $
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -----------------------------
 0: jdbc:farrago:> -- Delete tests on lcs tables
@@ -196,8 +196,7 @@
 '  LcsTableDeleteRel(table=[[LOCALDB, LCSDEL, DELTAB]])'
 '    FennelCalcRel(expr#0..2=[{inputs}], expr#3=[null], expr#4=[CAST($t3):VARBINARY(512)], rid=[$t1], descriptor=[$t4], segment=[$t4])'
 '      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
-'        FennelCalcRel(expr#0..1=[{inputs}], expr#2=[true], expr#3=[IS TRUE($t2)], proj#0..1=[{exprs}], $condition=[$t3])'
-'          LcsRowScanRel(table=[[LOCALDB, LCSDEL, DELTAB]], projection=[[2, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSDEL$DELTAB$C1]])'
+'        LcsRowScanRel(table=[[LOCALDB, LCSDEL, DELTAB]], projection=[[2, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSDEL$DELTAB$C1]])'
 '        FennelAggRel(groupCount=[1])'
 '          FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '            FennelMergeRel'

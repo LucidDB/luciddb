@@ -31,6 +31,7 @@ import net.sf.farrago.plugin.*;
 import org.eigenbase.reltype.*;
 
 import java.util.*;
+import java.util.regex.*;
 
 /**
  * FarragoSession represents an internal API to the Farrago database.  It is
@@ -297,6 +298,20 @@ public interface FarragoSession extends FarragoAllocation
      * @return FarragoSessionInfo object
      */
     public FarragoSessionInfo getSessionInfo();
+
+    /**
+     * Sets the exclusion filter to use for planners created by this session.
+     * See {@link RelOptPlanner#setRuleDescExclusionFilter} for details.
+     *
+     * @param exclusionFilter pattern to match for exclusion; null
+     * to disable filtering
+     */
+    public void setOptRuleDescExclusionFilter(Pattern exclusionFilter);
+
+    /**
+     * @return exclusion filter in effect for planners created by this session
+     */
+    public Pattern getOptRuleDescExclusionFilter();
 }
 
 // End FarragoSession.java

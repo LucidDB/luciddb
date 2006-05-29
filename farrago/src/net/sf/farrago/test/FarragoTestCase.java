@@ -39,6 +39,7 @@ import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.db.*;
+import net.sf.farrago.session.*;
 
 import org.eigenbase.test.*;
 import org.eigenbase.util.SaffronProperties;
@@ -173,9 +174,7 @@ public abstract class FarragoTestCase extends ResultSetTestCase
         }
         if (connection == null) {
             connection = newConnection();
-            FarragoJdbcEngineConnection farragoConnection =
-                (FarragoJdbcEngineConnection) connection;
-            repos = farragoConnection.getSession().getRepos();
+            repos = getSession().getRepos();
             saveParameters();
         } else {
             // cycle connections to discard any leftover session state; but do
@@ -218,6 +217,17 @@ public abstract class FarragoTestCase extends ResultSetTestCase
             restoreParameters();
         }
         rollbackIfSupported();
+    }
+
+    /**
+     * @return FarragoSession for this test
+     */
+    protected static FarragoSession getSession()
+    {
+        assert(connection != null);
+        FarragoJdbcEngineConnection farragoConnection =
+            (FarragoJdbcEngineConnection) connection;
+        return farragoConnection.getSession();
     }
 
     private static void rollbackIfSupported()

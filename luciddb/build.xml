@@ -453,7 +453,7 @@ ${farrago.test.jvmargs}
 
   <target name="runInitSql" >
     <filelist dir="${farrago.initsql.dir}" id="filelist.initsql"
-      files="createStorageWrappers.sql,createSqljSchema.sql,createJdbcViews.sql"/>
+      files="createStorageWrappers.sql,createSqljSchema.sql,createJdbcViews.sql,createMgmtViews.sql"/>
     <pathconvert property="filelist.initsql" refid="filelist.initsql"
       pathsep="${line.separator}" dirsep="${file.separator}" />
     <junit printsummary="yes" fork="yes" haltonerror="yes" haltonfailure="yes"
@@ -556,7 +556,7 @@ ${farrago.test.jvmargs}
 
   <target name="runLuciddbInitSql">
     <filelist dir="${initSql.dir}" id="filelist.InitSql"
-      files="installApplib.sql, createTestHarness.sql"/>
+      files="installApplib.sql, createTestHarness.sql, createDbaViews.sql"/>
     <pathconvert property="filelist.InitSql" 
       refid="filelist.InitSql" pathsep="${line.separator}"
       dirsep="${file.separator}" />

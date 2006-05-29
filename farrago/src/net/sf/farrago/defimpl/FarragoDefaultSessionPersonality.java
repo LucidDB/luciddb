@@ -141,8 +141,11 @@ public class FarragoDefaultSessionPersonality
         FarragoSessionStmtValidator stmtValidator)
     {
         FarragoPreparingStmt stmt = new FarragoPreparingStmt(stmtValidator);
-        stmt.setPlanner(
-            stmtValidator.getSession().getPersonality().newPlanner(stmt, true));
+        FarragoSessionPlanner planner = 
+            stmtValidator.getSession().getPersonality().newPlanner(stmt, true);
+        planner.setRuleDescExclusionFilter(
+            stmtValidator.getSession().getOptRuleDescExclusionFilter());
+        stmt.setPlanner(planner);
         return stmt;
     }
     

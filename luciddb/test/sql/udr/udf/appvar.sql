@@ -23,6 +23,11 @@ values (applib.get_var('context1', 'var1'));
 call applib.set_var('context1', 'var1', 'bar');
 values (applib.get_var('context1', 'var1'));
 
+-- verify that constant reduction works for appvar references
+!set outputformat csv
+explain plan for values (applib.get_var('context1', 'var1'));
+!set outputformat xmlattr
+
 -- delete variable
 call applib.delete_var('context1', 'var1');
 

@@ -25,6 +25,7 @@ package net.sf.farrago.test;
 import junit.framework.*;
 import net.sf.farrago.test.regression.FarragoCalcSystemTest;
 import net.sf.farrago.jdbc.FarragoJdbcUtil;
+import net.sf.farrago.query.*;
 import org.eigenbase.sql.SqlOperator;
 import org.eigenbase.sql.parser.SqlParserUtil;
 import org.eigenbase.sql.test.AbstractSqlTester;
@@ -281,6 +282,16 @@ public class FarragoSqlOperatorsSuite
             super("dummy");
         }
 
+        public void setUp()
+            throws Exception
+        {
+            // Constant reduction slows things down without any benefit,
+            // so disable it.
+            super.setUp();
+            getSession().setOptRuleDescExclusionFilter(
+                FarragoReduceExpressionsRule.EXCLUSION_PATTERN);
+        }
+        
         /**
          * Checks that a scalar expression fails at validate time or runtime
          * on a given virtual machine.

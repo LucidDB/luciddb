@@ -29,6 +29,7 @@ import org.eigenbase.rel.metadata.*;
 import org.eigenbase.trace.EigenbaseTrace;
 
 import java.util.logging.Logger;
+import java.util.regex.*;
 
 
 /**
@@ -81,6 +82,16 @@ public interface RelOptPlanner
      *   {@link java.util.Collection#remove(Object)}
      */
     boolean removeRule(RelOptRule rule);
+
+    /**
+     * Sets the exclusion filter to use for this planner.  Rules which
+     * match the given pattern will not be fired regardless of whether
+     * or when they are added to the planner.
+     *
+     * @param exclusionFilter pattern to match for exclusion; null
+     * to disable filtering
+     */
+    public void setRuleDescExclusionFilter(Pattern exclusionFilter);
 
     /**
      * Changes a relational expression to an equivalent one with a different

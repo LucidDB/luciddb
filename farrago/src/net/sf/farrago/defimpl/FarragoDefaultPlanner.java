@@ -129,6 +129,12 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
         planner.addRule(new IterRules.OneRowToIteratorRule());
 
         planner.addRule(new ReduceDecimalsRule());
+
+        // REVIEW jvs 26-May-2006:  reduce expressions for JoinRel also?
+        planner.addRule(
+            new FarragoReduceExpressionsRule(FilterRel.class));
+        planner.addRule(
+            new FarragoReduceExpressionsRule(ProjectRel.class));
         
         planner.addRule(ReduceAggregatesRule.instance);
         

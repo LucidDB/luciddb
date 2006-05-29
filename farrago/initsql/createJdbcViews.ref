@@ -210,7 +210,9 @@
 . . . . . . . . >         c."length" as char_octet_length,
 . . . . . . . . >         c."ordinal" + 1 as ordinal_position,
 . . . . . . . . >         convert_cwm_nullable_to_string(c."isNullable") as is_nullable,
+. . . . . . . . >         c."description" as remarks,
 . . . . . . . . >         c."mofId",
+. . . . . . . . >         c."lineageId",
 . . . . . . . . >         c."Histogram"
 . . . . . . . . >     from 
 . . . . . . . . >         tables_view_internal t 

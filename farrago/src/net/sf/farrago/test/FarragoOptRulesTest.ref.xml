@@ -290,4 +290,23 @@ ProjectRel(NAME=[$1])
 ]]>
         </Resource>
     </TestCase>
+    <TestCase name="testReduceConstants">
+        <Resource name="sql">
+            <![CDATA[select 1+2, deptno+(3+4), (5+6)+deptno, cast(null as integer), coalesce(2,null) from sales.depts where deptno=(7+8) and deptno=coalesce(2,null)]]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+ProjectRel(EXPR$0=[+(1, 2)], EXPR$1=[+($0, +(3, 4))], EXPR$2=[+(+(5, 6), $0)], EXPR$3=[CAST(null):INTEGER], EXPR$4=[CASE(IS NOT NULL(2), 2, CAST(null):INTEGER)])
+  FilterRel(condition=[AND(=($0, +(7, 8)), =($0, CASE(IS NOT NULL(2), 2, CAST(null):INTEGER)))])
+    TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+ProjectRel(EXPR$0=[3], EXPR$1=[+($0, 7)], EXPR$2=[+(11, $0)], EXPR$3=[CAST(null):INTEGER], EXPR$4=[CAST(2):INTEGER])
+  FilterRel(condition=[AND(=($0, 15), =($0, 2))])
+    TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+]]>
+        </Resource>
+    </TestCase>
 </Root>

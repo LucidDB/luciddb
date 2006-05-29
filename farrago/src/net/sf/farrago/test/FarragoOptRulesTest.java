@@ -341,6 +341,27 @@ public class FarragoOptRulesTest extends FarragoSqlToRelTestBase
             "select e1.name from sales.emps e1, sales.depts d, sales.emps e2 " +
             "where e1.deptno = d.deptno and d.deptno = e2.deptno");
     }
+
+    public void testReduceConstants()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(
+            new FarragoReduceExpressionsRule(ProjectRel.class));
+        programBuilder.addRuleInstance(
+            new FarragoReduceExpressionsRule(FilterRel.class));
+
+        // NOTE jvs 27-May-2006: among other things, this verifies
+        // intentionally different treatment for identical coalesce expression
+        // in select and where.
+        
+        check(
+            programBuilder.createProgram(),
+            "select 1+2, deptno+(3+4), (5+6)+deptno, cast(null as integer)," +
+            " coalesce(2,null)" +
+            " from sales.depts" +
+            " where deptno=(7+8) and deptno=coalesce(2,null)");
+    }
 }
 
 // End FarragoOptRulesTest.java

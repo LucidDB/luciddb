@@ -650,6 +650,16 @@ public abstract class SqlOperator
     {
         return false;
     }
+
+    /**
+     * @return true iff a call to this operator is guaranteed to always
+     * return the same result given the same operands; true is
+     * assumed by default
+     */
+    public boolean isDeterministic()
+    {
+        return true;
+    }
     
     /**
      * Method to check if call requires expansion when it has decimal 

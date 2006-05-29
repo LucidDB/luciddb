@@ -23,6 +23,7 @@
 package net.sf.farrago.test;
 
 import java.io.*;
+import java.util.regex.*;
 
 import junit.framework.*;
 
@@ -174,6 +175,9 @@ public class FarragoRexToOJTranslatorTest extends FarragoSqlToRelTestBase
             stmt.getSession().getPersonality().newPlanner(stmt,false);
         planner.addRule(IterRules.IterCalcRule.instance);
         FennelToIteratorConverter.register(planner);
+        // Constant reduction hides what we're trying to test for.
+        planner.setRuleDescExclusionFilter(
+            FarragoReduceExpressionsRule.EXCLUSION_PATTERN);
         stmt.setPlanner(planner);
     }
 

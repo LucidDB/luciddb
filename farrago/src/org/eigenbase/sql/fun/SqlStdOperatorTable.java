@@ -979,7 +979,10 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
          new SqlFunction("NEXT_VALUE", SqlKind.Function,
              SqlTypeStrategies.rtiBigint, null,
              SqlTypeStrategies.otcCharString,
-             SqlFunctionCategory.System);
+             SqlFunctionCategory.System)
+         {
+             public boolean isDeterministic() { return false; }
+         };
 }
 
 // End SqlStdOperatorTable.java
