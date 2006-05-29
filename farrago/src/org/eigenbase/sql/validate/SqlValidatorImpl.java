@@ -23,9 +23,7 @@
 
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.reltype.RelDataTypeField;
+import org.eigenbase.reltype.*;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.util.SqlVisitor;
@@ -1898,8 +1896,14 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                 boolean matches = aggScope.checkAggregateExpr(selectItem);
                 Util.discard(matches);
             }
-            expandSelectItem(selectItem, select, expandedSelectItems,
-                aliasList, typeList, false);
+            if (selectItem instanceof SqlSelect) {
+                handleScalarSubQuery(select, (SqlSelect)selectItem,
+                    expandedSelectItems,aliasList, typeList);
+
+            } else {
+                expandSelectItem(selectItem, select, expandedSelectItems,
+                    aliasList, typeList, false);
+            }
         }
 
         // Create the new select list with expanded items.  Pass through
@@ -1922,6 +1926,50 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
 
         assert typeList.size() == aliasList.size();
         return typeFactory.createStructType(typeList, aliasList);
+    }
+
+    /**
+     * Processes SubQuery found in Select list.  Checks that is actually
+     * Scalar subquery and makes proper entries in each of the 3 lists
+     * used to create the final rowType entry.
+     *
+     * @param parentSelect  base SqlSelect item
+     * @param selectItem  child SqlSelect from select list
+     * @param expandedSelectItems Select items after processing
+     * @param aliasList built from user or system values
+     * @param typeList Built up entries for each select list entry
+     */
+    private void handleScalarSubQuery(
+        SqlSelect parentSelect,
+        SqlSelect selectItem,
+        ArrayList expandedSelectItems,
+        List aliasList,
+        List typeList)
+    {
+        // A scalar subquery only has one output column.
+        if (1 != selectItem.getSelectList().size()) {
+            throw newValidationError(
+                selectItem,
+                EigenbaseResource.instance().OnlyScalarSubqueryAllowed.ex());
+        }
+
+        // No expansion in this routine just append to list.
+        expandedSelectItems.add(selectItem);
+
+        // Get or generate alias and add to list.
+        final String alias = deriveAlias(selectItem, aliasList.size());
+        aliasList.add(alias);
+
+        final SelectScope scope = (SelectScope) getWhereScope(parentSelect);
+        final RelDataType type = deriveType(scope, selectItem);
+        setValidatedNodeTypeImpl(selectItem, type);
+
+        // we do not want to pass on the RelRecordType returned
+        // by the sub query.  Just the type of the single expression
+        // in the subquery select list.
+        assert type instanceof RelRecordType;
+        RelRecordType rec = (RelRecordType) type;
+        typeList.add(rec.getFields()[0].getType());
     }
 
 
