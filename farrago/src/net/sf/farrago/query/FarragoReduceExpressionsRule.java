@@ -31,6 +31,7 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.util.*;
 
 import java.util.*;
+import java.math.*;
 import java.util.regex.*;
 import java.util.logging.*;
 import java.sql.*;
@@ -214,7 +215,6 @@ public class FarragoReduceExpressionsRule extends RelOptRule
         private final RexBuilder rexBuilder;
         private final List<RexNode> exprs;
         private final List<RexNode> results;
-
         boolean failed;
 
         ReentrantValuesStmt(
@@ -253,19 +253,26 @@ public class FarragoReduceExpressionsRule extends RelOptRule
             ResultSet resultSet = getStmtContext().getResultSet();
             resultSet.next();
             for (int i = 0; i < exprs.size(); ++i) {
-                // REVIEW jvs 28-May-2006: There might be a few cases where we
-                // could preserve precision better by calling the type-specific
-                // getter method instead of getString.
-                String val = resultSet.getString(i + 1);
                 RexNode expr = exprs.get(i);
+                SqlTypeName typeName = expr.getType().getSqlTypeName();
+                SqlTypeFamily approxFamily = SqlTypeFamily.ApproximateNumeric;
+                double doubleValue = 0.0;
+                String stringValue = null;
+                if (approxFamily.getTypeNames().contains(typeName)) {
+                    // Use getDouble to preserve precision.
+                    doubleValue = resultSet.getDouble(i + 1);
+                } else {
+                    // Anything else can be handled safely via string
+                    // representation.
+                    stringValue = resultSet.getString(i + 1);
+                }
                 RexNode result;
-                if (val == null) {
+                if (resultSet.wasNull()) {
                     result = rexBuilder.constantNull();
                     result = rexBuilder.makeCast(
                         expr.getType(),
                         result);
                 } else {
-                    SqlTypeName typeName = expr.getType().getSqlTypeName();
                     // TODO jvs 26-May-2006:  See comment on RexLiteral
                     // constructor regarding SqlTypeFamily.
                     typeName = broadenType(typeName);
@@ -273,19 +280,22 @@ public class FarragoReduceExpressionsRule extends RelOptRule
                         rexBuilder.getTypeFactory().createTypeWithNullability(
                             expr.getType(),
                             false);
-                    try {
-                        result = RexLiteral.fromJdbcString(
-                            literalType,
-                            typeName,
-                            val);
-                    } catch (NumberFormatException ex) {
-                        // NOTE jvs 28-May-2006:  This catches infinity
-                        // and NaN, which can't be round-tripped
-                        // through String and don't have a SQL literal
-                        // representation anyway.  For those rare cases,
-                        // we just fail the whole rule.
-                        result = null;
-                        failed = true;
+                    if (stringValue == null) {
+                        try {
+                            result = rexBuilder.makeApproxLiteral(
+                                new BigDecimal(doubleValue),
+                                literalType);
+                        } catch (NumberFormatException ex) {
+                            // Infinity or NaN.  For these rare cases,
+                            // just skip constant reduction.
+                            failed = true;
+                            result = null;
+                        }
+                    } else {
+                            result = RexLiteral.fromJdbcString(
+                                literalType,
+                                typeName,
+                                stringValue);
                     }
                 }
                 if (tracer.isLoggable(Level.FINE)) {

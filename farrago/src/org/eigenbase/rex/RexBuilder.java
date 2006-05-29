@@ -28,9 +28,7 @@ import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.type.IntervalSqlType;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.type.SqlTypeUtil;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.NlsString;
 import org.eigenbase.util.Util;
@@ -461,9 +459,27 @@ public class RexBuilder
         if (bd.doubleValue() == 0) {
             bd = BigDecimal.ZERO;
         }
+        return makeApproxLiteral(
+            bd,
+            typeFactory.createSqlType(SqlTypeName.Double));
+    }
+
+    /**
+     * Creates an approximate numeric literal (double or float).
+     *
+     * @param bd literal value
+     *
+     * @param type approximate numeric type
+     *
+     * @return new literal
+     */
+    public RexLiteral makeApproxLiteral(BigDecimal bd, RelDataType type)
+    {
+        assert(SqlTypeFamily.ApproximateNumeric.getTypeNames().contains(
+            type.getSqlTypeName()));
         return makeLiteral(
             bd,
-            typeFactory.createSqlType(SqlTypeName.Double),
+            type,
             SqlTypeName.Double);
     }
 
