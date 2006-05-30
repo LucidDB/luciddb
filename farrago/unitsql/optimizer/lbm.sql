@@ -321,6 +321,11 @@ select * from matrix9x9;
 insert into multimulti (a2, b2, c2)
 select * from matrix3x3;
 
+select * from multimulti;
+-- insert target is same as source target
+insert into multimulti select * from multimulti where a1 = 11 and b1 = 12;
+select * from multimulti;
+
 drop table multimulti;
 
 
