@@ -72,8 +72,8 @@ public class SqlAdvisorValidator extends SqlValidatorImpl
     public void validateIdentifier(SqlIdentifier id, SqlValidatorScope scope)
     {
         String ppstring = id.getParserPosition().toString();
-        sqlids.put(ppstring, id);
-        idscopes.put(ppstring, scope);
+        sqlIds.put(ppstring, id);
+        idScopes.put(ppstring, scope);
     }
 
     /**
@@ -103,7 +103,7 @@ public class SqlAdvisorValidator extends SqlValidatorImpl
 
     // we do not need to validate from clause for traversing the parse tree
     // because there is no SqlIdentifier in from clause that need to be
-    // registered into sqlids map
+    // registered into sqlIds map
     protected void validateFrom(
         SqlNode node,
         RelDataType targetRowType,

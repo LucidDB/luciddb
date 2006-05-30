@@ -23,6 +23,7 @@ package org.eigenbase.sql.validate;
 
 import org.eigenbase.sql.SqlJoin;
 import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.SqlWindow;
 
 /**
  * The name-resolution context for expression inside a JOIN clause.
@@ -71,6 +72,16 @@ class JoinScope extends ListScope
             // 'a' is a child namespace of 'a join b' and also of
             // 'a join b join c'.
             usingScope.addChild(ns, alias);
+        }
+    }
+
+    public SqlWindow lookupWindow(String name)
+    {
+        // Lookup window in enclosing select.
+        if (usingScope != null) {
+            return usingScope.lookupWindow(name);
+        } else {
+            return null;
         }
     }
 }
