@@ -1970,7 +1970,10 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         // in the subquery select list.
         assert type instanceof RelRecordType;
         RelRecordType rec = (RelRecordType) type;
-        typeList.add(rec.getFields()[0].getType());
+
+        RelDataType nodeType = rec.getFields()[0].getType();
+        nodeType = typeFactory.createTypeWithNullability(nodeType,true);
+        typeList.add(nodeType);
     }
 
 
