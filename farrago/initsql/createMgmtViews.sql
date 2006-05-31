@@ -34,7 +34,7 @@ create view sessions_view as
 -- todo:  grant this only to a privileged user
 grant select on sessions_view to public;
 
-create function objectsInUse()
+create function objects_in_use()
 returns table(stmt_id int, mof_id varchar(32))
 
 language java
@@ -43,10 +43,19 @@ no sql
 external name 'class net.sf.farrago.syslib.FarragoManagementUDR.objectsInUse';
 
 create view objects_in_use_view as
-  select * from table(objectsInUse());
+  select * from table(objects_in_use());
 
 -- TODO: grant this only to a privileged user
 grant select on objects_in_use_view to public;
+
+-- lie and say this is non-deterministic, since it's usually used
+-- in cases where it would be annoying if it got optimized away
+create function sleep(millis bigint)
+returns integer
+language java
+no sql
+not deterministic
+external name 'class net.sf.farrago.syslib.FarragoManagementUDR.sleep';
 
 -- lets an administrator kill a running session
 -- TODO: grant this only to a privileged user

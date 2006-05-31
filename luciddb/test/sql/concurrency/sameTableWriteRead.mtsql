@@ -1,0 +1,41 @@
+@nolockstep
+
+@setup
+
+-- this test verifies the lock matrix entry for a connection
+-- attempting to read from a table when another connection already
+-- has a write lock on that table; should fail
+
+@end
+
+
+
+@thread writer
+
+-- rendevous to give reader time to prime code cache
+@sync
+
+-- this will grab a write lock and then hold onto it while sleeping for
+-- 20 seconds, which should be plenty of time for the other thread to
+-- attempt to get a read lock
+insert into concurrency.test select sys_boot.mgmt.sleep(20000) from (values(0));
+
+@end
+
+
+
+@thread reader
+
+-- prime the code cache so that select below won't waste time preparing
+select * from concurrency.test;
+
+-- rendezvous to let writer know we're ready
+@sync
+
+-- give the writer 5 seconds to execute and get its lock
+@sleep 5000
+
+-- this should encounter a lock error
+@err select * from concurrency.test;
+
+@end

@@ -22,7 +22,12 @@ package com.lucidera.farrago;
 
 import net.sf.farrago.session.*;
 import net.sf.farrago.db.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.catalog.*;
 
+import org.eigenbase.util.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
 import org.eigenbase.relopt.*;
 
 import java.util.*;
@@ -42,8 +47,8 @@ class LucidDbTxnMgr extends FarragoDbNullTxnMgr
 {
     private final LockManager2 lockMgr;
 
-    private final Integer dbWriteLock;
-    
+    private final String dbWriteLock;
+
     LucidDbTxnMgr()
     {
         // TODO jvs 15-Mar-2006:  start a new LucidDbTrace.java file?
@@ -51,11 +56,12 @@ class LucidDbTxnMgr extends FarragoDbNullTxnMgr
             Logger.getLogger(LucidDbTxnMgr.class.getName()));
         lockMgr = new GenericLockManager(2, loggerFacade);
 
-        // This represents a lock which can be acquired on the
-        // entire database.  It prevents concurrent writes,
-        // but does not prevent reads; for that we use table-level
-        // locking.
-        dbWriteLock = new Integer(1);
+        // This represents a lock which can be acquired on the entire database.
+        // It prevents concurrent writes, but does not prevent reads; for that
+        // we use table-level locking.  By declaring this non-static and using
+        // new String(), this allows for the rather theoretical possibility of
+        // two LucidDB instances running in the same JVM.
+        dbWriteLock = new String(FarragoCatalogInit.LOCALDB_CATALOG_NAME);
     }
     
     // implement FarragoSessionTxnMgr
@@ -71,17 +77,23 @@ class LucidDbTxnMgr extends FarragoDbNullTxnMgr
         TableAccessMap.Mode accessType)
     {
         super.accessTable(txnId, localTableName, accessType);
+
+        SqlIdentifier sqlId =
+            new SqlIdentifier(
+                (String []) localTableName.toArray(Util.emptyStringArray),
+                SqlParserPos.ZERO);
+        String renderedTableName = sqlId.toString();
         
         if (accessType == TableAccessMap.Mode.READ_ACCESS) {
             // S-lock only the table; readers don't care about
             // the database lock
-            lockMgr.lock(txnId, localTableName, 1, true);
+            acquireLock(txnId, localTableName, renderedTableName, 1);
         } else {
             // X-lock the database to exclude other writers but
             // not readers
-            lockMgr.lock(txnId, dbWriteLock, 2, true);
+            acquireLock(txnId, dbWriteLock, dbWriteLock, 2);
             // X-lock the table to exclude readers
-            lockMgr.lock(txnId, localTableName, 2, true);
+            acquireLock(txnId, localTableName, renderedTableName, 2);
         }
     }
 
@@ -92,6 +104,19 @@ class LucidDbTxnMgr extends FarragoDbNullTxnMgr
     {
         super.endTxn(txnId, endType);
         lockMgr.releaseAll(txnId);
+    }
+
+    private void acquireLock(
+        FarragoSessionTxnId txnId,
+        Object resourceId,
+        String renderedName,
+        int lockLevel)
+    {
+        if (lockMgr.tryLock(txnId, resourceId, lockLevel, true)) {
+            return;
+        }
+        throw FarragoResource.instance().LockDenied.ex(
+            renderedName);
     }
 }
 

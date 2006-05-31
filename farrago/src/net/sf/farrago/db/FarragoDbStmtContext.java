@@ -181,6 +181,7 @@ public class FarragoDbStmtContext extends FarragoDbStmtContextBase
             startAutocommitTxn(!isDml);
         }
 
+        FarragoSessionRuntimeContext newContext = null;
         try {
             checkDynamicParamsSet();
             FarragoSessionRuntimeParams params =
@@ -192,8 +193,7 @@ public class FarragoDbStmtContext extends FarragoDbStmtContextBase
             params.resultSetTypeMap = executableStmt.getResultSetTypeMap();
             params.dynamicParamValues = dynamicParamValues;
             assert(runningContext == null);
-            FarragoSessionRuntimeContext newContext = 
-                session.getPersonality().newRuntimeContext(params);
+            newContext = session.getPersonality().newRuntimeContext(params);
             if (allocations != null) {
                 newContext.addAllocation(allocations);
                 allocations = null;
@@ -210,6 +210,7 @@ public class FarragoDbStmtContext extends FarragoDbStmtContextBase
 
             resultSet = executableStmt.execute(newContext);
             runningContext = newContext;
+            newContext = null;
 
             if (queryTimeoutMillis > 0) {
                 AbstractIterResultSet iteratorRS = 
@@ -218,6 +219,10 @@ public class FarragoDbStmtContext extends FarragoDbStmtContextBase
             }
             success = true;
         } finally {
+            if (newContext != null) {
+                newContext.closeAllocation();
+                newContext = null;
+            }
             if (!success) {
                 session.endTransactionIfAuto(false);
             }

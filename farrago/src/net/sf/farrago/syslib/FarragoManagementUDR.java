@@ -36,6 +36,7 @@ import net.sf.farrago.session.FarragoSessionInfo;
 import net.sf.farrago.session.FarragoSessionVariables;
 import net.sf.farrago.runtime.FarragoUdrRuntime;
 
+import org.eigenbase.util.*;
 
 /**
  * FarragoManagementUDR is a set of user-defined routines providing
@@ -159,5 +160,29 @@ public abstract class FarragoManagementUDR
                 s.isTxnInProgress());
             resultInserter.executeUpdate();
         }
+    }
+
+    /**
+     * Sleeps for a given number of milliseconds (checking
+     * for query cancellation every second).
+     *
+     * @param millis number of milliseconds to sleep
+     *
+     * @return 0 (instead of void, so that this can be used as a UDF)
+     */
+    public static int sleep(long millis)
+    {
+        try {
+            while (millis != 0) {
+                long delta = Math.min(1000, millis);
+                Thread.sleep(delta);
+                millis -= delta;
+                FarragoUdrRuntime.checkCancel();
+            }
+        } catch (InterruptedException ex) {
+            // should not happen
+            throw Util.newInternal(ex);
+        }
+        return 0;
     }
 }

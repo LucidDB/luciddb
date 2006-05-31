@@ -1,0 +1,20 @@
+-- setup
+-- end of setup
+
+-- thread writer
+> insert into concurrency.test select sys_boot.mgmt.sleep(20000) from (values(0));
+1 row affected.
+-- end of thread writer
+
+-- thread reader
+> select * from concurrency.test;
++------------+
+| I          |
++------------+
+| 42         |
++------------+
+
+> select * from concurrency.test;
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB.CONCURRENCY.TEST
+-- end of thread reader
+
