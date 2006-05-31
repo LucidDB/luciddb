@@ -151,7 +151,7 @@ public class SelectScope extends ListScope
             orderList = new SqlNodeList(SqlParserPos.ZERO);
             if (children.size() == 1) {
                 final SqlNodeList monotonicExprs =
-                    ((SqlValidatorNamespace) children.get(0)).getMonotonicExprs();
+                    children.get(0).getMonotonicExprs();
                 if (monotonicExprs.size() > 0) {
                     orderList.add(monotonicExprs.get(0));
                 }

@@ -23,9 +23,6 @@ package org.eigenbase.sql.validate;
 
 import org.eigenbase.sql.*;
 
-import java.util.ArrayList;
-import java.util.ListIterator;
-
 /**
  * The name-resolution scope of a OVER clause. The objects visible are
  * those in the parameters found on the left side of the over clause, and
@@ -65,23 +62,11 @@ public class OverScope extends ListScope
         this.overCall = overCall;
     }
 
-    /**
-     * Find out all the valid alternatives for the operand of this node's
-     * operator that matches the parse position indicated by pos
-     *
-     * @return a {@link SqlNode} base of the Over operator subtree
-     */
     public SqlNode getNode()
     {
         return overCall;
     }
 
-    /**
-     *  Test if this node is monontic when applied in this scope
-     * 
-     * @param expr is the base node of a Sql expression to be checked
-     * @return boolean value.  TRUE if expr is Monotonic
-     */
     public boolean isMonotonic(SqlNode expr)
     {
         if (expr.isMonotonic(this)) {
@@ -90,7 +75,7 @@ public class OverScope extends ListScope
 
         if (children.size() == 1) {
             final SqlNodeList monotonicExprs =
-                ((SqlValidatorNamespace) children.get(0)).getMonotonicExprs();
+                children.get(0).getMonotonicExprs();
             for (int i = 0; i < monotonicExprs.size(); i++) {
                 SqlNode monotonicExpr = monotonicExprs.get(i);
                 if (expr.equalsDeep(monotonicExpr, false)) {
@@ -102,4 +87,4 @@ public class OverScope extends ListScope
     }
 }
 
-// End SelectScope.java
+// End OverScope.java

@@ -25,9 +25,7 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.type.SqlTypeFamily;
-import org.eigenbase.sql.validate.SqlMoniker;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.Util;
 
@@ -182,6 +180,7 @@ public class SqlWindowOperator extends SqlOperator {
         final SqlWindow window = (SqlWindow) call;
         final SqlCall windowCall = window.getWindowCall();
         SqlNode [] operands = call.operands;
+//        operandScope = validator.getScope(operands[0]);
         SqlIdentifier refName =
                 (SqlIdentifier) operands[SqlWindow.RefName_OPERAND];
         if (refName != null) {
@@ -208,7 +207,7 @@ public class SqlWindowOperator extends SqlOperator {
             if (0 != orderList.size()) {
                 for (int i = 0; i < orderList.size(); i++) {
                     SqlNode orderItem = orderList.get(i);
-                    orderItem.validate(validator, scope);
+                    orderItem.validateExpr(validator, scope);
                 }
             } else {
                 // list is empty so reset the base reference to null so
