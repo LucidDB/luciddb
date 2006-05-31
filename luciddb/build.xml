@@ -128,6 +128,16 @@ ${farrago.test.jvmargs}
   <!-- directory for init SQL scripts -->
   <property name="initSql.dir" value="${luciddb.dir}/initsql"/>
 
+  <if>
+    <equals arg1="${osfamily}" arg2="unix"/>
+    <then>
+      <property name="lu.release.file" location="${dist.dir}/luciddb.tar.bz2"/>
+    </then>
+    <else>
+      <property name="lu.release.file" location="${dist.dir}/luciddb.zip"/>
+    </else>
+  </if>
+
   <!-- Classpaths -->
 
   <!-- classpath for running tests via ant -->
@@ -841,12 +851,12 @@ ${farrago.test.jvmargs}
 	<exec executable="/bin/tar" spawn="false" dir="${dist.dir}"> 
           <arg value="--bzip2"/>
           <arg value="-cf"/>
-          <arg value="${dist.dir}/luciddb.tar.bz2"/>
+          <arg value="${lu.release.file}"/>
           <arg value="${lucidera.release.spec}"/>
         </exec>
       </then>
       <else>
-        <zip destfile="${dist.dir}/luciddb.zip">
+          <zip destfile="${lu.release.file}">
           <zipfileset dir="${dist.dir}/${lucidera.release.spec}" prefix="${lucidera.release.spec}"/>
         </zip>
       </else>
@@ -855,8 +865,11 @@ ${farrago.test.jvmargs}
   </target>
 
   <target name="clean-dist">
+    <basename property="exclude.file" file="${lu.release.file}"/>
     <delete quiet="true" includeEmptyDirs="true">
-      <fileset dir="${dist.dir}"/>
+      <fileset dir="${dist.dir}">
+          <exclude name="${exclude.file}"/>
+      </fileset>
     </delete>
   </target>
 
