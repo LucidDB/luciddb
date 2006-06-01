@@ -1258,6 +1258,9 @@ public class SqlToRelConverter
         } else if (query.isA(SqlKind.Update)) {
             final SqlUpdate call = (SqlUpdate) query;
             return convertUpdate(call);
+        } else if (query.isA(SqlKind.Merge)) {
+            final SqlMerge call = (SqlMerge) query;
+            return convertMerge(call);
         } else if (query instanceof SqlCall) {
             final SqlCall call = (SqlCall) query;
             final SqlNode [] operands = call.getOperands();
@@ -1306,7 +1309,7 @@ public class SqlToRelConverter
             massagedRel, TableModificationRel.Operation.INSERT, null, false);
     }
 
-    protected RelOptTable getTargetTable(SqlInsert call)
+    protected RelOptTable getTargetTable(SqlNode call)
     {
         SqlValidatorNamespace targetNs = validator.getNamespace(call);
         RelOptTable targetTable =
@@ -1411,9 +1414,7 @@ public class SqlToRelConverter
 
     private RelNode convertDelete(SqlDelete call)
     {
-        SqlIdentifier from = call.getTargetTable();
-        SqlValidatorNamespace targetNamespace = validator.getNamespace(from);
-        RelOptTable targetTable = SqlValidatorUtil.getRelOptTable(targetNamespace, schema);
+        RelOptTable targetTable = getTargetTable(call);
         RelNode sourceRel = convertSelect(call.getSourceSelect());
         return new TableModificationRel(cluster, targetTable, connection,
             sourceRel, TableModificationRel.Operation.DELETE, null, false);
@@ -1421,9 +1422,7 @@ public class SqlToRelConverter
 
     private RelNode convertUpdate(SqlUpdate call)
     {
-        SqlIdentifier from = call.getTargetTable();
-        SqlValidatorNamespace targetNamespace = validator.getNamespace(from);
-        RelOptTable targetTable = SqlValidatorUtil.getRelOptTable(targetNamespace, schema);
+        RelOptTable targetTable = getTargetTable(call);
 
         // convert update column list from SqlIdentifier to String
         List targetColumnNameList = new ArrayList();
@@ -1440,6 +1439,113 @@ public class SqlToRelConverter
         return new TableModificationRel(cluster, targetTable, connection,
             sourceRel, TableModificationRel.Operation.UPDATE,
             targetColumnNameList, false);
+    }
+    
+    private RelNode convertMerge(SqlMerge call)
+    {
+        RelOptTable targetTable = getTargetTable(call);
+        
+        // convert update column list from SqlIdentifier to String
+        List targetColumnNameList = new ArrayList();
+        List targetColumnList =
+            call.getUpdateCall().getTargetColumnList().getList();
+        Iterator targetColumnIter = targetColumnList.iterator();
+        while (targetColumnIter.hasNext()) {
+            SqlIdentifier id = (SqlIdentifier) targetColumnIter.next();
+            String name = id.getSimple();
+            targetColumnNameList.add(name);
+        }
+        
+        // replace the projection of the source select with a
+        // projection that contains the following:
+        // 1) the expressions corresponding to the new insert row
+        // 2) all columns from the target table
+        // 3) the set expressions in the update call
+        
+        // first, convert the merge's source select to construct the columns
+        // from the target table and the set expressions in the update call
+        RelNode mergeSourceRel = convertSelect(call.getSourceSelect()); 
+      
+        // then, convert the insert statement so we can get the insert
+        // values expressions
+        SqlInsert insertCall = call.getInsertCall();
+        RelNode insertRel = convertInsert(insertCall);
+        
+        // there are 2 level of projections in the insert source so we also
+        // need to create 2 projects that correspond to those projects
+        RexNode[] level2InsertExprs = 
+            ((ProjectRel) insertRel.getInput(0)).getProjectExps();
+        RexNode[] level1InsertExprs =
+            ((ProjectRel) insertRel.getInput(0).getInput(0)).
+                getProjectExps();
+        
+        // the first (or bottom-most) project contains the actual values
+        // expressions, target columns, and update set expressions
+        JoinRel joinRel = (JoinRel) mergeSourceRel.getInput(0);
+        int nSourceFields = joinRel.getLeft().getRowType().getFieldCount();
+        RelNode massagedRel = createSourceProject(
+            joinRel, level1InsertExprs, (ProjectRel) mergeSourceRel,
+            nSourceFields, false);
+
+        // in the second project, everything is a reference to the
+        // bottom-most project expressions, except for the default values
+        // corresponding to unspecified insert target columns
+        massagedRel = createSourceProject(
+            massagedRel, level2InsertExprs, (ProjectRel) massagedRel,
+            level1InsertExprs.length, true);        
+        
+        return new TableModificationRel(cluster, targetTable, connection,
+            massagedRel, TableModificationRel.Operation.MERGE,
+            targetColumnNameList, false);
+    }
+    
+    /**
+     * Creates a projection that consists of expressions corresponding to
+     * insert values followed by the columns from the target table and update
+     * set expressions.
+     * 
+     * @param projChild the relnode that will be the child of the created
+     * projection
+     * @param insertExprs the insert expressions that will make up the first
+     * part of the projection
+     * @param baseProject the orginal projection that consists of the target
+     * table columns and update set expressions
+     * @param nOrigInsertFields the number of fields in the base project that
+     * correspond to insert exprs
+     * @param createRefs true if the target table columns and update set
+     * expressions should be created as references rather than just using the
+     * original expression
+     * 
+     * @return created projection
+     */
+    private RelNode createSourceProject(
+        RelNode projChild, RexNode[] insertExprs, ProjectRel baseProject,
+        int nOrigInsertFields, boolean createRefs)
+    {    
+        // copy the expressions from the original projection corresponding 
+        // to the target table and the update set expressions; these
+        // expressions follow the fields corresponding to the source
+        
+        RexNode[] baseProjExprs = baseProject.getProjectExps();
+       
+        int nTargetFields = insertExprs.length;
+        int newNumProjFields =
+            baseProject.getRowType().getFieldCount() - nOrigInsertFields +
+                nTargetFields;
+        RexNode[] newSourceExps = new RexNode[newNumProjFields];
+        System.arraycopy(insertExprs, 0, newSourceExps, 0, nTargetFields);
+        for (int i = nTargetFields, j = nOrigInsertFields;
+            i < newNumProjFields; i++, j++)
+        {
+            if (createRefs) {
+                newSourceExps[i] = rexBuilder.makeInputRef(
+                    baseProjExprs[j].getType(), j);
+            } else {
+                newSourceExps[i] = baseProjExprs[j];
+            }
+        }
+        
+        return CalcRel.createProject(projChild, newSourceExps, null);
     }
 
     /**

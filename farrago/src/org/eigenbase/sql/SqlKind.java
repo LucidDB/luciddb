@@ -89,7 +89,7 @@ public class SqlKind extends EnumeratedValues.BasicValue
     /** UPDATE statement */
     public static final int UpdateORDINAL = 9;
     public static final SqlKind Update = new SqlKind("Update", UpdateORDINAL);
-
+ 
     /** Dynamic Param */
     public static final int DynamicParamORDINAL = 10;
     public static final SqlKind DynamicParam =
@@ -124,6 +124,10 @@ public class SqlKind extends EnumeratedValues.BasicValue
     /** Window specification */
     public static final SqlKind Window = new SqlKind("Window", WindowORDINAL);
 
+    /** MERGE statement */
+    public static final int MergeORDINAL = 18;
+    public static final SqlKind Merge = new SqlKind("Merge", MergeORDINAL);
+    
     // binary operators
     // arithmetic 100 - 109
 
@@ -416,6 +420,7 @@ public class SqlKind extends EnumeratedValues.BasicValue
             // the basics
             Other, Select, Join, Identifier, Literal, Function, Explain,
             Insert, Update, Delete, Union, Except, Intersect, As, Over, Window,
+            Merge,
             // arithmetic
             Times, Divide, Plus, Minus,
             // comparisons
@@ -464,7 +469,8 @@ public class SqlKind extends EnumeratedValues.BasicValue
         case SetQueryORDINAL:
             return (this == Union) || (this == Intersect) || (this == Except);
         case DmlORDINAL:
-            return (this == Insert) || (this == Delete) || (this == Update);
+            return (this == Insert) || (this == Delete) || (this == Update)
+                || (this == Merge);
         case ExpressionORDINAL:
             return !((this == As) || (this == Descending) || (this == Select)
                 || (this == Join) || (this == Function) || (this == Cast)

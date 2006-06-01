@@ -37,11 +37,6 @@ void LhxHashDataAccessor::init(TupleDescriptor const &inputDataDesc)
     dataAccessor.compute(dataDescriptor);
 }
 
-uint LhxHashDataAccessor::getStorageSize(TupleData const &inputTuple)
-{
-    return dataAccessor.getByteCount(inputTuple) + getBufferOffset();
-}
-
 void LhxHashDataAccessor::checkStorageSize(TupleData const &inputTuple,
     uint maxBufferSize)
 {
@@ -147,11 +142,6 @@ void LhxHashKeyAccessor::addData(PBuffer inputData)
         firstData.setNext(inputData, firstDataNode);
     }
     setFirstData(inputData);
-}
-
-uint LhxHashKeyAccessor::getStorageSize(TupleData const &inputTuple)
-{
-    return keyAccessor.getByteCount(inputTuple) + getBufferOffset();
 }
 
 void LhxHashKeyAccessor::checkStorageSize(TupleData const &inputTuple,
@@ -260,6 +250,8 @@ void LhxHashBlockAccessor::setCurrent(PBuffer blockPtrInit, bool valid)
     if (!valid) {
         /*
          * Clear the memory if it is not valid.
+         * The next link is not reset however since this block can be part of a
+         * reusable block list.
          */
         memset(freePtr, 0, blockUsableSize);
     } else {
@@ -417,32 +409,37 @@ PBuffer LhxHashTable::allocBuffer(uint bufSize)
         /*
          * Current block out of memory
          */
-        PBuffer newBlock = allocBlock();
-            
-        if (newBlock) {
-            /*
-             * New block is linked to the end of the allocated block list.
-             */
+        PBuffer nextBlock = nodeBlockAccessor.getNext();
+        if (nextBlock) {
+            currentBlock = nextBlock;
+        } else {
+            PBuffer newBlock = allocBlock();
             nodeBlockAccessor.setNext(newBlock);
-            currentBlock = newBlock;                
+            currentBlock = newBlock;
+        }
+        
+        if (currentBlock) {
             nodeBlockAccessor.setCurrent(currentBlock, false);
-
             resultBuf = nodeBlockAccessor.allocBuffer(bufSize);
-
+            
             assert (resultBuf);
         }
     }
     
     return resultBuf;
-}        
+}     
 
-bool LhxHashTable::allocateResources(uint numSlotsInit)
+bool LhxHashTable::allocateResources(bool reuse)
 {
-    numSlots = numSlotsInit;
-    
+    assert (numSlots != 0);
+
     PBuffer newBlock;
 
-    currentBlock = firstBlock = allocBlock();
+    if (!reuse) {
+        firstBlock = allocBlock();
+    }
+
+    currentBlock = firstBlock;
     
     /*
      * Should be able to allocate at least one block.
@@ -473,11 +470,16 @@ bool LhxHashTable::allocateResources(uint numSlotsInit)
     int numSlotsToAlloc = numSlots - numSlotsPerBlock;
 
     while (numSlotsToAlloc > 0) {
-            
-        newBlock = allocBlock();
+        newBlock = NULL;
+        if (reuse) {
+            newBlock = nodeBlockAccessor.getNext();
+        }
 
         if (!newBlock) {
-            return false;
+            newBlock = allocBlock();
+            if (!newBlock) {
+                return false;
+            }
         }
             
         /*
@@ -502,21 +504,25 @@ bool LhxHashTable::allocateResources(uint numSlotsInit)
     return true;
 }
 
-void LhxHashTable::releaseResources()
+void LhxHashTable::releaseResources(bool reuse)
 {
     /*
      * Note: User of hash table needs to supply it with a private
      * scratchAccessor; otherwise, this call here can deallocate pages from
      * other clients of the shared scratchAccessor.
      */
-    scratchAccessor.pSegment->deallocatePageRange(NULL_PAGE_ID, NULL_PAGE_ID);
+    if (!reuse && scratchAccessor.pSegment) {
+        scratchAccessor.pSegment->deallocatePageRange(NULL_PAGE_ID,
+            NULL_PAGE_ID);
+        firstBlock = NULL;
+        currentBlockCount = 0;
+    }
 
     hashKeyAccessor.reset();
     hashDataAccessor.reset();
     blockAccessor.reset();
     nodeBlockAccessor.reset();
-    currentBlock = firstBlock = NULL;
-    currentBlockCount = 0;
+    currentBlock = NULL;
 }
 
 uint LhxHashTable::blocksNeeded(
@@ -553,6 +559,67 @@ uint LhxHashTable::blocksNeeded(
         + cndKeys * tmpKey.getMaxStorageSize()
         + numRows * tmpData.getMaxStorageSize();
     return (uint)ceil(totalBytes / usablePageSize);
+}
+
+void LhxHashTable::calculateNumSlots(
+    double cndKeys,
+    uint usablePageSize,
+    uint numBlocks)
+{
+    /*
+     * Use at least 1%, but no more than 10% of cache pages to store slots.
+     */
+    uint slotsLow = numBlocks * usablePageSize / sizeof(PBuffer) / 100;
+    uint slotsHigh = numBlocks * usablePageSize / sizeof(PBuffer) / 10;
+
+    numSlots =
+        max(slotsNeeded(cndKeys), slotsLow);
+
+    numSlots = min(numSlots, slotsHigh);    
+}
+
+void LhxHashTable::calculateSize(
+    double numRows,
+    double cndKeys,
+    TupleDescriptor &keyDesc,
+    TupleDescriptor &dataDesc,
+    uint usablePageSizeInit,
+    uint cacheBlocksLimit,
+    uint &numBlocks)
+{
+    uint usablePageSize = usablePageSizeInit - sizeof(PBuffer);
+
+    LhxHashKeyAccessor tmpKey;
+    LhxHashDataAccessor tmpData;
+
+    TupleProjection keyColsProj;
+    TupleProjection aggsProj;
+
+    /*
+     * Pretend there is no aggregate fields.
+     */
+    for (int i = 0; i < keyDesc.size(); i ++) {
+        keyColsProj.push_back(i);
+    }
+
+    tmpKey.init(keyDesc, keyColsProj, aggsProj);
+    tmpData.init(dataDesc);
+
+    double totalBytes = 
+        slotsNeeded(cndKeys) * sizeof(PBuffer)
+        + cndKeys * tmpKey.getMaxStorageSize()
+        + numRows * tmpData.getMaxStorageSize();
+    numBlocks = (uint)ceil(totalBytes / usablePageSize);
+
+    /*
+     * Cache pages requirement: at least 10000 blocks
+     * (or 40M for blocksize of 4K)
+     */
+    numBlocks =
+        min(max((uint32_t)10000, numBlocks),
+            cacheBlocksLimit);
+
+    calculateNumSlots(cndKeys, usablePageSizeInit, numBlocks);
 }
 
 uint LhxHashTable::bytesNeeded(

@@ -499,6 +499,11 @@ TBD: naming convention for extension features
     <text>INTERSECT not supported</text>
 </exception>
 
+<exception name="SQLFeature_F312">
+    <property name="FeatureDefinition">SQL:2003 Part 2 Annex F</property>
+    <text>MERGE not supported</text>
+</exception>
+
 <exception name="SQLFeature_E071_03">
     <property name="FeatureDefinition">SQL:2003 Part 2 Annex F</property>
     <text>EXCEPT not supported</text>

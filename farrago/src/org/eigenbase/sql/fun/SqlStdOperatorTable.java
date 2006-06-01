@@ -635,6 +635,9 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
 
     public static final SqlSpecialOperator updateOperator =
         new SqlSpecialOperator("UPDATE", SqlKind.Update);
+    
+    public static final SqlSpecialOperator mergeOperator =
+        new SqlSpecialOperator("MERGE", SqlKind.Merge);
 
     public static final SqlSpecialOperator explainOperator =
         new SqlSpecialOperator("EXPLAIN", SqlKind.Explain);

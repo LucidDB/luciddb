@@ -179,9 +179,8 @@
 '    FennelCalcRel(expr#0..2=[{inputs}], ENAME=[$t1])'
 '      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
 '        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$ENAME]])'
-'        FennelAggRel(groupCount=[1])'
-'          FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'            FennelValuesRel(tuples=[[{ 110 }, { 110 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }]])'
+'        LhxAggRel(groupCount=[1])'
+'          FennelValuesRel(tuples=[[{ 110 }, { 110 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select ename from lhxemps
 . . . . . . . . > where empno in 
@@ -457,10 +456,10 @@
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from lhxemps2, lhxemps3
 . . . . . . . . > where lhxemps2.enameA = lhxemps3.enameB
-. . . . . . . . > order by 1;
+. . . . . . . . > order by 1, 2;
 'column0'
 'FennelToIteratorConverter'
-'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    FennelCalcRel(expr#0..1=[{inputs}], expr#2=[=($t0, $t1)], proj#0..1=[{exprs}], $condition=[$t2])'
 '      FennelCartesianProductRel(leftouterjoin=[false])'
 '        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS2$ENAMEA]])'
@@ -468,7 +467,7 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps2, lhxemps3
 . . . . . . . . > where lhxemps2.enameA = lhxemps3.enameB
-. . . . . . . . > order by 1;
+. . . . . . . . > order by 1, 2;
 'ENAMEA','ENAMEB'
 'Eric','Eric                '
 'Fred','Fred                '
@@ -495,17 +494,17 @@
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from lhxemps3, lhxemps4
 . . . . . . . . > where lhxemps3.enameB = lhxemps4.enameC
-. . . . . . . . > order by 1;
+. . . . . . . . > order by 1, 2;
 'column0'
 'FennelToIteratorConverter'
-'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
 '      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS3$ENAMEB]])'
 '      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS4$ENAMEC]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps3, lhxemps4
 . . . . . . . . > where lhxemps3.enameB = lhxemps4.enameC
-. . . . . . . . > order by 1;
+. . . . . . . . > order by 1, 2;
 'ENAMEB','ENAMEC'
 'Eric                ','Eric                '
 'Fred                ','Fred                '
@@ -520,17 +519,17 @@
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from lhxemps3 left outer join lhxemps4
 . . . . . . . . > on lhxemps3.enameB = lhxemps4.enameC
-. . . . . . . . > order by 1;
+. . . . . . . . > order by 1, 2;
 'column0'
 'FennelToIteratorConverter'
-'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])'
 '      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS3$ENAMEB]])'
 '      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS4$ENAMEC]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps3 left outer join lhxemps4
 . . . . . . . . > on lhxemps3.enameB = lhxemps4.enameC
-. . . . . . . . > order by 1;
+. . . . . . . . > order by 1, 2;
 'ENAMEB','ENAMEC'
 '',''
 'Eric                ','Eric                '
@@ -542,20 +541,20 @@
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from lhxemps3 right outer join lhxemps4
 . . . . . . . . > on lhxemps3.enameB = lhxemps4.enameC
-. . . . . . . . > order by 1;
+. . . . . . . . > order by 1, 2;
 'column0'
 'FennelToIteratorConverter'
-'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHT])'
 '      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS3$ENAMEB]])'
 '      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS4$ENAMEC]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps3 right outer join lhxemps4
 . . . . . . . . > on lhxemps3.enameB = lhxemps4.enameC
-. . . . . . . . > order by 1;
+. . . . . . . . > order by 1, 2;
 'ENAMEB','ENAMEC'
-'','Adel                '
 '',''
+'','Adel                '
 'Eric                ','Eric                '
 'Fred                ','Fred                '
 'John                ','John                '
@@ -564,21 +563,21 @@
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from lhxemps3 full outer join lhxemps4
 . . . . . . . . > on lhxemps3.enameB = lhxemps4.enameC
-. . . . . . . . > order by 1;
+. . . . . . . . > order by 1, 2;
 'column0'
 'FennelToIteratorConverter'
-'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[FULL])'
 '      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS3$ENAMEB]])'
 '      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS4$ENAMEC]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps3 full outer join lhxemps4
 . . . . . . . . > on lhxemps3.enameB = lhxemps4.enameC
-. . . . . . . . > order by 1;
+. . . . . . . . > order by 1, 2;
 'ENAMEB','ENAMEC'
 '',''
-'','Adel                '
 '',''
+'','Adel                '
 'Eric                ','Eric                '
 'Fred                ','Fred                '
 'John                ','John                '
@@ -594,10 +593,10 @@
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from lhxemps3 inner join lhxemps4
 . . . . . . . . > on lhxemps3.enameB = cast(lhxemps4.enameC as char(20))
-. . . . . . . . > order by 1;
+. . . . . . . . > order by 1, 2;
 'column0'
 'FennelToIteratorConverter'
-'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    FennelCalcRel(expr#0..1=[{inputs}], expr#2=[CAST($t1):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#3=[=($t0, $t2)], proj#0..1=[{exprs}], $condition=[$t3])'
 '      FennelCartesianProductRel(leftouterjoin=[false])'
 '        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS3$ENAMEB]])'
@@ -619,17 +618,17 @@
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from lhxemps5 full outer join lhxemps6
 . . . . . . . . > on lhxemps5.enameB = lhxemps6.enameC
-. . . . . . . . > order by 1;
+. . . . . . . . > order by 1, 2;
 'column0'
 'FennelToIteratorConverter'
-'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[FULL])'
 '      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS5]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS5$ENAMEB]])'
 '      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS6]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS6$ENAMEC]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps5 full outer join lhxemps6
 . . . . . . . . > on lhxemps5.enameB = lhxemps6.enameC
-. . . . . . . . > order by 1;
+. . . . . . . . > order by 1, 2;
 'ENAMEB','ENAMEC'
 '','Adel                '
 'Leo                 ',''
@@ -647,10 +646,9 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelCalcRel(expr#0=[{inputs}], DEPTNO=[$t0])'
-'      FennelAggRel(groupCount=[1])'
-'        FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'          FennelRenameRel(fieldNames=[[$f0]])'
-'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO]])'
+'      LhxAggRel(groupCount=[1])'
+'        FennelRenameRel(fieldNames=[[$f0]])'
+'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select deptno from lhxemps group by deptno order by 1;
 'DEPTNO'
@@ -663,9 +661,8 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelAggRel(groupCount=[1])'
-'      FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO]])'
+'    LhxAggRel(groupCount=[1])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select distinct deptno from lhxemps order by 1;
 'DEPTNO'
@@ -692,12 +689,28 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelCalcRel(expr#0..1=[{inputs}], EXPR$0=[$t1])'
-'      FennelAggRel(groupCount=[1], agg#0=[COUNT(1)])'
-'        FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'      LhxAggRel(groupCount=[1], agg#0=[COUNT(1)])'
+'        FennelRenameRel(fieldNames=[[$f0, $f1]])'
+'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2, 0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$EMPNO]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select count(empno) from lhxemps group by deptno order by 1;
+'EXPR$0'
+'1'
+'1'
+'2'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select count(distinct empno) from lhxemps group by deptno order by 1;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..1=[{inputs}], EXPR$0=[$t1])'
+'      LhxAggRel(groupCount=[1], agg#0=[COUNT(1)])'
+'        LhxAggRel(groupCount=[2])'
 '          FennelRenameRel(fieldNames=[[$f0, $f1]])'
 '            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2, 0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$EMPNO]])'
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select count(empno) from lhxemps group by deptno order by 1;
+0: jdbc:farrago:> select count(distinct empno) from lhxemps group by deptno order by 1;
 'EXPR$0'
 '1'
 '1'
@@ -722,10 +735,9 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelCalcRel(expr#0..1=[{inputs}], EXPR$0=[$t1])'
-'      FennelAggRel(groupCount=[1], agg#0=[COUNT()])'
-'        FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'          FennelRenameRel(fieldNames=[[$f0]])'
-'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO]])'
+'      LhxAggRel(groupCount=[1], agg#0=[COUNT()])'
+'        FennelRenameRel(fieldNames=[[$f0]])'
+'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select count(*) from lhxemps group by deptno order by 1;
 'EXPR$0'
@@ -755,10 +767,9 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelCalcRel(expr#0..1=[{inputs}], EXPR$0=[$t1])'
-'      FennelAggRel(groupCount=[1], agg#0=[COUNT()])'
-'        FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'          FennelRenameRel(fieldNames=[[$f0]])'
-'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO]])'
+'      LhxAggRel(groupCount=[1], agg#0=[COUNT()])'
+'        FennelRenameRel(fieldNames=[[$f0]])'
+'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select count(*) from lhxemps group by deptno order by 1;
 'EXPR$0'
@@ -777,10 +788,9 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelCalcRel(expr#0..1=[{inputs}], EXPR$0=[$t1])'
-'      FennelAggRel(groupCount=[1], agg#0=[MAX(1)])'
-'        FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'          FennelRenameRel(fieldNames=[[$f0, $f1]])'
-'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$ENAME]])'
+'      LhxAggRel(groupCount=[1], agg#0=[MAX(1)])'
+'        FennelRenameRel(fieldNames=[[$f0, $f1]])'
+'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$ENAME]])'
 0: jdbc:farrago:> select max(ename) from lhxemps group by deptno order by 1;
 'EXPR$0'
 'abcdef'
@@ -796,13 +806,12 @@
 'column0'
 'IterCalcRel(expr#0..2=[{inputs}], proj#0..2=[{exprs}])'
 '  FennelToIteratorConverter'
-'    FennelAggRel(groupCount=[1], agg#0=[MIN(1)], agg#1=[MAX(1)])'
-'      FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'        FennelRenameRel(fieldNames=[[$f0, $f1]])'
-'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$ENAME]])'
+'    LhxAggRel(groupCount=[1], agg#0=[MIN(1)], agg#1=[MAX(1)])'
+'      FennelRenameRel(fieldNames=[[$f0, $f1]])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$ENAME]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select empno, min(ename), max(ename) from lhxemps group by empno;
-Error: Row size (6004 bytes) exceeds maximum (4096 bytes); row data:  [ 'abc                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ', 'abc                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ', 'abc                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ' ] (state=,code=0)
+Error: Row size (6013 bytes) exceeds maximum (4092 bytes); row data:  [ 'abc                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ', 'abc                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ', 'abc                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ' ] (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> ------------------------------------
 0: jdbc:farrago:> -- the following are from agg.sql --
@@ -853,7 +862,7 @@ Error: Row size (6004 bytes) exceeds maximum (4096 bytes); row data:  [ 'abc    
 '20','2'
 '40','1'
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Issue the same statement again to make sure SortedAggStream
+0: jdbc:farrago:> -- Issue the same statement again to make sure LhxAggStream
 0: jdbc:farrago:> -- is in good state when reopened
 0: jdbc:farrago:> select deptno, count(*) from emps group by deptno order by 1;
 'DEPTNO','EXPR$1'
@@ -963,10 +972,9 @@ Error: Row size (6004 bytes) exceeds maximum (4096 bytes); row data:  [ 'abc    
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelCalcRel(expr#0..1=[{inputs}], proj#0..1=[{exprs}])'
-'      FennelAggRel(groupCount=[1], agg#0=[COUNT()])'
-'        FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'          FennelRenameRel(fieldNames=[[$f0]])'
-'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
+'      LhxAggRel(groupCount=[1], agg#0=[COUNT()])'
+'        FennelRenameRel(fieldNames=[[$f0]])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select d.name, count(*) from emps e, depts d
@@ -975,12 +983,11 @@ Error: Row size (6004 bytes) exceeds maximum (4096 bytes); row data:  [ 'abc    
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelCalcRel(expr#0..1=[{inputs}], proj#0..1=[{exprs}])'
-'      FennelAggRel(groupCount=[1], agg#0=[COUNT()])'
-'        FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'          FennelCalcRel(expr#0..2=[{inputs}], $f0=[$t2])'
-'            LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
-'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
-'              FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'      LhxAggRel(groupCount=[1], agg#0=[COUNT()])'
+'        FennelCalcRel(expr#0..2=[{inputs}], $f0=[$t2])'
+'          LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
+'            FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select deptno, gender, min(age), max(age) from emps
@@ -989,10 +996,9 @@ Error: Row size (6004 bytes) exceeds maximum (4096 bytes); row data:  [ 'abc    
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    FennelCalcRel(expr#0..3=[{inputs}], proj#0..3=[{exprs}])'
-'      FennelAggRel(groupCount=[2], agg#0=[MIN(2)], agg#1=[MAX(2)])'
-'        FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
-'          FennelRenameRel(fieldNames=[[$f0, $f1, $f2]])'
-'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 3, 6]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'      LhxAggRel(groupCount=[2], agg#0=[MIN(2)], agg#1=[MAX(2)])'
+'        FennelRenameRel(fieldNames=[[$f0, $f1, $f2]])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 3, 6]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select sum(age) from emps group by deptno order by 1;
@@ -1000,10 +1006,9 @@ Error: Row size (6004 bytes) exceeds maximum (4096 bytes); row data:  [ 'abc    
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelCalcRel(expr#0..1=[{inputs}], EXPR$0=[$t1])'
-'      FennelAggRel(groupCount=[1], agg#0=[SUM(1)])'
-'        FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'          FennelRenameRel(fieldNames=[[$f0, $f1]])'
-'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 6]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'      LhxAggRel(groupCount=[1], agg#0=[SUM(1)])'
+'        FennelRenameRel(fieldNames=[[$f0, $f1]])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 6]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --------------
 0: jdbc:farrago:> -- Clean up --

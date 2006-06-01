@@ -108,7 +108,7 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
     public void registerRelMetadataProviders(ChainedRelMetadataProvider chain)
     {
         chain.addProvider(
-            new LoptMetadataProvider());
+            new LoptMetadataProvider(database.getSystemRepos()));
     }
 
     private FarragoSessionPlanner newHepPlanner(
@@ -307,8 +307,7 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         builder.addRuleInstance(ReduceAggregatesRule.instance);
         
         // Use hash aggregation wherever possible.
-        // Temporarily disabled - zfong 5/25/06
-        // builder.addRuleInstance(new LhxAggRule());
+        builder.addRuleInstance(new LhxAggRule());
 
         // Convert remaining filters and projects to logical calculators,
         // merging adjacent ones.

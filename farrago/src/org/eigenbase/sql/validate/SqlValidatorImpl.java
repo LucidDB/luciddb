@@ -710,7 +710,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             int ordinal = 0;
             while (iter.hasNext()) {
                 SqlNode exp = (SqlNode) iter.next();
-
+             
                 // Force unique aliases to avoid a duplicate for Y with
                 // SET X=Y
                 String alias = SqlUtil.deriveAliasFromOrdinal(ordinal);
@@ -727,6 +727,58 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                     selectList, sourceTable, call.getCondition(),
                     null, null, null, null, SqlParserPos.ZERO);
             call.setOperand(SqlUpdate.SOURCE_SELECT_OPERAND, select);
+        } else if (node.isA(SqlKind.Merge)) {
+            SqlMerge call = (SqlMerge) node;
+            SqlUpdate updateStmt = call.getUpdateCall();
+            // just clone the select list from the update statement's source
+            // since it's the same as what we want for the select list of
+            // the merge source -- '*' followed by the update set expressions
+            SqlNodeList selectList = (SqlNodeList)
+                updateStmt.getSourceSelect().getSelectList().clone();
+            SqlNode targetTable = call.getTargetTable();
+            if (call.getAlias() != null) {
+                targetTable = SqlValidatorUtil.addAlias(
+                    targetTable, call.getAlias().getSimple());
+            }
+            // Source select for the merge is a left outer join between the
+            // source in the USING clause and the target table; need to clone
+            // source table reference in order for validation to work
+            SqlNode sourceTableRef = call.getSourceTableRef();
+            call.setSourceTableRef(sourceTableRef);
+            SqlNode leftJoinTerm = (SqlNode) sourceTableRef.clone();
+            SqlNode outerJoin = SqlStdOperatorTable.joinOperator.createCall(
+                leftJoinTerm,
+                SqlLiteral.createBoolean(false, SqlParserPos.ZERO),
+                SqlLiteral.createSymbol(
+                    SqlJoinOperator.JoinType.Left, SqlParserPos.ZERO),
+                targetTable,
+                SqlLiteral.createSymbol(
+                    SqlJoinOperator.ConditionType.On, SqlParserPos.ZERO),
+                call.getCondition(),
+                SqlParserPos.ZERO);
+            SqlSelect select =
+                SqlStdOperatorTable.selectOperator.createCall(null,
+                    selectList, outerJoin, null,
+                    null, null, null, null, SqlParserPos.ZERO);
+            call.setOperand(SqlMerge.SOURCE_SELECT_OPERAND, select);
+            
+            // Source for the insert call is a select of the source table
+            // reference with the select list being the value expressions;
+            // note that the values clause has already been converted to a
+            // select on the values row constructor; so we need to extract
+            // that via the from clause on the select
+            SqlInsert insertCall = call.getInsertCall();
+            SqlSelect valuesSelect = (SqlSelect) insertCall.getSource();
+            SqlCall valuesCall = (SqlCall) valuesSelect.getFrom();
+            SqlCall rowCall = (SqlCall) valuesCall.getOperands()[0];
+            selectList = new SqlNodeList(
+                Arrays.asList(rowCall.getOperands()), SqlParserPos.ZERO);
+            SqlNode insertSource = (SqlNode) sourceTableRef.clone();
+            select =
+                SqlStdOperatorTable.selectOperator.createCall(null,
+                    selectList, insertSource, null, null, null, null, null,
+                    SqlParserPos.ZERO);
+            insertCall.setOperand(SqlInsert.SOURCE_OPERAND, select);
         }
         return node;
     }
@@ -1411,6 +1463,36 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                 parentScope,
                 usingScope,
                 updateCall.getSourceSelect(),
+                null,
+                false);
+            break;
+            
+        case SqlKind.MergeORDINAL:
+            validateFeature(
+                EigenbaseResource.instance().SQLFeature_F312,
+                node.getParserPosition());
+            SqlMerge mergeCall = (SqlMerge) node;
+            MergeNamespace mergeNs = new MergeNamespace(this, mergeCall);
+            registerNamespace(usingScope, null, mergeNs, forceNullable);
+            registerQuery(
+                parentScope,
+                usingScope,
+                mergeCall.getSourceSelect(),
+                null,
+                false);
+            // update call can reference either the source table reference
+            // or the target table, so set its parent scope to the merge's
+            // source select
+            registerQuery(
+                (ListScope) whereScopes.get(mergeCall.getSourceSelect()),
+                null,
+                mergeCall.getUpdateCall(),
+                null,
+                false);
+            registerQuery(
+                parentScope,
+                null,
+                mergeCall.getInsertCall(),
                 null,
                 false);
             break;
@@ -2114,14 +2196,9 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
     }
 
     public void validateUpdate(SqlUpdate call)
-    {
-        SqlSelect select = call.getSourceSelect();
-
-        SqlIdentifier id = call.getTargetTable();
-        final String name = id.names[id.names.length - 1];
-        final ListScope fromScope = (ListScope) getWhereScope(select);
+    {    
         IdentifierNamespace targetNamespace =
-            (IdentifierNamespace) fromScope.getChild(name);
+            (IdentifierNamespace) getNamespace(call.getTargetTable());
         validateNamespace(targetNamespace);
         SqlValidatorTable table = targetNamespace.getTable();
 
@@ -2131,11 +2208,30 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                 call.getTargetColumnList(),
                 true);
 
+        SqlSelect select = call.getSourceSelect();
         validateSelect(select, targetRowType);
 
         RelDataType sourceRowType = getNamespace(select).getRowType();
         checkTypeAssignment(sourceRowType, targetRowType, call);
 
+        validateAccess(table, SqlAccessEnum.UPDATE);
+    }
+    
+    public void validateMerge(SqlMerge call)
+    {
+        SqlSelect sqlSelect = call.getSourceSelect();
+        // REVIEW zfong 5/25/06 - Does an actual type have to be passed
+        // into validateSelect()?
+        validateSelect(sqlSelect, unknownType);
+
+        IdentifierNamespace targetNamespace =
+            (IdentifierNamespace) getNamespace(call.getTargetTable());
+        validateNamespace(targetNamespace);      
+        
+        validateUpdate(call.getUpdateCall());
+        validateInsert(call.getInsertCall());
+
+        SqlValidatorTable table = targetNamespace.getTable();
         validateAccess(table, SqlAccessEnum.UPDATE);
     }
 
@@ -2536,6 +2632,28 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         public DeleteNamespace(
             SqlValidatorImpl validator,
             SqlDelete node)
+        {
+            super(validator, node.getTargetTable());
+            this.node = node;
+            assert node != null;
+        }
+
+        public SqlNode getNode()
+        {
+            return node;
+        }
+    }
+    
+    /**
+     * Namespace for a MERGE statement.
+     */
+    private static class MergeNamespace extends IdentifierNamespace
+    {
+        private final SqlMerge node;
+
+        public MergeNamespace(
+            SqlValidatorImpl validator,
+            SqlMerge node)
         {
             super(validator, node.getTargetTable());
             this.node = node;

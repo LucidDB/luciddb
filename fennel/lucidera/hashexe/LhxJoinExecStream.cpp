@@ -134,31 +134,24 @@ void LhxJoinExecStream::prepare(
     hashInfo.isKeyColVarChar.push_back(isLeftKeyVarChar);
     hashInfo.isKeyColVarChar.push_back(isRightKeyVarChar);
 
-    /* 
-     * number of block required to perform the join, as given by the optimizer,
-     * completely in memory.
+    /*
+     * Let hash table use at most 50% of the allocated cache size.
      */
+    uint cacheLimit = 
+        (params.scratchAccessor.pCacheAccessor)->getCache()
+        ->getMaxLockedPages() / 2;
+
     uint usablePageSize = 
         (params.scratchAccessor.pSegment)->getUsablePageSize();
 
-    /*
-     * Cache pages requirement: put at 100000 blocks (or 400M for blocksize of 4K)
+    /* 
+     * Calculate the number of blocks required to perform the join, as given by
+     * the optimizer, completely in memory.
      */
-    uint hashTableBlocks = 
-        hashTable.blocksNeeded(
-            params.numRows, params.cndKeys, 
-            keyDesc, dataDesc, usablePageSize);
-
-    numBlocksHashTable = 
-        max((uint32_t)10000, hashTableBlocks + 10);
-   
-    /*
-     * Use between 0.1% and 1% of cache pages to store slots.
-     */
-    numSlotsHashTable =
-        max(hashTable.slotsNeeded(params.cndKeys), (uint)10000);
-
-    numSlotsHashTable = min(numSlotsHashTable, (uint)100000);
+    hashTable.calculateSize(
+        params.numRows, params.cndKeys, 
+        keyDesc, dataDesc, usablePageSize, cacheLimit,
+        numBlocksHashTable);
 
     TupleDescriptor outputDesc;
 
@@ -174,6 +167,11 @@ void LhxJoinExecStream::prepare(
     hashInfo.memSegmentAccessor = params.scratchAccessor;
     hashInfo.externalSegmentAccessor.pCacheAccessor = params.pCacheAccessor;
     hashInfo.externalSegmentAccessor.pSegment = params.pTempSegment;
+
+    /*
+     * Set aside 10 cache blocks for I/O.
+     */
+    numMiscCacheBlocks = 10;
 }
 
 void LhxJoinExecStream::getResourceRequirements(
@@ -181,14 +179,8 @@ void LhxJoinExecStream::getResourceRequirements(
     ExecStreamResourceQuantity &optQuantity)
 {
     ConfluenceExecStream::getResourceRequirements(minQuantity,optQuantity);
-    SharedCache pCache = (hashInfo.memSegmentAccessor.pCacheAccessor)->getCache();
-    
-    /*
-     * Let hash table use at most 50% os the total cache size.
-     */
-    uint cacheLimit = pCache->getAllocatedPageCount() / 2;
-    
-    minQuantity.nCachePages += min(numBlocksHashTable, cacheLimit);
+
+    minQuantity.nCachePages += numBlocksHashTable + numMiscCacheBlocks;
 
     optQuantity = minQuantity;
 }
@@ -197,7 +189,7 @@ void LhxJoinExecStream::setResourceAllocation(
     ExecStreamResourceQuantity &quantity)
 {
     ConfluenceExecStream::setResourceAllocation(quantity);
-    hashInfo.numCachePages = quantity.nCachePages;
+    hashInfo.numCachePages = quantity.nCachePages - numMiscCacheBlocks;
 }
 
 void LhxJoinExecStream::open(bool restart)
@@ -213,8 +205,7 @@ void LhxJoinExecStream::open(bool restart)
     hashTable.init(partitionLevel, hashInfo);
     hashTableReader.init(&hashTable, hashInfo);
     
-    bool status = hashTable.allocateResources(numSlotsHashTable);
-
+    bool status = hashTable.allocateResources();
     assert(status);
 
     /*
@@ -346,7 +337,6 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                              */
                             partInfo.close(LeftInputIndex);
                             partInfo.open(RightInputIndex,
-                                curPlan->getPartition(RightInputIndex),
                                 &hashTableReader, &rightReader, rightTuple);
                         } else {
                             /*
@@ -381,7 +371,7 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                 hashTable.init(curPlan->partitionLevel, hashInfo);
                 hashTableReader.init(&hashTable, hashInfo);
 
-                bool status = hashTable.allocateResources(numSlotsHashTable);
+                bool status = hashTable.allocateResources();
                 assert(status);
                 rightReader.open(curPlan->getPartition(RightInputIndex),
                     hashInfo, true);
@@ -402,7 +392,7 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                     hashTable.init(curPlan->partitionLevel, hashInfo);
                     hashTableReader.init(&hashTable, hashInfo);
 
-                    bool status = hashTable.allocateResources(numSlotsHashTable);
+                    bool status = hashTable.allocateResources();
                     assert(status);
                     rightReader.open(curPlan->getPartition(RightInputIndex),
                         hashInfo, true);

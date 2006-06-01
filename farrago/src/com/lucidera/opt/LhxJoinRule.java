@@ -111,13 +111,14 @@ public class LhxJoinRule extends RelOptRule
         BitSet joinKeyMap = new BitSet();
         
         for (int i = 0; i < rightKeys.size(); i ++) {
-        	joinKeyMap.set(rightKeys.get(i));
+            joinKeyMap.set(rightKeys.get(i));
         }
         
-        cndBuildKey = RelMetadataQuery.getDistinctRowCount(fennelRight, joinKeyMap, null);
+        cndBuildKey = RelMetadataQuery.getPopulationSize(
+            fennelRight, joinKeyMap);
         
         if ((cndBuildKey == null) || (cndBuildKey > numBuildRows)) {
-        	cndBuildKey = numBuildRows;
+            cndBuildKey = numBuildRows;
         }
         
         LhxJoinRel rel =
