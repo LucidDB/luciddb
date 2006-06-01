@@ -65,9 +65,15 @@ public abstract class FarragoReentrantStmt
      * what to do in {@link #executeImpl}.
      *
      * @param session session on which to execute
+     * @param allocateSession if true, allocate a re-entrant session; if false,
+     *                        use the given session directly
      */
-    public void execute(FarragoSession session)
+    public void execute(FarragoSession session, boolean allocateSession)
     {
+        if (allocateSession) {
+            session = session.getSessionFactory().newReentrantSession(session);
+        }
+        
         stmtContext = session.newStmtContext(null);
         FarragoSessionStmtValidator stmtValidator =
             session.newStmtValidator();
@@ -81,6 +87,9 @@ public abstract class FarragoReentrantStmt
         } finally {
             stmtContext.closeAllocation();
             stmtValidator.closeAllocation();
+            if (allocateSession) {
+                session.getSessionFactory().releaseReentrantSession(session);
+            }
         }
     }
 }

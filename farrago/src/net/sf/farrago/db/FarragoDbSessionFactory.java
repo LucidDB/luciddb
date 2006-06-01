@@ -52,6 +52,24 @@ public class FarragoDbSessionFactory implements FarragoSessionFactory
         return new FarragoDbSession(url, info, this);
     }
 
+    // implement FarragoSessionFactory
+    public FarragoSession newReentrantSession(FarragoSession session)
+    {
+        FarragoSessionVariables sessionVars = 
+            session.getSessionVariables().cloneVariables();
+        
+        FarragoSession reentrantSession =
+            session.cloneSession(sessionVars);
+        
+        return reentrantSession;
+    }
+    
+    // implement FarragoSessionFactory
+    public void releaseReentrantSession(FarragoSession session)
+    {
+        session.closeAllocation();
+    }
+    
     // implement FarragoSessionPersonalityFactory
     public FarragoSessionPersonality newSessionPersonality(
         FarragoSession session,

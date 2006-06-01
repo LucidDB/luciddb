@@ -142,6 +142,7 @@ cp jgrapht/jgrapht-*.jar $LIB_DIR
 cp jgrapht/license-LGPL.txt $LIB_DIR/jgrapht.license.txt
 cp hsqldb/doc/hypersonic_lic.txt $LIB_DIR/hsqldb.license.txt
 cp hsqldb/lib/hsqldb.jar $LIB_DIR
+cp postgresql-8.1-406.jdbc2.jar $LIB_DIR
 cp commons-transaction-1.1.jar $LIB_DIR
 rm -f $LIB_DIR/fennel/*debug*
 cp stlport/README $LIB_DIR/fennel/stlport.README.txt

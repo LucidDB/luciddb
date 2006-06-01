@@ -141,6 +141,6 @@ void FlatFileBuffer::setReadPtr(char *ptr)
     pCurrent = ptr;
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dev/fennel/lucidera/flatfile/FlatFileBuffer.cpp#7 $");
+FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/lucidera/flatfile/FlatFileBuffer.cpp#6 $");
 
 // End FlatFileBuffer.cpp

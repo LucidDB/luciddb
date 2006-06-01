@@ -57,6 +57,20 @@ public interface FarragoSessionFactory extends FarragoSessionPersonalityFactory
         Properties info);
 
     /**
+     * Creates a new reentrant session.  The base session is cloned with
+     * a cloned copy of the base session's session variables.
+     * 
+     * @param session the existing session on which to base the re-entrant 
+     *                session
+     */
+    public FarragoSession newReentrantSession(FarragoSession session);
+    
+    /**
+     * Release a reentrant session.
+     */
+    public void releaseReentrantSession(FarragoSession session);
+    
+    /**
      * Creates a new intrepreter for Fennel commands.
      *
      * @return new interpeter
