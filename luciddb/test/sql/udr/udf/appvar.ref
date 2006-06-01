@@ -1,4 +1,4 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/appvar.sql#1 $
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/appvar.sql#2 $
 0: jdbc:luciddb:> -- Test script for application variables UDF/UDP
 0: jdbc:luciddb:> set schema 'udftest';
 0: jdbc:luciddb:> set path 'udftest';
@@ -66,7 +66,15 @@ Error: Application variable 'var1' has not been created in context 'context1' (s
 0: jdbc:luciddb:> values (applib.get_var('context1', 'var0'));
 Error: Application variable 'var0' has not been created in context 'context1' (state=,code=0)
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- create a variable, implicitly creating its context
+0: jdbc:luciddb:> -- should fail:  create a variable, attempting to implicitly create its context
+0: jdbc:luciddb:> call applib.create_var('context2', 'var2', 'uncomfortably implicit');
+Error: Application variable context 'context2' has not been created (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- do it right
+0: jdbc:luciddb:> call applib.create_var('context2', null, 'uncomfortably implicit');
+<resultset>
+  <result EXPR$0="null"/>
+</resultset>
 0: jdbc:luciddb:> call applib.create_var('context2', 'var2', 'uncomfortably implicit');
 <resultset>
   <result EXPR$0="null"/>

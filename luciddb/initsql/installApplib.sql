@@ -297,10 +297,9 @@ external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.TimeDimensi
 -- variables to be manipulated as a unit.
 ----
 
--- Creates a variable (or a context if var_id is null).  When var_id
--- is not null, the context is implicitly created if it does not exist.
--- The initial value for the new variable is null.  If the variable
--- already exists, this call has no effect.
+-- Creates a variable (or a context if var_id is null).
+-- The initial value for a new variable is null.  It is an error
+-- to attempt to create a context or variable which already exists.
 create procedure applib.create_var(
     context_id varchar(128), 
     var_id varchar(128),
@@ -309,7 +308,8 @@ language java
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.CreateAppVarUdp.execute';
 
--- Deletes a variable (or a context if var_id is null).
+-- Deletes a variable (or a context if var_id is null), which must
+-- currently exist.
 create procedure applib.delete_var(
     context_id varchar(128), 
     var_id varchar(128))

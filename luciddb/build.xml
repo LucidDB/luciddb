@@ -169,8 +169,10 @@ ${farrago.test.jvmargs}
   <path id="applib.build.classpath">
     <pathelement path="${applib.dir}"/>
     <pathelement path="${farrago.classes.dir}"/>
+    <pathelement path="${farrago.catalog.src.dir}"/>
     <pathelement path="${resgen.dir}/lib/eigenbase-resgen.jar"/>
     <pathelement path="${resgen.dir}/lib/eigenbase-xom.jar"/>
+    <pathelement path="${mdrlibs.dir}/jmi.jar"/>
   </path>
   <property name="applib.build.classpath" refid="applib.build.classpath"/>
 

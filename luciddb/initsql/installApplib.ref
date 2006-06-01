@@ -1,4 +1,4 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/initsql/installApplib.sql#3 $
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/initsql/installApplib.sql#4 $
 0: jdbc:luciddb:> create schema applib;
 0: jdbc:luciddb:> set schema 'applib';
 0: jdbc:luciddb:> set path 'applib';
@@ -302,10 +302,9 @@
 0: jdbc:luciddb:> -- variables to be manipulated as a unit.
 0: jdbc:luciddb:> ----
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- Creates a variable (or a context if var_id is null).  When var_id
-0: jdbc:luciddb:> -- is not null, the context is implicitly created if it does not exist.
-0: jdbc:luciddb:> -- The initial value for the new variable is null.  If the variable
-0: jdbc:luciddb:> -- already exists, this call has no effect.
+0: jdbc:luciddb:> -- Creates a variable (or a context if var_id is null).
+0: jdbc:luciddb:> -- The initial value for a new variable is null.  It is an error
+0: jdbc:luciddb:> -- to attempt to create a context or variable which already exists.
 0: jdbc:luciddb:> create procedure applib.create_var(
 . . . . . . . . >     context_id varchar(128), 
 . . . . . . . . >     var_id varchar(128),
@@ -314,7 +313,8 @@
 . . . . . . . . > no sql
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.CreateAppVarUdp.execute';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- Deletes a variable (or a context if var_id is null).
+0: jdbc:luciddb:> -- Deletes a variable (or a context if var_id is null), which must
+0: jdbc:luciddb:> -- currently exist.
 0: jdbc:luciddb:> create procedure applib.delete_var(
 . . . . . . . . >     context_id varchar(128), 
 . . . . . . . . >     var_id varchar(128))
