@@ -134,6 +134,8 @@ public class FennelValuesRel extends ValuesRelBase implements FennelRel
                 } else if (value instanceof NlsString) {
                     NlsString nlsString = (NlsString) value;
                     datum.setString(nlsString.getValue());
+                } else if (value instanceof Boolean) {
+                    datum.setBoolean((Boolean) value);
                 } else {
                     assert(value instanceof ByteBuffer);
                     ByteBuffer byteBuffer = (ByteBuffer) value;

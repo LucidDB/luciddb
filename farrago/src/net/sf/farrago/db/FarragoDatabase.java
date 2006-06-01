@@ -705,7 +705,7 @@ public class FarragoDatabase extends FarragoDbSingleton
 
     private FarragoSessionExecutableStmt prepareStmtImpl(
         final FarragoSessionPreparingStmt stmt,
-        SqlNode sqlNode,
+        final SqlNode sqlNode,
         FarragoAllocationOwner owner,
         FarragoSessionAnalyzedSql analyzedSql)
     {
@@ -716,7 +716,7 @@ public class FarragoDatabase extends FarragoDbSingleton
         // directly.
         if (sqlNode.isA(SqlKind.Explain)) {
             FarragoSessionExecutableStmt executableStmt =
-                stmt.prepare(sqlNode);
+                stmt.prepare(sqlNode, sqlNode);
             owner.addAllocation(executableStmt);
             return executableStmt;
         }
@@ -768,7 +768,7 @@ public class FarragoDatabase extends FarragoDbSingleton
         FarragoSessionExecutableStmt executableStmt;
         if (!stmt.mayCacheImplementation()) {
             // no cache
-            executableStmt = stmt.prepare(validatedSqlNode);
+            executableStmt = stmt.prepare(validatedSqlNode, sqlNode);
             owner.addAllocation(executableStmt);
 
         } else { 
@@ -782,7 +782,7 @@ public class FarragoDatabase extends FarragoDbSingleton
                     {
                         assert (key.equals(sql));
                         FarragoSessionExecutableStmt executableStmt =
-                            stmt.prepare(validatedSqlNode);
+                            stmt.prepare(validatedSqlNode, sqlNode);
                         long memUsage =
                             FarragoUtil.getStringMemoryUsage(sql)
                             + executableStmt.getMemoryUsage();

@@ -1,14 +1,9 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/initsql/installApplib.sql#4 $
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/initsql/installApplib.sql#5 $
 0: jdbc:luciddb:> create schema applib;
 0: jdbc:luciddb:> set schema 'applib';
 0: jdbc:luciddb:> set path 'applib';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> call sqlj.install_jar('file:${FARRAGO_HOME}/plugin/applib.jar','applibJar', 0);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- UDFs
 0: jdbc:luciddb:> -- define CharReplace functions

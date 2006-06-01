@@ -468,9 +468,14 @@ public class SqlKind extends EnumeratedValues.BasicValue
                 || (this == ExplicitTable);
         case SetQueryORDINAL:
             return (this == Union) || (this == Intersect) || (this == Except);
+            // NOTE jvs 1-June-2006: For now we treat procedure calls as DML;
+            // this makes it easy for JDBC clients to call execute or
+            // executeUpdate and not have to process dummy cursor results.  If
+            // in the future we support procedures which return results sets,
+            // we'll need to refine this.
         case DmlORDINAL:
             return (this == Insert) || (this == Delete) || (this == Update)
-                || (this == Merge);
+                || (this == Merge) || (this == ProcedureCall);
         case ExpressionORDINAL:
             return !((this == As) || (this == Descending) || (this == Select)
                 || (this == Join) || (this == Function) || (this == Cast)

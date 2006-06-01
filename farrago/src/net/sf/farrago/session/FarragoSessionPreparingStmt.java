@@ -59,9 +59,15 @@ public interface FarragoSessionPreparingStmt extends FarragoAllocation
      * does not execute it.
      *
      * @param sqlNode top-level node of parsed statement
+     *
+     * @param sqlNodeOriginal original form of sqlNode if it has
+     * been rewritten by validation; otherwise, same as sqlNode
+     *
      * @return prepared FarragoSessionExecutableStmt
      */
-    public FarragoSessionExecutableStmt prepare(SqlNode sqlNode);
+    public FarragoSessionExecutableStmt prepare(
+        SqlNode sqlNode,
+        SqlNode sqlNodeOriginal);
 
     /**
      * Analyzes an SQL expression, and returns information about it.  Used

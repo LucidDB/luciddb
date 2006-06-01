@@ -196,12 +196,24 @@ public abstract class OJPreparingStmt
         env.bindVariable(arg.getName(),arg.getType());
     }
 
+    public PreparedResult prepareSql(
+        SqlNode sqlQuery,
+        Class runtimeContextClass,
+        SqlValidator validator,
+        boolean needsValidation)
+    {
+        return prepareSql(
+            sqlQuery, sqlQuery, runtimeContextClass, validator,
+            needsValidation);
+    }
+    
     /**
      * Prepares a statement for execution, starting from a parse tree and
      * using a user-supplied validator.
      */
     public PreparedResult prepareSql(
         SqlNode sqlQuery,
+        SqlNode sqlNodeOriginal,
         Class runtimeContextClass,
         SqlValidator validator,
         boolean needsValidation)
@@ -254,7 +266,7 @@ public abstract class OJPreparingStmt
         return implement(
             resultType,
             rootRel,
-            sqlQuery.getKind(),
+            sqlNodeOriginal.getKind(),
             decl,
             arguments);
     }

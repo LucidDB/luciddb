@@ -27,7 +27,7 @@ import java.sql.*;
 
 
 /**
- * PreparedResult represents the result of a call to Statement.prepareSql.
+ * PreparedResult represents the result of a call to OJPreparingStmt.prepareSql.
  *
  * @author John V. Sichi
  * @version $Id$

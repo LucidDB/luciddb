@@ -1,4 +1,4 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev_lcs/luciddb/test/sql/udr/udf/udfInvocation.sql#5 $
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/udfInvocation.sql#8 $
 0: jdbc:luciddb:> -- Tests ported from 
 0: jdbc:luciddb:> -- //open/lu/dev/farrago/unitsql/expressions/udfInvocation.sql
 0: jdbc:luciddb:> 
@@ -391,11 +391,6 @@ Error: java.lang.NumberFormatException: For input string: "Posey" (state=,code=0
 +---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> call set_java_property('net.sf.farrago.test.grue', 'lurker');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> values get_java_property('net.sf.farrago.test.grue');
 +---------+

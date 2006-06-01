@@ -107,13 +107,7 @@ public class LucidDbTestHarness extends TestCase
     private static void callProcedure(String call)
         throws Exception
     {
-        ResultSet resultSet = stmt.executeQuery(call);
-        try {
-            while (resultSet.next()) {
-            }
-        } finally {
-            resultSet.close();
-        }
+        stmt.executeUpdate(call);
     }
 
     /**
