@@ -28,4 +28,74 @@
 | 0       |
 +---------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> select count("mofId") from sys_boot.mgmt.dba_foreign_wrappers_internal;
++---------+
+| EXPR$0  |
++---------+
+| 4       |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select count(*) from sys_boot.mgmt.dba_views_internal2
+. . . . . . . . > where catalog_name='SYS_BOOT' and schema_name='MGMT';
++---------+
+| EXPR$0  |
++---------+
+| 24      |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select parameter_name from sys_boot.mgmt.dba_routine_parameters_internal1
+. . . . . . . . > where schema_name='MGMT' and routine_specific_name='SLEEP'
+. . . . . . . . > order by 1;
++-----------------+
+| PARAMETER_NAME  |
++-----------------+
+| MILLIS          |
+| RETURN          |
++-----------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select foreign_wrapper_name, foreign_server_name
+. . . . . . . . > from sys_boot.mgmt.dba_foreign_servers_internal2
+. . . . . . . . > order by 1,2;
++-----------------------+-------------------------------+
+| FOREIGN_WRAPPER_NAME  |      FOREIGN_SERVER_NAME      |
++-----------------------+-------------------------------+
+| SYS_JDBC              | HSQLDB_DEMO                   |
+| SYS_MDR               | SYS_CWM                       |
+| SYS_MDR               | SYS_FEM                       |
+| SYS_MDR               | SYS_MOF                       |
+| SYS_MOCK_FOREIGN      | SYS_MOCK_FOREIGN_DATA_SERVER  |
++-----------------------+-------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create schema mtest;
+0: jdbc:farrago:> create table mtest.t(col int primary key);
+0: jdbc:farrago:> insert into mtest.t values (1), (2), (3);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select count(*) from sys_boot.mgmt.dba_schemas_internal2
+. . . . . . . . > where schema_name='MTEST';
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select table_name, table_type from sys_boot.mgmt.dba_tables_internal2
+. . . . . . . . > where schema_name='MTEST';
++-------------+-------------+
+| TABLE_NAME  | TABLE_TYPE  |
++-------------+-------------+
+| T           | LocalTable  |
++-------------+-------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> analyze table mtest.t estimate statistics for all columns sample 66 percent;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select table_name, last_analyze_row_count 
+. . . . . . . . > from sys_boot.mgmt.dba_stored_tables_internal2
+. . . . . . . . > where schema_name='MTEST';
++-------------+-------------------------+
+| TABLE_NAME  | LAST_ANALYZE_ROW_COUNT  |
++-------------+-------------------------+
+| T           | 3                       |
++-------------+-------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop schema mtest cascade;
 0: jdbc:farrago:> !quit

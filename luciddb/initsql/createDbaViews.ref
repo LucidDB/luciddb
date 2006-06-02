@@ -10,8 +10,8 @@
 . . . . . . . . >     creation_timestamp,
 . . . . . . . . >     last_modified_timestamp,
 . . . . . . . . >     remarks,
-. . . . . . . . >     si."mofId",
-. . . . . . . . >     si."lineageId"
+. . . . . . . . >     si."mofId" as mofid,
+. . . . . . . . >     si."lineageId" as lineageid
 . . . . . . . . >   from
 . . . . . . . . >     sys_boot.mgmt.dba_schemas_internal2 si
 . . . . . . . . >   inner join
@@ -31,7 +31,9 @@
 . . . . . . . . >     ai."name" as creator,
 . . . . . . . . >     creation_timestamp,
 . . . . . . . . >     last_modification_timestamp,
-. . . . . . . . >     remarks
+. . . . . . . . >     remarks,
+. . . . . . . . >     dti."mofId" as mofid,
+. . . . . . . . >     dti."lineageId" as lineageid
 . . . . . . . . >   from
 . . . . . . . . >     sys_boot.mgmt.dba_tables_internal2 dti
 . . . . . . . . >   inner join
@@ -54,8 +56,8 @@
 . . . . . . . . >     dec_digits,
 . . . . . . . . >     is_nullable,
 . . . . . . . . >     remarks,
-. . . . . . . . >     ci."mofId",
-. . . . . . . . >     ci."lineageId"
+. . . . . . . . >     ci."mofId" as mofid,
+. . . . . . . . >     ci."lineageId" as lineageid
 . . . . . . . . >   from
 . . . . . . . . >     sys_boot.jdbc_metadata.columns_view_internal ci
 . . . . . . . . >   inner join
@@ -74,12 +76,10 @@
 . . . . . . . . >     ai."name" as creator,
 . . . . . . . . >     creation_timestamp,
 . . . . . . . . >     last_modification_timestamp,
-. . . . . . . . >     last_analyze_row_count,
-. . . . . . . . >     last_analyze_timestamp,
 . . . . . . . . >     original_text,
 . . . . . . . . >     remarks,
-. . . . . . . . >     vi."mofId",
-. . . . . . . . >     vi."lineageId"
+. . . . . . . . >     vi."mofId" as mofid,
+. . . . . . . . >     vi."lineageId" as lineageid
 . . . . . . . . >   from
 . . . . . . . . >     sys_boot.mgmt.dba_views_internal2 vi
 . . . . . . . . >   inner join
@@ -101,8 +101,8 @@
 . . . . . . . . >     last_analyze_row_count,
 . . . . . . . . >     last_analyze_timestamp,
 . . . . . . . . >     remarks,
-. . . . . . . . >     sti."lineageId",
-. . . . . . . . >     sti."mofId"
+. . . . . . . . >     sti."mofId" as mofid,
+. . . . . . . . >     sti."lineageId" as lineageid
 . . . . . . . . >   from
 . . . . . . . . >     sys_boot.mgmt.dba_stored_tables_internal2 sti
 . . . . . . . . >   inner join
@@ -129,8 +129,8 @@
 . . . . . . . . >     is_deterministic,
 . . . . . . . . >     data_access,
 . . . . . . . . >     remarks,
-. . . . . . . . >     ri."mofId",
-. . . . . . . . >     ri."lineageId"
+. . . . . . . . >     ri."mofId" as mofid,
+. . . . . . . . >     ri."lineageId" as lineageid
 . . . . . . . . >   from
 . . . . . . . . >     sys_boot.mgmt.dba_routines_internal2 ri
 . . . . . . . . >   inner join
@@ -153,8 +153,8 @@
 . . . . . . . . >     "PRECISION",
 . . . . . . . . >     dec_digits,
 . . . . . . . . >     remarks,
-. . . . . . . . >     rpi."mofId",
-. . . . . . . . >     rpi."lineageId"
+. . . . . . . . >     rpi."mofId" as mofid,
+. . . . . . . . >     rpi."lineageId" as lineageid
 . . . . . . . . >   from
 . . . . . . . . >     sys_boot.mgmt.dba_routine_parameters_internal1 rpi
 . . . . . . . . >   inner join
@@ -174,8 +174,8 @@
 . . . . . . . . >     creation_timestamp,
 . . . . . . . . >     last_modified_timestamp,
 . . . . . . . . >     remarks,
-. . . . . . . . >     fwi."mofId",
-. . . . . . . . >     fwi."lineageId"
+. . . . . . . . >     fwi."mofId" as mofid,
+. . . . . . . . >     fwi."lineageId" as lineageid
 . . . . . . . . >   from
 . . . . . . . . >     sys_boot.mgmt.dba_foreign_wrappers_internal fwi
 . . . . . . . . >   inner join
@@ -191,7 +191,7 @@
 . . . . . . . . >     dw."name" as foreign_wrapper_name,
 . . . . . . . . >     so."name" as option_name,
 . . . . . . . . >     so."value" as option_value,
-. . . . . . . . >     so."mofId"
+. . . . . . . . >     so."mofId" as mofid
 . . . . . . . . >   from
 . . . . . . . . >     sys_fem.med."DataWrapper" dw
 . . . . . . . . >   inner join
@@ -212,8 +212,8 @@
 . . . . . . . . >     fsi.creation_timestamp,
 . . . . . . . . >     fsi.last_modified_timestamp,
 . . . . . . . . >     fsi.remarks,
-. . . . . . . . >     fsi."mofId",
-. . . . . . . . >     fsi."lineageId"
+. . . . . . . . >     fsi."mofId" as mofid,
+. . . . . . . . >     fsi."lineageId" as lineageid
 . . . . . . . . >   from
 . . . . . . . . >     sys_boot.mgmt.dba_foreign_servers_internal2 fsi
 . . . . . . . . >   inner join
@@ -230,7 +230,7 @@
 . . . . . . . . >     foreign_server_name,
 . . . . . . . . >     so."name" as option_name,
 . . . . . . . . >     so."value" as option_value,
-. . . . . . . . >     so."mofId"
+. . . . . . . . >     so."mofId" as mofid
 . . . . . . . . >   from
 . . . . . . . . >     sys_boot.mgmt.dba_foreign_servers_internal1 fsi
 . . . . . . . . >   inner join
@@ -252,8 +252,8 @@
 . . . . . . . . >     fti.last_analyze_row_count,
 . . . . . . . . >     fti.last_analyze_timestamp,
 . . . . . . . . >     fti.remarks,
-. . . . . . . . >     fti."mofId",
-. . . . . . . . >     fti."lineageId"
+. . . . . . . . >     fti."mofId" as mofid,
+. . . . . . . . >     fti."lineageId" as lineageid
 . . . . . . . . >   from
 . . . . . . . . >     sys_boot.mgmt.dba_foreign_tables_internal2 fti
 . . . . . . . . >   inner join
@@ -271,7 +271,7 @@
 . . . . . . . . >     foreign_table_name,
 . . . . . . . . >     so."name" as option_name,
 . . . . . . . . >     so."value" as option_value,
-. . . . . . . . >     so."mofId"
+. . . . . . . . >     so."mofId" as mofid
 . . . . . . . . >   from
 . . . . . . . . >     sys_boot.mgmt.dba_foreign_tables_internal1 fti
 . . . . . . . . >   inner join

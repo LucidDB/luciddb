@@ -1,0 +1,159 @@
+-- Tests for db admin views
+
+create schema dbavtest;
+set schema 'dbavtest';
+
+-- get_current_time udf gets the current time as a timestamp
+create function dbavtest.get_current_time()
+returns timestamp
+language java
+not deterministic
+specific get_current_time_specific
+parameter style system defined java
+no sql
+external name 'class com.lucidera.luciddb.test.udr.GetCurrentTimeUdf.execute';
+
+-- misc adding udf
+create function adding(numA int, decA decimal(10,2))
+returns decimal(10,2)
+language sql
+contains sql
+return (numA + decA);
+
+-- dba_routines & routine parameters
+select catalog_name, schema_name, invocation_name, specific_name, 
+  external_name, routine_type, is_table_function, parameter_style,
+  is_deterministic, data_access
+from sys_root.dba_routines
+where schema_name='DBAVTEST';
+
+select creation_timestamp < dbavtest.get_current_time(), 
+  creation_timestamp <= last_modified_timestamp
+from sys_root.dba_routines
+where schema_name='DBAVTEST';
+
+select routine_specific_name, parameter_name, ordinal, datatype, "PRECISION",
+  dec_digits
+from sys_root.dba_routine_parameters
+where schema_name='DBAVTEST';
+
+select count(distinct mofid) 
+from sys_root.dba_routine_parameters
+where schema_name='DBAVTEST';
+
+-- dba_schemas
+create schema tt;
+
+select catalog_name, schema_name
+from sys_root.dba_schemas 
+where schema_name='TT';
+
+drop schema tt;
+
+select catalog_name, schema_name
+from sys_root.dba_schemas
+where schema_name='TT';
+
+-- dba_foreign_wrappers and dba_foreign_wrapper_options
+create foreign data wrapper dbatest_ff_jdbc
+library 'class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper'
+language java
+options ( random_opt1 'random_opt_value');
+
+select foreign_wrapper_name, library, "LANGUAGE"
+from sys_root.dba_foreign_wrappers
+where foreign_wrapper_name = 'DBATEST_FF_JDBC';
+
+select foreign_wrapper_name, option_name, option_value
+from sys_root.dba_foreign_wrapper_options
+where foreign_wrapper_name = 'DBATEST_FF_JDBC';
+
+-- dba_foreign_servers and dba_foreign_server_options
+create server dbatest_ff_server
+foreign data wrapper dbatest_ff_jdbc
+options(    
+    directory '@DIR@',
+    file_extension '.csv',
+    ctrl_file_extension '.bcp',
+    field_delimiter ',',
+    line_delimiter '\n',
+    quote_char '"',
+    escape_char '',
+    with_header 'yes',
+    num_rows_scan '1'
+);
+
+select foreign_wrapper_name, foreign_server_name, 
+  creation_timestamp <= last_modified_timestamp
+from sys_root.dba_foreign_servers
+where foreign_wrapper_name='DBATEST_FF_JDBC';
+
+select foreign_server_name, option_name, option_value
+from sys_root.dba_foreign_server_options
+where foreign_wrapper_name='DBATEST_FF_JDBC'
+  and option_name <> 'DIRECTORY';
+
+-- dba_foreign_tables and dba_foreign_table_options
+create foreign table EMPS
+server dbatest_ff_server
+options(
+SCHEMA_NAME 'BCP',
+filename 'EMP'
+);
+
+analyze table EMPS compute statistics for all columns;
+
+select foreign_server_name, foreign_table_name, 
+  last_analyze_timestamp >= creation_timestamp
+from sys_root.dba_foreign_tables
+where foreign_wrapper_name='DBATEST_FF_JDBC';
+
+select foreign_table_name, option_name, option_value
+from sys_root.dba_foreign_table_options
+where foreign_server_name='DBATEST_FF_SERVER';
+
+-- dba_tables, dba_views, dba_stored_tables
+create table dbavtest.table1(col1 int, col2 int);
+
+create view dbavtest.empview as 
+select * from dbavtest.emps;
+
+select catalog_name, schema_name, table_name, table_type
+from sys_root.dba_tables
+where schema_name='DBAVTEST'
+order by table_name;
+
+select count(distinct lineageId)
+from sys_root.dba_tables
+where schema_name='DBAVTEST';
+
+select catalog_name, view_name, original_text
+from sys_root.dba_views
+where schema_name='DBAVTEST';
+
+select table_name, last_analyze_row_count, 
+  last_analyze_timestamp > creation_timestamp
+from sys_root.dba_stored_tables
+where schema_name='DBAVTEST';
+
+-- dba_columns
+select catalog_name, table_name, column_name, ordinal_position, datatype,
+  "PRECISION", dec_digits, is_nullable
+from sys_root.dba_columns
+where schema_name='DBAVTEST';
+
+
+-- test creator field
+create user lala authorization 'Unknown' Default schema DBAVTEST;
+
+!closeall
+!connect jdbc:luciddb: LALA ""
+
+create table dbavtest.lalatable(lolo int);
+
+!closeall
+!connect jdbc:luciddb: sa ""
+
+select catalog_name, schema_name, table_name, table_type, creator
+from sys_root.dba_tables
+where creator='LALA';
