@@ -1,0 +1,54 @@
+<project name="bh" default="dml-delete">
+  <target name="dml-delete">
+    <test-suite name="dml-delete">
+
+      <init-hook>
+        <test-suite name="init">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">
+            <test-suite-modifier value="dml-delete"/>
+          </test-suite-call>
+        </test-suite>
+      </init-hook>
+
+      <test name="setup">
+        <junit-sql file="${open.dir}/luciddb/test/sql/dml/delete/setup.sql"/>
+      </test>
+
+      <test name="validate" requiresSuccess="setup">
+        <!-- delete from system table, via synonym, and special permissions -->
+        <!-- case with foreign key commented out -->
+        <junit-sql file="${open.dir}/luciddb/test/sql/dml/delete/validate.sql"/>
+      </test>
+
+      <test name="general" requiresSuccess="setup">
+        <!-- Scripts not supported, changed to straight sql statements -->
+        <!-- Foreign key relationships not implemented yet, commented out -->
+        <junit-sql file="${open.dir}/luciddb/test/sql/dml/delete/general.sql"/>
+      </test>
+
+      <test name="bugs" requiresSuccess="setup">
+        <!-- Scripts not supported, changed to straight sql statements -->
+        <!-- Foreign key relationships not implemented yet, commented out -->
+        <!-- same for UPDATE -->
+        <junit-sql file="${open.dir}/luciddb/test/sql/dml/delete/bugs.sql"/>
+      </test>
+
+      <test name="bug1843">
+        <junit-sql file="${open.dir}/luciddb/test/sql/dml/delete/bug1843.sql"/>
+      </test>
+
+      <test name="lazyDeleteTests" requiresSuccess="setup">
+        <junit-sql file="${open.dir}/luciddb/test/sql/dml/delete/lazyDeleteTests.sql"/>
+      </test>
+
+      <cleanup-hook>
+        <test-suite name="cleanup">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tdone.xml">
+            <test-suite-modifier value="dml-delete"/>
+          </test-suite-call>
+        </test-suite>
+      </cleanup-hook>
+
+    </test-suite>
+  </target>
+</project>
