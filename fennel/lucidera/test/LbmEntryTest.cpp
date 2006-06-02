@@ -151,6 +151,7 @@ public:
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonZeros4);
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonAfterSplit);
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonCombine);
+        FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonMaxSeg);
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonRandom1);
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonRandom2);
     }
@@ -186,6 +187,7 @@ public:
     void testMergeSingletonZeros4();
     void testMergeSingletonAfterSplit();
     void testMergeSingletonCombine();
+    void testMergeSingletonMaxSeg();
     void testMergeSingletonRandom1();
     void testMergeSingletonRandom2();
 };
@@ -1176,6 +1178,35 @@ void LbmEntryTest::testMergeSingletonAfterSplit()
     ridValues.push_back(LcsRid(47));
     ridValues.push_back(LcsRid(105));
     testMergeSingleton(23, ridValues, 2, true);
+}
+
+void LbmEntryTest::testMergeSingletonMaxSeg()
+{
+    std::vector<LcsRid> ridValues;
+
+    ridValues.push_back(LcsRid(0));
+
+    ridValues.push_back(LcsRid(27));
+    ridValues.push_back(LcsRid(36));
+    ridValues.push_back(LcsRid(45));
+    ridValues.push_back(LcsRid(54));
+    ridValues.push_back(LcsRid(63));
+    ridValues.push_back(LcsRid(64));
+    ridValues.push_back(LcsRid(72));
+    ridValues.push_back(LcsRid(81));
+    ridValues.push_back(LcsRid(90));
+    ridValues.push_back(LcsRid(99));
+    ridValues.push_back(LcsRid(108));
+    ridValues.push_back(LcsRid(117));
+    ridValues.push_back(LcsRid(126));
+    ridValues.push_back(LcsRid(135));
+    ridValues.push_back(LcsRid(136));
+    ridValues.push_back(LcsRid(145));
+
+    // attempt to insert singleton rid in front of a segment that currently
+    // has a segment length of 16
+    ridValues.push_back(LcsRid(18));
+    testMergeSingleton(32, ridValues, 1, false);
 }
 
 void LbmEntryTest::testMergeSingletonRandom(uint totalRids, uint ridRange)

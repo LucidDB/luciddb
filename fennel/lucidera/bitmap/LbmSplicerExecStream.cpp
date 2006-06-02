@@ -34,6 +34,7 @@ void LbmSplicerExecStream::prepare(LbmSplicerExecStreamParams const &params)
     assert(treeDescriptor.tupleDescriptor == pInAccessor->getTupleDesc());
     bitmapTupleDesc = treeDescriptor.tupleDescriptor;
     bTreeTupleData.compute(bitmapTupleDesc);
+    tempBTreeTupleData.compute(bitmapTupleDesc);
     inputTuple.compute(bitmapTupleDesc);
     nIdxKeys = treeDescriptor.keyProjection.size() - 1;
 
@@ -164,6 +165,14 @@ ExecStreamResult LbmSplicerExecStream::execute(ExecStreamQuantum const &quantum)
                 inputTuple, bitmapTupleDesc);
             assert(keyComp <= 0);
             if (keyComp == 0) {
+                // If we're in the mode where we're splicing in random
+                // singleton entries, first make sure there isn't a "better"
+                // entry in the btree for the entry we're trying to splice in.
+                // A better entry is one whose startRID is closer to the
+                // singleton rid we're trying to splice in.
+                if (computeRowCount) {
+                    findBetterEntry(inputTuple);
+                }
                 spliceEntry(inputTuple);
             } else {
                 insertBitmapEntry();
@@ -197,21 +206,9 @@ ExecStreamBufProvision LbmSplicerExecStream::getOutputBufProvision() const
 bool LbmSplicerExecStream::existingEntry(TupleData const &bitmapEntry)
 {
     if (!emptyTable) {
-        // if an exact match isn't found, make sure we at least match the
-        // first part of the key up till the rid
-        bool match = bTreeWriter->searchForKey(
-            bitmapEntry, DUP_SEEK_BEGIN, false);
-        bTreeWriter->getTupleAccessorForRead().unmarshal(bTreeTupleData);
-        if (match == false) {
-            int keyComp = bitmapTupleDesc.compareTuplesKey(
-                bTreeTupleData, bitmapEntry, nIdxKeys);
-            if (keyComp == 0) {
-                match = true;
-            }
-        }
-
-        // current bitmap entry becomes the existing btree entry
-        if (match == true) {
+        // if entry already exists in the btree, then the current bitmap
+        // entry becomes that existing btree entry
+        if (findBTreeEntry(bitmapEntry, bTreeTupleData)) {
             currExistingEntry = true;
             createNewBitmapEntry(bTreeTupleData);
             return true;
@@ -222,6 +219,61 @@ bool LbmSplicerExecStream::existingEntry(TupleData const &bitmapEntry)
     currExistingEntry = false;
     createNewBitmapEntry(bitmapEntry);
     return false;
+}
+
+bool LbmSplicerExecStream::findBTreeEntry(
+    TupleData const &bitmapEntry, TupleData &bTreeTupleData)
+{
+    // if an exact match isn't found, make sure we at least match the
+    // first part of the key up till the rid
+    bool match = bTreeWriter->searchForKey(
+        bitmapEntry, DUP_SEEK_BEGIN, false);
+    bTreeWriter->getTupleAccessorForRead().unmarshal(bTreeTupleData);
+    if (match == false) {
+        if (nIdxKeys == 0) {
+            match = true;
+        } else {
+            int keyComp = bitmapTupleDesc.compareTuplesKey(
+                bTreeTupleData, bitmapEntry, nIdxKeys);
+            if (keyComp == 0) {
+                match = true;
+            }
+        }
+    }
+    return match;
+}
+
+void LbmSplicerExecStream::findBetterEntry(TupleData const &bitmapEntry)
+{
+    // If there is a better entry, write out the existing one and set the
+    // current to the btree entry found
+    if (!emptyTable) {
+        if (findBTreeEntry(bitmapEntry, bTreeTupleData)) {
+
+            LcsRid btreeRid = *reinterpret_cast<LcsRid const *>
+                (bTreeTupleData[nIdxKeys].pData);
+            LcsRid newRid = *reinterpret_cast<LcsRid const *>
+                (bitmapEntry[nIdxKeys].pData);
+            LcsRid currRid = pCurrentEntry->getStartRID();
+
+            if ((currRid > newRid && currRid > btreeRid) ||
+                (newRid >= btreeRid && btreeRid > currRid))
+            {
+                // if the current entry is a superset of the btree entry found,
+                // then ignore it
+                int rowCount = pCurrentEntry->getRowCount();
+                if ((btreeRid >= currRid) && (btreeRid < currRid + rowCount)) {
+                    return;
+                }
+
+                // write out the current entry before we switch over to the
+                // new one
+                insertBitmapEntry();
+                currExistingEntry = true;
+                createNewBitmapEntry(bTreeTupleData);
+            }
+        }
+    }
 }
 
 void LbmSplicerExecStream::spliceEntry(TupleData &bitmapEntry)
@@ -240,6 +292,16 @@ void LbmSplicerExecStream::insertBitmapEntry()
 {
     // implement btree updates as deletes followed by inserts
     if (currExistingEntry) {
+        // when we're inserting in random singleton mode, we may have
+        // repositioned in the btree, trying to find a better btree entry,
+        // so we need to position back to the original btree entry before
+        // we delete it
+        if (computeRowCount) {
+            tempBTreeTupleData[nIdxKeys].pData =
+                (PConstBuffer) &currBTreeStartRid;
+            bool match = findBTreeEntry(tempBTreeTupleData, tempBTreeTupleData);
+            assert(match);
+        }
         bTreeWriter->deleteCurrent();
         currExistingEntry = false;
     }
@@ -255,6 +317,8 @@ void LbmSplicerExecStream::insertBitmapEntry()
 void LbmSplicerExecStream::createNewBitmapEntry(TupleData const &bitmapEntry)
 {
     pCurrentEntry->setEntryTuple(bitmapEntry);
+    currBTreeStartRid = *reinterpret_cast<LcsRid const *>
+        (bitmapEntry[nIdxKeys].pData);
     currEntry = true;
 }
 

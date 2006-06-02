@@ -224,6 +224,11 @@ public:
     inline uint getZeroLengthByteCount(uint8_t segDescByte);
 
     /**
+     * @return startRID of this bitmap segment
+     */
+    inline LcsRid getStartRID();
+
+    /**
      * One byte in the bitmap encodes 8 RIDs.
      */
     static const uint LbmOneByteSize = 8;
@@ -269,6 +274,11 @@ inline uint LbmSegment::getZeroLengthByteCount(uint8_t segDescByte)
     } else {
         return 0;
     }
+}
+
+inline LcsRid LbmSegment::getStartRID()
+{
+    return startRID;
 }
 
 /**

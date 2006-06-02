@@ -63,6 +63,9 @@ void LbmEntry::init(
      * Overwrite the buffer with FFs.
      */
     memset(scratchBuffer, 0xFF, scratchBufferSizeInit);
+    if (mergeScratchBuffer != NULL) {
+        memset(mergeScratchBuffer, 0xFF, scratchBufferSizeInit);
+    }
 #endif
 
     /*
@@ -1102,14 +1105,26 @@ bool LbmEntry::addNewSegment(
             prevSegBytes, prevZeroBytes);
     }
 
+    return addNewMiddleSegment(
+        inputTuple, prevSrid, prevSegDesc, nextSegDesc, prevSeg,
+        prevSegBytes, prevZeroBytes);
+}
+
+bool LbmEntry::addNewMiddleSegment(
+    TupleData &inputTuple, LcsRid prevSrid, PBuffer prevSegDesc,
+    PBuffer nextSegDesc, PBuffer prevSeg, uint prevSegBytes, uint prevZeroBytes)
+{
+    assert(isSingleton(inputTuple));
+
     // new byte is in the middle of the zero bytes in between two segments;
     // compute the space required to add the new segment (both byte and
     // descriptor) and to split the zero length bytes into 2 segments
+    LcsRid inputStartRID =
+        *((LcsRid*) inputTuple[inputTuple.size() - 3].pData);
+    LcsRid prevEridPlus1 = prevSrid + (prevSegBytes * LbmOneByteSize);
     uint leftZeroBytes = opaqueToInt(inputStartRID - prevEridPlus1) /
         LbmOneByteSize;
-    assert(leftZeroBytes > 0);
     uint rightZeroBytes = prevZeroBytes - leftZeroBytes - 1;
-    assert(rightZeroBytes > 0);
     uint spaceRequired = 2;
     int spaceNeededBefore = computeSpaceForZeroBytes(prevZeroBytes); 
     int spaceNeededAfter = computeSpaceForZeroBytes(leftZeroBytes) +
@@ -1170,7 +1185,8 @@ bool LbmEntry::addNewAdjacentSegment(
     // need 1 byte for the new segment, but the zero bytes in the
     // previous segment decreases by 1 and we may be able to combine
     // segments if only a single zero byte separates the two segments we
-    // are inserting the new segment in between
+    // are inserting the new segment in between, and the combined length
+    // of the two segments doesn't exceed the maximum
     uint spaceRequired = 1;
     int spaceNeededBefore = computeSpaceForZeroBytes(prevZeroBytes); 
     int spaceNeededAfter = computeSpaceForZeroBytes(prevZeroBytes - 1);
@@ -1195,6 +1211,7 @@ bool LbmEntry::addNewAdjacentSegment(
 
     // adjust the segment length of either the previous segment or the
     // next segment, depending on where the new segment is placed
+    bool rc;
     if (inputStartRID >= prevEridPlus1 &&
         inputStartRID < prevEridPlus1 + LbmOneByteSize)
     {
@@ -1202,9 +1219,17 @@ bool LbmEntry::addNewAdjacentSegment(
         if (combine) {
             segLen += getSegLength(*nextSegDesc);
         }
-        adjustSegLength(*prevSegDesc, segLen);
+        rc = adjustSegLength(*prevSegDesc, segLen);
     } else {
-        adjustSegLength(*nextSegDesc, getSegLength(*nextSegDesc) + 1);
+        rc = adjustSegLength(*nextSegDesc, getSegLength(*nextSegDesc) + 1);
+    }
+
+    // if adding a new adjacent segment exceeds the max segment size,
+    // then we have to create a new segment
+    if (!rc) {
+        return addNewMiddleSegment(
+            inputTuple, prevSrid, prevSegDesc, nextSegDesc, prevSeg,
+            prevSegBytes, prevZeroBytes);
     }
 
     // if the segments are being combined, set the zero length to that of
@@ -1341,13 +1366,17 @@ void LbmEntry::splitEntry(TupleData &inputTuple)
     mergeIntoSplitEntry(inputTuple, newEntry);
 }
 
-void LbmEntry::mergeIntoSplitEntry(TupleData &inputTuple, TupleData splitEntry)
+void LbmEntry::mergeIntoSplitEntry(
+    TupleData &inputTuple, TupleData &splitEntry)
 {
     assert(isSingleton(inputTuple));
 
     // temporarily save away the current entry
     boost::scoped_array<FixedBuffer> tempBuffer;
     tempBuffer.reset(new FixedBuffer[scratchBufferSize]);
+#ifdef DEBUG
+    memset(tempBuffer.get(), 0xFF, scratchBufferSize);
+#endif
     memcpy(tempBuffer.get(), scratchBuffer, scratchBufferSize);
     LcsRid savStartRID = startRID;
     PBuffer savSegStart = pSegStart;
@@ -1361,10 +1390,10 @@ void LbmEntry::mergeIntoSplitEntry(TupleData &inputTuple, TupleData splitEntry)
     memcpy(scratchBuffer, mergeScratchBuffer, scratchBufferSize);
     startRID = *((LcsRid*) splitEntry[ridField].pData);
     LcsRid splitStartRid = startRID;
-    pSegStart = scratchBuffer + scratchBufferSize;
-    pSegEnd = pSegStart - splitEntry[ridField + 1].cbData;
     pSegDescStart = scratchBuffer + keySize;
-    pSegDescEnd = pSegDescStart + splitEntry[ridField + 2].cbData;
+    pSegDescEnd = pSegDescStart + splitEntry[ridField + 1].cbData;
+    pSegStart = scratchBuffer + scratchBufferSize;
+    pSegEnd = pSegStart - splitEntry[ridField + 2].cbData;
     currentEntrySize =
         keySize + splitEntry[ridField + 1].cbData +
             splitEntry[ridField + 2].cbData;
