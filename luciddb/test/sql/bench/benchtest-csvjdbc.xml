@@ -28,9 +28,6 @@
       </test>
 
       <test name="deletes" requiresSuccess="benchload">
-        <test-metadata>
-          <knownFailures value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/bench/gen/${foreign.db}/deletes.sql"/>
       </test>
 
