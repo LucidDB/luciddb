@@ -23,7 +23,7 @@ DATA_LIBRARY=class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper
 SERVER_NAME=@name_prefix@_SERVER
 
 # flatfile options
-DIRECTORY=@open.dir@/luciddb/test/sql/datatypes
+DIRECTORY=@open.dir@/luciddb/test/sql/datatypes/csv-copy
 FILE_EXTENSION=.csv
 CTRL_FILE_EXT=.bcp
 FIELD_DELIM=,
@@ -32,7 +32,7 @@ QUOTE_CHAR="
 ESCAPE_CHAR=
 WITH_HEADER=yes
 NUM_ROWS_SCAN=1
-LOG_DIRECTORY=@open.dir@/luciddb/test/sql/datatypes
+LOG_DIRECTORY=@open.dir@/luciddb/test/sql/datatypes/testlog
 
 SCHEMA=BCP
 

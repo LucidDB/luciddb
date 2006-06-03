@@ -244,6 +244,9 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         // Convert semijoins to physical index access.
         builder.addRuleClass(LcsIndexSemiJoinRule.class);
         
+        // Remove any semijoins that couldn't be converted
+        builder.addRuleInstance(new LoptRemoveSemiJoinRule());
+        
         // Apply PushProjectPastJoinRule while there are no physical joinrels
         // since the rule only matches on JoinRel.
         builder.addRuleInstance(new RemoveTrivialProjectRule());

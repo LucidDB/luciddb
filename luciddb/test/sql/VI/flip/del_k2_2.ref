@@ -1,0 +1,6 @@
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> delete from bench10k where k2=2
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

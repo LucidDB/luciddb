@@ -29,9 +29,13 @@
 
       <test name="deletes" requiresSuccess="benchload">
         <test-metadata>
-          <knownFailures value="true"/>
+          <knownFailure value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/bench/gen/${foreign.db}/deletes.sql"/>
+      </test>
+
+      <test name="sequences" requiresSuccess="benchfileload">
+        <junit-sql file="${open.dir}/luciddb/test/sql/bench/gen/${foreign.db}/sequences.sql"/>
       </test>
 
       <cleanup-hook>
