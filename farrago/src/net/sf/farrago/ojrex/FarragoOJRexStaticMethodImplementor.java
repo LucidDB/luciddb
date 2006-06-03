@@ -154,7 +154,9 @@ public class FarragoOJRexStaticMethodImplementor
 
         if (method.getReturnType() == Void.TYPE) {
             // for a procedure call, the method return is void,
-            // so we make up a null value instead
+            // so we make up the value 0 instead; since we're
+            // treating procedure invocation as DML, this will
+            // appear to the client as 0 rows processed
             tryStmt.setBody(
                 new StatementList(
                     new ExpressionStatement(callExpr)));
@@ -165,11 +167,7 @@ public class FarragoOJRexStaticMethodImplementor
                 // a dead-end thread.
                 return null;
             }
-            Expression nullVar = translator.createScratchVariable(
-                returnType);
-            translator.addStatement(
-                translator.createSetNullStatement(nullVar, true));
-            return nullVar;
+            return Literal.makeLiteral((long) 0);
         }
 
         Variable varResult =

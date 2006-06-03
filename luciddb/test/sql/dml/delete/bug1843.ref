@@ -1,0 +1,53 @@
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- Bug 1843
+0: jdbc:luciddb:> -- Owner: Jonathan
+0: jdbc:luciddb:> -- Abstract: The third insert to the below table gives an internal error at "xovibuilder".
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> create schema bugs;
+0: jdbc:luciddb:> set schema 'bugs';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE TABLE WORKS
+. . . . . . . . > (EMPNUM   CHAR(3) NOT NULL,
+. . . . . . . . > PNUM     CHAR(3) NOT NULL,
+. . . . . . . . > HOURS    DECIMAL(5),
+. . . . . . . . > UNIQUE(EMPNUM,PNUM));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into works values('E9', 'P9', NULL);
+0: jdbc:luciddb:> select * from works;
++---------+-------+--------+
+| EMPNUM  | PNUM  | HOURS  |
++---------+-------+--------+
+| E9      | P9    |        |
++---------+-------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> delete from works;
+0: jdbc:luciddb:> select * from works;
++---------+-------+--------+
+| EMPNUM  | PNUM  | HOURS  |
++---------+-------+--------+
++---------+-------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into works values('E9', 'P9', NULL);
+0: jdbc:luciddb:> select * from works;
++---------+-------+--------+
+| EMPNUM  | PNUM  | HOURS  |
++---------+-------+--------+
+| E9      | P9    |        |
++---------+-------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> delete from works;
+0: jdbc:luciddb:> select * from works;
++---------+-------+--------+
+| EMPNUM  | PNUM  | HOURS  |
++---------+-------+--------+
++---------+-------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into works values('E9', 'P9', NULL);
+0: jdbc:luciddb:> select * from works;
++---------+-------+--------+
+| EMPNUM  | PNUM  | HOURS  |
++---------+-------+--------+
+| E9      | P9    |        |
++---------+-------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

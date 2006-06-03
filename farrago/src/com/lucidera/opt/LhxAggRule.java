@@ -20,10 +20,16 @@
 */
 package com.lucidera.opt;
 
-import net.sf.farrago.query.*;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.List;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.RelMetadataQuery;
 import org.eigenbase.relopt.*;
+import org.eigenbase.rex.*;
+
+import net.sf.farrago.query.*;
 
 /**
  * LhxAggRule is a rule for transforming {@link AggregateRel} to
@@ -88,13 +94,36 @@ public class LhxAggRule extends RelOptRule
             return;
         }
 
+        Double numInputRows = RelMetadataQuery.getRowCount(fennelInput);
+        if (numInputRows == null) {
+            numInputRows = 10000.0;
+        }
+
+        // Derive cardinality of RHS join keys.
+        Double cndGroupByKey;
+        BitSet groupByKeyMap = new BitSet();
+        
+        for (int i = 0; i < aggRel.getGroupCount(); i ++) {
+            groupByKeyMap.set(i);
+        }
+        
+        cndGroupByKey = RelMetadataQuery.getPopulationSize(
+            fennelInput, groupByKeyMap);
+        
+        if ((cndGroupByKey == null) || (cndGroupByKey > numInputRows)) {
+            cndGroupByKey = numInputRows;
+        }
+
         if (aggRel.getGroupCount() > 0) {
             LhxAggRel lhxAggRel =
                 new LhxAggRel(
                     aggRel.getCluster(),
                     fennelInput,
                     aggRel.getGroupCount(),
-                    aggRel.getAggCalls());
+                    aggRel.getAggCalls(),
+                    numInputRows.intValue(),
+                    cndGroupByKey.intValue());
+
             call.transformTo(lhxAggRel);
         } else {
             FennelAggRel fennelAggRel =

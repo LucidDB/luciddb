@@ -321,6 +321,13 @@ select * from matrix9x9;
 insert into multimulti (a2, b2, c2)
 select * from matrix3x3;
 
+select * from multimulti order by a1, b1, c1, a2, b2, c2, a3, b3, c3;
+-- insert target is same as source target
+insert into multimulti
+    select -a1, -b1, -c1, -a2, -b2, -c2, -a3, -b3, -c3 from multimulti
+        where a1 = 11 and b1 = 12;
+select * from multimulti order by a1, b1, c1, a2, b2, c2, a3, b3, c3;
+
 drop table multimulti;
 
 

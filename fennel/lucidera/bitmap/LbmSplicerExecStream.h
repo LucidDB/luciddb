@@ -78,6 +78,11 @@ class LbmSplicerExecStream : public BTreeExecStream, ConduitExecStream
     bool currExistingEntry;
 
     /**
+     * Start rid of the current existing entry in the bitmap index.
+     */
+    LcsRid currBTreeStartRid;
+
+    /**
      * True if table that the bitmap is being constructed on was empty to
      * begin with
      */
@@ -122,6 +127,7 @@ class LbmSplicerExecStream : public BTreeExecStream, ConduitExecStream
      * Tuple data for reading bitmaps from btree index
      */
     TupleData bTreeTupleData;
+    TupleData tempBTreeTupleData;
 
     /**
      * Tuple descriptor representing bitmap tuple
@@ -154,6 +160,26 @@ class LbmSplicerExecStream : public BTreeExecStream, ConduitExecStream
      * false if table was empty at the start of the load
      */
     bool existingEntry(TupleData const &bitmapEntry);
+
+    /**
+     * Searches the btree, looking for a bitmap entry
+     *
+     * @param bitmapEntry entry being searched
+     * @param bTreeTupleData tuple data where the btree record will be
+     * returned
+     *
+     * @return true if entry found in btree
+     */
+    bool findBTreeEntry(
+        TupleData const &bitmapEntry, TupleData &bTreeTupleData);
+
+    /**
+     * Determines if there exists a better entry in the btree, corresponding
+     * to the bitmap entry passed in, as compared to whatever is the current
+     * bitmap entry.  If there is, the current entry is written to the btree,
+     * and the current entry is set to the btree entry found.
+     */
+    void findBetterEntry(TupleData const &bitmapEntry);
 
     /**
      * Splices a bitmap entry to the current entry under construction.  If the

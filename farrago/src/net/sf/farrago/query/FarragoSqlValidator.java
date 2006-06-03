@@ -181,6 +181,16 @@ public class FarragoSqlValidator extends SqlValidatorImpl
     }
     
     // override SqlValidatorImpl
+    public void validateMerge(SqlMerge call)
+    {
+        getPreparingStmt().setDmlValidation(
+            call.getTargetTable(),
+            PrivilegedActionEnum.UPDATE);
+        super.validateMerge(call);
+        getPreparingStmt().clearDmlValidation();
+    }
+    
+    // override SqlValidatorImpl
     protected void validateFeature(
         ResourceDefinition feature,
         SqlParserPos context)

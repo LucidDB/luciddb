@@ -57,8 +57,11 @@ struct LhxHashInfo
 
     /**
      * Join keys, aggs and data
+     * For join,
      * index 0 refers to the orginal(optimizer chosen) probe side
      * index 1 refers to the orginal(optimizer chosen) build side
+     * For aggregation,
+     * index 0 refers to the input.
      */
     std::vector<TupleDescriptor> inputDesc;
 
@@ -73,6 +76,13 @@ struct LhxHashInfo
      */
     TupleProjection aggsProj;
     TupleProjection dataProj;
+    
+    /**
+     * Build key cardinality estimate from the optimizer.
+     * Used to estimate the size of the hash table(to build partial aggregates)
+     * during recursive partitioning for aggregate operations.
+     */
+    uint cndKeys;
 
     /**
      * ExecStream buf accessors.

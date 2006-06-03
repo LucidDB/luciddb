@@ -1,0 +1,23 @@
+-- setup
+-- end of setup
+
+-- thread reader1
+> select sys_boot.mgmt.sleep(5000) from concurrency.test;
++------------+
+| EXPR$0     |
++------------+
+| 0          |
++------------+
+
+-- end of thread reader1
+
+-- thread reader2
+> select sys_boot.mgmt.sleep(5000) from concurrency.test;
++------------+
+| EXPR$0     |
++------------+
+| 0          |
++------------+
+
+-- end of thread reader2
+

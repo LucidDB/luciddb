@@ -13,13 +13,13 @@ Contains concurrency tests for Farrago.
   </tr>
   <tr>
     <th>Copyright</th>
-    <td>Copyright (C) 2005-2005 The Eigenbase Project
-    <br>Copyright (C) 2005-2005 Disruptive Tech
-    <br>Copyright (C) 2005-2005 LucidEra, Inc.</td>
+    <td>Copyright (C) 2005-2006 The Eigenbase Project
+    <br>Copyright (C) 2005-2006 Disruptive Tech
+    <br>Copyright (C) 2005-2006 LucidEra, Inc.</td>
   </tr>
   <tr>
     <th>Author</th>
-    <td>John V. Sichi</td>
+    <td>Stephan Zuercher</td>
   </tr>
 </table>
 
@@ -183,6 +183,14 @@ if it's not needed.  Here's an example test script:
 	<td>
 		Sleep for T milliseconds.  May only appear inside of a
 		<tt>&#64;thread</tt> or <tt>&#64;repeat</tt> block.
+	</td>
+</tr>
+
+<tr>
+	<td nowrap>&#64;err SQL</td>
+	<td>
+		Execute SQL and verify that it results in an
+		error.
 	</td>
 </tr>
 </table>

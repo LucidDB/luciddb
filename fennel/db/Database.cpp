@@ -342,7 +342,14 @@ SharedSegment Database::createShadowLog(DeviceMode shadowLogMode)
     CompoundId::setBlockNum(deviceParams.firstBlockId,0);
 
     if (forceTxns) {
-        deviceParams.nPagesAllocated = 0;
+        if (shadowLogMode.create) {
+            // start allocating from beginning of device
+            deviceParams.nPagesAllocated = 0;
+        } else {
+            // treat entire device as pre-allocated because we're
+            // going to scan it during recovery
+            deviceParams.nPagesAllocated = MAXU;
+        }
     } else {
         deviceParams.nPagesAllocated = MAXU;
         deviceParams.nPagesIncrement = 0;

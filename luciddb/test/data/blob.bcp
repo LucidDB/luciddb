@@ -1,0 +1,4 @@
+6.0
+2
+1	SQLBINARY	0	21	","	1	c_binary
+2	SQLVARBINARY	0	21	"\n"	2	c_varbinary

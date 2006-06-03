@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/stat.sql#5 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/stat.sql#6 $
 0: jdbc:farrago:> -- This script tests statistics generation procedures
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set verbose true
@@ -37,53 +37,13 @@
 0: jdbc:farrago:> -- 1.1 Row counts, fine for foreign tables
 0: jdbc:farrago:> --
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','CUSTOMER',15000);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','LINEITEM',600572);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','NATION',25);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','ORDERS',150000);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','PART',20000);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','PARTSUPP',80000);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','REGION',5);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','SUPPLIER',1000);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
 +------------+--------------+-------------+------------+
@@ -110,11 +70,6 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_page_count(
 . . . . . . . . >     'LOCALDB','TPCD','SYS$CONSTRAINT_INDEX$DUMMY_REGION$SYS$PRIMARY_KEY',1);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
 +------------+--------------+---------------+----------------------------------------------------+--------+
@@ -130,20 +85,10 @@
 0: jdbc:farrago:> -- C_CUSTKEY
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB','TPCD','CUSTOMER','F1',15000,10,1500,0,'0123456789');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- C_NATIONKEY
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB','TPCD','CUSTOMER','F4',25,10,25,0,'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
 +------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
@@ -369,11 +314,6 @@
 0: jdbc:farrago:> --
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB','TPCD','CUSTOMER','F1',15000,100,15000,0,'0123456789');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
 +------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+

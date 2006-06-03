@@ -34,7 +34,7 @@ create view sessions_view as
 -- todo:  grant this only to a privileged user
 grant select on sessions_view to public;
 
-create function objectsInUse()
+create function objects_in_use()
 returns table(stmt_id int, mof_id varchar(32))
 
 language java
@@ -43,10 +43,19 @@ no sql
 external name 'class net.sf.farrago.syslib.FarragoManagementUDR.objectsInUse';
 
 create view objects_in_use_view as
-  select * from table(objectsInUse());
+  select * from table(objects_in_use());
 
 -- TODO: grant this only to a privileged user
 grant select on objects_in_use_view to public;
+
+-- lie and say this is non-deterministic, since it's usually used
+-- in cases where it would be annoying if it got optimized away
+create function sleep(millis bigint)
+returns integer
+language java
+no sql
+not deterministic
+external name 'class net.sf.farrago.syslib.FarragoManagementUDR.sleep';
 
 -- lets an administrator kill a running session
 -- TODO: grant this only to a privileged user
@@ -260,7 +269,8 @@ create view dba_tables_internal1 as
     cast(ae."creationTimestamp" as timestamp) as creation_timestamp,
     cast(ae."modificationTimestamp" as timestamp) as last_modification_timestamp,
     "description" as remarks,
-    t."mofId"
+    ae."mofId",
+    ae."lineageId"
   from
     sys_boot.jdbc_metadata.tables_view_internal t
   inner join 
@@ -278,7 +288,9 @@ create view dba_tables_internal2 as
     creation_timestamp,
     last_modification_timestamp,
     remarks,
-    g."Grantee"
+    g."Grantee",
+    dti."mofId",
+    dti."lineageId"
   from
     dba_tables_internal1 dti
   inner join
@@ -296,8 +308,6 @@ create view dba_views_internal1 as
     v."name" as view_name,
     cast("creationTimestamp" as timestamp) as creation_timestamp,
     cast("modificationTimestamp" as timestamp) as last_modification_timestamp,
-    "rowCount" as last_analyze_row_count,
-    cast("analyzeTime" as timestamp) as last_analyze_timestamp,
     "originalDefinition" as original_text,
     "description" as remarks,
     v."mofId",
@@ -318,8 +328,6 @@ create view dba_views_internal2 as
     view_name,
     creation_timestamp,
     last_modification_timestamp,
-    last_analyze_row_count,
-    last_analyze_timestamp,
     original_text,
     remarks,
     vi."mofId",

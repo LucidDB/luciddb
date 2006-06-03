@@ -81,11 +81,12 @@
 . . . . . . . . > K500K) SELECT C1,C2,C4,C5,C10,C25,C100,C1K,C10K,C40K,C100K,C250K,C500K 
 . . . . . . . . > FROM @name_prefix@_schema.BENCH_SOURCE_100
 . . . . . . . . > ;
-0: jdbc:luciddb:> -- deletes not working yet
-0: jdbc:luciddb:> -- DELETE FROM BENCH100 WHERE K25 = 2 and K2 = 2
-0: jdbc:luciddb:> -- ;
-0: jdbc:luciddb:> -- DELETE FROM BENCH100 WHERE KSEQ between 17 and 23
-0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> DELETE FROM BENCH100 WHERE K25 = 2 and K2 = 2
+. . . . . . . . > ;
+0: jdbc:luciddb:> DELETE FROM BENCH100 WHERE KSEQ between 17 and 23
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create index B100_K4_IDX on bench100 (k4)
 . . . . . . . . > ;
 0: jdbc:luciddb:> create index B100_K10K_IDX on bench100 (k10k)

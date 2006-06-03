@@ -18,14 +18,14 @@
 'FennelToIteratorConverter'
 '  LcsRowScanRel(table=[[LOCALDB, S1, T]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S1$T$I]])'
 '    LcsIndexSearchRel(table=[[LOCALDB, S1, T]], projection=[*], index=[IDX1], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
-'      FennelValuesRel(tuples=[[{ '[', 1, ']', 1 }]])'
+'      FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 1, _ISO-8859-1']', 1 }]])'
 0: jdbc:luciddb:> explain plan for select * from t where i=2
 . . . . . . . . > ;
 'column0'
 'FennelToIteratorConverter'
 '  LcsRowScanRel(table=[[LOCALDB, S1, T]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S1$T$I]])'
 '    LcsIndexSearchRel(table=[[LOCALDB, S1, T]], projection=[*], index=[IDX1], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
-'      FennelValuesRel(tuples=[[{ '[', 2, ']', 2 }]])'
+'      FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 2, _ISO-8859-1']', 2 }]])'
 0: jdbc:luciddb:> !set outputformat table
 0: jdbc:luciddb:> select * from t where i = 2
 . . . . . . . . > ;

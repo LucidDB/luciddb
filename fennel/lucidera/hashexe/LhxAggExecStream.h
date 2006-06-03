@@ -95,21 +95,20 @@ class LhxAggExecStream : public ConduitExecStream
     uint numBlocksHashTable;
 
     /**
-     * Initial estimate of slots required.
+     * Number of cache blocks set aside for I/O.
      */
-    uint numSlotsHashTable;
-
-    /**
-     * The next state of the JoinExecStream
-     */
-    LhxAggState nextState;
+    uint numMiscCacheBlocks;
 
     /**
      * State of the AggExecStream
      */
     LhxAggState aggState;
-  
 
+    /**
+     * The next state of the AggExecStream
+     */
+    LhxAggState nextState;
+  
     bool isTopPartition;
     SharedLhxPlan rootPlan;
     LhxPlan *curPlan;
@@ -120,6 +119,7 @@ class LhxAggExecStream : public ConduitExecStream
     uint groupByKeyCount;
 
     AggComputerList aggComputers;
+    AggComputerList partialAggComputers;
 
     /**
      * The build partition(which is also the only partition)
@@ -152,6 +152,16 @@ class LhxAggExecStream : public ConduitExecStream
      */
     virtual void closeImpl();
 
+    /**
+     * Change oroginal agg computers to compute based on partial
+     * aggregates.
+     */
+    void getPartialAggComputers(
+        AggComputerList &aggComputers,
+        AggInvocationList const &aggInvocations,        
+        TupleDescriptor const &keyDesc,
+        TupleProjection const &aggsProj);
+        
 public:
     /*
      * implement ExecStream

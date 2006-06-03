@@ -1,0 +1,25 @@
+@nolockstep
+
+@setup
+
+-- this test verifies the lock matrix entry for a connection
+-- attempting to read from a table when another connection already
+-- has a read lock on that table; should succeed
+
+@end
+
+
+
+@thread reader1
+
+select sys_boot.mgmt.sleep(5000) from concurrency.test;
+
+@end
+
+
+
+@thread reader2
+
+select sys_boot.mgmt.sleep(5000) from concurrency.test;
+
+@end

@@ -1,4 +1,4 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/appvar.sql#1 $
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/appvar.sql#3 $
 0: jdbc:luciddb:> -- Test script for application variables UDF/UDP
 0: jdbc:luciddb:> set schema 'udftest';
 0: jdbc:luciddb:> set path 'udftest';
@@ -8,15 +8,9 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create a context
 0: jdbc:luciddb:> call applib.create_var('context1', null, 'very explicit');
-<resultset>
-  <result EXPR$0="null"/>
-</resultset>
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create a variable in that context
 0: jdbc:luciddb:> call applib.create_var('context1', 'var1', 'rather moody');
-<resultset>
-  <result EXPR$0="null"/>
-</resultset>
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- default value should be null
 0: jdbc:luciddb:> values (applib.get_var('context1', 'var1'));
@@ -26,9 +20,6 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- set a new value and verify that value was updated
 0: jdbc:luciddb:> call applib.set_var('context1', 'var1', 'foo');
-<resultset>
-  <result EXPR$0="null"/>
-</resultset>
 0: jdbc:luciddb:> values (applib.get_var('context1', 'var1'));
 <resultset>
   <result EXPR$0="foo"/>
@@ -36,9 +27,6 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- and again
 0: jdbc:luciddb:> call applib.set_var('context1', 'var1', 'bar');
-<resultset>
-  <result EXPR$0="null"/>
-</resultset>
 0: jdbc:luciddb:> values (applib.get_var('context1', 'var1'));
 <resultset>
   <result EXPR$0="bar"/>
@@ -54,9 +42,6 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- delete variable
 0: jdbc:luciddb:> call applib.delete_var('context1', 'var1');
-<resultset>
-  <result EXPR$0="null"/>
-</resultset>
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- should fail:  no longer exists
 0: jdbc:luciddb:> values (applib.get_var('context1', 'var1'));
@@ -66,11 +51,13 @@ Error: Application variable 'var1' has not been created in context 'context1' (s
 0: jdbc:luciddb:> values (applib.get_var('context1', 'var0'));
 Error: Application variable 'var0' has not been created in context 'context1' (state=,code=0)
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- create a variable, implicitly creating its context
+0: jdbc:luciddb:> -- should fail:  create a variable, attempting to implicitly create its context
 0: jdbc:luciddb:> call applib.create_var('context2', 'var2', 'uncomfortably implicit');
-<resultset>
-  <result EXPR$0="null"/>
-</resultset>
+Error: Application variable context 'context2' has not been created (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- do it right
+0: jdbc:luciddb:> call applib.create_var('context2', null, 'uncomfortably implicit');
+0: jdbc:luciddb:> call applib.create_var('context2', 'var2', 'uncomfortably implicit');
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- default value should be null
 0: jdbc:luciddb:> values (applib.get_var('context2', 'var2'));
@@ -80,9 +67,6 @@ Error: Application variable 'var0' has not been created in context 'context1' (s
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- delete context, which should implicitly delete variable
 0: jdbc:luciddb:> call applib.delete_var('context2', null);
-<resultset>
-  <result EXPR$0="null"/>
-</resultset>
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- should fail:  no longer exists
 0: jdbc:luciddb:> values (applib.get_var('context2', 'var2'));

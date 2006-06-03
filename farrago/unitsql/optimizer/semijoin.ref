@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/optimizer/semijoin.sql#5 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/semijoin.sql#6 $
 0: jdbc:farrago:> -- Tests semijoin transformations
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema sj;
@@ -37,48 +37,18 @@
 0: jdbc:farrago:> -- tables and are meant to force the optimizer to choose semijoins
 0: jdbc:farrago:> 
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'T', 10000);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'SMALLTABLE', 10);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'SJ', 'T', 'B', 10, 100, 10, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'SJ', 'T', 'D', 10, 100, 10, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'SJ', 'SMALLTABLE', 'S1', 10, 100, 10, 1,
 . . . . . . . . >     'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'SJ', 'SMALLTABLE', 'S3', 10, 100, 10, 1,
 . . . . . . . . >     'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- explain plan tests
 0: jdbc:farrago:> 
@@ -382,92 +352,27 @@
 0: jdbc:farrago:> -- make the optimizer think they are
 0: jdbc:farrago:> 
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'SALES', 100000);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'PRODUCT', 20);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'SALESPERSON', 10);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'CUSTOMER', 100);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'STATE', 5);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'SJ', 'SALES', 'PRODUCT_ID', 20, 100, 20, 0, '0123456789');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'SJ', 'SALES', 'SALESPERSON', 10, 100, 10, 0, '0123456789');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'SJ', 'SALES', 'CUSTOMER', 100, 100, 100, 0, '0123456789');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'SJ', 'PRODUCT', 'ID', 20, 100, 20, 0, '0123456789');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'SJ', 'SALESPERSON', 'ID', 10, 100, 10, 0, '0123456789');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'SJ', 'CUSTOMER', 'ID', 100, 100, 100, 0, '0123456789');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'SJ', 'CUSTOMER', 'CITY', 5, 100, 5, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'SJ', 'STATE', 'CITY', 5, 100, 5, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set outputformat csv
 0: jdbc:farrago:> 

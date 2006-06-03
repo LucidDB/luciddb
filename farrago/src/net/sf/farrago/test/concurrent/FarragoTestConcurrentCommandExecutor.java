@@ -116,7 +116,9 @@ public class FarragoTestConcurrentCommandExecutor extends Thread
         try {
             connection = DriverManager.getConnection(
                 jdbcURL, FarragoCatalogInit.SA_USER_NAME, null);
-            connection.setAutoCommit(false);
+            if (connection.getMetaData().supportsTransactions()) {
+                connection.setAutoCommit(false);
+            }
         } catch (Throwable t) {
             handleError(t, "during connect", null);
         }
@@ -158,7 +160,9 @@ public class FarragoTestConcurrentCommandExecutor extends Thread
 
         try {
             if (connection != null) {
-                connection.rollback();
+                if (connection.getMetaData().supportsTransactions()) {
+                    connection.rollback();
+                }
                 connection.close();
             }
         } catch (Throwable t) {

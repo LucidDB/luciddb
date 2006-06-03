@@ -113,7 +113,12 @@ public abstract class TableModificationRelBase extends SingleRel
     public boolean isDelete()
     {
         return operation.equals(Operation.DELETE);
-    }    
+    }
+    
+    public boolean isMerge()
+    {
+        return operation.equals(Operation.MERGE);
+    }
     
     // implement RelNode
     public RelDataType deriveRowType()
@@ -135,6 +140,20 @@ public abstract class TableModificationRelBase extends SingleRel
                 getCluster().getTypeFactory().createJoinType(
                     new RelDataType [] {
                         table.getRowType(),
+                        RelOptUtil.createTypeFromProjection(
+                            table.getRowType(),
+                            getCluster().getTypeFactory(), 
+                            updateColumnList)
+                    });
+        } else if (isMerge()) {
+            inputRowType =
+                getCluster().getTypeFactory().createJoinType(
+                    new RelDataType [] {
+                        getCluster().getTypeFactory().createJoinType(
+                            new RelDataType [] {
+                                table.getRowType(),
+                                table.getRowType()
+                            }),
                         RelOptUtil.createTypeFromProjection(
                             table.getRowType(),
                             getCluster().getTypeFactory(), 
@@ -192,12 +211,16 @@ public abstract class TableModificationRelBase extends SingleRel
         public static final int DELETE_ORDINAL = 3;
         public static final Operation DELETE =
             new Operation("DELETE", DELETE_ORDINAL);
+        public static final int MERGE_ORDINAL = 4;
+        public static final Operation MERGE =
+            new Operation("MERGE", MERGE_ORDINAL);
 
         /**
          * List of all allowable {@link TableModificationRel.Operation} values.
          */
         public static final EnumeratedValues enumeration =
-            new EnumeratedValues(new Operation [] { INSERT, UPDATE, DELETE });
+            new EnumeratedValues(
+                new Operation [] { INSERT, UPDATE, DELETE, MERGE });
 
         private Operation(
             String name,

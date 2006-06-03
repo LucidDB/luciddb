@@ -247,7 +247,9 @@ public class FarragoTestConcurrentScriptedCommandGenerator
 
         Connection connection = DriverManager.getConnection(
             jdbcUrl, FarragoCatalogInit.SA_USER_NAME, null);
-        connection.setAutoCommit(false);
+        if (connection.getMetaData().supportsTransactions()) {
+            connection.setAutoCommit(false);
+        }
 
         try {
             for(Iterator i = setupCommands.iterator(); i.hasNext(); ) {
@@ -290,7 +292,9 @@ public class FarragoTestConcurrentScriptedCommandGenerator
                 }
             }
         } finally {
-            connection.rollback();
+            if (connection.getMetaData().supportsTransactions()) {
+                connection.rollback();
+            }
             connection.close();
         }
     }
@@ -482,13 +486,18 @@ public class FarragoTestConcurrentScriptedCommandGenerator
                         
                         String sql = readSql(startOfSql, in);
                         boolean isSelect = isSelect(sql);
-                        assert(!isSelect);
                         
                         for(int i = threadId; i < nextThreadId; i++) {
+                            CommandWithTimeout newCommand;
+                            if (isSelect) {
+                                newCommand = new SelectCommand(sql, true);
+                            } else {
+                                newCommand = new SqlCommand(sql, true);
+                            }
                             addCommand(
                                 i,
                                 order,
-                                ((AbstractCommand)new SqlCommand(sql, true)));
+                                ((AbstractCommand) newCommand));
                         }
                         order++;
                     } else if (FETCH.equals(command)) {
@@ -929,6 +938,13 @@ public class FarragoTestConcurrentScriptedCommandGenerator
             super(0);
 
             this.sql = sql;
+        }
+
+        private SelectCommand(String sql, boolean errorExpected)
+        {
+            super(0);
+            this.sql = sql;
+            this.markToFail();
         }
 
         private SelectCommand(String sql, long timeout)

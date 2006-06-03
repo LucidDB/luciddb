@@ -1,0 +1,6 @@
+0: jdbc:luciddb:> create schema DT;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema DT2;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

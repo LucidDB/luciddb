@@ -165,6 +165,11 @@ public interface SqlValidator
      * Validates a DELETE statement.
      */
     void validateDelete(SqlDelete delete);
+    
+    /**
+     * Validates a MERGE statement.
+     */
+    void validateMerge(SqlMerge merge);
 
     /**
      * Validates a data type expression.

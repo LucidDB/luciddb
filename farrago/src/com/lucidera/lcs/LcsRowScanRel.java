@@ -464,10 +464,13 @@ public class LcsRowScanRel extends FennelMultipleRel
      */
     public FemAbstractColumn getColumnForFieldAccess(int columnOrdinal)
     {
+        // TODO zfong 5/29/06 - The code below does not account for UDTs.
+        // columnOrdinal represents a field ordinal and needs to be mapped
+        // back to its unflattened column ordinal.
         assert columnOrdinal >= 0;
         if (projectedColumns != null) {
             columnOrdinal = projectedColumns[columnOrdinal].intValue();
-        }
+        }    
         if (LucidDbOperatorTable.ldbInstance().isSpecialColumnId(columnOrdinal))
         {
             return null;
@@ -476,23 +479,31 @@ public class LcsRowScanRel extends FennelMultipleRel
                 get(columnOrdinal);
         }
     }
-
+    
     /**
-     * Gets the column referenced by a FieldAccess relative to this scan.
-     *
-     * @param columnOrdinal 0-based ordinal of an output field of the scan
-     *
-     * @return ordinal of the underlying column
+     * Returns the projected column ordinal for a given column ordinal,
+     * relative to this scan.
+     * 
+     * @param origColOrdinal original column ordinal (without projection)
+     * 
+     * @return column ordinal corresponding to the column in the projection
+     * for this scan; -1 if column is not in the projection list
      */
-    public int getOriginalColumnOrdinal(int columnOrdinal)
+    public int getProjectedColumnOrdinal(int origColOrdinal)
     {
-        assert columnOrdinal >= 0;
-        if (projectedColumns != null) {
-            // If called after projectin has been pushed inside, 
-            // map to the original column ordinal
-            return projectedColumns[columnOrdinal].intValue();
+        // TODO zfong 5/29/06 - The code below does not account for UDTs.
+        // origColOrdinal represents an unflattened column ordinal.  It needs
+        // to be converted to a flattened ordinal.  Furthermore, the flattened
+        // ordinal may map to multiple fields.
+        if (projectedColumns == null) {
+            return origColOrdinal;
         }
-        return columnOrdinal;
+        for (int i = 0; i < projectedColumns.length; i++) {
+            if (projectedColumns[i] == origColOrdinal) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     public RelOptTable getTable()

@@ -38,8 +38,6 @@ void LhxAggExecStream::prepare(
 
     TupleDescriptor inputDesc = pInAccessor->getTupleDesc();
 
-    inputTuple.compute(inputDesc);
-    
     TupleDescriptor keyDesc;
     TupleProjection keyProj;
     TupleDescriptor dataDesc;
@@ -92,6 +90,9 @@ void LhxAggExecStream::prepare(
         hashInfo.aggsProj.push_back(i++);
     }
     
+    getPartialAggComputers(partialAggComputers, params.aggInvocations,
+        keyDesc, hashInfo.aggsProj);
+
     for (i = 0; i < groupByKeyCount; i ++) {        
         /*
          * Hashing is special for varchar types(the trailing blanks are
@@ -110,33 +111,27 @@ void LhxAggExecStream::prepare(
 
     hashInfo.isKeyColVarChar.push_back(isKeyColVarChar);
 
-    uint usablePageSize = 
+    /*
+     * Let hash table use at most 50% os the total cache size.
+     */
+    uint cacheLimit, usablePageSize;
+
+    cacheLimit =
+        (params.scratchAccessor.pCacheAccessor)->getCache()
+        ->getMaxLockedPages() / 2;
+
+    usablePageSize = 
         (params.scratchAccessor.pSegment)->getUsablePageSize();
 
     /* 
-     * number of block required to perform the join, as given by the 
-     * optimizer, completely in memory.
+     * number of block and slots required to perform the join in memory,
+     * using estimates from the optimizer.
      */
-    uint hashTableBlocks = 
-        hashTable.blocksNeeded(
-            params.numRows, params.cndGroupByKeys, 
-            keyDesc, dataDesc, usablePageSize);
-
-    /*
-     * Cache pages requirement: at least 10000 blocks
-     * (or 40M for blocksize of 4K)
-     */
-    numBlocksHashTable = 
-        max((uint32_t)10000, hashTableBlocks + 10);
-
-    /*
-     * Use between 0.1% and 1% of cache pages to store slots.
-     */
-    numSlotsHashTable =
-        max(hashTable.slotsNeeded(params.cndGroupByKeys), (uint)10000);
-
-    numSlotsHashTable = min(numSlotsHashTable, (uint)100000);
-   
+    hashTable.calculateSize(
+        params.numRows, params.cndGroupByKeys, 
+        keyDesc, dataDesc, usablePageSize, cacheLimit,
+        numBlocksHashTable);
+    
     TupleDescriptor outputDesc;
 
     outputDesc = keyDesc;
@@ -150,7 +145,13 @@ void LhxAggExecStream::prepare(
 
     hashInfo.memSegmentAccessor = params.scratchAccessor;
     hashInfo.externalSegmentAccessor.pCacheAccessor = params.pCacheAccessor;
-    hashInfo.externalSegmentAccessor.pSegment = params.pTempSegment;        
+    hashInfo.externalSegmentAccessor.pSegment = params.pTempSegment;
+    hashInfo.cndKeys = params.cndGroupByKeys;
+
+    /*
+     * Set aside 10 cache blocks for I/O.
+     */
+    numMiscCacheBlocks = 10;
 }
 
 void LhxAggExecStream::getResourceRequirements(
@@ -158,15 +159,8 @@ void LhxAggExecStream::getResourceRequirements(
     ExecStreamResourceQuantity &optQuantity)
 {
     ConduitExecStream::getResourceRequirements(minQuantity,optQuantity);
-    SharedCache pCache = 
-        (hashInfo.memSegmentAccessor.pCacheAccessor)->getCache();
     
-    /*
-     * Let hash table use at most 50% os the total cache size.
-     */
-    uint cacheLimit = pCache->getAllocatedPageCount() / 2;
-    
-    minQuantity.nCachePages += min(numBlocksHashTable, cacheLimit);
+    minQuantity.nCachePages += numBlocksHashTable + numMiscCacheBlocks;
 
     optQuantity = minQuantity;
 }
@@ -175,7 +169,7 @@ void LhxAggExecStream::setResourceAllocation(
     ExecStreamResourceQuantity &quantity)
 {
     ConduitExecStream::setResourceAllocation(quantity);
-    hashInfo.numCachePages = quantity.nCachePages;
+    hashInfo.numCachePages = quantity.nCachePages - numMiscCacheBlocks;
 }
 
 
@@ -191,7 +185,7 @@ void LhxAggExecStream::open(bool restart)
     hashTable.init(partitionLevel, hashInfo, &aggComputers);
     hashTableReader.init(&hashTable, hashInfo);
 
-    bool status = hashTable.allocateResources(numSlotsHashTable);
+    bool status = hashTable.allocateResources();
 
     assert(status);
 
@@ -200,30 +194,30 @@ void LhxAggExecStream::open(bool restart)
      *
      * The execute state machine operates at the plan level.
      */
+    uint numInput = 1;
+    uint numChild = 2;
+    LhxPlan *parentPlan = NULL;
+    vector<SharedLhxPartition> partitionList;
     buildPart = SharedLhxPartition(new LhxPartition());
 
     buildPart->firstPageId = NULL_PAGE_ID;
     buildPart->inputIndex = 0;
-
-    rootPlan =  SharedLhxPlan(new LhxPlan());
-    uint numInput = 1;
-    uint numChild       = 2;
-    LhxPlan *parentPlan = NULL;
-    vector<SharedLhxPartition> partitionList;
     partitionList.push_back(buildPart);
 
+    rootPlan =  SharedLhxPlan(new LhxPlan());
     rootPlan->init(partitionLevel, numChild, partitionList, parentPlan);
-
-    curPlan = rootPlan.get();
-    isTopPartition = true;
-
-    buildReader.open(curPlan->getPartition(buildInputIndex), hashInfo, true);
 
     /*
      * Initialize recursive partitioning context.
      */
+    isTopPartition = true;
     partInfo.init(numInput, numChild, &hashInfo);
 
+    /*
+     * Now starts at the first (root) plan.
+     */
+    curPlan = rootPlan.get();
+    buildReader.open(curPlan->getPartition(buildInputIndex), hashInfo, true);
     aggState = Build;
 }
 
@@ -238,6 +232,7 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
                 /*
                  * Build
                  */
+                inputTuple.compute(buildReader.getTupleDesc());
                 for (;;) {
                     if (!buildReader.isTupleConsumptionPending()) {
                         if (buildReader.getState() == EXECBUF_EOS) {
@@ -252,7 +247,7 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
                         if (!buildReader.demandData()) {
                             if (isTopPartition) {
                                 /*
-                                 * Top level: request more data from producer.
+                                 * Top level: request more data from stream producer.
                                  */
                                 return EXECRC_BUF_UNDERFLOW;
                             } else {
@@ -273,9 +268,14 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
                      * contain null in its key columns, do not add to hash
                      * table.
                      */
-                    if (!hashTable.addTuple(inputTuple)) {                        
-                        partInfo.open(buildInputIndex,
-                            curPlan->getPartition(buildInputIndex));
+                    if (!hashTable.addTuple(inputTuple)) {
+                        if (isTopPartition) {
+                            partInfo.open(buildInputIndex,
+                                &hashTableReader, &buildReader, inputTuple, &aggComputers);
+                        } else {
+                            partInfo.open(buildInputIndex,
+                                &hashTableReader, &buildReader, inputTuple, &partialAggComputers);
+                        }
                         aggState = Partition;
                         break;
                     }
@@ -307,33 +307,40 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
         case CreateChildPlan:
             {
                 FENNEL_TRACE(TRACE_FINE, (curPlan->dataTrace).str());
-
                 /*
                  * Link the newly created partitioned in the plan tree.
                  */
                 curPlan->createChildren(partInfo);
                 
                 /*
-                 * now recursice down the plan tree to get the first leaf plan.
+                 * Reset the list of partitions to prepare for the next level
+                 * of recursive partitioning.
+                 */
+                partInfo.reset();
+
+                /*
+                 * now recurse down the plan tree to get the first leaf plan.
                  */
                 curPlan = curPlan->getFirstChild().get();
 
                 isTopPartition = false;
                 hashTable.releaseResources();
 
-                hashTable.init(curPlan->partitionLevel, hashInfo);
+                /*
+                 * At recursive level, the input tuple shape is
+                 * different. Inputs are all partial aggregates now.
+                 * Hash table needs to aggregate partial results using the
+                 * correct agg computer interface.
+                 */
+                hashTable.init(curPlan->partitionLevel, hashInfo, &partialAggComputers);
                 hashTableReader.init(&hashTable, hashInfo);
 
-                bool status = hashTable.allocateResources(numSlotsHashTable);
+                bool status = hashTable.allocateResources();
                 assert(status);
+
                 buildReader.open(curPlan->getPartition(buildInputIndex),
                     hashInfo, true);
 
-                /*
-                 * Reset the list of partitions to prepare for the next level
-                 * of recursive partitioning.
-                 */
-                partInfo.reset();
                 aggState = Build;
                 break;                
             }
@@ -343,13 +350,20 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
                 if (curPlan) {
                     hashTable.releaseResources();
 
-                    hashTable.init(curPlan->partitionLevel, hashInfo);
+                    /*
+                     * At recursive level, the input tuple shape is
+                     * different. Inputs are all partial aggregates now.
+                     * Hash table needs to aggregate partial results using the
+                     * correct agg computer interface.
+                     */
+                    hashTable.init(curPlan->partitionLevel, hashInfo, &partialAggComputers);
                     hashTableReader.init(&hashTable, hashInfo);
-
-                    bool status = hashTable.allocateResources(numSlotsHashTable);
+                    bool status = hashTable.allocateResources();
                     assert(status);
+
                     buildReader.open(curPlan->getPartition(buildInputIndex),
                         hashInfo, true);
+
                     aggState = Build;
                 } else {
                     aggState = Done;
@@ -418,6 +432,46 @@ void LhxAggExecStream::closeImpl()
     ConduitExecStream::closeImpl();
 }
 
+void LhxAggExecStream::getPartialAggComputers(
+    AggComputerList &partialAggComputers,
+    AggInvocationList const &aggInvocations,
+    TupleDescriptor const &keyDesc,
+    TupleProjection const &aggsProj)
+{
+    AggFunction partialAggFunction;
+    uint i = 0;
+
+    assert (aggInvocations.size() == aggsProj.size());
+
+    for (AggInvocationConstIter pInvocation(aggInvocations.begin());
+         pInvocation != aggInvocations.end();
+         ++pInvocation)
+    {
+        switch(pInvocation->aggFunction) {
+        case AGG_FUNC_COUNT:
+            partialAggFunction = AGG_FUNC_SUM;
+            break;
+        case AGG_FUNC_SUM:
+        case AGG_FUNC_MIN:
+        case AGG_FUNC_MAX:
+            partialAggFunction = pInvocation->aggFunction;
+            break;
+        default:
+            assert(false);
+            partialAggFunction = pInvocation->aggFunction;
+            break;
+        }
+        TupleAttributeDescriptor const *pInputAttr =
+            &(keyDesc[aggsProj[i]]);
+
+        partialAggComputers.push_back(
+            AggComputer::newAggComputer(
+                partialAggFunction,
+                pInputAttr));
+        partialAggComputers.back().setInputAttrIndex(aggsProj[i]);
+        i ++;
+    }    
+}
 
 
 FENNEL_END_CPPFILE("$Id$");

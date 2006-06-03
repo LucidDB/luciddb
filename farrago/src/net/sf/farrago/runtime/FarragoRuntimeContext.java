@@ -599,7 +599,9 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
             throw e;
         } finally {
             if (!success) {
-                newStreamGraph.closeAllocation();
+                if (newStreamGraph != null) {
+                    newStreamGraph.closeAllocation();
+                }
             }
         }
     }

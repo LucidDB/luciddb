@@ -26,11 +26,11 @@ import java.util.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.namespace.impl.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rel.metadata.*;
+import org.eigenbase.rex.*;
 import org.eigenbase.stat.*;
 
 /**
@@ -51,6 +51,8 @@ public class FarragoRelMetadataProvider extends ReflectiveRelMetadataProvider
 {
     private FarragoRepos repos;
     
+    private FarragoColumnMetadata columnMd;
+    
     /**
      * Initializes a provider with access to the Farrago catalog. The 
      * provider reads statistics stored in the catalog.
@@ -60,6 +62,7 @@ public class FarragoRelMetadataProvider extends ReflectiveRelMetadataProvider
     public FarragoRelMetadataProvider(FarragoRepos repos)
     {
         this.repos = repos;
+        columnMd = new FarragoColumnMetadata();
         
         mapParameterTypes(
             "getPopulationSize",
@@ -126,105 +129,19 @@ public class FarragoRelMetadataProvider extends ReflectiveRelMetadataProvider
     }
     
     public Set<BitSet> getUniqueKeys(RelNode rel)
-    {      
-        // this method only handles table level relnodes
-        if (rel.getTable() == null) {
-            return null;
-        }
-        
-        MedAbstractColumnSet table = (MedAbstractColumnSet) rel.getTable();
-        if (table.getCwmColumnSet() == null) {
-        	return null;
-        }
-        Set<BitSet> retSet = new HashSet<BitSet>();
-        
-        // first retrieve the columns from the primary key
-        FemPrimaryKeyConstraint primKey =
-            FarragoCatalogUtil.getPrimaryKey(table.getCwmColumnSet());
-        if (primKey != null) {
-            addKeyCols(primKey.getFeature(), false, retSet);
-        }
-        
-        // then, loop through each unique constraint, looking for unique
-        // constraints where all columns in the constraint are non-null
-        List<FemUniqueKeyConstraint> uniqueConstraints = 
-            FarragoCatalogUtil.getUniqueKeyConstraints(
-                table.getCwmColumnSet());
-        for (FemUniqueKeyConstraint uniqueConstraint : uniqueConstraints) {
-            addKeyCols(uniqueConstraint.getFeature(), true, retSet);
-        }
-        
-        return retSet;
-    }
-    
-    /**
-     * Forms bitmaps representing the columns in a constraint and adds them
-     * to a set
-     * 
-     * @param keyCols list of columns that make up a constraint
-     * @param checkNulls if true, don't add the columns of the constraint if
-     * the columns allow nulls
-     * @param keyList the set where the bitmaps will be added
-     */
-    private void addKeyCols(
-        List<FemAbstractColumn> keyCols, boolean checkNulls,
-        Set<BitSet> keyList)
-    {
-        BitSet colMask = new BitSet();
-        boolean nullFound = false;
-        for (FemAbstractColumn keyCol : keyCols) {          
-            if (checkNulls &&
-                FarragoCatalogUtil.isColumnNullable(repos, keyCol))
-            {
-                nullFound = true;
-                break;
-            }
-            colMask.set(keyCol.getOrdinal());
-        }
-        if (!nullFound) {
-            keyList.add(colMask);
-        }
+    {           
+        return columnMd.getUniqueKeys(rel, repos);
     }
     
     public Double getPopulationSize(RelNode rel, BitSet groupKey)
     {
-        // this method only handles table level relnodes
-        if (rel.getTable() == null) {
-            return null;
-        }
-        
-        double population = 1.0;
-        
-        // if columns are part of a unique key, then just return the rowcount
-        if (RelMdUtil.areColumnsUnique(rel, groupKey)) {
-            return RelMetadataQuery.getRowCount(rel);
-        }
-        
-        // if no stats are available, return null
-        RelStatSource tabStats = RelMetadataQuery.getStatistics(rel);
-        if (tabStats == null) {
-            return null;
-        }
-        
-        // multiply by the cardinality of each column
-        for (int col = groupKey.nextSetBit(0); col >= 0;
-            col = groupKey.nextSetBit(col + 1))
-        {
-            RelStatColumnStatistics colStats =
-                tabStats.getColumnStatistics(col, null);
-            if (colStats == null) {
-                return null;
-            }
-            Double colCard = colStats.getCardinality();
-            if (colCard == null) {
-                return null;
-            }
-            population *= colCard;
-        }
-        
-        // cap the number of distinct values
-        return RelMdUtil.numDistinctVals(
-            population, RelMetadataQuery.getRowCount(rel));
+        return columnMd.getPopulationSize(rel, groupKey);
+    }
+    
+    public Double getDistinctRowCount(
+        RelNode rel, BitSet groupKey, RexNode predicate)
+    {
+        return columnMd.getDistinctRowCount(rel, groupKey, predicate);
     }
 }
 

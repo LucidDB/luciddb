@@ -1,0 +1,8 @@
+0: jdbc:luciddb:> -- create a single-row table for use in various locking scenarios
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema concurrency;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table concurrency.test(i int);
+0: jdbc:luciddb:> insert into concurrency.test values(42);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

@@ -34,7 +34,6 @@
       
       <test name="delk2" requiresSuccess="creschema">
         <test-metadata>
-          <notImplemented value="true"/>
           <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/flip/del_k2_2.sql"/>

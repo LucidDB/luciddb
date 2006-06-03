@@ -172,16 +172,21 @@ public:
      * TupleDescriptor information previously passed in init().
      * This function needs to be called after calling init().
      */
-    uint getMaxStorageSize();
+    inline uint getMaxStorageSize();
 
     /**
      * Get actual buffer size required to store all the fields.
      *
-     * @param[in] inputTuple if NULL get the tuple storage size for the buffer
-     * associated with this accessor; else get the storage size for the
-     * inputTuple.
+     * @param[in] inputTuple get the storage size for this inputTuple.
      */
-    uint getStorageSize(TupleData const &inputTuple);
+    inline uint getStorageSize(TupleData const &inputTuple);
+
+    /**
+     * Get actual disk size required to store all the fields.
+     *
+     * @param[in] inputTuple get the storage size for this inputTuple.
+     */
+    inline uint getDiskStorageSize(TupleData const &inputTuple);
 
     /**
      * Check that buffer size required to store all the fields does not exceed
@@ -312,16 +317,21 @@ public:
      * TupleDescriptor information previously passed in init().
      * This function needs to be called after calling init().
      */
-    uint getMaxStorageSize();
+    inline uint getMaxStorageSize();
 
     /**
      * Get actual buffer size required to store all the fields.
      *
-     * @param[in] inputTuple if NULL get the tuple storage size for the buffer
-     * associated with this accessor; else get the storage size for the
-     * inputTuple.
+     * @param[in] inputTuple get the storage size for this inputTuple.
      */
-    uint getStorageSize(TupleData const &inputTuple);
+    inline uint getStorageSize(TupleData const &inputTuple);
+
+    /**
+     * Get actual disk size required to store all the fields.
+     *
+     * @param[in] inputTuple get the storage size for this inputTuple.
+     */
+    inline uint getDiskStorageSize(TupleData const &inputTuple);
 
     /**
      * Check that buffer size required to store all the fields does not exceed
@@ -529,7 +539,10 @@ class LhxHashTable
      */
     LhxHashKeyAccessor  hashKeyAccessor;
     LhxHashDataAccessor hashDataAccessor;
-    
+
+    /**
+     * The maximum number of bytes writable in a scratch page.
+     */
     uint maxBufferSize;
 
     /**
@@ -605,7 +618,8 @@ public:
      *
      * @param[in] partitionLevelInit recursive partitioning level
      * @param[in] hashInfo
-     & @param[in] aggList pointer to list of agg computers.
+     * @param[in] aggList pointer to list of agg computers.
+     *
      */
     void init(
         uint partitionLevelInit,
@@ -625,16 +639,20 @@ public:
     /**
      * Allocate blocks to hold the number of slots needed for this hash table.
      *
-     * @param[in] numSlotsInit number of slots in the hash table.
+     * @param[in] reuse if true, reuse the blocks already allocated to this
+     * hash table.
      *
      * @return status. false if no more space left in the hash table.
      */
-    bool allocateResources(uint numSlotsInit);
+    bool allocateResources(bool reuse=false);
 
     /**
      * Release the blocks allocated.
+     *
+     * @param[in] reuse if true do not release the scratch pages back to the
+     * cache.
      */
-    void releaseResources();
+    void releaseResources(bool reuse=false);
 
     /**
      * Compute the number of slots required to hold "cndKeys" keys without
@@ -685,6 +703,43 @@ public:
         uint usablePageSize = 0);
 
     /**
+     * Compute the number of blocks and slots required by the hash table and
+     * its contents for "nRows" rows with "cndKeys" distinct key values, for
+     * the specified key(aggs included) and data descriptions.
+     *
+     * @param[in] numRows
+     * @param[in] cndKeys
+     * @param[in] keyDesc shape of key and agg cols
+     * @param[in] dataDesc shape of data cols
+     * @param[in] usablePageSize indicate the usable page size.
+     * @param[in] cacheBlocksLimit maximum number of blocks in the cache.
+     *
+     * @param[out] numBlocks max number of blocks for this hash table.
+     */
+    void calculateSize(
+        double numRows,
+        double cndKeys,
+        TupleDescriptor &keyDesc,
+        TupleDescriptor &dataDesc,
+        uint usablePageSizeInit,
+        uint cacheBlocksLimit,
+        uint &numBlocks);
+
+    /**
+     * Compute the number of slots required by this hash table to store
+     * "cndKeys" distinct key values.
+     *
+     * @param[in] cndKeys
+     * @param[in] usablePageSize indicate the usable page size.
+     * @param[in] numBlocks maximum number of blocks budgeted for this
+     * hash table
+     */
+    void calculateNumSlots(
+        double cndKeys,
+        uint usablePageSize,
+        uint numBlocks);
+    
+    /**
      * Find location that stores the key node based on key cols.
      *
      * @param[in] inputTuple
@@ -731,12 +786,17 @@ public:
     /**
      * @return number of slots.
      */
-    uint getNumSlots() const;
+    inline uint getNumSlots() const;
 
+    /**
+     * @return if this hash table aggregates input
+     */
     inline bool isHashAggregate() const;
 
     /**
      * Print the content of the node associated with this accessor.
+     *
+     * @return the string representation of this hash table.
      */
     string toString();
 };
@@ -860,6 +920,8 @@ public:
      * @return false if no more tuples to output.
      */
     bool getNext(TupleData &outputTuple);
+
+    inline LhxHashTable *getHashTable();
 };
 
 inline LhxHashNodeAccessor::LhxHashNodeAccessor()
@@ -941,6 +1003,17 @@ inline uint LhxHashDataAccessor::getMaxStorageSize()
     return (dataAccessor.getMaxByteCount() + getBufferOffset());
 }
 
+inline uint LhxHashDataAccessor::getStorageSize(TupleData const &inputTuple)
+{
+    return dataAccessor.getByteCount(inputTuple) + getBufferOffset();
+}
+
+inline uint LhxHashDataAccessor::getDiskStorageSize(
+    TupleData const &inputTuple)
+{   
+    return dataAccessor.getByteCount(inputTuple);
+}
+
 inline void LhxHashKeyAccessor::setCurrent(PBuffer nodePtrInit, bool valid)
 {
     LhxHashNodeAccessor::setCurrent(nodePtrInit);
@@ -950,6 +1023,16 @@ inline void LhxHashKeyAccessor::setCurrent(PBuffer nodePtrInit, bool valid)
 inline uint LhxHashKeyAccessor::getMaxStorageSize()
 {   
     return (keyAccessor.getMaxByteCount() + getBufferOffset());
+}
+
+inline uint LhxHashKeyAccessor::getStorageSize(TupleData const &inputTuple)
+{
+    return keyAccessor.getByteCount(inputTuple) + getBufferOffset();
+}
+
+inline uint LhxHashKeyAccessor::getDiskStorageSize(TupleData const &inputTuple)
+{   
+    return keyAccessor.getByteCount(inputTuple);
 }
 
 inline PBuffer LhxHashKeyAccessor::getFirstData()
@@ -1021,6 +1104,8 @@ inline PBuffer LhxHashTable::findKey(
 inline uint LhxHashTable::getNumSlots() const { return numSlots; }
 
 inline bool LhxHashTable::isHashAggregate() const { return isAggregate; }
+
+inline LhxHashTable *LhxHashTableReader::getHashTable() {return hashTable;}
 
 FENNEL_END_NAMESPACE
 

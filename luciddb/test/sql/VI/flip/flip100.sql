@@ -53,10 +53,9 @@ K500K) SELECT C1,C2,C4,C5,C10,C25,C100,C1K,C10K,C40K,C100K,C250K,C500K
 FROM ff_schema.BENCH_SOURCE_100
 ;
 
--- Deletes not working yet
--- delete from bench100 where k25=2
--- ;
--- delete from bench100 where k25=12
--- ;
--- delete from bench100 where k25=22
--- ;
+delete from bench100 where k25=2
+;
+delete from bench100 where k25=12
+;
+delete from bench100 where k25=22
+;

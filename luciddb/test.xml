@@ -11,6 +11,7 @@
 
       <test-suite-call testfile="test/sql/udr/udf/test.xml"/>
       <test-suite-call testfile="test/sql/udr/udx/test.xml"/>
+      <test-suite-call testfile="test/sql/concurrency/test.xml"/>
       <test-suite-call testfile="test/sql/VI/tbs/tbs100test.xml"/>
 
     </test-suite>

@@ -20,6 +20,8 @@
 */
 package com.lucidera.opt.test;
 
+import com.lucidera.lcs.*;
+
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.rel.rules.*;
@@ -37,8 +39,6 @@ import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.test.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
-
-import com.lucidera.opt.*;
 
 import java.math.*;
 import java.util.*;
@@ -828,25 +828,82 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
         assertEquals(DEFAULT_SARGABLE_SELECTIVITY, result.doubleValue());
     }
     
-    public void testPopulationLcsTable()
+    public void testDistinctRowCountProjectedLcsTable()
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(new LcsTableProjectionRule());
         transformQuery(
-            programBuilder.createProgram(), "select * from emps");
-     
-        // get the population of (deptno, name)
+            programBuilder.createProgram(),
+            "select name from emps");
+        
         BitSet groupKey = new BitSet();
         groupKey.set(0);
+        Double result = RelMetadataQuery.getDistinctRowCount(
+            rootRel, groupKey, null);
+        Double expected = new Double(90000);
+        assertEquals(expected, result.doubleValue(), EPSILON);
+    }
+    
+    public void testPopulationProjectedLcsTable()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(new LcsTableProjectionRule());
+        transformQuery(
+            programBuilder.createProgram(),
+            "select age, deptno, name from emps");
+     
+        // get the population of (deptno, name); note that the bits are
+        // the projected ordinals
+        BitSet groupKey = new BitSet();
         groupKey.set(1);
+        groupKey.set(2);
         Double result = RelMetadataQuery.getPopulationSize(
-            ((ProjectRel) rootRel).getChild(), groupKey);
+            rootRel, groupKey);
       
        Double expected =
            RelMdUtil.numDistinctVals(90000*150.0, COLSTORE_EMPS_ROWCOUNT*1.0);
        
        assertTrue(result != null);
        assertEquals(expected.doubleValue(), result.doubleValue(), EPSILON);
+    }
+    
+    public void testUniqueKeysProjectedLcsTable()
+        throws Exception
+    {
+        stmt.executeUpdate(
+            "create table tab(" +
+            "c0 int not null," +
+            "c1 int not null," +
+            "c2 int not null,"+
+            "c3 int not null," +
+            "c4 int," +
+            "constraint primkey primary key(c4)," +
+            "constraint uniquekey1 unique(c2, c3)," +
+            "constraint uniquekey2 unique(c0, c1))");
+        
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(new LcsTableProjectionRule());
+        transformQuery(
+            programBuilder.createProgram(),
+            "select c4, c2, c1, c0 from tab");
+        
+        // unique keys relative to projection are (0) and (3, 2);
+        // uniquekey1 is not included because c3 is not projected
+        Set<BitSet> expected = new HashSet<BitSet>();
+        
+        BitSet uniqKey = new BitSet();
+        uniqKey.set(0);
+        expected.add(uniqKey);
+        
+        uniqKey = new BitSet();
+        uniqKey.set(3);
+        uniqKey.set(2);
+        expected.add(uniqKey);
+        
+        Set<BitSet> result = RelMetadataQuery.getUniqueKeys(rootRel);
+        assertTrue(result.equals(expected));
     }
 }
 

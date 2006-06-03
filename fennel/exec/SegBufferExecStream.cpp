@@ -24,6 +24,7 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/exec/SegBufferExecStream.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
+#include "fennel/exec/ExecStreamGraphImpl.h"
 #include "fennel/segment/SegInputStream.h"
 #include "fennel/segment/SegOutputStream.h"
 
@@ -143,6 +144,7 @@ ExecStreamResult SegBufferExecStream::execute(ExecStreamQuantum const &)
             }
             return EXECRC_BUF_UNDERFLOW;
         case EXECBUF_EOS:
+            closeProducers(getStreamId());
             openBufferForRead(!multipass);
             break;
         default:
@@ -172,6 +174,25 @@ ExecStreamResult SegBufferExecStream::execute(ExecStreamQuantum const &)
         pBuffer,
         pBuffer + cbLastRead);
     return EXECRC_BUF_OVERFLOW;
+}
+
+void SegBufferExecStream::closeProducers(ExecStreamId streamId)
+{
+    ExecStreamGraphImpl &graphImpl =
+        dynamic_cast<ExecStreamGraphImpl&>(getGraph());
+    ExecStreamGraphImpl::GraphRep graphRep = graphImpl.getGraphRep();
+    ExecStreamGraphImpl::InEdgeIterPair inEdges =
+        boost::in_edges(streamId, graphRep);
+    for (; inEdges.first != inEdges.second; ++(inEdges.first)) {
+        ExecStreamGraphImpl::Edge edge = *(inEdges.first);
+        // move streamId upstream
+        streamId = boost::source(edge,graphRep);
+        // close the producers of this stream before closing the stream
+        // itself
+        closeProducers(streamId);
+        SharedExecStream pStream = graphImpl.getStreamFromVertex(streamId);
+        pStream->close();
+    }
 }
 
 ExecStreamBufProvision SegBufferExecStream::getOutputBufProvision() const

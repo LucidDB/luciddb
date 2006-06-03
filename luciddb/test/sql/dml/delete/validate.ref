@@ -1,0 +1,159 @@
+0: jdbc:luciddb:> ------------------------------------------------------------------------------
+0: jdbc:luciddb:> -----
+0: jdbc:luciddb:> --  pure validation
+0: jdbc:luciddb:> -----
+0: jdbc:luciddb:> ------------------------------------------------------------------------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --{{{ Validate the table we are DELETING
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- DELETE code needs to validate whether the table exists, whether it
+0: jdbc:luciddb:> -- is a normal table (not a view, system-table, etc), whether user
+0: jdbc:luciddb:> -- has delete permission on this table
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- -- DELETE on a table that does not exist (should fail)
+0: jdbc:luciddb:> DELETE FROM DT.TableThatDoesNotExist
+. . . . . . . . > ;
+Error: From line 1, column 13 to line 1, column 14: Table 'DT.TABLETHATDOESNOTEXIST' not found (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- -- DELETE on a system table (should fail)
+0: jdbc:luciddb:> -- DELETE FROM system.columns
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- -- DELETE on something in the catalog (should fail)
+0: jdbc:luciddb:> delete from sys_fem.med."StoredColumn";
+Error: Optimizer failed to find a valid physical implementation for relational expression rel#41:TableModificationRel.NONE(child=HepRelVertex#42,table=[SYS_FEM, MED, StoredColumn],operation=DELETE,updateColumnList=[],flattened=true); see trace for partially optimized plan (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- -- DELETE on a view (should fail)
+0: jdbc:luciddb:> --CREATE VIEW DT.onerowView AS SELECT * FROM system.onerow
+0: jdbc:luciddb:> --;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- DELETE FROM DT.onerowView
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE VIEW DT.onerowView as values(1, 'one', 1.00);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> DELETE from DT.onerowView;
+Error: Optimizer failed to find a valid physical implementation for relational expression rel#61:TableModificationRel.NONE(child=HepRelVertex#74,table=[LOCALDB, DT, ONEROWVIEW],operation=DELETE,updateColumnList=[],flattened=true); see trace for partially optimized plan (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- -- DELETE on a table which we don't have DELETE permission for (should fail)
+0: jdbc:luciddb:> CREATE TABLE DT.permissionCheck (x integer)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- CREATE USER aUser IDENTIFIED BY aUser
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE USER AUSER AUTHORIZATION 'Unknown';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE ROLE aRole
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- -- we grant all the permissions but the one that is actually necessary
+0: jdbc:luciddb:> -- GRANT ALL ON DT.permissionCheck TO aRole
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- REVOKE DELETE ON DT.permissionCheck FROM aRole
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> GRANT SELECT, INSERT, UPDATE on DT.permissionCheck TO AUSER;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> GRANT ROLE aRole TO aUser
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !closeall
+sqlline> !connect jdbc:luciddb: AUSER ""
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> DELETE FROM DT.permissionCheck
+. . . . . . . . > ;
+Error: Privilege "DELETE" required for access to table "DT"."PERMISSIONCHECK" (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !closeall
+sqlline> !connect jdbc:luciddb: sa ""
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> DELETE FROM DT.permissionCheck
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- DELETE via a synonym (should succeed)
+0: jdbc:luciddb:> -- CREATE TABLE DT.tableForSynonym (x integer, y integer)
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- INSERT INTO DT.tableForSynonym VALUES (1, 2)
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- CREATE SYNONYM DT.tableSynonym FOR DT.tableForSynonym
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- DELETE FROM DT.tableSynonym
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- SELECT * FROM DT.tableSynonym
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- Validate the WHERE clause
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- need to validate the where clause
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --}}}
+0: jdbc:luciddb:> --{{{ Validate special permission case
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- -- create users
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- CREATE SCHEMA schemaA
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> -- -- create user userA identified by userA default schema schemaA
+0: jdbc:luciddb:> -- -- ;
+0: jdbc:luciddb:> -- create user USERA authorization 'Unknown' default SCHEMA schemaA;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create role userA
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> -- grant userA to userA
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- CREATE SCHEMA schemaB
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> -- -- create user userB identified by userB default schema schemaB
+0: jdbc:luciddb:> -- -- ;
+0: jdbc:luciddb:> -- create user USERB authorization 'Unknown' default SCHEMA schemaB;
+0: jdbc:luciddb:> -- create role userB
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> -- grant role userB to userB
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- GRANT ALL on schemaA.* TO userA
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- GRANT ALL ON schemaB.* TO userB
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- -- user A
+0: jdbc:luciddb:> -- connect userA userA
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- CREATE TABLE DIM (x integer primary key)
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- GRANT SELECT ON DIM TO PUBLIC
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- -- user B
+0: jdbc:luciddb:> -- connect userB userB
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- CREATE TABLE FACT (y integer references schemaA.DIM(x))
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- -- user A again
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- connect userA userA
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- -- the following should work even though userA can't read FACT table
+0: jdbc:luciddb:> -- DELETE FROM DIM where x = 0
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- -- this should fail
+0: jdbc:luciddb:> -- SELECT * FROM schemaB.fact
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- --}}}
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit
