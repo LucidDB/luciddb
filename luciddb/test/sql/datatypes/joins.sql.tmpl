@@ -1,0 +1,21 @@
+set schema 's';
+
+import foreign schema "@SCHEMA@"
+limit to ("DEPT", "EMP", "SALES", "PRODUCTS")
+from server @SERVER_NAME@
+into @name_prefix@_is_schema;
+
+select DEPARTMENTS.DNAME, EMPLOYEES.FNAME
+from @name_prefix@_IS_SCHEMA.DEPT as DEPARTMENTS,
+    @name_prefix@_IS_SCHEMA.EMP as EMPLOYEES
+where DEPARTMENTS.DEPTNO = EMPLOYEES.DEPTNO
+order by 1,2;
+
+select EMP.FNAME, PRODUCTS.NAME, SALES.PRICE
+from @name_prefix@_IS_SCHEMA.SALES, @name_prefix@_IS_SCHEMA.PRODUCTS,
+    @name_prefix@_IS_SCHEMA.EMP
+where SALES.PRODID = PRODUCTS.PRODID 
+  and
+    SALES.EMPNO = EMP.EMPNO
+  and SALES.PRICE > 7.00
+order by 1,2,3;

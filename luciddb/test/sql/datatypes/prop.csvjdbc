@@ -24,7 +24,7 @@ SERVER_NAME=@name_prefix@_SERVER
 
 # csvjdbc options
 DRIVER_CLASS=org.relique.jdbc.csv.CsvDriver
-URL=jdbc:relique:csv:@open.dir@/luciddb/test/sql/datatypes
+URL=jdbc:relique:csv:@open.dir@/luciddb/test/sql/datatypes/csv-copy
 SCHEMA_NAME=TESTDATA
 
 SCHEMA=TESTDATA

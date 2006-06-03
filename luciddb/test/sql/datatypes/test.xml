@@ -8,6 +8,7 @@
             <test-suite-modifier value="datatypes"/>
           </test-suite-call>
         </test-suite>
+        <ant dir="${open.dir}/luciddb/test/sql/datatypes" target="copy-csv"/>
       </init-hook>
 
       <test name="creschema">
@@ -32,6 +33,10 @@
 
       <test name="metadata">
         <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${foreign.db}/metadatatypes.sql"/>
+      </test>
+
+      <test name="joins">
+        <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${foreign.db}/joins.sql"/>
       </test>
 
       <cleanup-hook>

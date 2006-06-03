@@ -8,6 +8,7 @@
             <test-suite-modifier value="datatypes-csvjdbc"/>
           </test-suite-call>
         </test-suite>
+        <ant dir="${open.dir}/luciddb/test/sql/datatypes" target="copy-csv"/>
       </init-hook>
 
       <test name="creschema">
