@@ -849,7 +849,6 @@ require version '${required.ant.version}'."/>
         <fileset dir="${farrago.classes.dir}">
           <exclude name="**/test/regression/*Test.class"/>
           <exclude name="**/test/concurrent/*Test.class"/>
-          <exclude name="**/test/FarragoServerTest.class"/>
           <include name="**/*Test.class"/>
         </fileset>
       </testfileset>

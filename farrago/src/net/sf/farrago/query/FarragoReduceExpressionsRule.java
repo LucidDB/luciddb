@@ -93,7 +93,7 @@ public class FarragoReduceExpressionsRule extends RelOptRule
                 reducibleExps,
                 reducedValues);
         FarragoSession session = getSession(rel);
-        reentrantStmt.execute(session);
+        reentrantStmt.execute(session, true);
         if (reentrantStmt.failed) {
             return;
         }
