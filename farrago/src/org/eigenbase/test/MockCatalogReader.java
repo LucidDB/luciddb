@@ -61,6 +61,10 @@ public class MockCatalogReader implements SqlValidatorCatalogReader
             typeFactory.createSqlType(SqlTypeName.Varchar, 20);
         final RelDataType dateType =
             typeFactory.createSqlType(SqlTypeName.Date);
+        final RelDataType rectilinearCoordType =
+            typeFactory.createStructType(
+                new RelDataType[] {intType, intType},
+                new String[] {"X", "Y"});
 
         // TODO jvs 12-Feb-2005: register this canonical instance with type
         // factory
@@ -121,13 +125,16 @@ public class MockCatalogReader implements SqlValidatorCatalogReader
         // Register "CUSTOMER" schema.
         MockSchema customerSchema = new MockSchema("CUSTOMER");
         registerSchema(customerSchema);
+
         // Register "CONTACT" table.
         MockTable contactTable = new MockTable(customerSchema, "CONTACT");
         contactTable.addColumn("CONTACTNO", intType);
         contactTable.addColumn("FNAME", varchar10Type);
         contactTable.addColumn("LNAME", varchar10Type);
         contactTable.addColumn("EMAIL", varchar20Type);
+        contactTable.addColumn("COORD", rectilinearCoordType);
         registerTable(contactTable);
+        
         // Register "ACCOUNT" table.
         MockTable accountTable = new MockTable(customerSchema, "ACCOUNT");
         accountTable.addColumn("ACCTNO", intType);
