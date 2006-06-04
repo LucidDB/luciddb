@@ -54,29 +54,13 @@ public class RexCallBinding extends SqlOperatorBinding
     // implement SqlOperatorBinding
     public int getIntLiteralOperand(int ordinal)
     {
-        //todo move this to RexUtil
-        RexNode node = operands[ordinal];
-        if (node instanceof RexLiteral) {
-            return RexLiteral.intValue(node);
-        } else if (node instanceof RexCall) {
-            RexCall call = (RexCall) node;
-            if (call.isA(RexKind.MinusPrefix)) {
-                RexNode child = call.operands[0];
-                if (child instanceof RexLiteral) {
-                    return -RexLiteral.intValue(child);
-                }
-            }
-        }
-        throw Util.newInternal("should never come here");
+        return RexLiteral.intValue(operands[ordinal]);
     }
 
     // implement SqlOperatorBinding
     public boolean isOperandNull(int ordinal, boolean allowCast)
     {
-        // NOTE jvs 1-May-2006:  This call is only relevant
-        // for SQL validation, so anywhere else, just say
-        // everything's OK.
-        return false;
+        return RexUtil.isNullLiteral(operands[ordinal], allowCast);
     }
 
     // implement SqlOperatorBinding
