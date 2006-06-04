@@ -309,7 +309,6 @@ ${farrago.test.jvmargs}
     <pathelement location="${hsqldb.dir}/lib/hsqldb.jar"/>
     <pathelement location="${thirdparty.dir}/commons-transaction-1.1.jar"/>
     <pathelement location="${thirdparty.dir}/postgresql-8.1-406.jdbc2.jar"/>
-    <!-- REVIEW:  need separate classpaths for vjdbc build/run -->
     <pathelement location="${vjdbc.dir}/lib/vjdbc_server.jar"/>
     <pathelement location="${vjdbc.dir}/lib/vjdbc.jar"/>
     <pathelement location="${vjdbc.dir}/lib/commons-logging.jar"/>
