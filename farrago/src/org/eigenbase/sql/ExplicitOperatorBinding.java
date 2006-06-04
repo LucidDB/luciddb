@@ -65,7 +65,7 @@ public class ExplicitOperatorBinding extends SqlOperatorBinding
         return types[ordinal];
     }
 
-    public boolean isOperandNull(int ordinal)
+    public boolean isOperandNull(int ordinal, boolean allowCast)
     {
         // NOTE jvs 1-May-2006:  This call is only relevant
         // for SQL validation, so anywhere else, just say

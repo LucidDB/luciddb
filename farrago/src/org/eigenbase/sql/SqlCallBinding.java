@@ -22,9 +22,6 @@
 package org.eigenbase.sql;
 
 import org.eigenbase.sql.validate.*;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.fun.SqlLiteralChainOperator;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.resource.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.*;
@@ -97,9 +94,9 @@ public class SqlCallBinding extends SqlOperatorBinding
     }
 
     // implement SqlOperatorBinding
-    public boolean isOperandNull(int ordinal)
+    public boolean isOperandNull(int ordinal, boolean allowCast)
     {
-        return SqlUtil.isNullLiteral(call.operands[ordinal], true);
+        return SqlUtil.isNullLiteral(call.operands[ordinal], allowCast);
     }
 
     // implement SqlOperatorBinding
