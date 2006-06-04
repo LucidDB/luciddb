@@ -2484,6 +2484,23 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
     }
 
+    public void testRecordType()
+    {
+        // Have to qualify columns with table name.
+        checkFails("SELECT ^coord^.x, coord.y FROM customer.contact",
+            "Table 'COORD' not found");
+
+        checkResultType(
+            "SELECT contact.coord.x, contact.coord.y FROM customer.contact",
+            "RecordType(INTEGER NOT NULL X, INTEGER NOT NULL Y) NOT NULL");
+
+        // Qualifying with schema is OK.
+        if (Bug.Frg140Fixed)
+        checkResultType(
+            "SELECT customer.contact.coord.x, customer.contact.email, contact.coord.y FROM customer.contact",
+            "RecordType(INTEGER NOT NULL X, INTEGER NOT NULL Y) NOT NULL");
+    }
+
     public void testNew()
     {
         // (To debug invidual statements, paste them into this method.)

@@ -92,15 +92,17 @@ public abstract class SqlOperatorBinding
     }
 
     /**
-     * Determines whether a bound operand is a bare null without cast.
-     * This is only relevant for SQL validation.
+     * Determines whether a bound operand is NULL.
+     *
+     * <p>This is only relevant for SQL validation.
      *
      * @param ordinal zero-based ordinal of operand of interest
+     * @param allowCast whether to regard CAST(constant) as a constant
      *
      * @return whether operand is null; false for everything
      * except SQL validation
      */
-    public boolean isOperandNull(int ordinal)
+    public boolean isOperandNull(int ordinal, boolean allowCast)
     {
         throw new UnsupportedOperationException();
     }
@@ -133,3 +135,5 @@ public abstract class SqlOperatorBinding
         return ret;
     }
 }
+
+// End SqlOperatorBinding.java
