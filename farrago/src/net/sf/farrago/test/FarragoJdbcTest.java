@@ -2470,7 +2470,10 @@ public class FarragoJdbcTest extends ResultSetTestCase
                 + "'");
         }
         String msg = e.toString();
-        if (!msg.matches(expectedPattern)) {
+        // NOTE jvs 4-June-2006:  Let regex dot match newlines
+        // since sometimes error stacks include them.
+        Pattern pattern = Pattern.compile(expectedPattern, Pattern.DOTALL);
+        if (!pattern.matcher(msg).matches()) {
             fail("Got a different error '" + msg + "' than expected '"
                 + expectedPattern + "'");
         }

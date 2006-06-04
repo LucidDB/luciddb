@@ -1,10 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2006-2006 The Eigenbase Project
+// Copyright (C) 2006-2006 Disruptive Tech
+// Copyright (C) 2006-2006 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -28,29 +27,29 @@ import java.util.*;
 import net.sf.farrago.jdbc.*;
 import net.sf.farrago.release.*;
 
-import org.objectweb.rmijdbc.RJConnectionInterface;
+import de.simplicit.vjdbc.*;
 
 /**
  * FarragoJdbcClientDriver implements the Farrago client side of
- * the {@link java.sql.Driver} interface via the RmiJdbc proxy.
+ * the {@link java.sql.Driver} interface via the VJDBC proxy.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoJdbcClientDriver extends FarragoAbstractJdbcDriver
+public class FarragoVjdbcClientDriver extends FarragoAbstractJdbcDriver
 {
     //~ Static fields/initializers --------------------------------------------
 
     static {
-        new FarragoJdbcClientDriver().register();
+        new FarragoVjdbcClientDriver().register();
     }
 
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Creates a new FarragoJdbcClientDriver object.
+     * Creates a new FarragoVjdbcClientDriver object.
      */
-    public FarragoJdbcClientDriver()
+    public FarragoVjdbcClientDriver()
     {
     }
 
@@ -86,13 +85,13 @@ public class FarragoJdbcClientDriver extends FarragoAbstractJdbcDriver
 
         Driver rmiDriver;
         try {
-            rmiDriver = new CustomRJDriver();
+            rmiDriver = new VirtualDriver();
         } catch (Exception ex) {
             // TODO: use FarragoJdbcUtil.newSqlException, see Jira FRG-122
             throw new SQLException(ex.getMessage());
         }
 
-        // transform the URL into a form understood by RmiJdbc
+        // transform the URL into a form understood by VJDBC
         String urlRmi = driverUrl.substring(getUrlPrefix().length());
         String [] split = urlRmi.split(":");
         if (split.length == 1) {
@@ -101,29 +100,13 @@ public class FarragoJdbcClientDriver extends FarragoAbstractJdbcDriver
                 FarragoReleaseProperties.instance();
             urlRmi = urlRmi + ":" + props.jdbcUrlPortDefault.get();
         }
-        urlRmi = "jdbc:rmi://" + urlRmi + "/" + getClientUrl();
+        urlRmi = "jdbc:vjdbc:rmi://" + urlRmi + "/VJdbc,FarragoDBMS";
 
         // NOTE:  can't call DriverManager.connect here, because that
         // would deadlock in the case where client and server are
         // running in the same VM
         return rmiDriver.connect(urlRmi, driverProps);
     }
-
-    private static class CustomRJDriver extends org.objectweb.rmijdbc.Driver 
-        implements java.sql.Driver, java.io.Serializable 
-    {
-        CustomRJDriver() throws Exception
-        {
-            super();
-        }
-
-        public java.sql.Connection buildConnection(RJConnectionInterface c)
-            throws SQLException
-        {
-            return new FarragoRJConnection(c);
-        }
-    }
 }
 
-
-// End FarragoJdbcClientDriver.java
+// End FarragoVjdbcClientDriver.java

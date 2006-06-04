@@ -8,6 +8,6 @@ set MAIN_DIR=%~dp0..
 call "%MAIN_DIR%\bin\defineFarragoRuntime.bat"
 if errorlevel 1 goto done
 
-%JAVA_EXEC% %JAVA_ARGS% net.sf.farrago.server.FarragoServer
+%JAVA_EXEC% %JAVA_ARGS% net.sf.farrago.server.FarragoVjdbcServer
 
 :done

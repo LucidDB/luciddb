@@ -258,7 +258,7 @@ public class FarragoJdbcEngineStatement implements FarragoStatement
     public int getMaxRows()
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+        return 0;
     }
 
     // implement Statement

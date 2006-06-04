@@ -21,31 +21,38 @@
 */
 package net.sf.farrago.test;
 
+import net.sf.farrago.jdbc.*;
+import net.sf.farrago.jdbc.client.*;
 import net.sf.farrago.server.*;
 
 /**
- * FarragoDebugServer's only purpose is to provide an entry point
- * from which FarragoServer can be debugged via an IDE such as Eclipse.
+ * FarragoServerTest tests Farrago client/server connections via VJDBC.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoDebugServer
+public class FarragoVjdbcServerTest extends FarragoServerTest
 {
     /**
-     * Provides an entry point for debugging FarragoServer.
+     * Initializes a new FarragoVjdbcServerTest.
      *
-     * @param args unused
+     * @param testCaseName JUnit test case name
      */
-    public static void main(String [] args)
+    public FarragoVjdbcServerTest(String testCaseName)
         throws Exception
     {
-        // Trick to invoke FarragoTestCase's static initializer to get default
-        // settings for environment variables.
-        FarragoQueryTest unused = new FarragoQueryTest("unused");
-        
-        FarragoVjdbcServer.main(new String[0]);
+        super(testCaseName);
+    }
+
+    protected FarragoAbstractServer newServer()
+    {
+        return new FarragoVjdbcServer();
+    }
+
+    protected FarragoAbstractJdbcDriver newClientDriver()
+    {
+        return new FarragoVjdbcClientDriver();
     }
 }
 
-// End FarragoDebugServer.java
+// End FarragoVjdbcServerTest.java

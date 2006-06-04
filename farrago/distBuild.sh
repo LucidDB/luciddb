@@ -144,6 +144,11 @@ cp hsqldb/doc/hypersonic_lic.txt $LIB_DIR/hsqldb.license.txt
 cp hsqldb/lib/hsqldb.jar $LIB_DIR
 cp postgresql-8.1-406.jdbc2.jar $LIB_DIR
 cp commons-transaction-1.1.jar $LIB_DIR
+cp vjdbc/lib/vjdbc.jar $LIB_DIR
+cp vjdbc/lib/vjdbc_server.jar $LIB_DIR
+cp vjdbc/lib/commons-logging.jar $LIB_DIR
+cp vjdbc/lib/commons-pool-1.2.jar $LIB_DIR
+cp vjdbc/lib/commons-dbcp-1.2.1.jar $LIB_DIR
 rm -f $LIB_DIR/fennel/*debug*
 cp stlport/README $LIB_DIR/fennel/stlport.README.txt
 if $dist_fennel; then
