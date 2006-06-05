@@ -87,6 +87,12 @@ public abstract class FarragoTestCase extends ResultSetTestCase
 
     private static Thread shutdownHook;
 
+    /**
+     * Connection counter for distinguishing connections during debug.
+     * @see #newConnection
+     */
+    private static int connCounter = 0;
+
     //~ Instance fields -------------------------------------------------------
 
     /** PreparedStatement for processing queries. */
@@ -245,9 +251,12 @@ public abstract class FarragoTestCase extends ResultSetTestCase
         throws Exception
     {
         FarragoJdbcEngineDriver driver = newJdbcEngineDriver();
+        // create sessionName with connection counter to help
+        // distinguish connections during debugging
+        String sessionName = ";sessionName=FarragoTestCase:" + ++connCounter;
         Connection newConnection =
             DriverManager.getConnection(
-                driver.getUrlPrefix(),
+                driver.getUrlPrefix() +sessionName,
                 FarragoCatalogInit.SA_USER_NAME,
                 null);
         if (newConnection.getMetaData().supportsTransactions()) {
