@@ -333,10 +333,4 @@ SqlNode FloorCeilOptions( SqlParserPos pos, boolean floorFlag) :
     }
 }
 
-void ExtendedViewDefinition( FemLocalView view, SqlNode query) :
-{}
-{
-    E()
-}
-
 // End RngParser.jj

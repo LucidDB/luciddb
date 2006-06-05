@@ -67,6 +67,12 @@ public class RelDataTypeFieldImpl implements RelDataTypeField
     {
         return type;
     }
+
+    // for debugging
+    public String toString()
+    {
+        return "#" + index + ": " + name + " " + type;
+    }
 }
 
 // End RelDataTypeFieldImpl.java

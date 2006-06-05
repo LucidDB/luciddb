@@ -503,7 +503,9 @@ public abstract class RelOptUtil
         int n = inputFields.length;
 
         RelDataTypeField [] outputFields = outputType.getFields();
-        assert outputFields.length == n;
+        assert outputFields.length == n :
+            "rename: field count mismatch: in=" + inputType +
+            ", out" + outputType;
 
         RexNode [] renameExps = new RexNode[n];
         String [] renameNames = new String[n];

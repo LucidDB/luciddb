@@ -512,8 +512,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         getSqlToRelConverter();
         if (analyzedSql.paramRowType == null) {
             // query expression
-            rootRel =
-                sqlToRelConverter.convertQuery(sqlNode, false, true);
+            rootRel = sqlToRelConverter.convertQuery(sqlNode, false, true);
             analyzedSql.setResultType(rootRel.getRowType());
             analyzedSql.paramRowType = getParamRowType();
         } else {
@@ -796,21 +795,25 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         needRestore = false;
     }
 
-    RelNode expandView(String queryString)
+    /**
+     * Returns a relational expression which is to be substituted for
+     * an access to a SQL view.
+     *
+     * @param rowType Row type of the view
+     * @param queryString Body of the view
+     * @return Relational expression
+     */
+    protected RelNode expandView(RelDataType rowType, String queryString)
     {
         expansionDepth++;
 
         FarragoSessionParser parser =
             getSession().getPersonality().newParser(getSession());
-        final SqlNode sqlQuery;
-        try {
-            sqlQuery = (SqlNode) parser.parseSqlText(
+        final SqlNode sqlQuery =
+            (SqlNode) parser.parseSqlText(
                 stmtValidator, null, queryString, true);
-        } catch (Throwable e) {
-            throw Util.newInternal(e,
-                "Error while parsing view definition:  " + queryString);
-        }
         RelNode relNode = sqlToRelConverter.convertQuery(sqlQuery, true, false);
+
         --expansionDepth;
         return relNode;
     }

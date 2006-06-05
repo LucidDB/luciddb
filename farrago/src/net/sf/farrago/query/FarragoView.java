@@ -67,14 +67,17 @@ class FarragoView extends FarragoQueryNamedColumnSet
         RelOptConnection connection)
     {
         // REVIEW:  cache view definition?
-        RelNode rel =
-            getPreparingStmt().expandView(
-                getFemView().getQueryExpression().getBody());
-        rel = RelOptUtil.createRenameRel(
-            getRowType(),
-            rel);
-        rel = getPreparingStmt().flattenTypes(rel, false);
-        return rel;
+        final String queryString = getFemView().getQueryExpression().getBody();
+        try {
+            RelNode rel = getPreparingStmt().expandView(
+                getRowType(), queryString);
+            rel = RelOptUtil.createRenameRel(rowType, rel);
+            rel = getPreparingStmt().flattenTypes(rel, false);
+            return rel;
+        } catch (Throwable e) {
+            throw Util.newInternal(e,
+                "Error while parsing view definition:  " + queryString);
+        }
     }
 }
 

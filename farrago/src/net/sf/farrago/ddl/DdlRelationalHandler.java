@@ -330,6 +330,8 @@ public class DdlRelationalHandler extends DdlHandler
             view.getFeature(),
             false);
 
+        validator.fixupView(view, analyzedSql);
+
         view.setOriginalDefinition(sql);
         view.getQueryExpression().setBody(analyzedSql.canonicalString);
         analyzedSql.setModality(view);
