@@ -33,6 +33,7 @@ import java.util.Calendar;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.EnumeratedValues;
@@ -500,12 +501,35 @@ public class RexLiteral extends RexNode
 
     public static int intValue(RexNode node)
     {
-        return ((Number) ((RexLiteral) node).value).intValue();
+        final Comparable value = findValue(node);
+        return ((Number) value).intValue();
     }
 
     public static String stringValue(RexNode node)
     {
-        return ((NlsString) ((RexLiteral) node).value).getValue();
+        final Comparable value = findValue(node);
+        return value == null ? null :
+            ((NlsString) value).getValue();
+    }
+
+    private static Comparable findValue(RexNode node)
+    {
+        if (node instanceof RexLiteral) {
+            return ((RexLiteral) node).value;
+        }
+        if (node instanceof RexCall) {
+            final RexCall call = (RexCall) node;
+            final SqlOperator operator = call.getOperator();
+            if (operator == SqlStdOperatorTable.castFunc) {
+                return findValue(call.getOperands()[0]);
+            }
+            if (operator == SqlStdOperatorTable.prefixMinusOperator) {
+                final BigDecimal value =
+                    (BigDecimal) findValue(call.getOperands()[0]);
+                return value.negate();
+            }
+        }
+        throw Util.newInternal("not a literal: " + node);
     }
 
     public static boolean isNullLiteral(RexNode node)
