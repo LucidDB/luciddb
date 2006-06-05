@@ -32,6 +32,7 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.fem.security.PrivilegedActionEnum;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.type.*;
@@ -43,6 +44,7 @@ import org.eigenbase.trace.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.validate.SqlMoniker;
+import org.eigenbase.resource.EigenbaseResource;
 
 
 /**
@@ -139,7 +141,7 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
      * Looks up a table's column by name, throwing a validation error if not
      * found.
      *
-     * @param table the table to search
+     * @param namedColumnSet the table to search
      * @param columnName name of column to find
      *
      * @return column found

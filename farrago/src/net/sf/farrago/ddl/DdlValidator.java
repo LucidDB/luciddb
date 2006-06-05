@@ -1355,6 +1355,11 @@ public class DdlValidator extends FarragoCompoundAllocation
         return result;
     }
 
+    public void fixupView(FemLocalView view, FarragoSessionAnalyzedSql analyzedSql)
+    {
+        // nothing
+    }
+
     /**
      * Removes dependency associations on oldElement so that it may be deleted
      * without cascading side effects.  Reassign these dependencies to newElement.

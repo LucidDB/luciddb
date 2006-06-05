@@ -29,6 +29,7 @@ import net.sf.farrago.util.FarragoAllocation;
 import net.sf.farrago.plugin.*;
 
 import org.eigenbase.reltype.*;
+import org.eigenbase.relopt.RelOptPlanner;
 
 import java.util.*;
 import java.util.regex.*;
@@ -282,7 +283,7 @@ public interface FarragoSession extends FarragoAllocation
      *
      * @param lurql query string
      *
-     * @param map from parameter name (String) to argument value
+     * @param argMap from parameter name (String) to argument value
      * (typically String or Set)
      *
      * @return collection of RefObjects retrieved by query
