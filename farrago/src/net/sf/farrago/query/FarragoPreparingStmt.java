@@ -145,6 +145,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     {
         super(null);
 
+        timingTracer = stmtValidator.getTimingTracer();
+
         this.stmtValidator = stmtValidator;
         stmtValidator.addAllocation(this);
 
