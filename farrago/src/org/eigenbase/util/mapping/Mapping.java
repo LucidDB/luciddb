@@ -39,7 +39,7 @@ import java.util.Iterator;
  *
  */
 public interface Mapping extends 
-    Mappings.FunctionMapping, Mappings.SourceMapping
+    Mappings.FunctionMapping, Mappings.SourceMapping, Iterable<IntPair>
 {
     /**
      * Returns an iterator over the elements in this mapping.

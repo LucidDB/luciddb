@@ -627,6 +627,21 @@ public class RexProgram
     }
 
     /**
+     * Returns whether an expression is constant.
+     * @param ref
+     * @return
+     */
+    public boolean isConstant(RexNode ref)
+    {
+        return ref.accept(new ConstantFinder());
+    }
+
+    public RexNode gatherExpr(RexNode expr)
+    {
+        return expr.accept(new Marshaller());
+    }
+
+    /**
      * Visitor which walks over a program and checks validity.
      */
     class Checker extends RexVisitorImpl<Boolean>
@@ -696,6 +711,139 @@ public class RexProgram
         }
     }
 
+    /**
+     * Walks over an expression and determines whether it is constant.
+     */
+    private class ConstantFinder implements RexVisitor<Boolean>
+    {
+        private ConstantFinder()
+        {
+        }
+
+        public Boolean visitLiteral(RexLiteral literal)
+        {
+            return true;
+        }
+
+        public Boolean visitInputRef(RexInputRef inputRef)
+        {
+            return false;
+        }
+
+        public Boolean visitLocalRef(RexLocalRef localRef)
+        {
+            final RexNode expr = exprs[localRef.index];
+            return expr.accept(this);
+        }
+
+        public Boolean visitOver(RexOver over)
+        {
+            return false;
+        }
+
+        public Boolean visitCorrelVariable(RexCorrelVariable correlVariable)
+        {
+            // Correlating variables are constant WITHIN A RESTART, so that's
+            // good enough.
+            return true;
+        }
+
+        public Boolean visitDynamicParam(RexDynamicParam dynamicParam)
+        {
+            // Dynamic parameters are constant WITHIN A RESTART, so that's
+            // good enough.
+            return true;
+        }
+
+        public Boolean visitCall(RexCall call)
+        {
+            // Constant if operator is deterministic and all operands are
+            // constant.
+            return call.getOperator().isDeterministic() &&
+                RexVisitorImpl.visitArrayAnd(this, call.getOperands());
+        }
+
+        public Boolean visitRangeRef(RexRangeRef rangeRef)
+        {
+            return false;
+        }
+
+        public Boolean visitFieldAccess(RexFieldAccess fieldAccess)
+        {
+            // "<expr>.FIELD" is constant iff "<expr>" is constant.
+            return fieldAccess.getReferenceExpr().accept(this);
+        }
+    }
+
+    /**
+     * Given an expression in a program, creates a clone of the expression
+     * with sub-expressions (represented by {@link RexLocalRef}s) fully
+     * expanded.
+     */
+    private class Marshaller extends RexVisitorImpl<RexNode>
+    {
+        Marshaller()
+        {
+            super(false);
+        }
+
+        public RexNode visitInputRef(RexInputRef inputRef)
+        {
+            return inputRef;
+        }
+
+        public RexNode visitLocalRef(RexLocalRef localRef)
+        {
+            final RexNode expr = exprs[localRef.index];
+            return expr.accept(this);
+        }
+
+        public RexNode visitLiteral(RexLiteral literal)
+        {
+            return literal;
+        }
+
+        public RexNode visitCall(RexCall call)
+        {
+            final RexNode [] operands = call.getOperands();
+            final RexNode[] newOperands = new RexNode[operands.length];
+            for (int i = 0; i < operands.length; i++) {
+                newOperands[i] = operands[i].accept(this);
+            }
+            return call.clone(
+                call.getType(),
+                newOperands);
+        }
+
+        public RexNode visitOver(RexOver over)
+        {
+            return visitCall(over);
+        }
+
+        public RexNode visitCorrelVariable(RexCorrelVariable correlVariable)
+        {
+            return correlVariable;
+        }
+
+        public RexNode visitDynamicParam(RexDynamicParam dynamicParam)
+        {
+            return dynamicParam;
+        }
+
+        public RexNode visitRangeRef(RexRangeRef rangeRef)
+        {
+            return rangeRef;
+        }
+
+        public RexNode visitFieldAccess(RexFieldAccess fieldAccess)
+        {
+            final RexNode referenceExpr =
+                fieldAccess.getReferenceExpr().accept(this);
+            return new RexFieldAccess(
+                referenceExpr,
+                fieldAccess.getField());
+        }
+    }
 }
 
 // End RexProgram.java
