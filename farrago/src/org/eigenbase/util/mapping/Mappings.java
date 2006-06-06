@@ -54,6 +54,9 @@ public abstract class Mappings
         int targetCount)
     {
         switch (mappingType) {
+        case Bijection:
+            assert sourceCount == targetCount;
+            return new Permutation(sourceCount);
         case InverseSurjection:
         case PartialSurjection:
             return new Mappings.PartialMapping(
@@ -273,7 +276,7 @@ public abstract class Mappings
      *
      * <p>TODO: figure out which interfaces this should extend
      */
-    public static interface TargetMapping
+    public static interface TargetMapping extends Mapping
     {
         int getSourceCount();
         int getSourceOpt(int target);
@@ -831,6 +834,13 @@ public abstract class Mappings
                 throw new IllegalArgumentException("Target must be less than " + targetCount);
             }
             targets[source] = target;
+        }
+
+        public void setAll(Mapping mapping)
+        {
+            for (IntPair pair : mapping) {
+                set(pair.source, pair.target);
+            }
         }
 
         public int getTargetOpt(int source)

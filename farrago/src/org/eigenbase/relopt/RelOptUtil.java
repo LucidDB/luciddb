@@ -35,6 +35,7 @@ import openjava.ptree.FieldAccess;
 import openjava.ptree.Variable;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.rules.PullConstantsThroughAggregatesRule;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeField;
@@ -804,6 +805,7 @@ public abstract class RelOptUtil
         CalcRel.register(planner);
         CollectRel.register(planner);
         UncollectRel.register(planner);
+        planner.addRule(PullConstantsThroughAggregatesRule.instance);
         planner.addRule(FilterToCalcRule.instance);
         planner.addRule(ProjectToCalcRule.instance);
 

@@ -21,7 +21,10 @@
 */
 package org.eigenbase.util;
 
+import org.eigenbase.util.mapping.*;
+
 import java.util.Arrays;
+import java.util.Iterator;
 
 /**
  * Represents a mapping which reorders elements in an array.
@@ -29,7 +32,7 @@ import java.util.Arrays;
  * @author Julian Hyde
  * @version $Id$
  */
-public class Permutation
+public class Permutation implements Mapping, Mappings.TargetMapping
 {
     private int[] targets;
     private int[] sources;
@@ -432,6 +435,63 @@ public class Permutation
     }
 
 
+    // implement Mapping
+    public Iterator<IntPair> iterator()
+    {
+        return new Iterator<IntPair>()
+        {
+            private int i = 0;
+
+            public boolean hasNext()
+            {
+                return i < targets.length;
+            }
+
+            public IntPair next()
+            {
+                final IntPair pair = new IntPair(i, targets[i]);
+                ++i;
+                return pair;
+            }
+
+            public void remove()
+            {
+                throw new UnsupportedOperationException();
+            }
+        };
+    }
+
+    public int getSourceCount()
+    {
+        return targets.length;
+    }
+
+    public int getTargetCount()
+    {
+        return targets.length;
+    }
+
+    public MappingType getMappingType()
+    {
+        return MappingType.Bijection;
+    }
+
+    public int getTargetOpt(int source)
+    {
+        return getTarget(source);
+    }
+
+    public int getSourceOpt(int target)
+    {
+        return getSource(target);
+    }
+
+    public void setAll(Mapping mapping)
+    {
+        for (IntPair pair : mapping) {
+            set(pair.source, pair.target);
+        }
+    }
 }
 
 // End Permutation.java

@@ -139,6 +139,18 @@ public enum MappingType
     }
 
     /**
+     * Returns whether this mapping type is (possibly a weaker form of) a
+     * given mapping type.
+     *
+     * <p>For example, a {@link #Bijection} is a {@link #Function}, but not
+     * every {link #Function} is a {@link #Bijection}.
+     */
+    public boolean isA(MappingType mappingType)
+    {
+        return (ordinal() & mappingType.ordinal()) == ordinal();
+    }
+
+    /**
      * A mapping is a total function if
      * every source has precisely one target.
      */
