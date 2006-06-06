@@ -6,62 +6,11 @@
 0: jdbc:luciddb:> set schema 'ct';
 0: jdbc:luciddb:> set path 'ct';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create table time_dim1 (
-. . . . . . . . >   TIME_KEY_SEQ int,
-. . . . . . . . >   TIME_KEY date,
-. . . . . . . . >   DAY_OF_WEEK varchar(10),
-. . . . . . . . >   WEEKEND varchar(1),
-. . . . . . . . >   DAY_NUMBER_IN_WEEK int,
-. . . . . . . . >   DAY_NUMBER_IN_MONTH int,
-. . . . . . . . >   DAY_NUMBER_IN_YEAR int,
-. . . . . . . . >   DAY_NUMBER_OVERALL int,
-. . . . . . . . >   WEEK_NUMBER_IN_YEAR int,
-. . . . . . . . >   WEEK_NUMBER_OVERALL int,
-. . . . . . . . >   MONTH_NAME varchar(10),
-. . . . . . . . >   MONTH_NUMBER_IN_YEAR int,
-. . . . . . . . >   MONTH_NUMBER_OVERALL int,
-. . . . . . . . >   QUARTER int,
-. . . . . . . . >   YR int,
-. . . . . . . . >   CALENDAR_QUARTER varchar(6),
-. . . . . . . . >   FIRST_DAY_OF_WEEK date
-. . . . . . . . > );
+0: jdbc:luciddb:> create table t1(aa int, bb varchar(20));
+0: jdbc:luciddb:> insert into t1 values (1, 'one'), (3, 'three'), (10, 'ten');
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> insert into time_dim1
-. . . . . . . . >   select * from
-. . . . . . . . >   table(applib.time_dimension(2101, 4, 27, 2101, 5, 1));
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create table time_dim2 (
-. . . . . . . . >   TIME_KEY_SEQ int,
-. . . . . . . . >   TIME_KEY date,
-. . . . . . . . >   DAY_OF_WEEK varchar(10),
-. . . . . . . . >   WEEKEND varchar(1),
-. . . . . . . . >   DAY_NUMBER_IN_WEEK int,
-. . . . . . . . >   DAY_NUMBER_IN_MONTH int,
-. . . . . . . . >   DAY_NUMBER_IN_YEAR int,
-. . . . . . . . >   DAY_NUMBER_OVERALL int,
-. . . . . . . . >   WEEK_NUMBER_IN_YEAR int,
-. . . . . . . . >   WEEK_NUMBER_OVERALL int,
-. . . . . . . . >   MONTH_NAME varchar(10),
-. . . . . . . . >   MONTH_NUMBER_IN_YEAR int,
-. . . . . . . . >   MONTH_NUMBER_OVERALL int,
-. . . . . . . . >   QUARTER int,
-. . . . . . . . >   YR int,
-. . . . . . . . >   CALENDAR_QUARTER varchar(6),
-. . . . . . . . >   FIRST_DAY_OF_WEEK date
-. . . . . . . . > );
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> insert into time_dim2
-. . . . . . . . >   select * from
-. . . . . . . . >   table(applib.time_dimension(2101, 4, 29, 2101, 5, 3));
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> insert into time_dim1
-. . . . . . . . >   select * from
-. . . . . . . . >   table(applib.time_dimension(2101, 4, 29, 2101, 5, 1));
-0: jdbc:luciddb:> insert into time_dim2
-. . . . . . . . >   select * from
-. . . . . . . . >   table(applib.time_dimension(2101, 4, 30, 2101, 5, 2));
+0: jdbc:luciddb:> create table t2(a int, b varchar(20));
+0: jdbc:luciddb:> insert into t2 values (2, 'dos'), (3, 'tres');
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> --
 0: jdbc:luciddb:> -- UDX with multiple output columns
@@ -208,57 +157,27 @@
 0: jdbc:luciddb:> --
 0: jdbc:luciddb:> -- UDX with two cursors
 0: jdbc:luciddb:> --
-0: jdbc:luciddb:> -- create function combine_timedim_tables(c1 cursor, c2 cursor, cmpCol int)
-0: jdbc:luciddb:> -- returns table(
-0: jdbc:luciddb:> --   TIME_KEY_SEQ int,
-0: jdbc:luciddb:> --   TIME_KEY date,
-0: jdbc:luciddb:> --   DAY_OF_WEEK varchar(10),
-0: jdbc:luciddb:> --   WEEKEND varchar(1),
-0: jdbc:luciddb:> --   DAY_NUMBER_IN_WEEK int,
-0: jdbc:luciddb:> --   DAY_NUMBER_IN_MONTH int,
-0: jdbc:luciddb:> --   DAY_NUMBER_IN_YEAR int,
-0: jdbc:luciddb:> --   DAY_NUMBER_OVERALL int,
-0: jdbc:luciddb:> --   WEEK_NUMBER_IN_YEAR int,
-0: jdbc:luciddb:> --   WEEK_NUMBER_OVERALL int,
-0: jdbc:luciddb:> --   MONTH_NAME varchar(10),
-0: jdbc:luciddb:> --   MONTH_NUMBER_IN_YEAR int,
-0: jdbc:luciddb:> --   MONTH_NUMBER_OVERALL int,
-0: jdbc:luciddb:> --   QUARTER int,
-0: jdbc:luciddb:> --   YR int,
-0: jdbc:luciddb:> --   CALENDAR_QUARTER varchar(6),
-0: jdbc:luciddb:> --   FIRST_DAY_OF_WEEK date
-0: jdbc:luciddb:> -- )
-0: jdbc:luciddb:> -- language java
-0: jdbc:luciddb:> -- parameter style system defined java
-0: jdbc:luciddb:> -- no sql
-0: jdbc:luciddb:> -- external name 'class com.lucidera.luciddb.test.udr.MergeRowsInOrderUdx.execute';
+0: jdbc:luciddb:> create function two_cursor_test(c1 cursor, c2 cursor)
+. . . . . . . . > returns table(col1 int, col2 varchar(20))
+. . . . . . . . > language java
+. . . . . . . . > parameter style system defined java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.TestTwoCursorUdx.execute';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- select * from table(
-0: jdbc:luciddb:> --   combine_timedim_tables(
-0: jdbc:luciddb:> --     cursor(select * from time_dim1 order by 1),
-0: jdbc:luciddb:> --     cursor(select * from time_dim2 order by 1),
-0: jdbc:luciddb:> --     8)
-0: jdbc:luciddb:> -- );
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- create function combine_junk(c1 cursor, c2 cursor, cmpCol int)
-0: jdbc:luciddb:> -- returns table( cola int, colb varchar(65535))
-0: jdbc:luciddb:> -- language java
-0: jdbc:luciddb:> -- parameter style system defined java
-0: jdbc:luciddb:> -- no sql
-0: jdbc:luciddb:> -- external name 'class com.lucidera.luciddb.test.udr.MergeRowsInOrderUdx.execute';
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- create table t1(aa int, bb varchar(20));
-0: jdbc:luciddb:> -- insert into t1 values (1, 'one'), (3, 'three'), (10, 'ten');
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- create table t2(a int, b varchar(20));
-0: jdbc:luciddb:> -- insert into t2 values (2, 'dos'), (3, 'tres');
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- select * from table(
-0: jdbc:luciddb:> --   combine_junk(
-0: jdbc:luciddb:> --     cursor(select * from t1 order by 1),
-0: jdbc:luciddb:> --     cursor(select * from t2 order by 1),
-0: jdbc:luciddb:> --     1)
-0: jdbc:luciddb:> -- );
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   two_cursor_test(
+. . . . . . . . >     cursor(select * from t1),
+. . . . . . . . >     cursor(select * from t2)))
+. . . . . . . . > order by 1;
++-------+--------+
+| COL1  |  COL2  |
++-------+--------+
+| 1     | one    |
+| 2     | dos    |
+| 3     | tres   |
+| 3     | three  |
+| 10    | ten    |
++-------+--------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> --
 0: jdbc:luciddb:> -- UDX with another UDX as input cursor
@@ -346,7 +265,7 @@
 . . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.ThrowsExceptionUdx.execute';
 0: jdbc:luciddb:> select * from table(
 . . . . . . . . >   test_throws_exception(
-. . . . . . . . >     cursor(select * from time_dim1 order by 1)
+. . . . . . . . >     cursor(select * from t1 order by 1)
 . . . . . . . . > ));
 Error: hey, hey, it's an exception (state=,code=0)
 0: jdbc:luciddb:> 
