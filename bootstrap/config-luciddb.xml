@@ -10,13 +10,11 @@
 
 	<!-- Bootstrappers are run with every build before mod checks -->
 	<bootstrappers>
-		<!-- currentbuildstatusbootstrapper file="logs/luciddb/currentbuildstatus.txt"/ -->
 		<p4bootstrapper port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/bootstrap/..."/>
 	</bootstrappers>
 
     <listeners>
-        <currentbuildstatuslistener file="logs/luciddb/currentbuildstatus.txt"/>
-        <currentbuildstatuslistener file="&open_default.build.home;/../web/logs/luciddb&configSuffix;/currentbuildstatus.txt"/>
+        <currentbuildstatuslistener file="&red.bootstrap.dir;/logs/luciddb/currentbuildstatus.txt"/>
     </listeners>
 
 	<!-- Defines where cruise looks for changes, to decide whether to run the build -->
@@ -52,8 +50,6 @@
 
 	<!-- Publishers are run *after* a build completes -->
 	<publishers>
-		<!-- currentbuildstatuspublisher file="logs/luciddb/currentbuildstatus.txt"/ -->
-
         <artifactspublisher 
             dir="&open_integration.build.home;/luciddb/trace" 
             dest="artifacts/luciddb&configSuffix;" 
@@ -102,21 +98,6 @@
             subdirectory="release"/>
 
 		<!-- sync up artifacts on jsp machine: CC's scp would copy everything -->
-
-        <scp sourcedir="logs/luciddb"
-			     targetuser="&scp_user;"
-			     targethost="&scp_host;"
-			     targetseparator="&scp_filesep;"
-			     targetdir="web/logs/luciddb&configSuffix;"
-                             options="&scp_options;"/>
-			
-		<scp sourcedir="logs/luciddb"
-			     file="currentbuildstatus.txt"
-			     targetuser="&scp_user;"
-			     targethost="&scp_host;"
-			     targetseparator="&scp_filesep;"
-			     targetdir="web/logs/luciddb&configSuffix;"
-                             options="&scp_options;"/> 
 
         <onsuccess>
             <antpublisher 
