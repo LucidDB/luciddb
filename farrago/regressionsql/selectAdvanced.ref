@@ -142,7 +142,9 @@
 0: jdbc:farrago:> -- fails
 0: jdbc:farrago:> values cast(null as boolean) + cast(null as integer);
 Error: From line 1, column 13 to line 1, column 52: Cannot apply '+' to arguments of type '<BOOLEAN> + <INTEGER>'. Supported form(s): '<NUMERIC> + <NUMERIC>'
-'<DATETIME_INTERVAL> + <DATETIME_INTERVAL>' (state=,code=0)
+'<DATETIME_INTERVAL> + <DATETIME_INTERVAL>'
+'<DATETIME> + <DATETIME_INTERVAL>'
+'<DATETIME_INTERVAL> + <DATETIME]>' (state=,code=0)
 0: jdbc:farrago:> -- fails
 0: jdbc:farrago:> values cast(null as boolean) and 1;
 Error: From line 1, column 13 to line 1, column 34: Cannot apply 'AND' to arguments of type '<BOOLEAN> AND <INTEGER>'. Supported form(s): '<BOOLEAN> AND <BOOLEAN>' (state=,code=0)
