@@ -35,7 +35,7 @@ create view sessions_view as
 grant select on sessions_view to public;
 
 create function objects_in_use()
-returns table(stmt_id int, mof_id varchar(32))
+returns table(session_id int, stmt_id int, mof_id varchar(32))
 
 language java
 parameter style system defined java
