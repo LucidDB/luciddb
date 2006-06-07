@@ -303,6 +303,32 @@ class LbmEntry : public LbmSegment
         uint prevZeroBytes);
 
     /**
+     * Creates a new segment in between two segments containing a singleton
+     * rid.
+     *
+     * @param[in|out] inputTuple the input entry singleton
+     * @param prevSrid starting rid of the segment that the new segment will be
+     * inserted after
+     * @param prevSegDesc pointer to the segment descriptor corresponding to the
+     * segment that the new segment will be inserted after
+     * @param nextSegDesc pointer to the segment descriptor corresponding to the
+     * segment that will follow the new segment
+     * @param prevSeg pointer to the segment that the new segment will be
+     * inserted after
+     * @param prevSegBytes number of bytes in the segment that the new segment
+     * will be inserted after
+     * @param prevZeroBytes number of trailing zeros in the segment that the new
+     * segment will be inserted after
+     *
+     * @return true if there is enough space in the current entry to
+     * accomodate the new byte; false otherwise
+     */
+    bool addNewMiddleSegment(
+        TupleData &inputTuple, LcsRid prevSrid, PBuffer prevSegDesc,
+        PBuffer nextSegDesc, PBuffer prevSeg, uint prevSegBytes,
+        uint prevZeroBytes);
+
+    /**
      * Creates a new segment adjacent to an existing segment, the new
      * segment corresponding to a singleton input.  I.e., replaces a byte
      * that's currently a "zero byte" with a byte containing a singleton rid.
@@ -376,7 +402,8 @@ class LbmEntry : public LbmSegment
      * @param inputTuple[in|out] input singleton
      * @param splitEntry the split off entry
      */
-    void mergeIntoSplitEntry(TupleData &inputTuple, TupleData splitEntry);
+    void mergeIntoSplitEntry(
+        TupleData &inputTuple, TupleData &splitEntry);
 
     /**
      ** STATIC MEMBERS AND METHODS

@@ -38,15 +38,29 @@ import net.sf.farrago.query.*;
  */
 public class LhxAggRel extends AggregateRelBase implements FennelRel
 {
+    /**
+     * row count of the input
+     */
+    int numInputRows;
+    
+    /**
+     * cardinality of the group by key
+     */
+    int cndGroupByKey;
+
     public LhxAggRel(
         RelOptCluster cluster,
         RelNode child,
         int groupCount,
-        Call [] aggCalls)
+        Call [] aggCalls,
+        int numInputRows,
+        int cndGroupByKey)
     {
         super(
             cluster, new RelTraitSet(FennelRel.FENNEL_EXEC_CONVENTION),
             child, groupCount, aggCalls);
+        this.numInputRows = numInputRows;
+        this.cndGroupByKey  = cndGroupByKey;
     }
 
     public Object clone()
@@ -55,7 +69,9 @@ public class LhxAggRel extends AggregateRelBase implements FennelRel
             getCluster(),
             RelOptUtil.clone(getChild()),
             groupCount,
-            aggCalls);
+            aggCalls,
+            numInputRows,
+            cndGroupByKey);
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -98,50 +114,8 @@ public class LhxAggRel extends AggregateRelBase implements FennelRel
             aggStream.getAggInvocation().add(aggInvocation);
         }
         
-        RelNode child = getChild();
-        Double numRows = RelMetadataQuery.getRowCount(child);
-        if (numRows == null) {
-            numRows = 10000.0;
-        }
-        aggStream.setNumRows(numRows.intValue());
-        
-        RelStatSource statSource = RelMetadataQuery.getStatistics(child);
-
-        // Derive cardinality of RHS join keys.
-        Double cndKeys = 1.0;
-        double correlationFactor = 0.7;
-        RelStatColumnStatistics colStat;
-        Double cndCol;
-        
-        for (int i = 0; i < getGroupCount(); i ++) {
-            cndCol = null;
-            if (statSource != null) {
-                colStat = statSource.getColumnStatistics(i, null);
-                if (colStat != null) {
-                    cndCol = colStat.getCardinality();
-                }
-            }
-
-            if (cndCol == null) {
-                // default to 100 distinct values for a column
-                cndCol = 100.0;
-            }
-            
-            cndKeys *= cndCol;
-            
-            // for each additional key, apply the correlationFactor.
-            if (i > 0) {
-                cndKeys *= correlationFactor;
-            }
-            
-            // cndKeys can be at most equal to number of rows from the build
-            // side.
-            if (cndKeys > numRows) {
-                cndKeys = numRows;
-                break;
-            }
-        }
-        aggStream.setCndGroupByKeys(cndKeys.intValue());
+        aggStream.setNumRows(numInputRows);
+        aggStream.setCndGroupByKeys(cndGroupByKey);
 
         implementor.addDataFlowFromProducerToConsumer(
             implementor.visitFennelChild((FennelRel) getChild()), 

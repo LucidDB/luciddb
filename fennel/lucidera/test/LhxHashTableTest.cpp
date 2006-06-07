@@ -229,9 +229,14 @@ void LhxHashTableTest::testInsert(
     for (i = 0; i < numKeyCols; i ++) {
         cndKeys *= repeatSeqValues[i];
     }
-    uint numSlots = hashTable.slotsNeeded(cndKeys);
 
-    bool status = hashTable.allocateResources(numSlots);
+    uint usablePageSize =
+        (hashInfo.memSegmentAccessor.pSegment)->getUsablePageSize();
+
+    hashTable.calculateNumSlots(cndKeys, usablePageSize, hashInfo.numCachePages);
+
+
+    bool status = hashTable.allocateResources();
 
     assert(status);
 

@@ -32,7 +32,7 @@ import org.objectweb.rmijdbc.RJConnectionInterface;
 
 /**
  * FarragoJdbcClientDriver implements the Farrago client side of
- * the {@link java.sql.Driver} interface.
+ * the {@link java.sql.Driver} interface via the RmiJdbc proxy.
  *
  * @author John V. Sichi
  * @version $Id$

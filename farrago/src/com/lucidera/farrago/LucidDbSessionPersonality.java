@@ -108,7 +108,7 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
     public void registerRelMetadataProviders(ChainedRelMetadataProvider chain)
     {
         chain.addProvider(
-            new LoptMetadataProvider());
+            new LoptMetadataProvider(database.getSystemRepos()));
     }
 
     private FarragoSessionPlanner newHepPlanner(
@@ -244,6 +244,9 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         // Convert semijoins to physical index access.
         builder.addRuleClass(LcsIndexSemiJoinRule.class);
         
+        // Remove any semijoins that couldn't be converted
+        builder.addRuleInstance(new LoptRemoveSemiJoinRule());
+        
         // Apply PushProjectPastJoinRule while there are no physical joinrels
         // since the rule only matches on JoinRel.
         builder.addRuleInstance(new RemoveTrivialProjectRule());
@@ -307,8 +310,7 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         builder.addRuleInstance(ReduceAggregatesRule.instance);
         
         // Use hash aggregation wherever possible.
-        // Temporarily disabled - zfong 5/25/06
-        // builder.addRuleInstance(new LhxAggRule());
+        builder.addRuleInstance(new LhxAggRule());
 
         // Convert remaining filters and projects to logical calculators,
         // merging adjacent ones.

@@ -47,6 +47,7 @@ import org.eigenbase.resgen.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.oj.stmt.*;
+import org.eigenbase.trace.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.reltype.*;
@@ -71,6 +72,10 @@ public class FarragoDbSession extends FarragoCompoundAllocation
 
     private static final Logger tracer =
         FarragoTrace.getDatabaseSessionTracer();
+    
+    private static final Logger sqlTimingTracer =
+        EigenbaseTrace.getSqlTimingTracer();
+
     public static final String MDR_USER_NAME = "MDR";
 
     //~ Instance fields -------------------------------------------------------
@@ -489,29 +494,35 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     }
     
     // implement FarragoAllocation
-    public synchronized void closeAllocation()
+    public void closeAllocation()
     {
-        super.closeAllocation();
-        if (isClone || isClosed()) {
-            return;
-        }
-        if (isTxnInProgress()) {
-            if (isAutoCommit) {
-                commitImpl();
-            } else {
-                // NOTE jvs 10-May-2005:  Technically,  we're supposed to throw
-                // an invalid state exception here.  However, it's very
-                // unlikely that the caller is going to handle it properly,
-                // so instead we roll back.  If they wanted their
-                // changes committed, they should have said so.
-                rollbackImpl();
+        synchronized(FarragoDbSingleton.class) {
+            synchronized(this) {
+                super.closeAllocation();
+                if (isClone || isClosed()) {
+                    return;
+                }
+                if (isTxnInProgress()) {
+                    if (isAutoCommit) {
+                        commitImpl();
+                    } else {
+                        // NOTE jvs 10-May-2005: Technically, we're
+                        // supposed to throw an invalid state
+                        // exception here.  However, it's very
+                        // unlikely that the caller is going to handle
+                        // it properly, so instead we roll back.  If
+                        // they wanted their changes committed, they
+                        // should have said so.
+                        rollbackImpl();
+                    }
+                }
+                try {
+                    FarragoDbSingleton.disconnectSession(this);
+                } finally {
+                    database = null;
+                    repos = null;
+                }
             }
-        }
-        try {
-            FarragoDbSingleton.disconnectSession(this);
-        } finally {
-            database = null;
-            repos = null;
         }
     }
 
@@ -790,6 +801,11 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     {
         tracer.info(sql);
 
+        EigenbaseTimingTracer timingTracer =
+            new EigenbaseTimingTracer(
+                sqlTimingTracer,
+                "begin prepare");
+
         // TODO jvs 20-Mar-2006: Get rid of this big mutex.  First we need
         // to make object-level DDL-locking incremental (rather than deferring
         // it all to the end of preparation).  For now the contention is the
@@ -811,6 +827,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             pRollback[0] = true;
             FarragoSessionStmtValidator stmtValidator =
                 newStmtValidator();
+            stmtValidator.setTimingTracer(timingTracer);
             FarragoSessionExecutableStmt stmt = null;
             try {
                 stmt =
@@ -836,6 +853,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
                     reposTxnContext.commit();
                 }
             }
+            timingTracer.traceTime("end prepare");
             return stmt;
         }
     }
@@ -865,6 +883,8 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         Object parsedObj = parser.parseSqlText(
             stmtValidator, ddlValidator, sql, expectStatement);
 
+        stmtValidator.getTimingTracer().traceTime("end parse");
+
         if (parsedObj instanceof SqlNode) {
             SqlNode sqlNode = (SqlNode) parsedObj;
             pRollback[0] = false;
@@ -888,12 +908,16 @@ public class FarragoDbSession extends FarragoCompoundAllocation
 
         validateDdl(ddlValidator, reposTxnContext, ddlStmt);
         
+        stmtValidator.getTimingTracer().traceTime("end DDL validation");
+        
         if (!isExecDirect) {
             return null;
         }
 
         executeDdl(ddlValidator, reposTxnContext, ddlStmt);
 
+        stmtValidator.getTimingTracer().traceTime("end DDL execution");
+        
         pRollback[0] = false;
         return null;
     }

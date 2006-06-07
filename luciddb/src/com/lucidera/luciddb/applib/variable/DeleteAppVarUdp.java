@@ -20,7 +20,10 @@
 */
 package com.lucidera.luciddb.applib.variable;
 
-import java.util.prefs.*;
+import net.sf.farrago.catalog.*;
+
+import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.instance.*;
 
 import com.lucidera.luciddb.applib.resource.*;
 
@@ -33,15 +36,28 @@ import com.lucidera.luciddb.applib.resource.*;
 public abstract class DeleteAppVarUdp
 {
     public static void execute(String contextId, String varId)
-        throws BackingStoreException
     {
+        FarragoRepos repos = null;
+        boolean rollback = true;
         try {
-            Preferences prefs = AppVarUtil.getPreferencesNode(
-                contextId, varId, false);
-            prefs.removeNode();
-        } catch (BackingStoreException ex) {
+            repos = AppVarUtil.getRepos();
+            repos.beginReposTxn(true);
+            CwmExtent context = AppVarUtil.lookupContext(repos, contextId);
+            if (varId == null) {
+                context.refDelete();
+            } else {
+                CwmTaggedValue tag = AppVarUtil.lookupVariable(
+                    repos, context, varId);
+                tag.refDelete();
+            }
+            rollback = false;
+        } catch (Throwable ex) {
             throw ApplibResourceObject.get().AppVarWriteFailed.ex(
                 contextId, varId, ex);
+        } finally {
+            if (repos != null) {
+                repos.endReposTxn(rollback);
+            }
         }
     }
 }

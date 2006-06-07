@@ -20,7 +20,10 @@
 */
 package com.lucidera.luciddb.applib.variable;
 
-import java.util.prefs.*;
+import net.sf.farrago.catalog.*;
+
+import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.instance.*;
 
 import com.lucidera.luciddb.applib.resource.*;
 
@@ -35,15 +38,29 @@ public abstract class CreateAppVarUdp
     public static void execute(
         String contextId, String varId, String description)
     {
+        FarragoRepos repos = null;
+        boolean rollback = true;
         try {
-            Preferences prefs = AppVarUtil.getPreferencesNode(
-                contextId, varId, true);
-            if (description != null) {
-                prefs.put(AppVarUtil.DESCRIPTION_KEY, description);
+            repos = AppVarUtil.getRepos();
+            repos.beginReposTxn(true);
+            if (varId == null) {
+                CwmExtent context = repos.newCwmExtent();
+                context.setName(contextId);
+            } else {
+                CwmExtent context = AppVarUtil.lookupContext(repos, contextId);
+                repos.setTagValue(
+                    context,
+                    varId,
+                    AppVarUtil.NULL_APPVAR_VALUE);
             }
-        } catch (BackingStoreException ex) {
+            rollback = false;
+        } catch (Throwable ex) {
             throw ApplibResourceObject.get().AppVarWriteFailed.ex(
                 contextId, varId, ex);
+        } finally {
+            if (repos != null) {
+                repos.endReposTxn(rollback);
+            }
         }
     }
 }

@@ -50,6 +50,7 @@ import net.sf.farrago.util.*;
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.trace.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.fun.*;
@@ -705,10 +706,13 @@ public class FarragoDatabase extends FarragoDbSingleton
 
     private FarragoSessionExecutableStmt prepareStmtImpl(
         final FarragoSessionPreparingStmt stmt,
-        SqlNode sqlNode,
+        final SqlNode sqlNode,
         FarragoAllocationOwner owner,
         FarragoSessionAnalyzedSql analyzedSql)
     {
+        final EigenbaseTimingTracer timingTracer =
+            stmt.getStmtValidator().getTimingTracer();
+        
         // REVIEW jvs 27-Aug-2005:  what are the security implications of
         // EXPLAIN PLAN?
         
@@ -716,7 +720,7 @@ public class FarragoDatabase extends FarragoDbSingleton
         // directly.
         if (sqlNode.isA(SqlKind.Explain)) {
             FarragoSessionExecutableStmt executableStmt =
-                stmt.prepare(sqlNode);
+                stmt.prepare(sqlNode, sqlNode);
             owner.addAllocation(executableStmt);
             return executableStmt;
         }
@@ -740,6 +744,8 @@ public class FarragoDatabase extends FarragoDbSingleton
 
         stmt.postValidate(validatedSqlNode);
         
+        timingTracer.traceTime("end validation");
+
         SqlDialect sqlDialect =
             new SqlDialect(stmt.getSession().getDatabaseMetaData());
         final String sql = validatedSqlNode.toSqlString(sqlDialect);
@@ -762,15 +768,17 @@ public class FarragoDatabase extends FarragoDbSingleton
             // storage defined yet.)
             analyzedSql.canonicalString = sql;
             stmt.analyzeSql(validatedSqlNode, analyzedSql);
+            
+            timingTracer.traceTime("end analyzeSql");
+
             return null;
         }
 
         FarragoSessionExecutableStmt executableStmt;
         if (!stmt.mayCacheImplementation()) {
             // no cache
-            executableStmt = stmt.prepare(validatedSqlNode);
+            executableStmt = stmt.prepare(validatedSqlNode, sqlNode);
             owner.addAllocation(executableStmt);
-
         } else { 
             // use the cache
             FarragoObjectCache.Entry cacheEntry;
@@ -780,9 +788,11 @@ public class FarragoDatabase extends FarragoDbSingleton
                         Object key,
                         FarragoObjectCache.UninitializedEntry entry)
                     {
+                        timingTracer.traceTime("code cache miss");
+
                         assert (key.equals(sql));
                         FarragoSessionExecutableStmt executableStmt =
-                            stmt.prepare(validatedSqlNode);
+                            stmt.prepare(validatedSqlNode, sqlNode);
                         long memUsage =
                             FarragoUtil.getStringMemoryUsage(sql)
                             + executableStmt.getMemoryUsage();
@@ -796,10 +806,6 @@ public class FarragoDatabase extends FarragoDbSingleton
                     (FarragoSessionExecutableStmt) cacheEntry.getValue();
 
                 if (isStale(stmt.getRepos(), executableStmt)) {
-                    // TODO jvs 17-July-2004: Need DDL-vs-query concurrency control
-                    // here.  FarragoRuntimeContext needs to acquire DDL-locks on
-                    // referenced objects so that they cannot be modified/dropped
-                    // for the duration of execution.
                     cacheEntry.closeAllocation();
                     codeCache.discard(sql);
                     cacheEntry = null;

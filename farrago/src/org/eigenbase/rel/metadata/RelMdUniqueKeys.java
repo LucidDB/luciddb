@@ -72,6 +72,9 @@ public class RelMdUniqueKeys extends ReflectiveRelMetadataProvider
         Set<BitSet> retSet = new HashSet<BitSet>();
         if (rightUnique != null && rightUnique) {
             Set<BitSet> leftSet = RelMetadataQuery.getUniqueKeys(left);
+            if (leftSet == null) {
+            	return null;
+            }
             retSet.addAll(leftSet);
         }
         // bits on the right need to be adjusted to reflect addition of left
@@ -79,6 +82,9 @@ public class RelMdUniqueKeys extends ReflectiveRelMetadataProvider
         if (leftUnique != null && leftUnique) {
             int nFieldsOnLeft = left.getRowType().getFieldCount();
             Set<BitSet> rightSet = RelMetadataQuery.getUniqueKeys(right);
+            if (rightSet == null) {
+            	return null;
+            }
             Iterator it = rightSet.iterator();
             while (it.hasNext()) {
                 BitSet colMask = (BitSet) it.next();

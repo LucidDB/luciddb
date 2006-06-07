@@ -20,7 +20,11 @@
 */
 package com.lucidera.luciddb.applib.variable;
 
-import java.util.prefs.*;
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.runtime.*;
+
+import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.instance.*;
 
 import com.lucidera.luciddb.applib.resource.*;
 
@@ -32,37 +36,37 @@ import com.lucidera.luciddb.applib.resource.*;
  */
 public abstract class AppVarUtil
 {
-    public static final String CURRENT_VALUE_KEY = "currentValue";
-    
-    public static final String DESCRIPTION_KEY = "description";
+    public static final String NULL_APPVAR_VALUE = "SYS$NULL";
 
-    static Preferences getPreferencesNode(
-        String contextId, String varId, boolean create)
-        throws BackingStoreException
+    static FarragoRepos getRepos()
     {
-        Preferences root = Preferences.userNodeForPackage(AppVarUtil.class);
+        return FarragoUdrRuntime.getSession().getRepos();
+    }
 
-        // In developer/test environments, use EIGEN_HOME to
-        // discriminate by branch.
-        String eigenHome = System.getenv("EIGEN_HOME");
-        if (eigenHome != null) {
-            eigenHome = eigenHome.replace('/', '!');
-            root = root.node(eigenHome);
-        }
-        
-        if (!create && !root.nodeExists(contextId)) {
+    static CwmExtent lookupContext(FarragoRepos repos, String contextId)
+    {
+        CwmExtent context = (CwmExtent)
+            FarragoCatalogUtil.getModelElementByName(
+                repos.getInstancePackage().getCwmExtent().refAllOfClass(),
+                contextId);
+        if (context == null) {
             throw ApplibResourceObject.get().AppVarContextUndefined.ex(
                 contextId);
         }
-        Preferences contextNode = root.node(contextId);
-        if (varId == null) {
-            return contextNode;
-        }
-        if (!create && !contextNode.nodeExists(varId)) {
+        return context;
+    }
+
+    static CwmTaggedValue lookupVariable(
+        FarragoRepos repos, CwmExtent context, String varId)
+    {
+        CwmTaggedValue tag = repos.getTag(
+            context,
+            varId);
+        if (tag == null) {
             throw ApplibResourceObject.get().AppVarUndefined.ex(
-                contextId, varId);
+                context.getName(), varId);
         }
-        return contextNode.node(varId);
+        return tag;
     }
 }
 

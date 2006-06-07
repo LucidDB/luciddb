@@ -27,6 +27,7 @@ import java.util.*;
 
 import junit.framework.*;
 
+import net.sf.farrago.jdbc.*;
 import net.sf.farrago.jdbc.client.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.server.*;
@@ -34,8 +35,9 @@ import org.eigenbase.util14.ConnectStringParser;
 
 
 /**
- * FarragoServerTest tests Farrago client/server connections.  It does
- * not inherit from FarragoTestCase since that pulls in an embedded engine.
+ * FarragoServerTest tests Farrago client/server connections via RmiJdbc.  It
+ * does not inherit from FarragoTestCase since that pulls in an embedded
+ * engine.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -43,8 +45,8 @@ import org.eigenbase.util14.ConnectStringParser;
 public class FarragoServerTest extends TestCase
 {
     //~ Instance fields -------------------------------------------------------
-
-    private FarragoServer server;
+    
+    private FarragoAbstractServer server;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -67,17 +69,27 @@ public class FarragoServerTest extends TestCase
         super.setUp();
         FarragoTestCase.forceShutdown();
     }
+
+    protected FarragoAbstractServer newServer()
+    {
+        return new FarragoRmiJdbcServer();
+    }
+
+    protected FarragoAbstractJdbcDriver newClientDriver()
+    {
+        return new FarragoJdbcClientDriver();
+    }
     
     public void testServer()
         throws Exception
     {
-        server = new FarragoServer();
+        server = newServer();
         FarragoJdbcEngineDriver serverDriver = new FarragoJdbcEngineDriver();
         server.start(serverDriver);
 
         // NOTE: can't call DriverManager.getConnection here, because that
         // would deadlock
-        FarragoJdbcClientDriver clientDriver = new FarragoJdbcClientDriver();
+        FarragoAbstractJdbcDriver clientDriver = newClientDriver();
         // N.B. it is better practice to put the login credentials in the
         // Properties object rather than on the URL, but this is a convenient
         // test of the client driver's connect string processing.
@@ -99,10 +111,10 @@ public class FarragoServerTest extends TestCase
     public void testKillServer()
         throws Exception
     {
-        server = new FarragoServer();
+        server = newServer();
         FarragoJdbcEngineDriver serverDriver = new FarragoJdbcEngineDriver();
         server.start(serverDriver);
-        FarragoJdbcClientDriver clientDriver = new FarragoJdbcClientDriver();
+        FarragoAbstractJdbcDriver clientDriver = newClientDriver();
         // N.B. it is better practice to put the login credentials in the
         // Properties object rather than on the URL, but this is a convenient
         // test of the client driver's connect string processing.
@@ -121,11 +133,11 @@ public class FarragoServerTest extends TestCase
      */
     public void testConnectionParams() throws Throwable
     {
-        server = new FarragoServer();
+        server = newServer();
         FarragoJdbcEngineDriver serverDriver = new FarragoJdbcEngineDriver();
         server.start(serverDriver);
 
-        FarragoJdbcClientDriver clientDriver = new FarragoJdbcClientDriver();
+        FarragoAbstractJdbcDriver clientDriver = newClientDriver();
         String uri = clientDriver.getUrlPrefix() + "localhost";
 
         // test a connection that fails without the params
@@ -135,7 +147,8 @@ public class FarragoServerTest extends TestCase
             conn = clientDriver.connect(uri, empty);
             fail("Farrago connect without user credentials");
         } catch (SQLException e) {
-            FarragoJdbcTest.assertExceptionMatches(e, ".*Unknown user.*");
+            FarragoJdbcTest.assertExceptionMatches(
+                e, ".*Unknown user.*");
         }
         Properties auth = new Properties();
         auth.setProperty("user", "sa");

@@ -109,8 +109,9 @@ class LhxJoinExecStream : public ConfluenceExecStream
     };
 
     enum LhxJoinState {
-        Build, GetNextPlan, Partition, Probe, ProduceInner, ProduceLeftOuter,
-        ProduceRightOuter, ProducePending, CreateChildPlan, Done
+        Build, GetNextPlan, Partition, Probe, ProduceInner,
+        ProduceLeftOuter, ProduceRightOuter, ProducePending, CreateChildPlan,
+        Done
     };
   
     /**
@@ -141,14 +142,19 @@ class LhxJoinExecStream : public ConfluenceExecStream
     uint numBlocksHashTable;
 
     /**
-     * Initial estimate of slots required.
+     * Number of cache blocks set aside for I/O.
      */
-    uint numSlotsHashTable;
+    uint numMiscCacheBlocks;
 
     /*
      * State of the JoinExecStream
      */
     LhxJoinState joinState;
+
+    /**
+     * The next state of the JoinExecStream
+     */
+    LhxJoinState nextState;
 
     /**
      * Return matching rows from the left.
@@ -185,11 +191,6 @@ class LhxJoinExecStream : public ConfluenceExecStream
      * Number of tuples produced within the current quantum.
      */
     uint numTuplesProduced;
-
-    /**
-     * The next state of the JoinExecStream
-     */
-    LhxJoinState nextState;
 
     /**
      * tuple size

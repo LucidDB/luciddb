@@ -68,7 +68,7 @@ import javax.jmi.reflect.*;
 public class FarragoDefaultSessionPersonality
     implements FarragoSessionPersonality
 {
-    private final FarragoDatabase database;
+    protected final FarragoDatabase database;
     
     protected FarragoDefaultSessionPersonality(FarragoDbSession session)
     {

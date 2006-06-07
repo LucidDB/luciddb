@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/optimizer/joinorder.sql#4 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/joinorder.sql#5 $
 0: jdbc:farrago:> -- Tests for ConvertMultiJoinRule and OptimizeJoinRule
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema jo;
@@ -34,117 +34,37 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- fake stats
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'F', 10000000);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'D1', 100000);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'D2', 1000);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'D3', 10);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'JO', 'F', 'F_D1', 100000, 100, 100000, 0, '0123456789');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'JO', 'F', 'F_D2', 1000, 100, 1000, 0, '0123456789');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'JO', 'F', 'F_D3', 10, 100, 10, 0, '0123456789');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'JO', 'D1', 'D1_F', 100000, 100, 100000, 0, '0123456789');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'JO', 'D1', 'D1_D2', 1000, 100, 1000, 0, '0123456789');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'JO', 'D1', 'D1_D3', 10, 100, 10, 0, '0123456789');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'JO', 'D2', 'D2_F', 1000, 100, 1000, 0, '0123456789');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'JO', 'D2', 'D2_D1', 1000, 100, 1000, 0, '0123456789');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'JO', 'D2', 'D2_D3', 10, 100, 10, 0, '0123456789');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'JO', 'D3', 'D3_F', 10, 100, 10, 0, '0123456789');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'JO', 'D3', 'D3_D1', 10, 100, 10, 0, '0123456789');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'JO', 'D3', 'D3_D2', 10, 100, 10, 0, '0123456789');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set outputformat csv
 0: jdbc:farrago:> 

@@ -1,0 +1,129 @@
+0: jdbc:luciddb:> set schema 'DT2';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table fish (
+. . . . . . . . >   id int not null, 
+. . . . . . . . >   name varchar(20), 
+. . . . . . . . >   is_ocean boolean,
+. . . . . . . . >   location char(10)
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- delete on empty table
+0: jdbc:luciddb:> delete from fish;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into fish values(0, 'Salmon', true, 'NA');
+0: jdbc:luciddb:> insert into fish values(1, 'Mackerel', true, 'fridge');
+0: jdbc:luciddb:> insert into fish values(2, 'catfish', false, 'stomach');
+0: jdbc:luciddb:> insert into fish values(3, 'goldfish', false, 'trash');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from fish order by 1,2,3,4;
++-----+-----------+-----------+-------------+
+| ID  |   NAME    | IS_OCEAN  |  LOCATION   |
++-----+-----------+-----------+-------------+
+| 0   | Salmon    | true      | NA          |
+| 1   | Mackerel  | true      | fridge      |
+| 2   | catfish   | false     | stomach     |
+| 3   | goldfish  | false     | trash       |
++-----+-----------+-----------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check that deletion index exists
+0: jdbc:luciddb:> select * from sys_boot.jdbc_metadata.index_info_view 
+. . . . . . . . > where table_name = 'FISH'
+. . . . . . . . > order by 1,2,3,6;
++------------+--------------+-------------+-------------+------------------+----------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |               INDEX_NAME               | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
++------------+--------------+-------------+-------------+------------------+----------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
+| LOCALDB    | DT2          | FISH        | false       |                  |                                        | 0     | 0                 |              |               | 0            | 0      |                   |
+| LOCALDB    | DT2          | FISH        | true        | LOCALDB          | SYS$CLUSTERED_INDEX$DT2$FISH$ID        | 1     | 1                 | ID           | A             | 0            | 0      |                   |
+| LOCALDB    | DT2          | FISH        | true        | LOCALDB          | SYS$CLUSTERED_INDEX$DT2$FISH$IS_OCEAN  | 1     | 1                 | IS_OCEAN     | A             | 0            | 0      |                   |
+| LOCALDB    | DT2          | FISH        | true        | LOCALDB          | SYS$CLUSTERED_INDEX$DT2$FISH$LOCATION  | 1     | 1                 | LOCATION     | A             | 0            | 0      |                   |
+| LOCALDB    | DT2          | FISH        | true        | LOCALDB          | SYS$CLUSTERED_INDEX$DT2$FISH$NAME      | 1     | 1                 | NAME         | A             | 0            | 0      |                   |
+| LOCALDB    | DT2          | FISH        | false       | LOCALDB          | SYS$DELETION_INDEX$DT2$FISH            | 3     |                   |              | A             | 0            | 0      |                   |
++------------+--------------+-------------+-------------+------------------+----------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- try to drop the deletion index (should fail)
+0: jdbc:luciddb:> drop index SYS$DELETION_INDEX$DT2$FISH;
+Error: org.eigenbase.sql.parser.SqlParseException: Encountered "SYS$DELETION_INDEX$DT2$FISH" at line 1, column 12.
+Was expecting one of:
+    <IDENTIFIER> ...
+    <QUOTED_IDENTIFIER> ... (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- delete and recreate entries
+0: jdbc:luciddb:> delete from fish where is_ocean=true;
+0: jdbc:luciddb:> select * from fish;
++-----+-----------+-----------+-------------+
+| ID  |   NAME    | IS_OCEAN  |  LOCATION   |
++-----+-----------+-----------+-------------+
+| 2   | catfish   | false     | stomach     |
+| 3   | goldfish  | false     | trash       |
++-----+-----------+-----------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create index idx_fish_is_ocean on fish(is_ocean);
+0: jdbc:luciddb:> insert into fish values(0, 'Salmon', true, 'NA');
+0: jdbc:luciddb:> insert into fish values(1, 'Mackerel', true, 'fridge');
+0: jdbc:luciddb:> delete from fish where is_ocean=true;
+0: jdbc:luciddb:> select * from fish where is_ocean=true;
++-----+-------+-----------+-----------+
+| ID  | NAME  | IS_OCEAN  | LOCATION  |
++-----+-------+-----------+-----------+
++-----+-------+-----------+-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> delete from fish where is_ocean=false;
+0: jdbc:luciddb:> select count(*) from fish;
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into fish values(0, 'Salmon', true, 'NA');
+0: jdbc:luciddb:> insert into fish values(1, 'Mackerel', true, 'fridge');
+0: jdbc:luciddb:> drop index idx_fish_is_ocean;
+0: jdbc:luciddb:> insert into fish values(2, 'catfish', false, 'stomach');
+0: jdbc:luciddb:> insert into fish values(3, 'goldfish', false, 'trash');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from fish;
++---------+
+| EXPR$0  |
++---------+
+| 4       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into fish values(0, 'Salmon', true, 'NA');
+0: jdbc:luciddb:> insert into fish values(1, 'Mackerel', true, 'fridge');
+0: jdbc:luciddb:> insert into fish values(2, 'catfish', false, 'stomach');
+0: jdbc:luciddb:> insert into fish values(3, 'goldfish', false, 'trash');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> delete from fish;
+0: jdbc:luciddb:> select * from fish where is_ocean=true;
++-----+-------+-----------+-----------+
+| ID  | NAME  | IS_OCEAN  | LOCATION  |
++-----+-------+-----------+-----------+
++-----+-------+-----------+-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- delete with join
+0: jdbc:luciddb:> create table places(location char(10), description varchar(100));
+0: jdbc:luciddb:> insert into places values 
+. . . . . . . . > ('NA', 'North America'), 
+. . . . . . . . > ('fridge', 'green'),
+. . . . . . . . > ('trash', 'stainless steel');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into fish values(0, 'Salmon', true, 'NA');
+0: jdbc:luciddb:> insert into fish values(1, 'Mackerel', true, 'fridge');
+0: jdbc:luciddb:> insert into fish values(2, 'catfish', false, 'stomach');
+0: jdbc:luciddb:> insert into fish values(3, 'goldfish', false, 'trash');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> delete from fish where fish.location in
+. . . . . . . . > (select distinct fish.location 
+. . . . . . . . >  from fish inner join places 
+. . . . . . . . >  on fish.location = places.location
+. . . . . . . . >  where description <> 'North America');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from fish
+. . . . . . . . > order by 1,2,3,4;
++-----+----------+-----------+-------------+
+| ID  |   NAME   | IS_OCEAN  |  LOCATION   |
++-----+----------+-----------+-------------+
+| 0   | Salmon   | true      | NA          |
+| 2   | catfish  | false     | stomach     |
++-----+----------+-----------+-------------+
+0: jdbc:luciddb:> !quit

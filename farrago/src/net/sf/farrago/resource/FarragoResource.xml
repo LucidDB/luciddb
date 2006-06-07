@@ -711,6 +711,10 @@ column type family is {1} but default value type family is {2}</text>
 <text>Sequence generator limit exceeded for {0}</text>
 </exception>
 
+<exception id="450140" name="LockDenied">
+<text>Failed to acquire lock on {0}</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Data wrapper resources 460,000 - 470,000 -->
 <!-- ====================================================================== -->
@@ -905,6 +909,10 @@ column type family is {1} but default value type family is {2}</text>
 
 <message id="480070" name="ServerProductName">
 <text>Server personality:  {0}</text>
+</message>
+
+<message id="480080" name="ServerNetworkStartFailed">
+<text>Failed to start network</text>
 </message>
 
 <!-- ====================================================================== -->

@@ -9,6 +9,6 @@ set MAIN_DIR=%~dp0..
 call "%MAIN_DIR%\bin\defineFarragoRuntime.bat"
 if errorlevel 1 goto done
 
-%JAVA_EXEC% %JAVA_ARGS% %SQLLINE_JAVA_ARGS% -u jdbc:farrago:rmi://localhost -d net.sf.farrago.jdbc.client.FarragoJdbcClientDriver -n guest %*
+%JAVA_EXEC% %JAVA_ARGS% %SQLLINE_JAVA_ARGS% -u jdbc:farrago:rmi://localhost -d net.sf.farrago.jdbc.client.FarragoVjdbcClientDriver -n guest %*
 
 :done

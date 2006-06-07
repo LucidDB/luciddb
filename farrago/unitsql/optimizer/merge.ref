@@ -1,0 +1,311 @@
+0: jdbc:farrago:> -- $Id: //open/lu/dev_lcs/farrago/unitsql/optimizer/merge.sql#1 $
+0: jdbc:farrago:> 
+0: jdbc:farrago:> ----------------------------
+0: jdbc:farrago:> -- Tests for MERGE statement
+0: jdbc:farrago:> ----------------------------
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create schema m;
+0: jdbc:farrago:> set schema 'm';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table emps(
+. . . . . . . . >     empno int, name varchar(20), deptno int, gender char(1), city char(30),
+. . . . . . . . >     age int, salary int) server sys_column_store_data_server;
+0: jdbc:farrago:> create table tempemps(
+. . . . . . . . >     t_empno int, t_name varchar(25), t_deptno int, t_gender char(1),
+. . . . . . . . >     t_city char(35), t_age int) server sys_column_store_data_server;
+0: jdbc:farrago:> create table salarytable(empno int, salary int)
+. . . . . . . . >     server sys_column_store_data_server;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !set outputformat csv
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- source table reference is a table
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > merge into emps e
+. . . . . . . . >     using tempemps t on t.t_empno = e.empno
+. . . . . . . . >     when matched then
+. . . . . . . . >         update set deptno = t.t_deptno, city = upper(t.t_city),
+. . . . . . . . >             salary = salary * .25
+. . . . . . . . >     when not matched then
+. . . . . . . . >         insert (empno, name, age, gender, salary, city)
+. . . . . . . . >         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.t_age * 1000,
+. . . . . . . . >             t.t_city);
+'column0'
+'TableModificationRel(table=[[LOCALDB, M, EMPS]], operation=[MERGE], updateColumnList=[[DEPTNO, CITY, SALARY]], flattened=[false])'
+'  ProjectRel($f0=[$0], $f1=[$1], $f2=[null], $f3=[$3], $f4=[$5], $f5=[$2], $f6=[$4], $f7=[$6], $f8=[$7], $f9=[$8], $f10=[$9], $f11=[$10], $f12=[$11], $f13=[$12], $f14=[$13], $f15=[$14], $f16=[$15])'
+'    ProjectRel($f0=[$0], $f1=[UPPER($1)], $f2=[$5], $f3=[$3], $f4=[*($5, 1000)], $f5=[$4], $f6=[$6], $f7=[$7], $f8=[$8], $f9=[$9], $f10=[$10], $f11=[$11], $f12=[$12], $f13=[$2], $f14=[UPPER($4)], $f15=[*($12, 0.25)])'
+'      JoinRel(condition=[=($0, $6)], joinType=[left])'
+'        TableAccessRel(table=[[LOCALDB, M, TEMPEMPS]])'
+'        TableAccessRel(table=[[LOCALDB, M, EMPS]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- source table reference is a single table select
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > merge into emps e
+. . . . . . . . >     using (select * from tempemps where t_deptno = 100) t on t.t_empno = e.empno
+. . . . . . . . >     when matched then
+. . . . . . . . >         update set deptno = t.t_deptno, city = upper(t.t_city),
+. . . . . . . . >             salary = salary * .25
+. . . . . . . . >     when not matched then
+. . . . . . . . >         insert (empno, name, age, gender, salary, city)
+. . . . . . . . >         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.t_age * 1000,
+. . . . . . . . >             t.t_city);
+'column0'
+'TableModificationRel(table=[[LOCALDB, M, EMPS]], operation=[MERGE], updateColumnList=[[DEPTNO, CITY, SALARY]], flattened=[false])'
+'  ProjectRel($f0=[$0], $f1=[$1], $f2=[null], $f3=[$3], $f4=[$5], $f5=[$2], $f6=[$4], $f7=[$6], $f8=[$7], $f9=[$8], $f10=[$9], $f11=[$10], $f12=[$11], $f13=[$12], $f14=[$13], $f15=[$14], $f16=[$15])'
+'    ProjectRel($f0=[$0], $f1=[UPPER($1)], $f2=[$5], $f3=[$3], $f4=[*($5, 1000)], $f5=[$4], $f6=[$6], $f7=[$7], $f8=[$8], $f9=[$9], $f10=[$10], $f11=[$11], $f12=[$12], $f13=[$2], $f14=[UPPER($4)], $f15=[*($12, 0.25)])'
+'      JoinRel(condition=[=($0, $6)], joinType=[left])'
+'        ProjectRel(T_EMPNO=[$0], T_NAME=[$1], T_DEPTNO=[$2], T_GENDER=[$3], T_CITY=[$4], T_AGE=[$5])'
+'          FilterRel(condition=[=($2, 100)])'
+'            TableAccessRel(table=[[LOCALDB, M, TEMPEMPS]])'
+'        TableAccessRel(table=[[LOCALDB, M, EMPS]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- source table reference is a join
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > merge into emps e
+. . . . . . . . >     using (select s.empno, s.salary, t.* from salarytable s, tempemps t
+. . . . . . . . >         where t.t_empno = s.empno) t
+. . . . . . . . >     on t.t_empno = e.empno
+. . . . . . . . >     when matched then
+. . . . . . . . >         update set deptno = t.t_deptno, city = upper(t.t_city),
+. . . . . . . . >             salary = e.salary * .25
+. . . . . . . . >     when not matched then
+. . . . . . . . >         insert (empno, name, age, gender, salary, city)
+. . . . . . . . >         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.salary * .15,
+. . . . . . . . >             t.t_city);
+'column0'
+'TableModificationRel(table=[[LOCALDB, M, EMPS]], operation=[MERGE], updateColumnList=[[DEPTNO, CITY, SALARY]], flattened=[false])'
+'  ProjectRel($f0=[$0], $f1=[$1], $f2=[null], $f3=[$3], $f4=[$5], $f5=[$2], $f6=[$4], $f7=[$6], $f8=[$7], $f9=[$8], $f10=[$9], $f11=[$10], $f12=[$11], $f13=[$12], $f14=[$13], $f15=[$14], $f16=[$15])'
+'    ProjectRel($f0=[$2], $f1=[UPPER($3)], $f2=[$7], $f3=[$5], $f4=[*($1, 0.15)], $f5=[$6], $f6=[$8], $f7=[$9], $f8=[$10], $f9=[$11], $f10=[$12], $f11=[$13], $f12=[$14], $f13=[$4], $f14=[UPPER($6)], $f15=[*($14, 0.25)])'
+'      JoinRel(condition=[=($2, $8)], joinType=[left])'
+'        ProjectRel(EMPNO=[$0], SALARY=[$1], T_EMPNO=[$2], T_NAME=[$3], T_DEPTNO=[$4], T_GENDER=[$5], T_CITY=[$6], T_AGE=[$7])'
+'          FilterRel(condition=[=($2, $0)])'
+'            JoinRel(condition=[true], joinType=[inner])'
+'              TableAccessRel(table=[[LOCALDB, M, SALARYTABLE]])'
+'              TableAccessRel(table=[[LOCALDB, M, TEMPEMPS]])'
+'        TableAccessRel(table=[[LOCALDB, M, EMPS]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- columns aren't qualified
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > merge into emps
+. . . . . . . . >     using (select * from tempemps where t_deptno = 100) on t_empno = empno
+. . . . . . . . >     when matched then
+. . . . . . . . >         update set deptno = t_deptno, city = upper(t_city),
+. . . . . . . . >             salary = salary * .25
+. . . . . . . . >     when not matched then
+. . . . . . . . >         insert (empno, name, age, gender, salary, city)
+. . . . . . . . >         values(t_empno, upper(t_name), t_age, t_gender, t_age * 1000, t_city);
+'column0'
+'TableModificationRel(table=[[LOCALDB, M, EMPS]], operation=[MERGE], updateColumnList=[[DEPTNO, CITY, SALARY]], flattened=[false])'
+'  ProjectRel($f0=[$0], $f1=[$1], $f2=[null], $f3=[$3], $f4=[$5], $f5=[$2], $f6=[$4], $f7=[$6], $f8=[$7], $f9=[$8], $f10=[$9], $f11=[$10], $f12=[$11], $f13=[$12], $f14=[$13], $f15=[$14], $f16=[$15])'
+'    ProjectRel($f0=[$0], $f1=[UPPER($1)], $f2=[$5], $f3=[$3], $f4=[*($5, 1000)], $f5=[$4], $f6=[$6], $f7=[$7], $f8=[$8], $f9=[$9], $f10=[$10], $f11=[$11], $f12=[$12], $f13=[$2], $f14=[UPPER($4)], $f15=[*($12, 0.25)])'
+'      JoinRel(condition=[=($0, $6)], joinType=[left])'
+'        ProjectRel(T_EMPNO=[$0], T_NAME=[$1], T_DEPTNO=[$2], T_GENDER=[$3], T_CITY=[$4], T_AGE=[$5])'
+'          FilterRel(condition=[=($2, 100)])'
+'            TableAccessRel(table=[[LOCALDB, M, TEMPEMPS]])'
+'        TableAccessRel(table=[[LOCALDB, M, EMPS]])'
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > merge into emps
+. . . . . . . . >     using tempemps on t_empno = empno
+. . . . . . . . >     when matched then
+. . . . . . . . >         update set deptno = t_deptno, city = upper(t_city),
+. . . . . . . . >             salary = salary * .25
+. . . . . . . . >     when not matched then
+. . . . . . . . >         insert (empno, name, age, gender, salary, city)
+. . . . . . . . >         values(t_empno, upper(t_name), t_age, t_gender, t_age * 1000, t_city);
+'column0'
+'TableModificationRel(table=[[LOCALDB, M, EMPS]], operation=[MERGE], updateColumnList=[[DEPTNO, CITY, SALARY]], flattened=[false])'
+'  ProjectRel($f0=[$0], $f1=[$1], $f2=[null], $f3=[$3], $f4=[$5], $f5=[$2], $f6=[$4], $f7=[$6], $f8=[$7], $f9=[$8], $f10=[$9], $f11=[$10], $f12=[$11], $f13=[$12], $f14=[$13], $f15=[$14], $f16=[$15])'
+'    ProjectRel($f0=[$0], $f1=[UPPER($1)], $f2=[$5], $f3=[$3], $f4=[*($5, 1000)], $f5=[$4], $f6=[$6], $f7=[$7], $f8=[$8], $f9=[$9], $f10=[$10], $f11=[$11], $f12=[$12], $f13=[$2], $f14=[UPPER($4)], $f15=[*($12, 0.25)])'
+'      JoinRel(condition=[=($0, $6)], joinType=[left])'
+'        TableAccessRel(table=[[LOCALDB, M, TEMPEMPS]])'
+'        TableAccessRel(table=[[LOCALDB, M, EMPS]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- no target column list in the insert
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > merge into emps
+. . . . . . . . >     using (select * from tempemps where t_deptno = 100) on t_empno = empno
+. . . . . . . . >     when matched then
+. . . . . . . . >         update set deptno = t_deptno, city = upper(t_city),
+. . . . . . . . >             salary = salary * .25
+. . . . . . . . >     when not matched then
+. . . . . . . . >         insert
+. . . . . . . . >             values(t_empno, upper(t_name), null, t_gender, t_city, t_age,
+. . . . . . . . >                 t_age * 1000);
+'column0'
+'TableModificationRel(table=[[LOCALDB, M, EMPS]], operation=[MERGE], updateColumnList=[[DEPTNO, CITY, SALARY]], flattened=[false])'
+'  ProjectRel($f0=[$0], $f1=[$1], $f2=[$2], $f3=[$3], $f4=[$4], $f5=[$5], $f6=[$6], $f7=[$7], $f8=[$8], $f9=[$9], $f10=[$10], $f11=[$11], $f12=[$12], $f13=[$13], $f14=[$14], $f15=[$15], $f16=[$16])'
+'    ProjectRel($f0=[$0], $f1=[UPPER($1)], $f2=[CAST(null):INTEGER], $f3=[$3], $f4=[$4], $f5=[$5], $f6=[*($5, 1000)], $f7=[$6], $f8=[$7], $f9=[$8], $f10=[$9], $f11=[$10], $f12=[$11], $f13=[$12], $f14=[$2], $f15=[UPPER($4)], $f16=[*($12, 0.25)])'
+'      JoinRel(condition=[=($0, $6)], joinType=[left])'
+'        ProjectRel(T_EMPNO=[$0], T_NAME=[$1], T_DEPTNO=[$2], T_GENDER=[$3], T_CITY=[$4], T_AGE=[$5])'
+'          FilterRel(condition=[=($2, 100)])'
+'            TableAccessRel(table=[[LOCALDB, M, TEMPEMPS]])'
+'        TableAccessRel(table=[[LOCALDB, M, EMPS]])'
+0: jdbc:farrago:>                 
+0: jdbc:farrago:> -- no target column list in the insert, but the types of the source insert
+0: jdbc:farrago:> -- expressions match the target
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > merge into emps
+. . . . . . . . >     using (select * from tempemps where t_deptno = 100) on t_empno = empno
+. . . . . . . . >     when matched then
+. . . . . . . . >         update set deptno = t_deptno, city = upper(t_city),
+. . . . . . . . >             salary = salary * .25
+. . . . . . . . >     when not matched then
+. . . . . . . . >         insert
+. . . . . . . . >             values(t_empno, cast(upper(t_name) as varchar(20)), null, t_gender,
+. . . . . . . . >                 cast(t_city as char(30)), t_age, t_age * 1000);
+'column0'
+'TableModificationRel(table=[[LOCALDB, M, EMPS]], operation=[MERGE], updateColumnList=[[DEPTNO, CITY, SALARY]], flattened=[false])'
+'  ProjectRel($f0=[$0], $f1=[$1], $f2=[$2], $f3=[$3], $f4=[$4], $f5=[$5], $f6=[$6], $f7=[$7], $f8=[$8], $f9=[$9], $f10=[$10], $f11=[$11], $f12=[$12], $f13=[$13], $f14=[$14], $f15=[$15], $f16=[$16])'
+'    ProjectRel($f0=[$0], $f1=[CAST(UPPER($1)):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], $f2=[CAST(null):INTEGER], $f3=[$3], $f4=[CAST($4):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], $f5=[$5], $f6=[*($5, 1000)], $f7=[$6], $f8=[$7], $f9=[$8], $f10=[$9], $f11=[$10], $f12=[$11], $f13=[$12], $f14=[$2], $f15=[UPPER($4)], $f16=[*($12, 0.25)])'
+'      JoinRel(condition=[=($0, $6)], joinType=[left])'
+'        ProjectRel(T_EMPNO=[$0], T_NAME=[$1], T_DEPTNO=[$2], T_GENDER=[$3], T_CITY=[$4], T_AGE=[$5])'
+'          FilterRel(condition=[=($2, 100)])'
+'            TableAccessRel(table=[[LOCALDB, M, TEMPEMPS]])'
+'        TableAccessRel(table=[[LOCALDB, M, EMPS]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --------------
+0: jdbc:farrago:> -- Error cases
+0: jdbc:farrago:> --------------
+0: jdbc:farrago:> -- invalid target table
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > merge into emp e
+. . . . . . . . >     using tempemps t on t.t_empno = e.empno
+. . . . . . . . >     when matched then
+. . . . . . . . >         update set deptno = t.t_deptno, city = upper(t.t_city),
+. . . . . . . . >             salary = salary * .25
+. . . . . . . . >     when not matched then
+. . . . . . . . >         insert (empno, name, age, gender, salary, city)
+. . . . . . . . >         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.t_age * 1000,
+. . . . . . . . >             t.t_city);
+Error: From line 1, column 52 to line 1, column 54: Table 'EMP' not found (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- invalid table in using clause
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > merge into emps e
+. . . . . . . . >     using tempemp t on t.t_empno = e.empno
+. . . . . . . . >     when matched then
+. . . . . . . . >         update set deptno = t.t_deptno, city = upper(t.t_city),
+. . . . . . . . >             salary = salary * .25
+. . . . . . . . >     when not matched then
+. . . . . . . . >         insert (empno, name, age, gender, salary, city)
+. . . . . . . . >         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.t_age * 1000,
+. . . . . . . . >             t.t_city);
+Error: From line 1, column 69 to line 1, column 75: Table 'TEMPEMP' not found (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- invalid column reference in on clause
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > merge into emps e
+. . . . . . . . >     using tempemps t on t.empno = e.empno
+. . . . . . . . >     when matched then
+. . . . . . . . >         update set deptno = t.t_deptno, city = upper(t.t_city),
+. . . . . . . . >             salary = salary * .25
+. . . . . . . . >     when not matched then
+. . . . . . . . >         insert (empno, name, age, gender, salary, city)
+. . . . . . . . >         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.t_age * 1000,
+. . . . . . . . >             t.t_city);
+Error: Column 'EMPNO' not found in table T (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- invalid column reference in update set clause
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > merge into emps e
+. . . . . . . . >     using tempemps t on t.t_empno = e.empno
+. . . . . . . . >     when matched then
+. . . . . . . . >         update set t_deptno = t.t_deptno, city = upper(t.t_city),
+. . . . . . . . >             salary = salary * .25
+. . . . . . . . >     when not matched then
+. . . . . . . . >         insert (empno, name, age, gender, salary, city)
+. . . . . . . . >         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.t_age * 1000,
+. . . . . . . . >             t.t_city);
+Error: From line 1, column 144 to line 1, column 151: Unknown target column 'T_DEPTNO' (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- invalid column reference in update set expr
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > merge into emps e
+. . . . . . . . >     using tempemps t on t.t_empno = e.empno
+. . . . . . . . >     when matched then
+. . . . . . . . >         update set deptno = t.t_deptno, city = upper(e.t_city),
+. . . . . . . . >             salary = salary * .25
+. . . . . . . . >     when not matched then
+. . . . . . . . >         insert (empno, name, age, gender, salary, city)
+. . . . . . . . >         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.t_age * 1000,
+. . . . . . . . >             t.t_city);
+Error: At line 1, column 178: Unknown field 'T_CITY' (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- ambiguous column
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > merge into emps e
+. . . . . . . . >     using (select s.empno, s.salary, t.* from salarytable s, tempemps t
+. . . . . . . . >         where t.t_empno = s.empno) t
+. . . . . . . . >     on t.t_empno = e.empno
+. . . . . . . . >     when matched then
+. . . . . . . . >         update set deptno = t.t_deptno, city = upper(t.t_city),
+. . . . . . . . >             salary = salary * .25
+. . . . . . . . >     when not matched then
+. . . . . . . . >         insert (empno, name, age, gender, salary, city)
+. . . . . . . . >         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.salary * .15,
+. . . . . . . . >             t.t_city);
+Error: From line 1, column 302 to line 1, column 307: Column 'SALARY' is ambiguous (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- invalid column reference in insert target list
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > merge into emps e
+. . . . . . . . >     using tempemps t on t.t_empno = e.empno
+. . . . . . . . >     when matched then
+. . . . . . . . >         update set deptno = t.t_deptno, city = upper(t.t_city),
+. . . . . . . . >             salary = salary * .25
+. . . . . . . . >     when not matched then
+. . . . . . . . >         insert (empno, name, age, t_gender, salary, city)
+. . . . . . . . >         values(t.t_empno, upper(e.t_name), t.t_age, t.t_gender, t.t_age * 1000,
+. . . . . . . . >             t.t_city);
+Error: From line 1, column 283 to line 1, column 290: Unknown target column 'T_GENDER' (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- invalid column reference in insert values list
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > merge into emps e
+. . . . . . . . >     using tempemps t on t.t_empno = e.empno
+. . . . . . . . >     when matched then
+. . . . . . . . >         update set deptno = t.t_deptno, city = upper(t.t_city),
+. . . . . . . . >             salary = salary * .25
+. . . . . . . . >     when not matched then
+. . . . . . . . >         insert (empno, name, age, gender, salary, city)
+. . . . . . . . >         values(t.t_empno, upper(e.t_name), t.t_age, t.t_gender, t.t_age * 1000,
+. . . . . . . . >             t.t_city);
+Error: At line 1, column 337: Unknown identifier 'E' (state=,code=0)
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > merge into emps e
+. . . . . . . . >     using tempemps t on t.t_empno = e.empno
+. . . . . . . . >     when matched then
+. . . . . . . . >         update set deptno = t.t_deptno, city = upper(t.t_city),
+. . . . . . . . >             salary = salary * .25
+. . . . . . . . >     when not matched then
+. . . . . . . . >         insert (empno, name, age, gender, salary, city)
+. . . . . . . . >         values(t.t_empno, upper(name), t.t_age, t.t_gender, t.t_age * 1000,
+. . . . . . . . >             t.t_city);
+Error: From line 1, column 337 to line 1, column 340: Unknown identifier 'NAME' (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- mismatch in number of column in values clause
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > merge into emps e
+. . . . . . . . >     using tempemps t on t.t_empno = e.empno
+. . . . . . . . >     when matched then
+. . . . . . . . >         update set deptno = t.t_deptno, city = upper(t.t_city),
+. . . . . . . . >             salary = salary * .25
+. . . . . . . . >     when not matched then
+. . . . . . . . >         insert (empno, name, age, gender, salary, city)
+. . . . . . . . >         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.t_age * 1000);
+Error: Number of INSERT target columns (6) does not equal number of source items (5) (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- mismatch in types in values clause
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > merge into emps e
+. . . . . . . . >     using tempemps t on t.t_empno = e.empno
+. . . . . . . . >     when matched then
+. . . . . . . . >         update set deptno = t.t_deptno, city = upper(t.t_city),
+. . . . . . . . >             salary = salary * .25
+. . . . . . . . >     when not matched then
+. . . . . . . . >         insert (empno, name, age, gender, salary, city)
+. . . . . . . . >         values(t.t_empno, upper(t.t_name), t.t_name, t.t_gender, t.t_age * 1000,
+. . . . . . . . >             t.t_city);
+Error: From line 1, column 278 to line 1, column 280: Cannot assign to target field 'AGE' of type INTEGER from source field 'T_NAME' of type VARCHAR(25) (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

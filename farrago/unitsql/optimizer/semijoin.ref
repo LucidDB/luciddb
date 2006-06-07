@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/optimizer/semijoin.sql#5 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/semijoin.sql#6 $
 0: jdbc:farrago:> -- Tests semijoin transformations
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema sj;
@@ -37,48 +37,18 @@
 0: jdbc:farrago:> -- tables and are meant to force the optimizer to choose semijoins
 0: jdbc:farrago:> 
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'T', 10000);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'SMALLTABLE', 10);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'SJ', 'T', 'B', 10, 100, 10, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'SJ', 'T', 'D', 10, 100, 10, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'SJ', 'SMALLTABLE', 'S1', 10, 100, 10, 1,
 . . . . . . . . >     'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'SJ', 'SMALLTABLE', 'S3', 10, 100, 10, 1,
 . . . . . . . . >     'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- explain plan tests
 0: jdbc:farrago:> 
@@ -382,92 +352,27 @@
 0: jdbc:farrago:> -- make the optimizer think they are
 0: jdbc:farrago:> 
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'SALES', 100000);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'PRODUCT', 20);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'SALESPERSON', 10);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'CUSTOMER', 100);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'STATE', 5);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'SJ', 'SALES', 'PRODUCT_ID', 20, 100, 20, 0, '0123456789');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'SJ', 'SALES', 'SALESPERSON', 10, 100, 10, 0, '0123456789');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'SJ', 'SALES', 'CUSTOMER', 100, 100, 100, 0, '0123456789');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'SJ', 'PRODUCT', 'ID', 20, 100, 20, 0, '0123456789');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'SJ', 'SALESPERSON', 'ID', 10, 100, 10, 0, '0123456789');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'SJ', 'CUSTOMER', 'ID', 100, 100, 100, 0, '0123456789');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'SJ', 'CUSTOMER', 'CITY', 5, 100, 5, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
 . . . . . . . . >     'LOCALDB', 'SJ', 'STATE', 'CITY', 5, 100, 5, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set outputformat csv
 0: jdbc:farrago:> 
@@ -741,6 +646,27 @@
 '                    LcsRowScanRel(table=[[LOCALDB, SJ, PRODUCT]], projection=[[0, 3]], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$PRODUCT$ID, SYS$CLUSTERED_INDEX$SJ$PRODUCT$SIZE]])'
 '        FennelCalcRel(expr#0..3=[{inputs}], expr#4=[_ISO-8859-1'S'], expr#5=[=($t3, $t4)], proj#0..3=[{exprs}], $condition=[$t5])'
 '          LcsRowScanRel(table=[[LOCALDB, SJ, PRODUCT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$PRODUCT$COLOR, SYS$CLUSTERED_INDEX$SJ$PRODUCT$ID, SYS$CLUSTERED_INDEX$SJ$PRODUCT$NAME, SYS$CLUSTERED_INDEX$SJ$PRODUCT$SIZE]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- semijoin that needs to be removed
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . >     select s.product_id from
+. . . . . . . . >         (select sum(quantity), product_id from sales group by product_id) s,
+. . . . . . . . >         product p
+. . . . . . . . >         where
+. . . . . . . . >             s.product_id = p.id and p.size = 'S'
+. . . . . . . . >         order by 1;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..1=[{inputs}], PRODUCT_ID=[$t0])'
+'      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'        FennelCalcRel(expr#0..1=[{inputs}], PRODUCT_ID=[$t0])'
+'          LhxAggRel(groupCount=[1], agg#0=[SUM(1)])'
+'            FennelRenameRel(fieldNames=[[$f0, $f1]])'
+'              LcsRowScanRel(table=[[LOCALDB, SJ, SALES]], projection=[[1, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SJ$SALES$QUANTITY]])'
+'        FennelCalcRel(expr#0..1=[{inputs}], expr#2=[_ISO-8859-1'S'], expr#3=[=($t1, $t2)], ID=[$t0], $condition=[$t3])'
+'          LcsRowScanRel(table=[[LOCALDB, SJ, PRODUCT]], projection=[[0, 3]], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$PRODUCT$ID, SYS$CLUSTERED_INDEX$SJ$PRODUCT$SIZE]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> ------------------
 0: jdbc:farrago:> -- run the queries

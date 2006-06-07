@@ -10,7 +10,6 @@ SERVER_JAVA_ARGS="-ea -esa -cp classes:`cat ../farrago/classpath.gen` \
   -Djava.util.logging.config.file=trace/LucidDbTrace.properties \
   -Dnet.sf.farrago.defaultSessionFactoryLibraryName=${SESSION_FACTORY}"
 
-# TODO:  trim this
-CLIENT_JAVA_ARGS=${SERVER_JAVA_ARGS}
+CLIENT_JAVA_ARGS="-ea -esa -cp plugin/LucidDbClient.jar:../thirdparty/sqlline.jar:../thirdparty/jline.jar:../thirdparty/hsqldb/lib/hsqldb.jar -Djava.util.logging.config.file=trace/LucidDbTrace.properties"
 
 SQLLINE_JAVA_ARGS="sqlline.SqlLine"

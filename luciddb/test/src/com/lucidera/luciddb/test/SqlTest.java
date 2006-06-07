@@ -27,6 +27,7 @@ import java.util.regex.*;
 import java.util.logging.*;
 import junit.framework.*;
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.test.concurrent.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.util.*;
 import sqlline.SqlLine;
@@ -105,7 +106,7 @@ public class SqlTest extends TestCase {
         System.out.println("sql-file: " + sqlFile);
         System.out.println("jdbc-driver: " + driverName);
         System.out.println("username: " + username);
-        assert (sqlFile.endsWith(".sql"));
+        assert (sqlFile.endsWith(".sql") || sqlFile.endsWith(".mtsql"));
         sqlFileSansExt =
             new File(sqlFile.substring(0, sqlFile.length() - 4));
         args =
@@ -140,34 +141,13 @@ public class SqlTest extends TestCase {
         // of a suite.
         try {
             // read from the specified file
-            inputStream = new FileInputStream(sqlFile.toString());
-            // to make sure the session is closed properly, append the
-            // !quit command
-            String quitCommand = "\n!quit\n";
-            ByteArrayInputStream quitStream =
-                new ByteArrayInputStream(quitCommand.getBytes());
-
-            SequenceInputStream sequenceStream =
-                new SequenceInputStream(inputStream, quitStream);
-            OutputStream outputStream =
-                openTestLogOutputStream(sqlFileSansExt);
-            PrintStream printStream = new PrintStream(outputStream);
-            System.setOut(printStream);
-            System.setErr(printStream);
-
-            // tell SqlLine not to exit (this boolean is active-low)
-            System.setProperty("sqlline.system.exit", "true");
-            // set limit to min on plan cache
-            if (urlPrefix.contains("luciddb")) {
-                Connection conn = LucidDbTestHarness.startupEngine(
-                    urlPrefix, username, passwd);
-                Statement stmt = conn.createStatement();
-                stmt.executeUpdate(
-                    "alter system set \"codeCacheMaxBytes\" = min");
+            if (sqlFile.endsWith(".sql")) {
+                inputStream = new FileInputStream(sqlFile.toString());
+                runSqllineTest(inputStream);
+            } else {
+                assert(sqlFile.endsWith(".mtsql"));
+                runMtsqlTest();
             }
-            SqlLine.mainWithInputRedirection(args, sequenceStream);
-            printStream.flush();
-            diffTestLog();
         } catch (Exception e) {
             fail("Failed with Unexpected Exception: " +
                 e.toString());
@@ -175,13 +155,56 @@ public class SqlTest extends TestCase {
             System.setOut(savedOut);
             System.setErr(savedErr);
             try {
-                inputStream.close();
+                if (inputStream != null) {
+                    inputStream.close();
+                }
             } catch (Throwable t) {
                 System.out.println("ERROR INPUT STREAM CLOSE THREW EXCEPTION!"
                     + t.toString());
             }
             tracer.info("Leaving test case " + sqlFile);
         }
+    }
+
+    private void runSqllineTest(InputStream inputStream)
+        throws Exception
+    {
+        // to make sure the session is closed properly, append the
+        // !quit command
+        String quitCommand = "\n!quit\n";
+        ByteArrayInputStream quitStream =
+            new ByteArrayInputStream(quitCommand.getBytes());
+
+        SequenceInputStream sequenceStream =
+            new SequenceInputStream(inputStream, quitStream);
+        OutputStream outputStream =
+            openTestLogOutputStream(sqlFileSansExt);
+        PrintStream printStream = new PrintStream(outputStream);
+        System.setOut(printStream);
+        System.setErr(printStream);
+
+        // tell SqlLine not to exit (this boolean is active-low)
+        System.setProperty("sqlline.system.exit", "true");
+        // set limit to min on plan cache
+        if (urlPrefix.contains("luciddb")) {
+            Connection conn = LucidDbTestHarness.startupEngine(
+                urlPrefix, username, passwd);
+            Statement stmt = conn.createStatement();
+            stmt.executeUpdate(
+                "alter system set \"codeCacheMaxBytes\" = min");
+        }
+        SqlLine.mainWithInputRedirection(args, sequenceStream);
+        printStream.flush();
+        diffTestLog();
+    }
+
+    private void runMtsqlTest()
+        throws Exception
+    {
+        LucidDbTestHarness.startupEngine(
+            urlPrefix, username, passwd);
+        MtsqlTestCase testCase = new MtsqlTestCase(sqlFile);
+        testCase.go();
     }
 
     /**
@@ -371,6 +394,25 @@ public class SqlTest extends TestCase {
         }
     }
 
+    /**
+     * Helper clsas for invoking a multi-threaded SQL script (testname.mtsql).
+     * Inherits FarragoTestConcurrentTest, but bypasses some of the usual
+     * malarkey that happens in setUp and tearDown.
+     */
+    private static class MtsqlTestCase extends FarragoTestConcurrentTest
+    {
+        MtsqlTestCase(String name)
+            throws Exception
+        {
+            super(name);
+        }
+        
+        public void go()
+            throws Exception
+        {
+            runTest();
+        }
+    }
 }
 
 

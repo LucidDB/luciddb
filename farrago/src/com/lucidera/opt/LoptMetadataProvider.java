@@ -22,6 +22,7 @@ package com.lucidera.opt;
 
 import com.lucidera.lcs.*;
 
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.sql2003.*;
 
@@ -59,8 +60,15 @@ import java.util.*;
  */
 public class LoptMetadataProvider extends ReflectiveRelMetadataProvider
 {
-    public LoptMetadataProvider()
+    private FarragoRepos repos;
+    
+    private LcsColumnMetadata columnMd;
+    
+    public LoptMetadataProvider(FarragoRepos repos)
     {
+        this.repos = repos;
+        columnMd = new LcsColumnMetadata();
+        
         mapParameterTypes(
             "getCostWithFilters",
             Collections.singletonList((Class) RexNode.class));
@@ -73,6 +81,10 @@ public class LoptMetadataProvider extends ReflectiveRelMetadataProvider
         mapParameterTypes(
             "getSelectivity",
             Collections.singletonList((Class) RexNode.class));
+
+        mapParameterTypes(
+            "getPopulationSize",
+            Collections.singletonList((Class) BitSet.class));
     }
     
     // override the default; LucidDB computes cumulative cost in terms
@@ -315,95 +327,7 @@ public class LoptMetadataProvider extends ReflectiveRelMetadataProvider
     public Double getDistinctRowCount(
         LcsRowScanRel rel, BitSet groupKey, RexNode predicate)
     {
-        // if the columns form a unique key or are part of a unique key,
-        // then just return the rowcount times the selectivity of the
-        // predicate
-        Boolean uniq = RelMdUtil.areColumnsUnique(rel, groupKey);
-        if (uniq != null && uniq) {
-            return NumberUtil.multiply(
-                RelMetadataQuery.getRowCount(rel),
-                RelMetadataQuery.getSelectivity(rel, predicate));
-        }
-        
-        // if no stats are available, return null
-        RelStatSource tabStats = RelMetadataQuery.getStatistics(rel);
-        if (tabStats == null) {
-            return null;
-        }
-              
-        Map<CwmColumn, SargIntervalSequence> col2SeqMap = null;
-        RexNode nonSargFilters = null;
-        if (predicate != null) {
-            SargFactory sargFactory =
-                new SargFactory(rel.getCluster().getRexBuilder());            
-            SargRexAnalyzer rexAnalyzer = sargFactory.newRexAnalyzer();
-    
-            // determine which predicates are sargable and which aren't
-            List<SargBinding> sargBindingList =
-                rexAnalyzer.analyzeAll(predicate);
-            nonSargFilters = rexAnalyzer.getPostFilterRexNode();
-        
-            if (!sargBindingList.isEmpty()) {
-                LcsIndexGuide indexGuide = rel.getIndexGuide();
-                col2SeqMap = indexGuide.getCol2SeqMap(rel, sargBindingList);
-            }
-        }
-        
-        // loop through each column and determine the cardinality of the
-        // column      
-        Double distRowCount = 1.0;
-        for (int colno = groupKey.nextSetBit(0); colno >= 0;
-            colno = groupKey.nextSetBit(colno + 1))
-        {
-            // calculate the original ordinal (before projection)
-            int origcolno = rel.getOriginalColumnOrdinal(colno);
-            
-            // if the column has sargable predicates, compute the
-            // cardinality based on the predicates; otherwise, just compute
-            // the full cardinality of the column
-            RelStatColumnStatistics colStats = null;
-            
-            // getColumnForFieldAccess uses projected position.
-            FemAbstractColumn col = rel.getColumnForFieldAccess(colno);
-            // TODO zfong 5/17/06 - for special columns like LCS_RID, we can
-            // construct column stats for it, since the column values are
-            // guaranteed to be unique
-            if (col == null) {
-                return null;
-            }
-            
-            if (col2SeqMap != null) {   
-                SargIntervalSequence sargSeq = col2SeqMap.get(col);
-                // getColumnStatistics uses original field position
-                colStats = tabStats.getColumnStatistics(origcolno, sargSeq);
-            } else {
-                // getColumnStatistics uses original field position
-                colStats = tabStats.getColumnStatistics(origcolno, null);
-            }
-            if (colStats == null) {
-                return null;
-            }
-            Double colCard = colStats.getCardinality();
-            if (colCard == null) {
-                return null;
-            }
-            distRowCount = distRowCount * colCard;
-        }
-        
-        // reduce cardinality by the selectivity of the non-sargable
-        // predicates (which includes any semijoin filters)
-        distRowCount *= RelMdUtil.guessSelectivity(nonSargFilters);
-        
-        // return value should be no higher than just applying the selectivity
-        // of all predicates on the rel
-        Double minRowCount = NumberUtil.multiply(
-            RelMetadataQuery.getRowCount(rel),
-            RelMetadataQuery.getSelectivity(rel, predicate));
-        if (minRowCount != null) {
-            distRowCount = Math.min(distRowCount, minRowCount);
-        }
-        
-        return distRowCount;
+        return columnMd.getDistinctRowCount(rel, groupKey, predicate);
     }
     
     public Double getSelectivity(JoinRel rel, RexNode predicate)
@@ -593,7 +517,8 @@ public class LoptMetadataProvider extends ReflectiveRelMetadataProvider
      * 
      * @param rel the join rel
      * @param leftJoinCols equijoin columns from the left hand side of the join
-     * @param rightJoinCols equijoin columns from the right hand side of the join
+     * @param rightJoinCols equijoin columns from the right hand side of the
+     * join
      * @return true if dimension table is on the left; null if cannot determine
      */
     private Boolean dimOnLeft(
@@ -632,6 +557,16 @@ public class LoptMetadataProvider extends ReflectiveRelMetadataProvider
         } else {
             return false;
         }
+    }
+    
+    public Double getPopulationSize(LcsRowScanRel rel, BitSet groupKey)
+    {
+        return columnMd.getPopulationSize(rel, groupKey);
+    }
+    
+    public Set<BitSet> getUniqueKeys(LcsRowScanRel rel)
+    {    
+        return columnMd.getUniqueKeys(rel, repos);
     }
 }
 

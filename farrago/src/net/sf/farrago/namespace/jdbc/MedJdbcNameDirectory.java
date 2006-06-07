@@ -220,7 +220,9 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
                 FarragoMedMetadataQuery.OTN_COLUMN);
             List tableListActual = new ArrayList();
             List tableListOptimized = new ArrayList();
-            if (wantTables) {
+            // FRG-137: Since we rely on queryTable to populate the lists, we
+            // need to do it for wantColumns even when !wantTables.
+            if (wantTables || wantColumns) {
                 if (!queryTables(
                         query, sink, tableListActual, tableListOptimized))
                 {

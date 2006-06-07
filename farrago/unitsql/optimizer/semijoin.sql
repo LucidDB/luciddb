@@ -307,6 +307,16 @@ explain plan for
             s.salesperson > 0 and s.customer > 0
         order by sid;
 
+-- semijoin that needs to be removed
+
+explain plan for
+    select s.product_id from
+        (select sum(quantity), product_id from sales group by product_id) s,
+        product p
+        where
+            s.product_id = p.id and p.size = 'S'
+        order by 1;
+
 ------------------
 -- run the queries
 ------------------

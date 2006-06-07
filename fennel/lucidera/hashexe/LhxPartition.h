@@ -31,6 +31,7 @@
 #include "fennel/lucidera/hashexe/LhxHashBase.h"
 #include "fennel/lucidera/hashexe/LhxHashTable.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
+#include "fennel/exec/AggComputer.h"
 #include <boost/scoped_array.hpp>
 
 FENNEL_BEGIN_NAMESPACE
@@ -81,10 +82,28 @@ class LhxPartitionWriter
      * Tuple accessor to marshal the inputTuple.
      */
     TupleAccessor tupleAccessor;
+
+    bool isAggregate;
+
+    /**
+     * Each writer has a local hash table(which shares the scratch page quota
+     * with other writer) to compute partial aggregates before flushing them to
+     * disk.
+     */
+    LhxHashTable hashTable;
+    LhxHashTableReader hashTableReader;
+    TupleData partialAggTuple;
+
 public:
     void open(SharedLhxPartition destPartition,
-              LhxHashInfo const &hashInfo);
+        LhxHashInfo const &hashInfo);
+    void open(SharedLhxPartition destPartition,
+        LhxHashInfo &hashInfo,
+        AggComputerList *aggList,
+        uint numWriterCachePages);
+    inline void allocateResources();
     void marshalTuple(TupleData const &inputTuple);
+    void aggAndMarshalTuple(TupleData const &inputTuple);
     void close();
 };
 
@@ -117,6 +136,7 @@ class LhxPartitionReader
     LhxPartitionReaderState readerState;
     bool srcIsStream;
     ExecStreamBufState bufState;
+    TupleDescriptor outputTupleDesc;
 
     /**
      * If reader is on a partition which comes from the input exec stream,
@@ -129,12 +149,13 @@ public:
     void open(SharedLhxPartition srcPartition,
         LhxHashInfo const &hashInfo,
         bool setDeallocate);
-    void unmarshalTuple(TupleData &outputTuple);
-    void consumeTuple();
     bool isTupleConsumptionPending();
     bool demandData();
-    inline ExecStreamBufState getState() const;
+    void unmarshalTuple(TupleData &outputTuple);
+    void consumeTuple();
     void close();
+    inline ExecStreamBufState getState() const;
+    inline TupleDescriptor const &getTupleDesc() const;
 };
 
 enum LhxPartitionState {
@@ -180,6 +201,12 @@ struct LhxPartitionInfo
 
     LhxHashInfo *hashInfo;
 
+    /*
+     * True if the tuples currently being partitioned come from
+     * memory(i.e. from the hash table).
+     */
+    bool partitionMemory;
+
     LhxPartitionInfo() {reader = NULL; hashTableReader = NULL;}
 
     /**
@@ -203,10 +230,21 @@ struct LhxPartitionInfo
      * this partition.
      */
     void open(uint curInputIndex,
-        SharedLhxPartition partition,
         LhxHashTableReader *hashTableReaderInit,
         LhxPartitionReader *buildReader,
         TupleData &buildTuple);
+
+    /**
+     * Prepare to aggregate and partition the build input which reads from both
+     * hash table and an existing reader. There is also a inflight tuple that
+     * is part of this partition.
+     * aggList contains the agg computers which will aggregate the input.
+     */
+    void open(uint curInputIndex,
+        LhxHashTableReader *hashTableReaderInit,
+        LhxPartitionReader *buildReader,
+        TupleData &buildTuple,
+        AggComputerList *aggList);
 
     /**
      * Close the reader stream and the writer streams.
@@ -302,6 +340,17 @@ inline ExecStreamBufState LhxPartitionReader::getState() const
    } else {
         return bufState;
    }
+}
+
+inline TupleDescriptor const &LhxPartitionReader::getTupleDesc() const
+{
+    return outputTupleDesc;
+}
+
+inline void LhxPartitionWriter::allocateResources()
+{
+    bool status = hashTable.allocateResources();
+    assert(status);
 }
 
 inline void LhxPlan::addSibling(SharedLhxPlan siblingPlanInit)

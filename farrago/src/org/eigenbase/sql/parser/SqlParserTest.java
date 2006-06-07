@@ -1568,6 +1568,50 @@ public class SqlParserTest extends TestCase
         check("delete from emps where empno=12",
             "DELETE FROM `EMPS`" + NL + "WHERE (`EMPNO` = 12)");
     }
+    
+    public void testMergeSelectSource()
+    {
+        check("merge into emps e " +
+            "using (select * from tempemps where deptno is null) t " +
+            "on e.empno = t.empno " +
+            "when matched then update " +
+            "set name = t.name, deptno = t.deptno, salary = t.salary * .1 " +
+            "when not matched then insert (name, dept, salary) " +
+            "values(t.name, 10, t.salary * .15)",
+            
+            fold(new String[] {
+                "MERGE INTO `EMPS` AS `E`",
+                "USING (SELECT *",
+                "FROM `TEMPEMPS`",
+                "WHERE (`DEPTNO` IS NULL)) AS `T`",
+                "ON (`E`.`EMPNO` = `T`.`EMPNO`)",
+                "WHEN MATCHED THEN UPDATE SET `NAME` = `T`.`NAME`",
+                ", `DEPTNO` = `T`.`DEPTNO`",
+                ", `SALARY` = (`T`.`SALARY` * 0.1)",
+                "WHEN NOT MATCHED THEN INSERT (`NAME`, `DEPT`, `SALARY`) " +
+                "(VALUES (ROW(`T`.`NAME`, 10, (`T`.`SALARY` * 0.15))))" }));
+    }
+
+    public void testMergeTableRefSource()
+    {
+        check("merge into emps e " +
+            "using tempemps as t " +
+            "on e.empno = t.empno " +
+            "when matched then update " +
+            "set name = t.name, deptno = t.deptno, salary = t.salary * .1 " +
+            "when not matched then insert (name, dept, salary) " +
+            "values(t.name, 10, t.salary * .15)",
+            
+            fold(new String[] {
+                "MERGE INTO `EMPS` AS `E`",
+                "USING `TEMPEMPS` AS `T`",
+                "ON (`E`.`EMPNO` = `T`.`EMPNO`)",
+                "WHEN MATCHED THEN UPDATE SET `NAME` = `T`.`NAME`",
+                ", `DEPTNO` = `T`.`DEPTNO`",
+                ", `SALARY` = (`T`.`SALARY` * 0.1)",
+                "WHEN NOT MATCHED THEN INSERT (`NAME`, `DEPT`, `SALARY`) " +
+                "(VALUES (ROW(`T`.`NAME`, 10, (`T`.`SALARY` * 0.15))))" }));
+    }
 
     public void testBitStringNotImplemented()
     {

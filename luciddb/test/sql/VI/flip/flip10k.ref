@@ -72,8 +72,7 @@
 . . . . . . . . > FROM ff_schema.BENCH_SOURCE_10K
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- Delete not working yet
-0: jdbc:luciddb:> -- delete from BENCH10K where K2=1
-0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> delete from BENCH10K where K2=1
+. . . . . . . . > ;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

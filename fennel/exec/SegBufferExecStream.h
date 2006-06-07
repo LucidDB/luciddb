@@ -72,6 +72,7 @@ class SegBufferExecStream : public ConduitExecStream
 
     void destroyBuffer();
     void openBufferForRead(bool destroy);
+    void closeProducers(ExecStreamId streamId);
     
 public:
     virtual void prepare(SegBufferExecStreamParams const &params);

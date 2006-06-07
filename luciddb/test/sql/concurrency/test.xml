@@ -1,0 +1,42 @@
+<project name="bh" default="concurrency">
+  <target name="concurrency">
+    <test-suite name="concurrency">
+
+      <init-hook>
+        <test-suite name="init">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">
+            <test-suite-modifier value="concurrency"/>
+          </test-suite-call>
+        </test-suite>
+      </init-hook>
+
+      <test name="setup">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/setup.sql"/>
+      </test>
+
+      <test name="sameTableReadRead" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/sameTableReadRead.mtsql"/>
+      </test>
+
+      <test name="sameTableReadWrite" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/sameTableReadWrite.mtsql"/>
+      </test>
+
+      <test name="sameTableWriteRead" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/sameTableWriteRead.mtsql"/>
+      </test>
+
+      <cleanup-hook>
+        <test-suite name="cleanup">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tdone.xml">
+            <test-suite-modifier value="concurrency"/>
+          </test-suite-call>
+        </test-suite>
+      </cleanup-hook>
+
+    </test-suite>
+  </target>
+</project>

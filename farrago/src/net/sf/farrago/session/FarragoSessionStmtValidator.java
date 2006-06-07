@@ -40,6 +40,7 @@ import net.sf.farrago.util.*;
 
 import org.eigenbase.util.*;
 import org.eigenbase.resgen.*;
+import org.eigenbase.trace.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.validate.SqlMoniker;
@@ -318,6 +319,19 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
     public void validateFeature(
         ResourceDefinition feature,
         SqlParserPos context);
+
+    /**
+     * Sets the timing tracer associated with this statement
+     *
+     * @param timingTracer tracer to use
+     */
+    public void setTimingTracer(
+        EigenbaseTimingTracer timingTracer);
+
+    /**
+     * @return the timing tracer associated with this statement
+     */
+    public EigenbaseTimingTracer getTimingTracer();
 }
 
 

@@ -37,7 +37,11 @@ values (applib.get_var('context1', 'var1'));
 -- should fail:  attempt to access a variable we never even created
 values (applib.get_var('context1', 'var0'));
 
--- create a variable, implicitly creating its context
+-- should fail:  create a variable, attempting to implicitly create its context
+call applib.create_var('context2', 'var2', 'uncomfortably implicit');
+
+-- do it right
+call applib.create_var('context2', null, 'uncomfortably implicit');
 call applib.create_var('context2', 'var2', 'uncomfortably implicit');
 
 -- default value should be null

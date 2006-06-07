@@ -20,10 +20,6 @@
 */
 package com.lucidera.luciddb.applib.variable;
 
-import java.util.prefs.*;
-
-import com.lucidera.luciddb.applib.resource.*;
-
 /**
  * SQL-invocable procedure to flush an application variable or context.
  *
@@ -33,16 +29,8 @@ import com.lucidera.luciddb.applib.resource.*;
 public abstract class FlushAppVarUdp
 {
     public static void execute(String contextId, String varId)
-        throws BackingStoreException
     {
-        try {
-            Preferences prefs = AppVarUtil.getPreferencesNode(
-                contextId, varId, false);
-            prefs.flush();
-        } catch (BackingStoreException ex) {
-            throw ApplibResourceObject.get().AppVarWriteFailed.ex(
-                contextId, varId, ex);
-        }
+        // NOP for now
     }
 }
 

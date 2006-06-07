@@ -193,11 +193,11 @@ insert into lhxemps3 values(null);
 explain plan for
 select * from lhxemps2, lhxemps3
 where lhxemps2.enameA = lhxemps3.enameB
-order by 1;
+order by 1, 2;
 
 select * from lhxemps2, lhxemps3
 where lhxemps2.enameA = lhxemps3.enameB
-order by 1;
+order by 1, 2;
 
 -- nulls should not join with nulls of the same type either
 create table lhxemps4(
@@ -213,11 +213,11 @@ select * from lhxemps4 order by 1;
 explain plan for
 select * from lhxemps3, lhxemps4
 where lhxemps3.enameB = lhxemps4.enameC
-order by 1;
+order by 1, 2;
 
 select * from lhxemps3, lhxemps4
 where lhxemps3.enameB = lhxemps4.enameC
-order by 1;
+order by 1, 2;
 
 insert into lhxemps3 values('Leo');
 
@@ -227,29 +227,29 @@ insert into lhxemps4 values('Adel');
 explain plan for
 select * from lhxemps3 left outer join lhxemps4
 on lhxemps3.enameB = lhxemps4.enameC
-order by 1;
+order by 1, 2;
 
 select * from lhxemps3 left outer join lhxemps4
 on lhxemps3.enameB = lhxemps4.enameC
-order by 1;
+order by 1, 2;
 
 explain plan for
 select * from lhxemps3 right outer join lhxemps4
 on lhxemps3.enameB = lhxemps4.enameC
-order by 1;
+order by 1, 2;
 
 select * from lhxemps3 right outer join lhxemps4
 on lhxemps3.enameB = lhxemps4.enameC
-order by 1;
+order by 1, 2;
 
 explain plan for
 select * from lhxemps3 full outer join lhxemps4
 on lhxemps3.enameB = lhxemps4.enameC
-order by 1;
+order by 1, 2;
 
 select * from lhxemps3 full outer join lhxemps4
 on lhxemps3.enameB = lhxemps4.enameC
-order by 1;
+order by 1, 2;
 
 -- FIXME: currently only join conditions referencing input fields are
 -- recognized by hash join; cast() is produced by the input so the join
@@ -260,7 +260,7 @@ order by 1;
 explain plan for
 select * from lhxemps3 inner join lhxemps4
 on lhxemps3.enameB = cast(lhxemps4.enameC as char(20))
-order by 1;
+order by 1, 2;
 
 -- not null types are compatible with hash outer joins
 create table lhxemps5(
@@ -278,11 +278,11 @@ insert into lhxemps6 values('Adel');
 explain plan for
 select * from lhxemps5 full outer join lhxemps6
 on lhxemps5.enameB = lhxemps6.enameC
-order by 1;
+order by 1, 2;
 
 select * from lhxemps5 full outer join lhxemps6
 on lhxemps5.enameB = lhxemps6.enameC
-order by 1;
+order by 1, 2;
 
 --------------------
 -- hash aggregate --
@@ -310,6 +310,11 @@ explain plan for
 select count(empno) from lhxemps group by deptno order by 1;
 
 select count(empno) from lhxemps group by deptno order by 1;
+
+explain plan for
+select count(distinct empno) from lhxemps group by deptno order by 1;
+
+select count(distinct empno) from lhxemps group by deptno order by 1;
 
 explain plan for
 select count(*) from lhxemps;
@@ -386,7 +391,7 @@ select avg(deptno) from depts;
 
 select deptno, count(*) from emps group by deptno order by 1;
 
--- Issue the same statement again to make sure SortedAggStream
+-- Issue the same statement again to make sure LhxAggStream
 -- is in good state when reopened
 select deptno, count(*) from emps group by deptno order by 1;
 

@@ -34,7 +34,7 @@
 0: jdbc:farrago:> -- todo:  grant this only to a privileged user
 0: jdbc:farrago:> grant select on sessions_view to public;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create function objectsInUse()
+0: jdbc:farrago:> create function objects_in_use()
 . . . . . . . . > returns table(stmt_id int, mof_id varchar(32))
 . . . . . . . . > 
 . . . . . . . . > language java
@@ -43,10 +43,19 @@
 . . . . . . . . > external name 'class net.sf.farrago.syslib.FarragoManagementUDR.objectsInUse';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create view objects_in_use_view as
-. . . . . . . . >   select * from table(objectsInUse());
+. . . . . . . . >   select * from table(objects_in_use());
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- TODO: grant this only to a privileged user
 0: jdbc:farrago:> grant select on objects_in_use_view to public;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- lie and say this is non-deterministic, since it's usually used
+0: jdbc:farrago:> -- in cases where it would be annoying if it got optimized away
+0: jdbc:farrago:> create function sleep(millis bigint)
+. . . . . . . . > returns integer
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > not deterministic
+. . . . . . . . > external name 'class net.sf.farrago.syslib.FarragoManagementUDR.sleep';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- lets an administrator kill a running session
 0: jdbc:farrago:> -- TODO: grant this only to a privileged user
@@ -260,7 +269,8 @@
 . . . . . . . . >     cast(ae."creationTimestamp" as timestamp) as creation_timestamp,
 . . . . . . . . >     cast(ae."modificationTimestamp" as timestamp) as last_modification_timestamp,
 . . . . . . . . >     "description" as remarks,
-. . . . . . . . >     t."mofId"
+. . . . . . . . >     ae."mofId",
+. . . . . . . . >     ae."lineageId"
 . . . . . . . . >   from
 . . . . . . . . >     sys_boot.jdbc_metadata.tables_view_internal t
 . . . . . . . . >   inner join 
@@ -278,7 +288,9 @@
 . . . . . . . . >     creation_timestamp,
 . . . . . . . . >     last_modification_timestamp,
 . . . . . . . . >     remarks,
-. . . . . . . . >     g."Grantee"
+. . . . . . . . >     g."Grantee",
+. . . . . . . . >     dti."mofId",
+. . . . . . . . >     dti."lineageId"
 . . . . . . . . >   from
 . . . . . . . . >     dba_tables_internal1 dti
 . . . . . . . . >   inner join
@@ -296,8 +308,6 @@
 . . . . . . . . >     v."name" as view_name,
 . . . . . . . . >     cast("creationTimestamp" as timestamp) as creation_timestamp,
 . . . . . . . . >     cast("modificationTimestamp" as timestamp) as last_modification_timestamp,
-. . . . . . . . >     "rowCount" as last_analyze_row_count,
-. . . . . . . . >     cast("analyzeTime" as timestamp) as last_analyze_timestamp,
 . . . . . . . . >     "originalDefinition" as original_text,
 . . . . . . . . >     "description" as remarks,
 . . . . . . . . >     v."mofId",
@@ -318,8 +328,6 @@
 . . . . . . . . >     view_name,
 . . . . . . . . >     creation_timestamp,
 . . . . . . . . >     last_modification_timestamp,
-. . . . . . . . >     last_analyze_row_count,
-. . . . . . . . >     last_analyze_timestamp,
 . . . . . . . . >     original_text,
 . . . . . . . . >     remarks,
 . . . . . . . . >     vi."mofId",

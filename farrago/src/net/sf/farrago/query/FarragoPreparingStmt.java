@@ -145,6 +145,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     {
         super(null);
 
+        timingTracer = stmtValidator.getTimingTracer();
+
         this.stmtValidator = stmtValidator;
         stmtValidator.addAllocation(this);
 
@@ -248,7 +250,9 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     }
 
     // implement FarragoSessionPreparingStmt
-    public FarragoSessionExecutableStmt prepare(SqlNode sqlNode)
+    public FarragoSessionExecutableStmt prepare(
+        SqlNode sqlNode,
+        SqlNode sqlNodeOriginal)
     {
         boolean needValidation = false;
         if (sqlValidator == null) {
@@ -260,6 +264,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         PreparedResult preparedResult =
             super.prepareSql(
                 sqlNode,
+                sqlNodeOriginal,
                 getSession().getPersonality().getRuntimeContextClass(
                     this),
                 sqlValidator,

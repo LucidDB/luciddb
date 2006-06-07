@@ -23,32 +23,19 @@
 package net.sf.farrago.server;
 
 import java.io.*;
-import java.rmi.*;
-import java.rmi.registry.*;
 import java.util.*;
 
-import net.sf.farrago.db.*;
-import net.sf.farrago.fem.config.*;
 import net.sf.farrago.jdbc.engine.*;
-import net.sf.farrago.resource.*;
-import net.sf.farrago.session.*;
-import net.sf.farrago.release.*;
-import net.sf.farrago.util.*;
 
 /**
- * FarragoServer is a wrapper for an RmiJdbc server.
+ * @deprecated use FarragoRmiJdbcServer instead; this is hanging
+ * around for a while to avoid breaking dependencies
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoServer
+public class FarragoServer extends FarragoRmiJdbcServer
 {
-    //~ Static fields/initializers --------------------------------------------
-
-    protected static Registry rmiRegistry;
-
-    private final PrintWriter pw;
-
     //~ Methods ---------------------------------------------------------------
 
     /**
@@ -59,6 +46,7 @@ public class FarragoServer
      * @param args ignored
      */
     public static void main(String [] args)
+        throws Exception
     {
         FarragoServer server = new FarragoServer();
         server.start(new FarragoJdbcEngineDriver());
@@ -72,7 +60,7 @@ public class FarragoServer
      */
     public FarragoServer()
     {
-        this(new PrintWriter(System.out, true));
+        super();
     }
 
     /**
@@ -83,191 +71,10 @@ public class FarragoServer
      * @param pw receives console output
      */
     public FarragoServer(PrintWriter pw)
+        throws Exception
     {
-        this.pw = pw;
+        super(pw);
     }
-
-    /**
-     * Starts the server.
-     *
-     * @param jdbcDriver the JDBC driver which will be served
-     * to remote clients
-     */
-    public void start(FarragoJdbcServerDriver jdbcDriver)
-    {
-        FarragoResource res = FarragoResource.instance();
-        FarragoReleaseProperties releaseProps =
-            FarragoReleaseProperties.instance();
-        pw.println(
-            res.ServerProductName.str(
-                releaseProps.productName.get()));
-        pw.println(res.ServerLoadingDatabase.str());
-
-        // Load the session factory
-        FarragoSessionFactory sessionFactory = jdbcDriver.newSessionFactory();
-
-        // Load the database instance
-        FarragoDatabase db = FarragoDbSingleton.pinReference(sessionFactory);
-
-        FemFarragoConfig config = db.getSystemRepos().getCurrentConfig();
-
-        int rmiRegistryPort = config.getServerRmiRegistryPort();
-
-        int singleListenerPort = config.getServerSingleListenerPort();
-
-        if (rmiRegistryPort == -1) {
-            rmiRegistryPort = releaseProps.jdbcUrlPortDefault.get();
-        }
-
-        pw.println(res.ServerStartingNetwork.str());
-
-        List argList = new ArrayList();
-
-        if (rmiRegistry != null) {
-            // A server instance was previously in existence, so don't
-            // try to recreate the RMI registry.
-            argList.add("-noreg");
-        }
-
-        argList.add("-port");
-        argList.add(Integer.toString(rmiRegistryPort));
-
-        if (singleListenerPort != -1) {
-            argList.add("-lp");
-            argList.add(Integer.toString(singleListenerPort));
-        }
-
-        FarragoRJJdbcServer.main((String []) argList.toArray(new String[0]));
-
-        if (rmiRegistry == null) {
-            // This is the first server instance in this JVM, so
-            // look up the RMI registry which was just created by
-            // RJJdbcServer.main.
-            try {
-                rmiRegistry = LocateRegistry.getRegistry(rmiRegistryPort);
-            } catch (RemoteException ex) {
-                // TODO:  handle this better
-            }
-        }
-
-        pw.println(
-            res.ServerListening.str(new Integer(rmiRegistryPort)));
-    }
-
-    /**
-     * Stops the server if there are no sessions.
-     *
-     * @return whether server was stopped
-     */
-    public boolean stopSoft()
-    {
-        FarragoResource res = FarragoResource.instance();
-        pw.println(res.ServerShuttingDown.str());
-
-        // NOTE:  use groundReferences=1 in shutdownConditional
-        // to account for our baseline reference
-        if (FarragoDbSingleton.shutdownConditional(getGroundReferences())) {
-            pw.println(res.ServerShutdownComplete.str());
-
-            // TODO: should find a way to prevent new messages BEFORE shutdown
-            unbindRegistry();
-            return true;
-        } else {
-            pw.println(res.ServerSessionsExist.str());
-            return false;
-        }
-    }
-
-    /**
-     * Returns the number of ground references for this server.  Ground
-     * references are references pinned at startup time.  For the base
-     * implementation of FarragoServer this is always 1.  Farrago extensions,
-     * especially those that initialize resources via
-     * {@link FarragoSessionFactory#specializedInitialization(
-     *     FarragoAllocationOwner)}, may need to alter this value.
-     *
-     * @return the number of ground references for this server
-     */
-    protected int getGroundReferences()
-    {
-        return 1;
-    }
-
-    /**
-     * Stops the server, killing any sessions.
-     */
-    public void stopHard()
-    {
-        unbindRegistry();
-        FarragoResource res = FarragoResource.instance();
-        pw.println(res.ServerShuttingDown.str());
-        FarragoDbSingleton.shutdown();
-        pw.println(res.ServerShutdownComplete.str());
-    }
-
-    /** Unbinds all items remaining in RMI registry. */
-    protected void unbindRegistry()
-    {
-        if (rmiRegistry == null) {
-            return;
-        }
-
-        try {
-            String [] names = rmiRegistry.list();
-            for (int i = 0; i < names.length; ++i) {
-                rmiRegistry.unbind(names[i]);
-            }
-        } catch (Exception ex) {
-            // TODO:  handle this better
-            ex.printStackTrace();
-        }
-    }
-
-    /**
-     * @return redirected console output
-     */
-    public PrintWriter getPrintWriter()
-    {
-        return pw;
-    }
-
-    /**
-     * Implements console interaction from stdin after the server
-     * has successfully started.
-     */
-    public void runConsole()
-    {
-        FarragoResource res = FarragoResource.instance();
-
-        // TODO:  install signal handlers also
-        InputStreamReader inReader = new InputStreamReader(System.in);
-        LineNumberReader lineReader = new LineNumberReader(inReader);
-        for (;;) {
-            String cmd;
-            try {
-                cmd = lineReader.readLine();
-            } catch (IOException ex) {
-                break;
-            }
-            if (cmd == null) {
-                // interpret end-of-stream as meaning we are supposed to
-                // run forever as a daemon
-                return;
-            }
-            if (cmd.equals("!quit")) {
-                if (stopSoft()) {
-                    break;
-                }
-            } else if (cmd.equals("!kill")) {
-                stopHard();
-                break;
-            } else {
-                pw.println(res.ServerBadCommand.str(cmd));
-            }
-        }
-        System.exit(0);
-    }
-
 }
 
 

@@ -36,10 +36,57 @@ void LhxPartitionWriter::open(
     tupleAccessor.compute(hashInfo.inputDesc[destPartition->inputIndex]);
     pSegOutputStream = SegOutputStream::newSegOutputStream(
         hashInfo.externalSegmentAccessor);
+    isAggregate = false;
+}
+
+void LhxPartitionWriter::open(
+    SharedLhxPartition destPartitionInit,
+    LhxHashInfo &hashInfo,
+    AggComputerList *aggList,
+    uint numWriterCachePages)
+{
+    destPartition = destPartitionInit;
+    tupleAccessor.compute(hashInfo.inputDesc[destPartition->inputIndex]);
+    pSegOutputStream = SegOutputStream::newSegOutputStream(
+        hashInfo.externalSegmentAccessor);
+
+    isAggregate = true;
+    /*
+     * Any partition level is fine since the data is hash partitioned already.
+     */
+    uint partitionLevel = 0;
+    uint savedNumCachePages = hashInfo.numCachePages;
+    hashInfo.numCachePages = numWriterCachePages;
+
+    hashTable.init(partitionLevel, hashInfo, aggList);
+    hashTableReader.init(&hashTable, hashInfo);
+
+    hashInfo.numCachePages = savedNumCachePages;
+    
+    uint cndKeys = hashInfo.cndKeys;
+    uint usablePageSize =
+        (hashInfo.memSegmentAccessor.pSegment)->getUsablePageSize();
+
+    hashTable.calculateNumSlots(cndKeys, usablePageSize, numWriterCachePages);
+
+    partialAggTuple.compute(hashInfo.inputDesc[destPartition->inputIndex]);    
 }
 
 void LhxPartitionWriter::close()
 {
+    if (isAggregate) {
+        /*
+         * Write out the remaining partial aggregates in the local hash table.
+         */
+        while (hashTableReader.getNext(partialAggTuple)) {
+            uint tupleStorageLength =
+                tupleAccessor.getByteCount(partialAggTuple);
+            PBuffer pDestBuf =
+                pSegOutputStream->getWritePointer(tupleStorageLength);
+            tupleAccessor.marshal(partialAggTuple, pDestBuf);
+            pSegOutputStream->consumeWritePointer(tupleStorageLength);    
+        }
+    }
     destPartition->firstPageId = pSegOutputStream->getFirstPageId();
     pSegOutputStream.reset();
 }
@@ -52,6 +99,35 @@ void LhxPartitionWriter::marshalTuple(TupleData const &inputTuple)
     pSegOutputStream->consumeWritePointer(tupleStorageLength);    
 }
 
+void LhxPartitionWriter::aggAndMarshalTuple(TupleData const &inputTuple)
+{
+    
+    while (!hashTable.addTuple(inputTuple)) {
+        /*
+         * Write everything out to partition.
+         */
+        while (hashTableReader.getNext(partialAggTuple)) {
+            uint tupleStorageLength =
+                tupleAccessor.getByteCount(partialAggTuple);
+            PBuffer pDestBuf =
+                pSegOutputStream->getWritePointer(tupleStorageLength);
+            tupleAccessor.marshal(partialAggTuple, pDestBuf);
+            pSegOutputStream->consumeWritePointer(tupleStorageLength);    
+        }
+        bool reuse = true;
+        /*
+         * hash table size remain unchanged
+         */
+        bool status = hashTable.allocateResources(reuse);
+        assert(status);
+        /*
+         * Reset the reader and bind it to no particular key(will read the
+         * whole hash table).
+         */
+        hashTableReader.bindKey(NULL);
+    }
+}
+
 void LhxPartitionReader::open(
     SharedLhxPartition srcPartitionInit,
     LhxHashInfo const &hashInfo,
@@ -59,7 +135,6 @@ void LhxPartitionReader::open(
 {
     bufState = EXECBUF_NONEMPTY;
     srcPartition = srcPartitionInit;
-    tupleAccessor.compute(hashInfo.inputDesc[srcPartition->inputIndex]);
     
     if (srcPartition->firstPageId == NULL_PAGE_ID) {
         srcIsStream = true;
@@ -69,7 +144,10 @@ void LhxPartitionReader::open(
 
     if (srcIsStream) {
         streamBufAccessor = hashInfo.streamBufAccessor[srcPartition->inputIndex];
+        outputTupleDesc = streamBufAccessor->getTupleDesc();
     } else {
+        outputTupleDesc = hashInfo.inputDesc[srcPartition->inputIndex];
+        tupleAccessor.compute(outputTupleDesc);
         pSegInputStream = SegInputStream::newSegInputStream(
             hashInfo.externalSegmentAccessor, srcPartition->firstPageId);
         pSegInputStream->startPrefetch();
@@ -77,7 +155,7 @@ void LhxPartitionReader::open(
          * Once read the disk page can be deallocated.
          */
         pSegInputStream->setDeallocate(setDeallocate);
-        tupleAccessor.resetCurrentTupleBuf();        
+        tupleAccessor.resetCurrentTupleBuf();
     }
 }
 
@@ -169,6 +247,7 @@ void LhxPartitionInfo::init(
     numChildPart = numChildPartInit;
     numInput     = numInputInit;
 
+    writerList.clear();
     for (uint i = 0; i < numChildPart; i ++) {
         writerList.push_back(SharedLhxPartitionWriter(new LhxPartitionWriter()));
     }
@@ -191,11 +270,14 @@ void LhxPartitionInfo::open(
         destPartitionList[index]->inputIndex = curInputIndex;
         writerList[i]->open(destPartitionList[index], *hashInfo);
     }
+    /*
+     * Tuples will come from a partition(stream or disk).
+     */
+    partitionMemory = false;
 }
 
 void LhxPartitionInfo::open(
     uint curInputIndexInit,
-    SharedLhxPartition partition,
     LhxHashTableReader *hashTableReaderInit,
     LhxPartitionReader *buildReader,
     TupleData &buildTupleInit)
@@ -203,6 +285,10 @@ void LhxPartitionInfo::open(
     curInputIndex = curInputIndexInit;
 
     hashTableReader = hashTableReaderInit;
+    /*
+     * Reset the reader and bind it to no particular key(will read the
+     * whole hash table).
+     */
     hashTableReader->bindKey(NULL);    
 
     /*
@@ -221,6 +307,54 @@ void LhxPartitionInfo::open(
         destPartitionList[index]->inputIndex = curInputIndex;
         writerList[i]->open(destPartitionList[index], *hashInfo);
     }
+    /*
+     * Tuples will come from memory(hash table) first.
+     */
+    partitionMemory = true;
+}
+
+void LhxPartitionInfo::open(
+    uint curInputIndexInit,
+    LhxHashTableReader *hashTableReaderInit,
+    LhxPartitionReader *buildReader,
+    TupleData &buildTupleInit,
+    AggComputerList *aggList)
+{
+    curInputIndex = curInputIndexInit;
+
+    hashTableReader = hashTableReaderInit;
+    /*
+     * Reset the reader and bind it to no particular key(will read the
+     * whole hash table).
+     */
+    hashTableReader->bindKey(NULL);    
+
+    /*
+     * The build reader is from the LhxJoinExecStream and is already open.
+     */
+    reader = buildReader;
+
+    /*
+     * The inflight(between disk partition and hash table) build tuple.
+     */
+    buildTuple = buildTupleInit;
+
+    /*
+     * The hash table contained in the writer should only use up to the child's
+     * share of scratch buffer.
+     */
+    uint numWriterCachePages = hashInfo->numCachePages / numChildPart;
+
+    for (uint i = 0; i < numChildPart; i ++) {
+        uint index = i + curInputIndex * numChildPart;
+        destPartitionList.push_back(SharedLhxPartition(new LhxPartition()));
+        destPartitionList[index]->inputIndex = curInputIndex;
+        writerList[i]->open(destPartitionList[index], *hashInfo, aggList, numWriterCachePages);
+    }
+    /*
+     * Tuples will come from memory(hash table) first.
+     */
+    partitionMemory = true;
 }
 
 void LhxPartitionInfo::close(
@@ -274,7 +408,12 @@ void LhxPlan::createChildren(LhxHashInfo const &hashInfo)
     uint childNum, i, j;
     TupleData outputTuple;
 
-    for (j = 0; j < 2; j ++) {
+    uint numInputs = 2;
+
+    /*
+     * Generate partitions for each input.
+     */
+    for (j = 0; j < numInputs; j ++) {
         reader.open(partitions[j], hashInfo, true);
         outputTuple.compute(hashInfo.inputDesc[j]);
     
@@ -314,6 +453,9 @@ void LhxPlan::createChildren(LhxHashInfo const &hashInfo)
         reader.close();
     }
 
+    /*
+     * Create child plans consisting of one partition from each input.
+     */
     for (i = 0; i < numChildPart; i ++) {
         SharedLhxPlan newChildPlan = SharedLhxPlan(new LhxPlan());
         vector<SharedLhxPartition> partitionList;
@@ -335,6 +477,8 @@ void LhxPlan::createChildren(LhxHashInfo const &hashInfo)
 LhxPartitionState LhxPlan::generatePartitions(LhxHashInfo const &hashInfo,
     LhxPartitionInfo &partInfo, bool traceOn)
 {
+    bool isAggregate = (partInfo.numInput == 1);
+
     LhxHashGenerator hashSubPart;
     hashSubPart.init(partitionLevel + 1);
 
@@ -344,10 +488,15 @@ LhxPartitionState LhxPlan::generatePartitions(LhxHashInfo const &hashInfo,
     uint curInputIndex = partInfo.curInputIndex;
 
     uint childNum;
-    TupleData outputTuple;
+    TupleData hashTableTuple;
+    TupleDescriptor hashTableTupleDesc;
+    TupleData inputTuple;
+    TupleDescriptor const &inputTupleDesc = reader->getTupleDesc();
 
-    outputTuple.compute(hashInfo.inputDesc[curInputIndex]);
-    
+    hashTableTupleDesc = hashInfo.inputDesc[curInputIndex];
+    hashTableTuple.compute(hashTableTupleDesc);
+    inputTuple.compute(inputTupleDesc);
+
     /*
      * If there's hash table to read from.
      */
@@ -359,26 +508,44 @@ LhxPartitionState LhxPlan::generatePartitions(LhxHashInfo const &hashInfo,
         }
     }
 
-    if (curInputIndex == partInfo.numInput - 1) {
-        while ((partInfo.hashTableReader)->getNext(outputTuple)) {
+    if ((curInputIndex == partInfo.numInput - 1) && partInfo.partitionMemory) {
+        while ((partInfo.hashTableReader)->getNext(hashTableTuple)) {
 
             if (traceOn) {
-                tuplePrinter.print(dataTrace, hashInfo.inputDesc[curInputIndex],
-                    outputTuple);
+                tuplePrinter.print(dataTrace, hashTableTupleDesc, hashTableTuple);
                 dataTrace <<"\n";
             }
 
-            childNum = hashSubPart.hash(outputTuple,
+            childNum = hashSubPart.hash(hashTableTuple,
                 hashInfo.keyProj[curInputIndex],
                 hashInfo.isKeyColVarChar[curInputIndex]) % numChildPart;
             
-            writerList[childNum]->marshalTuple(outputTuple);            
+            writerList[childNum]->marshalTuple(hashTableTuple);
+            
         }
+        
+        if (isAggregate) {
+            /*
+             * release the hash table scratch pages
+             * and initialize writer scratch pages.
+             */
+            ((partInfo.hashTableReader)->getHashTable())->releaseResources();
+            for (int i = 0; i < writerList.size();i ++) {
+                writerList[i]->allocateResources();
+            }
+        }
+
+        /*
+         * Done with tuples in the hash table. Next tuples will come from a
+         * partition(stream or disk).
+         */
+        partInfo.partitionMemory = false;
+
         /*
          * The tuple for which hash table full is detected is not in the hash
          * table yet.
          */
-        outputTuple = partInfo.buildTuple;
+        inputTuple = partInfo.buildTuple;
     }
 
     if (traceOn) {
@@ -386,6 +553,11 @@ LhxPartitionState LhxPlan::generatePartitions(LhxHashInfo const &hashInfo,
     }
 
     for (;;) {
+        /*
+         * Note that the buildTuple is an unconsumed tuple from the reader. So
+         * when first time in this loop, isTupleConsumptionPending returns
+         * true.
+         */
         if (!reader->isTupleConsumptionPending()) {
             if (reader->getState() == EXECBUF_EOS) {
                 /*
@@ -405,20 +577,24 @@ LhxPartitionState LhxPlan::generatePartitions(LhxHashInfo const &hashInfo,
                 }
             }
             
-            reader->unmarshalTuple(outputTuple);
+            reader->unmarshalTuple(inputTuple);
         }
         
         if (traceOn) {    
-            tuplePrinter.print(dataTrace, hashInfo.inputDesc[curInputIndex],
-                outputTuple);
+            tuplePrinter.print(dataTrace, inputTupleDesc, inputTuple);
             dataTrace <<"\n";
         }
 
-        childNum = hashSubPart.hash(outputTuple,
+        childNum = hashSubPart.hash(inputTuple,
             hashInfo.keyProj[curInputIndex],
             hashInfo.isKeyColVarChar[curInputIndex]) % numChildPart;
         
-        writerList[childNum]->marshalTuple(outputTuple);
+        if (!isAggregate) {
+            writerList[childNum]->marshalTuple(inputTuple);
+        } else {
+            writerList[childNum]->aggAndMarshalTuple(inputTuple);
+        }
+
         reader->consumeTuple();
     }
 }

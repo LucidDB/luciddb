@@ -1,4 +1,6 @@
-0: jdbc:luciddb:> import foreign schema "@SCHEMA@" from server @name_prefix@_server into @name_prefix@_schema;
+0: jdbc:luciddb:> import foreign schema "@SCHEMA@" 
+. . . . . . . . > limit to ("bench100", "bench10K", "bench100K", "bench1M")
+. . . . . . . . > from server @name_prefix@_server into @name_prefix@_schema;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select count(*) from @name_prefix@_schema."bench100K";
 +---------+
