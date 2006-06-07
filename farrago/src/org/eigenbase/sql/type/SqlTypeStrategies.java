@@ -353,12 +353,21 @@ public abstract class SqlTypeStrategies
         });
 
     public static final SqlSingleOperandTypeChecker
+        otcIntervalDatetime =
+        new FamilyOperandTypeChecker(new SqlTypeFamily [] {
+            SqlTypeFamily.DatetimeInterval,
+            SqlTypeFamily.Datetime
+        });
+
+    public static final SqlSingleOperandTypeChecker
         otcPlusOperator =
         new CompositeOperandTypeChecker(
             CompositeOperandTypeChecker.OR,
             new SqlOperandTypeChecker[] {
                   otcNumericX2,
-                  otcIntervalSameX2
+                  otcIntervalSameX2,
+                  otcDatetimeInterval,
+                  otcIntervalDatetime
                   //todo datetime+interval checking missing
                   //todo interval+datetime checking missing
             });

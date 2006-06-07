@@ -259,6 +259,15 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
                 }
             } else if (SqlTypeUtil.isExactNumeric(type)) {
                 if (SqlTypeUtil.isExactNumeric(resultType)) {
+                    // TODO: come up with a cleaner way to support
+                    // interval + datetime = datetime
+                    if (types.length > i+1) {
+                        RelDataType type1 = types[i+1];
+                        if (SqlTypeUtil.isDatetime(type1)) {
+                            resultType = type1;
+                            return resultType;
+                        }
+                    }
                     if (!type.equals(resultType)) {
                         if (!typeName.allowsPrec()
                             && !resultTypeName.allowsPrec())
@@ -318,6 +327,15 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
                     return null;
                 }
             } else if (SqlTypeUtil.isInterval(type)) {
+                // TODO: come up with a cleaner way to support
+                // interval + datetime = datetime
+                if (types.length > i+1) {
+                    RelDataType type1 = types[i+1];
+                    if (SqlTypeUtil.isDatetime(type1)) {
+                        resultType = type1;
+                        return resultType;
+                    }
+                }
                 // TODO jvs 4-June-2005:  This shouldn't be necessary;
                 // move logic into IntervalSqlType.combine
                 Object type1 = resultType;
@@ -327,6 +345,17 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
                 resultType =
                     ((IntervalSqlType) resultType).combine(
                         (IntervalSqlType) type1);
+            } else if (SqlTypeUtil.isDatetime(type)) {
+                // TODO: come up with a cleaner way to support
+                // datetime +/- interval (or integer) = datetime
+                if (types.length > i+1) {
+                    RelDataType type1 = types[i+1];
+                    if (SqlTypeUtil.isInterval(type1) ||
+                        SqlTypeUtil.isIntType(type1)) {
+                        resultType = type;
+                        return resultType;
+                    }
+                }
             } else {
                 // TODO:  datetime precision details; for now we let
                 // leastRestrictiveByCast handle it
