@@ -2,6 +2,14 @@
   <target name="test-all">
     <test-suite name="test-all">
 
+      <init-hook>
+        <test-suite name="init">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">
+            <test-suite-modifier value="test-all"/>
+          </test-suite-call>
+        </test-suite>
+      </init-hook>
+
       <test-suite-call testfile="test-nightly-csvjdbc.xml">
         <test-suite-modifier value="csvjdbc"/>
         <property name="foreign.db" value="csvjdbc"/>
@@ -26,6 +34,14 @@
         <test-suite-modifier value="sqlserver"/>
         <property name="foreign.db" value="sqlserver"/>
       </test-suite-call>
+
+      <cleanup-hook>
+        <test-suite name="cleanup">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tdone.xml">
+            <test-suite-modifier value="test-all"/>
+          </test-suite-call>
+        </test-suite>
+      </cleanup-hook>
       
     </test-suite>
   </target>
