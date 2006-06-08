@@ -135,6 +135,19 @@ public interface SqlValidator
     RelDataType getValidatedNodeType(SqlNode node);
 
     /**
+     * Returns the type assigned to a node by validation, or null
+     * if unknown.  This allows for queries against nodes such as aliases,
+     * which have no type of their own.  If you want to assert
+     * that the node of interest must have a type, use {@link
+     * #getValidatedNodeType} instead.
+     *
+     * @param node the node of interest
+     *
+     * @return validated type, or null if unknown or not applicable
+     */
+    RelDataType getValidatedNodeTypeIfKnown(SqlNode node);
+
+    /**
      * Resolves an identifier to a fully-qualified name.
      *
      * @param id Identifier

@@ -78,6 +78,9 @@ typedef boost::shared_ptr<SegOutputStream> SharedSegOutputStream;
 class SegInputStream;
 typedef boost::shared_ptr<SegInputStream> SharedSegInputStream;
 
+class SegStreamAllocation;
+typedef boost::shared_ptr<SegStreamAllocation> SharedSegStreamAllocation;
+
 class SpillOutputStream;
 typedef boost::shared_ptr<SpillOutputStream> SharedSpillOutputStream;
 

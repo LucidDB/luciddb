@@ -28,22 +28,6 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-/**
- * Information about a run stored externally.
- */
-struct ExternalSortStoredRun
-{
-    /**
-     * PageId of first page of stored run.
-     */
-    PageId firstPageId;
-
-    /**
-     * Number of pages in stored run.
-     */
-    uint nStoredPages;
-};
-
 class ExternalSortInfo;
 
 /**
@@ -84,7 +68,7 @@ class ExternalSortRunAccessor : public ExternalSortSubStream
     /**
      * Information about run being accessed.
      */
-    ExternalSortStoredRun storedRun;
+    SharedSegStreamAllocation pStoredRun;
 
 // ----------------------------------------------------------------------
 // private methods
@@ -110,13 +94,10 @@ public:
     /**
      * Begins reading a particular run.
      *
-     * @param storedRunInit run to read
-     *
-     * @param deleteAfterRead whether to delete pages after they are read
+     * @param pStoredRunInit run to read
      */
     void startRead(
-        ExternalSortStoredRun &storedRunInit,
-        bool deleteAfterRead);
+        SharedSegStreamAllocation pStoredRunInit);
 
     /**
      * Terminates read for the current run if any.
@@ -132,11 +113,9 @@ public:
     void storeRun(ExternalSortSubStream &subStream);
 
     /**
-     * Returns information about run created by storeRun().
-     *
-     * @param storedRunOut receives stored run info
+     * @return information about run created by storeRun()
      */
-    void getStoredRun(ExternalSortStoredRun &storedRunOut);
+    SharedSegStreamAllocation getStoredRun();
 
     /**
      * Releases any resources acquired by this accessor.

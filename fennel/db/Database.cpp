@@ -221,6 +221,11 @@ void Database::closeImpl()
     if (pCheckpointThread) {
         pCheckpointThread->close();
     }
+
+    // Verify that no garbage temp pages remain allocated.
+    if (pTempSegment) {
+        assert(pTempSegment->getAllocatedSizeInPages() == 0);
+    }        
     
     if (isRecoveryRequired()) {
         closeDevices();
