@@ -494,29 +494,35 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     }
     
     // implement FarragoAllocation
-    public synchronized void closeAllocation()
+    public void closeAllocation()
     {
-        super.closeAllocation();
-        if (isClone || isClosed()) {
-            return;
-        }
-        if (isTxnInProgress()) {
-            if (isAutoCommit) {
-                commitImpl();
-            } else {
-                // NOTE jvs 10-May-2005:  Technically,  we're supposed to throw
-                // an invalid state exception here.  However, it's very
-                // unlikely that the caller is going to handle it properly,
-                // so instead we roll back.  If they wanted their
-                // changes committed, they should have said so.
-                rollbackImpl();
+        synchronized(FarragoDbSingleton.class) {
+            synchronized(this) {
+                super.closeAllocation();
+                if (isClone || isClosed()) {
+                    return;
+                }
+                if (isTxnInProgress()) {
+                    if (isAutoCommit) {
+                        commitImpl();
+                    } else {
+                        // NOTE jvs 10-May-2005: Technically, we're
+                        // supposed to throw an invalid state
+                        // exception here.  However, it's very
+                        // unlikely that the caller is going to handle
+                        // it properly, so instead we roll back.  If
+                        // they wanted their changes committed, they
+                        // should have said so.
+                        rollbackImpl();
+                    }
+                }
+                try {
+                    FarragoDbSingleton.disconnectSession(this);
+                } finally {
+                    database = null;
+                    repos = null;
+                }
             }
-        }
-        try {
-            FarragoDbSingleton.disconnectSession(this);
-        } finally {
-            database = null;
-            repos = null;
         }
     }
 

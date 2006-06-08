@@ -108,6 +108,7 @@ public abstract class FarragoManagementUDR
                     List<String> mofIds = stmtInfo.getObjectsInUse();
                     for (String mofId : mofIds) {
                         int i = 0;
+                        resultInserter.setLong(++i, info.getId());
                         resultInserter.setLong(++i, id);
                         resultInserter.setString(++i, mofId);
                         resultInserter.executeUpdate();

@@ -1147,6 +1147,10 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
     public void testIntervalOperators()
     {
+        checkExpType("interval '1' hour + TIME '8:8:8'", "TIME(0) NOT NULL");
+        checkExpType("TIME '8:8:8' - interval '1' hour", "TIME(0) NOT NULL");
+        checkExpType("TIME '8:8:8' + interval '1' hour", "TIME(0) NOT NULL");
+
         checkExpType("interval '1' day + interval '1' DAY(4)", "INTERVAL DAY(4) NOT NULL");
         checkExpType("interval '1' day(5) + interval '1' DAY", "INTERVAL DAY(5) NOT NULL");
         checkExpType("interval '1' day + interval '1' HOUR(10)", "INTERVAL DAY TO HOUR NOT NULL");
@@ -2280,6 +2284,10 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
     public void testCastToInterval()
     {
+        checkExpType("cast(interval '1' hour as varchar(20))", "VARCHAR(20) NOT NULL");
+        checkExpType("cast(interval '1' hour as bigint)", "BIGINT NOT NULL");
+        checkExpType("cast(1000 as interval hour)", "INTERVAL HOUR NOT NULL");
+
         checkExpType("cast(interval '1' month as interval year)", "INTERVAL YEAR NOT NULL");
         checkExpType("cast(interval '1-1' year to month as interval month)", "INTERVAL MONTH NOT NULL");
         checkExpType("cast(interval '1:1' hour to minute as interval day)", "INTERVAL DAY NOT NULL");
