@@ -817,6 +817,16 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
 
     public RelDataType getValidatedNodeType(SqlNode node)
     {
+        RelDataType type = getValidatedNodeTypeIfKnown(node);
+        if (type == null) {
+            throw Util.needToImplement(node);
+        } else {
+            return type;
+        }
+    }
+
+    public RelDataType getValidatedNodeTypeIfKnown(SqlNode node)
+    {
         final RelDataType type = (RelDataType) nodeToTypeMap.get(node);
         if (type != null) {
             return type;
@@ -825,9 +835,9 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         if (ns != null) {
             return ns.getRowType();
         }
-        throw Util.needToImplement(node);
+        return null;
     }
-
+    
     public void setValidatedNodeType(
         SqlNode node,
         RelDataType type)
@@ -2222,6 +2232,12 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         SqlSelect sqlSelect = call.getSourceSelect();
         // REVIEW zfong 5/25/06 - Does an actual type have to be passed
         // into validateSelect()?
+        
+        // REVIEW jvs 6-June-2006:  In general, passing unknownType like
+        // this means we won't be able to correctly infer the types
+        // for dynamic parameter markers (SET x = ?).  But
+        // maybe validateUpdate and validateInsert below will do
+        // the job?
         validateSelect(sqlSelect, unknownType);
 
         IdentifierNamespace targetNamespace =
