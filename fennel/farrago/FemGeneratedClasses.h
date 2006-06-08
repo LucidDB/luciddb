@@ -273,10 +273,10 @@ class ProxyExecutionStreamDef
 public:
 SharedProxyTupleDescriptor getOutputDesc();
 static jmethodID meth_getOutputDesc;
-SharedProxyExecStreamDataFlow getInputFlow();
-static jmethodID meth_getInputFlow;
 SharedProxyExecStreamDataFlow getOutputFlow();
 static jmethodID meth_getOutputFlow;
+SharedProxyExecStreamDataFlow getInputFlow();
+static jmethodID meth_getInputFlow;
 std::string getName();
 static jmethodID meth_getName;
 };
@@ -829,8 +829,16 @@ int32_t getNumBuildRows();
 static jmethodID meth_getNumBuildRows;
 int32_t getCndBuildKeys();
 static jmethodID meth_getCndBuildKeys;
+bool isLeftInner();
+static jmethodID meth_isLeftInner;
+bool isRightInner();
+static jmethodID meth_isRightInner;
 bool isRightOuter();
 static jmethodID meth_isRightOuter;
+bool isLeftDistinct();
+static jmethodID meth_isLeftDistinct;
+bool isRightDistinct();
+static jmethodID meth_isRightDistinct;
 };
 
 class ProxyMergeStreamDef
@@ -1021,10 +1029,10 @@ bool isPhysical();
 static jmethodID meth_isPhysical;
 std::string getRange();
 static jmethodID meth_getRange;
-SharedProxyWindowPartitionDef getPartition();
-static jmethodID meth_getPartition;
 SharedProxyWindowStreamDef getWindowStream();
 static jmethodID meth_getWindowStream;
+SharedProxyWindowPartitionDef getPartition();
+static jmethodID meth_getPartition;
 int32_t getOffset();
 static jmethodID meth_getOffset;
 };
