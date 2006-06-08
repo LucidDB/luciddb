@@ -31,6 +31,7 @@ import net.sf.farrago.jdbc.*;
 import net.sf.farrago.jdbc.client.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.server.*;
+import net.sf.farrago.test.jdbc.FarragoEngineDriverTest;
 import org.eigenbase.util14.ConnectStringParser;
 
 
@@ -127,7 +128,7 @@ public class FarragoServerTest extends TestCase
     /**
      * Tests client driver connection URI parameters.
      * The underlying connect-string processing is tested by
-     * {@link FarragoJdbcTest#testConnectStrings} using the engine driver.
+     * {@link FarragoEngineDriverTest#testConnectStrings} using the engine driver.
      * This method adds tests of client connections and
      * parameter precedence with the client driver.
      */
