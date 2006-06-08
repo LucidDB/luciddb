@@ -98,7 +98,7 @@ public:
     PageId getFirstPageId() const;
 
     /**
-     * @return the number of pages allocated by this segment
+     * @return the number of pages allocated by this stream
      */
     BlockNum getPageCount() const;
 
