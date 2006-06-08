@@ -177,8 +177,8 @@ typedef JniProxyIter<ProxyMergeStreamDef> SharedProxyMergeStreamDef;
 class ProxyMockTupleStreamDef;
 typedef JniProxyIter<ProxyMockTupleStreamDef> SharedProxyMockTupleStreamDef;
 
-class ProxyReshapeExecStream;
-typedef JniProxyIter<ProxyReshapeExecStream> SharedProxyReshapeExecStream;
+class ProxyReshapeStreamDef;
+typedef JniProxyIter<ProxyReshapeStreamDef> SharedProxyReshapeStreamDef;
 
 class ProxySortedAggStreamDef;
 typedef JniProxyIter<ProxySortedAggStreamDef> SharedProxySortedAggStreamDef;
@@ -849,7 +849,7 @@ int64_t getRowCount();
 static jmethodID meth_getRowCount;
 };
 
-class ProxyReshapeExecStream
+class ProxyReshapeStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
@@ -1183,7 +1183,7 @@ virtual void visit(ProxyMergeStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyMockTupleStreamDef &)
 { unhandledVisit(); }
-virtual void visit(ProxyReshapeExecStream &)
+virtual void visit(ProxyReshapeStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxySortedAggStreamDef &)
 { unhandledVisit(); }
