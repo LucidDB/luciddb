@@ -45,11 +45,6 @@ SharedSegment SegStream::getSegment() const
     return segmentAccessor.pSegment;
 }
 
-SegmentAccessor const &SegStream::getSegmentAccessor() const
-{
-    return segmentAccessor;
-}
-
 SegStreamMarker::SegStreamMarker(SegStream const &segStream)
     : ByteStreamMarker(segStream)
 {

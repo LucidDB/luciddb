@@ -52,6 +52,7 @@ struct ExternalSortMergeInfo
 
 class ExternalSortInfo;
 class ExternalSortRunAccessor;
+class ExternalSortStoredRun;
 
 typedef boost::shared_ptr<ExternalSortRunAccessor>
 SharedExternalSortRunAccessor;
@@ -146,10 +147,14 @@ public:
      * @param pStoredRun iterator to first run to merge
      *
      * @param nRunsToMerge number of runs to merge
+     *
+     * @param subMerge whether this merge result is going to need to
+     * be merged again at a higher level
      */
     void startMerge(
-        std::vector<SharedSegStreamAllocation>::iterator pStoredRun,
-        uint nRunsToMerge);
+        std::vector<ExternalSortStoredRun>::iterator pStoredRun,
+        uint nRunsToMerge,
+        bool subMerge);
 
     /**
      * Releases any resources acquired by this merger.

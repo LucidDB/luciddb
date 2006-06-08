@@ -23,7 +23,6 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/lucidera/sorter/ExternalSortExecStreamImpl.h"
 #include "fennel/segment/Segment.h"
-#include "fennel/segment/SegStreamAllocation.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
@@ -47,6 +46,7 @@ void ExternalSortExecStreamImpl::prepare(
 
     pTempSegment = params.pTempSegment;
     resultsReady = false;
+    nStoredRuns = 0;
     nParallel = 1;
     storeFinalRun = params.storeFinalRun;
     
@@ -159,7 +159,7 @@ ExecStreamResult ExternalSortExecStreamImpl::execute(
             ExternalSortRunLoader &runLoader = *(runLoaders[0]);
             if (runLoader.isStarted()) {
                 sortRun(runLoader);
-                if (storedRuns.size() || storeFinalRun) {
+                if ((nStoredRuns != 0) || storeFinalRun) {
                     // store last run
                     storeRun(runLoader);
                 }
@@ -189,6 +189,7 @@ void ExternalSortExecStreamImpl::releaseResources()
     pOutputWriter.reset();
     pFinalRunAccessor.reset();
     storedRuns.clear();
+    nStoredRuns = 0;
 }
 
 void ExternalSortExecStreamImpl::computeFirstResult()
@@ -212,19 +213,21 @@ void ExternalSortExecStreamImpl::storeRun(ExternalSortSubStream &subStream)
 {
     FENNEL_TRACE(
         TRACE_FINE,
-        "storing run " << storedRuns.size());
+        "storing run " << nStoredRuns);
                     
     boost::scoped_ptr<ExternalSortRunAccessor> pRunAccessor;
     pRunAccessor.reset(new ExternalSortRunAccessor(sortInfo));
     pRunAccessor->storeRun(subStream);
     
     StrictMutexGuard mutexGuard(storedRunMutex);
-    storedRuns.push_back(pRunAccessor->getStoredRun());
+    storedRuns.resize(nStoredRuns + 1);
+    pRunAccessor->getStoredRun(storedRuns[nStoredRuns]);
+    nStoredRuns++;
 }
 
 void ExternalSortExecStreamImpl::mergeFirstResult()
 {
-    if (storedRuns.size()) {
+    if (nStoredRuns != 0) {
         for (uint i = 0; i < nParallel; i++) {
             runLoaders[i]->releaseResources();
         }
@@ -234,7 +237,7 @@ void ExternalSortExecStreamImpl::mergeFirstResult()
             pMerger->initRunAccess();
         }
 
-        uint iFirstRun = storedRuns.size() - 1;
+        uint iFirstRun = nStoredRuns - 1;
         while (iFirstRun > 0) {
             uint nRunsToMerge;
 
@@ -242,31 +245,36 @@ void ExternalSortExecStreamImpl::mergeFirstResult()
             // the output buffer needed during merge.  Not sure why it worked
             // in BB?
             uint nMergePages = sortInfo.nSortMemPages - 1;
-            if (storedRuns.size() <= nMergePages) {
-                nRunsToMerge = storedRuns.size();
+            if (nStoredRuns <= nMergePages) {
+                nRunsToMerge = nStoredRuns;
             } else {
                 nRunsToMerge = std::min(
-                    storedRuns.size() - nMergePages + 1,
+                    nStoredRuns - nMergePages + 1,
                     nMergePages);
             }
 
             optimizeRunOrder();
-            iFirstRun = storedRuns.size() - nRunsToMerge;
+            iFirstRun = nStoredRuns - nRunsToMerge;
 
             FENNEL_TRACE(
                 TRACE_FINE,
                 "merging from run " << iFirstRun
                 << " with run count = " << nRunsToMerge);
             
-            pMerger->startMerge(
-                storedRuns.begin() + iFirstRun, nRunsToMerge);
             if ((iFirstRun > 0) || storeFinalRun) {
+                pMerger->startMerge(
+                    storedRuns.begin() + iFirstRun,nRunsToMerge,true);
                 storeRun(*pMerger);
                 deleteStoredRunInfo(iFirstRun,nRunsToMerge);
+            } else {
+                // REVIEW: we might actually want to delete the runs as we read
+                // them here (last param = true).
+                pMerger->startMerge(
+                    storedRuns.begin() + iFirstRun,nRunsToMerge,false);
             }
         }
 
-        if (storedRuns.size() == 1) {
+        if (nStoredRuns == 1) {
             if (!pFinalRunAccessor) {
                 pFinalRunAccessor.reset(new ExternalSortRunAccessor(sortInfo));
             }
@@ -276,14 +284,15 @@ void ExternalSortExecStreamImpl::mergeFirstResult()
                 "fetching from final run");
             
             pFinalRunAccessor->initRead();
-            pFinalRunAccessor->startRead(storedRuns[0]);
+            // REVIEW:  shouldn't last param be true instead?
+            pFinalRunAccessor->startRead(storedRuns[0],false);
             pMerger->releaseResources();
             pOutputWriter->setSubStream(*pFinalRunAccessor);
         } else {
             FENNEL_TRACE(
                 TRACE_FINE,
                 "fetching from final merge with run count = "
-                << storedRuns.size());
+                << nStoredRuns);
             
             pOutputWriter->setSubStream(*pMerger);
         }
@@ -292,10 +301,9 @@ void ExternalSortExecStreamImpl::mergeFirstResult()
 
 void ExternalSortExecStreamImpl::optimizeRunOrder()
 {
-    uint i = storedRuns.size() - 1;
+    uint i = nStoredRuns - 1;
     while ((i > 0)
-           && (storedRuns[i]->getWrittenPageCount()
-               > storedRuns[i-1]->getWrittenPageCount()))
+           && (storedRuns[i].nStoredPages > storedRuns[i-1].nStoredPages))
     {
         std::swap(storedRuns[i],storedRuns[i-1]);
         i--;
@@ -308,6 +316,7 @@ void ExternalSortExecStreamImpl::deleteStoredRunInfo(uint iFirstRun,uint nRuns)
     storedRuns.erase(
         storedRuns.begin() + iFirstRun,
         storedRuns.begin() + iFirstRun + nRuns);
+    nStoredRuns -= nRuns;
 }
 
 void ExternalSortExecStreamImpl::computeFirstResultParallel()

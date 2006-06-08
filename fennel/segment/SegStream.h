@@ -117,15 +117,7 @@ public:
      */
     virtual void getSegPos(SegStreamPosition &pos) = 0;
 
-    /**
-     * @return segment accessed by this stream
-     */
     SharedSegment getSegment() const;
-
-    /**
-     * @return segment accessor used by this stream 
-     */
-    SegmentAccessor const &getSegmentAccessor() const;
 };
 
 /**

@@ -88,9 +88,14 @@ public class SqlDialect
 
     /**
      * Encloses an identifier in quotation marks appropriate for the current
-     * SQL dialect. For example, <code>quoteIdentifier("emp")</code> yields a
+     * SQL dialect.
+     *
+     * <p>For example, <code>quoteIdentifier("emp")</code> yields a
      * string containing <code>"emp"</code> in Oracle, and a string
      * containing <code>[emp]</code> in Access.
+     *
+     * @param val Identifier to quote
+     * @return Quoted identifier
      */
     public String quoteIdentifier(String val)
     {
@@ -101,6 +106,33 @@ public class SqlDialect
             val.replaceAll(identifierQuoteString,
                 identifierQuoteString + identifierQuoteString);
         return identifierQuoteString + val2 + identifierQuoteString;
+    }
+
+    /**
+     * Encloses an identifier in quotation marks appropriate for the current
+     * SQL dialect, writing the result to a {@link StringBuffer}.
+     *
+     * <p>For example, <code>quoteIdentifier("emp")</code> yields a
+     * string containing <code>"emp"</code> in Oracle, and a string
+     * containing <code>[emp]</code> in Access.
+     *
+     * @param buf Buffer
+     * @param val Identifier to quote
+     * @return The buffer
+     */
+    public StringBuffer quoteIdentifier(StringBuffer buf, String val)
+    {
+        if (identifierQuoteString == null) {
+            buf.append(val); // quoting is not supported
+            return buf;
+        }
+        String val2 =
+            val.replaceAll(identifierQuoteString,
+                identifierQuoteString + identifierQuoteString);
+        buf.append(identifierQuoteString);
+        buf.append(val2);
+        buf.append(identifierQuoteString);
+        return buf;
     }
 
     /**

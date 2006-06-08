@@ -223,7 +223,7 @@ ${farrago.test.jvmargs}
   </target>
 
   <!-- Nightly tests -->
-  <target name="test-nightly-all-init" depends="cleanApplib,createCatalog,buildJdbcPlugin">
+  <target name="test-nightly-all-init" depends="cleanJars,createCatalog,buildJdbcPlugin">
     <antcall target="clean-subdirs"/>
     <antcall target="gen-all-sql"/>
   </target>
@@ -309,7 +309,7 @@ ${farrago.test.jvmargs}
       classpathref="test.classpath"/>
   </target>
 
-  <target name="test-all" depends="cleanApplib,createCatalog,buildJdbcPlugin,gen-all-sql">
+  <target name="test-all" depends="cleanJars,createCatalog,buildJdbcPlugin,gen-all-sql">
     <property name="bh.log.basedir" value="${testlog.dir}/bh"/>
     <property file="run.properties"/>
     <blackhawk.fork
@@ -321,7 +321,7 @@ ${farrago.test.jvmargs}
 
 <!-- End Experiment-->
 
-  <target name="test" depends="cleanApplib,createCatalog,buildJdbcPlugin,gen-all-sql">
+  <target name="test" depends="cleanJars,createCatalog,buildJdbcPlugin,gen-all-sql">
     <property name="bh.filter.knownFailures" value="false"/>
     <property file="run.properties"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh"/>
@@ -356,6 +356,7 @@ ${farrago.test.jvmargs}
       <include name="**/*.java" />
     </farrago.javaCompile>
     <antcall target="buildApplibPlugin"/>    
+    <antcall target="buildClientJar"/>
   </target>
 
   <!-- creates catalog and populates with initial metadata -->
@@ -505,6 +506,37 @@ ${farrago.test.jvmargs}
     </sequential>
   </macrodef>
 
+  <!-- create plugin/LucidDbClient.jar -->
+  <target name="buildClientJar" depends="makePluginDirs">
+    <jar jarfile="${luciddb.plugin.dir}/LucidDbClient.jar"
+      filesetmanifest="skip">
+      <zipgroupfileset dir="${vjdbc.dir}/lib">
+        <include name="vjdbc.jar"/>
+        <include name="commons-logging.jar"/>
+      </zipgroupfileset>
+      <fileset dir="${luciddb.dir}/license/client">
+        <include name="COPYING"/>
+      </fileset>
+      <fileset dir="${luciddb.dir}/classes">
+        <include name="FarragoRelease.properties"/>
+      </fileset>
+      <fileset dir="${farrago.classes.dir}">
+        <include 
+          name="com/lucidera/jdbc/LucidDbRmiDriver.class"/>
+        <include 
+          name="net/sf/farrago/jdbc/client/FarragoVjdbcClientDriver.class"/>
+        <include 
+          name="net/sf/farrago/jdbc/FarragoAbstractJdbcDriver.class"/>
+        <include 
+          name="net/sf/farrago/release/*"/>
+        <include 
+          name="org/eigenbase/util/property/*"/>
+        <include 
+          name="org/eigenbase/util14/ConnectStringParser.class"/>
+      </fileset>
+    </jar>
+  </target>
+
   <!-- create FarragoMedJdbc3p plugin jar -->
   <!-- FarragoMedJdbc.jar + jtds and oracle jdbc drivers -->
   <target name="buildJdbcPlugin" depends="makePluginDirs">
@@ -523,7 +555,7 @@ ${farrago.test.jvmargs}
     </jar>
   </target>
 
-<!-- create applib plugin jar -->
+  <!-- create applib plugin jar -->
   <target name="buildApplibPlugin" 
     depends="makePluginDirs,checkApplibPluginUptodate" 
     unless="plugin.applib.uptodate">
@@ -579,6 +611,16 @@ ${farrago.test.jvmargs}
       dirsep="${file.separator}" />
     <runSqlTests filelist="${filelist.InitSql}"
       sqltest.classpath="${test.classpath}"/>
+  </target>
+
+  <!-- REVIEW jvs 4-June-2006:  Should probably blow away plugin/*.jar -->
+  <target name="cleanJars">
+    <antcall target="cleanClientJar"/>
+    <antcall target="cleanApplib"/>
+  </target>
+
+  <target name="cleanClientJar">
+    <delete file="${luciddb.plugin.dir}/LucidDbClient.jar" quiet="true"/>
   </target>
 
   <target name="cleanApplib">

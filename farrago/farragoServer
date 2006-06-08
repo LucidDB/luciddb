@@ -4,4 +4,4 @@
 
 source ./defineFarragoRuntime.sh
 
-java ${SERVER_JAVA_ARGS} net.sf.farrago.server.FarragoServer
+java ${SERVER_JAVA_ARGS} net.sf.farrago.server.FarragoVjdbcServer

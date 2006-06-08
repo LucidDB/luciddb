@@ -65,8 +65,7 @@ class SetopNamespace extends AbstractNamespace
                 }
                 validator.validateQuery(operand);
             }
-            final SqlValidatorScope scope = (SqlValidatorScope)
-                validator.scopes.get(call);
+            final SqlValidatorScope scope = validator.scopes.get(call);
             return call.getOperator().validateOperands(
                 validator, scope, call);
         default:

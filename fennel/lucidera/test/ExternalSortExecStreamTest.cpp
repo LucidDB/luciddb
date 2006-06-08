@@ -26,8 +26,6 @@
 #include "fennel/tuple/StandardTypeDescriptor.h"
 #include "fennel/exec/MockProducerExecStream.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
-#include "fennel/exec/ExecStreamScheduler.h"
-#include "fennel/exec/ExecStreamGraph.h"
 #include "fennel/cache/Cache.h"
 
 #include <boost/test/test_tools.hpp>
@@ -39,33 +37,21 @@ class ExternalSortExecStreamTest : public ExecStreamUnitTestBase
     void testImpl(
         uint nRows,
         SharedMockProducerExecStreamGenerator pGenerator,
-        MockProducerExecStreamGenerator &verifier,
-        bool storeFinalRun = false,
-        bool stopEarly = false);
+        MockProducerExecStreamGenerator &verifier);
     
 public:
     explicit ExternalSortExecStreamTest()
     {
-        FENNEL_UNIT_TEST_CASE(
-            ExternalSortExecStreamTest,testPresortedInMem);
-        FENNEL_UNIT_TEST_CASE(
-            ExternalSortExecStreamTest,testPresortedExternal);
-        FENNEL_UNIT_TEST_CASE(
-            ExternalSortExecStreamTest,testRandomInMem);
-        FENNEL_UNIT_TEST_CASE(
-            ExternalSortExecStreamTest,testRandomExternal);
-        FENNEL_UNIT_TEST_CASE(
-            ExternalSortExecStreamTest,testRandomExternalStoreFinal);
-        FENNEL_UNIT_TEST_CASE(
-            ExternalSortExecStreamTest,testRandomExternalFault);
+        FENNEL_UNIT_TEST_CASE(ExternalSortExecStreamTest,testPresortedInMem);
+        FENNEL_UNIT_TEST_CASE(ExternalSortExecStreamTest,testPresortedExternal);
+        FENNEL_UNIT_TEST_CASE(ExternalSortExecStreamTest,testRandomInMem);
+        FENNEL_UNIT_TEST_CASE(ExternalSortExecStreamTest,testRandomExternal);
     }
 
     void testPresortedInMem();
     void testPresortedExternal();
     void testRandomInMem();
     void testRandomExternal();
-    void testRandomExternalStoreFinal();
-    void testRandomExternalFault();
 };
 
 void ExternalSortExecStreamTest::testRandomInMem()
@@ -82,23 +68,6 @@ void ExternalSortExecStreamTest::testRandomExternal()
         new PermutationGenerator(10000));
     RampExecStreamGenerator verifier;
     testImpl(10000, pGenerator, verifier);
-}
-
-void ExternalSortExecStreamTest::testRandomExternalStoreFinal()
-{
-    SharedMockProducerExecStreamGenerator pGenerator(
-        new PermutationGenerator(10000));
-    RampExecStreamGenerator verifier;
-    testImpl(10000, pGenerator, verifier, true);
-}
-
-void ExternalSortExecStreamTest::testRandomExternalFault()
-{
-    SharedMockProducerExecStreamGenerator pGenerator(
-        new PermutationGenerator(10000));
-    RampExecStreamGenerator verifier;
-    // only read half the result set, and then abort
-    testImpl(10000, pGenerator, verifier, true, true);
 }
 
 void ExternalSortExecStreamTest::testPresortedInMem()
@@ -118,9 +87,7 @@ void ExternalSortExecStreamTest::testPresortedExternal()
 void ExternalSortExecStreamTest::testImpl(
     uint nRows,
     SharedMockProducerExecStreamGenerator pGenerator,
-    MockProducerExecStreamGenerator &verifier,
-    bool storeFinalRun,
-    bool stopEarly)
+    MockProducerExecStreamGenerator &verifier)
 {
     StandardTypeDescriptorFactory stdTypeFactory;
     TupleAttributeDescriptor attrDesc(
@@ -143,7 +110,7 @@ void ExternalSortExecStreamTest::testImpl(
     sortParams.scratchAccessor =
         pSegmentFactory->newScratchSegment(pCache, 10);
     sortParams.keyProj.push_back(0);
-    sortParams.storeFinalRun = storeFinalRun;
+    sortParams.storeFinalRun = false;
     
     ExecStreamEmbryo sortStreamEmbryo;
     sortStreamEmbryo.init(
@@ -155,17 +122,8 @@ void ExternalSortExecStreamTest::testImpl(
 
     verifyOutput(
         *pOutputStream,
-        stopEarly ? (mockParams.nRows / 2) : mockParams.nRows,
-        verifier,
-        stopEarly);
-
-    if (stopEarly) {
-        // simulate error cleanup
-        pScheduler->stop();
-        pGraph->close();
-    }
-
-    BOOST_CHECK_EQUAL(0, pRandomSegment->getAllocatedSizeInPages());
+        mockParams.nRows,
+        verifier);
 }
 
 FENNEL_UNIT_TEST_SUITE(ExternalSortExecStreamTest);

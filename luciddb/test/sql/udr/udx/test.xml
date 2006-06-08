@@ -40,13 +40,6 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/viewTest.sql"/>
       </test>
 
-      <test name="cursorTests">
-        <test-metadata>
-          <knownFailure value="true"/>
-        </test-metadata>
-        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/cursorTests.sql"/>
-      </test>
-
       <cleanup-hook>
         <test-suite name="cleanup">
           <test-suite-call testfile="${open.dir}/luciddb/test/sql/tdone.xml">

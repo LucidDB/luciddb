@@ -317,11 +317,17 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
 
     /**
      * Returns immediate dependencies of an of element.
-     * @param element Starting element for dependency search
+     * @param rootElement Starting element for dependency search
      * @return Set of CwmModelElement, immediate dependencies of rootElement
      */
     public Set getDependencies(CwmModelElement rootElement);
 
+    /**
+     * @see Util#deprecated
+     * @param view
+     * @param analyzedSql
+     */
+    void fixupView(FemLocalView view, FarragoSessionAnalyzedSql analyzedSql);
 }
 
 

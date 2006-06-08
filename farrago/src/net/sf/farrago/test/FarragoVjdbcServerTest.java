@@ -1,8 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2006 LucidEra, Inc.
 // Copyright (C) 2006-2006 The Eigenbase Project
+// Copyright (C) 2006-2006 Disruptive Tech
+// Copyright (C) 2006-2006 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -18,32 +19,40 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package com.lucidera.luciddb.test.udr;
+package net.sf.farrago.test;
 
-import java.sql.*;
+import net.sf.farrago.jdbc.*;
+import net.sf.farrago.jdbc.client.*;
+import net.sf.farrago.server.*;
 
 /**
- * Takes in table and returns the column types
+ * FarragoServerTest tests Farrago client/server connections via VJDBC.
  *
- * @author Elizabeth Lin
+ * @author John V. Sichi
  * @version $Id$
  */
-public abstract class GetColumnTypesUdx
+public class FarragoVjdbcServerTest extends FarragoServerTest
 {
-    public static void execute(
-        ResultSet inputSet, PreparedStatement resultInserter)
-        throws SQLException
+    /**
+     * Initializes a new FarragoVjdbcServerTest.
+     *
+     * @param testCaseName JUnit test case name
+     */
+    public FarragoVjdbcServerTest(String testCaseName)
+        throws Exception
     {
-        ResultSetMetaData rsMetadata = inputSet.getMetaData();
-        int n = rsMetadata.getColumnCount();
+        super(testCaseName);
+    }
 
-        for (int i=1; i <= n; i++) {
-            resultInserter.setString(1, rsMetadata.getColumnLabel(i));
-            resultInserter.setInt(2, rsMetadata.getColumnType(i));
-            resultInserter.setString(3, rsMetadata.getColumnTypeName(i));
-            resultInserter.executeUpdate();
-        }
+    protected FarragoAbstractServer newServer()
+    {
+        return new FarragoVjdbcServer();
+    }
+
+    protected FarragoAbstractJdbcDriver newClientDriver()
+    {
+        return new FarragoVjdbcClientDriver();
     }
 }
 
-// End GetColumnTypesUdx.java
+// End FarragoVjdbcServerTest.java

@@ -25,13 +25,16 @@
 #include "fennel/lucidera/sorter/ExternalSortInfo.h"
 #include "fennel/segment/SegInputStream.h"
 #include "fennel/segment/SegOutputStream.h"
-#include "fennel/segment/SegStreamAllocation.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 ExternalSortRunAccessor::ExternalSortRunAccessor(ExternalSortInfo &sortInfoIn)
     : sortInfo(sortInfoIn)
 {
+    storedRun.firstPageId = NULL_PAGE_ID;
+    storedRun.nStoredPages = 0;
+
+    clearFetch();
     releaseResources();
 
     tupleAccessor.compute(sortInfo.tupleDesc);
@@ -42,20 +45,27 @@ ExternalSortRunAccessor::~ExternalSortRunAccessor()
     releaseResources();
 }
 
-SharedSegStreamAllocation ExternalSortRunAccessor::getStoredRun()
+void ExternalSortRunAccessor::getStoredRun(ExternalSortStoredRun &storedRunOut)
 {
-    return pStoredRun;
+    storedRunOut = storedRun;
 }
 
 void ExternalSortRunAccessor::startRead(
-    SharedSegStreamAllocation pStoredRunInit)
+    ExternalSortStoredRun &storedRunInit,bool deleteAfterRead)
 {
-    pStoredRun = pStoredRunInit;
-    pStoredRun->getInputStream()->startPrefetch();
+    pSegInputStream = SegInputStream::newSegInputStream(
+        sortInfo.externalSegmentAccessor,
+        storedRunInit.firstPageId);
+    if (deleteAfterRead) {
+        pSegInputStream->setDeallocate(true);
+    }
+    pSegInputStream->startPrefetch();
+    storedRun = storedRunInit;
 }
 
 void ExternalSortRunAccessor::resetRead()
 {
+    pSegInputStream.reset();
     fetchArray.nTuples = 0;
 }
 
@@ -67,19 +77,19 @@ void ExternalSortRunAccessor::initRead()
 
 void ExternalSortRunAccessor::releaseResources()
 {
-    pStoredRun.reset();
+    pSegInputStream.reset();
+    pSegOutputStream.reset();
     clearFetch();
 }
 
 void ExternalSortRunAccessor::storeRun(
     ExternalSortSubStream &pObjLoad)
 {
-    pStoredRun = SegStreamAllocation::newSegStreamAllocation();
+    assert(storedRun.firstPageId == NULL_PAGE_ID);
 
-    SharedSegOutputStream pSegOutputStream =
-        SegOutputStream::newSegOutputStream(
-            sortInfo.externalSegmentAccessor);
-    pStoredRun->beginWrite(pSegOutputStream);
+    // TODO:  deallocate pages on error
+    pSegOutputStream = SegOutputStream::newSegOutputStream(
+        sortInfo.externalSegmentAccessor);
     
     ExternalSortFetchArray &fetchArray = pObjLoad.bindFetchArray();
 
@@ -100,7 +110,11 @@ void ExternalSortRunAccessor::storeRun(
 
     assert(rc == EXTSORT_ENDOFDATA);
 
-    pStoredRun->endWrite();
+    storedRun.firstPageId = pSegOutputStream->getFirstPageId();
+
+    storedRun.nStoredPages = pSegOutputStream->getPageCount();
+
+    pSegOutputStream.reset();
 }
 
 ExternalSortFetchArray &ExternalSortRunAccessor::bindFetchArray()
@@ -115,7 +129,6 @@ ExternalSortRC ExternalSortRunAccessor::fetch(uint nTuplesRequested)
     }
 
     uint cb;
-    SharedSegInputStream const &pSegInputStream = pStoredRun->getInputStream();
     PConstBuffer pStart = pSegInputStream->getReadPointer(1,&cb);
     PConstBuffer pBuf = pStart;
     if (!pBuf) {

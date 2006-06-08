@@ -28,10 +28,12 @@ import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.parser.SqlParserUtil;
 import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.SqlTypeUtil;
 import org.eigenbase.sql.util.SqlVisitor;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.fun.SqlLiteralChainOperator;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.util.BitString;
 import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.NlsString;
@@ -290,20 +292,25 @@ public class SqlLiteral extends SqlNode
     }
 
     /**
-     * Extracts the string value from a string literal or a chain of string
-     * literals.
+     * Extracts the string value from a string literal, a chain of string
+     * literals, or a CAST of a string literal.
      */
     public static String stringValue(SqlNode node)
     {
         if (node instanceof SqlLiteral) {
             SqlLiteral literal = (SqlLiteral) node;
+            assert SqlTypeUtil.inCharFamily(literal.getTypeName());
             return literal.toValue();
-        } else if (node instanceof SqlCall) {
+        } else if (SqlUtil.isLiteralChain(node)) {
             final SqlLiteral literal =
                 SqlLiteralChainOperator.concatenateOperands((SqlCall) node);
+            assert SqlTypeUtil.inCharFamily(literal.getTypeName());
             return literal.toValue();
+        } else if (node instanceof SqlCall &&
+            ((SqlCall) node).getOperator() == SqlStdOperatorTable.castFunc) {
+            return stringValue(((SqlCall) node).getOperands()[0]);
         } else {
-            throw Util.newInternal("invalid string literal " + node);
+            throw Util.newInternal("invalid string literal: " + node);
         }
     }
 

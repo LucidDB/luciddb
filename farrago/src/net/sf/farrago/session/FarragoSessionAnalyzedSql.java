@@ -22,7 +22,6 @@
 */
 package net.sf.farrago.session;
 
-import java.sql.*;
 import java.util.*;
 
 import org.eigenbase.reltype.*;
@@ -40,6 +39,10 @@ import net.sf.farrago.fem.sql2003.*;
  */
 public class FarragoSessionAnalyzedSql
 {
+    public FarragoSessionAnalyzedSql()
+    {
+    }
+
     //~ Instance fields -------------------------------------------------------
 
     /**
@@ -100,7 +103,7 @@ public class FarragoSessionAnalyzedSql
         this.resultType = resultType;
     }
 
-    public void setModality(FemAbstractColumnSet colSet )
+    public void setModality(FemAbstractColumnSet colSet)
     {
         colSet.setModality(ModalityTypeEnum.MODALITYTYPE_RELATIONAL);
     }

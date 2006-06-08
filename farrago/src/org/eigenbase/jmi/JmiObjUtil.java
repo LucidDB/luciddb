@@ -521,6 +521,11 @@ public abstract class JmiObjUtil
      */
     public static void assertConstraints(RefObject obj)
     {
+        // REVIEW (2006/6/3, jhyde): This method noops if constraints are
+        // disabled. Change the signature of this method to
+        //    boolean constraintsAreValid(RefOject obj, boolean fail)
+        // so it is easy to invoke it ONLY if assertions are enabled.
+
         RefClass refClass = obj.refClass();
         Iterator featureIter =
             getFeatures(refClass, StructuralFeature.class, false).iterator();

@@ -152,6 +152,10 @@ public class SqlValidatorUtil
             // E.g. "1 + 2 as foo" --> "foo"
             return ((SqlCall) node).getOperands()[1].toString();
 
+        case SqlKind.OverORDINAL:
+            // E.g. "bids over w" --> "bids"
+            return getAlias(((SqlCall) node).getOperands()[0], ordinal);
+
         case SqlKind.IdentifierORDINAL:
             // E.g. "foo.bar" --> "bar"
             final String [] names = ((SqlIdentifier) node).names;

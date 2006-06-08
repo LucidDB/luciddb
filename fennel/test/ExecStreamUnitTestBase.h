@@ -214,16 +214,11 @@ protected:
      * @param nRowsExpected number of rows expected
      *
      * @param verifier generator for expected values
-     *
-     * @param stopEarly if true, stop once nRowsExpected have been
-     * fetched, even if more rows are available; this can be used
-     * for simulating the cleanup effect of an error in the middle of execution
      */
     void verifyOutput(
         ExecStream &stream,
         uint nRowsExpected,
-        MockProducerExecStreamGenerator &verifier,
-        bool stopEarly = false);
+        MockProducerExecStreamGenerator &verifier);
 
     /**
      * Executes the prepared stream graph and verifies that all output tuples

@@ -31,6 +31,7 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.rex.*;
 import org.eigenbase.util.Util;
+import org.eigenbase.util.IntList;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -695,26 +696,6 @@ public abstract class CalcRelSplitter
                 final int exprIndex = exprInverseOrdinals[localIndex];
                 return new RexLocalRef(exprIndex, local.getType());
             }
-        }
-    }
-
-    /**
-     * Extension to {@link ArrayList} to help build an array of
-     * <code>int</code> values.
-     */
-    private static class IntList extends ArrayList
-    {
-        public void add(int i)
-        {
-            add(new Integer(i));
-        }
-        public int[] toIntArray()
-        {
-            final int[] ints = new int[size()];
-            for (int i = 0; i < ints.length; i++) {
-                ints[i] = ((Integer) get(i)).intValue();
-            }
-            return ints;
         }
     }
 

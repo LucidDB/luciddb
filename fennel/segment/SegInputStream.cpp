@@ -148,11 +148,6 @@ void SegInputStream::setDeallocate(
     shouldDeallocate = shouldDeallocateInit;
 }
 
-bool SegInputStream::isDeallocating()
-{
-    return shouldDeallocate;
-}
-
 SharedByteStreamMarker SegInputStream::newMarker()
 {
     return SharedByteStreamMarker(new SegStreamMarker(*this));

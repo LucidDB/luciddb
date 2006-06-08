@@ -100,11 +100,6 @@ public:
      */
     void setDeallocate(bool shouldDeallocate);
 
-    /**
-     * @return true if currently set to deallocate pages as they are read
-     */
-    bool isDeallocating();
-
     // implement the SegStream interface
     virtual void getSegPos(SegStreamPosition &pos);
 

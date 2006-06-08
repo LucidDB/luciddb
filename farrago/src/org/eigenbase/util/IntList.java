@@ -1,8 +1,10 @@
 /*
 // $Id$
-// Farrago is an extensible data management system.
-// Copyright (C) 2006-2006 LucidEra, Inc.
-// Copyright (C) 2006-2006 The Eigenbase Project
+// Package org.eigenbase is a class library of data management components.
+// Copyright (C) 2005-2006 The Eigenbase Project
+// Copyright (C) 2002-2006 Disruptive Tech
+// Copyright (C) 2005-2006 LucidEra, Inc.
+// Portions Copyright (C) 2003-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -18,27 +20,27 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package com.lucidera.luciddb.test.udr;
+package org.eigenbase.util;
 
-import java.sql.*;
-import java.util.*;
+import java.util.ArrayList;
 
 /**
- * Returns the current local date/time as a timestamp
+ * Extension to {@link ArrayList} to help build an array of
+ * <code>int</code> values.
  *
- * @author Elizabeth Lin
+ * @author jhyde
  * @version $Id$
  */
-public abstract class GetCurrentTimeUdf
+public class IntList extends ArrayList<Integer>
 {
-    public static Timestamp execute()
+    public int[] toIntArray()
     {
-        Calendar cal = new GregorianCalendar();
-        // TODO: We're ahead by 7 hours always regardless of what time zone is 
-        // being set   
-        cal.roll(Calendar.HOUR, -7);
-        return new Timestamp(cal.getTimeInMillis());
+        final int[] ints = new int[size()];
+        for (int i = 0; i < ints.length; i++) {
+            ints[i] = ((Integer) get(i)).intValue();
+        }
+        return ints;
     }
 }
 
-// End GetCurrentTimeUdf.java
+// End IntList.java

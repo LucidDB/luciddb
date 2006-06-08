@@ -48,7 +48,7 @@ import org.eigenbase.runtime.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql2rel.*;
-import org.eigenbase.trace.EigenbaseTrace;
+import org.eigenbase.trace.*;
 import org.eigenbase.util.SaffronProperties;
 import org.eigenbase.util.Util;
 
@@ -76,6 +76,8 @@ public abstract class OJPreparingStmt
 
     protected JavaCompiler javaCompiler;
     protected final RelOptConnection connection;
+
+    protected EigenbaseTimingTracer timingTracer;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -241,6 +243,11 @@ public abstract class OJPreparingStmt
             getSqlToRelConverter(validator, connection);
         RelNode rootRel =
             sqlToRelConverter.convertQuery(sqlQuery, needsValidation, true);
+
+        if (timingTracer != null) {
+            timingTracer.traceTime("end sql2rel");
+        }
+
         RelDataType resultType = validator.getValidatedNodeType(sqlQuery);
 
         if (sqlExplain != null) {
@@ -263,6 +270,11 @@ public abstract class OJPreparingStmt
         }
 
         rootRel = optimize(resultType, rootRel);
+        
+        if (timingTracer != null) {
+            timingTracer.traceTime("end optimization");
+        }
+
         return implement(
             resultType,
             rootRel,
@@ -324,9 +336,19 @@ public abstract class OJPreparingStmt
         JavaRelImplementor relImplementor =
             getRelImplementor(rootRel.getCluster().getRexBuilder());
         Expression expr = relImplementor.implementRoot((JavaRel) rootRel);
+
+        if (timingTracer != null) {
+            timingTracer.traceTime("end codegen");
+        }
+        
         boolean isDml = sqlKind.isA(SqlKind.Dml);
         ParseTree parseTree = expr;
         BoundMethod boundMethod = compileAndBind(decl, parseTree, args);
+        
+        if (timingTracer != null) {
+            timingTracer.traceTime("end compilation");
+        }
+        
         final PreparedExecution plan =
             new PreparedExecution(
                 parseTree, rootRel.getRowType(), isDml, boundMethod);

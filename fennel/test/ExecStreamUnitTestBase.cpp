@@ -289,8 +289,7 @@ void ExecStreamUnitTestBase::tearDownExecStreamTest()
 void ExecStreamUnitTestBase::verifyOutput(
     ExecStream &stream,
     uint nRowsExpected,
-    MockProducerExecStreamGenerator &generator,
-    bool stopEarly)
+    MockProducerExecStreamGenerator &generator)
 {
     // TODO:  assertions about output tuple
     
@@ -329,9 +328,6 @@ void ExecStreamUnitTestBase::verifyOutput(
             }
             bufAccessor.consumeTuple();
             ++nRows;
-            if (stopEarly && nRows == nRowsExpected) {
-                return;
-            }
         }
     }
     BOOST_CHECK_EQUAL(nRowsExpected,nRows);

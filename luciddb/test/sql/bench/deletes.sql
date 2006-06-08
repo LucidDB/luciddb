@@ -33,9 +33,7 @@ delete from bench10k where
 
 select count(*) from bench10k;
 
-delete from bench1m where "kseq" in 
-(select b1."kseq" from bench1m b1, bench1m b2
- where b1."k100" = 49 and b1."k250k" = b2."k500k");
+delete from bench1m where "k100" = 49 and "k250k" = "k500k";
 select count(*) from bench1m;
 
 delete from bench1m;
