@@ -1005,6 +1005,7 @@
       <include pattern="lu.lcs" />
       <include pattern="lu.opt" />
       <include pattern="lu.query" />
+      <include pattern="server" />
       <include pattern="defimpl.deps" />
     </pattern>
 
