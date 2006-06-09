@@ -100,6 +100,8 @@ void FlatFileExecStreamImpl::handleTuple(
             (*pTupleData)[i].cbData = 0;
         } else {
             (*pTupleData)[i].pData = (PConstBuffer) value;
+            // quietly truncate long columns
+            strippedSize = std::min(strippedSize, textDesc[i].cbStorage);
             (*pTupleData)[i].cbData = strippedSize;
         }
     }
@@ -266,9 +268,12 @@ void FlatFileExecStreamImpl::prepare(
 
     numRowsScan = params.numRowsScan;
 
-    // Initialize calculator if a program was specified
-    if (params.calcProgram.size() == 0) return;
+    if (params.calcProgram.size() == 0) {
+        textDesc = params.outputTupleDesc;
+        return;
+    }
     
+    // Initialize calculator if a program was specified
     try {
         // Force instantiation of the calculator's instruction tables.
         (void) CalcInit::instance();

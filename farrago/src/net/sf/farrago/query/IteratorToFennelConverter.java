@@ -503,6 +503,7 @@ public class IteratorToFennelConverter extends ConverterRel
             
         streamDef.setStreamId(getId());
         streamDef.setJavaClassName(farragoTransformClassName);
+        streamDef.setReserved("");
             
         return streamDef;
     }

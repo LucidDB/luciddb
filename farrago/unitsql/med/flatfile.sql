@@ -258,7 +258,7 @@ select * from flatfile_server_fixed.BCP."fixed" order by 3;
 --     This type of query returns the width of a table's fields. it is an 
 --     internal query, and should not appear in user level documentation.
 --
-select * from flatfile_server.SAMPLE_DESC."example";
+select * from flatfile_server."DESCRIBE"."example";
 
 --
 -- 3.2 Test a sampling queries 
@@ -292,7 +292,7 @@ select * from flatfile_server_empty.BCP."empty";
 --
 -- 3.5 Describe a fixed format file (illegal)
 --
-select * from flatfile_server_fixed.SAMPLE_DESC."fixed";
+select * from flatfile_server_fixed."DESCRIBE"."fixed";
 
 --
 -- 3.6 Test sampling of a file perhaps with header, but with no data

@@ -309,4 +309,102 @@ ProjectRel(EXPR$0=[3], EXPR$1=[+($0, 7)], EXPR$2=[+(11, $0)], EXPR$3=[CAST(null)
 ]]>
         </Resource>
     </TestCase>
+    <TestCase name="testRemoveSemiJoin">
+        <Resource name="sql">
+            <![CDATA[select e.name from sales.emps e, sales.depts d where e.deptno = d.deptno]]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+ProjectRel(NAME=[$1])
+  FilterRel(condition=[=($2, $10)])
+    JoinRel(condition=[true], joinType=[inner])
+      TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+      TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+ProjectRel(NAME=[$1])
+  JoinRel(condition=[=($2, $10)], joinType=[inner], semiJoinDone=[true], multiJoinDone=[false])
+    TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+    TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testRemoveSemiJoinWithFilter">
+        <Resource name="sql">
+            <![CDATA[select e.name from sales.emps e, sales.depts d where e.deptno = d.deptno and e.name = 'foo']]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+ProjectRel(NAME=[$1])
+  FilterRel(condition=[AND(=($2, $10), =($1, _ISO-8859-1'foo'))])
+    JoinRel(condition=[true], joinType=[inner])
+      TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+      TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+ProjectRel(NAME=[$1])
+  JoinRel(condition=[=($2, $10)], joinType=[inner], semiJoinDone=[true], multiJoinDone=[false])
+    FilterRel(condition=[=($1, _ISO-8859-1'foo')])
+      TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+    TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testRemoveSemiJoinRight">
+        <Resource name="sql">
+            <![CDATA[select e1.name from sales.emps e1, sales.depts d, sales.emps e2 where e1.deptno = d.deptno and d.deptno = e2.deptno]]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+ProjectRel(NAME=[$1])
+  FilterRel(condition=[AND(=($2, $10), =($10, $14))])
+    JoinRel(condition=[true], joinType=[inner])
+      JoinRel(condition=[true], joinType=[inner])
+        TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+        TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+      TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+ProjectRel(NAME=[$1])
+  JoinRel(condition=[=($10, $14)], joinType=[inner], semiJoinDone=[true], multiJoinDone=[false])
+    JoinRel(condition=[=($2, $10)], joinType=[inner], semiJoinDone=[true], multiJoinDone=[false])
+      TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+      TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+    TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testRemoveSemiJoinRightWithFilter">
+        <Resource name="sql">
+            <![CDATA[select e1.name from sales.emps e1, sales.depts d, sales.emps e2 where e1.deptno = d.deptno and d.deptno = e2.deptno and d.name = 'foo']]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+ProjectRel(NAME=[$1])
+  FilterRel(condition=[AND(AND(=($2, $10), =($10, $14)), =($11, _ISO-8859-1'foo'))])
+    JoinRel(condition=[true], joinType=[inner])
+      JoinRel(condition=[true], joinType=[inner])
+        TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+        TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+      TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+ProjectRel(NAME=[$1])
+  JoinRel(condition=[=($10, $14)], joinType=[inner], semiJoinDone=[true], multiJoinDone=[false])
+    JoinRel(condition=[=($2, $10)], joinType=[inner], semiJoinDone=[true], multiJoinDone=[false])
+      TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+      FilterRel(condition=[=($1, _ISO-8859-1'foo')])
+        TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+    TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+]]>
+        </Resource>
+    </TestCase>
 </Root>

@@ -180,9 +180,15 @@ void CountNullableAggComputer::updateAccumulator(
 
 void CountNullableAggComputer::initAccumulator(
     TupleDatum &accumulatorDatum,
-    TupleData const &)
+    TupleData const &inputTuple)
 {
-    initAccumulatorImpl(accumulatorDatum);
+    assert(iInputAttr != -1);
+    TupleDatum const &inputDatum = inputTuple[iInputAttr];
+    if (inputDatum.pData) {
+        initAccumulatorImpl(accumulatorDatum);
+    } else {
+        clearAccumulatorImpl(accumulatorDatum);
+    }
 }
 
 void CountNullableAggComputer::initAccumulator(

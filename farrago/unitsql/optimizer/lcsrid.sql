@@ -55,6 +55,9 @@ select c0, c6, lcs_rid(c7) from tencols where c9 = 49 and lcs_rid(c8) = 3;
 select t2.c8, t1.c5, lcs_rid(t1.c0), t1.c2, lcs_rid(t2.c4)
     from tencols t1, tencols t2 where t1.c0 = t2.c0
     order by 3;
+select *, lcs_rid(t1.c0), lcs_rid(t2.c0)
+    from tencols t1, tencols t2 where t1.c0 = t2.c0
+    order by 1;
 select t2.c8, t1.c5, lcs_rid(t1.c0), t1.c2, lcs_rid(t2.c4)
     from tencols t1, tencols t2 where lcs_rid(t1.c0) = lcs_rid(t2.c0)
     order by 3;

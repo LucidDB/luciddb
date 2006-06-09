@@ -264,9 +264,6 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
 
                     /*
                      * Add tuple to hash table.
-                     * When null values are filtered, and this tuple does
-                     * contain null in its key columns, do not add to hash
-                     * table.
                      */
                     if (!hashTable.addTuple(inputTuple)) {
                         if (isTopPartition) {

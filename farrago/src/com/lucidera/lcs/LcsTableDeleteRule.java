@@ -26,7 +26,6 @@ import net.sf.farrago.query.FennelRel;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.type.*;
 
@@ -79,7 +78,8 @@ public class LcsTableDeleteRule extends RelOptRule
         // replace the project with one that projects out the rid and 2 null
         // columns to simulate a singleton bitmap entry
         RexBuilder rexBuilder = origProj.getCluster().getRexBuilder();
-        RexNode nullLiteral = makeNullLiteral(rexBuilder);
+        RexNode nullLiteral = rexBuilder.makeNullLiteral(
+            SqlTypeName.Varbinary, LcsIndexGuide.LbmBitmapSegMaxSize);
         RexNode[] singletonExpr = {
             LucidDbSpecialOperators.makeRidExpr(rexBuilder, origProj),
             nullLiteral,
@@ -108,23 +108,6 @@ public class LcsTableDeleteRule extends RelOptRule
                 tableModification.getUpdateColumnList());
 
         call.transformTo(deleteRel);      
-    }
-    
-    /**
-     * Creates an expression corresponding to a null literal, cast to the type
-     * of a bitmap descriptor/segment.
-     * 
-     * @param rexBuilder rex builder used to construct literal
-     * @return
-     */
-    private RexNode makeNullLiteral(RexBuilder rexBuilder)
-    {
-        RelDataTypeFactory typeFactory = rexBuilder.getTypeFactory();
-        RelDataType type = typeFactory.createTypeWithNullability(
-            typeFactory.createSqlType(
-                SqlTypeName.Varbinary, LcsIndexGuide.LbmBitmapSegMaxSize),
-                true);
-        return rexBuilder.makeCast(type, rexBuilder.constantNull());
     }
 }
 

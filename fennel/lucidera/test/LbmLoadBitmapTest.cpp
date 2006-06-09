@@ -315,6 +315,7 @@ void LbmLoadBitmapTest::testLoad(
     BarrierExecStreamParams barrierParams;
     barrierParams.outputTupleDesc.push_back(attrDesc_int64);
     barrierParams.outputTupleDesc.push_back(attrDesc_int64);
+    barrierParams.rowCountInput = -1;
 
     ExecStreamEmbryo clusterBarrierStreamEmbryo;
     clusterBarrierStreamEmbryo.init(new BarrierExecStream(), barrierParams);

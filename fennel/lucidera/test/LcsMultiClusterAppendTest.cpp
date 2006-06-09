@@ -201,6 +201,7 @@ void LcsMultiClusterAppendTest::loadClusters(uint nRows, uint nCols,
     
     BarrierExecStreamParams barrierParams;
     barrierParams.outputTupleDesc.push_back(attrDesc_int64);
+    barrierParams.rowCountInput = -1;
 
     ExecStreamEmbryo barrierStreamEmbryo;
     barrierStreamEmbryo.init(new BarrierExecStream(), barrierParams);

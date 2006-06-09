@@ -6,20 +6,237 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema m;
 0: jdbc:farrago:> set schema 'm';
+0: jdbc:farrago:> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create table emps(
-. . . . . . . . >     empno int, name varchar(20), deptno int, gender char(1), city char(30),
-. . . . . . . . >     age int, salary int) server sys_column_store_data_server;
+. . . . . . . . >     empno int not null, name varchar(20) not null, deptno int,
+. . . . . . . . >     gender char(1), city char(30), age int, salary int);
 0: jdbc:farrago:> create table tempemps(
 . . . . . . . . >     t_empno int, t_name varchar(25), t_deptno int, t_gender char(1),
-. . . . . . . . >     t_city char(35), t_age int) server sys_column_store_data_server;
-0: jdbc:farrago:> create table salarytable(empno int, salary int)
-. . . . . . . . >     server sys_column_store_data_server;
+. . . . . . . . >     t_city char(35), t_age int);
+0: jdbc:farrago:> create table salarytable(empno int, salary int);
 0: jdbc:farrago:> 
+0: jdbc:farrago:> insert into emps(empno, name, deptno, gender, city, age, salary)
+. . . . . . . . >     select case when name = 'John' then 130 else empno end,
+. . . . . . . . >         name, deptno, gender, city, age, age * 900 from sales.emps;
+0: jdbc:farrago:> select * from emps order by empno;
++--------+--------+---------+---------+---------------------------------+------+---------+
+| EMPNO  |  NAME  | DEPTNO  | GENDER  |              CITY               | AGE  | SALARY  |
++--------+--------+---------+---------+---------------------------------+------+---------+
+| 100    | Fred   | 10      |         |                                 | 25   | 22500   |
+| 110    | Eric   | 20      | M       | San Francisco                   | 80   | 72000   |
+| 120    | Wilma  | 20      | F       |                                 | 50   | 45000   |
+| 130    | John   | 40      | M       | Vancouver                       |      |         |
++--------+--------+---------+---------+---------------------------------+------+---------+
+0: jdbc:farrago:> insert into tempemps
+. . . . . . . . >     select empno, name, deptno + 1, gender, coalesce(city, 'San Mateo'), age
+. . . . . . . . >         from emps;
+0: jdbc:farrago:> insert into tempemps values(140, 'Barney', 10, 'M', 'San Mateo', 41);
+0: jdbc:farrago:> insert into tempemps values(150, 'Betty', 20, 'F', 'San Francisco', 40);
+0: jdbc:farrago:> select * from tempemps order by t_empno;
++----------+---------+-----------+-----------+--------------------------------------+--------+
+| T_EMPNO  | T_NAME  | T_DEPTNO  | T_GENDER  |                T_CITY                | T_AGE  |
++----------+---------+-----------+-----------+--------------------------------------+--------+
+| 100      | Fred    | 11        |           | San Mateo                            | 25     |
+| 110      | Eric    | 21        | M         | San Francisco                        | 80     |
+| 120      | Wilma   | 21        | F         | San Mateo                            | 50     |
+| 130      | John    | 41        | M         | Vancouver                            |        |
+| 140      | Barney  | 10        | M         | San Mateo                            | 41     |
+| 150      | Betty   | 20        | F         | San Francisco                        | 40     |
++----------+---------+-----------+-----------+--------------------------------------+--------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- basic merge
+0: jdbc:farrago:> merge into emps e
+. . . . . . . . >     using tempemps t on t.t_empno = e.empno
+. . . . . . . . >     when matched then
+. . . . . . . . >         update set deptno = t.t_deptno, city = upper(t.t_city),
+. . . . . . . . >             salary = salary * .25
+. . . . . . . . >     when not matched then
+. . . . . . . . >         insert (empno, name, age, gender, salary, city)
+. . . . . . . . >         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.t_age * 1000,
+. . . . . . . . >             t.t_city);
+0: jdbc:farrago:> select * from emps order by empno;
++--------+---------+---------+---------+---------------------------------+------+---------+
+| EMPNO  |  NAME   | DEPTNO  | GENDER  |              CITY               | AGE  | SALARY  |
++--------+---------+---------+---------+---------------------------------+------+---------+
+| 100    | Fred    | 11      |         | SAN MATEO                       | 25   | 5625    |
+| 110    | Eric    | 21      | M       | SAN FRANCISCO                   | 80   | 18000   |
+| 120    | Wilma   | 21      | F       | SAN MATEO                       | 50   | 11250   |
+| 130    | John    | 41      | M       | VANCOUVER                       |      |         |
+| 140    | BARNEY  |         | M       | San Mateo                       | 41   | 41000   |
+| 150    | BETTY   |         | F       | San Francisco                   | 40   | 40000   |
++--------+---------+---------+---------+---------------------------------+------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- source select is a join
+0: jdbc:farrago:> delete from emps where name in ('BARNEY', 'BETTY');
+0: jdbc:farrago:> insert into salarytable values(100, 100000);
+0: jdbc:farrago:> insert into salarytable values(110, 110000);
+0: jdbc:farrago:> insert into salarytable values(120, 120000);
+0: jdbc:farrago:> insert into salarytable values(130, 130000);
+0: jdbc:farrago:> insert into salarytable values(140, 140000);
+0: jdbc:farrago:> insert into salarytable values(150, 150000);
+0: jdbc:farrago:> select * from emps order by empno;
++--------+--------+---------+---------+---------------------------------+------+---------+
+| EMPNO  |  NAME  | DEPTNO  | GENDER  |              CITY               | AGE  | SALARY  |
++--------+--------+---------+---------+---------------------------------+------+---------+
+| 100    | Fred   | 11      |         | SAN MATEO                       | 25   | 5625    |
+| 110    | Eric   | 21      | M       | SAN FRANCISCO                   | 80   | 18000   |
+| 120    | Wilma  | 21      | F       | SAN MATEO                       | 50   | 11250   |
+| 130    | John   | 41      | M       | VANCOUVER                       |      |         |
++--------+--------+---------+---------+---------------------------------+------+---------+
+0: jdbc:farrago:> select * from salarytable order by empno;
++--------+---------+
+| EMPNO  | SALARY  |
++--------+---------+
+| 100    | 100000  |
+| 110    | 110000  |
+| 120    | 120000  |
+| 130    | 130000  |
+| 140    | 140000  |
+| 150    | 150000  |
++--------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> merge into emps e
+. . . . . . . . >     using (select s.empno, s.salary, t.* from salarytable s, tempemps t
+. . . . . . . . >         where t.t_empno = s.empno) t
+. . . . . . . . >     on t.t_empno = e.empno
+. . . . . . . . >     when matched then
+. . . . . . . . >         update set deptno = t.t_deptno-1, city = lower(t.t_city),
+. . . . . . . . >             salary = e.salary * 1.25
+. . . . . . . . >     when not matched then
+. . . . . . . . >         insert (empno, name, age, gender, salary, city)
+. . . . . . . . >         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.salary * .15,
+. . . . . . . . >             t.t_city);
+0: jdbc:farrago:> select * from emps order by empno;
++--------+---------+---------+---------+---------------------------------+------+---------+
+| EMPNO  |  NAME   | DEPTNO  | GENDER  |              CITY               | AGE  | SALARY  |
++--------+---------+---------+---------+---------------------------------+------+---------+
+| 100    | Fred    | 10      |         | san mateo                       | 25   | 7031    |
+| 110    | Eric    | 20      | M       | san francisco                   | 80   | 22500   |
+| 120    | Wilma   | 20      | F       | san mateo                       | 50   | 14063   |
+| 130    | John    | 40      | M       | vancouver                       |      |         |
+| 140    | BARNEY  |         | M       | San Mateo                       | 41   | 21000   |
+| 150    | BETTY   |         | F       | San Francisco                   | 40   | 22500   |
++--------+---------+---------+---------+---------------------------------+------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- no source rows; therefore, no rows should be affected
+0: jdbc:farrago:> merge into emps
+. . . . . . . . >     using (select * from tempemps where t_deptno = 100) on t_empno = empno
+. . . . . . . . >     when matched then
+. . . . . . . . >         update set deptno = t_deptno, city = upper(t_city),
+. . . . . . . . >             salary = salary * .25
+. . . . . . . . >     when not matched then
+. . . . . . . . >         insert (empno, name, age, gender, salary, city)
+. . . . . . . . >         values(t_empno, upper(t_name), t_age, t_gender, t_age * 1000, t_city);
+0: jdbc:farrago:> select * from emps order by empno;
++--------+---------+---------+---------+---------------------------------+------+---------+
+| EMPNO  |  NAME   | DEPTNO  | GENDER  |              CITY               | AGE  | SALARY  |
++--------+---------+---------+---------+---------------------------------+------+---------+
+| 100    | Fred    | 10      |         | san mateo                       | 25   | 7031    |
+| 110    | Eric    | 20      | M       | san francisco                   | 80   | 22500   |
+| 120    | Wilma   | 20      | F       | san mateo                       | 50   | 14063   |
+| 130    | John    | 40      | M       | vancouver                       |      |         |
+| 140    | BARNEY  |         | M       | San Mateo                       | 41   | 21000   |
+| 150    | BETTY   |         | F       | San Francisco                   | 40   | 22500   |
++--------+---------+---------+---------+---------------------------------+------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- only updates, no inserts
+0: jdbc:farrago:> merge into emps
+. . . . . . . . >     using tempemps on t_empno = empno
+. . . . . . . . >     when matched then
+. . . . . . . . >         update set name = lower(name), deptno = t_deptno,
+. . . . . . . . >             city = upper(t_city),
+. . . . . . . . >             salary = salary * 10
+. . . . . . . . >     when not matched then
+. . . . . . . . >         insert (empno, name, age, gender, salary, city)
+. . . . . . . . >         values(t_empno, upper(t_name), t_age, t_gender, t_age * 1000, t_city);
+0: jdbc:farrago:> select * from emps order by empno;
++--------+---------+---------+---------+---------------------------------+------+---------+
+| EMPNO  |  NAME   | DEPTNO  | GENDER  |              CITY               | AGE  | SALARY  |
++--------+---------+---------+---------+---------------------------------+------+---------+
+| 100    | fred    | 11      |         | SAN MATEO                       | 25   | 70310   |
+| 110    | eric    | 21      | M       | SAN FRANCISCO                   | 80   | 225000  |
+| 120    | wilma   | 21      | F       | SAN MATEO                       | 50   | 140630  |
+| 130    | john    | 41      | M       | VANCOUVER                       |      |         |
+| 140    | barney  | 10      | M       | SAN MATEO                       | 41   | 210000  |
+| 150    | betty   | 20      | F       | SAN FRANCISCO                   | 40   | 225000  |
++--------+---------+---------+---------+---------------------------------+------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- only inserts, no updates
+0: jdbc:farrago:> delete from emps where empno >= 140;
+0: jdbc:farrago:> select * from emps order by empno;
++--------+--------+---------+---------+---------------------------------+------+---------+
+| EMPNO  |  NAME  | DEPTNO  | GENDER  |              CITY               | AGE  | SALARY  |
++--------+--------+---------+---------+---------------------------------+------+---------+
+| 100    | fred   | 11      |         | SAN MATEO                       | 25   | 70310   |
+| 110    | eric   | 21      | M       | SAN FRANCISCO                   | 80   | 225000  |
+| 120    | wilma  | 21      | F       | SAN MATEO                       | 50   | 140630  |
+| 130    | john   | 41      | M       | VANCOUVER                       |      |         |
++--------+--------+---------+---------+---------------------------------+------+---------+
+0: jdbc:farrago:> merge into emps
+. . . . . . . . >     using (select * from tempemps where t_empno >= 140) on t_empno = empno
+. . . . . . . . >     when matched then
+. . . . . . . . >         update set deptno = t_deptno, city = upper(t_city),
+. . . . . . . . >             salary = salary * .25
+. . . . . . . . >     when not matched then
+. . . . . . . . >         insert
+. . . . . . . . >             values(t_empno, upper(t_name), t_empno-100, t_gender, t_city, t_age,
+. . . . . . . . >                 t_age * 1000);
+0: jdbc:farrago:> select * from emps order by empno;
++--------+---------+---------+---------+---------------------------------+------+---------+
+| EMPNO  |  NAME   | DEPTNO  | GENDER  |              CITY               | AGE  | SALARY  |
++--------+---------+---------+---------+---------------------------------+------+---------+
+| 100    | fred    | 11      |         | SAN MATEO                       | 25   | 70310   |
+| 110    | eric    | 21      | M       | SAN FRANCISCO                   | 80   | 225000  |
+| 120    | wilma   | 21      | F       | SAN MATEO                       | 50   | 140630  |
+| 130    | john    | 41      | M       | VANCOUVER                       |      |         |
+| 140    | BARNEY  | 40      | M       | San Mateo                       | 41   | 41000   |
+| 150    | BETTY   | 50      | F       | San Francisco                   | 40   | 40000   |
++--------+---------+---------+---------+---------------------------------+------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- more than 1 row in the target table matches the source; per SQL2003, this
+0: jdbc:farrago:> -- should return an error; currently, we do not return an error
+0: jdbc:farrago:> insert into emps(empno, name) values(130, 'JohnClone');
+0: jdbc:farrago:> select * from emps order by empno;
++--------+------------+---------+---------+---------------------------------+------+---------+
+| EMPNO  |    NAME    | DEPTNO  | GENDER  |              CITY               | AGE  | SALARY  |
++--------+------------+---------+---------+---------------------------------+------+---------+
+| 100    | fred       | 11      |         | SAN MATEO                       | 25   | 70310   |
+| 110    | eric       | 21      | M       | SAN FRANCISCO                   | 80   | 225000  |
+| 120    | wilma      | 21      | F       | SAN MATEO                       | 50   | 140630  |
+| 130    | john       | 41      | M       | VANCOUVER                       |      |         |
+| 130    | JohnClone  |         |         |                                 |      |         |
+| 140    | BARNEY     | 40      | M       | San Mateo                       | 41   | 41000   |
+| 150    | BETTY      | 50      | F       | San Francisco                   | 40   | 40000   |
++--------+------------+---------+---------+---------------------------------+------+---------+
+0: jdbc:farrago:> merge into emps
+. . . . . . . . >     using (select * from tempemps where t_empno = 130) on t_empno = empno
+. . . . . . . . >     when matched then
+. . . . . . . . >         update set deptno = t_deptno, city = t_city, age = t_age,
+. . . . . . . . >             gender = t_gender
+. . . . . . . . >     when not matched then
+. . . . . . . . >         insert (empno, name, age, gender, salary, city)
+. . . . . . . . >         values(t_empno, upper(t_name), t_age, t_gender, t_age * 1000, t_city);
+0: jdbc:farrago:> select * from emps order by empno, name;
++--------+------------+---------+---------+---------------------------------+------+---------+
+| EMPNO  |    NAME    | DEPTNO  | GENDER  |              CITY               | AGE  | SALARY  |
++--------+------------+---------+---------+---------------------------------+------+---------+
+| 100    | fred       | 11      |         | SAN MATEO                       | 25   | 70310   |
+| 110    | eric       | 21      | M       | SAN FRANCISCO                   | 80   | 225000  |
+| 120    | wilma      | 21      | F       | SAN MATEO                       | 50   | 140630  |
+| 130    | JohnClone  | 41      | M       | Vancouver                       |      |         |
+| 130    | john       | 41      | M       | Vancouver                       |      |         |
+| 140    | BARNEY     | 40      | M       | San Mateo                       | 41   | 41000   |
+| 150    | BETTY      | 50      | F       | San Francisco                   | 40   | 40000   |
++--------+------------+---------+---------+---------------------------------+------+---------+
+0: jdbc:farrago:>                 
+0: jdbc:farrago:> -----------------
+0: jdbc:farrago:> -- Explain output
+0: jdbc:farrago:> -----------------
 0: jdbc:farrago:> !set outputformat csv
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- source table reference is a table
-0: jdbc:farrago:> explain plan without implementation for
+0: jdbc:farrago:> explain plan for
 . . . . . . . . > merge into emps e
 . . . . . . . . >     using tempemps t on t.t_empno = e.empno
 . . . . . . . . >     when matched then
@@ -30,15 +247,16 @@
 . . . . . . . . >         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.t_age * 1000,
 . . . . . . . . >             t.t_city);
 'column0'
-'TableModificationRel(table=[[LOCALDB, M, EMPS]], operation=[MERGE], updateColumnList=[[DEPTNO, CITY, SALARY]], flattened=[false])'
-'  ProjectRel($f0=[$0], $f1=[$1], $f2=[null], $f3=[$3], $f4=[$5], $f5=[$2], $f6=[$4], $f7=[$6], $f8=[$7], $f9=[$8], $f10=[$9], $f11=[$10], $f12=[$11], $f13=[$12], $f14=[$13], $f15=[$14], $f16=[$15])'
-'    ProjectRel($f0=[$0], $f1=[UPPER($1)], $f2=[$5], $f3=[$3], $f4=[*($5, 1000)], $f5=[$4], $f6=[$6], $f7=[$7], $f8=[$8], $f9=[$9], $f10=[$10], $f11=[$11], $f12=[$12], $f13=[$2], $f14=[UPPER($4)], $f15=[*($12, 0.25)])'
-'      JoinRel(condition=[=($0, $6)], joinType=[left])'
-'        TableAccessRel(table=[[LOCALDB, M, TEMPEMPS]])'
-'        TableAccessRel(table=[[LOCALDB, M, EMPS]])'
+'FennelToIteratorConverter'
+'  LcsTableMergeRel(table=[[LOCALDB, M, EMPS]])'
+'    FennelCalcRel(expr#0..12=[{inputs}], expr#13=[CAST($t11):BIGINT], expr#14=[null], expr#15=[CAST($t14):VARBINARY(512)], expr#16=[IS NULL($t13)], expr#17=[CASE($t16, $t0, $t6)], expr#18=[CAST($t17):INTEGER NOT NULL], expr#19=[UPPER($t1)], expr#20=[CASE($t16, $t19, $t7)], expr#21=[CAST($t20):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#22=[CASE($t16, $t14, $t2)], expr#23=[CASE($t16, $t3, $t8)], expr#24=[UPPER($t4)], expr#25=[CASE($t16, $t4, $t24)], expr#26=[CAST($t25):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#27=[CASE($t16, $t5, $t9)], expr#28=[1000], expr#29=[*($t5, $t28)], expr#30=[0.25], expr#31=[Reinterpret($t30)], expr#32=[*($t10, $t31)], expr#33=[Reinterpret($t32)], expr#34=[100], expr#35=[*($t29, $t34)], expr#36=[Reinterpret($t33)], expr#37=[CASE($t16, $t35, $t36)], expr#38=[Reinterpret($t37)], expr#39=[Reinterpret($t38)], expr#40=[0], expr#41=[>($t39, $t40)], expr#42=[50], expr#43=[+($t39, $t42)], expr#44=[-($t39, $t42)], expr#45=[CASE($t41, $t43, $t44)], expr#46=[/($t45, $t34)], expr#47=[CAST($t46):INTEGER], rid=[$t13], descriptor=[$t15], segment=[$t15], EMPNO=[$t18], NAME=[$t21], DEPTNO=[$t22], GENDER=[$t23], CITY=[$t26], AGE=[$t27], SALARY=[$t47])'
+'      LhxJoinRel(leftKeys=[[0]], rightKeys=[[6]], joinType=[LEFT])'
+'        LcsRowScanRel(table=[[LOCALDB, M, TEMPEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_AGE, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_CITY, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_DEPTNO, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_EMPNO, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_GENDER, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_NAME]])'
+'        FennelCalcRel(expr#0..5=[{inputs}], expr#6=[CAST($t0):INTEGER], proj#0..6=[{exprs}])'
+'          LcsRowScanRel(table=[[LOCALDB, M, EMPS]], projection=[[0, 1, 3, 5, 6, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$M$EMPS$AGE, SYS$CLUSTERED_INDEX$M$EMPS$EMPNO, SYS$CLUSTERED_INDEX$M$EMPS$GENDER, SYS$CLUSTERED_INDEX$M$EMPS$NAME, SYS$CLUSTERED_INDEX$M$EMPS$SALARY]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- source table reference is a single table select
-0: jdbc:farrago:> explain plan without implementation for
+0: jdbc:farrago:> explain plan for
 . . . . . . . . > merge into emps e
 . . . . . . . . >     using (select * from tempemps where t_deptno = 100) t on t.t_empno = e.empno
 . . . . . . . . >     when matched then
@@ -49,17 +267,17 @@
 . . . . . . . . >         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.t_age * 1000,
 . . . . . . . . >             t.t_city);
 'column0'
-'TableModificationRel(table=[[LOCALDB, M, EMPS]], operation=[MERGE], updateColumnList=[[DEPTNO, CITY, SALARY]], flattened=[false])'
-'  ProjectRel($f0=[$0], $f1=[$1], $f2=[null], $f3=[$3], $f4=[$5], $f5=[$2], $f6=[$4], $f7=[$6], $f8=[$7], $f9=[$8], $f10=[$9], $f11=[$10], $f12=[$11], $f13=[$12], $f14=[$13], $f15=[$14], $f16=[$15])'
-'    ProjectRel($f0=[$0], $f1=[UPPER($1)], $f2=[$5], $f3=[$3], $f4=[*($5, 1000)], $f5=[$4], $f6=[$6], $f7=[$7], $f8=[$8], $f9=[$9], $f10=[$10], $f11=[$11], $f12=[$12], $f13=[$2], $f14=[UPPER($4)], $f15=[*($12, 0.25)])'
-'      JoinRel(condition=[=($0, $6)], joinType=[left])'
-'        ProjectRel(T_EMPNO=[$0], T_NAME=[$1], T_DEPTNO=[$2], T_GENDER=[$3], T_CITY=[$4], T_AGE=[$5])'
-'          FilterRel(condition=[=($2, 100)])'
-'            TableAccessRel(table=[[LOCALDB, M, TEMPEMPS]])'
-'        TableAccessRel(table=[[LOCALDB, M, EMPS]])'
+'FennelToIteratorConverter'
+'  LcsTableMergeRel(table=[[LOCALDB, M, EMPS]])'
+'    FennelCalcRel(expr#0..12=[{inputs}], expr#13=[CAST($t11):BIGINT], expr#14=[null], expr#15=[CAST($t14):VARBINARY(512)], expr#16=[IS NULL($t13)], expr#17=[CASE($t16, $t0, $t6)], expr#18=[CAST($t17):INTEGER NOT NULL], expr#19=[UPPER($t1)], expr#20=[CASE($t16, $t19, $t7)], expr#21=[CAST($t20):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#22=[CASE($t16, $t14, $t2)], expr#23=[CASE($t16, $t3, $t8)], expr#24=[UPPER($t4)], expr#25=[CASE($t16, $t4, $t24)], expr#26=[CAST($t25):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#27=[CASE($t16, $t5, $t9)], expr#28=[1000], expr#29=[*($t5, $t28)], expr#30=[0.25], expr#31=[Reinterpret($t30)], expr#32=[*($t10, $t31)], expr#33=[Reinterpret($t32)], expr#34=[100], expr#35=[*($t29, $t34)], expr#36=[Reinterpret($t33)], expr#37=[CASE($t16, $t35, $t36)], expr#38=[Reinterpret($t37)], expr#39=[Reinterpret($t38)], expr#40=[0], expr#41=[>($t39, $t40)], expr#42=[50], expr#43=[+($t39, $t42)], expr#44=[-($t39, $t42)], expr#45=[CASE($t41, $t43, $t44)], expr#46=[/($t45, $t34)], expr#47=[CAST($t46):INTEGER], rid=[$t13], descriptor=[$t15], segment=[$t15], EMPNO=[$t18], NAME=[$t21], DEPTNO=[$t22], GENDER=[$t23], CITY=[$t26], AGE=[$t27], SALARY=[$t47])'
+'      LhxJoinRel(leftKeys=[[0]], rightKeys=[[6]], joinType=[LEFT])'
+'        FennelCalcRel(expr#0..5=[{inputs}], expr#6=[100], expr#7=[=($t2, $t6)], proj#0..5=[{exprs}], $condition=[$t7])'
+'          LcsRowScanRel(table=[[LOCALDB, M, TEMPEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_AGE, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_CITY, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_DEPTNO, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_EMPNO, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_GENDER, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_NAME]])'
+'        FennelCalcRel(expr#0..5=[{inputs}], expr#6=[CAST($t0):INTEGER], proj#0..6=[{exprs}])'
+'          LcsRowScanRel(table=[[LOCALDB, M, EMPS]], projection=[[0, 1, 3, 5, 6, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$M$EMPS$AGE, SYS$CLUSTERED_INDEX$M$EMPS$EMPNO, SYS$CLUSTERED_INDEX$M$EMPS$GENDER, SYS$CLUSTERED_INDEX$M$EMPS$NAME, SYS$CLUSTERED_INDEX$M$EMPS$SALARY]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- source table reference is a join
-0: jdbc:farrago:> explain plan without implementation for
+0: jdbc:farrago:> explain plan for
 . . . . . . . . > merge into emps e
 . . . . . . . . >     using (select s.empno, s.salary, t.* from salarytable s, tempemps t
 . . . . . . . . >         where t.t_empno = s.empno) t
@@ -72,19 +290,19 @@
 . . . . . . . . >         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.salary * .15,
 . . . . . . . . >             t.t_city);
 'column0'
-'TableModificationRel(table=[[LOCALDB, M, EMPS]], operation=[MERGE], updateColumnList=[[DEPTNO, CITY, SALARY]], flattened=[false])'
-'  ProjectRel($f0=[$0], $f1=[$1], $f2=[null], $f3=[$3], $f4=[$5], $f5=[$2], $f6=[$4], $f7=[$6], $f8=[$7], $f9=[$8], $f10=[$9], $f11=[$10], $f12=[$11], $f13=[$12], $f14=[$13], $f15=[$14], $f16=[$15])'
-'    ProjectRel($f0=[$2], $f1=[UPPER($3)], $f2=[$7], $f3=[$5], $f4=[*($1, 0.15)], $f5=[$6], $f6=[$8], $f7=[$9], $f8=[$10], $f9=[$11], $f10=[$12], $f11=[$13], $f12=[$14], $f13=[$4], $f14=[UPPER($6)], $f15=[*($14, 0.25)])'
-'      JoinRel(condition=[=($2, $8)], joinType=[left])'
-'        ProjectRel(EMPNO=[$0], SALARY=[$1], T_EMPNO=[$2], T_NAME=[$3], T_DEPTNO=[$4], T_GENDER=[$5], T_CITY=[$6], T_AGE=[$7])'
-'          FilterRel(condition=[=($2, $0)])'
-'            JoinRel(condition=[true], joinType=[inner])'
-'              TableAccessRel(table=[[LOCALDB, M, SALARYTABLE]])'
-'              TableAccessRel(table=[[LOCALDB, M, TEMPEMPS]])'
-'        TableAccessRel(table=[[LOCALDB, M, EMPS]])'
+'FennelToIteratorConverter'
+'  LcsTableMergeRel(table=[[LOCALDB, M, EMPS]])'
+'    FennelCalcRel(expr#0..13=[{inputs}], expr#14=[CAST($t12):BIGINT], expr#15=[null], expr#16=[CAST($t15):VARBINARY(512)], expr#17=[IS NULL($t14)], expr#18=[CASE($t17, $t1, $t7)], expr#19=[CAST($t18):INTEGER NOT NULL], expr#20=[UPPER($t2)], expr#21=[CASE($t17, $t20, $t8)], expr#22=[CAST($t21):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#23=[CASE($t17, $t15, $t3)], expr#24=[CASE($t17, $t4, $t9)], expr#25=[UPPER($t5)], expr#26=[CASE($t17, $t5, $t25)], expr#27=[CAST($t26):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#28=[CASE($t17, $t6, $t10)], expr#29=[0.15], expr#30=[Reinterpret($t29)], expr#31=[*($t0, $t30)], expr#32=[Reinterpret($t31)], expr#33=[0.25], expr#34=[Reinterpret($t33)], expr#35=[*($t11, $t34)], expr#36=[Reinterpret($t35)], expr#37=[Reinterpret($t32)], expr#38=[Reinterpret($t36)], expr#39=[CASE($t17, $t37, $t38)], expr#40=[Reinterpret($t39)], expr#41=[Reinterpret($t40)], expr#42=[0], expr#43=[>($t41, $t42)], expr#44=[50], expr#45=[+($t41, $t44)], expr#46=[-($t41, $t44)], expr#47=[CASE($t43, $t45, $t46)], expr#48=[100], expr#49=[/($t47, $t48)], expr#50=[CAST($t49):INTEGER], rid=[$t14], descriptor=[$t16], segment=[$t16], EMPNO=[$t19], NAME=[$t22], DEPTNO=[$t23], GENDER=[$t24], CITY=[$t27], AGE=[$t28], SALARY=[$t50])'
+'      LhxJoinRel(leftKeys=[[1]], rightKeys=[[6]], joinType=[LEFT])'
+'        FennelCalcRel(expr#0..7=[{inputs}], SALARY=[$t1], T_EMPNO=[$t2], T_NAME=[$t3], T_DEPTNO=[$t4], T_GENDER=[$t5], T_CITY=[$t6], T_AGE=[$t7])'
+'          LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'            LcsRowScanRel(table=[[LOCALDB, M, SALARYTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$M$SALARYTABLE$EMPNO, SYS$CLUSTERED_INDEX$M$SALARYTABLE$SALARY]])'
+'            LcsRowScanRel(table=[[LOCALDB, M, TEMPEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_AGE, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_CITY, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_DEPTNO, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_EMPNO, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_GENDER, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_NAME]])'
+'        FennelCalcRel(expr#0..5=[{inputs}], expr#6=[CAST($t0):INTEGER], proj#0..6=[{exprs}])'
+'          LcsRowScanRel(table=[[LOCALDB, M, EMPS]], projection=[[0, 1, 3, 5, 6, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$M$EMPS$AGE, SYS$CLUSTERED_INDEX$M$EMPS$EMPNO, SYS$CLUSTERED_INDEX$M$EMPS$GENDER, SYS$CLUSTERED_INDEX$M$EMPS$NAME, SYS$CLUSTERED_INDEX$M$EMPS$SALARY]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- columns aren't qualified
-0: jdbc:farrago:> explain plan without implementation for
+0: jdbc:farrago:> explain plan for
 . . . . . . . . > merge into emps
 . . . . . . . . >     using (select * from tempemps where t_deptno = 100) on t_empno = empno
 . . . . . . . . >     when matched then
@@ -94,15 +312,15 @@
 . . . . . . . . >         insert (empno, name, age, gender, salary, city)
 . . . . . . . . >         values(t_empno, upper(t_name), t_age, t_gender, t_age * 1000, t_city);
 'column0'
-'TableModificationRel(table=[[LOCALDB, M, EMPS]], operation=[MERGE], updateColumnList=[[DEPTNO, CITY, SALARY]], flattened=[false])'
-'  ProjectRel($f0=[$0], $f1=[$1], $f2=[null], $f3=[$3], $f4=[$5], $f5=[$2], $f6=[$4], $f7=[$6], $f8=[$7], $f9=[$8], $f10=[$9], $f11=[$10], $f12=[$11], $f13=[$12], $f14=[$13], $f15=[$14], $f16=[$15])'
-'    ProjectRel($f0=[$0], $f1=[UPPER($1)], $f2=[$5], $f3=[$3], $f4=[*($5, 1000)], $f5=[$4], $f6=[$6], $f7=[$7], $f8=[$8], $f9=[$9], $f10=[$10], $f11=[$11], $f12=[$12], $f13=[$2], $f14=[UPPER($4)], $f15=[*($12, 0.25)])'
-'      JoinRel(condition=[=($0, $6)], joinType=[left])'
-'        ProjectRel(T_EMPNO=[$0], T_NAME=[$1], T_DEPTNO=[$2], T_GENDER=[$3], T_CITY=[$4], T_AGE=[$5])'
-'          FilterRel(condition=[=($2, 100)])'
-'            TableAccessRel(table=[[LOCALDB, M, TEMPEMPS]])'
-'        TableAccessRel(table=[[LOCALDB, M, EMPS]])'
-0: jdbc:farrago:> explain plan without implementation for
+'FennelToIteratorConverter'
+'  LcsTableMergeRel(table=[[LOCALDB, M, EMPS]])'
+'    FennelCalcRel(expr#0..12=[{inputs}], expr#13=[CAST($t11):BIGINT], expr#14=[null], expr#15=[CAST($t14):VARBINARY(512)], expr#16=[IS NULL($t13)], expr#17=[CASE($t16, $t0, $t6)], expr#18=[CAST($t17):INTEGER NOT NULL], expr#19=[UPPER($t1)], expr#20=[CASE($t16, $t19, $t7)], expr#21=[CAST($t20):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#22=[CASE($t16, $t14, $t2)], expr#23=[CASE($t16, $t3, $t8)], expr#24=[UPPER($t4)], expr#25=[CASE($t16, $t4, $t24)], expr#26=[CAST($t25):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#27=[CASE($t16, $t5, $t9)], expr#28=[1000], expr#29=[*($t5, $t28)], expr#30=[0.25], expr#31=[Reinterpret($t30)], expr#32=[*($t10, $t31)], expr#33=[Reinterpret($t32)], expr#34=[100], expr#35=[*($t29, $t34)], expr#36=[Reinterpret($t33)], expr#37=[CASE($t16, $t35, $t36)], expr#38=[Reinterpret($t37)], expr#39=[Reinterpret($t38)], expr#40=[0], expr#41=[>($t39, $t40)], expr#42=[50], expr#43=[+($t39, $t42)], expr#44=[-($t39, $t42)], expr#45=[CASE($t41, $t43, $t44)], expr#46=[/($t45, $t34)], expr#47=[CAST($t46):INTEGER], rid=[$t13], descriptor=[$t15], segment=[$t15], EMPNO=[$t18], NAME=[$t21], DEPTNO=[$t22], GENDER=[$t23], CITY=[$t26], AGE=[$t27], SALARY=[$t47])'
+'      LhxJoinRel(leftKeys=[[0]], rightKeys=[[6]], joinType=[LEFT])'
+'        FennelCalcRel(expr#0..5=[{inputs}], expr#6=[100], expr#7=[=($t2, $t6)], proj#0..5=[{exprs}], $condition=[$t7])'
+'          LcsRowScanRel(table=[[LOCALDB, M, TEMPEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_AGE, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_CITY, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_DEPTNO, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_EMPNO, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_GENDER, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_NAME]])'
+'        FennelCalcRel(expr#0..5=[{inputs}], expr#6=[CAST($t0):INTEGER], proj#0..6=[{exprs}])'
+'          LcsRowScanRel(table=[[LOCALDB, M, EMPS]], projection=[[0, 1, 3, 5, 6, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$M$EMPS$AGE, SYS$CLUSTERED_INDEX$M$EMPS$EMPNO, SYS$CLUSTERED_INDEX$M$EMPS$GENDER, SYS$CLUSTERED_INDEX$M$EMPS$NAME, SYS$CLUSTERED_INDEX$M$EMPS$SALARY]])'
+0: jdbc:farrago:> explain plan for
 . . . . . . . . > merge into emps
 . . . . . . . . >     using tempemps on t_empno = empno
 . . . . . . . . >     when matched then
@@ -112,15 +330,16 @@
 . . . . . . . . >         insert (empno, name, age, gender, salary, city)
 . . . . . . . . >         values(t_empno, upper(t_name), t_age, t_gender, t_age * 1000, t_city);
 'column0'
-'TableModificationRel(table=[[LOCALDB, M, EMPS]], operation=[MERGE], updateColumnList=[[DEPTNO, CITY, SALARY]], flattened=[false])'
-'  ProjectRel($f0=[$0], $f1=[$1], $f2=[null], $f3=[$3], $f4=[$5], $f5=[$2], $f6=[$4], $f7=[$6], $f8=[$7], $f9=[$8], $f10=[$9], $f11=[$10], $f12=[$11], $f13=[$12], $f14=[$13], $f15=[$14], $f16=[$15])'
-'    ProjectRel($f0=[$0], $f1=[UPPER($1)], $f2=[$5], $f3=[$3], $f4=[*($5, 1000)], $f5=[$4], $f6=[$6], $f7=[$7], $f8=[$8], $f9=[$9], $f10=[$10], $f11=[$11], $f12=[$12], $f13=[$2], $f14=[UPPER($4)], $f15=[*($12, 0.25)])'
-'      JoinRel(condition=[=($0, $6)], joinType=[left])'
-'        TableAccessRel(table=[[LOCALDB, M, TEMPEMPS]])'
-'        TableAccessRel(table=[[LOCALDB, M, EMPS]])'
+'FennelToIteratorConverter'
+'  LcsTableMergeRel(table=[[LOCALDB, M, EMPS]])'
+'    FennelCalcRel(expr#0..12=[{inputs}], expr#13=[CAST($t11):BIGINT], expr#14=[null], expr#15=[CAST($t14):VARBINARY(512)], expr#16=[IS NULL($t13)], expr#17=[CASE($t16, $t0, $t6)], expr#18=[CAST($t17):INTEGER NOT NULL], expr#19=[UPPER($t1)], expr#20=[CASE($t16, $t19, $t7)], expr#21=[CAST($t20):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#22=[CASE($t16, $t14, $t2)], expr#23=[CASE($t16, $t3, $t8)], expr#24=[UPPER($t4)], expr#25=[CASE($t16, $t4, $t24)], expr#26=[CAST($t25):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#27=[CASE($t16, $t5, $t9)], expr#28=[1000], expr#29=[*($t5, $t28)], expr#30=[0.25], expr#31=[Reinterpret($t30)], expr#32=[*($t10, $t31)], expr#33=[Reinterpret($t32)], expr#34=[100], expr#35=[*($t29, $t34)], expr#36=[Reinterpret($t33)], expr#37=[CASE($t16, $t35, $t36)], expr#38=[Reinterpret($t37)], expr#39=[Reinterpret($t38)], expr#40=[0], expr#41=[>($t39, $t40)], expr#42=[50], expr#43=[+($t39, $t42)], expr#44=[-($t39, $t42)], expr#45=[CASE($t41, $t43, $t44)], expr#46=[/($t45, $t34)], expr#47=[CAST($t46):INTEGER], rid=[$t13], descriptor=[$t15], segment=[$t15], EMPNO=[$t18], NAME=[$t21], DEPTNO=[$t22], GENDER=[$t23], CITY=[$t26], AGE=[$t27], SALARY=[$t47])'
+'      LhxJoinRel(leftKeys=[[0]], rightKeys=[[6]], joinType=[LEFT])'
+'        LcsRowScanRel(table=[[LOCALDB, M, TEMPEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_AGE, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_CITY, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_DEPTNO, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_EMPNO, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_GENDER, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_NAME]])'
+'        FennelCalcRel(expr#0..5=[{inputs}], expr#6=[CAST($t0):INTEGER], proj#0..6=[{exprs}])'
+'          LcsRowScanRel(table=[[LOCALDB, M, EMPS]], projection=[[0, 1, 3, 5, 6, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$M$EMPS$AGE, SYS$CLUSTERED_INDEX$M$EMPS$EMPNO, SYS$CLUSTERED_INDEX$M$EMPS$GENDER, SYS$CLUSTERED_INDEX$M$EMPS$NAME, SYS$CLUSTERED_INDEX$M$EMPS$SALARY]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- no target column list in the insert
-0: jdbc:farrago:> explain plan without implementation for
+0: jdbc:farrago:> explain plan for
 . . . . . . . . > merge into emps
 . . . . . . . . >     using (select * from tempemps where t_deptno = 100) on t_empno = empno
 . . . . . . . . >     when matched then
@@ -131,18 +350,18 @@
 . . . . . . . . >             values(t_empno, upper(t_name), null, t_gender, t_city, t_age,
 . . . . . . . . >                 t_age * 1000);
 'column0'
-'TableModificationRel(table=[[LOCALDB, M, EMPS]], operation=[MERGE], updateColumnList=[[DEPTNO, CITY, SALARY]], flattened=[false])'
-'  ProjectRel($f0=[$0], $f1=[$1], $f2=[$2], $f3=[$3], $f4=[$4], $f5=[$5], $f6=[$6], $f7=[$7], $f8=[$8], $f9=[$9], $f10=[$10], $f11=[$11], $f12=[$12], $f13=[$13], $f14=[$14], $f15=[$15], $f16=[$16])'
-'    ProjectRel($f0=[$0], $f1=[UPPER($1)], $f2=[CAST(null):INTEGER], $f3=[$3], $f4=[$4], $f5=[$5], $f6=[*($5, 1000)], $f7=[$6], $f8=[$7], $f9=[$8], $f10=[$9], $f11=[$10], $f12=[$11], $f13=[$12], $f14=[$2], $f15=[UPPER($4)], $f16=[*($12, 0.25)])'
-'      JoinRel(condition=[=($0, $6)], joinType=[left])'
-'        ProjectRel(T_EMPNO=[$0], T_NAME=[$1], T_DEPTNO=[$2], T_GENDER=[$3], T_CITY=[$4], T_AGE=[$5])'
-'          FilterRel(condition=[=($2, 100)])'
-'            TableAccessRel(table=[[LOCALDB, M, TEMPEMPS]])'
-'        TableAccessRel(table=[[LOCALDB, M, EMPS]])'
+'FennelToIteratorConverter'
+'  LcsTableMergeRel(table=[[LOCALDB, M, EMPS]])'
+'    FennelCalcRel(expr#0..12=[{inputs}], expr#13=[CAST($t11):BIGINT], expr#14=[null], expr#15=[CAST($t14):VARBINARY(512)], expr#16=[IS NULL($t13)], expr#17=[CASE($t16, $t0, $t6)], expr#18=[CAST($t17):INTEGER NOT NULL], expr#19=[UPPER($t1)], expr#20=[CASE($t16, $t19, $t7)], expr#21=[CAST($t20):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#22=[CAST($t14):INTEGER], expr#23=[CASE($t16, $t22, $t2)], expr#24=[CASE($t16, $t3, $t8)], expr#25=[UPPER($t4)], expr#26=[CASE($t16, $t4, $t25)], expr#27=[CAST($t26):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#28=[CASE($t16, $t5, $t9)], expr#29=[1000], expr#30=[*($t5, $t29)], expr#31=[0.25], expr#32=[Reinterpret($t31)], expr#33=[*($t10, $t32)], expr#34=[Reinterpret($t33)], expr#35=[100], expr#36=[*($t30, $t35)], expr#37=[Reinterpret($t34)], expr#38=[CASE($t16, $t36, $t37)], expr#39=[Reinterpret($t38)], expr#40=[Reinterpret($t39)], expr#41=[0], expr#42=[>($t40, $t41)], expr#43=[50], expr#44=[+($t40, $t43)], expr#45=[-($t40, $t43)], expr#46=[CASE($t42, $t44, $t45)], expr#47=[/($t46, $t35)], expr#48=[CAST($t47):INTEGER], rid=[$t13], descriptor=[$t15], segment=[$t15], EMPNO=[$t18], NAME=[$t21], DEPTNO=[$t23], GENDER=[$t24], CITY=[$t27], AGE=[$t28], SALARY=[$t48])'
+'      LhxJoinRel(leftKeys=[[0]], rightKeys=[[6]], joinType=[LEFT])'
+'        FennelCalcRel(expr#0..5=[{inputs}], expr#6=[100], expr#7=[=($t2, $t6)], proj#0..5=[{exprs}], $condition=[$t7])'
+'          LcsRowScanRel(table=[[LOCALDB, M, TEMPEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_AGE, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_CITY, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_DEPTNO, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_EMPNO, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_GENDER, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_NAME]])'
+'        FennelCalcRel(expr#0..5=[{inputs}], expr#6=[CAST($t0):INTEGER], proj#0..6=[{exprs}])'
+'          LcsRowScanRel(table=[[LOCALDB, M, EMPS]], projection=[[0, 1, 3, 5, 6, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$M$EMPS$AGE, SYS$CLUSTERED_INDEX$M$EMPS$EMPNO, SYS$CLUSTERED_INDEX$M$EMPS$GENDER, SYS$CLUSTERED_INDEX$M$EMPS$NAME, SYS$CLUSTERED_INDEX$M$EMPS$SALARY]])'
 0: jdbc:farrago:>                 
 0: jdbc:farrago:> -- no target column list in the insert, but the types of the source insert
 0: jdbc:farrago:> -- expressions match the target
-0: jdbc:farrago:> explain plan without implementation for
+0: jdbc:farrago:> explain plan for
 . . . . . . . . > merge into emps
 . . . . . . . . >     using (select * from tempemps where t_deptno = 100) on t_empno = empno
 . . . . . . . . >     when matched then
@@ -153,14 +372,14 @@
 . . . . . . . . >             values(t_empno, cast(upper(t_name) as varchar(20)), null, t_gender,
 . . . . . . . . >                 cast(t_city as char(30)), t_age, t_age * 1000);
 'column0'
-'TableModificationRel(table=[[LOCALDB, M, EMPS]], operation=[MERGE], updateColumnList=[[DEPTNO, CITY, SALARY]], flattened=[false])'
-'  ProjectRel($f0=[$0], $f1=[$1], $f2=[$2], $f3=[$3], $f4=[$4], $f5=[$5], $f6=[$6], $f7=[$7], $f8=[$8], $f9=[$9], $f10=[$10], $f11=[$11], $f12=[$12], $f13=[$13], $f14=[$14], $f15=[$15], $f16=[$16])'
-'    ProjectRel($f0=[$0], $f1=[CAST(UPPER($1)):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], $f2=[CAST(null):INTEGER], $f3=[$3], $f4=[CAST($4):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], $f5=[$5], $f6=[*($5, 1000)], $f7=[$6], $f8=[$7], $f9=[$8], $f10=[$9], $f11=[$10], $f12=[$11], $f13=[$12], $f14=[$2], $f15=[UPPER($4)], $f16=[*($12, 0.25)])'
-'      JoinRel(condition=[=($0, $6)], joinType=[left])'
-'        ProjectRel(T_EMPNO=[$0], T_NAME=[$1], T_DEPTNO=[$2], T_GENDER=[$3], T_CITY=[$4], T_AGE=[$5])'
-'          FilterRel(condition=[=($2, 100)])'
-'            TableAccessRel(table=[[LOCALDB, M, TEMPEMPS]])'
-'        TableAccessRel(table=[[LOCALDB, M, EMPS]])'
+'FennelToIteratorConverter'
+'  LcsTableMergeRel(table=[[LOCALDB, M, EMPS]])'
+'    FennelCalcRel(expr#0..12=[{inputs}], expr#13=[CAST($t11):BIGINT], expr#14=[null], expr#15=[CAST($t14):VARBINARY(512)], expr#16=[IS NULL($t13)], expr#17=[CASE($t16, $t0, $t6)], expr#18=[CAST($t17):INTEGER NOT NULL], expr#19=[UPPER($t1)], expr#20=[CAST($t19):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#21=[CASE($t16, $t20, $t7)], expr#22=[CAST($t21):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#23=[CAST($t14):INTEGER], expr#24=[CASE($t16, $t23, $t2)], expr#25=[CASE($t16, $t3, $t8)], expr#26=[CAST($t4):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#27=[UPPER($t4)], expr#28=[CASE($t16, $t26, $t27)], expr#29=[CAST($t28):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#30=[CASE($t16, $t5, $t9)], expr#31=[1000], expr#32=[*($t5, $t31)], expr#33=[0.25], expr#34=[Reinterpret($t33)], expr#35=[*($t10, $t34)], expr#36=[Reinterpret($t35)], expr#37=[100], expr#38=[*($t32, $t37)], expr#39=[Reinterpret($t36)], expr#40=[CASE($t16, $t38, $t39)], expr#41=[Reinterpret($t40)], expr#42=[Reinterpret($t41)], expr#43=[0], expr#44=[>($t42, $t43)], expr#45=[50], expr#46=[+($t42, $t45)], expr#47=[-($t42, $t45)], expr#48=[CASE($t44, $t46, $t47)], expr#49=[/($t48, $t37)], expr#50=[CAST($t49):INTEGER], rid=[$t13], descriptor=[$t15], segment=[$t15], EMPNO=[$t18], NAME=[$t22], DEPTNO=[$t24], GENDER=[$t25], CITY=[$t29], AGE=[$t30], SALARY=[$t50])'
+'      LhxJoinRel(leftKeys=[[0]], rightKeys=[[6]], joinType=[LEFT])'
+'        FennelCalcRel(expr#0..5=[{inputs}], expr#6=[100], expr#7=[=($t2, $t6)], proj#0..5=[{exprs}], $condition=[$t7])'
+'          LcsRowScanRel(table=[[LOCALDB, M, TEMPEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_AGE, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_CITY, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_DEPTNO, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_EMPNO, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_GENDER, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_NAME]])'
+'        FennelCalcRel(expr#0..5=[{inputs}], expr#6=[CAST($t0):INTEGER], proj#0..6=[{exprs}])'
+'          LcsRowScanRel(table=[[LOCALDB, M, EMPS]], projection=[[0, 1, 3, 5, 6, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$M$EMPS$AGE, SYS$CLUSTERED_INDEX$M$EMPS$EMPNO, SYS$CLUSTERED_INDEX$M$EMPS$GENDER, SYS$CLUSTERED_INDEX$M$EMPS$NAME, SYS$CLUSTERED_INDEX$M$EMPS$SALARY]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --------------
 0: jdbc:farrago:> -- Error cases

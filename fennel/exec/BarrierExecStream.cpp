@@ -48,6 +48,8 @@ void BarrierExecStream:: prepare(BarrierExecStreamParams const &params)
     outputTuple.compute(outputTupleDesc);
 
     outputTupleAccessor = &pOutAccessor->getScratchTupleAccessor();
+
+    rowCountInput = params.rowCountInput;
 }
 
 void BarrierExecStream::open(bool restart)
@@ -56,7 +58,8 @@ void BarrierExecStream::open(bool restart)
     iInput = 0;
 
     if (!restart) {
-        outputTupleBuffer.reset(new FixedBuffer[outputTupleAccessor->getMaxByteCount()]);
+        outputTupleBuffer.reset(
+            new FixedBuffer[outputTupleAccessor->getMaxByteCount()]);
         outputTupleAccessor->setCurrentTupleBuf(outputTupleBuffer.get());
     }
     isDone = false;
@@ -86,14 +89,14 @@ ExecStreamResult BarrierExecStream::execute(ExecStreamQuantum const &quantum)
         case EXECBUF_OVERFLOW:
         case EXECBUF_NONEMPTY:
             inAccessors[iInput]->unmarshalTuple(inputTuple);
-            if (iInput == 0) {
-                /*
-                 * First time, just copy the input into the output.
-                 */
+            if ((rowCountInput == -1 && iInput == 0) ||
+               (rowCountInput >= 0 && iInput == rowCountInput))
+            {
+                // copy input to output if this is the correct input stream
                 outputTupleAccessor->marshal(
                     inputTuple, outputTupleBuffer.get());
                 outputTupleAccessor->unmarshal(outputTuple);
-            } else {
+            } else if (rowCountInput == -1) {
                 permAssert((inAccessors[iInput]->getTupleDesc()).
                             compareTuples(inputTuple, outputTuple) == 0);
             }

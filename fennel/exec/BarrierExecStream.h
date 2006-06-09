@@ -36,7 +36,11 @@ FENNEL_BEGIN_NAMESPACE
  */
 struct BarrierExecStreamParams : public ConfluenceExecStreamParams
 {
-    
+    /**
+     * The input stream that will return the row count that BarrierExecStream
+     * produces.  If -1, all inputs return the same row count.
+     */
+    int rowCountInput;   
 };
     
 /**
@@ -78,6 +82,11 @@ class BarrierExecStream : public ConfluenceExecStream
      */
     uint iInput;
     
+    /**
+     * Input containing row count output
+     */
+    int rowCountInput;
+
 public:
     // implement ExecStream
     virtual void prepare(BarrierExecStreamParams const &params);    

@@ -66,7 +66,9 @@ public class IterCalcRel extends SingleRel implements JavaRel
 
     /** Values defined in {@link ProjectRelBase.Flags}. */
     protected int flags;
-    
+
+    private String loggerType;
+
     //~ Constructors ----------------------------------------------------------
 
     public IterCalcRel(
@@ -79,9 +81,15 @@ public class IterCalcRel extends SingleRel implements JavaRel
         this.flags = flags;
         this.program = program;
         this.rowType = program.getOutputRowType();
+        loggerType = null;
     }
 
     //~ Methods ---------------------------------------------------------------
+
+    public void setLoggerType(String loggerType)
+    {
+        this.loggerType = loggerType;
+    }
 
     // TODO jvs 10-May-2004: need a computeSelfCost which takes condition into
     // account; maybe inherit from CalcRelBase?
@@ -89,6 +97,20 @@ public class IterCalcRel extends SingleRel implements JavaRel
     public void explain(RelOptPlanWriter pw)
     {
         program.explainCalc(this, pw);
+    }
+
+    protected String computeDigest()
+    {
+        String tempDigest = super.computeDigest();
+        if (loggerType != null) {
+            // append logger type to digest
+            int lastParen = tempDigest.lastIndexOf(')');
+            tempDigest = 
+                tempDigest.substring(0, lastParen) 
+                + ",type=" + loggerType 
+                + tempDigest.substring(lastParen);
+        }
+        return tempDigest;
     }
 
     public double getRows()
@@ -164,11 +186,12 @@ public class IterCalcRel extends SingleRel implements JavaRel
         Variable varInputRow,
         final RelDataType inputRowType,
         final RelDataType outputRowType,
-        RexProgram program)
+        RexProgram program,
+        String loggerType)
     {
         return implementAbstractTupleIter(
             implementor, rel, childExp, varInputRow, inputRowType,
-            outputRowType, program);
+            outputRowType, program, loggerType);
     }
 
     public static Expression implementAbstractTupleIter(
@@ -178,7 +201,8 @@ public class IterCalcRel extends SingleRel implements JavaRel
         Variable varInputRow,
         final RelDataType inputRowType,
         final RelDataType outputRowType,
-        RexProgram program)
+        RexProgram program,
+        String loggerType)
     {
         RelDataTypeFactory typeFactory = implementor.getTypeFactory();
         OJClass outputRowClass = OJUtil.typeToOJClass(
@@ -224,7 +248,7 @@ public class IterCalcRel extends SingleRel implements JavaRel
         // The calculator (projection, filtering) statements are added to
         // calcStmts.  In most cases it will just be the while loop's body.
         StatementList calcStmts;
-        if (abortOnError) {
+        if (abortOnError && loggerType == null) {
             calcStmts = whileBody;
         } else {
             // This is not the usual case.  Here we wrap the calc statements
@@ -351,7 +375,7 @@ public class IterCalcRel extends SingleRel implements JavaRel
 
         return implementAbstract(
             implementor, this, childExp, varInputRow, inputRowType,
-            outputRowType, program);
+            outputRowType, program, loggerType);
     }
 
     public RexProgram getProgram()

@@ -163,7 +163,7 @@ public class LcsTableDeleteRel extends MedAbstractFennelTableModRel
         implementor.addDataFlowFromProducerToConsumer(input, splicer);
   
         FemBarrierStreamDef barrier = 
-            indexGuide.newBarrier(this);       
+            indexGuide.newBarrier(this, 0);       
         implementor.addDataFlowFromProducerToConsumer(splicer, barrier);
         
         return barrier;

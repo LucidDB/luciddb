@@ -6,20 +6,121 @@
 
 create schema m;
 set schema 'm';
+alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
 
 create table emps(
-    empno int, name varchar(20), deptno int, gender char(1), city char(30),
-    age int, salary int) server sys_column_store_data_server;
+    empno int not null, name varchar(20) not null, deptno int,
+    gender char(1), city char(30), age int, salary int);
 create table tempemps(
     t_empno int, t_name varchar(25), t_deptno int, t_gender char(1),
-    t_city char(35), t_age int) server sys_column_store_data_server;
-create table salarytable(empno int, salary int)
-    server sys_column_store_data_server;
+    t_city char(35), t_age int);
+create table salarytable(empno int, salary int);
 
+insert into emps(empno, name, deptno, gender, city, age, salary)
+    select case when name = 'John' then 130 else empno end,
+        name, deptno, gender, city, age, age * 900 from sales.emps;
+select * from emps order by empno;
+insert into tempemps
+    select empno, name, deptno + 1, gender, coalesce(city, 'San Mateo'), age
+        from emps;
+insert into tempemps values(140, 'Barney', 10, 'M', 'San Mateo', 41);
+insert into tempemps values(150, 'Betty', 20, 'F', 'San Francisco', 40);
+select * from tempemps order by t_empno;
+
+-- basic merge
+merge into emps e
+    using tempemps t on t.t_empno = e.empno
+    when matched then
+        update set deptno = t.t_deptno, city = upper(t.t_city),
+            salary = salary * .25
+    when not matched then
+        insert (empno, name, age, gender, salary, city)
+        values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.t_age * 1000,
+            t.t_city);
+select * from emps order by empno;
+
+-- source select is a join
+delete from emps where name in ('BARNEY', 'BETTY');
+insert into salarytable values(100, 100000);
+insert into salarytable values(110, 110000);
+insert into salarytable values(120, 120000);
+insert into salarytable values(130, 130000);
+insert into salarytable values(140, 140000);
+insert into salarytable values(150, 150000);
+select * from emps order by empno;
+select * from salarytable order by empno;
+
+merge into emps e
+    using (select s.empno, s.salary, t.* from salarytable s, tempemps t
+        where t.t_empno = s.empno) t
+    on t.t_empno = e.empno
+    when matched then
+        update set deptno = t.t_deptno-1, city = lower(t.t_city),
+            salary = e.salary * 1.25
+    when not matched then
+        insert (empno, name, age, gender, salary, city)
+        values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.salary * .15,
+            t.t_city);
+select * from emps order by empno;
+
+-- no source rows; therefore, no rows should be affected
+merge into emps
+    using (select * from tempemps where t_deptno = 100) on t_empno = empno
+    when matched then
+        update set deptno = t_deptno, city = upper(t_city),
+            salary = salary * .25
+    when not matched then
+        insert (empno, name, age, gender, salary, city)
+        values(t_empno, upper(t_name), t_age, t_gender, t_age * 1000, t_city);
+select * from emps order by empno;
+
+-- only updates, no inserts
+merge into emps
+    using tempemps on t_empno = empno
+    when matched then
+        update set name = lower(name), deptno = t_deptno,
+            city = upper(t_city),
+            salary = salary * 10
+    when not matched then
+        insert (empno, name, age, gender, salary, city)
+        values(t_empno, upper(t_name), t_age, t_gender, t_age * 1000, t_city);
+select * from emps order by empno;
+
+-- only inserts, no updates
+delete from emps where empno >= 140;
+select * from emps order by empno;
+merge into emps
+    using (select * from tempemps where t_empno >= 140) on t_empno = empno
+    when matched then
+        update set deptno = t_deptno, city = upper(t_city),
+            salary = salary * .25
+    when not matched then
+        insert
+            values(t_empno, upper(t_name), t_empno-100, t_gender, t_city, t_age,
+                t_age * 1000);
+select * from emps order by empno;
+
+-- more than 1 row in the target table matches the source; per SQL2003, this
+-- should return an error; currently, we do not return an error
+insert into emps(empno, name) values(130, 'JohnClone');
+select * from emps order by empno;
+merge into emps
+    using (select * from tempemps where t_empno = 130) on t_empno = empno
+    when matched then
+        update set deptno = t_deptno, city = t_city, age = t_age,
+            gender = t_gender
+    when not matched then
+        insert (empno, name, age, gender, salary, city)
+        values(t_empno, upper(t_name), t_age, t_gender, t_age * 1000, t_city);
+select * from emps order by empno, name;
+                
+-----------------
+-- Explain output
+-----------------
 !set outputformat csv
 
 -- source table reference is a table
-explain plan without implementation for
+explain plan for
 merge into emps e
     using tempemps t on t.t_empno = e.empno
     when matched then
@@ -31,7 +132,7 @@ merge into emps e
             t.t_city);
 
 -- source table reference is a single table select
-explain plan without implementation for
+explain plan for
 merge into emps e
     using (select * from tempemps where t_deptno = 100) t on t.t_empno = e.empno
     when matched then
@@ -43,7 +144,7 @@ merge into emps e
             t.t_city);
 
 -- source table reference is a join
-explain plan without implementation for
+explain plan for
 merge into emps e
     using (select s.empno, s.salary, t.* from salarytable s, tempemps t
         where t.t_empno = s.empno) t
@@ -57,7 +158,7 @@ merge into emps e
             t.t_city);
 
 -- columns aren't qualified
-explain plan without implementation for
+explain plan for
 merge into emps
     using (select * from tempemps where t_deptno = 100) on t_empno = empno
     when matched then
@@ -66,7 +167,7 @@ merge into emps
     when not matched then
         insert (empno, name, age, gender, salary, city)
         values(t_empno, upper(t_name), t_age, t_gender, t_age * 1000, t_city);
-explain plan without implementation for
+explain plan for
 merge into emps
     using tempemps on t_empno = empno
     when matched then
@@ -77,7 +178,7 @@ merge into emps
         values(t_empno, upper(t_name), t_age, t_gender, t_age * 1000, t_city);
 
 -- no target column list in the insert
-explain plan without implementation for
+explain plan for
 merge into emps
     using (select * from tempemps where t_deptno = 100) on t_empno = empno
     when matched then
@@ -90,7 +191,7 @@ merge into emps
                 
 -- no target column list in the insert, but the types of the source insert
 -- expressions match the target
-explain plan without implementation for
+explain plan for
 merge into emps
     using (select * from tempemps where t_deptno = 100) on t_empno = empno
     when matched then

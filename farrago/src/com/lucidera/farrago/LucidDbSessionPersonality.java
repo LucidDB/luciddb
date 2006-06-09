@@ -157,6 +157,7 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
             new LoptOptimizeJoinRule(
                 new RelOptRuleOperand(MultiJoinRel.class, null),
                 "without project"));
+        planner.addRule(new CoerceInputsRule(LcsTableMergeRel.class, false));
 
         planner.removeRule(SwapJoinRule.instance);
         return planner;
@@ -190,9 +191,10 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         // into and possibly through the join.
         builder.addRuleInstance(ExtractJoinFilterRule.instance);
             
-        // Need to fire delete rule before any projection rules since the
-        // delete rule modifies the projection
+        // Need to fire delete and merge rules before any projection rules
+        // since they modify the projection
         builder.addRuleInstance(new LcsTableDeleteRule());
+        builder.addRuleInstance(new LcsTableMergeRule());
 
         // Remove trivial projects so tables referenced in selects in the
         // from clause can be optimized with the rest of the query
@@ -243,10 +245,10 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
 
         // Convert semijoins to physical index access.
         builder.addRuleClass(LcsIndexSemiJoinRule.class);
-        
+ 
         // Remove any semijoins that couldn't be converted
-        builder.addRuleInstance(new LoptRemoveSemiJoinRule());
-        
+        builder.addRuleInstance(new RemoveSemiJoinRule());
+
         // Apply PushProjectPastJoinRule while there are no physical joinrels
         // since the rule only matches on JoinRel.
         builder.addRuleInstance(new RemoveTrivialProjectRule());

@@ -1,8 +1,10 @@
 /*
 // $Id$
-// Farrago is an extensible data management system.
-// Copyright (C) 2006-2006 LucidEra, Inc.
+// Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2006-2006 The Eigenbase Project
+// Copyright (C) 2006-2006 Disruptive Tech
+// Copyright (C) 2006-2006 LucidEra, Inc.
+// Portions Copyright (C) 2006-2006 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -18,14 +20,14 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package com.lucidera.opt;
+
+package org.eigenbase.rel.rules;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.rel.rules.*;
 
 /**
- * LoptRemoveSemiJoinRule implements the rule that removes semijoins from
+ * RemoveSemiJoinRule implements the rule that removes semijoins from
  * a join tree if it turns out it's not possible to convert a SemiJoinRel to
  * an indexed scan on a join factor.  Namely, if the join factor does not
  * reduce to a single table that can be scanned using an index.  This rule
@@ -34,35 +36,20 @@ import org.eigenbase.rel.rules.*;
  * @author Zelaine Fong
  * @version $Id$
  */
-public class LoptRemoveSemiJoinRule extends RelOptRule
+public class RemoveSemiJoinRule extends RelOptRule
 {
     //~ Constructors ----------------------------------------------------------
 
-    public LoptRemoveSemiJoinRule()
+    public RemoveSemiJoinRule()
     {
-        super(new RelOptRuleOperand(
-                JoinRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(SemiJoinRel.class, null)
-                }));
+        super(new RelOptRuleOperand(SemiJoinRel.class, null));
     }
 
     // implement RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
-    	JoinRel origJoinRel = (JoinRel) call.rels[0];
-        JoinRel joinRel = new JoinRel(
-                origJoinRel.getCluster(),
-                call.rels[1].getInput(0),
-                origJoinRel.getRight(),
-                origJoinRel.getCondition(),
-                origJoinRel.getJoinType(),
-                origJoinRel.getVariablesStopped(),
-                origJoinRel.isSemiJoinDone(),
-                origJoinRel.isMultiJoinDone());
-
-        call.transformTo(joinRel);
+        call.transformTo(call.rels[0].getInput(0));
     }
-
 }
-// End LoptRemoveSemiJoinRule.java
+
+// End RemoveSemiJoinRule.java

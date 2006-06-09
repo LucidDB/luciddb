@@ -23,9 +23,7 @@ package com.lucidera.lcs;
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
-import net.sf.farrago.fem.med.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.query.*;
 
@@ -113,18 +111,6 @@ extends MedAbstractFennelTableModRel
         return clone;
     }
     
-    
-    /**
-     * Returns an index guide specific to an unclustered index
-     */
-    private LcsIndexGuide getIndexGuide(FemLocalIndex unclusteredIndex)
-    {
-        return new LcsIndexGuide(
-            lcsTable.getPreparingStmt().getFarragoTypeFactory(),
-            lcsTable.getCwmColumnSet(),
-            unclusteredIndex);
-    }
-    
     // Override TableModificationRelBase
     public void explain(RelOptPlanWriter pw)
     {        
@@ -143,43 +129,8 @@ extends MedAbstractFennelTableModRel
         FemExecutionStreamDef input =
             implementor.visitFennelChild((FennelRel) getChild());
         
-        CwmTable table = (CwmTable) lcsTable.getCwmColumnSet();
         FarragoRepos repos = FennelRelUtil.getRepos(this);
-        LcsIndexGuide indexGuide = lcsTable.getIndexGuide();
         
-        //
-        // 1. Setup the SplitterStreamDef
-        //
-        FemSplitterStreamDef splitter = indexGuide.newSplitter(this);
-        
-        //
-        // 2. Setup all the LcsClusterAppendStreamDef's
-        //    - Get all the clustered indices.
-        //    - For each index, set up the corresponding clusterAppend stream
-        //      def.
-        //
-        
-        ArrayList<FemLcsClusterAppendStreamDef> clusterAppendDefs = 
-            new ArrayList<FemLcsClusterAppendStreamDef>();
-        
-        // Get the clustered indexes associated with this table.
-        List<FemLocalIndex> clusteredIndexes =
-            FarragoCatalogUtil.getClusteredIndexes(repos, table);
-        
-        for (FemLocalIndex clusteredIndex : clusteredIndexes) {            
-            clusterAppendDefs.add(
-                indexGuide.newClusterAppend(this, clusteredIndex));
-        }
-        
-        //
-        // 3. Setup the BarrierStreamDef.
-        //
-        FemBarrierStreamDef barrier = indexGuide.newBarrier(this);
-        
-        //
-        // 4. Set up buffering if required.
-        // We only need a buffer if the target table is also a source.
-        //
         if (inputNeedBuffer()) {
             FemBufferingTupleStreamDef buffer = newInputBuffer(repos);
             implementor.addDataFlowFromProducerToConsumer(
@@ -188,97 +139,14 @@ extends MedAbstractFennelTableModRel
             input = buffer;
         }
         
-        //
-        // 5. Link the StreamDefs together.
-        //                               -> clusterAppend ->
-        // input( -> buffer) -> splitter -> clusterAppend -> barrier
-        //                                  ...
-        //                               -> clusterAppned ->
-        //
-        implementor.addDataFlowFromProducerToConsumer(
-            input,
-            splitter);
+        LcsAppendStreamDef appendStreamDef =
+            new LcsAppendStreamDef(
+                repos,
+                lcsTable, 
+                input,
+                this);
         
-        for (Object streamDef : clusterAppendDefs) {
-            FemLcsClusterAppendStreamDef clusterAppend =
-                (FemLcsClusterAppendStreamDef) streamDef;
-            implementor.addDataFlowFromProducerToConsumer(
-                splitter,
-                clusterAppend);
-            implementor.addDataFlowFromProducerToConsumer(
-                clusterAppend,
-                barrier);                
-        }
-        
-        //
-        // 6. If there are no unclustered indexes, stop at the barrier
-        //
-        List<FemLocalIndex> unclusteredIndexes =
-            FarragoCatalogUtil.getUnclusteredIndexes(repos, table);
-        if (unclusteredIndexes.size() == 0) {
-            return barrier;
-        }
-        
-        // Update clustered index scans
-        for (Object streamDef : clusterAppendDefs) {
-            FemLcsClusterAppendStreamDef clusterAppend =
-                (FemLcsClusterAppendStreamDef) streamDef;
-            clusterAppend.setOutputDesc(
-                indexGuide.getUnclusteredInputDesc());
-        }
-        barrier.setOutputDesc(indexGuide.getUnclusteredInputDesc());
-        
-        //
-        // 7. Setup unclustered indices.
-        //    - For each index, set up the corresponding bitmap append
-        //
-        ArrayList<LcsCompositeStreamDef> bitmapAppendDefs = 
-            new ArrayList<LcsCompositeStreamDef>();
-        
-        for (FemLocalIndex unclusteredIndex : unclusteredIndexes) {
-            LcsIndexGuide ucxIndexGuide = getIndexGuide(unclusteredIndex);
-            FennelRelParamId dynParamId = implementor.allocateRelParamId();
-            bitmapAppendDefs.add( 
-                ucxIndexGuide.newBitmapAppend(
-                    this, unclusteredIndex, implementor, false, dynParamId));
-        }
-        
-        //
-        // 8. Setup a bitmap SplitterStreamDef
-        //
-        FemSplitterStreamDef bitmapSplitter = 
-            indexGuide.newSplitter(this);
-        
-        //
-        // 9. Setup a bitmap BarrierStreamDef
-        //
-        FemBarrierStreamDef bitmapBarrier = 
-            indexGuide.newBarrier(this);
-        
-        //
-        // 10. Link the bitmap StreamDefs together.
-        //                     -> bitmap append streams ->
-        // barrier -> splitter -> bitmap append streams -> barrier
-        //                                  ...
-        //                     -> bitmap append streams ->
-        //
-        
-        implementor.addDataFlowFromProducerToConsumer(
-            barrier,
-            bitmapSplitter);
-        
-        for (Object streamDef : bitmapAppendDefs) {
-            LcsCompositeStreamDef bitmapAppend =
-                (LcsCompositeStreamDef) streamDef;
-            implementor.addDataFlowFromProducerToConsumer(
-                bitmapSplitter,
-                bitmapAppend.getConsumer());
-            implementor.addDataFlowFromProducerToConsumer(
-                bitmapAppend.getProducer(),
-                bitmapBarrier);                
-        }
-        
-        return bitmapBarrier;
+        return appendStreamDef.toStreamDef(implementor);
     }
 }
 

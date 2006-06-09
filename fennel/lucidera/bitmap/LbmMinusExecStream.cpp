@@ -23,7 +23,7 @@
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/lucidera/bitmap/LbmMinusExecStream.h"
 
-FENNEL_BEGIN_CPPFILE("$Id$");
+FENNEL_BEGIN_CPPFILE("$Id:");
 
 LbmMinusExecStream::LbmMinusExecStream() : LbmBitOpExecStream()
 {
@@ -40,6 +40,7 @@ void LbmMinusExecStream::open(bool restart)
     childrenDone = false;
     needToRead = true;
     minChildRid = LcsRid(0);
+    advancePending = false;
     // since the children need to read till EOS, don't set a rowLimit
     rowLimit = 0;
 }
@@ -77,9 +78,17 @@ ExecStreamResult LbmMinusExecStream::execute(ExecStreamQuantum const &quantum)
         // minus the children input, if they haven't all reached EOS
         if (!childrenDone) {
            
-            rc = advanceChildren(baseRid);
-            if (rc != EXECRC_YIELD) {
-                return rc;
+            if (advancePending) {
+                rc = advanceChild(advanceChildInputNo, advanceChildRid);
+                if (rc != EXECRC_YIELD && rc != EXECRC_EOS) {
+                    return rc;
+                advancePending = false;
+                }
+            } else {
+                rc = advanceChildren(baseRid);
+                if (rc != EXECRC_YIELD) {
+                    return rc;
+                }
             }
 
             rc = minusSegments(baseRid, baseByteSeg, baseLen);
@@ -103,6 +112,12 @@ ExecStreamResult LbmMinusExecStream::execute(ExecStreamQuantum const &quantum)
     }
 
     return EXECRC_QUANTUM_EXPIRED;
+}
+
+ExecStreamResult LbmMinusExecStream::advanceChild(int inputNo, LcsRid rid)
+{
+    ExecStreamResult rc = segmentReaders[inputNo].advanceToRid(rid);
+    return rc;
 }
 
 ExecStreamResult LbmMinusExecStream::advanceChildren(LcsRid baseRid)
@@ -172,6 +187,9 @@ ExecStreamResult LbmMinusExecStream::minusSegments(
         rc = segmentReaders[minInput].advanceToRid(
             currRid + currLen * LbmSegment::LbmOneByteSize);
         if (rc != EXECRC_YIELD && rc != EXECRC_EOS) {
+            advancePending = true;
+            advanceChildRid = currRid + currLen * LbmSegment::LbmOneByteSize;
+            advanceChildInputNo = minInput;
             return rc;
         }
     }
