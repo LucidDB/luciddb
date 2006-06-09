@@ -9,6 +9,9 @@ create schema lhx;
 set schema 'lhx';
 set path 'lhx';
 
+-- force usage of Java calculator
+alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+
 create table lhxemps(
     empno integer not null,
     ename varchar(40),
@@ -48,6 +51,9 @@ drop schema lhx cascade;
 create schema lhx;
 set schema 'lhx';
 set path 'lhx';
+
+-- force usage of Java calculator
+alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
 
 alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
 
@@ -145,9 +151,10 @@ where lhxemps.deptno = lhxdepts.deptnoB and lhxemps.deptno = lhxdepts2.deptnoC
     and lhxemps.deptno = lhxdepts3.deptnoF and lhxemps.deptno = lhxdepts4.deptnoG
 order by empno, ename;
 
--- only identical types are recognized and can use hash join
+-- explicit type casting is added because hash join requires 
+-- join keys have identical types
 create table lhxemps2(
-    enameA varchar(40))
+    enameA varchar(20))
 server sys_column_store_data_server;
 
 insert into lhxemps2 select name from sales.emps;
@@ -163,10 +170,58 @@ select * from lhxemps, lhxemps2
 where lhxemps.ename = lhxemps2.enameA
 order by empno, ename;
 
+-- try both explicit and implicit casting
+explain plan for
+select * from lhxemps, lhxemps2
+where lhxemps.ename = cast(lhxemps2.enameA as varchar(40))
+      and lhxemps.ename = lhxemps2.enameA
+order by empno, ename;
+
+select * from lhxemps, lhxemps2
+where lhxemps.ename = cast(lhxemps2.enameA as varchar(40))
+      and lhxemps.ename = lhxemps2.enameA
+order by empno, ename;
+
+explain plan for
+select * from lhxemps, lhxemps2
+where cast(lhxemps.ename as varchar(20)) = lhxemps2.enameA
+      and lhxemps.ename = cast(lhxemps2.enameA as varchar(40))
+order by empno, ename;
+
+select * from lhxemps, lhxemps2
+where cast(lhxemps.ename as varchar(20)) = lhxemps2.enameA
+      and lhxemps.ename = cast(lhxemps2.enameA as varchar(40))
+order by empno, ename;
+
+-- make sure casting in both directions work
+explain plan for
+select * from lhxemps2, lhxemps
+where lhxemps2.enameA = lhxemps.ename
+order by empno, ename;
+
+select * from lhxemps2, lhxemps
+where lhxemps2.enameA = lhxemps.ename
+order by empno, ename;
+
+drop table lhxemps2;
+create table lhxemps2(
+    enameA varchar(60) not null)
+server sys_column_store_data_server;
+
+insert into lhxemps2 select name from sales.emps;
+
+explain plan for
+select * from lhxemps2, lhxemps
+where lhxemps2.enameA = lhxemps.ename
+order by empno, ename;
+
+select * from lhxemps2, lhxemps
+where lhxemps2.enameA = lhxemps.ename
+order by empno, ename;
+
+
 -- trailing blanks are insignificant when joining two
 -- character types.
--- currently since hash join does not do type casting,
--- if join keys have different types, do not use hash join
 create table lhxemps3(
     enameB char(20))
 server sys_column_store_data_server;
@@ -186,8 +241,15 @@ order by empno, ename;
 
 -- column values containing null
 -- nulls should not join with nulls of a different type
--- note a join with keys of different types does not use hash join
+drop table lhxemps2;
+create table lhxemps2(
+    enameA varchar(60))
+server sys_column_store_data_server;
+
+insert into lhxemps2 select name from sales.emps;
+
 insert into lhxemps2 values(null);
+
 insert into lhxemps3 values(null);
 
 explain plan for
@@ -251,15 +313,43 @@ select * from lhxemps3 full outer join lhxemps4
 on lhxemps3.enameB = lhxemps4.enameC
 order by 1, 2;
 
--- FIXME: currently only join conditions referencing input fields are
--- recognized by hash join; cast() is produced by the input so the join
--- condition is not recognized.
--- In future, using an explicit cast operator will make the joinkeys
+-- Use an explicit cast operator will make the joinkeys
 -- have same data types. HashJoin can be used.
 
 explain plan for
 select * from lhxemps3 inner join lhxemps4
 on lhxemps3.enameB = cast(lhxemps4.enameC as char(20))
+order by 1, 2;
+
+select * from lhxemps3 inner join lhxemps4
+on lhxemps3.enameB = cast(lhxemps4.enameC as char(20))
+order by 1, 2;
+
+explain plan for
+select * from lhxemps3 inner join lhxemps4
+on upper(lhxemps3.enameB) = upper(cast(lhxemps4.enameC as char(20)))
+order by 1, 2;
+
+select * from lhxemps3 inner join lhxemps4
+on upper(lhxemps3.enameB) = upper(cast(lhxemps4.enameC as char(20)))
+order by 1, 2;
+
+explain plan for
+select * from lhxemps3 inner join lhxemps4
+on upper(cast(lhxemps3.enameB as char(20))) = upper(cast(lhxemps4.enameC as char(20)))
+order by 1, 2;
+
+select * from lhxemps3 inner join lhxemps4
+on upper(cast(lhxemps3.enameB as char(20))) = upper(cast(lhxemps4.enameC as char(20)))
+order by 1, 2;
+
+explain plan for
+select * from lhxemps3 inner join lhxemps4
+on upper(cast(lhxemps3.enameB as char(20))) = cast(lhxemps4.enameC as char(20))
+order by 1, 2;
+
+select * from lhxemps3 inner join lhxemps4
+on upper(cast(lhxemps3.enameB as char(20))) = cast(lhxemps4.enameC as char(20))
 order by 1, 2;
 
 -- not null types are compatible with hash outer joins
@@ -287,6 +377,17 @@ order by 1, 2;
 --------------------
 -- hash aggregate --
 --------------------
+
+-- make sure nulls are in the same group
+truncate table lhxemps;
+insert into lhxemps values (10, NULL, null);
+insert into lhxemps values (20, 'Lance', null);
+insert into lhxemps values (30, NULL, null);
+
+explain plan for
+select ename from lhxemps group by ename order by 1;
+
+select ename from lhxemps group by ename order by 1;
 
 truncate table lhxemps;
 insert into lhxemps select empno, name, deptno from sales.emps;
@@ -362,93 +463,32 @@ select empno, min(ename), max(ename) from lhxemps group by empno;
 
 select empno, min(ename), max(ename) from lhxemps group by empno;
 
-------------------------------------
--- the following are from agg.sql --
-------------------------------------
-set schema 'sales';
+---------
+-- Bug --
+---------
+create table emps1(
+    ename1 varchar(20))
+server sys_column_store_data_server;
 
-alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+drop table emps2;
+create table emps2(
+    ename2 varchar(20))
+server sys_column_store_data_server;
 
-select count(*) from depts;
+insert into emps1 values(NULL);
+insert into emps1 values(NULL);
 
-select count(city) from emps;
+explain plan for select ename1 from emps1 group by ename1;
+explain plan for select distinct ename1 from emps1;
+explain plan for select count(*) from emps1 group by ename1;
+explain plan for select count(ename1) from emps1 group by ename1;
+explain plan for select count(distinct ename1) from emps1;
 
-select count(city) from emps where empno > 100000;
-
-select sum(deptno) from depts;
-
-select sum(deptno) from depts where deptno > 100000;
-
-select max(deptno) from depts;
-
-select min(deptno) from depts;
-
-select avg(deptno) from depts;
-
-------------
--- group bys
-------------
-
-select deptno, count(*) from emps group by deptno order by 1;
-
--- Issue the same statement again to make sure LhxAggStream
--- is in good state when reopened
-select deptno, count(*) from emps group by deptno order by 1;
-
-select d.name, count(*) from emps e, depts d
-    where d.deptno = e.deptno group by d.name order by 1;
-
--- Test group by key where key value could be NULL
-select deptno, gender, min(age), max(age) from emps
-    group by deptno, gender order by 1, 2;
-
-select sum(age) from emps group by deptno order by 1;
-
--- Test where input stream is empty
-select deptno, count(*) from emps where deptno < 0 group by deptno order by 1;
-
-
--- verify plans
-!set outputformat csv
-
-explain plan for
-select count(*) from depts;
-
-explain plan for
-select count(city) from emps;
-
-explain plan for
-select sum(deptno) from depts;
-
-explain plan for
-select max(deptno) from depts;
-
-explain plan for
-select min(deptno) from depts;
-
-explain plan for
-select avg(deptno) from depts;
-
-explain plan without implementation for
-select deptno,max(name) from sales.emps group by deptno order by 1;
-
------------------------------
--- verify plans for group bys
------------------------------
-
-explain plan for 
-select deptno, count(*) from emps group by deptno order by 1;
-
-explain plan for
-select d.name, count(*) from emps e, depts d
-    where d.deptno = e.deptno group by d.name order by 1;
-
-explain plan for
-select deptno, gender, min(age), max(age) from emps
-    group by deptno, gender order by 1, 2;
-
-explain plan for
-select sum(age) from emps group by deptno order by 1;
+select ename1 from emps1 group by ename1;
+select distinct ename1 from emps1;
+select count(*) from emps1 group by ename1;
+select count(ename1) from emps1 group by ename1;
+select count(distinct ename1) from emps1;
 
 --------------
 -- Clean up --

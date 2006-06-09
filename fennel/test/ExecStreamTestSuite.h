@@ -40,6 +40,8 @@ class ExecStreamTestSuite : public ExecStreamUnitTestBase
 protected:
     void testCartesianJoinExecStream(uint nRowsLeft,uint nRowsRight);
     void testGroupAggExecStreamNrows(uint nrows);
+    void testReshapeExecStream(
+        bool cast, bool filter, uint expectedNRows, int expectedStart);
     
 public:
     /**
@@ -63,6 +65,10 @@ public:
             FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testGroupAggExecStream2);
             FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testGroupAggExecStream3);
             FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testGroupAggExecStream4);
+            FENNEL_UNIT_TEST_CASE(
+                ExecStreamTestSuite,testReshapeExecStreamCastFilter);
+            FENNEL_UNIT_TEST_CASE(
+                ExecStreamTestSuite,testReshapeExecStreamNoCastFilter);
         }
     }
 
@@ -72,6 +78,7 @@ public:
     void testSegBufferExecStream();
     void testCountAggExecStream();
     void testSumAggExecStream();
+    void testReshapeExecStream();
     
     void testCartesianJoinExecStreamOuter()
     {
@@ -106,6 +113,16 @@ public:
     void testGroupAggExecStream4()
     {
         testGroupAggExecStreamNrows(259*2);
+    }
+
+    void testReshapeExecStreamCastFilter()
+    {
+        testReshapeExecStream(true, true, 10, 500);
+    }
+
+    void testReshapeExecStreamNoCastFilter()
+    {
+        testReshapeExecStream(false, false, 1000, 0);
     }
 };
 

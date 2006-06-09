@@ -102,9 +102,11 @@ public class PushProjectPastJoinRule extends RelOptRule
             leftBitmap, rightBitmap, preserveExprs, preserveLeft,
             preserveRight);
         
-        // if all fields are being projected, no point in proceeding
-        // any further
-        if (projRefs.cardinality() == nTotalFields) {
+        // if all fields are being projected and there are no special
+        // expressions, no point in proceeding any further
+        if (projRefs.cardinality() == nTotalFields &&
+            preserveLeft.size() == 0 && preserveRight.size() == 0)
+        {
             return;
         }
 
@@ -137,11 +139,25 @@ public class PushProjectPastJoinRule extends RelOptRule
 
         int[] adjustments = pushProject.getAdjustments(
             joinFields, projRefs, nFieldsLeft, preserveLeft.size());
-        if (joinRel.getCondition() != null) {   
+        if (joinRel.getCondition() != null) {
+            RelDataTypeField[] projLeftFields =
+                leftProjRel.getRowType().getFields();
+            RelDataTypeField[] projRightFields =
+                rightProjRel.getRowType().getFields();
+            RelDataTypeField[] projJoinFields =
+                new RelDataTypeField[
+                    projLeftFields.length + projRightFields.length];
+            System.arraycopy(
+                leftProjRel.getRowType().getFields(), 0, projJoinFields, 0,
+                projLeftFields.length);
+            System.arraycopy(
+                rightProjRel.getRowType().getFields(), 0, projJoinFields,
+                projLeftFields.length, projRightFields.length);
             newJoinFilter = pushProject.convertRefsAndExprs(
                 rexBuilder, joinRel.getCondition(), joinFields, adjustments,
                 preserveLeft, nLeftProject, preserveRight,
-                nLeftProject + preserveLeft.size() + nRightProject);
+                nLeftProject + preserveLeft.size() + nRightProject,
+                projJoinFields);
         }
         
         // create a new joinrel with the projected children

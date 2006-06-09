@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/med/flatfile.sql#15 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev_lcs/farrago/unitsql/med/flatfile.sql#11 $
 0: jdbc:farrago:> -- Test flatfile namespace plugin
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema flatfile_schema;
@@ -319,7 +319,7 @@ Error: Fixed position parsing, enabled by setting an empty field delimiter, requ
 0: jdbc:farrago:> --     This type of query returns the width of a table's fields. it is an 
 0: jdbc:farrago:> --     internal query, and should not appear in user level documentation.
 0: jdbc:farrago:> --
-0: jdbc:farrago:> select * from flatfile_server.SAMPLE_DESC."example";
+0: jdbc:farrago:> select * from flatfile_server."DESCRIBE"."example";
 +--------------+
 | FIELD_SIZES  |
 +--------------+
@@ -371,7 +371,7 @@ Error: Could not read header from data file unitsql/med/flatfiles/empty.txt (sta
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- 3.5 Describe a fixed format file (illegal)
 0: jdbc:farrago:> --
-0: jdbc:farrago:> select * from flatfile_server_fixed.SAMPLE_DESC."fixed";
+0: jdbc:farrago:> select * from flatfile_server_fixed."DESCRIBE"."fixed";
 Error: Cannot derive column sizes for fixed position data file 'fixed' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --

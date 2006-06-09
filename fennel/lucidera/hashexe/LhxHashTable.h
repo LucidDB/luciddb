@@ -546,11 +546,16 @@ class LhxHashTable
     uint maxBufferSize;
 
     /**
-     * Marks if this hash table is built for aggregation. Aggregating hash
+     * Marks if this hash table is built for Group-by. Group-by hash
      * table only contains keys(group by keys plus aggregates) and does not
      * contain data portion.
      */
-    bool isAggregate;
+    bool isGroupBy;
+
+    /**
+     * For group-bys, marks if there are any aggregates.
+     */
+    bool hasAggregates;
 
     /**
      * aggregate computers passed in from the agg exec stream.
@@ -791,7 +796,7 @@ public:
     /**
      * @return if this hash table aggregates input
      */
-    inline bool isHashAggregate() const;
+    inline bool isHashGroupBy() const;
 
     /**
      * Print the content of the node associated with this accessor.
@@ -814,7 +819,7 @@ class LhxHashTableReader
      * contain data portion. The reader behavior will thus be different from
      * reading a hash table built for joins.
      */
-    bool isAggregate;
+    bool isGroupBy;
 
     /**
      * Current read location.
@@ -1103,7 +1108,7 @@ inline PBuffer LhxHashTable::findKey(
 
 inline uint LhxHashTable::getNumSlots() const { return numSlots; }
 
-inline bool LhxHashTable::isHashAggregate() const { return isAggregate; }
+inline bool LhxHashTable::isHashGroupBy() const { return isGroupBy; }
 
 inline LhxHashTable *LhxHashTableReader::getHashTable() {return hashTable;}
 

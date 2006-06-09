@@ -177,8 +177,8 @@ typedef JniProxyIter<ProxyMergeStreamDef> SharedProxyMergeStreamDef;
 class ProxyMockTupleStreamDef;
 typedef JniProxyIter<ProxyMockTupleStreamDef> SharedProxyMockTupleStreamDef;
 
-class ProxyReshapeExecStream;
-typedef JniProxyIter<ProxyReshapeExecStream> SharedProxyReshapeExecStream;
+class ProxyReshapeStreamDef;
+typedef JniProxyIter<ProxyReshapeStreamDef> SharedProxyReshapeStreamDef;
 
 class ProxySortedAggStreamDef;
 typedef JniProxyIter<ProxySortedAggStreamDef> SharedProxySortedAggStreamDef;
@@ -273,10 +273,10 @@ class ProxyExecutionStreamDef
 public:
 SharedProxyTupleDescriptor getOutputDesc();
 static jmethodID meth_getOutputDesc;
-SharedProxyExecStreamDataFlow getInputFlow();
-static jmethodID meth_getInputFlow;
 SharedProxyExecStreamDataFlow getOutputFlow();
 static jmethodID meth_getOutputFlow;
+SharedProxyExecStreamDataFlow getInputFlow();
+static jmethodID meth_getInputFlow;
 std::string getName();
 static jmethodID meth_getName;
 };
@@ -829,8 +829,16 @@ int32_t getNumBuildRows();
 static jmethodID meth_getNumBuildRows;
 int32_t getCndBuildKeys();
 static jmethodID meth_getCndBuildKeys;
+bool isLeftInner();
+static jmethodID meth_isLeftInner;
+bool isRightInner();
+static jmethodID meth_isRightInner;
 bool isRightOuter();
 static jmethodID meth_isRightOuter;
+bool isLeftDistinct();
+static jmethodID meth_isLeftDistinct;
+bool isRightDistinct();
+static jmethodID meth_isRightDistinct;
 };
 
 class ProxyMergeStreamDef
@@ -849,7 +857,7 @@ int64_t getRowCount();
 static jmethodID meth_getRowCount;
 };
 
-class ProxyReshapeExecStream
+class ProxyReshapeStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
@@ -1021,10 +1029,10 @@ bool isPhysical();
 static jmethodID meth_isPhysical;
 std::string getRange();
 static jmethodID meth_getRange;
-SharedProxyWindowPartitionDef getPartition();
-static jmethodID meth_getPartition;
 SharedProxyWindowStreamDef getWindowStream();
 static jmethodID meth_getWindowStream;
+SharedProxyWindowPartitionDef getPartition();
+static jmethodID meth_getPartition;
 int32_t getOffset();
 static jmethodID meth_getOffset;
 };
@@ -1183,7 +1191,7 @@ virtual void visit(ProxyMergeStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyMockTupleStreamDef &)
 { unhandledVisit(); }
-virtual void visit(ProxyReshapeExecStream &)
+virtual void visit(ProxyReshapeStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxySortedAggStreamDef &)
 { unhandledVisit(); }

@@ -299,7 +299,13 @@ void LhxHashTable::init(
     aggWorkingTuple.compute(hashInfo.inputDesc.back());
     aggResultTuple.computeAndAllocate(hashInfo.inputDesc.back());
 
-    isAggregate = true;
+    isGroupBy = true;
+    
+    if (aggList->size() > 0) {
+        hasAggregates = true;
+    } else {
+        hasAggregates = false;
+    }
 }
 
 void LhxHashTable::init(
@@ -341,7 +347,7 @@ void LhxHashTable::init(
     aggsProj = hashInfo.aggsProj;
     dataProj = hashInfo.dataProj;
 
-    isAggregate = false;
+    isGroupBy = false;
 
     /*
      * These steps initialize the keyColsProjInKey and aggsProjInKey which are
@@ -707,7 +713,7 @@ bool LhxHashTable::addKeyData(TupleData const &inputTuple)
     TupleData tmpKeyTuple;
     PBuffer newKey = NULL;
 
-    if (!isAggregate) {
+    if (!isGroupBy) {
         tmpKeyTuple.projectFrom(inputTuple, keyColsProj);
         hashKeyAccessor.checkStorageSize(tmpKeyTuple, maxBufferSize);
         uint newKeyLen =
@@ -731,7 +737,7 @@ bool LhxHashTable::addKeyData(TupleData const &inputTuple)
     TupleData tmpDataTuple;
     PBuffer newData = NULL;
 
-    if (!isAggregate) {
+    if (!isGroupBy) {
         /*
          * Tuple contains data portion. i.e. this is not a group by case.
          */
@@ -741,7 +747,7 @@ bool LhxHashTable::addKeyData(TupleData const &inputTuple)
         newData = allocBuffer(newDataLen);
     }
 
-    if (!newKey || (!isAggregate && !newData)) {
+    if (!newKey || (!isGroupBy && !newData)) {
         /*
          * Ran out of memory.
          */
@@ -753,7 +759,7 @@ bool LhxHashTable::addKeyData(TupleData const &inputTuple)
     hashKeyAccessor.setMatched(false);
     hashKeyAccessor.setNext(newNextKey);
 
-    if (!isAggregate) {
+    if (!isGroupBy) {
         /*
          * Store the key.
          */
@@ -886,7 +892,7 @@ bool LhxHashTable::addTuple(TupleData const &inputTuple)
 
     if (!destKeyLoc) {
         /*
-         * Key is not presetn in the hash table. Add both the key and the data.
+         * Key is not present in the hash table. Add both the key and the data.
          */
         return addKeyData(inputTuple);
     } else {
@@ -895,7 +901,7 @@ bool LhxHashTable::addTuple(TupleData const &inputTuple)
          * If hash join, add to the data list corresponding this key.
          * If hash aggregate, aggregate the new data.
          */
-        if (!isAggregate) {
+        if (!isGroupBy) {
             PBuffer destKey;
             /*
              * Need to copy destKey out as destKeyLoc might not be aligned.
@@ -906,6 +912,9 @@ bool LhxHashTable::addTuple(TupleData const &inputTuple)
 
             return addData(destKey, inputTuple);
         } else {
+            if (!hasAggregates) {
+                return true;
+            }
             return aggData(destKeyLoc, inputTuple);
         }
     }
@@ -1006,7 +1015,7 @@ bool LhxHashTableReader::advanceSlot()
     
     hashKeyAccessor.setCurrent(curKey, true);
 
-    if (!isAggregate) {
+    if (!isGroupBy) {
         curData = hashKeyAccessor.getFirstData();
         assert(curData);
         hashDataAccessor.setCurrent(curData, true);
@@ -1030,7 +1039,7 @@ bool LhxHashTableReader::advanceKey()
     
     if (curKey) {
         hashKeyAccessor.setCurrent(curKey, true);
-        if (!isAggregate) {
+        if (!isGroupBy) {
             curData = hashKeyAccessor.getFirstData();
             assert(curData);
             hashDataAccessor.setCurrent(curData, true);
@@ -1043,7 +1052,7 @@ bool LhxHashTableReader::advanceKey()
 
 bool LhxHashTableReader::advanceData()
 {
-    if (isAggregate) {
+    if (isGroupBy) {
         return false;
     }
 
@@ -1059,7 +1068,7 @@ bool LhxHashTableReader::advanceData()
 void LhxHashTableReader::produceTuple(TupleData &outputTuple)
 {
     hashKeyAccessor.unpack(outputTuple, keyColsAndAggsProj);
-    if (!isAggregate) {
+    if (!isGroupBy) {
         hashDataAccessor.unpack(outputTuple, dataProj);
     }
 }
@@ -1112,7 +1121,7 @@ void LhxHashTableReader::init(
     hashDataAccessor.init(dataDesc);
 
     hashTable = hashTableInit;
-    isAggregate = hashTable->isHashAggregate();
+    isGroupBy = hashTable->isHashGroupBy();
  
     /*
      * By default, this reader is not associated with any key, i.e. it covers

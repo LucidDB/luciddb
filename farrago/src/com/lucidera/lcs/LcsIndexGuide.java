@@ -634,9 +634,13 @@ public class LcsIndexGuide
         return splitter;          
     }
     
-    protected FemBarrierStreamDef newBarrier(FennelRel rel)
+    protected FemBarrierStreamDef newBarrier(FennelRel rel, int rowCountInput)
     {
         FemBarrierStreamDef barrier = repos.newFemBarrierStreamDef();
+        // rowCountInput indicates which input stream contains the row count
+        // that the barrier should produce; if it is set to -1, then all
+        // inputs must produce the same row count
+        barrier.setRowCountInput(rowCountInput);
         
         barrier.setOutputDesc(
             FennelRelUtil.createTupleDescriptorFromRowType(

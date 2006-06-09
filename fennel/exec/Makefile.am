@@ -24,7 +24,8 @@ SortedAggExecStream.cpp \
 DiffluenceExecStream.cpp \
 SplitterExecStream.cpp \
 BarrierExecStream.cpp \
-ValuesExecStream.cpp
+ValuesExecStream.cpp \
+ReshapeExecStream.cpp
 
 DESIGN_DOCS=\
 ExecStreamDesign.cpp \
