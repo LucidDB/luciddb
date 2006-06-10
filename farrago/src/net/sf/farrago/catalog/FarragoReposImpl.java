@@ -415,6 +415,14 @@ public abstract class FarragoReposImpl extends FarragoMetadataFactoryImpl
             return sequence;
         }
     }
+
+    /* (non-Javadoc)
+     * @see net.sf.farrago.catalog.FarragoRepos#expandProperties(java.lang.String)
+     */
+    public String expandProperties(String value)
+    {
+        return FarragoProperties.instance().expandProperties(value);
+    }
 }
 
 

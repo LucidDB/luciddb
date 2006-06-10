@@ -50,7 +50,7 @@ public class FarragoProperties extends Properties
     //~ Static fields/initializers --------------------------------------------
 
     private static FarragoProperties instance;
-    private static final String PROPERTY_EXPANSION_PATTERN = "\\$\\{\\w+\\}";
+    private static final String PROPERTY_EXPANSION_PATTERN = "\\$\\{\\w+(\\.\\w+)*\\}";
 
     //~ Instance fields -------------------------------------------------------
 
@@ -180,16 +180,23 @@ public class FarragoProperties extends Properties
     // catalogDir, etc.  Also, the definition of a property name
     // should probably be expanded to include more punctuation and/or
     // non-ASCII letters.
+    
+    // UPDATE: RLN: 6/9/2006: Added support for expanding any named
+    // property in this object. Property names now allow periods as we
+    // normally use them (e.g., foo.bar), but disallows leading, trailing,
+    // multiple, etc.
 
     /**
      * Expands properties embedded in the given String.  Property
      * names are encoded as in Ant: <code>${propertyName}</code>.
      * Property names must match the {@link Pattern} \w character
-     * class (<code>[a-zA-z_0-9]</code>).  References to unknown
+     * class (<code>[a-zA-z_0-9]</code>); groups of characters may be
+     * separated by periods (such as <code>net.sf.farrago.home</code>).
+     * <p>References to unknown or undefined
      * properties are not modified (e.g., the expansion of
      * <code>"${UNKNOWN}"</code> is <code>"${UNKNOWN}"</code>).
      *
-     * <p>Currently, the only supported properties are
+     * <p>Currently, two special properties are supported:
      *
      *<ul>
      *<li><code>${FARRAGO_HOME}</code>:  replaced with the value
@@ -197,6 +204,9 @@ public class FarragoProperties extends Properties
      *<li><code>${FARRAGO_CATALOG_DIR}</code>:  replaced with the value
      * of {@link #getCatalogDir()}.
      *</ul>
+     *
+     * <p>All other tokens are used as keys to property values in this
+     * object.
      *
      * @param value a value that may or may not contain property names
      *              to be expanded.
@@ -223,6 +233,8 @@ public class FarragoProperties extends Properties
                 replacement = homeDir.get();
             } else if (propertyName.equals("FARRAGO_CATALOG_DIR")) {
                 replacement = getCatalogDir().getAbsolutePath();
+            } else {
+                replacement = getProperty(propertyName);
             }
             
             if (replacement != null) {

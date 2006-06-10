@@ -290,18 +290,29 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
         return loadedColumnSet;
     }
     
+    /**
+     * Extracts the storage options for an element into a Properties. No
+     * duplicate property names are allowed. Inline property references
+     * (such as <code>${varname}</code> get expanded on read.
+     * @param element FemElement we want the options from
+     * @return Properties object populated with the storage options
+     */
     private Properties getStorageOptionsAsProperties(
         FemElementWithStorageOptions element)
     {
         Properties props = new Properties();
 
         // TODO:  validate no duplicates
+        String optName, optValue;
         Iterator iter = element.getStorageOptions().iterator();
         while (iter.hasNext()) {
             FemStorageOption option = (FemStorageOption) iter.next();
+            optName = option.getName();
+            assert (!props.containsKey(optName));
+            optValue = getRepos().expandProperties(option.getValue());
             props.setProperty(
-                option.getName(),
-                option.getValue());
+                optName,
+                optValue);
         }
         return props;
     }
