@@ -68,7 +68,7 @@ public class SqlOrderByOperator extends SqlSpecialOperator
         writer.sep(getName());
         final SqlWriter.Frame listFrame =
             writer.startList(SqlWriter.FrameType.OrderByList);
-        operands[ORDER_OPERAND].unparse(writer, 0, 0);
+        unparseListClause(writer, operands[ORDER_OPERAND]);
         writer.endList(listFrame);
         writer.endList(frame);
     }

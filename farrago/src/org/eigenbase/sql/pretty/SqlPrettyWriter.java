@@ -329,8 +329,8 @@ public class SqlPrettyWriter implements SqlWriter
     }
 
     /**
-     * Sets whether each item in the select clause is on its own line.
-     * Default false.
+     * Sets whether each item in a SELECT list, GROUP BY list, or ORDER BY list
+     * is on its own line.  Default false.
      */
     public void setSelectListItemsOnSeparateLines(boolean b)
     {
@@ -436,8 +436,12 @@ public class SqlPrettyWriter implements SqlWriter
                 open,
                 close,
                 indentation,
-                false, false,
-                indentation, selectListItemsOnSeparateLines, false, false);
+                selectListItemsOnSeparateLines,
+                false,
+                indentation,
+                selectListItemsOnSeparateLines,
+                false,
+                false);
 
         case FrameType.Subquery_ordinal:
             if (subqueryStyle == SubqueryStyle.Black) {
@@ -532,6 +536,7 @@ public class SqlPrettyWriter implements SqlWriter
                 false, false,
                 indentation, false, false, false);
 
+        case FrameType.Identifier_ordinal:
         case FrameType.Simple_ordinal:
             return new FrameImpl(
                 frameType,
@@ -645,7 +650,14 @@ public class SqlPrettyWriter implements SqlWriter
         assert frameType != null;
         if (frame != null) {
             ++frame.itemCount;
-            currentIndent += frame.extraIndent;
+            // REVIEW jvs 9-June-2006:  This is part of the fix for FRG-149
+            // (extra frame for identifier was leading to extra indentation,
+            // causing select list to come out raggedy with identifiers
+            // deeper than literals); are there other frame types
+            // for which extra indent should be suppressed?
+            if (frameType.needsIndent()) {
+                currentIndent += frame.extraIndent;
+            }
             assert !listStack.contains(frame);
             listStack.push(frame);
         }
@@ -656,7 +668,8 @@ public class SqlPrettyWriter implements SqlWriter
 
     public void endList(Frame frame)
     {
-        Util.pre(frame == this.frame, "Frame " + ((FrameImpl) frame).frameType +
+        FrameImpl endedFrame = (FrameImpl) frame;
+        Util.pre(frame == this.frame, "Frame " + endedFrame.frameType +
             " does not match current frame " + this.frame.frameType);
         if (this.frame == null) {
             throw new RuntimeException("No list started");
@@ -679,7 +692,9 @@ public class SqlPrettyWriter implements SqlWriter
             assert currentIndent == 0 : currentIndent;
         } else {
             this.frame = (FrameImpl) listStack.pop();
-            currentIndent -= this.frame.extraIndent;
+            if (endedFrame.frameType.needsIndent()) {
+                currentIndent -= this.frame.extraIndent;
+            }
         }
     }
 
@@ -910,13 +925,12 @@ public class SqlPrettyWriter implements SqlWriter
 
         protected void sep(boolean printFirst, String sep)
         {
+            if ((newlineBeforeSep && itemCount > 0) ||
+                (newlineAfterOpen && itemCount == 0))
+            {
+                newlineAndIndent();
+            }
             if (itemCount > 0 || printFirst) {
-                if (newlineBeforeSep && itemCount > 0 ||
-                    newlineAfterOpen && itemCount == 0) {
-                    pw.println();
-                    indent(currentIndent + sepIndent);
-                    needWhitespace = false;
-                }
                 keyword(sep);
                 nextWhitespace = newlineAfterSep ? NL : " ";
             }

@@ -119,7 +119,7 @@ public class SqlNodeList extends SqlNode
         writer.endList(frame);
     }
 
-    private void commaList(SqlWriter writer)
+    void commaList(SqlWriter writer)
     {
         for (int i = 0; i < list.size(); i++) {
             SqlNode node = (SqlNode) list.get(i);

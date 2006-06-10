@@ -125,7 +125,7 @@ public class SqlIdentifier extends SqlNode
         int rightPrec)
     {
         final SqlWriter.Frame frame =
-            writer.startList(SqlWriter.FrameType.Simple);
+            writer.startList(SqlWriter.FrameType.Identifier);
         for (int i = 0; i < names.length; i++) {
             String name = names[i];
             writer.sep(".");
