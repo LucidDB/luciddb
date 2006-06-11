@@ -248,6 +248,15 @@ public interface FarragoRepos extends FarragoAllocation,
      * @param mofId the identifier for the sequence
      */
     public FarragoSequenceAccessor getSequenceAccessor(String mofId);
+    
+    /**
+     * Returns the input string with property values substituted for
+     * variables of the form <code>${VARNAME}</code>, such as that done
+     * by {@link FarragoProperties#expandProperties(String)}..
+     * @param value String we want to expand
+     * @return expanded string, if value(s) were known
+     */
+    public String expandProperties(String value);
 }
 
 
