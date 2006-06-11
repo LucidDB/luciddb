@@ -31,9 +31,10 @@ import java.io.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class LucidDbServer extends FarragoServer
+public class LucidDbServer extends FarragoVjdbcServer
 {
     public LucidDbServer(PrintWriter pw)
+        throws Exception
     {
         super(pw);
     }

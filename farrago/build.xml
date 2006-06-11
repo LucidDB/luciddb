@@ -429,6 +429,26 @@ require version '${required.ant.version}'."/>
       tofile="${farrago.ReposStorage.propfile}"/>
   </target>
 
+  <!-- creates ReposStorage.properties from the default Postgres template -->
+  <target name="switchToPsqlReposStorage">
+    <copy file="${farrago.catalog.dir}/templates/PostgresRepos.properties" 
+      tofile="${farrago.ReposStorage.propfile}" overwrite="true">
+      <filterchain>
+        <tokenfilter>
+          <replacestring 
+            from="jdbc:postgresql://localhost/test"
+            to="jdbc:postgresql://localhost/farrago"/>
+        </tokenfilter>
+      </filterchain>
+    </copy>
+  </target>
+
+  <!-- creates ReposStorage.properties from the default Postgres template -->
+  <target name="switchToDefaultReposStorage">
+    <copy file="${farrago.catalog.dir}/templates/HsqldbRepos.properties" 
+      tofile="${farrago.ReposStorage.propfile}" overwrite="true"/>
+  </target>
+
   <target name="compileCatalog"
     depends="cleanCatalog,generateSqlTestWrapper,createRepository"/>
 
@@ -829,7 +849,6 @@ require version '${required.ant.version}'."/>
         <fileset dir="${farrago.classes.dir}">
           <exclude name="**/test/regression/*Test.class"/>
           <exclude name="**/test/concurrent/*Test.class"/>
-          <exclude name="**/test/FarragoServerTest.class"/>
           <include name="**/*Test.class"/>
         </fileset>
       </testfileset>

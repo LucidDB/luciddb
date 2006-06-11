@@ -95,12 +95,17 @@ public abstract class AggregateRelBase extends SingleRel
     // implement RelNode
     public double getRows()
     {
+        // Assume that each sort column has 50% of the value count.
+        // Therefore one sort column has .5 * rowCount,
+        // 2 sort columns give .75 * rowCount.
+        // Zero sort columns yields 1 row (or 0 if the input is empty).
         if (groupCount == 0) {
-            return 1.0;
+            return 1;
+        } else {
+            double rowCount = super.getRows();
+            rowCount *= (1.0 - Math.pow(.5, groupCount));
+            return rowCount;
         }
-        // NOTE jvs 11-Apr-2006:  leaving the real thing for
-        // RelMetadataQuery implementation.
-        return super.getRows();
     }
     
     public RelOptCost computeSelfCost(RelOptPlanner planner)

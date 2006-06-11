@@ -45,6 +45,12 @@ public interface FarragoJdbcServerDriver extends Driver
      * @return new factory
      */
     public FarragoSessionFactory newSessionFactory();
+
+    /**
+     * @return the base JDBC URL for this driver;
+     * subclassing drivers can override this to customize the URL scheme
+     */
+    public String getBaseUrl();
 }
 
 

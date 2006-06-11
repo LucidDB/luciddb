@@ -57,14 +57,15 @@ public class SameOperandTypeChecker implements SqlOperandTypeChecker
     }
     
     private boolean checkOperandTypesImpl(
-        SqlOperatorBinding operatorBinding, boolean throwOnFailure,
+        SqlOperatorBinding operatorBinding,
+        boolean throwOnFailure,
         SqlCallBinding callBinding)
     {
+        assert !(throwOnFailure && callBinding == null);
         RelDataType [] types = new RelDataType[nOperands];
         for (int i = 0; i < nOperands; ++i) {
-            if (operatorBinding.isOperandNull(i)) {
+            if (operatorBinding.isOperandNull(i, false)) {
                 if (throwOnFailure) {
-                    assert(callBinding != null);
                     throw callBinding.getValidator().newValidationError(
                         callBinding.getCall().operands[i],
                         EigenbaseResource.instance().NullIllegal.ex());
@@ -82,7 +83,6 @@ public class SameOperandTypeChecker implements SqlOperandTypeChecker
                 // REVIEW jvs 5-June-2005: Why don't we use
                 // newValidationSignatureError() here?  It gives more
                 // specific diagnostics.
-                assert(callBinding != null);
                 throw callBinding.newValidationError(
                     EigenbaseResource.instance().NeedSameTypeParameter.ex());
             }

@@ -105,6 +105,23 @@ public class FennelSortRel extends FennelSingleRel
         return clone;
     }
 
+    public double getRows()
+    {
+        double rowCount = RelMetadataQuery.getRowCount(getChild());
+        if (discardDuplicates) {
+            // Assume that each sort column has 50% of the value count.
+            // Therefore one sort column has .5 * rowCount,
+            // 2 sort columns give .75 * rowCount.
+            // Zero sort columns yields 1 row (or 0 if the input is empty).
+            if (keyProjection.length == 0) {
+                rowCount = 1;
+            } else {
+                rowCount *= (1.0 - Math.pow(.5, keyProjection.length));
+            }
+        }
+        return rowCount;
+    }
+
     // implement RelNode
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {

@@ -6,7 +6,7 @@
 source ./defineFarragoRuntime.sh
 
 java ${CLIENT_JAVA_ARGS} org.hsqldb.util.DatabaseManagerSwing \
---driver net.sf.farrago.jdbc.client.FarragoJdbcClientDriver \
+--driver net.sf.farrago.jdbc.client.FarragoVjdbcClientDriver \
 --url jdbc:farrago:rmi://localhost \
 --user sa \
 $*

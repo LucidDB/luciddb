@@ -34,6 +34,7 @@ import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.util.Util;
 
 import java.util.Arrays;
+import java.math.BigDecimal;
 
 /**
  * Standard implementation of {@link SqlRexConvertletTable}.
@@ -140,7 +141,7 @@ public class StandardConvertletTable extends ReflectiveConvertletTable
         // SUM is already supposed to come out as NULL in cases where the COUNT
         // is zero, so the null check should take place first and prevent
         // division by zero.
-        
+
         // Convert "avg(<expr>)" to "case count(<expr>) when 0 then
         // null else sum(<expr>) / count(<expr>) end"
         registerOp(
@@ -341,6 +342,26 @@ public class StandardConvertletTable extends ReflectiveConvertletTable
     {
         RelDataTypeFactory typeFactory = cx.getTypeFactory();
         assert SqlKind.Cast.equals(call.getOperator().getKind());
+        if (call.operands[1] instanceof SqlIntervalQualifier) {
+            SqlNode node = call.operands[0];
+            if (node instanceof SqlNumericLiteral) {
+                SqlIntervalQualifier intervalQualifier =
+                    (SqlIntervalQualifier) call.operands[1];
+                BigDecimal val;
+                SqlNumericLiteral numLiteral = (SqlNumericLiteral) node;
+                if (numLiteral.getValue() instanceof BigDecimal) {
+                    val = new BigDecimal(numLiteral.getValue().toString());
+                } else {
+                    assert false : "Not a valid interval during cast";
+                    val = new BigDecimal(0);
+                }
+                int sign = val.signum() == -1 ? -1 : 1;
+                node = SqlLiteral.createInterval(
+                    sign, val.toString(), intervalQualifier,
+                    numLiteral.getParserPosition());
+            }
+            return cx.convertExpression(node);
+        }
         SqlDataTypeSpec dataType = (SqlDataTypeSpec) call.operands[1];
         if (SqlUtil.isNullLiteral(call.operands[0], false)) {
             return cx.convertExpression(call.operands[0]);
@@ -375,6 +396,45 @@ public class StandardConvertletTable extends ReflectiveConvertletTable
         SqlCall call)
     {
         final SqlNode[] operands = call.getOperands();
+        if (fun instanceof SqlExtractFunction) {
+            int val = 1;
+            SqlOperator op1 = SqlStdOperatorTable.divideOperator;
+            SqlNode[] ratio = new SqlNode[2];
+            ratio[0] = operands[1];
+            switch (((SqlIntervalQualifier) operands[0]).getStartUnit().getOrdinal()) {
+            case SqlIntervalQualifier.TimeUnit.Day_ordinal:
+                val = 24*3600000;
+                break;
+            case SqlIntervalQualifier.TimeUnit.Hour_ordinal:
+                val = 3600000;
+                break;
+            case SqlIntervalQualifier.TimeUnit.Minute_ordinal:
+                val = 60000;
+                break;
+            case SqlIntervalQualifier.TimeUnit.Second_ordinal:
+                val = 1000;
+                break;
+            case SqlIntervalQualifier.TimeUnit.Year_ordinal:
+                val = 12;
+                break;
+            case SqlIntervalQualifier.TimeUnit.Month_ordinal:
+                val = 1;
+                break;
+            default:
+                assert false : "invalid interval qualifier";
+                break;
+            }
+            ratio[1] = SqlLiteral.createExactNumeric(
+                val + "", ratio[0].getParserPosition());
+            SqlCall call1 = op1.createCall(ratio, call.getParserPosition());
+
+            SqlOperator op2 = SqlStdOperatorTable.floorFunc;
+            SqlNode[] fl = new SqlNode[1];
+            fl[0] = call1;
+            SqlCall call2 = op2.createCall(fl, call.getParserPosition());
+
+            return cx.convertExpression(call2);
+        }
         final RexNode [] exprs = convertExpressionList(cx, operands);
         if (fun.getFunctionType() ==
             SqlFunctionCategory.UserDefinedConstructor) {
@@ -440,6 +500,50 @@ public class StandardConvertletTable extends ReflectiveConvertletTable
     {
         final SqlOperator op = call.getOperator();
         final SqlNode[] operands = call.getOperands();
+        if (op instanceof SqlOverlapsOperator) {
+            // for intervals [t0, t1] overlaps [t2, t3], we can find if the
+            // intervals overlaps by: ~(t1 < t2 or t3 < t0)
+            assert operands.length == 4;
+            if (operands[1] instanceof SqlIntervalLiteral) {
+                // make t1 = t0 + t1 when t1 is an interval.
+                SqlOperator op1 = SqlStdOperatorTable.plusOperator;
+                SqlNode[] second = new SqlNode[2];
+                second[0] = operands[0];
+                second[1] = operands[1];
+                operands[1] = op1.createCall(second, call.getParserPosition());
+            }
+            if (operands[3] instanceof SqlIntervalLiteral) {
+                // make t3 = t2 + t3 when t3 is an interval.
+                SqlOperator op1 = SqlStdOperatorTable.plusOperator;
+                SqlNode[] four = new SqlNode[2];
+                four[0] = operands[2];
+                four[1] = operands[3];
+                operands[3] = op1.createCall(four, call.getParserPosition());
+            }
+
+            // This captures t1 >= t2
+            SqlOperator op1 = SqlStdOperatorTable.greaterThanOrEqualOperator;
+            SqlNode[] left = new SqlNode[2];
+            left[0] = operands[1];
+            left[1] = operands[2];
+            SqlCall call1 = op1.createCall(left, call.getParserPosition());
+
+            // This captures t3 >= t0
+            SqlOperator op2 = SqlStdOperatorTable.greaterThanOrEqualOperator;
+            SqlNode[] right = new SqlNode[2];
+            right[0] = operands[3];
+            right[1] = operands[0];
+            SqlCall call2 = op2.createCall(right, call.getParserPosition());
+
+            // This captures t1 >= t2 and t3 >= t0
+            SqlOperator and = SqlStdOperatorTable.andOperator;
+            SqlNode[] overlaps = new SqlNode[2];
+            overlaps[0] = call1;
+            overlaps[1] = call2;
+            SqlCall call3 = and.createCall(overlaps, call.getParserPosition());
+
+            return cx.convertExpression(call3);
+        }
         final RexNode [] exprs = convertExpressionList(cx, operands);
         return cx.getRexBuilder().makeCall(op, exprs);
     }

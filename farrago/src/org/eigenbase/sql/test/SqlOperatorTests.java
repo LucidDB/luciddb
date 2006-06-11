@@ -889,6 +889,35 @@ public abstract class SqlOperatorTests extends TestCase
             AbstractSqlTester.IntegerTypeChecker,
             "1",
             0);
+
+        // check return type on scalar subquery in select list.  Note return
+        // type is always nullable even if subquery select value is NOT NULL.
+        getTester().checkType(
+            "SELECT *,(SELECT * FROM (VALUES(1))) FROM (VALUES(2))",
+            "RecordType(INTEGER NOT NULL EXPR$0, INTEGER EXPR$1) NOT NULL");
+        getTester().checkType(
+            "SELECT *,(SELECT * FROM (VALUES(CAST(10 as BIGINT)))) " +
+            "FROM (VALUES(CAST(10 as bigint)))",
+            "RecordType(BIGINT NOT NULL EXPR$0, BIGINT EXPR$1) NOT NULL");
+        getTester().checkType(
+            " SELECT *,(SELECT * FROM (VALUES(10.5))) FROM (VALUES(10.5))",
+            "RecordType(DECIMAL(3, 1) NOT NULL EXPR$0, DECIMAL(3, 1) EXPR$1) NOT NULL");
+        getTester().checkType(
+            "SELECT *,(SELECT * FROM (VALUES('this is a char'))) "+
+            "FROM (VALUES('this is a char too'))",
+            "RecordType(CHAR(18) NOT NULL EXPR$0, CHAR(14) EXPR$1) NOT NULL");
+        getTester().checkType(
+            "SELECT *,(SELECT * FROM (VALUES(true))) FROM (values(false))",
+            "RecordType(BOOLEAN NOT NULL EXPR$0, BOOLEAN EXPR$1) NOT NULL");
+        getTester().checkType(
+            " SELECT *,(SELECT * FROM (VALUES(cast('abcd' as varchar(10))))) " +
+            "FROM (VALUES(CAST('abcd' as varchar(10))))",
+            "RecordType(VARCHAR(10) NOT NULL EXPR$0, VARCHAR(10) EXPR$1) NOT NULL");
+        getTester().checkType
+            ("SELECT *," +
+            "  (SELECT * FROM (VALUES(TIMESTAMP '2006-01-01 12:00:05'))) " +
+            "FROM (VALUES(TIMESTAMP '2006-01-01 12:00:05'))",
+            "RecordType(TIMESTAMP(0) NOT NULL EXPR$0, TIMESTAMP(0) EXPR$1) NOT NULL");
     }
 
     public void testLiteralChain()

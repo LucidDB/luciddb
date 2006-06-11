@@ -44,7 +44,7 @@ public class FarragoDebugServer
         // settings for environment variables.
         FarragoQueryTest unused = new FarragoQueryTest("unused");
         
-        FarragoServer.main(new String[0]);
+        FarragoVjdbcServer.main(new String[0]);
     }
 }
 

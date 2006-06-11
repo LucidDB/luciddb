@@ -9,5 +9,5 @@ source $BIN_DIR/defineFarragoRuntime.sh
 
 ${JAVA_EXEC} ${JAVA_ARGS} ${SQLLINE_JAVA_ARGS} \
     -u jdbc:farrago:rmi://localhost \
-    -d net.sf.farrago.jdbc.client.FarragoJdbcClientDriver \
+    -d net.sf.farrago.jdbc.client.FarragoVjdbcClientDriver \
     -n guest $*

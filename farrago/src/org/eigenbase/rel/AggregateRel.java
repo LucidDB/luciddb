@@ -24,14 +24,15 @@
 package org.eigenbase.rel;
 
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
-import org.eigenbase.util.*;
-
-import java.util.*;
 
 /**
  * <code>AggregateRel</code> is a relational operator which eliminates
  * duplicates and computes totals.
+ *
+ * <p>Rules:<ul>
+ * <li>{@link org.eigenbase.rel.rules.PullConstantsThroughAggregatesRule}
+ * <li>{@link RemoveDistinctAggregateRule}
+ * <li>{@link org.eigenbase.rel.rules.ReduceAggregatesRule}.
  *
  * @author jhyde
  * @version $Id$

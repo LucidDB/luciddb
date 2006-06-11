@@ -1,0 +1,37 @@
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/sqlline/incremental.sql#1 $
+0: jdbc:farrago:> -- Test various sqlline display options
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- with full error stack
+0: jdbc:farrago:> !set shownestederrs true
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop table cylon;
+Error: org.eigenbase.sql.parser.SqlParseException: No default schema specified; execute SET SCHEMA or use fully qualified names (state=,code=0)
+Error: Parser Error: No default schema specified; execute SET SCHEMA or use fully qualified names (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- back to default:  just most significant error stack entry
+0: jdbc:farrago:> !set shownestederrs false
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop table cylon;
+Error: org.eigenbase.sql.parser.SqlParseException: No default schema specified; execute SET SCHEMA or use fully qualified names (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- display numbers with rounding to limited scale
+0: jdbc:farrago:> !set numberformat #.###
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values (6.666666);
++---------+
+| EXPR$0  |
++---------+
+| 6.667   |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- display numbers the usual way
+0: jdbc:farrago:> !set numberformat default
+0: jdbc:farrago:> values (6.666666);
++-----------+
+|  EXPR$0   |
++-----------+
+| 6.666666  |
++-----------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

@@ -103,6 +103,52 @@ public class RexVisitorImpl<R> implements RexVisitor<R>
         final RexNode expr = fieldAccess.getReferenceExpr();
         return expr.accept(this);
     }
+
+    /**
+     * <p>Visits an array of expressions, returning the logical 'and' of their
+     * results.
+     *
+     * <p>If any of them returns false, returns false immediately;
+     * if they all return true, returns true.
+     *
+     * @see #visitArrayOr
+     * @see RexShuttle#visitArray
+     */
+    public static boolean visitArrayAnd(
+        RexVisitor<Boolean> visitor, RexNode[] exprs)
+    {
+        for (int i = 0; i < exprs.length; i++) {
+            RexNode expr = exprs[i];
+            final boolean b = expr.accept(visitor);
+            if (!b) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * <p>Visits an array of expressions, returning the logical 'or' of their
+     * results.
+     *
+     * <p>If any of them returns true, returns true immediately;
+     * if they all return false, returns false.
+     *
+     * @see #visitArrayAnd
+     * @see RexShuttle#visitArray
+     */
+    public static boolean visitArrayOr(
+        RexVisitor<Boolean> visitor, RexNode[] exprs)
+    {
+        for (int i = 0; i < exprs.length; i++) {
+            RexNode expr = exprs[i];
+            final boolean b = expr.accept(visitor);
+            if (b) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
 
 // End RexVisitorImpl.java

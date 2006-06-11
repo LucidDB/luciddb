@@ -1147,6 +1147,10 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
     public void testIntervalOperators()
     {
+        checkExpType("interval '1' hour + TIME '8:8:8'", "TIME(0) NOT NULL");
+        checkExpType("TIME '8:8:8' - interval '1' hour", "TIME(0) NOT NULL");
+        checkExpType("TIME '8:8:8' + interval '1' hour", "TIME(0) NOT NULL");
+
         checkExpType("interval '1' day + interval '1' DAY(4)", "INTERVAL DAY(4) NOT NULL");
         checkExpType("interval '1' day(5) + interval '1' DAY", "INTERVAL DAY(5) NOT NULL");
         checkExpType("interval '1' day + interval '1' HOUR(10)", "INTERVAL DAY TO HOUR NOT NULL");
@@ -2280,6 +2284,10 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
     public void testCastToInterval()
     {
+        checkExpType("cast(interval '1' hour as varchar(20))", "VARCHAR(20) NOT NULL");
+        checkExpType("cast(interval '1' hour as bigint)", "BIGINT NOT NULL");
+        checkExpType("cast(1000 as interval hour)", "INTERVAL HOUR NOT NULL");
+
         checkExpType("cast(interval '1' month as interval year)", "INTERVAL YEAR NOT NULL");
         checkExpType("cast(interval '1-1' year to month as interval month)", "INTERVAL MONTH NOT NULL");
         checkExpType("cast(interval '1:1' hour to minute as interval day)", "INTERVAL DAY NOT NULL");
@@ -2475,7 +2483,32 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "select * from table(dedup(cursor(select * from ^bloop^),'ename'))",
             "Table 'BLOOP' not found");
     }
-    
+
+    public void testScalarSubQuery()
+    {
+        check("SELECT  ename,(select name from dept where deptno=1) FROM emp");
+        checkFails("SELECT ename,(select losal,^hisal^ from salgrade where grade=1) FROM emp",
+            "Only scalar subqueries allowed in select list.");
+
+    }
+
+    public void testRecordType()
+    {
+        // Have to qualify columns with table name.
+        checkFails("SELECT ^coord^.x, coord.y FROM customer.contact",
+            "Table 'COORD' not found");
+
+        checkResultType(
+            "SELECT contact.coord.x, contact.coord.y FROM customer.contact",
+            "RecordType(INTEGER NOT NULL X, INTEGER NOT NULL Y) NOT NULL");
+
+        // Qualifying with schema is OK.
+        if (Bug.Frg140Fixed)
+        checkResultType(
+            "SELECT customer.contact.coord.x, customer.contact.email, contact.coord.y FROM customer.contact",
+            "RecordType(INTEGER NOT NULL X, INTEGER NOT NULL Y) NOT NULL");
+    }
+
     public void testNew()
     {
         // (To debug invidual statements, paste them into this method.)

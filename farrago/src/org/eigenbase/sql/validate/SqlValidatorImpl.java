@@ -23,9 +23,7 @@
 
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.reltype.RelDataTypeField;
+import org.eigenbase.reltype.*;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.util.SqlVisitor;
@@ -62,44 +60,57 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
      * Maps ParsePosition strings to the {@link SqlIdentifier} identifier
      * objects at these positions
      */
-    protected final HashMap sqlids = new HashMap();
+    protected final Map<String, SqlIdentifier> sqlIds =
+        new HashMap<String, SqlIdentifier>();
 
     /**
      * Maps ParsePosition strings to the {@link SqlValidatorScope} scope
      * objects at these positions
      */
-    protected final HashMap idscopes = new HashMap();
+    protected final Map<String, SqlValidatorScope> idScopes =
+        new HashMap<String, SqlValidatorScope>();
 
     /**
      * Maps {@link SqlNode query node} objects to the {@link SqlValidatorScope}
      * scope created from them}.
      */
-    protected final HashMap scopes = new HashMap();
+    protected final Map<SqlNode, SqlValidatorScope> scopes =
+        new HashMap<SqlNode, SqlValidatorScope>();
+
     /**
      * Maps a {@link SqlSelect} node to the scope used by its WHERE and HAVING
      * clauses.
      */
-    private final HashMap whereScopes = new HashMap();
+    private final Map<SqlSelect, SqlValidatorScope> whereScopes =
+        new HashMap<SqlSelect, SqlValidatorScope>();
+
     /**
      * Maps a {@link SqlSelect} node to the scope used by its SELECT and HAVING
      * clauses.
      */
-    private final HashMap selectScopes = new HashMap();
+    private final Map<SqlSelect, SqlValidatorScope> selectScopes =
+        new HashMap<SqlSelect, SqlValidatorScope>();
+
     /**
      * Maps a {@link SqlSelect} node to the scope used by its ORDER BY clause.
      */
-    private final HashMap orderScopes = new HashMap();
+    private final Map<SqlSelect, SqlValidatorScope> orderScopes =
+        new HashMap<SqlSelect, SqlValidatorScope>();
+
     /**
      * Maps a {@link SqlNode node} to the {@link SqlValidatorNamespace
      * namespace} which describes what columns they contain.
      */
-    protected final HashMap namespaces = new HashMap();
+    protected final Map<SqlNode, SqlValidatorNamespace> namespaces =
+        new HashMap<SqlNode, SqlValidatorNamespace>();
+
     /**
      * Set of select expressions used as cursor definitions.  In standard
      * SQL, only the top-level SELECT is a cursor; Eigenbase extends
      * this with cursors as inputs to table functions.
      */
-    private Set<SqlNode> cursorSet = new HashSet<SqlNode>();
+    private final Set<SqlNode> cursorSet = new HashSet<SqlNode>();
+
     private int nextGeneratedId;
     protected final RelDataTypeFactory typeFactory;
     protected final RelDataType unknownType;
@@ -110,7 +121,9 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
      * since in some cases (such as null literals) we need to discriminate by
      * instance.
      */
-    private Map nodeToTypeMap = new IdentityHashMap();
+    private final Map<SqlNode, RelDataType> nodeToTypeMap =
+        new IdentityHashMap<SqlNode, RelDataType>();
+
     public static final Logger tracer = EigenbaseTrace.parserTracer;
     private final AggFinder aggFinder = new AggFinder();
 
@@ -212,10 +225,8 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             if (identifier.names.length == 1 &&
                 identifier.names[0].equals("*"))
             {
-                ArrayList tableNames = scope.childrenNames;
                 SqlParserPos starPosition = identifier.getParserPosition();
-                for (int i = 0; i < tableNames.size(); i++) {
-                    String tableName = (String) tableNames.get(i);
+                for (String tableName : scope.childrenNames) {
                     final SqlValidatorNamespace childScope =
                         scope.getChild(tableName);
                     final SqlNode from = childScope.getNode();
@@ -339,16 +350,9 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
      */
     public SqlMoniker lookupQualifiedName(SqlNode topNode, SqlParserPos pos)
     {
-        SqlIdentifier id = null;
-        Object o = sqlids.get(pos.toString());
-        if (o != null) {
-            id = (SqlIdentifier) o;
-        }
-        SqlValidatorScope scope = null;
-        o = idscopes.get(pos.toString());
-        if (o != null) {
-            scope = (SqlValidatorScope) o;
-        }
+        final String posString = pos.toString();
+        SqlIdentifier id = sqlIds.get(posString);
+        SqlValidatorScope scope = idScopes.get(posString);
         if (id != null && scope != null) {
             return new SqlIdentifierMoniker(scope.fullyQualify(id));
         } else {
@@ -370,9 +374,8 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
      */
     SqlMoniker[] lookupSelectHints(SqlSelect select, SqlParserPos pos)
     {
-        SqlIdentifier dummyId =  (SqlIdentifier) sqlids.get(pos.toString());
-        SqlValidatorScope dummyScope = (SqlValidatorScope)
-            idscopes.get(pos.toString());
+        SqlIdentifier dummyId = sqlIds.get(pos.toString());
+        SqlValidatorScope dummyScope = idScopes.get(pos.toString());
         if (dummyId == null || dummyScope == null) {
             SqlNode fromNode = select.getFrom();
             final SqlValidatorScope fromScope = getFromScope(select);
@@ -490,24 +493,24 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
 
     public SqlValidatorScope getWhereScope(SqlSelect select)
     {
-        return (SqlValidatorScope) whereScopes.get(select);
+        return whereScopes.get(select);
     }
 
     public SqlValidatorScope getSelectScope(SqlSelect select)
     {
-        return (SqlValidatorScope) selectScopes.get(select);
+        return selectScopes.get(select);
     }
 
     public SqlValidatorScope getHavingScope(SqlSelect select)
     {
         // Yes, it's the same as getSelectScope
-        return (SqlValidatorScope) selectScopes.get(select);
+        return selectScopes.get(select);
     }
 
     public SqlValidatorScope getGroupScope(SqlSelect select)
     {
         // Yes, it's the same as getWhereScope
-        return (SqlValidatorScope) whereScopes.get(select);
+        return whereScopes.get(select);
     }
 
     public SqlValidatorScope getFromScope(SqlSelect select)
@@ -517,7 +520,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
 
     public SqlValidatorScope getOrderScope(SqlSelect select)
     {
-        return (SqlValidatorScope) orderScopes.get(select);
+        return orderScopes.get(select);
     }
 
     public SqlValidatorScope getJoinScope(SqlNode node) {
@@ -560,12 +563,12 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             return (SqlValidatorScope) scopes.get(select);
         case SqlSelect.WHERE_OPERAND:
         case SqlSelect.GROUP_OPERAND:
-            return (SqlValidatorScope) whereScopes.get(select);
+            return whereScopes.get(select);
         case SqlSelect.HAVING_OPERAND:
         case SqlSelect.SELECT_OPERAND:
-            return (SqlValidatorScope) selectScopes.get(select);
+            return selectScopes.get(select);
         case SqlSelect.ORDER_OPERAND:
-            return (SqlValidatorScope) orderScopes.get(select);
+            return orderScopes.get(select);
         default:
             throw Util.newInternal("Unexpected operandType " + operandType);
         }
@@ -579,7 +582,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         case SqlKind.OrderByORDINAL:
             return getNamespace(((SqlCall) node).operands[0]);
         default:
-            return (SqlValidatorNamespace) namespaces.get(node);
+            return namespaces.get(node);
         }
     }
 
@@ -827,7 +830,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
 
     public RelDataType getValidatedNodeTypeIfKnown(SqlNode node)
     {
-        final RelDataType type = (RelDataType) nodeToTypeMap.get(node);
+        final RelDataType type = nodeToTypeMap.get(node);
         if (type != null) {
             return type;
         }
@@ -865,7 +868,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         Util.pre(expr != null, "expr != null");
 
         // if we already know the type, no need to re-derive
-        RelDataType type = (RelDataType) nodeToTypeMap.get(expr);
+        RelDataType type = nodeToTypeMap.get(expr);
         if (type != null) {
             return type;
         }
@@ -1165,6 +1168,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         if (alias == null) {
             switch (kind.getOrdinal()) {
             case SqlKind.IdentifierORDINAL:
+            case SqlKind.OverORDINAL:
                 alias = deriveAlias(node, -1);
                 if (shouldExpandIdentifiers()) {
                     newNode = SqlValidatorUtil.addAlias(node, alias);
@@ -1305,15 +1309,13 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                 call.setOperand(0, newOperand);
             }
 
-            ArrayList tableNames = overScope.childrenNames;
-            for (int i = 0; i < tableNames.size(); i++) {
-                String tableName = (String) tableNames.get(i);
+            for (String tableName : overScope.childrenNames) {
                 final SqlValidatorNamespace childSpace =
                     overScope.getChild(tableName);
                 registerNamespace(usingScope, tableName, childSpace, false);
             }
 
-            return call;
+            return newNode;
 
         default:
             throw kind.unexpected();
@@ -1849,15 +1851,13 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
 
             SqlIdentifier declName = child.getDeclName();
             if (!declName.isSimple()){
-                throw this.newValidationError(declName,
-                    EigenbaseResource.instance()
-                    .WindowNameMustBeSimple.ex());
+                throw newValidationError(declName,
+                    EigenbaseResource.instance().WindowNameMustBeSimple.ex());
             }
 
             if (windowScope.existingWindowName(declName.toString())) {
-                throw this.newValidationError(declName,
-                    EigenbaseResource.instance()
-                    .DuplicateWindowName.ex());
+                throw newValidationError(declName,
+                    EigenbaseResource.instance().DuplicateWindowName.ex());
             } else {
                 windowScope.addWindowName(declName.toString());
             }
@@ -1866,19 +1866,18 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         if (2 <= windowList.size()) {
             SqlNode[] winArr = windowList.toArray();
 
-            for (int i=0; i < windowList.size() - 1; i++) {
-                for (int j=i+1; j < windowList.size(); j++) {
+            for (int i = 0; i < windowList.size() - 1; i++) {
+                for (int j = i + 1; j < windowList.size(); j++) {
                     if (winArr[i].equalsDeep(winArr[j], false)) {
-                        throw this.newValidationError(winArr[j],
-                            EigenbaseResource.instance()
-                            .DupWindowSpec.ex());
+                        throw newValidationError(winArr[j],
+                            EigenbaseResource.instance().DupWindowSpec.ex());
                     }
                 }
             }
         }
 
-        // Hande off to validate window spec components
-        windowList.validate(this,windowScope);
+        // Hand off to validate window spec components
+        windowList.validate(this, windowScope);
     }
 
     private void validateOrderList(SqlSelect select)
@@ -1990,8 +1989,14 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                 boolean matches = aggScope.checkAggregateExpr(selectItem);
                 Util.discard(matches);
             }
-            expandSelectItem(selectItem, select, expandedSelectItems,
-                aliasList, typeList, false);
+            if (selectItem instanceof SqlSelect) {
+                handleScalarSubQuery(select, (SqlSelect)selectItem,
+                    expandedSelectItems,aliasList, typeList);
+
+            } else {
+                expandSelectItem(selectItem, select, expandedSelectItems,
+                    aliasList, typeList, false);
+            }
         }
 
         // Create the new select list with expanded items.  Pass through
@@ -2014,6 +2019,53 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
 
         assert typeList.size() == aliasList.size();
         return typeFactory.createStructType(typeList, aliasList);
+    }
+
+    /**
+     * Processes SubQuery found in Select list.  Checks that is actually
+     * Scalar subquery and makes proper entries in each of the 3 lists
+     * used to create the final rowType entry.
+     *
+     * @param parentSelect  base SqlSelect item
+     * @param selectItem  child SqlSelect from select list
+     * @param expandedSelectItems Select items after processing
+     * @param aliasList built from user or system values
+     * @param typeList Built up entries for each select list entry
+     */
+    private void handleScalarSubQuery(
+        SqlSelect parentSelect,
+        SqlSelect selectItem,
+        ArrayList expandedSelectItems,
+        List aliasList,
+        List typeList)
+    {
+        // A scalar subquery only has one output column.
+        if (1 != selectItem.getSelectList().size()) {
+            throw newValidationError(
+                selectItem,
+                EigenbaseResource.instance().OnlyScalarSubqueryAllowed.ex());
+        }
+
+        // No expansion in this routine just append to list.
+        expandedSelectItems.add(selectItem);
+
+        // Get or generate alias and add to list.
+        final String alias = deriveAlias(selectItem, aliasList.size());
+        aliasList.add(alias);
+
+        final SelectScope scope = (SelectScope) getWhereScope(parentSelect);
+        final RelDataType type = deriveType(scope, selectItem);
+        setValidatedNodeTypeImpl(selectItem, type);
+
+        // we do not want to pass on the RelRecordType returned
+        // by the sub query.  Just the type of the single expression
+        // in the subquery select list.
+        assert type instanceof RelRecordType;
+        RelRecordType rec = (RelRecordType) type;
+
+        RelDataType nodeType = rec.getFields()[0].getType();
+        nodeType = typeFactory.createTypeWithNullability(nodeType,true);
+        typeList.add(nodeType);
     }
 
 

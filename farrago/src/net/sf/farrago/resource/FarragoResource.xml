@@ -911,6 +911,10 @@ column type family is {1} but default value type family is {2}</text>
 <text>Server personality:  {0}</text>
 </message>
 
+<message id="480080" name="ServerNetworkStartFailed">
+<text>Failed to start network</text>
+</message>
+
 <!-- ====================================================================== -->
 <!-- Plugin resources 490,000 - 500,000 -->
 <!-- ====================================================================== -->

@@ -330,6 +330,8 @@ public class DdlRelationalHandler extends DdlHandler
             view.getFeature(),
             false);
 
+        validator.fixupView(view, analyzedSql);
+
         view.setOriginalDefinition(sql);
         view.getQueryExpression().setBody(analyzedSql.canonicalString);
         analyzedSql.setModality(view);
@@ -452,7 +454,7 @@ public class DdlRelationalHandler extends DdlHandler
         try {
             ReentrantIndexBuilderStmt reentrantStmt =
                 new ReentrantIndexBuilderStmt(table, index, medDataServer);
-            reentrantStmt.execute(session);
+            reentrantStmt.execute(session, false);
         } finally {
             validator.releaseReentrantSession(session);
         }

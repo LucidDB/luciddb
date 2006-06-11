@@ -48,6 +48,7 @@ import org.eigenbase.sql.validate.SqlMonikerType;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.resgen.*;
+import org.eigenbase.trace.*;
 import org.eigenbase.util.*;
 
 /**
@@ -76,6 +77,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
     private final FarragoDdlLockManager ddlLockManager;
     
     private SqlParserPos parserPos;
+    private EigenbaseTimingTracer timingTracer;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -723,6 +725,19 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
         } else {
             throw ex;
         }
+    }
+    
+    // implement FarragoSessionStmtValidator
+    public void setTimingTracer(
+        EigenbaseTimingTracer timingTracer)
+    {
+        this.timingTracer = timingTracer;
+    }
+
+    // implement FarragoSessionStmtValidator
+    public EigenbaseTimingTracer getTimingTracer()
+    {
+        return timingTracer;
     }
 }
 

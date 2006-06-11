@@ -122,6 +122,7 @@ ${farrago.test.jvmargs}
   <fail unless="rmijdbc.dir"/>
   <fail unless="retroweaver.dir"/>
   <fail unless="emma.dir"/>
+  <fail unless="vjdbc.dir"/>
 
   <!-- Directories -->
 
@@ -307,6 +308,12 @@ ${farrago.test.jvmargs}
     <pathelement location="${openjava.dir}/openjava.jar"/>
     <pathelement location="${hsqldb.dir}/lib/hsqldb.jar"/>
     <pathelement location="${thirdparty.dir}/commons-transaction-1.1.jar"/>
+    <pathelement location="${thirdparty.dir}/postgresql-8.1-406.jdbc2.jar"/>
+    <pathelement location="${vjdbc.dir}/lib/vjdbc_server.jar"/>
+    <pathelement location="${vjdbc.dir}/lib/vjdbc.jar"/>
+    <pathelement location="${vjdbc.dir}/lib/commons-logging.jar"/>
+    <pathelement location="${vjdbc.dir}/lib/commons-pool-1.2.jar"/>
+    <pathelement location="${vjdbc.dir}/lib/commons-dbcp-1.2.1.jar"/>
     <pathelement path="${farrago.custom.classpath}"/>
   </path>
   <property name="farrago.3p.classpath" refid="farrago.3p.classpath"/>
