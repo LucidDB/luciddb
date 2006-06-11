@@ -9,7 +9,7 @@ FROM (SELECT *
         WHERE `X` = `Y` AND `A` > 5
         GROUP BY `Z`, `ZZ`
         WINDOW `W` AS (PARTITION BY `C`),
-                `W1` AS (PARTITION BY `C`, `D` ORDER BY `A`, `B` RANGE BETWEEN INTERVAL '2:2' HOUR TO MINUTE PRECEDING AND INTERVAL '1' DAY FOLLOWING))
+            `W1` AS (PARTITION BY `C`, `D` ORDER BY `A`, `B` RANGE BETWEEN INTERVAL '2:2' HOUR TO MINUTE PRECEDING AND INTERVAL '1' DAY FOLLOWING))
 ORDER BY `GG`]]>
         </Resource>
     </TestCase>
@@ -39,7 +39,7 @@ FROM (SELECT *
                 WHERE `X` = `Y` AND `A` > 5
                 GROUP BY `Z`, `ZZ`
                 WINDOW `W` AS (PARTITION BY `C`),
-                                `W1` AS (PARTITION BY `C`, `D` ORDER BY `A`, `B` RANGE BETWEEN INTERVAL '2:2' HOUR TO MINUTE PRECEDING AND INTERVAL '1' DAY FOLLOWING))
+                        `W1` AS (PARTITION BY `C`, `D` ORDER BY `A`, `B` RANGE BETWEEN INTERVAL '2:2' HOUR TO MINUTE PRECEDING AND INTERVAL '1' DAY FOLLOWING))
 ORDER BY `GG`]]>
         </Resource>
     </TestCase>
@@ -47,21 +47,30 @@ ORDER BY `GG`]]>
         <Resource name="desc"/>
         <Resource name="formatted">
             <![CDATA[SELECT `X` AS `A`, `B`, 'mixed-Case string', `UNQUOTEDCAMELCASEID`, `quoted id` FROM (SELECT *FROM `T` WHERE `X` = `Y` AND `A` > 5 GROUP BY `Z`, `ZZ` WINDOW `W` AS (PARTITION BY `C`),
-                `W1` AS (PARTITION BY `C`, `D` ORDER BY `A`, `B` RANGE BETWEEN INTERVAL '2:2' HOUR TO MINUTE PRECEDING AND INTERVAL '1' DAY FOLLOWING))
+            `W1` AS (PARTITION BY `C`, `D` ORDER BY `A`, `B` RANGE BETWEEN INTERVAL '2:2' HOUR TO MINUTE PRECEDING AND INTERVAL '1' DAY FOLLOWING))
 ORDER BY `GG`]]>
         </Resource>
     </TestCase>
     <TestCase name="testSelectListItemsOnSeparateLines">
         <Resource name="desc"/>
         <Resource name="formatted">
-            <![CDATA[SELECT `X` AS `A`, `B`, 'mixed-Case string', `UNQUOTEDCAMELCASEID`, `quoted id`
-FROM (SELECT *
+            <![CDATA[SELECT
+    `X` AS `A`,
+    `B`,
+    'mixed-Case string',
+    `UNQUOTEDCAMELCASEID`,
+    `quoted id`
+FROM (SELECT
+            *
         FROM `T`
         WHERE `X` = `Y` AND `A` > 5
-        GROUP BY `Z`, `ZZ`
+        GROUP BY
+            `Z`,
+            `ZZ`
         WINDOW `W` AS (PARTITION BY `C`),
-                `W1` AS (PARTITION BY `C`, `D` ORDER BY `A`, `B` RANGE BETWEEN INTERVAL '2:2' HOUR TO MINUTE PRECEDING AND INTERVAL '1' DAY FOLLOWING))
-ORDER BY `GG`]]>
+            `W1` AS (PARTITION BY `C`, `D` ORDER BY `A`, `B` RANGE BETWEEN INTERVAL '2:2' HOUR TO MINUTE PRECEDING AND INTERVAL '1' DAY FOLLOWING))
+ORDER BY
+`GG`]]>
         </Resource>
     </TestCase>
     <TestCase name="testKeywordsLowerCase">
@@ -73,7 +82,7 @@ from (select *
         where `X` = `Y` and `A` > 5
         group by `Z`, `ZZ`
         window `W` as (partition by `C`),
-                `W1` as (partition by `C`, `D` order by `A`, `B` range between interval '2:2' hour to minute preceding and interval '1' day following))
+            `W1` as (partition by `C`, `D` order by `A`, `B` range between interval '2:2' hour to minute preceding and interval '1' day following))
 order by `GG`]]>
         </Resource>
     </TestCase>
@@ -86,7 +95,7 @@ FROM (SELECT *
         WHERE ((`X` = `Y`) AND (`A` > 5))
         GROUP BY `Z`, `ZZ`
         WINDOW `W` AS (PARTITION BY `C`),
-                `W1` AS (PARTITION BY `C`, `D` ORDER BY `A`, `B` RANGE BETWEEN INTERVAL '2:2' HOUR TO MINUTE PRECEDING AND INTERVAL '1' DAY FOLLOWING))
+            `W1` AS (PARTITION BY `C`, `D` ORDER BY `A`, `B` RANGE BETWEEN INTERVAL '2:2' HOUR TO MINUTE PRECEDING AND INTERVAL '1' DAY FOLLOWING))
 ORDER BY `GG`]]>
         </Resource>
     </TestCase>
@@ -99,7 +108,7 @@ FROM (SELECT *
         WHERE X = Y AND A > 5
         GROUP BY Z, ZZ
         WINDOW W AS (PARTITION BY C),
-                W1 AS (PARTITION BY C, D ORDER BY A, B RANGE BETWEEN INTERVAL '2:2' HOUR TO MINUTE PRECEDING AND INTERVAL '1' DAY FOLLOWING))
+            W1 AS (PARTITION BY C, D ORDER BY A, B RANGE BETWEEN INTERVAL '2:2' HOUR TO MINUTE PRECEDING AND INTERVAL '1' DAY FOLLOWING))
 ORDER BY GG]]>
         </Resource>
     </TestCase>
@@ -112,7 +121,7 @@ FROM (    SELECT *
         WHERE `X` = `Y` AND `A` > 5
         GROUP BY `Z`, `ZZ`
         WINDOW `W` AS (PARTITION BY `C`),
-                `W1` AS (PARTITION BY `C`, `D` ORDER BY `A`, `B` RANGE BETWEEN INTERVAL '2:2' HOUR TO MINUTE PRECEDING AND INTERVAL '1' DAY FOLLOWING))
+            `W1` AS (PARTITION BY `C`, `D` ORDER BY `A`, `B` RANGE BETWEEN INTERVAL '2:2' HOUR TO MINUTE PRECEDING AND INTERVAL '1' DAY FOLLOWING))
 ORDER BY `GG`]]>
         </Resource>
     </TestCase>
