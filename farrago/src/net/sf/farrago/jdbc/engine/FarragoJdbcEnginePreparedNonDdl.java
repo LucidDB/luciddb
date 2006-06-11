@@ -25,6 +25,7 @@ package net.sf.farrago.jdbc.engine;
 import java.math.*;
 import java.sql.*;
 import java.sql.Date;
+import java.util.Calendar;
 
 import net.sf.farrago.session.*;
 import net.sf.farrago.type.*;
@@ -159,6 +160,19 @@ public class FarragoJdbcEnginePreparedNonDdl
         }
     }
 
+    private void setDynamicParam(
+        int parameterIndex,
+        Object obj,
+        Calendar cal)
+        throws SQLException
+    {
+        try {
+            stmtContext.setDynamicParam(parameterIndex - 1, obj, cal);
+        } catch (Throwable ex) {
+            throw FarragoJdbcEngineDriver.newSqlException(ex);
+        }
+    }
+
     // implement PreparedStatement
     public void setNull(
         int parameterIndex,
@@ -279,7 +293,17 @@ public class FarragoJdbcEnginePreparedNonDdl
         Date x)
         throws SQLException
     {
-        setDynamicParam(parameterIndex, x);
+        setDate(parameterIndex, x, Calendar.getInstance());
+    }
+
+    // implement PreparedStatement
+    public void setDate(
+        int parameterIndex,
+        Date x,
+        Calendar cal)
+        throws SQLException
+    {
+        setDynamicParam(parameterIndex, x, cal);
     }
 
     // implement PreparedStatement
@@ -288,7 +312,17 @@ public class FarragoJdbcEnginePreparedNonDdl
         Time x)
         throws SQLException
     {
-        setDynamicParam(parameterIndex, x);
+        setTime(parameterIndex, x, Calendar.getInstance());
+    }
+
+    // implement PreparedStatement
+    public void setTime(
+        int parameterIndex,
+        Time x,
+        Calendar cal)
+        throws SQLException
+    {
+        setDynamicParam(parameterIndex, x, cal);
     }
 
     // implement PreparedStatement
@@ -297,7 +331,17 @@ public class FarragoJdbcEnginePreparedNonDdl
         Timestamp x)
         throws SQLException
     {
-        setDynamicParam(parameterIndex, x);
+        setTimestamp(parameterIndex, x, Calendar.getInstance());
+    }
+
+    // implement PreparedStatement
+    public void setTimestamp(
+        int parameterIndex,
+        Timestamp x,
+        Calendar cal)
+        throws SQLException
+    {
+        setDynamicParam(parameterIndex, x, cal);
     }
 
     // implement PreparedStatement
@@ -306,7 +350,11 @@ public class FarragoJdbcEnginePreparedNonDdl
         Object x)
         throws SQLException
     {
-        setDynamicParam(parameterIndex, x);
+        if (x instanceof java.util.Date) {
+            setDynamicParam(parameterIndex, x, Calendar.getInstance());
+        } else {
+            setDynamicParam(parameterIndex, x);
+        }
     }
 }
 

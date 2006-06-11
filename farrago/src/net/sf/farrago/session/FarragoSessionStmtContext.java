@@ -23,6 +23,7 @@
 package net.sf.farrago.session;
 
 import java.sql.*;
+import java.util.Calendar;
 
 import net.sf.farrago.query.FarragoPreparingStmt;
 import net.sf.farrago.util.*;
@@ -133,6 +134,18 @@ public interface FarragoSessionStmtContext extends FarragoAllocation
     public void setDynamicParam(
         int iParam,
         Object arg);
+
+    /**
+     * Sets an input parameter.
+     *
+     * @param iParam 0-based index of parameter to set
+     *
+     * @param arg value to set
+     */
+    public void setDynamicParam(
+        int iParam,
+        Object arg,
+        Calendar cal);
 
     /**
      * Clears any settings for all dynamic parameters.

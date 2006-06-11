@@ -24,6 +24,7 @@ package net.sf.farrago.db;
 
 import java.util.Arrays;
 import java.util.Set;
+import java.util.Calendar;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -156,6 +157,15 @@ public abstract class FarragoDbStmtContextBase
     {
         assert (isPrepared());
         Object y = dynamicParamDefs[parameterIndex].scrubValue(x);
+        dynamicParamValues[parameterIndex] = y;
+        dynamicParamValuesSet[parameterIndex] = true;
+    }
+
+    // implement FarragoSessionStmtContext
+    public void setDynamicParam(int parameterIndex, Object x, Calendar cal)
+    {
+        assert (isPrepared());
+        Object y = dynamicParamDefs[parameterIndex].scrubValue(x, cal);
         dynamicParamValues[parameterIndex] = y;
         dynamicParamValuesSet[parameterIndex] = true;
     }
