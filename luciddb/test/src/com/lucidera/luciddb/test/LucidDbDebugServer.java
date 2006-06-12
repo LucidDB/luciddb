@@ -44,6 +44,14 @@ public class LucidDbDebugServer
     public static void main(String [] args)
         throws Exception
     {
+        initProperties();
+
+        // Start the server.
+        FarragoVjdbcServer.main(new String[0]);
+    }
+
+    static void initProperties()
+    {
         // Set required system properties based on environment variables.
         StringProperty homeDir =
             FarragoProperties.instance().homeDir;
@@ -65,9 +73,6 @@ public class LucidDbDebugServer
         System.setProperty(
             FarragoProperties.instance().defaultSessionFactoryLibraryName
                 .getPath(), "class:com.lucidera.farrago.LucidDbSessionFactory");
-
-        // Start the server.
-        FarragoVjdbcServer.main(new String[0]);
     }
 }
 
