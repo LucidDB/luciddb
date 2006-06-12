@@ -55,7 +55,7 @@ import org.netbeans.api.mdr.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class MedMdrDataServer extends MedAbstractDataServer
+public class MedMdrDataServer extends MedAbstractDataServer
 {
     //~ Static fields/initializers --------------------------------------------
 
@@ -102,6 +102,14 @@ class MedMdrDataServer extends MedAbstractDataServer
     public RefPackage getExtentPackage()
     {
         return extentPackage;
+    }
+
+    /**
+     * @return the MDR repository instance
+     */
+    public MDRepository getMdrRepository()
+    {
+        return repository;
     }
 
     void initialize()

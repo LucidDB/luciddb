@@ -70,6 +70,7 @@ public class FarragoVjdbcServer extends FarragoAbstractServer
         configFarrago.setId("FarragoDBMS");
         configFarrago.setUrl(jdbcDriver.getBaseUrl());
         configFarrago.setConnectionPooling(false);
+        configFarrago.setPrefetchResultSetMetaData(true);
         vjdbcConfig.addConnection(configFarrago);
         
         // NOTE:  This odd sequence is required because of the

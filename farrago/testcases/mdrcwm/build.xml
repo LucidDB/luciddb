@@ -12,6 +12,7 @@
   <property name="catalog.basename" location="catalog/mdr"/>
   <property name="src.dir" location="src"/>
   <property name="classes.dir" location="classes"/>
+  <property name="mondrian.dir" location="mondrian"/>
 
   <path id="mdrcwm.classpath">
     <pathelement path="${farrago.3p.classpath}"/>
@@ -35,8 +36,7 @@
       <mapJava
         dir="${catalog.src.dir}"
         extent="CWM"/>
-      <instantiate name="Original" extent="CWM" package="Relational"/>
-      <instantiate name="Imported" extent="CWM" package="Relational"/>
+      <instantiate name="Mondrian" extent="CWM" package="Olap"/>
     </mdr>
     <farrago.javaCompile
       srcdir="${catalog.src.dir}"
@@ -71,35 +71,49 @@
     </farrago.javaExec>
   </target>
 
+  <target name="cleanRepository" depends="deleteExtent, createExtent">
+  </target>
+
+  <target name="createExtent" depends="mdr_taskdef">
+    <mdr storageFile="${catalog.basename}">
+      <instantiate name="Mondrian" extent="CWM" package="Olap"/>
+    </mdr>
+  </target>
+
+  <target name="deleteExtent" depends="compile">
+    <farrago.javaExec classpathref="mdrcwm.classpath"
+      classname="CleanRepository">
+        <sysproperty key="org.netbeans.mdr.persistence.Dir" 
+        value="${catalog.basename}" />
+    </farrago.javaExec>
+  </target>
+
   <target name="export" depends="mdr_taskdef">
     <mdr storageFile="${catalog.basename}">
       <writeXMI
         file="${xmi.dir}/export.xmi"
-        extent="Original"
+        extent="Mondrian"
         xmiVersion = "1.2" />
     </mdr>
   </target>
 
-  <target name="import" depends="mdr_taskdef">
+  <target name="importFoodMart" depends="mdr_taskdef">
     <mdr storageFile="${catalog.basename}">
       <readXMI
-        file="${xmi.dir}/export.xmi"
-        extent="Imported"/>
-    </mdr>
-  </target>
-
-  <target name="exportAgain" depends="mdr_taskdef">
-    <mdr storageFile="${catalog.basename}">
-      <writeXMI
-        file="${xmi.dir}/exportAgain.xmi"
-        extent="Imported"
-        xmiVersion = "1.2" />
+        file="${xmi.dir}/FoodMart.xmi"
+        extent="Mondrian"/>
     </mdr>
   </target>
 
   <target name="mdr_taskdef">
     <taskdef name="mdr" classname="org.netbeans.mdrant.MdrTask"
       classpathref="mdrcwm.classpath"/>
+  </target>
+
+  <target name="convertFoodMartToCwm">
+    <xslt style="${mondrian.dir}/convertMondrianToCwm.xsl"
+      in="${mondrian.dir}/FoodMart.xml"
+      out="${xmi.dir}/FoodMart.xmi" />
   </target>
 
 </project>
