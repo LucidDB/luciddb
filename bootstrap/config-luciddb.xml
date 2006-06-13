@@ -37,8 +37,11 @@
             <property name="integration.build.home" value="&open_integration.build.home;"/>
             <property name="open.build.home" value="&open_integration.build.home;"/>
 
+            <property name="with.tests" value="&with.tests;"/>
+
 		    <property name="open_root" value="&open_root;"/>
 		    <property name="eigen_home" value="&open_integration.build.home;"/>
+            <property name="lucidera_platform_home" value="&red_integration.build.home;/platform/main"/>
 		</ant>
 	</schedule>
 
@@ -52,49 +55,49 @@
 	<publishers>
         <artifactspublisher 
             dir="&open_integration.build.home;/luciddb/trace" 
-            dest="artifacts/luciddb&configSuffix;" 
+            dest="&artifacts_dir;/luciddb&configSuffix;" 
             subdirectory="trace"/>
 
         <artifactspublisher 
             dir="&open_integration.build.home;/luciddb/testlog" 
-            dest="artifacts/luciddb&configSuffix;" 
+            dest="&artifacts_dir;/luciddb&configSuffix;" 
             subdirectory="testlog"/>
 
         <!-- farrago artifacts -->
         <artifactspublisher 
             dir="&open_integration.build.home;/farrago/trace" 
-            dest="artifacts/luciddb&configSuffix;" 
+            dest="&artifacts_dir;/luciddb&configSuffix;" 
             subdirectory="farrago/trace"/>
 
         <artifactspublisher 
             dir="&open_integration.build.home;/farrago/testlog" 
-            dest="artifacts/luciddb&configSuffix;" 
+            dest="&artifacts_dir;/luciddb&configSuffix;" 
             subdirectory="farrago/testlog"/>
 
         <artifactspublisher 
             dir="&open_integration.build.home;/farrago/unitsql" 
-            dest="artifacts/luciddb&configSuffix;" 
+            dest="&artifacts_dir;/luciddb&configSuffix;" 
             subdirectory="farrago/unitsql"/>
 
         <artifactspublisher 
             dir="&open_integration.build.home;/farrago/initsql" 
-            dest="artifacts/luciddb&configSuffix;" 
+            dest="&artifacts_dir;/luciddb&configSuffix;" 
             subdirectory="farrago/initsql"/>
 
         <artifactspublisher 
             dir="&open_integration.build.home;/farrago/regressionsql" 
-            dest="artifacts/luciddb&configSuffix;" 
+            dest="&artifacts_dir;/luciddb&configSuffix;" 
             subdirectory="farrago/regressionsql"/>                    
 
         <!-- fennel artifacts -->
         <artifactspublisher 
             dir="&open_integration.build.home;/fennel/trace" 
-            dest="artifacts/luciddb&configSuffix;" 
+            dest="&artifacts_dir;/luciddb&configSuffix;" 
             subdirectory="fennel"/>
 
         <artifactspublisher
-            file="&open_integration.build.home;/luciddb/dist/luciddb.tar.bz2"
-            dest="artifacts/luciddb&configSuffix;" 
+            file="&open_integration.build.home;/luciddb/dist/&luciddb_tar;"
+            dest="&artifacts_dir;/luciddb&configSuffix;" 
             subdirectory="release"/>
 
 		<!-- sync up artifacts on jsp machine: CC's scp would copy everything -->
@@ -131,15 +134,16 @@
 		        <property name="eigen_home" value="&open_integration.build.home;"/>
                 <property name="open.bootstrap.dir" value="&open.bootstrap.dir;"/>
                 <property name="red.bootstrap.dir" value="&red.bootstrap.dir;"/>
+                <property name="luciddb.pass.dir" value="&luciddb.pass.dir;"/>
             </antpublisher>
 
             <artifactspublisher
                 file="&luciddb.pass.dir;/unpackopen.tz"
-                dest="artifacts/luciddb&configSuffix;" 
+                dest="&artifacts_dir;/luciddb&configSuffix;" 
                 subdirectory="release"/>
             <artifactspublisher
                 file="&luciddb.pass.dir;/unpackopen.sh"
-                dest="artifacts/luciddb&configSuffix;" 
+                dest="&artifacts_dir;/luciddb&configSuffix;" 
                 subdirectory="release"/>
 
         </onsuccess>
@@ -151,6 +155,8 @@
                 uselogger="true"
                 usedebug="true"
                 target="pub-logfile">
+
+            <property name="artifacts_dir" value="&artifacts_dir;"/>
         </antpublisher>
 
 		<email buildresultsurl="&buildresultsbase;/luciddb&configSuffix;"

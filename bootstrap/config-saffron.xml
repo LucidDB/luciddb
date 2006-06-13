@@ -67,35 +67,14 @@
 
         <artifactspublisher 
             dir="&open_integration.build.home;/saffron/trace" 
-            dest="artifacts/saffron&configSuffix;" 
+            dest="&artifacts_dir;/saffron&configSuffix;" 
             subdirectory="trace"/>
 
-	    <!-- sync up artifacts on jsp machine: CC's scp would copy everything -->
-	    <execute command="&rsync_cmd; artifacts/saffron&configSuffix; &rsync_dest;"/>
+        <artifactspublisher 
+            dir="&open_integration.build.home;/saffron/testlog" 
+            dest="&artifacts_dir;/saffron&configSuffix;" 
+            subdirectory="testlog"/>
 
-                        <!--
-                        <onfailure>
-                            <artifactspublisher dir="&open_integration.build.home;/farrago" dest="artifacts/saffron&configSuffix;" subdirectory="farrago"/>
-                            <artifactspublisher dir="&open_integration.build.home;/fennel" dest="artifacts/saffron&configSuffix;" subdirectory="fennel"/>
-                            <artifactspublisher dir="&open_integration.build.home;/saffron" dest="artifacts/saffron&configSuffix;" subdirectory="saffron"/>
-                        </onfailure>
-                        -->
-
-	    <scp sourcedir="logs/saffron"
-			     targetuser="&scp_user;"
-			     targethost="&scp_host;"
-			     targetseparator="&scp_filesep;"
-			     targetdir="web/logs/saffron&configSuffix;"
-                             options="&scp_options;"/>
-			
-	    <scp sourcedir="logs/saffron"
-			     file="currentbuildstatus.txt"
-			     targetuser="&scp_user;"
-			     targethost="&scp_host;"
-			     targetseparator="&scp_filesep;"
-			     targetdir="web/logs/saffron&configSuffix;"
-                             options="&scp_options;"/>
-			
 	    <email buildresultsurl="&buildresultsbase;/saffron&configSuffix;"
 			       mailhost="&mailhost;"
 			       reportsuccess="&reportsuccess;"
