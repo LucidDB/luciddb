@@ -281,6 +281,7 @@ public class FarragoDbStmtContext extends FarragoDbStmtContextBase
     // implement FarragoSessionStmtContext
     public void cancel()
     {
+        tracer.info("cancel");
         FarragoSessionRuntimeContext contextToCancel = runningContext;
         if (contextToCancel != null) {
             contextToCancel.cancel();

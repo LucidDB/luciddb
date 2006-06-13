@@ -76,6 +76,8 @@ public class JmiModelGraph
     private final Map map;
 
     private final RefPackage refRootPackage;
+
+    private final boolean strict;
     
     /**
      * Creates a new graph based on the contents of a RefPackage
@@ -87,7 +89,25 @@ public class JmiModelGraph
     {
         this(
             refRootPackage,
-            new DirectedMultigraph());
+            new DirectedMultigraph(),
+            true);
+    }
+
+    /**
+     * Creates a new graph based on the contents of a RefPackage
+     * and all of its subpackages, with control over strictness.
+     *
+     * @param refRootPackage package on which graph is based
+     *
+     * @param strict true to prevent dangling references in model;
+     * false to ignore them
+     */
+    public JmiModelGraph(RefPackage refRootPackage, boolean strict)
+    {
+        this(
+            refRootPackage,
+            new DirectedMultigraph(),
+            strict);
     }
 
     /**
@@ -236,12 +256,14 @@ public class JmiModelGraph
     }
     
     private JmiModelGraph(
-        RefPackage refRootPackage, DirectedGraph combinedGraph)
+        RefPackage refRootPackage, DirectedGraph combinedGraph,
+        boolean strict)
     {
         super(combinedGraph);
 
         this.refRootPackage = refRootPackage;
         this.combinedGraph = combinedGraph;
+        this.strict = strict;
         
         inheritanceGraph = new DirectedMultigraph();
         unmodifiableInheritanceGraph =
@@ -372,6 +394,11 @@ public class JmiModelGraph
     {
         JmiClassVertex vertex = getVertexForMofClass(
             (MofClass) refClass.refMetaObject());
+        if (vertex == null) {
+            if (!strict) {
+                return;
+            }
+        }
         assert(vertex != null);
         vertex.refClass = refClass;
         map.put(refClass, vertex);
@@ -381,6 +408,11 @@ public class JmiModelGraph
     {
         JmiAssocEdge edge = getEdgeForMofAssoc(
             (Association) refAssoc.refMetaObject());
+        if (edge == null) {
+            if (!strict) {
+                return;
+            }
+        }
         assert(edge != null);
         edge.refAssoc = refAssoc;
         map.put(refAssoc, edge);

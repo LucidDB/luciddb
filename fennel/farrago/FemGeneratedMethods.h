@@ -111,8 +111,8 @@ jmethodID ProxyLhxJoinStreamDef::meth_getCndBuildKeys = 0;
 jmethodID ProxyLhxJoinStreamDef::meth_isLeftInner = 0;
 jmethodID ProxyLhxJoinStreamDef::meth_isRightInner = 0;
 jmethodID ProxyLhxJoinStreamDef::meth_isRightOuter = 0;
-jmethodID ProxyLhxJoinStreamDef::meth_isLeftDistinct = 0;
-jmethodID ProxyLhxJoinStreamDef::meth_isRightDistinct = 0;
+jmethodID ProxyLhxJoinStreamDef::meth_isSetopDistinct = 0;
+jmethodID ProxyLhxJoinStreamDef::meth_isSetopAll = 0;
 jmethodID ProxyMergeStreamDef::meth_isSequential = 0;
 jmethodID ProxyMockTupleStreamDef::meth_getRowCount = 0;
 jmethodID ProxyReshapeStreamDef::meth_getCompareOp = 0;
@@ -141,8 +141,8 @@ jmethodID ProxyValuesStreamDef::meth_getTupleBytesBase64 = 0;
 jmethodID ProxyWindowDef::meth_getOrderKeyList = 0;
 jmethodID ProxyWindowDef::meth_isPhysical = 0;
 jmethodID ProxyWindowDef::meth_getRange = 0;
-jmethodID ProxyWindowDef::meth_getWindowStream = 0;
 jmethodID ProxyWindowDef::meth_getPartition = 0;
+jmethodID ProxyWindowDef::meth_getWindowStream = 0;
 jmethodID ProxyWindowDef::meth_getOffset = 0;
 jmethodID ProxyWindowPartitionDef::meth_getPartitionKeyList = 0;
 jmethodID ProxyWindowPartitionDef::meth_getInitializeProgram = 0;
@@ -436,8 +436,8 @@ ProxyLhxJoinStreamDef::meth_getCndBuildKeys = pEnv->GetMethodID(jClass,"getCndBu
 ProxyLhxJoinStreamDef::meth_isLeftInner = pEnv->GetMethodID(jClass,"isLeftInner","()Z");
 ProxyLhxJoinStreamDef::meth_isRightInner = pEnv->GetMethodID(jClass,"isRightInner","()Z");
 ProxyLhxJoinStreamDef::meth_isRightOuter = pEnv->GetMethodID(jClass,"isRightOuter","()Z");
-ProxyLhxJoinStreamDef::meth_isLeftDistinct = pEnv->GetMethodID(jClass,"isLeftDistinct","()Z");
-ProxyLhxJoinStreamDef::meth_isRightDistinct = pEnv->GetMethodID(jClass,"isRightDistinct","()Z");
+ProxyLhxJoinStreamDef::meth_isSetopDistinct = pEnv->GetMethodID(jClass,"isSetopDistinct","()Z");
+ProxyLhxJoinStreamDef::meth_isSetopAll = pEnv->GetMethodID(jClass,"isSetopAll","()Z");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemMergeStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyMergeStreamDef>));
@@ -544,8 +544,8 @@ visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(ne
 ProxyWindowDef::meth_getOrderKeyList = pEnv->GetMethodID(jClass,"getOrderKeyList","()Lnet/sf/farrago/fem/fennel/FemTupleProjection;");
 ProxyWindowDef::meth_isPhysical = pEnv->GetMethodID(jClass,"isPhysical","()Z");
 ProxyWindowDef::meth_getRange = pEnv->GetMethodID(jClass,"getRange","()Ljava/lang/String;");
-ProxyWindowDef::meth_getWindowStream = pEnv->GetMethodID(jClass,"getWindowStream","()Lnet/sf/farrago/fem/fennel/FemWindowStreamDef;");
 ProxyWindowDef::meth_getPartition = pEnv->GetMethodID(jClass,"getPartition","()Ljava/util/List;");
+ProxyWindowDef::meth_getWindowStream = pEnv->GetMethodID(jClass,"getWindowStream","()Lnet/sf/farrago/fem/fennel/FemWindowStreamDef;");
 ProxyWindowDef::meth_getOffset = pEnv->GetMethodID(jClass,"getOffset","()I");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemWindowPartitionDef");
@@ -1261,14 +1261,14 @@ bool ProxyLhxJoinStreamDef::isRightOuter()
 return pEnv->CallBooleanMethod(jObject,meth_isRightOuter);
 }
 
-bool ProxyLhxJoinStreamDef::isLeftDistinct()
+bool ProxyLhxJoinStreamDef::isSetopDistinct()
 {
-return pEnv->CallBooleanMethod(jObject,meth_isLeftDistinct);
+return pEnv->CallBooleanMethod(jObject,meth_isSetopDistinct);
 }
 
-bool ProxyLhxJoinStreamDef::isRightDistinct()
+bool ProxyLhxJoinStreamDef::isSetopAll()
 {
-return pEnv->CallBooleanMethod(jObject,meth_isRightDistinct);
+return pEnv->CallBooleanMethod(jObject,meth_isSetopAll);
 }
 
 bool ProxyMergeStreamDef::isSequential()
@@ -1457,15 +1457,6 @@ std::string ProxyWindowDef::getRange()
 return constructString(pEnv->CallObjectMethod(jObject,meth_getRange));
 }
 
-SharedProxyWindowStreamDef ProxyWindowDef::getWindowStream()
-{
-SharedProxyWindowStreamDef p;
-p->pEnv = pEnv;
-p->jObject = pEnv->CallObjectMethod(jObject,meth_getWindowStream);
-if (!p->jObject) p.reset();
-return p;
-}
-
 SharedProxyWindowPartitionDef ProxyWindowDef::getPartition()
 {
 SharedProxyWindowPartitionDef p;
@@ -1473,6 +1464,15 @@ p->pEnv = pEnv;
 p->jObject = pEnv->CallObjectMethod(jObject,meth_getPartition);
 p.jIter = JniUtil::getIter(p->pEnv,p->jObject);
 ++p;
+return p;
+}
+
+SharedProxyWindowStreamDef ProxyWindowDef::getWindowStream()
+{
+SharedProxyWindowStreamDef p;
+p->pEnv = pEnv;
+p->jObject = pEnv->CallObjectMethod(jObject,meth_getWindowStream);
+if (!p->jObject) p.reset();
 return p;
 }
 

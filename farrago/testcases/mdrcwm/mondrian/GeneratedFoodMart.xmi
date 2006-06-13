@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<XMI xmi.version="1.2" timestamp="TODO" xmlns:CWM="org.omg.xmi.namespace.CWM" xmlns:CWMTFM="org.omg.xmi.namespace.CWMTFM" xmlns:CWMOLAP="org.omg.xmi.namespace.CWMOLAP" xmlns:Model="omg.org/mof.Model/1.3">
+  <XMI.header>
+    <XMI.documentation>
+      <XMI.exporter>convertMondrianToCwm</XMI.exporter>
+      <XMI.exporterVersion>0.1</XMI.exporterVersion>
+    </XMI.documentation>
+  </XMI.header>
+  <XMI.content>
+    <CWMOLAP:Schema name="FoodMart" xmi.id="N65537">
+      <CWMOLAP:Schema.dimension>
+        <CWMOLAP:Dimension isAbstract="false" isMeasure="false" isTime="false" name="Store" xmi.id="N65545">
+          <CWMOLAP:Dimension.hierarchy>
+            <CWMOLAP:LevelBasedHierarchy isAbstract="false" name="Store" xmi.id="N65548">
+              <CWMOLAP:LevelBasedHierarchy.hierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation name="Store Country" xmi.id="HLA_N65555">
+                  <CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                    <CWMOLAP:Level xmi.idref="N65555"/>
+                  </CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                </CWMOLAP:HierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation name="Store State" xmi.id="HLA_N65560">
+                  <CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                    <CWMOLAP:Level xmi.idref="N65560"/>
+                  </CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                </CWMOLAP:HierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation name="Store City" xmi.id="HLA_N65565">
+                  <CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                    <CWMOLAP:Level xmi.idref="N65565"/>
+                  </CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                </CWMOLAP:HierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation name="Store Name" xmi.id="HLA_N65570">
+                  <CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                    <CWMOLAP:Level xmi.idref="N65570"/>
+                  </CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                </CWMOLAP:HierarchyLevelAssociation>
+              </CWMOLAP:LevelBasedHierarchy.hierarchyLevelAssociation>
+            </CWMOLAP:LevelBasedHierarchy>
+          </CWMOLAP:Dimension.hierarchy>
+          <CWMOLAP:Dimension.memberSelection>
+            <CWMOLAP:Level isAbstract="false" name="Store Country" xmi.id="N65555">
+              <CWMOLAP:Level.hierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation xmi.idref="HLA_N65555"/>
+              </CWMOLAP:Level.hierarchyLevelAssociation>
+            </CWMOLAP:Level>
+            <CWMOLAP:Level isAbstract="false" name="Store State" xmi.id="N65560">
+              <CWMOLAP:Level.hierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation xmi.idref="HLA_N65560"/>
+              </CWMOLAP:Level.hierarchyLevelAssociation>
+            </CWMOLAP:Level>
+            <CWMOLAP:Level isAbstract="false" name="Store City" xmi.id="N65565">
+              <CWMOLAP:Level.hierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation xmi.idref="HLA_N65565"/>
+              </CWMOLAP:Level.hierarchyLevelAssociation>
+            </CWMOLAP:Level>
+            <CWMOLAP:Level isAbstract="false" name="Store Name" xmi.id="N65570">
+              <CWMOLAP:Level.hierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation xmi.idref="HLA_N65570"/>
+              </CWMOLAP:Level.hierarchyLevelAssociation>
+            </CWMOLAP:Level>
+          </CWMOLAP:Dimension.memberSelection>
+        </CWMOLAP:Dimension>
+        <CWMOLAP:Dimension isAbstract="false" isMeasure="false" isTime="false" name="Store Size in SQFT" xmi.id="N65616">
+          <CWMOLAP:Dimension.hierarchy>
+            <CWMOLAP:LevelBasedHierarchy isAbstract="false" name="Store Size in SQFT" xmi.id="N65619">
+              <CWMOLAP:LevelBasedHierarchy.hierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation name="Store Sqft" xmi.id="HLA_N65626">
+                  <CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                    <CWMOLAP:Level xmi.idref="N65626"/>
+                  </CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                </CWMOLAP:HierarchyLevelAssociation>
+              </CWMOLAP:LevelBasedHierarchy.hierarchyLevelAssociation>
+            </CWMOLAP:LevelBasedHierarchy>
+          </CWMOLAP:Dimension.hierarchy>
+          <CWMOLAP:Dimension.memberSelection>
+            <CWMOLAP:Level isAbstract="false" name="Store Sqft" xmi.id="N65626">
+              <CWMOLAP:Level.hierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation xmi.idref="HLA_N65626"/>
+              </CWMOLAP:Level.hierarchyLevelAssociation>
+            </CWMOLAP:Level>
+          </CWMOLAP:Dimension.memberSelection>
+        </CWMOLAP:Dimension>
+        <CWMOLAP:Dimension isAbstract="false" isMeasure="false" isTime="false" name="Store Type" xmi.id="N65634">
+          <CWMOLAP:Dimension.hierarchy>
+            <CWMOLAP:LevelBasedHierarchy isAbstract="false" name="Store Type" xmi.id="N65637">
+              <CWMOLAP:LevelBasedHierarchy.hierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation name="Store Type" xmi.id="HLA_N65644">
+                  <CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                    <CWMOLAP:Level xmi.idref="N65644"/>
+                  </CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                </CWMOLAP:HierarchyLevelAssociation>
+              </CWMOLAP:LevelBasedHierarchy.hierarchyLevelAssociation>
+            </CWMOLAP:LevelBasedHierarchy>
+          </CWMOLAP:Dimension.hierarchy>
+          <CWMOLAP:Dimension.memberSelection>
+            <CWMOLAP:Level isAbstract="false" name="Store Type" xmi.id="N65644">
+              <CWMOLAP:Level.hierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation xmi.idref="HLA_N65644"/>
+              </CWMOLAP:Level.hierarchyLevelAssociation>
+            </CWMOLAP:Level>
+          </CWMOLAP:Dimension.memberSelection>
+        </CWMOLAP:Dimension>
+        <CWMOLAP:Dimension isAbstract="false" isMeasure="false" isTime="true" name="Time" xmi.id="N65651">
+          <CWMOLAP:Dimension.hierarchy>
+            <CWMOLAP:LevelBasedHierarchy isAbstract="false" name="Time" xmi.id="N65655">
+              <CWMOLAP:LevelBasedHierarchy.hierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation name="Year" xmi.id="HLA_N65662">
+                  <CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                    <CWMOLAP:Level xmi.idref="N65662"/>
+                  </CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                </CWMOLAP:HierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation name="Quarter" xmi.id="HLA_N65669">
+                  <CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                    <CWMOLAP:Level xmi.idref="N65669"/>
+                  </CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                </CWMOLAP:HierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation name="Month" xmi.id="HLA_N65675">
+                  <CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                    <CWMOLAP:Level xmi.idref="N65675"/>
+                  </CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                </CWMOLAP:HierarchyLevelAssociation>
+              </CWMOLAP:LevelBasedHierarchy.hierarchyLevelAssociation>
+            </CWMOLAP:LevelBasedHierarchy>
+            <CWMOLAP:LevelBasedHierarchy isAbstract="false" name="Weekly" xmi.id="N65683">
+              <CWMOLAP:LevelBasedHierarchy.hierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation name="Year" xmi.id="HLA_N65692">
+                  <CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                    <CWMOLAP:Level xmi.idref="N65692"/>
+                  </CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                </CWMOLAP:HierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation name="Week" xmi.id="HLA_N65699">
+                  <CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                    <CWMOLAP:Level xmi.idref="N65699"/>
+                  </CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                </CWMOLAP:HierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation name="Day" xmi.id="HLA_N65706">
+                  <CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                    <CWMOLAP:Level xmi.idref="N65706"/>
+                  </CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                </CWMOLAP:HierarchyLevelAssociation>
+              </CWMOLAP:LevelBasedHierarchy.hierarchyLevelAssociation>
+            </CWMOLAP:LevelBasedHierarchy>
+          </CWMOLAP:Dimension.hierarchy>
+          <CWMOLAP:Dimension.memberSelection>
+            <CWMOLAP:Level isAbstract="false" name="Year" xmi.id="N65662">
+              <CWMOLAP:Level.hierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation xmi.idref="HLA_N65662"/>
+              </CWMOLAP:Level.hierarchyLevelAssociation>
+            </CWMOLAP:Level>
+            <CWMOLAP:Level isAbstract="false" name="Quarter" xmi.id="N65669">
+              <CWMOLAP:Level.hierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation xmi.idref="HLA_N65669"/>
+              </CWMOLAP:Level.hierarchyLevelAssociation>
+            </CWMOLAP:Level>
+            <CWMOLAP:Level isAbstract="false" name="Month" xmi.id="N65675">
+              <CWMOLAP:Level.hierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation xmi.idref="HLA_N65675"/>
+              </CWMOLAP:Level.hierarchyLevelAssociation>
+            </CWMOLAP:Level>
+            <CWMOLAP:Level isAbstract="false" name="Year" xmi.id="N65692">
+              <CWMOLAP:Level.hierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation xmi.idref="HLA_N65692"/>
+              </CWMOLAP:Level.hierarchyLevelAssociation>
+            </CWMOLAP:Level>
+            <CWMOLAP:Level isAbstract="false" name="Week" xmi.id="N65699">
+              <CWMOLAP:Level.hierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation xmi.idref="HLA_N65699"/>
+              </CWMOLAP:Level.hierarchyLevelAssociation>
+            </CWMOLAP:Level>
+            <CWMOLAP:Level isAbstract="false" name="Day" xmi.id="N65706">
+              <CWMOLAP:Level.hierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation xmi.idref="HLA_N65706"/>
+              </CWMOLAP:Level.hierarchyLevelAssociation>
+            </CWMOLAP:Level>
+          </CWMOLAP:Dimension.memberSelection>
+        </CWMOLAP:Dimension>
+        <CWMOLAP:Dimension isAbstract="false" isMeasure="false" isTime="false" name="Product" xmi.id="N65715">
+          <CWMOLAP:Dimension.hierarchy>
+            <CWMOLAP:LevelBasedHierarchy isAbstract="false" name="Product" xmi.id="N65718">
+              <CWMOLAP:LevelBasedHierarchy.hierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation name="Product Family" xmi.id="HLA_N65736">
+                  <CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                    <CWMOLAP:Level xmi.idref="N65736"/>
+                  </CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                </CWMOLAP:HierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation name="Product Department" xmi.id="HLA_N65742">
+                  <CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                    <CWMOLAP:Level xmi.idref="N65742"/>
+                  </CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                </CWMOLAP:HierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation name="Product Category" xmi.id="HLA_N65748">
+                  <CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                    <CWMOLAP:Level xmi.idref="N65748"/>
+                  </CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                </CWMOLAP:HierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation name="Product Subcategory" xmi.id="HLA_N65754">
+                  <CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                    <CWMOLAP:Level xmi.idref="N65754"/>
+                  </CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                </CWMOLAP:HierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation name="Brand Name" xmi.id="HLA_N65760">
+                  <CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                    <CWMOLAP:Level xmi.idref="N65760"/>
+                  </CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                </CWMOLAP:HierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation name="Product Name" xmi.id="HLA_N65766">
+                  <CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                    <CWMOLAP:Level xmi.idref="N65766"/>
+                  </CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                </CWMOLAP:HierarchyLevelAssociation>
+              </CWMOLAP:LevelBasedHierarchy.hierarchyLevelAssociation>
+            </CWMOLAP:LevelBasedHierarchy>
+          </CWMOLAP:Dimension.hierarchy>
+          <CWMOLAP:Dimension.memberSelection>
+            <CWMOLAP:Level isAbstract="false" name="Product Family" xmi.id="N65736">
+              <CWMOLAP:Level.hierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation xmi.idref="HLA_N65736"/>
+              </CWMOLAP:Level.hierarchyLevelAssociation>
+            </CWMOLAP:Level>
+            <CWMOLAP:Level isAbstract="false" name="Product Department" xmi.id="N65742">
+              <CWMOLAP:Level.hierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation xmi.idref="HLA_N65742"/>
+              </CWMOLAP:Level.hierarchyLevelAssociation>
+            </CWMOLAP:Level>
+            <CWMOLAP:Level isAbstract="false" name="Product Category" xmi.id="N65748">
+              <CWMOLAP:Level.hierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation xmi.idref="HLA_N65748"/>
+              </CWMOLAP:Level.hierarchyLevelAssociation>
+            </CWMOLAP:Level>
+            <CWMOLAP:Level isAbstract="false" name="Product Subcategory" xmi.id="N65754">
+              <CWMOLAP:Level.hierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation xmi.idref="HLA_N65754"/>
+              </CWMOLAP:Level.hierarchyLevelAssociation>
+            </CWMOLAP:Level>
+            <CWMOLAP:Level isAbstract="false" name="Brand Name" xmi.id="N65760">
+              <CWMOLAP:Level.hierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation xmi.idref="HLA_N65760"/>
+              </CWMOLAP:Level.hierarchyLevelAssociation>
+            </CWMOLAP:Level>
+            <CWMOLAP:Level isAbstract="false" name="Product Name" xmi.id="N65766">
+              <CWMOLAP:Level.hierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation xmi.idref="HLA_N65766"/>
+              </CWMOLAP:Level.hierarchyLevelAssociation>
+            </CWMOLAP:Level>
+          </CWMOLAP:Dimension.memberSelection>
+        </CWMOLAP:Dimension>
+        <CWMOLAP:Dimension isAbstract="false" isMeasure="false" isTime="false" name="Warehouse" xmi.id="N65774">
+          <CWMOLAP:Dimension.hierarchy>
+            <CWMOLAP:LevelBasedHierarchy isAbstract="false" name="Warehouse" xmi.id="N65777">
+              <CWMOLAP:LevelBasedHierarchy.hierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation name="Country" xmi.id="HLA_N65784">
+                  <CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                    <CWMOLAP:Level xmi.idref="N65784"/>
+                  </CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                </CWMOLAP:HierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation name="State Province" xmi.id="HLA_N65789">
+                  <CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                    <CWMOLAP:Level xmi.idref="N65789"/>
+                  </CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                </CWMOLAP:HierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation name="City" xmi.id="HLA_N65794">
+                  <CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                    <CWMOLAP:Level xmi.idref="N65794"/>
+                  </CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                </CWMOLAP:HierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation name="Warehouse Name" xmi.id="HLA_N65799">
+                  <CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                    <CWMOLAP:Level xmi.idref="N65799"/>
+                  </CWMOLAP:HierarchyLevelAssociation.currentLevel>
+                </CWMOLAP:HierarchyLevelAssociation>
+              </CWMOLAP:LevelBasedHierarchy.hierarchyLevelAssociation>
+            </CWMOLAP:LevelBasedHierarchy>
+          </CWMOLAP:Dimension.hierarchy>
+          <CWMOLAP:Dimension.memberSelection>
+            <CWMOLAP:Level isAbstract="false" name="Country" xmi.id="N65784">
+              <CWMOLAP:Level.hierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation xmi.idref="HLA_N65784"/>
+              </CWMOLAP:Level.hierarchyLevelAssociation>
+            </CWMOLAP:Level>
+            <CWMOLAP:Level isAbstract="false" name="State Province" xmi.id="N65789">
+              <CWMOLAP:Level.hierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation xmi.idref="HLA_N65789"/>
+              </CWMOLAP:Level.hierarchyLevelAssociation>
+            </CWMOLAP:Level>
+            <CWMOLAP:Level isAbstract="false" name="City" xmi.id="N65794">
+              <CWMOLAP:Level.hierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation xmi.idref="HLA_N65794"/>
+              </CWMOLAP:Level.hierarchyLevelAssociation>
+            </CWMOLAP:Level>
+            <CWMOLAP:Level isAbstract="false" name="Warehouse Name" xmi.id="N65799">
+              <CWMOLAP:Level.hierarchyLevelAssociation>
+                <CWMOLAP:HierarchyLevelAssociation xmi.idref="HLA_N65799"/>
+              </CWMOLAP:Level.hierarchyLevelAssociation>
+            </CWMOLAP:Level>
+          </CWMOLAP:Dimension.memberSelection>
+        </CWMOLAP:Dimension>
+      </CWMOLAP:Schema.dimension>
+    </CWMOLAP:Schema>
+  </XMI.content>
+</XMI>
