@@ -113,13 +113,20 @@
 			<property name="${build.type}" value="yes"/>
 		</ant>
         -->
+
+        <echo>
+            key="EIGEN_HOME" path="${open.build.home}
+            exec dir="${build.home}/saffron" executable="${bash.exe}" failonerror="true"
+        </echo>
+
         <!-- system env EIGEN_HOME is required -->
         <exec dir="${build.home}/saffron" executable="${bash.exe}" failonerror="true">
 		    <arg value="-x"/>
             <arg value="${open.build.home}/thirdparty/ant/bin/ant"/>
             <arg value="-D${build.type}=yes"/>
+            <arg value="test"/>
 
-            <env key="EIGEN_HOME" file="${open.build.home}"/>
+            <env key="EIGEN_HOME" path="${open.build.home}"/>
 		</exec>
 	</target>
 
