@@ -562,8 +562,9 @@ public abstract class OJPreparingStmt
                 new ClassDeclarationList(decl));
 
         if (queryString != null) {
-            compUnit.setComment("/** "
-                + queryString.replaceAll("\n", "\n// ") + "\n */");
+            // use single line comments to avoid issues with */ in literals
+            compUnit.setComment("// "
+                + queryString.replaceAll("\n", "\n// ") + "\n");
         }
         String s = compUnit.toString();
         String className = decl.getName();
