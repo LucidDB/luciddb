@@ -28,6 +28,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.rel.metadata.*;
 
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.cwm.core.CwmModelElement;
 
 /**
  * FarragoSessionAnalyzedSql contains the results of the analyzeSql
@@ -62,7 +63,7 @@ public class FarragoSessionAnalyzedSql
      * Set of catalog objects on which the expression directly
      * depends.
      */
-    public Set dependencies;
+    public Set<CwmModelElement> dependencies;
 
     /**
      * Metadata for result set returned when the expression is executed:

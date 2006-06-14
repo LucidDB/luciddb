@@ -23,6 +23,7 @@ package org.eigenbase.sql.validate;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.resource.EigenbaseResource;
+import org.eigenbase.reltype.RelDataType;
 
 import java.util.List;
 
@@ -69,12 +70,28 @@ class EmptyScope implements SqlValidatorScope
         return null;
     }
 
-    public void findAllColumnNames(String parentObjName, List result)
+    public void findAllColumnNames(
+        String parentObjName, List<SqlMoniker> result)
     {
     }
 
-    public void findAllTableNames(List result)
+    public void findAllTableNames(List<SqlMoniker> result)
     {
+    }
+
+    public RelDataType resolveColumn(String name, SqlNode ctx)
+    {
+        return null;
+    }
+
+    public SqlValidatorScope getOperandScope(SqlCall call)
+    {
+        return this;
+    }
+
+    public void validateExpr(SqlNode expr)
+    {
+        // valid
     }
 
     public String findQualifyingTableName(

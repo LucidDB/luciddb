@@ -356,10 +356,11 @@ public class SqlJdbcFunctionCall extends SqlFunction
 
     public SqlCall createCall(
         SqlNode [] operands,
-        SqlParserPos pos)
+        SqlParserPos pos,
+        SqlLiteral functionQualifier)
     {
         thisOperands = operands;
-        return super.createCall(operands, pos);
+        return super.createCall(operands, pos, functionQualifier);
     }
 
     public SqlCall getLookupCall()

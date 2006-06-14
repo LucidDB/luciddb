@@ -80,10 +80,10 @@ public abstract class SqlAbstractParserImpl
     protected static final ExprContext EXPR_ACCEPT_CURSOR =
         new ExprContext();
 
-    private static final Set sql92ReservedWordSet;
+    private static final Set<String> sql92ReservedWordSet;
 
     static {
-        Set set = new HashSet();
+        Set<String> set = new HashSet<String>();
         set.add("ABSOLUTE");
         set.add("ACTION");
         set.add("ADD");
@@ -319,7 +319,7 @@ public abstract class SqlAbstractParserImpl
      *
      * @sql.92 Section 5.2
      */
-    public static Set getSql92ReservedWords()
+    public static Set<String> getSql92ReservedWords()
     {
         return sql92ReservedWordSet;
     }
@@ -339,7 +339,8 @@ public abstract class SqlAbstractParserImpl
         SqlIdentifier funName,
         SqlNode [] operands,
         SqlParserPos pos,
-        SqlFunctionCategory funcType)
+        SqlFunctionCategory funcType,
+        SqlLiteral functionQualifier)
     {
         SqlOperator fun = null;
 
@@ -348,12 +349,12 @@ public abstract class SqlAbstractParserImpl
         // preserve the correct syntax (i.e. don't quote builtin function
         /// name when regenerating SQL).
         if (funName.isSimple()) {
-            List list = opTab.lookupOperatorOverloads(
+            List<SqlOperator> list = opTab.lookupOperatorOverloads(
                 funName,
                 null,
                 SqlSyntax.Function);
             if (list.size() == 1) {
-                fun = (SqlOperator) list.get(0);
+                fun = list.get(0);
             }
         }
 
@@ -363,7 +364,7 @@ public abstract class SqlAbstractParserImpl
             fun = new SqlFunction(funName, null, null, null, null, funcType);
         }
 
-        return fun.createCall(operands, pos);
+        return fun.createCall(operands, pos, functionQualifier);
     }
 
     /**
@@ -457,7 +458,7 @@ public abstract class SqlAbstractParserImpl
         /**
          * Returns a list of all tokens in alphabetical order.
          */
-        List getTokens();
+        List<String> getTokens();
     }
 
     /**
@@ -465,18 +466,18 @@ public abstract class SqlAbstractParserImpl
      */
     public static class MetadataImpl implements Metadata
     {
-        private final Set reservedFunctionNames = new HashSet();
-        private final Set contextVariableNames = new HashSet();
-        private final Set nonReservedKeyWordSet = new HashSet();
+        private final Set<String> reservedFunctionNames = new HashSet<String>();
+        private final Set<String> contextVariableNames = new HashSet<String>();
+        private final Set<String> nonReservedKeyWordSet = new HashSet<String>();
         /**
          * Set of all tokens.
          */
-        private final SortedSet tokenSet = new TreeSet();
+        private final SortedSet<String> tokenSet = new TreeSet<String>();
         /**
          * Immutable list of all tokens, in alphabetical order.
          */
-        private final List tokenList;
-        private final Set reservedWords = new HashSet();
+        private final List<String> tokenList;
+        private final Set<String> reservedWords = new HashSet<String>();
         private final String sql92ReservedWords;
 
         public MetadataImpl(SqlAbstractParserImpl sqlParser)
@@ -484,9 +485,9 @@ public abstract class SqlAbstractParserImpl
             initList(sqlParser, reservedFunctionNames, "ReservedFunctionName");
             initList(sqlParser, contextVariableNames, "ContextVariable");
             initList(sqlParser, nonReservedKeyWordSet, "NonReservedKeyWord");
-            tokenList = Collections.unmodifiableList(new ArrayList(tokenSet));
+            tokenList = Collections.unmodifiableList(new ArrayList<String>(tokenSet));
             sql92ReservedWords = constructSql92ReservedWordList();
-            Set reservedWordSet = new TreeSet();
+            Set<String> reservedWordSet = new TreeSet<String>();
             reservedWordSet.addAll(tokenSet);
             reservedWordSet.removeAll(nonReservedKeyWordSet);
             reservedWords.addAll(reservedWordSet);
@@ -496,7 +497,9 @@ public abstract class SqlAbstractParserImpl
          * Initializes lists of keywords.
          */
         private void initList(
-            SqlAbstractParserImpl parserImpl, Set keywords, final String name)
+            SqlAbstractParserImpl parserImpl,
+            Set<String> keywords,
+            String name)
         {
             parserImpl.ReInit(new StringReader("1"));
             try {
@@ -551,7 +554,7 @@ public abstract class SqlAbstractParserImpl
             SqlAbstractParserImpl parserImpl,
             String name) throws Throwable
         {
-            Class clazz = parserImpl.getClass();
+            Class<? extends Object> clazz = parserImpl.getClass();
             try {
                 final Method method = clazz.getMethod(name, (Class []) null);
                 return method.invoke(parserImpl, (Object []) null);
@@ -571,14 +574,14 @@ public abstract class SqlAbstractParserImpl
         private String constructSql92ReservedWordList()
         {
             StringBuffer sb = new StringBuffer();
-            TreeSet jdbcReservedSet = new TreeSet();
+            TreeSet<String> jdbcReservedSet = new TreeSet<String>();
             jdbcReservedSet.addAll(tokenSet);
             jdbcReservedSet.removeAll(sql92ReservedWordSet);
             jdbcReservedSet.removeAll(nonReservedKeyWordSet);
             int j = 0;
-            for (Iterator jdbcReservedIter = jdbcReservedSet.iterator();
+            for (Iterator<String> jdbcReservedIter = jdbcReservedSet.iterator();
                  jdbcReservedIter.hasNext();) {
-                String jdbcReserved = (String) jdbcReservedIter.next();
+                String jdbcReserved = jdbcReservedIter.next();
                 if (j++ > 0) {
                     sb.append(",");
                 }
@@ -587,7 +590,7 @@ public abstract class SqlAbstractParserImpl
             return sb.toString();
         }
 
-        public List getTokens()
+        public List<String> getTokens()
         {
             return tokenList;
         }

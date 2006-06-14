@@ -50,10 +50,26 @@ public class SqlIntervalLiteral extends SqlLiteral
         SqlTypeName sqlTypeName,
         SqlParserPos pos)
     {
-        super(
+        this(
             new IntervalValue(intervalQualifier, sign, intervalStr),
             sqlTypeName,
             pos);
+    }
+
+    private SqlIntervalLiteral(
+        IntervalValue intervalValue,
+        SqlTypeName sqlTypeName,
+        SqlParserPos pos)
+    {
+        super(
+            intervalValue,
+            sqlTypeName,
+            pos);
+    }
+
+    public SqlNode clone(SqlParserPos pos)
+    {
+        return new SqlIntervalLiteral((IntervalValue) value, getTypeName(), pos);
     }
 
     public void unparse(

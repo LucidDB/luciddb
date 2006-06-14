@@ -112,12 +112,13 @@ public class SqlTestGen
      * running tests. It is not a valid JUnit test because it does not have
      * a public constructor.
      */
-    private static class SqlValidatorSpooler extends SqlValidatorTest {
-        private final String testName;
+    private static class SqlValidatorSpooler extends SqlValidatorTest
+    {
         private final PrintWriter pw;
 
-        private SqlValidatorSpooler(String testName, PrintWriter pw) {
-            this.testName = testName;
+        private SqlValidatorSpooler(String testName, PrintWriter pw)
+        {
+            super(testName);
             this.pw = pw;
         }
 
@@ -134,7 +135,7 @@ public class SqlTestGen
                         // This SQL statement is supposed to succeed. Generate
                         // it to the file, so we can see what output it
                         // produces.
-                        pw.println("-- " + testName);
+                        pw.println("-- " + getName());
                         pw.println(sql);
                         pw.println(";");
                     } else {

@@ -249,7 +249,8 @@ public class VolcanoPlannerTraitTest
     private static class AltTraitDef
         extends RelTraitDef
     {
-        private MultiMap conversionMap = new MultiMap();
+        private MultiMap<RelTrait,Object[]> conversionMap =
+            new MultiMap<RelTrait, Object[]>();
 
         public Class getTraitClass()
         {
@@ -268,9 +269,9 @@ public class VolcanoPlannerTraitTest
             RelTrait fromTrait = rel.getTraits().getTrait(this);
 
             if (conversionMap.containsKey(fromTrait)) {
-                List entries = conversionMap.getMulti(fromTrait);
-                for(Iterator i = entries.iterator(); i.hasNext(); ) {
-                    Object[] traitAndRule = (Object[])i.next();
+                List<Object[]> entries = conversionMap.getMulti(fromTrait);
+                for(Iterator<Object[]> i = entries.iterator(); i.hasNext(); ) {
+                    Object[] traitAndRule = i.next();
 
                     RelTrait trait = (RelTrait)traitAndRule[0];
                     ConverterRule rule = (ConverterRule)traitAndRule[1];
@@ -293,9 +294,9 @@ public class VolcanoPlannerTraitTest
             RelOptPlanner planner, RelTrait fromTrait, RelTrait toTrait)
         {
             if (conversionMap.containsKey(fromTrait)) {
-                List entries = conversionMap.getMulti(fromTrait);
-                for(Iterator i = entries.iterator(); i.hasNext(); ) {
-                    Object[] traitAndRule = (Object[])i.next();
+                List<Object[]> entries = conversionMap.getMulti(fromTrait);
+                for(Iterator<Object[]> i = entries.iterator(); i.hasNext(); ) {
+                    Object[] traitAndRule = i.next();
 
                     if (traitAndRule[0] == toTrait) {
                         return true;

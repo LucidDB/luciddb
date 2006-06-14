@@ -23,17 +23,15 @@ package com.disruptivetech.farrago.sql.advise;
 
 import org.eigenbase.util.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidatorCatalogReader;
-import org.eigenbase.sql.validate.SqlValidatorImpl;
+import org.eigenbase.sql.validate.*;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 
 /**
- * <code>SqlAdvisorValidator</code> is used by SqlAdvisor to traverse the parse
- * tree of a SQL statement, not for validation purpose but for setting up the
- * scopes and namespaces to facilitate retrieval of SQL statement completion
- * hints
+ * <code>SqlAdvisorValidator</code> is used by {@link SqlAdvisor} to traverse
+ * the parse tree of a SQL statement, not for validation purpose but for
+ * setting up the scopes and namespaces to facilitate retrieval of SQL
+ * statement completion hints.
  *
  * @author tleung
  * @version $Id$
@@ -55,9 +53,10 @@ public class SqlAdvisorValidator extends SqlValidatorImpl
     public SqlAdvisorValidator(
         SqlOperatorTable opTab,
         SqlValidatorCatalogReader catalogReader,
-        RelDataTypeFactory typeFactory)
+        RelDataTypeFactory typeFactory,
+        Compatible compatible)
     {
-        super(opTab, catalogReader, typeFactory);
+        super(opTab, catalogReader, typeFactory, compatible);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -74,6 +73,18 @@ public class SqlAdvisorValidator extends SqlValidatorImpl
         String ppstring = id.getParserPosition().toString();
         sqlIds.put(ppstring, id);
         idScopes.put(ppstring, scope);
+    }
+
+    public SqlNode expand(SqlNode expr, SqlValidatorScope scope)
+    {
+        // Disable expansion. It doesn't help us come up with better hints.
+        return expr;
+    }
+
+    public SqlNode expandOrderExpr(SqlSelect select, SqlNode orderExpr)
+    {
+        // Disable expansion. It doesn't help us come up with better hints.
+        return orderExpr;
     }
 
     /**

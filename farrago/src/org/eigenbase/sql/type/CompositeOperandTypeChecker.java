@@ -120,7 +120,7 @@ public class CompositeOperandTypeChecker
         } else {
             // TODO jvs 2-June-2005:  technically, this is only correct
             // for OR, not AND; probably not a big deal
-            Set set = new TreeSet();
+            Set<Integer> set = new TreeSet<Integer>();
             for (int i = 0; i < allowedRules.length; i++) {
                 SqlOperandTypeChecker rule = allowedRules[i];
                 SqlOperandCountRange range = rule.getOperandCountRange();
@@ -130,7 +130,7 @@ public class CompositeOperandTypeChecker
                 set.addAll(range.getAllowedList());
             }
             return new SqlOperandCountRange(
-                new ArrayList(set));
+                new ArrayList<Integer>(set));
         }
     }
 

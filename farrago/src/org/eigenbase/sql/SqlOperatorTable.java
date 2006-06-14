@@ -22,13 +22,7 @@
 */
 package org.eigenbase.sql;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.util.MultiMap;
-import org.eigenbase.util.Util;
-
-import java.lang.reflect.Field;
-import java.util.*;
+import java.util.List;
 
 
 /**
@@ -52,7 +46,7 @@ public interface SqlOperatorTable
      * @return mutable list of SqlOperator objects
      * (or immutable empty list if no matches)
      */
-    public List lookupOperatorOverloads(
+    public List<SqlOperator> lookupOperatorOverloads(
         SqlIdentifier opName,
         SqlFunctionCategory category,
         SqlSyntax syntax);
@@ -63,7 +57,7 @@ public interface SqlOperatorTable
      *
      * @return list of SqlOperator objects
      */
-    public List getOperatorList();
+    public List<SqlOperator> getOperatorList();
 }
 
 

@@ -22,6 +22,7 @@
 package org.eigenbase.sql.validate;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.reltype.RelDataType;
 
 import java.util.List;
 
@@ -89,14 +90,14 @@ public interface SqlValidatorScope
      * from which to query the column names
      * @param result an array list of strings to add the result to
      */
-    void findAllColumnNames(String parentObjName, List result);
+    void findAllColumnNames(String parentObjName, List<SqlMoniker> result);
 
     /**
      * Collects the {@link SqlMoniker}s of all possible tables in this scope.
      *
      * @param result an array list of strings to add the result to
      */
-    void findAllTableNames(List result);
+    void findAllTableNames(List<SqlMoniker> result);
 
     /**
      * Converts an identifier into a fully-qualified identifier. For
@@ -124,6 +125,32 @@ public interface SqlValidatorScope
      * If the rows are unsorted, returns null.
      */
     SqlNodeList getOrderList();
+
+    /**
+     * Resolves a single identifier to a column, and returns the datatype of
+     * that column.
+     *
+     * <p>If it cannot find the column, returns null.
+     * If the column is ambiguous, throws an error with context
+     * <code>ctx</code>.
+     *
+     * @param name Name of column
+     * @param ctx Context for exception
+     * @return Type of column, if found and unambiguous; null if not found
+     */
+    RelDataType resolveColumn(String name, SqlNode ctx);
+
+    /**
+     * Returns the scope within which operands to a call are to be validated.
+     * Usually it is this scope, but when the call is to an aggregate function
+     * and this is an aggregating scope, it will be a a different scope.
+     *
+     * @param call Call
+     * @return Scope within which to validate arguments to call.
+     */
+    SqlValidatorScope getOperandScope(SqlCall call);
+
+    void validateExpr(SqlNode expr);
 }
 
 // End SqlValidatorScope.java

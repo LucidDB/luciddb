@@ -38,11 +38,11 @@ import org.eigenbase.sql.validate.SqlValidator;
  * A <code>SqlNodeList</code> is a list of {@link SqlNode}s. It is also a
  * {@link SqlNode}, so may appear in a parse tree.
  */
-public class SqlNodeList extends SqlNode
+public class SqlNodeList extends SqlNode implements Iterable<SqlNode>
 {
     //~ Instance fields -------------------------------------------------------
 
-    private ArrayList list;
+    private final List<SqlNode> list;
 
     /**
      * An immutable, empty SqlNodeList.
@@ -62,7 +62,7 @@ public class SqlNodeList extends SqlNode
     public SqlNodeList(SqlParserPos pos)
     {
         super(pos);
-        list = new ArrayList();
+        list = new ArrayList<SqlNode>();
     }
 
     /**
@@ -74,12 +74,18 @@ public class SqlNodeList extends SqlNode
         SqlParserPos pos)
     {
         super(pos);
-        list = new ArrayList(collection);
+        list = new ArrayList<SqlNode>(collection);
     }
 
     //~ Methods ---------------------------------------------------------------
 
-    public List getList()
+    // implement Iterable<SqlNode>
+    public Iterator<SqlNode> iterator()
+    {
+        return list.iterator();
+    }
+
+    public List<SqlNode> getList()
     {
         return list;
     }
@@ -89,16 +95,16 @@ public class SqlNodeList extends SqlNode
         list.add(node);
     }
 
-    public Object clone()
+    public SqlNode clone(SqlParserPos pos)
     {
         return new SqlNodeList(
             list,
-            getParserPosition());
+            pos);
     }
 
     public SqlNode get(int n)
     {
-        return (SqlNode) list.get(n);
+        return list.get(n);
     }
 
     public int size()
@@ -122,7 +128,7 @@ public class SqlNodeList extends SqlNode
     private void commaList(SqlWriter writer)
     {
         for (int i = 0; i < list.size(); i++) {
-            SqlNode node = (SqlNode) list.get(i);
+            SqlNode node = list.get(i);
             writer.sep(",");
             node.unparse(writer, 0, 0);
         }
@@ -130,9 +136,7 @@ public class SqlNodeList extends SqlNode
 
     public void validate(SqlValidator validator, SqlValidatorScope scope)
     {
-        Iterator iter = getList().iterator();
-        while (iter.hasNext()) {
-            final SqlNode child = (SqlNode) iter.next();
+        for (SqlNode child : list) {
             child.validate(validator, scope);
         }
     }
@@ -154,8 +158,8 @@ public class SqlNodeList extends SqlNode
             return false;
         }
         for (int i = 0; i < list.size(); i++) {
-            SqlNode thisChild = (SqlNode) list.get(i);
-            final SqlNode thatChild = that.get(i);
+            SqlNode thisChild = list.get(i);
+            final SqlNode thatChild = that.list.get(i);
             if (!thisChild.equalsDeep(thatChild, fail)) {
                 return false;
             }
@@ -165,7 +169,7 @@ public class SqlNodeList extends SqlNode
 
     public SqlNode [] toArray()
     {
-        return (SqlNode []) list.toArray(new SqlNode[list.size()]);
+        return list.toArray(new SqlNode[list.size()]);
     }
 
     public static boolean isEmptyList(final SqlNode node) {
@@ -192,8 +196,7 @@ public class SqlNodeList extends SqlNode
         //    {  SqlIdentifier({"empno"}),
         //       SqlNodeList(SqlLiteral(10), SqlLiteral(20))  }
 
-        for (int i = 0; i < list.size(); i++) {
-            SqlNode node = (SqlNode) list.get(i);
+        for (SqlNode node : list) {
             node.validateExpr(validator, scope);
         }
     }

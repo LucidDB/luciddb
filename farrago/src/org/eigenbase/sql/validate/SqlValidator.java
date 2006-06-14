@@ -44,7 +44,7 @@ import java.util.Map;
  * {@link SqlLiteral#validate(SqlValidator, SqlValidatorScope)} calls
  * {@link #validateLiteral(org.eigenbase.sql.SqlLiteral)};
  * {@link SqlCall#validate(SqlValidator, SqlValidatorScope)} calls
- * {@link #validateCall(org.eigenbase.sql.SqlCall, SqlValidatorScope)};
+ * {@link #validateCall(SqlCall,SqlValidatorScope)};
  * and so forth.
  *
  * <p>The {@link SqlNode#validateExpr(SqlValidator, SqlValidatorScope)} method
@@ -78,6 +78,12 @@ import java.util.Map;
 public interface SqlValidator
 {
     /**
+     * Returns the dialect of SQL (SQL:2003, etc.) this validator recognizes.
+     * Default is {@link Compatible#Default}.
+     */
+    Compatible getCompatible();
+
+    /**
      * Returns the catalog reader used by this validator.
      */
     SqlValidatorCatalogReader getCatalogReader();
@@ -105,7 +111,7 @@ public interface SqlValidator
      *
      * @param topNode top of expression tree to be validated
      *
-     * @param nameToTypeMap map of simple name (String) to {@link RelDataType};
+     * @param nameToTypeMap map of simple name to {@link RelDataType};
      * used to resolve {@link SqlIdentifier} references
      *
      * @return validated tree (possibly rewritten)
@@ -114,7 +120,7 @@ public interface SqlValidator
      */
     SqlNode validateParameterizedExpression(
         SqlNode topNode,
-        Map nameToTypeMap);
+        Map<String, RelDataType> nameToTypeMap);
 
     /**
      * Checks that a query (<code>select</code> statement, or a set operation
@@ -193,6 +199,7 @@ public interface SqlValidator
 
     /**
      * Validates a call to an operator.
+     *
      */
     void validateCall(SqlCall call, SqlValidatorScope scope);
 
@@ -355,6 +362,13 @@ public interface SqlValidator
     SqlValidatorScope getSelectScope(SqlSelect select);
 
     /**
+     * Returns the scope for resolving the SELECT, GROUP BY and HAVING clauses.
+     * Always a {@link SelectScope}; if this is an aggregation query, the
+     * {@link AggregatingScope} is stripped away.
+     */
+    SelectScope getRawSelectScope(SqlSelect select);
+
+    /**
      * Returns a scope containing the objects visible from the FROM clause
      * of a query.
      */
@@ -413,6 +427,107 @@ public interface SqlValidator
         SqlCall call,
         SqlFunction unresolvedFunction,
         RelDataType [] argTypes);
+
+    /**
+     * Expands an expression in the ORDER BY clause into an expression with
+     * the same semantics as expressions in the SELECT clause.
+     *
+     * <p>This is made necessary by a couple of dialect 'features':<ul>
+     * <li><b>ordinal expressions</b>: In "SELECT x, y FROM t ORDER BY 2",
+     *     the expression "2" is shorthand for the 2nd item in the select
+     *     clause, namely "y".
+     * <li><b>alias references</b>: In "SELECT x AS a, y FROM t ORDER BY a",
+     *     the expression "a" is shorthand for the item in the select clause
+     *     whose alias is "a"
+     * </ul>
+     *
+     * @param select Select statement which contains ORDER BY
+     * @param orderExpr Expression in the ORDER BY clause.
+     * @return Expression translated into SELECT clause semantics
+     */
+    SqlNode expandOrderExpr(SqlSelect select, SqlNode orderExpr);
+
+    SqlNode expand(SqlNode expr, SqlValidatorScope scope);
+
+    /**
+     * Enumeration of valid SQL compatiblity modes.
+     */
+    public class Compatible extends EnumeratedValues.BasicValue
+    {
+        private Compatible(String name, int ordinal)
+        {
+            super(name, ordinal, null);
+        }
+
+        public static final int Default_ordinal = 0;
+        public static final int Strict92_ordinal = 1;
+        public static final int Strict99_ordinal = 2;
+        public static final int Pragmatic99_ordinal = 3;
+        public static final int Oracle10g_ordinal = 4;
+        public static final int Sql2003_ordinal = 5;
+        public static final int Pragmatic2003_ordinal = 6;
+
+        public static final Compatible Strict92 =
+            new Compatible("Strict92", Strict92_ordinal);
+        public static final Compatible Strict99 =
+            new Compatible("Strict99", Strict99_ordinal);
+        public static final Compatible Pragmatic99 =
+            new Compatible("Pragmatic99", Pragmatic99_ordinal);
+        public static final Compatible Oracle10g =
+            new Compatible("Oracle10g", Oracle10g_ordinal);
+        public static final Compatible Sql2003 =
+            new Compatible("Sql2003", Sql2003_ordinal);
+        public static final Compatible Default =
+            new Compatible("Default", Default_ordinal);
+        public static final Compatible Pragmatic2003 =
+            new Compatible("Pragmatic2003", Pragmatic2003_ordinal);
+
+        /**
+         * Whether 'order by 2' is interpreted to mean 'sort by the 2nd column
+         * in the select list'.
+         */
+        public boolean isSortByOrdinal()
+        {
+            return this == Compatible.Default ||
+                this == Compatible.Oracle10g ||
+                this == Compatible.Strict92 ||
+                this == Compatible.Pragmatic99 ||
+                this == Compatible.Pragmatic2003;
+        }
+
+        /**
+         * Whether 'order by x' is interpreted to mean 'sort by the select list
+         * item whose alias is x' even if there is a column called x.
+         */
+        public boolean isSortByAlias()
+        {
+            return this == Compatible.Default ||
+                this == Compatible.Oracle10g ||
+                this == Compatible.Strict92;
+        }
+
+        /**
+         * Whether "empno" is invalid in "select empno as x from emp order by
+         * empno" because the alias "x" obscures it.
+         */
+        public boolean isSortByAliasObscures()
+        {
+            return this == Compatible.Strict92;
+        }
+
+        public static final Compatible[] Values = {
+            Default,
+            Strict92,
+            Strict99,
+            Pragmatic99,
+            Oracle10g,
+            Sql2003,
+            Pragmatic2003,
+        };
+
+        public static final EnumeratedValues enumeration =
+            new EnumeratedValues(Values);
+    }
 }
 
 // End SqlValidator.java

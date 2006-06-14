@@ -190,7 +190,7 @@ public abstract class SqlTypeStrategies
                 }
 
                 final SqlLiteral arg = ((SqlLiteral) node);
-                final int value = arg.intValue();
+                final int value = arg.intValue(true);
                 if (value < 0) {
                     if (throwOnFailure) {
                         throw EigenbaseResource.instance()

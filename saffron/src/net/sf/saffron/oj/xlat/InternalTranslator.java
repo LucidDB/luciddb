@@ -32,9 +32,7 @@ import org.eigenbase.oj.util.OJUtil;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.SqlOperator;
-import org.eigenbase.sql.SqlSyntax;
-import org.eigenbase.sql.SqlIdentifier;
+import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.util.Util;
@@ -64,12 +62,14 @@ class InternalTranslator
     RelNode [] inputs;
     protected final JavaRexBuilder rexBuilder;
     protected final QueryEnvironment qenv;
-    private static final HashMap mapUnaryOpToSql = createUnaryMap();
+    private static final Map<Integer,SqlPrefixOperator> mapUnaryOpToSql =
+        createUnaryMap();
 
     //private static final HashMap mapBinaryOpToRex = createBinaryMap();
-    private static HashMap createUnaryMap()
+    private static Map<Integer,SqlPrefixOperator> createUnaryMap()
     {
-        HashMap map = new HashMap();
+        Map<Integer,SqlPrefixOperator> map =
+            new HashMap<Integer, SqlPrefixOperator>();
 
         //map.put(new Integer(UnaryExpression.POST_INCREMENT),RexKind.None);
         //map.put(new Integer(UnaryExpression.POST_DECREMENT),RexKind.None);
@@ -89,9 +89,9 @@ class InternalTranslator
         return map;
     }
 
-    private static HashMap createBinaryMap()
+    private static Map<Integer,RexKind> createBinaryMap()
     {
-        HashMap map = new HashMap();
+        Map<Integer,RexKind> map = new HashMap<Integer, RexKind>();
         map.put(
             new Integer(BinaryExpression.TIMES),
             RexKind.Times);
@@ -264,7 +264,7 @@ class InternalTranslator
         if (sqlName == null) {
             return null;
         }
-        List list = rexBuilder.getOpTab().lookupOperatorOverloads(
+        List<SqlOperator> list = rexBuilder.getOpTab().lookupOperatorOverloads(
             new SqlIdentifier(sqlName.toUpperCase(), SqlParserPos.ZERO),
             null,
             SqlSyntax.Binary);
@@ -272,7 +272,7 @@ class InternalTranslator
             return null;
         }
         assert(list.size() == 1);
-        return (SqlOperator) list.get(0);
+        return list.get(0);
     }
 
     public RexNode evaluateDown(BinaryExpression p)
@@ -395,9 +395,9 @@ class InternalTranslator
                 // been translated yet. This occurs when from items are
                 // correlated, e.g. "select * from Orders as o join
                 // order.Lineitems as li". Create a temporary expression.
-                assert (!false);
-                assert (null == null) : "when lookup is called to fixup forward references "
-                + "(varName!=null), the input must not be null";
+                assert (null == null) :
+                    "when lookup is called to fixup forward references "
+                        + "(varName!=null), the input must not be null";
                 QueryInfo.DeferredLookupImpl lookup =
                     qi.createDeferredLookup(offset, false);
                 String correlName =

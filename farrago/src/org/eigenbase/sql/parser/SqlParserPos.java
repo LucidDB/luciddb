@@ -159,10 +159,9 @@ public class SqlParserPos
     /**
      * Combines this parser position with a list of positions.
      */
-    public SqlParserPos plusAll(Collection nodeList)
+    public SqlParserPos plusAll(Collection<SqlNode> nodeList)
     {
-        final SqlNode[] nodes =
-            (SqlNode[]) nodeList.toArray(new SqlNode[nodeList.size()]);
+        final SqlNode[] nodes = nodeList.toArray(new SqlNode[nodeList.size()]);
         return plusAll(nodes);
     }
     
@@ -174,7 +173,7 @@ public class SqlParserPos
     public static SqlParserPos sum(
         SqlNode[] nodes)
     {
-        return sum(nodes, -1, -1, Integer.MAX_VALUE, Integer.MAX_VALUE);
+        return sum(nodes, Integer.MAX_VALUE, Integer.MAX_VALUE, -1, -1);
     }
 
     private static SqlParserPos sum(
@@ -188,7 +187,54 @@ public class SqlParserPos
         int testColumn;
         for (int i = 0; i < nodes.length; i++) {
             SqlNode node = nodes[i];
+            if (node == null) {
+                continue;
+            }
             SqlParserPos pos = node.getParserPosition();
+            testLine = pos.getLineNum();
+            testColumn = pos.getColumnNum();
+            if (testLine < line ||
+                testLine == line && testColumn < column) {
+                line = testLine;
+                column = testColumn;
+            }
+
+            testLine = pos.getEndLineNum();
+            testColumn = pos.getEndColumnNum();
+            if (testLine > endLine ||
+                testLine == endLine && testColumn > endColumn) {
+                endLine = testLine;
+                endColumn = testColumn;
+            }
+        }
+        return new SqlParserPos(line, column, endLine, endColumn);
+    }
+
+    /**
+     * Combines an array of parser positions to create a
+     * position which spans from the beginning of the first to the end of the
+     * last.
+     */
+    public static SqlParserPos sum(
+        SqlParserPos[] poses)
+    {
+        return sum(poses, Integer.MAX_VALUE, Integer.MAX_VALUE, -1, -1);
+    }
+
+    private static SqlParserPos sum(
+        SqlParserPos[] poses,
+        int line,
+        int column,
+        int endLine,
+        int endColumn)
+    {
+        int testLine;
+        int testColumn;
+        for (int i = 0; i < poses.length; i++) {
+            SqlParserPos pos = poses[i];
+            if (pos == null) {
+                continue;
+            }
             testLine = pos.getLineNum();
             testColumn = pos.getColumnNum();
             if (testLine < line ||

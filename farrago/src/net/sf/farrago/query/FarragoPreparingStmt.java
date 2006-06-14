@@ -60,7 +60,6 @@ import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.sql.util.*;
-import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql2rel.*;
 import org.eigenbase.util.*;
 
@@ -98,9 +97,9 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     private Object savedDeclarer;
     private FarragoAllocation javaCodeDir;
     protected SqlValidatorImpl sqlValidator;
-    private Set directDependencies;
-    private Set allDependencies;
-    private Set jarUrlSet;
+    private final Set<CwmModelElement> directDependencies;
+    private final Set<CwmModelElement> allDependencies;
+    private final Set<URL> jarUrlSet;
     protected SqlOperatorTable sqlOperatorTable;
     private final FarragoUserDefinedRoutineLookup routineLookup;
     private int expansionDepth;
@@ -154,9 +153,9 @@ public class FarragoPreparingStmt extends OJPreparingStmt
 
         super.setResultCallingConvention(CallingConvention.ITERATOR);
 
-        directDependencies = new HashSet();
-        allDependencies = new HashSet();
-        jarUrlSet = new LinkedHashSet();
+        directDependencies = new HashSet<CwmModelElement>();
+        allDependencies = new HashSet<CwmModelElement>();
+        jarUrlSet = new LinkedHashSet<URL>();
 
         classesRoot = new File(FarragoProperties.instance().homeDir.get(true));
         classesRoot = new File(classesRoot, "classes");
@@ -244,7 +243,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     public SqlValidator getSqlValidator()
     {
         if (sqlValidator == null) {
-            sqlValidator = new FarragoSqlValidator(this);
+            sqlValidator = new FarragoSqlValidator(
+                this, SqlValidator.Compatible.Default);
         }
         return sqlValidator;
     }
@@ -363,8 +363,11 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         // name, there will be trouble.  The alternative is to always use
         // reflection, which would be bad for UDF performance.  What to do?
         // Also, need to implement jar paths.
-        List jarUrlList = new ArrayList(jarUrlSet);
-        URL [] urls = (URL []) jarUrlList.toArray(new URL[0]);
+
+        // REVIEW jhyde, 2006/6/3: Mystical two-stage copy designed to preserve
+        // order of set?
+        List<URL> jarUrlList = new ArrayList<URL>(jarUrlSet);
+        URL [] urls = jarUrlList.toArray(new URL[jarUrlList.size()]);
         URLClassLoader urlClassLoader = URLClassLoader.newInstance(
             urls, getSession().getPluginClassLoader());
         javaCompiler.getArgs().setClassLoader(urlClassLoader);

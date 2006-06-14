@@ -93,7 +93,7 @@ Usage: columns <table name>
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Test cases where an error is reported 
 0: jdbc:farrago:> select "COL WITH SPACES" from "My Table";
-Error: From line 1, column 8 to line 1, column 24: Unknown identifier 'COL WITH SPACES' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 24: Column 'COL WITH SPACES' not found in any table (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Test identifiers with non-ASCII characters
 0: jdbc:farrago:> create table "non-ASCII table \u00bc\uc2bb\u00c3\u00bb" (

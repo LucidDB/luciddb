@@ -258,9 +258,9 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
      *
      * @return new dependency
      */
-    public CwmDependency createDependency(
+    public <T extends CwmModelElement> CwmDependency createDependency(
         CwmNamespace client,
-        Collection suppliers);
+        Collection<T> suppliers);
 
     /**
      * Discards a data wrapper or server from the shared cache
@@ -323,9 +323,13 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
     public Set getDependencies(CwmModelElement rootElement);
 
     /**
-     * @see Util#deprecated
-     * @param view
-     * @param analyzedSql
+     * Modifies the analyzed SQL for a view definition, to take into account
+     * any system columns which a personality may need to have in the view.
+     * In particular, makes sure that the analyzed SQL returns the same number
+     * and type of columns as the view definition.
+     *
+     * @param view View definition
+     * @param analyzedSql Analyzed SQL for the view definition
      */
     void fixupView(FemLocalView view, FarragoSessionAnalyzedSql analyzedSql);
 }

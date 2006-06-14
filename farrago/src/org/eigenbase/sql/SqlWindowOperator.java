@@ -26,6 +26,8 @@ import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.type.SqlTypeFamily;
 import org.eigenbase.sql.validate.*;
+import org.eigenbase.sql.util.SqlVisitor;
+import org.eigenbase.sql.util.SqlBasicVisitor;
 import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.Util;
 
@@ -90,8 +92,10 @@ public class SqlWindowOperator extends SqlOperator {
 
     public SqlCall createCall(
         SqlNode[] operands,
-        SqlParserPos pos)
+        SqlParserPos pos,
+        SqlLiteral functionQualifier)
     {
+        assert functionQualifier == null;
         return new SqlWindow(this, operands, pos);
     }
 
@@ -113,6 +117,32 @@ public class SqlWindowOperator extends SqlOperator {
                 lowerBound, upperBound
             },
             pos);
+    }
+
+    public <R> void acceptCall(
+        SqlVisitor<R> visitor,
+        SqlCall call,
+        boolean onlyExpressions,
+        SqlBasicVisitor.ArgHandler<R> argHandler)
+    {
+        if (onlyExpressions) {
+            for (int i = 0; i < call.operands.length; i++) {
+                SqlNode operand = call.operands[i];
+                // if the second parm is an Identifier then it's supposed to
+                // be a name from a window clause and isn't part of the
+                // group by check
+                if (operand == null) {
+                    continue;
+                }
+                if (i == SqlWindow.RefName_OPERAND &&
+                    operand instanceof SqlIdentifier) {
+                    continue;
+                }
+                argHandler.visitChild(visitor, call, i, operand);
+            }
+        } else {
+            super.acceptCall(visitor, call, onlyExpressions, argHandler);
+        }
     }
 
     public void unparse(
@@ -402,10 +432,9 @@ public class SqlWindowOperator extends SqlOperator {
      */
     private static boolean isTableSorted(SqlValidatorScope scope)
     {
-        List columnNames = new ArrayList();
-        scope.findAllColumnNames(null,columnNames);
-        for (int i = 0; i < columnNames.size(); i++) {
-            SqlMoniker columnName = (SqlMoniker) columnNames.get(i);
+        List<SqlMoniker> columnNames = new ArrayList<SqlMoniker>();
+        scope.findAllColumnNames(null, columnNames);
+        for (SqlMoniker columnName : columnNames) {
             SqlIdentifier columnId = columnName.toIdentifier();
             if (scope.isMonotonic(columnId)) {
                 return true;

@@ -33,7 +33,8 @@ import org.eigenbase.test.SqlValidatorTestCase;
  */
 public class SqlOperatorTest extends SqlOperatorTests
 {
-    private SqlTester tester = (SqlTester) new SqlValidatorTestCase().getTester();
+    private SqlTester tester =
+        (SqlTester) new SqlValidatorTestCase("dummy").getTester();
 
     public SqlOperatorTest(String testName)
     {

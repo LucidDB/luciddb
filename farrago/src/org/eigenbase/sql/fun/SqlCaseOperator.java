@@ -286,8 +286,10 @@ public class SqlCaseOperator extends SqlOperator
 
     public SqlCall createCall(
         SqlNode [] operands,
-        SqlParserPos pos)
+        SqlParserPos pos,
+        SqlLiteral functionQualifier)
     {
+        assert functionQualifier == null;
         return new SqlCase(this, operands, pos);
     }
 
@@ -299,7 +301,7 @@ public class SqlCaseOperator extends SqlOperator
         SqlParserPos pos)
     {
         if (null != caseIdentifier) {
-            List list = whenList.getList();
+            List<SqlNode> list = whenList.getList();
             for (int i = 0; i < list.size(); i++) {
                 SqlNode e = (SqlNode) list.get(i);
                 list.set(

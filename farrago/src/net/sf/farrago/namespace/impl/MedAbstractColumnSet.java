@@ -216,14 +216,14 @@ public abstract class MedAbstractColumnSet extends RelOptAbstractTable
         }
 
         // Look up the UDX in the catalog.
-        List list =
+        List<SqlOperator> list =
             getPreparingStmt().getSqlOperatorTable().lookupOperatorOverloads(
                 udxId,
                 SqlFunctionCategory.UserDefinedSpecificFunction,
                 SqlSyntax.Function);
         FarragoUserDefinedRoutine udx = null;
         if (list.size() == 1) {
-            Object obj = list.iterator().next();
+            SqlOperator obj = list.get(0);
             if (obj instanceof FarragoUserDefinedRoutine) {
                 udx = (FarragoUserDefinedRoutine) obj;
                 if (!FarragoCatalogUtil.isTableFunction(udx.getFemRoutine())) {

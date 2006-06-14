@@ -30,6 +30,7 @@ import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.SqlTypeFamily;
 import org.eigenbase.util.*;
 
 import java.lang.reflect.Proxy;
@@ -74,7 +75,7 @@ public abstract class SqlUtil
         if (node1 == null) {
             return node2;
         }
-        ArrayList list = new ArrayList();
+        ArrayList<SqlNode> list = new ArrayList<SqlNode>();
         if (node1.isA(SqlKind.And)) {
             list.addAll(Arrays.asList(((SqlCall) node1).operands));
         } else {
@@ -90,9 +91,9 @@ public abstract class SqlUtil
             SqlParserPos.ZERO);
     }
 
-    static ArrayList flatten(SqlNode node)
+    static ArrayList<SqlNode> flatten(SqlNode node)
     {
-        ArrayList list = new ArrayList();
+        ArrayList<SqlNode> list = new ArrayList<SqlNode>();
         flatten(node, list);
         return list;
     }
@@ -104,13 +105,13 @@ public abstract class SqlUtil
         SqlSelect query,
         int ordinal)
     {
-        ArrayList list = flatten(query.getFrom());
-        return (SqlNode) list.get(ordinal);
+        ArrayList<SqlNode> list = flatten(query.getFrom());
+        return list.get(ordinal);
     }
 
     private static void flatten(
         SqlNode node,
-        ArrayList list)
+        ArrayList<SqlNode> list)
     {
         switch (node.getKind().getOrdinal()) {
         case SqlKind.JoinORDINAL:
@@ -367,13 +368,13 @@ public abstract class SqlUtil
         RelDataType [] argTypes,
         SqlFunctionCategory category)
     {
-        List list = lookupSubjectRoutines(
+        List<SqlFunction> list = lookupSubjectRoutines(
             opTab, funcName, argTypes, category);
         if (list.isEmpty()) {
             return null;
         } else {
             // return first on schema path
-            return (SqlFunction) list.get(0);
+            return list.get(0);
         }
     }
 
@@ -393,15 +394,21 @@ public abstract class SqlUtil
      *
      * @sql.99 Part 2 Section 10.4
      */
-    public static List lookupSubjectRoutines(
+    public static List<SqlFunction> lookupSubjectRoutines(
         SqlOperatorTable opTab,
         SqlIdentifier funcName,
         RelDataType [] argTypes,
         SqlFunctionCategory category)
     {
         // start with all routines matching by name
-        List routines = opTab.lookupOperatorOverloads(
+        List<SqlOperator> operators = opTab.lookupOperatorOverloads(
             funcName, category, SqlSyntax.Function);
+        List<SqlFunction> routines = new ArrayList<SqlFunction>();
+        for (SqlOperator operator : operators) {
+            if (operator instanceof SqlFunction) {
+                routines.add((SqlFunction) operator);
+            }
+        }
 
         // first pass:  eliminate routines which don't accept the given
         // number of arguments
@@ -432,10 +439,10 @@ public abstract class SqlUtil
     }
 
     private static void filterRoutinesByParameterCount(
-        List routines,
+        List<SqlFunction> routines,
         RelDataType [] argTypes)
     {
-        Iterator iter = routines.iterator();
+        Iterator<SqlFunction> iter = routines.iterator();
         while (iter.hasNext()) {
             SqlFunction function = (SqlFunction) iter.next();
             SqlOperandCountRange od =
@@ -484,16 +491,14 @@ public abstract class SqlUtil
      * @sql.99 Part 2 Section 9.4
      */
     private static void filterRoutinesByTypePrecedence(
-        List routines,
+        List<SqlFunction> routines,
         RelDataType [] argTypes)
     {
         for (int i = 0; i < argTypes.length; ++i) {
             RelDataTypePrecedenceList precList =
                 argTypes[i].getPrecedenceList();
             RelDataType bestMatch = null;
-            Iterator iter = routines.iterator();
-            while (iter.hasNext()) {
-                SqlFunction function = (SqlFunction) iter.next();
+            for (SqlFunction function : routines) {
                 RelDataType [] paramTypes = function.getParamTypes();
                 if (paramTypes == null) {
                     continue;
@@ -509,7 +514,7 @@ public abstract class SqlUtil
                 }
             }
             if (bestMatch != null) {
-                iter = routines.iterator();
+                Iterator<SqlFunction> iter = routines.iterator();
                 while (iter.hasNext()) {
                     SqlFunction function = (SqlFunction) iter.next();
                     RelDataType [] paramTypes = function.getParamTypes();
@@ -575,17 +580,17 @@ public abstract class SqlUtil
         SqlIdentifier id)
     {
         if (id.names.length == 1) {
-            List list = opTab.lookupOperatorOverloads(
+            List<SqlOperator> list = opTab.lookupOperatorOverloads(
                 id, null, SqlSyntax.Function);
-            for (int i = 0; i < list.size(); i++) {
-                SqlOperator operator = (SqlOperator) list.get(i);
+            for (SqlOperator operator : list) {
                 if (operator.getSyntax() == SqlSyntax.FunctionId) {
                     // Even though this looks like an identifier, it is a
                     // actually a call to a function. Construct a fake
                     // call to this function, so we can use the regular
                     // operator validation.
-                    return new SqlCall(operator, SqlNode.emptyArray,
-                        id.getParserPosition());
+                    return new SqlCall(
+                        operator, SqlNode.emptyArray,
+                        id.getParserPosition(), true, null);
                 }
             }
         }
@@ -604,11 +609,14 @@ public abstract class SqlUtil
      *
      * @param op operator
      *
-     * @param typeList list of types to use for operands
+     * @param typeList list of types to use for operands.
+     *      Types may be represented as {@link String}, {@link SqlTypeFamily},
+     *      or any object with a valid {@link Object#toString()} method.
      *
      * @return constructed signature
      */
-    public static String getOperatorSignature(SqlOperator op, List typeList)
+    public static String getOperatorSignature(
+        SqlOperator op, List<? extends Object> typeList)
     {
         return getAliasedSignature(op, op.getName(), typeList);
     }
@@ -621,13 +629,15 @@ public abstract class SqlUtil
      *
      * @param opName name to use for operator
      *
-     * @param typeList list of types to use for operands
+     * @param typeList list of {@link SqlTypeName} or {@link String} to use for
+     *       operands
      *
      * @return constructed signature
      */
     public static String getAliasedSignature(
         SqlOperator op,
-        String opName, List typeList)
+        String opName,
+        List<? extends Object> typeList)
     {
         StringBuffer ret = new StringBuffer();
         String template = op.getSignatureTemplate(typeList.size());
@@ -639,8 +649,9 @@ public abstract class SqlUtil
                 if (i > 0) {
                     ret.append(", ");
                 }
-                ret.append(
-                    "<" + typeList.get(i).toString().toUpperCase() + ">");
+                ret.append("<").
+                    append(typeList.get(i).toString().toUpperCase()).
+                    append(">");
             }
             ret.append(")'");
         } else {

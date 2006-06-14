@@ -48,7 +48,8 @@ public class ListSqlOperatorTable implements SqlOperatorTable
         operatorList.add(op);
     }
 
-    public List lookupOperatorOverloads(SqlIdentifier opName,
+    public List<SqlOperator> lookupOperatorOverloads(
+        SqlIdentifier opName,
         SqlFunctionCategory category,
         SqlSyntax syntax)
     {
@@ -75,7 +76,7 @@ public class ListSqlOperatorTable implements SqlOperatorTable
         return list;
     }
 
-    public List getOperatorList()
+    public List<SqlOperator> getOperatorList()
     {
         return operatorList;
     }

@@ -133,6 +133,12 @@ public class SqlIntervalQualifier extends SqlNode
         return endUnit;
     }
 
+    public SqlNode clone(SqlParserPos pos)
+    {
+        return new SqlIntervalQualifier(
+            startUnit, startPrecision, endUnit, fractionalSecondPrecision, pos);
+    }
+
     public void unparse(
         SqlWriter writer,
         int leftPrec,

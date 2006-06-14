@@ -77,6 +77,12 @@ public class SqlTimestampLiteral extends SqlAbstractDateTimeLiteral
         return new Time(millis - tzOffset);
     }
 
+    public SqlNode clone(SqlParserPos pos)
+    {
+        return new SqlTimestampLiteral(
+            (Calendar) value, precision, hasTimeZone, formatString, pos);
+    }
+
     public String toString()
     {
         return "TIMESTAMP '" + toFormattedString() + "'";

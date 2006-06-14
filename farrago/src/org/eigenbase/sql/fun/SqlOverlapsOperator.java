@@ -95,7 +95,7 @@ public class SqlOverlapsOperator extends SqlSpecialOperator {
             if (y > 0) {
                 ret.append(NL);
             }
-            ArrayList list = new ArrayList();
+            ArrayList<String> list = new ArrayList<String>();
             list.add(d);
             list.add(typeNames[y]);
             list.add(d);

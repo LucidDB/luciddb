@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/med/mock.sql#6 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/med/mock.sql#9 $
 0: jdbc:farrago:> -- Test mock namespace plugin
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create server mock_foreign_server
@@ -170,11 +170,11 @@ Error: Mock foreign object "BACH_TABLE" not found (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  unknown schema name
 0: jdbc:farrago:> select * from mock_foreign_metadata_server.bach_schema.mock_table;
-Error: From line 1, column 15 to line 1, column 42: Table 'MOCK_FOREIGN_METADATA_SERVER.BACH_SCHEMA.MOCK_TABLE' not found (state=,code=0)
+Error: From line 1, column 15 to line 1, column 65: Table 'MOCK_FOREIGN_METADATA_SERVER.BACH_SCHEMA.MOCK_TABLE' not found (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  unknown table name
 0: jdbc:farrago:> select * from mock_foreign_metadata_server.mock_schema.bach_table;
-Error: From line 1, column 15 to line 1, column 42: Table 'MOCK_FOREIGN_METADATA_SERVER.MOCK_SCHEMA.BACH_TABLE' not found (state=,code=0)
+Error: From line 1, column 15 to line 1, column 65: Table 'MOCK_FOREIGN_METADATA_SERVER.MOCK_SCHEMA.BACH_TABLE' not found (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for select * from mock_fennel_table;
 +------------------------------------------------------------------------+
@@ -276,7 +276,7 @@ Error: One or more tables not found while importing foreign schema "MOCK_SCHEMA"
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  excluded
 0: jdbc:farrago:> select * from mock_exclude_schema.mock_table;
-Error: From line 1, column 15 to line 1, column 33: Table 'MOCK_EXCLUDE_SCHEMA.MOCK_TABLE' not found (state=,code=0)
+Error: From line 1, column 15 to line 1, column 44: Table 'MOCK_EXCLUDE_SCHEMA.MOCK_TABLE' not found (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create table mock_schema.dynamic_row_count(
 . . . . . . . . >     current_row_count int not null primary key);

@@ -59,9 +59,10 @@ public class SqlCoalesceFunction extends SqlFunction
             thenList.add(operands[i]);
         }
         SqlNode elseExpr = operands[operands.length - 1];
-        final SqlCall newCall = SqlStdOperatorTable.caseOperator.createCall(
-            null, whenList, thenList, elseExpr, pos);
-        newCall.setFunctionQuantifier(call.getFunctionQuantifier());
+        assert call.getFunctionQuantifier() == null;
+        final SqlCall newCall =
+            SqlStdOperatorTable.caseOperator.createCall(
+                null, whenList, thenList, elseExpr, pos);
         return newCall;
     }
 

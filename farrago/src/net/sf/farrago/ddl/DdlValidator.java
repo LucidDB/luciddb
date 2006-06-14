@@ -30,15 +30,11 @@ import javax.jmi.reflect.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.cwm.datatypes.*;
-import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.med.*;
-import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fennel.*;
-import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.resource.*;
@@ -103,19 +99,19 @@ public class DdlValidator extends FarragoCompoundAllocation
      * Map (from RefAssociation.Class to FarragoSessionDdlDropRule) of
      * associations for which special handling is required during DROP.
      */
-    private MultiMap dropRules;
+    private MultiMap<Class<? extends Object>,FarragoSessionDdlDropRule> dropRules;
 
     /** Map from catalog object to SqlParserPos for beginning of definition. */
-    private final Map parserContextMap;
+    private final Map<Object,SqlParserPos> parserContextMap;
 
     /** Map from catalog object to SqlParserPos for offset of body. */
-    private final Map parserOffsetMap;
+    private final Map<RefObject,SqlParserPos> parserOffsetMap;
 
     /**
      * Map from catalog object to associated SQL definition
      * (not all objects have these).
      */
-    private final Map sqlMap;
+    private final Map<RefObject,SqlNode> sqlMap;
 
     /**
      * Map containing scheduled validation actions.  The key is the MofId of
@@ -123,25 +119,25 @@ public class DdlValidator extends FarragoCompoundAllocation
      * of the symbols {@link #VALIDATE_CREATION}, {@link #VALIDATE_DELETION},
      * {@link #VALIDATE_MODIFICATION}, {@link #VALIDATE_TRUNCATION}).
      */
-    private Map schedulingMap;
+    private Map<String,Object> schedulingMap;
 
     /**
      * Map of objects in transition between schedulingMap and validatedMap.
      * Content format is same as for schedulingMap.
      */
-    private Map transitMap;
+    private Map<String,Object> transitMap;
 
     /**
      * Map of object validations which have already taken place.
      * The key is the RefObject itself; the value is the action type.
      */
-    private Map validatedMap;
+    private Map<RefObject,Object> validatedMap;
 
     /**
      * Set of objects which a DROP CASCADE has encountered but not yet
      * processed.
      */
-    private Set deleteQueue;
+    private Set<RefObject> deleteQueue;
 
     /**
      * Thread binding to prevent cross-talk.
@@ -166,7 +162,7 @@ public class DdlValidator extends FarragoCompoundAllocation
     /**
      * Set of objects to be revalidated (CREATE OR REPLACE)
      */
-    private Set revalidateQueue;
+    private Set<CwmModelElement> revalidateQueue;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -184,18 +180,18 @@ public class DdlValidator extends FarragoCompoundAllocation
 
         // NOTE jvs 25-Jan-2004:  Use LinkedHashXXX, since order
         // matters for these.
-        schedulingMap = new LinkedHashMap();
-        validatedMap = new LinkedHashMap();
-        deleteQueue = new LinkedHashSet();
+        schedulingMap = new LinkedHashMap<String, Object>();
+        validatedMap = new LinkedHashMap<RefObject, Object>();
+        deleteQueue = new LinkedHashSet<RefObject>();
 
-        parserContextMap = new HashMap();
-        parserOffsetMap = new HashMap();
-        sqlMap = new HashMap();
-        revalidateQueue = new HashSet();
+        parserContextMap = new HashMap<Object, SqlParserPos>();
+        parserOffsetMap = new HashMap<RefObject, SqlParserPos>();
+        sqlMap = new HashMap<RefObject, SqlNode>();
+        revalidateQueue = new HashSet<CwmModelElement>();
         
         // NOTE:  dropRules are populated implicitly as action handlers
         // are set up below.
-        dropRules = new MultiMap();
+        dropRules = new MultiMap<Class<? extends Object>, FarragoSessionDdlDropRule>();
 
         // Build up list of action handlers.
         actionHandlers = new ArrayList();
@@ -334,7 +330,7 @@ public class DdlValidator extends FarragoCompoundAllocation
 
     private SqlParserPos getParserPos(RefObject obj)
     {
-        return (SqlParserPos) parserContextMap.get(obj);
+        return parserContextMap.get(obj);
     }
 
     // implement FarragoSessionDdlValidator
@@ -348,7 +344,7 @@ public class DdlValidator extends FarragoCompoundAllocation
     // implement FarragoSessionDdlValidator
     public SqlParserPos getParserOffset(RefObject obj)
     {
-        return (SqlParserPos) parserOffsetMap.get(obj);
+        return parserOffsetMap.get(obj);
     }
 
     // implement FarragoSessionDdlValidator
@@ -362,7 +358,7 @@ public class DdlValidator extends FarragoCompoundAllocation
     // implement FarragoSessionDdlValidator
     public SqlNode getSqlDefinition(RefObject obj)
     {
-        SqlNode sqlNode = (SqlNode) sqlMap.get(obj);
+        SqlNode sqlNode = sqlMap.get(obj);
         SqlParserPos parserContext = getParserPos(obj);
         if (parserContext != null) {
             stmtValidator.setParserPosition(parserContext);
@@ -526,7 +522,7 @@ public class DdlValidator extends FarragoCompoundAllocation
 
             replacementTarget.refDelete();
             while (!deleteQueue.isEmpty()) {
-                RefObject refObj = (RefObject) deleteQueue.iterator().next();
+                RefObject refObj = deleteQueue.iterator().next();
                 deleteQueue.remove(refObj);
                 if (!schedulingMap.containsKey(refObj.refMofId())) {
                     if (tracer.isLoggable(Level.FINE)) {
@@ -553,8 +549,8 @@ public class DdlValidator extends FarragoCompoundAllocation
 
         List deletionList = new ArrayList();
         for (Object entry : validatedMap.entrySet()) {
-            Map.Entry mapEntry = (Map.Entry) entry;
-            RefObject obj = (RefObject) mapEntry.getKey();
+            Map.Entry<RefObject,Object> mapEntry = (Map.Entry<RefObject,Object>) entry;
+            RefObject obj = mapEntry.getKey();
             Object action = mapEntry.getValue();
 
             if (obj instanceof CwmStructuralFeature) {
@@ -605,8 +601,8 @@ public class DdlValidator extends FarragoCompoundAllocation
         // this until here so that storage handlers above can use object
         // visibility attribute to distinguish new objects.
         for (Object entry : validatedMap.entrySet()) {
-            Map.Entry mapEntry = (Map.Entry) entry;
-            RefObject obj = (RefObject) mapEntry.getKey();
+            Map.Entry<RefObject,Object> mapEntry = (Map.Entry<RefObject,Object>) entry;
+            RefObject obj = mapEntry.getKey();
             Object action = mapEntry.getValue();
 
             if (!(obj instanceof CwmModelElement)) {
@@ -705,14 +701,12 @@ public class DdlValidator extends FarragoCompoundAllocation
             if (event.getType() == AssociationEvent.EVENT_ASSOCIATION_REMOVE) {
                 RefAssociation refAssoc =
                     (RefAssociation) associationEvent.getSource();
-                List rules = dropRules.getMulti(refAssoc.getClass());
-                Iterator ruleIter = rules.iterator();
-                while (ruleIter.hasNext()) {
-                    FarragoSessionDdlDropRule rule =
-                        (FarragoSessionDdlDropRule) ruleIter.next();
+                List<FarragoSessionDdlDropRule> rules =
+                    dropRules.getMulti(refAssoc.getClass());
+                for (FarragoSessionDdlDropRule rule : rules) {
                     if ((rule != null)
-                            && rule.getEndName().equals(
-                                associationEvent.getEndName())) {
+                        && rule.getEndName().equals(
+                        associationEvent.getEndName())) {
                         fireDropRule(
                             rule,
                             associationEvent.getFixedElement(),
@@ -757,7 +751,7 @@ public class DdlValidator extends FarragoCompoundAllocation
             // Process deletions until a fixpoint is reached, using MDR events
             // to implement RESTRICT/CASCADE.
             while (!deleteQueue.isEmpty()) {
-                RefObject refObj = (RefObject) deleteQueue.iterator().next();
+                RefObject refObj = deleteQueue.iterator().next();
                 checkInUse(refObj.refMofId());
 
                 deleteQueue.remove(refObj);
@@ -804,14 +798,14 @@ public class DdlValidator extends FarragoCompoundAllocation
             // Swap in a new map so new scheduling calls aren't handled until
             // the next round.
             transitMap = schedulingMap;
-            schedulingMap = new LinkedHashMap();
+            schedulingMap = new LinkedHashMap<String, Object>();
 
             boolean progress = false;
-            Iterator mapIter = transitMap.entrySet().iterator();
+            Iterator<Map.Entry<String,Object>> mapIter = transitMap.entrySet().iterator();
             while (mapIter.hasNext()) {
-                Map.Entry mapEntry = (Map.Entry) mapIter.next();
+                Map.Entry<String,Object> mapEntry = mapIter.next();
                 RefObject obj =
-                    (RefObject) getRepos().getMdrRepos().getByMofId((String) mapEntry
+                    (RefObject) getRepos().getMdrRepos().getByMofId(mapEntry
                             .getKey());
                 if (obj == null) {
                     continue;
@@ -914,7 +908,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         Collection collection,
         boolean includeType)
     {
-        Map nameMap = new LinkedHashMap();
+        Map<Object,CwmModelElement> nameMap = new LinkedHashMap<Object, CwmModelElement>();
         Iterator iter = collection.iterator();
         while (iter.hasNext()) {
             CwmModelElement element = (CwmModelElement) iter.next();
@@ -923,7 +917,7 @@ public class DdlValidator extends FarragoCompoundAllocation
                 continue;
             }
 
-            CwmModelElement other = (CwmModelElement) nameMap.get(nameKey);
+            CwmModelElement other = nameMap.get(nameKey);
             if (other != null) {
                 if (isNewObject(other) && isNewObject(element)) {
                     // clash between two new objects being defined
@@ -1040,7 +1034,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         sessionVariables.schemaName = schema.getName();
 
         // convert from List<FemSqlpathElement> to List<SqlIdentifier>
-        List list = new ArrayList();
+        List<SqlIdentifier> list = new ArrayList<SqlIdentifier>();
         Iterator iter = schema.getPathElement().iterator();
         while (iter.hasNext()) {
             FemSqlpathElement element = (FemSqlpathElement) iter.next();
@@ -1275,8 +1269,8 @@ public class DdlValidator extends FarragoCompoundAllocation
     private boolean containsCycle(
         CwmModelElement rootElement)
     {
-        HashSet visited = new HashSet();
-        HashSet visit = new HashSet();
+        HashSet<CwmModelElement> visited = new HashSet<CwmModelElement>();
+        HashSet<CwmModelElement> visit = new HashSet<CwmModelElement>();
 
         DependencySupplier depSupplier =
             getRepos().getCorePackage().getDependencySupplier();
@@ -1284,7 +1278,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         visit.add(rootElement);
         while (!visit.isEmpty()) {
             CwmModelElement element =
-                (CwmModelElement) visit.iterator().next();
+                visit.iterator().next();
             visit.remove(element);
             if (visited.contains(element)) {
                 return true;
@@ -1334,7 +1328,7 @@ public class DdlValidator extends FarragoCompoundAllocation
     //FarragoSessionDdlValidator
     public Set getDependencies(CwmModelElement rootElement)
     {
-        HashSet result = new HashSet();
+        HashSet<CwmModelElement> result = new HashSet<CwmModelElement>();
 
         DependencySupplier s =
             getRepos().getCorePackage().getDependencySupplier();

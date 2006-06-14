@@ -763,7 +763,7 @@ SqlNode NamedRoutineCall(
     {
         SqlNode function = createCall(
             name, SqlParserUtil.toNodeArray(args), pos,
-            routineType);
+            routineType, null);
         return function;
     }
 }
@@ -1061,14 +1061,18 @@ SqlNode SelectExpression() :
 {
     SqlNode e;
     String id;
-    SqlParserPos pos;
+    SqlParserPos pos, starPos;
 }
 {
     LOOKAHEAD(3)
     id = Identifier() { pos = getPos(); } <DOT> <STAR>
     {
-        pos = pos.plus(getPos());
-        return new SqlIdentifier(new String[] {id, "*"}, pos);
+        starPos = getPos();
+        return new SqlIdentifier(
+            new String[] {id, "*"},
+            null,
+            pos.plus(starPos),
+            new SqlParserPos[] {pos, starPos});
     }
     |
     <STAR>
@@ -1446,6 +1450,7 @@ SqlNode GroupByOpt() :
     SqlParserPos pos;
 }
 {
+    LOOKAHEAD(4)
     <GROUP> <BY> e = Expression(EXPR_ACCEPT_SUBQUERY)
     {
         pos = getPos();
@@ -1458,6 +1463,11 @@ SqlNode GroupByOpt() :
     ) *
     {
         return new SqlNodeList(list, pos);
+    }
+    |
+    <GROUP> <BY> <LPAREN> <RPAREN>
+    {
+        return new SqlNodeList(getPos());
     }
     |
     {
@@ -1967,7 +1977,7 @@ SqlNode Expression3(ExprContext exprContext) :
     e = Expression3(EXPR_ACCEPT_SUBQUERY)
     {
         SqlParserPos callPos = prefixRowOpPos.plus(e.getParserPosition());
-        return op.createCall(e,callPos);
+        return op.createCall(e, callPos);
     }
     |
     {
@@ -2605,18 +2615,29 @@ List SimpleIdentifierCommaList() :
 SqlIdentifier CompoundIdentifier() :
 {
     List list = new ArrayList();
+    List posList = new ArrayList();
     String p;
-    SqlParserPos pos;
 }
 {
     p = Identifier()
     {
-        pos = getPos();
+        posList.add(getPos());
         list.add(p);
     }
-    (<DOT> p = Identifier() {list.add(p);}) *
+    (
+        <DOT> p = Identifier()
+        {
+            list.add(p);
+            posList.add(getPos());
+        }
+    ) *
     {
-        return new SqlIdentifier(SqlParserUtil.toStringArray(list), pos);
+        SqlParserPos[] componentPositions =
+            (SqlParserPos []) posList.toArray(
+                new SqlParserPos[posList.size()]);
+        SqlParserPos pos = SqlParserPos.sum(componentPositions);
+        return new SqlIdentifier(
+            SqlParserUtil.toStringArray(list), null, pos, componentPositions);
     }
 }
 
@@ -3197,8 +3218,8 @@ SqlNode NamedFunctionCall() :
             | args = FunctionParameterList(EXPR_ACCEPT_SUBQUERY)
             {
                 pos = pos.plus(getPos());
-		quantifier = (SqlLiteral) args.get(0);
-		args.remove(0);
+                quantifier = (SqlLiteral) args.get(0);
+                args.remove(0);
             }
         )
         [ <OVER>
@@ -3213,12 +3234,9 @@ SqlNode NamedFunctionCall() :
             )
         ]
         {
-	
             function = createCall(
                 qualifiedName, SqlParserUtil.toNodeArray(args),
-                pos, funcType);
-            
-            function.setFunctionQuantifier( quantifier);		
+                pos, funcType, quantifier);
 
             if (over) {
                 if (id != null) {

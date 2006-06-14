@@ -28,6 +28,8 @@ import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.SqlNodeList;
 import org.eigenbase.reltype.RelDataType;
 
+import java.util.List;
+
 /**
  * A namespace describes the relation returned by a section of a SQL query.
  *
@@ -82,7 +84,7 @@ public interface SqlValidatorNamespace
     /**
      * Looks up hints from this namespace.
      */
-    SqlMoniker[] lookupHints(SqlParserPos pos);
+    void lookupHints(SqlParserPos pos, List<SqlMoniker> hintList);
 
     SqlNode getNode();
 

@@ -22,9 +22,7 @@
 */
 package org.eigenbase.sql.util;
 
-import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.util.MultiMap;
 import org.eigenbase.util.Util;
 
@@ -42,8 +40,11 @@ public abstract class ReflectiveSqlOperatorTable implements SqlOperatorTable
 {
     //~ Instance fields -------------------------------------------------------
 
-    private final MultiMap operators = new MultiMap();
-    private final HashMap mapNameToOp = new HashMap();
+    private final MultiMap<String,SqlOperator> operators =
+        new MultiMap<String, SqlOperator>();
+
+    private final Map<String,SqlOperator> mapNameToOp =
+        new HashMap<String, SqlOperator>();
 
     //~ Constructors ----------------------------------------------------------
 
@@ -86,14 +87,14 @@ public abstract class ReflectiveSqlOperatorTable implements SqlOperatorTable
     }
 
     // implement SqlOperatorTable
-    public List lookupOperatorOverloads(
+    public List<SqlOperator> lookupOperatorOverloads(
         SqlIdentifier opName,
         SqlFunctionCategory category,
         SqlSyntax syntax)
     {
         // NOTE jvs 3-Mar-2005:  ignore category until someone cares
         
-        List overloads = new ArrayList();
+        List<SqlOperator> overloads = new ArrayList<SqlOperator>();
         String simpleName;
         if (opName.names.length > 1) {
             if (opName.names[opName.names.length - 2].equals(
@@ -107,9 +108,9 @@ public abstract class ReflectiveSqlOperatorTable implements SqlOperatorTable
         } else {
             simpleName = opName.getSimple();
         }
-        final List list = operators.getMulti(simpleName);
+        final List<SqlOperator> list = operators.getMulti(simpleName);
         for (int i = 0, n = list.size(); i < n; i++) {
-            SqlOperator op = (SqlOperator) list.get(i);
+            SqlOperator op = list.get(i);
             if (op.getSyntax() == syntax) {
                 overloads.add(op);
             } else if ((syntax == SqlSyntax.Function)
@@ -123,7 +124,7 @@ public abstract class ReflectiveSqlOperatorTable implements SqlOperatorTable
 
         // REVIEW jvs 1-Jan-2005:  why is this extra lookup required?
         // Shouldn't it be covered by search above?
-        Object extra = null;
+        SqlOperator extra = null;
         switch (syntax.getOrdinal()) {
         case SqlSyntax.Binary_ordinal:
             extra = mapNameToOp.get(simpleName + ":BINARY");
@@ -167,14 +168,13 @@ public abstract class ReflectiveSqlOperatorTable implements SqlOperatorTable
     }
 
     // implement SqlOperatorTable
-    public List getOperatorList()
+    public List<SqlOperator> getOperatorList()
     {
-        ArrayList list = new ArrayList();
+        List<SqlOperator> list = new ArrayList<SqlOperator>();
 
-        Iterator it = operators.entryIterMulti();
+        Iterator<Map.Entry<String,SqlOperator>> it = operators.entryIterMulti();
         while (it.hasNext()) {
-            Map.Entry mapEntry = (Map.Entry) it.next();
-            list.add(mapEntry.getValue());
+            list.add(it.next().getValue());
         }
 
         return list;

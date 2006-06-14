@@ -24,6 +24,7 @@ package org.eigenbase.sql;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.type.SqlTypeStrategies;
 import org.eigenbase.sql.util.SqlVisitor;
+import org.eigenbase.sql.util.SqlBasicVisitor;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.reltype.RelDataType;
@@ -68,9 +69,16 @@ public class SqlAsOperator extends SqlBinaryOperator
         }
     }
 
-    public <R> R acceptCall(SqlVisitor<R> visitor, SqlCall call) {
-        // Do not visit operands[1] -- it is not an expression.
-        return visitor.visitChild(call, 0, call.operands[0]);
+    public <R> void acceptCall(
+        SqlVisitor<R> visitor, SqlCall call, boolean onlyExpressions,
+        SqlBasicVisitor.ArgHandler<R> argHandler)
+    {
+        if (onlyExpressions) {
+            // Do not visit operands[1] -- it is not an expression.
+            argHandler.visitChild(visitor, call, 0, call.operands[0]);
+        } else {
+            super.acceptCall(visitor, call, onlyExpressions, argHandler);
+        }
     }
 
     public RelDataType deriveType(

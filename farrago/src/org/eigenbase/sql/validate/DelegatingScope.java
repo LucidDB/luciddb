@@ -81,7 +81,7 @@ public abstract class DelegatingScope implements SqlValidatorScope
 
     protected void addColumnNames(
         SqlValidatorNamespace ns,
-        List colNames)
+        List<SqlMoniker> colNames)
     {
         final RelDataType rowType;
         try {
@@ -94,28 +94,32 @@ public abstract class DelegatingScope implements SqlValidatorScope
         final RelDataTypeField [] fields = rowType.getFields();
         for (int i = 0; i < fields.length; i++) {
             RelDataTypeField field = fields[i];
-            colNames.add(new SqlMonikerImpl(field.getName(), SqlMonikerType.Column));
+            colNames.add(
+                new SqlMonikerImpl(field.getName(), SqlMonikerType.Column));
         }
     }
 
     protected void addTableNames(
         SqlValidatorNamespace ns,
-        List tableNames)
+        List<SqlMoniker> tableNames)
     {
         SqlValidatorTable table = ns.getTable();
-        if (table == null) return;
+        if (table == null) {
+            return;
+        }
         String [] qnames = table.getQualifiedName();
         if (qnames != null) {
             tableNames.add(new SqlMonikerImpl(qnames, SqlMonikerType.Table));
         }
     }
 
-    public void findAllColumnNames(String parentObjName, List result)
+    public void findAllColumnNames(
+        String parentObjName, List<SqlMoniker> result)
     {
         parent.findAllColumnNames(parentObjName, result);
     }
 
-    public void findAllTableNames(List result)
+    public void findAllTableNames(List<SqlMoniker> result)
     {
         parent.findAllTableNames(result);
     }
@@ -123,6 +127,19 @@ public abstract class DelegatingScope implements SqlValidatorScope
     public String findQualifyingTableName(String columnName, SqlNode ctx)
     {
         return parent.findQualifyingTableName(columnName, ctx);
+    }
+
+    public RelDataType resolveColumn(String name, SqlNode ctx)
+    {
+        return parent.resolveColumn(name, ctx);
+    }
+
+    public SqlValidatorScope getOperandScope(SqlCall call)
+    {
+        if (call instanceof SqlSelect) {
+            return validator.getSelectScope((SqlSelect) call);
+        }
+        return this;
     }
 
     public SqlValidator getValidator()
@@ -135,7 +152,7 @@ public abstract class DelegatingScope implements SqlValidatorScope
      * example, the "empno" in "select empno from emp natural join dept"
      * becomes "emp.empno".
      *
-     * If the identifier cannot be resolved, throws. Never returns null.
+     * <p>If the identifier cannot be resolved, throws. Never returns null.
      */
     public SqlIdentifier fullyQualify(SqlIdentifier identifier)
     {
@@ -150,9 +167,16 @@ public abstract class DelegatingScope implements SqlValidatorScope
                     findQualifyingTableName(columnName, identifier);
 
                 //todo: do implicit collation here
-                return new SqlIdentifier(
+                final SqlParserPos pos = identifier.getParserPosition();
+                SqlIdentifier expanded = new SqlIdentifier(
                     new String[]{tableName, columnName},
-                    SqlParserPos.ZERO);
+                    null,
+                    pos,
+                    new SqlParserPos[]{
+                        SqlParserPos.ZERO,
+                        pos});
+                validator.setOriginal(expanded, identifier);
+                return expanded;
             }
 
         case 2:
@@ -160,19 +184,22 @@ public abstract class DelegatingScope implements SqlValidatorScope
                 final String tableName = identifier.names[0];
                 final SqlValidatorNamespace fromNs = resolve(tableName, null, null);
                 if (fromNs == null) {
-                    throw validator.newValidationError(identifier,
+                    throw validator.newValidationError(
+                        identifier.getComponent(0),
                         EigenbaseResource.instance().TableNameNotFound.ex(
                             tableName));
                 }
                 final String columnName = identifier.names[1];
                 final RelDataType fromRowType = fromNs.getRowType();
                 final RelDataType type =
-                    SqlValidatorUtil.lookupField(fromRowType, columnName);
+                    SqlValidatorUtil.lookupFieldType(fromRowType, columnName);
                 if (type != null) {
                     return identifier; // it was fine already
                 } else {
-                    throw EigenbaseResource.instance()
-                        .ColumnNotFoundInTable.ex(columnName, tableName);
+                    throw validator.newValidationError(
+                        identifier.getComponent(1),
+                        EigenbaseResource.instance().ColumnNotFoundInTable.ex(
+                            columnName, tableName));
                 }
             }
 
@@ -182,6 +209,12 @@ public abstract class DelegatingScope implements SqlValidatorScope
             assert identifier.names.length > 0;
             return identifier;
         }
+    }
+
+    public void validateExpr(SqlNode expr)
+    {
+        // Do not delegate to parent. An expression valid in this scope may not
+        // be valid in the parent scope.
     }
 
     public SqlWindow lookupWindow(String name)

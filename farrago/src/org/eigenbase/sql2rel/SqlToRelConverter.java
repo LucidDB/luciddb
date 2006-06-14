@@ -69,7 +69,7 @@ public class SqlToRelConverter
         new HashMap<SqlValidatorScope, LookupContext>();
     private DefaultValueFactory defaultValueFactory;
     protected final List<RelNode> leaves = new ArrayList<RelNode>();
-    private final List dynamicParamSqlNodes = new ArrayList();
+    private final List<SqlDynamicParam> dynamicParamSqlNodes = new ArrayList<SqlDynamicParam>();
     private final SqlOperatorTable opTab;
     private boolean shouldConvertTableAccess;
     protected final RelDataTypeFactory typeFactory;
@@ -278,25 +278,71 @@ public class SqlToRelConverter
         convertWhere(
             bb,
             select.getWhere());
+
+        List<SqlNode> orderExprList = new ArrayList<SqlNode>();
+        List<RelFieldCollation> collationList =
+            new ArrayList<RelFieldCollation>();
+        gatherOrderExprs(
+            bb,
+            select, select.getOrderList(),
+            orderExprList,
+            collationList);
+
         if (validator.isAggregate(select)) {
             convertAgg(
                 bb,
                 select.getGroup(),
                 select.getHaving(),
-                select.getSelectList());
+                select.getSelectList(),
+                orderExprList);
         } else {
             convertSelectList(
                 bb,
                 select.getSelectList(),
+                orderExprList,
                 select);
         }
         if (select.isDistinct()) {
             bb.setRoot(RelOptUtil.createDistinctRel(bb.root), false);
         }
-        convertOrder(
-            bb,
-            select.getOrderList());
+        convertOrder(select, bb, collationList, orderExprList);
         bb.setRoot(bb.root, true);
+    }
+
+    private void convertOrder(
+        SqlSelect select,
+        final Blackboard bb,
+        List<RelFieldCollation> collationList,
+        List<SqlNode> orderExprList)
+    {
+        if (select.getOrderList() == null) {
+            return;
+        }
+
+        // Create a sorter using the previously constructed collations.
+        bb.setRoot(
+            new SortRel(
+                cluster,
+                bb.root,
+                collationList.toArray(
+                    new RelFieldCollation[collationList.size()])),
+            false);
+
+        // If extra exressions were added to the project list for sorting,
+        // add another project to remove them.
+        if (orderExprList.size() > 0) {
+            List<RexNode> exprs = new ArrayList<RexNode>();
+            List<String> names = new ArrayList<String>();
+            final RelDataType rowType = bb.root.getRowType();
+            int fieldCount = rowType.getFieldCount() - orderExprList.size();
+            for (int i = 0; i < fieldCount; i++) {
+                exprs.add(RelOptUtil.createInputRef(bb.root, i));
+                names.add(rowType.getFields()[i].getName());
+            }
+            bb.setRoot(
+                CalcRel.createProject(bb.root, exprs, names),
+                false);
+        }
     }
 
     /**
@@ -437,8 +483,7 @@ public class SqlToRelConverter
         SqlNodeList valuesList)
     {
         RexNode result = null;
-        for (Object nodeObj : valuesList.getList()) {
-            SqlNode rightVals = (SqlNode) nodeObj;
+        for (SqlNode rightVals : valuesList) {
             // REVIEW jvs 1-May-2006:  Normalize row types here?  Also,
             // do we need to convert leftKeys over and over, or can
             // we just do it once and alias?
@@ -556,7 +601,7 @@ public class SqlToRelConverter
             null;
         final Blackboard seekBb = createBlackboard(seekScope);
         RelNode seekRel = convertQueryOrInList(seekBb, seek);
-        List conditions = new ArrayList();
+        List<RexNode> conditions = new ArrayList<RexNode>();
         if (condition != null) {
             // We are translating an IN clause, so add a condition.
             final RexNode ref =
@@ -620,8 +665,7 @@ public class SqlToRelConverter
 
             SqlNodeList nodeList = (SqlNodeList) seek;
             List<RelNode> unionInputs = new ArrayList<RelNode>();
-            for (Object nodeObj : nodeList.getList()) {
-                SqlNode node = (SqlNode) nodeObj;
+            for (SqlNode node : nodeList) {
                 SqlCall call;
                 if (isRowConstructor(node)) {
                     call = (SqlCall) node;
@@ -781,14 +825,14 @@ public class SqlToRelConverter
      */
     public RexNode convertExpression(
         SqlNode node,
-        final Map nameToNodeMap)
+        final Map<String, RexNode> nameToNodeMap)
     {
         // REVIEW jvs 2-Jan-2005: should perhaps create a proper scope as well
         Blackboard bb = new Blackboard(null)
             {
                 RexNode lookupExp(String name)
                 {
-                    RexNode node = (RexNode) nameToNodeMap.get(name);
+                    RexNode node = nameToNodeMap.get(name);
                     if (node == null) {
                         throw Util.newInternal(
                             "Unknown identifier '" + name
@@ -1028,7 +1072,8 @@ public class SqlToRelConverter
         RexNode conditionExp =
             convertJoinCondition(bb, condition, conditionType, leftRel,
                 rightRel);
-        return new JoinRel(cluster, leftRel, rightRel, conditionExp, joinType,
+        return new JoinRel(
+            cluster, leftRel, rightRel, conditionExp, joinType,
             Collections.EMPTY_SET);
     }
 
@@ -1088,16 +1133,19 @@ public class SqlToRelConverter
 
     /**
      * Converts the SELECT, GROUP BY and HAVING clauses of an aggregate query.
+     *
      * @param bb         Scope within which to resolve identifiers
      * @param groupList  GROUP BY clause, or null
      * @param having     HAVING clause
      * @param selectList SELECT list
+     * @param orderExprList Additional expressions needed to implement ORDER BY
      */
     private void convertAgg(
         Blackboard bb,
         SqlNodeList groupList,
         SqlNode having,
-        SqlNodeList selectList)
+        SqlNodeList selectList,
+        List<SqlNode> orderExprList)
     {
         assert bb.root != null : "precondition: child != null";
         final AggConverter aggConverter = new AggConverter(bb);
@@ -1109,21 +1157,33 @@ public class SqlToRelConverter
 
         // register the group exprs
         for (int i = 0; i < groupList.size(); i++) {
-            aggConverter.addGroupExpr(groupList.get(i));
+            final SqlNode groupExpr = groupList.get(i);
+            final SqlNode expandedGroupExpr =
+                validator.expand(groupExpr, bb.scope);
+            aggConverter.addGroupExpr(expandedGroupExpr);
         }
 
-        RexNode[] selectExprs = new RexNode[selectList.size()];
-        String[] selectNames = new String[selectList.size()];
+        final int selectCount = selectList.size();
+        final int orderCount = orderExprList.size();
+        RexNode[] selectExprs = new RexNode[selectCount + orderCount];
+        String[] selectNames = new String[selectCount + orderCount];
         RexNode havingExpr = null;
         try {
             Util.permAssert(bb.agg == null, "already in agg mode");
             bb.agg = aggConverter;
             // convert the select and having expressions, so that the
             // agg converter knows which aggregations are required
-            for (int i = 0; i < selectList.size(); i++) {
+            for (int i = 0; i < selectCount; i++) {
                 SqlNode expr = selectList.get(i);
                 selectExprs[i] = bb.convertExpression(expr);
                 selectNames[i] = validator.deriveAlias(expr, i);
+            }
+
+            for (int i = 0; i < orderCount; i++) {
+                SqlNode expr = orderExprList.get(i);
+                selectExprs[selectCount + i] = bb.convertExpression(expr);
+                selectNames[selectCount + i] =
+                    validator.deriveAlias(expr, selectCount + i);
             }
 
             if (having != null) {
@@ -1146,7 +1206,8 @@ public class SqlToRelConverter
             CalcRel.createProject(
                 bb.root,
                 preExprs,
-                null), false);
+                null),
+            false);
 
         // add the aggregator
         final AggregateRel.Call [] aggCalls = aggConverter.getAggCalls();
@@ -1159,8 +1220,9 @@ public class SqlToRelConverter
 
         // implement HAVING
         if (having != null) {
-            bb.setRoot(CalcRel.createFilter(bb.root,
-                havingExpr), false);
+            bb.setRoot(
+                CalcRel.createFilter(bb.root, havingExpr),
+                false);
         }
 
         // implement the SELECT list
@@ -1168,7 +1230,8 @@ public class SqlToRelConverter
             CalcRel.createProject(
                 bb.root,
                 selectExprs,
-                selectNames), false);
+                selectNames),
+            false);
     }
 
 
@@ -1190,51 +1253,85 @@ public class SqlToRelConverter
     }
 
     /**
-     * Converts an ORDER BY clause.
+     * Creates a list of collations required to implement the ORDER BY clause,
+     * if there is one. Populates <code>extraOrderExprs</code> with any sort
+     * expressions which are not in the select clause.
+     *
      * @param bb       Scope within which to resolve identifiers
-     * @param orderList Order by clause, or null
+     * @param select   Select clause, null if order by is applied to set
+     *                 operation (UNION etc.)
+     * @param orderList Order by clause, may be null
+     * @param extraOrderExprs Sort expressions which are not in the select
+     *                 clause (output)
+     * @param collationList List of collations (output)
      * @pre bb.root != null
-     * @post return != null
      */
-    private void convertOrder(
+    private void gatherOrderExprs(
         Blackboard bb,
-        SqlNodeList orderList)
+        SqlSelect select,
+        SqlNodeList orderList,
+        List<SqlNode> extraOrderExprs,
+        List<RelFieldCollation> collationList)
     {
         // TODO:  add validation rules to SqlValidator also
         assert bb.root != null : "precondition: child != null";
         if (orderList == null) {
             return;
         }
-        RelFieldCollation [] collations =
-            new RelFieldCollation[orderList.size()];
-        for (int i = 0; i < collations.length; ++i) {
-            SqlNode orderItem = orderList.get(i);
-            int iOrdinal;
-            if (orderItem.isA(SqlKind.Literal)) {
-                SqlLiteral sqlLiteral = (SqlLiteral) orderItem;
-                RexLiteral ordinalExp =
-                    (RexLiteral) exprConverter.convertLiteral(bb, sqlLiteral);
-                if (ordinalExp.getTypeName() != SqlTypeName.Decimal) {
-                    throw Util.needToImplement(ordinalExp);
-                }
-
-                // SQL ordinals are 1-based, but SortRel's are 0-based
-                iOrdinal = sqlLiteral.intValue() - 1;
-            } else if (orderItem.isA(SqlKind.Identifier)) {
-                String alias = validator.deriveAlias(orderItem, -1);            	
-                iOrdinal =
-                    bb.root.getRowType().getFieldOrdinal(alias);
-                assert (iOrdinal != -1);
-            } else {
-                // TODO:  handle descending, collation sequence,
-                // (and expressions, but flagged as non-standard)
-                throw Util.needToImplement(orderItem);
-            }
-            assert (iOrdinal < bb.root.getRowType().getFieldCount());
-            collations[i] = new RelFieldCollation(
-                iOrdinal, RelFieldCollation.Direction.Ascending);
+        for (SqlNode orderItem : orderList) {
+            collationList.add(
+                convertOrderItem(
+                    select, orderItem, extraOrderExprs,
+                    RelFieldCollation.Direction.Ascending));
         }
-        bb.setRoot(new SortRel(cluster, bb.root, collations), false);
+    }
+
+    private RelFieldCollation convertOrderItem(
+        SqlSelect select,
+        SqlNode orderItem,
+        List<SqlNode> extraExprs,
+        RelFieldCollation.Direction direction)
+    {
+        // DESC keyword, e.g. 'select a, b from t order by a desc'.
+        if (orderItem instanceof SqlCall) {
+            SqlCall call = (SqlCall) orderItem;
+            if (call.getOperator() == SqlStdOperatorTable.descendingOperator) {
+                return convertOrderItem(select, call.operands[0],
+                    extraExprs, RelFieldCollation.Direction.Descending);
+            }
+        }
+
+        SqlNode converted = validator.expandOrderExpr(select, orderItem);
+
+        // Scan the select list and order exprs for an identical expression.
+        if (select != null) {
+            SelectScope selectScope =
+                (SelectScope) validator.getRawSelectScope(select);
+            int ordinal = -1;
+            for (SqlNode selectItem : selectScope.getExpandedSelectList()) {
+                ++ordinal;
+                if (selectItem.getKind() == SqlKind.As) {
+                    selectItem = ((SqlCall) selectItem).operands[0];
+                }
+                if (converted.equalsDeep(selectItem, false)) {
+                    return new RelFieldCollation(ordinal, direction);                    
+                }
+            }
+
+            for (SqlNode extraExpr : extraExprs) {
+                ++ordinal;
+                if (converted.equalsDeep(extraExpr, false)) {
+                    return new RelFieldCollation(ordinal, direction);
+                }
+            }
+        }
+        
+        // TODO:  handle collation sequence
+        // TODO: flag expressions as non-standard
+
+        int ordinal = select.getSelectList().size() + extraExprs.size();
+        extraExprs.add(converted);
+        return new RelFieldCollation(ordinal, direction);
     }
 
     /**
@@ -1331,9 +1428,10 @@ public class SqlToRelConverter
      *
      * @param call Insert expression
      * @param sourceRel Source relational expression
-     * @return
+     * @return Converted INSERT statement
      */
-    protected RelNode convertColumnList(SqlInsert call,
+    protected RelNode convertColumnList(
+        SqlInsert call,
         RelNode sourceRel)
     {
         RelDataType sourceRowType = sourceRel.getRowType();
@@ -1425,11 +1523,9 @@ public class SqlToRelConverter
         RelOptTable targetTable = getTargetTable(call);
 
         // convert update column list from SqlIdentifier to String
-        List targetColumnNameList = new ArrayList();
-        List targetColumnList = call.getTargetColumnList().getList();
-        Iterator targetColumnIter = targetColumnList.iterator();
-        while (targetColumnIter.hasNext()) {
-            SqlIdentifier id = (SqlIdentifier) targetColumnIter.next();
+        List<String> targetColumnNameList = new ArrayList<String>();
+        for (SqlNode node : call.getTargetColumnList()) {
+            SqlIdentifier id = (SqlIdentifier) node;
             String name = id.getSimple();
             targetColumnNameList.add(name);
         }
@@ -1446,12 +1542,9 @@ public class SqlToRelConverter
         RelOptTable targetTable = getTargetTable(call);
         
         // convert update column list from SqlIdentifier to String
-        List targetColumnNameList = new ArrayList();
-        List targetColumnList =
-            call.getUpdateCall().getTargetColumnList().getList();
-        Iterator targetColumnIter = targetColumnList.iterator();
-        while (targetColumnIter.hasNext()) {
-            SqlIdentifier id = (SqlIdentifier) targetColumnIter.next();
+        List<String> targetColumnNameList = new ArrayList<String>();
+        for (SqlNode targetColumn : call.getUpdateCall().getTargetColumnList()) {
+            SqlIdentifier id = (SqlIdentifier) targetColumn;
             String name = id.getSimple();
             targetColumnNameList.add(name);
         }
@@ -1639,8 +1732,8 @@ public class SqlToRelConverter
     {
         // TODO Wael 2/04/05: this implementation is not the most efficent in
         // terms of planning since it generates XOs that can be reduced.
-        List joinList = new ArrayList();
-        List lastList = new ArrayList();
+        List<Object> joinList = new ArrayList<Object>();
+        List<SqlNode> lastList = new ArrayList<SqlNode>();
         for (int i = 0; i < operands.length; i++) {
             SqlNode operand = operands[i];
             if (!(operand instanceof SqlCall)) {
@@ -1657,8 +1750,7 @@ public class SqlToRelConverter
             }
             final RelNode input;
             if (op == SqlStdOperatorTable.multisetValueConstructor) {
-                final SqlNodeList list = (SqlNodeList)
-                    SqlUtil.toNodeList(call.operands).clone();
+                final SqlNodeList list = SqlUtil.toNodeList(call.operands);
                 assert bb.scope instanceof SelectScope : bb.scope;
                 CollectNamespace nss =
                     (CollectNamespace) validator.getNamespace(call);
@@ -1687,7 +1779,7 @@ public class SqlToRelConverter
             if (lastList.size() > 0) {
                 joinList.add(lastList);
             }
-            lastList = new ArrayList();
+            lastList = new ArrayList<SqlNode>();
             CollectRel collectRel =
                 new CollectRel(
                     cluster,
@@ -1703,11 +1795,11 @@ public class SqlToRelConverter
         for (int i = 0; i < joinList.size(); i++) {
             Object o = joinList.get(i);
             if (o instanceof List) {
-                List projectList = (List) o;
+                List<SqlNode> projectList = (List<SqlNode>) o;
                 final List<RexNode> selectList = new ArrayList<RexNode>();
                 final List<String> fieldNameList = new ArrayList<String>();
                 for (int j = 0; j < projectList.size(); j++) {
-                    SqlNode operand = (SqlNode) projectList.get(j);
+                    SqlNode operand = projectList.get(j);
                     selectList.add(bb.convertExpression(operand));
 
                     // REVIEW angel 5-June-2005: Use deriveAliasFromOrdinal
@@ -1744,20 +1836,35 @@ public class SqlToRelConverter
 
     private void convertSelectList(
         Blackboard bb,
-        SqlNodeList selectList, SqlSelect select)
+        SqlNodeList selectList,
+        List<SqlNode> orderList,
+        SqlSelect select)
     {
         selectList = validator.expandStar(selectList, select, false);
         replaceSubqueries(bb, selectList);
-        String [] fieldNames = new String[selectList.size()];
-        RexNode [] exps = new RexNode[selectList.size()];
+        List<String> fieldNames = new ArrayList<String>();
+        List<RexNode> exprs = new ArrayList<RexNode>();
         List<String> aliases = new ArrayList<String>();
-        for (int i = 0; i < selectList.size(); i++) {
-            final SqlNode node = selectList.get(i);
-            exps[i] = bb.convertExpression(node);
-            fieldNames[i] = deriveAlias(node, aliases, i);
+
+        // Project select clause.
+        int i = -1;
+        for (SqlNode expr : selectList) {
+            ++i;
+            exprs.add(bb.convertExpression(expr));
+            fieldNames.add(deriveAlias(expr, aliases, i));
         }
+
+        // Project extra fields for sorting.
+        for (SqlNode expr : orderList) {
+            ++i;
+            SqlNode expr2 = validator.expandOrderExpr(select, expr);
+            exprs.add(bb.convertExpression(expr2));
+            fieldNames.add(deriveAlias(expr, aliases, i));
+        }
+
         bb.setRoot(
-            CalcRel.createProject(bb.root, exps, fieldNames), false);
+            CalcRel.createProject(bb.root, exprs, fieldNames),
+            false);
     }
 
     private String deriveAlias(
@@ -1786,7 +1893,7 @@ public class SqlToRelConverter
         SqlCall values)
     {
         SqlNode [] rowConstructorList = values.getOperands();
-        ArrayList unionRels = new ArrayList();
+        ArrayList<RelNode> unionRels = new ArrayList<RelNode>();
         for (int i = 0; i < rowConstructorList.length; i++) {
             SqlCall rowConstructor = (SqlCall) rowConstructorList[i];
 
@@ -1811,7 +1918,7 @@ public class SqlToRelConverter
         if (unionRels.size() == 0) {
             throw Util.newInternal("empty values clause");
         } else if (unionRels.size() == 1) {
-            bb.setRoot((RelNode) unionRels.get(0), true);
+            bb.setRoot(unionRels.get(0), true);
         } else {
             bb.setRoot(
                 new UnionRel(
@@ -2329,11 +2436,6 @@ public class SqlToRelConverter
             return convertInterval(intervalQualifier);
         }
 
-        // implement SqlVisitor
-        public RexNode visitChild(SqlNode parent, int ordinal, SqlNode child)
-        {
-            throw new UnsupportedOperationException();
-        }
     }
 
     private static class DeferredLookupImpl
@@ -2489,7 +2591,7 @@ public class SqlToRelConverter
                 bb.agg = this;
             }
             final Aggregation aggregation = (Aggregation) call.getOperator();
-            RelDataType type = validator.getValidatedNodeType(call);
+            RelDataType type = validator.deriveType(bb.scope, call);
             boolean distinct = false;
             SqlLiteral quantifier = call.getFunctionQuantifier();
             if ((null != quantifier) &&

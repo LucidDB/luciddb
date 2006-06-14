@@ -1043,7 +1043,7 @@ void CommonSequenceOption(FarragoSequenceOptions opts) :
 {
     <START> <WITH> value = NumericLiteral()
     {
-        opts.setStart(value.longValue());
+        opts.setStart(value.longValue(true));
     }
     |
     BasicSequenceOption(opts)
@@ -1056,12 +1056,12 @@ void BasicSequenceOption(FarragoSequenceOptions opts) :
 {
     <INCREMENT> <BY> value = NumericLiteral()
     {
-        opts.setIncrement(value.longValue());
+        opts.setIncrement(value.longValue(true));
     }
     |
     <MINVALUE> value = NumericLiteral()
     {
-        opts.setMin(value.longValue());
+        opts.setMin(value.longValue(true));
     }
     |
     LOOKAHEAD(2)
@@ -1072,7 +1072,7 @@ void BasicSequenceOption(FarragoSequenceOptions opts) :
     |
     <MAXVALUE> value = NumericLiteral()
     {
-        opts.setMax(value.longValue());
+        opts.setMax(value.longValue(true));
     }
     |
     LOOKAHEAD(2)
@@ -1318,7 +1318,7 @@ CwmModelElement JarDrop() :
         FemJar jar = (FemJar) farragoParser.getStmtValidator().findSchemaObject(
             qualifiedJarName,
             getRepos().getSql2003Package().getFemJar());
-        jar.setDeploymentState(deploymentState.intValue());
+        jar.setDeploymentState(deploymentState.intValue(true));
         return jar;
     }
 }
@@ -1439,7 +1439,7 @@ DdlStmt AlterIdentityColumnStmt(CwmColumn column) :
     (
         <RESTART> <WITH> value = NumericLiteral()
         {
-            opts.setStart(value.longValue());
+            opts.setStart(value.longValue(true));
         }
         |
         <SET> BasicSequenceOption(opts)
@@ -2087,7 +2087,7 @@ FemJar JarDefinition() :
     <OPTIONS> <LPAREN>
     deploymentState = NumericLiteral() <RPAREN>
     {
-        jar.setDeploymentState(deploymentState.intValue());
+        jar.setDeploymentState(deploymentState.intValue(true));
         return jar;
     }
 }

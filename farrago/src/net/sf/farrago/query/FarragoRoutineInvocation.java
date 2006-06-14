@@ -40,8 +40,10 @@ public class FarragoRoutineInvocation
     private final FarragoUserDefinedRoutine routine;
     private final RexNode [] argExprs;
     private final RexNode [] argCastExprs;
-    private final Map paramNameToArgMap;
-    private final Map paramNameToTypeMap;
+    private final Map<String, RexNode> paramNameToArgMap = 
+        new HashMap<String, RexNode>();
+    private final Map<String, RelDataType> paramNameToTypeMap =
+        new HashMap<String, RelDataType>();
     
     public FarragoRoutineInvocation(
         FarragoUserDefinedRoutine routine,
@@ -49,9 +51,7 @@ public class FarragoRoutineInvocation
     {
         this.routine = routine;
         this.argExprs = argExprs;
-        paramNameToArgMap = new HashMap();
-        paramNameToTypeMap = new HashMap();
-        
+
         RelDataType [] paramTypes = routine.getParamTypes();
         argCastExprs = new RexNode[argExprs.length];
         List paramNames = new ArrayList();
@@ -78,12 +78,12 @@ public class FarragoRoutineInvocation
         return argCastExprs;
     }
 
-    public Map getParamNameToArgMap()
+    public Map<String, RexNode> getParamNameToArgMap()
     {
         return paramNameToArgMap;
     }
 
-    public Map getParamNameToTypeMap()
+    public Map<String, RelDataType> getParamNameToTypeMap()
     {
         return paramNameToTypeMap;
     }

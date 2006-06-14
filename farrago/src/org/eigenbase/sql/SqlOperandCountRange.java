@@ -55,7 +55,7 @@ public class SqlOperandCountRange
     public static final SqlOperandCountRange Four =
         new SqlOperandCountRange(4);
 
-    private List possibleList;
+    private List<Integer> possibleList;
     private boolean isVariadic;
 
     /**
@@ -78,7 +78,7 @@ public class SqlOperandCountRange
         this(new Integer[]{ new Integer(count) });
     }
 
-    public SqlOperandCountRange(List list)
+    public SqlOperandCountRange(List<Integer> list)
     {
         possibleList = Collections.unmodifiableList(list);
         isVariadic = false;
@@ -111,7 +111,7 @@ public class SqlOperandCountRange
      *
      * @return unmodifiable list of Integer
      */
-    public List getAllowedList()
+    public List<Integer> getAllowedList()
     {
         Util.pre(!isVariadic, "!isVariadic");
         return possibleList;

@@ -168,6 +168,7 @@ public abstract class TestUtil
         return s
             .replaceAll("\\\\", "\\\\")
             .replaceAll("\\.", "\\\\.")
+            .replaceAll("\\+", "\\\\+")
             .replaceAll("\\{", "\\\\{")
             .replaceAll("\\}", "\\\\}")
             .replaceAll("\\|", "\\\\||")

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/med/flatfile.sql#15 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/med/flatfile.sql#11 $
 0: jdbc:farrago:> -- Test flatfile namespace plugin
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema flatfile_schema;
@@ -349,7 +349,7 @@ Error: Fixed position parsing, enabled by setting an empty field delimiter, requ
 0: jdbc:farrago:> -- 3.3 Test sampling of missing file
 0: jdbc:farrago:> --
 0: jdbc:farrago:> select * from flatfile_server.SAMPLE."missing";
-Error: From line 1, column 15 to line 1, column 29: Table 'FLATFILE_SERVER.SAMPLE.missing' not found (state=,code=0)
+Error: From line 1, column 15 to line 1, column 46: Table 'FLATFILE_SERVER.SAMPLE.missing' not found (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- 3.4 Test sampling of an empty file (no header)
@@ -459,7 +459,7 @@ Error: Could not derive column sizes for data file unitsql/med/flatfiles/empty.f
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test: should fail; entire import failed
 0: jdbc:farrago:> select * from flatfile_schema."example" order by 3;
-Error: From line 1, column 15 to line 1, column 29: Table 'FLATFILE_SCHEMA.example' not found (state=,code=0)
+Error: From line 1, column 15 to line 1, column 39: Table 'FLATFILE_SCHEMA.example' not found (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test a table using implicit column definitions
 0: jdbc:farrago:> create foreign table flatfile_implicit_table
@@ -568,7 +568,7 @@ Error: One or more tables not found while importing foreign schema "BCP":  [no_t
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test: not imported. fail
 0: jdbc:farrago:> select * from flatfiledir_schema."example2" order by 3;
-Error: From line 1, column 15 to line 1, column 32: Table 'FLATFILEDIR_SCHEMA.example2' not found (state=,code=0)
+Error: From line 1, column 15 to line 1, column 43: Table 'FLATFILEDIR_SCHEMA.example2' not found (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop table flatfiledir_schema."example";
 0: jdbc:farrago:> 

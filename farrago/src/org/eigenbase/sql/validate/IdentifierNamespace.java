@@ -29,6 +29,8 @@ import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.SqlNodeList;
 import org.eigenbase.sql.parser.SqlParserPos;
 
+import java.util.Arrays;
+
 /**
  * Namespace whose contents are defined by the type of an
  * {@link org.eigenbase.sql.SqlIdentifier identifier}.
@@ -65,7 +67,16 @@ public class IdentifierNamespace extends AbstractNamespace
             // TODO:  expand qualifiers for column references also
             String [] qualifiedNames = table.getQualifiedName();
             if (qualifiedNames != null) {
-                id.names = qualifiedNames;
+                // Assign positions to the components of the fully-qualified
+                // identifier, as best we can. We assume that qualification
+                // adds names to the front, e.g. FOO.BAR becomes BAZ.FOO.BAR.
+                SqlParserPos[] poses = new SqlParserPos[qualifiedNames.length];
+                Arrays.fill(poses, id.getParserPosition());
+                for (int i = 0; i < id.names.length; i++) {
+                    int offset = qualifiedNames.length - id.names.length;
+                    poses[i + offset] = id.getComponentParserPosition(i);
+                }
+                id.setNames(qualifiedNames, poses);
             }
         }
         // Build a list of monotonic expressions.

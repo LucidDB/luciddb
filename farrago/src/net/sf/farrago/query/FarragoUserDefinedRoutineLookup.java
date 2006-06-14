@@ -27,7 +27,6 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.type.*;
 
 import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.cwm.behavioral.*;
 
@@ -64,7 +63,7 @@ public class FarragoUserDefinedRoutineLookup implements SqlOperatorTable
     }
 
     // implement SqlOperatorTable
-    public List lookupOperatorOverloads(
+    public List<SqlOperator> lookupOperatorOverloads(
         SqlIdentifier opName,
         SqlFunctionCategory category,
         SqlSyntax syntax)
@@ -84,7 +83,7 @@ public class FarragoUserDefinedRoutineLookup implements SqlOperatorTable
             FemRoutine femRoutine = (FemRoutine) stmtValidator.findSchemaObject(
                 opName,
                 stmtValidator.getRepos().getSql2003Package().getFemRoutine());
-            List overloads = new ArrayList();
+            List<SqlOperator> overloads = new ArrayList<SqlOperator>();
             if (femRoutine.getType() == ProcedureTypeEnum.FUNCTION) {
                 overloads.add(convertRoutine(femRoutine));
             }
@@ -98,10 +97,9 @@ public class FarragoUserDefinedRoutineLookup implements SqlOperatorTable
         List list = stmtValidator.findRoutineOverloads(
             opName,
             null);
-        List overloads = new ArrayList();
-        Iterator iter = list.iterator();
-        while (iter.hasNext()) {
-            FemRoutine femRoutine = (FemRoutine) iter.next();
+        List<SqlOperator> overloads = new ArrayList<SqlOperator>();
+        for (Object aList : list) {
+            FemRoutine femRoutine = (FemRoutine) aList;
             if (category == SqlFunctionCategory.UserDefinedFunction) {
                 if (femRoutine.getType() != ProcedureTypeEnum.FUNCTION) {
                     continue;
@@ -131,7 +129,7 @@ public class FarragoUserDefinedRoutineLookup implements SqlOperatorTable
     }
     
     // implement SqlOperatorTable
-    public List getOperatorList()
+    public List<SqlOperator> getOperatorList()
     {
         // NOTE jvs 1-Jan-2005:  I don't think we'll ever need this.
         throw Util.needToImplement(this);

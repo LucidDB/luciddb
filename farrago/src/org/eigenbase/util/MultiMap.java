@@ -23,6 +23,8 @@
 
 package org.eigenbase.util;
 
+import org.eigenbase.relopt.RelTrait;
+
 import java.util.*;
 
 
@@ -45,9 +47,21 @@ import java.util.*;
  *
  * @since May 18, 2003
  */
-public class MultiMap extends HashMap
+public class MultiMap<K,V>
 {
+    private final Map<K,Object> map = new HashMap<K,Object>();
+
     //~ Methods ---------------------------------------------------------------
+
+    private Object get(K key)
+    {
+        return map.get(key);
+    }
+
+    private Object put(K key, V value)
+    {
+        return map.put(key, value);
+    }
 
     /**
      * Returns a list of values for a given key; returns an empty list if not
@@ -55,15 +69,15 @@ public class MultiMap extends HashMap
      *
      * @post return != null
      */
-    public List getMulti(Object key)
+    public List<V> getMulti(K key)
     {
         Object o = get(key);
         if (o == null) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         } else if (o instanceof ValueList) {
-            return (ValueList) o;
+            return (ValueList<V>) o;
         } else {
-            return Collections.singletonList(o);
+            return Collections.singletonList((V) o);
         }
     }
 
@@ -71,22 +85,22 @@ public class MultiMap extends HashMap
      * Adds a value for this key.
      */
     public void putMulti(
-        Object key,
-        Object value)
+        K key,
+        V value)
     {
         final Object o = put(key, value);
         if (o != null) {
             // We knocked something out. It might be a list, or a singleton
             // object.
-            ValueList list;
+            ValueList<V> list;
             if (o instanceof ValueList) {
-                list = (ValueList) o;
+                list = (ValueList<V>) o;
             } else {
-                list = new ValueList();
-                list.add(o);
+                list = new ValueList<V>();
+                list.add((V) o);
             }
             list.add(value);
-            put(key, list);
+            map.put(key, list);
         }
     }
 
@@ -94,8 +108,8 @@ public class MultiMap extends HashMap
      * Removes a value for this key.
      */
     public boolean removeMulti(
-        Object key,
-        Object value)
+        K key,
+        V value)
     {
         final Object o = get(key);
         if (o == null) {
@@ -103,7 +117,7 @@ public class MultiMap extends HashMap
             return false;
         } else {
             if (o instanceof ValueList) {
-                ValueList list = (ValueList) o;
+                ValueList<V> list = (ValueList<V>) o;
                 if (list.remove(value)) {
                     if (list.size() == 1) {
                         // now just one value left, so forget the list, and
@@ -134,9 +148,24 @@ public class MultiMap extends HashMap
      * Like entrySet().iterator(), but returns one Map.Entry per value
      * rather than one per key.
      */
-    public Iterator entryIterMulti()
+    public EntryIter entryIterMulti()
     {
         return new EntryIter();
+    }
+
+    public Object remove(K key)
+    {
+        return map.remove(key);
+    }
+
+    public boolean containsKey(K key)
+    {
+        return map.containsKey(key);
+    }
+
+    public void clear()
+    {
+        map.clear();
     }
 
     //~ Inner Classes ---------------------------------------------------------
@@ -145,7 +174,7 @@ public class MultiMap extends HashMap
      * Holder class, ensures that user's values are never interpreted as
      * multiple values.
      */
-    private static class ValueList extends ArrayList
+    private static class ValueList<V> extends ArrayList<V>
     {
     }
 
@@ -154,20 +183,20 @@ public class MultiMap extends HashMap
      * empty ValueLists will never be encountered, and also preserves
      * this property when remove() is called.
      */
-    private class EntryIter implements Iterator
+    private class EntryIter implements Iterator<Map.Entry<K,V>>
     {
-        Object key;
-        Iterator keyIter;
-        List valueList;
-        Iterator valueIter;
+        K key;
+        Iterator<K> keyIter;
+        List<V> valueList;
+        Iterator<V> valueIter;
 
         EntryIter()
         {
-            keyIter = keySet().iterator();
+            keyIter = map.keySet().iterator();
             if (keyIter.hasNext()) {
                 nextKey();
             } else {
-                valueList = Collections.EMPTY_LIST;
+                valueList = Collections.emptyList();
                 valueIter = valueList.iterator();
             }
         }
@@ -184,20 +213,20 @@ public class MultiMap extends HashMap
             return keyIter.hasNext() || valueIter.hasNext();
         }
 
-        public Object next()
+        public Map.Entry<K,V> next()
         {
             if (!valueIter.hasNext()) {
                 nextKey();
             }
-            final Object savedKey = key;
-            final Object value = valueIter.next();
-            return new Map.Entry() {
-                    public Object getKey()
+            final K savedKey = key;
+            final V value = valueIter.next();
+            return new Map.Entry<K,V>() {
+                    public K getKey()
                     {
                         return savedKey;
                     }
 
-                    public Object getValue()
+                    public V getValue()
                     {
                         return value;
                     }

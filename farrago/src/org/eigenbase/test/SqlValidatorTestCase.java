@@ -82,6 +82,48 @@ public class SqlValidatorTestCase extends TestCase
      */
     private static final boolean FailIfNoPosition =
         Bug.Dt315Fixed;
+    private final SqlValidator.Compatible compatible;
+
+    /**
+     * Creates a testcase.
+     *
+     * <p>If name is of the form "compatible:testCase", invokes sets the
+     * compatibility to "compatible".
+     *
+     * @param name Name; examples "Sql2003:testGroup", "testGroup"
+     */
+    public SqlValidatorTestCase(String name)
+    {
+        super(splitName(name));
+        SqlValidator.Compatible compatible = splitCompatible(name);
+        if (compatible == null) {
+            this.compatible = SqlValidator.Compatible.Default;
+        } else {
+            this.compatible = compatible;
+        }
+    }
+
+    private static String splitName(String name)
+    {
+        int colon = name.indexOf(':');
+        if (colon < 0) {
+            return name;
+        } else {
+            return name.substring(colon);
+        }
+    }
+
+    private static SqlValidator.Compatible splitCompatible(String name)
+    {
+        int colon = name.indexOf(':');
+        if (colon < 0) {
+            return null;
+        } else {
+            String compatibleName = name.substring(0, colon);
+            return (SqlValidator.Compatible)
+                SqlValidator.Compatible.enumeration.getValue(compatibleName);
+        }
+    }
 
     private String buildQuery(String expression)
     {
@@ -313,8 +355,9 @@ public class SqlValidatorTestCase extends TestCase
         tester.checkCollation(sql, expectedCollationName, expectedCoercibility);
     }
 
-    protected Compatible getCompatible() {
-        return Compatible.Default;
+    protected SqlValidator.Compatible getCompatible()
+    {
+        return compatible;
     }
 
     /**
@@ -819,34 +862,6 @@ public class SqlValidatorTestCase extends TestCase
         }
     }
 
-    /**
-     * Describes the valid SQL compatiblity modes.
-     */
-    public static class Compatible extends EnumeratedValues.BasicValue {
-        private Compatible(String name, int ordinal) {
-            super(name, ordinal, null);
-        }
-
-        public static final int Default_ordinal = 0;
-        public static final int Strict92_ordinal = 1;
-        public static final int Strict99_ordinal = 2;
-        public static final int Pragmatic99_ordinal = 3;
-        public static final int Oracle10g_ordinal = 4;
-        public static final int Sql2003_ordinal = 5;
-
-        public static final SqlValidatorTest.Compatible Strict92 =
-            new SqlValidatorTest.Compatible("Strict92", Strict92_ordinal);
-        public static final SqlValidatorTest.Compatible Strict99 =
-            new SqlValidatorTest.Compatible("Strict99", Strict99_ordinal);
-        public static final SqlValidatorTest.Compatible Pragmatic99 =
-            new SqlValidatorTest.Compatible("Pragmatic99", Pragmatic99_ordinal);
-        public static final SqlValidatorTest.Compatible Oracle10g =
-            new SqlValidatorTest.Compatible("Oracle10g", Oracle10g_ordinal);
-        public static final SqlValidatorTest.Compatible Sql2003 =
-            new SqlValidatorTest.Compatible("Sql2003", Sql2003_ordinal);
-        public static final SqlValidatorTest.Compatible Default =
-            new SqlValidatorTest.Compatible("Default", Default_ordinal);
-    }
 }
 
 

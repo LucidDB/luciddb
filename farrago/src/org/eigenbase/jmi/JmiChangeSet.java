@@ -28,7 +28,6 @@ import javax.jmi.reflect.*;
 import javax.jmi.model.*;
 
 import org.eigenbase.trace.*;
-import org.eigenbase.resource.*;
 import org.eigenbase.util.*;
 import org.netbeans.api.mdr.*;
 import org.netbeans.api.mdr.events.*;
@@ -62,7 +61,7 @@ public class JmiChangeSet implements MDRPreChangeListener
      * Map (from RefAssociation.Class to JmiDeletionRule) of
      * associations for which special handling is required during deletion.
      */
-    private MultiMap deletionRules;
+    private MultiMap<Class<? extends Object>,JmiDeletionRule> deletionRules;
 
     /**
      * Map containing scheduled validation actions.  The key is the MofId of
@@ -117,7 +116,7 @@ public class JmiChangeSet implements MDRPreChangeListener
 
         // NOTE:  deletionRules are populated implicitly as action handlers
         // are set up below.
-        deletionRules = new MultiMap();
+        deletionRules = new MultiMap<Class<? extends Object>, JmiDeletionRule>();
 
         // MDR pre-change instance creation events are useless, since they
         // don't refer to the new instance.  Instead, we rely on the
@@ -199,7 +198,7 @@ public class JmiChangeSet implements MDRPreChangeListener
         // further validation
         stopListening();
 
-        List deletionList = new ArrayList();
+        List<RefObject> deletionList = new ArrayList<RefObject>();
         for (Map.Entry<RefObject, JmiValidationAction> mapEntry
                  : validatedMap.entrySet())
         {
@@ -232,9 +231,7 @@ public class JmiChangeSet implements MDRPreChangeListener
         // now we can finally consummate any requested deletions, since we're
         // all done referencing the objects
         Collections.reverse(deletionList);
-        Iterator deletionIter = deletionList.iterator();
-        while (deletionIter.hasNext()) {
-            RefObject refObj = (RefObject) deletionIter.next();
+        for (RefObject refObj : deletionList) {
             if (tracer.isLoggable(Level.FINE)) {
                 tracer.fine("really deleting " + refObj);
             }
@@ -281,14 +278,11 @@ public class JmiChangeSet implements MDRPreChangeListener
             if (event.getType() == AssociationEvent.EVENT_ASSOCIATION_REMOVE) {
                 RefAssociation refAssoc =
                     (RefAssociation) associationEvent.getSource();
-                List rules = deletionRules.getMulti(refAssoc.getClass());
-                Iterator ruleIter = rules.iterator();
-                while (ruleIter.hasNext()) {
-                    JmiDeletionRule rule =
-                        (JmiDeletionRule) ruleIter.next();
+                List<JmiDeletionRule> rules = deletionRules.getMulti(refAssoc.getClass());
+                for (JmiDeletionRule rule : rules) {
                     if ((rule != null)
-                            && rule.getEndName().equals(
-                                associationEvent.getEndName())) {
+                        && rule.getEndName().equals(
+                        associationEvent.getEndName())) {
                         fireDeletionRule(
                             refAssoc,
                             rule,

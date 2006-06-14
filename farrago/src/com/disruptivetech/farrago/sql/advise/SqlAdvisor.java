@@ -68,8 +68,9 @@ public class SqlAdvisor
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Gets completion hints for a partially completed or syntatically incorrect      * sql statement with cursor pointing to the position where completion
-     * hints are requested
+     * Gets completion hints for a partially completed or syntatically
+     * incorrect sql statement with cursor pointing to the position where
+     * completion hints are requested.
      *
      * @param sql A partial or syntatically incorrect sql statement for which
      * to retrieve completion hints
@@ -192,10 +193,10 @@ public class SqlAdvisor
      *
      * @return a List of ValidateErrorInfo (null if sql is valid)
      */
-    public List validate(String sql)
+    public List<ValidateErrorInfo> validate(String sql)
     {
         SqlNode sqlNode = null;
-        ArrayList errorList = new ArrayList();
+        List<ValidateErrorInfo> errorList = new ArrayList<ValidateErrorInfo>();
         
         sqlNode = collectParserError(sql, errorList);
         if (!errorList.isEmpty()) {
@@ -251,13 +252,13 @@ public class SqlAdvisor
      */
     public String [] getReservedAndKeyWords()
     {   
-        Collection c = getParserImpl().getSql92ReservedWords();
-        List l = Arrays.asList(
+        Collection<String> c = SqlAbstractParserImpl.getSql92ReservedWords();
+        List<String> l = Arrays.asList(
             getParserImpl().getMetadata().getJdbcKeywords().split(","));
-        ArrayList al = new ArrayList();
+        List<String> al = new ArrayList<String>();
         al.addAll(c);
         al.addAll(l);
-        return (String[]) al.toArray(new String[0]);
+        return al.toArray(new String[al.size()]);
     }
 
     /**
@@ -279,7 +280,6 @@ public class SqlAdvisor
     protected SqlNode parseQuery(String sql) throws SqlParseException
     {
         SqlParser parser = new SqlParser(sql);
-        SqlNode sqlNode = null;
         return parser.parseQuery();
     }
 
@@ -289,17 +289,19 @@ public class SqlAdvisor
      * This implementation uses {@link SqlParser}.
      * Subclass can re-implement this with a different parser implementation
      *
-     * @param sql A user-input sql statement to be parsed 
+     * @param sql A user-input sql statement to be parsed
      * @param errorList A {@link List} of error to be added to
      *
-     * @return {@link SqlNode } that is root of the parse tree, null if 
+     * @return {@link SqlNode } that is root of the parse tree, null if
      * the sql is not valid
      */
-    protected SqlNode collectParserError(String sql, List errorList)
+    protected SqlNode collectParserError(
+        String sql,
+        List<ValidateErrorInfo> errorList)
     {
-        SqlNode sqlNode = null;
         try {
-            sqlNode = parseQuery(sql);
+            SqlNode sqlNode = parseQuery(sql);
+            return sqlNode;
         } catch (SqlParseException e) {
             ValidateErrorInfo errInfo =
                 new ValidateErrorInfo(
@@ -310,7 +312,6 @@ public class SqlAdvisor
             errorList.add(errInfo);
             return null;
         }
-        return sqlNode;
     }
 
     /**

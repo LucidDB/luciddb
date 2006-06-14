@@ -40,11 +40,11 @@ Error: DDL validation error near line 1, column 39: Target schema "LOCALDB"."FOO
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail 'cause foo2.pineapple depends on foo1.apple
 0: jdbc:farrago:> create or replace rename to foo3 schema foo1;
-Error: From line 2, column 6 to line 2, column 14: Table 'LOCALDB.FOO1.APPLE' not found (state=,code=0)
+Error: From line 2, column 6 to line 2, column 29: Table 'LOCALDB.FOO1.APPLE' not found (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail, same error as above
 0: jdbc:farrago:> create or replace rename to lemon view foo1.apple as select * from sales.depts;
-Error: From line 2, column 6 to line 2, column 14: Table 'LOCALDB.FOO1.APPLE' not found (state=,code=0)
+Error: From line 2, column 6 to line 2, column 29: Table 'LOCALDB.FOO1.APPLE' not found (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- Server

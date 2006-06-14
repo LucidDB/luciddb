@@ -31,7 +31,6 @@ import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.RexNode;
 
-
 /**
  * Relational expression which imposes a
  * particular sort order on its input without otherwise changing its content.
@@ -100,13 +99,18 @@ public final class SortRel extends SingleRel
 
     public void explain(RelOptPlanWriter pw)
     {
+        String [] terms = new String[1 + collations.length * 2];
+        Object [] values = new Object[collations.length];
         int i = 0;
-        String [] terms = new String[1 + collations.length];
         terms[i++] = "child";
         for (int j = 0; j < collations.length; ++j) {
             terms[i++] = "sort" + j;
         }
-        pw.explain(this, terms);
+        for (int j = 0; j < collations.length; ++j) {
+            terms[i++] = "dir" + j;
+            values[j] = collations[j].getDirection();
+        }
+        pw.explain(this, terms, values);
     }
 }
 

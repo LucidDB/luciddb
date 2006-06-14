@@ -956,7 +956,7 @@ Error: Row size (6013 bytes) exceeds maximum (4092 bytes); row data:  [ 'abc    
 0: jdbc:farrago:> explain plan without implementation for
 . . . . . . . . > select deptno,max(name) from sales.emps group by deptno order by 1;
 'column0'
-'SortRel(sort0=[$0])'
+'SortRel(sort0=[$0], dir0=[Ascending])'
 '  ProjectRel(DEPTNO=[$0], EXPR$1=[$1])'
 '    AggregateRel(groupCount=[1], agg#0=[MAX(1)])'
 '      ProjectRel($f0=[$2], $f1=[$1])'

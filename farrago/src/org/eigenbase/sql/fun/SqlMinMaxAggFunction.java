@@ -26,7 +26,6 @@ import openjava.mop.OJClass;
 import org.eigenbase.sql.*;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.Util;
 import org.eigenbase.reltype.RelDataType;
@@ -34,9 +33,11 @@ import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.oj.util.OJUtil;
 
 /**
- * <code>MinMax</code> implements the "min" and "max" aggregator
+ * Definition of the <code>MIN</code> and <code>MAX</code> aggregate
  * functions, returning the returns the smallest/largest of the values
- * which go into it. There are 3 forms:
+ * which go into it.
+ *
+ * <p>There are 3 forms:
  *
  * <dl>
  * <dt>
@@ -142,30 +143,35 @@ public class SqlMinMaxAggFunction extends SqlAggFunction
         }
     }
 
-    public void validateCall(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        SqlValidatorScope operandScope)
+    public boolean checkOperandTypes(
+        SqlCallBinding callBinding, boolean throwOnFailure)
     {
-        super.validateCall(call, validator, scope, operandScope);
+        boolean ok = super.checkOperandTypes(callBinding, throwOnFailure);
 
-        assert(1 == call.operands.length);
-        SqlNode operand = call.getOperands()[0];
-        RelDataType opType = validator.getValidatedNodeType(operand);
-        assert(null != opType);
-        SqlTypeFamily typeFam =
+        // REVIEW (jhyde, 2006/6/13): Remove this piece of code.
+        //   SqlTypeStrategies.otcComparableOrdered should be sufficient.
+        //   Currently, BOOLEAN thinks it is comparable, and the following code
+        //   thinks it isn't, so one of them is wrong.
+        final SqlValidator validator = callBinding.getValidator();
+        RelDataType opType = callBinding.getOperandType(0);
+        assert null != opType;
+        SqlTypeFamily typeFamily =
             SqlTypeFamily.getFamilyForSqlType(opType.getSqlTypeName());
-        if ((typeFam == SqlTypeFamily.Boolean) ||
-            (typeFam == SqlTypeFamily.Binary) ||
-            (typeFam == SqlTypeFamily.Multiset)) {
-            throw validator.newValidationError(operand,
-                EigenbaseResource.instance().MinMaxBadType.ex(
-                    call.getOperator().getName(),
-                    opType.getSqlTypeName().getName()));
+        if ((typeFamily == SqlTypeFamily.Boolean) ||
+            (typeFamily == SqlTypeFamily.Binary) ||
+            (typeFamily == SqlTypeFamily.Multiset)) {
+            if (throwOnFailure) {
+                throw validator.newValidationError(
+                    callBinding.getCall(),
+                    EigenbaseResource.instance().MinMaxBadType.ex(
+                        getName(),
+                        opType.getSqlTypeName().getName()));
+            } else {
+                ok = false;
+            }
         }
 
-
+        return ok;
     }
 }
 

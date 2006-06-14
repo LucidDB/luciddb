@@ -26,6 +26,8 @@ import org.eigenbase.sql.SqlNodeList;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.util.Util;
 
+import java.util.List;
+
 /**
  * Abstract implementation of {@link SqlValidatorNamespace}.
  *
@@ -58,9 +60,9 @@ abstract class AbstractNamespace implements SqlValidatorNamespace
         this.validator = validator;
     }
 
-    public SqlMoniker[] lookupHints(SqlParserPos pos)
+    public void lookupHints(SqlParserPos pos, List<SqlMoniker> hintList)
     {
-        return Util.emptySqlMonikerArray;
+        // no hints
     }
 
     public void validate()
@@ -137,7 +139,7 @@ abstract class AbstractNamespace implements SqlValidatorNamespace
     {
         final RelDataType rowType = getRowType();
         final RelDataType dataType =
-            SqlValidatorUtil.lookupField(rowType, name);
+            SqlValidatorUtil.lookupFieldType(rowType, name);
         return dataType != null;
     }
 
@@ -160,7 +162,7 @@ abstract class AbstractNamespace implements SqlValidatorNamespace
     {
         return false;
     }
-    
+
     public void makeNullable()
     {
         forceNullable = true;

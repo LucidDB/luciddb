@@ -36,6 +36,9 @@ import java.util.Calendar;
  * such as <code>DATE '2004-10-22'</code>.
  *
  * <p>Create values using {@link SqlLiteral#createDate}.
+ *
+ * @version $Id$
+ * @author jhyde
  */
 public class SqlDateLiteral extends SqlAbstractDateTimeLiteral
  {
@@ -61,6 +64,12 @@ public class SqlDateLiteral extends SqlAbstractDateTimeLiteral
         SimpleDateFormat df = new SimpleDateFormat(dfString);
         df.setLenient(false);
         return df;
+    }
+
+    public SqlNode clone(SqlParserPos pos)
+    {
+        return new SqlDateLiteral((Calendar) value, pos);
+
     }
 
     public String toString()

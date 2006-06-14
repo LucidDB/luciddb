@@ -31,6 +31,8 @@ import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.pretty.SqlPrettyWriter;
 import org.eigenbase.util.Util;
 
+import java.util.List;
+
 
 /**
  * A <code>SqlNode</code> is a SQL parse tree. It may be an {@link SqlOperator
@@ -64,13 +66,20 @@ public abstract class SqlNode implements Cloneable
 
     //~ Methods ---------------------------------------------------------------
 
-    // NOTE:  mutable subclasses must override clone()
     public Object clone()
     {
+        return clone(getParserPosition());
+    }
+
+    /**
+     * Clones a SqlNode with a different position.
+     */
+    public SqlNode clone(SqlParserPos pos)
+    {
         try {
-            return super.clone();
-        } catch (CloneNotSupportedException ex) {
-            throw Util.newInternal(ex);
+            return (SqlNode) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw Util.newInternal(e, "error while cloning " + this);
         }
     }
 
@@ -203,29 +212,31 @@ public abstract class SqlNode implements Cloneable
      * @param scope Validation scope
      * @param pos SqlParserPos indicating the cursor position at which
      * competion hints are requested for
-     * @return a {@link SqlMoniker} array of valid options
+     * @param hintList list of valid options
      */
-    public SqlMoniker[] findValidOptions(
+    public void findValidOptions(
         SqlValidator validator,
         SqlValidatorScope scope,
-        SqlParserPos pos)
+        SqlParserPos pos,
+        List<SqlMoniker> hintList)
     {
-        return Util.emptySqlMonikerArray;
+        // no valid options
     }
 
     /**
-     * Lists all the valid alternatives for this node.  Only implemented
-     * now for SqlIdentifier.
+     * Populates a list of all the valid alternatives for this node.
+     * Only implemented now for {@link SqlIdentifier}.
      *
      * @param validator Validator
      * @param scope Validation scope
-     * @return a {@link SqlMoniker} array of valid options
+     * @param hintList a list of valid options
      */
-    public SqlMoniker[] findValidOptions(
+    public void findValidOptions(
         SqlValidator validator,
-        SqlValidatorScope scope)
+        SqlValidatorScope scope,
+        List<SqlMoniker> hintList)
     {
-        return Util.emptySqlMonikerArray;
+        // no valid options
     }
 
     /**
