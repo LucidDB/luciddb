@@ -744,8 +744,16 @@ public class FarragoTestConcurrentScriptedCommandGenerator
             widths = new int[columns];
             for(int i = 0; i < columns; i++) {
                 labels[i] = meta.getColumnLabel(i + 1);
-                widths[i] = Math.max(labels[i].length(),
-                                     meta.getColumnDisplaySize(i + 1));
+                int displaySize = meta.getColumnDisplaySize(i + 1);
+                // NOTE jvs 13-June-2006:  I put this in to cap
+                // EXPLAIN PLAN, which now returns a very large
+                // worst-case display size.
+                if (displaySize > 4096) {
+                    displaySize = 0;
+                }
+                widths[i] = Math.max(
+                    labels[i].length(),
+                    displaySize);
             }
 
             printSeparator(out, widths);
